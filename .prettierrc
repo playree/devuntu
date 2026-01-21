@@ -1,0 +1,19 @@
+{
+  "trailingComma": "all",
+  "tabWidth": 2,
+  "semi": false,
+  "singleQuote": true,
+  "jsxSingleQuote": true,
+  "endOfLine": "lf",
+  "printWidth": 120,
+  "plugins": ["prettier-plugin-organize-imports", "prettier-plugin-tailwindcss"],
+  "tailwindFunctions": ["twMerge"],
+  "overrides": [
+    {
+      "files": "*.json",
+      "options": {
+        "printWidth": 180
+      }
+    }
+  ]
+}
