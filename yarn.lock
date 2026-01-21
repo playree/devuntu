@@ -1727,6 +1727,8 @@ __metadata:
     prettier-plugin-tailwindcss: "npm:^0.7.2"
     react: "npm:19.2.3"
     react-dom: "npm:19.2.3"
+    tailwind-merge: "npm:^3.4.0"
+    tailwind-variants: "npm:^3.2.2"
     tailwindcss: "npm:^4.1.18"
     typescript: "npm:^5.9.3"
   languageName: unknown
@@ -4140,6 +4142,26 @@ __metadata:
   version: 1.0.0
   resolution: "supports-preserve-symlinks-flag@npm:1.0.0"
   checksum: 10c0/6c4032340701a9950865f7ae8ef38578d8d7053f5e10518076e6554a9381fa91bd9c6850193695c141f32b21f979c985db07265a758867bac95de05f7d8aeb39
+  languageName: node
+  linkType: hard
+
+"tailwind-merge@npm:^3.4.0":
+  version: 3.4.0
+  resolution: "tailwind-merge@npm:3.4.0"
+  checksum: 10c0/eaf17bb695c51c7bb7a90366a9c62be295473ee97fcfd1da54287714d4a5788a88ff4ad1ab9e0128638257fda777d6c9ea88682e36195e31a7fa2cf43f45e310
+  languageName: node
+  linkType: hard
+
+"tailwind-variants@npm:^3.2.2":
+  version: 3.2.2
+  resolution: "tailwind-variants@npm:3.2.2"
+  peerDependencies:
+    tailwind-merge: ">=3.0.0"
+    tailwindcss: "*"
+  peerDependenciesMeta:
+    tailwind-merge:
+      optional: true
+  checksum: 10c0/715a35b66c374f3bb234cd1e6737588cb7c0213c80a69bd62239d752d20c44377bec1d028c3ea7c28882d81384507fbae407813d348c142cb991c5a0ad063d48
   languageName: node
   linkType: hard
 
