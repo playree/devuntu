@@ -17,5 +17,5 @@ yarn set version latest --yarn-path
 # better-auth
 
 ```sh
-yarn dlx @better-auth/cli@latest generate --output ./prisma/schema.prisma --config ./src/lib/auth.ts
+npx @better-auth/cli generate
 ```
