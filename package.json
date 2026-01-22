@@ -13,10 +13,12 @@
     "studio": "prisma studio"
   },
   "dependencies": {
+    "@heroui/react": "^2.8.7",
     "@prisma/adapter-better-sqlite3": "^7.2.0",
     "@prisma/client": "^7.2.0",
     "better-auth": "^1.4.17",
     "dotenv": "^17.2.3",
+    "framer-motion": "^12.28.1",
     "next": "16.1.4",
     "react": "19.2.3",
     "react-dom": "19.2.3",

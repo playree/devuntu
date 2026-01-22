@@ -1,15 +1,19 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Noto_Sans_JP, Roboto_Mono } from 'next/font/google'
+import { twMerge } from 'tailwind-merge'
 import './globals.css'
+import { Providers } from './providers'
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const NotoSansJp = Noto_Sans_JP({
   subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-noto-sans-jp',
 })
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const RobotoMono = Roboto_Mono({
   subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-roboto-mono',
 })
 
 export const metadata: Metadata = {
@@ -23,8 +27,10 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang='en'>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>{children}</body>
+    <html lang='ja' className={`${NotoSansJp.variable} ${RobotoMono.variable}`} suppressHydrationWarning>
+      <body className={twMerge('bg-background font-noto min-h-screen antialiased')}>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   )
 }
