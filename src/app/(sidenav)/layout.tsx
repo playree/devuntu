@@ -1,11 +1,11 @@
 import { FC, ReactNode } from 'react'
 
 import { SideNavbar } from '@/components/side-navbar'
-import { Menu, getMenu } from './menu'
+import { createMenu } from './menu'
 
 const SideNavLayout: FC<{ children: ReactNode }> = async ({ children }) => {
   return (
-    <SideNavbar menu={<Menu />} getMenu={getMenu} className='bg-white dark:bg-black'>
+    <SideNavbar menu={createMenu} className='bg-white dark:bg-black'>
       <div className='mx-auto max-w-6xl'>{children}</div>
     </SideNavbar>
   )

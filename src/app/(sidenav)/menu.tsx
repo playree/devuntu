@@ -58,6 +58,6 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
   )
 }
 
-export const getMenu = (closeMenu?: () => void) => {
+export const createMenu = (closeMenu?: () => void) => {
   return <Menu closeMenu={closeMenu} />
 }
