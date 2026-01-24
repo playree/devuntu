@@ -1,6 +1,6 @@
 import { FC, ReactNode } from 'react'
 
-import { SideNavbar } from '@/components/side-navbar'
+import { SideNavbar } from '@/components/general/side-navbar'
 import { createMenu } from './menu'
 
 const SideNavLayout: FC<{ children: ReactNode }> = async ({ children }) => {

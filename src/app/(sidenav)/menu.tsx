@@ -1,4 +1,5 @@
 'use client'
+import { ThemeSwitchList } from '@/components/general/theme-switch'
 import { Accordion, AccordionItem, AccordionItemProps, Button } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC, ReactNode } from 'react'
@@ -42,6 +43,12 @@ export const MenuButton: FC<{
 export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
   return (
     <div>
+      <div // テーマ・言語
+        className='flex p-2'
+      >
+        <ThemeSwitchList size='sm' className='mr-2' />
+        {/* <LangSwitch size='sm' /> */}
+      </div>
       <div className='mt-2'>
         <Accordion selectionMode='multiple' itemClasses={accordionStyles} defaultSelectedKeys='all' showDivider={false}>
           <AccordionItem isCompact={true} title={'Group'} classNames={{ trigger: 'cursor-pointer' }}>
