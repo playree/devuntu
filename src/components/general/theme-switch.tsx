@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, SwitchProps } from '@heroui/react'
+import { Button, ButtonProps, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, SwitchProps } from '@heroui/react'
 import { useTheme } from 'next-themes'
 import { FC, ReactNode, SVGProps, useEffect, useMemo, useState } from 'react'
 
@@ -49,7 +49,11 @@ export interface ThemeSwitchProps {
   classNames?: SwitchProps['classNames']
 }
 
-export const ThemeSwitchList: FC<{ className?: string; size?: 'sm' | 'md' | 'lg' }> = ({ className, size = 'md' }) => {
+export const ThemeSwitchList: FC<{
+  className?: string
+  size?: 'sm' | 'md' | 'lg'
+  variant?: ButtonProps['variant']
+}> = ({ className, size = 'md', variant = 'faded' }) => {
   const iconSize = iconSizes[size]
   const { theme, setTheme, systemTheme } = useTheme()
   const [selectedKeys, setSelectedKeys] = useState(new Set([theme || 'system']))
@@ -86,7 +90,7 @@ export const ThemeSwitchList: FC<{ className?: string; size?: 'sm' | 'md' | 'lg'
   return (
     <Dropdown className={className} size={size}>
       <DropdownTrigger>
-        <Button size={size} variant='bordered' startContent={selectIcon} className={className}>
+        <Button size={size} variant={variant} startContent={selectIcon} className={className}>
           {selectedValue === 'system' ? 'auto' : selectedValue}
         </Button>
       </DropdownTrigger>
