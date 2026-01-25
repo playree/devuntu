@@ -36,7 +36,7 @@ export default function RootLayout({
   return (
     <html lang='ja' className={`${NotoSansJp.variable} ${RobotoMono.variable}`} suppressHydrationWarning>
       <head />
-      <body className={twMerge('bg-background font-noto min-h-screen antialiased')}>
+      <body className={twMerge('bg-background font-noto antialiased')}>
         <Providers themeProps={{ attribute: 'class' }}>{children}</Providers>
       </body>
     </html>

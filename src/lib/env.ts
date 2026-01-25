@@ -1,6 +1,12 @@
 import { errSystemError } from './error'
 
 export const env = {
+  get NODE_ENV() {
+    return process.env.NODE_ENV
+  },
+  get LOG_LEVEL() {
+    return process.env.LOG_LEVEL
+  },
   get DATABASE_URL() {
     if (!process.env.DATABASE_URL) {
       throw errSystemError('DATABASE_URL is not set')
