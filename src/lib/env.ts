@@ -25,4 +25,7 @@ export const env = {
     }
     return process.env.BETTER_AUTH_SECRET
   },
+  get DEFAULT_LOCALE() {
+    return process.env.DEFAULT_LOCALE
+  },
 }

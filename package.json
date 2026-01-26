@@ -17,7 +17,9 @@
     "@hookform/resolvers": "^5.2.2",
     "@prisma/adapter-better-sqlite3": "^7.2.0",
     "@prisma/client": "^7.2.0",
+    "accept-language-parser": "^1.5.0",
     "better-auth": "^1.4.17",
+    "cookie": "^1.1.1",
     "dotenv": "^17.2.3",
     "framer-motion": "^12.28.1",
     "next": "16.1.4",
@@ -35,6 +37,7 @@
   "devDependencies": {
     "@better-auth/cli": "^1.4.17",
     "@tailwindcss/postcss": "^4.1.18",
+    "@types/accept-language-parser": "^1",
     "@types/node": "^20.19.30",
     "@types/react": "^19.2.9",
     "@types/react-dom": "^19.2.3",

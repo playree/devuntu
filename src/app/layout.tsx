@@ -1,5 +1,8 @@
+import { env } from '@/lib/env'
+import { localeConfig } from '@/locale/config'
 import type { Metadata } from 'next'
 import { Noto_Sans_JP, Roboto_Mono } from 'next/font/google'
+import { headers } from 'next/headers'
 import { twMerge } from 'tailwind-merge'
 import './globals.css'
 import { Providers } from './providers'
@@ -28,16 +31,21 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const acceptLanguage = (await headers()).get('accept-language')
+  const defaultLocale = env.DEFAULT_LOCALE || localeConfig.locales[0]
+
   return (
     <html lang='ja' className={`${NotoSansJp.variable} ${RobotoMono.variable}`} suppressHydrationWarning>
       <head />
       <body className={twMerge('bg-background font-noto antialiased')}>
-        <Providers themeProps={{ attribute: 'class' }}>{children}</Providers>
+        <Providers themeProps={{ attribute: 'class' }} defaultLocale={defaultLocale} acceptLanguage={acceptLanguage}>
+          {children}
+        </Providers>
       </body>
     </html>
   )
