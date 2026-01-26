@@ -10,27 +10,24 @@ const iconSizes = {
   lg: 24,
 } as const
 
-const SunFilledIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
+const SunIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
   <svg
     fill='currentColor'
-    viewBox='0 0 24 24'
+    viewBox='0 0 20 20'
     xmlns='http://www.w3.org/2000/svg'
     aria-hidden='true'
     width={width}
     strokeWidth={strokeWidth}
     {...props}
   >
-    <g fill='currentColor'>
-      <path d='M19 12a7 7 0 11-7-7 7 7 0 017 7z' />
-      <path d='M12 22.96a.969.969 0 01-1-.96v-.08a1 1 0 012 0 1.038 1.038 0 01-1 1.04zm7.14-2.82a1.024 1.024 0 01-.71-.29l-.13-.13a1 1 0 011.41-1.41l.13.13a1 1 0 010 1.41.984.984 0 01-.7.29zm-14.28 0a1.024 1.024 0 01-.71-.29 1 1 0 010-1.41l.13-.13a1 1 0 011.41 1.41l-.13.13a1 1 0 01-.7.29zM22 13h-.08a1 1 0 010-2 1.038 1.038 0 011.04 1 .969.969 0 01-.96 1zM2.08 13H2a1 1 0 010-2 1.038 1.038 0 011.04 1 .969.969 0 01-.96 1zm16.93-7.01a1.024 1.024 0 01-.71-.29 1 1 0 010-1.41l.13-.13a1 1 0 011.41 1.41l-.13.13a.984.984 0 01-.7.29zm-14.02 0a1.024 1.024 0 01-.71-.29l-.13-.14a1 1 0 011.41-1.41l.13.13a1 1 0 010 1.41.97.97 0 01-.7.3zM12 3.04a.969.969 0 01-1-.96V2a1 1 0 012 0 1.038 1.038 0 01-1 1.04z' />
-    </g>
+    <path d='M10 2a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 2ZM10 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 15ZM10 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM15.657 5.404a.75.75 0 1 0-1.06-1.06l-1.061 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM6.464 14.596a.75.75 0 1 0-1.06-1.06l-1.06 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM18 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 18 10ZM5 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 5 10ZM14.596 15.657a.75.75 0 0 0 1.06-1.06l-1.06-1.061a.75.75 0 1 0-1.06 1.06l1.06 1.06ZM5.404 6.464a.75.75 0 0 0 1.06-1.06l-1.06-1.06a.75.75 0 1 0-1.061 1.06l1.06 1.06Z' />
   </svg>
 )
 
-const MoonFilledIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
+const MoonIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
   <svg
     fill='currentColor'
-    viewBox='0 0 24 24'
+    viewBox='0 0 20 20'
     xmlns='http://www.w3.org/2000/svg'
     aria-hidden='true'
     width={width}
@@ -38,8 +35,9 @@ const MoonFilledIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth =
     {...props}
   >
     <path
-      d='M21.53 15.93c-.16-.27-.61-.69-1.73-.49a8.46 8.46 0 01-1.88.13 8.409 8.409 0 01-5.91-2.82 8.068 8.068 0 01-1.44-8.66c.44-1.01.13-1.54-.09-1.76s-.77-.55-1.83-.11a10.318 10.318 0 00-6.32 10.21 10.475 10.475 0 007.04 8.99 10 10 0 002.89.55c.16.01.32.02.48.02a10.5 10.5 0 008.47-4.27c.67-.93.49-1.519.32-1.79z'
-      fill='currentColor'
+      clipRule='evenodd'
+      fillRule='evenodd'
+      d='M7.455 2.004a.75.75 0 0 1 .26.77 7 7 0 0 0 9.958 7.967.75.75 0 0 1 1.067.853A8.5 8.5 0 1 1 6.647 1.921a.75.75 0 0 1 .808.083Z'
     />
   </svg>
 )
@@ -58,8 +56,8 @@ export const ThemeSwitchList: FC<{
   const { theme, setTheme, systemTheme } = useTheme()
   const [selectedKeys, setSelectedKeys] = useState(new Set([theme || 'system']))
 
-  const lightIcon = useMemo(() => <SunFilledIcon width={iconSize} />, [iconSize])
-  const darkIcon = useMemo(() => <MoonFilledIcon width={iconSize} />, [iconSize])
+  const lightIcon = useMemo(() => <SunIcon width={iconSize} />, [iconSize])
+  const darkIcon = useMemo(() => <MoonIcon width={iconSize} />, [iconSize])
   const [systemIcon, setSystemIcon] = useState<ReactNode>()
   const [selectIcon, setSelectIcon] = useState<ReactNode>()
   const [selectedValue, setSelectedValue] = useState('Loading')
