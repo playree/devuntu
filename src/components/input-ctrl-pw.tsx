@@ -59,8 +59,8 @@ export const PasswordScore: FC<{
       label={label}
       value={score}
       classNames={{
-        base: 'my-1 px-2',
-        label: isDisabled ? 'text-gray-600 dark:text-gray-400' : '',
+        base: 'my-1 px-1',
+        label: isDisabled ? 'text-gray-600 dark:text-gray-400 text-xs' : 'text-xs',
       }}
       color={COLOR[score]}
       isDisabled={isDisabled}
