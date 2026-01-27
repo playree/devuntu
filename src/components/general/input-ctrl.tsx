@@ -12,6 +12,7 @@ export const InputCtrl = <
   name,
   type = 'text',
   variant = 'faded',
+  isClearable = true,
   onChanged,
   ...props
 }: InputProps & {
@@ -28,6 +29,8 @@ export const InputCtrl = <
           {...props}
           type={type}
           variant={variant}
+          isClearable={isClearable}
+          onClear={() => onChange()}
           onChange={
             type === 'number'
               ? (event) => {

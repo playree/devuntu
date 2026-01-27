@@ -18,7 +18,7 @@ export const MultiButton: FC<
   type = 'button',
   size,
   color = 'primary',
-  variant = 'solid',
+  variant = 'flat',
   onPress,
   href = '',
   tooltip,

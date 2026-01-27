@@ -1,6 +1,6 @@
-export type LocaleItemBase = 'admin_regist'
+export type LocaleItemBase = 'ok' | 'cancel' | 'email' | 'title_admin_regist'
 
-export type LocaleItemError = '@required_field'
+export type LocaleItemError = '@required_field' | '@invalid_email'
 export const el = (item: LocaleItemError) => item
 
 export type LocaleItem = LocaleItemBase | LocaleItemError
