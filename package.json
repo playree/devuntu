@@ -17,6 +17,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@prisma/adapter-better-sqlite3": "^7.2.0",
     "@prisma/client": "^7.2.0",
+    "@zxcvbn-ts/core": "^3.0.4",
     "accept-language-parser": "^1.5.0",
     "better-auth": "^1.4.17",
     "cookie": "^1.1.1",

@@ -5,6 +5,7 @@ import { InputCtrl } from '@/components/general/input-ctrl'
 import { LocaleSwitch } from '@/components/general/locale-switch'
 import { ThemeSwitchList } from '@/components/general/theme-switch'
 import { CheckIcon, Cog6ToothIcon } from '@/components/icon'
+import { InputCtrlPassword } from '@/components/input-ctrl-pw'
 import { CreateAdmin, scCreateAdmin } from '@/lib/schema'
 import { intervalOperation } from '@/lib/sleep'
 import { gridStyles } from '@/lib/style'
@@ -40,31 +41,44 @@ export const StartClient: FC = () => {
         </div>
       </div>
 
-      <form
-        onSubmit={handleSubmit(async (input) => {
-          const res = await createAdmin(input)
-          console.log(res)
-          await intervalOperation()
-        })}
-      >
-        <div className={gridStyles()}>
-          <div className='col-span-12'>
-            <InputCtrl
-              control={control}
-              name='email'
-              label={t('email')}
-              autoComplete='email'
-              errorMessage={fet(errors.email)}
-              isRequired
-            />
+      <div className='mx-auto w-full max-w-md'>
+        <form
+          onSubmit={handleSubmit(async (input) => {
+            const res = await createAdmin(input)
+            console.log(res)
+            await intervalOperation()
+          })}
+        >
+          <div className={gridStyles()}>
+            <div className='col-span-12'>
+              <InputCtrl
+                control={control}
+                name='email'
+                label={t('email')}
+                autoComplete='email'
+                errorMessage={fet(errors.email)}
+                isRequired
+              />
+            </div>
+            <div className='col-span-12'>
+              <InputCtrlPassword
+                control={control}
+                name='password'
+                label={t('password')}
+                autoComplete='new-password'
+                errorMessage={fet(errors.password)}
+                requiredPasswordScore={4}
+                isRequired
+              />
+            </div>
+            <div className='col-span-12 mt-4 text-center'>
+              <MultiButton type='submit' startContent={<CheckIcon />} isLoading={isSubmitting}>
+                {t('ok')}
+              </MultiButton>
+            </div>
           </div>
-          <div className='col-span-12 mt-4 text-center'>
-            <MultiButton type='submit' startContent={<CheckIcon />} isLoading={isSubmitting}>
-              {t('ok')}
-            </MultiButton>
-          </div>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   )
 }
