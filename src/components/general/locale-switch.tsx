@@ -2,15 +2,22 @@
 
 import { Button } from '@heroui/button'
 import { Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from '@heroui/dropdown'
+import { Skeleton } from '@heroui/react'
 import { FC, useEffect, useState } from 'react'
+import { twMerge } from 'tailwind-merge'
 import { setCookie } from './cookie/client'
 import { useLocale } from './locale/client'
 
 export const LocaleSwitch: FC<{ className?: string; size?: 'sm' | 'md' | 'lg' }> = ({ className, size = 'md' }) => {
+  const [mounted, setMounted] = useState(false)
   const { locale, lcConfig, setLocale } = useLocale()
   // const { data: session } = useSession()
   const [selectedKeys, setSelectedKeys] = useState(new Set([locale]))
   const [selectedValue, setSelectedValue] = useState('')
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     setSelectedKeys(new Set([locale]))
@@ -19,6 +26,10 @@ export const LocaleSwitch: FC<{ className?: string; size?: 'sm' | 'md' | 'lg' }>
   useEffect(() => {
     setSelectedValue(Array.from(selectedKeys).join(', ').replaceAll('_', ' '))
   }, [selectedKeys])
+
+  if (!mounted) {
+    return <Skeleton className={twMerge('h-8 w-18 rounded-lg', className)} />
+  }
 
   return (
     <Dropdown className={className} size={size}>

@@ -1,8 +1,18 @@
 'use client'
 
-import { Button, ButtonProps, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, SwitchProps } from '@heroui/react'
+import {
+  Button,
+  ButtonProps,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+  Skeleton,
+  SwitchProps,
+} from '@heroui/react'
 import { useTheme } from 'next-themes'
 import { FC, ReactNode, SVGProps, useEffect, useMemo, useState } from 'react'
+import { twMerge } from 'tailwind-merge'
 
 const iconSizes = {
   sm: 16,
@@ -52,6 +62,7 @@ export const ThemeSwitchList: FC<{
   size?: 'sm' | 'md' | 'lg'
   variant?: ButtonProps['variant']
 }> = ({ className, size = 'md', variant = 'faded' }) => {
+  const [mounted, setMounted] = useState(false)
   const iconSize = iconSizes[size]
   const { theme, setTheme, systemTheme } = useTheme()
   const [selectedKeys, setSelectedKeys] = useState(new Set([theme || 'system']))
@@ -61,6 +72,10 @@ export const ThemeSwitchList: FC<{
   const [systemIcon, setSystemIcon] = useState<ReactNode>()
   const [selectIcon, setSelectIcon] = useState<ReactNode>()
   const [selectedValue, setSelectedValue] = useState('Loading')
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     setSystemIcon(systemTheme === 'dark' ? darkIcon : lightIcon)
@@ -84,6 +99,10 @@ export const ThemeSwitchList: FC<{
   useEffect(() => {
     setSelectedValue(Array.from(selectedKeys).join(', ').replaceAll('_', ' '))
   }, [selectedKeys])
+
+  if (!mounted) {
+    return <Skeleton className={twMerge('h-8 w-20 rounded-lg', className)} />
+  }
 
   return (
     <Dropdown className={className} size={size}>
