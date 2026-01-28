@@ -19,6 +19,9 @@ model User {
   sessions      Session[]
   accounts      Account[]
 
+  // Custom
+  isAdmin Boolean @default(false)
+
   @@unique([email])
   @@map("user")
 }
