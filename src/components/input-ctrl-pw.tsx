@@ -83,7 +83,7 @@ export const InputCtrlPassword = <
   control?: Control<TFieldValues>
   name: TName
   onChanged?: (e: ChangeEvent<HTMLInputElement>) => void
-  requiredPasswordScore: number
+  requiredPasswordScore?: number
 }) => {
   const { t } = useLocale()
   const [isVisible, setIsVisible] = useState(false)
@@ -110,8 +110,10 @@ export const InputCtrlPassword = <
             type={isVisible ? 'text' : 'password'}
             variant={variant}
             onChange={(event) => {
-              const res = zxcvbn(event.target.value)
-              setPasswordScore(res.score)
+              if (requiredPasswordScore) {
+                const res = zxcvbn(event.target.value)
+                setPasswordScore(res.score)
+              }
 
               if (onChanged) {
                 onChanged(event)
@@ -123,10 +125,12 @@ export const InputCtrlPassword = <
           />
         )}
       />
-      <PasswordScore
-        label={`${t('password_score')} = ${passwordScore} ( ${t('msg_password_score_required', { score: requiredPasswordScore })} )`}
-        score={passwordScore}
-      />
+      {requiredPasswordScore && (
+        <PasswordScore
+          label={`${t('password_score')} = ${passwordScore} ( ${t('msg_password_score_required', { score: requiredPasswordScore })} )`}
+          score={passwordScore}
+        />
+      )}
     </>
   )
 }

@@ -1,6 +1,9 @@
 export type LocaleItemBase =
   | 'ok'
   | 'cancel'
+  | 'signin'
+  | 'next'
+  | 'back'
   | 'username'
   | 'email'
   | 'password'

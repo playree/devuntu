@@ -3,6 +3,9 @@ import { DefaultLocaleItems } from '.'
 export const ja: DefaultLocaleItems = {
   ok: 'OK',
   cancel: 'キャンセル',
+  signin: 'サインイン',
+  next: '次へ',
+  back: '戻る',
   username: 'ユーザー名',
   email: 'Eメール',
   password: 'パスワード',

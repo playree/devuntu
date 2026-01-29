@@ -3,6 +3,9 @@ import { LocaleItems } from '.'
 export const en: LocaleItems = {
   ok: 'OK',
   cancel: 'Cancel',
+  signin: 'Sign In',
+  next: 'Next',
+  back: 'Back',
   username: 'Username',
   email: 'Email',
   password: 'Password',

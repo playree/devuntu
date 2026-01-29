@@ -42,9 +42,9 @@ export default async function RootLayout({
   return (
     <html lang='ja' className={`${NotoSansJp.variable} ${RobotoMono.variable}`} suppressHydrationWarning>
       <head />
-      <body className={twMerge('bg-background font-noto antialiased')}>
+      <body className={twMerge('bg-background font-noto min-h-screen antialiased')}>
         <Providers themeProps={{ attribute: 'class' }} defaultLocale={defaultLocale} acceptLanguage={acceptLanguage}>
-          {children}
+          <div className='relative flex h-screen flex-col'>{children}</div>
         </Providers>
       </body>
     </html>
