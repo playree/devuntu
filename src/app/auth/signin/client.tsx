@@ -14,14 +14,18 @@ import { useLocale } from '@/locale/client'
 import { Card, CardBody, CardHeader } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AnimatePresence } from 'framer-motion'
+import { useSearchParams } from 'next/navigation'
 import { FC, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
 export const SignInClient: FC = () => {
+  const searchParams = useSearchParams()
   const { t, fet } = useLocale()
   const [step, setStep] = useState(1)
   const [direction, setDirection] = useState(1) // 1: 進む, -1: 戻る
   const [email, setEmail] = useState<string>()
+
+  const callbackURL = searchParams.get('callback') ?? '/'
 
   const formEmail = useForm<SignInEmail>({
     resolver: zodResolver(scSignInEmail),
@@ -106,6 +110,7 @@ export const SignInClient: FC = () => {
                     email,
                     password: input.password,
                     rememberMe: true,
+                    callbackURL,
                   })
                   console.log(res)
                   await intervalOperation()

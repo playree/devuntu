@@ -1,5 +1,6 @@
 'use client'
 import { ThemeSwitchList } from '@/components/general/theme-switch'
+import { authClient } from '@/lib/auth-client'
 import { Accordion, AccordionItem, AccordionItemProps, Button } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC, ReactNode } from 'react'
@@ -41,8 +42,11 @@ export const MenuButton: FC<{
 }
 
 export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
+  const { data: session } = authClient.useSession()
+
   return (
     <div>
+      <div>{session?.user.name}</div>
       <div // テーマ・言語
         className='flex p-2'
       >
