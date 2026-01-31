@@ -13,11 +13,11 @@ export const env = {
     }
     return process.env.DATABASE_URL
   },
-  get BETTER_AUTH_URL() {
-    if (!process.env.BETTER_AUTH_URL) {
-      throw errSystemError('BETTER_AUTH_URL is not set')
+  get NEXT_PUBLIC_URL() {
+    if (!process.env.NEXT_PUBLIC_URL) {
+      throw errSystemError('NEXT_PUBLIC_URL is not set')
     }
-    return process.env.BETTER_AUTH_URL
+    return process.env.NEXT_PUBLIC_URL
   },
   get BETTER_AUTH_SECRET() {
     if (!process.env.BETTER_AUTH_SECRET) {

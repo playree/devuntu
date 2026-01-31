@@ -1,15 +1,19 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
+import { GrowMotion } from '@/components/general/grow-motion'
 import { InputCtrl } from '@/components/general/input-ctrl'
-import { ArrowRightCircleIcon, KeyIcon } from '@/components/icon'
+import { StepMotion } from '@/components/general/step-motion'
+import { ArrowLeftCircleIcon, ArrowRightCircleIcon, CheckIcon, KeyIcon } from '@/components/icon'
 import { InputCtrlPassword } from '@/components/input-ctrl-pw'
+import { authClient } from '@/lib/auth-client'
 import { SignInEmail, SignInPassword, scSignInEmail, scSignInPassword } from '@/lib/schema'
 import { intervalOperation } from '@/lib/sleep'
+import { gridStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
 import { Card, CardBody, CardHeader } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence } from 'framer-motion'
 import { FC, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
@@ -17,6 +21,7 @@ export const SignInClient: FC = () => {
   const { t, fet } = useLocale()
   const [step, setStep] = useState(1)
   const [direction, setDirection] = useState(1) // 1: 進む, -1: 戻る
+  const [email, setEmail] = useState<string>()
 
   const formEmail = useForm<SignInEmail>({
     resolver: zodResolver(scSignInEmail),
@@ -34,53 +39,40 @@ export const SignInClient: FC = () => {
     },
   })
 
-  const variants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? 50 : -50,
-      opacity: 0,
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-    },
-    exit: (direction: number) => ({
-      x: direction > 0 ? -50 : 50,
-      opacity: 0,
-    }),
-  }
-
   const handleNext = () => {
     setDirection(1)
     setStep(2)
   }
 
   const handleBack = () => {
+    setEmail(undefined)
     setDirection(-1)
     setStep(1)
   }
 
   return (
     <Card className='m-auto w-full max-w-md p-4 shadow-md'>
-      <CardHeader className='text-lg font-semibold'>
-        <KeyIcon className='mr-2' />
-        {t('signin')}
+      <CardHeader className={gridStyles()}>
+        <div className='col-span-4 flex'>
+          <KeyIcon className='mr-2' />
+          <div className='text-lg font-semibold'>{t('signin')}</div>
+        </div>
+        {email && (
+          <div className='col-span-8 flex h-full items-end'>
+            <GrowMotion key='view_email' className='text-sm text-gray-400'>
+              {email}
+            </GrowMotion>
+          </div>
+        )}
       </CardHeader>
       <CardBody className='relative overflow-hidden'>
         <AnimatePresence mode='wait' custom={direction}>
           {step === 1 ? (
-            <motion.div
-              key='step1'
-              custom={direction}
-              variants={variants}
-              initial='enter'
-              animate='center'
-              exit='exit'
-              transition={{ duration: 0.3, ease: 'easeInOut' }}
-              className='w-full space-y-4'
-            >
+            <StepMotion key='step1' direction={direction}>
               <form
                 onSubmit={formEmail.handleSubmit(async (input) => {
                   await intervalOperation(200)
+                  setEmail(input.email)
                   handleNext()
                 })}
               >
@@ -102,22 +94,21 @@ export const SignInClient: FC = () => {
                   </MultiButton>
                 </div>
               </form>
-            </motion.div>
+            </StepMotion>
           ) : (
-            <motion.div
-              key='step2'
-              custom={direction}
-              variants={variants}
-              initial='enter'
-              animate='center'
-              exit='exit'
-              transition={{ duration: 0.3, ease: 'easeInOut' }}
-              className='w-full space-y-4'
-            >
+            <StepMotion key='step2' direction={direction}>
               <form
                 onSubmit={formPassword.handleSubmit(async (input) => {
+                  if (!email) {
+                    return
+                  }
+                  const res = await authClient.signIn.email({
+                    email,
+                    password: input.password,
+                    rememberMe: true,
+                  })
+                  console.log(res)
                   await intervalOperation()
-                  handleNext()
                 })}
               >
                 <InputCtrlPassword
@@ -130,7 +121,8 @@ export const SignInClient: FC = () => {
                 />
                 <div className='mt-4 flex items-center justify-between'>
                   <MultiButton
-                    startContent={<ArrowRightCircleIcon />}
+                    isSecondary
+                    startContent={<ArrowLeftCircleIcon />}
                     onPress={() => {
                       handleBack()
                     }}
@@ -139,14 +131,14 @@ export const SignInClient: FC = () => {
                   </MultiButton>
                   <MultiButton
                     type='submit'
-                    startContent={<ArrowRightCircleIcon />}
+                    startContent={<CheckIcon />}
                     isLoading={formPassword.formState.isSubmitting}
                   >
-                    {t('next')}
+                    {t('signin')}
                   </MultiButton>
                 </div>
               </form>
-            </motion.div>
+            </StepMotion>
           )}
         </AnimatePresence>
       </CardBody>

@@ -12,6 +12,7 @@ export const MultiButton: FC<
     isLink?: boolean
     showAnchorIcon?: boolean
     isExternal?: boolean
+    isSecondary?: boolean
   }
 > = ({
   children,
@@ -27,6 +28,7 @@ export const MultiButton: FC<
   className,
   startContent,
   isLoading,
+  isSecondary,
   ...props
 }) => {
   const router = useRouter()
@@ -34,8 +36,8 @@ export const MultiButton: FC<
     <Button
       type={type}
       size={size}
-      color={color}
-      variant={variant}
+      color={isSecondary ? 'secondary' : color}
+      variant={isSecondary ? 'light' : variant}
       className={twMerge(isSmart ? 'h-fit px-2 py-1' : '', className)}
       {...props}
       onPress={

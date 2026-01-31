@@ -1,7 +1,7 @@
 'use client'
 
 import acceptLanguageParser from 'accept-language-parser'
-import { FC, createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { FC, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 
 import { getCookie } from '../cookie/client'
 import { LocaleConfig } from './types'
@@ -68,7 +68,18 @@ export const LocaleProvider: FC<{
   defaultLocale: string
   acceptLanguage: string | null
 }> = ({ children, config, defaultLocale, acceptLanguage }) => {
+  const [mounted, setMounted] = useState(false)
   const ctx = useLocaleContext(config, defaultLocale, acceptLanguage)
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return <></>
+  }
+
   return <LocaleContext.Provider value={ctx}>{children}</LocaleContext.Provider>
 }
 
