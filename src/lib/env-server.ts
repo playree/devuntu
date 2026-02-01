@@ -1,6 +1,16 @@
 import { errSystemError } from './error'
 
-export const env = {
+export const envServer = {
+  get NEXT_PUBLIC_APP_NAME() {
+    return process.env.NEXT_PUBLIC_APP_NAME || 'Devuntu'
+  },
+  get NEXT_PUBLIC_URL() {
+    if (!process.env.NEXT_PUBLIC_URL) {
+      throw errSystemError('NEXT_PUBLIC_URL is not set')
+    }
+    return process.env.NEXT_PUBLIC_URL
+  },
+
   get NODE_ENV() {
     return process.env.NODE_ENV
   },
@@ -12,12 +22,6 @@ export const env = {
       throw errSystemError('DATABASE_URL is not set')
     }
     return process.env.DATABASE_URL
-  },
-  get NEXT_PUBLIC_URL() {
-    if (!process.env.NEXT_PUBLIC_URL) {
-      throw errSystemError('NEXT_PUBLIC_URL is not set')
-    }
-    return process.env.NEXT_PUBLIC_URL
   },
   get BETTER_AUTH_SECRET() {
     if (!process.env.BETTER_AUTH_SECRET) {

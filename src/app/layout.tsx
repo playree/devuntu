@@ -1,4 +1,4 @@
-import { env } from '@/lib/env'
+import { envServer } from '@/lib/env-server'
 import { localeConfig } from '@/locale/config'
 import type { Metadata } from 'next'
 import { Noto_Sans_JP, Roboto_Mono } from 'next/font/google'
@@ -37,7 +37,7 @@ export default async function RootLayout({
   children: React.ReactNode
 }>) {
   const acceptLanguage = (await headers()).get('accept-language')
-  const defaultLocale = env.DEFAULT_LOCALE || localeConfig.locales[0]
+  const defaultLocale = envServer.DEFAULT_LOCALE || localeConfig.locales[0]
 
   return (
     <html lang='ja' className={`${NotoSansJp.variable} ${RobotoMono.variable}`} suppressHydrationWarning>

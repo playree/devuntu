@@ -17,6 +17,7 @@ import { AnimatePresence } from 'framer-motion'
 import { useSearchParams } from 'next/navigation'
 import { FC, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { getUserByEmail } from './server'
 
 export const SignInClient: FC = () => {
   const searchParams = useSearchParams()
@@ -75,6 +76,7 @@ export const SignInClient: FC = () => {
             <StepMotion key='step1' direction={direction}>
               <form
                 onSubmit={formEmail.handleSubmit(async (input) => {
+                  await getUserByEmail(input)
                   await intervalOperation(200)
                   setEmail(input.email)
                   handleNext()
