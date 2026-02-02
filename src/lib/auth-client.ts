@@ -1,6 +1,6 @@
 import { createAuthClient } from 'better-auth/react'
-import { envClient } from './env-client'
+import { envu } from './env-util'
 
 export const authClient = createAuthClient({
-  baseURL: envClient.NEXT_PUBLIC_URL,
+  baseURL: envu.client.NEXT_PUBLIC_URL,
 })

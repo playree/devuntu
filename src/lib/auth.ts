@@ -3,12 +3,12 @@ import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { nextCookies } from 'better-auth/next-js'
 import { twoFactor } from 'better-auth/plugins'
 import { ulid } from 'ulid'
-import { envServer } from './env-server'
+import { envu } from './env-util'
 import { logger } from './logger'
 import { prisma } from './prisma'
 
 export const auth = betterAuth({
-  appName: envServer.NEXT_PUBLIC_APP_NAME,
+  appName: envu.server.NEXT_PUBLIC_APP_NAME,
   database: prismaAdapter(prisma, {
     provider: 'sqlite',
   }),

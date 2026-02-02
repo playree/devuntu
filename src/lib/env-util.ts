@@ -1,6 +1,6 @@
 import { errSystemError } from './error'
 
-export const envServer = {
+const client = {
   get NEXT_PUBLIC_APP_NAME() {
     return process.env.NEXT_PUBLIC_APP_NAME || 'Devuntu'
   },
@@ -10,6 +10,10 @@ export const envServer = {
     }
     return process.env.NEXT_PUBLIC_URL
   },
+}
+
+const server = {
+  ...client,
 
   get NODE_ENV() {
     return process.env.NODE_ENV
@@ -33,3 +37,5 @@ export const envServer = {
     return process.env.DEFAULT_LOCALE
   },
 }
+
+export const envu = { client, server }
