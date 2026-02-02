@@ -1,6 +1,10 @@
 'use client'
+import { MultiButton } from '@/components/general/button'
+import { LocaleSwitch } from '@/components/general/locale-switch'
 import { ThemeSwitchList } from '@/components/general/theme-switch'
+import { ArrowLeftStartOnRectangleIcon } from '@/components/icon'
 import { authClient } from '@/lib/auth-client'
+import { useLocale } from '@/locale/client'
 import { Accordion, AccordionItem, AccordionItemProps, Button } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC, ReactNode } from 'react'
@@ -43,6 +47,7 @@ export const MenuButton: FC<{
 
 export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
   const { data: session } = authClient.useSession()
+  const { t } = useLocale()
 
   return (
     <div>
@@ -51,8 +56,25 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
         className='flex p-2'
       >
         <ThemeSwitchList size='sm' className='mr-2' />
-        {/* <LangSwitch size='sm' /> */}
+        <LocaleSwitch size='sm' />
       </div>
+
+      <div // サインアウト
+        className='flex p-2'
+      >
+        <MultiButton
+          color='default'
+          variant='light'
+          isSmart
+          startContent={<ArrowLeftStartOnRectangleIcon />}
+          onPress={() => {
+            authClient.signOut()
+          }}
+        >
+          {t('signout')}
+        </MultiButton>
+      </div>
+
       <div className='mt-2'>
         <Accordion selectionMode='multiple' itemClasses={accordionStyles} defaultSelectedKeys='all' showDivider={false}>
           <AccordionItem isCompact={true} title={'Group'} classNames={{ trigger: 'cursor-pointer' }}>

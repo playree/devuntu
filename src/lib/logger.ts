@@ -1,8 +1,8 @@
 import pino from 'pino'
-import { envServer } from './env-server'
+import { envu } from './env-util'
 
 export const logger = pino({
-  level: envServer.LOG_LEVEL || 'info',
+  level: envu.server.LOG_LEVEL || 'info',
   base: {
     service: 'devuntu',
   },

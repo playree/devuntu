@@ -5740,6 +5740,7 @@ __metadata:
     next: "npm:16.1.6"
     next-safe-action: "npm:^8.0.11"
     next-themes: "npm:^0.4.6"
+    path-to-regexp: "npm:^8.3.0"
     pino: "npm:^10.3.0"
     pino-pretty: "npm:^13.1.3"
     prettier: "npm:^3.8.1"
@@ -8349,6 +8350,13 @@ __metadata:
     lru-cache: "npm:^11.0.0"
     minipass: "npm:^7.1.2"
   checksum: 10c0/2a16ed0e81fbc43513e245aa5763354e25e787dab0d539581a6c3f0f967461a159ed6236b2559de23aa5b88e7dc32b469b6c47568833dd142a4b24b4f5cd2620
+  languageName: node
+  linkType: hard
+
+"path-to-regexp@npm:^8.3.0":
+  version: 8.3.0
+  resolution: "path-to-regexp@npm:8.3.0"
+  checksum: 10c0/ee1544a73a3f294a97a4c663b0ce71bbf1621d732d80c9c9ed201b3e911a86cb628ebad691b9d40f40a3742fe22011e5a059d8eed2cf63ec2cb94f6fb4efe67c
   languageName: node
   linkType: hard
 

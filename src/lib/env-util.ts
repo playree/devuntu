@@ -39,3 +39,13 @@ const server = {
 }
 
 export const envu = { client, server }
+
+export const makeUrl = (path: string, params?: Record<string, string>) => {
+  const url = new URL(path, client.NEXT_PUBLIC_URL)
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      url.searchParams.append(key, value)
+    })
+  }
+  return url
+}
