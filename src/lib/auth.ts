@@ -40,5 +40,5 @@ export const getServerSession = async () =>
     headers: await headers(),
   })
 
-export const redirectSignIn = (callback?: string) =>
-  NextResponse.redirect(makeUrl(authConfig.path.signIn, callback ? { callback } : undefined))
+export const redirectSignIn = (callbackURL?: string) =>
+  NextResponse.redirect(makeUrl(authConfig.path.signIn, callbackURL ? { cb: callbackURL } : undefined))

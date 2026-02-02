@@ -7,6 +7,7 @@ import { StepMotion } from '@/components/general/step-motion'
 import { ArrowLeftCircleIcon, ArrowRightCircleIcon, CheckIcon, KeyIcon } from '@/components/icon'
 import { InputCtrlPassword } from '@/components/input-ctrl-pw'
 import { authClient } from '@/lib/auth-client'
+import { envu } from '@/lib/env-util'
 import { SignInEmail, SignInPassword, scSignInEmail, scSignInPassword } from '@/lib/schema'
 import { intervalOperation } from '@/lib/sleep'
 import { gridStyles } from '@/lib/style'
@@ -26,7 +27,7 @@ export const SignInClient: FC = () => {
   const [direction, setDirection] = useState(1) // 1: 進む, -1: 戻る
   const [email, setEmail] = useState<string>()
 
-  const callbackURL = searchParams.get('callback') ?? '/'
+  const callbackURL = searchParams.get('cb') ?? envu.client.NEXT_PUBLIC_URL
 
   const formEmail = useForm<SignInEmail>({
     resolver: zodResolver(scSignInEmail),
