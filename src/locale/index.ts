@@ -10,6 +10,7 @@ export type LocaleItemBase =
   | 'email'
   | 'password'
   | 'password_score'
+  | 'google_signin'
   | 'title_admin_regist'
   | 'msg_password_score_required'
 

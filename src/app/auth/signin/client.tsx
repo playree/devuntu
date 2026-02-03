@@ -6,7 +6,13 @@ import { InputCtrl } from '@/components/general/input-ctrl'
 import { LocaleSwitch } from '@/components/general/locale-switch'
 import { StepMotion } from '@/components/general/step-motion'
 import { ThemeSwitchList } from '@/components/general/theme-switch'
-import { ArrowLeftCircleIcon, ArrowLeftEndOnRectangleIcon, ArrowRightCircleIcon, KeyIcon } from '@/components/icon'
+import {
+  ArrowLeftCircleIcon,
+  ArrowLeftEndOnRectangleIcon,
+  ArrowRightCircleIcon,
+  GoogleIcon,
+  KeyIcon,
+} from '@/components/icon'
 import { InputCtrlPassword } from '@/components/input-ctrl-pw'
 import { authClient } from '@/lib/auth-client'
 import { envu } from '@/lib/env-util'
@@ -70,7 +76,7 @@ export const SignInClient: FC = () => {
       ></div>
 
       <div className='relative flex h-full items-center justify-center'>
-        <div className='w-full max-w-lg p-2 md:p-0'>
+        <div className='w-full max-w-md p-2 md:p-0'>
           <div className='mb-4 flex items-center'>
             <KeyIcon className='mr-2' />
             <div className='text-lg font-semibold'>{t('signin')}</div>
@@ -79,14 +85,15 @@ export const SignInClient: FC = () => {
               <LocaleSwitch size='sm' />
             </div>
           </div>
+
           <Card className='w-full p-2 md:p-4'>
             <CardHeader className={gridStyles()}>
-              <div className='col-span-3 flex'>
+              <div className='col-span-4 flex'>
                 <div className='text-lg font-semibold'>{t('welcome')}</div>
               </div>
               {email && (
-                <div className='col-span-9 flex h-full items-end'>
-                  <GrowMotion key='view_email' className='font-semibold text-gray-400'>
+                <div className='col-span-8 flex h-full items-end'>
+                  <GrowMotion key='view_email' className='truncate text-sm font-semibold text-gray-400'>
                     {email}
                   </GrowMotion>
                 </div>
@@ -173,7 +180,17 @@ export const SignInClient: FC = () => {
             </CardBody>
           </Card>
 
-          <Card className='mt-4 w-full p-4'></Card>
+          <Card className='mt-4 w-full p-2 md:p-4'>
+            <MultiButton
+              className='mx-auto max-w-xs'
+              fullWidth
+              variant='flat'
+              color='default'
+              startContent={<GoogleIcon />}
+            >
+              {t('google_signin')}
+            </MultiButton>
+          </Card>
         </div>
       </div>
     </div>

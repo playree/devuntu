@@ -12,6 +12,7 @@ export const ja: DefaultLocaleItems = {
   email: 'Eメール',
   password: 'パスワード',
   password_score: 'パスワードスコア',
+  google_signin: 'Googleでサインイン',
 
   title_admin_regist: '管理者登録',
 

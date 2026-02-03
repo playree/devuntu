@@ -12,6 +12,7 @@ export const en: LocaleItems = {
   email: 'Email',
   password: 'Password',
   password_score: 'Password Score',
+  google_signin: 'Sign in with Google',
 
   title_admin_regist: 'Administrator Registration',
 
