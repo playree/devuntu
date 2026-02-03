@@ -5,6 +5,7 @@ export const en: LocaleItems = {
   cancel: 'Cancel',
   signin: 'Sign In',
   signout: 'Sign Out',
+  welcome: 'Welcome',
   next: 'Next',
   back: 'Back',
   username: 'Username',

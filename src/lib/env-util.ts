@@ -36,6 +36,12 @@ const server = {
   get DEFAULT_LOCALE() {
     return process.env.DEFAULT_LOCALE
   },
+  get GOOGLE_CLIENT_ID() {
+    return process.env.GOOGLE_CLIENT_ID
+  },
+  get GOOGLE_CLIENT_SECRET() {
+    return process.env.GOOGLE_CLIENT_SECRET
+  },
 }
 
 export const envu = { client, server }

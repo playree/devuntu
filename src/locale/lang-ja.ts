@@ -5,6 +5,7 @@ export const ja: DefaultLocaleItems = {
   cancel: 'キャンセル',
   signin: 'サインイン',
   signout: 'サインアウト',
+  welcome: 'ようこそ',
   next: '次へ',
   back: '戻る',
   username: 'ユーザー名',

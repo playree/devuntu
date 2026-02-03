@@ -12,6 +12,7 @@ import { prisma } from './prisma'
 
 export const auth = betterAuth({
   appName: envu.server.NEXT_PUBLIC_APP_NAME,
+  baseURL: envu.server.NEXT_PUBLIC_URL,
   database: prismaAdapter(prisma, {
     provider: 'sqlite',
   }),
@@ -22,6 +23,16 @@ export const auth = betterAuth({
   },
   emailAndPassword: {
     enabled: true,
+  },
+  socialProviders: {
+    ...(!!envu.server.GOOGLE_CLIENT_ID && !!envu.server.GOOGLE_CLIENT_SECRET
+      ? {
+          google: {
+            clientId: envu.server.GOOGLE_CLIENT_ID,
+            clientSecret: envu.server.GOOGLE_CLIENT_SECRET,
+          },
+        }
+      : {}),
   },
   plugins: [
     nextCookies(),

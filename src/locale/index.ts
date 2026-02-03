@@ -3,6 +3,7 @@ export type LocaleItemBase =
   | 'cancel'
   | 'signin'
   | 'signout'
+  | 'welcome'
   | 'next'
   | 'back'
   | 'username'
