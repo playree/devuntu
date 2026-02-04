@@ -20,7 +20,7 @@ import { SignInEmail, SignInPassword, scSignInEmail, scSignInPassword } from '@/
 import { intervalOperation } from '@/lib/sleep'
 import { gridStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
-import { Card, CardBody, CardHeader } from '@heroui/react'
+import { Card, CardBody, CardHeader, Divider } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AnimatePresence } from 'framer-motion'
 import { useSearchParams } from 'next/navigation'
@@ -70,36 +70,38 @@ export const SignInClient: FC = () => {
       <div
         className={twMerge(
           'absolute inset-0 bg-size-[20px_20px]',
-          'bg-[linear-gradient(to_right,#6f6f6f22_1px,transparent_1px),linear-gradient(to_bottom,#6f6f6f22_1px,transparent_1px)]',
+          'bg-[linear-gradient(to_right,#80808030_1px,transparent_1px),linear-gradient(to_bottom,#80808030_1px,transparent_1px)]',
           'mask-[radial-gradient(ellipse_80%_50%_at_50%_50%,#000_10%,transparent_100%)]',
         )}
       ></div>
 
       <div className='relative flex h-full items-center justify-center'>
         <div className='w-full max-w-md p-2 md:p-0'>
-          <div className='mb-4 flex items-center'>
-            <KeyIcon className='mr-2' />
-            <div className='text-lg font-semibold'>{t('signin')}</div>
-            <div className='right-0 flex flex-auto justify-end'>
-              <ThemeSwitchList size='sm' className='mr-2' />
-              <LocaleSwitch size='sm' />
-            </div>
-          </div>
-
-          <Card className='w-full p-2 md:p-4'>
-            <CardHeader className={gridStyles()}>
-              <div className='col-span-4 flex'>
-                <div className='text-lg font-semibold'>{t('welcome')}</div>
-              </div>
-              {email && (
-                <div className='col-span-8 flex h-full items-end'>
-                  <GrowMotion key='view_email' className='truncate text-sm font-semibold text-gray-400'>
-                    {email}
-                  </GrowMotion>
+          <Card className='w-full'>
+            <CardHeader className='px-2 md:px-4'>
+              <div className='flex w-full items-center'>
+                <KeyIcon className='mr-2' />
+                <div className='text-lg font-semibold'>{t('signin')}</div>
+                <div className='right-0 flex flex-auto justify-end'>
+                  <ThemeSwitchList size='sm' className='mr-2' />
+                  <LocaleSwitch size='sm' />
                 </div>
-              )}
+              </div>
             </CardHeader>
-            <CardBody className='relative overflow-hidden'>
+
+            <CardBody className='relative overflow-hidden px-2 pt-2 pb-6 md:px-4'>
+              <div className={twMerge(gridStyles(), 'mb-2')}>
+                <div className='col-span-3 flex'>
+                  <div className='text-lg'>{t('welcome')}</div>
+                </div>
+                {email && (
+                  <div className='col-span-9 flex h-full items-end'>
+                    <GrowMotion key='view_email' className='truncate text-sm font-semibold text-gray-400'>
+                      {email}
+                    </GrowMotion>
+                  </div>
+                )}
+              </div>
               <AnimatePresence mode='wait' custom={direction}>
                 {step === 1 ? (
                   <StepMotion key='step1' direction={direction}>
@@ -177,19 +179,17 @@ export const SignInClient: FC = () => {
                   </StepMotion>
                 )}
               </AnimatePresence>
+              <Divider className='my-6' />
+              <MultiButton
+                className='mx-auto max-w-xs'
+                fullWidth
+                variant='flat'
+                color='default'
+                startContent={<GoogleIcon />}
+              >
+                {t('google_signin')}
+              </MultiButton>
             </CardBody>
-          </Card>
-
-          <Card className='mt-4 w-full p-2 md:p-4'>
-            <MultiButton
-              className='mx-auto max-w-xs'
-              fullWidth
-              variant='flat'
-              color='default'
-              startContent={<GoogleIcon />}
-            >
-              {t('google_signin')}
-            </MultiButton>
           </Card>
         </div>
       </div>
