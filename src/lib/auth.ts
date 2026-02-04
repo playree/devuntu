@@ -1,4 +1,4 @@
-import { betterAuth } from 'better-auth'
+import { APIError, betterAuth } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { nextCookies } from 'better-auth/next-js'
 import { twoFactor } from 'better-auth/plugins'
@@ -23,6 +23,18 @@ export const auth = betterAuth({
   },
   emailAndPassword: {
     enabled: true,
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user, ctx) => {
+          if (!ctx?.body?.password) {
+            // Email & Password以外でのユーザー作成は許可しない
+            throw new APIError('BAD_REQUEST', { code: 'USER_NOT_EXIST', message: 'user not exist' })
+          }
+        },
+      },
+    },
   },
   socialProviders: {
     ...(!!envu.server.GOOGLE_CLIENT_ID && !!envu.server.GOOGLE_CLIENT_SECRET
