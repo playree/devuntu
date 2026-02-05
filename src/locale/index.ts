@@ -1,6 +1,7 @@
 export type LocaleItemBase =
   | 'ok'
   | 'cancel'
+  | 'error'
   | 'signin'
   | 'signout'
   | 'welcome'
@@ -13,6 +14,7 @@ export type LocaleItemBase =
   | 'auth_ng'
   | 'google_signin'
   | 'title_admin_regist'
+  | 'msg_system_error'
   | 'msg_password_score_required'
   | 'msg_invalid_email_or_password'
   | 'msg_user_not_exist'
