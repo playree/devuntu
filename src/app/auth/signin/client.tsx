@@ -29,30 +29,123 @@ import { useForm } from 'react-hook-form'
 import { twMerge } from 'tailwind-merge'
 import { getUserByEmail } from './server'
 
-export const SignInClient: FC = () => {
-  const searchParams = useSearchParams()
+const EmailForm: FC<{
+  direction: number
+  visible: boolean
+  next: (email: string) => void
+}> = ({ direction, visible, next }) => {
   const { t, fet } = useLocale()
-  const [step, setStep] = useState(1)
-  const [direction, setDirection] = useState(1) // 1: 進む, -1: 戻る
-  const [email, setEmail] = useState<string>()
-
-  const callbackURL = searchParams.get('cb') ?? envu.client.NEXT_PUBLIC_URL
-
-  const formEmail = useForm<SignInEmail>({
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting, errors },
+  } = useForm<SignInEmail>({
     resolver: zodResolver(scSignInEmail),
-    mode: 'onChange',
+    // mode: 'onChange',
     defaultValues: {
       email: '',
     },
   })
 
-  const formPassword = useForm<SignInPassword>({
+  return (
+    <StepMotion direction={direction} visible={visible}>
+      <form
+        onSubmit={handleSubmit(async (input) => {
+          await getUserByEmail(input)
+          await intervalOperation(200)
+          next(input.email)
+        })}
+      >
+        <InputCtrl
+          control={control}
+          name='email'
+          label={t('email')}
+          autoComplete='email'
+          errorMessage={fet(errors.email)}
+          isRequired
+        />
+        <div className='mt-4 flex items-center justify-end'>
+          <MultiButton type='submit' startContent={<ArrowRightCircleIcon />} isLoading={isSubmitting}>
+            {t('next')}
+          </MultiButton>
+        </div>
+      </form>
+    </StepMotion>
+  )
+}
+
+const PasswordForm: FC<{
+  direction: number
+  visible: boolean
+  email?: string
+  callbackURL: string
+  back: () => void
+}> = ({ direction, visible, email, callbackURL, back }) => {
+  const { t, fet } = useLocale()
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting, errors },
+  } = useForm<SignInPassword>({
     resolver: zodResolver(scSignInPassword),
     mode: 'onChange',
     defaultValues: {
       password: '',
     },
   })
+
+  return (
+    <StepMotion direction={direction} visible={visible}>
+      <form
+        onSubmit={handleSubmit(async (input) => {
+          if (!email) {
+            return
+          }
+          const res = await authClient.signIn.email({
+            email,
+            password: input.password,
+            rememberMe: true,
+            callbackURL,
+          })
+          console.log(res)
+          await intervalOperation()
+        })}
+      >
+        <InputCtrlPassword
+          control={control}
+          name='password'
+          label={t('password')}
+          autoComplete='current-password'
+          errorMessage={fet(errors.password)}
+          isRequired
+        />
+        <div className='mt-4 flex items-center justify-between'>
+          <MultiButton
+            isSecondary
+            startContent={<ArrowLeftCircleIcon />}
+            onPress={() => {
+              back()
+            }}
+          >
+            {t('back')}
+          </MultiButton>
+          <MultiButton type='submit' startContent={<ArrowLeftEndOnRectangleIcon />} isLoading={isSubmitting}>
+            {t('signin')}
+          </MultiButton>
+        </div>
+      </form>
+    </StepMotion>
+  )
+}
+
+export const SignInClient: FC = () => {
+  const searchParams = useSearchParams()
+  const { t } = useLocale()
+  const [step, setStep] = useState(1)
+  const [direction, setDirection] = useState(1) // 1: 進む, -1: 戻る
+  const [email, setEmail] = useState<string>()
+
+  const callbackURL = searchParams.get('cb') ?? envu.client.NEXT_PUBLIC_URL
 
   const handleNext = () => {
     setDirection(1)
@@ -81,81 +174,26 @@ export const SignInClient: FC = () => {
       </div>
 
       <AnimatePresence mode='wait' custom={direction}>
-        {step === 1 ? (
-          <StepMotion key='step1' direction={direction}>
-            <form
-              onSubmit={formEmail.handleSubmit(async (input) => {
-                await getUserByEmail(input)
-                await intervalOperation(200)
-                setEmail(input.email)
-                handleNext()
-              })}
-            >
-              <InputCtrl
-                control={formEmail.control}
-                name='email'
-                label={t('email')}
-                autoComplete='email'
-                errorMessage={fet(formEmail.formState.errors.email)}
-                isRequired
-              />
-              <div className='mt-4 flex items-center justify-end'>
-                <MultiButton
-                  type='submit'
-                  startContent={<ArrowRightCircleIcon />}
-                  isLoading={formEmail.formState.isSubmitting}
-                >
-                  {t('next')}
-                </MultiButton>
-              </div>
-            </form>
-          </StepMotion>
-        ) : (
-          <StepMotion key='step2' direction={direction}>
-            <form
-              onSubmit={formPassword.handleSubmit(async (input) => {
-                if (!email) {
-                  return
-                }
-                const res = await authClient.signIn.email({
-                  email,
-                  password: input.password,
-                  rememberMe: true,
-                  callbackURL,
-                })
-                console.log(res)
-                await intervalOperation()
-              })}
-            >
-              <InputCtrlPassword
-                control={formPassword.control}
-                name='password'
-                label={t('password')}
-                autoComplete='current-password'
-                errorMessage={fet(formPassword.formState.errors.password)}
-                isRequired
-              />
-              <div className='mt-4 flex items-center justify-between'>
-                <MultiButton
-                  isSecondary
-                  startContent={<ArrowLeftCircleIcon />}
-                  onPress={() => {
-                    handleBack()
-                  }}
-                >
-                  {t('back')}
-                </MultiButton>
-                <MultiButton
-                  type='submit'
-                  startContent={<ArrowLeftEndOnRectangleIcon />}
-                  isLoading={formPassword.formState.isSubmitting}
-                >
-                  {t('signin')}
-                </MultiButton>
-              </div>
-            </form>
-          </StepMotion>
-        )}
+        <EmailForm
+          key='step_email'
+          direction={direction}
+          visible={step === 1}
+          next={(email) => {
+            setEmail(email)
+            handleNext()
+          }}
+        />
+
+        <PasswordForm
+          key='step_password'
+          direction={direction}
+          visible={step !== 1}
+          email={email}
+          callbackURL={callbackURL}
+          back={() => {
+            handleBack()
+          }}
+        />
       </AnimatePresence>
 
       <Divider className='my-6' />
