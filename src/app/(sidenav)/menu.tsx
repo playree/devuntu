@@ -2,12 +2,15 @@
 import { MultiButton } from '@/components/general/button'
 import { LocaleSwitch } from '@/components/general/locale-switch'
 import { ThemeSwitchList } from '@/components/general/theme-switch'
-import { ArrowLeftStartOnRectangleIcon } from '@/components/icon'
+import { ArrowLeftStartOnRectangleIcon, UserCircleIcon } from '@/components/icon'
 import { authClient } from '@/lib/auth-client'
+import { authConfig } from '@/lib/auth-config'
+import { makeUrl } from '@/lib/env-util'
 import { useLocale } from '@/locale/client'
-import { Accordion, AccordionItem, AccordionItemProps, Button } from '@heroui/react'
+import { Accordion, AccordionItem, AccordionItemProps, Button, Card, CardBody } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC, ReactNode } from 'react'
+import { twMerge } from 'tailwind-merge'
 
 const accordionStyles: AccordionItemProps['classNames'] = {
   title: '',
@@ -45,13 +48,49 @@ export const MenuButton: FC<{
   )
 }
 
+const SignOutButton: FC = () => {
+  const { t } = useLocale()
+  const router = useRouter()
+
+  return (
+    <MultiButton
+      color='default'
+      variant='light'
+      isSmart
+      startContent={<ArrowLeftStartOnRectangleIcon />}
+      onPress={() => {
+        authClient.signOut()
+        router.push(makeUrl(authConfig.path.signIn).toString())
+      }}
+    >
+      {t('signout')}
+    </MultiButton>
+  )
+}
+
 export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
   const { data: session } = authClient.useSession()
   const { t } = useLocale()
 
   return (
     <div>
-      <div>{session?.user.name}</div>
+      <div
+        className={twMerge(
+          'absolute inset-0 bg-size-[20px_20px]',
+          'bg-[linear-gradient(to_right,#80808020_1px,transparent_1px),linear-gradient(to_bottom,#80808020_1px,transparent_1px)]',
+          'mask-[linear-gradient(to_right,#000_50%,transparent_100%)]',
+        )}
+      ></div>
+
+      <Card>
+        <CardBody>
+          <div className='flex items-center'>
+            <UserCircleIcon className='mr-2' />
+            <div>{session?.user?.name}</div>
+          </div>
+        </CardBody>
+      </Card>
+
       <div // テーマ・言語
         className='flex p-2'
       >
@@ -60,19 +99,8 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
       </div>
 
       <div // サインアウト
-        className='flex p-2'
       >
-        <MultiButton
-          color='default'
-          variant='light'
-          isSmart
-          startContent={<ArrowLeftStartOnRectangleIcon />}
-          onPress={() => {
-            authClient.signOut()
-          }}
-        >
-          {t('signout')}
-        </MultiButton>
+        <SignOutButton />
       </div>
 
       <div className='mt-2'>
