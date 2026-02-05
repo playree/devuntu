@@ -19,6 +19,7 @@ export const ja: DefaultLocaleItems = {
 
   msg_password_score_required: '${score}以上が必要',
   msg_invalid_email_or_password: 'Eメールまたはパスワードが違います',
+  msg_user_not_exist: 'ユーザーが存在しません',
 
   '@required_field': '必須入力項目',
   '@invalid_username': '2～20文字',

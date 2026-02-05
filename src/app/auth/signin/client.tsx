@@ -24,7 +24,7 @@ import { addToast, Divider } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AnimatePresence } from 'framer-motion'
 import { useSearchParams } from 'next/navigation'
-import { FC, useState } from 'react'
+import { FC, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { twMerge } from 'tailwind-merge'
 import { getUserByEmail } from './server'
@@ -52,7 +52,7 @@ const EmailForm: FC<{
       <form
         onSubmit={handleSubmit(async (input) => {
           await getUserByEmail(input)
-          await intervalOperation(200)
+          await intervalOperation(100)
           next(input.email)
         })}
       >
@@ -107,14 +107,11 @@ const PasswordForm: FC<{
             rememberMe: true,
             callbackURL,
           })
-          console.debug(res)
-          await intervalOperation()
+          await intervalOperation(100)
           if (res.error) {
-            addToast({
-              title: t('auth_ng'),
-              description: t('msg_invalid_email_or_password'),
-              color: 'danger',
-            })
+            console.debug(res.error)
+            const msg = res.error.code === 'INVALID_EMAIL_OR_PASSWORD' ? t('msg_invalid_email_or_password') : undefined
+            addToast({ title: t('auth_ng'), description: msg, color: 'danger' })
           }
         })}
       >
@@ -153,6 +150,14 @@ export const SignInClient: FC = () => {
   const [email, setEmail] = useState<string>()
 
   const callbackURL = searchParams.get('cb') ?? envu.client.NEXT_PUBLIC_URL
+  const errorCode = searchParams.get('error')
+
+  useEffect(() => {
+    if (errorCode) {
+      const msg = errorCode === 'user_not_exist' ? t('msg_user_not_exist') : undefined
+      addToast({ title: t('auth_ng'), description: msg, color: 'danger' })
+    }
+  }, [errorCode, t])
 
   const handleNext = () => {
     setDirection(1)

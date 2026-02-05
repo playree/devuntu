@@ -19,6 +19,7 @@ export const en: LocaleItems = {
 
   msg_password_score_required: '${score} or more required',
   msg_invalid_email_or_password: 'Invalid email or password',
+  msg_user_not_exist: 'User does not exist',
 
   '@required_field': 'Required field',
   '@invalid_username': '2-20 characters',
