@@ -2,7 +2,7 @@
 
 import { LocaleProvider } from '@/components/general/locale/client'
 import { localeConfig } from '@/locale/config'
-import { HeroUIProvider } from '@heroui/react'
+import { HeroUIProvider, ToastProvider } from '@heroui/react'
 import { ThemeProvider, type ThemeProviderProps } from 'next-themes'
 import { FC, ReactNode } from 'react'
 
@@ -17,6 +17,7 @@ export const Providers: FC<ProvidersProps> = ({ children, themeProps, defaultLoc
   return (
     <HeroUIProvider>
       <ThemeProvider {...themeProps}>
+        <ToastProvider placement='top-center' />
         <LocaleProvider config={localeConfig} defaultLocale={defaultLocale} acceptLanguage={acceptLanguage}>
           {children}
         </LocaleProvider>

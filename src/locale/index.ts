@@ -10,9 +10,11 @@ export type LocaleItemBase =
   | 'email'
   | 'password'
   | 'password_score'
+  | 'auth_ng'
   | 'google_signin'
   | 'title_admin_regist'
   | 'msg_password_score_required'
+  | 'msg_invalid_email_or_password'
 
 export type LocaleItemError = '@required_field' | '@invalid_username' | '@invalid_email' | '@invalid_password'
 export const el = (item: LocaleItemError) => item

@@ -15,12 +15,12 @@ import { InputCtrlPassword } from '@/components/input-ctrl-pw'
 import { SingleLayout } from '@/components/single-layout'
 import { authClient } from '@/lib/auth-client'
 import { authConfig } from '@/lib/auth-config'
-import { envu } from '@/lib/env-util'
-import { SignInEmail, SignInPassword, scSignInEmail, scSignInPassword } from '@/lib/schema'
+import { envu, makeUrl } from '@/lib/env-util'
+import { scSignInEmail, scSignInPassword, SignInEmail, SignInPassword } from '@/lib/schema'
 import { intervalOperation } from '@/lib/sleep'
 import { gridStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
-import { Divider } from '@heroui/react'
+import { addToast, Divider } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AnimatePresence } from 'framer-motion'
 import { useSearchParams } from 'next/navigation'
@@ -107,8 +107,15 @@ const PasswordForm: FC<{
             rememberMe: true,
             callbackURL,
           })
-          console.log(res)
+          console.debug(res)
           await intervalOperation()
+          if (res.error) {
+            addToast({
+              title: t('auth_ng'),
+              description: t('msg_invalid_email_or_password'),
+              color: 'danger',
+            })
+          }
         })}
       >
         <InputCtrlPassword
@@ -208,7 +215,7 @@ export const SignInClient: FC = () => {
           const data = await authClient.signIn.social({
             provider: 'google',
             callbackURL,
-            errorCallbackURL: authConfig.path.signIn,
+            errorCallbackURL: makeUrl(authConfig.path.signIn, { cb: callbackURL }).toString(),
           })
           console.log(data)
         }}

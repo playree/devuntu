@@ -12,11 +12,13 @@ export const ja: DefaultLocaleItems = {
   email: 'Eメール',
   password: 'パスワード',
   password_score: 'パスワードスコア',
+  auth_ng: '認証NG',
   google_signin: 'Googleでサインイン',
 
   title_admin_regist: '管理者登録',
 
   msg_password_score_required: '${score}以上が必要',
+  msg_invalid_email_or_password: 'Eメールまたはパスワードが違います',
 
   '@required_field': '必須入力項目',
   '@invalid_username': '2～20文字',
