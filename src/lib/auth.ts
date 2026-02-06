@@ -1,7 +1,7 @@
 import { APIError, betterAuth } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { nextCookies } from 'better-auth/next-js'
-import { twoFactor } from 'better-auth/plugins'
+import { admin, twoFactor } from 'better-auth/plugins'
 import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { ulid } from 'ulid'
@@ -47,6 +47,7 @@ export const auth = betterAuth({
       : {}),
   },
   plugins: [
+    admin(),
     nextCookies(),
     twoFactor({
       otpOptions: {

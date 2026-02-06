@@ -8,7 +8,6 @@ datasource db {
 }
 
 model User {
-  // Better Auth
   id               String      @id
   name             String
   email            String
@@ -16,29 +15,30 @@ model User {
   image            String?
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
+  role             String?
+  banned           Boolean?    @default(false)
+  banReason        String?
+  banExpires       DateTime?
+  twoFactorEnabled Boolean?    @default(false)
   sessions         Session[]
   accounts         Account[]
-  twoFactorEnabled Boolean?    @default(false)
   twofactors       TwoFactor[]
-
-  // Custom
-  isAdmin Boolean @default(false)
 
   @@unique([email])
   @@map("user")
 }
 
 model Session {
-  // Better Auth
-  id        String   @id
-  expiresAt DateTime
-  token     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  ipAddress String?
-  userAgent String?
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String   @id
+  expiresAt      DateTime
+  token          String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  ipAddress      String?
+  userAgent      String?
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  impersonatedBy String?
 
   @@unique([token])
   @@index([userId])
@@ -46,7 +46,6 @@ model Session {
 }
 
 model Account {
-  // Better Auth
   id                    String    @id
   accountId             String
   providerId            String
@@ -67,7 +66,6 @@ model Account {
 }
 
 model Verification {
-  // Better Auth
   id         String   @id
   identifier String
   value      String
@@ -80,7 +78,6 @@ model Verification {
 }
 
 model TwoFactor {
-  // Better Auth
   id          String @id
   secret      String
   backupCodes String
