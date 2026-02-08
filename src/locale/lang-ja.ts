@@ -15,13 +15,18 @@ export const ja: DefaultLocaleItems = {
   password_score: 'パスワードスコア',
   auth_ng: '認証NG',
   google_signin: 'Googleでサインイン',
+  otp: 'OTP',
+  auth: '認証',
+  send: '送信',
 
   title_admin_regist: '管理者登録',
+  title_twofa_enable: '2FA有効化',
 
   msg_system_error: 'エラーが発生しました',
   msg_password_score_required: '${score}以上が必要',
   msg_invalid_email_or_password: 'Eメールまたはパスワードが違います',
   msg_user_not_exist: 'ユーザーが存在しません',
+  msg_enter_otp: 'Eメールに届いたワンタイムコードを入力',
 
   '@required_field': '必須入力項目',
   '@invalid_username': '2～20文字',

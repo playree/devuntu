@@ -21,9 +21,19 @@ export const scSignInPassword = z.object({
 })
 export type SignInPassword = z.infer<typeof scSignInPassword>
 
+export const scSignInOTP = z.object({
+  otp: z.string(),
+})
+export type SignInOTP = z.infer<typeof scSignInOTP>
+
 export const scCreateAdmin = z.object({
   name: zUsername,
   email: zEmail,
   password: zPassword,
 })
 export type CreateAdmin = z.infer<typeof scCreateAdmin>
+
+export const scTwoFACode = z.object({
+  otp: z.string(),
+})
+export type TwoFACode = z.infer<typeof scTwoFACode>

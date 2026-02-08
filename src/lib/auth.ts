@@ -34,6 +34,17 @@ export const auth = betterAuth({
           }
         },
       },
+      update: {
+        after: async (user) => {
+          if (!user.emailVerified && user.twoFactorEnabled) {
+            // 2FA完了後にemailVerifiedを更新
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { emailVerified: true },
+            })
+          }
+        },
+      },
     },
   },
   socialProviders: {
@@ -50,6 +61,7 @@ export const auth = betterAuth({
     admin(),
     nextCookies(),
     twoFactor({
+      skipVerificationOnEnable: true,
       otpOptions: {
         sendOTP: async ({ user, otp }) => {
           logger.info({ user, otp }, 'sendOTP')
