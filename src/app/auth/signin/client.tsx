@@ -3,6 +3,7 @@
 import { MultiButton } from '@/components/general/button'
 import { GrowMotion } from '@/components/general/grow-motion'
 import { InputCtrl } from '@/components/general/input-ctrl'
+import { InputOtpCtrl } from '@/components/general/input-otp-ctrl'
 import { StepMotion } from '@/components/general/step-motion'
 import {
   ArrowLeftCircleIcon,
@@ -19,7 +20,7 @@ import { authConfig } from '@/lib/auth-config'
 import { envu, makeUrl } from '@/lib/env-util'
 import { scSignInEmail, scSignInOTP, scSignInPassword, SignInEmail, SignInOTP, SignInPassword } from '@/lib/schema'
 import { intervalOperation } from '@/lib/sleep'
-import { gridStyles } from '@/lib/style'
+import { gridStyles, textStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
 import { addToast, Divider } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -203,6 +204,7 @@ const OtpForm: FC<{
           }
           const res = await authClient.twoFactor.verifyOtp({
             code: input.otp,
+            trustDevice: true,
           })
           await intervalOperation(100)
           if (res.error) {
@@ -213,10 +215,11 @@ const OtpForm: FC<{
           router.push(callbackURL)
         })}
       >
-        <InputCtrl
+        <div className={twMerge(textStyles().light(), 'mt-2 text-xs')}>{t('msg_enter_otp')}</div>
+        <InputOtpCtrl
           control={control}
           name='otp'
-          label={t('msg_enter_otp')}
+          length={6}
           autoComplete='one-time-code'
           inputMode='numeric'
           errorMessage={fet(errors.otp)}
