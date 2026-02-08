@@ -26,7 +26,7 @@ import { addToast, Divider } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AnimatePresence } from 'framer-motion'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { FC, useEffect, useState } from 'react'
+import { FC, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { twMerge } from 'tailwind-merge'
 import { getUserByEmail } from './server'
@@ -194,10 +194,12 @@ const OtpForm: FC<{
       otp: '',
     },
   })
+  const formRef = useRef<HTMLFormElement>(null)
 
   return (
     <StepMotion direction={direction} visible={visible}>
       <form
+        ref={formRef}
         onSubmit={handleSubmit(async (input) => {
           if (!password) {
             return
@@ -216,16 +218,22 @@ const OtpForm: FC<{
         })}
       >
         <div className={twMerge(textStyles().light(), 'mt-2 text-xs')}>{t('msg_enter_otp')}</div>
-        <InputOtpCtrl
-          control={control}
-          name='otp'
-          length={6}
-          autoComplete='one-time-code'
-          inputMode='numeric'
-          errorMessage={fet(errors.otp)}
-          isRequired
-          autoFocus
-        />
+        <div>
+          <InputOtpCtrl
+            className='mx-auto'
+            control={control}
+            name='otp'
+            length={6}
+            autoComplete='one-time-code'
+            inputMode='numeric'
+            errorMessage={fet(errors.otp)}
+            isRequired
+            autoFocus
+            onComplete={() => {
+              formRef.current?.requestSubmit()
+            }}
+          />
+        </div>
         <div className='mt-4 flex items-center justify-between'>
           <MultiButton
             isSecondary
@@ -264,7 +272,7 @@ export const SignInClient: FC = () => {
   }, [errorCode, t])
 
   return (
-    <SingleLayout icon={<KeyIcon />} title={t('signin')}>
+    <SingleLayout icon={<KeyIcon />} title={step === 'OTP' ? t('title_twofa_enable') : t('signin')}>
       <div className={twMerge(gridStyles(), 'mb-2')}>
         <div className='col-span-3 flex'>
           <div className='text-lg'>{t('welcome')}</div>
