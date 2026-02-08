@@ -18,9 +18,8 @@ export const en: LocaleItems = {
   otp: 'OTP',
   auth: 'Auth',
   send: 'Send',
-
-  title_admin_regist: 'Administrator Registration',
-  title_twofa_enable: '2FA Enable',
+  admin_regist: 'Admin Regist',
+  twofa_enable: '2FA Enable',
 
   msg_system_error: 'An error has occurred',
   msg_password_score_required: '${score} or more required',

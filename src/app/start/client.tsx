@@ -36,7 +36,7 @@ export const StartClient: FC = () => {
   })
 
   return (
-    <SingleLayout icon={<Cog6ToothIcon />} title={t('title_admin_regist')}>
+    <SingleLayout icon={<Cog6ToothIcon />} title={t('admin_regist')}>
       <form
         onSubmit={handleSubmit(async (input) => {
           const res = await createAdmin(input)

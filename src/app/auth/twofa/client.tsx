@@ -31,7 +31,7 @@ export const TwoFARegistClient: FC = () => {
   })
 
   return (
-    <SingleLayout icon={<ShieldCheckIcon />} title={t('title_twofa_enable')}>
+    <SingleLayout icon={<ShieldCheckIcon />} title={t('twofa_enable')}>
       <Step>Step1</Step>
       <div className={twMerge(gridStyles(), 'mb-2')}>
         <div className='col-span-9 flex h-full items-center pl-2'>

@@ -272,7 +272,7 @@ export const SignInClient: FC = () => {
   }, [errorCode, t])
 
   return (
-    <SingleLayout icon={<KeyIcon />} title={step === 'OTP' ? t('title_twofa_enable') : t('signin')}>
+    <SingleLayout icon={<KeyIcon />} title={step === 'OTP' ? t('twofa_enable') : t('signin')}>
       <div className={twMerge(gridStyles(), 'mb-2')}>
         <div className='col-span-3 flex'>
           <div className='text-lg'>{t('welcome')}</div>

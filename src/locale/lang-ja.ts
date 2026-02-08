@@ -18,9 +18,8 @@ export const ja: DefaultLocaleItems = {
   otp: 'OTP',
   auth: '認証',
   send: '送信',
-
-  title_admin_regist: '管理者登録',
-  title_twofa_enable: '2FA有効化',
+  admin_regist: '管理者登録',
+  twofa_enable: '2要素認証有効化',
 
   msg_system_error: 'エラーが発生しました',
   msg_password_score_required: '${score}以上が必要',
