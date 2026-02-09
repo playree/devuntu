@@ -17,6 +17,7 @@ export type LocaleItemBase =
   | 'auth'
   | 'send'
   | 'admin_regist'
+  | 'twofa'
   | 'twofa_enable'
   | 'msg_system_error'
   | 'msg_password_score_required'

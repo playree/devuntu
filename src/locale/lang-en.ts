@@ -19,6 +19,7 @@ export const en: LocaleItems = {
   auth: 'Auth',
   send: 'Send',
   admin_regist: 'Admin Regist',
+  twofa: '2FA',
   twofa_enable: '2FA Enable',
 
   msg_system_error: 'An error has occurred',

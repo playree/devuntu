@@ -12,7 +12,7 @@ export const SingleLayout: FC<{
   title: string
 }> = ({ children, icon, title }) => {
   return (
-    <div className='relative h-screen w-full'>
+    <div className='relative flex h-screen w-full items-center justify-center'>
       <div
         className={twMerge(
           'absolute inset-0 bg-size-[20px_20px]',
@@ -21,23 +21,21 @@ export const SingleLayout: FC<{
         )}
       ></div>
 
-      <div className='relative flex h-full items-center justify-center'>
-        <div className='w-full max-w-md p-2 md:p-0'>
-          <Card className='w-full'>
-            <CardHeader className='px-2 md:px-4'>
-              <div className='flex w-full items-center'>
-                {icon}
-                <div className='ml-2 text-lg font-semibold'>{title}</div>
-                <div className='right-0 flex flex-auto justify-end'>
-                  <ThemeSwitchList size='sm' className='mr-2' />
-                  <LocaleSwitch size='sm' />
-                </div>
+      <div className='w-full max-w-md p-2 md:p-0'>
+        <Card className='w-full'>
+          <CardHeader className='px-2 md:px-4'>
+            <div className='flex w-full items-center'>
+              {icon}
+              <div className='ml-2 text-lg font-semibold'>{title}</div>
+              <div className='right-0 flex flex-auto justify-end'>
+                <ThemeSwitchList size='sm' className='mr-2' />
+                <LocaleSwitch size='sm' />
               </div>
-            </CardHeader>
+            </div>
+          </CardHeader>
 
-            <CardBody className='relative overflow-hidden px-2 pt-2 pb-6 md:px-4'>{children}</CardBody>
-          </Card>
-        </div>
+          <CardBody className='relative overflow-hidden px-2 pt-2 pb-6 md:px-4'>{children}</CardBody>
+        </Card>
       </div>
     </div>
   )

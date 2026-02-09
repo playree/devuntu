@@ -19,6 +19,7 @@ export const ja: DefaultLocaleItems = {
   auth: '認証',
   send: '送信',
   admin_regist: '管理者登録',
+  twofa: '2要素認証',
   twofa_enable: '2要素認証有効化',
 
   msg_system_error: 'エラーが発生しました',

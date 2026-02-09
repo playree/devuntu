@@ -6,8 +6,7 @@ import { FC, ReactNode } from 'react'
 export const StepMotion: FC<{
   children: ReactNode
   direction: number
-  visible: boolean
-}> = ({ children, direction, visible }) => {
+}> = ({ children, direction }) => {
   const variantsStep = {
     enter: (direction: number) => ({
       x: direction > 0 ? 80 : -80,
@@ -21,10 +20,6 @@ export const StepMotion: FC<{
       x: direction > 0 ? -80 : 80,
       opacity: 0,
     }),
-  }
-
-  if (!visible) {
-    return <></>
   }
 
   return (

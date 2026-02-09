@@ -9,9 +9,9 @@ import {
   ArrowLeftCircleIcon,
   ArrowLeftEndOnRectangleIcon,
   ArrowRightCircleIcon,
-  CheckIcon,
   GoogleIcon,
   KeyIcon,
+  ShieldCheckIcon,
 } from '@/components/icon'
 import { InputCtrlPassword } from '@/components/input-ctrl-pw'
 import { SingleLayout } from '@/components/single-layout'
@@ -26,16 +26,17 @@ import { addToast, Divider } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AnimatePresence } from 'framer-motion'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { FC, useEffect, useRef, useState } from 'react'
+import { FC, useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { twMerge } from 'tailwind-merge'
 import { getUserByEmail } from './server'
 
+type Mode = '2FA' | null
+
 const EmailForm: FC<{
   direction: number
-  visible: boolean
   next: (email: string) => void
-}> = ({ direction, visible, next }) => {
+}> = ({ direction, next }) => {
   const { t, fet } = useLocale()
   const {
     control,
@@ -50,7 +51,7 @@ const EmailForm: FC<{
   })
 
   return (
-    <StepMotion direction={direction} visible={visible}>
+    <StepMotion direction={direction}>
       <form
         onSubmit={handleSubmit(async (input) => {
           await getUserByEmail(input)
@@ -79,12 +80,12 @@ const EmailForm: FC<{
 
 const PasswordForm: FC<{
   direction: number
-  visible: boolean
   email?: string
   callbackURL: string
+  mode: Mode
   next: (password: string) => void
   back: () => void
-}> = ({ direction, visible, email, callbackURL, next, back }) => {
+}> = ({ direction, email, callbackURL, mode, next, back }) => {
   const { t, fet } = useLocale()
   const router = useRouter()
   const {
@@ -100,7 +101,7 @@ const PasswordForm: FC<{
   })
 
   return (
-    <StepMotion direction={direction} visible={visible}>
+    <StepMotion direction={direction}>
       <form
         onSubmit={handleSubmit(async (input) => {
           if (!email) {
@@ -156,18 +157,28 @@ const PasswordForm: FC<{
           autoFocus
         />
         <div className='mt-4 flex items-center justify-between'>
-          <MultiButton
-            isSecondary
-            startContent={<ArrowLeftCircleIcon />}
-            onPress={() => {
-              back()
-            }}
-          >
-            {t('back')}
-          </MultiButton>
-          <MultiButton type='submit' startContent={<ArrowLeftEndOnRectangleIcon />} isLoading={isSubmitting}>
-            {t('signin')}
-          </MultiButton>
+          {mode === '2FA' ? (
+            <div></div>
+          ) : (
+            <MultiButton
+              isSecondary
+              startContent={<ArrowLeftCircleIcon />}
+              onPress={() => {
+                back()
+              }}
+            >
+              {t('back')}
+            </MultiButton>
+          )}
+          {mode === '2FA' ? (
+            <MultiButton type='submit' startContent={<ShieldCheckIcon />} isLoading={isSubmitting}>
+              {t('auth')}
+            </MultiButton>
+          ) : (
+            <MultiButton type='submit' startContent={<ArrowLeftEndOnRectangleIcon />} isLoading={isSubmitting}>
+              {t('signin')}
+            </MultiButton>
+          )}
         </div>
       </form>
     </StepMotion>
@@ -176,11 +187,10 @@ const PasswordForm: FC<{
 
 const OtpForm: FC<{
   direction: number
-  visible: boolean
   password?: string
   callbackURL: string
   back: () => void
-}> = ({ direction, visible, password, callbackURL, back }) => {
+}> = ({ direction, password, callbackURL, back }) => {
   const { t, fet } = useLocale()
   const router = useRouter()
   const {
@@ -197,7 +207,7 @@ const OtpForm: FC<{
   const formRef = useRef<HTMLFormElement>(null)
 
   return (
-    <StepMotion direction={direction} visible={visible}>
+    <StepMotion direction={direction}>
       <form
         ref={formRef}
         onSubmit={handleSubmit(async (input) => {
@@ -217,7 +227,7 @@ const OtpForm: FC<{
           router.push(callbackURL)
         })}
       >
-        <div className={twMerge(textStyles().light(), 'mt-2 text-xs')}>{t('msg_enter_otp')}</div>
+        <div className={twMerge(textStyles().light(), 'text-xs')}>{t('msg_enter_otp')}</div>
         <div>
           <InputOtpCtrl
             className='mx-auto'
@@ -244,7 +254,7 @@ const OtpForm: FC<{
           >
             {t('back')}
           </MultiButton>
-          <MultiButton type='submit' startContent={<CheckIcon />} isLoading={isSubmitting}>
+          <MultiButton type='submit' startContent={<ShieldCheckIcon />} isLoading={isSubmitting}>
             {t('auth')}
           </MultiButton>
         </div>
@@ -253,15 +263,17 @@ const OtpForm: FC<{
   )
 }
 
-export const SignInClient: FC = () => {
+export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) => {
   const searchParams = useSearchParams()
+  // const { data: session, isPending } = authClient.useSession()
   const { t } = useLocale()
-  const [step, setStep] = useState<'EMAIL' | 'PASSWORD' | 'OTP'>('EMAIL')
+  const [step, setStep] = useState<'EMAIL' | 'PASSWORD' | 'OTP'>(sessionEmail ? 'PASSWORD' : 'EMAIL')
   const [direction, setDirection] = useState(1) // 1: 進む, -1: 戻る
-  const [email, setEmail] = useState<string>()
+  const [email, setEmail] = useState(sessionEmail)
   const [password, setPassword] = useState<string>()
 
   const callbackURL = searchParams.get('cb') ?? envu.client.NEXT_PUBLIC_URL
+  const mode = searchParams.get('mode') as Mode
   const errorCode = searchParams.get('error')
 
   useEffect(() => {
@@ -271,9 +283,19 @@ export const SignInClient: FC = () => {
     }
   }, [errorCode, t])
 
+  const viewTitle = useMemo(() => {
+    if (mode === '2FA') {
+      return t('twofa_enable')
+    }
+    if (step === 'OTP') {
+      return t('twofa')
+    }
+    return t('signin')
+  }, [mode, step, t])
+
   return (
-    <SingleLayout icon={<KeyIcon />} title={step === 'OTP' ? t('twofa_enable') : t('signin')}>
-      <div className={twMerge(gridStyles(), 'mb-2')}>
+    <SingleLayout icon={<KeyIcon />} title={viewTitle}>
+      <div className={twMerge(gridStyles(), 'mb-4')}>
         <div className='col-span-3 flex'>
           <div className='text-lg'>{t('welcome')}</div>
         </div>
@@ -287,65 +309,72 @@ export const SignInClient: FC = () => {
       </div>
 
       <AnimatePresence mode='wait' custom={direction}>
-        <EmailForm
-          key='step_email'
-          direction={direction}
-          visible={step === 'EMAIL'}
-          next={(email) => {
-            setEmail(email)
-            setDirection(1)
-            setStep('PASSWORD')
-          }}
-        />
+        {step === 'EMAIL' && (
+          <EmailForm
+            key='step_email'
+            direction={direction}
+            next={(email) => {
+              setEmail(email)
+              setDirection(1)
+              setStep('PASSWORD')
+            }}
+          />
+        )}
 
-        <PasswordForm
-          key='step_password'
-          direction={direction}
-          visible={step === 'PASSWORD'}
-          email={email}
-          callbackURL={callbackURL}
-          next={(password) => {
-            setPassword(password)
-            setStep('OTP')
-          }}
-          back={() => {
-            setDirection(-1)
-            setStep('EMAIL')
-          }}
-        />
+        {step === 'PASSWORD' && (
+          <PasswordForm
+            key='step_password'
+            direction={direction}
+            email={email}
+            mode={mode}
+            callbackURL={callbackURL}
+            next={(password) => {
+              setPassword(password)
+              setStep('OTP')
+            }}
+            back={() => {
+              setDirection(-1)
+              setStep('EMAIL')
+            }}
+          />
+        )}
 
-        <OtpForm
-          key='step_otp'
-          direction={direction}
-          visible={step === 'OTP'}
-          password={password}
-          callbackURL={callbackURL}
-          back={() => {
-            setDirection(-1)
-            setStep('EMAIL')
-          }}
-        />
+        {step === 'OTP' && (
+          <OtpForm
+            key='step_otp'
+            direction={direction}
+            password={password}
+            callbackURL={callbackURL}
+            back={() => {
+              setDirection(-1)
+              setStep('EMAIL')
+            }}
+          />
+        )}
       </AnimatePresence>
 
-      <Divider className='my-6' />
-
-      <MultiButton
-        className='mx-auto max-w-xs'
-        fullWidth
-        variant='flat'
-        color='default'
-        startContent={<GoogleIcon />}
-        onPress={async () => {
-          const data = await authClient.signIn.social({
-            provider: 'google',
-            callbackURL,
-            errorCallbackURL: makeUrl(authConfig.path.signIn, { cb: callbackURL }).toString(),
-          })
-          console.log(data)
-        }}
-      >
-        {t('google_signin')}
-      </MultiButton>
+      {mode !== '2FA' && (
+        <>
+          <Divider className='my-6' />
+          <MultiButton
+            className='mx-auto max-w-xs'
+            fullWidth
+            variant='flat'
+            color='default'
+            startContent={<GoogleIcon />}
+            onPress={async () => {
+              const data = await authClient.signIn.social({
+                provider: 'google',
+                callbackURL,
+                errorCallbackURL: makeUrl(authConfig.path.signIn, { cb: callbackURL }).toString(),
+              })
+              console.log(data)
+            }}
+          >
+            {t('google_signin')}
+          </MultiButton>
+        </>
+      )}
     </SingleLayout>
   )
 }
