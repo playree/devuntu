@@ -33,7 +33,7 @@ export const scCreateAdmin = z.object({
 })
 export type CreateAdmin = z.infer<typeof scCreateAdmin>
 
-export const scTwoFACode = z.object({
+export const scTwoFaCode = z.object({
   otp: z.string(),
 })
-export type TwoFACode = z.infer<typeof scTwoFACode>
+export type TwoFaCode = z.infer<typeof scTwoFaCode>

@@ -7,7 +7,7 @@ import { CheckIcon, PaperAirplaneIcon, ShieldCheckIcon } from '@/components/icon
 import { SingleLayout } from '@/components/single-layout'
 import { Step } from '@/components/step'
 import { authClient } from '@/lib/auth-client'
-import { TwoFACode, scTwoFACode } from '@/lib/schema'
+import { TwoFaCode, scTwoFaCode } from '@/lib/schema'
 import { gridStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -15,15 +15,15 @@ import { FC } from 'react'
 import { useForm } from 'react-hook-form'
 import { twMerge } from 'tailwind-merge'
 
-export const TwoFARegistClient: FC = () => {
+export const TwoFaRegistClient: FC = () => {
   const { data: session } = authClient.useSession()
   const { t, fet } = useLocale()
   const {
     control,
     handleSubmit,
     formState: { isSubmitting, errors },
-  } = useForm<TwoFACode>({
-    resolver: zodResolver(scTwoFACode),
+  } = useForm<TwoFaCode>({
+    resolver: zodResolver(scTwoFaCode),
     // mode: 'onChange',
     defaultValues: {
       otp: '',

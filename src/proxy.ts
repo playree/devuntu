@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession, redirectSignIn } from './lib/auth'
+import { getServerSession, redirectSignIn, redirectTwoFaEnable } from './lib/auth'
 import { authConfig } from './lib/auth-config'
 import { logger } from './lib/logger'
 import { matchCondition } from './lib/match'
@@ -17,7 +17,12 @@ export const proxy = async (request: NextRequest) => {
     const session = await getServerSession()
     logger.debug({ session }, 'proxy auth')
     if (!session) {
+      // 未ログイン
       return redirectSignIn(url)
+    }
+    if (!session.user.twoFactorEnabled) {
+      // 2FA必須化
+      return redirectTwoFaEnable(url)
     }
 
     // 管理者

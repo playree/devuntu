@@ -128,7 +128,10 @@ const PasswordForm: FC<{
                   if (user) {
                     // 2FA有効化の確認
                     if (!user.twoFactorEnabled) {
-                      authClient.twoFactor.enable({ password })
+                      await authClient.twoFactor.enable({ password })
+                      await authClient.twoFactor.sendOtp()
+                      next(password)
+                      return
                     }
 
                     router.push(callbackURL)

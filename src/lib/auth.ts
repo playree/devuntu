@@ -36,6 +36,7 @@ export const auth = betterAuth({
       },
       update: {
         after: async (user) => {
+          logger.debug({ user }, 'update')
           if (!user.emailVerified && user.twoFactorEnabled) {
             // 2FA完了後にemailVerifiedを更新
             await prisma.user.update({
@@ -61,7 +62,7 @@ export const auth = betterAuth({
     admin(),
     nextCookies(),
     twoFactor({
-      skipVerificationOnEnable: true,
+      // skipVerificationOnEnable: true,
       otpOptions: {
         sendOTP: async ({ user, otp }) => {
           logger.info({ user, otp }, 'sendOTP')
@@ -78,3 +79,6 @@ export const getServerSession = async () =>
 
 export const redirectSignIn = (callbackURL?: string) =>
   NextResponse.redirect(makeUrl(authConfig.path.signIn, callbackURL ? { cb: callbackURL } : undefined))
+
+export const redirectTwoFaEnable = (callbackURL?: string) =>
+  NextResponse.redirect(makeUrl(authConfig.path.signIn, callbackURL ? { cb: callbackURL, mode: '2FA' } : undefined))
