@@ -13,6 +13,7 @@ export const InputCtrl = <
   type = 'text',
   variant = 'faded',
   onChanged,
+  description,
   ...props
 }: InputProps & {
   control?: Control<TFieldValues>
@@ -45,6 +46,7 @@ export const InputCtrl = <
           }
           value={value || (type === 'number' ? '0' : '')}
           isInvalid={!!props.errorMessage}
+          description={!!props.errorMessage ? '' : (description ?? '　')}
         />
       )}
     />

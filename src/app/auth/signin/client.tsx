@@ -68,7 +68,7 @@ const EmailForm: FC<{
           isRequired
           autoFocus
         />
-        <div className='mt-4 flex items-center justify-end'>
+        <div className='flex items-center justify-end'>
           <MultiButton type='submit' startContent={<ArrowRightCircleIcon />} isLoading={isSubmitting}>
             {t('next')}
           </MultiButton>
@@ -159,7 +159,7 @@ const PasswordForm: FC<{
           isRequired
           autoFocus
         />
-        <div className='mt-4 flex items-center justify-between'>
+        <div className='flex items-center justify-between'>
           {mode === '2FA' ? (
             <div></div>
           ) : (
@@ -247,7 +247,7 @@ const OtpForm: FC<{
             }}
           />
         </div>
-        <div className='mt-4 flex items-center justify-between'>
+        <div className='mt-2 flex items-center justify-between'>
           <MultiButton
             isSecondary
             startContent={<ArrowLeftCircleIcon />}

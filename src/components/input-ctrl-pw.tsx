@@ -78,6 +78,7 @@ export const InputCtrlPassword = <
   variant = 'faded',
   onChanged,
   requiredPasswordScore,
+  description,
   ...props
 }: InputProps & {
   control?: Control<TFieldValues>
@@ -122,6 +123,7 @@ export const InputCtrlPassword = <
             }}
             value={value || (type === 'number' ? '0' : '')}
             isInvalid={!!props.errorMessage}
+            description={!!props.errorMessage ? '' : (description ?? '　')}
           />
         )}
       />
