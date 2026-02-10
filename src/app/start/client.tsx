@@ -52,7 +52,14 @@ export const StartClient: FC = () => {
       >
         <div className={gridStyles()}>
           <div className='col-span-12'>
-            <InputCtrl control={control} name='name' label={t('username')} errorMessage={fet(errors.name)} isRequired />
+            <InputCtrl
+              control={control}
+              name='name'
+              label={t('username')}
+              errorMessage={fet(errors.name)}
+              isRequired
+              autoFocus
+            />
           </div>
           <div className='col-span-12'>
             <InputCtrl

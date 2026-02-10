@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession, redirectSignIn, redirectTwoFaEnable } from './lib/auth'
 import { authConfig } from './lib/auth-config'
+import { envu } from './lib/env-util'
 import { logger } from './lib/logger'
 import { matchCondition } from './lib/match'
 
@@ -20,9 +21,11 @@ export const proxy = async (request: NextRequest) => {
       // 未ログイン
       return redirectSignIn(url)
     }
-    if (!session.user.twoFactorEnabled) {
-      // 2FA必須化
-      return redirectTwoFaEnable(url)
+    if (envu.server.TWO_FA_REQUIRED) {
+      if (!session.user.twoFactorEnabled) {
+        // 2FA必須化
+        return redirectTwoFaEnable(url)
+      }
     }
 
     // 管理者

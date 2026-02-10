@@ -1,4 +1,57 @@
+- [Devuntu](#devuntu)
+- [パッケージ構成](#パッケージ構成)
+- [環境変数](#環境変数)
+  - [NEXT_PUBLIC_URL](#next_public_url)
+  - [DEFAULT_LOCALE](#default_locale)
+  - [DATABASE_URL](#database_url)
+  - [BETTER_AUTH_SECRET](#better_auth_secret)
+  - [GOOGLE_CLIENT_ID](#google_client_id)
+  - [GOOGLE_CLIENT_SECRET](#google_client_secret)
+  - [開発用](#開発用)
+    - [LOG_LEVEL](#log_level)
+- [開発用](#開発用-1)
+  - [パッケージ更新](#パッケージ更新)
+  - [yarn更新](#yarn更新)
+- [better-auth](#better-auth)
+
 # Devuntu
+
+# パッケージ構成
+
+- Next.js v16
+- Prisma v7
+- Better Auth v1.4
+- Tailwind CSS v4
+- HeroUI v2.8
+- Zod v4
+
+# 環境変数
+
+## NEXT_PUBLIC_URL
+
+運用するベースのURL
+
+## DEFAULT_LOCALE
+
+## DATABASE_URL
+
+DB(SQLite)のファイルパス
+
+## BETTER_AUTH_SECRET
+
+Better Auth用のシークレット
+
+## GOOGLE_CLIENT_ID
+
+## GOOGLE_CLIENT_SECRET
+
+## 開発用
+
+### LOG_LEVEL
+
+ログレベル
+
+_デフォルト = info_
 
 # 開発用
 

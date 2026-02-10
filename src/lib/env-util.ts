@@ -1,5 +1,9 @@
 import { errSystemError } from './error'
 
+const convBoolean = (value?: string) => {
+  return value ? value.toLowerCase() !== 'false' : false
+}
+
 const client = {
   get NEXT_PUBLIC_APP_NAME() {
     return process.env.NEXT_PUBLIC_APP_NAME || 'Devuntu'
@@ -19,7 +23,7 @@ const server = {
     return process.env.NODE_ENV
   },
   get LOG_LEVEL() {
-    return process.env.LOG_LEVEL
+    return process.env.LOG_LEVEL ?? 'info'
   },
   get DATABASE_URL() {
     if (!process.env.DATABASE_URL) {
@@ -35,6 +39,9 @@ const server = {
   },
   get DEFAULT_LOCALE() {
     return process.env.DEFAULT_LOCALE
+  },
+  get TWO_FA_REQUIRED() {
+    return convBoolean(process.env.TWO_FA_REQUIRED)
   },
   get GOOGLE_CLIENT_ID() {
     return process.env.GOOGLE_CLIENT_ID
