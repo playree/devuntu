@@ -8,6 +8,7 @@ import { ulid } from 'ulid'
 import { authConfig } from './auth-config'
 import { envu, makeUrl } from './env-util'
 import { logger } from './logger'
+import { sendEmailOtp } from './mail'
 import { prisma } from './prisma'
 
 export const auth = betterAuth({
@@ -65,7 +66,7 @@ export const auth = betterAuth({
       // skipVerificationOnEnable: true,
       otpOptions: {
         sendOTP: async ({ user, otp }) => {
-          logger.info({ user, otp }, 'sendOTP')
+          await sendEmailOtp({ to: user.email, otp })
         },
       },
     }),

@@ -18,6 +18,7 @@ export const en: LocaleItems = {
   otp: 'OTP',
   auth: 'Auth',
   send: 'Send',
+  resend: 'Resend',
   admin_regist: 'Admin Regist',
   twofa: '2FA',
   twofa_enable: '2FA Enable',
@@ -26,7 +27,20 @@ export const en: LocaleItems = {
   msg_password_score_required: '${score} or more required',
   msg_invalid_email_or_password: 'Invalid email or password',
   msg_user_not_exist: 'User does not exist',
-  msg_enter_otp: 'Enter the one-time code sent to your email',
+  msg_enter_otp: 'Enter the verification code sent to your email address',
+  msg_otp_sent: 'Verification code sent',
+
+  mail_otp_subject: '[${appname}] 2FA OTP : ${otp}',
+  mail_otp_body: `A verification code has been issued for two-factor authentication.
+
+Verification Code: \${otp}
+
+Expiration time: 5 minutes
+
+*If you do not recognize this email, please discard it.
+
+@\${hostname} #\${otp}
+`,
 
   '@required_field': 'Required field',
   '@invalid_username': '2-20 characters',

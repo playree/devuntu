@@ -16,6 +16,7 @@ export type LocaleItemBase =
   | 'otp'
   | 'auth'
   | 'send'
+  | 'resend'
   | 'admin_regist'
   | 'twofa'
   | 'twofa_enable'
@@ -24,6 +25,9 @@ export type LocaleItemBase =
   | 'msg_invalid_email_or_password'
   | 'msg_user_not_exist'
   | 'msg_enter_otp'
+  | 'msg_otp_sent'
+  | 'mail_otp_subject'
+  | 'mail_otp_body'
 
 export type LocaleItemError = '@required_field' | '@invalid_username' | '@invalid_email' | '@invalid_password'
 export const el = (item: LocaleItemError) => item

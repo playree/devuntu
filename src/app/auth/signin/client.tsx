@@ -8,6 +8,7 @@ import { StepMotion } from '@/components/general/step-motion'
 import {
   ArrowLeftCircleIcon,
   ArrowLeftEndOnRectangleIcon,
+  ArrowPathIcon,
   ArrowRightCircleIcon,
   GoogleIcon,
   KeyIcon,
@@ -121,6 +122,7 @@ const PasswordForm: FC<{
                   if (twoFactorRedirect) {
                     // 2FA
                     await authClient.twoFactor.sendOtp()
+                    addToast({ title: t('msg_otp_sent'), color: 'success' })
                     next(password)
                     return
                   }
@@ -130,6 +132,7 @@ const PasswordForm: FC<{
                     if (!user.twoFactorEnabled) {
                       await authClient.twoFactor.enable({ password })
                       await authClient.twoFactor.sendOtp()
+                      addToast({ title: t('msg_otp_sent'), color: 'success' })
                       next(password)
                       return
                     }
@@ -192,8 +195,7 @@ const OtpForm: FC<{
   direction: number
   password?: string
   callbackURL: string
-  back: () => void
-}> = ({ direction, password, callbackURL, back }) => {
+}> = ({ direction, password, callbackURL }) => {
   const { t, fet } = useLocale()
   const router = useRouter()
   const {
@@ -250,12 +252,14 @@ const OtpForm: FC<{
         <div className='mt-2 flex items-center justify-between'>
           <MultiButton
             isSecondary
-            startContent={<ArrowLeftCircleIcon />}
-            onPress={() => {
-              back()
+            startContent={<ArrowPathIcon />}
+            coolTime={30}
+            onPress={async () => {
+              await authClient.twoFactor.sendOtp()
+              addToast({ title: t('msg_otp_sent'), color: 'success' })
             }}
           >
-            {t('back')}
+            {t('resend')}
           </MultiButton>
           <MultiButton type='submit' startContent={<ShieldCheckIcon />} isLoading={isSubmitting}>
             {t('auth')}
@@ -343,16 +347,7 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
         )}
 
         {step === 'OTP' && (
-          <OtpForm
-            key='step_otp'
-            direction={direction}
-            password={password}
-            callbackURL={callbackURL}
-            back={() => {
-              setDirection(-1)
-              setStep('EMAIL')
-            }}
-          />
+          <OtpForm key='step_otp' direction={direction} password={password} callbackURL={callbackURL} />
         )}
       </AnimatePresence>
 

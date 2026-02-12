@@ -2,7 +2,7 @@
 
 import { Button, ButtonProps, Link, Tooltip } from '@heroui/react'
 import { useRouter } from 'next/navigation'
-import { FC } from 'react'
+import { FC, useEffect, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 
 export const MultiButton: FC<
@@ -13,6 +13,7 @@ export const MultiButton: FC<
     showAnchorIcon?: boolean
     isExternal?: boolean
     isSecondary?: boolean
+    coolTime?: number
   }
 > = ({
   children,
@@ -29,9 +30,23 @@ export const MultiButton: FC<
   startContent,
   isLoading,
   isSecondary,
+  coolTime = 0,
+  isDisabled,
   ...props
 }) => {
   const router = useRouter()
+  const [waitTime, setWaitTime] = useState(0)
+
+  useEffect(() => {
+    if (waitTime > 0) {
+      const timer = setTimeout(() => {
+        setWaitTime((prev) => prev - 1)
+      }, 1000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [waitTime])
+
   const button = (
     <Button
       type={type}
@@ -45,14 +60,22 @@ export const MultiButton: FC<
           ? () => {
               router.push(href)
             }
-          : onPress
+          : (e) => {
+              if (onPress) {
+                onPress(e)
+              }
+              if (coolTime > 0) {
+                setWaitTime(coolTime)
+              }
+            }
       }
       as={isLink ? Link : undefined}
       href={isLink ? href : undefined}
       startContent={isLoading ? undefined : startContent}
       isLoading={isLoading}
+      isDisabled={waitTime > 0 ? true : isDisabled}
     >
-      {children}
+      {waitTime > 0 ? `wait ${waitTime}s` : children}
     </Button>
   )
 
