@@ -2,7 +2,6 @@ import { type Metadata } from 'next'
 import { FC } from 'react'
 import { HomeClient } from './client'
 
-export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   title: 'Home',
 }

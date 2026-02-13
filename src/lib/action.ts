@@ -1,35 +1,101 @@
-import { createSafeActionClient } from 'next-safe-action'
+import { createMiddleware, createSafeActionClient } from 'next-safe-action'
+import { headers } from 'next/headers'
 import z from 'zod'
-import { ClientError } from './error'
+import { auth } from './auth'
+import { ClientError, errInvalidSession, errPermissionDenied } from './error'
 import { logger } from './logger'
 
-export const safeAction = createSafeActionClient({
-  defineMetadataSchema: () => z.object({ actionName: z.string() }),
-  handleServerError: (error) => {
-    if (error instanceof ClientError) {
-      // クライアントエラー系
-      // logger.warn(error.message)
-      return {
-        type: error.errorType,
-        message: error.message,
-      }
-    }
+const normalMetaSc = z.object({ actionName: z.string() })
+type NormalMetaSc = z.infer<typeof normalMetaSc>
 
-    // システムエラー系
-    logger.error(error)
+const authMetaSc = z.object({ actionName: z.string(), role: z.enum(['user', 'admin']) })
+type AuthMetaSc = z.infer<typeof authMetaSc>
+
+type ServerError = { type: string; message: string }
+
+/**
+ * エラーハンドラー
+ */
+const handleServerError = (error: Error) => {
+  if (error instanceof ClientError) {
+    // クライアントエラー系
+    // logger.warn(error.message)
     return {
-      type: 'SYSTEM_ERROR',
+      type: error.errorType,
       message: error.message,
     }
-  },
-}).use(async ({ next, clientInput, metadata }) => {
-  logger.debug({ action: metadata.actionName, input: clientInput }, 'action start')
+  }
+
+  // システムエラー系
+  logger.error(error)
+  return {
+    type: 'SYSTEM_ERROR',
+    message: error.message,
+  }
+}
+
+/**
+ * 前後処理用Middleware
+ */
+const wrapMiddleware = createMiddleware<{
+  serverError: ServerError
+  ctx: object
+  metadata: NormalMetaSc
+}>().define(async ({ next, clientInput, metadata }) => {
+  logger.debug({ metadata, input: clientInput }, 'action start')
+  const { actionName: action } = metadata
   const startTime = performance.now()
   const res = await next()
   const endTime = performance.now()
   if (!res.success) {
-    logger.warn({ action: metadata.actionName, res }, 'action failed')
+    logger.warn({ action, res }, 'action failed')
   }
-  logger.info({ action: metadata.actionName, execTime: `${(endTime - startTime).toFixed(2)} ms` }, 'action end')
+  logger.info({ action, execTime: `${(endTime - startTime).toFixed(2)} ms` }, 'action end')
   return res
 })
+
+/**
+ * 認証用Middleware
+ */
+const authMiddleware = createMiddleware<{
+  serverError: ServerError
+  ctx: object
+  metadata: AuthMetaSc
+}>().define(async ({ next, clientInput, metadata }) => {
+  logger.debug({ metadata, input: clientInput }, 'action auth')
+  const { role } = metadata
+
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+
+  // サインイン状態チェック
+  if (!session?.user) {
+    throw errInvalidSession()
+  }
+
+  // 管理者権限チェック
+  if (role === 'admin' && session.user.role !== 'admin') {
+    throw errPermissionDenied()
+  }
+
+  return next({ ctx: { user: session.user } })
+})
+
+/**
+ * Action(認証なし)
+ */
+export const safeAction = createSafeActionClient({
+  defineMetadataSchema: () => normalMetaSc,
+  handleServerError,
+}).use(wrapMiddleware)
+
+/**
+ * Action(認証あり)
+ */
+export const safeAuthAction = createSafeActionClient({
+  defineMetadataSchema: () => authMetaSc,
+  handleServerError,
+})
+  .use(wrapMiddleware)
+  .use(authMiddleware)

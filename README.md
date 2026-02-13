@@ -24,6 +24,7 @@
 - Tailwind CSS v4
 - HeroUI v2.8
 - Zod v4
+- next-safe-action v8
 
 # 環境変数
 
