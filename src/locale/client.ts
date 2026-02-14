@@ -1,4 +1,4 @@
-import { useLocale as ul } from '@/components/general/locale/client'
+import { useLocale as ul } from '@/components/locale/client'
 
 import { LocaleItem } from '.'
 

@@ -3,7 +3,7 @@
 import acceptLanguageParser from 'accept-language-parser'
 import { FC, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 
-import { getCookie } from '../cookie/client'
+import { getCookie } from '../general/cookie/client'
 import { LocaleConfig } from './types'
 
 type LocaleContextType = {

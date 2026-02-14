@@ -1,17 +1,19 @@
 'use client'
 
+import { authClient } from '@/lib/auth-client'
 import { Button } from '@heroui/button'
 import { Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from '@heroui/dropdown'
 import { Skeleton } from '@heroui/react'
 import { FC, useEffect, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
-import { setCookie } from './cookie/client'
-import { useLocale } from './locale/client'
+import { setCookie } from '../general/cookie/client'
+import { useLocale } from './client'
+import { setUserLocale } from './server'
 
 export const LocaleSwitch: FC<{ className?: string; size?: 'sm' | 'md' | 'lg' }> = ({ className, size = 'md' }) => {
   const [mounted, setMounted] = useState(false)
   const { locale, lcConfig, setLocale } = useLocale()
-  // const { data: session } = useSession()
+  const { data: session } = authClient.useSession()
   const [selectedKeys, setSelectedKeys] = useState(new Set([locale]))
   const [selectedValue, setSelectedValue] = useState('')
 
@@ -47,6 +49,10 @@ export const LocaleSwitch: FC<{ className?: string; size?: 'sm' | 'md' | 'lg' }>
           setSelectedKeys(new Set([keyString]))
           setCookie(lcConfig.cookie.name, keyString, { maxAge: lcConfig.cookie.maxAge, path: '/' })
           setLocale(keyString)
+          if (session?.user) {
+            console.debug('update user locale:', keyString)
+            setUserLocale({ locale: keyString })
+          }
 
           // if (session?.user) {
           //   // ユーザーのロケール情報を更新

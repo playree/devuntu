@@ -61,8 +61,8 @@ const authMiddleware = createMiddleware<{
   serverError: ServerError
   ctx: object
   metadata: AuthMetaSc
-}>().define(async ({ next, clientInput, metadata }) => {
-  logger.debug({ metadata, input: clientInput }, 'action auth')
+}>().define(async ({ next, metadata }) => {
+  // logger.debug({ metadata, input: clientInput }, 'action auth')
   const { role } = metadata
 
   const session = await auth.api.getSession({

@@ -1,4 +1,4 @@
-import { LocaleConfig } from '@/components/general/locale/types'
+import { LocaleConfig } from '@/components/locale/types'
 import { en } from './lang-en'
 import { ja } from './lang-ja'
 

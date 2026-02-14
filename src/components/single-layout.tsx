@@ -3,8 +3,8 @@
 import { Card, CardBody, CardHeader } from '@heroui/react'
 import { FC, ReactNode } from 'react'
 import { twMerge } from 'tailwind-merge'
-import { LocaleSwitch } from './general/locale-switch'
 import { ThemeSwitchList } from './general/theme-switch'
+import { LocaleSwitch } from './locale/locale-switch'
 
 export const SingleLayout: FC<{
   children: ReactNode

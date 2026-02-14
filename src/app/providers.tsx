@@ -1,6 +1,6 @@
 'use client'
 
-import { LocaleProvider } from '@/components/general/locale/client'
+import { LocaleProvider } from '@/components/locale/client'
 import { localeConfig } from '@/locale/config'
 import { HeroUIProvider, ToastProvider } from '@heroui/react'
 import { ThemeProvider, type ThemeProviderProps } from 'next-themes'
