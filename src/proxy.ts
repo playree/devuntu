@@ -4,6 +4,7 @@ import { authConfig } from './lib/auth-config'
 import { envu } from './lib/env-util'
 import { logger } from './lib/logger'
 import { matchCondition } from './lib/match'
+import { localeConfig } from './locale/config'
 
 export const proxy = async (request: NextRequest) => {
   const {
@@ -14,10 +15,11 @@ export const proxy = async (request: NextRequest) => {
   logger.debug({ pathname, method }, 'proxy in')
 
   // 認証
+  let session
   if (matchCondition(pathname, authConfig.target.auth)) {
-    const session = await getServerSession()
+    session = await getServerSession()
     logger.debug({ session }, 'proxy auth')
-    if (!session) {
+    if (!session?.user) {
       // 未ログイン
       return redirectSignIn(url)
     }
@@ -31,7 +33,28 @@ export const proxy = async (request: NextRequest) => {
     // 管理者
   }
 
-  return NextResponse.next()
+  const response = NextResponse.next()
+
+  if (session?.user) {
+    // ロケールCookie
+    if (request.method.toUpperCase() === 'GET') {
+      if (!request.cookies.has(localeConfig.cookie.name)) {
+        // ロケールCookieが存在しない場合かつ、ユーザーのロケールが取得できる場合にはCookieを発行
+        if (session.user.locale) {
+          logger.debug({ locale: session.user.locale }, 'set locale cookie')
+          response.cookies.set({
+            name: localeConfig.cookie.name,
+            value: session.user.locale,
+            path: '/',
+            httpOnly: false,
+            maxAge: localeConfig.cookie.maxAge,
+          })
+        }
+      }
+    }
+  }
+
+  return response
 }
 
 export const config = {

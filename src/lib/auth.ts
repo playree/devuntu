@@ -22,6 +22,14 @@ export const auth = betterAuth({
       generateId: () => ulid(),
     },
   },
+  user: {
+    additionalFields: {
+      locale: {
+        type: 'string',
+        required: false,
+      },
+    },
+  },
   emailAndPassword: {
     enabled: true,
   },

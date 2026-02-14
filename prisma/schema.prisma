@@ -24,7 +24,6 @@ model User {
   accounts         Account[]
   twofactors       TwoFactor[]
 
-  // Custom
   locale String?
 
   @@unique([email])
