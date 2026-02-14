@@ -50,20 +50,10 @@ export const LocaleSwitch: FC<{ className?: string; size?: 'sm' | 'md' | 'lg' }>
           setCookie(lcConfig.cookie.name, keyString, { maxAge: lcConfig.cookie.maxAge, path: '/' })
           setLocale(keyString)
           if (session?.user) {
+            // DB保存
             console.debug('update user locale:', keyString)
             setUserLocale({ locale: keyString })
           }
-
-          // if (session?.user) {
-          //   // ユーザーのロケール情報を更新
-          //   if (session?.user) {
-          //     console.debug('update user locale:', keyString)
-          //     fetchJson<void, SetLocaleApi>('/api/locale', {
-          //       method: 'POST',
-          //       body: { locale: keyString },
-          //     })
-          //   }
-          // }
           return
         }}
       >
