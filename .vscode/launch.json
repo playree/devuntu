@@ -5,7 +5,7 @@
       "name": "server-side",
       "type": "node-terminal",
       "request": "launch",
-      "command": "yarn dev"
+      "command": "pnpm run dev"
     }
   ]
 }
