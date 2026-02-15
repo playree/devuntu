@@ -15,6 +15,7 @@ model User {
   image            String?
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
+  locale           String?
   role             String?
   banned           Boolean?    @default(false)
   banReason        String?
@@ -23,8 +24,7 @@ model User {
   sessions         Session[]
   accounts         Account[]
   twofactors       TwoFactor[]
-
-  locale String?
+  passkeys         Passkey[]
 
   @@unique([email])
   @@map("user")
@@ -89,4 +89,23 @@ model TwoFactor {
   @@index([secret])
   @@index([userId])
   @@map("two_factor")
+}
+
+model Passkey {
+  id           String    @id
+  name         String?
+  publicKey    String
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  credentialID String
+  counter      Int
+  deviceType   String
+  backedUp     Boolean
+  transports   String?
+  createdAt    DateTime?
+  aaguid       String?
+
+  @@index([userId])
+  @@index([credentialID])
+  @@map("passkey")
 }

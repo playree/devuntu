@@ -10,6 +10,7 @@ import {
   ArrowLeftEndOnRectangleIcon,
   ArrowPathIcon,
   ArrowRightCircleIcon,
+  FingerPrintIcon,
   GoogleIcon,
   KeyIcon,
   ShieldCheckIcon,
@@ -19,7 +20,14 @@ import { SingleLayout } from '@/components/single-layout'
 import { authClient } from '@/lib/auth-client'
 import { authConfig } from '@/lib/auth-config'
 import { envu, makeUrl } from '@/lib/env-util'
-import { scSignInEmail, scSignInOTP, scSignInPassword, SignInEmail, SignInOTP, SignInPassword } from '@/lib/schema'
+import {
+  scSignInOTP,
+  scSignInPassword,
+  scSignInUsername,
+  SignInOTP,
+  SignInPassword,
+  SignInUsername,
+} from '@/lib/schema'
 import { intervalOperation } from '@/lib/sleep'
 import { gridStyles, textStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
@@ -34,7 +42,7 @@ import { getUserByEmail } from './server'
 
 type Mode = '2FA' | null
 
-const EmailForm: FC<{
+const UsernameForm: FC<{
   direction: number
   next: (email: string) => void
 }> = ({ direction, next }) => {
@@ -43,13 +51,26 @@ const EmailForm: FC<{
     control,
     handleSubmit,
     formState: { isSubmitting, errors },
-  } = useForm<SignInEmail>({
-    resolver: zodResolver(scSignInEmail),
+  } = useForm<SignInUsername>({
+    resolver: zodResolver(scSignInUsername),
     // mode: 'onChange',
     defaultValues: {
-      email: '',
+      username: '',
     },
   })
+
+  // const isLoadedPasskey = useRef(false)
+  // useEffect(() => {
+  //   if (
+  //     isLoadedPasskey.current ||
+  //     !PublicKeyCredential.isConditionalMediationAvailable ||
+  //     !PublicKeyCredential.isConditionalMediationAvailable()
+  //   ) {
+  //     return
+  //   }
+  //   isLoadedPasskey.current = true
+  //   void authClient.signIn.passkey({ autoFill: true })
+  // }, [])
 
   return (
     <StepMotion direction={direction}>
@@ -57,15 +78,15 @@ const EmailForm: FC<{
         onSubmit={handleSubmit(async (input) => {
           await getUserByEmail(input)
           await intervalOperation(100)
-          next(input.email)
+          next(input.username)
         })}
       >
         <InputCtrl
           control={control}
-          name='email'
+          name='username'
           label={t('email')}
-          autoComplete='email'
-          errorMessage={fet(errors.email)}
+          autoComplete='username webauthn'
+          errorMessage={fet(errors.username)}
           isRequired
           autoFocus
         />
@@ -272,8 +293,8 @@ const OtpForm: FC<{
 
 export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) => {
   const searchParams = useSearchParams()
-  // const { data: session, isPending } = authClient.useSession()
   const { t } = useLocale()
+  const router = useRouter()
   const [step, setStep] = useState<'EMAIL' | 'PASSWORD' | 'OTP'>(sessionEmail ? 'PASSWORD' : 'EMAIL')
   const [direction, setDirection] = useState(1) // 1: 進む, -1: 戻る
   const [email, setEmail] = useState(sessionEmail)
@@ -317,7 +338,7 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
 
       <AnimatePresence mode='wait' custom={direction}>
         {step === 'EMAIL' && (
-          <EmailForm
+          <UsernameForm
             key='step_email'
             direction={direction}
             next={(email) => {
@@ -342,6 +363,7 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
             back={() => {
               setDirection(-1)
               setStep('EMAIL')
+              setEmail(undefined)
             }}
           />
         )}
@@ -353,9 +375,9 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
 
       {mode !== '2FA' && (
         <>
-          <Divider className='my-6' />
+          <Divider className='mt-6 mb-4' />
           <MultiButton
-            className='mx-auto max-w-xs'
+            className='mx-auto mt-2 max-w-xs'
             fullWidth
             variant='flat'
             color='default'
@@ -370,6 +392,24 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
             }}
           >
             {t('google_signin')}
+          </MultiButton>
+          <MultiButton
+            className='mx-auto mt-2 max-w-xs'
+            fullWidth
+            variant='flat'
+            color='default'
+            startContent={<FingerPrintIcon />}
+            onPress={async () => {
+              const { data, error } = await authClient.signIn.passkey()
+              console.debug('passkey', { data, error })
+              if (error) {
+                addToast({ title: t('auth_ng'), color: 'danger' })
+                return
+              }
+              router.push(callbackURL)
+            }}
+          >
+            {t('passkey_signin')}
           </MultiButton>
         </>
       )}

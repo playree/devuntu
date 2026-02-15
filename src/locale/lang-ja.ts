@@ -15,6 +15,7 @@ export const ja: DefaultLocaleItems = {
   password_score: 'パスワードスコア',
   auth_ng: '認証NG',
   google_signin: 'Googleでサインイン',
+  passkey_signin: 'パスキーでサインイン',
   otp: 'OTP',
   auth: '認証',
   send: '送信',

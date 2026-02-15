@@ -13,6 +13,7 @@ export type LocaleItemBase =
   | 'password_score'
   | 'auth_ng'
   | 'google_signin'
+  | 'passkey_signin'
   | 'otp'
   | 'auth'
   | 'send'

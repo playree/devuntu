@@ -11,10 +11,10 @@ export const zPassword = z
   .max(20, el('@invalid_password'))
   .regex(reHalfString, el('@invalid_password'))
 
-export const scSignInEmail = z.object({
-  email: zEmail,
+export const scSignInUsername = z.object({
+  username: zEmail,
 })
-export type SignInEmail = z.infer<typeof scSignInEmail>
+export type SignInUsername = z.infer<typeof scSignInUsername>
 
 export const scSignInPassword = z.object({
   password: z.string(),

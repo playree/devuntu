@@ -15,6 +15,7 @@ export const en: LocaleItems = {
   password_score: 'Password Score',
   auth_ng: 'Authentication failed',
   google_signin: 'Sign in with Google',
+  passkey_signin: 'Sign in with Passkey',
   otp: 'OTP',
   auth: 'Auth',
   send: 'Send',

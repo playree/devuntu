@@ -1,3 +1,4 @@
+import { passkey } from '@better-auth/passkey'
 import { APIError, betterAuth } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { nextCookies } from 'better-auth/next-js'
@@ -76,6 +77,13 @@ export const auth = betterAuth({
         sendOTP: async ({ user, otp }) => {
           await sendEmailOtp({ to: user.email, otp })
         },
+      },
+    }),
+    passkey({
+      authenticatorSelection: {
+        authenticatorAttachment: 'platform',
+        residentKey: 'preferred',
+        userVerification: 'required',
       },
     }),
   ],

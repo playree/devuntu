@@ -59,7 +59,6 @@ const sendSmtp = async (param: SendEmail) => {
 }
 
 const sendEmail = async (param: Omit<SendEmail, 'from'>) => {
-  console.debug('sendEmail:', param.subject, param.to)
   const mailFrom = envu.server.MAIL_FROM
 
   const from = {
