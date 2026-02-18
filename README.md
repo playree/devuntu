@@ -11,7 +11,6 @@
     - [LOG\_LEVEL](#log_level)
 - [開発用](#開発用-1)
   - [パッケージ更新](#パッケージ更新)
-  - [yarn更新](#yarn更新)
 - [better-auth](#better-auth)
 
 # Devuntu
@@ -60,17 +59,11 @@ _デフォルト = info_
 ## パッケージ更新
 
 ```sh
-yarn upgrade-interactive
-```
-
-## yarn更新
-
-```sh
-yarn set version latest --yarn-path
+pnpm up -i
 ```
 
 # better-auth
 
 ```sh
-npx @better-auth/cli generate
+pnpm dlx @better-auth/cli@latest generate
 ```
