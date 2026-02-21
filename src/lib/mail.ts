@@ -89,8 +89,8 @@ const sendEmail = async (param: Omit<SendEmail, 'from'>) => {
   throw errSystemError('Unable to send email')
 }
 
-export const sendEmailOtp = async (param: { locale?: string; to: string; otp: string }) => {
-  const { locale = '', to, otp } = param
+export const sendEmailOtp = async (param: { locale: string | null; to: string; otp: string }) => {
+  const { locale, to, otp } = param
   const { hostname } = new URL(envu.server.NEXT_PUBLIC_URL)
 
   logger.info({ to }, 'sendEmailOtp')

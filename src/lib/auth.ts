@@ -74,8 +74,8 @@ export const auth = betterAuth({
     twoFactor({
       // skipVerificationOnEnable: true,
       otpOptions: {
-        sendOTP: async ({ user, otp }) => {
-          await sendEmailOtp({ to: user.email, otp })
+        sendOTP: async ({ user: { locale = '', email }, otp }) => {
+          await sendEmailOtp({ locale, to: email, otp })
         },
       },
     }),

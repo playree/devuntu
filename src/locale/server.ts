@@ -4,9 +4,13 @@ import { localeConfig } from './config'
 
 export const defaultLocale = envu.server.DEFAULT_LOCALE || localeConfig.locales[0]
 
-export const t = (locale: string, item: LocaleItem, values?: { [key: string]: string | number | null | undefined }) => {
-  const { resources } = localeConfig
-  const lc = resources[locale] ? locale : defaultLocale
+export const t = (
+  locale: string | null,
+  item: LocaleItem,
+  values?: { [key: string]: string | number | null | undefined },
+) => {
+  const { resources, locales } = localeConfig
+  const lc = locale && locales.includes(locale) ? locale : defaultLocale
 
   const template = resources[lc][item] || resources[defaultLocale][item] || ''
   return !values
