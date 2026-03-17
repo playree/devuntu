@@ -17,8 +17,8 @@ import type * as Prisma from "./prismaNamespace"
 
 const config: runtime.GetPrismaClientConfig = {
   "previewFeatures": [],
-  "clientVersion": "7.4.0",
-  "engineVersion": "ab56fe763f921d033a6c195e7ddeb3e255bdbb57",
+  "clientVersion": "7.5.0",
+  "engineVersion": "280c870be64f457428992c43c1f6d557fab6e29e",
   "activeProvider": "sqlite",
   "inlineSchema": "generator client {\n  provider = \"prisma-client\"\n  output   = \"../src/generated/prisma\"\n}\n\ndatasource db {\n  provider = \"sqlite\"\n}\n\nmodel User {\n  id               String      @id\n  name             String\n  email            String\n  emailVerified    Boolean     @default(false)\n  image            String?\n  createdAt        DateTime    @default(now())\n  updatedAt        DateTime    @updatedAt\n  locale           String?\n  role             String?\n  banned           Boolean?    @default(false)\n  banReason        String?\n  banExpires       DateTime?\n  twoFactorEnabled Boolean?    @default(false)\n  sessions         Session[]\n  accounts         Account[]\n  twofactors       TwoFactor[]\n  passkeys         Passkey[]\n\n  @@unique([email])\n  @@map(\"user\")\n}\n\nmodel Session {\n  id             String   @id\n  expiresAt      DateTime\n  token          String\n  createdAt      DateTime @default(now())\n  updatedAt      DateTime @updatedAt\n  ipAddress      String?\n  userAgent      String?\n  userId         String\n  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n  impersonatedBy String?\n\n  @@unique([token])\n  @@index([userId])\n  @@map(\"session\")\n}\n\nmodel Account {\n  id                    String    @id\n  accountId             String\n  providerId            String\n  userId                String\n  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)\n  accessToken           String?\n  refreshToken          String?\n  idToken               String?\n  accessTokenExpiresAt  DateTime?\n  refreshTokenExpiresAt DateTime?\n  scope                 String?\n  password              String?\n  createdAt             DateTime  @default(now())\n  updatedAt             DateTime  @updatedAt\n\n  @@index([userId])\n  @@map(\"account\")\n}\n\nmodel Verification {\n  id         String   @id\n  identifier String\n  value      String\n  expiresAt  DateTime\n  createdAt  DateTime @default(now())\n  updatedAt  DateTime @updatedAt\n\n  @@index([identifier])\n  @@map(\"verification\")\n}\n\nmodel TwoFactor {\n  id          String @id\n  secret      String\n  backupCodes String\n  userId      String\n  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@index([secret])\n  @@index([userId])\n  @@map(\"two_factor\")\n}\n\nmodel Passkey {\n  id           String    @id\n  name         String?\n  publicKey    String\n  userId       String\n  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)\n  credentialID String\n  counter      Int\n  deviceType   String\n  backedUp     Boolean\n  transports   String?\n  createdAt    DateTime?\n  aaguid       String?\n\n  @@index([userId])\n  @@index([credentialID])\n  @@map(\"passkey\")\n}\n",
   "runtimeDataModel": {
@@ -67,7 +67,9 @@ export interface PrismaClientConstructor {
    * Type-safe database client for TypeScript
    * @example
    * ```
-   * const prisma = new PrismaClient()
+   * const prisma = new PrismaClient({
+   *   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL })
+   * })
    * // Fetch zero or more Users
    * const users = await prisma.user.findMany()
    * ```
@@ -89,7 +91,9 @@ export interface PrismaClientConstructor {
  * Type-safe database client for TypeScript
  * @example
  * ```
- * const prisma = new PrismaClient()
+ * const prisma = new PrismaClient({
+ *   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL })
+ * })
  * // Fetch zero or more Users
  * const users = await prisma.user.findMany()
  * ```
@@ -174,7 +178,7 @@ export interface PrismaClient<
    * ])
    * ```
    * 
-   * Read more in our [docs](https://www.prisma.io/docs/concepts/components/prisma-client/transactions).
+   * Read more in our [docs](https://www.prisma.io/docs/orm/prisma-client/queries/transactions).
    */
   $transaction<P extends Prisma.PrismaPromise<any>[]>(arg: [...P], options?: { isolationLevel?: Prisma.TransactionIsolationLevel }): runtime.Types.Utils.JsPromise<runtime.Types.Utils.UnwrapTuple<P>>
 

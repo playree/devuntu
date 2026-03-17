@@ -1383,6 +1383,11 @@ export type PasskeyFindManyArgs<ExtArgs extends runtime.Types.Extensions.Interna
    * Skip the first `n` Passkeys.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of Passkeys.
+   */
   distinct?: Prisma.PasskeyScalarFieldEnum | Prisma.PasskeyScalarFieldEnum[]
 }
 
