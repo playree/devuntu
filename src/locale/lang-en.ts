@@ -23,6 +23,7 @@ export const en: LocaleItems = {
   admin_regist: 'Admin Regist',
   twofa: '2FA',
   twofa_enable: '2FA Enable',
+  password_reset: 'Password Reset',
 
   msg_system_error: 'An error has occurred',
   msg_password_score_required: '${score} or more required',

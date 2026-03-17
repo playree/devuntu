@@ -21,12 +21,12 @@ import { authClient } from '@/lib/auth-client'
 import { authConfig } from '@/lib/auth-config'
 import { envu, makeUrl } from '@/lib/env-util'
 import {
-  scSignInOTP,
   scSignInPassword,
   scSignInUsername,
-  SignInOTP,
+  scTwoFaCode,
   SignInPassword,
   SignInUsername,
+  TwoFaCode,
 } from '@/lib/schema'
 import { intervalOperation } from '@/lib/sleep'
 import { gridStyles, textStyles } from '@/lib/style'
@@ -223,8 +223,8 @@ const OtpForm: FC<{
     control,
     handleSubmit,
     formState: { isSubmitting, errors },
-  } = useForm<SignInOTP>({
-    resolver: zodResolver(scSignInOTP),
+  } = useForm<TwoFaCode>({
+    resolver: zodResolver(scTwoFaCode),
     // mode: 'onChange',
     defaultValues: {
       otp: '',

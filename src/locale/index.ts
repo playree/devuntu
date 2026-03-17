@@ -21,6 +21,7 @@ export type LocaleItemBase =
   | 'admin_regist'
   | 'twofa'
   | 'twofa_enable'
+  | 'password_reset'
   | 'msg_system_error'
   | 'msg_password_score_required'
   | 'msg_invalid_email_or_password'
