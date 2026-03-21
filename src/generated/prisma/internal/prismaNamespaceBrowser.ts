@@ -56,7 +56,12 @@ export const ModelName = {
   Account: 'Account',
   Verification: 'Verification',
   TwoFactor: 'TwoFactor',
-  Passkey: 'Passkey'
+  Passkey: 'Passkey',
+  Jwks: 'Jwks',
+  OauthClient: 'OauthClient',
+  OauthRefreshToken: 'OauthRefreshToken',
+  OauthAccessToken: 'OauthAccessToken',
+  OauthConsent: 'OauthConsent'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -80,12 +85,12 @@ export const UserScalarFieldEnum = {
   image: 'image',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
-  locale: 'locale',
   role: 'role',
   banned: 'banned',
   banReason: 'banReason',
   banExpires: 'banExpires',
-  twoFactorEnabled: 'twoFactorEnabled'
+  twoFactorEnabled: 'twoFactorEnabled',
+  locale: 'locale'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -162,6 +167,99 @@ export const PasskeyScalarFieldEnum = {
 } as const
 
 export type PasskeyScalarFieldEnum = (typeof PasskeyScalarFieldEnum)[keyof typeof PasskeyScalarFieldEnum]
+
+
+export const JwksScalarFieldEnum = {
+  id: 'id',
+  publicKey: 'publicKey',
+  privateKey: 'privateKey',
+  createdAt: 'createdAt',
+  expiresAt: 'expiresAt'
+} as const
+
+export type JwksScalarFieldEnum = (typeof JwksScalarFieldEnum)[keyof typeof JwksScalarFieldEnum]
+
+
+export const OauthClientScalarFieldEnum = {
+  id: 'id',
+  clientId: 'clientId',
+  clientSecret: 'clientSecret',
+  disabled: 'disabled',
+  skipConsent: 'skipConsent',
+  enableEndSession: 'enableEndSession',
+  subjectType: 'subjectType',
+  scopes: 'scopes',
+  userId: 'userId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  name: 'name',
+  uri: 'uri',
+  icon: 'icon',
+  contacts: 'contacts',
+  tos: 'tos',
+  policy: 'policy',
+  softwareId: 'softwareId',
+  softwareVersion: 'softwareVersion',
+  softwareStatement: 'softwareStatement',
+  redirectUris: 'redirectUris',
+  postLogoutRedirectUris: 'postLogoutRedirectUris',
+  tokenEndpointAuthMethod: 'tokenEndpointAuthMethod',
+  grantTypes: 'grantTypes',
+  responseTypes: 'responseTypes',
+  public: 'public',
+  type: 'type',
+  requirePKCE: 'requirePKCE',
+  referenceId: 'referenceId',
+  metadata: 'metadata'
+} as const
+
+export type OauthClientScalarFieldEnum = (typeof OauthClientScalarFieldEnum)[keyof typeof OauthClientScalarFieldEnum]
+
+
+export const OauthRefreshTokenScalarFieldEnum = {
+  id: 'id',
+  token: 'token',
+  clientId: 'clientId',
+  sessionId: 'sessionId',
+  userId: 'userId',
+  referenceId: 'referenceId',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt',
+  revoked: 'revoked',
+  authTime: 'authTime',
+  scopes: 'scopes'
+} as const
+
+export type OauthRefreshTokenScalarFieldEnum = (typeof OauthRefreshTokenScalarFieldEnum)[keyof typeof OauthRefreshTokenScalarFieldEnum]
+
+
+export const OauthAccessTokenScalarFieldEnum = {
+  id: 'id',
+  token: 'token',
+  clientId: 'clientId',
+  sessionId: 'sessionId',
+  userId: 'userId',
+  referenceId: 'referenceId',
+  refreshId: 'refreshId',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt',
+  scopes: 'scopes'
+} as const
+
+export type OauthAccessTokenScalarFieldEnum = (typeof OauthAccessTokenScalarFieldEnum)[keyof typeof OauthAccessTokenScalarFieldEnum]
+
+
+export const OauthConsentScalarFieldEnum = {
+  id: 'id',
+  clientId: 'clientId',
+  userId: 'userId',
+  referenceId: 'referenceId',
+  scopes: 'scopes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OauthConsentScalarFieldEnum = (typeof OauthConsentScalarFieldEnum)[keyof typeof OauthConsentScalarFieldEnum]
 
 
 export const SortOrder = {

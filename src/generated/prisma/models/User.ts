@@ -32,12 +32,12 @@ export type UserMinAggregateOutputType = {
   image: string | null
   createdAt: Date | null
   updatedAt: Date | null
-  locale: string | null
   role: string | null
   banned: boolean | null
   banReason: string | null
   banExpires: Date | null
   twoFactorEnabled: boolean | null
+  locale: string | null
 }
 
 export type UserMaxAggregateOutputType = {
@@ -48,12 +48,12 @@ export type UserMaxAggregateOutputType = {
   image: string | null
   createdAt: Date | null
   updatedAt: Date | null
-  locale: string | null
   role: string | null
   banned: boolean | null
   banReason: string | null
   banExpires: Date | null
   twoFactorEnabled: boolean | null
+  locale: string | null
 }
 
 export type UserCountAggregateOutputType = {
@@ -64,12 +64,12 @@ export type UserCountAggregateOutputType = {
   image: number
   createdAt: number
   updatedAt: number
-  locale: number
   role: number
   banned: number
   banReason: number
   banExpires: number
   twoFactorEnabled: number
+  locale: number
   _all: number
 }
 
@@ -82,12 +82,12 @@ export type UserMinAggregateInputType = {
   image?: true
   createdAt?: true
   updatedAt?: true
-  locale?: true
   role?: true
   banned?: true
   banReason?: true
   banExpires?: true
   twoFactorEnabled?: true
+  locale?: true
 }
 
 export type UserMaxAggregateInputType = {
@@ -98,12 +98,12 @@ export type UserMaxAggregateInputType = {
   image?: true
   createdAt?: true
   updatedAt?: true
-  locale?: true
   role?: true
   banned?: true
   banReason?: true
   banExpires?: true
   twoFactorEnabled?: true
+  locale?: true
 }
 
 export type UserCountAggregateInputType = {
@@ -114,12 +114,12 @@ export type UserCountAggregateInputType = {
   image?: true
   createdAt?: true
   updatedAt?: true
-  locale?: true
   role?: true
   banned?: true
   banReason?: true
   banExpires?: true
   twoFactorEnabled?: true
+  locale?: true
   _all?: true
 }
 
@@ -203,12 +203,12 @@ export type UserGroupByOutputType = {
   image: string | null
   createdAt: Date
   updatedAt: Date
-  locale: string | null
   role: string | null
   banned: boolean | null
   banReason: string | null
   banExpires: Date | null
   twoFactorEnabled: boolean | null
+  locale: string | null
   _count: UserCountAggregateOutputType | null
   _min: UserMinAggregateOutputType | null
   _max: UserMaxAggregateOutputType | null
@@ -240,16 +240,20 @@ export type UserWhereInput = {
   image?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
-  locale?: Prisma.StringNullableFilter<"User"> | string | null
   role?: Prisma.StringNullableFilter<"User"> | string | null
   banned?: Prisma.BoolNullableFilter<"User"> | boolean | null
   banReason?: Prisma.StringNullableFilter<"User"> | string | null
   banExpires?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   twoFactorEnabled?: Prisma.BoolNullableFilter<"User"> | boolean | null
+  locale?: Prisma.StringNullableFilter<"User"> | string | null
   sessions?: Prisma.SessionListRelationFilter
   accounts?: Prisma.AccountListRelationFilter
   twofactors?: Prisma.TwoFactorListRelationFilter
   passkeys?: Prisma.PasskeyListRelationFilter
+  oauthclients?: Prisma.OauthClientListRelationFilter
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenListRelationFilter
+  oauthaccesstokens?: Prisma.OauthAccessTokenListRelationFilter
+  oauthconsents?: Prisma.OauthConsentListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -260,16 +264,20 @@ export type UserOrderByWithRelationInput = {
   image?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
-  locale?: Prisma.SortOrderInput | Prisma.SortOrder
   role?: Prisma.SortOrderInput | Prisma.SortOrder
   banned?: Prisma.SortOrderInput | Prisma.SortOrder
   banReason?: Prisma.SortOrderInput | Prisma.SortOrder
   banExpires?: Prisma.SortOrderInput | Prisma.SortOrder
   twoFactorEnabled?: Prisma.SortOrderInput | Prisma.SortOrder
+  locale?: Prisma.SortOrderInput | Prisma.SortOrder
   sessions?: Prisma.SessionOrderByRelationAggregateInput
   accounts?: Prisma.AccountOrderByRelationAggregateInput
   twofactors?: Prisma.TwoFactorOrderByRelationAggregateInput
   passkeys?: Prisma.PasskeyOrderByRelationAggregateInput
+  oauthclients?: Prisma.OauthClientOrderByRelationAggregateInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenOrderByRelationAggregateInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenOrderByRelationAggregateInput
+  oauthconsents?: Prisma.OauthConsentOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -283,16 +291,20 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   image?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
-  locale?: Prisma.StringNullableFilter<"User"> | string | null
   role?: Prisma.StringNullableFilter<"User"> | string | null
   banned?: Prisma.BoolNullableFilter<"User"> | boolean | null
   banReason?: Prisma.StringNullableFilter<"User"> | string | null
   banExpires?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   twoFactorEnabled?: Prisma.BoolNullableFilter<"User"> | boolean | null
+  locale?: Prisma.StringNullableFilter<"User"> | string | null
   sessions?: Prisma.SessionListRelationFilter
   accounts?: Prisma.AccountListRelationFilter
   twofactors?: Prisma.TwoFactorListRelationFilter
   passkeys?: Prisma.PasskeyListRelationFilter
+  oauthclients?: Prisma.OauthClientListRelationFilter
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenListRelationFilter
+  oauthaccesstokens?: Prisma.OauthAccessTokenListRelationFilter
+  oauthconsents?: Prisma.OauthConsentListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -303,12 +315,12 @@ export type UserOrderByWithAggregationInput = {
   image?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
-  locale?: Prisma.SortOrderInput | Prisma.SortOrder
   role?: Prisma.SortOrderInput | Prisma.SortOrder
   banned?: Prisma.SortOrderInput | Prisma.SortOrder
   banReason?: Prisma.SortOrderInput | Prisma.SortOrder
   banExpires?: Prisma.SortOrderInput | Prisma.SortOrder
   twoFactorEnabled?: Prisma.SortOrderInput | Prisma.SortOrder
+  locale?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
   _max?: Prisma.UserMaxOrderByAggregateInput
   _min?: Prisma.UserMinOrderByAggregateInput
@@ -325,12 +337,12 @@ export type UserScalarWhereWithAggregatesInput = {
   image?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
-  locale?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   role?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   banned?: Prisma.BoolNullableWithAggregatesFilter<"User"> | boolean | null
   banReason?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   banExpires?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   twoFactorEnabled?: Prisma.BoolNullableWithAggregatesFilter<"User"> | boolean | null
+  locale?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
 }
 
 export type UserCreateInput = {
@@ -341,16 +353,20 @@ export type UserCreateInput = {
   image?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  locale?: string | null
   role?: string | null
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
+  locale?: string | null
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
   passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -361,16 +377,20 @@ export type UserUncheckedCreateInput = {
   image?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  locale?: string | null
   role?: string | null
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
+  locale?: string | null
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
   passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientUncheckedCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -381,16 +401,20 @@ export type UserUpdateInput = {
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
   passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -401,16 +425,20 @@ export type UserUncheckedUpdateInput = {
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
   passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUncheckedUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -421,12 +449,12 @@ export type UserCreateManyInput = {
   image?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  locale?: string | null
   role?: string | null
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
+  locale?: string | null
 }
 
 export type UserUpdateManyMutationInput = {
@@ -437,12 +465,12 @@ export type UserUpdateManyMutationInput = {
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type UserUncheckedUpdateManyInput = {
@@ -453,12 +481,12 @@ export type UserUncheckedUpdateManyInput = {
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type UserCountOrderByAggregateInput = {
@@ -469,12 +497,12 @@ export type UserCountOrderByAggregateInput = {
   image?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
-  locale?: Prisma.SortOrder
   role?: Prisma.SortOrder
   banned?: Prisma.SortOrder
   banReason?: Prisma.SortOrder
   banExpires?: Prisma.SortOrder
   twoFactorEnabled?: Prisma.SortOrder
+  locale?: Prisma.SortOrder
 }
 
 export type UserMaxOrderByAggregateInput = {
@@ -485,12 +513,12 @@ export type UserMaxOrderByAggregateInput = {
   image?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
-  locale?: Prisma.SortOrder
   role?: Prisma.SortOrder
   banned?: Prisma.SortOrder
   banReason?: Prisma.SortOrder
   banExpires?: Prisma.SortOrder
   twoFactorEnabled?: Prisma.SortOrder
+  locale?: Prisma.SortOrder
 }
 
 export type UserMinOrderByAggregateInput = {
@@ -501,17 +529,22 @@ export type UserMinOrderByAggregateInput = {
   image?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
-  locale?: Prisma.SortOrder
   role?: Prisma.SortOrder
   banned?: Prisma.SortOrder
   banReason?: Prisma.SortOrder
   banExpires?: Prisma.SortOrder
   twoFactorEnabled?: Prisma.SortOrder
+  locale?: Prisma.SortOrder
 }
 
 export type UserScalarRelationFilter = {
   is?: Prisma.UserWhereInput
   isNot?: Prisma.UserWhereInput
+}
+
+export type UserNullableScalarRelationFilter = {
+  is?: Prisma.UserWhereInput | null
+  isNot?: Prisma.UserWhereInput | null
 }
 
 export type StringFieldUpdateOperationsInput = {
@@ -594,6 +627,68 @@ export type UserUpdateOneRequiredWithoutPasskeysNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutPasskeysInput, Prisma.UserUpdateWithoutPasskeysInput>, Prisma.UserUncheckedUpdateWithoutPasskeysInput>
 }
 
+export type UserCreateNestedOneWithoutOauthclientsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutOauthclientsInput, Prisma.UserUncheckedCreateWithoutOauthclientsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutOauthclientsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutOauthclientsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutOauthclientsInput, Prisma.UserUncheckedCreateWithoutOauthclientsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutOauthclientsInput
+  upsert?: Prisma.UserUpsertWithoutOauthclientsInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutOauthclientsInput, Prisma.UserUpdateWithoutOauthclientsInput>, Prisma.UserUncheckedUpdateWithoutOauthclientsInput>
+}
+
+export type UserCreateNestedOneWithoutOauthrefreshtokensInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutOauthrefreshtokensInput, Prisma.UserUncheckedCreateWithoutOauthrefreshtokensInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutOauthrefreshtokensInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutOauthrefreshtokensNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutOauthrefreshtokensInput, Prisma.UserUncheckedCreateWithoutOauthrefreshtokensInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutOauthrefreshtokensInput
+  upsert?: Prisma.UserUpsertWithoutOauthrefreshtokensInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutOauthrefreshtokensInput, Prisma.UserUpdateWithoutOauthrefreshtokensInput>, Prisma.UserUncheckedUpdateWithoutOauthrefreshtokensInput>
+}
+
+export type UserCreateNestedOneWithoutOauthaccesstokensInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutOauthaccesstokensInput, Prisma.UserUncheckedCreateWithoutOauthaccesstokensInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutOauthaccesstokensInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutOauthaccesstokensNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutOauthaccesstokensInput, Prisma.UserUncheckedCreateWithoutOauthaccesstokensInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutOauthaccesstokensInput
+  upsert?: Prisma.UserUpsertWithoutOauthaccesstokensInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutOauthaccesstokensInput, Prisma.UserUpdateWithoutOauthaccesstokensInput>, Prisma.UserUncheckedUpdateWithoutOauthaccesstokensInput>
+}
+
+export type UserCreateNestedOneWithoutOauthconsentsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutOauthconsentsInput, Prisma.UserUncheckedCreateWithoutOauthconsentsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutOauthconsentsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutOauthconsentsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutOauthconsentsInput, Prisma.UserUncheckedCreateWithoutOauthconsentsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutOauthconsentsInput
+  upsert?: Prisma.UserUpsertWithoutOauthconsentsInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutOauthconsentsInput, Prisma.UserUpdateWithoutOauthconsentsInput>, Prisma.UserUncheckedUpdateWithoutOauthconsentsInput>
+}
+
 export type UserCreateWithoutSessionsInput = {
   id: string
   name: string
@@ -602,15 +697,19 @@ export type UserCreateWithoutSessionsInput = {
   image?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  locale?: string | null
   role?: string | null
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
+  locale?: string | null
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
   passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
@@ -621,15 +720,19 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   image?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  locale?: string | null
   role?: string | null
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
+  locale?: string | null
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
   passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientUncheckedCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -656,15 +759,19 @@ export type UserUpdateWithoutSessionsInput = {
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
   passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -675,15 +782,19 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
   passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUncheckedUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAccountsInput = {
@@ -694,15 +805,19 @@ export type UserCreateWithoutAccountsInput = {
   image?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  locale?: string | null
   role?: string | null
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
+  locale?: string | null
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
   passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAccountsInput = {
@@ -713,15 +828,19 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   image?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  locale?: string | null
   role?: string | null
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
+  locale?: string | null
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
   passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientUncheckedCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAccountsInput = {
@@ -748,15 +867,19 @@ export type UserUpdateWithoutAccountsInput = {
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
   passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -767,15 +890,19 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
   passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUncheckedUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutTwofactorsInput = {
@@ -786,15 +913,19 @@ export type UserCreateWithoutTwofactorsInput = {
   image?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  locale?: string | null
   role?: string | null
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
+  locale?: string | null
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutTwofactorsInput = {
@@ -805,15 +936,19 @@ export type UserUncheckedCreateWithoutTwofactorsInput = {
   image?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  locale?: string | null
   role?: string | null
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
+  locale?: string | null
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientUncheckedCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutTwofactorsInput = {
@@ -840,15 +975,19 @@ export type UserUpdateWithoutTwofactorsInput = {
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTwofactorsInput = {
@@ -859,15 +998,19 @@ export type UserUncheckedUpdateWithoutTwofactorsInput = {
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUncheckedUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPasskeysInput = {
@@ -878,15 +1021,19 @@ export type UserCreateWithoutPasskeysInput = {
   image?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  locale?: string | null
   role?: string | null
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
+  locale?: string | null
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPasskeysInput = {
@@ -897,15 +1044,19 @@ export type UserUncheckedCreateWithoutPasskeysInput = {
   image?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  locale?: string | null
   role?: string | null
   banned?: boolean | null
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
+  locale?: string | null
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientUncheckedCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPasskeysInput = {
@@ -932,15 +1083,19 @@ export type UserUpdateWithoutPasskeysInput = {
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPasskeysInput = {
@@ -951,15 +1106,451 @@ export type UserUncheckedUpdateWithoutPasskeysInput = {
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUncheckedUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutOauthclientsInput = {
+  id: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  locale?: string | null
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutOauthclientsInput = {
+  id: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  locale?: string | null
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutOauthclientsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutOauthclientsInput, Prisma.UserUncheckedCreateWithoutOauthclientsInput>
+}
+
+export type UserUpsertWithoutOauthclientsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutOauthclientsInput, Prisma.UserUncheckedUpdateWithoutOauthclientsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutOauthclientsInput, Prisma.UserUncheckedCreateWithoutOauthclientsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutOauthclientsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutOauthclientsInput, Prisma.UserUncheckedUpdateWithoutOauthclientsInput>
+}
+
+export type UserUpdateWithoutOauthclientsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutOauthclientsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutOauthrefreshtokensInput = {
+  id: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  locale?: string | null
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutOauthrefreshtokensInput = {
+  id: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  locale?: string | null
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientUncheckedCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutOauthrefreshtokensInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutOauthrefreshtokensInput, Prisma.UserUncheckedCreateWithoutOauthrefreshtokensInput>
+}
+
+export type UserUpsertWithoutOauthrefreshtokensInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutOauthrefreshtokensInput, Prisma.UserUncheckedUpdateWithoutOauthrefreshtokensInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutOauthrefreshtokensInput, Prisma.UserUncheckedCreateWithoutOauthrefreshtokensInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutOauthrefreshtokensInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutOauthrefreshtokensInput, Prisma.UserUncheckedUpdateWithoutOauthrefreshtokensInput>
+}
+
+export type UserUpdateWithoutOauthrefreshtokensInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutOauthrefreshtokensInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUncheckedUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutOauthaccesstokensInput = {
+  id: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  locale?: string | null
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutOauthaccesstokensInput = {
+  id: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  locale?: string | null
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientUncheckedCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutOauthaccesstokensInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutOauthaccesstokensInput, Prisma.UserUncheckedCreateWithoutOauthaccesstokensInput>
+}
+
+export type UserUpsertWithoutOauthaccesstokensInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutOauthaccesstokensInput, Prisma.UserUncheckedUpdateWithoutOauthaccesstokensInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutOauthaccesstokensInput, Prisma.UserUncheckedCreateWithoutOauthaccesstokensInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutOauthaccesstokensInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutOauthaccesstokensInput, Prisma.UserUncheckedUpdateWithoutOauthaccesstokensInput>
+}
+
+export type UserUpdateWithoutOauthaccesstokensInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutOauthaccesstokensInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUncheckedUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutOauthconsentsInput = {
+  id: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  locale?: string | null
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutOauthconsentsInput = {
+  id: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  locale?: string | null
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientUncheckedCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutOauthconsentsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutOauthconsentsInput, Prisma.UserUncheckedCreateWithoutOauthconsentsInput>
+}
+
+export type UserUpsertWithoutOauthconsentsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutOauthconsentsInput, Prisma.UserUncheckedUpdateWithoutOauthconsentsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutOauthconsentsInput, Prisma.UserUncheckedCreateWithoutOauthconsentsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutOauthconsentsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutOauthconsentsInput, Prisma.UserUncheckedUpdateWithoutOauthconsentsInput>
+}
+
+export type UserUpdateWithoutOauthconsentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutOauthconsentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUncheckedUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -972,6 +1563,10 @@ export type UserCountOutputType = {
   accounts: number
   twofactors: number
   passkeys: number
+  oauthclients: number
+  oauthrefreshtokens: number
+  oauthaccesstokens: number
+  oauthconsents: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -979,6 +1574,10 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   accounts?: boolean | UserCountOutputTypeCountAccountsArgs
   twofactors?: boolean | UserCountOutputTypeCountTwofactorsArgs
   passkeys?: boolean | UserCountOutputTypeCountPasskeysArgs
+  oauthclients?: boolean | UserCountOutputTypeCountOauthclientsArgs
+  oauthrefreshtokens?: boolean | UserCountOutputTypeCountOauthrefreshtokensArgs
+  oauthaccesstokens?: boolean | UserCountOutputTypeCountOauthaccesstokensArgs
+  oauthconsents?: boolean | UserCountOutputTypeCountOauthconsentsArgs
 }
 
 /**
@@ -1019,6 +1618,34 @@ export type UserCountOutputTypeCountPasskeysArgs<ExtArgs extends runtime.Types.E
   where?: Prisma.PasskeyWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountOauthclientsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.OauthClientWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountOauthrefreshtokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.OauthRefreshTokenWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountOauthaccesstokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.OauthAccessTokenWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountOauthconsentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.OauthConsentWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1028,16 +1655,20 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   image?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  locale?: boolean
   role?: boolean
   banned?: boolean
   banReason?: boolean
   banExpires?: boolean
   twoFactorEnabled?: boolean
+  locale?: boolean
   sessions?: boolean | Prisma.User$sessionsArgs<ExtArgs>
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
   twofactors?: boolean | Prisma.User$twofactorsArgs<ExtArgs>
   passkeys?: boolean | Prisma.User$passkeysArgs<ExtArgs>
+  oauthclients?: boolean | Prisma.User$oauthclientsArgs<ExtArgs>
+  oauthrefreshtokens?: boolean | Prisma.User$oauthrefreshtokensArgs<ExtArgs>
+  oauthaccesstokens?: boolean | Prisma.User$oauthaccesstokensArgs<ExtArgs>
+  oauthconsents?: boolean | Prisma.User$oauthconsentsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -1049,12 +1680,12 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   image?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  locale?: boolean
   role?: boolean
   banned?: boolean
   banReason?: boolean
   banExpires?: boolean
   twoFactorEnabled?: boolean
+  locale?: boolean
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1065,12 +1696,12 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   image?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  locale?: boolean
   role?: boolean
   banned?: boolean
   banReason?: boolean
   banExpires?: boolean
   twoFactorEnabled?: boolean
+  locale?: boolean
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectScalar = {
@@ -1081,20 +1712,24 @@ export type UserSelectScalar = {
   image?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  locale?: boolean
   role?: boolean
   banned?: boolean
   banReason?: boolean
   banExpires?: boolean
   twoFactorEnabled?: boolean
+  locale?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "createdAt" | "updatedAt" | "locale" | "role" | "banned" | "banReason" | "banExpires" | "twoFactorEnabled", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "createdAt" | "updatedAt" | "role" | "banned" | "banReason" | "banExpires" | "twoFactorEnabled" | "locale", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   sessions?: boolean | Prisma.User$sessionsArgs<ExtArgs>
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
   twofactors?: boolean | Prisma.User$twofactorsArgs<ExtArgs>
   passkeys?: boolean | Prisma.User$passkeysArgs<ExtArgs>
+  oauthclients?: boolean | Prisma.User$oauthclientsArgs<ExtArgs>
+  oauthrefreshtokens?: boolean | Prisma.User$oauthrefreshtokensArgs<ExtArgs>
+  oauthaccesstokens?: boolean | Prisma.User$oauthaccesstokensArgs<ExtArgs>
+  oauthconsents?: boolean | Prisma.User$oauthconsentsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1107,6 +1742,10 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     accounts: Prisma.$AccountPayload<ExtArgs>[]
     twofactors: Prisma.$TwoFactorPayload<ExtArgs>[]
     passkeys: Prisma.$PasskeyPayload<ExtArgs>[]
+    oauthclients: Prisma.$OauthClientPayload<ExtArgs>[]
+    oauthrefreshtokens: Prisma.$OauthRefreshTokenPayload<ExtArgs>[]
+    oauthaccesstokens: Prisma.$OauthAccessTokenPayload<ExtArgs>[]
+    oauthconsents: Prisma.$OauthConsentPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1116,12 +1755,12 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     image: string | null
     createdAt: Date
     updatedAt: Date
-    locale: string | null
     role: string | null
     banned: boolean | null
     banReason: string | null
     banExpires: Date | null
     twoFactorEnabled: boolean | null
+    locale: string | null
   }, ExtArgs["result"]["user"]>
   composites: {}
 }
@@ -1520,6 +2159,10 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   accounts<T extends Prisma.User$accountsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$accountsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AccountPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   twofactors<T extends Prisma.User$twofactorsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$twofactorsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TwoFactorPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   passkeys<T extends Prisma.User$passkeysArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$passkeysArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PasskeyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  oauthclients<T extends Prisma.User$oauthclientsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$oauthclientsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OauthClientPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  oauthrefreshtokens<T extends Prisma.User$oauthrefreshtokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$oauthrefreshtokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OauthRefreshTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  oauthaccesstokens<T extends Prisma.User$oauthaccesstokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$oauthaccesstokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OauthAccessTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  oauthconsents<T extends Prisma.User$oauthconsentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$oauthconsentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OauthConsentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1556,12 +2199,12 @@ export interface UserFieldRefs {
   readonly image: Prisma.FieldRef<"User", 'String'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
-  readonly locale: Prisma.FieldRef<"User", 'String'>
   readonly role: Prisma.FieldRef<"User", 'String'>
   readonly banned: Prisma.FieldRef<"User", 'Boolean'>
   readonly banReason: Prisma.FieldRef<"User", 'String'>
   readonly banExpires: Prisma.FieldRef<"User", 'DateTime'>
   readonly twoFactorEnabled: Prisma.FieldRef<"User", 'Boolean'>
+  readonly locale: Prisma.FieldRef<"User", 'String'>
 }
     
 
@@ -2046,6 +2689,102 @@ export type User$passkeysArgs<ExtArgs extends runtime.Types.Extensions.InternalA
   take?: number
   skip?: number
   distinct?: Prisma.PasskeyScalarFieldEnum | Prisma.PasskeyScalarFieldEnum[]
+}
+
+/**
+ * User.oauthclients
+ */
+export type User$oauthclientsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the OauthClient
+   */
+  select?: Prisma.OauthClientSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the OauthClient
+   */
+  omit?: Prisma.OauthClientOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.OauthClientInclude<ExtArgs> | null
+  where?: Prisma.OauthClientWhereInput
+  orderBy?: Prisma.OauthClientOrderByWithRelationInput | Prisma.OauthClientOrderByWithRelationInput[]
+  cursor?: Prisma.OauthClientWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.OauthClientScalarFieldEnum | Prisma.OauthClientScalarFieldEnum[]
+}
+
+/**
+ * User.oauthrefreshtokens
+ */
+export type User$oauthrefreshtokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the OauthRefreshToken
+   */
+  select?: Prisma.OauthRefreshTokenSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the OauthRefreshToken
+   */
+  omit?: Prisma.OauthRefreshTokenOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.OauthRefreshTokenInclude<ExtArgs> | null
+  where?: Prisma.OauthRefreshTokenWhereInput
+  orderBy?: Prisma.OauthRefreshTokenOrderByWithRelationInput | Prisma.OauthRefreshTokenOrderByWithRelationInput[]
+  cursor?: Prisma.OauthRefreshTokenWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.OauthRefreshTokenScalarFieldEnum | Prisma.OauthRefreshTokenScalarFieldEnum[]
+}
+
+/**
+ * User.oauthaccesstokens
+ */
+export type User$oauthaccesstokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the OauthAccessToken
+   */
+  select?: Prisma.OauthAccessTokenSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the OauthAccessToken
+   */
+  omit?: Prisma.OauthAccessTokenOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.OauthAccessTokenInclude<ExtArgs> | null
+  where?: Prisma.OauthAccessTokenWhereInput
+  orderBy?: Prisma.OauthAccessTokenOrderByWithRelationInput | Prisma.OauthAccessTokenOrderByWithRelationInput[]
+  cursor?: Prisma.OauthAccessTokenWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.OauthAccessTokenScalarFieldEnum | Prisma.OauthAccessTokenScalarFieldEnum[]
+}
+
+/**
+ * User.oauthconsents
+ */
+export type User$oauthconsentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the OauthConsent
+   */
+  select?: Prisma.OauthConsentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the OauthConsent
+   */
+  omit?: Prisma.OauthConsentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.OauthConsentInclude<ExtArgs> | null
+  where?: Prisma.OauthConsentWhereInput
+  orderBy?: Prisma.OauthConsentOrderByWithRelationInput | Prisma.OauthConsentOrderByWithRelationInput[]
+  cursor?: Prisma.OauthConsentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.OauthConsentScalarFieldEnum | Prisma.OauthConsentScalarFieldEnum[]
 }
 
 /**
