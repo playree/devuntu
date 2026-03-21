@@ -20,10 +20,12 @@ export const ja: DefaultLocaleItems = {
   auth: '認証',
   send: '送信',
   resend: '再送',
+  admin: '管理者',
   admin_regist: '管理者登録',
   twofa: '2要素認証',
   twofa_enable: '2要素認証有効化',
   password_reset: 'パスワード再設定',
+  oidc_client: 'OIDCクライアント',
 
   msg_system_error: 'エラーが発生しました',
   msg_password_score_required: '${score}以上が必要',

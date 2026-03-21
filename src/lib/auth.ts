@@ -91,6 +91,7 @@ export const auth = betterAuth({
     oauthProvider({
       loginPage: authConfig.path.signIn,
       consentPage: '/consent',
+      silenceWarnings: { oauthAuthServerConfig: true }, // 暫定
     }),
   ],
 })

@@ -1,7 +1,7 @@
 'use client'
 import { MultiButton } from '@/components/general/button'
 import { ThemeSwitchList } from '@/components/general/theme-switch'
-import { ArrowLeftStartOnRectangleIcon, UserCircleIcon } from '@/components/icon'
+import { ArrowLeftStartOnRectangleIcon, ServerStackIcon, UserCircleIcon } from '@/components/icon'
 import { LocaleSwitch } from '@/components/locale/locale-switch'
 import { authClient } from '@/lib/auth-client'
 import { authConfig } from '@/lib/auth-config'
@@ -9,7 +9,7 @@ import { makeUrl } from '@/lib/env-util'
 import { useLocale } from '@/locale/client'
 import { Accordion, AccordionItem, AccordionItemProps, Button, Card, CardBody } from '@heroui/react'
 import { useRouter } from 'next/navigation'
-import { FC, ReactNode } from 'react'
+import { FC, ReactNode, useEffect } from 'react'
 import { twMerge } from 'tailwind-merge'
 
 const accordionStyles: AccordionItemProps['classNames'] = {
@@ -72,6 +72,11 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
   const { data: session } = authClient.useSession()
   const { t } = useLocale()
 
+  useEffect(() => {
+    // Debug
+    console.debug('@session', session)
+  }, [session])
+
   return (
     <div>
       <div
@@ -111,6 +116,17 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
             </div>
             <div className='mx-2'>
               <MenuButton to='/account' text={'Item2'} closeMenu={closeMenu} />
+            </div>
+          </AccordionItem>
+
+          <AccordionItem
+            isCompact={true}
+            title={t('admin')}
+            hidden={session?.user.role !== 'admin'}
+            classNames={{ trigger: 'cursor-pointer' }}
+          >
+            <div className='mx-2'>
+              <MenuButton to='/admin/oauth' text={t('oidc_client')} icon={<ServerStackIcon />} closeMenu={closeMenu} />
             </div>
           </AccordionItem>
         </Accordion>

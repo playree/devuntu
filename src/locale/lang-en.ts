@@ -20,10 +20,12 @@ export const en: LocaleItems = {
   auth: 'Auth',
   send: 'Send',
   resend: 'Resend',
+  admin: 'Admin',
   admin_regist: 'Admin Regist',
   twofa: '2FA',
   twofa_enable: '2FA Enable',
   password_reset: 'Password Reset',
+  oidc_client: 'OIDC Client',
 
   msg_system_error: 'An error has occurred',
   msg_password_score_required: '${score} or more required',
