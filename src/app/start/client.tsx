@@ -10,7 +10,7 @@ import { CreateAdmin, scCreateAdmin } from '@/lib/schema'
 import { intervalOperation } from '@/lib/sleep'
 import { gridStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
-import { addToast } from '@heroui/react'
+import { toast } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
@@ -42,7 +42,7 @@ export const StartClient: FC = () => {
           const res = await createAdmin(input)
           console.debug(res)
           if (!res.data) {
-            addToast({ title: t('error'), description: t('msg_system_error'), color: 'danger' })
+            toast(t('error'), { description: t('msg_system_error'), variant: 'danger' })
             return
           }
 
@@ -83,7 +83,7 @@ export const StartClient: FC = () => {
             />
           </div>
           <div className='col-span-12 mt-4 text-center'>
-            <MultiButton type='submit' startContent={<CheckIcon />} isLoading={isSubmitting}>
+            <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
               {t('ok')}
             </MultiButton>
           </div>

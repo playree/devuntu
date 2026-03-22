@@ -31,7 +31,7 @@ import {
 import { intervalOperation } from '@/lib/sleep'
 import { gridStyles, textStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
-import { addToast, Divider } from '@heroui/react'
+import { Separator, toast } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AnimatePresence } from 'framer-motion'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -59,19 +59,6 @@ const UsernameForm: FC<{
     },
   })
 
-  // const isLoadedPasskey = useRef(false)
-  // useEffect(() => {
-  //   if (
-  //     isLoadedPasskey.current ||
-  //     !PublicKeyCredential.isConditionalMediationAvailable ||
-  //     !PublicKeyCredential.isConditionalMediationAvailable()
-  //   ) {
-  //     return
-  //   }
-  //   isLoadedPasskey.current = true
-  //   void authClient.signIn.passkey({ autoFill: true })
-  // }, [])
-
   return (
     <StepMotion direction={direction}>
       <form
@@ -83,15 +70,15 @@ const UsernameForm: FC<{
       >
         <InputCtrl
           control={control}
+          variant='secondary'
           name='username'
           label={t('email')}
           autoComplete='username webauthn'
           errorMessage={fet(errors.username)}
-          isRequired
           autoFocus
         />
         <div className='flex items-center justify-end'>
-          <MultiButton type='submit' startContent={<ArrowRightCircleIcon />} isLoading={isSubmitting}>
+          <MultiButton type='submit' icon={<ArrowRightCircleIcon />} isPending={isSubmitting}>
             {t('next')}
           </MultiButton>
         </div>
@@ -143,7 +130,7 @@ const PasswordForm: FC<{
                   if (twoFactorRedirect) {
                     // 2FA
                     await authClient.twoFactor.sendOtp()
-                    addToast({ title: t('msg_otp_sent'), color: 'success' })
+                    toast(t('msg_otp_sent'), { variant: 'success' })
                     next(password)
                     return
                   }
@@ -153,7 +140,7 @@ const PasswordForm: FC<{
                     if (!user.twoFactorEnabled) {
                       await authClient.twoFactor.enable({ password })
                       await authClient.twoFactor.sendOtp()
-                      addToast({ title: t('msg_otp_sent'), color: 'success' })
+                      toast(t('msg_otp_sent'), { variant: 'success' })
                       next(password)
                       return
                     }
@@ -170,17 +157,17 @@ const PasswordForm: FC<{
           if (res.error) {
             console.debug(res.error)
             const msg = res.error.code === 'INVALID_EMAIL_OR_PASSWORD' ? t('msg_invalid_email_or_password') : undefined
-            addToast({ title: t('auth_ng'), description: msg, color: 'danger' })
+            toast(t('auth_ng'), { description: msg, variant: 'danger' })
           }
         })}
       >
         <InputCtrlPassword
           control={control}
+          variant='secondary'
           name='password'
           label={t('password')}
           autoComplete='current-password'
           errorMessage={fet(errors.password)}
-          isRequired
           autoFocus
         />
         <div className='flex items-center justify-between'>
@@ -188,8 +175,8 @@ const PasswordForm: FC<{
             <div></div>
           ) : (
             <MultiButton
-              isSecondary
-              startContent={<ArrowLeftCircleIcon />}
+              variant='ghost'
+              icon={<ArrowLeftCircleIcon />}
               onPress={() => {
                 back()
               }}
@@ -198,11 +185,11 @@ const PasswordForm: FC<{
             </MultiButton>
           )}
           {mode === '2FA' ? (
-            <MultiButton type='submit' startContent={<ShieldCheckIcon />} isLoading={isSubmitting}>
+            <MultiButton type='submit' icon={<ShieldCheckIcon />} isPending={isSubmitting}>
               {t('auth')}
             </MultiButton>
           ) : (
-            <MultiButton type='submit' startContent={<ArrowLeftEndOnRectangleIcon />} isLoading={isSubmitting}>
+            <MultiButton type='submit' icon={<ArrowLeftEndOnRectangleIcon />} isPending={isSubmitting}>
               {t('signin')}
             </MultiButton>
           )}
@@ -217,12 +204,12 @@ const OtpForm: FC<{
   password?: string
   callbackURL: string
 }> = ({ direction, password, callbackURL }) => {
-  const { t, fet } = useLocale()
+  const { t } = useLocale()
   const router = useRouter()
   const {
     control,
     handleSubmit,
-    formState: { isSubmitting, errors },
+    formState: { isSubmitting },
   } = useForm<TwoFaCode>({
     resolver: zodResolver(scTwoFaCode),
     // mode: 'onChange',
@@ -247,7 +234,7 @@ const OtpForm: FC<{
           await intervalOperation(100)
           if (res.error) {
             console.debug(res.error)
-            addToast({ title: t('auth_ng'), color: 'danger' })
+            toast(t('auth_ng'), { variant: 'danger' })
             return
           }
           router.push(callbackURL)
@@ -259,11 +246,9 @@ const OtpForm: FC<{
             className='mx-auto'
             control={control}
             name='otp'
-            length={6}
+            maxLength={6}
             autoComplete='one-time-code'
             inputMode='numeric'
-            errorMessage={fet(errors.otp)}
-            isRequired
             autoFocus
             onComplete={() => {
               formRef.current?.requestSubmit()
@@ -272,17 +257,17 @@ const OtpForm: FC<{
         </div>
         <div className='mt-2 flex items-center justify-between'>
           <MultiButton
-            isSecondary
-            startContent={<ArrowPathIcon />}
+            variant='ghost'
+            icon={<ArrowPathIcon />}
             coolTime={30}
             onPress={async () => {
               await authClient.twoFactor.sendOtp()
-              addToast({ title: t('msg_otp_sent'), color: 'success' })
+              toast(t('msg_otp_sent'), { variant: 'success' })
             }}
           >
             {t('resend')}
           </MultiButton>
-          <MultiButton type='submit' startContent={<ShieldCheckIcon />} isLoading={isSubmitting}>
+          <MultiButton type='submit' icon={<ShieldCheckIcon />} isPending={isSubmitting}>
             {t('auth')}
           </MultiButton>
         </div>
@@ -307,7 +292,7 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
   useEffect(() => {
     if (errorCode) {
       const msg = errorCode === 'user_not_exist' ? t('msg_user_not_exist') : undefined
-      addToast({ title: t('auth_ng'), description: msg, color: 'danger' })
+      toast(t('auth_ng'), { description: msg, variant: 'danger' })
     }
   }, [errorCode, t])
 
@@ -336,52 +321,53 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
         )}
       </div>
 
-      <AnimatePresence mode='wait' custom={direction}>
-        {step === 'EMAIL' && (
-          <UsernameForm
-            key='step_email'
-            direction={direction}
-            next={(email) => {
-              setEmail(email)
-              setDirection(1)
-              setStep('PASSWORD')
-            }}
-          />
-        )}
+      <div className='relative min-h-32 overflow-hidden px-1'>
+        <AnimatePresence mode='wait' custom={direction}>
+          {step === 'EMAIL' && (
+            <UsernameForm
+              key='step_email'
+              direction={direction}
+              next={(email) => {
+                setEmail(email)
+                setDirection(1)
+                setStep('PASSWORD')
+              }}
+            />
+          )}
 
-        {step === 'PASSWORD' && (
-          <PasswordForm
-            key='step_password'
-            direction={direction}
-            email={email}
-            mode={mode}
-            callbackURL={callbackURL}
-            next={(password) => {
-              setPassword(password)
-              setStep('OTP')
-            }}
-            back={() => {
-              setDirection(-1)
-              setStep('EMAIL')
-              setEmail(undefined)
-            }}
-          />
-        )}
+          {step === 'PASSWORD' && (
+            <PasswordForm
+              key='step_password'
+              direction={direction}
+              email={email}
+              mode={mode}
+              callbackURL={callbackURL}
+              next={(password) => {
+                setPassword(password)
+                setStep('OTP')
+              }}
+              back={() => {
+                setDirection(-1)
+                setStep('EMAIL')
+                setEmail(undefined)
+              }}
+            />
+          )}
 
-        {step === 'OTP' && (
-          <OtpForm key='step_otp' direction={direction} password={password} callbackURL={callbackURL} />
-        )}
-      </AnimatePresence>
+          {step === 'OTP' && (
+            <OtpForm key='step_otp' direction={direction} password={password} callbackURL={callbackURL} />
+          )}
+        </AnimatePresence>
+      </div>
 
       {mode !== '2FA' && (
         <>
-          <Divider className='mt-6 mb-4' />
+          <Separator className='mt-6 mb-4' />
           <MultiButton
             className='mx-auto mt-2 max-w-xs'
             fullWidth
-            variant='flat'
-            color='default'
-            startContent={<GoogleIcon />}
+            variant='tertiary'
+            icon={<GoogleIcon />}
             onPress={async () => {
               const data = await authClient.signIn.social({
                 provider: 'google',
@@ -396,14 +382,13 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
           <MultiButton
             className='mx-auto mt-2 max-w-xs'
             fullWidth
-            variant='flat'
-            color='default'
-            startContent={<FingerPrintIcon />}
+            variant='tertiary'
+            icon={<FingerPrintIcon />}
             onPress={async () => {
               const { data, error } = await authClient.signIn.passkey()
               console.debug('passkey', { data, error })
               if (error) {
-                addToast({ title: t('auth_ng'), color: 'danger' })
+                toast(t('auth_ng'), { variant: 'danger' })
                 return
               }
               router.push(callbackURL)

@@ -1,6 +1,6 @@
 'use client'
 
-import { Card, CardBody, CardHeader } from '@heroui/react'
+import { Card } from '@heroui/react'
 import { FC, ReactNode } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { ThemeSwitchList } from './general/theme-switch'
@@ -23,7 +23,7 @@ export const SingleLayout: FC<{
 
       <div className='w-full max-w-md p-2 md:p-0'>
         <Card className='w-full'>
-          <CardHeader className='px-2 md:px-4'>
+          <Card.Header className='px-2 md:px-4'>
             <div className='flex w-full items-center'>
               {icon}
               <div className='ml-2 text-lg font-semibold'>{title}</div>
@@ -32,9 +32,9 @@ export const SingleLayout: FC<{
                 <LocaleSwitch size='sm' />
               </div>
             </div>
-          </CardHeader>
+          </Card.Header>
 
-          <CardBody className='relative overflow-hidden px-2 pt-2 pb-6 md:px-4'>{children}</CardBody>
+          <Card.Content className='relative overflow-hidden px-2 pt-2 pb-6 md:px-4'>{children}</Card.Content>
         </Card>
       </div>
     </div>

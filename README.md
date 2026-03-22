@@ -1,14 +1,14 @@
 - [Devuntu](#devuntu)
 - [パッケージ構成](#パッケージ構成)
 - [環境変数](#環境変数)
-  - [NEXT_PUBLIC_URL](#next_public_url)
-  - [DEFAULT_LOCALE](#default_locale)
-  - [DATABASE_URL](#database_url)
-  - [BETTER_AUTH_SECRET](#better_auth_secret)
-  - [GOOGLE_CLIENT_ID](#google_client_id)
-  - [GOOGLE_CLIENT_SECRET](#google_client_secret)
+  - [NEXT\_PUBLIC\_URL](#next_public_url)
+  - [DEFAULT\_LOCALE](#default_locale)
+  - [DATABASE\_URL](#database_url)
+  - [BETTER\_AUTH\_SECRET](#better_auth_secret)
+  - [GOOGLE\_CLIENT\_ID](#google_client_id)
+  - [GOOGLE\_CLIENT\_SECRET](#google_client_secret)
   - [開発用](#開発用)
-    - [LOG_LEVEL](#log_level)
+    - [LOG\_LEVEL](#log_level)
 - [開発用](#開発用-1)
   - [インストール](#インストール)
   - [ビルド](#ビルド)
@@ -74,6 +74,7 @@ pnpm build
 
 ```sh
 pnpm up -i
+pnpm up -i -L
 ```
 
 # better-auth

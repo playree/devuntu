@@ -1,6 +1,6 @@
 'use client'
 
-import { Input, InputProps } from '@heroui/react'
+import { ErrorMessage, Input, InputProps, Label, TextField } from '@heroui/react'
 import { ChangeEvent } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 
@@ -11,43 +11,53 @@ export const InputCtrl = <
   control,
   name,
   type = 'text',
-  variant = 'faded',
   onChanged,
-  description,
+  label,
+  isRequired,
+  isReadOnly,
+  errorMessage,
   ...props
 }: InputProps & {
   control?: Control<TFieldValues>
   name: TName
   onChanged?: (e: ChangeEvent<HTMLInputElement>) => void
+  label?: string
+  isRequired?: boolean
+  isReadOnly?: boolean
+  errorMessage?: string
 }) => {
   return (
     <Controller
       control={control}
       name={name}
       render={({ field: { onChange, value } }) => (
-        <Input
-          {...props}
-          type={type}
-          variant={variant}
-          onChange={
-            type === 'number'
-              ? (event) => {
-                  if (onChanged) {
-                    onChanged(event)
+        <TextField isInvalid={!!errorMessage} isReadOnly={isReadOnly}>
+          <Label>
+            {label}
+            {isRequired ? '*' : ''}
+          </Label>
+          <Input
+            {...props}
+            type={type}
+            onChange={
+              type === 'number'
+                ? (event) => {
+                    if (onChanged) {
+                      onChanged(event)
+                    }
+                    onChange(Number(event.target.value))
                   }
-                  onChange(Number(event.target.value))
-                }
-              : (event) => {
-                  if (onChanged) {
-                    onChanged(event)
+                : (event) => {
+                    if (onChanged) {
+                      onChanged(event)
+                    }
+                    onChange(event)
                   }
-                  onChange(event)
-                }
-          }
-          value={value || (type === 'number' ? '0' : '')}
-          isInvalid={!!props.errorMessage}
-          description={!!props.errorMessage ? '' : (description ?? '　')}
-        />
+            }
+            value={value || (type === 'number' ? '0' : '')}
+          />
+          <ErrorMessage className='min-h-4'>{errorMessage}</ErrorMessage>
+        </TextField>
       )}
     />
   )
