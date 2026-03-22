@@ -81,15 +81,6 @@ const UsernameForm: FC<{
           <MultiButton type='submit' icon={<ArrowRightCircleIcon />} isPending={isSubmitting}>
             {t('next')}
           </MultiButton>
-          <MultiButton
-            variant='ghost'
-            icon={<ArrowLeftCircleIcon />}
-            onPress={() => {
-              next('')
-            }}
-          >
-            {t('back')}
-          </MultiButton>
         </div>
       </form>
     </StepMotion>
