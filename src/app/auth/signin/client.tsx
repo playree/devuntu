@@ -60,7 +60,7 @@ const UsernameForm: FC<{
   })
 
   return (
-    <StepMotion direction={direction}>
+    <StepMotion direction={direction} className='mx-auto w-95'>
       <form
         onSubmit={handleSubmit(async (input) => {
           await getUserByEmail(input)
@@ -80,6 +80,15 @@ const UsernameForm: FC<{
         <div className='flex items-center justify-end'>
           <MultiButton type='submit' icon={<ArrowRightCircleIcon />} isPending={isSubmitting}>
             {t('next')}
+          </MultiButton>
+          <MultiButton
+            variant='ghost'
+            icon={<ArrowLeftCircleIcon />}
+            onPress={() => {
+              next('')
+            }}
+          >
+            {t('back')}
           </MultiButton>
         </div>
       </form>
@@ -110,7 +119,7 @@ const PasswordForm: FC<{
   })
 
   return (
-    <StepMotion direction={direction}>
+    <StepMotion direction={direction} className='mx-auto w-95'>
       <form
         onSubmit={handleSubmit(async (input) => {
           if (!email) {
@@ -220,7 +229,7 @@ const OtpForm: FC<{
   const formRef = useRef<HTMLFormElement>(null)
 
   return (
-    <StepMotion direction={direction}>
+    <StepMotion direction={direction} className='mx-auto w-95'>
       <form
         ref={formRef}
         onSubmit={handleSubmit(async (input) => {
@@ -276,12 +285,18 @@ const OtpForm: FC<{
   )
 }
 
+type Step = {
+  id: 'EMAIL' | 'PASSWORD' | 'OTP'
+  direction: number
+}
+
 export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) => {
   const searchParams = useSearchParams()
   const { t } = useLocale()
   const router = useRouter()
-  const [step, setStep] = useState<'EMAIL' | 'PASSWORD' | 'OTP'>(sessionEmail ? 'PASSWORD' : 'EMAIL')
-  const [direction, setDirection] = useState(1) // 1: 進む, -1: 戻る
+  const [step, setStep] = useState<Step>(
+    sessionEmail ? { id: 'PASSWORD', direction: 0 } : { id: 'EMAIL', direction: 0 },
+  )
   const [email, setEmail] = useState(sessionEmail)
   const [password, setPassword] = useState<string>()
 
@@ -300,7 +315,7 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
     if (mode === '2FA') {
       return t('twofa_enable')
     }
-    if (step === 'OTP') {
+    if (step.id === 'OTP') {
       return t('twofa')
     }
     return t('signin')
@@ -321,41 +336,39 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
         )}
       </div>
 
-      <div className='relative min-h-32 overflow-hidden px-1'>
-        <AnimatePresence mode='wait' custom={direction}>
-          {step === 'EMAIL' && (
+      <div className='min-h-32 overflow-hidden'>
+        <AnimatePresence mode='wait' custom={step.direction}>
+          {step.id === 'EMAIL' && (
             <UsernameForm
               key='step_email'
-              direction={direction}
+              direction={step.direction}
               next={(email) => {
+                setStep({ id: 'PASSWORD', direction: 1 })
                 setEmail(email)
-                setDirection(1)
-                setStep('PASSWORD')
               }}
             />
           )}
 
-          {step === 'PASSWORD' && (
+          {step.id === 'PASSWORD' && (
             <PasswordForm
               key='step_password'
-              direction={direction}
+              direction={step.direction}
               email={email}
               mode={mode}
               callbackURL={callbackURL}
               next={(password) => {
                 setPassword(password)
-                setStep('OTP')
+                setStep({ id: 'OTP', direction: 1 })
               }}
               back={() => {
-                setDirection(-1)
-                setStep('EMAIL')
+                setStep({ id: 'EMAIL', direction: -1 })
                 setEmail(undefined)
               }}
             />
           )}
 
-          {step === 'OTP' && (
-            <OtpForm key='step_otp' direction={direction} password={password} callbackURL={callbackURL} />
+          {step.id === 'OTP' && (
+            <OtpForm key='step_otp' direction={step.direction} password={password} callbackURL={callbackURL} />
           )}
         </AnimatePresence>
       </div>
