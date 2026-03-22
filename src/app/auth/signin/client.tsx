@@ -60,7 +60,7 @@ const UsernameForm: FC<{
   })
 
   return (
-    <StepMotion direction={direction} className='mx-auto w-95'>
+    <StepMotion direction={direction} className='mx-auto w-11/12 md:w-95'>
       <form
         onSubmit={handleSubmit(async (input) => {
           await getUserByEmail(input)
@@ -110,7 +110,7 @@ const PasswordForm: FC<{
   })
 
   return (
-    <StepMotion direction={direction} className='mx-auto w-95'>
+    <StepMotion direction={direction} className='mx-auto w-11/12 md:w-95'>
       <form
         onSubmit={handleSubmit(async (input) => {
           if (!email) {
@@ -220,7 +220,7 @@ const OtpForm: FC<{
   const formRef = useRef<HTMLFormElement>(null)
 
   return (
-    <StepMotion direction={direction} className='mx-auto w-95'>
+    <StepMotion direction={direction} className='mx-auto w-11/12 md:w-95'>
       <form
         ref={formRef}
         onSubmit={handleSubmit(async (input) => {
@@ -315,16 +315,18 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
   return (
     <SingleLayout icon={<KeyIcon />} title={viewTitle}>
       <div className={twMerge(gridStyles(), 'mb-4')}>
-        <div className='col-span-3 flex'>
+        <div className='col-span-12 flex md:col-span-3'>
           <div className='text-lg'>{t('welcome')}</div>
         </div>
-        {email && (
-          <div className='col-span-9 flex h-full items-end'>
-            <GrowMotion key='view_email' className='truncate text-sm font-semibold text-gray-400'>
-              {email}
-            </GrowMotion>
-          </div>
-        )}
+        <div className='col-span-12 min-h-5 md:col-span-9'>
+          {email && (
+            <div className='flex h-full w-full items-end'>
+              <GrowMotion key='view_email' className='truncate text-sm font-semibold text-gray-400'>
+                {email}
+              </GrowMotion>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className='min-h-32 overflow-hidden'>
