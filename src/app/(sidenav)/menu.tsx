@@ -7,15 +7,10 @@ import { authClient } from '@/lib/auth-client'
 import { authConfig } from '@/lib/auth-config'
 import { makeUrl } from '@/lib/env-util'
 import { useLocale } from '@/locale/client'
-import { Accordion, AccordionItem, AccordionItemProps, Button, Card, CardBody } from '@heroui/react'
+import { Accordion, Button, Card } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC, ReactNode, useEffect } from 'react'
 import { twMerge } from 'tailwind-merge'
-
-const accordionStyles: AccordionItemProps['classNames'] = {
-  title: '',
-  titleWrapper: 'flex-none',
-}
 
 export const MenuButton: FC<{
   /** メニューテキスト */
@@ -31,9 +26,9 @@ export const MenuButton: FC<{
   return (
     <div>
       <Button
-        color='default'
-        variant='light'
-        className='mb-2 h-8 w-full justify-start p-2'
+        size='sm'
+        className='rounded-xl'
+        variant='ghost'
         onPress={() => {
           router.push(to)
           if (closeMenu) {
@@ -42,7 +37,7 @@ export const MenuButton: FC<{
         }}
       >
         {icon}
-        <span className={icon ? 'ml-1' : ''}>{text}</span>
+        {text}
       </Button>
     </div>
   )
@@ -54,10 +49,8 @@ const SignOutButton: FC = () => {
 
   return (
     <MultiButton
-      color='default'
-      variant='light'
       isSmart
-      startContent={<ArrowLeftStartOnRectangleIcon />}
+      icon={<ArrowLeftStartOnRectangleIcon />}
       onPress={() => {
         authClient.signOut()
         router.push(makeUrl(authConfig.path.signIn).toString())
@@ -67,6 +60,8 @@ const SignOutButton: FC = () => {
     </MultiButton>
   )
 }
+
+const defaultExpandedKeys = new Set(['group_admin'])
 
 export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
   const { data: session } = authClient.useSession()
@@ -88,12 +83,12 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
       ></div>
 
       <Card>
-        <CardBody>
+        <Card.Content>
           <div className='flex items-center'>
             <UserCircleIcon className='mr-2' />
             <div>{session?.user?.name}</div>
           </div>
-        </CardBody>
+        </Card.Content>
       </Card>
 
       <div // テーマ・言語
@@ -109,26 +104,46 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
       </div>
 
       <div className='mt-2'>
-        <Accordion selectionMode='multiple' itemClasses={accordionStyles} defaultSelectedKeys='all' showDivider={false}>
-          <AccordionItem isCompact={true} title={'Group'} classNames={{ trigger: 'cursor-pointer' }}>
-            <div className='mx-2'>
-              <MenuButton to='/' text={'Item1'} closeMenu={closeMenu} />
-            </div>
-            <div className='mx-2'>
-              <MenuButton to='/account' text={'Item2'} closeMenu={closeMenu} />
-            </div>
-          </AccordionItem>
+        <Accordion allowsMultipleExpanded defaultExpandedKeys={defaultExpandedKeys}>
+          <Accordion.Item>
+            <Accordion.Heading>
+              <Accordion.Trigger>
+                Group
+                <Accordion.Indicator />
+              </Accordion.Trigger>
+            </Accordion.Heading>
+            <Accordion.Panel>
+              <Accordion.Body>
+                <div className='mx-2'>
+                  <MenuButton to='/' text={'Item1'} closeMenu={closeMenu} />
+                </div>
+                <div className='mx-2'>
+                  <MenuButton to='/account' text={'Item2'} closeMenu={closeMenu} />
+                </div>
+              </Accordion.Body>
+            </Accordion.Panel>
+          </Accordion.Item>
 
-          <AccordionItem
-            isCompact={true}
-            title={t('admin')}
-            hidden={session?.user.role !== 'admin'}
-            classNames={{ trigger: 'cursor-pointer' }}
-          >
-            <div className='mx-2'>
-              <MenuButton to='/admin/oauth' text={t('oidc_client')} icon={<ServerStackIcon />} closeMenu={closeMenu} />
-            </div>
-          </AccordionItem>
+          <Accordion.Item id='group_admin' hidden={session?.user.role !== 'admin'}>
+            <Accordion.Heading>
+              <Accordion.Trigger>
+                {t('admin')}
+                <Accordion.Indicator />
+              </Accordion.Trigger>
+            </Accordion.Heading>
+            <Accordion.Panel>
+              <Accordion.Body>
+                <div className='mx-2'>
+                  <MenuButton
+                    to='/admin/oauth'
+                    text={t('oidc_client')}
+                    icon={<ServerStackIcon />}
+                    closeMenu={closeMenu}
+                  />
+                </div>
+              </Accordion.Body>
+            </Accordion.Panel>
+          </Accordion.Item>
         </Accordion>
       </div>
     </div>

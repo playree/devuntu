@@ -7,3 +7,12 @@
     YuGothic, 游ゴシック Medium, Yu Gothic Medium, 游ゴシック, Yu Gothic, Verdana, メイリオ, Meiryo, sans-serif;
   --font-mono: var(--font-roboto-mono);
 }
+
+@layer components {
+  .accordion__trigger {
+    @apply px-2 py-3;
+  }
+  .accordion__body-inner {
+    @apply px-2;
+  }
+}
