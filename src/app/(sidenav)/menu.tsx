@@ -27,7 +27,8 @@ export const MenuButton: FC<{
     <div>
       <Button
         size='sm'
-        className='rounded-xl'
+        fullWidth
+        className='justify-start rounded-xl px-4 hover:bg-gray-100 dark:hover:bg-neutral-900'
         variant='ghost'
         onPress={() => {
           router.push(to)
@@ -50,6 +51,7 @@ const SignOutButton: FC = () => {
   return (
     <MultiButton
       isSmart
+      variant='ghost'
       icon={<ArrowLeftStartOnRectangleIcon />}
       onPress={() => {
         authClient.signOut()
@@ -99,12 +101,13 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
       </div>
 
       <div // サインアウト
+        className='flex px-2'
       >
         <SignOutButton />
       </div>
 
       <div className='mt-2'>
-        <Accordion allowsMultipleExpanded defaultExpandedKeys={defaultExpandedKeys}>
+        <Accordion allowsMultipleExpanded hideSeparator defaultExpandedKeys={defaultExpandedKeys}>
           <Accordion.Item>
             <Accordion.Heading>
               <Accordion.Trigger>

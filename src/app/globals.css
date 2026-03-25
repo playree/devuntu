@@ -8,11 +8,22 @@
   --font-mono: var(--font-roboto-mono);
 }
 
+@layer base {
+  :root {
+    --background: #ffffff;
+  }
+
+  .dark,
+  [data-theme='dark'] {
+    --background: #000000;
+  }
+}
+
 @layer components {
   .accordion__trigger {
     @apply px-2 py-3;
   }
   .accordion__body-inner {
-    @apply px-2;
+    @apply px-0;
   }
 }
