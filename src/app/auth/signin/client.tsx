@@ -124,7 +124,8 @@ const PasswordForm: FC<{
               rememberMe: true,
             },
             {
-              onSuccess: async (ctx) => {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              onSuccess: async (ctx: any) => {
                 if (ctx.data) {
                   const { user, twoFactorRedirect } = ctx.data
                   if (twoFactorRedirect) {
