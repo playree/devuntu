@@ -264,9 +264,10 @@ const OtpForm: FC<{
             coolTime={30}
             onPress={async () => {
               const res = await authClient.twoFactor.sendOtp()
+              console.log(res)
               if (!res.data?.status) {
                 // 一時的な認証状態が有効期限切れなので、サインインを最初からやり直す
-                router.push(makeUrl(authConfig.path.signIn, callbackURL ? { cb: callbackURL } : undefined).toString())
+                window.location.reload()
                 return
               }
               toast(t('msg_otp_sent'), { variant: 'success' })
@@ -375,7 +376,11 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
 
       {mode !== '2FA' && (
         <>
-          <Separator className='mt-6 mb-4' />
+          <div className='mt-6 mb-4 flex items-center'>
+            <Separator className='flex-1' />
+            <div className={twMerge(textStyles().superlight(), 'mx-2')}>or</div>
+            <Separator className='flex-1' />
+          </div>
           <MultiButton
             className='mx-auto mt-2 max-w-xs'
             fullWidth
