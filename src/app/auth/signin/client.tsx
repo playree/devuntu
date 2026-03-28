@@ -244,8 +244,9 @@ const OtpForm: FC<{
         <div className={twMerge(textStyles().light(), 'text-xs')}>{t('msg_enter_otp')}</div>
         <div>
           <InputOtpCtrl
-            className='mx-auto'
+            className='m-4'
             control={control}
+            variant='secondary'
             name='otp'
             maxLength={6}
             autoComplete='one-time-code'
@@ -262,7 +263,12 @@ const OtpForm: FC<{
             icon={<ArrowPathIcon />}
             coolTime={30}
             onPress={async () => {
-              await authClient.twoFactor.sendOtp()
+              const res = await authClient.twoFactor.sendOtp()
+              if (!res.data?.status) {
+                // 一時的な認証状態が有効期限切れなので、サインインを最初からやり直す
+                router.push(makeUrl(authConfig.path.signIn, callbackURL ? { cb: callbackURL } : undefined).toString())
+                return
+              }
               toast(t('msg_otp_sent'), { variant: 'success' })
             }}
           >

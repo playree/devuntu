@@ -31,7 +31,7 @@ export const InputOtpCtrl = <
           }}
           value={value}
         >
-          <InputOTP.Group>
+          <InputOTP.Group className='mx-auto'>
             <InputOTP.Slot index={0} />
             <InputOTP.Slot index={1} />
             <InputOTP.Slot index={2} />
