@@ -2,7 +2,7 @@
 
 import { FC } from 'react'
 
-export const OAuthListClient: FC = () => {
+export const OidcListClient: FC = () => {
   return (
     <div>
       <div>OAuth</div>

@@ -138,8 +138,8 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
               <Accordion.Body>
                 <div className='mx-2'>
                   <MenuButton
-                    to='/admin/oauth-clients'
-                    text={t('oidc_client')}
+                    to='/admin/oidc-clients'
+                    text={t('oidc_clients')}
                     icon={<ServerStackIcon />}
                     closeMenu={closeMenu}
                   />

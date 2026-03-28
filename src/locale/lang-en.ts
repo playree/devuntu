@@ -25,7 +25,8 @@ export const en: LocaleItems = {
   twofa: '2FA',
   twofa_enable: '2FA Enable',
   password_reset: 'Password Reset',
-  oidc_client: 'OIDC Client',
+  oidc_clients: 'OIDC Clients',
+  user_manage: 'User Management',
 
   msg_system_error: 'An error has occurred',
   msg_password_score_required: '${score} or more required',

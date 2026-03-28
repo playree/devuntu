@@ -25,7 +25,8 @@ export const ja: DefaultLocaleItems = {
   twofa: '2要素認証',
   twofa_enable: '2要素認証有効化',
   password_reset: 'パスワード再設定',
-  oidc_client: 'OIDCクライアント',
+  oidc_clients: 'OIDCクライアント',
+  user_manage: 'ユーザー管理',
 
   msg_system_error: 'エラーが発生しました',
   msg_password_score_required: '${score}以上が必要',
