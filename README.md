@@ -22,7 +22,7 @@
 - Next.js v16
 - pnpm v10
 - Prisma v7
-- Better Auth v1.5
+- Better Auth v1.6
 - Tailwind CSS v4
 - HeroUI v3
 - Zod v4
