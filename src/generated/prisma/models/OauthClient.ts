@@ -333,7 +333,7 @@ export type OauthClientGroupByOutputType = {
   _max: OauthClientMaxAggregateOutputType | null
 }
 
-type GetOauthClientGroupByPayload<T extends OauthClientGroupByArgs> = Prisma.PrismaPromise<
+export type GetOauthClientGroupByPayload<T extends OauthClientGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<OauthClientGroupByOutputType, T['by']> &
       {

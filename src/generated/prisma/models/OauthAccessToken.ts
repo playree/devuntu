@@ -193,7 +193,7 @@ export type OauthAccessTokenGroupByOutputType = {
   _max: OauthAccessTokenMaxAggregateOutputType | null
 }
 
-type GetOauthAccessTokenGroupByPayload<T extends OauthAccessTokenGroupByArgs> = Prisma.PrismaPromise<
+export type GetOauthAccessTokenGroupByPayload<T extends OauthAccessTokenGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<OauthAccessTokenGroupByOutputType, T['by']> &
       {

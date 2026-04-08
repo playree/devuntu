@@ -158,7 +158,7 @@ export type JwksGroupByOutputType = {
   _max: JwksMaxAggregateOutputType | null
 }
 
-type GetJwksGroupByPayload<T extends JwksGroupByArgs> = Prisma.PrismaPromise<
+export type GetJwksGroupByPayload<T extends JwksGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<JwksGroupByOutputType, T['by']> &
       {

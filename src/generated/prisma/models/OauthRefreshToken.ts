@@ -200,7 +200,7 @@ export type OauthRefreshTokenGroupByOutputType = {
   _max: OauthRefreshTokenMaxAggregateOutputType | null
 }
 
-type GetOauthRefreshTokenGroupByPayload<T extends OauthRefreshTokenGroupByArgs> = Prisma.PrismaPromise<
+export type GetOauthRefreshTokenGroupByPayload<T extends OauthRefreshTokenGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<OauthRefreshTokenGroupByOutputType, T['by']> &
       {
