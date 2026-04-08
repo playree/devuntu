@@ -1,7 +1,7 @@
 'use client'
 import { MultiButton } from '@/components/general/button'
 import { ThemeSwitchList } from '@/components/general/theme-switch'
-import { ArrowLeftStartOnRectangleIcon, ServerStackIcon, UserCircleIcon } from '@/components/icon'
+import { ArrowLeftStartOnRectangleIcon, ServerStackIcon, UserCircleIcon, UsersIcon } from '@/components/icon'
 import { LocaleSwitch } from '@/components/locale/locale-switch'
 import { authClient } from '@/lib/auth-client'
 import { authConfig } from '@/lib/auth-config'
@@ -135,7 +135,10 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
               </Accordion.Trigger>
             </Accordion.Heading>
             <Accordion.Panel>
-              <Accordion.Body>
+              <Accordion.Body className='grid grid-cols-1 gap-2'>
+                <div className='mx-2'>
+                  <MenuButton to='/admin/users' text={t('user_manage')} icon={<UsersIcon />} closeMenu={closeMenu} />
+                </div>
                 <div className='mx-2'>
                   <MenuButton
                     to='/admin/oidc-clients'
