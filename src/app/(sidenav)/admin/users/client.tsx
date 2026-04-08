@@ -53,11 +53,17 @@ export const UsersClient: FC = () => {
               <Table.Column allowsSorting isRowHeader id='name'>
                 {({ sortDirection }) => <SortableColumnHeader sortDirection={sortDirection}>Name</SortableColumnHeader>}
               </Table.Column>
+              <Table.Column allowsSorting isRowHeader id='email'>
+                {({ sortDirection }) => (
+                  <SortableColumnHeader sortDirection={sortDirection}>Email</SortableColumnHeader>
+                )}
+              </Table.Column>
             </Table.Header>
             <Table.Body>
               {list.items.map((item) => (
-                <Table.Row key={item.name} id={item.name}>
+                <Table.Row key={item.id} id={item.id}>
                   <Table.Cell>{item.name}</Table.Cell>
+                  <Table.Cell>{item.email}</Table.Cell>
                 </Table.Row>
               ))}
             </Table.Body>
