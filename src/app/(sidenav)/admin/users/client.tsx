@@ -1,30 +1,12 @@
 'use client'
 
 import { usePageingList } from '@/components/general/paging'
-import { ChevronUpIcon, UsersIcon } from '@/components/icon'
+import { MultiTable } from '@/components/general/table'
+import { UsersIcon } from '@/components/icon'
 import { useLocale } from '@/locale/client'
-import { cn, SortDescriptor, Table } from '@heroui/react'
-import { FC, ReactNode } from 'react'
+import { Table } from '@heroui/react'
+import { FC } from 'react'
 import { getUsers } from './server'
-
-const SortableColumnHeader: FC<{
-  children: React.ReactNode
-  sortDirection?: 'ascending' | 'descending'
-}> = ({ children, sortDirection }: { children: ReactNode; sortDirection?: SortDescriptor['direction'] }) => {
-  return (
-    <span className='flex items-center justify-between'>
-      {children}
-      {!!sortDirection && (
-        <ChevronUpIcon
-          className={cn(
-            'size-3 transform transition-transform duration-100 ease-out',
-            sortDirection === 'descending' ? 'rotate-180' : '',
-          )}
-        />
-      )}
-    </span>
-  )
-}
 
 export const UsersClient: FC = () => {
   const { t } = useLocale()
@@ -46,30 +28,23 @@ export const UsersClient: FC = () => {
         {t('user_manage')}
       </div>
 
-      <Table>
-        <Table.ScrollContainer>
-          <Table.Content aria-label='users list' sortDescriptor={list.sortDescriptor} onSortChange={list.onSortChange}>
-            <Table.Header>
-              <Table.Column allowsSorting isRowHeader id='name'>
-                {({ sortDirection }) => <SortableColumnHeader sortDirection={sortDirection}>Name</SortableColumnHeader>}
-              </Table.Column>
-              <Table.Column allowsSorting isRowHeader id='email'>
-                {({ sortDirection }) => (
-                  <SortableColumnHeader sortDirection={sortDirection}>Email</SortableColumnHeader>
-                )}
-              </Table.Column>
-            </Table.Header>
-            <Table.Body>
-              {list.items.map((item) => (
-                <Table.Row key={item.id} id={item.id}>
-                  <Table.Cell>{item.name}</Table.Cell>
-                  <Table.Cell>{item.email}</Table.Cell>
-                </Table.Row>
-              ))}
-            </Table.Body>
-          </Table.Content>
-        </Table.ScrollContainer>
-      </Table>
+      <MultiTable
+        ariaLabel='user list'
+        items={list.items}
+        sortDescriptor={list.sortDescriptor}
+        onSortChange={list.onSortChange}
+        columns={[
+          { id: 'name', name: t('username'), isRowHeader: true, allowsSorting: true },
+          { id: 'email', name: t('email'), isRowHeader: true, allowsSorting: true },
+        ]}
+      >
+        {(item) => (
+          <Table.Row key={item.id} id={item.id}>
+            <Table.Cell>{item.name}</Table.Cell>
+            <Table.Cell>{item.email}</Table.Cell>
+          </Table.Row>
+        )}
+      </MultiTable>
     </>
   )
 }
