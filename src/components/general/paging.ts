@@ -88,7 +88,7 @@ export const usePageingList = <T extends Record<string, unknown>[], F extends Re
   const [filters, setFilters] = useState(filter?.init)
   const [filterState] = useState(filter)
 
-  const { items, listLen } = useMemo(() => {
+  const { items, total } = useMemo(() => {
     console.debug('items update page:', page)
 
     // フィルタ
@@ -98,23 +98,22 @@ export const usePageingList = <T extends Record<string, unknown>[], F extends Re
     const start = (page - 1) * rowsPerPage
     const end = start + rowsPerPage
 
-    return { items: tmpList.slice(start, end) as T, listLen: tmpList.length }
+    return { items: tmpList.slice(start, end) as T, total: tmpList.length }
   }, [filterState, filters, list.items, page, rowsPerPage])
 
-  const total = useMemo(() => {
-    return Math.ceil(listLen / rowsPerPage) || 1
-  }, [listLen, rowsPerPage])
+  const totalPages = useMemo(() => {
+    return Math.ceil(total / rowsPerPage) || 1
+  }, [total, rowsPerPage])
 
   return {
     items,
     total,
+    totalPages,
     page,
+    rowsPerPage,
     sortDescriptor: list.sortDescriptor,
     onSortChange: list.sort,
-    onPageChange: (page: number) => {
-      console.debug('onPageChange:', page)
-      setPage(page)
-    },
+    onPageChange: setPage,
     reload: list.reload,
     setFilter: (filter: Partial<F>) => {
       if (filters) {

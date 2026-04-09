@@ -19,6 +19,7 @@ export const UsersClient: FC = () => {
     sort: {
       init: { column: 'updatedAt', direction: 'descending' },
     },
+    rowsPerPage: 4,
   })
 
   return (
@@ -37,6 +38,12 @@ export const UsersClient: FC = () => {
           { id: 'name', name: t('username'), isRowHeader: true, allowsSorting: true },
           { id: 'email', name: t('email'), isRowHeader: true, allowsSorting: true },
         ]}
+        paging={{
+          rowsPerPage: list.rowsPerPage,
+          page: list.page,
+          total: list.total,
+          onPageChange: list.onPageChange,
+        }}
       >
         {(item) => (
           <Table.Row key={item.id} id={item.id}>

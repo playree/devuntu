@@ -1,7 +1,7 @@
 'use client'
 
-import { cn, type SortDescriptor, Table, type TableBodyProps, type TableContentProps } from '@heroui/react'
-import { FC, ReactNode, SVGProps } from 'react'
+import { cn, Pagination, type SortDescriptor, Table, type TableBodyProps, type TableContentProps } from '@heroui/react'
+import { Dispatch, FC, ReactNode, SetStateAction, SVGProps } from 'react'
 
 const ChevronUpIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
   <svg
@@ -40,11 +40,58 @@ const SortableColumnHeader: FC<{
   )
 }
 
+type PagingParam = {
+  rowsPerPage: number
+  page: number
+  total: number
+  onPageChange: Dispatch<SetStateAction<number>>
+}
+
+const TablePaging: FC<PagingParam> = ({ rowsPerPage, page, total, onPageChange }) => {
+  const totalPages = Math.ceil(total / rowsPerPage)
+  const start = (page - 1) * rowsPerPage + 1
+  const end = Math.min(page * rowsPerPage, total)
+  const pages = Array.from({ length: totalPages }, (_, i) => i + 1)
+
+  return (
+    <Pagination size='sm'>
+      <Pagination.Summary>
+        {start} to {end} of {total} results
+      </Pagination.Summary>
+      <Pagination.Content>
+        <Pagination.Item>
+          <Pagination.Previous isDisabled={page === 1} onPress={() => onPageChange((p) => Math.max(1, p - 1))}>
+            <Pagination.PreviousIcon />
+            Prev
+          </Pagination.Previous>
+        </Pagination.Item>
+        {pages.map((p) => (
+          <Pagination.Item key={p}>
+            <Pagination.Link isActive={p === page} onPress={() => onPageChange(p)}>
+              {p}
+            </Pagination.Link>
+          </Pagination.Item>
+        ))}
+        <Pagination.Item>
+          <Pagination.Next
+            isDisabled={page === totalPages}
+            onPress={() => onPageChange((p) => Math.min(totalPages, p + 1))}
+          >
+            Next
+            <Pagination.NextIcon />
+          </Pagination.Next>
+        </Pagination.Item>
+      </Pagination.Content>
+    </Pagination>
+  )
+}
+
 export const MultiTable = <T extends object>({
   ariaLabel,
   sortDescriptor,
   onSortChange,
   columns,
+  paging,
   ...props
 }: TableBodyProps<T> & {
   ariaLabel: string
@@ -56,6 +103,7 @@ export const MultiTable = <T extends object>({
     isRowHeader?: boolean
     allowsSorting?: boolean
   }[]
+  paging?: PagingParam
 }) => {
   return (
     <Table>
@@ -78,6 +126,7 @@ export const MultiTable = <T extends object>({
           <Table.Body {...props} />
         </Table.Content>
       </Table.ScrollContainer>
+      <Table.Footer>{paging && <TablePaging {...paging} />}</Table.Footer>
     </Table>
   )
 }
