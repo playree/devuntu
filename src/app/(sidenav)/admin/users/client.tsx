@@ -3,9 +3,9 @@
 import { usePageingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { UserPlusIcon, UsersIcon } from '@/components/icon'
+import { ArrowPathIcon, UserPlusIcon, UsersIcon } from '@/components/icon'
 import { useLocale } from '@/locale/client'
-import { Button, Table } from '@heroui/react'
+import { Button, ButtonGroup, Table } from '@heroui/react'
 import { FC } from 'react'
 import { getUsers } from './server'
 
@@ -28,6 +28,10 @@ export const UsersClient: FC = () => {
       <ContentHeader icon={<UsersIcon />} title={t('user_manage')}>
         <Button isIconOnly>
           <UserPlusIcon />
+        </Button>
+        <Button isIconOnly>
+          <ButtonGroup.Separator />
+          <ArrowPathIcon />
         </Button>
       </ContentHeader>
 

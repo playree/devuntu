@@ -53,6 +53,14 @@ const TablePaging: FC<PagingParam> = ({ rowsPerPage, page, total, onPageChange }
   const end = Math.min(page * rowsPerPage, total)
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1)
 
+  if (total === 0) {
+    return (
+      <Pagination size='sm'>
+        <Pagination.Summary>0 results</Pagination.Summary>
+      </Pagination>
+    )
+  }
+
   return (
     <Pagination size='sm'>
       <Pagination.Summary>
