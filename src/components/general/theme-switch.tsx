@@ -1,9 +1,8 @@
 'use client'
 
-import { Button, ButtonProps, Dropdown, Label, Skeleton } from '@heroui/react'
+import { Button, ButtonProps, cn, Dropdown, Label, Skeleton } from '@heroui/react'
 import { useTheme } from 'next-themes'
 import { FC, ReactNode, SVGProps, useEffect, useMemo, useState } from 'react'
-import { twMerge } from 'tailwind-merge'
 
 const iconSizes = {
   sm: 16,
@@ -87,12 +86,12 @@ export const ThemeSwitchList: FC<{
   }, [selectedKeys])
 
   if (!mounted) {
-    return <Skeleton className={twMerge('h-8 w-20 rounded-lg', className)} />
+    return <Skeleton className={cn('h-8 w-20 rounded-lg', className)} />
   }
 
   return (
     <Dropdown className={className}>
-      <Button aria-label='Select Theme' size={size} variant={variant} className={twMerge('min-w-20', className)}>
+      <Button aria-label='Select Theme' size={size} variant={variant} className={cn('min-w-20', className)}>
         {selectIcon}
         {selectedValue === 'system' ? 'auto' : selectedValue}
       </Button>

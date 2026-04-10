@@ -1,9 +1,9 @@
 import { envu } from '@/lib/env-util'
 import { localeConfig } from '@/locale/config'
+import { cn } from '@heroui/react'
 import type { Metadata } from 'next'
 import { Noto_Sans_JP, Roboto_Mono } from 'next/font/google'
 import { headers } from 'next/headers'
-import { twMerge } from 'tailwind-merge'
 import './globals.css'
 import { Providers } from './providers'
 
@@ -42,7 +42,7 @@ export default async function RootLayout({
   return (
     <html lang='ja' className={`${NotoSansJp.variable} ${RobotoMono.variable}`} suppressHydrationWarning>
       <head />
-      <body className={twMerge('bg-background text-foreground font-noto min-h-screen antialiased')}>
+      <body className={cn('bg-background text-foreground font-noto min-h-screen antialiased')}>
         <Providers themeProps={{ attribute: 'class' }} defaultLocale={defaultLocale} acceptLanguage={acceptLanguage}>
           <div className='relative flex h-screen flex-col'>{children}</div>
         </Providers>

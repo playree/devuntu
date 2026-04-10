@@ -7,10 +7,9 @@ import { authClient } from '@/lib/auth-client'
 import { authConfig } from '@/lib/auth-config'
 import { makeUrl } from '@/lib/env-util'
 import { useLocale } from '@/locale/client'
-import { Accordion, Button, Card } from '@heroui/react'
+import { Accordion, Button, Card, cn } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC, ReactNode, useEffect } from 'react'
-import { twMerge } from 'tailwind-merge'
 
 export const MenuButton: FC<{
   /** メニューテキスト */
@@ -77,7 +76,7 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
   return (
     <div>
       <div
-        className={twMerge(
+        className={cn(
           'absolute inset-0 bg-size-[20px_20px]',
           'bg-[linear-gradient(to_right,#80808020_1px,transparent_1px),linear-gradient(to_bottom,#80808020_1px,transparent_1px)]',
           'mask-[linear-gradient(to_right,#000_50%,transparent_100%)]',

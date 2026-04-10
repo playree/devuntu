@@ -31,13 +31,12 @@ import {
 import { intervalOperation } from '@/lib/sleep'
 import { gridStyles, textStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
-import { Separator, toast } from '@heroui/react'
+import { cn, Separator, toast } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AnimatePresence } from 'framer-motion'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { FC, useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { twMerge } from 'tailwind-merge'
 import { getUserByEmail } from './server'
 
 type Mode = '2FA' | null
@@ -240,7 +239,7 @@ const OtpForm: FC<{
           router.push(callbackURL)
         })}
       >
-        <div className={twMerge(textStyles().light(), 'text-xs')}>{t('msg_enter_otp')}</div>
+        <div className={cn(textStyles().light(), 'text-xs')}>{t('msg_enter_otp')}</div>
         <div>
           <InputOtpCtrl
             className='m-4'
@@ -321,7 +320,7 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
 
   return (
     <SingleLayout icon={<KeyIcon />} title={viewTitle}>
-      <div className={twMerge(gridStyles(), 'mb-4')}>
+      <div className={cn(gridStyles(), 'mb-4')}>
         <div className='col-span-12 flex md:col-span-3'>
           <div className='text-lg'>{t('welcome')}</div>
         </div>
@@ -377,7 +376,7 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
         <>
           <div className='mt-6 mb-4 flex items-center'>
             <Separator className='flex-1' />
-            <div className={twMerge(textStyles().superlight(), 'mx-2')}>or</div>
+            <div className={cn(textStyles().superlight(), 'mx-2')}>or</div>
             <Separator className='flex-1' />
           </div>
           <MultiButton

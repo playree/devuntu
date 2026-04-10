@@ -1,8 +1,7 @@
 'use client'
 
-import { Button, ButtonProps, Spinner, Tooltip } from '@heroui/react'
+import { Button, ButtonProps, cn, Spinner, Tooltip } from '@heroui/react'
 import { FC, ReactNode, useEffect, useState } from 'react'
-import { twMerge } from 'tailwind-merge'
 
 export const MultiButton: FC<
   ButtonProps & {
@@ -43,7 +42,7 @@ export const MultiButton: FC<
     <Button
       type={type}
       size={size}
-      className={twMerge(isSmart ? 'h-fit px-2 py-1' : '', className)}
+      className={cn(isSmart ? 'h-fit px-2 py-1' : '', className)}
       {...props}
       onPress={(e) => {
         if (onPress) {

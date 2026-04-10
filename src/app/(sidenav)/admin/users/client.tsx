@@ -3,8 +3,9 @@
 import { usePageingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
 import { UsersIcon } from '@/components/icon'
+import { gridStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
-import { Table } from '@heroui/react'
+import { cn, Table } from '@heroui/react'
 import { FC } from 'react'
 import { getUsers } from './server'
 
@@ -24,9 +25,11 @@ export const UsersClient: FC = () => {
 
   return (
     <>
-      <div className='flex justify-center gap-2 lg:justify-start'>
-        <UsersIcon />
-        {t('user_manage')}
+      <div className={cn(gridStyles(), 'mb-4')}>
+        <div className='col-span-12 flex justify-center gap-2 lg:col-span-6 lg:justify-start'>
+          <UsersIcon />
+          {t('user_manage')}
+        </div>
       </div>
 
       <MultiTable

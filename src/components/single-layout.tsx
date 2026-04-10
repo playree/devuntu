@@ -1,8 +1,7 @@
 'use client'
 
-import { Card } from '@heroui/react'
+import { Card, cn } from '@heroui/react'
 import { FC, ReactNode } from 'react'
-import { twMerge } from 'tailwind-merge'
 import { ThemeSwitchList } from './general/theme-switch'
 import { LocaleSwitch } from './locale/locale-switch'
 
@@ -14,7 +13,7 @@ export const SingleLayout: FC<{
   return (
     <div className='relative flex h-screen w-full items-center justify-center'>
       <div
-        className={twMerge(
+        className={cn(
           'absolute inset-0 bg-size-[20px_20px]',
           'bg-[linear-gradient(to_right,#80808030_1px,transparent_1px),linear-gradient(to_bottom,#80808030_1px,transparent_1px)]',
           'mask-[radial-gradient(ellipse_80%_50%_at_50%_50%,#000_10%,transparent_100%)]',

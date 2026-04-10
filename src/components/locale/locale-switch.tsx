@@ -2,9 +2,8 @@
 
 import { authClient } from '@/lib/auth-client'
 import type { Selection } from '@heroui/react'
-import { Button, Dropdown, Label, Skeleton } from '@heroui/react'
+import { Button, cn, Dropdown, Label, Skeleton } from '@heroui/react'
 import { FC, useEffect, useState } from 'react'
-import { twMerge } from 'tailwind-merge'
 import { setCookie } from '../general/cookie/client'
 import { useLocale } from './client'
 import { setUserLocale } from './server'
@@ -29,7 +28,7 @@ export const LocaleSwitch: FC<{ className?: string; size?: 'sm' | 'md' | 'lg' }>
   }, [selectedKeys])
 
   if (!mounted) {
-    return <Skeleton className={twMerge('h-8 w-18 rounded-lg', className)} />
+    return <Skeleton className={cn('h-8 w-18 rounded-lg', className)} />
   }
 
   return (
@@ -38,7 +37,7 @@ export const LocaleSwitch: FC<{ className?: string; size?: 'sm' | 'md' | 'lg' }>
         aria-label='Select Lang'
         variant='outline'
         size={size}
-        className={twMerge('min-w-20', className)}
+        className={cn('min-w-20', className)}
       >{`lang: ${selectedValue}`}</Button>
       <Dropdown.Popover>
         <Dropdown.Menu
