@@ -25,12 +25,20 @@ const Bars3BottomLeftIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWi
 export const SideNavbar: FC<{
   children: ReactNode
   menu: (closeMenu?: () => void) => ReactNode
+  pendding?: () => ReactNode | undefined | null
   className?: string
-}> = ({ children, menu, className }) => {
+}> = ({ children, menu, pendding, className }) => {
   const [isOpen, setIsOpen] = useState(false)
   const closeMenu = () => {
     setIsOpen(false)
   }
+  if (pendding) {
+    const pd = pendding()
+    if (pd) {
+      return pd
+    }
+  }
+
   return (
     <>
       <button

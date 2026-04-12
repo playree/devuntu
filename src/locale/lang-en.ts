@@ -27,6 +27,10 @@ export const en: LocaleItems = {
   password_reset: 'Password Reset',
   oidc_clients: 'OIDC Clients',
   user_manage: 'User Management',
+  client_id: 'Client ID',
+  client_name: 'Client Name',
+  add_client: 'Add client',
+  redirect_uri: 'Redirect URI',
 
   msg_system_error: 'An error has occurred',
   msg_password_score_required: '${score} or more required',

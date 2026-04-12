@@ -1,16 +1,89 @@
 'use client'
 
+import { MultiButton } from '@/components/general/button'
+import { InputCtrl } from '@/components/general/input-ctrl'
 import { usePageingList } from '@/components/general/paging'
+import { useModalState } from '@/components/general/state'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, UserPlusIcon, UsersIcon } from '@/components/icon'
+import { ArrowPathIcon, CheckIcon, PlusIcon, UsersIcon } from '@/components/icon'
+import { AddOidcClient, scAddOidcClient } from '@/lib/schema'
+import { gridStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
-import { Button, ButtonGroup, Table } from '@heroui/react'
+import { ButtonGroup, cn, Modal, Table, UseOverlayStateReturn } from '@heroui/react'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { FC } from 'react'
+import { useForm } from 'react-hook-form'
 import { getOAuthClients } from './server'
+
+const AddModal: FC<{ state: UseOverlayStateReturn }> = ({ state }) => {
+  const { t, fet } = useLocale()
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting, errors },
+  } = useForm<AddOidcClient>({
+    resolver: zodResolver(scAddOidcClient),
+    mode: 'onChange',
+    defaultValues: {
+      clientName: '',
+      redirectUri: '',
+    },
+  })
+
+  return (
+    <Modal.Backdrop isOpen={state.isOpen} onOpenChange={state.setOpen}>
+      <Modal.Container>
+        <Modal.Dialog>
+          <form>
+            <Modal.CloseTrigger />
+            <Modal.Header>
+              <Modal.Heading>{t('add_client')}</Modal.Heading>
+            </Modal.Header>
+            <Modal.Body>
+              <div className={cn(gridStyles(), 'mt-4 p-1')}>
+                <div className='col-span-12'>
+                  <InputCtrl
+                    control={control}
+                    variant='secondary'
+                    name='clientName'
+                    label={t('client_name')}
+                    errorMessage={fet(errors.clientName)}
+                    isRequired
+                    autoFocus
+                  />
+                </div>
+                <div className='col-span-12'>
+                  <InputCtrl
+                    control={control}
+                    variant='secondary'
+                    name='redirectUri'
+                    label={t('redirect_uri')}
+                    errorMessage={fet(errors.redirectUri)}
+                    isRequired
+                  />
+                </div>
+              </div>
+            </Modal.Body>
+            <Modal.Footer>
+              <MultiButton slot='close' variant='secondary'>
+                Cancel
+              </MultiButton>
+              <MultiButton type='submit' icon={<CheckIcon />}>
+                Submit
+              </MultiButton>
+            </Modal.Footer>
+          </form>
+        </Modal.Dialog>
+      </Modal.Container>
+    </Modal.Backdrop>
+  )
+}
 
 export const OidcListClient: FC = () => {
   const { t } = useLocale()
+  const addModalState = useModalState() //useOverlayState()
 
   const list = usePageingList({
     load: async () => {
@@ -26,13 +99,13 @@ export const OidcListClient: FC = () => {
   return (
     <>
       <ContentHeader icon={<UsersIcon />} title={t('oidc_clients')}>
-        <Button isIconOnly>
-          <UserPlusIcon />
-        </Button>
-        <Button isIconOnly>
+        <MultiButton isIconOnly tooltip={t('add_client')} onPress={addModalState.open}>
+          <PlusIcon />
+        </MultiButton>
+        <MultiButton isIconOnly>
           <ButtonGroup.Separator />
           <ArrowPathIcon />
-        </Button>
+        </MultiButton>
       </ContentHeader>
 
       <MultiTable
@@ -41,8 +114,8 @@ export const OidcListClient: FC = () => {
         sortDescriptor={list.sortDescriptor}
         onSortChange={list.onSortChange}
         columns={[
-          { id: 'name', name: 'client_name', isRowHeader: true, allowsSorting: true },
-          { id: 'email', name: 'client_id', isRowHeader: true, allowsSorting: true },
+          { id: 'name', name: t('client_name'), isRowHeader: true, allowsSorting: true },
+          { id: 'email', name: t('client_id'), isRowHeader: true, allowsSorting: true },
         ]}
         paging={{
           rowsPerPage: list.rowsPerPage,
@@ -58,6 +131,8 @@ export const OidcListClient: FC = () => {
           </Table.Row>
         )}
       </MultiTable>
+
+      <AddModal state={addModalState} key={addModalState.key} />
     </>
   )
 }

@@ -61,7 +61,7 @@ export const MultiButton: FC<
   )
 
   return tooltip ? (
-    <Tooltip>
+    <Tooltip delay={300}>
       {button}
       <Tooltip.Content showArrow>{tooltip}</Tooltip.Content>
     </Tooltip>

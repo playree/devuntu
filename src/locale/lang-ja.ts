@@ -27,6 +27,10 @@ export const ja: DefaultLocaleItems = {
   password_reset: 'パスワード再設定',
   oidc_clients: 'OIDCクライアント',
   user_manage: 'ユーザー管理',
+  client_id: 'クライアントID',
+  client_name: 'クライアント名',
+  add_client: 'クライアント追加',
+  redirect_uri: 'リダイレクトURI',
 
   msg_system_error: 'エラーが発生しました',
   msg_password_score_required: '${score}以上が必要',
