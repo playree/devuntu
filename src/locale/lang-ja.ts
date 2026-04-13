@@ -38,6 +38,7 @@ export const ja: DefaultLocaleItems = {
   msg_user_not_exist: 'ユーザーが存在しません',
   msg_enter_otp: 'Eメールに届いた認証コードを入力してください',
   msg_otp_sent: '認証コードを送信しました',
+  msg_added_oidc_client: 'OIDCクライアントを追加しました',
 
   mail_otp_subject: '[${appname}] 2要素認証OTP : ${otp}',
   mail_otp_body: `2要素認証の為の認証コードを発行しました。

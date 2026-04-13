@@ -1,6 +1,6 @@
 'use server'
 
-import { safeAction } from '@/lib/action'
+import { safeAction } from '@/lib/action-server'
 import { auth } from '@/lib/auth'
 import { errSystemError } from '@/lib/error'
 import { logger } from '@/lib/logger'

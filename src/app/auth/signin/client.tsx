@@ -63,7 +63,7 @@ const UsernameForm: FC<{
       <form
         onSubmit={handleSubmit(async (input) => {
           await getUserByEmail(input)
-          await intervalOperation(100)
+          await intervalOperation()
           next(input.username)
         })}
       >
@@ -129,7 +129,7 @@ const PasswordForm: FC<{
                   if (twoFactorRedirect) {
                     // 2FA
                     await authClient.twoFactor.sendOtp()
-                    toast(t('msg_otp_sent'), { variant: 'success' })
+                    toast.success(t('msg_otp_sent'))
                     next(password)
                     return
                   }
@@ -139,7 +139,7 @@ const PasswordForm: FC<{
                     if (!user.twoFactorEnabled) {
                       await authClient.twoFactor.enable({ password })
                       await authClient.twoFactor.sendOtp()
-                      toast(t('msg_otp_sent'), { variant: 'success' })
+                      toast.success(t('msg_otp_sent'))
                       next(password)
                       return
                     }
@@ -152,11 +152,11 @@ const PasswordForm: FC<{
           )
           console.debug(res)
 
-          await intervalOperation(100)
+          await intervalOperation()
           if (res.error) {
             console.debug(res.error)
             const msg = res.error.code === 'INVALID_EMAIL_OR_PASSWORD' ? t('msg_invalid_email_or_password') : undefined
-            toast(t('auth_ng'), { description: msg, variant: 'danger' })
+            toast.warning(t('auth_ng'), { description: msg })
           }
         })}
       >
@@ -230,10 +230,10 @@ const OtpForm: FC<{
             code: input.otp,
             trustDevice: true,
           })
-          await intervalOperation(100)
+          await intervalOperation()
           if (res.error) {
             console.debug(res.error)
-            toast(t('auth_ng'), { variant: 'danger' })
+            toast.warning(t('auth_ng'))
             return
           }
           router.push(callbackURL)
@@ -268,7 +268,7 @@ const OtpForm: FC<{
                 window.location.reload()
                 return
               }
-              toast(t('msg_otp_sent'), { variant: 'success' })
+              toast.success(t('msg_otp_sent'))
             }}
           >
             {t('resend')}
@@ -304,7 +304,7 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
   useEffect(() => {
     if (errorCode) {
       const msg = errorCode === 'user_not_exist' ? t('msg_user_not_exist') : undefined
-      toast(t('auth_ng'), { description: msg, variant: 'danger' })
+      toast.warning(t('auth_ng'), { description: msg })
     }
   }, [errorCode, t])
 
@@ -404,7 +404,7 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
               const { data, error } = await authClient.signIn.passkey()
               console.debug('passkey', { data, error })
               if (error) {
-                toast(t('auth_ng'), { variant: 'danger' })
+                toast.warning(t('auth_ng'))
                 return
               }
               router.push(callbackURL)

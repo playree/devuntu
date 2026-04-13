@@ -16,7 +16,7 @@ export interface ProvidersProps {
 export const Providers: FC<ProvidersProps> = ({ children, themeProps, defaultLocale, acceptLanguage }) => {
   return (
     <ThemeProvider {...themeProps}>
-      <Toast.Provider placement='top' />
+      <Toast.Provider placement='bottom end' />
       <LocaleProvider config={localeConfig} defaultLocale={defaultLocale} acceptLanguage={acceptLanguage}>
         {children}
       </LocaleProvider>

@@ -1,6 +1,6 @@
 'use server'
 
-import { safeAction } from '@/lib/action'
+import { safeAction } from '@/lib/action-server'
 import { scSignInUsername } from '@/lib/schema'
 
 export const getUserByEmail = safeAction

@@ -1,4 +1,4 @@
-import { useOverlayState } from '@heroui/react'
+import { useOverlayState, UseOverlayStateReturn } from '@heroui/react'
 import { nanoid } from 'nanoid'
 import { useState } from 'react'
 
@@ -8,3 +8,5 @@ export const useModalState = () => {
   const state = useOverlayState({ onOpenChange: (isOpen) => setKey(({ id }) => ({ id, key: `${id}_${isOpen}` })) })
   return { ...state, key: key.key }
 }
+
+export type ModalBaseProps = { state: UseOverlayStateReturn; reload: () => void }

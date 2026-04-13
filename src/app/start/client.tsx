@@ -42,7 +42,7 @@ export const StartClient: FC = () => {
           const res = await createAdmin(input)
           console.debug(res)
           if (!res.data) {
-            toast(t('error'), { description: t('msg_system_error'), variant: 'danger' })
+            toast.danger(t('error'), { description: t('msg_system_error') })
             return
           }
 

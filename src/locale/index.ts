@@ -35,6 +35,7 @@ export type LocaleItemBase =
   | 'msg_user_not_exist'
   | 'msg_enter_otp'
   | 'msg_otp_sent'
+  | 'msg_added_oidc_client'
   | 'mail_otp_subject'
   | 'mail_otp_body'
 

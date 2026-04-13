@@ -38,6 +38,7 @@ export const en: LocaleItems = {
   msg_user_not_exist: 'User does not exist',
   msg_enter_otp: 'Enter the verification code sent to your email address',
   msg_otp_sent: 'Verification code sent',
+  msg_added_oidc_client: 'Added OIDC client',
 
   mail_otp_subject: '[${appname}] 2FA OTP : ${otp}',
   mail_otp_body: `A verification code has been issued for two-factor authentication.

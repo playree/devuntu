@@ -2,21 +2,23 @@
 
 import { MultiButton } from '@/components/general/button'
 import { InputCtrl } from '@/components/general/input-ctrl'
+import { ModalBaseProps, useModalState } from '@/components/general/modal'
 import { usePageingList } from '@/components/general/paging'
-import { useModalState } from '@/components/general/state'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
 import { ArrowPathIcon, CheckIcon, PlusIcon, UsersIcon } from '@/components/icon'
+import { parseAction } from '@/lib/action-client'
 import { AddOidcClient, scAddOidcClient } from '@/lib/schema'
+import { intervalOperation } from '@/lib/sleep'
 import { gridStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
-import { ButtonGroup, cn, Modal, Table, UseOverlayStateReturn } from '@heroui/react'
+import { ButtonGroup, cn, Modal, Table, toast } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FC } from 'react'
 import { useForm } from 'react-hook-form'
-import { getOAuthClients } from './server'
+import { addOidcClient, getOidcClients } from './server'
 
-const AddModal: FC<{ state: UseOverlayStateReturn }> = ({ state }) => {
+const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
   const { t, fet } = useLocale()
 
   const {
@@ -36,7 +38,15 @@ const AddModal: FC<{ state: UseOverlayStateReturn }> = ({ state }) => {
     <Modal.Backdrop isOpen={state.isOpen} onOpenChange={state.setOpen}>
       <Modal.Container>
         <Modal.Dialog>
-          <form>
+          <form
+            onSubmit={handleSubmit(async (req) => {
+              await parseAction(addOidcClient(req))
+              await intervalOperation()
+              toast.success(t('msg_added_oidc_client'))
+              reload()
+              state.close()
+            })}
+          >
             <Modal.CloseTrigger />
             <Modal.Header>
               <Modal.Heading>{t('add_client')}</Modal.Heading>
@@ -70,7 +80,7 @@ const AddModal: FC<{ state: UseOverlayStateReturn }> = ({ state }) => {
               <MultiButton slot='close' variant='secondary'>
                 Cancel
               </MultiButton>
-              <MultiButton type='submit' icon={<CheckIcon />}>
+              <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
                 Submit
               </MultiButton>
             </Modal.Footer>
@@ -87,7 +97,7 @@ export const OidcListClient: FC = () => {
 
   const list = usePageingList({
     load: async () => {
-      const res = await getOAuthClients()
+      const res = await getOidcClients()
       return res.data ?? []
     },
     sort: {
@@ -117,12 +127,7 @@ export const OidcListClient: FC = () => {
           { id: 'name', name: t('client_name'), isRowHeader: true, allowsSorting: true },
           { id: 'email', name: t('client_id'), isRowHeader: true, allowsSorting: true },
         ]}
-        paging={{
-          rowsPerPage: list.rowsPerPage,
-          page: list.page,
-          total: list.total,
-          onPageChange: list.onPageChange,
-        }}
+        paging={list}
       >
         {(item) => (
           <Table.Row key={item.client_id} id={item.client_id}>
@@ -132,7 +137,7 @@ export const OidcListClient: FC = () => {
         )}
       </MultiTable>
 
-      <AddModal state={addModalState} key={addModalState.key} />
+      <AddModal state={addModalState} reload={list.reload} key={addModalState.key} />
     </>
   )
 }
