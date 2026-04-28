@@ -283,7 +283,7 @@ export type SessionScalarWhereWithAggregatesInput = {
 }
 
 export type SessionCreateInput = {
-  id: string
+  id?: string
   expiresAt: Date | string
   token: string
   createdAt?: Date | string
@@ -297,7 +297,7 @@ export type SessionCreateInput = {
 }
 
 export type SessionUncheckedCreateInput = {
-  id: string
+  id?: string
   expiresAt: Date | string
   token: string
   createdAt?: Date | string
@@ -339,7 +339,7 @@ export type SessionUncheckedUpdateInput = {
 }
 
 export type SessionCreateManyInput = {
-  id: string
+  id?: string
   expiresAt: Date | string
   token: string
   createdAt?: Date | string
@@ -499,7 +499,7 @@ export type SessionUpdateOneWithoutOauthaccesstokensNestedInput = {
 }
 
 export type SessionCreateWithoutUserInput = {
-  id: string
+  id?: string
   expiresAt: Date | string
   token: string
   createdAt?: Date | string
@@ -512,7 +512,7 @@ export type SessionCreateWithoutUserInput = {
 }
 
 export type SessionUncheckedCreateWithoutUserInput = {
-  id: string
+  id?: string
   expiresAt: Date | string
   token: string
   createdAt?: Date | string
@@ -565,7 +565,7 @@ export type SessionScalarWhereInput = {
 }
 
 export type SessionCreateWithoutOauthrefreshtokensInput = {
-  id: string
+  id?: string
   expiresAt: Date | string
   token: string
   createdAt?: Date | string
@@ -578,7 +578,7 @@ export type SessionCreateWithoutOauthrefreshtokensInput = {
 }
 
 export type SessionUncheckedCreateWithoutOauthrefreshtokensInput = {
-  id: string
+  id?: string
   expiresAt: Date | string
   token: string
   createdAt?: Date | string
@@ -633,7 +633,7 @@ export type SessionUncheckedUpdateWithoutOauthrefreshtokensInput = {
 }
 
 export type SessionCreateWithoutOauthaccesstokensInput = {
-  id: string
+  id?: string
   expiresAt: Date | string
   token: string
   createdAt?: Date | string
@@ -646,7 +646,7 @@ export type SessionCreateWithoutOauthaccesstokensInput = {
 }
 
 export type SessionUncheckedCreateWithoutOauthaccesstokensInput = {
-  id: string
+  id?: string
   expiresAt: Date | string
   token: string
   createdAt?: Date | string
@@ -701,7 +701,7 @@ export type SessionUncheckedUpdateWithoutOauthaccesstokensInput = {
 }
 
 export type SessionCreateManyUserInput = {
-  id: string
+  id?: string
   expiresAt: Date | string
   token: string
   createdAt?: Date | string

@@ -54,6 +54,7 @@ export const StartClient: FC = () => {
           <div className='col-span-12'>
             <InputCtrl
               control={control}
+              variant='secondary'
               name='name'
               label={t('username')}
               errorMessage={fet(errors.name)}
@@ -64,6 +65,7 @@ export const StartClient: FC = () => {
           <div className='col-span-12'>
             <InputCtrl
               control={control}
+              variant='secondary'
               name='email'
               label={t('email')}
               autoComplete='email'
@@ -74,6 +76,7 @@ export const StartClient: FC = () => {
           <div className='col-span-12'>
             <InputCtrlPassword
               control={control}
+              variant='secondary'
               name='password'
               label={t('password')}
               autoComplete='new-password'

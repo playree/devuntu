@@ -6,7 +6,7 @@ import { nextCookies } from 'better-auth/next-js'
 import { admin, jwt, twoFactor } from 'better-auth/plugins'
 import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { ulid } from 'ulid'
+import { uuidv7 } from 'uuidv7'
 import { authConfig } from './auth-config'
 import { envu, makeUrl } from './env-util'
 import { logger } from './logger'
@@ -21,7 +21,7 @@ export const auth = betterAuth({
   }),
   advanced: {
     database: {
-      generateId: () => ulid(),
+      generateId: () => uuidv7(),
     },
   },
   user: {

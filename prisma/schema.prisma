@@ -8,7 +8,7 @@ datasource db {
 }
 
 model User {
-  id                 String              @id
+  id                 String              @id @default(uuid(7))
   name               String
   email              String
   emailVerified      Boolean             @default(false)
@@ -35,7 +35,7 @@ model User {
 }
 
 model Session {
-  id                 String              @id
+  id                 String              @id @default(uuid(7))
   expiresAt          DateTime
   token              String
   createdAt          DateTime            @default(now())
@@ -54,7 +54,7 @@ model Session {
 }
 
 model Account {
-  id                    String    @id
+  id                    String    @id @default(uuid(7))
   accountId             String
   providerId            String
   userId                String
@@ -74,7 +74,7 @@ model Account {
 }
 
 model Verification {
-  id         String   @id
+  id         String   @id @default(uuid(7))
   identifier String
   value      String
   expiresAt  DateTime
@@ -86,11 +86,12 @@ model Verification {
 }
 
 model TwoFactor {
-  id          String @id
+  id          String   @id @default(uuid(7))
   secret      String
   backupCodes String
   userId      String
-  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verified    Boolean? @default(true)
 
   @@index([secret])
   @@index([userId])
@@ -98,7 +99,7 @@ model TwoFactor {
 }
 
 model Passkey {
-  id           String    @id
+  id           String    @id @default(uuid(7))
   name         String?
   publicKey    String
   userId       String
@@ -117,7 +118,7 @@ model Passkey {
 }
 
 model Jwks {
-  id         String    @id
+  id         String    @id @default(uuid(7))
   publicKey  String
   privateKey String
   createdAt  DateTime
@@ -127,7 +128,7 @@ model Jwks {
 }
 
 model OauthClient {
-  id                      String              @id
+  id                      String              @id @default(uuid(7))
   clientId                String
   clientSecret            String?
   disabled                Boolean?            @default(false)
@@ -167,7 +168,7 @@ model OauthClient {
 }
 
 model OauthRefreshToken {
-  id                String             @id
+  id                String             @id @default(uuid(7))
   token             String
   clientId          String
   oauthclient       OauthClient        @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
@@ -187,7 +188,7 @@ model OauthRefreshToken {
 }
 
 model OauthAccessToken {
-  id                String             @id
+  id                String             @id @default(uuid(7))
   token             String?
   clientId          String
   oauthclient       OauthClient        @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
@@ -207,7 +208,7 @@ model OauthAccessToken {
 }
 
 model OauthConsent {
-  id          String      @id
+  id          String      @id @default(uuid(7))
   clientId    String
   oauthclient OauthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
   userId      String?

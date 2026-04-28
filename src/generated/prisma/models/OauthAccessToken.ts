@@ -298,7 +298,7 @@ export type OauthAccessTokenScalarWhereWithAggregatesInput = {
 }
 
 export type OauthAccessTokenCreateInput = {
-  id: string
+  id?: string
   token?: string | null
   referenceId?: string | null
   expiresAt?: Date | string | null
@@ -311,7 +311,7 @@ export type OauthAccessTokenCreateInput = {
 }
 
 export type OauthAccessTokenUncheckedCreateInput = {
-  id: string
+  id?: string
   token?: string | null
   clientId: string
   sessionId?: string | null
@@ -350,7 +350,7 @@ export type OauthAccessTokenUncheckedUpdateInput = {
 }
 
 export type OauthAccessTokenCreateManyInput = {
-  id: string
+  id?: string
   token?: string | null
   clientId: string
   sessionId?: string | null
@@ -602,7 +602,7 @@ export type OauthAccessTokenUncheckedUpdateManyWithoutOauthrefreshtokenNestedInp
 }
 
 export type OauthAccessTokenCreateWithoutUserInput = {
-  id: string
+  id?: string
   token?: string | null
   referenceId?: string | null
   expiresAt?: Date | string | null
@@ -614,7 +614,7 @@ export type OauthAccessTokenCreateWithoutUserInput = {
 }
 
 export type OauthAccessTokenUncheckedCreateWithoutUserInput = {
-  id: string
+  id?: string
   token?: string | null
   clientId: string
   sessionId?: string | null
@@ -667,7 +667,7 @@ export type OauthAccessTokenScalarWhereInput = {
 }
 
 export type OauthAccessTokenCreateWithoutSessionInput = {
-  id: string
+  id?: string
   token?: string | null
   referenceId?: string | null
   expiresAt?: Date | string | null
@@ -679,7 +679,7 @@ export type OauthAccessTokenCreateWithoutSessionInput = {
 }
 
 export type OauthAccessTokenUncheckedCreateWithoutSessionInput = {
-  id: string
+  id?: string
   token?: string | null
   clientId: string
   userId?: string | null
@@ -716,7 +716,7 @@ export type OauthAccessTokenUpdateManyWithWhereWithoutSessionInput = {
 }
 
 export type OauthAccessTokenCreateWithoutOauthclientInput = {
-  id: string
+  id?: string
   token?: string | null
   referenceId?: string | null
   expiresAt?: Date | string | null
@@ -728,7 +728,7 @@ export type OauthAccessTokenCreateWithoutOauthclientInput = {
 }
 
 export type OauthAccessTokenUncheckedCreateWithoutOauthclientInput = {
-  id: string
+  id?: string
   token?: string | null
   sessionId?: string | null
   userId?: string | null
@@ -765,7 +765,7 @@ export type OauthAccessTokenUpdateManyWithWhereWithoutOauthclientInput = {
 }
 
 export type OauthAccessTokenCreateWithoutOauthrefreshtokenInput = {
-  id: string
+  id?: string
   token?: string | null
   referenceId?: string | null
   expiresAt?: Date | string | null
@@ -777,7 +777,7 @@ export type OauthAccessTokenCreateWithoutOauthrefreshtokenInput = {
 }
 
 export type OauthAccessTokenUncheckedCreateWithoutOauthrefreshtokenInput = {
-  id: string
+  id?: string
   token?: string | null
   clientId: string
   sessionId?: string | null
@@ -814,7 +814,7 @@ export type OauthAccessTokenUpdateManyWithWhereWithoutOauthrefreshtokenInput = {
 }
 
 export type OauthAccessTokenCreateManyUserInput = {
-  id: string
+  id?: string
   token?: string | null
   clientId: string
   sessionId?: string | null
@@ -862,7 +862,7 @@ export type OauthAccessTokenUncheckedUpdateManyWithoutUserInput = {
 }
 
 export type OauthAccessTokenCreateManySessionInput = {
-  id: string
+  id?: string
   token?: string | null
   clientId: string
   userId?: string | null
@@ -910,7 +910,7 @@ export type OauthAccessTokenUncheckedUpdateManyWithoutSessionInput = {
 }
 
 export type OauthAccessTokenCreateManyOauthclientInput = {
-  id: string
+  id?: string
   token?: string | null
   sessionId?: string | null
   userId?: string | null
@@ -958,7 +958,7 @@ export type OauthAccessTokenUncheckedUpdateManyWithoutOauthclientInput = {
 }
 
 export type OauthAccessTokenCreateManyOauthrefreshtokenInput = {
-  id: string
+  id?: string
   token?: string | null
   clientId: string
   sessionId?: string | null

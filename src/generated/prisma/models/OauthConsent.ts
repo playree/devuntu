@@ -256,7 +256,7 @@ export type OauthConsentScalarWhereWithAggregatesInput = {
 }
 
 export type OauthConsentCreateInput = {
-  id: string
+  id?: string
   referenceId?: string | null
   scopes: string
   createdAt?: Date | string | null
@@ -266,7 +266,7 @@ export type OauthConsentCreateInput = {
 }
 
 export type OauthConsentUncheckedCreateInput = {
-  id: string
+  id?: string
   clientId: string
   userId?: string | null
   referenceId?: string | null
@@ -296,7 +296,7 @@ export type OauthConsentUncheckedUpdateInput = {
 }
 
 export type OauthConsentCreateManyInput = {
-  id: string
+  id?: string
   clientId: string
   userId?: string | null
   referenceId?: string | null
@@ -448,7 +448,7 @@ export type OauthConsentUncheckedUpdateManyWithoutOauthclientNestedInput = {
 }
 
 export type OauthConsentCreateWithoutUserInput = {
-  id: string
+  id?: string
   referenceId?: string | null
   scopes: string
   createdAt?: Date | string | null
@@ -457,7 +457,7 @@ export type OauthConsentCreateWithoutUserInput = {
 }
 
 export type OauthConsentUncheckedCreateWithoutUserInput = {
-  id: string
+  id?: string
   clientId: string
   referenceId?: string | null
   scopes: string
@@ -504,7 +504,7 @@ export type OauthConsentScalarWhereInput = {
 }
 
 export type OauthConsentCreateWithoutOauthclientInput = {
-  id: string
+  id?: string
   referenceId?: string | null
   scopes: string
   createdAt?: Date | string | null
@@ -513,7 +513,7 @@ export type OauthConsentCreateWithoutOauthclientInput = {
 }
 
 export type OauthConsentUncheckedCreateWithoutOauthclientInput = {
-  id: string
+  id?: string
   userId?: string | null
   referenceId?: string | null
   scopes: string
@@ -547,7 +547,7 @@ export type OauthConsentUpdateManyWithWhereWithoutOauthclientInput = {
 }
 
 export type OauthConsentCreateManyUserInput = {
-  id: string
+  id?: string
   clientId: string
   referenceId?: string | null
   scopes: string
@@ -583,7 +583,7 @@ export type OauthConsentUncheckedUpdateManyWithoutUserInput = {
 }
 
 export type OauthConsentCreateManyOauthclientInput = {
-  id: string
+  id?: string
   userId?: string | null
   referenceId?: string | null
   scopes: string

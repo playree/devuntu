@@ -226,7 +226,7 @@ export type JwksScalarWhereWithAggregatesInput = {
 }
 
 export type JwksCreateInput = {
-  id: string
+  id?: string
   publicKey: string
   privateKey: string
   createdAt: Date | string
@@ -234,7 +234,7 @@ export type JwksCreateInput = {
 }
 
 export type JwksUncheckedCreateInput = {
-  id: string
+  id?: string
   publicKey: string
   privateKey: string
   createdAt: Date | string
@@ -258,7 +258,7 @@ export type JwksUncheckedUpdateInput = {
 }
 
 export type JwksCreateManyInput = {
-  id: string
+  id?: string
   publicKey: string
   privateKey: string
   createdAt: Date | string

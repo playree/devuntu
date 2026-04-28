@@ -538,7 +538,7 @@ export type OauthClientScalarWhereWithAggregatesInput = {
 }
 
 export type OauthClientCreateInput = {
-  id: string
+  id?: string
   clientId: string
   clientSecret?: string | null
   disabled?: boolean | null
@@ -574,7 +574,7 @@ export type OauthClientCreateInput = {
 }
 
 export type OauthClientUncheckedCreateInput = {
-  id: string
+  id?: string
   clientId: string
   clientSecret?: string | null
   disabled?: boolean | null
@@ -682,7 +682,7 @@ export type OauthClientUncheckedUpdateInput = {
 }
 
 export type OauthClientCreateManyInput = {
-  id: string
+  id?: string
   clientId: string
   clientSecret?: string | null
   disabled?: boolean | null
@@ -978,7 +978,7 @@ export type OauthClientUpdateOneRequiredWithoutOauthconsentsNestedInput = {
 }
 
 export type OauthClientCreateWithoutUserInput = {
-  id: string
+  id?: string
   clientId: string
   clientSecret?: string | null
   disabled?: boolean | null
@@ -1013,7 +1013,7 @@ export type OauthClientCreateWithoutUserInput = {
 }
 
 export type OauthClientUncheckedCreateWithoutUserInput = {
-  id: string
+  id?: string
   clientId: string
   clientSecret?: string | null
   disabled?: boolean | null
@@ -1109,7 +1109,7 @@ export type OauthClientScalarWhereInput = {
 }
 
 export type OauthClientCreateWithoutOauthrefreshtokensInput = {
-  id: string
+  id?: string
   clientId: string
   clientSecret?: string | null
   disabled?: boolean | null
@@ -1144,7 +1144,7 @@ export type OauthClientCreateWithoutOauthrefreshtokensInput = {
 }
 
 export type OauthClientUncheckedCreateWithoutOauthrefreshtokensInput = {
-  id: string
+  id?: string
   clientId: string
   clientSecret?: string | null
   disabled?: boolean | null
@@ -1265,7 +1265,7 @@ export type OauthClientUncheckedUpdateWithoutOauthrefreshtokensInput = {
 }
 
 export type OauthClientCreateWithoutOauthaccesstokensInput = {
-  id: string
+  id?: string
   clientId: string
   clientSecret?: string | null
   disabled?: boolean | null
@@ -1300,7 +1300,7 @@ export type OauthClientCreateWithoutOauthaccesstokensInput = {
 }
 
 export type OauthClientUncheckedCreateWithoutOauthaccesstokensInput = {
-  id: string
+  id?: string
   clientId: string
   clientSecret?: string | null
   disabled?: boolean | null
@@ -1421,7 +1421,7 @@ export type OauthClientUncheckedUpdateWithoutOauthaccesstokensInput = {
 }
 
 export type OauthClientCreateWithoutOauthconsentsInput = {
-  id: string
+  id?: string
   clientId: string
   clientSecret?: string | null
   disabled?: boolean | null
@@ -1456,7 +1456,7 @@ export type OauthClientCreateWithoutOauthconsentsInput = {
 }
 
 export type OauthClientUncheckedCreateWithoutOauthconsentsInput = {
-  id: string
+  id?: string
   clientId: string
   clientSecret?: string | null
   disabled?: boolean | null
@@ -1577,7 +1577,7 @@ export type OauthClientUncheckedUpdateWithoutOauthconsentsInput = {
 }
 
 export type OauthClientCreateManyUserInput = {
-  id: string
+  id?: string
   clientId: string
   clientSecret?: string | null
   disabled?: boolean | null

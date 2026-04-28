@@ -44,12 +44,12 @@ const EyeSlashIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2
   </svg>
 )
 
-const COLOR: ('danger' | 'warning' | 'success' | 'accent' | 'default')[] = [
+const COLOR: ('default' | 'danger' | 'warning' | 'success' | 'accent')[] = [
+  'default',
   'danger',
   'warning',
   'success',
   'accent',
-  'default',
 ]
 
 export const PasswordScore: FC<{
@@ -59,11 +59,12 @@ export const PasswordScore: FC<{
 }> = ({ label, score, isDisabled }) => {
   return (
     <ProgressBar
-      size='sm'
+      size='md'
       maxValue={4}
       value={score}
       className='my-1 px-1'
       color={COLOR[score]}
+      valueLabel=' '
       // isDisabled={isDisabled}
     >
       <Label className={isDisabled ? 'text-xs text-gray-600 dark:text-gray-400' : 'text-xs'}>{label}</Label>
@@ -110,7 +111,12 @@ export const InputCtrlPassword = <
         control={control}
         name={name}
         render={({ field: { onChange, value } }) => (
-          <TextField type={isVisible ? 'text' : 'password'} isInvalid={!!errorMessage} isReadOnly={isReadOnly}>
+          <TextField
+            type={isVisible ? 'text' : 'password'}
+            className='relative'
+            isInvalid={!!errorMessage}
+            isReadOnly={isReadOnly}
+          >
             <Label>
               {label}
               {isRequired ? '*' : ''}

@@ -346,7 +346,7 @@ export type UserScalarWhereWithAggregatesInput = {
 }
 
 export type UserCreateInput = {
-  id: string
+  id?: string
   name: string
   email: string
   emailVerified?: boolean
@@ -370,7 +370,7 @@ export type UserCreateInput = {
 }
 
 export type UserUncheckedCreateInput = {
-  id: string
+  id?: string
   name: string
   email: string
   emailVerified?: boolean
@@ -442,7 +442,7 @@ export type UserUncheckedUpdateInput = {
 }
 
 export type UserCreateManyInput = {
-  id: string
+  id?: string
   name: string
   email: string
   emailVerified?: boolean
@@ -690,7 +690,7 @@ export type UserUpdateOneWithoutOauthconsentsNestedInput = {
 }
 
 export type UserCreateWithoutSessionsInput = {
-  id: string
+  id?: string
   name: string
   email: string
   emailVerified?: boolean
@@ -713,7 +713,7 @@ export type UserCreateWithoutSessionsInput = {
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
-  id: string
+  id?: string
   name: string
   email: string
   emailVerified?: boolean
@@ -798,7 +798,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
 }
 
 export type UserCreateWithoutAccountsInput = {
-  id: string
+  id?: string
   name: string
   email: string
   emailVerified?: boolean
@@ -821,7 +821,7 @@ export type UserCreateWithoutAccountsInput = {
 }
 
 export type UserUncheckedCreateWithoutAccountsInput = {
-  id: string
+  id?: string
   name: string
   email: string
   emailVerified?: boolean
@@ -906,7 +906,7 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
 }
 
 export type UserCreateWithoutTwofactorsInput = {
-  id: string
+  id?: string
   name: string
   email: string
   emailVerified?: boolean
@@ -929,7 +929,7 @@ export type UserCreateWithoutTwofactorsInput = {
 }
 
 export type UserUncheckedCreateWithoutTwofactorsInput = {
-  id: string
+  id?: string
   name: string
   email: string
   emailVerified?: boolean
@@ -1014,7 +1014,7 @@ export type UserUncheckedUpdateWithoutTwofactorsInput = {
 }
 
 export type UserCreateWithoutPasskeysInput = {
-  id: string
+  id?: string
   name: string
   email: string
   emailVerified?: boolean
@@ -1037,7 +1037,7 @@ export type UserCreateWithoutPasskeysInput = {
 }
 
 export type UserUncheckedCreateWithoutPasskeysInput = {
-  id: string
+  id?: string
   name: string
   email: string
   emailVerified?: boolean
@@ -1122,7 +1122,7 @@ export type UserUncheckedUpdateWithoutPasskeysInput = {
 }
 
 export type UserCreateWithoutOauthclientsInput = {
-  id: string
+  id?: string
   name: string
   email: string
   emailVerified?: boolean
@@ -1145,7 +1145,7 @@ export type UserCreateWithoutOauthclientsInput = {
 }
 
 export type UserUncheckedCreateWithoutOauthclientsInput = {
-  id: string
+  id?: string
   name: string
   email: string
   emailVerified?: boolean
@@ -1230,7 +1230,7 @@ export type UserUncheckedUpdateWithoutOauthclientsInput = {
 }
 
 export type UserCreateWithoutOauthrefreshtokensInput = {
-  id: string
+  id?: string
   name: string
   email: string
   emailVerified?: boolean
@@ -1253,7 +1253,7 @@ export type UserCreateWithoutOauthrefreshtokensInput = {
 }
 
 export type UserUncheckedCreateWithoutOauthrefreshtokensInput = {
-  id: string
+  id?: string
   name: string
   email: string
   emailVerified?: boolean
@@ -1338,7 +1338,7 @@ export type UserUncheckedUpdateWithoutOauthrefreshtokensInput = {
 }
 
 export type UserCreateWithoutOauthaccesstokensInput = {
-  id: string
+  id?: string
   name: string
   email: string
   emailVerified?: boolean
@@ -1361,7 +1361,7 @@ export type UserCreateWithoutOauthaccesstokensInput = {
 }
 
 export type UserUncheckedCreateWithoutOauthaccesstokensInput = {
-  id: string
+  id?: string
   name: string
   email: string
   emailVerified?: boolean
@@ -1446,7 +1446,7 @@ export type UserUncheckedUpdateWithoutOauthaccesstokensInput = {
 }
 
 export type UserCreateWithoutOauthconsentsInput = {
-  id: string
+  id?: string
   name: string
   email: string
   emailVerified?: boolean
@@ -1469,7 +1469,7 @@ export type UserCreateWithoutOauthconsentsInput = {
 }
 
 export type UserUncheckedCreateWithoutOauthconsentsInput = {
-  id: string
+  id?: string
   name: string
   email: string
   emailVerified?: boolean
