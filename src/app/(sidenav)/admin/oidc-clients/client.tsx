@@ -2,7 +2,7 @@
 
 import { MultiButton } from '@/components/general/button'
 import { InputCtrl } from '@/components/general/input-ctrl'
-import { ModalBaseProps, useModalState } from '@/components/general/modal'
+import { FormModal, ModalBaseProps, useModalState } from '@/components/general/modal'
 import { usePageingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
@@ -12,7 +12,7 @@ import { AddOidcClient, scAddOidcClient } from '@/lib/schema'
 import { intervalOperation } from '@/lib/sleep'
 import { gridStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
-import { ButtonGroup, cn, Modal, Table, toast } from '@heroui/react'
+import { ButtonGroup, cn, Table, toast } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FC } from 'react'
 import { useForm } from 'react-hook-form'
@@ -35,59 +35,51 @@ const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
   })
 
   return (
-    <Modal.Backdrop isOpen={state.isOpen} onOpenChange={state.setOpen}>
-      <Modal.Container>
-        <Modal.Dialog>
-          <form
-            onSubmit={handleSubmit(async (req) => {
-              await parseAction(addOidcClient(req))
-              await intervalOperation()
-              toast.success(t('msg_added_oidc_client'))
-              reload()
-              state.close()
-            })}
-          >
-            <Modal.CloseTrigger />
-            <Modal.Header>
-              <Modal.Heading>{t('add_client')}</Modal.Heading>
-            </Modal.Header>
-            <Modal.Body>
-              <div className={cn(gridStyles(), 'mt-4 p-1')}>
-                <div className='col-span-12'>
-                  <InputCtrl
-                    control={control}
-                    variant='secondary'
-                    name='clientName'
-                    label={t('client_name')}
-                    errorMessage={fet(errors.clientName)}
-                    isRequired
-                    autoFocus
-                  />
-                </div>
-                <div className='col-span-12'>
-                  <InputCtrl
-                    control={control}
-                    variant='secondary'
-                    name='redirectUri'
-                    label={t('redirect_uri')}
-                    errorMessage={fet(errors.redirectUri)}
-                    isRequired
-                  />
-                </div>
-              </div>
-            </Modal.Body>
-            <Modal.Footer>
-              <MultiButton slot='close' variant='secondary'>
-                Cancel
-              </MultiButton>
-              <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
-                Submit
-              </MultiButton>
-            </Modal.Footer>
-          </form>
-        </Modal.Dialog>
-      </Modal.Container>
-    </Modal.Backdrop>
+    <FormModal
+      state={state}
+      onSubmit={handleSubmit(async (req) => {
+        await parseAction(addOidcClient(req))
+        await intervalOperation()
+        toast.success(t('msg_added_oidc_client'))
+        reload()
+        state.close()
+      })}
+      title={{ text: t('add_client'), icon: <PlusIcon /> }}
+      hooter={
+        <>
+          <MultiButton slot='close' variant='secondary'>
+            {t('cancel')}
+          </MultiButton>
+          <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
+            {t('ok')}
+          </MultiButton>
+        </>
+      }
+    >
+      <div className={cn(gridStyles(), 'mt-4 p-1')}>
+        <div className='col-span-12'>
+          <InputCtrl
+            control={control}
+            variant='secondary'
+            name='clientName'
+            label={t('client_name')}
+            errorMessage={fet(errors.clientName)}
+            isRequired
+            autoFocus
+          />
+        </div>
+        <div className='col-span-12'>
+          <InputCtrl
+            control={control}
+            variant='secondary'
+            name='redirectUri'
+            label={t('redirect_uri')}
+            errorMessage={fet(errors.redirectUri)}
+            isRequired
+          />
+        </div>
+      </div>
+    </FormModal>
   )
 }
 
