@@ -33,7 +33,7 @@ export const StepMotion: FC<{
       initial={direction === 0 ? false : 'enter'}
       animate='center'
       exit='exit'
-      transition={{ duration: 0.5, ease: 'easeInOut' }}
+      transition={{ duration: 0.3, ease: 'easeInOut' }}
       className={className}
     >
       {children}

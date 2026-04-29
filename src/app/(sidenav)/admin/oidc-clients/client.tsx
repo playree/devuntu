@@ -9,7 +9,6 @@ import { ContentHeader } from '@/components/header'
 import { ArrowPathIcon, CheckIcon, PlusIcon, UsersIcon } from '@/components/icon'
 import { parseAction } from '@/lib/action-client'
 import { AddOidcClient, scAddOidcClient } from '@/lib/schema'
-import { intervalOperation } from '@/lib/sleep'
 import { gridStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
 import { ButtonGroup, cn, Table, toast } from '@heroui/react'
@@ -39,7 +38,6 @@ const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
       state={state}
       onSubmit={handleSubmit(async (req) => {
         await parseAction(addOidcClient(req))
-        await intervalOperation()
         toast.success(t('msg_added_oidc_client'))
         reload()
         state.close()

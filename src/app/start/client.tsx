@@ -5,12 +5,11 @@ import { InputCtrl } from '@/components/general/input-ctrl'
 import { CheckIcon, Cog6ToothIcon } from '@/components/icon'
 import { InputCtrlPassword } from '@/components/input-ctrl-pw'
 import { SingleLayout } from '@/components/single-layout'
+import { parseAction } from '@/lib/action-client'
 import { makeUrl } from '@/lib/env-util'
 import { CreateAdmin, scCreateAdmin } from '@/lib/schema'
-import { intervalOperation } from '@/lib/sleep'
 import { gridStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
-import { toast } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
@@ -39,14 +38,7 @@ export const StartClient: FC = () => {
     <SingleLayout icon={<Cog6ToothIcon />} title={t('admin_regist')}>
       <form
         onSubmit={handleSubmit(async (input) => {
-          const res = await createAdmin(input)
-          console.debug(res)
-          if (!res.data) {
-            toast.danger(t('error'), { description: t('msg_system_error') })
-            return
-          }
-
-          await intervalOperation()
+          await parseAction(createAdmin(input))
           router.push(makeUrl('/').toString())
         })}
       >

@@ -17,6 +17,7 @@ import {
 } from '@/components/icon'
 import { InputCtrlPassword } from '@/components/input-ctrl-pw'
 import { SingleLayout } from '@/components/single-layout'
+import { parseAction } from '@/lib/action-client'
 import { authClient } from '@/lib/auth-client'
 import { authConfig } from '@/lib/auth-config'
 import { envu, makeUrl } from '@/lib/env-util'
@@ -62,8 +63,8 @@ const UsernameForm: FC<{
     <StepMotion direction={direction} className='mx-auto w-11/12 md:w-95'>
       <form
         onSubmit={handleSubmit(async (input) => {
-          await getUserByEmail(input)
-          await intervalOperation()
+          //@todo
+          await parseAction(getUserByEmail(input))
           next(input.username)
         })}
       >
