@@ -31,6 +31,9 @@ export const en: LocaleItems = {
   client_name: 'Client Name',
   add_client: 'Add client',
   redirect_uri: 'Redirect URI',
+  skip_consent: 'Skip Consent',
+  reload: 'Reload',
+  action: 'Action',
 
   msg_system_error: 'An error has occurred',
   msg_password_score_required: '${score} or more required',

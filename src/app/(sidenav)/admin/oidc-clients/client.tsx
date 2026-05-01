@@ -1,12 +1,13 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
+import { OnOffChip } from '@/components/general/chip'
 import { InputCtrl } from '@/components/general/input-ctrl'
 import { FormModal, ModalBaseProps, useModalState } from '@/components/general/modal'
 import { usePageingList } from '@/components/general/paging'
-import { MultiTable } from '@/components/general/table'
+import { ActionCell, MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, CheckIcon, PlusIcon, UsersIcon } from '@/components/icon'
+import { ArrowPathIcon, CheckIcon, PencilSquareIcon, PlusIcon, TrashIcon, UsersIcon } from '@/components/icon'
 import { parseAction } from '@/lib/action-client'
 import { AddOidcClient, scAddOidcClient } from '@/lib/schema'
 import { gridStyles } from '@/lib/style'
@@ -87,8 +88,8 @@ export const OidcListClient: FC = () => {
 
   const list = usePageingList({
     load: async () => {
-      const res = await getOidcClients()
-      return res.data ?? []
+      const res = await parseAction(getOidcClients())
+      return res ?? []
     },
     sort: {
       init: { column: 'updatedAt', direction: 'descending' },
@@ -102,7 +103,7 @@ export const OidcListClient: FC = () => {
         <MultiButton isIconOnly tooltip={t('add_client')} onPress={addModalState.open}>
           <PlusIcon />
         </MultiButton>
-        <MultiButton isIconOnly>
+        <MultiButton isIconOnly tooltip={t('reload')} onPress={() => list.reload()}>
           <ButtonGroup.Separator />
           <ArrowPathIcon />
         </MultiButton>
@@ -114,15 +115,26 @@ export const OidcListClient: FC = () => {
         sortDescriptor={list.sortDescriptor}
         onSortChange={list.onSortChange}
         columns={[
-          { id: 'name', name: t('client_name'), isRowHeader: true, allowsSorting: true },
-          { id: 'email', name: t('client_id'), isRowHeader: true, allowsSorting: true },
+          { id: 'client_name', name: t('client_name'), isRowHeader: true, allowsSorting: true },
+          { id: 'client_id', name: t('client_id'), allowsSorting: true },
+          { id: 'consent', name: t('skip_consent'), allowsSorting: false },
+          { id: 'action', name: t('action'), allowsSorting: false },
         ]}
         paging={list}
       >
         {(item) => (
           <Table.Row key={item.client_id} id={item.client_id}>
             <Table.Cell>{item.client_name}</Table.Cell>
-            <Table.Cell>{item.client_id}</Table.Cell>
+            <Table.Cell className='font-mono'>{item.client_id}</Table.Cell>
+            <Table.Cell>
+              <OnOffChip isState={item.skip_consent} />
+            </Table.Cell>
+            <ActionCell
+              items={[
+                { key: 'edit', icon: <PencilSquareIcon /> },
+                { key: 'delete', variant: 'danger-soft', icon: <TrashIcon /> },
+              ]}
+            />
           </Table.Row>
         )}
       </MultiTable>

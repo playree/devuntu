@@ -31,6 +31,9 @@ export const ja: DefaultLocaleItems = {
   client_name: 'クライアント名',
   add_client: 'クライアント追加',
   redirect_uri: 'リダイレクトURI',
+  skip_consent: '同意スキップ',
+  reload: 'リロード',
+  action: '操作',
 
   msg_system_error: 'エラーが発生しました',
   msg_password_score_required: '${score}以上が必要',

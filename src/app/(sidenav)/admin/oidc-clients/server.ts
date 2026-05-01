@@ -12,9 +12,10 @@ export const getOidcClients = safeAuthAction
       headers: await headers(),
     })
     if (data) {
-      return data.map(({ client_id, client_name }) => ({
+      return data.map(({ client_id, client_name, skip_consent }) => ({
         client_id,
         client_name,
+        skip_consent,
       }))
     }
     return []
