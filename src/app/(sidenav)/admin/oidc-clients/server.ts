@@ -25,7 +25,7 @@ export const addOidcClient = safeAuthAction
   .metadata({ actionName: 'addOidcClient', role: 'admin' })
   .inputSchema(scAddOidcClient)
   .action(async ({ parsedInput: { clientName, redirectUri } }) => {
-    await auth.api.adminCreateOAuthClient({
+    const { client_id, client_secret } = await auth.api.adminCreateOAuthClient({
       headers: await headers(),
       body: {
         client_name: clientName,
@@ -34,4 +34,5 @@ export const addOidcClient = safeAuthAction
         skip_consent: true,
       },
     })
+    return { client_id, client_secret }
   })

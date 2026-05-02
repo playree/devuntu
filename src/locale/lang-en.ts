@@ -34,6 +34,7 @@ export const en: LocaleItems = {
   skip_consent: 'Skip Consent',
   reload: 'Reload',
   action: 'Action',
+  confirmed: 'Confirmed',
 
   msg_system_error: 'An error has occurred',
   msg_password_score_required: '${score} or more required',

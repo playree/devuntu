@@ -32,6 +32,7 @@ export type LocaleItemBase =
   | 'skip_consent'
   | 'reload'
   | 'action'
+  | 'confirmed'
   | 'msg_system_error'
   | 'msg_password_score_required'
   | 'msg_invalid_email_or_password'

@@ -34,6 +34,7 @@ export const ja: DefaultLocaleItems = {
   skip_consent: '同意スキップ',
   reload: 'リロード',
   action: '操作',
+  confirmed: '確認した',
 
   msg_system_error: 'エラーが発生しました',
   msg_password_score_required: '${score}以上が必要',

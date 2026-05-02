@@ -3,7 +3,7 @@
 import { MultiButton } from '@/components/general/button'
 import { OnOffChip } from '@/components/general/chip'
 import { InputCtrl } from '@/components/general/input-ctrl'
-import { FormModal, ModalBaseProps, useModalState } from '@/components/general/modal'
+import { FormModal, ModalBaseProps, useConfirmModal, useModalState } from '@/components/general/modal'
 import { usePageingList } from '@/components/general/paging'
 import { ActionCell, MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
@@ -84,7 +84,8 @@ const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
 
 export const OidcListClient: FC = () => {
   const { t } = useLocale()
-  const addModalState = useModalState() //useOverlayState()
+  const addModalState = useModalState()
+  const { confirmModal } = useConfirmModal()
 
   const list = usePageingList({
     load: async () => {
@@ -132,7 +133,18 @@ export const OidcListClient: FC = () => {
             <ActionCell
               items={[
                 { key: 'edit', icon: <PencilSquareIcon /> },
-                { key: 'delete', variant: 'danger-soft', icon: <TrashIcon /> },
+                {
+                  key: 'delete',
+                  variant: 'danger-soft',
+                  icon: <TrashIcon />,
+                  onPress: () => {
+                    confirmModal().confirm({
+                      title: 'Title',
+                      text: 'Text',
+                      requireCheck: true,
+                    })
+                  },
+                },
               ]}
             />
           </Table.Row>
