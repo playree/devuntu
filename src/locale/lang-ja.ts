@@ -42,7 +42,9 @@ export const ja: DefaultLocaleItems = {
   msg_user_not_exist: 'ユーザーが存在しません。',
   msg_enter_otp: 'Eメールに届いた認証コードを入力してください。',
   msg_otp_sent: '認証コードを送信しました。',
-  msg_added_oidc_client: 'OIDCクライアントを追加しました。',
+  msg_added_target: '${target} を追加しました。',
+  msg_deleted_target: '${target} を削除しました。',
+  msg_updated_target: '${target} を更新しました。',
   msg_confirm_deletion: '${target} を削除します。',
 
   mail_otp_subject: '[${appname}] 2要素認証OTP : ${otp}',

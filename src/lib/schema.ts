@@ -48,3 +48,7 @@ export const scAddOidcClient = z.object({
   redirectUri: z.url(),
 })
 export type AddOidcClient = z.infer<typeof scAddOidcClient>
+
+export const scDeleteOidcClient = z.object({
+  clientId: z.string(),
+})

@@ -16,7 +16,7 @@ import { ButtonGroup, cn, Table, toast } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FC } from 'react'
 import { useForm } from 'react-hook-form'
-import { addOidcClient, getOidcClients } from './server'
+import { addOidcClient, deleteOidcClient, getOidcClients } from './server'
 
 const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
   const { t, fet } = useLocale()
@@ -39,7 +39,7 @@ const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
       state={state}
       onSubmit={handleSubmit(async (req) => {
         await parseAction(addOidcClient(req))
-        toast.success(t('msg_added_oidc_client'))
+        toast.success(t('msg_added_target', { target: req.clientName }))
         reload()
         state.close()
       })}
@@ -124,11 +124,11 @@ export const OidcListClient: FC = () => {
         paging={list}
       >
         {(item) => (
-          <Table.Row key={item.client_id} id={item.client_id}>
-            <Table.Cell>{item.client_name}</Table.Cell>
-            <Table.Cell className='font-mono'>{item.client_id}</Table.Cell>
+          <Table.Row key={item.clientId} id={item.clientId}>
+            <Table.Cell>{item.clientName}</Table.Cell>
+            <Table.Cell className='font-mono'>{item.clientId}</Table.Cell>
             <Table.Cell>
-              <OnOffChip isState={item.skip_consent} />
+              <OnOffChip isState={item.skipConsent} />
             </Table.Cell>
             <ActionCell
               items={[
@@ -141,11 +141,14 @@ export const OidcListClient: FC = () => {
                     try {
                       const ok = await confirmModal().confirm({
                         title: t('confirm_deletion'),
-                        text: t('msg_confirm_deletion', { target: item.client_name }),
+                        text: t('msg_confirm_deletion', { target: item.clientName }),
                         requireCheck: true,
                         autoClose: false,
                       })
                       if (ok) {
+                        await parseAction(deleteOidcClient({ clientId: item.clientId }))
+                        toast.success(t('msg_deleted_target', { target: item.clientName }))
+                        list.reload()
                       }
                     } finally {
                       confirmModal().close()
