@@ -35,14 +35,15 @@ export const en: LocaleItems = {
   reload: 'Reload',
   action: 'Action',
   confirmed: 'Confirmed',
+  confirm_deletion: 'Confirm deletion',
+  password_score_required: '${score} or more required',
 
-  msg_system_error: 'An error has occurred',
-  msg_password_score_required: '${score} or more required',
-  msg_invalid_email_or_password: 'Invalid email or password',
-  msg_user_not_exist: 'User does not exist',
-  msg_enter_otp: 'Enter the verification code sent to your email address',
-  msg_otp_sent: 'Verification code sent',
-  msg_added_oidc_client: 'Added OIDC client',
+  msg_invalid_email_or_password: 'Invalid email or password.',
+  msg_user_not_exist: 'User does not exist.',
+  msg_enter_otp: 'Enter the verification code sent to your email address.',
+  msg_otp_sent: 'Verification code sent.',
+  msg_added_oidc_client: 'Added OIDC client.',
+  msg_confirm_deletion: 'Delete ${target}.',
 
   mail_otp_subject: '[${appname}] 2FA OTP : ${otp}',
   mail_otp_body: `A verification code has been issued for two-factor authentication.

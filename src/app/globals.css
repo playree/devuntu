@@ -20,6 +20,9 @@
 }
 
 @layer components {
+  .button > svg {
+    @apply w-5;
+  }
   .accordion__trigger {
     @apply px-2 py-3;
   }

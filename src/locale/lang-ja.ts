@@ -35,14 +35,15 @@ export const ja: DefaultLocaleItems = {
   reload: 'リロード',
   action: '操作',
   confirmed: '確認した',
+  confirm_deletion: '削除確認',
+  password_score_required: '${score}以上が必要',
 
-  msg_system_error: 'エラーが発生しました',
-  msg_password_score_required: '${score}以上が必要',
-  msg_invalid_email_or_password: 'Eメールまたはパスワードが違います',
-  msg_user_not_exist: 'ユーザーが存在しません',
-  msg_enter_otp: 'Eメールに届いた認証コードを入力してください',
-  msg_otp_sent: '認証コードを送信しました',
-  msg_added_oidc_client: 'OIDCクライアントを追加しました',
+  msg_invalid_email_or_password: 'Eメールまたはパスワードが違います。',
+  msg_user_not_exist: 'ユーザーが存在しません。',
+  msg_enter_otp: 'Eメールに届いた認証コードを入力してください。',
+  msg_otp_sent: '認証コードを送信しました。',
+  msg_added_oidc_client: 'OIDCクライアントを追加しました。',
+  msg_confirm_deletion: '${target} を削除します。',
 
   mail_otp_subject: '[${appname}] 2要素認証OTP : ${otp}',
   mail_otp_body: `2要素認証の為の認証コードを発行しました。

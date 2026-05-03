@@ -137,12 +137,19 @@ export const OidcListClient: FC = () => {
                   key: 'delete',
                   variant: 'danger-soft',
                   icon: <TrashIcon />,
-                  onPress: () => {
-                    confirmModal().confirm({
-                      title: 'Title',
-                      text: 'Text',
-                      requireCheck: true,
-                    })
+                  onPress: async () => {
+                    try {
+                      const ok = await confirmModal().confirm({
+                        title: t('confirm_deletion'),
+                        text: t('msg_confirm_deletion', { target: item.client_name }),
+                        requireCheck: true,
+                        autoClose: false,
+                      })
+                      if (ok) {
+                      }
+                    } finally {
+                      confirmModal().close()
+                    }
                   },
                 },
               ]}

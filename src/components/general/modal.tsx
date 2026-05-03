@@ -51,8 +51,8 @@ export const FormModal: FC<{
   hiddenCloseButton?: boolean
 }> = ({ children, state, onSubmit, title, hooter, hiddenCloseButton }) => {
   return (
-    <Modal.Backdrop isOpen={state.isOpen} onOpenChange={state.setOpen} isDismissable={false}>
-      <Modal.Container>
+    <Modal.Backdrop variant='blur' isOpen={state.isOpen} onOpenChange={state.setOpen} isDismissable={false}>
+      <Modal.Container placement='top'>
         <Modal.Dialog>
           <form onSubmit={onSubmit}>
             {!hiddenCloseButton && <Modal.CloseTrigger />}
@@ -111,8 +111,8 @@ export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ ui
   }))
 
   return (
-    <Modal.Backdrop isOpen={state.isOpen} onOpenChange={state.setOpen} isDismissable={false}>
-      <Modal.Container>
+    <Modal.Backdrop variant='blur' isOpen={state.isOpen} onOpenChange={state.setOpen} isDismissable={false}>
+      <Modal.Container placement='top'>
         <Modal.Dialog>
           <Modal.Header>
             <Modal.Heading className='flex items-center gap-2'>{confirmParam?.title || ''}</Modal.Heading>
@@ -148,7 +148,7 @@ export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ ui
               </MultiButton>
             )}
             <MultiButton
-              icon={<CheckIcon />}
+              icon={<CheckIcon className='w-5' />}
               isDisabled={!isAgree}
               isPending={isPending}
               onPress={async () => {

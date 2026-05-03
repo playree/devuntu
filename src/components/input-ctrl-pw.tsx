@@ -153,7 +153,7 @@ export const InputCtrlPassword = <
       />
       {requiredPasswordScore && (
         <PasswordScore
-          label={`${t('password_score')} = ${passwordScore} ( ${t('msg_password_score_required', { score: requiredPasswordScore })} )`}
+          label={`${t('password_score')} = ${passwordScore} ( ${t('password_score_required', { score: requiredPasswordScore })} )`}
           score={passwordScore}
         />
       )}
