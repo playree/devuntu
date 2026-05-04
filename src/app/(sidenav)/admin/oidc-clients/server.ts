@@ -2,6 +2,7 @@
 
 import { safeAuthAction } from '@/lib/action-server'
 import { auth } from '@/lib/auth'
+import { logger } from '@/lib/logger'
 import { scAddOidcClient, scDeleteOidcClient } from '@/lib/schema'
 import { headers } from 'next/headers'
 
@@ -25,7 +26,7 @@ export const addOidcClient = safeAuthAction
   .metadata({ actionName: 'addOidcClient', role: 'admin' })
   .inputSchema(scAddOidcClient)
   .action(async ({ parsedInput: { clientName, redirectUri } }) => {
-    const { client_id } = await auth.api.adminCreateOAuthClient({
+    const res = await auth.api.adminCreateOAuthClient({
       headers: await headers(),
       body: {
         client_name: clientName,
@@ -34,7 +35,8 @@ export const addOidcClient = safeAuthAction
         skip_consent: true,
       },
     })
-    return { clientId: client_id }
+    logger.debug(res, 'auth.api.adminCreateOAuthClient')
+    return { clientId: res.client_id, clientSecret: res.client_secret }
   })
 
 export const deleteOidcClient = safeAuthAction
@@ -47,5 +49,6 @@ export const deleteOidcClient = safeAuthAction
         client_id: clientId,
       },
     })
+    logger.debug({ clientId }, 'auth.api.deleteOAuthClient')
     return { clientId }
   })

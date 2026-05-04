@@ -121,7 +121,13 @@ export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ ui
             <div className='whitespace-pre-wrap'>{confirmParam?.text || ''}</div>
             {confirmParam?.requireCheck && (
               <div className='mt-4 flex'>
-                <Checkbox id='confirm-agree' onChange={setAgree} isSelected={isAgree} variant='secondary'>
+                <Checkbox
+                  id='confirm-agree'
+                  onChange={setAgree}
+                  isSelected={isAgree}
+                  variant='secondary'
+                  isDisabled={isPending}
+                >
                   <Checkbox.Control className='size-5 rounded-full before:rounded-full'>
                     <Checkbox.Indicator />
                   </Checkbox.Control>
@@ -136,6 +142,7 @@ export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ ui
             {!confirmParam?.onlyOk && (
               <MultiButton
                 variant='secondary'
+                isDisabled={isPending}
                 onPress={() => {
                   if (response.current) {
                     response.current(false)

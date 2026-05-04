@@ -35,6 +35,8 @@ export type LocaleItemBase =
   | 'confirmed'
   | 'confirm_deletion'
   | 'password_score_required'
+  | 'secret'
+  // for Message
   | 'msg_invalid_email_or_password'
   | 'msg_user_not_exist'
   | 'msg_enter_otp'
@@ -43,6 +45,7 @@ export type LocaleItemBase =
   | 'msg_deleted_target'
   | 'msg_updated_target'
   | 'msg_confirm_deletion'
+  // for Mail
   | 'mail_otp_subject'
   | 'mail_otp_body'
 
