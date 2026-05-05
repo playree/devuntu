@@ -29,6 +29,7 @@ export const en: LocaleItems = {
   user_manage: 'User Management',
   client_id: 'Client ID',
   client_name: 'Client Name',
+  client_secret: 'Client Secret',
   add_client: 'Add client',
   redirect_uri: 'Redirect URI',
   skip_consent: 'Skip Consent',
@@ -37,7 +38,6 @@ export const en: LocaleItems = {
   confirmed: 'Confirmed',
   confirm_deletion: 'Confirm deletion',
   password_score_required: '${score} or more required',
-  secret: 'Secret',
 
   msg_invalid_email_or_password: 'Invalid email or password.',
   msg_user_not_exist: 'User does not exist.',

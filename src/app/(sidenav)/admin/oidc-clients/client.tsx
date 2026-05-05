@@ -2,9 +2,11 @@
 
 import { MultiButton } from '@/components/general/button'
 import { OnOffChip } from '@/components/general/chip'
+import { CopyableField } from '@/components/general/copyable-field'
 import { InputCtrl } from '@/components/general/input-ctrl'
 import { FormModal, ModalBaseProps, useConfirmModal, useModalState } from '@/components/general/modal'
 import { usePageingList } from '@/components/general/paging'
+import { StepMotion } from '@/components/general/step-motion'
 import { ActionCell, MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
 import { ArrowPathIcon, CheckIcon, PencilSquareIcon, PlusIcon, TrashIcon, UsersIcon } from '@/components/icon'
@@ -14,12 +16,20 @@ import { gridStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
 import { ButtonGroup, cn, Table, toast } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { FC } from 'react'
+import { AnimatePresence } from 'framer-motion'
+import { FC, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { addOidcClient, deleteOidcClient, getOidcClients } from './server'
 
+type Step = {
+  id: 'INPUT' | 'OUTPUT'
+  direction: number
+}
+
 const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
   const { t, fet } = useLocale()
+  const [step, setStep] = useState<Step>({ id: 'INPUT', direction: 0 })
+  const [output, setOutput] = useState<{ clientId: string; clientSecret: string }>()
 
   const {
     control,
@@ -38,45 +48,76 @@ const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
     <FormModal
       state={state}
       onSubmit={handleSubmit(async (req) => {
-        await parseAction(addOidcClient(req))
+        const res = await parseAction(addOidcClient(req))
+        setOutput(res)
+        setStep({ id: 'OUTPUT', direction: 1 })
         toast.success(t('msg_added_target', { target: req.clientName }))
         reload()
-        state.close()
       })}
       title={{ text: t('add_client'), icon: <PlusIcon /> }}
       hooter={
         <>
-          <MultiButton slot='close' variant='secondary'>
-            {t('cancel')}
-          </MultiButton>
-          <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
-            {t('ok')}
-          </MultiButton>
+          {step.id === 'INPUT' && (
+            <>
+              <MultiButton slot='close' variant='secondary'>
+                {t('cancel')}
+              </MultiButton>
+              <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
+                {t('ok')}
+              </MultiButton>
+            </>
+          )}
+          {step.id === 'OUTPUT' && (
+            <MultiButton icon={<CheckIcon />} isPending={isSubmitting} onPress={() => state.close()}>
+              {t('ok')}
+            </MultiButton>
+          )}
         </>
       }
     >
-      <div className={cn(gridStyles(), 'mt-4 p-1')}>
-        <div className='col-span-12'>
-          <InputCtrl
-            control={control}
-            variant='secondary'
-            name='clientName'
-            label={t('client_name')}
-            errorMessage={fet(errors.clientName)}
-            isRequired
-            autoFocus
-          />
-        </div>
-        <div className='col-span-12'>
-          <InputCtrl
-            control={control}
-            variant='secondary'
-            name='redirectUri'
-            label={t('redirect_uri')}
-            errorMessage={fet(errors.redirectUri)}
-            isRequired
-          />
-        </div>
+      <div className='min-h-46 overflow-hidden'>
+        <AnimatePresence mode='wait' custom={step.direction}>
+          {step.id === 'INPUT' && (
+            <StepMotion direction={step.direction} key='step_input'>
+              <div className={cn(gridStyles(), 'mt-4 p-1')}>
+                <div className='col-span-12'>
+                  <InputCtrl
+                    control={control}
+                    variant='secondary'
+                    name='clientName'
+                    label={t('client_name')}
+                    errorMessage={fet(errors.clientName)}
+                    isRequired
+                    autoFocus
+                  />
+                </div>
+                <div className='col-span-12'>
+                  <InputCtrl
+                    control={control}
+                    variant='secondary'
+                    name='redirectUri'
+                    label={t('redirect_uri')}
+                    errorMessage={fet(errors.redirectUri)}
+                    isRequired
+                  />
+                </div>
+              </div>
+            </StepMotion>
+          )}
+
+          {step.id === 'OUTPUT' && output && (
+            <StepMotion direction={step.direction} key='step_output'>
+              <div className={cn(gridStyles(), 'mt-4 p-1')}>
+                <div className='col-span-12'>
+                  <CopyableField text={output.clientId} label={t('client_id')} variant='secondary' />
+                </div>
+                <div className='col-span-12'>
+                  <CopyableField text={output.clientSecret} label={t('client_secret')} isMask variant='secondary' />
+                </div>
+              </div>
+            </StepMotion>
+          )}
+        </AnimatePresence>
       </div>
     </FormModal>
   )

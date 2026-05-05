@@ -1,7 +1,7 @@
 'use client'
 
 import { useLocale } from '@/locale/client'
-import { ErrorMessage, Input, InputProps, Label, ProgressBar, TextField } from '@heroui/react'
+import { Button, ErrorMessage, InputGroup, InputProps, Label, ProgressBar, TextField } from '@heroui/react'
 import { zxcvbn } from '@zxcvbn-ts/core'
 import { ChangeEvent, FC, SVGProps, useState } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
@@ -89,6 +89,7 @@ export const InputCtrlPassword = <
   isReadOnly,
   errorMessage,
   requiredPasswordScore,
+  variant,
   ...props
 }: InputProps & {
   control?: Control<TFieldValues>
@@ -121,32 +122,28 @@ export const InputCtrlPassword = <
               {label}
               {isRequired ? '*' : ''}
             </Label>
-            <Input
-              {...props}
-              onChange={(event) => {
-                if (requiredPasswordScore) {
-                  const res = zxcvbn(event.target.value)
-                  setPasswordScore(res.score)
-                }
+            <InputGroup variant={variant}>
+              <InputGroup.Input
+                {...props}
+                onChange={(event) => {
+                  if (requiredPasswordScore) {
+                    const res = zxcvbn(event.target.value)
+                    setPasswordScore(res.score)
+                  }
 
-                if (onChanged) {
-                  onChanged(event)
-                }
-                onChange(event)
-              }}
-              value={value || (type === 'number' ? '0' : '')}
-            />
-            <button
-              className='absolute top-8 right-3 cursor-pointer focus:outline-hidden'
-              type='button'
-              onClick={toggleVisibility}
-            >
-              {isVisible ? (
-                <EyeSlashIcon className='text-default-400 pointer-events-none text-2xl' />
-              ) : (
-                <EyeIcon className='text-default-400 pointer-events-none text-2xl' />
-              )}
-            </button>
+                  if (onChanged) {
+                    onChanged(event)
+                  }
+                  onChange(event)
+                }}
+                value={value || (type === 'number' ? '0' : '')}
+              />
+              <InputGroup.Suffix className='pr-0'>
+                <Button isIconOnly size='sm' variant='ghost' onPress={toggleVisibility}>
+                  {isVisible ? <EyeSlashIcon /> : <EyeIcon />}
+                </Button>
+              </InputGroup.Suffix>
+            </InputGroup>
             <ErrorMessage className='min-h-4'>{errorMessage}</ErrorMessage>
           </TextField>
         )}

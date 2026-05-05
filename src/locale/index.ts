@@ -27,6 +27,7 @@ export type LocaleItemBase =
   | 'user_manage'
   | 'client_id'
   | 'client_name'
+  | 'client_secret'
   | 'add_client'
   | 'redirect_uri'
   | 'skip_consent'
@@ -35,7 +36,6 @@ export type LocaleItemBase =
   | 'confirmed'
   | 'confirm_deletion'
   | 'password_score_required'
-  | 'secret'
   // for Message
   | 'msg_invalid_email_or_password'
   | 'msg_user_not_exist'

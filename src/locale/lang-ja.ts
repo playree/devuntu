@@ -29,6 +29,7 @@ export const ja: DefaultLocaleItems = {
   user_manage: 'ユーザー管理',
   client_id: 'クライアントID',
   client_name: 'クライアント名',
+  client_secret: 'クライアントシークレット',
   add_client: 'クライアント追加',
   redirect_uri: 'リダイレクトURI',
   skip_consent: '同意スキップ',
@@ -37,7 +38,6 @@ export const ja: DefaultLocaleItems = {
   confirmed: '確認した',
   confirm_deletion: '削除確認',
   password_score_required: '${score}以上が必要',
-  secret: 'シークレット',
 
   msg_invalid_email_or_password: 'Eメールまたはパスワードが違います。',
   msg_user_not_exist: 'ユーザーが存在しません。',

@@ -2,6 +2,7 @@
 
 import { safeAuthAction } from '@/lib/action-server'
 import { auth } from '@/lib/auth'
+import { errSystemError } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { scAddOidcClient, scDeleteOidcClient } from '@/lib/schema'
 import { headers } from 'next/headers'
@@ -36,6 +37,9 @@ export const addOidcClient = safeAuthAction
       },
     })
     logger.debug(res, 'auth.api.adminCreateOAuthClient')
+    if (!res.client_secret) {
+      throw errSystemError('client_secret is empty')
+    }
     return { clientId: res.client_id, clientSecret: res.client_secret }
   })
 
