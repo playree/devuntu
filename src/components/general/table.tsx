@@ -7,6 +7,7 @@ import {
   type SortDescriptor,
   Table,
   type TableBodyProps,
+  TableColumnProps,
   type TableContentProps,
 } from '@heroui/react'
 import { Dispatch, FC, ReactNode, SetStateAction, SVGProps } from 'react'
@@ -119,12 +120,14 @@ export const MultiTable = <T extends object>({
     name: string
     isRowHeader?: boolean
     allowsSorting?: boolean
+    minWidth?: number
+    defaultWidth?: TableColumnProps['defaultWidth']
   }[]
   paging?: PagingParam
 }) => {
   return (
     <Table>
-      <Table.ScrollContainer>
+      <Table.ResizableContainer>
         <Table.Content aria-label={ariaLabel} sortDescriptor={sortDescriptor} onSortChange={onSortChange}>
           <Table.Header>
             {columns.map((column) => (
@@ -133,16 +136,21 @@ export const MultiTable = <T extends object>({
                 isRowHeader={column.isRowHeader}
                 id={column.id}
                 key={column.id}
+                minWidth={column.minWidth}
+                defaultWidth={column.defaultWidth}
               >
                 {({ sortDirection }) => (
-                  <SortableColumnHeader sortDirection={sortDirection}>{column.name}</SortableColumnHeader>
+                  <SortableColumnHeader sortDirection={sortDirection}>
+                    {column.name}
+                    {column.minWidth && <Table.ColumnResizer />}
+                  </SortableColumnHeader>
                 )}
               </Table.Column>
             ))}
           </Table.Header>
           <Table.Body {...props} />
         </Table.Content>
-      </Table.ScrollContainer>
+      </Table.ResizableContainer>
       <Table.Footer>{paging && <TablePaging {...paging} />}</Table.Footer>
     </Table>
   )

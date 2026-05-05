@@ -116,17 +116,24 @@ export const OidcListClient: FC = () => {
         sortDescriptor={list.sortDescriptor}
         onSortChange={list.onSortChange}
         columns={[
-          { id: 'client_name', name: t('client_name'), isRowHeader: true, allowsSorting: true },
-          { id: 'client_id', name: t('client_id'), allowsSorting: true },
-          { id: 'consent', name: t('skip_consent'), allowsSorting: false },
-          { id: 'action', name: t('action'), allowsSorting: false },
+          {
+            id: 'client_name',
+            name: t('client_name'),
+            isRowHeader: true,
+            allowsSorting: true,
+            minWidth: 120,
+            defaultWidth: '1fr',
+          },
+          { id: 'client_id', name: t('client_id'), allowsSorting: true, minWidth: 200, defaultWidth: '2fr' },
+          { id: 'skip_consent', name: t('skip_consent'), allowsSorting: false, minWidth: 110 },
+          { id: 'action', name: t('action'), allowsSorting: false, defaultWidth: 120 },
         ]}
         paging={list}
       >
         {(item) => (
           <Table.Row key={item.clientId} id={item.clientId}>
             <Table.Cell>{item.clientName}</Table.Cell>
-            <Table.Cell className='font-mono'>{item.clientId}</Table.Cell>
+            <Table.Cell className='overflow-hidden font-mono'>{item.clientId}</Table.Cell>
             <Table.Cell>
               <OnOffChip isState={item.skipConsent} />
             </Table.Cell>
