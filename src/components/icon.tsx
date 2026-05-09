@@ -1,6 +1,6 @@
 /**
  * SVGの基本的な取得元
- * https://heroicons.dev/?iconset=v2-20-solid&strictJsx=true
+ * https://heroicons.dev/?iconset=v2-24-solid&strictJsx=true
  */
 
 import { FC, SVGProps } from 'react'
