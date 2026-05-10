@@ -1,13 +1,13 @@
 'use client'
 import { MultiButton } from '@/components/general/button'
 import { ThemeSwitchList } from '@/components/general/theme-switch'
-import { ArrowLeftStartOnRectangleIcon, ServerStackIcon, UserCircleIcon, UsersIcon } from '@/components/icon'
+import { ArrowLeftStartOnRectangleIcon, ServerStackIcon, UsersIcon } from '@/components/icon'
 import { LocaleSwitch } from '@/components/locale/locale-switch'
 import { authClient } from '@/lib/auth-client'
 import { authConfig } from '@/lib/auth-config'
 import { makeUrl } from '@/lib/env-util'
 import { useLocale } from '@/locale/client'
-import { Accordion, Button, Card, cn } from '@heroui/react'
+import { Accordion, Avatar, Button, Card, cn } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC, ReactNode, useEffect } from 'react'
 
@@ -85,8 +85,12 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
 
       <Card>
         <Card.Content>
-          <div className='flex items-center'>
-            <UserCircleIcon className='mr-2' />
+          <div className='flex items-center gap-2'>
+            {/* <UserCircleIcon className='mr-2' /> */}
+            <Avatar>
+              <Avatar.Image src={session?.user.image ?? ''} />
+              <Avatar.Fallback>{session?.user?.name ? session.user.name.charAt(0) : '?'}</Avatar.Fallback>
+            </Avatar>
             <div>{session?.user?.name}</div>
           </div>
         </Card.Content>

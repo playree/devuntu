@@ -65,6 +65,7 @@ export const auth = betterAuth({
           google: {
             clientId: envu.server.GOOGLE_CLIENT_ID,
             clientSecret: envu.server.GOOGLE_CLIENT_SECRET,
+            overrideUserInfoOnSignIn: true,
           },
         }
       : {}),
