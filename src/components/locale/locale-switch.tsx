@@ -13,19 +13,12 @@ export const LocaleSwitch: FC<{ className?: string; size?: 'sm' | 'md' | 'lg' }>
   const { locale, lcConfig, setLocale } = useLocale()
   const { data: session } = authClient.useSession()
   const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([locale]))
-  const [selectedValue, setSelectedValue] = useState('')
+  const [selectedValue, setSelectedValue] = useState(locale)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true)
   }, [])
-
-  useEffect(() => {
-    setSelectedKeys(new Set([locale]))
-  }, [locale])
-
-  useEffect(() => {
-    setSelectedValue(Array.from(selectedKeys).join(', ').replaceAll('_', ' '))
-  }, [selectedKeys])
 
   if (!mounted) {
     return <Skeleton className={cn('h-8 w-18 rounded-lg', className)} />
@@ -46,9 +39,12 @@ export const LocaleSwitch: FC<{ className?: string; size?: 'sm' | 'md' | 'lg' }>
           selectedKeys={selectedKeys}
           onAction={(key) => {
             const keyString = key.toString()
-            setSelectedKeys(new Set([keyString]))
+            const keys = new Set([keyString])
+            setSelectedKeys(keys)
+            setSelectedValue(Array.from(keys).join(', ').replaceAll('_', ' '))
             setCookie(lcConfig.cookie.name, keyString, { maxAge: lcConfig.cookie.maxAge, path: '/' })
             setLocale(keyString)
+            setSelectedKeys(keys)
             if (session?.user) {
               // DB保存
               console.debug('update user locale:', keyString)

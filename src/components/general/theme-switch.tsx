@@ -56,34 +56,17 @@ export const ThemeSwitchList: FC<{
   const darkIcon = useMemo(() => <MoonIcon width={iconSize} />, [iconSize])
   const [systemIcon, setSystemIcon] = useState<ReactNode>()
   const [selectIcon, setSelectIcon] = useState<ReactNode>()
-  const [selectedValue, setSelectedValue] = useState('Loading')
+  const [selectedValue, setSelectedValue] = useState(theme)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true)
   }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSystemIcon(systemTheme === 'dark' ? darkIcon : lightIcon)
   }, [darkIcon, lightIcon, systemTheme])
-
-  useEffect(() => {
-    console.debug('theme:', theme)
-    switch (theme) {
-      case 'system':
-        setSelectIcon(systemIcon)
-        break
-      case 'light':
-        setSelectIcon(lightIcon)
-        break
-      case 'dark':
-        setSelectIcon(darkIcon)
-        break
-    }
-  }, [darkIcon, lightIcon, systemIcon, theme])
-
-  useEffect(() => {
-    setSelectedValue(Array.from(selectedKeys).join(', ').replaceAll('_', ' '))
-  }, [selectedKeys])
 
   if (!mounted) {
     return <Skeleton className={cn('h-8 w-20 rounded-lg', className)} />
@@ -102,8 +85,22 @@ export const ThemeSwitchList: FC<{
           selectedKeys={selectedKeys}
           onAction={(key) => {
             const keyString = key.toString()
-            setSelectedKeys(new Set([keyString]))
+            const keys = new Set([keyString])
+            setSelectedKeys(keys)
+            setSelectedValue(Array.from(keys).join(', ').replaceAll('_', ' '))
             setTheme(keyString)
+
+            switch (keyString) {
+              case 'system':
+                setSelectIcon(systemIcon)
+                break
+              case 'light':
+                setSelectIcon(lightIcon)
+                break
+              case 'dark':
+                setSelectIcon(darkIcon)
+                break
+            }
           }}
         >
           <Dropdown.Item key='system' id='system' textValue='auto'>
