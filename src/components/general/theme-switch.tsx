@@ -2,7 +2,7 @@
 
 import { Button, ButtonProps, cn, Dropdown, Label, Skeleton } from '@heroui/react'
 import { useTheme } from 'next-themes'
-import { FC, ReactNode, SVGProps, useEffect, useMemo, useState } from 'react'
+import { FC, SVGProps, useMemo, useState } from 'react'
 
 const iconSizes = {
   sm: 16,
@@ -47,28 +47,25 @@ export const ThemeSwitchList: FC<{
   size?: 'sm' | 'md' | 'lg'
   variant?: ButtonProps['variant']
 }> = ({ className, size = 'md', variant = 'outline' }) => {
-  const [mounted, setMounted] = useState(false)
   const iconSize = iconSizes[size]
   const { theme, setTheme, systemTheme } = useTheme()
   const [selectedKeys, setSelectedKeys] = useState(new Set([theme || 'system']))
 
   const lightIcon = useMemo(() => <SunIcon width={iconSize} />, [iconSize])
   const darkIcon = useMemo(() => <MoonIcon width={iconSize} />, [iconSize])
-  const [systemIcon, setSystemIcon] = useState<ReactNode>()
-  const [selectIcon, setSelectIcon] = useState<ReactNode>()
-  const [selectedValue, setSelectedValue] = useState(theme)
+  const systemIcon = useMemo(() => (systemTheme === 'dark' ? darkIcon : lightIcon), [darkIcon, lightIcon, systemTheme])
+  const selectIcon = useMemo(() => {
+    switch (theme) {
+      case 'system':
+        return systemIcon
+      case 'light':
+        return lightIcon
+      case 'dark':
+        return darkIcon
+    }
+  }, [darkIcon, lightIcon, systemIcon, theme])
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSystemIcon(systemTheme === 'dark' ? darkIcon : lightIcon)
-  }, [darkIcon, lightIcon, systemTheme])
-
-  if (!mounted) {
+  if (!theme) {
     return <Skeleton className={cn('h-8 w-20 rounded-lg', className)} />
   }
 
@@ -76,7 +73,7 @@ export const ThemeSwitchList: FC<{
     <Dropdown className={className}>
       <Button aria-label='Select Theme' size={size} variant={variant} className={cn('min-w-20', className)}>
         {selectIcon}
-        {selectedValue === 'system' ? 'auto' : selectedValue}
+        {theme === 'system' ? 'auto' : theme}
       </Button>
       <Dropdown.Popover>
         <Dropdown.Menu
@@ -87,20 +84,7 @@ export const ThemeSwitchList: FC<{
             const keyString = key.toString()
             const keys = new Set([keyString])
             setSelectedKeys(keys)
-            setSelectedValue(Array.from(keys).join(', ').replaceAll('_', ' '))
             setTheme(keyString)
-
-            switch (keyString) {
-              case 'system':
-                setSelectIcon(systemIcon)
-                break
-              case 'light':
-                setSelectIcon(lightIcon)
-                break
-              case 'dark':
-                setSelectIcon(darkIcon)
-                break
-            }
           }}
         >
           <Dropdown.Item key='system' id='system' textValue='auto'>
