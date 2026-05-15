@@ -24,6 +24,13 @@ if (
     clientId: envu.server.MAIN_DEVUNTU_CLIENT_ID,
     clientSecret: envu.server.MAIN_DEVUNTU_CLIENT_SECRET,
     discoveryUrl: new URL('.well-known/openid-configuration', envu.server.MAIN_DEVUNTU_URL).toString(),
+    scopes: ['openid', 'profile', 'email'],
+    overrideUserInfo: true,
+    pkce: true,
+    mapProfileToUser: async (profile) => {
+      logger.debug({ profile }, 'provider.devuntu')
+      return {}
+    },
   })
 }
 
@@ -94,7 +101,6 @@ export const auth = betterAuth({
   },
   plugins: [
     admin(),
-    nextCookies(),
     twoFactor({
       // skipVerificationOnEnable: true,
       otpOptions: {
@@ -119,6 +125,7 @@ export const auth = betterAuth({
     genericOAuth({
       config: oauthConfigs,
     }),
+    nextCookies(),
   ],
 })
 
