@@ -49,6 +49,15 @@ const server = {
   get TWO_FA_REQUIRED() {
     return convBoolean(process.env.TWO_FA_REQUIRED, true)
   },
+  get MAIN_DEVUNTU_URL() {
+    return process.env.MAIN_DEVUNTU_URL
+  },
+  get MAIN_DEVUNTU_CLIENT_ID() {
+    return process.env.MAIN_DEVUNTU_CLIENT_ID
+  },
+  get MAIN_DEVUNTU_CLIENT_SECRET() {
+    return process.env.MAIN_DEVUNTU_CLIENT_SECRET
+  },
   get GOOGLE_CLIENT_ID() {
     return process.env.GOOGLE_CLIENT_ID
   },

@@ -1,3 +1,4 @@
+
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -165,6 +166,7 @@ model OauthClient {
 
   @@unique([clientId])
   @@map("oauth_client")
+  @@index([userId])
 }
 
 model OauthRefreshToken {
@@ -185,6 +187,9 @@ model OauthRefreshToken {
   oauthaccesstokens OauthAccessToken[]
 
   @@map("oauth_refresh_token")
+  @@index([clientId])
+  @@index([sessionId])
+  @@index([userId])
 }
 
 model OauthAccessToken {
@@ -205,6 +210,10 @@ model OauthAccessToken {
 
   @@unique([token])
   @@map("oauth_access_token")
+  @@index([clientId])
+  @@index([sessionId])
+  @@index([userId])
+  @@index([refreshId])
 }
 
 model OauthConsent {
@@ -219,4 +228,6 @@ model OauthConsent {
   updatedAt   DateTime?
 
   @@map("oauth_consent")
+  @@index([clientId])
+  @@index([userId])
 }

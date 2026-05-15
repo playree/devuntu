@@ -301,11 +301,13 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
   const callbackURL = searchParams.get('cb') ?? envu.client.NEXT_PUBLIC_URL
   const mode = searchParams.get('mode') as Mode
   const errorCode = searchParams.get('error')
+  const hasErrorToasted = useRef(false)
 
   useEffect(() => {
-    if (errorCode) {
+    if (errorCode && !hasErrorToasted.current) {
       const msg = errorCode === 'user_not_exist' ? t('msg_user_not_exist') : undefined
       toast.warning(t('auth_ng'), { description: msg })
+      hasErrorToasted.current = true
     }
   }, [errorCode, t])
 
