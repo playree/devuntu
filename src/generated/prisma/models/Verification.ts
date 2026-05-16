@@ -165,7 +165,7 @@ export type VerificationGroupByOutputType = {
   _max: VerificationMaxAggregateOutputType | null
 }
 
-type GetVerificationGroupByPayload<T extends VerificationGroupByArgs> = Prisma.PrismaPromise<
+export type GetVerificationGroupByPayload<T extends VerificationGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<VerificationGroupByOutputType, T['by']> &
       {
@@ -238,7 +238,7 @@ export type VerificationScalarWhereWithAggregatesInput = {
 }
 
 export type VerificationCreateInput = {
-  id: string
+  id?: string
   identifier: string
   value: string
   expiresAt: Date | string
@@ -247,7 +247,7 @@ export type VerificationCreateInput = {
 }
 
 export type VerificationUncheckedCreateInput = {
-  id: string
+  id?: string
   identifier: string
   value: string
   expiresAt: Date | string
@@ -274,7 +274,7 @@ export type VerificationUncheckedUpdateInput = {
 }
 
 export type VerificationCreateManyInput = {
-  id: string
+  id?: string
   identifier: string
   value: string
   expiresAt: Date | string

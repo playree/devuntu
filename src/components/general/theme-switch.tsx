@@ -1,18 +1,8 @@
 'use client'
 
-import {
-  Button,
-  ButtonProps,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
-  Skeleton,
-  SwitchProps,
-} from '@heroui/react'
+import { Button, ButtonProps, cn, Dropdown, Label, Skeleton } from '@heroui/react'
 import { useTheme } from 'next-themes'
-import { FC, ReactNode, SVGProps, useEffect, useMemo, useState } from 'react'
-import { twMerge } from 'tailwind-merge'
+import { FC, SVGProps, useMemo, useState } from 'react'
 
 const iconSizes = {
   sm: 16,
@@ -52,87 +42,68 @@ const MoonIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ..
   </svg>
 )
 
-export interface ThemeSwitchProps {
-  className?: string
-  classNames?: SwitchProps['classNames']
-}
-
 export const ThemeSwitchList: FC<{
   className?: string
   size?: 'sm' | 'md' | 'lg'
   variant?: ButtonProps['variant']
-}> = ({ className, size = 'md', variant = 'faded' }) => {
-  const [mounted, setMounted] = useState(false)
+}> = ({ className, size = 'md', variant = 'outline' }) => {
   const iconSize = iconSizes[size]
   const { theme, setTheme, systemTheme } = useTheme()
   const [selectedKeys, setSelectedKeys] = useState(new Set([theme || 'system']))
 
   const lightIcon = useMemo(() => <SunIcon width={iconSize} />, [iconSize])
   const darkIcon = useMemo(() => <MoonIcon width={iconSize} />, [iconSize])
-  const [systemIcon, setSystemIcon] = useState<ReactNode>()
-  const [selectIcon, setSelectIcon] = useState<ReactNode>()
-  const [selectedValue, setSelectedValue] = useState('Loading')
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    setSystemIcon(systemTheme === 'dark' ? darkIcon : lightIcon)
-  }, [darkIcon, lightIcon, systemTheme])
-
-  useEffect(() => {
-    console.debug('theme:', theme)
+  const systemIcon = useMemo(() => (systemTheme === 'dark' ? darkIcon : lightIcon), [darkIcon, lightIcon, systemTheme])
+  const selectIcon = useMemo(() => {
     switch (theme) {
       case 'system':
-        setSelectIcon(systemIcon)
-        break
+        return systemIcon
       case 'light':
-        setSelectIcon(lightIcon)
-        break
+        return lightIcon
       case 'dark':
-        setSelectIcon(darkIcon)
-        break
+        return darkIcon
     }
   }, [darkIcon, lightIcon, systemIcon, theme])
 
-  useEffect(() => {
-    setSelectedValue(Array.from(selectedKeys).join(', ').replaceAll('_', ' '))
-  }, [selectedKeys])
-
-  if (!mounted) {
-    return <Skeleton className={twMerge('h-8 w-20 rounded-lg', className)} />
+  if (!theme) {
+    return <Skeleton className={cn('h-8 w-20 rounded-lg', className)} />
   }
 
   return (
-    <Dropdown className={className} size={size}>
-      <DropdownTrigger>
-        <Button size={size} variant={variant} startContent={selectIcon} className={className}>
-          {selectedValue === 'system' ? 'auto' : selectedValue}
-        </Button>
-      </DropdownTrigger>
-      <DropdownMenu
-        aria-label='Select Theme'
-        variant='flat'
-        disallowEmptySelection
-        selectionMode='single'
-        selectedKeys={selectedKeys}
-        onAction={(key) => {
-          const keyString = key.toString()
-          setSelectedKeys(new Set([keyString]))
-          setTheme(keyString)
-        }}
-      >
-        <DropdownItem key='system' startContent={systemIcon}>
-          auto
-        </DropdownItem>
-        <DropdownItem key='light' startContent={lightIcon}>
-          light
-        </DropdownItem>
-        <DropdownItem key='dark' startContent={darkIcon}>
-          dark
-        </DropdownItem>
-      </DropdownMenu>
+    <Dropdown className={className}>
+      <Button aria-label='Select Theme' size={size} variant={variant} className={cn('min-w-20', className)}>
+        {selectIcon}
+        {theme === 'system' ? 'auto' : theme}
+      </Button>
+      <Dropdown.Popover>
+        <Dropdown.Menu
+          disallowEmptySelection
+          selectionMode='single'
+          selectedKeys={selectedKeys}
+          onAction={(key) => {
+            const keyString = key.toString()
+            const keys = new Set([keyString])
+            setSelectedKeys(keys)
+            setTheme(keyString)
+          }}
+        >
+          <Dropdown.Item key='system' id='system' textValue='auto'>
+            <Dropdown.ItemIndicator />
+            {systemIcon}
+            <Label>auto</Label>
+          </Dropdown.Item>
+          <Dropdown.Item key='light' id='light' textValue='light'>
+            <Dropdown.ItemIndicator />
+            {lightIcon}
+            <Label>light</Label>
+          </Dropdown.Item>
+          <Dropdown.Item key='dark' id='dark' textValue='dark'>
+            <Dropdown.ItemIndicator />
+            {darkIcon}
+            <Label>dark</Label>
+          </Dropdown.Item>
+        </Dropdown.Menu>
+      </Dropdown.Popover>
     </Dropdown>
   )
 }

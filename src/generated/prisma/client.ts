@@ -71,3 +71,28 @@ export type TwoFactor = Prisma.TwoFactorModel
  * 
  */
 export type Passkey = Prisma.PasskeyModel
+/**
+ * Model Jwks
+ * 
+ */
+export type Jwks = Prisma.JwksModel
+/**
+ * Model OauthClient
+ * 
+ */
+export type OauthClient = Prisma.OauthClientModel
+/**
+ * Model OauthRefreshToken
+ * 
+ */
+export type OauthRefreshToken = Prisma.OauthRefreshTokenModel
+/**
+ * Model OauthAccessToken
+ * 
+ */
+export type OauthAccessToken = Prisma.OauthAccessTokenModel
+/**
+ * Model OauthConsent
+ * 
+ */
+export type OauthConsent = Prisma.OauthConsentModel

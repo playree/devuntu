@@ -1,16 +1,38 @@
+import { oauthProvider } from '@better-auth/oauth-provider'
 import { passkey } from '@better-auth/passkey'
 import { APIError, betterAuth } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { nextCookies } from 'better-auth/next-js'
-import { admin, twoFactor } from 'better-auth/plugins'
+import { admin, genericOAuth, type GenericOAuthConfig, jwt, twoFactor } from 'better-auth/plugins'
 import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { ulid } from 'ulid'
+import { uuidv7 } from 'uuidv7'
 import { authConfig } from './auth-config'
 import { envu, makeUrl } from './env-util'
 import { logger } from './logger'
 import { sendEmailOtp } from './mail'
 import { prisma } from './prisma'
+
+const oauthConfigs: GenericOAuthConfig[] = []
+if (
+  !!envu.server.MAIN_DEVUNTU_URL &&
+  !!envu.server.MAIN_DEVUNTU_CLIENT_ID &&
+  !!envu.server.MAIN_DEVUNTU_CLIENT_SECRET
+) {
+  oauthConfigs.push({
+    providerId: 'devuntu',
+    clientId: envu.server.MAIN_DEVUNTU_CLIENT_ID,
+    clientSecret: envu.server.MAIN_DEVUNTU_CLIENT_SECRET,
+    discoveryUrl: new URL('.well-known/openid-configuration', envu.server.MAIN_DEVUNTU_URL).toString(),
+    scopes: ['openid', 'profile', 'email'],
+    overrideUserInfo: true,
+    pkce: true,
+    mapProfileToUser: async (profile) => {
+      logger.debug({ profile }, 'provider.devuntu')
+      return {}
+    },
+  })
+}
 
 export const auth = betterAuth({
   appName: envu.server.NEXT_PUBLIC_APP_NAME,
@@ -20,8 +42,12 @@ export const auth = betterAuth({
   }),
   advanced: {
     database: {
-      generateId: () => ulid(),
+      generateId: () => uuidv7(),
     },
+  },
+  logger: {
+    level: 'warn',
+    log: (level, message, ...args) => logger['warn'](message, ...args),
   },
   user: {
     additionalFields: {
@@ -39,7 +65,11 @@ export const auth = betterAuth({
       create: {
         before: async (user, ctx) => {
           if (!ctx?.body?.password) {
-            // Email & Password以外でのユーザー作成は許可しない
+            // Email & Password以外でのユーザー作成
+            const provider = ctx?.params?.id
+            logger.debug({ provider }, 'databaseHooks.user.create.before')
+
+            // 基本的に許可しない
             throw new APIError('BAD_REQUEST', { code: 'USER_NOT_EXIST', message: 'user not exist' })
           }
         },
@@ -64,13 +94,13 @@ export const auth = betterAuth({
           google: {
             clientId: envu.server.GOOGLE_CLIENT_ID,
             clientSecret: envu.server.GOOGLE_CLIENT_SECRET,
+            overrideUserInfoOnSignIn: true,
           },
         }
       : {}),
   },
   plugins: [
     admin(),
-    nextCookies(),
     twoFactor({
       // skipVerificationOnEnable: true,
       otpOptions: {
@@ -86,6 +116,16 @@ export const auth = betterAuth({
         userVerification: 'required',
       },
     }),
+    jwt(),
+    oauthProvider({
+      loginPage: authConfig.path.signIn,
+      consentPage: '/consent',
+      silenceWarnings: { oauthAuthServerConfig: true }, // 暫定
+    }),
+    genericOAuth({
+      config: oauthConfigs,
+    }),
+    nextCookies(),
   ],
 })
 

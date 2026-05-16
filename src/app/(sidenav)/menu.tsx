@@ -1,21 +1,15 @@
 'use client'
 import { MultiButton } from '@/components/general/button'
 import { ThemeSwitchList } from '@/components/general/theme-switch'
-import { ArrowLeftStartOnRectangleIcon, UserCircleIcon } from '@/components/icon'
+import { ArrowLeftStartOnRectangleIcon, ServerStackIcon, UsersIcon } from '@/components/icon'
 import { LocaleSwitch } from '@/components/locale/locale-switch'
 import { authClient } from '@/lib/auth-client'
 import { authConfig } from '@/lib/auth-config'
 import { makeUrl } from '@/lib/env-util'
 import { useLocale } from '@/locale/client'
-import { Accordion, AccordionItem, AccordionItemProps, Button, Card, CardBody } from '@heroui/react'
+import { Accordion, Avatar, Button, Card, cn } from '@heroui/react'
 import { useRouter } from 'next/navigation'
-import { FC, ReactNode } from 'react'
-import { twMerge } from 'tailwind-merge'
-
-const accordionStyles: AccordionItemProps['classNames'] = {
-  title: '',
-  titleWrapper: 'flex-none',
-}
+import { FC, ReactNode, useEffect } from 'react'
 
 export const MenuButton: FC<{
   /** メニューテキスト */
@@ -31,9 +25,10 @@ export const MenuButton: FC<{
   return (
     <div>
       <Button
-        color='default'
-        variant='light'
-        className='mb-2 h-8 w-full justify-start p-2'
+        size='sm'
+        fullWidth
+        className='justify-start rounded-xl px-4 hover:bg-gray-100 dark:hover:bg-neutral-900'
+        variant='ghost'
         onPress={() => {
           router.push(to)
           if (closeMenu) {
@@ -42,7 +37,7 @@ export const MenuButton: FC<{
         }}
       >
         {icon}
-        <span className={icon ? 'ml-1' : ''}>{text}</span>
+        {text}
       </Button>
     </div>
   )
@@ -54,10 +49,9 @@ const SignOutButton: FC = () => {
 
   return (
     <MultiButton
-      color='default'
-      variant='light'
       isSmart
-      startContent={<ArrowLeftStartOnRectangleIcon />}
+      variant='ghost'
+      icon={<ArrowLeftStartOnRectangleIcon />}
       onPress={() => {
         authClient.signOut()
         router.push(makeUrl(authConfig.path.signIn).toString())
@@ -68,14 +62,21 @@ const SignOutButton: FC = () => {
   )
 }
 
+const defaultExpandedKeys = new Set(['group_admin'])
+
 export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
   const { data: session } = authClient.useSession()
   const { t } = useLocale()
 
+  useEffect(() => {
+    // Debug
+    console.debug('@session', session)
+  }, [session])
+
   return (
     <div>
       <div
-        className={twMerge(
+        className={cn(
           'absolute inset-0 bg-size-[20px_20px]',
           'bg-[linear-gradient(to_right,#80808020_1px,transparent_1px),linear-gradient(to_bottom,#80808020_1px,transparent_1px)]',
           'mask-[linear-gradient(to_right,#000_50%,transparent_100%)]',
@@ -83,12 +84,16 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
       ></div>
 
       <Card>
-        <CardBody>
-          <div className='flex items-center'>
-            <UserCircleIcon className='mr-2' />
+        <Card.Content>
+          <div className='flex items-center gap-2'>
+            {/* <UserCircleIcon className='mr-2' /> */}
+            <Avatar>
+              <Avatar.Image src={session?.user.image ?? ''} />
+              <Avatar.Fallback>{session?.user?.name ? session.user.name.charAt(0) : '?'}</Avatar.Fallback>
+            </Avatar>
             <div>{session?.user?.name}</div>
           </div>
-        </CardBody>
+        </Card.Content>
       </Card>
 
       <div // テーマ・言語
@@ -99,20 +104,55 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
       </div>
 
       <div // サインアウト
+        className='flex px-2'
       >
         <SignOutButton />
       </div>
 
       <div className='mt-2'>
-        <Accordion selectionMode='multiple' itemClasses={accordionStyles} defaultSelectedKeys='all' showDivider={false}>
-          <AccordionItem isCompact={true} title={'Group'} classNames={{ trigger: 'cursor-pointer' }}>
-            <div className='mx-2'>
-              <MenuButton to='/' text={'Item1'} closeMenu={closeMenu} />
-            </div>
-            <div className='mx-2'>
-              <MenuButton to='/account' text={'Item2'} closeMenu={closeMenu} />
-            </div>
-          </AccordionItem>
+        <Accordion allowsMultipleExpanded hideSeparator defaultExpandedKeys={defaultExpandedKeys}>
+          <Accordion.Item>
+            <Accordion.Heading>
+              <Accordion.Trigger>
+                Group
+                <Accordion.Indicator />
+              </Accordion.Trigger>
+            </Accordion.Heading>
+            <Accordion.Panel>
+              <Accordion.Body>
+                <div className='mx-2'>
+                  <MenuButton to='/' text={'Item1'} closeMenu={closeMenu} />
+                </div>
+                <div className='mx-2'>
+                  <MenuButton to='/account' text={'Item2'} closeMenu={closeMenu} />
+                </div>
+              </Accordion.Body>
+            </Accordion.Panel>
+          </Accordion.Item>
+
+          <Accordion.Item id='group_admin' hidden={session?.user.role !== 'admin'}>
+            <Accordion.Heading>
+              <Accordion.Trigger>
+                {t('admin')}
+                <Accordion.Indicator />
+              </Accordion.Trigger>
+            </Accordion.Heading>
+            <Accordion.Panel>
+              <Accordion.Body className='grid grid-cols-1 gap-2'>
+                <div className='mx-2'>
+                  <MenuButton to='/admin/users' text={t('user_manage')} icon={<UsersIcon />} closeMenu={closeMenu} />
+                </div>
+                <div className='mx-2'>
+                  <MenuButton
+                    to='/admin/oidc-clients'
+                    text={t('oidc_clients')}
+                    icon={<ServerStackIcon />}
+                    closeMenu={closeMenu}
+                  />
+                </div>
+              </Accordion.Body>
+            </Accordion.Panel>
+          </Accordion.Item>
         </Accordion>
       </div>
     </div>

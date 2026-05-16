@@ -80,12 +80,12 @@ export type PrismaVersion = {
 }
 
 /**
- * Prisma Client JS version: 7.5.0
- * Query Engine version: 280c870be64f457428992c43c1f6d557fab6e29e
+ * Prisma Client JS version: 7.8.0
+ * Query Engine version: 3c6e192761c0362d496ed980de936e2f3cebcd3a
  */
 export const prismaVersion: PrismaVersion = {
-  client: "7.5.0",
-  engine: "280c870be64f457428992c43c1f6d557fab6e29e"
+  client: "7.8.0",
+  engine: "3c6e192761c0362d496ed980de936e2f3cebcd3a"
 }
 
 /**
@@ -389,7 +389,12 @@ export const ModelName = {
   Account: 'Account',
   Verification: 'Verification',
   TwoFactor: 'TwoFactor',
-  Passkey: 'Passkey'
+  Passkey: 'Passkey',
+  Jwks: 'Jwks',
+  OauthClient: 'OauthClient',
+  OauthRefreshToken: 'OauthRefreshToken',
+  OauthAccessToken: 'OauthAccessToken',
+  OauthConsent: 'OauthConsent'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -405,7 +410,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "twoFactor" | "passkey"
+    modelProps: "user" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -853,6 +858,376 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    Jwks: {
+      payload: Prisma.$JwksPayload<ExtArgs>
+      fields: Prisma.JwksFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.JwksFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$JwksPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.JwksFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$JwksPayload>
+        }
+        findFirst: {
+          args: Prisma.JwksFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$JwksPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.JwksFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$JwksPayload>
+        }
+        findMany: {
+          args: Prisma.JwksFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$JwksPayload>[]
+        }
+        create: {
+          args: Prisma.JwksCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$JwksPayload>
+        }
+        createMany: {
+          args: Prisma.JwksCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.JwksCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$JwksPayload>[]
+        }
+        delete: {
+          args: Prisma.JwksDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$JwksPayload>
+        }
+        update: {
+          args: Prisma.JwksUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$JwksPayload>
+        }
+        deleteMany: {
+          args: Prisma.JwksDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.JwksUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.JwksUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$JwksPayload>[]
+        }
+        upsert: {
+          args: Prisma.JwksUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$JwksPayload>
+        }
+        aggregate: {
+          args: Prisma.JwksAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateJwks>
+        }
+        groupBy: {
+          args: Prisma.JwksGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.JwksGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.JwksCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.JwksCountAggregateOutputType> | number
+        }
+      }
+    }
+    OauthClient: {
+      payload: Prisma.$OauthClientPayload<ExtArgs>
+      fields: Prisma.OauthClientFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.OauthClientFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthClientPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.OauthClientFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthClientPayload>
+        }
+        findFirst: {
+          args: Prisma.OauthClientFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthClientPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.OauthClientFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthClientPayload>
+        }
+        findMany: {
+          args: Prisma.OauthClientFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthClientPayload>[]
+        }
+        create: {
+          args: Prisma.OauthClientCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthClientPayload>
+        }
+        createMany: {
+          args: Prisma.OauthClientCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.OauthClientCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthClientPayload>[]
+        }
+        delete: {
+          args: Prisma.OauthClientDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthClientPayload>
+        }
+        update: {
+          args: Prisma.OauthClientUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthClientPayload>
+        }
+        deleteMany: {
+          args: Prisma.OauthClientDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.OauthClientUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.OauthClientUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthClientPayload>[]
+        }
+        upsert: {
+          args: Prisma.OauthClientUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthClientPayload>
+        }
+        aggregate: {
+          args: Prisma.OauthClientAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateOauthClient>
+        }
+        groupBy: {
+          args: Prisma.OauthClientGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OauthClientGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.OauthClientCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OauthClientCountAggregateOutputType> | number
+        }
+      }
+    }
+    OauthRefreshToken: {
+      payload: Prisma.$OauthRefreshTokenPayload<ExtArgs>
+      fields: Prisma.OauthRefreshTokenFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.OauthRefreshTokenFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthRefreshTokenPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.OauthRefreshTokenFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthRefreshTokenPayload>
+        }
+        findFirst: {
+          args: Prisma.OauthRefreshTokenFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthRefreshTokenPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.OauthRefreshTokenFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthRefreshTokenPayload>
+        }
+        findMany: {
+          args: Prisma.OauthRefreshTokenFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthRefreshTokenPayload>[]
+        }
+        create: {
+          args: Prisma.OauthRefreshTokenCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthRefreshTokenPayload>
+        }
+        createMany: {
+          args: Prisma.OauthRefreshTokenCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.OauthRefreshTokenCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthRefreshTokenPayload>[]
+        }
+        delete: {
+          args: Prisma.OauthRefreshTokenDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthRefreshTokenPayload>
+        }
+        update: {
+          args: Prisma.OauthRefreshTokenUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthRefreshTokenPayload>
+        }
+        deleteMany: {
+          args: Prisma.OauthRefreshTokenDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.OauthRefreshTokenUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.OauthRefreshTokenUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthRefreshTokenPayload>[]
+        }
+        upsert: {
+          args: Prisma.OauthRefreshTokenUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthRefreshTokenPayload>
+        }
+        aggregate: {
+          args: Prisma.OauthRefreshTokenAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateOauthRefreshToken>
+        }
+        groupBy: {
+          args: Prisma.OauthRefreshTokenGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OauthRefreshTokenGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.OauthRefreshTokenCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OauthRefreshTokenCountAggregateOutputType> | number
+        }
+      }
+    }
+    OauthAccessToken: {
+      payload: Prisma.$OauthAccessTokenPayload<ExtArgs>
+      fields: Prisma.OauthAccessTokenFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.OauthAccessTokenFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthAccessTokenPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.OauthAccessTokenFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthAccessTokenPayload>
+        }
+        findFirst: {
+          args: Prisma.OauthAccessTokenFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthAccessTokenPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.OauthAccessTokenFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthAccessTokenPayload>
+        }
+        findMany: {
+          args: Prisma.OauthAccessTokenFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthAccessTokenPayload>[]
+        }
+        create: {
+          args: Prisma.OauthAccessTokenCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthAccessTokenPayload>
+        }
+        createMany: {
+          args: Prisma.OauthAccessTokenCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.OauthAccessTokenCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthAccessTokenPayload>[]
+        }
+        delete: {
+          args: Prisma.OauthAccessTokenDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthAccessTokenPayload>
+        }
+        update: {
+          args: Prisma.OauthAccessTokenUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthAccessTokenPayload>
+        }
+        deleteMany: {
+          args: Prisma.OauthAccessTokenDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.OauthAccessTokenUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.OauthAccessTokenUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthAccessTokenPayload>[]
+        }
+        upsert: {
+          args: Prisma.OauthAccessTokenUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthAccessTokenPayload>
+        }
+        aggregate: {
+          args: Prisma.OauthAccessTokenAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateOauthAccessToken>
+        }
+        groupBy: {
+          args: Prisma.OauthAccessTokenGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OauthAccessTokenGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.OauthAccessTokenCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OauthAccessTokenCountAggregateOutputType> | number
+        }
+      }
+    }
+    OauthConsent: {
+      payload: Prisma.$OauthConsentPayload<ExtArgs>
+      fields: Prisma.OauthConsentFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.OauthConsentFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthConsentPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.OauthConsentFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthConsentPayload>
+        }
+        findFirst: {
+          args: Prisma.OauthConsentFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthConsentPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.OauthConsentFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthConsentPayload>
+        }
+        findMany: {
+          args: Prisma.OauthConsentFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthConsentPayload>[]
+        }
+        create: {
+          args: Prisma.OauthConsentCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthConsentPayload>
+        }
+        createMany: {
+          args: Prisma.OauthConsentCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.OauthConsentCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthConsentPayload>[]
+        }
+        delete: {
+          args: Prisma.OauthConsentDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthConsentPayload>
+        }
+        update: {
+          args: Prisma.OauthConsentUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthConsentPayload>
+        }
+        deleteMany: {
+          args: Prisma.OauthConsentDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.OauthConsentUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.OauthConsentUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthConsentPayload>[]
+        }
+        upsert: {
+          args: Prisma.OauthConsentUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OauthConsentPayload>
+        }
+        aggregate: {
+          args: Prisma.OauthConsentAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateOauthConsent>
+        }
+        groupBy: {
+          args: Prisma.OauthConsentGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OauthConsentGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.OauthConsentCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OauthConsentCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -897,12 +1272,12 @@ export const UserScalarFieldEnum = {
   image: 'image',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
-  locale: 'locale',
   role: 'role',
   banned: 'banned',
   banReason: 'banReason',
   banExpires: 'banExpires',
-  twoFactorEnabled: 'twoFactorEnabled'
+  twoFactorEnabled: 'twoFactorEnabled',
+  locale: 'locale'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -958,7 +1333,8 @@ export const TwoFactorScalarFieldEnum = {
   id: 'id',
   secret: 'secret',
   backupCodes: 'backupCodes',
-  userId: 'userId'
+  userId: 'userId',
+  verified: 'verified'
 } as const
 
 export type TwoFactorScalarFieldEnum = (typeof TwoFactorScalarFieldEnum)[keyof typeof TwoFactorScalarFieldEnum]
@@ -979,6 +1355,99 @@ export const PasskeyScalarFieldEnum = {
 } as const
 
 export type PasskeyScalarFieldEnum = (typeof PasskeyScalarFieldEnum)[keyof typeof PasskeyScalarFieldEnum]
+
+
+export const JwksScalarFieldEnum = {
+  id: 'id',
+  publicKey: 'publicKey',
+  privateKey: 'privateKey',
+  createdAt: 'createdAt',
+  expiresAt: 'expiresAt'
+} as const
+
+export type JwksScalarFieldEnum = (typeof JwksScalarFieldEnum)[keyof typeof JwksScalarFieldEnum]
+
+
+export const OauthClientScalarFieldEnum = {
+  id: 'id',
+  clientId: 'clientId',
+  clientSecret: 'clientSecret',
+  disabled: 'disabled',
+  skipConsent: 'skipConsent',
+  enableEndSession: 'enableEndSession',
+  subjectType: 'subjectType',
+  scopes: 'scopes',
+  userId: 'userId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  name: 'name',
+  uri: 'uri',
+  icon: 'icon',
+  contacts: 'contacts',
+  tos: 'tos',
+  policy: 'policy',
+  softwareId: 'softwareId',
+  softwareVersion: 'softwareVersion',
+  softwareStatement: 'softwareStatement',
+  redirectUris: 'redirectUris',
+  postLogoutRedirectUris: 'postLogoutRedirectUris',
+  tokenEndpointAuthMethod: 'tokenEndpointAuthMethod',
+  grantTypes: 'grantTypes',
+  responseTypes: 'responseTypes',
+  public: 'public',
+  type: 'type',
+  requirePKCE: 'requirePKCE',
+  referenceId: 'referenceId',
+  metadata: 'metadata'
+} as const
+
+export type OauthClientScalarFieldEnum = (typeof OauthClientScalarFieldEnum)[keyof typeof OauthClientScalarFieldEnum]
+
+
+export const OauthRefreshTokenScalarFieldEnum = {
+  id: 'id',
+  token: 'token',
+  clientId: 'clientId',
+  sessionId: 'sessionId',
+  userId: 'userId',
+  referenceId: 'referenceId',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt',
+  revoked: 'revoked',
+  authTime: 'authTime',
+  scopes: 'scopes'
+} as const
+
+export type OauthRefreshTokenScalarFieldEnum = (typeof OauthRefreshTokenScalarFieldEnum)[keyof typeof OauthRefreshTokenScalarFieldEnum]
+
+
+export const OauthAccessTokenScalarFieldEnum = {
+  id: 'id',
+  token: 'token',
+  clientId: 'clientId',
+  sessionId: 'sessionId',
+  userId: 'userId',
+  referenceId: 'referenceId',
+  refreshId: 'refreshId',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt',
+  scopes: 'scopes'
+} as const
+
+export type OauthAccessTokenScalarFieldEnum = (typeof OauthAccessTokenScalarFieldEnum)[keyof typeof OauthAccessTokenScalarFieldEnum]
+
+
+export const OauthConsentScalarFieldEnum = {
+  id: 'id',
+  clientId: 'clientId',
+  userId: 'userId',
+  referenceId: 'referenceId',
+  scopes: 'scopes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OauthConsentScalarFieldEnum = (typeof OauthConsentScalarFieldEnum)[keyof typeof OauthConsentScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1130,6 +1599,21 @@ export type PrismaClientOptions = ({
    * ```
    */
   comments?: runtime.SqlCommenterPlugin[]
+  /**
+   * Optional maximum size for the query plan cache. If not provided, a default size will be used.
+   * A value of `0` can be used to disable the cache entirely. A higher cache size can improve
+   * performance for applications that execute a large number of unique queries, while a smaller
+   * cache size can reduce memory usage.
+   * 
+   * @example
+   * ```
+   * const prisma = new PrismaClient({
+   *   adapter,
+   *   queryPlanCacheMaxSize: 100,
+   * })
+   * ```
+   */
+  queryPlanCacheMaxSize?: number
 }
 export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
@@ -1138,6 +1622,11 @@ export type GlobalOmitConfig = {
   verification?: Prisma.VerificationOmit
   twoFactor?: Prisma.TwoFactorOmit
   passkey?: Prisma.PasskeyOmit
+  jwks?: Prisma.JwksOmit
+  oauthClient?: Prisma.OauthClientOmit
+  oauthRefreshToken?: Prisma.OauthRefreshTokenOmit
+  oauthAccessToken?: Prisma.OauthAccessTokenOmit
+  oauthConsent?: Prisma.OauthConsentOmit
 }
 
 /* Types for Logging */

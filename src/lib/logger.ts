@@ -12,7 +12,7 @@ export const logger = pino({
       return { level: label.toUpperCase() }
     },
   },
-  redact: ['password'],
+  redact: ['password', 'client_secret'],
 
   // 開発環境のときだけ pretty-print を有効にする
   transport:

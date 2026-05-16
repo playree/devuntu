@@ -1,7 +1,7 @@
 'use client'
 
+import { cn } from '@heroui/react'
 import { FC, ReactNode, SVGProps, useState } from 'react'
-import { twMerge } from 'tailwind-merge'
 
 const Bars3BottomLeftIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
   <svg
@@ -25,16 +25,24 @@ const Bars3BottomLeftIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWi
 export const SideNavbar: FC<{
   children: ReactNode
   menu: (closeMenu?: () => void) => ReactNode
+  pendding?: () => ReactNode | undefined | null
   className?: string
-}> = ({ children, menu, className }) => {
+}> = ({ children, menu, pendding, className }) => {
   const [isOpen, setIsOpen] = useState(false)
   const closeMenu = () => {
     setIsOpen(false)
   }
+  if (pendding) {
+    const pd = pendding()
+    if (pd) {
+      return pd
+    }
+  }
+
   return (
     <>
       <button
-        className={twMerge(
+        className={cn(
           'fixed z-40 mt-2 ml-3 rounded-lg bg-gray-200 p-2 text-sm text-gray-500',
           'opacity-50 hover:bg-gray-300 focus:ring-2 focus:ring-gray-200 focus:outline-hidden',
           'lg:hidden dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600',
@@ -48,19 +56,19 @@ export const SideNavbar: FC<{
 
       <nav // サイドメニュー
         id='side-menu'
-        className={twMerge(
+        className={cn(
           'fixed top-0 left-0 z-40 h-screen w-64 transition-transform',
           isOpen ? '' : '-translate-x-full lg:translate-x-0',
         )}
       >
-        <div className={twMerge('h-full overflow-y-auto bg-gray-100 px-3 py-4 dark:bg-gray-900', className)}>
+        <div className={cn('h-full overflow-y-auto px-3 py-4', className)}>
           {menu(() => {
             setTimeout(closeMenu, 200)
           })}
         </div>
       </nav>
       <div
-        className={twMerge('fixed inset-0 z-30 bg-gray-900 opacity-50 dark:opacity-80', isOpen ? '' : 'hidden')}
+        className={cn('fixed inset-0 z-30 bg-gray-900 opacity-50 dark:opacity-80', isOpen ? '' : 'hidden')}
         onClick={closeMenu}
       ></div>
 

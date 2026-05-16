@@ -5,12 +5,11 @@ import { InputCtrl } from '@/components/general/input-ctrl'
 import { CheckIcon, Cog6ToothIcon } from '@/components/icon'
 import { InputCtrlPassword } from '@/components/input-ctrl-pw'
 import { SingleLayout } from '@/components/single-layout'
+import { parseAction } from '@/lib/action-client'
 import { makeUrl } from '@/lib/env-util'
 import { CreateAdmin, scCreateAdmin } from '@/lib/schema'
-import { intervalOperation } from '@/lib/sleep'
 import { gridStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
-import { addToast } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
@@ -39,14 +38,7 @@ export const StartClient: FC = () => {
     <SingleLayout icon={<Cog6ToothIcon />} title={t('admin_regist')}>
       <form
         onSubmit={handleSubmit(async (input) => {
-          const res = await createAdmin(input)
-          console.debug(res)
-          if (!res.data) {
-            addToast({ title: t('error'), description: t('msg_system_error'), color: 'danger' })
-            return
-          }
-
-          await intervalOperation()
+          await parseAction(createAdmin(input))
           router.push(makeUrl('/').toString())
         })}
       >
@@ -54,6 +46,7 @@ export const StartClient: FC = () => {
           <div className='col-span-12'>
             <InputCtrl
               control={control}
+              variant='secondary'
               name='name'
               label={t('username')}
               errorMessage={fet(errors.name)}
@@ -64,6 +57,7 @@ export const StartClient: FC = () => {
           <div className='col-span-12'>
             <InputCtrl
               control={control}
+              variant='secondary'
               name='email'
               label={t('email')}
               autoComplete='email'
@@ -74,6 +68,7 @@ export const StartClient: FC = () => {
           <div className='col-span-12'>
             <InputCtrlPassword
               control={control}
+              variant='secondary'
               name='password'
               label={t('password')}
               autoComplete='new-password'
@@ -83,7 +78,7 @@ export const StartClient: FC = () => {
             />
           </div>
           <div className='col-span-12 mt-4 text-center'>
-            <MultiButton type='submit' startContent={<CheckIcon />} isLoading={isSubmitting}>
+            <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
               {t('ok')}
             </MultiButton>
           </div>

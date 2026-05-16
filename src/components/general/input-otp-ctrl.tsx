@@ -1,6 +1,6 @@
 'use client'
 
-import { InputOtp, InputOtpProps } from '@heroui/react'
+import { InputOTP, InputOTPProps } from '@heroui/react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 
 export const InputOtpCtrl = <
@@ -9,11 +9,9 @@ export const InputOtpCtrl = <
 >({
   control,
   name,
-  length,
-  variant = 'faded',
   onChanged,
   ...props
-}: InputOtpProps & {
+}: Omit<InputOTPProps, 'children'> & {
   control?: Control<TFieldValues>
   name: TName
   onChanged?: (value: string) => void
@@ -23,19 +21,25 @@ export const InputOtpCtrl = <
       control={control}
       name={name}
       render={({ field: { onChange, value } }) => (
-        <InputOtp
+        <InputOTP
           {...props}
-          length={length}
-          variant={variant}
-          onValueChange={(value) => {
+          onChange={(value) => {
             if (onChanged) {
               onChanged(value)
             }
             onChange(value)
           }}
           value={value}
-          isInvalid={!!props.errorMessage}
-        />
+        >
+          <InputOTP.Group className='mx-auto'>
+            <InputOTP.Slot index={0} />
+            <InputOTP.Slot index={1} />
+            <InputOTP.Slot index={2} />
+            <InputOTP.Slot index={3} />
+            <InputOTP.Slot index={4} />
+            <InputOTP.Slot index={5} />
+          </InputOTP.Group>
+        </InputOTP>
       )}
     />
   )

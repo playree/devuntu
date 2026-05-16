@@ -1,64 +1,59 @@
 'use client'
 
 import { authClient } from '@/lib/auth-client'
-import { Button, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, Skeleton } from '@heroui/react'
-import { FC, useEffect, useState } from 'react'
-import { twMerge } from 'tailwind-merge'
+import type { Selection } from '@heroui/react'
+import { Button, cn, Dropdown, Label, Skeleton } from '@heroui/react'
+import { FC, useState } from 'react'
 import { setCookie } from '../general/cookie/client'
 import { useLocale } from './client'
 import { setUserLocale } from './server'
 
 export const LocaleSwitch: FC<{ className?: string; size?: 'sm' | 'md' | 'lg' }> = ({ className, size = 'md' }) => {
-  const [mounted, setMounted] = useState(false)
   const { locale, lcConfig, setLocale } = useLocale()
   const { data: session } = authClient.useSession()
-  const [selectedKeys, setSelectedKeys] = useState(new Set([locale]))
-  const [selectedValue, setSelectedValue] = useState('')
+  const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([locale]))
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    setSelectedKeys(new Set([locale]))
-  }, [locale])
-
-  useEffect(() => {
-    setSelectedValue(Array.from(selectedKeys).join(', ').replaceAll('_', ' '))
-  }, [selectedKeys])
-
-  if (!mounted) {
-    return <Skeleton className={twMerge('h-8 w-18 rounded-lg', className)} />
+  if (!locale) {
+    return <Skeleton className={cn('h-8 w-18 rounded-lg', className)} />
   }
 
   return (
-    <Dropdown className={className} size={size}>
-      <DropdownTrigger>
-        <Button size={size} variant='faded' className={className}>{`lang: ${selectedValue}`}</Button>
-      </DropdownTrigger>
-      <DropdownMenu
+    <Dropdown className={className}>
+      <Button
         aria-label='Select Lang'
-        variant='flat'
-        disallowEmptySelection
-        selectionMode='single'
-        selectedKeys={selectedKeys}
-        onAction={(key) => {
-          const keyString = key.toString()
-          setSelectedKeys(new Set([keyString]))
-          setCookie(lcConfig.cookie.name, keyString, { maxAge: lcConfig.cookie.maxAge, path: '/' })
-          setLocale(keyString)
-          if (session?.user) {
-            // DB保存
-            console.debug('update user locale:', keyString)
-            setUserLocale({ locale: keyString })
-          }
-          return
-        }}
-      >
-        {lcConfig.locales.map((lc) => {
-          return <DropdownItem key={lc}>{lc}</DropdownItem>
-        })}
-      </DropdownMenu>
+        variant='outline'
+        size={size}
+        className={cn('min-w-20', className)}
+      >{`lang: ${locale}`}</Button>
+      <Dropdown.Popover>
+        <Dropdown.Menu
+          disallowEmptySelection
+          selectionMode='single'
+          selectedKeys={selectedKeys}
+          onAction={(key) => {
+            const keyString = key.toString()
+            const keys = new Set([keyString])
+            setSelectedKeys(keys)
+            setCookie(lcConfig.cookie.name, keyString, { maxAge: lcConfig.cookie.maxAge, path: '/' })
+            setLocale(keyString)
+            if (session?.user) {
+              // DB保存
+              console.debug('update user locale:', keyString)
+              setUserLocale({ locale: keyString })
+            }
+            return
+          }}
+        >
+          {lcConfig.locales.map((lc) => {
+            return (
+              <Dropdown.Item key={lc} id={lc} textValue={lc}>
+                <Dropdown.ItemIndicator />
+                <Label>{lc}</Label>
+              </Dropdown.Item>
+            )
+          })}
+        </Dropdown.Menu>
+      </Dropdown.Popover>
     </Dropdown>
   )
 }

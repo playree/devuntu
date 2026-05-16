@@ -1,7 +1,7 @@
 'use client'
 
 import { useLocale } from '@/locale/client'
-import { Input, InputProps, Progress } from '@heroui/react'
+import { Button, ErrorMessage, InputGroup, InputProps, Label, ProgressBar, TextField } from '@heroui/react'
 import { zxcvbn } from '@zxcvbn-ts/core'
 import { ChangeEvent, FC, SVGProps, useState } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
@@ -44,7 +44,13 @@ const EyeSlashIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2
   </svg>
 )
 
-const COLOR: ('danger' | 'warning' | 'success' | 'primary')[] = ['danger', 'danger', 'warning', 'success', 'primary']
+const COLOR: ('default' | 'danger' | 'warning' | 'success' | 'accent')[] = [
+  'default',
+  'danger',
+  'warning',
+  'success',
+  'accent',
+]
 
 export const PasswordScore: FC<{
   label: string
@@ -52,19 +58,21 @@ export const PasswordScore: FC<{
   isDisabled?: boolean
 }> = ({ label, score, isDisabled }) => {
   return (
-    <Progress
-      radius='sm'
-      size='sm'
+    <ProgressBar
+      size='md'
       maxValue={4}
-      label={label}
       value={score}
-      classNames={{
-        base: 'my-1 px-1',
-        label: isDisabled ? 'text-gray-600 dark:text-gray-400 text-xs' : 'text-xs',
-      }}
+      className='my-1 px-1'
       color={COLOR[score]}
-      isDisabled={isDisabled}
-    />
+      valueLabel=' '
+      // isDisabled={isDisabled}
+    >
+      <Label className={isDisabled ? 'text-xs text-gray-600 dark:text-gray-400' : 'text-xs'}>{label}</Label>
+      <ProgressBar.Output />
+      <ProgressBar.Track>
+        <ProgressBar.Fill />
+      </ProgressBar.Track>
+    </ProgressBar>
   )
 }
 
@@ -75,15 +83,22 @@ export const InputCtrlPassword = <
   control,
   name,
   type = 'text',
-  variant = 'faded',
   onChanged,
+  label,
+  isRequired,
+  isReadOnly,
+  errorMessage,
   requiredPasswordScore,
-  description,
+  variant,
   ...props
 }: InputProps & {
   control?: Control<TFieldValues>
   name: TName
   onChanged?: (e: ChangeEvent<HTMLInputElement>) => void
+  label?: string
+  isRequired?: boolean
+  isReadOnly?: boolean
+  errorMessage?: string
   requiredPasswordScore?: number
 }) => {
   const { t } = useLocale()
@@ -97,39 +112,45 @@ export const InputCtrlPassword = <
         control={control}
         name={name}
         render={({ field: { onChange, value } }) => (
-          <Input
-            {...props}
-            endContent={
-              <button className='focus:outline-hidden' type='button' onClick={toggleVisibility}>
-                {isVisible ? (
-                  <EyeSlashIcon className='text-default-400 pointer-events-none text-2xl' />
-                ) : (
-                  <EyeIcon className='text-default-400 pointer-events-none text-2xl' />
-                )}
-              </button>
-            }
+          <TextField
             type={isVisible ? 'text' : 'password'}
-            variant={variant}
-            onChange={(event) => {
-              if (requiredPasswordScore) {
-                const res = zxcvbn(event.target.value)
-                setPasswordScore(res.score)
-              }
+            className='relative'
+            isInvalid={!!errorMessage}
+            isReadOnly={isReadOnly}
+          >
+            <Label>
+              {label}
+              {isRequired ? '*' : ''}
+            </Label>
+            <InputGroup variant={variant}>
+              <InputGroup.Input
+                {...props}
+                onChange={(event) => {
+                  if (requiredPasswordScore) {
+                    const res = zxcvbn(event.target.value)
+                    setPasswordScore(res.score)
+                  }
 
-              if (onChanged) {
-                onChanged(event)
-              }
-              onChange(event)
-            }}
-            value={value || (type === 'number' ? '0' : '')}
-            isInvalid={!!props.errorMessage}
-            description={!!props.errorMessage ? '' : (description ?? '　')}
-          />
+                  if (onChanged) {
+                    onChanged(event)
+                  }
+                  onChange(event)
+                }}
+                value={value || (type === 'number' ? '0' : '')}
+              />
+              <InputGroup.Suffix className='pr-0'>
+                <Button isIconOnly size='sm' variant='ghost' onPress={toggleVisibility}>
+                  {isVisible ? <EyeSlashIcon /> : <EyeIcon />}
+                </Button>
+              </InputGroup.Suffix>
+            </InputGroup>
+            <ErrorMessage className='min-h-4'>{errorMessage}</ErrorMessage>
+          </TextField>
         )}
       />
       {requiredPasswordScore && (
         <PasswordScore
-          label={`${t('password_score')} = ${passwordScore} ( ${t('msg_password_score_required', { score: requiredPasswordScore })} )`}
+          label={`${t('password_score')} = ${passwordScore} ( ${t('password_score_required', { score: requiredPasswordScore })} )`}
           score={passwordScore}
         />
       )}

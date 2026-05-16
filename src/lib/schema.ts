@@ -42,3 +42,13 @@ export const scSetPassword = z.object({
   password: zPassword,
 })
 export type SetPassword = z.infer<typeof scSetPassword>
+
+export const scAddOidcClient = z.object({
+  clientName: z.string(),
+  redirectUri: z.url(),
+})
+export type AddOidcClient = z.infer<typeof scAddOidcClient>
+
+export const scDeleteOidcClient = z.object({
+  clientId: z.string(),
+})

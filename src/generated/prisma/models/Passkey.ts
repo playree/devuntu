@@ -234,7 +234,7 @@ export type PasskeyGroupByOutputType = {
   _max: PasskeyMaxAggregateOutputType | null
 }
 
-type GetPasskeyGroupByPayload<T extends PasskeyGroupByArgs> = Prisma.PrismaPromise<
+export type GetPasskeyGroupByPayload<T extends PasskeyGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<PasskeyGroupByOutputType, T['by']> &
       {
@@ -337,7 +337,7 @@ export type PasskeyScalarWhereWithAggregatesInput = {
 }
 
 export type PasskeyCreateInput = {
-  id: string
+  id?: string
   name?: string | null
   publicKey: string
   credentialID: string
@@ -351,7 +351,7 @@ export type PasskeyCreateInput = {
 }
 
 export type PasskeyUncheckedCreateInput = {
-  id: string
+  id?: string
   name?: string | null
   publicKey: string
   userId: string
@@ -393,7 +393,7 @@ export type PasskeyUncheckedUpdateInput = {
 }
 
 export type PasskeyCreateManyInput = {
-  id: string
+  id?: string
   name?: string | null
   publicKey: string
   userId: string
@@ -544,7 +544,7 @@ export type IntFieldUpdateOperationsInput = {
 }
 
 export type PasskeyCreateWithoutUserInput = {
-  id: string
+  id?: string
   name?: string | null
   publicKey: string
   credentialID: string
@@ -557,7 +557,7 @@ export type PasskeyCreateWithoutUserInput = {
 }
 
 export type PasskeyUncheckedCreateWithoutUserInput = {
-  id: string
+  id?: string
   name?: string | null
   publicKey: string
   credentialID: string
@@ -612,7 +612,7 @@ export type PasskeyScalarWhereInput = {
 }
 
 export type PasskeyCreateManyUserInput = {
-  id: string
+  id?: string
   name?: string | null
   publicKey: string
   credentialID: string

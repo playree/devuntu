@@ -214,7 +214,7 @@ export type AccountGroupByOutputType = {
   _max: AccountMaxAggregateOutputType | null
 }
 
-type GetAccountGroupByPayload<T extends AccountGroupByArgs> = Prisma.PrismaPromise<
+export type GetAccountGroupByPayload<T extends AccountGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<AccountGroupByOutputType, T['by']> &
       {
@@ -325,7 +325,7 @@ export type AccountScalarWhereWithAggregatesInput = {
 }
 
 export type AccountCreateInput = {
-  id: string
+  id?: string
   accountId: string
   providerId: string
   accessToken?: string | null
@@ -341,7 +341,7 @@ export type AccountCreateInput = {
 }
 
 export type AccountUncheckedCreateInput = {
-  id: string
+  id?: string
   accountId: string
   providerId: string
   userId: string
@@ -389,7 +389,7 @@ export type AccountUncheckedUpdateInput = {
 }
 
 export type AccountCreateManyInput = {
-  id: string
+  id?: string
   accountId: string
   providerId: string
   userId: string
@@ -536,7 +536,7 @@ export type AccountUncheckedUpdateManyWithoutUserNestedInput = {
 }
 
 export type AccountCreateWithoutUserInput = {
-  id: string
+  id?: string
   accountId: string
   providerId: string
   accessToken?: string | null
@@ -551,7 +551,7 @@ export type AccountCreateWithoutUserInput = {
 }
 
 export type AccountUncheckedCreateWithoutUserInput = {
-  id: string
+  id?: string
   accountId: string
   providerId: string
   accessToken?: string | null
@@ -610,7 +610,7 @@ export type AccountScalarWhereInput = {
 }
 
 export type AccountCreateManyUserInput = {
-  id: string
+  id?: string
   accountId: string
   providerId: string
   accessToken?: string | null
