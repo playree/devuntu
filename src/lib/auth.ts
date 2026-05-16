@@ -8,6 +8,7 @@ import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { uuidv7 } from 'uuidv7'
 import { authConfig } from './auth-config'
+import { nowDate } from './day'
 import { envu, makeUrl } from './env-util'
 import { logger } from './logger'
 import { sendEmailOtp } from './mail'
@@ -54,6 +55,12 @@ export const auth = betterAuth({
       locale: {
         type: 'string',
         required: false,
+        input: false,
+      },
+      lastLoginAt: {
+        type: 'date',
+        required: false,
+        input: false,
       },
     },
   },
@@ -84,6 +91,16 @@ export const auth = betterAuth({
               data: { emailVerified: true },
             })
           }
+        },
+      },
+    },
+    session: {
+      create: {
+        after: async (session) => {
+          await prisma.user.update({
+            where: { id: session.userId },
+            data: { lastLoginAt: nowDate() },
+          })
         },
       },
     },

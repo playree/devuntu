@@ -4,6 +4,7 @@ import { usePageingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
 import { ArrowPathIcon, UserPlusIcon, UsersIcon } from '@/components/icon'
+import { parseAction } from '@/lib/action-client'
 import { useLocale } from '@/locale/client'
 import { Button, ButtonGroup, Table } from '@heroui/react'
 import { FC } from 'react'
@@ -14,13 +15,12 @@ export const UsersClient: FC = () => {
 
   const list = usePageingList({
     load: async () => {
-      const res = await getUsers()
-      return res.data ?? []
+      const res = await parseAction(getUsers())
+      return res ?? []
     },
     sort: {
       init: { column: 'updatedAt', direction: 'descending' },
     },
-    rowsPerPage: 4,
   })
 
   return (

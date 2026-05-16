@@ -137,7 +137,6 @@ export const OidcListClient: FC = () => {
     sort: {
       init: { column: 'updatedAt', direction: 'descending' },
     },
-    rowsPerPage: 4,
   })
 
   return (

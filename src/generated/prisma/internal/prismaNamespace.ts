@@ -1277,7 +1277,8 @@ export const UserScalarFieldEnum = {
   banReason: 'banReason',
   banExpires: 'banExpires',
   twoFactorEnabled: 'twoFactorEnabled',
-  locale: 'locale'
+  locale: 'locale',
+  lastLoginAt: 'lastLoginAt'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
