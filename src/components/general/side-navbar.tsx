@@ -61,7 +61,7 @@ export const SideNavbar: FC<{
           isOpen ? '' : '-translate-x-full lg:translate-x-0',
         )}
       >
-        <div className={cn('h-full overflow-y-auto bg-gray-100 px-3 py-4 dark:bg-gray-900', className)}>
+        <div className={cn('h-full overflow-y-auto px-3 py-4', className)}>
           {menu(() => {
             setTimeout(closeMenu, 200)
           })}

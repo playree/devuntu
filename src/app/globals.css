@@ -10,12 +10,15 @@
 
 @layer base {
   :root {
-    --background: #ffffff;
+    --background: #f8fafa;
+    --accent: oklch(0.68 0.195 253.83);
+    --default: oklch(0.9 0.001 286.375);
   }
 
   .dark,
   [data-theme='dark'] {
     --background: #000000;
+    --default: oklch(0.35 0.006 286.033);
   }
 }
 
