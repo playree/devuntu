@@ -10,11 +10,12 @@ import { StepMotion } from '@/components/general/step-motion'
 import { ActionCell, MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
 import { ArrowPathIcon, CheckIcon, PencilSquareIcon, PlusIcon, TrashIcon, UsersIcon } from '@/components/icon'
+import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
 import { AddOidcClient, scAddOidcClient } from '@/lib/schema'
 import { gridStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
-import { ButtonGroup, cn, Table, toast } from '@heroui/react'
+import { ButtonGroup, cn, Table } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AnimatePresence } from 'framer-motion'
 import { FC, useState } from 'react'
@@ -51,7 +52,7 @@ const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
         const res = await parseAction(addOidcClient(req))
         setOutput(res)
         setStep({ id: 'OUTPUT', direction: 1 })
-        toast.success(t('msg_added_target', { target: req.clientName }))
+        notify.success(t('msg_added_target', { target: req.clientName }))
         reload()
       })}
       title={{ text: t('add_client'), icon: <PlusIcon /> }}
@@ -195,7 +196,7 @@ export const OidcListClient: FC = () => {
                       })
                       if (ok) {
                         await parseAction(deleteOidcClient({ clientId: item.clientId }))
-                        toast.success(t('msg_deleted_target', { target: item.clientName }))
+                        notify.success(t('msg_deleted_target', { target: item.clientName }))
                         list.reload()
                       }
                     } finally {

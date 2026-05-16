@@ -2,9 +2,9 @@
 
 import { ConfirmModalProvider } from '@/components/general/modal'
 import { LocaleProvider } from '@/components/locale/client'
+import { NotifyProvider } from '@/components/notify'
 import { useLocale } from '@/locale/client'
 import { localeConfig } from '@/locale/config'
-import { Toast } from '@heroui/react'
 import { ThemeProvider, type ThemeProviderProps } from 'next-themes'
 import { FC, ReactNode } from 'react'
 
@@ -28,7 +28,7 @@ const MyConfirmModalProvider: FC<{ children: ReactNode }> = ({ children }) => {
 export const Providers: FC<ProvidersProps> = ({ children, themeProps, defaultLocale, acceptLanguage }) => {
   return (
     <ThemeProvider {...themeProps}>
-      <Toast.Provider placement='bottom end' />
+      <NotifyProvider />
       <LocaleProvider config={localeConfig} defaultLocale={defaultLocale} acceptLanguage={acceptLanguage}>
         <MyConfirmModalProvider>{children}</MyConfirmModalProvider>
       </LocaleProvider>

@@ -16,6 +16,7 @@ import {
   ShieldCheckIcon,
 } from '@/components/icon'
 import { InputCtrlPassword } from '@/components/input-ctrl-pw'
+import { notify } from '@/components/notify'
 import { SingleLayout } from '@/components/single-layout'
 import { parseAction } from '@/lib/action-client'
 import { authClient } from '@/lib/auth-client'
@@ -32,7 +33,7 @@ import {
 import { intervalOperation } from '@/lib/sleep'
 import { gridStyles, textStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
-import { cn, Separator, toast } from '@heroui/react'
+import { cn, Separator } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AnimatePresence } from 'framer-motion'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -130,7 +131,7 @@ const PasswordForm: FC<{
                   if (twoFactorRedirect) {
                     // 2FA
                     await authClient.twoFactor.sendOtp()
-                    toast.success(t('msg_otp_sent'))
+                    notify.success(t('msg_otp_sent'))
                     next(password)
                     return
                   }
@@ -140,7 +141,7 @@ const PasswordForm: FC<{
                     if (!user.twoFactorEnabled) {
                       await authClient.twoFactor.enable({ password })
                       await authClient.twoFactor.sendOtp()
-                      toast.success(t('msg_otp_sent'))
+                      notify.success(t('msg_otp_sent'))
                       next(password)
                       return
                     }
@@ -157,7 +158,7 @@ const PasswordForm: FC<{
           if (res.error) {
             console.debug(res.error)
             const msg = res.error.code === 'INVALID_EMAIL_OR_PASSWORD' ? t('msg_invalid_email_or_password') : undefined
-            toast.warning(t('auth_ng'), { description: msg })
+            notify.warn(t('auth_ng'), { description: msg })
           }
         })}
       >
@@ -234,7 +235,7 @@ const OtpForm: FC<{
           await intervalOperation()
           if (res.error) {
             console.debug(res.error)
-            toast.warning(t('auth_ng'))
+            notify.warn(t('auth_ng'))
             return
           }
           router.push(callbackURL)
@@ -269,7 +270,7 @@ const OtpForm: FC<{
                 window.location.reload()
                 return
               }
-              toast.success(t('msg_otp_sent'))
+              notify.success(t('msg_otp_sent'))
             }}
           >
             {t('resend')}
@@ -306,7 +307,7 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
   useEffect(() => {
     if (errorCode && !hasErrorToasted.current) {
       const msg = errorCode === 'user_not_exist' ? t('msg_user_not_exist') : undefined
-      toast.warning(t('auth_ng'), { description: msg })
+      notify.warn(t('auth_ng'), { description: msg })
       hasErrorToasted.current = true
     }
   }, [errorCode, t])
@@ -407,7 +408,7 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
               const { data, error } = await authClient.signIn.passkey()
               console.debug('passkey', { data, error })
               if (error) {
-                toast.warning(t('auth_ng'))
+                notify.warn(t('auth_ng'))
                 return
               }
               router.push(callbackURL)

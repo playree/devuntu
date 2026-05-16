@@ -1,4 +1,4 @@
-import { toast } from '@heroui/react'
+import { notify } from '@/components/notify'
 import { intervalOperation } from './sleep'
 
 type MarkDataResolved<T> = T & {
@@ -23,7 +23,7 @@ export const parseAction = async <T extends { data?: unknown; serverError?: unkn
   console.debug('action exec', execTime)
 
   if (result.serverError || result.validationErrors) {
-    toast.danger('Error', { description: 'An error has occurred' })
+    notify.error('Error', { description: 'An error has occurred' })
     console.error('action error', result.serverError || result.validationErrors)
     throw new Error()
   }
