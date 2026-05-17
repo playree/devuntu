@@ -18,7 +18,7 @@ export const InputCtrl = <
   errorMessage,
   ...props
 }: InputProps & {
-  control?: Control<TFieldValues>
+  control: Control<TFieldValues>
   name: TName
   onChanged?: (e: ChangeEvent<HTMLInputElement>) => void
   label?: string

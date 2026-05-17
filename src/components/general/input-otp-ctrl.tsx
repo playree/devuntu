@@ -12,7 +12,7 @@ export const InputOtpCtrl = <
   onChanged,
   ...props
 }: Omit<InputOTPProps, 'children'> & {
-  control?: Control<TFieldValues>
+  control: Control<TFieldValues>
   name: TName
   onChanged?: (value: string) => void
 }) => {
