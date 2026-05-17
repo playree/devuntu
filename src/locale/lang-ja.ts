@@ -38,6 +38,10 @@ export const ja: DefaultLocaleItems = {
   confirmed: '確認した',
   confirm_deletion: '削除確認',
   password_score_required: '${score}以上が必要',
+  last_login: '最終ログイン',
+  created_at: '作成日時',
+  updated_at: '更新日時',
+  trust_device: 'このデバイスを信頼する',
 
   msg_invalid_email_or_password: 'Eメールまたはパスワードが違います。',
   msg_user_not_exist: 'ユーザーが存在しません。',

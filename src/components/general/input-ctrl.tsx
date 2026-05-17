@@ -30,7 +30,7 @@ export const InputCtrl = <
     <Controller
       control={control}
       name={name}
-      render={({ field: { onChange, value } }) => (
+      render={({ field: { onChange, value, onBlur, ref } }) => (
         <TextField isInvalid={!!errorMessage} isReadOnly={isReadOnly}>
           <Label>
             {label}
@@ -55,6 +55,8 @@ export const InputCtrl = <
                   }
             }
             value={value || (type === 'number' ? '0' : '')}
+            onBlur={onBlur}
+            ref={ref}
           />
           <ErrorMessage className='min-h-4'>{errorMessage}</ErrorMessage>
         </TextField>

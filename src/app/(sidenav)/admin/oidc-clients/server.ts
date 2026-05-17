@@ -34,6 +34,7 @@ export const addOidcClient = safeAuthAction
         redirect_uris: [redirectUri],
         client_secret_expires_at: 0,
         skip_consent: true,
+        require_pkce: false, // @todo
       },
     })
     logger.debug(res, 'auth.api.adminCreateOAuthClient')

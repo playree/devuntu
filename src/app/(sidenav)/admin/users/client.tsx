@@ -1,10 +1,11 @@
 'use client'
 
 import { usePageingList } from '@/components/general/paging'
-import { MultiTable } from '@/components/general/table'
+import { ActionCell, MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, UserPlusIcon, UsersIcon } from '@/components/icon'
+import { ArrowPathIcon, PencilSquareIcon, TrashIcon, UserPlusIcon, UsersIcon } from '@/components/icon'
 import { parseAction } from '@/lib/action-client'
+import { dayformat } from '@/lib/day'
 import { useLocale } from '@/locale/client'
 import { Button, ButtonGroup, Table } from '@heroui/react'
 import { FC } from 'react'
@@ -41,20 +42,30 @@ export const UsersClient: FC = () => {
         sortDescriptor={list.sortDescriptor}
         onSortChange={list.onSortChange}
         columns={[
-          { id: 'name', name: t('username'), isRowHeader: true, allowsSorting: true },
-          { id: 'email', name: t('email'), isRowHeader: true, allowsSorting: true },
+          { id: 'name', name: t('username'), isRowHeader: true, allowsSorting: true, minWidth: 80 },
+          { id: 'email', name: t('email'), allowsSorting: true, minWidth: 80 },
+          { id: 'lastLoginAt', name: t('last_login'), allowsSorting: true, minWidth: 120 },
+          { id: 'createdAt', name: t('created_at'), allowsSorting: true, minWidth: 120 },
+          { id: 'action', name: t('action'), allowsSorting: false, defaultWidth: 120 },
         ]}
-        paging={{
-          rowsPerPage: list.rowsPerPage,
-          page: list.page,
-          total: list.total,
-          onPageChange: list.onPageChange,
-        }}
+        paging={list}
       >
         {(item) => (
           <Table.Row key={item.id} id={item.id}>
             <Table.Cell>{item.name}</Table.Cell>
-            <Table.Cell>{item.email}</Table.Cell>
+            <Table.Cell className='truncate font-mono text-xs'>{item.email}</Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.lastLoginAt, 'jp-simple')}</Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'jp-simple')}</Table.Cell>
+            <ActionCell
+              items={[
+                { key: 'edit', icon: <PencilSquareIcon /> },
+                {
+                  key: 'delete',
+                  variant: 'danger-soft',
+                  icon: <TrashIcon />,
+                },
+              ]}
+            />
           </Table.Row>
         )}
       </MultiTable>

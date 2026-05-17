@@ -38,6 +38,10 @@ export const en: LocaleItems = {
   confirmed: 'Confirmed',
   confirm_deletion: 'Confirm deletion',
   password_score_required: '${score} or more required',
+  last_login: 'Last Login',
+  created_at: 'Created At',
+  updated_at: 'Updated At',
+  trust_device: 'Trust this device',
 
   msg_invalid_email_or_password: 'Invalid email or password.',
   msg_user_not_exist: 'User does not exist.',

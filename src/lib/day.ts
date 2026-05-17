@@ -1,4 +1,4 @@
-import dayjs, { extend } from 'dayjs'
+import dayjs, { Dayjs, extend } from 'dayjs'
 import timezone from 'dayjs/plugin/timezone'
 import utc from 'dayjs/plugin/utc'
 
@@ -9,7 +9,11 @@ export const now = () => dayjs()
 export const nowDate = () => now().toDate()
 
 /** 日本時間フォーマット */
-export const dayformat = (date: Date, format?: 'jp-simple') => {
+export const dayformat = (date: Dayjs | Date | null, format?: 'jp-simple') => {
+  if (!date) {
+    return ''
+  }
+
   switch (format) {
     case 'jp-simple':
       return dayjs(date).tz('Asia/Tokyo').format('YYYY-MM-DD HH:mm:ss')

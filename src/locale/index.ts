@@ -36,6 +36,10 @@ export type LocaleItemBase =
   | 'confirmed'
   | 'confirm_deletion'
   | 'password_score_required'
+  | 'last_login'
+  | 'created_at'
+  | 'updated_at'
+  | 'trust_device'
   // for Message
   | 'msg_invalid_email_or_password'
   | 'msg_user_not_exist'

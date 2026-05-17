@@ -23,13 +23,13 @@
 }
 
 @layer components {
-  .button > svg {
-    @apply w-5;
-  }
   .accordion__trigger {
     @apply px-2 py-3;
   }
   .accordion__body-inner {
     @apply px-0;
+  }
+  .table__cell {
+    @apply overflow-hidden;
   }
 }

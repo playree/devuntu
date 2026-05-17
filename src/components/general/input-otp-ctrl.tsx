@@ -20,7 +20,7 @@ export const InputOtpCtrl = <
     <Controller
       control={control}
       name={name}
-      render={({ field: { onChange, value } }) => (
+      render={({ field: { onChange, value, onBlur, ref } }) => (
         <InputOTP
           {...props}
           onChange={(value) => {
@@ -30,6 +30,8 @@ export const InputOtpCtrl = <
             onChange(value)
           }}
           value={value}
+          onBlur={onBlur}
+          ref={ref}
         >
           <InputOTP.Group className='mx-auto'>
             <InputOTP.Slot index={0} />

@@ -1,6 +1,7 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
+import { CheckBoxCtrl } from '@/components/general/checkbox-ctrl'
 import { GrowMotion } from '@/components/general/grow-motion'
 import { InputCtrl } from '@/components/general/input-ctrl'
 import { InputOtpCtrl } from '@/components/general/input-otp-ctrl'
@@ -216,6 +217,7 @@ const OtpForm: FC<{
     // mode: 'onChange',
     defaultValues: {
       otp: '',
+      trustDevice: true,
     },
   })
   const formRef = useRef<HTMLFormElement>(null)
@@ -225,12 +227,12 @@ const OtpForm: FC<{
       <form
         ref={formRef}
         onSubmit={handleSubmit(async (input) => {
-          if (!password) {
+          if (!password || !input.otp) {
             return
           }
           const res = await authClient.twoFactor.verifyOtp({
             code: input.otp,
-            trustDevice: true,
+            trustDevice: input.trustDevice,
           })
           await intervalOperation()
           if (res.error) {
@@ -258,26 +260,37 @@ const OtpForm: FC<{
           />
         </div>
         <div className='mt-2 flex items-center justify-between'>
-          <MultiButton
-            variant='ghost'
-            icon={<ArrowPathIcon />}
-            coolTime={30}
-            onPress={async () => {
-              const res = await authClient.twoFactor.sendOtp()
-              console.log(res)
-              if (!res.data?.status) {
-                // 一時的な認証状態が有効期限切れなので、サインインを最初からやり直す
-                window.location.reload()
-                return
-              }
-              notify.success(t('msg_otp_sent'))
-            }}
-          >
-            {t('resend')}
-          </MultiButton>
-          <MultiButton type='submit' icon={<ShieldCheckIcon />} isPending={isSubmitting}>
-            {t('auth')}
-          </MultiButton>
+          <div>
+            <CheckBoxCtrl
+              id='trustDevice'
+              name='trustDevice'
+              control={control}
+              label={t('trust_device')}
+              variant='secondary'
+            />
+          </div>
+          <div className='flex gap-2'>
+            <MultiButton
+              variant='ghost'
+              icon={<ArrowPathIcon />}
+              coolTime={30}
+              onPress={async () => {
+                const res = await authClient.twoFactor.sendOtp()
+                console.log(res)
+                if (!res.data?.status) {
+                  // 一時的な認証状態が有効期限切れなので、サインインを最初からやり直す
+                  window.location.reload()
+                  return
+                }
+                notify.success(t('msg_otp_sent'))
+              }}
+            >
+              {t('resend')}
+            </MultiButton>
+            <MultiButton type='submit' icon={<ShieldCheckIcon />} isPending={isSubmitting}>
+              {t('auth')}
+            </MultiButton>
+          </div>
         </div>
       </form>
     </StepMotion>

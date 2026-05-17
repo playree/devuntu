@@ -174,7 +174,7 @@ export const OidcListClient: FC = () => {
         {(item) => (
           <Table.Row key={item.clientId} id={item.clientId}>
             <Table.Cell>{item.clientName}</Table.Cell>
-            <Table.Cell className='overflow-hidden font-mono'>{item.clientId}</Table.Cell>
+            <Table.Cell className='font-mono'>{item.clientId}</Table.Cell>
             <Table.Cell>
               <OnOffChip isState={item.skipConsent} />
             </Table.Cell>
