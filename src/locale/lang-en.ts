@@ -52,8 +52,8 @@ export const en: LocaleItems = {
   msg_updated_target: 'Updated ${target}.',
   msg_confirm_deletion: 'Delete ${target}.',
 
-  mail_otp_subject: '[${appname}] 2FA OTP : ${otp}',
-  mail_otp_body: `A verification code has been issued for two-factor authentication.
+  mail_otp_subject: '[${appname}] Email OTP : ${otp}',
+  mail_otp_body: `A verification code has been issued for email authentication.
 
 Verification Code: \${otp}
 

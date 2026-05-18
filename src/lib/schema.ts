@@ -21,6 +21,11 @@ export const scSignInPassword = z.object({
 })
 export type SignInPassword = z.infer<typeof scSignInPassword>
 
+export const scOtp = z.object({
+  otp: z.string(),
+})
+export type Otp = z.infer<typeof scOtp>
+
 export const scTwoFaCode = z.object({
   otp: z.string(),
   trustDevice: z.boolean(),

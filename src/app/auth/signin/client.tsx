@@ -24,6 +24,8 @@ import { authClient } from '@/lib/auth-client'
 import { authConfig } from '@/lib/auth-config'
 import { envu, makeUrl } from '@/lib/env-util'
 import {
+  Otp,
+  scOtp,
   scSignInPassword,
   scSignInUsername,
   scTwoFaCode,
@@ -44,9 +46,14 @@ import { getUserByEmail } from './server'
 
 type Mode = '2FA' | null
 
+type Step = {
+  id: 'EMAIL' | 'PASSWORD' | 'OTP' | '2FA'
+  direction: number
+}
+
 const UsernameForm: FC<{
   direction: number
-  next: (email: string) => void
+  next: (email: string, nextStep: 'PASSWORD' | 'OTP') => void
 }> = ({ direction, next }) => {
   const { t, fet } = useLocale()
   const {
@@ -65,9 +72,10 @@ const UsernameForm: FC<{
     <StepMotion direction={direction} className='mx-auto w-11/12 md:w-95'>
       <form
         onSubmit={handleSubmit(async (input) => {
-          //@todo
-          await parseAction(getUserByEmail(input))
-          next(input.username)
+          const res = await parseAction(getUserByEmail(input))
+          if (res?.next) {
+            next(input.username, res.next)
+          }
         })}
       >
         <InputCtrl
@@ -203,6 +211,104 @@ const PasswordForm: FC<{
 
 const OtpForm: FC<{
   direction: number
+  email?: string
+  callbackURL: string
+  back: () => void
+}> = ({ direction, email, callbackURL, back }) => {
+  const { t } = useLocale()
+  const router = useRouter()
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm<Otp>({
+    resolver: zodResolver(scOtp),
+    // mode: 'onChange',
+    defaultValues: {
+      otp: '',
+    },
+  })
+  const formRef = useRef<HTMLFormElement>(null)
+
+  return (
+    <StepMotion direction={direction} className='mx-auto w-11/12 md:w-95'>
+      <form
+        ref={formRef}
+        onSubmit={handleSubmit(async ({ otp }) => {
+          if (!otp) {
+            return
+          }
+          const res = await authClient.signIn.emailOtp({ email, otp })
+          await intervalOperation()
+          if (res.error) {
+            console.debug(res.error)
+            notify.warn(t('auth_ng'))
+            return
+          }
+          router.push(callbackURL)
+        })}
+      >
+        <div className={cn(textStyles().light(), 'text-xs')}>{t('msg_enter_otp')}</div>
+        <div>
+          <InputOtpCtrl
+            className='m-4'
+            control={control}
+            variant='secondary'
+            name='otp'
+            maxLength={6}
+            autoComplete='one-time-code'
+            inputMode='numeric'
+            autoFocus
+            onComplete={() => {
+              formRef.current?.requestSubmit()
+            }}
+          />
+        </div>
+        <div className='mt-2 flex items-center justify-between'>
+          <div>
+            <MultiButton
+              variant='ghost'
+              icon={<ArrowLeftCircleIcon />}
+              onPress={() => {
+                back()
+              }}
+            >
+              {t('back')}
+            </MultiButton>
+          </div>
+          <div className='flex gap-2'>
+            <MultiButton
+              variant='ghost'
+              icon={<ArrowPathIcon />}
+              coolTime={30}
+              onPress={async () => {
+                if (!email) {
+                  return
+                }
+                const res = await authClient.emailOtp.sendVerificationOtp({ email, type: 'sign-in' })
+                console.log(res)
+                if (!res.data?.success) {
+                  // 一時的な認証状態が有効期限切れなので、サインインを最初からやり直す
+                  window.location.reload()
+                  return
+                }
+                notify.success(t('msg_otp_sent'))
+              }}
+            >
+              {t('resend')}
+            </MultiButton>
+            <MultiButton type='submit' icon={<ShieldCheckIcon />} isPending={isSubmitting}>
+              {t('auth')}
+            </MultiButton>
+          </div>
+        </div>
+      </form>
+    </StepMotion>
+  )
+}
+
+const TwoFaForm: FC<{
+  direction: number
   password?: string
   callbackURL: string
 }> = ({ direction, password, callbackURL }) => {
@@ -297,11 +403,6 @@ const OtpForm: FC<{
   )
 }
 
-type Step = {
-  id: 'EMAIL' | 'PASSWORD' | 'OTP'
-  direction: number
-}
-
 export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) => {
   const searchParams = useSearchParams()
   const { t } = useLocale()
@@ -329,7 +430,7 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
     if (mode === '2FA') {
       return t('twofa_enable')
     }
-    if (step.id === 'OTP') {
+    if (step.id === '2FA') {
       return t('twofa')
     }
     return t('signin')
@@ -358,8 +459,8 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
             <UsernameForm
               key='step_email'
               direction={step.direction}
-              next={(email) => {
-                setStep({ id: 'PASSWORD', direction: 1 })
+              next={(email, nextStep) => {
+                setStep({ id: nextStep, direction: 1 })
                 setEmail(email)
               }}
             />
@@ -374,7 +475,7 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
               callbackURL={callbackURL}
               next={(password) => {
                 setPassword(password)
-                setStep({ id: 'OTP', direction: 1 })
+                setStep({ id: '2FA', direction: 1 })
               }}
               back={() => {
                 setStep({ id: 'EMAIL', direction: -1 })
@@ -384,7 +485,20 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
           )}
 
           {step.id === 'OTP' && (
-            <OtpForm key='step_otp' direction={step.direction} password={password} callbackURL={callbackURL} />
+            <OtpForm
+              key='step_otp'
+              direction={step.direction}
+              email={email}
+              callbackURL={callbackURL}
+              back={() => {
+                setStep({ id: 'EMAIL', direction: -1 })
+                setEmail(undefined)
+              }}
+            />
+          )}
+
+          {step.id === '2FA' && (
+            <TwoFaForm key='step_2fa' direction={step.direction} password={password} callbackURL={callbackURL} />
           )}
         </AnimatePresence>
       </div>

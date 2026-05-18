@@ -3,7 +3,7 @@ import { passkey } from '@better-auth/passkey'
 import { APIError, betterAuth } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { nextCookies } from 'better-auth/next-js'
-import { admin, genericOAuth, type GenericOAuthConfig, jwt, twoFactor } from 'better-auth/plugins'
+import { admin, emailOTP, genericOAuth, type GenericOAuthConfig, jwt, twoFactor } from 'better-auth/plugins'
 import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { uuidv7 } from 'uuidv7'
@@ -65,7 +65,7 @@ export const auth = betterAuth({
     },
   },
   emailAndPassword: {
-    enabled: true,
+    enabled: !envu.server.DISABLE_PASSWORD_AUTH,
   },
   databaseHooks: {
     user: {
@@ -118,6 +118,16 @@ export const auth = betterAuth({
   },
   plugins: [
     admin(),
+    emailOTP({
+      disableSignUp: true,
+      sendVerificationOTP: async ({ email, otp, type }) => {
+        const user = await prisma.user.findUnique({ where: { email }, select: { locale: true } })
+        logger.debug({ email, type, user }, 'sendVerificationOTP')
+        if (user) {
+          await sendEmailOtp({ locale: user.locale, to: email, otp })
+        }
+      },
+    }),
     twoFactor({
       // skipVerificationOnEnable: true,
       otpOptions: {

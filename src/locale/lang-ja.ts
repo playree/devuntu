@@ -52,8 +52,8 @@ export const ja: DefaultLocaleItems = {
   msg_updated_target: '${target} を更新しました。',
   msg_confirm_deletion: '${target} を削除します。',
 
-  mail_otp_subject: '[${appname}] 2要素認証OTP : ${otp}',
-  mail_otp_body: `2要素認証の為の認証コードを発行しました。
+  mail_otp_subject: '[${appname}] Eメール認証OTP : ${otp}',
+  mail_otp_body: `Eメール認証の為の認証コードを発行しました。
 
 認証コード: \${otp}
 

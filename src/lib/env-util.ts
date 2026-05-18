@@ -49,6 +49,9 @@ const server = {
   get TWO_FA_REQUIRED() {
     return convBoolean(process.env.TWO_FA_REQUIRED, true)
   },
+  get DISABLE_PASSWORD_AUTH() {
+    return convBoolean(process.env.DISABLE_PASSWORD_AUTH, false)
+  },
   get MAIN_DEVUNTU_URL() {
     return process.env.MAIN_DEVUNTU_URL
   },
