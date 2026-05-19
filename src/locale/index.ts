@@ -49,6 +49,7 @@ export type LocaleItemBase =
   | 'msg_deleted_target'
   | 'msg_updated_target'
   | 'msg_confirm_deletion'
+  | 'msg_email_not_verified'
   // for Mail
   | 'mail_otp_subject'
   | 'mail_otp_body'

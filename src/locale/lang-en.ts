@@ -51,6 +51,7 @@ export const en: LocaleItems = {
   msg_deleted_target: 'Deleted ${target}.',
   msg_updated_target: 'Updated ${target}.',
   msg_confirm_deletion: 'Delete ${target}.',
+  msg_email_not_verified: 'Your email address has not been verified.\nPlease log in with your email address.',
 
   mail_otp_subject: '[${appname}] Email OTP : ${otp}',
   mail_otp_body: `A verification code has been issued for email authentication.

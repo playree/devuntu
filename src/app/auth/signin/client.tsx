@@ -420,7 +420,15 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
 
   useEffect(() => {
     if (errorCode && !hasErrorToasted.current) {
-      const msg = errorCode === 'user_not_exist' ? t('msg_user_not_exist') : undefined
+      let msg
+      switch (errorCode) {
+        case 'user_not_exist':
+          msg = t('msg_user_not_exist')
+          break
+        case 'account_not_linked':
+          msg = t('msg_email_not_verified')
+          break
+      }
       notify.warn(t('auth_ng'), { description: msg })
       hasErrorToasted.current = true
     }

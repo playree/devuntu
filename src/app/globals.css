@@ -20,6 +20,10 @@
     --background: #000000;
     --default: oklch(0.35 0.006 286.033);
   }
+
+  .toast__description {
+    @apply whitespace-pre-line;
+  }
 }
 
 @layer components {

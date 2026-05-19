@@ -51,6 +51,7 @@ export const ja: DefaultLocaleItems = {
   msg_deleted_target: '${target} を削除しました。',
   msg_updated_target: '${target} を更新しました。',
   msg_confirm_deletion: '${target} を削除します。',
+  msg_email_not_verified: 'Eメールが検証されていません。\n一度、Eメールでログインしてください。',
 
   mail_otp_subject: '[${appname}] Eメール認証OTP : ${otp}',
   mail_otp_body: `Eメール認証の為の認証コードを発行しました。
