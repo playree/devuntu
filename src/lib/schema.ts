@@ -35,7 +35,7 @@ export type TwoFaCode = z.infer<typeof scTwoFaCode>
 export const scCreateAdmin = z.object({
   name: zUsername,
   email: zEmail,
-  password: zPassword,
+  password: zPassword.optional(),
 })
 export type CreateAdmin = z.infer<typeof scCreateAdmin>
 

@@ -23,7 +23,7 @@ export const proxy = async (request: NextRequest) => {
       // 未ログイン
       return redirectSignIn(url)
     }
-    if (envu.server.TWO_FA_REQUIRED) {
+    if (envu.server.TWO_FA_REQUIRED && !envu.server.DISABLE_PASSWORD_AUTH) {
       if (!session.user.twoFactorEnabled) {
         // 2FA必須化
         return redirectTwoFaEnable(url)

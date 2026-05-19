@@ -71,10 +71,12 @@ export const auth = betterAuth({
     user: {
       create: {
         before: async (user, ctx) => {
-          if (!ctx?.body?.password) {
-            // Email & Password以外でのユーザー作成
-            const provider = ctx?.params?.id
-            logger.debug({ provider }, 'databaseHooks.user.create.before')
+          const path = ctx?.path
+          const provider = ctx?.params?.id
+          logger.debug({ path, provider }, 'databaseHooks.user.create.before')
+
+          if (path !== '/admin/create-user') {
+            // ユーザーの自動作成
 
             // 基本的に許可しない
             throw new APIError('BAD_REQUEST', { code: 'USER_NOT_EXIST', message: 'user not exist' })

@@ -16,7 +16,7 @@ import { FC } from 'react'
 import { useForm } from 'react-hook-form'
 import { createAdmin } from './server'
 
-export const StartClient: FC = () => {
+export const StartClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword }) => {
   const { t, fet } = useLocale()
   const router = useRouter()
 
@@ -30,7 +30,7 @@ export const StartClient: FC = () => {
     defaultValues: {
       name: '',
       email: '',
-      password: '',
+      password: enabledPassword ? '' : undefined,
     },
   })
 
@@ -65,18 +65,20 @@ export const StartClient: FC = () => {
               isRequired
             />
           </div>
-          <div className='col-span-12'>
-            <InputCtrlPassword
-              control={control}
-              variant='secondary'
-              name='password'
-              label={t('password')}
-              autoComplete='new-password'
-              errorMessage={fet(errors.password)}
-              requiredPasswordScore={4}
-              isRequired
-            />
-          </div>
+          {enabledPassword && (
+            <div className='col-span-12'>
+              <InputCtrlPassword
+                control={control}
+                variant='secondary'
+                name='password'
+                label={t('password')}
+                autoComplete='new-password'
+                errorMessage={fet(errors.password)}
+                requiredPasswordScore={4}
+                isRequired
+              />
+            </div>
+          )}
           <div className='col-span-12 mt-4 text-center'>
             <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
               {t('ok')}

@@ -12,7 +12,8 @@ CREATE TABLE "user" (
     "banReason" TEXT,
     "banExpires" DATETIME,
     "twoFactorEnabled" BOOLEAN DEFAULT false,
-    "locale" TEXT
+    "locale" TEXT,
+    "lastLoginAt" DATETIME
 );
 
 -- CreateTable
