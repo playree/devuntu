@@ -4,7 +4,7 @@ import { MultiButton } from '@/components/general/button'
 import { CheckBoxCtrl } from '@/components/general/checkbox-ctrl'
 import { InputCtrl } from '@/components/general/input-ctrl'
 import { FormModal, ModalBaseProps, useModalState } from '@/components/general/modal'
-import { usePageingList } from '@/components/general/paging'
+import { usePagingList } from '@/components/general/paging'
 import { ActionCell, MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
 import { ArrowPathIcon, CheckIcon, PencilSquareIcon, TrashIcon, UserPlusIcon, UsersIcon } from '@/components/icon'
@@ -106,7 +106,7 @@ export const UsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword 
   const { t } = useLocale()
   const addModalState = useModalState()
 
-  const list = usePageingList({
+  const list = usePagingList({
     load: async () => {
       const res = await parseAction(getUsers())
       return res ?? []
@@ -131,8 +131,7 @@ export const UsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword 
       <MultiTable
         ariaLabel='user list'
         items={list.items}
-        sortDescriptor={list.sortDescriptor}
-        onSortChange={list.onSortChange}
+        pagingList={list}
         columns={[
           { id: 'name', name: t('username'), isRowHeader: true, allowsSorting: true, minWidth: 80 },
           { id: 'email', name: t('email'), allowsSorting: true, minWidth: 80 },
@@ -140,7 +139,6 @@ export const UsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword 
           { id: 'createdAt', name: t('created_at'), allowsSorting: true, minWidth: 120 },
           { id: 'action', name: t('action'), allowsSorting: false, defaultWidth: 120 },
         ]}
-        paging={list}
       >
         {(item) => (
           <Table.Row key={item.id} id={item.id}>

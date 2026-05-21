@@ -12,6 +12,7 @@ import {
 } from '@heroui/react'
 import { Dispatch, FC, ReactNode, SetStateAction, SVGProps } from 'react'
 import { MultiButton } from './button'
+import { PagingList } from './paging'
 
 const ChevronUpIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
   <svg
@@ -55,6 +56,14 @@ type PagingParam = {
   page: number
   total: number
   onPageChange: Dispatch<SetStateAction<number>>
+}
+
+type TableActivityProps = {
+  sortDescriptor?: TableContentProps['sortDescriptor']
+  onSortChange?: TableContentProps['onSortChange']
+  paging?: PagingParam
+  isLoading?: boolean
+  pagingList?: PagingList
 }
 
 const TablePaging: FC<PagingParam> = ({ rowsPerPage, page, total, onPageChange }) => {
@@ -110,25 +119,29 @@ export const MultiTable = <T extends object>({
   onSortChange,
   columns,
   paging,
+  pagingList,
   ...props
-}: TableBodyProps<T> & {
-  ariaLabel: string
-  sortDescriptor?: TableContentProps['sortDescriptor']
-  onSortChange?: TableContentProps['onSortChange']
-  columns: {
-    id: string
-    name: string
-    isRowHeader?: boolean
-    allowsSorting?: boolean
-    minWidth?: number
-    defaultWidth?: TableColumnProps['defaultWidth']
-  }[]
-  paging?: PagingParam
-}) => {
+}: TableBodyProps<T> &
+  TableActivityProps & {
+    ariaLabel: string
+    columns: {
+      id: string
+      name: string
+      isRowHeader?: boolean
+      allowsSorting?: boolean
+      minWidth?: number
+      defaultWidth?: TableColumnProps['defaultWidth']
+    }[]
+  }) => {
+  const pagingParam = paging ?? pagingList
   return (
     <Table>
       <Table.ResizableContainer>
-        <Table.Content aria-label={ariaLabel} sortDescriptor={sortDescriptor} onSortChange={onSortChange}>
+        <Table.Content
+          aria-label={ariaLabel}
+          sortDescriptor={sortDescriptor ?? pagingList?.sortDescriptor}
+          onSortChange={onSortChange ?? pagingList?.onSortChange}
+        >
           <Table.Header>
             {columns.map((column) => (
               <Table.Column
@@ -151,7 +164,7 @@ export const MultiTable = <T extends object>({
           <Table.Body {...props} />
         </Table.Content>
       </Table.ResizableContainer>
-      <Table.Footer>{paging && <TablePaging {...paging} />}</Table.Footer>
+      <Table.Footer>{pagingParam && <TablePaging {...pagingParam} />}</Table.Footer>
     </Table>
   )
 }

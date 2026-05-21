@@ -5,7 +5,7 @@ import { OnOffChip } from '@/components/general/chip'
 import { CopyableField } from '@/components/general/copyable-field'
 import { InputCtrl } from '@/components/general/input-ctrl'
 import { FormModal, ModalBaseProps, useConfirmModal, useModalState } from '@/components/general/modal'
-import { usePageingList } from '@/components/general/paging'
+import { usePagingList } from '@/components/general/paging'
 import { StepMotion } from '@/components/general/step-motion'
 import { ActionCell, MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
@@ -129,7 +129,7 @@ export const OidcListClient: FC = () => {
   const addModalState = useModalState()
   const { confirmModal } = useConfirmModal()
 
-  const list = usePageingList({
+  const list = usePagingList({
     load: async () => {
       const res = await parseAction(getOidcClients())
       return res ?? []
@@ -154,22 +154,20 @@ export const OidcListClient: FC = () => {
       <MultiTable
         ariaLabel='user list'
         items={list.items}
-        sortDescriptor={list.sortDescriptor}
-        onSortChange={list.onSortChange}
+        pagingList={list}
         columns={[
           {
-            id: 'client_name',
+            id: 'clientName',
             name: t('client_name'),
             isRowHeader: true,
             allowsSorting: true,
             minWidth: 120,
             defaultWidth: '1fr',
           },
-          { id: 'client_id', name: t('client_id'), allowsSorting: true, minWidth: 200, defaultWidth: '2fr' },
-          { id: 'skip_consent', name: t('skip_consent'), allowsSorting: false, minWidth: 110 },
+          { id: 'clientId', name: t('client_id'), allowsSorting: true, minWidth: 200, defaultWidth: '2fr' },
+          { id: 'skipConsent', name: t('skip_consent'), allowsSorting: false, minWidth: 110 },
           { id: 'action', name: t('action'), allowsSorting: false, defaultWidth: 120 },
         ]}
-        paging={list}
       >
         {(item) => (
           <Table.Row key={item.clientId} id={item.clientId}>

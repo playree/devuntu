@@ -52,7 +52,7 @@ export const sortFunction: AsyncListLoadFunction<Record<string, unknown>, string
   }
 }
 
-export const usePageingList = <T extends Record<string, unknown>[], F extends Record<string, string>>({
+export const usePagingList = <T extends Record<string, unknown>[], F extends Record<string, string>>({
   load,
   filter,
   sort,
@@ -115,6 +115,7 @@ export const usePageingList = <T extends Record<string, unknown>[], F extends Re
     onSortChange: list.sort,
     onPageChange: setPage,
     reload: list.reload,
+    isLoading: list.isLoading,
     setFilter: (filter: Partial<F>) => {
       if (filters) {
         setFilters({
@@ -126,3 +127,4 @@ export const usePageingList = <T extends Record<string, unknown>[], F extends Re
     },
   }
 }
+export type PagingList = ReturnType<typeof usePagingList>
