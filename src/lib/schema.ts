@@ -58,3 +58,11 @@ export type AddOidcClient = z.infer<typeof scAddOidcClient>
 export const scDeleteOidcClient = z.object({
   clientId: z.string(),
 })
+
+export const scCreateUser = z.object({
+  name: zUsername,
+  email: zEmail,
+  password: zPassword.optional(),
+  isAdmin: z.boolean(),
+})
+export type CreateUser = z.infer<typeof scCreateUser>

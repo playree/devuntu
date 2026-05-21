@@ -1,5 +1,6 @@
 import { DefaultLocaleItems } from '.'
 
+// 五十音順
 export const ja: DefaultLocaleItems = {
   action: '操作',
   add_client: 'クライアント追加',
@@ -16,9 +17,12 @@ export const ja: DefaultLocaleItems = {
   confirm_deletion: '削除確認',
   confirmed: '確認した',
   created_at: '作成日時',
+  delete_user: 'ユーザー削除',
+  edit_user: 'ユーザー編集',
   email: 'Eメール',
   error: 'エラー',
   google_signin: 'Googleでサインイン',
+  is_admin: '管理者',
   last_login: '最終ログイン',
   next: '次へ',
   oidc_clients: 'OIDCクライアント',

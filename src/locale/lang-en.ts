@@ -1,9 +1,10 @@
 import { LocaleItems } from '.'
 
+// 五十音順
 export const en: LocaleItems = {
   action: 'Action',
-  add_client: 'Add client',
-  add_user: 'Add user',
+  add_client: 'Add Client',
+  add_user: 'Add User',
   admin: 'Admin',
   admin_regist: 'Admin Regist',
   auth: 'Auth',
@@ -16,9 +17,12 @@ export const en: LocaleItems = {
   confirm_deletion: 'Confirm deletion',
   confirmed: 'Confirmed',
   created_at: 'Created At',
+  delete_user: 'Delete User',
+  edit_user: 'Edit User',
   email: 'Email',
   error: 'Error',
   google_signin: 'Sign in with Google',
+  is_admin: 'Admin',
   last_login: 'Last Login',
   next: 'Next',
   oidc_clients: 'OIDC Clients',

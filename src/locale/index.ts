@@ -1,3 +1,4 @@
+// 五十音順
 export type LocaleItemBase =
   | 'action'
   | 'add_client'
@@ -14,9 +15,12 @@ export type LocaleItemBase =
   | 'confirm_deletion'
   | 'confirmed'
   | 'created_at'
+  | 'delete_user'
+  | 'edit_user'
   | 'email'
   | 'error'
   | 'google_signin'
+  | 'is_admin'
   | 'last_login'
   | 'next'
   | 'oidc_clients'

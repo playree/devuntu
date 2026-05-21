@@ -1,18 +1,110 @@
 'use client'
 
+import { MultiButton } from '@/components/general/button'
+import { CheckBoxCtrl } from '@/components/general/checkbox-ctrl'
+import { InputCtrl } from '@/components/general/input-ctrl'
+import { FormModal, ModalBaseProps, useModalState } from '@/components/general/modal'
 import { usePageingList } from '@/components/general/paging'
 import { ActionCell, MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, PencilSquareIcon, TrashIcon, UserPlusIcon, UsersIcon } from '@/components/icon'
+import { ArrowPathIcon, CheckIcon, PencilSquareIcon, TrashIcon, UserPlusIcon, UsersIcon } from '@/components/icon'
+import { InputCtrlPassword } from '@/components/input-ctrl-pw'
 import { parseAction } from '@/lib/action-client'
 import { dayformat } from '@/lib/day'
+import { CreateUser, scCreateUser } from '@/lib/schema'
+import { gridStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
-import { Button, ButtonGroup, Table } from '@heroui/react'
+import { ButtonGroup, cn, Table } from '@heroui/react'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { FC } from 'react'
+import { useForm } from 'react-hook-form'
 import { getUsers } from './server'
 
-export const UsersClient: FC = () => {
+const AddModal: FC<ModalBaseProps & { enabledPassword: boolean }> = ({ state, reload, enabledPassword }) => {
+  const { t, fet } = useLocale()
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting, errors },
+  } = useForm<CreateUser>({
+    resolver: zodResolver(scCreateUser),
+    mode: 'onChange',
+    defaultValues: {
+      name: '',
+      email: '',
+      password: enabledPassword ? '' : undefined,
+      isAdmin: false,
+    },
+  })
+
+  return (
+    <FormModal
+      state={state}
+      onSubmit={handleSubmit(async (req) => {
+        // const res = await parseAction(addOidcClient(req))
+        // notify.success(t('msg_added_target', { target: req.clientName }))
+        reload()
+      })}
+      title={{ text: t('add_user'), icon: <UserPlusIcon /> }}
+      hooter={
+        <>
+          <MultiButton slot='close' variant='secondary'>
+            {t('cancel')}
+          </MultiButton>
+          <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
+            {t('ok')}
+          </MultiButton>
+        </>
+      }
+    >
+      <div className={cn(gridStyles(), 'mt-4 p-1')}>
+        <div className='col-span-12'>
+          <InputCtrl
+            control={control}
+            variant='secondary'
+            name='name'
+            label={t('username')}
+            errorMessage={fet(errors.name)}
+            isRequired
+            autoFocus
+          />
+        </div>
+        <div className='col-span-12'>
+          <InputCtrl
+            control={control}
+            variant='secondary'
+            name='email'
+            label={t('email')}
+            errorMessage={fet(errors.email)}
+            isRequired
+          />
+        </div>
+        {enabledPassword && (
+          <div className='col-span-12'>
+            <InputCtrlPassword
+              control={control}
+              variant='secondary'
+              name='password'
+              label={t('password')}
+              autoComplete='new-password'
+              errorMessage={fet(errors.password)}
+              requiredPasswordScore={4}
+              isRequired
+            />
+          </div>
+        )}
+        <div className='col-span-12'>
+          <CheckBoxCtrl control={control} variant='secondary' name='isAdmin' id='isAdmin' label={t('is_admin')} />
+        </div>
+      </div>
+    </FormModal>
+  )
+}
+
+export const UsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword }) => {
   const { t } = useLocale()
+  const addModalState = useModalState()
 
   const list = usePageingList({
     load: async () => {
@@ -27,13 +119,13 @@ export const UsersClient: FC = () => {
   return (
     <>
       <ContentHeader icon={<UsersIcon />} title={t('user_manage')}>
-        <Button isIconOnly>
+        <MultiButton isIconOnly tooltip={t('add_user')} onPress={addModalState.open}>
           <UserPlusIcon />
-        </Button>
-        <Button isIconOnly>
+        </MultiButton>
+        <MultiButton isIconOnly tooltip={t('reload')} onPress={() => list.reload()}>
           <ButtonGroup.Separator />
           <ArrowPathIcon />
-        </Button>
+        </MultiButton>
       </ContentHeader>
 
       <MultiTable
@@ -69,6 +161,8 @@ export const UsersClient: FC = () => {
           </Table.Row>
         )}
       </MultiTable>
+
+      <AddModal state={addModalState} reload={list.reload} key={addModalState.key} enabledPassword={enabledPassword} />
     </>
   )
 }

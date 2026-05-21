@@ -3,6 +3,7 @@ import { MultiButton } from '@/components/general/button'
 import { ThemeSwitchList } from '@/components/general/theme-switch'
 import { ArrowLeftStartOnRectangleIcon, ServerStackIcon, UsersIcon } from '@/components/icon'
 import { LocaleSwitch } from '@/components/locale/locale-switch'
+import { LogoSVG } from '@/components/logo'
 import { authClient } from '@/lib/auth-client'
 import { authConfig } from '@/lib/auth-config'
 import { makeUrl } from '@/lib/env-util'
@@ -154,6 +155,10 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
             </Accordion.Panel>
           </Accordion.Item>
         </Accordion>
+      </div>
+
+      <div className='absolute inset-x-4 bottom-2'>
+        <LogoSVG width={80} className='mt-8' />
       </div>
     </div>
   )
