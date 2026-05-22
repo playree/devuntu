@@ -49,7 +49,7 @@ const AddModal: FC<ModalBaseProps & { enabledPassword: boolean }> = ({ state, re
       title={{ text: t('add_user'), icon: <UserPlusIcon /> }}
       hooter={
         <>
-          <MultiButton slot='close' variant='secondary'>
+          <MultiButton slot='close' variant='ghost'>
             {t('cancel')}
           </MultiButton>
           <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>

@@ -5,6 +5,7 @@ import {
   cn,
   Pagination,
   type SortDescriptor,
+  Spinner,
   Table,
   type TableBodyProps,
   TableColumnProps,
@@ -165,7 +166,12 @@ export const MultiTable = <T extends object>({
           <Table.Body {...props} items={items ?? pagingList?.items} />
         </Table.Content>
       </Table.ResizableContainer>
-      <Table.Footer>{pagingParam && <TablePaging {...pagingParam} />}</Table.Footer>
+      <Table.Footer className='relative'>
+        {pagingParam && <TablePaging {...pagingParam} />}
+        <div className='absolute inset-0 z-10 flex items-center justify-center'>
+          {pagingList?.isLoading && <Spinner />}
+        </div>
+      </Table.Footer>
     </Table>
   )
 }

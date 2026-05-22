@@ -60,7 +60,7 @@ const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
         <>
           {step.id === 'INPUT' && (
             <>
-              <MultiButton slot='close' variant='secondary'>
+              <MultiButton slot='close' variant='ghost'>
                 {t('cancel')}
               </MultiButton>
               <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
