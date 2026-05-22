@@ -141,7 +141,7 @@ export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ ui
           <Modal.Footer>
             {!confirmParam?.onlyOk && (
               <MultiButton
-                variant='secondary'
+                variant='ghost'
                 isDisabled={isPending}
                 onPress={() => {
                   if (response.current) {

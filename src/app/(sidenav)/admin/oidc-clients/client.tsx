@@ -177,11 +177,12 @@ export const OidcListClient: FC = () => {
             </Table.Cell>
             <ActionCell
               items={[
-                { key: 'edit', icon: <PencilSquareIcon /> },
+                { key: 'edit', icon: <PencilSquareIcon />, tooltip: t('edit') },
                 {
                   key: 'delete',
                   variant: 'danger-soft',
                   icon: <TrashIcon />,
+                  tooltip: t('delete'),
                   onPress: async () => {
                     try {
                       const ok = await confirmModal().confirm({

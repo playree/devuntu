@@ -37,7 +37,7 @@ export const addOidcClient = safeAuthAction
         require_pkce: false, // @todo
       },
     })
-    logger.debug(res, 'auth.api.adminCreateOAuthClient')
+    logger.info(res, 'auth.api.adminCreateOAuthClient')
     if (!res.client_secret) {
       throw errSystemError('client_secret is empty')
     }
@@ -54,6 +54,6 @@ export const deleteOidcClient = safeAuthAction
         client_id: clientId,
       },
     })
-    logger.debug({ clientId }, 'auth.api.deleteOAuthClient')
+    logger.info({ clientId }, 'auth.api.deleteOAuthClient')
     return { clientId }
   })

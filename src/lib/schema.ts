@@ -11,6 +11,10 @@ export const zPassword = z
   .max(20, el('@invalid_password'))
   .regex(reHalfString, el('@invalid_password'))
 
+export const scUUID = z.object({
+  id: z.uuidv7(),
+})
+
 export const scSignInUsername = z.object({
   username: zEmail,
 })

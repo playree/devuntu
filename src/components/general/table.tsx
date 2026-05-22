@@ -180,6 +180,7 @@ export const ActionCell: FC<{
   items: {
     key: string
     icon: ReactNode
+    tooltip?: string
     variant?: ButtonProps['variant']
     onPress?: () => void
   }[]
@@ -195,6 +196,7 @@ export const ActionCell: FC<{
             isIconOnly
             size='sm'
             className='h-7 w-7 rounded-sm'
+            tooltip={item.tooltip}
           >
             {item.icon}
           </MultiButton>

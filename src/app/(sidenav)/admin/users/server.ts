@@ -5,13 +5,17 @@ import { auth } from '@/lib/auth'
 import { errSystemError } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
-import { scCreateUser } from '@/lib/schema'
+import { scCreateUser, scUUID } from '@/lib/schema'
+import { headers } from 'next/headers'
 
 /**
  * ユーザー一覧取得
  */
 export const getUsers = safeAuthAction.metadata({ actionName: 'getUsers', role: 'admin' }).action(async () => {
-  return prisma.user.findMany({ select: { id: true, name: true, email: true, lastLoginAt: true, createdAt: true } })
+  const users = await prisma.user.findMany({
+    select: { id: true, name: true, email: true, role: true, lastLoginAt: true, createdAt: true },
+  })
+  return users.map(({ role, ...param }) => ({ ...param, isAdmin: role === 'admin' }))
 })
 
 /**
@@ -23,6 +27,7 @@ export const createUser = safeAuthAction
   .action(async ({ parsedInput: { name, email, password, isAdmin } }) => {
     // ユーザー作成
     const { user } = await auth.api.createUser({
+      headers: await headers(),
       body: {
         email,
         password,
@@ -37,4 +42,21 @@ export const createUser = safeAuthAction
     logger.info({ user }, 'user created')
 
     return { id: user.id, name: user.name }
+  })
+
+/**
+ * ユーザー削除
+ */
+export const deleteUser = safeAuthAction
+  .metadata({ actionName: 'deleteUser', role: 'admin' })
+  .inputSchema(scUUID)
+  .action(async ({ parsedInput: { id } }) => {
+    await auth.api.removeUser({
+      headers: await headers(),
+      body: {
+        userId: id,
+      },
+    })
+    logger.info({ id }, 'user deleted')
+    return { id }
   })

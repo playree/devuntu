@@ -2,8 +2,9 @@
 
 import { MultiButton } from '@/components/general/button'
 import { CheckBoxCtrl } from '@/components/general/checkbox-ctrl'
+import { OnOffChip } from '@/components/general/chip'
 import { InputCtrl } from '@/components/general/input-ctrl'
-import { FormModal, ModalBaseProps, useModalState } from '@/components/general/modal'
+import { FormModal, ModalBaseProps, useConfirmModal, useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
 import { ActionCell, MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
@@ -19,7 +20,7 @@ import { ButtonGroup, cn, Table } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FC } from 'react'
 import { useForm } from 'react-hook-form'
-import { createUser, getUsers } from './server'
+import { createUser, deleteUser, getUsers } from './server'
 
 const AddModal: FC<ModalBaseProps & { enabledPassword: boolean }> = ({ state, reload, enabledPassword }) => {
   const { t, fet } = useLocale()
@@ -107,6 +108,7 @@ const AddModal: FC<ModalBaseProps & { enabledPassword: boolean }> = ({ state, re
 export const UsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword }) => {
   const { t } = useLocale()
   const addModalState = useModalState()
+  const { confirmModal } = useConfirmModal()
 
   const list = usePagingList({
     load: async () => {
@@ -136,6 +138,7 @@ export const UsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword 
         columns={[
           { id: 'name', name: t('username'), isRowHeader: true, allowsSorting: true, minWidth: 80 },
           { id: 'email', name: t('email'), allowsSorting: true, minWidth: 80 },
+          { id: 'isAdmin', name: t('is_admin'), allowsSorting: true, minWidth: 110 },
           { id: 'lastLoginAt', name: t('last_login'), allowsSorting: true, minWidth: 120 },
           { id: 'createdAt', name: t('created_at'), allowsSorting: true, minWidth: 120 },
           { id: 'action', name: t('action'), allowsSorting: false, defaultWidth: 120 },
@@ -145,15 +148,36 @@ export const UsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword 
           <Table.Row key={item.id} id={item.id}>
             <Table.Cell>{item.name}</Table.Cell>
             <Table.Cell className='truncate font-mono text-xs'>{item.email}</Table.Cell>
+            <Table.Cell>
+              <OnOffChip isState={item.isAdmin} />
+            </Table.Cell>
             <Table.Cell className='font-mono text-xs'>{dayformat(item.lastLoginAt, 'jp-simple')}</Table.Cell>
             <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'jp-simple')}</Table.Cell>
             <ActionCell
               items={[
-                { key: 'edit', icon: <PencilSquareIcon /> },
+                { key: 'edit', icon: <PencilSquareIcon />, tooltip: t('edit') },
                 {
                   key: 'delete',
                   variant: 'danger-soft',
                   icon: <TrashIcon />,
+                  tooltip: t('delete'),
+                  onPress: async () => {
+                    try {
+                      const ok = await confirmModal().confirm({
+                        title: t('confirm_deletion'),
+                        text: t('msg_confirm_deletion', { target: item.name }),
+                        requireCheck: true,
+                        autoClose: false,
+                      })
+                      if (ok) {
+                        await parseAction(deleteUser({ id: item.id }))
+                        notify.success(t('msg_deleted_target', { target: item.name }))
+                        list.reload()
+                      }
+                    } finally {
+                      confirmModal().close()
+                    }
+                  },
                 },
               ]}
             />
