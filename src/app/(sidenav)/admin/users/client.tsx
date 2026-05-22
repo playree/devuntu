@@ -9,6 +9,7 @@ import { ActionCell, MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
 import { ArrowPathIcon, CheckIcon, PencilSquareIcon, TrashIcon, UserPlusIcon, UsersIcon } from '@/components/icon'
 import { InputCtrlPassword } from '@/components/input-ctrl-pw'
+import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
 import { dayformat } from '@/lib/day'
 import { CreateUser, scCreateUser } from '@/lib/schema'
@@ -18,7 +19,7 @@ import { ButtonGroup, cn, Table } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FC } from 'react'
 import { useForm } from 'react-hook-form'
-import { getUsers } from './server'
+import { createUser, getUsers } from './server'
 
 const AddModal: FC<ModalBaseProps & { enabledPassword: boolean }> = ({ state, reload, enabledPassword }) => {
   const { t, fet } = useLocale()
@@ -42,9 +43,10 @@ const AddModal: FC<ModalBaseProps & { enabledPassword: boolean }> = ({ state, re
     <FormModal
       state={state}
       onSubmit={handleSubmit(async (req) => {
-        // const res = await parseAction(addOidcClient(req))
-        // notify.success(t('msg_added_target', { target: req.clientName }))
+        const res = await parseAction(createUser(req))
+        notify.success(t('msg_added_target', { target: res.name }))
         reload()
+        state.close()
       })}
       title={{ text: t('add_user'), icon: <UserPlusIcon /> }}
       hooter={

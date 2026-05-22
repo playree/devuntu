@@ -35,5 +35,5 @@ export const createAdmin = safeAction
     }
     logger.info({ user }, 'admin created')
 
-    return user.id
+    return { id: user.id, name: user.name }
   })

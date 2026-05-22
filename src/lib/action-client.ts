@@ -16,7 +16,7 @@ export function checkError<T extends { data?: unknown; serverError?: unknown; va
 export const parseAction = async <T extends { data?: unknown; serverError?: unknown; validationErrors?: unknown }>(
   res: Promise<T>,
   wait: number = 300,
-): Promise<T['data']> => {
+) => {
   const start = performance.now()
   const result = await res
   const execTime = ~~(performance.now() - start)
@@ -32,5 +32,10 @@ export const parseAction = async <T extends { data?: unknown; serverError?: unkn
     await intervalOperation(wait - execTime)
   }
 
-  return result.data
+  const data = result.data as T['data']
+  if (data === undefined) {
+    throw new Error()
+  }
+
+  return data
 }
