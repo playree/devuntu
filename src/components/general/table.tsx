@@ -12,7 +12,7 @@ import {
 } from '@heroui/react'
 import { Dispatch, FC, ReactNode, SetStateAction, SVGProps } from 'react'
 import { MultiButton } from './button'
-import { PagingList } from './paging'
+import { type PagingList } from './paging'
 
 const ChevronUpIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
   <svg
@@ -58,12 +58,12 @@ type PagingParam = {
   onPageChange: Dispatch<SetStateAction<number>>
 }
 
-type TableActivityProps = {
+type TableActivityProps<T> = {
   sortDescriptor?: TableContentProps['sortDescriptor']
   onSortChange?: TableContentProps['onSortChange']
   paging?: PagingParam
   isLoading?: boolean
-  pagingList?: PagingList
+  pagingList?: PagingList & { items: T[] }
 }
 
 const TablePaging: FC<PagingParam> = ({ rowsPerPage, page, total, onPageChange }) => {
@@ -120,9 +120,10 @@ export const MultiTable = <T extends object>({
   columns,
   paging,
   pagingList,
+  items,
   ...props
 }: TableBodyProps<T> &
-  TableActivityProps & {
+  TableActivityProps<T> & {
     ariaLabel: string
     columns: {
       id: string
@@ -161,7 +162,7 @@ export const MultiTable = <T extends object>({
               </Table.Column>
             ))}
           </Table.Header>
-          <Table.Body {...props} />
+          <Table.Body {...props} items={items ?? pagingList?.items} />
         </Table.Content>
       </Table.ResizableContainer>
       <Table.Footer>{pagingParam && <TablePaging {...pagingParam} />}</Table.Footer>

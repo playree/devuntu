@@ -73,7 +73,7 @@ export const usePagingList = <T extends Record<string, unknown>[], F extends Rec
   const sortFunc = sort?.proc || sortFunction
 
   const list = useAsyncList({
-    async load({ sortDescriptor, selectedKeys, signal }) {
+    load: async ({ sortDescriptor, selectedKeys, signal }) => {
       const items = await load()
       console.debug('sortDescriptor:', sortDescriptor)
       if (sortDescriptor) {
@@ -88,18 +88,26 @@ export const usePagingList = <T extends Record<string, unknown>[], F extends Rec
   const [filters, setFilters] = useState(filter?.init)
   const [filterState] = useState(filter)
 
+  const [lastItems, setLastItems] = useState(list.items)
+  if (list.items !== lastItems && !list.isLoading) {
+    setLastItems(list.items)
+  }
+
   const { items, total } = useMemo(() => {
     console.debug('items update page:', page)
 
+    const displayItems = list.items.length === 0 && list.isLoading ? lastItems : list.items
+
     // フィルタ
-    const tmpList = filterState && filters ? list.items.filter((item) => filterState.proc(item, filters)) : list.items
+    const tmpList =
+      filterState && filters ? displayItems.filter((item) => filterState.proc(item, filters)) : displayItems
 
     // ページング
     const start = (page - 1) * rowsPerPage
     const end = start + rowsPerPage
 
     return { items: tmpList.slice(start, end) as T, total: tmpList.length }
-  }, [filterState, filters, list.items, page, rowsPerPage])
+  }, [filterState, filters, lastItems, list.isLoading, list.items, page, rowsPerPage])
 
   const totalPages = useMemo(() => {
     return Math.ceil(total / rowsPerPage) || 1

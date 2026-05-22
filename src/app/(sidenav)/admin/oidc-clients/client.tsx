@@ -153,7 +153,6 @@ export const OidcListClient: FC = () => {
 
       <MultiTable
         ariaLabel='user list'
-        items={list.items}
         pagingList={list}
         columns={[
           {

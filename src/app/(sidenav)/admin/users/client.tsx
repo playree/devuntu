@@ -130,7 +130,6 @@ export const UsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword 
 
       <MultiTable
         ariaLabel='user list'
-        items={list.items}
         pagingList={list}
         columns={[
           { id: 'name', name: t('username'), isRowHeader: true, allowsSorting: true, minWidth: 80 },
