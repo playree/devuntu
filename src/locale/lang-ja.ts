@@ -1,6 +1,6 @@
 import { DefaultLocaleItems } from '.'
 
-// 五十音順
+// アルファベット順
 export const ja: DefaultLocaleItems = {
   account: 'アカウント',
   action: '操作',

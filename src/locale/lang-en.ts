@@ -1,6 +1,6 @@
 import { LocaleItems } from '.'
 
-// 五十音順
+// アルファベット順
 export const en: LocaleItems = {
   account: 'Account',
   action: 'Action',

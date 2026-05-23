@@ -1,4 +1,4 @@
-// 五十音順
+// アルファベット順
 export type LocaleItemBase =
   | 'account'
   | 'action'
