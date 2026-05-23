@@ -2,6 +2,7 @@ import { DefaultLocaleItems } from '.'
 
 // 五十音順
 export const ja: DefaultLocaleItems = {
+  account: 'アカウント',
   action: '操作',
   add_client: 'クライアント追加',
   add_user: 'ユーザー追加',
@@ -17,6 +18,7 @@ export const ja: DefaultLocaleItems = {
   confirm_deletion: '削除確認',
   confirmed: '確認した',
   created_at: '作成日時',
+  dashboard: 'ダッシュボード',
   delete: '削除',
   delete_user: 'ユーザー削除',
   edit: '編集',

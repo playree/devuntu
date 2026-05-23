@@ -1,5 +1,6 @@
 // 五十音順
 export type LocaleItemBase =
+  | 'account'
   | 'action'
   | 'add_client'
   | 'add_user'
@@ -15,6 +16,7 @@ export type LocaleItemBase =
   | 'confirm_deletion'
   | 'confirmed'
   | 'created_at'
+  | 'dashboard'
   | 'delete'
   | 'delete_user'
   | 'edit'

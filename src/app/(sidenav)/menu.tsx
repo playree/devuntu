@@ -1,7 +1,13 @@
 'use client'
 import { MultiButton } from '@/components/general/button'
 import { ThemeSwitchList } from '@/components/general/theme-switch'
-import { ArrowLeftStartOnRectangleIcon, ServerStackIcon, UsersIcon } from '@/components/icon'
+import {
+  ArrowLeftStartOnRectangleIcon,
+  ServerStackIcon,
+  Squares2X2Icon,
+  UserCircleIcon,
+  UsersIcon,
+} from '@/components/icon'
 import { LocaleSwitch } from '@/components/locale/locale-switch'
 import { LogoSVG } from '@/components/logo'
 import { authClient } from '@/lib/auth-client'
@@ -51,7 +57,7 @@ const SignOutButton: FC = () => {
   return (
     <MultiButton
       isSmart
-      variant='ghost'
+      variant='outline'
       icon={<ArrowLeftStartOnRectangleIcon />}
       onPress={() => {
         authClient.signOut()
@@ -110,26 +116,10 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
         <SignOutButton />
       </div>
 
-      <div className='mt-2'>
+      <div className='mt-4'>
         <Accordion allowsMultipleExpanded hideSeparator defaultExpandedKeys={defaultExpandedKeys}>
-          <Accordion.Item>
-            <Accordion.Heading>
-              <Accordion.Trigger>
-                Group
-                <Accordion.Indicator />
-              </Accordion.Trigger>
-            </Accordion.Heading>
-            <Accordion.Panel>
-              <Accordion.Body>
-                <div className='mx-2'>
-                  <MenuButton to='/' text={'Item1'} closeMenu={closeMenu} />
-                </div>
-                <div className='mx-2'>
-                  <MenuButton to='/account' text={'Item2'} closeMenu={closeMenu} />
-                </div>
-              </Accordion.Body>
-            </Accordion.Panel>
-          </Accordion.Item>
+          <MenuButton to='/' text={t('dashboard')} icon={<Squares2X2Icon />} closeMenu={closeMenu} />
+          <MenuButton to='/account' text={t('account')} icon={<UserCircleIcon />} closeMenu={closeMenu} />
 
           <Accordion.Item id='group_admin' hidden={session?.user.role !== 'admin'}>
             <Accordion.Heading>
@@ -139,18 +129,14 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
               </Accordion.Trigger>
             </Accordion.Heading>
             <Accordion.Panel>
-              <Accordion.Body className='grid grid-cols-1 gap-2'>
-                <div className='mx-2'>
-                  <MenuButton to='/admin/users' text={t('user_manage')} icon={<UsersIcon />} closeMenu={closeMenu} />
-                </div>
-                <div className='mx-2'>
-                  <MenuButton
-                    to='/admin/oidc-clients'
-                    text={t('oidc_clients')}
-                    icon={<ServerStackIcon />}
-                    closeMenu={closeMenu}
-                  />
-                </div>
+              <Accordion.Body className='grid grid-cols-1 px-2'>
+                <MenuButton to='/admin/users' text={t('user_manage')} icon={<UsersIcon />} closeMenu={closeMenu} />
+                <MenuButton
+                  to='/admin/oidc-clients'
+                  text={t('oidc_clients')}
+                  icon={<ServerStackIcon />}
+                  closeMenu={closeMenu}
+                />
               </Accordion.Body>
             </Accordion.Panel>
           </Accordion.Item>

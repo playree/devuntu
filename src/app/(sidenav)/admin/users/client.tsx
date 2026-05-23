@@ -137,11 +137,11 @@ export const UsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword 
         pagingList={list}
         columns={[
           { id: 'name', name: t('username'), isRowHeader: true, allowsSorting: true, minWidth: 80 },
-          { id: 'email', name: t('email'), allowsSorting: true, minWidth: 80 },
-          { id: 'isAdmin', name: t('is_admin'), allowsSorting: true, minWidth: 110 },
-          { id: 'lastLoginAt', name: t('last_login'), allowsSorting: true, minWidth: 120 },
-          { id: 'createdAt', name: t('created_at'), allowsSorting: true, minWidth: 120 },
-          { id: 'action', name: t('action'), allowsSorting: false, defaultWidth: 120 },
+          { id: 'email', name: t('email'), allowsSorting: true, minWidth: 80, defaultWidth: '2fr' },
+          { id: 'isAdmin', name: t('is_admin'), allowsSorting: true, minWidth: 100 },
+          { id: 'lastLoginAt', name: t('last_login'), allowsSorting: true, minWidth: 110 },
+          { id: 'createdAt', name: t('created_at'), allowsSorting: true, minWidth: 110 },
+          { id: 'action', name: t('action'), allowsSorting: false, defaultWidth: 100 },
         ]}
       >
         {(item) => (

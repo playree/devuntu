@@ -5,7 +5,7 @@ import { MultiButton } from '@/components/general/button'
 import { OnOffChip } from '@/components/general/chip'
 import { CopyableField } from '@/components/general/copyable-field'
 import { InputCtrl } from '@/components/general/input-ctrl'
-import { FormModal, ModalBaseProps, useConfirmModal, useModalState } from '@/components/general/modal'
+import { FormModal, ModalBaseProps, useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
 import { StepMotion } from '@/components/general/step-motion'
 import { MultiTable } from '@/components/general/table'
@@ -128,7 +128,6 @@ const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
 export const OidcListClient: FC = () => {
   const { t } = useLocale()
   const addModalState = useModalState()
-  const { confirmModal } = useConfirmModal()
 
   const list = usePagingList({
     load: async () => {
@@ -165,8 +164,8 @@ export const OidcListClient: FC = () => {
             defaultWidth: '1fr',
           },
           { id: 'clientId', name: t('client_id'), allowsSorting: true, minWidth: 200, defaultWidth: '2fr' },
-          { id: 'skipConsent', name: t('skip_consent'), allowsSorting: false, minWidth: 110 },
-          { id: 'action', name: t('action'), allowsSorting: false, defaultWidth: 120 },
+          { id: 'skipConsent', name: t('skip_consent'), allowsSorting: false, minWidth: 100 },
+          { id: 'action', name: t('action'), allowsSorting: false, defaultWidth: 100 },
         ]}
       >
         {(item) => (

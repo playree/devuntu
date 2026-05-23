@@ -2,6 +2,7 @@ import { LocaleItems } from '.'
 
 // 五十音順
 export const en: LocaleItems = {
+  account: 'Account',
   action: 'Action',
   add_client: 'Add Client',
   add_user: 'Add User',
@@ -17,6 +18,7 @@ export const en: LocaleItems = {
   confirm_deletion: 'Confirm deletion',
   confirmed: 'Confirmed',
   created_at: 'Created At',
+  dashboard: 'Dashboard',
   delete: 'Delete',
   delete_user: 'Delete User',
   edit: 'Edit',
