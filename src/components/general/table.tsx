@@ -1,7 +1,6 @@
 'use client'
 
 import {
-  ButtonProps,
   cn,
   Pagination,
   type SortDescriptor,
@@ -12,7 +11,6 @@ import {
   type TableContentProps,
 } from '@heroui/react'
 import { Dispatch, FC, ReactNode, SetStateAction, SVGProps } from 'react'
-import { MultiButton } from './button'
 import { type PagingList } from './paging'
 
 const ChevronUpIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
@@ -173,35 +171,5 @@ export const MultiTable = <T extends object>({
         </div>
       </Table.Footer>
     </Table>
-  )
-}
-
-export const ActionCell: FC<{
-  items: {
-    key: string
-    icon: ReactNode
-    tooltip?: string
-    variant?: ButtonProps['variant']
-    onPress?: () => void
-  }[]
-}> = ({ items }) => {
-  return (
-    <Table.Cell className='py-2'>
-      <div className='flex items-center gap-0.5'>
-        {items.map((item) => (
-          <MultiButton
-            key={item.key}
-            variant={item.variant || 'tertiary'}
-            onPress={item.onPress}
-            isIconOnly
-            size='sm'
-            className='h-7 w-7 rounded-sm'
-            tooltip={item.tooltip}
-          >
-            {item.icon}
-          </MultiButton>
-        ))}
-      </div>
-    </Table.Cell>
   )
 }

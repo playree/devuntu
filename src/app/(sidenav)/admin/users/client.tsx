@@ -1,14 +1,15 @@
 'use client'
 
+import { ActionCell } from '@/components/action-cell'
 import { MultiButton } from '@/components/general/button'
 import { CheckBoxCtrl } from '@/components/general/checkbox-ctrl'
 import { OnOffChip } from '@/components/general/chip'
 import { InputCtrl } from '@/components/general/input-ctrl'
-import { FormModal, ModalBaseProps, useConfirmModal, useModalState } from '@/components/general/modal'
+import { FormModal, ModalBaseProps, useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
-import { ActionCell, MultiTable } from '@/components/general/table'
+import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, CheckIcon, PencilSquareIcon, TrashIcon, UserPlusIcon, UsersIcon } from '@/components/icon'
+import { ArrowPathIcon, CheckIcon, PencilSquareIcon, UserPlusIcon, UsersIcon } from '@/components/icon'
 import { InputCtrlPassword } from '@/components/input-ctrl-pw'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
@@ -108,7 +109,6 @@ const AddModal: FC<ModalBaseProps & { enabledPassword: boolean }> = ({ state, re
 export const UsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword }) => {
   const { t } = useLocale()
   const addModalState = useModalState()
-  const { confirmModal } = useConfirmModal()
 
   const list = usePagingList({
     load: async () => {
@@ -155,28 +155,13 @@ export const UsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword 
             <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'jp-simple')}</Table.Cell>
             <ActionCell
               items={[
-                { key: 'edit', icon: <PencilSquareIcon />, tooltip: t('edit') },
+                { template: 'none', key: 'edit', icon: <PencilSquareIcon />, tooltip: t('edit') },
                 {
-                  key: 'delete',
-                  variant: 'danger-soft',
-                  icon: <TrashIcon />,
-                  tooltip: t('delete'),
-                  onPress: async () => {
-                    try {
-                      const ok = await confirmModal().confirm({
-                        title: t('confirm_deletion'),
-                        text: t('msg_confirm_deletion', { target: item.name }),
-                        requireCheck: true,
-                        autoClose: false,
-                      })
-                      if (ok) {
-                        await parseAction(deleteUser({ id: item.id }))
-                        notify.success(t('msg_deleted_target', { target: item.name }))
-                        list.reload()
-                      }
-                    } finally {
-                      confirmModal().close()
-                    }
+                  template: 'delete',
+                  target: item.name,
+                  action: async () => {
+                    await parseAction(deleteUser({ id: item.id }))
+                    list.reload()
                   },
                 },
               ]}

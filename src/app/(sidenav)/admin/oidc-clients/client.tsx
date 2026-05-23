@@ -1,5 +1,6 @@
 'use client'
 
+import { ActionCell } from '@/components/action-cell'
 import { MultiButton } from '@/components/general/button'
 import { OnOffChip } from '@/components/general/chip'
 import { CopyableField } from '@/components/general/copyable-field'
@@ -7,9 +8,9 @@ import { InputCtrl } from '@/components/general/input-ctrl'
 import { FormModal, ModalBaseProps, useConfirmModal, useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
 import { StepMotion } from '@/components/general/step-motion'
-import { ActionCell, MultiTable } from '@/components/general/table'
+import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, CheckIcon, PencilSquareIcon, PlusIcon, TrashIcon, UsersIcon } from '@/components/icon'
+import { ArrowPathIcon, CheckIcon, PencilSquareIcon, PlusIcon, UsersIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
 import { AddOidcClient, scAddOidcClient } from '@/lib/schema'
@@ -177,28 +178,13 @@ export const OidcListClient: FC = () => {
             </Table.Cell>
             <ActionCell
               items={[
-                { key: 'edit', icon: <PencilSquareIcon />, tooltip: t('edit') },
+                { template: 'none', key: 'edit', icon: <PencilSquareIcon />, tooltip: t('edit') },
                 {
-                  key: 'delete',
-                  variant: 'danger-soft',
-                  icon: <TrashIcon />,
-                  tooltip: t('delete'),
-                  onPress: async () => {
-                    try {
-                      const ok = await confirmModal().confirm({
-                        title: t('confirm_deletion'),
-                        text: t('msg_confirm_deletion', { target: item.clientName }),
-                        requireCheck: true,
-                        autoClose: false,
-                      })
-                      if (ok) {
-                        await parseAction(deleteOidcClient({ clientId: item.clientId }))
-                        notify.success(t('msg_deleted_target', { target: item.clientName }))
-                        list.reload()
-                      }
-                    } finally {
-                      confirmModal().close()
-                    }
+                  template: 'delete',
+                  target: item.clientName ?? '',
+                  action: async () => {
+                    await parseAction(deleteOidcClient({ clientId: item.clientId }))
+                    list.reload()
                   },
                 },
               ]}
