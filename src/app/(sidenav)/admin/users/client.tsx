@@ -155,7 +155,7 @@ export const UsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword 
             <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'jp-simple')}</Table.Cell>
             <ActionCell
               items={[
-                { template: 'none', key: 'edit', icon: <PencilSquareIcon />, tooltip: t('edit') },
+                { template: 'none', key: 'edit', icon: <PencilSquareIcon />, tooltip: t('update') },
                 {
                   template: 'delete',
                   target: item.name,

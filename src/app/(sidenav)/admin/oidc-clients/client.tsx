@@ -177,7 +177,7 @@ export const OidcListClient: FC = () => {
             </Table.Cell>
             <ActionCell
               items={[
-                { template: 'none', key: 'edit', icon: <PencilSquareIcon />, tooltip: t('edit') },
+                { template: 'none', key: 'edit', icon: <PencilSquareIcon />, tooltip: t('update') },
                 {
                   template: 'delete',
                   target: item.clientName ?? '',
