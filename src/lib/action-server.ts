@@ -11,7 +11,7 @@ type NormalMetaSc = z.infer<typeof normalMetaSc>
 const authMetaSc = z.object({ actionName: z.string(), role: z.enum(['user', 'admin']) })
 type AuthMetaSc = z.infer<typeof authMetaSc>
 
-type ServerError = { type: string; message: string }
+type ServerError = { name?: string; errorType: string; message: string }
 
 /**
  * エラーハンドラー
@@ -19,9 +19,10 @@ type ServerError = { type: string; message: string }
 const handleServerError = (error: Error) => {
   if (error instanceof ClientError) {
     // クライアントエラー系
-    // logger.warn(error.message)
+    logger.info(error)
     return {
-      type: error.errorType,
+      name: error.name,
+      errorType: error.errorType,
       message: error.message,
     }
   }
@@ -29,7 +30,7 @@ const handleServerError = (error: Error) => {
   // システムエラー系
   logger.error(error)
   return {
-    type: 'SYSTEM_ERROR',
+    errorType: 'SYSTEM_ERROR',
     message: error.message,
   }
 }

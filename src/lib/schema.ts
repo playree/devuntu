@@ -72,6 +72,7 @@ export const scCreateUser = z.object({
 export type CreateUser = z.infer<typeof scCreateUser>
 
 export const scUpdateUser = z.object({
+  id: z.uuidv7(),
   name: zUsername,
   email: zEmail,
   isAdmin: z.boolean(),

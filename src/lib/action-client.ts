@@ -1,4 +1,5 @@
 import { notify } from '@/components/notify'
+import { errClient } from './error'
 import { intervalOperation } from './sleep'
 
 type MarkDataResolved<T> = T & {
@@ -13,7 +14,9 @@ export function checkError<T extends { data?: unknown; serverError?: unknown; va
   }
 }
 
-export const parseAction = async <T extends { data?: unknown; serverError?: unknown; validationErrors?: unknown }>(
+export const parseAction = async <
+  T extends { data?: unknown; serverError?: { name?: string; errorType: string }; validationErrors?: unknown },
+>(
   res: Promise<T>,
   wait: number = 300,
 ) => {
@@ -21,6 +24,11 @@ export const parseAction = async <T extends { data?: unknown; serverError?: unkn
   const result = await res
   const execTime = ~~(performance.now() - start)
   console.debug('action exec', execTime)
+
+  if (result.serverError?.name === 'ClientError') {
+    console.debug(result.serverError)
+    throw errClient(result.serverError.errorType)
+  }
 
   if (result.serverError || result.validationErrors) {
     notify.error('Error', { description: 'An error has occurred' })

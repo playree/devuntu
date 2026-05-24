@@ -3,11 +3,12 @@ export class ClientError extends Error {
     this.prototype.name = 'ClientError'
   }
   errorType: string
-  constructor(errorType: string, message: string, options?: ErrorOptions) {
-    super(message, options)
+  constructor(errorType: string, message?: string, options?: ErrorOptions) {
+    super(message ?? errorType, options)
     this.errorType = errorType
   }
 }
+export const errClient = (errorType: string) => new ClientError(errorType)
 export const errInvalidSession = () => new ClientError('INVALID_SESSION', 'Invalid Session')
 export const errPermissionDenied = () => new ClientError('PERMISSION_DENIED', 'Permission denied')
 export const errNotFound = () => new ClientError('NOT_FOUND', 'Not Found')

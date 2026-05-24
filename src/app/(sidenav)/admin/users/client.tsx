@@ -14,6 +14,7 @@ import { InputCtrlPassword } from '@/components/input-ctrl-pw'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
 import { dayformat } from '@/lib/day'
+import { ClientError } from '@/lib/error'
 import { CreateUser, scCreateUser, scUpdateUser, UpdateUser } from '@/lib/schema'
 import { gridStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
@@ -21,7 +22,7 @@ import { ButtonGroup, cn, Table } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FC } from 'react'
 import { useForm } from 'react-hook-form'
-import { createUser, deleteUser, getUsers } from './server'
+import { createUser, deleteUser, getUsers, updateUser } from './server'
 
 const AddModal: FC<ModalBaseProps & { enabledPassword: boolean }> = ({ state, reload, enabledPassword }) => {
   const { t, fet } = useLocale()
@@ -117,6 +118,7 @@ const UpdateModal: FC<ModalBaseProps & { target: UpdateUser }> = ({ state, reloa
     resolver: zodResolver(scUpdateUser),
     mode: 'onChange',
     defaultValues: {
+      id: target.id,
       name: target.name,
       email: target.email,
       isAdmin: target.isAdmin,
@@ -127,10 +129,16 @@ const UpdateModal: FC<ModalBaseProps & { target: UpdateUser }> = ({ state, reloa
     <FormModal
       state={state}
       onSubmit={handleSubmit(async (req) => {
-        // const res = await parseAction(createUser(req))
-        // notify.success(t('msg_added_target', { target: res.name }))
-        reload()
-        state.close()
+        try {
+          await parseAction(updateUser(req))
+          notify.success(t('msg_updated_target', { target: req.name }))
+          reload()
+          state.close()
+        } catch (e) {
+          if (e instanceof ClientError && e.errorType === 'CANNOT_DELETE_LAST_ADMIN') {
+            notify.warn(t('msg_cannot_delete_last_admin'))
+          }
+        }
       })}
       title={{ text: t('update_user'), icon: <UserIcon /> }}
       hooter={
@@ -237,13 +245,15 @@ export const UsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword 
                   template: 'delete',
                   target: item.name,
                   action: async () => {
-                    const res = await parseAction(deleteUser({ id: item.id }))
-                    if (res.error === 'CANNOT_DELETE_LAST_ADMIN') {
-                      notify.warn(t('msg_cannot_delete_last_admin'))
-                      return
+                    try {
+                      await parseAction(deleteUser({ id: item.id }))
+                      notify.success(t('msg_deleted_target', { target: item.name }))
+                      list.reload()
+                    } catch (e) {
+                      if (e instanceof ClientError && e.errorType === 'CANNOT_DELETE_LAST_ADMIN') {
+                        notify.warn(t('msg_cannot_delete_last_admin'))
+                      }
                     }
-                    notify.success(t('msg_deleted_target', { target: item.name }))
-                    list.reload()
                   },
                 },
               ]}

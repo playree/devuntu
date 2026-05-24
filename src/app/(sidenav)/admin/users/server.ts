@@ -2,10 +2,10 @@
 
 import { safeAuthAction } from '@/lib/action-server'
 import { auth } from '@/lib/auth'
-import { errInvalidOperation, errSystemError } from '@/lib/error'
+import { ClientError, errInvalidOperation, errSystemError } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
-import { scCreateUser, scUUID } from '@/lib/schema'
+import { scCreateUser, scUpdateUser, scUUID } from '@/lib/schema'
 import { headers } from 'next/headers'
 
 /**
@@ -51,25 +51,67 @@ export const deleteUser = safeAuthAction
   .metadata({ actionName: 'deleteUser', role: 'admin' })
   .inputSchema(scUUID)
   .action(async ({ parsedInput: { id } }) => {
-    // 対象の存在確認
-    const user = await prisma.user.findUnique({ where: { id } })
-    if (!user) {
-      throw errInvalidOperation()
-    }
-
-    if (user.role === 'admin') {
-      if ((await prisma.user.count({ where: { role: 'admin' } })) <= 1) {
-        // 最後の管理者ユーザーは削除不可
-        return { error: 'CANNOT_DELETE_LAST_ADMIN' }
+    await prisma.$transaction(async (tx) => {
+      // 対象の存在確認
+      const user = await tx.user.findUnique({ where: { id }, select: { id: true, role: true } })
+      if (!user) {
+        throw errInvalidOperation()
       }
-    }
 
-    await auth.api.removeUser({
-      headers: await headers(),
-      body: {
-        userId: id,
-      },
+      if (user.role === 'admin') {
+        if ((await prisma.user.count({ where: { role: 'admin', id: { not: id } } })) === 0) {
+          // 最後の管理者ユーザーは削除不可
+          throw new ClientError('CANNOT_DELETE_LAST_ADMIN')
+        }
+      }
+
+      await auth.api.removeUser({
+        headers: await headers(),
+        body: {
+          userId: id,
+        },
+      })
     })
+
     logger.info({ id }, 'user deleted')
+    return { id }
+  })
+
+/**
+ * ユーザー更新
+ */
+export const updateUser = safeAuthAction
+  .metadata({ actionName: 'updateUser', role: 'admin' })
+  .inputSchema(scUpdateUser)
+  .action(async ({ parsedInput: { id, name, email, isAdmin } }) => {
+    await prisma.$transaction(async (tx) => {
+      // 対象の存在確認
+      const user = await tx.user.findUnique({ where: { id }, select: { id: true, role: true } })
+      if (!user) {
+        throw errInvalidOperation()
+      }
+
+      // 管理者権限を消す場合
+      if (user.role === 'admin' && !isAdmin) {
+        if ((await prisma.user.count({ where: { role: 'admin', id: { not: id } } })) === 0) {
+          // 最後の管理者ユーザーは不可
+          throw new ClientError('CANNOT_DELETE_LAST_ADMIN')
+        }
+      }
+
+      await auth.api.adminUpdateUser({
+        headers: await headers(),
+        body: {
+          userId: id,
+          data: {
+            name,
+            email,
+            role: isAdmin ? 'admin' : 'user',
+          },
+        },
+      })
+    })
+
+    logger.info({ id }, 'user updated')
     return { id }
   })
