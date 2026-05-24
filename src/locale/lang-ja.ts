@@ -53,6 +53,7 @@ export const ja: DefaultLocaleItems = {
   welcome: 'ようこそ',
 
   msg_added_target: '${target} を追加しました。',
+  msg_cannot_delete_last_admin: '最後の管理者は削除できません。',
   msg_confirm_deletion: '${target} を削除します。',
   msg_deleted_target: '${target} を削除しました。',
   msg_email_not_verified: 'Eメールが検証されていません。\n一度、Eメールでログインしてください。',

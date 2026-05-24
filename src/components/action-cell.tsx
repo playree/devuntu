@@ -4,7 +4,6 @@ import { FC, ReactNode } from 'react'
 import { MultiButton } from './general/button'
 import { useConfirmModal } from './general/modal'
 import { TrashIcon } from './icon'
-import { notify } from './notify'
 
 export const ActionCell: FC<{
   items: (
@@ -47,7 +46,6 @@ export const ActionCell: FC<{
                     })
                     if (ok) {
                       await action()
-                      notify.success(t('msg_deleted_target', { target }))
                     }
                   } finally {
                     confirmModal().close()

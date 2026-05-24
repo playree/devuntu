@@ -142,7 +142,7 @@ export const OidcListClient: FC = () => {
   return (
     <>
       <ContentHeader icon={<UsersIcon />} title={t('oidc_clients')}>
-        <MultiButton isIconOnly tooltip={t('add_client')} onPress={addModalState.open}>
+        <MultiButton isIconOnly tooltip={t('add_client')} onPress={() => addModalState.open()}>
           <PlusIcon />
         </MultiButton>
         <MultiButton isIconOnly tooltip={t('reload')} onPress={() => list.reload()}>
@@ -183,6 +183,7 @@ export const OidcListClient: FC = () => {
                   target: item.clientName ?? '',
                   action: async () => {
                     await parseAction(deleteOidcClient({ clientId: item.clientId }))
+                    notify.success(t('msg_deleted_target', { target: item.clientName }))
                     list.reload()
                   },
                 },

@@ -70,3 +70,10 @@ export const scCreateUser = z.object({
   isAdmin: z.boolean(),
 })
 export type CreateUser = z.infer<typeof scCreateUser>
+
+export const scUpdateUser = z.object({
+  name: zUsername,
+  email: zEmail,
+  isAdmin: z.boolean(),
+})
+export type UpdateUser = z.infer<typeof scUpdateUser>

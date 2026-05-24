@@ -53,6 +53,7 @@ export const en: LocaleItems = {
   welcome: 'Welcome',
 
   msg_added_target: 'Added ${target}.',
+  msg_cannot_delete_last_admin: 'Cannot delete the last admin.',
   msg_confirm_deletion: 'Delete ${target}.',
   msg_deleted_target: 'Deleted ${target}.',
   msg_email_not_verified: 'Your email address has not been verified.\nPlease log in with your email address.',

@@ -2,7 +2,7 @@
 
 import { safeAuthAction } from '@/lib/action-server'
 import { auth } from '@/lib/auth'
-import { errSystemError } from '@/lib/error'
+import { errInvalidOperation, errSystemError } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { scCreateUser, scUUID } from '@/lib/schema'
@@ -51,6 +51,19 @@ export const deleteUser = safeAuthAction
   .metadata({ actionName: 'deleteUser', role: 'admin' })
   .inputSchema(scUUID)
   .action(async ({ parsedInput: { id } }) => {
+    // 対象の存在確認
+    const user = await prisma.user.findUnique({ where: { id } })
+    if (!user) {
+      throw errInvalidOperation()
+    }
+
+    if (user.role === 'admin') {
+      if ((await prisma.user.count({ where: { role: 'admin' } })) <= 1) {
+        // 最後の管理者ユーザーは削除不可
+        return { error: 'CANNOT_DELETE_LAST_ADMIN' }
+      }
+    }
+
     await auth.api.removeUser({
       headers: await headers(),
       body: {

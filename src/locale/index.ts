@@ -51,6 +51,7 @@ export type LocaleItemBase =
   | 'welcome'
   // for Message
   | 'msg_added_target'
+  | 'msg_cannot_delete_last_admin'
   | 'msg_confirm_deletion'
   | 'msg_deleted_target'
   | 'msg_email_not_verified'

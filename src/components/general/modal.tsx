@@ -33,11 +33,27 @@ const CheckIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, .
   </svg>
 )
 
-export const useModalState = () => {
+export const useModalState = <T = string,>() => {
   const id = nanoid()
   const [key, setKey] = useState({ id, key: id })
   const state = useOverlayState({ onOpenChange: (isOpen) => setKey(({ id }) => ({ id, key: `${id}_${isOpen}` })) })
-  return { ...state, key: key.key }
+  const [targetObj, setTargetObj] = useState<T>()
+
+  return {
+    ...state,
+    key: key.key,
+    open: (target?: T) => {
+      if (target) {
+        setTargetObj(target)
+      }
+      state.open()
+    },
+    close: () => {
+      setTargetObj(undefined)
+      state.close()
+    },
+    target: targetObj,
+  }
 }
 
 export type ModalBaseProps = { state: UseOverlayStateReturn; reload: () => void }
@@ -155,7 +171,7 @@ export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ ui
               </MultiButton>
             )}
             <MultiButton
-              icon={<CheckIcon className='w-5' />}
+              icon={<CheckIcon />}
               isDisabled={!isAgree}
               isPending={isPending}
               onPress={async () => {

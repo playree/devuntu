@@ -23,7 +23,7 @@ export const CheckBoxCtrl = <
       control={control}
       name={name}
       render={({ field: { onChange, value, onBlur, ref } }) => (
-        <Checkbox {...props} isSelected={value} onChange={onChange} onBlur={onBlur} ref={ref}>
+        <Checkbox {...props} isSelected={value} onChange={onChange} onBlur={onBlur} ref={ref} id={id}>
           <Checkbox.Control>
             <Checkbox.Indicator />
           </Checkbox.Control>

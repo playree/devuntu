@@ -9,12 +9,12 @@ import { FormModal, ModalBaseProps, useModalState } from '@/components/general/m
 import { usePagingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, CheckIcon, PencilSquareIcon, UserPlusIcon, UsersIcon } from '@/components/icon'
+import { ArrowPathIcon, CheckIcon, PencilSquareIcon, UserIcon, UserPlusIcon, UsersIcon } from '@/components/icon'
 import { InputCtrlPassword } from '@/components/input-ctrl-pw'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
 import { dayformat } from '@/lib/day'
-import { CreateUser, scCreateUser } from '@/lib/schema'
+import { CreateUser, scCreateUser, scUpdateUser, UpdateUser } from '@/lib/schema'
 import { gridStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
 import { ButtonGroup, cn, Table } from '@heroui/react'
@@ -106,9 +106,78 @@ const AddModal: FC<ModalBaseProps & { enabledPassword: boolean }> = ({ state, re
   )
 }
 
+const UpdateModal: FC<ModalBaseProps & { target: UpdateUser }> = ({ state, reload, target }) => {
+  const { t, fet } = useLocale()
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting, errors },
+  } = useForm<UpdateUser>({
+    resolver: zodResolver(scUpdateUser),
+    mode: 'onChange',
+    defaultValues: {
+      name: target.name,
+      email: target.email,
+      isAdmin: target.isAdmin,
+    },
+  })
+
+  return (
+    <FormModal
+      state={state}
+      onSubmit={handleSubmit(async (req) => {
+        // const res = await parseAction(createUser(req))
+        // notify.success(t('msg_added_target', { target: res.name }))
+        reload()
+        state.close()
+      })}
+      title={{ text: t('update_user'), icon: <UserIcon /> }}
+      hooter={
+        <>
+          <MultiButton slot='close' variant='ghost'>
+            {t('cancel')}
+          </MultiButton>
+          <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
+            {t('ok')}
+          </MultiButton>
+        </>
+      }
+    >
+      <div className={cn(gridStyles(), 'mt-4 p-1')}>
+        <div className='col-span-12'>
+          <InputCtrl
+            control={control}
+            variant='secondary'
+            name='name'
+            label={t('username')}
+            errorMessage={fet(errors.name)}
+            isRequired
+            autoFocus
+          />
+        </div>
+        <div className='col-span-12'>
+          <InputCtrl
+            control={control}
+            variant='secondary'
+            name='email'
+            label={t('email')}
+            errorMessage={fet(errors.email)}
+            isRequired
+          />
+        </div>
+        <div className='col-span-12'>
+          <CheckBoxCtrl control={control} variant='secondary' name='isAdmin' id='isAdmin' label={t('is_admin')} />
+        </div>
+      </div>
+    </FormModal>
+  )
+}
+
 export const UsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword }) => {
   const { t } = useLocale()
   const addModalState = useModalState()
+  const updateModalState = useModalState<UpdateUser>()
 
   const list = usePagingList({
     load: async () => {
@@ -123,7 +192,7 @@ export const UsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword 
   return (
     <>
       <ContentHeader icon={<UsersIcon />} title={t('user_manage')}>
-        <MultiButton isIconOnly tooltip={t('add_user')} onPress={addModalState.open}>
+        <MultiButton isIconOnly tooltip={t('add_user')} onPress={() => addModalState.open()}>
           <UserPlusIcon />
         </MultiButton>
         <MultiButton isIconOnly tooltip={t('reload')} onPress={() => list.reload()}>
@@ -155,12 +224,25 @@ export const UsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword 
             <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'jp-simple')}</Table.Cell>
             <ActionCell
               items={[
-                { template: 'none', key: 'edit', icon: <PencilSquareIcon />, tooltip: t('update') },
+                {
+                  template: 'none',
+                  key: 'edit',
+                  icon: <PencilSquareIcon />,
+                  tooltip: t('update'),
+                  onPress: () => {
+                    updateModalState.open(item)
+                  },
+                },
                 {
                   template: 'delete',
                   target: item.name,
                   action: async () => {
-                    await parseAction(deleteUser({ id: item.id }))
+                    const res = await parseAction(deleteUser({ id: item.id }))
+                    if (res.error === 'CANNOT_DELETE_LAST_ADMIN') {
+                      notify.warn(t('msg_cannot_delete_last_admin'))
+                      return
+                    }
+                    notify.success(t('msg_deleted_target', { target: item.name }))
                     list.reload()
                   },
                 },
@@ -171,6 +253,14 @@ export const UsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword 
       </MultiTable>
 
       <AddModal state={addModalState} reload={list.reload} key={addModalState.key} enabledPassword={enabledPassword} />
+      {updateModalState.target && (
+        <UpdateModal
+          state={updateModalState}
+          reload={list.reload}
+          key={updateModalState.key}
+          target={updateModalState.target}
+        />
+      )}
     </>
   )
 }
