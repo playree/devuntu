@@ -207,7 +207,7 @@ export const UsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword 
         columns={[
           { id: 'name', name: t('username'), isRowHeader: true, allowsSorting: true, minWidth: 80 },
           { id: 'email', name: t('email'), allowsSorting: true, minWidth: 80, defaultWidth: '2fr' },
-          { id: 'isAdmin', name: t('is_admin'), allowsSorting: true, minWidth: 100 },
+          { id: 'isAdmin', name: t('is_admin'), allowsSorting: true, minWidth: 70 },
           { id: 'lastLoginAt', name: t('last_login'), allowsSorting: true, minWidth: 110 },
           { id: 'createdAt', name: t('created_at'), allowsSorting: true, minWidth: 110 },
           { id: 'action', name: t('action'), allowsSorting: false, defaultWidth: 100 },
@@ -218,7 +218,7 @@ export const UsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword 
             <Table.Cell>{item.name}</Table.Cell>
             <Table.Cell className='truncate font-mono text-xs'>{item.email}</Table.Cell>
             <Table.Cell>
-              <OnOffChip isState={item.isAdmin} />
+              <OnOffChip isState={item.isAdmin} isIconOnly />
             </Table.Cell>
             <Table.Cell className='font-mono text-xs'>{dayformat(item.lastLoginAt, 'jp-simple')}</Table.Cell>
             <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'jp-simple')}</Table.Cell>
