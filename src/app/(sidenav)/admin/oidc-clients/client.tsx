@@ -2,8 +2,10 @@
 
 import { ActionCell } from '@/components/action-cell'
 import { MultiButton } from '@/components/general/button'
+import { CheckBoxCtrl } from '@/components/general/checkbox-ctrl'
 import { OnOffChip } from '@/components/general/chip'
 import { CopyableField } from '@/components/general/copyable-field'
+import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input-ctrl'
 import { FormModal, ModalBaseProps, useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
@@ -13,10 +15,10 @@ import { ContentHeader } from '@/components/header'
 import { ArrowPathIcon, CheckIcon, PencilSquareIcon, PlusIcon, UsersIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
+import { envu } from '@/lib/env-util'
 import { AddOidcClient, scAddOidcClient } from '@/lib/schema'
-import { gridStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
-import { ButtonGroup, cn, Table } from '@heroui/react'
+import { ButtonGroup, Table, Typography } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AnimatePresence } from 'framer-motion'
 import { FC, useState } from 'react'
@@ -43,6 +45,8 @@ const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
     defaultValues: {
       clientName: '',
       redirectUri: '',
+      skipConsent: true,
+      requirePkce: false,
     },
   })
 
@@ -53,7 +57,7 @@ const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
         const res = await parseAction(addOidcClient(req))
         setOutput(res)
         setStep({ id: 'OUTPUT', direction: 1 })
-        notify.success(t('msg_added_target', { target: req.clientName }))
+        // notify.success(t('msg_added_target', { target: req.clientName }))
         reload()
       })}
       title={{ text: t('add_client'), icon: <PlusIcon /> }}
@@ -77,11 +81,11 @@ const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
         </>
       }
     >
-      <div className='min-h-46 overflow-hidden'>
+      <div className='min-h-72 overflow-hidden'>
         <AnimatePresence mode='wait' custom={step.direction}>
           {step.id === 'INPUT' && (
             <StepMotion direction={step.direction} key='step_input'>
-              <div className={cn(gridStyles(), 'mt-4 p-1')}>
+              <GridBox>
                 <div className='col-span-12'>
                   <InputCtrl
                     control={control}
@@ -103,20 +107,49 @@ const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
                     isRequired
                   />
                 </div>
-              </div>
+                <div className='col-span-12'>
+                  <CheckBoxCtrl
+                    control={control}
+                    variant='secondary'
+                    name='skipConsent'
+                    id='skipConsent'
+                    label={t('skip_consent')}
+                    isDisabled
+                  />
+                </div>
+                <div className='col-span-12'>
+                  <CheckBoxCtrl
+                    control={control}
+                    variant='secondary'
+                    name='requirePkce'
+                    id='requirePkce'
+                    label={t('require_pkce')}
+                  />
+                </div>
+              </GridBox>
             </StepMotion>
           )}
 
           {step.id === 'OUTPUT' && output && (
             <StepMotion direction={step.direction} key='step_output'>
-              <div className={cn(gridStyles(), 'mt-4 p-1')}>
+              <GridBox>
                 <div className='col-span-12'>
                   <CopyableField text={output.clientId} label={t('client_id')} variant='secondary' />
                 </div>
                 <div className='col-span-12'>
                   <CopyableField text={output.clientSecret} label={t('client_secret')} isMask variant='secondary' />
                 </div>
-              </div>
+                <div className='col-span-12'>
+                  <CopyableField
+                    text={new URL('api/auth', envu.client.NEXT_PUBLIC_URL).toString()}
+                    label={t('issuer_url')}
+                    variant='secondary'
+                  />
+                </div>
+                <Typography type='body-sm' className='col-span-12 pt-2 whitespace-pre-wrap'>
+                  {t('msg_added_oidc_client')}
+                </Typography>
+              </GridBox>
             </StepMotion>
           )}
         </AnimatePresence>

@@ -1,6 +1,7 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
+import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input-ctrl'
 import { CheckIcon, Cog6ToothIcon } from '@/components/icon'
 import { InputCtrlPassword } from '@/components/input-ctrl-pw'
@@ -8,7 +9,6 @@ import { SingleLayout } from '@/components/single-layout'
 import { parseAction } from '@/lib/action-client'
 import { makeUrl } from '@/lib/env-util'
 import { CreateAdmin, scCreateAdmin } from '@/lib/schema'
-import { gridStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
@@ -42,7 +42,7 @@ export const StartClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword 
           router.push(makeUrl('/').toString())
         })}
       >
-        <div className={gridStyles()}>
+        <GridBox>
           <div className='col-span-12'>
             <InputCtrl
               control={control}
@@ -84,7 +84,7 @@ export const StartClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword 
               {t('ok')}
             </MultiButton>
           </div>
-        </div>
+        </GridBox>
       </form>
     </SingleLayout>
   )

@@ -1,4 +1,4 @@
-import { Button, InputGroup, InputGroupProps, Label, TextField } from '@heroui/react'
+import { Button, Chip, InputGroup, InputGroupProps, Label, TextField } from '@heroui/react'
 import { FC, SVGProps, useState } from 'react'
 
 const EyeIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
@@ -93,7 +93,7 @@ export const CopyableField: FC<{
   const [isCopied, setIsCopied] = useState(false)
 
   return (
-    <TextField type={!isMask || isVisible ? 'text' : 'password'} isReadOnly>
+    <TextField type={!isMask || isVisible ? 'text' : 'password'} isReadOnly className='relative'>
       <Label>{label}</Label>
       <InputGroup variant={variant}>
         <InputGroup.Input value={text} disabled className='font-mono' />
@@ -121,6 +121,11 @@ export const CopyableField: FC<{
           </Button>
         </InputGroup.Suffix>
       </InputGroup>
+      {isCopied && (
+        <Chip className='absolute right-0 py-0' color='success' variant='soft'>
+          Copied!
+        </Chip>
+      )}
     </TextField>
   )
 }

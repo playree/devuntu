@@ -27,6 +27,7 @@ export const en: LocaleItems = {
   error: 'Error',
   google_signin: 'Sign in with Google',
   is_admin: 'Admin',
+  issuer_url: 'Issuer URL',
   last_login: 'Last Login',
   next: 'Next',
   oidc_clients: 'OIDC Clients',
@@ -39,6 +40,7 @@ export const en: LocaleItems = {
   password_score_required: '${score} or more required',
   redirect_uri: 'Redirect URI',
   reload: 'Reload',
+  require_pkce: 'Require PKCE',
   resend: 'Resend',
   send: 'Send',
   signin: 'Sign In',
@@ -52,6 +54,7 @@ export const en: LocaleItems = {
   username: 'Username',
   welcome: 'Welcome',
 
+  msg_added_oidc_client: 'OIDC client added.',
   msg_added_target: 'Added ${target}.',
   msg_cannot_delete_last_admin: 'Cannot delete the last admin.',
   msg_confirm_deletion: 'Delete ${target}.',

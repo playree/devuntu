@@ -56,6 +56,8 @@ export type SetPassword = z.infer<typeof scSetPassword>
 export const scAddOidcClient = z.object({
   clientName: z.string(),
   redirectUri: z.url(),
+  skipConsent: z.boolean(),
+  requirePkce: z.boolean(),
 })
 export type AddOidcClient = z.infer<typeof scAddOidcClient>
 

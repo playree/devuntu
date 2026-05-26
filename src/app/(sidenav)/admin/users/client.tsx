@@ -4,6 +4,7 @@ import { ActionCell } from '@/components/action-cell'
 import { MultiButton } from '@/components/general/button'
 import { CheckBoxCtrl } from '@/components/general/checkbox-ctrl'
 import { OnOffChip } from '@/components/general/chip'
+import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input-ctrl'
 import { FormModal, ModalBaseProps, useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
@@ -16,9 +17,8 @@ import { parseAction } from '@/lib/action-client'
 import { dayformat } from '@/lib/day'
 import { ClientError } from '@/lib/error'
 import { CreateUser, scCreateUser, scUpdateUser, UpdateUser } from '@/lib/schema'
-import { gridStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
-import { ButtonGroup, cn, Table } from '@heroui/react'
+import { ButtonGroup, Table } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FC } from 'react'
 import { useForm } from 'react-hook-form'
@@ -63,7 +63,7 @@ const AddModal: FC<ModalBaseProps & { enabledPassword: boolean }> = ({ state, re
         </>
       }
     >
-      <div className={cn(gridStyles(), 'mt-4 p-1')}>
+      <GridBox>
         <div className='col-span-12'>
           <InputCtrl
             control={control}
@@ -102,7 +102,7 @@ const AddModal: FC<ModalBaseProps & { enabledPassword: boolean }> = ({ state, re
         <div className='col-span-12'>
           <CheckBoxCtrl control={control} variant='secondary' name='isAdmin' id='isAdmin' label={t('is_admin')} />
         </div>
-      </div>
+      </GridBox>
     </FormModal>
   )
 }
@@ -152,7 +152,7 @@ const UpdateModal: FC<ModalBaseProps & { target: UpdateUser }> = ({ state, reloa
         </>
       }
     >
-      <div className={cn(gridStyles(), 'mt-4 p-1')}>
+      <GridBox>
         <div className='col-span-12'>
           <InputCtrl
             control={control}
@@ -177,7 +177,7 @@ const UpdateModal: FC<ModalBaseProps & { target: UpdateUser }> = ({ state, reloa
         <div className='col-span-12'>
           <CheckBoxCtrl control={control} variant='secondary' name='isAdmin' id='isAdmin' label={t('is_admin')} />
         </div>
-      </div>
+      </GridBox>
     </FormModal>
   )
 }

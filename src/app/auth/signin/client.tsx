@@ -2,6 +2,7 @@
 
 import { MultiButton } from '@/components/general/button'
 import { CheckBoxCtrl } from '@/components/general/checkbox-ctrl'
+import { Grid } from '@/components/general/grid'
 import { GrowMotion } from '@/components/general/grow-motion'
 import { InputCtrl } from '@/components/general/input-ctrl'
 import { InputOtpCtrl } from '@/components/general/input-otp-ctrl'
@@ -34,7 +35,7 @@ import {
   TwoFaCode,
 } from '@/lib/schema'
 import { intervalOperation } from '@/lib/sleep'
-import { gridStyles, textStyles } from '@/lib/style'
+import { textStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
 import { cn, Separator } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -446,7 +447,7 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
 
   return (
     <SingleLayout icon={<KeyIcon />} title={viewTitle}>
-      <div className={cn(gridStyles(), 'mb-4')}>
+      <Grid className='mb-4'>
         <div className='col-span-12 flex md:col-span-3'>
           <div className='text-lg'>{t('welcome')}</div>
         </div>
@@ -459,7 +460,7 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
             </div>
           )}
         </div>
-      </div>
+      </Grid>
 
       <div className='min-h-32 overflow-hidden'>
         <AnimatePresence mode='wait' custom={step.direction}>

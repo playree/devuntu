@@ -25,6 +25,7 @@ export type LocaleItemBase =
   | 'error'
   | 'google_signin'
   | 'is_admin'
+  | 'issuer_url'
   | 'last_login'
   | 'next'
   | 'oidc_clients'
@@ -37,6 +38,7 @@ export type LocaleItemBase =
   | 'password_score_required'
   | 'redirect_uri'
   | 'reload'
+  | 'require_pkce'
   | 'resend'
   | 'send'
   | 'signin'
@@ -50,6 +52,7 @@ export type LocaleItemBase =
   | 'username'
   | 'welcome'
   // for Message
+  | 'msg_added_oidc_client'
   | 'msg_added_target'
   | 'msg_cannot_delete_last_admin'
   | 'msg_confirm_deletion'

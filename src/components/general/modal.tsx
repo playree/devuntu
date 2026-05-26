@@ -78,7 +78,7 @@ export const FormModal: FC<{
                 {title.text}
               </Modal.Heading>
             </Modal.Header>
-            <Modal.Body>{children}</Modal.Body>
+            <Modal.Body className='pt-2'>{children}</Modal.Body>
             <Modal.Footer>{hooter}</Modal.Footer>
           </form>
         </Modal.Dialog>

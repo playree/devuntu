@@ -27,6 +27,7 @@ export const ja: DefaultLocaleItems = {
   error: 'エラー',
   google_signin: 'Googleでサインイン',
   is_admin: '管理者',
+  issuer_url: '発行者URL',
   last_login: '最終ログイン',
   next: '次へ',
   oidc_clients: 'OIDCクライアント',
@@ -39,6 +40,7 @@ export const ja: DefaultLocaleItems = {
   password_score_required: '${score}以上が必要',
   redirect_uri: 'リダイレクトURI',
   reload: 'リロード',
+  require_pkce: 'PKCE必須',
   resend: '再送',
   send: '送信',
   signin: 'サインイン',
@@ -52,6 +54,9 @@ export const ja: DefaultLocaleItems = {
   username: 'ユーザー名',
   welcome: 'ようこそ',
 
+  msg_added_oidc_client: `クライアントを登録しました。
+上記の接続情報をコピーしてご利用ください。
+※シークレットは後から再確認できません。`,
   msg_added_target: '${target} を追加しました。',
   msg_cannot_delete_last_admin: '最後の管理者は削除できません。',
   msg_confirm_deletion: '${target} を削除します。',
