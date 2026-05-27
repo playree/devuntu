@@ -3,9 +3,9 @@ import { FC, ReactNode } from 'react'
 import { Grid } from './general/grid'
 
 export const ContentHeader: FC<{
-  children: ReactNode
-  icon: ReactNode
-  title: string
+  children?: ReactNode
+  icon?: ReactNode
+  title?: string
 }> = ({ children, icon, title }) => {
   return (
     <Grid className='mb-2 min-h-9'>
@@ -14,7 +14,7 @@ export const ContentHeader: FC<{
         {title}
       </div>
       <div className='col-span-12 flex justify-end gap-2 lg:col-span-6'>
-        <ButtonGroup variant='tertiary'>{children}</ButtonGroup>
+        {children && <ButtonGroup variant='tertiary'>{children}</ButtonGroup>}
       </div>
     </Grid>
   )
