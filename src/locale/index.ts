@@ -24,6 +24,7 @@ export type LocaleItemBase =
   | 'email'
   | 'error'
   | 'google_signin'
+  | 'immutable'
   | 'is_admin'
   | 'issuer_url'
   | 'last_login'

@@ -4,7 +4,7 @@ import { safeAuthAction } from '@/lib/action-server'
 import { auth } from '@/lib/auth'
 import { errSystemError } from '@/lib/error'
 import { logger } from '@/lib/logger'
-import { scAddOidcClient, scDeleteOidcClient } from '@/lib/schema'
+import { scAddOidcClient, scDeleteOidcClient, scUpdateOidcClient } from '@/lib/schema'
 import { headers } from 'next/headers'
 
 export const getOidcClients = safeAuthAction
@@ -14,10 +14,12 @@ export const getOidcClients = safeAuthAction
       headers: await headers(),
     })
     if (data) {
-      return data.map(({ client_id, client_name, skip_consent }) => ({
+      return data.map(({ client_id, client_name, redirect_uris, skip_consent, require_pkce }) => ({
         clientId: client_id,
-        clientName: client_name,
-        skipConsent: skip_consent,
+        clientName: client_name ?? '',
+        redirectUri: redirect_uris[0],
+        skipConsent: skip_consent ?? false,
+        requirePkce: require_pkce ?? false,
       }))
     }
     return []
@@ -42,6 +44,25 @@ export const addOidcClient = safeAuthAction
       throw errSystemError('client_secret is empty')
     }
     return { clientId: res.client_id, clientSecret: res.client_secret }
+  })
+
+export const updateOidcClient = safeAuthAction
+  .metadata({ actionName: 'updateOidcClient', role: 'admin' })
+  .inputSchema(scUpdateOidcClient)
+  .action(async ({ parsedInput: { clientId, clientName, redirectUri, skipConsent } }) => {
+    const res = await auth.api.adminUpdateOAuthClient({
+      headers: await headers(),
+      body: {
+        client_id: clientId,
+        update: {
+          client_name: clientName,
+          redirect_uris: [redirectUri],
+          skip_consent: skipConsent,
+        },
+      },
+    })
+    logger.info(res, 'auth.api.adminUpdateOAuthClient')
+    return { clientId: res.client_id }
   })
 
 export const deleteOidcClient = safeAuthAction

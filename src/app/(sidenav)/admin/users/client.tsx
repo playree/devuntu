@@ -193,7 +193,7 @@ export const UsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword 
       return res ?? []
     },
     sort: {
-      init: { column: 'updatedAt', direction: 'descending' },
+      init: { column: 'createdAt', direction: 'descending' },
     },
   })
 

@@ -26,6 +26,7 @@ export const en: LocaleItems = {
   email: 'Email',
   error: 'Error',
   google_signin: 'Sign in with Google',
+  immutable: 'Immutable',
   is_admin: 'Admin',
   issuer_url: 'Issuer URL',
   last_login: 'Last Login',
@@ -54,7 +55,9 @@ export const en: LocaleItems = {
   username: 'Username',
   welcome: 'Welcome',
 
-  msg_added_oidc_client: 'OIDC client added.',
+  msg_added_oidc_client: `Client registered.
+Please copy and use the connection information above.
+*The secret cannot be retrieved later.`,
   msg_added_target: 'Added ${target}.',
   msg_cannot_delete_last_admin: 'Cannot delete the last admin.',
   msg_confirm_deletion: 'Delete ${target}.',

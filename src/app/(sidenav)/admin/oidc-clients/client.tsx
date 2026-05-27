@@ -2,7 +2,7 @@
 
 import { ActionCell } from '@/components/action-cell'
 import { MultiButton } from '@/components/general/button'
-import { CheckBoxCtrl } from '@/components/general/checkbox-ctrl'
+import { CheckBoxCtrl, CheckBoxItem } from '@/components/general/checkbox-ctrl'
 import { OnOffChip } from '@/components/general/chip'
 import { CopyableField } from '@/components/general/copyable-field'
 import { GridBox } from '@/components/general/grid'
@@ -16,14 +16,14 @@ import { ArrowPathIcon, CheckIcon, PencilSquareIcon, PlusIcon, UsersIcon } from 
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
 import { envu } from '@/lib/env-util'
-import { AddOidcClient, scAddOidcClient } from '@/lib/schema'
+import { AddOidcClient, scAddOidcClient, scUpdateOidcClient, UpdateOidcClient } from '@/lib/schema'
 import { useLocale } from '@/locale/client'
 import { ButtonGroup, Table, Typography } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AnimatePresence } from 'framer-motion'
 import { FC, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { addOidcClient, deleteOidcClient, getOidcClients } from './server'
+import { addOidcClient, deleteOidcClient, getOidcClients, updateOidcClient } from './server'
 
 type Step = {
   id: 'INPUT' | 'OUTPUT'
@@ -158,9 +158,99 @@ const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
   )
 }
 
+const UpdateModal: FC<ModalBaseProps & { target: UpdateOidcClient & { requirePkce: boolean } }> = ({
+  state,
+  reload,
+  target,
+}) => {
+  const { t, fet } = useLocale()
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting, errors },
+  } = useForm<UpdateOidcClient>({
+    resolver: zodResolver(scUpdateOidcClient),
+    mode: 'onChange',
+    defaultValues: {
+      clientId: target.clientId,
+      clientName: target.clientName,
+      redirectUri: target.redirectUri,
+      skipConsent: target.skipConsent,
+    },
+  })
+
+  return (
+    <FormModal
+      state={state}
+      onSubmit={handleSubmit(async (req) => {
+        await parseAction(updateOidcClient(req))
+        notify.success(t('msg_updated_target', { target: req.clientName }))
+        reload()
+        state.close()
+      })}
+      title={{ text: t('add_client'), icon: <PlusIcon /> }}
+      hooter={
+        <>
+          <MultiButton slot='close' variant='ghost'>
+            {t('cancel')}
+          </MultiButton>
+          <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
+            {t('ok')}
+          </MultiButton>
+        </>
+      }
+    >
+      <GridBox>
+        <div className='col-span-12'>
+          <InputCtrl
+            control={control}
+            variant='secondary'
+            name='clientName'
+            label={t('client_name')}
+            errorMessage={fet(errors.clientName)}
+            isRequired
+            autoFocus
+          />
+        </div>
+        <div className='col-span-12'>
+          <InputCtrl
+            control={control}
+            variant='secondary'
+            name='redirectUri'
+            label={t('redirect_uri')}
+            errorMessage={fet(errors.redirectUri)}
+            isRequired
+          />
+        </div>
+        <div className='col-span-12'>
+          <CheckBoxCtrl
+            control={control}
+            variant='secondary'
+            name='skipConsent'
+            id='skipConsent'
+            label={t('skip_consent')}
+            isDisabled
+          />
+        </div>
+        <div className='col-span-12'>
+          <CheckBoxItem
+            variant='secondary'
+            id='requirePkce'
+            label={`${t('require_pkce')} (${t('immutable')})`}
+            isSelected={target.requirePkce}
+            isDisabled
+          />
+        </div>
+      </GridBox>
+    </FormModal>
+  )
+}
+
 export const OidcListClient: FC = () => {
   const { t } = useLocale()
   const addModalState = useModalState()
+  const updateModalState = useModalState<UpdateOidcClient & { requirePkce: boolean }>()
 
   const list = usePagingList({
     load: async () => {
@@ -198,6 +288,7 @@ export const OidcListClient: FC = () => {
           },
           { id: 'clientId', name: t('client_id'), allowsSorting: true, minWidth: 200, defaultWidth: '2fr' },
           { id: 'skipConsent', name: t('skip_consent'), allowsSorting: false, minWidth: 100 },
+          { id: 'requirePkce', name: t('require_pkce'), allowsSorting: false, minWidth: 100 },
           { id: 'action', name: t('action'), allowsSorting: false, defaultWidth: 100 },
         ]}
       >
@@ -208,9 +299,20 @@ export const OidcListClient: FC = () => {
             <Table.Cell>
               <OnOffChip isState={item.skipConsent} />
             </Table.Cell>
+            <Table.Cell>
+              <OnOffChip isState={item.requirePkce} />
+            </Table.Cell>
             <ActionCell
               items={[
-                { template: 'none', key: 'edit', icon: <PencilSquareIcon />, tooltip: t('update') },
+                {
+                  template: 'none',
+                  key: 'edit',
+                  icon: <PencilSquareIcon />,
+                  tooltip: t('update'),
+                  onPress: () => {
+                    updateModalState.open(item)
+                  },
+                },
                 {
                   template: 'delete',
                   target: item.clientName ?? '',
@@ -227,6 +329,14 @@ export const OidcListClient: FC = () => {
       </MultiTable>
 
       <AddModal state={addModalState} reload={list.reload} key={addModalState.key} />
+      {updateModalState.target && (
+        <UpdateModal
+          state={updateModalState}
+          reload={list.reload}
+          key={updateModalState.key}
+          target={updateModalState.target}
+        />
+      )}
     </>
   )
 }

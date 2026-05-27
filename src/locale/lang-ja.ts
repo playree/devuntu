@@ -26,6 +26,7 @@ export const ja: DefaultLocaleItems = {
   email: 'Eメール',
   error: 'エラー',
   google_signin: 'Googleでサインイン',
+  immutable: '変更不可',
   is_admin: '管理者',
   issuer_url: '発行者URL',
   last_login: '最終ログイン',

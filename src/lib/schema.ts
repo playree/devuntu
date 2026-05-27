@@ -61,6 +61,14 @@ export const scAddOidcClient = z.object({
 })
 export type AddOidcClient = z.infer<typeof scAddOidcClient>
 
+export const scUpdateOidcClient = z.object({
+  clientId: z.string(),
+  clientName: z.string(),
+  redirectUri: z.url(),
+  skipConsent: z.boolean(),
+})
+export type UpdateOidcClient = z.infer<typeof scUpdateOidcClient>
+
 export const scDeleteOidcClient = z.object({
   clientId: z.string(),
 })
