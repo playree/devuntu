@@ -38,6 +38,10 @@ if (
 export const auth = betterAuth({
   appName: envu.server.NEXT_PUBLIC_APP_NAME,
   baseURL: envu.server.NEXT_PUBLIC_URL,
+  session: {
+    expiresIn: envu.server.SESSION_EXPIRES_IN,
+    freshAge: envu.server.SESSION_FRESH_AGE,
+  },
   database: prismaAdapter(prisma, {
     provider: 'sqlite',
   }),

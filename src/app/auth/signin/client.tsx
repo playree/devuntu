@@ -57,6 +57,8 @@ const UsernameForm: FC<{
   next: (email: string, nextStep: 'PASSWORD' | 'OTP') => void
 }> = ({ direction, next }) => {
   const { t, fet } = useLocale()
+  const searchParams = useSearchParams()
+  const reAuthUser = searchParams.get('re')
   const {
     control,
     handleSubmit,
@@ -65,7 +67,7 @@ const UsernameForm: FC<{
     resolver: zodResolver(scSignInUsername),
     // mode: 'onChange',
     defaultValues: {
-      username: '',
+      username: reAuthUser ?? '',
     },
   })
 

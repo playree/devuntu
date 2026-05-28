@@ -88,3 +88,9 @@ export const scUpdateUser = z.object({
   isAdmin: z.boolean(),
 })
 export type UpdateUser = z.infer<typeof scUpdateUser>
+
+export const scUpdatePasskey = z.object({
+  id: z.uuidv7(),
+  name: z.string(),
+})
+export type UpdatePasskey = z.infer<typeof scUpdatePasskey>
