@@ -46,8 +46,23 @@ const server = {
     }
     return process.env.BETTER_AUTH_SECRET
   },
+  get SESSION_EXPIRES_IN() {
+    if (!process.env.SESSION_EXPIRES_IN) {
+      return 60 * 60 * 24 * 5
+    }
+    return Number(process.env.SESSION_EXPIRES_IN)
+  },
+  get SESSION_FRESH_AGE() {
+    if (!process.env.SESSION_FRESH_AGE) {
+      return 60 * 60 * 24
+    }
+    return Number(process.env.SESSION_FRESH_AGE)
+  },
   get TWO_FA_REQUIRED() {
     return convBoolean(process.env.TWO_FA_REQUIRED, true)
+  },
+  get DISABLE_PASSWORD_AUTH() {
+    return convBoolean(process.env.DISABLE_PASSWORD_AUTH, false)
   },
   get MAIN_DEVUNTU_URL() {
     return process.env.MAIN_DEVUNTU_URL

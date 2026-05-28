@@ -3,11 +3,12 @@ import { passkey } from '@better-auth/passkey'
 import { APIError, betterAuth } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { nextCookies } from 'better-auth/next-js'
-import { admin, genericOAuth, type GenericOAuthConfig, jwt, twoFactor } from 'better-auth/plugins'
+import { admin, emailOTP, genericOAuth, type GenericOAuthConfig, jwt, twoFactor } from 'better-auth/plugins'
 import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { uuidv7 } from 'uuidv7'
 import { authConfig } from './auth-config'
+import { nowDate } from './day'
 import { envu, makeUrl } from './env-util'
 import { logger } from './logger'
 import { sendEmailOtp } from './mail'
@@ -37,6 +38,10 @@ if (
 export const auth = betterAuth({
   appName: envu.server.NEXT_PUBLIC_APP_NAME,
   baseURL: envu.server.NEXT_PUBLIC_URL,
+  session: {
+    expiresIn: envu.server.SESSION_EXPIRES_IN,
+    freshAge: envu.server.SESSION_FRESH_AGE,
+  },
   database: prismaAdapter(prisma, {
     provider: 'sqlite',
   }),
@@ -54,20 +59,28 @@ export const auth = betterAuth({
       locale: {
         type: 'string',
         required: false,
+        input: false,
+      },
+      lastLoginAt: {
+        type: 'date',
+        required: false,
+        input: false,
       },
     },
   },
   emailAndPassword: {
-    enabled: true,
+    enabled: !envu.server.DISABLE_PASSWORD_AUTH,
   },
   databaseHooks: {
     user: {
       create: {
         before: async (user, ctx) => {
-          if (!ctx?.body?.password) {
-            // Email & Password以外でのユーザー作成
-            const provider = ctx?.params?.id
-            logger.debug({ provider }, 'databaseHooks.user.create.before')
+          const path = ctx?.path
+          const provider = ctx?.params?.id
+          logger.debug({ path, provider }, 'databaseHooks.user.create.before')
+
+          if (path !== '/admin/create-user') {
+            // ユーザーの自動作成
 
             // 基本的に許可しない
             throw new APIError('BAD_REQUEST', { code: 'USER_NOT_EXIST', message: 'user not exist' })
@@ -87,6 +100,16 @@ export const auth = betterAuth({
         },
       },
     },
+    session: {
+      create: {
+        after: async (session) => {
+          await prisma.user.update({
+            where: { id: session.userId },
+            data: { lastLoginAt: nowDate() },
+          })
+        },
+      },
+    },
   },
   socialProviders: {
     ...(!!envu.server.GOOGLE_CLIENT_ID && !!envu.server.GOOGLE_CLIENT_SECRET
@@ -101,6 +124,16 @@ export const auth = betterAuth({
   },
   plugins: [
     admin(),
+    emailOTP({
+      disableSignUp: true,
+      sendVerificationOTP: async ({ email, otp, type }) => {
+        const user = await prisma.user.findUnique({ where: { email }, select: { locale: true } })
+        logger.debug({ email, type, user }, 'sendVerificationOTP')
+        if (user) {
+          await sendEmailOtp({ locale: user.locale, to: email, otp })
+        }
+      },
+    }),
     twoFactor({
       // skipVerificationOnEnable: true,
       otpOptions: {

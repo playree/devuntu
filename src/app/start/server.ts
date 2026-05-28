@@ -2,7 +2,7 @@
 
 import { safeAction } from '@/lib/action-server'
 import { auth } from '@/lib/auth'
-import { errSystemError } from '@/lib/error'
+import { errInvalidOperation, errSystemError } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { scCreateAdmin } from '@/lib/schema'
@@ -16,6 +16,10 @@ export const createAdmin = safeAction
   .metadata({ actionName: 'createAdmin' })
   .inputSchema(scCreateAdmin)
   .action(async ({ parsedInput: { name, email, password } }) => {
+    if (await hasCompletedInitialSetup()) {
+      throw errInvalidOperation()
+    }
+
     // 管理者登録
     const { user } = await auth.api.createUser({
       body: {
@@ -26,10 +30,10 @@ export const createAdmin = safeAction
       },
     })
 
-    logger.info({ user }, 'admin created')
     if (!user) {
       throw errSystemError('admin create failed')
     }
+    logger.info({ user }, 'admin created')
 
-    return user.id
+    return { id: user.id, name: user.name }
   })

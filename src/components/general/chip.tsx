@@ -1,4 +1,4 @@
-import { Chip } from '@heroui/react'
+import { Chip, ChipProps } from '@heroui/react'
 import { FC, SVGProps } from 'react'
 
 const CheckBadgeIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
@@ -37,16 +37,20 @@ const XCircleIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2,
   </svg>
 )
 
-export const OnOffChip: FC<{ isState: boolean | undefined }> = ({ isState }) => {
+export const OnOffChip: FC<{ isState: boolean | undefined; variant?: ChipProps['variant']; isIconOnly?: boolean }> = ({
+  isState,
+  variant = 'tertiary',
+  isIconOnly = false,
+}) => {
   return isState ? (
-    <Chip color='success'>
-      <CheckBadgeIcon width={16} />
-      <Chip.Label>ON</Chip.Label>
+    <Chip color='success' variant={variant}>
+      <CheckBadgeIcon />
+      {!isIconOnly && <Chip.Label>ON</Chip.Label>}
     </Chip>
   ) : (
-    <Chip color='danger'>
-      <XCircleIcon width={16} />
-      <Chip.Label>OFF</Chip.Label>
+    <Chip color='danger' variant={variant}>
+      <XCircleIcon />
+      {!isIconOnly && <Chip.Label>OFF</Chip.Label>}
     </Chip>
   )
 }

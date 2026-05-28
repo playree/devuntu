@@ -1,25 +1,29 @@
 'use client'
 
+import { ActionCell } from '@/components/action-cell'
 import { MultiButton } from '@/components/general/button'
+import { CheckBoxCtrl, CheckBoxItem } from '@/components/general/checkbox-ctrl'
 import { OnOffChip } from '@/components/general/chip'
 import { CopyableField } from '@/components/general/copyable-field'
+import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input-ctrl'
-import { FormModal, ModalBaseProps, useConfirmModal, useModalState } from '@/components/general/modal'
-import { usePageingList } from '@/components/general/paging'
+import { FormModal, ModalBaseProps, useModalState } from '@/components/general/modal'
+import { usePagingList } from '@/components/general/paging'
 import { StepMotion } from '@/components/general/step-motion'
-import { ActionCell, MultiTable } from '@/components/general/table'
+import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, CheckIcon, PencilSquareIcon, PlusIcon, TrashIcon, UsersIcon } from '@/components/icon'
+import { ArrowPathIcon, CheckIcon, PencilSquareIcon, PlusIcon, UsersIcon } from '@/components/icon'
+import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
-import { AddOidcClient, scAddOidcClient } from '@/lib/schema'
-import { gridStyles } from '@/lib/style'
+import { envu } from '@/lib/env-util'
+import { AddOidcClient, scAddOidcClient, scUpdateOidcClient, UpdateOidcClient } from '@/lib/schema'
 import { useLocale } from '@/locale/client'
-import { ButtonGroup, cn, Table, toast } from '@heroui/react'
+import { ButtonGroup, Table, Typography } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AnimatePresence } from 'framer-motion'
 import { FC, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { addOidcClient, deleteOidcClient, getOidcClients } from './server'
+import { addOidcClient, deleteOidcClient, getOidcClients, updateOidcClient } from './server'
 
 type Step = {
   id: 'INPUT' | 'OUTPUT'
@@ -41,6 +45,8 @@ const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
     defaultValues: {
       clientName: '',
       redirectUri: '',
+      skipConsent: true,
+      requirePkce: false,
     },
   })
 
@@ -51,7 +57,7 @@ const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
         const res = await parseAction(addOidcClient(req))
         setOutput(res)
         setStep({ id: 'OUTPUT', direction: 1 })
-        toast.success(t('msg_added_target', { target: req.clientName }))
+        // notify.success(t('msg_added_target', { target: req.clientName }))
         reload()
       })}
       title={{ text: t('add_client'), icon: <PlusIcon /> }}
@@ -59,7 +65,7 @@ const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
         <>
           {step.id === 'INPUT' && (
             <>
-              <MultiButton slot='close' variant='secondary'>
+              <MultiButton slot='close' variant='ghost'>
                 {t('cancel')}
               </MultiButton>
               <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
@@ -75,11 +81,11 @@ const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
         </>
       }
     >
-      <div className='min-h-46 overflow-hidden'>
+      <div className='min-h-72 overflow-hidden'>
         <AnimatePresence mode='wait' custom={step.direction}>
           {step.id === 'INPUT' && (
             <StepMotion direction={step.direction} key='step_input'>
-              <div className={cn(gridStyles(), 'mt-4 p-1')}>
+              <GridBox>
                 <div className='col-span-12'>
                   <InputCtrl
                     control={control}
@@ -101,20 +107,49 @@ const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
                     isRequired
                   />
                 </div>
-              </div>
+                <div className='col-span-12'>
+                  <CheckBoxCtrl
+                    control={control}
+                    variant='secondary'
+                    name='skipConsent'
+                    id='skipConsent'
+                    label={t('skip_consent')}
+                    isDisabled
+                  />
+                </div>
+                <div className='col-span-12'>
+                  <CheckBoxCtrl
+                    control={control}
+                    variant='secondary'
+                    name='requirePkce'
+                    id='requirePkce'
+                    label={t('require_pkce')}
+                  />
+                </div>
+              </GridBox>
             </StepMotion>
           )}
 
           {step.id === 'OUTPUT' && output && (
             <StepMotion direction={step.direction} key='step_output'>
-              <div className={cn(gridStyles(), 'mt-4 p-1')}>
+              <GridBox>
                 <div className='col-span-12'>
                   <CopyableField text={output.clientId} label={t('client_id')} variant='secondary' />
                 </div>
                 <div className='col-span-12'>
                   <CopyableField text={output.clientSecret} label={t('client_secret')} isMask variant='secondary' />
                 </div>
-              </div>
+                <div className='col-span-12'>
+                  <CopyableField
+                    text={new URL('api/auth', envu.client.NEXT_PUBLIC_URL).toString()}
+                    label={t('issuer_url')}
+                    variant='secondary'
+                  />
+                </div>
+                <Typography type='body-sm' className='col-span-12 pt-2 whitespace-pre-wrap'>
+                  {t('msg_added_oidc_client')}
+                </Typography>
+              </GridBox>
             </StepMotion>
           )}
         </AnimatePresence>
@@ -123,12 +158,101 @@ const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
   )
 }
 
+const UpdateModal: FC<ModalBaseProps & { target: UpdateOidcClient & { requirePkce: boolean } }> = ({
+  state,
+  reload,
+  target,
+}) => {
+  const { t, fet } = useLocale()
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting, errors },
+  } = useForm<UpdateOidcClient>({
+    resolver: zodResolver(scUpdateOidcClient),
+    mode: 'onChange',
+    defaultValues: {
+      clientId: target.clientId,
+      clientName: target.clientName,
+      redirectUri: target.redirectUri,
+      skipConsent: target.skipConsent,
+    },
+  })
+
+  return (
+    <FormModal
+      state={state}
+      onSubmit={handleSubmit(async (req) => {
+        await parseAction(updateOidcClient(req))
+        notify.success(t('msg_updated_target', { target: req.clientName }))
+        reload()
+        state.close()
+      })}
+      title={{ text: t('add_client'), icon: <PlusIcon /> }}
+      hooter={
+        <>
+          <MultiButton slot='close' variant='ghost'>
+            {t('cancel')}
+          </MultiButton>
+          <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
+            {t('ok')}
+          </MultiButton>
+        </>
+      }
+    >
+      <GridBox>
+        <div className='col-span-12'>
+          <InputCtrl
+            control={control}
+            variant='secondary'
+            name='clientName'
+            label={t('client_name')}
+            errorMessage={fet(errors.clientName)}
+            isRequired
+            autoFocus
+          />
+        </div>
+        <div className='col-span-12'>
+          <InputCtrl
+            control={control}
+            variant='secondary'
+            name='redirectUri'
+            label={t('redirect_uri')}
+            errorMessage={fet(errors.redirectUri)}
+            isRequired
+          />
+        </div>
+        <div className='col-span-12'>
+          <CheckBoxCtrl
+            control={control}
+            variant='secondary'
+            name='skipConsent'
+            id='skipConsent'
+            label={t('skip_consent')}
+            isDisabled
+          />
+        </div>
+        <div className='col-span-12'>
+          <CheckBoxItem
+            variant='secondary'
+            id='requirePkce'
+            label={`${t('require_pkce')} (${t('immutable')})`}
+            isSelected={target.requirePkce}
+            isDisabled
+          />
+        </div>
+      </GridBox>
+    </FormModal>
+  )
+}
+
 export const OidcListClient: FC = () => {
   const { t } = useLocale()
   const addModalState = useModalState()
-  const { confirmModal } = useConfirmModal()
+  const updateModalState = useModalState<UpdateOidcClient & { requirePkce: boolean }>()
 
-  const list = usePageingList({
+  const list = usePagingList({
     load: async () => {
       const res = await parseAction(getOidcClients())
       return res ?? []
@@ -136,13 +260,12 @@ export const OidcListClient: FC = () => {
     sort: {
       init: { column: 'updatedAt', direction: 'descending' },
     },
-    rowsPerPage: 4,
   })
 
   return (
     <>
       <ContentHeader icon={<UsersIcon />} title={t('oidc_clients')}>
-        <MultiButton isIconOnly tooltip={t('add_client')} onPress={addModalState.open}>
+        <MultiButton isIconOnly tooltip={t('add_client')} onPress={() => addModalState.open()}>
           <PlusIcon />
         </MultiButton>
         <MultiButton isIconOnly tooltip={t('reload')} onPress={() => list.reload()}>
@@ -153,54 +276,50 @@ export const OidcListClient: FC = () => {
 
       <MultiTable
         ariaLabel='user list'
-        items={list.items}
-        sortDescriptor={list.sortDescriptor}
-        onSortChange={list.onSortChange}
+        pagingList={list}
         columns={[
           {
-            id: 'client_name',
+            id: 'clientName',
             name: t('client_name'),
             isRowHeader: true,
             allowsSorting: true,
             minWidth: 120,
             defaultWidth: '1fr',
           },
-          { id: 'client_id', name: t('client_id'), allowsSorting: true, minWidth: 200, defaultWidth: '2fr' },
-          { id: 'skip_consent', name: t('skip_consent'), allowsSorting: false, minWidth: 110 },
-          { id: 'action', name: t('action'), allowsSorting: false, defaultWidth: 120 },
+          { id: 'clientId', name: t('client_id'), allowsSorting: true, minWidth: 200, defaultWidth: '2fr' },
+          { id: 'skipConsent', name: t('skip_consent'), allowsSorting: false, minWidth: 100 },
+          { id: 'requirePkce', name: t('require_pkce'), allowsSorting: false, minWidth: 100 },
+          { id: 'action', name: t('action'), allowsSorting: false, defaultWidth: 100 },
         ]}
-        paging={list}
       >
         {(item) => (
           <Table.Row key={item.clientId} id={item.clientId}>
             <Table.Cell>{item.clientName}</Table.Cell>
-            <Table.Cell className='overflow-hidden font-mono'>{item.clientId}</Table.Cell>
+            <Table.Cell className='font-mono'>{item.clientId}</Table.Cell>
             <Table.Cell>
               <OnOffChip isState={item.skipConsent} />
             </Table.Cell>
+            <Table.Cell>
+              <OnOffChip isState={item.requirePkce} />
+            </Table.Cell>
             <ActionCell
               items={[
-                { key: 'edit', icon: <PencilSquareIcon /> },
                 {
-                  key: 'delete',
-                  variant: 'danger-soft',
-                  icon: <TrashIcon />,
-                  onPress: async () => {
-                    try {
-                      const ok = await confirmModal().confirm({
-                        title: t('confirm_deletion'),
-                        text: t('msg_confirm_deletion', { target: item.clientName }),
-                        requireCheck: true,
-                        autoClose: false,
-                      })
-                      if (ok) {
-                        await parseAction(deleteOidcClient({ clientId: item.clientId }))
-                        toast.success(t('msg_deleted_target', { target: item.clientName }))
-                        list.reload()
-                      }
-                    } finally {
-                      confirmModal().close()
-                    }
+                  template: 'none',
+                  key: 'edit',
+                  icon: <PencilSquareIcon />,
+                  tooltip: t('update'),
+                  onPress: () => {
+                    updateModalState.open(item)
+                  },
+                },
+                {
+                  template: 'delete',
+                  target: item.clientName ?? '',
+                  action: async () => {
+                    await parseAction(deleteOidcClient({ clientId: item.clientId }))
+                    notify.success(t('msg_deleted_target', { target: item.clientName }))
+                    list.reload()
                   },
                 },
               ]}
@@ -210,6 +329,14 @@ export const OidcListClient: FC = () => {
       </MultiTable>
 
       <AddModal state={addModalState} reload={list.reload} key={addModalState.key} />
+      {updateModalState.target && (
+        <UpdateModal
+          state={updateModalState}
+          reload={list.reload}
+          key={updateModalState.key}
+          target={updateModalState.target}
+        />
+      )}
     </>
   )
 }

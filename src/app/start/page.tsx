@@ -1,3 +1,4 @@
+import { auth } from '@/lib/auth'
 import { type Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { FC } from 'react'
@@ -14,6 +15,6 @@ const StartPage: FC = async () => {
     return <></>
   }
 
-  return <StartClient />
+  return <StartClient enabledPassword={auth.options.emailAndPassword.enabled} />
 }
 export default StartPage

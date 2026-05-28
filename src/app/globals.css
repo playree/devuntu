@@ -20,16 +20,20 @@
     --background: #000000;
     --default: oklch(0.35 0.006 286.033);
   }
+
+  .toast__description {
+    @apply whitespace-pre-line;
+  }
 }
 
 @layer components {
-  .button > svg {
-    @apply w-5;
-  }
   .accordion__trigger {
     @apply px-2 py-3;
   }
   .accordion__body-inner {
     @apply px-0;
+  }
+  .table__cell {
+    @apply overflow-hidden;
   }
 }

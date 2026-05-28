@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -22,6 +21,7 @@ model User {
   banExpires         DateTime?
   twoFactorEnabled   Boolean?            @default(false)
   locale             String?
+  lastLoginAt        DateTime?
   sessions           Session[]
   accounts           Account[]
   twofactors         TwoFactor[]
@@ -165,8 +165,8 @@ model OauthClient {
   oauthconsents           OauthConsent[]
 
   @@unique([clientId])
-  @@map("oauth_client")
   @@index([userId])
+  @@map("oauth_client")
 }
 
 model OauthRefreshToken {
@@ -186,10 +186,10 @@ model OauthRefreshToken {
   scopes            String
   oauthaccesstokens OauthAccessToken[]
 
-  @@map("oauth_refresh_token")
   @@index([clientId])
   @@index([sessionId])
   @@index([userId])
+  @@map("oauth_refresh_token")
 }
 
 model OauthAccessToken {
@@ -209,11 +209,11 @@ model OauthAccessToken {
   scopes            String
 
   @@unique([token])
-  @@map("oauth_access_token")
   @@index([clientId])
   @@index([sessionId])
   @@index([userId])
   @@index([refreshId])
+  @@map("oauth_access_token")
 }
 
 model OauthConsent {
@@ -227,7 +227,7 @@ model OauthConsent {
   createdAt   DateTime?
   updatedAt   DateTime?
 
-  @@map("oauth_consent")
   @@index([clientId])
   @@index([userId])
+  @@map("oauth_consent")
 }

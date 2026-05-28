@@ -1,17 +1,17 @@
 'use client'
 
 import {
-  ButtonProps,
   cn,
   Pagination,
   type SortDescriptor,
+  Spinner,
   Table,
   type TableBodyProps,
   TableColumnProps,
   type TableContentProps,
 } from '@heroui/react'
 import { Dispatch, FC, ReactNode, SetStateAction, SVGProps } from 'react'
-import { MultiButton } from './button'
+import { type PagingList } from './paging'
 
 const ChevronUpIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
   <svg
@@ -55,6 +55,14 @@ type PagingParam = {
   page: number
   total: number
   onPageChange: Dispatch<SetStateAction<number>>
+}
+
+type TableActivityProps<T> = {
+  sortDescriptor?: TableContentProps['sortDescriptor']
+  onSortChange?: TableContentProps['onSortChange']
+  paging?: PagingParam
+  isLoading?: boolean
+  pagingList?: PagingList & { items: T[] }
 }
 
 const TablePaging: FC<PagingParam> = ({ rowsPerPage, page, total, onPageChange }) => {
@@ -110,25 +118,30 @@ export const MultiTable = <T extends object>({
   onSortChange,
   columns,
   paging,
+  pagingList,
+  items,
   ...props
-}: TableBodyProps<T> & {
-  ariaLabel: string
-  sortDescriptor?: TableContentProps['sortDescriptor']
-  onSortChange?: TableContentProps['onSortChange']
-  columns: {
-    id: string
-    name: string
-    isRowHeader?: boolean
-    allowsSorting?: boolean
-    minWidth?: number
-    defaultWidth?: TableColumnProps['defaultWidth']
-  }[]
-  paging?: PagingParam
-}) => {
+}: TableBodyProps<T> &
+  TableActivityProps<T> & {
+    ariaLabel: string
+    columns: {
+      id: string
+      name: string
+      isRowHeader?: boolean
+      allowsSorting?: boolean
+      minWidth?: number
+      defaultWidth?: TableColumnProps['defaultWidth']
+    }[]
+  }) => {
+  const pagingParam = paging ?? pagingList
   return (
     <Table>
       <Table.ResizableContainer>
-        <Table.Content aria-label={ariaLabel} sortDescriptor={sortDescriptor} onSortChange={onSortChange}>
+        <Table.Content
+          aria-label={ariaLabel}
+          sortDescriptor={sortDescriptor ?? pagingList?.sortDescriptor}
+          onSortChange={onSortChange ?? pagingList?.onSortChange}
+        >
           <Table.Header>
             {columns.map((column) => (
               <Table.Column
@@ -148,38 +161,15 @@ export const MultiTable = <T extends object>({
               </Table.Column>
             ))}
           </Table.Header>
-          <Table.Body {...props} />
+          <Table.Body {...props} items={items ?? pagingList?.items} />
         </Table.Content>
       </Table.ResizableContainer>
-      <Table.Footer>{paging && <TablePaging {...paging} />}</Table.Footer>
+      <Table.Footer className='relative'>
+        {pagingParam && <TablePaging {...pagingParam} />}
+        <div className='absolute inset-0 z-10 flex items-center justify-center'>
+          {pagingList?.isLoading && <Spinner />}
+        </div>
+      </Table.Footer>
     </Table>
-  )
-}
-
-export const ActionCell: FC<{
-  items: {
-    key: string
-    icon: ReactNode
-    variant?: ButtonProps['variant']
-    onPress?: () => void
-  }[]
-}> = ({ items }) => {
-  return (
-    <Table.Cell className='py-2'>
-      <div className='flex items-center gap-0.5'>
-        {items.map((item) => (
-          <MultiButton
-            key={item.key}
-            variant={item.variant || 'tertiary'}
-            onPress={item.onPress}
-            isIconOnly
-            size='sm'
-            className='h-7 w-7 rounded-sm'
-          >
-            {item.icon}
-          </MultiButton>
-        ))}
-      </div>
-    </Table.Cell>
   )
 }

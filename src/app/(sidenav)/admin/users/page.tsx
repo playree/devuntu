@@ -1,3 +1,4 @@
+import { auth } from '@/lib/auth'
 import { en } from '@/locale/lang-en'
 import { type Metadata } from 'next'
 import { FC } from 'react'
@@ -8,6 +9,6 @@ export const metadata: Metadata = {
 }
 
 const UsersPage: FC = async () => {
-  return <UsersClient />
+  return <UsersClient enabledPassword={auth.options.emailAndPassword.enabled} />
 }
 export default UsersPage

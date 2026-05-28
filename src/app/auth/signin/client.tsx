@@ -1,6 +1,8 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
+import { CheckBoxCtrl } from '@/components/general/checkbox-ctrl'
+import { Grid } from '@/components/general/grid'
 import { GrowMotion } from '@/components/general/grow-motion'
 import { InputCtrl } from '@/components/general/input-ctrl'
 import { InputOtpCtrl } from '@/components/general/input-otp-ctrl'
@@ -16,12 +18,15 @@ import {
   ShieldCheckIcon,
 } from '@/components/icon'
 import { InputCtrlPassword } from '@/components/input-ctrl-pw'
+import { notify } from '@/components/notify'
 import { SingleLayout } from '@/components/single-layout'
 import { parseAction } from '@/lib/action-client'
 import { authClient } from '@/lib/auth-client'
 import { authConfig } from '@/lib/auth-config'
 import { envu, makeUrl } from '@/lib/env-util'
 import {
+  Otp,
+  scOtp,
   scSignInPassword,
   scSignInUsername,
   scTwoFaCode,
@@ -30,9 +35,9 @@ import {
   TwoFaCode,
 } from '@/lib/schema'
 import { intervalOperation } from '@/lib/sleep'
-import { gridStyles, textStyles } from '@/lib/style'
+import { textStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
-import { cn, Separator, toast } from '@heroui/react'
+import { cn, Separator } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AnimatePresence } from 'framer-motion'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -42,11 +47,18 @@ import { getUserByEmail } from './server'
 
 type Mode = '2FA' | null
 
+type Step = {
+  id: 'EMAIL' | 'PASSWORD' | 'OTP' | '2FA'
+  direction: number
+}
+
 const UsernameForm: FC<{
   direction: number
-  next: (email: string) => void
+  next: (email: string, nextStep: 'PASSWORD' | 'OTP') => void
 }> = ({ direction, next }) => {
   const { t, fet } = useLocale()
+  const searchParams = useSearchParams()
+  const reAuthUser = searchParams.get('re')
   const {
     control,
     handleSubmit,
@@ -55,7 +67,7 @@ const UsernameForm: FC<{
     resolver: zodResolver(scSignInUsername),
     // mode: 'onChange',
     defaultValues: {
-      username: '',
+      username: reAuthUser ?? '',
     },
   })
 
@@ -63,9 +75,10 @@ const UsernameForm: FC<{
     <StepMotion direction={direction} className='mx-auto w-11/12 md:w-95'>
       <form
         onSubmit={handleSubmit(async (input) => {
-          //@todo
-          await parseAction(getUserByEmail(input))
-          next(input.username)
+          const res = await parseAction(getUserByEmail(input))
+          if (res?.next) {
+            next(input.username, res.next)
+          }
         })}
       >
         <InputCtrl
@@ -130,7 +143,7 @@ const PasswordForm: FC<{
                   if (twoFactorRedirect) {
                     // 2FA
                     await authClient.twoFactor.sendOtp()
-                    toast.success(t('msg_otp_sent'))
+                    notify.success(t('msg_otp_sent'))
                     next(password)
                     return
                   }
@@ -140,7 +153,7 @@ const PasswordForm: FC<{
                     if (!user.twoFactorEnabled) {
                       await authClient.twoFactor.enable({ password })
                       await authClient.twoFactor.sendOtp()
-                      toast.success(t('msg_otp_sent'))
+                      notify.success(t('msg_otp_sent'))
                       next(password)
                       return
                     }
@@ -157,7 +170,7 @@ const PasswordForm: FC<{
           if (res.error) {
             console.debug(res.error)
             const msg = res.error.code === 'INVALID_EMAIL_OR_PASSWORD' ? t('msg_invalid_email_or_password') : undefined
-            toast.warning(t('auth_ng'), { description: msg })
+            notify.warn(t('auth_ng'), { description: msg })
           }
         })}
       >
@@ -201,17 +214,18 @@ const PasswordForm: FC<{
 
 const OtpForm: FC<{
   direction: number
-  password?: string
+  email?: string
   callbackURL: string
-}> = ({ direction, password, callbackURL }) => {
+  back: () => void
+}> = ({ direction, email, callbackURL, back }) => {
   const { t } = useLocale()
   const router = useRouter()
   const {
     control,
     handleSubmit,
     formState: { isSubmitting },
-  } = useForm<TwoFaCode>({
-    resolver: zodResolver(scTwoFaCode),
+  } = useForm<Otp>({
+    resolver: zodResolver(scOtp),
     // mode: 'onChange',
     defaultValues: {
       otp: '',
@@ -223,18 +237,15 @@ const OtpForm: FC<{
     <StepMotion direction={direction} className='mx-auto w-11/12 md:w-95'>
       <form
         ref={formRef}
-        onSubmit={handleSubmit(async (input) => {
-          if (!password) {
+        onSubmit={handleSubmit(async ({ otp }) => {
+          if (!otp) {
             return
           }
-          const res = await authClient.twoFactor.verifyOtp({
-            code: input.otp,
-            trustDevice: true,
-          })
+          const res = await authClient.signIn.emailOtp({ email, otp })
           await intervalOperation()
           if (res.error) {
             console.debug(res.error)
-            toast.warning(t('auth_ng'))
+            notify.warn(t('auth_ng'))
             return
           }
           router.push(callbackURL)
@@ -257,35 +268,142 @@ const OtpForm: FC<{
           />
         </div>
         <div className='mt-2 flex items-center justify-between'>
-          <MultiButton
-            variant='ghost'
-            icon={<ArrowPathIcon />}
-            coolTime={30}
-            onPress={async () => {
-              const res = await authClient.twoFactor.sendOtp()
-              console.log(res)
-              if (!res.data?.status) {
-                // 一時的な認証状態が有効期限切れなので、サインインを最初からやり直す
-                window.location.reload()
-                return
-              }
-              toast.success(t('msg_otp_sent'))
-            }}
-          >
-            {t('resend')}
-          </MultiButton>
-          <MultiButton type='submit' icon={<ShieldCheckIcon />} isPending={isSubmitting}>
-            {t('auth')}
-          </MultiButton>
+          <div>
+            <MultiButton
+              variant='ghost'
+              icon={<ArrowLeftCircleIcon />}
+              onPress={() => {
+                back()
+              }}
+            >
+              {t('back')}
+            </MultiButton>
+          </div>
+          <div className='flex gap-2'>
+            <MultiButton
+              variant='ghost'
+              icon={<ArrowPathIcon />}
+              coolTime={30}
+              onPress={async () => {
+                if (!email) {
+                  return
+                }
+                const res = await authClient.emailOtp.sendVerificationOtp({ email, type: 'sign-in' })
+                console.log(res)
+                if (!res.data?.success) {
+                  // 一時的な認証状態が有効期限切れなので、サインインを最初からやり直す
+                  window.location.reload()
+                  return
+                }
+                notify.success(t('msg_otp_sent'))
+              }}
+            >
+              {t('resend')}
+            </MultiButton>
+            <MultiButton type='submit' icon={<ShieldCheckIcon />} isPending={isSubmitting}>
+              {t('auth')}
+            </MultiButton>
+          </div>
         </div>
       </form>
     </StepMotion>
   )
 }
 
-type Step = {
-  id: 'EMAIL' | 'PASSWORD' | 'OTP'
+const TwoFaForm: FC<{
   direction: number
+  password?: string
+  callbackURL: string
+}> = ({ direction, password, callbackURL }) => {
+  const { t } = useLocale()
+  const router = useRouter()
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm<TwoFaCode>({
+    resolver: zodResolver(scTwoFaCode),
+    // mode: 'onChange',
+    defaultValues: {
+      otp: '',
+      trustDevice: true,
+    },
+  })
+  const formRef = useRef<HTMLFormElement>(null)
+
+  return (
+    <StepMotion direction={direction} className='mx-auto w-11/12 md:w-95'>
+      <form
+        ref={formRef}
+        onSubmit={handleSubmit(async (input) => {
+          if (!password || !input.otp) {
+            return
+          }
+          const res = await authClient.twoFactor.verifyOtp({
+            code: input.otp,
+            trustDevice: input.trustDevice,
+          })
+          await intervalOperation()
+          if (res.error) {
+            console.debug(res.error)
+            notify.warn(t('auth_ng'))
+            return
+          }
+          router.push(callbackURL)
+        })}
+      >
+        <div className={cn(textStyles().light(), 'text-xs')}>{t('msg_enter_otp')}</div>
+        <div>
+          <InputOtpCtrl
+            className='m-4'
+            control={control}
+            variant='secondary'
+            name='otp'
+            maxLength={6}
+            autoComplete='one-time-code'
+            inputMode='numeric'
+            autoFocus
+            onComplete={() => {
+              formRef.current?.requestSubmit()
+            }}
+          />
+        </div>
+        <div className='mt-2 flex items-center justify-between'>
+          <div>
+            <CheckBoxCtrl
+              id='trustDevice'
+              name='trustDevice'
+              control={control}
+              label={t('trust_device')}
+              variant='secondary'
+            />
+          </div>
+          <div className='flex gap-2'>
+            <MultiButton
+              variant='ghost'
+              icon={<ArrowPathIcon />}
+              coolTime={30}
+              onPress={async () => {
+                const res = await authClient.twoFactor.sendOtp()
+                console.log(res)
+                if (!res.data?.status) {
+                  // 一時的な認証状態が有効期限切れなので、サインインを最初からやり直す
+                  window.location.reload()
+                  return
+                }
+                notify.success(t('msg_otp_sent'))
+              }}
+            >
+              {t('resend')}
+            </MultiButton>
+            <MultiButton type='submit' icon={<ShieldCheckIcon />} isPending={isSubmitting}>
+              {t('auth')}
+            </MultiButton>
+          </div>
+        </div>
+      </form>
+    </StepMotion>
+  )
 }
 
 export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) => {
@@ -305,8 +423,16 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
 
   useEffect(() => {
     if (errorCode && !hasErrorToasted.current) {
-      const msg = errorCode === 'user_not_exist' ? t('msg_user_not_exist') : undefined
-      toast.warning(t('auth_ng'), { description: msg })
+      let msg
+      switch (errorCode) {
+        case 'user_not_exist':
+          msg = t('msg_user_not_exist')
+          break
+        case 'account_not_linked':
+          msg = t('msg_email_not_verified')
+          break
+      }
+      notify.warn(t('auth_ng'), { description: msg })
       hasErrorToasted.current = true
     }
   }, [errorCode, t])
@@ -315,7 +441,7 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
     if (mode === '2FA') {
       return t('twofa_enable')
     }
-    if (step.id === 'OTP') {
+    if (step.id === '2FA') {
       return t('twofa')
     }
     return t('signin')
@@ -323,7 +449,7 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
 
   return (
     <SingleLayout icon={<KeyIcon />} title={viewTitle}>
-      <div className={cn(gridStyles(), 'mb-4')}>
+      <Grid className='mb-4'>
         <div className='col-span-12 flex md:col-span-3'>
           <div className='text-lg'>{t('welcome')}</div>
         </div>
@@ -336,7 +462,7 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
             </div>
           )}
         </div>
-      </div>
+      </Grid>
 
       <div className='min-h-32 overflow-hidden'>
         <AnimatePresence mode='wait' custom={step.direction}>
@@ -344,8 +470,8 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
             <UsernameForm
               key='step_email'
               direction={step.direction}
-              next={(email) => {
-                setStep({ id: 'PASSWORD', direction: 1 })
+              next={(email, nextStep) => {
+                setStep({ id: nextStep, direction: 1 })
                 setEmail(email)
               }}
             />
@@ -360,7 +486,7 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
               callbackURL={callbackURL}
               next={(password) => {
                 setPassword(password)
-                setStep({ id: 'OTP', direction: 1 })
+                setStep({ id: '2FA', direction: 1 })
               }}
               back={() => {
                 setStep({ id: 'EMAIL', direction: -1 })
@@ -370,7 +496,20 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
           )}
 
           {step.id === 'OTP' && (
-            <OtpForm key='step_otp' direction={step.direction} password={password} callbackURL={callbackURL} />
+            <OtpForm
+              key='step_otp'
+              direction={step.direction}
+              email={email}
+              callbackURL={callbackURL}
+              back={() => {
+                setStep({ id: 'EMAIL', direction: -1 })
+                setEmail(undefined)
+              }}
+            />
+          )}
+
+          {step.id === '2FA' && (
+            <TwoFaForm key='step_2fa' direction={step.direction} password={password} callbackURL={callbackURL} />
           )}
         </AnimatePresence>
       </div>
@@ -407,7 +546,7 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
               const { data, error } = await authClient.signIn.passkey()
               console.debug('passkey', { data, error })
               if (error) {
-                toast.warning(t('auth_ng'))
+                notify.warn(t('auth_ng'))
                 return
               }
               router.push(callbackURL)

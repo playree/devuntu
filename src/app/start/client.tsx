@@ -1,6 +1,7 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
+import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input-ctrl'
 import { CheckIcon, Cog6ToothIcon } from '@/components/icon'
 import { InputCtrlPassword } from '@/components/input-ctrl-pw'
@@ -8,7 +9,6 @@ import { SingleLayout } from '@/components/single-layout'
 import { parseAction } from '@/lib/action-client'
 import { makeUrl } from '@/lib/env-util'
 import { CreateAdmin, scCreateAdmin } from '@/lib/schema'
-import { gridStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
@@ -16,7 +16,7 @@ import { FC } from 'react'
 import { useForm } from 'react-hook-form'
 import { createAdmin } from './server'
 
-export const StartClient: FC = () => {
+export const StartClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword }) => {
   const { t, fet } = useLocale()
   const router = useRouter()
 
@@ -30,7 +30,7 @@ export const StartClient: FC = () => {
     defaultValues: {
       name: '',
       email: '',
-      password: '',
+      password: enabledPassword ? '' : undefined,
     },
   })
 
@@ -42,7 +42,7 @@ export const StartClient: FC = () => {
           router.push(makeUrl('/').toString())
         })}
       >
-        <div className={gridStyles()}>
+        <GridBox>
           <div className='col-span-12'>
             <InputCtrl
               control={control}
@@ -65,24 +65,26 @@ export const StartClient: FC = () => {
               isRequired
             />
           </div>
-          <div className='col-span-12'>
-            <InputCtrlPassword
-              control={control}
-              variant='secondary'
-              name='password'
-              label={t('password')}
-              autoComplete='new-password'
-              errorMessage={fet(errors.password)}
-              requiredPasswordScore={4}
-              isRequired
-            />
-          </div>
+          {enabledPassword && (
+            <div className='col-span-12'>
+              <InputCtrlPassword
+                control={control}
+                variant='secondary'
+                name='password'
+                label={t('password')}
+                autoComplete='new-password'
+                errorMessage={fet(errors.password)}
+                requiredPasswordScore={4}
+                isRequired
+              />
+            </div>
+          )}
           <div className='col-span-12 mt-4 text-center'>
             <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
               {t('ok')}
             </MultiButton>
           </div>
-        </div>
+        </GridBox>
       </form>
     </SingleLayout>
   )

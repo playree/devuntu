@@ -33,11 +33,27 @@ const CheckIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, .
   </svg>
 )
 
-export const useModalState = () => {
+export const useModalState = <T = string,>() => {
   const id = nanoid()
   const [key, setKey] = useState({ id, key: id })
   const state = useOverlayState({ onOpenChange: (isOpen) => setKey(({ id }) => ({ id, key: `${id}_${isOpen}` })) })
-  return { ...state, key: key.key }
+  const [targetObj, setTargetObj] = useState<T>()
+
+  return {
+    ...state,
+    key: key.key,
+    open: (target?: T) => {
+      if (target) {
+        setTargetObj(target)
+      }
+      state.open()
+    },
+    close: () => {
+      setTargetObj(undefined)
+      state.close()
+    },
+    target: targetObj,
+  }
 }
 
 export type ModalBaseProps = { state: UseOverlayStateReturn; reload: () => void }
@@ -62,7 +78,7 @@ export const FormModal: FC<{
                 {title.text}
               </Modal.Heading>
             </Modal.Header>
-            <Modal.Body>{children}</Modal.Body>
+            <Modal.Body className='pt-2'>{children}</Modal.Body>
             <Modal.Footer>{hooter}</Modal.Footer>
           </form>
         </Modal.Dialog>
@@ -141,7 +157,7 @@ export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ ui
           <Modal.Footer>
             {!confirmParam?.onlyOk && (
               <MultiButton
-                variant='secondary'
+                variant='ghost'
                 isDisabled={isPending}
                 onPress={() => {
                   if (response.current) {
@@ -155,7 +171,7 @@ export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ ui
               </MultiButton>
             )}
             <MultiButton
-              icon={<CheckIcon className='w-5' />}
+              icon={<CheckIcon />}
               isDisabled={!isAgree}
               isPending={isPending}
               onPress={async () => {
