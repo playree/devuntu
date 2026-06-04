@@ -17,6 +17,7 @@ import {
   UserCircleIcon,
 } from '@/components/icon'
 import { notify } from '@/components/notify'
+import { aaguidMap } from '@/lib/aaguid'
 import { authClient } from '@/lib/auth-client'
 import { authConfig } from '@/lib/auth-config'
 import { dayformat, now } from '@/lib/day'
@@ -25,21 +26,13 @@ import { scUpdatePasskey, UpdatePasskey } from '@/lib/schema'
 import { useLocale } from '@/locale/client'
 import { Accordion, Table } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
 import { useForm } from 'react-hook-form'
 
 const getDeviceNameFromAaguid = (aaguid?: string) => {
-  const aaguidMap: Record<string, string> = {
-    'dd4ec289-e01d-41c9-bb89-70fa845d4bf2': 'iCloud Keychain',
-    'ea9b8d66-4d01-1d21-3ce4-b6b48cb575d4': 'Google Password Manager',
-    '08987058-cadc-4b81-b6e1-30de50dcbe96': 'Windows Hello',
-    '9ddd1817-af5a-4672-a2b9-3e3dd95000a9': 'Windows Hello',
-    '6028b017-b1d4-4c02-b4b3-afcdafc96bb2': 'Windows Hello',
-    'bada5566-a7aa-401f-bd96-45619a55120d': '1Password',
-  }
-
-  return aaguidMap[aaguid ?? ''] ?? 'Any Device'
+  return aaguidMap[aaguid ?? ''] ? aaguidMap[aaguid ?? ''] : { name: 'Any Device' }
 }
 
 const UpdatePasskeyModal: FC<ModalBaseProps & { target: UpdatePasskey }> = ({ state, reload, target }) => {
@@ -185,7 +178,12 @@ const MyPasskey: FC = () => {
         {(item) => (
           <Table.Row key={item.id} id={item.id}>
             <Table.Cell>{item.name}</Table.Cell>
-            <Table.Cell>{item.authenticator}</Table.Cell>
+            <Table.Cell className='flex items-center gap-2'>
+              {item.authenticator.icon_dark && (
+                <Image src={item.authenticator.icon_dark} width={20} height={20} alt='icon' className='h-5 w-auto' />
+              )}
+              {item.authenticator.name}
+            </Table.Cell>
             <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'jp-simple')}</Table.Cell>
             <ActionCell
               items={[

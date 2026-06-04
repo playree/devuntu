@@ -1,6 +1,7 @@
 {
   "name": "devuntu",
   "version": "0.1.0",
+  "buildno": "20260531",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -16,6 +17,7 @@
   "dependencies": {
     "@better-auth/oauth-provider": "^1.6.11",
     "@better-auth/passkey": "^1.6.11",
+    "@dnd-kit/react": "^0.4.0",
     "@heroui/react": "^3.0.5",
     "@heroui/styles": "^3.0.5",
     "@hookform/resolvers": "^5.2.2",
@@ -61,5 +63,5 @@
     "tailwindcss": "^4.3.0",
     "typescript": "^6.0.3"
   },
-  "packageManager": "pnpm@11.1.2"
+  "packageManager": "pnpm@11.4.0"
 }
