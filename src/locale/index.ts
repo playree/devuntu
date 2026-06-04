@@ -11,6 +11,7 @@ export type LocaleItemBase =
   | 'auth_ng'
   | 'authenticator'
   | 'back'
+  | 'buildno'
   | 'cancel'
   | 'client_id'
   | 'client_name'
@@ -62,7 +63,9 @@ export type LocaleItemBase =
   | 'updated_at'
   | 'user_manage'
   | 'username'
+  | 'version'
   | 'welcome'
+  | 'widget_list'
   // for Message
   | 'msg_added_oidc_client'
   | 'msg_added_passkey'

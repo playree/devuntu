@@ -13,3 +13,4 @@ export const getAppInfo = safeAuthAction.metadata({ actionName: 'getAppInfo', ro
     buildno,
   }
 })
+export type GetAppInfoReturnType = Awaited<ReturnType<typeof getAppInfo>>['data']

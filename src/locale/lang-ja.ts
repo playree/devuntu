@@ -13,6 +13,7 @@ export const ja: DefaultLocaleItems = {
   auth_ng: '認証NG',
   authenticator: '認証器',
   back: '戻る',
+  buildno: 'ビルド番号',
   cancel: 'キャンセル',
   client_id: 'クライアントID',
   client_name: 'クライアント名',
@@ -64,7 +65,9 @@ export const ja: DefaultLocaleItems = {
   updated_at: '更新日時',
   user_manage: 'ユーザー管理',
   username: 'ユーザー名',
+  version: 'バージョン',
   welcome: 'ようこそ',
+  widget_list: 'ウィジェット一覧',
 
   msg_added_oidc_client: `クライアントを登録しました。
 上記の接続情報をコピーしてご利用ください。

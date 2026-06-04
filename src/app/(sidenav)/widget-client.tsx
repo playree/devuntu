@@ -1,9 +1,13 @@
 'use client'
 
+import { Grid } from '@/components/general/grid'
+import { InformationCircleIcon } from '@/components/icon'
+import { parseAction } from '@/lib/action-client'
 import { useLocale } from '@/locale/client'
 import { useDraggable } from '@dnd-kit/react'
-import { Card, Skeleton } from '@heroui/react'
-import { FC } from 'react'
+import { Card, Separator, Skeleton } from '@heroui/react'
+import { FC, useEffect, useState } from 'react'
+import { getAppInfo, GetAppInfoReturnType } from './server'
 
 type WidgetFC = FC<{ id: string; editable: boolean }>
 
@@ -18,15 +22,37 @@ export const AppInfoName: FC = () => {
   return t('app_info')
 }
 export const AppInfoWidget: WidgetFC = ({ id, editable }) => {
+  const { t } = useLocale()
   const { ref } = useDraggable({
     id,
     disabled: !editable,
   })
+  const [data, setData] = useState<GetAppInfoReturnType>()
+
+  useEffect(() => {
+    parseAction(getAppInfo()).then((res) => setData(res))
+  }, [])
+
   return (
-    <Card ref={ref} className='h-full w-full pt-2'>
-      <Card.Header>test</Card.Header>
+    <Card ref={ref} className='h-full w-full gap-1 pt-2'>
+      <Card.Header>
+        <div className='flex gap-1 font-bold'>
+          <InformationCircleIcon />
+          {t('app_info')}
+        </div>
+      </Card.Header>
       <Card.Content>
-        <Skeleton className='h-full w-full rounded-xl' />
+        <Separator />
+        {data ? (
+          <Grid>
+            <div className='col-span-4 text-sm font-bold'>{t('version')} :</div>
+            <div className='col-span-8'>{data.version}</div>
+            <div className='col-span-4 text-sm font-bold'>{t('buildno')} :</div>
+            <div className='col-span-8'>{data.buildno}</div>
+          </Grid>
+        ) : (
+          <Skeleton className='h-full min-h-14 w-full rounded-xl' />
+        )}
       </Card.Content>
     </Card>
   )

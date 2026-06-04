@@ -13,6 +13,7 @@ export const en: LocaleItems = {
   auth_ng: 'Authentication failed',
   authenticator: 'Authenticator',
   back: 'Back',
+  buildno: 'Build No',
   cancel: 'Cancel',
   client_id: 'Client ID',
   client_name: 'Client Name',
@@ -64,7 +65,9 @@ export const en: LocaleItems = {
   updated_at: 'Updated At',
   user_manage: 'User Management',
   username: 'Username',
+  version: 'Version',
   welcome: 'Welcome',
+  widget_list: 'Widget List',
 
   msg_added_oidc_client: `Client registered.
 Please copy and use the connection information above.

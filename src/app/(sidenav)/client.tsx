@@ -41,11 +41,12 @@ const DragItem: FC<{ id: string; editable: boolean; name: FC }> = ({ id, editabl
 }
 
 const AvailableArea: FC<{ editable: boolean; availableWidgets: WidgetSet[] }> = ({ editable, availableWidgets }) => {
+  const { t } = useLocale()
   const { ref, isDropTarget } = useDroppable({ id: 'available' })
 
   return (
     <fieldset ref={ref} className={cn('mx-2 rounded-xl border-2 p-2', isDropTarget ? 'border-blue-300' : '')}>
-      <legend className='px-2 text-sm text-gray-500'>aaa</legend>
+      <legend className='px-2 text-sm text-gray-500'>{t('widget_list')}</legend>
       <div className='flex min-h-7 gap-2'>
         {availableWidgets.map((widget) => (
           <DragItem key={widget.id} id={widget.id} name={widget.name} editable={editable} />
