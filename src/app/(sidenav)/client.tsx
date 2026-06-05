@@ -8,7 +8,7 @@ import { useLocale } from '@/locale/client'
 import { DragDropProvider, useDraggable, useDroppable } from '@dnd-kit/react'
 import { Chip, cn } from '@heroui/react'
 import { FC, ReactNode, useMemo, useState } from 'react'
-import { AppInfoWidget, WidgetSet, WidgetStore } from './widget-client'
+import { WidgetMap, WidgetSet, WidgetStore } from './widget-client'
 
 const DropArea: FC<{ children?: ReactNode; id: string; editable: boolean }> = ({ children, id, editable }) => {
   const { ref, isDropTarget } = useDroppable({
@@ -132,9 +132,10 @@ const DragDropArea: FC<{ initialLayout: DashboardLayout }> = ({ initialLayout })
           <div className='col-span-12 flex flex-col gap-2 md:col-span-6'>
             {layout.left.map((widgetId, index) => {
               const ariaId = `l-${index}`
+              const Widget = widgetId ? WidgetMap[widgetId].widget : null
               return (
                 <DropArea key={ariaId} id={ariaId} editable={isEditable}>
-                  {widgetId && <AppInfoWidget id={widgetId} editable={isEditable} />}
+                  {widgetId && Widget && <Widget id={widgetId} editable={isEditable} />}
                 </DropArea>
               )
             })}
@@ -142,9 +143,10 @@ const DragDropArea: FC<{ initialLayout: DashboardLayout }> = ({ initialLayout })
           <div className='col-span-12 flex flex-col gap-2 md:col-span-6'>
             {layout.right.map((widgetId, index) => {
               const ariaId = `r-${index}`
+              const Widget = widgetId ? WidgetMap[widgetId].widget : null
               return (
                 <DropArea key={ariaId} id={ariaId} editable={isEditable}>
-                  {widgetId && <AppInfoWidget id={widgetId} editable={isEditable} />}
+                  {widgetId && Widget && <Widget id={widgetId} editable={isEditable} />}
                 </DropArea>
               )
             })}
