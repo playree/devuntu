@@ -94,3 +94,13 @@ export const scUpdatePasskey = z.object({
   name: z.string(),
 })
 export type UpdatePasskey = z.infer<typeof scUpdatePasskey>
+
+export const scDashboardLayout = z.object({
+  left: z.array(z.string().nullable()),
+  right: z.array(z.string().nullable()),
+})
+export type DashboardLayout = z.infer<typeof scDashboardLayout>
+
+export const scUpdateDashboard = z.object({
+  layout: scDashboardLayout,
+})

@@ -96,3 +96,8 @@ export type OauthAccessToken = Prisma.OauthAccessTokenModel
  * 
  */
 export type OauthConsent = Prisma.OauthConsentModel
+/**
+ * Model Dashboard
+ * 
+ */
+export type Dashboard = Prisma.DashboardModel

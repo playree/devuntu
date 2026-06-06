@@ -30,6 +30,7 @@ model User {
   oauthrefreshtokens OauthRefreshToken[]
   oauthaccesstokens  OauthAccessToken[]
   oauthconsents      OauthConsent[]
+  dashboard          Dashboard?
 
   @@unique([email])
   @@map("user")
@@ -230,4 +231,14 @@ model OauthConsent {
   @@index([clientId])
   @@index([userId])
   @@map("oauth_consent")
+}
+
+model Dashboard {
+  userId    String    @id
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  layout    Json
+  createdAt DateTime?
+  updatedAt DateTime?
+
+  @@map("dashboard")
 }
