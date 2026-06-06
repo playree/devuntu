@@ -82,6 +82,7 @@ export type LocaleItemBase =
   | 'msg_invalid_email_or_password'
   | 'msg_otp_sent'
   | 'msg_re_auth'
+  | 'msg_saved'
   | 'msg_updated_target'
   | 'msg_user_not_exist'
   // for Mail

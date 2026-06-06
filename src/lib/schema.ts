@@ -100,3 +100,7 @@ export const scDashboardLayout = z.object({
   right: z.array(z.string().nullable()),
 })
 export type DashboardLayout = z.infer<typeof scDashboardLayout>
+
+export const scUpdateDashboard = z.object({
+  layout: scDashboardLayout,
+})

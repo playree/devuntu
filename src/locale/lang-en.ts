@@ -86,6 +86,7 @@ Please copy and use the connection information above.
   msg_invalid_email_or_password: 'Invalid email or password.',
   msg_otp_sent: 'Verification code sent.',
   msg_re_auth: 'Re-authentication is required to perform the operation.\nPlease try again after re-authentication.',
+  msg_saved: 'Saved.',
   msg_updated_target: 'Updated ${target}.',
   msg_user_not_exist: 'User does not exist.',
 

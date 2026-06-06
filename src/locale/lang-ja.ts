@@ -86,6 +86,7 @@ export const ja: DefaultLocaleItems = {
   msg_invalid_email_or_password: 'Eメールまたはパスワードが違います。',
   msg_otp_sent: '認証コードを送信しました。',
   msg_re_auth: '該当の操作を行うには再認証が必要です。\n認証後に再度実行してください。',
+  msg_saved: '保存しました。',
   msg_updated_target: '${target} を更新しました。',
   msg_user_not_exist: 'ユーザーが存在しません。',
 

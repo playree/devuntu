@@ -3,12 +3,15 @@
 import { MultiButton } from '@/components/general/button'
 import { GridBox } from '@/components/general/grid'
 import { CheckIcon, PencilSquareIcon } from '@/components/icon'
+import { notify } from '@/components/notify'
+import { parseAction } from '@/lib/action-client'
 import { DashboardLayout } from '@/lib/schema'
 import { useLocale } from '@/locale/client'
 import { DragDropProvider, useDraggable, useDroppable } from '@dnd-kit/react'
 import { Chip, cn } from '@heroui/react'
 import { FC, ReactNode, useMemo, useState } from 'react'
-import { WidgetMap, WidgetSet, WidgetStore } from './widget-client'
+import { updateDashboard } from './server'
+import { WidgetDefaultLayout, WidgetMap, WidgetSet, WidgetStore } from './widget-client'
 
 const DropArea: FC<{ children?: ReactNode; id: string; editable: boolean }> = ({ children, id, editable }) => {
   const { ref, isDropTarget } = useDroppable({
@@ -60,6 +63,8 @@ const DragDropArea: FC<{ initialLayout: DashboardLayout }> = ({ initialLayout })
   const { t } = useLocale()
   const [isEditable, setEditable] = useState(false)
   const [layout, setLayout] = useState(initialLayout)
+  const [layoutBackup, setLayoutBackup] = useState<DashboardLayout>()
+
   const availableWidgets = useMemo(() => {
     const usedList: string[] = []
     layout.left.forEach((value) => {
@@ -114,15 +119,40 @@ const DragDropArea: FC<{ initialLayout: DashboardLayout }> = ({ initialLayout })
           </div>
           {isEditable ? (
             <div className='flex gap-2'>
-              <MultiButton size='sm' icon={<CheckIcon />}>
+              <MultiButton
+                size='sm'
+                icon={<CheckIcon />}
+                onPress={async () => {
+                  setEditable(false)
+                  await parseAction(updateDashboard({ layout }))
+                  notify.success(t('msg_saved'))
+                }}
+              >
                 {t('save')}
               </MultiButton>
-              <MultiButton variant='ghost' size='sm' onPress={() => setEditable(false)}>
+              <MultiButton
+                variant='ghost'
+                size='sm'
+                onPress={() => {
+                  if (layoutBackup) {
+                    setLayout(layoutBackup)
+                  }
+                  setEditable(false)
+                }}
+              >
                 {t('cancel')}
               </MultiButton>
             </div>
           ) : (
-            <MultiButton variant='outline' size='sm' icon={<PencilSquareIcon />} onPress={() => setEditable(true)}>
+            <MultiButton
+              variant='outline'
+              size='sm'
+              icon={<PencilSquareIcon />}
+              onPress={() => {
+                setLayoutBackup(layout)
+                setEditable(true)
+              }}
+            >
               {t('edit_dashboard')}
             </MultiButton>
           )}
@@ -157,15 +187,10 @@ const DragDropArea: FC<{ initialLayout: DashboardLayout }> = ({ initialLayout })
   )
 }
 
-export const HomeClient: FC = () => {
-  const ddLayout: DashboardLayout = {
-    left: [null, null, null, null, null],
-    right: [null, null, null, null, null],
-  }
-
+export const HomeClient: FC<{ layout: DashboardLayout | undefined | null }> = ({ layout }) => {
   return (
     <div className='flex flex-col gap-2'>
-      <DragDropArea initialLayout={ddLayout} />
+      <DragDropArea initialLayout={layout ?? WidgetDefaultLayout} />
     </div>
   )
 }

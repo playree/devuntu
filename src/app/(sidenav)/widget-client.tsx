@@ -5,6 +5,7 @@ import { ProgressBar } from '@/components/general/progress'
 import { InformationCircleIcon } from '@/components/icon'
 import { parseAction } from '@/lib/action-client'
 import { calcPercent, formatByte, formatTime } from '@/lib/math'
+import { DashboardLayout } from '@/lib/schema'
 import { useLocale } from '@/locale/client'
 import { useDraggable } from '@dnd-kit/react'
 import { Card, Separator, Skeleton } from '@heroui/react'
@@ -118,15 +119,7 @@ export const WidgetMap: Record<string, Omit<WidgetSet, 'id'>> = {
 
 export const WidgetStore: WidgetSet[] = Object.entries(WidgetMap).map(([key, props]) => ({ ...props, id: key }))
 
-// export const WidgetStore: WidgetSet[] = [
-//   {
-//     id: 'app_info',
-//     name: AppInfoName,
-//     widget: AppInfoWidget,
-//   },
-//   {
-//     id: 'server_info',
-//     name: ServerInfoName,
-//     widget: ServerInfoWidget,
-//   },
-// ] as const
+export const WidgetDefaultLayout: DashboardLayout = {
+  left: ['app_info', null, null, null, null],
+  right: ['server_info', null, null, null, null],
+} as const
