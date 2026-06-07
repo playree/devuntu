@@ -15,7 +15,6 @@ import { ContentHeader } from '@/components/header'
 import { ArrowPathIcon, CheckIcon, PencilSquareIcon, PlusIcon, UsersIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
-import { envu } from '@/lib/env-util'
 import { AddOidcClient, scAddOidcClient, scUpdateOidcClient, UpdateOidcClient } from '@/lib/schema'
 import { useLocale } from '@/locale/client'
 import { ButtonGroup, Table, Typography } from '@heroui/react'
@@ -30,7 +29,7 @@ type Step = {
   direction: number
 }
 
-const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
+const AddModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, reload, baseUrl }) => {
   const { t, fet } = useLocale()
   const [step, setStep] = useState<Step>({ id: 'INPUT', direction: 0 })
   const [output, setOutput] = useState<{ clientId: string; clientSecret: string }>()
@@ -141,7 +140,7 @@ const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
                 </div>
                 <div className='col-span-12'>
                   <CopyableField
-                    text={new URL('api/auth', envu.client.NEXT_PUBLIC_URL).toString()}
+                    text={new URL('api/auth', baseUrl).toString()}
                     label={t('issuer_url')}
                     variant='secondary'
                   />
@@ -247,7 +246,7 @@ const UpdateModal: FC<ModalBaseProps & { target: UpdateOidcClient & { requirePkc
   )
 }
 
-export const OidcListClient: FC = () => {
+export const OidcListClient: FC<{ baseUrl: string }> = ({ baseUrl }) => {
   const { t } = useLocale()
   const addModalState = useModalState()
   const updateModalState = useModalState<UpdateOidcClient & { requirePkce: boolean }>()
@@ -328,7 +327,7 @@ export const OidcListClient: FC = () => {
         )}
       </MultiTable>
 
-      <AddModal state={addModalState} reload={list.reload} key={addModalState.key} />
+      <AddModal state={addModalState} reload={list.reload} key={addModalState.key} baseUrl={baseUrl} />
       {updateModalState.target && (
         <UpdateModal
           state={updateModalState}

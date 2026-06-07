@@ -23,7 +23,7 @@ import { SingleLayout } from '@/components/single-layout'
 import { parseAction } from '@/lib/action-client'
 import { authClient } from '@/lib/auth-client'
 import { authConfig } from '@/lib/auth-config'
-import { envu, makeUrl } from '@/lib/env-util'
+import { makePath } from '@/lib/client-utils'
 import {
   Otp,
   scOtp,
@@ -416,7 +416,7 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
   const [email, setEmail] = useState(sessionEmail)
   const [password, setPassword] = useState<string>()
 
-  const callbackURL = searchParams.get('cb') ?? envu.client.NEXT_PUBLIC_URL
+  const callbackURL = searchParams.get('cb') ?? '/'
   const mode = searchParams.get('mode') as Mode
   const errorCode = searchParams.get('error')
   const hasErrorToasted = useRef(false)
@@ -530,7 +530,7 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
               const data = await authClient.signIn.social({
                 provider: 'google',
                 callbackURL,
-                errorCallbackURL: makeUrl(authConfig.path.signIn, { cb: callbackURL }).toString(),
+                errorCallbackURL: makePath(authConfig.path.signIn, { cb: callbackURL }).toString(),
               })
               console.log(data)
             }}

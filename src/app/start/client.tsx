@@ -7,7 +7,6 @@ import { CheckIcon, Cog6ToothIcon } from '@/components/icon'
 import { InputCtrlPassword } from '@/components/input-ctrl-pw'
 import { SingleLayout } from '@/components/single-layout'
 import { parseAction } from '@/lib/action-client'
-import { makeUrl } from '@/lib/env-util'
 import { CreateAdmin, scCreateAdmin } from '@/lib/schema'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -39,7 +38,7 @@ export const StartClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword 
       <form
         onSubmit={handleSubmit(async (input) => {
           await parseAction(createAdmin(input))
-          router.push(makeUrl('/').toString())
+          router.push('/')
         })}
       >
         <GridBox>

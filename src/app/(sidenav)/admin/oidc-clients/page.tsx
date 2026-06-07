@@ -1,3 +1,4 @@
+import { envu } from '@/lib/env-util'
 import { en } from '@/locale/lang-en'
 import { type Metadata } from 'next'
 import { FC } from 'react'
@@ -8,6 +9,6 @@ export const metadata: Metadata = {
 }
 
 const OidcClientsPage: FC = async () => {
-  return <OidcListClient />
+  return <OidcListClient baseUrl={envu.server.BETTER_AUTH_URL} />
 }
 export default OidcClientsPage
