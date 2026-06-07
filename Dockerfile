@@ -41,8 +41,13 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /prisma-cli/node_modules ./prisma-cli/node_modules
 
+# エントリーポイントスクリプトをコピー
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
+
 EXPOSE 3000
 ENV PORT=3000
 
 # CMD ["node", "server.js"]
-CMD ["sh", "-c", "./prisma-cli/node_modules/.bin/prisma migrate deploy --schema=./prisma/schema.prisma && node server.js"
+ENTRYPOINT ["./docker-entrypoint.sh"]
+CMD ["node", "server.js"]
