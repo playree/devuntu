@@ -18,6 +18,11 @@ RUN --mount=type=secret,id=database_url \
     BETTER_AUTH_SECRET=$(cat /run/secrets/better_auth_secret) \
     pnpm build
 
+# Prisma CLI を依存ごと隔離ディレクトリにインストール
+RUN mkdir /prisma-cli && cd /prisma-cli \
+    && npm init -y \
+    && npm install prisma@$(node -p "require('/app/node_modules/prisma/package.json').version")
+
 # ---
 # 実行環境
 # ---
@@ -32,14 +37,12 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-# Prismaのスキーマとマイグレーションファイル、CLIをコピー
+# Prismaのスキーマと、隔離した CLI 一式をコピー
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /prisma-cli/node_modules ./prisma-cli/node_modules
 
 EXPOSE 3000
 ENV PORT=3000
 
 # CMD ["node", "server.js"]
-CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && node server.js"]
+CMD ["sh", "-c", "./prisma-cli/node_modules/.bin/prisma migrate deploy --schema=./prisma/schema.prisma && node server.js"
