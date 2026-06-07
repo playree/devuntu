@@ -1,0 +1,32 @@
+services:
+  devuntu:
+    image: devuntu:latest
+    container_name: devuntu
+    ports:
+      - 3000:3000
+    volumes:
+      - ./docker_db:/app/db
+    restart: unless-stopped
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL}
+      - DEFAULT_LOCALE=${DEFAULT_LOCALE}
+      - DATABASE_URL=${DATABASE_URL}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL}
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      - TWO_FA_REQUIRED=${TWO_FA_REQUIRED}
+      - DISABLE_PASSWORD_AUTH=${DISABLE_PASSWORD_AUTH}
+      - SESSION_FRESH_AGE=${SESSION_FRESH_AGE}
+      - MAIN_DEVUNTU_URL=${MAIN_DEVUNTU_URL}
+      - MAIN_DEVUNTU_CLIENT_ID=${MAIN_DEVUNTU_CLIENT_ID}
+      - MAIN_DEVUNTU_CLIENT_SECRET=${MAIN_DEVUNTU_CLIENT_SECRET}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - MAIL_SEND=${MAIL_SEND}
+      - MAIL_FROM=${MAIL_FROM}
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - SENDMAIL_PATH=${SENDMAIL_PATH}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_IGNORE_TLS${SMTP_IGNORE_TLS}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
