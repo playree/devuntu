@@ -38,6 +38,7 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
 # Prismaのスキーマと、隔離した CLI 一式をコピー
+COPY --from=builder /app/prisma.config.ts ./
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /prisma-cli/node_modules ./prisma-cli/node_modules
 
