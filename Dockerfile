@@ -20,27 +20,31 @@ RUN --mount=type=secret,id=database_url \
 
 # Prisma CLI を依存ごと隔離ディレクトリにインストール
 RUN mkdir /prisma-cli && cd /prisma-cli \
-    && npm init -y \
     && npm install prisma@$(node -p "require('/app/node_modules/prisma/package.json').version")
 
 # ---
 # 実行環境
 # ---
 FROM node:24-alpine AS runner
-WORKDIR /app
 
 # curlコマンドをインストール(ヘルスチェック用)
 RUN apk add --no-cache curl
+
+WORKDIR /migrate
+
+# Prisma CLI
+RUN corepack enable pnpm
+COPY --from=builder /app/node_modules/prisma/package.json ./prisma-package.json
+COPY --from=builder /app/prisma.config.ts .
+COPY --from=builder /app/prisma .
+RUN pnpm add -D prisma@$(node -p "require('./prisma-package.json').version")
+
+WORKDIR /app
 
 # 実行に必要なファイルをビルド環境からコピー
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-
-# Prismaのスキーマと、隔離した CLI 一式をコピー
-COPY --from=builder /app/prisma.config.ts ./
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /prisma-cli/node_modules ./prisma-cli/node_modules
 
 # エントリーポイントスクリプトをコピー
 COPY docker-entrypoint.sh ./
