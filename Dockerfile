@@ -21,7 +21,7 @@ RUN --mount=type=secret,id=database_url \
 # ---
 # 実行環境
 # ---
-FROM node:24-alpine AS runner
+FROM node:24-slim AS runner
 WORKDIR /app
 
 # curlコマンドをインストール(ヘルスチェック用)
