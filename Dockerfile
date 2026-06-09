@@ -24,9 +24,6 @@ RUN --mount=type=secret,id=database_url \
 FROM node:24-slim AS runner
 WORKDIR /app
 
-# curlコマンドをインストール(ヘルスチェック用)
-RUN apk add --no-cache curl
-
 # 実行に必要なファイルをビルド環境からコピー
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
