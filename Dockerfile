@@ -20,7 +20,7 @@ RUN --mount=type=secret,id=database_url \
 
 # Prisma CLI を依存ごと隔離ディレクトリにインストール
 RUN mkdir migrate && cd migrate \
-    && npm install prisma@$(node -p "require('/app/node_modules/prisma/package.json').version")
+    && npm install prisma
 
 # ---
 # 実行環境
