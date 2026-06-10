@@ -39,6 +39,7 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/migrate ./migrate
 COPY --from=builder /app/prisma.config.ts ./migrate/prisma.config.ts
 COPY --from=builder /app/prisma ./migrate/prisma
+RUN mkdir /app/db && ln -s /app/db /app/migrate/db
 
 # エントリーポイントスクリプトをコピー
 COPY docker-entrypoint.sh ./
