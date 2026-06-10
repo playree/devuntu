@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-cd /migrate
+cd migrate
 ln -s ../db ./db
 npx prisma migrate deploy
 
