@@ -5,7 +5,7 @@ services:
     ports:
       - 3000:3000
     volumes:
-      - ./docker_db:/app/db
+      - ./db:/app/db
     restart: unless-stopped
     environment:
       - LOG_LEVEL=${LOG_LEVEL:-}
