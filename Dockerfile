@@ -18,7 +18,7 @@ RUN --mount=type=secret,id=database_url \
     BETTER_AUTH_SECRET=$(cat /run/secrets/better_auth_secret) \
     pnpm build
 
-# Prisma CLI を依存ごと隔離ディレクトリにインストール
+# Prisma Migrate用
 RUN mkdir migrate && cd migrate \
     && npm init -y \
     && npm install prisma@$(node -p "require('/app/node_modules/prisma/package.json').version")
@@ -28,6 +28,8 @@ RUN mkdir migrate && cd migrate \
 # ---
 FROM node:24-slim AS runner
 WORKDIR /app
+
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 # 実行に必要なファイルをビルド環境からコピー
 COPY --from=builder /app/public ./public
@@ -45,5 +47,5 @@ RUN chmod +x docker-entrypoint.sh
 EXPOSE 3000
 ENV PORT=3000
 
-# ENTRYPOINT ["./docker-entrypoint.sh"]
+ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["node", "server.js"]
