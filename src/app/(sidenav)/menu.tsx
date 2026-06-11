@@ -12,7 +12,6 @@ import { LocaleSwitch } from '@/components/locale/locale-switch'
 import { LogoSVG } from '@/components/logo'
 import { authClient } from '@/lib/auth-client'
 import { authConfig } from '@/lib/auth-config'
-import { makeUrl } from '@/lib/env-util'
 import { useLocale } from '@/locale/client'
 import { Accordion, Avatar, Button, Card, cn } from '@heroui/react'
 import { useRouter } from 'next/navigation'
@@ -61,7 +60,7 @@ const SignOutButton: FC = () => {
       icon={<ArrowLeftStartOnRectangleIcon />}
       onPress={() => {
         authClient.signOut()
-        router.push(makeUrl(authConfig.path.signIn).toString())
+        router.push(authConfig.path.signIn)
       }}
     >
       {t('signout')}

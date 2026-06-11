@@ -1,19 +1,22 @@
 - [Devuntu](#devuntu)
 - [パッケージ構成](#パッケージ構成)
 - [環境変数](#環境変数)
-  - [NEXT_PUBLIC_URL](#next_public_url)
-  - [DEFAULT_LOCALE](#default_locale)
-  - [DATABASE_URL](#database_url)
-  - [BETTER_AUTH_SECRET](#better_auth_secret)
-  - [GOOGLE_CLIENT_ID](#google_client_id)
-  - [GOOGLE_CLIENT_SECRET](#google_client_secret)
+  - [BETTER\_AUTH\_URL](#better_auth_url)
+  - [DEFAULT\_LOCALE](#default_locale)
+  - [DATABASE\_URL](#database_url)
+  - [BETTER\_AUTH\_SECRET](#better_auth_secret)
+  - [GOOGLE\_CLIENT\_ID](#google_client_id)
+  - [GOOGLE\_CLIENT\_SECRET](#google_client_secret)
   - [開発用](#開発用)
-    - [LOG_LEVEL](#log_level)
+    - [LOG\_LEVEL](#log_level)
 - [開発用](#開発用-1)
   - [インストール](#インストール)
   - [ビルド](#ビルド)
   - [パッケージ更新](#パッケージ更新)
 - [better-auth](#better-auth)
+- [イメージ作成](#イメージ作成)
+  - [Docker Build](#docker-build)
+  - [Docker Hub Push](#docker-hub-push)
 
 # Devuntu
 
@@ -30,7 +33,7 @@
 
 # 環境変数
 
-## NEXT_PUBLIC_URL
+## BETTER_AUTH_URL
 
 運用するベースのURL
 
@@ -82,3 +85,17 @@ pnpm up -i -L
 ```sh
 pnpm dlx auth generate
 ```
+
+# イメージ作成
+
+## Docker Build
+
+```sh
+docker build -f docker/Dockerfile \
+             --secret id=database_url,src=docker/database_url.env \
+             --secret id=better_auth_url,src=docker/better_auth_url.env \
+             --secret id=better_auth_secret,src=docker/better_auth_secret.env \
+             -t devuntu .
+```
+
+## Docker Hub Push

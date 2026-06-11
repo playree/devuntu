@@ -9,10 +9,11 @@ import { NextResponse } from 'next/server'
 import { uuidv7 } from 'uuidv7'
 import { authConfig } from './auth-config'
 import { nowDate } from './day'
-import { envu, makeUrl } from './env-util'
+import { envu } from './env-util'
 import { logger } from './logger'
 import { sendEmailOtp } from './mail'
 import { prisma } from './prisma'
+import { makeUrl } from './server-utils'
 
 const oauthConfigs: GenericOAuthConfig[] = []
 if (
@@ -37,7 +38,6 @@ if (
 
 export const auth = betterAuth({
   appName: envu.server.NEXT_PUBLIC_APP_NAME,
-  baseURL: envu.server.NEXT_PUBLIC_URL,
   session: {
     expiresIn: envu.server.SESSION_EXPIRES_IN,
     freshAge: envu.server.SESSION_FRESH_AGE,

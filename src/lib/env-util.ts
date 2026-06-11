@@ -9,12 +9,6 @@ const client = {
   get NEXT_PUBLIC_APP_NAME() {
     return process.env.NEXT_PUBLIC_APP_NAME || 'Devuntu'
   },
-  get NEXT_PUBLIC_URL() {
-    if (!process.env.NEXT_PUBLIC_URL) {
-      throw errSystemError('NEXT_PUBLIC_URL is not set')
-    }
-    return process.env.NEXT_PUBLIC_URL
-  },
 }
 
 const server = {
@@ -45,6 +39,12 @@ const server = {
       throw errSystemError('BETTER_AUTH_SECRET is not set')
     }
     return process.env.BETTER_AUTH_SECRET
+  },
+  get BETTER_AUTH_URL() {
+    if (!process.env.BETTER_AUTH_URL) {
+      throw errSystemError('BETTER_AUTH_URL is not set')
+    }
+    return process.env.BETTER_AUTH_URL
   },
   get SESSION_EXPIRES_IN() {
     if (!process.env.SESSION_EXPIRES_IN) {
@@ -129,13 +129,3 @@ const server = {
 }
 
 export const envu = { client, server }
-
-export const makeUrl = (path: string, params?: Record<string, string>) => {
-  const url = new URL(path, client.NEXT_PUBLIC_URL)
-  if (params) {
-    Object.entries(params).forEach(([key, value]) => {
-      url.searchParams.append(key, value)
-    })
-  }
-  return url
-}

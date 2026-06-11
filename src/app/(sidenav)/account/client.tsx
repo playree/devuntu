@@ -20,8 +20,9 @@ import { notify } from '@/components/notify'
 import { aaguidMap } from '@/lib/aaguid'
 import { authClient } from '@/lib/auth-client'
 import { authConfig } from '@/lib/auth-config'
+import { makePath } from '@/lib/client-utils'
 import { dayformat, now } from '@/lib/day'
-import { envu, makeUrl } from '@/lib/env-util'
+import { envu } from '@/lib/env-util'
 import { scUpdatePasskey, UpdatePasskey } from '@/lib/schema'
 import { useLocale } from '@/locale/client'
 import { Accordion, Table } from '@heroui/react'
@@ -150,7 +151,7 @@ const MyPasskey: FC = () => {
                 })
                 if (ok) {
                   router.push(
-                    makeUrl(authConfig.path.signIn, {
+                    makePath(authConfig.path.signIn, {
                       cb: window.location.href,
                       re: session?.user.email ?? '',
                     }).toString(),
