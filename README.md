@@ -91,8 +91,8 @@ pnpm dlx auth generate
 ## Docker Build
 
 ```sh
-cd docker
-docker build --secret id=database_url,src=database_url.env \
+docker build -f docker/Dockerfile \
+             --secret id=database_url,src=database_url.env \
              --secret id=better_auth_url,src=better_auth_url.env \
              --secret id=better_auth_secret,src=better_auth_secret.env \
              -t devuntu .

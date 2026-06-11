@@ -5,7 +5,7 @@ FROM node:24-slim AS builder
 WORKDIR /app
 
 # ソースをコピー
-COPY .. .
+COPY . .
 
 # ビルド
 RUN corepack enable pnpm
@@ -42,7 +42,7 @@ COPY --from=builder /app/prisma ./migrate/prisma
 RUN mkdir /app/db && ln -s /app/db /app/migrate/db
 
 # エントリーポイントスクリプトをコピー
-COPY docker-entrypoint.sh ./
+COPY --from=builder /app/docker/docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x docker-entrypoint.sh
 
 EXPOSE 3000
