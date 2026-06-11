@@ -5,7 +5,7 @@ FROM node:24-slim AS builder
 WORKDIR /app
 
 # ソースをコピー
-COPY . .
+COPY .. .
 
 # ビルド
 RUN corepack enable pnpm
