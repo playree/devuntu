@@ -59,6 +59,9 @@ importers:
       framer-motion:
         specifier: ^12.40.0
         version: 12.40.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      jose:
+        specifier: ^6.2.3
+        version: 6.2.3
       nanoid:
         specifier: ^5.1.11
         version: 5.1.11

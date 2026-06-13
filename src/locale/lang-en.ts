@@ -84,6 +84,7 @@ Please copy and use the connection information above.
   msg_email_not_verified: 'Your email address has not been verified.\nPlease log in with your email address.',
   msg_enter_otp: 'Enter the verification code sent to your email address.',
   msg_invalid_email_or_password: 'Invalid email or password.',
+  msg_not_allowed_domain_in_google: 'Google sign in is not allowed for this account.\nPlease sign in with your email or passkey instead.',
   msg_otp_sent: 'Verification code sent.',
   msg_re_auth: 'Re-authentication is required to perform the operation.\nPlease try again after re-authentication.',
   msg_saved: 'Saved.',

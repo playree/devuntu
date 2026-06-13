@@ -431,6 +431,9 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
         case 'account_not_linked':
           msg = t('msg_email_not_verified')
           break
+        case 'unable_to_get_user_info':
+          msg = t('msg_not_allowed_domain_in_google')
+          break
       }
       notify.warn(t('auth_ng'), { description: msg })
       hasErrorToasted.current = true
