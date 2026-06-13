@@ -31,6 +31,7 @@
     "dayjs": "^1.11.21",
     "dotenv": "^17.4.2",
     "framer-motion": "^12.40.0",
+    "jose": "^6.2.3",
     "nanoid": "^5.1.11",
     "next": "16.2.7",
     "next-safe-action": "^8.5.3",
@@ -65,5 +66,5 @@
   "engines": {
     "node": "^24.0.0"
   },
-  "packageManager": "pnpm@11.5.3"
+  "packageManager": "pnpm@11.6.0"
 }

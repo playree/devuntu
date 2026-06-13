@@ -84,6 +84,7 @@ export const ja: DefaultLocaleItems = {
   msg_email_not_verified: 'Eメールが検証されていません。\n一度、Eメールでログインしてください。',
   msg_enter_otp: 'Eメールに届いた認証コードを入力してください。',
   msg_invalid_email_or_password: 'Eメールまたはパスワードが違います。',
+  msg_not_allowed_domain_in_google: 'このアカウントでのGoogleサインインは許可されていません。\nEメール又はパスキーでのサインインをご利用ください。',
   msg_otp_sent: '認証コードを送信しました。',
   msg_re_auth: '該当の操作を行うには再認証が必要です。\n認証後に再度実行してください。',
   msg_saved: '保存しました。',

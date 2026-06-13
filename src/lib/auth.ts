@@ -1,9 +1,10 @@
 import { oauthProvider } from '@better-auth/oauth-provider'
 import { passkey } from '@better-auth/passkey'
-import { APIError, betterAuth } from 'better-auth'
+import { APIError, betterAuth, GoogleProfile } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { nextCookies } from 'better-auth/next-js'
 import { admin, emailOTP, genericOAuth, type GenericOAuthConfig, jwt, twoFactor } from 'better-auth/plugins'
+import { decodeJwt } from 'jose'
 import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { uuidv7 } from 'uuidv7'
@@ -118,6 +119,29 @@ export const auth = betterAuth({
             clientId: envu.server.GOOGLE_CLIENT_ID,
             clientSecret: envu.server.GOOGLE_CLIENT_SECRET,
             overrideUserInfoOnSignIn: true,
+            getUserInfo: async (token) => {
+              if (!token.idToken) {
+                return null
+              }
+              const user = decodeJwt(token.idToken) as GoogleProfile
+
+              // ドメインチェック
+              const domain = user.email?.split('@')[1]
+              if (!user.email_verified || !domain || !envu.server.GOOGLE_ALLOWED_DOMAINS.includes(domain)) {
+                return null
+              }
+
+              return {
+                user: {
+                  id: user.sub,
+                  name: user.name,
+                  email: user.email,
+                  image: user.picture,
+                  emailVerified: user.email_verified,
+                },
+                data: user,
+              }
+            },
           },
         }
       : {}),

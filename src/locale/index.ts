@@ -80,6 +80,7 @@ export type LocaleItemBase =
   | 'msg_email_not_verified'
   | 'msg_enter_otp'
   | 'msg_invalid_email_or_password'
+  | 'msg_not_allowed_domain_in_google'
   | 'msg_otp_sent'
   | 'msg_re_auth'
   | 'msg_saved'

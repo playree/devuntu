@@ -177,6 +177,15 @@ CREATE TABLE "oauth_consent" (
     CONSTRAINT "oauth_consent_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+-- CreateTable
+CREATE TABLE "dashboard" (
+    "userId" TEXT NOT NULL PRIMARY KEY,
+    "layout" JSONB NOT NULL,
+    "createdAt" DATETIME,
+    "updatedAt" DATETIME,
+    CONSTRAINT "dashboard_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "user_email_key" ON "user"("email");
 

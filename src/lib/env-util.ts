@@ -79,6 +79,10 @@ const server = {
   get GOOGLE_CLIENT_SECRET() {
     return process.env.GOOGLE_CLIENT_SECRET
   },
+  get GOOGLE_ALLOWED_DOMAINS() {
+    const domains = process.env.GOOGLE_ALLOWED_DOMAINS
+    return domains ? domains.split(',') : []
+  },
 
   // メール
   get MAIL_SEND() {
