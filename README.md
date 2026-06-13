@@ -99,3 +99,8 @@ docker build -f docker/Dockerfile \
 ```
 
 ## Docker Hub Push
+
+```sh
+docker tag devuntu:latest playree/devuntu:latest
+docker push playree/devuntu:latest
+```
