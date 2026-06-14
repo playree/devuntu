@@ -416,7 +416,8 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
   const [email, setEmail] = useState(sessionEmail)
   const [password, setPassword] = useState<string>()
 
-  const callbackURL = searchParams.get('cb') ?? '/'
+  const clientId = searchParams.get('client_id')
+  const callbackURL = clientId ? makePath('/api/auth/oauth2/authorize', searchParams) : (searchParams.get('cb') ?? '/')
   const mode = searchParams.get('mode') as Mode
   const errorCode = searchParams.get('error')
   const hasErrorToasted = useRef(false)
@@ -533,7 +534,7 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
               const data = await authClient.signIn.social({
                 provider: 'google',
                 callbackURL,
-                errorCallbackURL: makePath(authConfig.path.signIn, { cb: callbackURL }).toString(),
+                errorCallbackURL: makePath(authConfig.path.signIn, searchParams).toString(),
               })
               console.log(data)
             }}
