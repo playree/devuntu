@@ -2,7 +2,7 @@
 
 import { useLocale } from '@/locale/client'
 import { Button, ErrorMessage, InputGroup, InputProps, Label, ProgressBar, TextField } from '@heroui/react'
-import { zxcvbn } from '@zxcvbn-ts/core'
+import { ZxcvbnFactory } from '@zxcvbn-ts/core'
 import { ChangeEvent, FC, SVGProps, useState } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 
@@ -127,7 +127,8 @@ export const InputCtrlPassword = <
                 {...props}
                 onChange={(event) => {
                   if (requiredPasswordScore) {
-                    const res = zxcvbn(event.target.value)
+                    const zxcvbn = new ZxcvbnFactory()
+                    const res = zxcvbn.check(event.target.value)
                     setPasswordScore(res.score)
                   }
 
