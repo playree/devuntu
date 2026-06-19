@@ -57,7 +57,7 @@ export const SideNavbar: FC<{
       <nav // サイドメニュー
         id='side-menu'
         className={cn(
-          'fixed top-0 left-0 z-40 h-screen w-64 transition-transform',
+          'bg-background fixed top-0 left-0 z-40 h-screen w-64 transition-transform',
           isOpen ? '' : '-translate-x-full lg:translate-x-0',
         )}
       >
