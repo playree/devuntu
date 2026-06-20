@@ -47,6 +47,7 @@ export const en: LocaleItems = {
   password_score_required: '${score} or more required',
   re_auth: 'Re-authentication',
   redirect_uri: 'Redirect URI',
+  release_note: 'Release Note',
   register_passkey: 'Register Passkey',
   registered_passkeys: 'Registered Passkeys',
   reload: 'Reload',

@@ -47,6 +47,7 @@ export const ja: DefaultLocaleItems = {
   password_score_required: '${score}以上が必要',
   re_auth: '再認証',
   redirect_uri: 'リダイレクトURI',
+  release_note: 'リリースノート',
   register_passkey: 'パスキーを登録する',
   registered_passkeys: '登録済みパスキー',
   reload: 'リロード',

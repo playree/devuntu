@@ -45,6 +45,7 @@ export type LocaleItemBase =
   | 'password_score_required'
   | 're_auth'
   | 'redirect_uri'
+  | 'release_note'
   | 'register_passkey'
   | 'registered_passkeys'
   | 'reload'
