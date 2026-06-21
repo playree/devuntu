@@ -3,13 +3,22 @@ import { z } from 'zod'
 
 const reHalfString = /^[a-zA-Z0-9!-/:-@¥[-`{-~ ]*$/
 
-export const zUsername = z.string().min(2, el('@invalid_username')).max(20, el('@invalid_username'))
+export const zName = z.string().min(2, el('@invalid_name')).max(20, el('@invalid_name'))
 export const zEmail = z.email(el('@invalid_email'))
 export const zPassword = z
   .string()
   .min(8, el('@invalid_password'))
   .max(20, el('@invalid_password'))
   .regex(reHalfString, el('@invalid_password'))
+export const zDescription = z.string().max(20, el('@invalid_description'))
+
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+
+export const zImageFile = z
+  .instanceof(File, { message: el('@required_field') })
+  .refine((file) => file.size <= MAX_IMAGE_SIZE, el('@invalid_image_size'))
+  .refine((file) => ACCEPTED_IMAGE_TYPES.includes(file.type), el('@invalid_image_type'))
 
 export const scUUID = z.object({
   id: z.uuidv7(),
@@ -37,7 +46,7 @@ export const scTwoFaCode = z.object({
 export type TwoFaCode = z.infer<typeof scTwoFaCode>
 
 export const scCreateAdmin = z.object({
-  name: zUsername,
+  name: zName,
   email: zEmail,
   password: zPassword.optional(),
 })
@@ -74,7 +83,7 @@ export const scDeleteOidcClient = z.object({
 })
 
 export const scCreateUser = z.object({
-  name: zUsername,
+  name: zName,
   email: zEmail,
   password: zPassword.optional(),
   isAdmin: z.boolean(),
@@ -83,7 +92,7 @@ export type CreateUser = z.infer<typeof scCreateUser>
 
 export const scUpdateUser = z.object({
   id: z.uuidv7(),
-  name: zUsername,
+  name: zName,
   email: zEmail,
   isAdmin: z.boolean(),
 })
@@ -104,3 +113,11 @@ export type DashboardLayout = z.infer<typeof scDashboardLayout>
 export const scUpdateDashboard = z.object({
   layout: scDashboardLayout,
 })
+
+export const scCreateLinkWidget = z.object({
+  name: zName,
+  url: z.url(),
+  description: zDescription,
+  icon: zImageFile.optional(),
+})
+export type CreateLinkWidget = z.infer<typeof scCreateLinkWidget>

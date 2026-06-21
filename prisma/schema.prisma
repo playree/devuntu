@@ -246,8 +246,9 @@ model Dashboard {
 model LinkWidget {
   id          String    @id @default(uuid(7))
   name        String
-  description String
-  iconPath    String
+  url         String
+  description String?
+  iconPath    String?
   createdAt   DateTime?
   updatedAt   DateTime?
 }

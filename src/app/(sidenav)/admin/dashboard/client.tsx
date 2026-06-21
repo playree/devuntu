@@ -1,23 +1,121 @@
 'use client'
 
 import { ActionCell } from '@/components/action-cell'
+import { FileInputCtrl } from '@/components/file-input-ctrl'
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
+import { GridBox } from '@/components/general/grid'
+import { InputCtrl } from '@/components/general/input-ctrl'
+import { FormModal, ModalBaseProps, useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, PencilSquareIcon, PlusIcon, PuzzlePieceIcon, Squares2X2Icon } from '@/components/icon'
+import {
+  ArrowPathIcon,
+  CheckIcon,
+  PencilSquareIcon,
+  PlusIcon,
+  PuzzlePieceIcon,
+  Squares2X2Icon,
+} from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
 import { dayformat } from '@/lib/day'
+import { CreateLinkWidget, scCreateLinkWidget } from '@/lib/schema'
 import { useLocale } from '@/locale/client'
 import { Accordion, ButtonGroup, Table } from '@heroui/react'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { FC } from 'react'
-import { deleteLinkWidget, getLinkWidgets } from './server'
+import { useForm } from 'react-hook-form'
+import { createLinkWidget, deleteLinkWidget, getLinkWidgets } from './server'
 
-export const LinkWidgetsManage: FC = () => {
+const LinkWidgetAddModal: FC<ModalBaseProps> = ({ state, reload }) => {
+  const { t, fet } = useLocale()
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting, errors },
+  } = useForm<CreateLinkWidget>({
+    resolver: zodResolver(scCreateLinkWidget),
+    mode: 'onChange',
+    defaultValues: {
+      name: '',
+      url: '',
+      description: '',
+      icon: undefined,
+    },
+  })
+
+  return (
+    <FormModal
+      state={state}
+      onSubmit={handleSubmit(async (req) => {
+        const res = await parseAction(createLinkWidget(req))
+        notify.success(t('msg_added_target', { target: res.name }))
+        reload()
+        state.close()
+      })}
+      title={{ text: t('add_link'), icon: <PlusIcon /> }}
+      hooter={
+        <>
+          <MultiButton slot='close' variant='ghost'>
+            {t('cancel')}
+          </MultiButton>
+          <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
+            {t('ok')}
+          </MultiButton>
+        </>
+      }
+    >
+      <GridBox>
+        <div className='col-span-12'>
+          <InputCtrl
+            control={control}
+            variant='secondary'
+            name='name'
+            label={t('name')}
+            errorMessage={fet(errors.name)}
+            isRequired
+            autoFocus
+          />
+        </div>
+        <div className='col-span-12'>
+          <InputCtrl
+            control={control}
+            variant='secondary'
+            name='url'
+            label={t('url')}
+            errorMessage={fet(errors.url)}
+            isRequired
+          />
+        </div>
+        <div className='col-span-12'>
+          <FileInputCtrl
+            control={control}
+            variant='tertiary'
+            name='icon'
+            label={t('icon')}
+            errorMessage={fet(errors.icon)}
+          />
+        </div>
+        <div className='col-span-12'>
+          <InputCtrl
+            control={control}
+            variant='secondary'
+            name='description'
+            label={t('description')}
+            errorMessage={fet(errors.description)}
+          />
+        </div>
+      </GridBox>
+    </FormModal>
+  )
+}
+
+export const LinkWidgetManage: FC = () => {
   const { t } = useLocale()
-  // const addModalState = useModalState()
+  const addModalState = useModalState()
   // const updateModalState = useModalState<UpdateUser>()
 
   const list = usePagingList({
@@ -33,7 +131,7 @@ export const LinkWidgetsManage: FC = () => {
   return (
     <FlexCol>
       <ContentHeader>
-        <MultiButton isIconOnly tooltip={t('add_user')}>
+        <MultiButton isIconOnly tooltip={t('add_link')} onPress={() => addModalState.open()}>
           <PlusIcon />
         </MultiButton>
         <MultiButton isIconOnly tooltip={t('reload')} onPress={() => list.reload()}>
@@ -83,8 +181,8 @@ export const LinkWidgetsManage: FC = () => {
         )}
       </MultiTable>
 
-      {/* <AddModal state={addModalState} reload={list.reload} key={addModalState.key} enabledPassword={enabledPassword} />
-      {updateModalState.target && (
+      <LinkWidgetAddModal state={addModalState} reload={list.reload} key={addModalState.key} />
+      {/* {updateModalState.target && (
         <UpdateModal
           state={updateModalState}
           reload={list.reload}
@@ -114,7 +212,7 @@ export const AdminDashboardClient: FC = () => {
           </Accordion.Heading>
           <Accordion.Panel>
             <Accordion.Body className='px-4'>
-              <LinkWidgetsManage />
+              <LinkWidgetManage />
             </Accordion.Body>
           </Accordion.Panel>
         </Accordion.Item>

@@ -1614,6 +1614,7 @@ export type DashboardScalarFieldEnum = (typeof DashboardScalarFieldEnum)[keyof t
 export const LinkWidgetScalarFieldEnum = {
   id: 'id',
   name: 'name',
+  url: 'url',
   description: 'description',
   iconPath: 'iconPath',
   createdAt: 'createdAt',
