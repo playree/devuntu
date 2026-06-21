@@ -117,10 +117,23 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
 
       <div className='mt-4'>
         <Accordion allowsMultipleExpanded hideSeparator defaultExpandedKeys={defaultExpandedKeys}>
-          <MenuButton to='/' text={t('dashboard')} icon={<Squares2X2Icon />} closeMenu={closeMenu} />
-          <MenuButton to='/account' text={t('account')} icon={<UserCircleIcon />} closeMenu={closeMenu} />
+          <MenuButton // ダッシュボード
+            to='/'
+            text={t('dashboard')}
+            icon={<Squares2X2Icon />}
+            closeMenu={closeMenu}
+          />
+          <MenuButton // アカウント
+            to='/account'
+            text={t('account')}
+            icon={<UserCircleIcon />}
+            closeMenu={closeMenu}
+          />
 
-          <Accordion.Item id='group_admin' hidden={session?.user.role !== 'admin'}>
+          <Accordion.Item // 管理者メニュー
+            id='group_admin'
+            hidden={session?.user.role !== 'admin'}
+          >
             <Accordion.Heading>
               <Accordion.Trigger>
                 {t('admin')}
@@ -129,8 +142,19 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
             </Accordion.Heading>
             <Accordion.Panel>
               <Accordion.Body className='grid grid-cols-1 px-2'>
-                <MenuButton to='/admin/users' text={t('user_manage')} icon={<UsersIcon />} closeMenu={closeMenu} />
-                <MenuButton
+                <MenuButton // ユーザー管理
+                  to='/admin/users'
+                  text={t('user_manage')}
+                  icon={<UsersIcon />}
+                  closeMenu={closeMenu}
+                />
+                <MenuButton // ダッシュボード管理
+                  to='/admin/dashboard'
+                  text={t('dashboard_manage')}
+                  icon={<Squares2X2Icon />}
+                  closeMenu={closeMenu}
+                />
+                <MenuButton // OIDC Client管理
                   to='/admin/oidc-clients'
                   text={t('oidc_clients')}
                   icon={<ServerStackIcon />}

@@ -5,6 +5,7 @@ import { MultiButton } from '@/components/general/button'
 import { CheckBoxCtrl, CheckBoxItem } from '@/components/general/checkbox-ctrl'
 import { OnOffChip } from '@/components/general/chip'
 import { CopyableField } from '@/components/general/copyable-field'
+import { FlexCol } from '@/components/general/flex'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input-ctrl'
 import { FormModal, ModalBaseProps, useModalState } from '@/components/general/modal'
@@ -246,7 +247,7 @@ const UpdateModal: FC<ModalBaseProps & { target: UpdateOidcClient & { requirePkc
   )
 }
 
-export const OidcListClient: FC<{ baseUrl: string }> = ({ baseUrl }) => {
+export const AdminOidcListClient: FC<{ baseUrl: string }> = ({ baseUrl }) => {
   const { t } = useLocale()
   const addModalState = useModalState()
   const updateModalState = useModalState<UpdateOidcClient & { requirePkce: boolean }>()
@@ -262,7 +263,7 @@ export const OidcListClient: FC<{ baseUrl: string }> = ({ baseUrl }) => {
   })
 
   return (
-    <>
+    <FlexCol>
       <ContentHeader icon={<UsersIcon />} title={t('oidc_clients')}>
         <MultiButton isIconOnly tooltip={t('add_client')} onPress={() => addModalState.open()}>
           <PlusIcon />
@@ -336,6 +337,6 @@ export const OidcListClient: FC<{ baseUrl: string }> = ({ baseUrl }) => {
           target={updateModalState.target}
         />
       )}
-    </>
+    </FlexCol>
   )
 }

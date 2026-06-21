@@ -1,6 +1,7 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
+import { FlexCol } from '@/components/general/flex'
 import { GridBox } from '@/components/general/grid'
 import { CheckIcon, PencilSquareIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
@@ -159,7 +160,7 @@ const DragDropArea: FC<{ initialLayout: DashboardLayout }> = ({ initialLayout })
         </div>
 
         <GridBox>
-          <div className='col-span-12 flex flex-col gap-2 md:col-span-6'>
+          <FlexCol className='col-span-12 md:col-span-6'>
             {layout.left.map((widgetId, index) => {
               const ariaId = `l-${index}`
               const Widget = widgetId ? WidgetMap[widgetId].widget : null
@@ -169,8 +170,8 @@ const DragDropArea: FC<{ initialLayout: DashboardLayout }> = ({ initialLayout })
                 </DropArea>
               )
             })}
-          </div>
-          <div className='col-span-12 flex flex-col gap-2 md:col-span-6'>
+          </FlexCol>
+          <FlexCol className='col-span-12 md:col-span-6'>
             {layout.right.map((widgetId, index) => {
               const ariaId = `r-${index}`
               const Widget = widgetId ? WidgetMap[widgetId].widget : null
@@ -180,7 +181,7 @@ const DragDropArea: FC<{ initialLayout: DashboardLayout }> = ({ initialLayout })
                 </DropArea>
               )
             })}
-          </div>
+          </FlexCol>
         </GridBox>
       </DragDropProvider>
     </>
@@ -189,8 +190,8 @@ const DragDropArea: FC<{ initialLayout: DashboardLayout }> = ({ initialLayout })
 
 export const HomeClient: FC<{ layout: DashboardLayout | undefined | null }> = ({ layout }) => {
   return (
-    <div className='flex flex-col gap-2'>
+    <FlexCol>
       <DragDropArea initialLayout={layout ?? WidgetDefaultLayout} />
-    </div>
+    </FlexCol>
   )
 }

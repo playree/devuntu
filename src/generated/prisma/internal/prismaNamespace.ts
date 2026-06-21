@@ -395,7 +395,8 @@ export const ModelName = {
   OauthRefreshToken: 'OauthRefreshToken',
   OauthAccessToken: 'OauthAccessToken',
   OauthConsent: 'OauthConsent',
-  Dashboard: 'Dashboard'
+  Dashboard: 'Dashboard',
+  LinkWidget: 'LinkWidget'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -411,7 +412,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "dashboard"
+    modelProps: "user" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "dashboard" | "linkWidget"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1303,6 +1304,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    LinkWidget: {
+      payload: Prisma.$LinkWidgetPayload<ExtArgs>
+      fields: Prisma.LinkWidgetFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.LinkWidgetFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LinkWidgetPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.LinkWidgetFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LinkWidgetPayload>
+        }
+        findFirst: {
+          args: Prisma.LinkWidgetFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LinkWidgetPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.LinkWidgetFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LinkWidgetPayload>
+        }
+        findMany: {
+          args: Prisma.LinkWidgetFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LinkWidgetPayload>[]
+        }
+        create: {
+          args: Prisma.LinkWidgetCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LinkWidgetPayload>
+        }
+        createMany: {
+          args: Prisma.LinkWidgetCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.LinkWidgetCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LinkWidgetPayload>[]
+        }
+        delete: {
+          args: Prisma.LinkWidgetDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LinkWidgetPayload>
+        }
+        update: {
+          args: Prisma.LinkWidgetUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LinkWidgetPayload>
+        }
+        deleteMany: {
+          args: Prisma.LinkWidgetDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.LinkWidgetUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.LinkWidgetUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LinkWidgetPayload>[]
+        }
+        upsert: {
+          args: Prisma.LinkWidgetUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LinkWidgetPayload>
+        }
+        aggregate: {
+          args: Prisma.LinkWidgetAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateLinkWidget>
+        }
+        groupBy: {
+          args: Prisma.LinkWidgetGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.LinkWidgetGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.LinkWidgetCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.LinkWidgetCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1536,6 +1611,18 @@ export const DashboardScalarFieldEnum = {
 export type DashboardScalarFieldEnum = (typeof DashboardScalarFieldEnum)[keyof typeof DashboardScalarFieldEnum]
 
 
+export const LinkWidgetScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  iconPath: 'iconPath',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type LinkWidgetScalarFieldEnum = (typeof LinkWidgetScalarFieldEnum)[keyof typeof LinkWidgetScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1752,6 +1839,7 @@ export type GlobalOmitConfig = {
   oauthAccessToken?: Prisma.OauthAccessTokenOmit
   oauthConsent?: Prisma.OauthConsentOmit
   dashboard?: Prisma.DashboardOmit
+  linkWidget?: Prisma.LinkWidgetOmit
 }
 
 /* Types for Logging */

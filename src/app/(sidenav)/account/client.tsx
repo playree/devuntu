@@ -2,20 +2,14 @@
 
 import { ActionCell } from '@/components/action-cell'
 import { MultiButton } from '@/components/general/button'
+import { FlexCol } from '@/components/general/flex'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input-ctrl'
 import { FormModal, ModalBaseProps, useConfirmModal, useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import {
-  CheckIcon,
-  FingerPrintIcon,
-  PencilSquareIcon,
-  PlusCircleIcon,
-  TableCellsIcon,
-  UserCircleIcon,
-} from '@/components/icon'
+import { CheckIcon, FingerPrintIcon, PencilSquareIcon, PlusCircleIcon, UserCircleIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { aaguidMap } from '@/lib/aaguid'
 import { authClient } from '@/lib/auth-client'
@@ -122,15 +116,9 @@ const MyPasskey: FC = () => {
   })
 
   return (
-    <div className='flex flex-col gap-2'>
-      <div className='flex items-center justify-between'>
-        <div className='flex gap-1 pl-2'>
-          <TableCellsIcon />
-          {t('registered_passkeys')}
-        </div>
+    <FlexCol>
+      <ContentHeader>
         <MultiButton
-          variant='ghost'
-          size='sm'
           icon={<PlusCircleIcon />}
           onPress={async () => {
             const { data, error } = await authClient.passkey.addPasskey({
@@ -165,7 +153,8 @@ const MyPasskey: FC = () => {
         >
           {t('register_passkey')}
         </MultiButton>
-      </div>
+      </ContentHeader>
+
       <MultiTable
         ariaLabel='passkey list'
         pagingList={list}
@@ -224,7 +213,7 @@ const MyPasskey: FC = () => {
           target={updateModalState.target}
         />
       )}
-    </div>
+    </FlexCol>
   )
 }
 
@@ -233,7 +222,7 @@ export const AccountClient: FC = () => {
   const { t } = useLocale()
 
   return (
-    <>
+    <FlexCol>
       <ContentHeader icon={<UserCircleIcon />} title={t('account')}></ContentHeader>
       <Accordion allowsMultipleExpanded defaultExpandedKeys={defaultExpandedKeys}>
         <Accordion.Item id='passkey'>
@@ -251,6 +240,6 @@ export const AccountClient: FC = () => {
           </Accordion.Panel>
         </Accordion.Item>
       </Accordion>
-    </>
+    </FlexCol>
   )
 }

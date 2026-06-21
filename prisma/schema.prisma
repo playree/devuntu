@@ -242,3 +242,12 @@ model Dashboard {
 
   @@map("dashboard")
 }
+
+model LinkWidget {
+  id          String    @id @default(uuid(7))
+  name        String
+  description String
+  iconPath    String
+  createdAt   DateTime?
+  updatedAt   DateTime?
+}
