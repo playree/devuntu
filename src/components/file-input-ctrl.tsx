@@ -1,5 +1,6 @@
 'use client'
 
+import { TrashIcon } from '@/components/icon'
 import { useLocale } from '@/locale/client'
 import { Button, ButtonProps, ErrorMessage, Label, TextField } from '@heroui/react'
 import Image from 'next/image'
@@ -17,6 +18,7 @@ export const FileInputCtrl = <
   isRequired,
   errorMessage,
   variant,
+  existingUrl,
 }: { variant: ButtonProps['variant'] } & {
   control: Control<TFieldValues>
   name: TName
@@ -24,6 +26,7 @@ export const FileInputCtrl = <
   label?: string
   isRequired?: boolean
   errorMessage?: string
+  existingUrl?: string | null
 }) => {
   return (
     <Controller
@@ -36,7 +39,9 @@ export const FileInputCtrl = <
           isRequired={isRequired}
           errorMessage={errorMessage}
           variant={variant}
-          file={(value as unknown) instanceof File ? value : null}
+          file={(value as unknown) instanceof File ? (value as File) : null}
+          isCleared={value === null}
+          existingUrl={existingUrl}
           onChange={onChange}
           onBlur={onBlur}
           inputRef={ref}
@@ -52,6 +57,8 @@ const FileField = ({
   isRequired,
   errorMessage,
   file,
+  isCleared,
+  existingUrl,
   onChange,
   onBlur,
   inputRef,
@@ -62,7 +69,9 @@ const FileField = ({
   isRequired?: boolean
   errorMessage?: string
   file: File | null
-  onChange: (file: File | undefined) => void
+  isCleared?: boolean
+  existingUrl?: string | null
+  onChange: (file: File | null | undefined) => void
   onBlur: () => void
   inputRef: React.Ref<HTMLInputElement>
 }) => {
@@ -77,6 +86,19 @@ const FileField = ({
     }
   }, [preview])
 
+  // 表示画像: 新規選択ファイル優先、なければ(削除されていなければ)既存URL
+  const displayUrl = preview ?? (isCleared ? null : (existingUrl ?? null))
+  // 削除ボタン: 新規ファイル選択中、または既存表示中(未削除)に表示
+  const showRemove = !!file || (!!existingUrl && !isCleared)
+
+  const handleRemove = () => {
+    // 新規ファイル選択中は既存に戻し、既存表示中はnull(サーバーで削除)
+    onChange(file ? undefined : null)
+    if (localRef.current) {
+      localRef.current.value = ''
+    }
+  }
+
   return (
     <TextField isInvalid={!!errorMessage}>
       <Label>
@@ -85,7 +107,9 @@ const FileField = ({
       </Label>
       <div className='flex items-center gap-3'>
         <div className='flex h-12 w-12 items-center'>
-          {preview && <Image src={preview} alt='preview' width={48} height={48} className='border object-cover' />}
+          {displayUrl && (
+            <Image src={displayUrl} alt='preview' width={48} height={48} className='border object-cover' />
+          )}
         </div>
         <input
           type='file'
@@ -103,6 +127,11 @@ const FileField = ({
         <Button type='button' size='sm' variant={variant} onPress={() => localRef.current?.click()}>
           {t('select_file')}
         </Button>
+        {showRemove && (
+          <Button type='button' size='sm' variant='danger-soft' isIconOnly onPress={handleRemove}>
+            <TrashIcon width={16} />
+          </Button>
+        )}
         <span className='text-default-500 truncate text-sm'>{file?.name ?? t('no_file_selected')}</span>
       </div>
       <ErrorMessage className='min-h-4'>{errorMessage}</ErrorMessage>

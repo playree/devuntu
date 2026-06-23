@@ -21,13 +21,19 @@ import {
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
 import { dayformat } from '@/lib/day'
-import { CreateLinkWidget, scCreateLinkWidget } from '@/lib/schema'
+import { CreateLinkWidget, scCreateLinkWidget, scUpdateLinkWidget, UpdateLinkWidget } from '@/lib/schema'
 import { useLocale } from '@/locale/client'
 import { Accordion, ButtonGroup, Table } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
+import Image from 'next/image'
 import { FC } from 'react'
 import { useForm } from 'react-hook-form'
-import { createLinkWidget, deleteLinkWidget, getLinkWidgets } from './server'
+import { createLinkWidget, deleteLinkWidget, getLinkWidgets, updateLinkWidget } from './server'
+
+type LinkWidgetTarget = Omit<UpdateLinkWidget, 'icon' | 'description'> & {
+  description: string | null
+  iconPath: string | null
+}
 
 const LinkWidgetAddModal: FC<ModalBaseProps> = ({ state, reload }) => {
   const { t, fet } = useLocale()
@@ -113,10 +119,96 @@ const LinkWidgetAddModal: FC<ModalBaseProps> = ({ state, reload }) => {
   )
 }
 
+const LinkWidgetUpdateModal: FC<ModalBaseProps & { target: LinkWidgetTarget }> = ({ state, reload, target }) => {
+  const { t, fet } = useLocale()
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting, errors },
+  } = useForm<UpdateLinkWidget>({
+    resolver: zodResolver(scUpdateLinkWidget),
+    mode: 'onChange',
+    defaultValues: {
+      id: target.id,
+      name: target.name,
+      url: target.url,
+      description: target.description ?? '',
+      icon: undefined,
+    },
+  })
+
+  return (
+    <FormModal
+      state={state}
+      onSubmit={handleSubmit(async (req) => {
+        const res = await parseAction(updateLinkWidget(req))
+        notify.success(t('msg_updated_target', { target: res.name }))
+        reload()
+        state.close()
+      })}
+      title={{ text: t('update'), icon: <PencilSquareIcon /> }}
+      hooter={
+        <>
+          <MultiButton slot='close' variant='ghost'>
+            {t('cancel')}
+          </MultiButton>
+          <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
+            {t('ok')}
+          </MultiButton>
+        </>
+      }
+    >
+      <GridBox>
+        <div className='col-span-12'>
+          <InputCtrl
+            control={control}
+            variant='secondary'
+            name='name'
+            label={t('name')}
+            errorMessage={fet(errors.name)}
+            isRequired
+            autoFocus
+          />
+        </div>
+        <div className='col-span-12'>
+          <InputCtrl
+            control={control}
+            variant='secondary'
+            name='url'
+            label={t('url')}
+            errorMessage={fet(errors.url)}
+            isRequired
+          />
+        </div>
+        <div className='col-span-12'>
+          <FileInputCtrl
+            control={control}
+            variant='tertiary'
+            name='icon'
+            label={t('icon')}
+            errorMessage={fet(errors.icon)}
+            existingUrl={target.iconPath}
+          />
+        </div>
+        <div className='col-span-12'>
+          <InputCtrl
+            control={control}
+            variant='secondary'
+            name='description'
+            label={t('description')}
+            errorMessage={fet(errors.description)}
+          />
+        </div>
+      </GridBox>
+    </FormModal>
+  )
+}
+
 export const LinkWidgetManage: FC = () => {
   const { t } = useLocale()
   const addModalState = useModalState()
-  // const updateModalState = useModalState<UpdateUser>()
+  const updateModalState = useModalState<LinkWidgetTarget>()
 
   const list = usePagingList({
     load: async () => {
@@ -144,8 +236,9 @@ export const LinkWidgetManage: FC = () => {
         ariaLabel='user list'
         pagingList={list}
         columns={[
-          { id: 'name', name: t('username'), isRowHeader: true, allowsSorting: true, minWidth: 80 },
-
+          { id: 'name', name: t('name'), isRowHeader: true, allowsSorting: true, minWidth: 80 },
+          { id: 'url', name: t('url'), allowsSorting: true, minWidth: 120, defaultWidth: '2fr' },
+          { id: 'iconPath', name: t('icon'), minWidth: 60 },
           { id: 'updatedAt', name: t('updated_at'), allowsSorting: true, minWidth: 110 },
           { id: 'action', name: t('action'), allowsSorting: false, defaultWidth: 100 },
         ]}
@@ -153,7 +246,10 @@ export const LinkWidgetManage: FC = () => {
         {(item) => (
           <Table.Row key={item.id} id={item.id}>
             <Table.Cell>{item.name}</Table.Cell>
-
+            <Table.Cell className='font-mono text-xs'>{item.url}</Table.Cell>
+            <Table.Cell>
+              {item.iconPath && <Image src={item.iconPath} width={24} height={24} alt={item.name} />}
+            </Table.Cell>
             <Table.Cell className='font-mono text-xs'>{dayformat(item.updatedAt, 'jp-simple')}</Table.Cell>
             <ActionCell
               items={[
@@ -163,7 +259,7 @@ export const LinkWidgetManage: FC = () => {
                   icon: <PencilSquareIcon />,
                   tooltip: t('update'),
                   onPress: () => {
-                    // updateModalState.open(item)
+                    updateModalState.open(item)
                   },
                 },
                 {
@@ -182,14 +278,14 @@ export const LinkWidgetManage: FC = () => {
       </MultiTable>
 
       <LinkWidgetAddModal state={addModalState} reload={list.reload} key={addModalState.key} />
-      {/* {updateModalState.target && (
-        <UpdateModal
+      {updateModalState.target && (
+        <LinkWidgetUpdateModal
           state={updateModalState}
           reload={list.reload}
           key={updateModalState.key}
           target={updateModalState.target}
         />
-      )} */}
+      )}
     </FlexCol>
   )
 }

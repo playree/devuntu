@@ -121,3 +121,12 @@ export const scCreateLinkWidget = z.object({
   icon: zImageFile.optional(),
 })
 export type CreateLinkWidget = z.infer<typeof scCreateLinkWidget>
+
+export const scUpdateLinkWidget = z.object({
+  id: z.uuidv7(),
+  name: zName,
+  url: z.url(),
+  description: zDescription,
+  icon: zImageFile.nullish(), // File | null | undefined
+})
+export type UpdateLinkWidget = z.infer<typeof scUpdateLinkWidget>

@@ -234,21 +234,23 @@ model OauthConsent {
 }
 
 model Dashboard {
-  userId    String    @id
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @id
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   layout    Json
-  createdAt DateTime?
-  updatedAt DateTime?
+  createdAt DateTime @updatedAt
+  updatedAt DateTime @default(now())
 
   @@map("dashboard")
 }
 
 model LinkWidget {
-  id          String    @id @default(uuid(7))
+  id          String   @id @default(uuid(7))
   name        String
   url         String
   description String?
   iconPath    String?
-  createdAt   DateTime?
-  updatedAt   DateTime?
+  createdAt   DateTime @updatedAt
+  updatedAt   DateTime @default(now())
+
+  @@map("link_widget")
 }

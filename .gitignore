@@ -45,3 +45,6 @@ next-env.d.ts
 
 # work
 /.work/
+
+# upload
+/public/up/*.webp
