@@ -2,17 +2,26 @@
 
 import { Grid } from '@/components/general/grid'
 import { ProgressBar } from '@/components/general/progress'
-import { InformationCircleIcon } from '@/components/icon'
+import { ArrowTopRightOnSquareIcon, InformationCircleIcon } from '@/components/icon'
 import { parseAction } from '@/lib/action-client'
 import { calcPercent, formatByte, formatTime } from '@/lib/math'
 import { DashboardLayout } from '@/lib/schema'
 import { useLocale } from '@/locale/client'
 import { useDraggable } from '@dnd-kit/react'
-import { Card, Separator, Skeleton } from '@heroui/react'
+import { Card, Description, Separator, Skeleton } from '@heroui/react'
+import Image from 'next/image'
+import Link from 'next/link'
 import { FC, useEffect, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { getAppInfo, GetAppInfoReturnType, getServerInfo, GetServerInfoReturnType } from './server'
+import {
+  getAppInfo,
+  GetAppInfoReturnType,
+  getServerInfo,
+  GetServerInfoReturnType,
+  getUserLinkWidgets,
+  GetUserLinkWidgetsReturnType,
+} from './server'
 
 type WidgetFC = FC<{ id: string; editable: boolean }>
 
@@ -38,7 +47,7 @@ export const AppInfoWidget: WidgetFC = ({ id, editable }) => {
   }, [])
 
   return (
-    <Card ref={ref} className='h-full w-full gap-1 pt-2'>
+    <Card ref={ref} className='h-full w-full gap-1 py-2'>
       <Card.Header>
         <div className='flex gap-1 font-bold'>
           <InformationCircleIcon />
@@ -61,9 +70,9 @@ export const AppInfoWidget: WidgetFC = ({ id, editable }) => {
     </Card>
   )
 }
-export const AppInfoName: FC = () => {
+export const AppInfoWidgetName: FC = () => {
   const { t } = useLocale()
-  return t('app_info')
+  return <>{t('app_info')}</>
 }
 
 /**
@@ -82,7 +91,7 @@ export const ServerInfoWidget: WidgetFC = ({ id, editable }) => {
   }, [])
 
   return (
-    <Card ref={ref} className='h-full w-full gap-1 pt-2'>
+    <Card ref={ref} className='h-full w-full gap-1 py-2'>
       <Card.Header>
         <div className='flex gap-1 font-bold'>
           <InformationCircleIcon />
@@ -109,9 +118,9 @@ export const ServerInfoWidget: WidgetFC = ({ id, editable }) => {
     </Card>
   )
 }
-export const ServerInfoName: FC = () => {
+export const ServerInfoWidgetName: FC = () => {
   const { t } = useLocale()
-  return t('server_info')
+  return <>{t('server_info')}</>
 }
 
 /**
@@ -146,7 +155,7 @@ export const ReleaseNoteWidget: WidgetFC = ({ id, editable }) => {
   }, [])
 
   return (
-    <Card ref={ref} className='w-full gap-1 pt-2'>
+    <Card ref={ref} className='w-full gap-1 py-2'>
       <Card.Header>
         <div className='flex gap-1 font-bold'>
           <InformationCircleIcon />
@@ -176,29 +185,82 @@ export const ReleaseNoteWidget: WidgetFC = ({ id, editable }) => {
     </Card>
   )
 }
-export const ReleaseNoteName: FC = () => {
+export const ReleaseNoteWidgetName: FC = () => {
   const { t } = useLocale()
-  return t('release_note')
+  return <>{t('release_note')}</>
 }
 
-export const WidgetMap: Record<string, Omit<WidgetSet, 'id'>> = {
+/**
+ * LinkWidget。サーバー登録されたリンク情報を表示する Widget を生成するファクトリ。
+ */
+type LinkWidgetData = NonNullable<GetUserLinkWidgetsReturnType>[number]
+
+const createLinkWidgetSet = (link: LinkWidgetData): Omit<WidgetSet, 'id'> => {
+  const LinkWidgetName: FC = () => <>Link: {link.name}</>
+
+  const LinkWidget: WidgetFC = ({ id, editable }) => {
+    const { ref } = useDraggable({
+      id,
+      disabled: !editable,
+    })
+
+    return (
+      <Card ref={ref} className='w-full gap-1 py-4'>
+        <Link
+          href={link.url}
+          target='_blank'
+          rel='noopener noreferrer'
+          className='flex items-center gap-2 font-bold'
+          // 編集中はドラッグを優先し、リンク遷移を抑止する
+          onClick={(e) => editable && e.preventDefault()}
+        >
+          {link.iconPath ? (
+            <Image src={link.iconPath} width={24} height={24} alt={link.name} className='rounded' />
+          ) : (
+            <ArrowTopRightOnSquareIcon />
+          )}
+          {link.name}
+          {link.description && <Description>- {link.description}</Description>}
+        </Link>
+      </Card>
+    )
+  }
+
+  return { name: LinkWidgetName, widget: LinkWidget }
+}
+
+const BaseWidgetMap: Record<string, Omit<WidgetSet, 'id'>> = {
   app_info: {
-    name: AppInfoName,
+    name: AppInfoWidgetName,
     widget: AppInfoWidget,
   },
   server_info: {
-    name: ServerInfoName,
+    name: ServerInfoWidgetName,
     widget: ServerInfoWidget,
   },
   release_Note: {
-    name: ReleaseNoteName,
+    name: ReleaseNoteWidgetName,
     widget: ReleaseNoteWidget,
   },
 } as const
 
-export const WidgetStore: WidgetSet[] = Object.entries(WidgetMap).map(([key, props]) => ({ ...props, id: key }))
+/**
+ * 組み込み Widget にサーバー登録された LinkWidget をマージして返すフック。
+ */
+export const useWidgetMap = () => {
+  const [widgetMap, setWidgetMap] = useState<Record<string, Omit<WidgetSet, 'id'>>>(BaseWidgetMap)
+
+  useEffect(() => {
+    parseAction(getUserLinkWidgets()).then((links) => {
+      const linkEntries = Object.fromEntries(links.map((link) => [`link:${link.id}`, createLinkWidgetSet(link)]))
+      setWidgetMap({ ...BaseWidgetMap, ...linkEntries })
+    })
+  }, [])
+
+  return widgetMap
+}
 
 export const WidgetDefaultLayout: DashboardLayout = {
-  left: ['app_info', 'server_info', null, null, null],
-  right: ['release_Note', null, null, null, null],
+  left: ['app_info', 'server_info', null, null, null, null, null, null, null, null],
+  right: ['release_Note', null, null, null, null, null, null, null, null, null],
 } as const

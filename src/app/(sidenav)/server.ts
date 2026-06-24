@@ -9,6 +9,18 @@ import os from 'os'
 import pkg from '../../../package.json'
 
 /**
+ * LinkWidget一覧取得(ダッシュボード表示用)
+ */
+export const getUserLinkWidgets = safeAuthAction
+  .metadata({ actionName: 'getUserLinkWidgets', role: 'user' })
+  .action(async () => {
+    return prisma.linkWidget.findMany({
+      select: { id: true, name: true, url: true, description: true, iconPath: true },
+    })
+  })
+export type GetUserLinkWidgetsReturnType = Awaited<ReturnType<typeof getUserLinkWidgets>>['data']
+
+/**
  * ダッシュボード更新
  */
 export const updateDashboard = safeAuthAction

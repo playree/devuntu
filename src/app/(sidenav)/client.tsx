@@ -12,7 +12,7 @@ import { DragDropProvider, useDraggable, useDroppable } from '@dnd-kit/react'
 import { Chip, cn } from '@heroui/react'
 import { FC, ReactNode, useMemo, useState } from 'react'
 import { updateDashboard } from './server'
-import { WidgetDefaultLayout, WidgetMap, WidgetSet, WidgetStore } from './widget-client'
+import { useWidgetMap, WidgetDefaultLayout, WidgetSet } from './widget-client'
 
 const DropArea: FC<{ children?: ReactNode; id: string; editable: boolean }> = ({ children, id, editable }) => {
   const { ref, isDropTarget } = useDroppable({
@@ -22,7 +22,7 @@ const DropArea: FC<{ children?: ReactNode; id: string; editable: boolean }> = ({
   return (
     <div
       ref={ref}
-      className={cn('col-span-12 min-h-20 md:col-span-6', isDropTarget ? 'rounded-3xl border-2 border-blue-300' : '')}
+      className={cn('col-span-12 min-h-14 md:col-span-6', isDropTarget ? 'rounded-3xl border-2 border-blue-300' : '')}
     >
       <div className={cn('h-full w-full p-0.5', editable ? 'rounded-3xl border-2 border-dashed' : '')}>{children}</div>
     </div>
@@ -65,6 +65,12 @@ const DragDropArea: FC<{ initialLayout: DashboardLayout }> = ({ initialLayout })
   const [isEditable, setEditable] = useState(false)
   const [layout, setLayout] = useState(initialLayout)
   const [layoutBackup, setLayoutBackup] = useState<DashboardLayout>()
+  const widgetMap = useWidgetMap()
+
+  const widgetStore = useMemo<WidgetSet[]>(
+    () => Object.entries(widgetMap).map(([id, props]) => ({ ...props, id })),
+    [widgetMap],
+  )
 
   const availableWidgets = useMemo(() => {
     const usedList: string[] = []
@@ -78,8 +84,8 @@ const DragDropArea: FC<{ initialLayout: DashboardLayout }> = ({ initialLayout })
         usedList.push(value)
       }
     })
-    return WidgetStore.filter((widget) => !usedList.includes(widget.id))
-  }, [layout])
+    return widgetStore.filter((widget) => !usedList.includes(widget.id))
+  }, [layout, widgetStore])
 
   return (
     <>
@@ -163,7 +169,7 @@ const DragDropArea: FC<{ initialLayout: DashboardLayout }> = ({ initialLayout })
           <FlexCol className='col-span-12 md:col-span-6'>
             {layout.left.map((widgetId, index) => {
               const ariaId = `l-${index}`
-              const Widget = widgetId ? WidgetMap[widgetId].widget : null
+              const Widget = widgetId ? widgetMap[widgetId]?.widget : null
               return (
                 <DropArea key={ariaId} id={ariaId} editable={isEditable}>
                   {widgetId && Widget && <Widget id={widgetId} editable={isEditable} />}
@@ -174,7 +180,7 @@ const DragDropArea: FC<{ initialLayout: DashboardLayout }> = ({ initialLayout })
           <FlexCol className='col-span-12 md:col-span-6'>
             {layout.right.map((widgetId, index) => {
               const ariaId = `r-${index}`
-              const Widget = widgetId ? WidgetMap[widgetId].widget : null
+              const Widget = widgetId ? widgetMap[widgetId]?.widget : null
               return (
                 <DropArea key={ariaId} id={ariaId} editable={isEditable}>
                   {widgetId && Widget && <Widget id={widgetId} editable={isEditable} />}
