@@ -140,7 +140,7 @@ export const ReleaseNoteWidget: WidgetFC = ({ id, editable }) => {
   >()
 
   useEffect(() => {
-    fetch('https://api.github.com/repos/playree/wg-mui/releases' /* @todo 暫定 */, {
+    fetch('https://api.github.com/repos/playree/devuntu/releases', {
       headers: {
         Accept: 'application/vnd.github+json',
         'X-GitHub-Api-Version': '2022-11-28',
