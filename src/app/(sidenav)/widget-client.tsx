@@ -5,7 +5,6 @@ import { ProgressBar } from '@/components/general/progress'
 import { ArrowTopRightOnSquareIcon, InformationCircleIcon } from '@/components/icon'
 import { parseAction } from '@/lib/action-client'
 import { calcPercent, formatByte, formatTime } from '@/lib/math'
-import { DashboardLayout } from '@/lib/schema'
 import { useLocale } from '@/locale/client'
 import { useDraggable } from '@dnd-kit/react'
 import { Card, Description, Separator, Skeleton } from '@heroui/react'
@@ -204,24 +203,27 @@ const createLinkWidgetSet = (link: LinkWidgetData): Omit<WidgetSet, 'id'> => {
       disabled: !editable,
     })
 
+    const Content = (
+      <>
+        {link.iconPath ? (
+          <Image src={link.iconPath} width={24} height={24} alt={link.name} className='rounded' />
+        ) : (
+          <ArrowTopRightOnSquareIcon />
+        )}
+        {link.name}
+        {link.description && <Description>- {link.description}</Description>}
+      </>
+    )
+
     return (
       <Card ref={ref} className='w-full gap-1 py-4'>
-        <Link
-          href={link.url}
-          target='_blank'
-          rel='noopener noreferrer'
-          className='flex items-center gap-2 font-bold'
-          // 編集中はドラッグを優先し、リンク遷移を抑止する
-          onClick={(e) => editable && e.preventDefault()}
-        >
-          {link.iconPath ? (
-            <Image src={link.iconPath} width={24} height={24} alt={link.name} className='rounded' />
-          ) : (
-            <ArrowTopRightOnSquareIcon />
-          )}
-          {link.name}
-          {link.description && <Description>- {link.description}</Description>}
-        </Link>
+        {editable ? (
+          <div className='flex items-center gap-2 font-bold'>{Content}</div>
+        ) : (
+          <Link href={link.url} target='_blank' rel='noopener noreferrer' className='flex items-center gap-2 font-bold'>
+            {Content}
+          </Link>
+        )}
       </Card>
     )
   }
@@ -259,8 +261,3 @@ export const useWidgetMap = () => {
 
   return widgetMap
 }
-
-export const WidgetDefaultLayout: DashboardLayout = {
-  left: ['app_info', 'server_info', null, null, null, null, null, null, null, null],
-  right: ['release_Note', null, null, null, null, null, null, null, null, null],
-} as const

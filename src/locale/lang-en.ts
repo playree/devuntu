@@ -24,6 +24,7 @@ export const en: LocaleItems = {
   created_at: 'Created At',
   dashboard: 'Dashboard',
   dashboard_manage: 'Dashboard Management',
+  default_layout_manage: 'Edit Default Layout',
   delete: 'Delete',
   delete_user: 'Delete User',
   description: 'Description',

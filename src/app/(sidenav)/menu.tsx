@@ -84,7 +84,7 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
       <div
         className={cn(
           'absolute inset-0 bg-size-[20px_20px]',
-          'bg-[linear-gradient(to_right,#80808020_1px,transparent_1px),linear-gradient(to_bottom,#80808020_1px,transparent_1px)]',
+          'bg-[linear-gradient(to_right,#80808018_1px,transparent_1px),linear-gradient(to_bottom,#80808018_1px,transparent_1px)]',
           'mask-[linear-gradient(to_right,#000_50%,transparent_100%)]',
         )}
       ></div>

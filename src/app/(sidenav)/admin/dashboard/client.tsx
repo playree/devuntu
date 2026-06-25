@@ -21,14 +21,29 @@ import {
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
 import { dayformat } from '@/lib/day'
-import { CreateLinkWidget, scCreateLinkWidget, scUpdateLinkWidget, UpdateLinkWidget } from '@/lib/schema'
+import {
+  CreateLinkWidget,
+  DashboardLayout,
+  scCreateLinkWidget,
+  scUpdateLinkWidget,
+  UpdateLinkWidget,
+  WidgetDefaultLayout,
+} from '@/lib/schema'
 import { useLocale } from '@/locale/client'
-import { Accordion, ButtonGroup, Table } from '@heroui/react'
+import { Accordion, ButtonGroup, Modal, Table } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Image from 'next/image'
-import { FC } from 'react'
+import { FC, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { createLinkWidget, deleteLinkWidget, getLinkWidgets, updateLinkWidget } from './server'
+import { DashboardLayoutEditor } from '../../client'
+import {
+  createLinkWidget,
+  deleteLinkWidget,
+  getDefaultDashboard,
+  getLinkWidgets,
+  updateDefaultDashboard,
+  updateLinkWidget,
+} from './server'
 
 type LinkWidgetTarget = Omit<UpdateLinkWidget, 'icon' | 'description'> & {
   description: string | null
@@ -290,13 +305,93 @@ export const LinkWidgetManage: FC = () => {
   )
 }
 
+/**
+ * デフォルトレイアウト編集モーダルの本体(レイアウト取得後にマウントされる)
+ */
+const DefaultLayoutEditBody: FC<{ initialLayout: DashboardLayout; onSaved: () => void }> = ({
+  initialLayout,
+  onSaved,
+}) => {
+  const { t } = useLocale()
+  const [layout, setLayout] = useState(initialLayout)
+  const [isSaving, setSaving] = useState(false)
+
+  return (
+    <>
+      <Modal.Body className='bg-background rounded-2xl pt-2'>
+        <DashboardLayoutEditor layout={layout} setLayout={setLayout} editable />
+      </Modal.Body>
+      <Modal.Footer>
+        <MultiButton slot='close' variant='ghost'>
+          {t('cancel')}
+        </MultiButton>
+        <MultiButton
+          icon={<CheckIcon />}
+          isPending={isSaving}
+          onPress={async () => {
+            setSaving(true)
+            try {
+              await parseAction(updateDefaultDashboard({ layout }))
+              notify.success(t('msg_saved'))
+              onSaved()
+            } finally {
+              setSaving(false)
+            }
+          }}
+        >
+          {t('save')}
+        </MultiButton>
+      </Modal.Footer>
+    </>
+  )
+}
+
+/**
+ * デフォルトレイアウト編集ポップアップ
+ */
+const DefaultLayoutEditModal: FC<ModalBaseProps> = ({ state }) => {
+  const { t } = useLocale()
+  const [layout, setLayout] = useState<DashboardLayout>()
+
+  useEffect(() => {
+    parseAction(getDefaultDashboard()).then((res) => setLayout(res ?? WidgetDefaultLayout))
+  }, [])
+
+  return (
+    <Modal.Backdrop variant='blur' isOpen={state.isOpen} onOpenChange={state.setOpen} isDismissable={false}>
+      <Modal.Container placement='top'>
+        <Modal.Dialog className='max-w-3xl'>
+          <Modal.Header>
+            <Modal.Heading className='flex items-center gap-2'>
+              <Squares2X2Icon />
+              {t('default_layout_manage')}
+            </Modal.Heading>
+          </Modal.Header>
+          {layout && <DefaultLayoutEditBody initialLayout={layout} onSaved={state.close} />}
+        </Modal.Dialog>
+      </Modal.Container>
+    </Modal.Backdrop>
+  )
+}
+
 const defaultExpandedKeys = new Set(['link_widget_manage'])
 export const AdminDashboardClient: FC = () => {
   const { t } = useLocale()
+  const editModalState = useModalState()
 
   return (
     <FlexCol>
       <ContentHeader icon={<Squares2X2Icon />} title={t('dashboard_manage')} />
+      <MultiButton
+        size='sm'
+        className='ml-4'
+        variant='tertiary'
+        icon={<PencilSquareIcon />}
+        onPress={() => editModalState.open()}
+      >
+        {t('default_layout_manage')}
+      </MultiButton>
+      <DefaultLayoutEditModal state={editModalState} key={editModalState.key} reload={() => {}} />
       <Accordion allowsMultipleExpanded defaultExpandedKeys={defaultExpandedKeys}>
         <Accordion.Item id='link_widget_manage'>
           <Accordion.Heading>

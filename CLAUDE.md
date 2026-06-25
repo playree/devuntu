@@ -20,3 +20,7 @@
 - src/locale/index.ts
 - src/locale/lang-ja.ts
 - src/locale/lang-en.ts
+
+# 自動実行
+
+- コンパイル確認は不要

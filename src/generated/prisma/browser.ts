@@ -82,3 +82,8 @@ export type Dashboard = Prisma.DashboardModel
  * 
  */
 export type LinkWidget = Prisma.LinkWidgetModel
+/**
+ * Model KeyValueStore
+ * 
+ */
+export type KeyValueStore = Prisma.KeyValueStoreModel

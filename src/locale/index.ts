@@ -22,6 +22,7 @@ export type LocaleItemBase =
   | 'created_at'
   | 'dashboard'
   | 'dashboard_manage'
+  | 'default_layout_manage'
   | 'delete'
   | 'delete_user'
   | 'description'

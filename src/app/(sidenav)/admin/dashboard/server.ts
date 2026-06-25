@@ -2,13 +2,53 @@
 
 import { LinkWidgetUpdateInput } from '@/generated/prisma/models'
 import { safeAuthAction } from '@/lib/action-server'
+import { getString, setString } from '@/lib/kvs'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
-import { scCreateLinkWidget, scUpdateLinkWidget, scUUID } from '@/lib/schema'
+import {
+  scCreateLinkWidget,
+  scDashboardLayout,
+  scUpdateDashboard,
+  scUpdateLinkWidget,
+  scUUID,
+  WidgetDefaultLayout,
+} from '@/lib/schema'
 import { unlink, writeFile } from 'fs/promises'
 import path from 'path'
 import sharp from 'sharp'
 import { uuidv7 } from 'uuidv7'
+
+const DASHBOARD_DEFAULT_LAYOUT_KEY = 'DASHBOARD_DEFAULT_LAYOUT' as const
+
+/**
+ * デフォルトダッシュボードレイアウト取得
+ * 未設定・パース不可の場合はハードコードされた既定値を返す
+ */
+export const getDefaultDashboard = safeAuthAction
+  .metadata({ actionName: 'getDefaultDashboard', role: 'admin' })
+  .action(async () => {
+    const record = await getString(DASHBOARD_DEFAULT_LAYOUT_KEY)
+    if (record?.value) {
+      const parsed = scDashboardLayout.safeParse(JSON.parse(record.value))
+      if (parsed.success) {
+        return parsed.data
+      }
+      logger.warn({ value: record.value }, 'invalid default dashboard layout, fallback to default')
+    }
+    return WidgetDefaultLayout
+  })
+
+/**
+ * デフォルトダッシュボードレイアウト更新
+ */
+export const updateDefaultDashboard = safeAuthAction
+  .metadata({ actionName: 'updateDefaultDashboard', role: 'admin' })
+  .inputSchema(scUpdateDashboard)
+  .action(async ({ parsedInput: { layout } }) => {
+    await setString(DASHBOARD_DEFAULT_LAYOUT_KEY, JSON.stringify(layout))
+    logger.info({ layout }, 'default dashboard layout updated')
+    return { layout }
+  })
 
 /**
  * LinkWidget一覧取得

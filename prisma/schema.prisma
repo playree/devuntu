@@ -254,3 +254,15 @@ model LinkWidget {
 
   @@map("link_widget")
 }
+
+model KeyValueStore {
+  id        String   @id @default(uuid(7))
+  key       String   @unique
+  group     String?
+  value     String
+  createdAt DateTime @updatedAt
+  updatedAt DateTime @default(now())
+
+  @@index([group])
+  @@map("key_value_store")
+}

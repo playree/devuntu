@@ -6,13 +6,13 @@ import { GridBox } from '@/components/general/grid'
 import { CheckIcon, PencilSquareIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
-import { DashboardLayout } from '@/lib/schema'
+import { DashboardLayout, WidgetDefaultLayout } from '@/lib/schema'
 import { useLocale } from '@/locale/client'
 import { DragDropProvider, useDraggable, useDroppable } from '@dnd-kit/react'
 import { Chip, cn } from '@heroui/react'
-import { FC, ReactNode, useMemo, useState } from 'react'
+import { Dispatch, FC, ReactNode, SetStateAction, useMemo, useState } from 'react'
 import { updateDashboard } from './server'
-import { useWidgetMap, WidgetDefaultLayout, WidgetSet } from './widget-client'
+import { useWidgetMap, WidgetSet } from './widget-client'
 
 const DropArea: FC<{ children?: ReactNode; id: string; editable: boolean }> = ({ children, id, editable }) => {
   const { ref, isDropTarget } = useDroppable({
@@ -60,11 +60,15 @@ const AvailableArea: FC<{ editable: boolean; availableWidgets: WidgetSet[] }> = 
   )
 }
 
-const DragDropArea: FC<{ initialLayout: DashboardLayout }> = ({ initialLayout }) => {
-  const { t } = useLocale()
-  const [isEditable, setEditable] = useState(false)
-  const [layout, setLayout] = useState(initialLayout)
-  const [layoutBackup, setLayoutBackup] = useState<DashboardLayout>()
+/**
+ * ドラッグ&ドロップでウィジェット配置を編集する共有エディタ。
+ * レイアウトの state は呼び出し側が保持し、編集可否も外部から制御する。
+ */
+export const DashboardLayoutEditor: FC<{
+  layout: DashboardLayout
+  setLayout: Dispatch<SetStateAction<DashboardLayout>>
+  editable: boolean
+}> = ({ layout, setLayout, editable }) => {
   const widgetMap = useWidgetMap()
 
   const widgetStore = useMemo<WidgetSet[]>(
@@ -88,108 +92,122 @@ const DragDropArea: FC<{ initialLayout: DashboardLayout }> = ({ initialLayout })
   }, [layout, widgetStore])
 
   return (
-    <>
-      <DragDropProvider
-        onDragEnd={(event) => {
-          const sourceId = event.operation.source?.id.toString()
-          const targetId = event.operation.target?.id.toString()
-          console.debug('onDragEnd', { sourceId, targetId })
+    <DragDropProvider
+      onDragEnd={(event) => {
+        const sourceId = event.operation.source?.id.toString()
+        const targetId = event.operation.target?.id.toString()
+        console.debug('onDragEnd', { sourceId, targetId })
 
-          if (sourceId && targetId) {
-            if (targetId === 'available') {
-              setLayout((current) => {
-                const left = current.left.map((value) => (value === sourceId ? null : value))
-                const right = current.right.map((value) => (value === sourceId ? null : value))
-                return { left, right }
-              })
-            } else {
-              const target = targetId.split('-')
-              const lr = target[0]
-              const pos = Number(target[1])
-              setLayout((current) => {
-                const left = current.left.map((value) => (value === sourceId ? null : value))
-                const right = current.right.map((value) => (value === sourceId ? null : value))
-                if (lr === 'l') {
-                  left[pos] = sourceId.toString()
-                } else {
-                  right[pos] = sourceId.toString()
-                }
-                return { left, right }
-              })
-            }
+        if (sourceId && targetId) {
+          if (targetId === 'available') {
+            setLayout((current) => {
+              const left = current.left.map((value) => (value === sourceId ? null : value))
+              const right = current.right.map((value) => (value === sourceId ? null : value))
+              return { left, right }
+            })
+          } else {
+            const target = targetId.split('-')
+            const lr = target[0]
+            const pos = Number(target[1])
+            setLayout((current) => {
+              const left = current.left.map((value) => (value === sourceId ? null : value))
+              const right = current.right.map((value) => (value === sourceId ? null : value))
+              if (lr === 'l') {
+                left[pos] = sourceId.toString()
+              } else {
+                right[pos] = sourceId.toString()
+              }
+              return { left, right }
+            })
           }
-        }}
-      >
-        <div className='flex justify-between'>
-          <div className='flex-1 gap-2'>
-            {isEditable && <AvailableArea editable={isEditable} availableWidgets={availableWidgets} />}
-          </div>
-          {isEditable ? (
-            <div className='flex gap-2'>
-              <MultiButton
-                size='sm'
-                icon={<CheckIcon />}
-                onPress={async () => {
-                  setEditable(false)
-                  await parseAction(updateDashboard({ layout }))
-                  notify.success(t('msg_saved'))
-                }}
-              >
-                {t('save')}
-              </MultiButton>
-              <MultiButton
-                variant='ghost'
-                size='sm'
-                onPress={() => {
-                  if (layoutBackup) {
-                    setLayout(layoutBackup)
-                  }
-                  setEditable(false)
-                }}
-              >
-                {t('cancel')}
-              </MultiButton>
-            </div>
-          ) : (
+        }
+      }}
+    >
+      {editable && (
+        <div className='mb-2'>
+          <AvailableArea editable={editable} availableWidgets={availableWidgets} />
+        </div>
+      )}
+
+      <GridBox>
+        <FlexCol className='col-span-12 md:col-span-6'>
+          {layout.left.map((widgetId, index) => {
+            const ariaId = `l-${index}`
+            const Widget = widgetId ? widgetMap[widgetId]?.widget : null
+            return (
+              <DropArea key={ariaId} id={ariaId} editable={editable}>
+                {widgetId && Widget && <Widget id={widgetId} editable={editable} />}
+              </DropArea>
+            )
+          })}
+        </FlexCol>
+        <FlexCol className='col-span-12 md:col-span-6'>
+          {layout.right.map((widgetId, index) => {
+            const ariaId = `r-${index}`
+            const Widget = widgetId ? widgetMap[widgetId]?.widget : null
+            return (
+              <DropArea key={ariaId} id={ariaId} editable={editable}>
+                {widgetId && Widget && <Widget id={widgetId} editable={editable} />}
+              </DropArea>
+            )
+          })}
+        </FlexCol>
+      </GridBox>
+    </DragDropProvider>
+  )
+}
+
+const DragDropArea: FC<{ initialLayout: DashboardLayout }> = ({ initialLayout }) => {
+  const { t } = useLocale()
+  const [isEditable, setEditable] = useState(false)
+  const [layout, setLayout] = useState(initialLayout)
+  const [layoutBackup, setLayoutBackup] = useState<DashboardLayout>()
+
+  return (
+    <>
+      <div className='flex justify-end'>
+        {isEditable ? (
+          <div className='flex gap-2'>
             <MultiButton
-              variant='outline'
               size='sm'
-              icon={<PencilSquareIcon />}
-              onPress={() => {
-                setLayoutBackup(layout)
-                setEditable(true)
+              icon={<CheckIcon />}
+              onPress={async () => {
+                setEditable(false)
+                await parseAction(updateDashboard({ layout }))
+                notify.success(t('msg_saved'))
               }}
             >
-              {t('edit_dashboard')}
+              {t('save')}
             </MultiButton>
-          )}
-        </div>
+            <MultiButton
+              variant='ghost'
+              size='sm'
+              onPress={() => {
+                if (layoutBackup) {
+                  setLayout(layoutBackup)
+                }
+                setEditable(false)
+              }}
+            >
+              {t('cancel')}
+            </MultiButton>
+          </div>
+        ) : (
+          <MultiButton
+            variant='outline'
+            size='sm'
+            icon={<PencilSquareIcon />}
+            onPress={() => {
+              setLayoutBackup(layout)
+              setEditable(true)
+            }}
+          >
+            {t('edit_dashboard')}
+          </MultiButton>
+        )}
+      </div>
 
-        <GridBox>
-          <FlexCol className='col-span-12 md:col-span-6'>
-            {layout.left.map((widgetId, index) => {
-              const ariaId = `l-${index}`
-              const Widget = widgetId ? widgetMap[widgetId]?.widget : null
-              return (
-                <DropArea key={ariaId} id={ariaId} editable={isEditable}>
-                  {widgetId && Widget && <Widget id={widgetId} editable={isEditable} />}
-                </DropArea>
-              )
-            })}
-          </FlexCol>
-          <FlexCol className='col-span-12 md:col-span-6'>
-            {layout.right.map((widgetId, index) => {
-              const ariaId = `r-${index}`
-              const Widget = widgetId ? widgetMap[widgetId]?.widget : null
-              return (
-                <DropArea key={ariaId} id={ariaId} editable={isEditable}>
-                  {widgetId && Widget && <Widget id={widgetId} editable={isEditable} />}
-                </DropArea>
-              )
-            })}
-          </FlexCol>
-        </GridBox>
-      </DragDropProvider>
+      <DashboardLayoutEditor layout={layout} setLayout={setLayout} editable={isEditable} />
     </>
   )
 }

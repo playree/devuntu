@@ -24,6 +24,7 @@ export const ja: DefaultLocaleItems = {
   created_at: '作成日時',
   dashboard: 'ダッシュボード',
   dashboard_manage: 'ダッシュボード管理',
+  default_layout_manage: 'デフォルトレイアウト編集',
   delete: '削除',
   delete_user: 'ユーザー削除',
   description: '説明',

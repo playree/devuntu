@@ -396,7 +396,8 @@ export const ModelName = {
   OauthAccessToken: 'OauthAccessToken',
   OauthConsent: 'OauthConsent',
   Dashboard: 'Dashboard',
-  LinkWidget: 'LinkWidget'
+  LinkWidget: 'LinkWidget',
+  KeyValueStore: 'KeyValueStore'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -412,7 +413,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "dashboard" | "linkWidget"
+    modelProps: "user" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "dashboard" | "linkWidget" | "keyValueStore"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1378,6 +1379,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    KeyValueStore: {
+      payload: Prisma.$KeyValueStorePayload<ExtArgs>
+      fields: Prisma.KeyValueStoreFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.KeyValueStoreFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeyValueStorePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.KeyValueStoreFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeyValueStorePayload>
+        }
+        findFirst: {
+          args: Prisma.KeyValueStoreFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeyValueStorePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.KeyValueStoreFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeyValueStorePayload>
+        }
+        findMany: {
+          args: Prisma.KeyValueStoreFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeyValueStorePayload>[]
+        }
+        create: {
+          args: Prisma.KeyValueStoreCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeyValueStorePayload>
+        }
+        createMany: {
+          args: Prisma.KeyValueStoreCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.KeyValueStoreCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeyValueStorePayload>[]
+        }
+        delete: {
+          args: Prisma.KeyValueStoreDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeyValueStorePayload>
+        }
+        update: {
+          args: Prisma.KeyValueStoreUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeyValueStorePayload>
+        }
+        deleteMany: {
+          args: Prisma.KeyValueStoreDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.KeyValueStoreUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.KeyValueStoreUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeyValueStorePayload>[]
+        }
+        upsert: {
+          args: Prisma.KeyValueStoreUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeyValueStorePayload>
+        }
+        aggregate: {
+          args: Prisma.KeyValueStoreAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateKeyValueStore>
+        }
+        groupBy: {
+          args: Prisma.KeyValueStoreGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.KeyValueStoreGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.KeyValueStoreCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.KeyValueStoreCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1624,6 +1699,18 @@ export const LinkWidgetScalarFieldEnum = {
 export type LinkWidgetScalarFieldEnum = (typeof LinkWidgetScalarFieldEnum)[keyof typeof LinkWidgetScalarFieldEnum]
 
 
+export const KeyValueStoreScalarFieldEnum = {
+  id: 'id',
+  key: 'key',
+  group: 'group',
+  value: 'value',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type KeyValueStoreScalarFieldEnum = (typeof KeyValueStoreScalarFieldEnum)[keyof typeof KeyValueStoreScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1841,6 +1928,7 @@ export type GlobalOmitConfig = {
   oauthConsent?: Prisma.OauthConsentOmit
   dashboard?: Prisma.DashboardOmit
   linkWidget?: Prisma.LinkWidgetOmit
+  keyValueStore?: Prisma.KeyValueStoreOmit
 }
 
 /* Types for Logging */

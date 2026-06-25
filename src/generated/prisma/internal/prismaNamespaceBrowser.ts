@@ -63,7 +63,8 @@ export const ModelName = {
   OauthAccessToken: 'OauthAccessToken',
   OauthConsent: 'OauthConsent',
   Dashboard: 'Dashboard',
-  LinkWidget: 'LinkWidget'
+  LinkWidget: 'LinkWidget',
+  KeyValueStore: 'KeyValueStore'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -287,6 +288,18 @@ export const LinkWidgetScalarFieldEnum = {
 } as const
 
 export type LinkWidgetScalarFieldEnum = (typeof LinkWidgetScalarFieldEnum)[keyof typeof LinkWidgetScalarFieldEnum]
+
+
+export const KeyValueStoreScalarFieldEnum = {
+  id: 'id',
+  key: 'key',
+  group: 'group',
+  value: 'value',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type KeyValueStoreScalarFieldEnum = (typeof KeyValueStoreScalarFieldEnum)[keyof typeof KeyValueStoreScalarFieldEnum]
 
 
 export const SortOrder = {
