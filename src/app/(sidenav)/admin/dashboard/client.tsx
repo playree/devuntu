@@ -1,6 +1,7 @@
 'use client'
 
 import { ActionCell } from '@/components/action-cell'
+import { DashboardLayoutEditor } from '@/components/dashboard/layout-editor'
 import { FileInputCtrl } from '@/components/file-input-ctrl'
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
@@ -35,7 +36,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import Image from 'next/image'
 import { FC, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { DashboardLayoutEditor } from '../../client'
 import {
   createLinkWidget,
   deleteLinkWidget,
