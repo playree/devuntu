@@ -24,3 +24,8 @@
 # 自動実行
 
 - コンパイル確認は不要
+
+# コードレビュー除外ファイル
+
+- `src/generated/**`
+- `prisma/migrations/**`

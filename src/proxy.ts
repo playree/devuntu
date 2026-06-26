@@ -31,6 +31,12 @@ export const proxy = async (request: NextRequest) => {
     }
 
     // 管理者
+    if (matchCondition(pathname, authConfig.target.admin)) {
+      if (session.user.role !== 'admin') {
+        logger.debug({ pathname, role: session.user.role }, 'proxy admin denied')
+        return NextResponse.rewrite(new URL('/_not-found', request.url), { status: 404 })
+      }
+    }
   }
 
   const response = NextResponse.next()
