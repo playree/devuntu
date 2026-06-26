@@ -40,8 +40,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# sqlite
+# db
 *.sqlite
+/db/
 
 # work
 /.work/
