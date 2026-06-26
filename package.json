@@ -1,14 +1,14 @@
 {
   "name": "devuntu",
   "version": "0.1.1",
-  "buildno": "20260624",
+  "buildno": "20260626",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "dev2": "PORT=3033 next dev",
     "build": "next build",
     "lint": "eslint",
-    "prettier": "prettier --write --ignore-path .gitignore './**/*.{js,jsx,ts,tsx,json,css}'",
+    "prettier": "prettier --write --ignore-path .gitignore --ignore-path .prettierignore './**/*.{js,jsx,ts,tsx,json,css}'",
     "migrate": "prisma migrate dev",
     "generate": "prisma generate",
     "studio": "prisma studio"
