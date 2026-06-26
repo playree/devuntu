@@ -39,3 +39,26 @@ export const getServerInfo = safeAuthAction.metadata({ actionName: 'getServerInf
   }
 })
 export type GetServerInfoReturnType = Awaited<ReturnType<typeof getServerInfo>>['data']
+
+/**
+ * リリースノート取得(GitHub)
+ */
+export const getReleaseNotes = safeAuthAction
+  .metadata({ actionName: 'getReleaseNotes', role: 'user' })
+  .action(async () => {
+    const res = await fetch('https://api.github.com/repos/playree/devuntu/releases', {
+      headers: {
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+      next: {
+        revalidate: 180,
+      },
+    })
+    if (!res.ok) {
+      return []
+    }
+    const json = (await res.json()) as { id: number; name: string; body: string }[]
+    return json.map(({ id, name, body }) => ({ id: String(id), name, body }))
+  })
+export type GetReleaseNotesReturnType = Awaited<ReturnType<typeof getReleaseNotes>>['data']

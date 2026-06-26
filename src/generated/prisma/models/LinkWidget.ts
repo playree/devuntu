@@ -30,8 +30,8 @@ export type LinkWidgetMinAggregateOutputType = {
   url: string | null
   description: string | null
   iconPath: string | null
-  createdAt: Date | null
   updatedAt: Date | null
+  createdAt: Date | null
 }
 
 export type LinkWidgetMaxAggregateOutputType = {
@@ -40,8 +40,8 @@ export type LinkWidgetMaxAggregateOutputType = {
   url: string | null
   description: string | null
   iconPath: string | null
-  createdAt: Date | null
   updatedAt: Date | null
+  createdAt: Date | null
 }
 
 export type LinkWidgetCountAggregateOutputType = {
@@ -50,8 +50,8 @@ export type LinkWidgetCountAggregateOutputType = {
   url: number
   description: number
   iconPath: number
-  createdAt: number
   updatedAt: number
+  createdAt: number
   _all: number
 }
 
@@ -62,8 +62,8 @@ export type LinkWidgetMinAggregateInputType = {
   url?: true
   description?: true
   iconPath?: true
-  createdAt?: true
   updatedAt?: true
+  createdAt?: true
 }
 
 export type LinkWidgetMaxAggregateInputType = {
@@ -72,8 +72,8 @@ export type LinkWidgetMaxAggregateInputType = {
   url?: true
   description?: true
   iconPath?: true
-  createdAt?: true
   updatedAt?: true
+  createdAt?: true
 }
 
 export type LinkWidgetCountAggregateInputType = {
@@ -82,8 +82,8 @@ export type LinkWidgetCountAggregateInputType = {
   url?: true
   description?: true
   iconPath?: true
-  createdAt?: true
   updatedAt?: true
+  createdAt?: true
   _all?: true
 }
 
@@ -165,8 +165,8 @@ export type LinkWidgetGroupByOutputType = {
   url: string
   description: string | null
   iconPath: string | null
-  createdAt: Date
   updatedAt: Date
+  createdAt: Date
   _count: LinkWidgetCountAggregateOutputType | null
   _min: LinkWidgetMinAggregateOutputType | null
   _max: LinkWidgetMaxAggregateOutputType | null
@@ -196,8 +196,8 @@ export type LinkWidgetWhereInput = {
   url?: Prisma.StringFilter<"LinkWidget"> | string
   description?: Prisma.StringNullableFilter<"LinkWidget"> | string | null
   iconPath?: Prisma.StringNullableFilter<"LinkWidget"> | string | null
-  createdAt?: Prisma.DateTimeFilter<"LinkWidget"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"LinkWidget"> | Date | string
+  createdAt?: Prisma.DateTimeFilter<"LinkWidget"> | Date | string
 }
 
 export type LinkWidgetOrderByWithRelationInput = {
@@ -206,8 +206,8 @@ export type LinkWidgetOrderByWithRelationInput = {
   url?: Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   iconPath?: Prisma.SortOrderInput | Prisma.SortOrder
-  createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
 }
 
 export type LinkWidgetWhereUniqueInput = Prisma.AtLeast<{
@@ -219,8 +219,8 @@ export type LinkWidgetWhereUniqueInput = Prisma.AtLeast<{
   url?: Prisma.StringFilter<"LinkWidget"> | string
   description?: Prisma.StringNullableFilter<"LinkWidget"> | string | null
   iconPath?: Prisma.StringNullableFilter<"LinkWidget"> | string | null
-  createdAt?: Prisma.DateTimeFilter<"LinkWidget"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"LinkWidget"> | Date | string
+  createdAt?: Prisma.DateTimeFilter<"LinkWidget"> | Date | string
 }, "id">
 
 export type LinkWidgetOrderByWithAggregationInput = {
@@ -229,8 +229,8 @@ export type LinkWidgetOrderByWithAggregationInput = {
   url?: Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   iconPath?: Prisma.SortOrderInput | Prisma.SortOrder
-  createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
   _count?: Prisma.LinkWidgetCountOrderByAggregateInput
   _max?: Prisma.LinkWidgetMaxOrderByAggregateInput
   _min?: Prisma.LinkWidgetMinOrderByAggregateInput
@@ -245,8 +245,8 @@ export type LinkWidgetScalarWhereWithAggregatesInput = {
   url?: Prisma.StringWithAggregatesFilter<"LinkWidget"> | string
   description?: Prisma.StringNullableWithAggregatesFilter<"LinkWidget"> | string | null
   iconPath?: Prisma.StringNullableWithAggregatesFilter<"LinkWidget"> | string | null
-  createdAt?: Prisma.DateTimeWithAggregatesFilter<"LinkWidget"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"LinkWidget"> | Date | string
+  createdAt?: Prisma.DateTimeWithAggregatesFilter<"LinkWidget"> | Date | string
 }
 
 export type LinkWidgetCreateInput = {
@@ -255,8 +255,8 @@ export type LinkWidgetCreateInput = {
   url: string
   description?: string | null
   iconPath?: string | null
-  createdAt?: Date | string
   updatedAt?: Date | string
+  createdAt?: Date | string
 }
 
 export type LinkWidgetUncheckedCreateInput = {
@@ -265,8 +265,8 @@ export type LinkWidgetUncheckedCreateInput = {
   url: string
   description?: string | null
   iconPath?: string | null
-  createdAt?: Date | string
   updatedAt?: Date | string
+  createdAt?: Date | string
 }
 
 export type LinkWidgetUpdateInput = {
@@ -275,8 +275,8 @@ export type LinkWidgetUpdateInput = {
   url?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   iconPath?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type LinkWidgetUncheckedUpdateInput = {
@@ -285,8 +285,8 @@ export type LinkWidgetUncheckedUpdateInput = {
   url?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   iconPath?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type LinkWidgetCreateManyInput = {
@@ -295,8 +295,8 @@ export type LinkWidgetCreateManyInput = {
   url: string
   description?: string | null
   iconPath?: string | null
-  createdAt?: Date | string
   updatedAt?: Date | string
+  createdAt?: Date | string
 }
 
 export type LinkWidgetUpdateManyMutationInput = {
@@ -305,8 +305,8 @@ export type LinkWidgetUpdateManyMutationInput = {
   url?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   iconPath?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type LinkWidgetUncheckedUpdateManyInput = {
@@ -315,8 +315,8 @@ export type LinkWidgetUncheckedUpdateManyInput = {
   url?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   iconPath?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type LinkWidgetCountOrderByAggregateInput = {
@@ -325,8 +325,8 @@ export type LinkWidgetCountOrderByAggregateInput = {
   url?: Prisma.SortOrder
   description?: Prisma.SortOrder
   iconPath?: Prisma.SortOrder
-  createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
 }
 
 export type LinkWidgetMaxOrderByAggregateInput = {
@@ -335,8 +335,8 @@ export type LinkWidgetMaxOrderByAggregateInput = {
   url?: Prisma.SortOrder
   description?: Prisma.SortOrder
   iconPath?: Prisma.SortOrder
-  createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
 }
 
 export type LinkWidgetMinOrderByAggregateInput = {
@@ -345,8 +345,8 @@ export type LinkWidgetMinOrderByAggregateInput = {
   url?: Prisma.SortOrder
   description?: Prisma.SortOrder
   iconPath?: Prisma.SortOrder
-  createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
 }
 
 
@@ -357,8 +357,8 @@ export type LinkWidgetSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   url?: boolean
   description?: boolean
   iconPath?: boolean
-  createdAt?: boolean
   updatedAt?: boolean
+  createdAt?: boolean
 }, ExtArgs["result"]["linkWidget"]>
 
 export type LinkWidgetSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -367,8 +367,8 @@ export type LinkWidgetSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   url?: boolean
   description?: boolean
   iconPath?: boolean
-  createdAt?: boolean
   updatedAt?: boolean
+  createdAt?: boolean
 }, ExtArgs["result"]["linkWidget"]>
 
 export type LinkWidgetSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -377,8 +377,8 @@ export type LinkWidgetSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   url?: boolean
   description?: boolean
   iconPath?: boolean
-  createdAt?: boolean
   updatedAt?: boolean
+  createdAt?: boolean
 }, ExtArgs["result"]["linkWidget"]>
 
 export type LinkWidgetSelectScalar = {
@@ -387,11 +387,11 @@ export type LinkWidgetSelectScalar = {
   url?: boolean
   description?: boolean
   iconPath?: boolean
-  createdAt?: boolean
   updatedAt?: boolean
+  createdAt?: boolean
 }
 
-export type LinkWidgetOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "url" | "description" | "iconPath" | "createdAt" | "updatedAt", ExtArgs["result"]["linkWidget"]>
+export type LinkWidgetOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "url" | "description" | "iconPath" | "updatedAt" | "createdAt", ExtArgs["result"]["linkWidget"]>
 
 export type $LinkWidgetPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "LinkWidget"
@@ -402,8 +402,8 @@ export type $LinkWidgetPayload<ExtArgs extends runtime.Types.Extensions.Internal
     url: string
     description: string | null
     iconPath: string | null
-    createdAt: Date
     updatedAt: Date
+    createdAt: Date
   }, ExtArgs["result"]["linkWidget"]>
   composites: {}
 }
@@ -832,8 +832,8 @@ export interface LinkWidgetFieldRefs {
   readonly url: Prisma.FieldRef<"LinkWidget", 'String'>
   readonly description: Prisma.FieldRef<"LinkWidget", 'String'>
   readonly iconPath: Prisma.FieldRef<"LinkWidget", 'String'>
-  readonly createdAt: Prisma.FieldRef<"LinkWidget", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"LinkWidget", 'DateTime'>
+  readonly createdAt: Prisma.FieldRef<"LinkWidget", 'DateTime'>
 }
     
 

@@ -1,0 +1,18 @@
+language: 'ja-JP'
+reviews:
+  profile: 'chill'
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  review_details: false
+  auto_review:
+    enabled: true
+    drafts: false
+    ignore_title_keywords: ['wip']
+  path_filters:
+    - '!src/generated/**'
+    - '!prisma/migrations/**'
+    - '!**/*.lock'
+chat:
+  auto_reply: true

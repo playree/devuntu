@@ -26,42 +26,42 @@ export type AggregateDashboard = {
 
 export type DashboardMinAggregateOutputType = {
   userId: string | null
-  createdAt: Date | null
   updatedAt: Date | null
+  createdAt: Date | null
 }
 
 export type DashboardMaxAggregateOutputType = {
   userId: string | null
-  createdAt: Date | null
   updatedAt: Date | null
+  createdAt: Date | null
 }
 
 export type DashboardCountAggregateOutputType = {
   userId: number
   layout: number
-  createdAt: number
   updatedAt: number
+  createdAt: number
   _all: number
 }
 
 
 export type DashboardMinAggregateInputType = {
   userId?: true
-  createdAt?: true
   updatedAt?: true
+  createdAt?: true
 }
 
 export type DashboardMaxAggregateInputType = {
   userId?: true
-  createdAt?: true
   updatedAt?: true
+  createdAt?: true
 }
 
 export type DashboardCountAggregateInputType = {
   userId?: true
   layout?: true
-  createdAt?: true
   updatedAt?: true
+  createdAt?: true
   _all?: true
 }
 
@@ -140,8 +140,8 @@ export type DashboardGroupByArgs<ExtArgs extends runtime.Types.Extensions.Intern
 export type DashboardGroupByOutputType = {
   userId: string
   layout: runtime.JsonValue
-  createdAt: Date
   updatedAt: Date
+  createdAt: Date
   _count: DashboardCountAggregateOutputType | null
   _min: DashboardMinAggregateOutputType | null
   _max: DashboardMaxAggregateOutputType | null
@@ -168,16 +168,16 @@ export type DashboardWhereInput = {
   NOT?: Prisma.DashboardWhereInput | Prisma.DashboardWhereInput[]
   userId?: Prisma.StringFilter<"Dashboard"> | string
   layout?: Prisma.JsonFilter<"Dashboard">
-  createdAt?: Prisma.DateTimeFilter<"Dashboard"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Dashboard"> | Date | string
+  createdAt?: Prisma.DateTimeFilter<"Dashboard"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }
 
 export type DashboardOrderByWithRelationInput = {
   userId?: Prisma.SortOrder
   layout?: Prisma.SortOrder
-  createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
 }
 
@@ -187,16 +187,16 @@ export type DashboardWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.DashboardWhereInput[]
   NOT?: Prisma.DashboardWhereInput | Prisma.DashboardWhereInput[]
   layout?: Prisma.JsonFilter<"Dashboard">
-  createdAt?: Prisma.DateTimeFilter<"Dashboard"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Dashboard"> | Date | string
+  createdAt?: Prisma.DateTimeFilter<"Dashboard"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }, "userId">
 
 export type DashboardOrderByWithAggregationInput = {
   userId?: Prisma.SortOrder
   layout?: Prisma.SortOrder
-  createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
   _count?: Prisma.DashboardCountOrderByAggregateInput
   _max?: Prisma.DashboardMaxOrderByAggregateInput
   _min?: Prisma.DashboardMinOrderByAggregateInput
@@ -208,56 +208,56 @@ export type DashboardScalarWhereWithAggregatesInput = {
   NOT?: Prisma.DashboardScalarWhereWithAggregatesInput | Prisma.DashboardScalarWhereWithAggregatesInput[]
   userId?: Prisma.StringWithAggregatesFilter<"Dashboard"> | string
   layout?: Prisma.JsonWithAggregatesFilter<"Dashboard">
-  createdAt?: Prisma.DateTimeWithAggregatesFilter<"Dashboard"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Dashboard"> | Date | string
+  createdAt?: Prisma.DateTimeWithAggregatesFilter<"Dashboard"> | Date | string
 }
 
 export type DashboardCreateInput = {
   layout: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  createdAt?: Date | string
   updatedAt?: Date | string
+  createdAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutDashboardInput
 }
 
 export type DashboardUncheckedCreateInput = {
   userId: string
   layout: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  createdAt?: Date | string
   updatedAt?: Date | string
+  createdAt?: Date | string
 }
 
 export type DashboardUpdateInput = {
   layout?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutDashboardNestedInput
 }
 
 export type DashboardUncheckedUpdateInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   layout?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type DashboardCreateManyInput = {
   userId: string
   layout: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  createdAt?: Date | string
   updatedAt?: Date | string
+  createdAt?: Date | string
 }
 
 export type DashboardUpdateManyMutationInput = {
   layout?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type DashboardUncheckedUpdateManyInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   layout?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type DashboardNullableScalarRelationFilter = {
@@ -268,20 +268,20 @@ export type DashboardNullableScalarRelationFilter = {
 export type DashboardCountOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   layout?: Prisma.SortOrder
-  createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
 }
 
 export type DashboardMaxOrderByAggregateInput = {
   userId?: Prisma.SortOrder
-  createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
 }
 
 export type DashboardMinOrderByAggregateInput = {
   userId?: Prisma.SortOrder
-  createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
 }
 
 export type DashboardCreateNestedOneWithoutUserInput = {
@@ -318,14 +318,14 @@ export type DashboardUncheckedUpdateOneWithoutUserNestedInput = {
 
 export type DashboardCreateWithoutUserInput = {
   layout: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  createdAt?: Date | string
   updatedAt?: Date | string
+  createdAt?: Date | string
 }
 
 export type DashboardUncheckedCreateWithoutUserInput = {
   layout: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  createdAt?: Date | string
   updatedAt?: Date | string
+  createdAt?: Date | string
 }
 
 export type DashboardCreateOrConnectWithoutUserInput = {
@@ -346,14 +346,14 @@ export type DashboardUpdateToOneWithWhereWithoutUserInput = {
 
 export type DashboardUpdateWithoutUserInput = {
   layout?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type DashboardUncheckedUpdateWithoutUserInput = {
   layout?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 
@@ -361,35 +361,35 @@ export type DashboardUncheckedUpdateWithoutUserInput = {
 export type DashboardSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   userId?: boolean
   layout?: boolean
-  createdAt?: boolean
   updatedAt?: boolean
+  createdAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["dashboard"]>
 
 export type DashboardSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   userId?: boolean
   layout?: boolean
-  createdAt?: boolean
   updatedAt?: boolean
+  createdAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["dashboard"]>
 
 export type DashboardSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   userId?: boolean
   layout?: boolean
-  createdAt?: boolean
   updatedAt?: boolean
+  createdAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["dashboard"]>
 
 export type DashboardSelectScalar = {
   userId?: boolean
   layout?: boolean
-  createdAt?: boolean
   updatedAt?: boolean
+  createdAt?: boolean
 }
 
-export type DashboardOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"userId" | "layout" | "createdAt" | "updatedAt", ExtArgs["result"]["dashboard"]>
+export type DashboardOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"userId" | "layout" | "updatedAt" | "createdAt", ExtArgs["result"]["dashboard"]>
 export type DashboardInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -408,8 +408,8 @@ export type $DashboardPayload<ExtArgs extends runtime.Types.Extensions.InternalA
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     userId: string
     layout: runtime.JsonValue
-    createdAt: Date
     updatedAt: Date
+    createdAt: Date
   }, ExtArgs["result"]["dashboard"]>
   composites: {}
 }
@@ -836,8 +836,8 @@ export interface Prisma__DashboardClient<T, Null = never, ExtArgs extends runtim
 export interface DashboardFieldRefs {
   readonly userId: Prisma.FieldRef<"Dashboard", 'String'>
   readonly layout: Prisma.FieldRef<"Dashboard", 'Json'>
-  readonly createdAt: Prisma.FieldRef<"Dashboard", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Dashboard", 'DateTime'>
+  readonly createdAt: Prisma.FieldRef<"Dashboard", 'DateTime'>
 }
     
 

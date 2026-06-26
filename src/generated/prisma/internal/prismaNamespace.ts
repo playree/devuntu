@@ -1679,8 +1679,8 @@ export type OauthConsentScalarFieldEnum = (typeof OauthConsentScalarFieldEnum)[k
 export const DashboardScalarFieldEnum = {
   userId: 'userId',
   layout: 'layout',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  createdAt: 'createdAt'
 } as const
 
 export type DashboardScalarFieldEnum = (typeof DashboardScalarFieldEnum)[keyof typeof DashboardScalarFieldEnum]
@@ -1692,8 +1692,8 @@ export const LinkWidgetScalarFieldEnum = {
   url: 'url',
   description: 'description',
   iconPath: 'iconPath',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  createdAt: 'createdAt'
 } as const
 
 export type LinkWidgetScalarFieldEnum = (typeof LinkWidgetScalarFieldEnum)[keyof typeof LinkWidgetScalarFieldEnum]
@@ -1704,8 +1704,8 @@ export const KeyValueStoreScalarFieldEnum = {
   key: 'key',
   group: 'group',
   value: 'value',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  createdAt: 'createdAt'
 } as const
 
 export type KeyValueStoreScalarFieldEnum = (typeof KeyValueStoreScalarFieldEnum)[keyof typeof KeyValueStoreScalarFieldEnum]

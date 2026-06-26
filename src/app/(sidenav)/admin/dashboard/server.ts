@@ -29,10 +29,12 @@ export const getDefaultDashboard = safeAuthAction
   .action(async () => {
     const record = await getString(DASHBOARD_DEFAULT_LAYOUT_KEY)
     if (record?.value) {
-      const parsed = scDashboardLayout.safeParse(JSON.parse(record.value))
-      if (parsed.success) {
-        return parsed.data
-      }
+      try {
+        const parsed = scDashboardLayout.safeParse(JSON.parse(record.value))
+        if (parsed.success) {
+          return parsed.data
+        }
+      } catch {}
       logger.warn({ value: record.value }, 'invalid default dashboard layout, fallback to default')
     }
     return WidgetDefaultLayout

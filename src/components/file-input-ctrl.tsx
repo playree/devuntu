@@ -4,7 +4,7 @@ import { TrashIcon } from '@/components/icon'
 import { useLocale } from '@/locale/client'
 import { Button, ButtonProps, ErrorMessage, Label, TextField } from '@heroui/react'
 import Image from 'next/image'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 
 export const FileInputCtrl = <
@@ -78,11 +78,14 @@ const FileField = ({
   const { t } = useLocale()
   const localRef = useRef<HTMLInputElement>(null)
 
-  const preview = useMemo(() => (file ? URL.createObjectURL(file) : null), [file])
+  const [preview, setPreview] = useState<string | null>(null)
 
+  // preview は file 選択/削除時に生成・更新し、変更・アンマウント時に revoke する
   useEffect(() => {
     return () => {
-      if (preview) URL.revokeObjectURL(preview)
+      if (preview) {
+        URL.revokeObjectURL(preview)
+      }
     }
   }, [preview])
 
@@ -94,6 +97,7 @@ const FileField = ({
   const handleRemove = () => {
     // 新規ファイル選択中は既存に戻し、既存表示中はnull(サーバーで削除)
     onChange(file ? undefined : null)
+    setPreview(null)
     if (localRef.current) {
       localRef.current.value = ''
     }
@@ -120,7 +124,9 @@ const FileField = ({
           }}
           onBlur={onBlur}
           onChange={(event) => {
-            onChange(event.target.files?.[0])
+            const selected = event.target.files?.[0]
+            onChange(selected)
+            setPreview(selected ? URL.createObjectURL(selected) : null)
           }}
           className='hidden'
         />

@@ -171,7 +171,7 @@ const MyPasskey: FC = () => {
             <Table.Cell>
               <div className='flex items-center gap-2'>
                 {item.authenticator.icon_dark && (
-                  <Image src={item.authenticator.icon_dark} width={20} height={20} alt='icon' className='h-5 w-auto' />
+                  <Image src={item.authenticator.icon_dark} width={20} height={20} alt='' className='h-5 w-auto' />
                 )}
                 {item.authenticator.name}
               </div>

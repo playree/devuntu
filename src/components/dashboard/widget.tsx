@@ -16,6 +16,8 @@ import remarkGfm from 'remark-gfm'
 import {
   getAppInfo,
   GetAppInfoReturnType,
+  getReleaseNotes,
+  GetReleaseNotesReturnType,
   getServerInfo,
   GetServerInfoReturnType,
   getUserLinkWidgets,
@@ -131,26 +133,10 @@ export const ReleaseNoteWidget: WidgetFC = ({ id, editable }) => {
     id,
     disabled: !editable,
   })
-  const [data, setData] = useState<
-    {
-      id: string
-      name: string
-      body: string
-    }[]
-  >()
+  const [data, setData] = useState<GetReleaseNotesReturnType>()
 
   useEffect(() => {
-    fetch('https://api.github.com/repos/playree/devuntu/releases', {
-      headers: {
-        Accept: 'application/vnd.github+json',
-        'X-GitHub-Api-Version': '2022-11-28',
-      },
-      next: {
-        revalidate: 180,
-      },
-    })
-      .then((res) => res.json())
-      .then((json) => setData(json))
+    parseAction(getReleaseNotes()).then((res) => setData(res))
   }, [])
 
   return (
@@ -195,6 +181,7 @@ export const ReleaseNoteWidgetName: FC = () => {
 type LinkWidgetData = NonNullable<GetUserLinkWidgetsReturnType>[number]
 
 const createLinkWidgetSet = (link: LinkWidgetData): Omit<WidgetSet, 'id'> => {
+  // Link:はローカライズ不要
   const LinkWidgetName: FC = () => <>Link: {link.name}</>
 
   const LinkWidget: WidgetFC = ({ id, editable }) => {

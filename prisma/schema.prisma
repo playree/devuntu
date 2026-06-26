@@ -237,8 +237,8 @@ model Dashboard {
   userId    String   @id
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   layout    Json
-  createdAt DateTime @updatedAt
-  updatedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
 
   @@map("dashboard")
 }
@@ -249,8 +249,8 @@ model LinkWidget {
   url         String
   description String?
   iconPath    String?
-  createdAt   DateTime @updatedAt
-  updatedAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
 
   @@map("link_widget")
 }
@@ -260,8 +260,8 @@ model KeyValueStore {
   key       String   @unique
   group     String?
   value     String
-  createdAt DateTime @updatedAt
-  updatedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
 
   @@index([group])
   @@map("key_value_store")

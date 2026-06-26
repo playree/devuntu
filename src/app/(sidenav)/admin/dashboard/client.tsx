@@ -248,7 +248,7 @@ export const LinkWidgetManage: FC = () => {
       </ContentHeader>
 
       <MultiTable
-        ariaLabel='user list'
+        ariaLabel='link widget list'
         pagingList={list}
         columns={[
           { id: 'name', name: t('name'), isRowHeader: true, allowsSorting: true, minWidth: 80 },

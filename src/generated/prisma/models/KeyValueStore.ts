@@ -29,8 +29,8 @@ export type KeyValueStoreMinAggregateOutputType = {
   key: string | null
   group: string | null
   value: string | null
-  createdAt: Date | null
   updatedAt: Date | null
+  createdAt: Date | null
 }
 
 export type KeyValueStoreMaxAggregateOutputType = {
@@ -38,8 +38,8 @@ export type KeyValueStoreMaxAggregateOutputType = {
   key: string | null
   group: string | null
   value: string | null
-  createdAt: Date | null
   updatedAt: Date | null
+  createdAt: Date | null
 }
 
 export type KeyValueStoreCountAggregateOutputType = {
@@ -47,8 +47,8 @@ export type KeyValueStoreCountAggregateOutputType = {
   key: number
   group: number
   value: number
-  createdAt: number
   updatedAt: number
+  createdAt: number
   _all: number
 }
 
@@ -58,8 +58,8 @@ export type KeyValueStoreMinAggregateInputType = {
   key?: true
   group?: true
   value?: true
-  createdAt?: true
   updatedAt?: true
+  createdAt?: true
 }
 
 export type KeyValueStoreMaxAggregateInputType = {
@@ -67,8 +67,8 @@ export type KeyValueStoreMaxAggregateInputType = {
   key?: true
   group?: true
   value?: true
-  createdAt?: true
   updatedAt?: true
+  createdAt?: true
 }
 
 export type KeyValueStoreCountAggregateInputType = {
@@ -76,8 +76,8 @@ export type KeyValueStoreCountAggregateInputType = {
   key?: true
   group?: true
   value?: true
-  createdAt?: true
   updatedAt?: true
+  createdAt?: true
   _all?: true
 }
 
@@ -158,8 +158,8 @@ export type KeyValueStoreGroupByOutputType = {
   key: string
   group: string | null
   value: string
-  createdAt: Date
   updatedAt: Date
+  createdAt: Date
   _count: KeyValueStoreCountAggregateOutputType | null
   _min: KeyValueStoreMinAggregateOutputType | null
   _max: KeyValueStoreMaxAggregateOutputType | null
@@ -188,8 +188,8 @@ export type KeyValueStoreWhereInput = {
   key?: Prisma.StringFilter<"KeyValueStore"> | string
   group?: Prisma.StringNullableFilter<"KeyValueStore"> | string | null
   value?: Prisma.StringFilter<"KeyValueStore"> | string
-  createdAt?: Prisma.DateTimeFilter<"KeyValueStore"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"KeyValueStore"> | Date | string
+  createdAt?: Prisma.DateTimeFilter<"KeyValueStore"> | Date | string
 }
 
 export type KeyValueStoreOrderByWithRelationInput = {
@@ -197,8 +197,8 @@ export type KeyValueStoreOrderByWithRelationInput = {
   key?: Prisma.SortOrder
   group?: Prisma.SortOrderInput | Prisma.SortOrder
   value?: Prisma.SortOrder
-  createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
 }
 
 export type KeyValueStoreWhereUniqueInput = Prisma.AtLeast<{
@@ -209,8 +209,8 @@ export type KeyValueStoreWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.KeyValueStoreWhereInput | Prisma.KeyValueStoreWhereInput[]
   group?: Prisma.StringNullableFilter<"KeyValueStore"> | string | null
   value?: Prisma.StringFilter<"KeyValueStore"> | string
-  createdAt?: Prisma.DateTimeFilter<"KeyValueStore"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"KeyValueStore"> | Date | string
+  createdAt?: Prisma.DateTimeFilter<"KeyValueStore"> | Date | string
 }, "id" | "key">
 
 export type KeyValueStoreOrderByWithAggregationInput = {
@@ -218,8 +218,8 @@ export type KeyValueStoreOrderByWithAggregationInput = {
   key?: Prisma.SortOrder
   group?: Prisma.SortOrderInput | Prisma.SortOrder
   value?: Prisma.SortOrder
-  createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
   _count?: Prisma.KeyValueStoreCountOrderByAggregateInput
   _max?: Prisma.KeyValueStoreMaxOrderByAggregateInput
   _min?: Prisma.KeyValueStoreMinOrderByAggregateInput
@@ -233,8 +233,8 @@ export type KeyValueStoreScalarWhereWithAggregatesInput = {
   key?: Prisma.StringWithAggregatesFilter<"KeyValueStore"> | string
   group?: Prisma.StringNullableWithAggregatesFilter<"KeyValueStore"> | string | null
   value?: Prisma.StringWithAggregatesFilter<"KeyValueStore"> | string
-  createdAt?: Prisma.DateTimeWithAggregatesFilter<"KeyValueStore"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"KeyValueStore"> | Date | string
+  createdAt?: Prisma.DateTimeWithAggregatesFilter<"KeyValueStore"> | Date | string
 }
 
 export type KeyValueStoreCreateInput = {
@@ -242,8 +242,8 @@ export type KeyValueStoreCreateInput = {
   key: string
   group?: string | null
   value: string
-  createdAt?: Date | string
   updatedAt?: Date | string
+  createdAt?: Date | string
 }
 
 export type KeyValueStoreUncheckedCreateInput = {
@@ -251,8 +251,8 @@ export type KeyValueStoreUncheckedCreateInput = {
   key: string
   group?: string | null
   value: string
-  createdAt?: Date | string
   updatedAt?: Date | string
+  createdAt?: Date | string
 }
 
 export type KeyValueStoreUpdateInput = {
@@ -260,8 +260,8 @@ export type KeyValueStoreUpdateInput = {
   key?: Prisma.StringFieldUpdateOperationsInput | string
   group?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   value?: Prisma.StringFieldUpdateOperationsInput | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type KeyValueStoreUncheckedUpdateInput = {
@@ -269,8 +269,8 @@ export type KeyValueStoreUncheckedUpdateInput = {
   key?: Prisma.StringFieldUpdateOperationsInput | string
   group?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   value?: Prisma.StringFieldUpdateOperationsInput | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type KeyValueStoreCreateManyInput = {
@@ -278,8 +278,8 @@ export type KeyValueStoreCreateManyInput = {
   key: string
   group?: string | null
   value: string
-  createdAt?: Date | string
   updatedAt?: Date | string
+  createdAt?: Date | string
 }
 
 export type KeyValueStoreUpdateManyMutationInput = {
@@ -287,8 +287,8 @@ export type KeyValueStoreUpdateManyMutationInput = {
   key?: Prisma.StringFieldUpdateOperationsInput | string
   group?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   value?: Prisma.StringFieldUpdateOperationsInput | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type KeyValueStoreUncheckedUpdateManyInput = {
@@ -296,8 +296,8 @@ export type KeyValueStoreUncheckedUpdateManyInput = {
   key?: Prisma.StringFieldUpdateOperationsInput | string
   group?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   value?: Prisma.StringFieldUpdateOperationsInput | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type KeyValueStoreCountOrderByAggregateInput = {
@@ -305,8 +305,8 @@ export type KeyValueStoreCountOrderByAggregateInput = {
   key?: Prisma.SortOrder
   group?: Prisma.SortOrder
   value?: Prisma.SortOrder
-  createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
 }
 
 export type KeyValueStoreMaxOrderByAggregateInput = {
@@ -314,8 +314,8 @@ export type KeyValueStoreMaxOrderByAggregateInput = {
   key?: Prisma.SortOrder
   group?: Prisma.SortOrder
   value?: Prisma.SortOrder
-  createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
 }
 
 export type KeyValueStoreMinOrderByAggregateInput = {
@@ -323,8 +323,8 @@ export type KeyValueStoreMinOrderByAggregateInput = {
   key?: Prisma.SortOrder
   group?: Prisma.SortOrder
   value?: Prisma.SortOrder
-  createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
 }
 
 
@@ -334,8 +334,8 @@ export type KeyValueStoreSelect<ExtArgs extends runtime.Types.Extensions.Interna
   key?: boolean
   group?: boolean
   value?: boolean
-  createdAt?: boolean
   updatedAt?: boolean
+  createdAt?: boolean
 }, ExtArgs["result"]["keyValueStore"]>
 
 export type KeyValueStoreSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -343,8 +343,8 @@ export type KeyValueStoreSelectCreateManyAndReturn<ExtArgs extends runtime.Types
   key?: boolean
   group?: boolean
   value?: boolean
-  createdAt?: boolean
   updatedAt?: boolean
+  createdAt?: boolean
 }, ExtArgs["result"]["keyValueStore"]>
 
 export type KeyValueStoreSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -352,8 +352,8 @@ export type KeyValueStoreSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
   key?: boolean
   group?: boolean
   value?: boolean
-  createdAt?: boolean
   updatedAt?: boolean
+  createdAt?: boolean
 }, ExtArgs["result"]["keyValueStore"]>
 
 export type KeyValueStoreSelectScalar = {
@@ -361,11 +361,11 @@ export type KeyValueStoreSelectScalar = {
   key?: boolean
   group?: boolean
   value?: boolean
-  createdAt?: boolean
   updatedAt?: boolean
+  createdAt?: boolean
 }
 
-export type KeyValueStoreOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "key" | "group" | "value" | "createdAt" | "updatedAt", ExtArgs["result"]["keyValueStore"]>
+export type KeyValueStoreOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "key" | "group" | "value" | "updatedAt" | "createdAt", ExtArgs["result"]["keyValueStore"]>
 
 export type $KeyValueStorePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "KeyValueStore"
@@ -375,8 +375,8 @@ export type $KeyValueStorePayload<ExtArgs extends runtime.Types.Extensions.Inter
     key: string
     group: string | null
     value: string
-    createdAt: Date
     updatedAt: Date
+    createdAt: Date
   }, ExtArgs["result"]["keyValueStore"]>
   composites: {}
 }
@@ -804,8 +804,8 @@ export interface KeyValueStoreFieldRefs {
   readonly key: Prisma.FieldRef<"KeyValueStore", 'String'>
   readonly group: Prisma.FieldRef<"KeyValueStore", 'String'>
   readonly value: Prisma.FieldRef<"KeyValueStore", 'String'>
-  readonly createdAt: Prisma.FieldRef<"KeyValueStore", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"KeyValueStore", 'DateTime'>
+  readonly createdAt: Prisma.FieldRef<"KeyValueStore", 'DateTime'>
 }
     
 

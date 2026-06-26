@@ -120,5 +120,5 @@ Expiration time: 5 minutes
   '@invalid_password': '8-20 alphanumeric characters',
   '@invalid_name': '2-20 characters',
   '@required_field': 'Required field',
-  '@invalid_description': 'Up to 80 characters',
+  '@invalid_description': 'Up to 20 characters',
 }
