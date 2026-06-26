@@ -8,7 +8,7 @@ export const ContentHeader: FC<{
   title?: string
 }> = ({ children, icon, title }) => {
   return (
-    <Grid className='mb-2 min-h-9'>
+    <Grid className='min-h-9'>
       <div className='col-span-12 flex items-center justify-center gap-2 lg:col-span-6 lg:justify-start'>
         {icon}
         {title}

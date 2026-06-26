@@ -4,6 +4,7 @@ import { ActionCell } from '@/components/action-cell'
 import { MultiButton } from '@/components/general/button'
 import { CheckBoxCtrl } from '@/components/general/checkbox-ctrl'
 import { OnOffChip } from '@/components/general/chip'
+import { FlexCol } from '@/components/general/flex'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input-ctrl'
 import { FormModal, ModalBaseProps, useModalState } from '@/components/general/modal'
@@ -182,7 +183,7 @@ const UpdateModal: FC<ModalBaseProps & { target: UpdateUser }> = ({ state, reloa
   )
 }
 
-export const UsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword }) => {
+export const AdminUsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword }) => {
   const { t } = useLocale()
   const addModalState = useModalState()
   const updateModalState = useModalState<UpdateUser>()
@@ -198,7 +199,7 @@ export const UsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword 
   })
 
   return (
-    <>
+    <FlexCol>
       <ContentHeader icon={<UsersIcon />} title={t('user_manage')}>
         <MultiButton isIconOnly tooltip={t('add_user')} onPress={() => addModalState.open()}>
           <UserPlusIcon />
@@ -271,6 +272,6 @@ export const UsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword 
           target={updateModalState.target}
         />
       )}
-    </>
+    </FlexCol>
   )
 }

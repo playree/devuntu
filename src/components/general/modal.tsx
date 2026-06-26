@@ -1,4 +1,4 @@
-import { Checkbox, Label, Modal, useOverlayState, UseOverlayStateReturn } from '@heroui/react'
+import { Checkbox, Modal, useOverlayState, UseOverlayStateReturn } from '@heroui/react'
 import { nanoid } from 'nanoid'
 import { usePathname } from 'next/navigation'
 import {
@@ -14,6 +14,7 @@ import {
   useState,
 } from 'react'
 import { MultiButton } from './button'
+import { FlexCol } from './flex'
 
 const CheckIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
   <svg
@@ -134,9 +135,9 @@ export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ ui
             <Modal.Heading className='flex items-center gap-2'>{confirmParam?.title || ''}</Modal.Heading>
           </Modal.Header>
           <Modal.Body>
-            <div className='whitespace-pre-wrap'>{confirmParam?.text || ''}</div>
-            {confirmParam?.requireCheck && (
-              <div className='mt-4 flex'>
+            <FlexCol>
+              <div className='whitespace-pre-wrap'>{confirmParam?.text || ''}</div>
+              {confirmParam?.requireCheck && (
                 <Checkbox
                   id='confirm-agree'
                   onChange={setAgree}
@@ -144,15 +145,15 @@ export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ ui
                   variant='secondary'
                   isDisabled={isPending}
                 >
-                  <Checkbox.Control className='size-5 rounded-full before:rounded-full'>
-                    <Checkbox.Indicator />
-                  </Checkbox.Control>
                   <Checkbox.Content>
-                    <Label htmlFor='confirm-agree'>{uiText?.confirmed || 'Confirmed'}</Label>
+                    <Checkbox.Control className='size-5'>
+                      <Checkbox.Indicator />
+                    </Checkbox.Control>
+                    {uiText?.confirmed || 'Confirmed'}
                   </Checkbox.Content>
                 </Checkbox>
-              </div>
-            )}
+              )}
+            </FlexCol>
           </Modal.Body>
           <Modal.Footer>
             {!confirmParam?.onlyOk && (

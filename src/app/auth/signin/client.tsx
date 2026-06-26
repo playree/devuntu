@@ -86,7 +86,7 @@ const UsernameForm: FC<{
           variant='secondary'
           name='username'
           label={t('email')}
-          autoComplete='username webauthn'
+          autoComplete='username'
           errorMessage={fet(errors.username)}
           autoFocus
         />

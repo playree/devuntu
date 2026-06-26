@@ -5,7 +5,13 @@
       "name": "server-side",
       "type": "node-terminal",
       "request": "launch",
-      "command": "pnpm run dev"
+      "command": "pnpm dev"
+    },
+    {
+      "name": "client-side",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000"
     }
   ]
 }

@@ -101,3 +101,13 @@ export type OauthConsent = Prisma.OauthConsentModel
  * 
  */
 export type Dashboard = Prisma.DashboardModel
+/**
+ * Model LinkWidget
+ * 
+ */
+export type LinkWidget = Prisma.LinkWidgetModel
+/**
+ * Model KeyValueStore
+ * 
+ */
+export type KeyValueStore = Prisma.KeyValueStoreModel

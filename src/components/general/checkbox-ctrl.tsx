@@ -1,17 +1,17 @@
 'use client'
 
-import { Checkbox, CheckboxProps, Label } from '@heroui/react'
+import { Checkbox, CheckboxProps } from '@heroui/react'
 import { FC } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 
 export const CheckBoxItem: FC<CheckboxProps & { id: string; label: string }> = ({ id, label, ...props }) => {
   return (
     <Checkbox {...props} id={id}>
-      <Checkbox.Control className='size-5'>
-        <Checkbox.Indicator />
-      </Checkbox.Control>
       <Checkbox.Content>
-        <Label htmlFor={id}>{label}</Label>
+        <Checkbox.Control className='size-5'>
+          <Checkbox.Indicator />
+        </Checkbox.Control>
+        {label}
       </Checkbox.Content>
     </Checkbox>
   )
