@@ -34,7 +34,9 @@ export const getDefaultDashboard = safeAuthAction
         if (parsed.success) {
           return parsed.data
         }
-      } catch {}
+      } catch {
+        // JSON.parseで例外が発生した場合は無視して既定値を返す
+      }
       logger.warn({ value: record.value }, 'invalid default dashboard layout, fallback to default')
     }
     return WidgetDefaultLayout
@@ -83,7 +85,9 @@ const saveLinkWidgetIcon = async (icon: File, id: string) => {
  * 保存済みのアイコン画像を削除する
  */
 const removeLinkWidgetIcon = async (iconPath: string): Promise<void> => {
-  await unlink(path.join(process.cwd(), 'public', iconPath)).catch(() => {})
+  await unlink(path.join(process.cwd(), 'public', iconPath)).catch(() => {
+    // ファイルが存在しない場合は無視
+  })
 }
 
 /**

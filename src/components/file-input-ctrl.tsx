@@ -120,7 +120,9 @@ const FileField = ({
           accept={accept}
           ref={(el) => {
             localRef.current = el
-            if (typeof inputRef === 'function') inputRef(el)
+            if (typeof inputRef === 'function') {
+              inputRef(el)
+            }
           }}
           onBlur={onBlur}
           onChange={(event) => {

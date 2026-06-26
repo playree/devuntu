@@ -51,11 +51,12 @@ const useLocaleContext = (
         const lc = resources[locale] ? locale : defaultLocale
 
         const template = resources[lc][item] || resources[defaultLocale][item] || ''
-        return !values
-          ? template
-          : new Function(...Object.keys(values), `return \`${template}\`;`)(
-              ...Object.values(values).map((value) => value ?? ''),
-            )
+        if (!values) {
+          return template
+        }
+        return template.replace(/\$\{(\w+)\}/g, (match, key: string) =>
+          key in values ? String(values[key] ?? '') : match,
+        )
       },
       [defaultLocale, locale, lcConfig],
     ),
