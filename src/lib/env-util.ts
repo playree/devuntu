@@ -4,6 +4,16 @@ const convBoolean = (value: string | undefined, defaultValue: boolean) => {
   return value ? value.toLowerCase() !== 'false' : defaultValue
 }
 
+function getEnv(key: string, opts: { required: true }): string
+function getEnv(key: string): string | undefined
+function getEnv(key: string, opts?: { required?: boolean }): string | undefined {
+  const value = process.env[key]
+  if (!value && opts?.required) {
+    throw errSystemError(`${key} is not set`)
+  }
+  return value
+}
+
 const client = {
   // クライアントサイド
   get NEXT_PUBLIC_APP_NAME() {
@@ -24,10 +34,7 @@ const server = {
     return process.env.LOG_LEVEL ?? 'info'
   },
   get DATABASE_URL() {
-    if (!process.env.DATABASE_URL) {
-      throw errSystemError('DATABASE_URL is not set')
-    }
-    return process.env.DATABASE_URL
+    return getEnv('DATABASE_URL', { required: true })
   },
   get DEFAULT_LOCALE() {
     return process.env.DEFAULT_LOCALE
@@ -35,16 +42,10 @@ const server = {
 
   // 認証
   get BETTER_AUTH_SECRET() {
-    if (!process.env.BETTER_AUTH_SECRET) {
-      throw errSystemError('BETTER_AUTH_SECRET is not set')
-    }
-    return process.env.BETTER_AUTH_SECRET
+    return getEnv('BETTER_AUTH_SECRET', { required: true })
   },
   get BETTER_AUTH_URL() {
-    if (!process.env.BETTER_AUTH_URL) {
-      throw errSystemError('BETTER_AUTH_URL is not set')
-    }
-    return process.env.BETTER_AUTH_URL
+    return getEnv('BETTER_AUTH_URL', { required: true })
   },
   get SESSION_EXPIRES_IN() {
     if (!process.env.SESSION_EXPIRES_IN) {
@@ -89,34 +90,19 @@ const server = {
     return process.env.MAIL_SEND as 'sendgrid' | 'sendmail' | 'smtp' | 'debug' | undefined
   },
   get MAIL_FROM() {
-    if (!process.env.MAIL_FROM) {
-      throw errSystemError('MAIL_FROM is not set')
-    }
-    return process.env.MAIL_FROM
+    return getEnv('MAIL_FROM', { required: true })
   },
   get SENDGRID_API_KEY() {
-    if (!process.env.SENDGRID_API_KEY) {
-      throw errSystemError('SENDGRID_API_KEY is not set')
-    }
-    return process.env.SENDGRID_API_KEY
+    return getEnv('SENDGRID_API_KEY', { required: true })
   },
   get SENDMAIL_PATH() {
-    if (!process.env.SENDMAIL_PATH) {
-      throw errSystemError('SENDMAIL_PATH is not set')
-    }
-    return process.env.SENDMAIL_PATH
+    return getEnv('SENDMAIL_PATH', { required: true })
   },
   get SMTP_HOST() {
-    if (!process.env.SMTP_HOST) {
-      throw errSystemError('SMTP_HOST is not set')
-    }
-    return process.env.SMTP_HOST
+    return getEnv('SMTP_HOST', { required: true })
   },
   get SMTP_PORT() {
-    if (!process.env.SMTP_PORT) {
-      throw errSystemError('SMTP_PORT is not set')
-    }
-    return Number(process.env.SMTP_PORT)
+    return Number(getEnv('SMTP_PORT', { required: true }))
   },
   get SMTP_IGNORE_TLS() {
     return convBoolean(process.env.SMTP_IGNORE_TLS, false)

@@ -1,18 +1,12 @@
 'use server'
 
+import { WidgetDefaultLayout } from '@/components/dashboard/widget-define'
 import { LinkWidgetUpdateInput } from '@/generated/prisma/models'
 import { safeAuthAction } from '@/lib/action-server'
 import { getString, setString } from '@/lib/kvs'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
-import {
-  scCreateLinkWidget,
-  scDashboardLayout,
-  scUpdateDashboard,
-  scUpdateLinkWidget,
-  scUUID,
-  WidgetDefaultLayout,
-} from '@/lib/schema'
+import { scCreateLinkWidget, scDashboardLayout, scUpdateDashboard, scUpdateLinkWidget, scUUID } from '@/lib/schema'
 import { unlink, writeFile } from 'fs/promises'
 import path from 'path'
 import sharp from 'sharp'
