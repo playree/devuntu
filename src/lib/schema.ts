@@ -114,11 +114,6 @@ export const scUpdateDashboard = z.object({
   layout: scDashboardLayout,
 })
 
-export const WidgetDefaultLayout: DashboardLayout = {
-  left: ['app_info', 'server_info', null, null, null, null, null, null, null, null],
-  right: ['release_Note', null, null, null, null, null, null, null, null, null],
-} as const
-
 export const scCreateLinkWidget = z.object({
   name: zName,
   url: z.url(),

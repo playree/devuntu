@@ -181,9 +181,30 @@ CREATE TABLE "oauth_consent" (
 CREATE TABLE "dashboard" (
     "userId" TEXT NOT NULL PRIMARY KEY,
     "layout" JSONB NOT NULL,
-    "createdAt" DATETIME,
-    "updatedAt" DATETIME,
+    "updatedAt" DATETIME NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "dashboard_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "link_widget" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "url" TEXT NOT NULL,
+    "description" TEXT,
+    "iconPath" TEXT,
+    "updatedAt" DATETIME NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateTable
+CREATE TABLE "key_value_store" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "key" TEXT NOT NULL,
+    "group" TEXT,
+    "value" TEXT NOT NULL,
+    "updatedAt" DATETIME NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- CreateIndex
@@ -248,3 +269,9 @@ CREATE INDEX "oauth_consent_clientId_idx" ON "oauth_consent"("clientId");
 
 -- CreateIndex
 CREATE INDEX "oauth_consent_userId_idx" ON "oauth_consent"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "key_value_store_key_key" ON "key_value_store"("key");
+
+-- CreateIndex
+CREATE INDEX "key_value_store_group_idx" ON "key_value_store"("group");

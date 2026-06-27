@@ -59,7 +59,7 @@ export const deleteUser = safeAuthAction
       }
 
       if (user.role === 'admin') {
-        if ((await prisma.user.count({ where: { role: 'admin', id: { not: id } } })) === 0) {
+        if ((await tx.user.count({ where: { role: 'admin', id: { not: id } } })) === 0) {
           // 最後の管理者ユーザーは削除不可
           throw new ClientError('CANNOT_DELETE_LAST_ADMIN')
         }
@@ -93,7 +93,7 @@ export const updateUser = safeAuthAction
 
       // 管理者権限を消す場合
       if (user.role === 'admin' && !isAdmin) {
-        if ((await prisma.user.count({ where: { role: 'admin', id: { not: id } } })) === 0) {
+        if ((await tx.user.count({ where: { role: 'admin', id: { not: id } } })) === 0) {
           // 最後の管理者ユーザーは不可
           throw new ClientError('CANNOT_DELETE_LAST_ADMIN')
         }

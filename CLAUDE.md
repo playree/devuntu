@@ -24,3 +24,9 @@
 # 自動実行
 
 - コンパイル確認は不要
+- 参照系bash commandは実行を許可
+
+# コードレビュー除外ファイル
+
+- `src/generated/**`
+- `prisma/migrations/**`
