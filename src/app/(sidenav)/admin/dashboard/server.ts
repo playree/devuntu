@@ -7,7 +7,8 @@ import { getString, setString } from '@/lib/kvs'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { scCreateLinkWidget, scDashboardLayout, scUpdateDashboard, scUpdateLinkWidget, scUUID } from '@/lib/schema'
-import { unlink, writeFile } from 'fs/promises'
+import { toUploadPath, toUploadUrl, UPLOAD_DIR } from '@/lib/upload'
+import { mkdir, unlink, writeFile } from 'fs/promises'
 import path from 'path'
 import sharp from 'sharp'
 import { uuidv7 } from 'uuidv7'
@@ -71,15 +72,18 @@ const saveLinkWidgetIcon = async (icon: File, id: string) => {
     .toBuffer()
   // キャッシュバスティング: 保存ごとにユニークなファイル名にしてURLを変え、更新を反映させる
   const filename = `${id}-${Date.now().toString(36)}.webp`
-  await writeFile(path.join(process.cwd(), 'public/up', filename), webp)
-  return `/up/${filename}`
+  // standaloneビルドではupload/がバンドルに含まれないため実行時に作成を保証 @todo
+  await mkdir(UPLOAD_DIR, { recursive: true })
+  await writeFile(toUploadPath(filename), webp)
+  return toUploadUrl(filename)
 }
 
 /**
  * 保存済みのアイコン画像を削除する
  */
 const removeLinkWidgetIcon = async (iconPath: string): Promise<void> => {
-  await unlink(path.join(process.cwd(), 'public', iconPath)).catch(() => {
+  // iconPathは`/api/upload/<filename>`形式なのでファイル名を抽出
+  await unlink(toUploadPath(path.basename(iconPath))).catch(() => {
     // ファイルが存在しない場合は無視
   })
 }
