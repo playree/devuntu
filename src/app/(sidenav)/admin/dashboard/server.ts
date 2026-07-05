@@ -83,8 +83,10 @@ const saveLinkWidgetIcon = async (icon: File, id: string) => {
  */
 const removeLinkWidgetIcon = async (iconPath: string): Promise<void> => {
   // iconPathは`/api/upload/<filename>`形式なのでファイル名を抽出
-  await unlink(toUploadPath(path.basename(iconPath))).catch(() => {
-    // ファイルが存在しない場合は無視
+  await unlink(toUploadPath(path.basename(iconPath))).catch((err) => {
+    if (err?.code !== 'ENOENT') {
+      logger.warn({ err, iconPath }, 'failed to remove linkWidget icon')
+    }
   })
 }
 

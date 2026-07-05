@@ -1,4 +1,5 @@
 import { getServerSession } from '@/lib/auth'
+import { logger } from '@/lib/logger'
 import { UPLOAD_DIR, toUploadPath } from '@/lib/upload'
 import { readFile } from 'fs/promises'
 import { NextResponse } from 'next/server'
@@ -39,7 +40,10 @@ export const GET = async (_req: Request, { params }: { params: Promise<{ filenam
         'Cache-Control': 'private, max-age=31536000, immutable',
       },
     })
-  } catch {
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException)?.code !== 'ENOENT') {
+      logger.warn({ err, filePath }, 'failed to read upload file')
+    }
     return new NextResponse(null, { status: 404 })
   }
 }
