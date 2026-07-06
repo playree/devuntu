@@ -72,7 +72,7 @@ const saveLinkWidgetIcon = async (icon: File, id: string) => {
     .toBuffer()
   // キャッシュバスティング: 保存ごとにユニークなファイル名にしてURLを変え、更新を反映させる
   const filename = `${id}-${Date.now().toString(36)}.webp`
-  // standaloneビルドではupload/がバンドルに含まれないため実行時に作成を保証 @todo
+  // standaloneビルドではupload/がバンドルに含まれないため実行時に作成を保証
   await mkdir(UPLOAD_DIR, { recursive: true })
   await writeFile(toUploadPath(filename), webp)
   return toUploadUrl(filename)
