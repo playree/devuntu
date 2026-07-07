@@ -154,7 +154,7 @@ export const ReleaseNoteWidget: WidgetFC = ({ id, editable }) => {
             {data.map((note) => {
               return (
                 <div key={note.id}>
-                  <div className='text-sm font-bold'>{note.name}</div>
+                  <div className='text-base font-bold'>{note.name}</div>
                   <div className='markdown'>
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{note.body}</ReactMarkdown>
                   </div>
