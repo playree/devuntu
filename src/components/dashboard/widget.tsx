@@ -193,7 +193,7 @@ const createLinkWidgetSet = (link: LinkWidgetData): Omit<WidgetSet, 'id'> => {
     const Content = (
       <>
         {link.iconPath ? (
-          <Image src={link.iconPath} width={24} height={24} alt={link.name} className='rounded' />
+          <Image src={link.iconPath} width={24} height={24} alt={link.name} unoptimized className='rounded' />
         ) : (
           <ArrowTopRightOnSquareIcon />
         )}
