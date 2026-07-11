@@ -42,7 +42,7 @@
   }
 
   .markdown a {
-    @apply font-semibold text-blue-600;
+    @apply text-blue-600;
   }
 
   .markdown strong a {
@@ -50,27 +50,27 @@
   }
 
   .markdown h1 {
-    @apply mt-6 mb-4 border-b pb-2 text-2xl leading-tight font-semibold;
+    @apply mt-3 mb-2 border-b pb-2 text-2xl leading-tight font-semibold;
   }
 
   .markdown h2 {
-    @apply mt-6 mb-4 border-b pb-2 text-lg leading-tight font-semibold;
+    @apply mt-3 mb-2 border-b pb-2 text-lg leading-tight font-semibold;
   }
 
   .markdown h3 {
-    @apply mt-6 mb-4 text-base leading-snug font-semibold;
+    @apply mt-2 mb-1 text-base leading-snug font-semibold;
   }
 
   .markdown h4 {
-    @apply mt-6 mb-4 text-sm leading-none font-semibold;
+    @apply mt-2 mb-1 text-sm leading-none font-semibold;
   }
 
   .markdown h5 {
-    @apply mt-6 mb-4 text-xs leading-tight font-semibold;
+    @apply mt-2 mb-1 text-xs leading-tight font-semibold;
   }
 
   .markdown h6 {
-    @apply mt-6 mb-4 text-xs leading-tight font-semibold text-gray-500 dark:text-gray-400;
+    @apply mt-2 mb-1 text-xs leading-tight font-semibold text-gray-500 dark:text-gray-400;
   }
 
   .markdown blockquote {
@@ -90,11 +90,11 @@
   }
 
   .markdown ul {
-    @apply list-disc pl-8 text-sm;
+    @apply list-disc pl-5 text-sm;
   }
 
   .markdown ol {
-    @apply list-decimal pl-8 text-sm;
+    @apply list-decimal pl-5 text-sm;
   }
 
   .markdown kbd {

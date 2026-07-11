@@ -114,6 +114,11 @@ export const scUpdateDashboard = z.object({
   layout: scDashboardLayout,
 })
 
+export const scUpdateAnnouncement = z.object({
+  body: z.string(),
+})
+export type UpdateAnnouncement = z.infer<typeof scUpdateAnnouncement>
+
 export const scCreateLinkWidget = z.object({
   name: zName,
   url: z.url(),

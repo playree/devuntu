@@ -68,6 +68,7 @@ export const DefaultLayoutEditModal: FC<ModalBaseProps> = ({ state }) => {
     <Modal.Backdrop variant='blur' isOpen={state.isOpen} onOpenChange={state.setOpen} isDismissable={false}>
       <Modal.Container placement='top'>
         <Modal.Dialog className='max-w-3xl'>
+          <Modal.CloseTrigger />
           <Modal.Header>
             <Modal.Heading className='flex items-center gap-2'>
               <Squares2X2Icon />

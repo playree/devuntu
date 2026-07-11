@@ -17,6 +17,7 @@
 - [イメージ作成](#イメージ作成)
   - [Docker Build](#docker-build)
   - [Docker Hub Push](#docker-hub-push)
+- [sharpの依存関係チェック](#sharpの依存関係チェック)
 
 # Devuntu
 
@@ -103,4 +104,12 @@ docker build -f docker/Dockerfile \
 ```sh
 docker tag devuntu:latest playree/devuntu:latest
 docker push playree/devuntu:latest
+```
+
+# sharpの依存関係チェック
+
+基本的に`Next.js`の要求バージョンに揃える
+
+```sh
+pnpm why sharp
 ```

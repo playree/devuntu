@@ -7,6 +7,9 @@ export const metadata: Metadata = {
   title: en.dashboard,
 }
 
+/**
+ * ダッシュボード管理ページ
+ */
 const AdminDashboardPage: FC = async () => {
   return <AdminDashboardClient />
 }

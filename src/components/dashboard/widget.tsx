@@ -14,14 +14,18 @@ import { FC, useEffect, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import {
+  getAnnouncement,
+  GetAnnouncementReturnType,
   getAppInfo,
   GetAppInfoReturnType,
+  getLinodeTransferInfo,
+  GetLinodeTransferInfoReturnType,
+  getOtherWidgets,
+  GetOtherWidgetsReturnType,
   getReleaseNotes,
   GetReleaseNotesReturnType,
   getServerInfo,
   GetServerInfoReturnType,
-  getUserLinkWidgets,
-  GetUserLinkWidgetsReturnType,
 } from './server'
 
 type WidgetFC = FC<{ id: string; editable: boolean }>
@@ -125,6 +129,54 @@ export const ServerInfoWidgetName: FC = () => {
 }
 
 /**
+ * Linode Transfer情報を表示する Widget。
+ */
+export const LinodeTransferInfoWidget: WidgetFC = ({ id, editable }) => {
+  const { t } = useLocale()
+  const { ref } = useDraggable({
+    id,
+    disabled: !editable,
+  })
+  const [data, setData] = useState<GetLinodeTransferInfoReturnType>()
+
+  useEffect(() => {
+    parseAction(getLinodeTransferInfo()).then((res) => setData(res))
+  }, [])
+
+  return (
+    <Card ref={ref} className='h-full w-full gap-1 py-2'>
+      <Card.Header>
+        <div className='flex gap-1 font-bold'>
+          <InformationCircleIcon />
+          {t('linode_transfer_info')}
+        </div>
+      </Card.Header>
+      <Card.Content>
+        <Separator className='my-1' />
+        {data ? (
+          <Grid>
+            <div className='col-span-4 text-sm'>{t('transfer_pool_usage')} :</div>
+            <div className='col-span-8'>
+              <ProgressBar progress={calcPercent(data.used, data.total)}>
+                {formatByte(data.used)} / {data.quota}GiB
+              </ProgressBar>
+            </div>
+            <div className='col-span-4 text-sm'>{t('transfer_billable')} :</div>
+            <div className='col-span-8'>{data.billable}GiB</div>
+          </Grid>
+        ) : (
+          <Skeleton className='h-full min-h-14 w-full rounded-xl' />
+        )}
+      </Card.Content>
+    </Card>
+  )
+}
+export const LinodeTransferInfoWidgetName: FC = () => {
+  const { t } = useLocale()
+  return <>{t('linode_transfer_info')}</>
+}
+
+/**
  * リリースノート Widget。
  */
 export const ReleaseNoteWidget: WidgetFC = ({ id, editable }) => {
@@ -154,7 +206,7 @@ export const ReleaseNoteWidget: WidgetFC = ({ id, editable }) => {
             {data.map((note) => {
               return (
                 <div key={note.id}>
-                  <div className='text-sm font-bold'>{note.name}</div>
+                  <div className='text-base font-bold'>{note.name}</div>
                   <div className='markdown'>
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{note.body}</ReactMarkdown>
                   </div>
@@ -176,9 +228,52 @@ export const ReleaseNoteWidgetName: FC = () => {
 }
 
 /**
+ * お知らせ Widget。管理ページで編集された Markdown を表示する。
+ */
+export const AnnouncementWidget: WidgetFC = ({ id, editable }) => {
+  const { t } = useLocale()
+  const { ref } = useDraggable({
+    id,
+    disabled: !editable,
+  })
+  const [data, setData] = useState<GetAnnouncementReturnType>()
+
+  useEffect(() => {
+    parseAction(getAnnouncement()).then((res) => setData(res))
+  }, [])
+
+  return (
+    <Card ref={ref} className='w-full gap-1 py-2'>
+      <Card.Header>
+        <div className='flex gap-1 font-bold'>
+          <InformationCircleIcon />
+          {t('announcement')}
+        </div>
+      </Card.Header>
+      <Card.Content>
+        <Separator className='my-1' />
+        {data ? (
+          <div className='max-h-80 min-h-14 flex-1 overflow-y-auto'>
+            <div className='markdown'>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{data.body}</ReactMarkdown>
+            </div>
+          </div>
+        ) : (
+          <Skeleton className='h-full min-h-14 w-full rounded-xl' />
+        )}
+      </Card.Content>
+    </Card>
+  )
+}
+export const AnnouncementWidgetName: FC = () => {
+  const { t } = useLocale()
+  return <>{t('announcement')}</>
+}
+
+/**
  * LinkWidget。サーバー登録されたリンク情報を表示する Widget を生成するファクトリ。
  */
-type LinkWidgetData = NonNullable<GetUserLinkWidgetsReturnType>[number]
+type LinkWidgetData = NonNullable<GetOtherWidgetsReturnType>['linkWidgets'][number]
 
 const createLinkWidgetSet = (link: LinkWidgetData): Omit<WidgetSet, 'id'> => {
   // Link:はローカライズ不要
@@ -231,6 +326,10 @@ const BaseWidgetMap: Record<string, Omit<WidgetSet, 'id'>> = {
     name: ReleaseNoteWidgetName,
     widget: ReleaseNoteWidget,
   },
+  announcement: {
+    name: AnnouncementWidgetName,
+    widget: AnnouncementWidget,
+  },
 } as const
 
 /**
@@ -240,9 +339,17 @@ export const useWidgetMap = () => {
   const [widgetMap, setWidgetMap] = useState<Record<string, Omit<WidgetSet, 'id'>>>(BaseWidgetMap)
 
   useEffect(() => {
-    parseAction(getUserLinkWidgets()).then((links) => {
-      const linkEntries = Object.fromEntries(links.map((link) => [`link:${link.id}`, createLinkWidgetSet(link)]))
-      setWidgetMap({ ...BaseWidgetMap, ...linkEntries })
+    parseAction(getOtherWidgets()).then((otherWidgets) => {
+      const otherWidgetMap = Object.fromEntries(
+        otherWidgets.linkWidgets.map((link) => [`link:${link.id}`, createLinkWidgetSet(link)]),
+      )
+      if (otherWidgets.enabledLinodeTransferInfo) {
+        otherWidgetMap['linode_transfer_info'] = {
+          name: LinodeTransferInfoWidgetName,
+          widget: LinodeTransferInfoWidget,
+        }
+      }
+      setWidgetMap({ ...BaseWidgetMap, ...otherWidgetMap })
     })
   }, [])
 
