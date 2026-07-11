@@ -129,6 +129,9 @@ export const DashboardLayoutEditor: FC<{
           {layout.left.map((widgetId, index) => {
             const ariaId = `l-${index}`
             const Widget = widgetId ? widgetMap[widgetId]?.widget : null
+            if (!editable && !widgetId) {
+              return null
+            }
             return (
               <DropArea key={ariaId} id={ariaId} editable={editable}>
                 {widgetId && Widget && <Widget id={widgetId} editable={editable} />}
@@ -140,6 +143,9 @@ export const DashboardLayoutEditor: FC<{
           {layout.right.map((widgetId, index) => {
             const ariaId = `r-${index}`
             const Widget = widgetId ? widgetMap[widgetId]?.widget : null
+            if (!editable && !widgetId) {
+              return null
+            }
             return (
               <DropArea key={ariaId} id={ariaId} editable={editable}>
                 {widgetId && Widget && <Widget id={widgetId} editable={editable} />}

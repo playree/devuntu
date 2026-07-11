@@ -125,7 +125,7 @@ export const ja: DefaultLocaleItems = {
   '@invalid_image_size': '画像サイズは5MBまで',
   '@invalid_image_type': '画像形式はJPEG/PNG/WebP/GIF',
   '@invalid_password': '半角英数記号8～20文字',
-  '@invalid_name': '2～20文字',
+  '@invalid_name': '2～30文字',
   '@required_field': '必須入力項目',
-  '@invalid_description': '～20文字',
+  '@invalid_description': '～40文字',
 }

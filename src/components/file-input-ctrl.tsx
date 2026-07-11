@@ -112,7 +112,7 @@ const FileField = ({
       <div className='flex items-center gap-3'>
         <div className='flex h-12 w-12 items-center'>
           {displayUrl && (
-            <Image src={displayUrl} alt='preview' width={48} height={48} className='border object-cover' />
+            <Image src={displayUrl} alt='preview' width={48} height={48} unoptimized className='border object-cover' />
           )}
         </div>
         <input

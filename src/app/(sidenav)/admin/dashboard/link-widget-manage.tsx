@@ -71,6 +71,7 @@ const LinkWidgetAddModal: FC<ModalBaseProps> = ({ state, reload }) => {
         <div className='col-span-12'>
           <InputCtrl
             control={control}
+            schema={scCreateLinkWidget}
             variant='secondary'
             name='name'
             label={t('name')}
@@ -82,6 +83,7 @@ const LinkWidgetAddModal: FC<ModalBaseProps> = ({ state, reload }) => {
         <div className='col-span-12'>
           <InputCtrl
             control={control}
+            schema={scCreateLinkWidget}
             variant='secondary'
             name='url'
             label={t('url')}
@@ -101,6 +103,7 @@ const LinkWidgetAddModal: FC<ModalBaseProps> = ({ state, reload }) => {
         <div className='col-span-12'>
           <InputCtrl
             control={control}
+            schema={scCreateLinkWidget}
             variant='secondary'
             name='description'
             label={t('description')}
@@ -156,6 +159,7 @@ const LinkWidgetUpdateModal: FC<ModalBaseProps & { target: LinkWidgetTarget }> =
         <div className='col-span-12'>
           <InputCtrl
             control={control}
+            schema={scUpdateLinkWidget}
             variant='secondary'
             name='name'
             label={t('name')}
@@ -167,6 +171,7 @@ const LinkWidgetUpdateModal: FC<ModalBaseProps & { target: LinkWidgetTarget }> =
         <div className='col-span-12'>
           <InputCtrl
             control={control}
+            schema={scUpdateLinkWidget}
             variant='secondary'
             name='url'
             label={t('url')}
@@ -187,6 +192,7 @@ const LinkWidgetUpdateModal: FC<ModalBaseProps & { target: LinkWidgetTarget }> =
         <div className='col-span-12'>
           <InputCtrl
             control={control}
+            schema={scUpdateLinkWidget}
             variant='secondary'
             name='description'
             label={t('description')}
