@@ -90,11 +90,11 @@
   }
 
   .markdown ul {
-    @apply list-disc pl-8 text-sm;
+    @apply list-disc pl-5 text-sm;
   }
 
   .markdown ol {
-    @apply list-decimal pl-8 text-sm;
+    @apply list-decimal pl-5 text-sm;
   }
 
   .markdown kbd {
