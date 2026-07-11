@@ -1,8 +1,10 @@
 'use client'
 
+import { getFieldConstraints } from '@/lib/schema-util'
 import { ErrorMessage, Input, InputProps, Label, TextField } from '@heroui/react'
 import { ChangeEvent } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
+import { z } from 'zod'
 
 export const InputCtrl = <
   TFieldValues extends FieldValues = FieldValues,
@@ -10,6 +12,7 @@ export const InputCtrl = <
 >({
   control,
   name,
+  schema,
   type = 'text',
   onChanged,
   label,
@@ -20,12 +23,14 @@ export const InputCtrl = <
 }: InputProps & {
   control: Control<TFieldValues>
   name: TName
+  schema?: z.ZodObject
   onChanged?: (e: ChangeEvent<HTMLInputElement>) => void
   label?: string
   isRequired?: boolean
   isReadOnly?: boolean
   errorMessage?: string
 }) => {
+  const constraints = schema ? getFieldConstraints(schema, name) : {}
   return (
     <Controller
       control={control}
@@ -37,6 +42,7 @@ export const InputCtrl = <
             {isRequired ? '*' : ''}
           </Label>
           <Input
+            {...constraints}
             {...props}
             type={type}
             onChange={

@@ -3,14 +3,14 @@ import { z } from 'zod'
 
 const reHalfString = /^[a-zA-Z0-9!-/:-@¥[-`{-~ ]*$/
 
-export const zName = z.string().min(2, el('@invalid_name')).max(20, el('@invalid_name'))
+export const zName = z.string().min(2, el('@invalid_name')).max(30, el('@invalid_name'))
 export const zEmail = z.email(el('@invalid_email'))
 export const zPassword = z
   .string()
   .min(8, el('@invalid_password'))
   .max(20, el('@invalid_password'))
   .regex(reHalfString, el('@invalid_password'))
-export const zDescription = z.string().max(20, el('@invalid_description'))
+export const zDescription = z.string().max(40, el('@invalid_description'))
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
