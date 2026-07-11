@@ -16,12 +16,14 @@ import remarkGfm from 'remark-gfm'
 import {
   getAppInfo,
   GetAppInfoReturnType,
+  getLinodeTransferInfo,
+  GetLinodeTransferInfoReturnType,
+  getOtherWidgets,
+  GetOtherWidgetsReturnType,
   getReleaseNotes,
   GetReleaseNotesReturnType,
   getServerInfo,
   GetServerInfoReturnType,
-  getUserLinkWidgets,
-  GetUserLinkWidgetsReturnType,
 } from './server'
 
 type WidgetFC = FC<{ id: string; editable: boolean }>
@@ -125,6 +127,54 @@ export const ServerInfoWidgetName: FC = () => {
 }
 
 /**
+ * Linode Transfer情報を表示する Widget。
+ */
+export const LinodeTransferInfoWidget: WidgetFC = ({ id, editable }) => {
+  const { t } = useLocale()
+  const { ref } = useDraggable({
+    id,
+    disabled: !editable,
+  })
+  const [data, setData] = useState<GetLinodeTransferInfoReturnType>()
+
+  useEffect(() => {
+    parseAction(getLinodeTransferInfo()).then((res) => setData(res))
+  }, [])
+
+  return (
+    <Card ref={ref} className='h-full w-full gap-1 py-2'>
+      <Card.Header>
+        <div className='flex gap-1 font-bold'>
+          <InformationCircleIcon />
+          {t('linode_transfer_info')}
+        </div>
+      </Card.Header>
+      <Card.Content>
+        <Separator className='my-1' />
+        {data ? (
+          <Grid>
+            <div className='col-span-4 text-sm'>{t('transfer_pool_usage')} :</div>
+            <div className='col-span-8'>
+              <ProgressBar progress={calcPercent(data.used, data.total)}>
+                {formatByte(data.used)} / {data.quota}GiB
+              </ProgressBar>
+            </div>
+            <div className='col-span-4 text-sm'>{t('transfer_billable')} :</div>
+            <div className='col-span-8'>{data.billable}GiB</div>
+          </Grid>
+        ) : (
+          <Skeleton className='h-full min-h-14 w-full rounded-xl' />
+        )}
+      </Card.Content>
+    </Card>
+  )
+}
+export const LinodeTransferInfoWidgetName: FC = () => {
+  const { t } = useLocale()
+  return <>{t('linode_transfer_info')}</>
+}
+
+/**
  * リリースノート Widget。
  */
 export const ReleaseNoteWidget: WidgetFC = ({ id, editable }) => {
@@ -178,7 +228,7 @@ export const ReleaseNoteWidgetName: FC = () => {
 /**
  * LinkWidget。サーバー登録されたリンク情報を表示する Widget を生成するファクトリ。
  */
-type LinkWidgetData = NonNullable<GetUserLinkWidgetsReturnType>[number]
+type LinkWidgetData = NonNullable<GetOtherWidgetsReturnType>['linkWidgets'][number]
 
 const createLinkWidgetSet = (link: LinkWidgetData): Omit<WidgetSet, 'id'> => {
   // Link:はローカライズ不要
@@ -240,9 +290,17 @@ export const useWidgetMap = () => {
   const [widgetMap, setWidgetMap] = useState<Record<string, Omit<WidgetSet, 'id'>>>(BaseWidgetMap)
 
   useEffect(() => {
-    parseAction(getUserLinkWidgets()).then((links) => {
-      const linkEntries = Object.fromEntries(links.map((link) => [`link:${link.id}`, createLinkWidgetSet(link)]))
-      setWidgetMap({ ...BaseWidgetMap, ...linkEntries })
+    parseAction(getOtherWidgets()).then((otherWidgets) => {
+      const otherWidgetMap = Object.fromEntries(
+        otherWidgets.linkWidgets.map((link) => [`link:${link.id}`, createLinkWidgetSet(link)]),
+      )
+      if (otherWidgets.enabledLinodeTransferInfo) {
+        otherWidgetMap['linode_transfer_info'] = {
+          name: LinodeTransferInfoWidgetName,
+          widget: LinodeTransferInfoWidget,
+        }
+      }
+      setWidgetMap({ ...BaseWidgetMap, ...otherWidgetMap })
     })
   }, [])
 

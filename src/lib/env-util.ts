@@ -4,14 +4,41 @@ const convBoolean = (value: string | undefined, defaultValue: boolean) => {
   return value ? value.toLowerCase() !== 'false' : defaultValue
 }
 
-function getEnv(key: string, opts: { required: true }): string
-function getEnv(key: string): string | undefined
-function getEnv(key: string, opts?: { required?: boolean }): string | undefined {
+function getEnv<T extends string = string>(key: string, opts: { required: true }): T
+function getEnv<T extends string = string>(key: string, opts: { default: T }): T
+function getEnv<T extends string = string>(key: string): T | undefined
+function getEnv<T extends string = string>(key: string, opts?: { required?: boolean; default?: T }): T | undefined {
   const value = process.env[key]
-  if (!value && opts?.required) {
-    throw errSystemError(`${key} is not set`)
+  if (!value) {
+    if (opts?.default !== undefined) {
+      return opts.default
+    }
+    if (opts?.required) {
+      throw errSystemError(`${key} is not set`)
+    }
   }
-  return value
+  return value as T | undefined
+}
+
+function getEnvBoolean(key: string, opts?: { default?: boolean }): boolean {
+  return convBoolean(process.env[key], opts?.default ?? false)
+}
+
+function getEnvNumber(key: string, opts: { required: true }): number
+function getEnvNumber(key: string, opts: { default: number }): number
+function getEnvNumber(key: string): number | undefined
+function getEnvNumber(key: string, opts?: { required?: boolean; default?: number }): number | undefined {
+  const value = process.env[key]
+  if (!value) {
+    if (opts?.default !== undefined) {
+      return opts.default
+    }
+    if (opts?.required) {
+      throw errSystemError(`${key} is not set`)
+    }
+    return undefined
+  }
+  return Number(value)
 }
 
 const client = {
@@ -28,16 +55,16 @@ const server = {
 
   // 基本
   get NODE_ENV() {
-    return process.env.NODE_ENV
+    return getEnv('NODE_ENV')
   },
   get LOG_LEVEL() {
-    return process.env.LOG_LEVEL ?? 'info'
+    return getEnv('LOG_LEVEL', { default: 'info' })
   },
   get DATABASE_URL() {
     return getEnv('DATABASE_URL', { required: true })
   },
   get DEFAULT_LOCALE() {
-    return process.env.DEFAULT_LOCALE
+    return getEnv('DEFAULT_LOCALE')
   },
 
   // 認証
@@ -48,46 +75,40 @@ const server = {
     return getEnv('BETTER_AUTH_URL', { required: true })
   },
   get SESSION_EXPIRES_IN() {
-    if (!process.env.SESSION_EXPIRES_IN) {
-      return 60 * 60 * 24 * 5
-    }
-    return Number(process.env.SESSION_EXPIRES_IN)
+    return getEnvNumber('SESSION_EXPIRES_IN', { default: 60 * 60 * 24 * 5 })
   },
   get SESSION_FRESH_AGE() {
-    if (!process.env.SESSION_FRESH_AGE) {
-      return 60 * 60 * 24
-    }
-    return Number(process.env.SESSION_FRESH_AGE)
+    return getEnvNumber('SESSION_FRESH_AGE', { default: 60 * 60 * 24 })
   },
   get TWO_FA_REQUIRED() {
-    return convBoolean(process.env.TWO_FA_REQUIRED, true)
+    return getEnvBoolean('TWO_FA_REQUIRED', { default: true })
   },
   get DISABLE_PASSWORD_AUTH() {
-    return convBoolean(process.env.DISABLE_PASSWORD_AUTH, false)
+    return getEnvBoolean('DISABLE_PASSWORD_AUTH')
   },
   get MAIN_DEVUNTU_URL() {
-    return process.env.MAIN_DEVUNTU_URL
+    return getEnv('MAIN_DEVUNTU_URL')
   },
   get MAIN_DEVUNTU_CLIENT_ID() {
-    return process.env.MAIN_DEVUNTU_CLIENT_ID
+    return getEnv('MAIN_DEVUNTU_CLIENT_ID')
   },
   get MAIN_DEVUNTU_CLIENT_SECRET() {
-    return process.env.MAIN_DEVUNTU_CLIENT_SECRET
+    return getEnv('MAIN_DEVUNTU_CLIENT_SECRET')
   },
   get GOOGLE_CLIENT_ID() {
-    return process.env.GOOGLE_CLIENT_ID
+    return getEnv('GOOGLE_CLIENT_ID')
   },
   get GOOGLE_CLIENT_SECRET() {
-    return process.env.GOOGLE_CLIENT_SECRET
+    return getEnv('GOOGLE_CLIENT_SECRET')
   },
   get GOOGLE_ALLOWED_DOMAINS() {
-    const domains = process.env.GOOGLE_ALLOWED_DOMAINS
+    const domains = getEnv('GOOGLE_ALLOWED_DOMAINS')
     return domains ? domains.split(',') : []
   },
 
   // メール
   get MAIL_SEND() {
-    return process.env.MAIL_SEND as 'sendgrid' | 'sendmail' | 'smtp' | 'debug' | undefined
+    return getEnv<'sendgrid' | 'sendmail' | 'smtp' | 'debug'>('MAIL_SEND')
   },
   get MAIL_FROM() {
     return getEnv('MAIL_FROM', { required: true })
@@ -102,19 +123,41 @@ const server = {
     return getEnv('SMTP_HOST', { required: true })
   },
   get SMTP_PORT() {
-    return Number(getEnv('SMTP_PORT', { required: true }))
+    return getEnvNumber('SMTP_PORT', { required: true })
   },
   get SMTP_IGNORE_TLS() {
-    return convBoolean(process.env.SMTP_IGNORE_TLS, false)
+    return getEnvBoolean('SMTP_IGNORE_TLS')
   },
   get SMTP_SECURE() {
-    return convBoolean(process.env.SMTP_SECURE, false)
+    return getEnvBoolean('SMTP_SECURE')
   },
   get SMTP_USER() {
-    return process.env.SMTP_USER
+    return getEnv('SMTP_USER')
   },
   get SMTP_PASS() {
-    return process.env.SMTP_PASS
+    return getEnv('SMTP_PASS')
+  },
+
+  // Linode
+  get LINODE_ID() {
+    return getEnv('LINODE_ID')
+  },
+  get LINODE_PERSONAL_ACCESS_TOKEN() {
+    return getEnv('LINODE_PERSONAL_ACCESS_TOKEN')
+  },
+
+  // Debug
+  get DEBUG_LINODE_DUMMY() {
+    const value = getEnv('DEBUG_LINODE_DUMMY')
+    if (!value) {
+      return undefined
+    }
+
+    try {
+      return JSON.parse(value)
+    } catch {
+      throw errSystemError(`DEBUG_LINODE_DUMMY is not valid JSON: ${value}`)
+    }
   },
 }
 

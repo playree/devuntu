@@ -1,21 +1,29 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action-server'
+import { envu } from '@/lib/env-util'
+import { errCommunication } from '@/lib/error'
 import { prisma } from '@/lib/prisma'
 import os from 'os'
 import pkg from '../../../package.json'
 
 /**
- * LinkWidget一覧取得(ダッシュボード表示用)
+ * その他Widget一覧取得(ダッシュボード表示用)
  */
-export const getUserLinkWidgets = safeAuthAction
-  .metadata({ actionName: 'getUserLinkWidgets', role: 'user' })
+export const getOtherWidgets = safeAuthAction
+  .metadata({ actionName: 'getOtherWidgets', role: 'user' })
   .action(async () => {
-    return prisma.linkWidget.findMany({
-      select: { id: true, name: true, url: true, description: true, iconPath: true },
-    })
+    return {
+      linkWidgets: await prisma.linkWidget.findMany({
+        select: { id: true, name: true, url: true, description: true, iconPath: true },
+      }),
+      enabledLinodeTransferInfo: !!(
+        (envu.server.LINODE_ID && envu.server.LINODE_PERSONAL_ACCESS_TOKEN) ||
+        envu.server.DEBUG_LINODE_DUMMY
+      ),
+    }
   })
-export type GetUserLinkWidgetsReturnType = Awaited<ReturnType<typeof getUserLinkWidgets>>['data']
+export type GetOtherWidgetsReturnType = Awaited<ReturnType<typeof getOtherWidgets>>['data']
 
 /**
  * アプリ情報取得
@@ -62,3 +70,44 @@ export const getReleaseNotes = safeAuthAction
     return json.map(({ id, name, body }) => ({ id: String(id), name, body }))
   })
 export type GetReleaseNotesReturnType = Awaited<ReturnType<typeof getReleaseNotes>>['data']
+
+/**
+ * Linode Transfer情報取得
+ */
+export const getLinodeTransferInfo = safeAuthAction
+  .metadata({ actionName: 'getLinodeTransferInfo', role: 'user' })
+  .action(async () => {
+    const dummy = envu.server.DEBUG_LINODE_DUMMY
+    if (dummy) {
+      return dummy
+    }
+
+    const linodeId = envu.server.LINODE_ID
+    const personalAccessToken = envu.server.LINODE_PERSONAL_ACCESS_TOKEN
+    if (!linodeId || !personalAccessToken) {
+      return null
+    }
+
+    try {
+      const res = await fetch(`https://api.linode.com/v4/linode/instances/${linodeId}/transfer`, {
+        headers: {
+          Authorization: `Bearer ${personalAccessToken}`,
+        },
+        next: {
+          revalidate: 180,
+        },
+      })
+      const info: {
+        used: number
+        quota: number
+        billable: number
+      } = await res.json()
+      return {
+        ...info,
+        total: info.quota * Math.pow(1024, 3),
+      }
+    } catch {
+      throw errCommunication('Linode Transfer')
+    }
+  })
+export type GetLinodeTransferInfoReturnType = Awaited<ReturnType<typeof getLinodeTransferInfo>>['data']

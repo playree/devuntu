@@ -13,5 +13,6 @@ export const errInvalidSession = () => new ClientError('INVALID_SESSION', 'Inval
 export const errPermissionDenied = () => new ClientError('PERMISSION_DENIED', 'Permission denied')
 export const errNotFound = () => new ClientError('NOT_FOUND', 'Not Found')
 export const errValidation = (message: string) => new ClientError('VALIDATION_ERROR', `Validation Error: ${message}`)
+export const errCommunication = (message: string) => new ClientError(`Communication Error: ${message}`)
 export const errInvalidOperation = () => new ClientError('INVALID_OPERATION', 'Invalid Operation')
 export const errSystemError = (message: string) => new Error(`System Error: ${message}`)
