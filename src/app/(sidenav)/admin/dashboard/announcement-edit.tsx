@@ -1,33 +1,39 @@
 'use client'
 
-import { DashboardLayoutEditor } from '@/components/dashboard/layout-editor'
-import { WidgetDefaultLayout } from '@/components/dashboard/widget-define'
 import { MultiButton } from '@/components/general/button'
+import { FlexCol } from '@/components/general/flex'
 import { ModalBaseProps } from '@/components/general/modal'
-import { CheckIcon, Squares2X2Icon } from '@/components/icon'
+import { CheckIcon, PencilSquareIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
-import { DashboardLayout } from '@/lib/schema'
 import { useLocale } from '@/locale/client'
-import { Modal } from '@heroui/react'
+import { Label, Modal, TextArea } from '@heroui/react'
 import { FC, useEffect, useState } from 'react'
-import { getDefaultDashboard, updateDefaultDashboard } from './server'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import { getAnnouncement, updateAnnouncement } from './server'
 
 /**
- * デフォルトレイアウト編集モーダルの本体(レイアウト取得後にマウントされる)
+ * お知らせ編集モーダルの本体(内容取得後にマウントされる)
  */
-const DefaultLayoutEditBody: FC<{ initialLayout: DashboardLayout; onSaved: () => void }> = ({
-  initialLayout,
-  onSaved,
-}) => {
+const AnnouncementEditBody: FC<{ initialBody: string; onSaved: () => void }> = ({ initialBody, onSaved }) => {
   const { t } = useLocale()
-  const [layout, setLayout] = useState(initialLayout)
+  const [body, setBody] = useState(initialBody)
   const [isSaving, setSaving] = useState(false)
 
   return (
     <>
-      <Modal.Body className='bg-background rounded-2xl pt-2'>
-        <DashboardLayoutEditor layout={layout} setLayout={setLayout} editable />
+      <Modal.Body className='pt-2'>
+        <FlexCol>
+          <Label>{t('announcement')}</Label>
+          <TextArea fullWidth rows={4} variant='secondary' value={body} onChange={(e) => setBody(e.target.value)} />
+          <fieldset className='min-h-24 rounded-xl border-2 p-2'>
+            <legend className='px-2 text-sm text-gray-500'>{t('preview')}</legend>
+            <div className='markdown'>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown>
+            </div>
+          </fieldset>
+        </FlexCol>
       </Modal.Body>
       <Modal.Footer>
         <MultiButton slot='close' variant='ghost'>
@@ -39,7 +45,7 @@ const DefaultLayoutEditBody: FC<{ initialLayout: DashboardLayout; onSaved: () =>
           onPress={async () => {
             setSaving(true)
             try {
-              await parseAction(updateDefaultDashboard({ layout }))
+              await parseAction(updateAnnouncement({ body }))
               onSaved()
             } finally {
               setSaving(false)
@@ -54,14 +60,14 @@ const DefaultLayoutEditBody: FC<{ initialLayout: DashboardLayout; onSaved: () =>
 }
 
 /**
- * デフォルトレイアウト編集ポップアップ
+ * お知らせ編集ポップアップ
  */
-export const DefaultLayoutEditModal: FC<ModalBaseProps> = ({ state }) => {
+export const AnnouncementEditModal: FC<ModalBaseProps> = ({ state }) => {
   const { t } = useLocale()
-  const [layout, setLayout] = useState<DashboardLayout>()
+  const [body, setBody] = useState<string>()
 
   useEffect(() => {
-    parseAction(getDefaultDashboard()).then((res) => setLayout(res ?? WidgetDefaultLayout))
+    parseAction(getAnnouncement()).then((res) => setBody(res?.body ?? ''))
   }, [])
 
   return (
@@ -71,13 +77,13 @@ export const DefaultLayoutEditModal: FC<ModalBaseProps> = ({ state }) => {
           <Modal.CloseTrigger />
           <Modal.Header>
             <Modal.Heading className='flex items-center gap-2'>
-              <Squares2X2Icon />
-              {t('default_layout_manage')}
+              <PencilSquareIcon />
+              {t('announcement_manage')}
             </Modal.Heading>
           </Modal.Header>
-          {layout && (
-            <DefaultLayoutEditBody
-              initialLayout={layout}
+          {body !== undefined && (
+            <AnnouncementEditBody
+              initialBody={body}
               onSaved={() => {
                 notify.success(t('msg_saved'))
                 state.close()

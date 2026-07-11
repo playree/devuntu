@@ -14,6 +14,8 @@ import { FC, useEffect, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import {
+  getAnnouncement,
+  GetAnnouncementReturnType,
   getAppInfo,
   GetAppInfoReturnType,
   getLinodeTransferInfo,
@@ -226,6 +228,49 @@ export const ReleaseNoteWidgetName: FC = () => {
 }
 
 /**
+ * お知らせ Widget。管理ページで編集された Markdown を表示する。
+ */
+export const AnnouncementWidget: WidgetFC = ({ id, editable }) => {
+  const { t } = useLocale()
+  const { ref } = useDraggable({
+    id,
+    disabled: !editable,
+  })
+  const [data, setData] = useState<GetAnnouncementReturnType>()
+
+  useEffect(() => {
+    parseAction(getAnnouncement()).then((res) => setData(res))
+  }, [])
+
+  return (
+    <Card ref={ref} className='w-full gap-1 py-2'>
+      <Card.Header>
+        <div className='flex gap-1 font-bold'>
+          <InformationCircleIcon />
+          {t('announcement')}
+        </div>
+      </Card.Header>
+      <Card.Content>
+        <Separator className='my-1' />
+        {data ? (
+          <div className='max-h-80 min-h-14 flex-1 overflow-y-auto'>
+            <div className='markdown'>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{data.body}</ReactMarkdown>
+            </div>
+          </div>
+        ) : (
+          <Skeleton className='h-full min-h-14 w-full rounded-xl' />
+        )}
+      </Card.Content>
+    </Card>
+  )
+}
+export const AnnouncementWidgetName: FC = () => {
+  const { t } = useLocale()
+  return <>{t('announcement')}</>
+}
+
+/**
  * LinkWidget。サーバー登録されたリンク情報を表示する Widget を生成するファクトリ。
  */
 type LinkWidgetData = NonNullable<GetOtherWidgetsReturnType>['linkWidgets'][number]
@@ -280,6 +325,10 @@ const BaseWidgetMap: Record<string, Omit<WidgetSet, 'id'>> = {
   release_Note: {
     name: ReleaseNoteWidgetName,
     widget: ReleaseNoteWidget,
+  },
+  announcement: {
+    name: AnnouncementWidgetName,
+    widget: AnnouncementWidget,
   },
 } as const
 

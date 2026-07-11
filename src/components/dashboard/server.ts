@@ -3,6 +3,7 @@
 import { safeAuthAction } from '@/lib/action-server'
 import { envu } from '@/lib/env-util'
 import { errCommunication } from '@/lib/error'
+import { getString } from '@/lib/kvs'
 import { prisma } from '@/lib/prisma'
 import os from 'os'
 import pkg from '../../../package.json'
@@ -24,6 +25,17 @@ export const getOtherWidgets = safeAuthAction
     }
   })
 export type GetOtherWidgetsReturnType = Awaited<ReturnType<typeof getOtherWidgets>>['data']
+
+/**
+ * お知らせ取得(ダッシュボード表示用)
+ */
+export const getAnnouncement = safeAuthAction
+  .metadata({ actionName: 'getAnnouncement', role: 'user' })
+  .action(async () => {
+    const record = await getString('DASHBOARD_ANNOUNCEMENT')
+    return { body: record?.value ?? '' }
+  })
+export type GetAnnouncementReturnType = Awaited<ReturnType<typeof getAnnouncement>>['data']
 
 /**
  * アプリ情報取得

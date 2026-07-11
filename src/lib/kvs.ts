@@ -4,7 +4,7 @@ import { prisma } from './prisma'
  * Key-Value Store Utility
  */
 
-type KeyString = 'DASHBOARD_DEFAULT_LAYOUT'
+type KeyString = 'DASHBOARD_DEFAULT_LAYOUT' | 'DASHBOARD_ANNOUNCEMENT'
 
 export const getString = async (key: KeyString) => {
   return prisma.keyValueStore.findUnique({ where: { key } })
