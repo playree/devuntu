@@ -8,6 +8,7 @@ export type LocaleItemBase =
   | 'admin'
   | 'admin_regist'
   | 'announcement'
+  | 'announcement_edit'
   | 'announcement_manage'
   | 'app_info'
   | 'auth'
