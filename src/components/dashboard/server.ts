@@ -91,7 +91,10 @@ export const getLinodeTransferInfo = safeAuthAction
   .action(async () => {
     const dummy = envu.server.DEBUG_LINODE_DUMMY
     if (dummy) {
-      return dummy
+      return {
+        ...dummy,
+        total: dummy.quota * Math.pow(1024, 3),
+      }
     }
 
     const linodeId = envu.server.LINODE_ID
@@ -109,6 +112,9 @@ export const getLinodeTransferInfo = safeAuthAction
           revalidate: 180,
         },
       })
+      if (!res.ok) {
+        throw errCommunication('Linode Transfer')
+      }
       const info: {
         used: number
         quota: number
