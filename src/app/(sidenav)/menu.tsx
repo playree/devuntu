@@ -148,6 +148,12 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
                   icon={<UsersIcon />}
                   closeMenu={closeMenu}
                 />
+                <MenuButton // グループ管理
+                  to='/admin/groups'
+                  text={t('group_manage')}
+                  icon={<UsersIcon />}
+                  closeMenu={closeMenu}
+                />
                 <MenuButton // ダッシュボード管理
                   to='/admin/dashboard'
                   text={t('dashboard_manage')}

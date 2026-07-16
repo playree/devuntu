@@ -135,3 +135,16 @@ export const scUpdateLinkWidget = z.object({
   icon: zImageFile.nullish(), // File | null | undefined
 })
 export type UpdateLinkWidget = z.infer<typeof scUpdateLinkWidget>
+
+export const scCreateGroup = z.object({
+  name: zName,
+  description: zDescription.optional(),
+})
+export type CreateGroup = z.infer<typeof scCreateGroup>
+
+export const scUpdateGroup = z.object({
+  id: z.uuidv7(),
+  name: zName,
+  description: zDescription.optional(),
+})
+export type UpdateGroup = z.infer<typeof scUpdateGroup>
