@@ -29,6 +29,7 @@
 - 参照系bash commandは実行を許可
 - 修正ファイルには`pnpm exec prettier --write`を実施する
 - CLAUDE.mdに追記した方が良い内容があれば提案して
+- 作成したPlanは`.plan`配下に保存して
 
 # コードレビュー除外ファイル
 

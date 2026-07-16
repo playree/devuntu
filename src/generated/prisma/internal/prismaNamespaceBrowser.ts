@@ -64,7 +64,9 @@ export const ModelName = {
   OauthConsent: 'OauthConsent',
   Dashboard: 'Dashboard',
   LinkWidget: 'LinkWidget',
-  KeyValueStore: 'KeyValueStore'
+  KeyValueStore: 'KeyValueStore',
+  Group: 'Group',
+  UserGroup: 'UserGroup'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -300,6 +302,27 @@ export const KeyValueStoreScalarFieldEnum = {
 } as const
 
 export type KeyValueStoreScalarFieldEnum = (typeof KeyValueStoreScalarFieldEnum)[keyof typeof KeyValueStoreScalarFieldEnum]
+
+
+export const GroupScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type GroupScalarFieldEnum = (typeof GroupScalarFieldEnum)[keyof typeof GroupScalarFieldEnum]
+
+
+export const UserGroupScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  groupId: 'groupId',
+  createdAt: 'createdAt'
+} as const
+
+export type UserGroupScalarFieldEnum = (typeof UserGroupScalarFieldEnum)[keyof typeof UserGroupScalarFieldEnum]
 
 
 export const SortOrder = {
