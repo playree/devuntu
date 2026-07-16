@@ -87,8 +87,11 @@ export const scCreateUser = z.object({
   email: zEmail,
   password: zPassword.optional(),
   isAdmin: z.boolean(),
+  groups: z.array(z.uuidv7()).default([]),
 })
 export type CreateUser = z.infer<typeof scCreateUser>
+export type CreateUserIn = z.input<typeof scCreateUser>
+export type CreateUserOut = z.output<typeof scCreateUser>
 
 export const scUpdateUser = z.object({
   id: z.uuidv7(),

@@ -24,7 +24,7 @@ export const getUsers = safeAuthAction.metadata({ actionName: 'getUsers', role: 
 export const createUser = safeAuthAction
   .metadata({ actionName: 'createUser', role: 'admin' })
   .inputSchema(scCreateUser)
-  .action(async ({ parsedInput: { name, email, password, isAdmin } }) => {
+  .action(async ({ parsedInput: { name, email, password, isAdmin, groups } }) => {
     // ユーザー作成
     const { user } = await auth.api.createUser({
       headers: await headers(),
@@ -39,7 +39,15 @@ export const createUser = safeAuthAction
     if (!user) {
       throw errSystemError('user create failed')
     }
-    logger.info({ user }, 'user created')
+
+    // グループ紐付け
+    if (groups.length > 0) {
+      await prisma.userGroup.createMany({
+        data: groups.map((groupId) => ({ userId: user.id, groupId })),
+      })
+    }
+
+    logger.info({ user, groups }, 'user created')
 
     return { id: user.id, name: user.name }
   })

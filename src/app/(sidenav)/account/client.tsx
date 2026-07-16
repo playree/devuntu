@@ -78,9 +78,9 @@ const UpdatePasskeyModal: FC<ModalBaseProps & { target: UpdatePasskey }> = ({ st
             control={control}
             variant='secondary'
             name='name'
+            constraintSchema={scUpdatePasskey}
             label={t('name')}
             errorMessage={fet(errors.name)}
-            isRequired
             autoFocus
           />
         </div>

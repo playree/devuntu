@@ -12,7 +12,7 @@ export const InputCtrl = <
 >({
   control,
   name,
-  schema,
+  constraintSchema,
   type = 'text',
   onChanged,
   label,
@@ -23,14 +23,17 @@ export const InputCtrl = <
 }: InputProps & {
   control: Control<TFieldValues>
   name: TName
-  schema?: z.ZodObject
+  constraintSchema?: z.ZodObject
   onChanged?: (e: ChangeEvent<HTMLInputElement>) => void
   label?: string
   isRequired?: boolean
   isReadOnly?: boolean
   errorMessage?: string
 }) => {
-  const constraints = schema ? getFieldConstraints(schema, name) : {}
+  const { isRequired: schemaRequired, ...constraints } = constraintSchema
+    ? getFieldConstraints(constraintSchema, name)
+    : {}
+  const requiredFlag = isRequired ?? schemaRequired
   return (
     <Controller
       control={control}
@@ -39,7 +42,7 @@ export const InputCtrl = <
         <TextField isInvalid={!!errorMessage} isReadOnly={isReadOnly}>
           <Label>
             {label}
-            {isRequired ? '*' : ''}
+            {requiredFlag ? '*' : ''}
           </Label>
           <Input
             {...constraints}

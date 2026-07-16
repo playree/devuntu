@@ -47,9 +47,9 @@ export const StartClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword 
               control={control}
               variant='secondary'
               name='name'
+              constraintSchema={scCreateAdmin}
               label={t('username')}
               errorMessage={fet(errors.name)}
-              isRequired
               autoFocus
             />
           </div>
@@ -58,10 +58,10 @@ export const StartClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword 
               control={control}
               variant='secondary'
               name='email'
+              constraintSchema={scCreateAdmin}
               label={t('email')}
               autoComplete='email'
               errorMessage={fet(errors.email)}
-              isRequired
             />
           </div>
           {enabledPassword && (

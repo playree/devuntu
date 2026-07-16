@@ -9,6 +9,7 @@ import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input-ctrl'
 import { FormModal, ModalBaseProps, useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
+import { MultiSelectCtrl } from '@/components/general/select-ctrl'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
 import { ArrowPathIcon, CheckIcon, PencilSquareIcon, UserIcon, UserPlusIcon, UsersIcon } from '@/components/icon'
@@ -17,7 +18,7 @@ import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
 import { dayformat } from '@/lib/day'
 import { ClientError } from '@/lib/error'
-import { CreateUser, scCreateUser, scUpdateUser, UpdateUser } from '@/lib/schema'
+import { CreateUserIn, CreateUserOut, scCreateUser, scUpdateUser, UpdateUser } from '@/lib/schema'
 import { useLocale } from '@/locale/client'
 import { ButtonGroup, Table } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -32,7 +33,7 @@ const AddModal: FC<ModalBaseProps & { enabledPassword: boolean }> = ({ state, re
     control,
     handleSubmit,
     formState: { isSubmitting, errors },
-  } = useForm<CreateUser>({
+  } = useForm<CreateUserIn, unknown, CreateUserOut>({
     resolver: zodResolver(scCreateUser),
     mode: 'onChange',
     defaultValues: {
@@ -40,6 +41,7 @@ const AddModal: FC<ModalBaseProps & { enabledPassword: boolean }> = ({ state, re
       email: '',
       password: enabledPassword ? '' : undefined,
       isAdmin: false,
+      groups: [],
     },
   })
 
@@ -70,9 +72,9 @@ const AddModal: FC<ModalBaseProps & { enabledPassword: boolean }> = ({ state, re
             control={control}
             variant='secondary'
             name='name'
+            constraintSchema={scCreateUser}
             label={t('username')}
             errorMessage={fet(errors.name)}
-            isRequired
             autoFocus
           />
         </div>
@@ -81,9 +83,9 @@ const AddModal: FC<ModalBaseProps & { enabledPassword: boolean }> = ({ state, re
             control={control}
             variant='secondary'
             name='email'
+            constraintSchema={scCreateUser}
             label={t('email')}
             errorMessage={fet(errors.email)}
-            isRequired
           />
         </div>
         {enabledPassword && (
@@ -100,8 +102,11 @@ const AddModal: FC<ModalBaseProps & { enabledPassword: boolean }> = ({ state, re
             />
           </div>
         )}
-        <div className='col-span-12'>
+        <div className='col-span-12 pb-4'>
           <CheckBoxCtrl control={control} variant='secondary' name='isAdmin' id='isAdmin' label={t('is_admin')} />
+        </div>
+        <div className='col-span-12'>
+          <MultiSelectCtrl control={control} name='groups' />
         </div>
       </GridBox>
     </FormModal>
@@ -159,9 +164,9 @@ const UpdateModal: FC<ModalBaseProps & { target: UpdateUser }> = ({ state, reloa
             control={control}
             variant='secondary'
             name='name'
+            constraintSchema={scUpdateUser}
             label={t('username')}
             errorMessage={fet(errors.name)}
-            isRequired
             autoFocus
           />
         </div>
@@ -170,9 +175,9 @@ const UpdateModal: FC<ModalBaseProps & { target: UpdateUser }> = ({ state, reloa
             control={control}
             variant='secondary'
             name='email'
+            constraintSchema={scUpdateUser}
             label={t('email')}
             errorMessage={fet(errors.email)}
-            isRequired
           />
         </div>
         <div className='col-span-12'>

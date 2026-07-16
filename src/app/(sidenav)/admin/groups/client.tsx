@@ -64,9 +64,9 @@ const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
             control={control}
             variant='secondary'
             name='name'
+            constraintSchema={scCreateGroup}
             label={t('name')}
             errorMessage={fet(errors.name)}
-            isRequired
             autoFocus
           />
         </div>
@@ -75,6 +75,7 @@ const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
             control={control}
             variant='secondary'
             name='description'
+            constraintSchema={scCreateGroup}
             label={t('description')}
             errorMessage={fet(errors.description)}
           />
@@ -128,9 +129,9 @@ const UpdateModal: FC<ModalBaseProps & { target: UpdateGroup }> = ({ state, relo
             control={control}
             variant='secondary'
             name='name'
+            constraintSchema={scUpdateGroup}
             label={t('name')}
             errorMessage={fet(errors.name)}
-            isRequired
             autoFocus
           />
         </div>
@@ -139,6 +140,7 @@ const UpdateModal: FC<ModalBaseProps & { target: UpdateGroup }> = ({ state, relo
             control={control}
             variant='secondary'
             name='description'
+            constraintSchema={scUpdateGroup}
             label={t('description')}
             errorMessage={fet(errors.description)}
           />
