@@ -13,21 +13,34 @@ import { headers } from 'next/headers'
  */
 export const getUsers = safeAuthAction.metadata({ actionName: 'getUsers', role: 'admin' }).action(async () => {
   const users = await prisma.user.findMany({
-    select: { id: true, name: true, email: true, role: true, lastLoginAt: true, createdAt: true },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      lastLoginAt: true,
+      createdAt: true,
+      userGroups: { select: { groupId: true } },
+    },
   })
-  return users.map(({ role, ...param }) => ({ ...param, isAdmin: role === 'admin' }))
+  return users.map(({ role, userGroups, ...param }) => ({
+    ...param,
+    isAdmin: role === 'admin',
+    groups: userGroups.map((ug) => ug.groupId),
+  }))
 })
 
 /**
- * グループ選択肢取得（id / name のみ）
+ * グループ選択肢取得（id: name のマップ）
  */
 export const getGroupOptions = safeAuthAction
   .metadata({ actionName: 'getGroupOptions', role: 'admin' })
   .action(async () => {
-    return prisma.group.findMany({
+    const groups = await prisma.group.findMany({
       select: { id: true, name: true },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { name: 'asc' },
     })
+    return Object.fromEntries(groups.map((g) => [g.id, g.name])) as Record<string, string>
   })
 export type GetGroupOptionsReturnType = Awaited<ReturnType<typeof getGroupOptions>>['data']
 

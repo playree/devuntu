@@ -1,7 +1,7 @@
 'use client'
 
 import { Chip, Label, ListBox, Select } from '@heroui/react'
-import { FC, SVGProps, useMemo } from 'react'
+import { FC, SVGProps } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 
 export const XCircleIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
@@ -34,12 +34,10 @@ export const MultiSelectCtrl = <
 }: {
   control: Control<TFieldValues>
   name: TName
-  groupOptions: { id: string; name: string }[]
+  groupOptions: Record<string, string>
   label: string
   variant?: 'primary' | 'secondary'
 }) => {
-  const groupMap = useMemo(() => new Map(groupOptions.map((g) => [g.id, g.name])), [groupOptions])
-
   return (
     <Controller
       control={control}
@@ -61,7 +59,7 @@ export const MultiSelectCtrl = <
                   return value.length > 0 ? (
                     value.map((id: string) => (
                       <Chip key={id} variant='soft' color='accent'>
-                        {groupMap.get(id)}
+                        {groupOptions[id]}
                       </Chip>
                     ))
                   ) : (
@@ -88,9 +86,9 @@ export const MultiSelectCtrl = <
             </Select.Trigger>
             <Select.Popover>
               <ListBox selectionMode='multiple'>
-                {groupOptions.map((group) => (
-                  <ListBox.Item key={group.id} id={group.id} textValue={group.name}>
-                    {group.name}
+                {Object.entries(groupOptions).map(([id, name]) => (
+                  <ListBox.Item key={id} id={id} textValue={name}>
+                    {name}
                     <ListBox.ItemIndicator />
                   </ListBox.Item>
                 ))}

@@ -20,13 +20,13 @@ import { dayformat } from '@/lib/day'
 import { ClientError } from '@/lib/error'
 import { CreateUserIn, CreateUserOut, scCreateUser, scUpdateUser, UpdateUser } from '@/lib/schema'
 import { useLocale } from '@/locale/client'
-import { ButtonGroup, Table } from '@heroui/react'
+import { ButtonGroup, Chip, Table } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FC } from 'react'
 import { useForm } from 'react-hook-form'
 import { createUser, deleteUser, getGroupOptions, getUsers, updateUser } from './server'
 
-const AddModal: FC<ModalBaseProps & { enabledPassword: boolean; groupOptions: { id: string; name: string }[] }> = ({
+const AddModal: FC<ModalBaseProps & { enabledPassword: boolean; groupOptions: Record<string, string> }> = ({
   state,
   reload,
   enabledPassword,
@@ -232,8 +232,9 @@ export const AdminUsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPass
         pagingList={list}
         columns={[
           { id: 'name', name: t('username'), isRowHeader: true, allowsSorting: true, minWidth: 80 },
-          { id: 'email', name: t('email'), allowsSorting: true, minWidth: 80, defaultWidth: '2fr' },
-          { id: 'isAdmin', name: t('is_admin'), allowsSorting: true, minWidth: 70 },
+          { id: 'email', name: t('email'), allowsSorting: true, minWidth: 80, defaultWidth: '1fr' },
+          { id: 'isAdmin', name: t('is_admin'), allowsSorting: true, minWidth: 70, defaultWidth: 70 },
+          { id: 'groups', name: t('group'), minWidth: 80, defaultWidth: '2fr' },
           { id: 'lastLoginAt', name: t('last_login'), allowsSorting: true, minWidth: 110 },
           { id: 'createdAt', name: t('created_at'), allowsSorting: true, minWidth: 110 },
           { id: 'action', name: t('action'), allowsSorting: false, defaultWidth: 100 },
@@ -245,6 +246,15 @@ export const AdminUsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPass
             <Table.Cell className='truncate font-mono text-xs'>{item.email}</Table.Cell>
             <Table.Cell>
               <OnOffChip isState={item.isAdmin} isIconOnly />
+            </Table.Cell>
+            <Table.Cell>
+              <div className='flex flex-wrap gap-1'>
+                {item.groups.map((groupId) => (
+                  <Chip key={groupId} variant='soft' color='accent'>
+                    {groupOptions?.[groupId]}
+                  </Chip>
+                ))}
+              </div>
             </Table.Cell>
             <Table.Cell className='font-mono text-xs'>{dayformat(item.lastLoginAt, 'jp-simple')}</Table.Cell>
             <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'jp-simple')}</Table.Cell>
