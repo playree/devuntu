@@ -6,6 +6,7 @@ import {
   ServerStackIcon,
   Squares2X2Icon,
   UserCircleIcon,
+  UserGroupIcon,
   UsersIcon,
 } from '@/components/icon'
 import { LocaleSwitch } from '@/components/locale/locale-switch'
@@ -33,7 +34,7 @@ export const MenuButton: FC<{
       <Button
         size='sm'
         fullWidth
-        className='justify-start rounded-xl px-4 hover:bg-gray-100 dark:hover:bg-neutral-900'
+        className='my-0.5 justify-start rounded-xl px-4 hover:bg-gray-100 dark:hover:bg-neutral-900'
         variant='ghost'
         onPress={() => {
           router.push(to)
@@ -151,7 +152,7 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
                 <MenuButton // グループ管理
                   to='/admin/groups'
                   text={t('group_manage')}
-                  icon={<UsersIcon />}
+                  icon={<UserGroupIcon />}
                   closeMenu={closeMenu}
                 />
                 <MenuButton // ダッシュボード管理

@@ -7,7 +7,7 @@ import { useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, PencilSquareIcon, PlusIcon, UsersIcon } from '@/components/icon'
+import { ArrowPathIcon, PencilSquareIcon, PlusIcon, UserGroupIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
 import { dayformat } from '@/lib/day'
@@ -35,7 +35,7 @@ export const AdminGroupsClient: FC = () => {
 
   return (
     <FlexCol>
-      <ContentHeader icon={<UsersIcon />} title={t('group_manage')}>
+      <ContentHeader icon={<UserGroupIcon />} title={t('group_manage')}>
         <MultiButton isIconOnly tooltip={t('add_group')} onPress={() => addModalState.open()}>
           <PlusIcon />
         </MultiButton>
