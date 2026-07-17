@@ -15,7 +15,7 @@ import { ContentHeader } from '@/components/header'
 import { ArrowPathIcon, CheckIcon, PencilSquareIcon, UserIcon, UserPlusIcon, UsersIcon } from '@/components/icon'
 import { InputCtrlPassword } from '@/components/input-ctrl-pw'
 import { notify } from '@/components/notify'
-import { parseAction } from '@/lib/action-client'
+import { parseAction, useActionData } from '@/lib/action-client'
 import { dayformat } from '@/lib/day'
 import { ClientError } from '@/lib/error'
 import { CreateUserIn, CreateUserOut, scCreateUser, scUpdateUser, UpdateUser } from '@/lib/schema'
@@ -24,9 +24,14 @@ import { ButtonGroup, Table } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FC } from 'react'
 import { useForm } from 'react-hook-form'
-import { createUser, deleteUser, getUsers, updateUser } from './server'
+import { createUser, deleteUser, getGroupOptions, getUsers, updateUser } from './server'
 
-const AddModal: FC<ModalBaseProps & { enabledPassword: boolean }> = ({ state, reload, enabledPassword }) => {
+const AddModal: FC<ModalBaseProps & { enabledPassword: boolean; groupOptions: { id: string; name: string }[] }> = ({
+  state,
+  reload,
+  enabledPassword,
+  groupOptions,
+}) => {
   const { t, fet } = useLocale()
 
   const {
@@ -106,7 +111,13 @@ const AddModal: FC<ModalBaseProps & { enabledPassword: boolean }> = ({ state, re
           <CheckBoxCtrl control={control} variant='secondary' name='isAdmin' id='isAdmin' label={t('is_admin')} />
         </div>
         <div className='col-span-12'>
-          <MultiSelectCtrl control={control} name='groups' />
+          <MultiSelectCtrl
+            control={control}
+            name='groups'
+            groupOptions={groupOptions}
+            label={t('group')}
+            variant='secondary'
+          />
         </div>
       </GridBox>
     </FormModal>
@@ -192,6 +203,7 @@ export const AdminUsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPass
   const { t } = useLocale()
   const addModalState = useModalState()
   const updateModalState = useModalState<UpdateUser>()
+  const groupOptions = useActionData(getGroupOptions)
 
   const list = usePagingList({
     load: async () => {
@@ -268,7 +280,15 @@ export const AdminUsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPass
         )}
       </MultiTable>
 
-      <AddModal state={addModalState} reload={list.reload} key={addModalState.key} enabledPassword={enabledPassword} />
+      {groupOptions && (
+        <AddModal
+          state={addModalState}
+          reload={list.reload}
+          key={addModalState.key}
+          enabledPassword={enabledPassword}
+          groupOptions={groupOptions}
+        />
+      )}
       {updateModalState.target && (
         <UpdateModal
           state={updateModalState}

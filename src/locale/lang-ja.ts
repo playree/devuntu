@@ -37,6 +37,7 @@ export const ja: DefaultLocaleItems = {
   error: 'エラー',
   free_memory: '空きメモリ',
   google_signin: 'Googleでサインイン',
+  group: 'グループ',
   group_manage: 'グループ管理',
   icon: 'アイコン',
   id: 'ID',

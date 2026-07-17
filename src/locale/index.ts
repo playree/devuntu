@@ -35,6 +35,7 @@ export type LocaleItemBase =
   | 'error'
   | 'free_memory'
   | 'google_signin'
+  | 'group'
   | 'group_manage'
   | 'icon'
   | 'id'

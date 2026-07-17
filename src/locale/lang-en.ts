@@ -37,6 +37,7 @@ export const en: LocaleItems = {
   error: 'Error',
   free_memory: 'Free Memory',
   google_signin: 'Sign in with Google',
+  group: 'Group',
   group_manage: 'Group Management',
   icon: 'Icon',
   id: 'ID',

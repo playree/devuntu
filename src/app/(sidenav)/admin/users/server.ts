@@ -19,6 +19,19 @@ export const getUsers = safeAuthAction.metadata({ actionName: 'getUsers', role: 
 })
 
 /**
+ * グループ選択肢取得（id / name のみ）
+ */
+export const getGroupOptions = safeAuthAction
+  .metadata({ actionName: 'getGroupOptions', role: 'admin' })
+  .action(async () => {
+    return prisma.group.findMany({
+      select: { id: true, name: true },
+      orderBy: { createdAt: 'desc' },
+    })
+  })
+export type GetGroupOptionsReturnType = Awaited<ReturnType<typeof getGroupOptions>>['data']
+
+/**
  * ユーザー作成
  */
 export const createUser = safeAuthAction
