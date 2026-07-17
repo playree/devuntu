@@ -120,12 +120,13 @@ export const AdminUsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPass
           groupOptions={groupOptions}
         />
       )}
-      {updateModalState.target && (
+      {updateModalState.target && groupOptions && (
         <UpdateModal
           state={updateModalState}
           reload={list.reload}
           key={updateModalState.key}
           target={updateModalState.target}
+          groupOptions={groupOptions}
         />
       )}
     </FlexCol>

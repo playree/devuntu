@@ -98,6 +98,7 @@ export const scUpdateUser = z.object({
   name: zName,
   email: zEmail,
   isAdmin: z.boolean(),
+  groups: z.array(z.uuidv7()),
 })
 export type UpdateUser = z.infer<typeof scUpdateUser>
 

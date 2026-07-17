@@ -117,7 +117,7 @@ export const deleteUser = safeAuthAction
 export const updateUser = safeAuthAction
   .metadata({ actionName: 'updateUser', role: 'admin' })
   .inputSchema(scUpdateUser)
-  .action(async ({ parsedInput: { id, name, email, isAdmin } }) => {
+  .action(async ({ parsedInput: { id, name, email, isAdmin, groups } }) => {
     await prisma.$transaction(async (tx) => {
       // 対象の存在確認
       const user = await tx.user.findUnique({ where: { id }, select: { id: true, role: true } })
@@ -144,8 +144,16 @@ export const updateUser = safeAuthAction
           },
         },
       })
+
+      // グループ再構築
+      await tx.userGroup.deleteMany({ where: { userId: id } })
+      if (groups.length > 0) {
+        await tx.userGroup.createMany({
+          data: groups.map((groupId) => ({ userId: id, groupId })),
+        })
+      }
     })
 
-    logger.info({ id }, 'user updated')
+    logger.info({ id, groups }, 'user updated')
     return { id }
   })

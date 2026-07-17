@@ -116,7 +116,12 @@ export const AddModal: FC<ModalBaseProps & { enabledPassword: boolean; groupOpti
   )
 }
 
-export const UpdateModal: FC<ModalBaseProps & { target: UpdateUser }> = ({ state, reload, target }) => {
+export const UpdateModal: FC<ModalBaseProps & { target: UpdateUser; groupOptions: Record<string, string> }> = ({
+  state,
+  reload,
+  target,
+  groupOptions,
+}) => {
   const { t, fet } = useLocale()
 
   const {
@@ -131,6 +136,7 @@ export const UpdateModal: FC<ModalBaseProps & { target: UpdateUser }> = ({ state
       name: target.name,
       email: target.email,
       isAdmin: target.isAdmin,
+      groups: target.groups,
     },
   })
 
@@ -183,8 +189,17 @@ export const UpdateModal: FC<ModalBaseProps & { target: UpdateUser }> = ({ state
             errorMessage={fet(errors.email)}
           />
         </div>
-        <div className='col-span-12'>
+        <div className='col-span-12 pb-4'>
           <CheckBoxCtrl control={control} variant='secondary' name='isAdmin' id='isAdmin' label={t('is_admin')} />
+        </div>
+        <div className='col-span-12'>
+          <MultiSelectCtrl
+            control={control}
+            name='groups'
+            groupOptions={groupOptions}
+            label={t('group')}
+            variant='secondary'
+          />
         </div>
       </GridBox>
     </FormModal>
