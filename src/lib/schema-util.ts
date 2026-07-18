@@ -5,6 +5,7 @@ export type FieldConstraints = {
   maxLength?: number
   min?: number
   max?: number
+  isRequired?: boolean
 }
 
 // optional/nullable/nullish などのラッパーを剥がして中身のスキーマを取り出す
@@ -17,6 +18,21 @@ const unwrap = (schema: any): any => {
   return s
 }
 
+// optional/nullish/default/prefault ラッパーが含まれていれば必須ではないと判定する。
+// nullable 単体は undefined を許容しないため required 扱いのままにする（HTML の required 意味論に一致）。
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const isFieldRequired = (schema: any): boolean => {
+  let s = schema
+  while (s?._zod?.def?.innerType) {
+    const type = s._zod.def.type
+    if (type === 'optional' || type === 'nullish' || type === 'default' || type === 'prefault') {
+      return false
+    }
+    s = s._zod.def.innerType
+  }
+  return true
+}
+
 // Zod v4 のスキーマ内部（_zod.def.checks）から min/max 制約を取り出す。
 // 文字列は minLength/maxLength、数値は min/max に振り分ける。
 export const getFieldConstraints = (schema: z.ZodObject, name: string): FieldConstraints => {
@@ -26,7 +42,7 @@ export const getFieldConstraints = (schema: z.ZodObject, name: string): FieldCon
   }
 
   const checks = unwrap(field)?._zod?.def?.checks ?? []
-  const out: FieldConstraints = {}
+  const out: FieldConstraints = { isRequired: isFieldRequired(field) }
   for (const check of checks) {
     const def = check?._zod?.def
     if (!def) {

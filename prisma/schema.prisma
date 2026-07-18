@@ -32,6 +32,9 @@ model User {
   oauthconsents      OauthConsent[]
   dashboard          Dashboard?
 
+  // add Group
+  userGroups UserGroup[]
+
   @@unique([email])
   @@map("user")
 }
@@ -265,4 +268,29 @@ model KeyValueStore {
 
   @@index([group])
   @@map("key_value_store")
+}
+
+model Group {
+  id          String      @id @default(uuid(7))
+  name        String
+  description String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  userGroups  UserGroup[]
+
+  @@map("group")
+}
+
+model UserGroup {
+  id        String   @id @default(uuid(7))
+  userId    String
+  groupId   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
+  @@index([userId])
+  @@index([groupId])
+  @@map("user_group")
 }

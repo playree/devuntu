@@ -1,7 +1,7 @@
 {
   "name": "devuntu",
-  "version": "0.1.5",
-  "buildno": "2026071201",
+  "version": "0.1.6",
+  "buildno": "2026071601",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -69,5 +69,5 @@
   "engines": {
     "node": "^24.0.0"
   },
-  "packageManager": "pnpm@11.9.0"
+  "packageManager": "pnpm@11.13.1"
 }

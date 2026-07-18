@@ -10,7 +10,7 @@ export const zPassword = z
   .min(8, el('@invalid_password'))
   .max(20, el('@invalid_password'))
   .regex(reHalfString, el('@invalid_password'))
-export const zDescription = z.string().max(40, el('@invalid_description'))
+export const zDescription = z.string().max(40, el('@invalid_description')).optional()
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
@@ -87,14 +87,18 @@ export const scCreateUser = z.object({
   email: zEmail,
   password: zPassword.optional(),
   isAdmin: z.boolean(),
+  groups: z.array(z.uuidv7()).default([]),
 })
 export type CreateUser = z.infer<typeof scCreateUser>
+export type CreateUserIn = z.input<typeof scCreateUser>
+export type CreateUserOut = z.output<typeof scCreateUser>
 
 export const scUpdateUser = z.object({
   id: z.uuidv7(),
   name: zName,
   email: zEmail,
   isAdmin: z.boolean(),
+  groups: z.array(z.uuidv7()),
 })
 export type UpdateUser = z.infer<typeof scUpdateUser>
 
@@ -135,3 +139,16 @@ export const scUpdateLinkWidget = z.object({
   icon: zImageFile.nullish(), // File | null | undefined
 })
 export type UpdateLinkWidget = z.infer<typeof scUpdateLinkWidget>
+
+export const scCreateGroup = z.object({
+  name: zName,
+  description: zDescription.optional(),
+})
+export type CreateGroup = z.infer<typeof scCreateGroup>
+
+export const scUpdateGroup = z.object({
+  id: z.uuidv7(),
+  name: zName,
+  description: zDescription.optional(),
+})
+export type UpdateGroup = z.infer<typeof scUpdateGroup>

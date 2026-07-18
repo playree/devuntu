@@ -56,7 +56,7 @@ const LinkWidgetAddModal: FC<ModalBaseProps> = ({ state, reload }) => {
         state.close()
       })}
       title={{ text: t('add_link'), icon: <PlusIcon /> }}
-      hooter={
+      footer={
         <>
           <MultiButton slot='close' variant='ghost'>
             {t('cancel')}
@@ -71,24 +71,22 @@ const LinkWidgetAddModal: FC<ModalBaseProps> = ({ state, reload }) => {
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            schema={scCreateLinkWidget}
             variant='secondary'
             name='name'
+            constraintSchema={scCreateLinkWidget}
             label={t('name')}
             errorMessage={fet(errors.name)}
-            isRequired
             autoFocus
           />
         </div>
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            schema={scCreateLinkWidget}
             variant='secondary'
             name='url'
+            constraintSchema={scCreateLinkWidget}
             label={t('url')}
             errorMessage={fet(errors.url)}
-            isRequired
           />
         </div>
         <div className='col-span-12'>
@@ -103,9 +101,9 @@ const LinkWidgetAddModal: FC<ModalBaseProps> = ({ state, reload }) => {
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            schema={scCreateLinkWidget}
             variant='secondary'
             name='description'
+            constraintSchema={scCreateLinkWidget}
             label={t('description')}
             errorMessage={fet(errors.description)}
           />
@@ -143,8 +141,8 @@ const LinkWidgetUpdateModal: FC<ModalBaseProps & { target: LinkWidgetTarget }> =
         reload()
         state.close()
       })}
-      title={{ text: t('update'), icon: <PencilSquareIcon /> }}
-      hooter={
+      title={{ text: t('update_link'), icon: <PencilSquareIcon /> }}
+      footer={
         <>
           <MultiButton slot='close' variant='ghost'>
             {t('cancel')}
@@ -159,24 +157,22 @@ const LinkWidgetUpdateModal: FC<ModalBaseProps & { target: LinkWidgetTarget }> =
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            schema={scUpdateLinkWidget}
             variant='secondary'
             name='name'
+            constraintSchema={scUpdateLinkWidget}
             label={t('name')}
             errorMessage={fet(errors.name)}
-            isRequired
             autoFocus
           />
         </div>
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            schema={scUpdateLinkWidget}
             variant='secondary'
             name='url'
+            constraintSchema={scUpdateLinkWidget}
             label={t('url')}
             errorMessage={fet(errors.url)}
-            isRequired
           />
         </div>
         <div className='col-span-12'>
@@ -192,9 +188,9 @@ const LinkWidgetUpdateModal: FC<ModalBaseProps & { target: LinkWidgetTarget }> =
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            schema={scUpdateLinkWidget}
             variant='secondary'
             name='description'
+            constraintSchema={scUpdateLinkWidget}
             label={t('description')}
             errorMessage={fet(errors.description)}
           />

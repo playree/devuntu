@@ -111,3 +111,13 @@ export type LinkWidget = Prisma.LinkWidgetModel
  * 
  */
 export type KeyValueStore = Prisma.KeyValueStoreModel
+/**
+ * Model Group
+ * 
+ */
+export type Group = Prisma.GroupModel
+/**
+ * Model UserGroup
+ * 
+ */
+export type UserGroup = Prisma.UserGroupModel

@@ -46,6 +46,7 @@ next-env.d.ts
 
 # work
 /.work/
+/.plan/
 
 # upload
 /upload/*.*

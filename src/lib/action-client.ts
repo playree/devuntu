@@ -1,4 +1,7 @@
+'use client'
+
 import { notify } from '@/components/notify'
+import { useEffect, useState } from 'react'
 import { errClient } from './error'
 import { intervalOperation } from './sleep'
 
@@ -44,6 +47,32 @@ export const parseAction = async <
   if (data === undefined) {
     throw new Error()
   }
+
+  return data
+}
+
+/**
+ * サーバーアクションをマウント時に1回実行し、結果を返す。
+ * エラー時は parseAction が throw / notify するため data は undefined のまま。
+ */
+export const useActionData = <T>(
+  action: () => Promise<{
+    data?: T
+    serverError?: { name?: string; errorType: string }
+    validationErrors?: unknown
+  }>,
+) => {
+  const [data, setData] = useState<T>()
+
+  useEffect(() => {
+    parseAction(action())
+      .then((res) => setData(res))
+      .catch((e) => {
+        console.error(e)
+      })
+    // マウント時1回のみ実行
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return data
 }

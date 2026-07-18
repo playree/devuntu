@@ -3,13 +3,11 @@
 import { ActionCell } from '@/components/action-cell'
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
-import { GridBox } from '@/components/general/grid'
-import { InputCtrl } from '@/components/general/input-ctrl'
-import { FormModal, ModalBaseProps, useConfirmModal, useModalState } from '@/components/general/modal'
+import { useConfirmModal, useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { CheckIcon, FingerPrintIcon, PencilSquareIcon, PlusCircleIcon, UserCircleIcon } from '@/components/icon'
+import { FingerPrintIcon, PencilSquareIcon, PlusCircleIcon, UserCircleIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { aaguidMap } from '@/lib/aaguid'
 import { authClient } from '@/lib/auth-client'
@@ -17,76 +15,16 @@ import { authConfig } from '@/lib/auth-config'
 import { makePath } from '@/lib/client-utils'
 import { dayformat, now } from '@/lib/day'
 import { envu } from '@/lib/env-util'
-import { scUpdatePasskey, UpdatePasskey } from '@/lib/schema'
+import { UpdatePasskey } from '@/lib/schema'
 import { useLocale } from '@/locale/client'
 import { Accordion, Table } from '@heroui/react'
-import { zodResolver } from '@hookform/resolvers/zod'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
-import { useForm } from 'react-hook-form'
+import { UpdatePasskeyModal } from './modals'
 
 const getDeviceNameFromAaguid = (aaguid?: string) => {
   return aaguidMap[aaguid ?? ''] ? aaguidMap[aaguid ?? ''] : { name: 'Any Device' }
-}
-
-const UpdatePasskeyModal: FC<ModalBaseProps & { target: UpdatePasskey }> = ({ state, reload, target }) => {
-  const { t, fet } = useLocale()
-
-  const {
-    control,
-    handleSubmit,
-    formState: { isSubmitting, errors },
-  } = useForm<UpdatePasskey>({
-    resolver: zodResolver(scUpdatePasskey),
-    mode: 'onChange',
-    defaultValues: {
-      id: target.id,
-      name: target.name,
-    },
-  })
-
-  return (
-    <FormModal
-      state={state}
-      onSubmit={handleSubmit(async (req) => {
-        const { data } = await authClient.passkey.updatePasskey({
-          id: req.id,
-          name: req.name,
-        })
-        if (data?.passkey) {
-          notify.success(t('msg_updated_target', { target: req.name }))
-          reload()
-        }
-        state.close()
-      })}
-      title={{ text: t('update_passkey'), icon: <FingerPrintIcon /> }}
-      hooter={
-        <>
-          <MultiButton slot='close' variant='ghost'>
-            {t('cancel')}
-          </MultiButton>
-          <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
-            {t('ok')}
-          </MultiButton>
-        </>
-      }
-    >
-      <GridBox>
-        <div className='col-span-12'>
-          <InputCtrl
-            control={control}
-            variant='secondary'
-            name='name'
-            label={t('name')}
-            errorMessage={fet(errors.name)}
-            isRequired
-            autoFocus
-          />
-        </div>
-      </GridBox>
-    </FormModal>
-  )
 }
 
 const MyPasskey: FC = () => {

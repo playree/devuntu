@@ -2,41 +2,41 @@
 
 import { ActionCell } from '@/components/action-cell'
 import { MultiButton } from '@/components/general/button'
-import { OnOffChip } from '@/components/general/chip'
 import { FlexCol } from '@/components/general/flex'
 import { useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, PencilSquareIcon, PlusIcon, UsersIcon } from '@/components/icon'
+import { ArrowPathIcon, PencilSquareIcon, PlusIcon, UserGroupIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
-import { UpdateOidcClient } from '@/lib/schema'
+import { dayformat } from '@/lib/day'
+import { UpdateGroup } from '@/lib/schema'
 import { useLocale } from '@/locale/client'
 import { ButtonGroup, Table } from '@heroui/react'
 import { FC } from 'react'
 import { AddModal, UpdateModal } from './modals'
-import { deleteOidcClient, getOidcClients } from './server'
+import { deleteGroup, getGroups } from './server'
 
-export const AdminOidcListClient: FC<{ baseUrl: string }> = ({ baseUrl }) => {
+export const AdminGroupsClient: FC = () => {
   const { t } = useLocale()
   const addModalState = useModalState()
-  const updateModalState = useModalState<UpdateOidcClient & { requirePkce: boolean }>()
+  const updateModalState = useModalState<UpdateGroup>()
 
   const list = usePagingList({
     load: async () => {
-      const res = await parseAction(getOidcClients())
+      const res = await parseAction(getGroups())
       return res ?? []
     },
     sort: {
-      init: { column: 'updatedAt', direction: 'descending' },
+      init: { column: 'createdAt', direction: 'descending' },
     },
   })
 
   return (
     <FlexCol>
-      <ContentHeader icon={<UsersIcon />} title={t('oidc_clients')}>
-        <MultiButton isIconOnly tooltip={t('add_client')} onPress={() => addModalState.open()}>
+      <ContentHeader icon={<UserGroupIcon />} title={t('group_manage')}>
+        <MultiButton isIconOnly tooltip={t('add_group')} onPress={() => addModalState.open()}>
           <PlusIcon />
         </MultiButton>
         <MultiButton isIconOnly tooltip={t('reload')} onPress={() => list.reload()}>
@@ -46,33 +46,20 @@ export const AdminOidcListClient: FC<{ baseUrl: string }> = ({ baseUrl }) => {
       </ContentHeader>
 
       <MultiTable
-        ariaLabel='user list'
+        ariaLabel='group list'
         pagingList={list}
         columns={[
-          {
-            id: 'clientName',
-            name: t('client_name'),
-            isRowHeader: true,
-            allowsSorting: true,
-            minWidth: 120,
-            defaultWidth: '1fr',
-          },
-          { id: 'clientId', name: t('client_id'), allowsSorting: true, minWidth: 200, defaultWidth: '2fr' },
-          { id: 'skipConsent', name: t('skip_consent'), allowsSorting: false, minWidth: 100 },
-          { id: 'requirePkce', name: t('require_pkce'), allowsSorting: false, minWidth: 100 },
+          { id: 'name', name: t('name'), isRowHeader: true, allowsSorting: true, minWidth: 80 },
+          { id: 'description', name: t('description'), allowsSorting: true, minWidth: 80, defaultWidth: '2fr' },
+          { id: 'createdAt', name: t('created_at'), allowsSorting: true, minWidth: 110 },
           { id: 'action', name: t('action'), allowsSorting: false, defaultWidth: 100 },
         ]}
       >
         {(item) => (
-          <Table.Row key={item.clientId} id={item.clientId}>
-            <Table.Cell>{item.clientName}</Table.Cell>
-            <Table.Cell className='font-mono text-xs'>{item.clientId}</Table.Cell>
-            <Table.Cell>
-              <OnOffChip isState={item.skipConsent} />
-            </Table.Cell>
-            <Table.Cell>
-              <OnOffChip isState={item.requirePkce} />
-            </Table.Cell>
+          <Table.Row key={item.id} id={item.id}>
+            <Table.Cell>{item.name}</Table.Cell>
+            <Table.Cell className='truncate'>{item.description}</Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'jp-simple')}</Table.Cell>
             <ActionCell
               items={[
                 {
@@ -86,10 +73,10 @@ export const AdminOidcListClient: FC<{ baseUrl: string }> = ({ baseUrl }) => {
                 },
                 {
                   template: 'delete',
-                  target: item.clientName ?? '',
+                  target: item.name,
                   action: async () => {
-                    await parseAction(deleteOidcClient({ clientId: item.clientId }))
-                    notify.success(t('msg_deleted_target', { target: item.clientName }))
+                    await parseAction(deleteGroup({ id: item.id }))
+                    notify.success(t('msg_deleted_target', { target: item.name }))
                     list.reload()
                   },
                 },
@@ -99,7 +86,7 @@ export const AdminOidcListClient: FC<{ baseUrl: string }> = ({ baseUrl }) => {
         )}
       </MultiTable>
 
-      <AddModal state={addModalState} reload={list.reload} key={addModalState.key} baseUrl={baseUrl} />
+      <AddModal state={addModalState} reload={list.reload} key={addModalState.key} />
       {updateModalState.target && (
         <UpdateModal
           state={updateModalState}

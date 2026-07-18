@@ -64,9 +64,9 @@ export const FormModal: FC<{
   state: UseOverlayStateReturn
   onSubmit: (e?: BaseSyntheticEvent) => Promise<void>
   title: { text: string; icon?: ReactNode }
-  hooter: ReactNode
+  footer: ReactNode
   hiddenCloseButton?: boolean
-}> = ({ children, state, onSubmit, title, hooter, hiddenCloseButton }) => {
+}> = ({ children, state, onSubmit, title, footer, hiddenCloseButton }) => {
   return (
     <Modal.Backdrop variant='blur' isOpen={state.isOpen} onOpenChange={state.setOpen} isDismissable={false}>
       <Modal.Container placement='top'>
@@ -80,7 +80,7 @@ export const FormModal: FC<{
               </Modal.Heading>
             </Modal.Header>
             <Modal.Body className='pt-2'>{children}</Modal.Body>
-            <Modal.Footer>{hooter}</Modal.Footer>
+            <Modal.Footer>{footer}</Modal.Footer>
           </form>
         </Modal.Dialog>
       </Modal.Container>
