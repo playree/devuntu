@@ -4,7 +4,7 @@ import { MultiButton } from '@/components/general/button'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input-ctrl'
 import { FormModal, ModalBaseProps } from '@/components/general/modal'
-import { CheckIcon, FingerPrintIcon } from '@/components/icon'
+import { CheckIcon, PencilSquareIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { authClient } from '@/lib/auth-client'
 import { scUpdatePasskey, UpdatePasskey } from '@/lib/schema'
@@ -40,10 +40,10 @@ export const UpdatePasskeyModal: FC<ModalBaseProps & { target: UpdatePasskey }> 
         if (data?.passkey) {
           notify.success(t('msg_updated_target', { target: req.name }))
           reload()
+          state.close()
         }
-        state.close()
       })}
-      title={{ text: t('update_passkey'), icon: <FingerPrintIcon /> }}
+      title={{ text: t('update_passkey'), icon: <PencilSquareIcon /> }}
       hooter={
         <>
           <MultiButton slot='close' variant='ghost'>

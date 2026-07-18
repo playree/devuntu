@@ -141,7 +141,7 @@ const LinkWidgetUpdateModal: FC<ModalBaseProps & { target: LinkWidgetTarget }> =
         reload()
         state.close()
       })}
-      title={{ text: t('update'), icon: <PencilSquareIcon /> }}
+      title={{ text: t('update_link'), icon: <PencilSquareIcon /> }}
       hooter={
         <>
           <MultiButton slot='close' variant='ghost'>

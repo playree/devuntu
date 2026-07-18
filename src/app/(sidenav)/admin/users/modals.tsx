@@ -6,7 +6,7 @@ import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input-ctrl'
 import { FormModal, ModalBaseProps } from '@/components/general/modal'
 import { MultiSelectCtrl } from '@/components/general/select-ctrl'
-import { CheckIcon, UserIcon, UserPlusIcon } from '@/components/icon'
+import { CheckIcon, PencilSquareIcon, UserPlusIcon } from '@/components/icon'
 import { InputCtrlPassword } from '@/components/input-ctrl-pw'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
@@ -155,7 +155,7 @@ export const UpdateModal: FC<ModalBaseProps & { target: UpdateUser; groupOptions
           }
         }
       })}
-      title={{ text: t('update_user'), icon: <UserIcon /> }}
+      title={{ text: t('update_user'), icon: <PencilSquareIcon /> }}
       hooter={
         <>
           <MultiButton slot='close' variant='ghost'>

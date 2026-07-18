@@ -7,7 +7,7 @@ import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input-ctrl'
 import { FormModal, ModalBaseProps } from '@/components/general/modal'
 import { StepMotion } from '@/components/general/step-motion'
-import { CheckIcon, PlusIcon } from '@/components/icon'
+import { CheckIcon, PencilSquareIcon, PlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
 import { AddOidcClient, scAddOidcClient, scUpdateOidcClient, UpdateOidcClient } from '@/lib/schema'
@@ -183,7 +183,7 @@ export const UpdateModal: FC<ModalBaseProps & { target: UpdateOidcClient & { req
         reload()
         state.close()
       })}
-      title={{ text: t('add_client'), icon: <PlusIcon /> }}
+      title={{ text: t('update_client'), icon: <PencilSquareIcon /> }}
       hooter={
         <>
           <MultiButton slot='close' variant='ghost'>

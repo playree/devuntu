@@ -10,7 +10,7 @@ export const zPassword = z
   .min(8, el('@invalid_password'))
   .max(20, el('@invalid_password'))
   .regex(reHalfString, el('@invalid_password'))
-export const zDescription = z.string().max(40, el('@invalid_description'))
+export const zDescription = z.string().max(40, el('@invalid_description')).optional()
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
