@@ -14,8 +14,8 @@
     "studio": "prisma studio"
   },
   "dependencies": {
-    "@better-auth/oauth-provider": "^1.6.11",
-    "@better-auth/passkey": "^1.6.11",
+    "@better-auth/oauth-provider": "^1.6.23",
+    "@better-auth/passkey": "^1.6.23",
     "@dnd-kit/react": "^0.5.0",
     "@heroui/react": "^3.2.2",
     "@heroui/styles": "^3.2.2",
@@ -26,7 +26,7 @@
     "@sendgrid/mail": "^8.1.6",
     "@zxcvbn-ts/core": "^4.1.2",
     "accept-language-parser": "^1.5.0",
-    "better-auth": "^1.6.11",
+    "better-auth": "^1.6.23",
     "cookie": "^1.1.1",
     "dayjs": "^1.11.21",
     "dotenv": "^17.4.2",
@@ -69,5 +69,5 @@
   "engines": {
     "node": "^24.0.0"
   },
-  "packageManager": "pnpm@11.13.1"
+  "packageManager": "pnpm@11.14.0"
 }
