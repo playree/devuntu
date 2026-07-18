@@ -65,7 +65,11 @@ export const useActionData = <T>(
   const [data, setData] = useState<T>()
 
   useEffect(() => {
-    parseAction(action()).then((res) => setData(res))
+    parseAction(action())
+      .then((res) => setData(res))
+      .catch((e) => {
+        console.error(e)
+      })
     // マウント時1回のみ実行
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

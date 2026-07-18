@@ -63,6 +63,7 @@ export const MultiSelectCtrl = <
                       </Chip>
                     ))
                   ) : (
+                    // 共通部品なのでローカライズ不要とする
                     <Chip variant='tertiary'>Not selected</Chip>
                   )
                 }}

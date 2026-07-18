@@ -9,6 +9,19 @@ import { scCreateUser, scUpdateUser, scUUID } from '@/lib/schema'
 import { headers } from 'next/headers'
 
 /**
+ * グループ存在確認（渡された全 groupId が存在しなければ INVALID_OPERATION）
+ */
+const assertGroupsExist = async (groupIds: string[]) => {
+  if (groupIds.length === 0) {
+    return
+  }
+  const count = await prisma.group.count({ where: { id: { in: groupIds } } })
+  if (count !== groupIds.length) {
+    throw errInvalidOperation()
+  }
+}
+
+/**
  * ユーザー一覧取得
  */
 export const getUsers = safeAuthAction.metadata({ actionName: 'getUsers', role: 'admin' }).action(async () => {
@@ -51,6 +64,11 @@ export const createUser = safeAuthAction
   .metadata({ actionName: 'createUser', role: 'admin' })
   .inputSchema(scCreateUser)
   .action(async ({ parsedInput: { name, email, password, isAdmin, groups } }) => {
+    const groupIds = [...new Set(groups)]
+
+    // グループ存在確認（作成前に検証してFK例外/孤立ユーザーを防ぐ）
+    await assertGroupsExist(groupIds)
+
     // ユーザー作成
     const { user } = await auth.api.createUser({
       headers: await headers(),
@@ -67,13 +85,13 @@ export const createUser = safeAuthAction
     }
 
     // グループ紐付け
-    if (groups.length > 0) {
+    if (groupIds.length > 0) {
       await prisma.userGroup.createMany({
-        data: groups.map((groupId) => ({ userId: user.id, groupId })),
+        data: groupIds.map((groupId) => ({ userId: user.id, groupId })),
       })
     }
 
-    logger.info({ user, groups }, 'user created')
+    logger.info({ user, groups: groupIds }, 'user created')
 
     return { id: user.id, name: user.name }
   })
@@ -118,42 +136,46 @@ export const updateUser = safeAuthAction
   .metadata({ actionName: 'updateUser', role: 'admin' })
   .inputSchema(scUpdateUser)
   .action(async ({ parsedInput: { id, name, email, isAdmin, groups } }) => {
-    await prisma.$transaction(async (tx) => {
-      // 対象の存在確認
-      const user = await tx.user.findUnique({ where: { id }, select: { id: true, role: true } })
-      if (!user) {
-        throw errInvalidOperation()
-      }
+    const groupIds = [...new Set(groups)]
 
-      // 管理者権限を消す場合
-      if (user.role === 'admin' && !isAdmin) {
-        if ((await tx.user.count({ where: { role: 'admin', id: { not: id } } })) === 0) {
-          // 最後の管理者ユーザーは不可
-          throw new ClientError('CANNOT_DELETE_LAST_ADMIN')
-        }
-      }
+    // 対象の存在確認
+    const user = await prisma.user.findUnique({ where: { id }, select: { id: true, role: true } })
+    if (!user) {
+      throw errInvalidOperation()
+    }
 
-      await auth.api.adminUpdateUser({
-        headers: await headers(),
-        body: {
-          userId: id,
-          data: {
-            name,
-            email,
-            role: isAdmin ? 'admin' : 'user',
-          },
+    // 管理者権限を消す場合
+    if (user.role === 'admin' && !isAdmin) {
+      if ((await prisma.user.count({ where: { role: 'admin', id: { not: id } } })) === 0) {
+        // 最後の管理者ユーザーは不可
+        throw new ClientError('CANNOT_DELETE_LAST_ADMIN')
+      }
+    }
+
+    // グループ存在確認（auth 更新前に検証してFK例外/部分更新を防ぐ）
+    await assertGroupsExist(groupIds)
+
+    // プロフィール/権限更新（auth は別クライアントのためトランザクション対象外）
+    await auth.api.adminUpdateUser({
+      headers: await headers(),
+      body: {
+        userId: id,
+        data: {
+          name,
+          email,
+          role: isAdmin ? 'admin' : 'user',
         },
-      })
-
-      // グループ再構築
-      await tx.userGroup.deleteMany({ where: { userId: id } })
-      if (groups.length > 0) {
-        await tx.userGroup.createMany({
-          data: groups.map((groupId) => ({ userId: id, groupId })),
-        })
-      }
+      },
     })
 
-    logger.info({ id, groups }, 'user updated')
+    // グループ再構築（この2操作のみ原子的に）
+    await prisma.$transaction([
+      prisma.userGroup.deleteMany({ where: { userId: id } }),
+      ...(groupIds.length > 0
+        ? [prisma.userGroup.createMany({ data: groupIds.map((groupId) => ({ userId: id, groupId })) })]
+        : []),
+    ])
+
+    logger.info({ id, groups: groupIds }, 'user updated')
     return { id }
   })
