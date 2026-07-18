@@ -1,7 +1,7 @@
 # プロジェクト概要
 
 - Next.js v16
-- pnpm v10
+- pnpm v11
 - Prisma v7
 - Better Auth v1.6
 - Tailwind CSS v4

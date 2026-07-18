@@ -56,7 +56,7 @@ const LinkWidgetAddModal: FC<ModalBaseProps> = ({ state, reload }) => {
         state.close()
       })}
       title={{ text: t('add_link'), icon: <PlusIcon /> }}
-      hooter={
+      footer={
         <>
           <MultiButton slot='close' variant='ghost'>
             {t('cancel')}
@@ -142,7 +142,7 @@ const LinkWidgetUpdateModal: FC<ModalBaseProps & { target: LinkWidgetTarget }> =
         state.close()
       })}
       title={{ text: t('update_link'), icon: <PencilSquareIcon /> }}
-      hooter={
+      footer={
         <>
           <MultiButton slot='close' variant='ghost'>
             {t('cancel')}

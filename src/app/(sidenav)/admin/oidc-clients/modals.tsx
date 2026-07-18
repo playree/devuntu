@@ -55,7 +55,7 @@ export const AddModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, relo
         reload()
       })}
       title={{ text: t('add_client'), icon: <PlusIcon /> }}
-      hooter={
+      footer={
         <>
           {step.id === 'INPUT' && (
             <>
@@ -184,7 +184,7 @@ export const UpdateModal: FC<ModalBaseProps & { target: UpdateOidcClient & { req
         state.close()
       })}
       title={{ text: t('update_client'), icon: <PencilSquareIcon /> }}
-      hooter={
+      footer={
         <>
           <MultiButton slot='close' variant='ghost'>
             {t('cancel')}

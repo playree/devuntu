@@ -52,7 +52,7 @@ export const AddModal: FC<ModalBaseProps & { enabledPassword: boolean; groupOpti
         state.close()
       })}
       title={{ text: t('add_user'), icon: <UserPlusIcon /> }}
-      hooter={
+      footer={
         <>
           <MultiButton slot='close' variant='ghost'>
             {t('cancel')}
@@ -152,11 +152,13 @@ export const UpdateModal: FC<ModalBaseProps & { target: UpdateUser; groupOptions
         } catch (e) {
           if (e instanceof ClientError && e.errorType === 'CANNOT_DELETE_LAST_ADMIN') {
             notify.warn(t('msg_cannot_delete_last_admin'))
+          } else {
+            throw e
           }
         }
       })}
       title={{ text: t('update_user'), icon: <PencilSquareIcon /> }}
-      hooter={
+      footer={
         <>
           <MultiButton slot='close' variant='ghost'>
             {t('cancel')}

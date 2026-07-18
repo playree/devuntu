@@ -44,7 +44,7 @@ export const UpdatePasskeyModal: FC<ModalBaseProps & { target: UpdatePasskey }> 
         }
       })}
       title={{ text: t('update_passkey'), icon: <PencilSquareIcon /> }}
-      hooter={
+      footer={
         <>
           <MultiButton slot='close' variant='ghost'>
             {t('cancel')}

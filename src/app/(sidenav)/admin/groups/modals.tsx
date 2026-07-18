@@ -40,7 +40,7 @@ export const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
         state.close()
       })}
       title={{ text: t('add_group'), icon: <PlusIcon /> }}
-      hooter={
+      footer={
         <>
           <MultiButton slot='close' variant='ghost'>
             {t('cancel')}
@@ -105,7 +105,7 @@ export const UpdateModal: FC<ModalBaseProps & { target: UpdateGroup }> = ({ stat
         state.close()
       })}
       title={{ text: t('update_group'), icon: <PencilSquareIcon /> }}
-      hooter={
+      footer={
         <>
           <MultiButton slot='close' variant='ghost'>
             {t('cancel')}
