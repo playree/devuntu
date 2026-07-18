@@ -7,7 +7,7 @@ services:
     volumes:
       - ./upload:/app/upload
     restart: unless-stopped
-    env_file: ./.env
+    env_file: ./.env.docker
     depends_on:
       - db
   db:
