@@ -11,6 +11,8 @@
     - [LOG\_LEVEL](#log_level)
 - [開発](#開発)
   - [DB起動](#db起動)
+  - [DBバックアップ](#dbバックアップ)
+  - [DBリストア](#dbリストア)
   - [インストール](#インストール)
   - [ビルド](#ビルド)
   - [パッケージ更新](#パッケージ更新)
@@ -67,6 +69,26 @@ _デフォルト = info_
 
 ```sh
 docker compose up -d db
+```
+
+## DBバックアップ
+
+DB(`db`サービス)が起動している状態で実行する。`backup/`配下にタイムスタンプ付き(`.dump`/カスタム形式)で出力される。
+
+```sh
+pnpm db:backup
+# または
+./scripts/backup-db.sh
+```
+
+## DBリストア
+
+対象のダンプファイルを引数に指定する。既存オブジェクトは削除された上で復元される。
+
+```sh
+pnpm db:restore backup/devuntu_YYYYMMDD_HHMMSS.dump
+# または
+./scripts/restore-db.sh backup/devuntu_YYYYMMDD_HHMMSS.dump
 ```
 
 ## インストール
