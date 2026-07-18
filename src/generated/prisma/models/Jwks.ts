@@ -988,6 +988,7 @@ export type JwksCreateManyArgs<ExtArgs extends runtime.Types.Extensions.Internal
    * The data used to create many Jwks.
    */
   data: Prisma.JwksCreateManyInput | Prisma.JwksCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -1006,6 +1007,7 @@ export type JwksCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extensions
    * The data used to create many Jwks.
    */
   data: Prisma.JwksCreateManyInput | Prisma.JwksCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**

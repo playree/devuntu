@@ -1016,6 +1016,7 @@ export type KeyValueStoreCreateManyArgs<ExtArgs extends runtime.Types.Extensions
    * The data used to create many KeyValueStores.
    */
   data: Prisma.KeyValueStoreCreateManyInput | Prisma.KeyValueStoreCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -1034,6 +1035,7 @@ export type KeyValueStoreCreateManyAndReturnArgs<ExtArgs extends runtime.Types.E
    * The data used to create many KeyValueStores.
    */
   data: Prisma.KeyValueStoreCreateManyInput | Prisma.KeyValueStoreCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**

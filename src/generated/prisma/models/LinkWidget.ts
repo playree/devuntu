@@ -1044,6 +1044,7 @@ export type LinkWidgetCreateManyArgs<ExtArgs extends runtime.Types.Extensions.In
    * The data used to create many LinkWidgets.
    */
   data: Prisma.LinkWidgetCreateManyInput | Prisma.LinkWidgetCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -1062,6 +1063,7 @@ export type LinkWidgetCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Exte
    * The data used to create many LinkWidgets.
    */
   data: Prisma.LinkWidgetCreateManyInput | Prisma.LinkWidgetCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
