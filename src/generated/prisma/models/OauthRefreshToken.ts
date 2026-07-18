@@ -642,6 +642,7 @@ export type OauthRefreshTokenCreateOrConnectWithoutUserInput = {
 
 export type OauthRefreshTokenCreateManyUserInputEnvelope = {
   data: Prisma.OauthRefreshTokenCreateManyUserInput | Prisma.OauthRefreshTokenCreateManyUserInput[]
+  skipDuplicates?: boolean
 }
 
 export type OauthRefreshTokenUpsertWithWhereUniqueWithoutUserInput = {
@@ -712,6 +713,7 @@ export type OauthRefreshTokenCreateOrConnectWithoutSessionInput = {
 
 export type OauthRefreshTokenCreateManySessionInputEnvelope = {
   data: Prisma.OauthRefreshTokenCreateManySessionInput | Prisma.OauthRefreshTokenCreateManySessionInput[]
+  skipDuplicates?: boolean
 }
 
 export type OauthRefreshTokenUpsertWithWhereUniqueWithoutSessionInput = {
@@ -765,6 +767,7 @@ export type OauthRefreshTokenCreateOrConnectWithoutOauthclientInput = {
 
 export type OauthRefreshTokenCreateManyOauthclientInputEnvelope = {
   data: Prisma.OauthRefreshTokenCreateManyOauthclientInput | Prisma.OauthRefreshTokenCreateManyOauthclientInput[]
+  skipDuplicates?: boolean
 }
 
 export type OauthRefreshTokenUpsertWithWhereUniqueWithoutOauthclientInput = {
@@ -1826,6 +1829,7 @@ export type OauthRefreshTokenCreateManyArgs<ExtArgs extends runtime.Types.Extens
    * The data used to create many OauthRefreshTokens.
    */
   data: Prisma.OauthRefreshTokenCreateManyInput | Prisma.OauthRefreshTokenCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -1844,6 +1848,7 @@ export type OauthRefreshTokenCreateManyAndReturnArgs<ExtArgs extends runtime.Typ
    * The data used to create many OauthRefreshTokens.
    */
   data: Prisma.OauthRefreshTokenCreateManyInput | Prisma.OauthRefreshTokenCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

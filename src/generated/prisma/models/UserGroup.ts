@@ -406,6 +406,7 @@ export type UserGroupCreateOrConnectWithoutUserInput = {
 
 export type UserGroupCreateManyUserInputEnvelope = {
   data: Prisma.UserGroupCreateManyUserInput | Prisma.UserGroupCreateManyUserInput[]
+  skipDuplicates?: boolean
 }
 
 export type UserGroupUpsertWithWhereUniqueWithoutUserInput = {
@@ -453,6 +454,7 @@ export type UserGroupCreateOrConnectWithoutGroupInput = {
 
 export type UserGroupCreateManyGroupInputEnvelope = {
   data: Prisma.UserGroupCreateManyGroupInput | Prisma.UserGroupCreateManyGroupInput[]
+  skipDuplicates?: boolean
 }
 
 export type UserGroupUpsertWithWhereUniqueWithoutGroupInput = {
@@ -1243,6 +1245,7 @@ export type UserGroupCreateManyArgs<ExtArgs extends runtime.Types.Extensions.Int
    * The data used to create many UserGroups.
    */
   data: Prisma.UserGroupCreateManyInput | Prisma.UserGroupCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -1261,6 +1264,7 @@ export type UserGroupCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Exten
    * The data used to create many UserGroups.
    */
   data: Prisma.UserGroupCreateManyInput | Prisma.UserGroupCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

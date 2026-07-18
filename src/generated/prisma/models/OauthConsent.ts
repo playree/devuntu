@@ -472,6 +472,7 @@ export type OauthConsentCreateOrConnectWithoutUserInput = {
 
 export type OauthConsentCreateManyUserInputEnvelope = {
   data: Prisma.OauthConsentCreateManyUserInput | Prisma.OauthConsentCreateManyUserInput[]
+  skipDuplicates?: boolean
 }
 
 export type OauthConsentUpsertWithWhereUniqueWithoutUserInput = {
@@ -528,6 +529,7 @@ export type OauthConsentCreateOrConnectWithoutOauthclientInput = {
 
 export type OauthConsentCreateManyOauthclientInputEnvelope = {
   data: Prisma.OauthConsentCreateManyOauthclientInput | Prisma.OauthConsentCreateManyOauthclientInput[]
+  skipDuplicates?: boolean
 }
 
 export type OauthConsentUpsertWithWhereUniqueWithoutOauthclientInput = {
@@ -1360,6 +1362,7 @@ export type OauthConsentCreateManyArgs<ExtArgs extends runtime.Types.Extensions.
    * The data used to create many OauthConsents.
    */
   data: Prisma.OauthConsentCreateManyInput | Prisma.OauthConsentCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -1378,6 +1381,7 @@ export type OauthConsentCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Ex
    * The data used to create many OauthConsents.
    */
   data: Prisma.OauthConsentCreateManyInput | Prisma.OauthConsentCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

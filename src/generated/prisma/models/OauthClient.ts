@@ -1054,6 +1054,7 @@ export type OauthClientCreateOrConnectWithoutUserInput = {
 
 export type OauthClientCreateManyUserInputEnvelope = {
   data: Prisma.OauthClientCreateManyUserInput | Prisma.OauthClientCreateManyUserInput[]
+  skipDuplicates?: boolean
 }
 
 export type OauthClientUpsertWithWhereUniqueWithoutUserInput = {
@@ -2643,6 +2644,7 @@ export type OauthClientCreateManyArgs<ExtArgs extends runtime.Types.Extensions.I
    * The data used to create many OauthClients.
    */
   data: Prisma.OauthClientCreateManyInput | Prisma.OauthClientCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -2661,6 +2663,7 @@ export type OauthClientCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Ext
    * The data used to create many OauthClients.
    */
   data: Prisma.OauthClientCreateManyInput | Prisma.OauthClientCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

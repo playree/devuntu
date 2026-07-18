@@ -632,6 +632,7 @@ export type OauthAccessTokenCreateOrConnectWithoutUserInput = {
 
 export type OauthAccessTokenCreateManyUserInputEnvelope = {
   data: Prisma.OauthAccessTokenCreateManyUserInput | Prisma.OauthAccessTokenCreateManyUserInput[]
+  skipDuplicates?: boolean
 }
 
 export type OauthAccessTokenUpsertWithWhereUniqueWithoutUserInput = {
@@ -697,6 +698,7 @@ export type OauthAccessTokenCreateOrConnectWithoutSessionInput = {
 
 export type OauthAccessTokenCreateManySessionInputEnvelope = {
   data: Prisma.OauthAccessTokenCreateManySessionInput | Prisma.OauthAccessTokenCreateManySessionInput[]
+  skipDuplicates?: boolean
 }
 
 export type OauthAccessTokenUpsertWithWhereUniqueWithoutSessionInput = {
@@ -746,6 +748,7 @@ export type OauthAccessTokenCreateOrConnectWithoutOauthclientInput = {
 
 export type OauthAccessTokenCreateManyOauthclientInputEnvelope = {
   data: Prisma.OauthAccessTokenCreateManyOauthclientInput | Prisma.OauthAccessTokenCreateManyOauthclientInput[]
+  skipDuplicates?: boolean
 }
 
 export type OauthAccessTokenUpsertWithWhereUniqueWithoutOauthclientInput = {
@@ -795,6 +798,7 @@ export type OauthAccessTokenCreateOrConnectWithoutOauthrefreshtokenInput = {
 
 export type OauthAccessTokenCreateManyOauthrefreshtokenInputEnvelope = {
   data: Prisma.OauthAccessTokenCreateManyOauthrefreshtokenInput | Prisma.OauthAccessTokenCreateManyOauthrefreshtokenInput[]
+  skipDuplicates?: boolean
 }
 
 export type OauthAccessTokenUpsertWithWhereUniqueWithoutOauthrefreshtokenInput = {
@@ -1781,6 +1785,7 @@ export type OauthAccessTokenCreateManyArgs<ExtArgs extends runtime.Types.Extensi
    * The data used to create many OauthAccessTokens.
    */
   data: Prisma.OauthAccessTokenCreateManyInput | Prisma.OauthAccessTokenCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -1799,6 +1804,7 @@ export type OauthAccessTokenCreateManyAndReturnArgs<ExtArgs extends runtime.Type
    * The data used to create many OauthAccessTokens.
    */
   data: Prisma.OauthAccessTokenCreateManyInput | Prisma.OauthAccessTokenCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

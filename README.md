@@ -9,15 +9,16 @@
   - [GOOGLE\_CLIENT\_SECRET](#google_client_secret)
   - [開発用](#開発用)
     - [LOG\_LEVEL](#log_level)
-- [開発用](#開発用-1)
+- [開発](#開発)
+  - [DB起動](#db起動)
   - [インストール](#インストール)
   - [ビルド](#ビルド)
   - [パッケージ更新](#パッケージ更新)
-- [better-auth](#better-auth)
-- [イメージ作成](#イメージ作成)
-  - [Docker Build](#docker-build)
-  - [Docker Hub Push](#docker-hub-push)
-- [sharpの依存関係チェック](#sharpの依存関係チェック)
+  - [better-auth](#better-auth)
+  - [イメージ作成](#イメージ作成)
+    - [Docker Build](#docker-build)
+    - [Docker Hub Push](#docker-hub-push)
+  - [sharpの依存関係チェック](#sharpの依存関係チェック)
 
 # Devuntu
 
@@ -42,7 +43,7 @@
 
 ## DATABASE_URL
 
-DB(SQLite)のファイルパス
+DB(PostgreSQL)のパス
 
 ## BETTER_AUTH_SECRET
 
@@ -60,7 +61,13 @@ Better Auth用のシークレット
 
 _デフォルト = info_
 
-# 開発用
+# 開発
+
+## DB起動
+
+```sh
+docker compose up -d db
+```
 
 ## インストール
 
@@ -81,15 +88,15 @@ pnpm up -i
 pnpm up -i -L
 ```
 
-# better-auth
+## better-auth
 
 ```sh
 pnpm dlx auth generate
 ```
 
-# イメージ作成
+## イメージ作成
 
-## Docker Build
+### Docker Build
 
 ```sh
 docker build -f docker/Dockerfile \
@@ -99,14 +106,14 @@ docker build -f docker/Dockerfile \
              -t devuntu .
 ```
 
-## Docker Hub Push
+### Docker Hub Push
 
 ```sh
 docker tag devuntu:latest playree/devuntu:latest
 docker push playree/devuntu:latest
 ```
 
-# sharpの依存関係チェック
+## sharpの依存関係チェック
 
 基本的に`Next.js`の要求バージョンに揃える
 

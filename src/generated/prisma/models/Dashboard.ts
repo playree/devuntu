@@ -1072,6 +1072,7 @@ export type DashboardCreateManyArgs<ExtArgs extends runtime.Types.Extensions.Int
    * The data used to create many Dashboards.
    */
   data: Prisma.DashboardCreateManyInput | Prisma.DashboardCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -1090,6 +1091,7 @@ export type DashboardCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Exten
    * The data used to create many Dashboards.
    */
   data: Prisma.DashboardCreateManyInput | Prisma.DashboardCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

@@ -44,7 +44,7 @@ export const auth = betterAuth({
     freshAge: envu.server.SESSION_FRESH_AGE,
   },
   database: prismaAdapter(prisma, {
-    provider: 'sqlite',
+    provider: 'postgresql',
   }),
   advanced: {
     database: {
