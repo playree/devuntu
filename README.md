@@ -133,6 +133,9 @@ docker build -f docker/Dockerfile \
 ```sh
 docker tag devuntu:latest playree/devuntu:latest
 docker push playree/devuntu:latest
+
+docker tag devuntu:latest playree/devuntu:0.2.0
+docker push playree/devuntu:0.2.0
 ```
 
 ## sharpの依存関係チェック
