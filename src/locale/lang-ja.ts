@@ -3,6 +3,9 @@ import { DefaultLocaleItems } from '.'
 // アルファベット順
 export const ja: DefaultLocaleItems = {
   account: 'アカウント',
+  account_connect: 'Googleアカウントと連携',
+  account_disconnect: '連携を解除',
+  account_relink: '再連携',
   action: '操作',
   add_client: 'クライアント追加',
   add_group: 'グループ追加',
@@ -36,7 +39,9 @@ export const ja: DefaultLocaleItems = {
   email: 'Eメール',
   error: 'エラー',
   free_memory: '空きメモリ',
+  google_account: 'Googleアカウント',
   google_signin: 'Googleでサインイン',
+  granted_scopes: '取得済みスコープ',
   group: 'グループ',
   group_manage: 'グループ管理',
   icon: 'アイコン',
@@ -69,6 +74,7 @@ export const ja: DefaultLocaleItems = {
   require_pkce: 'PKCE必須',
   resend: '再送',
   save: '保存',
+  scope: 'スコープ',
   select_file: 'ファイルを選択',
   send: '送信',
   server_info: 'サーバー情報',
@@ -106,6 +112,8 @@ export const ja: DefaultLocaleItems = {
   msg_deleted_target: '${target} を削除しました。',
   msg_email_not_verified: 'Eメールが検証されていません。\n一度、Eメールでログインしてください。',
   msg_enter_otp: 'Eメールに届いた認証コードを入力してください。',
+  msg_google_account_connected: 'Googleアカウントと連携済みです。',
+  msg_google_account_not_connected: 'Googleアカウントと連携すると、Googleのデータを利用できます。',
   msg_invalid_email_or_password: 'Eメールまたはパスワードが違います。',
   msg_not_allowed_domain_in_google:
     'このアカウントでのGoogleサインインは許可されていません。\nEメール又はパスキーでのサインインをご利用ください。',

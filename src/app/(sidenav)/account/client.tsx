@@ -7,21 +7,31 @@ import { useConfirmModal, useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { FingerPrintIcon, PencilSquareIcon, PlusCircleIcon, UserCircleIcon } from '@/components/icon'
+import {
+  BoltSlashIcon,
+  FingerPrintIcon,
+  GoogleIcon,
+  PencilSquareIcon,
+  PlusIcon,
+  UserCircleIcon,
+} from '@/components/icon'
 import { notify } from '@/components/notify'
 import { aaguidMap } from '@/lib/aaguid'
+import { parseAction } from '@/lib/action-client'
 import { authClient } from '@/lib/auth-client'
 import { authConfig } from '@/lib/auth-config'
 import { makePath } from '@/lib/client-utils'
 import { dayformat, now } from '@/lib/day'
 import { envu } from '@/lib/env-util'
+import { formatScopeLabel, GOOGLE_LINK_SCOPES } from '@/lib/google-calendar'
 import { UpdatePasskey } from '@/lib/schema'
 import { useLocale } from '@/locale/client'
-import { Accordion, Table } from '@heroui/react'
+import { Accordion, ButtonGroup, Table } from '@heroui/react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { FC } from 'react'
+import { FC, useEffect, useState } from 'react'
 import { UpdatePasskeyModal } from './modals'
+import { disconnectGoogleAccount, getGoogleAccountStatus, GetGoogleAccountStatusReturnType } from './server'
 
 const getDeviceNameFromAaguid = (aaguid?: string) => {
   return aaguidMap[aaguid ?? ''] ? aaguidMap[aaguid ?? ''] : { name: 'Any Device' }
@@ -55,9 +65,9 @@ const MyPasskey: FC = () => {
 
   return (
     <FlexCol>
-      <ContentHeader>
+      <ContentHeader className='text-foreground'>
         <MultiButton
-          icon={<PlusCircleIcon />}
+          icon={<PlusIcon />}
           onPress={async () => {
             const { data, error } = await authClient.passkey.addPasskey({
               name: `${envu.client.NEXT_PUBLIC_APP_NAME} (${dayformat(now(), 'jp-simple')})`,
@@ -155,7 +165,83 @@ const MyPasskey: FC = () => {
   )
 }
 
-const defaultExpandedKeys = new Set(['passkey'])
+const GoogleAccountLink: FC = () => {
+  const { t } = useLocale()
+  const { confirmModal } = useConfirmModal()
+  const [status, setStatus] = useState<GetGoogleAccountStatusReturnType>()
+
+  const reload = () => {
+    parseAction(getGoogleAccountStatus()).then((res) => setStatus(res))
+  }
+
+  useEffect(() => {
+    reload()
+  }, [])
+
+  const link = async () => {
+    await authClient.linkSocial({
+      provider: 'google',
+      scopes: GOOGLE_LINK_SCOPES,
+      callbackURL: '/account',
+    })
+  }
+
+  const connected = status?.connected
+
+  return (
+    <FlexCol>
+      {connected ? (
+        <ContentHeader title={t('msg_google_account_connected')} className='text-foreground'>
+          <MultiButton icon={<GoogleIcon />} onPress={link}>
+            {t('account_relink')}
+          </MultiButton>
+          <MultiButton
+            icon={<BoltSlashIcon />}
+            onPress={async () => {
+              const ok = await confirmModal().confirm({
+                title: t('account_disconnect'),
+                text: t('msg_google_account_connected'),
+              })
+              if (ok) {
+                await parseAction(disconnectGoogleAccount())
+                notify.success(t('account_disconnect'))
+                reload()
+              }
+            }}
+          >
+            <ButtonGroup.Separator />
+            {t('account_disconnect')}
+          </MultiButton>
+        </ContentHeader>
+      ) : (
+        <ContentHeader title={t('msg_google_account_not_connected')}>
+          <MultiButton icon={<GoogleIcon />} onPress={link}>
+            {t('account_connect')}
+          </MultiButton>
+        </ContentHeader>
+      )}
+
+      {connected && !!status?.scopes.length && (
+        <div className='px-1'>
+          <div className='mb-1 text-sm font-bold'>{t('granted_scopes')}</div>
+          <MultiTable
+            ariaLabel='granted scopes'
+            columns={[{ id: 'scope', name: t('scope'), isRowHeader: true, defaultWidth: '1fr' }]}
+            items={status.scopes.map((scope) => ({ id: scope, scope }))}
+          >
+            {(item) => (
+              <Table.Row key={item.id} id={item.id}>
+                <Table.Cell className='font-mono text-xs'>{formatScopeLabel(item.scope)}</Table.Cell>
+              </Table.Row>
+            )}
+          </MultiTable>
+        </div>
+      )}
+    </FlexCol>
+  )
+}
+
+const defaultExpandedKeys = new Set(['passkey', 'google_account'])
 export const AccountClient: FC = () => {
   const { t } = useLocale()
 
@@ -174,6 +260,20 @@ export const AccountClient: FC = () => {
           <Accordion.Panel>
             <Accordion.Body className='px-4'>
               <MyPasskey />
+            </Accordion.Body>
+          </Accordion.Panel>
+        </Accordion.Item>
+        <Accordion.Item id='google_account'>
+          <Accordion.Heading>
+            <Accordion.Trigger className='gap-1'>
+              <GoogleIcon />
+              {t('google_account')}
+              <Accordion.Indicator />
+            </Accordion.Trigger>
+          </Accordion.Heading>
+          <Accordion.Panel>
+            <Accordion.Body className='px-4'>
+              <GoogleAccountLink />
             </Accordion.Body>
           </Accordion.Panel>
         </Accordion.Item>

@@ -3,6 +3,9 @@ import { LocaleItems } from '.'
 // アルファベット順
 export const en: LocaleItems = {
   account: 'Account',
+  account_connect: 'Connect Google Account',
+  account_disconnect: 'Disconnect',
+  account_relink: 'Re-link',
   action: 'Action',
   add_client: 'Add Client',
   add_group: 'Add Group',
@@ -36,7 +39,9 @@ export const en: LocaleItems = {
   email: 'Email',
   error: 'Error',
   free_memory: 'Free Memory',
+  google_account: 'Google Account',
   google_signin: 'Sign in with Google',
+  granted_scopes: 'Granted Scopes',
   group: 'Group',
   group_manage: 'Group Management',
   icon: 'Icon',
@@ -69,6 +74,7 @@ export const en: LocaleItems = {
   require_pkce: 'Require PKCE',
   resend: 'Resend',
   save: 'Save',
+  scope: 'Scope',
   select_file: 'Choose file',
   send: 'Send',
   server_info: 'Server Info',
@@ -106,6 +112,8 @@ Please copy and use the connection information above.
   msg_deleted_target: 'Deleted ${target}.',
   msg_email_not_verified: 'Your email address has not been verified.\nPlease log in with your email address.',
   msg_enter_otp: 'Enter the verification code sent to your email address.',
+  msg_google_account_connected: 'Google account is connected.',
+  msg_google_account_not_connected: 'Connect your Google account to use Google data.',
   msg_invalid_email_or_password: 'Invalid email or password.',
   msg_not_allowed_domain_in_google:
     'Google sign in is not allowed for this account.\nPlease sign in with your email or passkey instead.',

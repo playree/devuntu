@@ -69,6 +69,12 @@ export const auth = betterAuth({
       },
     },
   },
+  account: {
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ['google'],
+    },
+  },
   emailAndPassword: {
     enabled: !envu.server.DISABLE_PASSWORD_AUTH,
   },
@@ -119,6 +125,9 @@ export const auth = betterAuth({
             clientId: envu.server.GOOGLE_CLIENT_ID,
             clientSecret: envu.server.GOOGLE_CLIENT_SECRET,
             overrideUserInfoOnSignIn: true,
+            // リフレッシュトークンを取得するための設定
+            accessType: 'offline',
+            prompt: 'select_account consent',
             getUserInfo: async (token) => {
               if (!token.idToken) {
                 return null
