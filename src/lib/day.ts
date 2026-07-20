@@ -1,9 +1,11 @@
 import dayjs, { Dayjs, extend } from 'dayjs'
+import isoWeek from 'dayjs/plugin/isoWeek'
 import timezone from 'dayjs/plugin/timezone'
 import utc from 'dayjs/plugin/utc'
 
 extend(utc)
 extend(timezone)
+extend(isoWeek)
 
 export const now = () => dayjs()
 export const nowDate = () => now().toDate()
@@ -36,9 +38,8 @@ export const TOKYO_TZ = 'Asia/Tokyo'
 export const startOfWeek = (date?: string | null) => {
   const base = date ? dayjs.tz(date, TOKYO_TZ) : dayjs().tz(TOKYO_TZ)
   const valid = base.isValid() ? base : dayjs().tz(TOKYO_TZ)
-  const d = valid.startOf('day')
-  const diff = (d.day() + 6) % 7 // 月曜までの戻し日数(day(): 0=日..6=土)
-  return d.subtract(diff, 'day')
+  // isoWeek は月曜始まり
+  return valid.startOf('isoWeek')
 }
 
 /** 週の起点から7日分の Dayjs 配列(月曜〜日曜) */

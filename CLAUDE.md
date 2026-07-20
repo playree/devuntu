@@ -31,7 +31,6 @@
 - コンパイル、ビルド確認は`pnpm build`
 - Plan作成時の参照系commandは実行を許可
 - 修正ファイルには`pnpm exec prettier --write`を実施する
-- Planファイルを作成したら`.plan`配下に保存する
 
 # コードレビュー除外ファイル
 

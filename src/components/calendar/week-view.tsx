@@ -106,7 +106,12 @@ export const WeekView: FC<{ weekStartISO: string; busy: BusySlot[]; className?: 
           スクロールバー幅を両者で共有し、縦罫線のズレを防ぐ */}
       <div ref={scrollRef} className='relative overflow-y-auto' style={{ maxHeight: 640 }}>
         {/* ヘッダ(曜日・日付) */}
-        <div className='bg-background sticky top-0 z-20 flex border-b border-neutral-200 dark:border-neutral-800'>
+        <div
+          className={cn(
+            'sticky top-0 z-20 flex border-b border-neutral-200 dark:border-neutral-800',
+            'bg-cyan-50 dark:bg-gray-950',
+          )}
+        >
           <div className='w-12 shrink-0' />
           {days.map((d) => {
             const isToday = !!todayStr && d.key === todayStr
@@ -122,7 +127,7 @@ export const WeekView: FC<{ weekStartISO: string; busy: BusySlot[]; className?: 
               >
                 <div
                   className={cn(
-                    'text-xs',
+                    'text-xs font-semibold',
                     isSunday && 'text-red-500',
                     isSaturday && 'text-blue-500',
                     !isSunday && !isSaturday && 'text-neutral-500',
@@ -130,7 +135,7 @@ export const WeekView: FC<{ weekStartISO: string; busy: BusySlot[]; className?: 
                 >
                   {weekdays[d.weekdayIndex]}
                 </div>
-                <div className={cn('text-sm font-semibold', isToday && 'text-blue-600 dark:text-blue-400')}>
+                <div className={cn('font-mono text-sm font-semibold', isToday && 'text-blue-600 dark:text-blue-400')}>
                   {d.dateLabel}
                 </div>
               </div>
@@ -139,13 +144,13 @@ export const WeekView: FC<{ weekStartISO: string; busy: BusySlot[]; className?: 
         </div>
 
         {/* 本文 */}
-        <div ref={bodyRef} className='flex' style={{ height: TOTAL_HEIGHT }}>
+        <div ref={bodyRef} className='flex bg-cyan-50 dark:bg-gray-950' style={{ height: TOTAL_HEIGHT }}>
           {/* 時刻ラベル */}
           <div className='relative w-12 shrink-0'>
             {HOURS.map((h) => (
               <div
                 key={h}
-                className='absolute right-1 -translate-y-1/2 text-xs text-neutral-400'
+                className='absolute right-1 -translate-y-1/2 font-mono text-xs text-neutral-400'
                 style={{ top: h * HOUR_HEIGHT }}
               >
                 {h > 0 ? `${h}:00` : ''}
