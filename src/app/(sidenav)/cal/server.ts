@@ -1,0 +1,76 @@
+'use server'
+
+import { safeAuthAction } from '@/lib/action-server'
+import { GOOGLE_ACCOUNT_PROVIDER_ID } from '@/lib/google-calendar'
+import { logger } from '@/lib/logger'
+import { prisma } from '@/lib/prisma'
+import { nanoid } from 'nanoid'
+
+/** 公開URL用のID(推測困難な長め) */
+const genPublicId = () => nanoid(48)
+
+/**
+ * カレンダー共有の状態取得
+ */
+export const getCalendarShare = safeAuthAction
+  .metadata({ actionName: 'getCalendarShare', role: 'user' })
+  .action(async ({ ctx: { user } }) => {
+    const [account, share] = await Promise.all([
+      prisma.account.findFirst({
+        where: { userId: user.id, providerId: GOOGLE_ACCOUNT_PROVIDER_ID },
+        select: { refreshToken: true },
+      }),
+      prisma.calendarShare.findUnique({
+        where: { userId: user.id },
+        select: { publicId: true },
+      }),
+    ])
+    return {
+      googleConnected: !!account?.refreshToken,
+      shared: !!share,
+      publicId: share?.publicId ?? null,
+    }
+  })
+export type GetCalendarShareReturnType = Awaited<ReturnType<typeof getCalendarShare>>['data']
+
+/**
+ * カレンダー共有を有効化(レコード作成)
+ */
+export const enableCalendarShare = safeAuthAction
+  .metadata({ actionName: 'enableCalendarShare', role: 'user' })
+  .action(async ({ ctx: { user } }) => {
+    const share = await prisma.calendarShare.upsert({
+      where: { userId: user.id },
+      update: {},
+      create: { userId: user.id, publicId: genPublicId() },
+      select: { publicId: true },
+    })
+    logger.info({ userId: user.id }, 'calendar share enabled')
+    return { publicId: share.publicId }
+  })
+
+/**
+ * カレンダー共有を無効化(レコード削除)
+ */
+export const disableCalendarShare = safeAuthAction
+  .metadata({ actionName: 'disableCalendarShare', role: 'user' })
+  .action(async ({ ctx: { user } }) => {
+    await prisma.calendarShare.deleteMany({ where: { userId: user.id } })
+    logger.info({ userId: user.id }, 'calendar share disabled')
+    return { disabled: true }
+  })
+
+/**
+ * 共有URLの再発行(publicId をローテート)
+ */
+export const rotateCalendarShareUrl = safeAuthAction
+  .metadata({ actionName: 'rotateCalendarShareUrl', role: 'user' })
+  .action(async ({ ctx: { user } }) => {
+    const share = await prisma.calendarShare.update({
+      where: { userId: user.id },
+      data: { publicId: genPublicId() },
+      select: { publicId: true },
+    })
+    logger.info({ userId: user.id }, 'calendar share url rotated')
+    return { publicId: share.publicId }
+  })

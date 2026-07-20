@@ -19,7 +19,9 @@ export const authConfig: AuthConfig = {
   },
   target: {
     auth: {
-      exclude: ['/auth/signin', '/start'],
+      // '/cal/:id' はカレンダー空き時間の公開共有ページ(ログイン不要)
+      // ':id' は1セグメント必須のため、管理ページ '/cal'(認証必須)はマッチしない
+      exclude: ['/auth/signin', '/start', '/cal/:id'],
     },
     admin: {
       require: ['/admin/:path'],

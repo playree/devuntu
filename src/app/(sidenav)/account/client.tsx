@@ -23,7 +23,7 @@ import { authConfig } from '@/lib/auth-config'
 import { makePath } from '@/lib/client-utils'
 import { dayformat, now } from '@/lib/day'
 import { envu } from '@/lib/env-util'
-import { formatScopeLabel, GOOGLE_LINK_SCOPES } from '@/lib/google-calendar'
+import { formatScopeLabel, GOOGLE_ACCOUNT_PROVIDER_ID } from '@/lib/google-calendar'
 import { UpdatePasskey } from '@/lib/schema'
 import { useLocale } from '@/locale/client'
 import { Accordion, ButtonGroup, Table } from '@heroui/react'
@@ -179,9 +179,10 @@ const GoogleAccountLink: FC = () => {
   }, [])
 
   const link = async () => {
-    await authClient.linkSocial({
-      provider: 'google',
-      scopes: GOOGLE_LINK_SCOPES,
+    // カレンダー連携専用プロバイダ(google-account)にリンク
+    // (scopes/offline/consent はサーバーのプロバイダ設定側で固定)
+    await authClient.oauth2.link({
+      providerId: GOOGLE_ACCOUNT_PROVIDER_ID,
       callbackURL: '/account',
     })
   }

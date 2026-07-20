@@ -11,6 +11,7 @@ import { uuidv7 } from 'uuidv7'
 import { authConfig } from './auth-config'
 import { nowDate } from './day'
 import { envu } from './env-util'
+import { CALENDAR_READONLY_SCOPE, GOOGLE_ACCOUNT_PROVIDER_ID } from './google-calendar'
 import { logger } from './logger'
 import { sendEmailOtp } from './mail'
 import { prisma } from './prisma'
@@ -34,6 +35,23 @@ if (
       logger.debug({ profile }, 'provider.devuntu')
       return {}
     },
+  })
+}
+
+// カレンダー連携用の Google プロバイダ(ログイン用 'google' とは分離)
+// refresh token を確実に得るため access_type=offline + prompt=consent を指定
+if (!!envu.server.GOOGLE_CLIENT_ID && !!envu.server.GOOGLE_CLIENT_SECRET) {
+  oauthConfigs.push({
+    providerId: GOOGLE_ACCOUNT_PROVIDER_ID,
+    clientId: envu.server.GOOGLE_CLIENT_ID,
+    clientSecret: envu.server.GOOGLE_CLIENT_SECRET,
+    discoveryUrl: 'https://accounts.google.com/.well-known/openid-configuration',
+    // 'profile' は必須。無いと userinfo に name が返らず better-auth が name_is_missing で失敗する
+    scopes: ['openid', 'profile', 'email', CALENDAR_READONLY_SCOPE],
+    pkce: true,
+    accessType: 'offline',
+    prompt: 'consent',
+    disableSignUp: true,
   })
 }
 
@@ -125,9 +143,9 @@ export const auth = betterAuth({
             clientId: envu.server.GOOGLE_CLIENT_ID,
             clientSecret: envu.server.GOOGLE_CLIENT_SECRET,
             overrideUserInfoOnSignIn: true,
-            // リフレッシュトークンを取得するための設定
-            accessType: 'offline',
-            prompt: 'select_account consent',
+            // ログイン用途。毎回の同意画面を避けるため consent は付けない
+            // (refresh token が必要なカレンダー連携は 'google-account' プロバイダで別途取得)
+            prompt: 'select_account',
             getUserInfo: async (token) => {
               if (!token.idToken) {
                 return null

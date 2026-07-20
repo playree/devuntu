@@ -3,6 +3,7 @@ import { MultiButton } from '@/components/general/button'
 import { ThemeSwitchList } from '@/components/general/theme-switch'
 import {
   ArrowLeftStartOnRectangleIcon,
+  CalendarDaysIcon,
   ServerStackIcon,
   Squares2X2Icon,
   UserCircleIcon,
@@ -122,6 +123,12 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
             to='/'
             text={t('dashboard')}
             icon={<Squares2X2Icon />}
+            closeMenu={closeMenu}
+          />
+          <MenuButton // カレンダー
+            to='/cal'
+            text={t('calendar')}
+            icon={<CalendarDaysIcon />}
             closeMenu={closeMenu}
           />
           <MenuButton // アカウント

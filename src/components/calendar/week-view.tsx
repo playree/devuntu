@@ -1,0 +1,188 @@
+'use client'
+
+import { TOKYO_TZ, toTokyo } from '@/lib/day'
+import type { BusySlot } from '@/lib/google-calendar'
+import { useLocale } from '@/locale/client'
+import { cn } from '@heroui/react'
+import dayjs from 'dayjs'
+import { FC, useEffect, useMemo, useRef, useSyncExternalStore } from 'react'
+
+/** マウント済みか(クライアントのみ true)。SSR とのハイドレーション不一致を避けつつ現在時刻を扱う */
+const emptySubscribe = () => () => {}
+const useMounted = () =>
+  useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  )
+
+/** 1時間あたりの高さ(px) */
+const HOUR_HEIGHT = 48
+const TOTAL_HEIGHT = HOUR_HEIGHT * 24
+const HOURS = Array.from({ length: 24 }, (_, i) => i)
+
+const WEEKDAY_LABELS: Record<string, string[]> = {
+  ja: ['日', '月', '火', '水', '木', '金', '土'],
+  en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+}
+
+type DayBlock = { top: number; height: number }
+
+/**
+ * Google カレンダー週表示風のグリッド。
+ * FreeBusy(予定あり区間)のみをブロック表示し、予定のタイトル等は一切表示しない。
+ */
+export const WeekView: FC<{ weekStartISO: string; busy: BusySlot[]; className?: string }> = ({
+  weekStartISO,
+  busy,
+  className,
+}) => {
+  const { locale } = useLocale()
+  const weekdays = WEEKDAY_LABELS[locale] ?? WEEKDAY_LABELS.ja
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  // 現在時刻はクライアントでのみ確定する(SSR では null)
+  const mounted = useMounted()
+  const now = useMemo(() => (mounted ? dayjs().tz(TOKYO_TZ) : null), [mounted])
+  const todayStr = now?.format('YYYY-MM-DD') ?? ''
+  const nowY = now ? ((now.hour() * 60 + now.minute()) / (24 * 60)) * TOTAL_HEIGHT : null
+
+  const weekStart = useMemo(() => toTokyo(weekStartISO), [weekStartISO])
+
+  // 各日ごとの列情報(日付・当日判定・busyブロック位置)を算出
+  const days = useMemo(() => {
+    return Array.from({ length: 7 }, (_, di) => {
+      const dayStart = weekStart.add(di, 'day')
+      const dayStartMs = dayStart.valueOf()
+      const dayEndMs = dayStart.add(1, 'day').valueOf()
+      const dayMs = dayEndMs - dayStartMs
+
+      const blocks: DayBlock[] = []
+      for (const slot of busy) {
+        const bs = new Date(slot.start).getTime()
+        const be = new Date(slot.end).getTime()
+        const s = Math.max(bs, dayStartMs)
+        const e = Math.min(be, dayEndMs)
+        if (e > s) {
+          blocks.push({
+            top: ((s - dayStartMs) / dayMs) * TOTAL_HEIGHT,
+            height: ((e - s) / dayMs) * TOTAL_HEIGHT,
+          })
+        }
+      }
+
+      return {
+        key: dayStart.format('YYYY-MM-DD'),
+        weekdayIndex: dayStart.day(),
+        dateLabel: dayStart.format('M/D'),
+        blocks,
+      }
+    })
+  }, [weekStart, busy])
+
+  useEffect(() => {
+    // 初期スクロール位置: 当週に今日が含まれれば現在時刻を中央に、なければ 8:00 付近を表示
+    const container = scrollRef.current
+    if (!container || !now || nowY === null) {
+      return
+    }
+    const inThisWeek = days.some((d) => d.key === todayStr)
+    const target = inThisWeek ? nowY - container.clientHeight / 2 : 8 * HOUR_HEIGHT - HOUR_HEIGHT
+    container.scrollTop = Math.max(0, target)
+  }, [days, now, nowY, todayStr])
+
+  return (
+    <div
+      className={cn(
+        'bg-background overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800',
+        className,
+      )}
+    >
+      {/* ヘッダ(曜日・日付) */}
+      <div className='flex border-b border-neutral-200 dark:border-neutral-800'>
+        <div className='w-12 shrink-0' />
+        {days.map((d) => {
+          const isToday = !!todayStr && d.key === todayStr
+          const isSunday = d.weekdayIndex === 0
+          const isSaturday = d.weekdayIndex === 6
+          return (
+            <div
+              key={d.key}
+              className={cn(
+                'flex-1 border-l border-neutral-200 py-1 text-center dark:border-neutral-800',
+                isToday && 'bg-blue-500/10',
+              )}
+            >
+              <div
+                className={cn(
+                  'text-xs',
+                  isSunday && 'text-red-500',
+                  isSaturday && 'text-blue-500',
+                  !isSunday && !isSaturday && 'text-neutral-500',
+                )}
+              >
+                {weekdays[d.weekdayIndex]}
+              </div>
+              <div className={cn('text-sm font-semibold', isToday && 'text-blue-600 dark:text-blue-400')}>
+                {d.dateLabel}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* 本文(縦スクロール) */}
+      <div ref={scrollRef} className='relative overflow-y-auto' style={{ maxHeight: 640 }}>
+        <div className='flex' style={{ height: TOTAL_HEIGHT }}>
+          {/* 時刻ラベル */}
+          <div className='relative w-12 shrink-0'>
+            {HOURS.map((h) => (
+              <div
+                key={h}
+                className='absolute right-1 -translate-y-1/2 text-[10px] text-neutral-400'
+                style={{ top: h * HOUR_HEIGHT }}
+              >
+                {h > 0 ? `${h}:00` : ''}
+              </div>
+            ))}
+          </div>
+
+          {/* 日ごとの列 */}
+          {days.map((d) => {
+            const isToday = !!todayStr && d.key === todayStr
+            return (
+              <div key={d.key} className='relative flex-1 border-l border-neutral-200 dark:border-neutral-800'>
+                {/* 時間の区切り線 */}
+                {HOURS.map((h) => (
+                  <div
+                    key={h}
+                    className='absolute inset-x-0 border-t border-neutral-100 dark:border-neutral-900'
+                    style={{ top: h * HOUR_HEIGHT }}
+                  />
+                ))}
+
+                {/* 予定ありブロック */}
+                {d.blocks.map((b, i) => (
+                  <div
+                    key={i}
+                    className='absolute inset-x-0.5 rounded-md bg-blue-500/70 dark:bg-blue-400/60'
+                    style={{ top: b.top, height: Math.max(2, b.height) }}
+                  />
+                ))}
+
+                {/* 現在時刻ライン(当日のみ) */}
+                {isToday && nowY !== null && (
+                  <div className='absolute inset-x-0 z-10' style={{ top: nowY }}>
+                    <div className='relative border-t border-red-500'>
+                      <div className='absolute -top-1 -left-1 h-2 w-2 rounded-full bg-red-500' />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
