@@ -32,14 +32,16 @@ export const withinMinutes = (date: Date, min: number) => {
 /** タイムゾーン(固定) */
 export const TOKYO_TZ = 'Asia/Tokyo'
 
-/** 指定日(YYYY-MM-DD等)を含む週の起点(日曜 0:00, Asia/Tokyo)を返す。未指定・不正時は今日基準 */
+/** 指定日(YYYY-MM-DD等)を含む週の起点(月曜 0:00, Asia/Tokyo)を返す。未指定・不正時は今日基準 */
 export const startOfWeek = (date?: string | null) => {
   const base = date ? dayjs.tz(date, TOKYO_TZ) : dayjs().tz(TOKYO_TZ)
   const valid = base.isValid() ? base : dayjs().tz(TOKYO_TZ)
-  return valid.startOf('week')
+  const d = valid.startOf('day')
+  const diff = (d.day() + 6) % 7 // 月曜までの戻し日数(day(): 0=日..6=土)
+  return d.subtract(diff, 'day')
 }
 
-/** 週の起点から7日分の Dayjs 配列(日曜〜土曜) */
+/** 週の起点から7日分の Dayjs 配列(月曜〜日曜) */
 export const weekDays = (weekStart: Dayjs) => Array.from({ length: 7 }, (_, i) => weekStart.add(i, 'day'))
 
 /** 週の取得レンジ(ISO文字列。timeMin: 週初日0:00, timeMax: 翌週初日0:00) */

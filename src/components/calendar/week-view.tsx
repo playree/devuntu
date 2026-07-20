@@ -40,6 +40,7 @@ export const WeekView: FC<{ weekStartISO: string; busy: BusySlot[]; className?: 
   const { locale } = useLocale()
   const weekdays = WEEKDAY_LABELS[locale] ?? WEEKDAY_LABELS.ja
   const scrollRef = useRef<HTMLDivElement>(null)
+  const bodyRef = useRef<HTMLDivElement>(null)
 
   // 現在時刻はクライアントでのみ確定する(SSR では null)
   const mounted = useMounted()
@@ -82,12 +83,15 @@ export const WeekView: FC<{ weekStartISO: string; busy: BusySlot[]; className?: 
 
   useEffect(() => {
     // 初期スクロール位置: 当週に今日が含まれれば現在時刻を中央に、なければ 8:00 付近を表示
+    // sticky ヘッダの分だけ本文が下にずれるため、本文の offsetTop を加味する
     const container = scrollRef.current
-    if (!container || !now || nowY === null) {
+    const body = bodyRef.current
+    if (!container || !body || !now || nowY === null) {
       return
     }
+    const bodyTop = body.offsetTop
     const inThisWeek = days.some((d) => d.key === todayStr)
-    const target = inThisWeek ? nowY - container.clientHeight / 2 : 8 * HOUR_HEIGHT - HOUR_HEIGHT
+    const target = inThisWeek ? bodyTop + nowY - container.clientHeight / 2 : bodyTop + 8 * HOUR_HEIGHT - HOUR_HEIGHT
     container.scrollTop = Math.max(0, target)
   }, [days, now, nowY, todayStr])
 
@@ -98,48 +102,50 @@ export const WeekView: FC<{ weekStartISO: string; busy: BusySlot[]; className?: 
         className,
       )}
     >
-      {/* ヘッダ(曜日・日付) */}
-      <div className='flex border-b border-neutral-200 dark:border-neutral-800'>
-        <div className='w-12 shrink-0' />
-        {days.map((d) => {
-          const isToday = !!todayStr && d.key === todayStr
-          const isSunday = d.weekdayIndex === 0
-          const isSaturday = d.weekdayIndex === 6
-          return (
-            <div
-              key={d.key}
-              className={cn(
-                'flex-1 border-l border-neutral-200 py-1 text-center dark:border-neutral-800',
-                isToday && 'bg-blue-500/10',
-              )}
-            >
+      {/* ヘッダと本文を同一スクロールコンテナに入れ、ヘッダを sticky にすることで
+          スクロールバー幅を両者で共有し、縦罫線のズレを防ぐ */}
+      <div ref={scrollRef} className='relative overflow-y-auto' style={{ maxHeight: 640 }}>
+        {/* ヘッダ(曜日・日付) */}
+        <div className='bg-background sticky top-0 z-20 flex border-b border-neutral-200 dark:border-neutral-800'>
+          <div className='w-12 shrink-0' />
+          {days.map((d) => {
+            const isToday = !!todayStr && d.key === todayStr
+            const isSunday = d.weekdayIndex === 0
+            const isSaturday = d.weekdayIndex === 6
+            return (
               <div
+                key={d.key}
                 className={cn(
-                  'text-xs',
-                  isSunday && 'text-red-500',
-                  isSaturday && 'text-blue-500',
-                  !isSunday && !isSaturday && 'text-neutral-500',
+                  'flex-1 border-l border-neutral-200 py-1 text-center dark:border-neutral-800',
+                  isToday && 'bg-blue-500/10',
                 )}
               >
-                {weekdays[d.weekdayIndex]}
+                <div
+                  className={cn(
+                    'text-xs',
+                    isSunday && 'text-red-500',
+                    isSaturday && 'text-blue-500',
+                    !isSunday && !isSaturday && 'text-neutral-500',
+                  )}
+                >
+                  {weekdays[d.weekdayIndex]}
+                </div>
+                <div className={cn('text-sm font-semibold', isToday && 'text-blue-600 dark:text-blue-400')}>
+                  {d.dateLabel}
+                </div>
               </div>
-              <div className={cn('text-sm font-semibold', isToday && 'text-blue-600 dark:text-blue-400')}>
-                {d.dateLabel}
-              </div>
-            </div>
-          )
-        })}
-      </div>
+            )
+          })}
+        </div>
 
-      {/* 本文(縦スクロール) */}
-      <div ref={scrollRef} className='relative overflow-y-auto' style={{ maxHeight: 640 }}>
-        <div className='flex' style={{ height: TOTAL_HEIGHT }}>
+        {/* 本文 */}
+        <div ref={bodyRef} className='flex' style={{ height: TOTAL_HEIGHT }}>
           {/* 時刻ラベル */}
           <div className='relative w-12 shrink-0'>
             {HOURS.map((h) => (
               <div
                 key={h}
-                className='absolute right-1 -translate-y-1/2 text-[10px] text-neutral-400'
+                className='absolute right-1 -translate-y-1/2 text-xs text-neutral-400'
                 style={{ top: h * HOUR_HEIGHT }}
               >
                 {h > 0 ? `${h}:00` : ''}
@@ -156,7 +162,7 @@ export const WeekView: FC<{ weekStartISO: string; busy: BusySlot[]; className?: 
                 {HOURS.map((h) => (
                   <div
                     key={h}
-                    className='absolute inset-x-0 border-t border-neutral-100 dark:border-neutral-900'
+                    className='absolute inset-x-0 border-t border-neutral-200 dark:border-neutral-900'
                     style={{ top: h * HOUR_HEIGHT }}
                   />
                 ))}
@@ -165,8 +171,13 @@ export const WeekView: FC<{ weekStartISO: string; busy: BusySlot[]; className?: 
                 {d.blocks.map((b, i) => (
                   <div
                     key={i}
-                    className='absolute inset-x-0.5 rounded-md bg-blue-500/70 dark:bg-blue-400/60'
-                    style={{ top: b.top, height: Math.max(2, b.height) }}
+                    className='absolute inset-x-0.5 rounded-md border border-blue-500/30 bg-blue-500/20'
+                    style={{
+                      top: b.top,
+                      height: Math.max(2, b.height),
+                      backgroundImage:
+                        'repeating-linear-gradient(45deg, rgb(59 130 246 / 0.45) 0, rgb(59 130 246 / 0.45) 2px, transparent 2px, transparent 7px)',
+                    }}
                   />
                 ))}
 
