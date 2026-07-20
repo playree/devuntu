@@ -28,7 +28,7 @@
 # 自動実行
 
 - コンパイル確認は不要
-- 参照系bash commandは実行を許可
+- Plan作成時の参照系commandは実行を許可
 - 修正ファイルには`pnpm exec prettier --write`を実施する
 - CLAUDE.mdに追記した方が良い内容があれば提案して
 - Plan作成時のMDファイルは`.plan`配下に作成して

@@ -264,6 +264,7 @@ export type UserWhereInput = {
   oauthconsents?: Prisma.OauthConsentListRelationFilter
   dashboard?: Prisma.XOR<Prisma.DashboardNullableScalarRelationFilter, Prisma.DashboardWhereInput> | null
   userGroups?: Prisma.UserGroupListRelationFilter
+  calendarShare?: Prisma.XOR<Prisma.CalendarShareNullableScalarRelationFilter, Prisma.CalendarShareWhereInput> | null
 }
 
 export type UserOrderByWithRelationInput = {
@@ -291,6 +292,7 @@ export type UserOrderByWithRelationInput = {
   oauthconsents?: Prisma.OauthConsentOrderByRelationAggregateInput
   dashboard?: Prisma.DashboardOrderByWithRelationInput
   userGroups?: Prisma.UserGroupOrderByRelationAggregateInput
+  calendarShare?: Prisma.CalendarShareOrderByWithRelationInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -321,6 +323,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   oauthconsents?: Prisma.OauthConsentListRelationFilter
   dashboard?: Prisma.XOR<Prisma.DashboardNullableScalarRelationFilter, Prisma.DashboardWhereInput> | null
   userGroups?: Prisma.UserGroupListRelationFilter
+  calendarShare?: Prisma.XOR<Prisma.CalendarShareNullableScalarRelationFilter, Prisma.CalendarShareWhereInput> | null
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -388,6 +391,7 @@ export type UserCreateInput = {
   oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -415,6 +419,7 @@ export type UserUncheckedCreateInput = {
   oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -442,6 +447,7 @@ export type UserUpdateInput = {
   oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -469,6 +475,7 @@ export type UserUncheckedUpdateInput = {
   oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -753,6 +760,20 @@ export type UserUpdateOneRequiredWithoutUserGroupsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutUserGroupsInput, Prisma.UserUpdateWithoutUserGroupsInput>, Prisma.UserUncheckedUpdateWithoutUserGroupsInput>
 }
 
+export type UserCreateNestedOneWithoutCalendarShareInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCalendarShareInput, Prisma.UserUncheckedCreateWithoutCalendarShareInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCalendarShareInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutCalendarShareNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCalendarShareInput, Prisma.UserUncheckedCreateWithoutCalendarShareInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCalendarShareInput
+  upsert?: Prisma.UserUpsertWithoutCalendarShareInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCalendarShareInput, Prisma.UserUpdateWithoutCalendarShareInput>, Prisma.UserUncheckedUpdateWithoutCalendarShareInput>
+}
+
 export type UserCreateWithoutSessionsInput = {
   id?: string
   name: string
@@ -777,6 +798,7 @@ export type UserCreateWithoutSessionsInput = {
   oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
@@ -803,6 +825,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -845,6 +868,7 @@ export type UserUpdateWithoutSessionsInput = {
   oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -871,6 +895,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAccountsInput = {
@@ -897,6 +922,7 @@ export type UserCreateWithoutAccountsInput = {
   oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAccountsInput = {
@@ -923,6 +949,7 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAccountsInput = {
@@ -965,6 +992,7 @@ export type UserUpdateWithoutAccountsInput = {
   oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -991,6 +1019,7 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutTwofactorsInput = {
@@ -1017,6 +1046,7 @@ export type UserCreateWithoutTwofactorsInput = {
   oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutTwofactorsInput = {
@@ -1043,6 +1073,7 @@ export type UserUncheckedCreateWithoutTwofactorsInput = {
   oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutTwofactorsInput = {
@@ -1085,6 +1116,7 @@ export type UserUpdateWithoutTwofactorsInput = {
   oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTwofactorsInput = {
@@ -1111,6 +1143,7 @@ export type UserUncheckedUpdateWithoutTwofactorsInput = {
   oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPasskeysInput = {
@@ -1137,6 +1170,7 @@ export type UserCreateWithoutPasskeysInput = {
   oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPasskeysInput = {
@@ -1163,6 +1197,7 @@ export type UserUncheckedCreateWithoutPasskeysInput = {
   oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPasskeysInput = {
@@ -1205,6 +1240,7 @@ export type UserUpdateWithoutPasskeysInput = {
   oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPasskeysInput = {
@@ -1231,6 +1267,7 @@ export type UserUncheckedUpdateWithoutPasskeysInput = {
   oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutOauthclientsInput = {
@@ -1257,6 +1294,7 @@ export type UserCreateWithoutOauthclientsInput = {
   oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutOauthclientsInput = {
@@ -1283,6 +1321,7 @@ export type UserUncheckedCreateWithoutOauthclientsInput = {
   oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutOauthclientsInput = {
@@ -1325,6 +1364,7 @@ export type UserUpdateWithoutOauthclientsInput = {
   oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOauthclientsInput = {
@@ -1351,6 +1391,7 @@ export type UserUncheckedUpdateWithoutOauthclientsInput = {
   oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutOauthrefreshtokensInput = {
@@ -1377,6 +1418,7 @@ export type UserCreateWithoutOauthrefreshtokensInput = {
   oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutOauthrefreshtokensInput = {
@@ -1403,6 +1445,7 @@ export type UserUncheckedCreateWithoutOauthrefreshtokensInput = {
   oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutOauthrefreshtokensInput = {
@@ -1445,6 +1488,7 @@ export type UserUpdateWithoutOauthrefreshtokensInput = {
   oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOauthrefreshtokensInput = {
@@ -1471,6 +1515,7 @@ export type UserUncheckedUpdateWithoutOauthrefreshtokensInput = {
   oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutOauthaccesstokensInput = {
@@ -1497,6 +1542,7 @@ export type UserCreateWithoutOauthaccesstokensInput = {
   oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutOauthaccesstokensInput = {
@@ -1523,6 +1569,7 @@ export type UserUncheckedCreateWithoutOauthaccesstokensInput = {
   oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutOauthaccesstokensInput = {
@@ -1565,6 +1612,7 @@ export type UserUpdateWithoutOauthaccesstokensInput = {
   oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOauthaccesstokensInput = {
@@ -1591,6 +1639,7 @@ export type UserUncheckedUpdateWithoutOauthaccesstokensInput = {
   oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutOauthconsentsInput = {
@@ -1617,6 +1666,7 @@ export type UserCreateWithoutOauthconsentsInput = {
   oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutUserInput
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutOauthconsentsInput = {
@@ -1643,6 +1693,7 @@ export type UserUncheckedCreateWithoutOauthconsentsInput = {
   oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutUserInput
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutOauthconsentsInput = {
@@ -1685,6 +1736,7 @@ export type UserUpdateWithoutOauthconsentsInput = {
   oauthaccesstokens?: Prisma.OauthAccessTokenUpdateManyWithoutUserNestedInput
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOauthconsentsInput = {
@@ -1711,6 +1763,7 @@ export type UserUncheckedUpdateWithoutOauthconsentsInput = {
   oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedUpdateManyWithoutUserNestedInput
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutDashboardInput = {
@@ -1737,6 +1790,7 @@ export type UserCreateWithoutDashboardInput = {
   oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutUserInput
   oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
   userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutDashboardInput = {
@@ -1763,6 +1817,7 @@ export type UserUncheckedCreateWithoutDashboardInput = {
   oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutUserInput
   oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
   userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutDashboardInput = {
@@ -1805,6 +1860,7 @@ export type UserUpdateWithoutDashboardInput = {
   oauthaccesstokens?: Prisma.OauthAccessTokenUpdateManyWithoutUserNestedInput
   oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDashboardInput = {
@@ -1831,6 +1887,7 @@ export type UserUncheckedUpdateWithoutDashboardInput = {
   oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedUpdateManyWithoutUserNestedInput
   oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
   userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutUserGroupsInput = {
@@ -1857,6 +1914,7 @@ export type UserCreateWithoutUserGroupsInput = {
   oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutUserInput
   oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
+  calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutUserGroupsInput = {
@@ -1883,6 +1941,7 @@ export type UserUncheckedCreateWithoutUserGroupsInput = {
   oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutUserInput
   oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
+  calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutUserGroupsInput = {
@@ -1925,6 +1984,7 @@ export type UserUpdateWithoutUserGroupsInput = {
   oauthaccesstokens?: Prisma.OauthAccessTokenUpdateManyWithoutUserNestedInput
   oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutUserGroupsInput = {
@@ -1951,6 +2011,131 @@ export type UserUncheckedUpdateWithoutUserGroupsInput = {
   oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedUpdateManyWithoutUserNestedInput
   oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
+}
+
+export type UserCreateWithoutCalendarShareInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  locale?: string | null
+  lastLoginAt?: Date | string | null
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
+  dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
+  userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutCalendarShareInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  locale?: string | null
+  lastLoginAt?: Date | string | null
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientUncheckedCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
+  dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
+  userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutCalendarShareInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutCalendarShareInput, Prisma.UserUncheckedCreateWithoutCalendarShareInput>
+}
+
+export type UserUpsertWithoutCalendarShareInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutCalendarShareInput, Prisma.UserUncheckedUpdateWithoutCalendarShareInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutCalendarShareInput, Prisma.UserUncheckedCreateWithoutCalendarShareInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutCalendarShareInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutCalendarShareInput, Prisma.UserUncheckedUpdateWithoutCalendarShareInput>
+}
+
+export type UserUpdateWithoutCalendarShareInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
+  dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
+  userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutCalendarShareInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUncheckedUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
+  dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
+  userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -2081,6 +2266,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   oauthconsents?: boolean | Prisma.User$oauthconsentsArgs<ExtArgs>
   dashboard?: boolean | Prisma.User$dashboardArgs<ExtArgs>
   userGroups?: boolean | Prisma.User$userGroupsArgs<ExtArgs>
+  calendarShare?: boolean | Prisma.User$calendarShareArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -2147,6 +2333,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   oauthconsents?: boolean | Prisma.User$oauthconsentsArgs<ExtArgs>
   dashboard?: boolean | Prisma.User$dashboardArgs<ExtArgs>
   userGroups?: boolean | Prisma.User$userGroupsArgs<ExtArgs>
+  calendarShare?: boolean | Prisma.User$calendarShareArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -2165,6 +2352,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     oauthconsents: Prisma.$OauthConsentPayload<ExtArgs>[]
     dashboard: Prisma.$DashboardPayload<ExtArgs> | null
     userGroups: Prisma.$UserGroupPayload<ExtArgs>[]
+    calendarShare: Prisma.$CalendarSharePayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2585,6 +2773,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   oauthconsents<T extends Prisma.User$oauthconsentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$oauthconsentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OauthConsentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   dashboard<T extends Prisma.User$dashboardArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$dashboardArgs<ExtArgs>>): Prisma.Prisma__DashboardClient<runtime.Types.Result.GetResult<Prisma.$DashboardPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   userGroups<T extends Prisma.User$userGroupsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$userGroupsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserGroupPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  calendarShare<T extends Prisma.User$calendarShareArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$calendarShareArgs<ExtArgs>>): Prisma.Prisma__CalendarShareClient<runtime.Types.Result.GetResult<Prisma.$CalendarSharePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3253,6 +3442,25 @@ export type User$userGroupsArgs<ExtArgs extends runtime.Types.Extensions.Interna
   take?: number
   skip?: number
   distinct?: Prisma.UserGroupScalarFieldEnum | Prisma.UserGroupScalarFieldEnum[]
+}
+
+/**
+ * User.calendarShare
+ */
+export type User$calendarShareArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CalendarShare
+   */
+  select?: Prisma.CalendarShareSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the CalendarShare
+   */
+  omit?: Prisma.CalendarShareOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CalendarShareInclude<ExtArgs> | null
+  where?: Prisma.CalendarShareWhereInput
 }
 
 /**
