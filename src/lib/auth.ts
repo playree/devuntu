@@ -150,7 +150,6 @@ export const auth = betterAuth({
             overrideUserInfoOnSignIn: true,
             // ログイン用途。毎回の同意画面を避けるため consent は付けない
             // (refresh token が必要なカレンダー連携は 'google-account' プロバイダで別途取得)
-            prompt: 'select_account',
             getUserInfo: async (token) => {
               if (!token.idToken) {
                 return null

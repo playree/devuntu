@@ -151,7 +151,7 @@ export const WeekView: FC<{ weekStartISO: string; busy: BusySlot[]; timezone: st
             {HOURS.map((h) => (
               <div
                 key={h}
-                className='absolute right-1 -translate-y-1/2 font-mono text-xs text-neutral-400'
+                className='absolute right-1 -translate-y-1/2 font-mono text-xs text-neutral-500'
                 style={{ top: h * HOUR_HEIGHT }}
               >
                 {h > 0 ? `${h}:00` : ''}

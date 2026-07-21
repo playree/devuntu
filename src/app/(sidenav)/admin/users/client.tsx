@@ -79,8 +79,8 @@ export const AdminUsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPass
                 ))}
               </div>
             </Table.Cell>
-            <Table.Cell className='font-mono text-xs'>{dayformat(item.lastLoginAt, 'jp-simple', tz)}</Table.Cell>
-            <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'jp-simple', tz)}</Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.lastLoginAt, 'tz-simple', tz)}</Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'tz-simple', tz)}</Table.Cell>
             <ActionCell
               items={[
                 {

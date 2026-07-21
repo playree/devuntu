@@ -64,13 +64,13 @@ export const isValidTimezone = (tz: string): boolean => {
 }
 
 /** 指定タイムゾーンで日時をフォーマット(既定は Asia/Tokyo) */
-export const dayformat = (date: Dayjs | Date | null, format?: 'jp-simple', tz: string = DEFAULT_TZ) => {
+export const dayformat = (date: Dayjs | Date | null, format?: 'tz-simple', tz: string = DEFAULT_TZ) => {
   if (!date) {
     return ''
   }
 
   switch (format) {
-    case 'jp-simple':
+    case 'tz-simple':
       return dayjs(date).tz(tz).format('YYYY-MM-DD HH:mm:ss')
   }
   return dayjs(date).tz(tz).format()

@@ -247,7 +247,7 @@ export const LinkWidgetManage: FC = () => {
             <Table.Cell>
               {item.iconPath && <Image src={item.iconPath} unoptimized width={24} height={24} alt={item.name} />}
             </Table.Cell>
-            <Table.Cell className='font-mono text-xs'>{dayformat(item.updatedAt, 'jp-simple', tz)}</Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.updatedAt, 'tz-simple', tz)}</Table.Cell>
             <ActionCell
               items={[
                 {
