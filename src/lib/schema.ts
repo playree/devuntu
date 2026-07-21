@@ -152,3 +152,12 @@ export const scUpdateGroup = z.object({
   description: zDescription.optional(),
 })
 export type UpdateGroup = z.infer<typeof scUpdateGroup>
+
+export const zShareTitle = z.string().trim().max(50) // 空文字許可(表示側でフォールバック)
+
+/** CalendarShare.options の構造 */
+export const scCalendarShareOptions = z.object({ title: z.string().max(50).optional() })
+export type CalendarShareOptions = z.infer<typeof scCalendarShareOptions>
+
+export const scUpdateCalendarShareTitle = z.object({ title: zShareTitle })
+export type UpdateCalendarShareTitle = z.infer<typeof scUpdateCalendarShareTitle>

@@ -13,11 +13,12 @@ import { cn } from '@heroui/react'
 import { usePathname, useRouter } from 'next/navigation'
 import { FC } from 'react'
 
-export const PublicCalClient: FC<{ weekStartISO: string; busy: BusySlot[] | null; timezone: string }> = ({
-  weekStartISO,
-  busy,
-  timezone,
-}) => {
+export const PublicCalClient: FC<{
+  weekStartISO: string
+  busy: BusySlot[] | null
+  timezone: string
+  title: string
+}> = ({ weekStartISO, busy, timezone, title }) => {
   const { t } = useLocale()
   const router = useRouter()
   const pathname = usePathname()
@@ -45,7 +46,7 @@ export const PublicCalClient: FC<{ weekStartISO: string; busy: BusySlot[] | null
         <div className='flex flex-wrap items-center gap-2'>
           <div className='flex items-center gap-2 text-lg font-semibold'>
             <CalendarDaysIcon />
-            {t('calendar')}
+            {title || t('calendar')}
           </div>
           <div className='flex flex-auto justify-end gap-2'>
             <ThemeSwitchList size='sm' />

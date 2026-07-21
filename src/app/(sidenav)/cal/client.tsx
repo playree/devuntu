@@ -9,7 +9,7 @@ import { ArrowPathIcon, CalendarDaysIcon, GoogleIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
 import { useLocale } from '@/locale/client'
-import { Card } from '@heroui/react'
+import { Card, Input, Label, TextField } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC, useEffect, useState } from 'react'
 import {
@@ -18,6 +18,7 @@ import {
   getCalendarShare,
   GetCalendarShareReturnType,
   rotateCalendarShareUrl,
+  updateCalendarShareTitle,
 } from './server'
 
 export const CalClient: FC<{ origin: string }> = ({ origin }) => {
@@ -25,9 +26,13 @@ export const CalClient: FC<{ origin: string }> = ({ origin }) => {
   const router = useRouter()
   const { confirmModal } = useConfirmModal()
   const [status, setStatus] = useState<GetCalendarShareReturnType>()
+  const [title, setTitle] = useState('')
 
   const reload = () => {
-    parseAction(getCalendarShare()).then((res) => setStatus(res))
+    parseAction(getCalendarShare()).then((res) => {
+      setStatus(res)
+      setTitle(res?.title ?? '')
+    })
   }
 
   useEffect(() => {
@@ -50,6 +55,12 @@ export const CalClient: FC<{ origin: string }> = ({ origin }) => {
       notify.success(t('msg_calendar_share_disabled'))
       reload()
     }
+  }
+
+  const saveTitle = async () => {
+    await parseAction(updateCalendarShareTitle({ title: title.trim() }))
+    notify.success(t('msg_calendar_share_title_saved'))
+    reload()
   }
 
   const rotate = async () => {
@@ -88,12 +99,21 @@ export const CalClient: FC<{ origin: string }> = ({ origin }) => {
 
               {status.shared ? (
                 <FlexCol>
+                  <div className='flex flex-wrap items-end gap-2'>
+                    <TextField className='flex-auto' value={title} onChange={setTitle} maxLength={50}>
+                      <Label>{t('share_title')}</Label>
+                      <Input variant='secondary' />
+                    </TextField>
+                    <MultiButton variant='outline' onPress={saveTitle}>
+                      {t('save')}
+                    </MultiButton>
+                  </div>
                   <CopyableField label={t('share_url')} text={shareUrl} variant='secondary' />
                   <div className='flex flex-wrap gap-2'>
                     <MultiButton icon={<ArrowPathIcon />} variant='outline' onPress={rotate}>
                       {t('regenerate_url')}
                     </MultiButton>
-                    <MultiButton variant='outline' onPress={disable}>
+                    <MultiButton variant='danger-soft' onPress={disable}>
                       {t('disable_sharing')}
                     </MultiButton>
                   </div>

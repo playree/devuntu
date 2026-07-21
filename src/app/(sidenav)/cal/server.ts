@@ -4,10 +4,14 @@ import { safeAuthAction } from '@/lib/action-server'
 import { GOOGLE_ACCOUNT_PROVIDER_ID } from '@/lib/google-calendar'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
+import { scCalendarShareOptions, scUpdateCalendarShareTitle } from '@/lib/schema'
 import { nanoid } from 'nanoid'
 
 /** 公開URL用のID(推測困難な長め) */
 const genPublicId = () => nanoid(48)
+
+/** options(JSON)を型付き構造にパース */
+const parseOptions = (v: unknown) => scCalendarShareOptions.safeParse(v).data ?? {}
 
 /**
  * カレンダー共有の状態取得
@@ -22,13 +26,14 @@ export const getCalendarShare = safeAuthAction
       }),
       prisma.calendarShare.findUnique({
         where: { userId: user.id },
-        select: { publicId: true },
+        select: { publicId: true, options: true },
       }),
     ])
     return {
       googleConnected: !!account?.refreshToken,
       shared: !!share,
       publicId: share?.publicId ?? null,
+      title: parseOptions(share?.options).title ?? '',
     }
   })
 export type GetCalendarShareReturnType = Awaited<ReturnType<typeof getCalendarShare>>['data']
@@ -42,11 +47,34 @@ export const enableCalendarShare = safeAuthAction
     const share = await prisma.calendarShare.upsert({
       where: { userId: user.id },
       update: {},
-      create: { userId: user.id, publicId: genPublicId() },
+      create: {
+        userId: user.id,
+        publicId: genPublicId(),
+        options: { title: `${user.name ?? ''} の予定表` },
+      },
       select: { publicId: true },
     })
     logger.info({ userId: user.id }, 'calendar share enabled')
     return { publicId: share.publicId }
+  })
+
+/**
+ * 共有タイトルを更新(options.title を更新し他のキーは保持)
+ */
+export const updateCalendarShareTitle = safeAuthAction
+  .metadata({ actionName: 'updateCalendarShareTitle', role: 'user' })
+  .inputSchema(scUpdateCalendarShareTitle)
+  .action(async ({ ctx: { user }, parsedInput: { title } }) => {
+    const current = await prisma.calendarShare.findUnique({
+      where: { userId: user.id },
+      select: { options: true },
+    })
+    await prisma.calendarShare.update({
+      where: { userId: user.id },
+      data: { options: { ...parseOptions(current?.options), title } },
+    })
+    logger.info({ userId: user.id }, 'calendar share title updated')
+    return { title }
   })
 
 /**
