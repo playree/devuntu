@@ -80,6 +80,11 @@ export const auth = betterAuth({
         required: false,
         input: false,
       },
+      timezone: {
+        type: 'string',
+        required: false,
+        input: false,
+      },
       lastLoginAt: {
         type: 'date',
         required: false,

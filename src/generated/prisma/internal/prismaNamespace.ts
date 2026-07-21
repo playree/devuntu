@@ -1731,6 +1731,7 @@ export const UserScalarFieldEnum = {
   banExpires: 'banExpires',
   twoFactorEnabled: 'twoFactorEnabled',
   locale: 'locale',
+  timezone: 'timezone',
   lastLoginAt: 'lastLoginAt'
 } as const
 

@@ -90,6 +90,7 @@ export const ja: DefaultLocaleItems = {
   signin: 'サインイン',
   signout: 'サインアウト',
   skip_consent: '同意スキップ',
+  timezone: 'タイムゾーン',
   today: '今日',
   transfer_billable: '課金対象転送量',
   transfer_pool_usage: '転送プール使用量',

@@ -88,6 +88,7 @@ export type LocaleItemBase =
   | 'signin'
   | 'signout'
   | 'skip_consent'
+  | 'timezone'
   | 'today'
   | 'transfer_billable'
   | 'transfer_pool_usage'

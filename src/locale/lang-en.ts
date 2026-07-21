@@ -90,6 +90,7 @@ export const en: LocaleItems = {
   signin: 'Sign In',
   signout: 'Sign Out',
   skip_consent: 'Skip Consent',
+  timezone: 'Timezone',
   today: 'Today',
   transfer_billable: 'Billable Transfer',
   transfer_pool_usage: 'Transfer Pool Usage',

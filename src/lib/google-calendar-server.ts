@@ -7,7 +7,7 @@
  *       token 更新・FreeBusy 取得は標準 `fetch` で REST を直接呼び出す。
  */
 
-import { TOKYO_TZ } from './day'
+import { DEFAULT_TZ } from './day'
 import { envu } from './env-util'
 import { GOOGLE_ACCOUNT_PROVIDER_ID, type BusySlot } from './google-calendar'
 import { logger } from './logger'
@@ -55,10 +55,12 @@ export const getGoogleFreeBusy = async ({
   userId,
   timeMin,
   timeMax,
+  timeZone = DEFAULT_TZ,
 }: {
   userId: string
   timeMin: string
   timeMax: string
+  timeZone?: string
 }): Promise<BusySlot[] | null> => {
   const clientId = envu.server.GOOGLE_CLIENT_ID
   const clientSecret = envu.server.GOOGLE_CLIENT_SECRET
@@ -91,7 +93,7 @@ export const getGoogleFreeBusy = async ({
       body: JSON.stringify({
         timeMin,
         timeMax,
-        timeZone: TOKYO_TZ,
+        timeZone,
         items: [{ id: 'primary' }],
       }),
     })

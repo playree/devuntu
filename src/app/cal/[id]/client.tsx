@@ -6,19 +6,23 @@ import { ThemeSwitchList } from '@/components/general/theme-switch'
 import { ArrowLeftCircleIcon, ArrowRightCircleIcon, CalendarDaysIcon } from '@/components/icon'
 import { LocaleSwitch } from '@/components/locale/locale-switch'
 import { makePath } from '@/lib/client-utils'
-import { toTokyo } from '@/lib/day'
+import { toZone } from '@/lib/day'
 import type { BusySlot } from '@/lib/google-calendar'
 import { useLocale } from '@/locale/client'
 import { cn } from '@heroui/react'
 import { usePathname, useRouter } from 'next/navigation'
 import { FC } from 'react'
 
-export const PublicCalClient: FC<{ weekStartISO: string; busy: BusySlot[] | null }> = ({ weekStartISO, busy }) => {
+export const PublicCalClient: FC<{ weekStartISO: string; busy: BusySlot[] | null; timezone: string }> = ({
+  weekStartISO,
+  busy,
+  timezone,
+}) => {
   const { t } = useLocale()
   const router = useRouter()
   const pathname = usePathname()
 
-  const weekStart = toTokyo(weekStartISO)
+  const weekStart = toZone(weekStartISO, timezone)
   const weekLabel = `${weekStart.format('YYYY/M/D')} - ${weekStart.add(6, 'day').format('M/D')}`
 
   const go = (deltaDays: number) => {
@@ -67,7 +71,7 @@ export const PublicCalClient: FC<{ weekStartISO: string; busy: BusySlot[] | null
             {t('msg_calendar_share_unavailable')}
           </div>
         ) : (
-          <WeekView weekStartISO={weekStartISO} busy={busy} />
+          <WeekView weekStartISO={weekStartISO} busy={busy} timezone={timezone} />
         )}
       </div>
     </div>

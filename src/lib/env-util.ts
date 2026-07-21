@@ -66,6 +66,9 @@ const server = {
   get DEFAULT_LOCALE() {
     return getEnv('DEFAULT_LOCALE')
   },
+  get DEFAULT_TIMEZONE() {
+    return getEnv('DEFAULT_TIMEZONE', { default: 'Asia/Tokyo' })
+  },
 
   // 認証
   get BETTER_AUTH_SECRET() {

@@ -9,6 +9,7 @@ import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
 import {
   BoltSlashIcon,
+  Cog6ToothIcon,
   FingerPrintIcon,
   GoogleIcon,
   PencilSquareIcon,
@@ -21,17 +22,23 @@ import { parseAction } from '@/lib/action-client'
 import { authClient } from '@/lib/auth-client'
 import { authConfig } from '@/lib/auth-config'
 import { makePath } from '@/lib/client-utils'
-import { dayformat, now } from '@/lib/day'
+import { COMMON_TIMEZONES, dayformat, now, tzOffsetLabel, tzOffsetMinutes } from '@/lib/day'
 import { envu } from '@/lib/env-util'
 import { formatScopeLabel, GOOGLE_ACCOUNT_PROVIDER_ID } from '@/lib/google-calendar'
 import { UpdatePasskey } from '@/lib/schema'
+import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
-import { Accordion, ButtonGroup, Table } from '@heroui/react'
+import { Accordion, ButtonGroup, ListBox, Select, Table } from '@heroui/react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { FC, useEffect, useState } from 'react'
+import { FC, useEffect, useMemo, useState } from 'react'
 import { UpdatePasskeyModal } from './modals'
-import { disconnectGoogleAccount, getGoogleAccountStatus, GetGoogleAccountStatusReturnType } from './server'
+import {
+  disconnectGoogleAccount,
+  getGoogleAccountStatus,
+  GetGoogleAccountStatusReturnType,
+  setUserTimezone,
+} from './server'
 
 const getDeviceNameFromAaguid = (aaguid?: string) => {
   return aaguidMap[aaguid ?? ''] ? aaguidMap[aaguid ?? ''] : { name: 'Any Device' }
@@ -39,6 +46,7 @@ const getDeviceNameFromAaguid = (aaguid?: string) => {
 
 const MyPasskey: FC = () => {
   const { t } = useLocale()
+  const tz = useUserTimezone()
   const router = useRouter()
   const { confirmModal } = useConfirmModal()
   const { data: session } = authClient.useSession()
@@ -70,7 +78,7 @@ const MyPasskey: FC = () => {
           icon={<PlusIcon />}
           onPress={async () => {
             const { data, error } = await authClient.passkey.addPasskey({
-              name: `${envu.client.NEXT_PUBLIC_APP_NAME} (${dayformat(now(), 'jp-simple')})`,
+              name: `${envu.client.NEXT_PUBLIC_APP_NAME} (${dayformat(now(), 'jp-simple', tz)})`,
               authenticatorAttachment: 'platform',
             })
             console.debug('addPasskey', { data, error })
@@ -124,7 +132,7 @@ const MyPasskey: FC = () => {
                 {item.authenticator.name}
               </div>
             </Table.Cell>
-            <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'jp-simple')}</Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'jp-simple', tz)}</Table.Cell>
             <ActionCell
               items={[
                 {
@@ -242,7 +250,58 @@ const GoogleAccountLink: FC = () => {
   )
 }
 
-const defaultExpandedKeys = new Set(['passkey', 'google_account'])
+const TimezoneSetting: FC = () => {
+  const { t } = useLocale()
+  const { data: session } = authClient.useSession()
+  const [selected, setSelected] = useState<string | null>(null)
+
+  // 現在値は session の timezone、未設定時は Asia/Tokyo。変更後は selected を優先
+  const current = session?.user.timezone ?? 'Asia/Tokyo'
+  const value = selected ?? current
+
+  // 主要都市をオフセット順に表示。現在値が候補外なら先頭にマージして必ず表示できるようにする
+  const timezones = useMemo(() => {
+    const base = COMMON_TIMEZONES.includes(value) ? COMMON_TIMEZONES : [value, ...COMMON_TIMEZONES]
+    return [...base].sort((a, b) => tzOffsetMinutes(a) - tzOffsetMinutes(b))
+  }, [value])
+
+  return (
+    <FlexCol>
+      <div className='max-w-sm px-1'>
+        <Select
+          selectionMode='single'
+          value={value}
+          onChange={async (key) => {
+            if (!key) {
+              return
+            }
+            const tz = key.toString()
+            setSelected(tz)
+            await parseAction(setUserTimezone({ timezone: tz }))
+            notify.success(t('msg_saved'))
+          }}
+        >
+          <Select.Trigger>
+            <Select.Value />
+            <Select.Indicator />
+          </Select.Trigger>
+          <Select.Popover>
+            <ListBox selectionMode='single'>
+              {timezones.map((tz) => (
+                <ListBox.Item key={tz} id={tz} textValue={tzOffsetLabel(tz)}>
+                  {tzOffsetLabel(tz)}
+                  <ListBox.ItemIndicator />
+                </ListBox.Item>
+              ))}
+            </ListBox>
+          </Select.Popover>
+        </Select>
+      </div>
+    </FlexCol>
+  )
+}
+
+const defaultExpandedKeys = new Set(['passkey', 'google_account', 'timezone'])
 export const AccountClient: FC = () => {
   const { t } = useLocale()
 
@@ -250,6 +309,20 @@ export const AccountClient: FC = () => {
     <FlexCol>
       <ContentHeader icon={<UserCircleIcon />} title={t('account')}></ContentHeader>
       <Accordion allowsMultipleExpanded defaultExpandedKeys={defaultExpandedKeys}>
+        <Accordion.Item id='timezone'>
+          <Accordion.Heading>
+            <Accordion.Trigger className='gap-1'>
+              <Cog6ToothIcon />
+              {t('timezone')}
+              <Accordion.Indicator />
+            </Accordion.Trigger>
+          </Accordion.Heading>
+          <Accordion.Panel>
+            <Accordion.Body className='px-4'>
+              <TimezoneSetting />
+            </Accordion.Body>
+          </Accordion.Panel>
+        </Accordion.Item>
         <Accordion.Item id='passkey'>
           <Accordion.Heading>
             <Accordion.Trigger className='gap-1'>

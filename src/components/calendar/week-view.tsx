@@ -1,6 +1,6 @@
 'use client'
 
-import { TOKYO_TZ, toTokyo } from '@/lib/day'
+import { toZone } from '@/lib/day'
 import type { BusySlot } from '@/lib/google-calendar'
 import { useLocale } from '@/locale/client'
 import { cn } from '@heroui/react'
@@ -32,9 +32,10 @@ type DayBlock = { top: number; height: number }
  * Google カレンダー週表示風のグリッド。
  * FreeBusy(予定あり区間)のみをブロック表示し、予定のタイトル等は一切表示しない。
  */
-export const WeekView: FC<{ weekStartISO: string; busy: BusySlot[]; className?: string }> = ({
+export const WeekView: FC<{ weekStartISO: string; busy: BusySlot[]; timezone: string; className?: string }> = ({
   weekStartISO,
   busy,
+  timezone,
   className,
 }) => {
   const { locale } = useLocale()
@@ -44,11 +45,11 @@ export const WeekView: FC<{ weekStartISO: string; busy: BusySlot[]; className?: 
 
   // 現在時刻はクライアントでのみ確定する(SSR では null)
   const mounted = useMounted()
-  const now = useMemo(() => (mounted ? dayjs().tz(TOKYO_TZ) : null), [mounted])
+  const now = useMemo(() => (mounted ? dayjs().tz(timezone) : null), [mounted, timezone])
   const todayStr = now?.format('YYYY-MM-DD') ?? ''
   const nowY = now ? ((now.hour() * 60 + now.minute()) / (24 * 60)) * TOTAL_HEIGHT : null
 
-  const weekStart = useMemo(() => toTokyo(weekStartISO), [weekStartISO])
+  const weekStart = useMemo(() => toZone(weekStartISO, timezone), [weekStartISO, timezone])
 
   // 各日ごとの列情報(日付・当日判定・busyブロック位置)を算出
   const days = useMemo(() => {

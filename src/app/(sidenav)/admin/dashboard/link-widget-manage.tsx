@@ -15,6 +15,7 @@ import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
 import { dayformat } from '@/lib/day'
 import { CreateLinkWidget, scCreateLinkWidget, scUpdateLinkWidget, UpdateLinkWidget } from '@/lib/schema'
+import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { ButtonGroup, Table } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -202,6 +203,7 @@ const LinkWidgetUpdateModal: FC<ModalBaseProps & { target: LinkWidgetTarget }> =
 
 export const LinkWidgetManage: FC = () => {
   const { t } = useLocale()
+  const tz = useUserTimezone()
   const addModalState = useModalState()
   const updateModalState = useModalState<LinkWidgetTarget>()
 
@@ -245,7 +247,7 @@ export const LinkWidgetManage: FC = () => {
             <Table.Cell>
               {item.iconPath && <Image src={item.iconPath} unoptimized width={24} height={24} alt={item.name} />}
             </Table.Cell>
-            <Table.Cell className='font-mono text-xs'>{dayformat(item.updatedAt, 'jp-simple')}</Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.updatedAt, 'jp-simple', tz)}</Table.Cell>
             <ActionCell
               items={[
                 {

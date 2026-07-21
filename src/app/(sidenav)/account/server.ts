@@ -2,10 +2,13 @@
 
 import { safeAuthAction } from '@/lib/action-server'
 import { auth } from '@/lib/auth'
+import { isValidTimezone } from '@/lib/day'
+import { errValidation } from '@/lib/error'
 import { GOOGLE_ACCOUNT_PROVIDER_ID } from '@/lib/google-calendar'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { headers } from 'next/headers'
+import { z } from 'zod'
 
 /**
  * Google アカウント連携状態の取得
@@ -39,4 +42,19 @@ export const disconnectGoogleAccount = safeAuthAction
 
     logger.info({ userId: user.id }, 'google account disconnected')
     return { disconnected: true }
+  })
+
+/**
+ * ユーザーのタイムゾーン設定を更新する
+ */
+export const setUserTimezone = safeAuthAction
+  .metadata({ actionName: 'setUserTimezone', role: 'user' })
+  .inputSchema(z.object({ timezone: z.string() }))
+  .action(async ({ parsedInput: { timezone }, ctx: { user } }) => {
+    if (!isValidTimezone(timezone)) {
+      throw errValidation('timezone is not valid')
+    }
+    await prisma.user.update({ where: { id: user.id }, data: { timezone } })
+    logger.info({ userId: user.id, timezone }, 'user timezone updated')
+    return { timezone }
   })
