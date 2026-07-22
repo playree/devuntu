@@ -6,7 +6,7 @@
  */
 
 import { envu } from './env-util'
-import { getByGroup, setString } from './kvs'
+import { getByGroup, setStrings } from './kvs'
 import { logger } from './logger'
 import { prisma } from './prisma'
 
@@ -53,8 +53,10 @@ export const getGoogleAccountSettings = async (): Promise<GoogleAccountSettings>
  * Google アカウント連携設定を保存する。
  */
 export const setGoogleAccountSettings = async ({ enabled, allowedGroupIds }: GoogleAccountSettings): Promise<void> => {
-  await setString(KEY_ENABLED, enabled ? 'true' : 'false', KVS_GROUP)
-  await setString(KEY_ALLOWED_GROUP_IDS, JSON.stringify(allowedGroupIds), KVS_GROUP)
+  await setStrings([
+    { key: KEY_ENABLED, value: enabled ? 'true' : 'false', group: KVS_GROUP },
+    { key: KEY_ALLOWED_GROUP_IDS, value: JSON.stringify(allowedGroupIds), group: KVS_GROUP },
+  ])
   logger.info({ enabled, allowedGroupIds }, 'google account settings updated')
 }
 

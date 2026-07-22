@@ -48,7 +48,7 @@ export const OnOffChip: FC<{ isState: boolean | undefined; variant?: ChipProps['
       {!isIconOnly && <Chip.Label>ON</Chip.Label>}
     </Chip>
   ) : (
-    <Chip color='default' variant={variant} className='opacity-15'>
+    <Chip color='default' variant={variant} className='opacity-30'>
       <XCircleIcon />
       {!isIconOnly && <Chip.Label>OFF</Chip.Label>}
     </Chip>

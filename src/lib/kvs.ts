@@ -23,6 +23,21 @@ export const setString = async (key: KeyString, value: string, group?: KvsGroup)
 }
 
 /**
+ * 複数の key/value を単一トランザクションでまとめて保存する(全件コミット or 全件ロールバック)
+ */
+export const setStrings = async (entries: { key: KeyString; value: string; group?: KvsGroup }[]) => {
+  return prisma.$transaction(
+    entries.map(({ key, value, group }) =>
+      prisma.keyValueStore.upsert({
+        where: { key },
+        update: { value, group },
+        create: { key, value, group },
+      }),
+    ),
+  )
+}
+
+/**
  * 指定した group に属する key/value をまとめて取得しマップで返す
  */
 export const getByGroup = async (group: KvsGroup): Promise<Record<string, string>> => {

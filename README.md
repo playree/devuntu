@@ -138,6 +138,8 @@ docker tag devuntu:latest playree/devuntu:0.2.0
 docker push playree/devuntu:0.2.0
 ```
 
+※`0.2.0`のバージョンタグはサンプル
+
 ## sharpの依存関係チェック
 
 基本的に`Next.js`の要求バージョンに揃える

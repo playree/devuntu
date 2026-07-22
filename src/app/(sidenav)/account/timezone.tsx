@@ -36,9 +36,15 @@ export const TimezoneSetting: FC = () => {
               return
             }
             const tz = key.toString()
+            const prev = selected
             setSelected(tz)
-            await parseAction(setUserTimezone({ timezone: tz }))
-            notify.success(t('msg_saved'))
+            try {
+              await parseAction(setUserTimezone({ timezone: tz }))
+              notify.success(t('msg_saved'))
+            } catch (e) {
+              setSelected(prev)
+              throw e
+            }
           }}
         >
           <Select.Trigger>
