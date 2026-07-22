@@ -104,6 +104,9 @@ model TwoFactor {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   verified    Boolean? @default(true)
 
+  failedVerificationCount Int?      @default(0)
+  lockedUntil             DateTime?
+
   @@index([secret])
   @@index([userId])
   @@map("two_factor")
@@ -146,7 +149,7 @@ model OauthClient {
   skipConsent             Boolean?
   enableEndSession        Boolean?
   subjectType             String?
-  scopes                  String?
+  scopes                  String[]            @default([])
   userId                  String?
   user                    User?               @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt               DateTime?
@@ -154,22 +157,22 @@ model OauthClient {
   name                    String?
   uri                     String?
   icon                    String?
-  contacts                String?
+  contacts                String[]            @default([])
   tos                     String?
   policy                  String?
   softwareId              String?
   softwareVersion         String?
   softwareStatement       String?
-  redirectUris            String
-  postLogoutRedirectUris  String?
+  redirectUris            String[]            @default([])
+  postLogoutRedirectUris  String[]            @default([])
   tokenEndpointAuthMethod String?
-  grantTypes              String?
-  responseTypes           String?
+  grantTypes              String[]            @default([])
+  responseTypes           String[]            @default([])
   public                  Boolean?
   type                    String?
   requirePKCE             Boolean?
   referenceId             String?
-  metadata                String?
+  metadata                Json?
   oauthrefreshtokens      OauthRefreshToken[]
   oauthaccesstokens       OauthAccessToken[]
   oauthconsents           OauthConsent[]
@@ -193,7 +196,7 @@ model OauthRefreshToken {
   createdAt         DateTime?
   revoked           DateTime?
   authTime          DateTime?
-  scopes            String
+  scopes            String[]
   oauthaccesstokens OauthAccessToken[]
 
   @@index([clientId])
@@ -216,7 +219,7 @@ model OauthAccessToken {
   oauthrefreshtoken OauthRefreshToken? @relation(fields: [refreshId], references: [id], onDelete: Cascade)
   expiresAt         DateTime?
   createdAt         DateTime?
-  scopes            String
+  scopes            String[]
 
   @@unique([token])
   @@index([clientId])
@@ -233,7 +236,7 @@ model OauthConsent {
   userId      String?
   user        User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
   referenceId String?
-  scopes      String
+  scopes      String[]
   createdAt   DateTime?
   updatedAt   DateTime?
 

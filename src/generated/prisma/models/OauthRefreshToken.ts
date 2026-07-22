@@ -35,7 +35,6 @@ export type OauthRefreshTokenMinAggregateOutputType = {
   createdAt: Date | null
   revoked: Date | null
   authTime: Date | null
-  scopes: string | null
 }
 
 export type OauthRefreshTokenMaxAggregateOutputType = {
@@ -49,7 +48,6 @@ export type OauthRefreshTokenMaxAggregateOutputType = {
   createdAt: Date | null
   revoked: Date | null
   authTime: Date | null
-  scopes: string | null
 }
 
 export type OauthRefreshTokenCountAggregateOutputType = {
@@ -79,7 +77,6 @@ export type OauthRefreshTokenMinAggregateInputType = {
   createdAt?: true
   revoked?: true
   authTime?: true
-  scopes?: true
 }
 
 export type OauthRefreshTokenMaxAggregateInputType = {
@@ -93,7 +90,6 @@ export type OauthRefreshTokenMaxAggregateInputType = {
   createdAt?: true
   revoked?: true
   authTime?: true
-  scopes?: true
 }
 
 export type OauthRefreshTokenCountAggregateInputType = {
@@ -194,7 +190,7 @@ export type OauthRefreshTokenGroupByOutputType = {
   createdAt: Date | null
   revoked: Date | null
   authTime: Date | null
-  scopes: string
+  scopes: string[]
   _count: OauthRefreshTokenCountAggregateOutputType | null
   _min: OauthRefreshTokenMinAggregateOutputType | null
   _max: OauthRefreshTokenMaxAggregateOutputType | null
@@ -229,7 +225,7 @@ export type OauthRefreshTokenWhereInput = {
   createdAt?: Prisma.DateTimeNullableFilter<"OauthRefreshToken"> | Date | string | null
   revoked?: Prisma.DateTimeNullableFilter<"OauthRefreshToken"> | Date | string | null
   authTime?: Prisma.DateTimeNullableFilter<"OauthRefreshToken"> | Date | string | null
-  scopes?: Prisma.StringFilter<"OauthRefreshToken"> | string
+  scopes?: Prisma.StringNullableListFilter<"OauthRefreshToken">
   oauthclient?: Prisma.XOR<Prisma.OauthClientScalarRelationFilter, Prisma.OauthClientWhereInput>
   session?: Prisma.XOR<Prisma.SessionNullableScalarRelationFilter, Prisma.SessionWhereInput> | null
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -268,7 +264,7 @@ export type OauthRefreshTokenWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeNullableFilter<"OauthRefreshToken"> | Date | string | null
   revoked?: Prisma.DateTimeNullableFilter<"OauthRefreshToken"> | Date | string | null
   authTime?: Prisma.DateTimeNullableFilter<"OauthRefreshToken"> | Date | string | null
-  scopes?: Prisma.StringFilter<"OauthRefreshToken"> | string
+  scopes?: Prisma.StringNullableListFilter<"OauthRefreshToken">
   oauthclient?: Prisma.XOR<Prisma.OauthClientScalarRelationFilter, Prisma.OauthClientWhereInput>
   session?: Prisma.XOR<Prisma.SessionNullableScalarRelationFilter, Prisma.SessionWhereInput> | null
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -306,7 +302,7 @@ export type OauthRefreshTokenScalarWhereWithAggregatesInput = {
   createdAt?: Prisma.DateTimeNullableWithAggregatesFilter<"OauthRefreshToken"> | Date | string | null
   revoked?: Prisma.DateTimeNullableWithAggregatesFilter<"OauthRefreshToken"> | Date | string | null
   authTime?: Prisma.DateTimeNullableWithAggregatesFilter<"OauthRefreshToken"> | Date | string | null
-  scopes?: Prisma.StringWithAggregatesFilter<"OauthRefreshToken"> | string
+  scopes?: Prisma.StringNullableListFilter<"OauthRefreshToken">
 }
 
 export type OauthRefreshTokenCreateInput = {
@@ -317,7 +313,7 @@ export type OauthRefreshTokenCreateInput = {
   createdAt?: Date | string | null
   revoked?: Date | string | null
   authTime?: Date | string | null
-  scopes: string
+  scopes?: Prisma.OauthRefreshTokenCreatescopesInput | string[]
   oauthclient: Prisma.OauthClientCreateNestedOneWithoutOauthrefreshtokensInput
   session?: Prisma.SessionCreateNestedOneWithoutOauthrefreshtokensInput
   user: Prisma.UserCreateNestedOneWithoutOauthrefreshtokensInput
@@ -335,7 +331,7 @@ export type OauthRefreshTokenUncheckedCreateInput = {
   createdAt?: Date | string | null
   revoked?: Date | string | null
   authTime?: Date | string | null
-  scopes: string
+  scopes?: Prisma.OauthRefreshTokenCreatescopesInput | string[]
   oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutOauthrefreshtokenInput
 }
 
@@ -347,7 +343,7 @@ export type OauthRefreshTokenUpdateInput = {
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   revoked?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   authTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  scopes?: Prisma.StringFieldUpdateOperationsInput | string
+  scopes?: Prisma.OauthRefreshTokenUpdatescopesInput | string[]
   oauthclient?: Prisma.OauthClientUpdateOneRequiredWithoutOauthrefreshtokensNestedInput
   session?: Prisma.SessionUpdateOneWithoutOauthrefreshtokensNestedInput
   user?: Prisma.UserUpdateOneRequiredWithoutOauthrefreshtokensNestedInput
@@ -365,7 +361,7 @@ export type OauthRefreshTokenUncheckedUpdateInput = {
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   revoked?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   authTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  scopes?: Prisma.StringFieldUpdateOperationsInput | string
+  scopes?: Prisma.OauthRefreshTokenUpdatescopesInput | string[]
   oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedUpdateManyWithoutOauthrefreshtokenNestedInput
 }
 
@@ -380,7 +376,7 @@ export type OauthRefreshTokenCreateManyInput = {
   createdAt?: Date | string | null
   revoked?: Date | string | null
   authTime?: Date | string | null
-  scopes: string
+  scopes?: Prisma.OauthRefreshTokenCreatescopesInput | string[]
 }
 
 export type OauthRefreshTokenUpdateManyMutationInput = {
@@ -391,7 +387,7 @@ export type OauthRefreshTokenUpdateManyMutationInput = {
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   revoked?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   authTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  scopes?: Prisma.StringFieldUpdateOperationsInput | string
+  scopes?: Prisma.OauthRefreshTokenUpdatescopesInput | string[]
 }
 
 export type OauthRefreshTokenUncheckedUpdateManyInput = {
@@ -405,7 +401,7 @@ export type OauthRefreshTokenUncheckedUpdateManyInput = {
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   revoked?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   authTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  scopes?: Prisma.StringFieldUpdateOperationsInput | string
+  scopes?: Prisma.OauthRefreshTokenUpdatescopesInput | string[]
 }
 
 export type OauthRefreshTokenListRelationFilter = {
@@ -443,7 +439,6 @@ export type OauthRefreshTokenMaxOrderByAggregateInput = {
   createdAt?: Prisma.SortOrder
   revoked?: Prisma.SortOrder
   authTime?: Prisma.SortOrder
-  scopes?: Prisma.SortOrder
 }
 
 export type OauthRefreshTokenMinOrderByAggregateInput = {
@@ -457,7 +452,6 @@ export type OauthRefreshTokenMinOrderByAggregateInput = {
   createdAt?: Prisma.SortOrder
   revoked?: Prisma.SortOrder
   authTime?: Prisma.SortOrder
-  scopes?: Prisma.SortOrder
 }
 
 export type OauthRefreshTokenNullableScalarRelationFilter = {
@@ -591,6 +585,15 @@ export type OauthRefreshTokenUncheckedUpdateManyWithoutOauthclientNestedInput = 
   deleteMany?: Prisma.OauthRefreshTokenScalarWhereInput | Prisma.OauthRefreshTokenScalarWhereInput[]
 }
 
+export type OauthRefreshTokenCreatescopesInput = {
+  set: string[]
+}
+
+export type OauthRefreshTokenUpdatescopesInput = {
+  set?: string[]
+  push?: string | string[]
+}
+
 export type OauthRefreshTokenCreateNestedOneWithoutOauthaccesstokensInput = {
   create?: Prisma.XOR<Prisma.OauthRefreshTokenCreateWithoutOauthaccesstokensInput, Prisma.OauthRefreshTokenUncheckedCreateWithoutOauthaccesstokensInput>
   connectOrCreate?: Prisma.OauthRefreshTokenCreateOrConnectWithoutOauthaccesstokensInput
@@ -615,7 +618,7 @@ export type OauthRefreshTokenCreateWithoutUserInput = {
   createdAt?: Date | string | null
   revoked?: Date | string | null
   authTime?: Date | string | null
-  scopes: string
+  scopes?: Prisma.OauthRefreshTokenCreatescopesInput | string[]
   oauthclient: Prisma.OauthClientCreateNestedOneWithoutOauthrefreshtokensInput
   session?: Prisma.SessionCreateNestedOneWithoutOauthrefreshtokensInput
   oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutOauthrefreshtokenInput
@@ -631,7 +634,7 @@ export type OauthRefreshTokenUncheckedCreateWithoutUserInput = {
   createdAt?: Date | string | null
   revoked?: Date | string | null
   authTime?: Date | string | null
-  scopes: string
+  scopes?: Prisma.OauthRefreshTokenCreatescopesInput | string[]
   oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutOauthrefreshtokenInput
 }
 
@@ -675,7 +678,7 @@ export type OauthRefreshTokenScalarWhereInput = {
   createdAt?: Prisma.DateTimeNullableFilter<"OauthRefreshToken"> | Date | string | null
   revoked?: Prisma.DateTimeNullableFilter<"OauthRefreshToken"> | Date | string | null
   authTime?: Prisma.DateTimeNullableFilter<"OauthRefreshToken"> | Date | string | null
-  scopes?: Prisma.StringFilter<"OauthRefreshToken"> | string
+  scopes?: Prisma.StringNullableListFilter<"OauthRefreshToken">
 }
 
 export type OauthRefreshTokenCreateWithoutSessionInput = {
@@ -686,7 +689,7 @@ export type OauthRefreshTokenCreateWithoutSessionInput = {
   createdAt?: Date | string | null
   revoked?: Date | string | null
   authTime?: Date | string | null
-  scopes: string
+  scopes?: Prisma.OauthRefreshTokenCreatescopesInput | string[]
   oauthclient: Prisma.OauthClientCreateNestedOneWithoutOauthrefreshtokensInput
   user: Prisma.UserCreateNestedOneWithoutOauthrefreshtokensInput
   oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutOauthrefreshtokenInput
@@ -702,7 +705,7 @@ export type OauthRefreshTokenUncheckedCreateWithoutSessionInput = {
   createdAt?: Date | string | null
   revoked?: Date | string | null
   authTime?: Date | string | null
-  scopes: string
+  scopes?: Prisma.OauthRefreshTokenCreatescopesInput | string[]
   oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutOauthrefreshtokenInput
 }
 
@@ -740,7 +743,7 @@ export type OauthRefreshTokenCreateWithoutOauthclientInput = {
   createdAt?: Date | string | null
   revoked?: Date | string | null
   authTime?: Date | string | null
-  scopes: string
+  scopes?: Prisma.OauthRefreshTokenCreatescopesInput | string[]
   session?: Prisma.SessionCreateNestedOneWithoutOauthrefreshtokensInput
   user: Prisma.UserCreateNestedOneWithoutOauthrefreshtokensInput
   oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutOauthrefreshtokenInput
@@ -756,7 +759,7 @@ export type OauthRefreshTokenUncheckedCreateWithoutOauthclientInput = {
   createdAt?: Date | string | null
   revoked?: Date | string | null
   authTime?: Date | string | null
-  scopes: string
+  scopes?: Prisma.OauthRefreshTokenCreatescopesInput | string[]
   oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutOauthrefreshtokenInput
 }
 
@@ -794,7 +797,7 @@ export type OauthRefreshTokenCreateWithoutOauthaccesstokensInput = {
   createdAt?: Date | string | null
   revoked?: Date | string | null
   authTime?: Date | string | null
-  scopes: string
+  scopes?: Prisma.OauthRefreshTokenCreatescopesInput | string[]
   oauthclient: Prisma.OauthClientCreateNestedOneWithoutOauthrefreshtokensInput
   session?: Prisma.SessionCreateNestedOneWithoutOauthrefreshtokensInput
   user: Prisma.UserCreateNestedOneWithoutOauthrefreshtokensInput
@@ -811,7 +814,7 @@ export type OauthRefreshTokenUncheckedCreateWithoutOauthaccesstokensInput = {
   createdAt?: Date | string | null
   revoked?: Date | string | null
   authTime?: Date | string | null
-  scopes: string
+  scopes?: Prisma.OauthRefreshTokenCreatescopesInput | string[]
 }
 
 export type OauthRefreshTokenCreateOrConnectWithoutOauthaccesstokensInput = {
@@ -838,7 +841,7 @@ export type OauthRefreshTokenUpdateWithoutOauthaccesstokensInput = {
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   revoked?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   authTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  scopes?: Prisma.StringFieldUpdateOperationsInput | string
+  scopes?: Prisma.OauthRefreshTokenUpdatescopesInput | string[]
   oauthclient?: Prisma.OauthClientUpdateOneRequiredWithoutOauthrefreshtokensNestedInput
   session?: Prisma.SessionUpdateOneWithoutOauthrefreshtokensNestedInput
   user?: Prisma.UserUpdateOneRequiredWithoutOauthrefreshtokensNestedInput
@@ -855,7 +858,7 @@ export type OauthRefreshTokenUncheckedUpdateWithoutOauthaccesstokensInput = {
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   revoked?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   authTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  scopes?: Prisma.StringFieldUpdateOperationsInput | string
+  scopes?: Prisma.OauthRefreshTokenUpdatescopesInput | string[]
 }
 
 export type OauthRefreshTokenCreateManyUserInput = {
@@ -868,7 +871,7 @@ export type OauthRefreshTokenCreateManyUserInput = {
   createdAt?: Date | string | null
   revoked?: Date | string | null
   authTime?: Date | string | null
-  scopes: string
+  scopes?: Prisma.OauthRefreshTokenCreatescopesInput | string[]
 }
 
 export type OauthRefreshTokenUpdateWithoutUserInput = {
@@ -879,7 +882,7 @@ export type OauthRefreshTokenUpdateWithoutUserInput = {
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   revoked?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   authTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  scopes?: Prisma.StringFieldUpdateOperationsInput | string
+  scopes?: Prisma.OauthRefreshTokenUpdatescopesInput | string[]
   oauthclient?: Prisma.OauthClientUpdateOneRequiredWithoutOauthrefreshtokensNestedInput
   session?: Prisma.SessionUpdateOneWithoutOauthrefreshtokensNestedInput
   oauthaccesstokens?: Prisma.OauthAccessTokenUpdateManyWithoutOauthrefreshtokenNestedInput
@@ -895,7 +898,7 @@ export type OauthRefreshTokenUncheckedUpdateWithoutUserInput = {
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   revoked?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   authTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  scopes?: Prisma.StringFieldUpdateOperationsInput | string
+  scopes?: Prisma.OauthRefreshTokenUpdatescopesInput | string[]
   oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedUpdateManyWithoutOauthrefreshtokenNestedInput
 }
 
@@ -909,7 +912,7 @@ export type OauthRefreshTokenUncheckedUpdateManyWithoutUserInput = {
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   revoked?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   authTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  scopes?: Prisma.StringFieldUpdateOperationsInput | string
+  scopes?: Prisma.OauthRefreshTokenUpdatescopesInput | string[]
 }
 
 export type OauthRefreshTokenCreateManySessionInput = {
@@ -922,7 +925,7 @@ export type OauthRefreshTokenCreateManySessionInput = {
   createdAt?: Date | string | null
   revoked?: Date | string | null
   authTime?: Date | string | null
-  scopes: string
+  scopes?: Prisma.OauthRefreshTokenCreatescopesInput | string[]
 }
 
 export type OauthRefreshTokenUpdateWithoutSessionInput = {
@@ -933,7 +936,7 @@ export type OauthRefreshTokenUpdateWithoutSessionInput = {
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   revoked?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   authTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  scopes?: Prisma.StringFieldUpdateOperationsInput | string
+  scopes?: Prisma.OauthRefreshTokenUpdatescopesInput | string[]
   oauthclient?: Prisma.OauthClientUpdateOneRequiredWithoutOauthrefreshtokensNestedInput
   user?: Prisma.UserUpdateOneRequiredWithoutOauthrefreshtokensNestedInput
   oauthaccesstokens?: Prisma.OauthAccessTokenUpdateManyWithoutOauthrefreshtokenNestedInput
@@ -949,7 +952,7 @@ export type OauthRefreshTokenUncheckedUpdateWithoutSessionInput = {
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   revoked?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   authTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  scopes?: Prisma.StringFieldUpdateOperationsInput | string
+  scopes?: Prisma.OauthRefreshTokenUpdatescopesInput | string[]
   oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedUpdateManyWithoutOauthrefreshtokenNestedInput
 }
 
@@ -963,7 +966,7 @@ export type OauthRefreshTokenUncheckedUpdateManyWithoutSessionInput = {
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   revoked?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   authTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  scopes?: Prisma.StringFieldUpdateOperationsInput | string
+  scopes?: Prisma.OauthRefreshTokenUpdatescopesInput | string[]
 }
 
 export type OauthRefreshTokenCreateManyOauthclientInput = {
@@ -976,7 +979,7 @@ export type OauthRefreshTokenCreateManyOauthclientInput = {
   createdAt?: Date | string | null
   revoked?: Date | string | null
   authTime?: Date | string | null
-  scopes: string
+  scopes?: Prisma.OauthRefreshTokenCreatescopesInput | string[]
 }
 
 export type OauthRefreshTokenUpdateWithoutOauthclientInput = {
@@ -987,7 +990,7 @@ export type OauthRefreshTokenUpdateWithoutOauthclientInput = {
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   revoked?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   authTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  scopes?: Prisma.StringFieldUpdateOperationsInput | string
+  scopes?: Prisma.OauthRefreshTokenUpdatescopesInput | string[]
   session?: Prisma.SessionUpdateOneWithoutOauthrefreshtokensNestedInput
   user?: Prisma.UserUpdateOneRequiredWithoutOauthrefreshtokensNestedInput
   oauthaccesstokens?: Prisma.OauthAccessTokenUpdateManyWithoutOauthrefreshtokenNestedInput
@@ -1003,7 +1006,7 @@ export type OauthRefreshTokenUncheckedUpdateWithoutOauthclientInput = {
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   revoked?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   authTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  scopes?: Prisma.StringFieldUpdateOperationsInput | string
+  scopes?: Prisma.OauthRefreshTokenUpdatescopesInput | string[]
   oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedUpdateManyWithoutOauthrefreshtokenNestedInput
 }
 
@@ -1017,7 +1020,7 @@ export type OauthRefreshTokenUncheckedUpdateManyWithoutOauthclientInput = {
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   revoked?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   authTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  scopes?: Prisma.StringFieldUpdateOperationsInput | string
+  scopes?: Prisma.OauthRefreshTokenUpdatescopesInput | string[]
 }
 
 
@@ -1156,7 +1159,7 @@ export type $OauthRefreshTokenPayload<ExtArgs extends runtime.Types.Extensions.I
     createdAt: Date | null
     revoked: Date | null
     authTime: Date | null
-    scopes: string
+    scopes: string[]
   }, ExtArgs["result"]["oauthRefreshToken"]>
   composites: {}
 }
@@ -1594,7 +1597,7 @@ export interface OauthRefreshTokenFieldRefs {
   readonly createdAt: Prisma.FieldRef<"OauthRefreshToken", 'DateTime'>
   readonly revoked: Prisma.FieldRef<"OauthRefreshToken", 'DateTime'>
   readonly authTime: Prisma.FieldRef<"OauthRefreshToken", 'DateTime'>
-  readonly scopes: Prisma.FieldRef<"OauthRefreshToken", 'String'>
+  readonly scopes: Prisma.FieldRef<"OauthRefreshToken", 'String[]'>
 }
     
 
