@@ -17,6 +17,9 @@ import { sendEmailOtp } from './mail'
 import { prisma } from './prisma'
 import { makeUrl } from './server-utils'
 
+// oauthProvider(自身がOIDCプロバイダとして提供)用のスコープ(OIDCログイン用)
+export const OIDC_PROVIDER_SCOPES = ['openid', 'profile', 'email'] as const
+
 const oauthConfigs: GenericOAuthConfig[] = []
 if (
   !!envu.server.MAIN_DEVUNTU_URL &&
@@ -208,6 +211,7 @@ export const auth = betterAuth({
     oauthProvider({
       loginPage: authConfig.path.signIn,
       consentPage: '/consent',
+      scopes: [...OIDC_PROVIDER_SCOPES],
       silenceWarnings: { oauthAuthServerConfig: true }, // 暫定
     }),
     genericOAuth({

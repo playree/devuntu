@@ -1,7 +1,7 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action-server'
-import { auth } from '@/lib/auth'
+import { auth, OIDC_PROVIDER_SCOPES } from '@/lib/auth'
 import { errSystemError } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { scAddOidcClient, scDeleteOidcClient, scUpdateOidcClient } from '@/lib/schema'
@@ -37,6 +37,7 @@ export const addOidcClient = safeAuthAction
         client_secret_expires_at: 0,
         skip_consent: skipConsent,
         require_pkce: requirePkce,
+        scope: OIDC_PROVIDER_SCOPES.join(' '),
       },
     })
     logger.info(res, 'auth.api.adminCreateOAuthClient')
