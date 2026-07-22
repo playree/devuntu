@@ -35,6 +35,12 @@ model User {
   // add Group
   userGroups UserGroup[]
 
+  // add CalendarShare
+  calendarShare CalendarShare?
+
+  // add timezone
+  timezone String?
+
   @@unique([email])
   @@map("user")
 }
@@ -98,6 +104,9 @@ model TwoFactor {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   verified    Boolean? @default(true)
 
+  failedVerificationCount Int?      @default(0)
+  lockedUntil             DateTime?
+
   @@index([secret])
   @@index([userId])
   @@map("two_factor")
@@ -140,7 +149,7 @@ model OauthClient {
   skipConsent             Boolean?
   enableEndSession        Boolean?
   subjectType             String?
-  scopes                  String?
+  scopes                  String[]            @default([])
   userId                  String?
   user                    User?               @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt               DateTime?
@@ -148,22 +157,22 @@ model OauthClient {
   name                    String?
   uri                     String?
   icon                    String?
-  contacts                String?
+  contacts                String[]            @default([])
   tos                     String?
   policy                  String?
   softwareId              String?
   softwareVersion         String?
   softwareStatement       String?
-  redirectUris            String
-  postLogoutRedirectUris  String?
+  redirectUris            String[]            @default([])
+  postLogoutRedirectUris  String[]            @default([])
   tokenEndpointAuthMethod String?
-  grantTypes              String?
-  responseTypes           String?
+  grantTypes              String[]            @default([])
+  responseTypes           String[]            @default([])
   public                  Boolean?
   type                    String?
   requirePKCE             Boolean?
   referenceId             String?
-  metadata                String?
+  metadata                Json?
   oauthrefreshtokens      OauthRefreshToken[]
   oauthaccesstokens       OauthAccessToken[]
   oauthconsents           OauthConsent[]
@@ -187,7 +196,7 @@ model OauthRefreshToken {
   createdAt         DateTime?
   revoked           DateTime?
   authTime          DateTime?
-  scopes            String
+  scopes            String[]
   oauthaccesstokens OauthAccessToken[]
 
   @@index([clientId])
@@ -210,7 +219,7 @@ model OauthAccessToken {
   oauthrefreshtoken OauthRefreshToken? @relation(fields: [refreshId], references: [id], onDelete: Cascade)
   expiresAt         DateTime?
   createdAt         DateTime?
-  scopes            String
+  scopes            String[]
 
   @@unique([token])
   @@index([clientId])
@@ -227,7 +236,7 @@ model OauthConsent {
   userId      String?
   user        User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
   referenceId String?
-  scopes      String
+  scopes      String[]
   createdAt   DateTime?
   updatedAt   DateTime?
 
@@ -284,13 +293,26 @@ model Group {
 model UserGroup {
   id        String   @id @default(uuid(7))
   userId    String
-  groupId   String
-  createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  groupId   String
   group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
 
   @@unique([userId, groupId])
   @@index([userId])
   @@index([groupId])
   @@map("user_group")
+}
+
+model CalendarShare {
+  id        String   @id @default(uuid(7))
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  publicId  String   @unique // 公開URL用のランダムID
+  options   Json? // 設定(将来用)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([publicId])
+  @@map("calendar_share")
 }

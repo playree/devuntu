@@ -66,7 +66,8 @@ export const ModelName = {
   LinkWidget: 'LinkWidget',
   KeyValueStore: 'KeyValueStore',
   Group: 'Group',
-  UserGroup: 'UserGroup'
+  UserGroup: 'UserGroup',
+  CalendarShare: 'CalendarShare'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -99,7 +100,8 @@ export const UserScalarFieldEnum = {
   banExpires: 'banExpires',
   twoFactorEnabled: 'twoFactorEnabled',
   locale: 'locale',
-  lastLoginAt: 'lastLoginAt'
+  lastLoginAt: 'lastLoginAt',
+  timezone: 'timezone'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -156,7 +158,9 @@ export const TwoFactorScalarFieldEnum = {
   secret: 'secret',
   backupCodes: 'backupCodes',
   userId: 'userId',
-  verified: 'verified'
+  verified: 'verified',
+  failedVerificationCount: 'failedVerificationCount',
+  lockedUntil: 'lockedUntil'
 } as const
 
 export type TwoFactorScalarFieldEnum = (typeof TwoFactorScalarFieldEnum)[keyof typeof TwoFactorScalarFieldEnum]
@@ -328,12 +332,32 @@ export const UserGroupScalarFieldEnum = {
 export type UserGroupScalarFieldEnum = (typeof UserGroupScalarFieldEnum)[keyof typeof UserGroupScalarFieldEnum]
 
 
+export const CalendarShareScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  publicId: 'publicId',
+  options: 'options',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CalendarShareScalarFieldEnum = (typeof CalendarShareScalarFieldEnum)[keyof typeof CalendarShareScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
 export const JsonNullValueInput = {

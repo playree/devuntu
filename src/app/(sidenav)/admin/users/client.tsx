@@ -14,6 +14,7 @@ import { parseAction, useActionData } from '@/lib/action-client'
 import { dayformat } from '@/lib/day'
 import { ClientError } from '@/lib/error'
 import { UpdateUser } from '@/lib/schema'
+import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { ButtonGroup, Chip, Table } from '@heroui/react'
 import { FC } from 'react'
@@ -22,6 +23,7 @@ import { deleteUser, getGroupOptions, getUsers } from './server'
 
 export const AdminUsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword }) => {
   const { t } = useLocale()
+  const tz = useUserTimezone()
   const addModalState = useModalState()
   const updateModalState = useModalState<UpdateUser>()
   const groupOptions = useActionData(getGroupOptions)
@@ -77,8 +79,8 @@ export const AdminUsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPass
                 ))}
               </div>
             </Table.Cell>
-            <Table.Cell className='font-mono text-xs'>{dayformat(item.lastLoginAt, 'jp-simple')}</Table.Cell>
-            <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'jp-simple')}</Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.lastLoginAt, 'tz-simple', tz)}</Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'tz-simple', tz)}</Table.Cell>
             <ActionCell
               items={[
                 {

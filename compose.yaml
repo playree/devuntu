@@ -1,6 +1,6 @@
 services:
   devuntu:
-    image: devuntu:latest
+    image: playree/devuntu:latest
     container_name: devuntu
     ports:
       - 3000:3000

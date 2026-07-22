@@ -399,7 +399,8 @@ export const ModelName = {
   LinkWidget: 'LinkWidget',
   KeyValueStore: 'KeyValueStore',
   Group: 'Group',
-  UserGroup: 'UserGroup'
+  UserGroup: 'UserGroup',
+  CalendarShare: 'CalendarShare'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -415,7 +416,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "dashboard" | "linkWidget" | "keyValueStore" | "group" | "userGroup"
+    modelProps: "user" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "dashboard" | "linkWidget" | "keyValueStore" | "group" | "userGroup" | "calendarShare"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1603,6 +1604,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    CalendarShare: {
+      payload: Prisma.$CalendarSharePayload<ExtArgs>
+      fields: Prisma.CalendarShareFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CalendarShareFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CalendarSharePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CalendarShareFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CalendarSharePayload>
+        }
+        findFirst: {
+          args: Prisma.CalendarShareFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CalendarSharePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CalendarShareFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CalendarSharePayload>
+        }
+        findMany: {
+          args: Prisma.CalendarShareFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CalendarSharePayload>[]
+        }
+        create: {
+          args: Prisma.CalendarShareCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CalendarSharePayload>
+        }
+        createMany: {
+          args: Prisma.CalendarShareCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CalendarShareCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CalendarSharePayload>[]
+        }
+        delete: {
+          args: Prisma.CalendarShareDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CalendarSharePayload>
+        }
+        update: {
+          args: Prisma.CalendarShareUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CalendarSharePayload>
+        }
+        deleteMany: {
+          args: Prisma.CalendarShareDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CalendarShareUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CalendarShareUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CalendarSharePayload>[]
+        }
+        upsert: {
+          args: Prisma.CalendarShareUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CalendarSharePayload>
+        }
+        aggregate: {
+          args: Prisma.CalendarShareAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCalendarShare>
+        }
+        groupBy: {
+          args: Prisma.CalendarShareGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CalendarShareGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CalendarShareCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CalendarShareCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1656,7 +1731,8 @@ export const UserScalarFieldEnum = {
   banExpires: 'banExpires',
   twoFactorEnabled: 'twoFactorEnabled',
   locale: 'locale',
-  lastLoginAt: 'lastLoginAt'
+  lastLoginAt: 'lastLoginAt',
+  timezone: 'timezone'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -1713,7 +1789,9 @@ export const TwoFactorScalarFieldEnum = {
   secret: 'secret',
   backupCodes: 'backupCodes',
   userId: 'userId',
-  verified: 'verified'
+  verified: 'verified',
+  failedVerificationCount: 'failedVerificationCount',
+  lockedUntil: 'lockedUntil'
 } as const
 
 export type TwoFactorScalarFieldEnum = (typeof TwoFactorScalarFieldEnum)[keyof typeof TwoFactorScalarFieldEnum]
@@ -1885,12 +1963,32 @@ export const UserGroupScalarFieldEnum = {
 export type UserGroupScalarFieldEnum = (typeof UserGroupScalarFieldEnum)[keyof typeof UserGroupScalarFieldEnum]
 
 
+export const CalendarShareScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  publicId: 'publicId',
+  options: 'options',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CalendarShareScalarFieldEnum = (typeof CalendarShareScalarFieldEnum)[keyof typeof CalendarShareScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
 export const JsonNullValueInput = {
@@ -2133,6 +2231,7 @@ export type GlobalOmitConfig = {
   keyValueStore?: Prisma.KeyValueStoreOmit
   group?: Prisma.GroupOmit
   userGroup?: Prisma.UserGroupOmit
+  calendarShare?: Prisma.CalendarShareOmit
 }
 
 /* Types for Logging */

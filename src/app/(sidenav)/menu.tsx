@@ -3,6 +3,8 @@ import { MultiButton } from '@/components/general/button'
 import { ThemeSwitchList } from '@/components/general/theme-switch'
 import {
   ArrowLeftStartOnRectangleIcon,
+  CalendarDaysIcon,
+  Cog6ToothIcon,
   ServerStackIcon,
   Squares2X2Icon,
   UserCircleIcon,
@@ -11,12 +13,14 @@ import {
 } from '@/components/icon'
 import { LocaleSwitch } from '@/components/locale/locale-switch'
 import { LogoSVG } from '@/components/logo'
+import { parseAction } from '@/lib/action-client'
 import { authClient } from '@/lib/auth-client'
 import { authConfig } from '@/lib/auth-config'
 import { useLocale } from '@/locale/client'
 import { Accordion, Avatar, Button, Card, cn } from '@heroui/react'
 import { useRouter } from 'next/navigation'
-import { FC, ReactNode, useEffect } from 'react'
+import { FC, ReactNode, useEffect, useState } from 'react'
+import { getMyGoogleAccountAccess } from './server'
 
 export const MenuButton: FC<{
   /** メニューテキスト */
@@ -74,11 +78,17 @@ const defaultExpandedKeys = new Set(['group_admin'])
 export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
   const { data: session } = authClient.useSession()
   const { t } = useLocale()
+  // Google連携が利用可能なユーザーのみカレンダーを表示する(初期値false)
+  const [googleAvailable, setGoogleAvailable] = useState(false)
 
   useEffect(() => {
     // Debug
     console.debug('@session', session)
   }, [session])
+
+  useEffect(() => {
+    parseAction(getMyGoogleAccountAccess()).then((res) => setGoogleAvailable(!!res?.available))
+  }, [])
 
   return (
     <div>
@@ -124,6 +134,14 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
             icon={<Squares2X2Icon />}
             closeMenu={closeMenu}
           />
+          {googleAvailable && (
+            <MenuButton // カレンダー
+              to='/cal'
+              text={t('calendar')}
+              icon={<CalendarDaysIcon />}
+              closeMenu={closeMenu}
+            />
+          )}
           <MenuButton // アカウント
             to='/account'
             text={t('account')}
@@ -159,6 +177,12 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
                   to='/admin/dashboard'
                   text={t('dashboard_manage')}
                   icon={<Squares2X2Icon />}
+                  closeMenu={closeMenu}
+                />
+                <MenuButton // 連携設定
+                  to='/admin/settings'
+                  text={t('integration_settings')}
+                  icon={<Cog6ToothIcon />}
                   closeMenu={closeMenu}
                 />
                 <MenuButton // OIDC Client管理

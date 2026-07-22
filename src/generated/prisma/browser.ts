@@ -97,3 +97,8 @@ export type Group = Prisma.GroupModel
  * 
  */
 export type UserGroup = Prisma.UserGroupModel
+/**
+ * Model CalendarShare
+ * 
+ */
+export type CalendarShare = Prisma.CalendarShareModel

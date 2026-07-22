@@ -12,6 +12,7 @@ import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
 import { dayformat } from '@/lib/day'
 import { UpdateGroup } from '@/lib/schema'
+import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { ButtonGroup, Table } from '@heroui/react'
 import { FC } from 'react'
@@ -20,6 +21,7 @@ import { deleteGroup, getGroups } from './server'
 
 export const AdminGroupsClient: FC = () => {
   const { t } = useLocale()
+  const tz = useUserTimezone()
   const addModalState = useModalState()
   const updateModalState = useModalState<UpdateGroup>()
 
@@ -59,7 +61,7 @@ export const AdminGroupsClient: FC = () => {
           <Table.Row key={item.id} id={item.id}>
             <Table.Cell>{item.name}</Table.Cell>
             <Table.Cell className='truncate'>{item.description}</Table.Cell>
-            <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'jp-simple')}</Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'tz-simple', tz)}</Table.Cell>
             <ActionCell
               items={[
                 {
