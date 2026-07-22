@@ -4,6 +4,7 @@ import { safeAuthAction } from '@/lib/action-server'
 import { auth } from '@/lib/auth'
 import { isValidTimezone } from '@/lib/day'
 import { errValidation } from '@/lib/error'
+import { canUseGoogleAccount } from '@/lib/google-account'
 import { GOOGLE_ACCOUNT_PROVIDER_ID } from '@/lib/google-calendar'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
@@ -16,6 +17,10 @@ import { z } from 'zod'
 export const getGoogleAccountStatus = safeAuthAction
   .metadata({ actionName: 'getGoogleAccountStatus', role: 'user' })
   .action(async ({ ctx: { user } }) => {
+    // 連携が利用不可なユーザーには未連携として返す(UI非表示のバックアップ)
+    if (!(await canUseGoogleAccount(user.id))) {
+      return { connected: false, scopes: [] as string[] }
+    }
     const account = await prisma.account.findFirst({
       where: { userId: user.id, providerId: GOOGLE_ACCOUNT_PROVIDER_ID },
       select: { scope: true, refreshToken: true },

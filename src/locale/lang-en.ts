@@ -45,6 +45,8 @@ export const en: LocaleItems = {
   error: 'Error',
   free_memory: 'Free Memory',
   google_account: 'Google Account',
+  google_account_allowed_groups: 'Allowed groups',
+  google_account_enable: 'Enable Google account linking',
   google_signin: 'Sign in with Google',
   granted_scopes: 'Granted Scopes',
   group: 'Group',
@@ -52,6 +54,7 @@ export const en: LocaleItems = {
   icon: 'Icon',
   id: 'ID',
   immutable: 'Immutable',
+  integration_settings: 'Settings',
   is_admin: 'Admin',
   issuer_url: 'Issuer URL',
   last_login: 'Last Login',
@@ -133,7 +136,12 @@ Please copy and use the connection information above.
   msg_deleted_target: 'Deleted ${target}.',
   msg_email_not_verified: 'Your email address has not been verified.\nPlease log in with your email address.',
   msg_enter_otp: 'Enter the verification code sent to your email address.',
+  msg_feature_unavailable: 'This feature is currently unavailable.',
+  msg_google_account_allowed_groups_desc:
+    'Only users in the selected groups can use linking. If none are selected, all users can use it.',
   msg_google_account_connected: 'Google account is connected.',
+  msg_google_account_enable_desc:
+    'When disabled, Google account linking and the shared calendar feature become unavailable.',
   msg_google_account_not_connected: 'Connect your Google account to use Google data.',
   msg_invalid_email_or_password: 'Invalid email or password.',
   msg_link_google_for_calendar:

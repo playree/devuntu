@@ -9,6 +9,7 @@
 
 import { DEFAULT_TZ } from './day'
 import { envu } from './env-util'
+import { canUseGoogleAccount } from './google-account'
 import { GOOGLE_ACCOUNT_PROVIDER_ID, type BusySlot } from './google-calendar'
 import { logger } from './logger'
 import { prisma } from './prisma'
@@ -66,6 +67,11 @@ export const getGoogleFreeBusy = async ({
   const clientSecret = envu.server.GOOGLE_CLIENT_SECRET
   if (!clientId || !clientSecret) {
     logger.warn('google client id/secret is not set')
+    return null
+  }
+
+  // 所有者(カレンダー主)が連携を利用不可なら公開ページも表示ガード(データは保持)
+  if (!(await canUseGoogleAccount(userId))) {
     return null
   }
 

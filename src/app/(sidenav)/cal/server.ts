@@ -1,11 +1,20 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action-server'
+import { errPermissionDenied } from '@/lib/error'
+import { canUseGoogleAccount } from '@/lib/google-account'
 import { GOOGLE_ACCOUNT_PROVIDER_ID } from '@/lib/google-calendar'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { scCalendarShareOptions, scUpdateCalendarShareTitle } from '@/lib/schema'
 import { nanoid } from 'nanoid'
+
+/** 連携が利用不可なら例外を投げる(ミューテーション用ガード) */
+const assertGoogleAccountAvailable = async (userId: string) => {
+  if (!(await canUseGoogleAccount(userId))) {
+    throw errPermissionDenied()
+  }
+}
 
 /** 公開URL用のID(推測困難な長め) */
 const genPublicId = () => nanoid(48)
@@ -19,6 +28,10 @@ const parseOptions = (v: unknown) => scCalendarShareOptions.safeParse(v).data ??
 export const getCalendarShare = safeAuthAction
   .metadata({ actionName: 'getCalendarShare', role: 'user' })
   .action(async ({ ctx: { user } }) => {
+    // 連携が利用不可なら未連携・未共有として返す
+    if (!(await canUseGoogleAccount(user.id))) {
+      return { googleConnected: false, shared: false, publicId: null, title: '' }
+    }
     const [account, share] = await Promise.all([
       prisma.account.findFirst({
         where: { userId: user.id, providerId: GOOGLE_ACCOUNT_PROVIDER_ID },
@@ -44,6 +57,7 @@ export type GetCalendarShareReturnType = Awaited<ReturnType<typeof getCalendarSh
 export const enableCalendarShare = safeAuthAction
   .metadata({ actionName: 'enableCalendarShare', role: 'user' })
   .action(async ({ ctx: { user } }) => {
+    await assertGoogleAccountAvailable(user.id)
     const share = await prisma.calendarShare.upsert({
       where: { userId: user.id },
       update: {},
@@ -65,6 +79,7 @@ export const updateCalendarShareTitle = safeAuthAction
   .metadata({ actionName: 'updateCalendarShareTitle', role: 'user' })
   .inputSchema(scUpdateCalendarShareTitle)
   .action(async ({ ctx: { user }, parsedInput: { title } }) => {
+    await assertGoogleAccountAvailable(user.id)
     const current = await prisma.calendarShare.findUnique({
       where: { userId: user.id },
       select: { options: true },
@@ -83,6 +98,7 @@ export const updateCalendarShareTitle = safeAuthAction
 export const disableCalendarShare = safeAuthAction
   .metadata({ actionName: 'disableCalendarShare', role: 'user' })
   .action(async ({ ctx: { user } }) => {
+    await assertGoogleAccountAvailable(user.id)
     await prisma.calendarShare.deleteMany({ where: { userId: user.id } })
     logger.info({ userId: user.id }, 'calendar share disabled')
     return { disabled: true }
@@ -94,6 +110,7 @@ export const disableCalendarShare = safeAuthAction
 export const rotateCalendarShareUrl = safeAuthAction
   .metadata({ actionName: 'rotateCalendarShareUrl', role: 'user' })
   .action(async ({ ctx: { user } }) => {
+    await assertGoogleAccountAvailable(user.id)
     const share = await prisma.calendarShare.update({
       where: { userId: user.id },
       data: { publicId: genPublicId() },

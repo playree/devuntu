@@ -161,3 +161,10 @@ export type CalendarShareOptions = z.infer<typeof scCalendarShareOptions>
 
 export const scUpdateCalendarShareTitle = z.object({ title: zShareTitle })
 export type UpdateCalendarShareTitle = z.infer<typeof scUpdateCalendarShareTitle>
+
+/** Google アカウント連携設定 */
+export const scUpdateGoogleAccountSettings = z.object({
+  enabled: z.boolean(),
+  allowedGroupIds: z.array(z.uuidv7()),
+})
+export type UpdateGoogleAccountSettings = z.infer<typeof scUpdateGoogleAccountSettings>

@@ -45,6 +45,8 @@ export const ja: DefaultLocaleItems = {
   error: 'エラー',
   free_memory: '空きメモリ',
   google_account: 'Googleアカウント',
+  google_account_allowed_groups: '利用を許可するグループ',
+  google_account_enable: 'Googleアカウント連携を有効化',
   google_signin: 'Googleでサインイン',
   granted_scopes: '取得済みスコープ',
   group: 'グループ',
@@ -52,6 +54,7 @@ export const ja: DefaultLocaleItems = {
   icon: 'アイコン',
   id: 'ID',
   immutable: '変更不可',
+  integration_settings: '設定',
   is_admin: '管理者',
   issuer_url: '発行者URL',
   last_login: '最終ログイン',
@@ -133,7 +136,11 @@ export const ja: DefaultLocaleItems = {
   msg_deleted_target: '${target} を削除しました。',
   msg_email_not_verified: 'Eメールが検証されていません。\n一度、Eメールでログインしてください。',
   msg_enter_otp: 'Eメールに届いた認証コードを入力してください。',
+  msg_feature_unavailable: 'この機能は現在利用できません。',
+  msg_google_account_allowed_groups_desc:
+    '指定したグループに所属するユーザーのみ連携を利用できます。未指定の場合は全ユーザーが利用できます。',
   msg_google_account_connected: 'Googleアカウントと連携済みです。',
+  msg_google_account_enable_desc: '無効にすると、Googleアカウント連携と共有カレンダー機能が利用できなくなります。',
   msg_google_account_not_connected: 'Googleアカウントと連携すると、Googleのデータを利用できます。',
   msg_invalid_email_or_password: 'Eメールまたはパスワードが違います。',
   msg_link_google_for_calendar:

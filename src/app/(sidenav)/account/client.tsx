@@ -11,7 +11,7 @@ import { MyPasskey } from './passkey'
 import { TimezoneSetting } from './timezone'
 
 const defaultExpandedKeys = new Set(['passkey', 'google_account', 'timezone'])
-export const AccountClient: FC = () => {
+export const AccountClient: FC<{ googleAvailable: boolean }> = ({ googleAvailable }) => {
   const { t } = useLocale()
 
   return (
@@ -46,20 +46,22 @@ export const AccountClient: FC = () => {
             </Accordion.Body>
           </Accordion.Panel>
         </Accordion.Item>
-        <Accordion.Item id='google_account'>
-          <Accordion.Heading>
-            <Accordion.Trigger className='gap-1'>
-              <GoogleIcon />
-              {t('google_account')}
-              <Accordion.Indicator />
-            </Accordion.Trigger>
-          </Accordion.Heading>
-          <Accordion.Panel>
-            <Accordion.Body className='px-4'>
-              <GoogleAccountLink />
-            </Accordion.Body>
-          </Accordion.Panel>
-        </Accordion.Item>
+        {googleAvailable && (
+          <Accordion.Item id='google_account'>
+            <Accordion.Heading>
+              <Accordion.Trigger className='gap-1'>
+                <GoogleIcon />
+                {t('google_account')}
+                <Accordion.Indicator />
+              </Accordion.Trigger>
+            </Accordion.Heading>
+            <Accordion.Panel>
+              <Accordion.Body className='px-4'>
+                <GoogleAccountLink />
+              </Accordion.Body>
+            </Accordion.Panel>
+          </Accordion.Item>
+        )}
       </Accordion>
     </FlexCol>
   )
