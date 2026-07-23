@@ -9,6 +9,7 @@ import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
 import { PencilSquareIcon, PlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
+
 import { authClient } from '@/lib/auth-client'
 import { authConfig } from '@/lib/auth-config'
 import { makePath } from '@/lib/client-utils'
@@ -35,8 +36,9 @@ export const MyPasskey: FC = () => {
       const res = await authClient.passkey.listUserPasskeys()
       if (res.data) {
         console.debug(res.data)
-        return res.data.map(({ id, aaguid, createdAt }) => ({
+        return res.data.map(({ id, name, aaguid, createdAt }) => ({
           id,
+          name: name ?? '',
           authenticator: getAuthenticatorName(aaguid) || 'Passkey',
           createdAt,
         }))
@@ -55,7 +57,6 @@ export const MyPasskey: FC = () => {
           icon={<PlusIcon />}
           onPress={async () => {
             const { data, error } = await authClient.passkey.addPasskey({
-              // name: `${envu.client.NEXT_PUBLIC_APP_NAME} (${dayformat(now(), 'tz-simple', tz)})`,
               authenticatorAttachment: 'platform',
             })
             console.debug('addPasskey', { data, error })
@@ -92,6 +93,7 @@ export const MyPasskey: FC = () => {
         ariaLabel='passkey list'
         pagingList={list}
         columns={[
+          { id: 'name', name: t('name'), isRowHeader: true, allowsSorting: true, minWidth: 200, defaultWidth: '1fr' },
           { id: 'authenticator', name: t('authenticator'), allowsSorting: true, minWidth: 200, defaultWidth: '1fr' },
           { id: 'createdAt', name: t('created_at'), allowsSorting: true, minWidth: 110 },
           { id: 'action', name: t('action'), allowsSorting: false, defaultWidth: 100 },
@@ -99,6 +101,7 @@ export const MyPasskey: FC = () => {
       >
         {(item) => (
           <Table.Row key={item.id} id={item.id}>
+            <Table.Cell>{item.name || 'No Name'}</Table.Cell>
             <Table.Cell>
               <div className='flex items-center gap-2'>{item.authenticator}</div>
             </Table.Cell>
@@ -116,11 +119,11 @@ export const MyPasskey: FC = () => {
                 },
                 {
                   template: 'delete',
-                  target: item.name ?? '',
+                  target: item.name || item.authenticator,
                   action: async () => {
                     const { data } = await authClient.passkey.deletePasskey({ id: item.id })
                     if (data) {
-                      notify.success(t('msg_deleted_target', { target: item.name }))
+                      notify.success(t('msg_deleted_target', { target: item.name || item.authenticator }))
                       list.reload()
                     }
                   },
