@@ -67,7 +67,8 @@ export const ModelName = {
   KeyValueStore: 'KeyValueStore',
   Group: 'Group',
   UserGroup: 'UserGroup',
-  CalendarShare: 'CalendarShare'
+  CalendarShare: 'CalendarShare',
+  CalendarBusyTime: 'CalendarBusyTime'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -342,6 +343,20 @@ export const CalendarShareScalarFieldEnum = {
 } as const
 
 export type CalendarShareScalarFieldEnum = (typeof CalendarShareScalarFieldEnum)[keyof typeof CalendarShareScalarFieldEnum]
+
+
+export const CalendarBusyTimeScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  title: 'title',
+  weekdays: 'weekdays',
+  startMin: 'startMin',
+  endMin: 'endMin',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CalendarBusyTimeScalarFieldEnum = (typeof CalendarBusyTimeScalarFieldEnum)[keyof typeof CalendarBusyTimeScalarFieldEnum]
 
 
 export const SortOrder = {

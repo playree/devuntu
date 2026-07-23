@@ -12,6 +12,7 @@ import { useLocale } from '@/locale/client'
 import { Card, Input, Label, TextField } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC, useEffect, useState } from 'react'
+import { BusyTimeManage } from './busy-time'
 import {
   disableCalendarShare,
   enableCalendarShare,
@@ -129,6 +130,8 @@ export const CalClient: FC<{ origin: string }> = ({ origin }) => {
           )}
         </Card.Content>
       </Card>
+
+      {status?.googleConnected && status.shared && <BusyTimeManage />}
     </FlexCol>
   )
 }

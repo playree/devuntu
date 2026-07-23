@@ -1,3 +1,4 @@
+import { expandBusyTimes, mergeBusySlots } from '@/lib/calendar-busy'
 import { startOfWeek, weekRange } from '@/lib/day'
 import { envu } from '@/lib/env-util'
 import { getGoogleFreeBusy } from '@/lib/google-calendar-server'
@@ -49,6 +50,16 @@ const PublicCalPage = async ({
   const busy = await getGoogleFreeBusy({ userId: share.userId, timeMin, timeMax, timeZone: tz })
   logger.debug({ userId: share.userId, timeMin, timeMax, tz, busy }, 'fetching google freebusy')
 
-  return <PublicCalClient weekStartISO={weekStart.toISOString()} busy={busy} timezone={tz} title={title} />
+  // Google の busy が取得できたときのみ、手動で登録された追加Busy時間を展開して統合する
+  let merged = busy
+  if (busy !== null) {
+    const rules = await prisma.calendarBusyTime.findMany({
+      where: { userId: share.userId },
+      select: { weekdays: true, startMin: true, endMin: true },
+    })
+    merged = mergeBusySlots([...busy, ...expandBusyTimes(rules, weekStart)])
+  }
+
+  return <PublicCalClient weekStartISO={weekStart.toISOString()} busy={merged} timezone={tz} title={title} />
 }
 export default PublicCalPage

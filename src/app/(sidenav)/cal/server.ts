@@ -1,12 +1,18 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action-server'
-import { errPermissionDenied } from '@/lib/error'
+import { errInvalidOperation, errPermissionDenied } from '@/lib/error'
 import { canUseGoogleAccount } from '@/lib/google-account'
 import { GOOGLE_ACCOUNT_PROVIDER_ID } from '@/lib/google-calendar'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
-import { scCalendarShareOptions, scUpdateCalendarShareTitle } from '@/lib/schema'
+import {
+  scCalendarShareOptions,
+  scCreateBusyTime,
+  scUpdateBusyTime,
+  scUpdateCalendarShareTitle,
+  scUUID,
+} from '@/lib/schema'
 import { nanoid } from 'nanoid'
 
 /** 連携が利用不可なら例外を投げる(ミューテーション用ガード) */
@@ -118,4 +124,79 @@ export const rotateCalendarShareUrl = safeAuthAction
     })
     logger.info({ userId: user.id }, 'calendar share url rotated')
     return { publicId: share.publicId }
+  })
+
+/**
+ * 追加Busy時間の一覧取得
+ */
+export const getBusyTimes = safeAuthAction
+  .metadata({ actionName: 'getBusyTimes', role: 'user' })
+  .action(async ({ ctx: { user } }) => {
+    await assertGoogleAccountAvailable(user.id)
+    return prisma.calendarBusyTime.findMany({
+      where: { userId: user.id },
+      select: { id: true, title: true, weekdays: true, startMin: true, endMin: true, createdAt: true },
+      orderBy: { createdAt: 'desc' },
+    })
+  })
+export type GetBusyTimesReturnType = Awaited<ReturnType<typeof getBusyTimes>>['data']
+
+/**
+ * 追加Busy時間の作成
+ */
+export const createBusyTime = safeAuthAction
+  .metadata({ actionName: 'createBusyTime', role: 'user' })
+  .inputSchema(scCreateBusyTime)
+  .action(async ({ ctx: { user }, parsedInput: { title, weekdays, startMin, endMin } }) => {
+    await assertGoogleAccountAvailable(user.id)
+    const busyTime = await prisma.calendarBusyTime.create({
+      data: { userId: user.id, title, weekdays, startMin, endMin },
+      select: { id: true },
+    })
+    logger.info({ userId: user.id, id: busyTime.id }, 'calendar busy time created')
+    return busyTime
+  })
+
+/**
+ * 追加Busy時間の更新
+ */
+export const updateBusyTime = safeAuthAction
+  .metadata({ actionName: 'updateBusyTime', role: 'user' })
+  .inputSchema(scUpdateBusyTime)
+  .action(async ({ ctx: { user }, parsedInput: { id, title, weekdays, startMin, endMin } }) => {
+    await assertGoogleAccountAvailable(user.id)
+    const busyTime = await prisma.$transaction(async (tx) => {
+      // 所有者確認
+      const target = await tx.calendarBusyTime.findFirst({ where: { id, userId: user.id }, select: { id: true } })
+      if (!target) {
+        throw errInvalidOperation()
+      }
+      return tx.calendarBusyTime.update({
+        where: { id },
+        data: { title, weekdays, startMin, endMin },
+        select: { id: true },
+      })
+    })
+    logger.info({ userId: user.id, id }, 'calendar busy time updated')
+    return busyTime
+  })
+
+/**
+ * 追加Busy時間の削除
+ */
+export const deleteBusyTime = safeAuthAction
+  .metadata({ actionName: 'deleteBusyTime', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => {
+    await assertGoogleAccountAvailable(user.id)
+    await prisma.$transaction(async (tx) => {
+      // 所有者確認
+      const target = await tx.calendarBusyTime.findFirst({ where: { id, userId: user.id }, select: { id: true } })
+      if (!target) {
+        throw errInvalidOperation()
+      }
+      await tx.calendarBusyTime.delete({ where: { id } })
+    })
+    logger.info({ userId: user.id, id }, 'calendar busy time deleted')
+    return { id }
   })

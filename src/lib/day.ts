@@ -103,3 +103,16 @@ export const weekRange = (weekStart: Dayjs) => ({
 
 /** ISO文字列等を指定タイムゾーンの Dayjs に変換(既定は Asia/Tokyo) */
 export const toZone = (date: string | Date | Dayjs, tz: string = DEFAULT_TZ) => dayjs(date).tz(tz)
+
+/** 曜日ラベル。インデックスは dayjs の .day() と同じ 0=日 .. 6=土 */
+export const WEEKDAY_LABELS: Record<string, string[]> = {
+  ja: ['日', '月', '火', '水', '木', '金', '土'],
+  en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+}
+
+/** 0:00 からの分を "HH:mm" 形式に変換(1440 は "24:00") */
+export const minToHHmm = (min: number): string => {
+  const h = Math.floor(min / 60)
+  const m = min % 60
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+}
