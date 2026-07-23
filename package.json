@@ -1,14 +1,16 @@
 {
   "name": "devuntu",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "buildno": "2026072201",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev2": "PORT=3033 next dev",
+    "dev:domain": "PORT=3033 next dev",
     "build": "next build",
     "lint": "eslint",
     "prettier": "prettier --write --ignore-path .gitignore --ignore-path .prettierignore './**/*.{js,jsx,ts,tsx,json,css}'",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "migrate": "prisma migrate dev",
     "generate": "prisma generate",
     "studio": "prisma studio",
@@ -66,7 +68,8 @@
     "prettier-plugin-tailwindcss": "^0.8.1",
     "prisma": "^7.8.0",
     "tailwindcss": "^4.3.3",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.10"
   },
   "engines": {
     "node": "^24.0.0"

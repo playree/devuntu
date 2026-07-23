@@ -192,8 +192,8 @@ model OauthRefreshToken {
   userId            String
   user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   referenceId       String?
-  expiresAt         DateTime?
-  createdAt         DateTime?
+  expiresAt         DateTime
+  createdAt         DateTime           @default(now())
   revoked           DateTime?
   authTime          DateTime?
   scopes            String[]
@@ -207,7 +207,7 @@ model OauthRefreshToken {
 
 model OauthAccessToken {
   id                String             @id @default(uuid(7))
-  token             String?
+  token             String
   clientId          String
   oauthclient       OauthClient        @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
   sessionId         String?
@@ -217,8 +217,8 @@ model OauthAccessToken {
   referenceId       String?
   refreshId         String?
   oauthrefreshtoken OauthRefreshToken? @relation(fields: [refreshId], references: [id], onDelete: Cascade)
-  expiresAt         DateTime?
-  createdAt         DateTime?
+  expiresAt         DateTime
+  createdAt         DateTime           @default(now())
   scopes            String[]
 
   @@unique([token])
@@ -237,8 +237,8 @@ model OauthConsent {
   user        User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
   referenceId String?
   scopes      String[]
-  createdAt   DateTime?
-  updatedAt   DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
   @@index([clientId])
   @@index([userId])
