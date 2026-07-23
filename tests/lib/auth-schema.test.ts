@@ -29,7 +29,7 @@ type PrismaField = { base: string; isArray: boolean; optional: boolean }
 /** prisma/schema.prisma を軽量パースし、モデル毎のフィールド型を得る。 */
 function parsePrismaModels(src: string): Record<string, Record<string, PrismaField>> {
   const models: Record<string, Record<string, PrismaField>> = {}
-  const modelRe = /model\s+(\w+)\s*\{([^}]*)\}/g
+  const modelRe = /model\s+(\w+)\s*\{\n([\s\S]*?)\n\}/g
   let m: RegExpExecArray | null
   while ((m = modelRe.exec(src)) !== null) {
     const ident = m[1]
@@ -91,6 +91,19 @@ describe('Better Auth スキーマと Prisma スキーマの整合性', () => {
         const baIsArray = baType.endsWith('[]')
         const baBase = baIsArray ? baType.slice(0, -2) : baType
         const allowedBases = BETTER_AUTH_TO_PRISMA_BASE[baBase]
+
+        // 必須/オプション（nullable）の整合。Better Auth の required は省略時 true（NOT NULL）扱い。
+        // スカラー配列は Prisma では NOT NULL の `T[] @default([])`（空配列が「無し」）で表現され、
+        // Better Auth の optional とは意味が異なるため対象外とする。
+        if (!baIsArray) {
+          const baRequired = attr.required !== false
+          const prismaRequired = !pf.optional
+          if (baRequired !== prismaRequired) {
+            errors.push(
+              `- ${column}: 必須/オプションが不一致（Better Auth: ${baRequired ? 'required' : 'optional'} / Prisma: ${prismaRequired ? 'required' : 'optional'}）`,
+            )
+          }
+        }
 
         if (!allowedBases) {
           // 未知の Better Auth 型（将来の追加）。チェックをスキップせず気づけるようにする
