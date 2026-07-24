@@ -5,7 +5,7 @@ import { CopyableField } from '@/components/general/copyable-field'
 import { FlexCol } from '@/components/general/flex'
 import { useConfirmModal } from '@/components/general/modal'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, CalendarDaysIcon, GoogleIcon } from '@/components/icon'
+import { ArrowPathIcon, CalendarDaysIcon, ClockIcon, DocumentPlusIcon, GoogleIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction, useActionData } from '@/lib/action-client'
 import { useLocale } from '@/locale/client'
@@ -82,7 +82,7 @@ export const CalClient: FC<{ origin: string }> = ({ origin }) => {
         <Accordion.Item id='share'>
           <Accordion.Heading>
             <Accordion.Trigger className='gap-1'>
-              <CalendarDaysIcon />
+              <ClockIcon />
               {t('calendar_share')}
               <Accordion.Indicator />
             </Accordion.Trigger>
@@ -142,7 +142,7 @@ export const CalClient: FC<{ origin: string }> = ({ origin }) => {
           <Accordion.Item id='busy_time'>
             <Accordion.Heading>
               <Accordion.Trigger className='gap-1'>
-                <CalendarDaysIcon />
+                <DocumentPlusIcon />
                 {t('busy_time_manage')}
                 <Accordion.Indicator />
               </Accordion.Trigger>
