@@ -36,7 +36,8 @@ model User {
   userGroups UserGroup[]
 
   // add CalendarShare
-  calendarShare CalendarShare?
+  calendarShare     CalendarShare?
+  calendarBusyTimes CalendarBusyTime[]
 
   // add timezone
   timezone String?
@@ -315,4 +316,19 @@ model CalendarShare {
 
   @@index([publicId])
   @@map("calendar_share")
+}
+
+model CalendarBusyTime {
+  id        String   @id @default(uuid(7))
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String // 件名(管理画面での識別ラベル。公開カレンダーには非表示)
+  weekdays  Int[] // dayjs .day() と同じ 0=日 .. 6=土。1件で複数曜日を保持
+  startMin  Int // 0:00 からの分。0..1410、30分刻み
+  endMin    Int // 0:00 からの分。30..1440(24:00=1440)、30分刻み。startMin < endMin
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("calendar_busy_time")
 }

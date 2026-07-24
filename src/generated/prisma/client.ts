@@ -126,3 +126,8 @@ export type UserGroup = Prisma.UserGroupModel
  * 
  */
 export type CalendarShare = Prisma.CalendarShareModel
+/**
+ * Model CalendarBusyTime
+ * 
+ */
+export type CalendarBusyTime = Prisma.CalendarBusyTimeModel

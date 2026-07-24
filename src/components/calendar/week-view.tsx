@@ -1,6 +1,6 @@
 'use client'
 
-import { toZone } from '@/lib/day'
+import { toZone, WEEKDAY_LABELS } from '@/lib/day'
 import type { BusySlot } from '@/lib/google-calendar'
 import { useLocale } from '@/locale/client'
 import { cn } from '@heroui/react'
@@ -20,11 +20,6 @@ const useMounted = () =>
 const HOUR_HEIGHT = 48
 const TOTAL_HEIGHT = HOUR_HEIGHT * 24
 const HOURS = Array.from({ length: 24 }, (_, i) => i)
-
-const WEEKDAY_LABELS: Record<string, string[]> = {
-  ja: ['日', '月', '火', '水', '木', '金', '土'],
-  en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-}
 
 type DayBlock = { top: number; height: number }
 

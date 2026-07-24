@@ -400,7 +400,8 @@ export const ModelName = {
   KeyValueStore: 'KeyValueStore',
   Group: 'Group',
   UserGroup: 'UserGroup',
-  CalendarShare: 'CalendarShare'
+  CalendarShare: 'CalendarShare',
+  CalendarBusyTime: 'CalendarBusyTime'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -416,7 +417,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "dashboard" | "linkWidget" | "keyValueStore" | "group" | "userGroup" | "calendarShare"
+    modelProps: "user" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "dashboard" | "linkWidget" | "keyValueStore" | "group" | "userGroup" | "calendarShare" | "calendarBusyTime"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1678,6 +1679,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    CalendarBusyTime: {
+      payload: Prisma.$CalendarBusyTimePayload<ExtArgs>
+      fields: Prisma.CalendarBusyTimeFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CalendarBusyTimeFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CalendarBusyTimePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CalendarBusyTimeFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CalendarBusyTimePayload>
+        }
+        findFirst: {
+          args: Prisma.CalendarBusyTimeFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CalendarBusyTimePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CalendarBusyTimeFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CalendarBusyTimePayload>
+        }
+        findMany: {
+          args: Prisma.CalendarBusyTimeFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CalendarBusyTimePayload>[]
+        }
+        create: {
+          args: Prisma.CalendarBusyTimeCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CalendarBusyTimePayload>
+        }
+        createMany: {
+          args: Prisma.CalendarBusyTimeCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CalendarBusyTimeCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CalendarBusyTimePayload>[]
+        }
+        delete: {
+          args: Prisma.CalendarBusyTimeDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CalendarBusyTimePayload>
+        }
+        update: {
+          args: Prisma.CalendarBusyTimeUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CalendarBusyTimePayload>
+        }
+        deleteMany: {
+          args: Prisma.CalendarBusyTimeDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CalendarBusyTimeUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CalendarBusyTimeUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CalendarBusyTimePayload>[]
+        }
+        upsert: {
+          args: Prisma.CalendarBusyTimeUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CalendarBusyTimePayload>
+        }
+        aggregate: {
+          args: Prisma.CalendarBusyTimeAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCalendarBusyTime>
+        }
+        groupBy: {
+          args: Prisma.CalendarBusyTimeGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CalendarBusyTimeGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CalendarBusyTimeCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CalendarBusyTimeCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1975,6 +2050,20 @@ export const CalendarShareScalarFieldEnum = {
 export type CalendarShareScalarFieldEnum = (typeof CalendarShareScalarFieldEnum)[keyof typeof CalendarShareScalarFieldEnum]
 
 
+export const CalendarBusyTimeScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  title: 'title',
+  weekdays: 'weekdays',
+  startMin: 'startMin',
+  endMin: 'endMin',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CalendarBusyTimeScalarFieldEnum = (typeof CalendarBusyTimeScalarFieldEnum)[keyof typeof CalendarBusyTimeScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -2232,6 +2321,7 @@ export type GlobalOmitConfig = {
   group?: Prisma.GroupOmit
   userGroup?: Prisma.UserGroupOmit
   calendarShare?: Prisma.CalendarShareOmit
+  calendarBusyTime?: Prisma.CalendarBusyTimeOmit
 }
 
 /* Types for Logging */

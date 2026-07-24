@@ -1,14 +1,12 @@
 - [Devuntu](#devuntu)
 - [パッケージ構成](#パッケージ構成)
 - [環境変数](#環境変数)
-  - [BETTER\_AUTH\_URL](#better_auth_url)
-  - [DEFAULT\_LOCALE](#default_locale)
-  - [DATABASE\_URL](#database_url)
-  - [BETTER\_AUTH\_SECRET](#better_auth_secret)
-  - [GOOGLE\_CLIENT\_ID](#google_client_id)
-  - [GOOGLE\_CLIENT\_SECRET](#google_client_secret)
-  - [開発用](#開発用)
-    - [LOG\_LEVEL](#log_level)
+  - [基本](#基本)
+  - [認証](#認証)
+  - [メール](#メール)
+  - [Linode](#linode)
+  - [Debug](#debug)
+  - [補足](#補足)
 - [開発](#開発)
   - [DB起動](#db起動)
   - [DBバックアップ](#dbバックアップ)
@@ -37,31 +35,69 @@
 
 # 環境変数
 
-## BETTER_AUTH_URL
+環境変数の定義元は `src/lib/env-util.ts`。参照時も同ファイルの `envu` を利用する。
 
-運用するベースのURL
+## 基本
 
-## DEFAULT_LOCALE
+| 変数名                 | 説明                         | 必須 | デフォルト   |
+| ---------------------- | ---------------------------- | ---- | ------------ |
+| `NEXT_PUBLIC_APP_NAME` | アプリ名（クライアント公開） |      | `Devuntu`    |
+| `DATABASE_URL`         | DB(PostgreSQL) の接続パス    | 〇   | -            |
+| `DEFAULT_LOCALE`       | デフォルトロケール           |      | -            |
+| `DEFAULT_TIMEZONE`     | デフォルトタイムゾーン       |      | `Asia/Tokyo` |
+| `LOG_LEVEL`            | ログレベル                   |      | `info`       |
 
-## DATABASE_URL
+## 認証
 
-DB(PostgreSQL)のパス
+| 変数名                       | 説明                                  | 必須 | デフォルト    |
+| ---------------------------- | ------------------------------------- | ---- | ------------- |
+| `BETTER_AUTH_URL`            | 運用するベースの URL                  | 〇   | -             |
+| `BETTER_AUTH_SECRET`         | Better Auth 用シークレット            | 〇   | -             |
+| `SESSION_EXPIRES_IN`         | セッション有効期間(秒)                |      | `432000`(5日) |
+| `SESSION_FRESH_AGE`          | セッション fresh 期間(秒)             |      | `86400`(1日)  |
+| `TWO_FA_REQUIRED`            | 2要素認証を必須にするか               |      | `true`        |
+| `DISABLE_PASSWORD_AUTH`      | パスワード認証を無効化                |      | `false`       |
+| `MAIN_DEVUNTU_URL`           | 連携元 Devuntu の URL                 |      | -             |
+| `MAIN_DEVUNTU_CLIENT_ID`     | 連携元クライアントID                  |      | -             |
+| `MAIN_DEVUNTU_CLIENT_SECRET` | 連携元クライアントシークレット        |      | -             |
+| `GOOGLE_CLIENT_ID`           | Google OAuth クライアントID           |      | -             |
+| `GOOGLE_CLIENT_SECRET`       | Google OAuth クライアントシークレット |      | -             |
+| `GOOGLE_ALLOWED_DOMAINS`     | 許可ドメイン(カンマ区切り)            |      | -             |
 
-## BETTER_AUTH_SECRET
+## メール
 
-Better Auth用のシークレット
+| 変数名             | 説明                                          | 必須                    | デフォルト |
+| ------------------ | --------------------------------------------- | ----------------------- | ---------- |
+| `MAIL_SEND`        | 送信方式 `sendgrid`/`sendmail`/`smtp`/`debug` |                         | -          |
+| `MAIL_FROM`        | 送信元アドレス                                | 〇                      | -          |
+| `SENDGRID_API_KEY` | SendGrid APIキー                              | `MAIL_SEND=sendgrid` 時 | -          |
+| `SENDMAIL_PATH`    | sendmail のパス                               | `MAIL_SEND=sendmail` 時 | -          |
+| `SMTP_HOST`        | SMTP ホスト                                   | `MAIL_SEND=smtp` 時     | -          |
+| `SMTP_PORT`        | SMTP ポート                                   | `MAIL_SEND=smtp` 時     | -          |
+| `SMTP_IGNORE_TLS`  | TLS を無視                                    |                         | `false`    |
+| `SMTP_SECURE`      | SSL/TLS 接続                                  |                         | `false`    |
+| `SMTP_USER`        | SMTP 認証ユーザー                             |                         | -          |
+| `SMTP_PASS`        | SMTP 認証パスワード                           |                         | -          |
 
-## GOOGLE_CLIENT_ID
+## Linode
 
-## GOOGLE_CLIENT_SECRET
+| 変数名                         | 説明                    | 必須 | デフォルト |
+| ------------------------------ | ----------------------- | ---- | ---------- |
+| `LINODE_ID`                    | Linode インスタンスID   |      | -          |
+| `LINODE_PERSONAL_ACCESS_TOKEN` | Linode アクセストークン |      | -          |
 
-## 開発用
+## Debug
 
-### LOG_LEVEL
+| 変数名               | 説明                    | 必須 | デフォルト |
+| -------------------- | ----------------------- | ---- | ---------- |
+| `DEBUG_LINODE_DUMMY` | Linode ダミー応答(JSON) |      | -          |
 
-ログレベル
+## 補足
 
-_デフォルト = info_
+以下はユーザーが直接設定しない内部変数。
+
+- `BUILD_NO` : ビルド番号。`next.config.ts` の `env` で自動生成・注入される
+- `NODE_ENV` : 実行環境(`development`/`production` 等)。実行環境側で設定される
 
 # 開発
 

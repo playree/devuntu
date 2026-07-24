@@ -1,4 +1,4 @@
-import { Checkbox, Modal, useOverlayState, UseOverlayStateReturn } from '@heroui/react'
+import { Checkbox, Modal, ModalContainerProps, useOverlayState, UseOverlayStateReturn } from '@heroui/react'
 import { nanoid } from 'nanoid'
 import { usePathname } from 'next/navigation'
 import {
@@ -66,10 +66,11 @@ export const FormModal: FC<{
   title: { text: string; icon?: ReactNode }
   footer: ReactNode
   hiddenCloseButton?: boolean
-}> = ({ children, state, onSubmit, title, footer, hiddenCloseButton }) => {
+  size?: ModalContainerProps['size']
+}> = ({ children, state, onSubmit, title, footer, hiddenCloseButton, size }) => {
   return (
     <Modal.Backdrop variant='blur' isOpen={state.isOpen} onOpenChange={state.setOpen} isDismissable={false}>
-      <Modal.Container placement='top'>
+      <Modal.Container placement='top' size={size}>
         <Modal.Dialog>
           <form onSubmit={onSubmit}>
             {!hiddenCloseButton && <Modal.CloseTrigger />}
@@ -136,7 +137,7 @@ export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ ui
           </Modal.Header>
           <Modal.Body>
             <FlexCol>
-              <div className='whitespace-pre-wrap'>{confirmParam?.text || ''}</div>
+              <div className='text-foreground whitespace-pre-wrap'>{confirmParam?.text || ''}</div>
               {confirmParam?.requireCheck && (
                 <Checkbox
                   id='confirm-agree'

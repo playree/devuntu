@@ -26,7 +26,7 @@ export const AdminUsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPass
   const tz = useUserTimezone()
   const addModalState = useModalState()
   const updateModalState = useModalState<UpdateUser>()
-  const groupOptions = useActionData(getGroupOptions)
+  const { data: groupOptions } = useActionData(getGroupOptions)
 
   const list = usePagingList({
     load: async () => {
