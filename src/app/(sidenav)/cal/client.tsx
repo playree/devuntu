@@ -7,17 +7,16 @@ import { useConfirmModal } from '@/components/general/modal'
 import { ContentHeader } from '@/components/header'
 import { ArrowPathIcon, CalendarDaysIcon, GoogleIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
-import { parseAction } from '@/lib/action-client'
+import { parseAction, useActionData } from '@/lib/action-client'
 import { useLocale } from '@/locale/client'
 import { Card, Input, Label, TextField } from '@heroui/react'
 import { useRouter } from 'next/navigation'
-import { FC, useEffect, useState } from 'react'
+import { FC, useState } from 'react'
 import { BusyTimeManage } from './busy-time'
 import {
   disableCalendarShare,
   enableCalendarShare,
   getCalendarShare,
-  GetCalendarShareReturnType,
   rotateCalendarShareUrl,
   updateCalendarShareTitle,
 } from './server'
@@ -26,19 +25,15 @@ export const CalClient: FC<{ origin: string }> = ({ origin }) => {
   const { t } = useLocale()
   const router = useRouter()
   const { confirmModal } = useConfirmModal()
-  const [status, setStatus] = useState<GetCalendarShareReturnType>()
+  const { data: status, reload } = useActionData(getCalendarShare)
   const [title, setTitle] = useState('')
+  const [syncedTitle, setSyncedTitle] = useState<string>()
 
-  const reload = () => {
-    parseAction(getCalendarShare()).then((res) => {
-      setStatus(res)
-      setTitle(res?.title ?? '')
-    })
+  // status 取得・再取得でサーバー値が変わったら編集用 title を同期(レンダー中に調整)
+  if (status && status.title !== syncedTitle) {
+    setSyncedTitle(status.title)
+    setTitle(status.title)
   }
-
-  useEffect(() => {
-    reload()
-  }, [])
 
   const enable = async () => {
     await parseAction(enableCalendarShare())

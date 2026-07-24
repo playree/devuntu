@@ -1,7 +1,7 @@
 'use client'
 
 import { notify } from '@/components/notify'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { errClient } from './error'
 import { intervalOperation } from './sleep'
 
@@ -52,7 +52,8 @@ export const parseAction = async <
 }
 
 /**
- * サーバーアクションをマウント時に1回実行し、結果を返す。
+ * サーバーアクションをマウント時に実行し、結果を返す。
+ * reload で再取得でき、isLoading で取得中かどうかを判定できる。
  * エラー時は parseAction が throw / notify するため data は undefined のまま。
  */
 export const useActionData = <T>(
@@ -63,16 +64,27 @@ export const useActionData = <T>(
   }>,
 ) => {
   const [data, setData] = useState<T>()
+  const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    parseAction(action())
+  const fetchData = useCallback(() => {
+    return parseAction(action())
       .then((res) => setData(res))
       .catch((e) => {
         console.error(e)
       })
-    // マウント時1回のみ実行
+      .finally(() => setIsLoading(false))
+    // action はモジュールレベルの安定参照
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  return data
+  const reload = useCallback(() => {
+    setIsLoading(true)
+    return fetchData()
+  }, [fetchData])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  return { data, reload, isLoading }
 }
