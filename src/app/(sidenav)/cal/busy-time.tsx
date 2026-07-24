@@ -6,8 +6,7 @@ import { FlexCol } from '@/components/general/flex'
 import { useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
-import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, CalendarDaysIcon, PencilSquareIcon, PlusIcon } from '@/components/icon'
+import { ArrowPathIcon, PencilSquareIcon, PlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
 import { minToHHmm, WEEKDAY_LABELS } from '@/lib/day'
@@ -40,21 +39,23 @@ export const BusyTimeManage: FC = () => {
 
   return (
     <FlexCol>
-      <ContentHeader icon={<CalendarDaysIcon />} title={t('busy_time_manage')}>
-        <MultiButton isIconOnly size='sm' tooltip={t('add_busy_time')} onPress={() => modalState.open()}>
-          <PlusIcon />
-        </MultiButton>
-        <MultiButton isIconOnly size='sm' tooltip={t('reload')} onPress={() => list.reload()}>
-          <ButtonGroup.Separator />
-          <ArrowPathIcon />
-        </MultiButton>
-      </ContentHeader>
+      <div className='flex justify-end'>
+        <ButtonGroup variant='tertiary'>
+          <MultiButton isIconOnly size='sm' tooltip={t('add_busy_time')} onPress={() => modalState.open()}>
+            <PlusIcon />
+          </MultiButton>
+          <MultiButton isIconOnly size='sm' tooltip={t('reload')} onPress={() => list.reload()}>
+            <ButtonGroup.Separator />
+            <ArrowPathIcon />
+          </MultiButton>
+        </ButtonGroup>
+      </div>
 
       <MultiTable
         ariaLabel='busy time list'
         pagingList={list}
         columns={[
-          { id: 'title', name: t('title'), isRowHeader: true, minWidth: 120, defaultWidth: '2fr' },
+          { id: 'title', name: t('title'), isRowHeader: true, minWidth: 120, defaultWidth: '1fr' },
           { id: 'weekdays', name: t('weekday'), minWidth: 120, defaultWidth: '1fr' },
           { id: 'time', name: t('time_range'), defaultWidth: 150 },
           { id: 'action', name: t('action'), allowsSorting: false, defaultWidth: 100 },

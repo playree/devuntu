@@ -9,7 +9,7 @@ import { ArrowPathIcon, CalendarDaysIcon, GoogleIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction, useActionData } from '@/lib/action-client'
 import { useLocale } from '@/locale/client'
-import { Card, Input, Label, TextField } from '@heroui/react'
+import { Accordion, Input, Label, TextField } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC, useState } from 'react'
 import { BusyTimeManage } from './busy-time'
@@ -20,6 +20,8 @@ import {
   rotateCalendarShareUrl,
   updateCalendarShareTitle,
 } from './server'
+
+const defaultExpandedKeys = new Set(['share', 'busy_time'])
 
 export const CalClient: FC<{ origin: string }> = ({ origin }) => {
   const { t } = useLocale()
@@ -75,58 +77,84 @@ export const CalClient: FC<{ origin: string }> = ({ origin }) => {
 
   return (
     <FlexCol>
-      <ContentHeader icon={<CalendarDaysIcon />} title={t('calendar_share')} />
-      <Card>
-        <Card.Content className='flex flex-col gap-4 p-4'>
-          {status && !status.googleConnected && (
-            <FlexCol>
-              <p className='text-sm'>{t('msg_link_google_for_calendar')}</p>
-              <div>
-                <MultiButton icon={<GoogleIcon />} onPress={() => router.push('/account')}>
-                  {t('account')}
-                </MultiButton>
-              </div>
-            </FlexCol>
-          )}
-
-          {status?.googleConnected && (
-            <FlexCol>
-              <p className='text-sm text-neutral-500'>{t('msg_calendar_share_desc')}</p>
-
-              {status.shared ? (
+      <ContentHeader icon={<CalendarDaysIcon />} title={t('calendar')} />
+      <Accordion allowsMultipleExpanded defaultExpandedKeys={defaultExpandedKeys}>
+        <Accordion.Item id='share'>
+          <Accordion.Heading>
+            <Accordion.Trigger className='gap-1'>
+              <CalendarDaysIcon />
+              {t('calendar_share')}
+              <Accordion.Indicator />
+            </Accordion.Trigger>
+          </Accordion.Heading>
+          <Accordion.Panel>
+            <Accordion.Body className='flex flex-col gap-4 px-4'>
+              {status && !status.googleConnected && (
                 <FlexCol>
-                  <div className='flex flex-wrap items-end gap-2'>
-                    <TextField className='flex-auto' value={title} onChange={setTitle} maxLength={50}>
-                      <Label>{t('share_title')}</Label>
-                      <Input variant='secondary' />
-                    </TextField>
-                    <MultiButton variant='outline' onPress={saveTitle}>
-                      {t('save')}
-                    </MultiButton>
-                  </div>
-                  <CopyableField label={t('share_url')} text={shareUrl} variant='secondary' />
-                  <div className='flex flex-wrap gap-2'>
-                    <MultiButton icon={<ArrowPathIcon />} variant='outline' onPress={rotate}>
-                      {t('regenerate_url')}
-                    </MultiButton>
-                    <MultiButton variant='danger-soft' onPress={disable}>
-                      {t('disable_sharing')}
+                  <p className='text-sm'>{t('msg_link_google_for_calendar')}</p>
+                  <div>
+                    <MultiButton icon={<GoogleIcon />} onPress={() => router.push('/account')}>
+                      {t('account')}
                     </MultiButton>
                   </div>
                 </FlexCol>
-              ) : (
-                <div>
-                  <MultiButton icon={<CalendarDaysIcon />} onPress={enable}>
-                    {t('enable_sharing')}
-                  </MultiButton>
-                </div>
               )}
-            </FlexCol>
-          )}
-        </Card.Content>
-      </Card>
 
-      {status?.googleConnected && status.shared && <BusyTimeManage />}
+              {status?.googleConnected && (
+                <FlexCol>
+                  <p className='text-sm text-neutral-500'>{t('msg_calendar_share_desc')}</p>
+
+                  {status.shared ? (
+                    <FlexCol>
+                      <div className='flex flex-wrap items-end gap-2'>
+                        <TextField className='flex-auto' value={title} onChange={setTitle} maxLength={50}>
+                          <Label>{t('share_title')}</Label>
+                          <Input variant='secondary' />
+                        </TextField>
+                        <MultiButton variant='outline' onPress={saveTitle}>
+                          {t('save')}
+                        </MultiButton>
+                      </div>
+                      <CopyableField label={t('share_url')} text={shareUrl} variant='secondary' />
+                      <div className='flex flex-wrap gap-2'>
+                        <MultiButton icon={<ArrowPathIcon />} variant='outline' onPress={rotate}>
+                          {t('regenerate_url')}
+                        </MultiButton>
+                        <MultiButton variant='danger-soft' onPress={disable}>
+                          {t('disable_sharing')}
+                        </MultiButton>
+                      </div>
+                    </FlexCol>
+                  ) : (
+                    <div>
+                      <MultiButton icon={<CalendarDaysIcon />} onPress={enable}>
+                        {t('enable_sharing')}
+                      </MultiButton>
+                    </div>
+                  )}
+                </FlexCol>
+              )}
+            </Accordion.Body>
+          </Accordion.Panel>
+        </Accordion.Item>
+
+        {status?.googleConnected && status.shared && (
+          <Accordion.Item id='busy_time'>
+            <Accordion.Heading>
+              <Accordion.Trigger className='gap-1'>
+                <CalendarDaysIcon />
+                {t('busy_time_manage')}
+                <Accordion.Indicator />
+              </Accordion.Trigger>
+            </Accordion.Heading>
+            <Accordion.Panel>
+              <Accordion.Body className='px-4'>
+                <BusyTimeManage />
+              </Accordion.Body>
+            </Accordion.Panel>
+          </Accordion.Item>
+        )}
+      </Accordion>
     </FlexCol>
   )
 }
