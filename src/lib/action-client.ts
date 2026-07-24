@@ -1,7 +1,7 @@
 'use client'
 
 import { notify } from '@/components/notify'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { errClient } from './error'
 import { intervalOperation } from './sleep'
 
@@ -65,14 +65,25 @@ export const useActionData = <T>(
 ) => {
   const [data, setData] = useState<T>()
   const [isLoading, setIsLoading] = useState(true)
+  // reload 連打時に古いレスポンスが後着で state を上書きしないよう世代トークンで管理
+  const genRef = useRef(0)
 
   const fetchData = useCallback(() => {
+    const gen = ++genRef.current
     return parseAction(action())
-      .then((res) => setData(res))
+      .then((res) => {
+        if (gen === genRef.current) {
+          setData(res)
+        }
+      })
       .catch((e) => {
         console.error(e)
       })
-      .finally(() => setIsLoading(false))
+      .finally(() => {
+        if (gen === genRef.current) {
+          setIsLoading(false)
+        }
+      })
     // action はモジュールレベルの安定参照
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

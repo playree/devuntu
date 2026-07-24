@@ -67,6 +67,7 @@ export type LocaleItemBase =
   | 'next'
   | 'next_week'
   | 'no_file_selected'
+  | 'no_name'
   | 'oidc_clients'
   | 'ok'
   | 'otp'

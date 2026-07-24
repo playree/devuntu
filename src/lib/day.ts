@@ -104,6 +104,9 @@ export const weekRange = (weekStart: Dayjs) => ({
 /** ISO文字列等を指定タイムゾーンの Dayjs に変換(既定は Asia/Tokyo) */
 export const toZone = (date: string | Date | Dayjs, tz: string = DEFAULT_TZ) => dayjs(date).tz(tz)
 
+/** 月始まりの表示順(値は dayjs .day() のインデックス 0=日..6=土) */
+export const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0]
+
 /** 曜日ラベル。インデックスは dayjs の .day() と同じ 0=日 .. 6=土 */
 export const WEEKDAY_LABELS: Record<string, string[]> = {
   ja: ['日', '月', '火', '水', '木', '金', '土'],

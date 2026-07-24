@@ -69,6 +69,7 @@ export const en: LocaleItems = {
   next: 'Next',
   next_week: 'Next Week',
   no_file_selected: 'No file selected',
+  no_name: 'No Name',
   oidc_clients: 'OIDC Clients',
   ok: 'OK',
   otp: 'OTP',

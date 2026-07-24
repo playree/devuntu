@@ -9,16 +9,13 @@ import { MultiTable } from '@/components/general/table'
 import { ArrowPathIcon, PencilSquareIcon, PlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
-import { minToHHmm, WEEKDAY_LABELS } from '@/lib/day'
+import { minToHHmm, WEEKDAY_LABELS, WEEKDAY_ORDER } from '@/lib/day'
 import { UpdateBusyTime } from '@/lib/schema'
 import { useLocale } from '@/locale/client'
 import { ButtonGroup, Chip, Table } from '@heroui/react'
 import { FC } from 'react'
 import { BusyTimeModal } from './busy-modals'
 import { deleteBusyTime, getBusyTimes } from './server'
-
-/** 月始まりの表示順(値は dayjs .day() のインデックス 0=日..6=土) */
-const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0]
 
 export const BusyTimeManage: FC = () => {
   const { t, locale } = useLocale()

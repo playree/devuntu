@@ -9,7 +9,7 @@ import { FormModal, ModalBaseProps } from '@/components/general/modal'
 import { CheckIcon, PencilSquareIcon, PlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
-import { minToHHmm, WEEKDAY_LABELS } from '@/lib/day'
+import { minToHHmm, WEEKDAY_LABELS, WEEKDAY_ORDER } from '@/lib/day'
 import { CreateBusyTime, scBusyTimeBase, scCreateBusyTime, UpdateBusyTime } from '@/lib/schema'
 import { useLocale } from '@/locale/client'
 import { ErrorMessage, Label, ListBox, Select } from '@heroui/react'
@@ -18,8 +18,6 @@ import { FC } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { createBusyTime, updateBusyTime } from './server'
 
-/** 月始まりの表示順(値は dayjs .day() のインデックス 0=日..6=土) */
-const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0]
 const EVERYDAY = [0, 1, 2, 3, 4, 5, 6]
 const WEEKDAYS_ONLY = [1, 2, 3, 4, 5]
 
@@ -164,6 +162,7 @@ export const BusyTimeModal: FC<ModalBaseProps & { target?: UpdateBusyTime }> = (
               </Select>
             )}
           />
+          <ErrorMessage className='min-h-4'>{fet(errors.startMin)}</ErrorMessage>
         </div>
 
         {/* 終了時刻 */}
@@ -202,8 +201,8 @@ export const BusyTimeModal: FC<ModalBaseProps & { target?: UpdateBusyTime }> = (
               </Select>
             )}
           />
+          <ErrorMessage className='min-h-4'>{fet(errors.endMin)}</ErrorMessage>
         </div>
-        <ErrorMessage className='min-h-4'>{fet(errors.endMin)}</ErrorMessage>
       </GridBox>
     </FormModal>
   )

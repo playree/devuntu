@@ -101,7 +101,7 @@ export const MyPasskey: FC = () => {
       >
         {(item) => (
           <Table.Row key={item.id} id={item.id}>
-            <Table.Cell>{item.name || 'No Name'}</Table.Cell>
+            <Table.Cell>{item.name || t('no_name')}</Table.Cell>
             <Table.Cell>
               <div className='flex items-center gap-2'>{item.authenticator}</div>
             </Table.Cell>

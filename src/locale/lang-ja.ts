@@ -69,6 +69,7 @@ export const ja: DefaultLocaleItems = {
   next: '次へ',
   next_week: '翌週',
   no_file_selected: '選択されていません',
+  no_name: '名前なし',
   oidc_clients: 'OIDCクライアント',
   ok: 'OK',
   otp: 'OTP',
