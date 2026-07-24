@@ -60,6 +60,11 @@ const server = {
   get LOG_LEVEL() {
     return getEnv('LOG_LEVEL', { default: 'info' })
   },
+  get BUILD_NO() {
+    // next.config.ts の env で注入する値は Next.js が静的な process.env.BUILD_NO を
+    // ビルド時にインライン化するため、getEnv（動的アクセス）ではなく静的参照で読む
+    return process.env.BUILD_NO ?? 'unknown'
+  },
   get DATABASE_URL() {
     return getEnv('DATABASE_URL', { required: true })
   },

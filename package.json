@@ -1,7 +1,6 @@
 {
   "name": "devuntu",
   "version": "0.2.2",
-  "buildno": "2026072201",
   "private": true,
   "scripts": {
     "dev": "next dev",

@@ -41,10 +41,9 @@ export type GetAnnouncementReturnType = Awaited<ReturnType<typeof getAnnouncemen
  * アプリ情報取得
  */
 export const getAppInfo = safeAuthAction.metadata({ actionName: 'getAppInfo', role: 'user' }).action(async () => {
-  const { version, buildno } = pkg
   return {
-    version,
-    buildno,
+    version: pkg.version,
+    buildno: envu.server.BUILD_NO,
   }
 })
 export type GetAppInfoReturnType = Awaited<ReturnType<typeof getAppInfo>>['data']
