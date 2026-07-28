@@ -174,7 +174,7 @@ Please copy and use the connection information above.
   msg_added_passkey: 'Passkey registered.',
   msg_added_passkey_description: 'Edit the name as needed.',
   msg_added_target: 'Added ${target}.',
-  msg_auto_assign_self: 'Private tickets are assigned to you automatically.',
+  msg_auto_assign_self: '*Private ticket',
   msg_calendar_share_desc:
     'When enabled, you can share your availability with external people via a share URL. Event titles and details are not shown; only busy time slots are made public.',
   msg_calendar_share_disabled: 'Sharing disabled. The share URL is no longer valid.',

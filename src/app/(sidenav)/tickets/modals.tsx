@@ -120,7 +120,7 @@ export const AddModal: FC<ModalBaseProps & { options: FormOptions; defaultBoardI
             />
           </div>
         )}
-        <div className='col-span-12 md:col-span-6'>
+        <div className='col-span-6 md:col-span-3'>
           <SingleSelectCtrl
             control={control}
             name='status'
@@ -129,7 +129,7 @@ export const AddModal: FC<ModalBaseProps & { options: FormOptions; defaultBoardI
             label={t('status')}
           />
         </div>
-        <div className='col-span-12 md:col-span-6'>
+        <div className='col-span-6 md:col-span-3'>
           <SingleSelectCtrl
             control={control}
             name='priority'
@@ -139,7 +139,7 @@ export const AddModal: FC<ModalBaseProps & { options: FormOptions; defaultBoardI
             isClearable
           />
         </div>
-        <div className='col-span-12 md:col-span-6'>
+        <div className='col-span-6 md:col-span-3'>
           {boardId ? (
             <SingleSelectCtrl
               control={control}
@@ -153,7 +153,7 @@ export const AddModal: FC<ModalBaseProps & { options: FormOptions; defaultBoardI
             <SelfAssigneeField userName={options.me.name} />
           )}
         </div>
-        <div className='col-span-12 md:col-span-6'>
+        <div className='col-span-6 md:col-span-3'>
           <DatePickerCtrl control={control} name='dueDate' label={t('due_date')} errorMessage={fet(errors.dueDate)} />
         </div>
 

@@ -7,6 +7,7 @@ import {
   ChangeCodeMirrorLanguage,
   codeBlockPlugin,
   codeMirrorPlugin,
+  CodeToggle,
   ConditionalContents,
   CreateLink,
   diffSourcePlugin,
@@ -53,21 +54,34 @@ const VIEW_MODES = ['rich-text', 'source'] as const
 /** シリアライズ時の記法を固定して、保存のたびに差分が出るのを防ぐ */
 const TO_MARKDOWN_OPTIONS = { bullet: '-', listItemIndent: 'one' } as const
 
-const Toolbar: FC = () => (
-  <DiffSourceToggleWrapper options={[...VIEW_MODES]}>
+/** コードブロック非選択時に出す通常のリッチテキスト用コントロール */
+const RichTextControls: FC = () => (
+  <>
     <UndoRedo />
     <Separator />
     <BoldItalicUnderlineToggles />
+    <CodeToggle />
     <Separator />
     <BlockTypeSelect />
     <ListsToggle />
     <Separator />
     <CreateLink />
     <InsertTable />
+    <InsertCodeBlock />
+  </>
+)
+
+/**
+ * ツールバー。コードブロックにフォーカスがある間は CodeMirror で効かない
+ * リッチテキスト用コントロールを隠し、言語セレクタだけを出す。
+ * ビュー切替は常に使えるよう DiffSourceToggleWrapper は分岐の外に置く。
+ */
+const Toolbar: FC = () => (
+  <DiffSourceToggleWrapper options={[...VIEW_MODES]}>
     <ConditionalContents
       options={[
         { when: (editor) => editor?.editorType === 'codeblock', contents: () => <ChangeCodeMirrorLanguage /> },
-        { fallback: () => <InsertCodeBlock /> },
+        { fallback: () => <RichTextControls /> },
       ]}
     />
   </DiffSourceToggleWrapper>
