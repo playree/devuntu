@@ -1,6 +1,6 @@
 'use client'
 
-import { Chip, Label, ListBox, Select } from '@heroui/react'
+import { Chip, ErrorMessage, Label, ListBox, Select } from '@heroui/react'
 import { FC, SVGProps } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 
@@ -31,12 +31,16 @@ export const MultiSelectCtrl = <
   groupOptions,
   label,
   variant,
+  isSlim,
+  errorMessage,
 }: {
   control: Control<TFieldValues>
   name: TName
   groupOptions: Record<string, string>
   label: string
   variant?: 'primary' | 'secondary'
+  isSlim?: boolean
+  errorMessage?: string
 }) => {
   return (
     <Controller
@@ -52,7 +56,7 @@ export const MultiSelectCtrl = <
             onBlur={onBlur}
             ref={ref}
           >
-            <Label>{label}</Label>
+            <Label className={isSlim ? 'text-xs font-light' : ''}>{label}</Label>
             <Select.Trigger>
               <Select.Value>
                 {() => {
@@ -85,6 +89,7 @@ export const MultiSelectCtrl = <
               )}
               <Select.Indicator />
             </Select.Trigger>
+            <ErrorMessage className={isSlim ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
             <Select.Popover>
               <ListBox selectionMode='multiple'>
                 {Object.entries(groupOptions).map(([id, name]) => (
@@ -116,6 +121,8 @@ export const SingleSelectCtrl = <
   label,
   variant,
   isClearable = false,
+  errorMessage,
+  isSlim,
 }: {
   control: Control<TFieldValues>
   name: TName
@@ -123,6 +130,8 @@ export const SingleSelectCtrl = <
   label: string
   variant?: 'primary' | 'secondary'
   isClearable?: boolean
+  errorMessage?: string
+  isSlim?: boolean
 }) => {
   return (
     <Controller
@@ -138,17 +147,16 @@ export const SingleSelectCtrl = <
             onBlur={onBlur}
             ref={ref}
           >
-            <Label>{label}</Label>
-            <Select.Trigger>
+            <Label className={isSlim ? 'text-xs font-light' : ''}>{label}</Label>
+            {/* isSlim: 既定 36px(min-h-9 + py-2)を 28px へ。text-sm の行高 20px + 上下 4px */}
+            <Select.Trigger className={isSlim ? 'min-h-7 py-1' : undefined}>
               <Select.Value>
                 {() =>
                   value && groupOptions[value] ? (
-                    <Chip variant='soft' color='accent'>
-                      {groupOptions[value]}
-                    </Chip>
+                    <>{groupOptions[value]}</>
                   ) : (
                     // 共通部品なのでローカライズ不要とする
-                    <Chip variant='tertiary'>Not selected</Chip>
+                    <>Not selected</>
                   )
                 }
               </Select.Value>
@@ -169,6 +177,7 @@ export const SingleSelectCtrl = <
               )}
               <Select.Indicator />
             </Select.Trigger>
+            <ErrorMessage className={isSlim ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
             <Select.Popover>
               <ListBox selectionMode='single'>
                 {Object.entries(groupOptions).map(([id, name]) => (

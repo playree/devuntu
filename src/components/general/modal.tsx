@@ -90,7 +90,10 @@ export const FormModal: FC<{
     <Modal.Backdrop variant='blur' isOpen={state.isOpen} onOpenChange={state.setOpen} isDismissable={false}>
       <Modal.Container placement='top' size={extraSizeClass ? undefined : (size as ModalContainerProps['size'])}>
         <Modal.Dialog className={extraSizeClass}>
-          <form onSubmit={onSubmit}>
+          {/* Modal.Dialog(flex flex-col / max-h-full)と Modal.Body(min-h-0 flex-1 + overflow-y-auto)の間に
+              素のformが入るとBodyのflex-1が解決されず、背の高い内容がoverflow-clipで切れてしまう。
+              form自体を縮むflexコンテナにしてHeroUIのscroll='inside'を機能させる */}
+          <form onSubmit={onSubmit} className='flex min-h-0 flex-col'>
             {!hiddenCloseButton && <Modal.CloseTrigger />}
             <Modal.Header>
               <Modal.Heading className='flex items-center gap-2'>

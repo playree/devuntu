@@ -137,6 +137,10 @@
   /* MDXEditor: 他のフォーム部品(rounded-xl border-2)と枠線を揃える */
   .mdxeditor {
     @apply rounded-xl border-2;
+    /* 本文が伸び続けてモーダルや画面をはみ出さないよう、エディタ内でスクロールさせる。
+       ツールバーは MDXEditor 側で position: sticky / top: 0 なので上端に残る。
+       ポップアップは overlayContainer(Modal.Dialog / body)側に出るためクリップされない */
+    @apply max-h-[50vh] overflow-y-auto overscroll-contain;
   }
 }
 

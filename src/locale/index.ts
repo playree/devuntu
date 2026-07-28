@@ -170,7 +170,6 @@ export type LocaleItemBase =
   | 'msg_added_passkey'
   | 'msg_added_passkey_description'
   | 'msg_added_target'
-  | 'msg_auto_assign_self'
   | 'msg_calendar_share_desc'
   | 'msg_calendar_share_disabled'
   | 'msg_calendar_share_enabled'

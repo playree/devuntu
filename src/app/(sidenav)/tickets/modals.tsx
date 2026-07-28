@@ -105,6 +105,7 @@ export const AddModal: FC<ModalBaseProps & { options: FormOptions; defaultBoardI
             label={t('title')}
             errorMessage={fet(errors.title)}
             autoFocus
+            isSlim
           />
         </div>
 
@@ -127,6 +128,7 @@ export const AddModal: FC<ModalBaseProps & { options: FormOptions; defaultBoardI
             variant='secondary'
             groupOptions={statusOptions}
             label={t('status')}
+            isSlim
           />
         </div>
         <div className='col-span-6 md:col-span-3'>
@@ -137,6 +139,7 @@ export const AddModal: FC<ModalBaseProps & { options: FormOptions; defaultBoardI
             groupOptions={priorityOptions}
             label={t('priority')}
             isClearable
+            isSlim
           />
         </div>
         <div className='col-span-6 md:col-span-3'>
@@ -148,13 +151,20 @@ export const AddModal: FC<ModalBaseProps & { options: FormOptions; defaultBoardI
               groupOptions={boardAssignees}
               label={t('assignee')}
               isClearable
+              isSlim
             />
           ) : (
             <SelfAssigneeField userName={options.me.name} />
           )}
         </div>
         <div className='col-span-6 md:col-span-3'>
-          <DatePickerCtrl control={control} name='dueDate' label={t('due_date')} errorMessage={fet(errors.dueDate)} />
+          <DatePickerCtrl
+            control={control}
+            name='dueDate'
+            label={t('due_date')}
+            errorMessage={fet(errors.dueDate)}
+            isSlim
+          />
         </div>
 
         <div className='col-span-12'>

@@ -1,7 +1,7 @@
 'use client'
 
 import { getFieldConstraints } from '@/lib/schema-util'
-import { ErrorMessage, Input, InputProps, Label, TextField } from '@heroui/react'
+import { cn, ErrorMessage, Input, InputProps, Label, TextField } from '@heroui/react'
 import { ChangeEvent } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 import { z } from 'zod'
@@ -19,6 +19,8 @@ export const InputCtrl = <
   isRequired,
   isReadOnly,
   errorMessage,
+  isSlim,
+  className,
   ...props
 }: InputProps & {
   control: Control<TFieldValues>
@@ -29,6 +31,8 @@ export const InputCtrl = <
   isRequired?: boolean
   isReadOnly?: boolean
   errorMessage?: string
+  isSlim?: boolean
+  className?: string
 }) => {
   const { isRequired: schemaRequired, ...constraints } = constraintSchema
     ? getFieldConstraints(constraintSchema, name)
@@ -47,6 +51,8 @@ export const InputCtrl = <
           <Input
             {...constraints}
             {...props}
+            // isSlim: 既定 36px(py-2)を 28px へ。text-sm の行高 20px + 上下 4px
+            className={cn(isSlim ? 'py-1' : '', className)}
             type={type}
             onChange={
               type === 'number'
@@ -67,7 +73,7 @@ export const InputCtrl = <
             onBlur={onBlur}
             ref={ref}
           />
-          <ErrorMessage className='min-h-4'>{errorMessage}</ErrorMessage>
+          <ErrorMessage className={isSlim ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
         </TextField>
       )}
     />

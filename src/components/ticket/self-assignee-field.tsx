@@ -1,7 +1,7 @@
 'use client'
 
 import { useLocale } from '@/locale/client'
-import { Description, Input, Label, TextField } from '@heroui/react'
+import { Input, Label, TextField } from '@heroui/react'
 import { FC } from 'react'
 
 /**
@@ -15,11 +15,11 @@ export const SelfAssigneeField: FC<{ userName: string }> = ({ userName }) => {
   const { t } = useLocale()
 
   return (
-    <TextField isReadOnly>
-      <Label>{t('assignee')}</Label>
-      {/* readOnly は TextField から context 経由で input へ伝わる */}
-      <Input value={userName} variant='secondary' />
-      <Description>{t('msg_auto_assign_self')}</Description>
+    <TextField isDisabled>
+      <Label className='text-xs font-light'>{t('assignee')}</Label>
+      {/* readOnly は TextField から context 経由で input へ伝わる。
+          py-1 は同じ枠に出し分ける SingleSelectCtrl(isSlim) と高さを揃えるため */}
+      <Input value={userName} variant='secondary' className='py-1' />
     </TextField>
   )
 }

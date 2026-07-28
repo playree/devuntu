@@ -174,7 +174,6 @@ export const ja: DefaultLocaleItems = {
   msg_added_passkey: 'パスキーを登録しました。',
   msg_added_passkey_description: '必要に応じて名前を編集してください。',
   msg_added_target: '${target} を追加しました。',
-  msg_auto_assign_self: '※プライベートチケット',
   msg_calendar_share_desc:
     '有効にすると、あなたのカレンダーの空き時間を共有URLで外部の人に見せられます。予定のタイトルや詳細は表示されず、「予定あり」の時間帯だけが公開されます。',
   msg_calendar_share_disabled: '共有を無効にしました。共有URLは無効になりました。',

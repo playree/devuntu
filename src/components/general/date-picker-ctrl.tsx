@@ -40,6 +40,7 @@ export const DatePickerCtrl = <
   isReadOnly,
   isClearable = true,
   variant = 'secondary',
+  isSlim,
 }: {
   control: Control<TFieldValues>
   name: TName
@@ -50,6 +51,7 @@ export const DatePickerCtrl = <
   /** クリアボタンを表示する(任意入力の日付向け) */
   isClearable?: boolean
   variant?: 'primary' | 'secondary'
+  isSlim?: boolean
 }) => (
   <Controller
     control={control}
@@ -65,15 +67,20 @@ export const DatePickerCtrl = <
           isInvalid={!!errorMessage}
           isReadOnly={isReadOnly}
           isRequired={isRequired}
+          className='flex w-full'
         >
           {label && (
-            <Label>
+            <Label className={isSlim ? 'text-xs font-light' : ''}>
               {label}
               {isRequired ? '*' : ''}
             </Label>
           )}
-          <DateField.Group fullWidth variant={variant}>
-            <DateField.Input>{(segment: DateSegmentValue) => <DateField.Segment segment={segment} />}</DateField.Input>
+          {/* isSlim: .date-input-group は h-9 固定なので h-7 で上書きし、
+              overflow-hidden で内側がクリップされないよう Input の py も詰める */}
+          <DateField.Group fullWidth variant={variant} className={isSlim ? 'h-7' : undefined}>
+            <DateField.Input className={isSlim ? 'py-1' : undefined}>
+              {(segment: DateSegmentValue) => <DateField.Segment segment={segment} />}
+            </DateField.Input>
             <DateField.Suffix>
               {isClearable && selected && !isReadOnly && (
                 <span
@@ -95,7 +102,7 @@ export const DatePickerCtrl = <
               </DatePicker.Trigger>
             </DateField.Suffix>
           </DateField.Group>
-          <ErrorMessage className='min-h-4'>{errorMessage}</ErrorMessage>
+          <ErrorMessage className={isSlim ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
           <DatePicker.Popover>
             <Calendar>
               <Calendar.Header>
