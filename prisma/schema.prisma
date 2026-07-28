@@ -42,6 +42,13 @@ model User {
   // add timezone
   timezone String?
 
+  // add Board / Ticket
+  boardMembers    BoardMember[]
+  ownedTickets    Ticket[]        @relation("TicketOwner")
+  createdTickets  Ticket[]        @relation("TicketCreator")
+  assignedTickets Ticket[]        @relation("TicketAssignee")
+  ticketComments  TicketComment[] @relation("TicketCommentAuthor")
+
   @@unique([email])
   @@map("user")
 }
@@ -288,6 +295,9 @@ model Group {
   updatedAt   DateTime    @updatedAt
   userGroups  UserGroup[]
 
+  // add Board
+  boardGroups BoardGroup[]
+
   @@map("group")
 }
 
@@ -331,4 +341,112 @@ model CalendarBusyTime {
 
   @@index([userId])
   @@map("calendar_busy_time")
+}
+
+enum BoardMemberRole {
+  owner // ボードの権限周りの操作が可能
+  member
+}
+
+enum TicketStatus {
+  backlog // 未着手
+  todo // 対応予定
+  doing // 対応中
+  done // 完了
+}
+
+enum TicketPriority {
+  urgent // 緊急
+  high // 高
+  medium // 中
+  low // 低
+}
+
+model Board {
+  id          String        @id @default(uuid(7))
+  name        String
+  description String?
+  archived    Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  members     BoardMember[]
+  groups      BoardGroup[]
+  tickets     Ticket[]
+
+  @@map("board")
+}
+
+model BoardMember {
+  id        String          @id @default(uuid(7))
+  boardId   String
+  board     Board           @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      BoardMemberRole @default(member)
+  createdAt DateTime        @default(now())
+
+  // @@unique が (boardId, ...) の先頭索引を兼ねるため @@index([boardId]) は不要
+  @@unique([boardId, userId])
+  @@index([userId])
+  @@map("board_member")
+}
+
+model BoardGroup {
+  id        String   @id @default(uuid(7))
+  boardId   String
+  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([boardId, groupId])
+  @@index([groupId])
+  @@map("board_group")
+}
+
+model Ticket {
+  id          String          @id @default(uuid(7))
+  // boardId が null = プライベートチケット。その場合 ownerId が所有者
+  boardId     String?
+  board       Board?          @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  // プライベートチケットの所有者。ボードチケットでは常に null(Cascade を安全に効かせるため)
+  ownerId     String?
+  owner       User?           @relation("TicketOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  createdById String?
+  createdBy   User?           @relation("TicketCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  assigneeId  String?
+  assignee    User?           @relation("TicketAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  title       String
+  content     String?
+  status      TicketStatus    @default(todo)
+  priority    TicketPriority?
+  dueDate     DateTime? // 日付のみの概念。UTC 0:00 で保存する
+  tags        String[]        @default([])
+  // 同一レーン(スコープ + status)内の表示順。昇順・0始まりの連番で保持
+  order       Int             @default(0)
+  comments    TicketComment[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([boardId, status, order])
+  @@index([ownerId, status, order])
+  @@index([assigneeId])
+  @@index([createdById])
+  @@map("ticket")
+}
+
+model TicketComment {
+  id               String   @id @default(uuid(7))
+  ticketId         String
+  ticket           Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  // 退会ユーザーのコメントも議論履歴として残すため SetNull(表示は no_name)
+  authorId         String?
+  author           User?    @relation("TicketCommentAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  content          String
+  mentionedUserIds String[] @default([])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([ticketId, createdAt])
+  @@map("ticket_comment")
 }

@@ -133,4 +133,28 @@
   .table__cell {
     @apply overflow-hidden;
   }
+
+  /* MDXEditor: 他のフォーム部品(rounded-xl border-2)と枠線を揃える */
+  .mdxeditor {
+    @apply rounded-xl border-2;
+  }
+}
+
+/* MDXEditor のダーク補正。
+ *
+ * この 2 つの変数は MDXEditor の style.css にダーク値が定義されていないため補う。
+ * style.css はレイヤー無しで読み込まれ、カスケードレイヤーの規則により
+ * @layer 内の宣言は特異性に関係なくレイヤー無しの宣言に負けるので、
+ * ここはあえて @layer の外に書く。
+ *
+ * ダーク判定は MDXEditor 公式の dark-theme クラス(mdx-editor-core.tsx で付与)。
+ * ポップアップ用コンテナは .mdxeditor を持たない別要素なのでセレクタを分ける。
+ */
+.mdxeditor.dark-theme,
+.mdxeditor-popup-container.dark-theme {
+  /* 素の値は white 固定。ツールバー(--baseBg = slate-3)より 1 段明るい slate-4 にして、
+     ライト時の「ドロップダウンはツールバーより明るい」関係を保つ */
+  --basePageBg: var(--baseBgHover);
+  /* 素の値は --red-10 参照だが red パレットにダークブロックが無いため、アプリの danger を使う */
+  --error-color: var(--danger);
 }

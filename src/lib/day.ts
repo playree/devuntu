@@ -63,8 +63,13 @@ export const isValidTimezone = (tz: string): boolean => {
   }
 }
 
-/** 指定タイムゾーンで日時をフォーマット(既定は Asia/Tokyo) */
-export const dayformat = (date: Dayjs | Date | null, format?: 'tz-simple', tz: string = DEFAULT_TZ) => {
+/**
+ * 指定タイムゾーンで日時をフォーマット(既定は Asia/Tokyo)
+ *
+ * `date` はチケットの期日のように「日付のみ」を意味する値を扱うための書式。
+ * UTC 0:00 で保存されているため、タイムゾーン変換をせず UTC のまま日付として出す。
+ */
+export const dayformat = (date: Dayjs | Date | null, format?: 'tz-simple' | 'date', tz: string = DEFAULT_TZ) => {
   if (!date) {
     return ''
   }
@@ -72,9 +77,26 @@ export const dayformat = (date: Dayjs | Date | null, format?: 'tz-simple', tz: s
   switch (format) {
     case 'tz-simple':
       return dayjs(date).tz(tz).format('YYYY-MM-DD HH:mm:ss')
+    case 'date':
+      return dayjs(date).utc().format('YYYY-MM-DD')
   }
   return dayjs(date).tz(tz).format()
 }
+
+const RE_DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/
+
+/** 日付のみの文字列(YYYY-MM-DD)を UTC 0:00 の Date へ変換する。不正・未指定は null */
+export const dateOnlyToUtc = (value?: string | null): Date | null => {
+  if (!value || !RE_DATE_ONLY.test(value)) {
+    return null
+  }
+  const parsed = dayjs.utc(`${value}T00:00:00Z`)
+  return parsed.isValid() ? parsed.toDate() : null
+}
+
+/** UTC 0:00 で保存された日付を YYYY-MM-DD へ戻す(DatePicker の初期値用)。未指定は null */
+export const utcToDateOnly = (date?: Date | null): string | null =>
+  date ? dayjs(date).utc().format('YYYY-MM-DD') : null
 
 /** xx分以内かのチェック */
 export const withinMinutes = (date: Date, min: number) => {

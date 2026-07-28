@@ -7,6 +7,7 @@ import {
   Cog6ToothIcon,
   ServerStackIcon,
   Squares2X2Icon,
+  TicketIcon,
   UserCircleIcon,
   UserGroupIcon,
   UsersIcon,
@@ -73,7 +74,7 @@ const SignOutButton: FC = () => {
   )
 }
 
-const defaultExpandedKeys = new Set(['group_admin'])
+const defaultExpandedKeys = new Set(['group_task', 'group_admin'])
 
 export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
   const { data: session } = authClient.useSession()
@@ -148,6 +149,27 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
             icon={<UserCircleIcon />}
             closeMenu={closeMenu}
           />
+
+          <Accordion.Item // タスク管理メニュー
+            id='group_task'
+          >
+            <Accordion.Heading>
+              <Accordion.Trigger>
+                {t('task_management')}
+                <Accordion.Indicator />
+              </Accordion.Trigger>
+            </Accordion.Heading>
+            <Accordion.Panel>
+              <Accordion.Body className='grid grid-cols-1 px-2'>
+                <MenuButton // チケット
+                  to='/tickets'
+                  text={t('ticket')}
+                  icon={<TicketIcon />}
+                  closeMenu={closeMenu}
+                />
+              </Accordion.Body>
+            </Accordion.Panel>
+          </Accordion.Item>
 
           <Accordion.Item // 管理者メニュー
             id='group_admin'

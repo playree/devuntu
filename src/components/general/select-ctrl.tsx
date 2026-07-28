@@ -101,3 +101,87 @@ export const MultiSelectCtrl = <
     />
   )
 }
+
+/**
+ * 単一選択の Select。react-hook-form の値は選択肢の ID(string) または null。
+ * `isClearable` を付けると未選択(null)へ戻せる(任意入力の項目向け)。
+ */
+export const SingleSelectCtrl = <
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+>({
+  control,
+  name,
+  groupOptions,
+  label,
+  variant,
+  isClearable = false,
+}: {
+  control: Control<TFieldValues>
+  name: TName
+  groupOptions: Record<string, string>
+  label: string
+  variant?: 'primary' | 'secondary'
+  isClearable?: boolean
+}) => {
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field: { onChange, value, onBlur, ref } }) => (
+        <div className='space-y-4'>
+          <Select
+            selectionMode='single'
+            value={value ?? null}
+            variant={variant}
+            onChange={(key) => onChange(key === null ? null : key.toString())}
+            onBlur={onBlur}
+            ref={ref}
+          >
+            <Label>{label}</Label>
+            <Select.Trigger>
+              <Select.Value>
+                {() =>
+                  value && groupOptions[value] ? (
+                    <Chip variant='soft' color='accent'>
+                      {groupOptions[value]}
+                    </Chip>
+                  ) : (
+                    // 共通部品なのでローカライズ不要とする
+                    <Chip variant='tertiary'>Not selected</Chip>
+                  )
+                }
+              </Select.Value>
+              {isClearable && value && (
+                <span
+                  role='button'
+                  aria-label='clear'
+                  tabIndex={-1}
+                  className='ml-auto inline-flex cursor-pointer items-center opacity-60 hover:opacity-100'
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onChange(null)
+                  }}
+                >
+                  <XCircleIcon width={16} />
+                </span>
+              )}
+              <Select.Indicator />
+            </Select.Trigger>
+            <Select.Popover>
+              <ListBox selectionMode='single'>
+                {Object.entries(groupOptions).map(([id, name]) => (
+                  <ListBox.Item key={id} id={id} textValue={name}>
+                    {name}
+                    <ListBox.ItemIndicator />
+                  </ListBox.Item>
+                ))}
+              </ListBox>
+            </Select.Popover>
+          </Select>
+        </div>
+      )}
+    />
+  )
+}

@@ -188,3 +188,107 @@ export const scUpdateGoogleAccountSettings = z.object({
   allowedGroupIds: z.array(z.uuidv7()),
 })
 export type UpdateGoogleAccountSettings = z.infer<typeof scUpdateGoogleAccountSettings>
+
+/* -------------------------------------------------------------------------------------------------
+ * タスク管理(チケット / ボード)
+ * InputCtrl の constraintSchema は z.ZodObject を要求するため、
+ * `.refine()` / `.and()` は使わず `z.object` / `.extend()` / `.omit()` で組み立てる。
+ * -----------------------------------------------------------------------------------------------*/
+
+export const zTicketTitle = z.string().trim().min(1, el('@required_field')).max(120, el('@invalid_title'))
+export const zTicketContent = z.string().max(20000, el('@invalid_content'))
+export const zTag = z.string().trim().min(1, el('@invalid_tag')).max(20, el('@invalid_tag'))
+export const zTags = z.array(zTag).max(10, el('@invalid_tag'))
+export const zTicketStatus = z.enum(['backlog', 'todo', 'doing', 'done'])
+export const zTicketPriority = z.enum(['urgent', 'high', 'medium', 'low'])
+export const zCommentContent = z.string().trim().min(1, el('@required_field')).max(5000, el('@invalid_content'))
+export const zBoardDescription = z.string().max(200, el('@invalid_description')).optional()
+export const zBoardRole = z.enum(['owner', 'member'])
+
+/** 期日は日付のみ(YYYY-MM-DD)。DatePickerCtrl が CalendarDate との変換を担う */
+export const zDueDate = z.iso.date().nullish()
+
+export const scCreateTicket = z.object({
+  boardId: z.uuidv7().nullish(),
+  title: zTicketTitle,
+  content: zTicketContent.optional(),
+  status: zTicketStatus.default('todo'),
+  priority: zTicketPriority.nullish(),
+  dueDate: zDueDate,
+  tags: zTags.default([]),
+  assigneeId: z.uuidv7().nullish(),
+})
+export type CreateTicket = z.infer<typeof scCreateTicket>
+export type CreateTicketIn = z.input<typeof scCreateTicket>
+export type CreateTicketOut = z.output<typeof scCreateTicket>
+
+// .extend() は ZodObject を返すため constraintSchema へ渡せる
+export const scUpdateTicket = scCreateTicket.omit({ boardId: true }).extend({ id: z.uuidv7() })
+export type UpdateTicket = z.infer<typeof scUpdateTicket>
+export type UpdateTicketIn = z.input<typeof scUpdateTicket>
+export type UpdateTicketOut = z.output<typeof scUpdateTicket>
+
+export const scUpdateTicketStatus = z.object({
+  id: z.uuidv7(),
+  status: zTicketStatus,
+})
+export type UpdateTicketStatus = z.infer<typeof scUpdateTicketStatus>
+
+export const scMoveTicket = z.object({
+  id: z.uuidv7(),
+  status: zTicketStatus,
+  /** 移動先レーン内の 0 始まりの挿入位置 */
+  index: z.number().int().min(0),
+})
+export type MoveTicket = z.infer<typeof scMoveTicket>
+
+export const scTicketSearch = z.object({
+  keyword: z.string().trim().max(100).default(''),
+  status: z.array(zTicketStatus).default([]),
+  priority: z.array(zTicketPriority).default([]),
+  tags: z.array(zTag).default([]),
+  scope: z.enum(['all', 'private', 'board']).default('all'),
+  boardId: z.uuidv7().nullish(),
+  assignee: z.enum(['any', 'me', 'none']).default('any'),
+})
+export type TicketSearch = z.infer<typeof scTicketSearch>
+export type TicketSearchIn = z.input<typeof scTicketSearch>
+
+export const scCreateTicketComment = z.object({
+  ticketId: z.uuidv7(),
+  content: zCommentContent,
+})
+export type CreateTicketComment = z.infer<typeof scCreateTicketComment>
+
+export const scUpdateTicketComment = z.object({
+  id: z.uuidv7(),
+  content: zCommentContent,
+})
+export type UpdateTicketComment = z.infer<typeof scUpdateTicketComment>
+
+export const scCreateBoard = z.object({
+  name: zName,
+  description: zBoardDescription,
+})
+export type CreateBoard = z.infer<typeof scCreateBoard>
+
+export const scUpdateBoard = z.object({
+  id: z.uuidv7(),
+  name: zName,
+  description: zBoardDescription,
+  archived: z.boolean(),
+})
+export type UpdateBoard = z.infer<typeof scUpdateBoard>
+
+/**
+ * ボードのアサイン。既存の MultiSelectCtrl(Record<string,string> + string[]) を再利用するため
+ * owner / member を 2 つの多重選択に分け、サーバー側で mergeBoardMembers でマージする。
+ */
+export const scSetBoardAssignments = z.object({
+  id: z.uuidv7(),
+  ownerIds: z.array(z.uuidv7()).default([]),
+  memberIds: z.array(z.uuidv7()).default([]),
+  groupIds: z.array(z.uuidv7()).default([]),
+})
+export type SetBoardAssignments = z.infer<typeof scSetBoardAssignments>
+export type SetBoardAssignmentsIn = z.input<typeof scSetBoardAssignments>

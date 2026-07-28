@@ -1,3 +1,8 @@
+# 動作
+
+- 回答は日本語でお願い
+- Plan作成時の参照系commandは実行を許可
+
 # プロジェクト概要
 
 - Next.js v16
@@ -18,20 +23,16 @@
 - 環境変数の参照は`src/lib/env-util.ts`を利用する
 - Server Actionsは基本的に利用するClientファイルと同じ階層の`server.ts`に配置する
 - `src/components/general`配下は共通部品として独立させたいので、このフォルダ内で完結するようにする
+- テストソースは`tests`配下に配置する
+- better-authをバージョンアップする場合には、ライブラリが要求するテーブル定義に変更が無いかをチェックする
+- コンパイル、ビルド確認は`pnpm build`
+- 修正ファイルには`pnpm exec prettier --write`を実施する
 
 # ロケールの構成ファイル
 
 - src/locale/index.ts
 - src/locale/lang-ja.ts
 - src/locale/lang-en.ts
-
-# 自動実行
-
-- 回答は日本語でお願い
-- コンパイル、ビルド確認は`pnpm build`
-- Plan作成時の参照系commandは実行を許可
-- 修正ファイルには`pnpm exec prettier --write`を実施する
-- better-authをバージョンアップする場合には、ライブラリが要求するテーブル定義に変更が無いかをチェックする
 
 # コードレビュー除外ファイル
 

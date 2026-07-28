@@ -131,3 +131,28 @@ export type CalendarShare = Prisma.CalendarShareModel
  * 
  */
 export type CalendarBusyTime = Prisma.CalendarBusyTimeModel
+/**
+ * Model Board
+ * 
+ */
+export type Board = Prisma.BoardModel
+/**
+ * Model BoardMember
+ * 
+ */
+export type BoardMember = Prisma.BoardMemberModel
+/**
+ * Model BoardGroup
+ * 
+ */
+export type BoardGroup = Prisma.BoardGroupModel
+/**
+ * Model Ticket
+ * 
+ */
+export type Ticket = Prisma.TicketModel
+/**
+ * Model TicketComment
+ * 
+ */
+export type TicketComment = Prisma.TicketCommentModel
