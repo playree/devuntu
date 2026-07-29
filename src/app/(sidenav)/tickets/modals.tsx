@@ -108,7 +108,7 @@ export const AddModal: FC<
       }
     >
       <GridBox isSmart>
-        <div className='col-span-12'>
+        <div className='col-span-12 md:col-span-8'>
           <InputCtrl
             control={control}
             variant='secondary'
@@ -120,7 +120,7 @@ export const AddModal: FC<
           />
         </div>
 
-        <div className='col-span-6 md:col-span-3'>
+        <div className='col-span-6 md:col-span-4'>
           <SingleSelectCtrl
             control={control}
             name='boardId'
@@ -158,11 +158,11 @@ export const AddModal: FC<
             isClearable
           />
         </div>
-        <div className='col-span-6 md:col-span-3'>
+        <div className='col-span-6 md:col-span-2'>
           <DatePickerCtrl control={control} name='dueDate' label={t('due_date')} errorMessage={fet(errors.dueDate)} />
         </div>
 
-        <div className='col-span-12'>
+        <div className='col-span-12 md:col-span-4'>
           <TagSelect
             control={control}
             name='tagIds'

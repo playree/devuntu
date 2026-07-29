@@ -6,16 +6,30 @@ import { PlusIcon, XMarkIcon } from '@/components/icon'
 import type { TagColor } from '@/generated/prisma/enums'
 import { MAX_TAG_NAME, MAX_TICKET_TAGS } from '@/lib/task'
 import { useLocale } from '@/locale/client'
-import { Chip, ErrorMessage, Input, Label, TextField } from '@heroui/react'
-import { KeyboardEvent, useState } from 'react'
+import { Autocomplete, EmptyState, ErrorMessage, Label, ListBox, SearchField, useFilter } from '@heroui/react'
+import { useState } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 import { TagChip } from './ticket-chip'
 
 /** 選択肢として渡すタグ。`lib/tag.ts` の TagOption と構造的に一致させる */
 export type TagSelectOption = { id: string; name: string; color: TagColor }
 
+/** react-aria へ毎回新しい配列を渡さないよう空配列は使い回す */
+const NO_KEYS: string[] = []
+
 /**
- * チケットのタグ選択(マスタから選ぶ + その場で新規作成)。
+ * チケットのタグ選択(一覧から複数選択 + 入力で絞り込み + 入力値をそのまま新規作成)。
+ *
+ * HeroUI の Autocomplete(react-aria の Select + Autocomplete)で構成する。
+ * - トリガーに選択済みタグを Chip で並べ、× で個別解除 / ClearButton で全解除
+ * - ポップオーバー内の SearchField で候補を絞り込む(ListBox は複数選択)
+ * - 一致するタグが無ければ「『xxx』を作成」ボタンを出し、クリック or Enter で onCreate を呼ぶ
+ *
+ * Enter の扱いは `disableAutoFocusFirst` が前提。これを外すと react-aria が
+ * 入力ごとに先頭候補へ仮想フォーカスを乗せてしまい「入力値をそのまま追加」ができない。
+ * さらにその挙動は inputType が insertText のときだけなので、IME 経由の日本語入力では
+ * 仮想フォーカスが乗らず Enter が無反応になる。付けることで
+ * 「入力して Enter = 作成 / ArrowDown で候補へ移ってから Enter = 選択」に固定できる。
  *
  * フォームの値は tagId の配列。`options` には**対象ボードのタグだけ**を渡すこと
  * (他ボードのタグを選べてしまうとサーバー側の assertTagIdsInBoard で弾かれる)。
@@ -34,6 +48,7 @@ export const TagSelect = <
   onCreate,
   label,
   errorMessage,
+  variant = 'secondary',
   isSmart: isSmartProp,
 }: {
   control: Control<TFieldValues>
@@ -43,55 +58,67 @@ export const TagSelect = <
   onCreate?: (name: string) => Promise<TagSelectOption | undefined>
   label?: string
   errorMessage?: string
+  variant?: 'primary' | 'secondary'
   isSmart?: boolean
 }) => {
   const isSmart = useIsSmart(isSmartProp)
   const { t } = useLocale()
+  // 大文字小文字やアクセントの違いを無視して絞り込む
+  const { contains } = useFilter({ sensitivity: 'base' })
   const [draft, setDraft] = useState('')
   const [isCreating, setCreating] = useState(false)
-  // onCreate で作られたタグは options の再取得を待たずに選べるようにする
+  // onCreate で作られたタグは options の再取得を待たずに選べるようにする。
+  // collection に無い tagId は selectedItems から落ちてしまうため、ここへの保持は必須。
   const [created, setCreated] = useState<TagSelectOption[]>([])
 
   const all = [...options, ...created.filter((tag) => !options.some((o) => o.id === tag.id))]
+  const keyword = draft.trim()
 
   return (
     <Controller
       control={control}
       name={name}
-      render={({ field: { onChange, value } }) => {
-        const selectedIds: string[] = Array.isArray(value) ? value : []
+      render={({ field: { onChange, value, onBlur, ref } }) => {
+        const selectedIds: string[] = Array.isArray(value) ? value : NO_KEYS
         const selected = selectedIds.flatMap((id) => all.filter((tag) => tag.id === id))
-        const available = all.filter((tag) => !selectedIds.includes(tag.id))
         const isFull = selectedIds.length >= MAX_TICKET_TAGS
+        // 上限に達したら未選択のタグだけ選べなくする。
+        // 選択済みも無効にすると disabledBehavior='all' により press が届かず解除もできなくなる。
+        const disabledKeys = isFull ? all.filter((tag) => !selectedIds.includes(tag.id)).map((tag) => tag.id) : NO_KEYS
+        // 同名が既にあるときは作成ボタンを出さない(既存を選ばせる)
+        const canCreate = !!onCreate && !isFull && keyword !== '' && !all.some((tag) => tag.name === keyword)
 
-        const add = (tag: TagSelectOption) => {
-          if (isFull || selectedIds.includes(tag.id)) {
+        const add = (id: string) => {
+          if (selectedIds.includes(id)) {
             return
           }
-          onChange([...selectedIds, tag.id])
+          onChange([...selectedIds, id])
         }
 
-        const remove = (id: string) => onChange(selectedIds.filter((v) => v !== id))
-
-        const create = async () => {
-          const trimmed = draft.trim()
-          if (!trimmed || !onCreate || isFull) {
+        /**
+         * 入力値を確定する。同名が既にあれば選択するだけ、無ければ onCreate で作成する。
+         * ListBox の外に置いた作成ボタンと、検索入力の Enter から呼ぶ。
+         */
+        const commitDraft = async () => {
+          if (keyword === '' || isFull || isCreating) {
             return
           }
-          // 同名が既にあれば作成せず選択のみ
-          const existing = all.find((tag) => tag.name === trimmed)
+          const existing = all.find((tag) => tag.name === keyword)
           if (existing) {
-            add(existing)
+            add(existing.id)
             setDraft('')
             return
           }
-
+          if (!onCreate) {
+            return
+          }
           setCreating(true)
           try {
-            const tag = await onCreate(trimmed)
+            const tag = await onCreate(keyword)
             if (tag) {
-              setCreated((prev) => [...prev, tag])
-              add(tag)
+              setCreated((prev) => (prev.some((p) => p.id === tag.id) ? prev : [...prev, tag]))
+              add(tag.id)
+              // 作成後は絞り込みを解除して一覧を戻す
               setDraft('')
             }
           } finally {
@@ -99,83 +126,133 @@ export const TagSelect = <
           }
         }
 
-        const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-          if (e.key === 'Enter') {
-            // フォーム全体の submit を防いでタグ確定に使う
-            e.preventDefault()
-            create()
-          }
-        }
-
         return (
-          <div className='space-y-2'>
-            <TextField isInvalid={!!errorMessage}>
-              <Label className={isSmart ? 'text-xs font-light' : ''}>{label ?? t('tags')}</Label>
-              {onCreate && (
-                <div className='flex items-center gap-2'>
-                  <Input
-                    value={draft}
-                    variant='secondary'
-                    maxLength={MAX_TAG_NAME}
-                    className={isSmart ? 'py-1' : ''}
-                    onChange={(e) => setDraft(e.target.value)}
-                    onKeyDown={onKeyDown}
-                  />
-                  <MultiButton
-                    isIconOnly
-                    size='sm'
-                    tooltip={t('add_tag')}
-                    isPending={isCreating}
-                    isDisabled={!draft.trim() || isFull}
-                    onPress={create}
-                    isSmart
-                  >
-                    <PlusIcon />
-                  </MultiButton>
-                </div>
-              )}
-              <ErrorMessage className={isSmart ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
-            </TextField>
-
-            {selected.length > 0 && (
-              <div className='flex flex-wrap gap-1'>
-                {selected.map((tag) => (
-                  <TagChip key={tag.id} tag={tag}>
-                    <span
-                      role='button'
-                      aria-label={`remove ${tag.name}`}
-                      tabIndex={-1}
-                      className='ml-1 inline-flex cursor-pointer items-center opacity-60 hover:opacity-100'
-                      onClick={() => remove(tag.id)}
+          <Autocomplete
+            selectionMode='multiple'
+            variant={variant}
+            value={selectedIds}
+            isInvalid={!!errorMessage}
+            disabledKeys={disabledKeys}
+            // タグが 0 件でも開けるようにする(react-aria は collection が空だと開かない)
+            allowsEmptyCollection
+            onChange={(keys) => onChange(keys.map(String))}
+            onOpenChange={(isOpen) => {
+              // 閉じたら絞り込みを捨てる(次に開いたとき前回の入力が残らないように)
+              if (!isOpen) {
+                setDraft('')
+              }
+            }}
+            onBlur={onBlur}
+            ref={ref}
+          >
+            <Label className={isSmart ? 'text-xs font-light' : ''}>
+              {label ?? t('tags')}
+              <span className='ml-1 text-xs opacity-60'>{`${selectedIds.length}/${MAX_TICKET_TAGS}`}</span>
+            </Label>
+            {/* isSmart: 既定 36px(min-h-9 + py-2)を 28px へ。text-sm の行高 20px + 上下 4px */}
+            <Autocomplete.Trigger className={isSmart ? 'min-h-7 py-1' : undefined}>
+              <Autocomplete.Value className='flex flex-wrap items-center gap-1'>
+                {() =>
+                  selected.length > 0 ? (
+                    <>
+                      {selected.map((tag) => (
+                        <TagChip key={tag.id} tag={tag}>
+                          <span
+                            role='button'
+                            aria-label={`remove ${tag.name}`}
+                            tabIndex={-1}
+                            className='ml-1 inline-flex cursor-pointer items-center opacity-60 hover:opacity-100'
+                            // トリガーの onClick は開閉なので × では伝播を止める
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onChange(selectedIds.filter((id) => id !== tag.id))
+                            }}
+                          >
+                            <XMarkIcon width={14} />
+                          </span>
+                        </TagChip>
+                      ))}
+                    </>
+                  ) : (
+                    <span className='opacity-60'>{t('no_tag_selected')}</span>
+                  )
+                }
+              </Autocomplete.Value>
+              {/* 全解除。未選択(data-empty)のときは CSS 側で非表示になる */}
+              <Autocomplete.ClearButton />
+              {/* children を渡すと Button ラップが消えてキーボードで開けなくなるので空のまま */}
+              <Autocomplete.Indicator />
+            </Autocomplete.Trigger>
+            <ErrorMessage className={isSmart ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
+            <Autocomplete.Popover>
+              <Autocomplete.Filter
+                inputValue={draft}
+                onInputChange={setDraft}
+                filter={contains}
+                // 入力しただけでは候補へ仮想フォーカスを乗せない(Enter を作成に使うため)
+                disableAutoFocusFirst
+              >
+                <SearchField aria-label={t('search_tag')}>
+                  <SearchField.Group>
+                    <SearchField.SearchIcon />
+                    <SearchField.Input
+                      autoFocus
+                      placeholder={t('search_tag')}
+                      maxLength={MAX_TAG_NAME}
+                      onKeyDown={(e) => {
+                        if (e.key !== 'Enter' || e.nativeEvent.isComposing) {
+                          return
+                        }
+                        // react-aria が候補を選択済みなら preventDefault されているので何もしない
+                        if (e.isDefaultPrevented()) {
+                          return
+                        }
+                        // フォーム submit の保険(検索入力は portal 内なので本来届かない)
+                        e.preventDefault()
+                        void commitDraft()
+                      }}
+                    />
+                    <SearchField.ClearButton />
+                  </SearchField.Group>
+                </SearchField>
+                {canCreate && (
+                  // SearchField の px-3 に合わせる(ポップオーバー自体は p-0)
+                  <div className='px-3 pb-1'>
+                    <MultiButton
+                      variant='ghost'
+                      size='sm'
+                      className='w-full justify-start'
+                      icon={<PlusIcon width={16} />}
+                      isPending={isCreating}
+                      onPress={() => void commitDraft()}
+                      // フィールドが isSmart でもポップオーバー内は通常サイズを保つ
+                      isSmart={false}
                     >
-                      <XMarkIcon width={14} />
-                    </span>
-                  </TagChip>
-                ))}
-              </div>
-            )}
-
-            {available.length > 0 && !isFull && (
-              <div className='flex flex-wrap items-center gap-1'>
-                {available.map((tag) => (
-                  <TagChip
-                    key={tag.id}
-                    tag={tag}
-                    className='cursor-pointer opacity-60 hover:opacity-100'
-                    onClick={() => add(tag)}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+                      {t('create_tag', { name: keyword })}
+                    </MultiButton>
+                  </div>
+                )}
+                <ListBox
+                  selectionMode='multiple'
+                  // useSelect が autoFocus を強制するため、開いた直後の Enter で先頭タグが解除されるのを防ぐ
+                  autoFocus={false}
+                  renderEmptyState={() => (
+                    <EmptyState>{all.length === 0 ? t('msg_no_tags') : t('msg_no_matching_tags')}</EmptyState>
+                  )}
+                >
+                  {all.map((tag) => (
+                    <ListBox.Item key={tag.id} id={tag.id} textValue={tag.name}>
+                      <TagChip tag={tag} />
+                      <ListBox.ItemIndicator />
+                    </ListBox.Item>
+                  ))}
+                </ListBox>
+              </Autocomplete.Filter>
+            </Autocomplete.Popover>
+          </Autocomplete>
         )
       }}
     />
   )
-}
-
-/** 選択肢が空のときに出す注記(タグ管理への誘導は呼び出し側で行う) */
-export const NoTagsHint = () => {
-  const { t } = useLocale()
-  return <Chip variant='tertiary'>{t('msg_no_tags')}</Chip>
 }
