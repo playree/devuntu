@@ -9,22 +9,21 @@ import { SingleSelectCtrl } from '@/components/general/select-ctrl'
 import { CheckIcon, PlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { MarkdownEditor } from '@/components/ticket/markdown-editor'
-import { SelfAssigneeField } from '@/components/ticket/self-assignee-field'
-import { TagInput } from '@/components/ticket/tag-input'
-import { useTicketOptions } from '@/components/ticket/ticket-chip'
+import { TagSelect } from '@/components/ticket/tag-select'
+import { useBoardName, useTicketOptions } from '@/components/ticket/ticket-chip'
 import { parseAction } from '@/lib/action-client'
 import { CreateTicketIn, CreateTicketOut, scCreateTicket } from '@/lib/schema'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FC, useEffect, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
-import { createTicket, getAssigneeOptions, GetTicketFormOptionsReturnType } from './server'
+import { createTicket, createTicketTag, getAssigneeOptions, GetTicketFormOptionsReturnType } from './server'
 
 type FormOptions = NonNullable<GetTicketFormOptionsReturnType>
 
 /**
  * チケット作成モーダル。
- * ボードを選ぶとそのボードのメンバーが担当者候補になる(未選択ならプライベートチケットで自分のみ)。
+ * ボードは必須(既定はプライベートボード)で、担当者とタグの候補は選択中のボードに連動する。
  */
 export const AddModal: FC<ModalBaseProps & { options: FormOptions; defaultBoardId?: string | null }> = ({
   state,
@@ -34,7 +33,8 @@ export const AddModal: FC<ModalBaseProps & { options: FormOptions; defaultBoardI
 }) => {
   const { t, fet } = useLocale()
   const { statusOptions, priorityOptions } = useTicketOptions()
-  const hasBoards = Object.keys(options.boards).length > 0
+  const boardName = useBoardName()
+  const boardOptions = Object.fromEntries(options.boards.map((board) => [board.id, boardName(board)]))
 
   const {
     control,
@@ -45,32 +45,32 @@ export const AddModal: FC<ModalBaseProps & { options: FormOptions; defaultBoardI
     resolver: zodResolver(scCreateTicket),
     mode: 'onChange',
     defaultValues: {
-      boardId: defaultBoardId ?? null,
+      boardId: defaultBoardId ?? options.privateBoardId,
       title: '',
       content: '',
       status: 'todo',
       priority: null,
       dueDate: null,
-      tags: [],
+      tagIds: [],
       assigneeId: null,
     },
   })
 
   const boardId = useWatch({ control, name: 'boardId' })
   const [boardAssignees, setBoardAssignees] = useState<Record<string, string>>({})
+  // タグは選択中のボードのものだけを候補にする(他ボードのタグはサーバー側で弾かれる)
+  const boardTags = options.tags.filter((tag) => tag.boardId === boardId)
 
   useEffect(() => {
-    if (!boardId) {
-      return
-    }
     parseAction(getAssigneeOptions({ id: boardId }))
       .then((res) => setBoardAssignees(res ?? {}))
       .catch(() => setBoardAssignees({}))
   }, [boardId])
 
-  // ボードが変わったら前のボードのメンバーIDが残らないようクリアする
+  // ボードが変わったら前のボードの担当者・タグの ID が残らないようクリアする
   useEffect(() => {
     setValue('assigneeId', null)
+    setValue('tagIds', [])
   }, [boardId, setValue])
 
   return (
@@ -105,33 +105,31 @@ export const AddModal: FC<ModalBaseProps & { options: FormOptions; defaultBoardI
             label={t('title')}
             errorMessage={fet(errors.title)}
             autoFocus
-            isSlim
+            isSmart
           />
         </div>
 
-        {hasBoards && (
-          <div className='col-span-12 md:col-span-6'>
-            <SingleSelectCtrl
-              control={control}
-              name='boardId'
-              variant='secondary'
-              groupOptions={options.boards}
-              label={t('board')}
-              isClearable
-            />
-          </div>
-        )}
         <div className='col-span-6 md:col-span-3'>
+          <SingleSelectCtrl
+            control={control}
+            name='boardId'
+            variant='secondary'
+            groupOptions={boardOptions}
+            label={t('board')}
+            isSmart
+          />
+        </div>
+        <div className='col-span-6 md:col-span-2'>
           <SingleSelectCtrl
             control={control}
             name='status'
             variant='secondary'
             groupOptions={statusOptions}
             label={t('status')}
-            isSlim
+            isSmart
           />
         </div>
-        <div className='col-span-6 md:col-span-3'>
+        <div className='col-span-6 md:col-span-2'>
           <SingleSelectCtrl
             control={control}
             name='priority'
@@ -139,23 +137,19 @@ export const AddModal: FC<ModalBaseProps & { options: FormOptions; defaultBoardI
             groupOptions={priorityOptions}
             label={t('priority')}
             isClearable
-            isSlim
+            isSmart
           />
         </div>
-        <div className='col-span-6 md:col-span-3'>
-          {boardId ? (
-            <SingleSelectCtrl
-              control={control}
-              name='assigneeId'
-              variant='secondary'
-              groupOptions={boardAssignees}
-              label={t('assignee')}
-              isClearable
-              isSlim
-            />
-          ) : (
-            <SelfAssigneeField userName={options.me.name} />
-          )}
+        <div className='col-span-6 md:col-span-2'>
+          <SingleSelectCtrl
+            control={control}
+            name='assigneeId'
+            variant='secondary'
+            groupOptions={boardAssignees}
+            label={t('assignee')}
+            isClearable
+            isSmart
+          />
         </div>
         <div className='col-span-6 md:col-span-3'>
           <DatePickerCtrl
@@ -163,12 +157,19 @@ export const AddModal: FC<ModalBaseProps & { options: FormOptions; defaultBoardI
             name='dueDate'
             label={t('due_date')}
             errorMessage={fet(errors.dueDate)}
-            isSlim
+            isSmart
           />
         </div>
 
         <div className='col-span-12'>
-          <TagInput control={control} name='tags' errorMessage={fet(errors.tags)} suggestions={options.tags} />
+          <TagSelect
+            control={control}
+            name='tagIds'
+            options={boardTags}
+            errorMessage={fet(errors.tagIds)}
+            onCreate={async (name) => parseAction(createTicketTag({ boardId, name }))}
+            isSmart
+          />
         </div>
 
         <div className='col-span-12'>

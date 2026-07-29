@@ -137,6 +137,16 @@ export type CalendarBusyTime = Prisma.CalendarBusyTimeModel
  */
 export type Board = Prisma.BoardModel
 /**
+ * Model Tag
+ * 
+ */
+export type Tag = Prisma.TagModel
+/**
+ * Model TicketTag
+ * 
+ */
+export type TicketTag = Prisma.TicketTagModel
+/**
  * Model BoardMember
  * 
  */

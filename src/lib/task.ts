@@ -6,7 +6,7 @@
  * サーバー / クライアントの双方から import され、`tests/lib/task.test.ts` の対象になる。
  */
 
-import type { TicketPriority, TicketStatus } from '@/generated/prisma/enums'
+import type { TagColor, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
 import type { TicketWhereInput } from '@/generated/prisma/models'
 
 /** チケットのステータス(定義順は enum と同じ) */
@@ -45,20 +45,14 @@ export type BoardRole = 'owner' | 'member'
 export const resolveBoardRole = (directRole: BoardRole | null, hasGroupAccess: boolean): BoardRole | null =>
   directRole ?? (hasGroupAccess ? 'member' : null)
 
-/** boardId を持たないチケットはプライベート(ownerId の所有物) */
-export type TicketScope = 'private' | 'board'
-
 export type TicketAccessInput = {
   userId: string
-  boardId: string | null
-  ownerId: string | null
   createdById: string | null
-  /** board チケットのときのみ意味を持つ。resolveBoardRole の戻り値 */
+  /** resolveBoardRole の戻り値。null ならそのボードにアクセスできない */
   boardRole: BoardRole | null
 }
 
 export type TicketPermission = {
-  scope: TicketScope
   canView: boolean
   /** タイトル/本文/タグ/優先度/期限/担当/ステータスの変更 + コメント投稿 */
   canEdit: boolean
@@ -66,25 +60,14 @@ export type TicketPermission = {
 }
 
 /**
- * プライベート / ボードの両方を統一的に判定する単一ソース。
- * - private : 所有者本人のみ view/edit/delete
- * - board   : メンバー(owner|member)は view/edit、delete は owner または作成者
+ * チケットの権限。メンバー(owner|member)は view/edit、delete は owner または作成者。
+ *
+ * プライベートチケットも「自分が owner のプライベートボード」に属するため、
+ * ここを通るだけで従来の「本人のみ全操作可」と同じ結果になる(分岐は不要)。
  */
-export const evaluateTicketAccess = ({
-  userId,
-  boardId,
-  ownerId,
-  createdById,
-  boardRole,
-}: TicketAccessInput): TicketPermission => {
-  if (boardId === null) {
-    const isOwner = !!ownerId && ownerId === userId
-    return { scope: 'private', canView: isOwner, canEdit: isOwner, canDelete: isOwner }
-  }
-
+export const evaluateTicketAccess = ({ userId, createdById, boardRole }: TicketAccessInput): TicketPermission => {
   const canView = boardRole !== null
   return {
-    scope: 'board',
     canView,
     canEdit: canView,
     canDelete: canView && (boardRole === 'owner' || createdById === userId),
@@ -111,22 +94,73 @@ export const mergeBoardMembers = (ownerIds: string[], memberIds: string[]): { us
 export const canApplyAssignments = ({ ownerIds, byAdmin }: { ownerIds: string[]; byAdmin: boolean }): boolean =>
   byAdmin || ownerIds.length > 0
 
+/* -------------------------------------------------------------------------------------------------
+ * タグ
+ * -----------------------------------------------------------------------------------------------*/
+
 /**
- * チケットの担当者を解決する(保存値を決める単一ソース)。
- * - プライベートチケット(boardId なし) : 常に所有者本人(自動アサイン)
- * - ボードチケット                     : 指定された担当者(未指定は null)
- *
- * クライアントの表示に依存せず、Server Action 側でこの関数を通して保存する。
+ * タグの表示色(定義順 = 選択UIの並び順)。Prisma の TagColor enum と一致させる。
+ * HeroUI Chip は 5 色しか持たないため、実際の配色は TAG_COLOR_CLASS で Tailwind へマップする。
  */
-export const resolveTicketAssignee = ({
-  boardId,
-  ownerId,
-  requested,
-}: {
-  boardId: string | null
-  ownerId: string
-  requested?: string | null
-}): string | null => (boardId ? (requested ?? null) : ownerId)
+export const TAG_COLORS = [
+  'gray',
+  'red',
+  'orange',
+  'amber',
+  'green',
+  'teal',
+  'blue',
+  'indigo',
+  'violet',
+  'pink',
+] as const satisfies readonly TagColor[]
+
+/** 1 チケットに付けられるタグ数 */
+export const MAX_TICKET_TAGS = 10
+
+/** タグ名の最大長 */
+export const MAX_TAG_NAME = 20
+
+/** 1 ボードあたりのタグ数上限(選択UIが破綻しない範囲) */
+export const MAX_TAGS_PER_SCOPE = 50
+
+/**
+ * プライベートボードの Board.name に入れる固定値。
+ * 表示は kind==='private' のときロケール(`private`)へ差し替えるため、この値は画面に出ない。
+ */
+export const PRIVATE_BOARD_NAME = '__private__'
+
+/** 表記そのままで trim + 空除去 + 重複除去(検索条件を無駄に増やさない) */
+export const dedupeTagNames = (names: string[]): string[] => [
+  ...new Set(names.map((name) => name.trim()).filter((name) => name.length > 0)),
+]
+
+/** 同名タグ(別ボード)を 1 件に畳む。色は最初に見つかったものを採用する */
+export const dedupeTagOptionsByName = <T extends { name: string }>(tags: T[]): T[] => {
+  const byName = new Map<string, T>()
+  for (const tag of tags) {
+    if (!byName.has(tag.name)) {
+      byName.set(tag.name, tag)
+    }
+  }
+  return [...byName.values()]
+}
+
+/** 既存 order の最大 + 1、空なら 0(nextLaneOrder と同型) */
+export const nextTagOrder = (existing: number[]): number => existing.reduce((max, v) => (v > max ? v : max), -1) + 1
+
+/**
+ * TicketTag の総入れ替えに必要な差分を求める(syncTicketTags の判断部分)。
+ * 重複指定は畳み、変化しない tagId は触らないことで不要な DELETE/INSERT を避ける。
+ */
+export const diffTagIds = (current: string[], next: string[]): { toAdd: string[]; toRemove: string[] } => {
+  const currentSet = new Set(current)
+  const nextSet = new Set(next)
+  return {
+    toAdd: [...nextSet].filter((id) => !currentSet.has(id)),
+    toRemove: [...currentSet].filter((id) => !nextSet.has(id)),
+  }
+}
 
 /* -------------------------------------------------------------------------------------------------
  * 検索
@@ -138,17 +172,18 @@ export type TicketSearchParams = {
   status: TicketStatus[]
   priority: TicketPriority[]
   tags: string[]
-  scope: 'all' | 'private' | 'board'
+  /** null / undefined = 可視ボード全体。指定時は可視ボードとの交差を取る */
   boardId?: string | null
   assignee: 'any' | 'me' | 'none'
 }
 
-/** 可視チケットの where 断片(プライベート = 自分所有 + 参加ボード) */
-export const ticketScopeWhere = (userId: string, accessibleBoardIds: string[]): TicketWhereInput => ({
-  OR: [
-    { boardId: null, ownerId: userId },
-    ...(accessibleBoardIds.length > 0 ? [{ boardId: { in: accessibleBoardIds } }] : []),
-  ],
+/**
+ * 可視チケットの where 断片。
+ * プライベートチケットもプライベートボードに属するため、accessibleBoardIds へ含まれる。
+ * 空配列なら 0 件になるので、呼び出し元は先に `ensurePrivateBoard` を通しておくこと。
+ */
+export const ticketScopeWhere = (accessibleBoardIds: string[]): TicketWhereInput => ({
+  boardId: { in: accessibleBoardIds },
 })
 
 /** AND で結合するキーワードの上限 */
@@ -166,12 +201,20 @@ export const splitKeywords = (raw: string, max: number = MAX_KEYWORDS): string[]
     .filter((word) => word.length > 0)
     .slice(0, max)
 
+/**
+ * タグ名 1 件ぶんの EXISTS 条件。
+ *
+ * 条件ごとに `some` を分けて AND することで、旧 `tags: { hasEvery: [...] }` と同じ意味になる。
+ * 1 つの `some` に `name: { in: [...] }` を渡すと OR(hasSome) になってしまうため分けること。
+ */
+export const tagNameWhere = (name: string): TicketWhereInput => ({ tags: { some: { tag: { name } } } })
+
 /** 1語ぶんの横断 OR 条件(タイトル / 本文 / タグ / コメント) */
 const keywordOr = (word: string): TicketWhereInput => ({
   OR: [
     { title: { contains: word, mode: 'insensitive' } },
     { content: { contains: word, mode: 'insensitive' } },
-    { tags: { has: word } },
+    { tags: { some: { tag: { name: { equals: word, mode: 'insensitive' } } } } },
     { comments: { some: { content: { contains: word, mode: 'insensitive' } } } },
   ],
 })
@@ -182,6 +225,7 @@ const keywordOr = (word: string): TicketWhereInput => ({
  *
  * NOTE: `contains` は ILIKE '%q%' となり索引が効かない(seq scan)。数千件までは実用上問題ないが、
  *       将来的には pg_trgm の GIN 索引か tsvector の全文検索への移行を検討する。
+ *       タグ名によるボード横断の絞り込みも同様に索引が効かないが、タグ総数は数十件規模の想定。
  */
 export const buildTicketWhere = (
   params: TicketSearchParams,
@@ -189,18 +233,12 @@ export const buildTicketWhere = (
 ): TicketWhereInput => {
   const and: TicketWhereInput[] = []
 
-  // 可視スコープ(認可)
-  if (params.scope === 'private') {
-    and.push({ boardId: null, ownerId: ctx.userId })
-  } else if (params.scope === 'board') {
-    // boardId 指定時も可視ボードとの交差を取る(可視外の指定なら 0 件になる)
-    const boardIds = params.boardId
-      ? ctx.accessibleBoardIds.filter((id) => id === params.boardId)
-      : ctx.accessibleBoardIds
-    and.push({ boardId: { in: boardIds } })
-  } else {
-    and.push(ticketScopeWhere(ctx.userId, ctx.accessibleBoardIds))
-  }
+  // 可視スコープ(認可)。boardId 指定時も可視ボードとの交差を取る(可視外の指定なら 0 件になる)
+  and.push(
+    ticketScopeWhere(
+      params.boardId ? ctx.accessibleBoardIds.filter((id) => id === params.boardId) : ctx.accessibleBoardIds,
+    ),
+  )
 
   // キーワード(語ごとに AND、語の中はタイトル/本文/タグ/コメントの OR)
   for (const word of splitKeywords(params.keyword)) {
@@ -213,8 +251,9 @@ export const buildTicketWhere = (
   if (params.priority.length > 0) {
     and.push({ priority: { in: params.priority } })
   }
-  if (params.tags.length > 0) {
-    and.push({ tags: { hasEvery: params.tags } })
+  // タグは名前ごとに独立した some(= AND)。1 つの some に in を渡すと OR になってしまう
+  for (const name of dedupeTagNames(params.tags)) {
+    and.push(tagNameWhere(name))
   }
   if (params.assignee === 'me') {
     and.push({ assigneeId: ctx.userId })

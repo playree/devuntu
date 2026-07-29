@@ -7,7 +7,7 @@ import { ContentHeader } from '@/components/header'
 import { ArrowLeftCircleIcon, ArrowPathIcon, PencilSquareIcon, TicketIcon, TrashIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { MarkdownView } from '@/components/ticket/markdown-view'
-import { PriorityChip, StatusChip, TagChips, useTicketOptions } from '@/components/ticket/ticket-chip'
+import { PriorityChip, StatusChip, TagChips, useBoardName, useTicketOptions } from '@/components/ticket/ticket-chip'
 import type { TicketStatus } from '@/generated/prisma/enums'
 import { parseAction, useActionData } from '@/lib/action-client'
 import { dayformat } from '@/lib/day'
@@ -16,7 +16,13 @@ import { useLocale } from '@/locale/client'
 import { ButtonGroup, Label, ListBox, Select, Skeleton } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC, useEffect, useState } from 'react'
-import { deleteTicket, getAssigneeOptions, getTicketFormOptions, GetTicketFormOptionsReturnType } from '../server'
+import {
+  createTicketTag,
+  deleteTicket,
+  getAssigneeOptions,
+  getTicketFormOptions,
+  GetTicketFormOptionsReturnType,
+} from '../server'
 import { TicketComments } from './comments'
 import { UpdateModal } from './modals'
 import { getTicket, updateTicketStatus } from './server'
@@ -35,6 +41,7 @@ export const TicketDetailClient: FC<{ id: string }> = ({ id }) => {
   const router = useRouter()
   const { confirmModal } = useConfirmModal()
   const { statusOptions } = useTicketOptions()
+  const boardName = useBoardName()
   const updateModalState = useModalState()
 
   const { data: ticket, reload, isLoading } = useActionData(() => getTicket({ id }))
@@ -48,7 +55,7 @@ export const TicketDetailClient: FC<{ id: string }> = ({ id }) => {
       .catch(() => setOptions(undefined))
   }, [])
 
-  // ボードチケットの担当者候補はボードメンバー(プライベートは自分のみなので取得不要)
+  // 担当者候補はそのボードのメンバー(プライベートボードなら本人のみ)
   const boardId = ticket?.boardId
   useEffect(() => {
     if (!boardId) {
@@ -134,7 +141,7 @@ export const TicketDetailClient: FC<{ id: string }> = ({ id }) => {
 
       <div className='grid grid-cols-12 gap-2'>
         <div className='col-span-12 space-y-1 rounded-xl border-2 p-3 md:col-span-5'>
-          <MetaRow label={t('ticket_scope')}>{ticket.boardName || t('private')}</MetaRow>
+          <MetaRow label={t('board')}>{boardName({ name: ticket.boardName, kind: ticket.boardKind })}</MetaRow>
           <MetaRow label={t('status')}>
             {ticket.canEdit ? (
               <Select
@@ -199,8 +206,9 @@ export const TicketDetailClient: FC<{ id: string }> = ({ id }) => {
           key={updateModalState.key}
           target={ticket}
           assigneeOptions={boardAssignees}
-          me={options.me}
-          tagSuggestions={options.tags}
+          // そのボードのタグだけを候補にする(他ボードのタグはサーバー側で弾かれる)
+          tagOptions={options.tags.filter((tag) => tag.boardId === ticket.boardId)}
+          onCreateTag={async (name) => parseAction(createTicketTag({ boardId: ticket.boardId, name }))}
         />
       )}
     </FlexCol>

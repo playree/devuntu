@@ -11,6 +11,7 @@ import {
   UserCircleIcon,
   UserGroupIcon,
   UsersIcon,
+  ViewColumnsIcon,
 } from '@/components/icon'
 import { LocaleSwitch } from '@/components/locale/locale-switch'
 import { LogoSVG } from '@/components/logo'
@@ -161,6 +162,12 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
             </Accordion.Heading>
             <Accordion.Panel>
               <Accordion.Body className='grid grid-cols-1 px-2'>
+                <MenuButton // ボード
+                  to='/boards'
+                  text={t('board_manage')}
+                  icon={<ViewColumnsIcon />}
+                  closeMenu={closeMenu}
+                />
                 <MenuButton // チケット
                   to='/tickets'
                   text={t('ticket')}

@@ -26,6 +26,8 @@ export type AggregateBoard = {
 
 export type BoardMinAggregateOutputType = {
   id: string | null
+  kind: $Enums.BoardKind | null
+  privateOwnerId: string | null
   name: string | null
   description: string | null
   archived: boolean | null
@@ -35,6 +37,8 @@ export type BoardMinAggregateOutputType = {
 
 export type BoardMaxAggregateOutputType = {
   id: string | null
+  kind: $Enums.BoardKind | null
+  privateOwnerId: string | null
   name: string | null
   description: string | null
   archived: boolean | null
@@ -44,6 +48,8 @@ export type BoardMaxAggregateOutputType = {
 
 export type BoardCountAggregateOutputType = {
   id: number
+  kind: number
+  privateOwnerId: number
   name: number
   description: number
   archived: number
@@ -55,6 +61,8 @@ export type BoardCountAggregateOutputType = {
 
 export type BoardMinAggregateInputType = {
   id?: true
+  kind?: true
+  privateOwnerId?: true
   name?: true
   description?: true
   archived?: true
@@ -64,6 +72,8 @@ export type BoardMinAggregateInputType = {
 
 export type BoardMaxAggregateInputType = {
   id?: true
+  kind?: true
+  privateOwnerId?: true
   name?: true
   description?: true
   archived?: true
@@ -73,6 +83,8 @@ export type BoardMaxAggregateInputType = {
 
 export type BoardCountAggregateInputType = {
   id?: true
+  kind?: true
+  privateOwnerId?: true
   name?: true
   description?: true
   archived?: true
@@ -155,6 +167,8 @@ export type BoardGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
 
 export type BoardGroupByOutputType = {
   id: string
+  kind: $Enums.BoardKind
+  privateOwnerId: string | null
   name: string
   description: string | null
   archived: boolean
@@ -185,45 +199,59 @@ export type BoardWhereInput = {
   OR?: Prisma.BoardWhereInput[]
   NOT?: Prisma.BoardWhereInput | Prisma.BoardWhereInput[]
   id?: Prisma.StringFilter<"Board"> | string
+  kind?: Prisma.EnumBoardKindFilter<"Board"> | $Enums.BoardKind
+  privateOwnerId?: Prisma.StringNullableFilter<"Board"> | string | null
   name?: Prisma.StringFilter<"Board"> | string
   description?: Prisma.StringNullableFilter<"Board"> | string | null
   archived?: Prisma.BoolFilter<"Board"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Board"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Board"> | Date | string
+  privateOwner?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   members?: Prisma.BoardMemberListRelationFilter
   groups?: Prisma.BoardGroupListRelationFilter
   tickets?: Prisma.TicketListRelationFilter
+  tags?: Prisma.TagListRelationFilter
 }
 
 export type BoardOrderByWithRelationInput = {
   id?: Prisma.SortOrder
+  kind?: Prisma.SortOrder
+  privateOwnerId?: Prisma.SortOrderInput | Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   archived?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  privateOwner?: Prisma.UserOrderByWithRelationInput
   members?: Prisma.BoardMemberOrderByRelationAggregateInput
   groups?: Prisma.BoardGroupOrderByRelationAggregateInput
   tickets?: Prisma.TicketOrderByRelationAggregateInput
+  tags?: Prisma.TagOrderByRelationAggregateInput
 }
 
 export type BoardWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  privateOwnerId?: string
   AND?: Prisma.BoardWhereInput | Prisma.BoardWhereInput[]
   OR?: Prisma.BoardWhereInput[]
   NOT?: Prisma.BoardWhereInput | Prisma.BoardWhereInput[]
+  kind?: Prisma.EnumBoardKindFilter<"Board"> | $Enums.BoardKind
   name?: Prisma.StringFilter<"Board"> | string
   description?: Prisma.StringNullableFilter<"Board"> | string | null
   archived?: Prisma.BoolFilter<"Board"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Board"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Board"> | Date | string
+  privateOwner?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   members?: Prisma.BoardMemberListRelationFilter
   groups?: Prisma.BoardGroupListRelationFilter
   tickets?: Prisma.TicketListRelationFilter
-}, "id">
+  tags?: Prisma.TagListRelationFilter
+}, "id" | "privateOwnerId">
 
 export type BoardOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
+  kind?: Prisma.SortOrder
+  privateOwnerId?: Prisma.SortOrderInput | Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   archived?: Prisma.SortOrder
@@ -239,6 +267,8 @@ export type BoardScalarWhereWithAggregatesInput = {
   OR?: Prisma.BoardScalarWhereWithAggregatesInput[]
   NOT?: Prisma.BoardScalarWhereWithAggregatesInput | Prisma.BoardScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"Board"> | string
+  kind?: Prisma.EnumBoardKindWithAggregatesFilter<"Board"> | $Enums.BoardKind
+  privateOwnerId?: Prisma.StringNullableWithAggregatesFilter<"Board"> | string | null
   name?: Prisma.StringWithAggregatesFilter<"Board"> | string
   description?: Prisma.StringNullableWithAggregatesFilter<"Board"> | string | null
   archived?: Prisma.BoolWithAggregatesFilter<"Board"> | boolean
@@ -248,18 +278,23 @@ export type BoardScalarWhereWithAggregatesInput = {
 
 export type BoardCreateInput = {
   id?: string
+  kind?: $Enums.BoardKind
   name: string
   description?: string | null
   archived?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
   members?: Prisma.BoardMemberCreateNestedManyWithoutBoardInput
   groups?: Prisma.BoardGroupCreateNestedManyWithoutBoardInput
   tickets?: Prisma.TicketCreateNestedManyWithoutBoardInput
+  tags?: Prisma.TagCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateInput = {
   id?: string
+  kind?: $Enums.BoardKind
+  privateOwnerId?: string | null
   name: string
   description?: string | null
   archived?: boolean
@@ -268,22 +303,28 @@ export type BoardUncheckedCreateInput = {
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
   groups?: Prisma.BoardGroupUncheckedCreateNestedManyWithoutBoardInput
   tickets?: Prisma.TicketUncheckedCreateNestedManyWithoutBoardInput
+  tags?: Prisma.TagUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
   members?: Prisma.BoardMemberUpdateManyWithoutBoardNestedInput
   groups?: Prisma.BoardGroupUpdateManyWithoutBoardNestedInput
   tickets?: Prisma.TicketUpdateManyWithoutBoardNestedInput
+  tags?: Prisma.TagUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  privateOwnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -292,10 +333,13 @@ export type BoardUncheckedUpdateInput = {
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
   groups?: Prisma.BoardGroupUncheckedUpdateManyWithoutBoardNestedInput
   tickets?: Prisma.TicketUncheckedUpdateManyWithoutBoardNestedInput
+  tags?: Prisma.TagUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateManyInput = {
   id?: string
+  kind?: $Enums.BoardKind
+  privateOwnerId?: string | null
   name: string
   description?: string | null
   archived?: boolean
@@ -305,6 +349,7 @@ export type BoardCreateManyInput = {
 
 export type BoardUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -314,6 +359,8 @@ export type BoardUpdateManyMutationInput = {
 
 export type BoardUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  privateOwnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -321,8 +368,15 @@ export type BoardUncheckedUpdateManyInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
+export type BoardNullableScalarRelationFilter = {
+  is?: Prisma.BoardWhereInput | null
+  isNot?: Prisma.BoardWhereInput | null
+}
+
 export type BoardCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  kind?: Prisma.SortOrder
+  privateOwnerId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrder
   archived?: Prisma.SortOrder
@@ -332,6 +386,8 @@ export type BoardCountOrderByAggregateInput = {
 
 export type BoardMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  kind?: Prisma.SortOrder
+  privateOwnerId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrder
   archived?: Prisma.SortOrder
@@ -341,6 +397,8 @@ export type BoardMaxOrderByAggregateInput = {
 
 export type BoardMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  kind?: Prisma.SortOrder
+  privateOwnerId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrder
   archived?: Prisma.SortOrder
@@ -353,9 +411,54 @@ export type BoardScalarRelationFilter = {
   isNot?: Prisma.BoardWhereInput
 }
 
-export type BoardNullableScalarRelationFilter = {
-  is?: Prisma.BoardWhereInput | null
-  isNot?: Prisma.BoardWhereInput | null
+export type BoardCreateNestedOneWithoutPrivateOwnerInput = {
+  create?: Prisma.XOR<Prisma.BoardCreateWithoutPrivateOwnerInput, Prisma.BoardUncheckedCreateWithoutPrivateOwnerInput>
+  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutPrivateOwnerInput
+  connect?: Prisma.BoardWhereUniqueInput
+}
+
+export type BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput = {
+  create?: Prisma.XOR<Prisma.BoardCreateWithoutPrivateOwnerInput, Prisma.BoardUncheckedCreateWithoutPrivateOwnerInput>
+  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutPrivateOwnerInput
+  connect?: Prisma.BoardWhereUniqueInput
+}
+
+export type BoardUpdateOneWithoutPrivateOwnerNestedInput = {
+  create?: Prisma.XOR<Prisma.BoardCreateWithoutPrivateOwnerInput, Prisma.BoardUncheckedCreateWithoutPrivateOwnerInput>
+  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutPrivateOwnerInput
+  upsert?: Prisma.BoardUpsertWithoutPrivateOwnerInput
+  disconnect?: Prisma.BoardWhereInput | boolean
+  delete?: Prisma.BoardWhereInput | boolean
+  connect?: Prisma.BoardWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.BoardUpdateToOneWithWhereWithoutPrivateOwnerInput, Prisma.BoardUpdateWithoutPrivateOwnerInput>, Prisma.BoardUncheckedUpdateWithoutPrivateOwnerInput>
+}
+
+export type BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput = {
+  create?: Prisma.XOR<Prisma.BoardCreateWithoutPrivateOwnerInput, Prisma.BoardUncheckedCreateWithoutPrivateOwnerInput>
+  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutPrivateOwnerInput
+  upsert?: Prisma.BoardUpsertWithoutPrivateOwnerInput
+  disconnect?: Prisma.BoardWhereInput | boolean
+  delete?: Prisma.BoardWhereInput | boolean
+  connect?: Prisma.BoardWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.BoardUpdateToOneWithWhereWithoutPrivateOwnerInput, Prisma.BoardUpdateWithoutPrivateOwnerInput>, Prisma.BoardUncheckedUpdateWithoutPrivateOwnerInput>
+}
+
+export type EnumBoardKindFieldUpdateOperationsInput = {
+  set?: $Enums.BoardKind
+}
+
+export type BoardCreateNestedOneWithoutTagsInput = {
+  create?: Prisma.XOR<Prisma.BoardCreateWithoutTagsInput, Prisma.BoardUncheckedCreateWithoutTagsInput>
+  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutTagsInput
+  connect?: Prisma.BoardWhereUniqueInput
+}
+
+export type BoardUpdateOneRequiredWithoutTagsNestedInput = {
+  create?: Prisma.XOR<Prisma.BoardCreateWithoutTagsInput, Prisma.BoardUncheckedCreateWithoutTagsInput>
+  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutTagsInput
+  upsert?: Prisma.BoardUpsertWithoutTagsInput
+  connect?: Prisma.BoardWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.BoardUpdateToOneWithWhereWithoutTagsInput, Prisma.BoardUpdateWithoutTagsInput>, Prisma.BoardUncheckedUpdateWithoutTagsInput>
 }
 
 export type BoardCreateNestedOneWithoutMembersInput = {
@@ -392,29 +495,176 @@ export type BoardCreateNestedOneWithoutTicketsInput = {
   connect?: Prisma.BoardWhereUniqueInput
 }
 
-export type BoardUpdateOneWithoutTicketsNestedInput = {
+export type BoardUpdateOneRequiredWithoutTicketsNestedInput = {
   create?: Prisma.XOR<Prisma.BoardCreateWithoutTicketsInput, Prisma.BoardUncheckedCreateWithoutTicketsInput>
   connectOrCreate?: Prisma.BoardCreateOrConnectWithoutTicketsInput
   upsert?: Prisma.BoardUpsertWithoutTicketsInput
-  disconnect?: Prisma.BoardWhereInput | boolean
-  delete?: Prisma.BoardWhereInput | boolean
   connect?: Prisma.BoardWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.BoardUpdateToOneWithWhereWithoutTicketsInput, Prisma.BoardUpdateWithoutTicketsInput>, Prisma.BoardUncheckedUpdateWithoutTicketsInput>
 }
 
-export type BoardCreateWithoutMembersInput = {
+export type BoardCreateWithoutPrivateOwnerInput = {
   id?: string
+  kind?: $Enums.BoardKind
   name: string
   description?: string | null
   archived?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  members?: Prisma.BoardMemberCreateNestedManyWithoutBoardInput
+  groups?: Prisma.BoardGroupCreateNestedManyWithoutBoardInput
+  tickets?: Prisma.TicketCreateNestedManyWithoutBoardInput
+  tags?: Prisma.TagCreateNestedManyWithoutBoardInput
+}
+
+export type BoardUncheckedCreateWithoutPrivateOwnerInput = {
+  id?: string
+  kind?: $Enums.BoardKind
+  name: string
+  description?: string | null
+  archived?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
+  groups?: Prisma.BoardGroupUncheckedCreateNestedManyWithoutBoardInput
+  tickets?: Prisma.TicketUncheckedCreateNestedManyWithoutBoardInput
+  tags?: Prisma.TagUncheckedCreateNestedManyWithoutBoardInput
+}
+
+export type BoardCreateOrConnectWithoutPrivateOwnerInput = {
+  where: Prisma.BoardWhereUniqueInput
+  create: Prisma.XOR<Prisma.BoardCreateWithoutPrivateOwnerInput, Prisma.BoardUncheckedCreateWithoutPrivateOwnerInput>
+}
+
+export type BoardUpsertWithoutPrivateOwnerInput = {
+  update: Prisma.XOR<Prisma.BoardUpdateWithoutPrivateOwnerInput, Prisma.BoardUncheckedUpdateWithoutPrivateOwnerInput>
+  create: Prisma.XOR<Prisma.BoardCreateWithoutPrivateOwnerInput, Prisma.BoardUncheckedCreateWithoutPrivateOwnerInput>
+  where?: Prisma.BoardWhereInput
+}
+
+export type BoardUpdateToOneWithWhereWithoutPrivateOwnerInput = {
+  where?: Prisma.BoardWhereInput
+  data: Prisma.XOR<Prisma.BoardUpdateWithoutPrivateOwnerInput, Prisma.BoardUncheckedUpdateWithoutPrivateOwnerInput>
+}
+
+export type BoardUpdateWithoutPrivateOwnerInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.BoardMemberUpdateManyWithoutBoardNestedInput
+  groups?: Prisma.BoardGroupUpdateManyWithoutBoardNestedInput
+  tickets?: Prisma.TicketUpdateManyWithoutBoardNestedInput
+  tags?: Prisma.TagUpdateManyWithoutBoardNestedInput
+}
+
+export type BoardUncheckedUpdateWithoutPrivateOwnerInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
+  groups?: Prisma.BoardGroupUncheckedUpdateManyWithoutBoardNestedInput
+  tickets?: Prisma.TicketUncheckedUpdateManyWithoutBoardNestedInput
+  tags?: Prisma.TagUncheckedUpdateManyWithoutBoardNestedInput
+}
+
+export type BoardCreateWithoutTagsInput = {
+  id?: string
+  kind?: $Enums.BoardKind
+  name: string
+  description?: string | null
+  archived?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
+  members?: Prisma.BoardMemberCreateNestedManyWithoutBoardInput
   groups?: Prisma.BoardGroupCreateNestedManyWithoutBoardInput
   tickets?: Prisma.TicketCreateNestedManyWithoutBoardInput
 }
 
+export type BoardUncheckedCreateWithoutTagsInput = {
+  id?: string
+  kind?: $Enums.BoardKind
+  privateOwnerId?: string | null
+  name: string
+  description?: string | null
+  archived?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
+  groups?: Prisma.BoardGroupUncheckedCreateNestedManyWithoutBoardInput
+  tickets?: Prisma.TicketUncheckedCreateNestedManyWithoutBoardInput
+}
+
+export type BoardCreateOrConnectWithoutTagsInput = {
+  where: Prisma.BoardWhereUniqueInput
+  create: Prisma.XOR<Prisma.BoardCreateWithoutTagsInput, Prisma.BoardUncheckedCreateWithoutTagsInput>
+}
+
+export type BoardUpsertWithoutTagsInput = {
+  update: Prisma.XOR<Prisma.BoardUpdateWithoutTagsInput, Prisma.BoardUncheckedUpdateWithoutTagsInput>
+  create: Prisma.XOR<Prisma.BoardCreateWithoutTagsInput, Prisma.BoardUncheckedCreateWithoutTagsInput>
+  where?: Prisma.BoardWhereInput
+}
+
+export type BoardUpdateToOneWithWhereWithoutTagsInput = {
+  where?: Prisma.BoardWhereInput
+  data: Prisma.XOR<Prisma.BoardUpdateWithoutTagsInput, Prisma.BoardUncheckedUpdateWithoutTagsInput>
+}
+
+export type BoardUpdateWithoutTagsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
+  members?: Prisma.BoardMemberUpdateManyWithoutBoardNestedInput
+  groups?: Prisma.BoardGroupUpdateManyWithoutBoardNestedInput
+  tickets?: Prisma.TicketUpdateManyWithoutBoardNestedInput
+}
+
+export type BoardUncheckedUpdateWithoutTagsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  privateOwnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
+  groups?: Prisma.BoardGroupUncheckedUpdateManyWithoutBoardNestedInput
+  tickets?: Prisma.TicketUncheckedUpdateManyWithoutBoardNestedInput
+}
+
+export type BoardCreateWithoutMembersInput = {
+  id?: string
+  kind?: $Enums.BoardKind
+  name: string
+  description?: string | null
+  archived?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
+  groups?: Prisma.BoardGroupCreateNestedManyWithoutBoardInput
+  tickets?: Prisma.TicketCreateNestedManyWithoutBoardInput
+  tags?: Prisma.TagCreateNestedManyWithoutBoardInput
+}
+
 export type BoardUncheckedCreateWithoutMembersInput = {
   id?: string
+  kind?: $Enums.BoardKind
+  privateOwnerId?: string | null
   name: string
   description?: string | null
   archived?: boolean
@@ -422,6 +672,7 @@ export type BoardUncheckedCreateWithoutMembersInput = {
   updatedAt?: Date | string
   groups?: Prisma.BoardGroupUncheckedCreateNestedManyWithoutBoardInput
   tickets?: Prisma.TicketUncheckedCreateNestedManyWithoutBoardInput
+  tags?: Prisma.TagUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutMembersInput = {
@@ -442,17 +693,22 @@ export type BoardUpdateToOneWithWhereWithoutMembersInput = {
 
 export type BoardUpdateWithoutMembersInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
   groups?: Prisma.BoardGroupUpdateManyWithoutBoardNestedInput
   tickets?: Prisma.TicketUpdateManyWithoutBoardNestedInput
+  tags?: Prisma.TagUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutMembersInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  privateOwnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -460,21 +716,27 @@ export type BoardUncheckedUpdateWithoutMembersInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   groups?: Prisma.BoardGroupUncheckedUpdateManyWithoutBoardNestedInput
   tickets?: Prisma.TicketUncheckedUpdateManyWithoutBoardNestedInput
+  tags?: Prisma.TagUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutGroupsInput = {
   id?: string
+  kind?: $Enums.BoardKind
   name: string
   description?: string | null
   archived?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
   members?: Prisma.BoardMemberCreateNestedManyWithoutBoardInput
   tickets?: Prisma.TicketCreateNestedManyWithoutBoardInput
+  tags?: Prisma.TagCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutGroupsInput = {
   id?: string
+  kind?: $Enums.BoardKind
+  privateOwnerId?: string | null
   name: string
   description?: string | null
   archived?: boolean
@@ -482,6 +744,7 @@ export type BoardUncheckedCreateWithoutGroupsInput = {
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
   tickets?: Prisma.TicketUncheckedCreateNestedManyWithoutBoardInput
+  tags?: Prisma.TagUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutGroupsInput = {
@@ -502,17 +765,22 @@ export type BoardUpdateToOneWithWhereWithoutGroupsInput = {
 
 export type BoardUpdateWithoutGroupsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
   members?: Prisma.BoardMemberUpdateManyWithoutBoardNestedInput
   tickets?: Prisma.TicketUpdateManyWithoutBoardNestedInput
+  tags?: Prisma.TagUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutGroupsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  privateOwnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -520,21 +788,27 @@ export type BoardUncheckedUpdateWithoutGroupsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
   tickets?: Prisma.TicketUncheckedUpdateManyWithoutBoardNestedInput
+  tags?: Prisma.TagUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutTicketsInput = {
   id?: string
+  kind?: $Enums.BoardKind
   name: string
   description?: string | null
   archived?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
   members?: Prisma.BoardMemberCreateNestedManyWithoutBoardInput
   groups?: Prisma.BoardGroupCreateNestedManyWithoutBoardInput
+  tags?: Prisma.TagCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutTicketsInput = {
   id?: string
+  kind?: $Enums.BoardKind
+  privateOwnerId?: string | null
   name: string
   description?: string | null
   archived?: boolean
@@ -542,6 +816,7 @@ export type BoardUncheckedCreateWithoutTicketsInput = {
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
   groups?: Prisma.BoardGroupUncheckedCreateNestedManyWithoutBoardInput
+  tags?: Prisma.TagUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutTicketsInput = {
@@ -562,17 +837,22 @@ export type BoardUpdateToOneWithWhereWithoutTicketsInput = {
 
 export type BoardUpdateWithoutTicketsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
   members?: Prisma.BoardMemberUpdateManyWithoutBoardNestedInput
   groups?: Prisma.BoardGroupUpdateManyWithoutBoardNestedInput
+  tags?: Prisma.TagUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutTicketsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  privateOwnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -580,6 +860,7 @@ export type BoardUncheckedUpdateWithoutTicketsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
   groups?: Prisma.BoardGroupUncheckedUpdateManyWithoutBoardNestedInput
+  tags?: Prisma.TagUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 
@@ -591,12 +872,14 @@ export type BoardCountOutputType = {
   members: number
   groups: number
   tickets: number
+  tags: number
 }
 
 export type BoardCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   members?: boolean | BoardCountOutputTypeCountMembersArgs
   groups?: boolean | BoardCountOutputTypeCountGroupsArgs
   tickets?: boolean | BoardCountOutputTypeCountTicketsArgs
+  tags?: boolean | BoardCountOutputTypeCountTagsArgs
 }
 
 /**
@@ -630,40 +913,59 @@ export type BoardCountOutputTypeCountTicketsArgs<ExtArgs extends runtime.Types.E
   where?: Prisma.TicketWhereInput
 }
 
+/**
+ * BoardCountOutputType without action
+ */
+export type BoardCountOutputTypeCountTagsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.TagWhereInput
+}
+
 
 export type BoardSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  kind?: boolean
+  privateOwnerId?: boolean
   name?: boolean
   description?: boolean
   archived?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  privateOwner?: boolean | Prisma.Board$privateOwnerArgs<ExtArgs>
   members?: boolean | Prisma.Board$membersArgs<ExtArgs>
   groups?: boolean | Prisma.Board$groupsArgs<ExtArgs>
   tickets?: boolean | Prisma.Board$ticketsArgs<ExtArgs>
+  tags?: boolean | Prisma.Board$tagsArgs<ExtArgs>
   _count?: boolean | Prisma.BoardCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["board"]>
 
 export type BoardSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  kind?: boolean
+  privateOwnerId?: boolean
   name?: boolean
   description?: boolean
   archived?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  privateOwner?: boolean | Prisma.Board$privateOwnerArgs<ExtArgs>
 }, ExtArgs["result"]["board"]>
 
 export type BoardSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  kind?: boolean
+  privateOwnerId?: boolean
   name?: boolean
   description?: boolean
   archived?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  privateOwner?: boolean | Prisma.Board$privateOwnerArgs<ExtArgs>
 }, ExtArgs["result"]["board"]>
 
 export type BoardSelectScalar = {
   id?: boolean
+  kind?: boolean
+  privateOwnerId?: boolean
   name?: boolean
   description?: boolean
   archived?: boolean
@@ -671,25 +973,35 @@ export type BoardSelectScalar = {
   updatedAt?: boolean
 }
 
-export type BoardOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "description" | "archived" | "createdAt" | "updatedAt", ExtArgs["result"]["board"]>
+export type BoardOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "kind" | "privateOwnerId" | "name" | "description" | "archived" | "createdAt" | "updatedAt", ExtArgs["result"]["board"]>
 export type BoardInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  privateOwner?: boolean | Prisma.Board$privateOwnerArgs<ExtArgs>
   members?: boolean | Prisma.Board$membersArgs<ExtArgs>
   groups?: boolean | Prisma.Board$groupsArgs<ExtArgs>
   tickets?: boolean | Prisma.Board$ticketsArgs<ExtArgs>
+  tags?: boolean | Prisma.Board$tagsArgs<ExtArgs>
   _count?: boolean | Prisma.BoardCountOutputTypeDefaultArgs<ExtArgs>
 }
-export type BoardIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
-export type BoardIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
+export type BoardIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  privateOwner?: boolean | Prisma.Board$privateOwnerArgs<ExtArgs>
+}
+export type BoardIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  privateOwner?: boolean | Prisma.Board$privateOwnerArgs<ExtArgs>
+}
 
 export type $BoardPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Board"
   objects: {
+    privateOwner: Prisma.$UserPayload<ExtArgs> | null
     members: Prisma.$BoardMemberPayload<ExtArgs>[]
     groups: Prisma.$BoardGroupPayload<ExtArgs>[]
     tickets: Prisma.$TicketPayload<ExtArgs>[]
+    tags: Prisma.$TagPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    kind: $Enums.BoardKind
+    privateOwnerId: string | null
     name: string
     description: string | null
     archived: boolean
@@ -1089,9 +1401,11 @@ readonly fields: BoardFieldRefs;
  */
 export interface Prisma__BoardClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  privateOwner<T extends Prisma.Board$privateOwnerArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Board$privateOwnerArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   members<T extends Prisma.Board$membersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Board$membersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BoardMemberPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   groups<T extends Prisma.Board$groupsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Board$groupsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BoardGroupPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   tickets<T extends Prisma.Board$ticketsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Board$ticketsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TicketPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  tags<T extends Prisma.Board$tagsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Board$tagsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TagPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1122,6 +1436,8 @@ export interface Prisma__BoardClient<T, Null = never, ExtArgs extends runtime.Ty
  */
 export interface BoardFieldRefs {
   readonly id: Prisma.FieldRef<"Board", 'String'>
+  readonly kind: Prisma.FieldRef<"Board", 'BoardKind'>
+  readonly privateOwnerId: Prisma.FieldRef<"Board", 'String'>
   readonly name: Prisma.FieldRef<"Board", 'String'>
   readonly description: Prisma.FieldRef<"Board", 'String'>
   readonly archived: Prisma.FieldRef<"Board", 'Boolean'>
@@ -1381,6 +1697,10 @@ export type BoardCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extension
    */
   data: Prisma.BoardCreateManyInput | Prisma.BoardCreateManyInput[]
   skipDuplicates?: boolean
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.BoardIncludeCreateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -1451,6 +1771,10 @@ export type BoardUpdateManyAndReturnArgs<ExtArgs extends runtime.Types.Extension
    * Limit how many Boards to update.
    */
   limit?: number
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.BoardIncludeUpdateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -1517,6 +1841,25 @@ export type BoardDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Interna
    * Limit how many Boards to delete.
    */
   limit?: number
+}
+
+/**
+ * Board.privateOwner
+ */
+export type Board$privateOwnerArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the User
+   */
+  select?: Prisma.UserSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the User
+   */
+  omit?: Prisma.UserOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserInclude<ExtArgs> | null
+  where?: Prisma.UserWhereInput
 }
 
 /**
@@ -1589,6 +1932,30 @@ export type Board$ticketsArgs<ExtArgs extends runtime.Types.Extensions.InternalA
   take?: number
   skip?: number
   distinct?: Prisma.TicketScalarFieldEnum | Prisma.TicketScalarFieldEnum[]
+}
+
+/**
+ * Board.tags
+ */
+export type Board$tagsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Tag
+   */
+  select?: Prisma.TagSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Tag
+   */
+  omit?: Prisma.TagOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TagInclude<ExtArgs> | null
+  where?: Prisma.TagWhereInput
+  orderBy?: Prisma.TagOrderByWithRelationInput | Prisma.TagOrderByWithRelationInput[]
+  cursor?: Prisma.TagWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.TagScalarFieldEnum | Prisma.TagScalarFieldEnum[]
 }
 
 /**

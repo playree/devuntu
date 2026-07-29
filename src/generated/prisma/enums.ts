@@ -17,6 +17,30 @@ export const BoardMemberRole = {
 export type BoardMemberRole = (typeof BoardMemberRole)[keyof typeof BoardMemberRole]
 
 
+export const BoardKind = {
+  private: 'private',
+  team: 'team'
+} as const
+
+export type BoardKind = (typeof BoardKind)[keyof typeof BoardKind]
+
+
+export const TagColor = {
+  gray: 'gray',
+  red: 'red',
+  orange: 'orange',
+  amber: 'amber',
+  green: 'green',
+  teal: 'teal',
+  blue: 'blue',
+  indigo: 'indigo',
+  violet: 'violet',
+  pink: 'pink'
+} as const
+
+export type TagColor = (typeof TagColor)[keyof typeof TagColor]
+
+
 export const TicketStatus = {
   backlog: 'backlog',
   todo: 'todo',

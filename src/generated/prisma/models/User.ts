@@ -275,7 +275,7 @@ export type UserWhereInput = {
   calendarShare?: Prisma.XOR<Prisma.CalendarShareNullableScalarRelationFilter, Prisma.CalendarShareWhereInput> | null
   calendarBusyTimes?: Prisma.CalendarBusyTimeListRelationFilter
   boardMembers?: Prisma.BoardMemberListRelationFilter
-  ownedTickets?: Prisma.TicketListRelationFilter
+  privateBoard?: Prisma.XOR<Prisma.BoardNullableScalarRelationFilter, Prisma.BoardWhereInput> | null
   createdTickets?: Prisma.TicketListRelationFilter
   assignedTickets?: Prisma.TicketListRelationFilter
   ticketComments?: Prisma.TicketCommentListRelationFilter
@@ -310,7 +310,7 @@ export type UserOrderByWithRelationInput = {
   calendarShare?: Prisma.CalendarShareOrderByWithRelationInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeOrderByRelationAggregateInput
   boardMembers?: Prisma.BoardMemberOrderByRelationAggregateInput
-  ownedTickets?: Prisma.TicketOrderByRelationAggregateInput
+  privateBoard?: Prisma.BoardOrderByWithRelationInput
   createdTickets?: Prisma.TicketOrderByRelationAggregateInput
   assignedTickets?: Prisma.TicketOrderByRelationAggregateInput
   ticketComments?: Prisma.TicketCommentOrderByRelationAggregateInput
@@ -348,7 +348,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   calendarShare?: Prisma.XOR<Prisma.CalendarShareNullableScalarRelationFilter, Prisma.CalendarShareWhereInput> | null
   calendarBusyTimes?: Prisma.CalendarBusyTimeListRelationFilter
   boardMembers?: Prisma.BoardMemberListRelationFilter
-  ownedTickets?: Prisma.TicketListRelationFilter
+  privateBoard?: Prisma.XOR<Prisma.BoardNullableScalarRelationFilter, Prisma.BoardWhereInput> | null
   createdTickets?: Prisma.TicketListRelationFilter
   assignedTickets?: Prisma.TicketListRelationFilter
   ticketComments?: Prisma.TicketCommentListRelationFilter
@@ -425,7 +425,7 @@ export type UserCreateInput = {
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
@@ -460,7 +460,7 @@ export type UserUncheckedCreateInput = {
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
@@ -495,7 +495,7 @@ export type UserUpdateInput = {
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
@@ -530,7 +530,7 @@ export type UserUncheckedUpdateInput = {
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUncheckedUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
@@ -852,6 +852,22 @@ export type UserUpdateOneRequiredWithoutCalendarBusyTimesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCalendarBusyTimesInput, Prisma.UserUpdateWithoutCalendarBusyTimesInput>, Prisma.UserUncheckedUpdateWithoutCalendarBusyTimesInput>
 }
 
+export type UserCreateNestedOneWithoutPrivateBoardInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPrivateBoardInput, Prisma.UserUncheckedCreateWithoutPrivateBoardInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPrivateBoardInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutPrivateBoardNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPrivateBoardInput, Prisma.UserUncheckedCreateWithoutPrivateBoardInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPrivateBoardInput
+  upsert?: Prisma.UserUpsertWithoutPrivateBoardInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutPrivateBoardInput, Prisma.UserUpdateWithoutPrivateBoardInput>, Prisma.UserUncheckedUpdateWithoutPrivateBoardInput>
+}
+
 export type UserCreateNestedOneWithoutBoardMembersInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutBoardMembersInput, Prisma.UserUncheckedCreateWithoutBoardMembersInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutBoardMembersInput
@@ -866,12 +882,6 @@ export type UserUpdateOneRequiredWithoutBoardMembersNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutBoardMembersInput, Prisma.UserUpdateWithoutBoardMembersInput>, Prisma.UserUncheckedUpdateWithoutBoardMembersInput>
 }
 
-export type UserCreateNestedOneWithoutOwnedTicketsInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutOwnedTicketsInput, Prisma.UserUncheckedCreateWithoutOwnedTicketsInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutOwnedTicketsInput
-  connect?: Prisma.UserWhereUniqueInput
-}
-
 export type UserCreateNestedOneWithoutCreatedTicketsInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutCreatedTicketsInput, Prisma.UserUncheckedCreateWithoutCreatedTicketsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutCreatedTicketsInput
@@ -882,16 +892,6 @@ export type UserCreateNestedOneWithoutAssignedTicketsInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutAssignedTicketsInput, Prisma.UserUncheckedCreateWithoutAssignedTicketsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutAssignedTicketsInput
   connect?: Prisma.UserWhereUniqueInput
-}
-
-export type UserUpdateOneWithoutOwnedTicketsNestedInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutOwnedTicketsInput, Prisma.UserUncheckedCreateWithoutOwnedTicketsInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutOwnedTicketsInput
-  upsert?: Prisma.UserUpsertWithoutOwnedTicketsInput
-  disconnect?: Prisma.UserWhereInput | boolean
-  delete?: Prisma.UserWhereInput | boolean
-  connect?: Prisma.UserWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutOwnedTicketsInput, Prisma.UserUpdateWithoutOwnedTicketsInput>, Prisma.UserUncheckedUpdateWithoutOwnedTicketsInput>
 }
 
 export type UserUpdateOneWithoutCreatedTicketsNestedInput = {
@@ -958,7 +958,7 @@ export type UserCreateWithoutSessionsInput = {
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
@@ -992,7 +992,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
@@ -1042,7 +1042,7 @@ export type UserUpdateWithoutSessionsInput = {
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
@@ -1076,7 +1076,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUncheckedUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
@@ -1110,7 +1110,7 @@ export type UserCreateWithoutAccountsInput = {
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
@@ -1144,7 +1144,7 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
@@ -1194,7 +1194,7 @@ export type UserUpdateWithoutAccountsInput = {
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
@@ -1228,7 +1228,7 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUncheckedUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
@@ -1262,7 +1262,7 @@ export type UserCreateWithoutTwofactorsInput = {
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
@@ -1296,7 +1296,7 @@ export type UserUncheckedCreateWithoutTwofactorsInput = {
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
@@ -1346,7 +1346,7 @@ export type UserUpdateWithoutTwofactorsInput = {
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
@@ -1380,7 +1380,7 @@ export type UserUncheckedUpdateWithoutTwofactorsInput = {
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUncheckedUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
@@ -1414,7 +1414,7 @@ export type UserCreateWithoutPasskeysInput = {
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
@@ -1448,7 +1448,7 @@ export type UserUncheckedCreateWithoutPasskeysInput = {
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
@@ -1498,7 +1498,7 @@ export type UserUpdateWithoutPasskeysInput = {
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
@@ -1532,7 +1532,7 @@ export type UserUncheckedUpdateWithoutPasskeysInput = {
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUncheckedUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
@@ -1566,7 +1566,7 @@ export type UserCreateWithoutOauthclientsInput = {
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
@@ -1600,7 +1600,7 @@ export type UserUncheckedCreateWithoutOauthclientsInput = {
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
@@ -1650,7 +1650,7 @@ export type UserUpdateWithoutOauthclientsInput = {
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
@@ -1684,7 +1684,7 @@ export type UserUncheckedUpdateWithoutOauthclientsInput = {
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUncheckedUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
@@ -1718,7 +1718,7 @@ export type UserCreateWithoutOauthrefreshtokensInput = {
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
@@ -1752,7 +1752,7 @@ export type UserUncheckedCreateWithoutOauthrefreshtokensInput = {
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
@@ -1802,7 +1802,7 @@ export type UserUpdateWithoutOauthrefreshtokensInput = {
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
@@ -1836,7 +1836,7 @@ export type UserUncheckedUpdateWithoutOauthrefreshtokensInput = {
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUncheckedUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
@@ -1870,7 +1870,7 @@ export type UserCreateWithoutOauthaccesstokensInput = {
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
@@ -1904,7 +1904,7 @@ export type UserUncheckedCreateWithoutOauthaccesstokensInput = {
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
@@ -1954,7 +1954,7 @@ export type UserUpdateWithoutOauthaccesstokensInput = {
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
@@ -1988,7 +1988,7 @@ export type UserUncheckedUpdateWithoutOauthaccesstokensInput = {
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUncheckedUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
@@ -2022,7 +2022,7 @@ export type UserCreateWithoutOauthconsentsInput = {
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
@@ -2056,7 +2056,7 @@ export type UserUncheckedCreateWithoutOauthconsentsInput = {
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
@@ -2106,7 +2106,7 @@ export type UserUpdateWithoutOauthconsentsInput = {
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
@@ -2140,7 +2140,7 @@ export type UserUncheckedUpdateWithoutOauthconsentsInput = {
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUncheckedUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
@@ -2174,7 +2174,7 @@ export type UserCreateWithoutDashboardInput = {
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
@@ -2208,7 +2208,7 @@ export type UserUncheckedCreateWithoutDashboardInput = {
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
@@ -2258,7 +2258,7 @@ export type UserUpdateWithoutDashboardInput = {
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
@@ -2292,7 +2292,7 @@ export type UserUncheckedUpdateWithoutDashboardInput = {
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUncheckedUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
@@ -2326,7 +2326,7 @@ export type UserCreateWithoutUserGroupsInput = {
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
@@ -2360,7 +2360,7 @@ export type UserUncheckedCreateWithoutUserGroupsInput = {
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
@@ -2410,7 +2410,7 @@ export type UserUpdateWithoutUserGroupsInput = {
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
@@ -2444,7 +2444,7 @@ export type UserUncheckedUpdateWithoutUserGroupsInput = {
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUncheckedUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
@@ -2478,7 +2478,7 @@ export type UserCreateWithoutCalendarShareInput = {
   userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
@@ -2512,7 +2512,7 @@ export type UserUncheckedCreateWithoutCalendarShareInput = {
   userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
@@ -2562,7 +2562,7 @@ export type UserUpdateWithoutCalendarShareInput = {
   userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
@@ -2596,7 +2596,7 @@ export type UserUncheckedUpdateWithoutCalendarShareInput = {
   userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUncheckedUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
@@ -2630,7 +2630,7 @@ export type UserCreateWithoutCalendarBusyTimesInput = {
   userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
@@ -2664,7 +2664,7 @@ export type UserUncheckedCreateWithoutCalendarBusyTimesInput = {
   userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
@@ -2714,7 +2714,7 @@ export type UserUpdateWithoutCalendarBusyTimesInput = {
   userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
@@ -2748,7 +2748,159 @@ export type UserUncheckedUpdateWithoutCalendarBusyTimesInput = {
   userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUncheckedUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
+  createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
+  ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+}
+
+export type UserCreateWithoutPrivateBoardInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  locale?: string | null
+  lastLoginAt?: Date | string | null
+  timezone?: string | null
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
+  dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
+  userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
+  boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
+  createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
+  assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
+  ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+}
+
+export type UserUncheckedCreateWithoutPrivateBoardInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  locale?: string | null
+  lastLoginAt?: Date | string | null
+  timezone?: string | null
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientUncheckedCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
+  dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
+  userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
+  boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
+  createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
+  ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+}
+
+export type UserCreateOrConnectWithoutPrivateBoardInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutPrivateBoardInput, Prisma.UserUncheckedCreateWithoutPrivateBoardInput>
+}
+
+export type UserUpsertWithoutPrivateBoardInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutPrivateBoardInput, Prisma.UserUncheckedUpdateWithoutPrivateBoardInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutPrivateBoardInput, Prisma.UserUncheckedCreateWithoutPrivateBoardInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutPrivateBoardInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutPrivateBoardInput, Prisma.UserUncheckedUpdateWithoutPrivateBoardInput>
+}
+
+export type UserUpdateWithoutPrivateBoardInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
+  dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
+  userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
+  boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
+  createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
+  assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
+  ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+}
+
+export type UserUncheckedUpdateWithoutPrivateBoardInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUncheckedUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
+  dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
+  userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
+  boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
@@ -2782,7 +2934,7 @@ export type UserCreateWithoutBoardMembersInput = {
   userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
@@ -2816,7 +2968,7 @@ export type UserUncheckedCreateWithoutBoardMembersInput = {
   userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
@@ -2866,7 +3018,7 @@ export type UserUpdateWithoutBoardMembersInput = {
   userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
@@ -2900,83 +3052,10 @@ export type UserUncheckedUpdateWithoutBoardMembersInput = {
   userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUncheckedUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
-}
-
-export type UserCreateWithoutOwnedTicketsInput = {
-  id?: string
-  name: string
-  email: string
-  emailVerified?: boolean
-  image?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  role?: string | null
-  banned?: boolean | null
-  banReason?: string | null
-  banExpires?: Date | string | null
-  twoFactorEnabled?: boolean | null
-  locale?: string | null
-  lastLoginAt?: Date | string | null
-  timezone?: string | null
-  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
-  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
-  twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
-  passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
-  oauthclients?: Prisma.OauthClientCreateNestedManyWithoutUserInput
-  oauthrefreshtokens?: Prisma.OauthRefreshTokenCreateNestedManyWithoutUserInput
-  oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutUserInput
-  oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
-  dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
-  userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
-  calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
-  calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
-  boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
-  createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
-  assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
-  ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
-}
-
-export type UserUncheckedCreateWithoutOwnedTicketsInput = {
-  id?: string
-  name: string
-  email: string
-  emailVerified?: boolean
-  image?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  role?: string | null
-  banned?: boolean | null
-  banReason?: string | null
-  banExpires?: Date | string | null
-  twoFactorEnabled?: boolean | null
-  locale?: string | null
-  lastLoginAt?: Date | string | null
-  timezone?: string | null
-  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
-  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
-  twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
-  passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
-  oauthclients?: Prisma.OauthClientUncheckedCreateNestedManyWithoutUserInput
-  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedCreateNestedManyWithoutUserInput
-  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutUserInput
-  oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
-  dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
-  userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
-  calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
-  calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
-  boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
-  createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
-  assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
-  ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
-}
-
-export type UserCreateOrConnectWithoutOwnedTicketsInput = {
-  where: Prisma.UserWhereUniqueInput
-  create: Prisma.XOR<Prisma.UserCreateWithoutOwnedTicketsInput, Prisma.UserUncheckedCreateWithoutOwnedTicketsInput>
 }
 
 export type UserCreateWithoutCreatedTicketsInput = {
@@ -3008,7 +3087,7 @@ export type UserCreateWithoutCreatedTicketsInput = {
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
 }
@@ -3042,7 +3121,7 @@ export type UserUncheckedCreateWithoutCreatedTicketsInput = {
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
 }
@@ -3081,7 +3160,7 @@ export type UserCreateWithoutAssignedTicketsInput = {
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
 }
@@ -3115,7 +3194,7 @@ export type UserUncheckedCreateWithoutAssignedTicketsInput = {
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
 }
@@ -3123,85 +3202,6 @@ export type UserUncheckedCreateWithoutAssignedTicketsInput = {
 export type UserCreateOrConnectWithoutAssignedTicketsInput = {
   where: Prisma.UserWhereUniqueInput
   create: Prisma.XOR<Prisma.UserCreateWithoutAssignedTicketsInput, Prisma.UserUncheckedCreateWithoutAssignedTicketsInput>
-}
-
-export type UserUpsertWithoutOwnedTicketsInput = {
-  update: Prisma.XOR<Prisma.UserUpdateWithoutOwnedTicketsInput, Prisma.UserUncheckedUpdateWithoutOwnedTicketsInput>
-  create: Prisma.XOR<Prisma.UserCreateWithoutOwnedTicketsInput, Prisma.UserUncheckedCreateWithoutOwnedTicketsInput>
-  where?: Prisma.UserWhereInput
-}
-
-export type UserUpdateToOneWithWhereWithoutOwnedTicketsInput = {
-  where?: Prisma.UserWhereInput
-  data: Prisma.XOR<Prisma.UserUpdateWithoutOwnedTicketsInput, Prisma.UserUncheckedUpdateWithoutOwnedTicketsInput>
-}
-
-export type UserUpdateWithoutOwnedTicketsInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
-  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
-  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
-  twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
-  passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
-  oauthclients?: Prisma.OauthClientUpdateManyWithoutUserNestedInput
-  oauthrefreshtokens?: Prisma.OauthRefreshTokenUpdateManyWithoutUserNestedInput
-  oauthaccesstokens?: Prisma.OauthAccessTokenUpdateManyWithoutUserNestedInput
-  oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
-  dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
-  userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
-  calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
-  calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
-  boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
-  createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
-  assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
-  ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
-}
-
-export type UserUncheckedUpdateWithoutOwnedTicketsInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
-  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
-  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
-  twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
-  passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
-  oauthclients?: Prisma.OauthClientUncheckedUpdateManyWithoutUserNestedInput
-  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedUpdateManyWithoutUserNestedInput
-  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedUpdateManyWithoutUserNestedInput
-  oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
-  dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
-  userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
-  calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
-  calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
-  boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
-  createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
-  assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
-  ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUpsertWithoutCreatedTicketsInput = {
@@ -3244,7 +3244,7 @@ export type UserUpdateWithoutCreatedTicketsInput = {
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
 }
@@ -3278,7 +3278,7 @@ export type UserUncheckedUpdateWithoutCreatedTicketsInput = {
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUncheckedUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
 }
@@ -3323,7 +3323,7 @@ export type UserUpdateWithoutAssignedTicketsInput = {
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
 }
@@ -3357,7 +3357,7 @@ export type UserUncheckedUpdateWithoutAssignedTicketsInput = {
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUncheckedUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
 }
@@ -3391,7 +3391,7 @@ export type UserCreateWithoutTicketCommentsInput = {
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
 }
@@ -3425,7 +3425,7 @@ export type UserUncheckedCreateWithoutTicketCommentsInput = {
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
-  ownedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutOwnerInput
+  privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
 }
@@ -3475,7 +3475,7 @@ export type UserUpdateWithoutTicketCommentsInput = {
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
 }
@@ -3509,7 +3509,7 @@ export type UserUncheckedUpdateWithoutTicketCommentsInput = {
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
-  ownedTickets?: Prisma.TicketUncheckedUpdateManyWithoutOwnerNestedInput
+  privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
 }
@@ -3531,7 +3531,6 @@ export type UserCountOutputType = {
   userGroups: number
   calendarBusyTimes: number
   boardMembers: number
-  ownedTickets: number
   createdTickets: number
   assignedTickets: number
   ticketComments: number
@@ -3549,7 +3548,6 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   userGroups?: boolean | UserCountOutputTypeCountUserGroupsArgs
   calendarBusyTimes?: boolean | UserCountOutputTypeCountCalendarBusyTimesArgs
   boardMembers?: boolean | UserCountOutputTypeCountBoardMembersArgs
-  ownedTickets?: boolean | UserCountOutputTypeCountOwnedTicketsArgs
   createdTickets?: boolean | UserCountOutputTypeCountCreatedTicketsArgs
   assignedTickets?: boolean | UserCountOutputTypeCountAssignedTicketsArgs
   ticketComments?: boolean | UserCountOutputTypeCountTicketCommentsArgs
@@ -3645,13 +3643,6 @@ export type UserCountOutputTypeCountBoardMembersArgs<ExtArgs extends runtime.Typ
 /**
  * UserCountOutputType without action
  */
-export type UserCountOutputTypeCountOwnedTicketsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.TicketWhereInput
-}
-
-/**
- * UserCountOutputType without action
- */
 export type UserCountOutputTypeCountCreatedTicketsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.TicketWhereInput
 }
@@ -3700,7 +3691,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   calendarShare?: boolean | Prisma.User$calendarShareArgs<ExtArgs>
   calendarBusyTimes?: boolean | Prisma.User$calendarBusyTimesArgs<ExtArgs>
   boardMembers?: boolean | Prisma.User$boardMembersArgs<ExtArgs>
-  ownedTickets?: boolean | Prisma.User$ownedTicketsArgs<ExtArgs>
+  privateBoard?: boolean | Prisma.User$privateBoardArgs<ExtArgs>
   createdTickets?: boolean | Prisma.User$createdTicketsArgs<ExtArgs>
   assignedTickets?: boolean | Prisma.User$assignedTicketsArgs<ExtArgs>
   ticketComments?: boolean | Prisma.User$ticketCommentsArgs<ExtArgs>
@@ -3776,7 +3767,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   calendarShare?: boolean | Prisma.User$calendarShareArgs<ExtArgs>
   calendarBusyTimes?: boolean | Prisma.User$calendarBusyTimesArgs<ExtArgs>
   boardMembers?: boolean | Prisma.User$boardMembersArgs<ExtArgs>
-  ownedTickets?: boolean | Prisma.User$ownedTicketsArgs<ExtArgs>
+  privateBoard?: boolean | Prisma.User$privateBoardArgs<ExtArgs>
   createdTickets?: boolean | Prisma.User$createdTicketsArgs<ExtArgs>
   assignedTickets?: boolean | Prisma.User$assignedTicketsArgs<ExtArgs>
   ticketComments?: boolean | Prisma.User$ticketCommentsArgs<ExtArgs>
@@ -3801,7 +3792,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     calendarShare: Prisma.$CalendarSharePayload<ExtArgs> | null
     calendarBusyTimes: Prisma.$CalendarBusyTimePayload<ExtArgs>[]
     boardMembers: Prisma.$BoardMemberPayload<ExtArgs>[]
-    ownedTickets: Prisma.$TicketPayload<ExtArgs>[]
+    privateBoard: Prisma.$BoardPayload<ExtArgs> | null
     createdTickets: Prisma.$TicketPayload<ExtArgs>[]
     assignedTickets: Prisma.$TicketPayload<ExtArgs>[]
     ticketComments: Prisma.$TicketCommentPayload<ExtArgs>[]
@@ -4229,7 +4220,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   calendarShare<T extends Prisma.User$calendarShareArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$calendarShareArgs<ExtArgs>>): Prisma.Prisma__CalendarShareClient<runtime.Types.Result.GetResult<Prisma.$CalendarSharePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   calendarBusyTimes<T extends Prisma.User$calendarBusyTimesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$calendarBusyTimesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CalendarBusyTimePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   boardMembers<T extends Prisma.User$boardMembersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$boardMembersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BoardMemberPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  ownedTickets<T extends Prisma.User$ownedTicketsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$ownedTicketsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TicketPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  privateBoard<T extends Prisma.User$privateBoardArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$privateBoardArgs<ExtArgs>>): Prisma.Prisma__BoardClient<runtime.Types.Result.GetResult<Prisma.$BoardPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   createdTickets<T extends Prisma.User$createdTicketsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$createdTicketsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TicketPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   assignedTickets<T extends Prisma.User$assignedTicketsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$assignedTicketsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TicketPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   ticketComments<T extends Prisma.User$ticketCommentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$ticketCommentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TicketCommentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -4972,27 +4963,22 @@ export type User$boardMembersArgs<ExtArgs extends runtime.Types.Extensions.Inter
 }
 
 /**
- * User.ownedTickets
+ * User.privateBoard
  */
-export type User$ownedTicketsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type User$privateBoardArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
-   * Select specific fields to fetch from the Ticket
+   * Select specific fields to fetch from the Board
    */
-  select?: Prisma.TicketSelect<ExtArgs> | null
+  select?: Prisma.BoardSelect<ExtArgs> | null
   /**
-   * Omit specific fields from the Ticket
+   * Omit specific fields from the Board
    */
-  omit?: Prisma.TicketOmit<ExtArgs> | null
+  omit?: Prisma.BoardOmit<ExtArgs> | null
   /**
    * Choose, which related nodes to fetch as well
    */
-  include?: Prisma.TicketInclude<ExtArgs> | null
-  where?: Prisma.TicketWhereInput
-  orderBy?: Prisma.TicketOrderByWithRelationInput | Prisma.TicketOrderByWithRelationInput[]
-  cursor?: Prisma.TicketWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.TicketScalarFieldEnum | Prisma.TicketScalarFieldEnum[]
+  include?: Prisma.BoardInclude<ExtArgs> | null
+  where?: Prisma.BoardWhereInput
 }
 
 /**

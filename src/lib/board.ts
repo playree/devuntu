@@ -10,12 +10,13 @@
  */
 
 import type { Prisma } from '@/generated/prisma/client'
-import type { TicketStatus } from '@/generated/prisma/enums'
+import type { BoardKind, TicketStatus } from '@/generated/prisma/enums'
 import { errInvalidOperation } from './error'
 import { prisma } from './prisma'
 import {
   evaluateTicketAccess,
   insertAt,
+  PRIVATE_BOARD_NAME,
   reindexLane,
   resolveBoardRole,
   type BoardRole,
@@ -35,10 +36,59 @@ type Db = Prisma.TransactionClient | typeof prisma
 
 export type BoardAccess = {
   boardId: string
+  kind: BoardKind
   role: BoardRole
   /** 直接メンバーか、グループ経由か */
   via: 'member' | 'group'
   archived: boolean
+}
+
+/**
+ * プライベートボード(1ユーザー1つ)を冪等に用意して boardId を返す。
+ *
+ * `/tickets` と `/boards` の入口 Server Action の先頭で呼ぶ。プライベートチケットは
+ * このボードに属するため、これを通さないと `getAccessibleBoardIds` から漏れて
+ * 自分のチケットが 1 件も見えなくなる。
+ *
+ * 一覧と選択肢の取得はクライアントから並行で走るため、同時に create が起きうる。
+ * privateOwnerId の @unique に当たった場合(P2002)は読み直して吸収する。
+ */
+export const ensurePrivateBoard = async (user: { id: string }): Promise<string> => {
+  const found = await prisma.board.findUnique({ where: { privateOwnerId: user.id }, select: { id: true } })
+  if (found) {
+    return found.id
+  }
+
+  try {
+    const created = await prisma.board.create({
+      data: {
+        kind: 'private',
+        privateOwnerId: user.id,
+        // 表示は kind==='private' のときロケールへ差し替えるため、この値は画面に出ない
+        name: PRIVATE_BOARD_NAME,
+        members: { create: { userId: user.id, role: 'owner' } },
+      },
+      select: { id: true },
+    })
+    return created.id
+  } catch (e) {
+    const raced = await prisma.board.findUnique({ where: { privateOwnerId: user.id }, select: { id: true } })
+    if (!raced) {
+      throw e
+    }
+    return raced.id
+  }
+}
+
+/**
+ * ボードの構成変更(名称/説明/アーカイブ/削除/アサイン)が許されるかを検証する。
+ * プライベートボードは 1 ユーザー 1 つの固定構成なので、管理者であっても変更させない。
+ */
+export const assertTeamBoard = async (tx: Db, boardId: string): Promise<void> => {
+  const board = await tx.board.findUnique({ where: { id: boardId }, select: { kind: true } })
+  if (!board || board.kind !== 'team') {
+    throw errInvalidOperation()
+  }
 }
 
 /**
@@ -50,6 +100,7 @@ export const getBoardAccess = async (actor: Actor, boardId: string, tx: Db = pri
     where: { id: boardId },
     select: {
       id: true,
+      kind: true,
       archived: true,
       members: { where: { userId: actor.id }, select: { role: true }, take: 1 },
       groups: {
@@ -69,7 +120,7 @@ export const getBoardAccess = async (actor: Actor, boardId: string, tx: Db = pri
     return null
   }
 
-  return { boardId, role, via: directRole ? 'member' : 'group', archived: board.archived }
+  return { boardId, kind: board.kind, role, via: directRole ? 'member' : 'group', archived: board.archived }
 }
 
 /**
@@ -87,11 +138,11 @@ export const assertBoardAccess = async (
   if (!access) {
     if (need === 'manage' && isAdminActor(actor)) {
       // 管理者はアサインされていないボードでも管理操作のみ可能
-      const board = await tx.board.findUnique({ where: { id: boardId }, select: { archived: true } })
+      const board = await tx.board.findUnique({ where: { id: boardId }, select: { kind: true, archived: true } })
       if (!board) {
         throw errInvalidOperation()
       }
-      return { boardId, role: 'owner', via: 'member', archived: board.archived }
+      return { boardId, kind: board.kind, role: 'owner', via: 'member', archived: board.archived }
     }
     throw errInvalidOperation()
   }
@@ -121,6 +172,7 @@ export const getAccessibleBoardIds = async (
 
 export type BoardListItem = {
   id: string
+  kind: BoardKind
   name: string
   description: string
   archived: boolean
@@ -128,7 +180,10 @@ export type BoardListItem = {
   via: 'member' | 'group'
 }
 
-/** /boards の一覧表示用。自分がアサインされているボードのみをロール付きで返す */
+/**
+ * /boards の一覧表示用。自分がアサインされているボードのみをロール付きで返す。
+ * BoardKind は enum の宣言順(private, team)で比較されるため、kind 昇順でプライベートが先頭に来る。
+ */
 export const listAccessibleBoards = async (
   userId: string,
   opts?: { includeArchived?: boolean },
@@ -140,6 +195,7 @@ export const listAccessibleBoards = async (
     },
     select: {
       id: true,
+      kind: true,
       name: true,
       description: true,
       archived: true,
@@ -150,7 +206,7 @@ export const listAccessibleBoards = async (
         take: 1,
       },
     },
-    orderBy: { name: 'asc' },
+    orderBy: [{ kind: 'asc' }, { name: 'asc' }],
   })
 
   return boards.flatMap(({ members, groups, description, ...board }) => {
@@ -182,9 +238,6 @@ export const countTicketsByBoard = async (
 
   const counts: Record<string, Partial<Record<TicketStatus, number>>> = {}
   for (const row of rows) {
-    if (!row.boardId) {
-      continue
-    }
     const byStatus = counts[row.boardId] ?? {}
     byStatus[row.status] = row._count._all
     counts[row.boardId] = byStatus
@@ -256,13 +309,16 @@ export const assertBoardAssignee = async (tx: Db, boardId: string, assigneeId?: 
 }
 
 /**
- * ボードのアサイン(ユーザー / グループ)を一括同期する。
+ * ユーザー単位のアサイン(BoardMember)を総入れ替えする。owner も実行できる操作。
  * 既存の admin/users と同じ「総入れ替え」方式。呼び出し側でトランザクションを張ること。
+ *
+ * グループ経由メンバーの owner 昇格もこの経路で表現される。
+ * owner に含めれば BoardMember 行ができ、外せば行が消えてグループ経由 member へ戻る。
  */
-export const syncBoardAssignments = async (
+export const syncBoardMembers = async (
   tx: Prisma.TransactionClient,
   boardId: string,
-  { members, groupIds }: { members: { userId: string; role: BoardRole }[]; groupIds: string[] },
+  members: { userId: string; role: BoardRole }[],
 ): Promise<void> => {
   await tx.boardMember.deleteMany({ where: { boardId } })
   if (members.length > 0) {
@@ -270,7 +326,17 @@ export const syncBoardAssignments = async (
       data: members.map(({ userId, role }) => ({ boardId, userId, role })),
     })
   }
+}
 
+/**
+ * グループ単位のアサイン(BoardGroup)を総入れ替えする。
+ * ユーザー単位と権限境界が違う(管理者のみ)ため関数を分けている。
+ */
+export const syncBoardGroups = async (
+  tx: Prisma.TransactionClient,
+  boardId: string,
+  groupIds: string[],
+): Promise<void> => {
   await tx.boardGroup.deleteMany({ where: { boardId } })
   if (groupIds.length > 0) {
     await tx.boardGroup.createMany({ data: groupIds.map((groupId) => ({ boardId, groupId })) })
@@ -298,8 +364,9 @@ export const assertBoardAssignmentTargets = async (
 
 export type TicketAccess = TicketPermission & {
   ticketId: string
-  boardId: string | null
-  ownerId: string | null
+  boardId: string
+  /** プライベートボードかチームボードか。表示名の差し替えに使う */
+  boardKind: BoardKind
   createdById: string | null
   assigneeId: string | null
   status: TicketStatus
@@ -308,7 +375,7 @@ export type TicketAccess = TicketPermission & {
 
 /**
  * チケット 1 件のアクセス実体。
- * boardId の有無(プライベート / ボード)を呼び出し側が意識しなくて済むようにする。
+ * プライベートチケットもプライベートボードに属するため、経路は 1 本で済む。
  */
 export const getTicketAccess = async (
   actor: Actor,
@@ -317,23 +384,27 @@ export const getTicketAccess = async (
 ): Promise<TicketAccess | null> => {
   const ticket = await tx.ticket.findUnique({
     where: { id: ticketId },
-    select: { id: true, boardId: true, ownerId: true, createdById: true, assigneeId: true, status: true },
+    select: { id: true, boardId: true, createdById: true, assigneeId: true, status: true },
   })
   if (!ticket) {
     return null
   }
 
-  const boardRole = ticket.boardId ? ((await getBoardAccess(actor, ticket.boardId, tx))?.role ?? null) : null
+  const access = await getBoardAccess(actor, ticket.boardId, tx)
+  const board = access ?? (await tx.board.findUnique({ where: { id: ticket.boardId }, select: { kind: true } }))
+  if (!board) {
+    // ボードが消えていればチケットも Cascade で消えるため通常は到達しない
+    return null
+  }
+
   const permission = evaluateTicketAccess({
     userId: actor.id,
-    boardId: ticket.boardId,
-    ownerId: ticket.ownerId,
     createdById: ticket.createdById,
-    boardRole,
+    boardRole: access?.role ?? null,
   })
 
   const { id, ...rest } = ticket
-  return { ticketId: id, ...rest, boardRole, ...permission }
+  return { ticketId: id, ...rest, boardKind: board.kind, boardRole: access?.role ?? null, ...permission }
 }
 
 /** レコード単位の認可の入口。NG なら errInvalidOperation() を throw */
@@ -357,22 +428,13 @@ export const assertTicketAccess = async (
 }
 
 /**
- * メンション候補。
- * - プライベートチケット : 所有者本人のみ
- * - ボードチケット       : 直接メンバー ∪ グループ所属ユーザー
+ * メンション候補。そのボードの直接メンバー ∪ グループ所属ユーザー。
+ * プライベートボードではメンバーが本人 1 人なので、自然に本人のみになる。
  */
 export const getTicketMentionCandidates = async (
   access: TicketAccess,
   tx: Db = prisma,
 ): Promise<{ id: string; name: string }[]> => {
-  if (!access.boardId) {
-    if (!access.ownerId) {
-      return []
-    }
-    const owner = await tx.user.findUnique({ where: { id: access.ownerId }, select: { id: true, name: true } })
-    return owner ? [owner] : []
-  }
-
   const users = await getBoardMemberUsers(access.boardId, tx)
   return users.map(({ id, name }) => ({ id, name }))
 }
@@ -388,18 +450,9 @@ export const moveTicketToLane = async (
   tx: Prisma.TransactionClient,
   { access, status, index }: { access: TicketAccess; status: TicketStatus; index?: number },
 ): Promise<{ id: string; status: TicketStatus; order: number }> => {
-  // 同一スコープ(ボード or 自分のプライベート)のレーンを対象にする
-  const scopeWhere = access.boardId
-    ? { boardId: access.boardId }
-    : access.ownerId
-      ? { boardId: null, ownerId: access.ownerId }
-      : null
-  if (!scopeWhere) {
-    throw errInvalidOperation()
-  }
-
+  // レーンは「同一ボード + 同一ステータス」で決まる
   const lane = await tx.ticket.findMany({
-    where: { ...scopeWhere, status },
+    where: { boardId: access.boardId, status },
     select: { id: true },
     orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
   })

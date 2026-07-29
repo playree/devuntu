@@ -19,7 +19,7 @@ export const InputCtrl = <
   isRequired,
   isReadOnly,
   errorMessage,
-  isSlim,
+  isSmart,
   className,
   ...props
 }: InputProps & {
@@ -31,7 +31,7 @@ export const InputCtrl = <
   isRequired?: boolean
   isReadOnly?: boolean
   errorMessage?: string
-  isSlim?: boolean
+  isSmart?: boolean
   className?: string
 }) => {
   const { isRequired: schemaRequired, ...constraints } = constraintSchema
@@ -51,8 +51,8 @@ export const InputCtrl = <
           <Input
             {...constraints}
             {...props}
-            // isSlim: 既定 36px(py-2)を 28px へ。text-sm の行高 20px + 上下 4px
-            className={cn(isSlim ? 'py-1' : '', className)}
+            // isSmart: 既定 36px(py-2)を 28px へ。text-sm の行高 20px + 上下 4px
+            className={cn(isSmart ? 'py-1' : '', className)}
             type={type}
             onChange={
               type === 'number'
@@ -73,7 +73,7 @@ export const InputCtrl = <
             onBlur={onBlur}
             ref={ref}
           />
-          <ErrorMessage className={isSlim ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
+          <ErrorMessage className={isSmart ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
         </TextField>
       )}
     />

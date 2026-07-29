@@ -9,8 +9,7 @@ import { SingleSelectCtrl } from '@/components/general/select-ctrl'
 import { CheckIcon, PencilSquareIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { MarkdownEditor } from '@/components/ticket/markdown-editor'
-import { SelfAssigneeField } from '@/components/ticket/self-assignee-field'
-import { TagInput } from '@/components/ticket/tag-input'
+import { TagSelect, TagSelectOption } from '@/components/ticket/tag-select'
 import { useTicketOptions } from '@/components/ticket/ticket-chip'
 import { parseAction } from '@/lib/action-client'
 import { utcToDateOnly } from '@/lib/day'
@@ -25,18 +24,19 @@ type Ticket = NonNullable<GetTicketReturnType>
 
 /**
  * チケット更新モーダル。
- * ボードの付け替えは行わない(スコープの変更は不変条件に関わるため対象外)。
+ * ボードの付け替えは行わない(担当者・タグの所属が変わるため対象外)。
  */
 export const UpdateModal: FC<
   ModalBaseProps & {
     target: Ticket
-    /** ボードチケットの担当者候補(ボードメンバー) */
+    /** 担当者候補(そのボードのメンバー) */
     assigneeOptions: Record<string, string>
-    /** ログインユーザー。プライベートチケットの担当者表示に使う */
-    me: { id: string; name: string }
-    tagSuggestions: string[]
+    /** タグ候補(そのボードのタグ) */
+    tagOptions: TagSelectOption[]
+    /** タグの新規作成。権限が無ければ渡さない */
+    onCreateTag?: (name: string) => Promise<TagSelectOption | undefined>
   }
-> = ({ state, reload, target, assigneeOptions, me, tagSuggestions }) => {
+> = ({ state, reload, target, assigneeOptions, tagOptions, onCreateTag }) => {
   const { t, fet } = useLocale()
   const { statusOptions, priorityOptions } = useTicketOptions()
 
@@ -54,7 +54,7 @@ export const UpdateModal: FC<
       status: target.status,
       priority: target.priority,
       dueDate: utcToDateOnly(target.dueDate),
-      tags: target.tags,
+      tagIds: target.tags.map((tag) => tag.id),
       assigneeId: target.assigneeId,
     },
   })
@@ -114,25 +114,27 @@ export const UpdateModal: FC<
           />
         </div>
         <div className='col-span-12 md:col-span-6'>
-          {target.boardId ? (
-            <SingleSelectCtrl
-              control={control}
-              name='assigneeId'
-              variant='secondary'
-              groupOptions={assigneeOptions}
-              label={t('assignee')}
-              isClearable
-            />
-          ) : (
-            <SelfAssigneeField userName={me.name} />
-          )}
+          <SingleSelectCtrl
+            control={control}
+            name='assigneeId'
+            variant='secondary'
+            groupOptions={assigneeOptions}
+            label={t('assignee')}
+            isClearable
+          />
         </div>
         <div className='col-span-12 md:col-span-6'>
           <DatePickerCtrl control={control} name='dueDate' label={t('due_date')} errorMessage={fet(errors.dueDate)} />
         </div>
 
         <div className='col-span-12'>
-          <TagInput control={control} name='tags' errorMessage={fet(errors.tags)} suggestions={tagSuggestions} />
+          <TagSelect
+            control={control}
+            name='tagIds'
+            options={tagOptions}
+            errorMessage={fet(errors.tagIds)}
+            onCreate={onCreateTag}
+          />
         </div>
 
         <div className='col-span-12'>

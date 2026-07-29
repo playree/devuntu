@@ -20,7 +20,8 @@ import {
   scUpdateTicketStatus,
   scUUID,
 } from '@/lib/schema'
-import { extractMentionNames, resolveMentionUserIds, resolveTicketAssignee } from '@/lib/task'
+import { assertTagIdsInBoard, syncTicketTags } from '@/lib/tag'
+import { extractMentionNames, resolveMentionUserIds } from '@/lib/task'
 
 /**
  * チケット詳細取得(本文 + コメント + 権限)
@@ -38,13 +39,16 @@ export const getTicket = safeAuthAction
       select: {
         id: true,
         boardId: true,
-        board: { select: { name: true } },
+        board: { select: { name: true, kind: true } },
         title: true,
         content: true,
         status: true,
         priority: true,
         dueDate: true,
-        tags: true,
+        tags: {
+          select: { tag: { select: { id: true, boardId: true, name: true, color: true, order: true } } },
+          orderBy: { tag: { order: 'asc' } },
+        },
         assigneeId: true,
         assignee: { select: { name: true } },
         createdBy: { select: { name: true } },
@@ -76,10 +80,13 @@ export const getTicket = safeAuthAction
         : []
     const nameById = new Map(mentionedUsers.map((u) => [u.id, u.name]))
 
-    const { board, assignee, createdBy, comments, ...rest } = ticket
+    const { board, assignee, createdBy, comments, tags, ...rest } = ticket
     return {
       ...rest,
-      boardName: board?.name ?? '',
+      // 中間テーブルは表示側で扱わないので平坦化する
+      tags: tags.map(({ tag }) => tag),
+      boardName: board.name,
+      boardKind: board.kind,
       assigneeName: assignee?.name ?? '',
       createdByName: createdBy?.name ?? '',
       comments: comments.map(({ author, mentionedUserIds, ...comment }) => ({
@@ -91,7 +98,6 @@ export const getTicket = safeAuthAction
         }),
         isMine: comment.authorId === user.id,
       })),
-      scope: access.scope,
       boardRole: access.boardRole,
       canEdit: access.canEdit,
       canDelete: access.canDelete,
@@ -107,34 +113,24 @@ export type GetTicketReturnType = Awaited<ReturnType<typeof getTicket>>['data']
 export const updateTicket = safeAuthAction
   .metadata({ actionName: 'updateTicket', role: 'user' })
   .inputSchema(scUpdateTicket)
-  .action(async ({ ctx: { user }, parsedInput: { id, status, assigneeId, tags, dueDate, ...rest } }) => {
+  .action(async ({ ctx: { user }, parsedInput: { id, status, assigneeId, tagIds, dueDate, ...rest } }) => {
     const ticket = await prisma.$transaction(async (tx) => {
       const access = await assertTicketAccess(user, id, 'edit', tx)
 
-      if (access.boardId) {
-        // 担当者はそのボードのメンバーに限る
-        await assertBoardAssignee(tx, access.boardId, assigneeId)
-      } else if (assigneeId && assigneeId !== user.id) {
-        // プライベートチケットは他人へ割り当てできない(正常な UI 操作では到達しない)
-        throw errInvalidOperation()
-      }
+      // 担当者・タグはそのボードに属するものに限る(DB 制約では防げない)
+      await assertBoardAssignee(tx, access.boardId, assigneeId)
+      const ids = await assertTagIdsInBoard(tx, access.boardId, tagIds)
 
       const updated = await tx.ticket.update({
         where: { id },
         data: {
           ...rest,
-          tags: [...new Set(tags)],
           dueDate: dateOnlyToUtc(dueDate),
-          // プライベートチケットは所有者本人が自動的に担当者になる
-          // (canEdit の条件により private では ownerId === user.id が保証される)
-          assigneeId: resolveTicketAssignee({
-            boardId: access.boardId,
-            ownerId: access.ownerId ?? user.id,
-            requested: assigneeId,
-          }),
+          assigneeId: assigneeId ?? null,
         },
         select: { id: true, title: true },
       })
+      await syncTicketTags(tx, id, ids)
 
       // ステータスが変わる場合はレーン末尾へ移動する(order の再採番を伴う)
       if (status !== access.status) {

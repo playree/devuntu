@@ -5,6 +5,7 @@ import {
   assertBoardAccess,
   assertBoardAssignee,
   assertTicketAccess,
+  ensurePrivateBoard,
   getAccessibleBoardIds,
   getBoardMemberUsers,
 } from '@/lib/board'
@@ -12,11 +13,15 @@ import { dateOnlyToUtc } from '@/lib/day'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
-import { scCreateTicket, scTicketSearch, scUUID } from '@/lib/schema'
-import { buildTicketWhere, MAX_TICKET_LIST, nextLaneOrder, resolveTicketAssignee, ticketScopeWhere } from '@/lib/task'
+import { scCreateTag, scCreateTicket, scTicketSearch, scUUID } from '@/lib/schema'
+import { assertTagIdsInBoard, listVisibleTags, rethrowDuplicatedTagName } from '@/lib/tag'
+import { buildTicketWhere, MAX_TAGS_PER_SCOPE, MAX_TICKET_LIST, nextLaneOrder, nextTagOrder } from '@/lib/task'
 
-/** タグ候補の収集対象件数(全件走査を避けるための上限) */
-const TAG_SCAN_LIMIT = 500
+/** タグの選択肢として返す列。`lib/tag.ts` の TagOption と一致させる */
+const TAG_SELECT = { id: true, boardId: true, name: true, color: true, order: true } as const
+
+/** チケット一覧・詳細で共有する select。TicketTag を平坦化するために使う */
+const TICKET_TAGS_SELECT = { select: { tag: { select: TAG_SELECT } }, orderBy: { tag: { order: 'asc' } } } as const
 
 /**
  * チケット一覧取得(検索・フィルタ)
@@ -28,7 +33,10 @@ export const getTickets = safeAuthAction
   .metadata({ actionName: 'getTickets', role: 'user' })
   .inputSchema(scTicketSearch)
   .action(async ({ ctx: { user }, parsedInput }) => {
+    // プライベートチケットもボード経由で可視化するため、先にプライベートボードを用意する
+    await ensurePrivateBoard(user)
     const accessibleBoardIds = await getAccessibleBoardIds(user.id)
+
     const tickets = await prisma.ticket.findMany({
       where: buildTicketWhere(parsedInput, { userId: user.id, accessibleBoardIds }),
       select: {
@@ -36,10 +44,10 @@ export const getTickets = safeAuthAction
         title: true,
         status: true,
         priority: true,
-        tags: true,
+        tags: TICKET_TAGS_SELECT,
         dueDate: true,
         boardId: true,
-        board: { select: { name: true } },
+        board: { select: { name: true, kind: true } },
         assigneeId: true,
         assignee: { select: { name: true } },
         _count: { select: { comments: true } },
@@ -50,9 +58,12 @@ export const getTickets = safeAuthAction
       take: MAX_TICKET_LIST,
     })
 
-    return tickets.map(({ board, assignee, _count, ...ticket }) => ({
+    return tickets.map(({ board, assignee, _count, tags, ...ticket }) => ({
       ...ticket,
-      boardName: board?.name ?? '',
+      // 中間テーブルは表示側で扱わないので平坦化する
+      tags: tags.map(({ tag }) => tag),
+      boardName: board.name,
+      boardKind: board.kind,
       assigneeName: assignee?.name ?? '',
       commentCount: _count.comments,
     }))
@@ -62,38 +73,70 @@ export type GetTicketsReturnType = Awaited<ReturnType<typeof getTickets>>['data'
 /**
  * チケットのフォーム / 検索パネル用の選択肢
  *
- * 全ユーザー一覧は返さない(自分と、自分が参加しているボードのメンバーに限定する)。
+ * 全ユーザー一覧は返さない(自分が参加しているボードのメンバーに限定する)。
+ * タグはマスタ(Tag)から引くので、旧実装のようにチケットを走査して逆引きする必要はない。
  */
 export const getTicketFormOptions = safeAuthAction
   .metadata({ actionName: 'getTicketFormOptions', role: 'user' })
   .action(async ({ ctx: { user } }) => {
+    const privateBoardId = await ensurePrivateBoard(user)
     const accessibleBoardIds = await getAccessibleBoardIds(user.id)
 
-    const [boards, tagRows] = await Promise.all([
+    const [boards, tags] = await Promise.all([
       prisma.board.findMany({
         where: { id: { in: accessibleBoardIds } },
-        select: { id: true, name: true },
-        orderBy: { name: 'asc' },
+        select: { id: true, name: true, kind: true },
+        // BoardKind は enum の宣言順で比較されるためプライベートが先頭に来る
+        orderBy: [{ kind: 'asc' }, { name: 'asc' }],
       }),
-      prisma.ticket.findMany({
-        where: ticketScopeWhere(user.id, accessibleBoardIds),
-        select: { tags: true },
-        orderBy: { updatedAt: 'desc' },
-        take: TAG_SCAN_LIMIT,
-      }),
+      listVisibleTags(accessibleBoardIds),
     ])
 
-    return {
-      boards: Object.fromEntries(boards.map((board) => [board.id, board.name])) as Record<string, string>,
-      tags: [...new Set(tagRows.flatMap((row) => row.tags))].sort(),
-      me: { id: user.id, name: user.name },
-    }
+    return { boards, tags, privateBoardId }
   })
 export type GetTicketFormOptionsReturnType = Awaited<ReturnType<typeof getTicketFormOptions>>['data']
 
 /**
- * 担当者の選択肢。ボード未指定(プライベート)なら自分のみ、ボード指定ならそのボードのメンバー。
+ * チケット編集中のタグ新規作成。
+ *
+ * タグの管理(リネーム / 削除 / 統合)は /boards/[id] 側だが、作成だけはチケットを
+ * 書いている流れで必要になるため、メンバー権限で実行できるようにここへ置く。
  */
+export const createTicketTag = safeAuthAction
+  .metadata({ actionName: 'createTicketTag', role: 'user' })
+  .inputSchema(scCreateTag)
+  .action(async ({ ctx: { user }, parsedInput: { boardId, name, color, order } }) => {
+    // タグ作成はメンバーなら可能(リネーム / 削除は manage が必要)
+    await assertBoardAccess(user, boardId, 'view')
+
+    // 同名が既にあればそれを返す(UI 上は作成せず選択だけさせたい)
+    const existing = await prisma.tag.findUnique({ where: { boardId_name: { boardId, name } }, select: TAG_SELECT })
+    if (existing) {
+      return existing
+    }
+
+    const tags = await prisma.tag.findMany({ where: { boardId }, select: { order: true } })
+    if (tags.length >= MAX_TAGS_PER_SCOPE) {
+      throw errInvalidOperation()
+    }
+
+    // トランザクションにしないのは、PostgreSQL では一意制約違反でトランザクション全体が
+    // 中断され、同じ tx 内で既存タグを読み直せなくなるため
+    const tag = await prisma.tag
+      .create({
+        data: { boardId, name, color, order: order || nextTagOrder(tags.map((row) => row.order)) },
+        select: TAG_SELECT,
+      })
+      .catch(async (e) => {
+        const raced = await prisma.tag.findUnique({ where: { boardId_name: { boardId, name } }, select: TAG_SELECT })
+        return raced ?? rethrowDuplicatedTagName(e)
+      })
+
+    logger.info({ userId: user.id, tag }, 'tag created')
+    return tag
+  })
+
+/** 担当者の選択肢。そのボードのメンバー(プライベートボードなら本人のみ) */
 export const getAssigneeOptions = safeAuthAction
   .metadata({ actionName: 'getAssigneeOptions', role: 'user' })
   .inputSchema(scUUID)
@@ -105,42 +148,35 @@ export const getAssigneeOptions = safeAuthAction
 export type GetAssigneeOptionsReturnType = Awaited<ReturnType<typeof getAssigneeOptions>>['data']
 
 /**
- * チケット作成(プライベート / ボードの両方)
+ * チケット作成
  *
- * 不変条件 `(boardId IS NULL) XOR (ownerId IS NULL)` はここで保証する。
+ * プライベートもプライベートボードに属するため経路は 1 本。
+ * 担当者・タグがそのボードに属することは DB 制約では防げないのでここで検証する。
  */
 export const createTicket = safeAuthAction
   .metadata({ actionName: 'createTicket', role: 'user' })
   .inputSchema(scCreateTicket)
-  .action(async ({ ctx: { user }, parsedInput: { boardId, status, assigneeId, tags, dueDate, ...rest } }) => {
+  .action(async ({ ctx: { user }, parsedInput: { boardId, status, assigneeId, tagIds, dueDate, ...rest } }) => {
     const ticket = await prisma.$transaction(async (tx) => {
-      if (boardId) {
-        // 参加しているボードのみ
-        await assertBoardAccess(user, boardId, 'view', tx)
-        // 担当者はそのボードのメンバーに限る
-        await assertBoardAssignee(tx, boardId, assigneeId)
-      } else if (assigneeId && assigneeId !== user.id) {
-        // プライベートチケットは他人へ割り当てできない(正常な UI 操作では到達しない)
-        throw errInvalidOperation()
-      }
+      // 参加しているボードのみ
+      await assertBoardAccess(user, boardId, 'view', tx)
+      // 担当者はそのボードのメンバーに限る
+      await assertBoardAssignee(tx, boardId, assigneeId)
+      // タグもそのボードのものに限る
+      const ids = await assertTagIdsInBoard(tx, boardId, tagIds)
 
       // 対象レーンの末尾へ追加する
-      const lane = await tx.ticket.findMany({
-        where: boardId ? { boardId, status } : { boardId: null, ownerId: user.id, status },
-        select: { order: true },
-      })
+      const lane = await tx.ticket.findMany({ where: { boardId, status }, select: { order: true } })
 
       return tx.ticket.create({
         data: {
           ...rest,
           status,
-          tags: [...new Set(tags)],
+          boardId,
           dueDate: dateOnlyToUtc(dueDate),
-          boardId: boardId ?? null,
-          ownerId: boardId ? null : user.id,
           createdById: user.id,
-          // プライベートチケットは所有者本人が自動的に担当者になる
-          assigneeId: resolveTicketAssignee({ boardId: boardId ?? null, ownerId: user.id, requested: assigneeId }),
+          assigneeId: assigneeId ?? null,
+          tags: { create: ids.map((tagId) => ({ tagId })) },
           order: nextLaneOrder(lane.map((row) => row.order)),
         },
         select: { id: true, title: true },

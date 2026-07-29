@@ -3,10 +3,10 @@
 import { MultiButton } from '@/components/general/button'
 import { GridBox } from '@/components/general/grid'
 import { MagnifyingGlassIcon } from '@/components/icon'
-import { useTicketOptions } from '@/components/ticket/ticket-chip'
-import type { TicketPriority, TicketStatus } from '@/generated/prisma/enums'
+import { TagChip, useTicketOptions } from '@/components/ticket/ticket-chip'
+import type { BoardKind, TagColor, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
 import { TicketSearch } from '@/lib/schema'
-import { TICKET_PRIORITIES, TICKET_STATUSES } from '@/lib/task'
+import { dedupeTagOptionsByName, TICKET_PRIORITIES, TICKET_STATUSES } from '@/lib/task'
 import { useLocale } from '@/locale/client'
 import { Chip, Input, Label, ListBox, Select } from '@heroui/react'
 import { FC, KeyboardEvent, useState } from 'react'
@@ -17,14 +17,12 @@ export const emptyTicketFilter: TicketSearch = {
   status: [],
   priority: [],
   tags: [],
-  scope: 'all',
   boardId: null,
   assignee: 'any',
 }
 
-/** 対象(スコープ)の Select は all / private / 各ボードID を 1 つの値として扱う */
-const SCOPE_ALL = 'all'
-const SCOPE_PRIVATE = 'private'
+/** 対象の Select で「すべてのボード」を表す値(boardId = null に対応) */
+const BOARD_ALL = 'all'
 
 const toggle = <T,>(values: T[], value: T): T[] =>
   values.includes(value) ? values.filter((v) => v !== value) : [...values, value]
@@ -50,19 +48,23 @@ const FilterChip: FC<{ label: string; isActive: boolean; onToggle: () => void }>
 export const TicketSearchPanel: FC<{
   filter: TicketSearch
   onChange: (filter: TicketSearch) => void
-  boards: Record<string, string>
-  tags: string[]
+  /** 表示名は呼び出し側で解決済み(プライベートはロケール名) */
+  boards: { id: string; name: string; kind: BoardKind }[]
+  tags: { id: string; boardId: string; name: string; color: TagColor }[]
 }> = ({ filter, onChange, boards, tags }) => {
   const { t } = useLocale()
   const { statusOptions, priorityOptions } = useTicketOptions()
   const [keyword, setKeyword] = useState(filter.keyword)
 
-  const scopeOptions: Record<string, string> = {
-    [SCOPE_ALL]: t('all'),
-    [SCOPE_PRIVATE]: t('private'),
-    ...boards,
+  const boardOptions: Record<string, string> = {
+    [BOARD_ALL]: t('all'),
+    ...Object.fromEntries(boards.map((board) => [board.id, board.name])),
   }
-  const scopeValue = filter.scope === 'board' && filter.boardId ? filter.boardId : filter.scope
+
+  // 絞り込み対象のボードのタグだけを出し、同名(別ボード)は 1 チップに畳む
+  const tagChoices = dedupeTagOptionsByName(
+    filter.boardId ? tags.filter((tag) => tag.boardId === filter.boardId) : tags,
+  )
 
   const assigneeOptions: Record<string, string> = {
     any: t('all'),
@@ -101,14 +103,10 @@ export const TicketSearchPanel: FC<{
         <Select
           selectionMode='single'
           variant='secondary'
-          value={scopeValue}
+          value={filter.boardId ?? BOARD_ALL}
           onChange={(key) => {
-            const value = key?.toString() ?? SCOPE_ALL
-            if (value === SCOPE_ALL || value === SCOPE_PRIVATE) {
-              onChange({ ...filter, scope: value, boardId: null })
-            } else {
-              onChange({ ...filter, scope: 'board', boardId: value })
-            }
+            const value = key?.toString() ?? BOARD_ALL
+            onChange({ ...filter, boardId: value === BOARD_ALL ? null : value })
           }}
         >
           <Label>{t('ticket_scope')}</Label>
@@ -118,7 +116,7 @@ export const TicketSearchPanel: FC<{
           </Select.Trigger>
           <Select.Popover>
             <ListBox selectionMode='single'>
-              {Object.entries(scopeOptions).map(([id, name]) => (
+              {Object.entries(boardOptions).map(([id, name]) => (
                 <ListBox.Item key={id} id={id} textValue={name}>
                   {name}
                   <ListBox.ItemIndicator />
@@ -182,16 +180,17 @@ export const TicketSearchPanel: FC<{
         </div>
       </div>
 
-      {tags.length > 0 && (
+      {tagChoices.length > 0 && (
         <div className='col-span-12'>
           <Label>{t('tags')}</Label>
           <div className='flex flex-wrap gap-1 pt-1'>
-            {tags.map((tag) => (
-              <FilterChip
-                key={tag}
-                label={tag}
-                isActive={filter.tags.includes(tag)}
-                onToggle={() => onChange({ ...filter, tags: toggle(filter.tags, tag) })}
+            {tagChoices.map((tag) => (
+              <TagChip
+                key={tag.id}
+                tag={tag}
+                // トグルの値は tagId ではなく名前(ボード横断でも同名を 1 条件にまとめる)
+                className={filter.tags.includes(tag.name) ? 'cursor-pointer' : 'cursor-pointer opacity-50'}
+                onClick={() => onChange({ ...filter, tags: toggle(filter.tags, tag.name) })}
               />
             ))}
           </div>

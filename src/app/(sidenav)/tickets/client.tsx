@@ -9,7 +9,7 @@ import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
 import { ArrowPathIcon, ArrowTopRightOnSquareIcon, ChatBubbleIcon, PlusIcon, TicketIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
-import { PriorityChip, StatusChip, TagChips } from '@/components/ticket/ticket-chip'
+import { PriorityChip, StatusChip, TagChips, useBoardName } from '@/components/ticket/ticket-chip'
 import { parseAction } from '@/lib/action-client'
 import { dayformat } from '@/lib/day'
 import { TicketSearch } from '@/lib/schema'
@@ -29,6 +29,7 @@ export const TicketsClient: FC = () => {
   const { t } = useLocale()
   const tz = useUserTimezone()
   const router = useRouter()
+  const boardName = useBoardName()
   const addModalState = useModalState()
 
   const [filter, setFilter] = useState<TicketSearch>(emptyTicketFilter)
@@ -90,7 +91,7 @@ export const TicketsClient: FC = () => {
               <TicketSearchPanel
                 filter={filter}
                 onChange={applyFilter}
-                boards={options?.boards ?? {}}
+                boards={(options?.boards ?? []).map((board) => ({ ...board, name: boardName(board) }))}
                 tags={options?.tags ?? []}
               />
             </Accordion.Body>
@@ -122,7 +123,7 @@ export const TicketsClient: FC = () => {
               <div className='flex flex-col gap-0.5'>
                 <span className='truncate'>{item.title}</span>
                 <span className='flex items-center gap-2 text-xs text-gray-500'>
-                  {item.boardName ? item.boardName : t('private')}
+                  {boardName({ name: item.boardName, kind: item.boardKind })}
                   {item.commentCount > 0 && (
                     <span className='flex items-center gap-0.5'>
                       <ChatBubbleIcon width={12} />
@@ -174,7 +175,7 @@ export const TicketsClient: FC = () => {
           reload={reloadAll}
           key={addModalState.key}
           options={options}
-          defaultBoardId={filter.scope === 'board' ? filter.boardId : null}
+          defaultBoardId={filter.boardId}
         />
       )}
     </FlexCol>

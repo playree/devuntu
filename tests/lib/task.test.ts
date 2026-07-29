@@ -22,9 +22,9 @@ import {
   reindexLane,
   resolveBoardRole,
   resolveMentionUserIds,
-  resolveTicketAssignee,
   splitKeywords,
   stripCodeSpans,
+  tagNameWhere,
   TICKET_STATUSES,
   ticketScopeWhere,
   type BoardRole,
@@ -54,60 +54,36 @@ describe('resolveBoardRole: ボードの実効ロール解決', () => {
   }
 })
 
-describe('evaluateTicketAccess: private/board を統一的に判定する', () => {
-  const base = { boardId: null, ownerId: null, createdById: null, boardRole: null } as const
-
-  it('private: 所有者本人はすべて可能', () => {
-    const res = evaluateTicketAccess({ ...base, userId: 'u1', ownerId: 'u1' })
-    expect(res).toEqual({ scope: 'private', canView: true, canEdit: true, canDelete: true })
+describe('evaluateTicketAccess: ボードのロールから権限を決める', () => {
+  // プライベートチケットもプライベートボード(本人が owner)に属するため、
+  // 「本人のみ全操作可」は boardRole='owner' のケースでそのまま担保される
+  it('owner は削除まで可能', () => {
+    const res = evaluateTicketAccess({ userId: 'u1', createdById: 'u9', boardRole: 'owner' })
+    expect(res).toEqual({ canView: true, canEdit: true, canDelete: true })
   })
 
-  it('private: 他人は一切不可', () => {
-    const res = evaluateTicketAccess({ ...base, userId: 'u2', ownerId: 'u1' })
-    expect(res).toEqual({ scope: 'private', canView: false, canEdit: false, canDelete: false })
-  })
-
-  it('private: ownerId が null なら(データ不整合)アクセス不可', () => {
-    const res = evaluateTicketAccess({ ...base, userId: 'u1', ownerId: null })
-    expect(res.canView, 'ownerId が無いチケットは誰にも見せない').toBe(false)
-  })
-
-  it('board: owner は削除まで可能', () => {
-    const res = evaluateTicketAccess({
-      userId: 'u1',
-      boardId: 'b1',
-      ownerId: null,
-      createdById: 'u9',
-      boardRole: 'owner',
+  it('プライベートボード相当(自分が owner かつ作成者)は全操作可', () => {
+    const res = evaluateTicketAccess({ userId: 'u1', createdById: 'u1', boardRole: 'owner' })
+    expect(res, 'プライベートチケットの従来挙動と一致する').toEqual({
+      canView: true,
+      canEdit: true,
+      canDelete: true,
     })
-    expect(res).toEqual({ scope: 'board', canView: true, canEdit: true, canDelete: true })
   })
 
-  it('board: member かつ作成者なら削除可能', () => {
-    const res = evaluateTicketAccess({
-      userId: 'u1',
-      boardId: 'b1',
-      ownerId: null,
-      createdById: 'u1',
-      boardRole: 'member',
-    })
+  it('member かつ作成者なら削除可能', () => {
+    const res = evaluateTicketAccess({ userId: 'u1', createdById: 'u1', boardRole: 'member' })
     expect(res.canDelete, '自分が作成したチケットは削除できる').toBe(true)
   })
 
-  it('board: member かつ非作成者は削除不可(閲覧・編集は可能)', () => {
-    const res = evaluateTicketAccess({
-      userId: 'u1',
-      boardId: 'b1',
-      ownerId: null,
-      createdById: 'u9',
-      boardRole: 'member',
-    })
-    expect(res).toEqual({ scope: 'board', canView: true, canEdit: true, canDelete: false })
+  it('member かつ非作成者は削除不可(閲覧・編集は可能)', () => {
+    const res = evaluateTicketAccess({ userId: 'u1', createdById: 'u9', boardRole: 'member' })
+    expect(res).toEqual({ canView: true, canEdit: true, canDelete: false })
   })
 
-  it('board: 非メンバー(boardRole=null)は作成者でも一切不可', () => {
-    const res = evaluateTicketAccess({ userId: 'u1', boardId: 'b1', ownerId: null, createdById: 'u1', boardRole: null })
-    expect(res).toEqual({ scope: 'board', canView: false, canEdit: false, canDelete: false })
+  it('非メンバー(boardRole=null)は作成者でも一切不可', () => {
+    const res = evaluateTicketAccess({ userId: 'u1', createdById: 'u1', boardRole: null })
+    expect(res).toEqual({ canView: false, canEdit: false, canDelete: false })
   })
 })
 
@@ -142,33 +118,6 @@ describe('mergeBoardMembers / canApplyAssignments: ボードのアサイン', ()
     expect(canApplyAssignments({ ownerIds: [], byAdmin: false }), 'owner 操作では拒否').toBe(false)
     expect(canApplyAssignments({ ownerIds: [], byAdmin: true }), '管理者操作では許可').toBe(true)
     expect(canApplyAssignments({ ownerIds: ['u1'], byAdmin: false }), 'owner が 1 人以上なら許可').toBe(true)
-  })
-})
-
-describe('resolveTicketAssignee: 担当者の保存値を決める', () => {
-  it('プライベート: 未指定なら所有者が自動で担当者になる', () => {
-    expect(resolveTicketAssignee({ boardId: null, ownerId: 'u1' })).toBe('u1')
-    expect(resolveTicketAssignee({ boardId: null, ownerId: 'u1', requested: null })).toBe('u1')
-  })
-
-  it('プライベート: 自分を指定しても所有者になる', () => {
-    expect(resolveTicketAssignee({ boardId: null, ownerId: 'u1', requested: 'u1' })).toBe('u1')
-  })
-
-  it('プライベート: 他人を指定しても所有者へ強制される', () => {
-    expect(
-      resolveTicketAssignee({ boardId: null, ownerId: 'u1', requested: 'u2' }),
-      'プライベートチケットは所有者以外に割り当てられない',
-    ).toBe('u1')
-  })
-
-  it('ボード: 未指定なら未割り当て(null)', () => {
-    expect(resolveTicketAssignee({ boardId: 'b1', ownerId: 'u1' })).toBeNull()
-    expect(resolveTicketAssignee({ boardId: 'b1', ownerId: 'u1', requested: null })).toBeNull()
-  })
-
-  it('ボード: 指定された担当者をそのまま使う(所有者へ寄せない)', () => {
-    expect(resolveTicketAssignee({ boardId: 'b1', ownerId: 'u1', requested: 'u2' })).toBe('u2')
   })
 })
 
@@ -210,14 +159,16 @@ describe('splitKeywords: キーワードの分解', () => {
 })
 
 describe('ticketScopeWhere: 可視スコープの where 断片', () => {
-  it('参加ボードがある場合はプライベートとの OR になる', () => {
-    expect(ticketScopeWhere('u1', ['b1', 'b2'])).toEqual({
-      OR: [{ boardId: null, ownerId: 'u1' }, { boardId: { in: ['b1', 'b2'] } }],
-    })
+  it('可視ボードの in 条件になる(プライベートボードも含まれる)', () => {
+    expect(ticketScopeWhere(['b1', 'b2'])).toEqual({ boardId: { in: ['b1', 'b2'] } })
   })
 
-  it('参加ボードが無い場合はプライベートのみ', () => {
-    expect(ticketScopeWhere('u1', [])).toEqual({ OR: [{ boardId: null, ownerId: 'u1' }] })
+  it('可視ボードが無ければ 0 件になる', () => {
+    // 旧実装は boardId=null の OR があったため空でも自分のチケットが見えたが、
+    // 現在はプライベートボードが accessibleBoardIds に含まれていることが前提
+    expect(ticketScopeWhere([]), 'ensurePrivateBoard を先に通していないと 0 件になる').toEqual({
+      boardId: { in: [] },
+    })
   })
 })
 
@@ -227,7 +178,6 @@ describe('buildTicketWhere: 検索条件から Prisma where を組む', () => {
     status: [],
     priority: [],
     tags: [],
-    scope: 'all',
     boardId: null,
     assignee: 'any',
   }
@@ -236,26 +186,21 @@ describe('buildTicketWhere: 検索条件から Prisma where を組む', () => {
   it('条件なしなら可視スコープのみ', () => {
     const res = buildTicketWhere(emptyParams, ctx)
     expect(res.AND, '可視スコープの 1 条件だけになる').toHaveLength(1)
-    expect((res.AND as object[])[0]).toEqual(ticketScopeWhere('u1', ['b1', 'b2']))
+    expect((res.AND as object[])[0]).toEqual(ticketScopeWhere(['b1', 'b2']))
   })
 
-  it('scope=private なら自分のプライベートチケットに限定する', () => {
-    const res = buildTicketWhere({ ...emptyParams, scope: 'private' }, ctx)
-    expect((res.AND as object[])[0]).toEqual({ boardId: null, ownerId: 'u1' })
-  })
-
-  it('scope=board なら可視ボード全体に限定する', () => {
-    const res = buildTicketWhere({ ...emptyParams, scope: 'board' }, ctx)
+  it('boardId 未指定なら可視ボード全体に限定する', () => {
+    const res = buildTicketWhere(emptyParams, ctx)
     expect((res.AND as object[])[0]).toEqual({ boardId: { in: ['b1', 'b2'] } })
   })
 
-  it('scope=board + boardId 指定は可視ボードとの交差を取る', () => {
-    const res = buildTicketWhere({ ...emptyParams, scope: 'board', boardId: 'b1' }, ctx)
+  it('boardId 指定は可視ボードとの交差を取る', () => {
+    const res = buildTicketWhere({ ...emptyParams, boardId: 'b1' }, ctx)
     expect((res.AND as object[])[0]).toEqual({ boardId: { in: ['b1'] } })
   })
 
   it('可視外の boardId を指定しても他ボードは見えない(0 件になる)', () => {
-    const res = buildTicketWhere({ ...emptyParams, scope: 'board', boardId: 'other' }, ctx)
+    const res = buildTicketWhere({ ...emptyParams, boardId: 'other' }, ctx)
     expect((res.AND as object[])[0], '交差が空になるため 0 件').toEqual({ boardId: { in: [] } })
   })
 
@@ -272,13 +217,13 @@ describe('buildTicketWhere: 検索条件から Prisma where を組む', () => {
       OR: [
         { title: { contains: 'foo', mode: 'insensitive' } },
         { content: { contains: 'foo', mode: 'insensitive' } },
-        { tags: { has: 'foo' } },
+        { tags: { some: { tag: { name: { equals: 'foo', mode: 'insensitive' } } } } },
         { comments: { some: { content: { contains: 'foo', mode: 'insensitive' } } } },
       ],
     })
   })
 
-  it('status / priority は in、tags は hasEvery(すべて含む)', () => {
+  it('status / priority は in、タグは名前ごとに独立した some(= AND)になる', () => {
     const res = buildTicketWhere(
       { ...emptyParams, status: ['todo', 'doing'], priority: ['high'], tags: ['bug', 'ui'] },
       ctx,
@@ -286,7 +231,22 @@ describe('buildTicketWhere: 検索条件から Prisma where を組む', () => {
     const and = res.AND as object[]
     expect(and).toContainEqual({ status: { in: ['todo', 'doing'] } })
     expect(and).toContainEqual({ priority: { in: ['high'] } })
-    expect(and, 'タグは AND 条件(hasEvery)').toContainEqual({ tags: { hasEvery: ['bug', 'ui'] } })
+    // 退行防止: 1 つの some に name: { in: [...] } を渡すと OR(hasSome) になってしまうため、
+    // タグは必ず 1 件 = 1 条件に分けること
+    expect(and, 'bug の EXISTS 条件').toContainEqual(tagNameWhere('bug'))
+    expect(and, 'ui の EXISTS 条件').toContainEqual(tagNameWhere('ui'))
+    expect(and, 'スコープ + status + priority + タグ 2 件').toHaveLength(5)
+  })
+
+  it('同名タグの重複指定は 1 条件に畳まれる', () => {
+    const res = buildTicketWhere({ ...emptyParams, tags: ['bug', 'bug', ' bug '] }, ctx)
+    expect(res.AND, 'スコープ + タグ 1 件').toHaveLength(2)
+    expect((res.AND as object[])[1]).toEqual(tagNameWhere('bug'))
+  })
+
+  it('tags が空ならタグ条件を付けない', () => {
+    const res = buildTicketWhere({ ...emptyParams, tags: [] }, ctx)
+    expect(res.AND).toHaveLength(1)
   })
 
   it('assignee=me は自分、assignee=none は未割り当てに絞る', () => {

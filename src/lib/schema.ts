@@ -1,5 +1,6 @@
 import { el } from '@/locale'
 import { z } from 'zod'
+import { MAX_TAG_NAME, MAX_TICKET_TAGS, TAG_COLORS } from './task'
 
 const reHalfString = /^[a-zA-Z0-9!-/:-@¥[-`{-~ ]*$/
 
@@ -197,8 +198,16 @@ export type UpdateGoogleAccountSettings = z.infer<typeof scUpdateGoogleAccountSe
 
 export const zTicketTitle = z.string().trim().min(1, el('@required_field')).max(120, el('@invalid_title'))
 export const zTicketContent = z.string().max(20000, el('@invalid_content'))
-export const zTag = z.string().trim().min(1, el('@invalid_tag')).max(20, el('@invalid_tag'))
-export const zTags = z.array(zTag).max(10, el('@invalid_tag'))
+
+/** タグ名。表示用の文字列。検索条件でも使う */
+export const zTagName = z.string().trim().min(1, el('@invalid_tag')).max(MAX_TAG_NAME, el('@invalid_tag'))
+/** タグの色。TAG_COLORS(task.ts) を単一ソースにする */
+export const zTagColor = z.enum(TAG_COLORS)
+/** タグの表示順 */
+export const zTagOrder = z.number().int().min(0).max(999)
+/** チケットへ付けるタグ。名前配列との取り違えを型で防ぐためフィールド名も tagIds にする */
+export const zTagIds = z.array(z.uuidv7()).max(MAX_TICKET_TAGS, el('@invalid_tag'))
+
 export const zTicketStatus = z.enum(['backlog', 'todo', 'doing', 'done'])
 export const zTicketPriority = z.enum(['urgent', 'high', 'medium', 'low'])
 export const zCommentContent = z.string().trim().min(1, el('@required_field')).max(5000, el('@invalid_content'))
@@ -209,13 +218,14 @@ export const zBoardRole = z.enum(['owner', 'member'])
 export const zDueDate = z.iso.date().nullish()
 
 export const scCreateTicket = z.object({
-  boardId: z.uuidv7().nullish(),
+  // プライベートも必ずボードに属するため必須。既定値はプライベートボード
+  boardId: z.uuidv7(),
   title: zTicketTitle,
   content: zTicketContent.optional(),
   status: zTicketStatus.default('todo'),
   priority: zTicketPriority.nullish(),
   dueDate: zDueDate,
-  tags: zTags.default([]),
+  tagIds: zTagIds.default([]),
   assigneeId: z.uuidv7().nullish(),
 })
 export type CreateTicket = z.infer<typeof scCreateTicket>
@@ -246,8 +256,9 @@ export const scTicketSearch = z.object({
   keyword: z.string().trim().max(100).default(''),
   status: z.array(zTicketStatus).default([]),
   priority: z.array(zTicketPriority).default([]),
-  tags: z.array(zTag).default([]),
-  scope: z.enum(['all', 'private', 'board']).default('all'),
+  /** タグは名前で絞り込む。ボード横断時に同名タグが分裂しないようにするため */
+  tags: z.array(zTagName).max(MAX_TICKET_TAGS).default([]),
+  /** null = 可視ボード全体。プライベートも 1 つのボードとして指定する */
   boardId: z.uuidv7().nullish(),
   assignee: z.enum(['any', 'me', 'none']).default('any'),
 })
@@ -281,14 +292,55 @@ export const scUpdateBoard = z.object({
 export type UpdateBoard = z.infer<typeof scUpdateBoard>
 
 /**
- * ボードのアサイン。既存の MultiSelectCtrl(Record<string,string> + string[]) を再利用するため
- * owner / member を 2 つの多重選択に分け、サーバー側で mergeBoardMembers でマージする。
+ * ユーザー単位のアサイン(owner も実行可能)。
+ * 既存の MultiSelectCtrl(Record<string,string> + string[]) を再利用するため owner / member を
+ * 2 つの多重選択に分け、サーバー側で mergeBoardMembers でマージする。
  */
-export const scSetBoardAssignments = z.object({
+export const scSetBoardMembers = z.object({
   id: z.uuidv7(),
   ownerIds: z.array(z.uuidv7()).default([]),
   memberIds: z.array(z.uuidv7()).default([]),
+})
+export type SetBoardMembers = z.infer<typeof scSetBoardMembers>
+export type SetBoardMembersIn = z.input<typeof scSetBoardMembers>
+
+/** グループ単位のアサイン(管理者のみ)。権限境界が違うためユーザー単位と分けている */
+export const scSetBoardGroups = z.object({
+  id: z.uuidv7(),
   groupIds: z.array(z.uuidv7()).default([]),
 })
-export type SetBoardAssignments = z.infer<typeof scSetBoardAssignments>
-export type SetBoardAssignmentsIn = z.input<typeof scSetBoardAssignments>
+export type SetBoardGroups = z.infer<typeof scSetBoardGroups>
+export type SetBoardGroupsIn = z.input<typeof scSetBoardGroups>
+
+/* -------------------------------------------------------------------------------------------------
+ * タグ
+ * -----------------------------------------------------------------------------------------------*/
+
+/** タグはボードに属する。プライベートタグもプライベートボードの boardId を指定する */
+export const scCreateTag = z.object({
+  boardId: z.uuidv7(),
+  name: zTagName,
+  color: zTagColor.default('gray'),
+  order: zTagOrder.default(0),
+})
+export type CreateTag = z.infer<typeof scCreateTag>
+export type CreateTagIn = z.input<typeof scCreateTag>
+export type CreateTagOut = z.output<typeof scCreateTag>
+
+export const scUpdateTag = z.object({
+  id: z.uuidv7(),
+  name: zTagName,
+  color: zTagColor,
+  order: zTagOrder,
+})
+export type UpdateTag = z.infer<typeof scUpdateTag>
+export type UpdateTagIn = z.input<typeof scUpdateTag>
+export type UpdateTagOut = z.output<typeof scUpdateTag>
+
+/** タグ統合。同一ボード内のみ許可する(検証はサーバー側の mergeTags) */
+export const scMergeTags = z.object({
+  boardId: z.uuidv7(),
+  sourceId: z.uuidv7(),
+  targetId: z.uuidv7(),
+})
+export type MergeTags = z.infer<typeof scMergeTags>

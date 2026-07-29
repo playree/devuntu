@@ -70,6 +70,8 @@ export const ModelName = {
   CalendarShare: 'CalendarShare',
   CalendarBusyTime: 'CalendarBusyTime',
   Board: 'Board',
+  Tag: 'Tag',
+  TicketTag: 'TicketTag',
   BoardMember: 'BoardMember',
   BoardGroup: 'BoardGroup',
   Ticket: 'Ticket',
@@ -366,6 +368,8 @@ export type CalendarBusyTimeScalarFieldEnum = (typeof CalendarBusyTimeScalarFiel
 
 export const BoardScalarFieldEnum = {
   id: 'id',
+  kind: 'kind',
+  privateOwnerId: 'privateOwnerId',
   name: 'name',
   description: 'description',
   archived: 'archived',
@@ -374,6 +378,29 @@ export const BoardScalarFieldEnum = {
 } as const
 
 export type BoardScalarFieldEnum = (typeof BoardScalarFieldEnum)[keyof typeof BoardScalarFieldEnum]
+
+
+export const TagScalarFieldEnum = {
+  id: 'id',
+  boardId: 'boardId',
+  name: 'name',
+  color: 'color',
+  order: 'order',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TagScalarFieldEnum = (typeof TagScalarFieldEnum)[keyof typeof TagScalarFieldEnum]
+
+
+export const TicketTagScalarFieldEnum = {
+  id: 'id',
+  ticketId: 'ticketId',
+  tagId: 'tagId',
+  createdAt: 'createdAt'
+} as const
+
+export type TicketTagScalarFieldEnum = (typeof TicketTagScalarFieldEnum)[keyof typeof TicketTagScalarFieldEnum]
 
 
 export const BoardMemberScalarFieldEnum = {
@@ -400,7 +427,6 @@ export type BoardGroupScalarFieldEnum = (typeof BoardGroupScalarFieldEnum)[keyof
 export const TicketScalarFieldEnum = {
   id: 'id',
   boardId: 'boardId',
-  ownerId: 'ownerId',
   createdById: 'createdById',
   assigneeId: 'assigneeId',
   title: 'title',
@@ -408,7 +434,6 @@ export const TicketScalarFieldEnum = {
   status: 'status',
   priority: 'priority',
   dueDate: 'dueDate',
-  tags: 'tags',
   order: 'order',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'

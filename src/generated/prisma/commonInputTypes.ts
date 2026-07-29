@@ -317,6 +317,40 @@ export type JsonWithAggregatesFilterBase<$PrismaModel = never> = {
   _max?: Prisma.NestedJsonFilter<$PrismaModel>
 }
 
+export type EnumBoardKindFilter<$PrismaModel = never> = {
+  equals?: $Enums.BoardKind | Prisma.EnumBoardKindFieldRefInput<$PrismaModel>
+  in?: $Enums.BoardKind[] | Prisma.ListEnumBoardKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.BoardKind[] | Prisma.ListEnumBoardKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumBoardKindFilter<$PrismaModel> | $Enums.BoardKind
+}
+
+export type EnumBoardKindWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.BoardKind | Prisma.EnumBoardKindFieldRefInput<$PrismaModel>
+  in?: $Enums.BoardKind[] | Prisma.ListEnumBoardKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.BoardKind[] | Prisma.ListEnumBoardKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumBoardKindWithAggregatesFilter<$PrismaModel> | $Enums.BoardKind
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumBoardKindFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumBoardKindFilter<$PrismaModel>
+}
+
+export type EnumTagColorFilter<$PrismaModel = never> = {
+  equals?: $Enums.TagColor | Prisma.EnumTagColorFieldRefInput<$PrismaModel>
+  in?: $Enums.TagColor[] | Prisma.ListEnumTagColorFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TagColor[] | Prisma.ListEnumTagColorFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTagColorFilter<$PrismaModel> | $Enums.TagColor
+}
+
+export type EnumTagColorWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TagColor | Prisma.EnumTagColorFieldRefInput<$PrismaModel>
+  in?: $Enums.TagColor[] | Prisma.ListEnumTagColorFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TagColor[] | Prisma.ListEnumTagColorFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTagColorWithAggregatesFilter<$PrismaModel> | $Enums.TagColor
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTagColorFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTagColorFilter<$PrismaModel>
+}
+
 export type EnumBoardMemberRoleFilter<$PrismaModel = never> = {
   equals?: $Enums.BoardMemberRole | Prisma.EnumBoardMemberRoleFieldRefInput<$PrismaModel>
   in?: $Enums.BoardMemberRole[] | Prisma.ListEnumBoardMemberRoleFieldRefInput<$PrismaModel>
@@ -628,6 +662,40 @@ export type NestedJsonFilterBase<$PrismaModel = never> = {
   gt?: runtime.InputJsonValue | Prisma.JsonFieldRefInput<$PrismaModel>
   gte?: runtime.InputJsonValue | Prisma.JsonFieldRefInput<$PrismaModel>
   not?: runtime.InputJsonValue | Prisma.JsonFieldRefInput<$PrismaModel> | Prisma.JsonNullValueFilter
+}
+
+export type NestedEnumBoardKindFilter<$PrismaModel = never> = {
+  equals?: $Enums.BoardKind | Prisma.EnumBoardKindFieldRefInput<$PrismaModel>
+  in?: $Enums.BoardKind[] | Prisma.ListEnumBoardKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.BoardKind[] | Prisma.ListEnumBoardKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumBoardKindFilter<$PrismaModel> | $Enums.BoardKind
+}
+
+export type NestedEnumBoardKindWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.BoardKind | Prisma.EnumBoardKindFieldRefInput<$PrismaModel>
+  in?: $Enums.BoardKind[] | Prisma.ListEnumBoardKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.BoardKind[] | Prisma.ListEnumBoardKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumBoardKindWithAggregatesFilter<$PrismaModel> | $Enums.BoardKind
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumBoardKindFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumBoardKindFilter<$PrismaModel>
+}
+
+export type NestedEnumTagColorFilter<$PrismaModel = never> = {
+  equals?: $Enums.TagColor | Prisma.EnumTagColorFieldRefInput<$PrismaModel>
+  in?: $Enums.TagColor[] | Prisma.ListEnumTagColorFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TagColor[] | Prisma.ListEnumTagColorFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTagColorFilter<$PrismaModel> | $Enums.TagColor
+}
+
+export type NestedEnumTagColorWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TagColor | Prisma.EnumTagColorFieldRefInput<$PrismaModel>
+  in?: $Enums.TagColor[] | Prisma.ListEnumTagColorFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TagColor[] | Prisma.ListEnumTagColorFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTagColorWithAggregatesFilter<$PrismaModel> | $Enums.TagColor
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTagColorFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTagColorFilter<$PrismaModel>
 }
 
 export type NestedEnumBoardMemberRoleFilter<$PrismaModel = never> = {

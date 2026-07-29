@@ -31,7 +31,7 @@ export const MultiSelectCtrl = <
   groupOptions,
   label,
   variant,
-  isSlim,
+  isSmart,
   errorMessage,
 }: {
   control: Control<TFieldValues>
@@ -39,7 +39,7 @@ export const MultiSelectCtrl = <
   groupOptions: Record<string, string>
   label: string
   variant?: 'primary' | 'secondary'
-  isSlim?: boolean
+  isSmart?: boolean
   errorMessage?: string
 }) => {
   return (
@@ -56,7 +56,7 @@ export const MultiSelectCtrl = <
             onBlur={onBlur}
             ref={ref}
           >
-            <Label className={isSlim ? 'text-xs font-light' : ''}>{label}</Label>
+            <Label className={isSmart ? 'text-xs font-light' : ''}>{label}</Label>
             <Select.Trigger>
               <Select.Value>
                 {() => {
@@ -89,7 +89,7 @@ export const MultiSelectCtrl = <
               )}
               <Select.Indicator />
             </Select.Trigger>
-            <ErrorMessage className={isSlim ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
+            <ErrorMessage className={isSmart ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
             <Select.Popover>
               <ListBox selectionMode='multiple'>
                 {Object.entries(groupOptions).map(([id, name]) => (
@@ -122,7 +122,7 @@ export const SingleSelectCtrl = <
   variant,
   isClearable = false,
   errorMessage,
-  isSlim,
+  isSmart = false,
 }: {
   control: Control<TFieldValues>
   name: TName
@@ -131,7 +131,7 @@ export const SingleSelectCtrl = <
   variant?: 'primary' | 'secondary'
   isClearable?: boolean
   errorMessage?: string
-  isSlim?: boolean
+  isSmart?: boolean
 }) => {
   return (
     <Controller
@@ -147,19 +147,10 @@ export const SingleSelectCtrl = <
             onBlur={onBlur}
             ref={ref}
           >
-            <Label className={isSlim ? 'text-xs font-light' : ''}>{label}</Label>
-            {/* isSlim: 既定 36px(min-h-9 + py-2)を 28px へ。text-sm の行高 20px + 上下 4px */}
-            <Select.Trigger className={isSlim ? 'min-h-7 py-1' : undefined}>
-              <Select.Value>
-                {() =>
-                  value && groupOptions[value] ? (
-                    <>{groupOptions[value]}</>
-                  ) : (
-                    // 共通部品なのでローカライズ不要とする
-                    <>Not selected</>
-                  )
-                }
-              </Select.Value>
+            <Label className={isSmart ? 'text-xs font-light' : ''}>{label}</Label>
+            {/* isSmart: 既定 36px(min-h-9 + py-2)を 28px へ。text-sm の行高 20px + 上下 4px */}
+            <Select.Trigger className={isSmart ? 'min-h-7 py-1' : undefined}>
+              <Select.Value>{() => (value && groupOptions[value] ? <>{groupOptions[value]}</> : <></>)}</Select.Value>
               {isClearable && value && (
                 <span
                   role='button'
@@ -177,7 +168,7 @@ export const SingleSelectCtrl = <
               )}
               <Select.Indicator />
             </Select.Trigger>
-            <ErrorMessage className={isSlim ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
+            <ErrorMessage className={isSmart ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
             <Select.Popover>
               <ListBox selectionMode='single'>
                 {Object.entries(groupOptions).map(([id, name]) => (
