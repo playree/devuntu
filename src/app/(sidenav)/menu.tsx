@@ -164,7 +164,7 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
               <Accordion.Body className='grid grid-cols-1 px-2'>
                 <MenuButton // ボード
                   to='/boards'
-                  text={t('board_manage')}
+                  text={t('board')}
                   icon={<ViewColumnsIcon />}
                   closeMenu={closeMenu}
                 />

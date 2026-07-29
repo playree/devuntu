@@ -176,7 +176,9 @@ export const TicketDetailClient: FC<{ id: string }> = ({ id }) => {
               <StatusChip status={ticket.status} />
             )}
           </MetaRow>
-          <MetaRow label={t('priority')}>{ticket.priority ? <PriorityChip priority={ticket.priority} /> : '-'}</MetaRow>
+          <MetaRow label={t('priority')}>
+            <PriorityChip priority={ticket.priority} />
+          </MetaRow>
           <MetaRow label={t('assignee')}>{ticket.assigneeName || t('unassigned')}</MetaRow>
           <MetaRow label={t('due_date')}>
             <span className='font-mono text-xs'>{dayformat(ticket.dueDate, 'date') || '-'}</span>

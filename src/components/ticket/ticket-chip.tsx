@@ -34,14 +34,8 @@ export const StatusChip: FC<{ status: TicketStatus; size?: ChipProps['size'] }> 
   )
 }
 
-export const PriorityChip: FC<{ priority?: TicketPriority | null; size?: ChipProps['size'] }> = ({
-  priority,
-  size = 'sm',
-}) => {
+export const PriorityChip: FC<{ priority: TicketPriority; size?: ChipProps['size'] }> = ({ priority, size = 'sm' }) => {
   const { t } = useLocale()
-  if (!priority) {
-    return null
-  }
   const { item, color } = PRIORITY_STYLE[priority]
   return (
     <Chip variant='soft' color={color} size={size}>

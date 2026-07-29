@@ -24,6 +24,9 @@ export const KANBAN_LANES = ['todo', 'doing', 'done', 'backlog'] as const satisf
 /** 一覧で返すチケットの上限。usePagingList が全件をクライアントへ返すため上限が必要 */
 export const MAX_TICKET_LIST = 300
 
+/** かんばん 1 ボードで返すカードの上限(レーン単位ではなくボード全体) */
+export const MAX_KANBAN_CARDS = 500
+
 export const isTicketStatus = (value: string): value is TicketStatus =>
   (TICKET_STATUSES as readonly string[]).includes(value)
 
@@ -358,6 +361,22 @@ export type KanbanCardLite = { id: string; status: TicketStatus }
 export type LaneMap<T extends KanbanCardLite = KanbanCardLite> = Record<TicketStatus, T[]>
 
 export type DropTarget = { kind: 'lane'; status: TicketStatus } | { kind: 'card'; ticketId: string }
+
+/** 空の LaneMap。サーバーのグルーピングとクライアントの初期値で共有する */
+export const emptyLaneMap = <T extends KanbanCardLite>(): LaneMap<T> =>
+  Object.fromEntries(TICKET_STATUSES.map((status) => [status, [] as T[]])) as LaneMap<T>
+
+/**
+ * カード配列をレーン別へ振り分ける。並び順は入力順をそのまま保つ
+ * (呼び出し側が order / createdAt でソート済みであること)。
+ */
+export const groupByLane = <T extends KanbanCardLite>(cards: T[]): LaneMap<T> => {
+  const lanes = emptyLaneMap<T>()
+  for (const card of cards) {
+    lanes[card.status].push(card)
+  }
+  return lanes
+}
 
 /** レーンの droppable id */
 export const laneDropId = (status: TicketStatus): string => `lane:${status}`

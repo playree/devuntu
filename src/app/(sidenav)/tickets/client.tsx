@@ -67,7 +67,7 @@ export const TicketsClient: FC = () => {
   }
 
   return (
-    <FlexCol>
+    <FlexCol data-wide className='mx-auto max-w-6xl'>
       <ContentHeader icon={<TicketIcon />} title={t('ticket')}>
         <MultiButton isIconOnly tooltip={t('add_ticket')} isDisabled={!options} onPress={() => addModalState.open()}>
           <PlusIcon />

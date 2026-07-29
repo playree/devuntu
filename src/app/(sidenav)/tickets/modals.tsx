@@ -11,6 +11,7 @@ import { notify } from '@/components/notify'
 import { MarkdownEditor } from '@/components/ticket/markdown-editor'
 import { TagSelect } from '@/components/ticket/tag-select'
 import { useBoardName, useTicketOptions } from '@/components/ticket/ticket-chip'
+import type { TicketStatus } from '@/generated/prisma/enums'
 import { parseAction } from '@/lib/action-client'
 import { CreateTicketIn, CreateTicketOut, scCreateTicket } from '@/lib/schema'
 import { useLocale } from '@/locale/client'
@@ -24,17 +25,27 @@ type FormOptions = NonNullable<GetTicketFormOptionsReturnType>
 /**
  * チケット作成モーダル。
  * ボードは必須(既定はプライベートボード)で、担当者とタグの候補は選択中のボードに連動する。
+ *
+ * かんばん(/boards/[id])のレーンからも開くため、初期ステータスとボード固定を受け取れるようにしている。
  */
-export const AddModal: FC<ModalBaseProps & { options: FormOptions; defaultBoardId?: string | null }> = ({
-  state,
-  reload,
-  options,
-  defaultBoardId,
-}) => {
+export const AddModal: FC<
+  ModalBaseProps & {
+    options: FormOptions
+    defaultBoardId?: string | null
+    /** レーン別の追加ボタンから開いた場合の初期ステータス */
+    defaultStatus?: TicketStatus
+    /** true ならボードを変更させない(かんばんで作ったカードが画面に出ない事故を防ぐ) */
+    isBoardLocked?: boolean
+  }
+> = ({ state, reload, options, defaultBoardId, defaultStatus, isBoardLocked }) => {
   const { t, fet } = useLocale()
   const { statusOptions, priorityOptions } = useTicketOptions()
   const boardName = useBoardName()
   const boardOptions = Object.fromEntries(options.boards.map((board) => [board.id, boardName(board)]))
+
+  const initialBoardId = defaultBoardId ?? options.privateBoardId
+  /** そのボードでの既定担当者。プライベートボードはメンバーが本人 1 人なので本人を選んでおく */
+  const defaultAssigneeId = (boardId: string) => (boardId === options.privateBoardId ? options.selfUserId : null)
 
   const {
     control,
@@ -45,14 +56,14 @@ export const AddModal: FC<ModalBaseProps & { options: FormOptions; defaultBoardI
     resolver: zodResolver(scCreateTicket),
     mode: 'onChange',
     defaultValues: {
-      boardId: defaultBoardId ?? options.privateBoardId,
+      boardId: initialBoardId,
       title: '',
       content: '',
-      status: 'todo',
-      priority: null,
+      status: defaultStatus ?? 'todo',
+      priority: 'medium',
       dueDate: null,
       tagIds: [],
-      assigneeId: null,
+      assigneeId: defaultAssigneeId(initialBoardId),
     },
   })
 
@@ -67,11 +78,12 @@ export const AddModal: FC<ModalBaseProps & { options: FormOptions; defaultBoardI
       .catch(() => setBoardAssignees({}))
   }, [boardId])
 
-  // ボードが変わったら前のボードの担当者・タグの ID が残らないようクリアする
+  // ボードが変わったら前のボードの担当者・タグの ID が残らないよう既定値へ戻す
+  // (初回マウントでも走るが defaultValues と同じ値を書くだけなので実害はない)
   useEffect(() => {
-    setValue('assigneeId', null)
+    setValue('assigneeId', boardId === options.privateBoardId ? options.selfUserId : null)
     setValue('tagIds', [])
-  }, [boardId, setValue])
+  }, [boardId, options.privateBoardId, options.selfUserId, setValue])
 
   return (
     <FormModal
@@ -116,6 +128,7 @@ export const AddModal: FC<ModalBaseProps & { options: FormOptions; defaultBoardI
             variant='secondary'
             groupOptions={boardOptions}
             label={t('board')}
+            isDisabled={isBoardLocked}
             isSmart
           />
         </div>
@@ -136,7 +149,6 @@ export const AddModal: FC<ModalBaseProps & { options: FormOptions; defaultBoardI
             variant='secondary'
             groupOptions={priorityOptions}
             label={t('priority')}
-            isClearable
             isSmart
           />
         </div>

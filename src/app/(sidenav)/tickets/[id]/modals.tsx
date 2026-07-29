@@ -110,7 +110,6 @@ export const UpdateModal: FC<
             variant='secondary'
             groupOptions={priorityOptions}
             label={t('priority')}
-            isClearable
           />
         </div>
         <div className='col-span-12 md:col-span-6'>

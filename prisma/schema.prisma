@@ -479,7 +479,7 @@ model Ticket {
   title       String
   content     String?
   status      TicketStatus    @default(todo)
-  priority    TicketPriority?
+  priority    TicketPriority  @default(medium)
   dueDate     DateTime? // 日付のみの概念。UTC 0:00 で保存する
   tags        TicketTag[]
   // 同一レーン(boardId + status)内の表示順。昇順・0始まりの連番で保持

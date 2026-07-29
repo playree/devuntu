@@ -67,7 +67,7 @@ export const BoardsClient: FC = () => {
 
   return (
     <FlexCol>
-      <ContentHeader icon={<ViewColumnsIcon />} title={t('board_manage')}>
+      <ContentHeader icon={<ViewColumnsIcon />} title={t('board')}>
         <MultiButton isIconOnly tooltip={t('add_board')} onPress={() => addModalState.open()}>
           <PlusIcon />
         </MultiButton>

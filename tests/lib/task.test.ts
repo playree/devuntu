@@ -11,8 +11,10 @@ import {
   buildTicketWhere,
   canApplyAssignments,
   cardDropId,
+  emptyLaneMap,
   evaluateTicketAccess,
   extractMentionNames,
+  groupByLane,
   insertAt,
   laneDropId,
   mergeBoardMembers,
@@ -485,5 +487,39 @@ describe('applyLaneMove: DnD 結果をレーンへ適用する', () => {
   it('存在しないドロップ先カードは null', () => {
     const lanes = makeLanes({ todo: ['a'] })
     expect(applyLaneMove(lanes, { ticketId: 'a', target: { kind: 'card', ticketId: 'zzz' } })).toBeNull()
+  })
+})
+
+describe('emptyLaneMap / groupByLane: カードのレーン振り分け', () => {
+  it('空配列は 4 レーンすべて空の LaneMap になる', () => {
+    const lanes = groupByLane([])
+    expect(Object.keys(lanes).sort()).toEqual([...TICKET_STATUSES].sort())
+    for (const status of TICKET_STATUSES) {
+      expect(lanes[status], status).toEqual([])
+    }
+  })
+
+  it('status 別に振り分け、入力順(order 順)を保つ', () => {
+    const cards = [
+      { id: 't1', status: 'todo' as const },
+      { id: 'd1', status: 'doing' as const },
+      { id: 't2', status: 'todo' as const },
+      { id: 'b1', status: 'backlog' as const },
+    ]
+    const lanes = groupByLane(cards)
+    expect(
+      lanes.todo.map((c) => c.id),
+      '入力順を保持',
+    ).toEqual(['t1', 't2'])
+    expect(lanes.doing.map((c) => c.id)).toEqual(['d1'])
+    expect(lanes.backlog.map((c) => c.id)).toEqual(['b1'])
+    expect(lanes.done).toEqual([])
+  })
+
+  it('emptyLaneMap は呼び出しごとに独立した配列を返す', () => {
+    const a = emptyLaneMap()
+    const b = emptyLaneMap()
+    a.todo.push({ id: 'x', status: 'todo' })
+    expect(b.todo, '参照が共有されていない').toEqual([])
   })
 })

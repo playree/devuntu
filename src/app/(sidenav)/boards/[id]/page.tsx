@@ -1,14 +1,14 @@
 import { en } from '@/locale/lang-en'
 import { type Metadata } from 'next'
 import { FC } from 'react'
-import { BoardDetailClient } from './client'
+import { BoardKanbanClient } from './client'
 
 export const metadata: Metadata = {
   title: en.board,
 }
 
-const BoardDetailPage: FC<{ params: Promise<{ id: string }> }> = async ({ params }) => {
+const BoardKanbanPage: FC<{ params: Promise<{ id: string }> }> = async ({ params }) => {
   const { id } = await params
-  return <BoardDetailClient boardId={id} />
+  return <BoardKanbanClient boardId={id} />
 }
-export default BoardDetailPage
+export default BoardKanbanPage

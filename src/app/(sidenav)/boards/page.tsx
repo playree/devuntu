@@ -4,7 +4,7 @@ import { FC } from 'react'
 import { BoardsClient } from './client'
 
 export const metadata: Metadata = {
-  title: en.board_manage,
+  title: en.board,
 }
 
 const BoardsPage: FC = async () => {

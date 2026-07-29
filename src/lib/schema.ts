@@ -223,7 +223,8 @@ export const scCreateTicket = z.object({
   title: zTicketTitle,
   content: zTicketContent.optional(),
   status: zTicketStatus.default('todo'),
-  priority: zTicketPriority.nullish(),
+  // 必須。未指定は medium(クリア不可のため UI からは null が飛ばない)
+  priority: zTicketPriority.default('medium'),
   dueDate: zDueDate,
   tagIds: zTagIds.default([]),
   assigneeId: z.uuidv7().nullish(),

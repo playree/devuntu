@@ -92,14 +92,15 @@ export const getTicketFormOptions = safeAuthAction
       listVisibleTags(accessibleBoardIds),
     ])
 
-    return { boards, tags, privateBoardId }
+    // selfUserId はプライベートボードでの担当者の既定値(本人)を決めるために返す
+    return { boards, tags, privateBoardId, selfUserId: user.id }
   })
 export type GetTicketFormOptionsReturnType = Awaited<ReturnType<typeof getTicketFormOptions>>['data']
 
 /**
  * チケット編集中のタグ新規作成。
  *
- * タグの管理(リネーム / 削除 / 統合)は /boards/[id] 側だが、作成だけはチケットを
+ * タグの管理(リネーム / 削除 / 統合)は /boards/[id]/settings 側だが、作成だけはチケットを
  * 書いている流れで必要になるため、メンバー権限で実行できるようにここへ置く。
  */
 export const createTicketTag = safeAuthAction

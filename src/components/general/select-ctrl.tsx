@@ -110,6 +110,7 @@ export const MultiSelectCtrl = <
 /**
  * 単一選択の Select。react-hook-form の値は選択肢の ID(string) または null。
  * `isClearable` を付けると未選択(null)へ戻せる(任意入力の項目向け)。
+ * `isDisabled` は値を固定して表示だけしたい場合に使う。
  */
 export const SingleSelectCtrl = <
   TFieldValues extends FieldValues = FieldValues,
@@ -121,6 +122,7 @@ export const SingleSelectCtrl = <
   label,
   variant,
   isClearable = false,
+  isDisabled = false,
   errorMessage,
   isSmart = false,
 }: {
@@ -130,6 +132,7 @@ export const SingleSelectCtrl = <
   label: string
   variant?: 'primary' | 'secondary'
   isClearable?: boolean
+  isDisabled?: boolean
   errorMessage?: string
   isSmart?: boolean
 }) => {
@@ -143,6 +146,7 @@ export const SingleSelectCtrl = <
             selectionMode='single'
             value={value ?? null}
             variant={variant}
+            isDisabled={isDisabled}
             onChange={(key) => onChange(key === null ? null : key.toString())}
             onBlur={onBlur}
             ref={ref}
