@@ -125,6 +125,7 @@ export type LocaleItemBase =
   | 'role'
   | 'save'
   | 'scope'
+  | 'search'
   | 'search_tag'
   | 'select_file'
   | 'send'

@@ -2,7 +2,7 @@
 
 import { MultiButton } from '@/components/general/button'
 import { GridBox } from '@/components/general/grid'
-import { InputCtrl } from '@/components/general/input-ctrl'
+import { InputCtrl } from '@/components/general/input'
 import { CheckIcon, Cog6ToothIcon } from '@/components/icon'
 import { InputCtrlPassword } from '@/components/input-ctrl-pw'
 import { SingleLayout } from '@/components/single-layout'

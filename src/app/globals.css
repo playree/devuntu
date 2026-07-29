@@ -10,14 +10,14 @@
 
 @layer base {
   :root {
-    --background: #f8fafa;
+    --background: #fafaf9;
     --accent: oklch(0.68 0.195 253.83);
     --default: oklch(0.9 0.001 286.375);
   }
 
   .dark,
   [data-theme='dark'] {
-    --background: #000000;
+    --background: #0c0a09;
     --default: oklch(0.35 0.006 286.033);
   }
 
@@ -132,6 +132,9 @@
   }
   .table__cell {
     @apply overflow-hidden;
+  }
+  .modal__dialog {
+    @apply bg-stone-50 dark:bg-stone-950;
   }
 
   /* MDXEditor: 他のフォーム部品(rounded-xl border-2)と枠線を揃える */

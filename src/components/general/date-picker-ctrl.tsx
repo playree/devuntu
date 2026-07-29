@@ -4,7 +4,7 @@ import { Calendar, DateField, DatePicker, ErrorMessage, Label } from '@heroui/re
 import { CalendarDate, parseDate } from '@internationalized/date'
 import { ComponentProps } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
-import { XCircleIcon } from './select-ctrl'
+import { XCircleIcon } from './select'
 import { useIsSmart } from './smart'
 
 /** DateField.Input の children が受け取るセグメント(型を直接 import できないため props から導出する) */
@@ -40,7 +40,7 @@ export const DatePickerCtrl = <
   isRequired,
   isReadOnly,
   isClearable = true,
-  variant = 'secondary',
+  variant,
   isSmart: isSmartProp,
 }: {
   control: Control<TFieldValues>

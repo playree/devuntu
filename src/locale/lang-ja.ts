@@ -127,6 +127,7 @@ export const ja: DefaultLocaleItems = {
   role: 'ロール',
   save: '保存',
   scope: 'スコープ',
+  search: '検索',
   search_tag: 'タグを検索',
   select_file: 'ファイルを選択',
   send: '送信',

@@ -1,15 +1,15 @@
 'use client'
 
-import { MultiButton } from '@/components/general/button'
 import { GridBox } from '@/components/general/grid'
-import { MagnifyingGlassIcon } from '@/components/icon'
+import { InputSearchField } from '@/components/general/input'
+import { SingleSelectField } from '@/components/general/select'
 import { TagChip, useTicketOptions } from '@/components/ticket/ticket-chip'
 import type { BoardKind, TagColor, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
 import { TicketSearch } from '@/lib/schema'
 import { dedupeTagOptionsByName, TICKET_PRIORITIES, TICKET_STATUSES } from '@/lib/task'
 import { useLocale } from '@/locale/client'
-import { Chip, Input, Label, ListBox, Select } from '@heroui/react'
-import { FC, KeyboardEvent, useState } from 'react'
+import { Chip, Label } from '@heroui/react'
+import { FC, useState } from 'react'
 
 /** 検索条件の初期値 */
 export const emptyTicketFilter: TicketSearch = {
@@ -72,84 +72,42 @@ export const TicketSearchPanel: FC<{
     none: t('unassigned'),
   }
 
-  const applyKeyword = () => onChange({ ...filter, keyword: keyword.trim() })
-
-  const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      applyKeyword()
-    }
-  }
+  const applyKeyword = (value: string) => onChange({ ...filter, keyword: value.trim() })
 
   return (
-    <GridBox>
+    <GridBox isSmart>
       <div className='col-span-12 md:col-span-6'>
-        <Label>{t('keyword')}</Label>
-        <div className='flex items-center gap-2'>
-          <Input
-            value={keyword}
-            variant='secondary'
-            maxLength={100}
-            onChange={(e) => setKeyword(e.target.value)}
-            onKeyDown={onKeyDown}
-          />
-          <MultiButton isIconOnly size='sm' tooltip={t('keyword')} onPress={applyKeyword}>
-            <MagnifyingGlassIcon />
-          </MultiButton>
-        </div>
+        <InputSearchField
+          label={t('keyword')}
+          placeholder={t('keyword')}
+          variant='secondary'
+          maxLength={100}
+          searchLabel={t('search')}
+          value={keyword}
+          onChange={setKeyword}
+          onSubmit={applyKeyword}
+          onClear={() => onChange({ ...filter, keyword: '' })}
+        />
       </div>
 
       <div className='col-span-12 md:col-span-3'>
-        <Select
-          selectionMode='single'
+        <SingleSelectField
+          label={t('ticket_scope')}
           variant='secondary'
+          groupOptions={boardOptions}
           value={filter.boardId ?? BOARD_ALL}
-          onChange={(key) => {
-            const value = key?.toString() ?? BOARD_ALL
-            onChange({ ...filter, boardId: value === BOARD_ALL ? null : value })
-          }}
-        >
-          <Label>{t('ticket_scope')}</Label>
-          <Select.Trigger>
-            <Select.Value />
-            <Select.Indicator />
-          </Select.Trigger>
-          <Select.Popover>
-            <ListBox selectionMode='single'>
-              {Object.entries(boardOptions).map(([id, name]) => (
-                <ListBox.Item key={id} id={id} textValue={name}>
-                  {name}
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </Select.Popover>
-        </Select>
+          onChange={(value) => onChange({ ...filter, boardId: !value || value === BOARD_ALL ? null : value })}
+        />
       </div>
 
       <div className='col-span-12 md:col-span-3'>
-        <Select
-          selectionMode='single'
+        <SingleSelectField
+          label={t('assignee')}
           variant='secondary'
+          groupOptions={assigneeOptions}
           value={filter.assignee}
-          onChange={(key) => onChange({ ...filter, assignee: (key?.toString() ?? 'any') as TicketSearch['assignee'] })}
-        >
-          <Label>{t('assignee')}</Label>
-          <Select.Trigger>
-            <Select.Value />
-            <Select.Indicator />
-          </Select.Trigger>
-          <Select.Popover>
-            <ListBox selectionMode='single'>
-              {Object.entries(assigneeOptions).map(([id, name]) => (
-                <ListBox.Item key={id} id={id} textValue={name}>
-                  {name}
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </Select.Popover>
-        </Select>
+          onChange={(value) => onChange({ ...filter, assignee: (value ?? 'any') as TicketSearch['assignee'] })}
+        />
       </div>
 
       <div className='col-span-12 md:col-span-6'>

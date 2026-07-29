@@ -2,7 +2,7 @@
 
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
-import { MultiSelectCtrl } from '@/components/general/select-ctrl'
+import { MultiSelectCtrl } from '@/components/general/select'
 import { CheckIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'

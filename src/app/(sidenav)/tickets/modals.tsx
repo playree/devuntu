@@ -3,9 +3,9 @@
 import { MultiButton } from '@/components/general/button'
 import { DatePickerCtrl } from '@/components/general/date-picker-ctrl'
 import { GridBox } from '@/components/general/grid'
-import { InputCtrl } from '@/components/general/input-ctrl'
+import { InputCtrl } from '@/components/general/input'
 import { FormModal, ModalBaseProps } from '@/components/general/modal'
-import { SingleSelectCtrl } from '@/components/general/select-ctrl'
+import { SingleSelectCtrl } from '@/components/general/select'
 import { CheckIcon, PlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { MarkdownEditor } from '@/components/ticket/markdown-editor'
@@ -111,7 +111,6 @@ export const AddModal: FC<
         <div className='col-span-12 md:col-span-8'>
           <InputCtrl
             control={control}
-            variant='secondary'
             name='title'
             constraintSchema={scCreateTicket}
             label={t('title')}
@@ -124,35 +123,21 @@ export const AddModal: FC<
           <SingleSelectCtrl
             control={control}
             name='boardId'
-            variant='secondary'
             groupOptions={boardOptions}
             label={t('board')}
             isDisabled={isBoardLocked}
           />
         </div>
         <div className='col-span-6 md:col-span-2'>
-          <SingleSelectCtrl
-            control={control}
-            name='status'
-            variant='secondary'
-            groupOptions={statusOptions}
-            label={t('status')}
-          />
+          <SingleSelectCtrl control={control} name='status' groupOptions={statusOptions} label={t('status')} />
         </div>
         <div className='col-span-6 md:col-span-2'>
-          <SingleSelectCtrl
-            control={control}
-            name='priority'
-            variant='secondary'
-            groupOptions={priorityOptions}
-            label={t('priority')}
-          />
+          <SingleSelectCtrl control={control} name='priority' groupOptions={priorityOptions} label={t('priority')} />
         </div>
         <div className='col-span-6 md:col-span-2'>
           <SingleSelectCtrl
             control={control}
             name='assigneeId'
-            variant='secondary'
             groupOptions={boardAssignees}
             label={t('assignee')}
             isClearable

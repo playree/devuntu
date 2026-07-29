@@ -127,6 +127,7 @@ export const en: LocaleItems = {
   role: 'Role',
   save: 'Save',
   scope: 'Scope',
+  search: 'Search',
   search_tag: 'Search tags',
   select_file: 'Choose file',
   send: 'Send',

@@ -48,7 +48,7 @@ export const TagSelect = <
   onCreate,
   label,
   errorMessage,
-  variant = 'secondary',
+  variant,
   isSmart: isSmartProp,
 }: {
   control: Control<TFieldValues>
