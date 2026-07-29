@@ -107,7 +107,7 @@ export const AddModal: FC<
         </>
       }
     >
-      <GridBox>
+      <GridBox isSmart>
         <div className='col-span-12'>
           <InputCtrl
             control={control}
@@ -117,7 +117,6 @@ export const AddModal: FC<
             label={t('title')}
             errorMessage={fet(errors.title)}
             autoFocus
-            isSmart
           />
         </div>
 
@@ -129,7 +128,6 @@ export const AddModal: FC<
             groupOptions={boardOptions}
             label={t('board')}
             isDisabled={isBoardLocked}
-            isSmart
           />
         </div>
         <div className='col-span-6 md:col-span-2'>
@@ -139,7 +137,6 @@ export const AddModal: FC<
             variant='secondary'
             groupOptions={statusOptions}
             label={t('status')}
-            isSmart
           />
         </div>
         <div className='col-span-6 md:col-span-2'>
@@ -149,7 +146,6 @@ export const AddModal: FC<
             variant='secondary'
             groupOptions={priorityOptions}
             label={t('priority')}
-            isSmart
           />
         </div>
         <div className='col-span-6 md:col-span-2'>
@@ -160,17 +156,10 @@ export const AddModal: FC<
             groupOptions={boardAssignees}
             label={t('assignee')}
             isClearable
-            isSmart
           />
         </div>
         <div className='col-span-6 md:col-span-3'>
-          <DatePickerCtrl
-            control={control}
-            name='dueDate'
-            label={t('due_date')}
-            errorMessage={fet(errors.dueDate)}
-            isSmart
-          />
+          <DatePickerCtrl control={control} name='dueDate' label={t('due_date')} errorMessage={fet(errors.dueDate)} />
         </div>
 
         <div className='col-span-12'>
@@ -180,7 +169,6 @@ export const AddModal: FC<
             options={boardTags}
             errorMessage={fet(errors.tagIds)}
             onCreate={async (name) => parseAction(createTicketTag({ boardId, name }))}
-            isSmart
           />
         </div>
 

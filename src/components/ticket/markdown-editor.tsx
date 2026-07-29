@@ -4,14 +4,27 @@ import { getFieldConstraints } from '@/lib/schema-util'
 import { useLocale } from '@/locale/client'
 import { ErrorMessage, Label, Skeleton, TextField } from '@heroui/react'
 import dynamic from 'next/dynamic'
-import { FC, memo, ReactNode, useCallback, useState } from 'react'
+import { CSSProperties, FC, memo, ReactNode, useCallback, useState } from 'react'
 import { Control, FieldPath, FieldValues, useController } from 'react-hook-form'
 import { z } from 'zod'
+import { useIsSmart } from '../general/smart'
+
+/**
+ * 編集面の既定の最小行数。
+ *
+ * MDXEditor には `rows` / `minRows` 相当の prop が無いため、行数は CSS 変数
+ * `--mdx-min-rows` としてラッパーに置き、globals.css 側で min-height に換算する。
+ * rich-text(contenteditable)と source(CodeMirror)の両方に継承で届く。
+ */
+const DEFAULT_MIN_ROWS = 6
+
+/** ローディング Skeleton も同じ変数で高さを合わせ、マウント時のガタつきを防ぐ */
+const MIN_HEIGHT = 'calc(var(--mdx-min-rows, 6) * 1.5rem)'
 
 // MDXEditor はブラウザ専用なので SSR から外す(lexical / codemirror も別チャンクへ分離される)
 const MdxEditorCore = dynamic(() => import('./mdx-editor-core'), {
   ssr: false,
-  loading: () => <Skeleton className='min-h-40 w-full rounded-xl' />,
+  loading: () => <Skeleton className='w-full rounded-xl' style={{ minHeight: MIN_HEIGHT }} />,
 })
 
 /**
@@ -30,7 +43,9 @@ const MdxEditorHost = memo<{
   initialMarkdown: string
   onChange: (markdown: string) => void
   onBlur?: () => void
-}>(function MdxEditorHost({ initialMarkdown, onChange, onBlur }) {
+  /** 編集面の最小行数 */
+  minRows?: number
+}>(function MdxEditorHost({ initialMarkdown, onChange, onBlur, minRows = DEFAULT_MIN_ROWS }) {
   const [container, setContainer] = useState<HTMLElement | null>(null)
   const [isReady, setReady] = useState(false)
 
@@ -43,7 +58,8 @@ const MdxEditorHost = memo<{
   }, [])
 
   return (
-    <div ref={anchorRef} className='min-h-40'>
+    // 最小行数は globals.css の --mdx-min-rows 経由で編集面(rich-text / source)に効かせる
+    <div ref={anchorRef} style={{ '--mdx-min-rows': minRows } as CSSProperties}>
       {isReady && (
         <MdxEditorCore markdown={initialMarkdown} onChange={onChange} onBlur={onBlur} overlayContainer={container} />
       )}
@@ -59,23 +75,26 @@ const EditorField: FC<{
   maxLength?: number
   errorMessage?: string
   children: ReactNode
-}> = ({ label, isRequired, length, maxLength, errorMessage, children }) => (
-  <TextField isInvalid={!!errorMessage}>
-    <div className='flex items-baseline justify-between'>
-      <Label>
-        {label}
-        {isRequired ? '*' : ''}
-      </Label>
-      {maxLength !== undefined && (
-        <span className={`font-mono text-xs ${length > maxLength ? 'text-danger' : 'text-gray-500'}`}>
-          {length} / {maxLength}
-        </span>
-      )}
-    </div>
-    {children}
-    <ErrorMessage className='min-h-4'>{errorMessage}</ErrorMessage>
-  </TextField>
-)
+}> = ({ label, isRequired, length, maxLength, errorMessage, children }) => {
+  const isSmart = useIsSmart()
+  return (
+    <TextField isInvalid={!!errorMessage}>
+      <div className='flex items-baseline justify-between'>
+        <Label className={isSmart ? 'text-xs font-light' : ''}>
+          {label}
+          {isRequired ? '*' : ''}
+        </Label>
+        {maxLength !== undefined && (
+          <span className={`font-mono text-xs ${length > maxLength ? 'text-danger' : 'text-gray-500'}`}>
+            {length} / {maxLength}
+          </span>
+        )}
+      </div>
+      {children}
+      <ErrorMessage className='min-h-4'>{errorMessage}</ErrorMessage>
+    </TextField>
+  )
+}
 
 /**
  * Markdown エディタ(非制御)。`defaultValue` は初回マウント時の値としてのみ使われる。
@@ -89,14 +108,16 @@ export const MarkdownInput: FC<{
   label?: string
   maxLength?: number
   errorMessage?: string
-}> = ({ defaultValue, onChange, length, label, maxLength, errorMessage }) => {
+  /** 編集面の最小行数(既定 {@link DEFAULT_MIN_ROWS}) */
+  minRows?: number
+}> = ({ defaultValue, onChange, length, label, maxLength, errorMessage, minRows }) => {
   const { t } = useLocale()
   // 初回マウント時の値を固定する(MDXEditor は markdown prop の変更を取り込まない)
   const [initialMarkdown] = useState(defaultValue)
 
   return (
     <EditorField label={label ?? t('content')} length={length} maxLength={maxLength} errorMessage={errorMessage}>
-      <MdxEditorHost initialMarkdown={initialMarkdown} onChange={onChange} />
+      <MdxEditorHost initialMarkdown={initialMarkdown} onChange={onChange} minRows={minRows} />
     </EditorField>
   )
 }
@@ -114,12 +135,15 @@ export const MarkdownEditor = <
   constraintSchema,
   label,
   errorMessage,
+  minRows,
 }: {
   control: Control<TFieldValues>
   name: TName
   constraintSchema?: z.ZodObject
   label?: string
   errorMessage?: string
+  /** 編集面の最小行数(既定 {@link DEFAULT_MIN_ROWS}) */
+  minRows?: number
 }) => {
   const { t } = useLocale()
   const { field } = useController({ control, name })
@@ -138,7 +162,12 @@ export const MarkdownEditor = <
       errorMessage={errorMessage}
     >
       {/* useController の onChange / onBlur は useCallback 済みで安定参照のためそのまま渡せる */}
-      <MdxEditorHost initialMarkdown={initialMarkdown} onChange={field.onChange} onBlur={field.onBlur} />
+      <MdxEditorHost
+        initialMarkdown={initialMarkdown}
+        onChange={field.onChange}
+        onBlur={field.onBlur}
+        minRows={minRows}
+      />
     </EditorField>
   )
 }

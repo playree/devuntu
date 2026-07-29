@@ -159,7 +159,8 @@ const MdxEditorCore: FC<MdxEditorCoreProps> = ({
       // dark-theme が MDXEditor 公式のダーク切替。className の各語は
       // ポップアップ用コンテナにもコピーされるため、ドロップダウンとダイアログにも効く
       className={cn(isDark && 'dark-theme', className)}
-      // globals.css の .markdown を編集面にも効かせて表示側と見た目を揃える
+      // globals.css の .markdown を編集面にも効かせて表示側と見た目を揃える。
+      // globals.css の `.mdxeditor .markdown` は最小行数(--mdx-min-rows)の適用先も兼ねる
       contentEditableClassName='markdown'
       toMarkdownOptions={TO_MARKDOWN_OPTIONS}
       plugins={plugins}

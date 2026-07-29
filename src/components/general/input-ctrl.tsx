@@ -5,6 +5,7 @@ import { cn, ErrorMessage, Input, InputProps, Label, TextField } from '@heroui/r
 import { ChangeEvent } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 import { z } from 'zod'
+import { useIsSmart } from './smart'
 
 export const InputCtrl = <
   TFieldValues extends FieldValues = FieldValues,
@@ -19,7 +20,7 @@ export const InputCtrl = <
   isRequired,
   isReadOnly,
   errorMessage,
-  isSmart,
+  isSmart: isSmartProp,
   className,
   ...props
 }: InputProps & {
@@ -34,6 +35,7 @@ export const InputCtrl = <
   isSmart?: boolean
   className?: string
 }) => {
+  const isSmart = useIsSmart(isSmartProp)
   const { isRequired: schemaRequired, ...constraints } = constraintSchema
     ? getFieldConstraints(constraintSchema, name)
     : {}
@@ -44,7 +46,7 @@ export const InputCtrl = <
       name={name}
       render={({ field: { onChange, value, onBlur, ref } }) => (
         <TextField isInvalid={!!errorMessage} isReadOnly={isReadOnly}>
-          <Label>
+          <Label className={isSmart ? 'text-xs font-light' : ''}>
             {label}
             {requiredFlag ? '*' : ''}
           </Label>

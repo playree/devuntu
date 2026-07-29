@@ -1,6 +1,7 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
+import { useIsSmart } from '@/components/general/smart'
 import { PlusIcon, XMarkIcon } from '@/components/icon'
 import type { TagColor } from '@/generated/prisma/enums'
 import { MAX_TAG_NAME, MAX_TICKET_TAGS } from '@/lib/task'
@@ -33,7 +34,7 @@ export const TagSelect = <
   onCreate,
   label,
   errorMessage,
-  isSmart,
+  isSmart: isSmartProp,
 }: {
   control: Control<TFieldValues>
   name: TName
@@ -44,6 +45,7 @@ export const TagSelect = <
   errorMessage?: string
   isSmart?: boolean
 }) => {
+  const isSmart = useIsSmart(isSmartProp)
   const { t } = useLocale()
   const [draft, setDraft] = useState('')
   const [isCreating, setCreating] = useState(false)
@@ -126,6 +128,7 @@ export const TagSelect = <
                     isPending={isCreating}
                     isDisabled={!draft.trim() || isFull}
                     onPress={create}
+                    isSmart
                   >
                     <PlusIcon />
                   </MultiButton>

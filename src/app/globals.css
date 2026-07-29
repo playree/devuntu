@@ -142,6 +142,20 @@
        ポップアップは overlayContainer(Modal.Dialog / body)側に出るためクリップされない */
     @apply max-h-[50vh] overflow-y-auto overscroll-contain;
   }
+
+  /* MDXEditor に行数指定の prop が無いため、最小行数は編集面の min-height で表現する。
+     --mdx-min-rows は markdown-editor.tsx がラッパー div に置き、継承で両モードへ届く。
+     style.css は min-height を宣言していないので @layer 内の指定でも上書きされない */
+
+  /* rich-text。.markdown(leading-normal = 1.5)に contentEditable の上下 padding を足す */
+  .mdxeditor .markdown {
+    min-height: calc(var(--mdx-min-rows, 6) * 1.5em + 2 * var(--spacing-3));
+  }
+
+  /* source。CodeMirror の行の高さは style.css の .cm-sourceView .cm-scroller で 1.3rem */
+  .mdxeditor .cm-sourceView .cm-content {
+    min-height: calc(var(--mdx-min-rows, 6) * 1.3rem);
+  }
 }
 
 /* MDXEditor のダーク補正。

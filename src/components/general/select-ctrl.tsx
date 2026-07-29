@@ -3,6 +3,7 @@
 import { Chip, ErrorMessage, Label, ListBox, Select } from '@heroui/react'
 import { FC, SVGProps } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
+import { useIsSmart } from './smart'
 
 export const XCircleIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
   <svg
@@ -31,7 +32,7 @@ export const MultiSelectCtrl = <
   groupOptions,
   label,
   variant,
-  isSmart,
+  isSmart: isSmartProp,
   errorMessage,
 }: {
   control: Control<TFieldValues>
@@ -42,6 +43,7 @@ export const MultiSelectCtrl = <
   isSmart?: boolean
   errorMessage?: string
 }) => {
+  const isSmart = useIsSmart(isSmartProp)
   return (
     <Controller
       control={control}
@@ -124,7 +126,7 @@ export const SingleSelectCtrl = <
   isClearable = false,
   isDisabled = false,
   errorMessage,
-  isSmart = false,
+  isSmart: isSmartProp,
 }: {
   control: Control<TFieldValues>
   name: TName
@@ -136,6 +138,7 @@ export const SingleSelectCtrl = <
   errorMessage?: string
   isSmart?: boolean
 }) => {
+  const isSmart = useIsSmart(isSmartProp)
   return (
     <Controller
       control={control}
