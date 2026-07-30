@@ -3,18 +3,19 @@
 import { GridBox } from '@/components/general/grid'
 import { InputSearchField } from '@/components/general/input'
 import { SingleSelectField } from '@/components/general/select'
+import { MultiTagField } from '@/components/general/tag-group'
 import { TagChip, useTicketOptions } from '@/components/ticket/ticket-chip'
-import type { BoardKind, TagColor, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
+import type { BoardKind, TagColor } from '@/generated/prisma/enums'
 import { TicketSearch } from '@/lib/schema'
-import { dedupeTagOptionsByName, TICKET_PRIORITIES, TICKET_STATUSES } from '@/lib/task'
+import { dedupeTagOptionsByName, OPEN_TICKET_STATUSES, TICKET_PRIORITIES, TICKET_STATUSES } from '@/lib/task'
 import { useLocale } from '@/locale/client'
-import { Chip, Label } from '@heroui/react'
+import { Label } from '@heroui/react'
 import { FC, useState } from 'react'
 
-/** 検索条件の初期値 */
-export const emptyTicketFilter: TicketSearch = {
+/** 検索条件の初期値(ステータスは完了以外を選択済み) */
+export const defaultTicketFilter: TicketSearch = {
   keyword: '',
-  status: [],
+  status: OPEN_TICKET_STATUSES,
   priority: [],
   tags: [],
   boardId: null,
@@ -26,20 +27,6 @@ const BOARD_ALL = 'all'
 
 const toggle = <T,>(values: T[], value: T): T[] =>
   values.includes(value) ? values.filter((v) => v !== value) : [...values, value]
-
-/** クリックで ON/OFF する絞り込み用の Chip */
-const FilterChip: FC<{ label: string; isActive: boolean; onToggle: () => void }> = ({ label, isActive, onToggle }) => (
-  <Chip
-    variant={isActive ? 'soft' : 'tertiary'}
-    color={isActive ? 'accent' : undefined}
-    size='sm'
-    role='button'
-    className='cursor-pointer'
-    onClick={onToggle}
-  >
-    <Chip.Label>{label}</Chip.Label>
-  </Chip>
-)
 
 /**
  * チケット一覧の検索・フィルタパネル。
@@ -76,11 +63,10 @@ export const TicketSearchPanel: FC<{
 
   return (
     <GridBox isSmart>
-      <div className='col-span-12 md:col-span-6'>
+      <div className='col-span-12 md:col-span-5'>
         <InputSearchField
           label={t('keyword')}
           placeholder={t('keyword')}
-          variant='secondary'
           maxLength={100}
           searchLabel={t('search')}
           value={keyword}
@@ -90,56 +76,44 @@ export const TicketSearchPanel: FC<{
         />
       </div>
 
-      <div className='col-span-12 md:col-span-3'>
+      <div className='col-span-6 md:col-span-4'>
         <SingleSelectField
           label={t('ticket_scope')}
-          variant='secondary'
           groupOptions={boardOptions}
           value={filter.boardId ?? BOARD_ALL}
           onChange={(value) => onChange({ ...filter, boardId: !value || value === BOARD_ALL ? null : value })}
         />
       </div>
 
-      <div className='col-span-12 md:col-span-3'>
+      <div className='col-span-6 md:col-span-3'>
         <SingleSelectField
           label={t('assignee')}
-          variant='secondary'
           groupOptions={assigneeOptions}
           value={filter.assignee}
           onChange={(value) => onChange({ ...filter, assignee: (value ?? 'any') as TicketSearch['assignee'] })}
         />
       </div>
 
-      <div className='col-span-12 md:col-span-6'>
-        <Label>{t('status')}</Label>
-        <div className='flex flex-wrap gap-1 pt-1'>
-          {TICKET_STATUSES.map((status) => (
-            <FilterChip
-              key={status}
-              label={statusOptions[status]}
-              isActive={filter.status.includes(status)}
-              onToggle={() => onChange({ ...filter, status: toggle<TicketStatus>(filter.status, status) })}
-            />
-          ))}
-        </div>
+      <div className='col-span-6 md:col-span-4'>
+        <MultiTagField
+          label={t('status')}
+          items={TICKET_STATUSES.map((status) => ({ id: status, label: statusOptions[status] }))}
+          value={filter.status}
+          onChange={(status) => onChange({ ...filter, status })}
+        />
       </div>
 
-      <div className='col-span-12 md:col-span-6'>
-        <Label>{t('priority')}</Label>
-        <div className='flex flex-wrap gap-1 pt-1'>
-          {TICKET_PRIORITIES.map((priority) => (
-            <FilterChip
-              key={priority}
-              label={priorityOptions[priority]}
-              isActive={filter.priority.includes(priority)}
-              onToggle={() => onChange({ ...filter, priority: toggle<TicketPriority>(filter.priority, priority) })}
-            />
-          ))}
-        </div>
+      <div className='col-span-6 md:col-span-3'>
+        <MultiTagField
+          label={t('priority')}
+          items={TICKET_PRIORITIES.map((priority) => ({ id: priority, label: priorityOptions[priority] }))}
+          value={filter.priority}
+          onChange={(priority) => onChange({ ...filter, priority })}
+        />
       </div>
 
       {tagChoices.length > 0 && (
-        <div className='col-span-12'>
+        <div className='col-span-12 md:col-span-5'>
           <Label>{t('tags')}</Label>
           <div className='flex flex-wrap gap-1 pt-1'>
             {tagChoices.map((tag) => (

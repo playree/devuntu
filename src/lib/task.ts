@@ -12,6 +12,9 @@ import type { TicketWhereInput } from '@/generated/prisma/models'
 /** チケットのステータス(定義順は enum と同じ) */
 export const TICKET_STATUSES = ['backlog', 'todo', 'doing', 'done'] as const satisfies readonly TicketStatus[]
 
+/** 完了(done)以外のステータス。チケット一覧の絞り込み初期値に使う */
+export const OPEN_TICKET_STATUSES = TICKET_STATUSES.filter((status) => status !== 'done')
+
 /** チケットの優先度(高い順) */
 export const TICKET_PRIORITIES = ['urgent', 'high', 'medium', 'low'] as const satisfies readonly TicketPriority[]
 

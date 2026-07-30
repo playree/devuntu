@@ -20,7 +20,7 @@ import { Accordion, ButtonGroup, Table } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC, useEffect, useRef, useState } from 'react'
 import { AddModal } from './modals'
-import { emptyTicketFilter, TicketSearchPanel } from './search-panel'
+import { defaultTicketFilter, TicketSearchPanel } from './search-panel'
 import { deleteTicket, getTicketFormOptions, GetTicketFormOptionsReturnType, getTickets } from './server'
 
 const defaultExpandedKeys = new Set(['search'])
@@ -32,7 +32,7 @@ export const TicketsClient: FC = () => {
   const boardName = useBoardName()
   const addModalState = useModalState()
 
-  const [filter, setFilter] = useState<TicketSearch>(emptyTicketFilter)
+  const [filter, setFilter] = useState<TicketSearch>(defaultTicketFilter)
   // usePagingList の load は再生成されるため、最新の検索条件は ref から読む
   const filterRef = useRef(filter)
   const [options, setOptions] = useState<GetTicketFormOptionsReturnType>()

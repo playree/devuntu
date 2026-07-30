@@ -55,6 +55,8 @@ export const parseAction = async <
  * サーバーアクションをマウント時に実行し、結果を返す。
  * reload で再取得でき、isLoading で取得中かどうかを判定できる。
  * エラー時は parseAction が throw / notify するため data は undefined のまま。
+ * action は毎レンダー再生成されるインライン関数でもよい(常に最新のものを呼ぶ)。
+ * ただし action が参照する値の変化では自動再取得しないため、必要なら reload を呼ぶ。
  */
 export const useActionData = <T>(
   action: () => Promise<{
@@ -67,10 +69,16 @@ export const useActionData = <T>(
   const [isLoading, setIsLoading] = useState(true)
   // reload 連打時に古いレスポンスが後着で state を上書きしないよう世代トークンで管理
   const genRef = useRef(0)
+  // action はインライン関数で渡されることが多いため、常に最新のものを ref 経由で呼ぶ
+  const actionRef = useRef(action)
+
+  useEffect(() => {
+    actionRef.current = action
+  })
 
   const fetchData = useCallback(() => {
     const gen = ++genRef.current
-    return parseAction(action())
+    return parseAction(actionRef.current())
       .then((res) => {
         if (gen === genRef.current) {
           setData(res)
@@ -84,8 +92,6 @@ export const useActionData = <T>(
           setIsLoading(false)
         }
       })
-    // action はモジュールレベルの安定参照
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const reload = useCallback(() => {
