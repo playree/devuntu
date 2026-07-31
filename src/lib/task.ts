@@ -208,12 +208,14 @@ export const splitKeywords = (raw: string, max: number = MAX_KEYWORDS): string[]
     .slice(0, max)
 
 /**
- * タグ名 1 件ぶんの EXISTS 条件。
+ * タグ名の EXISTS 条件(いずれかのタグを持てばヒット = OR)。
  *
- * 条件ごとに `some` を分けて AND することで、旧 `tags: { hasEvery: [...] }` と同じ意味になる。
- * 1 つの `some` に `name: { in: [...] }` を渡すと OR(hasSome) になってしまうため分けること。
+ * 1 つの `some` に `name: { in: [...] }` を渡すことで OR になる。
+ * 条件ごとに `some` を分けて AND する(= すべてのタグを持つ)挙動ではない点に注意。
  */
-export const tagNameWhere = (name: string): TicketWhereInput => ({ tags: { some: { tag: { name } } } })
+export const tagNamesWhere = (names: string[]): TicketWhereInput => ({
+  tags: { some: { tag: { name: { in: names } } } },
+})
 
 /** 1語ぶんの横断 OR 条件(タイトル / 本文 / タグ / コメント) */
 const keywordOr = (word: string): TicketWhereInput => ({
@@ -257,9 +259,10 @@ export const buildTicketWhere = (
   if (params.priority.length > 0) {
     and.push({ priority: { in: params.priority } })
   }
-  // タグは名前ごとに独立した some(= AND)。1 つの some に in を渡すと OR になってしまう
-  for (const name of dedupeTagNames(params.tags)) {
-    and.push(tagNameWhere(name))
+  // タグはいずれか 1 つでも持てばヒット(status / priority と同じく OR)
+  const tagNames = dedupeTagNames(params.tags)
+  if (tagNames.length > 0) {
+    and.push(tagNamesWhere(tagNames))
   }
   if (params.assignee === 'me') {
     and.push({ assigneeId: ctx.userId })

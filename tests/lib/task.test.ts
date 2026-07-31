@@ -26,7 +26,7 @@ import {
   resolveMentionUserIds,
   splitKeywords,
   stripCodeSpans,
-  tagNameWhere,
+  tagNamesWhere,
   TICKET_STATUSES,
   ticketScopeWhere,
   type BoardRole,
@@ -225,7 +225,7 @@ describe('buildTicketWhere: 検索条件から Prisma where を組む', () => {
     })
   })
 
-  it('status / priority は in、タグは名前ごとに独立した some(= AND)になる', () => {
+  it('status / priority / タグはいずれも in(= OR)になる', () => {
     const res = buildTicketWhere(
       { ...emptyParams, status: ['todo', 'doing'], priority: ['high'], tags: ['bug', 'ui'] },
       ctx,
@@ -233,17 +233,16 @@ describe('buildTicketWhere: 検索条件から Prisma where を組む', () => {
     const and = res.AND as object[]
     expect(and).toContainEqual({ status: { in: ['todo', 'doing'] } })
     expect(and).toContainEqual({ priority: { in: ['high'] } })
-    // 退行防止: 1 つの some に name: { in: [...] } を渡すと OR(hasSome) になってしまうため、
-    // タグは必ず 1 件 = 1 条件に分けること
-    expect(and, 'bug の EXISTS 条件').toContainEqual(tagNameWhere('bug'))
-    expect(and, 'ui の EXISTS 条件').toContainEqual(tagNameWhere('ui'))
-    expect(and, 'スコープ + status + priority + タグ 2 件').toHaveLength(5)
+    // 退行防止: タグは 1 つの some に name: { in: [...] } でまとめること。
+    // 名前ごとに some を分けて AND すると「すべてのタグを持つ」条件になってしまう
+    expect(and, 'いずれかのタグを持てばヒットする EXISTS 条件').toContainEqual(tagNamesWhere(['bug', 'ui']))
+    expect(and, 'スコープ + status + priority + タグ 1 条件').toHaveLength(4)
   })
 
-  it('同名タグの重複指定は 1 条件に畳まれる', () => {
+  it('同名タグの重複指定は 1 件に畳まれる', () => {
     const res = buildTicketWhere({ ...emptyParams, tags: ['bug', 'bug', ' bug '] }, ctx)
-    expect(res.AND, 'スコープ + タグ 1 件').toHaveLength(2)
-    expect((res.AND as object[])[1]).toEqual(tagNameWhere('bug'))
+    expect(res.AND, 'スコープ + タグ 1 条件').toHaveLength(2)
+    expect((res.AND as object[])[1]).toEqual(tagNamesWhere(['bug']))
   })
 
   it('tags が空ならタグ条件を付けない', () => {

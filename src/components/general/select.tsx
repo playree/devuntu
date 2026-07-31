@@ -101,7 +101,7 @@ export const MultiSelectField = ({
         <Select.Popover>
           <ListBox selectionMode='multiple'>
             {Object.entries(groupOptions).map(([id, name]) => (
-              <ListBox.Item key={id} id={id} textValue={name}>
+              <ListBox.Item key={id} id={id} textValue={name} className='min-h-min py-1'>
                 {name}
                 <ListBox.ItemIndicator />
               </ListBox.Item>
@@ -201,7 +201,7 @@ export const SingleSelectField = ({
         <Select.Popover>
           <ListBox selectionMode='single'>
             {Object.entries(groupOptions).map(([id, name]) => (
-              <ListBox.Item key={id} id={id} textValue={name}>
+              <ListBox.Item key={id} id={id} textValue={name} className='min-h-min py-1'>
                 {name}
                 <ListBox.ItemIndicator />
               </ListBox.Item>

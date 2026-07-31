@@ -1,13 +1,14 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
+import { XCircleIcon } from '@/components/general/select'
 import { useIsSmart } from '@/components/general/smart'
 import { PlusIcon, XMarkIcon } from '@/components/icon'
 import type { TagColor } from '@/generated/prisma/enums'
 import { MAX_TAG_NAME, MAX_TICKET_TAGS } from '@/lib/task'
 import { useLocale } from '@/locale/client'
-import { Autocomplete, EmptyState, ErrorMessage, Label, ListBox, SearchField, useFilter } from '@heroui/react'
-import { useState } from 'react'
+import { Autocomplete, EmptyState, ErrorMessage, Label, ListBox, SearchField, Select, useFilter } from '@heroui/react'
+import { FC, useState } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 import { TagChip } from './ticket-chip'
 
@@ -254,5 +255,102 @@ export const TagSelect = <
         )
       }}
     />
+  )
+}
+
+/**
+ * タグ名で複数選択する Select(絞り込み条件用)。react-hook-form には依存しない。
+ *
+ * 同じファイルの `TagSelect` との違い:
+ * - 値が **タグ名の配列**(tagId ではない)。ボード横断でも同名タグを 1 条件に畳むため
+ * - 検索入力 / 新規作成を持たないので Autocomplete ではなく Select で構成する
+ *
+ * collection のキーもタグ名にするため、`options` は呼び出し側で
+ * `dedupeTagOptionsByName`(lib/task.ts) を通して同名を畳んでおくこと。
+ */
+export const TagNameSelectField: FC<{
+  options: TagSelectOption[]
+  /** 選択中のタグ名 */
+  value: string[]
+  onChange: (value: string[]) => void
+  label?: string
+  /** 選択できる最大件数。到達したら未選択のタグを選べなくする */
+  max?: number
+  variant?: 'primary' | 'secondary'
+  errorMessage?: string
+  isSmart?: boolean
+}> = ({ options, value, onChange, label, max, variant, errorMessage, isSmart: isSmartProp }) => {
+  const isSmart = useIsSmart(isSmartProp)
+  const { t } = useLocale()
+  // 選択順で並べる(options 順ではなく選んだ順にチップが増える)
+  const selected = value.flatMap((name) => options.filter((tag) => tag.name === name))
+  const isFull = max !== undefined && value.length >= max
+  // 上限に達したら未選択のタグだけ選べなくする。
+  // 選択済みも無効にすると disabledBehavior='all' により press が届かず解除もできなくなる。
+  const disabledKeys = isFull ? options.filter((tag) => !value.includes(tag.name)).map((tag) => tag.name) : NO_KEYS
+
+  return (
+    <Select
+      selectionMode='multiple'
+      value={value}
+      variant={variant}
+      isInvalid={!!errorMessage}
+      disabledKeys={disabledKeys}
+      // タグが 0 件でも開けるようにする(react-aria は collection が空だと開かない)
+      allowsEmptyCollection
+      onChange={(keys) => onChange(keys.map(String))}
+    >
+      <Label className={isSmart ? 'text-xs font-light' : ''}>
+        {label ?? t('tags')}
+        {max !== undefined && <span className='ml-1 text-xs opacity-60'>{`${value.length}/${max}`}</span>}
+      </Label>
+      {/* isSmart: 既定 36px(min-h-9 + py-2)を 28px へ。text-sm の行高 20px + 上下 4px */}
+      <Select.Trigger className={isSmart ? 'min-h-7 py-1' : undefined}>
+        <Select.Value className='flex flex-wrap items-center gap-1'>
+          {() =>
+            selected.length > 0 ? (
+              <>
+                {selected.map((tag) => (
+                  <TagChip key={tag.id} tag={tag} />
+                ))}
+              </>
+            ) : (
+              <span className='opacity-60'>{t('no_tag_selected')}</span>
+            )
+          }
+        </Select.Value>
+        {/* Select には Autocomplete.ClearButton 相当が無いので手書きする */}
+        {value.length > 0 && (
+          <span
+            role='button'
+            aria-label='clear'
+            tabIndex={-1}
+            className='ml-auto inline-flex cursor-pointer items-center opacity-60 hover:opacity-100'
+            // トリガーの onClick は開閉なので × では伝播を止める
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation()
+              onChange([])
+            }}
+          >
+            <XCircleIcon width={16} />
+          </span>
+        )}
+        <Select.Indicator />
+      </Select.Trigger>
+      <ErrorMessage className={isSmart ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
+      <Select.Popover>
+        <ListBox selectionMode='multiple' renderEmptyState={() => <EmptyState>{t('msg_no_tags')}</EmptyState>}>
+          {options.map((tag) => (
+            // キーは tagId ではなく名前(value と揃える)
+            <ListBox.Item key={tag.name} id={tag.name} textValue={tag.name} className='min-h-min py-1'>
+              <TagChip tag={{ ...tag, name: '　' }} />
+              {tag.name}
+              <ListBox.ItemIndicator />
+            </ListBox.Item>
+          ))}
+        </ListBox>
+      </Select.Popover>
+    </Select>
   )
 }

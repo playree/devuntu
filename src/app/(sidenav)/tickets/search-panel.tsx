@@ -4,12 +4,18 @@ import { GridBox } from '@/components/general/grid'
 import { InputSearchField } from '@/components/general/input'
 import { SingleSelectField } from '@/components/general/select'
 import { MultiTagField } from '@/components/general/tag-group'
-import { TagChip, useTicketOptions } from '@/components/ticket/ticket-chip'
+import { TagNameSelectField } from '@/components/ticket/tag-select'
+import { useTicketOptions } from '@/components/ticket/ticket-chip'
 import type { BoardKind, TagColor } from '@/generated/prisma/enums'
 import { TicketSearch } from '@/lib/schema'
-import { dedupeTagOptionsByName, OPEN_TICKET_STATUSES, TICKET_PRIORITIES, TICKET_STATUSES } from '@/lib/task'
+import {
+  dedupeTagOptionsByName,
+  MAX_TICKET_TAGS,
+  OPEN_TICKET_STATUSES,
+  TICKET_PRIORITIES,
+  TICKET_STATUSES,
+} from '@/lib/task'
 import { useLocale } from '@/locale/client'
-import { Label } from '@heroui/react'
 import { FC, useState } from 'react'
 
 /** 検索条件の初期値(ステータスは完了以外を選択済み) */
@@ -24,9 +30,6 @@ export const defaultTicketFilter: TicketSearch = {
 
 /** 対象の Select で「すべてのボード」を表す値(boardId = null に対応) */
 const BOARD_ALL = 'all'
-
-const toggle = <T,>(values: T[], value: T): T[] =>
-  values.includes(value) ? values.filter((v) => v !== value) : [...values, value]
 
 /**
  * チケット一覧の検索・フィルタパネル。
@@ -114,18 +117,13 @@ export const TicketSearchPanel: FC<{
 
       {tagChoices.length > 0 && (
         <div className='col-span-12 md:col-span-5'>
-          <Label>{t('tags')}</Label>
-          <div className='flex flex-wrap gap-1 pt-1'>
-            {tagChoices.map((tag) => (
-              <TagChip
-                key={tag.id}
-                tag={tag}
-                // トグルの値は tagId ではなく名前(ボード横断でも同名を 1 条件にまとめる)
-                className={filter.tags.includes(tag.name) ? 'cursor-pointer' : 'cursor-pointer opacity-50'}
-                onClick={() => onChange({ ...filter, tags: toggle(filter.tags, tag.name) })}
-              />
-            ))}
-          </div>
+          {/* 絞り込みの値は tagId ではなく名前(ボード横断でも同名を 1 条件にまとめる) */}
+          <TagNameSelectField
+            options={tagChoices}
+            value={filter.tags}
+            max={MAX_TICKET_TAGS}
+            onChange={(tags) => onChange({ ...filter, tags })}
+          />
         </div>
       )}
     </GridBox>
