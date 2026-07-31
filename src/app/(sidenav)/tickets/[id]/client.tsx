@@ -404,25 +404,27 @@ export const TicketDetailClient: FC<{ id: string }> = ({ id }) => {
               </FlexRow>
             ) : (
               canEdit && (
-                <MultiButton
-                  isIconOnly
-                  size='sm'
-                  variant='outline'
-                  tooltip={t('update')}
-                  onPress={() => {
-                    setContentDraft(ticket.content ?? '')
-                    setEditingContent(true)
-                  }}
-                >
-                  <PencilSquareIcon width={16} />
-                </MultiButton>
+                <FlexRow isSmart>
+                  <MultiButton
+                    isIconOnly
+                    size='sm'
+                    variant='outline'
+                    tooltip={t('update')}
+                    onPress={() => {
+                      setContentDraft(ticket.content ?? '')
+                      setEditingContent(true)
+                    }}
+                  >
+                    <PencilSquareIcon width={16} />
+                  </MultiButton>
+                </FlexRow>
               )
             )
           }
         />
       </div>
 
-      <TicketComments ticket={ticket} reload={reload} />
+      <TicketComments ticket={ticket} refresh={refresh} />
     </FlexCol>
   )
 }
