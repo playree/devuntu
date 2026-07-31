@@ -81,7 +81,7 @@ export const TicketSearchPanel: FC<{
 
       <div className='col-span-6 md:col-span-4'>
         <SingleSelectField
-          label={t('ticket_scope')}
+          label={t('target_board')}
           groupOptions={boardOptions}
           value={filter.boardId ?? BOARD_ALL}
           onChange={(value) => onChange({ ...filter, boardId: !value || value === BOARD_ALL ? null : value })}

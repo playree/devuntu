@@ -7,7 +7,14 @@ import { useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, ArrowTopRightOnSquareIcon, ChatBubbleIcon, PlusIcon, TicketIcon } from '@/components/icon'
+import {
+  ArrowPathIcon,
+  ArrowTopRightOnSquareIcon,
+  ChatBubbleIcon,
+  FunnelIcon,
+  PlusIcon,
+  TicketIcon,
+} from '@/components/icon'
 import { notify } from '@/components/notify'
 import { PriorityChip, StatusChip, TagChips, useBoardName } from '@/components/ticket/ticket-chip'
 import { parseAction } from '@/lib/action-client'
@@ -81,8 +88,9 @@ export const TicketsClient: FC = () => {
       <Accordion allowsMultipleExpanded hideSeparator defaultExpandedKeys={defaultExpandedKeys}>
         <Accordion.Item id='search'>
           <Accordion.Heading>
-            <Accordion.Trigger>
-              {t('keyword')}
+            <Accordion.Trigger className='gap-1'>
+              <FunnelIcon />
+              {t('filter')}
               <Accordion.Indicator />
             </Accordion.Trigger>
           </Accordion.Heading>
@@ -108,12 +116,12 @@ export const TicketsClient: FC = () => {
         pagingList={list}
         columns={[
           { id: 'title', name: t('title'), isRowHeader: true, allowsSorting: true, minWidth: 140, defaultWidth: '2fr' },
-          { id: 'status', name: t('status'), allowsSorting: true, minWidth: 90 },
-          { id: 'priority', name: t('priority'), allowsSorting: true, minWidth: 80 },
-          { id: 'assigneeName', name: t('assignee'), allowsSorting: true, minWidth: 90 },
-          { id: 'dueDate', name: t('due_date'), allowsSorting: true, minWidth: 100 },
+          { id: 'status', name: t('status'), allowsSorting: true, minWidth: 100, defaultWidth: 100 },
+          { id: 'priority', name: t('priority'), allowsSorting: true, minWidth: 70, defaultWidth: 70 },
+          { id: 'assigneeName', name: t('assignee'), allowsSorting: true, minWidth: 100, defaultWidth: 100 },
+          { id: 'dueDate', name: t('due_date'), allowsSorting: true, minWidth: 110, defaultWidth: 110 },
           { id: 'tags', name: t('tags'), allowsSorting: false, minWidth: 100 },
-          { id: 'updatedAt', name: t('updated_at'), allowsSorting: true, minWidth: 110 },
+          { id: 'updatedAt', name: t('updated_at'), allowsSorting: true, minWidth: 110, defaultWidth: 110 },
           { id: 'action', name: t('action'), allowsSorting: false, defaultWidth: 100 },
         ]}
       >

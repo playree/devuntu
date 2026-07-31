@@ -1,6 +1,6 @@
 'use client'
 
-import { Label, Tag, TagGroup } from '@heroui/react'
+import { cn, Tag, TagGroup } from '@heroui/react'
 import { useMemo } from 'react'
 import { useIsSmart } from './smart'
 
@@ -48,15 +48,17 @@ export const MultiTagField = <T extends string>({
         )
       }
     >
-      <Label className={isSmart ? 'text-xs font-light' : ''}>{label}</Label>
       {/* items prop は使わず静的に children を map する(react-aria のコレクションキャッシュを避ける) */}
-      <TagGroup.List>
-        {items.map((item) => (
-          <Tag key={item.id} id={item.id} textValue={item.label} isDisabled={item.isDisabled}>
-            {item.label}
-          </Tag>
-        ))}
-      </TagGroup.List>
+      <fieldset className='rounded-xl border-2 px-2 pt-0.5 pb-1.5'>
+        <legend className={cn('text-foreground px-2', isSmart ? 'text-xs font-light' : '')}>{label}</legend>
+        <TagGroup.List>
+          {items.map((item) => (
+            <Tag key={item.id} id={item.id} textValue={item.label} isDisabled={item.isDisabled}>
+              {item.label}
+            </Tag>
+          ))}
+        </TagGroup.List>
+      </fieldset>
     </TagGroup>
   )
 }
