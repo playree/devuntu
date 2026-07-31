@@ -186,7 +186,13 @@ export const TagSelect = <
               <Autocomplete.Indicator />
             </Autocomplete.Trigger>
             <ErrorMessage className={isSmart ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
-            <Autocomplete.Popover>
+            {/*
+              aria-label は内部の Dialog 用。HeroUI 3.2.2 の Autocomplete.Popover は Dialog へ
+              ラベルを渡さず react-aria が警告を出すため、patches/@heroui__react.patch で転送している。
+              Select のコレクション構築は children を <template> 内で描画するので、
+              <Heading slot='title'> では(id が実 DOM に無く)ラベル付けできない。
+            */}
+            <Autocomplete.Popover aria-label={label ?? t('tags')}>
               <Autocomplete.Filter
                 inputValue={draft}
                 onInputChange={setDraft}

@@ -13,3 +13,5 @@ onlyBuiltDependencies:
   - unrs-resolver
 overrides:
   sharp: '0.34.5'
+patchedDependencies:
+  '@heroui/react': patches/@heroui__react.patch

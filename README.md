@@ -14,6 +14,8 @@
   - [インストール](#インストール)
   - [ビルド](#ビルド)
   - [パッケージ更新](#パッケージ更新)
+  - [パッケージへのパッチ](#パッケージへのパッチ)
+    - [@heroui/react](#herouireact)
   - [better-auth](#better-auth)
   - [イメージ作成](#イメージ作成)
     - [Docker Build](#docker-build)
@@ -145,6 +147,39 @@ pnpm build
 pnpm up -i
 pnpm up -i -L
 ```
+
+## パッケージへのパッチ
+
+`patches/`配下に`pnpm patch`で作成したパッチを置いている。登録先は`pnpm-workspace.yaml`の`patchedDependencies`で、`pnpm install`時に自動適用される。
+
+**パッチ対象パッケージをバージョンアップした場合は、パッチの当て直しが必要。**
+
+```sh
+# 1. 編集用の一時ディレクトリを作成(パスが出力される)
+pnpm patch @heroui/react
+
+# 2. 出力されたパス配下のファイルを編集
+
+# 3. パッチとして確定(patches/配下に保存され pnpm-workspace.yaml に登録される)
+pnpm patch-commit '<出力されたパス>'
+```
+
+### @heroui/react
+
+| パッチ                         | 対象バージョン | 内容                                                                                       |
+| ------------------------------ | -------------- | ------------------------------------------------------------------------------------------ |
+| `patches/@heroui__react.patch` | 3.2.2          | `Autocomplete.Popover`が`aria-label`/`aria-labelledby`を内部の`Dialog`へ転送するようにする |
+
+`Autocomplete.Popover`は内部で react-aria の`Dialog`を挟むが、受け取った props は外側の`Popover`にしか展開されず`Dialog`にラベルを渡す手段が無い。そのため開発時に以下の警告が出続ける。
+
+```
+If a Dialog does not contain a <Heading slot="title">, it must have an aria-label or
+aria-labelledby attribute for accessibility.
+```
+
+- `<Heading slot="title">`では解決できない。react-aria の`Select`はコレクション構築のため children ツリーを`<template>`内で描画し、`Dialog`は`document.getElementById`で見出しを探すため、この pass では必ず見つからず警告になる(ポップオーバーを開く前、マウント時から出る)
+- 利用側は`<Autocomplete.Popover aria-label={...}>`を渡すだけでよい。`src/components/ticket/tag-select.tsx`が該当
+- 上流(HeroUI)側の不備なので、修正されたらこのパッチは削除する
 
 ## better-auth
 

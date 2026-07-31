@@ -19,6 +19,7 @@ export const MultiTagField = <T extends string>({
   size = 'sm',
   variant,
   isSmart: isSmartProp,
+  ariaLabel,
 }: {
   label: string
   items: readonly MultiTagItem<T>[]
@@ -27,12 +28,14 @@ export const MultiTagField = <T extends string>({
   size?: 'sm' | 'md' | 'lg'
   variant?: 'default' | 'surface'
   isSmart?: boolean
+  ariaLabel?: string
 }) => {
   const isSmart = useIsSmart(isSmartProp)
   // react-aria へ毎回新しい Set を渡さないよう value 参照で memo 化する
   const selectedKeys = useMemo(() => new Set<string>(value), [value])
   return (
     <TagGroup
+      aria-label={ariaLabel || `aria-${label}`}
       selectionMode='multiple'
       selectedKeys={selectedKeys}
       // 絞り込み条件が Escape で意図せず全解除されるのを防ぐ(react-aria の既定は clearSelection)
