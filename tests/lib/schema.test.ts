@@ -4,7 +4,7 @@
  * 既定値・必須の境界だけを対象にする(項目ごとの文字数制限は UI の constraintSchema が担う)。
  */
 
-import { scCreateTicket, scMoveTicket, scUpdateTicket } from '@/lib/schema'
+import { scCreateTicket, scMoveTicket, scPatchTicket } from '@/lib/schema'
 import { describe, expect, it } from 'vitest'
 
 const boardId = '01920000-0000-7000-8000-000000000001'
@@ -28,9 +28,25 @@ describe('scCreateTicket: priority は必須(既定 medium)', () => {
   it('未知の値は受け付けない', () => {
     expect(scCreateTicket.safeParse({ boardId, title: 'x', priority: 'highest' }).success).toBe(false)
   })
+})
 
-  it('scUpdateTicket も同じ既定値を引き継ぐ', () => {
-    expect(scUpdateTicket.parse({ id: ticketId, title: 'x' }).priority).toBe('medium')
+describe('scPatchTicket: 渡された項目だけを更新する', () => {
+  it('未指定の項目には既定値を入れない', () => {
+    const res = scPatchTicket.parse({ id: ticketId })
+    expect(res.priority, '既定値を補うと無変更のはずの項目を上書きしてしまう').toBeUndefined()
+    expect(res.title).toBeUndefined()
+    expect(res.tagIds).toBeUndefined()
+  })
+
+  it('null はクリアとして受け付ける(期日・担当者)', () => {
+    const res = scPatchTicket.parse({ id: ticketId, dueDate: null, assigneeId: null })
+    expect(res.dueDate).toBeNull()
+    expect(res.assigneeId).toBeNull()
+  })
+
+  it('クリア不可の項目に null は受け付けない', () => {
+    expect(scPatchTicket.safeParse({ id: ticketId, priority: null }).success, '優先度').toBe(false)
+    expect(scPatchTicket.safeParse({ id: ticketId, title: null }).success, '件名').toBe(false)
   })
 })
 

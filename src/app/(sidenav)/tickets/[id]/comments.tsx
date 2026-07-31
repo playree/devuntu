@@ -25,10 +25,10 @@ const MAX_COMMENT_LENGTH = 5000
 const isSubmittable = (draft: string) => !!draft.trim() && draft.length <= MAX_COMMENT_LENGTH
 
 /** コメント 1 件。投稿者本人なら編集できる */
-const CommentItem: FC<{ comment: Comment; canDelete: boolean; reload: () => void }> = ({
+const CommentItem: FC<{ comment: Comment; canDelete: boolean; refresh: () => Promise<void> }> = ({
   comment,
   canDelete,
-  reload,
+  refresh,
 }) => {
   const { t } = useLocale()
   const tz = useUserTimezone()
@@ -43,7 +43,7 @@ const CommentItem: FC<{ comment: Comment; canDelete: boolean; reload: () => void
       await parseAction(updateTicketComment({ id: comment.id, content: draft }))
       notify.success(t('msg_saved'))
       setEditing(false)
-      reload()
+      await refresh()
     } finally {
       setSaving(false)
     }
@@ -60,7 +60,7 @@ const CommentItem: FC<{ comment: Comment; canDelete: boolean; reload: () => void
       if (ok) {
         await parseAction(deleteTicketComment({ id: comment.id }))
         notify.success(t('msg_deleted_target', { target: t('comment') }))
-        reload()
+        await refresh()
       }
     } finally {
       confirmModal().close()
@@ -146,7 +146,7 @@ const CommentItem: FC<{ comment: Comment; canDelete: boolean; reload: () => void
 }
 
 /** コメント一覧 + 投稿フォーム */
-export const TicketComments: FC<{ ticket: Ticket; reload: () => void }> = ({ ticket, reload }) => {
+export const TicketComments: FC<{ ticket: Ticket; refresh: () => Promise<void> }> = ({ ticket, refresh }) => {
   const { t } = useLocale()
   const [draft, setDraft] = useState('')
   const [isPosting, setPosting] = useState(false)
@@ -160,7 +160,7 @@ export const TicketComments: FC<{ ticket: Ticket; reload: () => void }> = ({ tic
       notify.success(t('msg_added_comment'))
       setDraft('')
       setEditorKey((n) => n + 1)
-      reload()
+      await refresh()
     } finally {
       setPosting(false)
     }
@@ -176,7 +176,7 @@ export const TicketComments: FC<{ ticket: Ticket; reload: () => void }> = ({ tic
       </div>
 
       {ticket.comments.map((comment) => (
-        <CommentItem key={comment.id} comment={comment} canDelete={ticket.canDelete} reload={reload} />
+        <CommentItem key={comment.id} comment={comment} canDelete={ticket.canDelete} refresh={refresh} />
       ))}
 
       {ticket.canEdit && (

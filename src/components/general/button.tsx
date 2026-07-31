@@ -44,7 +44,7 @@ export const MultiButton: FC<
     <Button
       type={type}
       size={size}
-      className={cn(isSmart ? 'h-fit p-0.5' : '', className)}
+      className={cn(isSmart ? 'h-fit px-2 py-0.5' : '', className)}
       {...props}
       onPress={(e) => {
         if (onPress) {

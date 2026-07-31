@@ -1,6 +1,6 @@
 'use client'
 
-import { Calendar, DateField, DatePicker, ErrorMessage, Label } from '@heroui/react'
+import { Calendar, cn, DateField, DatePicker, ErrorMessage, Label } from '@heroui/react'
 import { CalendarDate, parseDate } from '@internationalized/date'
 import { ComponentProps } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
@@ -25,9 +25,110 @@ const toCalendarDate = (value: unknown): CalendarDate | null => {
   }
 }
 
+type DatePickerFieldProps = {
+  label?: string
+  /** ラベルを読み上げ用にだけ残す(見出しを呼び出し側で出す場合) */
+  isLabelHidden?: boolean
+  errorMessage?: string
+  isRequired?: boolean
+  isReadOnly?: boolean
+  isDisabled?: boolean
+  /** クリアボタンを表示する(任意入力の日付向け) */
+  isClearable?: boolean
+  variant?: 'primary' | 'secondary'
+  isSmart?: boolean
+}
+
 /**
- * react-hook-form 対応の DatePicker(日付のみ)。
- * フォーム側の値は `YYYY-MM-DD` 文字列で扱い、CalendarDate との変換をこの中に隠蔽する。
+ * react-hook-form に依存しない DatePicker(日付のみ)本体。
+ * 値は `YYYY-MM-DD` 文字列または null。CalendarDate との変換はこの中に隠蔽する。
+ */
+export const DatePickerField = ({
+  label,
+  isLabelHidden,
+  errorMessage,
+  isRequired,
+  isReadOnly,
+  isDisabled,
+  isClearable = true,
+  variant,
+  isSmart: isSmartProp,
+  value,
+  onChange,
+  onBlur,
+}: DatePickerFieldProps & {
+  value: string | null
+  onChange: (value: string | null) => void
+  onBlur?: () => void
+}) => {
+  const isSmart = useIsSmart(isSmartProp)
+  const selected = toCalendarDate(value)
+  return (
+    <DatePicker
+      value={selected}
+      // CalendarDate.toString() は YYYY-MM-DD を返す
+      onChange={(date) => onChange(date ? date.toString() : null)}
+      onBlur={onBlur}
+      isInvalid={!!errorMessage}
+      isReadOnly={isReadOnly}
+      isRequired={isRequired}
+      isDisabled={isDisabled}
+      className='flex w-full'
+    >
+      {label && (
+        <Label className={cn(isSmart ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}>
+          {label}
+          {isRequired ? '*' : ''}
+        </Label>
+      )}
+      {/* isSmart: .date-input-group は h-9 固定なので h-7 で上書きし、
+              overflow-hidden で内側がクリップされないよう Input の py も詰める */}
+      <DateField.Group fullWidth variant={variant} className={isSmart ? 'h-7' : undefined}>
+        <DateField.Input className={isSmart ? 'py-1' : undefined}>
+          {(segment: DateSegmentValue) => <DateField.Segment segment={segment} />}
+        </DateField.Input>
+        <DateField.Suffix>
+          {isClearable && selected && !isReadOnly && (
+            <span
+              role='button'
+              aria-label='clear'
+              tabIndex={-1}
+              className='mr-1 inline-flex cursor-pointer items-center opacity-60 hover:opacity-100'
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation()
+                onChange(null)
+              }}
+            >
+              <XCircleIcon width={16} />
+            </span>
+          )}
+          <DatePicker.Trigger>
+            <DatePicker.TriggerIndicator />
+          </DatePicker.Trigger>
+        </DateField.Suffix>
+      </DateField.Group>
+      <ErrorMessage className={isSmart ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
+      <DatePicker.Popover>
+        <Calendar>
+          <Calendar.Header>
+            <Calendar.NavButton slot='previous' />
+            <Calendar.Heading />
+            <Calendar.NavButton slot='next' />
+          </Calendar.Header>
+          <Calendar.Grid>
+            <Calendar.GridHeader>{(day) => <Calendar.HeaderCell>{day}</Calendar.HeaderCell>}</Calendar.GridHeader>
+            <Calendar.GridBody>{(date) => <Calendar.Cell date={date} />}</Calendar.GridBody>
+          </Calendar.Grid>
+        </Calendar>
+      </DatePicker.Popover>
+    </DatePicker>
+  )
+}
+
+/**
+ * react-hook-form 対応の DatePicker(日付のみ)。描画は DatePickerField に委譲する。
+ * フォーム側の値は `YYYY-MM-DD` 文字列で扱う。
  */
 export const DatePickerCtrl = <
   TFieldValues extends FieldValues = FieldValues,
@@ -35,93 +136,23 @@ export const DatePickerCtrl = <
 >({
   control,
   name,
-  label,
-  errorMessage,
-  isRequired,
-  isReadOnly,
-  isClearable = true,
-  variant,
-  isSmart: isSmartProp,
-}: {
+  ...props
+}: DatePickerFieldProps & {
   control: Control<TFieldValues>
   name: TName
-  label?: string
-  errorMessage?: string
-  isRequired?: boolean
-  isReadOnly?: boolean
-  /** クリアボタンを表示する(任意入力の日付向け) */
-  isClearable?: boolean
-  variant?: 'primary' | 'secondary'
-  isSmart?: boolean
 }) => {
-  const isSmart = useIsSmart(isSmartProp)
   return (
     <Controller
       control={control}
       name={name}
-      render={({ field: { onChange, value, onBlur } }) => {
-        const selected = toCalendarDate(value)
-        return (
-          <DatePicker
-            value={selected}
-            // CalendarDate.toString() は YYYY-MM-DD を返す
-            onChange={(date) => onChange(date ? date.toString() : null)}
-            onBlur={onBlur}
-            isInvalid={!!errorMessage}
-            isReadOnly={isReadOnly}
-            isRequired={isRequired}
-            className='flex w-full'
-          >
-            {label && (
-              <Label className={isSmart ? 'text-xs font-light' : ''}>
-                {label}
-                {isRequired ? '*' : ''}
-              </Label>
-            )}
-            {/* isSmart: .date-input-group は h-9 固定なので h-7 で上書きし、
-              overflow-hidden で内側がクリップされないよう Input の py も詰める */}
-            <DateField.Group fullWidth variant={variant} className={isSmart ? 'h-7' : undefined}>
-              <DateField.Input className={isSmart ? 'py-1' : undefined}>
-                {(segment: DateSegmentValue) => <DateField.Segment segment={segment} />}
-              </DateField.Input>
-              <DateField.Suffix>
-                {isClearable && selected && !isReadOnly && (
-                  <span
-                    role='button'
-                    aria-label='clear'
-                    tabIndex={-1}
-                    className='mr-1 inline-flex cursor-pointer items-center opacity-60 hover:opacity-100'
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onChange(null)
-                    }}
-                  >
-                    <XCircleIcon width={16} />
-                  </span>
-                )}
-                <DatePicker.Trigger>
-                  <DatePicker.TriggerIndicator />
-                </DatePicker.Trigger>
-              </DateField.Suffix>
-            </DateField.Group>
-            <ErrorMessage className={isSmart ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
-            <DatePicker.Popover>
-              <Calendar>
-                <Calendar.Header>
-                  <Calendar.NavButton slot='previous' />
-                  <Calendar.Heading />
-                  <Calendar.NavButton slot='next' />
-                </Calendar.Header>
-                <Calendar.Grid>
-                  <Calendar.GridHeader>{(day) => <Calendar.HeaderCell>{day}</Calendar.HeaderCell>}</Calendar.GridHeader>
-                  <Calendar.GridBody>{(date) => <Calendar.Cell date={date} />}</Calendar.GridBody>
-                </Calendar.Grid>
-              </Calendar>
-            </DatePicker.Popover>
-          </DatePicker>
-        )
-      }}
+      render={({ field: { onChange, value, onBlur } }) => (
+        <DatePickerField
+          {...props}
+          value={typeof value === 'string' ? value : null}
+          onChange={onChange}
+          onBlur={onBlur}
+        />
+      )}
     />
   )
 }

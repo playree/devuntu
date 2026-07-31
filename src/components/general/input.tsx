@@ -30,6 +30,8 @@ const MagnifyingGlassIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 16, strokeWi
 
 type InputFieldProps = InputProps & {
   label?: string
+  /** ラベルを読み上げ用にだけ残す(見出しを呼び出し側で出す場合) */
+  isLabelHidden?: boolean
   isRequired?: boolean
   isReadOnly?: boolean
   errorMessage?: string
@@ -45,6 +47,7 @@ type InputFieldProps = InputProps & {
 export const InputField = ({
   type = 'text',
   label,
+  isLabelHidden,
   isRequired,
   isReadOnly,
   errorMessage,
@@ -55,7 +58,7 @@ export const InputField = ({
   const isSmart = useIsSmart(isSmartProp)
   return (
     <TextField isInvalid={!!errorMessage} isReadOnly={isReadOnly}>
-      <Label className={isSmart ? 'text-xs font-light' : ''}>
+      <Label className={cn(isSmart ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}>
         {label}
         {isRequired ? '*' : ''}
       </Label>

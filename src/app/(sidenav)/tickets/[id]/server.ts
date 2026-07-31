@@ -13,13 +13,7 @@ import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { notifyMention } from '@/lib/notify-mention'
 import { prisma } from '@/lib/prisma'
-import {
-  scCreateTicketComment,
-  scUpdateTicket,
-  scUpdateTicketComment,
-  scUpdateTicketStatus,
-  scUUID,
-} from '@/lib/schema'
+import { scCreateTicketComment, scPatchTicket, scUpdateTicketComment, scUpdateTicketStatus, scUUID } from '@/lib/schema'
 import { assertTagIdsInBoard, syncTicketTags } from '@/lib/tag'
 import { extractMentionNames, resolveMentionUserIds } from '@/lib/task'
 
@@ -106,41 +100,42 @@ export const getTicket = safeAuthAction
 export type GetTicketReturnType = Awaited<ReturnType<typeof getTicket>>['data']
 
 /**
- * チケット更新(タイトル / 本文 / 属性)
+ * チケットの部分更新(詳細画面のインライン編集)
  *
+ * 渡された項目だけを更新する(undefined = 変更しない / null = クリア)。
  * status はレーン位置の再採番を伴うため updateTicketStatus 側で扱う。
  */
-export const updateTicket = safeAuthAction
-  .metadata({ actionName: 'updateTicket', role: 'user' })
-  .inputSchema(scUpdateTicket)
-  .action(async ({ ctx: { user }, parsedInput: { id, status, assigneeId, tagIds, dueDate, ...rest } }) => {
+export const patchTicket = safeAuthAction
+  .metadata({ actionName: 'patchTicket', role: 'user' })
+  .inputSchema(scPatchTicket)
+  .action(async ({ ctx: { user }, parsedInput: { id, assigneeId, tagIds, dueDate, ...rest } }) => {
     const ticket = await prisma.$transaction(async (tx) => {
       const access = await assertTicketAccess(user, id, 'edit', tx)
 
       // 担当者・タグはそのボードに属するものに限る(DB 制約では防げない)
-      await assertBoardAssignee(tx, access.boardId, assigneeId)
-      const ids = await assertTagIdsInBoard(tx, access.boardId, tagIds)
+      if (assigneeId !== undefined) {
+        await assertBoardAssignee(tx, access.boardId, assigneeId)
+      }
+      const ids = tagIds !== undefined ? await assertTagIdsInBoard(tx, access.boardId, tagIds) : undefined
 
       const updated = await tx.ticket.update({
         where: { id },
         data: {
+          // title / content / priority は未指定なら undefined = 無変更
           ...rest,
-          dueDate: dateOnlyToUtc(dueDate),
-          assigneeId: assigneeId ?? null,
+          ...(dueDate !== undefined && { dueDate: dateOnlyToUtc(dueDate) }),
+          ...(assigneeId !== undefined && { assigneeId: assigneeId ?? null }),
         },
         select: { id: true, title: true },
       })
-      await syncTicketTags(tx, id, ids)
-
-      // ステータスが変わる場合はレーン末尾へ移動する(order の再採番を伴う)
-      if (status !== access.status) {
-        await moveTicketToLane(tx, { access, status })
+      if (ids) {
+        await syncTicketTags(tx, id, ids)
       }
 
       return updated
     })
 
-    logger.info({ userId: user.id, id }, 'ticket updated')
+    logger.info({ userId: user.id, id }, 'ticket patched')
     return ticket
   })
 

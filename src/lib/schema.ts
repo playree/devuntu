@@ -233,11 +233,25 @@ export type CreateTicket = z.infer<typeof scCreateTicket>
 export type CreateTicketIn = z.input<typeof scCreateTicket>
 export type CreateTicketOut = z.output<typeof scCreateTicket>
 
-// .extend() は ZodObject を返すため constraintSchema へ渡せる
-export const scUpdateTicket = scCreateTicket.omit({ boardId: true }).extend({ id: z.uuidv7() })
-export type UpdateTicket = z.infer<typeof scUpdateTicket>
-export type UpdateTicketIn = z.input<typeof scUpdateTicket>
-export type UpdateTicketOut = z.output<typeof scUpdateTicket>
+/**
+ * チケットの部分更新(詳細画面のインライン編集)。
+ *
+ * 渡された項目だけを更新する。status はレーン順の再採番を伴うため scUpdateTicketStatus 側で扱う。
+ * z.object で組むので constraintSchema へも渡せる(.optional() は getFieldConstraints が剥がす)。
+ */
+export const scPatchTicket = z.object({
+  id: z.uuidv7(),
+  title: zTicketTitle.optional(),
+  content: zTicketContent.optional(),
+  priority: zTicketPriority.optional(),
+  /** undefined = 変更しない / null = クリア(zDueDate は nullish) */
+  dueDate: zDueDate,
+  tagIds: zTagIds.optional(),
+  /** undefined = 変更しない / null = 未割り当てへ */
+  assigneeId: z.uuidv7().nullish(),
+})
+export type PatchTicket = z.infer<typeof scPatchTicket>
+export type PatchTicketIn = z.input<typeof scPatchTicket>
 
 export const scUpdateTicketStatus = z.object({
   id: z.uuidv7(),

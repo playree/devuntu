@@ -1,19 +1,34 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
-import { FlexCol } from '@/components/general/flex'
-import { useConfirmModal, useModalState } from '@/components/general/modal'
+import { DatePickerField } from '@/components/general/date-picker-ctrl'
+import { FlexCol, FlexRow } from '@/components/general/flex'
+import { Grid } from '@/components/general/grid'
+import { InputField } from '@/components/general/input'
+import { useConfirmModal } from '@/components/general/modal'
+import { SingleSelectField } from '@/components/general/select'
 import { ContentHeader } from '@/components/header'
-import { ArrowLeftCircleIcon, ArrowPathIcon, PencilSquareIcon, TicketIcon, TrashIcon } from '@/components/icon'
+import {
+  ArrowLeftCircleIcon,
+  ArrowPathIcon,
+  CheckIcon,
+  PencilSquareIcon,
+  TicketIcon,
+  TrashIcon,
+  XMarkIcon,
+} from '@/components/icon'
 import { notify } from '@/components/notify'
-import { MarkdownView } from '@/components/ticket/markdown-view'
+import { MarkdownField } from '@/components/ticket/markdown-editor'
+import { TagIdSelectField } from '@/components/ticket/tag-select'
 import { PriorityChip, StatusChip, TagChips, useBoardName, useTicketOptions } from '@/components/ticket/ticket-chip'
 import type { TicketStatus } from '@/generated/prisma/enums'
 import { parseAction, useActionData } from '@/lib/action-client'
-import { dayformat } from '@/lib/day'
+import { dayformat, utcToDateOnly } from '@/lib/day'
+import { PatchTicketIn, scPatchTicket, zTicketTitle } from '@/lib/schema'
+import { getFieldConstraints } from '@/lib/schema-util'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
-import { ButtonGroup, Label, ListBox, Select, Skeleton } from '@heroui/react'
+import { ButtonGroup, Skeleton } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC, useEffect, useState } from 'react'
 import {
@@ -24,30 +39,49 @@ import {
   GetTicketFormOptionsReturnType,
 } from '../server'
 import { TicketComments } from './comments'
-import { UpdateModal } from './modals'
-import { getTicket, updateTicketStatus } from './server'
+import { getTicket, patchTicket, updateTicketStatus } from './server'
 
-/** 見出し + 値の 1 行 */
-const MetaRow: FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
-  <div className='flex items-baseline gap-2'>
-    <span className='w-20 shrink-0 text-xs text-gray-500'>{label}</span>
-    <div className='min-w-0 text-sm'>{children}</div>
+/** 内容の文字数上限(MDXEditor には maxLength 属性が無いのでスキーマから取る) */
+const MAX_CONTENT_LENGTH = getFieldConstraints(scPatchTicket, 'content').maxLength
+
+/** 保存中の項目。同時に複数の項目は保存させない */
+type EditField = 'title' | 'status' | 'priority' | 'assigneeId' | 'dueDate' | 'tagIds'
+
+/** 保存中の楽観値。status は patchTicket の対象外なので別枠で持つ */
+type Draft = Partial<PatchTicketIn> & { status?: TicketStatus }
+
+/**
+ * 編集できない項目の 1 セル。
+ * 入力欄(isSmart)と同じ体裁でラベル + 値を縦に並べ、編集できる項目と縦位置を揃える。
+ * ラベルは isSmart 時の Label、値側の min-h-7 は isSmart 時の入力欄の高さ(28px)に合わせている。
+ */
+const MetaText: FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
+  <div className='flex flex-col'>
+    <span className='text-xs font-light'>{label}</span>
+    <div className='flex min-h-7 items-center gap-2 text-sm'>{children}</div>
   </div>
 )
 
 export const TicketDetailClient: FC<{ id: string }> = ({ id }) => {
-  const { t } = useLocale()
+  const { t, fet } = useLocale()
   const tz = useUserTimezone()
   const router = useRouter()
   const { confirmModal } = useConfirmModal()
-  const { statusOptions } = useTicketOptions()
+  const { statusOptions, priorityOptions } = useTicketOptions()
   const boardName = useBoardName()
-  const updateModalState = useModalState()
 
-  const { data: ticket, reload, isLoading } = useActionData(() => getTicket({ id }))
+  const { data: ticket, reload, refresh, isLoading } = useActionData(() => getTicket({ id }))
   const [options, setOptions] = useState<GetTicketFormOptionsReturnType>()
   const [boardAssignees, setBoardAssignees] = useState<Record<string, string>>({})
-  const [isMovingStatus, setMovingStatus] = useState(false)
+  const [savingField, setSavingField] = useState<EditField>()
+  const [draft, setDraft] = useState<Draft>({})
+  // 件名は入力途中の値を保持する必要があるため state で持つ
+  const [title, setTitle] = useState('')
+  // 同期済みのサーバー値。取得し直したかの判定に使う
+  const [syncedTicket, setSyncedTicket] = useState<typeof ticket>()
+  const [isEditingContent, setEditingContent] = useState(false)
+  const [contentDraft, setContentDraft] = useState('')
+  const [isSavingContent, setSavingContent] = useState(false)
 
   useEffect(() => {
     parseAction(getTicketFormOptions())
@@ -66,14 +100,57 @@ export const TicketDetailClient: FC<{ id: string }> = ({ id }) => {
       .catch(() => setBoardAssignees({}))
   }, [boardId])
 
+  // 再取得でサーバー値が変わったら楽観値を捨て、件名の入力欄を同期する(レンダー中に調整)
+  if (ticket && ticket !== syncedTicket) {
+    setSyncedTicket(ticket)
+    setTitle(ticket.title)
+    setDraft({})
+  }
+
+  /**
+   * 1 項目だけ更新する。保存中は楽観値を表示しておき、refresh で正の値に置き換える。
+   * refresh(isLoading を立てない再取得)を await するのは、サーバー値が届くまで
+   * 保存中の状態を維持して、旧値が一瞬見えるのを防ぐため。
+   */
+  const patch = async (field: EditField, input: Partial<PatchTicketIn>) => {
+    setSavingField(field)
+    setDraft(input)
+    try {
+      await parseAction(patchTicket({ id, ...input }))
+      notify.success(t('msg_saved'))
+      await refresh()
+    } catch {
+      // エラー表示は parseAction 側で済んでいる。楽観値を捨ててサーバー値に戻す
+      setDraft({})
+    } finally {
+      setSavingField(undefined)
+    }
+  }
+
+  /** ステータスはレーン順の再採番を伴うため専用 Action を使う */
   const changeStatus = async (status: TicketStatus) => {
-    setMovingStatus(true)
+    setSavingField('status')
+    setDraft({ status })
     try {
       await parseAction(updateTicketStatus({ id, status }))
       notify.success(t('msg_saved'))
-      reload()
+      await refresh()
+    } catch {
+      setDraft({})
     } finally {
-      setMovingStatus(false)
+      setSavingField(undefined)
+    }
+  }
+
+  const saveContent = async () => {
+    setSavingContent(true)
+    try {
+      await parseAction(patchTicket({ id, content: contentDraft }))
+      notify.success(t('msg_saved'))
+      setEditingContent(false)
+      await refresh()
+    } finally {
+      setSavingContent(false)
     }
   }
 
@@ -116,103 +193,236 @@ export const TicketDetailClient: FC<{ id: string }> = ({ id }) => {
     )
   }
 
+  const canEdit = ticket.canEdit
+  // 保存中の楽観値を優先する。null(クリア) と undefined(未変更) は区別する
+  const status = draft.status ?? ticket.status
+  const priority = draft.priority ?? ticket.priority
+  const assigneeId = draft.assigneeId !== undefined ? draft.assigneeId : ticket.assigneeId
+  const dueDate = draft.dueDate !== undefined ? draft.dueDate : utcToDateOnly(ticket.dueDate)
+  const tagIds = draft.tagIds ?? ticket.tags.map((tag) => tag.id)
+
+  const titleParsed = zTicketTitle.safeParse(title)
+  const titleError = titleParsed.success ? undefined : fet({ message: titleParsed.error.issues[0]?.message })
+  const saveTitle = () => {
+    if (!titleParsed.success || titleParsed.data === ticket.title) {
+      return
+    }
+    void patch('title', { title: titleParsed.data })
+  }
+
+  // 候補が揃うまでは選択肢が空になり選択済みの値が消えてしまうため、表示専用にフォールバックする
+  const canEditAssignee = canEdit && Object.keys(boardAssignees).length > 0
+  const canEditTags = canEdit && !!options
+  const isContentSubmittable = MAX_CONTENT_LENGTH === undefined || contentDraft.length <= MAX_CONTENT_LENGTH
+
   return (
     <FlexCol>
       <ContentHeader icon={<TicketIcon />} title={ticket.title}>
         <MultiButton isIconOnly tooltip={t('back')} onPress={() => router.push('/tickets')}>
           <ArrowLeftCircleIcon />
         </MultiButton>
-        {ticket.canEdit && (
-          <MultiButton isIconOnly tooltip={t('update')} isDisabled={!options} onPress={() => updateModalState.open()}>
-            <ButtonGroup.Separator />
-            <PencilSquareIcon />
-          </MultiButton>
-        )}
         {ticket.canDelete && (
           <MultiButton isIconOnly variant='danger-soft' tooltip={t('delete')} onPress={remove}>
+            <ButtonGroup.Separator />
             <TrashIcon />
           </MultiButton>
         )}
-        <MultiButton isIconOnly tooltip={t('reload')} onPress={reload}>
+        {/* 明示的な再読込なので、保存時とは違って読み込み中の表示に切り替える */}
+        <MultiButton isIconOnly tooltip={t('reload')} onPress={() => void reload()}>
           <ButtonGroup.Separator />
           <ArrowPathIcon />
         </MultiButton>
       </ContentHeader>
 
-      <div className='grid grid-cols-12 gap-2'>
-        <div className='col-span-12 space-y-1 rounded-xl border-2 p-3 md:col-span-5'>
-          <MetaRow label={t('board')}>{boardName({ name: ticket.boardName, kind: ticket.boardKind })}</MetaRow>
-          <MetaRow label={t('status')}>
-            {ticket.canEdit ? (
-              <Select
-                selectionMode='single'
-                variant='secondary'
-                value={ticket.status}
-                isDisabled={isMovingStatus}
-                onChange={(key) => {
-                  const next = key?.toString() as TicketStatus | undefined
+      <div className='rounded-xl border-2 p-3'>
+        {/* 項目の並びは作成モーダル(../modals.tsx の AddModal)と揃えている */}
+        <Grid isSmart>
+          <div className='col-span-12 md:col-span-8'>
+            {canEdit ? (
+              <InputField
+                label={t('title')}
+                isRequired
+                maxLength={getFieldConstraints(scPatchTicket, 'title').maxLength}
+                errorMessage={titleError}
+                // 保存中の入力は reload で上書きされてしまうため受け付けない
+                disabled={savingField === 'title'}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                // 入力ごとに保存しないよう、フォーカスを外したときに変更を確定する
+                onBlur={saveTitle}
+              />
+            ) : (
+              <MetaText label={t('title')}>{ticket.title}</MetaText>
+            )}
+          </div>
+
+          <div className='col-span-12 md:col-span-4'>
+            {/* ボードは詳細画面では変更させない */}
+            <MetaText label={t('board')}>{boardName({ name: ticket.boardName, kind: ticket.boardKind })}</MetaText>
+          </div>
+
+          <div className='col-span-6 md:col-span-2'>
+            {canEdit ? (
+              <SingleSelectField
+                label={t('status')}
+                groupOptions={statusOptions}
+                value={status}
+                isDisabled={savingField === 'status'}
+                onChange={(next) => {
                   if (next && next !== ticket.status) {
-                    changeStatus(next)
+                    void changeStatus(next as TicketStatus)
                   }
                 }}
-              >
-                <Label className='sr-only'>{t('status')}</Label>
-                <Select.Trigger>
-                  <Select.Value />
-                  <Select.Indicator />
-                </Select.Trigger>
-                <Select.Popover>
-                  <ListBox selectionMode='single'>
-                    {Object.entries(statusOptions).map(([value, name]) => (
-                      <ListBox.Item key={value} id={value} textValue={name}>
-                        {name}
-                        <ListBox.ItemIndicator />
-                      </ListBox.Item>
-                    ))}
-                  </ListBox>
-                </Select.Popover>
-              </Select>
+              />
             ) : (
-              <StatusChip status={ticket.status} />
+              <MetaText label={t('status')}>
+                <StatusChip status={status} />
+              </MetaText>
             )}
-          </MetaRow>
-          <MetaRow label={t('priority')}>
-            <PriorityChip priority={ticket.priority} />
-          </MetaRow>
-          <MetaRow label={t('assignee')}>{ticket.assigneeName || t('unassigned')}</MetaRow>
-          <MetaRow label={t('due_date')}>
-            <span className='font-mono text-xs'>{dayformat(ticket.dueDate, 'date') || '-'}</span>
-          </MetaRow>
-          <MetaRow label={t('tags')}>{ticket.tags.length > 0 ? <TagChips tags={ticket.tags} /> : '-'}</MetaRow>
-          <MetaRow label={t('created_at')}>
-            <span className='font-mono text-xs'>{dayformat(ticket.createdAt, 'tz-simple', tz)}</span>
-            {ticket.createdByName && <span className='ml-2 text-xs text-gray-500'>{ticket.createdByName}</span>}
-          </MetaRow>
-          <MetaRow label={t('updated_at')}>
-            <span className='font-mono text-xs'>{dayformat(ticket.updatedAt, 'tz-simple', tz)}</span>
-          </MetaRow>
-        </div>
+          </div>
 
-        <fieldset className='col-span-12 min-h-48 rounded-xl border-2 p-3 md:col-span-7'>
-          <legend className='px-2 text-sm text-gray-500'>{t('content')}</legend>
-          <MarkdownView body={ticket.content ?? ''} />
-        </fieldset>
+          <div className='col-span-6 md:col-span-2'>
+            {canEdit ? (
+              <SingleSelectField
+                label={t('priority')}
+                groupOptions={priorityOptions}
+                value={priority}
+                isDisabled={savingField === 'priority'}
+                onChange={(next) => {
+                  if (next && next !== ticket.priority) {
+                    void patch('priority', { priority: next as typeof priority })
+                  }
+                }}
+              />
+            ) : (
+              <MetaText label={t('priority')}>
+                <PriorityChip priority={priority} />
+              </MetaText>
+            )}
+          </div>
+
+          <div className='col-span-6 md:col-span-2'>
+            {canEditAssignee ? (
+              <SingleSelectField
+                label={t('assignee')}
+                isClearable
+                groupOptions={boardAssignees}
+                value={assigneeId}
+                isDisabled={savingField === 'assigneeId'}
+                onChange={(next) => {
+                  if (next !== (ticket.assigneeId ?? null)) {
+                    void patch('assigneeId', { assigneeId: next })
+                  }
+                }}
+              />
+            ) : (
+              <MetaText label={t('assignee')}>{ticket.assigneeName || t('unassigned')}</MetaText>
+            )}
+          </div>
+
+          <div className='col-span-6 md:col-span-2'>
+            {canEdit ? (
+              <DatePickerField
+                label={t('due_date')}
+                value={dueDate}
+                isDisabled={savingField === 'dueDate'}
+                onChange={(next) => {
+                  if (next !== utcToDateOnly(ticket.dueDate)) {
+                    void patch('dueDate', { dueDate: next })
+                  }
+                }}
+              />
+            ) : (
+              <MetaText label={t('due_date')}>
+                <span className='font-mono text-xs'>{dayformat(ticket.dueDate, 'date') || '-'}</span>
+              </MetaText>
+            )}
+          </div>
+
+          <div className='col-span-12 md:col-span-4'>
+            {canEditTags ? (
+              <TagIdSelectField
+                // そのボードのタグだけを候補にする(他ボードのタグはサーバー側で弾かれる)
+                options={options.tags.filter((tag) => tag.boardId === ticket.boardId)}
+                onCreate={async (name) => parseAction(createTicketTag({ boardId: ticket.boardId, name }))}
+                value={tagIds}
+                // 保存中に isDisabled にするとポップオーバーが閉じて連続選択できないため無効化しない
+                onChange={(next) => void patch('tagIds', { tagIds: next })}
+              />
+            ) : (
+              <MetaText label={t('tags')}>{ticket.tags.length > 0 ? <TagChips tags={ticket.tags} /> : '-'}</MetaText>
+            )}
+          </div>
+        </Grid>
+
+        {/* 作成 / 更新はチケットの属性ではないので、項目のグリッドから外して注記にする */}
+        <div className='mt-2 flex flex-wrap items-center gap-x-3 border-t pt-2 text-xs text-gray-500'>
+          <span>
+            {t('created_at')} <span className='font-mono'>{dayformat(ticket.createdAt, 'tz-simple', tz)}</span>
+            {ticket.createdByName && <span className='ml-1'>{ticket.createdByName}</span>}
+          </span>
+          <span>
+            {t('updated_at')} <span className='font-mono'>{dayformat(ticket.updatedAt, 'tz-simple', tz)}</span>
+          </span>
+        </div>
+      </div>
+
+      {/* 表示 / 編集で本文の位置を動かさず、差分をツールバーの有無だけにする */}
+      <div className='py-4'>
+        <MarkdownField
+          body={ticket.content ?? ''}
+          isEditing={isEditingContent}
+          // 編集中に変わらない値を渡す(MDXEditor は編集モードのマウント時にこの値を取り込む)
+          defaultValue={ticket.content ?? ''}
+          onChange={setContentDraft}
+          length={contentDraft.length}
+          maxLength={MAX_CONTENT_LENGTH}
+          label={t('content')}
+          // ツールバー + 2 行が MarkdownField の最小高に収まるので、短い本文でも高さが動かない
+          minRows={2}
+          action={
+            isEditingContent ? (
+              <FlexRow isSmart>
+                <MultiButton
+                  size='sm'
+                  variant='danger-soft'
+                  isIconOnly
+                  icon={<XMarkIcon width={16} />}
+                  tooltip={t('cancel')}
+                  onPress={() => setEditingContent(false)}
+                ></MultiButton>
+                <MultiButton
+                  size='sm'
+                  icon={<CheckIcon width={16} />}
+                  tooltip={t('save')}
+                  isPending={isSavingContent}
+                  isDisabled={!isContentSubmittable}
+                  onPress={saveContent}
+                >
+                  {t('save')}
+                </MultiButton>
+              </FlexRow>
+            ) : (
+              canEdit && (
+                <MultiButton
+                  isIconOnly
+                  size='sm'
+                  variant='outline'
+                  tooltip={t('update')}
+                  onPress={() => {
+                    setContentDraft(ticket.content ?? '')
+                    setEditingContent(true)
+                  }}
+                >
+                  <PencilSquareIcon width={16} />
+                </MultiButton>
+              )
+            )
+          }
+        />
       </div>
 
       <TicketComments ticket={ticket} reload={reload} />
-
-      {updateModalState.isOpen && options && (
-        <UpdateModal
-          state={updateModalState}
-          reload={reload}
-          key={updateModalState.key}
-          target={ticket}
-          assigneeOptions={boardAssignees}
-          // そのボードのタグだけを候補にする(他ボードのタグはサーバー側で弾かれる)
-          tagOptions={options.tags.filter((tag) => tag.boardId === ticket.boardId)}
-          onCreateTag={async (name) => parseAction(createTicketTag({ boardId: ticket.boardId, name }))}
-        />
-      )}
     </FlexCol>
   )
 }

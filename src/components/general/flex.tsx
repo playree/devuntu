@@ -18,3 +18,19 @@ export const FlexCol: FC<ComponentProps<'div'> & { isSmart?: boolean }> = ({
     </SmartProvider>
   )
 }
+
+export const FlexRow: FC<ComponentProps<'div'> & { isSmart?: boolean }> = ({
+  children,
+  className,
+  isSmart: isSmartProp,
+  ...props
+}) => {
+  const isSmart = useIsSmart(isSmartProp)
+  return (
+    <SmartProvider isSmart={isSmart}>
+      <div className={cn('flex flex-row', isSmart ? 'gap-1' : 'gap-2', className)} {...props}>
+        {children}
+      </div>
+    </SmartProvider>
+  )
+}

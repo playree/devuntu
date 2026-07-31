@@ -2,12 +2,16 @@
 
 import { getFieldConstraints } from '@/lib/schema-util'
 import { useLocale } from '@/locale/client'
-import { ErrorMessage, Label, Skeleton, TextField } from '@heroui/react'
+import { cn, ErrorMessage, Label, Skeleton, TextField } from '@heroui/react'
 import dynamic from 'next/dynamic'
 import { CSSProperties, FC, memo, ReactNode, useCallback, useState } from 'react'
 import { Control, FieldPath, FieldValues, useController } from 'react-hook-form'
 import { z } from 'zod'
 import { useIsSmart } from '../general/smart'
+import { MarkdownView } from './markdown-view'
+
+/** 枠なし表示用のクラス。実体は globals.css(style.css の padding を上書きするためレイヤー外) */
+const FLAT_CLASS = 'mdxeditor-flat'
 
 /**
  * 編集面の既定の最小行数。
@@ -45,7 +49,9 @@ const MdxEditorHost = memo<{
   onBlur?: () => void
   /** 編集面の最小行数 */
   minRows?: number
-}>(function MdxEditorHost({ initialMarkdown, onChange, onBlur, minRows = DEFAULT_MIN_ROWS }) {
+  /** MDXEditor 本体に付けるクラス(ポップアップ用コンテナにもコピーされる) */
+  className?: string
+}>(function MdxEditorHost({ initialMarkdown, onChange, onBlur, minRows = DEFAULT_MIN_ROWS, className }) {
   const [container, setContainer] = useState<HTMLElement | null>(null)
   const [isReady, setReady] = useState(false)
 
@@ -61,7 +67,13 @@ const MdxEditorHost = memo<{
     // 最小行数は globals.css の --mdx-min-rows 経由で編集面(rich-text / source)に効かせる
     <div ref={anchorRef} style={{ '--mdx-min-rows': minRows } as CSSProperties}>
       {isReady && (
-        <MdxEditorCore markdown={initialMarkdown} onChange={onChange} onBlur={onBlur} overlayContainer={container} />
+        <MdxEditorCore
+          markdown={initialMarkdown}
+          onChange={onChange}
+          onBlur={onBlur}
+          overlayContainer={container}
+          className={className}
+        />
       )}
     </div>
   )
@@ -74,24 +86,32 @@ const EditorField: FC<{
   length: number
   maxLength?: number
   errorMessage?: string
+  /** ラベル行の右端に置く操作(文字数カウンタの後ろ) */
+  action?: ReactNode
+  /** 枠なし表示。エラー用の高さを常時確保しない */
+  isFlat?: boolean
   children: ReactNode
-}> = ({ label, isRequired, length, maxLength, errorMessage, children }) => {
+}> = ({ label, isRequired, length, maxLength, errorMessage, action, isFlat, children }) => {
   const isSmart = useIsSmart()
   return (
     <TextField isInvalid={!!errorMessage}>
-      <div className='flex items-baseline justify-between'>
+      {/* action にはボタンが入るため、そのときだけ中央揃えにしてラベルと高さを合わせる */}
+      <div className={cn('flex justify-between', action ? 'items-center' : 'items-baseline')}>
         <Label className={isSmart ? 'text-xs font-light' : ''}>
           {label}
           {isRequired ? '*' : ''}
         </Label>
-        {maxLength !== undefined && (
-          <span className={`font-mono text-xs ${length > maxLength ? 'text-danger' : 'text-gray-500'}`}>
-            {length} / {maxLength}
-          </span>
-        )}
+        <div className='flex items-center gap-2'>
+          {maxLength !== undefined && (
+            <span className={`font-mono text-xs ${length > maxLength ? 'text-danger' : 'text-gray-500'}`}>
+              {length} / {maxLength}
+            </span>
+          )}
+          {action}
+        </div>
       </div>
       {children}
-      <ErrorMessage className='min-h-4'>{errorMessage}</ErrorMessage>
+      <ErrorMessage className={isFlat ? undefined : 'min-h-4'}>{errorMessage}</ErrorMessage>
     </TextField>
   )
 }
@@ -118,6 +138,53 @@ export const MarkdownInput: FC<{
   return (
     <EditorField label={label ?? t('content')} length={length} maxLength={maxLength} errorMessage={errorMessage}>
       <MdxEditorHost initialMarkdown={initialMarkdown} onChange={onChange} minRows={minRows} />
+    </EditorField>
+  )
+}
+
+/**
+ * 表示 ⇄ 編集をラベル行ごと共有して切り替える枠なしの本文フィールド。
+ *
+ * ラベル行と本文の位置を 1 か所で決めるため、モードを切り替えても見た目の差分は
+ * MDXEditor のツールバーが差し込まれる分だけになる。枠線・角丸・編集面の padding は
+ * globals.css の `mdxeditor-flat` で落としている。
+ */
+export const MarkdownField: FC<{
+  /** 表示モードで描画する本文 */
+  body: string
+  isEditing: boolean
+  /** 編集開始時の初期 Markdown。編集モードの間だけ MDXEditor をマウントする */
+  defaultValue: string
+  onChange: (markdown: string) => void
+  /** 文字数カウンタに使う現在値 */
+  length: number
+  label?: string
+  maxLength?: number
+  /** 編集面の最小行数(既定 {@link DEFAULT_MIN_ROWS}) */
+  minRows?: number
+  /** ラベル行の右端に置く操作(表示モードなら編集開始、編集モードならキャンセル / 保存) */
+  action?: ReactNode
+}> = ({ body, isEditing, defaultValue, onChange, length, label, maxLength, minRows, action }) => {
+  const { t } = useLocale()
+
+  return (
+    <EditorField
+      label={label ?? t('content')}
+      length={length}
+      // カウンタは編集中だけ出す。ラベル行の高さは Label と action で決まるので出し入れしても動かない
+      maxLength={isEditing ? maxLength : undefined}
+      action={action}
+      isFlat
+    >
+      {/* 本文が短いときにモードの切り替えで高さが動かないよう、両モードで同じ最小高を確保する。
+          ツールバー + minRows 行がこの高さに収まる範囲で minRows を選ぶこと */}
+      <div className='min-h-24'>
+        {isEditing ? (
+          <MdxEditorHost initialMarkdown={defaultValue} onChange={onChange} minRows={minRows} className={FLAT_CLASS} />
+        ) : (
+          <MarkdownView body={body} />
+        )}
+      </div>
     </EditorField>
   )
 }

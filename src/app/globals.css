@@ -171,6 +171,27 @@
  * ダーク判定は MDXEditor 公式の dark-theme クラス(mdx-editor-core.tsx で付与)。
  * ポップアップ用コンテナは .mdxeditor を持たない別要素なのでセレクタを分ける。
  */
+/* MDXEditor の枠なしバリアント(チケット内容欄)。
+ *
+ * 表示モードの MarkdownView と本文の縦横位置を揃えるため、枠線・角丸・内側 padding を落とし、
+ * エディタ内スクロールも解除してページ側でスクロールさせる。
+ * padding は style.css が宣言しているため、上のダーク補正と同じ理由で @layer の外に書く。
+ *
+ * className の各語はポップアップ用コンテナにもコピーされるので、
+ * .mdxeditor と組み合わせて本体だけに効かせる。
+ */
+.mdxeditor.mdxeditor-flat {
+  border-width: 0;
+  border-radius: 0;
+  max-height: none;
+}
+
+.mdxeditor.mdxeditor-flat .markdown {
+  padding: 0;
+  /* @layer 内の `.mdxeditor .markdown` は contentEditable の padding 込みの式なので、padding 抜きで再定義する */
+  min-height: calc(var(--mdx-min-rows, 6) * 1.5em);
+}
+
 .mdxeditor.dark-theme,
 .mdxeditor-popup-container.dark-theme {
   /* 素の値は white 固定。ツールバー(--baseBg = slate-3)より 1 段明るい slate-4 にして、

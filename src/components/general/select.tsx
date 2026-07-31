@@ -1,6 +1,6 @@
 'use client'
 
-import { Chip, ErrorMessage, Label, ListBox, Select } from '@heroui/react'
+import { Chip, cn, ErrorMessage, Label, ListBox, Select } from '@heroui/react'
 import { FC, Ref, SVGProps } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 import { useIsSmart } from './smart'
@@ -26,6 +26,8 @@ export const XCircleIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWid
 type SelectFieldBaseProps = {
   groupOptions: Record<string, string>
   label: string
+  /** ラベルを読み上げ用にだけ残す(見出しを呼び出し側で出す場合) */
+  isLabelHidden?: boolean
   variant?: 'primary' | 'secondary'
   isSmart?: boolean
   errorMessage?: string
@@ -154,6 +156,7 @@ type SingleSelectFieldProps = SelectFieldBaseProps & {
 export const SingleSelectField = ({
   groupOptions,
   label,
+  isLabelHidden,
   variant,
   isClearable = false,
   isDisabled = false,
@@ -176,7 +179,7 @@ export const SingleSelectField = ({
         onBlur={onBlur}
         ref={ref}
       >
-        <Label className={isSmart ? 'text-xs font-light' : ''}>{label}</Label>
+        <Label className={cn(isSmart ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}>{label}</Label>
         {/* isSmart: 既定 36px(min-h-9 + py-2)を 28px へ。text-sm の行高 20px + 上下 4px */}
         <Select.Trigger className={isSmart ? 'min-h-7 py-1' : undefined}>
           <Select.Value>{() => (value && groupOptions[value] ? <>{groupOptions[value]}</> : <></>)}</Select.Value>
