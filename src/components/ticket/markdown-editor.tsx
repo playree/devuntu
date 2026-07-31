@@ -94,7 +94,7 @@ const EditorField: FC<{
 }> = ({ label, isRequired, length, maxLength, errorMessage, action, isFlat, children }) => {
   const isSmart = useIsSmart()
   return (
-    <TextField isInvalid={!!errorMessage}>
+    <TextField isInvalid={!!errorMessage} className='mb-0.5'>
       {/* action にはボタンが入るため、そのときだけ中央揃えにしてラベルと高さを合わせる */}
       <div className={cn('flex justify-between', action ? 'items-center' : 'items-baseline')}>
         <Label className={isSmart ? 'text-xs font-light' : ''}>
@@ -111,7 +111,7 @@ const EditorField: FC<{
         </div>
       </div>
       {children}
-      <ErrorMessage className={isFlat ? undefined : 'min-h-4'}>{errorMessage}</ErrorMessage>
+      <ErrorMessage className={isFlat || isSmart ? undefined : 'min-h-4'}>{errorMessage}</ErrorMessage>
     </TextField>
   )
 }

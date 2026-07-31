@@ -3,6 +3,7 @@
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
 import { useConfirmModal } from '@/components/general/modal'
+import { Panel } from '@/components/general/panel'
 import { ChatBubbleIcon, CheckIcon, PencilSquareIcon, TrashIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { MarkdownInput } from '@/components/ticket/markdown-editor'
@@ -68,7 +69,7 @@ const CommentItem: FC<{ comment: Comment; canDelete: boolean; refresh: () => Pro
   }
 
   return (
-    <div className='rounded-xl border-2 p-2'>
+    <Panel variant='shadow'>
       <div className='flex items-center gap-2 text-xs text-gray-500'>
         <span className='font-medium'>{comment.authorName || t('no_name')}</span>
         <span className='font-mono'>{dayformat(comment.createdAt, 'tz-simple', tz)}</span>
@@ -77,7 +78,7 @@ const CommentItem: FC<{ comment: Comment; canDelete: boolean; refresh: () => Pro
             <MultiButton
               isIconOnly
               size='sm'
-              variant='tertiary'
+              variant='ghost'
               className='h-7 w-7 rounded-sm'
               tooltip={t('update')}
               onPress={() => {
@@ -92,12 +93,12 @@ const CommentItem: FC<{ comment: Comment; canDelete: boolean; refresh: () => Pro
             <MultiButton
               isIconOnly
               size='sm'
-              variant='danger-soft'
+              variant='ghost'
               className='h-7 w-7 rounded-sm'
               tooltip={t('delete')}
               onPress={remove}
             >
-              <TrashIcon width={16} />
+              <TrashIcon width={16} className='text-red-400' />
             </MultiButton>
           )}
         </div>
@@ -141,7 +142,7 @@ const CommentItem: FC<{ comment: Comment; canDelete: boolean; refresh: () => Pro
           ))}
         </div>
       )}
-    </div>
+    </Panel>
   )
 }
 
@@ -167,7 +168,7 @@ export const TicketComments: FC<{ ticket: Ticket; refresh: () => Promise<void> }
   }
 
   return (
-    <FlexCol>
+    <FlexCol isSmart>
       <div className='flex items-center gap-2'>
         <ChatBubbleIcon />
         <span>
