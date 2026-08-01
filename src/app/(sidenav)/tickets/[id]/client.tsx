@@ -313,7 +313,7 @@ export const TicketDetailClient: FC<{
             )}
           </div>
 
-          <div className='col-span-6 md:col-span-2'>
+          <div className='col-span-6 md:col-span-1'>
             {canEdit ? (
               <SingleSelectField
                 label={t('priority')}
@@ -352,7 +352,7 @@ export const TicketDetailClient: FC<{
             )}
           </div>
 
-          <div className='col-span-6 md:col-span-2'>
+          <div className='col-span-6 md:col-span-3'>
             {canEdit ? (
               <DatePickerField
                 label={t('due_date')}

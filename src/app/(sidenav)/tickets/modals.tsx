@@ -131,7 +131,7 @@ export const AddModal: FC<
         <div className='col-span-6 md:col-span-2'>
           <SingleSelectCtrl control={control} name='status' groupOptions={statusOptions} label={t('status')} />
         </div>
-        <div className='col-span-6 md:col-span-2'>
+        <div className='col-span-6 md:col-span-1'>
           <SingleSelectCtrl control={control} name='priority' groupOptions={priorityOptions} label={t('priority')} />
         </div>
         <div className='col-span-6 md:col-span-2'>
@@ -143,7 +143,7 @@ export const AddModal: FC<
             isClearable
           />
         </div>
-        <div className='col-span-6 md:col-span-2'>
+        <div className='col-span-6 md:col-span-3'>
           <DatePickerCtrl control={control} name='dueDate' label={t('due_date')} errorMessage={fet(errors.dueDate)} />
         </div>
 

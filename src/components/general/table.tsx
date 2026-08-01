@@ -62,6 +62,14 @@ const SELECTION_COLUMN_WIDTH = 28
 /** 既定の px-4 では余るので、選択列だけパディングを詰める */
 const SELECTION_COLUMN_PADDING = 'pl-2 pr-0'
 
+/**
+ * isCompact のときの上下パディング。HeroUI 既定はセル px-4 py-3 / ヘッダ px-4 py-2.5。
+ * 子孫セレクタなのでセル個別の className(py-2 など)より詳細度が高く、
+ * SelectionCell や ActionCell の上下パディングもまとめて上書きされる。
+ * MultiTable は仮想化しないので、セル / ヘッダは常に td / th としてレンダリングされる。
+ */
+const COMPACT_ROW_CLASS = '[&_td]:py-0.5 [&_th]:py-1'
+
 /** 行選択のチェックボックス。ヘッダ(全選択)と各行で同じ見た目を使う */
 const SelectionCheckbox: FC = () => (
   <Checkbox slot='selection' variant='secondary'>
@@ -106,6 +114,8 @@ type TableActivityProps<T> = {
   paging?: PagingParam
   isLoading?: boolean
   pagingList?: PagingList & { items: T[] }
+  /** 行の上下パディングを詰めて、1 画面に表示できる行数を増やす */
+  isCompact?: boolean
 }
 
 const TablePaging: FC<PagingParam> = ({ rowsPerPage, page, total, onPageChange }) => {
@@ -167,6 +177,7 @@ export const MultiTable = <T extends object>({
   paging,
   pagingList,
   items,
+  isCompact,
   ...props
 }: TableBodyProps<T> &
   TableActivityProps<T> & {
@@ -183,7 +194,7 @@ export const MultiTable = <T extends object>({
   const pagingParam = paging ?? pagingList
   const behavior = selectionMode ? (selectionBehavior ?? 'replace') : undefined
   return (
-    <Table>
+    <Table className={cn(isCompact && COMPACT_ROW_CLASS)}>
       <Table.ResizableContainer>
         <Table.Content
           aria-label={ariaLabel}
