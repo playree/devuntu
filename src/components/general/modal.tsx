@@ -158,7 +158,7 @@ export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ ui
           </Modal.Header>
           <Modal.Body>
             <FlexCol>
-              <div className='text-foreground whitespace-pre-wrap'>{confirmParam?.text || ''}</div>
+              <div className='text-foreground wrap-anywhere whitespace-pre-wrap'>{confirmParam?.text || ''}</div>
               {confirmParam?.requireCheck && (
                 <Checkbox
                   id='confirm-agree'
