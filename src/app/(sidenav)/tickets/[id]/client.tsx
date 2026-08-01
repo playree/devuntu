@@ -63,7 +63,26 @@ const MetaText: FC<{ label: string; children: React.ReactNode }> = ({ label, chi
   </div>
 )
 
-export const TicketDetailClient: FC<{ id: string }> = ({ id }) => {
+/**
+ * ヘッダの閉じるボタン。
+ * 一覧に埋め込んだとき(onClose あり)はパネルを閉じる操作、単独ページでは一覧へ戻る操作になる。
+ */
+const CloseButton: FC<{ onClose?: () => void; onPress: () => void }> = ({ onClose, onPress }) => {
+  const { t } = useLocale()
+  return (
+    <MultiButton isIconOnly tooltip={onClose ? t('close') : t('back')} onPress={onPress}>
+      {onClose ? <XMarkIcon /> : <ArrowLeftCircleIcon />}
+    </MultiButton>
+  )
+}
+
+export const TicketDetailClient: FC<{
+  id: string
+  /** 一覧に埋め込んだときの閉じる操作。未指定なら一覧へ遷移する */
+  onClose?: () => void
+  /** 一覧に埋め込んだときの変更通知。一覧の再読込に使う */
+  onChanged?: () => void
+}> = ({ id, onClose, onChanged }) => {
   const { t, fet } = useLocale()
   const tz = useUserTimezone()
   const router = useRouter()
@@ -108,6 +127,21 @@ export const TicketDetailClient: FC<{ id: string }> = ({ id }) => {
     setDraft({})
   }
 
+  /** サーバー値を取り直し、埋め込み元(一覧)にも変更を伝える */
+  const refreshAll = async () => {
+    await refresh()
+    onChanged?.()
+  }
+
+  /** 閉じる操作。埋め込み時は選択解除、単独ページでは一覧へ戻る */
+  const close = () => {
+    if (onClose) {
+      onClose()
+    } else {
+      router.push('/tickets')
+    }
+  }
+
   /**
    * 1 項目だけ更新する。保存中は楽観値を表示しておき、refresh で正の値に置き換える。
    * refresh(isLoading を立てない再取得)を await するのは、サーバー値が届くまで
@@ -119,7 +153,7 @@ export const TicketDetailClient: FC<{ id: string }> = ({ id }) => {
     try {
       await parseAction(patchTicket({ id, ...input }))
       notify.success(t('msg_saved'))
-      await refresh()
+      await refreshAll()
     } catch {
       // エラー表示は parseAction 側で済んでいる。楽観値を捨ててサーバー値に戻す
       setDraft({})
@@ -135,7 +169,7 @@ export const TicketDetailClient: FC<{ id: string }> = ({ id }) => {
     try {
       await parseAction(updateTicketStatus({ id, status }))
       notify.success(t('msg_saved'))
-      await refresh()
+      await refreshAll()
     } catch {
       setDraft({})
     } finally {
@@ -149,7 +183,7 @@ export const TicketDetailClient: FC<{ id: string }> = ({ id }) => {
       await parseAction(patchTicket({ id, content: contentDraft }))
       notify.success(t('msg_saved'))
       setEditingContent(false)
-      await refresh()
+      await refreshAll()
     } finally {
       setSavingContent(false)
     }
@@ -169,7 +203,8 @@ export const TicketDetailClient: FC<{ id: string }> = ({ id }) => {
       if (ok) {
         await parseAction(deleteTicket({ id }))
         notify.success(t('msg_deleted_target', { target: ticket.title }))
-        router.push('/tickets')
+        onChanged?.()
+        close()
       }
     } finally {
       confirmModal().close()
@@ -185,9 +220,7 @@ export const TicketDetailClient: FC<{ id: string }> = ({ id }) => {
     return (
       <FlexCol>
         <ContentHeader icon={<TicketIcon />} title={t('ticket')}>
-          <MultiButton isIconOnly tooltip={t('back')} onPress={() => router.push('/tickets')}>
-            <ArrowLeftCircleIcon />
-          </MultiButton>
+          <CloseButton onClose={onClose} onPress={close} />
         </ContentHeader>
         <div className='rounded-xl border-2 p-4 text-sm'>{t('msg_no_access')}</div>
       </FlexCol>
@@ -219,9 +252,7 @@ export const TicketDetailClient: FC<{ id: string }> = ({ id }) => {
   return (
     <FlexCol>
       <ContentHeader icon={<TicketIcon />} title={ticket.title}>
-        <MultiButton isIconOnly tooltip={t('back')} onPress={() => router.push('/tickets')}>
-          <ArrowLeftCircleIcon />
-        </MultiButton>
+        <CloseButton onClose={onClose} onPress={close} />
         {ticket.canDelete && (
           <MultiButton isIconOnly variant='danger-soft' tooltip={t('delete')} onPress={remove}>
             <ButtonGroup.Separator />
@@ -425,7 +456,7 @@ export const TicketDetailClient: FC<{ id: string }> = ({ id }) => {
         />
       </div>
 
-      <TicketComments ticket={ticket} refresh={refresh} />
+      <TicketComments ticket={ticket} refresh={refreshAll} />
     </FlexCol>
   )
 }

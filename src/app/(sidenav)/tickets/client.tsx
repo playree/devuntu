@@ -1,21 +1,13 @@
 'use client'
 
-import { ActionCell } from '@/components/action-cell'
 import { MultiButton } from '@/components/general/button'
+import { SideDrawer } from '@/components/general/drawer'
 import { FlexCol } from '@/components/general/flex'
 import { useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
-import { MultiTable } from '@/components/general/table'
+import { MultiTable, SelectionCell } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import {
-  ArrowPathIcon,
-  ArrowTopRightOnSquareIcon,
-  ChatBubbleIcon,
-  FunnelIcon,
-  PlusIcon,
-  TicketIcon,
-} from '@/components/icon'
-import { notify } from '@/components/notify'
+import { ArrowPathIcon, ChatBubbleIcon, FunnelIcon, PlusIcon, TicketIcon } from '@/components/icon'
 import { PriorityChip, StatusChip, TagChips, useBoardName } from '@/components/ticket/ticket-chip'
 import { parseAction } from '@/lib/action-client'
 import { dayformat } from '@/lib/day'
@@ -23,22 +15,46 @@ import { TicketSearch } from '@/lib/schema'
 import { MAX_TICKET_LIST } from '@/lib/task'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
-import { Accordion, ButtonGroup, Table } from '@heroui/react'
-import { useRouter } from 'next/navigation'
-import { FC, useEffect, useRef, useState } from 'react'
+import { Accordion, ButtonGroup, cn, Table } from '@heroui/react'
+import Link from 'next/link'
+import {
+  FC,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
+import { TicketDetailClient } from './[id]/client'
 import { AddModal } from './modals'
 import { defaultTicketFilter, TicketSearchPanel } from './search-panel'
-import { deleteTicket, getTicketFormOptions, GetTicketFormOptionsReturnType, getTickets } from './server'
+import { getTicketFormOptions, GetTicketFormOptionsReturnType, getTickets } from './server'
 
 const defaultExpandedKeys = new Set(['search'])
+
+/**
+ * 行内のリンクを押したときに行選択(詳細パネル)を起こさないためのハンドラ。
+ * 行の押下判定は pointerdown / keydown 起点なので、リンク側でイベントを止める。
+ */
+const preventRowSelection = {
+  onPointerDown: (e: ReactPointerEvent) => e.stopPropagation(),
+  onClick: (e: ReactMouseEvent) => e.stopPropagation(),
+  onKeyDown: (e: ReactKeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.stopPropagation()
+    }
+  },
+}
 
 export const TicketsClient: FC = () => {
   const { t } = useLocale()
   const tz = useUserTimezone()
-  const router = useRouter()
   const boardName = useBoardName()
   const addModalState = useModalState()
 
+  // 詳細パネルに表示中のチケット。未選択なら undefined
+  const [selectedId, setSelectedId] = useState<string>()
   const [filter, setFilter] = useState<TicketSearch>(defaultTicketFilter)
   // usePagingList の load は再生成されるため、最新の検索条件は ref から読む
   const filterRef = useRef(filter)
@@ -62,6 +78,24 @@ export const TicketsClient: FC = () => {
     loadOptions()
   }, [])
 
+  // Escape で詳細パネルを閉じる。
+  // モーダルやポップオーバーが処理済みの Escape(defaultPrevented)と、
+  // 入力中の Escape は入力内容を失わせないため無視する。
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || e.defaultPrevented) {
+        return
+      }
+      const el = e.target as HTMLElement | null
+      if (el?.closest('input, textarea, [contenteditable="true"]')) {
+        return
+      }
+      setSelectedId(undefined)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
   const applyFilter = (next: TicketSearch) => {
     filterRef.current = next
     setFilter(next)
@@ -74,7 +108,13 @@ export const TicketsClient: FC = () => {
   }
 
   return (
-    <FlexCol data-wide className='mx-auto max-w-6xl'>
+    // 詳細パネルを開いている間は data-nav-hidden でサイドメニューを隠し、横幅を稼ぐ。
+    // あわせて中央寄せ(mx-auto)をやめて左に寄せ、右のパネルと重なりにくくする
+    <FlexCol
+      data-wide
+      data-nav-hidden={selectedId ? '' : undefined}
+      className={cn('max-w-6xl', !selectedId && 'mx-auto')}
+    >
       <ContentHeader icon={<TicketIcon />} title={t('ticket')}>
         <MultiButton isIconOnly tooltip={t('add_ticket')} isDisabled={!options} onPress={() => addModalState.open()}>
           <PlusIcon />
@@ -114,6 +154,14 @@ export const TicketsClient: FC = () => {
       <MultiTable
         ariaLabel='ticket list'
         pagingList={list}
+        selectionMode='single'
+        selectionBehavior='toggle'
+        selectedKeys={selectedId ? [selectedId] : []}
+        onSelectionChange={(keys) => {
+          // 'all' は単一選択では発生しないが、型の都合で除外する
+          const next = keys === 'all' ? undefined : [...keys][0]
+          setSelectedId(next === undefined ? undefined : String(next))
+        }}
         columns={[
           { id: 'title', name: t('title'), isRowHeader: true, allowsSorting: true, minWidth: 140, defaultWidth: '2fr' },
           { id: 'status', name: t('status'), allowsSorting: true, minWidth: 100, defaultWidth: 100 },
@@ -122,14 +170,18 @@ export const TicketsClient: FC = () => {
           { id: 'dueDate', name: t('due_date'), allowsSorting: true, minWidth: 110, defaultWidth: 110 },
           { id: 'tags', name: t('tags'), allowsSorting: false, minWidth: 100 },
           { id: 'updatedAt', name: t('updated_at'), allowsSorting: true, minWidth: 110, defaultWidth: 110 },
-          { id: 'action', name: t('action'), allowsSorting: false, defaultWidth: 100 },
         ]}
       >
         {(item) => (
           <Table.Row key={item.id} id={item.id}>
+            <SelectionCell />
             <Table.Cell>
               <div className='flex flex-col gap-0.5'>
-                <span className='truncate'>{item.title}</span>
+                {/* 件名を詳細ページへのリンクにする(新規タブや URL コピーを可能にするため)。
+                    行選択が同時に走ると遷移直前に詳細パネルが一瞬見えるので抑止する */}
+                <Link href={`/tickets/${item.id}`} className='truncate hover:underline' {...preventRowSelection}>
+                  {item.title}
+                </Link>
                 <span className='flex items-center gap-2 text-xs text-gray-500'>
                   {boardName({ name: item.boardName, kind: item.boardKind })}
                   {item.commentCount > 0 && (
@@ -153,29 +205,21 @@ export const TicketsClient: FC = () => {
               <TagChips tags={item.tags} />
             </Table.Cell>
             <Table.Cell className='font-mono text-xs'>{dayformat(item.updatedAt, 'tz-simple', tz)}</Table.Cell>
-            <ActionCell
-              items={[
-                {
-                  template: 'none',
-                  key: 'open',
-                  icon: <ArrowTopRightOnSquareIcon />,
-                  tooltip: t('list'),
-                  onPress: () => router.push(`/tickets/${item.id}`),
-                },
-                {
-                  template: 'delete',
-                  target: item.title,
-                  action: async () => {
-                    await parseAction(deleteTicket({ id: item.id }))
-                    notify.success(t('msg_deleted_target', { target: item.title }))
-                    reloadAll()
-                  },
-                },
-              ]}
-            />
           </Table.Row>
         )}
       </MultiTable>
+
+      <SideDrawer isOpen={!!selectedId} className='bg-background border-l p-4 shadow-2xl'>
+        {selectedId && (
+          <TicketDetailClient
+            // id が変わっても useActionData は再取得しないため、選択のたびに作り直す
+            key={selectedId}
+            id={selectedId}
+            onClose={() => setSelectedId(undefined)}
+            onChanged={reloadAll}
+          />
+        )}
+      </SideDrawer>
 
       {options && (
         <AddModal

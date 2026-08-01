@@ -41,6 +41,7 @@ export type LocaleItemBase =
   | 'client_id'
   | 'client_name'
   | 'client_secret'
+  | 'close'
   | 'comment'
   | 'confirm_deletion'
   | 'confirmed'

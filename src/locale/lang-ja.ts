@@ -43,6 +43,7 @@ export const ja: DefaultLocaleItems = {
   client_id: 'クライアントID',
   client_name: 'クライアント名',
   client_secret: 'クライアントシークレット',
+  close: '閉じる',
   comment: 'コメント',
   confirm_deletion: '削除確認',
   confirmed: '確認した',

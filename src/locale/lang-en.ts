@@ -43,6 +43,7 @@ export const en: LocaleItems = {
   client_id: 'Client ID',
   client_name: 'Client Name',
   client_secret: 'Client Secret',
+  close: 'Close',
   comment: 'Comment',
   confirm_deletion: 'Confirm deletion',
   confirmed: 'Confirmed',

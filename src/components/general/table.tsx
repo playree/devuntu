@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  Checkbox,
   cn,
   Pagination,
   type SortDescriptor,
@@ -50,6 +51,38 @@ const SortableColumnHeader: FC<{
   )
 }
 
+/**
+ * 選択チェックボックス列の id と幅。ヘッダと SelectionCell で共有する。
+ * 幅は左パディング(8px)+チェックボックス(size-5 = 20px)の最小値。
+ * minWidth を渡さないと React Aria の既定最小幅(75px)に引き上げられるため、
+ * Table.Column には width と minWidth の両方を指定すること。
+ */
+const SELECTION_COLUMN_ID = 'selection'
+const SELECTION_COLUMN_WIDTH = 28
+/** 既定の px-4 では余るので、選択列だけパディングを詰める */
+const SELECTION_COLUMN_PADDING = 'pl-2 pr-0'
+
+/** 行選択のチェックボックス。ヘッダ(全選択)と各行で同じ見た目を使う */
+const SelectionCheckbox: FC = () => (
+  <Checkbox slot='selection' variant='secondary'>
+    <Checkbox.Content>
+      <Checkbox.Control className='size-5'>
+        <Checkbox.Indicator />
+      </Checkbox.Control>
+    </Checkbox.Content>
+  </Checkbox>
+)
+
+/**
+ * 行選択チェックボックスのセル。
+ * selectionBehavior='toggle' のとき、各行の先頭セルとして置く。
+ */
+export const SelectionCell: FC = () => (
+  <Table.Cell className={cn('py-2', SELECTION_COLUMN_PADDING)}>
+    <SelectionCheckbox />
+  </Table.Cell>
+)
+
 type PagingParam = {
   rowsPerPage: number
   page: number
@@ -60,6 +93,16 @@ type PagingParam = {
 type TableActivityProps<T> = {
   sortDescriptor?: TableContentProps['sortDescriptor']
   onSortChange?: TableContentProps['onSortChange']
+  /** 行選択。指定すると行クリックで選択できるようになる */
+  selectionMode?: TableContentProps['selectionMode']
+  /**
+   * 選択方法。既定の 'replace' はチェックボックス列なしのハイライト選択。
+   * 'toggle' にすると先頭にチェックボックス列が追加されるので、
+   * 各行の先頭にも SelectionCell を置くこと。
+   */
+  selectionBehavior?: TableContentProps['selectionBehavior']
+  selectedKeys?: TableContentProps['selectedKeys']
+  onSelectionChange?: TableContentProps['onSelectionChange']
   paging?: PagingParam
   isLoading?: boolean
   pagingList?: PagingList & { items: T[] }
@@ -116,6 +159,10 @@ export const MultiTable = <T extends object>({
   ariaLabel,
   sortDescriptor,
   onSortChange,
+  selectionMode,
+  selectionBehavior,
+  selectedKeys,
+  onSelectionChange,
   columns,
   paging,
   pagingList,
@@ -134,6 +181,7 @@ export const MultiTable = <T extends object>({
     }[]
   }) => {
   const pagingParam = paging ?? pagingList
+  const behavior = selectionMode ? (selectionBehavior ?? 'replace') : undefined
   return (
     <Table>
       <Table.ResizableContainer>
@@ -141,8 +189,24 @@ export const MultiTable = <T extends object>({
           aria-label={ariaLabel}
           sortDescriptor={sortDescriptor ?? pagingList?.sortDescriptor}
           onSortChange={onSortChange ?? pagingList?.onSortChange}
+          selectionMode={selectionMode}
+          // 既定はクリックした行に選択を置き換える(トグルで解除されない)
+          selectionBehavior={behavior}
+          selectedKeys={selectedKeys}
+          onSelectionChange={onSelectionChange}
         >
           <Table.Header>
+            {behavior === 'toggle' && (
+              <Table.Column
+                id={SELECTION_COLUMN_ID}
+                width={SELECTION_COLUMN_WIDTH}
+                minWidth={SELECTION_COLUMN_WIDTH}
+                className={SELECTION_COLUMN_PADDING}
+              >
+                {/* 単一選択では全選択できないのでヘッダのチェックボックスは出さない */}
+                {selectionMode === 'multiple' && <SelectionCheckbox />}
+              </Table.Column>
+            )}
             {columns.map((column) => (
               <Table.Column
                 allowsSorting={column.allowsSorting}
