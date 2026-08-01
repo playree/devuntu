@@ -11,11 +11,11 @@ import { SingleSelectField } from '@/components/general/select'
 import { ContentHeader } from '@/components/header'
 import {
   ArrowLeftCircleIcon,
-  ArrowPathIcon,
   CheckIcon,
   PencilSquareIcon,
   TicketIcon,
   TrashIcon,
+  ViewColumnsIcon,
   XMarkIcon,
 } from '@/components/icon'
 import { notify } from '@/components/notify'
@@ -29,7 +29,7 @@ import { PatchTicketIn, scPatchTicket, zTicketTitle } from '@/lib/schema'
 import { getFieldConstraints } from '@/lib/schema-util'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
-import { ButtonGroup, Skeleton } from '@heroui/react'
+import { Breadcrumbs, Skeleton } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC, useEffect, useState } from 'react'
 import {
@@ -70,9 +70,38 @@ const MetaText: FC<{ label: string; children: React.ReactNode }> = ({ label, chi
 const CloseButton: FC<{ onClose?: () => void; onPress: () => void }> = ({ onClose, onPress }) => {
   const { t } = useLocale()
   return (
-    <MultiButton isIconOnly tooltip={onClose ? t('close') : t('back')} onPress={onPress}>
+    <MultiButton isIconOnly variant='ghost' tooltip={onClose ? t('close') : t('back')} onPress={onPress}>
       {onClose ? <XMarkIcon /> : <ArrowLeftCircleIcon />}
     </MultiButton>
+  )
+}
+
+/**
+ * ヘッダのパンくず。ボード名 > 件名 の 2 階層。
+ * 長い名前は幅で省略する。最後の項目(件名)は react-aria が現在地として扱うためリンクにならない。
+ */
+const TicketBreadcrumbs: FC<{ boardId: string; boardName: string; title: string }> = ({
+  boardId,
+  boardName,
+  title,
+}) => {
+  const router = useRouter()
+  return (
+    <Breadcrumbs className='min-w-0'>
+      {/* RouterProvider を置いていないため href ではなく router.push で遷移する */}
+      <Breadcrumbs.Item onPress={() => router.push(`/boards/${boardId}`)}>
+        <span className='flex items-center gap-1'>
+          <ViewColumnsIcon width={16} />
+          <span className='max-w-32 truncate sm:max-w-48'>{boardName}</span>
+        </span>
+      </Breadcrumbs.Item>
+      <Breadcrumbs.Item>
+        <span className='flex items-center gap-1'>
+          <TicketIcon width={16} />
+          <span className='max-w-40 truncate sm:max-w-72'>{title}</span>
+        </span>
+      </Breadcrumbs.Item>
+    </Breadcrumbs>
   )
 }
 
@@ -90,7 +119,7 @@ export const TicketDetailClient: FC<{
   const { statusOptions, priorityOptions } = useTicketOptions()
   const boardName = useBoardName()
 
-  const { data: ticket, reload, refresh, isLoading } = useActionData(() => getTicket({ id }))
+  const { data: ticket, refresh, isLoading } = useActionData(() => getTicket({ id }))
   const [options, setOptions] = useState<GetTicketFormOptionsReturnType>()
   const [boardAssignees, setBoardAssignees] = useState<Record<string, string>>({})
   const [savingField, setSavingField] = useState<EditField>()
@@ -219,9 +248,15 @@ export const TicketDetailClient: FC<{
   if (!ticket) {
     return (
       <FlexCol>
-        <ContentHeader icon={<TicketIcon />} title={t('ticket')}>
-          <CloseButton onClose={onClose} onPress={close} />
-        </ContentHeader>
+        <ContentHeader
+          title={
+            <>
+              <CloseButton onClose={onClose} onPress={close} />
+              <TicketIcon />
+              {t('ticket')}
+            </>
+          }
+        />
         <div className='rounded-xl border-2 p-4 text-sm'>{t('msg_no_access')}</div>
       </FlexCol>
     )
@@ -251,20 +286,18 @@ export const TicketDetailClient: FC<{
 
   return (
     <FlexCol>
-      <ContentHeader icon={<TicketIcon />} title={ticket.title}>
-        <CloseButton onClose={onClose} onPress={close} />
-        {ticket.canDelete && (
-          <MultiButton isIconOnly variant='danger-soft' tooltip={t('delete')} onPress={remove}>
-            <ButtonGroup.Separator />
-            <TrashIcon />
-          </MultiButton>
-        )}
-        {/* 明示的な再読込なので、保存時とは違って読み込み中の表示に切り替える */}
-        <MultiButton isIconOnly tooltip={t('reload')} onPress={() => void reload()}>
-          <ButtonGroup.Separator />
-          <ArrowPathIcon />
-        </MultiButton>
-      </ContentHeader>
+      <ContentHeader
+        title={
+          <>
+            <CloseButton onClose={onClose} onPress={close} />
+            <TicketBreadcrumbs
+              boardId={ticket.boardId}
+              boardName={boardName({ name: ticket.boardName, kind: ticket.boardKind })}
+              title={ticket.title}
+            />
+          </>
+        }
+      />
 
       <Panel>
         {/* 項目の並びは作成モーダル(../modals.tsx の AddModal)と揃えている */}
@@ -396,6 +429,18 @@ export const TicketDetailClient: FC<{
           <span>
             {t('updated_at')} <span className='font-mono'>{dayformat(ticket.updatedAt, 'tz-simple', tz)}</span>
           </span>
+          {ticket.canDelete && (
+            <MultiButton
+              isIconOnly
+              size='sm'
+              variant='danger-soft'
+              className='ml-auto'
+              tooltip={t('delete')}
+              onPress={remove}
+            >
+              <TrashIcon width={16} />
+            </MultiButton>
+          )}
         </div>
       </Panel>
 
