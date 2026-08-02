@@ -309,28 +309,9 @@ export const assertBoardAssignee = async (tx: Db, boardId: string, assigneeId?: 
 }
 
 /**
- * ユーザー単位のアサイン(BoardMember)を総入れ替えする。owner も実行できる操作。
- * 既存の admin/users と同じ「総入れ替え」方式。呼び出し側でトランザクションを張ること。
- *
- * グループ経由メンバーの owner 昇格もこの経路で表現される。
- * owner に含めれば BoardMember 行ができ、外せば行が消えてグループ経由 member へ戻る。
- */
-export const syncBoardMembers = async (
-  tx: Prisma.TransactionClient,
-  boardId: string,
-  members: { userId: string; role: BoardRole }[],
-): Promise<void> => {
-  await tx.boardMember.deleteMany({ where: { boardId } })
-  if (members.length > 0) {
-    await tx.boardMember.createMany({
-      data: members.map(({ userId, role }) => ({ boardId, userId, role })),
-    })
-  }
-}
-
-/**
  * グループ単位のアサイン(BoardGroup)を総入れ替えする。
- * ユーザー単位と権限境界が違う(管理者のみ)ため関数を分けている。
+ * ユーザー単位のアサイン(BoardMember)はメンバー 1 人ずつの upsert / delete で行うため、
+ * こちらだけ総入れ替え方式になっている(権限境界も管理者のみで異なる)。
  */
 export const syncBoardGroups = async (
   tx: Prisma.TransactionClient,

@@ -306,18 +306,29 @@ export const scUpdateBoard = z.object({
 })
 export type UpdateBoard = z.infer<typeof scUpdateBoard>
 
+/** ボードのロール。Prisma の BoardMemberRole / task.ts の BoardRole と一致させる */
+const zBoardMemberRole = z.enum(['owner', 'member'])
+
 /**
- * ユーザー単位のアサイン(owner も実行可能)。
- * 既存の MultiSelectCtrl(Record<string,string> + string[]) を再利用するため owner / member を
- * 2 つの多重選択に分け、サーバー側で mergeBoardMembers でマージする。
+ * ユーザー単位のアサインをメンバー 1 人ずつ追加 / 変更する(owner も実行可能)。
+ * グループ経由ユーザーへの直接ロール付与も同じ入力で表せる。
+ * `id` はボード ID、`userId` が対象ユーザー。
  */
-export const scSetBoardMembers = z.object({
+export const scUpsertBoardMember = z.object({
   id: z.uuidv7(),
-  ownerIds: z.array(z.uuidv7()).default([]),
-  memberIds: z.array(z.uuidv7()).default([]),
+  // 未選択(空文字)のままの送信をフォーム側でも弾けるようメッセージを付ける
+  userId: z.uuidv7(el('@required_field')),
+  role: zBoardMemberRole,
 })
-export type SetBoardMembers = z.infer<typeof scSetBoardMembers>
-export type SetBoardMembersIn = z.input<typeof scSetBoardMembers>
+export type UpsertBoardMember = z.infer<typeof scUpsertBoardMember>
+export type UpsertBoardMemberIn = z.input<typeof scUpsertBoardMember>
+
+/** 直接メンバー(BoardMember 行)の解除。グループ経由メンバーには使えない */
+export const scRemoveBoardMember = z.object({
+  id: z.uuidv7(),
+  userId: z.uuidv7(),
+})
+export type RemoveBoardMember = z.infer<typeof scRemoveBoardMember>
 
 /** グループ単位のアサイン(管理者のみ)。権限境界が違うためユーザー単位と分けている */
 export const scSetBoardGroups = z.object({
@@ -351,11 +362,3 @@ export const scUpdateTag = z.object({
 export type UpdateTag = z.infer<typeof scUpdateTag>
 export type UpdateTagIn = z.input<typeof scUpdateTag>
 export type UpdateTagOut = z.output<typeof scUpdateTag>
-
-/** タグ統合。同一ボード内のみ許可する(検証はサーバー側の mergeTags) */
-export const scMergeTags = z.object({
-  boardId: z.uuidv7(),
-  sourceId: z.uuidv7(),
-  targetId: z.uuidv7(),
-})
-export type MergeTags = z.infer<typeof scMergeTags>

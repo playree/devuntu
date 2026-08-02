@@ -1,5 +1,6 @@
 'use server'
 
+import type { Prisma } from '@/generated/prisma/client'
 import { safeAuthAction } from '@/lib/action-server'
 import {
   assertBoardAccess,
@@ -9,29 +10,30 @@ import {
   getBoardMemberUsers,
   isAdminActor,
   syncBoardGroups,
-  syncBoardMembers,
+  type Actor,
 } from '@/lib/board'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import {
   scCreateTag,
-  scMergeTags,
+  scRemoveBoardMember,
   scSetBoardGroups,
-  scSetBoardMembers,
   scUpdateBoard,
   scUpdateTag,
+  scUpsertBoardMember,
   scUUID,
 } from '@/lib/schema'
-import { listBoardTagsForManage, mergeTags, rethrowDuplicatedTagName } from '@/lib/tag'
-import { canApplyAssignments, MAX_TAGS_PER_SCOPE, mergeBoardMembers, nextTagOrder, TICKET_STATUSES } from '@/lib/task'
+import { listBoardTagsForManage, rethrowDuplicatedTagName } from '@/lib/tag'
+import { canApplyAssignments, MAX_TAGS_PER_SCOPE, nextTagOrder, TICKET_STATUSES, type BoardRole } from '@/lib/task'
 
 const TAG_SELECT = { id: true, boardId: true, name: true, color: true, order: true } as const
 
 /**
- * ボード詳細(概要 + メンバー + 権限)
+ * ボード詳細(概要 + 権限)
  *
  * 権限は画面側のセクション表示に使う。クライアントの非表示だけに頼らず各 Action でも検証する。
+ * メンバー一覧は独立してリロードできるよう getBoardMembers に分けている。
  */
 export const getBoardDetail = safeAuthAction
   .metadata({ actionName: 'getBoardDetail', role: 'user' })
@@ -47,7 +49,7 @@ export const getBoardDetail = safeAuthAction
       throw errInvalidOperation()
     }
 
-    const [members, counts] = await Promise.all([getBoardMemberUsers(id), countTicketsByBoard([id])])
+    const counts = await countTicketsByBoard([id])
     const byStatus = counts[id] ?? {}
 
     return {
@@ -58,11 +60,20 @@ export const getBoardDetail = safeAuthAction
       // 権限境界: ユーザー単位のアサインは owner、グループ単位は管理者のみ
       canManage: access.role === 'owner' || isAdminActor(user),
       isAdmin: isAdminActor(user),
-      members,
       ticketCounts: Object.fromEntries(TICKET_STATUSES.map((status) => [status, byStatus[status] ?? 0])),
     }
   })
 export type GetBoardDetailReturnType = Awaited<ReturnType<typeof getBoardDetail>>['data']
+
+/** メンバー一覧(グループ経由も含む)。閲覧はメンバーなら可能 */
+export const getBoardMembers = safeAuthAction
+  .metadata({ actionName: 'getBoardMembers', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => {
+    await assertBoardAccess(user, id, 'view')
+    return getBoardMemberUsers(id)
+  })
+export type GetBoardMembersReturnType = Awaited<ReturnType<typeof getBoardMembers>>['data']
 
 /** ボード更新(owner または管理者)。プライベートボードは変更できない */
 export const updateBoard = safeAuthAction
@@ -132,27 +143,96 @@ export const getBoardAssignments = safeAuthAction
 export type GetBoardAssignmentsReturnType = Awaited<ReturnType<typeof getBoardAssignments>>['data']
 
 /**
- * ユーザー単位のアサインを更新する(owner または管理者)。
- * グループ経由メンバーの owner 昇格もこの経路。ownerIds に含めれば BoardMember 行ができる。
+ * 操作後に owner が 1 人以上残るかを検証する。0 人になるとボードが管理不能になるため。
+ * `nextRole` が null は対象ユーザーの削除。管理者は 0 人にできる(/admin から救済できる)。
  */
-export const setBoardMembers = safeAuthAction
-  .metadata({ actionName: 'setBoardMembers', role: 'user' })
-  .inputSchema(scSetBoardMembers)
-  .action(async ({ ctx: { user }, parsedInput: { id, ownerIds, memberIds } }) => {
+const assertOwnerRemains = async (
+  tx: Prisma.TransactionClient,
+  { actor, boardId, userId, nextRole }: { actor: Actor; boardId: string; userId: string; nextRole: BoardRole | null },
+): Promise<void> => {
+  const owners = await tx.boardMember.findMany({ where: { boardId, role: 'owner' }, select: { userId: true } })
+  const ownerIds = owners.map((owner) => owner.userId).filter((id) => id !== userId)
+  if (nextRole === 'owner') {
+    ownerIds.push(userId)
+  }
+
+  if (!canApplyAssignments({ ownerIds, byAdmin: isAdminActor(actor) })) {
+    throw errInvalidOperation()
+  }
+}
+
+/**
+ * 直接メンバー(BoardMember)1 行を追加 / 更新する。追加と編集で処理が同じなので実体を共有する。
+ * グループ経由メンバーへのロール付与もここを通る(行が無ければ create される)。
+ *
+ * 呼び出し側でトランザクションを張ること。
+ */
+const upsertBoardMember = async (
+  tx: Prisma.TransactionClient,
+  { actor, boardId, userId, role }: { actor: Actor; boardId: string; userId: string; role: BoardRole },
+): Promise<void> => {
+  await assertBoardAccess(actor, boardId, 'manage', tx)
+  await assertTeamBoard(tx, boardId)
+  await assertBoardAssignmentTargets(tx, { userIds: [userId], groupIds: [] })
+  await assertOwnerRemains(tx, { actor, boardId, userId, nextRole: role })
+
+  await tx.boardMember.upsert({
+    where: { boardId_userId: { boardId, userId } },
+    create: { boardId, userId, role },
+    update: { role },
+  })
+}
+
+/** メンバーを 1 人追加する(owner または管理者)。既に直接メンバーならロールを上書きする */
+export const addBoardMember = safeAuthAction
+  .metadata({ actionName: 'addBoardMember', role: 'user' })
+  .inputSchema(scUpsertBoardMember)
+  .action(async ({ ctx: { user }, parsedInput: { id, userId, role } }) => {
+    await prisma.$transaction((tx) => upsertBoardMember(tx, { actor: user, boardId: id, userId, role }))
+
+    logger.info({ userId: user.id, id, targetId: userId, role }, 'board member added')
+    return { id }
+  })
+
+/**
+ * メンバーのロールを変更する(owner または管理者)。
+ * グループ経由メンバーもここで直接ロールを付与できる(付与後は via='member' になる)。
+ */
+export const updateBoardMemberRole = safeAuthAction
+  .metadata({ actionName: 'updateBoardMemberRole', role: 'user' })
+  .inputSchema(scUpsertBoardMember)
+  .action(async ({ ctx: { user }, parsedInput: { id, userId, role } }) => {
+    await prisma.$transaction((tx) => upsertBoardMember(tx, { actor: user, boardId: id, userId, role }))
+
+    logger.info({ userId: user.id, id, targetId: userId, role }, 'board member role updated')
+    return { id }
+  })
+
+/**
+ * 直接メンバーを外す(owner または管理者)。
+ * グループ経由メンバーは BoardMember 行を持たないため対象外(ボードグループ設定で外す)。
+ */
+export const removeBoardMember = safeAuthAction
+  .metadata({ actionName: 'removeBoardMember', role: 'user' })
+  .inputSchema(scRemoveBoardMember)
+  .action(async ({ ctx: { user }, parsedInput: { id, userId } }) => {
     await prisma.$transaction(async (tx) => {
       await assertBoardAccess(user, id, 'manage', tx)
       await assertTeamBoard(tx, id)
-      await assertBoardAssignmentTargets(tx, { userIds: [...ownerIds, ...memberIds], groupIds: [] })
 
-      // owner が 0 人になるとボードが管理不能になる(管理者は /admin から救済できる)
-      if (!canApplyAssignments({ ownerIds, byAdmin: isAdminActor(user) })) {
+      const member = await tx.boardMember.findUnique({
+        where: { boardId_userId: { boardId: id, userId } },
+        select: { id: true },
+      })
+      if (!member) {
         throw errInvalidOperation()
       }
 
-      await syncBoardMembers(tx, id, mergeBoardMembers(ownerIds, memberIds))
+      await assertOwnerRemains(tx, { actor: user, boardId: id, userId, nextRole: null })
+      await tx.boardMember.delete({ where: { id: member.id } })
     })
 
-    logger.info({ userId: user.id, id }, 'board members updated')
+    logger.info({ userId: user.id, id, targetId: userId }, 'board member removed')
     return { id }
   })
 
@@ -249,18 +329,4 @@ export const deleteBoardTag = safeAuthAction
 
     logger.info({ userId: user.id, id }, 'tag deleted')
     return { id }
-  })
-
-/** タグ統合(owner または管理者)。同一ボード内のみ */
-export const mergeBoardTags = safeAuthAction
-  .metadata({ actionName: 'mergeBoardTags', role: 'user' })
-  .inputSchema(scMergeTags)
-  .action(async ({ ctx: { user }, parsedInput: { boardId, sourceId, targetId } }) => {
-    await prisma.$transaction(async (tx) => {
-      await assertBoardAccess(user, boardId, 'manage', tx)
-      await mergeTags(tx, boardId, sourceId, targetId)
-    })
-
-    logger.info({ userId: user.id, boardId, sourceId, targetId }, 'tags merged')
-    return { id: targetId }
   })

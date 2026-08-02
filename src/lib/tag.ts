@@ -96,7 +96,7 @@ export const assertTagIdsInBoard = async (tx: Db, boardId: string, tagIds: strin
 }
 
 /**
- * チケットに紐づくタグを総入れ替えする(syncBoardMembers と同じ思想)。
+ * チケットに紐づくタグを総入れ替えする(syncBoardGroups と同じ思想)。
  * 変化しない tagId は触らないことで、不要な DELETE / INSERT を避ける。
  */
 export const syncTicketTags = async (
@@ -116,36 +116,4 @@ export const syncTicketTags = async (
   if (toAdd.length > 0) {
     await tx.ticketTag.createMany({ data: toAdd.map((tagId) => ({ ticketId, tagId })) })
   }
-}
-
-/**
- * 同一ボード内のタグを統合する。source が付いていたチケットへ target を付け、source を削除する。
- * 両方付いていたチケットで重複行にならないよう skipDuplicates を使う。
- */
-export const mergeTags = async (
-  tx: Prisma.TransactionClient,
-  boardId: string,
-  sourceId: string,
-  targetId: string,
-): Promise<void> => {
-  const [source, target] = await Promise.all([
-    tx.tag.findUnique({ where: { id: sourceId }, select: { id: true, boardId: true } }),
-    tx.tag.findUnique({ where: { id: targetId }, select: { id: true, boardId: true } }),
-  ])
-
-  // ボードを跨いだ統合はタグの所属を壊すので許可しない
-  if (!source || !target || source.id === target.id || source.boardId !== boardId || target.boardId !== boardId) {
-    throw errInvalidOperation()
-  }
-
-  const links = await tx.ticketTag.findMany({ where: { tagId: source.id }, select: { ticketId: true } })
-  if (links.length > 0) {
-    await tx.ticketTag.createMany({
-      data: links.map(({ ticketId }) => ({ ticketId, tagId: target.id })),
-      skipDuplicates: true,
-    })
-  }
-
-  // 残った source 側の TicketTag は onDelete: Cascade で消える
-  await tx.tag.delete({ where: { id: source.id } })
 }

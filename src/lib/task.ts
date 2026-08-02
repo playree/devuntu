@@ -80,22 +80,11 @@ export const evaluateTicketAccess = ({ userId, createdById, boardRole }: TicketA
   }
 }
 
-/** owner/member の多重選択を BoardMember 行へマージする(重複は owner 優先) */
-export const mergeBoardMembers = (ownerIds: string[], memberIds: string[]): { userId: string; role: BoardRole }[] => {
-  const roles = new Map<string, BoardRole>()
-  // owner を優先させるため member を先に入れる
-  for (const userId of memberIds) {
-    roles.set(userId, 'member')
-  }
-  for (const userId of ownerIds) {
-    roles.set(userId, 'owner')
-  }
-  return [...roles].map(([userId, role]) => ({ userId, role }))
-}
-
 /**
  * owner が 0 人になるアサインは owner 自身には許可しない(ボードが管理不能になる)。
  * 管理者は /admin/boards から実施できる。
+ *
+ * `ownerIds` には操作を適用した後の owner 一覧を渡す。
  */
 export const canApplyAssignments = ({ ownerIds, byAdmin }: { ownerIds: string[]; byAdmin: boolean }): boolean =>
   byAdmin || ownerIds.length > 0

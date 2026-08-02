@@ -1,14 +1,14 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
-import { FlexCol } from '@/components/general/flex'
+import { FlexCol, FlexRow } from '@/components/general/flex'
+import { InputField } from '@/components/general/input'
 import { useConfirmModal } from '@/components/general/modal'
-import { CheckIcon, PencilSquareIcon, PlusIcon, TrashIcon, XMarkIcon } from '@/components/icon'
+import { CheckIcon, PencilSquareIcon, TrashIcon, XMarkIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import type { TagColor } from '@/generated/prisma/enums'
 import { MAX_TAG_NAME, MAX_TAGS_PER_SCOPE, TAG_COLORS } from '@/lib/task'
 import { useLocale } from '@/locale/client'
-import { Input, Label, ListBox, Select } from '@heroui/react'
 import { FC, useState } from 'react'
 import { TAG_COLOR_CLASS, TagChip } from './ticket-chip'
 
@@ -68,23 +68,21 @@ const TagRowForm: FC<{
   }
 
   return (
-    <div className='flex flex-wrap items-end gap-2 rounded-xl border-2 p-2'>
+    <FlexRow isSmart className='flex-wrap items-end gap-2 rounded-xl border-2 p-2'>
       <div className='min-w-40 grow'>
-        <Label className='text-xs font-light'>{t('name')}</Label>
-        <Input
+        <InputField
+          label={t('name')}
           value={name}
           variant='secondary'
           maxLength={MAX_TAG_NAME}
-          className='py-1'
           onChange={(e) => setName(e.target.value)}
         />
       </div>
       <div className='w-20'>
-        <Label className='text-xs font-light'>{t('display_order')}</Label>
-        <Input
+        <InputField
+          label={t('display_order')}
           value={order}
           variant='secondary'
-          className='py-1'
           inputMode='numeric'
           onChange={(e) => setOrder(e.target.value.replace(/\D/g, ''))}
         />
@@ -93,7 +91,6 @@ const TagRowForm: FC<{
         <ColorPicker value={color} onChange={setColor} />
       </div>
       <div className='flex items-center gap-1'>
-        <TagChip tag={{ name: name.trim() || t('tags'), color }} />
         <MultiButton
           size='sm'
           icon={<CheckIcon width={16} />}
@@ -109,7 +106,7 @@ const TagRowForm: FC<{
           </MultiButton>
         )}
       </div>
-    </div>
+    </FlexRow>
   )
 }
 
@@ -126,12 +123,10 @@ export const TagEditor: FC<{
   onCreate: (req: { name: string; color: TagColor; order: number }) => Promise<void>
   onUpdate: (req: { id: string; name: string; color: TagColor; order: number }) => Promise<void>
   onDelete: (tag: TagEditorItem) => Promise<void>
-  onMerge: (req: { sourceId: string; targetId: string }) => Promise<void>
-}> = ({ tags, canManage, onCreate, onUpdate, onDelete, onMerge }) => {
+}> = ({ tags, canManage, onCreate, onUpdate, onDelete }) => {
   const { t } = useLocale()
   const { confirmModal } = useConfirmModal()
   const [editingId, setEditingId] = useState<string>()
-  const [mergeSourceId, setMergeSourceId] = useState<string>()
   const [isPending, setPending] = useState(false)
 
   const withPending = async (action: () => Promise<void>) => {
@@ -154,29 +149,6 @@ export const TagEditor: FC<{
       if (ok) {
         await onDelete(tag)
         notify.success(t('msg_deleted_target', { target: tag.name }))
-      }
-    } finally {
-      confirmModal().close()
-    }
-  }
-
-  const merge = async (targetId: string) => {
-    const source = tags.find((tag) => tag.id === mergeSourceId)
-    const target = tags.find((tag) => tag.id === targetId)
-    if (!source || !target || source.id === target.id) {
-      return
-    }
-    try {
-      const ok = await confirmModal().confirm({
-        title: t('merge_tags'),
-        text: t('msg_confirm_merge_tags', { source: source.name, target: target.name }),
-        requireCheck: true,
-        autoClose: false,
-      })
-      if (ok) {
-        await onMerge({ sourceId: source.id, targetId: target.id })
-        notify.success(t('msg_saved'))
-        setMergeSourceId(undefined)
       }
     } finally {
       confirmModal().close()
@@ -232,16 +204,6 @@ export const TagEditor: FC<{
                     <MultiButton
                       isIconOnly
                       size='sm'
-                      variant={mergeSourceId === tag.id ? 'primary' : 'tertiary'}
-                      className='h-7 w-7 rounded-sm'
-                      tooltip={mergeSourceId === tag.id ? t('merge_source') : t('merge_tags')}
-                      onPress={() => setMergeSourceId(mergeSourceId === tag.id ? undefined : tag.id)}
-                    >
-                      <PlusIcon width={16} />
-                    </MultiButton>
-                    <MultiButton
-                      isIconOnly
-                      size='sm'
                       variant='danger-soft'
                       className='h-7 w-7 rounded-sm'
                       tooltip={t('delete')}
@@ -254,48 +216,6 @@ export const TagEditor: FC<{
               </div>
             ),
           )}
-        </div>
-      )}
-
-      {mergeSourceId && (
-        <div className='flex flex-wrap items-center gap-2 rounded-xl border-2 p-2'>
-          <span className='text-xs text-gray-500'>
-            {t('merge_source')}: {tags.find((tag) => tag.id === mergeSourceId)?.name}
-          </span>
-          <Select
-            selectionMode='single'
-            variant='secondary'
-            aria-label={t('merge_target')}
-            value=''
-            isDisabled={isPending}
-            onChange={(key) => {
-              const id = key?.toString()
-              if (id) {
-                merge(id)
-              }
-            }}
-          >
-            <Label className='sr-only'>{t('merge_target')}</Label>
-            <Select.Trigger>
-              <Select.Value />
-              <Select.Indicator />
-            </Select.Trigger>
-            <Select.Popover>
-              <ListBox selectionMode='single'>
-                {tags
-                  .filter((tag) => tag.id !== mergeSourceId)
-                  .map((tag) => (
-                    <ListBox.Item key={tag.id} id={tag.id} textValue={tag.name}>
-                      {tag.name}
-                      <ListBox.ItemIndicator />
-                    </ListBox.Item>
-                  ))}
-              </ListBox>
-            </Select.Popover>
-          </Select>
-          <MultiButton size='sm' variant='ghost' onPress={() => setMergeSourceId(undefined)}>
-            {t('cancel')}
-          </MultiButton>
         </div>
       )}
     </FlexCol>

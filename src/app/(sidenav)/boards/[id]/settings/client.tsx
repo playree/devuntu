@@ -2,15 +2,15 @@
 
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
-import { useConfirmModal } from '@/components/general/modal'
 import { ContentHeader } from '@/components/header'
 import {
   ArrowLeftCircleIcon,
   ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
   Cog6ToothIcon,
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
   TagIcon,
-  TrashIcon,
   UserGroupIcon,
   UsersIcon,
   ViewColumnsIcon,
@@ -20,42 +20,33 @@ import { TagEditor } from '@/components/ticket/tag-editor'
 import { useBoardName } from '@/components/ticket/ticket-chip'
 import { parseAction, useActionData } from '@/lib/action-client'
 import { useLocale } from '@/locale/client'
-import { ButtonGroup, Chip, Skeleton } from '@heroui/react'
+import { Accordion, ButtonGroup, Skeleton } from '@heroui/react'
 import { useRouter } from 'next/navigation'
-import { FC, ReactNode } from 'react'
+import { FC } from 'react'
+import { BoardMembers } from './board-members'
 import { BoardProfile } from './board-profile'
-import { GroupManage, MemberManage } from './member-manage'
+import { DangerZone } from './danger-zone'
+import { GroupManage } from './group-manage'
 import {
   createBoardTag,
-  deleteBoard,
   deleteBoardTag,
   getBoardAssignments,
   getBoardDetail,
   getBoardTags,
-  mergeBoardTags,
   updateBoardTag,
 } from './server'
 
-/** アイコン付きのセクション見出し */
-const Section: FC<{ icon: ReactNode; title: string; children: ReactNode }> = ({ icon, title, children }) => (
-  <fieldset className='rounded-xl border-2 p-3'>
-    <legend className='flex items-center gap-1 px-2 text-sm text-gray-500'>
-      {icon}
-      {title}
-    </legend>
-    {children}
-  </fieldset>
-)
+/** デンジャーゾーンは誤操作を避けるため初期状態で閉じておく */
+const defaultExpandedKeys = new Set(['board_profile', 'board_members', 'board_groups', 'tag_manage'])
 
 export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
   const { t } = useLocale()
   const router = useRouter()
   const boardName = useBoardName()
-  const { confirmModal } = useConfirmModal()
 
   const { data: board, reload, isLoading } = useActionData(() => getBoardDetail({ id: boardId }))
   const { data: tags, reload: reloadTags } = useActionData(() => getBoardTags({ id: boardId }))
-  // アサイン編集は manage 権限が要るため、取得できない場合は undefined のまま(セクションを出さない)
+  // アサイン編集は manage 権限が要るため、取得できない場合は undefined のまま(フォームを出さない)
   const { data: assignments, reload: reloadAssignments } = useActionData(() => getBoardAssignments({ id: boardId }))
 
   if (isLoading) {
@@ -78,26 +69,6 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
 
   const isPrivate = board.kind === 'private'
   const canManageBoard = !isPrivate && board.canManage
-
-  // ボード削除は配下のチケット / コメントごと消えるので、ボード名入りの専用確認文をチェック付きで出す
-  const removeBoard = async () => {
-    const name = boardName(board)
-    try {
-      const ok = await confirmModal().confirm({
-        title: t('confirm_deletion'),
-        text: t('msg_confirm_delete_board', { target: name }),
-        requireCheck: true,
-        autoClose: false,
-      })
-      if (ok) {
-        await parseAction(deleteBoard({ id: board.id }))
-        notify.success(t('msg_deleted_target', { target: name }))
-        router.push('/boards')
-      }
-    } finally {
-      confirmModal().close()
-    }
-  }
 
   return (
     <FlexCol>
@@ -125,68 +96,124 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
           <ButtonGroup.Separator />
           <ArrowPathIcon />
         </MultiButton>
-        {canManageBoard && (
-          <MultiButton isIconOnly variant='danger-soft' tooltip={t('delete')} onPress={removeBoard}>
-            <ButtonGroup.Separator />
-            <TrashIcon />
-          </MultiButton>
-        )}
       </ContentHeader>
 
-      <BoardProfile board={board} reload={reload} />
+      <Accordion allowsMultipleExpanded defaultExpandedKeys={defaultExpandedKeys}>
+        {/* ボード情報: 名前 / 説明の編集とメタ情報(種別・オーナー・チケット件数など)。
+            閲覧は誰でも可、編集可否は BoardProfile 内で manage 権限から判定する */}
+        <Accordion.Item id='board_profile'>
+          <Accordion.Heading>
+            <Accordion.Trigger className='gap-1'>
+              <InformationCircleIcon />
+              {t('board_profile')}
+              <Accordion.Indicator />
+            </Accordion.Trigger>
+          </Accordion.Heading>
+          <Accordion.Panel>
+            <Accordion.Body className='px-4'>
+              {/* アーカイブをデンジャーゾーンから切り替えても useForm の defaultValues は追従しないので、
+                  古い archived で上書きしないよう再マウントさせる */}
+              <BoardProfile key={`${board.id}-${board.archived}`} board={board} reload={reload} />
+            </Accordion.Body>
+          </Accordion.Panel>
+        </Accordion.Item>
 
-      {/* プライベートボードは 1 ユーザー 1 つの固定構成なのでアサインを変更させない */}
-      {canManageBoard && assignments && (
-        <Section icon={<UsersIcon width={16} />} title={t('board_members')}>
-          <MemberManage boardId={board.id} assignments={assignments} reload={reloadAssignments} />
-        </Section>
-      )}
+        {/* ボードメンバー: 直接メンバーとグループ経由メンバーの一覧 / 追加 / ロール変更 / 削除。
+            プライベートボードは所有者 1 人固定でメンバーの概念が無いのでセクションごと出さない */}
+        {!isPrivate && (
+          <Accordion.Item id='board_members'>
+            <Accordion.Heading>
+              <Accordion.Trigger className='gap-1'>
+                <UsersIcon />
+                {t('board_members')}
+                <Accordion.Indicator />
+              </Accordion.Trigger>
+            </Accordion.Heading>
+            <Accordion.Panel>
+              <Accordion.Body className='px-4'>
+                {/* manage 権限が無いメンバーには一覧だけ見せる(assignments を渡さないと編集 UI が出ない) */}
+                <BoardMembers
+                  boardId={board.id}
+                  assignments={canManageBoard ? assignments : undefined}
+                  reloadAssignments={reloadAssignments}
+                />
+              </Accordion.Body>
+            </Accordion.Panel>
+          </Accordion.Item>
+        )}
 
-      {!isPrivate && board.isAdmin && assignments && (
-        <Section icon={<UserGroupIcon width={16} />} title={t('board_groups')}>
-          <GroupManage boardId={board.id} assignments={assignments} reload={reloadAssignments} />
-        </Section>
-      )}
+        {/* ボードグループ: グループ単位のアサイン。グループ構成の変更は管理者だけに許すので
+            isAdmin かつアサイン情報(選択肢)を取得できたときだけ表示する */}
+        {!isPrivate && board.isAdmin && assignments && (
+          <Accordion.Item id='board_groups'>
+            <Accordion.Heading>
+              <Accordion.Trigger className='gap-1'>
+                <UserGroupIcon />
+                {t('board_groups')}
+                <Accordion.Indicator />
+              </Accordion.Trigger>
+            </Accordion.Heading>
+            <Accordion.Panel>
+              <Accordion.Body className='px-4'>
+                <GroupManage boardId={board.id} assignments={assignments} reload={reloadAssignments} />
+              </Accordion.Body>
+            </Accordion.Panel>
+          </Accordion.Item>
+        )}
 
-      {!isPrivate && (
-        <Section icon={<UsersIcon width={16} />} title={t('member_count')}>
-          <div className='flex flex-wrap gap-1'>
-            {board.members.map((member) => (
-              <Chip key={member.id} variant='tertiary' size='sm'>
-                <Chip.Label>
-                  {member.name}
-                  {member.role === 'owner' ? ` (${t('owner')})` : member.via === 'group' ? ` (${t('group')})` : ''}
-                </Chip.Label>
-              </Chip>
-            ))}
-          </div>
-        </Section>
-      )}
+        {/* タグ管理: ボード内タグの追加 / 編集 / 削除。member もチケット編集中に新しいタグが要るため
+            追加は閲覧権限だけでも許可し、canManage は編集 / 削除の可否として渡す */}
+        <Accordion.Item id='tag_manage'>
+          <Accordion.Heading>
+            <Accordion.Trigger className='gap-1'>
+              <TagIcon />
+              {t('tag_manage')}
+              <Accordion.Indicator />
+            </Accordion.Trigger>
+          </Accordion.Heading>
+          <Accordion.Panel>
+            <Accordion.Body className='px-4'>
+              <TagEditor
+                tags={tags ?? []}
+                canManage={board.canManage}
+                onCreate={async (req) => {
+                  await parseAction(createBoardTag({ boardId: board.id, ...req }))
+                  notify.success(t('msg_added_target', { target: req.name }))
+                  reloadTags()
+                }}
+                onUpdate={async (req) => {
+                  await parseAction(updateBoardTag(req))
+                  notify.success(t('msg_updated_target', { target: req.name }))
+                  reloadTags()
+                }}
+                onDelete={async (tag) => {
+                  await parseAction(deleteBoardTag({ id: tag.id }))
+                  reloadTags()
+                }}
+              />
+            </Accordion.Body>
+          </Accordion.Panel>
+        </Accordion.Item>
 
-      <Section icon={<TagIcon width={16} />} title={t('tag_manage')}>
-        <TagEditor
-          tags={tags ?? []}
-          canManage={board.canManage}
-          onCreate={async (req) => {
-            await parseAction(createBoardTag({ boardId: board.id, ...req }))
-            notify.success(t('msg_added_target', { target: req.name }))
-            reloadTags()
-          }}
-          onUpdate={async (req) => {
-            await parseAction(updateBoardTag(req))
-            notify.success(t('msg_updated_target', { target: req.name }))
-            reloadTags()
-          }}
-          onDelete={async (tag) => {
-            await parseAction(deleteBoardTag({ id: tag.id }))
-            reloadTags()
-          }}
-          onMerge={async (req) => {
-            await parseAction(mergeBoardTags({ boardId: board.id, ...req }))
-            reloadTags()
-          }}
-        />
-      </Section>
+        {/* デンジャーゾーン: アーカイブ切替とボード削除。プライベートボードは削除させないので
+            manage 権限に加えてチームボードであることを条件にする */}
+        {canManageBoard && (
+          <Accordion.Item id='danger_zone'>
+            <Accordion.Heading>
+              <Accordion.Trigger className='gap-1'>
+                <ExclamationTriangleIcon className='text-danger' />
+                {t('danger_zone')}
+                <Accordion.Indicator />
+              </Accordion.Trigger>
+            </Accordion.Heading>
+            <Accordion.Panel>
+              <Accordion.Body className='px-4'>
+                <DangerZone board={board} reload={reload} />
+              </Accordion.Body>
+            </Accordion.Panel>
+          </Accordion.Item>
+        )}
+      </Accordion>
     </FlexCol>
   )
 }

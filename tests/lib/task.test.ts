@@ -17,7 +17,6 @@ import {
   groupByLane,
   insertAt,
   laneDropId,
-  mergeBoardMembers,
   nextLaneOrder,
   normalizeMentionName,
   parseDropTarget,
@@ -89,33 +88,7 @@ describe('evaluateTicketAccess: ボードのロールから権限を決める', 
   })
 })
 
-describe('mergeBoardMembers / canApplyAssignments: ボードのアサイン', () => {
-  it('owner と member を BoardMember 行へマージする', () => {
-    const res = mergeBoardMembers(['u1'], ['u2', 'u3'])
-    expect(res).toHaveLength(3)
-    expect(new Map(res.map((r) => [r.userId, r.role]))).toEqual(
-      new Map([
-        ['u1', 'owner'],
-        ['u2', 'member'],
-        ['u3', 'member'],
-      ]),
-    )
-  })
-
-  it('owner と member の重複は owner を優先する', () => {
-    const res = mergeBoardMembers(['u1'], ['u1', 'u2'])
-    expect(res, '重複は 1 行に畳まれる').toHaveLength(2)
-    expect(res.find((r) => r.userId === 'u1')?.role, 'u1 は owner になる').toBe('owner')
-  })
-
-  it('同じ ID が複数回指定されても重複しない', () => {
-    expect(mergeBoardMembers(['u1', 'u1'], ['u2', 'u2'])).toHaveLength(2)
-  })
-
-  it('空指定は空配列', () => {
-    expect(mergeBoardMembers([], [])).toEqual([])
-  })
-
+describe('canApplyAssignments: ボードのアサイン', () => {
   it('owner が 0 人になるアサインは owner 自身には許可しない', () => {
     expect(canApplyAssignments({ ownerIds: [], byAdmin: false }), 'owner 操作では拒否').toBe(false)
     expect(canApplyAssignments({ ownerIds: [], byAdmin: true }), '管理者操作では許可').toBe(true)

@@ -1,7 +1,6 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
-import { CheckBoxCtrl } from '@/components/general/checkbox-ctrl'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
 import { CheckIcon } from '@/components/icon'
@@ -29,7 +28,10 @@ const MetaRow: FC<{ label: string; children: ReactNode }> = ({ label, children }
   </div>
 )
 
-/** 名前 / 説明 / アーカイブの編集フォーム。team ボードの owner(または管理者)だけに出す */
+/**
+ * 名前 / 説明の編集フォーム。team ボードの owner(または管理者)だけに出す。
+ * アーカイブはデンジャーゾーン側で切り替えるが、scUpdateBoard が必須なので現在値をそのまま送る。
+ */
 const EditForm: FC<{ board: Board; reload: () => void }> = ({ board, reload }) => {
   const { t, fet } = useLocale()
 
@@ -59,7 +61,7 @@ const EditForm: FC<{ board: Board; reload: () => void }> = ({ board, reload }) =
         reload()
       })}
     >
-      <GridBox>
+      <GridBox isSmart>
         <div className='col-span-12'>
           <InputCtrl
             control={control}
@@ -81,7 +83,6 @@ const EditForm: FC<{ board: Board; reload: () => void }> = ({ board, reload }) =
           />
         </div>
         <div className='col-span-12 flex items-center gap-2'>
-          <CheckBoxCtrl control={control} variant='secondary' name='archived' id='archived' label={t('archived')} />
           <MultiButton className='ml-auto' type='submit' size='sm' icon={<CheckIcon />} isPending={isSubmitting}>
             {t('save')}
           </MultiButton>
@@ -93,7 +94,7 @@ const EditForm: FC<{ board: Board; reload: () => void }> = ({ board, reload }) =
 
 /**
  * ボードの概要ブロック。
- * 名前 / 説明 / アーカイブは編集権限があればそのまま編集でき、それ以外は読み取り表示になる。
+ * 名前 / 説明は編集権限があればそのまま編集でき、それ以外は読み取り表示になる。
  */
 export const BoardProfile: FC<{ board: Board; reload: () => void }> = ({ board, reload }) => {
   const { t } = useLocale()
@@ -105,7 +106,7 @@ export const BoardProfile: FC<{ board: Board; reload: () => void }> = ({ board, 
   const totalTickets = TICKET_STATUSES.reduce((sum, status) => sum + board.ticketCounts[status], 0)
 
   return (
-    <div className='space-y-1 rounded-xl border-2 p-3'>
+    <div className='space-y-1'>
       <MetaRow label={t('board')}>{isPrivate ? t('private') : t('team')}</MetaRow>
       <MetaRow label={t('owner')}>
         <Chip variant='soft' color={board.role === 'owner' ? 'accent' : 'default'} size='sm'>
@@ -126,16 +127,15 @@ export const BoardProfile: FC<{ board: Board; reload: () => void }> = ({ board, 
       <MetaRow label={t('created_at')}>
         <span className='font-mono text-xs'>{dayformat(board.createdAt, 'tz-simple', tz)}</span>
       </MetaRow>
+      {/* アーカイブの切り替えはデンジャーゾーン側なので、ここでは編集権限に関わらず状態だけ見せる */}
+      <MetaRow label={t('archived')}>{board.archived ? t('archived') : '-'}</MetaRow>
 
       {canEdit ? (
         <div className='pt-2'>
           <EditForm board={board} reload={reload} />
         </div>
       ) : (
-        <>
-          {!isPrivate && <MetaRow label={t('description')}>{board.description || '-'}</MetaRow>}
-          <MetaRow label={t('archived')}>{board.archived ? t('archived') : '-'}</MetaRow>
-        </>
+        <>{!isPrivate && <MetaRow label={t('description')}>{board.description || '-'}</MetaRow>}</>
       )}
     </div>
   )
