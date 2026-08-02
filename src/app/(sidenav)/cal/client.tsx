@@ -1,5 +1,6 @@
 'use client'
 
+import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
 import { CopyableField } from '@/components/general/copyable-field'
 import { FlexCol } from '@/components/general/flex'
@@ -79,80 +80,63 @@ export const CalClient: FC<{ origin: string }> = ({ origin }) => {
     <FlexCol>
       <ContentHeader icon={<CalendarDaysIcon />} title={t('calendar')} />
       <Accordion allowsMultipleExpanded defaultExpandedKeys={defaultExpandedKeys}>
-        <Accordion.Item id='share'>
-          <Accordion.Heading>
-            <Accordion.Trigger className='gap-1'>
-              <ClockIcon />
-              {t('calendar_share')}
-              <Accordion.Indicator />
-            </Accordion.Trigger>
-          </Accordion.Heading>
-          <Accordion.Panel>
-            <Accordion.Body className='flex flex-col gap-4 px-4'>
-              {status && !status.googleConnected && (
+        <AccordionSection
+          id='share'
+          icon={<ClockIcon />}
+          title={t('calendar_share')}
+          bodyClassName='flex flex-col gap-4'
+        >
+          {status && !status.googleConnected && (
+            <FlexCol>
+              <p className='text-sm'>{t('msg_link_google_for_calendar')}</p>
+              <div>
+                <MultiButton icon={<GoogleIcon />} onPress={() => router.push('/account')}>
+                  {t('account')}
+                </MultiButton>
+              </div>
+            </FlexCol>
+          )}
+
+          {status?.googleConnected && (
+            <FlexCol>
+              <p className='text-sm text-neutral-500'>{t('msg_calendar_share_desc')}</p>
+
+              {status.shared ? (
                 <FlexCol>
-                  <p className='text-sm'>{t('msg_link_google_for_calendar')}</p>
-                  <div>
-                    <MultiButton icon={<GoogleIcon />} onPress={() => router.push('/account')}>
-                      {t('account')}
+                  <div className='flex flex-wrap items-end gap-2'>
+                    <TextField className='flex-auto' value={title} onChange={setTitle} maxLength={50}>
+                      <Label>{t('share_title')}</Label>
+                      <Input variant='secondary' />
+                    </TextField>
+                    <MultiButton variant='outline' onPress={saveTitle}>
+                      {t('save')}
+                    </MultiButton>
+                  </div>
+                  <CopyableField label={t('share_url')} text={shareUrl} variant='secondary' />
+                  <div className='flex flex-wrap gap-2'>
+                    <MultiButton icon={<ArrowPathIcon />} variant='outline' onPress={rotate}>
+                      {t('regenerate_url')}
+                    </MultiButton>
+                    <MultiButton variant='danger-soft' onPress={disable}>
+                      {t('disable_sharing')}
                     </MultiButton>
                   </div>
                 </FlexCol>
+              ) : (
+                <div>
+                  <MultiButton icon={<CalendarDaysIcon />} onPress={enable}>
+                    {t('enable_sharing')}
+                  </MultiButton>
+                </div>
               )}
-
-              {status?.googleConnected && (
-                <FlexCol>
-                  <p className='text-sm text-neutral-500'>{t('msg_calendar_share_desc')}</p>
-
-                  {status.shared ? (
-                    <FlexCol>
-                      <div className='flex flex-wrap items-end gap-2'>
-                        <TextField className='flex-auto' value={title} onChange={setTitle} maxLength={50}>
-                          <Label>{t('share_title')}</Label>
-                          <Input variant='secondary' />
-                        </TextField>
-                        <MultiButton variant='outline' onPress={saveTitle}>
-                          {t('save')}
-                        </MultiButton>
-                      </div>
-                      <CopyableField label={t('share_url')} text={shareUrl} variant='secondary' />
-                      <div className='flex flex-wrap gap-2'>
-                        <MultiButton icon={<ArrowPathIcon />} variant='outline' onPress={rotate}>
-                          {t('regenerate_url')}
-                        </MultiButton>
-                        <MultiButton variant='danger-soft' onPress={disable}>
-                          {t('disable_sharing')}
-                        </MultiButton>
-                      </div>
-                    </FlexCol>
-                  ) : (
-                    <div>
-                      <MultiButton icon={<CalendarDaysIcon />} onPress={enable}>
-                        {t('enable_sharing')}
-                      </MultiButton>
-                    </div>
-                  )}
-                </FlexCol>
-              )}
-            </Accordion.Body>
-          </Accordion.Panel>
-        </Accordion.Item>
+            </FlexCol>
+          )}
+        </AccordionSection>
 
         {status?.googleConnected && status.shared && (
-          <Accordion.Item id='busy_time'>
-            <Accordion.Heading>
-              <Accordion.Trigger className='gap-1'>
-                <DocumentPlusIcon />
-                {t('busy_time_manage')}
-                <Accordion.Indicator />
-              </Accordion.Trigger>
-            </Accordion.Heading>
-            <Accordion.Panel>
-              <Accordion.Body className='px-4'>
-                <BusyTimeManage />
-              </Accordion.Body>
-            </Accordion.Panel>
-          </Accordion.Item>
+          <AccordionSection id='busy_time' icon={<DocumentPlusIcon />} title={t('busy_time_manage')}>
+            <BusyTimeManage />
+          </AccordionSection>
         )}
       </Accordion>
     </FlexCol>

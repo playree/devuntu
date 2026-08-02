@@ -45,20 +45,19 @@ export const GroupManage: FC<{ boardId: string; assignments: Assignments; reload
         reload()
       })}
     >
-      <FlexCol>
+      <FlexCol isSmart>
         <MultiSelectCtrl
           control={control}
           name='groupIds'
           variant='secondary'
           groupOptions={assignments.groupOptions}
           label={t('board_groups')}
-          isSmart
         />
         <div className='flex items-center gap-2'>
           <Chip variant='soft' color='warning' size='sm'>
             <Chip.Label>{t('msg_group_assign_admin_only')}</Chip.Label>
           </Chip>
-          <MultiButton className='ml-auto' type='submit' size='sm' icon={<CheckIcon />} isPending={isSubmitting}>
+          <MultiButton className='ml-auto' type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
             {t('save')}
           </MultiButton>
         </div>

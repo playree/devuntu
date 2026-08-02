@@ -1,5 +1,6 @@
 'use client'
 
+import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
 import { SideDrawer } from '@/components/general/drawer'
 import { FlexCol } from '@/components/general/flex'
@@ -126,25 +127,14 @@ export const TicketsClient: FC = () => {
       </ContentHeader>
 
       <Accordion allowsMultipleExpanded hideSeparator defaultExpandedKeys={defaultExpandedKeys}>
-        <Accordion.Item id='search'>
-          <Accordion.Heading>
-            <Accordion.Trigger className='gap-1'>
-              <FunnelIcon />
-              {t('filter')}
-              <Accordion.Indicator />
-            </Accordion.Trigger>
-          </Accordion.Heading>
-          <Accordion.Panel>
-            <Accordion.Body>
-              <TicketSearchPanel
-                filter={filter}
-                onChange={applyFilter}
-                boards={(options?.boards ?? []).map((board) => ({ ...board, name: boardName(board) }))}
-                tags={options?.tags ?? []}
-              />
-            </Accordion.Body>
-          </Accordion.Panel>
-        </Accordion.Item>
+        <AccordionSection id='search' icon={<FunnelIcon />} title={t('filter')}>
+          <TicketSearchPanel
+            filter={filter}
+            onChange={applyFilter}
+            boards={(options?.boards ?? []).map((board) => ({ ...board, name: boardName(board) }))}
+            tags={options?.tags ?? []}
+          />
+        </AccordionSection>
       </Accordion>
 
       {list.total >= MAX_TICKET_LIST && (

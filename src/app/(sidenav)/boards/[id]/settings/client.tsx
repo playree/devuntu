@@ -1,5 +1,6 @@
 'use client'
 
+import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
 import { ContentHeader } from '@/components/header'
@@ -101,117 +102,66 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
       <Accordion allowsMultipleExpanded defaultExpandedKeys={defaultExpandedKeys}>
         {/* ボード情報: 名前 / 説明の編集とメタ情報(種別・オーナー・チケット件数など)。
             閲覧は誰でも可、編集可否は BoardProfile 内で manage 権限から判定する */}
-        <Accordion.Item id='board_profile'>
-          <Accordion.Heading>
-            <Accordion.Trigger className='gap-1'>
-              <InformationCircleIcon />
-              {t('board_profile')}
-              <Accordion.Indicator />
-            </Accordion.Trigger>
-          </Accordion.Heading>
-          <Accordion.Panel>
-            <Accordion.Body className='px-4'>
-              {/* アーカイブをデンジャーゾーンから切り替えても useForm の defaultValues は追従しないので、
-                  古い archived で上書きしないよう再マウントさせる */}
-              <BoardProfile key={`${board.id}-${board.archived}`} board={board} reload={reload} />
-            </Accordion.Body>
-          </Accordion.Panel>
-        </Accordion.Item>
+        <AccordionSection id='board_profile' icon={<InformationCircleIcon />} title={t('board_profile')}>
+          {/* アーカイブをデンジャーゾーンから切り替えても useForm の defaultValues は追従しないので、
+              古い archived で上書きしないよう再マウントさせる */}
+          <BoardProfile key={`${board.id}-${board.archived}`} board={board} reload={reload} />
+        </AccordionSection>
 
         {/* ボードメンバー: 直接メンバーとグループ経由メンバーの一覧 / 追加 / ロール変更 / 削除。
             プライベートボードは所有者 1 人固定でメンバーの概念が無いのでセクションごと出さない */}
         {!isPrivate && (
-          <Accordion.Item id='board_members'>
-            <Accordion.Heading>
-              <Accordion.Trigger className='gap-1'>
-                <UsersIcon />
-                {t('board_members')}
-                <Accordion.Indicator />
-              </Accordion.Trigger>
-            </Accordion.Heading>
-            <Accordion.Panel>
-              <Accordion.Body className='px-4'>
-                {/* manage 権限が無いメンバーには一覧だけ見せる(assignments を渡さないと編集 UI が出ない) */}
-                <BoardMembers
-                  boardId={board.id}
-                  assignments={canManageBoard ? assignments : undefined}
-                  reloadAssignments={reloadAssignments}
-                />
-              </Accordion.Body>
-            </Accordion.Panel>
-          </Accordion.Item>
+          <AccordionSection id='board_members' icon={<UsersIcon />} title={t('board_members')}>
+            {/* manage 権限が無いメンバーには一覧だけ見せる(assignments を渡さないと編集 UI が出ない) */}
+            <BoardMembers
+              boardId={board.id}
+              assignments={canManageBoard ? assignments : undefined}
+              reloadAssignments={reloadAssignments}
+            />
+          </AccordionSection>
         )}
 
         {/* ボードグループ: グループ単位のアサイン。グループ構成の変更は管理者だけに許すので
             isAdmin かつアサイン情報(選択肢)を取得できたときだけ表示する */}
         {!isPrivate && board.isAdmin && assignments && (
-          <Accordion.Item id='board_groups'>
-            <Accordion.Heading>
-              <Accordion.Trigger className='gap-1'>
-                <UserGroupIcon />
-                {t('board_groups')}
-                <Accordion.Indicator />
-              </Accordion.Trigger>
-            </Accordion.Heading>
-            <Accordion.Panel>
-              <Accordion.Body className='px-4'>
-                <GroupManage boardId={board.id} assignments={assignments} reload={reloadAssignments} />
-              </Accordion.Body>
-            </Accordion.Panel>
-          </Accordion.Item>
+          <AccordionSection id='board_groups' icon={<UserGroupIcon />} title={t('board_groups')}>
+            <GroupManage boardId={board.id} assignments={assignments} reload={reloadAssignments} />
+          </AccordionSection>
         )}
 
         {/* タグ管理: ボード内タグの追加 / 編集 / 削除。member もチケット編集中に新しいタグが要るため
             追加は閲覧権限だけでも許可し、canManage は編集 / 削除の可否として渡す */}
-        <Accordion.Item id='tag_manage'>
-          <Accordion.Heading>
-            <Accordion.Trigger className='gap-1'>
-              <TagIcon />
-              {t('tag_manage')}
-              <Accordion.Indicator />
-            </Accordion.Trigger>
-          </Accordion.Heading>
-          <Accordion.Panel>
-            <Accordion.Body className='px-4'>
-              <TagEditor
-                tags={tags ?? []}
-                canManage={board.canManage}
-                onCreate={async (req) => {
-                  await parseAction(createBoardTag({ boardId: board.id, ...req }))
-                  notify.success(t('msg_added_target', { target: req.name }))
-                  reloadTags()
-                }}
-                onUpdate={async (req) => {
-                  await parseAction(updateBoardTag(req))
-                  notify.success(t('msg_updated_target', { target: req.name }))
-                  reloadTags()
-                }}
-                onDelete={async (tag) => {
-                  await parseAction(deleteBoardTag({ id: tag.id }))
-                  reloadTags()
-                }}
-              />
-            </Accordion.Body>
-          </Accordion.Panel>
-        </Accordion.Item>
+        <AccordionSection id='tag_manage' icon={<TagIcon />} title={t('tag_manage')}>
+          <TagEditor
+            tags={tags ?? []}
+            canManage={board.canManage}
+            onCreate={async (req) => {
+              await parseAction(createBoardTag({ boardId: board.id, ...req }))
+              notify.success(t('msg_added_target', { target: req.name }))
+              reloadTags()
+            }}
+            onUpdate={async (req) => {
+              await parseAction(updateBoardTag(req))
+              notify.success(t('msg_updated_target', { target: req.name }))
+              reloadTags()
+            }}
+            onDelete={async (tag) => {
+              await parseAction(deleteBoardTag({ id: tag.id }))
+              reloadTags()
+            }}
+          />
+        </AccordionSection>
 
         {/* デンジャーゾーン: アーカイブ切替とボード削除。プライベートボードは削除させないので
             manage 権限に加えてチームボードであることを条件にする */}
         {canManageBoard && (
-          <Accordion.Item id='danger_zone'>
-            <Accordion.Heading>
-              <Accordion.Trigger className='gap-1'>
-                <ExclamationTriangleIcon className='text-danger' />
-                {t('danger_zone')}
-                <Accordion.Indicator />
-              </Accordion.Trigger>
-            </Accordion.Heading>
-            <Accordion.Panel>
-              <Accordion.Body className='px-4'>
-                <DangerZone board={board} reload={reload} />
-              </Accordion.Body>
-            </Accordion.Panel>
-          </Accordion.Item>
+          <AccordionSection
+            id='danger_zone'
+            icon={<ExclamationTriangleIcon className='text-danger' />}
+            title={t('danger_zone')}
+          >
+            <DangerZone board={board} reload={reload} />
+          </AccordionSection>
         )}
       </Accordion>
     </FlexCol>

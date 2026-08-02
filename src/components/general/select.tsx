@@ -67,7 +67,7 @@ export const MultiSelectField = ({
         ref={ref}
       >
         <Label className={isSmart ? 'text-xs font-light' : ''}>{label}</Label>
-        <Select.Trigger>
+        <Select.Trigger className={isSmart ? 'min-h-7 py-1' : undefined}>
           <Select.Value>
             {() => {
               return value.length > 0 ? (

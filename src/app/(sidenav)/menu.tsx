@@ -1,4 +1,5 @@
 'use client'
+import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
 import { ThemeSwitchList } from '@/components/general/theme-switch'
 import {
@@ -151,78 +152,62 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
             closeMenu={closeMenu}
           />
 
-          <Accordion.Item // タスク管理メニュー
+          <AccordionSection // タスク管理メニュー
             id='group_task'
+            title={t('task_management')}
+            bodyClassName='grid grid-cols-1 px-2'
           >
-            <Accordion.Heading>
-              <Accordion.Trigger>
-                {t('task_management')}
-                <Accordion.Indicator />
-              </Accordion.Trigger>
-            </Accordion.Heading>
-            <Accordion.Panel>
-              <Accordion.Body className='grid grid-cols-1 px-2'>
-                <MenuButton // ボード
-                  to='/boards'
-                  text={t('board')}
-                  icon={<ViewColumnsIcon />}
-                  closeMenu={closeMenu}
-                />
-                <MenuButton // チケット
-                  to='/tickets'
-                  text={t('ticket')}
-                  icon={<TicketIcon />}
-                  closeMenu={closeMenu}
-                />
-              </Accordion.Body>
-            </Accordion.Panel>
-          </Accordion.Item>
+            <MenuButton // ボード
+              to='/boards'
+              text={t('board')}
+              icon={<ViewColumnsIcon />}
+              closeMenu={closeMenu}
+            />
+            <MenuButton // チケット
+              to='/tickets'
+              text={t('ticket')}
+              icon={<TicketIcon />}
+              closeMenu={closeMenu}
+            />
+          </AccordionSection>
 
-          <Accordion.Item // 管理者メニュー
+          <AccordionSection // 管理者メニュー
             id='group_admin'
             hidden={session?.user.role !== 'admin'}
+            title={t('admin')}
+            bodyClassName='grid grid-cols-1 px-2'
           >
-            <Accordion.Heading>
-              <Accordion.Trigger>
-                {t('admin')}
-                <Accordion.Indicator />
-              </Accordion.Trigger>
-            </Accordion.Heading>
-            <Accordion.Panel>
-              <Accordion.Body className='grid grid-cols-1 px-2'>
-                <MenuButton // ユーザー管理
-                  to='/admin/users'
-                  text={t('user_manage')}
-                  icon={<UsersIcon />}
-                  closeMenu={closeMenu}
-                />
-                <MenuButton // グループ管理
-                  to='/admin/groups'
-                  text={t('group_manage')}
-                  icon={<UserGroupIcon />}
-                  closeMenu={closeMenu}
-                />
-                <MenuButton // ダッシュボード管理
-                  to='/admin/dashboard'
-                  text={t('dashboard_manage')}
-                  icon={<Squares2X2Icon />}
-                  closeMenu={closeMenu}
-                />
-                <MenuButton // 連携設定
-                  to='/admin/settings'
-                  text={t('integration_settings')}
-                  icon={<Cog6ToothIcon />}
-                  closeMenu={closeMenu}
-                />
-                <MenuButton // OIDC Client管理
-                  to='/admin/oidc-clients'
-                  text={t('oidc_clients')}
-                  icon={<ServerStackIcon />}
-                  closeMenu={closeMenu}
-                />
-              </Accordion.Body>
-            </Accordion.Panel>
-          </Accordion.Item>
+            <MenuButton // ユーザー管理
+              to='/admin/users'
+              text={t('user_manage')}
+              icon={<UsersIcon />}
+              closeMenu={closeMenu}
+            />
+            <MenuButton // グループ管理
+              to='/admin/groups'
+              text={t('group_manage')}
+              icon={<UserGroupIcon />}
+              closeMenu={closeMenu}
+            />
+            <MenuButton // ダッシュボード管理
+              to='/admin/dashboard'
+              text={t('dashboard_manage')}
+              icon={<Squares2X2Icon />}
+              closeMenu={closeMenu}
+            />
+            <MenuButton // 連携設定
+              to='/admin/settings'
+              text={t('integration_settings')}
+              icon={<Cog6ToothIcon />}
+              closeMenu={closeMenu}
+            />
+            <MenuButton // OIDC Client管理
+              to='/admin/oidc-clients'
+              text={t('oidc_clients')}
+              icon={<ServerStackIcon />}
+              closeMenu={closeMenu}
+            />
+          </AccordionSection>
         </Accordion>
       </div>
 
