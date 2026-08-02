@@ -51,7 +51,8 @@ const KanbanCardView: FC<{
         ref={dragRef}
         className={cn('cursor-grab space-y-1 rounded-xl border-2 p-2', isDragging ? 'opacity-60' : '')}
       >
-        <Link href={`/tickets/${card.id}`} className='line-clamp-2 text-sm hover:underline'>
+        {/* 空白のない長いタイトルでもレーン幅を超えないよう wrap-anywhere で任意位置折り返しにする */}
+        <Link href={`/tickets/${card.id}`} className='line-clamp-2 text-sm wrap-anywhere hover:underline'>
           {card.title}
         </Link>
 
@@ -118,13 +119,20 @@ export const KanbanLane: FC<{
   const { ref, isDropTarget } = useDroppable({ id: laneDropId(status), accept: DRAG_TYPE })
 
   return (
-    <fieldset ref={ref} className={cn('rounded-xl border-2 p-2', isDropTarget ? 'border-blue-300' : '', className)}>
+    // fieldset は既定で min-inline-size: min-content のため、min-w-0 が無いとカード内容の分だけ横に広がる
+    <fieldset
+      ref={ref}
+      className={cn('min-w-0 rounded-xl border-2 p-2', isDropTarget ? 'border-blue-300' : '', className)}
+    >
       <legend className='flex items-center gap-1 px-2'>
         <StatusChip status={status} />
         <span className='font-mono text-xs text-gray-500'>{cards.length}</span>
-        <MultiButton isIconOnly variant='tertiary' tooltip={t('add_ticket')} isSmart onPress={onAdd}>
-          <PlusIcon width={16} />
-        </MultiButton>
+        {/* 完了レーンは新規チケットの起点にならないため追加ボタンを出さない */}
+        {status !== 'done' && (
+          <MultiButton isIconOnly variant='outline' tooltip={t('add_ticket')} isSmart onPress={onAdd}>
+            <PlusIcon width={16} />
+          </MultiButton>
+        )}
       </legend>
 
       <div className={cn('min-h-16 space-y-2', cardsClassName)}>
