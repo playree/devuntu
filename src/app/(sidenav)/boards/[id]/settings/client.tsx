@@ -2,6 +2,7 @@
 
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
+import { useConfirmModal } from '@/components/general/modal'
 import { ContentHeader } from '@/components/header'
 import {
   ArrowLeftCircleIcon,
@@ -9,24 +10,24 @@ import {
   ArrowTopRightOnSquareIcon,
   Cog6ToothIcon,
   TagIcon,
+  TrashIcon,
   UserGroupIcon,
   UsersIcon,
   ViewColumnsIcon,
 } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { TagEditor } from '@/components/ticket/tag-editor'
-import { StatusChip, useBoardName } from '@/components/ticket/ticket-chip'
+import { useBoardName } from '@/components/ticket/ticket-chip'
 import { parseAction, useActionData } from '@/lib/action-client'
-import { dayformat } from '@/lib/day'
-import { TICKET_STATUSES } from '@/lib/task'
-import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { ButtonGroup, Chip, Skeleton } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC, ReactNode } from 'react'
+import { BoardProfile } from './board-profile'
 import { GroupManage, MemberManage } from './member-manage'
 import {
   createBoardTag,
+  deleteBoard,
   deleteBoardTag,
   getBoardAssignments,
   getBoardDetail,
@@ -34,14 +35,6 @@ import {
   mergeBoardTags,
   updateBoardTag,
 } from './server'
-
-/** 見出し + 値の 1 行 */
-const MetaRow: FC<{ label: string; children: ReactNode }> = ({ label, children }) => (
-  <div className='flex items-baseline gap-2'>
-    <span className='w-24 shrink-0 text-xs text-gray-500'>{label}</span>
-    <div className='min-w-0 text-sm'>{children}</div>
-  </div>
-)
 
 /** アイコン付きのセクション見出し */
 const Section: FC<{ icon: ReactNode; title: string; children: ReactNode }> = ({ icon, title, children }) => (
@@ -56,9 +49,9 @@ const Section: FC<{ icon: ReactNode; title: string; children: ReactNode }> = ({ 
 
 export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
   const { t } = useLocale()
-  const tz = useUserTimezone()
   const router = useRouter()
   const boardName = useBoardName()
+  const { confirmModal } = useConfirmModal()
 
   const { data: board, reload, isLoading } = useActionData(() => getBoardDetail({ id: boardId }))
   const { data: tags, reload: reloadTags } = useActionData(() => getBoardTags({ id: boardId }))
@@ -84,7 +77,27 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
   }
 
   const isPrivate = board.kind === 'private'
-  const totalTickets = TICKET_STATUSES.reduce((sum, status) => sum + board.ticketCounts[status], 0)
+  const canManageBoard = !isPrivate && board.canManage
+
+  // ボード削除は配下のチケット / コメントごと消えるので、ボード名入りの専用確認文をチェック付きで出す
+  const removeBoard = async () => {
+    const name = boardName(board)
+    try {
+      const ok = await confirmModal().confirm({
+        title: t('confirm_deletion'),
+        text: t('msg_confirm_delete_board', { target: name }),
+        requireCheck: true,
+        autoClose: false,
+      })
+      if (ok) {
+        await parseAction(deleteBoard({ id: board.id }))
+        notify.success(t('msg_deleted_target', { target: name }))
+        router.push('/boards')
+      }
+    } finally {
+      confirmModal().close()
+    }
+  }
 
   return (
     <FlexCol>
@@ -112,35 +125,18 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
           <ButtonGroup.Separator />
           <ArrowPathIcon />
         </MultiButton>
+        {canManageBoard && (
+          <MultiButton isIconOnly variant='danger-soft' tooltip={t('delete')} onPress={removeBoard}>
+            <ButtonGroup.Separator />
+            <TrashIcon />
+          </MultiButton>
+        )}
       </ContentHeader>
 
-      <div className='space-y-1 rounded-xl border-2 p-3'>
-        <MetaRow label={t('board')}>{isPrivate ? t('private') : t('team')}</MetaRow>
-        {!isPrivate && <MetaRow label={t('description')}>{board.description || '-'}</MetaRow>}
-        <MetaRow label={t('owner')}>
-          <Chip variant='soft' color={board.role === 'owner' ? 'accent' : 'default'} size='sm'>
-            <Chip.Label>{board.role === 'owner' ? t('owner') : t('member')}</Chip.Label>
-          </Chip>
-        </MetaRow>
-        <MetaRow label={t('archived')}>{board.archived ? t('archived') : '-'}</MetaRow>
-        <MetaRow label={t('ticket_count')}>
-          <div className='flex flex-wrap items-center gap-1'>
-            <span className='font-mono text-xs'>{totalTickets}</span>
-            {TICKET_STATUSES.filter((status) => board.ticketCounts[status] > 0).map((status) => (
-              <span key={status} className='flex items-center gap-0.5'>
-                <StatusChip status={status} />
-                <span className='font-mono text-xs'>{board.ticketCounts[status]}</span>
-              </span>
-            ))}
-          </div>
-        </MetaRow>
-        <MetaRow label={t('created_at')}>
-          <span className='font-mono text-xs'>{dayformat(board.createdAt, 'tz-simple', tz)}</span>
-        </MetaRow>
-      </div>
+      <BoardProfile board={board} reload={reload} />
 
       {/* プライベートボードは 1 ユーザー 1 つの固定構成なのでアサインを変更させない */}
-      {!isPrivate && board.canManage && assignments && (
+      {canManageBoard && assignments && (
         <Section icon={<UsersIcon width={16} />} title={t('board_members')}>
           <MemberManage boardId={board.id} assignments={assignments} reload={reloadAssignments} />
         </Section>

@@ -14,7 +14,15 @@ import {
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
-import { scCreateTag, scMergeTags, scSetBoardGroups, scSetBoardMembers, scUpdateTag, scUUID } from '@/lib/schema'
+import {
+  scCreateTag,
+  scMergeTags,
+  scSetBoardGroups,
+  scSetBoardMembers,
+  scUpdateBoard,
+  scUpdateTag,
+  scUUID,
+} from '@/lib/schema'
 import { listBoardTagsForManage, mergeTags, rethrowDuplicatedTagName } from '@/lib/tag'
 import { canApplyAssignments, MAX_TAGS_PER_SCOPE, mergeBoardMembers, nextTagOrder, TICKET_STATUSES } from '@/lib/task'
 
@@ -55,6 +63,37 @@ export const getBoardDetail = safeAuthAction
     }
   })
 export type GetBoardDetailReturnType = Awaited<ReturnType<typeof getBoardDetail>>['data']
+
+/** ボード更新(owner または管理者)。プライベートボードは変更できない */
+export const updateBoard = safeAuthAction
+  .metadata({ actionName: 'updateBoard', role: 'user' })
+  .inputSchema(scUpdateBoard)
+  .action(async ({ ctx: { user }, parsedInput: { id, name, description, archived } }) => {
+    const board = await prisma.$transaction(async (tx) => {
+      await assertBoardAccess(user, id, 'manage', tx)
+      await assertTeamBoard(tx, id)
+
+      return tx.board.update({ where: { id }, data: { name, description, archived }, select: { id: true, name: true } })
+    })
+
+    logger.info({ userId: user.id, id }, 'board updated')
+    return board
+  })
+
+/** ボード削除(owner または管理者)。チケット / タグ / アサインは Cascade で消える */
+export const deleteBoard = safeAuthAction
+  .metadata({ actionName: 'deleteBoard', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => {
+    await prisma.$transaction(async (tx) => {
+      await assertBoardAccess(user, id, 'manage', tx)
+      await assertTeamBoard(tx, id)
+      await tx.board.delete({ where: { id } })
+    })
+
+    logger.info({ userId: user.id, id }, 'board deleted')
+    return { id }
+  })
 
 /* -------------------------------------------------------------------------------------------------
  * アサイン

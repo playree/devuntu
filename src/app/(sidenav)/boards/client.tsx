@@ -4,37 +4,26 @@ import { ActionCell } from '@/components/action-cell'
 import { MultiButton } from '@/components/general/button'
 import { OnOffChip } from '@/components/general/chip'
 import { FlexCol } from '@/components/general/flex'
-import { useConfirmModal, useModalState } from '@/components/general/modal'
+import { useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import {
-  ArrowPathIcon,
-  ArrowTopRightOnSquareIcon,
-  PencilSquareIcon,
-  PlusIcon,
-  TrashIcon,
-  ViewColumnsIcon,
-} from '@/components/icon'
-import { notify } from '@/components/notify'
+import { ArrowPathIcon, Cog6ToothIcon, PlusIcon, ViewColumnsIcon } from '@/components/icon'
 import { useBoardName } from '@/components/ticket/ticket-chip'
 import { parseAction } from '@/lib/action-client'
 import { useLocale } from '@/locale/client'
 import { ButtonGroup, Chip, Table } from '@heroui/react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
-import { AddModal, UpdateModal } from './modals'
-import { deleteBoard, getBoards, GetBoardsReturnType } from './server'
-
-type Board = NonNullable<GetBoardsReturnType>[number]
+import { AddModal } from './modals'
+import { getBoards } from './server'
 
 export const BoardsClient: FC = () => {
   const { t } = useLocale()
   const router = useRouter()
   const boardName = useBoardName()
-  const { confirmModal } = useConfirmModal()
   const addModalState = useModalState()
-  const updateModalState = useModalState<Board>()
 
   const list = usePagingList({
     load: async () => {
@@ -44,26 +33,6 @@ export const BoardsClient: FC = () => {
     // プライベートを先頭に出したいのでサーバー側の並び(kind, name)をそのまま使う
     sort: { init: { column: 'name', direction: 'ascending' } },
   })
-
-  // ActionCell の delete テンプレートは文言が固定なので、ボード専用の確認文で自前に出す
-  const remove = async (board: Board) => {
-    const name = boardName(board)
-    try {
-      const ok = await confirmModal().confirm({
-        title: t('confirm_deletion'),
-        text: t('msg_confirm_delete_board', { target: name }),
-        requireCheck: true,
-        autoClose: false,
-      })
-      if (ok) {
-        await parseAction(deleteBoard({ id: board.id }))
-        notify.success(t('msg_deleted_target', { target: name }))
-        list.reload()
-      }
-    } finally {
-      confirmModal().close()
-    }
-  }
 
   return (
     <FlexCol>
@@ -88,14 +57,17 @@ export const BoardsClient: FC = () => {
           { id: 'role', name: t('owner'), allowsSorting: true, minWidth: 90 },
           { id: 'ticketCount', name: t('ticket_count'), allowsSorting: true, minWidth: 90 },
           { id: 'archived', name: t('archived'), allowsSorting: true, minWidth: 80 },
-          { id: 'action', name: t('action'), allowsSorting: false, defaultWidth: 110 },
+          { id: 'settings', name: t('settings'), allowsSorting: false, defaultWidth: 90 },
         ]}
       >
         {(item) => (
           <Table.Row key={item.id} id={item.id}>
             <Table.Cell>
               <div className='flex flex-col gap-0.5'>
-                <span className='truncate'>{boardName(item)}</span>
+                {/* ボード名をかんばんへのリンクにする(操作列は置かない) */}
+                <Link href={`/boards/${item.id}`} className='truncate hover:underline'>
+                  {boardName(item)}
+                </Link>
                 <span className='text-xs text-gray-500'>{item.kind === 'private' ? t('private') : t('team')}</span>
               </div>
             </Table.Cell>
@@ -111,35 +83,16 @@ export const BoardsClient: FC = () => {
             <Table.Cell>
               <OnOffChip isState={item.archived} isIconOnly />
             </Table.Cell>
+            {/* 編集 / 削除 / アーカイブはボード設定ページに集約しているので、ここは設定への導線だけ */}
             <ActionCell
               items={[
                 {
                   template: 'none',
-                  key: 'open',
-                  icon: <ArrowTopRightOnSquareIcon />,
-                  tooltip: t('board'),
-                  onPress: () => router.push(`/boards/${item.id}`),
+                  key: 'settings',
+                  icon: <Cog6ToothIcon />,
+                  tooltip: t('board_settings'),
+                  onPress: () => router.push(`/boards/${item.id}/settings`),
                 },
-                // プライベートボードは 1 ユーザー 1 つの固定構成なので編集・削除させない
-                ...(item.kind === 'team' && item.role === 'owner'
-                  ? ([
-                      {
-                        template: 'none' as const,
-                        key: 'edit',
-                        icon: <PencilSquareIcon />,
-                        tooltip: t('update'),
-                        onPress: () => updateModalState.open(item),
-                      },
-                      {
-                        template: 'none' as const,
-                        key: 'delete',
-                        icon: <TrashIcon />,
-                        tooltip: t('delete'),
-                        variant: 'danger-soft' as const,
-                        onPress: () => remove(item),
-                      },
-                    ] as const)
-                  : []),
               ]}
             />
           </Table.Row>
@@ -147,14 +100,6 @@ export const BoardsClient: FC = () => {
       </MultiTable>
 
       <AddModal state={addModalState} reload={list.reload} key={addModalState.key} />
-      {updateModalState.target && (
-        <UpdateModal
-          state={updateModalState}
-          reload={list.reload}
-          key={updateModalState.key}
-          target={updateModalState.target}
-        />
-      )}
     </FlexCol>
   )
 }
