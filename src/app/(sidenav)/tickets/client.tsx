@@ -168,9 +168,15 @@ export const TicketsClient: FC = () => {
             <SelectionCell />
             <Table.Cell>
               <div className='flex flex-col gap-0.5'>
-                {/* 件名を詳細ページへのリンクにする(新規タブや URL コピーを可能にするため)。
-                    行選択が同時に走ると遷移直前に詳細パネルが一瞬見えるので抑止する */}
-                <Link href={`/tickets/${item.id}`} className='truncate hover:underline' {...preventRowSelection}>
+                <Link
+                  /**
+                   * 件名を詳細ページへのリンクにする(新規タブや URL コピーを可能にするため)。
+                   * 行選択が同時に走ると遷移直前に詳細パネルが一瞬見えるので抑止する
+                   */
+                  href={`/tickets/${item.id}`}
+                  className='truncate hover:underline'
+                  {...preventRowSelection}
+                >
                   {item.title}
                 </Link>
                 <span className='flex items-center gap-2 text-xs text-gray-500'>

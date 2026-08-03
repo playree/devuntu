@@ -7,7 +7,7 @@
  */
 
 import { BoardKind, TagColor } from '@/generated/prisma/enums'
-import { dedupeTagNames, dedupeTagOptionsByName, diffTagIds, nextTagOrder, TAG_COLORS } from '@/lib/task'
+import { dedupeTagNames, dedupeTagOptionsByName, diffTagIds, TAG_COLORS } from '@/lib/task'
 import { describe, expect, it } from 'vitest'
 
 describe('TAG_COLORS / BoardKind: Prisma の enum と一致していること', () => {
@@ -65,17 +65,6 @@ describe('dedupeTagOptionsByName: 同名タグ(別ボード)を 1 チップへ�
 
   it('空配列は空配列', () => {
     expect(dedupeTagOptionsByName([])).toEqual([])
-  })
-})
-
-describe('nextTagOrder: 表示順の初期値', () => {
-  it('空なら 0、既存があれば最大 + 1', () => {
-    expect(nextTagOrder([])).toBe(0)
-    expect(nextTagOrder([0, 3, 1])).toBe(4)
-  })
-
-  it('欠番があっても最大値を基準にする', () => {
-    expect(nextTagOrder([10]), '詰め直しはしない').toBe(11)
   })
 })
 

@@ -141,8 +141,8 @@ export const dedupeTagOptionsByName = <T extends { name: string }>(tags: T[]): T
   return [...byName.values()]
 }
 
-/** 既存 order の最大 + 1、空なら 0(nextLaneOrder と同型) */
-export const nextTagOrder = (existing: number[]): number => existing.reduce((max, v) => (v > max ? v : max), -1) + 1
+/** 既存 order の最大 + 1、空なら 0。タグの表示順とレーン内の並び順で共用する(詰め直しはしない) */
+export const nextOrder = (existing: number[]): number => existing.reduce((max, v) => (v > max ? v : max), -1) + 1
 
 /**
  * TicketTag の総入れ替えに必要な差分を求める(syncTicketTags の判断部分)。
@@ -398,9 +398,6 @@ export const parseDropTarget = (raw: string): DropTarget | null => {
   }
   return null
 }
-
-/** レーン末尾へ追加するときの order。空レーンは 0 */
-export const nextLaneOrder = (existing: number[]): number => existing.reduce((max, v) => (v > max ? v : max), -1) + 1
 
 /** id 配列を 0..n-1 の連番 order へ再採番する */
 export const reindexLane = (ids: string[]): { id: string; order: number }[] => ids.map((id, order) => ({ id, order }))

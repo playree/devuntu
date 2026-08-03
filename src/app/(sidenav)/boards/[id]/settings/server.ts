@@ -25,7 +25,7 @@ import {
   scUUID,
 } from '@/lib/schema'
 import { listBoardTagsForManage, rethrowDuplicatedTagName } from '@/lib/tag'
-import { canApplyAssignments, MAX_TAGS_PER_SCOPE, nextTagOrder, TICKET_STATUSES, type BoardRole } from '@/lib/task'
+import { canApplyAssignments, MAX_TAGS_PER_SCOPE, nextOrder, TICKET_STATUSES, type BoardRole } from '@/lib/task'
 
 const TAG_SELECT = { id: true, boardId: true, name: true, color: true, order: true } as const
 
@@ -285,7 +285,7 @@ export const createBoardTag = safeAuthAction
 
     const tag = await prisma.tag
       .create({
-        data: { boardId, name, color, order: order || nextTagOrder(tags.map((row) => row.order)) },
+        data: { boardId, name, color, order: order || nextOrder(tags.map((row) => row.order)) },
         select: TAG_SELECT,
       })
       .catch(rethrowDuplicatedTagName)

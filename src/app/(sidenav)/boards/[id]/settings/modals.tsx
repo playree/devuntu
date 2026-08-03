@@ -6,6 +6,7 @@ import { FormModal, ModalBaseProps } from '@/components/general/modal'
 import { SingleSelectCtrl } from '@/components/general/select'
 import { CheckIcon, PencilSquareIcon, UserPlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
+import { useRoleOptions } from '@/components/ticket/ticket-chip'
 import { parseAction } from '@/lib/action-client'
 import { scUpsertBoardMember, UpsertBoardMemberIn } from '@/lib/schema'
 import type { BoardRole } from '@/lib/task'
@@ -16,12 +17,6 @@ import { useForm } from 'react-hook-form'
 import { addBoardMember, GetBoardAssignmentsReturnType, updateBoardMemberRole } from './server'
 
 type Assignments = NonNullable<GetBoardAssignmentsReturnType>
-
-/** ロールの選択肢(Record<id, label>)。SingleSelectCtrl へ渡す */
-const useRoleOptions = (): Record<BoardRole, string> => {
-  const { t } = useLocale()
-  return { owner: t('owner'), member: t('member') }
-}
 
 /**
  * メンバー追加モーダル。ユーザーとロールを選んで直接メンバー(BoardMember)を 1 行作る。
@@ -152,8 +147,7 @@ export const UpdateMemberRoleModal: FC<
     >
       <GridBox>
         <div className='col-span-12'>
-          {/* 対象ユーザーは変更させない(別のメンバーを編集したい場合は一覧から開き直す) */}
-          <SingleSelectCtrl
+          <SingleSelectCtrl // 対象ユーザーは変更させない(別のメンバーを編集したい場合は一覧から開き直す)
             control={control}
             variant='secondary'
             name='userId'

@@ -95,8 +95,9 @@ const EditorField: FC<{
   const isSmart = useIsSmart()
   return (
     <TextField isInvalid={!!errorMessage} className='mb-0.5'>
-      {/* action にはボタンが入るため、そのときだけ中央揃えにしてラベルと高さを合わせる */}
-      <div className={cn('flex justify-between', action ? 'items-center' : 'items-baseline')}>
+      <div // action にはボタンが入るため、そのときだけ中央揃えにしてラベルと高さを合わせる
+        className={cn('flex justify-between', action ? 'items-center' : 'items-baseline')}
+      >
         <Label className={isSmart ? 'text-xs font-light' : ''}>
           {label}
           {isRequired ? '*' : ''}
@@ -176,9 +177,13 @@ export const MarkdownField: FC<{
       action={action}
       isFlat
     >
-      {/* 本文が短いときにモードの切り替えで高さが動かないよう、両モードで同じ最小高を確保する。
-          ツールバー + minRows 行がこの高さに収まる範囲で minRows を選ぶこと */}
-      <div className='min-h-24'>
+      <div
+        /**
+         * 本文が短いときにモードの切り替えで高さが動かないよう、両モードで同じ最小高を確保する。
+         * ツールバー + minRows 行がこの高さに収まる範囲で minRows を選ぶこと
+         */
+        className='min-h-24'
+      >
         {isEditing ? (
           <MdxEditorHost initialMarkdown={defaultValue} onChange={onChange} minRows={minRows} className={FLAT_CLASS} />
         ) : (
@@ -228,8 +233,7 @@ export const MarkdownEditor = <
       maxLength={maxLength}
       errorMessage={errorMessage}
     >
-      {/* useController の onChange / onBlur は useCallback 済みで安定参照のためそのまま渡せる */}
-      <MdxEditorHost
+      <MdxEditorHost // useController の onChange / onBlur は useCallback 済みで安定参照のためそのまま渡せる
         initialMarkdown={initialMarkdown}
         onChange={field.onChange}
         onBlur={field.onBlur}

@@ -15,7 +15,7 @@ import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { scCreateTag, scCreateTicket, scTicketSearch, scUUID } from '@/lib/schema'
 import { assertTagIdsInBoard, listVisibleTags, rethrowDuplicatedTagName } from '@/lib/tag'
-import { buildTicketWhere, MAX_TAGS_PER_SCOPE, MAX_TICKET_LIST, nextLaneOrder, nextTagOrder } from '@/lib/task'
+import { buildTicketWhere, MAX_TAGS_PER_SCOPE, MAX_TICKET_LIST, nextOrder } from '@/lib/task'
 
 /** タグの選択肢として返す列。`lib/tag.ts` の TagOption と一致させる */
 const TAG_SELECT = { id: true, boardId: true, name: true, color: true, order: true } as const
@@ -125,7 +125,7 @@ export const createTicketTag = safeAuthAction
     // 中断され、同じ tx 内で既存タグを読み直せなくなるため
     const tag = await prisma.tag
       .create({
-        data: { boardId, name, color, order: order || nextTagOrder(tags.map((row) => row.order)) },
+        data: { boardId, name, color, order: order || nextOrder(tags.map((row) => row.order)) },
         select: TAG_SELECT,
       })
       .catch(async (e) => {
@@ -178,7 +178,7 @@ export const createTicket = safeAuthAction
           createdById: user.id,
           assigneeId: assigneeId ?? null,
           tags: { create: ids.map((tagId) => ({ tagId })) },
-          order: nextLaneOrder(lane.map((row) => row.order)),
+          order: nextOrder(lane.map((row) => row.order)),
         },
         select: { id: true, title: true },
       })

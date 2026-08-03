@@ -58,8 +58,7 @@ export const KanbanFilterPanel: FC<{
 
       {tags.length > 0 && (
         <div className='col-span-12 md:col-span-4'>
-          {/* 絞り込みの値は tagId ではなく名前(チケット一覧の絞り込みと揃える) */}
-          <TagNameSelectField
+          <TagNameSelectField // 絞り込みの値は tagId ではなく名前(チケット一覧の絞り込みと揃える)
             options={tags}
             value={filter.tags}
             max={MAX_TICKET_TAGS}

@@ -22,7 +22,7 @@ import {
   isKanbanFilterActive,
   laneDropId,
   matchesKanbanFilter,
-  nextLaneOrder,
+  nextOrder,
   normalizeMentionName,
   parseDropTarget,
   reindexLane,
@@ -355,11 +355,15 @@ describe('parseDropTarget / laneDropId / cardDropId', () => {
   })
 })
 
-describe('nextLaneOrder / reindexLane / insertAt', () => {
-  it('空レーンの order は 0、既存があれば最大 + 1', () => {
-    expect(nextLaneOrder([])).toBe(0)
-    expect(nextLaneOrder([0, 1, 2])).toBe(3)
-    expect(nextLaneOrder([5, 1, 3]), '順不同でも最大値を見る').toBe(6)
+describe('nextOrder / reindexLane / insertAt', () => {
+  it('空なら 0、既存があれば最大 + 1', () => {
+    expect(nextOrder([])).toBe(0)
+    expect(nextOrder([0, 1, 2])).toBe(3)
+    expect(nextOrder([5, 1, 3]), '順不同でも最大値を見る').toBe(6)
+  })
+
+  it('欠番があっても最大値を基準にする', () => {
+    expect(nextOrder([10]), '詰め直しはしない').toBe(11)
   })
 
   it('reindexLane は 0 始まりの連番へ再採番する', () => {

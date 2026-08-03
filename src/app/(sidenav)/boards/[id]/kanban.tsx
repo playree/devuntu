@@ -1,6 +1,7 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
+import { SingleSelectField } from '@/components/general/select'
 import { ChatBubbleIcon, PlusIcon } from '@/components/icon'
 import {
   PriorityBar,
@@ -16,9 +17,9 @@ import { dayformat } from '@/lib/day'
 import { cardDropId, KANBAN_LANES, laneDropId } from '@/lib/task'
 import { useLocale } from '@/locale/client'
 import { useDraggable, useDroppable } from '@dnd-kit/react'
-import { Chip, cn, Label, ListBox, Select } from '@heroui/react'
+import { Chip, cn } from '@heroui/react'
 import Link from 'next/link'
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 import { GetBoardKanbanReturnType } from './server'
 
 type Kanban = NonNullable<GetBoardKanbanReturnType>
@@ -51,6 +52,12 @@ const KanbanCardView: FC<{
   const { ref: dropRef, isDropTarget } = useDroppable({ id: cardDropId(card.id), accept: DRAG_TYPE })
   const { ref: dragRef, isDragging } = useDraggable({ id: card.id, type: DRAG_TYPE })
 
+  // statusOptions のキー順は backlog 始まりなので、レーンの表示順(LANE_ORDER)へ組み直す
+  const laneOptions = useMemo(
+    () => Object.fromEntries(LANE_ORDER.map((status) => [status, statusOptions[status]])),
+    [statusOptions],
+  )
+
   return (
     <div // 外側 = ドロップ枠。ドラッグ中も矩形が元位置に留まるので挿入位置の基準が安定する
       ref={dropRef}
@@ -64,7 +71,7 @@ const KanbanCardView: FC<{
            * panel.tsx と違い dark:border-t-2 を持たないのは、上端はバーが輪郭を兼ねるため。
            * 代わりにダークでは priorityBorderClass がバーと同色の枠を全周に出す。
            */
-          'cursor-grab overflow-hidden rounded-xl',
+          'cursor-pointer overflow-hidden rounded-xl',
           'shadow-md dark:shadow-none', // ダークは枠線が輪郭を作るので影は要らない
           priorityBgClass(card.priority),
           priorityBorderClass(card.priority),
@@ -99,37 +106,26 @@ const KanbanCardView: FC<{
 
           <TagChips tags={card.tags} />
 
-          <Select
+          <SingleSelectField
             /**
              * DnD が使えないタッチ環境向けのフォールバック(button/select 上ではドラッグが開始しない)。
              * レーン自体がステータスを表しているので、トリガーには現在値ではなく固定ラベルを出す。
              * value は残しておくことで一覧の現在レーンにチェックが付き、同値選択の no-op 判定も効く。
              */
-            selectionMode='single'
+            label={t('move_ticket')}
+            isLabelHidden
+            /** カードの親(Grid / FlexCol)は isSmart 無指定なので継承されない。明示的に渡す */
+            isSmart
+            triggerLabel={<span className='text-xs opacity-60'>{t('move_ticket')}</span>}
+            groupOptions={laneOptions}
             value={card.status}
             onChange={(key) => {
-              const next = key?.toString() as TicketStatus | undefined
+              const next = key as TicketStatus | null
               if (next && next !== card.status) {
                 onChangeStatus(next)
               }
             }}
-          >
-            <Label className='sr-only'>{t('move_ticket')}</Label>
-            <Select.Trigger className='min-h-7 py-1'>
-              <Select.Value>{() => <span className='text-xs opacity-60'>{t('move_ticket')}</span>}</Select.Value>
-              <Select.Indicator />
-            </Select.Trigger>
-            <Select.Popover>
-              <ListBox selectionMode='single'>
-                {LANE_ORDER.map((status) => (
-                  <ListBox.Item key={status} id={status} textValue={statusOptions[status]}>
-                    {statusOptions[status]}
-                    <ListBox.ItemIndicator />
-                  </ListBox.Item>
-                ))}
-              </ListBox>
-            </Select.Popover>
-          </Select>
+          />
         </div>
       </div>
     </div>

@@ -9,10 +9,10 @@ import { usePagingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
 import { ArrowPathIcon, Cog6ToothIcon, PlusIcon, ViewColumnsIcon } from '@/components/icon'
-import { useBoardName } from '@/components/ticket/ticket-chip'
+import { RoleChip, useBoardName } from '@/components/ticket/ticket-chip'
 import { parseAction } from '@/lib/action-client'
 import { useLocale } from '@/locale/client'
-import { ButtonGroup, Chip, Table } from '@heroui/react'
+import { ButtonGroup, Table } from '@heroui/react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
@@ -64,8 +64,10 @@ export const BoardsClient: FC = () => {
           <Table.Row key={item.id} id={item.id}>
             <Table.Cell>
               <div className='flex flex-col gap-0.5'>
-                {/* ボード名をかんばんへのリンクにする(操作列は置かない) */}
-                <Link href={`/boards/${item.id}`} className='truncate hover:underline'>
+                <Link // ボード名をかんばんへのリンクにする(操作列は置かない)
+                  href={`/boards/${item.id}`}
+                  className='truncate hover:underline'
+                >
                   {boardName(item)}
                 </Link>
                 <span className='text-xs text-gray-500'>{item.kind === 'private' ? t('private') : t('team')}</span>
@@ -73,9 +75,7 @@ export const BoardsClient: FC = () => {
             </Table.Cell>
             <Table.Cell className='truncate'>{item.description}</Table.Cell>
             <Table.Cell>
-              <Chip variant='soft' color={item.role === 'owner' ? 'accent' : 'default'} size='sm'>
-                <Chip.Label>{item.role === 'owner' ? t('owner') : t('member')}</Chip.Label>
-              </Chip>
+              <RoleChip role={item.role} />
             </Table.Cell>
             <Table.Cell className='font-mono text-xs'>
               {item.openCount} / {item.ticketCount}
@@ -83,8 +83,7 @@ export const BoardsClient: FC = () => {
             <Table.Cell>
               <OnOffChip isState={item.archived} isIconOnly />
             </Table.Cell>
-            {/* 編集 / 削除 / アーカイブはボード設定ページに集約しているので、ここは設定への導線だけ */}
-            <ActionCell
+            <ActionCell // 編集 / 削除 / アーカイブはボード設定ページに集約しているので、ここは設定への導線だけ
               items={[
                 {
                   template: 'none',

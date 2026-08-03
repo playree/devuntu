@@ -3,6 +3,7 @@
 import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
+import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
 import {
   ArrowLeftCircleIcon,
@@ -21,7 +22,7 @@ import { TagEditor } from '@/components/ticket/tag-editor'
 import { useBoardName } from '@/components/ticket/ticket-chip'
 import { parseAction, useActionData } from '@/lib/action-client'
 import { useLocale } from '@/locale/client'
-import { Accordion, ButtonGroup, Skeleton } from '@heroui/react'
+import { Accordion, ButtonGroup } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
 import { BoardMembers } from './board-members'
@@ -51,7 +52,7 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
   const { data: assignments, reload: reloadAssignments } = useActionData(() => getBoardAssignments({ id: boardId }))
 
   if (isLoading) {
-    return <Skeleton className='min-h-48 w-full rounded-xl' />
+    return <PanelSkeleton />
   }
 
   // parseAction は ClientError を notify せず throw するため、ここで明示的に表示する
@@ -63,7 +64,7 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
             <ArrowLeftCircleIcon />
           </MultiButton>
         </ContentHeader>
-        <div className='rounded-xl border-2 p-4 text-sm'>{t('msg_no_access')}</div>
+        <NoticePanel>{t('msg_no_access')}</NoticePanel>
       </FlexCol>
     )
   }
@@ -100,20 +101,37 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
       </ContentHeader>
 
       <Accordion allowsMultipleExpanded defaultExpandedKeys={defaultExpandedKeys}>
-        {/* ボード情報: 名前 / 説明の編集とメタ情報(種別・オーナー・チケット件数など)。
-            閲覧は誰でも可、編集可否は BoardProfile 内で manage 権限から判定する */}
-        <AccordionSection id='board_profile' icon={<InformationCircleIcon />} title={t('board_profile')}>
-          {/* アーカイブをデンジャーゾーンから切り替えても useForm の defaultValues は追従しないので、
-              古い archived で上書きしないよう再マウントさせる */}
-          <BoardProfile key={`${board.id}-${board.archived}`} board={board} reload={reload} />
+        <AccordionSection
+          /**
+           * ボード情報: 名前 / 説明の編集とメタ情報(種別・オーナー・チケット件数など)。
+           * 閲覧は誰でも可、編集可否は BoardProfile 内で manage 権限から判定する
+           */
+          id='board_profile'
+          icon={<InformationCircleIcon />}
+          title={t('board_profile')}
+        >
+          <BoardProfile
+            /**
+             * アーカイブをデンジャーゾーンから切り替えても useForm の defaultValues は追従しないので、
+             * 古い archived で上書きしないよう再マウントさせる
+             */
+            key={`${board.id}-${board.archived}`}
+            board={board}
+            reload={reload}
+          />
         </AccordionSection>
 
-        {/* ボードメンバー: 直接メンバーとグループ経由メンバーの一覧 / 追加 / ロール変更 / 削除。
-            プライベートボードは所有者 1 人固定でメンバーの概念が無いのでセクションごと出さない */}
         {!isPrivate && (
-          <AccordionSection id='board_members' icon={<UsersIcon />} title={t('board_members')}>
-            {/* manage 権限が無いメンバーには一覧だけ見せる(assignments を渡さないと編集 UI が出ない) */}
-            <BoardMembers
+          <AccordionSection
+            /**
+             * ボードメンバー: 直接メンバーとグループ経由メンバーの一覧 / 追加 / ロール変更 / 削除。
+             * プライベートボードは所有者 1 人固定でメンバーの概念が無いのでセクションごと出さない
+             */
+            id='board_members'
+            icon={<UsersIcon />}
+            title={t('board_members')}
+          >
+            <BoardMembers // manage 権限が無いメンバーには一覧だけ見せる(assignments を渡さないと編集 UI が出ない)
               boardId={board.id}
               assignments={canManageBoard ? assignments : undefined}
               reloadAssignments={reloadAssignments}
@@ -121,17 +139,29 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
           </AccordionSection>
         )}
 
-        {/* ボードグループ: グループ単位のアサイン。グループ構成の変更は管理者だけに許すので
-            isAdmin かつアサイン情報(選択肢)を取得できたときだけ表示する */}
         {!isPrivate && board.isAdmin && assignments && (
-          <AccordionSection id='board_groups' icon={<UserGroupIcon />} title={t('board_groups')}>
+          <AccordionSection
+            /**
+             * ボードグループ: グループ単位のアサイン。グループ構成の変更は管理者だけに許すので
+             * isAdmin かつアサイン情報(選択肢)を取得できたときだけ表示する
+             */
+            id='board_groups'
+            icon={<UserGroupIcon />}
+            title={t('board_groups')}
+          >
             <GroupManage boardId={board.id} assignments={assignments} reload={reloadAssignments} />
           </AccordionSection>
         )}
 
-        {/* タグ管理: ボード内タグの追加 / 編集 / 削除。member もチケット編集中に新しいタグが要るため
-            追加は閲覧権限だけでも許可し、canManage は編集 / 削除の可否として渡す */}
-        <AccordionSection id='tag_manage' icon={<TagIcon />} title={t('tag_manage')}>
+        <AccordionSection
+          /**
+           * タグ管理: ボード内タグの追加 / 編集 / 削除。member もチケット編集中に新しいタグが要るため
+           * 追加は閲覧権限だけでも許可し、canManage は編集 / 削除の可否として渡す
+           */
+          id='tag_manage'
+          icon={<TagIcon />}
+          title={t('tag_manage')}
+        >
           <TagEditor
             tags={tags ?? []}
             canManage={board.canManage}
@@ -152,10 +182,12 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
           />
         </AccordionSection>
 
-        {/* デンジャーゾーン: アーカイブ切替とボード削除。プライベートボードは削除させないので
-            manage 権限に加えてチームボードであることを条件にする */}
         {canManageBoard && (
           <AccordionSection
+            /**
+             * デンジャーゾーン: アーカイブ切替とボード削除。プライベートボードは削除させないので
+             * manage 権限に加えてチームボードであることを条件にする
+             */
             id='danger_zone'
             icon={<ExclamationTriangleIcon className='text-danger' />}
             title={t('danger_zone')}

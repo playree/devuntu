@@ -117,8 +117,7 @@ export const TicketSearchPanel: FC<{
 
       {tagChoices.length > 0 && (
         <div className='col-span-12 md:col-span-5'>
-          {/* 絞り込みの値は tagId ではなく名前(ボード横断でも同名を 1 条件にまとめる) */}
-          <TagNameSelectField
+          <TagNameSelectField // 絞り込みの値は tagId ではなく名前(ボード横断でも同名を 1 条件にまとめる)
             options={tagChoices}
             value={filter.tags}
             max={MAX_TICKET_TAGS}

@@ -81,9 +81,15 @@ export const DatePickerField = ({
           {isRequired ? '*' : ''}
         </Label>
       )}
-      {/* isSmart: .date-input-group は h-9 固定なので h-7 で上書きし、
-              overflow-hidden で内側がクリップされないよう Input の py も詰める */}
-      <DateField.Group fullWidth variant={variant} className={isSmart ? 'h-7' : undefined}>
+      <DateField.Group
+        /**
+         * isSmart: .date-input-group は h-9 固定なので h-7 で上書きし、
+         * overflow-hidden で内側がクリップされないよう Input の py も詰める
+         */
+        fullWidth
+        variant={variant}
+        className={isSmart ? 'h-7' : undefined}
+      >
         <DateField.Input className={isSmart ? 'py-1' : undefined}>
           {(segment: DateSegmentValue) => <DateField.Segment segment={segment} />}
         </DateField.Input>

@@ -6,7 +6,7 @@ import { FlexCol, FlexRow } from '@/components/general/flex'
 import { Grid } from '@/components/general/grid'
 import { InputField } from '@/components/general/input'
 import { useConfirmModal } from '@/components/general/modal'
-import { Panel } from '@/components/general/panel'
+import { NoticePanel, Panel, PanelSkeleton } from '@/components/general/panel'
 import { SingleSelectField } from '@/components/general/select'
 import { ContentHeader } from '@/components/header'
 import {
@@ -29,7 +29,7 @@ import { PatchTicketIn, scPatchTicket, zTicketTitle } from '@/lib/schema'
 import { getFieldConstraints } from '@/lib/schema-util'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
-import { Breadcrumbs, Skeleton } from '@heroui/react'
+import { Breadcrumbs } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC, useEffect, useState } from 'react'
 import {
@@ -88,8 +88,9 @@ const TicketBreadcrumbs: FC<{ boardId: string; boardName: string; title: string 
   const router = useRouter()
   return (
     <Breadcrumbs className='min-w-0'>
-      {/* RouterProvider を置いていないため href ではなく router.push で遷移する */}
-      <Breadcrumbs.Item onPress={() => router.push(`/boards/${boardId}`)}>
+      <Breadcrumbs.Item // RouterProvider を置いていないため href ではなく router.push で遷移する
+        onPress={() => router.push(`/boards/${boardId}`)}
+      >
         <span className='flex items-center gap-1'>
           <ViewColumnsIcon width={16} />
           <span className='max-w-32 truncate sm:max-w-48'>{boardName}</span>
@@ -241,7 +242,7 @@ export const TicketDetailClient: FC<{
   }
 
   if (isLoading) {
-    return <Skeleton className='min-h-48 w-full rounded-xl' />
+    return <PanelSkeleton />
   }
 
   // parseAction は ClientError を notify せず throw するため、ここで明示的に表示する
@@ -257,7 +258,7 @@ export const TicketDetailClient: FC<{
             </>
           }
         />
-        <div className='rounded-xl border-2 p-4 text-sm'>{t('msg_no_access')}</div>
+        <NoticePanel>{t('msg_no_access')}</NoticePanel>
       </FlexCol>
     )
   }
@@ -300,8 +301,9 @@ export const TicketDetailClient: FC<{
       />
 
       <Panel>
-        {/* 項目の並びは作成モーダル(../modals.tsx の AddModal)と揃えている */}
-        <Grid isSmart>
+        <Grid // 項目の並びは作成モーダル(../modals.tsx の AddModal)と揃えている
+          isSmart
+        >
           <div className='col-span-12 md:col-span-8'>
             {canEdit ? (
               <InputField
@@ -322,8 +324,11 @@ export const TicketDetailClient: FC<{
           </div>
 
           <div className='col-span-12 md:col-span-4'>
-            {/* ボードは詳細画面では変更させない */}
-            <MetaText label={t('board')}>{boardName({ name: ticket.boardName, kind: ticket.boardKind })}</MetaText>
+            <MetaText // ボードは詳細画面では変更させない
+              label={t('board')}
+            >
+              {boardName({ name: ticket.boardName, kind: ticket.boardKind })}
+            </MetaText>
           </div>
 
           <div className='col-span-6 md:col-span-2'>
@@ -420,8 +425,9 @@ export const TicketDetailClient: FC<{
           </div>
         </Grid>
 
-        {/* 作成 / 更新はチケットの属性ではないので、項目のグリッドから外して注記にする */}
-        <div className='mt-2 flex flex-wrap items-center gap-x-3 border-t pt-2 text-xs text-gray-500'>
+        <div // 作成 / 更新はチケットの属性ではないので、項目のグリッドから外して注記にする
+          className='mt-2 flex flex-wrap items-center gap-x-3 border-t pt-2 text-xs text-gray-500'
+        >
           <span>
             {t('created_at')} <span className='font-mono'>{dayformat(ticket.createdAt, 'tz-simple', tz)}</span>
             {ticket.createdByName && <span className='ml-1'>{ticket.createdByName}</span>}
@@ -444,8 +450,9 @@ export const TicketDetailClient: FC<{
         </div>
       </Panel>
 
-      {/* 表示 / 編集で本文の位置を動かさず、差分をツールバーの有無だけにする */}
-      <div className='py-4'>
+      <div // 表示 / 編集で本文の位置を動かさず、差分をツールバーの有無だけにする
+        className='py-4'
+      >
         <MarkdownField
           body={ticket.content ?? ''}
           isEditing={isEditingContent}

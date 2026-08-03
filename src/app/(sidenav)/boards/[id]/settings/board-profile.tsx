@@ -5,14 +5,13 @@ import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
 import { CheckIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
-import { StatusChip } from '@/components/ticket/ticket-chip'
+import { RoleChip, StatusChip } from '@/components/ticket/ticket-chip'
 import { parseAction } from '@/lib/action-client'
 import { dayformat } from '@/lib/day'
 import { scUpdateBoard, UpdateBoard } from '@/lib/schema'
 import { TICKET_STATUSES } from '@/lib/task'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
-import { Chip } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FC, ReactNode } from 'react'
 import { useForm } from 'react-hook-form'
@@ -109,9 +108,7 @@ export const BoardProfile: FC<{ board: Board; reload: () => void }> = ({ board, 
     <div className='space-y-1'>
       <MetaRow label={t('board')}>{isPrivate ? t('private') : t('team')}</MetaRow>
       <MetaRow label={t('owner')}>
-        <Chip variant='soft' color={board.role === 'owner' ? 'accent' : 'default'} size='sm'>
-          <Chip.Label>{board.role === 'owner' ? t('owner') : t('member')}</Chip.Label>
-        </Chip>
+        <RoleChip role={board.role} />
       </MetaRow>
       <MetaRow label={t('ticket_count')}>
         <div className='flex flex-wrap items-center gap-1'>
@@ -127,8 +124,11 @@ export const BoardProfile: FC<{ board: Board; reload: () => void }> = ({ board, 
       <MetaRow label={t('created_at')}>
         <span className='font-mono text-xs'>{dayformat(board.createdAt, 'tz-simple', tz)}</span>
       </MetaRow>
-      {/* アーカイブの切り替えはデンジャーゾーン側なので、ここでは編集権限に関わらず状態だけ見せる */}
-      <MetaRow label={t('archived')}>{board.archived ? t('archived') : '-'}</MetaRow>
+      <MetaRow // アーカイブの切り替えはデンジャーゾーン側なので、ここでは編集権限に関わらず状態だけ見せる
+        label={t('archived')}
+      >
+        {board.archived ? t('archived') : '-'}
+      </MetaRow>
 
       {canEdit ? (
         <div className='pt-2'>

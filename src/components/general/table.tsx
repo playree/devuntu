@@ -214,8 +214,9 @@ export const MultiTable = <T extends object>({
                 minWidth={SELECTION_COLUMN_WIDTH}
                 className={SELECTION_COLUMN_PADDING}
               >
-                {/* 単一選択では全選択できないのでヘッダのチェックボックスは出さない */}
-                {selectionMode === 'multiple' && <SelectionCheckbox />}
+                {selectionMode === 'multiple' && (
+                  <SelectionCheckbox /* 単一選択では全選択できないのでヘッダのチェックボックスは出さない */ />
+                )}
               </Table.Column>
             )}
             {columns.map((column) => (

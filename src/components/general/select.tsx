@@ -1,7 +1,7 @@
 'use client'
 
 import { Chip, cn, ErrorMessage, Label, ListBox, Select } from '@heroui/react'
-import { FC, Ref, SVGProps } from 'react'
+import { FC, ReactNode, Ref, SVGProps } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 import { useIsSmart } from './smart'
 
@@ -145,6 +145,11 @@ type SingleSelectFieldProps = SelectFieldBaseProps & {
   onChange: (value: string | null) => void
   isClearable?: boolean
   isDisabled?: boolean
+  /**
+   * トリガーに現在値ではなく固定の表示を出す。
+   * 値が別の手段(かんばんのレーンなど)で既に自明で、トリガーは操作の入口としてだけ使う場合に指定する。
+   */
+  triggerLabel?: ReactNode
 }
 
 /**
@@ -162,6 +167,7 @@ export const SingleSelectField = ({
   isDisabled = false,
   errorMessage,
   isSmart: isSmartProp,
+  triggerLabel,
   value,
   onChange,
   onBlur,
@@ -180,9 +186,17 @@ export const SingleSelectField = ({
         ref={ref}
       >
         <Label className={cn(isSmart ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}>{label}</Label>
-        {/* isSmart: 既定 36px(min-h-9 + py-2)を 28px へ。text-sm の行高 20px + 上下 4px */}
-        <Select.Trigger className={isSmart ? 'min-h-7 py-1' : undefined}>
-          <Select.Value>{() => (value && groupOptions[value] ? <>{groupOptions[value]}</> : <></>)}</Select.Value>
+        <Select.Trigger // isSmart: 既定 36px(min-h-9 + py-2)を 28px へ。text-sm の行高 20px + 上下 4px
+          className={isSmart ? 'min-h-7 py-1' : undefined}
+        >
+          <Select.Value>
+            {() => {
+              if (triggerLabel) {
+                return <>{triggerLabel}</>
+              }
+              return value && groupOptions[value] ? <>{groupOptions[value]}</> : <></>
+            }}
+          </Select.Value>
           {isClearable && value && (
             <span
               role='button'

@@ -1,6 +1,7 @@
 'use client'
 
 import type { BoardKind, TagColor, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
+import type { BoardRole } from '@/lib/task'
 import { LocaleItemBase } from '@/locale'
 import { useLocale } from '@/locale/client'
 import { Chip, ChipProps, cn } from '@heroui/react'
@@ -71,6 +72,26 @@ export const StatusChip: FC<{ status: TicketStatus; size?: ChipProps['size'] }> 
 export const PriorityChip: FC<{ priority: TicketPriority; size?: ChipProps['size'] }> = ({ priority, size = 'sm' }) => {
   const { t } = useLocale()
   const { item, color } = PRIORITY_STYLE[priority]
+  return (
+    <Chip variant='soft' color={color} size={size}>
+      <Chip.Label>{t(item)}</Chip.Label>
+    </Chip>
+  )
+}
+
+/** ボードロールのロケールキーと表示色。owner だけ色を変えて権限差を目立たせる */
+const ROLE_STYLE: Record<BoardRole, { item: LocaleItemBase; color: ChipColor }> = {
+  owner: { item: 'owner', color: 'accent' },
+  member: { item: 'member', color: 'default' },
+}
+
+/**
+ * ボードロールの Chip。
+ * グループ経由のみのメンバーは直接ロールを持たないため、null の扱いは呼び出し側に任せる。
+ */
+export const RoleChip: FC<{ role: BoardRole; size?: ChipProps['size'] }> = ({ role, size = 'sm' }) => {
+  const { t } = useLocale()
+  const { item, color } = ROLE_STYLE[role]
   return (
     <Chip variant='soft' color={color} size={size}>
       <Chip.Label>{t(item)}</Chip.Label>
@@ -183,4 +204,10 @@ export const useTicketOptions = () => {
       (Object.keys(PRIORITY_STYLE) as TicketPriority[]).map((priority) => [priority, t(PRIORITY_STYLE[priority].item)]),
     ),
   }
+}
+
+/** ボードロールの選択肢(Record<id, label>)。RoleChip と同じ文言を SingleSelectCtrl へ渡す */
+export const useRoleOptions = (): Record<BoardRole, string> => {
+  const { t } = useLocale()
+  return { owner: t(ROLE_STYLE.owner.item), member: t(ROLE_STYLE.member.item) }
 }

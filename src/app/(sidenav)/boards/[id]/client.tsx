@@ -5,6 +5,7 @@ import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
 import { Grid } from '@/components/general/grid'
 import { useModalState } from '@/components/general/modal'
+import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
 import {
   ArrowLeftCircleIcon,
@@ -34,7 +35,7 @@ import {
 } from '@/lib/task'
 import { useLocale } from '@/locale/client'
 import { DragDropProvider } from '@dnd-kit/react'
-import { Accordion, ButtonGroup, Chip, Skeleton } from '@heroui/react'
+import { Accordion, ButtonGroup, Chip } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC, useEffect, useMemo, useState } from 'react'
 // チケット作成フォームは /tickets と共通のものを使う(重複定義を避ける)
@@ -95,7 +96,7 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
   }
 
   if (isLoading) {
-    return <Skeleton className='min-h-48 w-full rounded-xl' />
+    return <PanelSkeleton />
   }
 
   if (!data) {
@@ -106,7 +107,7 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
             <ArrowLeftCircleIcon />
           </MultiButton>
         </ContentHeader>
-        <div className='rounded-xl border-2 p-4 text-sm'>{t('msg_no_access')}</div>
+        <NoticePanel>{t('msg_no_access')}</NoticePanel>
       </FlexCol>
     )
   }
@@ -148,8 +149,10 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
         </div>
       )}
 
-      {/* かんばんは縦の表示領域が貴重なので既定は折りたたみ。絞り込み中は見出しに件数を出して気づけるようにする */}
-      <Accordion allowsMultipleExpanded hideSeparator>
+      <Accordion // かんばんは縦の表示領域が貴重なので既定は折りたたみ。絞り込み中は見出しに件数を出して気づけるようにする
+        allowsMultipleExpanded
+        hideSeparator
+      >
         <AccordionSection
           id='filter'
           icon={<FunnelIcon />}

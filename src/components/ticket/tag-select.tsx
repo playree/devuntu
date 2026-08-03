@@ -167,8 +167,9 @@ export const TagIdSelectField = ({
         {label ?? t('tags')}
         <span className='ml-1 text-xs opacity-60'>{`${selectedIds.length}/${MAX_TICKET_TAGS}`}</span>
       </Label>
-      {/* isSmart: 既定 36px(min-h-9 + py-2)を 28px へ。text-sm の行高 20px + 上下 4px */}
-      <Autocomplete.Trigger className={isSmart ? 'min-h-7 py-1' : undefined}>
+      <Autocomplete.Trigger // isSmart: 既定 36px(min-h-9 + py-2)を 28px へ。text-sm の行高 20px + 上下 4px
+        className={isSmart ? 'min-h-7 py-1' : undefined}
+      >
         <Autocomplete.Value className='flex flex-wrap items-center gap-1'>
           {() =>
             selected.length > 0 ? (
@@ -197,19 +198,19 @@ export const TagIdSelectField = ({
             )
           }
         </Autocomplete.Value>
-        {/* 全解除。未選択(data-empty)のときは CSS 側で非表示になる */}
-        <Autocomplete.ClearButton />
-        {/* children を渡すと Button ラップが消えてキーボードで開けなくなるので空のまま */}
-        <Autocomplete.Indicator />
+        <Autocomplete.ClearButton /* 全解除。未選択(data-empty)のときは CSS 側で非表示になる */ />
+        <Autocomplete.Indicator /* children を渡すと Button ラップが消えてキーボードで開けなくなるので空のまま */ />
       </Autocomplete.Trigger>
       <ErrorMessage className={isSmart ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
-      {/*
-        aria-label は内部の Dialog 用。HeroUI 3.2.2 の Autocomplete.Popover は Dialog へ
-        ラベルを渡さず react-aria が警告を出すため、patches/@heroui__react.patch で転送している。
-        Select のコレクション構築は children を <template> 内で描画するので、
-        <Heading slot='title'> では(id が実 DOM に無く)ラベル付けできない。
-      */}
-      <Autocomplete.Popover aria-label={label ?? t('tags')}>
+      <Autocomplete.Popover
+        /**
+         * aria-label は内部の Dialog 用。HeroUI 3.2.2 の Autocomplete.Popover は Dialog へ
+         * ラベルを渡さず react-aria が警告を出すため、patches/@heroui__react.patch で転送している。
+         * Select のコレクション構築は children を <template> 内で描画するので、
+         * <Heading slot='title'> では(id が実 DOM に無く)ラベル付けできない。
+         */
+        aria-label={label ?? t('tags')}
+      >
         <Autocomplete.Filter
           inputValue={draft}
           onInputChange={setDraft}
@@ -356,8 +357,9 @@ export const TagNameSelectField: FC<{
         {label ?? t('tags')}
         {max !== undefined && <span className='ml-1 text-xs opacity-60'>{`${value.length}/${max}`}</span>}
       </Label>
-      {/* isSmart: 既定 36px(min-h-9 + py-2)を 28px へ。text-sm の行高 20px + 上下 4px */}
-      <Select.Trigger className={isSmart ? 'min-h-7 py-1' : undefined}>
+      <Select.Trigger // isSmart: 既定 36px(min-h-9 + py-2)を 28px へ。text-sm の行高 20px + 上下 4px
+        className={isSmart ? 'min-h-7 py-1' : undefined}
+      >
         <Select.Value className='flex flex-wrap items-center gap-1'>
           {() =>
             selected.length > 0 ? (
@@ -371,9 +373,8 @@ export const TagNameSelectField: FC<{
             )
           }
         </Select.Value>
-        {/* Select には Autocomplete.ClearButton 相当が無いので手書きする */}
         {value.length > 0 && (
-          <span
+          <span // Select には Autocomplete.ClearButton 相当が無いので手書きする
             role='button'
             aria-label='clear'
             tabIndex={-1}

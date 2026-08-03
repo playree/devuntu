@@ -9,9 +9,10 @@ import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
 import { ArrowPathIcon, PencilSquareIcon, UserPlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
+import { RoleChip } from '@/components/ticket/ticket-chip'
 import { parseAction } from '@/lib/action-client'
 import { useLocale } from '@/locale/client'
-import { ButtonGroup, Chip, Table } from '@heroui/react'
+import { ButtonGroup, Table } from '@heroui/react'
 import { FC } from 'react'
 import { AddMemberModal, UpdateMemberRoleModal } from './modals'
 import { GetBoardAssignmentsReturnType, GetBoardMembersReturnType, getBoardMembers, removeBoardMember } from './server'
@@ -54,9 +55,12 @@ export const BoardMembers: FC<{
   return (
     <FlexCol>
       <ContentHeader>
-        {/* manage 権限が無い場合はアサインを編集させない(assignments が渡ってこない) */}
         {assignments && (
-          <MultiButton isIconOnly tooltip={t('add_member')} onPress={() => addModalState.open()}>
+          <MultiButton // manage 権限が無い場合はアサインを編集させない(assignments が渡ってこない)
+            isIconOnly
+            tooltip={t('add_member')}
+            onPress={() => addModalState.open()}
+          >
             <UserPlusIcon />
           </MultiButton>
         )}
@@ -82,15 +86,8 @@ export const BoardMembers: FC<{
           <Table.Row key={item.id} id={item.id}>
             <Table.Cell className='truncate'>{item.name}</Table.Cell>
             <Table.Cell className='truncate font-mono text-xs'>{item.email}</Table.Cell>
-            <Table.Cell>
-              {/* グループ経由のみのメンバーは直接ロールを持たない */}
-              {item.role ? (
-                <Chip variant='soft' color={item.role === 'owner' ? 'accent' : 'default'} size='sm'>
-                  <Chip.Label>{item.role === 'owner' ? t('owner') : t('member')}</Chip.Label>
-                </Chip>
-              ) : (
-                '-'
-              )}
+            <Table.Cell /* グループ経由のみのメンバーは直接ロールを持たない */>
+              {item.role ? <RoleChip role={item.role} /> : '-'}
             </Table.Cell>
             <Table.Cell>{item.via === 'group' ? t('group') : t('direct')}</Table.Cell>
             <ActionCell
