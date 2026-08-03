@@ -32,7 +32,7 @@ import {
 import '@mdxeditor/editor/style.css'
 import { basicDark } from 'cm6-theme-basic-dark'
 import { useTheme } from 'next-themes'
-import { FC, useMemo } from 'react'
+import { FC, useMemo, useState } from 'react'
 
 /** コードブロックの言語選択に出す一覧(キーは Markdown のフェンス言語名) */
 const CODE_BLOCK_LANGUAGES = {
@@ -100,14 +100,14 @@ export type MdxEditorCoreProps = {
 }
 
 /**
- * MDXEditor の実体。ブラウザ専用なので `next/dynamic` の `ssr: false` 経由で読み込む前提。
+ * MDXEditor 本体。テーマが確定した後にだけマウントする。
  *
- * プラグインを親ファイルで静的 import すると SSR バンドルへ入ってしまうため、
- * MDXEditor 関連の import はすべてこのファイルに閉じ込めて default export する。
- * ツールバーに出さない構文(`---` / `![](url)`)のプラグインも、既存本文を
- * パースエラーにしないために読み込んでおく。
+ * MDXEditor は `plugins` 配列が差し替わると内部の Lexical エディタを組み直すため、
+ * 配列の参照はマウント後ずっと変えてはいけない(編集中の内容が失われる)。
+ * `isDark` は初回の値で固定し、以降のテーマ切替では CodeMirror の拡張を変えない。
+ * リッチテキスト面は className の `dark-theme` が追従するので見た目は破綻しない。
  */
-const MdxEditorCore: FC<MdxEditorCoreProps> = ({
+const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
   markdown,
   onChange,
   onBlur,
@@ -115,17 +115,17 @@ const MdxEditorCore: FC<MdxEditorCoreProps> = ({
   placeholder,
   autoFocus,
   className,
+  isDark,
 }) => {
-  const { resolvedTheme } = useTheme()
-  const isDark = resolvedTheme === 'dark'
+  // マウント時のテーマで固定する(編集中にテーマを切り替えても plugins を作り直さない)
+  const [isDarkAtMount] = useState(isDark)
 
-  // source モードとコードブロックの CodeMirror は basicLight がハードコードされているため、
-  // ダーク時は basicDark を渡して上書きする。カスタム拡張は拡張配列の先頭=高優先度で入り、
-  // CodeMirror は高優先度の StyleModule を最後にマウントするので後勝ちで有効になる。
-  const codeMirrorExtensions = useMemo(() => (isDark ? [basicDark] : []), [isDark])
-
-  const plugins = useMemo(
-    () => [
+  const plugins = useMemo(() => {
+    // source モードとコードブロックの CodeMirror は basicLight がハードコードされているため、
+    // ダーク時は basicDark を渡して上書きする。カスタム拡張は拡張配列の先頭=高優先度で入り、
+    // CodeMirror は高優先度の StyleModule を最後にマウントするので後勝ちで有効になる。
+    const codeMirrorExtensions = isDarkAtMount ? [basicDark] : []
+    return [
       headingsPlugin(),
       quotePlugin(),
       listsPlugin(),
@@ -139,9 +139,8 @@ const MdxEditorCore: FC<MdxEditorCoreProps> = ({
       markdownShortcutPlugin(),
       diffSourcePlugin({ viewMode: 'rich-text', codeMirrorExtensions }),
       toolbarPlugin({ toolbarContents: () => <Toolbar /> }),
-    ],
-    [codeMirrorExtensions],
-  )
+    ]
+  }, [isDarkAtMount])
 
   return (
     <MDXEditor
@@ -166,6 +165,25 @@ const MdxEditorCore: FC<MdxEditorCoreProps> = ({
       plugins={plugins}
     />
   )
+}
+
+/**
+ * MDXEditor の実体。ブラウザ専用なので `next/dynamic` の `ssr: false` 経由で読み込む前提。
+ *
+ * プラグインを親ファイルで静的 import すると SSR バンドルへ入ってしまうため、
+ * MDXEditor 関連の import はすべてこのファイルに閉じ込めて default export する。
+ * ツールバーに出さない構文(`---` / `![](url)`)のプラグインも、既存本文を
+ * パースエラーにしないために読み込んでおく。
+ *
+ * `useTheme` の resolvedTheme は初回レンダーでは undefined なので、確定するまで
+ * 本体をマウントしない。先にマウントすると確定直後に plugins が作り直されてしまう。
+ */
+const MdxEditorCore: FC<MdxEditorCoreProps> = (props) => {
+  const { resolvedTheme } = useTheme()
+  if (!resolvedTheme) {
+    return null
+  }
+  return <MdxEditorInner {...props} isDark={resolvedTheme === 'dark'} />
 }
 
 export default MdxEditorCore

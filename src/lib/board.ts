@@ -372,7 +372,8 @@ export const getTicketAccess = async (
   }
 
   const access = await getBoardAccess(actor, ticket.boardId, tx)
-  const board = access ?? (await tx.board.findUnique({ where: { id: ticket.boardId }, select: { kind: true } }))
+  const board =
+    access ?? (await tx.board.findUnique({ where: { id: ticket.boardId }, select: { kind: true, archived: true } }))
   if (!board) {
     // ボードが消えていればチケットも Cascade で消えるため通常は到達しない
     return null
@@ -382,6 +383,8 @@ export const getTicketAccess = async (
     userId: actor.id,
     createdById: ticket.createdById,
     boardRole: access?.role ?? null,
+    // アクセス不可なら boardRole が null になり書き込みは元々許可されないが、値は実態に合わせておく
+    archived: board.archived,
   })
 
   const { id, ...rest } = ticket
@@ -434,19 +437,27 @@ export const moveTicketToLane = async (
   // レーンは「同一ボード + 同一ステータス」で決まる
   const lane = await tx.ticket.findMany({
     where: { boardId: access.boardId, status },
-    select: { id: true },
+    select: { id: true, order: true },
     orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
   })
 
+  const currentOrder = new Map(lane.map(({ id, order }) => [id, order]))
   const rest = lane.map((ticket) => ticket.id).filter((id) => id !== access.ticketId)
   const position = index ?? rest.length
   const ordered = reindexLane(insertAt(rest, access.ticketId, position))
 
-  await tx.ticket.update({ where: { id: access.ticketId }, data: { status } })
+  // 移動対象は status も変わるので 1 回の update にまとめる
+  const moved = ordered.find(({ id }) => id === access.ticketId)
+  const movedOrder = moved?.order ?? position
+  await tx.ticket.update({ where: { id: access.ticketId }, data: { status, order: movedOrder } })
+
+  // MAX_KANBAN_CARDS(500)まで入りうるレーンで毎回全行を UPDATE しないよう、order が変わる行だけ触る
   for (const { id, order } of ordered) {
+    if (id === access.ticketId || currentOrder.get(id) === order) {
+      continue
+    }
     await tx.ticket.update({ where: { id }, data: { order } })
   }
 
-  const moved = ordered.find(({ id }) => id === access.ticketId)
-  return { id: access.ticketId, status, order: moved?.order ?? position }
+  return { id: access.ticketId, status, order: movedOrder }
 }

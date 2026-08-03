@@ -84,7 +84,8 @@ export const TicketSearchPanel: FC<{
           label={t('target_board')}
           groupOptions={boardOptions}
           value={filter.boardId ?? BOARD_ALL}
-          onChange={(value) => onChange({ ...filter, boardId: !value || value === BOARD_ALL ? null : value })}
+          /** ボードを変えるとタグの候補(tagChoices)も変わるので、選択済みのタグ名は捨てる */
+          onChange={(value) => onChange({ ...filter, boardId: !value || value === BOARD_ALL ? null : value, tags: [] })}
         />
       </div>
 

@@ -8,7 +8,7 @@ overrides:
   sharp: 0.34.5
 
 patchedDependencies:
-  '@heroui/react': 8f4efc8fb555a12fc6a94c9ab1ba419a11534bc9aff2c3f610da8736de746e4d
+  '@heroui/react@3.2.2': 8f4efc8fb555a12fc6a94c9ab1ba419a11534bc9aff2c3f610da8736de746e4d
 
 importers:
 

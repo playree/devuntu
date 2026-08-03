@@ -35,7 +35,7 @@ export const MultiTagField = <T extends string>({
   const selectedKeys = useMemo(() => new Set<string>(value), [value])
   return (
     <TagGroup
-      aria-label={ariaLabel || `aria-${label}`}
+      aria-label={ariaLabel || label}
       selectionMode='multiple'
       selectedKeys={selectedKeys}
       // 絞り込み条件が Escape で意図せず全解除されるのを防ぐ(react-aria の既定は clearSelection)

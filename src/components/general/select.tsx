@@ -38,6 +38,8 @@ type SelectFieldBaseProps = {
 type MultiSelectFieldProps = SelectFieldBaseProps & {
   value: string[]
   onChange: (value: string[]) => void
+  /** 未選択時の表示。共通部品なのでロケールが要る場合は呼び出し側から渡す */
+  placeholder?: ReactNode
 }
 
 /**
@@ -53,6 +55,7 @@ export const MultiSelectField = ({
   value,
   onChange,
   onBlur,
+  placeholder,
   ref,
 }: MultiSelectFieldProps) => {
   const isSmart = useIsSmart(isSmartProp)
@@ -77,14 +80,19 @@ export const MultiSelectField = ({
                   </Chip>
                 ))
               ) : (
-                // 共通部品なのでローカライズ不要とする
-                <Chip variant='tertiary'>Not selected</Chip>
+                // 既定値は共通部品なのでローカライズ不要とする(必要なら placeholder で差し替える)
+                <Chip variant='tertiary'>{placeholder ?? 'Not selected'}</Chip>
               )
             }}
           </Select.Value>
           {value.length > 0 && (
             <span
+              /**
+               * Select.Trigger は内部が button なので、ここを button にすると入れ子になる。
+               * キーボードからは ListBox で選択を外せるため span + role='button' のままにする
+               */
               role='button'
+              // 共通部品なのでローカライズ不要とする
               aria-label='clear'
               tabIndex={-1}
               className='ml-auto inline-flex cursor-pointer items-center opacity-60 hover:opacity-100'
@@ -199,7 +207,12 @@ export const SingleSelectField = ({
           </Select.Value>
           {isClearable && value && (
             <span
+              /**
+               * Select.Trigger は内部が button なので、ここを button にすると入れ子になる。
+               * キーボードからは ListBox で選択を外せるため span + role='button' のままにする
+               */
               role='button'
+              // 共通部品なのでローカライズ不要とする
               aria-label='clear'
               tabIndex={-1}
               className='ml-auto inline-flex cursor-pointer items-center opacity-60 hover:opacity-100'

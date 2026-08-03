@@ -73,9 +73,14 @@ export const AddModal: FC<
   const boardTags = options.tags.filter((tag) => tag.boardId === boardId)
 
   useEffect(() => {
+    // ボードを続けて切り替えると古い要求が後着しうるので、対象が変わった結果は捨てる
+    let isCurrent = true
     parseAction(getAssigneeOptions({ id: boardId }))
-      .then((res) => setBoardAssignees(res ?? {}))
-      .catch(() => setBoardAssignees({}))
+      .then((res) => isCurrent && setBoardAssignees(res ?? {}))
+      .catch(() => isCurrent && setBoardAssignees({}))
+    return () => {
+      isCurrent = false
+    }
   }, [boardId])
 
   // ボードが変わったら前のボードの担当者・タグの ID が残らないよう既定値へ戻す

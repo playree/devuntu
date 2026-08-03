@@ -43,7 +43,7 @@ export const TextAreaCtrl = <
       control={control}
       name={name}
       render={({ field: { onChange, value, onBlur, ref } }) => (
-        <TextField isInvalid={!!errorMessage} isReadOnly={isReadOnly}>
+        <TextField isInvalid={!!errorMessage} isReadOnly={isReadOnly} isRequired={requiredFlag}>
           {label && (
             <Label>
               {label}

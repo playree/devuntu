@@ -278,15 +278,17 @@ export const createBoardTag = safeAuthAction
   .action(async ({ ctx: { user }, parsedInput: { boardId, name, color, order } }) => {
     await assertBoardAccess(user, boardId, 'view')
 
-    const tags = await prisma.tag.findMany({ where: { boardId }, select: { order: true } })
-    if (tags.length >= MAX_TAGS_PER_SCOPE) {
-      throw errInvalidOperation()
-    }
-
-    const tag = await prisma.tag
-      .create({
-        data: { boardId, name, color, order: order || nextOrder(tags.map((row) => row.order)) },
-        select: TAG_SELECT,
+    // 件数チェックと採番を create と同じトランザクションに入れ、同時作成で上限を超えないようにする
+    const tag = await prisma
+      .$transaction(async (tx) => {
+        const tags = await tx.tag.findMany({ where: { boardId }, select: { order: true } })
+        if (tags.length >= MAX_TAGS_PER_SCOPE) {
+          throw errInvalidOperation()
+        }
+        return tx.tag.create({
+          data: { boardId, name, color, order: order || nextOrder(tags.map((row) => row.order)) },
+          select: TAG_SELECT,
+        })
       })
       .catch(rethrowDuplicatedTagName)
 

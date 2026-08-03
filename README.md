@@ -241,7 +241,7 @@ pnpm patch-commit '<出力されたパス>'
 
 `Autocomplete.Popover`は内部で react-aria の`Dialog`を挟むが、受け取った props は外側の`Popover`にしか展開されず`Dialog`にラベルを渡す手段が無い。そのため開発時に以下の警告が出続ける。
 
-```
+```text
 If a Dialog does not contain a <Heading slot="title">, it must have an aria-label or
 aria-labelledby attribute for accessibility.
 ```

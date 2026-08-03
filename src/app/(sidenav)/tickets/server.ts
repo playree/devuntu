@@ -160,14 +160,18 @@ export const createTicket = safeAuthAction
   .action(async ({ ctx: { user }, parsedInput: { boardId, status, assigneeId, tagIds, dueDate, ...rest } }) => {
     const ticket = await prisma.$transaction(async (tx) => {
       // 参加しているボードのみ
-      await assertBoardAccess(user, boardId, 'view', tx)
+      const board = await assertBoardAccess(user, boardId, 'view', tx)
+      // アーカイブ済みボードは読み取り専用(evaluateTicketAccess と同じ方針)
+      if (board.archived) {
+        throw errInvalidOperation()
+      }
       // 担当者はそのボードのメンバーに限る
       await assertBoardAssignee(tx, boardId, assigneeId)
       // タグもそのボードのものに限る
       const ids = await assertTagIdsInBoard(tx, boardId, tagIds)
 
-      // 対象レーンの末尾へ追加する
-      const lane = await tx.ticket.findMany({ where: { boardId, status }, select: { order: true } })
+      // 対象レーンの末尾へ追加する。必要なのは最大値だけなので全行は読まない
+      const lane = await tx.ticket.aggregate({ where: { boardId, status }, _max: { order: true } })
 
       return tx.ticket.create({
         data: {
@@ -178,7 +182,7 @@ export const createTicket = safeAuthAction
           createdById: user.id,
           assigneeId: assigneeId ?? null,
           tags: { create: ids.map((tagId) => ({ tagId })) },
-          order: nextOrder(lane.map((row) => row.order)),
+          order: nextOrder(lane._max.order === null ? [] : [lane._max.order]),
         },
         select: { id: true, title: true },
       })

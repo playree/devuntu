@@ -145,9 +145,14 @@ export const TicketDetailClient: FC<{
     if (!boardId) {
       return
     }
+    // ボードが変わったときに古い要求が後着しうるので、対象が変わった結果は捨てる
+    let isCurrent = true
     parseAction(getAssigneeOptions({ id: boardId }))
-      .then((res) => setBoardAssignees(res ?? {}))
-      .catch(() => setBoardAssignees({}))
+      .then((res) => isCurrent && setBoardAssignees(res ?? {}))
+      .catch(() => isCurrent && setBoardAssignees({}))
+    return () => {
+      isCurrent = false
+    }
   }, [boardId])
 
   // 再取得でサーバー値が変わったら楽観値を捨て、件名の入力欄を同期する(レンダー中に調整)
@@ -214,6 +219,8 @@ export const TicketDetailClient: FC<{
       notify.success(t('msg_saved'))
       setEditingContent(false)
       await refreshAll()
+    } catch {
+      // エラー表示は parseAction 側で済んでいる。編集中の本文を失わせないため編集状態は維持する
     } finally {
       setSavingContent(false)
     }

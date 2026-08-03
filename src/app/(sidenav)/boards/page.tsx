@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   title: en.board,
 }
 
-const BoardsPage: FC = async () => {
+const BoardsPage: FC = () => {
   return <BoardsClient />
 }
 export default BoardsPage

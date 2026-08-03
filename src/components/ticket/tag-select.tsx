@@ -97,13 +97,22 @@ export const TagIdSelectField = ({
   const keyword = draft.trim()
 
   const selectedIds = value.length > 0 ? value : NO_KEYS
-  const selected = selectedIds.flatMap((id) => all.filter((tag) => tag.id === id))
+  const selected = selectedIds.flatMap((id) => all.find((tag) => tag.id === id) ?? [])
   const isFull = selectedIds.length >= MAX_TICKET_TAGS
   // 上限に達したら未選択のタグだけ選べなくする。
   // 選択済みも無効にすると disabledBehavior='all' により press が届かず解除もできなくなる。
   const disabledKeys = isFull ? all.filter((tag) => !selectedIds.includes(tag.id)).map((tag) => tag.id) : NO_KEYS
+
+  /**
+   * 表記差(大文字小文字・アクセント)を無視して既存タグを探す。
+   * 絞り込みの useFilter({ sensitivity: 'base' }) と判定を揃えないと、
+   * 候補に `Bug` が出ているのに `bug` の作成ボタンも出てしまい表記違いの重複タグができる。
+   */
+  const findByName = (name: string) =>
+    all.find((tag) => tag.name.localeCompare(name, undefined, { sensitivity: 'base' }) === 0)
+
   // 同名が既にあるときは作成ボタンを出さない(既存を選ばせる)
-  const canCreate = !!onCreate && !isFull && keyword !== '' && !all.some((tag) => tag.name === keyword)
+  const canCreate = !!onCreate && !isFull && keyword !== '' && !findByName(keyword)
 
   const add = (id: string) => {
     if (selectedIds.includes(id)) {
@@ -120,7 +129,7 @@ export const TagIdSelectField = ({
     if (keyword === '' || isFull || isCreating) {
       return
     }
-    const existing = all.find((tag) => tag.name === keyword)
+    const existing = findByName(keyword)
     if (existing) {
       add(existing.id)
       setDraft('')
@@ -177,8 +186,12 @@ export const TagIdSelectField = ({
                 {selected.map((tag) => (
                   <TagChip key={tag.id} tag={tag}>
                     <span
+                      /**
+                       * Autocomplete.Trigger は内部が button なので、ここを button にすると入れ子になる。
+                       * span + role='button' のまま、キーボードは ListBox 側の選択解除に任せる
+                       */
                       role='button'
-                      aria-label={`remove ${tag.name}`}
+                      aria-label={t('remove_target', { target: tag.name })}
                       tabIndex={-1}
                       className='ml-1 inline-flex cursor-pointer items-center opacity-60 hover:opacity-100'
                       // トリガーの onClick は開閉なので × では伝播を止める
@@ -335,8 +348,9 @@ export const TagNameSelectField: FC<{
 }> = ({ options, value, onChange, label, max, variant, errorMessage, isSmart: isSmartProp }) => {
   const isSmart = useIsSmart(isSmartProp)
   const { t } = useLocale()
-  // 選択順で並べる(options 順ではなく選んだ順にチップが増える)
-  const selected = value.flatMap((name) => options.filter((tag) => tag.name === name))
+  // 選択順で並べる(options 順ではなく選んだ順にチップが増える)。
+  // options は dedupeTagOptionsByName 済みなので名前は一意
+  const selected = value.flatMap((name) => options.find((tag) => tag.name === name) ?? [])
   const isFull = max !== undefined && value.length >= max
   // 上限に達したら未選択のタグだけ選べなくする。
   // 選択済みも無効にすると disabledBehavior='all' により press が届かず解除もできなくなる。
@@ -374,9 +388,13 @@ export const TagNameSelectField: FC<{
           }
         </Select.Value>
         {value.length > 0 && (
-          <span // Select には Autocomplete.ClearButton 相当が無いので手書きする
+          <span
+            /**
+             * Select には Autocomplete.ClearButton 相当が無いので手書きする。
+             * Select.Trigger は内部が button なので、ここを button にすると入れ子になる
+             */
             role='button'
-            aria-label='clear'
+            aria-label={t('clear')}
             tabIndex={-1}
             className='ml-auto inline-flex cursor-pointer items-center opacity-60 hover:opacity-100'
             // トリガーの onClick は開閉なので × では伝播を止める

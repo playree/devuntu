@@ -1,13 +1,7 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action-server'
-import {
-  assertBoardAssignee,
-  assertTicketAccess,
-  getTicketAccess,
-  getTicketMentionCandidates,
-  moveTicketToLane,
-} from '@/lib/board'
+import { assertBoardAssignee, assertTicketAccess, getTicketMentionCandidates, moveTicketToLane } from '@/lib/board'
 import { dateOnlyToUtc } from '@/lib/day'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
@@ -249,10 +243,7 @@ export const getMentionCandidates = safeAuthAction
   .metadata({ actionName: 'getMentionCandidates', role: 'user' })
   .inputSchema(scUUID)
   .action(async ({ ctx: { user }, parsedInput: { id } }) => {
-    const access = await getTicketAccess(user, id)
-    if (!access?.canView) {
-      throw errInvalidOperation()
-    }
+    const access = await assertTicketAccess(user, id, 'view')
     return getTicketMentionCandidates(access)
   })
 export type GetMentionCandidatesReturnType = Awaited<ReturnType<typeof getMentionCandidates>>['data']

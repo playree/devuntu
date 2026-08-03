@@ -75,9 +75,14 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
   }, [])
 
   useEffect(() => {
+    // ボードを続けて切り替えると古い要求が後着しうるので、対象が変わった結果は捨てる
+    let isCurrent = true
     parseAction(getAssigneeOptions({ id: boardId }))
-      .then((res) => setAssigneeOptions(res ?? {}))
-      .catch(() => setAssigneeOptions({}))
+      .then((res) => isCurrent && setAssigneeOptions(res ?? {}))
+      .catch(() => isCurrent && setAssigneeOptions({}))
+    return () => {
+      isCurrent = false
+    }
   }, [boardId])
 
   // Escape で詳細パネルを閉じる。
@@ -98,10 +103,9 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
 
-  /** DnD でのレーン移動 / 並べ替え。楽観更新し、失敗したら元に戻す */
+  /** DnD でのレーン移動 / 並べ替え。楽観更新し、失敗したらサーバー値を取り直す */
   const move = async (ticketId: string, target: DropTarget) => {
-    const prev = lanes
-    const moved = applyLaneMove(prev, { ticketId, target })
+    const moved = applyLaneMove(lanes, { ticketId, target })
     if (!moved) {
       // 自分自身へのドロップ / 位置が変わらない移動は通信しない
       return
@@ -111,8 +115,10 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
     try {
       await parseAction(moveTicket({ id: ticketId, status: moved.status, index: moved.index }))
     } catch {
+      // 手元のスナップショットへ戻すと、その間に他ユーザーが成功させた移動まで巻き戻してしまう。
+      // reload なら optimistic.base !== data になり楽観値も自動で破棄される
+      reload()
       // parseAction は ClientError を notify せず throw するため、ここで明示的に表示する
-      setOptimistic({ base: data, lanes: prev })
       notify.error(t('error'))
     }
   }
@@ -206,7 +212,7 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
           const sourceId = operation.source?.id.toString()
           const target = operation.target ? parseDropTarget(operation.target.id.toString()) : null
           if (sourceId && target) {
-            move(sourceId, target)
+            void move(sourceId, target)
           }
         }}
       >
@@ -224,7 +230,7 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
         </Grid>
       </DragDropProvider>
 
-      <SideDrawer isOpen={!!selectedId} className='bg-background border-l p-4 shadow-2xl'>
+      <SideDrawer isOpen={!!selectedId} ariaLabel={t('ticket')} className='bg-background border-l p-4 shadow-2xl'>
         {selectedId && (
           <TicketDetailClient
             // id が変わっても useActionData は再取得しないため、選択のたびに作り直す

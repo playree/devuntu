@@ -15,6 +15,7 @@ Playwright MCP(サーバ名 `playwright`)で `http://localhost:3000` を開い�
 - 画面上のラベル文言は `src/locale/lang-ja.ts` を参照する。`data-testid` は存在しないので、role + 日本語ラベルで要素を特定する
 - `playwright` MCP が未接続の場合は、`.mcp.json` 反映のために Claude Code の再起動が必要な旨をユーザーに伝える
 - `.mcp.json` の `--browser chromium` は**外さない**。省略すると Google Chrome チャンネル(`/opt/google/chrome/chrome`)を探して起動に失敗する。ブラウザ本体は `pnpm exec playwright-mcp install-browser chromium` で `~/.cache/ms-playwright` に導入済み
+- ブラウザのプロファイル(ログインセッションの保存先)は `.mcp.json` では指定しない(マシン固有パスを共有設定へ入れないため)。未指定なら playwright-mcp が OS のキャッシュ配下にユーザーごとのプロファイルを作る。場所を変えたい場合は環境変数 `PLAYWRIGHT_MCP_USER_DATA_DIR` を設定する
 
 ## 1. 前準備
 
@@ -90,8 +91,15 @@ grep -aoE 'OTP : [0-9]{6}' .work/dev-server.log | tail -1
 
 確認が終わったら、**自分で起動した開発サーバーは停止する**。`.work/dev-server.pid` が存在しない場合はユーザーが起動したものなので触らない。
 
+**kill する前に、記録した PID が本当に自分の開発サーバーかを必ず確認する**。PID ファイルは前回の異常終了で残っている(stale)ことがあり、その PID が別プロセスへ再利用されていると、プロセスグループごと無関係なプロセスを巻き添えで殺してしまう。
+
 ```sh
-kill -- "-$(cat .work/dev-server.pid)" && rm -f .work/dev-server.pid
+PID=$(cat .work/dev-server.pid 2>/dev/null)
+if [ -n "$PID" ] && ps -o args= -p "$PID" 2>/dev/null | grep -qE 'pnpm dev|next dev'; then
+  kill -- "-$PID"
+else
+  echo "stale or foreign pid: $PID - kill しない"
+fi
 ```
 
 停止できたことを必ず確認する(子プロセスが残っていないこと):
@@ -101,7 +109,7 @@ curl -fsS --max-time 2 http://localhost:3000/api/health && echo "STILL RUNNING" 
 pgrep -af 'next dev|next-server' || echo none
 ```
 
-残っていた場合は残存 PID を直接 kill する。
+停止を確認できてから PID ファイルを消す(`rm -f .work/dev-server.pid`)。残っていた場合は残存 PID を直接 kill する。
 
 ## 6. 報告
 

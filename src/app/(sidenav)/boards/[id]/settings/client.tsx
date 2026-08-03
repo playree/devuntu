@@ -149,7 +149,16 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
             icon={<UserGroupIcon />}
             title={t('board_groups')}
           >
-            <GroupManage boardId={board.id} assignments={assignments} reload={reloadAssignments} />
+            <GroupManage
+              /**
+               * 再取得しても useForm の defaultValues は追従しないので、
+               * アサインが変わったら作り直して古い groupIds で保存されないようにする
+               */
+              key={assignments.groupIds.join(',')}
+              boardId={board.id}
+              assignments={assignments}
+              reload={reloadAssignments}
+            />
           </AccordionSection>
         )}
 

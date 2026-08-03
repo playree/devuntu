@@ -65,12 +65,12 @@ describe('evaluateTicketAccess: ボードのロールから権限を決める', 
   // プライベートチケットもプライベートボード(本人が owner)に属するため、
   // 「本人のみ全操作可」は boardRole='owner' のケースでそのまま担保される
   it('owner は削除まで可能', () => {
-    const res = evaluateTicketAccess({ userId: 'u1', createdById: 'u9', boardRole: 'owner' })
+    const res = evaluateTicketAccess({ userId: 'u1', createdById: 'u9', boardRole: 'owner', archived: false })
     expect(res).toEqual({ canView: true, canEdit: true, canDelete: true })
   })
 
   it('プライベートボード相当(自分が owner かつ作成者)は全操作可', () => {
-    const res = evaluateTicketAccess({ userId: 'u1', createdById: 'u1', boardRole: 'owner' })
+    const res = evaluateTicketAccess({ userId: 'u1', createdById: 'u1', boardRole: 'owner', archived: false })
     expect(res, 'プライベートチケットの従来挙動と一致する').toEqual({
       canView: true,
       canEdit: true,
@@ -79,18 +79,32 @@ describe('evaluateTicketAccess: ボードのロールから権限を決める', 
   })
 
   it('member かつ作成者なら削除可能', () => {
-    const res = evaluateTicketAccess({ userId: 'u1', createdById: 'u1', boardRole: 'member' })
+    const res = evaluateTicketAccess({ userId: 'u1', createdById: 'u1', boardRole: 'member', archived: false })
     expect(res.canDelete, '自分が作成したチケットは削除できる').toBe(true)
   })
 
   it('member かつ非作成者は削除不可(閲覧・編集は可能)', () => {
-    const res = evaluateTicketAccess({ userId: 'u1', createdById: 'u9', boardRole: 'member' })
+    const res = evaluateTicketAccess({ userId: 'u1', createdById: 'u9', boardRole: 'member', archived: false })
     expect(res).toEqual({ canView: true, canEdit: true, canDelete: false })
   })
 
   it('非メンバー(boardRole=null)は作成者でも一切不可', () => {
-    const res = evaluateTicketAccess({ userId: 'u1', createdById: 'u1', boardRole: null })
+    const res = evaluateTicketAccess({ userId: 'u1', createdById: 'u1', boardRole: null, archived: false })
     expect(res).toEqual({ canView: false, canEdit: false, canDelete: false })
+  })
+
+  it('アーカイブ済みボードは owner でも読み取り専用', () => {
+    const res = evaluateTicketAccess({ userId: 'u1', createdById: 'u1', boardRole: 'owner', archived: true })
+    expect(res, 'アーカイブ解除はボード設定側の権限なのでチケットは書けない').toEqual({
+      canView: true,
+      canEdit: false,
+      canDelete: false,
+    })
+  })
+
+  it('アーカイブ済みボードは member でも書き込み不可', () => {
+    const res = evaluateTicketAccess({ userId: 'u1', createdById: 'u1', boardRole: 'member', archived: true })
+    expect(res).toEqual({ canView: true, canEdit: false, canDelete: false })
   })
 })
 

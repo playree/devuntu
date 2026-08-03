@@ -1,4 +1,5 @@
 import dayjs, { Dayjs, extend } from 'dayjs'
+import customParseFormat from 'dayjs/plugin/customParseFormat'
 import isoWeek from 'dayjs/plugin/isoWeek'
 import timezone from 'dayjs/plugin/timezone'
 import utc from 'dayjs/plugin/utc'
@@ -6,6 +7,8 @@ import utc from 'dayjs/plugin/utc'
 extend(utc)
 extend(timezone)
 extend(isoWeek)
+// dateOnlyToUtc の strict parse に必要
+extend(customParseFormat)
 
 export const now = () => dayjs()
 export const nowDate = () => now().toDate()
@@ -83,14 +86,16 @@ export const dayformat = (date: Dayjs | Date | null, format?: 'tz-simple' | 'dat
   return dayjs(date).tz(tz).format()
 }
 
-const RE_DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/
-
-/** 日付のみの文字列(YYYY-MM-DD)を UTC 0:00 の Date へ変換する。不正・未指定は null */
+/**
+ * 日付のみの文字列(YYYY-MM-DD)を UTC 0:00 の Date へ変換する。不正・未指定は null。
+ *
+ * strict parse(第3引数 true)にしないと `2026-02-31` が `2026-03-03` へ繰り上がってしまう。
+ */
 export const dateOnlyToUtc = (value?: string | null): Date | null => {
-  if (!value || !RE_DATE_ONLY.test(value)) {
+  if (!value) {
     return null
   }
-  const parsed = dayjs.utc(`${value}T00:00:00Z`)
+  const parsed = dayjs.utc(value, 'YYYY-MM-DD', true)
   return parsed.isValid() ? parsed.toDate() : null
 }
 

@@ -50,6 +50,26 @@ describe('scPatchTicket: 渡された項目だけを更新する', () => {
   })
 })
 
+describe('zDueDate: 期日は YYYY-MM-DD の実在する日付のみ', () => {
+  const parseDueDate = (dueDate: string) => scPatchTicket.safeParse({ id: ticketId, dueDate }).success
+
+  it('実在する日付は受け付ける', () => {
+    expect(parseDueDate('2026-01-15')).toBe(true)
+    expect(parseDueDate('2024-02-29'), '閏年の 2/29').toBe(true)
+  })
+
+  it('桁数は正しいが存在しない日付は受け付けない', () => {
+    expect(parseDueDate('2026-02-31'), '2月31日').toBe(false)
+    expect(parseDueDate('2026-02-29'), '平年の 2/29').toBe(false)
+    expect(parseDueDate('2026-13-01'), '13月').toBe(false)
+  })
+
+  it('区切りが違う形式は受け付けない', () => {
+    expect(parseDueDate('2026/01/01')).toBe(false)
+    expect(parseDueDate('20260101')).toBe(false)
+  })
+})
+
 describe('scMoveTicket', () => {
   it('レーン内位置は 0 以上の整数のみ', () => {
     expect(scMoveTicket.parse({ id: ticketId, status: 'doing', index: 0 }).index).toBe(0)

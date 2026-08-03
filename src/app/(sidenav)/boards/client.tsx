@@ -30,8 +30,8 @@ export const BoardsClient: FC = () => {
       const res = await parseAction(getBoards())
       return res ?? []
     },
-    // プライベートを先頭に出したいのでサーバー側の並び(kind, name)をそのまま使う
-    sort: { init: { column: 'name', direction: 'ascending' } },
+    // プライベートを先頭に出したいのでサーバー側の並び(kind, name)をそのまま使う。
+    // sort.init を渡すと usePagingList が load 時にクライアント側で並べ替えてしまうので指定しない
   })
 
   return (
@@ -54,7 +54,7 @@ export const BoardsClient: FC = () => {
         columns={[
           { id: 'name', name: t('name'), isRowHeader: true, allowsSorting: true, minWidth: 140, defaultWidth: '2fr' },
           { id: 'description', name: t('description'), allowsSorting: false, minWidth: 120, defaultWidth: '2fr' },
-          { id: 'role', name: t('owner'), allowsSorting: true, minWidth: 90 },
+          { id: 'role', name: t('role'), allowsSorting: true, minWidth: 90 },
           { id: 'ticketCount', name: t('ticket_count'), allowsSorting: true, minWidth: 90 },
           { id: 'archived', name: t('archived'), allowsSorting: true, minWidth: 80 },
           { id: 'settings', name: t('settings'), allowsSorting: false, defaultWidth: 90 },

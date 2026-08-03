@@ -114,6 +114,8 @@ export const syncTicketTags = async (
     await tx.ticketTag.deleteMany({ where: { ticketId, tagId: { in: toRemove } } })
   }
   if (toAdd.length > 0) {
-    await tx.ticketTag.createMany({ data: toAdd.map((tagId) => ({ ticketId, tagId })) })
+    // toAdd は読み取り時点の current を基にした差分なので、並行更新で同じ tagId が
+    // 同時に入ることがある。@@unique([ticketId, tagId]) 違反で中断しないよう読み飛ばす
+    await tx.ticketTag.createMany({ data: toAdd.map((tagId) => ({ ticketId, tagId })), skipDuplicates: true })
   }
 }

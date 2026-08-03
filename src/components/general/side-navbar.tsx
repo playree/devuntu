@@ -64,8 +64,11 @@ export const SideNavbar: FC<{
         className={cn(
           'bg-background fixed top-0 left-0 z-40 h-screen w-64 transition-transform',
           isOpen ? '' : '-translate-x-full lg:translate-x-0',
-          // :has() を含むセレクタは lg:translate-x-0 より詳細度が高いので、記述順に関係なく隠れる
-          'group-has-data-nav-hidden/sidenav:-translate-x-full',
+          /**
+           * :has() を含むセレクタは lg:translate-x-0 より詳細度が高いので、記述順に関係なく隠れる。
+           * lg 未満はメニューが元々オーバーレイなので、開いている最中に閉じてしまわないよう lg 限定にする
+           */
+          'lg:group-has-data-nav-hidden/sidenav:-translate-x-full',
         )}
       >
         <div className={cn('h-full overflow-y-auto px-3 py-4', className)}>

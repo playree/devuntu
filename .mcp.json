@@ -12,8 +12,6 @@
         "1600x1000",
         "--output-dir",
         ".work/playwright",
-        "--user-data-dir",
-        "/home/kmina/.cache/devuntu-mcp-profile",
         "--timeout-action",
         "10000",
         "--timeout-navigation",

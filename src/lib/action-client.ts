@@ -72,6 +72,8 @@ export const useActionData = <T>(
   const [isLoading, setIsLoading] = useState(true)
   // reload 連打時に古いレスポンスが後着で state を上書きしないよう世代トークンで管理
   const genRef = useRef(0)
+  // isLoading を立てたまま未解決かどうか。倒す責務を「最新世代の完了」へ集約するために持つ
+  const isPendingLoadingRef = useRef(true)
   // action はインライン関数で渡されることが多いため、常に最新のものを ref 経由で呼ぶ
   const actionRef = useRef(action)
 
@@ -81,6 +83,9 @@ export const useActionData = <T>(
 
   const fetchData = useCallback((silent: boolean) => {
     const gen = ++genRef.current
+    if (!silent) {
+      isPendingLoadingRef.current = true
+    }
     return parseAction(actionRef.current())
       .then((res) => {
         if (gen === genRef.current) {
@@ -91,8 +96,15 @@ export const useActionData = <T>(
         console.error(e)
       })
       .finally(() => {
-        // silent の場合は初回ロード中の isLoading を倒してしまわないよう触らない
-        if (gen === genRef.current && !silent) {
+        if (gen !== genRef.current) {
+          // 後着した古い世代。倒すのは最新世代の役目なので触らない
+          return
+        }
+        // silent(refresh)自身は isLoading を立てないが、ローディング中に refresh が
+        // 割り込むと元の世代が古くなって倒せなくなるため、最新世代のここで倒す
+        // (これをしないと isLoading が true のまま固定される)
+        if (isPendingLoadingRef.current) {
+          isPendingLoadingRef.current = false
           setIsLoading(false)
         }
       })

@@ -1,9 +1,9 @@
 {
-  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": ["playwright"],
   "permissions": {
     "allow": [
       "Bash(docker compose up -d db)",
-      "Bash(docker exec devuntu-postgres psql -U devuser -d devuntu -Atc \"select *)",
+      "Bash(docker exec devuntu-postgres psql -U devuser -d devuntu -Atc \"select split_part(value, ':', 1) from verification where identifier = 'sign-in-otp-*)",
       "Bash(curl -fsS --max-time 2 http://localhost:3000/api/health)",
       "Bash(curl -s -o /dev/null http://localhost:3000/*)",
       "Bash(mkdir -p .work)",

@@ -14,4 +14,5 @@ onlyBuiltDependencies:
 overrides:
   sharp: '0.34.5'
 patchedDependencies:
-  '@heroui/react': patches/@heroui__react.patch
+  # バージョンを固定する。上げたときにパッチが黙って当たり続けないようにするため
+  '@heroui/react@3.2.2': patches/@heroui__react.patch

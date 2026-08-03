@@ -1,6 +1,6 @@
 import { el } from '@/locale'
 import { z } from 'zod'
-import { MAX_TAG_NAME, MAX_TICKET_TAGS, TAG_COLORS } from './task'
+import { MAX_TAG_NAME, MAX_TICKET_TAGS, TAG_COLORS, TICKET_PRIORITIES, TICKET_STATUSES } from './task'
 
 const reHalfString = /^[a-zA-Z0-9!-/:-@¥[-`{-~ ]*$/
 
@@ -208,10 +208,12 @@ export const zTagOrder = z.number().int().min(0).max(999)
 /** チケットへ付けるタグ。名前配列との取り違えを型で防ぐためフィールド名も tagIds にする */
 export const zTagIds = z.array(z.uuidv7()).max(MAX_TICKET_TAGS, el('@invalid_tag'))
 
-export const zTicketStatus = z.enum(['backlog', 'todo', 'doing', 'done'])
-export const zTicketPriority = z.enum(['urgent', 'high', 'medium', 'low'])
+/** ステータス / 優先度 / ロールは task.ts を単一ソースにする(Prisma の enum とはそちらで突き合わせる) */
+export const zTicketStatus = z.enum(TICKET_STATUSES)
+export const zTicketPriority = z.enum(TICKET_PRIORITIES)
 export const zCommentContent = z.string().trim().min(1, el('@required_field')).max(5000, el('@invalid_content'))
 export const zBoardDescription = z.string().max(200, el('@invalid_description')).optional()
+/** ボードのロール。Prisma の BoardMemberRole / task.ts の BoardRole と一致させる */
 export const zBoardRole = z.enum(['owner', 'member'])
 
 /** 期日は日付のみ(YYYY-MM-DD)。DatePickerCtrl が CalendarDate との変換を担う */
@@ -306,9 +308,6 @@ export const scUpdateBoard = z.object({
 })
 export type UpdateBoard = z.infer<typeof scUpdateBoard>
 
-/** ボードのロール。Prisma の BoardMemberRole / task.ts の BoardRole と一致させる */
-const zBoardMemberRole = z.enum(['owner', 'member'])
-
 /**
  * ユーザー単位のアサインをメンバー 1 人ずつ追加 / 変更する(owner も実行可能)。
  * グループ経由ユーザーへの直接ロール付与も同じ入力で表せる。
@@ -318,7 +317,7 @@ export const scUpsertBoardMember = z.object({
   id: z.uuidv7(),
   // 未選択(空文字)のままの送信をフォーム側でも弾けるようメッセージを付ける
   userId: z.uuidv7(el('@required_field')),
-  role: zBoardMemberRole,
+  role: zBoardRole,
 })
 export type UpsertBoardMember = z.infer<typeof scUpsertBoardMember>
 export type UpsertBoardMemberIn = z.input<typeof scUpsertBoardMember>

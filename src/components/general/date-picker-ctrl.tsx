@@ -95,10 +95,14 @@ export const DatePickerField = ({
         </DateField.Input>
         <DateField.Suffix>
           {isClearable && selected && !isReadOnly && (
-            <span
-              role='button'
+            <button
+              /**
+               * DateField.Suffix はボタンではないので、ここは本物の button にできる
+               * (Select のトリガー内にあるクリアは button の入れ子になるため span のまま)
+               */
+              type='button'
+              // 共通部品なのでローカライズ不要とする
               aria-label='clear'
-              tabIndex={-1}
               className='mr-1 inline-flex cursor-pointer items-center opacity-60 hover:opacity-100'
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => {
@@ -107,7 +111,7 @@ export const DatePickerField = ({
               }}
             >
               <XCircleIcon width={16} />
-            </span>
+            </button>
           )}
           <DatePicker.Trigger>
             <DatePicker.TriggerIndicator />

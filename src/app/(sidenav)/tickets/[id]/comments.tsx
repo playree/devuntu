@@ -10,6 +10,8 @@ import { MarkdownInput } from '@/components/ticket/markdown-editor'
 import { MarkdownView } from '@/components/ticket/markdown-view'
 import { parseAction } from '@/lib/action-client'
 import { dayformat } from '@/lib/day'
+import { scCreateTicketComment } from '@/lib/schema'
+import { getFieldConstraints } from '@/lib/schema-util'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { Chip } from '@heroui/react'
@@ -19,11 +21,12 @@ import { addTicketComment, deleteTicketComment, GetTicketReturnType, updateTicke
 type Ticket = NonNullable<GetTicketReturnType>
 type Comment = Ticket['comments'][number]
 
-/** zCommentContent の max と一致させる */
-const MAX_COMMENT_LENGTH = 5000
+/** コメントの文字数上限(MDXEditor には maxLength 属性が無いのでスキーマから取る) */
+const MAX_COMMENT_LENGTH = getFieldConstraints(scCreateTicketComment, 'content').maxLength
 
 /** 投稿・編集の共通チェック(MDXEditor には maxLength 属性が無いためここで見る) */
-const isSubmittable = (draft: string) => !!draft.trim() && draft.length <= MAX_COMMENT_LENGTH
+const isSubmittable = (draft: string) =>
+  !!draft.trim() && (MAX_COMMENT_LENGTH === undefined || draft.length <= MAX_COMMENT_LENGTH)
 
 /** コメント 1 件。投稿者本人なら編集できる */
 const CommentItem: FC<{ comment: Comment; canDelete: boolean; refresh: () => Promise<void> }> = ({
@@ -45,6 +48,8 @@ const CommentItem: FC<{ comment: Comment; canDelete: boolean; refresh: () => Pro
       notify.success(t('msg_saved'))
       setEditing(false)
       await refresh()
+    } catch {
+      // エラー表示は parseAction 側で済んでいる。入力中の内容を失わせないため編集状態は維持する
     } finally {
       setSaving(false)
     }
@@ -162,6 +167,8 @@ export const TicketComments: FC<{ ticket: Ticket; refresh: () => Promise<void> }
       setDraft('')
       setEditorKey((n) => n + 1)
       await refresh()
+    } catch {
+      // エラー表示は parseAction 側で済んでいる。再投稿できるよう draft は消さない
     } finally {
       setPosting(false)
     }

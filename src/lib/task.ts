@@ -56,6 +56,8 @@ export type TicketAccessInput = {
   createdById: string | null
   /** resolveBoardRole の戻り値。null ならそのボードにアクセスできない */
   boardRole: BoardRole | null
+  /** 所属ボードがアーカイブ済みか。アーカイブ済みは読み取り専用にする */
+  archived: boolean
 }
 
 export type TicketPermission = {
@@ -70,13 +72,23 @@ export type TicketPermission = {
  *
  * プライベートチケットも「自分が owner のプライベートボード」に属するため、
  * ここを通るだけで従来の「本人のみ全操作可」と同じ結果になる(分岐は不要)。
+ *
+ * アーカイブ済みボードは閲覧だけ許し、チケットへの書き込み(編集 / 削除 / 移動 /
+ * ステータス変更 / コメント)を一律で塞ぐ。ボード自体の設定変更は別経路
+ * (assertBoardAccess)なので、アーカイブの解除は引き続き可能。
  */
-export const evaluateTicketAccess = ({ userId, createdById, boardRole }: TicketAccessInput): TicketPermission => {
+export const evaluateTicketAccess = ({
+  userId,
+  createdById,
+  boardRole,
+  archived,
+}: TicketAccessInput): TicketPermission => {
   const canView = boardRole !== null
+  const canWrite = canView && !archived
   return {
     canView,
-    canEdit: canView,
-    canDelete: canView && (boardRole === 'owner' || createdById === userId),
+    canEdit: canWrite,
+    canDelete: canWrite && (boardRole === 'owner' || createdById === userId),
   }
 }
 
