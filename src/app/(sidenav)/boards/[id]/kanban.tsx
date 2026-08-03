@@ -81,12 +81,16 @@ const KanbanCardView: FC<{
         <PriorityBar priority={card.priority} />
 
         <div className='space-y-1 p-2'>
-          <Link // 空白のない長いタイトルでもレーン幅を超えないよう wrap-anywhere で任意位置折り返しにする
-            href={`/tickets/${card.id}`}
-            className='line-clamp-2 text-sm wrap-anywhere hover:underline'
+          <p // 空白のない長いタイトルでもレーン幅を超えないよう wrap-anywhere で任意位置折り返しにする
+            className='line-clamp-2 text-sm wrap-anywhere'
           >
-            {card.title}
-          </Link>
+            <Link // line-clamp は display:-webkit-box なので Link 側に持たせると行全体がリンク範囲になる。外側の p に寄せて Link はインラインのまま文字列だけを範囲にする
+              href={`/tickets/${card.id}`}
+              className='hover:underline'
+            >
+              {card.title}
+            </Link>
+          </p>
 
           <div className='flex flex-wrap items-center gap-1'>
             <PriorityChip priority={card.priority} />
