@@ -10,7 +10,8 @@ import type { TagColor } from '@/generated/prisma/enums'
 import { MAX_TAG_NAME, MAX_TAGS_PER_SCOPE, TAG_COLORS } from '@/lib/task'
 import { useLocale } from '@/locale/client'
 import { FC, useState } from 'react'
-import { TAG_COLOR_CLASS, TagChip } from './ticket-chip'
+import { tv } from 'tailwind-variants'
+import { TagChip, tagColorClass } from './ticket-chip'
 
 export type TagEditorItem = {
   id: string
@@ -19,6 +20,12 @@ export type TagEditorItem = {
   order: number
   ticketCount: number
 }
+
+/** 色見本の丸。選択中だけ枠に色を付ける(枠の幅は常に確保してレイアウトを動かさない) */
+const swatchStyles = tv({
+  base: 'h-5 w-5 cursor-pointer rounded-full border-2',
+  variants: { selected: { true: 'border-accent', false: 'border-transparent' } },
+})
 
 /** 色見本を並べた選択 UI(SingleSelectCtrl では色を見せられないため自前で作る) */
 const ColorPicker: FC<{ value: TagColor; onChange: (color: TagColor) => void }> = ({ value, onChange }) => {
@@ -32,9 +39,7 @@ const ColorPicker: FC<{ value: TagColor; onChange: (color: TagColor) => void }> 
           role='button'
           aria-label={color}
           aria-pressed={color === value}
-          className={`h-5 w-5 cursor-pointer rounded-full border-2 ${TAG_COLOR_CLASS[color]} ${
-            color === value ? 'border-accent' : 'border-transparent'
-          }`}
+          className={swatchStyles({ selected: color === value, className: tagColorClass(color) })}
           onClick={() => onChange(color)}
         />
       ))}

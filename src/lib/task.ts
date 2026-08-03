@@ -107,7 +107,7 @@ export const canApplyAssignments = ({ ownerIds, byAdmin }: { ownerIds: string[];
 
 /**
  * タグの表示色(定義順 = 選択UIの並び順)。Prisma の TagColor enum と一致させる。
- * HeroUI Chip は 5 色しか持たないため、実際の配色は TAG_COLOR_CLASS で Tailwind へマップする。
+ * HeroUI Chip は 5 色しか持たないため、実際の配色は tagColorClass で Tailwind へマップする。
  */
 export const TAG_COLORS = [
   'gray',

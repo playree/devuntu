@@ -51,6 +51,7 @@
 
 # 画面の動作確認
 
+- 画面の動作確認は必要最低限とする。軽微な修正では不要。
 - 画面の表示・動作確認はスキル `screen-check`(`.claude/skills/screen-check/SKILL.md`)の手順に従う
 - ブラウザ操作は Playwright MCP(`.mcp.json` の `playwright`)経由。ヘッドレスのみ(DISPLAY 無し)
 - 開発サーバーは必ず `http://localhost:3000`。`BETTER_AUTH_URL` が localhost:3000 固定のため、別ポートでは認証の POST が origin チェックで 403 になる
