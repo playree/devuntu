@@ -1,0 +1,32 @@
+{
+  "enableAllProjectMcpServers": true,
+  "permissions": {
+    "allow": [
+      "Bash(docker compose up -d db)",
+      "Bash(docker exec devuntu-postgres psql -U devuser -d devuntu -Atc \"select *)",
+      "Bash(curl -fsS --max-time 2 http://localhost:3000/api/health)",
+      "Bash(curl -s -o /dev/null http://localhost:3000/*)",
+      "Bash(mkdir -p .work)",
+      "Bash(nohup pnpm dev *)",
+      "Bash(grep -a * .work/dev-server.log*)",
+      "Bash(tail -* .work/dev-server.log)",
+      "Bash(cat .work/dev-server.pid)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_navigate_back",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_console_messages",
+      "mcp__playwright__browser_network_requests",
+      "mcp__playwright__browser_wait_for",
+      "mcp__playwright__browser_resize",
+      "mcp__playwright__browser_find",
+      "mcp__playwright__browser_hover",
+      "mcp__playwright__browser_tabs",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_type",
+      "mcp__playwright__browser_fill_form",
+      "mcp__playwright__browser_press_key",
+      "mcp__playwright__browser_close"
+    ]
+  }
+}
