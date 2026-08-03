@@ -16,12 +16,46 @@ const STATUS_STYLE: Record<TicketStatus, { item: LocaleItemBase; color: ChipColo
   done: { item: 'status_done', color: 'success' },
 }
 
-/** 優先度のロケールキーと表示色 */
-const PRIORITY_STYLE: Record<TicketPriority, { item: LocaleItemBase; color: ChipColor }> = {
-  urgent: { item: 'priority_urgent', color: 'danger' },
-  high: { item: 'priority_high', color: 'warning' },
-  medium: { item: 'priority_medium', color: 'accent' },
-  low: { item: 'priority_low', color: 'default' },
+/**
+ * 優先度のロケールキーと表示色。
+ *
+ * color は Chip 用の HeroUI セマンティック名なので bg-* には使えない。
+ * バー用の背景色は bar、カード枠用の枠線色は border、カード自体の背景色は bg に持たせ、
+ * 優先度の色を 1 箇所に集約する。bg はバーと同じ色を 10% で敷いて下地を透かす。
+ * クラス名は purge 対策で必ず完全なリテラルで書くこと(TAG_COLOR_CLASS と同じ規約)。
+ */
+const PRIORITY_STYLE: Record<
+  TicketPriority,
+  { item: LocaleItemBase; color: ChipColor; bar: string; border: string; bg: string }
+> = {
+  urgent: {
+    item: 'priority_urgent',
+    color: 'danger',
+    bar: 'bg-red-300 dark:bg-red-800',
+    border: 'dark:border-red-800/30',
+    bg: 'bg-red-300/10 dark:bg-red-800/10',
+  },
+  high: {
+    item: 'priority_high',
+    color: 'warning',
+    bar: 'bg-amber-300 dark:bg-amber-800',
+    border: 'dark:border-amber-800/30',
+    bg: 'bg-amber-300/10 dark:bg-amber-800/10',
+  },
+  medium: {
+    item: 'priority_medium',
+    color: 'accent',
+    bar: 'bg-blue-300 dark:bg-blue-800',
+    border: 'dark:border-blue-800/30',
+    bg: 'bg-blue-300/10 dark:bg-blue-800/10',
+  },
+  low: {
+    item: 'priority_low',
+    color: 'default',
+    bar: 'bg-gray-200 dark:bg-gray-700',
+    border: 'dark:border-gray-700/30',
+    bg: 'bg-gray-200/10 dark:bg-gray-700/10',
+  },
 }
 
 export const StatusChip: FC<{ status: TicketStatus; size?: ChipProps['size'] }> = ({ status, size = 'sm' }) => {
@@ -43,6 +77,28 @@ export const PriorityChip: FC<{ priority: TicketPriority; size?: ChipProps['size
     </Chip>
   )
 }
+
+/**
+ * 優先度を色だけで示す帯。カード上端に全幅で置く想定。
+ * 同じ情報を PriorityChip がテキストで持つため、支援技術からは隠す。
+ */
+export const PriorityBar: FC<{ priority: TicketPriority; className?: string }> = ({ priority, className }) => (
+  <div aria-hidden className={cn('h-1 w-full', PRIORITY_STYLE[priority].bar, className)} />
+)
+
+/**
+ * PriorityBar を載せる箱の枠線。ダークは背景と周囲のコントラストが弱いので、
+ * バーと同じ色で全周に枠を出して輪郭を作る(ライトは影で十分に浮くため透明のまま)。
+ * テーマ切り替えでレイアウトが動かないよう、枠の幅は常に確保しておく。
+ */
+export const priorityBorderClass = (priority: TicketPriority) =>
+  cn('border-b-3 border-transparent', PRIORITY_STYLE[priority].border)
+
+/**
+ * PriorityBar を載せる箱の背景色。バー / 枠と同じ色を 10% で敷き、下地を透かして淡く色を付ける。
+ * 半透明なので単色の背景クラス(bg-sky-50 など)とは併用できない(後勝ちで打ち消し合う)。
+ */
+export const priorityBgClass = (priority: TicketPriority) => PRIORITY_STYLE[priority].bg
 
 /**
  * タグの表示色。HeroUI Chip は色を 5 種しか持たないため Tailwind の utility で上書きする。

@@ -97,6 +97,7 @@ export const ja: DefaultLocaleItems = {
   list: '一覧',
   member: 'メンバー',
   mentioned: 'メンション',
+  move_ticket: 'チケットを移動',
   name: '名前',
   next: '次へ',
   next_week: '翌週',

@@ -467,3 +467,77 @@ export const applyLaneMove = <T extends KanbanCardLite>(
 
   return { lanes: nextLanes, status: to, index }
 }
+
+/* -------------------------------------------------------------------------------------------------
+ * かんばんの絞り込み
+ * -----------------------------------------------------------------------------------------------*/
+
+/**
+ * かんばんの絞り込み条件。
+ *
+ * チケット一覧と違いサーバーへは投げず、取得済みのカード(最大 MAX_KANBAN_CARDS 件)を
+ * 描画直前にクライアントで絞る。サーバー再取得を挟むと楽観更新が破棄されてしまうため。
+ */
+export type KanbanFilter = {
+  /** null = すべて / 'none' = 未割り当て / それ以外は userId */
+  assignee: string | null
+  priority: TicketPriority[]
+  /** タグ「名」の配列(いずれか 1 つでも持てばヒット) */
+  tags: string[]
+}
+
+/** 絞り込みの初期値(すべて未指定) */
+export const defaultKanbanFilter: KanbanFilter = { assignee: null, priority: [], tags: [] }
+
+/** 未割り当てを表す assignee の値 */
+export const KANBAN_ASSIGNEE_NONE = 'none'
+
+/** 絞り込み対象のカードに最低限必要な形。LaneMap の要素型はこれを満たすこと */
+export type KanbanFilterCard = KanbanCardLite & {
+  assigneeId: string | null
+  priority: TicketPriority
+  tags: { name: string }[]
+}
+
+/** 1 つでも条件が指定されているか(見出しの件数表示と絞り込みのスキップ判定に使う) */
+export const isKanbanFilterActive = (filter: KanbanFilter): boolean =>
+  filter.assignee !== null || filter.priority.length > 0 || filter.tags.length > 0
+
+/** カード 1 枚が条件に一致するか。判定は buildTicketWhere と同じセマンティクス */
+export const matchesKanbanFilter = (card: KanbanFilterCard, filter: KanbanFilter): boolean => {
+  if (filter.assignee === KANBAN_ASSIGNEE_NONE) {
+    if (card.assigneeId !== null) {
+      return false
+    }
+  } else if (filter.assignee !== null && card.assigneeId !== filter.assignee) {
+    return false
+  }
+
+  if (filter.priority.length > 0 && !filter.priority.includes(card.priority)) {
+    return false
+  }
+
+  // タグは OR(いずれか 1 つでも持てばヒット)
+  if (filter.tags.length > 0 && !card.tags.some((tag) => filter.tags.includes(tag.name))) {
+    return false
+  }
+
+  return true
+}
+
+/**
+ * LaneMap を条件で絞る。
+ * 条件が未指定なら同一参照を返すので、呼び出し側の useMemo が無駄に再生成されない。
+ */
+export const filterLaneMap = <T extends KanbanFilterCard>(lanes: LaneMap<T>, filter: KanbanFilter): LaneMap<T> => {
+  if (!isKanbanFilterActive(filter)) {
+    return lanes
+  }
+  return Object.fromEntries(
+    TICKET_STATUSES.map((status) => [status, lanes[status].filter((card) => matchesKanbanFilter(card, filter))]),
+  ) as LaneMap<T>
+}
+
+/** LaneMap の総件数(絞り込み後の表示件数を出すのに使う) */
+export const countLaneMap = <T extends KanbanCardLite>(lanes: LaneMap<T>): number =>
+  TICKET_STATUSES.reduce((total, status) => total + lanes[status].length, 0)

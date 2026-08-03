@@ -11,12 +11,17 @@ import {
   buildTicketWhere,
   canApplyAssignments,
   cardDropId,
+  countLaneMap,
+  defaultKanbanFilter,
   emptyLaneMap,
   evaluateTicketAccess,
   extractMentionNames,
+  filterLaneMap,
   groupByLane,
   insertAt,
+  isKanbanFilterActive,
   laneDropId,
+  matchesKanbanFilter,
   nextLaneOrder,
   normalizeMentionName,
   parseDropTarget,
@@ -29,6 +34,7 @@ import {
   TICKET_STATUSES,
   ticketScopeWhere,
   type BoardRole,
+  type KanbanFilterCard,
   type LaneMap,
   type TicketSearchParams,
 } from '@/lib/task'
@@ -493,5 +499,105 @@ describe('emptyLaneMap / groupByLane: カードのレーン振り分け', () => 
     const b = emptyLaneMap()
     a.todo.push({ id: 'x', status: 'todo' })
     expect(b.todo, '参照が共有されていない').toEqual([])
+  })
+})
+
+/* -------------------------------------------------------------------------------------------------
+ * かんばんの絞り込み
+ * -----------------------------------------------------------------------------------------------*/
+
+const makeCard = (id: string, over: Partial<KanbanFilterCard> = {}): KanbanFilterCard => ({
+  id,
+  status: 'todo',
+  assigneeId: null,
+  priority: 'medium',
+  tags: [],
+  ...over,
+})
+
+describe('isKanbanFilterActive: 絞り込みが指定されているか', () => {
+  it('初期値は非アクティブ', () => {
+    expect(isKanbanFilterActive(defaultKanbanFilter)).toBe(false)
+  })
+
+  it('いずれか 1 つでも指定があればアクティブ', () => {
+    expect(isKanbanFilterActive({ ...defaultKanbanFilter, assignee: 'u1' })).toBe(true)
+    expect(isKanbanFilterActive({ ...defaultKanbanFilter, assignee: 'none' })).toBe(true)
+    expect(isKanbanFilterActive({ ...defaultKanbanFilter, priority: ['high'] })).toBe(true)
+    expect(isKanbanFilterActive({ ...defaultKanbanFilter, tags: ['bug'] })).toBe(true)
+  })
+})
+
+describe('matchesKanbanFilter: カード 1 枚の一致判定', () => {
+  it('条件なしはすべて通す', () => {
+    expect(matchesKanbanFilter(makeCard('a', { assigneeId: 'u1' }), defaultKanbanFilter)).toBe(true)
+  })
+
+  it('担当者: 特定ユーザー', () => {
+    const filter = { ...defaultKanbanFilter, assignee: 'u1' }
+    expect(matchesKanbanFilter(makeCard('a', { assigneeId: 'u1' }), filter)).toBe(true)
+    expect(matchesKanbanFilter(makeCard('b', { assigneeId: 'u2' }), filter)).toBe(false)
+    expect(matchesKanbanFilter(makeCard('c', { assigneeId: null }), filter)).toBe(false)
+  })
+
+  it('担当者: 未割り当て(none)', () => {
+    const filter = { ...defaultKanbanFilter, assignee: 'none' }
+    expect(matchesKanbanFilter(makeCard('a', { assigneeId: null }), filter)).toBe(true)
+    expect(matchesKanbanFilter(makeCard('b', { assigneeId: 'u1' }), filter)).toBe(false)
+  })
+
+  it('優先度: 空配列は無条件、非空は in 判定', () => {
+    const card = makeCard('a', { priority: 'high' })
+    expect(matchesKanbanFilter(card, { ...defaultKanbanFilter, priority: [] })).toBe(true)
+    expect(matchesKanbanFilter(card, { ...defaultKanbanFilter, priority: ['urgent', 'high'] })).toBe(true)
+    expect(matchesKanbanFilter(card, { ...defaultKanbanFilter, priority: ['low'] })).toBe(false)
+  })
+
+  it('タグ: いずれか 1 つでも持てばヒット(OR)', () => {
+    const card = makeCard('a', { tags: [{ name: 'bug' }, { name: 'ui' }] })
+    expect(matchesKanbanFilter(card, { ...defaultKanbanFilter, tags: ['ui'] })).toBe(true)
+    expect(matchesKanbanFilter(card, { ...defaultKanbanFilter, tags: ['ops', 'bug'] })).toBe(true)
+    expect(matchesKanbanFilter(card, { ...defaultKanbanFilter, tags: ['ops'] })).toBe(false)
+    expect(matchesKanbanFilter(makeCard('b'), { ...defaultKanbanFilter, tags: ['bug'] })).toBe(false)
+  })
+
+  it('複数条件は AND', () => {
+    const filter = { ...defaultKanbanFilter, assignee: 'u1', priority: ['high' as const], tags: ['bug'] }
+    const hit = makeCard('a', { assigneeId: 'u1', priority: 'high', tags: [{ name: 'bug' }] })
+    const miss = makeCard('b', { assigneeId: 'u1', priority: 'low', tags: [{ name: 'bug' }] })
+    expect(matchesKanbanFilter(hit, filter)).toBe(true)
+    expect(matchesKanbanFilter(miss, filter)).toBe(false)
+  })
+})
+
+describe('filterLaneMap / countLaneMap: レーン単位の絞り込み', () => {
+  const lanes = groupByLane([
+    makeCard('t1', { status: 'todo', assigneeId: 'u1', priority: 'high' }),
+    makeCard('t2', { status: 'todo', assigneeId: 'u2', priority: 'low' }),
+    makeCard('d1', { status: 'doing', assigneeId: 'u1', priority: 'low', tags: [{ name: 'bug' }] }),
+    makeCard('b1', { status: 'backlog' }),
+  ])
+
+  it('条件なしは同一参照を返す(useMemo の無駄な再生成を避ける)', () => {
+    expect(filterLaneMap(lanes, defaultKanbanFilter)).toBe(lanes)
+  })
+
+  it('レーンをまたいで絞り込まれ、4 レーンすべてが揃う', () => {
+    const filtered = filterLaneMap(lanes, { ...defaultKanbanFilter, assignee: 'u1' })
+    expect(Object.keys(filtered).sort()).toEqual([...TICKET_STATUSES].sort())
+    expect(filtered.todo.map((c) => c.id)).toEqual(['t1'])
+    expect(filtered.doing.map((c) => c.id)).toEqual(['d1'])
+    expect(filtered.backlog).toEqual([])
+    expect(countLaneMap(filtered)).toBe(2)
+  })
+
+  it('元の LaneMap は変更されない', () => {
+    filterLaneMap(lanes, { ...defaultKanbanFilter, tags: ['bug'] })
+    expect(countLaneMap(lanes)).toBe(4)
+  })
+
+  it('一致なしは全レーン空', () => {
+    const filtered = filterLaneMap(lanes, { ...defaultKanbanFilter, tags: ['nope'] })
+    expect(countLaneMap(filtered)).toBe(0)
   })
 })
