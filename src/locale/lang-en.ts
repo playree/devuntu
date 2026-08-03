@@ -97,7 +97,6 @@ export const en: LocaleItems = {
   list: 'List',
   member: 'Member',
   mentioned: 'Mentioned',
-  move_ticket: 'Move ticket',
   name: 'Name',
   next: 'Next',
   next_week: 'Next Week',

@@ -1,7 +1,6 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
-import { SingleSelectField } from '@/components/general/select'
 import { ChatBubbleIcon, PlusIcon } from '@/components/icon'
 import {
   PriorityBar,
@@ -10,16 +9,15 @@ import {
   PriorityChip,
   StatusChip,
   TagChips,
-  useTicketOptions,
 } from '@/components/ticket/ticket-chip'
 import type { TicketStatus } from '@/generated/prisma/enums'
 import { dayformat } from '@/lib/day'
 import { cardDropId, KANBAN_LANES, laneDropId } from '@/lib/task'
 import { useLocale } from '@/locale/client'
-import { useDraggable, useDroppable } from '@dnd-kit/react'
-import { Chip, cn } from '@heroui/react'
+import { KeyboardSensor, PointerSensor, useDraggable, useDroppable } from '@dnd-kit/react'
+import { Checkbox, Chip, cn } from '@heroui/react'
 import Link from 'next/link'
-import { FC, useMemo } from 'react'
+import { FC } from 'react'
 import { GetBoardKanbanReturnType } from './server'
 
 type Kanban = NonNullable<GetBoardKanbanReturnType>
@@ -42,26 +40,53 @@ export const LANE_LAYOUT: Record<TicketStatus, { className: string; cardsClassNa
 /** かんばんのレーン表示順(横3列 + backlog) */
 export const LANE_ORDER = KANBAN_LANES
 
-/** カード 1 枚。ステータス変更は DnD と Select の両方から同じ move() を呼ぶ */
+/**
+ * カード用のセンサー。data-no-drag を付けた要素の上ではドラッグを開始しない。
+ *
+ * dnd-kit の既定 preventActivation は target.closest('input, button, a[href], ...') で
+ * interactive 要素上のドラッグ開始を防いでいる(タイトルの Link がドラッグにならないのはこれ)。
+ * ところが HeroUI の Checkbox は input を「子孫」に持つ構造なので closest では拾えず、
+ * 選択チェックボックスの長押しでカードのドラッグが始まってしまう。
+ * そこで data-no-drag を判定に足し、既定の判定はそのまま呼んで維持する。
+ *
+ * なお pointerdown の伝播をネイティブに止める方法は使えない。
+ * React はイベントをルートコンテナで受けて合成イベントを配送するため、
+ * 途中で止めると dnd-kit だけでなく Checkbox 自身の押下判定にも届かなくなる。
+ *
+ * useDraggable の sensors は manager の既定センサーを置き換えるので、
+ * キーボード操作を残すため KeyboardSensor も並べておく。
+ * 配列は毎レンダー作り直すとセンサーの再バインドが走るのでモジュールスコープで持つ。
+ */
+const CARD_SENSORS = [
+  PointerSensor.configure({
+    preventActivation: (event, source) => {
+      const target = event.target
+      if (target instanceof Element && target.closest('[data-no-drag]')) {
+        return true
+      }
+      return PointerSensor.defaults.preventActivation?.(event, source) ?? false
+    },
+  }),
+  KeyboardSensor,
+]
+
+/** カード 1 枚。レーン移動は DnD、それ以外の変更は選択して詳細パネルから行う */
 const KanbanCardView: FC<{
   card: KanbanCard
-  onChangeStatus: (status: TicketStatus) => void
-}> = ({ card, onChangeStatus }) => {
-  const { t } = useLocale()
-  const { statusOptions } = useTicketOptions()
+  isSelected: boolean
+  onSelect: (selected: boolean) => void
+}> = ({ card, isSelected, onSelect }) => {
   const { ref: dropRef, isDropTarget } = useDroppable({ id: cardDropId(card.id), accept: DRAG_TYPE })
-  const { ref: dragRef, isDragging } = useDraggable({ id: card.id, type: DRAG_TYPE })
-
-  // statusOptions のキー順は backlog 始まりなので、レーンの表示順(LANE_ORDER)へ組み直す
-  const laneOptions = useMemo(
-    () => Object.fromEntries(LANE_ORDER.map((status) => [status, statusOptions[status]])),
-    [statusOptions],
-  )
+  const { ref: dragRef, isDragging } = useDraggable({ id: card.id, type: DRAG_TYPE, sensors: CARD_SENSORS })
 
   return (
     <div // 外側 = ドロップ枠。ドラッグ中も矩形が元位置に留まるので挿入位置の基準が安定する
       ref={dropRef}
-      className={cn('rounded-xl', isDropTarget ? 'ring-2 ring-blue-300' : '')}
+      className={cn(
+        'rounded-xl',
+        // ドラッグ中の挿入位置の方が情報として重要なので、ドロップ対象の枠を選択の枠より優先する
+        isDropTarget ? 'ring-2 ring-blue-300' : isSelected ? 'ring-2 ring-blue-500' : '',
+      )}
     >
       <div // ref を1要素へまとめるとインライン合成で毎レンダー detach/attach が走るため入れ子にする
         ref={dragRef}
@@ -81,16 +106,31 @@ const KanbanCardView: FC<{
         <PriorityBar priority={card.priority} />
 
         <div className='space-y-1 p-2'>
-          <p // 空白のない長いタイトルでもレーン幅を超えないよう wrap-anywhere で任意位置折り返しにする
-            className='line-clamp-2 text-sm wrap-anywhere'
-          >
-            <Link // line-clamp は display:-webkit-box なので Link 側に持たせると行全体がリンク範囲になる。外側の p に寄せて Link はインラインのまま文字列だけを範囲にする
-              href={`/tickets/${card.id}`}
-              className='hover:underline'
+          <div className='flex items-start gap-1'>
+            <span // 選択用のチェックボックス。この上ではドラッグを開始させない(CARD_SENSORS 参照)
+              data-no-drag
+              className='shrink-0'
             >
-              {card.title}
-            </Link>
-          </p>
+              <Checkbox aria-label='select ticket' variant='secondary' isSelected={isSelected} onChange={onSelect}>
+                <Checkbox.Content>
+                  <Checkbox.Control className='size-5'>
+                    <Checkbox.Indicator />
+                  </Checkbox.Control>
+                </Checkbox.Content>
+              </Checkbox>
+            </span>
+
+            <p // 空白のない長いタイトルでもレーン幅を超えないよう wrap-anywhere で任意位置折り返しにする
+              className='line-clamp-2 min-w-0 flex-1 text-sm wrap-anywhere'
+            >
+              <Link // line-clamp は display:-webkit-box なので Link 側に持たせると行全体がリンク範囲になる。外側の p に寄せて Link はインラインのまま文字列だけを範囲にする
+                href={`/tickets/${card.id}`}
+                className='hover:underline'
+              >
+                {card.title}
+              </Link>
+            </p>
+          </div>
 
           <div className='flex flex-wrap items-center gap-1'>
             <PriorityChip priority={card.priority} />
@@ -109,27 +149,6 @@ const KanbanCardView: FC<{
           </div>
 
           <TagChips tags={card.tags} />
-
-          <SingleSelectField
-            /**
-             * DnD が使えないタッチ環境向けのフォールバック(button/select 上ではドラッグが開始しない)。
-             * レーン自体がステータスを表しているので、トリガーには現在値ではなく固定ラベルを出す。
-             * value は残しておくことで一覧の現在レーンにチェックが付き、同値選択の no-op 判定も効く。
-             */
-            label={t('move_ticket')}
-            isLabelHidden
-            /** カードの親(Grid / FlexCol)は isSmart 無指定なので継承されない。明示的に渡す */
-            isSmart
-            triggerLabel={<span className='text-xs opacity-60'>{t('move_ticket')}</span>}
-            groupOptions={laneOptions}
-            value={card.status}
-            onChange={(key) => {
-              const next = key as TicketStatus | null
-              if (next && next !== card.status) {
-                onChangeStatus(next)
-              }
-            }}
-          />
         </div>
       </div>
     </div>
@@ -140,9 +159,11 @@ const KanbanCardView: FC<{
 export const KanbanLane: FC<{
   status: TicketStatus
   cards: KanbanCard[]
+  /** 詳細パネルに表示中のチケット。未選択なら undefined */
+  selectedId?: string
   onAdd: () => void
-  onChangeStatus: (card: KanbanCard, status: TicketStatus) => void
-}> = ({ status, cards, onAdd, onChangeStatus }) => {
+  onSelect: (ticketId: string, selected: boolean) => void
+}> = ({ status, cards, selectedId, onAdd, onSelect }) => {
   const { t } = useLocale()
   const { className, cardsClassName } = LANE_LAYOUT[status]
   const { ref, isDropTarget } = useDroppable({ id: laneDropId(status), accept: DRAG_TYPE })
@@ -170,7 +191,12 @@ export const KanbanLane: FC<{
 
       <div className={cn('min-h-16 space-y-2', cardsClassName)}>
         {cards.map((card) => (
-          <KanbanCardView key={card.id} card={card} onChangeStatus={(next) => onChangeStatus(card, next)} />
+          <KanbanCardView
+            key={card.id}
+            card={card}
+            isSelected={card.id === selectedId}
+            onSelect={(selected) => onSelect(card.id, selected)}
+          />
         ))}
         {cards.length === 0 && <p className='p-2 text-xs text-gray-500'>{t('msg_no_tickets')}</p>}
       </div>

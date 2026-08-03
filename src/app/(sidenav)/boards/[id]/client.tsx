@@ -2,6 +2,7 @@
 
 import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
+import { SideDrawer } from '@/components/general/drawer'
 import { FlexCol } from '@/components/general/flex'
 import { Grid } from '@/components/general/grid'
 import { useModalState } from '@/components/general/modal'
@@ -38,7 +39,8 @@ import { DragDropProvider } from '@dnd-kit/react'
 import { Accordion, ButtonGroup, Chip } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC, useEffect, useMemo, useState } from 'react'
-// チケット作成フォームは /tickets と共通のものを使う(重複定義を避ける)
+// チケット詳細・作成フォームは /tickets と共通のものを使う(重複定義を避ける)
+import { TicketDetailClient } from '../../tickets/[id]/client'
 import { AddModal } from '../../tickets/modals'
 import { getAssigneeOptions, getTicketFormOptions, GetTicketFormOptionsReturnType } from '../../tickets/server'
 import { KanbanFilterPanel } from './filter-panel'
@@ -55,6 +57,8 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
   const [options, setOptions] = useState<GetTicketFormOptionsReturnType>()
   const [assigneeOptions, setAssigneeOptions] = useState<Record<string, string>>({})
   const [filter, setFilter] = useState<KanbanFilter>(defaultKanbanFilter)
+  // 詳細パネルに表示中のチケット。未選択なら undefined
+  const [selectedId, setSelectedId] = useState<string>()
   // 楽観更新の結果。取得元(base)を持たせておくことで reload 後は自動的に破棄される
   const [optimistic, setOptimistic] = useState<{ base: unknown; lanes: LaneMap<KanbanCard> }>()
 
@@ -76,7 +80,25 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
       .catch(() => setAssigneeOptions({}))
   }, [boardId])
 
-  /** DnD とカード内 Select の共通経路。楽観更新し、失敗したら元に戻す */
+  // Escape で詳細パネルを閉じる。
+  // モーダルやポップオーバーが処理済みの Escape(defaultPrevented)と、
+  // 入力中の Escape は入力内容を失わせないため無視する。
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || e.defaultPrevented) {
+        return
+      }
+      const el = e.target as HTMLElement | null
+      if (el?.closest('input, textarea, [contenteditable="true"]')) {
+        return
+      }
+      setSelectedId(undefined)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
+  /** DnD でのレーン移動 / 並べ替え。楽観更新し、失敗したら元に戻す */
   const move = async (ticketId: string, target: DropTarget) => {
     const prev = lanes
     const moved = applyLaneMove(prev, { ticketId, target })
@@ -118,7 +140,8 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
   const isFiltered = isKanbanFilterActive(filter)
 
   return (
-    <FlexCol data-wide>
+    // 詳細パネルを開いている間は data-nav-hidden でサイドメニューを隠し、盤面の横幅を稼ぐ
+    <FlexCol data-wide data-nav-hidden={selectedId ? '' : undefined}>
       <ContentHeader icon={<ViewColumnsIcon />} title={boardName(board)}>
         <MultiButton isIconOnly tooltip={t('back')} onPress={() => router.push('/boards')}>
           <ArrowLeftCircleIcon />
@@ -193,12 +216,26 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
               key={status}
               status={status}
               cards={visibleLanes[status]}
+              selectedId={selectedId}
               onAdd={() => addModalState.open(status)}
-              onChangeStatus={(card, next) => move(card.id, { kind: 'lane', status: next })}
+              onSelect={(ticketId, selected) => setSelectedId(selected ? ticketId : undefined)}
             />
           ))}
         </Grid>
       </DragDropProvider>
+
+      <SideDrawer isOpen={!!selectedId} className='bg-background border-l p-4 shadow-2xl'>
+        {selectedId && (
+          <TicketDetailClient
+            // id が変わっても useActionData は再取得しないため、選択のたびに作り直す
+            key={selectedId}
+            id={selectedId}
+            onClose={() => setSelectedId(undefined)}
+            /** 詳細側の変更(ステータス変更によるレーン移動を含む)を盤面へ反映する */
+            onChanged={reload}
+          />
+        )}
+      </SideDrawer>
 
       {options && (
         <AddModal

@@ -95,7 +95,6 @@ export type LocaleItemBase =
   | 'list'
   | 'member'
   | 'mentioned'
-  | 'move_ticket'
   | 'name'
   | 'next'
   | 'next_week'
