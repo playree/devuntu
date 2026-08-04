@@ -109,6 +109,8 @@ export const TicketsClient: FC<{
   const applyFilter = (next: TicketSearch) => {
     filterRef.current = next
     setFilter(next)
+    // 条件が変われば件数も変わるため、前の条件でのページ位置を引き継がない
+    list.resetPage()
     list.reload()
   }
 

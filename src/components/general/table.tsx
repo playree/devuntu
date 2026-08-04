@@ -11,7 +11,7 @@ import {
   TableColumnProps,
   type TableContentProps,
 } from '@heroui/react'
-import { Dispatch, FC, ReactNode, SetStateAction, SVGProps } from 'react'
+import { FC, ReactNode, SVGProps } from 'react'
 import { type PagingList } from './paging'
 
 const ChevronUpIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
@@ -93,12 +93,8 @@ export const SelectionCell: FC = () => (
   </Table.Cell>
 )
 
-type PagingParam = {
-  rowsPerPage: number
-  page: number
-  total: number
-  onPageChange: Dispatch<SetStateAction<number>>
-}
+/** ページャの描画に必要な値。usePagingList の戻り値から導出して型ズレを防ぐ */
+type PagingParam = Pick<PagingList, 'rowsPerPage' | 'page' | 'total' | 'totalPages' | 'onPageChange'>
 
 type TableActivityProps<T> = {
   sortDescriptor?: TableContentProps['sortDescriptor']
@@ -113,18 +109,33 @@ type TableActivityProps<T> = {
   selectionBehavior?: TableContentProps['selectionBehavior']
   selectedKeys?: TableContentProps['selectedKeys']
   onSelectionChange?: TableContentProps['onSelectionChange']
-  paging?: PagingParam
-  isLoading?: boolean
   pagingList?: PagingList & { items: T[] }
   /** 行の上下パディングを詰めて、1 画面に表示できる行数を増やす */
   isCompact?: boolean
 }
 
-const TablePaging: FC<PagingParam> = ({ rowsPerPage, page, total, onPageChange }) => {
-  const totalPages = Math.ceil(total / rowsPerPage)
+/** 現在ページの前後に出すページ番号の数 */
+const SIBLING_COUNT = 1
+
+/**
+ * 表示するページ番号。先頭・末尾・現在ページ周辺だけを残し、
+ * 飛んだ箇所は null(= Pagination.Ellipsis)にする。
+ * 例: page=5, totalPages=30 -> [1, null, 4, 5, 6, null, 30]
+ */
+const buildPageItems = (page: number, totalPages: number): (number | null)[] => {
+  const shown = new Set<number>([1, totalPages])
+  for (let p = page - SIBLING_COUNT; p <= page + SIBLING_COUNT; p++) {
+    if (p >= 1 && p <= totalPages) {
+      shown.add(p)
+    }
+  }
+  const sorted = [...shown].sort((a, b) => a - b)
+  return sorted.flatMap((p, i) => (i > 0 && p - sorted[i - 1] > 1 ? [null, p] : [p]))
+}
+
+const TablePaging: FC<PagingParam> = ({ rowsPerPage, page, total, totalPages, onPageChange }) => {
   const start = (page - 1) * rowsPerPage + 1
   const end = Math.min(page * rowsPerPage, total)
-  const pages = Array.from({ length: totalPages }, (_, i) => i + 1)
 
   if (total === 0) {
     return (
@@ -146,11 +157,15 @@ const TablePaging: FC<PagingParam> = ({ rowsPerPage, page, total, onPageChange }
             Prev
           </Pagination.Previous>
         </Pagination.Item>
-        {pages.map((p) => (
-          <Pagination.Item key={p}>
-            <Pagination.Link isActive={p === page} onPress={() => onPageChange(p)}>
-              {p}
-            </Pagination.Link>
+        {buildPageItems(page, totalPages).map((p, i) => (
+          <Pagination.Item key={p ?? `gap-${i}`}>
+            {p === null ? (
+              <Pagination.Ellipsis />
+            ) : (
+              <Pagination.Link isActive={p === page} onPress={() => onPageChange(p)}>
+                {p}
+              </Pagination.Link>
+            )}
           </Pagination.Item>
         ))}
         <Pagination.Item>
@@ -176,7 +191,6 @@ export const MultiTable = <T extends object>({
   selectedKeys,
   onSelectionChange,
   columns,
-  paging,
   pagingList,
   items,
   isCompact,
@@ -193,7 +207,6 @@ export const MultiTable = <T extends object>({
       defaultWidth?: TableColumnProps['defaultWidth']
     }[]
   }) => {
-  const pagingParam = paging ?? pagingList
   const behavior = selectionMode ? (selectionBehavior ?? 'replace') : undefined
   return (
     <Table className={cn(isCompact && COMPACT_ROW_CLASS)}>
@@ -243,10 +256,14 @@ export const MultiTable = <T extends object>({
         </Table.Content>
       </Table.ResizableContainer>
       <Table.Footer className='relative'>
-        {pagingParam && <TablePaging {...pagingParam} />}
-        <div className='absolute inset-0 z-10 flex items-center justify-center'>
-          {pagingList?.isLoading && <Spinner />}
-        </div>
+        {pagingList && <TablePaging {...pagingList} />}
+        {pagingList?.isLoading && (
+          <div // inset-0 でフッタ全体を覆うため、pointer-events-none が無いとページャのクリックを奪ってしまう
+            className='pointer-events-none absolute inset-0 z-10 flex items-center justify-center'
+          >
+            <Spinner />
+          </div>
+        )}
       </Table.Footer>
     </Table>
   )

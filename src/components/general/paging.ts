@@ -75,7 +75,6 @@ export const usePagingList = <T extends Record<string, unknown>[], F extends Rec
   const list = useAsyncList({
     load: async ({ sortDescriptor, selectedKeys, signal }) => {
       const items = await load()
-      console.debug('sortDescriptor:', sortDescriptor)
       if (sortDescriptor) {
         return sortFunc({ items, sortDescriptor, selectedKeys, signal })
       }
@@ -93,37 +92,41 @@ export const usePagingList = <T extends Record<string, unknown>[], F extends Rec
     setLastItems(list.items)
   }
 
-  const { items, total } = useMemo(() => {
-    console.debug('items update page:', page)
-
+  // フィルタ適用まで(ページ切り出し前)。総件数から先に totalPages を確定させるため分けている
+  const filtered = useMemo(() => {
     const displayItems = list.items.length === 0 && list.isLoading ? lastItems : list.items
 
-    // フィルタ
-    const tmpList =
-      filterState && filters ? displayItems.filter((item) => filterState.proc(item, filters)) : displayItems
+    return filterState && filters ? displayItems.filter((item) => filterState.proc(item, filters)) : displayItems
+  }, [filterState, filters, lastItems, list.isLoading, list.items])
 
-    // ページング
-    const start = (page - 1) * rowsPerPage
-    const end = start + rowsPerPage
+  const total = filtered.length
+  const totalPages = Math.ceil(total / rowsPerPage) || 1
+  // 削除やリロードで総ページ数が減ったとき、範囲外のページに留まると空表示になるので丸める
+  const currentPage = Math.min(page, totalPages)
 
-    return { items: tmpList.slice(start, end) as T, total: tmpList.length }
-  }, [filterState, filters, lastItems, list.isLoading, list.items, page, rowsPerPage])
+  const items = useMemo(() => {
+    const start = (currentPage - 1) * rowsPerPage
 
-  const totalPages = useMemo(() => {
-    return Math.ceil(total / rowsPerPage) || 1
-  }, [total, rowsPerPage])
+    return filtered.slice(start, start + rowsPerPage) as T
+  }, [filtered, currentPage, rowsPerPage])
 
   return {
     items,
     total,
     totalPages,
-    page,
+    page: currentPage,
     rowsPerPage,
     sortDescriptor: list.sortDescriptor,
     onSortChange: list.sort,
     onPageChange: setPage,
     reload: list.reload,
     isLoading: list.isLoading,
+    /**
+     * 先頭ページに戻す。
+     * 絞り込み条件を呼び出し側で持って reload() する場合、
+     * 前の条件でのページ位置がそのまま残ってしまうので、あわせて呼ぶこと。
+     */
+    resetPage: () => setPage(1),
     setFilter: (filter: Partial<F>) => {
       if (filters) {
         setFilters({
