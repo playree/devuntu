@@ -74,7 +74,9 @@ const COMPACT_ROW_CLASS = '[&_td]:py-0.5 [&_th]:py-1'
 const SelectionCheckbox: FC = () => (
   <Checkbox slot='selection' variant='secondary'>
     <Checkbox.Content>
-      <Checkbox.Control className='size-5'>
+      <Checkbox.Control // HeroUI v3 に radius prop が無いため className で丸型化。選択時の塗り(::before)も別途 rounded-md を持つので before: でも上書きする
+        className='size-5 rounded-full before:rounded-full'
+      >
         <Checkbox.Indicator />
       </Checkbox.Control>
     </Checkbox.Content>
