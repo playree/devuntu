@@ -1,7 +1,7 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
-import { CheckBoxCtrl } from '@/components/general/checkbox-ctrl'
+import { CheckBoxCtrl } from '@/components/general/checkbox'
 import { FlexCol } from '@/components/general/flex'
 import { GridBox } from '@/components/general/grid'
 import { MultiSelectCtrl } from '@/components/general/select'

@@ -1,7 +1,7 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
-import { DatePickerField } from '@/components/general/date-picker-ctrl'
+import { DatePickerField } from '@/components/general/date-picker'
 import { FlexCol, FlexRow } from '@/components/general/flex'
 import { Grid } from '@/components/general/grid'
 import { InputField } from '@/components/general/input'

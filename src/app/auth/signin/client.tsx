@@ -1,11 +1,11 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
-import { CheckBoxCtrl } from '@/components/general/checkbox-ctrl'
+import { CheckBoxCtrl } from '@/components/general/checkbox'
 import { Grid } from '@/components/general/grid'
 import { GrowMotion } from '@/components/general/grow-motion'
 import { InputCtrl } from '@/components/general/input'
-import { InputOtpCtrl } from '@/components/general/input-otp-ctrl'
+import { InputOtpCtrl } from '@/components/general/input-otp'
 import { StepMotion } from '@/components/general/step-motion'
 import {
   ArrowLeftCircleIcon,

@@ -1,7 +1,7 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
-import { CheckBoxCtrl } from '@/components/general/checkbox-ctrl'
+import { CheckBoxCtrl } from '@/components/general/checkbox'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
 import { FormModal, ModalBaseProps } from '@/components/general/modal'

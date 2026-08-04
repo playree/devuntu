@@ -1,7 +1,7 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
-import { DatePickerCtrl } from '@/components/general/date-picker-ctrl'
+import { DatePickerCtrl } from '@/components/general/date-picker'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
 import { FormModal, ModalBaseProps } from '@/components/general/modal'

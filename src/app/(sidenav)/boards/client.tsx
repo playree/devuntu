@@ -6,7 +6,7 @@ import { OnOffChip } from '@/components/general/chip'
 import { FlexCol } from '@/components/general/flex'
 import { useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
-import { SwitchItem } from '@/components/general/switch-ctrl'
+import { SwitchField } from '@/components/general/switch'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
 import { ArrowPathIcon, Cog6ToothIcon, PlusIcon, ViewColumnsIcon } from '@/components/icon'
@@ -46,7 +46,7 @@ export const BoardsClient: FC = () => {
         icon={<ViewColumnsIcon />}
         title={t('board')}
         extra={
-          <SwitchItem // 既定ではアーカイブ済みを隠す。状態は setFilter が持つので useState は置かない
+          <SwitchField // 既定ではアーカイブ済みを隠す。状態は setFilter が持つので useState は置かない
             id='show-archived'
             label={t('show_archived')}
             onChange={(isSelected) => list.setFilter({ showArchived: isSelected ? '1' : '' })}
