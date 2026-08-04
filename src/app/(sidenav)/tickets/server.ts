@@ -13,9 +13,9 @@ import { dateOnlyToUtc } from '@/lib/day'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
-import { scCreateTag, scCreateTicket, scTicketSearch, scUUID } from '@/lib/schema'
+import { scCreateTag, scCreateTicket, scTicketListQuery, scUUID } from '@/lib/schema'
 import { assertTagIdsInBoard, listVisibleTags, rethrowDuplicatedTagName } from '@/lib/tag'
-import { buildTicketWhere, MAX_TAGS_PER_SCOPE, MAX_TICKET_LIST, nextOrder } from '@/lib/task'
+import { buildTicketWhere, MAX_TAGS_PER_SCOPE, nextOrder, ticketListOrderBy } from '@/lib/task'
 
 /** タグの選択肢として返す列。`lib/tag.ts` の TagOption と一致させる */
 const TAG_SELECT = { id: true, boardId: true, name: true, color: true, order: true } as const
@@ -24,49 +24,60 @@ const TAG_SELECT = { id: true, boardId: true, name: true, color: true, order: tr
 const TICKET_TAGS_SELECT = { select: { tag: { select: TAG_SELECT } }, orderBy: { tag: { order: 'asc' } } } as const
 
 /**
- * チケット一覧取得(検索・フィルタ)
+ * チケット一覧取得(検索・フィルタ・ページング)
  *
- * usePagingList が全件をクライアントへ返す実装のため、本文(content)は含めず件数も上限を設ける。
- * 検索は where 側で行うので機能には影響しない。
+ * 検索・絞り込み・並び替え・ページ切り出しをすべてサーバー側で行い、1 ページ分だけを返す。
+ * 全件返しでは件数上限を超えた行に到達できなかったため、上限は設けていない。
+ * 一覧では本文(content)を表示しないので select には含めない。
  */
 export const getTickets = safeAuthAction
   .metadata({ actionName: 'getTickets', role: 'user' })
-  .inputSchema(scTicketSearch)
-  .action(async ({ ctx: { user }, parsedInput }) => {
+  .inputSchema(scTicketListQuery)
+  .action(async ({ ctx: { user }, parsedInput: { page, rowsPerPage, sortColumn, sortDirection, ...search } }) => {
     // プライベートチケットもボード経由で可視化するため、先にプライベートボードを用意する
     await ensurePrivateBoard(user)
     const accessibleBoardIds = await getAccessibleBoardIds(user.id)
 
-    const tickets = await prisma.ticket.findMany({
-      where: buildTicketWhere(parsedInput, { userId: user.id, accessibleBoardIds }),
-      select: {
-        id: true,
-        title: true,
-        status: true,
-        priority: true,
-        tags: TICKET_TAGS_SELECT,
-        dueDate: true,
-        boardId: true,
-        board: { select: { name: true, kind: true } },
-        assigneeId: true,
-        assignee: { select: { name: true } },
-        _count: { select: { comments: true } },
-        createdAt: true,
-        updatedAt: true,
-      },
-      orderBy: { updatedAt: 'desc' },
-      take: MAX_TICKET_LIST,
-    })
+    // 総件数とページ内容で同じ条件を使う(ページャの総ページ数と表示行がずれないようにする)
+    const where = buildTicketWhere(search, { userId: user.id, accessibleBoardIds })
 
-    return tickets.map(({ board, assignee, _count, tags, ...ticket }) => ({
-      ...ticket,
-      // 中間テーブルは表示側で扱わないので平坦化する
-      tags: tags.map(({ tag }) => tag),
-      boardName: board.name,
-      boardKind: board.kind,
-      assigneeName: assignee?.name ?? '',
-      commentCount: _count.comments,
-    }))
+    const [total, tickets] = await Promise.all([
+      prisma.ticket.count({ where }),
+      prisma.ticket.findMany({
+        where,
+        select: {
+          id: true,
+          title: true,
+          status: true,
+          priority: true,
+          tags: TICKET_TAGS_SELECT,
+          dueDate: true,
+          boardId: true,
+          board: { select: { name: true, kind: true } },
+          assigneeId: true,
+          assignee: { select: { name: true } },
+          _count: { select: { comments: true } },
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: ticketListOrderBy(sortColumn, sortDirection),
+        skip: (page - 1) * rowsPerPage,
+        take: rowsPerPage,
+      }),
+    ])
+
+    return {
+      items: tickets.map(({ board, assignee, _count, tags, ...ticket }) => ({
+        ...ticket,
+        // 中間テーブルは表示側で扱わないので平坦化する
+        tags: tags.map(({ tag }) => tag),
+        boardName: board.name,
+        boardKind: board.kind,
+        assigneeName: assignee?.name ?? '',
+        commentCount: _count.comments,
+      })),
+      total,
+    }
   })
 export type GetTicketsReturnType = Awaited<ReturnType<typeof getTickets>>['data']
 

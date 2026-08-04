@@ -31,7 +31,9 @@ import {
   splitKeywords,
   stripCodeSpans,
   tagNamesWhere,
+  TICKET_SORT_COLUMNS,
   TICKET_STATUSES,
+  ticketListOrderBy,
   ticketScopeWhere,
   type BoardRole,
   type KanbanFilterCard,
@@ -255,6 +257,35 @@ describe('buildTicketWhere: 検索条件から Prisma where を組む', () => {
   it('assignee=any では担当者の条件を付けない', () => {
     const res = buildTicketWhere(emptyParams, ctx)
     expect(res.AND).toHaveLength(1)
+  })
+})
+
+describe('ticketListOrderBy: 一覧の並び順から Prisma orderBy を組む', () => {
+  it('ascending / descending を asc / desc に変換する', () => {
+    expect(ticketListOrderBy('title', 'ascending')).toEqual([{ title: 'asc' }, { id: 'asc' }])
+    expect(ticketListOrderBy('title', 'descending')).toEqual([{ title: 'desc' }, { id: 'desc' }])
+  })
+
+  it('どの列でも最後のタイブレークに id が入る(ページ間で行が重複・欠落しないため)', () => {
+    for (const column of TICKET_SORT_COLUMNS) {
+      const orderBy = ticketListOrderBy(column, 'descending')
+      expect(orderBy, `${column} は 2 条件になる`).toHaveLength(2)
+      expect(orderBy[1], `${column} の末尾は id`).toEqual({ id: 'desc' })
+    }
+  })
+
+  it('status / priority はスカラー列としてそのまま並べる(enum の宣言順で並ぶ)', () => {
+    expect(ticketListOrderBy('status', 'ascending')[0]).toEqual({ status: 'asc' })
+    expect(ticketListOrderBy('priority', 'ascending')[0]).toEqual({ priority: 'asc' })
+  })
+
+  it('assigneeName はリレーション先の name で並べる', () => {
+    expect(ticketListOrderBy('assigneeName', 'ascending')[0]).toEqual({ assignee: { name: 'asc' } })
+  })
+
+  it('dueDate は昇順・降順とも未設定を末尾に寄せる', () => {
+    expect(ticketListOrderBy('dueDate', 'ascending')[0]).toEqual({ dueDate: { sort: 'asc', nulls: 'last' } })
+    expect(ticketListOrderBy('dueDate', 'descending')[0]).toEqual({ dueDate: { sort: 'desc', nulls: 'last' } })
   })
 })
 

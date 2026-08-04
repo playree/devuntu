@@ -12,7 +12,8 @@ import {
   type TableContentProps,
 } from '@heroui/react'
 import { FC, ReactNode, SVGProps } from 'react'
-import { type PagingList } from './paging'
+import { type PagingList, ROWS_PER_PAGE_OPTIONS } from './paging'
+import { SingleSelectField } from './select'
 
 const ChevronUpIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
   <svg
@@ -94,7 +95,10 @@ export const SelectionCell: FC = () => (
 )
 
 /** ページャの描画に必要な値。usePagingList の戻り値から導出して型ズレを防ぐ */
-type PagingParam = Pick<PagingList, 'rowsPerPage' | 'page' | 'total' | 'totalPages' | 'onPageChange'>
+type PagingParam = Pick<
+  PagingList,
+  'rowsPerPage' | 'page' | 'total' | 'totalPages' | 'onPageChange' | 'onRowsPerPageChange'
+>
 
 type TableActivityProps<T> = {
   sortDescriptor?: TableContentProps['sortDescriptor']
@@ -133,22 +137,56 @@ const buildPageItems = (page: number, totalPages: number): (number | null)[] => 
   return sorted.flatMap((p, i) => (i > 0 && p - sorted[i - 1] > 1 ? [null, p] : [p]))
 }
 
-const TablePaging: FC<PagingParam> = ({ rowsPerPage, page, total, totalPages, onPageChange }) => {
+/** 表示件数 Select の選択肢。Record<string, string> なので描画ごとに作らず定数にする */
+const ROWS_PER_PAGE_GROUP = Object.fromEntries(ROWS_PER_PAGE_OPTIONS.map((rows) => [String(rows), `${rows} / page`]))
+
+/** 1ページあたりの表示件数を選ぶ。ページャの件数表示の隣に並べる */
+const RowsPerPageSelect: FC<Pick<PagingParam, 'rowsPerPage' | 'onRowsPerPageChange'>> = ({
+  rowsPerPage,
+  onRowsPerPageChange,
+}) => (
+  <div // Select.Trigger は横幅いっぱいに広がるので、フッタでは幅を固定する
+    className='w-28'
+  >
+    <SingleSelectField
+      isSmart
+      isLabelHidden
+      // 共通部品なのでローカライズ不要とする
+      label='rows per page'
+      groupOptions={ROWS_PER_PAGE_GROUP}
+      value={String(rowsPerPage)}
+      onChange={(value) => {
+        // isClearable を付けていないので null は来ないが、型の都合で除外する
+        if (value) {
+          onRowsPerPageChange(Number(value))
+        }
+      }}
+    />
+  </div>
+)
+
+const TablePaging: FC<PagingParam> = ({ rowsPerPage, page, total, totalPages, onPageChange, onRowsPerPageChange }) => {
   const start = (page - 1) * rowsPerPage + 1
   const end = Math.min(page * rowsPerPage, total)
 
   if (total === 0) {
     return (
       <Pagination size='sm'>
-        <Pagination.Summary>0 results</Pagination.Summary>
+        <Pagination.Summary>
+          <span>0 results</span>
+          <RowsPerPageSelect rowsPerPage={rowsPerPage} onRowsPerPageChange={onRowsPerPageChange} />
+        </Pagination.Summary>
       </Pagination>
     )
   }
 
   return (
     <Pagination size='sm'>
-      <Pagination.Summary>
-        {start} to {end} of {total} results
+      <Pagination.Summary /* .pagination__summary が flex items-center gap-2 なので、子を並べるだけでよい */>
+        <span>
+          {start} to {end} of {total} results
+        </span>
+        <RowsPerPageSelect rowsPerPage={rowsPerPage} onRowsPerPageChange={onRowsPerPageChange} />
       </Pagination.Summary>
       <Pagination.Content>
         <Pagination.Item>

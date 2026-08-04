@@ -491,6 +491,8 @@ model Ticket {
   @@index([boardId, status, order])
   @@index([assigneeId])
   @@index([createdById])
+  // チケット一覧の既定の並び順(更新日時の新しい順 + LIMIT)を索引スキャンにする
+  @@index([updatedAt])
   @@map("ticket")
 }
 

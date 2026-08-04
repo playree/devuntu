@@ -5,7 +5,7 @@ import { MultiButton } from '@/components/general/button'
 import { SideDrawer } from '@/components/general/drawer'
 import { FlexCol } from '@/components/general/flex'
 import { useModalState } from '@/components/general/modal'
-import { usePagingList } from '@/components/general/paging'
+import { useServerPagingList } from '@/components/general/paging'
 import { MultiTable, SelectionCell } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
 import { ArrowPathIcon, ChatBubbleIcon, FunnelIcon, PlusIcon, TicketIcon } from '@/components/icon'
@@ -13,7 +13,6 @@ import { PriorityChip, StatusChip, TagChips, useBoardName } from '@/components/t
 import { parseAction } from '@/lib/action-client'
 import { dayformat } from '@/lib/day'
 import { TicketSearch } from '@/lib/schema'
-import { MAX_TICKET_LIST } from '@/lib/task'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { Accordion, ButtonGroup, cn, Table } from '@heroui/react'
@@ -64,10 +63,11 @@ export const TicketsClient: FC<{
   const filterRef = useRef(filter)
   const [options, setOptions] = useState<GetTicketFormOptionsReturnType>()
 
-  const list = usePagingList({
-    load: async () => {
-      const res = await parseAction(getTickets(filterRef.current))
-      return res ?? []
+  // ページ切り出し・並び替えはサーバー側。検索条件と合わせて 1 ページ分だけを取得する
+  const list = useServerPagingList({
+    loadPage: async (query) => {
+      const res = await parseAction(getTickets({ ...filterRef.current, ...query }))
+      return res ?? { items: [], total: 0 }
     },
     sort: { init: { column: 'updatedAt', direction: 'descending' } },
   })
@@ -147,10 +147,6 @@ export const TicketsClient: FC<{
           />
         </AccordionSection>
       </Accordion>
-
-      {list.total >= MAX_TICKET_LIST && (
-        <div className='px-1 text-xs text-gray-500'>{t('msg_ticket_list_limit', { max: `${MAX_TICKET_LIST}` })}</div>
-      )}
 
       <MultiTable
         ariaLabel='ticket list'

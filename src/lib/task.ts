@@ -7,7 +7,7 @@
  */
 
 import type { TagColor, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
-import type { TicketWhereInput } from '@/generated/prisma/models'
+import type { TicketOrderByWithRelationInput, TicketWhereInput } from '@/generated/prisma/models'
 
 /** チケットのステータス(定義順は enum と同じ) */
 export const TICKET_STATUSES = ['backlog', 'todo', 'doing', 'done'] as const satisfies readonly TicketStatus[]
@@ -24,8 +24,12 @@ export const TICKET_PRIORITIES = ['urgent', 'high', 'medium', 'low'] as const sa
  */
 export const KANBAN_LANES = ['todo', 'doing', 'done', 'backlog'] as const satisfies readonly TicketStatus[]
 
-/** 一覧で返すチケットの上限。usePagingList が全件をクライアントへ返すため上限が必要 */
-export const MAX_TICKET_LIST = 300
+/**
+ * 一覧で並べ替えできる列。MultiTable に渡す columns の id と一致させる(tags は並べ替え不可)。
+ * `zTicketSortColumn`(schema.ts) と `ticketListOrderBy` の単一ソース。
+ */
+export const TICKET_SORT_COLUMNS = ['title', 'status', 'priority', 'assigneeName', 'dueDate', 'updatedAt'] as const
+export type TicketSortColumn = (typeof TICKET_SORT_COLUMNS)[number]
 
 /** かんばん 1 ボードで返すカードの上限(レーン単位ではなくボード全体) */
 export const MAX_KANBAN_CARDS = 500
@@ -273,6 +277,32 @@ export const buildTicketWhere = (
   }
 
   return { AND: and }
+}
+
+/**
+ * 一覧の並び順を Prisma の orderBy へ変換する。
+ *
+ * status / priority は enum の宣言順(backlog→done / urgent→low)で並ぶため、
+ * クライアント側の文字列比較(アルファベット順)より意味のある順序になる。
+ * ページをまたいで行が重複・欠落しないよう、最後のタイブレークに必ず id を入れる。
+ */
+export const ticketListOrderBy = (
+  column: TicketSortColumn,
+  direction: 'ascending' | 'descending',
+): TicketOrderByWithRelationInput[] => {
+  const sort = direction === 'ascending' ? 'asc' : 'desc'
+
+  switch (column) {
+    case 'assigneeName':
+      // 担当者未設定(assigneeId が null)の行の位置は PostgreSQL の既定に任せる。
+      // User.name は必須なので Prisma の nulls オプションは使えない
+      return [{ assignee: { name: sort } }, { id: sort }]
+    case 'dueDate':
+      // 期限順に見たいのに未設定が先に来ると邪魔なので、昇順・降順とも末尾へ寄せる
+      return [{ dueDate: { sort, nulls: 'last' } }, { id: sort }]
+    default:
+      return [{ [column]: sort }, { id: sort }]
+  }
 }
 
 /* -------------------------------------------------------------------------------------------------

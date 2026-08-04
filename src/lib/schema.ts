@@ -1,6 +1,13 @@
 import { el } from '@/locale'
 import { z } from 'zod'
-import { MAX_TAG_NAME, MAX_TICKET_TAGS, TAG_COLORS, TICKET_PRIORITIES, TICKET_STATUSES } from './task'
+import {
+  MAX_TAG_NAME,
+  MAX_TICKET_TAGS,
+  TAG_COLORS,
+  TICKET_PRIORITIES,
+  TICKET_SORT_COLUMNS,
+  TICKET_STATUSES,
+} from './task'
 
 const reHalfString = /^[a-zA-Z0-9!-/:-@¥[-`{-~ ]*$/
 
@@ -281,6 +288,30 @@ export const scTicketSearch = z.object({
 })
 export type TicketSearch = z.infer<typeof scTicketSearch>
 export type TicketSearchIn = z.input<typeof scTicketSearch>
+
+/** 一覧のソート対象列。TICKET_SORT_COLUMNS(task.ts) を単一ソースにする */
+export const zTicketSortColumn = z.enum(TICKET_SORT_COLUMNS)
+
+export const zSortDirection = z.enum(['ascending', 'descending'])
+export type SortDirection = z.infer<typeof zSortDirection>
+
+/**
+ * チケット一覧の問い合わせ条件。検索条件にページングと並び順を足したもの。
+ *
+ * 検索パネルは scTicketSearch だけを扱うため、ページング項目は別スキーマとして分けている。
+ *
+ * 並び順はテーブルのヘッダ操作(HeroUI の SortDescriptor)由来の任意の文字列として渡ってくるので、
+ * string を受けてから列名へ絞り、想定外の値はエラーにせず既定へ落として一覧が壊れないようにする。
+ */
+export const scTicketListQuery = scTicketSearch.extend({
+  page: z.number().int().min(1).default(1),
+  // 上限は ROWS_PER_PAGE_OPTIONS(components/general/paging.ts)の最大値に合わせる
+  rowsPerPage: z.number().int().min(1).max(100).default(10),
+  sortColumn: z.string().default('updatedAt').pipe(zTicketSortColumn.catch('updatedAt')),
+  sortDirection: z.string().default('descending').pipe(zSortDirection.catch('descending')),
+})
+export type TicketListQuery = z.infer<typeof scTicketListQuery>
+export type TicketListQueryIn = z.input<typeof scTicketListQuery>
 
 export const scCreateTicketComment = z.object({
   ticketId: z.uuidv7(),
