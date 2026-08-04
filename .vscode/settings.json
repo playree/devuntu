@@ -1,8 +1,8 @@
 {
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
-  "tailwindCSS.classAttributes": ["class", "className", "classNames", "ngClass", ".*Styles*", ".*Styles:.*"],
-  "tailwindCSS.experimental.classRegex": [["tv\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"]],
+  "tailwindCSS.classAttributes": ["class", "className", "classNames"],
+  "tailwindCSS.classFunctions": ["tv"],
   "[prisma]": {
     "editor.defaultFormatter": "Prisma.prisma"
   }

@@ -1,6 +1,50 @@
 @import 'tailwindcss';
 @import '@heroui/styles';
 
+/**
+ * HeroUI の dark variant を正しい定義で上書きする。
+ * 本家(node_modules/@heroui/styles/dist/variants/index.css)の prefers-color-scheme
+ * フォールバックが `&:not(...) &` と自己子孫セレクタになっており、同じ dark:* クラスを
+ * 親子で持つとライト表示中でもダーク色が当たる(優先度 medium のカードとバーが該当)。
+ * あわせて、本家が除外していない明示ライト(.light / [data-theme='light'])も除外する。
+ * next-themes は attribute: 'class' で <html class="light|dark"> を付けるため、
+ * 明示ライト時に OS の prefers-color-scheme: dark を拾わせないのが正しい挙動。
+ */
+@custom-variant dark {
+  /* 明示ダーク: .dark クラス or data-theme="dark" が自身か祖先にある */
+  &:is(.dark, .dark *, [data-theme='dark'], [data-theme='dark'] *) {
+    @slot;
+
+    &::before,
+    &::after {
+      @slot;
+    }
+  }
+
+  /* フォールバック: テーマ未指定で OS がダーク */
+  @media (prefers-color-scheme: dark) {
+    &:not(
+      :is(
+        .dark,
+        .dark *,
+        [data-theme='dark'],
+        [data-theme='dark'] *,
+        .light,
+        .light *,
+        [data-theme='light'],
+        [data-theme='light'] *
+      )
+    ) {
+      @slot;
+
+      &::before,
+      &::after {
+        @slot;
+      }
+    }
+  }
+}
+
 @theme {
   --font-noto:
     var(--font-noto-sans-jp), BlinkMacSystemFont, Roboto, Segoe UI, Helvetica Neue, HelveticaNeue, 游ゴシック体,

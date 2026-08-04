@@ -146,8 +146,18 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
   const isFiltered = isKanbanFilterActive(filter)
 
   return (
-    // 詳細パネルを開いている間は data-nav-hidden でサイドメニューを隠し、盤面の横幅を稼ぐ
-    <FlexCol data-wide data-nav-hidden={selectedId ? '' : undefined}>
+    <FlexCol
+      /**
+       * 詳細パネルを開いている間は data-nav-hidden でサイドメニューを隠し、盤面の横幅を稼ぐ。
+       *
+       * md 以上では盤面を 1 画面に収めてレーン内スクロールにするため、ここで画面高を固定する。
+       * 2rem は SideNavbar のメインコンテンツ(#side-main)の p-4(上下)。
+       * md 未満はレーンが縦積みになり 1 画面に 4 レーンは詰め込めないので、従来どおりページ全体のスクロールにする。
+       */
+      data-wide
+      data-nav-hidden={selectedId ? '' : undefined}
+      className='md:h-[calc(100dvh-2rem)]'
+    >
       <ContentHeader icon={<ViewColumnsIcon />} title={boardName(board)}>
         <MultiButton isIconOnly tooltip={t('back')} onPress={() => router.push('/boards')}>
           <ArrowLeftCircleIcon />
@@ -216,7 +226,14 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
           }
         }}
       >
-        <Grid>
+        <Grid
+          /**
+           * 残りの高さを盤面に割り当てる。
+           * 1行目(todo/doing/done)が残り全部、2行目(backlog)は内容ぶん(カード領域の max-h で頭打ち)。
+           * 1fr ではなく minmax(0,1fr) にするのは、行の下限が min-content に張り付いてレーン内スクロールが効かなくなるため。
+           */
+          className='md:min-h-0 md:flex-1 md:grid-rows-[minmax(0,1fr)_auto]'
+        >
           {LANE_ORDER.map((status) => (
             <KanbanLane
               key={status}

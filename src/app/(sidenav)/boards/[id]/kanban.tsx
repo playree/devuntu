@@ -27,14 +27,42 @@ export type KanbanCard = Kanban['lanes']['todo'][number]
 const DRAG_TYPE = 'ticket'
 
 /**
+ * カードの高さを一杯まで使うレーン(todo/doing/done)のカード領域。
+ *
+ * 高さは client.tsx 側の chain(ルートを画面高で固定 → Grid が flex-1 → 1行目が minmax(0,1fr))で降りてくる。
+ * overflow-y-auto を持つ flex 子は automatic minimum size が 0 になるため min-h-0 は要らない
+ * (min-h-16 は空レーンのドロップ枠として残す。min-h-0 を足すと同じ min-height の指定同士で競合する)。
+ * p-0.5 と相殺の -m-0.5 は、選択 / ドロップ対象カードの ring-2 がスクロール領域の境界で切れるのを防ぐため。
+ */
+const SCROLL_CARDS_CLASS = 'md:-m-0.5 md:flex-1 md:overflow-y-auto md:p-0.5'
+
+/**
+ * backlog のカード領域の高さ上限。カード2行分で頭打ちにして、残りはレーン内でスクロールさせる。
+ *
+ * カードの高さは中身で変わる(実測: 最小 = タイトル1行 + 優先度 chip のみで約 4.45rem、
+ * 担当者 / 期日 / タグまで付くと約 5.95rem、タイトル2行だと約 7.25rem)ため、
+ * 「ちょうど2行」を CSS だけで表すことはできない。
+ * そこで担当者・期日付きのカード 2 行分 + gap 0.5rem ≒ 12.5rem を上限にする。
+ * 最小のカードでも 3 行(約 14.35rem)は収まらないので、3 行目以降は必ずスクロールになる。
+ */
+const BACKLOG_MAX_H_CLASS = 'md:max-h-[12.5rem]'
+
+/**
  * レーンの配置。todo/doing/done を横3列、その下に backlog を全幅で置く。
  * Tailwind のスキャン対象になるようクラス名は完全なリテラルで書くこと。
  */
 export const LANE_LAYOUT: Record<TicketStatus, { className: string; cardsClassName?: string }> = {
-  todo: { className: 'col-span-12 md:col-span-4' },
-  doing: { className: 'col-span-12 md:col-span-4' },
-  done: { className: 'col-span-12 md:col-span-4' },
-  backlog: { className: 'col-span-12', cardsClassName: 'md:grid md:grid-cols-3 md:gap-2 md:space-y-0' },
+  todo: { className: 'col-span-12 md:col-span-4', cardsClassName: SCROLL_CARDS_CLASS },
+  doing: { className: 'col-span-12 md:col-span-4', cardsClassName: SCROLL_CARDS_CLASS },
+  done: { className: 'col-span-12 md:col-span-4', cardsClassName: SCROLL_CARDS_CLASS },
+  backlog: {
+    className: 'col-span-12',
+    cardsClassName: cn(
+      'md:grid md:grid-cols-3 md:gap-2 md:space-y-0',
+      BACKLOG_MAX_H_CLASS,
+      'md:-m-0.5 md:overflow-y-auto md:p-0.5',
+    ),
+  },
 }
 
 /** かんばんのレーン表示順(横3列 + backlog) */
@@ -92,9 +120,9 @@ const KanbanCardView: FC<{
         ref={dragRef}
         className={cn(
           /**
-           * 優先度バーを角丸に沿って左右いっぱいに出すため、padding は内側の div に持たせて overflow-hidden で切る。
-           * panel.tsx と違い dark:border-t-2 を持たないのは、上端はバーが輪郭を兼ねるため。
-           * 代わりにダークでは priorityBorderClass がバーと同色の枠を全周に出す。
+           * PriorityBar は自前で余白(mt / mx)を持つので、padding は兄弟の内容 div 側に寄せる。
+           * panel.tsx と違い dark:border-t-2 を持たないのは、上端は PriorityBar の線が輪郭を兼ねるため。
+           * 代わりにダークでは priorityBorderClass が線と同系色の枠を全周に出す。
            */
           'cursor-pointer overflow-hidden rounded-xl',
           'shadow-md dark:shadow-none', // ダークは枠線が輪郭を作るので影は要らない
@@ -171,9 +199,21 @@ export const KanbanLane: FC<{
   const { ref, isDropTarget } = useDroppable({ id: laneDropId(status), accept: DRAG_TYPE })
 
   return (
-    <fieldset // 既定で min-inline-size: min-content のため、min-w-0 が無いとカード内容の分だけ横に広がる
+    <fieldset
+      /**
+       * 既定で min-inline-size: min-content のため、min-w-0 が無いとカード内容の分だけ横に広がる。
+       *
+       * md 以上では内側のカード領域をスクロールさせるので flex コンテナにする。
+       * grid item の block 方向 automatic minimum size を min-h-0 で切らないと、
+       * 行が縮んだときに内容の高さのまま溢れてスクロール領域へ高さが渡らない。
+       * なお fieldset を flex にしても legend は flex item にならず従来どおり枠線上に描画される。
+       */
       ref={ref}
-      className={cn('min-w-0 rounded-xl border-2 p-2', isDropTarget ? 'border-blue-300' : '', className)}
+      className={cn(
+        'min-w-0 rounded-xl border-2 p-2 md:flex md:min-h-0 md:flex-col',
+        isDropTarget ? 'border-blue-300' : '',
+        className,
+      )}
     >
       <legend className='flex items-center gap-1 px-2'>
         <StatusChip status={status} />

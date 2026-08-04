@@ -31,13 +31,20 @@ const PRIORITY_META: Record<TicketPriority, { item: LocaleItemBase; color: ChipC
 }
 
 /**
- * 優先度の配色。バー(bar)・カード枠線(border)・カード背景(bg)を 1 箇所に集約する。
- * bg はバーと同じ色を 10% で敷いて下地を透かす。
+ * 優先度の配色。水平線(bar)・カード枠線(border)・カード背景(bg)を 1 箇所に集約する。
+ * bar は 1px の線で面積が小さいため透過させず、bg は同系色を 10% で敷いて下地を透かす。
  * クラス名は purge 対策で必ず完全なリテラルで書くこと(tagStyles と同じ規約)。
  */
 const priorityStyles = tv({
   slots: {
-    bar: 'h-1 w-full',
+    /**
+     * 塗りは持たず、上下のボーダーだけで 1px の水平線 2 本を作る。
+     * box-border なので h-1.5(6px)の内訳が 線 1px / 余白 4px / 線 1px になる。
+     * 幅を 90% に絞って中央寄せするのは、カードの角丸(rounded-xl)で上端の線だけが
+     * 左右を削られて 2 本の長さがズレるのを避けるため(mt-1 で角の曲線からも逃がす)。
+     * border スロットと同じ規約で、幅は常に確保して色だけ variants で変える。
+     */
+    bar: 'mx-auto mt-1 h-1 w-[94%] border-y border-transparent',
     // テーマ切り替えでレイアウトが動かないよう、枠の幅は常に確保しておく
     border: 'border-b-3 border-transparent',
     bg: '',
@@ -45,24 +52,24 @@ const priorityStyles = tv({
   variants: {
     priority: {
       urgent: {
-        bar: 'bg-red-300 dark:bg-red-800/60',
+        bar: 'border-red-300/30 dark:border-red-800/30',
         border: 'dark:border-red-800/30',
-        bg: 'bg-red-300/10 dark:bg-red-800/10',
+        bg: 'bg-red-300/15 dark:bg-red-800/15',
       },
       high: {
-        bar: 'bg-amber-300 dark:bg-amber-700/60',
-        border: 'dark:border-amber-700/30',
-        bg: 'bg-amber-300/10 dark:bg-amber-700/10',
+        bar: 'border-amber-400/30 dark:border-amber-600/30',
+        border: 'dark:border-amber-600/30',
+        bg: 'bg-amber-400/15 dark:bg-amber-600/15',
       },
       medium: {
-        bar: 'bg-blue-300 dark:bg-blue-800/60',
+        bar: 'border-blue-300/30 dark:border-blue-800/30',
         border: 'dark:border-blue-800/30',
-        bg: 'bg-blue-300/10 dark:bg-blue-800/10',
+        bg: 'bg-blue-300/15 dark:bg-blue-800/15',
       },
       low: {
-        bar: 'bg-gray-200 dark:bg-gray-700/60',
-        border: 'dark:border-gray-700/30',
-        bg: 'bg-gray-200/10 dark:bg-gray-700/10',
+        bar: 'border-gray-300/30 dark:border-gray-600/30',
+        border: 'dark:border-gray-600/30',
+        bg: 'bg-gray-300/15 dark:bg-gray-600/15',
       },
     } satisfies Record<TicketPriority, unknown>,
   },
@@ -109,7 +116,7 @@ export const RoleChip: FC<{ role: BoardRole; size?: ChipProps['size'] }> = ({ ro
 }
 
 /**
- * 優先度を色だけで示す帯。カード上端に全幅で置く想定。
+ * 優先度を色だけで示す 1px の水平線 2 本。カード上端に幅 90% で中央寄せして置く想定。
  * 同じ情報を PriorityChip がテキストで持つため、支援技術からは隠す。
  */
 export const PriorityBar: FC<{ priority: TicketPriority; className?: string }> = ({ priority, className }) => (

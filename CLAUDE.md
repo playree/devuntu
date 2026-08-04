@@ -26,6 +26,7 @@
 - better-authをバージョンアップする場合には、ライブラリが要求するテーブル定義に変更が無いかをチェックする
 - コンパイル、ビルド確認は`pnpm build`
 - 修正ファイルには`pnpm exec prettier --write`を実施する
+- classNameの外部定義はなるべく`tailwind-variants`を利用する
 
 ## tsxでのコメント
 
