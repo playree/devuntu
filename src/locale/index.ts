@@ -140,6 +140,7 @@ export type LocaleItemBase =
   | 'settings'
   | 'share_title'
   | 'share_url'
+  | 'show_archived'
   | 'signin'
   | 'signout'
   | 'skip_consent'

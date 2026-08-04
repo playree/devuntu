@@ -6,6 +6,7 @@ import { OnOffChip } from '@/components/general/chip'
 import { FlexCol } from '@/components/general/flex'
 import { useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
+import { SwitchItem } from '@/components/general/switch-ctrl'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
 import { ArrowPathIcon, Cog6ToothIcon, PlusIcon, ViewColumnsIcon } from '@/components/icon'
@@ -30,13 +31,28 @@ export const BoardsClient: FC = () => {
       const res = await parseAction(getBoards())
       return res ?? []
     },
+    filter: {
+      // usePagingList のフィルタ値は文字列のみなので '1' / '' で ON/OFF を表す
+      init: { showArchived: '' },
+      proc: (item, { showArchived }) => showArchived === '1' || !item.archived,
+    },
     // プライベートを先頭に出したいのでサーバー側の並び(kind, name)をそのまま使う。
     // sort.init を渡すと usePagingList が load 時にクライアント側で並べ替えてしまうので指定しない
   })
 
   return (
     <FlexCol>
-      <ContentHeader icon={<ViewColumnsIcon />} title={t('board')}>
+      <ContentHeader
+        icon={<ViewColumnsIcon />}
+        title={t('board')}
+        extra={
+          <SwitchItem // 既定ではアーカイブ済みを隠す。状態は setFilter が持つので useState は置かない
+            id='show-archived'
+            label={t('show_archived')}
+            onChange={(isSelected) => list.setFilter({ showArchived: isSelected ? '1' : '' })}
+          />
+        }
+      >
         <MultiButton isIconOnly tooltip={t('add_board')} onPress={() => addModalState.open()}>
           <PlusIcon />
         </MultiButton>

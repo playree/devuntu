@@ -17,6 +17,7 @@ export const getBoards = safeAuthAction
   .action(async ({ ctx: { user } }) => {
     await ensurePrivateBoard(user)
 
+    // 表示の出し入れは一覧側のスイッチ(クライアントフィルタ)で行うため、アーカイブ済みも含めて返す
     const boards = await listAccessibleBoards(user.id, { includeArchived: true })
     const counts = await countTicketsByBoard(boards.map((board) => board.id))
 

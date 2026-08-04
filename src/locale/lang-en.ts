@@ -142,6 +142,7 @@ export const en: LocaleItems = {
   settings: 'Settings',
   share_title: 'Share Title',
   share_url: 'Share URL',
+  show_archived: 'Show archived',
   signin: 'Sign In',
   signout: 'Sign Out',
   skip_consent: 'Skip Consent',

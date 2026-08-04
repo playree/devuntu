@@ -142,6 +142,7 @@ export const ja: DefaultLocaleItems = {
   settings: '設定',
   share_title: '共有タイトル',
   share_url: '共有URL',
+  show_archived: 'アーカイブ済みも表示',
   signin: 'サインイン',
   signout: 'サインアウト',
   skip_consent: '同意スキップ',
