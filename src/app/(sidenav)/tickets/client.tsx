@@ -48,7 +48,10 @@ const preventRowSelection = {
   },
 }
 
-export const TicketsClient: FC = () => {
+export const TicketsClient: FC<{
+  /** URL の ?boardId= 由来の初期絞り込み対象。null = すべてのボード */
+  initialBoardId?: string | null
+}> = ({ initialBoardId }) => {
   const { t } = useLocale()
   const tz = useUserTimezone()
   const boardName = useBoardName()
@@ -56,7 +59,7 @@ export const TicketsClient: FC = () => {
 
   // 詳細パネルに表示中のチケット。未選択なら undefined
   const [selectedId, setSelectedId] = useState<string>()
-  const [filter, setFilter] = useState<TicketSearch>(defaultTicketFilter)
+  const [filter, setFilter] = useState<TicketSearch>({ ...defaultTicketFilter, boardId: initialBoardId ?? null })
   // usePagingList の load は再生成されるため、最新の検索条件は ref から読む
   const filterRef = useRef(filter)
   const [options, setOptions] = useState<GetTicketFormOptionsReturnType>()

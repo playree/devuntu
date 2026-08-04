@@ -53,7 +53,7 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
   const boardName = useBoardName()
   const addModalState = useModalState<TicketStatus>()
 
-  const { data, reload, isLoading } = useActionData(() => getBoardKanban({ id: boardId }))
+  const { data, reload, refresh, isLoading } = useActionData(() => getBoardKanban({ id: boardId }))
   const [options, setOptions] = useState<GetTicketFormOptionsReturnType>()
   const [assigneeOptions, setAssigneeOptions] = useState<Record<string, string>>({})
   const [filter, setFilter] = useState<KanbanFilter>(defaultKanbanFilter)
@@ -116,8 +116,9 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
       await parseAction(moveTicket({ id: ticketId, status: moved.status, index: moved.index }))
     } catch {
       // 手元のスナップショットへ戻すと、その間に他ユーザーが成功させた移動まで巻き戻してしまう。
-      // reload なら optimistic.base !== data になり楽観値も自動で破棄される
-      reload()
+      // 再取得すれば optimistic.base !== data になり楽観値も自動で破棄される
+      // (巻き戻しのために盤面をスケルトンへ差し替える必要はないので silent な refresh を使う)
+      refresh()
       // parseAction は ClientError を notify せず throw するため、ここで明示的に表示する
       notify.error(t('error'))
     }
@@ -254,8 +255,12 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
             key={selectedId}
             id={selectedId}
             onClose={() => setSelectedId(undefined)}
-            /** 詳細側の変更(ステータス変更によるレーン移動を含む)を盤面へ反映する */
-            onChanged={reload}
+            /**
+             * 詳細側の変更(ステータス変更によるレーン移動を含む)を盤面へ反映する。
+             * reload だと isLoading で盤面ごとスケルトンに差し替わり、この詳細パネル自身が
+             * アンマウントされてしまうため silent な refresh を使う
+             */
+            onChanged={refresh}
           />
         )}
       </SideDrawer>
@@ -264,7 +269,8 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
         <AddModal
           key={addModalState.key}
           state={addModalState}
-          reload={reload}
+          /** 追加直後に盤面をスケルトンへ差し替えたくないので silent な refresh を渡す */
+          reload={refresh}
           options={options}
           defaultBoardId={board.id}
           defaultStatus={addModalState.target ?? 'todo'}
