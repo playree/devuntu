@@ -29,7 +29,8 @@ const DRAG_TYPE = 'ticket'
 /**
  * カードの高さを一杯まで使うレーン(todo/doing/done)のカード領域。
  *
- * 高さは client.tsx 側の chain(ルートを画面高で固定 → Grid が flex-1 → 1行目が minmax(0,1fr))で降りてくる。
+ * 高さは client.tsx 側の chain(ルートの max-h → 溢れた分だけ Grid が縮む → 1行目 minmax(0,1fr))で降りてくる。
+ * 盤面が画面に収まっているときは 1行目が max-content になるので、ここは内容ぶんの高さになりスクロールしない。
  * overflow-y-auto を持つ flex 子は automatic minimum size が 0 になるため min-h-0 は要らない
  * (min-h-16 は空レーンのドロップ枠として残す。min-h-0 を足すと同じ min-height の指定同士で競合する)。
  * p-0.5 と相殺の -m-0.5 は、選択 / ドロップ対象カードの ring-2 がスクロール領域の境界で切れるのを防ぐため。

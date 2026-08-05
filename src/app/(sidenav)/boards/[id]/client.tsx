@@ -151,13 +151,14 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
       /**
        * 詳細パネルを開いている間は data-nav-hidden でサイドメニューを隠し、盤面の横幅を稼ぐ。
        *
-       * md 以上では盤面を 1 画面に収めてレーン内スクロールにするため、ここで画面高を固定する。
+       * md 以上では盤面を 1 画面に収めてレーン内スクロールにするため、ここで画面高を「上限」にする。
+       * 固定高(h-)ではなく max-h- なのは、カードが少ないときにレーンを画面下端まで伸ばさず内容ぶんの高さで収めるため。
        * 2rem は SideNavbar のメインコンテンツ(#side-main)の p-4(上下)。
        * md 未満はレーンが縦積みになり 1 画面に 4 レーンは詰め込めないので、従来どおりページ全体のスクロールにする。
        */
       data-wide
       data-nav-hidden={selectedId ? '' : undefined}
-      className='md:h-[calc(100dvh-2rem)]'
+      className='md:max-h-[calc(100dvh-2rem)]'
     >
       <ContentHeader icon={<ViewColumnsIcon />} title={boardName(board)}>
         <MultiButton isIconOnly tooltip={t('back')} onPress={() => router.push('/boards')}>
@@ -229,11 +230,18 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
       >
         <Grid
           /**
-           * 残りの高さを盤面に割り当てる。
-           * 1行目(todo/doing/done)が残り全部、2行目(backlog)は内容ぶん(カード領域の max-h で頭打ち)。
-           * 1fr ではなく minmax(0,1fr) にするのは、行の下限が min-content に張り付いてレーン内スクロールが効かなくなるため。
+           * 盤面の高さ。1行目が todo/doing/done、2行目が backlog(カード領域の max-h で頭打ち)。
+           *
+           * flex-1 で残りを総取りせず、minmax(0,1fr) の二役に任せる。
+           * - 盤面が画面に収まるとき: grid の高さが不定なので 1行目は max-content(= 一番カードが多いレーン)になり、
+           *   レーンは内容ぶんの高さで済む。1fr ではなく minmax(0,...) にするのは、行の下限が min-content に
+           *   張り付くと下のケースで縮めず(レーン内スクロールが効かず)溢れるため。
+           * - 収まらないとき: ルートの max-h で主軸長が確定して flex shrink が走り、この Grid が縮む。
+           *   grid の高さが確定するので 1行目は「2行目を除いた残り」になり、従来どおりレーン内スクロールになる。
+           * min-h-0 は、その shrink の受け皿をこの Grid に限定するため
+           * (ヘッダーや Accordion は block 方向の automatic minimum size = 内容高なので縮まない)。
            */
-          className='md:min-h-0 md:flex-1 md:grid-rows-[minmax(0,1fr)_auto]'
+          className='md:min-h-0 md:grid-rows-[minmax(0,1fr)_auto]'
         >
           {LANE_ORDER.map((status) => (
             <KanbanLane
