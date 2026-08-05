@@ -10,6 +10,7 @@ Playwright MCP(サーバ名 `playwright`)で `http://localhost:3000` を開い�
 ## 大前提
 
 - **開発DBはユーザーの実データ**。指示が無い限り、作成・更新・削除・ドラッグ移動などの変更操作はしない。表示確認のみを行う
+- **確認が終わったら必ず「5. 後片付け」まで実施する**。ブラウザ(chromium)を閉じずに終わると次のセッションがプロファイルのロックでブラウザを使えなくなる
 - **必ず `http://localhost:3000`**。`BETTER_AUTH_URL` が localhost:3000 固定で、better-auth の origin チェックが `trustedOrigins` と照合するため、別ポートだと OTP 検証の POST `/api/auth/sign-in/email-otp` が 403(INVALID_ORIGIN)になり、画面には「認証NG」トーストしか出ず原因が分からない。`pnpm dev:domain`(3033)は使わない
 - 画面一覧とアクセス制御は `README.md` の「画面一覧」を参照する
 - 画面上のラベル文言は `src/locale/lang-ja.ts` を参照する。`data-testid` は存在しないので、role + 日本語ラベルで要素を特定する
@@ -89,7 +90,33 @@ grep -aoE 'OTP : [0-9]{6}' .work/dev-server.log | tail -1
 
 ## 5. 後片付け
 
-確認が終わったら、**自分で起動した開発サーバーは停止する**。`.work/dev-server.pid` が存在しない場合はユーザーが起動したものなので触らない。
+**確認が終わったら必ずここまでやる。ブラウザと開発サーバーを起動したまま報告を返して終わらない。**
+
+### 5-1. ブラウザを閉じる(必須)
+
+最後の確認が終わったら `browser_close` を呼ぶ。これを飛ばすと chromium が常駐し続け、
+**プロファイル(`~/.cache/ms-playwright-mcp/mcp-chrome-for-testing-*`)がロックされたままになるので、
+次のセッションが `Browser is already in use` で一切ブラウザを使えなくなる**。
+
+`browser_close` の後、プロセスが本当に消えたことを確認する:
+
+```sh
+sleep 2
+pgrep -af 'chrome-linux64/chrome' | grep -v 'bash -c' || echo none
+```
+
+`none` にならず残っていた場合は、そのプロファイルの chromium を落とす
+(`playwright-mcp` サーバー本体は MCP の管理下なので落とさない。次の利用時にブラウザだけ再起動される):
+
+```sh
+pkill -f 'chrome.*mcp-chrome-for-testing' || echo "no match"
+```
+
+ログインセッションはプロファイルのディスク上に残るため、閉じても次回のログインやり直しは不要。
+
+### 5-2. 開発サーバーを停止する
+
+**自分で起動した開発サーバーは停止する**。`.work/dev-server.pid` が存在しない場合はユーザーが起動したものなので触らない。
 
 **kill する前に、記録した PID が本当に自分の開発サーバーかを必ず確認する**。PID ファイルは前回の異常終了で残っている(stale)ことがあり、その PID が別プロセスへ再利用されていると、プロセスグループごと無関係なプロセスを巻き添えで殺してしまう。
 
@@ -110,6 +137,15 @@ pgrep -af 'next dev|next-server' || echo none
 ```
 
 停止を確認できてから PID ファイルを消す(`rm -f .work/dev-server.pid`)。残っていた場合は残存 PID を直接 kill する。
+
+### 5-3. 最終チェック
+
+報告の直前に、この 2 つが両方 `none` / `STOPPED` になっていることを確認してから終わる:
+
+```sh
+pgrep -af 'chrome-linux64/chrome' | grep -v 'bash -c' || echo "chromium: none"
+curl -fsS --max-time 2 http://localhost:3000/api/health >/dev/null 2>&1 && echo "STILL RUNNING" || echo STOPPED
+```
 
 ## 6. 報告
 

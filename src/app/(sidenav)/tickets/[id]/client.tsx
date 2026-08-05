@@ -19,6 +19,7 @@ import {
   XMarkIcon,
 } from '@/components/icon'
 import { notify } from '@/components/notify'
+import { AssigneeSelectField } from '@/components/ticket/assignee-select'
 import { MarkdownField } from '@/components/ticket/markdown-editor'
 import { TagIdSelectField } from '@/components/ticket/tag-select'
 import { PriorityChip, StatusChip, TagChips, useBoardName, useTicketOptions } from '@/components/ticket/ticket-chip'
@@ -380,8 +381,7 @@ export const TicketDetailClient: FC<{
 
           <div className='col-span-6 md:col-span-2'>
             {canEditAssignee ? (
-              <SingleSelectField
-                label={t('assignee')}
+              <AssigneeSelectField
                 isClearable
                 groupOptions={boardAssignees}
                 value={assigneeId}

@@ -1,8 +1,9 @@
 'use client'
 
+import { DateRangePickerField } from '@/components/general/date-picker'
 import { GridBox } from '@/components/general/grid'
-import { SingleSelectField } from '@/components/general/select'
 import { MultiTagField } from '@/components/general/tag-group'
+import { AssigneeSelectField } from '@/components/ticket/assignee-select'
 import { TagNameSelectField, TagSelectOption } from '@/components/ticket/tag-select'
 import { useTicketOptions } from '@/components/ticket/ticket-chip'
 import { KANBAN_ASSIGNEE_NONE, KanbanFilter, MAX_TICKET_TAGS, TICKET_PRIORITIES } from '@/lib/task'
@@ -38,21 +39,28 @@ export const KanbanFilterPanel: FC<{
 
   return (
     <GridBox isSmart>
-      <div className='col-span-12 md:col-span-4'>
-        <SingleSelectField
-          label={t('assignee')}
+      <div className='col-span-6 md:col-span-2'>
+        <AssigneeSelectField
           groupOptions={assigneeChoices}
           value={filter.assignee ?? ASSIGNEE_ALL}
           onChange={(value) => onChange({ ...filter, assignee: !value || value === ASSIGNEE_ALL ? null : value })}
         />
       </div>
 
-      <div className='col-span-12 md:col-span-4'>
+      <div className='col-span-6 md:col-span-3'>
         <MultiTagField
           label={t('priority')}
           items={TICKET_PRIORITIES.map((priority) => ({ id: priority, label: priorityOptions[priority] }))}
           value={filter.priority}
           onChange={(priority) => onChange({ ...filter, priority })}
+        />
+      </div>
+
+      <div className='col-span-12 md:col-span-3'>
+        <DateRangePickerField // 期日は範囲(両端含む)。開始・終了が揃った時点で絞り込みが効き、クリアで解除する
+          label={t('due_date')}
+          value={filter.due}
+          onChange={(due) => onChange({ ...filter, due })}
         />
       </div>
 

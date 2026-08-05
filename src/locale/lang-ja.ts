@@ -137,6 +137,7 @@ export const ja: DefaultLocaleItems = {
   search: '検索',
   search_tag: 'タグを検索',
   select_file: 'ファイルを選択',
+  select_self: '自分を選択',
   send: '送信',
   server_info: 'サーバー情報',
   settings: '設定',

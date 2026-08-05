@@ -561,8 +561,12 @@ const makeCard = (id: string, over: Partial<KanbanFilterCard> = {}): KanbanFilte
   assigneeId: null,
   priority: 'medium',
   tags: [],
+  dueDate: null,
   ...over,
 })
+
+/** 期日は UTC 0:00 で保存されるので、テストの値もその形で作る */
+const due = (value: string) => new Date(`${value}T00:00:00.000Z`)
 
 describe('isKanbanFilterActive: 絞り込みが指定されているか', () => {
   it('初期値は非アクティブ', () => {
@@ -574,6 +578,7 @@ describe('isKanbanFilterActive: 絞り込みが指定されているか', () => 
     expect(isKanbanFilterActive({ ...defaultKanbanFilter, assignee: 'none' })).toBe(true)
     expect(isKanbanFilterActive({ ...defaultKanbanFilter, priority: ['high'] })).toBe(true)
     expect(isKanbanFilterActive({ ...defaultKanbanFilter, tags: ['bug'] })).toBe(true)
+    expect(isKanbanFilterActive({ ...defaultKanbanFilter, due: { start: '2026-08-01', end: '2026-08-31' } })).toBe(true)
   })
 })
 
@@ -610,20 +615,54 @@ describe('matchesKanbanFilter: カード 1 枚の一致判定', () => {
     expect(matchesKanbanFilter(makeCard('b'), { ...defaultKanbanFilter, tags: ['bug'] })).toBe(false)
   })
 
+  it('期日: 範囲内は両端を含む', () => {
+    const filter = { ...defaultKanbanFilter, due: { start: '2026-08-10', end: '2026-08-20' } }
+    expect(matchesKanbanFilter(makeCard('a', { dueDate: due('2026-08-15') }), filter)).toBe(true)
+    expect(matchesKanbanFilter(makeCard('s', { dueDate: due('2026-08-10') }), filter), '開始と同日').toBe(true)
+    expect(matchesKanbanFilter(makeCard('e', { dueDate: due('2026-08-20') }), filter), '終了と同日').toBe(true)
+  })
+
+  it('期日: 範囲外は落とす', () => {
+    const filter = { ...defaultKanbanFilter, due: { start: '2026-08-10', end: '2026-08-20' } }
+    expect(matchesKanbanFilter(makeCard('a', { dueDate: due('2026-08-09') }), filter)).toBe(false)
+    expect(matchesKanbanFilter(makeCard('b', { dueDate: due('2026-08-21') }), filter)).toBe(false)
+    // 年をまたいでも辞書順比較が崩れないこと
+    expect(matchesKanbanFilter(makeCard('c', { dueDate: due('2025-12-31') }), filter)).toBe(false)
+  })
+
+  it('期日: 未設定はどの範囲にも入らない', () => {
+    const filter = { ...defaultKanbanFilter, due: { start: '2026-08-10', end: '2026-08-20' } }
+    expect(matchesKanbanFilter(makeCard('a', { dueDate: null }), filter)).toBe(false)
+    // 範囲が未指定なら期日なしも通す
+    expect(matchesKanbanFilter(makeCard('a', { dueDate: null }), defaultKanbanFilter)).toBe(true)
+  })
+
   it('複数条件は AND', () => {
-    const filter = { ...defaultKanbanFilter, assignee: 'u1', priority: ['high' as const], tags: ['bug'] }
-    const hit = makeCard('a', { assigneeId: 'u1', priority: 'high', tags: [{ name: 'bug' }] })
-    const miss = makeCard('b', { assigneeId: 'u1', priority: 'low', tags: [{ name: 'bug' }] })
-    expect(matchesKanbanFilter(hit, filter)).toBe(true)
-    expect(matchesKanbanFilter(miss, filter)).toBe(false)
+    const filter = {
+      ...defaultKanbanFilter,
+      assignee: 'u1',
+      priority: ['high' as const],
+      tags: ['bug'],
+      due: { start: '2026-08-10', end: '2026-08-20' },
+    }
+    const base = { assigneeId: 'u1', priority: 'high' as const, tags: [{ name: 'bug' }], dueDate: due('2026-08-15') }
+    expect(matchesKanbanFilter(makeCard('a', base), filter)).toBe(true)
+    expect(matchesKanbanFilter(makeCard('b', { ...base, priority: 'low' }), filter)).toBe(false)
+    expect(matchesKanbanFilter(makeCard('c', { ...base, dueDate: due('2026-09-01') }), filter)).toBe(false)
   })
 })
 
 describe('filterLaneMap / countLaneMap: レーン単位の絞り込み', () => {
   const lanes = groupByLane([
-    makeCard('t1', { status: 'todo', assigneeId: 'u1', priority: 'high' }),
-    makeCard('t2', { status: 'todo', assigneeId: 'u2', priority: 'low' }),
-    makeCard('d1', { status: 'doing', assigneeId: 'u1', priority: 'low', tags: [{ name: 'bug' }] }),
+    makeCard('t1', { status: 'todo', assigneeId: 'u1', priority: 'high', dueDate: due('2026-08-15') }),
+    makeCard('t2', { status: 'todo', assigneeId: 'u2', priority: 'low', dueDate: due('2026-09-01') }),
+    makeCard('d1', {
+      status: 'doing',
+      assigneeId: 'u1',
+      priority: 'low',
+      tags: [{ name: 'bug' }],
+      dueDate: due('2026-08-20'),
+    }),
     makeCard('b1', { status: 'backlog' }),
   ])
 
@@ -643,6 +682,14 @@ describe('filterLaneMap / countLaneMap: レーン単位の絞り込み', () => {
   it('元の LaneMap は変更されない', () => {
     filterLaneMap(lanes, { ...defaultKanbanFilter, tags: ['bug'] })
     expect(countLaneMap(lanes)).toBe(4)
+  })
+
+  it('期日の範囲で絞ると、範囲外と期日なしが落ちる', () => {
+    const filtered = filterLaneMap(lanes, { ...defaultKanbanFilter, due: { start: '2026-08-01', end: '2026-08-31' } })
+    expect(filtered.todo.map((c) => c.id)).toEqual(['t1'])
+    expect(filtered.doing.map((c) => c.id)).toEqual(['d1'])
+    expect(filtered.backlog, '期日なしは除外').toEqual([])
+    expect(countLaneMap(filtered)).toBe(2)
   })
 
   it('一致なしは全レーン空', () => {

@@ -135,6 +135,7 @@ export type LocaleItemBase =
   | 'search'
   | 'search_tag'
   | 'select_file'
+  | 'select_self'
   | 'send'
   | 'server_info'
   | 'settings'

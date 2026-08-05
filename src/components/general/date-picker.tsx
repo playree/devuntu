@@ -1,6 +1,6 @@
 'use client'
 
-import { Calendar, cn, DateField, DatePicker, ErrorMessage, Label } from '@heroui/react'
+import { Calendar, cn, DateField, DatePicker, DateRangePicker, ErrorMessage, Label, RangeCalendar } from '@heroui/react'
 import { CalendarDate, parseDate } from '@internationalized/date'
 import { ComponentProps } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
@@ -24,6 +24,28 @@ const toCalendarDate = (value: unknown): CalendarDate | null => {
     return null
   }
 }
+
+/**
+ * DateField.Suffix 内に置くクリアボタン。
+ *
+ * DateField.Suffix はボタンではないので、ここは本物の button にできる
+ * (Select のトリガー内にあるクリアは button の入れ子になるため span のまま)。
+ */
+const ClearButton = ({ onClear }: { onClear: () => void }) => (
+  <button
+    type='button'
+    // 共通部品なのでローカライズ不要とする
+    aria-label='clear'
+    className='mr-1 inline-flex cursor-pointer items-center opacity-60 hover:opacity-100'
+    onPointerDown={(e) => e.stopPropagation()}
+    onClick={(e) => {
+      e.stopPropagation()
+      onClear()
+    }}
+  >
+    <XCircleIcon width={16} />
+  </button>
+)
 
 type DatePickerFieldProps = {
   label?: string
@@ -94,25 +116,7 @@ export const DatePickerField = ({
           {(segment: DateSegmentValue) => <DateField.Segment segment={segment} />}
         </DateField.Input>
         <DateField.Suffix>
-          {isClearable && selected && !isReadOnly && (
-            <button
-              /**
-               * DateField.Suffix はボタンではないので、ここは本物の button にできる
-               * (Select のトリガー内にあるクリアは button の入れ子になるため span のまま)
-               */
-              type='button'
-              // 共通部品なのでローカライズ不要とする
-              aria-label='clear'
-              className='mr-1 inline-flex cursor-pointer items-center opacity-60 hover:opacity-100'
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.stopPropagation()
-                onChange(null)
-              }}
-            >
-              <XCircleIcon width={16} />
-            </button>
-          )}
+          {isClearable && selected && !isReadOnly && <ClearButton onClear={() => onChange(null)} />}
           <DatePicker.Trigger>
             <DatePicker.TriggerIndicator />
           </DatePicker.Trigger>
@@ -164,5 +168,97 @@ export const DatePickerCtrl = <
         />
       )}
     />
+  )
+}
+
+/** 日付範囲の値。両端とも `YYYY-MM-DD` で、範囲は両端を含む */
+export type DateRangeValue = { start: string; end: string }
+
+/**
+ * 日付範囲(開始 - 終了)の入力。値は `DateRangeValue` または null。
+ *
+ * 開始・終了の両方が揃ったときだけ onChange が呼ばれる(HeroUI / react-aria の DateRangePicker は
+ * 片側だけの入力を確定として通知しない)。片側だけの範囲は表せないので、解除はクリアボタンで行う。
+ */
+export const DateRangePickerField = ({
+  label,
+  isLabelHidden,
+  errorMessage,
+  isRequired,
+  isReadOnly,
+  isDisabled,
+  isClearable = true,
+  variant,
+  isSmart: isSmartProp,
+  value,
+  onChange,
+  onBlur,
+}: DatePickerFieldProps & {
+  value: DateRangeValue | null
+  onChange: (value: DateRangeValue | null) => void
+  onBlur?: () => void
+}) => {
+  const isSmart = useIsSmart(isSmartProp)
+  const start = toCalendarDate(value?.start)
+  const end = toCalendarDate(value?.end)
+  // 片側だけでは範囲にならないので未入力扱いにする
+  const selected: { start: CalendarDate; end: CalendarDate } | null = start && end ? { start, end } : null
+  return (
+    <DateRangePicker
+      value={selected}
+      // CalendarDate.toString() は YYYY-MM-DD を返す
+      onChange={(range) => onChange(range ? { start: range.start.toString(), end: range.end.toString() } : null)}
+      onBlur={onBlur}
+      isInvalid={!!errorMessage}
+      isReadOnly={isReadOnly}
+      isRequired={isRequired}
+      isDisabled={isDisabled}
+      className='flex w-full'
+    >
+      {label && (
+        <Label className={cn(isSmart ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}>
+          {label}
+          {isRequired ? '*' : ''}
+        </Label>
+      )}
+      <DateField.Group // isSmart の高さ調整は DatePickerField と同じ
+        fullWidth
+        variant={variant}
+        className={isSmart ? 'h-7' : undefined}
+      >
+        <DateField.Input // 範囲の両端は slot で区別する(react-aria の DateRangePicker の仕様)
+          slot='start'
+          className={isSmart ? 'py-1' : undefined}
+        >
+          {(segment: DateSegmentValue) => <DateField.Segment segment={segment} />}
+        </DateField.Input>
+        <DateRangePicker.RangeSeparator />
+        <DateField.Input slot='end' className={isSmart ? 'py-1' : undefined}>
+          {(segment: DateSegmentValue) => <DateField.Segment segment={segment} />}
+        </DateField.Input>
+        <DateField.Suffix>
+          {isClearable && selected && !isReadOnly && <ClearButton onClear={() => onChange(null)} />}
+          <DateRangePicker.Trigger>
+            <DateRangePicker.TriggerIndicator />
+          </DateRangePicker.Trigger>
+        </DateField.Suffix>
+      </DateField.Group>
+      <ErrorMessage className={isSmart ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
+      <DateRangePicker.Popover>
+        <RangeCalendar>
+          <RangeCalendar.Header>
+            <RangeCalendar.NavButton slot='previous' />
+            <RangeCalendar.Heading />
+            <RangeCalendar.NavButton slot='next' />
+          </RangeCalendar.Header>
+          <RangeCalendar.Grid>
+            <RangeCalendar.GridHeader>
+              {(day) => <RangeCalendar.HeaderCell>{day}</RangeCalendar.HeaderCell>}
+            </RangeCalendar.GridHeader>
+            <RangeCalendar.GridBody>{(date) => <RangeCalendar.Cell date={date} />}</RangeCalendar.GridBody>
+          </RangeCalendar.Grid>
+        </RangeCalendar>
+      </DateRangePicker.Popover>
+    </DateRangePicker>
   )
 }

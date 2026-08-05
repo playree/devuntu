@@ -8,6 +8,7 @@
 
 import type { TagColor, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
 import type { TicketOrderByWithRelationInput, TicketWhereInput } from '@/generated/prisma/models'
+import { utcToDateOnly } from './day'
 
 /** チケットのステータス(定義順は enum と同じ) */
 export const TICKET_STATUSES = ['backlog', 'todo', 'doing', 'done'] as const satisfies readonly TicketStatus[]
@@ -523,10 +524,12 @@ export type KanbanFilter = {
   priority: TicketPriority[]
   /** タグ「名」の配列(いずれか 1 つでも持てばヒット) */
   tags: string[]
+  /** 期日の範囲(YYYY-MM-DD)。null = 未指定。両端とも含む */
+  due: { start: string; end: string } | null
 }
 
 /** 絞り込みの初期値(すべて未指定) */
-export const defaultKanbanFilter: KanbanFilter = { assignee: null, priority: [], tags: [] }
+export const defaultKanbanFilter: KanbanFilter = { assignee: null, priority: [], tags: [], due: null }
 
 /** 未割り当てを表す assignee の値 */
 export const KANBAN_ASSIGNEE_NONE = 'none'
@@ -536,11 +539,12 @@ export type KanbanFilterCard = KanbanCardLite & {
   assigneeId: string | null
   priority: TicketPriority
   tags: { name: string }[]
+  dueDate: Date | null
 }
 
 /** 1 つでも条件が指定されているか(見出しの件数表示と絞り込みのスキップ判定に使う) */
 export const isKanbanFilterActive = (filter: KanbanFilter): boolean =>
-  filter.assignee !== null || filter.priority.length > 0 || filter.tags.length > 0
+  filter.assignee !== null || filter.priority.length > 0 || filter.tags.length > 0 || filter.due !== null
 
 /** カード 1 枚が条件に一致するか。判定は buildTicketWhere と同じセマンティクス */
 export const matchesKanbanFilter = (card: KanbanFilterCard, filter: KanbanFilter): boolean => {
@@ -559,6 +563,15 @@ export const matchesKanbanFilter = (card: KanbanFilterCard, filter: KanbanFilter
   // タグは OR(いずれか 1 つでも持てばヒット)
   if (filter.tags.length > 0 && !card.tags.some((tag) => filter.tags.includes(tag.name))) {
     return false
+  }
+
+  if (filter.due) {
+    // 保存値は UTC 0:00 の日付なので YYYY-MM-DD へ戻して比べる(この書式は辞書順 = 日付順)
+    const due = utcToDateOnly(card.dueDate)
+    // 期日なしはどの範囲にも入らないので除外する
+    if (!due || due < filter.due.start || due > filter.due.end) {
+      return false
+    }
   }
 
   return true

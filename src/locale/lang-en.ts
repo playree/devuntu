@@ -137,6 +137,7 @@ export const en: LocaleItems = {
   search: 'Search',
   search_tag: 'Search tags',
   select_file: 'Choose file',
+  select_self: 'Select myself',
   send: 'Send',
   server_info: 'Server Info',
   settings: 'Settings',

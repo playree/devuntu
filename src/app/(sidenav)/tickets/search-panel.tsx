@@ -4,6 +4,7 @@ import { GridBox } from '@/components/general/grid'
 import { InputSearchField } from '@/components/general/input'
 import { SingleSelectField } from '@/components/general/select'
 import { MultiTagField } from '@/components/general/tag-group'
+import { SelfAssigneeAction } from '@/components/ticket/assignee-select'
 import { TagNameSelectField } from '@/components/ticket/tag-select'
 import { useTicketOptions } from '@/components/ticket/ticket-chip'
 import type { BoardKind, TagColor } from '@/generated/prisma/enums'
@@ -95,6 +96,10 @@ export const TicketSearchPanel: FC<{
           groupOptions={assigneeOptions}
           value={filter.assignee}
           onChange={(value) => onChange({ ...filter, assignee: (value ?? 'any') as TicketSearch['assignee'] })}
+          labelAction={
+            // 候補が userId ではなく 'me' なので、担当者の候補に依らず常に選べる
+            <SelfAssigneeAction onPress={() => onChange({ ...filter, assignee: 'me' })} />
+          }
         />
       </div>
 

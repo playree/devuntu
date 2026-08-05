@@ -8,6 +8,7 @@ import { FormModal, ModalBaseProps } from '@/components/general/modal'
 import { SingleSelectCtrl } from '@/components/general/select'
 import { CheckIcon, PlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
+import { AssigneeSelectCtrl } from '@/components/ticket/assignee-select'
 import { MarkdownEditor } from '@/components/ticket/markdown-editor'
 import { TagSelect } from '@/components/ticket/tag-select'
 import { useBoardName, useTicketOptions } from '@/components/ticket/ticket-chip'
@@ -140,13 +141,7 @@ export const AddModal: FC<
           <SingleSelectCtrl control={control} name='priority' groupOptions={priorityOptions} label={t('priority')} />
         </div>
         <div className='col-span-6 md:col-span-2'>
-          <SingleSelectCtrl
-            control={control}
-            name='assigneeId'
-            groupOptions={boardAssignees}
-            label={t('assignee')}
-            isClearable
-          />
+          <AssigneeSelectCtrl control={control} name='assigneeId' groupOptions={boardAssignees} isClearable />
         </div>
         <div className='col-span-6 md:col-span-3'>
           <DatePickerCtrl control={control} name='dueDate' label={t('due_date')} errorMessage={fet(errors.dueDate)} />
