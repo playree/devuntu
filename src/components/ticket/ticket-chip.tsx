@@ -10,13 +10,40 @@ import { tv } from 'tailwind-variants'
 
 type ChipColor = ChipProps['color']
 
-/** ステータスのロケールキーと表示色 */
+/**
+ * ステータスのロケールキーと Chip の表示色。
+ * color は Chip 用の HeroUI セマンティック名なので bg-* には使えない(配色は statusStyles を参照)。
+ */
 const STATUS_STYLE: Record<TicketStatus, { item: LocaleItemBase; color: ChipColor }> = {
   backlog: { item: 'status_backlog', color: 'default' },
   todo: { item: 'status_todo', color: 'accent' },
   doing: { item: 'status_doing', color: 'warning' },
   done: { item: 'status_done', color: 'success' },
 }
+
+/**
+ * ステータスの背景色。StatusChip(STATUS_STYLE)と同じ色を 10% で敷き、下地を透かして淡く色を付ける。
+ *
+ * HeroUI のセマンティック名そのままでは bg-* に使えないが、色トークン(--color-accent など)は
+ * @theme に登録されているので bg-accent/10 の形で同じ色を参照できる
+ * (Tailwind v4 が color-mix(in oklab, var(--color-accent) 10%, transparent) に展開する)。
+ * 実体の CSS 変数がテーマごとに切り替わるため dark: は要らない(priorityStyles との違い)。
+ * 半透明なので単色の背景クラスとは併用できない(priorityBgClass と同じ制約)。
+ * クラス名は purge 対策で必ず完全なリテラルで書くこと(tagStyles と同じ規約)。
+ */
+const statusStyles = tv({
+  variants: {
+    status: {
+      backlog: 'bg-default/20',
+      todo: 'bg-accent/5',
+      doing: 'bg-warning/5',
+      done: 'bg-success/5',
+    } satisfies Record<TicketStatus, string>,
+  },
+})
+
+/** ステータス色を 10% で敷いた背景クラス。className を渡すと tailwind-merge でマージされる */
+export const statusBgClass = (status: TicketStatus, className?: string) => statusStyles({ status, className })
 
 /**
  * 優先度のロケールキーと Chip の表示色。

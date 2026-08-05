@@ -7,6 +7,7 @@ import {
   priorityBgClass,
   priorityBorderClass,
   PriorityChip,
+  statusBgClass,
   StatusChip,
   TagChips,
 } from '@/components/ticket/ticket-chip'
@@ -212,6 +213,7 @@ export const KanbanLane: FC<{
       ref={ref}
       className={cn(
         'min-w-0 rounded-xl border-2 p-2 md:flex md:min-h-0 md:flex-col',
+        statusBgClass(status),
         isDropTarget ? 'border-blue-300' : '',
         className,
       )}
