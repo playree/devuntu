@@ -146,6 +146,27 @@ const server = {
     return getEnv('SMTP_PASS')
   },
 
+  // オブジェクトストレージ(S3互換)
+  get S3_ENDPOINT() {
+    return getEnv('S3_ENDPOINT', { required: true })
+  },
+  get S3_BUCKET() {
+    return getEnv('S3_BUCKET', { default: 'devuntu' })
+  },
+  get S3_REGION() {
+    return getEnv('S3_REGION', { default: 'us-east-1' })
+  },
+  get S3_ACCESS_KEY_ID() {
+    return getEnv('S3_ACCESS_KEY_ID', { required: true })
+  },
+  get S3_SECRET_ACCESS_KEY() {
+    return getEnv('S3_SECRET_ACCESS_KEY', { required: true })
+  },
+  get S3_FORCE_PATH_STYLE() {
+    // SeaweedFS などはバーチャルホスト形式に対応しないためデフォルトで有効
+    return getEnvBoolean('S3_FORCE_PATH_STYLE', { default: true })
+  },
+
   // Linode
   get LINODE_ID() {
     return getEnv('LINODE_ID')

@@ -145,6 +145,11 @@
     @apply inline-block rounded-sm border px-1 py-5 align-middle font-mono text-xs font-normal shadow-sm;
   }
 
+  /* 表示・編集の両面に効く(編集面は contentEditableClassName='markdown') */
+  .markdown img {
+    @apply h-auto max-w-full rounded-sm;
+  }
+
   .markdown table {
     @apply border-gray-600 text-sm dark:border-gray-300;
   }

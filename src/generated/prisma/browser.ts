@@ -83,6 +83,12 @@ export type Dashboard = Prisma.DashboardModel
  */
 export type LinkWidget = Prisma.LinkWidgetModel
 /**
+ * Model Attachment
+ * オブジェクトストレージに保存したアップロードファイルのメタデータ。
+ * 公開URLは `/api/upload/<key>` で、配信時はここから mimeType を引いて存在確認も兼ねる。
+ */
+export type Attachment = Prisma.AttachmentModel
+/**
  * Model KeyValueStore
  * 
  */

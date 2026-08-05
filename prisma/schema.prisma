@@ -50,6 +50,9 @@ model User {
   assignedTickets Ticket[]        @relation("TicketAssignee")
   ticketComments  TicketComment[] @relation("TicketCommentAuthor")
 
+  // add Attachment
+  attachments Attachment[]
+
   @@unique([email])
   @@map("user")
 }
@@ -274,6 +277,21 @@ model LinkWidget {
   createdAt   DateTime @default(now())
 
   @@map("link_widget")
+}
+
+/// オブジェクトストレージに保存したアップロードファイルのメタデータ。
+/// 公開URLは `/api/upload/<key>` で、配信時はここから mimeType を引いて存在確認も兼ねる。
+model Attachment {
+  id           String   @id @default(uuid(7))
+  key          String   @unique
+  mimeType     String
+  size         Int
+  originalName String
+  createdById  String?
+  createdBy    User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now())
+
+  @@map("attachment")
 }
 
 model KeyValueStore {

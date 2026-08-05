@@ -1,16 +1,52 @@
-import path from 'path'
+import { uuidv7 } from 'uuidv7'
 
-export const UPLOAD_DIR = path.join(process.cwd(), 'upload')
+/**
+ * アップロードファイルのキーとURLの相互変換。
+ *
+ * オブジェクトストレージのキーは `<uuidv7>.<拡張子>` のフラット構成にして、
+ * 公開URLは `/api/upload/<キー>` になる。DBにはこの公開URLを文字列として保存する。
+ * サーバー/クライアント両方から import するため、Node固有のモジュールは使わない。
+ */
+
 export const UPLOAD_URL_PREFIX = '/api/upload'
 
-// 保存ファイル名から公開URLを生成
-export const toUploadUrl = (filename: string) => `${UPLOAD_URL_PREFIX}/${path.basename(filename)}`
+/**
+ * 許可する拡張子。
+ * 旧形式(`<uuidv7>-<base36>.webp`)はローカル保存時代のファイル名で、
+ * 移行後もDBの値を書き換えずに参照できるよう受け付ける。
+ */
+const UPLOAD_KEY_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(-[0-9a-z]+)?\.(webp|png|jpe?g|gif)$/
 
-// ディスク上の絶対パスを生成
-export const toUploadPath = (filename: string) => {
-  const resolved = path.join(UPLOAD_DIR, path.basename(filename))
-  if (!resolved.startsWith(UPLOAD_DIR + path.sep)) {
-    throw new Error('Invalid filename')
+/** 保存キーから公開URLを生成 */
+export const toUploadUrl = (key: string) => `${UPLOAD_URL_PREFIX}/${key}`
+
+/** 公開URL(`/api/upload/<キー>`)から保存キーを取り出す */
+export const toUploadKey = (url: string) => url.slice(url.lastIndexOf('/') + 1)
+
+/**
+ * 保存キーの形式検証。
+ *
+ * ホワイトリスト方式なのでスラッシュや `..` は構造的に通らず、
+ * ローカル保存時代のパストラバーサル対策(basename + ディレクトリ検証)を兼ねる。
+ */
+export const isValidUploadKey = (key: string) => UPLOAD_KEY_REGEX.test(key)
+
+/** 新規保存用のキーを生成する */
+export const newUploadKey = (ext: string) => `${uuidv7()}.${ext}`
+
+/**
+ * 画像をアップロードして公開URLを返す(MDXEditor の imageUploadHandler 用)。
+ * 失敗時は throw して MDXEditor 側にエラーを表示させる。
+ */
+export const uploadImage = async (file: File) => {
+  const form = new FormData()
+  form.append('file', file)
+  const res = await fetch(UPLOAD_URL_PREFIX, { method: 'POST', body: form })
+  if (!res.ok) {
+    const { message } = await res.json().catch(() => ({ message: undefined }))
+    throw new Error(message ?? `upload failed: ${res.status}`)
   }
-  return resolved
+  const { url } = (await res.json()) as { url: string }
+  return url
 }

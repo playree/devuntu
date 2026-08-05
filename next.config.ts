@@ -13,6 +13,12 @@ const nextConfig: NextConfig = {
   env: {
     BUILD_NO: genBuildNo(),
   },
+  experimental: {
+    serverActions: {
+      // 既定は1MB。schema.ts の MAX_IMAGE_SIZE(5MB)まで Server Action で受け取れるようにする
+      bodySizeLimit: '6mb',
+    },
+  },
 }
 
 export default nextConfig

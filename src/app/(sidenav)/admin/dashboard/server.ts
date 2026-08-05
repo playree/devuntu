@@ -3,6 +3,7 @@
 import { WidgetDefaultLayout } from '@/components/dashboard/widget-define'
 import { LinkWidgetUpdateInput } from '@/generated/prisma/models'
 import { safeAuthAction } from '@/lib/action-server'
+import { toWebp, WEBP_EXT, WEBP_MIME } from '@/lib/image'
 import { getString, setString } from '@/lib/kvs'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
@@ -14,10 +15,8 @@ import {
   scUpdateLinkWidget,
   scUUID,
 } from '@/lib/schema'
-import { toUploadPath, toUploadUrl, UPLOAD_DIR } from '@/lib/upload'
-import { mkdir, unlink, writeFile } from 'fs/promises'
-import path from 'path'
-import sharp from 'sharp'
+import { deleteObject, putObject } from '@/lib/storage'
+import { newUploadKey, toUploadKey, toUploadUrl } from '@/lib/upload'
 import { uuidv7 } from 'uuidv7'
 
 /**
@@ -89,32 +88,32 @@ export const getLinkWidgets = safeAuthAction
   })
 
 /**
- * アイコン画像を正方形にクロップしてwebpで保存し、公開パスを返す
+ * アイコン画像を正方形にクロップしてwebpでオブジェクトストレージに保存し、公開パスを返す
  */
-const saveLinkWidgetIcon = async (icon: File, id: string) => {
-  const buffer = Buffer.from(await icon.arrayBuffer())
-  const webp = await sharp(buffer)
-    .resize(128, 128, { fit: 'cover' }) // 正方形にクロップ
-    .webp({ quality: 80 })
-    .toBuffer()
-  // キャッシュバスティング: 保存ごとにユニークなファイル名にしてURLを変え、更新を反映させる
-  const filename = `${id}-${Date.now().toString(36)}.webp`
-  // standaloneビルドではupload/がバンドルに含まれないため実行時に作成を保証
-  await mkdir(UPLOAD_DIR, { recursive: true })
-  await writeFile(toUploadPath(filename), webp)
-  return toUploadUrl(filename)
+const saveLinkWidgetIcon = async (icon: File, userId: string) => {
+  const webp = await toWebp(icon, { size: 128, fit: 'cover' }) // 正方形にクロップ
+  // キャッシュバスティング: 保存ごとにユニークなキーにしてURLを変え、更新を反映させる
+  const key = newUploadKey(WEBP_EXT)
+  await putObject(key, webp, WEBP_MIME)
+  await prisma.attachment.create({
+    data: { key, mimeType: WEBP_MIME, size: webp.byteLength, originalName: icon.name, createdById: userId },
+  })
+  return toUploadUrl(key)
 }
 
 /**
  * 保存済みのアイコン画像を削除する
  */
 const removeLinkWidgetIcon = async (iconPath: string): Promise<void> => {
-  // iconPathは`/api/upload/<filename>`形式なのでファイル名を抽出
-  await unlink(toUploadPath(path.basename(iconPath))).catch((err) => {
-    if (err?.code !== 'ENOENT') {
-      logger.warn({ err, iconPath }, 'failed to remove linkWidget icon')
-    }
-  })
+  // iconPathは`/api/upload/<key>`形式なのでキーを抽出
+  const key = toUploadKey(iconPath)
+  try {
+    await deleteObject(key)
+    // 移行前のファイルはAttachmentレコードを持たない場合があるためdeleteManyで許容する
+    await prisma.attachment.deleteMany({ where: { key } })
+  } catch (err) {
+    logger.warn({ err, iconPath }, 'failed to remove linkWidget icon')
+  }
 }
 
 /**
@@ -123,9 +122,9 @@ const removeLinkWidgetIcon = async (iconPath: string): Promise<void> => {
 export const createLinkWidget = safeAuthAction
   .metadata({ actionName: 'createLinkWidget', role: 'admin' })
   .inputSchema(scCreateLinkWidget)
-  .action(async ({ parsedInput: { name, url, description, icon } }) => {
+  .action(async ({ ctx: { user }, parsedInput: { name, url, description, icon } }) => {
     const id = uuidv7()
-    const iconPath = icon ? await saveLinkWidgetIcon(icon, id) : null
+    const iconPath = icon ? await saveLinkWidgetIcon(icon, user.id) : null
     const created = await prisma.linkWidget.create({
       data: { id, name, url, description, iconPath },
     })
@@ -139,7 +138,7 @@ export const createLinkWidget = safeAuthAction
 export const updateLinkWidget = safeAuthAction
   .metadata({ actionName: 'updateLinkWidget', role: 'admin' })
   .inputSchema(scUpdateLinkWidget)
-  .action(async ({ parsedInput: { id, name, url, description, icon } }) => {
+  .action(async ({ ctx: { user }, parsedInput: { id, name, url, description, icon } }) => {
     const data: LinkWidgetUpdateInput = {
       name,
       url,
@@ -157,8 +156,8 @@ export const updateLinkWidget = safeAuthAction
         }
         data.iconPath = null
       } else {
-        // アイコン差し替え: 新ファイル名で保存してから旧ファイルを削除
-        data.iconPath = await saveLinkWidgetIcon(icon, id)
+        // アイコン差し替え: 新しいキーで保存してから旧ファイルを削除
+        data.iconPath = await saveLinkWidgetIcon(icon, user.id)
         if (existing?.iconPath) {
           await removeLinkWidgetIcon(existing.iconPath)
         }

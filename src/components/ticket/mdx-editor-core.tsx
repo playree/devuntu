@@ -1,5 +1,6 @@
 'use client'
 
+import { uploadImage } from '@/lib/upload'
 import { cn } from '@heroui/react'
 import {
   BlockTypeSelect,
@@ -15,6 +16,7 @@ import {
   headingsPlugin,
   imagePlugin,
   InsertCodeBlock,
+  InsertImage,
   InsertTable,
   linkDialogPlugin,
   linkPlugin,
@@ -66,6 +68,7 @@ const RichTextControls: FC = () => (
     <ListsToggle />
     <Separator />
     <CreateLink />
+    <InsertImage />
     <InsertTable />
     <InsertCodeBlock />
   </>
@@ -133,7 +136,12 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
       linkDialogPlugin(),
       thematicBreakPlugin(),
       tablePlugin(),
-      imagePlugin(),
+      /**
+       * imageUploadHandler を渡すと、ツールバーの InsertImage に加えて
+       * 貼り付け / ドラッグ&ドロップも imagePlugin 側が拾ってアップロードするようになる。
+       * uploadImage はモジュールスコープの安定参照なので plugins は作り直されない
+       */
+      imagePlugin({ imageUploadHandler: uploadImage }),
       codeBlockPlugin({ defaultCodeBlockLanguage: '' }),
       codeMirrorPlugin({ codeBlockLanguages: CODE_BLOCK_LANGUAGES, codeMirrorExtensions }),
       markdownShortcutPlugin(),

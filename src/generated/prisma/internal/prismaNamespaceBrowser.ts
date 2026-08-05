@@ -64,6 +64,7 @@ export const ModelName = {
   OauthConsent: 'OauthConsent',
   Dashboard: 'Dashboard',
   LinkWidget: 'LinkWidget',
+  Attachment: 'Attachment',
   KeyValueStore: 'KeyValueStore',
   Group: 'Group',
   UserGroup: 'UserGroup',
@@ -305,6 +306,19 @@ export const LinkWidgetScalarFieldEnum = {
 } as const
 
 export type LinkWidgetScalarFieldEnum = (typeof LinkWidgetScalarFieldEnum)[keyof typeof LinkWidgetScalarFieldEnum]
+
+
+export const AttachmentScalarFieldEnum = {
+  id: 'id',
+  key: 'key',
+  mimeType: 'mimeType',
+  size: 'size',
+  originalName: 'originalName',
+  createdById: 'createdById',
+  createdAt: 'createdAt'
+} as const
+
+export type AttachmentScalarFieldEnum = (typeof AttachmentScalarFieldEnum)[keyof typeof AttachmentScalarFieldEnum]
 
 
 export const KeyValueStoreScalarFieldEnum = {

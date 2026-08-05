@@ -20,8 +20,9 @@ export const zPassword = z
   .regex(reHalfString, el('@invalid_password'))
 export const zDescription = z.string().max(40, el('@invalid_description')).optional()
 
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB
-const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+/** アップロード画像の上限。クライアント側の入力チェックにも使うので export する */
+export const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB
+export const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 
 export const zImageFile = z
   .instanceof(File, { message: el('@required_field') })
