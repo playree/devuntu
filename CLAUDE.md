@@ -27,6 +27,7 @@
 - コンパイル、ビルド確認は`pnpm build`
 - 修正ファイルには`pnpm exec prettier --write`を実施する
 - classNameの外部定義はなるべく`tailwind-variants`を利用する
+- 1ファイルが肥大化しないように考慮する
 
 ## tsxでのコメント
 

@@ -66,6 +66,7 @@ export const ModelName = {
   LinkWidget: 'LinkWidget',
   Attachment: 'Attachment',
   KeyValueStore: 'KeyValueStore',
+  AppVersion: 'AppVersion',
   Group: 'Group',
   UserGroup: 'UserGroup',
   CalendarShare: 'CalendarShare',
@@ -331,6 +332,17 @@ export const KeyValueStoreScalarFieldEnum = {
 } as const
 
 export type KeyValueStoreScalarFieldEnum = (typeof KeyValueStoreScalarFieldEnum)[keyof typeof KeyValueStoreScalarFieldEnum]
+
+
+export const AppVersionScalarFieldEnum = {
+  id: 'id',
+  version: 'version',
+  buildNo: 'buildNo',
+  updatedAt: 'updatedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type AppVersionScalarFieldEnum = (typeof AppVersionScalarFieldEnum)[keyof typeof AppVersionScalarFieldEnum]
 
 
 export const GroupScalarFieldEnum = {

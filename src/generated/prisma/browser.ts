@@ -94,6 +94,13 @@ export type Attachment = Prisma.AttachmentModel
  */
 export type KeyValueStore = Prisma.KeyValueStoreModel
 /**
+ * Model AppVersion
+ * アプリバージョンの利用履歴。サーバー起動時(`src/instrumentation.ts`)に upsert で記録し、
+ * このDBがどのバージョンでいつ利用されていたかを追跡できるようにする。
+ * createdAt が初回起動日時、updatedAt が最終起動日時になる。
+ */
+export type AppVersion = Prisma.AppVersionModel
+/**
  * Model Group
  * 
  */
