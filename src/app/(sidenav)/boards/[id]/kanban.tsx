@@ -3,6 +3,7 @@
 import { MultiButton } from '@/components/general/button'
 import { ChatBubbleIcon, PlusIcon } from '@/components/icon'
 import {
+  CARD_BACKDROP_CLASS,
   PriorityBar,
   priorityBgClass,
   priorityBorderClass,
@@ -114,6 +115,8 @@ const KanbanCardView: FC<{
       ref={dropRef}
       className={cn(
         'rounded-xl',
+        // 半透明のカード背景(priorityBgClass)がレーンの色と混色されないよう、最背面に不透明な下地を敷く
+        CARD_BACKDROP_CLASS,
         // ドラッグ中の挿入位置の方が情報として重要なので、ドロップ対象の枠を選択の枠より優先する
         isDropTarget ? 'ring-2 ring-blue-300' : isSelected ? 'ring-2 ring-blue-500' : '',
       )}
