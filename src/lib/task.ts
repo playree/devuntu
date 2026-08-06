@@ -178,6 +178,9 @@ export const diffTagIds = (current: string[], next: string[]): { toAdd: string[]
  * 検索
  * -----------------------------------------------------------------------------------------------*/
 
+/** 未割り当てを表す assignee の値。チケット一覧・かんばんの絞り込みで共通に使う */
+export const ASSIGNEE_NONE = 'none'
+
 /** 検索条件。`scTicketSearch`(schema.ts) の出力型と構造的に一致させる */
 export type TicketSearchParams = {
   keyword: string
@@ -186,7 +189,8 @@ export type TicketSearchParams = {
   tags: string[]
   /** null / undefined = 可視ボード全体。指定時は可視ボードとの交差を取る */
   boardId?: string | null
-  assignee: 'any' | 'me' | 'none'
+  /** null / undefined = すべて / 'none' = 未割り当て / それ以外は userId */
+  assignee?: string | null
 }
 
 /**
@@ -243,7 +247,7 @@ const keywordOr = (word: string): TicketWhereInput => ({
  */
 export const buildTicketWhere = (
   params: TicketSearchParams,
-  ctx: { userId: string; accessibleBoardIds: string[] },
+  ctx: { accessibleBoardIds: string[] },
 ): TicketWhereInput => {
   const and: TicketWhereInput[] = []
 
@@ -270,11 +274,10 @@ export const buildTicketWhere = (
   if (tagNames.length > 0) {
     and.push(tagNamesWhere(tagNames))
   }
-  if (params.assignee === 'me') {
-    and.push({ assigneeId: ctx.userId })
-  }
-  if (params.assignee === 'none') {
+  if (params.assignee === ASSIGNEE_NONE) {
     and.push({ assigneeId: null })
+  } else if (params.assignee) {
+    and.push({ assigneeId: params.assignee })
   }
 
   return { AND: and }
@@ -531,9 +534,6 @@ export type KanbanFilter = {
 /** 絞り込みの初期値(すべて未指定) */
 export const defaultKanbanFilter: KanbanFilter = { assignee: null, priority: [], tags: [], due: null }
 
-/** 未割り当てを表す assignee の値 */
-export const KANBAN_ASSIGNEE_NONE = 'none'
-
 /** 絞り込み対象のカードに最低限必要な形。LaneMap の要素型はこれを満たすこと */
 export type KanbanFilterCard = KanbanCardLite & {
   assigneeId: string | null
@@ -548,7 +548,7 @@ export const isKanbanFilterActive = (filter: KanbanFilter): boolean =>
 
 /** カード 1 枚が条件に一致するか。判定は buildTicketWhere と同じセマンティクス */
 export const matchesKanbanFilter = (card: KanbanFilterCard, filter: KanbanFilter): boolean => {
-  if (filter.assignee === KANBAN_ASSIGNEE_NONE) {
+  if (filter.assignee === ASSIGNEE_NONE) {
     if (card.assigneeId !== null) {
       return false
     }

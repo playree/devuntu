@@ -1,6 +1,7 @@
 import { el } from '@/locale'
 import { z } from 'zod'
 import {
+  ASSIGNEE_NONE,
   MAX_TAG_NAME,
   MAX_TICKET_TAGS,
   TAG_COLORS,
@@ -285,7 +286,8 @@ export const scTicketSearch = z.object({
   tags: z.array(zTagName).max(MAX_TICKET_TAGS).default([]),
   /** null = 可視ボード全体。プライベートも 1 つのボードとして指定する */
   boardId: z.uuidv7().nullish(),
-  assignee: z.enum(['any', 'me', 'none']).default('any'),
+  /** null = すべて / 'none' = 未割り当て / それ以外は userId(KanbanFilter.assignee と同じ規約) */
+  assignee: z.union([z.literal(ASSIGNEE_NONE), z.uuidv7()]).nullish(),
 })
 export type TicketSearch = z.infer<typeof scTicketSearch>
 export type TicketSearchIn = z.input<typeof scTicketSearch>

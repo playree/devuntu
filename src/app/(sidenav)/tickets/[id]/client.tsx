@@ -19,7 +19,7 @@ import {
   XMarkIcon,
 } from '@/components/icon'
 import { notify } from '@/components/notify'
-import { AssigneeSelectField } from '@/components/ticket/assignee-select'
+import { AssigneeOption, AssigneeSelectField } from '@/components/ticket/assignee-select'
 import { MarkdownField } from '@/components/ticket/markdown-editor'
 import { TagIdSelectField } from '@/components/ticket/tag-select'
 import { PriorityChip, StatusChip, TagChips, useBoardName, useTicketOptions } from '@/components/ticket/ticket-chip'
@@ -123,7 +123,7 @@ export const TicketDetailClient: FC<{
 
   const { data: ticket, refresh, isLoading } = useActionData(() => getTicket({ id }))
   const [options, setOptions] = useState<GetTicketFormOptionsReturnType>()
-  const [boardAssignees, setBoardAssignees] = useState<Record<string, string>>({})
+  const [boardAssignees, setBoardAssignees] = useState<AssigneeOption[]>([])
   const [savingField, setSavingField] = useState<EditField>()
   const [draft, setDraft] = useState<Draft>({})
   // 件名は入力途中の値を保持する必要があるため state で持つ
@@ -149,8 +149,8 @@ export const TicketDetailClient: FC<{
     // ボードが変わったときに古い要求が後着しうるので、対象が変わった結果は捨てる
     let isCurrent = true
     parseAction(getAssigneeOptions({ id: boardId }))
-      .then((res) => isCurrent && setBoardAssignees(res ?? {}))
-      .catch(() => isCurrent && setBoardAssignees({}))
+      .then((res) => isCurrent && setBoardAssignees(res ?? []))
+      .catch(() => isCurrent && setBoardAssignees([]))
     return () => {
       isCurrent = false
     }
@@ -289,7 +289,7 @@ export const TicketDetailClient: FC<{
   }
 
   // 候補が揃うまでは選択肢が空になり選択済みの値が消えてしまうため、表示専用にフォールバックする
-  const canEditAssignee = canEdit && Object.keys(boardAssignees).length > 0
+  const canEditAssignee = canEdit && boardAssignees.length > 0
   const canEditTags = canEdit && !!options
   const isContentSubmittable = MAX_CONTENT_LENGTH === undefined || contentDraft.length <= MAX_CONTENT_LENGTH
 
@@ -383,7 +383,7 @@ export const TicketDetailClient: FC<{
             {canEditAssignee ? (
               <AssigneeSelectField
                 isClearable
-                groupOptions={boardAssignees}
+                options={boardAssignees}
                 value={assigneeId}
                 isDisabled={savingField === 'assigneeId'}
                 onChange={(next) => {

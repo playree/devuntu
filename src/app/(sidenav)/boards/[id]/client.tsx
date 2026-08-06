@@ -17,6 +17,7 @@ import {
   ViewColumnsIcon,
 } from '@/components/icon'
 import { notify } from '@/components/notify'
+import { AssigneeOption } from '@/components/ticket/assignee-select'
 import { useBoardName } from '@/components/ticket/ticket-chip'
 import type { TicketStatus } from '@/generated/prisma/enums'
 import { parseAction, useActionData } from '@/lib/action-client'
@@ -55,7 +56,7 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
 
   const { data, reload, refresh, isLoading } = useActionData(() => getBoardKanban({ id: boardId }))
   const [options, setOptions] = useState<GetTicketFormOptionsReturnType>()
-  const [assigneeOptions, setAssigneeOptions] = useState<Record<string, string>>({})
+  const [assigneeOptions, setAssigneeOptions] = useState<AssigneeOption[]>([])
   const [filter, setFilter] = useState<KanbanFilter>(defaultKanbanFilter)
   // 詳細パネルに表示中のチケット。未選択なら undefined
   const [selectedId, setSelectedId] = useState<string>()
@@ -78,8 +79,8 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
     // ボードを続けて切り替えると古い要求が後着しうるので、対象が変わった結果は捨てる
     let isCurrent = true
     parseAction(getAssigneeOptions({ id: boardId }))
-      .then((res) => isCurrent && setAssigneeOptions(res ?? {}))
-      .catch(() => isCurrent && setAssigneeOptions({}))
+      .then((res) => isCurrent && setAssigneeOptions(res ?? []))
+      .catch(() => isCurrent && setAssigneeOptions([]))
     return () => {
       isCurrent = false
     }

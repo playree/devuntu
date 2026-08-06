@@ -4,12 +4,14 @@ import { GridBox } from '@/components/general/grid'
 import { InputSearchField } from '@/components/general/input'
 import { SingleSelectField } from '@/components/general/select'
 import { MultiTagField } from '@/components/general/tag-group'
-import { SelfAssigneeAction } from '@/components/ticket/assignee-select'
+import { AssigneeOption, AssigneeSelectField } from '@/components/ticket/assignee-select'
 import { TagNameSelectField } from '@/components/ticket/tag-select'
 import { useTicketOptions } from '@/components/ticket/ticket-chip'
 import type { BoardKind, TagColor } from '@/generated/prisma/enums'
+import type { AssigneeCandidate } from '@/lib/board'
 import { TicketSearch } from '@/lib/schema'
 import {
+  ASSIGNEE_NONE,
   dedupeTagOptionsByName,
   MAX_TICKET_TAGS,
   OPEN_TICKET_STATUSES,
@@ -26,7 +28,7 @@ export const defaultTicketFilter: TicketSearch = {
   priority: [],
   tags: [],
   boardId: null,
-  assignee: 'any',
+  assignee: null,
 }
 
 /** 対象の Select で「すべてのボード」を表す値(boardId = null に対応) */
@@ -42,7 +44,9 @@ export const TicketSearchPanel: FC<{
   /** 表示名は呼び出し側で解決済み(プライベートはロケール名) */
   boards: { id: string; name: string; kind: BoardKind }[]
   tags: { id: string; boardId: string; name: string; color: TagColor }[]
-}> = ({ filter, onChange, boards, tags }) => {
+  /** 可視ボードのメンバー(ボード横断。所属ボードで絞り込む) */
+  assignees: AssigneeCandidate[]
+}> = ({ filter, onChange, boards, tags, assignees }) => {
   const { t } = useLocale()
   const { statusOptions, priorityOptions } = useTicketOptions()
   const [keyword, setKeyword] = useState(filter.keyword)
@@ -57,11 +61,19 @@ export const TicketSearchPanel: FC<{
     filter.boardId ? tags.filter((tag) => tag.boardId === filter.boardId) : tags,
   )
 
-  const assigneeOptions: Record<string, string> = {
-    any: t('all'),
-    me: t('assigned_to_me'),
-    none: t('unassigned'),
-  }
+  // 絞り込み対象のボードのメンバーだけを候補にする(タグと同じ方針)。「すべて」は選択肢ではなく未選択で表す
+  const boardId = filter.boardId ?? null
+  const assigneeChoices: AssigneeOption[] = [
+    { id: ASSIGNEE_NONE, name: t('unassigned'), hideAvatar: true },
+    ...(boardId ? assignees.filter((user) => user.boardIds.includes(boardId)) : assignees),
+  ]
+
+  /** ボードを変えた後も選べる担当者か。センチネル(未割り当て)と未選択は常に有効 */
+  const canKeepAssignee = (nextBoardId: string | null) =>
+    !filter.assignee ||
+    filter.assignee === ASSIGNEE_NONE ||
+    !nextBoardId ||
+    assignees.some((user) => user.id === filter.assignee && user.boardIds.includes(nextBoardId))
 
   const applyKeyword = (value: string) => onChange({ ...filter, keyword: value.trim() })
 
@@ -84,22 +96,30 @@ export const TicketSearchPanel: FC<{
         <SingleSelectField
           label={t('target_board')}
           groupOptions={boardOptions}
-          value={filter.boardId ?? BOARD_ALL}
-          /** ボードを変えるとタグの候補(tagChoices)も変わるので、選択済みのタグ名は捨てる */
-          onChange={(value) => onChange({ ...filter, boardId: !value || value === BOARD_ALL ? null : value, tags: [] })}
+          value={boardId ?? BOARD_ALL}
+          /**
+           * ボードを変えるとタグの候補(tagChoices)も変わるので、選択済みのタグ名は捨てる。
+           * 担当者は同じ人が複数ボードに居るのが普通なので、新しいボードに在籍していれば残す
+           */
+          onChange={(value) => {
+            const nextBoardId = !value || value === BOARD_ALL ? null : value
+            onChange({
+              ...filter,
+              boardId: nextBoardId,
+              tags: [],
+              assignee: canKeepAssignee(nextBoardId) ? filter.assignee : null,
+            })
+          }}
         />
       </div>
 
       <div className='col-span-6 md:col-span-3'>
-        <SingleSelectField
-          label={t('assignee')}
-          groupOptions={assigneeOptions}
-          value={filter.assignee}
-          onChange={(value) => onChange({ ...filter, assignee: (value ?? 'any') as TicketSearch['assignee'] })}
-          labelAction={
-            // 候補が userId ではなく 'me' なので、担当者の候補に依らず常に選べる
-            <SelfAssigneeAction onPress={() => onChange({ ...filter, assignee: 'me' })} />
-          }
+        <AssigneeSelectField
+          options={assigneeChoices}
+          value={filter.assignee ?? null}
+          isClearable // 選択後に「すべて」(未選択)へ戻す手段
+          placeholder={t('all')}
+          onChange={(assignee) => onChange({ ...filter, assignee })}
         />
       </div>
 

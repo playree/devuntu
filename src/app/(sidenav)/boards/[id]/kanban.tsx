@@ -1,5 +1,6 @@
 'use client'
 
+import { UserAvatar } from '@/components/general/avatar'
 import { MultiButton } from '@/components/general/button'
 import { CalendarDaysIcon, ChatBubbleIcon, PlusIcon } from '@/components/icon'
 import {
@@ -17,7 +18,7 @@ import { dayformat } from '@/lib/day'
 import { cardDropId, KANBAN_LANES, laneDropId } from '@/lib/task'
 import { useLocale } from '@/locale/client'
 import { KeyboardSensor, PointerSensor, useDraggable, useDroppable } from '@dnd-kit/react'
-import { Avatar, Checkbox, cn } from '@heroui/react'
+import { Checkbox, cn } from '@heroui/react'
 import Link from 'next/link'
 import { FC } from 'react'
 import { GetBoardKanbanReturnType } from './server'
@@ -195,17 +196,7 @@ const KanbanCardView: FC<{
               <PriorityChip priority={card.priority} />
               {card.assigneeName && (
                 <span className='flex min-w-0 items-center gap-0.5 text-xs text-gray-500'>
-                  <Avatar // HeroUI の最小サイズ(sm = 32px)でもカードには大きいので 16px に上書きする。
-                    // .avatar は @layer components なので @layer utilities の size-* / rounded-* が勝つ
-                    className='size-4 rounded-full'
-                  >
-                    <Avatar.Image src={card.assigneeImage} />
-                    <Avatar.Fallback // 既定の text-sm は 16px の円からはみ出すので落とす
-                      className='text-[9px]'
-                    >
-                      {card.assigneeName.charAt(0)}
-                    </Avatar.Fallback>
-                  </Avatar>
+                  <UserAvatar name={card.assigneeName} image={card.assigneeImage} size='xs' />
                   <span className='truncate'>{card.assigneeName}</span>
                 </span>
               )}

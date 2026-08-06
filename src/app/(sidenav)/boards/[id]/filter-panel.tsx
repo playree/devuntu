@@ -3,15 +3,12 @@
 import { DateRangePickerField } from '@/components/general/date-picker'
 import { GridBox } from '@/components/general/grid'
 import { MultiTagField } from '@/components/general/tag-group'
-import { AssigneeSelectField } from '@/components/ticket/assignee-select'
+import { AssigneeOption, AssigneeSelectField } from '@/components/ticket/assignee-select'
 import { TagNameSelectField, TagSelectOption } from '@/components/ticket/tag-select'
 import { useTicketOptions } from '@/components/ticket/ticket-chip'
-import { KANBAN_ASSIGNEE_NONE, KanbanFilter, MAX_TICKET_TAGS, TICKET_PRIORITIES } from '@/lib/task'
+import { ASSIGNEE_NONE, KanbanFilter, MAX_TICKET_TAGS, TICKET_PRIORITIES } from '@/lib/task'
 import { useLocale } from '@/locale/client'
 import { FC } from 'react'
-
-/** 担当者の Select で「すべて」を表す値(assignee = null に対応) */
-const ASSIGNEE_ALL = 'all'
 
 /**
  * かんばんの絞り込みパネル。
@@ -23,27 +20,29 @@ const ASSIGNEE_ALL = 'all'
 export const KanbanFilterPanel: FC<{
   filter: KanbanFilter
   onChange: (filter: KanbanFilter) => void
-  /** ボードメンバーの userId -> 表示名 */
-  assigneeOptions: Record<string, string>
+  /** ボードメンバー */
+  assigneeOptions: AssigneeOption[]
   /** そのボードのタグ(呼び出し側で絞り込み済み) */
   tags: TagSelectOption[]
 }> = ({ filter, onChange, assigneeOptions, tags }) => {
   const { t } = useLocale()
   const { priorityOptions } = useTicketOptions()
 
-  const assigneeChoices: Record<string, string> = {
-    [ASSIGNEE_ALL]: t('all'),
-    [KANBAN_ASSIGNEE_NONE]: t('unassigned'),
+  // 先頭はユーザーではないセンチネルなのでアバターを出さない。「すべて」は選択肢ではなく未選択で表す
+  const assigneeChoices: AssigneeOption[] = [
+    { id: ASSIGNEE_NONE, name: t('unassigned'), hideAvatar: true },
     ...assigneeOptions,
-  }
+  ]
 
   return (
     <GridBox isSmart>
       <div className='col-span-6 md:col-span-2'>
         <AssigneeSelectField
-          groupOptions={assigneeChoices}
-          value={filter.assignee ?? ASSIGNEE_ALL}
-          onChange={(value) => onChange({ ...filter, assignee: !value || value === ASSIGNEE_ALL ? null : value })}
+          options={assigneeChoices}
+          value={filter.assignee}
+          isClearable // 選択後に「すべて」(未選択)へ戻す手段
+          placeholder={t('all')}
+          onChange={(assignee) => onChange({ ...filter, assignee })}
         />
       </div>
 
