@@ -26,6 +26,7 @@
   - [パッケージへのパッチ](#パッケージへのパッチ)
   - [パッケージのバージョン上書き](#パッケージのバージョン上書き)
     - [tailwind-variants](#tailwind-variants)
+  - [TypeScript v7 と v6 の併存](#typescript-v7-と-v6-の併存)
   - [better-auth](#better-auth)
   - [イメージ作成](#イメージ作成)
     - [Docker Build](#docker-build)
@@ -37,7 +38,7 @@
 # パッケージ構成
 
 - Next.js v16
-- TypeScript v7
+- TypeScript v7(v6 と併存。[TypeScript v7 と v6 の併存](#typescript-v7-と-v6-の併存))
 - pnpm v11
 - Prisma v7
 - Better Auth v1.6
@@ -292,6 +293,29 @@ HeroUI の`Modal`はこのパターンを踏んでいる。`Modal.Backdrop`は`u
 - 3.3.1 で修正済み(slots オブジェクトを呼び出しごとに生成する形に戻っている)
 - HeroUI をバージョンアップする際は`@heroui/styles`の`dependencies.tailwind-variants`を確認し、3.3.1 以上になっていればこの override は削除できる
 - `@heroui/react`側も同じ 3.3.0 を持ち`tv`/`cn`を再エクスポートしているため、揃えて上書きしている(コピーが 1 本に集約される)
+
+## TypeScript v7 と v6 の併存
+
+TypeScript 7.0 は JS コンパイラ API を同梱していない(7.1 で提供予定)ため、`require('typescript')`で API を使うツールが動かなくなる。[公式手順](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/#running-side-by-side-with-typescript-6.0)に従い、`package.json`でエイリアスを使って両方を入れている。
+
+| devDependencies の指定                           | 実体         | 提供するもの               |
+| ------------------------------------------------ | ------------ | -------------------------- |
+| `typescript: npm:@typescript/typescript6@^6.0.2` | TypeScript 6 | JS コンパイラ API と`tsc6` |
+| `@typescript/native: npm:typescript@^7.0.2`      | TypeScript 7 | `tsc`                      |
+
+TS6 の API を必要としているもの。
+
+- `typescript-eslint`(`pnpm lint`) : TS7 を検出すると起動時にエラーで終了する
+- `prettier-plugin-organize-imports` : TS7 だとエラーも出さずに import 整列が無効化される
+- `next build`の型チェック : `next.config.ts`の`experimental.useTypeScriptCli: false`で JS API チェッカーを使う。既定の CLI チェッカーは解決した`typescript`パッケージの`bin.tsc`を実行するが、エイリアス先は`tsc6`しか持たないためビルドが止まる
+
+TS7(tsgo)での高速な型チェックは下記で行う。`tsconfig.json`が`.next/dev/types`を含むため、先に`next typegen`でルート型を生成している。
+
+```sh
+pnpm typecheck
+```
+
+TS 7.1 で JS API が復活し typescript-eslint が対応したら、`typescript`を素の`^7.x`に戻して`@typescript/native`と`useTypeScriptCli: false`は削除できる。
 
 ## better-auth
 
