@@ -37,6 +37,7 @@
 # パッケージ構成
 
 - Next.js v16
+- TypeScript v7
 - pnpm v11
 - Prisma v7
 - Better Auth v1.6
