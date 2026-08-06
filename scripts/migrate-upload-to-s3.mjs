@@ -3,6 +3,8 @@
  *
  *   pnpm upload:migrate
  *
+ * Docker環境では既存イメージから使い捨てコンテナで実行する(手順はREADME参照)。
+ *
  * DBは触らない。`link_widget.iconPath` は `/api/upload/<ファイル名>` 形式で、
  * ファイル名をそのままオブジェクトキーにするためURLが変わらず、DBの書き換えが不要。
  * 移行したファイルは Attachment レコードを持たないが、配信側
@@ -13,9 +15,15 @@
  * 設定値は `src/lib/env-util.ts` の同名の環境変数と揃えている。
  */
 import { CreateBucketCommand, HeadObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
-import 'dotenv/config'
 import { readdir, readFile } from 'node:fs/promises'
 import path from 'node:path'
+
+/**
+ * ローカル実行では `.env` を読む。
+ * Dockerコンテナでは env_file で環境変数が渡され、standaloneビルドに dotenv が
+ * 同梱されないため、解決できなくても続行する。
+ */
+await import('dotenv/config').catch(() => {})
 
 const UPLOAD_DIR = path.join(process.cwd(), 'upload')
 const BUCKET = process.env.S3_BUCKET || 'devuntu'

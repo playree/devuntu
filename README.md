@@ -18,6 +18,7 @@
 - [開発](#開発)
   - [開発用インフラ起動](#開発用インフラ起動)
   - [オブジェクトストレージへの移行](#オブジェクトストレージへの移行)
+    - [Docker環境での移行](#docker環境での移行)
   - [DBバックアップ](#dbバックアップ)
   - [DBリストア](#dbリストア)
   - [インストール](#インストール)
@@ -207,10 +208,62 @@ DB は `localhost:5432`、S3 API は `localhost:8333` で公開される。ア�
 
 ## オブジェクトストレージへの移行
 
-ローカル保存(`upload/`)からの移行は一度だけ以下を実行する。ファイル名をそのままオブジェクトキーにするため、DB の `iconPath` は書き換えなくてよい。何度実行しても既存分はスキップされる。
+ローカル保存(`upload/`)からの移行は一度だけ以下を実行する。
 
 ```sh
 pnpm upload:migrate
+```
+
+前提として、S3 サービスが起動([開発用インフラ起動](#開発用インフラ起動))し、`.env` に `S3_ENDPOINT`/`S3_ACCESS_KEY_ID`/`S3_SECRET_ACCESS_KEY` が設定されていること。スクリプトは`dotenv`で`.env`を読み(`dotenv`が無い環境では環境変数のみで動く)、`S3_ENDPOINT`が未設定ならエラーで終了する。バケット(`S3_BUCKET`、既定`devuntu`)は無ければ自動作成される。
+
+対象はリポジトリ直下の`upload/`にあるファイルのみ(サブディレクトリは走査しない)。`.gitkeep`などのドットファイルは対象外で、拡張子が`.webp`/`.png`/`.jpg`/`.jpeg`/`.gif`のものだけを移行する。それ以外の拡張子は警告を出してスキップする。`upload/`が無い場合は`no files to migrate`で正常終了する。
+
+ファイル名をそのままオブジェクトキーにするため公開URL(`/api/upload/<キー>`)が変わらず、DB(`link_widget.iconPath`やチケット本文中の画像URL)の書き換えは不要。移行したファイルは`Attachment`レコードを持たないが、配信側(`src/app/api/upload/[filename]/route.ts`)が Content-Type をストレージ側にフォールバックするためそのまま参照できる。
+
+アップロード済みのキーはスキップするため、何度実行しても安全。最後に`done. migrated=<n> skipped=<n>`が出力される。移行が済めばローカルの`upload/`は不要(アプリは参照しない)。
+
+### Docker環境での移行
+
+Docker で運用している環境の旧ファイルは、`compose.yaml` と同じ階層のホスト側 `upload/` に残っている(以前は `./upload:/app/upload` としてマウントしていた)。イメージには移行スクリプトが入っていないため、**既存イメージから使い捨てコンテナを起動し、スクリプトと `upload/` をマウントして実行する**。
+
+前提:
+
+- S3 対応版(`0.3.0` 以降)のイメージであること。`@aws-sdk/client-s3` はアプリ本体経由でイメージに含まれるため、追加の `npm install` は不要
+- ホスト側に `scripts/migrate-upload-to-s3.mjs` があること(このファイルだけ置けばよい)
+
+画像が参照できない期間を作らないため、新しい `devuntu` を起動する前に移行を済ませる。
+
+```sh
+docker compose pull
+docker compose up -d db s3
+
+docker compose run --rm \
+  -v "$(pwd)/upload:/app/upload:ro" \
+  -v "$(pwd)/scripts/migrate-upload-to-s3.mjs:/app/migrate-upload.mjs:ro" \
+  --entrypoint node \
+  devuntu /app/migrate-upload.mjs
+
+docker compose up -d devuntu
+```
+
+- `--entrypoint node` で `docker-entrypoint.sh` を上書きするため `prisma migrate deploy` は走らず、移行だけが実行される
+- `docker compose run` はポートを公開しないので、稼働中の `devuntu`(3000)と衝突しない
+- スクリプトは `/app/` 直下にマウントする。`WORKDIR` が `/app` なので参照先が `/app/upload` になり、`@aws-sdk/client-s3` も `/app/node_modules` から解決される
+- 環境変数は `env_file`(`.env.docker`)から渡るので、コンテナ内の `S3_ENDPOINT` は `http://s3:8333` になる
+
+`compose` を使わない場合は `docker run` でも実行できる。`.env.docker` は値の後ろにコメントを書いている行があり `--env-file` ではコメントごと値として渡ってしまうため、`-e` で S3 系のみ明示的に指定する。ネットワーク名は compose のプロジェクト名依存(`docker network ls` で確認)。
+
+```sh
+docker run --rm \
+  --network devuntu_default \
+  -e S3_ENDPOINT=http://s3:8333 \
+  -e S3_BUCKET=devuntu \
+  -e S3_ACCESS_KEY_ID=devuntu \
+  -e S3_SECRET_ACCESS_KEY=devuntuS3PassW0rd \
+  -v "$(pwd)/upload:/app/upload:ro" \
+  -v "$(pwd)/scripts/migrate-upload-to-s3.mjs:/app/migrate-upload.mjs:ro" \
+  --entrypoint node \
+  playree/devuntu:latest /app/migrate-upload.mjs
 ```
 
 ## DBバックアップ
