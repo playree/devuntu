@@ -151,6 +151,7 @@ const RowsPerPageSelect: FC<Pick<PagingParam, 'rowsPerPage' | 'onRowsPerPageChan
     <SingleSelectField
       isSmart
       isLabelHidden
+      variant='secondary'
       // 共通部品なのでローカライズ不要とする
       label='rows per page'
       groupOptions={ROWS_PER_PAGE_GROUP}

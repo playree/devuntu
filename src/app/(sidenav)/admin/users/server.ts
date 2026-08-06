@@ -33,13 +33,13 @@ export const getUsers = safeAuthAction.metadata({ actionName: 'getUsers', role: 
       role: true,
       lastLoginAt: true,
       createdAt: true,
-      userGroups: { select: { groupId: true } },
+      userGroups: { select: { group: { select: { id: true, name: true } } } },
     },
   })
   return users.map(({ role, userGroups, ...param }) => ({
     ...param,
     isAdmin: role === 'admin',
-    groups: userGroups.map((ug) => ug.groupId),
+    groups: userGroups.map((ug) => ug.group),
   }))
 })
 
