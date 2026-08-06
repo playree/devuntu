@@ -50,6 +50,9 @@ model User {
   assignedTickets Ticket[]        @relation("TicketAssignee")
   ticketComments  TicketComment[] @relation("TicketCommentAuthor")
 
+  // add Attachment
+  attachments Attachment[]
+
   @@unique([email])
   @@map("user")
 }
@@ -276,6 +279,21 @@ model LinkWidget {
   @@map("link_widget")
 }
 
+/// オブジェクトストレージに保存したアップロードファイルのメタデータ。
+/// 公開URLは `/api/upload/<key>` で、配信時はここから mimeType を引いて存在確認も兼ねる。
+model Attachment {
+  id           String   @id @default(uuid(7))
+  key          String   @unique
+  mimeType     String
+  size         Int
+  originalName String
+  createdById  String?
+  createdBy    User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now())
+
+  @@map("attachment")
+}
+
 model KeyValueStore {
   id        String   @id @default(uuid(7))
   key       String   @unique
@@ -286,6 +304,23 @@ model KeyValueStore {
 
   @@index([group])
   @@map("key_value_store")
+}
+
+/// アプリバージョンの利用履歴。サーバー起動時(`src/instrumentation.ts`)に upsert で記録し、
+/// このDBがどのバージョンでいつ利用されていたかを追跡できるようにする。
+/// createdAt が初回起動日時、updatedAt が最終起動日時になる。
+model AppVersion {
+  id String @id @default(uuid(7))
+
+  /// package.json の version(例: 0.2.2)。同一バージョンは1行に集約するので upsert のキーになる
+  version String @unique
+
+  /// 最終起動時のビルド番号(next.config.ts で生成する BUILD_NO)。同一バージョンの再デプロイを識別する
+  buildNo   String
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@map("app_version")
 }
 
 model Group {

@@ -72,9 +72,9 @@ export const AdminUsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPass
             </Table.Cell>
             <Table.Cell>
               <div className='flex flex-wrap gap-1'>
-                {item.groups.map((groupId) => (
-                  <Chip key={groupId} variant='soft' color='accent'>
-                    {groupOptions?.[groupId]}
+                {item.groups.map((group) => (
+                  <Chip key={group.id} variant='soft' color='accent'>
+                    {group.name}
                   </Chip>
                 ))}
               </div>
@@ -89,7 +89,13 @@ export const AdminUsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPass
                   icon: <PencilSquareIcon />,
                   tooltip: t('update'),
                   onPress: () => {
-                    updateModalState.open(item)
+                    updateModalState.open({
+                      id: item.id,
+                      name: item.name,
+                      email: item.email,
+                      isAdmin: item.isAdmin,
+                      groups: item.groups.map((group) => group.id),
+                    })
                   },
                 },
                 {

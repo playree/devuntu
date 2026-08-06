@@ -11,18 +11,22 @@
   - [基本](#基本)
   - [認証](#認証)
   - [メール](#メール)
+  - [オブジェクトストレージ](#オブジェクトストレージ)
   - [Linode](#linode)
   - [Debug](#debug)
   - [補足](#補足)
 - [開発](#開発)
-  - [DB起動](#db起動)
+  - [開発用インフラ起動](#開発用インフラ起動)
+  - [オブジェクトストレージへの移行](#オブジェクトストレージへの移行)
   - [DBバックアップ](#dbバックアップ)
   - [DBリストア](#dbリストア)
   - [インストール](#インストール)
   - [ビルド](#ビルド)
   - [パッケージ更新](#パッケージ更新)
   - [パッケージへのパッチ](#パッケージへのパッチ)
-    - [@heroui/react](#herouireact)
+  - [パッケージのバージョン上書き](#パッケージのバージョン上書き)
+    - [tailwind-variants](#tailwind-variants)
+  - [TypeScript v7 と v6 の併存](#typescript-v7-と-v6-の併存)
   - [better-auth](#better-auth)
   - [イメージ作成](#イメージ作成)
     - [Docker Build](#docker-build)
@@ -34,6 +38,7 @@
 # パッケージ構成
 
 - Next.js v16
+- TypeScript v7(v6 と併存。[TypeScript v7 と v6 の併存](#typescript-v7-と-v6-の併存))
 - pnpm v11
 - Prisma v7
 - Better Auth v1.6
@@ -97,12 +102,13 @@
 
 Proxy の対象外のため、各ルートハンドラ内で個別に認証する。
 
-| パス                                         | アクセス制御                         |
-| -------------------------------------------- | ------------------------------------ |
-| `/api/auth/[...all]`                         | Better Auth のハンドラ(認証処理自体) |
-| `/api/auth/.well-known/openid-configuration` | 認証不要(OIDC ディスカバリ)          |
-| `/api/health`                                | 認証不要(ヘルスチェック)             |
-| `/api/upload/[filename]`                     | 認証必須(未ログインは401)            |
+| パス                                         | アクセス制御                                      |
+| -------------------------------------------- | ------------------------------------------------- |
+| `/api/auth/[...all]`                         | Better Auth のハンドラ(認証処理自体)              |
+| `/api/auth/.well-known/openid-configuration` | 認証不要(OIDC ディスカバリ)                       |
+| `/api/health`                                | 認証不要(ヘルスチェック)                          |
+| `/api/upload`                                | 認証必須(未ログインは401)。画像アップロード(POST) |
+| `/api/upload/[filename]`                     | 認証必須(未ログインは401)。画像配信(GET)          |
 
 # 環境変数
 
@@ -150,6 +156,19 @@ Proxy の対象外のため、各ルートハンドラ内で個別に認証す�
 | `SMTP_USER`        | SMTP 認証ユーザー                             |                         | -          |
 | `SMTP_PASS`        | SMTP 認証パスワード                           |                         | -          |
 
+## オブジェクトストレージ
+
+アップロードファイル(画像)の保存先。S3互換APIを話すストレージであれば何でもよいが、`compose.yaml` では OSS の [SeaweedFS](https://github.com/seaweedfs/seaweedfs) を同梱している。認証情報は `docker/seaweedfs-s3.json` で定義する。
+
+| 変数名                 | 説明                                 | 必須 | デフォルト  |
+| ---------------------- | ------------------------------------ | ---- | ----------- |
+| `S3_ENDPOINT`          | S3 API のエンドポイント              | 〇   | -           |
+| `S3_BUCKET`            | バケット名(存在しない場合は自動作成) |      | `devuntu`   |
+| `S3_REGION`            | リージョン(SeaweedFS では任意値)     |      | `us-east-1` |
+| `S3_ACCESS_KEY_ID`     | アクセスキー                         | 〇   | -           |
+| `S3_SECRET_ACCESS_KEY` | シークレットキー                     | 〇   | -           |
+| `S3_FORCE_PATH_STYLE`  | パススタイルのアドレッシングを強制   |      | `true`      |
+
 ## Linode
 
 | 変数名                         | 説明                    | 必須 | デフォルト |
@@ -172,10 +191,26 @@ Proxy の対象外のため、各ルートハンドラ内で個別に認証す�
 
 # 開発
 
-## DB起動
+## 開発用インフラ起動
+
+開発に必要なのは DB(`db`サービス)とオブジェクトストレージ(`s3`サービス)のみ。まとめて起動・停止する。
 
 ```sh
-docker compose up -d db
+# 起動
+docker compose up -d db s3
+
+# 停止
+docker compose stop db s3
+```
+
+DB は `localhost:5432`、S3 API は `localhost:8333` で公開される。アップロード機能を使うには S3 API が必要。
+
+## オブジェクトストレージへの移行
+
+ローカル保存(`upload/`)からの移行は一度だけ以下を実行する。ファイル名をそのままオブジェクトキーにするため、DB の `iconPath` は書き換えなくてよい。何度実行しても既存分はスキップされる。
+
+```sh
+pnpm upload:migrate
 ```
 
 ## DBバックアップ
@@ -233,22 +268,54 @@ pnpm patch @heroui/react
 pnpm patch-commit '<出力されたパス>'
 ```
 
-### @heroui/react
+現在適用中のパッチは無い。`@heroui/react` 3.2.2 では`Autocomplete.Popover`が`aria-label`/`aria-labelledby`を内部の`Dialog`へ転送せず react-aria の警告が出続けるためパッチを当てていたが、3.2.3 で本体が修正されたため削除した。
 
-| パッチ                         | 対象バージョン | 内容                                                                                       |
-| ------------------------------ | -------------- | ------------------------------------------------------------------------------------------ |
-| `patches/@heroui__react.patch` | 3.2.2          | `Autocomplete.Popover`が`aria-label`/`aria-labelledby`を内部の`Dialog`へ転送するようにする |
+## パッケージのバージョン上書き
 
-`Autocomplete.Popover`は内部で react-aria の`Dialog`を挟むが、受け取った props は外側の`Popover`にしか展開されず`Dialog`にラベルを渡す手段が無い。そのため開発時に以下の警告が出続ける。
+依存パッケージが固定しているバージョンに問題がある場合は、`pnpm-workspace.yaml`の`overrides`で差し替える。`パッケージ名>依存パッケージ名`の形式で書くと、そのパッケージの入れ子依存だけを対象にできる。
 
-```text
-If a Dialog does not contain a <Heading slot="title">, it must have an aria-label or
-aria-labelledby attribute for accessibility.
+### tailwind-variants
+
+| 上書き対象                         | 指定     | 理由                                                         |
+| ---------------------------------- | -------- | ------------------------------------------------------------ |
+| `@heroui/styles>tailwind-variants` | `^3.3.1` | HeroUI 3.2.3 が固定する`tailwind-variants@3.3.0`のバグを回避 |
+| `@heroui/react>tailwind-variants`  | `^3.3.1` | 同上(コピーを 1 本に集約する)                                |
+
+`tailwind-variants` 3.3.0 の slots リゾルバは、
+
+- tv インスタンスごとに**単一の slots オブジェクトを使い回して返す**
+- 各 slot 関数は呼び出し時にモジュールスコープの「最後に渡された props」を読む(呼び出し元の props を捕捉しない)
+
+という実装のため、同じ tv を別の props で呼ぶと**先に取得済みの slot 関数の戻り値まで後の props に化ける**。
+
+HeroUI の`Modal`はこのパターンを踏んでいる。`Modal.Backdrop`は`useMemo(() => modalVariants({ variant }), [variant])`の結果を保持して毎レンダリングで`slots.backdrop()`を呼ぶが、後から描画される`Modal.Container`が同じ tv を`{ scroll, size }`(variant 無し)で呼ぶ。以降`Modal.Backdrop`が再レンダリングされても`useMemo`はヒットして`modalVariants`を呼び直さないため、`backdrop()`が`variant`の既定値である`modal__backdrop--opaque`を返す。結果、`FormModal`(`src/components/general/modal.tsx`)の`variant='blur'`が効かなくなっていた。`Drawer`/`AlertDialog`も同じ呼び出し方をしている。
+
+- 3.3.1 で修正済み(slots オブジェクトを呼び出しごとに生成する形に戻っている)
+- HeroUI をバージョンアップする際は`@heroui/styles`の`dependencies.tailwind-variants`を確認し、3.3.1 以上になっていればこの override は削除できる
+- `@heroui/react`側も同じ 3.3.0 を持ち`tv`/`cn`を再エクスポートしているため、揃えて上書きしている(コピーが 1 本に集約される)
+
+## TypeScript v7 と v6 の併存
+
+TypeScript 7.0 は JS コンパイラ API を同梱していない(7.1 で提供予定)ため、`require('typescript')`で API を使うツールが動かなくなる。[公式手順](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/#running-side-by-side-with-typescript-6.0)に従い、`package.json`でエイリアスを使って両方を入れている。
+
+| devDependencies の指定                           | 実体         | 提供するもの               |
+| ------------------------------------------------ | ------------ | -------------------------- |
+| `typescript: npm:@typescript/typescript6@^6.0.2` | TypeScript 6 | JS コンパイラ API と`tsc6` |
+| `@typescript/native: npm:typescript@^7.0.2`      | TypeScript 7 | `tsc`                      |
+
+TS6 の API を必要としているもの。
+
+- `typescript-eslint`(`pnpm lint`) : TS7 を検出すると起動時にエラーで終了する
+- `prettier-plugin-organize-imports` : TS7 だとエラーも出さずに import 整列が無効化される
+- `next build`の型チェック : `next.config.ts`の`experimental.useTypeScriptCli: false`で JS API チェッカーを使う。既定の CLI チェッカーは解決した`typescript`パッケージの`bin.tsc`を実行するが、エイリアス先は`tsc6`しか持たないためビルドが止まる
+
+TS7(tsgo)での高速な型チェックは下記で行う。`tsconfig.json`が`.next/dev/types`を含むため、先に`next typegen`でルート型を生成している。
+
+```sh
+pnpm typecheck
 ```
 
-- `<Heading slot="title">`では解決できない。react-aria の`Select`はコレクション構築のため children ツリーを`<template>`内で描画し、`Dialog`は`document.getElementById`で見出しを探すため、この pass では必ず見つからず警告になる(ポップオーバーを開く前、マウント時から出る)
-- 利用側は`<Autocomplete.Popover aria-label={...}>`を渡すだけでよい。`src/components/ticket/tag-select.tsx`が該当
-- 上流(HeroUI)側の不備なので、修正されたらこのパッチは削除する
+TS 7.1 で JS API が復活し typescript-eslint が対応したら、`typescript`を素の`^7.x`に戻して`@typescript/native`と`useTypeScriptCli: false`は削除できる。
 
 ## better-auth
 

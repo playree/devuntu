@@ -1,8 +1,10 @@
 'use client'
 
+import { UserAvatar } from '@/components/general/avatar'
 import { MultiButton } from '@/components/general/button'
-import { ChatBubbleIcon, PlusIcon } from '@/components/icon'
+import { CalendarDaysIcon, ChatBubbleIcon, PlusIcon } from '@/components/icon'
 import {
+  CARD_BACKDROP_CLASS,
   PriorityBar,
   priorityBgClass,
   priorityBorderClass,
@@ -16,7 +18,7 @@ import { dayformat } from '@/lib/day'
 import { cardDropId, KANBAN_LANES, laneDropId } from '@/lib/task'
 import { useLocale } from '@/locale/client'
 import { KeyboardSensor, PointerSensor, useDraggable, useDroppable } from '@dnd-kit/react'
-import { Checkbox, Chip, cn } from '@heroui/react'
+import { Checkbox, cn } from '@heroui/react'
 import Link from 'next/link'
 import { FC } from 'react'
 import { GetBoardKanbanReturnType } from './server'
@@ -100,6 +102,14 @@ const CARD_SENSORS = [
   KeyboardSensor,
 ]
 
+/**
+ * 選択チェックボックスをカード左端の縦長ピルにするクラス。
+ * HeroUI 既定の control は size-4 の角丸四角なので、幅だけ残して高さを h-full にし、
+ * 角丸を rounded-full で上書きする(size-4 は tailwind-merge により h-full w-4 が後勝ちする)。
+ * 選択時の塗り(::before)は別途 rounded-md を持つので before: でも上書きする。
+ */
+const SELECT_PILL_CLASS = 'h-full w-4 rounded-full before:rounded-full'
+
 /** カード 1 枚。レーン移動は DnD、それ以外の変更は選択して詳細パネルから行う */
 const KanbanCardView: FC<{
   card: KanbanCard
@@ -114,6 +124,8 @@ const KanbanCardView: FC<{
       ref={dropRef}
       className={cn(
         'rounded-xl',
+        // 半透明のカード背景(priorityBgClass)がレーンの色と混色されないよう、最背面に不透明な下地を敷く
+        CARD_BACKDROP_CLASS,
         // ドラッグ中の挿入位置の方が情報として重要なので、ドロップ対象の枠を選択の枠より優先する
         isDropTarget ? 'ring-2 ring-blue-300' : isSelected ? 'ring-2 ring-blue-500' : '',
       )}
@@ -122,11 +134,12 @@ const KanbanCardView: FC<{
         ref={dragRef}
         className={cn(
           /**
-           * PriorityBar は自前で余白(mt / mx)を持つので、padding は兄弟の内容 div 側に寄せる。
-           * panel.tsx と違い dark:border-t-2 を持たないのは、上端は PriorityBar の線が輪郭を兼ねるため。
+           * flex-col は「カード両端まで通す PriorityBar」+「選択ピル / 内容の行」の縦 2 段。
+           * PriorityBar は自前で余白(mt)を持つので、padding は下段の内容 div 側に寄せる。
+           * 上端に dark:border-t-2 を持たないのは、上端は PriorityBar の線が輪郭を兼ねるため。
            * 代わりにダークでは priorityBorderClass が線と同系色の枠を全周に出す。
            */
-          'cursor-pointer overflow-hidden rounded-xl',
+          'flex cursor-pointer flex-col overflow-hidden rounded-xl',
           'shadow-md dark:shadow-none', // ダークは枠線が輪郭を作るので影は要らない
           priorityBgClass(card.priority),
           priorityBorderClass(card.priority),
@@ -135,25 +148,41 @@ const KanbanCardView: FC<{
       >
         <PriorityBar priority={card.priority} />
 
-        <div className='space-y-1 p-2'>
-          <div className='flex items-start gap-1'>
-            <span // 選択用のチェックボックス。この上ではドラッグを開始させない(CARD_SENSORS 参照)
-              data-no-drag
-              className='shrink-0'
+        <div // 下段。既定の stretch で選択ピルが内容の高さいっぱいに伸びる
+          className='flex'
+        >
+          <span // 選択用のチェックボックス。この上ではドラッグを開始させない(CARD_SENSORS 参照)
+            data-no-drag
+            /**
+             * 左は PriorityBar(w-[94%] の中央寄せ)の左端に揃う 4px。
+             * 0 にしないのは、親の rounded-xl + overflow-hidden でピルの上下角が削られるため。
+             * 上下は PriorityBar の下端 / カード下端から 8px 逃がす。
+             */
+            className='flex shrink-0 py-2 pl-1'
+          >
+            <Checkbox
+              /**
+               * HeroUI の base(flex flex-col)/ content(inline-flex)を跨いで
+               * control まで高さを通すため、両方に h-full を渡す。
+               */
+              className='h-full'
+              aria-label='select ticket'
+              isSelected={isSelected}
+              onChange={onSelect}
             >
-              <Checkbox aria-label='select ticket' variant='secondary' isSelected={isSelected} onChange={onSelect}>
-                <Checkbox.Content>
-                  <Checkbox.Control // HeroUI v3 に radius prop が無いため className で丸型化。選択時の塗り(::before)も別途 rounded-md を持つので before: でも上書きする
-                    className='size-5 rounded-full before:rounded-full'
-                  >
-                    <Checkbox.Indicator />
-                  </Checkbox.Control>
-                </Checkbox.Content>
-              </Checkbox>
-            </span>
+              <Checkbox.Content className='h-full'>
+                <Checkbox.Control className={SELECT_PILL_CLASS}>
+                  <Checkbox.Indicator />
+                </Checkbox.Control>
+              </Checkbox.Content>
+            </Checkbox>
+          </span>
 
+          <div // min-w-0 が無いと、長いタイトルが flex の automatic minimum size でレーン幅を押し広げる
+            className='min-w-0 flex-1 space-y-1 p-2'
+          >
             <p // 空白のない長いタイトルでもレーン幅を超えないよう wrap-anywhere で任意位置折り返しにする
-              className='line-clamp-2 min-w-0 flex-1 text-sm wrap-anywhere'
+              className='line-clamp-2 text-sm wrap-anywhere'
             >
               <Link // line-clamp は display:-webkit-box なので Link 側に持たせると行全体がリンク範囲になる。外側の p に寄せて Link はインラインのまま文字列だけを範囲にする
                 href={`/tickets/${card.id}`}
@@ -162,25 +191,31 @@ const KanbanCardView: FC<{
                 {card.title}
               </Link>
             </p>
-          </div>
 
-          <div className='flex flex-wrap items-center gap-1'>
-            <PriorityChip priority={card.priority} />
-            {card.assigneeName && (
-              <Chip variant='tertiary' size='sm'>
-                <Chip.Label>{card.assigneeName}</Chip.Label>
-              </Chip>
-            )}
-            {card.dueDate && <span className='font-mono text-xs'>{dayformat(card.dueDate, 'date')}</span>}
-            {card.commentCount > 0 && (
-              <span className='flex items-center gap-0.5 text-xs text-gray-500'>
-                <ChatBubbleIcon width={12} />
-                {card.commentCount}
-              </span>
-            )}
-          </div>
+            <div className='flex flex-wrap items-center gap-1'>
+              <PriorityChip priority={card.priority} />
+              {card.assigneeName && (
+                <span className='flex min-w-0 items-center gap-0.5 text-xs text-gray-500'>
+                  <UserAvatar name={card.assigneeName} image={card.assigneeImage} size='xs' />
+                  <span className='truncate'>{card.assigneeName}</span>
+                </span>
+              )}
+              {card.dueDate && (
+                <span className='flex items-center gap-0.5 text-xs text-gray-500'>
+                  <CalendarDaysIcon width={12} />
+                  <span className='font-mono'>{dayformat(card.dueDate, 'date')}</span>
+                </span>
+              )}
+              {card.commentCount > 0 && (
+                <span className='flex items-center gap-0.5 text-xs text-gray-500'>
+                  <ChatBubbleIcon width={12} />
+                  {card.commentCount}
+                </span>
+              )}
+            </div>
 
-          <TagChips tags={card.tags} />
+            <TagChips tags={card.tags} />
+          </div>
         </div>
       </div>
     </div>

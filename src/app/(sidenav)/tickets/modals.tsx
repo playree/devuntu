@@ -8,7 +8,7 @@ import { FormModal, ModalBaseProps } from '@/components/general/modal'
 import { SingleSelectCtrl } from '@/components/general/select'
 import { CheckIcon, PlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
-import { AssigneeSelectCtrl } from '@/components/ticket/assignee-select'
+import { AssigneeOption, AssigneeSelectCtrl } from '@/components/ticket/assignee-select'
 import { MarkdownEditor } from '@/components/ticket/markdown-editor'
 import { TagSelect } from '@/components/ticket/tag-select'
 import { useBoardName, useTicketOptions } from '@/components/ticket/ticket-chip'
@@ -69,7 +69,7 @@ export const AddModal: FC<
   })
 
   const boardId = useWatch({ control, name: 'boardId' })
-  const [boardAssignees, setBoardAssignees] = useState<Record<string, string>>({})
+  const [boardAssignees, setBoardAssignees] = useState<AssigneeOption[]>([])
   // タグは選択中のボードのものだけを候補にする(他ボードのタグはサーバー側で弾かれる)
   const boardTags = options.tags.filter((tag) => tag.boardId === boardId)
 
@@ -77,8 +77,8 @@ export const AddModal: FC<
     // ボードを続けて切り替えると古い要求が後着しうるので、対象が変わった結果は捨てる
     let isCurrent = true
     parseAction(getAssigneeOptions({ id: boardId }))
-      .then((res) => isCurrent && setBoardAssignees(res ?? {}))
-      .catch(() => isCurrent && setBoardAssignees({}))
+      .then((res) => isCurrent && setBoardAssignees(res ?? []))
+      .catch(() => isCurrent && setBoardAssignees([]))
     return () => {
       isCurrent = false
     }
@@ -141,7 +141,7 @@ export const AddModal: FC<
           <SingleSelectCtrl control={control} name='priority' groupOptions={priorityOptions} label={t('priority')} />
         </div>
         <div className='col-span-6 md:col-span-2'>
-          <AssigneeSelectCtrl control={control} name='assigneeId' groupOptions={boardAssignees} isClearable />
+          <AssigneeSelectCtrl control={control} name='assigneeId' options={boardAssignees} isClearable />
         </div>
         <div className='col-span-6 md:col-span-3'>
           <DatePickerCtrl control={control} name='dueDate' label={t('due_date')} errorMessage={fet(errors.dueDate)} />

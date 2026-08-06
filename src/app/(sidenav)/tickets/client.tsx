@@ -144,6 +144,7 @@ export const TicketsClient: FC<{
             onChange={applyFilter}
             boards={(options?.boards ?? []).map((board) => ({ ...board, name: boardName(board) }))}
             tags={options?.tags ?? []}
+            assignees={options?.assignees ?? []}
           />
         </AccordionSection>
       </Accordion>

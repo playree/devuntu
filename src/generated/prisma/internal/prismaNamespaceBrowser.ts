@@ -64,7 +64,9 @@ export const ModelName = {
   OauthConsent: 'OauthConsent',
   Dashboard: 'Dashboard',
   LinkWidget: 'LinkWidget',
+  Attachment: 'Attachment',
   KeyValueStore: 'KeyValueStore',
+  AppVersion: 'AppVersion',
   Group: 'Group',
   UserGroup: 'UserGroup',
   CalendarShare: 'CalendarShare',
@@ -307,6 +309,19 @@ export const LinkWidgetScalarFieldEnum = {
 export type LinkWidgetScalarFieldEnum = (typeof LinkWidgetScalarFieldEnum)[keyof typeof LinkWidgetScalarFieldEnum]
 
 
+export const AttachmentScalarFieldEnum = {
+  id: 'id',
+  key: 'key',
+  mimeType: 'mimeType',
+  size: 'size',
+  originalName: 'originalName',
+  createdById: 'createdById',
+  createdAt: 'createdAt'
+} as const
+
+export type AttachmentScalarFieldEnum = (typeof AttachmentScalarFieldEnum)[keyof typeof AttachmentScalarFieldEnum]
+
+
 export const KeyValueStoreScalarFieldEnum = {
   id: 'id',
   key: 'key',
@@ -317,6 +332,17 @@ export const KeyValueStoreScalarFieldEnum = {
 } as const
 
 export type KeyValueStoreScalarFieldEnum = (typeof KeyValueStoreScalarFieldEnum)[keyof typeof KeyValueStoreScalarFieldEnum]
+
+
+export const AppVersionScalarFieldEnum = {
+  id: 'id',
+  version: 'version',
+  buildNo: 'buildNo',
+  updatedAt: 'updatedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type AppVersionScalarFieldEnum = (typeof AppVersionScalarFieldEnum)[keyof typeof AppVersionScalarFieldEnum]
 
 
 export const GroupScalarFieldEnum = {

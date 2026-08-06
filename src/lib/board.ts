@@ -249,6 +249,8 @@ export type BoardUser = {
   id: string
   name: string
   email: string
+  /** アバター画像。OIDC のプロフィール由来なので未設定の場合がある */
+  image: string | null
   /** 直接メンバーのロール。グループ経由のみの場合は null */
   role: BoardRole | null
   via: 'member' | 'group'
@@ -263,12 +265,14 @@ export const getBoardMemberUsers = async (boardId: string, tx: Db = prisma): Pro
     where: { id: boardId },
     select: {
       members: {
-        select: { role: true, user: { select: { id: true, name: true, email: true } } },
+        select: { role: true, user: { select: { id: true, name: true, email: true, image: true } } },
       },
       groups: {
         select: {
           group: {
-            select: { userGroups: { select: { user: { select: { id: true, name: true, email: true } } } } },
+            select: {
+              userGroups: { select: { user: { select: { id: true, name: true, email: true, image: true } } } },
+            },
           },
         },
       },
@@ -286,6 +290,61 @@ export const getBoardMemberUsers = async (boardId: string, tx: Db = prisma): Pro
     for (const { user } of group.userGroups) {
       if (!users.has(user.id)) {
         users.set(user.id, { ...user, role: null, via: 'group' })
+      }
+    }
+  }
+
+  return [...users.values()].sort((a, b) => a.name.localeCompare(b.name))
+}
+
+/** 担当者の候補。所属ボードを持たせて、呼び出し側で対象ボードの絞り込みに使えるようにする */
+export type AssigneeCandidate = {
+  id: string
+  name: string
+  image: string | null
+  /** 引数で渡したボードのうち、そのユーザーがメンバーであるもの */
+  boardIds: string[]
+}
+
+/**
+ * 複数ボードのメンバー実体(直接メンバー ∪ グループ所属ユーザー)をユーザー単位に畳む。
+ * ボード横断の担当者候補(チケット一覧の絞り込み)に使う。全ユーザー一覧は返さない。
+ */
+export const getBoardsMemberUsers = async (boardIds: string[], tx: Db = prisma): Promise<AssigneeCandidate[]> => {
+  if (boardIds.length === 0) {
+    return []
+  }
+
+  const boards = await tx.board.findMany({
+    where: { id: { in: boardIds } },
+    select: {
+      id: true,
+      members: { select: { user: { select: { id: true, name: true, image: true } } } },
+      groups: {
+        select: {
+          group: { select: { userGroups: { select: { user: { select: { id: true, name: true, image: true } } } } } },
+        },
+      },
+    },
+  })
+
+  const users = new Map<string, AssigneeCandidate>()
+  const add = (boardId: string, user: { id: string; name: string; image: string | null }) => {
+    const found = users.get(user.id)
+    if (!found) {
+      users.set(user.id, { ...user, boardIds: [boardId] })
+    } else if (!found.boardIds.includes(boardId)) {
+      found.boardIds.push(boardId)
+    }
+  }
+
+  for (const board of boards) {
+    for (const { user } of board.members) {
+      add(board.id, user)
+    }
+    for (const { group } of board.groups) {
+      for (const { user } of group.userGroups) {
+        add(board.id, user)
       }
     }
   }

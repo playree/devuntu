@@ -37,7 +37,7 @@ export const getBoardKanban = safeAuthAction
         priority: true,
         dueDate: true,
         assigneeId: true,
-        assignee: { select: { name: true } },
+        assignee: { select: { name: true, image: true } },
         tags: {
           select: { tag: { select: { id: true, name: true, color: true } } },
           orderBy: { tag: { order: 'asc' } },
@@ -54,6 +54,8 @@ export const getBoardKanban = safeAuthAction
       // 中間テーブルは表示側で扱わないので平坦化する
       tags: tags.map(({ tag }) => tag),
       assigneeName: assignee?.name ?? '',
+      // 未設定は空文字にして、表示側は assigneeName と同じ falsy 判定で扱えるようにする
+      assigneeImage: assignee?.image ?? '',
       commentCount: _count.comments,
     }))
 

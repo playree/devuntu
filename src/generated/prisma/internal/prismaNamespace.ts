@@ -397,7 +397,9 @@ export const ModelName = {
   OauthConsent: 'OauthConsent',
   Dashboard: 'Dashboard',
   LinkWidget: 'LinkWidget',
+  Attachment: 'Attachment',
   KeyValueStore: 'KeyValueStore',
+  AppVersion: 'AppVersion',
   Group: 'Group',
   UserGroup: 'UserGroup',
   CalendarShare: 'CalendarShare',
@@ -424,7 +426,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "dashboard" | "linkWidget" | "keyValueStore" | "group" | "userGroup" | "calendarShare" | "calendarBusyTime" | "board" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "ticket" | "ticketComment"
+    modelProps: "user" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "dashboard" | "linkWidget" | "attachment" | "keyValueStore" | "appVersion" | "group" | "userGroup" | "calendarShare" | "calendarBusyTime" | "board" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "ticket" | "ticketComment"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1390,6 +1392,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    Attachment: {
+      payload: Prisma.$AttachmentPayload<ExtArgs>
+      fields: Prisma.AttachmentFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AttachmentFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AttachmentPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AttachmentFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AttachmentPayload>
+        }
+        findFirst: {
+          args: Prisma.AttachmentFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AttachmentPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AttachmentFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AttachmentPayload>
+        }
+        findMany: {
+          args: Prisma.AttachmentFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AttachmentPayload>[]
+        }
+        create: {
+          args: Prisma.AttachmentCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AttachmentPayload>
+        }
+        createMany: {
+          args: Prisma.AttachmentCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AttachmentCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AttachmentPayload>[]
+        }
+        delete: {
+          args: Prisma.AttachmentDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AttachmentPayload>
+        }
+        update: {
+          args: Prisma.AttachmentUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AttachmentPayload>
+        }
+        deleteMany: {
+          args: Prisma.AttachmentDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AttachmentUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AttachmentUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AttachmentPayload>[]
+        }
+        upsert: {
+          args: Prisma.AttachmentUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AttachmentPayload>
+        }
+        aggregate: {
+          args: Prisma.AttachmentAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAttachment>
+        }
+        groupBy: {
+          args: Prisma.AttachmentGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AttachmentGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AttachmentCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AttachmentCountAggregateOutputType> | number
+        }
+      }
+    }
     KeyValueStore: {
       payload: Prisma.$KeyValueStorePayload<ExtArgs>
       fields: Prisma.KeyValueStoreFieldRefs
@@ -1461,6 +1537,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.KeyValueStoreCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.KeyValueStoreCountAggregateOutputType> | number
+        }
+      }
+    }
+    AppVersion: {
+      payload: Prisma.$AppVersionPayload<ExtArgs>
+      fields: Prisma.AppVersionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AppVersionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppVersionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AppVersionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppVersionPayload>
+        }
+        findFirst: {
+          args: Prisma.AppVersionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppVersionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AppVersionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppVersionPayload>
+        }
+        findMany: {
+          args: Prisma.AppVersionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppVersionPayload>[]
+        }
+        create: {
+          args: Prisma.AppVersionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppVersionPayload>
+        }
+        createMany: {
+          args: Prisma.AppVersionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AppVersionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppVersionPayload>[]
+        }
+        delete: {
+          args: Prisma.AppVersionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppVersionPayload>
+        }
+        update: {
+          args: Prisma.AppVersionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppVersionPayload>
+        }
+        deleteMany: {
+          args: Prisma.AppVersionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AppVersionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AppVersionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppVersionPayload>[]
+        }
+        upsert: {
+          args: Prisma.AppVersionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppVersionPayload>
+        }
+        aggregate: {
+          args: Prisma.AppVersionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAppVersion>
+        }
+        groupBy: {
+          args: Prisma.AppVersionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AppVersionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AppVersionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AppVersionCountAggregateOutputType> | number
         }
       }
     }
@@ -2530,6 +2680,19 @@ export const LinkWidgetScalarFieldEnum = {
 export type LinkWidgetScalarFieldEnum = (typeof LinkWidgetScalarFieldEnum)[keyof typeof LinkWidgetScalarFieldEnum]
 
 
+export const AttachmentScalarFieldEnum = {
+  id: 'id',
+  key: 'key',
+  mimeType: 'mimeType',
+  size: 'size',
+  originalName: 'originalName',
+  createdById: 'createdById',
+  createdAt: 'createdAt'
+} as const
+
+export type AttachmentScalarFieldEnum = (typeof AttachmentScalarFieldEnum)[keyof typeof AttachmentScalarFieldEnum]
+
+
 export const KeyValueStoreScalarFieldEnum = {
   id: 'id',
   key: 'key',
@@ -2540,6 +2703,17 @@ export const KeyValueStoreScalarFieldEnum = {
 } as const
 
 export type KeyValueStoreScalarFieldEnum = (typeof KeyValueStoreScalarFieldEnum)[keyof typeof KeyValueStoreScalarFieldEnum]
+
+
+export const AppVersionScalarFieldEnum = {
+  id: 'id',
+  version: 'version',
+  buildNo: 'buildNo',
+  updatedAt: 'updatedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type AppVersionScalarFieldEnum = (typeof AppVersionScalarFieldEnum)[keyof typeof AppVersionScalarFieldEnum]
 
 
 export const GroupScalarFieldEnum = {
@@ -3001,7 +3175,9 @@ export type GlobalOmitConfig = {
   oauthConsent?: Prisma.OauthConsentOmit
   dashboard?: Prisma.DashboardOmit
   linkWidget?: Prisma.LinkWidgetOmit
+  attachment?: Prisma.AttachmentOmit
   keyValueStore?: Prisma.KeyValueStoreOmit
+  appVersion?: Prisma.AppVersionOmit
   group?: Prisma.GroupOmit
   userGroup?: Prisma.UserGroupOmit
   calendarShare?: Prisma.CalendarShareOmit

@@ -8,6 +8,7 @@
 import type { TicketStatus } from '@/generated/prisma/enums'
 import {
   applyLaneMove,
+  ASSIGNEE_NONE,
   buildTicketWhere,
   canApplyAssignments,
   cardDropId,
@@ -176,9 +177,9 @@ describe('buildTicketWhere: 検索条件から Prisma where を組む', () => {
     priority: [],
     tags: [],
     boardId: null,
-    assignee: 'any',
+    assignee: null,
   }
-  const ctx = { userId: 'u1', accessibleBoardIds: ['b1', 'b2'] }
+  const ctx = { accessibleBoardIds: ['b1', 'b2'] }
 
   it('条件なしなら可視スコープのみ', () => {
     const res = buildTicketWhere(emptyParams, ctx)
@@ -245,18 +246,18 @@ describe('buildTicketWhere: 検索条件から Prisma where を組む', () => {
     expect(res.AND).toHaveLength(1)
   })
 
-  it('assignee=me は自分、assignee=none は未割り当てに絞る', () => {
-    expect(buildTicketWhere({ ...emptyParams, assignee: 'me' }, ctx).AND as object[]).toContainEqual({
+  it('assignee は userId 指定、ASSIGNEE_NONE は未割り当てに絞る', () => {
+    expect(buildTicketWhere({ ...emptyParams, assignee: 'u1' }, ctx).AND as object[]).toContainEqual({
       assigneeId: 'u1',
     })
-    expect(buildTicketWhere({ ...emptyParams, assignee: 'none' }, ctx).AND as object[]).toContainEqual({
+    expect(buildTicketWhere({ ...emptyParams, assignee: ASSIGNEE_NONE }, ctx).AND as object[]).toContainEqual({
       assigneeId: null,
     })
   })
 
-  it('assignee=any では担当者の条件を付けない', () => {
-    const res = buildTicketWhere(emptyParams, ctx)
-    expect(res.AND).toHaveLength(1)
+  it('assignee 未指定(すべて)では担当者の条件を付けない', () => {
+    expect(buildTicketWhere(emptyParams, ctx).AND).toHaveLength(1)
+    expect(buildTicketWhere({ ...emptyParams, assignee: undefined }, ctx).AND).toHaveLength(1)
   })
 })
 

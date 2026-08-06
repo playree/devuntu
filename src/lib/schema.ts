@@ -1,6 +1,7 @@
 import { el } from '@/locale'
 import { z } from 'zod'
 import {
+  ASSIGNEE_NONE,
   MAX_TAG_NAME,
   MAX_TICKET_TAGS,
   TAG_COLORS,
@@ -20,8 +21,9 @@ export const zPassword = z
   .regex(reHalfString, el('@invalid_password'))
 export const zDescription = z.string().max(40, el('@invalid_description')).optional()
 
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB
-const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+/** アップロード画像の上限。クライアント側の入力チェックにも使うので export する */
+export const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB
+export const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 
 export const zImageFile = z
   .instanceof(File, { message: el('@required_field') })
@@ -284,7 +286,8 @@ export const scTicketSearch = z.object({
   tags: z.array(zTagName).max(MAX_TICKET_TAGS).default([]),
   /** null = 可視ボード全体。プライベートも 1 つのボードとして指定する */
   boardId: z.uuidv7().nullish(),
-  assignee: z.enum(['any', 'me', 'none']).default('any'),
+  /** null = すべて / 'none' = 未割り当て / それ以外は userId(KanbanFilter.assignee と同じ規約) */
+  assignee: z.union([z.literal(ASSIGNEE_NONE), z.uuidv7()]).nullish(),
 })
 export type TicketSearch = z.infer<typeof scTicketSearch>
 export type TicketSearchIn = z.input<typeof scTicketSearch>

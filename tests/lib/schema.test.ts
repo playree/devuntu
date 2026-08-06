@@ -4,11 +4,13 @@
  * 既定値・必須の境界だけを対象にする(項目ごとの文字数制限は UI の constraintSchema が担う)。
  */
 
-import { scCreateTicket, scMoveTicket, scPatchTicket } from '@/lib/schema'
+import { scCreateTicket, scMoveTicket, scPatchTicket, scTicketSearch } from '@/lib/schema'
+import { ASSIGNEE_NONE } from '@/lib/task'
 import { describe, expect, it } from 'vitest'
 
 const boardId = '01920000-0000-7000-8000-000000000001'
 const ticketId = '01920000-0000-7000-8000-000000000002'
+const userId = '01920000-0000-7000-8000-000000000003'
 
 describe('scCreateTicket: priority は必須(既定 medium)', () => {
   it('priority 未指定なら medium になる', () => {
@@ -67,6 +69,25 @@ describe('zDueDate: 期日は YYYY-MM-DD の実在する日付のみ', () => {
   it('区切りが違う形式は受け付けない', () => {
     expect(parseDueDate('2026/01/01')).toBe(false)
     expect(parseDueDate('20260101')).toBe(false)
+  })
+})
+
+describe('scTicketSearch: 担当者は未選択 / 未割り当て / userId', () => {
+  const parseAssignee = (assignee: unknown) => scTicketSearch.safeParse({ assignee })
+
+  it('未指定・null は「すべて」として通す', () => {
+    expect(scTicketSearch.parse({}).assignee, '未指定').toBeUndefined()
+    expect(scTicketSearch.parse({ assignee: null }).assignee, 'null').toBeNull()
+  })
+
+  it('未割り当てのセンチネルと userId を受け付ける', () => {
+    expect(parseAssignee(ASSIGNEE_NONE).success, '未割り当て').toBe(true)
+    expect(parseAssignee(userId).success, 'userId').toBe(true)
+  })
+
+  it('userId でもセンチネルでもない文字列は受け付けない', () => {
+    expect(parseAssignee('me').success, '旧仕様の me').toBe(false)
+    expect(parseAssignee('any').success, '旧仕様の any').toBe(false)
   })
 })
 

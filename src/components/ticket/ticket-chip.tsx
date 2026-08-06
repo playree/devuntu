@@ -81,22 +81,22 @@ const priorityStyles = tv({
       urgent: {
         bar: 'border-red-300/30 dark:border-red-800/30',
         border: 'dark:border-red-800/30',
-        bg: 'bg-red-300/15 dark:bg-red-800/15',
+        bg: 'bg-red-300/15 dark:bg-red-800/10',
       },
       high: {
-        bar: 'border-amber-400/30 dark:border-amber-600/30',
-        border: 'dark:border-amber-600/30',
-        bg: 'bg-amber-400/15 dark:bg-amber-600/15',
+        bar: 'border-amber-400/30 dark:border-amber-500/20',
+        border: 'dark:border-amber-500/20',
+        bg: 'bg-amber-400/15 dark:bg-amber-500/10',
       },
       medium: {
         bar: 'border-blue-300/30 dark:border-blue-800/30',
         border: 'dark:border-blue-800/30',
-        bg: 'bg-blue-300/15 dark:bg-blue-800/15',
+        bg: 'bg-blue-300/15 dark:bg-blue-800/10',
       },
       low: {
         bar: 'border-gray-300/30 dark:border-gray-600/30',
         border: 'dark:border-gray-600/30',
-        bg: 'bg-gray-300/15 dark:bg-gray-600/15',
+        bg: 'bg-gray-300/15 dark:bg-gray-600/10',
       },
     } satisfies Record<TicketPriority, unknown>,
   },
@@ -161,6 +161,14 @@ export const priorityBorderClass = (priority: TicketPriority) => priorityStyles(
  * 半透明なので単色の背景クラス(bg-sky-50 など)とは併用できない(後勝ちで打ち消し合う)。
  */
 export const priorityBgClass = (priority: TicketPriority) => priorityStyles({ priority }).bg()
+
+/**
+ * カードの最背面に敷く不透明な下地。
+ * priorityBgClass / statusBgClass はどちらも半透明なので、下地が無いとカードの色が
+ * レーン(ステータス色)と混色されてしまう。
+ * 背景色の指定同士が打ち消し合わないよう、priorityBgClass とは別の要素に当てること。
+ */
+export const CARD_BACKDROP_CLASS = 'bg-white dark:bg-black'
 
 /**
  * タグの表示色。HeroUI Chip は色を 5 種しか持たないため Tailwind の utility で上書きする。

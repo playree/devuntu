@@ -8,6 +8,7 @@ import {
   ensurePrivateBoard,
   getAccessibleBoardIds,
   getBoardMemberUsers,
+  getBoardsMemberUsers,
 } from '@/lib/board'
 import { dateOnlyToUtc } from '@/lib/day'
 import { errInvalidOperation } from '@/lib/error'
@@ -39,7 +40,7 @@ export const getTickets = safeAuthAction
     const accessibleBoardIds = await getAccessibleBoardIds(user.id)
 
     // 総件数とページ内容で同じ条件を使う(ページャの総ページ数と表示行がずれないようにする)
-    const where = buildTicketWhere(search, { userId: user.id, accessibleBoardIds })
+    const where = buildTicketWhere(search, { accessibleBoardIds })
 
     const [total, tickets] = await Promise.all([
       prisma.ticket.count({ where }),
@@ -93,7 +94,7 @@ export const getTicketFormOptions = safeAuthAction
     const privateBoardId = await ensurePrivateBoard(user)
     const accessibleBoardIds = await getAccessibleBoardIds(user.id)
 
-    const [boards, tags] = await Promise.all([
+    const [boards, tags, assignees] = await Promise.all([
       prisma.board.findMany({
         where: { id: { in: accessibleBoardIds } },
         select: { id: true, name: true, kind: true },
@@ -101,10 +102,12 @@ export const getTicketFormOptions = safeAuthAction
         orderBy: [{ kind: 'asc' }, { name: 'asc' }],
       }),
       listVisibleTags(accessibleBoardIds),
+      // 担当者の候補は絞り込み対象のボードが変わっても引き直さずに済むよう、タグと同じくまとめて返す
+      getBoardsMemberUsers(accessibleBoardIds),
     ])
 
     // selfUserId はプライベートボードでの担当者の既定値(本人)を決めるために返す
-    return { boards, tags, privateBoardId, selfUserId: user.id }
+    return { boards, tags, assignees, privateBoardId, selfUserId: user.id }
   })
 export type GetTicketFormOptionsReturnType = Awaited<ReturnType<typeof getTicketFormOptions>>['data']
 
@@ -148,14 +151,18 @@ export const createTicketTag = safeAuthAction
     return tag
   })
 
-/** 担当者の選択肢。そのボードのメンバー(プライベートボードなら本人のみ) */
+/**
+ * 担当者の選択肢。そのボードのメンバー(プライベートボードなら本人のみ)。
+ * 並びは `getBoardMemberUsers` の名前順のまま。
+ * 構造は `components/ticket/assignee-select.tsx` の AssigneeOption と一致させること。
+ */
 export const getAssigneeOptions = safeAuthAction
   .metadata({ actionName: 'getAssigneeOptions', role: 'user' })
   .inputSchema(scUUID)
   .action(async ({ ctx: { user }, parsedInput: { id: boardId } }) => {
     await assertBoardAccess(user, boardId, 'view')
     const users = await getBoardMemberUsers(boardId)
-    return Object.fromEntries(users.map(({ id, name }) => [id, name])) as Record<string, string>
+    return users.map(({ id, name, image }) => ({ id, name, image }))
   })
 export type GetAssigneeOptionsReturnType = Awaited<ReturnType<typeof getAssigneeOptions>>['data']
 
