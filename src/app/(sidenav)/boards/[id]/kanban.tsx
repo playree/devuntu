@@ -1,7 +1,7 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
-import { ChatBubbleIcon, PlusIcon } from '@/components/icon'
+import { CalendarDaysIcon, ChatBubbleIcon, PlusIcon } from '@/components/icon'
 import {
   CARD_BACKDROP_CLASS,
   PriorityBar,
@@ -17,7 +17,7 @@ import { dayformat } from '@/lib/day'
 import { cardDropId, KANBAN_LANES, laneDropId } from '@/lib/task'
 import { useLocale } from '@/locale/client'
 import { KeyboardSensor, PointerSensor, useDraggable, useDroppable } from '@dnd-kit/react'
-import { Checkbox, Chip, cn } from '@heroui/react'
+import { Avatar, Checkbox, cn } from '@heroui/react'
 import Link from 'next/link'
 import { FC } from 'react'
 import { GetBoardKanbanReturnType } from './server'
@@ -194,11 +194,27 @@ const KanbanCardView: FC<{
             <div className='flex flex-wrap items-center gap-1'>
               <PriorityChip priority={card.priority} />
               {card.assigneeName && (
-                <Chip variant='tertiary' size='sm'>
-                  <Chip.Label>{card.assigneeName}</Chip.Label>
-                </Chip>
+                <span className='flex min-w-0 items-center gap-0.5 text-xs text-gray-500'>
+                  <Avatar // HeroUI の最小サイズ(sm = 32px)でもカードには大きいので 16px に上書きする。
+                    // .avatar は @layer components なので @layer utilities の size-* / rounded-* が勝つ
+                    className='size-4 rounded-full'
+                  >
+                    <Avatar.Image src={card.assigneeImage} />
+                    <Avatar.Fallback // 既定の text-sm は 16px の円からはみ出すので落とす
+                      className='text-[9px]'
+                    >
+                      {card.assigneeName.charAt(0)}
+                    </Avatar.Fallback>
+                  </Avatar>
+                  <span className='truncate'>{card.assigneeName}</span>
+                </span>
               )}
-              {card.dueDate && <span className='font-mono text-xs'>{dayformat(card.dueDate, 'date')}</span>}
+              {card.dueDate && (
+                <span className='flex items-center gap-0.5 text-xs text-gray-500'>
+                  <CalendarDaysIcon width={12} />
+                  <span className='font-mono'>{dayformat(card.dueDate, 'date')}</span>
+                </span>
+              )}
               {card.commentCount > 0 && (
                 <span className='flex items-center gap-0.5 text-xs text-gray-500'>
                   <ChatBubbleIcon width={12} />
