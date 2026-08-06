@@ -24,7 +24,8 @@
   - [ビルド](#ビルド)
   - [パッケージ更新](#パッケージ更新)
   - [パッケージへのパッチ](#パッケージへのパッチ)
-    - [@heroui/react](#herouireact)
+  - [パッケージのバージョン上書き](#パッケージのバージョン上書き)
+    - [tailwind-variants](#tailwind-variants)
   - [better-auth](#better-auth)
   - [イメージ作成](#イメージ作成)
     - [Docker Build](#docker-build)
@@ -265,22 +266,31 @@ pnpm patch @heroui/react
 pnpm patch-commit '<出力されたパス>'
 ```
 
-### @heroui/react
+現在適用中のパッチは無い。`@heroui/react` 3.2.2 では`Autocomplete.Popover`が`aria-label`/`aria-labelledby`を内部の`Dialog`へ転送せず react-aria の警告が出続けるためパッチを当てていたが、3.2.3 で本体が修正されたため削除した。
 
-| パッチ                         | 対象バージョン | 内容                                                                                       |
-| ------------------------------ | -------------- | ------------------------------------------------------------------------------------------ |
-| `patches/@heroui__react.patch` | 3.2.2          | `Autocomplete.Popover`が`aria-label`/`aria-labelledby`を内部の`Dialog`へ転送するようにする |
+## パッケージのバージョン上書き
 
-`Autocomplete.Popover`は内部で react-aria の`Dialog`を挟むが、受け取った props は外側の`Popover`にしか展開されず`Dialog`にラベルを渡す手段が無い。そのため開発時に以下の警告が出続ける。
+依存パッケージが固定しているバージョンに問題がある場合は、`pnpm-workspace.yaml`の`overrides`で差し替える。`パッケージ名>依存パッケージ名`の形式で書くと、そのパッケージの入れ子依存だけを対象にできる。
 
-```text
-If a Dialog does not contain a <Heading slot="title">, it must have an aria-label or
-aria-labelledby attribute for accessibility.
-```
+### tailwind-variants
 
-- `<Heading slot="title">`では解決できない。react-aria の`Select`はコレクション構築のため children ツリーを`<template>`内で描画し、`Dialog`は`document.getElementById`で見出しを探すため、この pass では必ず見つからず警告になる(ポップオーバーを開く前、マウント時から出る)
-- 利用側は`<Autocomplete.Popover aria-label={...}>`を渡すだけでよい。`src/components/ticket/tag-select.tsx`が該当
-- 上流(HeroUI)側の不備なので、修正されたらこのパッチは削除する
+| 上書き対象                         | 指定     | 理由                                                         |
+| ---------------------------------- | -------- | ------------------------------------------------------------ |
+| `@heroui/styles>tailwind-variants` | `^3.3.1` | HeroUI 3.2.3 が固定する`tailwind-variants@3.3.0`のバグを回避 |
+| `@heroui/react>tailwind-variants`  | `^3.3.1` | 同上(コピーを 1 本に集約する)                                |
+
+`tailwind-variants` 3.3.0 の slots リゾルバは、
+
+- tv インスタンスごとに**単一の slots オブジェクトを使い回して返す**
+- 各 slot 関数は呼び出し時にモジュールスコープの「最後に渡された props」を読む(呼び出し元の props を捕捉しない)
+
+という実装のため、同じ tv を別の props で呼ぶと**先に取得済みの slot 関数の戻り値まで後の props に化ける**。
+
+HeroUI の`Modal`はこのパターンを踏んでいる。`Modal.Backdrop`は`useMemo(() => modalVariants({ variant }), [variant])`の結果を保持して毎レンダリングで`slots.backdrop()`を呼ぶが、後から描画される`Modal.Container`が同じ tv を`{ scroll, size }`(variant 無し)で呼ぶ。以降`Modal.Backdrop`が再レンダリングされても`useMemo`はヒットして`modalVariants`を呼び直さないため、`backdrop()`が`variant`の既定値である`modal__backdrop--opaque`を返す。結果、`FormModal`(`src/components/general/modal.tsx`)の`variant='blur'`が効かなくなっていた。`Drawer`/`AlertDialog`も同じ呼び出し方をしている。
+
+- 3.3.1 で修正済み(slots オブジェクトを呼び出しごとに生成する形に戻っている)
+- HeroUI をバージョンアップする際は`@heroui/styles`の`dependencies.tailwind-variants`を確認し、3.3.1 以上になっていればこの override は削除できる
+- `@heroui/react`側も同じ 3.3.0 を持ち`tv`/`cn`を再エクスポートしているため、揃えて上書きしている(コピーが 1 本に集約される)
 
 ## better-auth
 

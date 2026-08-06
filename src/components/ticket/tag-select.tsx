@@ -215,15 +215,7 @@ export const TagIdSelectField = ({
         <Autocomplete.Indicator /* children を渡すと Button ラップが消えてキーボードで開けなくなるので空のまま */ />
       </Autocomplete.Trigger>
       <ErrorMessage className={isSmart ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
-      <Autocomplete.Popover
-        /**
-         * aria-label は内部の Dialog 用。HeroUI 3.2.2 の Autocomplete.Popover は Dialog へ
-         * ラベルを渡さず react-aria が警告を出すため、patches/@heroui__react.patch で転送している。
-         * Select のコレクション構築は children を <template> 内で描画するので、
-         * <Heading slot='title'> では(id が実 DOM に無く)ラベル付けできない。
-         */
-        aria-label={label ?? t('tags')}
-      >
+      <Autocomplete.Popover>
         <Autocomplete.Filter
           inputValue={draft}
           onInputChange={setDraft}
