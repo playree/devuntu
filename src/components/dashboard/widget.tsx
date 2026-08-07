@@ -3,6 +3,7 @@
 import { Grid } from '@/components/general/grid'
 import { ProgressBar } from '@/components/general/progress'
 import { ArrowTopRightOnSquareIcon, InformationCircleIcon } from '@/components/icon'
+import { MarkdownView } from '@/components/markdown/markdown-view'
 import { parseAction } from '@/lib/action-client'
 import { calcPercent, formatByte, formatTime } from '@/lib/math'
 import { useLocale } from '@/locale/client'
@@ -11,8 +12,6 @@ import { Card, Description, Separator, Skeleton } from '@heroui/react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { FC, useEffect, useState } from 'react'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 import {
   getAnnouncement,
   GetAnnouncementReturnType,
@@ -207,9 +206,7 @@ export const ReleaseNoteWidget: WidgetFC = ({ id, editable }) => {
               return (
                 <div key={note.id}>
                   <div className='text-base font-bold'>{note.name}</div>
-                  <div className='markdown'>
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{note.body}</ReactMarkdown>
-                  </div>
+                  <MarkdownView body={note.body} />
                   <Separator className='my-2' />
                 </div>
               )
@@ -254,9 +251,7 @@ export const AnnouncementWidget: WidgetFC = ({ id, editable }) => {
         <Separator className='my-1' />
         {data ? (
           <div className='max-h-80 min-h-14 flex-1 overflow-y-auto'>
-            <div className='markdown'>
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{data.body}</ReactMarkdown>
-            </div>
+            <MarkdownView body={data.body} />
           </div>
         ) : (
           <Skeleton className='h-full min-h-14 w-full rounded-xl' />

@@ -1,65 +1,47 @@
 /**
- * Markdown 表示の生HTML無害化(`rehype-sanitize`)の許可リストの単体テスト
+ * Markdown 中の生HTMLの許可リストの単体テスト
  *
- * アップロード画像は `/api/upload/<key>` の相対URLで本文に埋め込まれるため、
- * 許可リストがこれを除去してしまうと画像が表示されなくなる。
- * 逆に `javascript:` / `data:` は通してはいけない。この2点を固定する。
- *
- * `react-markdown` を経由せず sanitize の transformer を直接呼ぶことで、
- * DOM を用意せずに検証できる(vitest の environment は node)。
+ * MDXEditor は許可タグの一覧に `script` / `style` / `iframe` を含み、属性も
+ * 検査せずに DOM へ渡すため、ここで絞り込めていないと表示・編集の両方で
+ * スクリプトが実行される。無害化の実体は Lexical と DOM を要する import visitor で
+ * vitest(environment: node)からは動かせないので、その入力になる許可リストを固定する。
  */
 
-import { SANITIZE_SCHEMA } from '@/components/ticket/markdown-view'
-import type { Root } from 'hast'
-import rehypeSanitize from 'rehype-sanitize'
+import { ALLOWED_HTML_TAGS, isAllowedHtmlTag, isDroppedHtmlTag } from '@/lib/markdown-sanitize'
 import { describe, expect, it } from 'vitest'
 
-/** `img` を1つだけ持つ hast ツリーを許可リストに通し、残った src を返す */
-const sanitizeImgSrc = (src: string) => {
-  const tree: Root = {
-    type: 'root',
-    children: [
-      {
-        type: 'element',
-        tagName: 'p',
-        properties: {},
-        children: [{ type: 'element', tagName: 'img', properties: { src, alt: 'alt' }, children: [] }],
-      },
-    ],
-  }
-  // rehype-sanitize のプラグインを呼ぶと transformer が返る
-  const transform = rehypeSanitize(SANITIZE_SCHEMA) as (tree: Root) => Root | undefined
-  const sanitized = transform(tree) ?? tree
-  const paragraph = sanitized.children[0]
-  if (paragraph?.type !== 'element') {
-    return undefined
-  }
-  const img = paragraph.children[0]
-  if (img?.type !== 'element') {
-    return undefined
-  }
-  return img.properties.src
-}
+describe('ALLOWED_HTML_TAGS', () => {
+  it.each(['script', 'style', 'iframe', 'object', 'embed', 'form', 'a', 'img', 'div', 'span'])(
+    '%s は許可しない',
+    (tag) => {
+      expect(isAllowedHtmlTag(tag)).toBe(false)
+    },
+  )
 
-describe('SANITIZE_SCHEMA', () => {
-  it('アップロード画像の相対URLはそのまま残る', () => {
-    const src = '/api/upload/019fd203-653c-7dc4-8422-4bcbaa3a7ec7.webp'
-    expect(sanitizeImgSrc(src)).toBe(src)
+  it('MDXEditor が下線として出力する u タグを許可している', () => {
+    expect(isAllowedHtmlTag('u')).toBe(true)
   })
 
-  it('httpsの外部URLは残る', () => {
-    const src = 'https://example.com/a.png'
-    expect(sanitizeImgSrc(src)).toBe(src)
+  it.each(['br', 's', 'del', 'ins', 'mark', 'kbd', 'sub', 'sup'])('%s は許可する', (tag) => {
+    expect(isAllowedHtmlTag(tag)).toBe(true)
   })
 
-  it.each([
-    ['javascript:alert(1)', 'javascriptスキーム'],
-    ['data:image/png;base64,AAAA', 'dataスキーム'],
-  ])('%s は除去される (%s)', (src) => {
-    expect(sanitizeImgSrc(src)).toBeUndefined()
+  it('名前が無いノードは許可しない', () => {
+    expect(isAllowedHtmlTag(null)).toBe(false)
+    expect(isAllowedHtmlTag(undefined)).toBe(false)
+    expect(isAllowedHtmlTag('')).toBe(false)
   })
 
-  it('MDXEditor が出力する u タグを許可している', () => {
-    expect(SANITIZE_SCHEMA.tagNames).toContain('u')
+  it.each(['script', 'style', 'noscript', 'template', 'title', 'textarea'])('%s は中身ごと捨てる', (tag) => {
+    expect(isDroppedHtmlTag(tag)).toBe(true)
+  })
+
+  it('許可タグと中身ごと捨てるタグは重ならない', () => {
+    expect([...ALLOWED_HTML_TAGS].filter(isDroppedHtmlTag)).toEqual([])
+  })
+
+  it('属性が無くても意味が保てるタグだけを並べている', () => {
+    // 許可を広げるときは属性を全て捨てても壊れないかを確認する
+    expect([...ALLOWED_HTML_TAGS].toSorted()).toEqual(['br', 'del', 'ins', 'kbd', 'mark', 's', 'sub', 'sup', 'u'])
   })
 })

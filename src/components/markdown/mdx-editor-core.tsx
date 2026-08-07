@@ -35,6 +35,7 @@ import '@mdxeditor/editor/style.css'
 import { basicDark } from 'cm6-theme-basic-dark'
 import { useTheme } from 'next-themes'
 import { FC, useMemo, useState } from 'react'
+import { sanitizeHtmlPlugin } from './mdx-sanitize-plugin'
 
 /** コードブロックの言語選択に出す一覧(キーは Markdown のフェンス言語名) */
 const CODE_BLOCK_LANGUAGES = {
@@ -129,6 +130,8 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
     // CodeMirror は高優先度の StyleModule を最後にマウントするので後勝ちで有効になる。
     const codeMirrorExtensions = isDarkAtMount ? [basicDark] : []
     return [
+      // 危険な生HTMLはここで落とすため、編集して保存すると本文からも消える
+      sanitizeHtmlPlugin(),
       headingsPlugin(),
       quotePlugin(),
       listsPlugin(),

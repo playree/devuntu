@@ -18,9 +18,9 @@ import {
   ViewColumnsIcon,
   XMarkIcon,
 } from '@/components/icon'
+import { MarkdownField } from '@/components/markdown/markdown-editor'
 import { notify } from '@/components/notify'
 import { AssigneeOption, AssigneeSelectField } from '@/components/ticket/assignee-select'
-import { MarkdownField } from '@/components/ticket/markdown-editor'
 import { TagIdSelectField } from '@/components/ticket/tag-select'
 import { PriorityChip, StatusChip, TagChips, useBoardName, useTicketOptions } from '@/components/ticket/ticket-chip'
 import type { TicketStatus } from '@/generated/prisma/enums'

@@ -241,6 +241,35 @@
   min-height: calc(var(--mdx-min-rows, 6) * 1.5em);
 }
 
+/* MDXEditor の表示専用バリアント(MarkdownView)。
+ *
+ * 枠線・角丸・内側 padding とエディタ内スクロールを落として、素の本文として並べる。
+ * 最小行数(--mdx-min-rows)も効かせない。上の flat と同じ理由で @layer の外に書く。
+ */
+.mdxeditor.mdxeditor-view {
+  border-width: 0;
+  border-radius: 0;
+  max-height: none;
+  overflow: visible;
+}
+
+.mdxeditor.mdxeditor-view .markdown {
+  padding: 0;
+  min-height: 0;
+}
+
+/* 本文が段落以外(表・見出し・区切り線など)で終わると、Lexical がカーソル置き場として
+   空の段落を足す。表示側では余白が1行ぶん増えるだけなので隠す */
+.mdxeditor.mdxeditor-view .markdown > p:last-child:has(> br[data-lexical-managed-linebreak]:only-child) {
+  display: none;
+}
+
+/* readOnly でも click は Lexical に届くため、画像を選択したときの枠を消す。
+   style.css のクラス名はビルドハッシュ付きなので部分一致で当てる */
+.mdxeditor.mdxeditor-view [class*='focusedImage'] {
+  outline: none;
+}
+
 .mdxeditor.dark-theme,
 .mdxeditor-popup-container.dark-theme {
   /* 素の値は white 固定。ツールバー(--baseBg = slate-3)より 1 段明るい slate-4 にして、

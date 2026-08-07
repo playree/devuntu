@@ -18,7 +18,7 @@ const eslintConfig = defineConfig([
   {
     rules: {
       // `_` 始まりは「意図的に受け取るが使わない」印。
-      // 分割代入で不要なキーを除外する用途(例: react-markdown の hast ノード)で使う
+      // 分割代入で不要なキーを除外する用途で使う
       '@typescript-eslint/no-unused-vars': [
         'warn',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_', ignoreRestSiblings: true },
