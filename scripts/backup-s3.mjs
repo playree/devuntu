@@ -3,14 +3,14 @@
  *
  *   pnpm s3:backup
  *
- * Docker環境では既存イメージから使い捨てコンテナで実行する(手順はREADME参照)。
+ * Docker環境では使い捨てコンテナで実行する(手順はREADME参照)。
  *
  * S3 API 経由の論理バックアップにしているのは、無停止で取得でき、
  * SeaweedFS の内部レイアウトに依存せず他の S3 互換ストレージへも復元できるため。
  *
  * アプリのモジュール(`@/` エイリアス)を読めないため、S3クライアントはここで組み立てる。
  * 設定値は `src/lib/env-util.ts` の同名の環境変数と揃えている。
- * Docker環境ではこのファイル1つだけをマウントして実行するため、
+ * このファイル単体をマウントするだけでも実行できるよう、
  * `restore-s3.mjs` と共通処理を切り出さず、それぞれ自己完結させている。
  */
 import { GetObjectCommand, ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3'

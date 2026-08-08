@@ -17,6 +17,8 @@
   - [補足](#補足)
 - [開発](#開発)
   - [開発用インフラ起動](#開発用インフラ起動)
+  - [s3-toolsサービス](#s3-toolsサービス)
+    - [旧イメージでの実行](#旧イメージでの実行)
   - [オブジェクトストレージへの移行](#オブジェクトストレージへの移行)
     - [Docker環境での移行](#docker環境での移行)
   - [DBバックアップ](#dbバックアップ)
@@ -24,6 +26,7 @@
   - [S3バックアップ](#s3バックアップ)
     - [Docker環境でのS3バックアップ](#docker環境でのs3バックアップ)
   - [S3リストア](#s3リストア)
+    - [Docker環境でのS3リストア](#docker環境でのs3リストア)
     - [ボリュームを作り直す場合](#ボリュームを作り直す場合)
   - [インストール](#インストール)
   - [ビルド](#ビルド)
@@ -210,6 +213,40 @@ docker compose stop db s3
 
 DB は `localhost:5432`、S3 API は `localhost:8333` で公開される。アップロード機能を使うには S3 API が必要。
 
+## s3-toolsサービス
+
+`compose.yaml` で Docker 運用している環境向けに、S3 のバックアップ/リストア/移行スクリプトを実行するための使い捨てコンテナを `s3-tools` サービスとして定義している。スクリプトはイメージに同梱されているので、**リポジトリの clone もホストへの node インストールも不要**で、`compose.yaml` と `.env.docker` があれば実行できる。
+
+```sh
+# バックアップ(既定のコマンド)
+docker compose run --rm s3-tools
+
+# リストア・移行は引数でスクリプトを指定する
+docker compose run --rm s3-tools /app/scripts/restore-s3.mjs /app/backup/s3_YYYYMMDD_HHMMSS
+```
+
+- 同梱版イメージ(`0.4.0` 以降)が前提。それ以前のイメージでは[旧イメージでの実行](#旧イメージでの実行)を参照する
+- `profiles: ['tools']` を付けているので `docker compose up` では起動しない
+- `entrypoint` を `node` にしているので `docker-entrypoint.sh` が動かず、`prisma migrate deploy` は走らない
+- 環境変数は `env_file`(`.env.docker`)から渡るので、コンテナ内の `S3_ENDPOINT` は `http://s3:8333` になる
+- `depends_on` により、`s3` が停止していれば `docker compose run` が起動する
+- `./backup` をマウントしているので、入出力先は `compose.yaml` と同じ階層の `backup/`。引数のパスは**コンテナ内のパス**(`/app/backup/...`)で指定する
+- コンテナは root で動くため、`backup/` 配下は root 所有で作られる
+
+### 旧イメージでの実行
+
+`0.3.0` 以前のイメージには `scripts/` が入っていないため、ホスト側のスクリプトを使い捨てコンテナへマウントして実行する(この場合はホストにスクリプトの実体が必要)。
+
+```sh
+docker compose run --rm \
+  -v "$(pwd)/backup:/app/backup" \
+  -v "$(pwd)/scripts/backup-s3.mjs:/app/backup-s3.mjs:ro" \
+  --entrypoint node \
+  devuntu /app/backup-s3.mjs
+```
+
+スクリプトは `/app/` 直下にマウントする。`WORKDIR` が `/app` なので出力先が `/app/backup` になり、`@aws-sdk/client-s3` も `/app/node_modules` から解決される。
+
 ## オブジェクトストレージへの移行
 
 ローカル保存(`upload/`)からの移行は一度だけ以下を実行する。
@@ -228,12 +265,7 @@ pnpm upload:migrate
 
 ### Docker環境での移行
 
-Docker で運用している環境の旧ファイルは、`compose.yaml` と同じ階層のホスト側 `upload/` に残っている(以前は `./upload:/app/upload` としてマウントしていた)。イメージには移行スクリプトが入っていないため、**既存イメージから使い捨てコンテナを起動し、スクリプトと `upload/` をマウントして実行する**。
-
-前提:
-
-- S3 対応版(`0.3.0` 以降)のイメージであること。`@aws-sdk/client-s3` はアプリ本体経由でイメージに含まれるため、追加の `npm install` は不要
-- ホスト側に `scripts/migrate-upload-to-s3.mjs` があること(このファイルだけ置けばよい)
+Docker で運用している環境の旧ファイルは、`compose.yaml` と同じ階層のホスト側 `upload/` に残っている(以前は `./upload:/app/upload` としてマウントしていた)。[`s3-tools`サービス](#s3-toolsサービス)から移行スクリプトを実行する。
 
 画像が参照できない期間を作らないため、新しい `devuntu` を起動する前に移行を済ませる。
 
@@ -243,17 +275,13 @@ docker compose up -d db s3
 
 docker compose run --rm \
   -v "$(pwd)/upload:/app/upload:ro" \
-  -v "$(pwd)/scripts/migrate-upload-to-s3.mjs:/app/migrate-upload.mjs:ro" \
-  --entrypoint node \
-  devuntu /app/migrate-upload.mjs
+  s3-tools /app/scripts/migrate-upload-to-s3.mjs
 
 docker compose up -d devuntu
 ```
 
-- `--entrypoint node` で `docker-entrypoint.sh` を上書きするため `prisma migrate deploy` は走らず、移行だけが実行される
+- `upload/`は`s3-tools`に常設していないので、移行のときだけ`-v`で足す(`WORKDIR`が`/app`なのでマウント先は`/app/upload`)
 - `docker compose run` はポートを公開しないので、稼働中の `devuntu`(3000)と衝突しない
-- スクリプトは `/app/` 直下にマウントする。`WORKDIR` が `/app` なので参照先が `/app/upload` になり、`@aws-sdk/client-s3` も `/app/node_modules` から解決される
-- 環境変数は `env_file`(`.env.docker`)から渡るので、コンテナ内の `S3_ENDPOINT` は `http://s3:8333` になる
 
 `compose` を使わない場合は `docker run` でも実行できる。`.env.docker` は値の後ろにコメントを書いている行があり `--env-file` ではコメントごと値として渡ってしまうため、`-e` で S3 系のみ明示的に指定する。ネットワーク名は compose のプロジェクト名依存(`docker network ls` で確認)。
 
@@ -265,9 +293,8 @@ docker run --rm \
   -e S3_ACCESS_KEY_ID=devuntu \
   -e S3_SECRET_ACCESS_KEY=devuntuS3PassW0rd \
   -v "$(pwd)/upload:/app/upload:ro" \
-  -v "$(pwd)/scripts/migrate-upload-to-s3.mjs:/app/migrate-upload.mjs:ro" \
   --entrypoint node \
-  playree/devuntu:latest /app/migrate-upload.mjs
+  playree/devuntu:latest /app/scripts/migrate-upload-to-s3.mjs
 ```
 
 ## DBバックアップ
@@ -280,6 +307,16 @@ pnpm db:backup
 ./scripts/backup-db.sh
 ```
 
+リポジトリを clone していない Docker 運用環境では、スクリプトと同じ内容を直接実行する。
+
+```sh
+mkdir -p backup
+docker compose exec -T db pg_dump -U devuser -Fc devuntu \
+  > backup/devuntu_$(date +%Y%m%d_%H%M%S).dump
+```
+
+ユーザー名と DB 名は `compose.yaml` の `POSTGRES_USER`/`POSTGRES_DB` に合わせる。
+
 ## DBリストア
 
 対象のダンプファイルを引数に指定する。既存オブジェクトは削除された上で復元される。
@@ -288,6 +325,15 @@ pnpm db:backup
 pnpm db:restore backup/devuntu_YYYYMMDD_HHMMSS.dump
 # または
 ./scripts/restore-db.sh backup/devuntu_YYYYMMDD_HHMMSS.dump
+```
+
+同じく、リポジトリを clone していない環境では直接実行する。既存 DB を作り直してから復元する(`--clean` ではダンプに含まれないテーブルと外部キーが残り、依存エラーになるため)。
+
+```sh
+docker compose exec -T db dropdb -U devuser -f devuntu
+docker compose exec -T db createdb -U devuser devuntu
+docker compose exec -T db pg_restore -U devuser -d devuntu --no-owner --single-transaction \
+  < backup/devuntu_YYYYMMDD_HHMMSS.dump
 ```
 
 ## S3バックアップ
@@ -316,21 +362,13 @@ backup/s3_YYYYMMDD_HHMMSS/
 
 ### Docker環境でのS3バックアップ
 
-イメージには`scripts/`が入っていないため、[Docker環境での移行](#docker環境での移行)と同じく既存イメージから使い捨てコンテナを起動する。
+[`s3-tools`サービス](#s3-toolsサービス)の既定コマンドがバックアップなので、引数なしで実行する。
 
 ```sh
-docker compose run --rm \
-  -v "$(pwd)/backup:/app/backup" \
-  -v "$(pwd)/scripts/backup-s3.mjs:/app/backup-s3.mjs:ro" \
-  --entrypoint node \
-  devuntu /app/backup-s3.mjs
+docker compose run --rm s3-tools
 ```
 
-- `--entrypoint node`で`docker-entrypoint.sh`を上書きするため`prisma migrate deploy`は走らない
-- `backup/`は書き込み先なので`:ro`を付けない
-- 環境変数は`env_file`(`.env.docker`)から渡るので、コンテナ内の`S3_ENDPOINT`は`http://s3:8333`になる
-
-リストアも同様に`scripts/restore-s3.mjs`をマウントし、引数にコンテナ内のパス(`/app/backup/s3_YYYYMMDD_HHMMSS`)を渡す。
+`compose.yaml`と同じ階層の`backup/`に出力される。
 
 ## S3リストア
 
@@ -345,6 +383,15 @@ node ./scripts/restore-s3.mjs backup/s3_YYYYMMDD_HHMMSS
 バケット(`S3_BUCKET`、既定`devuntu`)は無ければ自動作成される。Content-Type は`manifest.json`の値で復元するため、配信側(`src/app/api/upload/[filename]/route.ts`)のストレージ側フォールバックもそのまま働く。
 
 **DB リストアと挙動が異なる点**として、バックアップに含まれるキーを上書きするだけで、**ストレージ側にしか無いオブジェクトは削除しない**。同じキーへ何度実行しても安全なので、DB リストアとセットで実行してよい。
+
+### Docker環境でのS3リストア
+
+[`s3-tools`サービス](#s3-toolsサービス)にリストアスクリプトとコンテナ内のパスを渡す。
+
+```sh
+docker compose run --rm s3-tools \
+  /app/scripts/restore-s3.mjs /app/backup/s3_YYYYMMDD_HHMMSS
+```
 
 ### ボリュームを作り直す場合
 
@@ -362,6 +409,8 @@ docker volume rm devuntu_seaweeddata
 docker compose up -d s3
 pnpm s3:restore backup/s3_YYYYMMDD_HHMMSS
 ```
+
+Docker 運用環境では `pnpm` の箇所を [Docker環境でのS3バックアップ](#docker環境でのs3バックアップ)・[Docker環境でのS3リストア](#docker環境でのs3リストア)・[DBバックアップ](#dbバックアップ)の直接実行コマンドに読み替える。
 
 消費量は`docker compose exec -T s3 sh -c 'du -sk /data'`で確認できる。
 

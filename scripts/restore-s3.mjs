@@ -3,7 +3,7 @@
  *
  *   pnpm s3:restore backup/s3_YYYYMMDD_HHMMSS
  *
- * Docker環境では既存イメージから使い捨てコンテナで実行する(手順はREADME参照)。
+ * Docker環境では使い捨てコンテナで実行する(手順はREADME参照)。
  *
  * バックアップに含まれるキーを上書きするだけで、ストレージ側にしか無いオブジェクトは
  * 削除しない。DBリストア(`restore-db.sh`)がDBを作り直すのと挙動が異なる。
@@ -11,7 +11,7 @@
  *
  * アプリのモジュール(`@/` エイリアス)を読めないため、S3クライアントはここで組み立てる。
  * 設定値は `src/lib/env-util.ts` の同名の環境変数と揃えている。
- * Docker環境ではこのファイル1つだけをマウントして実行するため、
+ * このファイル単体をマウントするだけでも実行できるよう、
  * `backup-s3.mjs` と共通処理を切り出さず、それぞれ自己完結させている。
  */
 import { CreateBucketCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
