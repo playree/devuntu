@@ -41,6 +41,12 @@ COPY --from=builder /app/prisma.config.ts ./migrate/prisma.config.ts
 COPY --from=builder /app/prisma ./migrate/prisma
 RUN mkdir /app/db && ln -s /app/db /app/migrate/db
 
+# バックアップ/リストア/移行スクリプト(compose.yaml の s3-tools サービスから実行する)
+COPY --from=builder /app/scripts/backup-s3.mjs \
+                    /app/scripts/restore-s3.mjs \
+                    /app/scripts/migrate-upload-to-s3.mjs \
+                    ./scripts/
+
 # エントリーポイントスクリプトをコピー
 COPY --from=builder /app/docker/docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x docker-entrypoint.sh

@@ -1,7 +1,0 @@
--- AlterTable
-ALTER TABLE "oauth_client" ALTER COLUMN "scopes" SET DEFAULT ARRAY[]::TEXT[],
-ALTER COLUMN "contacts" SET DEFAULT ARRAY[]::TEXT[],
-ALTER COLUMN "redirectUris" SET DEFAULT ARRAY[]::TEXT[],
-ALTER COLUMN "postLogoutRedirectUris" SET DEFAULT ARRAY[]::TEXT[],
-ALTER COLUMN "grantTypes" SET DEFAULT ARRAY[]::TEXT[],
-ALTER COLUMN "responseTypes" SET DEFAULT ARRAY[]::TEXT[];

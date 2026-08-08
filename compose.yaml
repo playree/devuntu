@@ -1,14 +1,18 @@
+x-app-image: &app-image playree/devuntu:latest
+
 services:
   devuntu:
-    image: playree/devuntu:latest
+    image: *app-image
     container_name: devuntu
     ports:
       - 3000:3000
     restart: unless-stopped
     env_file: ./.env.docker
     depends_on:
-      - db
-      - s3
+      db:
+        condition: service_healthy
+      s3:
+        condition: service_healthy
 
   db:
     image: postgres:18
@@ -44,6 +48,23 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+
+  # S3のバックアップ/リストア/移行スクリプトを実行するための使い捨てコンテナ。
+  # profiles を付けているので docker compose up では起動せず、
+  # docker compose run --rm s3-tools で指定したときだけ有効になる。
+  s3-tools:
+    image: *app-image
+    profiles: ['tools']
+    env_file: ./.env.docker
+    # docker-entrypoint.sh を上書きして prisma migrate deploy を走らせない
+    entrypoint: ['node']
+    command: ['/app/scripts/backup-s3.mjs']
+    volumes:
+      # ホスト側に backup/ が無いと Docker が root 所有で作るので、実行前に mkdir -p backup しておく
+      - ./backup:/app/backup
+    depends_on:
+      s3:
+        condition: service_healthy
 
 volumes:
   pgdata:

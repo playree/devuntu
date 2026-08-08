@@ -3,7 +3,7 @@
  *
  *   pnpm upload:migrate
  *
- * Docker環境では既存イメージから使い捨てコンテナで実行する(手順はREADME参照)。
+ * Docker環境では使い捨てコンテナで実行する(手順はREADME参照)。
  *
  * DBは触らない。`link_widget.iconPath` は `/api/upload/<ファイル名>` 形式で、
  * ファイル名をそのままオブジェクトキーにするためURLが変わらず、DBの書き換えが不要。
