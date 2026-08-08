@@ -15,11 +15,6 @@ describe('toUploadUrl / toUploadKey', () => {
     expect(url).toBe(`${UPLOAD_URL_PREFIX}/${key}`)
     expect(toUploadKey(url)).toBe(key)
   })
-
-  it('移行前のファイル名形式でも往復できる', () => {
-    const key = '019f042a-eb50-755d-b7e0-05094ab48731-mquzdfmo.webp'
-    expect(toUploadKey(toUploadUrl(key))).toBe(key)
-  })
 })
 
 describe('newUploadKey', () => {
@@ -36,8 +31,7 @@ describe('newUploadKey', () => {
 
 describe('isValidUploadKey', () => {
   it.each([
-    ['019eef64-6cc1-78f1-8f50-1ef86986289a.webp', '新形式'],
-    ['019f042a-eb50-755d-b7e0-05094ab48731-mquzdfmo.webp', '旧形式(移行前のファイル名)'],
+    ['019eef64-6cc1-78f1-8f50-1ef86986289a.webp', 'webp'],
     ['019eef64-6cc1-78f1-8f50-1ef86986289a.png', 'png'],
     ['019eef64-6cc1-78f1-8f50-1ef86986289a.jpg', 'jpg'],
     ['019eef64-6cc1-78f1-8f50-1ef86986289a.jpeg', 'jpeg'],
@@ -55,6 +49,7 @@ describe('isValidUploadKey', () => {
     ['019eef64-6cc1-78f1-8f50-1ef86986289a', '拡張子なし'],
     ['019eef64-6cc1-78f1-8f50-1ef86986289a.webp.svg', '二重拡張子'],
     ['not-a-uuid.webp', 'UUID形式でない'],
+    ['019f042a-eb50-755d-b7e0-05094ab48731-mquzdfmo.webp', 'UUIDの後ろにサフィックスが付く'],
     ['019EEF64-6CC1-78F1-8F50-1EF86986289A.webp', '大文字(生成されない形式)'],
   ])('拒否する: %s (%s)', (key) => {
     expect(isValidUploadKey(key)).toBe(false)

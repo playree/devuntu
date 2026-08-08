@@ -109,7 +109,7 @@ const removeLinkWidgetIcon = async (iconPath: string): Promise<void> => {
   const key = toUploadKey(iconPath)
   try {
     await deleteObject(key)
-    // 移行前のファイルはAttachmentレコードを持たない場合があるためdeleteManyで許容する
+    // レコードが無いキーもありうるためdeleteManyで許容する
     await prisma.attachment.deleteMany({ where: { key } })
   } catch (err) {
     logger.warn({ err, iconPath }, 'failed to remove linkWidget icon')

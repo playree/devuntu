@@ -110,7 +110,6 @@ export const getObject = async (key: string) => {
     }
     return {
       body: res.Body.transformToWebStream(),
-      contentType: res.ContentType,
       contentLength: res.ContentLength,
     }
   } catch (err) {

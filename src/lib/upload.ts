@@ -10,13 +10,8 @@ import { uuidv7 } from 'uuidv7'
 
 export const UPLOAD_URL_PREFIX = '/api/upload'
 
-/**
- * 許可する拡張子。
- * 旧形式(`<uuidv7>-<base36>.webp`)はローカル保存時代のファイル名で、
- * 移行後もDBの値を書き換えずに参照できるよう受け付ける。
- */
-const UPLOAD_KEY_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(-[0-9a-z]+)?\.(webp|png|jpe?g|gif)$/
+/** 許可するキーの形式(`<uuidv7>.<拡張子>`) */
+const UPLOAD_KEY_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(webp|png|jpe?g|gif)$/
 
 /** 保存キーから公開URLを生成 */
 export const toUploadUrl = (key: string) => `${UPLOAD_URL_PREFIX}/${key}`
@@ -26,9 +21,7 @@ export const toUploadKey = (url: string) => url.slice(url.lastIndexOf('/') + 1)
 
 /**
  * 保存キーの形式検証。
- *
- * ホワイトリスト方式なのでスラッシュや `..` は構造的に通らず、
- * ローカル保存時代のパストラバーサル対策(basename + ディレクトリ検証)を兼ねる。
+ * ホワイトリスト方式なのでスラッシュや `..` は構造的に通らない。
  */
 export const isValidUploadKey = (key: string) => UPLOAD_KEY_REGEX.test(key)
 

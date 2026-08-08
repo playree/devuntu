@@ -23,24 +23,23 @@ export const GET = async (_req: Request, { params }: { params: Promise<{ filenam
     return new NextResponse(null, { status: 400 })
   }
 
+  // Content-Type は Attachment レコードから引く。存在しないキーはストレージを叩かずに返す
+  const attachment = await prisma.attachment.findUnique({
+    where: { key: filename },
+    select: { mimeType: true },
+  })
+  if (!attachment) {
+    return new NextResponse(null, { status: 404 })
+  }
+
   const object = await getObject(filename)
   if (!object) {
     return new NextResponse(null, { status: 404 })
   }
 
-  /**
-   * Content-Type は Attachment レコードを優先する。
-   * ローカル保存時代から移行したファイルはレコードを持たないため、
-   * ストレージ側の Content-Type にフォールバックする(存在確認はストレージが担う)。
-   */
-  const attachment = await prisma.attachment.findUnique({
-    where: { key: filename },
-    select: { mimeType: true },
-  })
-
   return new NextResponse(object.body, {
     headers: {
-      'Content-Type': attachment?.mimeType ?? object.contentType ?? 'application/octet-stream',
+      'Content-Type': attachment.mimeType,
       ...(object.contentLength ? { 'Content-Length': String(object.contentLength) } : {}),
       // 認証必須のためprivate。キーは保存ごとに変わるため長期キャッシュ可能
       'Cache-Control': 'private, max-age=31536000, immutable',
