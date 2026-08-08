@@ -16,6 +16,8 @@
     "studio": "prisma studio",
     "db:backup": "./scripts/backup-db.sh",
     "db:restore": "./scripts/restore-db.sh",
+    "s3:backup": "node ./scripts/backup-s3.mjs",
+    "s3:restore": "node ./scripts/restore-s3.mjs",
     "upload:migrate": "node ./scripts/migrate-upload-to-s3.mjs"
   },
   "dependencies": {

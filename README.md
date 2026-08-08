@@ -21,6 +21,10 @@
     - [Docker環境での移行](#docker環境での移行)
   - [DBバックアップ](#dbバックアップ)
   - [DBリストア](#dbリストア)
+  - [S3バックアップ](#s3バックアップ)
+    - [Docker環境でのS3バックアップ](#docker環境でのs3バックアップ)
+  - [S3リストア](#s3リストア)
+    - [ボリュームを作り直す場合](#ボリュームを作り直す場合)
   - [インストール](#インストール)
   - [ビルド](#ビルド)
   - [パッケージ更新](#パッケージ更新)
@@ -285,6 +289,81 @@ pnpm db:restore backup/devuntu_YYYYMMDD_HHMMSS.dump
 # または
 ./scripts/restore-db.sh backup/devuntu_YYYYMMDD_HHMMSS.dump
 ```
+
+## S3バックアップ
+
+アップロードされた画像はオブジェクトストレージ(`s3`サービス)にしか存在せず、Docker の名前付きボリューム`seaweeddata`が消えると復旧できない。DB だけ復元しても`Attachment`レコードや`link_widget.iconPath`、チケット本文の画像 URL が実体を失うため、**DB バックアップと対で取得する**。
+
+S3 サービスが起動している状態で実行する。`.env`の`S3_ENDPOINT`/`S3_ACCESS_KEY_ID`/`S3_SECRET_ACCESS_KEY`が必要(`pnpm upload:migrate`と同じ)。
+
+```sh
+pnpm s3:backup
+# または
+node ./scripts/backup-s3.mjs
+```
+
+S3 API 経由でオブジェクトを 1 件ずつ取得する論理バックアップで、SeaweedFS を停止せずに実行できる。`backup/`配下にタイムスタンプ付きのディレクトリが作られる。
+
+```
+backup/s3_YYYYMMDD_HHMMSS/
+├── manifest.json  … キー・Content-Type・サイズ・ETag の一覧
+└── objects/       … オブジェクト本体(ファイル名=オブジェクトキー)
+```
+
+一時ディレクトリへ書き出して成功時のみ本ディレクトリへ移動するため、途中で失敗しても欠けたバックアップは残らない。オブジェクトキーは`<uuidv7>.<拡張子>`のフラット構成のため、`/`を含むキーがあった場合は警告を出してスキップする。
+
+`weed`の内部レイアウトに依存しないので、AWS S3 や Cloudflare R2 など他の S3 互換ストレージへ`S3_ENDPOINT`を向けて復元することもできる。
+
+### Docker環境でのS3バックアップ
+
+イメージには`scripts/`が入っていないため、[Docker環境での移行](#docker環境での移行)と同じく既存イメージから使い捨てコンテナを起動する。
+
+```sh
+docker compose run --rm \
+  -v "$(pwd)/backup:/app/backup" \
+  -v "$(pwd)/scripts/backup-s3.mjs:/app/backup-s3.mjs:ro" \
+  --entrypoint node \
+  devuntu /app/backup-s3.mjs
+```
+
+- `--entrypoint node`で`docker-entrypoint.sh`を上書きするため`prisma migrate deploy`は走らない
+- `backup/`は書き込み先なので`:ro`を付けない
+- 環境変数は`env_file`(`.env.docker`)から渡るので、コンテナ内の`S3_ENDPOINT`は`http://s3:8333`になる
+
+リストアも同様に`scripts/restore-s3.mjs`をマウントし、引数にコンテナ内のパス(`/app/backup/s3_YYYYMMDD_HHMMSS`)を渡す。
+
+## S3リストア
+
+対象のバックアップディレクトリを引数に指定する。
+
+```sh
+pnpm s3:restore backup/s3_YYYYMMDD_HHMMSS
+# または
+node ./scripts/restore-s3.mjs backup/s3_YYYYMMDD_HHMMSS
+```
+
+バケット(`S3_BUCKET`、既定`devuntu`)は無ければ自動作成される。Content-Type は`manifest.json`の値で復元するため、配信側(`src/app/api/upload/[filename]/route.ts`)のストレージ側フォールバックもそのまま働く。
+
+**DB リストアと挙動が異なる点**として、バックアップに含まれるキーを上書きするだけで、**ストレージ側にしか無いオブジェクトは削除しない**。同じキーへ何度実行しても安全なので、DB リストアとセットで実行してよい。
+
+### ボリュームを作り直す場合
+
+`seaweeddata`ボリュームを作り直すと`/data`のディスク消費をリセットできる。過去のバージョンで作られた volume ファイル(`*.dat`)は 1 ファイルあたり 1GiB を`fallocate`で先行確保しており、実データが数 KB でもディスクを 10GB 以上占有することがある(現行の`compose.yaml`の起動オプションでは先行確保は起きない)。
+
+必ずバックアップを取ってから実行する。
+
+```sh
+pnpm s3:backup
+pnpm db:backup
+
+docker compose stop s3 && docker compose rm -f s3
+docker volume rm devuntu_seaweeddata
+
+docker compose up -d s3
+pnpm s3:restore backup/s3_YYYYMMDD_HHMMSS
+```
+
+消費量は`docker compose exec -T s3 sh -c 'du -sk /data'`で確認できる。
 
 ## インストール
 
