@@ -218,6 +218,8 @@ DB は `localhost:5432`、S3 API は `localhost:8333` で公開される。ア�
 `compose.yaml` で Docker 運用している環境向けに、S3 のバックアップ/リストア/移行スクリプトを実行するための使い捨てコンテナを `s3-tools` サービスとして定義している。スクリプトはイメージに同梱されているので、**リポジトリの clone もホストへの node インストールも不要**で、`compose.yaml` と `.env.docker` があれば実行できる。
 
 ```sh
+mkdir -p backup
+
 # バックアップ(既定のコマンド)
 docker compose run --rm s3-tools
 
@@ -225,13 +227,13 @@ docker compose run --rm s3-tools
 docker compose run --rm s3-tools /app/scripts/restore-s3.mjs /app/backup/s3_YYYYMMDD_HHMMSS
 ```
 
-- 同梱版イメージ(`0.4.0` 以降)が前提。それ以前のイメージでは[旧イメージでの実行](#旧イメージでの実行)を参照する
+- 同梱版イメージ(`0.3.1` 以降)が前提。それ以前のイメージでは[旧イメージでの実行](#旧イメージでの実行)を参照する
 - `profiles: ['tools']` を付けているので `docker compose up` では起動しない
 - `entrypoint` を `node` にしているので `docker-entrypoint.sh` が動かず、`prisma migrate deploy` は走らない
 - 環境変数は `env_file`(`.env.docker`)から渡るので、コンテナ内の `S3_ENDPOINT` は `http://s3:8333` になる
-- `depends_on` により、`s3` が停止していれば `docker compose run` が起動する
+- `depends_on` の `condition: service_healthy` により、`s3` が停止していれば起動し、healthcheck が通るまで待ってからスクリプトが実行される
 - `./backup` をマウントしているので、入出力先は `compose.yaml` と同じ階層の `backup/`。引数のパスは**コンテナ内のパス**(`/app/backup/...`)で指定する
-- コンテナは root で動くため、`backup/` 配下は root 所有で作られる
+- コンテナは root で動くため、`backup/` 配下の出力は root 所有になる。事前に `mkdir -p backup` しておけばディレクトリ自体は実行ユーザー所有になり、未作成のまま実行すると Docker がマウント時に root 所有で作る
 
 ### 旧イメージでの実行
 
@@ -283,10 +285,10 @@ docker compose up -d devuntu
 - `upload/`は`s3-tools`に常設していないので、移行のときだけ`-v`で足す(`WORKDIR`が`/app`なのでマウント先は`/app/upload`)
 - `docker compose run` はポートを公開しないので、稼働中の `devuntu`(3000)と衝突しない
 
-`compose` を使わない場合は `docker run` でも実行できる。`.env.docker` は値の後ろにコメントを書いている行があり `--env-file` ではコメントごと値として渡ってしまうため、`-e` で S3 系のみ明示的に指定する。ネットワーク名は compose のプロジェクト名依存(`docker network ls` で確認)。
+`compose` を使わない場合は `docker run` でも実行できる。`.env.docker` は値の後ろにコメントを書いている行があり `--env-file` ではコメントごと値として渡ってしまうため、`-e` で S3 系のみ明示的に指定する。ネットワーク名は compose のプロジェクト名依存(`docker network ls` で確認)。`latest` はローカルにキャッシュがあるとそれが使われ、`scripts/` 未同梱の旧イメージで実行されてしまうため `--pull=always` を付ける(固定タグやダイジェストの指定でもよい)。
 
 ```sh
-docker run --rm \
+docker run --rm --pull=always \
   --network devuntu_default \
   -e S3_ENDPOINT=http://s3:8333 \
   -e S3_BUCKET=devuntu \
@@ -329,11 +331,17 @@ pnpm db:restore backup/devuntu_YYYYMMDD_HHMMSS.dump
 
 同じく、リポジトリを clone していない環境では直接実行する。既存 DB を作り直してから復元する(`--clean` ではダンプに含まれないテーブルと外部キーが残り、依存エラーになるため)。
 
+アプリの停止が前提になる。`devuntu` は `restart: unless-stopped` のため、`dropdb -f` で切断してもすぐ接続を張り直して DROP が失敗する。復元後も Prisma の接続プールが古い状態を握るので、止めてから実行して最後に起動し直す。
+
 ```sh
+docker compose stop devuntu
+
 docker compose exec -T db dropdb -U devuser -f devuntu
 docker compose exec -T db createdb -U devuser devuntu
 docker compose exec -T db pg_restore -U devuser -d devuntu --no-owner --single-transaction \
   < backup/devuntu_YYYYMMDD_HHMMSS.dump
+
+docker compose up -d devuntu
 ```
 
 ## S3バックアップ
@@ -365,6 +373,7 @@ backup/s3_YYYYMMDD_HHMMSS/
 [`s3-tools`サービス](#s3-toolsサービス)の既定コマンドがバックアップなので、引数なしで実行する。
 
 ```sh
+mkdir -p backup
 docker compose run --rm s3-tools
 ```
 
