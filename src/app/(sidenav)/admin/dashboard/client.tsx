@@ -1,5 +1,6 @@
 'use client'
 
+import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
 import { useModalState } from '@/components/general/modal'
@@ -27,34 +28,12 @@ export const AdminDashboardClient: FC = () => {
       </div>
       <DefaultLayoutEditModal state={editModalState} key={editModalState.key} reload={() => {}} />
       <Accordion allowsMultipleExpanded defaultExpandedKeys={defaultExpandedKeys}>
-        <Accordion.Item id='announcement_manage'>
-          <Accordion.Heading>
-            <Accordion.Trigger className='gap-1'>
-              <MegaphoneIcon />
-              {t('announcement_manage')}
-              <Accordion.Indicator />
-            </Accordion.Trigger>
-          </Accordion.Heading>
-          <Accordion.Panel>
-            <Accordion.Body className='px-4'>
-              <AnnouncementManage />
-            </Accordion.Body>
-          </Accordion.Panel>
-        </Accordion.Item>
-        <Accordion.Item id='link_widget_manage'>
-          <Accordion.Heading>
-            <Accordion.Trigger className='gap-1'>
-              <PuzzlePieceIcon />
-              {t('link_widget_manage')}
-              <Accordion.Indicator />
-            </Accordion.Trigger>
-          </Accordion.Heading>
-          <Accordion.Panel>
-            <Accordion.Body className='px-4'>
-              <LinkWidgetManage />
-            </Accordion.Body>
-          </Accordion.Panel>
-        </Accordion.Item>
+        <AccordionSection id='announcement_manage' icon={<MegaphoneIcon />} title={t('announcement_manage')}>
+          <AnnouncementManage />
+        </AccordionSection>
+        <AccordionSection id='link_widget_manage' icon={<PuzzlePieceIcon />} title={t('link_widget_manage')}>
+          <LinkWidgetManage />
+        </AccordionSection>
       </Accordion>
     </FlexCol>
   )

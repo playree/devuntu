@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "pnpm",
+      "args": [
+        "exec",
+        "playwright-mcp",
+        "--headless",
+        "--browser",
+        "chromium",
+        "--viewport-size",
+        "1600x1000",
+        "--output-dir",
+        ".work/playwright",
+        "--timeout-action",
+        "10000",
+        "--timeout-navigation",
+        "120000",
+        "--console-level",
+        "error"
+      ]
+    }
+  }
+}

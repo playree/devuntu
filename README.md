@@ -1,19 +1,37 @@
 - [Devuntu](#devuntu)
 - [パッケージ構成](#パッケージ構成)
+- [画面一覧](#画面一覧)
+  - [アクセス制御の仕組み](#アクセス制御の仕組み)
+  - [一般](#一般)
+  - [タスク管理](#タスク管理)
+  - [管理者](#管理者)
+  - [認証・公開](#認証公開)
+  - [API](#api)
 - [環境変数](#環境変数)
   - [基本](#基本)
   - [認証](#認証)
   - [メール](#メール)
+  - [オブジェクトストレージ](#オブジェクトストレージ)
   - [Linode](#linode)
   - [Debug](#debug)
   - [補足](#補足)
 - [開発](#開発)
-  - [DB起動](#db起動)
+  - [開発用インフラ起動](#開発用インフラ起動)
+  - [オブジェクトストレージへの移行](#オブジェクトストレージへの移行)
+    - [Docker環境での移行](#docker環境での移行)
   - [DBバックアップ](#dbバックアップ)
   - [DBリストア](#dbリストア)
+  - [S3バックアップ](#s3バックアップ)
+    - [Docker環境でのS3バックアップ](#docker環境でのs3バックアップ)
+  - [S3リストア](#s3リストア)
+    - [ボリュームを作り直す場合](#ボリュームを作り直す場合)
   - [インストール](#インストール)
   - [ビルド](#ビルド)
   - [パッケージ更新](#パッケージ更新)
+  - [パッケージへのパッチ](#パッケージへのパッチ)
+  - [パッケージのバージョン上書き](#パッケージのバージョン上書き)
+    - [tailwind-variants](#tailwind-variants)
+  - [TypeScript v7 と v6 の併存](#typescript-v7-と-v6-の併存)
   - [better-auth](#better-auth)
   - [イメージ作成](#イメージ作成)
     - [Docker Build](#docker-build)
@@ -25,6 +43,7 @@
 # パッケージ構成
 
 - Next.js v16
+- TypeScript v7(v6 と併存。[TypeScript v7 と v6 の併存](#typescript-v7-と-v6-の併存))
 - pnpm v11
 - Prisma v7
 - Better Auth v1.6
@@ -32,6 +51,69 @@
 - HeroUI v3
 - Zod v4
 - next-safe-action v8
+
+# 画面一覧
+
+## アクセス制御の仕組み
+
+パス単位の制御は `src/proxy.ts`(Next.js Proxy)が `src/lib/auth-config.ts` の設定に従って行う。
+
+- **認証必須** : `/auth/signin` `/start` `/cal/:id` 以外の全ページ。未ログインは `/auth/signin?cb=<元のURL>` へリダイレクト
+- **管理者のみ** : `/admin/**`。`role !== 'admin'` の場合は 404 へ rewrite(メニューにも表示されない)
+- **2要素認証** : `TWO_FA_REQUIRED=true` かつ `DISABLE_PASSWORD_AUTH=false` の場合、2FA未設定なら `/auth/signin?mode=2FA` へリダイレクト
+- Proxy の matcher は `api/**` と Server Action(`next-action` ヘッダ)を除外している。そのためレコード単位の認可(ボード/チケットの参照・編集権限)は各 Server Action 側で `assertBoardAccess` / `assertTicketAccess`(`src/lib/board.ts`)により検証する
+
+ボードの権限は直接メンバー(`BoardMember`)またはグループ経由(`BoardGroup`)で解決され、`owner` / `member` のロールを持つ。
+
+## 一般
+
+| 画面名称       | パス       | アクセス制御                                                                    |
+| -------------- | ---------- | ------------------------------------------------------------------------------- |
+| ダッシュボード | `/`        | 認証必須                                                                        |
+| カレンダー     | `/cal`     | 認証必須 + Googleアカウント連携が利用可能なユーザーのみ(不可の場合は案内を表示) |
+| アカウント     | `/account` | 認証必須(自分のアカウント情報のみ)                                              |
+
+## タスク管理
+
+| 画面名称     | パス                    | アクセス制御                                                                               |
+| ------------ | ----------------------- | ------------------------------------------------------------------------------------------ |
+| ボード一覧   | `/boards`               | 認証必須(自分がアクセスできるボードのみ表示)                                               |
+| かんばん     | `/boards/[id]`          | 認証必須 + 対象ボードの参照権限(`owner` / `member`)                                        |
+| ボード設定   | `/boards/[id]/settings` | 認証必須 + 対象ボードの参照権限。メンバー/グループ/タグ等の変更は `owner` または管理者のみ |
+| チケット一覧 | `/tickets`              | 認証必須(アクセスできるボードのチケットのみ表示)                                           |
+| チケット詳細 | `/tickets/[id]`         | 認証必須 + 対象チケットの参照権限(所属ボード経由で判定)                                    |
+
+## 管理者
+
+いずれも `/admin/**` 配下のため管理者(`role === 'admin'`)のみアクセス可能。
+
+| 画面名称           | パス                  | アクセス制御 |
+| ------------------ | --------------------- | ------------ |
+| ユーザー管理       | `/admin/users`        | 管理者のみ   |
+| グループ管理       | `/admin/groups`       | 管理者のみ   |
+| ダッシュボード管理 | `/admin/dashboard`    | 管理者のみ   |
+| 設定(連携設定)     | `/admin/settings`     | 管理者のみ   |
+| OIDCクライアント   | `/admin/oidc-clients` | 管理者のみ   |
+
+## 認証・公開
+
+| 画面名称         | パス           | アクセス制御                                                                             |
+| ---------------- | -------------- | ---------------------------------------------------------------------------------------- |
+| サインイン       | `/auth/signin` | 認証不要。`?mode=2FA` で2FA設定の誘導、`?cb=` でサインイン後の遷移先を指定               |
+| 初期セットアップ | `/start`       | 認証不要。初期セットアップ済みの場合は `/` へリダイレクト                                |
+| 空き時間の共有   | `/cal/[id]`    | **認証不要の公開ページ**。共有URLの `publicId` で参照。無効化済み/不正なIDは404。noindex |
+
+## API
+
+Proxy の対象外のため、各ルートハンドラ内で個別に認証する。
+
+| パス                                         | アクセス制御                                      |
+| -------------------------------------------- | ------------------------------------------------- |
+| `/api/auth/[...all]`                         | Better Auth のハンドラ(認証処理自体)              |
+| `/api/auth/.well-known/openid-configuration` | 認証不要(OIDC ディスカバリ)                       |
+| `/api/health`                                | 認証不要(ヘルスチェック)                          |
+| `/api/upload`                                | 認証必須(未ログインは401)。画像アップロード(POST) |
+| `/api/upload/[filename]`                     | 認証必須(未ログインは401)。画像配信(GET)          |
 
 # 環境変数
 
@@ -79,6 +161,19 @@
 | `SMTP_USER`        | SMTP 認証ユーザー                             |                         | -          |
 | `SMTP_PASS`        | SMTP 認証パスワード                           |                         | -          |
 
+## オブジェクトストレージ
+
+アップロードファイル(画像)の保存先。S3互換APIを話すストレージであれば何でもよいが、`compose.yaml` では OSS の [SeaweedFS](https://github.com/seaweedfs/seaweedfs) を同梱している。認証情報は `docker/seaweedfs-s3.json` で定義する。
+
+| 変数名                 | 説明                                 | 必須 | デフォルト  |
+| ---------------------- | ------------------------------------ | ---- | ----------- |
+| `S3_ENDPOINT`          | S3 API のエンドポイント              | 〇   | -           |
+| `S3_BUCKET`            | バケット名(存在しない場合は自動作成) |      | `devuntu`   |
+| `S3_REGION`            | リージョン(SeaweedFS では任意値)     |      | `us-east-1` |
+| `S3_ACCESS_KEY_ID`     | アクセスキー                         | 〇   | -           |
+| `S3_SECRET_ACCESS_KEY` | シークレットキー                     | 〇   | -           |
+| `S3_FORCE_PATH_STYLE`  | パススタイルのアドレッシングを強制   |      | `true`      |
+
 ## Linode
 
 | 変数名                         | 説明                    | 必須 | デフォルト |
@@ -101,10 +196,78 @@
 
 # 開発
 
-## DB起動
+## 開発用インフラ起動
+
+開発に必要なのは DB(`db`サービス)とオブジェクトストレージ(`s3`サービス)のみ。まとめて起動・停止する。
 
 ```sh
-docker compose up -d db
+# 起動
+docker compose up -d db s3
+
+# 停止
+docker compose stop db s3
+```
+
+DB は `localhost:5432`、S3 API は `localhost:8333` で公開される。アップロード機能を使うには S3 API が必要。
+
+## オブジェクトストレージへの移行
+
+ローカル保存(`upload/`)からの移行は一度だけ以下を実行する。
+
+```sh
+pnpm upload:migrate
+```
+
+前提として、S3 サービスが起動([開発用インフラ起動](#開発用インフラ起動))し、`.env` に `S3_ENDPOINT`/`S3_ACCESS_KEY_ID`/`S3_SECRET_ACCESS_KEY` が設定されていること。スクリプトは`dotenv`で`.env`を読み(`dotenv`が無い環境では環境変数のみで動く)、`S3_ENDPOINT`が未設定ならエラーで終了する。バケット(`S3_BUCKET`、既定`devuntu`)は無ければ自動作成される。
+
+対象はリポジトリ直下の`upload/`にあるファイルのみ(サブディレクトリは走査しない)。`.gitkeep`などのドットファイルは対象外で、拡張子が`.webp`/`.png`/`.jpg`/`.jpeg`/`.gif`のものだけを移行する。それ以外の拡張子は警告を出してスキップする。`upload/`が無い場合は`no files to migrate`で正常終了する。
+
+ファイル名をそのままオブジェクトキーにするため公開URL(`/api/upload/<キー>`)が変わらず、DB(`link_widget.iconPath`やチケット本文中の画像URL)の書き換えは不要。移行したファイルは`Attachment`レコードを持たないが、配信側(`src/app/api/upload/[filename]/route.ts`)が Content-Type をストレージ側にフォールバックするためそのまま参照できる。
+
+アップロード済みのキーはスキップするため、何度実行しても安全。最後に`done. migrated=<n> skipped=<n>`が出力される。移行が済めばローカルの`upload/`は不要(アプリは参照しない)。
+
+### Docker環境での移行
+
+Docker で運用している環境の旧ファイルは、`compose.yaml` と同じ階層のホスト側 `upload/` に残っている(以前は `./upload:/app/upload` としてマウントしていた)。イメージには移行スクリプトが入っていないため、**既存イメージから使い捨てコンテナを起動し、スクリプトと `upload/` をマウントして実行する**。
+
+前提:
+
+- S3 対応版(`0.3.0` 以降)のイメージであること。`@aws-sdk/client-s3` はアプリ本体経由でイメージに含まれるため、追加の `npm install` は不要
+- ホスト側に `scripts/migrate-upload-to-s3.mjs` があること(このファイルだけ置けばよい)
+
+画像が参照できない期間を作らないため、新しい `devuntu` を起動する前に移行を済ませる。
+
+```sh
+docker compose pull
+docker compose up -d db s3
+
+docker compose run --rm \
+  -v "$(pwd)/upload:/app/upload:ro" \
+  -v "$(pwd)/scripts/migrate-upload-to-s3.mjs:/app/migrate-upload.mjs:ro" \
+  --entrypoint node \
+  devuntu /app/migrate-upload.mjs
+
+docker compose up -d devuntu
+```
+
+- `--entrypoint node` で `docker-entrypoint.sh` を上書きするため `prisma migrate deploy` は走らず、移行だけが実行される
+- `docker compose run` はポートを公開しないので、稼働中の `devuntu`(3000)と衝突しない
+- スクリプトは `/app/` 直下にマウントする。`WORKDIR` が `/app` なので参照先が `/app/upload` になり、`@aws-sdk/client-s3` も `/app/node_modules` から解決される
+- 環境変数は `env_file`(`.env.docker`)から渡るので、コンテナ内の `S3_ENDPOINT` は `http://s3:8333` になる
+
+`compose` を使わない場合は `docker run` でも実行できる。`.env.docker` は値の後ろにコメントを書いている行があり `--env-file` ではコメントごと値として渡ってしまうため、`-e` で S3 系のみ明示的に指定する。ネットワーク名は compose のプロジェクト名依存(`docker network ls` で確認)。
+
+```sh
+docker run --rm \
+  --network devuntu_default \
+  -e S3_ENDPOINT=http://s3:8333 \
+  -e S3_BUCKET=devuntu \
+  -e S3_ACCESS_KEY_ID=devuntu \
+  -e S3_SECRET_ACCESS_KEY=devuntuS3PassW0rd \
+  -v "$(pwd)/upload:/app/upload:ro" \
+  -v "$(pwd)/scripts/migrate-upload-to-s3.mjs:/app/migrate-upload.mjs:ro" \
+  --entrypoint node \
+  playree/devuntu:latest /app/migrate-upload.mjs
 ```
 
 ## DBバックアップ
@@ -127,6 +290,81 @@ pnpm db:restore backup/devuntu_YYYYMMDD_HHMMSS.dump
 ./scripts/restore-db.sh backup/devuntu_YYYYMMDD_HHMMSS.dump
 ```
 
+## S3バックアップ
+
+アップロードされた画像はオブジェクトストレージ(`s3`サービス)にしか存在せず、Docker の名前付きボリューム`seaweeddata`が消えると復旧できない。DB だけ復元しても`Attachment`レコードや`link_widget.iconPath`、チケット本文の画像 URL が実体を失うため、**DB バックアップと対で取得する**。
+
+S3 サービスが起動している状態で実行する。`.env`の`S3_ENDPOINT`/`S3_ACCESS_KEY_ID`/`S3_SECRET_ACCESS_KEY`が必要(`pnpm upload:migrate`と同じ)。
+
+```sh
+pnpm s3:backup
+# または
+node ./scripts/backup-s3.mjs
+```
+
+S3 API 経由でオブジェクトを 1 件ずつ取得する論理バックアップで、SeaweedFS を停止せずに実行できる。`backup/`配下にタイムスタンプ付きのディレクトリが作られる。
+
+```
+backup/s3_YYYYMMDD_HHMMSS/
+├── manifest.json  … キー・Content-Type・サイズ・ETag の一覧
+└── objects/       … オブジェクト本体(ファイル名=オブジェクトキー)
+```
+
+一時ディレクトリへ書き出して成功時のみ本ディレクトリへ移動するため、途中で失敗しても欠けたバックアップは残らない。オブジェクトキーは`<uuidv7>.<拡張子>`のフラット構成のため、`/`を含むキーがあった場合は警告を出してスキップする。
+
+`weed`の内部レイアウトに依存しないので、AWS S3 や Cloudflare R2 など他の S3 互換ストレージへ`S3_ENDPOINT`を向けて復元することもできる。
+
+### Docker環境でのS3バックアップ
+
+イメージには`scripts/`が入っていないため、[Docker環境での移行](#docker環境での移行)と同じく既存イメージから使い捨てコンテナを起動する。
+
+```sh
+docker compose run --rm \
+  -v "$(pwd)/backup:/app/backup" \
+  -v "$(pwd)/scripts/backup-s3.mjs:/app/backup-s3.mjs:ro" \
+  --entrypoint node \
+  devuntu /app/backup-s3.mjs
+```
+
+- `--entrypoint node`で`docker-entrypoint.sh`を上書きするため`prisma migrate deploy`は走らない
+- `backup/`は書き込み先なので`:ro`を付けない
+- 環境変数は`env_file`(`.env.docker`)から渡るので、コンテナ内の`S3_ENDPOINT`は`http://s3:8333`になる
+
+リストアも同様に`scripts/restore-s3.mjs`をマウントし、引数にコンテナ内のパス(`/app/backup/s3_YYYYMMDD_HHMMSS`)を渡す。
+
+## S3リストア
+
+対象のバックアップディレクトリを引数に指定する。
+
+```sh
+pnpm s3:restore backup/s3_YYYYMMDD_HHMMSS
+# または
+node ./scripts/restore-s3.mjs backup/s3_YYYYMMDD_HHMMSS
+```
+
+バケット(`S3_BUCKET`、既定`devuntu`)は無ければ自動作成される。Content-Type は`manifest.json`の値で復元するため、配信側(`src/app/api/upload/[filename]/route.ts`)のストレージ側フォールバックもそのまま働く。
+
+**DB リストアと挙動が異なる点**として、バックアップに含まれるキーを上書きするだけで、**ストレージ側にしか無いオブジェクトは削除しない**。同じキーへ何度実行しても安全なので、DB リストアとセットで実行してよい。
+
+### ボリュームを作り直す場合
+
+`seaweeddata`ボリュームを作り直すと`/data`のディスク消費をリセットできる。過去のバージョンで作られた volume ファイル(`*.dat`)は 1 ファイルあたり 1GiB を`fallocate`で先行確保しており、実データが数 KB でもディスクを 10GB 以上占有することがある(現行の`compose.yaml`の起動オプションでは先行確保は起きない)。
+
+必ずバックアップを取ってから実行する。
+
+```sh
+pnpm s3:backup
+pnpm db:backup
+
+docker compose stop s3 && docker compose rm -f s3
+docker volume rm devuntu_seaweeddata
+
+docker compose up -d s3
+pnpm s3:restore backup/s3_YYYYMMDD_HHMMSS
+```
+
+消費量は`docker compose exec -T s3 sh -c 'du -sk /data'`で確認できる。
+
 ## インストール
 
 ```sh
@@ -145,6 +383,71 @@ pnpm build
 pnpm up -i
 pnpm up -i -L
 ```
+
+## パッケージへのパッチ
+
+`patches/`配下に`pnpm patch`で作成したパッチを置いている。登録先は`pnpm-workspace.yaml`の`patchedDependencies`で、`pnpm install`時に自動適用される。
+
+**パッチ対象パッケージをバージョンアップした場合は、パッチの当て直しが必要。**
+
+```sh
+# 1. 編集用の一時ディレクトリを作成(パスが出力される)
+pnpm patch @heroui/react
+
+# 2. 出力されたパス配下のファイルを編集
+
+# 3. パッチとして確定(patches/配下に保存され pnpm-workspace.yaml に登録される)
+pnpm patch-commit '<出力されたパス>'
+```
+
+現在適用中のパッチは無い。`@heroui/react` 3.2.2 では`Autocomplete.Popover`が`aria-label`/`aria-labelledby`を内部の`Dialog`へ転送せず react-aria の警告が出続けるためパッチを当てていたが、3.2.3 で本体が修正されたため削除した。
+
+## パッケージのバージョン上書き
+
+依存パッケージが固定しているバージョンに問題がある場合は、`pnpm-workspace.yaml`の`overrides`で差し替える。`パッケージ名>依存パッケージ名`の形式で書くと、そのパッケージの入れ子依存だけを対象にできる。
+
+### tailwind-variants
+
+| 上書き対象                         | 指定     | 理由                                                         |
+| ---------------------------------- | -------- | ------------------------------------------------------------ |
+| `@heroui/styles>tailwind-variants` | `^3.3.1` | HeroUI 3.2.3 が固定する`tailwind-variants@3.3.0`のバグを回避 |
+| `@heroui/react>tailwind-variants`  | `^3.3.1` | 同上(コピーを 1 本に集約する)                                |
+
+`tailwind-variants` 3.3.0 の slots リゾルバは、
+
+- tv インスタンスごとに**単一の slots オブジェクトを使い回して返す**
+- 各 slot 関数は呼び出し時にモジュールスコープの「最後に渡された props」を読む(呼び出し元の props を捕捉しない)
+
+という実装のため、同じ tv を別の props で呼ぶと**先に取得済みの slot 関数の戻り値まで後の props に化ける**。
+
+HeroUI の`Modal`はこのパターンを踏んでいる。`Modal.Backdrop`は`useMemo(() => modalVariants({ variant }), [variant])`の結果を保持して毎レンダリングで`slots.backdrop()`を呼ぶが、後から描画される`Modal.Container`が同じ tv を`{ scroll, size }`(variant 無し)で呼ぶ。以降`Modal.Backdrop`が再レンダリングされても`useMemo`はヒットして`modalVariants`を呼び直さないため、`backdrop()`が`variant`の既定値である`modal__backdrop--opaque`を返す。結果、`FormModal`(`src/components/general/modal.tsx`)の`variant='blur'`が効かなくなっていた。`Drawer`/`AlertDialog`も同じ呼び出し方をしている。
+
+- 3.3.1 で修正済み(slots オブジェクトを呼び出しごとに生成する形に戻っている)
+- HeroUI をバージョンアップする際は`@heroui/styles`の`dependencies.tailwind-variants`を確認し、3.3.1 以上になっていればこの override は削除できる
+- `@heroui/react`側も同じ 3.3.0 を持ち`tv`/`cn`を再エクスポートしているため、揃えて上書きしている(コピーが 1 本に集約される)
+
+## TypeScript v7 と v6 の併存
+
+TypeScript 7.0 は JS コンパイラ API を同梱していない(7.1 で提供予定)ため、`require('typescript')`で API を使うツールが動かなくなる。[公式手順](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/#running-side-by-side-with-typescript-6.0)に従い、`package.json`でエイリアスを使って両方を入れている。
+
+| devDependencies の指定                           | 実体         | 提供するもの               |
+| ------------------------------------------------ | ------------ | -------------------------- |
+| `typescript: npm:@typescript/typescript6@^6.0.2` | TypeScript 6 | JS コンパイラ API と`tsc6` |
+| `@typescript/native: npm:typescript@^7.0.2`      | TypeScript 7 | `tsc`                      |
+
+TS6 の API を必要としているもの。
+
+- `typescript-eslint`(`pnpm lint`) : TS7 を検出すると起動時にエラーで終了する
+- `prettier-plugin-organize-imports` : TS7 だとエラーも出さずに import 整列が無効化される
+- `next build`の型チェック : `next.config.ts`の`experimental.useTypeScriptCli: false`で JS API チェッカーを使う。既定の CLI チェッカーは解決した`typescript`パッケージの`bin.tsc`を実行するが、エイリアス先は`tsc6`しか持たないためビルドが止まる
+
+TS7(tsgo)での高速な型チェックは下記で行う。`tsconfig.json`が`.next/dev/types`を含むため、先に`next typegen`でルート型を生成している。
+
+```sh
+pnpm typecheck
+```
+
+TS 7.1 で JS API が復活し typescript-eslint が対応したら、`typescript`を素の`^7.x`に戻して`@typescript/native`と`useTypeScriptCli: false`は削除できる。
 
 ## better-auth
 

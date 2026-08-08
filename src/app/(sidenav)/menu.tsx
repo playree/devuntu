@@ -1,4 +1,6 @@
 'use client'
+import { AccordionSection } from '@/components/general/accordion'
+import { UserAvatar } from '@/components/general/avatar'
 import { MultiButton } from '@/components/general/button'
 import { ThemeSwitchList } from '@/components/general/theme-switch'
 import {
@@ -7,9 +9,11 @@ import {
   Cog6ToothIcon,
   ServerStackIcon,
   Squares2X2Icon,
+  TicketIcon,
   UserCircleIcon,
   UserGroupIcon,
   UsersIcon,
+  ViewColumnsIcon,
 } from '@/components/icon'
 import { LocaleSwitch } from '@/components/locale/locale-switch'
 import { LogoSVG } from '@/components/logo'
@@ -17,7 +21,7 @@ import { parseAction } from '@/lib/action-client'
 import { authClient } from '@/lib/auth-client'
 import { authConfig } from '@/lib/auth-config'
 import { useLocale } from '@/locale/client'
-import { Accordion, Avatar, Button, Card, cn } from '@heroui/react'
+import { Accordion, Button, Card, cn } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC, ReactNode, useEffect, useState } from 'react'
 import { getMyGoogleAccountAccess } from './server'
@@ -73,7 +77,7 @@ const SignOutButton: FC = () => {
   )
 }
 
-const defaultExpandedKeys = new Set(['group_admin'])
+const defaultExpandedKeys = new Set(['group_task', 'group_admin'])
 
 export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
   const { data: session } = authClient.useSession()
@@ -104,10 +108,7 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
         <Card.Content>
           <div className='flex items-center gap-2'>
             {/* <UserCircleIcon className='mr-2' /> */}
-            <Avatar>
-              <Avatar.Image src={session?.user.image ?? ''} />
-              <Avatar.Fallback>{session?.user?.name ? session.user.name.charAt(0) : '?'}</Avatar.Fallback>
-            </Avatar>
+            <UserAvatar name={session?.user?.name ?? ''} image={session?.user.image} />
             <div>{session?.user?.name}</div>
           </div>
         </Card.Content>
@@ -149,51 +150,62 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
             closeMenu={closeMenu}
           />
 
-          <Accordion.Item // 管理者メニュー
+          <AccordionSection // タスク管理メニュー
+            id='group_task'
+            title={t('task_management')}
+            bodyClassName='grid grid-cols-1 px-2'
+          >
+            <MenuButton // ボード
+              to='/boards'
+              text={t('board')}
+              icon={<ViewColumnsIcon />}
+              closeMenu={closeMenu}
+            />
+            <MenuButton // チケット
+              to='/tickets'
+              text={t('ticket')}
+              icon={<TicketIcon />}
+              closeMenu={closeMenu}
+            />
+          </AccordionSection>
+
+          <AccordionSection // 管理者メニュー
             id='group_admin'
             hidden={session?.user.role !== 'admin'}
+            title={t('admin')}
+            bodyClassName='grid grid-cols-1 px-2'
           >
-            <Accordion.Heading>
-              <Accordion.Trigger>
-                {t('admin')}
-                <Accordion.Indicator />
-              </Accordion.Trigger>
-            </Accordion.Heading>
-            <Accordion.Panel>
-              <Accordion.Body className='grid grid-cols-1 px-2'>
-                <MenuButton // ユーザー管理
-                  to='/admin/users'
-                  text={t('user_manage')}
-                  icon={<UsersIcon />}
-                  closeMenu={closeMenu}
-                />
-                <MenuButton // グループ管理
-                  to='/admin/groups'
-                  text={t('group_manage')}
-                  icon={<UserGroupIcon />}
-                  closeMenu={closeMenu}
-                />
-                <MenuButton // ダッシュボード管理
-                  to='/admin/dashboard'
-                  text={t('dashboard_manage')}
-                  icon={<Squares2X2Icon />}
-                  closeMenu={closeMenu}
-                />
-                <MenuButton // 連携設定
-                  to='/admin/settings'
-                  text={t('integration_settings')}
-                  icon={<Cog6ToothIcon />}
-                  closeMenu={closeMenu}
-                />
-                <MenuButton // OIDC Client管理
-                  to='/admin/oidc-clients'
-                  text={t('oidc_clients')}
-                  icon={<ServerStackIcon />}
-                  closeMenu={closeMenu}
-                />
-              </Accordion.Body>
-            </Accordion.Panel>
-          </Accordion.Item>
+            <MenuButton // ユーザー管理
+              to='/admin/users'
+              text={t('user_manage')}
+              icon={<UsersIcon />}
+              closeMenu={closeMenu}
+            />
+            <MenuButton // グループ管理
+              to='/admin/groups'
+              text={t('group_manage')}
+              icon={<UserGroupIcon />}
+              closeMenu={closeMenu}
+            />
+            <MenuButton // ダッシュボード管理
+              to='/admin/dashboard'
+              text={t('dashboard_manage')}
+              icon={<Squares2X2Icon />}
+              closeMenu={closeMenu}
+            />
+            <MenuButton // 連携設定
+              to='/admin/settings'
+              text={t('integration_settings')}
+              icon={<Cog6ToothIcon />}
+              closeMenu={closeMenu}
+            />
+            <MenuButton // OIDC Client管理
+              to='/admin/oidc-clients'
+              text={t('oidc_clients')}
+              icon={<ServerStackIcon />}
+              closeMenu={closeMenu}
+            />
+          </AccordionSection>
         </Accordion>
       </div>
 

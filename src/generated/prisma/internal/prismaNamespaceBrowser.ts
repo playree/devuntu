@@ -64,11 +64,20 @@ export const ModelName = {
   OauthConsent: 'OauthConsent',
   Dashboard: 'Dashboard',
   LinkWidget: 'LinkWidget',
+  Attachment: 'Attachment',
   KeyValueStore: 'KeyValueStore',
+  AppVersion: 'AppVersion',
   Group: 'Group',
   UserGroup: 'UserGroup',
   CalendarShare: 'CalendarShare',
-  CalendarBusyTime: 'CalendarBusyTime'
+  CalendarBusyTime: 'CalendarBusyTime',
+  Board: 'Board',
+  Tag: 'Tag',
+  TicketTag: 'TicketTag',
+  BoardMember: 'BoardMember',
+  BoardGroup: 'BoardGroup',
+  Ticket: 'Ticket',
+  TicketComment: 'TicketComment'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -300,6 +309,19 @@ export const LinkWidgetScalarFieldEnum = {
 export type LinkWidgetScalarFieldEnum = (typeof LinkWidgetScalarFieldEnum)[keyof typeof LinkWidgetScalarFieldEnum]
 
 
+export const AttachmentScalarFieldEnum = {
+  id: 'id',
+  key: 'key',
+  mimeType: 'mimeType',
+  size: 'size',
+  originalName: 'originalName',
+  createdById: 'createdById',
+  createdAt: 'createdAt'
+} as const
+
+export type AttachmentScalarFieldEnum = (typeof AttachmentScalarFieldEnum)[keyof typeof AttachmentScalarFieldEnum]
+
+
 export const KeyValueStoreScalarFieldEnum = {
   id: 'id',
   key: 'key',
@@ -310,6 +332,17 @@ export const KeyValueStoreScalarFieldEnum = {
 } as const
 
 export type KeyValueStoreScalarFieldEnum = (typeof KeyValueStoreScalarFieldEnum)[keyof typeof KeyValueStoreScalarFieldEnum]
+
+
+export const AppVersionScalarFieldEnum = {
+  id: 'id',
+  version: 'version',
+  buildNo: 'buildNo',
+  updatedAt: 'updatedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type AppVersionScalarFieldEnum = (typeof AppVersionScalarFieldEnum)[keyof typeof AppVersionScalarFieldEnum]
 
 
 export const GroupScalarFieldEnum = {
@@ -357,6 +390,95 @@ export const CalendarBusyTimeScalarFieldEnum = {
 } as const
 
 export type CalendarBusyTimeScalarFieldEnum = (typeof CalendarBusyTimeScalarFieldEnum)[keyof typeof CalendarBusyTimeScalarFieldEnum]
+
+
+export const BoardScalarFieldEnum = {
+  id: 'id',
+  kind: 'kind',
+  privateOwnerId: 'privateOwnerId',
+  name: 'name',
+  description: 'description',
+  archived: 'archived',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BoardScalarFieldEnum = (typeof BoardScalarFieldEnum)[keyof typeof BoardScalarFieldEnum]
+
+
+export const TagScalarFieldEnum = {
+  id: 'id',
+  boardId: 'boardId',
+  name: 'name',
+  color: 'color',
+  order: 'order',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TagScalarFieldEnum = (typeof TagScalarFieldEnum)[keyof typeof TagScalarFieldEnum]
+
+
+export const TicketTagScalarFieldEnum = {
+  id: 'id',
+  ticketId: 'ticketId',
+  tagId: 'tagId',
+  createdAt: 'createdAt'
+} as const
+
+export type TicketTagScalarFieldEnum = (typeof TicketTagScalarFieldEnum)[keyof typeof TicketTagScalarFieldEnum]
+
+
+export const BoardMemberScalarFieldEnum = {
+  id: 'id',
+  boardId: 'boardId',
+  userId: 'userId',
+  role: 'role',
+  createdAt: 'createdAt'
+} as const
+
+export type BoardMemberScalarFieldEnum = (typeof BoardMemberScalarFieldEnum)[keyof typeof BoardMemberScalarFieldEnum]
+
+
+export const BoardGroupScalarFieldEnum = {
+  id: 'id',
+  boardId: 'boardId',
+  groupId: 'groupId',
+  createdAt: 'createdAt'
+} as const
+
+export type BoardGroupScalarFieldEnum = (typeof BoardGroupScalarFieldEnum)[keyof typeof BoardGroupScalarFieldEnum]
+
+
+export const TicketScalarFieldEnum = {
+  id: 'id',
+  boardId: 'boardId',
+  createdById: 'createdById',
+  assigneeId: 'assigneeId',
+  title: 'title',
+  content: 'content',
+  status: 'status',
+  priority: 'priority',
+  dueDate: 'dueDate',
+  order: 'order',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TicketScalarFieldEnum = (typeof TicketScalarFieldEnum)[keyof typeof TicketScalarFieldEnum]
+
+
+export const TicketCommentScalarFieldEnum = {
+  id: 'id',
+  ticketId: 'ticketId',
+  authorId: 'authorId',
+  content: 'content',
+  mentionedUserIds: 'mentionedUserIds',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TicketCommentScalarFieldEnum = (typeof TicketCommentScalarFieldEnum)[keyof typeof TicketCommentScalarFieldEnum]
 
 
 export const SortOrder = {

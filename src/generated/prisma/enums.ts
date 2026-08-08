@@ -9,7 +9,53 @@
 * 🟢 You can import this file directly.
 */
 
+export const BoardMemberRole = {
+  owner: 'owner',
+  member: 'member'
+} as const
+
+export type BoardMemberRole = (typeof BoardMemberRole)[keyof typeof BoardMemberRole]
 
 
-// This file is empty because there are no enums in the schema.
-export {}
+export const BoardKind = {
+  private: 'private',
+  team: 'team'
+} as const
+
+export type BoardKind = (typeof BoardKind)[keyof typeof BoardKind]
+
+
+export const TagColor = {
+  gray: 'gray',
+  red: 'red',
+  orange: 'orange',
+  amber: 'amber',
+  green: 'green',
+  teal: 'teal',
+  blue: 'blue',
+  indigo: 'indigo',
+  violet: 'violet',
+  pink: 'pink'
+} as const
+
+export type TagColor = (typeof TagColor)[keyof typeof TagColor]
+
+
+export const TicketStatus = {
+  backlog: 'backlog',
+  todo: 'todo',
+  doing: 'doing',
+  done: 'done'
+} as const
+
+export type TicketStatus = (typeof TicketStatus)[keyof typeof TicketStatus]
+
+
+export const TicketPriority = {
+  urgent: 'urgent',
+  high: 'high',
+  medium: 'medium',
+  low: 'low'
+} as const
+
+export type TicketPriority = (typeof TicketPriority)[keyof typeof TicketPriority]

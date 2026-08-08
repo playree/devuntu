@@ -1,19 +1,14 @@
 import { getServerSession } from '@/lib/auth'
-import { logger } from '@/lib/logger'
-import { UPLOAD_DIR, toUploadPath } from '@/lib/upload'
-import { readFile } from 'fs/promises'
+import { prisma } from '@/lib/prisma'
+import { getObject } from '@/lib/storage'
+import { isValidUploadKey } from '@/lib/upload'
 import { NextResponse } from 'next/server'
-import path from 'path'
-
-const CONTENT_TYPES: Record<string, string> = {
-  '.webp': 'image/webp',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-}
 
 /**
- * アップロードファイルを配信する
+ * アップロードファイルを配信する。
+ *
+ * オブジェクトストレージへ直リンクさせず必ずここを通すことで、参照にも
+ * ログイン認証を強制する(署名付きURLは使わないのでURLが漏れても読めない)。
  */
 export const GET = async (_req: Request, { params }: { params: Promise<{ filename: string }> }) => {
   // ログイン認証チェック
@@ -23,27 +18,32 @@ export const GET = async (_req: Request, { params }: { params: Promise<{ filenam
   }
 
   const { filename } = await params
-  // パストラバーサル対策: ディレクトリ成分を除去
-  const safeName = path.basename(filename)
-  const filePath = toUploadPath(safeName)
-  // 解決後のパスがUPLOAD_DIR配下であることを検証
-  if (!filePath.startsWith(UPLOAD_DIR + path.sep)) {
+  // ホワイトリスト方式の形式検証。スラッシュや`..`は通らないのでパストラバーサルにならない
+  if (!isValidUploadKey(filename)) {
     return new NextResponse(null, { status: 400 })
   }
-  try {
-    const data = await readFile(filePath)
-    const contentType = CONTENT_TYPES[path.extname(safeName).toLowerCase()] ?? 'application/octet-stream'
-    return new NextResponse(new Uint8Array(data), {
-      headers: {
-        'Content-Type': contentType,
-        // 認証必須のためprivate。ファイル名はキャッシュバスティング済みのため長期キャッシュ可能
-        'Cache-Control': 'private, max-age=31536000, immutable',
-      },
-    })
-  } catch (err) {
-    if ((err as NodeJS.ErrnoException)?.code !== 'ENOENT') {
-      logger.warn({ err, filePath }, 'failed to read upload file')
-    }
+
+  const object = await getObject(filename)
+  if (!object) {
     return new NextResponse(null, { status: 404 })
   }
+
+  /**
+   * Content-Type は Attachment レコードを優先する。
+   * ローカル保存時代から移行したファイルはレコードを持たないため、
+   * ストレージ側の Content-Type にフォールバックする(存在確認はストレージが担う)。
+   */
+  const attachment = await prisma.attachment.findUnique({
+    where: { key: filename },
+    select: { mimeType: true },
+  })
+
+  return new NextResponse(object.body, {
+    headers: {
+      'Content-Type': attachment?.mimeType ?? object.contentType ?? 'application/octet-stream',
+      ...(object.contentLength ? { 'Content-Length': String(object.contentLength) } : {}),
+      // 認証必須のためprivate。キーは保存ごとに変わるため長期キャッシュ可能
+      'Cache-Control': 'private, max-age=31536000, immutable',
+    },
+  })
 }

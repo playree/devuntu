@@ -1,0 +1,36 @@
+import { Accordion } from '@heroui/react'
+import { ComponentProps, FC, ReactNode } from 'react'
+import { tv } from 'tailwind-variants'
+
+const bodyStyles = tv({ base: 'px-4' })
+
+/**
+ * Accordion の 1 セクション。
+ * Heading / Trigger / Indicator / Panel / Body の入れ子を隠し、アイコン + 見出し + 中身だけで書けるようにする。
+ * `Accordion` 本体は開閉状態の管理が呼び出し側の関心事なので、HeroUI のものをそのまま使う。
+ */
+export const AccordionSection: FC<
+  // Disclosure の props は DOM 属性の title と render props 版の children を含むので、独自 props と衝突しないよう外す
+  Omit<ComponentProps<typeof Accordion.Item>, 'children' | 'title'> & {
+    /** 見出しのアイコン */
+    icon?: ReactNode
+    /** 見出しテキスト */
+    title: ReactNode
+    /** 中身の className(パディングやレイアウトの調整用) */
+    bodyClassName?: string
+    children?: ReactNode
+  }
+> = ({ icon, title, bodyClassName, children, ...props }) => (
+  <Accordion.Item {...props}>
+    <Accordion.Heading>
+      <Accordion.Trigger className='gap-1'>
+        {icon}
+        {title}
+        <Accordion.Indicator />
+      </Accordion.Trigger>
+    </Accordion.Heading>
+    <Accordion.Panel>
+      <Accordion.Body className={bodyStyles({ className: bodyClassName })}>{children}</Accordion.Body>
+    </Accordion.Panel>
+  </Accordion.Item>
+)

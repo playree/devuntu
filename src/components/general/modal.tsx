@@ -59,6 +59,21 @@ export const useModalState = <T = string,>() => {
 
 export type ModalBaseProps = { state: UseOverlayStateReturn; reload: () => void }
 
+// HeroUIのModalはlg(32rem)の次がfull/coverしかないため、その間のサイズを補完する
+// Tailwindのスキャン対象になるようクラス名は完全なリテラルで記述すること
+const EXTRA_MODAL_SIZES = {
+  xl: 'max-w-xl',
+  '2xl': 'max-w-2xl',
+  '3xl': 'max-w-3xl',
+  '4xl': 'max-w-4xl',
+  '5xl': 'max-w-5xl',
+} as const
+
+type ExtraModalSize = keyof typeof EXTRA_MODAL_SIZES
+export type FormModalSize = NonNullable<ModalContainerProps['size']> | ExtraModalSize
+
+const isExtraModalSize = (size: FormModalSize): size is ExtraModalSize => size in EXTRA_MODAL_SIZES
+
 export const FormModal: FC<{
   children: ReactNode
   state: UseOverlayStateReturn
@@ -66,13 +81,24 @@ export const FormModal: FC<{
   title: { text: string; icon?: ReactNode }
   footer: ReactNode
   hiddenCloseButton?: boolean
-  size?: ModalContainerProps['size']
+  size?: FormModalSize
 }> = ({ children, state, onSubmit, title, footer, hiddenCloseButton, size }) => {
+  // 拡張サイズの場合はHeroUIのsizeを使わず、Modal.Dialogにmax-w-*を当てて上書きする
+  const extraSizeClass = size && isExtraModalSize(size) ? EXTRA_MODAL_SIZES[size] : undefined
+
   return (
     <Modal.Backdrop variant='blur' isOpen={state.isOpen} onOpenChange={state.setOpen} isDismissable={false}>
-      <Modal.Container placement='top' size={size}>
-        <Modal.Dialog>
-          <form onSubmit={onSubmit}>
+      <Modal.Container placement='top' size={extraSizeClass ? undefined : (size as ModalContainerProps['size'])}>
+        <Modal.Dialog className={extraSizeClass}>
+          <form
+            /**
+             * Modal.Dialog(flex flex-col / max-h-full)と Modal.Body(min-h-0 flex-1 + overflow-y-auto)の間に
+             * 素のformが入るとBodyのflex-1が解決されず、背の高い内容がoverflow-clipで切れてしまう。
+             * form自体を縮むflexコンテナにしてHeroUIのscroll='inside'を機能させる
+             */
+            onSubmit={onSubmit}
+            className='flex min-h-0 flex-col'
+          >
             {!hiddenCloseButton && <Modal.CloseTrigger />}
             <Modal.Header>
               <Modal.Heading className='flex items-center gap-2'>
@@ -137,7 +163,7 @@ export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ ui
           </Modal.Header>
           <Modal.Body>
             <FlexCol>
-              <div className='text-foreground whitespace-pre-wrap'>{confirmParam?.text || ''}</div>
+              <div className='text-foreground wrap-anywhere whitespace-pre-wrap'>{confirmParam?.text || ''}</div>
               {confirmParam?.requireCheck && (
                 <Checkbox
                   id='confirm-agree'

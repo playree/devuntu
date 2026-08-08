@@ -1,0 +1,14 @@
+{
+  "identities": [
+    {
+      "name": "devuntu",
+      "credentials": [
+        {
+          "accessKey": "devuntu",
+          "secretKey": "devuntuS3PassW0rd"
+        }
+      ],
+      "actions": ["Read", "Write", "List", "Tagging", "Admin"]
+    }
+  ]
+}

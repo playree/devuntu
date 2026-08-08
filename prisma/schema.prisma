@@ -42,6 +42,17 @@ model User {
   // add timezone
   timezone String?
 
+  // add Board / Ticket
+  boardMembers    BoardMember[]
+  // プライベートボード(1ユーザー1つ)。Board.privateOwnerId の @unique で担保する
+  privateBoard    Board?          @relation("PrivateBoardOwner")
+  createdTickets  Ticket[]        @relation("TicketCreator")
+  assignedTickets Ticket[]        @relation("TicketAssignee")
+  ticketComments  TicketComment[] @relation("TicketCommentAuthor")
+
+  // add Attachment
+  attachments Attachment[]
+
   @@unique([email])
   @@map("user")
 }
@@ -268,6 +279,21 @@ model LinkWidget {
   @@map("link_widget")
 }
 
+/// オブジェクトストレージに保存したアップロードファイルのメタデータ。
+/// 公開URLは `/api/upload/<key>` で、配信時はここから mimeType を引いて存在確認も兼ねる。
+model Attachment {
+  id           String   @id @default(uuid(7))
+  key          String   @unique
+  mimeType     String
+  size         Int
+  originalName String
+  createdById  String?
+  createdBy    User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now())
+
+  @@map("attachment")
+}
+
 model KeyValueStore {
   id        String   @id @default(uuid(7))
   key       String   @unique
@@ -280,6 +306,23 @@ model KeyValueStore {
   @@map("key_value_store")
 }
 
+/// アプリバージョンの利用履歴。サーバー起動時(`src/instrumentation.ts`)に upsert で記録し、
+/// このDBがどのバージョンでいつ利用されていたかを追跡できるようにする。
+/// createdAt が初回起動日時、updatedAt が最終起動日時になる。
+model AppVersion {
+  id String @id @default(uuid(7))
+
+  /// package.json の version(例: 0.2.2)。同一バージョンは1行に集約するので upsert のキーになる
+  version String @unique
+
+  /// 最終起動時のビルド番号(next.config.ts で生成する BUILD_NO)。同一バージョンの再デプロイを識別する
+  buildNo   String
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@map("app_version")
+}
+
 model Group {
   id          String      @id @default(uuid(7))
   name        String
@@ -287,6 +330,9 @@ model Group {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   userGroups  UserGroup[]
+
+  // add Board
+  boardGroups BoardGroup[]
 
   @@map("group")
 }
@@ -331,4 +377,172 @@ model CalendarBusyTime {
 
   @@index([userId])
   @@map("calendar_busy_time")
+}
+
+enum BoardMemberRole {
+  owner // ボードの権限周りの操作が可能
+  member
+}
+
+/// ボードの種別。
+/// PostgreSQL の enum は宣言順で比較されるため、一覧を `orderBy: { kind: 'asc' }` に
+/// したときプライベートが先頭へ来るよう private を先に宣言する。
+enum BoardKind {
+  private // 1ユーザー1つの個人用ボード。privateOwnerId が所有者
+  team // 複数人で共有するボード
+}
+
+/// タグの表示色。HeroUI Chip は5色しか持たないため Tailwind パレットへ自前でマップする
+enum TagColor {
+  gray
+  red
+  orange
+  amber
+  green
+  teal
+  blue
+  indigo
+  violet
+  pink
+}
+
+enum TicketStatus {
+  backlog // 未着手
+  todo // 対応予定
+  doing // 対応中
+  done // 完了
+}
+
+enum TicketPriority {
+  urgent // 緊急
+  high // 高
+  medium // 中
+  low // 低
+}
+
+model Board {
+  id             String        @id @default(uuid(7))
+  kind           BoardKind     @default(team)
+  // プライベートボードの所有者。team では常に null。
+  // PostgreSQL の UNIQUE は NULL を互いに異なる値として扱うため、これ1本で
+  // 「1ユーザー1プライベートボード」を担保でき、部分索引が不要になる。
+  // kind='private' <=> privateOwnerId IS NOT NULL の整合はアプリ側で保証する
+  // (作成経路を ensurePrivateBoard と createBoard の2つに限定している)
+  privateOwnerId String?       @unique
+  privateOwner   User?         @relation("PrivateBoardOwner", fields: [privateOwnerId], references: [id], onDelete: Cascade)
+  name           String
+  description    String?
+  archived       Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  members        BoardMember[]
+  groups         BoardGroup[]
+  tickets        Ticket[]
+  tags           Tag[]
+
+  @@map("board")
+}
+
+model Tag {
+  id        String      @id @default(uuid(7))
+  boardId   String
+  board     Board       @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  name      String
+  color     TagColor    @default(gray)
+  // ボード内の表示順。昇順。同値は name 昇順で安定させる
+  order     Int         @default(0)
+  tickets   TicketTag[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  // @@unique が (boardId, ...) の先頭索引を兼ねるため @@index([boardId]) は不要
+  @@unique([boardId, name])
+  @@map("tag")
+}
+
+model TicketTag {
+  id        String   @id @default(uuid(7))
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  tagId     String
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  // チケット内のタグの並びは Tag.order を単一ソースにするため order は持たせない
+  @@unique([ticketId, tagId])
+  @@index([tagId])
+  @@map("ticket_tag")
+}
+
+model BoardMember {
+  id        String          @id @default(uuid(7))
+  boardId   String
+  board     Board           @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      BoardMemberRole @default(member)
+  createdAt DateTime        @default(now())
+
+  // @@unique が (boardId, ...) の先頭索引を兼ねるため @@index([boardId]) は不要
+  @@unique([boardId, userId])
+  @@index([userId])
+  @@map("board_member")
+}
+
+model BoardGroup {
+  id        String   @id @default(uuid(7))
+  boardId   String
+  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([boardId, groupId])
+  @@index([groupId])
+  @@map("board_group")
+}
+
+model Ticket {
+  id          String          @id @default(uuid(7))
+  // プライベートも必ずボード(kind=private)に属する。所有者による別スコープは持たない
+  boardId     String
+  board       Board           @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  createdById String?
+  createdBy   User?           @relation("TicketCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  assigneeId  String?
+  assignee    User?           @relation("TicketAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  title       String
+  content     String?
+  status      TicketStatus    @default(todo)
+  priority    TicketPriority  @default(medium)
+  dueDate     DateTime? // 日付のみの概念。UTC 0:00 で保存する
+  tags        TicketTag[]
+  // 同一レーン(boardId + status)内の表示順。昇順・0始まりの連番で保持
+  order       Int             @default(0)
+  comments    TicketComment[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([boardId, status, order])
+  @@index([assigneeId])
+  @@index([createdById])
+  // チケット一覧の既定の並び順(更新日時の新しい順 + LIMIT)を索引スキャンにする
+  @@index([updatedAt])
+  @@map("ticket")
+}
+
+model TicketComment {
+  id               String   @id @default(uuid(7))
+  ticketId         String
+  ticket           Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  // 退会ユーザーのコメントも議論履歴として残すため SetNull(表示は no_name)
+  authorId         String?
+  author           User?    @relation("TicketCommentAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  content          String
+  mentionedUserIds String[] @default([])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([ticketId, createdAt])
+  @@map("ticket_comment")
 }

@@ -22,6 +22,11 @@ const Bars3BottomLeftIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWi
   </svg>
 )
 
+/**
+ * サイドメニュー付きのレイアウト。
+ * 配下に `data-nav-hidden` を持つ要素があると、lg 以上でもサイドメニューを左へ隠して
+ * メインコンテンツを全幅にする(チケット詳細パネルのような広い表示用)。
+ */
 export const SideNavbar: FC<{
   children: ReactNode
   menu: (closeMenu?: () => void) => ReactNode
@@ -40,7 +45,7 @@ export const SideNavbar: FC<{
   }
 
   return (
-    <>
+    <div className='group/sidenav'>
       <button
         className={cn(
           'fixed z-40 mt-2 ml-3 rounded-lg bg-gray-200 p-2 text-sm text-gray-500',
@@ -59,6 +64,11 @@ export const SideNavbar: FC<{
         className={cn(
           'bg-background fixed top-0 left-0 z-40 h-screen w-64 transition-transform',
           isOpen ? '' : '-translate-x-full lg:translate-x-0',
+          /**
+           * :has() を含むセレクタは lg:translate-x-0 より詳細度が高いので、記述順に関係なく隠れる。
+           * lg 未満はメニューが元々オーバーレイなので、開いている最中に閉じてしまわないよう lg 限定にする
+           */
+          'lg:group-has-data-nav-hidden/sidenav:-translate-x-full',
         )}
       >
         <div className={cn('h-full overflow-y-auto px-3 py-4', className)}>
@@ -74,10 +84,10 @@ export const SideNavbar: FC<{
 
       <div // メインコンテンツ
         id='side-main'
-        className='p-4 lg:ml-64'
+        className='p-4 transition-[margin] group-has-data-nav-hidden/sidenav:ml-0 lg:ml-64'
       >
         {children}
       </div>
-    </>
+    </div>
   )
 }

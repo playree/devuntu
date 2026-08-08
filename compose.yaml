@@ -4,12 +4,12 @@ services:
     container_name: devuntu
     ports:
       - 3000:3000
-    volumes:
-      - ./upload:/app/upload
     restart: unless-stopped
     env_file: ./.env.docker
     depends_on:
       - db
+      - s3
+
   db:
     image: postgres:18
     container_name: devuntu-postgres
@@ -27,5 +27,24 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+
+  s3:
+    image: chrislusf/seaweedfs:4.40
+    container_name: devuntu-seaweedfs
+    # server モードで master/volume/filer/s3 をまとめて起動する
+    command: server -dir=/data -s3 -s3.config=/etc/seaweedfs/s3.json -ip.bind=0.0.0.0
+    ports:
+      - 8333:8333 # S3 API
+    volumes:
+      - seaweeddata:/data
+      - ./docker/seaweedfs-s3.json:/etc/seaweedfs/s3.json:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-fsS', 'http://localhost:9333/cluster/status']
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
 volumes:
   pgdata:
+  seaweeddata:

@@ -1,6 +1,50 @@
 @import 'tailwindcss';
 @import '@heroui/styles';
 
+/**
+ * HeroUI の dark variant を正しい定義で上書きする。
+ * 本家(node_modules/@heroui/styles/dist/variants/index.css)の prefers-color-scheme
+ * フォールバックが `&:not(...) &` と自己子孫セレクタになっており、同じ dark:* クラスを
+ * 親子で持つとライト表示中でもダーク色が当たる(優先度 medium のカードとバーが該当)。
+ * あわせて、本家が除外していない明示ライト(.light / [data-theme='light'])も除外する。
+ * next-themes は attribute: 'class' で <html class="light|dark"> を付けるため、
+ * 明示ライト時に OS の prefers-color-scheme: dark を拾わせないのが正しい挙動。
+ */
+@custom-variant dark {
+  /* 明示ダーク: .dark クラス or data-theme="dark" が自身か祖先にある */
+  &:is(.dark, .dark *, [data-theme='dark'], [data-theme='dark'] *) {
+    @slot;
+
+    &::before,
+    &::after {
+      @slot;
+    }
+  }
+
+  /* フォールバック: テーマ未指定で OS がダーク */
+  @media (prefers-color-scheme: dark) {
+    &:not(
+      :is(
+        .dark,
+        .dark *,
+        [data-theme='dark'],
+        [data-theme='dark'] *,
+        .light,
+        .light *,
+        [data-theme='light'],
+        [data-theme='light'] *
+      )
+    ) {
+      @slot;
+
+      &::before,
+      &::after {
+        @slot;
+      }
+    }
+  }
+}
+
 @theme {
   --font-noto:
     var(--font-noto-sans-jp), BlinkMacSystemFont, Roboto, Segoe UI, Helvetica Neue, HelveticaNeue, 游ゴシック体,
@@ -10,14 +54,14 @@
 
 @layer base {
   :root {
-    --background: #f8fafa;
+    --background: #fafaf9;
     --accent: oklch(0.68 0.195 253.83);
     --default: oklch(0.9 0.001 286.375);
   }
 
   .dark,
   [data-theme='dark'] {
-    --background: #000000;
+    --background: #0c0a09;
     --default: oklch(0.35 0.006 286.033);
   }
 
@@ -101,6 +145,11 @@
     @apply inline-block rounded-sm border px-1 py-5 align-middle font-mono text-xs font-normal shadow-sm;
   }
 
+  /* 表示・編集の両面に効く(編集面は contentEditableClassName='markdown') */
+  .markdown img {
+    @apply h-auto max-w-full rounded-sm;
+  }
+
   .markdown table {
     @apply border-gray-600 text-sm dark:border-gray-300;
   }
@@ -133,4 +182,117 @@
   .table__cell {
     @apply overflow-hidden;
   }
+  .modal__dialog {
+    @apply bg-stone-50 dark:bg-stone-950;
+  }
+
+  /* MDXEditor: 他のフォーム部品(rounded-xl border-2)と枠線を揃える */
+  .mdxeditor {
+    @apply rounded-xl border-2;
+    /* 本文が伸び続けてモーダルや画面をはみ出さないよう、エディタ内でスクロールさせる。
+       ツールバーは MDXEditor 側で position: sticky / top: 0 なので上端に残る。
+       ポップアップは overlayContainer(Modal.Dialog / body)側に出るためクリップされない */
+    @apply max-h-[50vh] overflow-y-auto overscroll-contain;
+  }
+
+  /* MDXEditor に行数指定の prop が無いため、最小行数は編集面の min-height で表現する。
+     --mdx-min-rows は markdown-editor.tsx がラッパー div に置き、継承で両モードへ届く。
+     style.css は min-height を宣言していないので @layer 内の指定でも上書きされない */
+
+  /* rich-text。.markdown(leading-normal = 1.5)に contentEditable の上下 padding を足す */
+  .mdxeditor .markdown {
+    min-height: calc(var(--mdx-min-rows, 6) * 1.5em + 2 * var(--spacing-3));
+  }
+
+  /* source。CodeMirror の行の高さは style.css の .cm-sourceView .cm-scroller で 1.3rem */
+  .mdxeditor .cm-sourceView .cm-content {
+    min-height: calc(var(--mdx-min-rows, 6) * 1.3rem);
+  }
+}
+
+/* MDXEditor のダーク補正。
+ *
+ * この 2 つの変数は MDXEditor の style.css にダーク値が定義されていないため補う。
+ * style.css はレイヤー無しで読み込まれ、カスケードレイヤーの規則により
+ * @layer 内の宣言は特異性に関係なくレイヤー無しの宣言に負けるので、
+ * ここはあえて @layer の外に書く。
+ *
+ * ダーク判定は MDXEditor 公式の dark-theme クラス(mdx-editor-core.tsx で付与)。
+ * ポップアップ用コンテナは .mdxeditor を持たない別要素なのでセレクタを分ける。
+ */
+/* MDXEditor の枠なしバリアント(チケット内容欄)。
+ *
+ * 表示モードの MarkdownView と本文の縦横位置を揃えるため、枠線・角丸・内側 padding を落とし、
+ * エディタ内スクロールも解除してページ側でスクロールさせる。
+ * padding は style.css が宣言しているため、上のダーク補正と同じ理由で @layer の外に書く。
+ *
+ * className の各語はポップアップ用コンテナにもコピーされるので、
+ * .mdxeditor と組み合わせて本体だけに効かせる。
+ */
+.mdxeditor.mdxeditor-flat {
+  border-width: 0;
+  border-radius: 0;
+  max-height: none;
+}
+
+.mdxeditor.mdxeditor-flat .markdown {
+  padding: 0;
+  /* @layer 内の `.mdxeditor .markdown` は contentEditable の padding 込みの式なので、padding 抜きで再定義する */
+  min-height: calc(var(--mdx-min-rows, 6) * 1.5em);
+}
+
+/* MDXEditor の表示専用バリアント(MarkdownView)。
+ *
+ * 枠線・角丸・内側 padding とエディタ内スクロールを落として、素の本文として並べる。
+ * 最小行数(--mdx-min-rows)も効かせない。上の flat と同じ理由で @layer の外に書く。
+ */
+.mdxeditor.mdxeditor-view {
+  border-width: 0;
+  border-radius: 0;
+  max-height: none;
+  overflow: visible;
+}
+
+.mdxeditor.mdxeditor-view .markdown {
+  padding: 0;
+  min-height: 0;
+}
+
+/* 本文が段落以外(表・見出し・区切り線など)で終わると、Lexical がカーソル置き場として
+   空の段落を足す。表示側では余白が1行ぶん増えるだけなので隠す */
+.mdxeditor.mdxeditor-view .markdown > p:last-child:has(> br[data-lexical-managed-linebreak]:only-child) {
+  display: none;
+}
+
+/* readOnly でも click は Lexical に届くため、画像を選択したときの枠を消す。
+   style.css のクラス名はビルドハッシュ付きなので部分一致で当てる */
+.mdxeditor.mdxeditor-view [class*='focusedImage'] {
+  outline: none;
+}
+
+.mdxeditor.dark-theme,
+.mdxeditor-popup-container.dark-theme {
+  /* 素の値は white 固定。ツールバー(--baseBg = slate-3)より 1 段明るい slate-4 にして、
+     ライト時の「ドロップダウンはツールバーより明るい」関係を保つ */
+  --basePageBg: var(--baseBgHover);
+  /* 素の値は --red-10 参照だが red パレットにダークブロックが無いため、アプリの danger を使う */
+  --error-color: var(--danger);
+}
+
+/* dnd-kit のドラッグ中カーソル上書き。
+ *
+ * @dnd-kit/dom の Cursor プラグイン(defaultPreset に含まれる)が
+ * `* { cursor: grabbing !important }` を <head> の先頭に注入する。
+ * grabbing / grab は Linux のカーソルテーマに実体が無いことが多く、
+ * Chromium 内蔵の低解像度ビットマップにフォールバックして HiDPI でギザギザになるため move に差し替える。
+ * どのテーマにも必ずある move はテーマ提供の高解像度データで描画される。
+ *
+ * 注入側は !important かつレイヤー無しなので、カスケードレイヤーの規則により
+ * @layer 内に書くと特異性に関係なく負ける。上の MDXEditor 補正と同じ理由で @layer の外に書く。
+ * 特異性は注入側の `*` が (0,0,0)、こちらは (0,2,0) なので確実に勝つ。
+ *
+ * data-dnd-dragging はドラッグ中の要素に Feedback プラグインが付ける属性。
+ */
+:root:has([data-dnd-dragging]) * {
+  cursor: move !important;
 }

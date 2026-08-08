@@ -5,13 +5,13 @@ import { FlexCol } from '@/components/general/flex'
 import { ModalBaseProps, useModalState } from '@/components/general/modal'
 import { ContentHeader } from '@/components/header'
 import { CheckIcon, PencilSquareIcon } from '@/components/icon'
+import { MarkdownInput } from '@/components/markdown/markdown-editor'
+import { MarkdownView } from '@/components/markdown/markdown-view'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
 import { useLocale } from '@/locale/client'
-import { Label, Modal, Skeleton, TextArea } from '@heroui/react'
+import { Modal, Skeleton } from '@heroui/react'
 import { FC, useCallback, useEffect, useState } from 'react'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 import { getAnnouncement, updateAnnouncement } from './server'
 
 /**
@@ -25,16 +25,12 @@ const AnnouncementEditBody: FC<{ initialBody: string; onSaved: () => void }> = (
   return (
     <>
       <Modal.Body className='pt-2'>
-        <FlexCol>
-          <Label>{t('announcement')}</Label>
-          <TextArea fullWidth rows={4} variant='secondary' value={body} onChange={(e) => setBody(e.target.value)} />
-          <fieldset className='min-h-24 rounded-xl border-2 p-2'>
-            <legend className='px-2 text-sm text-gray-500'>{t('preview')}</legend>
-            <div className='markdown text-foreground'>
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown>
-            </div>
-          </fieldset>
-        </FlexCol>
+        <MarkdownInput // WYSIWYG なので別途プレビューは持たない
+          label={t('announcement')}
+          defaultValue={initialBody}
+          onChange={setBody}
+          length={body.length}
+        />
       </Modal.Body>
       <Modal.Footer>
         <MultiButton slot='close' variant='ghost'>
@@ -125,9 +121,7 @@ export const AnnouncementManage: FC = () => {
       {body !== undefined ? (
         <fieldset className='min-h-24 rounded-xl border-2 p-2'>
           <legend className='px-2 text-sm text-gray-500'>{t('announcement')}</legend>
-          <div className='markdown text-foreground'>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown>
-          </div>
+          <MarkdownView body={body} />
         </fieldset>
       ) : (
         <Skeleton className='min-h-24 w-full rounded-xl' />

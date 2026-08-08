@@ -1,10 +1,10 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
-import { CheckBoxCtrl, CheckBoxItem } from '@/components/general/checkbox-ctrl'
+import { CheckBoxCtrl, CheckBoxField } from '@/components/general/checkbox'
 import { CopyableField } from '@/components/general/copyable-field'
 import { GridBox } from '@/components/general/grid'
-import { InputCtrl } from '@/components/general/input-ctrl'
+import { InputCtrl } from '@/components/general/input'
 import { FormModal, ModalBaseProps } from '@/components/general/modal'
 import { StepMotion } from '@/components/general/step-motion'
 import { CheckIcon, PencilSquareIcon, PlusIcon } from '@/components/icon'
@@ -228,7 +228,7 @@ export const UpdateModal: FC<ModalBaseProps & { target: UpdateOidcClient & { req
           />
         </div>
         <div className='col-span-12'>
-          <CheckBoxItem
+          <CheckBoxField
             variant='secondary'
             id='requirePkce'
             label={`${t('require_pkce')} (${t('immutable')})`}

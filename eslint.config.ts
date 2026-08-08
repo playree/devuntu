@@ -15,6 +15,16 @@ const eslintConfig = defineConfig([
     '.yarn/**',
     '**/generated/**/*',
   ]),
+  {
+    rules: {
+      // `_` 始まりは「意図的に受け取るが使わない」印。
+      // 分割代入で不要なキーを除外する用途で使う
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', ignoreRestSiblings: true },
+      ],
+    },
+  },
 ])
 
 export default eslintConfig

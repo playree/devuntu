@@ -1,10 +1,10 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
-import { CheckBoxCtrl } from '@/components/general/checkbox-ctrl'
+import { CheckBoxCtrl } from '@/components/general/checkbox'
 import { FlexCol } from '@/components/general/flex'
 import { GridBox } from '@/components/general/grid'
-import { MultiSelectCtrl } from '@/components/general/select-ctrl'
+import { MultiSelectCtrl } from '@/components/general/select'
 import { ContentHeader } from '@/components/header'
 import { CheckIcon, Cog6ToothIcon, GoogleIcon } from '@/components/icon'
 import { notify } from '@/components/notify'

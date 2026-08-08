@@ -107,10 +107,23 @@ export type Dashboard = Prisma.DashboardModel
  */
 export type LinkWidget = Prisma.LinkWidgetModel
 /**
+ * Model Attachment
+ * オブジェクトストレージに保存したアップロードファイルのメタデータ。
+ * 公開URLは `/api/upload/<key>` で、配信時はここから mimeType を引いて存在確認も兼ねる。
+ */
+export type Attachment = Prisma.AttachmentModel
+/**
  * Model KeyValueStore
  * 
  */
 export type KeyValueStore = Prisma.KeyValueStoreModel
+/**
+ * Model AppVersion
+ * アプリバージョンの利用履歴。サーバー起動時(`src/instrumentation.ts`)に upsert で記録し、
+ * このDBがどのバージョンでいつ利用されていたかを追跡できるようにする。
+ * createdAt が初回起動日時、updatedAt が最終起動日時になる。
+ */
+export type AppVersion = Prisma.AppVersionModel
 /**
  * Model Group
  * 
@@ -131,3 +144,38 @@ export type CalendarShare = Prisma.CalendarShareModel
  * 
  */
 export type CalendarBusyTime = Prisma.CalendarBusyTimeModel
+/**
+ * Model Board
+ * 
+ */
+export type Board = Prisma.BoardModel
+/**
+ * Model Tag
+ * 
+ */
+export type Tag = Prisma.TagModel
+/**
+ * Model TicketTag
+ * 
+ */
+export type TicketTag = Prisma.TicketTagModel
+/**
+ * Model BoardMember
+ * 
+ */
+export type BoardMember = Prisma.BoardMemberModel
+/**
+ * Model BoardGroup
+ * 
+ */
+export type BoardGroup = Prisma.BoardGroupModel
+/**
+ * Model Ticket
+ * 
+ */
+export type Ticket = Prisma.TicketModel
+/**
+ * Model TicketComment
+ * 
+ */
+export type TicketComment = Prisma.TicketCommentModel

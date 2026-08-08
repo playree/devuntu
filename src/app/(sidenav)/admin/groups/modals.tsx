@@ -2,7 +2,7 @@
 
 import { MultiButton } from '@/components/general/button'
 import { GridBox } from '@/components/general/grid'
-import { InputCtrl } from '@/components/general/input-ctrl'
+import { InputCtrl } from '@/components/general/input'
 import { FormModal, ModalBaseProps } from '@/components/general/modal'
 import { CheckIcon, PencilSquareIcon, PlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'

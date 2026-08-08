@@ -2,6 +2,7 @@
 
 import { Button, ButtonProps, cn, Spinner, Tooltip } from '@heroui/react'
 import { FC, ReactNode, useEffect, useState } from 'react'
+import { useIsSmart } from './smart'
 
 export const MultiButton: FC<
   ButtonProps & {
@@ -19,13 +20,14 @@ export const MultiButton: FC<
   onPress,
   isPending,
   tooltip,
-  isSmart,
+  isSmart: isSmartProp,
   className,
   icon,
   coolTime = 0,
   isDisabled,
   ...props
 }) => {
+  const isSmart = useIsSmart(isSmartProp)
   const [waitTime, setWaitTime] = useState(0)
 
   useEffect(() => {
@@ -42,7 +44,7 @@ export const MultiButton: FC<
     <Button
       type={type}
       size={size}
-      className={cn(isSmart ? 'h-fit px-2 py-1' : '', className)}
+      className={cn(isSmart ? 'h-fit px-2 py-0.5' : '', className)}
       {...props}
       onPress={(e) => {
         if (onPress) {

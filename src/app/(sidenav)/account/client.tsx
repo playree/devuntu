@@ -1,5 +1,6 @@
 'use client'
 
+import { AccordionSection } from '@/components/general/accordion'
 import { FlexCol } from '@/components/general/flex'
 import { ContentHeader } from '@/components/header'
 import { Cog6ToothIcon, FingerPrintIcon, GoogleIcon, UserCircleIcon } from '@/components/icon'
@@ -18,49 +19,16 @@ export const AccountClient: FC<{ googleAvailable: boolean }> = ({ googleAvailabl
     <FlexCol>
       <ContentHeader icon={<UserCircleIcon />} title={t('account')}></ContentHeader>
       <Accordion allowsMultipleExpanded defaultExpandedKeys={defaultExpandedKeys}>
-        <Accordion.Item id='timezone'>
-          <Accordion.Heading>
-            <Accordion.Trigger className='gap-1'>
-              <Cog6ToothIcon />
-              {t('timezone')}
-              <Accordion.Indicator />
-            </Accordion.Trigger>
-          </Accordion.Heading>
-          <Accordion.Panel>
-            <Accordion.Body className='px-4'>
-              <TimezoneSetting />
-            </Accordion.Body>
-          </Accordion.Panel>
-        </Accordion.Item>
-        <Accordion.Item id='passkey'>
-          <Accordion.Heading>
-            <Accordion.Trigger className='gap-1'>
-              <FingerPrintIcon />
-              {t('passkey')}
-              <Accordion.Indicator />
-            </Accordion.Trigger>
-          </Accordion.Heading>
-          <Accordion.Panel>
-            <Accordion.Body className='px-4'>
-              <MyPasskey />
-            </Accordion.Body>
-          </Accordion.Panel>
-        </Accordion.Item>
+        <AccordionSection id='timezone' icon={<Cog6ToothIcon />} title={t('timezone')}>
+          <TimezoneSetting />
+        </AccordionSection>
+        <AccordionSection id='passkey' icon={<FingerPrintIcon />} title={t('passkey')}>
+          <MyPasskey />
+        </AccordionSection>
         {googleAvailable && (
-          <Accordion.Item id='google_account'>
-            <Accordion.Heading>
-              <Accordion.Trigger className='gap-1'>
-                <GoogleIcon />
-                {t('google_account')}
-                <Accordion.Indicator />
-              </Accordion.Trigger>
-            </Accordion.Heading>
-            <Accordion.Panel>
-              <Accordion.Body className='px-4'>
-                <GoogleAccountLink />
-              </Accordion.Body>
-            </Accordion.Panel>
-          </Accordion.Item>
+          <AccordionSection id='google_account' icon={<GoogleIcon />} title={t('google_account')}>
+            <GoogleAccountLink />
+          </AccordionSection>
         )}
       </Accordion>
     </FlexCol>

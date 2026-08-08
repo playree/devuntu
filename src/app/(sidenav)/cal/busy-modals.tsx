@@ -1,10 +1,10 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
-import { CheckBoxItem } from '@/components/general/checkbox-ctrl'
+import { CheckBoxField } from '@/components/general/checkbox'
 import { FlexCol } from '@/components/general/flex'
 import { GridBox } from '@/components/general/grid'
-import { InputCtrl } from '@/components/general/input-ctrl'
+import { InputCtrl } from '@/components/general/input'
 import { FormModal, ModalBaseProps } from '@/components/general/modal'
 import { CheckIcon, PencilSquareIcon, PlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
@@ -111,7 +111,7 @@ export const BusyTimeModal: FC<ModalBaseProps & { target?: UpdateBusyTime }> = (
               </div>
               <div className='flex flex-wrap gap-3'>
                 {WEEKDAY_ORDER.map((d) => (
-                  <CheckBoxItem
+                  <CheckBoxField
                     key={d}
                     id={`weekday-${d}`}
                     label={labels[d]}

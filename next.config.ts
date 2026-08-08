@@ -13,6 +13,18 @@ const nextConfig: NextConfig = {
   env: {
     BUILD_NO: genBuildNo(),
   },
+  experimental: {
+    serverActions: {
+      // 既定は1MB。schema.ts の MAX_IMAGE_SIZE(5MB)まで Server Action で受け取れるようにする
+      bodySizeLimit: '6mb',
+    },
+    /**
+     * typescript は @typescript/typescript6 のエイリアス(tsc バイナリを持たず tsc6 のみ)なので、
+     * 既定の CLI チェッカーだと tsc を解決できずビルドが止まる。JS API チェッカーを使う。
+     * TS7 での高速な型チェックは `pnpm typecheck`(@typescript/native の tsc)で行う。
+     */
+    useTypeScriptCli: false,
+  },
 }
 
 export default nextConfig
