@@ -39,12 +39,7 @@ export const TextAreaField = ({
           {isRequired ? '*' : ''}
         </Label>
       )}
-      <TextArea // isSmart: 既定の py-2 を py-1 へ詰める
-        fullWidth
-        rows={rows}
-        {...props}
-        className={cn(isSmart ? 'py-1' : '', className)}
-      />
+      <TextArea fullWidth rows={rows} {...props} className={cn(isSmart ? 'py-1' : '', className)} />
       <ErrorMessage className={isSmart ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
     </TextField>
   )

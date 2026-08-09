@@ -100,7 +100,7 @@ export const CopyableField: FC<{
   return (
     <TextField type={!isMask || isVisible ? 'text' : 'password'} isReadOnly className='relative'>
       <Label className={isSmart ? 'text-xs font-light' : ''}>{label}</Label>
-      <InputGroup // isSmart: 既定 36px(min-h-9 + py-2)を 28px へ。text-sm の行高 20px + 上下 4px
+      <InputGroup // isSmart: 既定 36px を 28px に詰める
         variant={variant}
         className={isSmart ? 'min-h-7' : ''}
       >
@@ -111,7 +111,7 @@ export const CopyableField: FC<{
               isIconOnly
               size='sm'
               variant='ghost'
-              // isSmart: size='sm' は 32px あり 28px の枠に収まらないため 24px へ
+              // isSmart: size='sm' の 32px は 28px の枠に収まらない
               className={isSmart ? 'size-6' : ''}
               onPress={toggleVisibility}
             >

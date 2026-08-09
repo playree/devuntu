@@ -105,8 +105,8 @@ export const DatePickerField = ({
       )}
       <DateField.Group
         /**
-         * isSmart: .date-input-group は h-9 固定なので h-7 で上書きし、
-         * overflow-hidden で内側がクリップされないよう Input の py も詰める
+         * isSmart: .date-input-group の h-9 固定を上書きする。
+         * overflow-hidden で内側がクリップされるため Input の py も詰める
          */
         fullWidth
         variant={variant}

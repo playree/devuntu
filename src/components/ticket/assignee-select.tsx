@@ -164,7 +164,7 @@ export const AssigneeSelectField = ({
             <XCircleIcon width={16} />
           </span>
         )}
-        <Input // isSmart: 既定 36px(min-h-9 + py-2)を 28px へ。text-sm の行高 20px + 上下 4px
+        <Input // isSmart: 既定 36px を 28px に詰める
           className={cn(
             isSmart ? 'min-h-7 py-1' : undefined,
             // 重ねたアバター(inset-s-2 + 16px)とクリア(inset-e-6 + 16px)の分だけ内側を空ける

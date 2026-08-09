@@ -64,7 +64,7 @@ export const InputField = ({
       </Label>
       <Input
         {...props}
-        // isSmart: 既定 36px(py-2)を 28px へ。text-sm の行高 20px + 上下 4px
+        // isSmart: 既定 36px を 28px に詰める
         className={cn(isSmart ? 'py-1' : '', className)}
         type={type}
       />
