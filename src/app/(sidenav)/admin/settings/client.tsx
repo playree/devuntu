@@ -45,13 +45,7 @@ const GoogleAccountSettingsForm: FC<{
     >
       <GridBox>
         <div className='col-span-12 pb-2'>
-          <CheckBoxCtrl
-            control={control}
-            variant='secondary'
-            name='enabled'
-            id='enabled'
-            label={t('google_account_enable')}
-          />
+          <CheckBoxCtrl control={control} name='enabled' id='enabled' label={t('google_account_enable')} />
           <p className='mt-1 text-sm text-neutral-500'>{t('msg_google_account_enable_desc')}</p>
         </div>
         <div className='col-span-12'>
@@ -60,7 +54,6 @@ const GoogleAccountSettingsForm: FC<{
             name='allowedGroupIds'
             groupOptions={groupOptions}
             label={t('google_account_allowed_groups')}
-            variant='secondary'
           />
           <p className='mt-1 text-sm text-neutral-500'>{t('msg_google_account_allowed_groups_desc')}</p>
         </div>

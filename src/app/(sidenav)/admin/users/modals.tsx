@@ -67,7 +67,6 @@ export const AddModal: FC<ModalBaseProps & { enabledPassword: boolean; groupOpti
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            variant='secondary'
             name='name'
             constraintSchema={scCreateUser}
             label={t('username')}
@@ -78,7 +77,6 @@ export const AddModal: FC<ModalBaseProps & { enabledPassword: boolean; groupOpti
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            variant='secondary'
             name='email'
             constraintSchema={scCreateUser}
             label={t('email')}
@@ -89,7 +87,6 @@ export const AddModal: FC<ModalBaseProps & { enabledPassword: boolean; groupOpti
           <div className='col-span-12'>
             <InputCtrlPassword
               control={control}
-              variant='secondary'
               name='password'
               label={t('password')}
               autoComplete='new-password'
@@ -100,16 +97,10 @@ export const AddModal: FC<ModalBaseProps & { enabledPassword: boolean; groupOpti
           </div>
         )}
         <div className='col-span-12 pb-4'>
-          <CheckBoxCtrl control={control} variant='secondary' name='isAdmin' id='isAdmin' label={t('is_admin')} />
+          <CheckBoxCtrl control={control} name='isAdmin' id='isAdmin' label={t('is_admin')} />
         </div>
         <div className='col-span-12'>
-          <MultiSelectCtrl
-            control={control}
-            name='groups'
-            groupOptions={groupOptions}
-            label={t('group')}
-            variant='secondary'
-          />
+          <MultiSelectCtrl control={control} name='groups' groupOptions={groupOptions} label={t('group')} />
         </div>
       </GridBox>
     </FormModal>
@@ -173,7 +164,6 @@ export const UpdateModal: FC<ModalBaseProps & { target: UpdateUser; groupOptions
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            variant='secondary'
             name='name'
             constraintSchema={scUpdateUser}
             label={t('username')}
@@ -184,7 +174,6 @@ export const UpdateModal: FC<ModalBaseProps & { target: UpdateUser; groupOptions
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            variant='secondary'
             name='email'
             constraintSchema={scUpdateUser}
             label={t('email')}
@@ -192,16 +181,10 @@ export const UpdateModal: FC<ModalBaseProps & { target: UpdateUser; groupOptions
           />
         </div>
         <div className='col-span-12 pb-4'>
-          <CheckBoxCtrl control={control} variant='secondary' name='isAdmin' id='isAdmin' label={t('is_admin')} />
+          <CheckBoxCtrl control={control} name='isAdmin' id='isAdmin' label={t('is_admin')} />
         </div>
         <div className='col-span-12'>
-          <MultiSelectCtrl
-            control={control}
-            name='groups'
-            groupOptions={groupOptions}
-            label={t('group')}
-            variant='secondary'
-          />
+          <MultiSelectCtrl control={control} name='groups' groupOptions={groupOptions} label={t('group')} />
         </div>
       </GridBox>
     </FormModal>

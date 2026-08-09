@@ -55,7 +55,6 @@ export const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            variant='secondary'
             name='name'
             constraintSchema={scCreateGroup}
             label={t('name')}
@@ -66,7 +65,6 @@ export const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            variant='secondary'
             name='description'
             constraintSchema={scCreateGroup}
             label={t('description')}
@@ -120,7 +118,6 @@ export const UpdateModal: FC<ModalBaseProps & { target: UpdateGroup }> = ({ stat
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            variant='secondary'
             name='name'
             constraintSchema={scUpdateGroup}
             label={t('name')}
@@ -131,7 +128,6 @@ export const UpdateModal: FC<ModalBaseProps & { target: UpdateGroup }> = ({ stat
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            variant='secondary'
             name='description'
             constraintSchema={scUpdateGroup}
             label={t('description')}

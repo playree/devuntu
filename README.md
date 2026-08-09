@@ -31,7 +31,6 @@
   - [パッケージ更新](#パッケージ更新)
   - [パッケージへのパッチ](#パッケージへのパッチ)
   - [パッケージのバージョン上書き](#パッケージのバージョン上書き)
-    - [tailwind-variants](#tailwind-variants)
   - [TypeScript v7 と v6 の併存](#typescript-v7-と-v6-の併存)
   - [better-auth](#better-auth)
   - [イメージ作成](#イメージ作成)
@@ -412,25 +411,11 @@ pnpm patch-commit '<出力されたパス>'
 
 依存パッケージが固定しているバージョンに問題がある場合は、`pnpm-workspace.yaml`の`overrides`で差し替える。`パッケージ名>依存パッケージ名`の形式で書くと、そのパッケージの入れ子依存だけを対象にできる。
 
-### tailwind-variants
+| 上書き対象 | 指定     | 理由                                       |
+| ---------- | -------- | ------------------------------------------ |
+| `sharp`    | `0.34.5` | Next.js の画像最適化で使うバージョンを固定 |
 
-| 上書き対象                         | 指定     | 理由                                                         |
-| ---------------------------------- | -------- | ------------------------------------------------------------ |
-| `@heroui/styles>tailwind-variants` | `^3.3.1` | HeroUI 3.2.3 が固定する`tailwind-variants@3.3.0`のバグを回避 |
-| `@heroui/react>tailwind-variants`  | `^3.3.1` | 同上(コピーを 1 本に集約する)                                |
-
-`tailwind-variants` 3.3.0 の slots リゾルバは、
-
-- tv インスタンスごとに**単一の slots オブジェクトを使い回して返す**
-- 各 slot 関数は呼び出し時にモジュールスコープの「最後に渡された props」を読む(呼び出し元の props を捕捉しない)
-
-という実装のため、同じ tv を別の props で呼ぶと**先に取得済みの slot 関数の戻り値まで後の props に化ける**。
-
-HeroUI の`Modal`はこのパターンを踏んでいる。`Modal.Backdrop`は`useMemo(() => modalVariants({ variant }), [variant])`の結果を保持して毎レンダリングで`slots.backdrop()`を呼ぶが、後から描画される`Modal.Container`が同じ tv を`{ scroll, size }`(variant 無し)で呼ぶ。以降`Modal.Backdrop`が再レンダリングされても`useMemo`はヒットして`modalVariants`を呼び直さないため、`backdrop()`が`variant`の既定値である`modal__backdrop--opaque`を返す。結果、`FormModal`(`src/components/general/modal.tsx`)の`variant='blur'`が効かなくなっていた。`Drawer`/`AlertDialog`も同じ呼び出し方をしている。
-
-- 3.3.1 で修正済み(slots オブジェクトを呼び出しごとに生成する形に戻っている)
-- HeroUI をバージョンアップする際は`@heroui/styles`の`dependencies.tailwind-variants`を確認し、3.3.1 以上になっていればこの override は削除できる
-- `@heroui/react`側も同じ 3.3.0 を持ち`tv`/`cn`を再エクスポートしているため、揃えて上書きしている(コピーが 1 本に集約される)
+HeroUI 3.2.3 の頃は`@heroui/{react,styles}>tailwind-variants`を`^3.3.1`へ上書きしていた。3.3.0 の slots リゾルバが単一の slots オブジェクトを使い回し、同じ tv を別の props で呼ぶと先に取得済みの slot 関数の戻り値まで後の props に化けるバグがあり、`Modal.Backdrop`の`variant='blur'`が`opaque`に化けていたため。HeroUI 3.2.4 が`tailwind-variants@3.3.1`を固定依存にしたので上書きは削除した。
 
 ## TypeScript v7 と v6 の併存
 

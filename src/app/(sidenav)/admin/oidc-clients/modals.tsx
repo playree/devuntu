@@ -75,7 +75,7 @@ export const AddModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, relo
         </>
       }
     >
-      <div className='min-h-72 overflow-hidden'>
+      <div className='min-h-76 overflow-hidden'>
         <AnimatePresence mode='wait' custom={step.direction}>
           {step.id === 'INPUT' && (
             <StepMotion direction={step.direction} key='step_input'>
@@ -83,7 +83,6 @@ export const AddModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, relo
                 <div className='col-span-12'>
                   <InputCtrl
                     control={control}
-                    variant='secondary'
                     name='clientName'
                     label={t('client_name')}
                     errorMessage={fet(errors.clientName)}
@@ -94,7 +93,6 @@ export const AddModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, relo
                 <div className='col-span-12'>
                   <InputCtrl
                     control={control}
-                    variant='secondary'
                     name='redirectUri'
                     label={t('redirect_uri')}
                     errorMessage={fet(errors.redirectUri)}
@@ -104,7 +102,6 @@ export const AddModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, relo
                 <div className='col-span-12'>
                   <CheckBoxCtrl
                     control={control}
-                    variant='secondary'
                     name='skipConsent'
                     id='skipConsent'
                     label={t('skip_consent')}
@@ -112,13 +109,7 @@ export const AddModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, relo
                   />
                 </div>
                 <div className='col-span-12'>
-                  <CheckBoxCtrl
-                    control={control}
-                    variant='secondary'
-                    name='requirePkce'
-                    id='requirePkce'
-                    label={t('require_pkce')}
-                  />
+                  <CheckBoxCtrl control={control} name='requirePkce' id='requirePkce' label={t('require_pkce')} />
                 </div>
               </GridBox>
             </StepMotion>
@@ -128,17 +119,13 @@ export const AddModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, relo
             <StepMotion direction={step.direction} key='step_output'>
               <GridBox>
                 <div className='col-span-12'>
-                  <CopyableField text={output.clientId} label={t('client_id')} variant='secondary' />
+                  <CopyableField text={output.clientId} label={t('client_id')} />
                 </div>
                 <div className='col-span-12'>
-                  <CopyableField text={output.clientSecret} label={t('client_secret')} isMask variant='secondary' />
+                  <CopyableField text={output.clientSecret} label={t('client_secret')} isMask />
                 </div>
                 <div className='col-span-12'>
-                  <CopyableField
-                    text={new URL('api/auth', baseUrl).toString()}
-                    label={t('issuer_url')}
-                    variant='secondary'
-                  />
+                  <CopyableField text={new URL('api/auth', baseUrl).toString()} label={t('issuer_url')} />
                 </div>
                 <Typography type='body-sm' className='col-span-12 pt-2 whitespace-pre-wrap'>
                   {t('msg_added_oidc_client')}
@@ -199,7 +186,6 @@ export const UpdateModal: FC<ModalBaseProps & { target: UpdateOidcClient & { req
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            variant='secondary'
             name='clientName'
             label={t('client_name')}
             errorMessage={fet(errors.clientName)}
@@ -210,7 +196,6 @@ export const UpdateModal: FC<ModalBaseProps & { target: UpdateOidcClient & { req
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            variant='secondary'
             name='redirectUri'
             label={t('redirect_uri')}
             errorMessage={fet(errors.redirectUri)}
@@ -218,18 +203,10 @@ export const UpdateModal: FC<ModalBaseProps & { target: UpdateOidcClient & { req
           />
         </div>
         <div className='col-span-12'>
-          <CheckBoxCtrl
-            control={control}
-            variant='secondary'
-            name='skipConsent'
-            id='skipConsent'
-            label={t('skip_consent')}
-            isDisabled
-          />
+          <CheckBoxCtrl control={control} name='skipConsent' id='skipConsent' label={t('skip_consent')} isDisabled />
         </div>
         <div className='col-span-12'>
           <CheckBoxField
-            variant='secondary'
             id='requirePkce'
             label={`${t('require_pkce')} (${t('immutable')})`}
             isSelected={target.requirePkce}

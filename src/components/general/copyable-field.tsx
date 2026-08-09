@@ -1,5 +1,8 @@
-import { Button, Chip, InputGroup, InputGroupProps, Label, TextField } from '@heroui/react'
+'use client'
+
+import { Button, Chip, cn, InputGroup, InputGroupProps, Label, TextField } from '@heroui/react'
 import { FC, SVGProps, useState } from 'react'
+import { useIsSmart } from './smart'
 
 const EyeIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
   <svg
@@ -86,20 +89,32 @@ export const CopyableField: FC<{
   label: string
   isMask?: boolean
   variant?: InputGroupProps['variant']
+  isSmart?: boolean
   onCopied?: () => void
-}> = ({ text, label, isMask, variant, onCopied }) => {
+}> = ({ text, label, isMask, variant, isSmart: isSmartProp, onCopied }) => {
+  const isSmart = useIsSmart(isSmartProp)
   const [isVisible, setIsVisible] = useState(false)
   const toggleVisibility = () => setIsVisible(!isVisible)
   const [isCopied, setIsCopied] = useState(false)
 
   return (
     <TextField type={!isMask || isVisible ? 'text' : 'password'} isReadOnly className='relative'>
-      <Label>{label}</Label>
-      <InputGroup variant={variant}>
-        <InputGroup.Input value={text} disabled className='font-mono' />
+      <Label className={isSmart ? 'text-xs font-light' : ''}>{label}</Label>
+      <InputGroup // isSmart: 既定 36px を 28px に詰める
+        variant={variant}
+        className={isSmart ? 'min-h-7' : ''}
+      >
+        <InputGroup.Input value={text} disabled className={cn('font-mono', isSmart ? 'py-1' : '')} />
         <InputGroup.Suffix className='pr-0'>
           {isMask && (
-            <Button isIconOnly size='sm' variant='ghost' onPress={toggleVisibility}>
+            <Button
+              isIconOnly
+              size='sm'
+              variant='ghost'
+              // isSmart: size='sm' の 32px は 28px の枠に収まらない
+              className={isSmart ? 'size-6' : ''}
+              onPress={toggleVisibility}
+            >
               {isVisible ? <EyeSlashIcon /> : <EyeIcon />}
             </Button>
           )}
@@ -107,6 +122,7 @@ export const CopyableField: FC<{
             isIconOnly
             size='sm'
             variant='ghost'
+            className={isSmart ? 'size-6' : ''}
             onPress={async () => {
               await navigator.clipboard.writeText(text)
               setIsCopied(true)

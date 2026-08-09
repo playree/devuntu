@@ -194,7 +194,7 @@ export const SingleSelectField = ({
         ref={ref}
       >
         <Label className={cn(isSmart ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}>{label}</Label>
-        <Select.Trigger // isSmart: 既定 36px(min-h-9 + py-2)を 28px へ。text-sm の行高 20px + 上下 4px
+        <Select.Trigger // isSmart: 既定 36px を 28px に詰める
           className={isSmart ? 'min-h-7 py-1' : undefined}
         >
           <Select.Value>

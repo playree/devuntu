@@ -106,13 +106,13 @@ export const CalClient: FC<{ origin: string }> = ({ origin }) => {
                   <div className='flex flex-wrap items-end gap-2'>
                     <TextField className='flex-auto' value={title} onChange={setTitle} maxLength={50}>
                       <Label>{t('share_title')}</Label>
-                      <Input variant='secondary' />
+                      <Input />
                     </TextField>
                     <MultiButton variant='outline' onPress={saveTitle}>
                       {t('save')}
                     </MultiButton>
                   </div>
-                  <CopyableField label={t('share_url')} text={shareUrl} variant='secondary' />
+                  <CopyableField label={t('share_url')} text={shareUrl} />
                   <div className='flex flex-wrap gap-2'>
                     <MultiButton icon={<ArrowPathIcon />} variant='outline' onPress={rotate}>
                       {t('regenerate_url')}

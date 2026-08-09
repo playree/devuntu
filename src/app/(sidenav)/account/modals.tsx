@@ -59,7 +59,6 @@ export const UpdatePasskeyModal: FC<ModalBaseProps & { target: UpdatePasskey }> 
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            variant='secondary'
             name='name'
             constraintSchema={scUpdatePasskey}
             label={t('name')}

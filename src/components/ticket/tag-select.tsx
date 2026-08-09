@@ -176,7 +176,7 @@ export const TagIdSelectField = ({
         {label ?? t('tags')}
         <span className='ml-1 text-xs opacity-60'>{`${selectedIds.length}/${MAX_TICKET_TAGS}`}</span>
       </Label>
-      <Autocomplete.Trigger // isSmart: 既定 36px(min-h-9 + py-2)を 28px へ。text-sm の行高 20px + 上下 4px
+      <Autocomplete.Trigger // isSmart: 既定 36px を 28px に詰める
         className={isSmart ? 'min-h-7 py-1' : undefined}
       >
         <Autocomplete.Value className='flex flex-wrap items-center gap-1'>
@@ -363,7 +363,7 @@ export const TagNameSelectField: FC<{
         {label ?? t('tags')}
         {max !== undefined && <span className='ml-1 text-xs opacity-60'>{`${value.length}/${max}`}</span>}
       </Label>
-      <Select.Trigger // isSmart: 既定 36px(min-h-9 + py-2)を 28px へ。text-sm の行高 20px + 上下 4px
+      <Select.Trigger // isSmart: 既定 36px を 28px に詰める
         className={isSmart ? 'min-h-7 py-1' : undefined}
       >
         <Select.Value className='flex flex-wrap items-center gap-1'>

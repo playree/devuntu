@@ -1,10 +1,11 @@
 'use client'
 
 import { useLocale } from '@/locale/client'
-import { Button, ErrorMessage, InputGroup, InputProps, Label, ProgressBar, TextField } from '@heroui/react'
+import { Button, cn, ErrorMessage, InputGroup, InputProps, Label, ProgressBar, TextField } from '@heroui/react'
 import { ZxcvbnFactory } from '@zxcvbn-ts/core'
 import { ChangeEvent, FC, SVGProps, useState } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
+import { useIsSmart } from './general/smart'
 
 const EyeIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
   <svg
@@ -90,6 +91,7 @@ export const InputCtrlPassword = <
   errorMessage,
   requiredPasswordScore,
   variant,
+  isSmart: isSmartProp,
   ...props
 }: InputProps & {
   control?: Control<TFieldValues>
@@ -100,8 +102,10 @@ export const InputCtrlPassword = <
   isReadOnly?: boolean
   errorMessage?: string
   requiredPasswordScore?: number
+  isSmart?: boolean
 }) => {
   const { t } = useLocale()
+  const isSmart = useIsSmart(isSmartProp)
   const [isVisible, setIsVisible] = useState(false)
   const toggleVisibility = () => setIsVisible(!isVisible)
   const [passwordScore, setPasswordScore] = useState(0)
@@ -118,13 +122,17 @@ export const InputCtrlPassword = <
             isInvalid={!!errorMessage}
             isReadOnly={isReadOnly}
           >
-            <Label>
+            <Label className={isSmart ? 'text-xs font-light' : ''}>
               {label}
               {isRequired ? '*' : ''}
             </Label>
-            <InputGroup variant={variant}>
+            <InputGroup // isSmart: 既定 36px を 28px に詰める
+              variant={variant}
+              className={isSmart ? 'min-h-7' : ''}
+            >
               <InputGroup.Input
                 {...props}
+                className={cn(isSmart ? 'py-1' : '', props.className)}
                 onChange={(event) => {
                   if (requiredPasswordScore) {
                     const zxcvbn = new ZxcvbnFactory()
@@ -140,12 +148,19 @@ export const InputCtrlPassword = <
                 value={value || (type === 'number' ? '0' : '')}
               />
               <InputGroup.Suffix className='pr-0'>
-                <Button isIconOnly size='sm' variant='ghost' onPress={toggleVisibility}>
+                <Button
+                  isIconOnly
+                  size='sm'
+                  variant='ghost'
+                  // isSmart: size='sm' の 32px は 28px の枠に収まらない
+                  className={isSmart ? 'size-6' : ''}
+                  onPress={toggleVisibility}
+                >
                   {isVisible ? <EyeSlashIcon /> : <EyeIcon />}
                 </Button>
               </InputGroup.Suffix>
             </InputGroup>
-            <ErrorMessage className='min-h-4'>{errorMessage}</ErrorMessage>
+            <ErrorMessage className={isSmart ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
           </TextField>
         )}
       />
