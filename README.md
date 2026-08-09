@@ -19,8 +19,6 @@
   - [開発用インフラ起動](#開発用インフラ起動)
   - [s3-toolsサービス](#s3-toolsサービス)
     - [旧イメージでの実行](#旧イメージでの実行)
-  - [オブジェクトストレージへの移行](#オブジェクトストレージへの移行)
-    - [Docker環境での移行](#docker環境での移行)
   - [DBバックアップ](#dbバックアップ)
   - [DBリストア](#dbリストア)
   - [S3バックアップ](#s3バックアップ)
@@ -215,7 +213,7 @@ DB は `localhost:5432`、S3 API は `localhost:8333` で公開される。ア�
 
 ## s3-toolsサービス
 
-`compose.yaml` で Docker 運用している環境向けに、S3 のバックアップ/リストア/移行スクリプトを実行するための使い捨てコンテナを `s3-tools` サービスとして定義している。スクリプトはイメージに同梱されているので、**リポジトリの clone もホストへの node インストールも不要**で、`compose.yaml` と `.env.docker` があれば実行できる。
+`compose.yaml` で Docker 運用している環境向けに、S3 のバックアップ/リストアスクリプトを実行するための使い捨てコンテナを `s3-tools` サービスとして定義している。スクリプトはイメージに同梱されているので、**リポジトリの clone もホストへの node インストールも不要**で、`compose.yaml` と `.env.docker` があれば実行できる。
 
 ```sh
 mkdir -p backup
@@ -223,7 +221,7 @@ mkdir -p backup
 # バックアップ(既定のコマンド)
 docker compose run --rm s3-tools
 
-# リストア・移行は引数でスクリプトを指定する
+# リストアは引数でスクリプトを指定する
 docker compose run --rm s3-tools /app/scripts/restore-s3.mjs /app/backup/s3_YYYYMMDD_HHMMSS
 ```
 
@@ -248,56 +246,6 @@ docker compose run --rm \
 ```
 
 スクリプトは `/app/` 直下にマウントする。`WORKDIR` が `/app` なので出力先が `/app/backup` になり、`@aws-sdk/client-s3` も `/app/node_modules` から解決される。
-
-## オブジェクトストレージへの移行
-
-ローカル保存(`upload/`)からの移行は一度だけ以下を実行する。
-
-```sh
-pnpm upload:migrate
-```
-
-前提として、S3 サービスが起動([開発用インフラ起動](#開発用インフラ起動))し、`.env` に `S3_ENDPOINT`/`S3_ACCESS_KEY_ID`/`S3_SECRET_ACCESS_KEY` が設定されていること。スクリプトは`dotenv`で`.env`を読み(`dotenv`が無い環境では環境変数のみで動く)、`S3_ENDPOINT`が未設定ならエラーで終了する。バケット(`S3_BUCKET`、既定`devuntu`)は無ければ自動作成される。
-
-対象はリポジトリ直下の`upload/`にあるファイルのみ(サブディレクトリは走査しない)。`.gitkeep`などのドットファイルは対象外で、拡張子が`.webp`/`.png`/`.jpg`/`.jpeg`/`.gif`のものだけを移行する。それ以外の拡張子は警告を出してスキップする。`upload/`が無い場合は`no files to migrate`で正常終了する。
-
-ファイル名をそのままオブジェクトキーにするため公開URL(`/api/upload/<キー>`)が変わらず、DB(`link_widget.iconPath`やチケット本文中の画像URL)の書き換えは不要。移行したファイルは`Attachment`レコードを持たないが、配信側(`src/app/api/upload/[filename]/route.ts`)が Content-Type をストレージ側にフォールバックするためそのまま参照できる。
-
-アップロード済みのキーはスキップするため、何度実行しても安全。最後に`done. migrated=<n> skipped=<n>`が出力される。移行が済めばローカルの`upload/`は不要(アプリは参照しない)。
-
-### Docker環境での移行
-
-Docker で運用している環境の旧ファイルは、`compose.yaml` と同じ階層のホスト側 `upload/` に残っている(以前は `./upload:/app/upload` としてマウントしていた)。[`s3-tools`サービス](#s3-toolsサービス)から移行スクリプトを実行する。
-
-画像が参照できない期間を作らないため、新しい `devuntu` を起動する前に移行を済ませる。
-
-```sh
-docker compose pull
-docker compose up -d db s3
-
-docker compose run --rm \
-  -v "$(pwd)/upload:/app/upload:ro" \
-  s3-tools /app/scripts/migrate-upload-to-s3.mjs
-
-docker compose up -d devuntu
-```
-
-- `upload/`は`s3-tools`に常設していないので、移行のときだけ`-v`で足す(`WORKDIR`が`/app`なのでマウント先は`/app/upload`)
-- `docker compose run` はポートを公開しないので、稼働中の `devuntu`(3000)と衝突しない
-
-`compose` を使わない場合は `docker run` でも実行できる。`.env.docker` は値の後ろにコメントを書いている行があり `--env-file` ではコメントごと値として渡ってしまうため、`-e` で S3 系のみ明示的に指定する。ネットワーク名は compose のプロジェクト名依存(`docker network ls` で確認)。`latest` はローカルにキャッシュがあるとそれが使われ、`scripts/` 未同梱の旧イメージで実行されてしまうため `--pull=always` を付ける(固定タグやダイジェストの指定でもよい)。
-
-```sh
-docker run --rm --pull=always \
-  --network devuntu_default \
-  -e S3_ENDPOINT=http://s3:8333 \
-  -e S3_BUCKET=devuntu \
-  -e S3_ACCESS_KEY_ID=devuntu \
-  -e S3_SECRET_ACCESS_KEY=devuntuS3PassW0rd \
-  -v "$(pwd)/upload:/app/upload:ro" \
-  --entrypoint node \
-  playree/devuntu:latest /app/scripts/migrate-upload-to-s3.mjs
-```
 
 ## DBバックアップ
 
@@ -348,7 +296,7 @@ docker compose up -d devuntu
 
 アップロードされた画像はオブジェクトストレージ(`s3`サービス)にしか存在せず、Docker の名前付きボリューム`seaweeddata`が消えると復旧できない。DB だけ復元しても`Attachment`レコードや`link_widget.iconPath`、チケット本文の画像 URL が実体を失うため、**DB バックアップと対で取得する**。
 
-S3 サービスが起動している状態で実行する。`.env`の`S3_ENDPOINT`/`S3_ACCESS_KEY_ID`/`S3_SECRET_ACCESS_KEY`が必要(`pnpm upload:migrate`と同じ)。
+S3 サービスが起動している状態で実行する。`.env`の`S3_ENDPOINT`/`S3_ACCESS_KEY_ID`/`S3_SECRET_ACCESS_KEY`が必要。
 
 ```sh
 pnpm s3:backup
@@ -389,7 +337,7 @@ pnpm s3:restore backup/s3_YYYYMMDD_HHMMSS
 node ./scripts/restore-s3.mjs backup/s3_YYYYMMDD_HHMMSS
 ```
 
-バケット(`S3_BUCKET`、既定`devuntu`)は無ければ自動作成される。Content-Type は`manifest.json`の値で復元するため、配信側(`src/app/api/upload/[filename]/route.ts`)のストレージ側フォールバックもそのまま働く。
+バケット(`S3_BUCKET`、既定`devuntu`)は無ければ自動作成される。Content-Type は`manifest.json`の値で復元する。
 
 **DB リストアと挙動が異なる点**として、バックアップに含まれるキーを上書きするだけで、**ストレージ側にしか無いオブジェクトは削除しない**。同じキーへ何度実行しても安全なので、DB リストアとセットで実行してよい。
 

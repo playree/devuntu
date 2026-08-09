@@ -27,7 +27,7 @@ await import('dotenv/config').catch(() => {})
 
 const BUCKET = process.env.S3_BUCKET || 'devuntu'
 
-/** manifest に Content-Type が無い場合のフォールバック(移行スクリプトと同じ対応表) */
+/** manifest に Content-Type が無い場合のフォールバック */
 const CONTENT_TYPES = {
   '.webp': 'image/webp',
   '.png': 'image/png',

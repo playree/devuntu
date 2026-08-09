@@ -105,9 +105,8 @@ const main = async () => {
     }
 
     /**
-     * Content-Type を控えるのは、復元後も配信側
-     * (`src/app/api/upload/[filename]/route.ts`)のストレージ側フォールバックが
-     * 正しい型を返せるようにするため。
+     * Content-Type を控えるのは、他の S3 互換ストレージへ復元したときも
+     * オブジェクトの型を忠実に再現できるようにするため。
      */
     const manifest = {
       createdAt: new Date().toISOString(),
