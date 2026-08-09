@@ -13,9 +13,3 @@ onlyBuiltDependencies:
   - unrs-resolver
 overrides:
   sharp: '0.34.5'
-  # HeroUI 3.2.3 は tailwind-variants を 3.3.0 に固定依存しているが、3.3.0 の slots リゾルバは
-  # 単一の slots オブジェクトを使い回し、slot 関数が「最後に渡された props」を参照するリグレッションがある。
-  # HeroUI は Modal.Backdrop(variant)と Modal.Container(scroll/size)で同じ tv を別の props で呼ぶため、
-  # 再レンダリング後に variant='blur' が既定値の opaque に化ける。3.3.1 で修正済み。
-  '@heroui/styles>tailwind-variants': '^3.3.1'
-  '@heroui/react>tailwind-variants': '^3.3.1'
