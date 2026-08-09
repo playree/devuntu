@@ -22,7 +22,7 @@ export const AdminDashboardClient: FC = () => {
     <FlexCol>
       <ContentHeader icon={<Squares2X2Icon />} title={t('dashboard_manage')} />
       <div className='ml-4 flex flex-wrap gap-2'>
-        <MultiButton size='sm' variant='tertiary' icon={<PencilSquareIcon />} onPress={() => editModalState.open()}>
+        <MultiButton size='sm' variant='outline' icon={<PencilSquareIcon />} onPress={() => editModalState.open()}>
           {t('default_layout_manage')}
         </MultiButton>
       </div>

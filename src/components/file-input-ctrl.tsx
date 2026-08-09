@@ -2,10 +2,11 @@
 
 import { TrashIcon } from '@/components/icon'
 import { useLocale } from '@/locale/client'
-import { Button, ButtonProps, ErrorMessage, Label, TextField } from '@heroui/react'
+import { Button, ButtonProps, cn, ErrorMessage, Label, TextField } from '@heroui/react'
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
+import { useIsSmart } from './general/smart'
 
 export const FileInputCtrl = <
   TFieldValues extends FieldValues = FieldValues,
@@ -19,6 +20,7 @@ export const FileInputCtrl = <
   errorMessage,
   variant,
   existingUrl,
+  isSmart,
 }: { variant: ButtonProps['variant'] } & {
   control: Control<TFieldValues>
   name: TName
@@ -27,6 +29,7 @@ export const FileInputCtrl = <
   isRequired?: boolean
   errorMessage?: string
   existingUrl?: string | null
+  isSmart?: boolean
 }) => {
   return (
     <Controller
@@ -39,6 +42,7 @@ export const FileInputCtrl = <
           isRequired={isRequired}
           errorMessage={errorMessage}
           variant={variant}
+          isSmart={isSmart}
           file={(value as unknown) instanceof File ? (value as File) : null}
           isCleared={value === null}
           existingUrl={existingUrl}
@@ -63,6 +67,7 @@ const FileField = ({
   onBlur,
   inputRef,
   variant,
+  isSmart: isSmartProp,
 }: { variant: ButtonProps['variant'] } & {
   accept: string
   label?: string
@@ -74,8 +79,10 @@ const FileField = ({
   onChange: (file: File | null | undefined) => void
   onBlur: () => void
   inputRef: React.Ref<HTMLInputElement>
+  isSmart?: boolean
 }) => {
   const { t } = useLocale()
+  const isSmart = useIsSmart(isSmartProp)
   const localRef = useRef<HTMLInputElement>(null)
 
   const [preview, setPreview] = useState<string | null>(null)
@@ -105,14 +112,21 @@ const FileField = ({
 
   return (
     <TextField isInvalid={!!errorMessage}>
-      <Label>
+      <Label className={isSmart ? 'text-xs font-light' : ''}>
         {label}
         {isRequired ? '*' : ''}
       </Label>
-      <div className='flex items-center gap-3'>
-        <div className='flex h-12 w-12 items-center'>
+      <div className={cn('flex items-center', isSmart ? 'gap-2' : 'gap-3')}>
+        <div className={cn('flex items-center', isSmart ? 'size-8' : 'size-12')}>
           {displayUrl && (
-            <Image src={displayUrl} alt='preview' width={48} height={48} unoptimized className='border object-cover' />
+            <Image
+              src={displayUrl}
+              alt='preview'
+              width={isSmart ? 32 : 48}
+              height={isSmart ? 32 : 48}
+              unoptimized
+              className='border object-cover'
+            />
           )}
         </div>
         <input
@@ -132,17 +146,33 @@ const FileField = ({
           }}
           className='hidden'
         />
-        <Button type='button' size='sm' variant={variant} onPress={() => localRef.current?.click()}>
+        <Button
+          type='button'
+          size='sm'
+          variant={variant}
+          // isSmart: MultiButton の isSmart と同じ詰め方に揃える
+          className={isSmart ? 'h-fit px-2 py-0.5' : ''}
+          onPress={() => localRef.current?.click()}
+        >
           {t('select_file')}
         </Button>
         {showRemove && (
-          <Button type='button' size='sm' variant='danger-soft' isIconOnly onPress={handleRemove}>
+          <Button
+            type='button'
+            size='sm'
+            variant='danger-soft'
+            isIconOnly
+            className={isSmart ? 'size-6' : ''}
+            onPress={handleRemove}
+          >
             <TrashIcon width={16} />
           </Button>
         )}
-        <span className='text-default-500 truncate text-sm'>{file?.name ?? t('no_file_selected')}</span>
+        <span className={cn('text-default-500 truncate', isSmart ? 'text-xs' : 'text-sm')}>
+          {file?.name ?? t('no_file_selected')}
+        </span>
       </div>
-      <ErrorMessage className='min-h-4'>{errorMessage}</ErrorMessage>
+      <ErrorMessage className={isSmart ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
     </TextField>
   )
 }

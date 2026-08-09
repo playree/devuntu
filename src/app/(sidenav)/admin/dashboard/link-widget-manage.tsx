@@ -72,7 +72,6 @@ const LinkWidgetAddModal: FC<ModalBaseProps> = ({ state, reload }) => {
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            variant='secondary'
             name='name'
             constraintSchema={scCreateLinkWidget}
             label={t('name')}
@@ -83,7 +82,6 @@ const LinkWidgetAddModal: FC<ModalBaseProps> = ({ state, reload }) => {
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            variant='secondary'
             name='url'
             constraintSchema={scCreateLinkWidget}
             label={t('url')}
@@ -93,7 +91,7 @@ const LinkWidgetAddModal: FC<ModalBaseProps> = ({ state, reload }) => {
         <div className='col-span-12'>
           <FileInputCtrl
             control={control}
-            variant='tertiary'
+            variant='outline'
             name='icon'
             label={t('icon')}
             errorMessage={fet(errors.icon)}
@@ -102,7 +100,6 @@ const LinkWidgetAddModal: FC<ModalBaseProps> = ({ state, reload }) => {
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            variant='secondary'
             name='description'
             constraintSchema={scCreateLinkWidget}
             label={t('description')}
@@ -158,7 +155,6 @@ const LinkWidgetUpdateModal: FC<ModalBaseProps & { target: LinkWidgetTarget }> =
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            variant='secondary'
             name='name'
             constraintSchema={scUpdateLinkWidget}
             label={t('name')}
@@ -169,7 +165,6 @@ const LinkWidgetUpdateModal: FC<ModalBaseProps & { target: LinkWidgetTarget }> =
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            variant='secondary'
             name='url'
             constraintSchema={scUpdateLinkWidget}
             label={t('url')}
@@ -179,7 +174,7 @@ const LinkWidgetUpdateModal: FC<ModalBaseProps & { target: LinkWidgetTarget }> =
         <div className='col-span-12'>
           <FileInputCtrl
             control={control}
-            variant='tertiary'
+            variant='outline'
             name='icon'
             label={t('icon')}
             errorMessage={fet(errors.icon)}
@@ -189,7 +184,6 @@ const LinkWidgetUpdateModal: FC<ModalBaseProps & { target: LinkWidgetTarget }> =
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            variant='secondary'
             name='description'
             constraintSchema={scUpdateLinkWidget}
             label={t('description')}

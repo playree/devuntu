@@ -165,13 +165,7 @@ export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ ui
             <FlexCol>
               <div className='text-foreground wrap-anywhere whitespace-pre-wrap'>{confirmParam?.text || ''}</div>
               {confirmParam?.requireCheck && (
-                <Checkbox
-                  id='confirm-agree'
-                  onChange={setAgree}
-                  isSelected={isAgree}
-                  variant='secondary'
-                  isDisabled={isPending}
-                >
+                <Checkbox id='confirm-agree' onChange={setAgree} isSelected={isAgree} isDisabled={isPending}>
                   <Checkbox.Content>
                     <Checkbox.Control className='size-5'>
                       <Checkbox.Indicator />

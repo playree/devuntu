@@ -1,15 +1,18 @@
 'use client'
 
 import { getFieldConstraints } from '@/lib/schema-util'
-import { ErrorMessage, Label, TextArea, TextAreaProps, TextField } from '@heroui/react'
+import { cn, ErrorMessage, Label, TextArea, TextAreaProps, TextField } from '@heroui/react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 import { z } from 'zod'
+import { useIsSmart } from './smart'
 
 type TextAreaFieldProps = TextAreaProps & {
   label?: string
   isRequired?: boolean
   isReadOnly?: boolean
   errorMessage?: string
+  isSmart?: boolean
+  className?: string
 }
 
 /**
@@ -23,18 +26,26 @@ export const TextAreaField = ({
   isReadOnly,
   errorMessage,
   rows = 6,
+  isSmart: isSmartProp,
+  className,
   ...props
 }: TextAreaFieldProps) => {
+  const isSmart = useIsSmart(isSmartProp)
   return (
     <TextField isInvalid={!!errorMessage} isReadOnly={isReadOnly} isRequired={isRequired}>
       {label && (
-        <Label>
+        <Label className={isSmart ? 'text-xs font-light' : ''}>
           {label}
           {isRequired ? '*' : ''}
         </Label>
       )}
-      <TextArea fullWidth rows={rows} {...props} />
-      <ErrorMessage className='min-h-4'>{errorMessage}</ErrorMessage>
+      <TextArea // isSmart: 既定の py-2 を py-1 へ詰める
+        fullWidth
+        rows={rows}
+        {...props}
+        className={cn(isSmart ? 'py-1' : '', className)}
+      />
+      <ErrorMessage className={isSmart ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
     </TextField>
   )
 }

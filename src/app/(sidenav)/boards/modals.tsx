@@ -52,7 +52,6 @@ export const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            variant='secondary'
             name='name'
             constraintSchema={scCreateBoard}
             label={t('name')}
@@ -63,7 +62,6 @@ export const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            variant='secondary'
             name='description'
             constraintSchema={scCreateBoard}
             label={t('description')}

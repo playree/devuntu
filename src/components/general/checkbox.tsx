@@ -1,18 +1,27 @@
 'use client'
 
-import { Checkbox, CheckboxProps } from '@heroui/react'
+import { Checkbox, CheckboxProps, cn } from '@heroui/react'
 import { FC } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
+import { useIsSmart } from './smart'
 
 /**
  * react-hook-form に依存しない Checkbox 本体。
  * isSelected / onChange / onBlur / ref はそのまま Checkbox へ透過するため、外部stateでも制御できる。
  */
-export const CheckBoxField: FC<CheckboxProps & { id: string; label: string }> = ({ id, label, ...props }) => {
+export const CheckBoxField: FC<CheckboxProps & { id: string; label: string; isSmart?: boolean }> = ({
+  id,
+  label,
+  isSmart: isSmartProp,
+  ...props
+}) => {
+  const isSmart = useIsSmart(isSmartProp)
   return (
     <Checkbox {...props} id={id}>
-      <Checkbox.Content>
-        <Checkbox.Control className='size-5'>
+      <Checkbox.Content // isSmart: ラベル相当の文言なので他フィールドのラベルと同じ体裁に揃える
+        className={isSmart ? 'gap-2 text-xs font-light' : ''}
+      >
+        <Checkbox.Control className={cn('size-5', isSmart ? 'size-4' : '')}>
           <Checkbox.Indicator />
         </Checkbox.Control>
         {label}
@@ -37,6 +46,7 @@ export const CheckBoxCtrl = <
   name: TName
   id: string
   label: string
+  isSmart?: boolean
 }) => {
   return (
     <Controller
