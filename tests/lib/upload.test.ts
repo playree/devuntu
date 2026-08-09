@@ -49,6 +49,8 @@ describe('isValidUploadKey', () => {
     ['019eef64-6cc1-78f1-8f50-1ef86986289a', '拡張子なし'],
     ['019eef64-6cc1-78f1-8f50-1ef86986289a.webp.svg', '二重拡張子'],
     ['not-a-uuid.webp', 'UUID形式でない'],
+    ['f47ac10b-58cc-4372-a567-0e02b2c3d479.webp', 'UUIDv4(版数が7でない)'],
+    ['019eef64-6cc1-78f1-cf50-1ef86986289a.webp', 'variantが不正'],
     ['019f042a-eb50-755d-b7e0-05094ab48731-mquzdfmo.webp', 'UUIDの後ろにサフィックスが付く'],
     ['019EEF64-6CC1-78F1-8F50-1EF86986289A.webp', '大文字(生成されない形式)'],
   ])('拒否する: %s (%s)', (key) => {

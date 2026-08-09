@@ -18,12 +18,11 @@ export const GET = async (_req: Request, { params }: { params: Promise<{ filenam
   }
 
   const { filename } = await params
-  // ホワイトリスト方式の形式検証。スラッシュや`..`は通らないのでパストラバーサルにならない
   if (!isValidUploadKey(filename)) {
     return new NextResponse(null, { status: 400 })
   }
 
-  // Content-Type は Attachment レコードから引く。存在しないキーはストレージを叩かずに返す
+  // 存在しないキーはストレージを叩かずに返す
   const attachment = await prisma.attachment.findUnique({
     where: { key: filename },
     select: { mimeType: true },
