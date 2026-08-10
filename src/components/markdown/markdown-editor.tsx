@@ -163,9 +163,11 @@ export const MarkdownField: FC<{
   maxLength?: number
   /** 編集面の最小行数(既定 {@link DEFAULT_MIN_ROWS}) */
   minRows?: number
-  /** ラベル行の右端に置く操作(表示モードなら編集開始、編集モードならキャンセル / 保存) */
+  /** ラベル行の右端に置く操作(表示モードの編集開始など) */
   action?: ReactNode
-}> = ({ body, isEditing, defaultValue, onChange, length, label, maxLength, minRows, action }) => {
+  /** 本文の下に右寄せで置く操作(編集モードのキャンセル / 保存など) */
+  footer?: ReactNode
+}> = ({ body, isEditing, defaultValue, onChange, length, label, maxLength, minRows, action, footer }) => {
   const { t } = useLocale()
 
   return (
@@ -174,7 +176,10 @@ export const MarkdownField: FC<{
       length={length}
       // カウンタは編集中だけ出す。ラベル行の高さは Label と action で決まるので出し入れしても動かない
       maxLength={isEditing ? maxLength : undefined}
-      action={action}
+      action={
+        // 操作が片方のモードにしか無くてもラベル行の高さを動かさないよう、ボタン 1 個分の枠を残す
+        action || footer ? <div className='flex min-h-8 items-center gap-2'>{action}</div> : undefined
+      }
       isFlat
     >
       <div
@@ -190,6 +195,7 @@ export const MarkdownField: FC<{
           <MarkdownView body={body} />
         )}
       </div>
+      {footer && <div className='mt-2 flex justify-end gap-2'>{footer}</div>}
     </EditorField>
   )
 }

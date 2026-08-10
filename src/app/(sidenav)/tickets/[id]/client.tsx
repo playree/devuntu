@@ -2,7 +2,7 @@
 
 import { MultiButton } from '@/components/general/button'
 import { DatePickerField } from '@/components/general/date-picker'
-import { FlexCol, FlexRow } from '@/components/general/flex'
+import { FlexCol } from '@/components/general/flex'
 import { Grid } from '@/components/general/grid'
 import { InputField } from '@/components/general/input'
 import { useConfirmModal } from '@/components/general/modal'
@@ -458,7 +458,7 @@ export const TicketDetailClient: FC<{
         </div>
       </Panel>
 
-      <div // 表示 / 編集で本文の位置を動かさず、差分をツールバーの有無だけにする
+      <div // 表示 / 編集で本文の位置を動かさず、差分をツールバーと本文下の操作行だけにする
         className='py-4'
       >
         <MarkdownField
@@ -473,44 +473,38 @@ export const TicketDetailClient: FC<{
           // ツールバー + 2 行が MarkdownField の最小高に収まるので、短い本文でも高さが動かない
           minRows={2}
           action={
-            isEditingContent ? (
-              <FlexRow isSmart>
-                <MultiButton
-                  size='sm'
-                  variant='danger-soft'
-                  isIconOnly
-                  icon={<XMarkIcon width={16} />}
-                  tooltip={t('cancel')}
-                  onPress={() => setEditingContent(false)}
-                ></MultiButton>
+            !isEditingContent &&
+            canEdit && (
+              <MultiButton
+                isIconOnly
+                size='sm'
+                variant='outline'
+                tooltip={t('update')}
+                onPress={() => {
+                  setContentDraft(ticket.content ?? '')
+                  setEditingContent(true)
+                }}
+              >
+                <PencilSquareIcon width={16} />
+              </MultiButton>
+            )
+          }
+          footer={
+            isEditingContent && (
+              <>
+                <MultiButton variant='ghost' size='sm' onPress={() => setEditingContent(false)}>
+                  {t('cancel')}
+                </MultiButton>
                 <MultiButton
                   size='sm'
                   icon={<CheckIcon width={16} />}
-                  tooltip={t('save')}
                   isPending={isSavingContent}
                   isDisabled={!isContentSubmittable}
                   onPress={saveContent}
                 >
                   {t('save')}
                 </MultiButton>
-              </FlexRow>
-            ) : (
-              canEdit && (
-                <FlexRow isSmart>
-                  <MultiButton
-                    isIconOnly
-                    size='sm'
-                    variant='outline'
-                    tooltip={t('update')}
-                    onPress={() => {
-                      setContentDraft(ticket.content ?? '')
-                      setEditingContent(true)
-                    }}
-                  >
-                    <PencilSquareIcon width={16} />
-                  </MultiButton>
-                </FlexRow>
-              )
+              </>
             )
           }
         />

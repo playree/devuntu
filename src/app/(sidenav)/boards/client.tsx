@@ -49,6 +49,7 @@ export const BoardsClient: FC = () => {
           <SwitchField // 既定ではアーカイブ済みを隠す。状態は setFilter が持つので useState は置かない
             id='show-archived'
             label={t('show_archived')}
+            isSmart
             onChange={(isSelected) => list.setFilter({ showArchived: isSelected ? '1' : '' })}
           />
         }

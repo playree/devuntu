@@ -3,15 +3,27 @@
 import { Switch, SwitchProps } from '@heroui/react'
 import { FC } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
+import { useIsSmart } from './smart'
 
 /**
  * react-hook-form に依存しない Switch 本体。
  * isSelected / onChange / onBlur / ref はそのまま Switch へ透過するため、外部stateでも制御できる。
  */
-export const SwitchField: FC<SwitchProps & { id: string; label: string }> = ({ id, label, ...props }) => {
+export const SwitchField: FC<SwitchProps & { id: string; label: string; isSmart?: boolean }> = ({
+  id,
+  label,
+  isSmart: isSmartProp,
+  size,
+  ...props
+}) => {
+  const isSmart = useIsSmart(isSmartProp)
   return (
-    <Switch {...props} id={id}>
-      <Switch.Content>
+    <Switch // Switchはvariantを持たずsizeで大きさを変えるため、isSmartはclassNameではなくsizeへ反映する
+      {...props}
+      size={size ?? (isSmart ? 'md' : 'lg')}
+      id={id}
+    >
+      <Switch.Content className={isSmart ? 'gap-2 text-sm' : 'text-md'}>
         <Switch.Control>
           <Switch.Thumb />
         </Switch.Control>
@@ -37,6 +49,7 @@ export const SwitchCtrl = <
   name: TName
   id: string
   label: string
+  isSmart?: boolean
 }) => {
   return (
     <Controller
