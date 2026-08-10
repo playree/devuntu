@@ -218,8 +218,9 @@ export const TicketDetailClient: FC<{
     try {
       await parseAction(patchTicket({ id, content: contentDraft }))
       notify.success(t('msg_saved'))
-      setEditingContent(false)
+      // 表示モードへ戻すのはサーバー値が届いた後。先に戻すと旧本文が一瞬見える
       await refreshAll()
+      setEditingContent(false)
     } catch {
       // エラー表示は parseAction 側で済んでいる。編集中の本文を失わせないため編集状態は維持する
     } finally {

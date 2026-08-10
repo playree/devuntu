@@ -46,8 +46,9 @@ const CommentItem: FC<{ comment: Comment; canDelete: boolean; refresh: () => Pro
     try {
       await parseAction(updateTicketComment({ id: comment.id, content: draft }))
       notify.success(t('msg_saved'))
-      setEditing(false)
+      // 表示モードへ戻すのはサーバー値が届いた後。先に戻すと旧本文が一瞬見える
       await refresh()
+      setEditing(false)
     } catch {
       // エラー表示は parseAction 側で済んでいる。入力中の内容を失わせないため編集状態は維持する
     } finally {

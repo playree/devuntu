@@ -270,6 +270,19 @@
   outline: none;
 }
 
+/* MDXEditor のポップアップ(ツールバーのプルダウン・リンク/画像ダイアログ)の重なり順。
+ *
+ * MDXEditor は Portal 先のコンテナを overlayContainer(既定は document.body)直下に作り、
+ * style.css で z-index: 2 を与える。body 直下だと SideDrawer(z-30)の下に潜って見えなくなるため、
+ * ドロワーより上・HeroUI のオーバーレイ(z-50)より下に置き直す。
+ *
+ * style.css はレイヤー無しで読み込まれるため、上と同じ理由で @layer の外に書く。
+ * 読み込み順にも依存しないよう、要素型を足して style.css 側(クラスのみ)より特異性を高くする。
+ */
+div.mdxeditor-popup-container {
+  z-index: 40;
+}
+
 .mdxeditor.dark-theme,
 .mdxeditor-popup-container.dark-theme {
   /* 素の値は white 固定。ツールバー(--baseBg = slate-3)より 1 段明るい slate-4 にして、
