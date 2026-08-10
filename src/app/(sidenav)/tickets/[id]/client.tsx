@@ -443,6 +443,11 @@ export const TicketDetailClient: FC<{
           <span>
             {t('updated_at')} <span className='font-mono'>{dayformat(ticket.updatedAt, 'tz-simple', tz)}</span>
           </span>
+          {ticket.completedAt && (
+            <span>
+              {t('completed_at')} <span className='font-mono'>{dayformat(ticket.completedAt, 'tz-simple', tz)}</span>
+            </span>
+          )}
           {ticket.canDelete && (
             <MultiButton
               isIconOnly

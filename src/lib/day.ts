@@ -71,8 +71,13 @@ export const isValidTimezone = (tz: string): boolean => {
  *
  * `date` はチケットの期日のように「日付のみ」を意味する値を扱うための書式。
  * UTC 0:00 で保存されているため、タイムゾーン変換をせず UTC のまま日付として出す。
+ * `tz-minute` はかんばんのカードのように横幅が限られる場所向けに秒を落としたもの。
  */
-export const dayformat = (date: Dayjs | Date | null, format?: 'tz-simple' | 'date', tz: string = DEFAULT_TZ) => {
+export const dayformat = (
+  date: Dayjs | Date | null,
+  format?: 'tz-simple' | 'tz-minute' | 'date',
+  tz: string = DEFAULT_TZ,
+) => {
   if (!date) {
     return ''
   }
@@ -80,6 +85,8 @@ export const dayformat = (date: Dayjs | Date | null, format?: 'tz-simple' | 'dat
   switch (format) {
     case 'tz-simple':
       return dayjs(date).tz(tz).format('YYYY-MM-DD HH:mm:ss')
+    case 'tz-minute':
+      return dayjs(date).tz(tz).format('YYYY-MM-DD HH:mm')
     case 'date':
       return dayjs(date).utc().format('YYYY-MM-DD')
   }

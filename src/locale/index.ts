@@ -46,6 +46,7 @@ export type LocaleItemBase =
   | 'clear'
   | 'close'
   | 'comment'
+  | 'completed_at'
   | 'confirm_archive'
   | 'confirm_deletion'
   | 'confirmed'

@@ -11,11 +11,14 @@
 
 import type { Prisma } from '@/generated/prisma/client'
 import type { BoardKind, TicketStatus } from '@/generated/prisma/enums'
+import { nowDate } from './day'
 import { errInvalidOperation } from './error'
 import { prisma } from './prisma'
 import {
   evaluateTicketAccess,
   insertAt,
+  kanbanDoneSince,
+  kanbanLaneWhere,
   PRIVATE_BOARD_NAME,
   reindexLane,
   resolveBoardRole,
@@ -488,6 +491,9 @@ export const getTicketMentionCandidates = async (
  *
  * `index` を省略すると移動先レーンの末尾へ入る。
  * レーン内は 0..n-1 の連番へ再採番する(行ごとに異なる値なので updateMany は使えない)。
+ *
+ * 採番の対象は盤面に表示されるカードだけ。かんばんに出ない古い完了カードは読まず order も触らないので、
+ * クライアントが送る index(盤面に見えているカードだけを数えた位置)とそのまま基準が揃う。
  */
 export const moveTicketToLane = async (
   tx: Prisma.TransactionClient,
@@ -495,7 +501,7 @@ export const moveTicketToLane = async (
 ): Promise<{ id: string; status: TicketStatus; order: number }> => {
   // レーンは「同一ボード + 同一ステータス」で決まる
   const lane = await tx.ticket.findMany({
-    where: { boardId: access.boardId, status },
+    where: kanbanLaneWhere(access.boardId, status, kanbanDoneSince(nowDate())),
     select: { id: true, order: true },
     orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
   })
@@ -508,7 +514,15 @@ export const moveTicketToLane = async (
   // 移動対象は status も変わるので 1 回の update にまとめる
   const moved = ordered.find(({ id }) => id === access.ticketId)
   const movedOrder = moved?.order ?? position
-  await tx.ticket.update({ where: { id: access.ticketId }, data: { status, order: movedOrder } })
+  await tx.ticket.update({
+    where: { id: access.ticketId },
+    data: {
+      status,
+      order: movedOrder,
+      // 同一レーン内の並べ替えでは完了日時を書き換えない
+      ...(access.status !== status && { completedAt: status === 'done' ? nowDate() : null }),
+    },
+  })
 
   // MAX_KANBAN_CARDS(500)まで入りうるレーンで毎回全行を UPDATE しないよう、order が変わる行だけ触る
   for (const { id, order } of ordered) {

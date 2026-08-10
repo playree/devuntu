@@ -2,17 +2,20 @@
 
 import { safeAuthAction } from '@/lib/action-server'
 import { assertBoardAccess, assertTicketAccess, isAdminActor, moveTicketToLane } from '@/lib/board'
+import { nowDate } from '@/lib/day'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { scMoveTicket, scUUID } from '@/lib/schema'
-import { groupByLane, MAX_KANBAN_CARDS } from '@/lib/task'
+import { groupByLane, kanbanDoneSince, kanbanTicketWhere, MAX_KANBAN_CARDS } from '@/lib/task'
 
 /**
  * かんばん表示用のボード + レーン別カード
  *
  * カードの並びは `moveTicketToLane` がレーン内順序を読むときの orderBy と必ず一致させること。
  * ズレるとクライアントが渡す index とサーバーが認識するレーン内位置が食い違う。
+ * 表示対象の条件(古い完了を落とす)も同様で、`moveTicketToLane` 側は同じ条件の
+ * `kanbanLaneWhere`(レーン単位)で採番対象を絞っている。
  */
 export const getBoardKanban = safeAuthAction
   .metadata({ actionName: 'getBoardKanban', role: 'user' })
@@ -29,13 +32,15 @@ export const getBoardKanban = safeAuthAction
     }
 
     const tickets = await prisma.ticket.findMany({
-      where: { boardId: id },
+      // 完了から KANBAN_DONE_VISIBLE_DAYS を過ぎたカードは盤面から落とす(一覧 /tickets からは引き続き見える)
+      where: kanbanTicketWhere(id, kanbanDoneSince(nowDate())),
       select: {
         id: true,
         title: true,
         status: true,
         priority: true,
         dueDate: true,
+        completedAt: true,
         assigneeId: true,
         assignee: { select: { name: true, image: true } },
         tags: {

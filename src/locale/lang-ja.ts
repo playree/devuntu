@@ -48,6 +48,7 @@ export const ja: DefaultLocaleItems = {
   clear: 'クリア',
   close: '閉じる',
   comment: 'コメント',
+  completed_at: '完了日時',
   confirm_archive: 'アーカイブ確認',
   confirm_deletion: '削除確認',
   confirmed: '確認した',

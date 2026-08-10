@@ -21,6 +21,9 @@ import {
   groupByLane,
   insertAt,
   isKanbanFilterActive,
+  kanbanDoneSince,
+  kanbanLaneWhere,
+  kanbanTicketWhere,
   laneDropId,
   matchesKanbanFilter,
   nextOrder,
@@ -442,6 +445,7 @@ describe('applyLaneMove: DnD 結果をレーンへ適用する', () => {
     const lanes = makeLanes({ todo: ['t1', 't2'], doing: ['d1'] })
     const res = applyLaneMove(lanes, { ticketId: 't1', target: { kind: 'lane', status: 'doing' } })
     expect(res).not.toBeNull()
+    expect(res?.from, '移動元のレーン').toBe('todo')
     expect(res?.status).toBe('doing')
     expect(res?.index, '末尾の位置').toBe(1)
     expect(ids(res!.lanes.doing)).toEqual(['d1', 't1'])
@@ -475,6 +479,7 @@ describe('applyLaneMove: DnD 結果をレーンへ適用する', () => {
     const res = applyLaneMove(lanes, { ticketId: 'c', target: { kind: 'card', ticketId: 'a' } })
     expect(ids(res!.lanes.todo)).toEqual(['c', 'a', 'b'])
     expect(res?.index).toBe(0)
+    expect(res?.from, '同一レーン内なら from と status は同じ').toBe(res?.status)
   })
 
   it('同一レーン内で下へ移動する', () => {
@@ -515,6 +520,35 @@ describe('applyLaneMove: DnD 結果をレーンへ適用する', () => {
   it('存在しないドロップ先カードは null', () => {
     const lanes = makeLanes({ todo: ['a'] })
     expect(applyLaneMove(lanes, { ticketId: 'a', target: { kind: 'card', ticketId: 'zzz' } })).toBeNull()
+  })
+})
+
+describe('kanbanDoneSince / kanbanTicketWhere / kanbanLaneWhere: かんばんの表示対象', () => {
+  const now = new Date('2026-08-10T12:00:00.000Z')
+  const since = kanbanDoneSince(now)
+  // 完了日時なし(この機能の導入前に完了したチケット)も表示し続ける
+  const doneVisible = { OR: [{ completedAt: null }, { completedAt: { gte: since } }] }
+
+  it('表示期限は現在から KANBAN_DONE_VISIBLE_DAYS 日前', () => {
+    expect(since.toISOString()).toBe('2026-07-11T12:00:00.000Z')
+    expect(kanbanDoneSince(now, 1).toISOString(), '日数は上書きできる').toBe('2026-08-09T12:00:00.000Z')
+  })
+
+  it('ボード単位の where 断片は「完了以外 / 表示対象の完了」の OR になる', () => {
+    expect(kanbanTicketWhere('b1', since)).toEqual({
+      boardId: 'b1',
+      OR: [{ status: { not: 'done' } }, doneVisible],
+    })
+  })
+
+  it('done レーンの where 断片は表示期限で絞る', () => {
+    expect(kanbanLaneWhere('b1', 'done', since)).toEqual({ boardId: 'b1', status: 'done', ...doneVisible })
+  })
+
+  it('done 以外のレーンの where 断片はボード + ステータスのみ', () => {
+    for (const status of TICKET_STATUSES.filter((s) => s !== 'done')) {
+      expect(kanbanLaneWhere('b1', status, since), status).toEqual({ boardId: 'b1', status })
+    }
   })
 })
 
