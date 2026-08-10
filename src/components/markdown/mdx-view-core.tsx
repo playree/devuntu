@@ -8,13 +8,14 @@ import {
   linkPlugin,
   listsPlugin,
   MDXEditor,
+  MDXEditorMethods,
   quotePlugin,
   tablePlugin,
   thematicBreakPlugin,
 } from '@mdxeditor/editor'
 import '@mdxeditor/editor/style.css'
 import { useTheme } from 'next-themes'
-import { FC, MouseEvent, useMemo } from 'react'
+import { FC, MouseEvent, useEffect, useMemo, useRef } from 'react'
 import { sanitizeHtmlPlugin } from './mdx-sanitize-plugin'
 import { readOnlyCodeBlockDescriptor, readOnlyTablePlugin } from './mdx-view-plugins'
 
@@ -52,6 +53,20 @@ const openLinkInNewTab = (e: MouseEvent<HTMLDivElement>) => {
  */
 const MdxViewCore: FC<MdxViewCoreProps> = ({ markdown, onError }) => {
   const { resolvedTheme } = useTheme()
+  const editorRef = useRef<MDXEditorMethods>(null)
+  /**
+   * 反映済みの Markdown。マウント時は `markdown` prop から取り込まれるため初期値に入れておく。
+   * MDXEditor 側の値は正規化されていて prop と一致しないので、比較には prop の生の値を使う
+   */
+  const appliedRef = useRef(markdown)
+
+  // MDXEditor は markdown prop の変更を取り込まないため、明示的に差し替える
+  useEffect(() => {
+    if (appliedRef.current !== markdown) {
+      appliedRef.current = markdown
+      editorRef.current?.setMarkdown(markdown)
+    }
+  }, [markdown])
 
   const plugins = useMemo(
     () => [
@@ -77,6 +92,7 @@ const MdxViewCore: FC<MdxViewCoreProps> = ({ markdown, onError }) => {
   return (
     <div onClickCapture={openLinkInNewTab}>
       <MDXEditor
+        ref={editorRef}
         readOnly
         spellCheck={false}
         markdown={markdown}
