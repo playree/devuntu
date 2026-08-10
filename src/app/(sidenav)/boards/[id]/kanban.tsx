@@ -122,6 +122,7 @@ const KanbanCardView: FC<{
   isSelected: boolean
   onSelect: (selected: boolean) => void
 }> = ({ card, tz, isSelected, onSelect }) => {
+  const { t } = useLocale()
   const { ref: dropRef, isDropTarget } = useDroppable({ id: cardDropId(card.id), accept: DRAG_TYPE })
   const { ref: dragRef, isDragging } = useDraggable({ id: card.id, type: DRAG_TYPE, sensors: CARD_SENSORS })
 
@@ -211,12 +212,14 @@ const KanbanCardView: FC<{
                   className='flex items-center gap-0.5 text-xs text-gray-500'
                 >
                   <CheckBadgeIcon width={12} />
+                  <span className='sr-only'>{t('completed_at')}</span>
                   <span className='font-mono'>{dayformat(card.completedAt, 'tz-minute', tz)}</span>
                 </span>
               ) : (
                 card.dueDate && (
                   <span className='flex items-center gap-0.5 text-xs text-gray-500'>
                     <ClockIcon width={12} />
+                    <span className='sr-only'>{t('due_date')}</span>
                     <span className='font-mono'>{dayformat(card.dueDate, 'date')}</span>
                   </span>
                 )
@@ -224,6 +227,7 @@ const KanbanCardView: FC<{
               {card.commentCount > 0 && (
                 <span className='flex items-center gap-0.5 text-xs text-gray-500'>
                   <ChatBubbleIcon width={12} />
+                  <span className='sr-only'>{t('comment')}</span>
                   {card.commentCount}
                 </span>
               )}

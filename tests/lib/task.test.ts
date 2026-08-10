@@ -21,8 +21,8 @@ import {
   groupByLane,
   insertAt,
   isKanbanFilterActive,
-  isKanbanVisible,
   kanbanDoneSince,
+  kanbanLaneWhere,
   kanbanTicketWhere,
   laneDropId,
   matchesKanbanFilter,
@@ -523,43 +523,32 @@ describe('applyLaneMove: DnD 結果をレーンへ適用する', () => {
   })
 })
 
-describe('kanbanDoneSince / isKanbanVisible / kanbanTicketWhere: かんばんの表示対象', () => {
+describe('kanbanDoneSince / kanbanTicketWhere / kanbanLaneWhere: かんばんの表示対象', () => {
   const now = new Date('2026-08-10T12:00:00.000Z')
   const since = kanbanDoneSince(now)
+  // 完了日時なし(この機能の導入前に完了したチケット)も表示し続ける
+  const doneVisible = { OR: [{ completedAt: null }, { completedAt: { gte: since } }] }
 
   it('表示期限は現在から KANBAN_DONE_VISIBLE_DAYS 日前', () => {
     expect(since.toISOString()).toBe('2026-07-11T12:00:00.000Z')
     expect(kanbanDoneSince(now, 1).toISOString(), '日数は上書きできる').toBe('2026-08-09T12:00:00.000Z')
   })
 
-  it('完了から日が浅いチケットは表示する', () => {
-    expect(isKanbanVisible({ status: 'done', completedAt: new Date('2026-08-01T00:00:00.000Z') }, since)).toBe(true)
-    expect(isKanbanVisible({ status: 'done', completedAt: since }, since), '境界は含む').toBe(true)
-  })
-
-  it('表示期限より前に完了したチケットは落とす', () => {
-    expect(isKanbanVisible({ status: 'done', completedAt: new Date('2026-07-11T11:59:59.000Z') }, since)).toBe(false)
-  })
-
-  it('完了日時を持たない完了は表示し続ける(この機能の導入前に完了したチケット)', () => {
-    expect(isKanbanVisible({ status: 'done', completedAt: null }, since)).toBe(true)
-  })
-
-  it('完了以外は完了日時に関わらず表示する', () => {
-    for (const status of TICKET_STATUSES.filter((s) => s !== 'done')) {
-      expect(isKanbanVisible({ status, completedAt: null }, since), status).toBe(true)
-      expect(
-        isKanbanVisible({ status, completedAt: new Date('2020-01-01T00:00:00.000Z') }, since),
-        `${status} は古い completedAt が残っていても表示する`,
-      ).toBe(true)
-    }
-  })
-
-  it('where 断片は「完了以外 / 完了日時なし / 期限内の完了」の OR になる', () => {
+  it('ボード単位の where 断片は「完了以外 / 表示対象の完了」の OR になる', () => {
     expect(kanbanTicketWhere('b1', since)).toEqual({
       boardId: 'b1',
-      OR: [{ status: { not: 'done' } }, { completedAt: null }, { completedAt: { gte: since } }],
+      OR: [{ status: { not: 'done' } }, doneVisible],
     })
+  })
+
+  it('done レーンの where 断片は表示期限で絞る', () => {
+    expect(kanbanLaneWhere('b1', 'done', since)).toEqual({ boardId: 'b1', status: 'done', ...doneVisible })
+  })
+
+  it('done 以外のレーンの where 断片はボード + ステータスのみ', () => {
+    for (const status of TICKET_STATUSES.filter((s) => s !== 'done')) {
+      expect(kanbanLaneWhere('b1', status, since), status).toEqual({ boardId: 'b1', status })
+    }
   })
 })
 

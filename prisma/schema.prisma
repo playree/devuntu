@@ -519,7 +519,8 @@ model Ticket {
   // status を done にした時刻。done から他のステータスへ戻すと null に戻す
   completedAt DateTime?
   tags        TicketTag[]
-  // 同一レーン(boardId + status)内の表示順。昇順・0始まりの連番で保持
+  // 同一レーン(boardId + status)内の表示順。昇順・0始まりの連番で保持する。
+  // done レーンは盤面に表示されるカードのみを連番の対象とし、表示期限を過ぎた完了の order は据え置く
   order       Int             @default(0)
   comments    TicketComment[]
   createdAt   DateTime        @default(now())

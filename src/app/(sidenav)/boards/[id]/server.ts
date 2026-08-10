@@ -14,7 +14,8 @@ import { groupByLane, kanbanDoneSince, kanbanTicketWhere, MAX_KANBAN_CARDS } fro
  *
  * カードの並びは `moveTicketToLane` がレーン内順序を読むときの orderBy と必ず一致させること。
  * ズレるとクライアントが渡す index とサーバーが認識するレーン内位置が食い違う。
- * 表示対象の条件(古い完了を落とす)も同様で、`moveTicketToLane` 側で同じ `isKanbanVisible` を使っている。
+ * 表示対象の条件(古い完了を落とす)も同様で、`moveTicketToLane` 側は同じ条件の
+ * `kanbanLaneWhere`(レーン単位)で採番対象を絞っている。
  */
 export const getBoardKanban = safeAuthAction
   .metadata({ actionName: 'getBoardKanban', role: 'user' })

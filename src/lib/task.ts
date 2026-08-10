@@ -406,16 +406,24 @@ export const kanbanDoneSince = (now: Date, days: number = KANBAN_DONE_VISIBLE_DA
   new Date(now.getTime() - days * 24 * 60 * 60 * 1000)
 
 /**
- * かんばんに表示するチケットか。
+ * 盤面に残す done の条件。
  * completedAt を持たない done(この機能の導入前に完了したチケット)は従来どおり表示し続ける。
  */
-export const isKanbanVisible = (ticket: { status: TicketStatus; completedAt: Date | null }, since: Date): boolean =>
-  ticket.status !== 'done' || ticket.completedAt === null || ticket.completedAt >= since
+const doneVisibleWhere = (since: Date): TicketWhereInput => ({
+  OR: [{ completedAt: null }, { completedAt: { gte: since } }],
+})
 
-/** `isKanbanVisible` と同じ条件の where 断片(判定を SQL とアプリの 2 箇所で二重定義しないための単一ソース) */
+/** ボード 1 枚ぶんの表示対象(盤面の取得に使う) */
 export const kanbanTicketWhere = (boardId: string, since: Date): TicketWhereInput => ({
   boardId,
-  OR: [{ status: { not: 'done' } }, { completedAt: null }, { completedAt: { gte: since } }],
+  OR: [{ status: { not: 'done' } }, doneVisibleWhere(since)],
+})
+
+/** レーン 1 本(boardId + status)の表示対象。done 以外は表示期限による絞り込みが要らない */
+export const kanbanLaneWhere = (boardId: string, status: TicketStatus, since: Date): TicketWhereInput => ({
+  boardId,
+  status,
+  ...(status === 'done' ? doneVisibleWhere(since) : {}),
 })
 
 /* -------------------------------------------------------------------------------------------------

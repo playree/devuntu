@@ -17,8 +17,8 @@ import { prisma } from './prisma'
 import {
   evaluateTicketAccess,
   insertAt,
-  isKanbanVisible,
   kanbanDoneSince,
+  kanbanLaneWhere,
   PRIVATE_BOARD_NAME,
   reindexLane,
   resolveBoardRole,
@@ -491,6 +491,9 @@ export const getTicketMentionCandidates = async (
  *
  * `index` を省略すると移動先レーンの末尾へ入る。
  * レーン内は 0..n-1 の連番へ再採番する(行ごとに異なる値なので updateMany は使えない)。
+ *
+ * 採番の対象は盤面に表示されるカードだけ。かんばんに出ない古い完了カードは読まず order も触らないので、
+ * クライアントが送る index(盤面に見えているカードだけを数えた位置)とそのまま基準が揃う。
  */
 export const moveTicketToLane = async (
   tx: Prisma.TransactionClient,
@@ -498,22 +501,13 @@ export const moveTicketToLane = async (
 ): Promise<{ id: string; status: TicketStatus; order: number }> => {
   // レーンは「同一ボード + 同一ステータス」で決まる
   const lane = await tx.ticket.findMany({
-    where: { boardId: access.boardId, status },
-    select: { id: true, order: true, completedAt: true },
+    where: kanbanLaneWhere(access.boardId, status, kanbanDoneSince(nowDate())),
+    select: { id: true, order: true },
     orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
   })
 
-  /**
-   * クライアントが送る index は「盤面に見えているカード」だけを数えた位置。
-   * かんばんに出ない古い完了カードを末尾へ寄せてから採番することで、両者の基準を揃える
-   * (見えないカードなので末尾へ動いても表示には影響しない)。
-   */
-  const since = kanbanDoneSince(nowDate())
-  const isVisible = ({ completedAt }: { completedAt: Date | null }) => isKanbanVisible({ status, completedAt }, since)
-  const visibleFirst = [...lane.filter(isVisible), ...lane.filter((ticket) => !isVisible(ticket))]
-
   const currentOrder = new Map(lane.map(({ id, order }) => [id, order]))
-  const rest = visibleFirst.map((ticket) => ticket.id).filter((id) => id !== access.ticketId)
+  const rest = lane.map((ticket) => ticket.id).filter((id) => id !== access.ticketId)
   const position = index ?? rest.length
   const ordered = reindexLane(insertAt(rest, access.ticketId, position))
 
