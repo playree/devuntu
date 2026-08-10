@@ -458,9 +458,7 @@ export const TicketDetailClient: FC<{
         </div>
       </Panel>
 
-      <div // 表示 / 編集で本文の位置を動かさず、差分をツールバーと本文下の操作行だけにする
-        className='py-4'
-      >
+      <div className='py-4'>
         <MarkdownField
           body={ticket.content ?? ''}
           isEditing={isEditingContent}
@@ -492,7 +490,12 @@ export const TicketDetailClient: FC<{
           footer={
             isEditingContent && (
               <>
-                <MultiButton variant='ghost' size='sm' onPress={() => setEditingContent(false)}>
+                <MultiButton
+                  variant='ghost'
+                  size='sm'
+                  isDisabled={isSavingContent}
+                  onPress={() => setEditingContent(false)}
+                >
                   {t('cancel')}
                 </MultiButton>
                 <MultiButton

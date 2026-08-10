@@ -5,10 +5,7 @@ import { FC } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 import { useIsSmart } from './smart'
 
-/**
- * react-hook-form に依存しない Switch 本体。
- * isSelected / onChange / onBlur / ref はそのまま Switch へ透過するため、外部stateでも制御できる。
- */
+/** react-hook-form に依存しない Switch 本体 */
 export const SwitchField: FC<SwitchProps & { id: string; label: string; isSmart?: boolean }> = ({
   id,
   label,
