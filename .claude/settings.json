@@ -1,6 +1,5 @@
 {
   "enabledMcpjsonServers": ["playwright"],
-  "remoteControlAtStartup": true,
   "permissions": {
     "allow": [
       "Bash(docker compose up -d db)",
