@@ -516,6 +516,8 @@ model Ticket {
   status      TicketStatus    @default(todo)
   priority    TicketPriority  @default(medium)
   dueDate     DateTime? // 日付のみの概念。UTC 0:00 で保存する
+  // status を done にした時刻。done から他のステータスへ戻すと null に戻す
+  completedAt DateTime?
   tags        TicketTag[]
   // 同一レーン(boardId + status)内の表示順。昇順・0始まりの連番で保持
   order       Int             @default(0)

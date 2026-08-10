@@ -21,6 +21,9 @@ import {
   groupByLane,
   insertAt,
   isKanbanFilterActive,
+  isKanbanVisible,
+  kanbanDoneSince,
+  kanbanTicketWhere,
   laneDropId,
   matchesKanbanFilter,
   nextOrder,
@@ -442,6 +445,7 @@ describe('applyLaneMove: DnD 結果をレーンへ適用する', () => {
     const lanes = makeLanes({ todo: ['t1', 't2'], doing: ['d1'] })
     const res = applyLaneMove(lanes, { ticketId: 't1', target: { kind: 'lane', status: 'doing' } })
     expect(res).not.toBeNull()
+    expect(res?.from, '移動元のレーン').toBe('todo')
     expect(res?.status).toBe('doing')
     expect(res?.index, '末尾の位置').toBe(1)
     expect(ids(res!.lanes.doing)).toEqual(['d1', 't1'])
@@ -475,6 +479,7 @@ describe('applyLaneMove: DnD 結果をレーンへ適用する', () => {
     const res = applyLaneMove(lanes, { ticketId: 'c', target: { kind: 'card', ticketId: 'a' } })
     expect(ids(res!.lanes.todo)).toEqual(['c', 'a', 'b'])
     expect(res?.index).toBe(0)
+    expect(res?.from, '同一レーン内なら from と status は同じ').toBe(res?.status)
   })
 
   it('同一レーン内で下へ移動する', () => {
@@ -515,6 +520,46 @@ describe('applyLaneMove: DnD 結果をレーンへ適用する', () => {
   it('存在しないドロップ先カードは null', () => {
     const lanes = makeLanes({ todo: ['a'] })
     expect(applyLaneMove(lanes, { ticketId: 'a', target: { kind: 'card', ticketId: 'zzz' } })).toBeNull()
+  })
+})
+
+describe('kanbanDoneSince / isKanbanVisible / kanbanTicketWhere: かんばんの表示対象', () => {
+  const now = new Date('2026-08-10T12:00:00.000Z')
+  const since = kanbanDoneSince(now)
+
+  it('表示期限は現在から KANBAN_DONE_VISIBLE_DAYS 日前', () => {
+    expect(since.toISOString()).toBe('2026-07-11T12:00:00.000Z')
+    expect(kanbanDoneSince(now, 1).toISOString(), '日数は上書きできる').toBe('2026-08-09T12:00:00.000Z')
+  })
+
+  it('完了から日が浅いチケットは表示する', () => {
+    expect(isKanbanVisible({ status: 'done', completedAt: new Date('2026-08-01T00:00:00.000Z') }, since)).toBe(true)
+    expect(isKanbanVisible({ status: 'done', completedAt: since }, since), '境界は含む').toBe(true)
+  })
+
+  it('表示期限より前に完了したチケットは落とす', () => {
+    expect(isKanbanVisible({ status: 'done', completedAt: new Date('2026-07-11T11:59:59.000Z') }, since)).toBe(false)
+  })
+
+  it('完了日時を持たない完了は表示し続ける(この機能の導入前に完了したチケット)', () => {
+    expect(isKanbanVisible({ status: 'done', completedAt: null }, since)).toBe(true)
+  })
+
+  it('完了以外は完了日時に関わらず表示する', () => {
+    for (const status of TICKET_STATUSES.filter((s) => s !== 'done')) {
+      expect(isKanbanVisible({ status, completedAt: null }, since), status).toBe(true)
+      expect(
+        isKanbanVisible({ status, completedAt: new Date('2020-01-01T00:00:00.000Z') }, since),
+        `${status} は古い completedAt が残っていても表示する`,
+      ).toBe(true)
+    }
+  })
+
+  it('where 断片は「完了以外 / 完了日時なし / 期限内の完了」の OR になる', () => {
+    expect(kanbanTicketWhere('b1', since)).toEqual({
+      boardId: 'b1',
+      OR: [{ status: { not: 'done' } }, { completedAt: null }, { completedAt: { gte: since } }],
+    })
   })
 })
 

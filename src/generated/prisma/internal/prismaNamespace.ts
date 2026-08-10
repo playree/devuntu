@@ -2844,6 +2844,7 @@ export const TicketScalarFieldEnum = {
   status: 'status',
   priority: 'priority',
   dueDate: 'dueDate',
+  completedAt: 'completedAt',
   order: 'order',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'

@@ -35,6 +35,9 @@ export type TicketSortColumn = (typeof TICKET_SORT_COLUMNS)[number]
 /** かんばん 1 ボードで返すカードの上限(レーン単位ではなくボード全体) */
 export const MAX_KANBAN_CARDS = 500
 
+/** 完了チケットをかんばんに表示し続ける日数。これを過ぎた done は盤面から落とす */
+export const KANBAN_DONE_VISIBLE_DAYS = 30
+
 export const isTicketStatus = (value: string): value is TicketStatus =>
   (TICKET_STATUSES as readonly string[]).includes(value)
 
@@ -395,6 +398,27 @@ export const resolveMentionUserIds = (names: string[], candidates: { id: string;
 }
 
 /* -------------------------------------------------------------------------------------------------
+ * かんばんの表示対象
+ * -----------------------------------------------------------------------------------------------*/
+
+/** 完了チケットの表示期限。かんばんに出すのは `since` 以降に完了したものだけ */
+export const kanbanDoneSince = (now: Date, days: number = KANBAN_DONE_VISIBLE_DAYS): Date =>
+  new Date(now.getTime() - days * 24 * 60 * 60 * 1000)
+
+/**
+ * かんばんに表示するチケットか。
+ * completedAt を持たない done(この機能の導入前に完了したチケット)は従来どおり表示し続ける。
+ */
+export const isKanbanVisible = (ticket: { status: TicketStatus; completedAt: Date | null }, since: Date): boolean =>
+  ticket.status !== 'done' || ticket.completedAt === null || ticket.completedAt >= since
+
+/** `isKanbanVisible` と同じ条件の where 断片(判定を SQL とアプリの 2 箇所で二重定義しないための単一ソース) */
+export const kanbanTicketWhere = (boardId: string, since: Date): TicketWhereInput => ({
+  boardId,
+  OR: [{ status: { not: 'done' } }, { completedAt: null }, { completedAt: { gte: since } }],
+})
+
+/* -------------------------------------------------------------------------------------------------
  * かんばんの並び替え
  * -----------------------------------------------------------------------------------------------*/
 
@@ -467,7 +491,7 @@ const sameOrder = (a: { id: string }[], b: { id: string }[]): boolean =>
 export const applyLaneMove = <T extends KanbanCardLite>(
   lanes: LaneMap<T>,
   { ticketId, target }: { ticketId: string; target: DropTarget },
-): { lanes: LaneMap<T>; status: TicketStatus; index: number } | null => {
+): { lanes: LaneMap<T>; from: TicketStatus; status: TicketStatus; index: number } | null => {
   if (target.kind === 'card' && target.ticketId === ticketId) {
     // 自分自身へのドロップ
     return null
@@ -508,7 +532,7 @@ export const applyLaneMove = <T extends KanbanCardLite>(
   }
   nextLanes[to] = nextTo
 
-  return { lanes: nextLanes, status: to, index }
+  return { lanes: nextLanes, from, status: to, index }
 }
 
 /* -------------------------------------------------------------------------------------------------

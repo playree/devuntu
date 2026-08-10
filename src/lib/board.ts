@@ -11,11 +11,14 @@
 
 import type { Prisma } from '@/generated/prisma/client'
 import type { BoardKind, TicketStatus } from '@/generated/prisma/enums'
+import { nowDate } from './day'
 import { errInvalidOperation } from './error'
 import { prisma } from './prisma'
 import {
   evaluateTicketAccess,
   insertAt,
+  isKanbanVisible,
+  kanbanDoneSince,
   PRIVATE_BOARD_NAME,
   reindexLane,
   resolveBoardRole,
@@ -496,19 +499,36 @@ export const moveTicketToLane = async (
   // レーンは「同一ボード + 同一ステータス」で決まる
   const lane = await tx.ticket.findMany({
     where: { boardId: access.boardId, status },
-    select: { id: true, order: true },
+    select: { id: true, order: true, completedAt: true },
     orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
   })
 
+  /**
+   * クライアントが送る index は「盤面に見えているカード」だけを数えた位置。
+   * かんばんに出ない古い完了カードを末尾へ寄せてから採番することで、両者の基準を揃える
+   * (見えないカードなので末尾へ動いても表示には影響しない)。
+   */
+  const since = kanbanDoneSince(nowDate())
+  const isVisible = ({ completedAt }: { completedAt: Date | null }) => isKanbanVisible({ status, completedAt }, since)
+  const visibleFirst = [...lane.filter(isVisible), ...lane.filter((ticket) => !isVisible(ticket))]
+
   const currentOrder = new Map(lane.map(({ id, order }) => [id, order]))
-  const rest = lane.map((ticket) => ticket.id).filter((id) => id !== access.ticketId)
+  const rest = visibleFirst.map((ticket) => ticket.id).filter((id) => id !== access.ticketId)
   const position = index ?? rest.length
   const ordered = reindexLane(insertAt(rest, access.ticketId, position))
 
   // 移動対象は status も変わるので 1 回の update にまとめる
   const moved = ordered.find(({ id }) => id === access.ticketId)
   const movedOrder = moved?.order ?? position
-  await tx.ticket.update({ where: { id: access.ticketId }, data: { status, order: movedOrder } })
+  await tx.ticket.update({
+    where: { id: access.ticketId },
+    data: {
+      status,
+      order: movedOrder,
+      // 同一レーン内の並べ替えでは完了日時を書き換えない
+      ...(access.status !== status && { completedAt: status === 'done' ? nowDate() : null }),
+    },
+  })
 
   // MAX_KANBAN_CARDS(500)まで入りうるレーンで毎回全行を UPDATE しないよう、order が変わる行だけ触る
   for (const { id, order } of ordered) {

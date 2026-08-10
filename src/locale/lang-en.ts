@@ -48,6 +48,7 @@ export const en: LocaleItems = {
   clear: 'Clear',
   close: 'Close',
   comment: 'Comment',
+  completed_at: 'Completed At',
   confirm_archive: 'Confirm archive',
   confirm_deletion: 'Confirm deletion',
   confirmed: 'Confirmed',

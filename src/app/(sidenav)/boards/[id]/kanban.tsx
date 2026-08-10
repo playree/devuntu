@@ -2,7 +2,7 @@
 
 import { UserAvatar } from '@/components/general/avatar'
 import { MultiButton } from '@/components/general/button'
-import { CalendarDaysIcon, ChatBubbleIcon, PlusIcon } from '@/components/icon'
+import { ChatBubbleIcon, CheckBadgeIcon, ClockIcon, PlusIcon } from '@/components/icon'
 import {
   CARD_BACKDROP_CLASS,
   PriorityBar,
@@ -117,9 +117,11 @@ const SELECT_PILL_CLASS = 'h-full w-4 rounded-full before:rounded-full'
 /** カード 1 枚。レーン移動は DnD、それ以外の変更は選択して詳細パネルから行う */
 const KanbanCardView: FC<{
   card: KanbanCard
+  /** 完了日時の表示に使うユーザーのタイムゾーン。カードごとにセッションを購読しないよう上から渡す */
+  tz: string
   isSelected: boolean
   onSelect: (selected: boolean) => void
-}> = ({ card, isSelected, onSelect }) => {
+}> = ({ card, tz, isSelected, onSelect }) => {
   const { ref: dropRef, isDropTarget } = useDroppable({ id: cardDropId(card.id), accept: DRAG_TYPE })
   const { ref: dragRef, isDragging } = useDraggable({ id: card.id, type: DRAG_TYPE, sensors: CARD_SENSORS })
 
@@ -204,11 +206,20 @@ const KanbanCardView: FC<{
                   <span className='truncate'>{card.assigneeName}</span>
                 </span>
               )}
-              {card.dueDate && (
-                <span className='flex items-center gap-0.5 text-xs text-gray-500'>
-                  <CalendarDaysIcon width={12} />
-                  <span className='font-mono'>{dayformat(card.dueDate, 'date')}</span>
+              {card.completedAt ? (
+                <span // 完了したカードで見たいのは期日ではなく完了日時なので、両方は出さず置き換える
+                  className='flex items-center gap-0.5 text-xs text-gray-500'
+                >
+                  <CheckBadgeIcon width={12} />
+                  <span className='font-mono'>{dayformat(card.completedAt, 'tz-minute', tz)}</span>
                 </span>
+              ) : (
+                card.dueDate && (
+                  <span className='flex items-center gap-0.5 text-xs text-gray-500'>
+                    <ClockIcon width={12} />
+                    <span className='font-mono'>{dayformat(card.dueDate, 'date')}</span>
+                  </span>
+                )
               )}
               {card.commentCount > 0 && (
                 <span className='flex items-center gap-0.5 text-xs text-gray-500'>
@@ -230,11 +241,12 @@ const KanbanCardView: FC<{
 export const KanbanLane: FC<{
   status: TicketStatus
   cards: KanbanCard[]
+  tz: string
   /** 詳細パネルに表示中のチケット。未選択なら undefined */
   selectedId?: string
   onAdd: () => void
   onSelect: (ticketId: string, selected: boolean) => void
-}> = ({ status, cards, selectedId, onAdd, onSelect }) => {
+}> = ({ status, cards, tz, selectedId, onAdd, onSelect }) => {
   const { t } = useLocale()
   const { className, cardsClassName } = LANE_LAYOUT[status]
   const { ref, isDropTarget } = useDroppable({ id: laneDropId(status), accept: DRAG_TYPE })
@@ -284,6 +296,7 @@ export const KanbanLane: FC<{
           <KanbanCardView
             key={card.id}
             card={card}
+            tz={tz}
             isSelected={card.id === selectedId}
             onSelect={(selected) => onSelect(card.id, selected)}
           />

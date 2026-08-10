@@ -10,7 +10,7 @@ import {
   getBoardMemberUsers,
   getBoardsMemberUsers,
 } from '@/lib/board'
-import { dateOnlyToUtc } from '@/lib/day'
+import { dateOnlyToUtc, nowDate } from '@/lib/day'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
@@ -197,6 +197,8 @@ export const createTicket = safeAuthAction
           status,
           boardId,
           dueDate: dateOnlyToUtc(dueDate),
+          // 最初から完了で作ることもできるので、その場合はここで完了日時を入れる
+          completedAt: status === 'done' ? nowDate() : null,
           createdById: user.id,
           assigneeId: assigneeId ?? null,
           tags: { create: ids.map((tagId) => ({ tagId })) },

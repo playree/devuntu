@@ -33,6 +33,7 @@ export const getTicket = safeAuthAction
         status: true,
         priority: true,
         dueDate: true,
+        completedAt: true,
         tags: {
           select: { tag: { select: { id: true, boardId: true, name: true, color: true, order: true } } },
           orderBy: { tag: { order: 'asc' } },

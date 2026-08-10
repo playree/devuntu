@@ -35,6 +35,7 @@ import {
   MAX_KANBAN_CARDS,
   parseDropTarget,
 } from '@/lib/task'
+import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { DragDropProvider } from '@dnd-kit/react'
 import { Accordion, ButtonGroup, Chip } from '@heroui/react'
@@ -52,6 +53,7 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
   const { t } = useLocale()
   const router = useRouter()
   const boardName = useBoardName()
+  const tz = useUserTimezone()
   const addModalState = useModalState<TicketStatus>()
 
   const { data, reload, refresh, isLoading } = useActionData(() => getBoardKanban({ id: boardId }))
@@ -115,6 +117,10 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
 
     try {
       await parseAction(moveTicket({ id: ticketId, status: moved.status, index: moved.index }))
+      // 完了日時はサーバーが付け外しするので、done を出入りしたカードだけ取り直して表示を合わせる
+      if (moved.from !== moved.status && (moved.status === 'done' || moved.from === 'done')) {
+        refresh()
+      }
     } catch {
       // 手元のスナップショットへ戻すと、その間に他ユーザーが成功させた移動まで巻き戻してしまう。
       // 再取得すれば optimistic.base !== data になり楽観値も自動で破棄される
@@ -249,6 +255,7 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
               key={status}
               status={status}
               cards={visibleLanes[status]}
+              tz={tz}
               selectedId={selectedId}
               onAdd={() => addModalState.open(status)}
               onSelect={(ticketId, selected) => setSelectedId(selected ? ticketId : undefined)}
