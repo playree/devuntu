@@ -62,7 +62,11 @@ export const LANE_LAYOUT: Record<TicketStatus, { className: string; cardsClassNa
   backlog: {
     className: 'col-span-12',
     cardsClassName: cn(
-      'md:grid md:grid-cols-3 md:gap-2 md:space-y-0',
+      /**
+       * items-start が無いと grid 既定の stretch でカードの外枠(ドロップ枠)だけが行の最大高さまで伸び、
+       * 中身なりの高さしか持たない色付きカードの下に CARD_BACKDROP_CLASS の下地が帯として露出する。
+       */
+      'md:grid md:grid-cols-3 md:items-start md:gap-2 md:space-y-0',
       BACKLOG_MAX_H_CLASS,
       'md:-m-0.5 md:overflow-y-auto md:p-0.5',
     ),
