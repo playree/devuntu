@@ -1,17 +1,18 @@
 'use client'
 
+import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
-import { CheckBoxCtrl } from '@/components/general/checkbox'
 import { FlexCol } from '@/components/general/flex'
 import { GridBox } from '@/components/general/grid'
 import { MultiSelectCtrl } from '@/components/general/select'
+import { SwitchCtrl } from '@/components/general/switch'
 import { ContentHeader } from '@/components/header'
 import { CheckIcon, Cog6ToothIcon, GoogleIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
 import { scUpdateGoogleAccountSettings, UpdateGoogleAccountSettings } from '@/lib/schema'
 import { useLocale } from '@/locale/client'
-import { Card, Skeleton } from '@heroui/react'
+import { Accordion, Skeleton } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FC, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -43,9 +44,9 @@ const GoogleAccountSettingsForm: FC<{
         notify.success(t('msg_saved'))
       })}
     >
-      <GridBox>
+      <GridBox isSmart>
         <div className='col-span-12 pb-2'>
-          <CheckBoxCtrl control={control} name='enabled' id='enabled' label={t('google_account_enable')} />
+          <SwitchCtrl control={control} name='enabled' id='enabled' label={t('google_account_enable')} />
           <p className='mt-1 text-sm text-neutral-500'>{t('msg_google_account_enable_desc')}</p>
         </div>
         <div className='col-span-12'>
@@ -67,6 +68,7 @@ const GoogleAccountSettingsForm: FC<{
   )
 }
 
+const defaultExpandedKeys = new Set(['google_account'])
 export const AdminSettingsClient: FC = () => {
   const { t } = useLocale()
   const [data, setData] = useState<{
@@ -88,16 +90,15 @@ export const AdminSettingsClient: FC = () => {
   return (
     <FlexCol>
       <ContentHeader icon={<Cog6ToothIcon />} title={t('integration_settings')} />
-      <Card>
-        <Card.Content className='flex flex-col gap-2 p-4'>
-          <ContentHeader icon={<GoogleIcon />} title={t('google_account')} className='text-foreground' />
+      <Accordion allowsMultipleExpanded defaultExpandedKeys={defaultExpandedKeys}>
+        <AccordionSection id='google_account' icon={<GoogleIcon />} title={t('google_account')}>
           {data ? (
             <GoogleAccountSettingsForm initial={data.initial} groupOptions={data.groupOptions} />
           ) : (
             <Skeleton className='min-h-24 w-full rounded-xl' />
           )}
-        </Card.Content>
-      </Card>
+        </AccordionSection>
+      </Accordion>
     </FlexCol>
   )
 }
