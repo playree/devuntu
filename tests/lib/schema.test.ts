@@ -4,7 +4,15 @@
  * 既定値・必須の境界だけを対象にする(項目ごとの文字数制限は UI の constraintSchema が担う)。
  */
 
-import { scCreateTicket, scMoveTicket, scPatchTicket, scTicketSearch } from '@/lib/schema'
+import {
+  scCreateTag,
+  scCreateTicket,
+  scMoveTicket,
+  scPatchTicket,
+  scTicketSearch,
+  zBoardKey,
+  zPassword,
+} from '@/lib/schema'
 import { ASSIGNEE_NONE } from '@/lib/task'
 import { describe, expect, it } from 'vitest'
 
@@ -100,5 +108,67 @@ describe('scMoveTicket', () => {
 
   it('未知のステータスは受け付けない', () => {
     expect(scMoveTicket.safeParse({ id: ticketId, status: 'unknown', index: 0 }).success).toBe(false)
+  })
+})
+
+describe('zBoardKey: ボードキーの入力チェック', () => {
+  it('英大文字と数字の2〜8文字を通し、小文字は大文字へ寄せる', () => {
+    expect(zBoardKey.parse('DEV')).toBe('DEV')
+    expect(zBoardKey.parse(' dev1 '), 'trim + 大文字化').toBe('DEV1')
+    expect(zBoardKey.parse('ABCDEFGH'), '上限ちょうど').toBe('ABCDEFGH')
+  })
+
+  it('形式外は受け付けない', () => {
+    expect(zBoardKey.safeParse('D').success, '短すぎる').toBe(false)
+    expect(zBoardKey.safeParse('ABCDEFGHI').success, '長すぎる').toBe(false)
+    expect(zBoardKey.safeParse('1DEV').success, '数字始まり').toBe(false)
+    expect(zBoardKey.safeParse('DE-V').success, '記号').toBe(false)
+  })
+
+  it('PRV で始まるキーは予約済みなので弾く', () => {
+    // 通してしまうと nextSequentialKey が採番不能になり、プライベートボード未作成の
+    // 全ユーザーで ensurePrivateBoard が恒久的に失敗する
+    expect(zBoardKey.safeParse('PRV99999').success).toBe(false)
+    expect(zBoardKey.safeParse('prv1').success, '小文字で入力しても弾く').toBe(false)
+    expect(zBoardKey.safeParse('PRVX').success).toBe(false)
+    expect(zBoardKey.safeParse('PR1').success, '接頭辞が一致しなければ通る').toBe(true)
+  })
+
+  it('予約キーのエラーメッセージは専用のロケールキーになる', () => {
+    const res = zBoardKey.safeParse('PRV1')
+    expect(res.error?.issues[0]?.message).toBe('@reserved_board_key')
+  })
+})
+
+describe('zPassword: 長さのみで判定する', () => {
+  it('8〜128文字を受け付ける', () => {
+    expect(zPassword.safeParse('a'.repeat(8)).success).toBe(true)
+    expect(zPassword.safeParse('a'.repeat(128)).success).toBe(true)
+  })
+
+  it('境界外は受け付けない', () => {
+    expect(zPassword.safeParse('a'.repeat(7)).success).toBe(false)
+    expect(zPassword.safeParse('a'.repeat(129)).success, 'better-auth の上限に合わせる').toBe(false)
+  })
+
+  it('パスフレーズやパスワードマネージャの生成値を文字種で弾かない', () => {
+    expect(zPassword.safeParse('correct horse battery staple').success).toBe(true)
+    expect(zPassword.safeParse('パスフレーズを使いたい').success).toBe(true)
+    expect(zPassword.safeParse('Xk#9vQ2~mL8•pR4').success).toBe(true)
+  })
+})
+
+describe('scCreateTag: 表示順は未指定と 0 を区別する', () => {
+  it('未指定なら undefined のまま(サーバー側で末尾へ採番する)', () => {
+    expect(scCreateTag.parse({ boardId, name: 'タグ' }).order).toBeUndefined()
+  })
+
+  it('0 を明示したら 0 のまま通す', () => {
+    // 既定値を持たせると 0 が採番へ流れて先頭固定にできなくなる
+    expect(scCreateTag.parse({ boardId, name: 'タグ', order: 0 }).order).toBe(0)
+  })
+
+  it('色は未指定なら gray', () => {
+    expect(scCreateTag.parse({ boardId, name: 'タグ' }).color).toBe('gray')
   })
 })

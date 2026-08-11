@@ -418,6 +418,7 @@ export const ModelName = {
   CalendarShare: 'CalendarShare',
   CalendarBusyTime: 'CalendarBusyTime',
   Board: 'Board',
+  BoardKeyHistory: 'BoardKeyHistory',
   Tag: 'Tag',
   TicketTag: 'TicketTag',
   BoardMember: 'BoardMember',
@@ -439,7 +440,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "dashboard" | "linkWidget" | "attachment" | "keyValueStore" | "appVersion" | "group" | "userGroup" | "calendarShare" | "calendarBusyTime" | "board" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "ticket" | "ticketComment"
+    modelProps: "user" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "dashboard" | "linkWidget" | "attachment" | "keyValueStore" | "appVersion" | "group" | "userGroup" | "calendarShare" | "calendarBusyTime" | "board" | "boardKeyHistory" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "ticket" | "ticketComment"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1997,6 +1998,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    BoardKeyHistory: {
+      payload: Prisma.$BoardKeyHistoryPayload<ExtArgs>
+      fields: Prisma.BoardKeyHistoryFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BoardKeyHistoryFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardKeyHistoryPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BoardKeyHistoryFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardKeyHistoryPayload>
+        }
+        findFirst: {
+          args: Prisma.BoardKeyHistoryFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardKeyHistoryPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BoardKeyHistoryFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardKeyHistoryPayload>
+        }
+        findMany: {
+          args: Prisma.BoardKeyHistoryFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardKeyHistoryPayload>[]
+        }
+        create: {
+          args: Prisma.BoardKeyHistoryCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardKeyHistoryPayload>
+        }
+        createMany: {
+          args: Prisma.BoardKeyHistoryCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BoardKeyHistoryCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardKeyHistoryPayload>[]
+        }
+        delete: {
+          args: Prisma.BoardKeyHistoryDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardKeyHistoryPayload>
+        }
+        update: {
+          args: Prisma.BoardKeyHistoryUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardKeyHistoryPayload>
+        }
+        deleteMany: {
+          args: Prisma.BoardKeyHistoryDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BoardKeyHistoryUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BoardKeyHistoryUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardKeyHistoryPayload>[]
+        }
+        upsert: {
+          args: Prisma.BoardKeyHistoryUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardKeyHistoryPayload>
+        }
+        aggregate: {
+          args: Prisma.BoardKeyHistoryAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBoardKeyHistory>
+        }
+        groupBy: {
+          args: Prisma.BoardKeyHistoryGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BoardKeyHistoryGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BoardKeyHistoryCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BoardKeyHistoryCountAggregateOutputType> | number
+        }
+      }
+    }
     Tag: {
       payload: Prisma.$TagPayload<ExtArgs>
       fields: Prisma.TagFieldRefs
@@ -2699,6 +2774,7 @@ export const AttachmentScalarFieldEnum = {
   mimeType: 'mimeType',
   size: 'size',
   originalName: 'originalName',
+  boardId: 'boardId',
   createdById: 'createdById',
   createdAt: 'createdAt'
 } as const
@@ -2790,6 +2866,15 @@ export const BoardScalarFieldEnum = {
 } as const
 
 export type BoardScalarFieldEnum = (typeof BoardScalarFieldEnum)[keyof typeof BoardScalarFieldEnum]
+
+
+export const BoardKeyHistoryScalarFieldEnum = {
+  key: 'key',
+  boardId: 'boardId',
+  createdAt: 'createdAt'
+} as const
+
+export type BoardKeyHistoryScalarFieldEnum = (typeof BoardKeyHistoryScalarFieldEnum)[keyof typeof BoardKeyHistoryScalarFieldEnum]
 
 
 export const TagScalarFieldEnum = {
@@ -3241,6 +3326,7 @@ export type GlobalOmitConfig = {
   calendarShare?: Prisma.CalendarShareOmit
   calendarBusyTime?: Prisma.CalendarBusyTimeOmit
   board?: Prisma.BoardOmit
+  boardKeyHistory?: Prisma.BoardKeyHistoryOmit
   tag?: Prisma.TagOmit
   ticketTag?: Prisma.TicketTagOmit
   boardMember?: Prisma.BoardMemberOmit

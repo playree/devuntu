@@ -1,4 +1,5 @@
 import type { Dayjs } from 'dayjs'
+import { addDaysDateOnly, DEFAULT_TZ, zonedMinutes } from './day'
 import type { BusySlot } from './google-calendar'
 
 /** 追加Busy時間の1件分(曜日+時間帯)。分は 0:00 からの分 */
@@ -10,19 +11,25 @@ export type BusyTimeRule = { weekdays: number[]; startMin: number; endMin: numbe
  *
  * weekStart は所有者タイムゾーンの週初日 0:00(Dayjs)。曜日判定は dayjs の .day()
  * (0=日 .. 6=土)で行う。
+ *
+ * 「毎週 9:00-18:00」は壁時計時刻の指定なので、日付は暦日で進めて時刻は tz で解決する
+ * (絶対時間の加算にすると DST の切替日で 1 時間ずれる)。
  */
-export const expandBusyTimes = (rules: BusyTimeRule[], weekStart: Dayjs): BusySlot[] => {
+export const expandBusyTimes = (rules: BusyTimeRule[], weekStart: Dayjs, tz: string = DEFAULT_TZ): BusySlot[] => {
+  const firstDate = weekStart.format('YYYY-MM-DD')
+
   const slots: BusySlot[] = []
   for (let di = 0; di < 7; di++) {
-    const dayStart = weekStart.add(di, 'day')
-    const weekday = dayStart.day()
+    // 日送りは DST の影響を受けない暦日で行う
+    const date = addDaysDateOnly(firstDate, di)
+    const weekday = zonedMinutes(date, 0, tz).day()
     for (const rule of rules) {
       if (!rule.weekdays.includes(weekday)) {
         continue
       }
       slots.push({
-        start: dayStart.add(rule.startMin, 'minute').toISOString(),
-        end: dayStart.add(rule.endMin, 'minute').toISOString(),
+        start: zonedMinutes(date, rule.startMin, tz).toISOString(),
+        end: zonedMinutes(date, rule.endMin, tz).toISOString(),
       })
     }
   }

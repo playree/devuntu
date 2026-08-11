@@ -16,4 +16,7 @@ export const errValidation = (message: string) => new ClientError('VALIDATION_ER
 export const errCommunication = (message: string) =>
   new ClientError('COMMUNICATION_ERROR', `Communication Error: ${message}`)
 export const errInvalidOperation = () => new ClientError('INVALID_OPERATION', 'Invalid Operation')
+/** レート制限超過。クライアント側で errorType を見て分岐するため型名を定数で公開する */
+export const TOO_MANY_REQUESTS = 'TOO_MANY_REQUESTS'
+export const errTooManyRequests = () => new ClientError(TOO_MANY_REQUESTS, 'Too Many Requests')
 export const errSystemError = (message: string) => new Error(`System Error: ${message}`)

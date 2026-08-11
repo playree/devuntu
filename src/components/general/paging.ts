@@ -17,22 +17,27 @@ const ROWS_PER_PAGE_COOKIE_MAX_AGE = 86400 * 365
 
 /**
  * 表示件数の状態。クライアント側 / サーバー側ページングの両方で共有する。
- * 初期値は Cookie の前回の選択。アプリ全体が LocaleProvider の mounted 後に描画されるため
- * ハイドレーション不整合は起きない
+ *
+ * Cookie は SSR では読めないため、初期値は fallback にしてハイドレーション後に前回の選択へ寄せる
+ * (初期描画で読むとサーバーの出力と一致しない)
  */
 const useRowsPerPage = (fallback: number) => {
-  const [rowsPerPage, setRowsPerPage] = useState(() => {
+  const [state, setState] = useState({ rows: fallback, restored: false })
+
+  useEffect(() => {
     const saved = Number(getCookie(ROWS_PER_PAGE_COOKIE))
-    return ROWS_PER_PAGE_OPTIONS.includes(saved) ? saved : fallback
-  })
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setState({ rows: ROWS_PER_PAGE_OPTIONS.includes(saved) ? saved : fallback, restored: true })
+  }, [fallback])
 
   // 次回以降も同じ件数で開けるよう Cookie に残す
   const changeRowsPerPage = (rows: number) => {
-    setRowsPerPage(rows)
+    setState({ rows, restored: true })
     setCookie(ROWS_PER_PAGE_COOKIE, String(rows), { maxAge: ROWS_PER_PAGE_COOKIE_MAX_AGE, path: '/' })
   }
 
-  return [rowsPerPage, changeRowsPerPage] as const
+  // restored は「Cookie を反映済みか」。サーバー側ページングで既定件数のままの取得を1回無駄打ちしないために使う
+  return [state.rows, changeRowsPerPage, state.restored] as const
 }
 
 /**
@@ -233,7 +238,7 @@ export const useServerPagingList = <T extends Record<string, unknown>>({
   rowsPerPage?: number
 }): PagingList<T> => {
   const [page, setPage] = useState(1)
-  const [rowsPerPage, changeRowsPerPage] = useRowsPerPage(fallbackRowsPerPage)
+  const [rowsPerPage, changeRowsPerPage, rowsPerPageRestored] = useRowsPerPage(fallbackRowsPerPage)
   const [sortDescriptor, setSortDescriptor] = useState(sort?.init)
   // 条件が同じでも取得し直したいとき(reload)に進めるトークン
   const [reloadToken, setReloadToken] = useState(0)
@@ -270,6 +275,11 @@ export const useServerPagingList = <T extends Record<string, unknown>>({
   const generation = useRef(0)
 
   useEffect(() => {
+    // Cookie の表示件数を反映する前に取得すると、直後に件数が変わって二重取得になる
+    if (!rowsPerPageRestored) {
+      return
+    }
+
     const current = ++generation.current
 
     // 結果を差し替えるまで前のページの行を残す(表示が一瞬空になるのを避ける)
@@ -297,7 +307,7 @@ export const useServerPagingList = <T extends Record<string, unknown>>({
           setLoaded({ key: queryKey, items: [], total: 0 })
         }
       })
-  }, [queryKey, page, rowsPerPage, sortColumn, sortDirection])
+  }, [queryKey, page, rowsPerPage, rowsPerPageRestored, sortColumn, sortDirection])
 
   const totalPages = Math.ceil(loaded.total / rowsPerPage) || 1
 

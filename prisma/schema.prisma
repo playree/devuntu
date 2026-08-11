@@ -287,10 +287,15 @@ model Attachment {
   mimeType     String
   size         Int
   originalName String
+  /// 添付先のボード。値がある場合は配信時にそのボードの可視判定を通す。
+  /// null は全ログインユーザーへ配信してよいもの(お知らせ / リンクウィジェットのアイコン)
+  boardId      String?
+  board        Board?   @relation(fields: [boardId], references: [id], onDelete: Cascade)
   createdById  String?
   createdBy    User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
   createdAt    DateTime @default(now())
 
+  @@index([boardId])
   @@map("attachment")
 }
 
@@ -421,32 +426,50 @@ enum TicketPriority {
 }
 
 model Board {
-  id             String        @id @default(uuid(7))
-  kind           BoardKind     @default(team)
+  id             String            @id @default(uuid(7))
+  kind           BoardKind         @default(team)
   // プライベートボードの所有者。team では常に null。
   // PostgreSQL の UNIQUE は NULL を互いに異なる値として扱うため、これ1本で
   // 「1ユーザー1プライベートボード」を担保でき、部分索引が不要になる。
   // kind='private' <=> privateOwnerId IS NOT NULL の整合はアプリ側で保証する
   // (作成経路を ensurePrivateBoard と createBoard の2つに限定している)
-  privateOwnerId String?       @unique
-  privateOwner   User?         @relation("PrivateBoardOwner", fields: [privateOwnerId], references: [id], onDelete: Cascade)
+  privateOwnerId String?           @unique
+  privateOwner   User?             @relation("PrivateBoardOwner", fields: [privateOwnerId], references: [id], onDelete: Cascade)
   // チケット表示ID(`key-number`)の接頭辞。大文字英数(BOARD_KEY_PATTERN)で全ボード一意。
   // 変更すると共有済みの表示IDが解決できなくなるため、変更できるのは owner と管理者に限る
-  key            String        @unique
+  key            String            @unique
   // 採番済みチケット番号の最大値。UPDATE の行ロックで採番を直列化する。
   // 連番の欠けを避けるためシーケンスではなくこの列で持つ(ロールバック時は番号も戻る)
-  ticketSeq      Int           @default(0)
+  ticketSeq      Int               @default(0)
   name           String
   description    String?
-  archived       Boolean       @default(false)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  archived       Boolean           @default(false)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
   members        BoardMember[]
   groups         BoardGroup[]
   tickets        Ticket[]
   tags           Tag[]
+  attachments    Attachment[]
+  keyHistories   BoardKeyHistory[]
 
   @@map("board")
+}
+
+/// 過去に使われたボードキーの記録。改名 / 削除でキーを解放しても再利用させないことで、
+/// 共有済みの表示ID(`KEY-番号`)が別ボードの同番号チケットへ解決されるのを防ぐ。
+/// 行はボードを消しても残す(消すと再利用できてしまうため)。
+model BoardKeyHistory {
+  key String @id
+
+  /// このキーを使った(使っている)ボード。削除時は SetNull で行だけ残す。
+  /// 同じボードがキー変更を戻すのは表示IDの指す先が変わらないので安全で、その判定に使う
+  boardId   String?
+  board     Board?   @relation(fields: [boardId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+
+  @@index([boardId])
+  @@map("board_key_history")
 }
 
 model Tag {

@@ -4,7 +4,6 @@ import { authConfig } from './lib/auth-config'
 import { envu } from './lib/env-util'
 import { logger } from './lib/logger'
 import { matchCondition } from './lib/match'
-import { makeUrl } from './lib/server-utils'
 import { localeConfig } from './locale/config'
 
 export const proxy = async (request: NextRequest) => {
@@ -20,13 +19,12 @@ export const proxy = async (request: NextRequest) => {
     session = await getServerSession()
     logger.debug({ session }, 'proxy auth')
     if (!session?.user) {
-      // 未ログイン
-      return redirectSignIn(makeUrl(pathname).toString())
+      // cb はサインイン画面で safeCallbackPath を通すため自サイト内のパスで渡す
+      return redirectSignIn(pathname)
     }
     if (envu.server.TWO_FA_REQUIRED && !envu.server.DISABLE_PASSWORD_AUTH) {
       if (!session.user.twoFactorEnabled) {
-        // 2FA必須化
-        return redirectTwoFaEnable(makeUrl(pathname).toString())
+        return redirectTwoFaEnable(pathname)
       }
     }
 

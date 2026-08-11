@@ -9,7 +9,7 @@
  * middleware では守られない点に注意。
  */
 
-import type { Prisma } from '@/generated/prisma/client'
+import { Prisma } from '@/generated/prisma/client'
 import type { BoardKind, TicketStatus } from '@/generated/prisma/enums'
 import { nowDate } from './day'
 import { errClient, errInvalidOperation } from './error'
@@ -28,6 +28,7 @@ import {
   type BoardRole,
   type TicketPermission,
 } from './task'
+import { extractUploadKeys } from './upload'
 
 /** Server Action の `ctx.user` をそのまま渡せる最小形 */
 export type Actor = { id: string; role?: string | null }
@@ -60,21 +61,51 @@ export const rethrowDuplicatedBoardKey = (e: unknown): never => {
   throw e
 }
 
+/**
+ * ボードキーを履歴(BoardKeyHistory)へ登録して占有する。他ボードが使ったことのあるキーなら
+ * DUPLICATED_BOARD_KEY。
+ *
+ * `Board.key` の @unique だけでは「改名 / 削除で手放したキーを別ボードが取る」ことを防げず、
+ * 共有済みの表示ID(`KEY-番号`)が別ボードの同番号チケットへ解決されてしまう。
+ * 履歴の行はボードを消しても残すので、一度使ったキーが別のボードへ渡ることはない。
+ *
+ * 自分が以前使っていたキーへ戻す場合だけは許す(表示IDの指す先が変わらないため)。
+ * `boardId` 未指定は新規作成 = まだ手放したキーを持たないので、履歴があれば必ず拒否になる。
+ *
+ * ボードの作成 / キー変更と同じトランザクションで呼ぶこと(失敗時にキーを焼かないため)。
+ */
+export const reserveBoardKey = async (tx: Prisma.TransactionClient, key: string, boardId?: string): Promise<void> => {
+  const used = await tx.boardKeyHistory.findUnique({ where: { key }, select: { boardId: true } })
+  if (used) {
+    if (!boardId || used.boardId !== boardId) {
+      throw errClient(DUPLICATED_BOARD_KEY)
+    }
+    return
+  }
+
+  await tx.boardKeyHistory.create({ data: { key, boardId }, select: { key: true } }).catch(rethrowDuplicatedBoardKey)
+}
+
 /** ensurePrivateBoard のキー競合によるリトライ回数。キーの取り合いは同時実行数ぶんしか起きない */
 const PRIVATE_BOARD_CREATE_RETRY = 3
 
 /**
  * プライベートボードのキー(PRV<連番>)。既存の最大 + 1 を採る。
  * 桁が MAX_BOARD_KEY を超えると表示IDを解決できないボードになるため、その手前で失敗させる。
+ *
+ * 採番の母集団は現存ボードではなく履歴(BoardKeyHistory)。退会などでプライベートボードが
+ * 消えても、その番号を別ユーザーへ再発行しない(共有済みの表示IDが別人のチケットを指さない)。
+ * PRV 接頭辞はチームボードのキー入力から `isReservedBoardKey` で除外してあるため、
+ * ここの母集団に利用者が作ったキーが混ざることはない。
  */
-const nextPrivateBoardKey = async (): Promise<string> => {
-  const boards = await prisma.board.findMany({
+const nextPrivateBoardKey = async (tx: Prisma.TransactionClient): Promise<string> => {
+  const used = await tx.boardKeyHistory.findMany({
     where: { key: { startsWith: PRIVATE_BOARD_KEY_PREFIX } },
     select: { key: true },
   })
   const key = nextSequentialKey(
     PRIVATE_BOARD_KEY_PREFIX,
-    boards.map(({ key }) => key),
+    used.map(({ key }) => key),
   )
   if (!key) {
     throw errInvalidOperation()
@@ -93,6 +124,9 @@ const nextPrivateBoardKey = async (): Promise<string> => {
  * privateOwnerId の @unique に当たったなら読み直して吸収し、キーの取り合いに負けた場合は
  * 採番からやり直す(自分のボードはまだ無いので読み直しでは吸収できない)。
  * 一意制約違反以外(接続断など)はリトライしても直らないので即座に投げ直す。
+ *
+ * キーの登録に `reserveBoardKey` を使わないのは、あちらが一意制約違反を ClientError へ
+ * 変換してしまい、ここのリトライ判定(isUniqueViolation)に掛からなくなるため。
  */
 export const ensurePrivateBoard = async (user: { id: string }): Promise<string> => {
   const found = await prisma.board.findUnique({ where: { privateOwnerId: user.id }, select: { id: true } })
@@ -102,18 +136,23 @@ export const ensurePrivateBoard = async (user: { id: string }): Promise<string> 
 
   for (let attempt = 1; ; attempt++) {
     try {
-      const created = await prisma.board.create({
-        data: {
-          kind: 'private',
-          privateOwnerId: user.id,
-          key: await nextPrivateBoardKey(),
-          // 表示は kind==='private' のときロケールへ差し替えるため、この値は画面に出ない
-          name: PRIVATE_BOARD_NAME,
-          members: { create: { userId: user.id, role: 'owner' } },
-        },
-        select: { id: true },
+      // 採番・履歴への登録・ボード作成を 1 トランザクションにまとめ、負けた側がキーを焼かないようにする
+      return await prisma.$transaction(async (tx) => {
+        const key = await nextPrivateBoardKey(tx)
+        const created = await tx.board.create({
+          data: {
+            kind: 'private',
+            privateOwnerId: user.id,
+            key,
+            // 表示は kind==='private' のときロケールへ差し替えるため、この値は画面に出ない
+            name: PRIVATE_BOARD_NAME,
+            members: { create: { userId: user.id, role: 'owner' } },
+          },
+          select: { id: true },
+        })
+        await tx.boardKeyHistory.create({ data: { key, boardId: created.id }, select: { key: true } })
+        return created.id
       })
-      return created.id
     } catch (e) {
       if (!isUniqueViolation(e)) {
         throw e
@@ -471,6 +510,30 @@ export const nextTicketNumber = async (tx: Prisma.TransactionClient, boardId: st
 }
 
 /**
+ * 本文に貼られた添付を、本文の保存先ボードへ紐付け直す。
+ *
+ * アップロードは本文の保存より前に走るので、作成フォームでボードを選び直すと添付だけが
+ * 前のボードに残り、保存先ボードのメンバーが `/api/upload/<キー>` を読めなくなる。
+ * 付け替えは本人がアップロードしたものに限る(他人の添付を自分のボードへ引き込めないようにする)。
+ * 保存先ボードへのアクセスは呼び出し元で `assertBoardAccess` を通していること。
+ */
+export const reassignContentAttachments = async (
+  tx: Prisma.TransactionClient,
+  content: string | null | undefined,
+  boardId: string,
+  actor: Actor,
+): Promise<void> => {
+  const keys = content ? extractUploadKeys(content) : []
+  if (keys.length === 0) {
+    return
+  }
+  await tx.attachment.updateMany({
+    where: { key: { in: keys }, createdById: actor.id, boardId: { not: boardId } },
+    data: { boardId },
+  })
+}
+
+/**
  * 表示ID(`KEY-番号`)からチケット ID を引く。形式外・未存在・アクセス不可はいずれも null。
  *
  * アクセス不可を未存在と区別せずに潰すことで、短縮URLが「そのチケットが在るか」と
@@ -581,7 +644,7 @@ export const getTicketMentionCandidates = async (
  * かんばんの DnD・カード内メニュー・詳細画面のステータス変更が共有する唯一の経路。
  *
  * `index` を省略すると移動先レーンの末尾へ入る。
- * レーン内は 0..n-1 の連番へ再採番する(行ごとに異なる値なので updateMany は使えない)。
+ * レーン内は 0..n-1 の連番へ再採番する(行ごとに異なる値になるため updateMany では書けず、生 SQL で 1 文にまとめる)。
  *
  * 採番の対象は盤面に表示されるカードだけ。かんばんに出ない古い完了カードは読まず order も触らないので、
  * クライアントが送る index(盤面に見えているカードだけを数えた位置)とそのまま基準が揃う。
@@ -616,11 +679,20 @@ export const moveTicketToLane = async (
   })
 
   // MAX_KANBAN_CARDS(500)まで入りうるレーンで毎回全行を UPDATE しないよう、order が変わる行だけ触る
-  for (const { id, order } of ordered) {
-    if (id === access.ticketId || currentOrder.get(id) === order) {
-      continue
-    }
-    await tx.ticket.update({ where: { id }, data: { order } })
+  const shifted = ordered.filter(({ id, order }) => id !== access.ticketId && currentOrder.get(id) !== order)
+  if (shifted.length > 0) {
+    /**
+     * レーン先頭への移動では実質全行が対象になるため、1 行ずつではなく 1 文で更新する。
+     * 生 SQL では `@updatedAt` が効かないので、1 行ずつ update していたときと同じになるよう明示的に触る。
+     */
+    await tx.$executeRaw`
+      UPDATE "ticket" AS t
+      SET "order" = v."order", "updatedAt" = NOW()
+      FROM (VALUES ${Prisma.join(
+        shifted.map(({ id, order }) => Prisma.sql`(${id}::text, ${order}::int)`),
+      )}) AS v(id, "order")
+      WHERE t.id = v.id
+    `
   }
 
   return { id: access.ticketId, status, order: movedOrder }

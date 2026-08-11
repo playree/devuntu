@@ -72,6 +72,7 @@ export const ModelName = {
   CalendarShare: 'CalendarShare',
   CalendarBusyTime: 'CalendarBusyTime',
   Board: 'Board',
+  BoardKeyHistory: 'BoardKeyHistory',
   Tag: 'Tag',
   TicketTag: 'TicketTag',
   BoardMember: 'BoardMember',
@@ -315,6 +316,7 @@ export const AttachmentScalarFieldEnum = {
   mimeType: 'mimeType',
   size: 'size',
   originalName: 'originalName',
+  boardId: 'boardId',
   createdById: 'createdById',
   createdAt: 'createdAt'
 } as const
@@ -406,6 +408,15 @@ export const BoardScalarFieldEnum = {
 } as const
 
 export type BoardScalarFieldEnum = (typeof BoardScalarFieldEnum)[keyof typeof BoardScalarFieldEnum]
+
+
+export const BoardKeyHistoryScalarFieldEnum = {
+  key: 'key',
+  boardId: 'boardId',
+  createdAt: 'createdAt'
+} as const
+
+export type BoardKeyHistoryScalarFieldEnum = (typeof BoardKeyHistoryScalarFieldEnum)[keyof typeof BoardKeyHistoryScalarFieldEnum]
 
 
 export const TagScalarFieldEnum = {

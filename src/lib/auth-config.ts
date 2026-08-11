@@ -24,7 +24,8 @@ export const authConfig: AuthConfig = {
       exclude: ['/auth/signin', '/start', '/cal/:id'],
     },
     admin: {
-      require: ['/admin/:path'],
+      // ':path' は1セグメントしかマッチしないため、ネストしたルートも含む '*path'(0セグメント以上)で受ける
+      require: ['/admin{/*path}'],
     },
     twoFactor: {
       exclude: ['/auth/twofa'],

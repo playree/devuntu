@@ -3,6 +3,7 @@ import { z } from 'zod'
 import {
   ASSIGNEE_NONE,
   BOARD_KEY_PATTERN,
+  isReservedBoardKey,
   MAX_BOARD_KEY,
   MAX_TAG_NAME,
   MAX_TICKET_TAGS,
@@ -12,15 +13,13 @@ import {
   TICKET_STATUSES,
 } from './task'
 
-const reHalfString = /^[a-zA-Z0-9!-/:-@¥[-`{-~ ]*$/
-
 export const zName = z.string().min(2, el('@invalid_name')).max(30, el('@invalid_name'))
 export const zEmail = z.email(el('@invalid_email'))
-export const zPassword = z
-  .string()
-  .min(8, el('@invalid_password'))
-  .max(20, el('@invalid_password'))
-  .regex(reHalfString, el('@invalid_password'))
+/**
+ * パスワード。パスフレーズやパスワードマネージャの生成値を弾かないよう、文字種は制限せず長さだけを見る。
+ * 上限は better-auth の maxPasswordLength(既定 128)に合わせる。
+ */
+export const zPassword = z.string().min(8, el('@invalid_password')).max(128, el('@invalid_password'))
 export const zDescription = z.string().max(40, el('@invalid_description')).optional()
 
 /** アップロード画像の上限。クライアント側の入力チェックにも使うので export する */
@@ -226,7 +225,8 @@ export const zCommentContent = z.string().trim().min(1, el('@required_field')).m
 export const zBoardDescription = z.string().max(200, el('@invalid_description')).optional()
 /**
  * ボードキー(チケット表示ID `KEY-番号` の接頭辞)。小文字で入力されても大文字へ寄せてから検証する。
- * 変更すると共有済みの表示IDが指す先が変わるため、変更できるのは owner と管理者に限る。
+ * 変更すると共有済みの表示IDが解決できなくなるため、変更できるのは owner と管理者に限る。
+ * プライベートボードの採番領域(PRV)は `isReservedBoardKey` で塞ぐ。
  */
 export const zBoardKey = z
   .string()
@@ -234,6 +234,7 @@ export const zBoardKey = z
   .toUpperCase()
   .max(MAX_BOARD_KEY, el('@invalid_board_key'))
   .regex(BOARD_KEY_PATTERN, el('@invalid_board_key'))
+  .refine((key) => !isReservedBoardKey(key), el('@reserved_board_key'))
 /** ボードのロール。Prisma の BoardMemberRole / task.ts の BoardRole と一致させる */
 export const zBoardRole = z.enum(['owner', 'member'])
 
@@ -403,7 +404,8 @@ export const scCreateTag = z.object({
   boardId: z.uuidv7(),
   name: zTagName,
   color: zTagColor.default('gray'),
-  order: zTagOrder.default(0),
+  /** 未指定は末尾へ採番する。0 を明示した場合は 0 のまま扱うため既定値は持たせない */
+  order: zTagOrder.optional(),
 })
 export type CreateTag = z.infer<typeof scCreateTag>
 export type CreateTagIn = z.input<typeof scCreateTag>

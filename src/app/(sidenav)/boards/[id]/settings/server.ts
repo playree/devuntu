@@ -9,6 +9,7 @@ import {
   countTicketsByBoard,
   getBoardMemberUsers,
   isAdminActor,
+  reserveBoardKey,
   rethrowDuplicatedBoardKey,
   syncBoardGroups,
   type Actor,
@@ -88,6 +89,13 @@ export const updateBoard = safeAuthAction
 
       // キーを変えると既存チケットの表示IDも一斉に変わる(番号は据え置き)。
       // 共有済みの旧表示IDは解決できなくなるため、変更できるのは owner と管理者に限っている
+      const current = await tx.board.findUnique({ where: { id }, select: { key: true } })
+      if (current && current.key !== key) {
+        // 手放した旧キーは履歴に残り続けるので、他のボードが拾って旧表示IDを横取りすることはない。
+        // 自分が以前使っていたキーへ戻すのは許される(reserveBoardKey に boardId を渡している)
+        await reserveBoardKey(tx, key, id)
+      }
+
       return tx.board
         .update({ where: { id }, data: { name, key, description }, select: { id: true, name: true } })
         .catch(rethrowDuplicatedBoardKey)
@@ -312,7 +320,7 @@ export const createBoardTag = safeAuthAction
           throw errInvalidOperation()
         }
         return tx.tag.create({
-          data: { boardId, name, color, order: order || nextOrder(tags.map((row) => row.order)) },
+          data: { boardId, name, color, order: order ?? nextOrder(tags.map((row) => row.order)) },
           select: TAG_SELECT,
         })
       })

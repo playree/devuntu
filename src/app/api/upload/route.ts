@@ -1,15 +1,17 @@
 import { getServerSession } from '@/lib/auth'
+import { getBoardAccess } from '@/lib/board'
 import { toWebp, WEBP_EXT, WEBP_MIME } from '@/lib/image'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { zImageFile } from '@/lib/schema'
 import { putObject } from '@/lib/storage'
-import { newUploadKey, toUploadUrl } from '@/lib/upload'
+import { newUploadKey, toUploadUrl, UPLOAD_BOARD_ID_FIELD } from '@/lib/upload'
 import { LocaleItem } from '@/locale'
 import { localeConfig } from '@/locale/config'
 import { t } from '@/locale/server'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
+import { z } from 'zod'
 
 /**
  * 画像をアップロードしてオブジェクトストレージに保存する。
@@ -27,6 +29,21 @@ export const POST = async (req: Request) => {
   }
 
   const form = await req.formData().catch(() => null)
+
+  /**
+   * 添付先のボード。配信(`/api/upload/<key>`)の可視判定に使う。
+   * 未指定は「ボードに属さない本文」(お知らせなど)とみなし全ログインユーザーへ配信する。
+   * 指定がある場合はその時点でメンバーであることを確認し、他人のボードへ紐付けさせない。
+   */
+  const boardIdInput = form?.get(UPLOAD_BOARD_ID_FIELD)
+  const boardId = typeof boardIdInput === 'string' ? (z.uuidv7().safeParse(boardIdInput).data ?? false) : null
+  if (boardId === false) {
+    return new NextResponse(null, { status: 400 })
+  }
+  if (boardId && !(await getBoardAccess(session.user, boardId))) {
+    return new NextResponse(null, { status: 403 })
+  }
+
   const file = form?.get('file')
   const parsed = zImageFile.safeParse(file)
   if (!parsed.success) {
@@ -51,10 +68,11 @@ export const POST = async (req: Request) => {
       mimeType: WEBP_MIME,
       size: webp.byteLength,
       originalName: parsed.data.name,
+      boardId,
       createdById: session.user.id,
     },
   })
-  logger.info({ key, size: webp.byteLength, userId: session.user.id }, 'attachment uploaded')
+  logger.info({ key, size: webp.byteLength, boardId, userId: session.user.id }, 'attachment uploaded')
 
   return NextResponse.json({ url: toUploadUrl(attachment.key) })
 }

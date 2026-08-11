@@ -47,11 +47,13 @@ const MdxEditorHost = memo<{
   initialMarkdown: string
   onChange: (markdown: string) => void
   onBlur?: () => void
+  /** 挿入した画像の添付先ボード({@link MarkdownInput} 参照) */
+  uploadBoardId?: string | null
   /** 編集面の最小行数 */
   minRows?: number
   /** MDXEditor 本体に付けるクラス(ポップアップ用コンテナにもコピーされる) */
   className?: string
-}>(function MdxEditorHost({ initialMarkdown, onChange, onBlur, minRows = DEFAULT_MIN_ROWS, className }) {
+}>(function MdxEditorHost({ initialMarkdown, onChange, onBlur, uploadBoardId, minRows = DEFAULT_MIN_ROWS, className }) {
   const [container, setContainer] = useState<HTMLElement | null>(null)
   const [isReady, setReady] = useState(false)
 
@@ -72,6 +74,7 @@ const MdxEditorHost = memo<{
           onChange={onChange}
           onBlur={onBlur}
           overlayContainer={container}
+          uploadBoardId={uploadBoardId}
           className={className}
         />
       )}
@@ -129,16 +132,26 @@ export const MarkdownInput: FC<{
   label?: string
   maxLength?: number
   errorMessage?: string
+  /**
+   * 挿入した画像の添付先ボード。配信時にこのボードの可視判定が掛かる。
+   * 省略すると全ログインユーザーが参照できる添付になるため、ボードに属する本文では必ず渡すこと
+   */
+  uploadBoardId?: string | null
   /** 編集面の最小行数(既定 {@link DEFAULT_MIN_ROWS}) */
   minRows?: number
-}> = ({ defaultValue, onChange, length, label, maxLength, errorMessage, minRows }) => {
+}> = ({ defaultValue, onChange, length, label, maxLength, errorMessage, uploadBoardId, minRows }) => {
   const { t } = useLocale()
   // 初回マウント時の値を固定する(MDXEditor は markdown prop の変更を取り込まない)
   const [initialMarkdown] = useState(defaultValue)
 
   return (
     <EditorField label={label ?? t('content')} length={length} maxLength={maxLength} errorMessage={errorMessage}>
-      <MdxEditorHost initialMarkdown={initialMarkdown} onChange={onChange} minRows={minRows} />
+      <MdxEditorHost
+        initialMarkdown={initialMarkdown}
+        onChange={onChange}
+        uploadBoardId={uploadBoardId}
+        minRows={minRows}
+      />
     </EditorField>
   )
 }
@@ -161,13 +174,27 @@ export const MarkdownField: FC<{
   length: number
   label?: string
   maxLength?: number
+  /** 挿入した画像の添付先ボード({@link MarkdownInput} 参照) */
+  uploadBoardId?: string | null
   /** 編集面の最小行数(既定 {@link DEFAULT_MIN_ROWS}) */
   minRows?: number
   /** ラベル行の右端に置く操作(表示モードの編集開始など) */
   action?: ReactNode
   /** 本文の下に右寄せで置く操作(編集モードのキャンセル / 保存など) */
   footer?: ReactNode
-}> = ({ body, isEditing, defaultValue, onChange, length, label, maxLength, minRows, action, footer }) => {
+}> = ({
+  body,
+  isEditing,
+  defaultValue,
+  onChange,
+  length,
+  label,
+  maxLength,
+  uploadBoardId,
+  minRows,
+  action,
+  footer,
+}) => {
   const { t } = useLocale()
 
   return (
@@ -190,7 +217,13 @@ export const MarkdownField: FC<{
         className='min-h-24'
       >
         {isEditing ? (
-          <MdxEditorHost initialMarkdown={defaultValue} onChange={onChange} minRows={minRows} className={FLAT_CLASS} />
+          <MdxEditorHost
+            initialMarkdown={defaultValue}
+            onChange={onChange}
+            uploadBoardId={uploadBoardId}
+            minRows={minRows}
+            className={FLAT_CLASS}
+          />
         ) : (
           <MarkdownView body={body} />
         )}
@@ -213,6 +246,7 @@ export const MarkdownEditor = <
   constraintSchema,
   label,
   errorMessage,
+  uploadBoardId,
   minRows,
 }: {
   control: Control<TFieldValues>
@@ -220,6 +254,8 @@ export const MarkdownEditor = <
   constraintSchema?: z.ZodObject
   label?: string
   errorMessage?: string
+  /** 挿入した画像の添付先ボード({@link MarkdownInput} 参照) */
+  uploadBoardId?: string | null
   /** 編集面の最小行数(既定 {@link DEFAULT_MIN_ROWS}) */
   minRows?: number
 }) => {
@@ -243,6 +279,7 @@ export const MarkdownEditor = <
         initialMarkdown={initialMarkdown}
         onChange={field.onChange}
         onBlur={field.onBlur}
+        uploadBoardId={uploadBoardId}
         minRows={minRows}
       />
     </EditorField>
