@@ -11,7 +11,7 @@
 import type { Prisma } from '@/generated/prisma/client'
 import type { TagColor } from '@/generated/prisma/enums'
 import { errClient, errInvalidOperation } from './error'
-import { prisma } from './prisma'
+import { isUniqueViolation, prisma } from './prisma'
 import { diffTagIds } from './task'
 
 type Db = Prisma.TransactionClient | typeof prisma
@@ -35,9 +35,6 @@ const TAG_ORDER_BY = [{ order: 'asc' }, { name: 'asc' }] as const
 
 /** 重複タグ名は DB の @@unique([boardId, name]) で弾かれる。クライアントへ専用コードで返す */
 const DUPLICATED_TAG_NAME = 'DUPLICATED_TAG_NAME'
-
-const isUniqueViolation = (e: unknown): boolean =>
-  typeof e === 'object' && e !== null && 'code' in e && (e as { code?: string }).code === 'P2002'
 
 /** 重複名の一意制約違反を DUPLICATED_TAG_NAME へ変換して再 throw する */
 export const rethrowDuplicatedTagName = (e: unknown): never => {

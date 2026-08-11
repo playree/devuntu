@@ -27,8 +27,11 @@ import {
   laneDropId,
   matchesKanbanFilter,
   nextOrder,
+  nextSequentialKey,
   normalizeMentionName,
   parseDropTarget,
+  parseTicketDisplayId,
+  parseTicketNumber,
   reindexLane,
   resolveBoardRole,
   resolveMentionUserIds,
@@ -37,6 +40,7 @@ import {
   tagNamesWhere,
   TICKET_SORT_COLUMNS,
   TICKET_STATUSES,
+  ticketDisplayId,
   ticketListOrderBy,
   ticketScopeWhere,
   type BoardRole,
@@ -119,6 +123,65 @@ describe('canApplyAssignments: ボードのアサイン', () => {
     expect(canApplyAssignments({ ownerIds: [], byAdmin: false }), 'owner 操作では拒否').toBe(false)
     expect(canApplyAssignments({ ownerIds: [], byAdmin: true }), '管理者操作では許可').toBe(true)
     expect(canApplyAssignments({ ownerIds: ['u1'], byAdmin: false }), 'owner が 1 人以上なら許可').toBe(true)
+  })
+})
+
+/* -------------------------------------------------------------------------------------------------
+ * 表示ID
+ * -----------------------------------------------------------------------------------------------*/
+
+describe('ticketDisplayId / parseTicketDisplayId: 表示IDの組み立てと分解', () => {
+  it('ボードキーと番号をハイフンで繋ぐ', () => {
+    expect(ticketDisplayId({ key: 'DEV', number: 12 })).toBe('DEV-12')
+  })
+
+  it('組み立てた表示IDはそのまま読み戻せる', () => {
+    expect(parseTicketDisplayId(ticketDisplayId({ key: 'DEV', number: 12 }))).toEqual({ key: 'DEV', number: 12 })
+  })
+
+  it('小文字で貼られてもキーは大文字へ寄せる', () => {
+    expect(parseTicketDisplayId('dev-12')).toEqual({ key: 'DEV', number: 12 })
+  })
+
+  it('前後の空白は無視する', () => {
+    expect(parseTicketDisplayId(' DEV-12 ')).toEqual({ key: 'DEV', number: 12 })
+  })
+
+  it('形式外は null', () => {
+    expect(parseTicketDisplayId('DEV'), 'キーだけ').toBeNull()
+    expect(parseTicketDisplayId('12'), '番号だけ').toBeNull()
+    expect(parseTicketDisplayId('1DEV-12'), '数字始まりのキー').toBeNull()
+    expect(parseTicketDisplayId('D-12'), '1 文字のキー').toBeNull()
+    expect(parseTicketDisplayId('TOOLONGKEY-12'), '8 文字を超えるキー').toBeNull()
+    expect(parseTicketDisplayId('DEV-0012345678'), 'Int に収まらない桁数').toBeNull()
+    expect(parseTicketDisplayId('DEV-12 の件'), '後ろに文字が続く').toBeNull()
+  })
+})
+
+describe('parseTicketNumber: 番号だけの指定', () => {
+  it('# 付き / 無しのどちらも受ける', () => {
+    expect(parseTicketNumber('12')).toBe(12)
+    expect(parseTicketNumber('#12')).toBe(12)
+  })
+
+  it('数字以外が混じれば null', () => {
+    expect(parseTicketNumber('12a')).toBeNull()
+    expect(parseTicketNumber('##12')).toBeNull()
+    expect(parseTicketNumber('')).toBeNull()
+  })
+})
+
+describe('nextSequentialKey: 連番キーの採番', () => {
+  it('既存が無ければ 1 から始める', () => {
+    expect(nextSequentialKey('PRV', [])).toBe('PRV1')
+  })
+
+  it('既存の最大 + 1 を返す(件数ではなく最大値で決める)', () => {
+    expect(nextSequentialKey('PRV', ['PRV1', 'PRV9', 'PRV3'])).toBe('PRV10')
+  })
+
+  it('接頭辞が違うキー / 連番でないキーは無視する', () => {
+    expect(nextSequentialKey('PRV', ['DEV1', 'PRVX', 'PRV2'])).toBe('PRV3')
   })
 })
 
@@ -222,6 +285,18 @@ describe('buildTicketWhere: 検索条件から Prisma where を組む', () => {
         { comments: { some: { content: { contains: 'foo', mode: 'insensitive' } } } },
       ],
     })
+  })
+
+  it('表示IDを貼るとキー + 番号の完全一致が OR の先頭に足される', () => {
+    const res = buildTicketWhere({ ...emptyParams, keyword: 'DEV-12' }, ctx)
+    const or = (res.AND as { OR: unknown[] }[])[1].OR
+    expect(or[0], '索引が効く完全一致を先に評価させる').toEqual({ number: 12, board: { key: 'DEV' } })
+    expect(or, '文字列としての横断検索も残る').toHaveLength(5)
+  })
+
+  it('番号だけの指定はボードを跨いで番号一致する', () => {
+    const res = buildTicketWhere({ ...emptyParams, keyword: '#12' }, ctx)
+    expect((res.AND as { OR: unknown[] }[])[1].OR[0]).toEqual({ number: 12 })
   })
 
   it('status / priority / タグはいずれも in(= OR)になる', () => {

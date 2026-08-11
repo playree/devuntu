@@ -2,6 +2,8 @@ import { el } from '@/locale'
 import { z } from 'zod'
 import {
   ASSIGNEE_NONE,
+  BOARD_KEY_PATTERN,
+  MAX_BOARD_KEY,
   MAX_TAG_NAME,
   MAX_TICKET_TAGS,
   TAG_COLORS,
@@ -222,6 +224,16 @@ export const zTicketStatus = z.enum(TICKET_STATUSES)
 export const zTicketPriority = z.enum(TICKET_PRIORITIES)
 export const zCommentContent = z.string().trim().min(1, el('@required_field')).max(5000, el('@invalid_content'))
 export const zBoardDescription = z.string().max(200, el('@invalid_description')).optional()
+/**
+ * ボードキー(チケット表示ID `KEY-番号` の接頭辞)。小文字で入力されても大文字へ寄せてから検証する。
+ * 変更すると共有済みの表示IDが指す先が変わるため、変更できるのは owner と管理者に限る。
+ */
+export const zBoardKey = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .max(MAX_BOARD_KEY, el('@invalid_board_key'))
+  .regex(BOARD_KEY_PATTERN, el('@invalid_board_key'))
 /** ボードのロール。Prisma の BoardMemberRole / task.ts の BoardRole と一致させる */
 export const zBoardRole = z.enum(['owner', 'member'])
 
@@ -330,6 +342,7 @@ export type UpdateTicketComment = z.infer<typeof scUpdateTicketComment>
 
 export const scCreateBoard = z.object({
   name: zName,
+  key: zBoardKey,
   description: zBoardDescription,
 })
 export type CreateBoard = z.infer<typeof scCreateBoard>
@@ -337,6 +350,7 @@ export type CreateBoard = z.infer<typeof scCreateBoard>
 export const scUpdateBoard = z.object({
   id: z.uuidv7(),
   name: zName,
+  key: zBoardKey,
   description: zBoardDescription,
   archived: z.boolean(),
 })

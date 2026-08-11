@@ -9,6 +9,7 @@ import {
   getAccessibleBoardIds,
   getBoardMemberUsers,
   getBoardsMemberUsers,
+  nextTicketNumber,
 } from '@/lib/board'
 import { dateOnlyToUtc, nowDate } from '@/lib/day'
 import { errInvalidOperation } from '@/lib/error'
@@ -16,7 +17,7 @@ import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { scCreateTag, scCreateTicket, scTicketListQuery, scUUID } from '@/lib/schema'
 import { assertTagIdsInBoard, listVisibleTags, rethrowDuplicatedTagName } from '@/lib/tag'
-import { buildTicketWhere, MAX_TAGS_PER_SCOPE, nextOrder, ticketListOrderBy } from '@/lib/task'
+import { buildTicketWhere, MAX_TAGS_PER_SCOPE, nextOrder, ticketDisplayId, ticketListOrderBy } from '@/lib/task'
 
 /** タグの選択肢として返す列。`lib/tag.ts` の TagOption と一致させる */
 const TAG_SELECT = { id: true, boardId: true, name: true, color: true, order: true } as const
@@ -48,13 +49,14 @@ export const getTickets = safeAuthAction
         where,
         select: {
           id: true,
+          number: true,
           title: true,
           status: true,
           priority: true,
           tags: TICKET_TAGS_SELECT,
           dueDate: true,
           boardId: true,
-          board: { select: { name: true, kind: true } },
+          board: { select: { name: true, kind: true, key: true } },
           assigneeId: true,
           assignee: { select: { name: true } },
           _count: { select: { comments: true } },
@@ -72,6 +74,8 @@ export const getTickets = safeAuthAction
         ...ticket,
         // 中間テーブルは表示側で扱わないので平坦化する
         tags: tags.map(({ tag }) => tag),
+        // 表示ID はボードキーとの組で決まるので、組み立てはサーバー側に寄せる
+        displayId: ticketDisplayId({ key: board.key, number: ticket.number }),
         boardName: board.name,
         boardKind: board.kind,
         assigneeName: assignee?.name ?? '',
@@ -190,10 +194,13 @@ export const createTicket = safeAuthAction
 
       // 対象レーンの末尾へ追加する。必要なのは最大値だけなので全行は読まない
       const lane = await tx.ticket.aggregate({ where: { boardId, status }, _max: { order: true } })
+      // 採番はボード行をロックするので、他の検証を終えてから最後に取る
+      const number = await nextTicketNumber(tx, boardId)
 
-      return tx.ticket.create({
+      const created = await tx.ticket.create({
         data: {
           ...rest,
+          number,
           status,
           boardId,
           dueDate: dateOnlyToUtc(dueDate),
@@ -204,8 +211,15 @@ export const createTicket = safeAuthAction
           tags: { create: ids.map((tagId) => ({ tagId })) },
           order: nextOrder(lane._max.order === null ? [] : [lane._max.order]),
         },
-        select: { id: true, title: true },
+        select: { id: true, title: true, number: true, board: { select: { key: true } } },
       })
+
+      // 表示IDは組み立てて返す(作成直後の通知でそのまま出せるようにする)
+      return {
+        id: created.id,
+        title: created.title,
+        displayId: ticketDisplayId({ key: created.board.key, number: created.number }),
+      }
     })
 
     logger.info({ userId: user.id, ticket }, 'ticket created')

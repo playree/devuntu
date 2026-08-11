@@ -75,19 +75,12 @@ const TagRowForm: FC<{
   return (
     <FlexRow isSmart className='flex-wrap items-end gap-2 rounded-xl border-2 p-2'>
       <div className='min-w-40 grow'>
-        <InputField
-          label={t('name')}
-          value={name}
-          variant='secondary'
-          maxLength={MAX_TAG_NAME}
-          onChange={(e) => setName(e.target.value)}
-        />
+        <InputField label={t('name')} value={name} maxLength={MAX_TAG_NAME} onChange={(e) => setName(e.target.value)} />
       </div>
       <div className='w-20'>
         <InputField
           label={t('display_order')}
           value={order}
-          variant='secondary'
           inputMode='numeric'
           onChange={(e) => setOrder(e.target.value.replace(/\D/g, ''))}
         />

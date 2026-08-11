@@ -9,7 +9,7 @@ import { notifyMention } from '@/lib/notify-mention'
 import { prisma } from '@/lib/prisma'
 import { scCreateTicketComment, scPatchTicket, scUpdateTicketComment, scUpdateTicketStatus, scUUID } from '@/lib/schema'
 import { assertTagIdsInBoard, syncTicketTags } from '@/lib/tag'
-import { extractMentionNames, resolveMentionUserIds } from '@/lib/task'
+import { extractMentionNames, resolveMentionUserIds, ticketDisplayId } from '@/lib/task'
 
 /**
  * チケット詳細取得(本文 + コメント + 権限)
@@ -26,8 +26,9 @@ export const getTicket = safeAuthAction
       where: { id },
       select: {
         id: true,
+        number: true,
         boardId: true,
-        board: { select: { name: true, kind: true } },
+        board: { select: { name: true, kind: true, key: true } },
         title: true,
         content: true,
         status: true,
@@ -74,6 +75,7 @@ export const getTicket = safeAuthAction
       ...rest,
       // 中間テーブルは表示側で扱わないので平坦化する
       tags: tags.map(({ tag }) => tag),
+      displayId: ticketDisplayId({ key: board.key, number: rest.number }),
       boardName: board.name,
       boardKind: board.kind,
       assigneeName: assignee?.name ?? '',
@@ -157,7 +159,7 @@ export const addTicketComment = safeAuthAction
   .metadata({ actionName: 'addTicketComment', role: 'user' })
   .inputSchema(scCreateTicketComment)
   .action(async ({ ctx: { user }, parsedInput: { ticketId, content } }) => {
-    const { comment, mentionedUserIds } = await prisma.$transaction(async (tx) => {
+    const { comment, mentionedUserIds, ticket } = await prisma.$transaction(async (tx) => {
       const access = await assertTicketAccess(user, ticketId, 'edit', tx)
 
       const candidates = await getTicketMentionCandidates(access, tx)
@@ -169,13 +171,25 @@ export const addTicketComment = safeAuthAction
       })
 
       // 検索(更新日時順)の観点でチケット側の updatedAt も更新する
-      await tx.ticket.update({ where: { id: ticketId }, data: { updatedAt: new Date() } })
+      // 通知の見出しに使う表示ID / 件名はこの update の戻りから取る(追加の SELECT を増やさない)
+      const ticket = await tx.ticket.update({
+        where: { id: ticketId },
+        data: { updatedAt: new Date() },
+        select: { number: true, title: true, board: { select: { key: true } } },
+      })
 
-      return { comment, mentionedUserIds }
+      return { comment, mentionedUserIds, ticket }
     })
 
     // 通知は未実装(ログのみ)
-    await notifyMention({ ticketId, commentId: comment.id, fromUserId: user.id, toUserIds: mentionedUserIds })
+    await notifyMention({
+      ticketId,
+      displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
+      ticketTitle: ticket.title,
+      commentId: comment.id,
+      fromUserId: user.id,
+      toUserIds: mentionedUserIds,
+    })
 
     logger.info({ userId: user.id, ticketId, commentId: comment.id }, 'ticket comment added')
     return { id: comment.id, mentionedUserIds }

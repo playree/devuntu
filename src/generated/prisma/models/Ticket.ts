@@ -27,10 +27,12 @@ export type AggregateTicket = {
 }
 
 export type TicketAvgAggregateOutputType = {
+  number: number | null
   order: number | null
 }
 
 export type TicketSumAggregateOutputType = {
+  number: number | null
   order: number | null
 }
 
@@ -39,6 +41,7 @@ export type TicketMinAggregateOutputType = {
   boardId: string | null
   createdById: string | null
   assigneeId: string | null
+  number: number | null
   title: string | null
   content: string | null
   status: $Enums.TicketStatus | null
@@ -55,6 +58,7 @@ export type TicketMaxAggregateOutputType = {
   boardId: string | null
   createdById: string | null
   assigneeId: string | null
+  number: number | null
   title: string | null
   content: string | null
   status: $Enums.TicketStatus | null
@@ -71,6 +75,7 @@ export type TicketCountAggregateOutputType = {
   boardId: number
   createdById: number
   assigneeId: number
+  number: number
   title: number
   content: number
   status: number
@@ -85,10 +90,12 @@ export type TicketCountAggregateOutputType = {
 
 
 export type TicketAvgAggregateInputType = {
+  number?: true
   order?: true
 }
 
 export type TicketSumAggregateInputType = {
+  number?: true
   order?: true
 }
 
@@ -97,6 +104,7 @@ export type TicketMinAggregateInputType = {
   boardId?: true
   createdById?: true
   assigneeId?: true
+  number?: true
   title?: true
   content?: true
   status?: true
@@ -113,6 +121,7 @@ export type TicketMaxAggregateInputType = {
   boardId?: true
   createdById?: true
   assigneeId?: true
+  number?: true
   title?: true
   content?: true
   status?: true
@@ -129,6 +138,7 @@ export type TicketCountAggregateInputType = {
   boardId?: true
   createdById?: true
   assigneeId?: true
+  number?: true
   title?: true
   content?: true
   status?: true
@@ -232,6 +242,7 @@ export type TicketGroupByOutputType = {
   boardId: string
   createdById: string | null
   assigneeId: string | null
+  number: number
   title: string
   content: string | null
   status: $Enums.TicketStatus
@@ -271,6 +282,7 @@ export type TicketWhereInput = {
   boardId?: Prisma.StringFilter<"Ticket"> | string
   createdById?: Prisma.StringNullableFilter<"Ticket"> | string | null
   assigneeId?: Prisma.StringNullableFilter<"Ticket"> | string | null
+  number?: Prisma.IntFilter<"Ticket"> | number
   title?: Prisma.StringFilter<"Ticket"> | string
   content?: Prisma.StringNullableFilter<"Ticket"> | string | null
   status?: Prisma.EnumTicketStatusFilter<"Ticket"> | $Enums.TicketStatus
@@ -292,6 +304,7 @@ export type TicketOrderByWithRelationInput = {
   boardId?: Prisma.SortOrder
   createdById?: Prisma.SortOrderInput | Prisma.SortOrder
   assigneeId?: Prisma.SortOrderInput | Prisma.SortOrder
+  number?: Prisma.SortOrder
   title?: Prisma.SortOrder
   content?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -310,12 +323,14 @@ export type TicketOrderByWithRelationInput = {
 
 export type TicketWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  boardId_number?: Prisma.TicketBoardIdNumberCompoundUniqueInput
   AND?: Prisma.TicketWhereInput | Prisma.TicketWhereInput[]
   OR?: Prisma.TicketWhereInput[]
   NOT?: Prisma.TicketWhereInput | Prisma.TicketWhereInput[]
   boardId?: Prisma.StringFilter<"Ticket"> | string
   createdById?: Prisma.StringNullableFilter<"Ticket"> | string | null
   assigneeId?: Prisma.StringNullableFilter<"Ticket"> | string | null
+  number?: Prisma.IntFilter<"Ticket"> | number
   title?: Prisma.StringFilter<"Ticket"> | string
   content?: Prisma.StringNullableFilter<"Ticket"> | string | null
   status?: Prisma.EnumTicketStatusFilter<"Ticket"> | $Enums.TicketStatus
@@ -330,13 +345,14 @@ export type TicketWhereUniqueInput = Prisma.AtLeast<{
   assignee?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   tags?: Prisma.TicketTagListRelationFilter
   comments?: Prisma.TicketCommentListRelationFilter
-}, "id">
+}, "id" | "boardId_number">
 
 export type TicketOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   boardId?: Prisma.SortOrder
   createdById?: Prisma.SortOrderInput | Prisma.SortOrder
   assigneeId?: Prisma.SortOrderInput | Prisma.SortOrder
+  number?: Prisma.SortOrder
   title?: Prisma.SortOrder
   content?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -361,6 +377,7 @@ export type TicketScalarWhereWithAggregatesInput = {
   boardId?: Prisma.StringWithAggregatesFilter<"Ticket"> | string
   createdById?: Prisma.StringNullableWithAggregatesFilter<"Ticket"> | string | null
   assigneeId?: Prisma.StringNullableWithAggregatesFilter<"Ticket"> | string | null
+  number?: Prisma.IntWithAggregatesFilter<"Ticket"> | number
   title?: Prisma.StringWithAggregatesFilter<"Ticket"> | string
   content?: Prisma.StringNullableWithAggregatesFilter<"Ticket"> | string | null
   status?: Prisma.EnumTicketStatusWithAggregatesFilter<"Ticket"> | $Enums.TicketStatus
@@ -374,6 +391,7 @@ export type TicketScalarWhereWithAggregatesInput = {
 
 export type TicketCreateInput = {
   id?: string
+  number: number
   title: string
   content?: string | null
   status?: $Enums.TicketStatus
@@ -395,6 +413,7 @@ export type TicketUncheckedCreateInput = {
   boardId: string
   createdById?: string | null
   assigneeId?: string | null
+  number: number
   title: string
   content?: string | null
   status?: $Enums.TicketStatus
@@ -410,6 +429,7 @@ export type TicketUncheckedCreateInput = {
 
 export type TicketUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
@@ -431,6 +451,7 @@ export type TicketUncheckedUpdateInput = {
   boardId?: Prisma.StringFieldUpdateOperationsInput | string
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   assigneeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
@@ -449,6 +470,7 @@ export type TicketCreateManyInput = {
   boardId: string
   createdById?: string | null
   assigneeId?: string | null
+  number: number
   title: string
   content?: string | null
   status?: $Enums.TicketStatus
@@ -462,6 +484,7 @@ export type TicketCreateManyInput = {
 
 export type TicketUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
@@ -478,6 +501,7 @@ export type TicketUncheckedUpdateManyInput = {
   boardId?: Prisma.StringFieldUpdateOperationsInput | string
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   assigneeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
@@ -504,11 +528,17 @@ export type TicketScalarRelationFilter = {
   isNot?: Prisma.TicketWhereInput
 }
 
+export type TicketBoardIdNumberCompoundUniqueInput = {
+  boardId: string
+  number: number
+}
+
 export type TicketCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   boardId?: Prisma.SortOrder
   createdById?: Prisma.SortOrder
   assigneeId?: Prisma.SortOrder
+  number?: Prisma.SortOrder
   title?: Prisma.SortOrder
   content?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -521,6 +551,7 @@ export type TicketCountOrderByAggregateInput = {
 }
 
 export type TicketAvgOrderByAggregateInput = {
+  number?: Prisma.SortOrder
   order?: Prisma.SortOrder
 }
 
@@ -529,6 +560,7 @@ export type TicketMaxOrderByAggregateInput = {
   boardId?: Prisma.SortOrder
   createdById?: Prisma.SortOrder
   assigneeId?: Prisma.SortOrder
+  number?: Prisma.SortOrder
   title?: Prisma.SortOrder
   content?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -545,6 +577,7 @@ export type TicketMinOrderByAggregateInput = {
   boardId?: Prisma.SortOrder
   createdById?: Prisma.SortOrder
   assigneeId?: Prisma.SortOrder
+  number?: Prisma.SortOrder
   title?: Prisma.SortOrder
   content?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -557,6 +590,7 @@ export type TicketMinOrderByAggregateInput = {
 }
 
 export type TicketSumOrderByAggregateInput = {
+  number?: Prisma.SortOrder
   order?: Prisma.SortOrder
 }
 
@@ -724,6 +758,7 @@ export type TicketUpdateOneRequiredWithoutCommentsNestedInput = {
 
 export type TicketCreateWithoutCreatedByInput = {
   id?: string
+  number: number
   title: string
   content?: string | null
   status?: $Enums.TicketStatus
@@ -743,6 +778,7 @@ export type TicketUncheckedCreateWithoutCreatedByInput = {
   id?: string
   boardId: string
   assigneeId?: string | null
+  number: number
   title: string
   content?: string | null
   status?: $Enums.TicketStatus
@@ -768,6 +804,7 @@ export type TicketCreateManyCreatedByInputEnvelope = {
 
 export type TicketCreateWithoutAssigneeInput = {
   id?: string
+  number: number
   title: string
   content?: string | null
   status?: $Enums.TicketStatus
@@ -787,6 +824,7 @@ export type TicketUncheckedCreateWithoutAssigneeInput = {
   id?: string
   boardId: string
   createdById?: string | null
+  number: number
   title: string
   content?: string | null
   status?: $Enums.TicketStatus
@@ -834,6 +872,7 @@ export type TicketScalarWhereInput = {
   boardId?: Prisma.StringFilter<"Ticket"> | string
   createdById?: Prisma.StringNullableFilter<"Ticket"> | string | null
   assigneeId?: Prisma.StringNullableFilter<"Ticket"> | string | null
+  number?: Prisma.IntFilter<"Ticket"> | number
   title?: Prisma.StringFilter<"Ticket"> | string
   content?: Prisma.StringNullableFilter<"Ticket"> | string | null
   status?: Prisma.EnumTicketStatusFilter<"Ticket"> | $Enums.TicketStatus
@@ -863,6 +902,7 @@ export type TicketUpdateManyWithWhereWithoutAssigneeInput = {
 
 export type TicketCreateWithoutBoardInput = {
   id?: string
+  number: number
   title: string
   content?: string | null
   status?: $Enums.TicketStatus
@@ -882,6 +922,7 @@ export type TicketUncheckedCreateWithoutBoardInput = {
   id?: string
   createdById?: string | null
   assigneeId?: string | null
+  number: number
   title: string
   content?: string | null
   status?: $Enums.TicketStatus
@@ -923,6 +964,7 @@ export type TicketUpdateManyWithWhereWithoutBoardInput = {
 
 export type TicketCreateWithoutTagsInput = {
   id?: string
+  number: number
   title: string
   content?: string | null
   status?: $Enums.TicketStatus
@@ -943,6 +985,7 @@ export type TicketUncheckedCreateWithoutTagsInput = {
   boardId: string
   createdById?: string | null
   assigneeId?: string | null
+  number: number
   title: string
   content?: string | null
   status?: $Enums.TicketStatus
@@ -973,6 +1016,7 @@ export type TicketUpdateToOneWithWhereWithoutTagsInput = {
 
 export type TicketUpdateWithoutTagsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
@@ -993,6 +1037,7 @@ export type TicketUncheckedUpdateWithoutTagsInput = {
   boardId?: Prisma.StringFieldUpdateOperationsInput | string
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   assigneeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
@@ -1007,6 +1052,7 @@ export type TicketUncheckedUpdateWithoutTagsInput = {
 
 export type TicketCreateWithoutCommentsInput = {
   id?: string
+  number: number
   title: string
   content?: string | null
   status?: $Enums.TicketStatus
@@ -1027,6 +1073,7 @@ export type TicketUncheckedCreateWithoutCommentsInput = {
   boardId: string
   createdById?: string | null
   assigneeId?: string | null
+  number: number
   title: string
   content?: string | null
   status?: $Enums.TicketStatus
@@ -1057,6 +1104,7 @@ export type TicketUpdateToOneWithWhereWithoutCommentsInput = {
 
 export type TicketUpdateWithoutCommentsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
@@ -1077,6 +1125,7 @@ export type TicketUncheckedUpdateWithoutCommentsInput = {
   boardId?: Prisma.StringFieldUpdateOperationsInput | string
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   assigneeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
@@ -1093,6 +1142,7 @@ export type TicketCreateManyCreatedByInput = {
   id?: string
   boardId: string
   assigneeId?: string | null
+  number: number
   title: string
   content?: string | null
   status?: $Enums.TicketStatus
@@ -1108,6 +1158,7 @@ export type TicketCreateManyAssigneeInput = {
   id?: string
   boardId: string
   createdById?: string | null
+  number: number
   title: string
   content?: string | null
   status?: $Enums.TicketStatus
@@ -1121,6 +1172,7 @@ export type TicketCreateManyAssigneeInput = {
 
 export type TicketUpdateWithoutCreatedByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
@@ -1140,6 +1192,7 @@ export type TicketUncheckedUpdateWithoutCreatedByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   boardId?: Prisma.StringFieldUpdateOperationsInput | string
   assigneeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
@@ -1157,6 +1210,7 @@ export type TicketUncheckedUpdateManyWithoutCreatedByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   boardId?: Prisma.StringFieldUpdateOperationsInput | string
   assigneeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
@@ -1170,6 +1224,7 @@ export type TicketUncheckedUpdateManyWithoutCreatedByInput = {
 
 export type TicketUpdateWithoutAssigneeInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
@@ -1189,6 +1244,7 @@ export type TicketUncheckedUpdateWithoutAssigneeInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   boardId?: Prisma.StringFieldUpdateOperationsInput | string
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
@@ -1206,6 +1262,7 @@ export type TicketUncheckedUpdateManyWithoutAssigneeInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   boardId?: Prisma.StringFieldUpdateOperationsInput | string
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
@@ -1221,6 +1278,7 @@ export type TicketCreateManyBoardInput = {
   id?: string
   createdById?: string | null
   assigneeId?: string | null
+  number: number
   title: string
   content?: string | null
   status?: $Enums.TicketStatus
@@ -1234,6 +1292,7 @@ export type TicketCreateManyBoardInput = {
 
 export type TicketUpdateWithoutBoardInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
@@ -1253,6 +1312,7 @@ export type TicketUncheckedUpdateWithoutBoardInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   assigneeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
@@ -1270,6 +1330,7 @@ export type TicketUncheckedUpdateManyWithoutBoardInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   assigneeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
@@ -1326,6 +1387,7 @@ export type TicketSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   boardId?: boolean
   createdById?: boolean
   assigneeId?: boolean
+  number?: boolean
   title?: boolean
   content?: boolean
   status?: boolean
@@ -1348,6 +1410,7 @@ export type TicketSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   boardId?: boolean
   createdById?: boolean
   assigneeId?: boolean
+  number?: boolean
   title?: boolean
   content?: boolean
   status?: boolean
@@ -1367,6 +1430,7 @@ export type TicketSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
   boardId?: boolean
   createdById?: boolean
   assigneeId?: boolean
+  number?: boolean
   title?: boolean
   content?: boolean
   status?: boolean
@@ -1386,6 +1450,7 @@ export type TicketSelectScalar = {
   boardId?: boolean
   createdById?: boolean
   assigneeId?: boolean
+  number?: boolean
   title?: boolean
   content?: boolean
   status?: boolean
@@ -1397,7 +1462,7 @@ export type TicketSelectScalar = {
   updatedAt?: boolean
 }
 
-export type TicketOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "boardId" | "createdById" | "assigneeId" | "title" | "content" | "status" | "priority" | "dueDate" | "completedAt" | "order" | "createdAt" | "updatedAt", ExtArgs["result"]["ticket"]>
+export type TicketOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "boardId" | "createdById" | "assigneeId" | "number" | "title" | "content" | "status" | "priority" | "dueDate" | "completedAt" | "order" | "createdAt" | "updatedAt", ExtArgs["result"]["ticket"]>
 export type TicketInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   board?: boolean | Prisma.BoardDefaultArgs<ExtArgs>
   createdBy?: boolean | Prisma.Ticket$createdByArgs<ExtArgs>
@@ -1431,6 +1496,7 @@ export type $TicketPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     boardId: string
     createdById: string | null
     assigneeId: string | null
+    number: number
     title: string
     content: string | null
     status: $Enums.TicketStatus
@@ -1872,6 +1938,7 @@ export interface TicketFieldRefs {
   readonly boardId: Prisma.FieldRef<"Ticket", 'String'>
   readonly createdById: Prisma.FieldRef<"Ticket", 'String'>
   readonly assigneeId: Prisma.FieldRef<"Ticket", 'String'>
+  readonly number: Prisma.FieldRef<"Ticket", 'Int'>
   readonly title: Prisma.FieldRef<"Ticket", 'String'>
   readonly content: Prisma.FieldRef<"Ticket", 'String'>
   readonly status: Prisma.FieldRef<"Ticket", 'TicketStatus'>

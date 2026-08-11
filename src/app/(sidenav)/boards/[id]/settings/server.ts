@@ -9,6 +9,7 @@ import {
   countTicketsByBoard,
   getBoardMemberUsers,
   isAdminActor,
+  rethrowDuplicatedBoardKey,
   syncBoardGroups,
   type Actor,
 } from '@/lib/board'
@@ -43,7 +44,7 @@ export const getBoardDetail = safeAuthAction
 
     const board = await prisma.board.findUnique({
       where: { id },
-      select: { id: true, kind: true, name: true, description: true, archived: true, createdAt: true },
+      select: { id: true, kind: true, key: true, name: true, description: true, archived: true, createdAt: true },
     })
     if (!board) {
       throw errInvalidOperation()
@@ -79,12 +80,16 @@ export type GetBoardMembersReturnType = Awaited<ReturnType<typeof getBoardMember
 export const updateBoard = safeAuthAction
   .metadata({ actionName: 'updateBoard', role: 'user' })
   .inputSchema(scUpdateBoard)
-  .action(async ({ ctx: { user }, parsedInput: { id, name, description, archived } }) => {
+  .action(async ({ ctx: { user }, parsedInput: { id, name, key, description, archived } }) => {
     const board = await prisma.$transaction(async (tx) => {
       await assertBoardAccess(user, id, 'manage', tx)
       await assertTeamBoard(tx, id)
 
-      return tx.board.update({ where: { id }, data: { name, description, archived }, select: { id: true, name: true } })
+      // キーを変えると既存チケットの表示IDも一斉に変わる(番号は据え置き)。
+      // 共有済みの旧表示IDは解決できなくなるため、変更できるのは owner と管理者に限っている
+      return tx.board
+        .update({ where: { id }, data: { name, key, description, archived }, select: { id: true, name: true } })
+        .catch(rethrowDuplicatedBoardKey)
     })
 
     logger.info({ userId: user.id, id }, 'board updated')

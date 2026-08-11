@@ -7,7 +7,7 @@ import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { scMoveTicket, scUUID } from '@/lib/schema'
-import { groupByLane, kanbanDoneSince, kanbanTicketWhere, MAX_KANBAN_CARDS } from '@/lib/task'
+import { groupByLane, kanbanDoneSince, kanbanTicketWhere, MAX_KANBAN_CARDS, ticketDisplayId } from '@/lib/task'
 
 /**
  * かんばん表示用のボード + レーン別カード
@@ -25,7 +25,7 @@ export const getBoardKanban = safeAuthAction
 
     const board = await prisma.board.findUnique({
       where: { id },
-      select: { id: true, kind: true, name: true, description: true, archived: true },
+      select: { id: true, kind: true, key: true, name: true, description: true, archived: true },
     })
     if (!board) {
       throw errInvalidOperation()
@@ -36,6 +36,7 @@ export const getBoardKanban = safeAuthAction
       where: kanbanTicketWhere(id, kanbanDoneSince(nowDate())),
       select: {
         id: true,
+        number: true,
         title: true,
         status: true,
         priority: true,
@@ -58,6 +59,8 @@ export const getBoardKanban = safeAuthAction
       ...ticket,
       // 中間テーブルは表示側で扱わないので平坦化する
       tags: tags.map(({ tag }) => tag),
+      // 同一ボードのカードなので接頭辞は共通だが、表示側で組み立てを持たせないよう揃えて返す
+      displayId: ticketDisplayId({ key: board.key, number: ticket.number }),
       assigneeName: assignee?.name ?? '',
       // 未設定は空文字にして、表示側は assigneeName と同じ falsy 判定で扱えるようにする
       assigneeImage: assignee?.image ?? '',

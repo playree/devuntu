@@ -178,6 +178,61 @@ export const diffTagIds = (current: string[], next: string[]): { toAdd: string[]
 }
 
 /* -------------------------------------------------------------------------------------------------
+ * 表示ID
+ * -----------------------------------------------------------------------------------------------*/
+
+/** ボードキーの最大長。BOARD_KEY_PATTERN と一致させる */
+export const MAX_BOARD_KEY = 8
+
+/**
+ * ボードキー(表示IDの接頭辞)の形式。大文字英字始まりの大文字英数 2〜8 字。
+ * 検索語の判定(parseTicketDisplayId)でも同じ形を使うため、変える場合は両方を揃えること。
+ */
+export const BOARD_KEY_PATTERN = /^[A-Z][A-Z0-9]{1,7}$/
+
+/** プライベートボードのキーの接頭辞。利用者は入力せず PRV<連番> で自動採番する */
+export const PRIVATE_BOARD_KEY_PREFIX = 'PRV'
+
+/** 表示ID。利用者へ見せる識別子で、URL やチャットに貼れる単一の表記 */
+export const ticketDisplayId = ({ key, number }: { key: string; number: number }): string => `${key}-${number}`
+
+/** 検索語 / URL から表示IDを読み取る。数値は Int の範囲に収めるため 9 桁までとする */
+const DISPLAY_ID_PATTERN = /^([A-Za-z][A-Za-z0-9]{1,7})-(\d{1,9})$/
+
+/** 表示IDの分解。形式外は null。キーは大文字へ寄せるので小文字で貼られても引ける */
+export const parseTicketDisplayId = (raw: string): { key: string; number: number } | null => {
+  const matched = DISPLAY_ID_PATTERN.exec(raw.trim())
+  if (!matched) {
+    return null
+  }
+  return { key: matched[1].toUpperCase(), number: Number(matched[2]) }
+}
+
+/** キー無しの番号指定(`12` / `#12`)。ボードを跨いで同じ番号がヒットする */
+const TICKET_NUMBER_PATTERN = /^#?(\d{1,9})$/
+
+export const parseTicketNumber = (raw: string): number | null => {
+  const matched = TICKET_NUMBER_PATTERN.exec(raw.trim())
+  return matched ? Number(matched[1]) : null
+}
+
+/**
+ * `<prefix><連番>` 形式のキーの次の値。既存キーの最大 + 1(無ければ 1)。
+ * プライベートボードのキー採番に使う(接頭辞の後ろが数字でないキーは無関係とみなす)。
+ */
+export const nextSequentialKey = (prefix: string, keys: string[]): string => {
+  const max = keys.reduce((max, key) => {
+    const rest = key.startsWith(prefix) ? key.slice(prefix.length) : ''
+    if (!/^\d+$/.test(rest)) {
+      return max
+    }
+    const seq = Number(rest)
+    return seq > max ? seq : max
+  }, 0)
+  return `${prefix}${max + 1}`
+}
+
+/* -------------------------------------------------------------------------------------------------
  * 検索
  * -----------------------------------------------------------------------------------------------*/
 
@@ -230,15 +285,27 @@ export const tagNamesWhere = (names: string[]): TicketWhereInput => ({
   tags: { some: { tag: { name: { in: names } } } },
 })
 
-/** 1語ぶんの横断 OR 条件(タイトル / 本文 / タグ / コメント) */
-const keywordOr = (word: string): TicketWhereInput => ({
-  OR: [
-    { title: { contains: word, mode: 'insensitive' } },
-    { content: { contains: word, mode: 'insensitive' } },
-    { tags: { some: { tag: { name: { equals: word, mode: 'insensitive' } } } } },
-    { comments: { some: { content: { contains: word, mode: 'insensitive' } } } },
-  ],
-})
+/**
+ * 1語ぶんの横断 OR 条件(表示ID / タイトル / 本文 / タグ / コメント)。
+ *
+ * 表示ID(`DEV-12`)と番号(`#12`)は完全一致で足し、貼り付けた表示IDがそのまま 1 件に絞れるようにする。
+ * 表示IDそのものはどの列にも保持していないので、キーと番号へ分解して条件にする。
+ */
+const keywordOr = (word: string): TicketWhereInput => {
+  const displayId = parseTicketDisplayId(word)
+  const number = displayId ? null : parseTicketNumber(word)
+
+  return {
+    OR: [
+      ...(displayId ? [{ number: displayId.number, board: { key: displayId.key } }] : []),
+      ...(number === null ? [] : [{ number }]),
+      { title: { contains: word, mode: 'insensitive' as const } },
+      { content: { contains: word, mode: 'insensitive' as const } },
+      { tags: { some: { tag: { name: { equals: word, mode: 'insensitive' as const } } } } },
+      { comments: { some: { content: { contains: word, mode: 'insensitive' as const } } } },
+    ],
+  }
+}
 
 /**
  * 検索条件を Prisma の where へ変換する。

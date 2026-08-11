@@ -12,13 +12,16 @@
 import type { Prisma } from '@/generated/prisma/client'
 import type { BoardKind, TicketStatus } from '@/generated/prisma/enums'
 import { nowDate } from './day'
-import { errInvalidOperation } from './error'
-import { prisma } from './prisma'
+import { errClient, errInvalidOperation } from './error'
+import { isUniqueViolation, prisma } from './prisma'
 import {
   evaluateTicketAccess,
   insertAt,
   kanbanDoneSince,
   kanbanLaneWhere,
+  nextSequentialKey,
+  parseTicketDisplayId,
+  PRIVATE_BOARD_KEY_PREFIX,
   PRIVATE_BOARD_NAME,
   reindexLane,
   resolveBoardRole,
@@ -46,6 +49,32 @@ export type BoardAccess = {
   archived: boolean
 }
 
+/** 重複するボードキーは DB の @unique で弾かれる。クライアントへ専用コードで返す */
+const DUPLICATED_BOARD_KEY = 'DUPLICATED_BOARD_KEY'
+
+/** キー重複の一意制約違反を DUPLICATED_BOARD_KEY へ変換して再 throw する */
+export const rethrowDuplicatedBoardKey = (e: unknown): never => {
+  if (isUniqueViolation(e)) {
+    throw errClient(DUPLICATED_BOARD_KEY)
+  }
+  throw e
+}
+
+/** ensurePrivateBoard の作成リトライ回数。キーの取り合いは同時実行数ぶんしか起きない */
+const PRIVATE_BOARD_CREATE_RETRY = 3
+
+/** プライベートボードのキー(PRV<連番>)。既存の最大 + 1 を採る */
+const nextPrivateBoardKey = async (): Promise<string> => {
+  const boards = await prisma.board.findMany({
+    where: { key: { startsWith: PRIVATE_BOARD_KEY_PREFIX } },
+    select: { key: true },
+  })
+  return nextSequentialKey(
+    PRIVATE_BOARD_KEY_PREFIX,
+    boards.map(({ key }) => key),
+  )
+}
+
 /**
  * プライベートボード(1ユーザー1つ)を冪等に用意して boardId を返す。
  *
@@ -54,7 +83,8 @@ export type BoardAccess = {
  * 自分のチケットが 1 件も見えなくなる。
  *
  * 一覧と選択肢の取得はクライアントから並行で走るため、同時に create が起きうる。
- * privateOwnerId の @unique に当たった場合(P2002)は読み直して吸収する。
+ * privateOwnerId の @unique に当たったなら読み直して吸収し、キーの取り合いに負けた場合は
+ * 採番からやり直す(自分のボードはまだ無いので読み直しでは吸収できない)。
  */
 export const ensurePrivateBoard = async (user: { id: string }): Promise<string> => {
   const found = await prisma.board.findUnique({ where: { privateOwnerId: user.id }, select: { id: true } })
@@ -62,24 +92,29 @@ export const ensurePrivateBoard = async (user: { id: string }): Promise<string> 
     return found.id
   }
 
-  try {
-    const created = await prisma.board.create({
-      data: {
-        kind: 'private',
-        privateOwnerId: user.id,
-        // 表示は kind==='private' のときロケールへ差し替えるため、この値は画面に出ない
-        name: PRIVATE_BOARD_NAME,
-        members: { create: { userId: user.id, role: 'owner' } },
-      },
-      select: { id: true },
-    })
-    return created.id
-  } catch (e) {
-    const raced = await prisma.board.findUnique({ where: { privateOwnerId: user.id }, select: { id: true } })
-    if (!raced) {
-      throw e
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const created = await prisma.board.create({
+        data: {
+          kind: 'private',
+          privateOwnerId: user.id,
+          key: await nextPrivateBoardKey(),
+          // 表示は kind==='private' のときロケールへ差し替えるため、この値は画面に出ない
+          name: PRIVATE_BOARD_NAME,
+          members: { create: { userId: user.id, role: 'owner' } },
+        },
+        select: { id: true },
+      })
+      return created.id
+    } catch (e) {
+      const raced = await prisma.board.findUnique({ where: { privateOwnerId: user.id }, select: { id: true } })
+      if (raced) {
+        return raced.id
+      }
+      if (attempt >= PRIVATE_BOARD_CREATE_RETRY) {
+        throw e
+      }
     }
-    return raced.id
   }
 }
 
@@ -176,6 +211,8 @@ export const getAccessibleBoardIds = async (
 export type BoardListItem = {
   id: string
   kind: BoardKind
+  /** チケット表示IDの接頭辞 */
+  key: string
   name: string
   description: string
   archived: boolean
@@ -199,6 +236,7 @@ export const listAccessibleBoards = async (
     select: {
       id: true,
       kind: true,
+      key: true,
       name: true,
       description: true,
       archived: true,
@@ -404,6 +442,43 @@ export const assertBoardAssignmentTargets = async (
 /* -------------------------------------------------------------------------------------------------
  * チケット
  * -----------------------------------------------------------------------------------------------*/
+
+/**
+ * ボード内のチケット番号を 1 つ払い出す。
+ *
+ * `UPDATE ... RETURNING` の行ロックで同一ボードへの同時作成が直列化されるため番号は重複しない。
+ * シーケンスと違い、トランザクションがロールバックすればカウンタも戻るので欠番も出ない。
+ * ロックはコミットまで残るので、チケット作成の直前に呼ぶこと。
+ */
+export const nextTicketNumber = async (tx: Prisma.TransactionClient, boardId: string): Promise<number> => {
+  const { ticketSeq } = await tx.board.update({
+    where: { id: boardId },
+    data: { ticketSeq: { increment: 1 } },
+    select: { ticketSeq: true },
+  })
+  return ticketSeq
+}
+
+/**
+ * 表示ID(`KEY-番号`)からチケット ID を引く。形式外・未存在は null。
+ *
+ * 認可はしない(呼び出し元がチケット詳細側の `assertTicketAccess` へ委ねる前提)。
+ */
+export const findTicketIdByDisplayId = async (raw: string): Promise<string | null> => {
+  const parsed = parseTicketDisplayId(raw)
+  if (!parsed) {
+    return null
+  }
+  const board = await prisma.board.findUnique({ where: { key: parsed.key }, select: { id: true } })
+  if (!board) {
+    return null
+  }
+  const ticket = await prisma.ticket.findUnique({
+    where: { boardId_number: { boardId: board.id, number: parsed.number } },
+    select: { id: true },
+  })
+  return ticket?.id ?? null
+}
 
 export type TicketAccess = TicketPermission & {
   ticketId: string

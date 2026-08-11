@@ -49,7 +49,6 @@ export const GroupManage: FC<{ boardId: string; assignments: Assignments; reload
         <MultiSelectCtrl
           control={control}
           name='groupIds'
-          variant='secondary'
           groupOptions={assignments.groupOptions}
           label={t('board_groups')}
         />

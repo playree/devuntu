@@ -87,7 +87,14 @@ export const BoardsClient: FC = () => {
                 >
                   {boardName(item)}
                 </Link>
-                <span className='text-xs text-gray-500'>{item.kind === 'private' ? t('private') : t('team')}</span>
+                <span className='flex items-center gap-2 text-xs text-gray-500'>
+                  {item.kind === 'private' ? t('private') : t('team')}
+                  <span // このボードのチケット表示IDの接頭辞
+                    className='font-mono'
+                  >
+                    {item.key}
+                  </span>
+                </span>
               </div>
             </Table.Cell>
             <Table.Cell className='truncate'>{item.description}</Table.Cell>

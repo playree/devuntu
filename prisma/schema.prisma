@@ -430,6 +430,12 @@ model Board {
   // (作成経路を ensurePrivateBoard と createBoard の2つに限定している)
   privateOwnerId String?       @unique
   privateOwner   User?         @relation("PrivateBoardOwner", fields: [privateOwnerId], references: [id], onDelete: Cascade)
+  // チケット表示ID(`key-number`)の接頭辞。大文字英数(BOARD_KEY_PATTERN)で全ボード一意。
+  // 変更すると共有済みの表示IDが解決できなくなるため、変更できるのは owner と管理者に限る
+  key            String        @unique
+  // 採番済みチケット番号の最大値。UPDATE の行ロックで採番を直列化する。
+  // 連番の欠けを避けるためシーケンスではなくこの列で持つ(ロールバック時は番号も戻る)
+  ticketSeq      Int           @default(0)
   name           String
   description    String?
   archived       Boolean       @default(false)
@@ -511,6 +517,8 @@ model Ticket {
   createdBy   User?           @relation("TicketCreator", fields: [createdById], references: [id], onDelete: SetNull)
   assigneeId  String?
   assignee    User?           @relation("TicketAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  // ボード内の連番(1始まり)。利用者へ見せる表示IDは `Board.key`-`number`(ticketDisplayId)
+  number      Int
   title       String
   content     String?
   status      TicketStatus    @default(todo)
@@ -526,6 +534,8 @@ model Ticket {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
+  // @@unique が (boardId, ...) の先頭索引を兼ねるので表示IDからの検索はこれで賄える
+  @@unique([boardId, number])
   @@index([boardId, status, order])
   @@index([assigneeId])
   @@index([createdById])

@@ -53,7 +53,13 @@ export const DangerZone: FC<{ board: Board; reload: () => void }> = ({ board, re
       })
       if (ok) {
         await parseAction(
-          updateBoard({ id: board.id, name: board.name, description: board.description, archived: next }),
+          updateBoard({
+            id: board.id,
+            name: board.name,
+            key: board.key,
+            description: board.description,
+            archived: next,
+          }),
         )
         notify.success(t('msg_saved'))
         reload()
