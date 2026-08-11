@@ -12,6 +12,7 @@ import {
   statusBgClass,
   StatusChip,
   TagChips,
+  TicketIdText,
 } from '@/components/ticket/ticket-chip'
 import type { TicketStatus } from '@/generated/prisma/enums'
 import { dayformat } from '@/lib/day'
@@ -188,6 +189,9 @@ const KanbanCardView: FC<{
           <div // min-w-0 が無いと、長いタイトルが flex の automatic minimum size でレーン幅を押し広げる
             className='min-w-0 flex-1 space-y-1 p-2'
           >
+            <TicketIdText // 同一ボードなので接頭辞は全カード共通だが、口頭・チャットで指すときに読み上げる値なので出す
+              displayId={card.displayId}
+            />
             <p // 空白のない長いタイトルでもレーン幅を超えないよう wrap-anywhere で任意位置折り返しにする
               className='line-clamp-2 text-sm wrap-anywhere'
             >

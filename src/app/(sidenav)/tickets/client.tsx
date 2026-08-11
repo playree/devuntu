@@ -9,7 +9,7 @@ import { useServerPagingList } from '@/components/general/paging'
 import { MultiTable, SelectionCell } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
 import { ArrowPathIcon, ChatBubbleIcon, FunnelIcon, PlusIcon, TicketIcon } from '@/components/icon'
-import { PriorityChip, StatusChip, TagChips, useBoardName } from '@/components/ticket/ticket-chip'
+import { PriorityChip, StatusChip, TagChips, TicketIdText, useBoardName } from '@/components/ticket/ticket-chip'
 import { parseAction } from '@/lib/action-client'
 import { dayformat } from '@/lib/day'
 import { TicketSearch } from '@/lib/schema'
@@ -162,6 +162,8 @@ export const TicketsClient: FC<{
           setSelectedId(next === undefined ? undefined : String(next))
         }}
         columns={[
+          // 番号順の並べ替えは持たない(TICKET_SORT_COLUMNS に無く、ボード横断では意味を成さないため)
+          { id: 'displayId', name: t('id'), allowsSorting: false, minWidth: 80, defaultWidth: 90 },
           { id: 'title', name: t('title'), isRowHeader: true, allowsSorting: true, minWidth: 140, defaultWidth: '2fr' },
           { id: 'status', name: t('status'), allowsSorting: true, minWidth: 100, defaultWidth: 100 },
           { id: 'priority', name: t('priority'), allowsSorting: true, minWidth: 70, defaultWidth: 70 },
@@ -174,6 +176,9 @@ export const TicketsClient: FC<{
         {(item) => (
           <Table.Row key={item.id} id={item.id}>
             <SelectionCell />
+            <Table.Cell>
+              <TicketIdText displayId={item.displayId} />
+            </Table.Cell>
             <Table.Cell>
               <div className='flex flex-col gap-0.5'>
                 <Link

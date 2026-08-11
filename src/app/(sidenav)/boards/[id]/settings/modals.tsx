@@ -77,7 +77,6 @@ export const AddMemberModal: FC<ModalBaseProps & { boardId: string; assignments:
         <div className='col-span-12'>
           <SingleSelectCtrl
             control={control}
-            variant='secondary'
             name='userId'
             groupOptions={userOptions}
             label={t('user')}
@@ -87,7 +86,6 @@ export const AddMemberModal: FC<ModalBaseProps & { boardId: string; assignments:
         <div className='col-span-12'>
           <SingleSelectCtrl
             control={control}
-            variant='secondary'
             name='role'
             groupOptions={roleOptions}
             label={t('role')}
@@ -149,7 +147,6 @@ export const UpdateMemberRoleModal: FC<
         <div className='col-span-12'>
           <SingleSelectCtrl // 対象ユーザーは変更させない(別のメンバーを編集したい場合は一覧から開き直す)
             control={control}
-            variant='secondary'
             name='userId'
             groupOptions={{ [target.id]: target.name }}
             label={t('user')}
@@ -159,7 +156,6 @@ export const UpdateMemberRoleModal: FC<
         <div className='col-span-12'>
           <SingleSelectCtrl
             control={control}
-            variant='secondary'
             name='role'
             groupOptions={roleOptions}
             label={t('role')}

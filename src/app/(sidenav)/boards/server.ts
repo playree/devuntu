@@ -1,7 +1,7 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action-server'
-import { countTicketsByBoard, ensurePrivateBoard, listAccessibleBoards } from '@/lib/board'
+import { countTicketsByBoard, ensurePrivateBoard, listAccessibleBoards, rethrowDuplicatedBoardKey } from '@/lib/board'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { scCreateBoard } from '@/lib/schema'
@@ -40,17 +40,20 @@ export type GetBoardsReturnType = Awaited<ReturnType<typeof getBoards>>['data']
 export const createBoard = safeAuthAction
   .metadata({ actionName: 'createBoard', role: 'user' })
   .inputSchema(scCreateBoard)
-  .action(async ({ ctx: { user }, parsedInput: { name, description } }) => {
-    const board = await prisma.board.create({
-      data: {
-        // privateOwnerId は触らない(プライベートボードの作成経路は ensurePrivateBoard だけ)
-        kind: 'team',
-        name,
-        description,
-        members: { create: { userId: user.id, role: 'owner' } },
-      },
-      select: { id: true, name: true },
-    })
+  .action(async ({ ctx: { user }, parsedInput: { name, key, description } }) => {
+    const board = await prisma.board
+      .create({
+        data: {
+          // privateOwnerId は触らない(プライベートボードの作成経路は ensurePrivateBoard だけ)
+          kind: 'team',
+          name,
+          key,
+          description,
+          members: { create: { userId: user.id, role: 'owner' } },
+        },
+        select: { id: true, name: true },
+      })
+      .catch(rethrowDuplicatedBoardKey)
 
     logger.info({ userId: user.id, board }, 'board created')
     return board

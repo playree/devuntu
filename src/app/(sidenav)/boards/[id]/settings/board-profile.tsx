@@ -8,6 +8,7 @@ import { notify } from '@/components/notify'
 import { RoleChip, StatusChip } from '@/components/ticket/ticket-chip'
 import { parseAction } from '@/lib/action-client'
 import { dayformat } from '@/lib/day'
+import { ClientError } from '@/lib/error'
 import { scUpdateBoard, UpdateBoard } from '@/lib/schema'
 import { TICKET_STATUSES } from '@/lib/task'
 import { useUserTimezone } from '@/lib/use-timezone'
@@ -27,10 +28,7 @@ const MetaRow: FC<{ label: string; children: ReactNode }> = ({ label, children }
   </div>
 )
 
-/**
- * 名前 / 説明の編集フォーム。team ボードの owner(または管理者)だけに出す。
- * アーカイブはデンジャーゾーン側で切り替えるが、scUpdateBoard が必須なので現在値をそのまま送る。
- */
+/** 名前 / ボードキー / 説明の編集フォーム。team ボードの owner(または管理者)だけに出す */
 const EditForm: FC<{ board: Board; reload: () => void }> = ({ board, reload }) => {
   const { t, fet } = useLocale()
 
@@ -45,26 +43,34 @@ const EditForm: FC<{ board: Board; reload: () => void }> = ({ board, reload }) =
     defaultValues: {
       id: board.id,
       name: board.name,
+      key: board.key,
       description: board.description,
-      archived: board.archived,
     },
   })
 
   return (
     <form
       onSubmit={handleSubmit(async (req) => {
-        await parseAction(updateBoard(req))
-        notify.success(t('msg_saved'))
-        // 再取得しても useForm の defaultValues は追従しないので、保存値で dirty を落としておく
-        reset(req)
-        reload()
+        try {
+          await parseAction(updateBoard(req))
+          notify.success(t('msg_saved'))
+          // 再取得しても useForm の defaultValues は追従しないので、保存値で dirty を落としておく
+          reset(req)
+          reload()
+        } catch (e) {
+          // キーは全ボードで一意。他のボードが使っている場合は入力し直してもらう
+          if (e instanceof ClientError && e.errorType === 'DUPLICATED_BOARD_KEY') {
+            notify.warn(t('msg_duplicated_board_key'))
+          } else {
+            throw e
+          }
+        }
       })}
     >
       <GridBox isSmart>
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            variant='secondary'
             name='name'
             constraintSchema={scUpdateBoard}
             label={t('name')}
@@ -74,7 +80,18 @@ const EditForm: FC<{ board: Board; reload: () => void }> = ({ board, reload }) =
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            variant='secondary'
+            name='key'
+            constraintSchema={scUpdateBoard}
+            label={t('board_key')}
+            errorMessage={fet(errors.key)}
+            // 入力は小文字でも zBoardKey が大文字へ寄せるので、見た目も大文字に揃えておく
+            className='font-mono uppercase'
+          />
+          <p className='text-xs text-gray-500'>{t('msg_board_key_change')}</p>
+        </div>
+        <div className='col-span-12'>
+          <InputCtrl
+            control={control}
             name='description'
             constraintSchema={scUpdateBoard}
             label={t('description')}
@@ -107,6 +124,13 @@ export const BoardProfile: FC<{ board: Board; reload: () => void }> = ({ board, 
   return (
     <div className='space-y-1'>
       <MetaRow label={t('board')}>{isPrivate ? t('private') : t('team')}</MetaRow>
+      {!canEdit && (
+        <MetaRow // 編集できる場合は下の EditForm 側に入力欄が出るので、ここでは出さない
+          label={t('board_key')}
+        >
+          <span className='font-mono text-xs'>{board.key}</span>
+        </MetaRow>
+      )}
       <MetaRow label={t('owner')}>
         <RoleChip role={board.role} />
       </MetaRow>

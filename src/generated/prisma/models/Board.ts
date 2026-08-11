@@ -20,14 +20,26 @@ export type BoardModel = runtime.Types.Result.DefaultSelection<Prisma.$BoardPayl
 
 export type AggregateBoard = {
   _count: BoardCountAggregateOutputType | null
+  _avg: BoardAvgAggregateOutputType | null
+  _sum: BoardSumAggregateOutputType | null
   _min: BoardMinAggregateOutputType | null
   _max: BoardMaxAggregateOutputType | null
+}
+
+export type BoardAvgAggregateOutputType = {
+  ticketSeq: number | null
+}
+
+export type BoardSumAggregateOutputType = {
+  ticketSeq: number | null
 }
 
 export type BoardMinAggregateOutputType = {
   id: string | null
   kind: $Enums.BoardKind | null
   privateOwnerId: string | null
+  key: string | null
+  ticketSeq: number | null
   name: string | null
   description: string | null
   archived: boolean | null
@@ -39,6 +51,8 @@ export type BoardMaxAggregateOutputType = {
   id: string | null
   kind: $Enums.BoardKind | null
   privateOwnerId: string | null
+  key: string | null
+  ticketSeq: number | null
   name: string | null
   description: string | null
   archived: boolean | null
@@ -50,6 +64,8 @@ export type BoardCountAggregateOutputType = {
   id: number
   kind: number
   privateOwnerId: number
+  key: number
+  ticketSeq: number
   name: number
   description: number
   archived: number
@@ -59,10 +75,20 @@ export type BoardCountAggregateOutputType = {
 }
 
 
+export type BoardAvgAggregateInputType = {
+  ticketSeq?: true
+}
+
+export type BoardSumAggregateInputType = {
+  ticketSeq?: true
+}
+
 export type BoardMinAggregateInputType = {
   id?: true
   kind?: true
   privateOwnerId?: true
+  key?: true
+  ticketSeq?: true
   name?: true
   description?: true
   archived?: true
@@ -74,6 +100,8 @@ export type BoardMaxAggregateInputType = {
   id?: true
   kind?: true
   privateOwnerId?: true
+  key?: true
+  ticketSeq?: true
   name?: true
   description?: true
   archived?: true
@@ -85,6 +113,8 @@ export type BoardCountAggregateInputType = {
   id?: true
   kind?: true
   privateOwnerId?: true
+  key?: true
+  ticketSeq?: true
   name?: true
   description?: true
   archived?: true
@@ -131,6 +161,18 @@ export type BoardAggregateArgs<ExtArgs extends runtime.Types.Extensions.Internal
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: BoardAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: BoardSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: BoardMinAggregateInputType
@@ -161,6 +203,8 @@ export type BoardGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
   take?: number
   skip?: number
   _count?: BoardCountAggregateInputType | true
+  _avg?: BoardAvgAggregateInputType
+  _sum?: BoardSumAggregateInputType
   _min?: BoardMinAggregateInputType
   _max?: BoardMaxAggregateInputType
 }
@@ -169,12 +213,16 @@ export type BoardGroupByOutputType = {
   id: string
   kind: $Enums.BoardKind
   privateOwnerId: string | null
+  key: string
+  ticketSeq: number
   name: string
   description: string | null
   archived: boolean
   createdAt: Date
   updatedAt: Date
   _count: BoardCountAggregateOutputType | null
+  _avg: BoardAvgAggregateOutputType | null
+  _sum: BoardSumAggregateOutputType | null
   _min: BoardMinAggregateOutputType | null
   _max: BoardMaxAggregateOutputType | null
 }
@@ -201,6 +249,8 @@ export type BoardWhereInput = {
   id?: Prisma.StringFilter<"Board"> | string
   kind?: Prisma.EnumBoardKindFilter<"Board"> | $Enums.BoardKind
   privateOwnerId?: Prisma.StringNullableFilter<"Board"> | string | null
+  key?: Prisma.StringFilter<"Board"> | string
+  ticketSeq?: Prisma.IntFilter<"Board"> | number
   name?: Prisma.StringFilter<"Board"> | string
   description?: Prisma.StringNullableFilter<"Board"> | string | null
   archived?: Prisma.BoolFilter<"Board"> | boolean
@@ -217,6 +267,8 @@ export type BoardOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   kind?: Prisma.SortOrder
   privateOwnerId?: Prisma.SortOrderInput | Prisma.SortOrder
+  key?: Prisma.SortOrder
+  ticketSeq?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   archived?: Prisma.SortOrder
@@ -232,10 +284,12 @@ export type BoardOrderByWithRelationInput = {
 export type BoardWhereUniqueInput = Prisma.AtLeast<{
   id?: string
   privateOwnerId?: string
+  key?: string
   AND?: Prisma.BoardWhereInput | Prisma.BoardWhereInput[]
   OR?: Prisma.BoardWhereInput[]
   NOT?: Prisma.BoardWhereInput | Prisma.BoardWhereInput[]
   kind?: Prisma.EnumBoardKindFilter<"Board"> | $Enums.BoardKind
+  ticketSeq?: Prisma.IntFilter<"Board"> | number
   name?: Prisma.StringFilter<"Board"> | string
   description?: Prisma.StringNullableFilter<"Board"> | string | null
   archived?: Prisma.BoolFilter<"Board"> | boolean
@@ -246,20 +300,24 @@ export type BoardWhereUniqueInput = Prisma.AtLeast<{
   groups?: Prisma.BoardGroupListRelationFilter
   tickets?: Prisma.TicketListRelationFilter
   tags?: Prisma.TagListRelationFilter
-}, "id" | "privateOwnerId">
+}, "id" | "privateOwnerId" | "key">
 
 export type BoardOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   kind?: Prisma.SortOrder
   privateOwnerId?: Prisma.SortOrderInput | Prisma.SortOrder
+  key?: Prisma.SortOrder
+  ticketSeq?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   archived?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.BoardCountOrderByAggregateInput
+  _avg?: Prisma.BoardAvgOrderByAggregateInput
   _max?: Prisma.BoardMaxOrderByAggregateInput
   _min?: Prisma.BoardMinOrderByAggregateInput
+  _sum?: Prisma.BoardSumOrderByAggregateInput
 }
 
 export type BoardScalarWhereWithAggregatesInput = {
@@ -269,6 +327,8 @@ export type BoardScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"Board"> | string
   kind?: Prisma.EnumBoardKindWithAggregatesFilter<"Board"> | $Enums.BoardKind
   privateOwnerId?: Prisma.StringNullableWithAggregatesFilter<"Board"> | string | null
+  key?: Prisma.StringWithAggregatesFilter<"Board"> | string
+  ticketSeq?: Prisma.IntWithAggregatesFilter<"Board"> | number
   name?: Prisma.StringWithAggregatesFilter<"Board"> | string
   description?: Prisma.StringNullableWithAggregatesFilter<"Board"> | string | null
   archived?: Prisma.BoolWithAggregatesFilter<"Board"> | boolean
@@ -279,6 +339,8 @@ export type BoardScalarWhereWithAggregatesInput = {
 export type BoardCreateInput = {
   id?: string
   kind?: $Enums.BoardKind
+  key: string
+  ticketSeq?: number
   name: string
   description?: string | null
   archived?: boolean
@@ -295,6 +357,8 @@ export type BoardUncheckedCreateInput = {
   id?: string
   kind?: $Enums.BoardKind
   privateOwnerId?: string | null
+  key: string
+  ticketSeq?: number
   name: string
   description?: string | null
   archived?: boolean
@@ -309,6 +373,8 @@ export type BoardUncheckedCreateInput = {
 export type BoardUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -325,6 +391,8 @@ export type BoardUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
   privateOwnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -340,6 +408,8 @@ export type BoardCreateManyInput = {
   id?: string
   kind?: $Enums.BoardKind
   privateOwnerId?: string | null
+  key: string
+  ticketSeq?: number
   name: string
   description?: string | null
   archived?: boolean
@@ -350,6 +420,8 @@ export type BoardCreateManyInput = {
 export type BoardUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -361,6 +433,8 @@ export type BoardUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
   privateOwnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -377,6 +451,8 @@ export type BoardCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   kind?: Prisma.SortOrder
   privateOwnerId?: Prisma.SortOrder
+  key?: Prisma.SortOrder
+  ticketSeq?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrder
   archived?: Prisma.SortOrder
@@ -384,10 +460,16 @@ export type BoardCountOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
 }
 
+export type BoardAvgOrderByAggregateInput = {
+  ticketSeq?: Prisma.SortOrder
+}
+
 export type BoardMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   kind?: Prisma.SortOrder
   privateOwnerId?: Prisma.SortOrder
+  key?: Prisma.SortOrder
+  ticketSeq?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrder
   archived?: Prisma.SortOrder
@@ -399,11 +481,17 @@ export type BoardMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   kind?: Prisma.SortOrder
   privateOwnerId?: Prisma.SortOrder
+  key?: Prisma.SortOrder
+  ticketSeq?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrder
   archived?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type BoardSumOrderByAggregateInput = {
+  ticketSeq?: Prisma.SortOrder
 }
 
 export type BoardScalarRelationFilter = {
@@ -506,6 +594,8 @@ export type BoardUpdateOneRequiredWithoutTicketsNestedInput = {
 export type BoardCreateWithoutPrivateOwnerInput = {
   id?: string
   kind?: $Enums.BoardKind
+  key: string
+  ticketSeq?: number
   name: string
   description?: string | null
   archived?: boolean
@@ -520,6 +610,8 @@ export type BoardCreateWithoutPrivateOwnerInput = {
 export type BoardUncheckedCreateWithoutPrivateOwnerInput = {
   id?: string
   kind?: $Enums.BoardKind
+  key: string
+  ticketSeq?: number
   name: string
   description?: string | null
   archived?: boolean
@@ -550,6 +642,8 @@ export type BoardUpdateToOneWithWhereWithoutPrivateOwnerInput = {
 export type BoardUpdateWithoutPrivateOwnerInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -564,6 +658,8 @@ export type BoardUpdateWithoutPrivateOwnerInput = {
 export type BoardUncheckedUpdateWithoutPrivateOwnerInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -578,6 +674,8 @@ export type BoardUncheckedUpdateWithoutPrivateOwnerInput = {
 export type BoardCreateWithoutTagsInput = {
   id?: string
   kind?: $Enums.BoardKind
+  key: string
+  ticketSeq?: number
   name: string
   description?: string | null
   archived?: boolean
@@ -593,6 +691,8 @@ export type BoardUncheckedCreateWithoutTagsInput = {
   id?: string
   kind?: $Enums.BoardKind
   privateOwnerId?: string | null
+  key: string
+  ticketSeq?: number
   name: string
   description?: string | null
   archived?: boolean
@@ -622,6 +722,8 @@ export type BoardUpdateToOneWithWhereWithoutTagsInput = {
 export type BoardUpdateWithoutTagsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -637,6 +739,8 @@ export type BoardUncheckedUpdateWithoutTagsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
   privateOwnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -650,6 +754,8 @@ export type BoardUncheckedUpdateWithoutTagsInput = {
 export type BoardCreateWithoutMembersInput = {
   id?: string
   kind?: $Enums.BoardKind
+  key: string
+  ticketSeq?: number
   name: string
   description?: string | null
   archived?: boolean
@@ -665,6 +771,8 @@ export type BoardUncheckedCreateWithoutMembersInput = {
   id?: string
   kind?: $Enums.BoardKind
   privateOwnerId?: string | null
+  key: string
+  ticketSeq?: number
   name: string
   description?: string | null
   archived?: boolean
@@ -694,6 +802,8 @@ export type BoardUpdateToOneWithWhereWithoutMembersInput = {
 export type BoardUpdateWithoutMembersInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -709,6 +819,8 @@ export type BoardUncheckedUpdateWithoutMembersInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
   privateOwnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -722,6 +834,8 @@ export type BoardUncheckedUpdateWithoutMembersInput = {
 export type BoardCreateWithoutGroupsInput = {
   id?: string
   kind?: $Enums.BoardKind
+  key: string
+  ticketSeq?: number
   name: string
   description?: string | null
   archived?: boolean
@@ -737,6 +851,8 @@ export type BoardUncheckedCreateWithoutGroupsInput = {
   id?: string
   kind?: $Enums.BoardKind
   privateOwnerId?: string | null
+  key: string
+  ticketSeq?: number
   name: string
   description?: string | null
   archived?: boolean
@@ -766,6 +882,8 @@ export type BoardUpdateToOneWithWhereWithoutGroupsInput = {
 export type BoardUpdateWithoutGroupsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -781,6 +899,8 @@ export type BoardUncheckedUpdateWithoutGroupsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
   privateOwnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -794,6 +914,8 @@ export type BoardUncheckedUpdateWithoutGroupsInput = {
 export type BoardCreateWithoutTicketsInput = {
   id?: string
   kind?: $Enums.BoardKind
+  key: string
+  ticketSeq?: number
   name: string
   description?: string | null
   archived?: boolean
@@ -809,6 +931,8 @@ export type BoardUncheckedCreateWithoutTicketsInput = {
   id?: string
   kind?: $Enums.BoardKind
   privateOwnerId?: string | null
+  key: string
+  ticketSeq?: number
   name: string
   description?: string | null
   archived?: boolean
@@ -838,6 +962,8 @@ export type BoardUpdateToOneWithWhereWithoutTicketsInput = {
 export type BoardUpdateWithoutTicketsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -853,6 +979,8 @@ export type BoardUncheckedUpdateWithoutTicketsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
   privateOwnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -925,6 +1053,8 @@ export type BoardSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   id?: boolean
   kind?: boolean
   privateOwnerId?: boolean
+  key?: boolean
+  ticketSeq?: boolean
   name?: boolean
   description?: boolean
   archived?: boolean
@@ -942,6 +1072,8 @@ export type BoardSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   id?: boolean
   kind?: boolean
   privateOwnerId?: boolean
+  key?: boolean
+  ticketSeq?: boolean
   name?: boolean
   description?: boolean
   archived?: boolean
@@ -954,6 +1086,8 @@ export type BoardSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   id?: boolean
   kind?: boolean
   privateOwnerId?: boolean
+  key?: boolean
+  ticketSeq?: boolean
   name?: boolean
   description?: boolean
   archived?: boolean
@@ -966,6 +1100,8 @@ export type BoardSelectScalar = {
   id?: boolean
   kind?: boolean
   privateOwnerId?: boolean
+  key?: boolean
+  ticketSeq?: boolean
   name?: boolean
   description?: boolean
   archived?: boolean
@@ -973,7 +1109,7 @@ export type BoardSelectScalar = {
   updatedAt?: boolean
 }
 
-export type BoardOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "kind" | "privateOwnerId" | "name" | "description" | "archived" | "createdAt" | "updatedAt", ExtArgs["result"]["board"]>
+export type BoardOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "kind" | "privateOwnerId" | "key" | "ticketSeq" | "name" | "description" | "archived" | "createdAt" | "updatedAt", ExtArgs["result"]["board"]>
 export type BoardInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   privateOwner?: boolean | Prisma.Board$privateOwnerArgs<ExtArgs>
   members?: boolean | Prisma.Board$membersArgs<ExtArgs>
@@ -1002,6 +1138,8 @@ export type $BoardPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     id: string
     kind: $Enums.BoardKind
     privateOwnerId: string | null
+    key: string
+    ticketSeq: number
     name: string
     description: string | null
     archived: boolean
@@ -1438,6 +1576,8 @@ export interface BoardFieldRefs {
   readonly id: Prisma.FieldRef<"Board", 'String'>
   readonly kind: Prisma.FieldRef<"Board", 'BoardKind'>
   readonly privateOwnerId: Prisma.FieldRef<"Board", 'String'>
+  readonly key: Prisma.FieldRef<"Board", 'String'>
+  readonly ticketSeq: Prisma.FieldRef<"Board", 'Int'>
   readonly name: Prisma.FieldRef<"Board", 'String'>
   readonly description: Prisma.FieldRef<"Board", 'String'>
   readonly archived: Prisma.FieldRef<"Board", 'Boolean'>

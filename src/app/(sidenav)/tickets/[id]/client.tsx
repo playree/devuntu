@@ -78,6 +78,33 @@ const CloseButton: FC<{ onClose?: () => void; onPress: () => void }> = ({ onClos
 }
 
 /**
+ * ヘッダの表示ID。押すとクリップボードへ入るので、チャットや議事録へそのまま貼れる。
+ * クリップボードは安全なコンテキスト(https / localhost)でしか使えないため、失敗しても黙って落とさない。
+ */
+const TicketIdCopyButton: FC<{ displayId: string }> = ({ displayId }) => {
+  const { t } = useLocale()
+  return (
+    <MultiButton
+      size='sm'
+      variant='ghost'
+      className='shrink-0 font-mono'
+      tooltip={t('copy_ticket_id')}
+      onPress={async () => {
+        try {
+          // 安全なコンテキストの外では navigator.clipboard 自体が無く、参照だけで例外になる
+          await navigator.clipboard.writeText(displayId)
+          notify.success(t('msg_copied'))
+        } catch {
+          notify.error(t('msg_copy_failed'))
+        }
+      }}
+    >
+      {displayId}
+    </MultiButton>
+  )
+}
+
+/**
  * ヘッダのパンくず。ボード名 > 件名 の 2 階層。
  * 長い名前は幅で省略する。最後の項目(件名)は react-aria が現在地として扱うためリンクにならない。
  */
@@ -300,6 +327,7 @@ export const TicketDetailClient: FC<{
         title={
           <>
             <CloseButton onClose={onClose} onPress={close} />
+            <TicketIdCopyButton displayId={ticket.displayId} />
             <TicketBreadcrumbs
               boardId={ticket.boardId}
               boardName={boardName({ name: ticket.boardName, kind: ticket.boardKind })}

@@ -4,7 +4,7 @@ import type { BoardKind, TagColor, TicketPriority, TicketStatus } from '@/genera
 import type { BoardRole } from '@/lib/task'
 import { LocaleItemBase } from '@/locale'
 import { useLocale } from '@/locale/client'
-import { Chip, ChipProps } from '@heroui/react'
+import { Chip, ChipProps, cn } from '@heroui/react'
 import { FC, ReactNode, useCallback } from 'react'
 import { tv } from 'tailwind-variants'
 
@@ -195,6 +195,14 @@ const tagStyles = tv({
     } satisfies Record<TagColor, string>,
   },
 })
+
+/**
+ * チケットの表示ID(`KEY-番号`)。値はサーバー側で組み立てたものをそのまま出す。
+ * 桁の違いで揃わなくならないよう等幅で、本文より一段弱い色にして件名を主役に保つ。
+ */
+export const TicketIdText: FC<{ displayId: string; className?: string }> = ({ displayId, className }) => (
+  <span className={cn('font-mono text-xs text-gray-500', className)}>{displayId}</span>
+)
 
 /** タグ色のクラス。className を渡すと tailwind-merge でマージされる */
 export const tagColorClass = (color: TagColor, className?: string) => tagStyles({ color, className })
