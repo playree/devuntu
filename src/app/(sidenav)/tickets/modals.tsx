@@ -163,6 +163,7 @@ export const AddModal: FC<
             name='content'
             constraintSchema={scCreateTicket}
             errorMessage={fet(errors.content)}
+            uploadBoardId={boardId}
           />
         </div>
       </GridBox>

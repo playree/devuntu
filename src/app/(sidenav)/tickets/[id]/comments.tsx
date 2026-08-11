@@ -29,8 +29,9 @@ const isSubmittable = (draft: string) =>
   !!draft.trim() && (MAX_COMMENT_LENGTH === undefined || draft.length <= MAX_COMMENT_LENGTH)
 
 /** コメント 1 件。投稿者本人なら編集できる */
-const CommentItem: FC<{ comment: Comment; canDelete: boolean; refresh: () => Promise<void> }> = ({
+const CommentItem: FC<{ comment: Comment; boardId: string; canDelete: boolean; refresh: () => Promise<void> }> = ({
   comment,
+  boardId,
   canDelete,
   refresh,
 }) => {
@@ -118,6 +119,7 @@ const CommentItem: FC<{ comment: Comment; canDelete: boolean; refresh: () => Pro
             length={draft.length}
             maxLength={MAX_COMMENT_LENGTH}
             label={t('comment')}
+            uploadBoardId={boardId}
           />
           <div className='flex justify-end gap-2'>
             <MultiButton variant='ghost' size='sm' onPress={() => setEditing(false)}>
@@ -185,7 +187,13 @@ export const TicketComments: FC<{ ticket: Ticket; refresh: () => Promise<void> }
       </div>
 
       {ticket.comments.map((comment) => (
-        <CommentItem key={comment.id} comment={comment} canDelete={ticket.canDelete} refresh={refresh} />
+        <CommentItem
+          key={comment.id}
+          comment={comment}
+          boardId={ticket.boardId}
+          canDelete={ticket.canDelete}
+          refresh={refresh}
+        />
       ))}
 
       {ticket.canEdit && (
@@ -197,6 +205,7 @@ export const TicketComments: FC<{ ticket: Ticket; refresh: () => Promise<void> }
             length={draft.length}
             maxLength={MAX_COMMENT_LENGTH}
             label={t('add_comment')}
+            uploadBoardId={ticket.boardId}
           />
           <div className='flex items-center gap-2'>
             <span className='text-xs text-gray-500'>{t('msg_mention_hint')}</span>

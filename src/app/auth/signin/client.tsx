@@ -23,7 +23,8 @@ import { SingleLayout } from '@/components/single-layout'
 import { parseAction } from '@/lib/action-client'
 import { authClient } from '@/lib/auth-client'
 import { authConfig } from '@/lib/auth-config'
-import { makePath } from '@/lib/client-utils'
+import { makePath, safeCallbackPath } from '@/lib/client-utils'
+import { ClientError, TOO_MANY_REQUESTS } from '@/lib/error'
 import {
   Otp,
   scOtp,
@@ -75,9 +76,18 @@ const UsernameForm: FC<{
     <StepMotion direction={direction} className='mx-auto w-11/12 md:w-95'>
       <form
         onSubmit={handleSubmit(async (input) => {
-          const res = await parseAction(getUserByEmail(input))
-          if (res?.next) {
-            next(input.username, res.next)
+          try {
+            const res = await parseAction(getUserByEmail(input))
+            if (res?.next) {
+              next(input.username, res.next)
+            }
+          } catch (e) {
+            // OTPメールの濫用を防ぐレート制限。時間をおけば再試行できるので画面はそのまま残す
+            if (e instanceof ClientError && e.errorType === TOO_MANY_REQUESTS) {
+              notify.warn(t('msg_too_many_requests'))
+            } else {
+              throw e
+            }
           }
         })}
       >
@@ -417,7 +427,10 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
   const [password, setPassword] = useState<string>()
 
   const clientId = searchParams.get('client_id')
-  const callbackURL = clientId ? makePath('/api/auth/oauth2/authorize', searchParams) : (searchParams.get('cb') ?? '/')
+  // cb は URL 由来なので必ず safeCallbackPath を通す(素通しするとオープンリダイレクトになる)
+  const callbackURL = clientId
+    ? makePath('/api/auth/oauth2/authorize', searchParams)
+    : safeCallbackPath(searchParams.get('cb'))
   const mode = searchParams.get('mode') as Mode
   const errorCode = searchParams.get('error')
   const hasErrorToasted = useRef(false)

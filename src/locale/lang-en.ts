@@ -225,7 +225,7 @@ Please copy and use the connection information above.
   msg_copy_failed: 'Failed to copy to clipboard.',
   msg_delete_board: 'All tickets and comments in the board are deleted as well. This cannot be undone.',
   msg_deleted_target: 'Deleted ${target}.',
-  msg_duplicated_board_key: 'That board key is already in use.',
+  msg_duplicated_board_key: 'That board key has already been used. Keys used in the past cannot be reused.',
   msg_duplicated_tag_name: 'A tag with the same name already exists.',
   msg_email_not_verified: 'Your email address has not been verified.\nPlease log in with your email address.',
   msg_enter_otp: 'Enter the verification code sent to your email address.',
@@ -255,6 +255,7 @@ Please copy and use the connection information above.
   msg_re_auth: 'Re-authentication is required to perform the operation.\nPlease try again after re-authentication.',
   msg_saved: 'Saved.',
   msg_ticket_list_limit: 'Up to ${max} results are shown.',
+  msg_too_many_requests: 'Too many attempts. Please wait a while and try again.',
   msg_updated_target: 'Updated ${target}.',
   msg_user_not_exist: 'User does not exist.',
 
@@ -282,5 +283,6 @@ Expiration time: 5 minutes
   '@invalid_title': '1-120 characters',
   '@invalid_content': 'Exceeds the maximum length',
   '@invalid_board_key': '2-8 characters, uppercase letters and digits (must start with a letter)',
+  '@reserved_board_key': 'Keys starting with PRV are reserved by the system',
   '@invalid_tag': 'Tag names are 1-20 characters, up to 10 per ticket',
 }

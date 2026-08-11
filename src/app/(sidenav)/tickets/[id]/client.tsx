@@ -501,6 +501,7 @@ export const TicketDetailClient: FC<{
           length={contentDraft.length}
           maxLength={MAX_CONTENT_LENGTH}
           label={t('content')}
+          uploadBoardId={ticket.boardId}
           // ツールバー + 2 行が MarkdownField の最小高に収まるので、短い本文でも高さが動かない
           minRows={2}
           action={

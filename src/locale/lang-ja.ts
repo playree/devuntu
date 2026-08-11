@@ -225,7 +225,7 @@ export const ja: DefaultLocaleItems = {
   msg_copy_failed: 'コピーできませんでした。',
   msg_delete_board: 'ボード内のチケットとコメントもすべて削除されます。この操作は取り消せません。',
   msg_deleted_target: '${target} を削除しました。',
-  msg_duplicated_board_key: '同じボードキーが既に使われています。',
+  msg_duplicated_board_key: 'このボードキーは使用済みです。過去に使われたキーも再利用できません。',
   msg_duplicated_tag_name: '同じ名前のタグが既に存在します。',
   msg_email_not_verified: 'Eメールが検証されていません。\n一度、Eメールでログインしてください。',
   msg_enter_otp: 'Eメールに届いた認証コードを入力してください。',
@@ -254,6 +254,7 @@ export const ja: DefaultLocaleItems = {
   msg_re_auth: '該当の操作を行うには再認証が必要です。\n認証後に再度実行してください。',
   msg_saved: '保存しました。',
   msg_ticket_list_limit: '検索結果は最大${max}件まで表示されます。',
+  msg_too_many_requests: '試行回数が多すぎます。しばらく時間をおいてからお試しください。',
   msg_updated_target: '${target} を更新しました。',
   msg_user_not_exist: 'ユーザーが存在しません。',
 
@@ -281,5 +282,6 @@ export const ja: DefaultLocaleItems = {
   '@invalid_title': '1～120文字',
   '@invalid_content': '文字数の上限を超えています',
   '@invalid_board_key': '英大文字と数字で2～8文字(先頭は英字)',
+  '@reserved_board_key': 'PRV で始まるキーはシステムが予約しています',
   '@invalid_tag': 'タグ名は1～20文字、1チケット10個まで',
 }

@@ -150,6 +150,13 @@ export type CalendarBusyTime = Prisma.CalendarBusyTimeModel
  */
 export type Board = Prisma.BoardModel
 /**
+ * Model BoardKeyHistory
+ * 過去に使われたボードキーの記録。改名 / 削除でキーを解放しても再利用させないことで、
+ * 共有済みの表示ID(`KEY-番号`)が別ボードの同番号チケットへ解決されるのを防ぐ。
+ * 行はボードを消しても残す(消すと再利用できてしまうため)。
+ */
+export type BoardKeyHistory = Prisma.BoardKeyHistoryModel
+/**
  * Model Tag
  * 
  */

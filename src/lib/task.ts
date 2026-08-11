@@ -193,6 +193,15 @@ export const BOARD_KEY_PATTERN = /^[A-Z][A-Z0-9]{1,7}$/
 /** プライベートボードのキーの接頭辞。利用者は入力せず PRV<連番> で自動採番する */
 export const PRIVATE_BOARD_KEY_PREFIX = 'PRV'
 
+/**
+ * システムが予約しているキーか。チームボードのキー入力(zBoardKey)から除外する。
+ *
+ * 予約しないと `PRV99999` のようなキーを 1 つ作られるだけで nextSequentialKey が
+ * MAX_BOARD_KEY を超えて採番できなくなり、プライベートボードを未作成の全ユーザーで
+ * ensurePrivateBoard が恒久的に失敗する(= /tickets と /boards が開けなくなる)。
+ */
+export const isReservedBoardKey = (key: string): boolean => key.toUpperCase().startsWith(PRIVATE_BOARD_KEY_PREFIX)
+
 /** 表示ID。利用者へ見せる識別子で、URL やチャットに貼れる単一の表記 */
 export const ticketDisplayId = ({ key, number }: { key: string; number: number }): string => `${key}-${number}`
 

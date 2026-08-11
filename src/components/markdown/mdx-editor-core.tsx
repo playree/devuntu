@@ -34,7 +34,7 @@ import {
 import '@mdxeditor/editor/style.css'
 import { basicDark } from 'cm6-theme-basic-dark'
 import { useTheme } from 'next-themes'
-import { FC, useMemo, useState } from 'react'
+import { FC, useEffect, useMemo, useRef, useState } from 'react'
 import { sanitizeHtmlPlugin } from './mdx-sanitize-plugin'
 
 /** コードブロックの言語選択に出す一覧(キーは Markdown のフェンス言語名) */
@@ -98,6 +98,11 @@ export type MdxEditorCoreProps = {
   onBlur?: () => void
   /** ポップアップの描画先。HeroUI Modal 内では Modal.Dialog を渡す */
   overlayContainer?: HTMLElement | null
+  /**
+   * 挿入した画像の添付先ボード。配信時の可視判定に使われる。
+   * 省略すると全ログインユーザーが参照できる添付になるので、ボードに属する本文では必ず渡すこと
+   */
+  uploadBoardId?: string | null
   placeholder?: string
   autoFocus?: boolean
   className?: string
@@ -116,6 +121,7 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
   onChange,
   onBlur,
   overlayContainer,
+  uploadBoardId,
   placeholder,
   autoFocus,
   className,
@@ -123,6 +129,18 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
 }) => {
   // マウント時のテーマで固定する(編集中にテーマを切り替えても plugins を作り直さない)
   const [isDarkAtMount] = useState(isDark)
+
+  /**
+   * 添付先ボードは編集中に変わりうる(新規チケットモーダルのボード選択)。
+   * plugins を作り直すと編集中の内容が失われるため、ハンドラの参照は固定したまま
+   * ref 越しに最新値を読む。
+   */
+  const boardIdRef = useRef(uploadBoardId)
+  useEffect(() => {
+    boardIdRef.current = uploadBoardId
+  }, [uploadBoardId])
+  // useState の遅延初期化で初回マウント時の関数を固定する(ref を render 中に読まないため)
+  const [uploadHandler] = useState(() => (file: File) => uploadImage(file, boardIdRef.current))
 
   const plugins = useMemo(() => {
     // source モードとコードブロックの CodeMirror は basicLight がハードコードされているため、
@@ -142,16 +160,17 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
       /**
        * imageUploadHandler を渡すと、ツールバーの InsertImage に加えて
        * 貼り付け / ドラッグ&ドロップも imagePlugin 側が拾ってアップロードするようになる。
-       * uploadImage はモジュールスコープの安定参照なので plugins は作り直されない
+       * ハンドラは ref に固定した安定参照なので plugins は作り直されない
        */
-      imagePlugin({ imageUploadHandler: uploadImage }),
+      imagePlugin({ imageUploadHandler: uploadHandler }),
       codeBlockPlugin({ defaultCodeBlockLanguage: '' }),
       codeMirrorPlugin({ codeBlockLanguages: CODE_BLOCK_LANGUAGES, codeMirrorExtensions }),
       markdownShortcutPlugin(),
       diffSourcePlugin({ viewMode: 'rich-text', codeMirrorExtensions }),
       toolbarPlugin({ toolbarContents: () => <Toolbar /> }),
     ]
-  }, [isDarkAtMount])
+    // uploadHandler は useState で固定した安定参照なので、依存に入れても plugins は作り直されない
+  }, [isDarkAtMount, uploadHandler])
 
   return (
     <MDXEditor

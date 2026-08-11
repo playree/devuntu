@@ -246,6 +246,7 @@ export type LocaleItemBase =
   | 'msg_re_auth'
   | 'msg_saved'
   | 'msg_ticket_list_limit'
+  | 'msg_too_many_requests'
   | 'msg_updated_target'
   | 'msg_user_not_exist'
   // for Mail
@@ -265,6 +266,7 @@ export type LocaleItemError =
   | '@invalid_title'
   | '@invalid_content'
   | '@invalid_board_key'
+  | '@reserved_board_key'
   | '@invalid_tag'
 export const el = (item: LocaleItemError) => item
 

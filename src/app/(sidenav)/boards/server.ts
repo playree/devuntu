@@ -1,7 +1,13 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action-server'
-import { countTicketsByBoard, ensurePrivateBoard, listAccessibleBoards, rethrowDuplicatedBoardKey } from '@/lib/board'
+import {
+  countTicketsByBoard,
+  ensurePrivateBoard,
+  listAccessibleBoards,
+  reserveBoardKey,
+  rethrowDuplicatedBoardKey,
+} from '@/lib/board'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { scCreateBoard } from '@/lib/schema'
@@ -41,19 +47,25 @@ export const createBoard = safeAuthAction
   .metadata({ actionName: 'createBoard', role: 'user' })
   .inputSchema(scCreateBoard)
   .action(async ({ ctx: { user }, parsedInput: { name, key, description } }) => {
-    const board = await prisma.board
-      .create({
-        data: {
-          // privateOwnerId は触らない(プライベートボードの作成経路は ensurePrivateBoard だけ)
-          kind: 'team',
-          name,
-          key,
-          description,
-          members: { create: { userId: user.id, role: 'owner' } },
-        },
-        select: { id: true, name: true },
-      })
-      .catch(rethrowDuplicatedBoardKey)
+    const board = await prisma.$transaction(async (tx) => {
+      const created = await tx.board
+        .create({
+          data: {
+            // privateOwnerId は触らない(プライベートボードの作成経路は ensurePrivateBoard だけ)
+            kind: 'team',
+            name,
+            key,
+            description,
+            members: { create: { userId: user.id, role: 'owner' } },
+          },
+          select: { id: true, name: true },
+        })
+        .catch(rethrowDuplicatedBoardKey)
+
+      // 過去に他のボードが使ったキーは再利用させない(共有済みの表示IDが別ボードを指さないようにする)
+      await reserveBoardKey(tx, key, created.id)
+      return created
+    })
 
     logger.info({ userId: user.id, board }, 'board created')
     return board

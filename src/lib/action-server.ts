@@ -15,6 +15,10 @@ type ServerError = { name?: string; errorType: string; message: string }
 
 /**
  * エラーハンドラー
+ *
+ * ClientError は errorType でクライアント側の分岐に使うため内容をそのまま返す。
+ * それ以外(Prisma の制約名・接続情報・環境変数名などが混ざりうる)はログにだけ残し、
+ * クライアントへは固定文言を返して内部情報を出さない。
  */
 const handleServerError = (error: Error) => {
   if (error instanceof ClientError) {
@@ -31,7 +35,7 @@ const handleServerError = (error: Error) => {
   logger.error(error)
   return {
     errorType: 'SYSTEM_ERROR',
-    message: error.message,
+    message: 'Internal Server Error',
   }
 }
 

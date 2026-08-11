@@ -21,6 +21,7 @@ import {
   groupByLane,
   insertAt,
   isKanbanFilterActive,
+  isReservedBoardKey,
   kanbanDoneSince,
   kanbanLaneWhere,
   kanbanTicketWhere,
@@ -192,6 +193,25 @@ describe('nextSequentialKey: 連番キーの採番', () => {
   it('上限を超える桁になったら null(表示IDを解決できないキーは作らせない)', () => {
     expect(nextSequentialKey('PRV', ['PRV99999'])).toBeNull()
     expect(nextSequentialKey('PRV', ['PRV1'], 3), 'maxLength は指定できる').toBeNull()
+  })
+})
+
+describe('isReservedBoardKey: プライベート採番領域の予約', () => {
+  it('PRV で始まるキーは予約済み', () => {
+    expect(isReservedBoardKey('PRV1')).toBe(true)
+    // これを通すと nextSequentialKey が採番不能になり ensurePrivateBoard が恒久的に失敗する
+    expect(isReservedBoardKey('PRV99999')).toBe(true)
+    expect(isReservedBoardKey('PRVX')).toBe(true)
+  })
+
+  it('小文字で入力されても予約済みと判定する', () => {
+    expect(isReservedBoardKey('prv1')).toBe(true)
+  })
+
+  it('接頭辞が一致しないキーは予約対象外', () => {
+    expect(isReservedBoardKey('DEV')).toBe(false)
+    expect(isReservedBoardKey('PR')).toBe(false)
+    expect(isReservedBoardKey('APRV1'), '途中に含むだけなら対象外').toBe(false)
   })
 })
 

@@ -3,6 +3,7 @@ import { z } from 'zod'
 import {
   ASSIGNEE_NONE,
   BOARD_KEY_PATTERN,
+  isReservedBoardKey,
   MAX_BOARD_KEY,
   MAX_TAG_NAME,
   MAX_TICKET_TAGS,
@@ -226,7 +227,8 @@ export const zCommentContent = z.string().trim().min(1, el('@required_field')).m
 export const zBoardDescription = z.string().max(200, el('@invalid_description')).optional()
 /**
  * ボードキー(チケット表示ID `KEY-番号` の接頭辞)。小文字で入力されても大文字へ寄せてから検証する。
- * 変更すると共有済みの表示IDが指す先が変わるため、変更できるのは owner と管理者に限る。
+ * 変更すると共有済みの表示IDが解決できなくなるため、変更できるのは owner と管理者に限る。
+ * プライベートボードの採番領域(PRV)は `isReservedBoardKey` で塞ぐ。
  */
 export const zBoardKey = z
   .string()
@@ -234,6 +236,7 @@ export const zBoardKey = z
   .toUpperCase()
   .max(MAX_BOARD_KEY, el('@invalid_board_key'))
   .regex(BOARD_KEY_PATTERN, el('@invalid_board_key'))
+  .refine((key) => !isReservedBoardKey(key), el('@reserved_board_key'))
 /** ボードのロール。Prisma の BoardMemberRole / task.ts の BoardRole と一致させる */
 export const zBoardRole = z.enum(['owner', 'member'])
 
