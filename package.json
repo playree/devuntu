@@ -23,6 +23,7 @@
     "@aws-sdk/client-s3": "^3.1106.0",
     "@better-auth/oauth-provider": "^1.6.23",
     "@better-auth/passkey": "^1.6.23",
+    "@dnd-kit/dom": "^0.5.0",
     "@dnd-kit/react": "^0.5.0",
     "@heroui/react": "^3.2.4",
     "@heroui/styles": "^3.2.4",
