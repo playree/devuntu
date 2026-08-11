@@ -1,10 +1,6 @@
-/**
- * 翻訳リソースのテンプレート展開の単体テスト
- *
- * サーバー / クライアント双方の `t()` が共有する実装なので、置換規則をここで固定する。
- */
+/** サーバー / クライアント双方の `t()` が共有する実装なので、置換規則をここで固定する */
 
-import { expandTemplate } from '@/components/locale/template'
+import { expandTemplate } from '@/lib/locale-util'
 import { describe, expect, it } from 'vitest'
 
 describe('expandTemplate', () => {
@@ -30,6 +26,11 @@ describe('expandTemplate', () => {
 
   it('values に無いキーはそのまま残す', () => {
     expect(expandTemplate('${target} を削除しました。', { other: 'x' })).toBe('${target} を削除しました。')
+  })
+
+  it('継承プロパティのキーは置換しない', () => {
+    expect(expandTemplate('${toString}', {})).toBe('${toString}')
+    expect(expandTemplate('${constructor}', {})).toBe('${constructor}')
   })
 
   it('JS の式としては評価しない', () => {

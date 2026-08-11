@@ -11,14 +11,24 @@ type Entry = { value: Promise<unknown>; expiresAt: number }
 
 const entries = new Map<string, Entry>()
 
-/** Map が無制限に膨らまないよう、この件数を超えたら期限切れを掃除する */
-const PRUNE_THRESHOLD = 1000
+/** 保持するエントリ数の上限 */
+const MAX_ENTRIES = 1000
 
-const prune = (now: number) => {
+/**
+ * 上限を超えた分を捨てる。期限切れを先に落とし、それでも収まらなければ古い順(Map の挿入順)に削る。
+ * 期限切れの掃除だけだと、キーを変え続けるリクエストで有効なエントリだけが積み上がってしまう。
+ */
+const evict = (now: number) => {
   for (const [key, entry] of entries) {
     if (entry.expiresAt <= now) {
       entries.delete(key)
     }
+  }
+  for (const key of entries.keys()) {
+    if (entries.size < MAX_ENTRIES) {
+      break
+    }
+    entries.delete(key)
   }
 }
 
@@ -31,13 +41,14 @@ const prune = (now: number) => {
  */
 export const cached = <T>(key: string, ttlMs: number, load: () => Promise<T>): Promise<T> => {
   const now = Date.now()
-  if (entries.size > PRUNE_THRESHOLD) {
-    prune(now)
-  }
 
   const entry = entries.get(key)
   if (entry && entry.expiresAt > now) {
     return entry.value as Promise<T>
+  }
+
+  if (entries.size >= MAX_ENTRIES) {
+    evict(now)
   }
 
   const value: Promise<T> = load().catch((error: unknown) => {

@@ -1,8 +1,4 @@
-/**
- * 追加Busy時間の展開・統合の単体テスト
- *
- * 「毎週この曜日のこの時刻」は壁時計時刻の指定なので、DST を挟んでも時刻がずれないことを固定する。
- */
+/** 「毎週この曜日のこの時刻」は壁時計時刻の指定なので、DST を挟んでも時刻がずれないことを固定する */
 
 import { expandBusyTimes, mergeBusySlots } from '@/lib/calendar-busy'
 import { startOfWeek } from '@/lib/day'

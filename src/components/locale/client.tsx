@@ -1,11 +1,9 @@
 'use client'
 
-import acceptLanguageParser from 'accept-language-parser'
+import { expandTemplate, pickLocale, type LocaleConfig, type LocaleValues } from '@/lib/locale-util'
 import { FC, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 
 import { getCookie } from '../general/cookie/client'
-import { expandTemplate, type LocaleValues } from './template'
-import { LocaleConfig } from './types'
 
 type LocaleContextType = {
   locale: string
@@ -16,27 +14,6 @@ type LocaleContextType = {
 }
 
 const LocaleContext = createContext<LocaleContextType>({} as LocaleContextType)
-
-/**
- * 表示するロケールを決める。Cookie の指定が最優先で、無ければ Accept-Language から選ぶ。
- *
- * Cookie は SSR では読めないので値を引数で受け取る。サーバーとクライアントで同じ入力を渡せば
- * 同じ結果になるため、初期描画をサーバー側と一致させられる。
- */
-const pickLocale = (
-  localeConfig: LocaleConfig,
-  defaultLocale: string,
-  acceptLanguage: string | null,
-  cookieLocale: string | null,
-) => {
-  if (cookieLocale && localeConfig.locales.includes(cookieLocale)) {
-    return cookieLocale
-  }
-
-  return (
-    acceptLanguageParser.pick(localeConfig.locales, acceptLanguage ?? defaultLocale, { loose: true }) || defaultLocale
-  )
-}
 
 const useLocaleContext = (
   localeConfig: LocaleConfig,

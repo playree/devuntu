@@ -9,7 +9,7 @@
  * middleware では守られない点に注意。
  */
 
-// Prisma.sql / Prisma.join(レーン再採番の一括 UPDATE)を使うため値としても import する
+// レーン再採番の一括 UPDATE で Prisma.sql / Prisma.join を使うため type import にしない
 import { Prisma } from '@/generated/prisma/client'
 import type { BoardKind, TicketStatus } from '@/generated/prisma/enums'
 import { nowDate } from './day'
@@ -29,6 +29,7 @@ import {
   type BoardRole,
   type TicketPermission,
 } from './task'
+import { extractUploadKeys } from './upload'
 
 /** Server Action の `ctx.user` をそのまま渡せる最小形 */
 export type Actor = { id: string; role?: string | null }
@@ -507,6 +508,30 @@ export const nextTicketNumber = async (tx: Prisma.TransactionClient, boardId: st
     select: { ticketSeq: true },
   })
   return ticketSeq
+}
+
+/**
+ * 本文に貼られた添付を、本文の保存先ボードへ紐付け直す。
+ *
+ * アップロードは本文の保存より前に走るので、作成フォームでボードを選び直すと添付だけが
+ * 前のボードに残り、保存先ボードのメンバーが `/api/upload/<キー>` を読めなくなる。
+ * 付け替えは本人がアップロードしたものに限る(他人の添付を自分のボードへ引き込めないようにする)。
+ * 保存先ボードへのアクセスは呼び出し元で `assertBoardAccess` を通していること。
+ */
+export const reassignContentAttachments = async (
+  tx: Prisma.TransactionClient,
+  content: string | null | undefined,
+  boardId: string,
+  actor: Actor,
+): Promise<void> => {
+  const keys = content ? extractUploadKeys(content) : []
+  if (keys.length === 0) {
+    return
+  }
+  await tx.attachment.updateMany({
+    where: { key: { in: keys }, createdById: actor.id, boardId: { not: boardId } },
+    data: { boardId },
+  })
 }
 
 /**

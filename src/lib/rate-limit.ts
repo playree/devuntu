@@ -27,14 +27,32 @@ type Counter = { count: number; resetAt: number }
  */
 const counters = new Map<string, Counter>()
 
-/** Map が無制限に膨らまないよう、この件数を超えたら期限切れを掃除する */
-const PRUNE_THRESHOLD = 10000
+/** 保持するカウンタ数の上限 */
+export const MAX_ENTRIES = 10000
 
-const prune = (now: number) => {
+/**
+ * 上限を超えた分を捨てる。ウィンドウ明けを先に落とし、それでも収まらなければ古い順(Map の挿入順)に削る。
+ * 期限切れの掃除だけだと、キーを変え続ける試行で有効なカウンタだけが積み上がってしまう。
+ *
+ * 有効なカウンタを捨てるとそのキーの制限は緩むため、発生したことは分かるようにしておく。
+ */
+const evict = (now: number) => {
   for (const [key, counter] of counters) {
     if (counter.resetAt <= now) {
       counters.delete(key)
     }
+  }
+
+  let dropped = 0
+  for (const key of counters.keys()) {
+    if (counters.size < MAX_ENTRIES) {
+      break
+    }
+    counters.delete(key)
+    dropped += 1
+  }
+  if (dropped > 0) {
+    logger.warn({ dropped, max: MAX_ENTRIES }, 'rate limit counters evicted')
   }
 }
 
@@ -44,12 +62,12 @@ const prune = (now: number) => {
  */
 export const consumeRateLimit = (key: string, { limit, windowMs }: RateLimitRule): boolean => {
   const now = Date.now()
-  if (counters.size > PRUNE_THRESHOLD) {
-    prune(now)
-  }
 
   const counter = counters.get(key)
   if (!counter || counter.resetAt <= now) {
+    if (counters.size >= MAX_ENTRIES) {
+      evict(now)
+    }
     counters.set(key, { count: 1, resetAt: now + windowMs })
     return true
   }
@@ -64,7 +82,8 @@ export const consumeRateLimit = (key: string, { limit, windowMs }: RateLimitRule
  */
 export const assertRateLimit = (key: string, rule: RateLimitRule): void => {
   if (!consumeRateLimit(key, rule)) {
-    logger.warn({ key, rule }, 'rate limit exceeded')
+    // key はメールアドレス / IP を含むので、`:` より前の用途名だけを残す
+    logger.warn({ scope: key.split(':')[0], limit: rule.limit }, 'rate limit exceeded')
     throw errTooManyRequests()
   }
 }

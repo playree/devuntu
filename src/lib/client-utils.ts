@@ -5,8 +5,7 @@ import { ReadonlyURLSearchParams } from 'next/navigation'
  *
  * `cb` はクエリ文字列で渡ってくる = 攻撃者が自由に指定できるため、検証せずに `router.push` すると
  * 「正規のサインイン画面でログインした直後に外部サイトへ飛ばされる」オープンリダイレクトになる。
- * 同一オリジンならパス(+クエリ/ハッシュ)へ畳み、他オリジン・`//host`・`javascript:` は
- * すべて `new URL()` の origin 比較で落ちる。
+ * 同一オリジンならパス(+クエリ/ハッシュ)へ畳み、他オリジン・`//host`・`javascript:` は落とす。
  */
 export const safeCallbackPath = (raw: string | null | undefined, fallback: string = '/') => {
   if (!raw || typeof window === 'undefined') {

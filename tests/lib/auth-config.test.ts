@@ -1,8 +1,4 @@
-/**
- * proxy のパス判定(認証 / 管理者ゲート)の単体テスト
- *
- * パターンの書き間違いはゲートの素通りに直結するため、代表的なパスで固定する。
- */
+/** パターンの書き間違いはゲートの素通りに直結するため、代表的なパスで固定する */
 
 import { authConfig } from '@/lib/auth-config'
 import { matchCondition } from '@/lib/match'

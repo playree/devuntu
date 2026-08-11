@@ -22,6 +22,23 @@ export const toUploadKey = (url: string) => url.slice(url.lastIndexOf('/') + 1)
 /** 保存キーの形式検証(ホワイトリスト方式のため別途のパストラバーサル対策は不要) */
 export const isValidUploadKey = (key: string) => UPLOAD_KEY_REGEX.test(key)
 
+/**
+ * 本文(Markdown)に含まれる `/api/upload/<キー>` から保存キーを重複なく取り出す。
+ *
+ * 添付を本文の保存先ボードへ紐付け直すために使う。形式検証を通したものだけ返すので、
+ * 本文へ手書きされた任意の文字列がそのままキーとして扱われることはない。
+ */
+export const extractUploadKeys = (content: string): string[] => {
+  const matches = content.matchAll(new RegExp(`${UPLOAD_URL_PREFIX}/([\\w.-]+)`, 'g'))
+  const keys = new Set<string>()
+  for (const [, key] of matches) {
+    if (isValidUploadKey(key)) {
+      keys.add(key)
+    }
+  }
+  return [...keys]
+}
+
 /** 新規保存用のキーを生成する */
 export const newUploadKey = (ext: string) => `${uuidv7()}.${ext}`
 

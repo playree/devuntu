@@ -1,12 +1,7 @@
-/**
- * レートリミッタの単体テスト
- *
- * 固定ウィンドウのカウンタなので、境界(limit ちょうど / 超過 / ウィンドウ明け)を確認する。
- * カウンタはモジュールスコープで共有されるため、テストごとに別のキーを使う。
- */
+/** カウンタはモジュールスコープで共有されるため、テストごとに別のキーを使う */
 
 import { ClientError, TOO_MANY_REQUESTS } from '@/lib/error'
-import { assertRateLimit, consumeRateLimit } from '@/lib/rate-limit'
+import { assertRateLimit, consumeRateLimit, MAX_ENTRIES } from '@/lib/rate-limit'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const RULE = { limit: 3, windowMs: 1000 }
@@ -51,5 +46,22 @@ describe('assertRateLimit: 超過時は ClientError', () => {
       expect(e).toBeInstanceOf(ClientError)
       expect((e as ClientError).errorType).toBe(TOO_MANY_REQUESTS)
     }
+  })
+})
+
+// カウンタを上限まで積んで他のテストのキーを巻き込むので、最後に置く
+describe('consumeRateLimit: 上限到達時の追い出し', () => {
+  it('上限を超えると古いキーから捨てられる', () => {
+    const oldest = 'evict:oldest'
+    expect([1, 2, 3].map(() => consumeRateLimit(oldest, RULE))).toEqual([true, true, true])
+    expect(consumeRateLimit(oldest, RULE), '追い出し前は超過している').toBe(false)
+
+    // ウィンドウ明けでは消えないよう十分長い窓で埋める
+    const long = { limit: 1, windowMs: 60_000 }
+    for (let i = 0; i < MAX_ENTRIES; i++) {
+      consumeRateLimit(`evict:fill:${i}`, long)
+    }
+
+    expect(consumeRateLimit(oldest, RULE), '追い出されてカウンタが戻る').toBe(true)
   })
 })

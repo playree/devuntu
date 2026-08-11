@@ -129,10 +129,15 @@ export const startOfWeek = (date?: string | null, tz: string = DEFAULT_TZ) => {
 /** 週の起点から7日分の Dayjs 配列(月曜〜日曜) */
 export const weekDays = (weekStart: Dayjs) => Array.from({ length: 7 }, (_, i) => weekStart.add(i, 'day'))
 
-/** 週の取得レンジ(ISO文字列。timeMin: 週初日0:00, timeMax: 翌週初日0:00) */
-export const weekRange = (weekStart: Dayjs) => ({
+/**
+ * 週の取得レンジ(ISO文字列。timeMin: 週初日0:00, timeMax: 翌週初日0:00)
+ *
+ * 終端は翌週初日の暦日から tz で解決する。`.add(7, 'day')` だと `.tz()` が固定したオフセットの
+ * まま加算されるため、DST の切替を挟む週で 1 時間ずれる(zonedMinutes と同じ理由)。
+ */
+export const weekRange = (weekStart: Dayjs, tz: string = DEFAULT_TZ) => ({
   timeMin: weekStart.toISOString(),
-  timeMax: weekStart.add(7, 'day').toISOString(),
+  timeMax: zonedMinutes(addDaysDateOnly(weekStart.format('YYYY-MM-DD'), 7), 0, tz).toISOString(),
 })
 
 /** ISO文字列等を指定タイムゾーンの Dayjs に変換(既定は Asia/Tokyo) */

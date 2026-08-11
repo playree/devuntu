@@ -1,16 +1,10 @@
-/**
- * クライアント用ユーティリティの単体テスト
- *
- * `safeCallbackPath` は認証後の遷移先を自サイト内へ閉じるためのガードなので、
- * オープンリダイレクトになりうる入力を重点的に確認する。
- */
+/** `safeCallbackPath` はオープンリダイレクトのガードなので、危険になりうる入力を重点的に確認する */
 
 import { safeCallbackPath } from '@/lib/client-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const ORIGIN = 'https://app.example.com'
 
-/** 実装は window.location.origin を基準に判定するので、テストからは window を差し込む */
 const stubWindow = () => vi.stubGlobal('window', { location: { origin: ORIGIN } })
 
 afterEach(() => {

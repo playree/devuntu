@@ -1,4 +1,5 @@
 import { envu } from '@/lib/env-util'
+import { pickLocale } from '@/lib/locale-util'
 import { localeConfig } from '@/locale/config'
 import { cn } from '@heroui/react'
 import type { Metadata } from 'next'
@@ -40,9 +41,11 @@ export default async function RootLayout({
   const defaultLocale = envu.server.DEFAULT_LOCALE || localeConfig.locales[0]
   // LocaleProvider が SSR でもクライアントと同じロケールを選べるようにサーバー側で読んで渡す
   const cookieLocale = (await cookies()).get(localeConfig.cookie.name)?.value ?? null
+  // <html lang> は LocaleProvider と同じ判定を通して、文書言語と表示ロケールを食い違わせない
+  const locale = pickLocale(localeConfig, defaultLocale, acceptLanguage, cookieLocale)
 
   return (
-    <html lang='ja' className={`${NotoSansJp.variable} ${RobotoMono.variable}`} suppressHydrationWarning>
+    <html lang={locale} className={`${NotoSansJp.variable} ${RobotoMono.variable}`} suppressHydrationWarning>
       <head />
       <body className={cn('bg-background text-foreground font-noto min-h-screen antialiased')}>
         <Providers

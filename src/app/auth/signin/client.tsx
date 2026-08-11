@@ -82,7 +82,7 @@ const UsernameForm: FC<{
               next(input.username, res.next)
             }
           } catch (e) {
-            // OTPメールの濫用を防ぐレート制限。時間をおけば再試行できるので画面はそのまま残す
+            // 時間をおけば再試行できるので画面はそのまま残す
             if (e instanceof ClientError && e.errorType === TOO_MANY_REQUESTS) {
               notify.warn(t('msg_too_many_requests'))
             } else {

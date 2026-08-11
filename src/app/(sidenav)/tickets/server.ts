@@ -10,6 +10,7 @@ import {
   getBoardMemberUsers,
   getBoardsMemberUsers,
   nextTicketNumber,
+  reassignContentAttachments,
 } from '@/lib/board'
 import { dateOnlyToUtc, nowDate } from '@/lib/day'
 import { errInvalidOperation } from '@/lib/error'
@@ -214,6 +215,9 @@ export const createTicket = safeAuthAction
         },
         select: { id: true, title: true, number: true, board: { select: { key: true } } },
       })
+
+      // 本文の画像はボードを選び直す前にアップロードされている場合があるので、作成先へ付け替える
+      await reassignContentAttachments(tx, rest.content, boardId, user)
 
       // 表示IDは組み立てて返す(作成直後の通知でそのまま出せるようにする)
       return {

@@ -5,7 +5,14 @@
  * ストレージやDBを起動せずに検証できる。
  */
 
-import { isValidUploadKey, newUploadKey, toUploadKey, toUploadUrl, UPLOAD_URL_PREFIX } from '@/lib/upload'
+import {
+  extractUploadKeys,
+  isValidUploadKey,
+  newUploadKey,
+  toUploadKey,
+  toUploadUrl,
+  UPLOAD_URL_PREFIX,
+} from '@/lib/upload'
 import { describe, expect, it } from 'vitest'
 
 describe('toUploadUrl / toUploadKey', () => {
@@ -26,6 +33,30 @@ describe('newUploadKey', () => {
 
   it('呼び出しごとに異なるキーになる', () => {
     expect(newUploadKey('webp')).not.toBe(newUploadKey('webp'))
+  })
+})
+
+describe('extractUploadKeys', () => {
+  const a = '019eef64-6cc1-78f1-8f50-1ef86986289a.webp'
+  const b = '019eef64-6cc1-78f1-8f50-1ef86986289b.png'
+
+  it('本文中の複数の添付URLをキーとして取り出す', () => {
+    const content = `![a](${toUploadUrl(a)})\n\n本文\n\n![b](${toUploadUrl(b)})`
+    expect(extractUploadKeys(content)).toEqual([a, b])
+  })
+
+  it('同じキーは1つにまとめる', () => {
+    expect(extractUploadKeys(`![](${toUploadUrl(a)}) ![](${toUploadUrl(a)})`)).toEqual([a])
+  })
+
+  it('形式を満たさないキーは無視する', () => {
+    const content = `![](${UPLOAD_URL_PREFIX}/../../etc/passwd) ![](${UPLOAD_URL_PREFIX}/not-a-uuid.webp) ![](${toUploadUrl(a)})`
+    expect(extractUploadKeys(content)).toEqual([a])
+  })
+
+  it('添付URLが無ければ空配列', () => {
+    expect(extractUploadKeys('本文だけ https://example.com/image.webp')).toEqual([])
+    expect(extractUploadKeys('')).toEqual([])
   })
 })
 

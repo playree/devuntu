@@ -50,7 +50,7 @@ const PublicCalPage = async ({
   const title = scCalendarShareOptions.safeParse(share.options).data?.title ?? ''
 
   const weekStart = startOfWeek(date, tz)
-  const { timeMin, timeMax } = weekRange(weekStart)
+  const { timeMin, timeMax } = weekRange(weekStart, tz)
 
   /**
    * 共有URLを知っていれば誰でも開けるページなので、週ごとの結果をキャッシュして

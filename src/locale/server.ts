@@ -1,5 +1,5 @@
-import { expandTemplate, type LocaleValues } from '@/components/locale/template'
 import { envu } from '@/lib/env-util'
+import { expandTemplate, type LocaleValues } from '@/lib/locale-util'
 import { LocaleItem } from '.'
 import { localeConfig } from './config'
 
