@@ -192,10 +192,11 @@ export const createTicket = safeAuthAction
       // タグもそのボードのものに限る
       const ids = await assertTagIdsInBoard(tx, boardId, tagIds)
 
+      // 採番はボード行をロックする。レーンの読み取りより先に取ることで、同一ボードへの同時作成は
+      // 先行トランザクションのコミット後にレーンを読み直すことになり、order の重複も防げる
+      const number = await nextTicketNumber(tx, boardId)
       // 対象レーンの末尾へ追加する。必要なのは最大値だけなので全行は読まない
       const lane = await tx.ticket.aggregate({ where: { boardId, status }, _max: { order: true } })
-      // 採番はボード行をロックするので、他の検証を終えてから最後に取る
-      const number = await nextTicketNumber(tx, boardId)
 
       const created = await tx.ticket.create({
         data: {

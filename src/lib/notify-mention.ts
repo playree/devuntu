@@ -22,6 +22,8 @@ export type MentionNotification = {
 /**
  * 通知の見出し。メールの件名にもそのまま使えるよう表示IDを先頭に置く。
  * 受け取った側が本文を開かなくても、どのチケットの話かを判別できるようにするのが狙い。
+ *
+ * 件名は利用者の入力を含むため、通知を送る箇所でだけ組み立てる(ログには出さない)。
  */
 export const mentionSubject = ({ displayId, ticketTitle }: Pick<MentionNotification, 'displayId' | 'ticketTitle'>) =>
   `[${displayId}] ${ticketTitle}`
@@ -29,7 +31,6 @@ export const mentionSubject = ({ displayId, ticketTitle }: Pick<MentionNotificat
 export const notifyMention = async ({
   ticketId,
   displayId,
-  ticketTitle,
   commentId,
   fromUserId,
   toUserIds,
@@ -38,8 +39,5 @@ export const notifyMention = async ({
     return
   }
 
-  logger.info(
-    { ticketId, displayId, subject: mentionSubject({ displayId, ticketTitle }), commentId, fromUserId, toUserIds },
-    'mention notify (not implemented)',
-  )
+  logger.info({ ticketId, displayId, commentId, fromUserId, toUserIds }, 'mention notify (not implemented)')
 }

@@ -183,6 +183,16 @@ describe('nextSequentialKey: 連番キーの採番', () => {
   it('接頭辞が違うキー / 連番でないキーは無視する', () => {
     expect(nextSequentialKey('PRV', ['DEV1', 'PRVX', 'PRV2'])).toBe('PRV3')
   })
+
+  it('上限ちょうど(MAX_BOARD_KEY)までは採番する', () => {
+    expect(nextSequentialKey('PRV', ['PRV9998'])).toBe('PRV9999')
+    expect(nextSequentialKey('PRV', ['PRV9999'])).toBe('PRV10000')
+  })
+
+  it('上限を超える桁になったら null(表示IDを解決できないキーは作らせない)', () => {
+    expect(nextSequentialKey('PRV', ['PRV99999'])).toBeNull()
+    expect(nextSequentialKey('PRV', ['PRV1'], 3), 'maxLength は指定できる').toBeNull()
+  })
 })
 
 /* -------------------------------------------------------------------------------------------------

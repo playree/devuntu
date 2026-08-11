@@ -60,19 +60,26 @@ export const rethrowDuplicatedBoardKey = (e: unknown): never => {
   throw e
 }
 
-/** ensurePrivateBoard の作成リトライ回数。キーの取り合いは同時実行数ぶんしか起きない */
+/** ensurePrivateBoard のキー競合によるリトライ回数。キーの取り合いは同時実行数ぶんしか起きない */
 const PRIVATE_BOARD_CREATE_RETRY = 3
 
-/** プライベートボードのキー(PRV<連番>)。既存の最大 + 1 を採る */
+/**
+ * プライベートボードのキー(PRV<連番>)。既存の最大 + 1 を採る。
+ * 桁が MAX_BOARD_KEY を超えると表示IDを解決できないボードになるため、その手前で失敗させる。
+ */
 const nextPrivateBoardKey = async (): Promise<string> => {
   const boards = await prisma.board.findMany({
     where: { key: { startsWith: PRIVATE_BOARD_KEY_PREFIX } },
     select: { key: true },
   })
-  return nextSequentialKey(
+  const key = nextSequentialKey(
     PRIVATE_BOARD_KEY_PREFIX,
     boards.map(({ key }) => key),
   )
+  if (!key) {
+    throw errInvalidOperation()
+  }
+  return key
 }
 
 /**
@@ -85,6 +92,7 @@ const nextPrivateBoardKey = async (): Promise<string> => {
  * 一覧と選択肢の取得はクライアントから並行で走るため、同時に create が起きうる。
  * privateOwnerId の @unique に当たったなら読み直して吸収し、キーの取り合いに負けた場合は
  * 採番からやり直す(自分のボードはまだ無いので読み直しでは吸収できない)。
+ * 一意制約違反以外(接続断など)はリトライしても直らないので即座に投げ直す。
  */
 export const ensurePrivateBoard = async (user: { id: string }): Promise<string> => {
   const found = await prisma.board.findUnique({ where: { privateOwnerId: user.id }, select: { id: true } })
@@ -107,6 +115,9 @@ export const ensurePrivateBoard = async (user: { id: string }): Promise<string> 
       })
       return created.id
     } catch (e) {
+      if (!isUniqueViolation(e)) {
+        throw e
+      }
       const raced = await prisma.board.findUnique({ where: { privateOwnerId: user.id }, select: { id: true } })
       if (raced) {
         return raced.id
@@ -460,17 +471,22 @@ export const nextTicketNumber = async (tx: Prisma.TransactionClient, boardId: st
 }
 
 /**
- * 表示ID(`KEY-番号`)からチケット ID を引く。形式外・未存在は null。
+ * 表示ID(`KEY-番号`)からチケット ID を引く。形式外・未存在・アクセス不可はいずれも null。
  *
- * 認可はしない(呼び出し元がチケット詳細側の `assertTicketAccess` へ委ねる前提)。
+ * アクセス不可を未存在と区別せずに潰すことで、短縮URLが「そのチケットが在るか」と
+ * 内部 ID を答えてしまわないようにする。
  */
-export const findTicketIdByDisplayId = async (raw: string): Promise<string | null> => {
+export const findTicketIdByDisplayId = async (actor: Actor, raw: string): Promise<string | null> => {
   const parsed = parseTicketDisplayId(raw)
   if (!parsed) {
     return null
   }
   const board = await prisma.board.findUnique({ where: { key: parsed.key }, select: { id: true } })
   if (!board) {
+    return null
+  }
+  const access = await getBoardAccess(actor, board.id)
+  if (!access) {
     return null
   }
   const ticket = await prisma.ticket.findUnique({

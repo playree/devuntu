@@ -28,10 +28,7 @@ const MetaRow: FC<{ label: string; children: ReactNode }> = ({ label, children }
   </div>
 )
 
-/**
- * 名前 / ボードキー / 説明の編集フォーム。team ボードの owner(または管理者)だけに出す。
- * アーカイブはデンジャーゾーン側で切り替えるが、scUpdateBoard が必須なので現在値をそのまま送る。
- */
+/** 名前 / ボードキー / 説明の編集フォーム。team ボードの owner(または管理者)だけに出す */
 const EditForm: FC<{ board: Board; reload: () => void }> = ({ board, reload }) => {
   const { t, fet } = useLocale()
 
@@ -48,7 +45,6 @@ const EditForm: FC<{ board: Board; reload: () => void }> = ({ board, reload }) =
       name: board.name,
       key: board.key,
       description: board.description,
-      archived: board.archived,
     },
   })
 

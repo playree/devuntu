@@ -9,7 +9,7 @@ import { parseAction } from '@/lib/action-client'
 import { useLocale } from '@/locale/client'
 import { useRouter } from 'next/navigation'
 import { FC, ReactNode } from 'react'
-import { deleteBoard, GetBoardDetailReturnType, updateBoard } from './server'
+import { deleteBoard, GetBoardDetailReturnType, setBoardArchived } from './server'
 
 type Board = NonNullable<GetBoardDetailReturnType>
 
@@ -38,7 +38,6 @@ export const DangerZone: FC<{ board: Board; reload: () => void }> = ({ board, re
   const boardName = useBoardName()
   const { confirmModal } = useConfirmModal()
 
-  // scUpdateBoard は archived 以外も必須なので、現在値をそのまま渡して archived だけ反転する
   const toggleArchive = async () => {
     const name = boardName(board)
     const next = !board.archived
@@ -52,15 +51,7 @@ export const DangerZone: FC<{ board: Board; reload: () => void }> = ({ board, re
         autoClose: false,
       })
       if (ok) {
-        await parseAction(
-          updateBoard({
-            id: board.id,
-            name: board.name,
-            key: board.key,
-            description: board.description,
-            archived: next,
-          }),
-        )
+        await parseAction(setBoardArchived({ id: board.id, archived: next }))
         notify.success(t('msg_saved'))
         reload()
       }

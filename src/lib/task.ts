@@ -219,8 +219,11 @@ export const parseTicketNumber = (raw: string): number | null => {
 /**
  * `<prefix><連番>` 形式のキーの次の値。既存キーの最大 + 1(無ければ 1)。
  * プライベートボードのキー採番に使う(接頭辞の後ろが数字でないキーは無関係とみなす)。
+ *
+ * `maxLength` を超える桁になったら null を返す。BOARD_KEY_PATTERN を外れたキーで作られたボードは
+ * チケットの表示IDを parseTicketDisplayId で解決できなくなるため、採番せず呼び出し側で失敗させる。
  */
-export const nextSequentialKey = (prefix: string, keys: string[]): string => {
+export const nextSequentialKey = (prefix: string, keys: string[], maxLength: number = MAX_BOARD_KEY): string | null => {
   const max = keys.reduce((max, key) => {
     const rest = key.startsWith(prefix) ? key.slice(prefix.length) : ''
     if (!/^\d+$/.test(rest)) {
@@ -229,7 +232,9 @@ export const nextSequentialKey = (prefix: string, keys: string[]): string => {
     const seq = Number(rest)
     return seq > max ? seq : max
   }, 0)
-  return `${prefix}${max + 1}`
+
+  const key = `${prefix}${max + 1}`
+  return key.length > maxLength ? null : key
 }
 
 /* -------------------------------------------------------------------------------------------------

@@ -19,6 +19,7 @@ import { prisma } from '@/lib/prisma'
 import {
   scCreateTag,
   scRemoveBoardMember,
+  scSetBoardArchived,
   scSetBoardGroups,
   scUpdateBoard,
   scUpdateTag,
@@ -80,7 +81,7 @@ export type GetBoardMembersReturnType = Awaited<ReturnType<typeof getBoardMember
 export const updateBoard = safeAuthAction
   .metadata({ actionName: 'updateBoard', role: 'user' })
   .inputSchema(scUpdateBoard)
-  .action(async ({ ctx: { user }, parsedInput: { id, name, key, description, archived } }) => {
+  .action(async ({ ctx: { user }, parsedInput: { id, name, key, description } }) => {
     const board = await prisma.$transaction(async (tx) => {
       await assertBoardAccess(user, id, 'manage', tx)
       await assertTeamBoard(tx, id)
@@ -88,12 +89,32 @@ export const updateBoard = safeAuthAction
       // キーを変えると既存チケットの表示IDも一斉に変わる(番号は据え置き)。
       // 共有済みの旧表示IDは解決できなくなるため、変更できるのは owner と管理者に限っている
       return tx.board
-        .update({ where: { id }, data: { name, key, description, archived }, select: { id: true, name: true } })
+        .update({ where: { id }, data: { name, key, description }, select: { id: true, name: true } })
         .catch(rethrowDuplicatedBoardKey)
     })
 
     logger.info({ userId: user.id, id }, 'board updated')
     return board
+  })
+
+/**
+ * アーカイブの切り替え(owner または管理者)。
+ *
+ * 更新するのは archived だけにしてある。プロフィール編集と同じ Action にすると、
+ * デンジャーゾーンが画面に表示中の name / key を送り返し、他者が変更した直後の値を巻き戻してしまう。
+ */
+export const setBoardArchived = safeAuthAction
+  .metadata({ actionName: 'setBoardArchived', role: 'user' })
+  .inputSchema(scSetBoardArchived)
+  .action(async ({ ctx: { user }, parsedInput: { id, archived } }) => {
+    await prisma.$transaction(async (tx) => {
+      await assertBoardAccess(user, id, 'manage', tx)
+      await assertTeamBoard(tx, id)
+      await tx.board.update({ where: { id }, data: { archived }, select: { id: true } })
+    })
+
+    logger.info({ userId: user.id, id, archived }, 'board archived updated')
+    return { id }
   })
 
 /** ボード削除(owner または管理者)。チケット / タグ / アサインは Cascade で消える */

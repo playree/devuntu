@@ -352,9 +352,18 @@ export const scUpdateBoard = z.object({
   name: zName,
   key: zBoardKey,
   description: zBoardDescription,
-  archived: z.boolean(),
 })
 export type UpdateBoard = z.infer<typeof scUpdateBoard>
+
+/**
+ * アーカイブの切り替え。プロフィール編集と経路を分けることで、
+ * アーカイブ操作が画面に残っている古い name / key を書き戻さないようにする。
+ */
+export const scSetBoardArchived = z.object({
+  id: z.uuidv7(),
+  archived: z.boolean(),
+})
+export type SetBoardArchived = z.infer<typeof scSetBoardArchived>
 
 /**
  * ユーザー単位のアサインをメンバー 1 人ずつ追加 / 変更する(owner も実行可能)。

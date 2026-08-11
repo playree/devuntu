@@ -89,11 +89,14 @@ const TicketIdCopyButton: FC<{ displayId: string }> = ({ displayId }) => {
       variant='ghost'
       className='shrink-0 font-mono'
       tooltip={t('copy_ticket_id')}
-      onPress={() => {
-        navigator.clipboard
-          .writeText(displayId)
-          .then(() => notify.success(t('msg_copied')))
-          .catch(() => notify.error(t('msg_copy_failed')))
+      onPress={async () => {
+        try {
+          // 安全なコンテキストの外では navigator.clipboard 自体が無く、参照だけで例外になる
+          await navigator.clipboard.writeText(displayId)
+          notify.success(t('msg_copied'))
+        } catch {
+          notify.error(t('msg_copy_failed'))
+        }
       }}
     >
       {displayId}
