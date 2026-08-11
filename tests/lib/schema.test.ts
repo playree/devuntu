@@ -4,7 +4,15 @@
  * 既定値・必須の境界だけを対象にする(項目ごとの文字数制限は UI の constraintSchema が担う)。
  */
 
-import { scCreateTicket, scMoveTicket, scPatchTicket, scTicketSearch, zBoardKey } from '@/lib/schema'
+import {
+  scCreateTag,
+  scCreateTicket,
+  scMoveTicket,
+  scPatchTicket,
+  scTicketSearch,
+  zBoardKey,
+  zPassword,
+} from '@/lib/schema'
 import { ASSIGNEE_NONE } from '@/lib/task'
 import { describe, expect, it } from 'vitest'
 
@@ -129,5 +137,38 @@ describe('zBoardKey: ボードキーの入力チェック', () => {
   it('予約キーのエラーメッセージは専用のロケールキーになる', () => {
     const res = zBoardKey.safeParse('PRV1')
     expect(res.error?.issues[0]?.message).toBe('@reserved_board_key')
+  })
+})
+
+describe('zPassword: 長さのみで判定する', () => {
+  it('8〜128文字を受け付ける', () => {
+    expect(zPassword.safeParse('a'.repeat(8)).success).toBe(true)
+    expect(zPassword.safeParse('a'.repeat(128)).success).toBe(true)
+  })
+
+  it('境界外は受け付けない', () => {
+    expect(zPassword.safeParse('a'.repeat(7)).success).toBe(false)
+    expect(zPassword.safeParse('a'.repeat(129)).success, 'better-auth の上限に合わせる').toBe(false)
+  })
+
+  it('パスフレーズやパスワードマネージャの生成値を文字種で弾かない', () => {
+    expect(zPassword.safeParse('correct horse battery staple').success).toBe(true)
+    expect(zPassword.safeParse('パスフレーズを使いたい').success).toBe(true)
+    expect(zPassword.safeParse('Xk#9vQ2~mL8•pR4').success).toBe(true)
+  })
+})
+
+describe('scCreateTag: 表示順は未指定と 0 を区別する', () => {
+  it('未指定なら undefined のまま(サーバー側で末尾へ採番する)', () => {
+    expect(scCreateTag.parse({ boardId, name: 'タグ' }).order).toBeUndefined()
+  })
+
+  it('0 を明示したら 0 のまま通す', () => {
+    // 既定値を持たせると 0 が採番へ流れて先頭固定にできなくなる
+    expect(scCreateTag.parse({ boardId, name: 'タグ', order: 0 }).order).toBe(0)
+  })
+
+  it('色は未指定なら gray', () => {
+    expect(scCreateTag.parse({ boardId, name: 'タグ' }).color).toBe('gray')
   })
 })

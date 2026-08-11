@@ -9,7 +9,8 @@
  * middleware では守られない点に注意。
  */
 
-import type { Prisma } from '@/generated/prisma/client'
+// Prisma.sql / Prisma.join(レーン再採番の一括 UPDATE)を使うため値としても import する
+import { Prisma } from '@/generated/prisma/client'
 import type { BoardKind, TicketStatus } from '@/generated/prisma/enums'
 import { nowDate } from './day'
 import { errClient, errInvalidOperation } from './error'
@@ -619,7 +620,7 @@ export const getTicketMentionCandidates = async (
  * かんばんの DnD・カード内メニュー・詳細画面のステータス変更が共有する唯一の経路。
  *
  * `index` を省略すると移動先レーンの末尾へ入る。
- * レーン内は 0..n-1 の連番へ再採番する(行ごとに異なる値なので updateMany は使えない)。
+ * レーン内は 0..n-1 の連番へ再採番する(行ごとに異なる値になるため updateMany では書けず、生 SQL で 1 文にまとめる)。
  *
  * 採番の対象は盤面に表示されるカードだけ。かんばんに出ない古い完了カードは読まず order も触らないので、
  * クライアントが送る index(盤面に見えているカードだけを数えた位置)とそのまま基準が揃う。
@@ -654,11 +655,20 @@ export const moveTicketToLane = async (
   })
 
   // MAX_KANBAN_CARDS(500)まで入りうるレーンで毎回全行を UPDATE しないよう、order が変わる行だけ触る
-  for (const { id, order } of ordered) {
-    if (id === access.ticketId || currentOrder.get(id) === order) {
-      continue
-    }
-    await tx.ticket.update({ where: { id }, data: { order } })
+  const shifted = ordered.filter(({ id, order }) => id !== access.ticketId && currentOrder.get(id) !== order)
+  if (shifted.length > 0) {
+    /**
+     * レーン先頭への移動では実質全行が対象になるため、1 行ずつではなく 1 文で更新する。
+     * 生 SQL では `@updatedAt` が効かないので、1 行ずつ update していたときと同じになるよう明示的に触る。
+     */
+    await tx.$executeRaw`
+      UPDATE "ticket" AS t
+      SET "order" = v."order", "updatedAt" = NOW()
+      FROM (VALUES ${Prisma.join(
+        shifted.map(({ id, order }) => Prisma.sql`(${id}::text, ${order}::int)`),
+      )}) AS v(id, "order")
+      WHERE t.id = v.id
+    `
   }
 
   return { id: access.ticketId, status, order: movedOrder }

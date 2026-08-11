@@ -174,7 +174,6 @@ const PasswordForm: FC<{
               },
             },
           )
-          console.debug(res)
 
           await intervalOperation()
           if (res.error) {
@@ -299,7 +298,6 @@ const OtpForm: FC<{
                   return
                 }
                 const res = await authClient.emailOtp.sendVerificationOtp({ email, type: 'sign-in' })
-                console.log(res)
                 if (!res.data?.success) {
                   // 一時的な認証状態が有効期限切れなので、サインインを最初からやり直す
                   window.location.reload()
@@ -395,7 +393,6 @@ const TwoFaForm: FC<{
               coolTime={30}
               onPress={async () => {
                 const res = await authClient.twoFactor.sendOtp()
-                console.log(res)
                 if (!res.data?.status) {
                   // 一時的な認証状態が有効期限切れなので、サインインを最初からやり直す
                   window.location.reload()
@@ -544,12 +541,11 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
             variant='tertiary'
             icon={<GoogleIcon />}
             onPress={async () => {
-              const data = await authClient.signIn.social({
+              await authClient.signIn.social({
                 provider: 'google',
                 callbackURL,
                 errorCallbackURL: makePath(authConfig.path.signIn, searchParams).toString(),
               })
-              console.log(data)
             }}
           >
             {t('google_signin')}
@@ -560,9 +556,9 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
             variant='tertiary'
             icon={<FingerPrintIcon />}
             onPress={async () => {
-              const { data, error } = await authClient.signIn.passkey()
-              console.debug('passkey', { data, error })
+              const { error } = await authClient.signIn.passkey()
               if (error) {
+                console.debug(error)
                 notify.warn(t('auth_ng'))
                 return
               }

@@ -2,7 +2,7 @@
 
 import { Button, ButtonProps, cn, Dropdown, Label, Skeleton } from '@heroui/react'
 import { useTheme } from 'next-themes'
-import { FC, SVGProps, useMemo, useState } from 'react'
+import { FC, SVGProps, useEffect, useMemo, useState } from 'react'
 
 const iconSizes = {
   sm: 16,
@@ -51,6 +51,16 @@ export const ThemeSwitchList: FC<{
   const { theme, setTheme, systemTheme } = useTheme()
   const [selectedKeys, setSelectedKeys] = useState(new Set([theme || 'system']))
 
+  /**
+   * next-themes は保存済みのテーマをクライアントの初回描画時点で返す(SSR では返さない)ため、
+   * マウントするまではサーバーと同じプレースホルダを出してハイドレーション不整合を避ける。
+   */
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true)
+  }, [])
+
   const lightIcon = useMemo(() => <SunIcon width={iconSize} />, [iconSize])
   const darkIcon = useMemo(() => <MoonIcon width={iconSize} />, [iconSize])
   const systemIcon = useMemo(() => (systemTheme === 'dark' ? darkIcon : lightIcon), [darkIcon, lightIcon, systemTheme])
@@ -65,7 +75,7 @@ export const ThemeSwitchList: FC<{
     }
   }, [darkIcon, lightIcon, systemIcon, theme])
 
-  if (!theme) {
+  if (!mounted || !theme) {
     return <Skeleton className={cn('h-8 w-20 rounded-lg', className)} />
   }
 

@@ -153,3 +153,17 @@ export const minToHHmm = (min: number): string => {
   const m = min % 60
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }
+
+/** 暦日(YYYY-MM-DD)を日数分ずらす。UTC の暦日計算なので DST の影響を受けない */
+export const addDaysDateOnly = (date: string, days: number): string =>
+  dayjs.utc(date, 'YYYY-MM-DD', true).add(days, 'day').format('YYYY-MM-DD')
+
+/**
+ * 暦日(YYYY-MM-DD)と 0:00 からの分から、指定タイムゾーンの絶対時刻を作る。1440 は翌日 0:00。
+ *
+ * 週初日の Dayjs に分を足す方法だと、`.tz()` が固定したオフセットのまま加算されるため
+ * DST の切替を挟む日で壁時計時刻がずれる。日付+時刻の文字列としてタイムゾーン解決させることで防ぐ。
+ */
+export const zonedMinutes = (date: string, min: number, tz: string = DEFAULT_TZ) =>
+  // 24:00 以降は翌日の時刻として解決させる
+  dayjs.tz(`${addDaysDateOnly(date, Math.floor(min / 1440))} ${minToHHmm(min % 1440)}`, tz)

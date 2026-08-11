@@ -143,7 +143,7 @@ export const createTicketTag = safeAuthAction
     // 中断され、同じ tx 内で既存タグを読み直せなくなるため
     const tag = await prisma.tag
       .create({
-        data: { boardId, name, color, order: order || nextOrder(tags.map((row) => row.order)) },
+        data: { boardId, name, color, order: order ?? nextOrder(tags.map((row) => row.order)) },
         select: TAG_SELECT,
       })
       .catch(async (e) => {

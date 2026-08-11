@@ -13,15 +13,13 @@ import {
   TICKET_STATUSES,
 } from './task'
 
-const reHalfString = /^[a-zA-Z0-9!-/:-@¥[-`{-~ ]*$/
-
 export const zName = z.string().min(2, el('@invalid_name')).max(30, el('@invalid_name'))
 export const zEmail = z.email(el('@invalid_email'))
-export const zPassword = z
-  .string()
-  .min(8, el('@invalid_password'))
-  .max(20, el('@invalid_password'))
-  .regex(reHalfString, el('@invalid_password'))
+/**
+ * パスワード。パスフレーズやパスワードマネージャの生成値を弾かないよう、文字種は制限せず長さだけを見る。
+ * 上限は better-auth の maxPasswordLength(既定 128)に合わせる。
+ */
+export const zPassword = z.string().min(8, el('@invalid_password')).max(128, el('@invalid_password'))
 export const zDescription = z.string().max(40, el('@invalid_description')).optional()
 
 /** アップロード画像の上限。クライアント側の入力チェックにも使うので export する */
@@ -406,7 +404,8 @@ export const scCreateTag = z.object({
   boardId: z.uuidv7(),
   name: zTagName,
   color: zTagColor.default('gray'),
-  order: zTagOrder.default(0),
+  /** 未指定は末尾へ採番する。0 を明示した場合は 0 のまま扱うため既定値は持たせない */
+  order: zTagOrder.optional(),
 })
 export type CreateTag = z.infer<typeof scCreateTag>
 export type CreateTagIn = z.input<typeof scCreateTag>

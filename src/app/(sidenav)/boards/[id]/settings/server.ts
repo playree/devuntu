@@ -320,7 +320,7 @@ export const createBoardTag = safeAuthAction
           throw errInvalidOperation()
         }
         return tx.tag.create({
-          data: { boardId, name, color, order: order || nextOrder(tags.map((row) => row.order)) },
+          data: { boardId, name, color, order: order ?? nextOrder(tags.map((row) => row.order)) },
           select: TAG_SELECT,
         })
       })

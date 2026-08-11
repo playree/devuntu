@@ -13,6 +13,7 @@ export interface ProvidersProps {
   themeProps?: ThemeProviderProps
   defaultLocale: string
   acceptLanguage: string | null
+  cookieLocale: string | null
 }
 
 const MyConfirmModalProvider: FC<{ children: ReactNode }> = ({ children }) => {
@@ -25,11 +26,22 @@ const MyConfirmModalProvider: FC<{ children: ReactNode }> = ({ children }) => {
   )
 }
 
-export const Providers: FC<ProvidersProps> = ({ children, themeProps, defaultLocale, acceptLanguage }) => {
+export const Providers: FC<ProvidersProps> = ({
+  children,
+  themeProps,
+  defaultLocale,
+  acceptLanguage,
+  cookieLocale,
+}) => {
   return (
     <ThemeProvider {...themeProps}>
       <NotifyProvider />
-      <LocaleProvider config={localeConfig} defaultLocale={defaultLocale} acceptLanguage={acceptLanguage}>
+      <LocaleProvider
+        config={localeConfig}
+        defaultLocale={defaultLocale}
+        acceptLanguage={acceptLanguage}
+        cookieLocale={cookieLocale}
+      >
         <MyConfirmModalProvider>{children}</MyConfirmModalProvider>
       </LocaleProvider>
     </ThemeProvider>

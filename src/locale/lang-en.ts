@@ -274,7 +274,7 @@ Expiration time: 5 minutes
   '@invalid_email': 'Invalid email format',
   '@invalid_image_size': 'Image must be 5MB or less',
   '@invalid_image_type': 'Image must be JPEG, PNG, WebP, or GIF',
-  '@invalid_password': '8-20 alphanumeric characters',
+  '@invalid_password': '8-128 characters',
   '@invalid_name': '2-30 characters',
   '@required_field': 'Required field',
   '@invalid_description': 'Up to 40 characters',
