@@ -25,8 +25,7 @@ export const isValidUploadKey = (key: string) => UPLOAD_KEY_REGEX.test(key)
 /**
  * 本文(Markdown)に含まれる `/api/upload/<キー>` から保存キーを重複なく取り出す。
  *
- * 添付を本文の保存先ボードへ紐付け直すために使う。形式検証を通したものだけ返すので、
- * 本文へ手書きされた任意の文字列がそのままキーとして扱われることはない。
+ * 形式検証を通したものだけ返すので、本文へ手書きされた任意の文字列がキーとして扱われることはない。
  */
 export const extractUploadKeys = (content: string): string[] => {
   const matches = content.matchAll(new RegExp(`${UPLOAD_URL_PREFIX}/([\\w.-]+)`, 'g'))

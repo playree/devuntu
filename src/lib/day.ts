@@ -122,8 +122,8 @@ export const withinMinutes = (date: Date, min: number) => {
 export const startOfWeek = (date?: string | null, tz: string = DEFAULT_TZ) => {
   const base = date ? dayjs.tz(date, tz) : dayjs().tz(tz)
   const valid = base.isValid() ? base : dayjs().tz(tz)
-  // isoWeek は月曜始まり
-  return valid.startOf('isoWeek')
+  // isoWeek は月曜始まり。暦日にしてから解決するので、週内に DST の切替があっても 0:00 になる
+  return zonedMinutes(valid.startOf('isoWeek').format('YYYY-MM-DD'), 0, tz)
 }
 
 /** 週の起点から7日分の Dayjs 配列(月曜〜日曜) */
@@ -132,8 +132,7 @@ export const weekDays = (weekStart: Dayjs) => Array.from({ length: 7 }, (_, i) =
 /**
  * 週の取得レンジ(ISO文字列。timeMin: 週初日0:00, timeMax: 翌週初日0:00)
  *
- * 終端は翌週初日の暦日から tz で解決する。`.add(7, 'day')` だと `.tz()` が固定したオフセットの
- * まま加算されるため、DST の切替を挟む週で 1 時間ずれる(zonedMinutes と同じ理由)。
+ * 両端とも暦日を進めてから tz で解決するので、DST の切替を挟む週でも壁時計の 0:00 を指す。
  */
 export const weekRange = (weekStart: Dayjs, tz: string = DEFAULT_TZ) => ({
   timeMin: weekStart.toISOString(),
@@ -163,12 +162,28 @@ export const minToHHmm = (min: number): string => {
 export const addDaysDateOnly = (date: string, days: number): string =>
   dayjs.utc(date, 'YYYY-MM-DD', true).add(days, 'day').format('YYYY-MM-DD')
 
+const DAY_MS = 24 * 60 * 60 * 1000
+
+/** 指定した瞬間のタイムゾーンの UTC オフセット(分) */
+const offsetAt = (ts: number, tz: string): number => dayjs(ts).tz(tz).utcOffset()
+
 /**
  * 暦日(YYYY-MM-DD)と 0:00 からの分から、指定タイムゾーンの絶対時刻を作る。1440 は翌日 0:00。
  *
- * 週初日の Dayjs に分を足す方法だと、`.tz()` が固定したオフセットのまま加算されるため
- * DST の切替を挟む日で壁時計時刻がずれる。日付+時刻の文字列としてタイムゾーン解決させることで防ぐ。
+ * 壁時計時刻の指定として解決するため、DST の切替を挟んでも指定した時刻を保つ。
+ * 切替日に 2 度現れる時刻は早い側(切替前)、存在しない時刻は切替後へ送る。
+ * `dayjs.tz()` に文字列を渡すと前者が実行時のオフセット次第で変わるので、候補から自前で選ぶ。
  */
-export const zonedMinutes = (date: string, min: number, tz: string = DEFAULT_TZ) =>
+export const zonedMinutes = (date: string, min: number, tz: string = DEFAULT_TZ) => {
   // 24:00 以降は翌日の時刻として解決させる
-  dayjs.tz(`${addDaysDateOnly(date, Math.floor(min / 1440))} ${minToHHmm(min % 1440)}`, tz)
+  const wall = dayjs
+    .utc(`${addDaysDateOnly(date, Math.floor(min / 1440))} ${minToHHmm(min % 1440)}`, 'YYYY-MM-DD HH:mm', true)
+    .valueOf()
+
+  const offsets = [offsetAt(wall - DAY_MS, tz), offsetAt(wall + DAY_MS, tz)]
+  const candidates = offsets.map((offset) => wall - offset * 60_000)
+  // 想定したオフセットが実際と一致する候補だけが実在する時刻
+  const exact = candidates.filter((ts, i) => offsetAt(ts, tz) === offsets[i])
+
+  return dayjs(exact.length > 0 ? Math.min(...exact) : Math.max(...candidates)).tz(tz)
+}

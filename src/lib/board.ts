@@ -9,7 +9,6 @@
  * middleware では守られない点に注意。
  */
 
-// レーン再採番の一括 UPDATE で Prisma.sql / Prisma.join を使うため type import にしない
 import { Prisma } from '@/generated/prisma/client'
 import type { BoardKind, TicketStatus } from '@/generated/prisma/enums'
 import { nowDate } from './day'

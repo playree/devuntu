@@ -51,17 +51,28 @@ describe('assertRateLimit: 超過時は ClientError', () => {
 
 // カウンタを上限まで積んで他のテストのキーを巻き込むので、最後に置く
 describe('consumeRateLimit: 上限到達時の追い出し', () => {
-  it('上限を超えると古いキーから捨てられる', () => {
-    const oldest = 'evict:oldest'
-    expect([1, 2, 3].map(() => consumeRateLimit(oldest, RULE))).toEqual([true, true, true])
-    expect(consumeRateLimit(oldest, RULE), '追い出し前は超過している').toBe(false)
+  /** ウィンドウ明けと追い出しを混同しないよう、この describe では時間を止めて長い窓だけを使う */
+  const LONG = { limit: 3, windowMs: 60_000 }
 
-    // ウィンドウ明けでは消えないよう十分長い窓で埋める
-    const long = { limit: 1, windowMs: 60_000 }
+  it('制限内の古いキーから捨てられ、超過中のキーは残る', () => {
+    vi.useFakeTimers()
+
+    const blocked = 'evict:blocked'
+    expect([1, 2, 3].map(() => consumeRateLimit(blocked, LONG))).toEqual([true, true, true])
+    expect(consumeRateLimit(blocked, LONG), '追い出し前から超過している').toBe(false)
+
+    const spare = 'evict:spare'
+    expect(consumeRateLimit(spare, LONG), '制限内のカウンタ').toBe(true)
+
     for (let i = 0; i < MAX_ENTRIES; i++) {
-      consumeRateLimit(`evict:fill:${i}`, long)
+      consumeRateLimit(`evict:fill:${i}`, LONG)
     }
 
-    expect(consumeRateLimit(oldest, RULE), '追い出されてカウンタが戻る').toBe(true)
+    expect(consumeRateLimit(blocked, LONG), '超過中は保護されるので解けない').toBe(false)
+    // 残っていれば 2,3,4 回目として数えられ最後が false になる
+    expect(
+      [1, 2, 3].map(() => consumeRateLimit(spare, LONG)),
+      '制限内は追い出されカウンタが戻る',
+    ).toEqual([true, true, true])
   })
 })

@@ -19,7 +19,8 @@ export type RateLimitRule = {
   windowMs: number
 }
 
-type Counter = { count: number; resetAt: number }
+/** `limit` は追い出しの優先度判定(制限超過中かどうか)に使うため、カウンタ側にも持たせる */
+type Counter = { count: number; resetAt: number; limit: number }
 
 /**
  * 固定ウィンドウのカウンタ。
@@ -30,11 +31,50 @@ const counters = new Map<string, Counter>()
 /** 保持するカウンタ数の上限 */
 export const MAX_ENTRIES = 10000
 
+/** 追い出しの警告を出す最短間隔。キーを変え続ける試行で 1 リクエストごとに warn しないため */
+const EVICT_WARN_INTERVAL_MS = 60 * 1000
+
+let pendingWarn = { dropped: 0, blocked: 0 }
+let lastWarnAt = 0
+
 /**
- * 上限を超えた分を捨てる。ウィンドウ明けを先に落とし、それでも収まらなければ古い順(Map の挿入順)に削る。
+ * 追い出しの発生を警告する。間隔内の分は次の警告までまとめる。
+ * `blocked`(制限超過中だったカウンタ)が出ている場合はそのキーの制限が緩んでいる。
+ */
+const warnEvicted = (now: number, dropped: number, blocked: number) => {
+  if (dropped === 0) {
+    return
+  }
+  pendingWarn = { dropped: pendingWarn.dropped + dropped, blocked: pendingWarn.blocked + blocked }
+  if (now - lastWarnAt < EVICT_WARN_INTERVAL_MS) {
+    return
+  }
+  lastWarnAt = now
+  logger.warn({ ...pendingWarn, max: MAX_ENTRIES }, 'rate limit counters evicted')
+  pendingWarn = { dropped: 0, blocked: 0 }
+}
+
+/** 上限を下回るまで、条件に合うカウンタを古い順(Map の挿入順)に捨てる */
+const dropOldest = (match: (counter: Counter) => boolean): number => {
+  let dropped = 0
+  for (const [key, counter] of counters) {
+    if (counters.size < MAX_ENTRIES) {
+      break
+    }
+    if (match(counter)) {
+      counters.delete(key)
+      dropped += 1
+    }
+  }
+  return dropped
+}
+
+/**
+ * 上限を超えた分を捨てる。ウィンドウ明け → 制限内 → 制限超過中 の順に落とす。
  * 期限切れの掃除だけだと、キーを変え続ける試行で有効なカウンタだけが積み上がってしまう。
  *
- * 有効なカウンタを捨てるとそのキーの制限は緩むため、発生したことは分かるようにしておく。
+ * 制限超過中のカウンタを最後に回すのは、それを捨てるとブロック中の IP / メールの制限が解けるため。
+ * 使い捨てのキー(1 回しか使われず制限内のまま)を先に捨てることで、流入でブロックを外させない。
  */
 const evict = (now: number) => {
   for (const [key, counter] of counters) {
@@ -43,17 +83,9 @@ const evict = (now: number) => {
     }
   }
 
-  let dropped = 0
-  for (const key of counters.keys()) {
-    if (counters.size < MAX_ENTRIES) {
-      break
-    }
-    counters.delete(key)
-    dropped += 1
-  }
-  if (dropped > 0) {
-    logger.warn({ dropped, max: MAX_ENTRIES }, 'rate limit counters evicted')
-  }
+  const dropped = dropOldest((counter) => counter.count <= counter.limit)
+  const blocked = dropOldest(() => true)
+  warnEvicted(now, dropped + blocked, blocked)
 }
 
 /**
@@ -68,7 +100,7 @@ export const consumeRateLimit = (key: string, { limit, windowMs }: RateLimitRule
     if (counters.size >= MAX_ENTRIES) {
       evict(now)
     }
-    counters.set(key, { count: 1, resetAt: now + windowMs })
+    counters.set(key, { count: 1, resetAt: now + windowMs, limit })
     return true
   }
 
