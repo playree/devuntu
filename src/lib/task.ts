@@ -415,9 +415,16 @@ export const MENTION_CANDIDATE_LIMIT = 8
  */
 const RE_MENTION = /(?<![\w@])@\\?\[([^\s[\]@]+@[^\s[\]@]+\.[^\s[\]@]+)]/g
 
-/** Markdown のコードブロック / インラインコードを除去する(メンションの対象外にする) */
+/**
+ * Markdown のコードブロック / インラインコードを除去する(メンションの対象外にする)
+ *
+ * 開始と終了のバッククォート数を後方参照で揃えるため、``` ``@[foo@example.com]`` `` のように
+ * バッククォートを重ねた記法でも中身を取りこぼさない。フェンスを先に落とすのは、
+ * インラインの規則(改行を含まない)ではフェンス内の複数行を扱えないため。
+ * 4 スペースインデントのコードブロックはリストの継続行と区別できないので対象外とする。
+ */
 export const stripCodeSpans = (markdown: string): string =>
-  markdown.replace(/```[\s\S]*?```/g, ' ').replace(/`[^`\n]*`/g, ' ')
+  markdown.replace(/(```+|~~~+)[\s\S]*?\1/g, ' ').replace(/(`+)[^\n]*?\1/g, ' ')
 
 /** メンションの突き合わせ用の正規化(全角/半角・大文字小文字の差異を吸収する) */
 export const normalizeMentionText = (text: string): string => text.normalize('NFKC').trim().toLowerCase()

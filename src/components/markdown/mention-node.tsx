@@ -38,7 +38,8 @@ const mentionStyles = tv({
 /** 本文中のメンション 1 件。名前が引けない(ボードから外れた等)ならメールアドレスを出す */
 const MentionLabel: FC<{ email: string }> = ({ email }) => {
   const users = useContext(MentionUsersContext)
-  const name = users.get(email)?.name
+  // Provider は正規化済みのメールアドレスをキーにしているので、引く側も同じ形に揃える
+  const name = users.get(normalizeMentionText(email))?.name
 
   return (
     <span // 名前で表示しているときに実体を確かめられるようにする

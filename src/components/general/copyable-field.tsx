@@ -87,12 +87,14 @@ const ClipboardDocumentCheckIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, s
 export const CopyableField: FC<{
   text: string
   label?: string
+  /** ラベルを出さずに使うときの入力の名前。`label` があるときは不要 */
+  ariaLabel?: string
   isMask?: boolean
   variant?: InputGroupProps['variant']
   isSmart?: boolean
   className?: string
   onCopied?: () => void
-}> = ({ text, label, isMask, variant, isSmart: isSmartProp, className, onCopied }) => {
+}> = ({ text, label, ariaLabel, isMask, variant, isSmart: isSmartProp, className, onCopied }) => {
   const isSmart = useIsSmart(isSmartProp)
   const [isVisible, setIsVisible] = useState(false)
   const toggleVisibility = () => setIsVisible(!isVisible)
@@ -108,6 +110,7 @@ export const CopyableField: FC<{
         <InputGroup.Input
           value={text}
           disabled
+          aria-label={label ? undefined : ariaLabel}
           // min-w-0: 幅を絞って使ったときに input の既定幅(約20文字)が優先され、コピーボタンが枠外へ押し出されるのを防ぐ
           className={cn('min-w-0 font-mono', isSmart ? 'py-1' : '')}
         />
@@ -134,7 +137,11 @@ export const CopyableField: FC<{
                 // 安全なコンテキスト(https / localhost)の外では navigator.clipboard 自体が無く、参照だけで例外になる
                 await navigator.clipboard.writeText(text)
               } catch {
-                // コピーできていないので、成功の表示はしない
+                /**
+                 * コピーできていないので、成功の表示はしない。
+                 * このフォルダはロケールや通知(`@/components/notify`)へ依存させない方針なので、
+                 * 失敗の通知は出さず、成功表示が出ないことで伝える。
+                 */
                 return
               }
               setIsCopied(true)

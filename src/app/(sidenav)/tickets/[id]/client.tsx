@@ -313,6 +313,8 @@ export const TicketDetailClient: FC<{
               className='w-36 shrink-0'
               isSmart
               text={ticket.displayId}
+              // パンくずの隣に置くのでラベルは出さない。名前は支援技術向けにだけ与える
+              ariaLabel={t('id')}
             />
           </>
         }

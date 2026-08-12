@@ -414,6 +414,20 @@ describe('stripCodeSpans / normalizeMentionText', () => {
     expect(stripCodeSpans('a ```x``` b `y` c').includes('y')).toBe(false)
   })
 
+  it('~~~ のフェンスも除去する', () => {
+    expect(stripCodeSpans('a\n~~~\nx\n~~~\nb').includes('x')).toBe(false)
+  })
+
+  it('バッククォートを重ねたインラインコードも除去する', () => {
+    expect(stripCodeSpans('a ``x`` b').includes('x')).toBe(false)
+    expect(stripCodeSpans('a ``x`y`` b').includes('x')).toBe(false)
+  })
+
+  it('コード外のテキストは残す', () => {
+    expect(stripCodeSpans('a `x` b ~~~\ny\n~~~ c')).toContain('a')
+    expect(stripCodeSpans('a `x` b ~~~\ny\n~~~ c')).toContain('c')
+  })
+
   it('全角・大文字小文字・前後空白を正規化する', () => {
     expect(normalizeMentionText(' ＴＡＲＯ ')).toBe('taro')
     expect(normalizeMentionText('Foo@Example.COM')).toBe('foo@example.com')
@@ -452,7 +466,9 @@ describe('extractMentionEmails: 本文からメンションを抽出する', () 
     { label: 'メールアドレスに見えない中身は拾わない', input: '@[太郎]', expected: [] },
     { label: 'ドメインにドットが無い中身は拾わない', input: '@[taro@example]', expected: [] },
     { label: 'コードブロック内は対象外', input: '```\n@[taro@example.com]\n```', expected: [] },
+    { label: '~~~ のコードブロック内は対象外', input: '~~~\n@[taro@example.com]\n~~~', expected: [] },
     { label: 'インラインコード内は対象外', input: '`@[taro@example.com]`', expected: [] },
+    { label: 'バッククォートを重ねたインラインコード内も対象外', input: '``@[taro@example.com]``', expected: [] },
     { label: '@ 単体は 0 件', input: '@', expected: [] },
     { label: '空文字は 0 件', input: '', expected: [] },
     {

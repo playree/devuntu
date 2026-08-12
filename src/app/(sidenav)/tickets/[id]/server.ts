@@ -229,10 +229,16 @@ export const updateTicketComment = safeAuthAction
   .metadata({ actionName: 'updateTicketComment', role: 'user' })
   .inputSchema(scUpdateTicketComment)
   .action(async ({ ctx: { user }, parsedInput: { id, content } }) => {
-    const mentionedUserIds = await prisma.$transaction(async (tx) => {
+    const { mentionedUserIds, addedMentionUserIds, ticketId, ticket } = await prisma.$transaction(async (tx) => {
       const target = await tx.ticketComment.findUnique({
         where: { id },
-        select: { ticketId: true, authorId: true },
+        select: {
+          ticketId: true,
+          authorId: true,
+          mentionedUserIds: true,
+          // 通知の見出しに使う表示ID / 件名。この SELECT で併せて取り、追加の問い合わせを増やさない
+          ticket: { select: { number: true, title: true, board: { select: { key: true } } } },
+        },
       })
       if (!target || target.authorId !== user.id) {
         throw errInvalidOperation()
@@ -243,7 +249,23 @@ export const updateTicketComment = safeAuthAction
       const mentionedUserIds = resolveMentionUserIds(extractMentionEmails(content), candidates)
 
       await tx.ticketComment.update({ where: { id }, data: { content, mentionedUserIds } })
-      return mentionedUserIds
+      return {
+        mentionedUserIds,
+        // コメントを編集し直すたびに同じ相手へ通知しないよう、増えた分だけを通知対象にする
+        addedMentionUserIds: mentionedUserIds.filter((userId) => !target.mentionedUserIds.includes(userId)),
+        ticketId: target.ticketId,
+        ticket: target.ticket,
+      }
+    })
+
+    // 通知は未実装(ログのみ)
+    await notifyMention({
+      ticketId,
+      displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
+      ticketTitle: ticket.title,
+      commentId: id,
+      fromUserId: user.id,
+      toUserIds: addedMentionUserIds,
     })
 
     logger.info({ userId: user.id, id }, 'ticket comment updated')
