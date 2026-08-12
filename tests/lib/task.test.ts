@@ -18,15 +18,21 @@ import {
   evaluateTicketAccess,
   extractMentionNames,
   filterLaneMap,
+  filterMentionCandidates,
+  formatMentionText,
   groupByLane,
   insertAt,
   isKanbanFilterActive,
+  isMentionableName,
   isReservedBoardKey,
   kanbanDoneSince,
   kanbanLaneWhere,
   kanbanTicketWhere,
   laneDropId,
   matchesKanbanFilter,
+  matchMentionTrigger,
+  MENTION_CANDIDATE_LIMIT,
+  MENTION_NAME_MAX,
   nextOrder,
   nextSequentialKey,
   normalizeMentionName,
@@ -485,6 +491,177 @@ describe('resolveMentionUserIds: 表示名を userId へ解決する', () => {
       { id: 'u1', name: 'taro' },
     ]
     expect(resolveMentionUserIds(['taro'], dupRow), '同一 ID の重複は同名衝突ではない').toEqual(['u1'])
+  })
+})
+
+/* -------------------------------------------------------------------------------------------------
+ * メンションの入力補助
+ * -----------------------------------------------------------------------------------------------*/
+
+describe('matchMentionTrigger: キャレット直前の入力中メンションを捉える', () => {
+  const cases: { label: string; input: string; expected: ReturnType<typeof matchMentionTrigger> }[] = [
+    {
+      label: '@ 単体でも一致する(直後に一覧を出すため)',
+      input: '@',
+      expected: { leadOffset: 0, matchingString: '', replaceableString: '@' },
+    },
+    {
+      label: '行頭のクエリ',
+      input: '@太',
+      expected: { leadOffset: 0, matchingString: '太', replaceableString: '@太' },
+    },
+    {
+      label: '空白の後のクエリ',
+      input: 'よろしく @tar',
+      expected: { leadOffset: 5, matchingString: 'tar', replaceableString: '@tar' },
+    },
+    {
+      label: '空白なしの日本語文中でも一致する(@ の直前が単語文字でない)',
+      input: '見て@やま',
+      expected: { leadOffset: 2, matchingString: 'やま', replaceableString: '@やま' },
+    },
+    {
+      label: '改行の後のクエリ',
+      input: '一行目\n@太',
+      expected: { leadOffset: 4, matchingString: '太', replaceableString: '@太' },
+    },
+    { label: '直前が単語文字ならメールアドレスとみなして一致しない', input: 'foo@exa', expected: null },
+    { label: '@ が連続する場合は一致しない', input: '@@太', expected: null },
+    { label: '区切り文字でクエリが終端するので一致しない', input: '@太郎 ', expected: null },
+    { label: '句点の後は一致しない', input: '@太郎。', expected: null },
+    { label: 'メンションを含まない文字列', input: 'よろしく', expected: null },
+    { label: '空文字', input: '', expected: null },
+    {
+      label: '最大長ちょうどのクエリは一致する',
+      input: `@${'a'.repeat(MENTION_NAME_MAX)}`,
+      expected: {
+        leadOffset: 0,
+        matchingString: 'a'.repeat(MENTION_NAME_MAX),
+        replaceableString: `@${'a'.repeat(MENTION_NAME_MAX)}`,
+      },
+    },
+    { label: '最大長を超えたクエリは一致しない', input: `@${'a'.repeat(MENTION_NAME_MAX + 1)}`, expected: null },
+  ]
+
+  for (const { label, input, expected } of cases) {
+    it(label, () => {
+      expect(matchMentionTrigger(input), `入力: ${JSON.stringify(input)}`).toEqual(expected)
+    })
+  }
+
+  it('leadOffset は @ の位置を指す', () => {
+    const input = 'よろしく @tar'
+    const match = matchMentionTrigger(input)
+    expect(input.slice(match?.leadOffset), 'leadOffset から末尾までが置換対象と一致する').toBe(match?.replaceableString)
+  })
+})
+
+describe('isMentionableName: メンション記法で書ける表示名か', () => {
+  it('通常の名前は書ける', () => {
+    expect(isMentionableName('taro')).toBe(true)
+    expect(isMentionableName('山田 太郎'), '空白入りは角括弧で囲めるので書ける').toBe(true)
+  })
+
+  it('空・空白のみは書けない', () => {
+    expect(isMentionableName('')).toBe(false)
+    expect(isMentionableName('   ')).toBe(false)
+  })
+
+  it('角括弧の閉じ・改行を含む名前は書けない', () => {
+    expect(isMentionableName('a]b'), '@[..] の内側に置けない').toBe(false)
+    expect(isMentionableName('a\nb')).toBe(false)
+  })
+
+  it('最大長を超える名前は書けない', () => {
+    expect(isMentionableName('a'.repeat(MENTION_NAME_MAX))).toBe(true)
+    expect(isMentionableName('a'.repeat(MENTION_NAME_MAX + 1))).toBe(false)
+  })
+})
+
+describe('formatMentionText: 挿入した文字列が extractMentionNames で復元できる', () => {
+  const names = [
+    'taro',
+    '太郎',
+    '山田 太郎',
+    'Yamada Taro',
+    'a.b',
+    'taro(sales)',
+    'ＴＡＲＯ',
+    'a'.repeat(MENTION_NAME_MAX),
+  ]
+
+  for (const name of names) {
+    it(`往復する: ${JSON.stringify(name)}`, () => {
+      const inserted = formatMentionText(name)
+      expect(extractMentionNames(inserted), `挿入結果: ${JSON.stringify(inserted)}`).toEqual([name])
+    })
+  }
+
+  it('区切り文字を含まない名前は角括弧で囲まない', () => {
+    expect(formatMentionText('taro')).toBe('@taro ')
+  })
+
+  it('空白や記号を含む名前は角括弧で囲む', () => {
+    expect(formatMentionText('山田 太郎')).toBe('@[山田 太郎] ')
+    expect(formatMentionText('a.b')).toBe('@[a.b] ')
+  })
+
+  it('前後の空白は落とす', () => {
+    expect(formatMentionText('  taro  ')).toBe('@taro ')
+  })
+
+  it('文中へ挿入しても復元できる', () => {
+    const body = `よろしく ${formatMentionText('山田 太郎')}お願いします`
+    expect(extractMentionNames(body)).toEqual(['山田 太郎'])
+  })
+})
+
+describe('filterMentionCandidates: 入力中のクエリで候補を絞り込む', () => {
+  const candidates = [
+    { id: 'u1', name: 'hanako' },
+    { id: 'u2', name: 'taro' },
+    { id: 'u3', name: 'yamada taro' },
+    { id: 'u4', name: '山田 太郎' },
+  ]
+
+  it('クエリが空なら全件返す', () => {
+    expect(filterMentionCandidates(candidates, '').map((c) => c.id)).toEqual(['u1', 'u2', 'u3', 'u4'])
+  })
+
+  it('前方一致を部分一致より先に寄せる', () => {
+    expect(
+      filterMentionCandidates(candidates, 'taro').map((c) => c.id),
+      'taro が yamada taro より先',
+    ).toEqual(['u2', 'u3'])
+  })
+
+  it('全角・大文字小文字の差異を吸収する', () => {
+    expect(filterMentionCandidates(candidates, 'ＴＡＲＯ').map((c) => c.id)).toEqual(['u2', 'u3'])
+    expect(filterMentionCandidates(candidates, '山田').map((c) => c.id)).toEqual(['u4'])
+  })
+
+  it('一致しなければ 0 件', () => {
+    expect(filterMentionCandidates(candidates, 'jiro')).toEqual([])
+  })
+
+  it('記法に載せられない名前は候補に出さない', () => {
+    const invalid = [
+      { id: 'u1', name: '' },
+      { id: 'u2', name: 'a]b' },
+      { id: 'u3', name: 'a'.repeat(MENTION_NAME_MAX + 1) },
+    ]
+    expect(filterMentionCandidates(invalid, ''), '選んでも解決されない候補は出さない').toEqual([])
+  })
+
+  it('既定の上限で切る', () => {
+    const many = Array.from({ length: MENTION_CANDIDATE_LIMIT + 5 }, (_, i) => ({ id: `u${i}`, name: `user${i}` }))
+    expect(filterMentionCandidates(many, '').length).toBe(MENTION_CANDIDATE_LIMIT)
+    expect(filterMentionCandidates(many, '', 3).length).toBe(3)
+  })
+
+  it('渡した候補の余分な項目は保つ', () => {
+    const withImage = [{ id: 'u1', name: 'taro', image: 'https://example.com/a.png' }]
+    expect(filterMentionCandidates(withImage, 'ta')[0].image).toBe('https://example.com/a.png')
   })
 })
 

@@ -21,6 +21,7 @@ import {
 import { MarkdownField } from '@/components/markdown/markdown-editor'
 import { notify } from '@/components/notify'
 import { AssigneeOption, AssigneeSelectField } from '@/components/ticket/assignee-select'
+import { MentionChips } from '@/components/ticket/mention-chips'
 import { TagIdSelectField } from '@/components/ticket/tag-select'
 import { PriorityChip, StatusChip, TagChips, useBoardName, useTicketOptions } from '@/components/ticket/ticket-chip'
 import type { TicketStatus } from '@/generated/prisma/enums'
@@ -502,6 +503,8 @@ export const TicketDetailClient: FC<{
           maxLength={MAX_CONTENT_LENGTH}
           label={t('content')}
           uploadBoardId={ticket.boardId}
+          // メンション候補は担当者候補と同じボードメンバー(取得を 1 本にまとめている)
+          mentionCandidates={boardAssignees}
           // ツールバー + 2 行が MarkdownField の最小高に収まるので、短い本文でも高さが動かない
           minRows={2}
           action={
@@ -545,9 +548,11 @@ export const TicketDetailClient: FC<{
             )
           }
         />
+        {/* 誰へ届いたのかは本文の外に出す(本文中の @名前 は素のテキストのまま) */}
+        {!isEditingContent && <MentionChips names={ticket.mentionedNames} className='mt-1' />}
       </div>
 
-      <TicketComments ticket={ticket} refresh={refreshAll} />
+      <TicketComments ticket={ticket} mentionCandidates={boardAssignees} refresh={refreshAll} />
     </FlexCol>
   )
 }

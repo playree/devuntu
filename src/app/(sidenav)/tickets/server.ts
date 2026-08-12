@@ -8,6 +8,7 @@ import {
   ensurePrivateBoard,
   getAccessibleBoardIds,
   getBoardMemberUsers,
+  getBoardMentionCandidates,
   getBoardsMemberUsers,
   nextTicketNumber,
   reassignContentAttachments,
@@ -15,10 +16,19 @@ import {
 import { dateOnlyToUtc, nowDate } from '@/lib/day'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
+import { notifyMention } from '@/lib/notify-mention'
 import { prisma } from '@/lib/prisma'
 import { scCreateTag, scCreateTicket, scTicketListQuery, scUUID } from '@/lib/schema'
 import { assertTagIdsInBoard, listVisibleTags, rethrowDuplicatedTagName } from '@/lib/tag'
-import { buildTicketWhere, MAX_TAGS_PER_SCOPE, nextOrder, ticketDisplayId, ticketListOrderBy } from '@/lib/task'
+import {
+  buildTicketWhere,
+  extractMentionNames,
+  MAX_TAGS_PER_SCOPE,
+  nextOrder,
+  resolveMentionUserIds,
+  ticketDisplayId,
+  ticketListOrderBy,
+} from '@/lib/task'
 
 /** タグの選択肢として返す列。`lib/tag.ts` の TagOption と一致させる */
 const TAG_SELECT = { id: true, boardId: true, name: true, color: true, order: true } as const
@@ -181,7 +191,7 @@ export const createTicket = safeAuthAction
   .metadata({ actionName: 'createTicket', role: 'user' })
   .inputSchema(scCreateTicket)
   .action(async ({ ctx: { user }, parsedInput: { boardId, status, assigneeId, tagIds, dueDate, ...rest } }) => {
-    const ticket = await prisma.$transaction(async (tx) => {
+    const { ticket, mentionedUserIds } = await prisma.$transaction(async (tx) => {
       // 参加しているボードのみ
       const board = await assertBoardAccess(user, boardId, 'view', tx)
       // アーカイブ済みボードは読み取り専用(evaluateTicketAccess と同じ方針)
@@ -199,6 +209,10 @@ export const createTicket = safeAuthAction
       // 対象レーンの末尾へ追加する。必要なのは最大値だけなので全行は読まない
       const lane = await tx.ticket.aggregate({ where: { boardId, status }, _max: { order: true } })
 
+      // 本文のメンションはこのボードのメンバーに限って解決する
+      const candidates = await getBoardMentionCandidates(boardId, tx)
+      const mentionedUserIds = resolveMentionUserIds(extractMentionNames(rest.content ?? ''), candidates)
+
       const created = await tx.ticket.create({
         data: {
           ...rest,
@@ -210,6 +224,7 @@ export const createTicket = safeAuthAction
           completedAt: status === 'done' ? nowDate() : null,
           createdById: user.id,
           assigneeId: assigneeId ?? null,
+          mentionedUserIds,
           tags: { create: ids.map((tagId) => ({ tagId })) },
           order: nextOrder(lane._max.order === null ? [] : [lane._max.order]),
         },
@@ -221,10 +236,22 @@ export const createTicket = safeAuthAction
 
       // 表示IDは組み立てて返す(作成直後の通知でそのまま出せるようにする)
       return {
-        id: created.id,
-        title: created.title,
-        displayId: ticketDisplayId({ key: created.board.key, number: created.number }),
+        ticket: {
+          id: created.id,
+          title: created.title,
+          displayId: ticketDisplayId({ key: created.board.key, number: created.number }),
+        },
+        mentionedUserIds,
       }
+    })
+
+    // 通知は未実装(ログのみ)
+    await notifyMention({
+      ticketId: ticket.id,
+      displayId: ticket.displayId,
+      ticketTitle: ticket.title,
+      fromUserId: user.id,
+      toUserIds: mentionedUserIds,
     })
 
     logger.info({ userId: user.id, ticket }, 'ticket created')

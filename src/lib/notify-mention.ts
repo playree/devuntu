@@ -12,8 +12,9 @@ export type MentionNotification = {
   /** 利用者向けの表示ID(`KEY-番号`)。件名など人が読む箇所の識別子に使う */
   displayId: string
   ticketTitle: string
-  commentId: string
-  /** コメントを投稿したユーザー */
+  /** コメント経由のメンションのみ。チケット本文のメンションでは省略する */
+  commentId?: string
+  /** メンションした本人(コメントの投稿者 / 本文の更新者) */
   fromUserId: string
   /** メンションされたユーザー(解決済み) */
   toUserIds: string[]

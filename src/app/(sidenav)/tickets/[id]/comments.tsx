@@ -7,14 +7,15 @@ import { Panel } from '@/components/general/panel'
 import { ChatBubbleIcon, CheckIcon, PencilSquareIcon, TrashIcon } from '@/components/icon'
 import { MarkdownInput } from '@/components/markdown/markdown-editor'
 import { MarkdownView } from '@/components/markdown/markdown-view'
+import type { MentionCandidate } from '@/components/markdown/mention-menu'
 import { notify } from '@/components/notify'
+import { MentionChips } from '@/components/ticket/mention-chips'
 import { parseAction } from '@/lib/action-client'
 import { dayformat } from '@/lib/day'
 import { scCreateTicketComment } from '@/lib/schema'
 import { getFieldConstraints } from '@/lib/schema-util'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
-import { Chip } from '@heroui/react'
 import { FC, useState } from 'react'
 import { addTicketComment, deleteTicketComment, GetTicketReturnType, updateTicketComment } from './server'
 
@@ -29,12 +30,14 @@ const isSubmittable = (draft: string) =>
   !!draft.trim() && (MAX_COMMENT_LENGTH === undefined || draft.length <= MAX_COMMENT_LENGTH)
 
 /** コメント 1 件。投稿者本人なら編集できる */
-const CommentItem: FC<{ comment: Comment; boardId: string; canDelete: boolean; refresh: () => Promise<void> }> = ({
-  comment,
-  boardId,
-  canDelete,
-  refresh,
-}) => {
+const CommentItem: FC<{
+  comment: Comment
+  boardId: string
+  /** `@` 入力時のメンション候補(そのボードのメンバー) */
+  mentionCandidates: MentionCandidate[]
+  canDelete: boolean
+  refresh: () => Promise<void>
+}> = ({ comment, boardId, mentionCandidates, canDelete, refresh }) => {
   const { t } = useLocale()
   const tz = useUserTimezone()
   const { confirmModal } = useConfirmModal()
@@ -120,6 +123,7 @@ const CommentItem: FC<{ comment: Comment; boardId: string; canDelete: boolean; r
             maxLength={MAX_COMMENT_LENGTH}
             label={t('comment')}
             uploadBoardId={boardId}
+            mentionCandidates={mentionCandidates}
           />
           <div className='flex justify-end gap-2'>
             <MultiButton variant='ghost' size='sm' onPress={() => setEditing(false)}>
@@ -140,22 +144,18 @@ const CommentItem: FC<{ comment: Comment; boardId: string; canDelete: boolean; r
         <MarkdownView body={comment.content} className='mt-1' />
       )}
 
-      {comment.mentionedNames.length > 0 && (
-        <div className='mt-2 flex flex-wrap items-center gap-1'>
-          <span className='text-xs text-gray-500'>{t('mentioned')}</span>
-          {comment.mentionedNames.map((name) => (
-            <Chip key={name} variant='soft' color='accent' size='sm'>
-              <Chip.Label>{name}</Chip.Label>
-            </Chip>
-          ))}
-        </div>
-      )}
+      <MentionChips names={comment.mentionedNames} className='mt-2' />
     </Panel>
   )
 }
 
 /** コメント一覧 + 投稿フォーム */
-export const TicketComments: FC<{ ticket: Ticket; refresh: () => Promise<void> }> = ({ ticket, refresh }) => {
+export const TicketComments: FC<{
+  ticket: Ticket
+  /** `@` 入力時のメンション候補(そのボードのメンバー) */
+  mentionCandidates: MentionCandidate[]
+  refresh: () => Promise<void>
+}> = ({ ticket, mentionCandidates, refresh }) => {
   const { t } = useLocale()
   const [draft, setDraft] = useState('')
   const [isPosting, setPosting] = useState(false)
@@ -191,6 +191,7 @@ export const TicketComments: FC<{ ticket: Ticket; refresh: () => Promise<void> }
           key={comment.id}
           comment={comment}
           boardId={ticket.boardId}
+          mentionCandidates={mentionCandidates}
           canDelete={ticket.canDelete}
           refresh={refresh}
         />
@@ -206,6 +207,7 @@ export const TicketComments: FC<{ ticket: Ticket; refresh: () => Promise<void> }
             maxLength={MAX_COMMENT_LENGTH}
             label={t('add_comment')}
             uploadBoardId={ticket.boardId}
+            mentionCandidates={mentionCandidates}
           />
           <div className='flex items-center gap-2'>
             <span className='text-xs text-gray-500'>{t('msg_mention_hint')}</span>

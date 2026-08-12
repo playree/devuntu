@@ -631,13 +631,19 @@ export const assertTicketAccess = async (
  * メンション候補。そのボードの直接メンバー ∪ グループ所属ユーザー。
  * プライベートボードではメンバーが本人 1 人なので、自然に本人のみになる。
  */
+export const getBoardMentionCandidates = async (
+  boardId: string,
+  tx: Db = prisma,
+): Promise<{ id: string; name: string }[]> => {
+  const users = await getBoardMemberUsers(boardId, tx)
+  return users.map(({ id, name }) => ({ id, name }))
+}
+
+/** {@link getBoardMentionCandidates} のチケット版(既にアクセス判定を済ませている経路用) */
 export const getTicketMentionCandidates = async (
   access: TicketAccess,
   tx: Db = prisma,
-): Promise<{ id: string; name: string }[]> => {
-  const users = await getBoardMemberUsers(access.boardId, tx)
-  return users.map(({ id, name }) => ({ id, name }))
-}
+): Promise<{ id: string; name: string }[]> => getBoardMentionCandidates(access.boardId, tx)
 
 /**
  * チケットのステータス / レーン位置を更新するコア。

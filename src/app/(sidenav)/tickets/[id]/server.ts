@@ -31,6 +31,7 @@ export const getTicket = safeAuthAction
         board: { select: { name: true, kind: true, key: true } },
         title: true,
         content: true,
+        mentionedUserIds: true,
         status: true,
         priority: true,
         dueDate: true,
@@ -62,17 +63,25 @@ export const getTicket = safeAuthAction
       throw errInvalidOperation()
     }
 
-    // メンション済みユーザーの表示名を解決する(投稿時点のスナップショットなので存在しない ID もあり得る)
-    const mentionedIds = [...new Set(ticket.comments.flatMap((comment) => comment.mentionedUserIds))]
+    // メンション済みユーザーの表示名を解決する(保存時点のスナップショットなので存在しない ID もあり得る)
+    const mentionedIds = [
+      ...new Set([...ticket.mentionedUserIds, ...ticket.comments.flatMap((comment) => comment.mentionedUserIds)]),
+    ]
     const mentionedUsers =
       mentionedIds.length > 0
         ? await prisma.user.findMany({ where: { id: { in: mentionedIds } }, select: { id: true, name: true } })
         : []
     const nameById = new Map(mentionedUsers.map((u) => [u.id, u.name]))
+    const toMentionedNames = (userIds: string[]) =>
+      userIds.flatMap((userId) => {
+        const name = nameById.get(userId)
+        return name ? [name] : []
+      })
 
-    const { board, assignee, createdBy, comments, tags, ...rest } = ticket
+    const { board, assignee, createdBy, comments, tags, mentionedUserIds, ...rest } = ticket
     return {
       ...rest,
+      mentionedNames: toMentionedNames(mentionedUserIds),
       // 中間テーブルは表示側で扱わないので平坦化する
       tags: tags.map(({ tag }) => tag),
       displayId: ticketDisplayId({ key: board.key, number: rest.number }),
@@ -80,13 +89,10 @@ export const getTicket = safeAuthAction
       boardKind: board.kind,
       assigneeName: assignee?.name ?? '',
       createdByName: createdBy?.name ?? '',
-      comments: comments.map(({ author, mentionedUserIds, ...comment }) => ({
+      comments: comments.map(({ author, mentionedUserIds: commentMentions, ...comment }) => ({
         ...comment,
         authorName: author?.name ?? '',
-        mentionedNames: mentionedUserIds.flatMap((userId) => {
-          const name = nameById.get(userId)
-          return name ? [name] : []
-        }),
+        mentionedNames: toMentionedNames(commentMentions),
         isMine: comment.authorId === user.id,
       })),
       boardRole: access.boardRole,
@@ -106,7 +112,7 @@ export const patchTicket = safeAuthAction
   .metadata({ actionName: 'patchTicket', role: 'user' })
   .inputSchema(scPatchTicket)
   .action(async ({ ctx: { user }, parsedInput: { id, assigneeId, tagIds, dueDate, ...rest } }) => {
-    const ticket = await prisma.$transaction(async (tx) => {
+    const { ticket, addedMentionUserIds } = await prisma.$transaction(async (tx) => {
       const access = await assertTicketAccess(user, id, 'edit', tx)
 
       // 担当者・タグはそのボードに属するものに限る(DB 制約では防げない)
@@ -115,6 +121,17 @@ export const patchTicket = safeAuthAction
       }
       const ids = tagIds !== undefined ? await assertTagIdsInBoard(tx, access.boardId, tagIds) : undefined
 
+      // 本文を書き換えるときだけメンションを解き直す
+      let mentionedUserIds: string[] | undefined
+      let addedMentionUserIds: string[] = []
+      if (rest.content !== undefined) {
+        const before = await tx.ticket.findUniqueOrThrow({ where: { id }, select: { mentionedUserIds: true } })
+        const candidates = await getTicketMentionCandidates(access, tx)
+        mentionedUserIds = resolveMentionUserIds(extractMentionNames(rest.content ?? ''), candidates)
+        // 本文を編集し直すたびに同じ相手へ通知しないよう、増えた分だけを通知対象にする
+        addedMentionUserIds = mentionedUserIds.filter((userId) => !before.mentionedUserIds.includes(userId))
+      }
+
       const updated = await tx.ticket.update({
         where: { id },
         data: {
@@ -122,18 +139,28 @@ export const patchTicket = safeAuthAction
           ...rest,
           ...(dueDate !== undefined && { dueDate: dateOnlyToUtc(dueDate) }),
           ...(assigneeId !== undefined && { assigneeId: assigneeId ?? null }),
+          mentionedUserIds,
         },
-        select: { id: true, title: true },
+        select: { id: true, title: true, number: true, board: { select: { key: true } } },
       })
       if (ids) {
         await syncTicketTags(tx, id, ids)
       }
 
-      return updated
+      return { ticket: updated, addedMentionUserIds }
+    })
+
+    // 通知は未実装(ログのみ)
+    await notifyMention({
+      ticketId: id,
+      displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
+      ticketTitle: ticket.title,
+      fromUserId: user.id,
+      toUserIds: addedMentionUserIds,
     })
 
     logger.info({ userId: user.id, id }, 'ticket patched')
-    return ticket
+    return { id: ticket.id, title: ticket.title }
   })
 
 /**
@@ -250,15 +277,3 @@ export const deleteTicketComment = safeAuthAction
     logger.info({ userId: user.id, id }, 'ticket comment deleted')
     return { id }
   })
-
-/**
- * メンション候補(コメント入力のヒント表示に使う)
- */
-export const getMentionCandidates = safeAuthAction
-  .metadata({ actionName: 'getMentionCandidates', role: 'user' })
-  .inputSchema(scUUID)
-  .action(async ({ ctx: { user }, parsedInput: { id } }) => {
-    const access = await assertTicketAccess(user, id, 'view')
-    return getTicketMentionCandidates(access)
-  })
-export type GetMentionCandidatesReturnType = Awaited<ReturnType<typeof getMentionCandidates>>['data']

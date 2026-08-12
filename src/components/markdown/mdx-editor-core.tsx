@@ -35,7 +35,9 @@ import '@mdxeditor/editor/style.css'
 import { basicDark } from 'cm6-theme-basic-dark'
 import { useTheme } from 'next-themes'
 import { FC, useEffect, useMemo, useRef, useState } from 'react'
+import { MentionCandidatesProvider, mentionPlugin } from './mdx-mention-plugin'
 import { sanitizeHtmlPlugin } from './mdx-sanitize-plugin'
+import { MentionCandidate } from './mention-menu'
 
 /** コードブロックの言語選択に出す一覧(キーは Markdown のフェンス言語名) */
 const CODE_BLOCK_LANGUAGES = {
@@ -103,6 +105,11 @@ export type MdxEditorCoreProps = {
    * 省略すると全ログインユーザーが参照できる添付になるので、ボードに属する本文では必ず渡すこと
    */
   uploadBoardId?: string | null
+  /**
+   * `@` 入力時に出すメンション候補。空 / 未指定なら候補は出ない。
+   * ボードに属する本文では、そのボードのメンバー(担当者候補と同じ集合)を渡す
+   */
+  mentionCandidates?: MentionCandidate[]
   placeholder?: string
   autoFocus?: boolean
   className?: string
@@ -122,6 +129,7 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
   onBlur,
   overlayContainer,
   uploadBoardId,
+  mentionCandidates,
   placeholder,
   autoFocus,
   className,
@@ -163,6 +171,8 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
        * ハンドラは ref に固定した安定参照なので plugins は作り直されない
        */
       imagePlugin({ imageUploadHandler: uploadHandler }),
+      // 候補は React context 経由で渡すため、引数を取らず参照が固定される(mdx-mention-plugin.tsx)
+      mentionPlugin(),
       codeBlockPlugin({ defaultCodeBlockLanguage: '' }),
       codeMirrorPlugin({ codeBlockLanguages: CODE_BLOCK_LANGUAGES, codeMirrorExtensions }),
       markdownShortcutPlugin(),
@@ -173,27 +183,29 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
   }, [isDarkAtMount, uploadHandler])
 
   return (
-    <MDXEditor
-      markdown={markdown}
-      // 初期値の正規化による変更は無視する(編集していないのに dirty になるのを防ぐ)
-      onChange={(value, initialMarkdownNormalize) => {
-        if (!initialMarkdownNormalize) {
-          onChange(value)
-        }
-      }}
-      onBlur={onBlur ? () => onBlur() : undefined}
-      overlayContainer={overlayContainer}
-      placeholder={placeholder}
-      autoFocus={autoFocus}
-      // dark-theme が MDXEditor 公式のダーク切替。className の各語は
-      // ポップアップ用コンテナにもコピーされるため、ドロップダウンとダイアログにも効く
-      className={cn(isDark && 'dark-theme', className)}
-      // globals.css の .markdown を編集面にも効かせて表示側と見た目を揃える。
-      // globals.css の `.mdxeditor .markdown` は最小行数(--mdx-min-rows)の適用先も兼ねる
-      contentEditableClassName='markdown'
-      toMarkdownOptions={TO_MARKDOWN_OPTIONS}
-      plugins={plugins}
-    />
+    <MentionCandidatesProvider candidates={mentionCandidates}>
+      <MDXEditor
+        markdown={markdown}
+        // 初期値の正規化による変更は無視する(編集していないのに dirty になるのを防ぐ)
+        onChange={(value, initialMarkdownNormalize) => {
+          if (!initialMarkdownNormalize) {
+            onChange(value)
+          }
+        }}
+        onBlur={onBlur ? () => onBlur() : undefined}
+        overlayContainer={overlayContainer}
+        placeholder={placeholder}
+        autoFocus={autoFocus}
+        // dark-theme が MDXEditor 公式のダーク切替。className の各語は
+        // ポップアップ用コンテナにもコピーされるため、ドロップダウンとダイアログにも効く
+        className={cn(isDark && 'dark-theme', className)}
+        // globals.css の .markdown を編集面にも効かせて表示側と見た目を揃える。
+        // globals.css の `.mdxeditor .markdown` は最小行数(--mdx-min-rows)の適用先も兼ねる
+        contentEditableClassName='markdown'
+        toMarkdownOptions={TO_MARKDOWN_OPTIONS}
+        plugins={plugins}
+      />
+    </MentionCandidatesProvider>
   )
 }
 

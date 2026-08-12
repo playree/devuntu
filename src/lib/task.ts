@@ -397,11 +397,17 @@ export const ticketListOrderBy = (
  * メンション
  * -----------------------------------------------------------------------------------------------*/
 
+/** 表示名の終端とみなす記号(空白以外)。正規表現の文字クラスに入れる形で持つ */
+const MENTION_PUNCTUATION = '@,.!?:;\'"`/\\\\()\\[\\]{}<>、。．・：；！？（）「」'
+
 /** 表示名の終端とみなす区切り文字 */
-const MENTION_DELIM = '\\s@,.!?:;\'"`/\\\\()\\[\\]{}<>、。．・：；！？（）「」'
+const MENTION_DELIM = `\\s${MENTION_PUNCTUATION}`
 
 /** 表示名の最大長 */
-const MENTION_NAME_MAX = 60
+export const MENTION_NAME_MAX = 60
+
+/** 候補として一度に出す最大件数 */
+export const MENTION_CANDIDATE_LIMIT = 8
 
 /**
  * メンション記法
@@ -476,6 +482,101 @@ export const resolveMentionUserIds = (names: string[], candidates: { id: string;
   }
 
   return resolved
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * メンションの入力補助
+ * -----------------------------------------------------------------------------------------------*/
+
+/**
+ * キャレット直前の `@クエリ` を捉える。{@link RE_MENTION} と同じ前置ルール
+ * (直前が単語文字 / `@` でない)にすることで、候補を出す条件と抽出される条件を一致させる。
+ * クエリ 0 文字( `@` を打った直後)でも一致させて、その時点で一覧を出せるようにする。
+ */
+const RE_MENTION_TRIGGER = new RegExp(`(^|[^\\w@])(@([^${MENTION_DELIM}]{0,${MENTION_NAME_MAX}}))$`)
+
+/** 表示名をそのまま `@表示名` の形で書けない(角括弧で囲む必要がある)文字 */
+const RE_MENTION_NEEDS_BRACKET = new RegExp(`[${MENTION_DELIM}]`)
+
+/** どの記法にも載せられない表示名の文字。`@[表示名]` の内側に置けない */
+const RE_MENTION_UNUSABLE = /[\]\n]/
+
+/** メンション候補の最小形。`{@link filterMentionCandidates}` は余分な項目を保ったまま絞り込む */
+export type MentionCandidateLike = {
+  id: string
+  name: string
+}
+
+/** 入力補助が見つけたメンション。Lexical の typeahead が要求する形に合わせている */
+export type MentionTriggerMatch = {
+  /** `@` の位置(渡したテキストの先頭からのオフセット) */
+  leadOffset: number
+  /** `@` に続くクエリ */
+  matchingString: string
+  /** 候補を選んだときに置き換える範囲(`@` を含む) */
+  replaceableString: string
+}
+
+/** キャレットまでのテキストから入力中のメンションを取り出す。無ければ null */
+export const matchMentionTrigger = (textBeforeCaret: string): MentionTriggerMatch | null => {
+  const match = RE_MENTION_TRIGGER.exec(textBeforeCaret)
+  if (!match) {
+    return null
+  }
+  return {
+    leadOffset: match.index + match[1].length,
+    matchingString: match[3],
+    replaceableString: match[2],
+  }
+}
+
+/**
+ * メンション記法で書ける表示名か。
+ * 書けない名前を候補に出しても、選んでも {@link resolveMentionUserIds} で解決されない。
+ */
+export const isMentionableName = (name: string): boolean => {
+  const trimmed = name.trim()
+  return !!normalizeMentionName(trimmed) && trimmed.length <= MENTION_NAME_MAX && !RE_MENTION_UNUSABLE.test(trimmed)
+}
+
+/**
+ * 表示名を本文へ挿入する形にする。区切り文字を含む名前は `@[山田 太郎]` の形で囲む。
+ * 続けて入力しやすいよう末尾に空白を足す(非囲み形の終端も兼ねる)。
+ *
+ * 挿入位置の直前が単語文字 / `@` でないことは {@link matchMentionTrigger} が保証しているため、
+ * ここで作った文字列はそのまま {@link extractMentionNames} で復元できる。
+ */
+export const formatMentionText = (name: string): string => {
+  const trimmed = name.trim()
+  return `${RE_MENTION_NEEDS_BRACKET.test(trimmed) ? `@[${trimmed}]` : `@${trimmed}`} `
+}
+
+/**
+ * 入力中のクエリで候補を絞り込む。担当者の ComboBox と同じ部分一致にしつつ、
+ * 前方一致を先に寄せる。クエリが空(`@` の直後)なら先頭から `limit` 件。
+ */
+export const filterMentionCandidates = <T extends MentionCandidateLike>(
+  candidates: T[],
+  query: string,
+  limit: number = MENTION_CANDIDATE_LIMIT,
+): T[] => {
+  const key = normalizeMentionName(query)
+  const prefixMatched: T[] = []
+  const partialMatched: T[] = []
+
+  for (const candidate of candidates) {
+    if (!isMentionableName(candidate.name)) {
+      continue
+    }
+    const name = normalizeMentionName(candidate.name)
+    if (!key || name.startsWith(key)) {
+      prefixMatched.push(candidate)
+    } else if (name.includes(key)) {
+      partialMatched.push(candidate)
+    }
+  }
+
+  return [...prefixMatched, ...partialMatched].slice(0, limit)
 }
 
 /* -------------------------------------------------------------------------------------------------

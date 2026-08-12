@@ -557,6 +557,9 @@ model Ticket {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
+  // 本文中のメンションを解決した結果。保存時点のスナップショット(TicketComment と同じ扱い)
+  mentionedUserIds String[] @default([])
+
   // @@unique が (boardId, ...) の先頭索引を兼ねるので表示IDからの検索はこれで賄える
   @@unique([boardId, number])
   @@index([boardId, status, order])
