@@ -34,29 +34,16 @@ const DRAG_TYPE = 'ticket'
 
 /**
  * カードの高さを一杯まで使うレーン(todo/doing/done)のカード領域。
- *
- * 高さは client.tsx 側の chain(ルートの max-h → 溢れた分だけ Grid が縮む → 1行目 minmax(0,1fr))で降りてくる。
- * 盤面が画面に収まっているときは 1行目が max-content になるので、ここは内容ぶんの高さになりスクロールしない。
- * overflow-y-auto を持つ flex 子は automatic minimum size が 0 になるため min-h-0 は要らない
- * (min-h-16 は空レーンのドロップ枠として残す。min-h-0 を足すと同じ min-height の指定同士で競合する)。
- * p-0.5 と相殺の -m-0.5 は、選択 / ドロップ対象カードの ring-2 がスクロール領域の境界で切れるのを防ぐため。
  */
 const SCROLL_CARDS_CLASS = 'md:-m-0.5 md:flex-1 md:overflow-y-auto md:p-0.5'
 
 /**
  * backlog のカード領域の高さ上限。カード2行分で頭打ちにして、残りはレーン内でスクロールさせる。
- *
- * カードの高さは中身で変わる(実測: 最小 = タイトル1行 + 優先度 chip のみで約 4.45rem、
- * 担当者 / 期日 / タグまで付くと約 5.95rem、タイトル2行だと約 7.25rem)ため、
- * 「ちょうど2行」を CSS だけで表すことはできない。
- * そこで担当者・期日付きのカード 2 行分 + gap 0.5rem ≒ 12.5rem を上限にする。
- * 最小のカードでも 3 行(約 14.35rem)は収まらないので、3 行目以降は必ずスクロールになる。
  */
 const BACKLOG_MAX_H_CLASS = 'md:max-h-[12.5rem]'
 
 /**
  * レーンの配置。todo/doing/done を横3列、その下に backlog を全幅で置く。
- * Tailwind のスキャン対象になるようクラス名は完全なリテラルで書くこと。
  */
 export const LANE_LAYOUT: Record<TicketStatus, { className: string; cardsClassName?: string }> = {
   todo: { className: 'col-span-12 md:col-span-4', cardsClassName: SCROLL_CARDS_CLASS },
@@ -81,18 +68,6 @@ export const LANE_ORDER = KANBAN_LANES
 
 /**
  * カード用のセンサー。カードは全体がクリックで選択できるので、指を動かさない操作は必ずクリックにする。
- *
- * dnd-kit の既定はマウスでも Delay(200ms, tolerance 10) + Distance(5px) で、
- * 少し長めに押しただけでドラッグが始まる。ドラッグ中は body へ pointer capture が移り
- * click が React のルートまで届かなくなるため、既定のままだと「押したのに選択されない」になる。
- * そこでマウス / ペンは距離だけを条件にする。
- * タッチは既定どおり Delay を残す(距離だけだとレーンのスクロールがドラッグになるため)。
- *
- * useDraggable の sensors は manager の既定センサーを置き換えるので、キーボードでのレーン移動を
- * 残すため KeyboardSensor も並べる。ただし既定の start は Space / Enter の両方で、
- * Enter をカードの選択に使えなくなるため Space だけに絞る(end からも Enter を外す)。
- *
- * 配列は毎レンダー作り直すとセンサーの再バインドが走るのでモジュールスコープで持つ。
  */
 const CARD_SENSORS = [
   PointerSensor.configure({
@@ -133,10 +108,6 @@ const KanbanCardView: FC<{
       ref={dropRef}
       /**
        * カード全体を押して詳細パネルを開く。内側のどこを押しても拾えるようここで受ける。
-       * role / tabIndex は付けない。dnd-kit の Accessibility プラグインが内側の draggable へ
-       * role='button' と tabindex を付けるため、ここにも付けるとカード 1 枚に
-       * ボタンが 2 つ入れ子になり、タブ止まりも二重になる。
-       * ドラッグしたときは pointer capture が body へ移るので click はここまで届かない。
        */
       onClick={toggle}
       onKeyDown={(e) => {
@@ -168,13 +139,11 @@ const KanbanCardView: FC<{
         aria-current={isSelected}
         className={cn(
           /**
-           * flex-col は「カード両端まで通す PriorityBar」+「内容」の縦 2 段。
-           * PriorityBar は自前で余白(mt)を持つので、padding は内容 div 側に寄せる。
-           * 上端に dark:border-t-2 を持たないのは、上端は PriorityBar の線が輪郭を兼ねるため。
-           * 代わりにダークでは priorityBorderClass が線と同系色の枠を全周に出す。
+           * flex-col は「ID + PriorityBar のヘッダ行」+「内容」の縦 2 段。
+           * 上端に border を持たないのは、上端は PriorityBar の線が輪郭を兼ねるため。
+           * 代わりにダークでは priorityBorderClass が線と同系色の枠を左右と下に出す。
            */
           'flex flex-col overflow-hidden rounded-xl',
-          'shadow-md dark:shadow-none', // ダークは枠線が輪郭を作るので影は要らない
           // フォーカスを受けるのは dnd-kit が tabindex を付けるこの要素なので、枠線もここに出す
           'outline-none focus-visible:ring-2 focus-visible:ring-blue-400',
           priorityBgClass(card.priority),
@@ -182,12 +151,16 @@ const KanbanCardView: FC<{
           isDragging ? 'opacity-60' : '',
         )}
       >
-        <PriorityBar priority={card.priority} />
-
-        <div className='space-y-1 p-2'>
+        <div // ID と優先度バーの行。上端へ寄せてバーがカード上辺の輪郭を兼ねる
+          className='flex items-center gap-2 px-2 pt-0'
+        >
           <TicketIdText // 同一ボードなので接頭辞は全カード共通だが、口頭・チャットで指すときに読み上げる値なので出す
             displayId={card.displayId}
           />
+          <PriorityBar priority={card.priority} />
+        </div>
+
+        <div className='space-y-1 px-2 pt-0.5 pb-2'>
           <p // 空白のない長いタイトルでもレーン幅を超えないよう wrap-anywhere で任意位置折り返しにする
             className='line-clamp-2 text-sm wrap-anywhere'
           >
@@ -259,11 +232,6 @@ export const KanbanLane: FC<{
     <fieldset
       /**
        * 既定で min-inline-size: min-content のため、min-w-0 が無いとカード内容の分だけ横に広がる。
-       *
-       * md 以上では内側のカード領域をスクロールさせるので flex コンテナにする。
-       * grid item の block 方向 automatic minimum size を min-h-0 で切らないと、
-       * 行が縮んだときに内容の高さのまま溢れてスクロール領域へ高さが渡らない。
-       * なお fieldset を flex にしても legend は flex item にならず従来どおり枠線上に描画される。
        */
       ref={ref}
       className={cn(
