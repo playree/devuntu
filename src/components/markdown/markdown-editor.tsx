@@ -258,7 +258,7 @@ export const MarkdownField: FC<{
             className={FLAT_CLASS}
           />
         ) : (
-          <MarkdownView body={body} />
+          <MarkdownView body={body} mentionUsers={mentionCandidates} />
         )}
       </div>
       {footer && <div className='mt-2 flex justify-end gap-2'>{footer}</div>}

@@ -4,12 +4,11 @@ import { UserAvatar } from '@/components/general/avatar'
 import { FC, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { tv } from 'tailwind-variants'
+import { MentionUser } from './mention-node'
 
 /** メンション候補。`getAssigneeOptions` が返す形と構造的に一致させる */
-export type MentionCandidate = {
+export type MentionCandidate = MentionUser & {
   id: string
-  name: string
-  image?: string | null
 }
 
 /** 描画に必要な情報だけに落とした候補({@link MentionMenu} を Lexical から独立させるため) */
@@ -28,6 +27,7 @@ const menuStyles = tv({
   slots: {
     base: 'absolute top-0 left-0 z-[9999] max-h-64 w-max min-w-40 overflow-y-auto rounded-xl bg-stone-100 p-1 shadow-md dark:border-t-2 dark:border-mist-900 dark:bg-mist-950',
     item: 'flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-sm',
+    email: 'truncate font-mono text-xs text-gray-500',
   },
   variants: {
     isSelected: {
@@ -75,7 +75,7 @@ export const MentionMenu: FC<{
       role='presentation'
       className={styles.base()}
     >
-      {items.map(({ id, name, image, setElement }, index) => (
+      {items.map(({ id, name, email, image, setElement }, index) => (
         <li
           key={id}
           ref={setElement}
@@ -92,7 +92,11 @@ export const MentionMenu: FC<{
           onClick={() => onSelect(index)}
         >
           <UserAvatar name={name} image={image} size='xs' />
-          <span className='truncate'>{name}</span>
+          <div className='min-w-0'>
+            <div className='truncate'>{name}</div>
+            {/* 同名のメンバーを見分けられるようにする(絞り込みにも使える) */}
+            <div className={styles.email()}>{email}</div>
+          </div>
         </li>
       ))}
     </ul>,

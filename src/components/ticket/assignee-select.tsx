@@ -14,6 +14,8 @@ import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 export type AssigneeOption = {
   id: string
   name: string
+  /** メンション候補としても使うため保持する。ユーザー以外の選択肢では持たない */
+  email?: string
   image?: string | null
   /** アバターを出さない選択肢(絞り込みの「すべて」「未割り当て」などユーザー以外) */
   hideAvatar?: boolean

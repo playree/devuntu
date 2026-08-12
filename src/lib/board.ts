@@ -634,16 +634,16 @@ export const assertTicketAccess = async (
 export const getBoardMentionCandidates = async (
   boardId: string,
   tx: Db = prisma,
-): Promise<{ id: string; name: string }[]> => {
+): Promise<{ id: string; email: string }[]> => {
   const users = await getBoardMemberUsers(boardId, tx)
-  return users.map(({ id, name }) => ({ id, name }))
+  return users.map(({ id, email }) => ({ id, email }))
 }
 
 /** {@link getBoardMentionCandidates} のチケット版(既にアクセス判定を済ませている経路用) */
 export const getTicketMentionCandidates = async (
   access: TicketAccess,
   tx: Db = prisma,
-): Promise<{ id: string; name: string }[]> => getBoardMentionCandidates(access.boardId, tx)
+): Promise<{ id: string; email: string }[]> => getBoardMentionCandidates(access.boardId, tx)
 
 /**
  * チケットのステータス / レーン位置を更新するコア。

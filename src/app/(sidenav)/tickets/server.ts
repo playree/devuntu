@@ -22,7 +22,7 @@ import { scCreateTag, scCreateTicket, scTicketListQuery, scUUID } from '@/lib/sc
 import { assertTagIdsInBoard, listVisibleTags, rethrowDuplicatedTagName } from '@/lib/tag'
 import {
   buildTicketWhere,
-  extractMentionNames,
+  extractMentionEmails,
   MAX_TAGS_PER_SCOPE,
   nextOrder,
   resolveMentionUserIds,
@@ -170,6 +170,9 @@ export const createTicketTag = safeAuthAction
  * 担当者の選択肢。そのボードのメンバー(プライベートボードなら本人のみ)。
  * 並びは `getBoardMemberUsers` の名前順のまま。
  * 構造は `components/ticket/assignee-select.tsx` の AssigneeOption と一致させること。
+ *
+ * メンション候補も同じ集合なのでこの 1 本にまとめている。email はメンションの
+ * 保存形式(`@[メールアドレス]`)と候補の絞り込みに使う。
  */
 export const getAssigneeOptions = safeAuthAction
   .metadata({ actionName: 'getAssigneeOptions', role: 'user' })
@@ -177,7 +180,7 @@ export const getAssigneeOptions = safeAuthAction
   .action(async ({ ctx: { user }, parsedInput: { id: boardId } }) => {
     await assertBoardAccess(user, boardId, 'view')
     const users = await getBoardMemberUsers(boardId)
-    return users.map(({ id, name, image }) => ({ id, name, image }))
+    return users.map(({ id, name, email, image }) => ({ id, name, email, image }))
   })
 export type GetAssigneeOptionsReturnType = Awaited<ReturnType<typeof getAssigneeOptions>>['data']
 
@@ -211,7 +214,7 @@ export const createTicket = safeAuthAction
 
       // 本文のメンションはこのボードのメンバーに限って解決する
       const candidates = await getBoardMentionCandidates(boardId, tx)
-      const mentionedUserIds = resolveMentionUserIds(extractMentionNames(rest.content ?? ''), candidates)
+      const mentionedUserIds = resolveMentionUserIds(extractMentionEmails(rest.content ?? ''), candidates)
 
       const created = await tx.ticket.create({
         data: {

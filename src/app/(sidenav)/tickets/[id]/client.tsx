@@ -1,6 +1,7 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
+import { CopyableField } from '@/components/general/copyable-field'
 import { DatePickerField } from '@/components/general/date-picker'
 import { FlexCol } from '@/components/general/flex'
 import { Grid } from '@/components/general/grid'
@@ -19,8 +20,9 @@ import {
   XMarkIcon,
 } from '@/components/icon'
 import { MarkdownField } from '@/components/markdown/markdown-editor'
+import { MentionCandidate } from '@/components/markdown/mention-menu'
 import { notify } from '@/components/notify'
-import { AssigneeOption, AssigneeSelectField } from '@/components/ticket/assignee-select'
+import { AssigneeSelectField } from '@/components/ticket/assignee-select'
 import { MentionChips } from '@/components/ticket/mention-chips'
 import { TagIdSelectField } from '@/components/ticket/tag-select'
 import { PriorityChip, StatusChip, TagChips, useBoardName, useTicketOptions } from '@/components/ticket/ticket-chip'
@@ -79,33 +81,6 @@ const CloseButton: FC<{ onClose?: () => void; onPress: () => void }> = ({ onClos
 }
 
 /**
- * ヘッダの表示ID。押すとクリップボードへ入るので、チャットや議事録へそのまま貼れる。
- * クリップボードは安全なコンテキスト(https / localhost)でしか使えないため、失敗しても黙って落とさない。
- */
-const TicketIdCopyButton: FC<{ displayId: string }> = ({ displayId }) => {
-  const { t } = useLocale()
-  return (
-    <MultiButton
-      size='sm'
-      variant='ghost'
-      className='shrink-0 font-mono'
-      tooltip={t('copy_ticket_id')}
-      onPress={async () => {
-        try {
-          // 安全なコンテキストの外では navigator.clipboard 自体が無く、参照だけで例外になる
-          await navigator.clipboard.writeText(displayId)
-          notify.success(t('msg_copied'))
-        } catch {
-          notify.error(t('msg_copy_failed'))
-        }
-      }}
-    >
-      {displayId}
-    </MultiButton>
-  )
-}
-
-/**
  * ヘッダのパンくず。ボード名 > 件名 の 2 階層。
  * 長い名前は幅で省略する。最後の項目(件名)は react-aria が現在地として扱うためリンクにならない。
  */
@@ -151,7 +126,7 @@ export const TicketDetailClient: FC<{
 
   const { data: ticket, refresh, isLoading } = useActionData(() => getTicket({ id }))
   const [options, setOptions] = useState<GetTicketFormOptionsReturnType>()
-  const [boardAssignees, setBoardAssignees] = useState<AssigneeOption[]>([])
+  const [boardAssignees, setBoardAssignees] = useState<MentionCandidate[]>([])
   const [savingField, setSavingField] = useState<EditField>()
   const [draft, setDraft] = useState<Draft>({})
   // 件名は入力途中の値を保持する必要があるため state で持つ
@@ -328,11 +303,16 @@ export const TicketDetailClient: FC<{
         title={
           <>
             <CloseButton onClose={onClose} onPress={close} />
-            <TicketIdCopyButton displayId={ticket.displayId} />
             <TicketBreadcrumbs
               boardId={ticket.boardId}
               boardName={boardName({ name: ticket.boardName, kind: ticket.boardKind })}
               title={ticket.title}
+            />
+            <CopyableField // 表示IDはチャットや議事録へそのまま貼れるようコピーできるようにする
+              // 幅を固定しないと input の既定幅で狭い画面のパンくずを潰してしまう
+              className='w-36 shrink-0'
+              isSmart
+              text={ticket.displayId}
             />
           </>
         }

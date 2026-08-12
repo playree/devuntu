@@ -9,7 +9,7 @@ import { notifyMention } from '@/lib/notify-mention'
 import { prisma } from '@/lib/prisma'
 import { scCreateTicketComment, scPatchTicket, scUpdateTicketComment, scUpdateTicketStatus, scUUID } from '@/lib/schema'
 import { assertTagIdsInBoard, syncTicketTags } from '@/lib/tag'
-import { extractMentionNames, resolveMentionUserIds, ticketDisplayId } from '@/lib/task'
+import { extractMentionEmails, resolveMentionUserIds, ticketDisplayId } from '@/lib/task'
 
 /**
  * チケット詳細取得(本文 + コメント + 権限)
@@ -127,7 +127,7 @@ export const patchTicket = safeAuthAction
       if (rest.content !== undefined) {
         const before = await tx.ticket.findUniqueOrThrow({ where: { id }, select: { mentionedUserIds: true } })
         const candidates = await getTicketMentionCandidates(access, tx)
-        mentionedUserIds = resolveMentionUserIds(extractMentionNames(rest.content ?? ''), candidates)
+        mentionedUserIds = resolveMentionUserIds(extractMentionEmails(rest.content ?? ''), candidates)
         // 本文を編集し直すたびに同じ相手へ通知しないよう、増えた分だけを通知対象にする
         addedMentionUserIds = mentionedUserIds.filter((userId) => !before.mentionedUserIds.includes(userId))
       }
@@ -190,7 +190,7 @@ export const addTicketComment = safeAuthAction
       const access = await assertTicketAccess(user, ticketId, 'edit', tx)
 
       const candidates = await getTicketMentionCandidates(access, tx)
-      const mentionedUserIds = resolveMentionUserIds(extractMentionNames(content), candidates)
+      const mentionedUserIds = resolveMentionUserIds(extractMentionEmails(content), candidates)
 
       const comment = await tx.ticketComment.create({
         data: { ticketId, authorId: user.id, content, mentionedUserIds },
@@ -240,7 +240,7 @@ export const updateTicketComment = safeAuthAction
 
       const access = await assertTicketAccess(user, target.ticketId, 'edit', tx)
       const candidates = await getTicketMentionCandidates(access, tx)
-      const mentionedUserIds = resolveMentionUserIds(extractMentionNames(content), candidates)
+      const mentionedUserIds = resolveMentionUserIds(extractMentionEmails(content), candidates)
 
       await tx.ticketComment.update({ where: { id }, data: { content, mentionedUserIds } })
       return mentionedUserIds

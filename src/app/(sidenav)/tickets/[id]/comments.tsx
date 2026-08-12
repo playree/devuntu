@@ -141,7 +141,7 @@ const CommentItem: FC<{
           </div>
         </div>
       ) : (
-        <MarkdownView body={comment.content} className='mt-1' />
+        <MarkdownView body={comment.content} className='mt-1' mentionUsers={mentionCandidates} />
       )}
 
       <MentionChips names={comment.mentionedNames} className='mt-2' />
