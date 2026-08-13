@@ -5,10 +5,15 @@ import { prisma } from './prisma'
  */
 
 type KeyString =
-  'DASHBOARD_DEFAULT_LAYOUT' | 'DASHBOARD_ANNOUNCEMENT' | 'GOOGLE_ACCOUNT_ENABLED' | 'GOOGLE_ACCOUNT_ALLOWED_GROUP_IDS'
+  | 'DASHBOARD_DEFAULT_LAYOUT'
+  | 'DASHBOARD_ANNOUNCEMENT'
+  | 'GOOGLE_ACCOUNT_ENABLED'
+  | 'GOOGLE_ACCOUNT_ALLOWED_GROUP_IDS'
+  | 'SLACK_ENABLED'
+  | 'SLACK_ALLOWED_GROUP_IDS'
 
 /** キーをまとめて引くための名前空間(KeyValueStore.group) */
-type KvsGroup = 'GOOGLE_ACCOUNT'
+type KvsGroup = 'GOOGLE_ACCOUNT' | 'SLACK'
 
 export const getString = async (key: KeyString) => {
   return prisma.keyValueStore.findUnique({ where: { key } })

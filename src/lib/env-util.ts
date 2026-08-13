@@ -109,6 +109,18 @@ const server = {
   get GOOGLE_CLIENT_SECRET() {
     return getEnv('GOOGLE_CLIENT_SECRET')
   },
+  get SLACK_CLIENT_ID() {
+    return getEnv('SLACK_CLIENT_ID')
+  },
+  get SLACK_CLIENT_SECRET() {
+    return getEnv('SLACK_CLIENT_SECRET')
+  },
+  get SLACK_BOT_TOKEN() {
+    return getEnv('SLACK_BOT_TOKEN')
+  },
+  get SLACK_TEAM_ID() {
+    return getEnv('SLACK_TEAM_ID')
+  },
   get GOOGLE_ALLOWED_DOMAINS() {
     const domains = getEnv('GOOGLE_ALLOWED_DOMAINS')
     return domains ? domains.split(',') : []

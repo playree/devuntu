@@ -3,7 +3,7 @@ import { passkey } from '@better-auth/passkey'
 import { APIError, betterAuth, GoogleProfile } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { nextCookies } from 'better-auth/next-js'
-import { admin, emailOTP, genericOAuth, type GenericOAuthConfig, jwt, twoFactor } from 'better-auth/plugins'
+import { admin, emailOTP, genericOAuth, type GenericOAuthConfig, jwt, slack, twoFactor } from 'better-auth/plugins'
 import { decodeJwt } from 'jose'
 import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -16,6 +16,8 @@ import { logger } from './logger'
 import { sendEmailOtp } from './mail'
 import { prisma } from './prisma'
 import { makeUrl } from './server-utils'
+import { SLACK_PROVIDER_ID } from './slack'
+import { slackUserInfo } from './slack-server'
 
 // oauthProvider(自身がOIDCプロバイダとして提供)用のスコープ(OIDCログイン用)
 export const OIDC_PROVIDER_SCOPES = ['openid', 'profile', 'email'] as const
@@ -55,6 +57,27 @@ if (!!envu.server.GOOGLE_CLIENT_ID && !!envu.server.GOOGLE_CLIENT_SECRET) {
     accessType: 'offline',
     prompt: 'consent',
     disableSignUp: true,
+  })
+}
+
+// Slack 通知の宛先を特定するための連携(Sign in with Slack / OIDC)。
+// ここで得るトークンはプロフィール取得専用で、DM 送信には使えない(送信は Bot トークン)。
+// 必要なのは account.accountId に入る Slack ユーザーID(`U...`)だけ。
+if (!!envu.server.SLACK_CLIENT_ID && !!envu.server.SLACK_CLIENT_SECRET) {
+  oauthConfigs.push({
+    ...slack({
+      clientId: envu.server.SLACK_CLIENT_ID,
+      clientSecret: envu.server.SLACK_CLIENT_SECRET,
+      // 'profile' が無いと userinfo に name が返らず better-auth が name_is_missing で失敗する
+      scopes: ['openid', 'profile', 'email'],
+      pkce: true,
+      disableSignUp: true,
+    }),
+    providerId: SLACK_PROVIDER_ID,
+    // プリセットの実装は Slack が 200 + `ok:false` を返す失敗を検出できないので差し替える
+    getUserInfo: slackUserInfo,
+    // 認可画面のワークスペースを固定する(該当ワークスペースで認証済みなら同意を省ける)
+    ...(envu.server.SLACK_TEAM_ID && { authorizationUrlParams: { team: envu.server.SLACK_TEAM_ID } }),
   })
 }
 

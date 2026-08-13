@@ -402,6 +402,23 @@ export type EnumTicketPriorityWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumTicketPriorityFilter<$PrismaModel>
 }
 
+export type EnumNotifyEventFilter<$PrismaModel = never> = {
+  equals?: $Enums.NotifyEvent | Prisma.EnumNotifyEventFieldRefInput<$PrismaModel>
+  in?: $Enums.NotifyEvent[] | Prisma.ListEnumNotifyEventFieldRefInput<$PrismaModel>
+  notIn?: $Enums.NotifyEvent[] | Prisma.ListEnumNotifyEventFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumNotifyEventFilter<$PrismaModel> | $Enums.NotifyEvent
+}
+
+export type EnumNotifyEventWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.NotifyEvent | Prisma.EnumNotifyEventFieldRefInput<$PrismaModel>
+  in?: $Enums.NotifyEvent[] | Prisma.ListEnumNotifyEventFieldRefInput<$PrismaModel>
+  notIn?: $Enums.NotifyEvent[] | Prisma.ListEnumNotifyEventFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumNotifyEventWithAggregatesFilter<$PrismaModel> | $Enums.NotifyEvent
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumNotifyEventFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumNotifyEventFilter<$PrismaModel>
+}
+
 export type NestedStringFilter<$PrismaModel = never> = {
   equals?: string | Prisma.StringFieldRefInput<$PrismaModel>
   in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
@@ -747,6 +764,23 @@ export type NestedEnumTicketPriorityWithAggregatesFilter<$PrismaModel = never> =
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumTicketPriorityFilter<$PrismaModel>
   _max?: Prisma.NestedEnumTicketPriorityFilter<$PrismaModel>
+}
+
+export type NestedEnumNotifyEventFilter<$PrismaModel = never> = {
+  equals?: $Enums.NotifyEvent | Prisma.EnumNotifyEventFieldRefInput<$PrismaModel>
+  in?: $Enums.NotifyEvent[] | Prisma.ListEnumNotifyEventFieldRefInput<$PrismaModel>
+  notIn?: $Enums.NotifyEvent[] | Prisma.ListEnumNotifyEventFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumNotifyEventFilter<$PrismaModel> | $Enums.NotifyEvent
+}
+
+export type NestedEnumNotifyEventWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.NotifyEvent | Prisma.EnumNotifyEventFieldRefInput<$PrismaModel>
+  in?: $Enums.NotifyEvent[] | Prisma.ListEnumNotifyEventFieldRefInput<$PrismaModel>
+  notIn?: $Enums.NotifyEvent[] | Prisma.ListEnumNotifyEventFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumNotifyEventWithAggregatesFilter<$PrismaModel> | $Enums.NotifyEvent
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumNotifyEventFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumNotifyEventFilter<$PrismaModel>
 }
 
 

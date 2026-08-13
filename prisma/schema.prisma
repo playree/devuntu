@@ -53,6 +53,9 @@ model User {
   // add Attachment
   attachments Attachment[]
 
+  // add Notify
+  notifySettings UserNotifySetting[]
+
   @@unique([email])
   @@map("user")
 }
@@ -584,4 +587,25 @@ model TicketComment {
 
   @@index([ticketId, createdAt])
   @@map("ticket_comment")
+}
+
+enum NotifyEvent {
+  mention // メンションされたとき
+}
+
+// ユーザーごと・イベント種別ごとの通知先の ON/OFF。
+// 行が無い場合は既定(全チャネル ON)として扱うので、OFF にしたときだけ行ができる。
+// 通知チャネルを増やすときは列を足す(メールなら `email Boolean`)。
+model UserNotifySetting {
+  id        String      @id @default(uuid(7))
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event     NotifyEvent
+  slack     Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  // (userId, event) の @@unique が userId 先頭の索引を兼ねるので @@index([userId]) は不要
+  @@unique([userId, event])
+  @@map("user_notify_setting")
 }

@@ -146,6 +146,10 @@ Proxy の対象外のため、各ルートハンドラ内で個別に認証す�
 | `GOOGLE_CLIENT_ID`           | Google OAuth クライアントID           |      | -             |
 | `GOOGLE_CLIENT_SECRET`       | Google OAuth クライアントシークレット |      | -             |
 | `GOOGLE_ALLOWED_DOMAINS`     | 許可ドメイン(カンマ区切り)            |      | -             |
+| `SLACK_CLIENT_ID`            | Slack OAuth クライアントID            |      | -             |
+| `SLACK_CLIENT_SECRET`        | Slack OAuth クライアントシークレット  |      | -             |
+| `SLACK_BOT_TOKEN`            | Slack Bot トークン(`xoxb-`)           |      | -             |
+| `SLACK_TEAM_ID`              | Slack ワークスペースID(`T...`)        |      | -             |
 
 ## メール
 

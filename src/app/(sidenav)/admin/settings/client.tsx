@@ -1,102 +1,28 @@
 'use client'
 
 import { AccordionSection } from '@/components/general/accordion'
-import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
-import { GridBox } from '@/components/general/grid'
-import { MultiSelectCtrl } from '@/components/general/select'
-import { SwitchCtrl } from '@/components/general/switch'
 import { ContentHeader } from '@/components/header'
-import { CheckIcon, Cog6ToothIcon, GoogleIcon } from '@/components/icon'
-import { notify } from '@/components/notify'
-import { parseAction } from '@/lib/action-client'
-import { scUpdateGoogleAccountSettings, UpdateGoogleAccountSettings } from '@/lib/schema'
+import { Cog6ToothIcon, GoogleIcon, SlackIcon } from '@/components/icon'
 import { useLocale } from '@/locale/client'
-import { Accordion, Skeleton } from '@heroui/react'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { FC, useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { getGoogleAccountSettingsAction, updateGoogleAccountSettingsAction } from './server'
+import { Accordion } from '@heroui/react'
+import { FC } from 'react'
+import { GoogleAccountSettings } from './google-account'
+import { SlackSettings } from './slack'
 
-/**
- * Google アカウント連携設定フォーム(設定取得後にマウントされる)
- */
-const GoogleAccountSettingsForm: FC<{
-  initial: UpdateGoogleAccountSettings
-  groupOptions: Record<string, string>
-}> = ({ initial, groupOptions }) => {
-  const { t } = useLocale()
-
-  const {
-    control,
-    handleSubmit,
-    formState: { isSubmitting },
-  } = useForm<UpdateGoogleAccountSettings>({
-    resolver: zodResolver(scUpdateGoogleAccountSettings),
-    mode: 'onChange',
-    defaultValues: initial,
-  })
-
-  return (
-    <form
-      onSubmit={handleSubmit(async (req) => {
-        await parseAction(updateGoogleAccountSettingsAction(req))
-        notify.success(t('msg_saved'))
-      })}
-    >
-      <GridBox isSmart>
-        <div className='col-span-12 pb-2'>
-          <SwitchCtrl control={control} name='enabled' id='enabled' label={t('google_account_enable')} />
-          <p className='mt-1 text-sm text-neutral-500'>{t('msg_google_account_enable_desc')}</p>
-        </div>
-        <div className='col-span-12'>
-          <MultiSelectCtrl
-            control={control}
-            name='allowedGroupIds'
-            groupOptions={groupOptions}
-            label={t('google_account_allowed_groups')}
-          />
-          <p className='mt-1 text-sm text-neutral-500'>{t('msg_google_account_allowed_groups_desc')}</p>
-        </div>
-        <div className='col-span-12 pt-2'>
-          <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
-            {t('save')}
-          </MultiButton>
-        </div>
-      </GridBox>
-    </form>
-  )
-}
-
-const defaultExpandedKeys = new Set(['google_account'])
+const defaultExpandedKeys = new Set(['google_account', 'slack'])
 export const AdminSettingsClient: FC = () => {
   const { t } = useLocale()
-  const [data, setData] = useState<{
-    initial: UpdateGoogleAccountSettings
-    groupOptions: Record<string, string>
-  }>()
-
-  useEffect(() => {
-    parseAction(getGoogleAccountSettingsAction()).then((res) => {
-      if (res) {
-        setData({
-          initial: { enabled: res.enabled, allowedGroupIds: res.allowedGroupIds },
-          groupOptions: res.groupOptions,
-        })
-      }
-    })
-  }, [])
 
   return (
     <FlexCol>
       <ContentHeader icon={<Cog6ToothIcon />} title={t('integration_settings')} />
       <Accordion allowsMultipleExpanded defaultExpandedKeys={defaultExpandedKeys}>
         <AccordionSection id='google_account' icon={<GoogleIcon />} title={t('google_account')}>
-          {data ? (
-            <GoogleAccountSettingsForm initial={data.initial} groupOptions={data.groupOptions} />
-          ) : (
-            <Skeleton className='min-h-24 w-full rounded-xl' />
-          )}
+          <GoogleAccountSettings />
+        </AccordionSection>
+        <AccordionSection id='slack' icon={<SlackIcon />} title={t('slack')}>
+          <SlackSettings />
         </AccordionSection>
       </Accordion>
     </FlexCol>

@@ -7,7 +7,11 @@ import { errValidation } from '@/lib/error'
 import { canUseGoogleAccount } from '@/lib/google-account'
 import { GOOGLE_ACCOUNT_PROVIDER_ID } from '@/lib/google-calendar'
 import { logger } from '@/lib/logger'
+import { getUserNotifySettings, setUserNotifySetting } from '@/lib/notify-setting'
 import { prisma } from '@/lib/prisma'
+import { scUpdateNotifySetting } from '@/lib/schema'
+import { SLACK_PROVIDER_ID } from '@/lib/slack'
+import { canUseSlackAccount } from '@/lib/slack-account'
 import { headers } from 'next/headers'
 import { z } from 'zod'
 
@@ -47,6 +51,52 @@ export const disconnectGoogleAccount = safeAuthAction
 
     logger.info({ userId: user.id }, 'google account disconnected')
     return { disconnected: true }
+  })
+
+/**
+ * Slack 連携状態と通知設定の取得
+ */
+export const getSlackStatus = safeAuthAction
+  .metadata({ actionName: 'getSlackStatus', role: 'user' })
+  .action(async ({ ctx: { user } }) => {
+    // 連携が利用不可なユーザーには未連携として返す(UI非表示のバックアップ)
+    if (!(await canUseSlackAccount(user.id))) {
+      return { connected: false, settings: await getUserNotifySettings(user.id) }
+    }
+    // Slack は token レスポンスに scope を返さないので、Google のような
+    // refreshToken での判定はできない。account 行の有無で連携済みとする
+    const account = await prisma.account.findFirst({
+      where: { userId: user.id, providerId: SLACK_PROVIDER_ID },
+      select: { id: true },
+    })
+    return { connected: !!account, settings: await getUserNotifySettings(user.id) }
+  })
+export type GetSlackStatusReturnType = Awaited<ReturnType<typeof getSlackStatus>>['data']
+
+/**
+ * Slack 連携の解除
+ */
+export const disconnectSlack = safeAuthAction
+  .metadata({ actionName: 'disconnectSlack', role: 'user' })
+  .action(async ({ ctx: { user } }) => {
+    await auth.api.unlinkAccount({
+      body: { providerId: SLACK_PROVIDER_ID },
+      headers: await headers(),
+    })
+
+    logger.info({ userId: user.id }, 'slack account disconnected')
+    return { disconnected: true }
+  })
+
+/**
+ * 通知設定(イベント種別ごとの ON/OFF)の更新
+ */
+export const updateNotifySetting = safeAuthAction
+  .metadata({ actionName: 'updateNotifySetting', role: 'user' })
+  .inputSchema(scUpdateNotifySetting)
+  .action(async ({ parsedInput: { event, slack }, ctx: { user } }) => {
+    await setUserNotifySetting(user.id, event, slack)
+    return { event, slack }
   })
 
 /**

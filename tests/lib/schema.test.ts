@@ -10,6 +10,8 @@ import {
   scMoveTicket,
   scPatchTicket,
   scTicketSearch,
+  scUpdateNotifySetting,
+  scUpdateSlackSettings,
   zBoardKey,
   zPassword,
 } from '@/lib/schema'
@@ -170,5 +172,26 @@ describe('scCreateTag: 表示順は未指定と 0 を区別する', () => {
 
   it('色は未指定なら gray', () => {
     expect(scCreateTag.parse({ boardId, name: 'タグ' }).color).toBe('gray')
+  })
+})
+
+describe('scUpdateSlackSettings: 許可グループはグループIDの配列', () => {
+  it('空配列(全ユーザー許可)を通す', () => {
+    expect(scUpdateSlackSettings.safeParse({ enabled: true, allowedGroupIds: [] }).success).toBe(true)
+  })
+
+  it('uuidv7 でない値は弾く', () => {
+    expect(scUpdateSlackSettings.safeParse({ enabled: true, allowedGroupIds: ['not-a-uuid'] }).success).toBe(false)
+  })
+})
+
+describe('scUpdateNotifySetting: 通知イベントは enum で受ける', () => {
+  it('既知のイベントを通す', () => {
+    expect(scUpdateNotifySetting.safeParse({ event: 'mention', slack: false }).success).toBe(true)
+  })
+
+  it('未知のイベントは弾く', () => {
+    // NOTIFY_EVENTS から生成しているので、Prisma に種別を足せば自動で追従する
+    expect(scUpdateNotifySetting.safeParse({ event: 'assigned', slack: true }).success).toBe(false)
   })
 })

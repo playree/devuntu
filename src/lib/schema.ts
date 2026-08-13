@@ -1,5 +1,6 @@
 import { el } from '@/locale'
 import { z } from 'zod'
+import { NOTIFY_EVENTS } from './slack'
 import {
   ASSIGNEE_NONE,
   BOARD_KEY_PATTERN,
@@ -199,6 +200,20 @@ export const scUpdateGoogleAccountSettings = z.object({
   allowedGroupIds: z.array(z.uuidv7()),
 })
 export type UpdateGoogleAccountSettings = z.infer<typeof scUpdateGoogleAccountSettings>
+
+/** Slack 連携設定 */
+export const scUpdateSlackSettings = z.object({
+  enabled: z.boolean(),
+  allowedGroupIds: z.array(z.uuidv7()),
+})
+export type UpdateSlackSettings = z.infer<typeof scUpdateSlackSettings>
+
+/** 通知設定(イベント種別ごとの ON/OFF)。種別が増えても z.enum が自動で追従する */
+export const scUpdateNotifySetting = z.object({
+  event: z.enum(NOTIFY_EVENTS),
+  slack: z.boolean(),
+})
+export type UpdateNotifySetting = z.infer<typeof scUpdateNotifySetting>
 
 /* -------------------------------------------------------------------------------------------------
  * タスク管理(チケット / ボード)

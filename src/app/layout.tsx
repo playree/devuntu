@@ -26,10 +26,6 @@ export const metadata: Metadata = {
     template: `%s - Devuntu`,
   },
   description: 'Devuntu',
-  icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-icon.png',
-  },
 }
 
 export default async function RootLayout({
