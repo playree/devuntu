@@ -5,11 +5,11 @@ import { tv } from 'tailwind-variants'
 export type PanelVariant = 'border' | 'shadow'
 
 const panelStyles = tv({
-  base: 'rounded-xl bg-stone-100 p-3 dark:bg-mist-950',
+  base: 'rounded-xl bg-stone-100 px-3 py-2 dark:bg-mist-950',
   variants: {
     variant: {
       border: 'border',
-      shadow: 'shadow-md dark:border-t-2 dark:border-mist-900',
+      shadow: 'border-t-2 border-mist-200 dark:border-mist-900',
     },
   },
   defaultVariants: { variant: 'border' },

@@ -16,13 +16,17 @@ import {
 import '@mdxeditor/editor/style.css'
 import { useTheme } from 'next-themes'
 import { FC, MouseEvent, useEffect, useMemo, useRef } from 'react'
+import { mentionPlugin } from './mdx-mention-plugin'
 import { sanitizeHtmlPlugin } from './mdx-sanitize-plugin'
 import { readOnlyCodeBlockDescriptor, readOnlyTablePlugin } from './mdx-view-plugins'
+import { MentionUser, MentionUsersProvider } from './mention-node'
 
 export type MdxViewCoreProps = {
   markdown: string
   /** パースに失敗したときに呼ばれる。MDXEditor は例外を投げず空の本文になるため、呼び元で代替表示に切り替える */
   onError: () => void
+  /** 本文中のメンションを `@表示名` で出すためのユーザー。渡さないとメールアドレスのまま表示される */
+  mentionUsers?: MentionUser[]
 }
 
 /**
@@ -51,7 +55,7 @@ const openLinkInNewTab = (e: MouseEvent<HTMLDivElement>) => {
  * 編集用の {@link ./mdx-editor-core} とはファイルを分けてあり、ツールバー・source 切替・
  * CodeMirror を含まないぶん表示だけの画面では読み込むチャンクが小さくなる。
  */
-const MdxViewCore: FC<MdxViewCoreProps> = ({ markdown, onError }) => {
+const MdxViewCore: FC<MdxViewCoreProps> = ({ markdown, onError, mentionUsers }) => {
   const { resolvedTheme } = useTheme()
   const editorRef = useRef<MDXEditorMethods>(null)
   /**
@@ -82,6 +86,8 @@ const MdxViewCore: FC<MdxViewCoreProps> = ({ markdown, onError }) => {
       // readOnly でも click は届くため、画像の選択枠とリサイズハンドルは明示的に止める
       imagePlugin({ disableImageResize: true, disableImageSettingsButton: true, ImageDialog: () => null }),
       codeBlockPlugin({ codeBlockEditorDescriptors: [readOnlyCodeBlockDescriptor] }),
+      // 表示専用なので候補の入力補助は付けない(記法の解釈と描画だけ)
+      mentionPlugin(),
     ],
     [],
   )
@@ -91,16 +97,18 @@ const MdxViewCore: FC<MdxViewCoreProps> = ({ markdown, onError }) => {
   }
   return (
     <div onClickCapture={openLinkInNewTab}>
-      <MDXEditor
-        ref={editorRef}
-        readOnly
-        spellCheck={false}
-        markdown={markdown}
-        onError={onError}
-        className={cn('mdxeditor-view', resolvedTheme === 'dark' && 'dark-theme')}
-        contentEditableClassName='markdown'
-        plugins={plugins}
-      />
+      <MentionUsersProvider users={mentionUsers}>
+        <MDXEditor
+          ref={editorRef}
+          readOnly
+          spellCheck={false}
+          markdown={markdown}
+          onError={onError}
+          className={cn('mdxeditor-view', resolvedTheme === 'dark' && 'dark-theme')}
+          contentEditableClassName='markdown'
+          plugins={plugins}
+        />
+      </MentionUsersProvider>
     </div>
   )
 }

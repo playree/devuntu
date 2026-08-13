@@ -9,6 +9,8 @@ import { Control, FieldPath, FieldValues, useController } from 'react-hook-form'
 import { z } from 'zod'
 import { useIsSmart } from '../general/smart'
 import { MarkdownView } from './markdown-view'
+// 型のみの参照。実体(lexical / MDXEditor)は mdx-editor-core 側の動的 import に閉じたままになる
+import type { MentionCandidate } from './mention-menu'
 
 /** 枠なし表示用のクラス。実体は globals.css(style.css の padding を上書きするためレイヤー外) */
 const FLAT_CLASS = 'mdxeditor-flat'
@@ -49,11 +51,21 @@ const MdxEditorHost = memo<{
   onBlur?: () => void
   /** 挿入した画像の添付先ボード({@link MarkdownInput} 参照) */
   uploadBoardId?: string | null
+  /** `@` 入力時のメンション候補({@link MarkdownInput} 参照) */
+  mentionCandidates?: MentionCandidate[]
   /** 編集面の最小行数 */
   minRows?: number
   /** MDXEditor 本体に付けるクラス(ポップアップ用コンテナにもコピーされる) */
   className?: string
-}>(function MdxEditorHost({ initialMarkdown, onChange, onBlur, uploadBoardId, minRows = DEFAULT_MIN_ROWS, className }) {
+}>(function MdxEditorHost({
+  initialMarkdown,
+  onChange,
+  onBlur,
+  uploadBoardId,
+  mentionCandidates,
+  minRows = DEFAULT_MIN_ROWS,
+  className,
+}) {
   const [container, setContainer] = useState<HTMLElement | null>(null)
   const [isReady, setReady] = useState(false)
 
@@ -75,6 +87,7 @@ const MdxEditorHost = memo<{
           onBlur={onBlur}
           overlayContainer={container}
           uploadBoardId={uploadBoardId}
+          mentionCandidates={mentionCandidates}
           className={className}
         />
       )}
@@ -137,9 +150,24 @@ export const MarkdownInput: FC<{
    * 省略すると全ログインユーザーが参照できる添付になるため、ボードに属する本文では必ず渡すこと
    */
   uploadBoardId?: string | null
+  /**
+   * `@` 入力時に出すメンション候補。省略すると候補は出ない。
+   * ボードに属する本文では、そのボードのメンバー(`getAssigneeOptions` の結果)を渡すこと
+   */
+  mentionCandidates?: MentionCandidate[]
   /** 編集面の最小行数(既定 {@link DEFAULT_MIN_ROWS}) */
   minRows?: number
-}> = ({ defaultValue, onChange, length, label, maxLength, errorMessage, uploadBoardId, minRows }) => {
+}> = ({
+  defaultValue,
+  onChange,
+  length,
+  label,
+  maxLength,
+  errorMessage,
+  uploadBoardId,
+  mentionCandidates,
+  minRows,
+}) => {
   const { t } = useLocale()
   // 初回マウント時の値を固定する(MDXEditor は markdown prop の変更を取り込まない)
   const [initialMarkdown] = useState(defaultValue)
@@ -150,6 +178,7 @@ export const MarkdownInput: FC<{
         initialMarkdown={initialMarkdown}
         onChange={onChange}
         uploadBoardId={uploadBoardId}
+        mentionCandidates={mentionCandidates}
         minRows={minRows}
       />
     </EditorField>
@@ -176,6 +205,8 @@ export const MarkdownField: FC<{
   maxLength?: number
   /** 挿入した画像の添付先ボード({@link MarkdownInput} 参照) */
   uploadBoardId?: string | null
+  /** `@` 入力時のメンション候補({@link MarkdownInput} 参照) */
+  mentionCandidates?: MentionCandidate[]
   /** 編集面の最小行数(既定 {@link DEFAULT_MIN_ROWS}) */
   minRows?: number
   /** ラベル行の右端に置く操作(表示モードの編集開始など) */
@@ -191,6 +222,7 @@ export const MarkdownField: FC<{
   label,
   maxLength,
   uploadBoardId,
+  mentionCandidates,
   minRows,
   action,
   footer,
@@ -221,11 +253,12 @@ export const MarkdownField: FC<{
             initialMarkdown={defaultValue}
             onChange={onChange}
             uploadBoardId={uploadBoardId}
+            mentionCandidates={mentionCandidates}
             minRows={minRows}
             className={FLAT_CLASS}
           />
         ) : (
-          <MarkdownView body={body} />
+          <MarkdownView body={body} mentionUsers={mentionCandidates} />
         )}
       </div>
       {footer && <div className='mt-2 flex justify-end gap-2'>{footer}</div>}
@@ -247,6 +280,7 @@ export const MarkdownEditor = <
   label,
   errorMessage,
   uploadBoardId,
+  mentionCandidates,
   minRows,
 }: {
   control: Control<TFieldValues>
@@ -256,6 +290,8 @@ export const MarkdownEditor = <
   errorMessage?: string
   /** 挿入した画像の添付先ボード({@link MarkdownInput} 参照) */
   uploadBoardId?: string | null
+  /** `@` 入力時のメンション候補({@link MarkdownInput} 参照) */
+  mentionCandidates?: MentionCandidate[]
   /** 編集面の最小行数(既定 {@link DEFAULT_MIN_ROWS}) */
   minRows?: number
 }) => {
@@ -280,6 +316,7 @@ export const MarkdownEditor = <
         onChange={field.onChange}
         onBlur={field.onBlur}
         uploadBoardId={uploadBoardId}
+        mentionCandidates={mentionCandidates}
         minRows={minRows}
       />
     </EditorField>

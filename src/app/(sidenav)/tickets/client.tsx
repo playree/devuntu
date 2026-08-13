@@ -11,41 +11,20 @@ import { ContentHeader } from '@/components/header'
 import { ArrowPathIcon, ChatBubbleIcon, FunnelIcon, PlusIcon, TicketIcon } from '@/components/icon'
 import { PriorityChip, StatusChip, TagChips, TicketIdText, useBoardName } from '@/components/ticket/ticket-chip'
 import { parseAction } from '@/lib/action-client'
+import { preventParentSelection } from '@/lib/client-utils'
 import { dayformat } from '@/lib/day'
 import { TicketSearch } from '@/lib/schema'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { Accordion, ButtonGroup, cn, Table } from '@heroui/react'
 import Link from 'next/link'
-import {
-  FC,
-  type KeyboardEvent as ReactKeyboardEvent,
-  type MouseEvent as ReactMouseEvent,
-  type PointerEvent as ReactPointerEvent,
-  useEffect,
-  useRef,
-  useState,
-} from 'react'
+import { FC, useEffect, useRef, useState } from 'react'
 import { TicketDetailClient } from './[id]/client'
 import { AddModal } from './modals'
 import { defaultTicketFilter, TicketSearchPanel } from './search-panel'
 import { getTicketFormOptions, GetTicketFormOptionsReturnType, getTickets } from './server'
 
 const defaultExpandedKeys = new Set(['search'])
-
-/**
- * 行内のリンクを押したときに行選択(詳細パネル)を起こさないためのハンドラ。
- * 行の押下判定は pointerdown / keydown 起点なので、リンク側でイベントを止める。
- */
-const preventRowSelection = {
-  onPointerDown: (e: ReactPointerEvent) => e.stopPropagation(),
-  onClick: (e: ReactMouseEvent) => e.stopPropagation(),
-  onKeyDown: (e: ReactKeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.stopPropagation()
-    }
-  },
-}
 
 export const TicketsClient: FC<{
   /** URL の ?boardId= 由来の初期絞り込み対象。null = すべてのボード */
@@ -188,7 +167,7 @@ export const TicketsClient: FC<{
                    */
                   href={`/tickets/${item.id}`}
                   className='truncate hover:underline'
-                  {...preventRowSelection}
+                  {...preventParentSelection}
                 >
                   {item.title}
                 </Link>

@@ -66,36 +66,35 @@ const priorityStyles = tv({
   slots: {
     /**
      * 塗りは持たず、上下のボーダーだけで 1px の水平線 2 本を作る。
-     * box-border なので h-1.5(6px)の内訳が 線 1px / 余白 4px / 線 1px になる。
-     * 幅を 90% に絞って中央寄せするのは、カードの角丸(rounded-xl)で上端の線だけが
-     * 左右を削られて 2 本の長さがズレるのを避けるため(mt-1 で角の曲線からも逃がす)。
+     * box-border なので h-1(4px)の内訳が 線 1px / 余白 2px / 線 1px になる。
+     * flex 行に置いて ID の右の残り幅を埋める前提なので、左右の余白は呼び出し側が持つ。
      * border スロットと同じ規約で、幅は常に確保して色だけ variants で変える。
      */
-    bar: 'mx-auto mt-1 h-1 w-[94%] border-y border-transparent',
+    bar: 'h-1 min-w-0 flex-1 border-y border-transparent',
     // テーマ切り替えでレイアウトが動かないよう、枠の幅は常に確保しておく
-    border: 'border-b-3 border-transparent',
+    border: 'border-x border-b-3 border-transparent',
     bg: '',
   },
   variants: {
     priority: {
       urgent: {
         bar: 'border-red-300/30 dark:border-red-800/30',
-        border: 'dark:border-red-800/30',
+        border: 'border-red-300/30 dark:border-red-800/30',
         bg: 'bg-red-300/15 dark:bg-red-800/10',
       },
       high: {
         bar: 'border-amber-400/30 dark:border-amber-500/20',
-        border: 'dark:border-amber-500/20',
+        border: 'border-amber-400/30 dark:border-amber-500/20',
         bg: 'bg-amber-400/15 dark:bg-amber-500/10',
       },
       medium: {
         bar: 'border-blue-300/30 dark:border-blue-800/30',
-        border: 'dark:border-blue-800/30',
+        border: 'border-blue-300/30 dark:border-blue-800/30',
         bg: 'bg-blue-300/15 dark:bg-blue-800/10',
       },
       low: {
         bar: 'border-gray-300/30 dark:border-gray-600/30',
-        border: 'dark:border-gray-600/30',
+        border: 'border-gray-300/30 dark:border-gray-600/30',
         bg: 'bg-gray-300/15 dark:bg-gray-600/10',
       },
     } satisfies Record<TicketPriority, unknown>,
@@ -143,7 +142,7 @@ export const RoleChip: FC<{ role: BoardRole; size?: ChipProps['size'] }> = ({ ro
 }
 
 /**
- * 優先度を色だけで示す 1px の水平線 2 本。カード上端に幅 90% で中央寄せして置く想定。
+ * 優先度を色だけで示す 1px の水平線 2 本。カード上端の行で ID の右に並べ、残り幅に敷く想定。
  * 同じ情報を PriorityChip がテキストで持つため、支援技術からは隠す。
  */
 export const PriorityBar: FC<{ priority: TicketPriority; className?: string }> = ({ priority, className }) => (

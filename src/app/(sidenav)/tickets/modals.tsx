@@ -8,8 +8,9 @@ import { FormModal, ModalBaseProps } from '@/components/general/modal'
 import { SingleSelectCtrl } from '@/components/general/select'
 import { CheckIcon, PlusIcon } from '@/components/icon'
 import { MarkdownEditor } from '@/components/markdown/markdown-editor'
+import { MentionCandidate } from '@/components/markdown/mention-menu'
 import { notify } from '@/components/notify'
-import { AssigneeOption, AssigneeSelectCtrl } from '@/components/ticket/assignee-select'
+import { AssigneeSelectCtrl } from '@/components/ticket/assignee-select'
 import { TagSelect } from '@/components/ticket/tag-select'
 import { useBoardName, useTicketOptions } from '@/components/ticket/ticket-chip'
 import type { TicketStatus } from '@/generated/prisma/enums'
@@ -69,7 +70,7 @@ export const AddModal: FC<
   })
 
   const boardId = useWatch({ control, name: 'boardId' })
-  const [boardAssignees, setBoardAssignees] = useState<AssigneeOption[]>([])
+  const [boardAssignees, setBoardAssignees] = useState<MentionCandidate[]>([])
   // タグは選択中のボードのものだけを候補にする(他ボードのタグはサーバー側で弾かれる)
   const boardTags = options.tags.filter((tag) => tag.boardId === boardId)
 
@@ -164,6 +165,8 @@ export const AddModal: FC<
             constraintSchema={scCreateTicket}
             errorMessage={fet(errors.content)}
             uploadBoardId={boardId}
+            // メンション候補は担当者候補と同じボードメンバー(取得を 1 本にまとめている)
+            mentionCandidates={boardAssignees}
           />
         </div>
       </GridBox>

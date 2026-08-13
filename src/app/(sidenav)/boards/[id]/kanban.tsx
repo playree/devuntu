@@ -15,11 +15,13 @@ import {
   TicketIdText,
 } from '@/components/ticket/ticket-chip'
 import type { TicketStatus } from '@/generated/prisma/enums'
+import { preventParentSelection } from '@/lib/client-utils'
 import { dayformat } from '@/lib/day'
 import { cardDropId, KANBAN_LANES, laneDropId } from '@/lib/task'
 import { useLocale } from '@/locale/client'
+import { PointerActivationConstraints } from '@dnd-kit/dom'
 import { KeyboardSensor, PointerSensor, useDraggable, useDroppable } from '@dnd-kit/react'
-import { Checkbox, cn } from '@heroui/react'
+import { cn } from '@heroui/react'
 import Link from 'next/link'
 import { FC } from 'react'
 import { GetBoardKanbanReturnType } from './server'
@@ -32,29 +34,16 @@ const DRAG_TYPE = 'ticket'
 
 /**
  * カードの高さを一杯まで使うレーン(todo/doing/done)のカード領域。
- *
- * 高さは client.tsx 側の chain(ルートの max-h → 溢れた分だけ Grid が縮む → 1行目 minmax(0,1fr))で降りてくる。
- * 盤面が画面に収まっているときは 1行目が max-content になるので、ここは内容ぶんの高さになりスクロールしない。
- * overflow-y-auto を持つ flex 子は automatic minimum size が 0 になるため min-h-0 は要らない
- * (min-h-16 は空レーンのドロップ枠として残す。min-h-0 を足すと同じ min-height の指定同士で競合する)。
- * p-0.5 と相殺の -m-0.5 は、選択 / ドロップ対象カードの ring-2 がスクロール領域の境界で切れるのを防ぐため。
  */
 const SCROLL_CARDS_CLASS = 'md:-m-0.5 md:flex-1 md:overflow-y-auto md:p-0.5'
 
 /**
  * backlog のカード領域の高さ上限。カード2行分で頭打ちにして、残りはレーン内でスクロールさせる。
- *
- * カードの高さは中身で変わる(実測: 最小 = タイトル1行 + 優先度 chip のみで約 4.45rem、
- * 担当者 / 期日 / タグまで付くと約 5.95rem、タイトル2行だと約 7.25rem)ため、
- * 「ちょうど2行」を CSS だけで表すことはできない。
- * そこで担当者・期日付きのカード 2 行分 + gap 0.5rem ≒ 12.5rem を上限にする。
- * 最小のカードでも 3 行(約 14.35rem)は収まらないので、3 行目以降は必ずスクロールになる。
  */
 const BACKLOG_MAX_H_CLASS = 'md:max-h-[12.5rem]'
 
 /**
  * レーンの配置。todo/doing/done を横3列、その下に backlog を全幅で置く。
- * Tailwind のスキャン対象になるようクラス名は完全なリテラルで書くこと。
  */
 export const LANE_LAYOUT: Record<TicketStatus, { className: string; cardsClassName?: string }> = {
   todo: { className: 'col-span-12 md:col-span-4', cardsClassName: SCROLL_CARDS_CLASS },
@@ -67,7 +56,7 @@ export const LANE_LAYOUT: Record<TicketStatus, { className: string; cardsClassNa
        * items-start が無いと grid 既定の stretch でカードの外枠(ドロップ枠)だけが行の最大高さまで伸び、
        * 中身なりの高さしか持たない色付きカードの下に CARD_BACKDROP_CLASS の下地が帯として露出する。
        */
-      'md:grid md:grid-cols-3 md:items-start md:gap-2 md:space-y-0',
+      'md:grid md:grid-cols-3 md:items-start md:gap-2 md:space-y-0 xl:grid-cols-4',
       BACKLOG_MAX_H_CLASS,
       'md:-m-0.5 md:overflow-y-auto md:p-0.5',
     ),
@@ -78,42 +67,27 @@ export const LANE_LAYOUT: Record<TicketStatus, { className: string; cardsClassNa
 export const LANE_ORDER = KANBAN_LANES
 
 /**
- * カード用のセンサー。data-no-drag を付けた要素の上ではドラッグを開始しない。
- *
- * dnd-kit の既定 preventActivation は target.closest('input, button, a[href], ...') で
- * interactive 要素上のドラッグ開始を防いでいる(タイトルの Link がドラッグにならないのはこれ)。
- * ところが HeroUI の Checkbox は input を「子孫」に持つ構造なので closest では拾えず、
- * 選択チェックボックスの長押しでカードのドラッグが始まってしまう。
- * そこで data-no-drag を判定に足し、既定の判定はそのまま呼んで維持する。
- *
- * なお pointerdown の伝播をネイティブに止める方法は使えない。
- * React はイベントをルートコンテナで受けて合成イベントを配送するため、
- * 途中で止めると dnd-kit だけでなく Checkbox 自身の押下判定にも届かなくなる。
- *
- * useDraggable の sensors は manager の既定センサーを置き換えるので、
- * キーボード操作を残すため KeyboardSensor も並べておく。
- * 配列は毎レンダー作り直すとセンサーの再バインドが走るのでモジュールスコープで持つ。
+ * カード用のセンサー。カードは全体がクリックで選択できるので、指を動かさない操作は必ずクリックにする。
  */
 const CARD_SENSORS = [
   PointerSensor.configure({
-    preventActivation: (event, source) => {
-      const target = event.target
-      if (target instanceof Element && target.closest('[data-no-drag]')) {
-        return true
-      }
-      return PointerSensor.defaults.preventActivation?.(event, source) ?? false
+    activationConstraints: (event) =>
+      event.pointerType === 'touch'
+        ? [new PointerActivationConstraints.Delay({ value: 250, tolerance: 5 })]
+        : [new PointerActivationConstraints.Distance({ value: 5 })],
+  }),
+  KeyboardSensor.configure({
+    keyboardCodes: {
+      start: ['Space'],
+      cancel: ['Escape'],
+      end: ['Space', 'Tab'],
+      up: ['ArrowUp'],
+      down: ['ArrowDown'],
+      left: ['ArrowLeft'],
+      right: ['ArrowRight'],
     },
   }),
-  KeyboardSensor,
 ]
-
-/**
- * 選択チェックボックスをカード左端の縦長ピルにするクラス。
- * HeroUI 既定の control は size-4 の角丸四角なので、幅だけ残して高さを h-full にし、
- * 角丸を rounded-full で上書きする(size-4 は tailwind-merge により h-full w-4 が後勝ちする)。
- * 選択時の塗り(::before)は別途 rounded-md を持つので before: でも上書きする。
- */
-const SELECT_PILL_CLASS = 'h-full w-4 rounded-full before:rounded-full'
 
 /** カード 1 枚。レーン移動は DnD、それ以外の変更は選択して詳細パネルから行う */
 const KanbanCardView: FC<{
@@ -127,118 +101,113 @@ const KanbanCardView: FC<{
   const { ref: dropRef, isDropTarget } = useDroppable({ id: cardDropId(card.id), accept: DRAG_TYPE })
   const { ref: dragRef, isDragging } = useDraggable({ id: card.id, type: DRAG_TYPE, sensors: CARD_SENSORS })
 
+  const toggle = () => onSelect(!isSelected)
+
   return (
-    <div // 外側 = ドロップ枠。ドラッグ中も矩形が元位置に留まるので挿入位置の基準が安定する
+    <div // 外側 = ドロップ枠 兼 選択の当たり判定。ドラッグ中も矩形が元位置に留まるので挿入位置の基準が安定する
       ref={dropRef}
+      /**
+       * カード全体を押して詳細パネルを開く。内側のどこを押しても拾えるようここで受ける。
+       */
+      onClick={toggle}
+      onKeyDown={(e) => {
+        // Space はキーボードでのドラッグ開始(KeyboardSensor)に使うので Enter だけを選択にする
+        if (e.key !== 'Enter' || e.defaultPrevented) {
+          return
+        }
+        e.preventDefault()
+        toggle()
+      }}
       className={cn(
-        'rounded-xl',
+        'cursor-pointer rounded-xl',
         // 半透明のカード背景(priorityBgClass)がレーンの色と混色されないよう、最背面に不透明な下地を敷く
         CARD_BACKDROP_CLASS,
         // ドラッグ中の挿入位置の方が情報として重要なので、ドロップ対象の枠を選択の枠より優先する
-        isDropTarget ? 'ring-2 ring-blue-300' : isSelected ? 'ring-2 ring-blue-500' : '',
+        isDropTarget
+          ? 'ring-2 ring-blue-300'
+          : isSelected
+            ? 'ring-2 ring-blue-500'
+            : 'hover:ring-2 hover:ring-blue-200',
       )}
     >
       <div // ref を1要素へまとめるとインライン合成で毎レンダー detach/attach が走るため入れ子にする
         ref={dragRef}
+        /**
+         * 詳細パネルに出ている 1 枚であることを支援技術へ伝える。
+         * aria-pressed / aria-grabbed は dnd-kit がドラッグ中かどうかで上書きするので使えない。
+         */
+        aria-current={isSelected}
         className={cn(
           /**
-           * flex-col は「カード両端まで通す PriorityBar」+「選択ピル / 内容の行」の縦 2 段。
-           * PriorityBar は自前で余白(mt)を持つので、padding は下段の内容 div 側に寄せる。
-           * 上端に dark:border-t-2 を持たないのは、上端は PriorityBar の線が輪郭を兼ねるため。
-           * 代わりにダークでは priorityBorderClass が線と同系色の枠を全周に出す。
+           * flex-col は「ID + PriorityBar のヘッダ行」+「内容」の縦 2 段。
+           * 上端に border を持たないのは、上端は PriorityBar の線が輪郭を兼ねるため。
+           * 代わりにダークでは priorityBorderClass が線と同系色の枠を左右と下に出す。
            */
-          'flex cursor-pointer flex-col overflow-hidden rounded-xl',
-          'shadow-md dark:shadow-none', // ダークは枠線が輪郭を作るので影は要らない
+          'flex flex-col overflow-hidden rounded-xl',
+          // フォーカスを受けるのは dnd-kit が tabindex を付けるこの要素なので、枠線もここに出す
+          'outline-none focus-visible:ring-2 focus-visible:ring-blue-400',
           priorityBgClass(card.priority),
           priorityBorderClass(card.priority),
           isDragging ? 'opacity-60' : '',
         )}
       >
-        <PriorityBar priority={card.priority} />
-
-        <div // 下段。既定の stretch で選択ピルが内容の高さいっぱいに伸びる
-          className='flex'
+        <div // ID と優先度バーの行。上端へ寄せてバーがカード上辺の輪郭を兼ねる
+          className='flex items-center gap-2 px-2 pt-0'
         >
-          <span // 選択用のチェックボックス。この上ではドラッグを開始させない(CARD_SENSORS 参照)
-            data-no-drag
-            /**
-             * 左は PriorityBar(w-[94%] の中央寄せ)の左端に揃う 4px。
-             * 0 にしないのは、親の rounded-xl + overflow-hidden でピルの上下角が削られるため。
-             * 上下は PriorityBar の下端 / カード下端から 8px 逃がす。
-             */
-            className='flex shrink-0 py-2 pl-1'
-          >
-            <Checkbox
-              /**
-               * HeroUI の base(flex flex-col)/ content(inline-flex)を跨いで
-               * control まで高さを通すため、両方に h-full を渡す。
-               */
-              className='h-full'
-              aria-label='select ticket'
-              isSelected={isSelected}
-              onChange={onSelect}
-            >
-              <Checkbox.Content className='h-full'>
-                <Checkbox.Control className={SELECT_PILL_CLASS}>
-                  <Checkbox.Indicator />
-                </Checkbox.Control>
-              </Checkbox.Content>
-            </Checkbox>
-          </span>
+          <TicketIdText // 同一ボードなので接頭辞は全カード共通だが、口頭・チャットで指すときに読み上げる値なので出す
+            displayId={card.displayId}
+          />
+          <PriorityBar priority={card.priority} />
+        </div>
 
-          <div // min-w-0 が無いと、長いタイトルが flex の automatic minimum size でレーン幅を押し広げる
-            className='min-w-0 flex-1 space-y-1 p-2'
+        <div className='space-y-1 px-2 pt-0.5 pb-2'>
+          <p // 空白のない長いタイトルでもレーン幅を超えないよう wrap-anywhere で任意位置折り返しにする
+            className='line-clamp-2 text-sm wrap-anywhere'
           >
-            <TicketIdText // 同一ボードなので接頭辞は全カード共通だが、口頭・チャットで指すときに読み上げる値なので出す
-              displayId={card.displayId}
-            />
-            <p // 空白のない長いタイトルでもレーン幅を超えないよう wrap-anywhere で任意位置折り返しにする
-              className='line-clamp-2 text-sm wrap-anywhere'
+            <Link // line-clamp は display:-webkit-box なので Link 側に持たせると行全体がリンク範囲になる。外側の p に寄せて Link はインラインのまま文字列だけを範囲にする
+              href={`/tickets/${card.id}`}
+              className='hover:underline'
+              {...preventParentSelection} // リンクの押下は遷移だけにして、カードの選択は起こさない
             >
-              <Link // line-clamp は display:-webkit-box なので Link 側に持たせると行全体がリンク範囲になる。外側の p に寄せて Link はインラインのまま文字列だけを範囲にする
-                href={`/tickets/${card.id}`}
-                className='hover:underline'
+              {card.title}
+            </Link>
+          </p>
+
+          <div className='flex flex-wrap items-center gap-1'>
+            <PriorityChip priority={card.priority} />
+            {card.assigneeName && (
+              <span className='flex min-w-0 items-center gap-0.5 text-xs text-gray-500'>
+                <UserAvatar name={card.assigneeName} image={card.assigneeImage} size='xs' />
+                <span className='truncate'>{card.assigneeName}</span>
+              </span>
+            )}
+            {card.completedAt ? (
+              <span // 完了したカードで見たいのは期日ではなく完了日時なので、両方は出さず置き換える
+                className='flex items-center gap-0.5 text-xs text-gray-500'
               >
-                {card.title}
-              </Link>
-            </p>
-
-            <div className='flex flex-wrap items-center gap-1'>
-              <PriorityChip priority={card.priority} />
-              {card.assigneeName && (
-                <span className='flex min-w-0 items-center gap-0.5 text-xs text-gray-500'>
-                  <UserAvatar name={card.assigneeName} image={card.assigneeImage} size='xs' />
-                  <span className='truncate'>{card.assigneeName}</span>
-                </span>
-              )}
-              {card.completedAt ? (
-                <span // 完了したカードで見たいのは期日ではなく完了日時なので、両方は出さず置き換える
-                  className='flex items-center gap-0.5 text-xs text-gray-500'
-                >
-                  <CheckBadgeIcon width={12} />
-                  <span className='sr-only'>{t('completed_at')}</span>
-                  <span className='font-mono'>{dayformat(card.completedAt, 'tz-minute', tz)}</span>
-                </span>
-              ) : (
-                card.dueDate && (
-                  <span className='flex items-center gap-0.5 text-xs text-gray-500'>
-                    <ClockIcon width={12} />
-                    <span className='sr-only'>{t('due_date')}</span>
-                    <span className='font-mono'>{dayformat(card.dueDate, 'date')}</span>
-                  </span>
-                )
-              )}
-              {card.commentCount > 0 && (
+                <CheckBadgeIcon width={12} />
+                <span className='sr-only'>{t('completed_at')}</span>
+                <span className='font-mono'>{dayformat(card.completedAt, 'tz-minute', tz)}</span>
+              </span>
+            ) : (
+              card.dueDate && (
                 <span className='flex items-center gap-0.5 text-xs text-gray-500'>
-                  <ChatBubbleIcon width={12} />
-                  <span className='sr-only'>{t('comment')}</span>
-                  {card.commentCount}
+                  <ClockIcon width={12} />
+                  <span className='sr-only'>{t('due_date')}</span>
+                  <span className='font-mono'>{dayformat(card.dueDate, 'date')}</span>
                 </span>
-              )}
-            </div>
-
-            <TagChips tags={card.tags} />
+              )
+            )}
+            {card.commentCount > 0 && (
+              <span className='flex items-center gap-0.5 text-xs text-gray-500'>
+                <ChatBubbleIcon width={12} />
+                <span className='sr-only'>{t('comment')}</span>
+                {card.commentCount}
+              </span>
+            )}
           </div>
+
+          <TagChips tags={card.tags} />
         </div>
       </div>
     </div>
@@ -263,11 +232,6 @@ export const KanbanLane: FC<{
     <fieldset
       /**
        * 既定で min-inline-size: min-content のため、min-w-0 が無いとカード内容の分だけ横に広がる。
-       *
-       * md 以上では内側のカード領域をスクロールさせるので flex コンテナにする。
-       * grid item の block 方向 automatic minimum size を min-h-0 で切らないと、
-       * 行が縮んだときに内容の高さのまま溢れてスクロール領域へ高さが渡らない。
-       * なお fieldset を flex にしても legend は flex item にならず従来どおり枠線上に描画される。
        */
       ref={ref}
       className={cn(
