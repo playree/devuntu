@@ -28,6 +28,7 @@ export type UserNotifySettingMinAggregateOutputType = {
   id: string | null
   userId: string | null
   event: $Enums.NotifyEvent | null
+  email: boolean | null
   slack: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -37,6 +38,7 @@ export type UserNotifySettingMaxAggregateOutputType = {
   id: string | null
   userId: string | null
   event: $Enums.NotifyEvent | null
+  email: boolean | null
   slack: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -46,6 +48,7 @@ export type UserNotifySettingCountAggregateOutputType = {
   id: number
   userId: number
   event: number
+  email: number
   slack: number
   createdAt: number
   updatedAt: number
@@ -57,6 +60,7 @@ export type UserNotifySettingMinAggregateInputType = {
   id?: true
   userId?: true
   event?: true
+  email?: true
   slack?: true
   createdAt?: true
   updatedAt?: true
@@ -66,6 +70,7 @@ export type UserNotifySettingMaxAggregateInputType = {
   id?: true
   userId?: true
   event?: true
+  email?: true
   slack?: true
   createdAt?: true
   updatedAt?: true
@@ -75,6 +80,7 @@ export type UserNotifySettingCountAggregateInputType = {
   id?: true
   userId?: true
   event?: true
+  email?: true
   slack?: true
   createdAt?: true
   updatedAt?: true
@@ -157,6 +163,7 @@ export type UserNotifySettingGroupByOutputType = {
   id: string
   userId: string
   event: $Enums.NotifyEvent
+  email: boolean
   slack: boolean
   createdAt: Date
   updatedAt: Date
@@ -187,6 +194,7 @@ export type UserNotifySettingWhereInput = {
   id?: Prisma.StringFilter<"UserNotifySetting"> | string
   userId?: Prisma.StringFilter<"UserNotifySetting"> | string
   event?: Prisma.EnumNotifyEventFilter<"UserNotifySetting"> | $Enums.NotifyEvent
+  email?: Prisma.BoolFilter<"UserNotifySetting"> | boolean
   slack?: Prisma.BoolFilter<"UserNotifySetting"> | boolean
   createdAt?: Prisma.DateTimeFilter<"UserNotifySetting"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"UserNotifySetting"> | Date | string
@@ -197,6 +205,7 @@ export type UserNotifySettingOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   event?: Prisma.SortOrder
+  email?: Prisma.SortOrder
   slack?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -211,6 +220,7 @@ export type UserNotifySettingWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.UserNotifySettingWhereInput | Prisma.UserNotifySettingWhereInput[]
   userId?: Prisma.StringFilter<"UserNotifySetting"> | string
   event?: Prisma.EnumNotifyEventFilter<"UserNotifySetting"> | $Enums.NotifyEvent
+  email?: Prisma.BoolFilter<"UserNotifySetting"> | boolean
   slack?: Prisma.BoolFilter<"UserNotifySetting"> | boolean
   createdAt?: Prisma.DateTimeFilter<"UserNotifySetting"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"UserNotifySetting"> | Date | string
@@ -221,6 +231,7 @@ export type UserNotifySettingOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   event?: Prisma.SortOrder
+  email?: Prisma.SortOrder
   slack?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -236,6 +247,7 @@ export type UserNotifySettingScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"UserNotifySetting"> | string
   userId?: Prisma.StringWithAggregatesFilter<"UserNotifySetting"> | string
   event?: Prisma.EnumNotifyEventWithAggregatesFilter<"UserNotifySetting"> | $Enums.NotifyEvent
+  email?: Prisma.BoolWithAggregatesFilter<"UserNotifySetting"> | boolean
   slack?: Prisma.BoolWithAggregatesFilter<"UserNotifySetting"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"UserNotifySetting"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"UserNotifySetting"> | Date | string
@@ -244,6 +256,7 @@ export type UserNotifySettingScalarWhereWithAggregatesInput = {
 export type UserNotifySettingCreateInput = {
   id?: string
   event: $Enums.NotifyEvent
+  email?: boolean
   slack?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -254,6 +267,7 @@ export type UserNotifySettingUncheckedCreateInput = {
   id?: string
   userId: string
   event: $Enums.NotifyEvent
+  email?: boolean
   slack?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -262,6 +276,7 @@ export type UserNotifySettingUncheckedCreateInput = {
 export type UserNotifySettingUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   event?: Prisma.EnumNotifyEventFieldUpdateOperationsInput | $Enums.NotifyEvent
+  email?: Prisma.BoolFieldUpdateOperationsInput | boolean
   slack?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -272,6 +287,7 @@ export type UserNotifySettingUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   event?: Prisma.EnumNotifyEventFieldUpdateOperationsInput | $Enums.NotifyEvent
+  email?: Prisma.BoolFieldUpdateOperationsInput | boolean
   slack?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -281,6 +297,7 @@ export type UserNotifySettingCreateManyInput = {
   id?: string
   userId: string
   event: $Enums.NotifyEvent
+  email?: boolean
   slack?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -289,6 +306,7 @@ export type UserNotifySettingCreateManyInput = {
 export type UserNotifySettingUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   event?: Prisma.EnumNotifyEventFieldUpdateOperationsInput | $Enums.NotifyEvent
+  email?: Prisma.BoolFieldUpdateOperationsInput | boolean
   slack?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -298,6 +316,7 @@ export type UserNotifySettingUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   event?: Prisma.EnumNotifyEventFieldUpdateOperationsInput | $Enums.NotifyEvent
+  email?: Prisma.BoolFieldUpdateOperationsInput | boolean
   slack?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -322,6 +341,7 @@ export type UserNotifySettingCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   event?: Prisma.SortOrder
+  email?: Prisma.SortOrder
   slack?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -331,6 +351,7 @@ export type UserNotifySettingMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   event?: Prisma.SortOrder
+  email?: Prisma.SortOrder
   slack?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -340,6 +361,7 @@ export type UserNotifySettingMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   event?: Prisma.SortOrder
+  email?: Prisma.SortOrder
   slack?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -394,6 +416,7 @@ export type EnumNotifyEventFieldUpdateOperationsInput = {
 export type UserNotifySettingCreateWithoutUserInput = {
   id?: string
   event: $Enums.NotifyEvent
+  email?: boolean
   slack?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -402,6 +425,7 @@ export type UserNotifySettingCreateWithoutUserInput = {
 export type UserNotifySettingUncheckedCreateWithoutUserInput = {
   id?: string
   event: $Enums.NotifyEvent
+  email?: boolean
   slack?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -440,6 +464,7 @@ export type UserNotifySettingScalarWhereInput = {
   id?: Prisma.StringFilter<"UserNotifySetting"> | string
   userId?: Prisma.StringFilter<"UserNotifySetting"> | string
   event?: Prisma.EnumNotifyEventFilter<"UserNotifySetting"> | $Enums.NotifyEvent
+  email?: Prisma.BoolFilter<"UserNotifySetting"> | boolean
   slack?: Prisma.BoolFilter<"UserNotifySetting"> | boolean
   createdAt?: Prisma.DateTimeFilter<"UserNotifySetting"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"UserNotifySetting"> | Date | string
@@ -448,6 +473,7 @@ export type UserNotifySettingScalarWhereInput = {
 export type UserNotifySettingCreateManyUserInput = {
   id?: string
   event: $Enums.NotifyEvent
+  email?: boolean
   slack?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -456,6 +482,7 @@ export type UserNotifySettingCreateManyUserInput = {
 export type UserNotifySettingUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   event?: Prisma.EnumNotifyEventFieldUpdateOperationsInput | $Enums.NotifyEvent
+  email?: Prisma.BoolFieldUpdateOperationsInput | boolean
   slack?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -464,6 +491,7 @@ export type UserNotifySettingUpdateWithoutUserInput = {
 export type UserNotifySettingUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   event?: Prisma.EnumNotifyEventFieldUpdateOperationsInput | $Enums.NotifyEvent
+  email?: Prisma.BoolFieldUpdateOperationsInput | boolean
   slack?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -472,6 +500,7 @@ export type UserNotifySettingUncheckedUpdateWithoutUserInput = {
 export type UserNotifySettingUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   event?: Prisma.EnumNotifyEventFieldUpdateOperationsInput | $Enums.NotifyEvent
+  email?: Prisma.BoolFieldUpdateOperationsInput | boolean
   slack?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -483,6 +512,7 @@ export type UserNotifySettingSelect<ExtArgs extends runtime.Types.Extensions.Int
   id?: boolean
   userId?: boolean
   event?: boolean
+  email?: boolean
   slack?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -493,6 +523,7 @@ export type UserNotifySettingSelectCreateManyAndReturn<ExtArgs extends runtime.T
   id?: boolean
   userId?: boolean
   event?: boolean
+  email?: boolean
   slack?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -503,6 +534,7 @@ export type UserNotifySettingSelectUpdateManyAndReturn<ExtArgs extends runtime.T
   id?: boolean
   userId?: boolean
   event?: boolean
+  email?: boolean
   slack?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -513,12 +545,13 @@ export type UserNotifySettingSelectScalar = {
   id?: boolean
   userId?: boolean
   event?: boolean
+  email?: boolean
   slack?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserNotifySettingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "event" | "slack" | "createdAt" | "updatedAt", ExtArgs["result"]["userNotifySetting"]>
+export type UserNotifySettingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "event" | "email" | "slack" | "createdAt" | "updatedAt", ExtArgs["result"]["userNotifySetting"]>
 export type UserNotifySettingInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -538,6 +571,7 @@ export type $UserNotifySettingPayload<ExtArgs extends runtime.Types.Extensions.I
     id: string
     userId: string
     event: $Enums.NotifyEvent
+    email: boolean
     slack: boolean
     createdAt: Date
     updatedAt: Date
@@ -968,6 +1002,7 @@ export interface UserNotifySettingFieldRefs {
   readonly id: Prisma.FieldRef<"UserNotifySetting", 'String'>
   readonly userId: Prisma.FieldRef<"UserNotifySetting", 'String'>
   readonly event: Prisma.FieldRef<"UserNotifySetting", 'NotifyEvent'>
+  readonly email: Prisma.FieldRef<"UserNotifySetting", 'Boolean'>
   readonly slack: Prisma.FieldRef<"UserNotifySetting", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"UserNotifySetting", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"UserNotifySetting", 'DateTime'>

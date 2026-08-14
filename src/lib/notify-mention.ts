@@ -9,10 +9,12 @@
 import { t } from '@/locale/server'
 import { after } from 'next/server'
 import { logger } from './logger'
-import { filterSlackNotifiable } from './notify-setting'
+import { isMailConfigured, sendMentionMail } from './mail'
+import { MAX_NOTIFY_RECIPIENTS } from './notify'
+import { filterNotifiable } from './notify-setting'
 import { prisma } from './prisma'
 import { makeUrl } from './server-utils'
-import { buildMentionMessage, MAX_SLACK_RECIPIENTS, SLACK_PROVIDER_ID } from './slack'
+import { buildMentionMessage, SLACK_PROVIDER_ID } from './slack'
 import { filterSlackAllowedUserIds } from './slack-account'
 import { postSlackDm } from './slack-server'
 
@@ -38,26 +40,73 @@ export type MentionNotification = {
 export const mentionSubject = ({ displayId, ticketTitle }: Pick<MentionNotification, 'displayId' | 'ticketTitle'>) =>
   `[${displayId}] ${ticketTitle}`
 
+/** チャネル間で共通の送信内容。宛先のロケールで文面が変わる部分だけ関数で持つ */
+type MentionContext = {
+  subject: string
+  url: string
+  message: (locale: string | null) => string
+}
+
+const buildMentionContext = async ({
+  displayId,
+  ticketTitle,
+  commentId,
+  fromUserId,
+}: MentionNotification): Promise<MentionContext> => {
+  const from = await prisma.user.findUnique({ where: { id: fromUserId }, select: { name: true } })
+  const fromName = from?.name ?? ''
+
+  return {
+    subject: mentionSubject({ displayId, ticketTitle }),
+    url: makeUrl(`/t/${displayId}`).toString(),
+    message: (locale) =>
+      t(locale, commentId ? 'notify_msg_mentioned_comment' : 'notify_msg_mentioned', { from: fromName }),
+  }
+}
+
+/**
+ * 通知 ON の宛先へメールを送る。
+ *
+ * Slack と違い連携作業が要らないので、通知 OFF のユーザーを外すだけで宛先が決まる。
+ */
+const notifyMentionByEmail = async (targets: string[], { subject, url, message }: MentionContext): Promise<void> => {
+  if (!isMailConfigured()) {
+    return
+  }
+
+  const notMuted = await filterNotifiable(targets, 'mention', 'email')
+  if (notMuted.length === 0) {
+    return
+  }
+
+  const recipients = await prisma.user.findMany({
+    where: { id: { in: notMuted } },
+    select: { id: true, email: true, locale: true },
+  })
+
+  const sendTo = recipients.slice(0, MAX_NOTIFY_RECIPIENTS)
+  if (recipients.length > sendTo.length) {
+    logger.warn({ total: recipients.length, sent: sendTo.length }, 'mail mention recipients truncated')
+  }
+
+  for (const { id, email, locale } of sendTo) {
+    try {
+      await sendMentionMail({ locale, to: email, subject, message: message(locale), url })
+    } catch (error) {
+      // 1 通の失敗で残りの宛先を巻き添えにしない
+      logger.error({ error, userId: id }, 'mail mention failed')
+    }
+  }
+}
+
 /**
  * Slack 連携済みの宛先へ DM を送る。
  *
  * 宛先はここまでの各段階で絞り込まれ、条件を満たさない相手は自然に消える
  * (未連携 / 通知OFF / 許可グループ外)。通知しないこと自体はエラーではない。
  */
-const notifyMentionToSlack = async ({
-  displayId,
-  ticketTitle,
-  commentId,
-  fromUserId,
-  toUserIds,
-}: MentionNotification): Promise<void> => {
-  // 自分の書き込みが自分へ DM されないようにする
-  const targets = toUserIds.filter((userId) => userId !== fromUserId)
-  if (targets.length === 0) {
-    return
-  }
-
-  const notMuted = await filterSlackNotifiable(targets, 'mention')
+const notifyMentionToSlack = async (targets: string[], { subject, url, message }: MentionContext): Promise<void> => {
+  const notMuted = await filterNotifiable(targets, 'mention', 'slack')
   const allowed = await filterSlackAllowedUserIds(notMuted)
   if (allowed.length === 0) {
     return
@@ -71,21 +120,14 @@ const notifyMentionToSlack = async ({
     return
   }
 
-  const [from, recipients] = await Promise.all([
-    prisma.user.findUnique({ where: { id: fromUserId }, select: { name: true } }),
-    prisma.user.findMany({
-      where: { id: { in: accounts.map(({ userId }) => userId) } },
-      select: { id: true, locale: true },
-    }),
-  ])
+  const recipients = await prisma.user.findMany({
+    where: { id: { in: accounts.map(({ userId }) => userId) } },
+    select: { id: true, locale: true },
+  })
   const localeByUserId = new Map(recipients.map(({ id, locale }) => [id, locale]))
 
-  const subject = mentionSubject({ displayId, ticketTitle })
-  const url = makeUrl(`/t/${displayId}`).toString()
-  const fromName = from?.name ?? ''
-
   // 宛先が多くても Slack を叩き続けないよう頭打ちにする
-  const sendTo = accounts.slice(0, MAX_SLACK_RECIPIENTS)
+  const sendTo = accounts.slice(0, MAX_NOTIFY_RECIPIENTS)
   if (accounts.length > sendTo.length) {
     logger.warn({ total: accounts.length, sent: sendTo.length }, 'slack mention recipients truncated')
   }
@@ -94,14 +136,15 @@ const notifyMentionToSlack = async ({
   // バーストも避けられる
   for (const { userId, accountId } of sendTo) {
     const locale = localeByUserId.get(userId) ?? null
-    const message = buildMentionMessage({
-      subject,
-      url,
-      body: t(locale, commentId ? 'slack_msg_mentioned_comment' : 'slack_msg_mentioned', { from: fromName }),
-      openLabel: t(locale, 'slack_msg_open_ticket'),
-    })
-
-    const outcome = await postSlackDm(accountId, message)
+    const outcome = await postSlackDm(
+      accountId,
+      buildMentionMessage({
+        subject,
+        url,
+        body: message(locale),
+        openLabel: t(locale, 'slack_msg_open_ticket'),
+      }),
+    )
     if (outcome === 'revoked') {
       // Bot トークンが無効なら残りも全滅するので打ち切る
       logger.error({ userId }, 'slack mention aborted by invalid bot token')
@@ -118,11 +161,27 @@ export const notifyMention = async (param: MentionNotification): Promise<void> =
 
   logger.info({ ticketId, displayId, commentId, fromUserId, toUserIds }, 'mention notify')
 
-  // 通知はチケット操作の付随処理。Slack との往復でレスポンスを遅らせず、
+  // 通知はチケット操作の付随処理。外部サービスとの往復でレスポンスを遅らせず、
   // 失敗もチケット操作へ波及させない
   after(async () => {
     try {
-      await notifyMentionToSlack(param)
+      // 自分の書き込みが自分へ通知されないようにする
+      const targets = toUserIds.filter((userId) => userId !== fromUserId)
+      if (targets.length === 0) {
+        return
+      }
+      const context = await buildMentionContext(param)
+
+      // 片方のチャネルの失敗でもう片方を止めない
+      const results = await Promise.allSettled([
+        notifyMentionByEmail(targets, context),
+        notifyMentionToSlack(targets, context),
+      ])
+      for (const result of results) {
+        if (result.status === 'rejected') {
+          logger.error({ error: result.reason, ticketId, displayId }, 'mention notify channel failed')
+        }
+      }
     } catch (error) {
       logger.error({ error, ticketId, displayId }, 'mention notify failed')
     }

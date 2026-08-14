@@ -54,14 +54,14 @@ export const disconnectGoogleAccount = safeAuthAction
   })
 
 /**
- * Slack 連携状態と通知設定の取得
+ * Slack 連携状態の取得
  */
 export const getSlackStatus = safeAuthAction
   .metadata({ actionName: 'getSlackStatus', role: 'user' })
   .action(async ({ ctx: { user } }) => {
     // 連携が利用不可なユーザーには未連携として返す(UI非表示のバックアップ)
     if (!(await canUseSlackAccount(user.id))) {
-      return { connected: false, settings: await getUserNotifySettings(user.id) }
+      return { connected: false }
     }
     // Slack は token レスポンスに scope を返さないので、Google のような
     // refreshToken での判定はできない。account 行の有無で連携済みとする
@@ -69,7 +69,7 @@ export const getSlackStatus = safeAuthAction
       where: { userId: user.id, providerId: SLACK_PROVIDER_ID },
       select: { id: true },
     })
-    return { connected: !!account, settings: await getUserNotifySettings(user.id) }
+    return { connected: !!account }
   })
 export type GetSlackStatusReturnType = Awaited<ReturnType<typeof getSlackStatus>>['data']
 
@@ -89,14 +89,21 @@ export const disconnectSlack = safeAuthAction
   })
 
 /**
- * 通知設定(イベント種別ごとの ON/OFF)の更新
+ * 通知設定(イベント種別ごと・チャネルごとの ON/OFF)の取得
+ */
+export const getNotifySettings = safeAuthAction
+  .metadata({ actionName: 'getNotifySettings', role: 'user' })
+  .action(async ({ ctx: { user } }) => getUserNotifySettings(user.id))
+
+/**
+ * 通知設定の更新
  */
 export const updateNotifySetting = safeAuthAction
   .metadata({ actionName: 'updateNotifySetting', role: 'user' })
   .inputSchema(scUpdateNotifySetting)
-  .action(async ({ parsedInput: { event, slack }, ctx: { user } }) => {
-    await setUserNotifySetting(user.id, event, slack)
-    return { event, slack }
+  .action(async ({ parsedInput: { event, ...setting }, ctx: { user } }) => {
+    await setUserNotifySetting(user.id, event, setting)
+    return { event, ...setting }
   })
 
 /**

@@ -3,7 +3,8 @@ import { LocaleItems } from '.'
 // アルファベット順
 export const en: LocaleItems = {
   account: 'Account',
-  account_connect: 'Connect Google Account',
+  account_connect_google: 'Connect Google Account',
+  account_connect_slack: 'Connect Slack Account',
   account_disconnect: 'Disconnect',
   account_relink: 'Re-link',
   action: 'Action',
@@ -105,6 +106,8 @@ export const en: LocaleItems = {
   no_file_selected: 'No file selected',
   no_name: 'No Name',
   no_tag_selected: 'No tags selected',
+  notify_channel_email: 'Email',
+  notify_channel_slack: 'Slack',
   notify_event_mention: 'When I am mentioned',
   notify_settings: 'Notifications',
   oidc_clients: 'OIDC Clients',
@@ -268,6 +271,14 @@ Please copy and use the connection information above.
   msg_updated_target: 'Updated ${target}.',
   msg_user_not_exist: 'User does not exist.',
 
+  mail_mention_body: `\${message}
+
+\${subject}
+
+\${url}
+
+*You can stop this notification from the notification settings on the account page.
+`,
   mail_otp_body: `A verification code has been issued for email authentication.
 
 Verification Code: \${otp}
@@ -280,8 +291,9 @@ Expiration time: 5 minutes
 `,
   mail_otp_subject: '[${appname}] Email OTP : ${otp}',
 
-  slack_msg_mentioned: '${from} mentioned you',
-  slack_msg_mentioned_comment: '${from} mentioned you in a comment',
+  notify_msg_mentioned: '${from} mentioned you',
+  notify_msg_mentioned_comment: '${from} mentioned you in a comment',
+
   slack_msg_open_ticket: 'Open ticket',
 
   '@invalid_email': 'Invalid email format',

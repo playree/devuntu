@@ -502,6 +502,7 @@ export const UserNotifySettingScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
   event: 'event',
+  email: 'email',
   slack: 'slack',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'

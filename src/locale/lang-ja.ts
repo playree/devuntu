@@ -3,7 +3,8 @@ import { DefaultLocaleItems } from '.'
 // アルファベット順
 export const ja: DefaultLocaleItems = {
   account: 'アカウント',
-  account_connect: 'Googleアカウントと連携',
+  account_connect_google: 'Googleアカウントと連携',
+  account_connect_slack: 'Slackアカウントと連携',
   account_disconnect: '連携を解除',
   account_relink: '再連携',
   action: '操作',
@@ -105,6 +106,8 @@ export const ja: DefaultLocaleItems = {
   no_file_selected: '選択されていません',
   no_name: '名前なし',
   no_tag_selected: 'タグ未選択',
+  notify_channel_email: 'メール',
+  notify_channel_slack: 'Slack',
   notify_event_mention: 'メンションされたとき',
   notify_settings: '通知設定',
   oidc_clients: 'OIDCクライアント',
@@ -267,6 +270,14 @@ export const ja: DefaultLocaleItems = {
   msg_updated_target: '${target} を更新しました。',
   msg_user_not_exist: 'ユーザーが存在しません。',
 
+  mail_mention_body: `\${message}
+
+\${subject}
+
+\${url}
+
+※この通知はアカウント画面の通知設定から停止できます。
+`,
   mail_otp_body: `Eメール認証の為の認証コードを発行しました。
 
 認証コード: \${otp}
@@ -279,8 +290,9 @@ export const ja: DefaultLocaleItems = {
 `,
   mail_otp_subject: '[${appname}] Eメール認証OTP : ${otp}',
 
-  slack_msg_mentioned: '${from}さんがあなたをメンションしました',
-  slack_msg_mentioned_comment: '${from}さんがコメントであなたをメンションしました',
+  notify_msg_mentioned: '${from}さんがあなたをメンションしました',
+  notify_msg_mentioned_comment: '${from}さんがコメントであなたをメンションしました',
+
   slack_msg_open_ticket: 'チケットを開く',
 
   '@invalid_email': 'Eメールフォーマット不正',

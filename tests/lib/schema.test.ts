@@ -187,11 +187,17 @@ describe('scUpdateSlackSettings: 許可グループはグループIDの配列', 
 
 describe('scUpdateNotifySetting: 通知イベントは enum で受ける', () => {
   it('既知のイベントを通す', () => {
-    expect(scUpdateNotifySetting.safeParse({ event: 'mention', slack: false }).success).toBe(true)
+    expect(scUpdateNotifySetting.safeParse({ event: 'mention', email: true, slack: false }).success).toBe(true)
   })
 
   it('未知のイベントは弾く', () => {
     // NOTIFY_EVENTS から生成しているので、Prisma に種別を足せば自動で追従する
-    expect(scUpdateNotifySetting.safeParse({ event: 'assigned', slack: true }).success).toBe(false)
+    expect(scUpdateNotifySetting.safeParse({ event: 'assigned', email: true, slack: true }).success).toBe(false)
+  })
+
+  it('チャネルの指定漏れは弾く', () => {
+    // 部分更新を許すとサーバー側に「未指定なら据え置き」の分岐が必要になるので全部必須にしている
+    expect(scUpdateNotifySetting.safeParse({ event: 'mention', slack: true }).success).toBe(false)
+    expect(scUpdateNotifySetting.safeParse({ event: 'mention', email: true }).success).toBe(false)
   })
 })

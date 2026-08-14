@@ -247,8 +247,6 @@ export const createTicket = safeAuthAction
         mentionedUserIds,
       }
     })
-
-    // 通知は未実装(ログのみ)
     await notifyMention({
       ticketId: ticket.id,
       displayId: ticket.displayId,

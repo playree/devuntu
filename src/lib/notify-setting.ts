@@ -7,10 +7,13 @@
 
 import type { NotifyEvent } from '@/generated/prisma/enums'
 import { logger } from './logger'
+import { NOTIFY_EVENTS, type NotifyChannel } from './notify'
 import { prisma } from './prisma'
-import { NOTIFY_EVENTS } from './slack'
 
-export type NotifySetting = { slack: boolean }
+export type NotifySetting = { [K in NotifyChannel]: boolean }
+
+/** 行が無いイベントに使う既定値 */
+const DEFAULT_SETTING: NotifySetting = { email: true, slack: true }
 
 /**
  * 指定ユーザーの通知設定を全イベント分返す。行が無いイベントは既定値(ON)で埋める。
@@ -18,38 +21,47 @@ export type NotifySetting = { slack: boolean }
 export const getUserNotifySettings = async (userId: string): Promise<Record<NotifyEvent, NotifySetting>> => {
   const rows = await prisma.userNotifySetting.findMany({
     where: { userId },
-    select: { event: true, slack: true },
+    select: { event: true, email: true, slack: true },
   })
-  const byEvent = new Map(rows.map((row) => [row.event, row]))
+  const byEvent = new Map(rows.map(({ event, email, slack }) => [event, { email, slack }]))
 
   return Object.fromEntries(
-    NOTIFY_EVENTS.map((event) => [event, { slack: byEvent.get(event)?.slack ?? true }]),
+    NOTIFY_EVENTS.map((event) => [event, byEvent.get(event) ?? { ...DEFAULT_SETTING }]),
   ) as Record<NotifyEvent, NotifySetting>
 }
 
 /**
- * 1 イベント分の通知設定を保存する。
+ * 1 イベント分の通知設定を保存する。チャネルは常に全部まとめて受け取り、
+ * 部分更新の分岐を作らない。
  */
-export const setUserNotifySetting = async (userId: string, event: NotifyEvent, slack: boolean): Promise<void> => {
+export const setUserNotifySetting = async (
+  userId: string,
+  event: NotifyEvent,
+  setting: NotifySetting,
+): Promise<void> => {
   await prisma.userNotifySetting.upsert({
     where: { userId_event: { userId, event } },
-    update: { slack },
-    create: { userId, event, slack },
+    update: setting,
+    create: { userId, event, ...setting },
   })
-  logger.info({ userId, event, slack }, 'user notify setting updated')
+  logger.info({ userId, event, ...setting }, 'user notify setting updated')
 }
 
 /**
- * 指定イベントで Slack 通知を受け取るユーザーだけに絞り込む。
+ * 指定イベント・指定チャネルで通知を受け取るユーザーだけに絞り込む。
  *
  * 行が無い = ON なので、OFF の行だけを引いて除外する(宛先の数だけ行を作らない)。
  */
-export const filterSlackNotifiable = async (userIds: string[], event: NotifyEvent): Promise<string[]> => {
+export const filterNotifiable = async (
+  userIds: string[],
+  event: NotifyEvent,
+  channel: NotifyChannel,
+): Promise<string[]> => {
   if (userIds.length === 0) {
     return []
   }
   const muted = await prisma.userNotifySetting.findMany({
-    where: { userId: { in: userIds }, event, slack: false },
+    where: { userId: { in: userIds }, event, [channel]: false },
     select: { userId: true },
   })
   const mutedSet = new Set(muted.map(({ userId }) => userId))

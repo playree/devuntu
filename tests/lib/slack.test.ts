@@ -6,16 +6,8 @@
  * 純粋関数へ寄せてあるので、そちらを検証する(`google-calendar-server.ts` と同じ方針)。
  */
 
-import { NotifyEvent } from '@/generated/prisma/enums'
-import { buildMentionMessage, classifySlackError, escapeSlackText, NOTIFY_EVENTS } from '@/lib/slack'
+import { buildMentionMessage, classifySlackError, escapeSlackText } from '@/lib/slack'
 import { describe, expect, it } from 'vitest'
-
-describe('NOTIFY_EVENTS: Prisma の enum と一致していること', () => {
-  it('NotifyEvent enum と同じ値・同じ件数', () => {
-    // 件数も比較することで、Prisma 側に種別を追加して NOTIFY_EVENTS の更新を忘れた場合に落ちる
-    expect(NOTIFY_EVENTS, '通知設定UIの並び順は NOTIFY_EVENTS の定義順が単一ソース').toEqual(Object.values(NotifyEvent))
-  })
-})
 
 describe('escapeSlackText: 利用者入力を mrkdwn の特殊記法として解釈させない', () => {
   it('& を最初に置換するので二重エスケープにならない', () => {

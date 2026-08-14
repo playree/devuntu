@@ -5,16 +5,8 @@
  * サーバー専用の処理(prisma / Slack API 呼び出しなど)は `slack-server.ts` に配置する。
  */
 
-import type { NotifyEvent } from '@/generated/prisma/enums'
-
 /** Slack 連携用の OAuth プロバイダ ID */
 export const SLACK_PROVIDER_ID = 'slack'
-
-/** 通知イベントの種別。Prisma の enum と同じ並びで持つ(tests/lib/slack.test.ts で一致を固定する) */
-export const NOTIFY_EVENTS = ['mention'] as const satisfies readonly NotifyEvent[]
-
-/** 1回のメンションで DM を送る上限。暴走時に Slack を叩き続けないための歯止め */
-export const MAX_SLACK_RECIPIENTS = 20
 
 /** Block Kit の section が受け付ける mrkdwn の上限。超えると chat.postMessage が invalid_blocks で落ちる */
 const SECTION_TEXT_MAX = 3000

@@ -1,7 +1,8 @@
 // アルファベット順
 export type LocaleItemBase =
   | 'account'
-  | 'account_connect'
+  | 'account_connect_google'
+  | 'account_connect_slack'
   | 'account_disconnect'
   | 'account_relink'
   | 'action'
@@ -103,6 +104,8 @@ export type LocaleItemBase =
   | 'no_file_selected'
   | 'no_name'
   | 'no_tag_selected'
+  | 'notify_channel_email'
+  | 'notify_channel_slack'
   | 'notify_event_mention'
   | 'notify_settings'
   | 'oidc_clients'
@@ -259,11 +262,13 @@ export type LocaleItemBase =
   | 'msg_updated_target'
   | 'msg_user_not_exist'
   // for Mail
+  | 'mail_mention_body'
   | 'mail_otp_body'
   | 'mail_otp_subject'
+  // for Notify(メール / Slack で共用する文面)
+  | 'notify_msg_mentioned'
+  | 'notify_msg_mentioned_comment'
   // for Slack
-  | 'slack_msg_mentioned'
-  | 'slack_msg_mentioned_comment'
   | 'slack_msg_open_ticket'
 
 export type LocaleItemError =

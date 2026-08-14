@@ -16,12 +16,12 @@ import {
   ViewColumnsIcon,
 } from '@/components/icon'
 import { LocaleSwitch } from '@/components/locale/locale-switch'
-import { LogoSVG } from '@/components/logo'
 import { parseAction } from '@/lib/action-client'
 import { authClient } from '@/lib/auth-client'
 import { authConfig } from '@/lib/auth-config'
 import { useLocale } from '@/locale/client'
 import { Accordion, Button, Card, cn } from '@heroui/react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { FC, ReactNode, useEffect, useState } from 'react'
 import { getMyGoogleAccountAccess } from './server'
@@ -210,7 +210,13 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
       </div>
 
       <div className='absolute inset-x-4 bottom-2'>
-        <LogoSVG width={80} className='mt-8' />
+        <Image // ロゴ
+          src='/logo.png'
+          width={120}
+          height={45}
+          alt='Devuntu'
+          className='mt-8'
+        />
       </div>
     </div>
   )

@@ -1,6 +1,6 @@
 import { el } from '@/locale'
 import { z } from 'zod'
-import { NOTIFY_EVENTS } from './slack'
+import { NOTIFY_EVENTS } from './notify'
 import {
   ASSIGNEE_NONE,
   BOARD_KEY_PATTERN,
@@ -208,9 +208,13 @@ export const scUpdateSlackSettings = z.object({
 })
 export type UpdateSlackSettings = z.infer<typeof scUpdateSlackSettings>
 
-/** 通知設定(イベント種別ごとの ON/OFF)。種別が増えても z.enum が自動で追従する */
+/**
+ * 通知設定(イベント種別ごと・チャネルごとの ON/OFF)。種別が増えても z.enum が自動で追従する。
+ * チャネルは常に全部まとめて受け取り、サーバー側に部分更新の分岐を作らない。
+ */
 export const scUpdateNotifySetting = z.object({
   event: z.enum(NOTIFY_EVENTS),
+  email: z.boolean(),
   slack: z.boolean(),
 })
 export type UpdateNotifySetting = z.infer<typeof scUpdateNotifySetting>
