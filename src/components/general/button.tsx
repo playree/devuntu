@@ -44,7 +44,8 @@ export const MultiButton: FC<
     <Button
       type={type}
       size={size}
-      className={cn(isSmart ? 'h-fit px-2 py-0.5' : '', className)}
+      // isPending でアイコンがスピナーへ入れ替わっても高さが動かないよう、中身依存にせず固定する
+      className={cn(isSmart ? 'h-7 px-2' : '', className)}
       {...props}
       onPress={(e) => {
         if (onPress) {
