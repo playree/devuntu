@@ -30,20 +30,26 @@ export const createIntegrationSettings = (config: {
 }) => {
   const { group, enabledKey, allowedGroupIdsKey, hasCredentials, label } = config
 
-  /** allowedGroupIds の JSON 文字列を安全に配列へパースする */
-  const parseAllowedGroupIds = (value: string | undefined): string[] => {
+  /**
+   * allowedGroupIds の JSON 文字列を配列へパースする。
+   *
+   * 読めない値に対して空配列を返すと「全ユーザー許可」と同じ意味になってしまうため、
+   * 未設定([])と壊れている(null)を区別して返す。
+   */
+  const parseAllowedGroupIds = (value: string | undefined): string[] | null => {
     if (!value) {
       return []
     }
     try {
-      const parsed = JSON.parse(value)
-      if (Array.isArray(parsed)) {
-        return parsed.filter((v): v is string => typeof v === 'string')
+      const parsed: unknown = JSON.parse(value)
+      if (Array.isArray(parsed) && parsed.every((v) => typeof v === 'string')) {
+        return parsed as string[]
       }
     } catch {
-      logger.warn({ value }, `invalid ${allowedGroupIdsKey}, fallback to []`)
+      // JSON として読めない。下の warn で一緒に扱う
     }
-    return []
+    logger.warn({ value }, `invalid ${allowedGroupIdsKey}`)
+    return null
   }
 
   /**
@@ -52,9 +58,14 @@ export const createIntegrationSettings = (config: {
    */
   const get = async (): Promise<IntegrationSettings> => {
     const store = await getByGroup(group)
+    const allowedGroupIds = parseAllowedGroupIds(store[allowedGroupIdsKey])
+    if (!allowedGroupIds) {
+      // 許可グループが読めない状態を「制限なし」と解釈しないよう、連携ごと無効にする
+      return { enabled: false, allowedGroupIds: [] }
+    }
     return {
       enabled: store[enabledKey] === 'true',
-      allowedGroupIds: parseAllowedGroupIds(store[allowedGroupIdsKey]),
+      allowedGroupIds,
     }
   }
 

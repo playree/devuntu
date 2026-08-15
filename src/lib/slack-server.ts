@@ -136,18 +136,24 @@ export const getSlackBotInfo = async (): Promise<SlackBotInfo | null> => {
     return null
   }
 
-  return cached('slack:auth-test', BOT_INFO_TTL_MS, async () => {
-    const res = await callSlackApi<AuthTestResponse>('auth.test', token, {})
-    if (!res.ok) {
-      logger.warn({ error: res.error }, 'slack auth.test failed')
-      return null
-    }
-    const { team_id: teamId, team, url } = res.data
-    if (!teamId) {
-      return null
-    }
-    return { teamId, team: team ?? teamId, url: url ?? '' }
-  })
+  try {
+    // 失敗を null で返すと TTL の間キャッシュされ、トークンを直しても反映されない。
+    // cached は reject した Promise を残さないので、失敗は throw で伝える
+    return await cached('slack:auth-test', BOT_INFO_TTL_MS, async () => {
+      const res = await callSlackApi<AuthTestResponse>('auth.test', token, {})
+      if (!res.ok) {
+        throw new Error(res.error)
+      }
+      const { team_id: teamId, team, url } = res.data
+      if (!teamId) {
+        throw new Error('team_id is missing')
+      }
+      return { teamId, team: team ?? teamId, url: url ?? '' }
+    })
+  } catch (error) {
+    logger.warn({ error }, 'slack auth.test failed')
+    return null
+  }
 }
 
 type SlackUserInfoResponse = SlackApiResponse & {

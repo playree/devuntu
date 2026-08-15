@@ -6,7 +6,7 @@ import { notify } from '@/components/notify'
 import { parseAction, useActionData } from '@/lib/action-client'
 import { NOTIFY_EVENTS } from '@/lib/notify'
 import { useLocale } from '@/locale/client'
-import { FC } from 'react'
+import { FC, useState } from 'react'
 import { getNotifySettings, updateNotifySetting } from './server'
 
 /**
@@ -16,6 +16,8 @@ import { getNotifySettings, updateNotifySetting } from './server'
 export const NotifySettings: FC<{ slackAvailable: boolean }> = ({ slackAvailable }) => {
   const { t } = useLocale()
   const { data: settings, refresh } = useActionData(getNotifySettings)
+  // 保存中はスイッチを止める。連打すると後着の保存結果で表示が巻き戻る
+  const [isSaving, setIsSaving] = useState(false)
 
   if (!settings) {
     return null
@@ -26,19 +28,25 @@ export const NotifySettings: FC<{ slackAvailable: boolean }> = ({ slackAvailable
       {NOTIFY_EVENTS.map((event) => {
         const setting = settings[event]
         const save = async (next: typeof setting) => {
-          await parseAction(updateNotifySetting({ event, ...next }))
-          notify.success(t('msg_saved'))
-          refresh()
+          setIsSaving(true)
+          try {
+            await parseAction(updateNotifySetting({ event, ...next }))
+            notify.success(t('msg_saved'))
+            await refresh()
+          } finally {
+            setIsSaving(false)
+          }
         }
 
         return (
           <FlexCol key={event} className='gap-2'>
-            <div className='text-sm font-bold'>{t('notify_event_mention')}</div>
+            <div className='text-sm font-bold'>{t(`notify_event_${event}`)}</div>
             <FlexRow className='gap-6'>
               <SwitchField
                 id={`notify_${event}_email`}
                 label={t('notify_channel_email')}
                 isSelected={setting.email}
+                isDisabled={isSaving}
                 onChange={(email) => save({ ...setting, email })}
               />
               {slackAvailable && (
@@ -46,6 +54,7 @@ export const NotifySettings: FC<{ slackAvailable: boolean }> = ({ slackAvailable
                   id={`notify_${event}_slack`}
                   label={t('notify_channel_slack')}
                   isSelected={setting.slack}
+                  isDisabled={isSaving}
                   onChange={(slack) => save({ ...setting, slack })}
                 />
               )}

@@ -214,10 +214,10 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
         <Image
           /**
            * ロゴ。
-           * サイドメニュー内で常に描画され LCP と判定されるため priority で先読みさせる
+           * サイドメニュー内で常に描画され LCP と判定されるため preload で先読みさせる
            */
           src='/logo.png'
-          priority
+          preload
           width={120}
           height={45}
           alt='Devuntu'

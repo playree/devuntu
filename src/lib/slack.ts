@@ -92,7 +92,7 @@ export const buildMentionMessage = ({ subject, url, body, openLabel }: MentionMe
   const safeBody = escapeSlackText(body)
 
   return {
-    text: truncate(`${subject}\n${body}`, SECTION_TEXT_MAX),
+    text: truncate(`${safeSubject}\n${safeBody}`, SECTION_TEXT_MAX),
     blocks: [
       {
         type: 'section',

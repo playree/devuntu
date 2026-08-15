@@ -82,6 +82,8 @@ const notifyMentionByEmail = async (targets: string[], { subject, url, message }
   const recipients = await prisma.user.findMany({
     where: { id: { in: notMuted } },
     select: { id: true, email: true, locale: true },
+    // 上限で切り詰めるため、誰が落ちるかが実行ごとに変わらないよう順序を固定する
+    orderBy: { id: 'asc' },
   })
 
   const sendTo = recipients.slice(0, MAX_NOTIFY_RECIPIENTS)
@@ -115,22 +117,24 @@ const notifyMentionToSlack = async (targets: string[], { subject, url, message }
   const accounts = await prisma.account.findMany({
     where: { userId: { in: allowed }, providerId: SLACK_PROVIDER_ID },
     select: { userId: true, accountId: true },
+    // 上限で切り詰めるため、誰が落ちるかが実行ごとに変わらないよう順序を固定する
+    orderBy: { id: 'asc' },
   })
   if (accounts.length === 0) {
     return
   }
-
-  const recipients = await prisma.user.findMany({
-    where: { id: { in: accounts.map(({ userId }) => userId) } },
-    select: { id: true, locale: true },
-  })
-  const localeByUserId = new Map(recipients.map(({ id, locale }) => [id, locale]))
 
   // 宛先が多くても Slack を叩き続けないよう頭打ちにする
   const sendTo = accounts.slice(0, MAX_NOTIFY_RECIPIENTS)
   if (accounts.length > sendTo.length) {
     logger.warn({ total: accounts.length, sent: sendTo.length }, 'slack mention recipients truncated')
   }
+
+  const recipients = await prisma.user.findMany({
+    where: { id: { in: sendTo.map(({ userId }) => userId) } },
+    select: { id: true, locale: true },
+  })
+  const localeByUserId = new Map(recipients.map(({ id, locale }) => [id, locale]))
 
   // 逐次送信。after の中で走るのでレスポンスは待たされず、ワークスペース単位の
   // バーストも避けられる

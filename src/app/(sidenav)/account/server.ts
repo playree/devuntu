@@ -15,9 +15,6 @@ import { canUseSlackAccount } from '@/lib/slack-account'
 import { headers } from 'next/headers'
 import { z } from 'zod'
 
-/**
- * Google アカウント連携状態の取得
- */
 export const getGoogleAccountStatus = safeAuthAction
   .metadata({ actionName: 'getGoogleAccountStatus', role: 'user' })
   .action(async ({ ctx: { user } }) => {
@@ -38,9 +35,6 @@ export const getGoogleAccountStatus = safeAuthAction
   })
 export type GetGoogleAccountStatusReturnType = Awaited<ReturnType<typeof getGoogleAccountStatus>>['data']
 
-/**
- * Google アカウント連携の解除
- */
 export const disconnectGoogleAccount = safeAuthAction
   .metadata({ actionName: 'disconnectGoogleAccount', role: 'user' })
   .action(async ({ ctx: { user } }) => {
@@ -53,9 +47,6 @@ export const disconnectGoogleAccount = safeAuthAction
     return { disconnected: true }
   })
 
-/**
- * Slack 連携状態の取得
- */
 export const getSlackStatus = safeAuthAction
   .metadata({ actionName: 'getSlackStatus', role: 'user' })
   .action(async ({ ctx: { user } }) => {
@@ -73,9 +64,6 @@ export const getSlackStatus = safeAuthAction
   })
 export type GetSlackStatusReturnType = Awaited<ReturnType<typeof getSlackStatus>>['data']
 
-/**
- * Slack 連携の解除
- */
 export const disconnectSlack = safeAuthAction
   .metadata({ actionName: 'disconnectSlack', role: 'user' })
   .action(async ({ ctx: { user } }) => {
@@ -88,16 +76,10 @@ export const disconnectSlack = safeAuthAction
     return { disconnected: true }
   })
 
-/**
- * 通知設定(イベント種別ごと・チャネルごとの ON/OFF)の取得
- */
 export const getNotifySettings = safeAuthAction
   .metadata({ actionName: 'getNotifySettings', role: 'user' })
   .action(async ({ ctx: { user } }) => getUserNotifySettings(user.id))
 
-/**
- * 通知設定の更新
- */
 export const updateNotifySetting = safeAuthAction
   .metadata({ actionName: 'updateNotifySetting', role: 'user' })
   .inputSchema(scUpdateNotifySetting)
@@ -106,9 +88,6 @@ export const updateNotifySetting = safeAuthAction
     return { event, ...setting }
   })
 
-/**
- * ユーザーのタイムゾーン設定を更新する
- */
 export const setUserTimezone = safeAuthAction
   .metadata({ actionName: 'setUserTimezone', role: 'user' })
   .inputSchema(z.object({ timezone: z.string() }))

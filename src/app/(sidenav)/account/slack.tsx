@@ -10,17 +10,22 @@ import { parseAction, useActionData } from '@/lib/action-client'
 import { authClient } from '@/lib/auth-client'
 import { SLACK_PROVIDER_ID } from '@/lib/slack'
 import { useLocale } from '@/locale/client'
-import { ButtonGroup } from '@heroui/react'
+import { ButtonGroup, Skeleton } from '@heroui/react'
 import { FC } from 'react'
 import { disconnectSlack, getSlackStatus } from './server'
 
 export const SlackAccountLink: FC = () => {
   const { t } = useLocale()
   const { confirmModal } = useConfirmModal()
-  const { data: status, reload } = useActionData(getSlackStatus)
+  const { data: status, reload, isLoading } = useActionData(getSlackStatus)
 
   const link = async () => {
     await authClient.oauth2.link({ providerId: SLACK_PROVIDER_ID, callbackURL: '/account' })
+  }
+
+  // 取得前は未連携と区別できないため、連携済みでも一瞬「未連携」が出てしまう
+  if (isLoading) {
+    return <Skeleton className='min-h-16 w-full rounded-xl' />
   }
 
   const connected = status?.connected

@@ -96,6 +96,8 @@ describe('buildMentionMessage: chat.postMessage のペイロードを組み立�
     const blocks = JSON.stringify(res.blocks)
     expect(blocks, 'blocks 側は必ずエスケープを通す').toContain('&lt;!channel&gt;')
     expect(blocks, '生の全体メンションが残ってはいけない').not.toContain('<!channel>')
+    // text は通知プレビューに使われるため、blocks と同じくエスケープ済みでなければならない
+    expect(res.text, 'フォールバックの text にも生の全体メンションを残さない').not.toContain('<!channel>')
   })
 
   it('3000字を超える件名は切り詰める(invalid_blocks で落ちないようにする)', () => {
