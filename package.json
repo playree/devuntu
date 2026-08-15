@@ -1,10 +1,10 @@
 {
   "name": "devuntu",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:domain": "PORT=3033 next dev",
+    "dev:domain": "DOTENV_CONFIG_PATH=.env.domain DOTENV_CONFIG_QUIET=true NODE_OPTIONS=\"--require dotenv/config\" next dev",
     "build": "next build",
     "lint": "eslint",
     "prettier": "prettier --write --ignore-path .gitignore --ignore-path .prettierignore './**/*.{js,jsx,ts,tsx,json,css}'",

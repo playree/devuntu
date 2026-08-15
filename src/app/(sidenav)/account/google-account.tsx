@@ -67,7 +67,7 @@ export const GoogleAccountLink: FC = () => {
       ) : (
         <ContentHeader title={t('msg_google_account_not_connected')}>
           <MultiButton icon={<GoogleIcon />} onPress={link}>
-            {t('account_connect')}
+            {t('account_connect_google')}
           </MultiButton>
         </ContentHeader>
       )}

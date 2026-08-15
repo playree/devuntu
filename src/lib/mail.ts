@@ -89,6 +89,37 @@ const sendEmail = async (param: Omit<SendEmail, 'from'>) => {
   throw errSystemError('Unable to send email')
 }
 
+/**
+ * メール送信が構成されているか。未構成の環境で通知を試みても
+ * `Unable to send email` になるだけなので、通知側はこれを見て送信自体を諦める。
+ */
+export const isMailConfigured = () => !!envu.server.MAIL_SEND
+
+/**
+ * メンション通知メール。
+ *
+ * 件名・本文は利用者の入力(チケット名)を含むためログには出さない。
+ */
+export const sendMentionMail = async (param: {
+  locale: string | null
+  to: string
+  /** 件名。`mentionSubject()` の結果をそのまま使う */
+  subject: string
+  /** 誰が何をしたかの一文 */
+  message: string
+  /** チケットへの絶対URL */
+  url: string
+}) => {
+  const { locale, to, subject, message, url } = param
+
+  logger.info({ to }, 'sendMentionMail')
+  await sendEmail({
+    to,
+    subject,
+    text: t(locale, 'mail_mention_body', { message, subject, url }),
+  })
+}
+
 export const sendEmailOtp = async (param: { locale: string | null; to: string; otp: string }) => {
   const { locale, to, otp } = param
   const { hostname } = new URL(envu.server.BETTER_AUTH_URL)

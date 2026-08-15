@@ -424,7 +424,8 @@ export const ModelName = {
   BoardMember: 'BoardMember',
   BoardGroup: 'BoardGroup',
   Ticket: 'Ticket',
-  TicketComment: 'TicketComment'
+  TicketComment: 'TicketComment',
+  UserNotifySetting: 'UserNotifySetting'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -440,7 +441,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "dashboard" | "linkWidget" | "attachment" | "keyValueStore" | "appVersion" | "group" | "userGroup" | "calendarShare" | "calendarBusyTime" | "board" | "boardKeyHistory" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "ticket" | "ticketComment"
+    modelProps: "user" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "dashboard" | "linkWidget" | "attachment" | "keyValueStore" | "appVersion" | "group" | "userGroup" | "calendarShare" | "calendarBusyTime" | "board" | "boardKeyHistory" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "ticket" | "ticketComment" | "userNotifySetting"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2516,6 +2517,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    UserNotifySetting: {
+      payload: Prisma.$UserNotifySettingPayload<ExtArgs>
+      fields: Prisma.UserNotifySettingFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.UserNotifySettingFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserNotifySettingPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.UserNotifySettingFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserNotifySettingPayload>
+        }
+        findFirst: {
+          args: Prisma.UserNotifySettingFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserNotifySettingPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.UserNotifySettingFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserNotifySettingPayload>
+        }
+        findMany: {
+          args: Prisma.UserNotifySettingFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserNotifySettingPayload>[]
+        }
+        create: {
+          args: Prisma.UserNotifySettingCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserNotifySettingPayload>
+        }
+        createMany: {
+          args: Prisma.UserNotifySettingCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.UserNotifySettingCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserNotifySettingPayload>[]
+        }
+        delete: {
+          args: Prisma.UserNotifySettingDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserNotifySettingPayload>
+        }
+        update: {
+          args: Prisma.UserNotifySettingUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserNotifySettingPayload>
+        }
+        deleteMany: {
+          args: Prisma.UserNotifySettingDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.UserNotifySettingUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.UserNotifySettingUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserNotifySettingPayload>[]
+        }
+        upsert: {
+          args: Prisma.UserNotifySettingUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserNotifySettingPayload>
+        }
+        aggregate: {
+          args: Prisma.UserNotifySettingAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateUserNotifySetting>
+        }
+        groupBy: {
+          args: Prisma.UserNotifySettingGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UserNotifySettingGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.UserNotifySettingCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UserNotifySettingCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -2929,14 +3004,14 @@ export const TicketScalarFieldEnum = {
   number: 'number',
   title: 'title',
   content: 'content',
-  mentionedUserIds: 'mentionedUserIds',
   status: 'status',
   priority: 'priority',
   dueDate: 'dueDate',
   completedAt: 'completedAt',
   order: 'order',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  mentionedUserIds: 'mentionedUserIds'
 } as const
 
 export type TicketScalarFieldEnum = (typeof TicketScalarFieldEnum)[keyof typeof TicketScalarFieldEnum]
@@ -2953,6 +3028,19 @@ export const TicketCommentScalarFieldEnum = {
 } as const
 
 export type TicketCommentScalarFieldEnum = (typeof TicketCommentScalarFieldEnum)[keyof typeof TicketCommentScalarFieldEnum]
+
+
+export const UserNotifySettingScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  event: 'event',
+  email: 'email',
+  slack: 'slack',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UserNotifySettingScalarFieldEnum = (typeof UserNotifySettingScalarFieldEnum)[keyof typeof UserNotifySettingScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -3139,6 +3227,20 @@ export type EnumTicketPriorityFieldRefInput<$PrismaModel> = FieldRefInputType<$P
  * Reference to a field of type 'TicketPriority[]'
  */
 export type ListEnumTicketPriorityFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TicketPriority[]'>
+    
+
+
+/**
+ * Reference to a field of type 'NotifyEvent'
+ */
+export type EnumNotifyEventFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'NotifyEvent'>
+    
+
+
+/**
+ * Reference to a field of type 'NotifyEvent[]'
+ */
+export type ListEnumNotifyEventFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'NotifyEvent[]'>
     
 
 
@@ -3334,6 +3436,7 @@ export type GlobalOmitConfig = {
   boardGroup?: Prisma.BoardGroupOmit
   ticket?: Prisma.TicketOmit
   ticketComment?: Prisma.TicketCommentOmit
+  userNotifySetting?: Prisma.UserNotifySettingOmit
 }
 
 /* Types for Logging */

@@ -149,8 +149,6 @@ export const patchTicket = safeAuthAction
 
       return { ticket: updated, addedMentionUserIds }
     })
-
-    // 通知は未実装(ログのみ)
     await notifyMention({
       ticketId: id,
       displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
@@ -207,8 +205,6 @@ export const addTicketComment = safeAuthAction
 
       return { comment, mentionedUserIds, ticket }
     })
-
-    // 通知は未実装(ログのみ)
     await notifyMention({
       ticketId,
       displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
@@ -257,8 +253,6 @@ export const updateTicketComment = safeAuthAction
         ticket: target.ticket,
       }
     })
-
-    // 通知は未実装(ログのみ)
     await notifyMention({
       ticketId,
       displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),

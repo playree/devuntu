@@ -7,6 +7,12 @@
   - [管理者](#管理者)
   - [認証・公開](#認証公開)
   - [API](#api)
+- [通知](#通知)
+  - [メンション通知の流れ](#メンション通知の流れ)
+  - [ユーザーごとの通知設定](#ユーザーごとの通知設定)
+  - [メール通知の前提](#メール通知の前提)
+  - [Slack通知の前提](#slack通知の前提)
+  - [イベント・チャネルを増やす場合](#イベントチャネルを増やす場合)
 - [環境変数](#環境変数)
   - [基本](#基本)
   - [認証](#認証)
@@ -116,6 +122,51 @@ Proxy の対象外のため、各ルートハンドラ内で個別に認証す�
 | `/api/upload`                                | 認証必須(未ログインは401)。画像アップロード(POST) |
 | `/api/upload/[filename]`                     | 認証必須(未ログインは401)。画像配信(GET)          |
 
+# 通知
+
+現在の通知イベントはメンション(`mention`)のみで、通知チャネルは**メール**と**Slack DM**の 2 つ。
+
+## メンション通知の流れ
+
+チケット本文・コメントのエディタで `@` により指名されたユーザーへ通知する。入口は `notifyMention()`(`src/lib/notify-mention.ts`)ただ 1 つで、チケット作成 / 本文編集 / コメント投稿 / コメント編集(`src/app/(sidenav)/tickets/server.ts`、`src/app/(sidenav)/tickets/[id]/server.ts`)から呼ばれる。
+
+- `next/server` の `after()` でレスポンス後に実行する。外部サービスとの往復でレスポンスを遅らせず、通知の失敗もチケット操作へ波及させない
+- メンションした本人は宛先から除外する(自分の書き込みで自分に通知が飛ばない)
+- 件名は `[表示ID] チケットタイトル`、リンク先は `/t/<表示ID>`。文面は宛先ユーザーのロケールで組み立てる
+- メールと Slack は `Promise.allSettled` で並行に送る。片方のチャネルが失敗してももう片方は止まらない
+- 1 回の通知で送る宛先は `MAX_NOTIFY_RECIPIENTS`(`src/lib/notify.ts`、20 件)で頭打ちにする。暴走時に外部サービスを叩き続けないための歯止めで、超過分は警告ログのみ
+
+## ユーザーごとの通知設定
+
+`/account` の「通知設定」(`src/app/(sidenav)/account/notify.tsx`)で、イベント種別 × チャネルごとに ON/OFF を切り替える。項目数が少ないためフォームにせず切り替え即保存にしている。
+
+- 保存先は `UserNotifySetting`(`userId` + `event` でユニーク)の `email` / `slack` 列
+- **行が無い場合は全チャネル ON** として扱うオプトアウト方式。OFF にしたときだけ行が作られるので、全ユーザー分の初期行を用意しなくてよい。絞り込み(`filterNotifiable()` / `src/lib/notify-setting.ts`)も OFF の行だけを引いて除外する
+- メールのスイッチは常に表示する。Slack のスイッチは Slack 連携を利用できるユーザーにのみ表示する
+
+## メール通知の前提
+
+`MAIL_SEND` が設定されていることが唯一の前提で、ユーザー側の連携作業は不要。通知 OFF のユーザーを外すだけで宛先(`User.email`)が決まる。
+
+- `MAIL_SEND` 未設定の環境では `isMailConfigured()`(`src/lib/mail.ts`)が false になり、**通知メールは送信を試みずスキップされる**(OTP メールなど他の送信は `Unable to send email` エラーになる)
+- 1 通ずつ送信し、1 通の失敗で残りの宛先を巻き添えにしない
+
+## Slack通知の前提
+
+Slack DM は以下の 3 段がすべて揃ったユーザーにだけ届く。どれかを満たさない相手は宛先から自然に消えるだけで、エラーにはならない。
+
+1. **環境変数** : `SLACK_CLIENT_ID` / `SLACK_CLIENT_SECRET` / `SLACK_BOT_TOKEN` が揃っていること(`hasSlackCredentials()` / `src/lib/slack-account.ts`)。`SLACK_TEAM_ID` は任意で、設定すると別ワークスペースのアカウントを連携の入口で弾く
+2. **管理者による有効化** : `/admin/settings` で Slack 連携を有効にする。許可グループを指定した場合はそのグループのメンバーのみ、空の場合は全ユーザーが対象(設定は kvs の `SLACK` グループに保存)
+3. **ユーザー本人の連携** : `/account` から Slack アカウントを OAuth 連携する(`account.providerId = 'slack'`)
+
+送信は逐次で行い、Bot トークンが無効(`revoked`)と判定された時点で残りを打ち切る。
+
+## イベント・チャネルを増やす場合
+
+- **イベント** : Prisma の `NotifyEvent` enum と `NOTIFY_EVENTS`(`src/lib/notify.ts`)を揃える。並びの一致は `tests/lib/notify.test.ts` で固定している
+- **チャネル** : `UserNotifySetting` に Boolean 列(既定 ON に揃えるため `@default(true)`)を足し、`NOTIFY_CHANNELS`(`src/lib/notify.ts`)と `scUpdateNotifySetting`(`src/lib/schema.ts`)へ追加する
+- `src/lib/notify.ts` はクライアントからも import されるため、サーバー専用の処理は `notify-setting.ts`(設定の読み書き)と `notify-mention.ts`(送信)へ置く
+
 # 環境変数
 
 環境変数の定義元は `src/lib/env-util.ts`。参照時も同ファイルの `envu` を利用する。
@@ -146,21 +197,25 @@ Proxy の対象外のため、各ルートハンドラ内で個別に認証す�
 | `GOOGLE_CLIENT_ID`           | Google OAuth クライアントID           |      | -             |
 | `GOOGLE_CLIENT_SECRET`       | Google OAuth クライアントシークレット |      | -             |
 | `GOOGLE_ALLOWED_DOMAINS`     | 許可ドメイン(カンマ区切り)            |      | -             |
+| `SLACK_CLIENT_ID`            | Slack OAuth クライアントID            |      | -             |
+| `SLACK_CLIENT_SECRET`        | Slack OAuth クライアントシークレット  |      | -             |
+| `SLACK_BOT_TOKEN`            | Slack Bot トークン(`xoxb-`)           |      | -             |
+| `SLACK_TEAM_ID`              | Slack ワークスペースID(`T...`)        |      | -             |
 
 ## メール
 
-| 変数名             | 説明                                          | 必須                    | デフォルト |
-| ------------------ | --------------------------------------------- | ----------------------- | ---------- |
-| `MAIL_SEND`        | 送信方式 `sendgrid`/`sendmail`/`smtp`/`debug` |                         | -          |
-| `MAIL_FROM`        | 送信元アドレス                                | 〇                      | -          |
-| `SENDGRID_API_KEY` | SendGrid APIキー                              | `MAIL_SEND=sendgrid` 時 | -          |
-| `SENDMAIL_PATH`    | sendmail のパス                               | `MAIL_SEND=sendmail` 時 | -          |
-| `SMTP_HOST`        | SMTP ホスト                                   | `MAIL_SEND=smtp` 時     | -          |
-| `SMTP_PORT`        | SMTP ポート                                   | `MAIL_SEND=smtp` 時     | -          |
-| `SMTP_IGNORE_TLS`  | TLS を無視                                    |                         | `false`    |
-| `SMTP_SECURE`      | SSL/TLS 接続                                  |                         | `false`    |
-| `SMTP_USER`        | SMTP 認証ユーザー                             |                         | -          |
-| `SMTP_PASS`        | SMTP 認証パスワード                           |                         | -          |
+| 変数名             | 説明                                                                            | 必須                    | デフォルト |
+| ------------------ | ------------------------------------------------------------------------------- | ----------------------- | ---------- |
+| `MAIL_SEND`        | 送信方式 `sendgrid`/`sendmail`/`smtp`/`debug`。未設定の場合はメールを送信しない |                         | -          |
+| `MAIL_FROM`        | 送信元アドレス                                                                  | 〇                      | -          |
+| `SENDGRID_API_KEY` | SendGrid APIキー                                                                | `MAIL_SEND=sendgrid` 時 | -          |
+| `SENDMAIL_PATH`    | sendmail のパス                                                                 | `MAIL_SEND=sendmail` 時 | -          |
+| `SMTP_HOST`        | SMTP ホスト                                                                     | `MAIL_SEND=smtp` 時     | -          |
+| `SMTP_PORT`        | SMTP ポート                                                                     | `MAIL_SEND=smtp` 時     | -          |
+| `SMTP_IGNORE_TLS`  | TLS を無視                                                                      |                         | `false`    |
+| `SMTP_SECURE`      | SSL/TLS 接続                                                                    |                         | `false`    |
+| `SMTP_USER`        | SMTP 認証ユーザー                                                               |                         | -          |
+| `SMTP_PASS`        | SMTP 認証パスワード                                                             |                         | -          |
 
 ## オブジェクトストレージ
 

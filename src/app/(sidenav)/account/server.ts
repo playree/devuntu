@@ -7,13 +7,14 @@ import { errValidation } from '@/lib/error'
 import { canUseGoogleAccount } from '@/lib/google-account'
 import { GOOGLE_ACCOUNT_PROVIDER_ID } from '@/lib/google-calendar'
 import { logger } from '@/lib/logger'
+import { getUserNotifySettings, setUserNotifySetting } from '@/lib/notify-setting'
 import { prisma } from '@/lib/prisma'
+import { scUpdateNotifySetting } from '@/lib/schema'
+import { SLACK_PROVIDER_ID } from '@/lib/slack'
+import { canUseSlackAccount } from '@/lib/slack-account'
 import { headers } from 'next/headers'
 import { z } from 'zod'
 
-/**
- * Google アカウント連携状態の取得
- */
 export const getGoogleAccountStatus = safeAuthAction
   .metadata({ actionName: 'getGoogleAccountStatus', role: 'user' })
   .action(async ({ ctx: { user } }) => {
@@ -34,9 +35,6 @@ export const getGoogleAccountStatus = safeAuthAction
   })
 export type GetGoogleAccountStatusReturnType = Awaited<ReturnType<typeof getGoogleAccountStatus>>['data']
 
-/**
- * Google アカウント連携の解除
- */
 export const disconnectGoogleAccount = safeAuthAction
   .metadata({ actionName: 'disconnectGoogleAccount', role: 'user' })
   .action(async ({ ctx: { user } }) => {
@@ -49,9 +47,47 @@ export const disconnectGoogleAccount = safeAuthAction
     return { disconnected: true }
   })
 
-/**
- * ユーザーのタイムゾーン設定を更新する
- */
+export const getSlackStatus = safeAuthAction
+  .metadata({ actionName: 'getSlackStatus', role: 'user' })
+  .action(async ({ ctx: { user } }) => {
+    // 連携が利用不可なユーザーには未連携として返す(UI非表示のバックアップ)
+    if (!(await canUseSlackAccount(user.id))) {
+      return { connected: false }
+    }
+    // Slack は token レスポンスに scope を返さないので、Google のような
+    // refreshToken での判定はできない。account 行の有無で連携済みとする
+    const account = await prisma.account.findFirst({
+      where: { userId: user.id, providerId: SLACK_PROVIDER_ID },
+      select: { id: true },
+    })
+    return { connected: !!account }
+  })
+export type GetSlackStatusReturnType = Awaited<ReturnType<typeof getSlackStatus>>['data']
+
+export const disconnectSlack = safeAuthAction
+  .metadata({ actionName: 'disconnectSlack', role: 'user' })
+  .action(async ({ ctx: { user } }) => {
+    await auth.api.unlinkAccount({
+      body: { providerId: SLACK_PROVIDER_ID },
+      headers: await headers(),
+    })
+
+    logger.info({ userId: user.id }, 'slack account disconnected')
+    return { disconnected: true }
+  })
+
+export const getNotifySettings = safeAuthAction
+  .metadata({ actionName: 'getNotifySettings', role: 'user' })
+  .action(async ({ ctx: { user } }) => getUserNotifySettings(user.id))
+
+export const updateNotifySetting = safeAuthAction
+  .metadata({ actionName: 'updateNotifySetting', role: 'user' })
+  .inputSchema(scUpdateNotifySetting)
+  .action(async ({ parsedInput: { event, ...setting }, ctx: { user } }) => {
+    await setUserNotifySetting(user.id, event, setting)
+    return { event, ...setting }
+  })
+
 export const setUserTimezone = safeAuthAction
   .metadata({ actionName: 'setUserTimezone', role: 'user' })
   .inputSchema(z.object({ timezone: z.string() }))

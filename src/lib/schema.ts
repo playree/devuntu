@@ -1,5 +1,6 @@
 import { el } from '@/locale'
 import { z } from 'zod'
+import { NOTIFY_EVENTS } from './notify'
 import {
   ASSIGNEE_NONE,
   BOARD_KEY_PATTERN,
@@ -193,12 +194,23 @@ export type CreateBusyTime = z.infer<typeof scCreateBusyTime>
 export const scUpdateBusyTime = z.object({ id: z.uuidv7() }).and(scBusyTimeFields)
 export type UpdateBusyTime = z.infer<typeof scUpdateBusyTime>
 
-/** Google アカウント連携設定 */
-export const scUpdateGoogleAccountSettings = z.object({
+/** 外部サービス連携設定(Google / Slack で共通) */
+export const scUpdateIntegrationSettings = z.object({
   enabled: z.boolean(),
   allowedGroupIds: z.array(z.uuidv7()),
 })
-export type UpdateGoogleAccountSettings = z.infer<typeof scUpdateGoogleAccountSettings>
+export type UpdateIntegrationSettings = z.infer<typeof scUpdateIntegrationSettings>
+
+/**
+ * 通知設定(イベント種別ごと・チャネルごとの ON/OFF)。種別が増えても z.enum が自動で追従する。
+ * チャネルは常に全部まとめて受け取り、サーバー側に部分更新の分岐を作らない。
+ */
+export const scUpdateNotifySetting = z.object({
+  event: z.enum(NOTIFY_EVENTS),
+  email: z.boolean(),
+  slack: z.boolean(),
+})
+export type UpdateNotifySetting = z.infer<typeof scUpdateNotifySetting>
 
 /* -------------------------------------------------------------------------------------------------
  * タスク管理(チケット / ボード)

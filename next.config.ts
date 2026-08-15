@@ -27,6 +27,19 @@ const securityHeaders = [
     : []),
 ]
 
+/**
+ * リバースプロキシ経由で localhost 以外のドメインから dev サーバーを開く場合の許可オリジン
+ * (カンマ区切り)。dev リソース(/_next/*, /__nextjs*, HMR WebSocket)のクロスオリジン検査と、
+ * Server Action の origin / host 一致検査の双方を通すために必要。
+ * ドメイン名をソースへ残さないため、値は未追跡の .env.domain から渡す。
+ *
+ * env-util.ts は Next 起動前に評価される next.config.ts から解決できないため、
+ * 上の NODE_ENV と同様に process.env を直接読む。
+ */
+const allowedOrigins = process.env.DEV_ALLOWED_ORIGINS?.split(',')
+  .map((value) => value.trim())
+  .filter(Boolean)
+
 const nextConfig: NextConfig = {
   /* config options here */
   output: 'standalone',
@@ -34,10 +47,12 @@ const nextConfig: NextConfig = {
   env: {
     BUILD_NO: genBuildNo(),
   },
+  ...(allowedOrigins?.length ? { allowedDevOrigins: allowedOrigins } : {}),
   experimental: {
     serverActions: {
       // 既定は1MB。schema.ts の MAX_IMAGE_SIZE(5MB)まで Server Action で受け取れるようにする
       bodySizeLimit: '6mb',
+      ...(allowedOrigins?.length ? { allowedOrigins } : {}),
     },
     /**
      * typescript は @typescript/typescript6 のエイリアス(tsc バイナリを持たず tsc6 のみ)なので、

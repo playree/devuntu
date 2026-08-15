@@ -78,7 +78,8 @@ export const ModelName = {
   BoardMember: 'BoardMember',
   BoardGroup: 'BoardGroup',
   Ticket: 'Ticket',
-  TicketComment: 'TicketComment'
+  TicketComment: 'TicketComment',
+  UserNotifySetting: 'UserNotifySetting'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -471,14 +472,14 @@ export const TicketScalarFieldEnum = {
   number: 'number',
   title: 'title',
   content: 'content',
-  mentionedUserIds: 'mentionedUserIds',
   status: 'status',
   priority: 'priority',
   dueDate: 'dueDate',
   completedAt: 'completedAt',
   order: 'order',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  mentionedUserIds: 'mentionedUserIds'
 } as const
 
 export type TicketScalarFieldEnum = (typeof TicketScalarFieldEnum)[keyof typeof TicketScalarFieldEnum]
@@ -495,6 +496,19 @@ export const TicketCommentScalarFieldEnum = {
 } as const
 
 export type TicketCommentScalarFieldEnum = (typeof TicketCommentScalarFieldEnum)[keyof typeof TicketCommentScalarFieldEnum]
+
+
+export const UserNotifySettingScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  event: 'event',
+  email: 'email',
+  slack: 'slack',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UserNotifySettingScalarFieldEnum = (typeof UserNotifySettingScalarFieldEnum)[keyof typeof UserNotifySettingScalarFieldEnum]
 
 
 export const SortOrder = {

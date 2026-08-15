@@ -16,15 +16,25 @@ import {
   ViewColumnsIcon,
 } from '@/components/icon'
 import { LocaleSwitch } from '@/components/locale/locale-switch'
-import { LogoSVG } from '@/components/logo'
-import { parseAction } from '@/lib/action-client'
 import { authClient } from '@/lib/auth-client'
 import { authConfig } from '@/lib/auth-config'
 import { useLocale } from '@/locale/client'
 import { Accordion, Button, Card, cn } from '@heroui/react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { FC, ReactNode, useEffect, useState } from 'react'
-import { getMyGoogleAccountAccess } from './server'
+import { createContext, FC, ReactNode, useContext } from 'react'
+
+/**
+ * Google連携が利用可能かどうか(既定はfalse)。
+ *
+ * `SideNavbar` の menu propは関数なので、サーバーコンポーネントから直接値を差し込むと
+ * RSC境界を関数が越えてしまう。レイアウトで包むProvider経由で渡す。
+ */
+const GoogleAvailableContext = createContext(false)
+
+export const GoogleAvailableProvider: FC<{ value: boolean; children: ReactNode }> = ({ value, children }) => (
+  <GoogleAvailableContext.Provider value={value}>{children}</GoogleAvailableContext.Provider>
+)
 
 export const MenuButton: FC<{
   /** メニューテキスト */
@@ -82,17 +92,8 @@ const defaultExpandedKeys = new Set(['group_task', 'group_admin'])
 export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
   const { data: session } = authClient.useSession()
   const { t } = useLocale()
-  // Google連携が利用可能なユーザーのみカレンダーを表示する(初期値false)
-  const [googleAvailable, setGoogleAvailable] = useState(false)
-
-  useEffect(() => {
-    // Debug
-    console.debug('@session', session)
-  }, [session])
-
-  useEffect(() => {
-    parseAction(getMyGoogleAccountAccess()).then((res) => setGoogleAvailable(!!res?.available))
-  }, [])
+  // Google連携が利用可能なユーザーのみカレンダーを表示する
+  const googleAvailable = useContext(GoogleAvailableContext)
 
   return (
     <div>
@@ -210,7 +211,18 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
       </div>
 
       <div className='absolute inset-x-4 bottom-2'>
-        <LogoSVG width={80} className='mt-8' />
+        <Image
+          /**
+           * ロゴ。
+           * サイドメニュー内で常に描画され LCP と判定されるため preload で先読みさせる
+           */
+          src='/logo.png'
+          preload
+          width={120}
+          height={45}
+          alt='Devuntu'
+          className='mt-8'
+        />
       </div>
     </div>
   )

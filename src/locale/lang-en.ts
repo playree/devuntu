@@ -3,7 +3,8 @@ import { LocaleItems } from '.'
 // アルファベット順
 export const en: LocaleItems = {
   account: 'Account',
-  account_connect: 'Connect Google Account',
+  account_connect_google: 'Connect Google Account',
+  account_connect_slack: 'Connect Slack Account',
   account_disconnect: 'Disconnect',
   account_relink: 'Re-link',
   action: 'Action',
@@ -105,6 +106,10 @@ export const en: LocaleItems = {
   no_file_selected: 'No file selected',
   no_name: 'No Name',
   no_tag_selected: 'No tags selected',
+  notify_channel_email: 'Email',
+  notify_channel_slack: 'Slack',
+  notify_event_mention: 'When I am mentioned',
+  notify_settings: 'Notifications',
   oidc_clients: 'OIDC Clients',
   ok: 'OK',
   otp: 'OTP',
@@ -140,6 +145,10 @@ export const en: LocaleItems = {
   select_file: 'Choose file',
   select_self: 'Select myself',
   send: 'Send',
+  slack: 'Slack',
+  slack_allowed_groups: 'Groups allowed to use Slack',
+  slack_enable: 'Enable Slack integration',
+  slack_workspace: 'Connected workspace',
   server_info: 'Server Info',
   settings: 'Settings',
   share_title: 'Share Title',
@@ -251,11 +260,25 @@ Please copy and use the connection information above.
   msg_private_board_immutable: 'The private board cannot be reconfigured.',
   msg_re_auth: 'Re-authentication is required to perform the operation.\nPlease try again after re-authentication.',
   msg_saved: 'Saved.',
+  msg_slack_allowed_groups_desc: 'If not specified, all users can use the Slack integration.',
+  msg_slack_bot_unavailable: 'The Slack bot token is missing or invalid. Please check SLACK_BOT_TOKEN.',
+  msg_slack_connected: 'Connected to Slack',
+  msg_slack_email_must_match: 'Your Slack email address must match the one used in Devuntu.',
+  msg_slack_enable_desc: 'When enabled, users can connect Slack and receive notifications there.',
+  msg_slack_not_connected: 'Not connected to Slack',
   msg_ticket_list_limit: 'Up to ${max} results are shown.',
   msg_too_many_requests: 'Too many attempts. Please wait a while and try again.',
   msg_updated_target: 'Updated ${target}.',
   msg_user_not_exist: 'User does not exist.',
 
+  mail_mention_body: `\${message}
+
+\${subject}
+
+\${url}
+
+*You can stop this notification from the notification settings on the account page.
+`,
   mail_otp_body: `A verification code has been issued for email authentication.
 
 Verification Code: \${otp}
@@ -267,6 +290,11 @@ Expiration time: 5 minutes
 @\${hostname} #\${otp}
 `,
   mail_otp_subject: '[${appname}] Email OTP : ${otp}',
+
+  notify_msg_mentioned: '${from} mentioned you',
+  notify_msg_mentioned_comment: '${from} mentioned you in a comment',
+
+  slack_msg_open_ticket: 'Open ticket',
 
   '@invalid_email': 'Invalid email format',
   '@invalid_image_size': 'Image must be 5MB or less',

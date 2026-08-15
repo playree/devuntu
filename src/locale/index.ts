@@ -1,7 +1,8 @@
 // アルファベット順
 export type LocaleItemBase =
   | 'account'
-  | 'account_connect'
+  | 'account_connect_google'
+  | 'account_connect_slack'
   | 'account_disconnect'
   | 'account_relink'
   | 'action'
@@ -103,6 +104,10 @@ export type LocaleItemBase =
   | 'no_file_selected'
   | 'no_name'
   | 'no_tag_selected'
+  | 'notify_channel_email'
+  | 'notify_channel_slack'
+  | 'notify_event_mention'
+  | 'notify_settings'
   | 'oidc_clients'
   | 'ok'
   | 'otp'
@@ -138,6 +143,10 @@ export type LocaleItemBase =
   | 'select_file'
   | 'select_self'
   | 'send'
+  | 'slack'
+  | 'slack_allowed_groups'
+  | 'slack_enable'
+  | 'slack_workspace'
   | 'server_info'
   | 'settings'
   | 'share_title'
@@ -242,13 +251,25 @@ export type LocaleItemBase =
   | 'msg_private_board_immutable'
   | 'msg_re_auth'
   | 'msg_saved'
+  | 'msg_slack_allowed_groups_desc'
+  | 'msg_slack_bot_unavailable'
+  | 'msg_slack_connected'
+  | 'msg_slack_email_must_match'
+  | 'msg_slack_enable_desc'
+  | 'msg_slack_not_connected'
   | 'msg_ticket_list_limit'
   | 'msg_too_many_requests'
   | 'msg_updated_target'
   | 'msg_user_not_exist'
   // for Mail
+  | 'mail_mention_body'
   | 'mail_otp_body'
   | 'mail_otp_subject'
+  // for Notify(メール / Slack で共用する文面)
+  | 'notify_msg_mentioned'
+  | 'notify_msg_mentioned_comment'
+  // for Slack
+  | 'slack_msg_open_ticket'
 
 export type LocaleItemError =
   | '@required_field'

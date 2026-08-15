@@ -59,3 +59,10 @@ export const TicketPriority = {
 } as const
 
 export type TicketPriority = (typeof TicketPriority)[keyof typeof TicketPriority]
+
+
+export const NotifyEvent = {
+  mention: 'mention'
+} as const
+
+export type NotifyEvent = (typeof NotifyEvent)[keyof typeof NotifyEvent]

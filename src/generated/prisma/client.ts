@@ -186,3 +186,8 @@ export type Ticket = Prisma.TicketModel
  * 
  */
 export type TicketComment = Prisma.TicketCommentModel
+/**
+ * Model UserNotifySetting
+ * 
+ */
+export type UserNotifySetting = Prisma.UserNotifySettingModel
