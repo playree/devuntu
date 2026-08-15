@@ -141,12 +141,12 @@ Proxy の対象外のため、各ルートハンドラ内で個別に認証す�
 `/account` の「通知設定」(`src/app/(sidenav)/account/notify.tsx`)で、イベント種別 × チャネルごとに ON/OFF を切り替える。項目数が少ないためフォームにせず切り替え即保存にしている。
 
 - 保存先は `UserNotifySetting`(`userId` + `event` でユニーク)の `email` / `slack` 列
-- **行が無い場合は全チャネル ON** として扱うオプトアウト方式。OFF にしたときだけ行が作られるので、全ユーザー分の初期行を用意しなくてよい。絞り込み(`filterNotifiable()` / `src/lib/notify-setting.ts`)も OFF の行だけを引いて除外する
+- **行が無い場合は全チャネル OFF** として扱うオプトイン方式。ON にしたときだけ行が作られるので、全ユーザー分の初期行を用意しなくてよい。絞り込み(`filterNotifiable()` / `src/lib/notify-setting.ts`)も ON の行だけを引いて残す
 - メールのスイッチは常に表示する。Slack のスイッチは Slack 連携を利用できるユーザーにのみ表示する
 
 ## メール通知の前提
 
-`MAIL_SEND` が設定されていることが唯一の前提で、ユーザー側の連携作業は不要。通知 OFF のユーザーを外すだけで宛先(`User.email`)が決まる。
+`MAIL_SEND` が設定されていることが唯一の前提で、ユーザー側の連携作業は不要。メール通知を ON にしたユーザーだけが宛先(`User.email`)になる。
 
 - `MAIL_SEND` 未設定の環境では `isMailConfigured()`(`src/lib/mail.ts`)が false になり、**通知メールは送信を試みずスキップされる**(OTP メールなど他の送信は `Unable to send email` エラーになる)
 - 1 通ずつ送信し、1 通の失敗で残りの宛先を巻き添えにしない
@@ -164,7 +164,7 @@ Slack DM は以下の 3 段がすべて揃ったユーザーにだけ届く。�
 ## イベント・チャネルを増やす場合
 
 - **イベント** : Prisma の `NotifyEvent` enum と `NOTIFY_EVENTS`(`src/lib/notify.ts`)を揃える。並びの一致は `tests/lib/notify.test.ts` で固定している
-- **チャネル** : `UserNotifySetting` に Boolean 列(既定 ON に揃えるため `@default(true)`)を足し、`NOTIFY_CHANNELS`(`src/lib/notify.ts`)と `scUpdateNotifySetting`(`src/lib/schema.ts`)へ追加する
+- **チャネル** : `UserNotifySetting` に Boolean 列(既定 OFF に揃えるため `@default(false)`)を足し、`NOTIFY_CHANNELS`(`src/lib/notify.ts`)と `scUpdateNotifySetting`(`src/lib/schema.ts`)へ追加する
 - `src/lib/notify.ts` はクライアントからも import されるため、サーバー専用の処理は `notify-setting.ts`(設定の読み書き)と `notify-mention.ts`(送信)へ置く
 
 # 環境変数
