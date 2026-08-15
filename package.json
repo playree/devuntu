@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:domain": "DOTENV_CONFIG_PATH=.env.domain DOTENV_CONFIG_QUIET=true NODE_OPTIONS=\"--require dotenv/config\" next dev",
-    "build": "next build",
+    "build": "next build && node scripts/patch-standalone.mjs",
     "lint": "eslint",
     "prettier": "prettier --write --ignore-path .gitignore --ignore-path .prettierignore './**/*.{js,jsx,ts,tsx,json,css}'",
     "test": "vitest run",
