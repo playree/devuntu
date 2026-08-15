@@ -438,6 +438,8 @@ pnpm install
 pnpm build
 ```
 
+`next build`(`output: 'standalone'`)の後に`scripts/patch-standalone.mjs`が走り、`@swc/helpers`の`esm/`を`.next/standalone`へ補完する。Turbopack のファイルトレースが`cjs/`しか同梱しないのに対し、Node は`module-sync`条件で`esm/`を解決するため、補完しないと`node server.js`が`MODULE_NOT_FOUND`で起動しない。`test-standalone.sh`と Docker イメージはどちらもこの成果物を使う。
+
 ## パッケージ更新
 
 ```sh
