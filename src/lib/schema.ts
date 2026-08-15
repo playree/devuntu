@@ -194,19 +194,12 @@ export type CreateBusyTime = z.infer<typeof scCreateBusyTime>
 export const scUpdateBusyTime = z.object({ id: z.uuidv7() }).and(scBusyTimeFields)
 export type UpdateBusyTime = z.infer<typeof scUpdateBusyTime>
 
-/** Google アカウント連携設定 */
-export const scUpdateGoogleAccountSettings = z.object({
+/** 外部サービス連携設定(Google / Slack で共通) */
+export const scUpdateIntegrationSettings = z.object({
   enabled: z.boolean(),
   allowedGroupIds: z.array(z.uuidv7()),
 })
-export type UpdateGoogleAccountSettings = z.infer<typeof scUpdateGoogleAccountSettings>
-
-/** Slack 連携設定 */
-export const scUpdateSlackSettings = z.object({
-  enabled: z.boolean(),
-  allowedGroupIds: z.array(z.uuidv7()),
-})
-export type UpdateSlackSettings = z.infer<typeof scUpdateSlackSettings>
+export type UpdateIntegrationSettings = z.infer<typeof scUpdateIntegrationSettings>
 
 /**
  * 通知設定(イベント種別ごと・チャネルごとの ON/OFF)。種別が増えても z.enum が自動で追従する。

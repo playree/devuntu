@@ -10,8 +10,8 @@ import {
   scMoveTicket,
   scPatchTicket,
   scTicketSearch,
+  scUpdateIntegrationSettings,
   scUpdateNotifySetting,
-  scUpdateSlackSettings,
   zBoardKey,
   zPassword,
 } from '@/lib/schema'
@@ -175,13 +175,15 @@ describe('scCreateTag: 表示順は未指定と 0 を区別する', () => {
   })
 })
 
-describe('scUpdateSlackSettings: 許可グループはグループIDの配列', () => {
+describe('scUpdateIntegrationSettings: 許可グループはグループIDの配列', () => {
   it('空配列(全ユーザー許可)を通す', () => {
-    expect(scUpdateSlackSettings.safeParse({ enabled: true, allowedGroupIds: [] }).success).toBe(true)
+    expect(scUpdateIntegrationSettings.safeParse({ enabled: true, allowedGroupIds: [] }).success).toBe(true)
   })
 
   it('uuidv7 でない値は弾く', () => {
-    expect(scUpdateSlackSettings.safeParse({ enabled: true, allowedGroupIds: ['not-a-uuid'] }).success).toBe(false)
+    expect(scUpdateIntegrationSettings.safeParse({ enabled: true, allowedGroupIds: ['not-a-uuid'] }).success).toBe(
+      false,
+    )
   })
 })
 

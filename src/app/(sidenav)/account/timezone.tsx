@@ -1,12 +1,12 @@
 'use client'
 
 import { FlexCol } from '@/components/general/flex'
+import { SingleSelectField } from '@/components/general/select'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
 import { authClient } from '@/lib/auth-client'
 import { COMMON_TIMEZONES, tzOffsetLabel, tzOffsetMinutes } from '@/lib/day'
 import { useLocale } from '@/locale/client'
-import { ListBox, Select } from '@heroui/react'
 import { FC, useMemo, useState } from 'react'
 import { setUserTimezone } from './server'
 
@@ -20,48 +20,36 @@ export const TimezoneSetting: FC = () => {
   const value = selected ?? current
 
   // 主要都市をオフセット順に表示。現在値が候補外なら先頭にマージして必ず表示できるようにする
-  const timezones = useMemo(() => {
+  const timezoneOptions = useMemo(() => {
     const base = COMMON_TIMEZONES.includes(value) ? COMMON_TIMEZONES : [value, ...COMMON_TIMEZONES]
-    return [...base].sort((a, b) => tzOffsetMinutes(a) - tzOffsetMinutes(b))
+    return Object.fromEntries(
+      [...base].sort((a, b) => tzOffsetMinutes(a) - tzOffsetMinutes(b)).map((tz) => [tz, tzOffsetLabel(tz)]),
+    )
   }, [value])
 
   return (
     <FlexCol>
       <div className='max-w-sm px-1'>
-        <Select
-          selectionMode='single'
+        <SingleSelectField // 見出しは AccordionSection 側で出しているのでラベルは読み上げ用にだけ残す
+          label={t('timezone')}
+          isLabelHidden
+          groupOptions={timezoneOptions}
           value={value}
           onChange={async (key) => {
             if (!key) {
               return
             }
-            const tz = key.toString()
             const prev = selected
-            setSelected(tz)
+            setSelected(key)
             try {
-              await parseAction(setUserTimezone({ timezone: tz }))
+              await parseAction(setUserTimezone({ timezone: key }))
               notify.success(t('msg_saved'))
             } catch (e) {
               setSelected(prev)
               throw e
             }
           }}
-        >
-          <Select.Trigger>
-            <Select.Value />
-            <Select.Indicator />
-          </Select.Trigger>
-          <Select.Popover>
-            <ListBox selectionMode='single'>
-              {timezones.map((tz) => (
-                <ListBox.Item key={tz} id={tz} textValue={tzOffsetLabel(tz)}>
-                  {tzOffsetLabel(tz)}
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </Select.Popover>
-        </Select>
+        />
       </div>
     </FlexCol>
   )

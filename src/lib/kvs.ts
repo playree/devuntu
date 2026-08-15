@@ -4,7 +4,7 @@ import { prisma } from './prisma'
  * Key-Value Store Utility
  */
 
-type KeyString =
+export type KeyString =
   | 'DASHBOARD_DEFAULT_LAYOUT'
   | 'DASHBOARD_ANNOUNCEMENT'
   | 'GOOGLE_ACCOUNT_ENABLED'
@@ -13,7 +13,7 @@ type KeyString =
   | 'SLACK_ALLOWED_GROUP_IDS'
 
 /** キーをまとめて引くための名前空間(KeyValueStore.group) */
-type KvsGroup = 'GOOGLE_ACCOUNT' | 'SLACK'
+export type KvsGroup = 'GOOGLE_ACCOUNT' | 'SLACK'
 
 export const getString = async (key: KeyString) => {
   return prisma.keyValueStore.findUnique({ where: { key } })
