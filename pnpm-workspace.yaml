@@ -13,3 +13,9 @@ onlyBuiltDependencies:
   - unrs-resolver
 overrides:
   sharp: '0.34.5'
+# 各プラグインが peerDependencies に eslint@10 を載せたら削除する
+peerDependencyRules:
+  allowedVersions:
+    eslint-plugin-import>eslint: '10'
+    eslint-plugin-jsx-a11y>eslint: '10'
+    eslint-plugin-react>eslint: '10'
