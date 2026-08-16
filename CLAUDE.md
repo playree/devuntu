@@ -25,6 +25,7 @@
 - テストソースは`tests`配下に配置する
 - better-authをバージョンアップする場合には、ライブラリが要求するテーブル定義に変更が無いかをチェックする
 - コンパイル、ビルド確認は`pnpm build`
+- ソース修正後には`pnpm lint`を実施する
 - 修正ファイルには`pnpm exec prettier --write`を実施する
 - classNameの外部定義はなるべく`tailwind-variants`を利用する
 - 1ファイルが肥大化しないように考慮する

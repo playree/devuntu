@@ -259,8 +259,8 @@ const UUID_V7_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}
 /** 貼られた URL が指すチケット。引き方が変わるので参照の種類を持たせる */
 export type TicketUrlRef = { kind: 'displayId'; value: string } | { kind: 'ticketId'; value: string }
 
-/** パスセグメントのデコード。`%20` 等で貼られても解決する。不正なエスケープは null */
-const decodeSegment = (segment: string): string | null => {
+/** URL の断片(パスセグメントやハッシュ)のデコード。`%20` 等で貼られても解決する。不正なエスケープは null */
+export const decodeSegment = (segment: string): string | null => {
   try {
     return decodeURIComponent(segment)
   } catch {

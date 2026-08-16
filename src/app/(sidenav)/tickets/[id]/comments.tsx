@@ -14,10 +14,10 @@ import { parseAction } from '@/lib/action-client'
 import { dayformat } from '@/lib/day'
 import { scCreateTicketComment } from '@/lib/schema'
 import { getFieldConstraints } from '@/lib/schema-util'
-import { commentAnchorId } from '@/lib/task'
+import { commentAnchorId, decodeSegment } from '@/lib/task'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
-import { FC, useEffect, useRef, useState } from 'react'
+import { FC, useEffect, useState, useSyncExternalStore } from 'react'
 import { tv } from 'tailwind-variants'
 import { addTicketComment, deleteTicketComment, GetTicketReturnType, updateTicketComment } from './server'
 
@@ -37,6 +37,18 @@ const commentStyles = tv({
 /** 位置の追い直しを打ち切るまでの時間 */
 const ANCHOR_FOLLOW_MS = 3000
 
+/** 現在のハッシュ。SSR では空文字を返し、ハイドレーション後にクライアントの値へ切り替わる */
+const subscribeHash = (onChange: () => void) => {
+  window.addEventListener('hashchange', onChange)
+  return () => window.removeEventListener('hashchange', onChange)
+}
+const useLocationHash = () =>
+  useSyncExternalStore(
+    subscribeHash,
+    () => window.location.hash,
+    () => '',
+  )
+
 /**
  * 通知のリンク(`#comment-<id>`)で指されたコメントまで移動する。
  *
@@ -45,22 +57,9 @@ const ANCHOR_FOLLOW_MS = 3000
  * 伸びて位置がずれる。そのため高さが変わる間は追い直し、落ち着くか利用者が動かしたら止める。
  */
 const useCommentAnchor = (comments: Comment[]) => {
-  const [targetId, setTargetId] = useState('')
-  // 投稿・編集のたびに再取得が走るので、ハッシュを見るのは最初の一度だけにする
-  const isResolved = useRef(false)
-
-  useEffect(() => {
-    if (isResolved.current) {
-      return
-    }
-    const anchor = decodeURIComponent(window.location.hash.slice(1))
-    // 他の要素の id を拾わないよう、このチケットのコメントに限る
-    if (!comments.some(({ id }) => commentAnchorId(id) === anchor)) {
-      return
-    }
-    isResolved.current = true
-    setTargetId(anchor)
-  }, [comments])
+  const anchor = decodeSegment(useLocationHash().slice(1)) ?? ''
+  // 他の要素の id を拾わないよう、このチケットのコメントに限る
+  const targetId = comments.some(({ id }) => commentAnchorId(id) === anchor) ? anchor : ''
 
   useEffect(() => {
     const element = targetId ? document.getElementById(targetId) : null
