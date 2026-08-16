@@ -35,6 +35,8 @@ export const classifySlackError = (error: string | undefined): SlackSendOutcome 
     case undefined:
       return 'failed'
     case 'channel_not_found':
+    // Bot が会話に参加していない。unfurl では招待されるまでどの投稿も展開できない
+    case 'not_in_channel':
     case 'user_not_found':
     case 'users_not_found':
     case 'is_bot':
@@ -69,6 +71,52 @@ export const escapeSlackText = (text: string) => text.replace(/&/g, '&amp;').rep
 
 /** 上限を超える分を切り捨てる。末尾に省略記号を付けて途中で切れたことを示す */
 const truncate = (text: string, max: number) => (text.length <= max ? text : `${text.slice(0, max - 1)}…`)
+
+/** section の fields が受け付ける要素数の上限。超えると invalid_blocks で落ちる */
+const SECTION_FIELDS_MAX = 10
+
+/** fields の 1 要素あたりの上限 */
+const FIELD_TEXT_MAX = 2000
+
+export type TicketUnfurlParam = {
+  /**
+   * 見出しのリンク先。
+   * 貼られた文字列ではなく自前で組み立てた正規形を渡すこと(`>` などで mrkdwn が崩れる)。
+   */
+  url: string
+  /** 表示ID(`KEY-番号`) */
+  displayId: string
+  /** チケット名。利用者入力を含むのでエスケープ前の生文字列を渡す */
+  title: string
+  /** 見出しの下に 2 列で並べる項目。値が空のものは呼び出し側で落とさなくてよい */
+  fields: { label: string; value: string }[]
+}
+
+/**
+ * チケットURLのプレビュー(chat.unfurl の attachment)ブロックを組み立てる。
+ *
+ * unfurl はチャンネルの全員に見えるため、貼った本人に閲覧権限があることを
+ * 呼び出し側(`slack-unfurl.ts`)で確認した上で渡すこと。
+ */
+export const buildTicketUnfurlBlocks = ({ url, displayId, title, fields }: TicketUnfurlParam): unknown[] => {
+  const heading = {
+    type: 'section',
+    text: {
+      type: 'mrkdwn',
+      text: truncate(`*<${url}|[${escapeSlackText(displayId)}] ${escapeSlackText(title)}>*`, SECTION_TEXT_MAX),
+    },
+  }
+
+  const filled = fields
+    .filter(({ value }) => !!value)
+    .slice(0, SECTION_FIELDS_MAX)
+    .map(({ label, value }) => ({
+      type: 'mrkdwn',
+      text: truncate(`*${escapeSlackText(label)}*\n${escapeSlackText(value)}`, FIELD_TEXT_MAX),
+    }))
+
+  return filled.length > 0 ? [heading, { type: 'section', fields: filled }] : [heading]
+}
 
 export type MentionMessageParam = {
   /** 見出し(表示ID + チケット名)。利用者入力を含むのでエスケープ前の生文字列を渡す */

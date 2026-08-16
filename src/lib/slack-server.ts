@@ -84,27 +84,28 @@ const callSlackApi = async <T extends SlackApiResponse>(
 }
 
 /**
- * Slack ユーザーへ Bot から DM を送る。
+ * Bot トークンで 1 メソッドを叩き、結果を分類して返す。
  *
- * chat.postMessage の channel にユーザーID(`U...`)を渡すと Bot との 1:1 会話になる。
- * 通知は付随処理なので例外は投げず、後処理の判断材料だけを返す。
+ * 通知 / プレビューはどちらもチケット操作の付随処理なので例外は投げず、
+ * 後処理の判断材料だけを返す。レート制限は短時間なら一度だけ待って再送する。
  */
-export const postSlackDm = async (
-  slackUserId: string,
-  message: { text: string; blocks: unknown[] },
+const callWithBotToken = async (
+  method: string,
+  body: Record<string, unknown>,
+  label: string,
 ): Promise<SlackSendOutcome> => {
   const token = envu.server.SLACK_BOT_TOKEN
   if (!token) {
     return 'revoked'
   }
 
-  const send = () => callSlackApi('chat.postMessage', token, { channel: slackUserId, ...message })
+  const send = () => callSlackApi(method, token, body)
 
   let res = await send()
   if (!res.ok && classifySlackError(res.error) === 'rate_limited') {
     const waitSec = res.retryAfterSec ?? 1
     if (waitSec > MAX_RETRY_AFTER_SEC) {
-      logger.warn({ waitSec }, 'slack dm gave up on rate limit')
+      logger.warn({ waitSec, method }, `slack ${label} gave up on rate limit`)
       return 'rate_limited'
     }
     await sleep(waitSec * 1000)
@@ -118,8 +119,41 @@ export const postSlackDm = async (
   const outcome = classifySlackError(res.error)
   // 宛先不明は個別にスキップすればよいが、トークン失効は全滅するので重く扱う
   const log = outcome === 'revoked' ? logger.error : logger.warn
-  log.call(logger, { error: res.error, outcome }, 'slack dm not delivered')
+  log.call(logger, { error: res.error, outcome, method }, `slack ${label} failed`)
   return outcome
+}
+
+/**
+ * Slack ユーザーへ Bot から DM を送る。
+ *
+ * chat.postMessage の channel にユーザーID(`U...`)を渡すと Bot との 1:1 会話になる。
+ */
+export const postSlackDm = (
+  slackUserId: string,
+  message: { text: string; blocks: unknown[] },
+): Promise<SlackSendOutcome> => callWithBotToken('chat.postMessage', { channel: slackUserId, ...message }, 'dm')
+
+/**
+ * 展開先の指定。`link_shared` が渡してくる `unfurl_id` + `source` か、
+ * 投稿済みメッセージの `channel` + `ts` のどちらかで指定する。
+ */
+export type SlackUnfurlTarget = { unfurlId: string; source: string } | { channel: string; ts: string }
+
+/**
+ * メッセージ内のリンクをプレビュー展開する(`link_shared` への応答)。
+ *
+ * `unfurls` は URL をキーにした map だが、Slack の仕様上の型は JSON 文字列なので
+ * ここで文字列化して渡す。
+ */
+export const unfurlSlackLinks = (
+  target: SlackUnfurlTarget,
+  unfurls: Record<string, { blocks: unknown[] }>,
+): Promise<SlackSendOutcome> => {
+  const destination =
+    'unfurlId' in target
+      ? { unfurl_id: target.unfurlId, source: target.source }
+      : { channel: target.channel, ts: target.ts }
+  return callWithBotToken('chat.unfurl', { ...destination, unfurls: JSON.stringify(unfurls) }, 'unfurl')
 }
 
 type AuthTestResponse = SlackApiResponse & { team?: string; team_id?: string; url?: string }

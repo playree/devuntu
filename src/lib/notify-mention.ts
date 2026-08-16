@@ -17,6 +17,7 @@ import { makeUrl } from './server-utils'
 import { buildMentionMessage, SLACK_PROVIDER_ID } from './slack'
 import { filterSlackAllowedUserIds } from './slack-account'
 import { postSlackDm } from './slack-server'
+import { ticketShortPath } from './task'
 
 export type MentionNotification = {
   ticketId: string
@@ -58,7 +59,7 @@ const buildMentionContext = async ({
 
   return {
     subject: mentionSubject({ displayId, ticketTitle }),
-    url: makeUrl(`/t/${displayId}`).toString(),
+    url: makeUrl(ticketShortPath(displayId)).toString(),
     message: (locale) =>
       t(locale, commentId ? 'notify_msg_mentioned_comment' : 'notify_msg_mentioned', { from: fromName }),
   }

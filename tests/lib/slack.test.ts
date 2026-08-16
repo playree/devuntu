@@ -6,7 +6,7 @@
  * 純粋関数へ寄せてあるので、そちらを検証する(`google-calendar-server.ts` と同じ方針)。
  */
 
-import { buildMentionMessage, classifySlackError, escapeSlackText } from '@/lib/slack'
+import { buildMentionMessage, buildTicketUnfurlBlocks, classifySlackError, escapeSlackText } from '@/lib/slack'
 import { describe, expect, it } from 'vitest'
 
 describe('escapeSlackText: 利用者入力を mrkdwn の特殊記法として解釈させない', () => {
@@ -36,6 +36,7 @@ describe('escapeSlackText: 利用者入力を mrkdwn の特殊記法として解
 describe('classifySlackError: error コードを後処理の分類へ落とす', () => {
   const cases: { error: string | undefined; expected: string; label: string }[] = [
     { error: 'channel_not_found', expected: 'unlinked', label: '宛先が見つからない' },
+    { error: 'not_in_channel', expected: 'unlinked', label: 'Bot がチャンネルに参加していない' },
     { error: 'user_not_found', expected: 'unlinked', label: '宛先ユーザーが居ない' },
     { error: 'token_revoked', expected: 'revoked', label: 'トークンが失効' },
     { error: 'invalid_auth', expected: 'revoked', label: 'トークンが不正' },
@@ -105,5 +106,82 @@ describe('buildMentionMessage: chat.postMessage のペイロードを組み立�
     const sectionText = (res.blocks[0] as { text: { text: string } }).text.text
     expect(sectionText.length, 'Block Kit の section は 3000 字が上限').toBeLessThanOrEqual(3000)
     expect(res.text.length).toBeLessThanOrEqual(3000)
+  })
+})
+
+describe('buildTicketUnfurlBlocks: chat.unfurl のプレビューを組み立てる', () => {
+  const base = {
+    url: 'https://devuntu.example.com/t/PRJ-12',
+    displayId: 'PRJ-12',
+    title: 'ログイン画面のレイアウト崩れ',
+    fields: [
+      { label: 'ステータス', value: '対応中' },
+      { label: '優先度', value: '高' },
+      { label: '担当者', value: '田中太郎' },
+      { label: '期限', value: '2026-08-31' },
+    ],
+  }
+
+  /** section の fields を取り出す(fields が無ければ空配列) */
+  const fieldsOf = (blocks: unknown[]) =>
+    (blocks[1] as { fields?: { text: string }[] } | undefined)?.fields?.map(({ text }) => text) ?? []
+
+  it('見出しにチケットURLのリンクと表示IDが入る', () => {
+    const blocks = buildTicketUnfurlBlocks(base)
+    const heading = (blocks[0] as { text: { text: string } }).text.text
+    expect(heading).toBe('*<https://devuntu.example.com/t/PRJ-12|[PRJ-12] ログイン画面のレイアウト崩れ>*')
+  })
+
+  it('渡した項目が section の fields に並ぶ', () => {
+    expect(fieldsOf(buildTicketUnfurlBlocks(base))).toEqual([
+      '*ステータス*\n対応中',
+      '*優先度*\n高',
+      '*担当者*\n田中太郎',
+      '*期限*\n2026-08-31',
+    ])
+  })
+
+  it('値が空の項目は落とす(未設定の担当者・期限で空欄を出さない)', () => {
+    const blocks = buildTicketUnfurlBlocks({
+      ...base,
+      fields: [
+        { label: 'ステータス', value: '対応予定' },
+        { label: '担当者', value: '' },
+        { label: '期限', value: '' },
+      ],
+    })
+    expect(fieldsOf(blocks)).toEqual(['*ステータス*\n対応予定'])
+  })
+
+  it('項目が 1 つも無ければ fields の section 自体を作らない', () => {
+    // 空の fields を持つ section は invalid_blocks になる
+    const blocks = buildTicketUnfurlBlocks({ ...base, fields: [] })
+    expect(blocks).toHaveLength(1)
+  })
+
+  it('チケット名の利用者入力がエスケープされる', () => {
+    const blocks = buildTicketUnfurlBlocks({ ...base, title: '<!channel> を直す' })
+    const json = JSON.stringify(blocks)
+    expect(json).toContain('&lt;!channel&gt;')
+    expect(json, 'チャンネル全員に見えるので生の全体メンションを残さない').not.toContain('<!channel>')
+  })
+
+  it('担当者名の利用者入力もエスケープされる', () => {
+    const blocks = buildTicketUnfurlBlocks({
+      ...base,
+      fields: [{ label: '担当者', value: '<@U123ABC>' }],
+    })
+    expect(fieldsOf(blocks)).toEqual(['*担当者*\n&lt;@U123ABC&gt;'])
+  })
+
+  it('3000字を超える見出しは切り詰める', () => {
+    const blocks = buildTicketUnfurlBlocks({ ...base, title: 'あ'.repeat(5000) })
+    const heading = (blocks[0] as { text: { text: string } }).text.text
+    expect(heading.length).toBeLessThanOrEqual(3000)
+  })
+
+  it('10 件を超える項目は切り捨てる(fields の上限)', () => {
+    const many = Array.from({ length: 12 }, (_, i) => ({ label: `l${i}`, value: `v${i}` }))
+    expect(fieldsOf(buildTicketUnfurlBlocks({ ...base, fields: many }))).toHaveLength(10)
   })
 })

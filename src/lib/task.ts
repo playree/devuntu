@@ -8,6 +8,7 @@
 
 import type { TagColor, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
 import type { TicketOrderByWithRelationInput, TicketWhereInput } from '@/generated/prisma/models'
+import type { LocaleItemBase } from '@/locale'
 import { utcToDateOnly } from './day'
 
 /** チケットのステータス(定義順は enum と同じ) */
@@ -18,6 +19,26 @@ export const OPEN_TICKET_STATUSES = TICKET_STATUSES.filter((status) => status !=
 
 /** チケットの優先度(高い順) */
 export const TICKET_PRIORITIES = ['urgent', 'high', 'medium', 'low'] as const satisfies readonly TicketPriority[]
+
+/**
+ * ステータス / 優先度の表示ラベル(ロケールキー)。
+ *
+ * 画面(`components/ticket/ticket-chip.tsx`)だけでなく Slack のカードなどサーバー側でも
+ * 同じラベルを出すため、'use client' の付かないここを単一ソースにする。
+ */
+export const TICKET_STATUS_LOCALE = {
+  backlog: 'status_backlog',
+  todo: 'status_todo',
+  doing: 'status_doing',
+  done: 'status_done',
+} as const satisfies Record<TicketStatus, LocaleItemBase>
+
+export const TICKET_PRIORITY_LOCALE = {
+  urgent: 'priority_urgent',
+  high: 'priority_high',
+  medium: 'priority_medium',
+  low: 'priority_low',
+} as const satisfies Record<TicketPriority, LocaleItemBase>
 
 /**
  * かんばんのレーン表示順。todo/doing/done を横3列、その下に backlog を配置する。
@@ -215,6 +236,69 @@ export const parseTicketDisplayId = (raw: string): { key: string; number: number
     return null
   }
   return { key: matched[1].toUpperCase(), number: Number(matched[2]) }
+}
+
+/** 表示IDで開ける短縮URLのパス。チャットや議事録に貼る想定の表記 */
+export const ticketShortPath = (displayId: string): string => `/t/${displayId}`
+
+/** 短縮URLのパス(`/t/KEY-123`)。末尾スラッシュは許容する */
+const SHORT_PATH_PATTERN = /^\/t\/([^/]+)\/?$/
+
+/** チケット詳細のパス(`/tickets/<uuid>`)。アドレスバーからコピーするとこの形になる */
+const DETAIL_PATH_PATTERN = /^\/tickets\/([^/]+)\/?$/
+
+/**
+ * チケットIDの形式(uuid v7)。`Ticket.id` は `@default(uuid(7))`。
+ * 形式外を弾くのは、貼られた任意の文字列でチケットを引きにいかないため。
+ */
+const UUID_V7_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+/** 貼られた URL が指すチケット。引き方が変わるので参照の種類を持たせる */
+export type TicketUrlRef = { kind: 'displayId'; value: string } | { kind: 'ticketId'; value: string }
+
+/** パスセグメントのデコード。`%20` 等で貼られても解決する。不正なエスケープは null */
+const decodeSegment = (segment: string): string | null => {
+  try {
+    return decodeURIComponent(segment)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * 貼られた URL からチケットの参照を取り出す。自サイトのチケットURLでなければ null。
+ *
+ * 短縮URL(`/t/KEY-123`)とチケット詳細(`/tickets/<uuid>`)の両方を受ける。
+ * オリジン(protocol + host)まで一致を見るのは、他サイトの同じパスを
+ * 自分のチケットとして解決してしまわないようにするため。
+ */
+export const parseTicketUrl = (url: string, baseUrl: string): TicketUrlRef | null => {
+  let target: URL
+  let base: URL
+  try {
+    target = new URL(url)
+    base = new URL(baseUrl)
+  } catch {
+    return null
+  }
+  if (target.origin !== base.origin) {
+    return null
+  }
+
+  const short = SHORT_PATH_PATTERN.exec(target.pathname)
+  if (short) {
+    const displayId = decodeSegment(short[1])
+    // 表示IDそのものの形式検証は parseTicketDisplayId に任せる
+    return displayId && parseTicketDisplayId(displayId) ? { kind: 'displayId', value: displayId } : null
+  }
+
+  const detail = DETAIL_PATH_PATTERN.exec(target.pathname)
+  if (detail) {
+    const ticketId = decodeSegment(detail[1])
+    return ticketId && UUID_V7_PATTERN.test(ticketId) ? { kind: 'ticketId', value: ticketId } : null
+  }
+
+  return null
 }
 
 /** キー無しの番号指定(`12` / `#12`)。ボードを跨いで同じ番号がヒットする */

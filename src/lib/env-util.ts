@@ -121,6 +121,9 @@ const server = {
   get SLACK_TEAM_ID() {
     return getEnv('SLACK_TEAM_ID')
   },
+  get SLACK_SIGNING_SECRET() {
+    return getEnv('SLACK_SIGNING_SECRET')
+  },
   get GOOGLE_ALLOWED_DOMAINS() {
     const domains = getEnv('GOOGLE_ALLOWED_DOMAINS')
     return domains ? domains.split(',') : []
