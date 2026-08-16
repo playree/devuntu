@@ -154,6 +154,8 @@ export const InputCtrlPassword = <
                   variant='ghost'
                   // isSmart: size='sm' の 32px は 28px の枠に収まらない
                   className={isSmart ? 'size-6' : ''}
+                  // アイコンは aria-hidden なので、読み上げ名はボタン側で与える
+                  aria-label={isVisible ? t('hide') : t('show')}
                   onPress={toggleVisibility}
                 >
                   {isVisible ? <EyeSlashIcon /> : <EyeIcon />}
