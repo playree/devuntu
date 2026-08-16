@@ -108,7 +108,7 @@ export const ServerInfoWidget: WidgetFC = ({ id, editable }) => {
           <Grid>
             <div className='col-span-4 text-sm'>{t('free_memory')} :</div>
             <div className='col-span-8'>
-              <ProgressBar progress={calcPercent(data.memory.free, data.memory.total)}>
+              <ProgressBar progress={calcPercent(data.memory.free, data.memory.total)} ariaLabel={t('free_memory')}>
                 {formatByte(data.memory.free)} / {formatByte(data.memory.total)}
               </ProgressBar>
             </div>
@@ -156,7 +156,7 @@ export const LinodeTransferInfoWidget: WidgetFC = ({ id, editable }) => {
           <Grid>
             <div className='col-span-4 text-sm'>{t('transfer_pool_usage')} :</div>
             <div className='col-span-8'>
-              <ProgressBar progress={calcPercent(data.used, data.total)}>
+              <ProgressBar progress={calcPercent(data.used, data.total)} ariaLabel={t('transfer_pool_usage')}>
                 {formatByte(data.used)} / {data.quota}GiB
               </ProgressBar>
             </div>

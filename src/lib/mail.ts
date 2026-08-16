@@ -107,16 +107,20 @@ export const sendMentionMail = async (param: {
   subject: string
   /** 誰が何をしたかの一文 */
   message: string
-  /** チケットへの絶対URL */
+  /** チケット(コメント経由ならそのコメント)への絶対URL */
   url: string
+  /** コメント本文の抜粋。コメント経由のメンションのみ */
+  excerpt?: string
 }) => {
-  const { locale, to, subject, message, url } = param
+  const { locale, to, subject, message, url, excerpt } = param
 
   logger.info({ to }, 'sendMentionMail')
   await sendEmail({
     to,
     subject,
-    text: t(locale, 'mail_mention_body', { message, subject, url }),
+    text: excerpt
+      ? t(locale, 'mail_mention_comment_body', { message, subject, excerpt, url })
+      : t(locale, 'mail_mention_body', { message, subject, url }),
   })
 }
 

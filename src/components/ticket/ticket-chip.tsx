@@ -1,7 +1,7 @@
 'use client'
 
 import type { BoardKind, TagColor, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
-import type { BoardRole } from '@/lib/task'
+import { TICKET_PRIORITY_LOCALE, TICKET_STATUS_LOCALE, type BoardRole } from '@/lib/task'
 import { LocaleItemBase } from '@/locale'
 import { useLocale } from '@/locale/client'
 import { Chip, ChipProps, cn } from '@heroui/react'
@@ -15,10 +15,10 @@ type ChipColor = ChipProps['color']
  * color は Chip 用の HeroUI セマンティック名なので bg-* には使えない(配色は statusStyles を参照)。
  */
 const STATUS_STYLE: Record<TicketStatus, { item: LocaleItemBase; color: ChipColor }> = {
-  backlog: { item: 'status_backlog', color: 'default' },
-  todo: { item: 'status_todo', color: 'accent' },
-  doing: { item: 'status_doing', color: 'warning' },
-  done: { item: 'status_done', color: 'success' },
+  backlog: { item: TICKET_STATUS_LOCALE.backlog, color: 'default' },
+  todo: { item: TICKET_STATUS_LOCALE.todo, color: 'accent' },
+  doing: { item: TICKET_STATUS_LOCALE.doing, color: 'warning' },
+  done: { item: TICKET_STATUS_LOCALE.done, color: 'success' },
 }
 
 /**
@@ -51,10 +51,10 @@ export const statusBgClass = (status: TicketStatus, className?: string) => statu
  * キーの並びは選択肢(useTicketOptions)の表示順になるので、優先度の高い順に保つこと。
  */
 const PRIORITY_META: Record<TicketPriority, { item: LocaleItemBase; color: ChipColor }> = {
-  urgent: { item: 'priority_urgent', color: 'danger' },
-  high: { item: 'priority_high', color: 'warning' },
-  medium: { item: 'priority_medium', color: 'accent' },
-  low: { item: 'priority_low', color: 'default' },
+  urgent: { item: TICKET_PRIORITY_LOCALE.urgent, color: 'danger' },
+  high: { item: TICKET_PRIORITY_LOCALE.high, color: 'warning' },
+  medium: { item: TICKET_PRIORITY_LOCALE.medium, color: 'accent' },
+  low: { item: TICKET_PRIORITY_LOCALE.low, color: 'default' },
 }
 
 /**

@@ -315,6 +315,7 @@ export const TicketDetailClient: FC<{
               text={ticket.displayId}
               // パンくずの隣に置くのでラベルは出さない。名前は支援技術向けにだけ与える
               ariaLabel={t('id')}
+              copyLabel={t('copy')}
             />
           </>
         }

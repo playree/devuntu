@@ -10,13 +10,14 @@ import { t } from '@/locale/server'
 import { after } from 'next/server'
 import { logger } from './logger'
 import { isMailConfigured, sendMentionMail } from './mail'
-import { MAX_NOTIFY_RECIPIENTS } from './notify'
+import { commentExcerpt, MAX_NOTIFY_RECIPIENTS } from './notify'
 import { filterNotifiable } from './notify-setting'
 import { prisma } from './prisma'
 import { makeUrl } from './server-utils'
 import { buildMentionMessage, SLACK_PROVIDER_ID } from './slack'
 import { filterSlackAllowedUserIds } from './slack-account'
 import { postSlackDm } from './slack-server'
+import { commentAnchorId, extractMentionEmails, normalizeMentionText, ticketShortPath } from './task'
 
 export type MentionNotification = {
   ticketId: string
@@ -25,6 +26,8 @@ export type MentionNotification = {
   ticketTitle: string
   /** コメント経由のメンションのみ。チケット本文のメンションでは省略する */
   commentId?: string
+  /** コメント本文(Markdown)。通知に載せる抜粋の元。commentId と対で渡す */
+  commentContent?: string
   /** メンションした本人(コメントの投稿者 / 本文の更新者) */
   fromUserId: string
   /** メンションされたユーザー(解決済み) */
@@ -45,22 +48,53 @@ type MentionContext = {
   subject: string
   url: string
   message: (locale: string | null) => string
+  /** コメント本文の抜粋。チケット本文のメンションでは持たない */
+  excerpt?: string
+}
+
+/**
+ * 本文中のメンションを表示名へ解決する。
+ *
+ * 画面(`mention-node.tsx`)は `@表示名` で描画するので、通知でも同じ見え方に揃える。
+ * 引けなかったメールアドレスは画面と同じくそのまま出す。
+ */
+const resolveMentionNames = async (content: string): Promise<Map<string, string>> => {
+  // 正規化・重複除去済み(コードブロック内のメンションも除かれている)
+  const emails = extractMentionEmails(content)
+  if (emails.length === 0) {
+    return new Map()
+  }
+
+  const users = await prisma.user.findMany({
+    // 保存されている大文字小文字に依存しないよう、正規化した形と突き合わせる
+    where: { OR: emails.map((email) => ({ email: { equals: email, mode: 'insensitive' as const } })) },
+    select: { email: true, name: true },
+  })
+
+  return new Map(users.map(({ email, name }) => [normalizeMentionText(email), name]))
 }
 
 const buildMentionContext = async ({
   displayId,
   ticketTitle,
   commentId,
+  commentContent,
   fromUserId,
 }: MentionNotification): Promise<MentionContext> => {
   const from = await prisma.user.findUnique({ where: { id: fromUserId }, select: { name: true } })
   const fromName = from?.name ?? ''
 
+  // コメント宛のときだけ、該当コメントの位置まで開けるようフラグメントを付ける
+  const path = commentId ? `${ticketShortPath(displayId)}#${commentAnchorId(commentId)}` : ticketShortPath(displayId)
+  const excerpt = commentContent ? commentExcerpt(commentContent, await resolveMentionNames(commentContent)) : ''
+
   return {
     subject: mentionSubject({ displayId, ticketTitle }),
-    url: makeUrl(`/t/${displayId}`).toString(),
+    url: makeUrl(path).toString(),
     message: (locale) =>
       t(locale, commentId ? 'notify_msg_mentioned_comment' : 'notify_msg_mentioned', { from: fromName }),
+    // 記法を落とした結果が空になることもあるので、その場合は無かったことにする
+    ...(excerpt && { excerpt }),
   }
 }
 
@@ -69,7 +103,10 @@ const buildMentionContext = async ({
  *
  * Slack と違い連携作業が要らないので、通知 OFF のユーザーを外すだけで宛先が決まる。
  */
-const notifyMentionByEmail = async (targets: string[], { subject, url, message }: MentionContext): Promise<void> => {
+const notifyMentionByEmail = async (
+  targets: string[],
+  { subject, url, message, excerpt }: MentionContext,
+): Promise<void> => {
   if (!isMailConfigured()) {
     return
   }
@@ -93,7 +130,7 @@ const notifyMentionByEmail = async (targets: string[], { subject, url, message }
 
   for (const { id, email, locale } of sendTo) {
     try {
-      await sendMentionMail({ locale, to: email, subject, message: message(locale), url })
+      await sendMentionMail({ locale, to: email, subject, message: message(locale), url, excerpt })
     } catch (error) {
       // 1 通の失敗で残りの宛先を巻き添えにしない
       logger.error({ error, userId: id }, 'mail mention failed')
@@ -107,7 +144,10 @@ const notifyMentionByEmail = async (targets: string[], { subject, url, message }
  * 宛先はここまでの各段階で絞り込まれ、条件を満たさない相手は自然に消える
  * (未連携 / 通知OFF / 許可グループ外)。通知しないこと自体はエラーではない。
  */
-const notifyMentionToSlack = async (targets: string[], { subject, url, message }: MentionContext): Promise<void> => {
+const notifyMentionToSlack = async (
+  targets: string[],
+  { subject, url, message, excerpt }: MentionContext,
+): Promise<void> => {
   const notMuted = await filterNotifiable(targets, 'mention', 'slack')
   const allowed = await filterSlackAllowedUserIds(notMuted)
   if (allowed.length === 0) {
@@ -146,6 +186,7 @@ const notifyMentionToSlack = async (targets: string[], { subject, url, message }
         subject,
         url,
         body: message(locale),
+        excerpt,
         openLabel: t(locale, 'slack_msg_open_ticket'),
       }),
     )

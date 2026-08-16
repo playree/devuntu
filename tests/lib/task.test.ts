@@ -12,6 +12,7 @@ import {
   buildTicketWhere,
   canApplyAssignments,
   cardDropId,
+  commentAnchorId,
   countLaneMap,
   defaultKanbanFilter,
   emptyLaneMap,
@@ -39,6 +40,7 @@ import {
   parseDropTarget,
   parseTicketDisplayId,
   parseTicketNumber,
+  parseTicketUrl,
   reindexLane,
   resolveBoardRole,
   resolveMentionUserIds,
@@ -50,6 +52,7 @@ import {
   ticketDisplayId,
   ticketListOrderBy,
   ticketScopeWhere,
+  ticketShortPath,
   type BoardRole,
   type KanbanFilterCard,
   type LaneMap,
@@ -162,6 +165,80 @@ describe('ticketDisplayId / parseTicketDisplayId: 表示IDの組み立てと分�
     expect(parseTicketDisplayId('TOOLONGKEY-12'), '8 文字を超えるキー').toBeNull()
     expect(parseTicketDisplayId('DEV-0012345678'), 'Int に収まらない桁数').toBeNull()
     expect(parseTicketDisplayId('DEV-12 の件'), '後ろに文字が続く').toBeNull()
+  })
+})
+
+describe('ticketShortPath / parseTicketUrl: チャットに貼られたチケットURLの解決', () => {
+  const BASE = 'https://devuntu.example.com'
+  /** 実際のチケットID(uuid v7)と同じ形 */
+  const TICKET_ID = '019fb795-5ac1-745c-91f0-c6aa35077d64'
+  const byDisplayId = { kind: 'displayId', value: 'DEV-12' }
+  const byTicketId = { kind: 'ticketId', value: TICKET_ID }
+
+  it('組み立てた短縮URLはそのまま読み戻せる', () => {
+    expect(parseTicketUrl(`${BASE}${ticketShortPath('DEV-12')}`, BASE)).toEqual(byDisplayId)
+  })
+
+  it('チケット詳細URLはチケットIDとして解決する(アドレスバーからコピーした形)', () => {
+    expect(parseTicketUrl(`${BASE}/tickets/${TICKET_ID}`, BASE)).toEqual(byTicketId)
+  })
+
+  it('ベースURLにパスが付いていてもオリジンで判定する', () => {
+    expect(parseTicketUrl(`${BASE}/t/DEV-12`, `${BASE}/auth/signin`)).toEqual(byDisplayId)
+  })
+
+  it('クエリやフラグメントが付いていても解決できる', () => {
+    expect(parseTicketUrl(`${BASE}/t/DEV-12?from=slack#comment`, BASE), '短縮URL').toEqual(byDisplayId)
+    expect(parseTicketUrl(`${BASE}/tickets/${TICKET_ID}?from=slack`, BASE), '詳細URL').toEqual(byTicketId)
+  })
+
+  it('末尾スラッシュを許容する', () => {
+    expect(parseTicketUrl(`${BASE}/t/DEV-12/`, BASE), '短縮URL').toEqual(byDisplayId)
+    expect(parseTicketUrl(`${BASE}/tickets/${TICKET_ID}/`, BASE), '詳細URL').toEqual(byTicketId)
+  })
+
+  it('パーセントエンコードされていても解決できる', () => {
+    expect(parseTicketUrl(`${BASE}/t/DEV%2D12`, BASE)).toEqual(byDisplayId)
+  })
+
+  it('別オリジンの同じパスは解決しない', () => {
+    // 他サイトの /t/... を自分のチケットとして展開してはいけない
+    expect(parseTicketUrl('https://evil.example.com/t/DEV-12', BASE), 'ホスト違い').toBeNull()
+    expect(parseTicketUrl('http://devuntu.example.com/t/DEV-12', BASE), 'スキーム違い').toBeNull()
+    expect(parseTicketUrl('https://devuntu.example.com.evil.jp/t/DEV-12', BASE), '後方一致の偽装').toBeNull()
+    expect(parseTicketUrl(`https://evil.example.com/tickets/${TICKET_ID}`, BASE), '詳細URL').toBeNull()
+  })
+
+  it('チケットURL以外のパスは解決しない', () => {
+    expect(parseTicketUrl(`${BASE}/boards/${TICKET_ID}`, BASE), 'ボード').toBeNull()
+    expect(parseTicketUrl(`${BASE}/t`, BASE), '表示IDなし').toBeNull()
+    expect(parseTicketUrl(`${BASE}/tickets`, BASE), 'チケット一覧').toBeNull()
+    expect(parseTicketUrl(`${BASE}/t/DEV-12/extra`, BASE), '余分なセグメント').toBeNull()
+    expect(parseTicketUrl(`${BASE}/tickets/${TICKET_ID}/extra`, BASE), '詳細URLの余分なセグメント').toBeNull()
+  })
+
+  it('表示IDの形式を満たさなければ解決しない', () => {
+    expect(parseTicketUrl(`${BASE}/t/DEV`, BASE)).toBeNull()
+    expect(parseTicketUrl(`${BASE}/t/TOOLONGKEY-12`, BASE)).toBeNull()
+  })
+
+  it('uuid v7 でなければ解決しない(任意の文字列で DB を引かない)', () => {
+    expect(parseTicketUrl(`${BASE}/tickets/not-a-uuid`, BASE), 'uuid でない').toBeNull()
+    expect(parseTicketUrl(`${BASE}/tickets/019fb795-5ac1-445c-91f0-c6aa35077d64`, BASE), 'v4 相当').toBeNull()
+    expect(parseTicketUrl(`${BASE}/tickets/019fb795-5ac1-745c-91f0-c6aa35077d6`, BASE), '桁不足').toBeNull()
+  })
+
+  it('URL として読めない文字列は例外にせず null', () => {
+    expect(() => parseTicketUrl('not a url', BASE)).not.toThrow()
+    expect(parseTicketUrl('not a url', BASE), '不正な URL').toBeNull()
+    expect(parseTicketUrl(`${BASE}/t/DEV-12`, ''), 'ベースURL未設定').toBeNull()
+    expect(parseTicketUrl(`${BASE}/t/%E3%81%82%ZZ`, BASE), '壊れたエスケープ').toBeNull()
+  })
+
+  it('コメントのアンカーを付けてもチケットとして解決できる(通知のリンク)', () => {
+    const url = `${BASE}${ticketShortPath('DEV-12')}#${commentAnchorId(TICKET_ID)}`
+    expect(commentAnchorId(TICKET_ID), '画面側の要素 id と同じ形').toBe(`comment-${TICKET_ID}`)
+    expect(parseTicketUrl(url, BASE)).toEqual(byDisplayId)
   })
 })
 

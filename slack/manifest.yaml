@@ -1,0 +1,55 @@
+# Slack App のマニフェスト
+#
+# https://api.slack.com/apps → Create New App → From a manifest に貼り付けて作成する
+# (既存アプリの場合は App Manifest 画面で差分を反映できる)。
+#
+# `devuntu.example.com` は BETTER_AUTH_URL のホスト名に置き換えること。
+# Slack から到達できる公開 HTTPS ドメインである必要があり、localhost は登録できない。
+#
+# 作成後に控える値と対応する環境変数:
+#   Basic Information → App Credentials → Client ID        : SLACK_CLIENT_ID
+#   Basic Information → App Credentials → Client Secret    : SLACK_CLIENT_SECRET
+#   Basic Information → App Credentials → Signing Secret   : SLACK_SIGNING_SECRET
+#   OAuth & Permissions → Bot User OAuth Token (`xoxb-`)   : SLACK_BOT_TOKEN
+#   ワークスペースID(`T...`)                                : SLACK_TEAM_ID(任意)
+
+display_information:
+  name: Devuntu
+  description: Devuntuからの通知とリンクのプレビュー
+  background_color: '#1a1a1a'
+
+features:
+  bot_user:
+    display_name: Devuntu
+    # 通知の送信専用で常駐しないため、常時オンライン表示にはしない
+    always_online: false
+  # この一覧に載せたドメインのリンクだけ link_shared イベントが飛ぶ
+  unfurl_domains:
+    - devuntu.example.com
+
+oauth_config:
+  redirect_urls:
+    # better-auth の genericOAuth のコールバック(providerId = 'slack')
+    - https://devuntu.example.com/api/auth
+  scopes:
+    # `/account` からの Sign in with Slack。通知の宛先となる Slack ユーザーID の取得にのみ使う
+    # ('profile' が無いと userinfo に name が返らず連携が失敗する)
+    user:
+      - openid
+      - profile
+      - email
+    bot:
+      # メンション通知の DM 送信(chat.postMessage)
+      - chat:write
+      # 貼られたリンクの検知(link_shared)とプレビューの反映(chat.unfurl)
+      - links:read
+      - links:write
+
+settings:
+  event_subscriptions:
+    request_url: https://devuntu.example.com/api/slack/events
+    bot_events:
+      - link_shared
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false

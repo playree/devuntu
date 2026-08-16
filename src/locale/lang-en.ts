@@ -55,6 +55,7 @@ export const en: LocaleItems = {
   confirm_deletion: 'Confirm deletion',
   confirmed: 'Confirmed',
   content: 'Content',
+  copy: 'Copy',
   create_tag: 'Create “${name}”',
   created_at: 'Created At',
   danger_zone: 'Danger Zone',
@@ -63,6 +64,7 @@ export const en: LocaleItems = {
   default_layout_manage: 'Edit Default Layout',
   delete: 'Delete',
   delete_board: 'Delete Board',
+  delete_image: 'Delete image',
   delete_user: 'Delete User',
   description: 'Description',
   direct: 'Direct',
@@ -70,6 +72,7 @@ export const en: LocaleItems = {
   display_order: 'Order',
   due_date: 'Due Date',
   edit_dashboard: 'Edit Dashboard',
+  edit_link: 'Edit link',
   email: 'Email',
   enable_sharing: 'Enable Sharing',
   end_time: 'End Time',
@@ -86,15 +89,18 @@ export const en: LocaleItems = {
   group_count: 'Groups',
   group_manage: 'Group Management',
   groups: 'Groups',
+  hide: 'Hide',
   icon: 'Icon',
   id: 'ID',
   immutable: 'Immutable',
+  insert_image: 'Insert image',
   integration_settings: 'Settings',
   is_admin: 'Admin',
   issuer_url: 'Issuer URL',
   kanban: 'Kanban',
   keyword: 'Keyword',
   last_login: 'Last Login',
+  link_text: 'Link text',
   link_widget_manage: 'Link Widget Management',
   linode_transfer_info: 'Linode Transfer Info',
   list: 'List',
@@ -134,7 +140,9 @@ export const en: LocaleItems = {
   release_note: 'Release Note',
   register_passkey: 'Register Passkey',
   reload: 'Reload',
+  remove_link: 'Remove link',
   remove_target: 'Remove ${target}',
+  replace_image: 'Replace image',
   require_pkce: 'Require PKCE',
   resend: 'Resend',
   role: 'Role',
@@ -153,6 +161,7 @@ export const en: LocaleItems = {
   settings: 'Settings',
   share_title: 'Share Title',
   share_url: 'Share URL',
+  show: 'Show',
   show_archived: 'Show archived',
   signin: 'Sign In',
   signout: 'Sign Out',
@@ -231,6 +240,7 @@ Please copy and use the connection information above.
   msg_confirm_unarchive_board: 'Unarchive ${target}.',
   msg_delete_board: 'All tickets and comments in the board are deleted as well. This cannot be undone.',
   msg_deleted_target: 'Deleted ${target}.',
+  msg_drop_image: 'Drop an image here, or click to select',
   msg_duplicated_board_key: 'That board key has already been used. Keys used in the past cannot be reused.',
   msg_duplicated_tag_name: 'A tag with the same name already exists.',
   msg_email_not_verified: 'Your email address has not been verified.\nPlease log in with your email address.',
@@ -243,6 +253,7 @@ Please copy and use the connection information above.
     'When disabled, Google account linking and the shared calendar feature become unavailable.',
   msg_google_account_not_connected: 'Connect your Google account to use Google data.',
   msg_group_assign_admin_only: 'Only administrators can change group assignments.',
+  msg_image_upload_failed: 'Failed to upload the image.',
   msg_invalid_email_or_password: 'Invalid email or password.',
   msg_link_google_for_calendar:
     'Calendar sharing requires a linked Google account. Please link it on the account page.',
@@ -274,6 +285,16 @@ Please copy and use the connection information above.
   mail_mention_body: `\${message}
 
 \${subject}
+
+\${url}
+
+*You can stop this notification from the notification settings on the account page.
+`,
+  mail_mention_comment_body: `\${message}
+
+\${subject}
+
+\${excerpt}
 
 \${url}
 

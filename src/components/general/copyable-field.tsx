@@ -84,24 +84,52 @@ const ClipboardDocumentCheckIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, s
   </svg>
 )
 
-export const CopyableField: FC<{
-  text: string
-  label?: string
-  /** ラベルを出さずに使うときの入力の名前。`label` があるときは不要 */
-  ariaLabel?: string
-  isMask?: boolean
-  variant?: InputGroupProps['variant']
-  isSmart?: boolean
-  className?: string
-  onCopied?: () => void
-}> = ({ text, label, ariaLabel, isMask, variant, isSmart: isSmartProp, className, onCopied }) => {
+export const CopyableField: FC<
+  {
+    text: string
+    isMask?: boolean
+    variant?: InputGroupProps['variant']
+    isSmart?: boolean
+    className?: string
+    /** 各ボタンの aria-label。表示ラベルは持たないアイコンボタンなので読み上げ名になる */
+    copyLabel?: string
+    showLabel?: string
+    hideLabel?: string
+    onCopied?: () => void
+  } & (
+    | { label: string; ariaLabel?: never }
+    /** ラベルを出さずに使うときは読み上げ名を必須にする(無いと react-aria が警告を出す) */
+    | { label?: never; ariaLabel: string }
+  )
+> = ({
+  text,
+  label,
+  ariaLabel,
+  isMask,
+  variant,
+  isSmart: isSmartProp,
+  className,
+  copyLabel = 'Copy',
+  showLabel = 'Show',
+  hideLabel = 'Hide',
+  onCopied,
+}) => {
   const isSmart = useIsSmart(isSmartProp)
   const [isVisible, setIsVisible] = useState(false)
   const toggleVisibility = () => setIsVisible(!isVisible)
   const [isCopied, setIsCopied] = useState(false)
 
   return (
-    <TextField type={!isMask || isVisible ? 'text' : 'password'} isReadOnly className={cn('relative', className)}>
+    <TextField
+      type={!isMask || isVisible ? 'text' : 'password'}
+      isReadOnly
+      /**
+       * react-aria は `<Label>` の有無をこのルートの props で判定するため、
+       * 読み上げ名は input ではなくここへ渡す(input へは inputProps 経由で配られる)
+       */
+      aria-label={label ? undefined : ariaLabel}
+      className={cn('relative', className)}
+    >
       {label && <Label className={isSmart ? 'text-xs font-light' : ''}>{label}</Label>}
       <InputGroup // isSmart: 既定 36px を 28px に詰める
         variant={variant}
@@ -110,7 +138,6 @@ export const CopyableField: FC<{
         <InputGroup.Input
           value={text}
           disabled
-          aria-label={label ? undefined : ariaLabel}
           // min-w-0: 幅を絞って使ったときに input の既定幅(約20文字)が優先され、コピーボタンが枠外へ押し出されるのを防ぐ
           className={cn('min-w-0 font-mono', isSmart ? 'py-1' : '')}
         />
@@ -122,6 +149,8 @@ export const CopyableField: FC<{
               variant='ghost'
               // isSmart: size='sm' の 32px は 28px の枠に収まらない
               className={isSmart ? 'size-6' : ''}
+              // アイコンは aria-hidden なので、読み上げ名はボタン側で与える
+              aria-label={isVisible ? hideLabel : showLabel}
               onPress={toggleVisibility}
             >
               {isVisible ? <EyeSlashIcon /> : <EyeIcon />}
@@ -132,6 +161,7 @@ export const CopyableField: FC<{
             size='sm'
             variant='ghost'
             className={isSmart ? 'size-6' : ''}
+            aria-label={copyLabel}
             onPress={async () => {
               try {
                 // 安全なコンテキスト(https / localhost)の外では navigator.clipboard 自体が無く、参照だけで例外になる

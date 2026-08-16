@@ -590,19 +590,17 @@ model TicketComment {
 }
 
 enum NotifyEvent {
-  mention // メンションされたとき
+  mention
 }
 
-// ユーザーごと・イベント種別ごとの通知先の ON/OFF。
-// 行が無い場合は既定(全チャネル ON)として扱うので、OFF にしたときだけ行ができる。
-// 通知チャネルを増やすときは列を足す。既定を ON に揃えるため `@default(true)` にする。
+// 行が無い場合は全チャネル OFF として扱う。通知チャネルを増やすときは列を足す。
 model UserNotifySetting {
   id        String      @id @default(uuid(7))
   userId    String
   user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   event     NotifyEvent
-  email     Boolean     @default(true)
-  slack     Boolean     @default(true)
+  email     Boolean     @default(false)
+  slack     Boolean     @default(false)
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 

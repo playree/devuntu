@@ -55,6 +55,7 @@ export const ja: DefaultLocaleItems = {
   confirm_deletion: '削除確認',
   confirmed: '確認した',
   content: '内容',
+  copy: 'コピー',
   create_tag: '「${name}」を作成',
   created_at: '作成日時',
   danger_zone: 'デンジャーゾーン',
@@ -63,6 +64,7 @@ export const ja: DefaultLocaleItems = {
   default_layout_manage: 'デフォルトレイアウト編集',
   delete: '削除',
   delete_board: 'ボードの削除',
+  delete_image: '画像を削除',
   delete_user: 'ユーザー削除',
   description: '説明',
   direct: '直接',
@@ -70,6 +72,7 @@ export const ja: DefaultLocaleItems = {
   display_order: '表示順',
   due_date: '期日',
   edit_dashboard: 'ダッシュボードを編集',
+  edit_link: 'リンクを編集',
   email: 'Eメール',
   enable_sharing: '共有を有効にする',
   end_time: '終了時刻',
@@ -86,15 +89,18 @@ export const ja: DefaultLocaleItems = {
   group_count: 'グループ数',
   group_manage: 'グループ管理',
   groups: 'グループ',
+  hide: '隠す',
   icon: 'アイコン',
   id: 'ID',
   immutable: '変更不可',
+  insert_image: '画像を挿入',
   integration_settings: '設定',
   is_admin: '管理者',
   issuer_url: '発行者URL',
   kanban: 'かんばん',
   keyword: 'キーワード',
   last_login: '最終ログイン',
+  link_text: 'リンクテキスト',
   link_widget_manage: 'リンクウィジェット管理',
   linode_transfer_info: 'Linode転送情報',
   list: '一覧',
@@ -134,7 +140,9 @@ export const ja: DefaultLocaleItems = {
   release_note: 'リリースノート',
   register_passkey: 'パスキーを登録する',
   reload: 'リロード',
+  remove_link: 'リンクを解除',
   remove_target: '${target} を外す',
+  replace_image: '画像を差し替え',
   require_pkce: 'PKCE必須',
   resend: '再送',
   role: 'ロール',
@@ -153,6 +161,7 @@ export const ja: DefaultLocaleItems = {
   settings: '設定',
   share_title: '共有タイトル',
   share_url: '共有URL',
+  show: '表示',
   show_archived: 'アーカイブ済みも表示',
   signin: 'サインイン',
   signout: 'サインアウト',
@@ -231,6 +240,7 @@ export const ja: DefaultLocaleItems = {
   msg_confirm_unarchive_board: '${target} のアーカイブを解除します。',
   msg_delete_board: 'ボード内のチケットとコメントもすべて削除されます。この操作は取り消せません。',
   msg_deleted_target: '${target} を削除しました。',
+  msg_drop_image: '画像をドロップ、またはクリックして選択',
   msg_duplicated_board_key: 'このボードキーは使用済みです。過去に使われたキーも再利用できません。',
   msg_duplicated_tag_name: '同じ名前のタグが既に存在します。',
   msg_email_not_verified: 'Eメールが検証されていません。\n一度、Eメールでログインしてください。',
@@ -242,6 +252,7 @@ export const ja: DefaultLocaleItems = {
   msg_google_account_enable_desc: '無効にすると、Googleアカウント連携と共有カレンダー機能が利用できなくなります。',
   msg_google_account_not_connected: 'Googleアカウントと連携すると、Googleのデータを利用できます。',
   msg_group_assign_admin_only: 'グループ単位のアサインは管理者のみが変更できます。',
+  msg_image_upload_failed: '画像のアップロードに失敗しました。',
   msg_invalid_email_or_password: 'Eメールまたはパスワードが違います。',
   msg_link_google_for_calendar:
     'カレンダーの共有には Google アカウントとの連携が必要です。アカウントページで連携してください。',
@@ -273,6 +284,16 @@ export const ja: DefaultLocaleItems = {
   mail_mention_body: `\${message}
 
 \${subject}
+
+\${url}
+
+※この通知はアカウント画面の通知設定から停止できます。
+`,
+  mail_mention_comment_body: `\${message}
+
+\${subject}
+
+\${excerpt}
 
 \${url}
 

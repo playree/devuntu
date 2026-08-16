@@ -141,12 +141,12 @@ Proxy の対象外のため、各ルートハンドラ内で個別に認証す�
 `/account` の「通知設定」(`src/app/(sidenav)/account/notify.tsx`)で、イベント種別 × チャネルごとに ON/OFF を切り替える。項目数が少ないためフォームにせず切り替え即保存にしている。
 
 - 保存先は `UserNotifySetting`(`userId` + `event` でユニーク)の `email` / `slack` 列
-- **行が無い場合は全チャネル ON** として扱うオプトアウト方式。OFF にしたときだけ行が作られるので、全ユーザー分の初期行を用意しなくてよい。絞り込み(`filterNotifiable()` / `src/lib/notify-setting.ts`)も OFF の行だけを引いて除外する
+- **行が無い場合は全チャネル OFF** として扱うオプトイン方式。ON にしたときだけ行が作られるので、全ユーザー分の初期行を用意しなくてよい。絞り込み(`filterNotifiable()` / `src/lib/notify-setting.ts`)も ON の行だけを引いて残す
 - メールのスイッチは常に表示する。Slack のスイッチは Slack 連携を利用できるユーザーにのみ表示する
 
 ## メール通知の前提
 
-`MAIL_SEND` が設定されていることが唯一の前提で、ユーザー側の連携作業は不要。通知 OFF のユーザーを外すだけで宛先(`User.email`)が決まる。
+`MAIL_SEND` が設定されていることが唯一の前提で、ユーザー側の連携作業は不要。メール通知を ON にしたユーザーだけが宛先(`User.email`)になる。
 
 - `MAIL_SEND` 未設定の環境では `isMailConfigured()`(`src/lib/mail.ts`)が false になり、**通知メールは送信を試みずスキップされる**(OTP メールなど他の送信は `Unable to send email` エラーになる)
 - 1 通ずつ送信し、1 通の失敗で残りの宛先を巻き添えにしない
@@ -161,10 +161,89 @@ Slack DM は以下の 3 段がすべて揃ったユーザーにだけ届く。�
 
 送信は逐次で行い、Bot トークンが無効(`revoked`)と判定された時点で残りを打ち切る。
 
+## Slack でのチケットリンクのプレビュー
+
+Slack に貼られたチケットURLを、Slack Events API の `link_shared` を受けて
+`chat.unfurl` でカード表示に展開する(`src/app/api/slack/events/route.ts` → `src/lib/slack-unfurl.ts`)。
+
+サイト側は認証必須のままなので、未認証の Slack クローラに OGP を読ませる方式は採れない。
+代わりに **リンクを貼った本人の閲覧権限をサーバー側で検証してから展開する**。
+
+対応する URL は 2 形式(`parseTicketUrl()` / `src/lib/task.ts`)。オリジンが `BETTER_AUTH_URL` と一致するものだけ受ける。
+
+| 形式                    | 引き方                                        |
+| ----------------------- | --------------------------------------------- |
+| `/t/{表示ID}`           | `findTicketIdByDisplayId()` で表示IDから引く   |
+| `/tickets/{チケットID}` | uuid v7 の形式を確認してそのまま引く(詳細画面のURL) |
+
+- カードのリンク先は**どちらの形式でも短縮URLへ正規化**する
+- `link_shared` の `user`(Slack ユーザーID)を `account` テーブルで Devuntu ユーザーへ解決する。未連携なら展開しない
+- 通知と同じ `canUseSlackAccount()` で管理者による有効化・許可グループを確認する
+- `getTicketAccess()` で閲覧権限を確認する。見えないチケットは展開せず URL のまま残す(未存在と権限不足は区別しない)
+- 1 メッセージあたりの展開は 5 件まで
+- カードには表示ID・チケット名・ステータス・優先度・担当者・期限を載せる。文言は貼った本人のロケールで解決する
+
+展開先は `link_shared` の `unfurl_id` + `source` で指定する。これは投稿済みメッセージでも
+**入力中(送信前)のプレビュー**でも付くため、貼った時点でカードが見える。
+入力中のイベントは `channel` が `COMPOSER` という実在しない値になるので、`channel` + `message_ts` は
+`unfurl_id` が無い場合のフォールバックとしてのみ使う。
+
+### Slack App 側の設定
+
+アプリの定義は `slack/manifest.yaml` にある。<https://api.slack.com/apps> の **From a manifest** に貼り付けて作成する
+(既存アプリには App Manifest 画面から反映する)。ホスト名の置き換えと、取得した値をどの環境変数へ入れるかはファイル冒頭のコメントを参照。
+
+| マニフェストの項目                         | 用途                                          |
+| ------------------------------------------ | --------------------------------------------- |
+| `oauth_config.scopes.user`                 | `/account` からの Sign in with Slack          |
+| `oauth_config.scopes.bot` の `chat:write`  | メンション通知の DM 送信                      |
+| `oauth_config.scopes.bot` の `links:*`     | リンクの検知(`link_shared`)とプレビューの反映 |
+| `features.unfurl_domains`                  | 展開対象のドメイン                            |
+| `settings.event_subscriptions.request_url` | `/api/slack/events`                           |
+
+反映後は以下を確認する。
+
+- スコープを変更したらワークスペースへ**再インストール**する(しないと `links:write` が効かない)
+- Event Subscriptions の Request URL が **Verified** になっている(Slack が送る `url_verification` に応答している)
+- Signing Secret を `SLACK_SIGNING_SECRET` に設定する。未設定ならエンドポイントは 404 を返し、機能ごと無効になる
+
+`link_shared` は `unfurl_domains` に登録したドメインのリンクにだけ届く。
+また Slack から到達できる公開 HTTPS ドメインが必要なため、`localhost` の開発環境ではイベントが届かない。
+
+### 展開されるのはアプリが参加している会話だけ
+
+**イベントが届くこととカードを出せることは別**なので注意する。
+Slack は `links:read` があると **アプリが参加していない公開チャンネルにも `link_shared` を送る**
+(そのためイベントに `is_bot_user_member` が入っている)。一方 `chat.unfurl` はアプリが会話の参加者でないと
+`not_in_channel` で失敗するため、参加していないチャンネルの投稿は展開できない。
+
+`is_bot_user_member` が false のイベントは `chat.unfurl` を呼ばずに打ち切る(`src/lib/slack-unfurl.ts`)。
+
+動作確認は次のどちらかで行う。
+
+- 対象のチャンネルで `/invite @Devuntu` してアプリを参加させる
+- アプリとの DM(App の Messages タブ)に貼る
+
+**自分への DM では動かない**(アプリが参加しようがないため)。
+
+展開されない場合は `LOG_LEVEL=debug` にして `slack unfurl skipped` の `reason` を見る。
+`bot is not in the channel` / `unlinked user` / `no ticket url`(オリジン不一致なら `baseUrl` も出る)/
+`no viewable ticket` のいずれかで、どの段階で止まったか分かる。
+なお Slack は直近のアンファールをキャッシュするため、同じ URL を貼り直しても再度は展開されない。
+
+### リクエストの検証
+
+`/api/slack/events` は `src/proxy.ts` の matcher が `api/` を除外しているため未認証で叩ける。
+Slack の署名(`src/lib/slack-signature.ts`)だけが門番になるので、検証を通す前に本文を解釈しない。
+
+- 署名は**生ボディ**に対して計算されるため、`request.text()` で読んでから検証する(`request.json()` を先に呼ぶと一致しない)
+- タイムスタンプが 5 分以上ずれたリクエストは、署名が正しくてもリプレイとして拒否する
+- Slack は 3 秒以内の応答を要求するため、200 を返したあと `after()` の中でチケットを照会して `chat.unfurl` を呼ぶ
+
 ## イベント・チャネルを増やす場合
 
 - **イベント** : Prisma の `NotifyEvent` enum と `NOTIFY_EVENTS`(`src/lib/notify.ts`)を揃える。並びの一致は `tests/lib/notify.test.ts` で固定している
-- **チャネル** : `UserNotifySetting` に Boolean 列(既定 ON に揃えるため `@default(true)`)を足し、`NOTIFY_CHANNELS`(`src/lib/notify.ts`)と `scUpdateNotifySetting`(`src/lib/schema.ts`)へ追加する
+- **チャネル** : `UserNotifySetting` に Boolean 列(既定 OFF に揃えるため `@default(false)`)を足し、`NOTIFY_CHANNELS`(`src/lib/notify.ts`)と `scUpdateNotifySetting`(`src/lib/schema.ts`)へ追加する
 - `src/lib/notify.ts` はクライアントからも import されるため、サーバー専用の処理は `notify-setting.ts`(設定の読み書き)と `notify-mention.ts`(送信)へ置く
 
 # 環境変数
@@ -201,6 +280,7 @@ Slack DM は以下の 3 段がすべて揃ったユーザーにだけ届く。�
 | `SLACK_CLIENT_SECRET`        | Slack OAuth クライアントシークレット  |      | -             |
 | `SLACK_BOT_TOKEN`            | Slack Bot トークン(`xoxb-`)           |      | -             |
 | `SLACK_TEAM_ID`              | Slack ワークスペースID(`T...`)        |      | -             |
+| `SLACK_SIGNING_SECRET`       | Slack リクエスト署名シークレット      |      | -             |
 
 ## メール
 

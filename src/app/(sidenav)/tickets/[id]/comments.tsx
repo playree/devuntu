@@ -14,9 +14,11 @@ import { parseAction } from '@/lib/action-client'
 import { dayformat } from '@/lib/day'
 import { scCreateTicketComment } from '@/lib/schema'
 import { getFieldConstraints } from '@/lib/schema-util'
+import { commentAnchorId, decodeSegment } from '@/lib/task'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
-import { FC, useState } from 'react'
+import { FC, useEffect, useState, useSyncExternalStore } from 'react'
+import { tv } from 'tailwind-variants'
 import { addTicketComment, deleteTicketComment, GetTicketReturnType, updateTicketComment } from './server'
 
 type Ticket = NonNullable<GetTicketReturnType>
@@ -24,6 +26,72 @@ type Comment = Ticket['comments'][number]
 
 /** コメントの文字数上限(MDXEditor には maxLength 属性が無いのでスキーマから取る) */
 const MAX_COMMENT_LENGTH = getFieldConstraints(scCreateTicketComment, 'content').maxLength
+
+/** 通知のリンクから開いた 1 件を目立たせる枠(かんばんの選択カードと同じ表現) */
+const commentStyles = tv({
+  variants: {
+    isTarget: { true: 'ring-2 ring-blue-500' },
+  },
+})
+
+/** 位置の追い直しを打ち切るまでの時間 */
+const ANCHOR_FOLLOW_MS = 3000
+
+/** 現在のハッシュ。SSR では空文字を返し、ハイドレーション後にクライアントの値へ切り替わる */
+const subscribeHash = (onChange: () => void) => {
+  window.addEventListener('hashchange', onChange)
+  return () => window.removeEventListener('hashchange', onChange)
+}
+const useLocationHash = () =>
+  useSyncExternalStore(
+    subscribeHash,
+    () => window.location.hash,
+    () => '',
+  )
+
+/**
+ * 通知のリンク(`#comment-<id>`)で指されたコメントまで移動する。
+ *
+ * チケットはクライアント側で取得するので、ブラウザ標準のハッシュ移動は要素が無い時点で空振りする。
+ * さらに本文の描画(MarkdownView)は動的 import なので、一度移動しても後から各コメントの高さが
+ * 伸びて位置がずれる。そのため高さが変わる間は追い直し、落ち着くか利用者が動かしたら止める。
+ */
+const useCommentAnchor = (comments: Comment[]) => {
+  const anchor = decodeSegment(useLocationHash().slice(1)) ?? ''
+  // 他の要素の id を拾わないよう、このチケットのコメントに限る
+  const targetId = comments.some(({ id }) => commentAnchorId(id) === anchor) ? anchor : ''
+
+  useEffect(() => {
+    const element = targetId ? document.getElementById(targetId) : null
+    // 一覧そのもの(= コメントの親)を見れば、上に並ぶコメントが伸びた分も拾える
+    const list = element?.parentElement
+    if (!element || !list) {
+      return
+    }
+
+    const scroll = () => element.scrollIntoView({ block: 'center' })
+    scroll()
+
+    const observer = new ResizeObserver(scroll)
+    observer.observe(list)
+    const stop = () => observer.disconnect()
+    const timer = setTimeout(stop, ANCHOR_FOLLOW_MS)
+    // 利用者が自分で動かし始めたら、そちらを優先して追従をやめる
+    window.addEventListener('wheel', stop, { passive: true })
+    window.addEventListener('touchstart', stop, { passive: true })
+    window.addEventListener('keydown', stop)
+
+    return () => {
+      clearTimeout(timer)
+      stop()
+      window.removeEventListener('wheel', stop)
+      window.removeEventListener('touchstart', stop)
+      window.removeEventListener('keydown', stop)
+    }
+  }, [targetId])
+
+  return targetId
+}
 
 /** 投稿・編集の共通チェック(MDXEditor には maxLength 属性が無いためここで見る) */
 const isSubmittable = (draft: string) =>
@@ -36,8 +104,10 @@ const CommentItem: FC<{
   /** `@` 入力時のメンション候補(そのボードのメンバー) */
   mentionCandidates: MentionCandidate[]
   canDelete: boolean
+  /** 通知のリンク(`#comment-<id>`)で指されている 1 件 */
+  isTarget: boolean
   refresh: () => Promise<void>
-}> = ({ comment, boardId, mentionCandidates, canDelete, refresh }) => {
+}> = ({ comment, boardId, mentionCandidates, canDelete, isTarget, refresh }) => {
   const { t } = useLocale()
   const tz = useUserTimezone()
   const { confirmModal } = useConfirmModal()
@@ -79,7 +149,11 @@ const CommentItem: FC<{
   }
 
   return (
-    <Panel variant='shadow'>
+    <Panel // 通知の URL から直接開けるよう、コメント単位のアンカーを置く
+      variant='shadow'
+      id={commentAnchorId(comment.id)}
+      className={commentStyles({ isTarget })}
+    >
       <div className='flex items-center gap-2 text-xs text-gray-500'>
         <span className='font-medium'>{comment.authorName || t('no_name')}</span>
         <span className='font-mono'>{dayformat(comment.createdAt, 'tz-simple', tz)}</span>
@@ -162,6 +236,9 @@ export const TicketComments: FC<{
   // MDXEditor は markdown prop の変更を取り込まないため、key を変えて空の状態に戻す
   const [editorKey, setEditorKey] = useState(0)
 
+  const { comments } = ticket
+  const targetId = useCommentAnchor(comments)
+
   const post = async () => {
     setPosting(true)
     try {
@@ -182,17 +259,18 @@ export const TicketComments: FC<{
       <div className='flex items-center gap-2'>
         <ChatBubbleIcon />
         <span>
-          {t('comment')} ({ticket.comments.length})
+          {t('comment')} ({comments.length})
         </span>
       </div>
 
-      {ticket.comments.map((comment) => (
+      {comments.map((comment) => (
         <CommentItem
           key={comment.id}
           comment={comment}
           boardId={ticket.boardId}
           mentionCandidates={mentionCandidates}
           canDelete={ticket.canDelete}
+          isTarget={commentAnchorId(comment.id) === targetId}
           refresh={refresh}
         />
       ))}

@@ -163,6 +163,8 @@ const FileField = ({
             variant='danger-soft'
             isIconOnly
             className={isSmart ? 'size-6' : ''}
+            // アイコンは aria-hidden なので、読み上げ名はボタン側で与える
+            aria-label={t('delete')}
             onPress={handleRemove}
           >
             <TrashIcon width={16} />

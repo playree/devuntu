@@ -1,8 +1,8 @@
 /**
  * ユーザーごとの通知 ON/OFF(サーバー専用)
  *
- * 行が無い場合は「ON」として扱うオプトアウト方式にしてある。連携したユーザーは
- * 通知を受け取りたいのが既定であり、全ユーザー分の初期行を作らずに済む。
+ * 行が無い場合は全チャネル OFF として扱うオプトイン方式なので、
+ * 全ユーザー分の初期行を作らずに済む。
  */
 
 import type { NotifyEvent } from '@/generated/prisma/enums'
@@ -13,10 +13,10 @@ import { prisma } from './prisma'
 export type NotifySetting = { [K in NotifyChannel]: boolean }
 
 /** 行が無いイベントに使う既定値 */
-const DEFAULT_SETTING: NotifySetting = { email: true, slack: true }
+const DEFAULT_SETTING: NotifySetting = { email: false, slack: false }
 
 /**
- * 指定ユーザーの通知設定を全イベント分返す。行が無いイベントは既定値(ON)で埋める。
+ * 指定ユーザーの通知設定を全イベント分返す。行が無いイベントは既定値(OFF)で埋める。
  */
 export const getUserNotifySettings = async (userId: string): Promise<Record<NotifyEvent, NotifySetting>> => {
   const rows = await prisma.userNotifySetting.findMany({
@@ -50,7 +50,7 @@ export const setUserNotifySetting = async (
 /**
  * 指定イベント・指定チャネルで通知を受け取るユーザーだけに絞り込む。
  *
- * 行が無い = ON なので、OFF の行だけを引いて除外する(宛先の数だけ行を作らない)。
+ * 行が無い = OFF なので、ON の行だけを引いて残す(宛先の数だけ行を作らない)。
  */
 export const filterNotifiable = async (
   userIds: string[],
@@ -60,10 +60,10 @@ export const filterNotifiable = async (
   if (userIds.length === 0) {
     return []
   }
-  const muted = await prisma.userNotifySetting.findMany({
-    where: { userId: { in: userIds }, event, [channel]: false },
+  const enabled = await prisma.userNotifySetting.findMany({
+    where: { userId: { in: userIds }, event, [channel]: true },
     select: { userId: true },
   })
-  const mutedSet = new Set(muted.map(({ userId }) => userId))
-  return userIds.filter((userId) => !mutedSet.has(userId))
+  const enabledSet = new Set(enabled.map(({ userId }) => userId))
+  return userIds.filter((userId) => enabledSet.has(userId))
 }
