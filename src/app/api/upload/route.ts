@@ -48,9 +48,9 @@ export const POST = async (req: Request) => {
   const parsed = zImageFile.safeParse(file)
   if (!parsed.success) {
     /**
-     * Zod のメッセージはロケールキー(`@invalid_image_size` など)なので、
-     * ここで解決して返す。MDXEditor はエラーメッセージをそのまま表示するため、
-     * クライアント側では翻訳できない。
+     * Zod のメッセージはロケールキー(`@invalid_image_size` など)なので、ここで解決して返す。
+     * 呼び元(`uploadImage`)はこの message をそのまま Error にして投げるだけなので、
+     * 表示側でロケールキーとして扱われることを期待できない。
      */
     const locale = (await cookies()).get(localeConfig.cookie.name)?.value ?? null
     const message = parsed.error.issues[0]?.message

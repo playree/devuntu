@@ -1,6 +1,8 @@
 'use client'
 
+import { notify } from '@/components/notify'
 import { uploadImage } from '@/lib/upload'
+import { useLocale } from '@/locale/client'
 import { cn } from '@heroui/react'
 import {
   BlockTypeSelect,
@@ -34,7 +36,10 @@ import {
 import '@mdxeditor/editor/style.css'
 import { basicDark } from 'cm6-theme-basic-dark'
 import { useTheme } from 'next-themes'
-import { FC, useEffect, useMemo, useRef, useState } from 'react'
+import { FC, ReactElement, useEffect, useMemo, useRef, useState } from 'react'
+import { MdxImageDialog } from './mdx-image-dialog'
+import { MdxEditImageToolbar, MdxImagePlaceholder } from './mdx-image-toolbar'
+import { MdxLinkDialog } from './mdx-link-dialog'
 import { MentionCandidatesProvider, mentionPlugin } from './mdx-mention-plugin'
 import { sanitizeHtmlPlugin } from './mdx-sanitize-plugin'
 import { MentionCandidate } from './mention-menu'
@@ -148,8 +153,31 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
   useEffect(() => {
     boardIdRef.current = uploadBoardId
   }, [uploadBoardId])
+
+  /**
+   * 失敗通知の文言。`t` はロケール切替で参照が変わるため、ハンドラの参照を固定したまま
+   * 最新のものを読めるよう ref 越しにする。
+   */
+  const { t } = useLocale()
+  const failedTitleRef = useRef(t('msg_image_upload_failed'))
+  useEffect(() => {
+    failedTitleRef.current = t('msg_image_upload_failed')
+  }, [t])
+
   // useState の遅延初期化で初回マウント時の関数を固定する(ref を render 中に読まないため)
-  const [uploadHandler] = useState(() => (file: File) => uploadImage(file, boardIdRef.current))
+  const [uploadHandler] = useState(() => async (file: File) => {
+    try {
+      return await uploadImage(file, boardIdRef.current)
+    } catch (e) {
+      /**
+       * imagePlugin はツールバー / 貼り付け / ドラッグ&ドロップ / 差し替えのどの経路でも
+       * アップロードの失敗を Promise の中で投げ直すだけで UI に出さない。ここで拾って通知する。
+       * resolve に変えると src の無い壊れた画像ノードが挿入されるため、投げ直しは残す。
+       */
+      notify.error(failedTitleRef.current, { description: e instanceof Error ? e.message : undefined })
+      throw e
+    }
+  })
 
   const plugins = useMemo(() => {
     // source モードとコードブロックの CodeMirror は basicLight がハードコードされているため、
@@ -163,15 +191,26 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
       quotePlugin(),
       listsPlugin(),
       linkPlugin(),
-      linkDialogPlugin(),
+      // 型は要素を必ず返す関数を要求するが、閉じている間は null を返す実装で問題ない
+      linkDialogPlugin({ LinkDialog: MdxLinkDialog as () => ReactElement }),
       thematicBreakPlugin(),
       tablePlugin(),
       /**
        * imageUploadHandler を渡すと、ツールバーの InsertImage に加えて
        * 貼り付け / ドラッグ&ドロップも imagePlugin 側が拾ってアップロードするようになる。
-       * ハンドラは ref に固定した安定参照なので plugins は作り直されない
+       * ハンドラは ref に固定した安定参照なので plugins は作り直されない。
+       * UI 一式は既定の CSS Modules 実装からアプリの部品に差し替える
        */
-      imagePlugin({ imageUploadHandler: uploadHandler }),
+      imagePlugin({
+        imageUploadHandler: uploadHandler,
+        ImageDialog: MdxImageDialog,
+        /**
+         * imagePlugin の引数の型は props を取らないコンポーネントしか受け付けないが、
+         * 実際には ImageEditor が対象ノードの情報を props として渡して描画する
+         */
+        EditImageToolbar: MdxEditImageToolbar as FC,
+        imagePlaceholder: MdxImagePlaceholder,
+      }),
       // 候補は React context 経由で渡すため、引数に候補を取らず参照が固定される(mdx-mention-plugin.tsx)
       mentionPlugin({ typeahead: true }),
       codeBlockPlugin({ defaultCodeBlockLanguage: '' }),
