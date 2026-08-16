@@ -5,6 +5,8 @@
  * サーバー専用の処理(prisma / Slack API 呼び出しなど)は `slack-server.ts` に配置する。
  */
 
+import { truncate } from './text-util'
+
 /** Slack 連携用の OAuth プロバイダ ID */
 export const SLACK_PROVIDER_ID = 'slack'
 
@@ -69,8 +71,17 @@ export const classifySlackError = (error: string | undefined): SlackSendOutcome 
  */
 export const escapeSlackText = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
-/** 上限を超える分を切り捨てる。末尾に省略記号を付けて途中で切れたことを示す */
-const truncate = (text: string, max: number) => (text.length <= max ? text : `${text.slice(0, max - 1)}…`)
+/**
+ * `*<url|ラベル>*` の mrkdwn リンクを組み立てる。
+ *
+ * 組み立ててから上限で切ると閉じの `>*` まで落ちてリンク記法が壊れるため、
+ * 記法の分を差し引いた残りをラベルの予算にして先に詰める。
+ * URL だけで上限に届く場合はリンクを諦めてラベルだけ返す(壊れた記法よりましなため)。
+ */
+const boldLink = (url: string, label: string, max: number) => {
+  const budget = max - `*<${url}|>*`.length
+  return budget > 0 ? `*<${url}|${truncate(label, budget)}>*` : truncate(label, max)
+}
 
 /** section の fields が受け付ける要素数の上限。超えると invalid_blocks で落ちる */
 const SECTION_FIELDS_MAX = 10
@@ -103,7 +114,7 @@ export const buildTicketUnfurlBlocks = ({ url, displayId, title, fields }: Ticke
     type: 'section',
     text: {
       type: 'mrkdwn',
-      text: truncate(`*<${url}|[${escapeSlackText(displayId)}] ${escapeSlackText(title)}>*`, SECTION_TEXT_MAX),
+      text: boldLink(url, `[${escapeSlackText(displayId)}] ${escapeSlackText(title)}`, SECTION_TEXT_MAX),
     },
   }
 
@@ -125,28 +136,59 @@ export type MentionMessageParam = {
   url: string
   /** 「〇〇さんがメンションしました」の本文。呼び出し側でロケール解決済みのものを渡す */
   body: string
+  /** コメント本文の抜粋。引用として本文の下に出す。利用者入力を含むので生文字列を渡す */
+  excerpt?: string
   /** ボタンのラベル */
   openLabel: string
+}
+
+/**
+ * 上限に収まる範囲で行を積む。
+ *
+ * 予算を使い切った行は落とす(中途半端に 1 文字だけ残すより、その行が無い方が読める)。
+ * 各行の前に入る改行 1 文字も予算に含める。
+ */
+const fitLines = (lines: string[], max: number): string => {
+  const fitted: string[] = []
+  let budget = max
+
+  for (const line of lines) {
+    // 先頭行以外は改行の分を差し引く
+    const room = fitted.length === 0 ? budget : budget - 1
+    if (!line || room <= 0) {
+      continue
+    }
+    const text = truncate(line, room)
+    fitted.push(text)
+    budget = room - text.length
+  }
+
+  return fitted.join('\n')
 }
 
 /**
  * メンション通知の chat.postMessage ペイロードを組み立てる。
  *
  * `text` は通知バナー / プッシュ通知のフォールバックに使われるため必ず埋める
- * (blocks だけだと通知に本文が出ない)。
+ * (blocks だけだと通知に本文が出ない)。抜粋もここに含めて、開かなくても内容が分かるようにする。
  */
-export const buildMentionMessage = ({ subject, url, body, openLabel }: MentionMessageParam) => {
+export const buildMentionMessage = ({ subject, url, body, excerpt, openLabel }: MentionMessageParam) => {
   const safeSubject = escapeSlackText(subject)
   const safeBody = escapeSlackText(body)
+  // mrkdwn の引用。抜粋は改行を畳んだ 1 行で渡ってくる前提
+  const quoted = excerpt ? `>${escapeSlackText(excerpt)}` : ''
+
+  // 見出しのリンクを先に確定させ、余った分を本文・抜粋の順に割り当てる
+  const heading = boldLink(url, safeSubject, SECTION_TEXT_MAX)
 
   return {
-    text: truncate(`${safeSubject}\n${safeBody}`, SECTION_TEXT_MAX),
+    text: fitLines([safeSubject, safeBody, quoted], SECTION_TEXT_MAX),
     blocks: [
       {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: truncate(`*<${url}|${safeSubject}>*\n${safeBody}`, SECTION_TEXT_MAX),
+          text: fitLines([heading, safeBody, quoted], SECTION_TEXT_MAX),
         },
       },
       {

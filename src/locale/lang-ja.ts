@@ -289,6 +289,16 @@ export const ja: DefaultLocaleItems = {
 
 ※この通知はアカウント画面の通知設定から停止できます。
 `,
+  mail_mention_comment_body: `\${message}
+
+\${subject}
+
+\${excerpt}
+
+\${url}
+
+※この通知はアカウント画面の通知設定から停止できます。
+`,
   mail_otp_body: `Eメール認証の為の認証コードを発行しました。
 
 認証コード: \${otp}

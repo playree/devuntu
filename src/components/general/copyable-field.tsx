@@ -91,11 +91,9 @@ export const CopyableField: FC<
     variant?: InputGroupProps['variant']
     isSmart?: boolean
     className?: string
-    /** コピーボタンの aria-label */
+    /** 各ボタンの aria-label。表示ラベルは持たないアイコンボタンなので読み上げ名になる */
     copyLabel?: string
-    /** マスク解除ボタンの aria-label */
     showLabel?: string
-    /** マスクボタンの aria-label */
     hideLabel?: string
     onCopied?: () => void
   } & (

@@ -12,6 +12,7 @@ import {
   buildTicketWhere,
   canApplyAssignments,
   cardDropId,
+  commentAnchorId,
   countLaneMap,
   defaultKanbanFilter,
   emptyLaneMap,
@@ -232,6 +233,12 @@ describe('ticketShortPath / parseTicketUrl: チャットに貼られたチケッ
     expect(parseTicketUrl('not a url', BASE), '不正な URL').toBeNull()
     expect(parseTicketUrl(`${BASE}/t/DEV-12`, ''), 'ベースURL未設定').toBeNull()
     expect(parseTicketUrl(`${BASE}/t/%E3%81%82%ZZ`, BASE), '壊れたエスケープ').toBeNull()
+  })
+
+  it('コメントのアンカーを付けてもチケットとして解決できる(通知のリンク)', () => {
+    const url = `${BASE}${ticketShortPath('DEV-12')}#${commentAnchorId(TICKET_ID)}`
+    expect(commentAnchorId(TICKET_ID), '画面側の要素 id と同じ形').toBe(`comment-${TICKET_ID}`)
+    expect(parseTicketUrl(url, BASE)).toEqual(byDisplayId)
   })
 })
 

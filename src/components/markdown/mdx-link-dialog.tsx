@@ -161,7 +161,11 @@ export const MdxLinkDialog: FC = () => {
     }
   }, [isPreview, activeEditor, publishWindowChange])
 
-  // 下に入らなければ上へ出し、横は画面内へ寄せる(Popover を使わないぶん自前で見る)
+  /**
+   * 表示位置は Popover を使わないぶん自前で見る。
+   * rectangle は毎回新しいオブジェクトになるため、数値へばらしてから依存配列に入れること
+   * (そのまま渡すと再計算 → 再レンダリングが止まらない)。
+   */
   const rectTop = rectangle?.top
   const rectLeft = rectangle?.left
   const rectHeight = rectangle?.height
@@ -196,6 +200,7 @@ export const MdxLinkDialog: FC = () => {
   return createPortal(
     <div
       ref={panelRef}
+      role='dialog' // ロールが無いと aria-label が読み上げられない。背後も操作できるので aria-modal は付けない
       aria-label={t('url')}
       className={styles.base()}
       /**

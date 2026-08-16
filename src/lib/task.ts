@@ -241,6 +241,9 @@ export const parseTicketDisplayId = (raw: string): { key: string; number: number
 /** 表示IDで開ける短縮URLのパス。チャットや議事録に貼る想定の表記 */
 export const ticketShortPath = (displayId: string): string => `/t/${displayId}`
 
+/** コメントのアンカーID。通知URLのフラグメントと画面側の要素 id で同じ形を使う */
+export const commentAnchorId = (commentId: string): string => `comment-${commentId}`
+
 /** 短縮URLのパス(`/t/KEY-123`)。末尾スラッシュは許容する */
 const SHORT_PATH_PATTERN = /^\/t\/([^/]+)\/?$/
 

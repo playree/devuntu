@@ -18,6 +18,49 @@ type SlackEventPayload = {
   event?: SlackLinkSharedEvent & { type?: string }
 }
 
+/**
+ * 受け付ける本文の上限。Slack の Events payload は数KB に収まる。
+ * Route Handler には `next.config.ts` の `bodySizeLimit`(Server Actions 専用)が効かないため、
+ * 未認証で叩けるこのエンドポイントを無制限のバッファリングに晒さないよう自前で止める。
+ */
+const MAX_BODY_BYTES = 1024 * 1024
+
+/**
+ * 上限まで本文を読む。超えたら読み取りを打ち切って null を返す。
+ * Content-Length は詐称できるので、ヘッダの検査だけでなく読みながら実バイト数も数える。
+ */
+const readBody = async (request: Request): Promise<string | null> => {
+  const declared = Number(request.headers.get('content-length'))
+  if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) {
+    return null
+  }
+  if (!request.body) {
+    return ''
+  }
+
+  const reader = request.body.getReader()
+  // stream: true でチャンク境界にまたがるマルチバイト文字を落とさない
+  const decoder = new TextDecoder()
+  let size = 0
+  let text = ''
+  try {
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) {
+        break
+      }
+      size += value.byteLength
+      if (size > MAX_BODY_BYTES) {
+        return null
+      }
+      text += decoder.decode(value, { stream: true })
+    }
+  } finally {
+    await reader.cancel().catch(() => undefined)
+  }
+  return text + decoder.decode()
+}
+
 export const POST = async (request: Request) => {
   const signingSecret = envu.server.SLACK_SIGNING_SECRET
   if (!signingSecret) {
@@ -29,7 +72,11 @@ export const POST = async (request: Request) => {
    * 署名は生ボディに対して計算されるため、`request.json()` より先に文字列で読む
    * (パースして再度文字列化したものでは一致しない)。
    */
-  const rawBody = await request.text()
+  const rawBody = await readBody(request)
+  if (rawBody === null) {
+    logger.warn('slack event body too large')
+    return new NextResponse(null, { status: 413 })
+  }
 
   const valid = verifySlackSignature({
     signingSecret,

@@ -290,6 +290,16 @@ Please copy and use the connection information above.
 
 *You can stop this notification from the notification settings on the account page.
 `,
+  mail_mention_comment_body: `\${message}
+
+\${subject}
+
+\${excerpt}
+
+\${url}
+
+*You can stop this notification from the notification settings on the account page.
+`,
   mail_otp_body: `A verification code has been issued for email authentication.
 
 Verification Code: \${otp}

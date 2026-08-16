@@ -142,8 +142,8 @@ export type SlackUnfurlTarget = { unfurlId: string; source: string } | { channel
 /**
  * メッセージ内のリンクをプレビュー展開する(`link_shared` への応答)。
  *
- * `unfurls` は URL をキーにした map だが、Slack の仕様上の型は JSON 文字列なので
- * ここで文字列化して渡す。
+ * `unfurls` は URL をキーにした map。JSON 文字列で渡す形は form-encoded 送信時の仕様で、
+ * ここは JSON ボディなのでオブジェクトのまま渡す。
  */
 export const unfurlSlackLinks = (
   target: SlackUnfurlTarget,
@@ -153,7 +153,7 @@ export const unfurlSlackLinks = (
     'unfurlId' in target
       ? { unfurl_id: target.unfurlId, source: target.source }
       : { channel: target.channel, ts: target.ts }
-  return callWithBotToken('chat.unfurl', { ...destination, unfurls: JSON.stringify(unfurls) }, 'unfurl')
+  return callWithBotToken('chat.unfurl', { ...destination, unfurls }, 'unfurl')
 }
 
 type AuthTestResponse = SlackApiResponse & { team?: string; team_id?: string; url?: string }

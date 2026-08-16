@@ -274,6 +274,7 @@ export type LocaleItemBase =
   | 'msg_user_not_exist'
   // for Mail
   | 'mail_mention_body'
+  | 'mail_mention_comment_body'
   | 'mail_otp_body'
   | 'mail_otp_subject'
   // for Notify(メール / Slack で共用する文面)

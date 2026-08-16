@@ -81,4 +81,14 @@ describe('verifySlackSignature', () => {
     expect(() => verify({ signature: 'v0=short' })).not.toThrow()
     expect(verify({ signature: 'v0=short' })).toBe(false)
   })
+
+  it('文字数は同じでもバイト長が違う署名を例外にせず拒否する', () => {
+    const valid = sign(TIMESTAMP, BODY)
+    // 末尾 1 文字を 3 バイトの文字に置換。String.length で比べていると throw まで抜ける
+    const multibyte = `${valid.slice(0, -1)}あ`
+    expect(multibyte.length, '文字数は一致させる').toBe(valid.length)
+    expect(Buffer.byteLength(multibyte), 'バイト長はずらす').not.toBe(Buffer.byteLength(valid))
+    expect(() => verify({ signature: multibyte })).not.toThrow()
+    expect(verify({ signature: multibyte })).toBe(false)
+  })
 })

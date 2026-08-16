@@ -106,6 +106,45 @@ describe('buildMentionMessage: chat.postMessage のペイロードを組み立�
     const sectionText = (res.blocks[0] as { text: { text: string } }).text.text
     expect(sectionText.length, 'Block Kit の section は 3000 字が上限').toBeLessThanOrEqual(3000)
     expect(res.text.length).toBeLessThanOrEqual(3000)
+    // 件名だけで上限に達しても、リンク記法は閉じたままにする
+    expect(sectionText.startsWith(`*<${base.url}|`), '開きが残る').toBe(true)
+    expect(sectionText).toContain('>*')
+  })
+
+  it('本文が長くてもリンク記法は壊さない', () => {
+    const res = buildMentionMessage({ ...base, body: 'い'.repeat(5000) })
+    const sectionText = (res.blocks[0] as { text: { text: string } }).text.text
+    expect(sectionText.length).toBeLessThanOrEqual(3000)
+    // 切り詰めの対象は本文側。見出しのリンクは丸ごと残る
+    expect(sectionText.startsWith(`*<${base.url}|${base.subject}>*\n`)).toBe(true)
+  })
+
+  it('抜粋が引用として本文の下に入る', () => {
+    const res = buildMentionMessage({ ...base, excerpt: 'iOS Safari だけで再現しました' })
+    const sectionText = (res.blocks[0] as { text: { text: string } }).text.text
+    expect(sectionText, 'mrkdwn の引用にして本文と区別する').toContain('\n>iOS Safari だけで再現しました')
+    // 抜粋を届けるのが目的なので、プッシュ通知の時点で内容が見えるようにする
+    expect(res.text).toContain('iOS Safari だけで再現しました')
+  })
+
+  it('抜粋が無い場合は引用行を作らない', () => {
+    const res = buildMentionMessage(base)
+    const sectionText = (res.blocks[0] as { text: { text: string } }).text.text
+    expect(sectionText).toBe(`*<${base.url}|${base.subject}>*\n${base.body}`)
+  })
+
+  it('抜粋の利用者入力がエスケープされる', () => {
+    const res = buildMentionMessage({ ...base, excerpt: '<!channel> 見てください' })
+    expect(JSON.stringify(res.blocks)).not.toContain('<!channel>')
+    expect(res.text, 'フォールバックの text にも生の全体メンションを残さない').not.toContain('<!channel>')
+  })
+
+  it('本文で予算を使い切ったら抜粋を落とす(壊れた記法より欠落を選ぶ)', () => {
+    const res = buildMentionMessage({ ...base, body: 'い'.repeat(5000), excerpt: 'う'.repeat(500) })
+    const sectionText = (res.blocks[0] as { text: { text: string } }).text.text
+    expect(sectionText.length).toBeLessThanOrEqual(3000)
+    expect(sectionText.startsWith(`*<${base.url}|${base.subject}>*\n`)).toBe(true)
+    expect(sectionText, '入り切らない抜粋は行ごと落とす').not.toContain('\n>')
   })
 })
 
@@ -174,10 +213,13 @@ describe('buildTicketUnfurlBlocks: chat.unfurl のプレビューを組み立て
     expect(fieldsOf(blocks)).toEqual(['*担当者*\n&lt;@U123ABC&gt;'])
   })
 
-  it('3000字を超える見出しは切り詰める', () => {
+  it('3000字を超える見出しは切り詰め、リンク記法は壊さない', () => {
     const blocks = buildTicketUnfurlBlocks({ ...base, title: 'あ'.repeat(5000) })
     const heading = (blocks[0] as { text: { text: string } }).text.text
     expect(heading.length).toBeLessThanOrEqual(3000)
+    // 組み立ててから切ると閉じの `>*` が落ちてリンクが崩れる
+    expect(heading.startsWith(`*<${base.url}|`), '開きが残る').toBe(true)
+    expect(heading.endsWith('>*'), '閉じが残る').toBe(true)
   })
 
   it('10 件を超える項目は切り捨てる(fields の上限)', () => {

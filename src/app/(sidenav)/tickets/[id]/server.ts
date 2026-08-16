@@ -210,6 +210,7 @@ export const addTicketComment = safeAuthAction
       displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
       ticketTitle: ticket.title,
       commentId: comment.id,
+      commentContent: content,
       fromUserId: user.id,
       toUserIds: mentionedUserIds,
     })
@@ -258,6 +259,7 @@ export const updateTicketComment = safeAuthAction
       displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
       ticketTitle: ticket.title,
       commentId: id,
+      commentContent: content,
       fromUserId: user.id,
       toUserIds: addedMentionUserIds,
     })

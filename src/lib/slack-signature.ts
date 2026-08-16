@@ -62,9 +62,14 @@ export const verifySlackSignature = ({
 
   const expected = `${VERSION}=${createHmac('sha256', signingSecret).update(`${VERSION}:${timestamp}:${rawBody}`).digest('hex')}`
 
-  // timingSafeEqual は長さが違うと例外を投げるので、先に弾く(長さ自体は秘密ではない)
-  if (expected.length !== signature.length) {
+  /**
+   * timingSafeEqual はバイト長が違うと例外を投げるので、先に弾く(長さ自体は秘密ではない)。
+   * 文字数ではなくバイト長で見ること。非 ASCII が混ざると両者がずれて素通りしてしまう。
+   */
+  const expectedBuf = Buffer.from(expected)
+  const signatureBuf = Buffer.from(signature)
+  if (expectedBuf.length !== signatureBuf.length) {
     return false
   }
-  return timingSafeEqual(Buffer.from(expected), Buffer.from(signature))
+  return timingSafeEqual(expectedBuf, signatureBuf)
 }

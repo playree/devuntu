@@ -68,7 +68,7 @@ export const MdxImageDialog: FC = () => {
 
   const isOpen = dialogState.type !== 'inactive'
 
-  // 開閉のたびに前回の選択を捨てる(レンダリング中に開閉の変化を見て同期する)
+  // レンダリング中に開閉の変化を見て同期する(useEffect だと一度古い選択が見えてしまう)
   const [prevOpen, setPrevOpen] = useState(isOpen)
   if (prevOpen !== isOpen) {
     setPrevOpen(isOpen)
@@ -111,12 +111,18 @@ export const MdxImageDialog: FC = () => {
     if (!selected) {
       return
     }
+    // 弾いたときに前回の選択を残すと、エラーを出しながら古いファイルを送ってしまう
+    const reject = (message: string) => {
+      setError(message)
+      setFile(null)
+      setPreview(null)
+    }
     if (!ACCEPTED_IMAGE_TYPES.includes(selected.type)) {
-      setError(t('@invalid_image_type'))
+      reject(t('@invalid_image_type'))
       return
     }
     if (selected.size > MAX_IMAGE_SIZE) {
-      setError(t('@invalid_image_size'))
+      reject(t('@invalid_image_size'))
       return
     }
     setError(undefined)
@@ -150,7 +156,7 @@ export const MdxImageDialog: FC = () => {
       variant='blur'
       isOpen={isOpen}
       onOpenChange={(open) => {
-        if (!open) {
+        if (!open && !isPending) {
           closeImageDialog()
         }
       }}
@@ -166,7 +172,7 @@ export const MdxImageDialog: FC = () => {
     >
       <Modal.Container placement='top'>
         <Modal.Dialog>
-          <Modal.CloseTrigger />
+          <Modal.CloseTrigger isDisabled={isPending} />
           <Modal.Header>
             <Modal.Heading className='flex items-center gap-2'>
               <PhotoIcon />
@@ -178,6 +184,7 @@ export const MdxImageDialog: FC = () => {
             <FlexCol>
               <button
                 type='button'
+                aria-label={t('select_file')} // プレビュー表示中は中の文言が消えるので明示する
                 onClick={() => inputRef.current?.click()}
                 // preventDefault を忘れるとブラウザが既定動作でドロップした画像を開いてしまう
                 onDragOver={(e) => {
