@@ -168,7 +168,7 @@ export const ja: DefaultLocaleItems = {
   skip_consent: '同意スキップ',
   start_time: '開始時刻',
   status: 'ステータス',
-  status_backlog: '未着手',
+  status_backlog: 'バックログ',
   status_doing: '対応中',
   status_done: '完了',
   status_todo: '対応予定',

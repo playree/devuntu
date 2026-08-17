@@ -105,7 +105,12 @@ export const StatusChip: FC<{ status: TicketStatus; size?: ChipProps['size'] }> 
   const { t } = useLocale()
   const { item, color } = STATUS_STYLE[status]
   return (
-    <Chip variant='soft' color={color} size={size}>
+    <Chip // 幅の狭いセルに置かれてもラベルが途中で改行されないようにする
+      variant='soft'
+      color={color}
+      size={size}
+      className='whitespace-nowrap'
+    >
       <Chip.Label>{t(item)}</Chip.Label>
     </Chip>
   )

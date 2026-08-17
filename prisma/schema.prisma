@@ -415,7 +415,7 @@ enum TagColor {
 }
 
 enum TicketStatus {
-  backlog // 未着手
+  backlog // バックログ
   todo // 対応予定
   doing // 対応中
   done // 完了
