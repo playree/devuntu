@@ -171,9 +171,9 @@ Slack に貼られたチケットURLを、Slack Events API の `link_shared` を
 
 対応する URL は 2 形式(`parseTicketUrl()` / `src/lib/task.ts`)。オリジンが `BETTER_AUTH_URL` と一致するものだけ受ける。
 
-| 形式                    | 引き方                                        |
-| ----------------------- | --------------------------------------------- |
-| `/t/{表示ID}`           | `findTicketIdByDisplayId()` で表示IDから引く   |
+| 形式                    | 引き方                                              |
+| ----------------------- | --------------------------------------------------- |
+| `/t/{表示ID}`           | `findTicketIdByDisplayId()` で表示IDから引く        |
 | `/tickets/{チケットID}` | uuid v7 の形式を確認してそのまま引く(詳細画面のURL) |
 
 - カードのリンク先は**どちらの形式でも短縮URLへ正規化**する
@@ -193,17 +193,21 @@ Slack に貼られたチケットURLを、Slack Events API の `link_shared` を
 アプリの定義は `slack/manifest.yaml` にある。<https://api.slack.com/apps> の **From a manifest** に貼り付けて作成する
 (既存アプリには App Manifest 画面から反映する)。ホスト名の置き換えと、取得した値をどの環境変数へ入れるかはファイル冒頭のコメントを参照。
 
-| マニフェストの項目                         | 用途                                          |
-| ------------------------------------------ | --------------------------------------------- |
-| `oauth_config.scopes.user`                 | `/account` からの Sign in with Slack          |
-| `oauth_config.scopes.bot` の `chat:write`  | メンション通知の DM 送信                      |
-| `oauth_config.scopes.bot` の `links:*`     | リンクの検知(`link_shared`)とプレビューの反映 |
-| `features.unfurl_domains`                  | 展開対象のドメイン                            |
-| `settings.event_subscriptions.request_url` | `/api/slack/events`                           |
+| マニフェストの項目                                           | 用途                                                              |
+| ------------------------------------------------------------ | ----------------------------------------------------------------- |
+| `oauth_config.scopes.user`                                   | `/account` からの Sign in with Slack                              |
+| `oauth_config.scopes.bot` の `chat:write`                    | メンション通知の DM 送信とボードのチャンネル通知                  |
+| `oauth_config.scopes.bot` の `links:*`                       | リンクの検知(`link_shared`)とプレビューの反映                     |
+| `oauth_config.scopes.bot` の `channels:read` / `groups:read` | ボード設定で通知先チャンネルを選ぶ一覧取得(`users.conversations`) |
+| `features.unfurl_domains`                                    | 展開対象のドメイン                                                |
+| `settings.event_subscriptions.request_url`                   | `/api/slack/events`                                               |
 
 反映後は以下を確認する。
 
-- スコープを変更したらワークスペースへ**再インストール**する(しないと `links:write` が効かない)
+- Bot スコープを変更したらワークスペースへ**再インストール**する(しないと `links:write` や `users.conversations` が効かない)。
+  再インストールで `xoxb-` が発行し直されるため、`SLACK_BOT_TOKEN` も入れ替えてアプリを再起動する。
+  これは Bot 側の作業で、`/account` からのユーザー連携(user スコープ)のやり直しとは別物
+- 通知先チャンネルの一覧が空になる・`missing_scope` が出る場合は、上の再インストールと `SLACK_BOT_TOKEN` の入れ替えが済んでいない
 - Event Subscriptions の Request URL が **Verified** になっている(Slack が送る `url_verification` に応答している)
 - Signing Secret を `SLACK_SIGNING_SECRET` に設定する。未設定ならエンドポイントは 404 を返し、機能ごと無効になる
 

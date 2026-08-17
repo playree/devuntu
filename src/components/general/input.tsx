@@ -57,7 +57,17 @@ export const InputField = ({
 }: InputFieldProps) => {
   const isSmart = useIsSmart(isSmartProp)
   return (
-    <TextField isInvalid={!!errorMessage} isReadOnly={isReadOnly}>
+    <TextField
+      isInvalid={!!errorMessage}
+      isReadOnly={isReadOnly}
+      isRequired={isRequired}
+      /**
+       * 既定の native はネイティブ制約検証を有効にするため、未入力だと submit イベントごと
+       * 握り潰されて react-hook-form の handleSubmit まで届かない。
+       * aria なら required の代わりに aria-required が付き、検証は zod の一本に保てる
+       */
+      validationBehavior='aria'
+    >
       <Label
         className={cn(isSmart ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}
         isRequired={isRequired}
@@ -155,7 +165,12 @@ export const InputSearchField = ({
 }) => {
   const isSmart = useIsSmart(isSmartProp)
   return (
-    <SearchField {...props}>
+    <SearchField
+      {...props}
+      isRequired={isRequired}
+      // validationBehavior の事情は InputField と同じ
+      validationBehavior='aria'
+    >
       {({ state }) => (
         <>
           <Label className={isSmart ? 'text-xs font-light' : ''} isRequired={isRequired}>

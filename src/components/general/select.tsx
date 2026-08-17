@@ -31,7 +31,9 @@ type SelectFieldBaseProps = {
   /**
    * ラベルに必須(*)を出す。
    * Select 本体には渡さない。react-aria が form 内に <select required> を出し、
-   * 未選択のまま submit すると react-hook-form まで届かず無反応になるため
+   * 未選択のまま submit すると react-hook-form まで届かず無反応になるため。
+   * validationBehavior='aria' にしてもトリガー(button)に aria-required は付かないので、
+   * 読み上げ向けの必須はラベル表記に任せる
    */
   isRequired?: boolean
   variant?: 'primary' | 'secondary'

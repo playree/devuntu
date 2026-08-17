@@ -22,7 +22,7 @@ type ServerError = { name?: string; errorType: string; message: string }
  * それ以外(Prisma の制約名・接続情報・環境変数名などが混ざりうる)はログにだけ残し、
  * クライアントへは固定文言を返して内部情報を出さない。
  */
-const handleServerError = (error: Error) => {
+export const handleServerError = (error: Error) => {
   if (error instanceof ClientError) {
     // クライアントエラー系
     logger.info(error)

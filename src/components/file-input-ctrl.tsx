@@ -128,8 +128,9 @@ const FileField = ({
             />
           )}
         </div>
-        <input
+        <input // TextField の context を受け取らない生の input なので、必須は自前で伝える
           type='file'
+          aria-required={isRequired || undefined}
           accept={accept}
           ref={(el) => {
             localRef.current = el

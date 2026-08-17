@@ -121,6 +121,9 @@ export const InputCtrlPassword = <
             className='relative'
             isInvalid={!!errorMessage}
             isReadOnly={isReadOnly}
+            isRequired={isRequired}
+            // validationBehavior の事情は general/input.tsx の InputField と同じ
+            validationBehavior='aria'
           >
             <Label className={isSmart ? 'text-xs font-light' : ''} isRequired={isRequired}>
               {label}
