@@ -84,7 +84,6 @@ export const BusyTimeModal: FC<ModalBaseProps & { target?: UpdateBusyTime }> = (
         <div className='col-span-12'>
           <InputCtrl
             control={control}
-            variant='secondary'
             name='title'
             constraintSchema={scBusyTimeBase}
             label={t('title')}
@@ -122,7 +121,7 @@ export const BusyTimeModal: FC<ModalBaseProps & { target?: UpdateBusyTime }> = (
                 className='flex flex-wrap gap-3 **:data-[slot=checkbox]:mt-0'
               >
                 {WEEKDAY_ORDER.map((d) => (
-                  <CheckBoxField key={d} id={`weekday-${d}`} value={String(d)} label={labels[d]} variant='secondary' />
+                  <CheckBoxField key={d} id={`weekday-${d}`} value={String(d)} label={labels[d]} />
                 ))}
               </div>
               <ErrorMessage className='min-h-4'>{fet(errors.weekdays)}</ErrorMessage>
@@ -139,7 +138,6 @@ export const BusyTimeModal: FC<ModalBaseProps & { target?: UpdateBusyTime }> = (
               <SingleSelectField
                 groupOptions={START_OPTIONS}
                 label={t('start_time')}
-                variant='secondary'
                 isRequired
                 errorMessage={fet(errors.startMin)}
                 value={String(value)}
@@ -164,7 +162,6 @@ export const BusyTimeModal: FC<ModalBaseProps & { target?: UpdateBusyTime }> = (
               <SingleSelectField
                 groupOptions={END_OPTIONS}
                 label={t('end_time')}
-                variant='secondary'
                 isRequired
                 errorMessage={fet(errors.endMin)}
                 value={String(value)}
