@@ -53,7 +53,7 @@ export const KanbanFilterPanel: FC<{
 
   return (
     <GridBox isSmart>
-      <div className='col-span-6 md:col-span-2'>
+      <div className='col-span-6 md:col-span-3'>
         <AssigneeSelectField
           options={assigneeChoices}
           value={filter.assignee}
@@ -80,7 +80,7 @@ export const KanbanFilterPanel: FC<{
         />
       </div>
 
-      <div className='col-span-6 md:col-span-2'>
+      <div className='col-span-6 md:col-span-3'>
         <SingleSelectField
           /**
            * 完了レーンにだけ効く「完了日時からの経過日数」。
@@ -94,7 +94,7 @@ export const KanbanFilterPanel: FC<{
       </div>
 
       {tags.length > 0 && (
-        <div className='col-span-12 md:col-span-4'>
+        <div className='col-span-12 md:col-span-6'>
           <TagNameSelectField // 絞り込みの値は tagId ではなく名前(チケット一覧の絞り込みと揃える)
             options={tags}
             value={filter.tags}

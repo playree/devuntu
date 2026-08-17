@@ -37,7 +37,7 @@ import {
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { DragDropProvider } from '@dnd-kit/react'
-import { Accordion, ButtonGroup, Chip } from '@heroui/react'
+import { Accordion, ButtonGroup, Chip, cn } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC, useEffect, useMemo, useState } from 'react'
 // チケット詳細・作成フォームは /tickets と共通のものを使う(重複定義を避ける)
@@ -158,6 +158,7 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
     <FlexCol
       /**
        * 詳細パネルを開いている間は data-nav-hidden でサイドメニューを隠し、盤面の横幅を稼ぐ。
+       * あわせて中央寄せ(mx-auto)をやめて左に寄せ、右のパネルと重なりにくくする。
        *
        * md 以上では盤面を 1 画面に収めてレーン内スクロールにするため、ここで画面高を「上限」にする。
        * 固定高(h-)ではなく max-h- なのは、カードが少ないときにレーンを画面下端まで伸ばさず内容ぶんの高さで収めるため。
@@ -166,7 +167,7 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
        */
       data-wide
       data-nav-hidden={selectedId ? '' : undefined}
-      className='md:max-h-[calc(100dvh-2rem)]'
+      className={cn('max-w-7xl md:max-h-[calc(100dvh-2rem)]', !selectedId && 'mx-auto')}
     >
       <ContentHeader icon={<ViewColumnsIcon />} title={boardName(board)}>
         <MultiButton isIconOnly tooltip={t('back')} onPress={() => router.push('/boards')}>
