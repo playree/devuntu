@@ -144,7 +144,8 @@ export const TicketsClient: FC<{
           // 番号順の並べ替えは持たない(TICKET_SORT_COLUMNS に無く、ボード横断では意味を成さないため)
           { id: 'displayId', name: t('id'), allowsSorting: false, minWidth: 80, defaultWidth: 90 },
           { id: 'title', name: t('title'), isRowHeader: true, allowsSorting: true, minWidth: 140, defaultWidth: '2fr' },
-          { id: 'status', name: t('status'), allowsSorting: true, minWidth: 100, defaultWidth: 100 },
+          // 幅は一番長いラベル(バックログ)の StatusChip がセルの左右パディング込みで折り返さない値にする
+          { id: 'status', name: t('status'), allowsSorting: true, minWidth: 120, defaultWidth: 120 },
           { id: 'priority', name: t('priority'), allowsSorting: true, minWidth: 70, defaultWidth: 70 },
           { id: 'assigneeName', name: t('assignee'), allowsSorting: true, minWidth: 100, defaultWidth: 100 },
           { id: 'dueDate', name: t('due_date'), allowsSorting: true, minWidth: 110, defaultWidth: 110 },

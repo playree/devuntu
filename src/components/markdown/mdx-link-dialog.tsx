@@ -32,12 +32,20 @@ const GAP = 6
 /** Panel(variant='shadow')と同じサーフェスにする */
 const panelStyles = tv({
   slots: {
-    base: 'fixed z-10 w-max max-w-[min(90vw,24rem)] rounded-xl bg-stone-100 p-2 shadow-md dark:border-t-2 dark:border-mist-900 dark:bg-mist-950',
+    base: 'fixed z-10 rounded-xl bg-stone-100 p-2 shadow-md dark:border-t-2 dark:border-mist-900 dark:bg-mist-950',
     preview: 'flex items-center gap-1',
     url: 'text-accent mr-1 flex min-w-0 items-center gap-1 text-sm',
     form: 'flex flex-col gap-1',
     formFooter: 'flex justify-end gap-2',
   },
+  variants: {
+    // 編集フォームは内容なりだと入力欄の固有幅(≒200px)しか出ないので、幅を明示する
+    isPreview: {
+      true: { base: 'w-max max-w-[min(90vw,24rem)]' },
+      false: { base: 'w-[min(90vw,28rem)]' },
+    },
+  },
+  defaultVariants: { isPreview: true },
 })
 
 /**
@@ -196,7 +204,7 @@ export const MdxLinkDialog: FC = () => {
     return null
   }
 
-  const styles = panelStyles()
+  const styles = panelStyles({ isPreview })
   return createPortal(
     <div
       ref={panelRef}

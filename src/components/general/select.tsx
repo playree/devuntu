@@ -28,6 +28,14 @@ type SelectFieldBaseProps = {
   label: string
   /** ラベルを読み上げ用にだけ残す(見出しを呼び出し側で出す場合) */
   isLabelHidden?: boolean
+  /**
+   * ラベルに必須(*)を出す。
+   * Select 本体には渡さない。react-aria が form 内に <select required> を出し、
+   * 未選択のまま submit すると react-hook-form まで届かず無反応になるため。
+   * validationBehavior='aria' にしてもトリガー(button)に aria-required は付かないので、
+   * 読み上げ向けの必須はラベル表記に任せる
+   */
+  isRequired?: boolean
   variant?: 'primary' | 'secondary'
   isSmart?: boolean
   errorMessage?: string
@@ -49,6 +57,7 @@ type MultiSelectFieldProps = SelectFieldBaseProps & {
 export const MultiSelectField = ({
   groupOptions,
   label,
+  isRequired,
   variant,
   isSmart: isSmartProp,
   errorMessage,
@@ -69,7 +78,9 @@ export const MultiSelectField = ({
         onBlur={onBlur}
         ref={ref}
       >
-        <Label className={isSmart ? 'text-xs font-light' : ''}>{label}</Label>
+        <Label className={isSmart ? 'text-xs font-light' : ''} isRequired={isRequired}>
+          {label}
+        </Label>
         <Select.Trigger className={isSmart ? 'min-h-7 py-1' : undefined}>
           <Select.Value>
             {() => {
@@ -170,6 +181,7 @@ export const SingleSelectField = ({
   groupOptions,
   label,
   isLabelHidden,
+  isRequired,
   variant,
   isClearable = false,
   isDisabled = false,
@@ -193,7 +205,12 @@ export const SingleSelectField = ({
         onBlur={onBlur}
         ref={ref}
       >
-        <Label className={cn(isSmart ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}>{label}</Label>
+        <Label
+          className={cn(isSmart ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}
+          isRequired={isRequired}
+        >
+          {label}
+        </Label>
         <Select.Trigger // isSmart: 既定 36px を 28px に詰める
           className={isSmart ? 'min-h-7 py-1' : undefined}
         >

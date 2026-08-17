@@ -1,3 +1,4 @@
+import { isAPIError } from 'better-auth/api'
 import { createMiddleware, createSafeActionClient } from 'next-safe-action'
 import { headers } from 'next/headers'
 import z from 'zod'
@@ -17,10 +18,11 @@ type ServerError = { name?: string; errorType: string; message: string }
  * エラーハンドラー
  *
  * ClientError は errorType でクライアント側の分岐に使うため内容をそのまま返す。
+ * better-auth の APIError も文言が利用者向けなのでそのまま返す。
  * それ以外(Prisma の制約名・接続情報・環境変数名などが混ざりうる)はログにだけ残し、
  * クライアントへは固定文言を返して内部情報を出さない。
  */
-const handleServerError = (error: Error) => {
+export const handleServerError = (error: Error) => {
   if (error instanceof ClientError) {
     // クライアントエラー系
     logger.info(error)
@@ -28,6 +30,15 @@ const handleServerError = (error: Error) => {
       name: error.name,
       errorType: error.errorType,
       message: error.message,
+    }
+  }
+
+  if (isAPIError(error)) {
+    // better-auth 由来。固定文言に潰すと原因(SESSION_NOT_FRESH など)が追えなくなる
+    logger.info(error)
+    return {
+      errorType: error.body?.code ?? 'AUTH_ERROR',
+      message: error.body?.message ?? error.message,
     }
   }
 

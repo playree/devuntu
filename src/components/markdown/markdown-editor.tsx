@@ -114,9 +114,8 @@ const EditorField: FC<{
       <div // action にはボタンが入るため、そのときだけ中央揃えにしてラベルと高さを合わせる
         className={cn('flex justify-between', action ? 'items-center' : 'items-baseline')}
       >
-        <Label className={isSmart ? 'text-xs font-light' : ''}>
+        <Label className={isSmart ? 'text-xs font-light' : ''} isRequired={isRequired}>
           {label}
-          {isRequired ? '*' : ''}
         </Label>
         <div className='flex items-center gap-2'>
           {maxLength !== undefined && (

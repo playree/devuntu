@@ -39,11 +39,16 @@ oauth_config:
       - profile
       - email
     bot:
-      # メンション通知の DM 送信(chat.postMessage)
+      # メンション通知の DM 送信とボードのチャンネル通知(chat.postMessage)。
+      # DM とチャンネルで必要なスコープは変わらないが、チャンネルへは招待が要る
       - chat:write
       # 貼られたリンクの検知(link_shared)とプレビューの反映(chat.unfurl)
       - links:read
       - links:write
+      # ボード設定で通知先チャンネルを選ぶための一覧取得(users.conversations)。
+      # groups:read で見えるプライベートチャンネルは Bot が招待済みのものだけ
+      - channels:read
+      - groups:read
 
 settings:
   event_subscriptions:

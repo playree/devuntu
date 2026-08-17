@@ -38,9 +38,14 @@ const DRAG_TYPE = 'ticket'
 const SCROLL_CARDS_CLASS = 'md:-m-0.5 md:flex-1 md:overflow-y-auto md:p-0.5'
 
 /**
- * backlog のカード領域の高さ上限。カード2行分で頭打ちにして、残りはレーン内でスクロールさせる。
+ * backlog のカード領域の高さ上限。グリッド表示のカード2行分で頭打ちにして、残りはレーン内でスクロールさせる。
+ *
+ * カードは内容なりの高さなので、一番背が高くなる構成(タイトル2行 + メタ行 + タグ行 = 実測 117px)を基準に
+ * 117px × 2行 + gap-2(8px) + p-0.5 の上下(4px) = 246px を満たす値にしている。
+ *
+ * md 未満は1カラムの縦積みでレーン内スクロールも掛けないため、上限も掛けない(ページスクロールに任せる)。
  */
-const BACKLOG_MAX_H_CLASS = 'md:max-h-[12.5rem]'
+const BACKLOG_MAX_H_CLASS = 'md:max-h-[16rem]'
 
 /**
  * レーンの配置。todo/doing/done を横3列、その下に backlog を全幅で置く。

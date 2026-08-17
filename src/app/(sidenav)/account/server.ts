@@ -1,7 +1,6 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action-server'
-import { auth } from '@/lib/auth'
 import { isValidTimezone } from '@/lib/day'
 import { errValidation } from '@/lib/error'
 import { canUseGoogleAccount } from '@/lib/google-account'
@@ -12,7 +11,6 @@ import { prisma } from '@/lib/prisma'
 import { scUpdateNotifySetting } from '@/lib/schema'
 import { SLACK_PROVIDER_ID } from '@/lib/slack'
 import { canUseSlackAccount } from '@/lib/slack-account'
-import { headers } from 'next/headers'
 import { z } from 'zod'
 
 export const getGoogleAccountStatus = safeAuthAction
@@ -35,12 +33,16 @@ export const getGoogleAccountStatus = safeAuthAction
   })
 export type GetGoogleAccountStatusReturnType = Awaited<ReturnType<typeof getGoogleAccountStatus>>['data']
 
+/**
+ * better-auth の unlinkAccount は使わない。
+ * あちらはログイン資格情報の削除を想定していてセッションの鮮度(freshAge)を要求するが、
+ * ここで消すのは連携トークンなので、連携時と同じくセッションの鮮度は問わない。
+ */
 export const disconnectGoogleAccount = safeAuthAction
   .metadata({ actionName: 'disconnectGoogleAccount', role: 'user' })
   .action(async ({ ctx: { user } }) => {
-    await auth.api.unlinkAccount({
-      body: { providerId: GOOGLE_ACCOUNT_PROVIDER_ID },
-      headers: await headers(),
+    await prisma.account.deleteMany({
+      where: { userId: user.id, providerId: GOOGLE_ACCOUNT_PROVIDER_ID },
     })
 
     logger.info({ userId: user.id }, 'google account disconnected')
@@ -64,12 +66,12 @@ export const getSlackStatus = safeAuthAction
   })
 export type GetSlackStatusReturnType = Awaited<ReturnType<typeof getSlackStatus>>['data']
 
+/** unlinkAccount を使わない理由は disconnectGoogleAccount を参照 */
 export const disconnectSlack = safeAuthAction
   .metadata({ actionName: 'disconnectSlack', role: 'user' })
   .action(async ({ ctx: { user } }) => {
-    await auth.api.unlinkAccount({
-      body: { providerId: SLACK_PROVIDER_ID },
-      headers: await headers(),
+    await prisma.account.deleteMany({
+      where: { userId: user.id, providerId: SLACK_PROVIDER_ID },
     })
 
     logger.info({ userId: user.id }, 'slack account disconnected')

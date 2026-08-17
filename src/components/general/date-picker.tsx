@@ -95,12 +95,20 @@ export const DatePickerField = ({
       isReadOnly={isReadOnly}
       isRequired={isRequired}
       isDisabled={isDisabled}
+      /**
+       * 既定の native はネイティブ制約検証を有効にするため、未入力だと submit イベントごと
+       * 握り潰されて react-hook-form の handleSubmit まで届かない。
+       * aria なら検証は zod の一本に保てる
+       */
+      validationBehavior='aria'
       className='flex w-full'
     >
       {label && (
-        <Label className={cn(isSmart ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}>
+        <Label
+          className={cn(isSmart ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}
+          isRequired={isRequired}
+        >
           {label}
-          {isRequired ? '*' : ''}
         </Label>
       )}
       <DateField.Group
@@ -213,12 +221,16 @@ export const DateRangePickerField = ({
       isReadOnly={isReadOnly}
       isRequired={isRequired}
       isDisabled={isDisabled}
+      // validationBehavior は DatePickerField と同じ事情
+      validationBehavior='aria'
       className='flex w-full'
     >
       {label && (
-        <Label className={cn(isSmart ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}>
+        <Label
+          className={cn(isSmart ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}
+          isRequired={isRequired}
+        >
           {label}
-          {isRequired ? '*' : ''}
         </Label>
       )}
       <DateField.Group // isSmart の高さ調整は DatePickerField と同じ

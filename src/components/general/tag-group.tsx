@@ -18,6 +18,7 @@ export const MultiTagField = <T extends string>({
   onChange,
   size = 'sm',
   variant,
+  isRequired,
   isSmart: isSmartProp,
   ariaLabel,
 }: {
@@ -27,6 +28,7 @@ export const MultiTagField = <T extends string>({
   onChange: (value: T[]) => void
   size?: 'sm' | 'md' | 'lg'
   variant?: 'default' | 'surface'
+  isRequired?: boolean
   isSmart?: boolean
   ariaLabel?: string
 }) => {
@@ -54,7 +56,15 @@ export const MultiTagField = <T extends string>({
       <fieldset // items prop は使わず静的に children を map する(react-aria のコレクションキャッシュを避ける)
         className='rounded-xl border-2 px-2 pt-0.5 pb-1.5'
       >
-        <legend className={cn('text-foreground px-2', isSmart ? 'text-xs font-light' : '')}>{label}</legend>
+        <legend // fieldset の枠線ノッチを保つため legend のまま。必須(*)は Label と同じ CSS クラスで出す
+          className={cn(
+            'text-foreground px-2',
+            isSmart ? 'text-xs font-light' : '',
+            isRequired ? 'label--required' : '',
+          )}
+        >
+          {label}
+        </legend>
         <TagGroup.List>
           {items.map((item) => (
             <Tag key={item.id} id={item.id} textValue={item.label} isDisabled={item.isDisabled}>
