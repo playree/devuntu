@@ -57,6 +57,7 @@ export const en: LocaleItems = {
   confirmed: 'Confirmed',
   content: 'Content',
   copy: 'Copy',
+  copy_url: 'Copy URL',
   create_tag: 'Create “${name}”',
   created_at: 'Created At',
   danger_zone: 'Danger Zone',

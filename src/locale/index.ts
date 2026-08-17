@@ -55,6 +55,7 @@ export type LocaleItemBase =
   | 'confirmed'
   | 'content'
   | 'copy'
+  | 'copy_url'
   | 'create_tag'
   | 'created_at'
   | 'danger_zone'

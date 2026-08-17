@@ -87,6 +87,8 @@ const ClipboardDocumentCheckIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, s
 export const CopyableField: FC<
   {
     text: string
+    /** クリップボードへ渡す値。未指定なら表示している text をそのままコピーする */
+    copyText?: string
     isMask?: boolean
     variant?: InputGroupProps['variant']
     isSmart?: boolean
@@ -103,6 +105,7 @@ export const CopyableField: FC<
   )
 > = ({
   text,
+  copyText,
   label,
   ariaLabel,
   isMask,
@@ -165,7 +168,7 @@ export const CopyableField: FC<
             onPress={async () => {
               try {
                 // 安全なコンテキスト(https / localhost)の外では navigator.clipboard 自体が無く、参照だけで例外になる
-                await navigator.clipboard.writeText(text)
+                await navigator.clipboard.writeText(copyText ?? text)
               } catch {
                 /**
                  * コピーできていないので、成功の表示はしない。

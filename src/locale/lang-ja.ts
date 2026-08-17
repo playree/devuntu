@@ -57,6 +57,7 @@ export const ja: DefaultLocaleItems = {
   confirmed: '確認した',
   content: '内容',
   copy: 'コピー',
+  copy_url: 'URLをコピー',
   create_tag: '「${name}」を作成',
   created_at: '作成日時',
   danger_zone: 'デンジャーゾーン',
