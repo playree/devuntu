@@ -112,9 +112,8 @@ const FileField = ({
 
   return (
     <TextField isInvalid={!!errorMessage}>
-      <Label className={isSmart ? 'text-xs font-light' : ''}>
+      <Label className={isSmart ? 'text-xs font-light' : ''} isRequired={isRequired}>
         {label}
-        {isRequired ? '*' : ''}
       </Label>
       <div className={cn('flex items-center', isSmart ? 'gap-2' : 'gap-3')}>
         <div className={cn('flex items-center', isSmart ? 'size-8' : 'size-12')}>

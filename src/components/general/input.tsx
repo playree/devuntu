@@ -58,9 +58,11 @@ export const InputField = ({
   const isSmart = useIsSmart(isSmartProp)
   return (
     <TextField isInvalid={!!errorMessage} isReadOnly={isReadOnly}>
-      <Label className={cn(isSmart ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}>
+      <Label
+        className={cn(isSmart ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}
+        isRequired={isRequired}
+      >
         {label}
-        {isRequired ? '*' : ''}
       </Label>
       <Input
         {...props}
@@ -156,9 +158,8 @@ export const InputSearchField = ({
     <SearchField {...props}>
       {({ state }) => (
         <>
-          <Label className={isSmart ? 'text-xs font-light' : ''}>
+          <Label className={isSmart ? 'text-xs font-light' : ''} isRequired={isRequired}>
             {label}
-            {isRequired ? '*' : ''}
           </Label>
           <SearchField.Group className={isSmart ? 'h-min' : ''}>
             <SearchField.SearchIcon />

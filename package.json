@@ -10,6 +10,7 @@
     "prettier": "prettier --write --ignore-path .gitignore --ignore-path .prettierignore './**/*.{js,jsx,ts,tsx,json,css}'",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:standalone": "./scripts/test-standalone.sh",
     "typecheck": "next typegen && tsc --noEmit",
     "migrate": "prisma migrate dev",
     "generate": "prisma generate",

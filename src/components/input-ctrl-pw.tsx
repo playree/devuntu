@@ -122,9 +122,8 @@ export const InputCtrlPassword = <
             isInvalid={!!errorMessage}
             isReadOnly={isReadOnly}
           >
-            <Label className={isSmart ? 'text-xs font-light' : ''}>
+            <Label className={isSmart ? 'text-xs font-light' : ''} isRequired={isRequired}>
               {label}
-              {isRequired ? '*' : ''}
             </Label>
             <InputGroup // isSmart: 既定 36px を 28px に詰める
               variant={variant}

@@ -2,17 +2,17 @@
 
 import { MultiButton } from '@/components/general/button'
 import { CheckBoxField } from '@/components/general/checkbox'
-import { FlexCol } from '@/components/general/flex'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
 import { FormModal, ModalBaseProps } from '@/components/general/modal'
+import { SingleSelectField } from '@/components/general/select'
 import { CheckIcon, PencilSquareIcon, PlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
 import { minToHHmm, WEEKDAY_LABELS, WEEKDAY_ORDER } from '@/lib/day'
 import { CreateBusyTime, scBusyTimeBase, scCreateBusyTime, UpdateBusyTime } from '@/lib/schema'
 import { useLocale } from '@/locale/client'
-import { ErrorMessage, Label, ListBox, Select } from '@heroui/react'
+import { CheckboxGroup, ErrorMessage, Label } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FC } from 'react'
 import { Controller, useForm } from 'react-hook-form'
@@ -22,10 +22,9 @@ const EVERYDAY = [0, 1, 2, 3, 4, 5, 6]
 const WEEKDAYS_ONLY = [1, 2, 3, 4, 5]
 
 /** 30分刻みの選択肢(分) */
-const START_OPTIONS = Array.from({ length: 48 }, (_, i) => i * 30) // 00:00..23:30
-const END_OPTIONS = Array.from({ length: 48 }, (_, i) => (i + 1) * 30) // 00:30..24:00
-
-const toggle = (arr: number[], d: number) => (arr.includes(d) ? arr.filter((x) => x !== d) : [...arr, d])
+const toTimeOptions = (mins: number[]) => Object.fromEntries(mins.map((m) => [String(m), minToHHmm(m)]))
+const START_OPTIONS = toTimeOptions(Array.from({ length: 48 }, (_, i) => i * 30)) // 00:00..23:30
+const END_OPTIONS = toTimeOptions(Array.from({ length: 48 }, (_, i) => (i + 1) * 30)) // 00:30..24:00
 
 /**
  * 追加Busy時間の登録/更新モーダル。target が渡されれば更新、無ければ新規登録。
@@ -99,9 +98,19 @@ export const BusyTimeModal: FC<ModalBaseProps & { target?: UpdateBusyTime }> = (
           control={control}
           name='weekdays'
           render={({ field: { value, onChange } }) => (
-            <FlexCol className='col-span-12 gap-2'>
+            <CheckboxGroup
+              /**
+               * ErrorMessage は react-aria のフィールドが提供する errorMessage slot が要るため
+               * 素の div ではなく CheckboxGroup で囲む。
+               * isRequired は渡さない(ネイティブ required 検証で submit が握り潰されるため)
+               */
+              className='col-span-12 gap-2'
+              isInvalid={!!errors.weekdays}
+              value={value.map(String)}
+              onChange={(keys) => onChange(keys.map(Number))}
+            >
               <div className='flex items-center gap-2'>
-                <Label>{t('weekday')}*</Label>
+                <Label isRequired>{t('weekday')}</Label>
                 <MultiButton size='sm' variant='outline' onPress={() => onChange(EVERYDAY)}>
                   {t('everyday')}
                 </MultiButton>
@@ -109,20 +118,15 @@ export const BusyTimeModal: FC<ModalBaseProps & { target?: UpdateBusyTime }> = (
                   {t('weekdays_only')}
                 </MultiButton>
               </div>
-              <div className='flex flex-wrap gap-3'>
+              <div // checkbox-group の既定は縦並び前提で子に mt-4 が入るため、横並び用に打ち消す
+                className='flex flex-wrap gap-3 **:data-[slot=checkbox]:mt-0'
+              >
                 {WEEKDAY_ORDER.map((d) => (
-                  <CheckBoxField
-                    key={d}
-                    id={`weekday-${d}`}
-                    label={labels[d]}
-                    variant='secondary'
-                    isSelected={value.includes(d)}
-                    onChange={() => onChange(toggle(value, d))}
-                  />
+                  <CheckBoxField key={d} id={`weekday-${d}`} value={String(d)} label={labels[d]} variant='secondary' />
                 ))}
               </div>
               <ErrorMessage className='min-h-4'>{fet(errors.weekdays)}</ErrorMessage>
-            </FlexCol>
+            </CheckboxGroup>
           )}
         />
 
@@ -132,9 +136,12 @@ export const BusyTimeModal: FC<ModalBaseProps & { target?: UpdateBusyTime }> = (
             control={control}
             name='startMin'
             render={({ field: { value, onChange, onBlur, ref } }) => (
-              <Select
-                selectionMode='single'
+              <SingleSelectField
+                groupOptions={START_OPTIONS}
+                label={t('start_time')}
                 variant='secondary'
+                isRequired
+                errorMessage={fet(errors.startMin)}
                 value={String(value)}
                 onChange={(key) => {
                   if (key !== null) {
@@ -143,26 +150,9 @@ export const BusyTimeModal: FC<ModalBaseProps & { target?: UpdateBusyTime }> = (
                 }}
                 onBlur={onBlur}
                 ref={ref}
-              >
-                <Label>{t('start_time')}</Label>
-                <Select.Trigger>
-                  <Select.Value />
-                  <Select.Indicator />
-                </Select.Trigger>
-                <Select.Popover>
-                  <ListBox selectionMode='single'>
-                    {START_OPTIONS.map((m) => (
-                      <ListBox.Item key={m} id={String(m)} textValue={minToHHmm(m)}>
-                        {minToHHmm(m)}
-                        <ListBox.ItemIndicator />
-                      </ListBox.Item>
-                    ))}
-                  </ListBox>
-                </Select.Popover>
-              </Select>
+              />
             )}
           />
-          <ErrorMessage className='min-h-4'>{fet(errors.startMin)}</ErrorMessage>
         </div>
 
         {/* 終了時刻 */}
@@ -171,9 +161,12 @@ export const BusyTimeModal: FC<ModalBaseProps & { target?: UpdateBusyTime }> = (
             control={control}
             name='endMin'
             render={({ field: { value, onChange, onBlur, ref } }) => (
-              <Select
-                selectionMode='single'
+              <SingleSelectField
+                groupOptions={END_OPTIONS}
+                label={t('end_time')}
                 variant='secondary'
+                isRequired
+                errorMessage={fet(errors.endMin)}
                 value={String(value)}
                 onChange={(key) => {
                   if (key !== null) {
@@ -182,26 +175,9 @@ export const BusyTimeModal: FC<ModalBaseProps & { target?: UpdateBusyTime }> = (
                 }}
                 onBlur={onBlur}
                 ref={ref}
-              >
-                <Label>{t('end_time')}</Label>
-                <Select.Trigger>
-                  <Select.Value />
-                  <Select.Indicator />
-                </Select.Trigger>
-                <Select.Popover>
-                  <ListBox selectionMode='single'>
-                    {END_OPTIONS.map((m) => (
-                      <ListBox.Item key={m} id={String(m)} textValue={minToHHmm(m)}>
-                        {minToHHmm(m)}
-                        <ListBox.ItemIndicator />
-                      </ListBox.Item>
-                    ))}
-                  </ListBox>
-                </Select.Popover>
-              </Select>
+              />
             )}
           />
-          <ErrorMessage className='min-h-4'>{fet(errors.endMin)}</ErrorMessage>
         </div>
       </GridBox>
     </FormModal>
