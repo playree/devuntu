@@ -2,11 +2,19 @@
 
 import { DateRangePickerField } from '@/components/general/date-picker'
 import { GridBox } from '@/components/general/grid'
+import { SingleSelectField } from '@/components/general/select'
 import { MultiTagField } from '@/components/general/tag-group'
 import { AssigneeOption, AssigneeSelectField } from '@/components/ticket/assignee-select'
 import { TagNameSelectField, TagSelectOption } from '@/components/ticket/tag-select'
 import { useTicketOptions } from '@/components/ticket/ticket-chip'
-import { ASSIGNEE_NONE, KanbanFilter, MAX_TICKET_TAGS, TICKET_PRIORITIES } from '@/lib/task'
+import {
+  ASSIGNEE_NONE,
+  KANBAN_DONE_DAYS_OPTIONS,
+  KANBAN_DONE_VISIBLE_DAYS,
+  KanbanFilter,
+  MAX_TICKET_TAGS,
+  TICKET_PRIORITIES,
+} from '@/lib/task'
 import { useLocale } from '@/locale/client'
 import { FC } from 'react'
 
@@ -16,6 +24,7 @@ import { FC } from 'react'
  * チケット一覧の `TicketSearchPanel` と同じ部品で組むが、対象が単一ボードなので
  * キーワード / ボード / ステータス(= レーン)は持たず、担当者はそのボードのメンバーから選ばせる。
  * 絞り込み自体はサーバーへ投げずクライアントで行う(呼び出し側の `filterLaneMap` を参照)。
+ * 完了の表示期間だけは Cookie に残る(`useKanbanFilter`)。
  */
 export const KanbanFilterPanel: FC<{
   filter: KanbanFilter
@@ -33,6 +42,14 @@ export const KanbanFilterPanel: FC<{
     { id: ASSIGNEE_NONE, name: t('unassigned'), hideAvatar: true },
     ...assigneeOptions,
   ]
+
+  // 英語の単複を正しく出すため 1 日だけ別のロケールキーを使う
+  const doneDaysOptions: Record<string, string> = Object.fromEntries(
+    KANBAN_DONE_DAYS_OPTIONS.map((days) => [
+      String(days),
+      days === 1 ? t('msg_within_a_day') : t('msg_within_days', { days: String(days) }),
+    ]),
+  )
 
   return (
     <GridBox isSmart>
@@ -60,6 +77,19 @@ export const KanbanFilterPanel: FC<{
           label={t('due_date')}
           value={filter.due}
           onChange={(due) => onChange({ ...filter, due })}
+        />
+      </div>
+
+      <div className='col-span-6 md:col-span-2'>
+        <SingleSelectField
+          /**
+           * 完了レーンにだけ効く「完了日時からの経過日数」。
+           * 最大値がサーバーの取得上限と同じで絞り込みなしと同義なので、未選択(isClearable)は用意しない
+           */
+          label={t('completed_within')}
+          groupOptions={doneDaysOptions}
+          value={String(filter.doneDays)}
+          onChange={(value) => onChange({ ...filter, doneDays: Number(value) || KANBAN_DONE_VISIBLE_DAYS })}
         />
       </div>
 

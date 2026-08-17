@@ -26,6 +26,8 @@ import {
   insertAt,
   isKanbanFilterActive,
   isReservedBoardKey,
+  KANBAN_DONE_DAYS_OPTIONS,
+  KANBAN_DONE_VISIBLE_DAYS,
   kanbanDoneSince,
   kanbanLaneWhere,
   kanbanTicketWhere,
@@ -976,11 +978,15 @@ const makeCard = (id: string, over: Partial<KanbanFilterCard> = {}): KanbanFilte
   priority: 'medium',
   tags: [],
   dueDate: null,
+  completedAt: null,
   ...over,
 })
 
 /** 期日は UTC 0:00 で保存されるので、テストの値もその形で作る */
 const due = (value: string) => new Date(`${value}T00:00:00.000Z`)
+
+/** 完了カードの表示期間の判定に使う基準時刻。完了日時は時刻まで保持する */
+const filterNow = new Date('2026-08-10T12:00:00.000Z')
 
 describe('isKanbanFilterActive: 絞り込みが指定されているか', () => {
   it('初期値は非アクティブ', () => {
@@ -993,6 +999,17 @@ describe('isKanbanFilterActive: 絞り込みが指定されているか', () => 
     expect(isKanbanFilterActive({ ...defaultKanbanFilter, priority: ['high'] })).toBe(true)
     expect(isKanbanFilterActive({ ...defaultKanbanFilter, tags: ['bug'] })).toBe(true)
     expect(isKanbanFilterActive({ ...defaultKanbanFilter, due: { start: '2026-08-01', end: '2026-08-31' } })).toBe(true)
+    expect(isKanbanFilterActive({ ...defaultKanbanFilter, doneDays: 7 })).toBe(true)
+  })
+
+  it('完了の表示期間が取得上限と同じならアクティブにしない', () => {
+    expect(isKanbanFilterActive({ ...defaultKanbanFilter, doneDays: KANBAN_DONE_VISIBLE_DAYS })).toBe(false)
+  })
+})
+
+describe('KANBAN_DONE_DAYS_OPTIONS: 完了の表示期間の選択肢', () => {
+  it('最大値は取得上限と一致する(サーバーがそれより古い done を返さない)', () => {
+    expect(Math.max(...KANBAN_DONE_DAYS_OPTIONS)).toBe(KANBAN_DONE_VISIBLE_DAYS)
   })
 })
 
@@ -1064,6 +1081,26 @@ describe('matchesKanbanFilter: カード 1 枚の一致判定', () => {
     expect(matchesKanbanFilter(makeCard('b', { ...base, priority: 'low' }), filter)).toBe(false)
     expect(matchesKanbanFilter(makeCard('c', { ...base, dueDate: due('2026-09-01') }), filter)).toBe(false)
   })
+
+  it('完了の表示期間: 期間内の完了は残り、期間外は落ちる', () => {
+    const filter = { ...defaultKanbanFilter, doneDays: 7 }
+    const done = (completedAt: Date) => makeCard('a', { status: 'done' as const, completedAt })
+    expect(matchesKanbanFilter(done(new Date('2026-08-10T00:00:00.000Z')), filter, filterNow)).toBe(true)
+    expect(matchesKanbanFilter(done(new Date('2026-08-03T12:00:00.000Z')), filter, filterNow), '境界と同時刻').toBe(
+      true,
+    )
+    expect(matchesKanbanFilter(done(new Date('2026-08-03T11:59:59.000Z')), filter, filterNow)).toBe(false)
+  })
+
+  it('完了の表示期間: 完了日時なしの done は常に残す(サーバーの表示条件と揃える)', () => {
+    const card = makeCard('a', { status: 'done', completedAt: null })
+    expect(matchesKanbanFilter(card, { ...defaultKanbanFilter, doneDays: 1 }, filterNow)).toBe(true)
+  })
+
+  it('完了の表示期間: done 以外は完了日時が古くても落ちない', () => {
+    const card = makeCard('a', { status: 'todo', completedAt: new Date('2026-01-01T00:00:00.000Z') })
+    expect(matchesKanbanFilter(card, { ...defaultKanbanFilter, doneDays: 1 }, filterNow)).toBe(true)
+  })
 })
 
 describe('filterLaneMap / countLaneMap: レーン単位の絞り込み', () => {
@@ -1109,5 +1146,19 @@ describe('filterLaneMap / countLaneMap: レーン単位の絞り込み', () => {
   it('一致なしは全レーン空', () => {
     const filtered = filterLaneMap(lanes, { ...defaultKanbanFilter, tags: ['nope'] })
     expect(countLaneMap(filtered)).toBe(0)
+  })
+
+  it('完了の表示期間は done レーンだけを絞る', () => {
+    const withDone = groupByLane([
+      makeCard('t1', { status: 'todo' }),
+      makeCard('recent', { status: 'done', completedAt: new Date('2026-08-09T00:00:00.000Z') }),
+      makeCard('old', { status: 'done', completedAt: new Date('2026-07-20T00:00:00.000Z') }),
+    ])
+    const filtered = filterLaneMap(withDone, { ...defaultKanbanFilter, doneDays: 7 }, filterNow)
+    expect(filtered.done.map((c) => c.id)).toEqual(['recent'])
+    expect(
+      filtered.todo.map((c) => c.id),
+      '他のレーンは変わらない',
+    ).toEqual(['t1'])
   })
 })

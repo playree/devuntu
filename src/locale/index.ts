@@ -49,6 +49,7 @@ export type LocaleItemBase =
   | 'close'
   | 'comment'
   | 'completed_at'
+  | 'completed_within'
   | 'confirm_archive'
   | 'confirm_deletion'
   | 'confirmed'
@@ -272,6 +273,8 @@ export type LocaleItemBase =
   | 'msg_too_many_requests'
   | 'msg_updated_target'
   | 'msg_user_not_exist'
+  | 'msg_within_a_day'
+  | 'msg_within_days'
   // for Mail
   | 'mail_mention_body'
   | 'mail_mention_comment_body'

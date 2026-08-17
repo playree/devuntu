@@ -51,6 +51,7 @@ export const ja: DefaultLocaleItems = {
   close: '閉じる',
   comment: 'コメント',
   completed_at: '完了日時',
+  completed_within: '完了の表示期間',
   confirm_archive: 'アーカイブ確認',
   confirm_deletion: '削除確認',
   confirmed: '確認した',
@@ -280,6 +281,8 @@ export const ja: DefaultLocaleItems = {
   msg_too_many_requests: '試行回数が多すぎます。しばらく時間をおいてからお試しください。',
   msg_updated_target: '${target} を更新しました。',
   msg_user_not_exist: 'ユーザーが存在しません。',
+  msg_within_a_day: '1日以内',
+  msg_within_days: '${days}日以内',
 
   mail_mention_body: `\${message}
 

@@ -21,16 +21,15 @@ import { AssigneeOption } from '@/components/ticket/assignee-select'
 import { useBoardName } from '@/components/ticket/ticket-chip'
 import type { TicketStatus } from '@/generated/prisma/enums'
 import { parseAction, useActionData } from '@/lib/action-client'
+import { nowDate } from '@/lib/day'
 import {
   applyLaneMove,
   countLaneMap,
   dedupeTagOptionsByName,
-  defaultKanbanFilter,
   DropTarget,
   emptyLaneMap,
   filterLaneMap,
   isKanbanFilterActive,
-  KanbanFilter,
   LaneMap,
   MAX_KANBAN_CARDS,
   parseDropTarget,
@@ -46,6 +45,7 @@ import { TicketDetailClient } from '../../tickets/[id]/client'
 import { AddModal } from '../../tickets/modals'
 import { getAssigneeOptions, getTicketFormOptions, GetTicketFormOptionsReturnType } from '../../tickets/server'
 import { KanbanFilterPanel } from './filter-panel'
+import { useKanbanFilter } from './filter-state'
 import { KanbanCard, KanbanLane, LANE_ORDER } from './kanban'
 import { getBoardKanban, moveTicket } from './server'
 
@@ -59,7 +59,7 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
   const { data, reload, refresh, isLoading } = useActionData(() => getBoardKanban({ id: boardId }))
   const [options, setOptions] = useState<GetTicketFormOptionsReturnType>()
   const [assigneeOptions, setAssigneeOptions] = useState<AssigneeOption[]>([])
-  const [filter, setFilter] = useState<KanbanFilter>(defaultKanbanFilter)
+  const [filter, setFilter] = useKanbanFilter()
   // 詳細パネルに表示中のチケット。未選択なら undefined
   const [selectedId, setSelectedId] = useState<string>()
   // 楽観更新の結果。取得元(base)を持たせておくことで reload 後は自動的に破棄される
@@ -69,7 +69,8 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
 
   // 絞り込みは描画にだけ効かせる。move() / applyLaneMove は絞り込み前の lanes を使い続けること
   // (index はレーンの実際の位置で送る必要があるため、絞り込み後の配列を渡すと並び順が壊れる)
-  const visibleLanes = useMemo(() => filterLaneMap(lanes, filter), [lanes, filter])
+  // 完了の表示期間の基準時刻は、盤面の取得か絞り込みの変更でこれが再評価されるたびに取り直す
+  const visibleLanes = useMemo(() => filterLaneMap(lanes, filter, nowDate()), [lanes, filter])
 
   useEffect(() => {
     parseAction(getTicketFormOptions())

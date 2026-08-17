@@ -51,6 +51,7 @@ export const en: LocaleItems = {
   close: 'Close',
   comment: 'Comment',
   completed_at: 'Completed At',
+  completed_within: 'Completed Within',
   confirm_archive: 'Confirm archive',
   confirm_deletion: 'Confirm deletion',
   confirmed: 'Confirmed',
@@ -281,6 +282,8 @@ Please copy and use the connection information above.
   msg_too_many_requests: 'Too many attempts. Please wait a while and try again.',
   msg_updated_target: 'Updated ${target}.',
   msg_user_not_exist: 'User does not exist.',
+  msg_within_a_day: 'Within 1 day',
+  msg_within_days: 'Within ${days} days',
 
   mail_mention_body: `\${message}
 
