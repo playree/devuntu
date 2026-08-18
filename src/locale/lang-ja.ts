@@ -121,6 +121,7 @@ export const ja: DefaultLocaleItems = {
   oidc_clients: 'OIDCクライアント',
   ok: 'OK',
   otp: 'OTP',
+  overdue: '期限切れ',
   owner: 'オーナー',
   passkey: 'パスキー',
   passkey_signin: 'パスキーでサインイン',

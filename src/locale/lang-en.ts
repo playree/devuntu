@@ -121,6 +121,7 @@ export const en: LocaleItems = {
   oidc_clients: 'OIDC Clients',
   ok: 'OK',
   otp: 'OTP',
+  overdue: 'Overdue',
   owner: 'Owner',
   passkey: 'Passkey',
   passkey_signin: 'Sign in with Passkey',

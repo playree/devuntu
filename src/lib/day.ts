@@ -110,6 +110,16 @@ export const dateOnlyToUtc = (value?: string | null): Date | null => {
 export const utcToDateOnly = (date?: Date | null): string | null =>
   date ? dayjs(date).utc().format('YYYY-MM-DD') : null
 
+/**
+ * UTC 0:00 で保存された期日が、指定タイムゾーンの今日より前かを判定する(当日は期限切れにしない)。
+ *
+ * `YYYY-MM-DD` の辞書順は日付順なので、matchesKanbanFilter と同じく文字列のまま比べる。
+ */
+export const isDateOnlyOverdue = (date?: Date | null, tz: string = DEFAULT_TZ): boolean => {
+  const due = utcToDateOnly(date)
+  return !!due && due < dayjs().tz(tz).format('YYYY-MM-DD')
+}
+
 /** xx分以内かのチェック */
 export const withinMinutes = (date: Date, min: number) => {
   const now = dayjs()

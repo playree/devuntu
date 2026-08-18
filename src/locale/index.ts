@@ -119,6 +119,7 @@ export type LocaleItemBase =
   | 'oidc_clients'
   | 'ok'
   | 'otp'
+  | 'overdue'
   | 'owner'
   | 'passkey'
   | 'passkey_signin'
