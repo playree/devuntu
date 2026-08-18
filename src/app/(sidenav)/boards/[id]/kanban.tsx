@@ -2,7 +2,7 @@
 
 import { UserAvatar } from '@/components/general/avatar'
 import { MultiButton } from '@/components/general/button'
-import { ChatBubbleIcon, CheckBadgeIcon, ClockIcon, PlusIcon } from '@/components/icon'
+import { ChatBubbleIcon, CheckBadgeIcon, ClockIcon, FireIcon, PlusIcon } from '@/components/icon'
 import {
   CARD_BACKDROP_CLASS,
   PriorityBar,
@@ -16,7 +16,7 @@ import {
 } from '@/components/ticket/ticket-chip'
 import type { TicketStatus } from '@/generated/prisma/enums'
 import { preventParentSelection } from '@/lib/client-utils'
-import { dayformat } from '@/lib/day'
+import { dayformat, isDateOnlyOverdue } from '@/lib/day'
 import { cardDropId, KANBAN_LANES, laneDropId } from '@/lib/task'
 import { useLocale } from '@/locale/client'
 import { PointerActivationConstraints } from '@dnd-kit/dom'
@@ -24,6 +24,7 @@ import { KeyboardSensor, PointerSensor, useDraggable, useDroppable } from '@dnd-
 import { cn } from '@heroui/react'
 import Link from 'next/link'
 import { FC } from 'react'
+import { tv } from 'tailwind-variants'
 import { GetBoardKanbanReturnType } from './server'
 
 type Kanban = NonNullable<GetBoardKanbanReturnType>
@@ -94,10 +95,24 @@ const CARD_SENSORS = [
   }),
 ]
 
+/**
+ * 期日行の配色。期限切れは色だけでなくアイコンも変えるので、判定は 1 箇所に持たせて呼び出し側で共有する。
+ * クラス名は purge 対策で必ず完全なリテラルで書くこと(ticket-chip.tsx と同じ規約)。
+ */
+const dueDateStyles = tv({
+  base: 'flex items-center gap-0.5 text-xs',
+  variants: {
+    overdue: {
+      true: 'text-danger',
+      false: 'text-gray-500',
+    },
+  },
+})
+
 /** カード 1 枚。レーン移動は DnD、それ以外の変更は選択して詳細パネルから行う */
 const KanbanCardView: FC<{
   card: KanbanCard
-  /** 完了日時の表示に使うユーザーのタイムゾーン。カードごとにセッションを購読しないよう上から渡す */
+  /** 完了日時の表示と期限切れ判定に使うユーザーのタイムゾーン。カードごとにセッションを購読しないよう上から渡す */
   tz: string
   isSelected: boolean
   onSelect: (selected: boolean) => void
@@ -107,6 +122,8 @@ const KanbanCardView: FC<{
   const { ref: dragRef, isDragging } = useDraggable({ id: card.id, type: DRAG_TYPE, sensors: CARD_SENSORS })
 
   const toggle = () => onSelect(!isSelected)
+
+  const overdue = isDateOnlyOverdue(card.dueDate, tz)
 
   return (
     <div // 外側 = ドロップ枠 兼 選択の当たり判定。ドラッグ中も矩形が元位置に留まるので挿入位置の基準が安定する
@@ -196,9 +213,13 @@ const KanbanCardView: FC<{
               </span>
             ) : (
               card.dueDate && (
-                <span className='flex items-center gap-0.5 text-xs text-gray-500'>
-                  <ClockIcon width={12} />
-                  <span className='sr-only'>{t('due_date')}</span>
+                <span className={dueDateStyles({ overdue })}>
+                  {overdue ? <FireIcon width={12} /> : <ClockIcon width={12} />}
+                  <span // 色だけで期限切れを伝えないよう、読み上げるラベルも差し替える
+                    className='sr-only'
+                  >
+                    {overdue ? t('overdue') : t('due_date')}
+                  </span>
                   <span className='font-mono'>{dayformat(card.dueDate, 'date')}</span>
                 </span>
               )

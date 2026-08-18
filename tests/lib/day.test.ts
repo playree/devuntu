@@ -1,4 +1,4 @@
-import { startOfWeek, weekRange, zonedMinutes } from '@/lib/day'
+import { isDateOnlyOverdue, startOfWeek, weekRange, zonedMinutes } from '@/lib/day'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 afterEach(() => {
@@ -50,5 +50,41 @@ describe('zonedMinutes', () => {
   it('DST 開始日に存在しない時刻は切替後へ送られる', () => {
     // America/New_York の 2026-03-08 02:30 は存在しないので 03:30 EDT になる
     expect(zonedMinutes('2026-03-08', 150, 'America/New_York').toISOString()).toBe('2026-03-08T07:30:00.000Z')
+  })
+})
+
+describe('isDateOnlyOverdue', () => {
+  // 期日は UTC 0:00 で保存される値なので、テストの入力もその形で作る
+  const dueDate = (dateOnly: string) => new Date(`${dateOnly}T00:00:00Z`)
+
+  it('期日が昨日なら期限切れ', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-03-04T00:00:00Z'))
+    expect(isDateOnlyOverdue(dueDate('2026-03-03'), 'Asia/Tokyo')).toBe(true)
+  })
+
+  it('期日が今日なら期限切れにしない', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-03-04T00:00:00Z'))
+    expect(isDateOnlyOverdue(dueDate('2026-03-04'), 'Asia/Tokyo')).toBe(false)
+  })
+
+  it('期日が明日なら期限切れにしない', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-03-04T00:00:00Z'))
+    expect(isDateOnlyOverdue(dueDate('2026-03-05'), 'Asia/Tokyo')).toBe(false)
+  })
+
+  it('期日が未指定なら期限切れにしない', () => {
+    expect(isDateOnlyOverdue(null)).toBe(false)
+    expect(isDateOnlyOverdue(undefined)).toBe(false)
+  })
+
+  it('同じ時刻でもタイムゾーンで「今日」がずれる', () => {
+    // UTC 2026-03-04 02:00 は JST では 03-04 11:00、NY では 03-03 21:00
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-03-04T02:00:00Z'))
+    expect(isDateOnlyOverdue(dueDate('2026-03-03'), 'Asia/Tokyo')).toBe(true)
+    expect(isDateOnlyOverdue(dueDate('2026-03-03'), 'America/New_York')).toBe(false)
   })
 })

@@ -9,7 +9,7 @@
 import type { TagColor, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
 import type { TicketOrderByWithRelationInput, TicketWhereInput } from '@/generated/prisma/models'
 import type { LocaleItemBase } from '@/locale'
-import { utcToDateOnly } from './day'
+import { nowDate, utcToDateOnly } from './day'
 
 /** チケットのステータス(定義順は enum と同じ) */
 export const TICKET_STATUSES = ['backlog', 'todo', 'doing', 'done'] as const satisfies readonly TicketStatus[]
@@ -58,6 +58,12 @@ export const MAX_KANBAN_CARDS = 500
 
 /** 完了チケットをかんばんに表示し続ける日数。これを過ぎた done は盤面から落とす */
 export const KANBAN_DONE_VISIBLE_DAYS = 30
+
+/**
+ * 完了カードの表示期間として絞り込みで選べる日数。Select の選択肢と Cookie 値の検証で共有する。
+ * 最大は KANBAN_DONE_VISIBLE_DAYS(サーバーがそれより古い done を返さないので、それ以上は増やせない)
+ */
+export const KANBAN_DONE_DAYS_OPTIONS = [1, 3, 7, 14, 30]
 
 export const isTicketStatus = (value: string): value is TicketStatus =>
   (TICKET_STATUSES as readonly string[]).includes(value)
@@ -806,10 +812,21 @@ export type KanbanFilter = {
   tags: string[]
   /** 期日の範囲(YYYY-MM-DD)。null = 未指定。両端とも含む */
   due: { start: string; end: string } | null
+  /**
+   * 完了カードを表示する「完了日時からの経過日数」。選べる値は KANBAN_DONE_DAYS_OPTIONS。
+   * KANBAN_DONE_VISIBLE_DAYS はサーバーの取得上限と同じなので絞り込みなしと同義
+   */
+  doneDays: number
 }
 
 /** 絞り込みの初期値(すべて未指定) */
-export const defaultKanbanFilter: KanbanFilter = { assignee: null, priority: [], tags: [], due: null }
+export const defaultKanbanFilter: KanbanFilter = {
+  assignee: null,
+  priority: [],
+  tags: [],
+  due: null,
+  doneDays: KANBAN_DONE_VISIBLE_DAYS,
+}
 
 /** 絞り込み対象のカードに最低限必要な形。LaneMap の要素型はこれを満たすこと */
 export type KanbanFilterCard = KanbanCardLite & {
@@ -817,14 +834,22 @@ export type KanbanFilterCard = KanbanCardLite & {
   priority: TicketPriority
   tags: { name: string }[]
   dueDate: Date | null
+  completedAt: Date | null
 }
 
 /** 1 つでも条件が指定されているか(見出しの件数表示と絞り込みのスキップ判定に使う) */
 export const isKanbanFilterActive = (filter: KanbanFilter): boolean =>
-  filter.assignee !== null || filter.priority.length > 0 || filter.tags.length > 0 || filter.due !== null
+  filter.assignee !== null ||
+  filter.priority.length > 0 ||
+  filter.tags.length > 0 ||
+  filter.due !== null ||
+  filter.doneDays < KANBAN_DONE_VISIBLE_DAYS
 
-/** カード 1 枚が条件に一致するか。判定は buildTicketWhere と同じセマンティクス */
-export const matchesKanbanFilter = (card: KanbanFilterCard, filter: KanbanFilter): boolean => {
+/**
+ * カード 1 枚が条件に一致するか。判定は buildTicketWhere と同じセマンティクス。
+ * `now` は完了カードの表示期間の基準時刻(既定は現在時刻。テストからは明示的に渡す)
+ */
+export const matchesKanbanFilter = (card: KanbanFilterCard, filter: KanbanFilter, now: Date = nowDate()): boolean => {
   if (filter.assignee === ASSIGNEE_NONE) {
     if (card.assigneeId !== null) {
       return false
@@ -851,6 +876,12 @@ export const matchesKanbanFilter = (card: KanbanFilterCard, filter: KanbanFilter
     }
   }
 
+  // 完了カードだけは完了日時からの経過日数で絞る。他のレーンは完了日時を持たないので対象外。
+  // 完了日時なしの done(この機能の導入前に完了したもの)はサーバーの表示条件と揃えて常に残す
+  if (card.status === 'done' && card.completedAt && card.completedAt < kanbanDoneSince(now, filter.doneDays)) {
+    return false
+  }
+
   return true
 }
 
@@ -858,12 +889,16 @@ export const matchesKanbanFilter = (card: KanbanFilterCard, filter: KanbanFilter
  * LaneMap を条件で絞る。
  * 条件が未指定なら同一参照を返すので、呼び出し側の useMemo が無駄に再生成されない。
  */
-export const filterLaneMap = <T extends KanbanFilterCard>(lanes: LaneMap<T>, filter: KanbanFilter): LaneMap<T> => {
+export const filterLaneMap = <T extends KanbanFilterCard>(
+  lanes: LaneMap<T>,
+  filter: KanbanFilter,
+  now: Date = nowDate(),
+): LaneMap<T> => {
   if (!isKanbanFilterActive(filter)) {
     return lanes
   }
   return Object.fromEntries(
-    TICKET_STATUSES.map((status) => [status, lanes[status].filter((card) => matchesKanbanFilter(card, filter))]),
+    TICKET_STATUSES.map((status) => [status, lanes[status].filter((card) => matchesKanbanFilter(card, filter, now))]),
   ) as LaneMap<T>
 }
 

@@ -32,7 +32,8 @@ export const MentionUsersProvider: FC<{ users?: MentionUser[]; children: ReactNo
 }
 
 const mentionStyles = tv({
-  base: 'rounded-sm bg-blue-50 px-1 font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300',
+  // em 指定なので、本文でも箇条書き(text-sm)でも常に周囲より一段小さくなる
+  base: 'rounded-sm bg-blue-500/10 px-1 py-0.5 text-[0.85em] font-medium text-blue-700 dark:bg-blue-400/15 dark:text-blue-300',
 })
 
 /** 本文中のメンション 1 件。名前が引けない(ボードから外れた等)ならメールアドレスを出す */

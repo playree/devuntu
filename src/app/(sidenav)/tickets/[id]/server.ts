@@ -8,8 +8,9 @@ import { logger } from '@/lib/logger'
 import { notifyMention } from '@/lib/notify-mention'
 import { prisma } from '@/lib/prisma'
 import { scCreateTicketComment, scPatchTicket, scUpdateTicketComment, scUpdateTicketStatus, scUUID } from '@/lib/schema'
+import { makeUrl } from '@/lib/server-utils'
 import { assertTagIdsInBoard, syncTicketTags } from '@/lib/tag'
-import { extractMentionEmails, resolveMentionUserIds, ticketDisplayId } from '@/lib/task'
+import { extractMentionEmails, resolveMentionUserIds, ticketDisplayId, ticketShortPath } from '@/lib/task'
 
 /**
  * チケット詳細取得(本文 + コメント + 権限)
@@ -79,12 +80,18 @@ export const getTicket = safeAuthAction
       })
 
     const { board, assignee, createdBy, comments, tags, mentionedUserIds, ...rest } = ticket
+    const displayId = ticketDisplayId({ key: board.key, number: rest.number })
     return {
       ...rest,
       mentionedNames: toMentionedNames(mentionedUserIds),
       // 中間テーブルは表示側で扱わないので平坦化する
       tags: tags.map(({ tag }) => tag),
-      displayId: ticketDisplayId({ key: board.key, number: rest.number }),
+      displayId,
+      /**
+       * 貼り付け用の絶対URL。詳細画面は一覧・かんばんのドロワーからも開くため、
+       * オリジンを props で引き回さずここで組み立てる(メンション通知や Slack と同じ短縮URL)。
+       */
+      shortUrl: makeUrl(ticketShortPath(displayId)).toString(),
       boardName: board.name,
       boardKind: board.kind,
       assigneeName: assignee?.name ?? '',

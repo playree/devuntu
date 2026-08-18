@@ -308,14 +308,16 @@ export const TicketDetailClient: FC<{
               boardName={boardName({ name: ticket.boardName, kind: ticket.boardKind })}
               title={ticket.title}
             />
-            <CopyableField // 表示IDはチャットや議事録へそのまま貼れるようコピーできるようにする
+            <CopyableField // 表示IDを見せつつ、チャットや議事録へそのまま貼れるURLをコピーさせる
               // 幅を固定しないと input の既定幅で狭い画面のパンくずを潰してしまう
               className='w-36 shrink-0'
               isSmart
               text={ticket.displayId}
+              copyText={ticket.shortUrl}
               // パンくずの隣に置くのでラベルは出さない。名前は支援技術向けにだけ与える
               ariaLabel={t('id')}
-              copyLabel={t('copy')}
+              // アイコンのみのボタンなので、URLがコピーされることは読み上げ名で伝える
+              copyLabel={t('copy_url')}
             />
           </>
         }
