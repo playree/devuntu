@@ -23,7 +23,7 @@ onlyBuiltDependencies:
   - sharp
   - unrs-resolver
 overrides:
-  sharp: '0.34.5'
+  sharp: '0.35.3'
 # 各プラグインが peerDependencies に eslint@10 を載せたら削除する
 peerDependencyRules:
   allowedVersions:
