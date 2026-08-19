@@ -39,7 +39,7 @@ export const AddModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, relo
     defaultValues: {
       clientName: '',
       redirectUri: '',
-      skipConsent: true,
+      skipConsent: false,
       requirePkce: false,
     },
   })
@@ -100,13 +100,7 @@ export const AddModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, relo
                   />
                 </div>
                 <div className='col-span-12'>
-                  <CheckBoxCtrl
-                    control={control}
-                    name='skipConsent'
-                    id='skipConsent'
-                    label={t('skip_consent')}
-                    isDisabled
-                  />
+                  <CheckBoxCtrl control={control} name='skipConsent' id='skipConsent' label={t('skip_consent')} />
                 </div>
                 <div className='col-span-12'>
                   <CheckBoxCtrl control={control} name='requirePkce' id='requirePkce' label={t('require_pkce')} />
@@ -214,7 +208,7 @@ export const UpdateModal: FC<ModalBaseProps & { target: UpdateOidcClient & { req
           />
         </div>
         <div className='col-span-12'>
-          <CheckBoxCtrl control={control} name='skipConsent' id='skipConsent' label={t('skip_consent')} isDisabled />
+          <CheckBoxCtrl control={control} name='skipConsent' id='skipConsent' label={t('skip_consent')} />
         </div>
         <div className='col-span-12'>
           <CheckBoxField

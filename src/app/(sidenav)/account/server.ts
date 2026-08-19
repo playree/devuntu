@@ -1,16 +1,18 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action-server'
-import { isValidTimezone } from '@/lib/day'
-import { errValidation } from '@/lib/error'
+import { auth } from '@/lib/auth'
+import { isValidTimezone, nowDate } from '@/lib/day'
+import { errNotFound, errValidation } from '@/lib/error'
 import { canUseGoogleAccount, googleAccountQuery } from '@/lib/google-account'
 import { GOOGLE_ACCOUNT_PROVIDER_ID } from '@/lib/google-calendar'
 import { logger } from '@/lib/logger'
 import { getUserNotifySettings, setUserNotifySetting } from '@/lib/notify-setting'
 import { prisma } from '@/lib/prisma'
-import { scUpdateNotifySetting } from '@/lib/schema'
+import { scRevokeConsent, scUpdateNotifySetting } from '@/lib/schema'
 import { SLACK_PROVIDER_ID } from '@/lib/slack'
 import { canUseSlackAccount } from '@/lib/slack-account'
+import { headers } from 'next/headers'
 import { z } from 'zod'
 
 export const getGoogleAccountStatus = safeAuthAction
@@ -76,6 +78,64 @@ export const disconnectSlack = safeAuthAction
 
     logger.info({ userId: user.id }, 'slack account disconnected')
     return { disconnected: true }
+  })
+
+export const getMyOAuthConsents = safeAuthAction
+  .metadata({ actionName: 'getMyOAuthConsents', role: 'user' })
+  .action(async ({ ctx: { user } }) => {
+    // auth.api.getOAuthConsents はクライアント名を返さないので、リレーションを辿れる Prisma で1クエリにする
+    const consents = await prisma.oauthConsent.findMany({
+      where: { userId: user.id },
+      select: {
+        id: true,
+        scopes: true,
+        updatedAt: true,
+        oauthclient: { select: { clientId: true, name: true } },
+      },
+    })
+    return consents.map(({ id, scopes, updatedAt, oauthclient }) => ({
+      id,
+      clientId: oauthclient.clientId,
+      clientName: oauthclient.name ?? '',
+      scopes,
+      updatedAt,
+    }))
+  })
+export type GetMyOAuthConsentsReturnType = Awaited<ReturnType<typeof getMyOAuthConsents>>['data']
+
+/**
+ * 許可済みアプリの取り消し。
+ * 同意行を消すだけでは発行済みのアクセス/リフレッシュトークンは有効なままなので、
+ * 対象クライアント宛のトークンも失効させて「取り消し」と実際の権限を一致させる。
+ */
+export const revokeOAuthConsent = safeAuthAction
+  .metadata({ actionName: 'revokeOAuthConsent', role: 'user' })
+  .inputSchema(scRevokeConsent)
+  .action(async ({ parsedInput: { id }, ctx: { user } }) => {
+    const consent = await prisma.oauthConsent.findUnique({ where: { id }, select: { userId: true, clientId: true } })
+    if (!consent || consent.userId !== user.id) {
+      throw errNotFound()
+    }
+
+    await auth.api.deleteOAuthConsent({ headers: await headers(), body: { id } })
+
+    const revoked = nowDate()
+    const where = { userId: user.id, clientId: consent.clientId, revoked: null }
+    const [accessTokens, refreshTokens] = await prisma.$transaction([
+      prisma.oauthAccessToken.updateMany({ where, data: { revoked } }),
+      prisma.oauthRefreshToken.updateMany({ where, data: { revoked } }),
+    ])
+
+    logger.info(
+      {
+        userId: user.id,
+        clientId: consent.clientId,
+        accessTokens: accessTokens.count,
+        refreshTokens: refreshTokens.count,
+      },
+      'oauth consent revoked',
+    )
+    return { id }
   })
 
 export const getNotifySettings = safeAuthAction
