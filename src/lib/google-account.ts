@@ -6,8 +6,24 @@
  * (クライアント安全な定数・型は `google-calendar.ts` を参照)
  */
 
+import type { AccountOrderByWithRelationInput, AccountWhereInput } from '@/generated/prisma/models'
 import { envu } from './env-util'
+import { GOOGLE_ACCOUNT_PROVIDER_ID } from './google-calendar'
 import { createIntegrationSettings } from './integration-settings'
+
+/**
+ * カレンダー連携用の account 行を引く条件。
+ * 連携をやり直すと同一 `(userId, providerId)` の行が複数残り得る(1.7 の一意制約は
+ * `(issuer, accountId)`)ので、refresh token を持つ最新の行に絞って結果を一意にする。
+ */
+export const googleAccountQuery = (userId: string) => ({
+  where: {
+    userId,
+    providerId: GOOGLE_ACCOUNT_PROVIDER_ID,
+    refreshToken: { not: null },
+  } satisfies AccountWhereInput,
+  orderBy: { updatedAt: 'desc' } satisfies AccountOrderByWithRelationInput,
+})
 
 /** 連携に必要な環境変数が揃っているか。1 つでも欠けるとそもそも連携できない */
 const hasGoogleCredentials = () => !!envu.server.GOOGLE_CLIENT_ID && !!envu.server.GOOGLE_CLIENT_SECRET

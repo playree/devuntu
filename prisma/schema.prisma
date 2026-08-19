@@ -236,6 +236,7 @@ model OauthRefreshToken {
   scopes                  String[]
   oauthaccesstokens       OauthAccessToken[]
 
+  @@unique([token])
   @@index([clientId])
   @@index([sessionId])
   @@index([userId])

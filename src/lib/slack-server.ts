@@ -244,7 +244,7 @@ export const slackUserInfo = async (tokens: { accessToken?: string }) => {
   // chat.postMessage の channel へそのまま渡せる Slack ユーザーID
   const id = profile['https://slack.com/user_id'] ?? profile.sub
   if (!id || !profile.name || !profile.email) {
-    logger.warn({ hasId: !!id, hasName: !!profile.name }, 'slack userinfo is incomplete')
+    logger.warn({ hasId: !!id, hasName: !!profile.name, hasEmail: !!profile.email }, 'slack userinfo is incomplete')
     return null
   }
 

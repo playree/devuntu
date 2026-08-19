@@ -19,21 +19,31 @@ const createFactory = async () => {
 
 const getFactory = () => {
   if (!factoryPromise) {
-    factoryPromise = createFactory()
+    // 失敗した Promise を持ち続けると以降ずっと同じ失敗を返すので、捨てて次回の呼び出しで読み直す
+    factoryPromise = createFactory().catch((error: unknown) => {
+      factoryPromise = undefined
+      throw error
+    })
   }
   return factoryPromise
 }
 
 /** 辞書チャンクの先読み */
 export const preloadPasswordScore = () => {
-  void getFactory()
+  // 失敗しても入力時に読み直すので、ここでは unhandled rejection にしないためだけに捨てる
+  void getFactory().catch(() => {})
 }
 
-/** パスワード強度(0-4) */
+/** パスワード強度(0-4)。辞書が読めなかったときは判定できないので 0 を返す */
 export const getPasswordScore = async (password: string) => {
   if (!password) {
     return 0
   }
-  const factory = await getFactory()
-  return factory.check(password).score
+  try {
+    const factory = await getFactory()
+    return factory.check(password).score
+  } catch (error) {
+    console.error(error)
+    return 0
+  }
 }

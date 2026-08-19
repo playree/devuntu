@@ -303,10 +303,10 @@ export type OauthRefreshTokenOrderByWithRelationInput = {
 
 export type OauthRefreshTokenWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  token?: string
   AND?: Prisma.OauthRefreshTokenWhereInput | Prisma.OauthRefreshTokenWhereInput[]
   OR?: Prisma.OauthRefreshTokenWhereInput[]
   NOT?: Prisma.OauthRefreshTokenWhereInput | Prisma.OauthRefreshTokenWhereInput[]
-  token?: Prisma.StringFilter<"OauthRefreshToken"> | string
   clientId?: Prisma.StringFilter<"OauthRefreshToken"> | string
   sessionId?: Prisma.StringNullableFilter<"OauthRefreshToken"> | string | null
   userId?: Prisma.StringFilter<"OauthRefreshToken"> | string
@@ -327,7 +327,7 @@ export type OauthRefreshTokenWhereUniqueInput = Prisma.AtLeast<{
   session?: Prisma.XOR<Prisma.SessionNullableScalarRelationFilter, Prisma.SessionWhereInput> | null
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   oauthaccesstokens?: Prisma.OauthAccessTokenListRelationFilter
-}, "id">
+}, "id" | "token">
 
 export type OauthRefreshTokenOrderByWithAggregationInput = {
   id?: Prisma.SortOrder

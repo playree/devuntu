@@ -9,8 +9,8 @@
 
 import { auth } from './auth'
 import { DEFAULT_TZ } from './day'
-import { canUseGoogleAccount } from './google-account'
-import { GOOGLE_ACCOUNT_PROVIDER_ID, type BusySlot } from './google-calendar'
+import { canUseGoogleAccount, googleAccountQuery } from './google-account'
+import type { BusySlot } from './google-calendar'
 import { logger } from './logger'
 import { prisma } from './prisma'
 
@@ -47,7 +47,7 @@ export const getGoogleFreeBusy = async ({
 
   // getAccessToken は providerId ではなく account 行の id で対象を選ぶので先に引く
   const account = await prisma.account.findFirst({
-    where: { userId, providerId: GOOGLE_ACCOUNT_PROVIDER_ID },
+    ...googleAccountQuery(userId),
     select: { id: true },
   })
   if (!account) {

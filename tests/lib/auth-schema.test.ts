@@ -25,7 +25,7 @@ const BETTER_AUTH_TO_PRISMA_BASE: Record<string, string[]> = {
 }
 
 type PrismaField = { base: string; isArray: boolean; optional: boolean }
-/** `@@unique` / `@@index` の複合インデックス。単一カラムのフィールド属性は対象外。 */
+/** `@@unique` / `@@index` とフィールド属性の `@unique` / `@index` を同じ形で持つ。 */
 type PrismaIndex = { columns: string[]; unique: boolean }
 type PrismaModel = { fields: Record<string, PrismaField>; indexes: PrismaIndex[] }
 
@@ -61,6 +61,12 @@ function parsePrismaModels(src: string): Record<string, PrismaModel> {
         continue
       }
       const [, name, typeToken] = fm
+      // 単一カラムの制約はフィールド属性でも書けるので、@@unique / @@index と同じ扱いで拾う
+      if (/@unique\b/.test(line)) {
+        indexes.push({ columns: [name], unique: true })
+      } else if (/@index\b/.test(line)) {
+        indexes.push({ columns: [name], unique: false })
+      }
       fields[name] = {
         base: typeToken.replace(/[?[\]]/g, ''),
         isArray: typeToken.endsWith('[]'),
@@ -70,6 +76,14 @@ function parsePrismaModels(src: string): Record<string, PrismaModel> {
     models[key] = { fields, indexes }
   }
   return models
+}
+
+/**
+ * Prisma 側に該当のインデックスがあるか。
+ * unique を要求されている場合のみ unique であることまで求める(unique 索引は index の要求も満たす)。
+ */
+function hasIndex(model: PrismaModel, columns: readonly string[], unique: boolean) {
+  return model.indexes.some((actual) => actual.columns.join(',') === columns.join(',') && (!unique || actual.unique))
 }
 
 const schemaPath = fileURLToPath(new URL('../../prisma/schema.prisma', import.meta.url))
@@ -157,16 +171,36 @@ describe('Better Auth スキーマと Prisma スキーマの整合性', () => {
       }
 
       const missing = expectedIndexes
-        .filter(
-          (expected) =>
-            !prismaModel.indexes.some(
-              (actual) =>
-                actual.columns.join(',') === expected.columns.join(',') && (!expected.unique || actual.unique),
-            ),
-        )
+        .filter((expected) => !hasIndex(prismaModel, expected.columns, !!expected.unique))
         .map((expected) => `- ${expected.unique ? '@@unique' : '@@index'}([${expected.columns.join(', ')}])`)
 
       expect(missing, `モデル "${model}" に不足しているインデックス:\n${missing.join('\n')}`).toEqual([])
+    })
+  }
+
+  // 単一カラムの制約は def.indexes ではなくフィールド属性(unique / index)で表現されるため、
+  // 複合インデックスの検証とは別に突き合わせる
+  for (const [model, def] of Object.entries(expectedSchema)) {
+    it(`${model}: 要求される単一カラムの制約が存在する`, () => {
+      const prismaModel = prismaModels[model]
+      expect(prismaModel, `Prisma スキーマにモデル "${model}" が存在しない`).toBeTruthy()
+      if (!prismaModel) {
+        return
+      }
+
+      const missing: string[] = []
+      for (const [fieldName, attr] of Object.entries(def.fields)) {
+        const column = attr.fieldName ?? fieldName
+        if (attr.unique && !hasIndex(prismaModel, [column], true)) {
+          missing.push(`- @@unique([${column}])`)
+          continue
+        }
+        if (attr.index && !hasIndex(prismaModel, [column], false)) {
+          missing.push(`- @@index([${column}])`)
+        }
+      }
+
+      expect(missing, `モデル "${model}" に不足している制約:\n${missing.join('\n')}`).toEqual([])
     })
   }
 })
