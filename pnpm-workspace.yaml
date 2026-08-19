@@ -4,6 +4,17 @@ allowBuilds:
   prisma: true
   sharp: true
   unrs-resolver: true
+minimumReleaseAgeExclude:
+  - '@better-auth/core@1.7.1'
+  - '@better-auth/drizzle-adapter@1.7.1'
+  - '@better-auth/kysely-adapter@1.7.1'
+  - '@better-auth/memory-adapter@1.7.1'
+  - '@better-auth/mongo-adapter@1.7.1'
+  - '@better-auth/oauth-provider@1.7.1'
+  - '@better-auth/passkey@1.7.1'
+  - '@better-auth/prisma-adapter@1.7.1'
+  - '@better-auth/telemetry@1.7.1'
+  - better-auth@1.7.1
 onlyBuiltDependencies:
   - '@heroui/shared-utils'
   - '@prisma/client'
@@ -12,7 +23,7 @@ onlyBuiltDependencies:
   - sharp
   - unrs-resolver
 overrides:
-  sharp: '0.34.5'
+  sharp: '0.35.3'
 # 各プラグインが peerDependencies に eslint@10 を載せたら削除する
 peerDependencyRules:
   allowedVersions:

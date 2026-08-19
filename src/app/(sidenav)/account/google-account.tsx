@@ -31,8 +31,8 @@ export const GoogleAccountLink: FC = () => {
   const link = async () => {
     // カレンダー連携専用プロバイダ(google-account)にリンク
     // (scopes/offline/consent はサーバーのプロバイダ設定側で固定)
-    await authClient.oauth2.link({
-      providerId: GOOGLE_ACCOUNT_PROVIDER_ID,
+    await authClient.linkSocial({
+      provider: GOOGLE_ACCOUNT_PROVIDER_ID,
       callbackURL: '/account',
     })
   }

@@ -62,6 +62,9 @@ export const ModelName = {
   OauthRefreshToken: 'OauthRefreshToken',
   OauthAccessToken: 'OauthAccessToken',
   OauthConsent: 'OauthConsent',
+  OauthResource: 'OauthResource',
+  OauthClientResource: 'OauthClientResource',
+  OauthClientAssertion: 'OauthClientAssertion',
   Dashboard: 'Dashboard',
   LinkWidget: 'LinkWidget',
   Attachment: 'Attachment',
@@ -136,6 +139,7 @@ export type SessionScalarFieldEnum = (typeof SessionScalarFieldEnum)[keyof typeo
 
 export const AccountScalarFieldEnum = {
   id: 'id',
+  issuer: 'issuer',
   accountId: 'accountId',
   providerId: 'providerId',
   userId: 'userId',
@@ -200,7 +204,9 @@ export const JwksScalarFieldEnum = {
   publicKey: 'publicKey',
   privateKey: 'privateKey',
   createdAt: 'createdAt',
-  expiresAt: 'expiresAt'
+  expiresAt: 'expiresAt',
+  alg: 'alg',
+  crv: 'crv'
 } as const
 
 export type JwksScalarFieldEnum = (typeof JwksScalarFieldEnum)[keyof typeof JwksScalarFieldEnum]
@@ -210,11 +216,13 @@ export const OauthClientScalarFieldEnum = {
   id: 'id',
   clientId: 'clientId',
   clientSecret: 'clientSecret',
+  clientDiscoveryId: 'clientDiscoveryId',
   disabled: 'disabled',
   skipConsent: 'skipConsent',
   enableEndSession: 'enableEndSession',
   subjectType: 'subjectType',
   scopes: 'scopes',
+  clientCredentialsScopes: 'clientCredentialsScopes',
   userId: 'userId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
@@ -229,12 +237,16 @@ export const OauthClientScalarFieldEnum = {
   softwareStatement: 'softwareStatement',
   redirectUris: 'redirectUris',
   postLogoutRedirectUris: 'postLogoutRedirectUris',
+  backchannelLogoutUri: 'backchannelLogoutUri',
+  backchannelLogoutSessionRequired: 'backchannelLogoutSessionRequired',
   tokenEndpointAuthMethod: 'tokenEndpointAuthMethod',
+  applicationType: 'applicationType',
+  jwks: 'jwks',
+  jwksUri: 'jwksUri',
   grantTypes: 'grantTypes',
   responseTypes: 'responseTypes',
-  public: 'public',
-  type: 'type',
   requirePKCE: 'requirePKCE',
+  dpopBoundAccessTokens: 'dpopBoundAccessTokens',
   referenceId: 'referenceId',
   metadata: 'metadata'
 } as const
@@ -249,10 +261,17 @@ export const OauthRefreshTokenScalarFieldEnum = {
   sessionId: 'sessionId',
   userId: 'userId',
   referenceId: 'referenceId',
+  authorizationCodeId: 'authorizationCodeId',
+  resources: 'resources',
+  requestedUserInfoClaims: 'requestedUserInfoClaims',
   expiresAt: 'expiresAt',
   createdAt: 'createdAt',
   revoked: 'revoked',
+  rotatedAt: 'rotatedAt',
+  rotationReplayResponse: 'rotationReplayResponse',
+  rotationReplayExpiresAt: 'rotationReplayExpiresAt',
   authTime: 'authTime',
+  confirmation: 'confirmation',
   scopes: 'scopes'
 } as const
 
@@ -266,9 +285,14 @@ export const OauthAccessTokenScalarFieldEnum = {
   sessionId: 'sessionId',
   userId: 'userId',
   referenceId: 'referenceId',
+  authorizationCodeId: 'authorizationCodeId',
+  resources: 'resources',
+  requestedUserInfoClaims: 'requestedUserInfoClaims',
   refreshId: 'refreshId',
   expiresAt: 'expiresAt',
   createdAt: 'createdAt',
+  revoked: 'revoked',
+  confirmation: 'confirmation',
   scopes: 'scopes'
 } as const
 
@@ -280,12 +304,54 @@ export const OauthConsentScalarFieldEnum = {
   clientId: 'clientId',
   userId: 'userId',
   referenceId: 'referenceId',
+  resources: 'resources',
+  requestedUserInfoClaims: 'requestedUserInfoClaims',
   scopes: 'scopes',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type OauthConsentScalarFieldEnum = (typeof OauthConsentScalarFieldEnum)[keyof typeof OauthConsentScalarFieldEnum]
+
+
+export const OauthResourceScalarFieldEnum = {
+  id: 'id',
+  identifier: 'identifier',
+  name: 'name',
+  accessTokenTtl: 'accessTokenTtl',
+  refreshTokenTtl: 'refreshTokenTtl',
+  signingAlgorithm: 'signingAlgorithm',
+  signingKeyId: 'signingKeyId',
+  allowedScopes: 'allowedScopes',
+  customClaims: 'customClaims',
+  dpopBoundAccessTokensRequired: 'dpopBoundAccessTokensRequired',
+  disabled: 'disabled',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  policyVersion: 'policyVersion',
+  metadata: 'metadata'
+} as const
+
+export type OauthResourceScalarFieldEnum = (typeof OauthResourceScalarFieldEnum)[keyof typeof OauthResourceScalarFieldEnum]
+
+
+export const OauthClientResourceScalarFieldEnum = {
+  id: 'id',
+  clientId: 'clientId',
+  resourceId: 'resourceId',
+  metadata: 'metadata',
+  createdAt: 'createdAt'
+} as const
+
+export type OauthClientResourceScalarFieldEnum = (typeof OauthClientResourceScalarFieldEnum)[keyof typeof OauthClientResourceScalarFieldEnum]
+
+
+export const OauthClientAssertionScalarFieldEnum = {
+  id: 'id',
+  expiresAt: 'expiresAt'
+} as const
+
+export type OauthClientAssertionScalarFieldEnum = (typeof OauthClientAssertionScalarFieldEnum)[keyof typeof OauthClientAssertionScalarFieldEnum]
 
 
 export const DashboardScalarFieldEnum = {

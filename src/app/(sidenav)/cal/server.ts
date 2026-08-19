@@ -2,8 +2,7 @@
 
 import { safeAuthAction } from '@/lib/action-server'
 import { errInvalidOperation, errPermissionDenied } from '@/lib/error'
-import { canUseGoogleAccount } from '@/lib/google-account'
-import { GOOGLE_ACCOUNT_PROVIDER_ID } from '@/lib/google-calendar'
+import { canUseGoogleAccount, googleAccountQuery } from '@/lib/google-account'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import {
@@ -40,8 +39,8 @@ export const getCalendarShare = safeAuthAction
     }
     const [account, share] = await Promise.all([
       prisma.account.findFirst({
-        where: { userId: user.id, providerId: GOOGLE_ACCOUNT_PROVIDER_ID },
-        select: { refreshToken: true },
+        ...googleAccountQuery(user.id),
+        select: { id: true },
       }),
       prisma.calendarShare.findUnique({
         where: { userId: user.id },
@@ -49,7 +48,7 @@ export const getCalendarShare = safeAuthAction
       }),
     ])
     return {
-      googleConnected: !!account?.refreshToken,
+      googleConnected: !!account,
       shared: !!share,
       publicId: share?.publicId ?? null,
       title: parseOptions(share?.options).title ?? '',

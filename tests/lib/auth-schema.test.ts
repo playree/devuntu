@@ -25,10 +25,13 @@ const BETTER_AUTH_TO_PRISMA_BASE: Record<string, string[]> = {
 }
 
 type PrismaField = { base: string; isArray: boolean; optional: boolean }
+/** `@@unique` / `@@index` とフィールド属性の `@unique` / `@index` を同じ形で持つ。 */
+type PrismaIndex = { columns: string[]; unique: boolean }
+type PrismaModel = { fields: Record<string, PrismaField>; indexes: PrismaIndex[] }
 
-/** prisma/schema.prisma を軽量パースし、モデル毎のフィールド型を得る。 */
-function parsePrismaModels(src: string): Record<string, Record<string, PrismaField>> {
-  const models: Record<string, Record<string, PrismaField>> = {}
+/** prisma/schema.prisma を軽量パースし、モデル毎のフィールド型と複合インデックスを得る。 */
+function parsePrismaModels(src: string): Record<string, PrismaModel> {
+  const models: Record<string, PrismaModel> = {}
   const modelRe = /model\s+(\w+)\s*\{\n([\s\S]*?)\n\}/g
   let m: RegExpExecArray | null
   while ((m = modelRe.exec(src)) !== null) {
@@ -37,9 +40,20 @@ function parsePrismaModels(src: string): Record<string, Record<string, PrismaFie
     // Better Auth のモデルキー（camelCase / Prisma クライアントのプロパティ名）に合わせる
     const key = ident.charAt(0).toLowerCase() + ident.slice(1)
     const fields: Record<string, PrismaField> = {}
+    const indexes: PrismaIndex[] = []
     for (const rawLine of body.split('\n')) {
       const line = rawLine.trim()
-      if (line === '' || line.startsWith('//') || line.startsWith('@@')) {
+      if (line === '' || line.startsWith('//')) {
+        continue
+      }
+      if (line.startsWith('@@')) {
+        const im = line.match(/^@@(unique|index)\(\[([^\]]*)\]/)
+        if (im) {
+          indexes.push({
+            columns: im[2].split(',').map((column) => column.trim()),
+            unique: im[1] === 'unique',
+          })
+        }
         continue
       }
       const fm = line.match(/^(\w+)\s+([A-Za-z0-9_]+(?:\?|\[\])?)/)
@@ -47,15 +61,29 @@ function parsePrismaModels(src: string): Record<string, Record<string, PrismaFie
         continue
       }
       const [, name, typeToken] = fm
+      // 単一カラムの制約はフィールド属性でも書けるので、@@unique / @@index と同じ扱いで拾う
+      if (/@unique\b/.test(line)) {
+        indexes.push({ columns: [name], unique: true })
+      } else if (/@index\b/.test(line)) {
+        indexes.push({ columns: [name], unique: false })
+      }
       fields[name] = {
         base: typeToken.replace(/[?[\]]/g, ''),
         isArray: typeToken.endsWith('[]'),
         optional: typeToken.endsWith('?'),
       }
     }
-    models[key] = fields
+    models[key] = { fields, indexes }
   }
   return models
+}
+
+/**
+ * Prisma 側に該当のインデックスがあるか。
+ * unique を要求されている場合のみ unique であることまで求める(unique 索引は index の要求も満たす)。
+ */
+function hasIndex(model: PrismaModel, columns: readonly string[], unique: boolean) {
+  return model.indexes.some((actual) => actual.columns.join(',') === columns.join(',') && (!unique || actual.unique))
 }
 
 const schemaPath = fileURLToPath(new URL('../../prisma/schema.prisma', import.meta.url))
@@ -71,11 +99,12 @@ describe('Better Auth スキーマと Prisma スキーマの整合性', () => {
   // 各モデルを個別テストにし、失敗時にどのモデルかが分かるようにする
   for (const [model, def] of Object.entries(expectedSchema)) {
     it(`${model}: フィールドの型・配列種別が一致する`, () => {
-      const prismaFields = prismaModels[model]
-      expect(prismaFields, `Prisma スキーマにモデル "${model}" が存在しない`).toBeTruthy()
-      if (!prismaFields) {
+      const prismaModel = prismaModels[model]
+      expect(prismaModel, `Prisma スキーマにモデル "${model}" が存在しない`).toBeTruthy()
+      if (!prismaModel) {
         return
       }
+      const prismaFields = prismaModel.fields
 
       const errors: string[] = []
       for (const [fieldName, attr] of Object.entries(def.fields)) {
@@ -124,6 +153,54 @@ describe('Better Auth スキーマと Prisma スキーマの整合性', () => {
       }
 
       expect(errors, `モデル "${model}" のスキーマ不整合:\n${errors.join('\n')}`).toEqual([])
+    })
+  }
+
+  // Better Auth 1.7 の account `(issuer, accountId)` のように、
+  // フィールドではなく複合インデックスだけが増えるケースを検知する
+  for (const [model, def] of Object.entries(expectedSchema)) {
+    const expectedIndexes = def.indexes ?? []
+    if (expectedIndexes.length === 0) {
+      continue
+    }
+    it(`${model}: 要求される複合インデックスが存在する`, () => {
+      const prismaModel = prismaModels[model]
+      expect(prismaModel, `Prisma スキーマにモデル "${model}" が存在しない`).toBeTruthy()
+      if (!prismaModel) {
+        return
+      }
+
+      const missing = expectedIndexes
+        .filter((expected) => !hasIndex(prismaModel, expected.columns, !!expected.unique))
+        .map((expected) => `- ${expected.unique ? '@@unique' : '@@index'}([${expected.columns.join(', ')}])`)
+
+      expect(missing, `モデル "${model}" に不足しているインデックス:\n${missing.join('\n')}`).toEqual([])
+    })
+  }
+
+  // 単一カラムの制約は def.indexes ではなくフィールド属性(unique / index)で表現されるため、
+  // 複合インデックスの検証とは別に突き合わせる
+  for (const [model, def] of Object.entries(expectedSchema)) {
+    it(`${model}: 要求される単一カラムの制約が存在する`, () => {
+      const prismaModel = prismaModels[model]
+      expect(prismaModel, `Prisma スキーマにモデル "${model}" が存在しない`).toBeTruthy()
+      if (!prismaModel) {
+        return
+      }
+
+      const missing: string[] = []
+      for (const [fieldName, attr] of Object.entries(def.fields)) {
+        const column = attr.fieldName ?? fieldName
+        if (attr.unique && !hasIndex(prismaModel, [column], true)) {
+          missing.push(`- @@unique([${column}])`)
+          continue
+        }
+        if (attr.index && !hasIndex(prismaModel, [column], false)) {
+          missing.push(`- @@index([${column}])`)
+        }
+      }
+
+      expect(missing, `モデル "${model}" に不足している制約:\n${missing.join('\n')}`).toEqual([])
     })
   }
 })

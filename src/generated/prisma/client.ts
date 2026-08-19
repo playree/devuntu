@@ -97,6 +97,23 @@ export type OauthAccessToken = Prisma.OauthAccessTokenModel
  */
 export type OauthConsent = Prisma.OauthConsentModel
 /**
+ * Model OauthResource
+ * アクセストークンの発行先となる保護リソース(RFC 8707 の `resource`)。
+ * TTL・スコープ・クレームを null にしておくとプラグイン既定値を継承する。
+ */
+export type OauthResource = Prisma.OauthResourceModel
+/**
+ * Model OauthClientResource
+ * どのクライアントがどのリソースを要求できるかの中間テーブル。
+ */
+export type OauthClientResource = Prisma.OauthClientResourceModel
+/**
+ * Model OauthClientAssertion
+ * private_key_jwt のクライアントアサーション `jti` の使い捨て記録。
+ * id はアサーション由来のダイジェストを better-auth が入れるため既定値は持たない。
+ */
+export type OauthClientAssertion = Prisma.OauthClientAssertionModel
+/**
  * Model Dashboard
  * 
  */

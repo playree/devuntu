@@ -160,14 +160,15 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
        * 詳細パネルを開いている間は data-nav-hidden でサイドメニューを隠し、盤面の横幅を稼ぐ。
        * あわせて中央寄せ(mx-auto)をやめて左に寄せ、右のパネルと重なりにくくする。
        *
-       * md 以上では盤面を 1 画面に収めてレーン内スクロールにするため、ここで画面高を「上限」にする。
+       * md 以上では盤面を 1 画面に収めてレーン内スクロールにする。高さの基準(画面高と padding)は
+       * data-fit-screen を見た SideNavbar の #side-main 側が持つので、ここは親に追従させるだけにする。
        * 固定高(h-)ではなく max-h- なのは、カードが少ないときにレーンを画面下端まで伸ばさず内容ぶんの高さで収めるため。
-       * 2rem は SideNavbar のメインコンテンツ(#side-main)の p-4(上下)。
        * md 未満はレーンが縦積みになり 1 画面に 4 レーンは詰め込めないので、従来どおりページ全体のスクロールにする。
        */
       data-wide
+      data-fit-screen
       data-nav-hidden={selectedId ? '' : undefined}
-      className={cn('max-w-7xl md:max-h-[calc(100dvh-2rem)]', !selectedId && 'mx-auto')}
+      className={cn('max-w-7xl md:max-h-full', !selectedId && 'mx-auto')}
     >
       <ContentHeader icon={<ViewColumnsIcon />} title={boardName(board)}>
         <MultiButton isIconOnly tooltip={t('back')} onPress={() => router.push('/boards')}>

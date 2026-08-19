@@ -14,8 +14,8 @@ const SideNavLayout: FC<{ children: ReactNode }> = async ({ children }) => {
   return (
     <GoogleAvailableProvider value={googleAvailable}>
       <SideNavbar menu={createMenu} pendding={getPendding}>
-        <div // 子が data-wide を持つときだけ幅制限を外す(かんばんのような全幅ページ向け)
-          className='mx-auto max-w-4xl px-2 has-data-wide:max-w-none lg:px-0'
+        <div // 子が data-wide のときだけ幅制限を外し、data-fit-screen のときは #side-main の高さも子へ通す
+          className='mx-auto max-w-4xl px-2 has-data-wide:max-w-none md:has-data-fit-screen:h-full lg:px-0'
         >
           {children}
         </div>

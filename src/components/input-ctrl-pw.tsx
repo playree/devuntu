@@ -1,9 +1,9 @@
 'use client'
 
+import { getPasswordScore, preloadPasswordScore } from '@/lib/password-score'
 import { useLocale } from '@/locale/client'
 import { Button, cn, ErrorMessage, InputGroup, InputProps, Label, ProgressBar, TextField } from '@heroui/react'
-import { ZxcvbnFactory } from '@zxcvbn-ts/core'
-import { ChangeEvent, FC, SVGProps, useState } from 'react'
+import { ChangeEvent, FC, SVGProps, useEffect, useRef, useState } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 import { useIsSmart } from './general/smart'
 
@@ -109,6 +109,14 @@ export const InputCtrlPassword = <
   const [isVisible, setIsVisible] = useState(false)
   const toggleVisibility = () => setIsVisible(!isVisible)
   const [passwordScore, setPasswordScore] = useState(0)
+  // 判定は非同期なので、連打で古い結果が後から反映されないように最新の入力だけを採用する
+  const scoreSeqRef = useRef(0)
+
+  useEffect(() => {
+    if (requiredPasswordScore) {
+      preloadPasswordScore()
+    }
+  }, [requiredPasswordScore])
 
   return (
     <>
@@ -137,9 +145,12 @@ export const InputCtrlPassword = <
                 className={cn(isSmart ? 'py-1' : '', props.className)}
                 onChange={(event) => {
                   if (requiredPasswordScore) {
-                    const zxcvbn = new ZxcvbnFactory()
-                    const res = zxcvbn.check(event.target.value)
-                    setPasswordScore(res.score)
+                    const seq = ++scoreSeqRef.current
+                    void getPasswordScore(event.target.value).then((score) => {
+                      if (seq === scoreSeqRef.current) {
+                        setPasswordScore(score)
+                      }
+                    })
                   }
 
                   if (onChanged) {

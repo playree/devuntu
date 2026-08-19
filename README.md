@@ -52,7 +52,7 @@
 - TypeScript v7(v6 と併存。[TypeScript v7 と v6 の併存](#typescript-v7-と-v6-の併存))
 - pnpm v11
 - Prisma v7
-- Better Auth v1.6
+- Better Auth v1.7
 - Tailwind CSS v4
 - HeroUI v3
 - Zod v4
@@ -555,7 +555,9 @@ pnpm patch-commit '<出力されたパス>'
 
 | 上書き対象 | 指定     | 理由                                       |
 | ---------- | -------- | ------------------------------------------ |
-| `sharp`    | `0.34.5` | Next.js の画像最適化で使うバージョンを固定 |
+| `sharp`    | `0.35.3` | Next.js の画像最適化で使うバージョンを固定 |
+
+`lexical`と`@lexical/react`は`package.json`で`0.48.0`に固定している。`@mdxeditor/editor`が`@lexical/*`を`^0.48.0`で要求しているため、ルートだけ 0.49 系へ上げると MDXEditor 配下に 0.48 系が別インスタンスで残り、`useLexicalComposerContext`が別モジュールの Context を引いてメンション機能が実行時に壊れる。`overrides`で全体を 0.49 系へ揃える手もあるが、0.49.0 は組み込みノードの`$config()`移行で`importJSON`/`importDOM`/`clone`/`transform`の static を落としており MDXEditor 側が未対応。MDXEditor が追随したら上げる。
 
 HeroUI 3.2.3 の頃は`@heroui/{react,styles}>tailwind-variants`を`^3.3.1`へ上書きしていた。3.3.0 の slots リゾルバが単一の slots オブジェクトを使い回し、同じ tv を別の props で呼ぶと先に取得済みの slot 関数の戻り値まで後の props に化けるバグがあり、`Modal.Backdrop`の`variant='blur'`が`opaque`に化けていたため。HeroUI 3.2.4 が`tailwind-variants@3.3.1`を固定依存にしたので上書きは削除した。
 

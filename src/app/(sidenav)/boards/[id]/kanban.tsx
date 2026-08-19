@@ -164,8 +164,12 @@ const KanbanCardView: FC<{
            * flex-col は「ID + PriorityBar のヘッダ行」+「内容」の縦 2 段。
            * 上端に border を持たないのは、上端は PriorityBar の線が輪郭を兼ねるため。
            * 代わりにダークでは priorityBorderClass が線と同系色の枠を左右と下に出す。
+           *
+           * relative は配下の sr-only(position: absolute)の包含ブロックをカードに閉じるため。
+           * 無いとルートレイアウトの relative が包含ブロックになり、レーンの overflow-y-auto では
+           * クリップされずスクロールで隠れた分だけページ全体のスクロール範囲を押し広げる。
            */
-          'flex flex-col overflow-hidden rounded-xl',
+          'relative flex flex-col overflow-hidden rounded-xl',
           // フォーカスを受けるのは dnd-kit が tabindex を付けるこの要素なので、枠線もここに出す
           'outline-none focus-visible:ring-2 focus-visible:ring-blue-400',
           priorityBgClass(card.priority),

@@ -3,7 +3,7 @@
 import { safeAuthAction } from '@/lib/action-server'
 import { isValidTimezone } from '@/lib/day'
 import { errValidation } from '@/lib/error'
-import { canUseGoogleAccount } from '@/lib/google-account'
+import { canUseGoogleAccount, googleAccountQuery } from '@/lib/google-account'
 import { GOOGLE_ACCOUNT_PROVIDER_ID } from '@/lib/google-calendar'
 import { logger } from '@/lib/logger'
 import { getUserNotifySettings, setUserNotifySetting } from '@/lib/notify-setting'
@@ -20,12 +20,12 @@ export const getGoogleAccountStatus = safeAuthAction
     if (!(await canUseGoogleAccount(user.id))) {
       return { connected: false, scopes: [] as string[] }
     }
+    // googleAccountQuery が refresh token を持つ行だけに絞るので、行の有無が連携済みかどうか
     const account = await prisma.account.findFirst({
-      where: { userId: user.id, providerId: GOOGLE_ACCOUNT_PROVIDER_ID },
-      select: { scope: true, refreshToken: true },
+      ...googleAccountQuery(user.id),
+      select: { scope: true },
     })
-    // リフレッシュトークンが無い場合は未連携扱い
-    const connected = !!account?.refreshToken
+    const connected = !!account
     return {
       connected,
       scopes: connected ? (account?.scope?.split(',').filter(Boolean) ?? []) : [],

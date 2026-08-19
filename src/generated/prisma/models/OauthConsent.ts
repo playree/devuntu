@@ -47,6 +47,8 @@ export type OauthConsentCountAggregateOutputType = {
   clientId: number
   userId: number
   referenceId: number
+  resources: number
+  requestedUserInfoClaims: number
   scopes: number
   createdAt: number
   updatedAt: number
@@ -77,6 +79,8 @@ export type OauthConsentCountAggregateInputType = {
   clientId?: true
   userId?: true
   referenceId?: true
+  resources?: true
+  requestedUserInfoClaims?: true
   scopes?: true
   createdAt?: true
   updatedAt?: true
@@ -160,6 +164,8 @@ export type OauthConsentGroupByOutputType = {
   clientId: string
   userId: string | null
   referenceId: string | null
+  resources: string[]
+  requestedUserInfoClaims: string[]
   scopes: string[]
   createdAt: Date
   updatedAt: Date
@@ -191,6 +197,8 @@ export type OauthConsentWhereInput = {
   clientId?: Prisma.StringFilter<"OauthConsent"> | string
   userId?: Prisma.StringNullableFilter<"OauthConsent"> | string | null
   referenceId?: Prisma.StringNullableFilter<"OauthConsent"> | string | null
+  resources?: Prisma.StringNullableListFilter<"OauthConsent">
+  requestedUserInfoClaims?: Prisma.StringNullableListFilter<"OauthConsent">
   scopes?: Prisma.StringNullableListFilter<"OauthConsent">
   createdAt?: Prisma.DateTimeFilter<"OauthConsent"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"OauthConsent"> | Date | string
@@ -203,6 +211,8 @@ export type OauthConsentOrderByWithRelationInput = {
   clientId?: Prisma.SortOrder
   userId?: Prisma.SortOrderInput | Prisma.SortOrder
   referenceId?: Prisma.SortOrderInput | Prisma.SortOrder
+  resources?: Prisma.SortOrder
+  requestedUserInfoClaims?: Prisma.SortOrder
   scopes?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -218,6 +228,8 @@ export type OauthConsentWhereUniqueInput = Prisma.AtLeast<{
   clientId?: Prisma.StringFilter<"OauthConsent"> | string
   userId?: Prisma.StringNullableFilter<"OauthConsent"> | string | null
   referenceId?: Prisma.StringNullableFilter<"OauthConsent"> | string | null
+  resources?: Prisma.StringNullableListFilter<"OauthConsent">
+  requestedUserInfoClaims?: Prisma.StringNullableListFilter<"OauthConsent">
   scopes?: Prisma.StringNullableListFilter<"OauthConsent">
   createdAt?: Prisma.DateTimeFilter<"OauthConsent"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"OauthConsent"> | Date | string
@@ -230,6 +242,8 @@ export type OauthConsentOrderByWithAggregationInput = {
   clientId?: Prisma.SortOrder
   userId?: Prisma.SortOrderInput | Prisma.SortOrder
   referenceId?: Prisma.SortOrderInput | Prisma.SortOrder
+  resources?: Prisma.SortOrder
+  requestedUserInfoClaims?: Prisma.SortOrder
   scopes?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -246,6 +260,8 @@ export type OauthConsentScalarWhereWithAggregatesInput = {
   clientId?: Prisma.StringWithAggregatesFilter<"OauthConsent"> | string
   userId?: Prisma.StringNullableWithAggregatesFilter<"OauthConsent"> | string | null
   referenceId?: Prisma.StringNullableWithAggregatesFilter<"OauthConsent"> | string | null
+  resources?: Prisma.StringNullableListFilter<"OauthConsent">
+  requestedUserInfoClaims?: Prisma.StringNullableListFilter<"OauthConsent">
   scopes?: Prisma.StringNullableListFilter<"OauthConsent">
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"OauthConsent"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"OauthConsent"> | Date | string
@@ -254,6 +270,8 @@ export type OauthConsentScalarWhereWithAggregatesInput = {
 export type OauthConsentCreateInput = {
   id?: string
   referenceId?: string | null
+  resources?: Prisma.OauthConsentCreateresourcesInput | string[]
+  requestedUserInfoClaims?: Prisma.OauthConsentCreaterequestedUserInfoClaimsInput | string[]
   scopes?: Prisma.OauthConsentCreatescopesInput | string[]
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -266,6 +284,8 @@ export type OauthConsentUncheckedCreateInput = {
   clientId: string
   userId?: string | null
   referenceId?: string | null
+  resources?: Prisma.OauthConsentCreateresourcesInput | string[]
+  requestedUserInfoClaims?: Prisma.OauthConsentCreaterequestedUserInfoClaimsInput | string[]
   scopes?: Prisma.OauthConsentCreatescopesInput | string[]
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -274,6 +294,8 @@ export type OauthConsentUncheckedCreateInput = {
 export type OauthConsentUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   referenceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resources?: Prisma.OauthConsentUpdateresourcesInput | string[]
+  requestedUserInfoClaims?: Prisma.OauthConsentUpdaterequestedUserInfoClaimsInput | string[]
   scopes?: Prisma.OauthConsentUpdatescopesInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -286,6 +308,8 @@ export type OauthConsentUncheckedUpdateInput = {
   clientId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   referenceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resources?: Prisma.OauthConsentUpdateresourcesInput | string[]
+  requestedUserInfoClaims?: Prisma.OauthConsentUpdaterequestedUserInfoClaimsInput | string[]
   scopes?: Prisma.OauthConsentUpdatescopesInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -296,6 +320,8 @@ export type OauthConsentCreateManyInput = {
   clientId: string
   userId?: string | null
   referenceId?: string | null
+  resources?: Prisma.OauthConsentCreateresourcesInput | string[]
+  requestedUserInfoClaims?: Prisma.OauthConsentCreaterequestedUserInfoClaimsInput | string[]
   scopes?: Prisma.OauthConsentCreatescopesInput | string[]
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -304,6 +330,8 @@ export type OauthConsentCreateManyInput = {
 export type OauthConsentUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   referenceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resources?: Prisma.OauthConsentUpdateresourcesInput | string[]
+  requestedUserInfoClaims?: Prisma.OauthConsentUpdaterequestedUserInfoClaimsInput | string[]
   scopes?: Prisma.OauthConsentUpdatescopesInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -314,6 +342,8 @@ export type OauthConsentUncheckedUpdateManyInput = {
   clientId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   referenceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resources?: Prisma.OauthConsentUpdateresourcesInput | string[]
+  requestedUserInfoClaims?: Prisma.OauthConsentUpdaterequestedUserInfoClaimsInput | string[]
   scopes?: Prisma.OauthConsentUpdatescopesInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -334,6 +364,8 @@ export type OauthConsentCountOrderByAggregateInput = {
   clientId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   referenceId?: Prisma.SortOrder
+  resources?: Prisma.SortOrder
+  requestedUserInfoClaims?: Prisma.SortOrder
   scopes?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -441,8 +473,26 @@ export type OauthConsentUncheckedUpdateManyWithoutOauthclientNestedInput = {
   deleteMany?: Prisma.OauthConsentScalarWhereInput | Prisma.OauthConsentScalarWhereInput[]
 }
 
+export type OauthConsentCreateresourcesInput = {
+  set: string[]
+}
+
+export type OauthConsentCreaterequestedUserInfoClaimsInput = {
+  set: string[]
+}
+
 export type OauthConsentCreatescopesInput = {
   set: string[]
+}
+
+export type OauthConsentUpdateresourcesInput = {
+  set?: string[]
+  push?: string | string[]
+}
+
+export type OauthConsentUpdaterequestedUserInfoClaimsInput = {
+  set?: string[]
+  push?: string | string[]
 }
 
 export type OauthConsentUpdatescopesInput = {
@@ -453,6 +503,8 @@ export type OauthConsentUpdatescopesInput = {
 export type OauthConsentCreateWithoutUserInput = {
   id?: string
   referenceId?: string | null
+  resources?: Prisma.OauthConsentCreateresourcesInput | string[]
+  requestedUserInfoClaims?: Prisma.OauthConsentCreaterequestedUserInfoClaimsInput | string[]
   scopes?: Prisma.OauthConsentCreatescopesInput | string[]
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -463,6 +515,8 @@ export type OauthConsentUncheckedCreateWithoutUserInput = {
   id?: string
   clientId: string
   referenceId?: string | null
+  resources?: Prisma.OauthConsentCreateresourcesInput | string[]
+  requestedUserInfoClaims?: Prisma.OauthConsentCreaterequestedUserInfoClaimsInput | string[]
   scopes?: Prisma.OauthConsentCreatescopesInput | string[]
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -502,6 +556,8 @@ export type OauthConsentScalarWhereInput = {
   clientId?: Prisma.StringFilter<"OauthConsent"> | string
   userId?: Prisma.StringNullableFilter<"OauthConsent"> | string | null
   referenceId?: Prisma.StringNullableFilter<"OauthConsent"> | string | null
+  resources?: Prisma.StringNullableListFilter<"OauthConsent">
+  requestedUserInfoClaims?: Prisma.StringNullableListFilter<"OauthConsent">
   scopes?: Prisma.StringNullableListFilter<"OauthConsent">
   createdAt?: Prisma.DateTimeFilter<"OauthConsent"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"OauthConsent"> | Date | string
@@ -510,6 +566,8 @@ export type OauthConsentScalarWhereInput = {
 export type OauthConsentCreateWithoutOauthclientInput = {
   id?: string
   referenceId?: string | null
+  resources?: Prisma.OauthConsentCreateresourcesInput | string[]
+  requestedUserInfoClaims?: Prisma.OauthConsentCreaterequestedUserInfoClaimsInput | string[]
   scopes?: Prisma.OauthConsentCreatescopesInput | string[]
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -520,6 +578,8 @@ export type OauthConsentUncheckedCreateWithoutOauthclientInput = {
   id?: string
   userId?: string | null
   referenceId?: string | null
+  resources?: Prisma.OauthConsentCreateresourcesInput | string[]
+  requestedUserInfoClaims?: Prisma.OauthConsentCreaterequestedUserInfoClaimsInput | string[]
   scopes?: Prisma.OauthConsentCreatescopesInput | string[]
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -555,6 +615,8 @@ export type OauthConsentCreateManyUserInput = {
   id?: string
   clientId: string
   referenceId?: string | null
+  resources?: Prisma.OauthConsentCreateresourcesInput | string[]
+  requestedUserInfoClaims?: Prisma.OauthConsentCreaterequestedUserInfoClaimsInput | string[]
   scopes?: Prisma.OauthConsentCreatescopesInput | string[]
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -563,6 +625,8 @@ export type OauthConsentCreateManyUserInput = {
 export type OauthConsentUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   referenceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resources?: Prisma.OauthConsentUpdateresourcesInput | string[]
+  requestedUserInfoClaims?: Prisma.OauthConsentUpdaterequestedUserInfoClaimsInput | string[]
   scopes?: Prisma.OauthConsentUpdatescopesInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -573,6 +637,8 @@ export type OauthConsentUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   clientId?: Prisma.StringFieldUpdateOperationsInput | string
   referenceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resources?: Prisma.OauthConsentUpdateresourcesInput | string[]
+  requestedUserInfoClaims?: Prisma.OauthConsentUpdaterequestedUserInfoClaimsInput | string[]
   scopes?: Prisma.OauthConsentUpdatescopesInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -582,6 +648,8 @@ export type OauthConsentUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   clientId?: Prisma.StringFieldUpdateOperationsInput | string
   referenceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resources?: Prisma.OauthConsentUpdateresourcesInput | string[]
+  requestedUserInfoClaims?: Prisma.OauthConsentUpdaterequestedUserInfoClaimsInput | string[]
   scopes?: Prisma.OauthConsentUpdatescopesInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -591,6 +659,8 @@ export type OauthConsentCreateManyOauthclientInput = {
   id?: string
   userId?: string | null
   referenceId?: string | null
+  resources?: Prisma.OauthConsentCreateresourcesInput | string[]
+  requestedUserInfoClaims?: Prisma.OauthConsentCreaterequestedUserInfoClaimsInput | string[]
   scopes?: Prisma.OauthConsentCreatescopesInput | string[]
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -599,6 +669,8 @@ export type OauthConsentCreateManyOauthclientInput = {
 export type OauthConsentUpdateWithoutOauthclientInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   referenceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resources?: Prisma.OauthConsentUpdateresourcesInput | string[]
+  requestedUserInfoClaims?: Prisma.OauthConsentUpdaterequestedUserInfoClaimsInput | string[]
   scopes?: Prisma.OauthConsentUpdatescopesInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -609,6 +681,8 @@ export type OauthConsentUncheckedUpdateWithoutOauthclientInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   referenceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resources?: Prisma.OauthConsentUpdateresourcesInput | string[]
+  requestedUserInfoClaims?: Prisma.OauthConsentUpdaterequestedUserInfoClaimsInput | string[]
   scopes?: Prisma.OauthConsentUpdatescopesInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -618,6 +692,8 @@ export type OauthConsentUncheckedUpdateManyWithoutOauthclientInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   referenceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resources?: Prisma.OauthConsentUpdateresourcesInput | string[]
+  requestedUserInfoClaims?: Prisma.OauthConsentUpdaterequestedUserInfoClaimsInput | string[]
   scopes?: Prisma.OauthConsentUpdatescopesInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -630,6 +706,8 @@ export type OauthConsentSelect<ExtArgs extends runtime.Types.Extensions.Internal
   clientId?: boolean
   userId?: boolean
   referenceId?: boolean
+  resources?: boolean
+  requestedUserInfoClaims?: boolean
   scopes?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -642,6 +720,8 @@ export type OauthConsentSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   clientId?: boolean
   userId?: boolean
   referenceId?: boolean
+  resources?: boolean
+  requestedUserInfoClaims?: boolean
   scopes?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -654,6 +734,8 @@ export type OauthConsentSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   clientId?: boolean
   userId?: boolean
   referenceId?: boolean
+  resources?: boolean
+  requestedUserInfoClaims?: boolean
   scopes?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -666,12 +748,14 @@ export type OauthConsentSelectScalar = {
   clientId?: boolean
   userId?: boolean
   referenceId?: boolean
+  resources?: boolean
+  requestedUserInfoClaims?: boolean
   scopes?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type OauthConsentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "clientId" | "userId" | "referenceId" | "scopes" | "createdAt" | "updatedAt", ExtArgs["result"]["oauthConsent"]>
+export type OauthConsentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "clientId" | "userId" | "referenceId" | "resources" | "requestedUserInfoClaims" | "scopes" | "createdAt" | "updatedAt", ExtArgs["result"]["oauthConsent"]>
 export type OauthConsentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   oauthclient?: boolean | Prisma.OauthClientDefaultArgs<ExtArgs>
   user?: boolean | Prisma.OauthConsent$userArgs<ExtArgs>
@@ -696,6 +780,8 @@ export type $OauthConsentPayload<ExtArgs extends runtime.Types.Extensions.Intern
     clientId: string
     userId: string | null
     referenceId: string | null
+    resources: string[]
+    requestedUserInfoClaims: string[]
     scopes: string[]
     createdAt: Date
     updatedAt: Date
@@ -1128,6 +1214,8 @@ export interface OauthConsentFieldRefs {
   readonly clientId: Prisma.FieldRef<"OauthConsent", 'String'>
   readonly userId: Prisma.FieldRef<"OauthConsent", 'String'>
   readonly referenceId: Prisma.FieldRef<"OauthConsent", 'String'>
+  readonly resources: Prisma.FieldRef<"OauthConsent", 'String[]'>
+  readonly requestedUserInfoClaims: Prisma.FieldRef<"OauthConsent", 'String[]'>
   readonly scopes: Prisma.FieldRef<"OauthConsent", 'String[]'>
   readonly createdAt: Prisma.FieldRef<"OauthConsent", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"OauthConsent", 'DateTime'>
