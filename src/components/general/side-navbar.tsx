@@ -84,7 +84,16 @@ export const SideNavbar: FC<{
 
       <div // メインコンテンツ
         id='side-main'
-        className='p-4 transition-[margin] group-has-data-nav-hidden/sidenav:ml-0 lg:ml-64'
+        className={cn(
+          'p-4 transition-[margin] group-has-data-nav-hidden/sidenav:ml-0 lg:ml-64',
+          /**
+           * 子が data-fit-screen のページ(かんばんのように内部スクロールで 1 画面に収めるページ)は、
+           * md 以上ではここが画面高を持ちきってページ側へ溢れを逃がさない。子は h-full / max-h-full で追従する。
+           * ページ全体のスクロールを使う data-wide(幅だけの指定)とは別物なので属性を分けている。
+           * md 未満は縦積みでページ全体のスクロールに任せるため掛けない(掛けると内容に届かなくなる)。
+           */
+          'md:has-data-fit-screen:h-screen md:has-data-fit-screen:overflow-hidden',
+        )}
       >
         {children}
       </div>
