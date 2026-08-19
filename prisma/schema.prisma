@@ -81,6 +81,7 @@ model Session {
 
 model Account {
   id                    String    @id @default(uuid(7))
+  issuer                String
   accountId             String
   providerId            String
   userId                String
@@ -95,6 +96,7 @@ model Account {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
+  @@unique([issuer, accountId])
   @@index([userId])
   @@map("account")
 }
@@ -152,45 +154,56 @@ model Jwks {
   privateKey String
   createdAt  DateTime
   expiresAt  DateTime?
+  alg        String?
+  crv        String?
 
   @@map("jwks")
 }
 
 model OauthClient {
-  id                      String              @id @default(uuid(7))
+  id                      String    @id @default(uuid(7))
   clientId                String
   clientSecret            String?
-  disabled                Boolean?            @default(false)
+  clientDiscoveryId       String?
+  disabled                Boolean?  @default(false)
   skipConsent             Boolean?
   enableEndSession        Boolean?
   subjectType             String?
-  scopes                  String[]            @default([])
+  scopes                  String[]  @default([])
+  clientCredentialsScopes String[]  @default([])
   userId                  String?
-  user                    User?               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                    User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt               DateTime?
   updatedAt               DateTime?
   name                    String?
   uri                     String?
   icon                    String?
-  contacts                String[]            @default([])
+  contacts                String[]  @default([])
   tos                     String?
   policy                  String?
   softwareId              String?
   softwareVersion         String?
   softwareStatement       String?
-  redirectUris            String[]            @default([])
-  postLogoutRedirectUris  String[]            @default([])
+  redirectUris            String[]  @default([])
+  postLogoutRedirectUris  String[]  @default([])
+
+  backchannelLogoutUri             String?
+  backchannelLogoutSessionRequired Boolean?
+
   tokenEndpointAuthMethod String?
-  grantTypes              String[]            @default([])
-  responseTypes           String[]            @default([])
-  public                  Boolean?
-  type                    String?
+  applicationType         String?
+  jwks                    String?
+  jwksUri                 String?
+  grantTypes              String[]              @default([])
+  responseTypes           String[]              @default([])
   requirePKCE             Boolean?
+  dpopBoundAccessTokens   Boolean?              @default(false)
   referenceId             String?
   metadata                Json?
   oauthrefreshtokens      OauthRefreshToken[]
   oauthaccesstokens       OauthAccessToken[]
   oauthconsents           OauthConsent[]
+  oauthclientresources    OauthClientResource[]
 
   @@unique([clientId])
   @@index([userId])
@@ -198,42 +211,59 @@ model OauthClient {
 }
 
 model OauthRefreshToken {
-  id                String             @id @default(uuid(7))
-  token             String
-  clientId          String
-  oauthclient       OauthClient        @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
-  sessionId         String?
-  session           Session?           @relation(fields: [sessionId], references: [id], onDelete: SetNull)
-  userId            String
-  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  referenceId       String?
-  expiresAt         DateTime
-  createdAt         DateTime           @default(now())
-  revoked           DateTime?
-  authTime          DateTime?
-  scopes            String[]
-  oauthaccesstokens OauthAccessToken[]
+  id          String      @id @default(uuid(7))
+  token       String
+  clientId    String
+  oauthclient OauthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  sessionId   String?
+  session     Session?    @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referenceId String?
+
+  authorizationCodeId     String?
+  resources               String[]
+  requestedUserInfoClaims String[]
+
+  expiresAt               DateTime
+  createdAt               DateTime           @default(now())
+  revoked                 DateTime?
+  rotatedAt               DateTime?
+  rotationReplayResponse  String?
+  rotationReplayExpiresAt DateTime?
+  authTime                DateTime?
+  confirmation            Json?
+  scopes                  String[]
+  oauthaccesstokens       OauthAccessToken[]
 
   @@index([clientId])
   @@index([sessionId])
   @@index([userId])
+  @@index([authorizationCodeId])
   @@map("oauth_refresh_token")
 }
 
 model OauthAccessToken {
-  id                String             @id @default(uuid(7))
-  token             String
-  clientId          String
-  oauthclient       OauthClient        @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
-  sessionId         String?
-  session           Session?           @relation(fields: [sessionId], references: [id], onDelete: SetNull)
-  userId            String?
-  user              User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  referenceId       String?
+  id          String      @id @default(uuid(7))
+  token       String
+  clientId    String
+  oauthclient OauthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  sessionId   String?
+  session     Session?    @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  userId      String?
+  user        User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referenceId String?
+
+  authorizationCodeId     String?
+  resources               String[]
+  requestedUserInfoClaims String[]
+
   refreshId         String?
   oauthrefreshtoken OauthRefreshToken? @relation(fields: [refreshId], references: [id], onDelete: Cascade)
   expiresAt         DateTime
   createdAt         DateTime           @default(now())
+  revoked           DateTime?
+  confirmation      Json?
   scopes            String[]
 
   @@unique([token])
@@ -241,6 +271,7 @@ model OauthAccessToken {
   @@index([sessionId])
   @@index([userId])
   @@index([refreshId])
+  @@index([authorizationCodeId])
   @@map("oauth_access_token")
 }
 
@@ -251,13 +282,67 @@ model OauthConsent {
   userId      String?
   user        User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
   referenceId String?
-  scopes      String[]
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+
+  resources               String[]
+  requestedUserInfoClaims String[]
+
+  scopes    String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([clientId])
   @@index([userId])
   @@map("oauth_consent")
+}
+
+/// アクセストークンの発行先となる保護リソース(RFC 8707 の `resource`)。
+/// TTL・スコープ・クレームを null にしておくとプラグイン既定値を継承する。
+model OauthResource {
+  id                            String    @id @default(uuid(7))
+  identifier                    String
+  name                          String
+  accessTokenTtl                Int?
+  refreshTokenTtl               Int?
+  signingAlgorithm              String?
+  signingKeyId                  String?
+  allowedScopes                 String[]
+  customClaims                  Json?
+  dpopBoundAccessTokensRequired Boolean?  @default(false)
+  disabled                      Boolean?  @default(false)
+  createdAt                     DateTime?
+  updatedAt                     DateTime?
+  policyVersion                 Int?      @default(1)
+  metadata                      Json?
+
+  oauthclientresources OauthClientResource[]
+
+  @@unique([identifier])
+  @@map("oauth_resource")
+}
+
+/// どのクライアントがどのリソースを要求できるかの中間テーブル。
+model OauthClientResource {
+  id            String        @id @default(uuid(7))
+  clientId      String
+  oauthclient   OauthClient   @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  resourceId    String
+  oauthresource OauthResource @relation(fields: [resourceId], references: [identifier], onDelete: Cascade)
+  metadata      Json?
+  createdAt     DateTime?
+
+  @@unique([clientId, resourceId])
+  @@index([clientId])
+  @@index([resourceId])
+  @@map("oauth_client_resource")
+}
+
+/// private_key_jwt のクライアントアサーション `jti` の使い捨て記録。
+/// id はアサーション由来のダイジェストを better-auth が入れるため既定値は持たない。
+model OauthClientAssertion {
+  id        String   @id
+  expiresAt DateTime
+
+  @@map("oauth_client_assertion")
 }
 
 model Dashboard {

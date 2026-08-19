@@ -241,7 +241,7 @@ export const slackUserInfo = async (tokens: { accessToken?: string }) => {
     return null
   }
 
-  // chat.postMessage の channel へそのまま渡せる Slack ユーザーIDを id にする
+  // chat.postMessage の channel へそのまま渡せる Slack ユーザーID
   const id = profile['https://slack.com/user_id'] ?? profile.sub
   if (!id || !profile.name || !profile.email) {
     logger.warn({ hasId: !!id, hasName: !!profile.name }, 'slack userinfo is incomplete')
@@ -249,7 +249,9 @@ export const slackUserInfo = async (tokens: { accessToken?: string }) => {
   }
 
   return {
-    id,
+    // slack() プリセットの accountSubject が sub を見て account.accountId を決めるため、
+    // Slack ユーザーIDを sub として返す
+    sub: id,
     name: profile.name,
     email: profile.email,
     image: profile.picture,

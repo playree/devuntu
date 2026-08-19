@@ -20,7 +20,7 @@ export const SlackAccountLink: FC = () => {
   const { data: status, reload, isLoading } = useActionData(getSlackStatus)
 
   const link = async () => {
-    await authClient.oauth2.link({ providerId: SLACK_PROVIDER_ID, callbackURL: '/account' })
+    await authClient.linkSocial({ provider: SLACK_PROVIDER_ID, callbackURL: '/account' })
   }
 
   // 取得前は未連携と区別できないため、連携済みでも一瞬「未連携」が出てしまう

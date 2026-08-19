@@ -14,6 +14,7 @@ import { envu } from './env-util'
 import { CALENDAR_READONLY_SCOPE, GOOGLE_ACCOUNT_PROVIDER_ID } from './google-calendar'
 import { logger } from './logger'
 import { sendEmailOtp } from './mail'
+import { idTokenStandardClaims } from './oidc-claims'
 import { prisma } from './prisma'
 import { makeUrl } from './server-utils'
 import { SLACK_PROVIDER_ID } from './slack'
@@ -21,6 +22,19 @@ import { slackUserInfo } from './slack-server'
 
 // oauthProvider(自身がOIDCプロバイダとして提供)用のスコープ(OIDCログイン用)
 export const OIDC_PROVIDER_SCOPES = ['openid', 'profile', 'email'] as const
+
+/**
+ * genericOAuth プロバイダの account.issuer を明示するための値。
+ * better-auth が discovery を持たないプロバイダへ与える合成 issuer と同じ形式にしてある。
+ *
+ * better-auth 1.7 から account の識別子が `(issuer, accountId)` になり、既定では
+ * discovery の issuer が入る。それをそのまま使うと下記2点で困るので固定する。
+ *
+ * - devuntu: issuer がメイン devuntu の baseURL になるため、環境ごとに値が変わってしまう
+ * - google-account: ログイン用 'google' と同じ Google アカウント(= 同じ sub)を
+ *   別用途で持つ設計なので、issuer まで同じだと `(issuer, accountId)` が衝突する
+ */
+const accountIssuer = (providerId: string) => `local:oauth:${providerId}`
 
 const oauthConfigs: GenericOAuthConfig[] = []
 if (
@@ -30,6 +44,7 @@ if (
 ) {
   oauthConfigs.push({
     providerId: 'devuntu',
+    accountIssuer: accountIssuer('devuntu'),
     clientId: envu.server.MAIN_DEVUNTU_CLIENT_ID,
     clientSecret: envu.server.MAIN_DEVUNTU_CLIENT_SECRET,
     discoveryUrl: new URL('.well-known/openid-configuration', envu.server.MAIN_DEVUNTU_URL).toString(),
@@ -48,6 +63,7 @@ if (
 if (!!envu.server.GOOGLE_CLIENT_ID && !!envu.server.GOOGLE_CLIENT_SECRET) {
   oauthConfigs.push({
     providerId: GOOGLE_ACCOUNT_PROVIDER_ID,
+    accountIssuer: accountIssuer(GOOGLE_ACCOUNT_PROVIDER_ID),
     clientId: envu.server.GOOGLE_CLIENT_ID,
     clientSecret: envu.server.GOOGLE_CLIENT_SECRET,
     discoveryUrl: 'https://accounts.google.com/.well-known/openid-configuration',
@@ -62,7 +78,8 @@ if (!!envu.server.GOOGLE_CLIENT_ID && !!envu.server.GOOGLE_CLIENT_SECRET) {
 
 // Slack 通知の宛先を特定するための連携(Sign in with Slack / OIDC)。
 // ここで得るトークンはプロフィール取得専用で、DM 送信には使えない(送信は Bot トークン)。
-// 必要なのは account.accountId に入る Slack ユーザーID(`U...`)だけ。
+// 必要なのは Slack ユーザーID(`U...`)だけで、slackUserInfo が返す sub が
+// プリセットの accountSubject 経由で account.accountId に入る。
 if (!!envu.server.SLACK_CLIENT_ID && !!envu.server.SLACK_CLIENT_SECRET) {
   oauthConfigs.push({
     ...slack({
@@ -190,7 +207,6 @@ export const auth = betterAuth({
 
               return {
                 user: {
-                  id: user.sub,
                   name: user.name,
                   email: user.email,
                   image: user.picture,
@@ -235,7 +251,9 @@ export const auth = betterAuth({
       loginPage: authConfig.path.signIn,
       consentPage: '/consent',
       scopes: [...OIDC_PROVIDER_SCOPES],
-      silenceWarnings: { oauthAuthServerConfig: true }, // 暫定
+      // oauth-provider 1.7 以降、標準クレームは userinfo 専用になった。
+      // ID token しか読まないクライアント(NetBird の Dex コネクタ等)向けに載せ直す
+      customIdTokenClaims: ({ user, scopes }) => idTokenStandardClaims(user, scopes),
     }),
     genericOAuth({
       config: oauthConfigs,

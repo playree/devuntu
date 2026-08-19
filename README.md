@@ -52,7 +52,7 @@
 - TypeScript v7(v6 と併存。[TypeScript v7 と v6 の併存](#typescript-v7-と-v6-の併存))
 - pnpm v11
 - Prisma v7
-- Better Auth v1.6
+- Better Auth v1.7
 - Tailwind CSS v4
 - HeroUI v3
 - Zod v4
