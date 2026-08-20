@@ -1,4 +1,6 @@
+import { getTicketForMcp, searchTicketsForMcp } from '@/lib/mcp-ticket'
 import type { ResourceAuth } from '@/lib/oauth-resource'
+import { TICKET_PRIORITIES, TICKET_STATUSES } from '@/lib/task'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
@@ -24,6 +26,38 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       inputSchema: { message: z.string().min(1) },
     },
     async ({ message }) => ({ content: [{ type: 'text' as const, text: message }] }),
+  )
+
+  server.registerTool(
+    'get_ticket',
+    {
+      title: 'チケット取得',
+      description:
+        '表示ID(例: ABC-42)またはチケットIDを指定して、本文・ステータス・担当者・タグ・コメントを含む詳細を取得する',
+      inputSchema: { ticketId: z.string().min(1) },
+    },
+    async ({ ticketId }) => ({
+      content: [{ type: 'text' as const, text: JSON.stringify(await getTicketForMcp(auth, ticketId), null, 2) }],
+    }),
+  )
+
+  server.registerTool(
+    'search_tickets',
+    {
+      title: 'チケット検索',
+      description: 'キーワード・ステータス・優先度・タグ・ボードで、アクセス可能なチケットを検索する',
+      inputSchema: {
+        keyword: z.string().max(100).optional(),
+        status: z.array(z.enum(TICKET_STATUSES)).optional(),
+        priority: z.array(z.enum(TICKET_PRIORITIES)).optional(),
+        tags: z.array(z.string()).optional(),
+        boardId: z.string().optional(),
+        limit: z.number().int().min(1).max(50).optional(),
+      },
+    },
+    async (input) => ({
+      content: [{ type: 'text' as const, text: JSON.stringify(await searchTicketsForMcp(auth, input), null, 2) }],
+    }),
   )
 
   return server
