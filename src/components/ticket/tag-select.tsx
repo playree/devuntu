@@ -2,7 +2,7 @@
 
 import { MultiButton } from '@/components/general/button'
 import { XCircleIcon } from '@/components/general/select'
-import { useIsSmart } from '@/components/general/smart'
+import { useSmart } from '@/components/general/smart'
 import { PlusIcon, XMarkIcon } from '@/components/icon'
 import type { TagColor } from '@/generated/prisma/enums'
 import { MAX_TAG_NAME, MAX_TICKET_TAGS } from '@/lib/task'
@@ -39,6 +39,7 @@ type TagIdSelectFieldProps = {
   isDisabled?: boolean
   variant?: 'primary' | 'secondary'
   isSmart?: boolean
+  isSmartForm?: boolean
 }
 
 /**
@@ -72,6 +73,7 @@ export const TagIdSelectField = ({
   isDisabled,
   variant,
   isSmart: isSmartProp,
+  isSmartForm: isSmartFormProp,
   value,
   onChange,
   onBlur,
@@ -83,7 +85,7 @@ export const TagIdSelectField = ({
   onBlur?: () => void
   ref?: Ref<HTMLDivElement>
 }) => {
-  const isSmart = useIsSmart(isSmartProp)
+  const { isCompact, hasErrorArea } = useSmart(isSmartProp, isSmartFormProp)
   const { t } = useLocale()
   // 大文字小文字やアクセントの違いを無視して絞り込む
   const { contains } = useFilter({ sensitivity: 'base' })
@@ -172,12 +174,12 @@ export const TagIdSelectField = ({
       onBlur={onBlur}
       ref={ref}
     >
-      <Label className={cn(isSmart ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}>
+      <Label className={cn(isCompact ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}>
         {label ?? t('tags')}
         <span className='ml-1 text-xs opacity-60'>{`${selectedIds.length}/${MAX_TICKET_TAGS}`}</span>
       </Label>
-      <Autocomplete.Trigger // isSmart: 既定 36px を 28px に詰める
-        className={isSmart ? 'min-h-7 py-1' : undefined}
+      <Autocomplete.Trigger // isCompact: 既定 36px を 28px に詰める
+        className={isCompact ? 'min-h-7 py-1' : undefined}
       >
         <Autocomplete.Value className='flex flex-wrap items-center gap-1'>
           {() =>
@@ -214,7 +216,7 @@ export const TagIdSelectField = ({
         <Autocomplete.ClearButton /* 全解除。未選択(data-empty)のときは CSS 側で非表示になる */ />
         <Autocomplete.Indicator /* children を渡すと Button ラップが消えてキーボードで開けなくなるので空のまま */ />
       </Autocomplete.Trigger>
-      <ErrorMessage className={isSmart ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
+      <ErrorMessage className={hasErrorArea ? 'min-h-4' : ''}>{errorMessage}</ErrorMessage>
       <Autocomplete.Popover>
         <Autocomplete.Filter
           inputValue={draft}
@@ -337,8 +339,19 @@ export const TagNameSelectField: FC<{
   variant?: 'primary' | 'secondary'
   errorMessage?: string
   isSmart?: boolean
-}> = ({ options, value, onChange, label, max, variant, errorMessage, isSmart: isSmartProp }) => {
-  const isSmart = useIsSmart(isSmartProp)
+  isSmartForm?: boolean
+}> = ({
+  options,
+  value,
+  onChange,
+  label,
+  max,
+  variant,
+  errorMessage,
+  isSmart: isSmartProp,
+  isSmartForm: isSmartFormProp,
+}) => {
+  const { isCompact, hasErrorArea } = useSmart(isSmartProp, isSmartFormProp)
   const { t } = useLocale()
   // 選択順で並べる(options 順ではなく選んだ順にチップが増える)。
   // options は dedupeTagOptionsByName 済みなので名前は一意
@@ -359,12 +372,12 @@ export const TagNameSelectField: FC<{
       allowsEmptyCollection
       onChange={(keys) => onChange(keys.map(String))}
     >
-      <Label className={isSmart ? 'text-xs font-light' : ''}>
+      <Label className={isCompact ? 'text-xs font-light' : ''}>
         {label ?? t('tags')}
         {max !== undefined && <span className='ml-1 text-xs opacity-60'>{`${value.length}/${max}`}</span>}
       </Label>
-      <Select.Trigger // isSmart: 既定 36px を 28px に詰める
-        className={isSmart ? 'min-h-7 py-1' : undefined}
+      <Select.Trigger // isCompact: 既定 36px を 28px に詰める
+        className={isCompact ? 'min-h-7 py-1' : undefined}
       >
         <Select.Value className='flex flex-wrap items-center gap-1'>
           {() =>
@@ -401,7 +414,7 @@ export const TagNameSelectField: FC<{
         )}
         <Select.Indicator />
       </Select.Trigger>
-      <ErrorMessage className={isSmart ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
+      <ErrorMessage className={hasErrorArea ? 'min-h-4' : ''}>{errorMessage}</ErrorMessage>
       <Select.Popover>
         <ListBox selectionMode='multiple' renderEmptyState={() => <EmptyState>{t('msg_no_tags')}</EmptyState>}>
           {options.map((tag) => (

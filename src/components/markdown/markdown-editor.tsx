@@ -7,7 +7,7 @@ import dynamic from 'next/dynamic'
 import { CSSProperties, FC, memo, ReactNode, useCallback, useState } from 'react'
 import { Control, FieldPath, FieldValues, useController } from 'react-hook-form'
 import { z } from 'zod'
-import { useIsSmart } from '../general/smart'
+import { useSmart } from '../general/smart'
 import { MarkdownView } from './markdown-view'
 // 型のみの参照。実体(lexical / MDXEditor)は mdx-editor-core 側の動的 import に閉じたままになる
 import type { MentionCandidate } from './mention-menu'
@@ -108,13 +108,13 @@ const EditorField: FC<{
   isFlat?: boolean
   children: ReactNode
 }> = ({ label, isRequired, length, maxLength, errorMessage, action, isFlat, children }) => {
-  const isSmart = useIsSmart()
+  const { isCompact, hasErrorArea } = useSmart()
   return (
     <TextField isInvalid={!!errorMessage} className='mb-0.5'>
       <div // action にはボタンが入るため、そのときだけ中央揃えにしてラベルと高さを合わせる
         className={cn('flex justify-between', action ? 'items-center' : 'items-baseline')}
       >
-        <Label className={isSmart ? 'text-xs font-light' : ''} isRequired={isRequired}>
+        <Label className={isCompact ? 'text-xs font-light' : ''} isRequired={isRequired}>
           {label}
         </Label>
         <div className='flex items-center gap-2'>
@@ -127,7 +127,7 @@ const EditorField: FC<{
         </div>
       </div>
       {children}
-      <ErrorMessage className={isFlat || isSmart ? undefined : 'min-h-4'}>{errorMessage}</ErrorMessage>
+      <ErrorMessage className={isFlat || !hasErrorArea ? undefined : 'min-h-4'}>{errorMessage}</ErrorMessage>
     </TextField>
   )
 }

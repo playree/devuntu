@@ -3,7 +3,7 @@
 import { UserAvatar } from '@/components/general/avatar'
 import { MultiButton } from '@/components/general/button'
 import { XCircleIcon } from '@/components/general/select'
-import { useIsSmart } from '@/components/general/smart'
+import { useSmart } from '@/components/general/smart'
 import { useSelfUserId } from '@/lib/use-user'
 import { useLocale } from '@/locale/client'
 import { ComboBox, EmptyState, ErrorMessage, Input, Label, ListBox, cn } from '@heroui/react'
@@ -75,6 +75,7 @@ type AssigneeSelectFieldProps = {
   errorMessage?: string
   variant?: 'primary' | 'secondary'
   isSmart?: boolean
+  isSmartForm?: boolean
   onBlur?: () => void
   ref?: Ref<HTMLDivElement>
 }
@@ -101,11 +102,12 @@ export const AssigneeSelectField = ({
   errorMessage,
   variant,
   isSmart: isSmartProp,
+  isSmartForm: isSmartFormProp,
   onBlur,
   ref,
 }: AssigneeSelectFieldProps) => {
   const { t } = useLocale()
-  const isSmart = useIsSmart(isSmartProp)
+  const { isCompact, hasErrorArea } = useSmart(isSmartProp, isSmartFormProp)
   const selfUserId = useSelfUserId()
   const canSelectSelf = !isDisabled && !!selfUserId && options.some((option) => option.id === selfUserId)
   const selected = value ? options.find((option) => option.id === value) : undefined
@@ -129,7 +131,7 @@ export const AssigneeSelectField = ({
       <div // ラベル行を横並びにする。react-aria は Context で Label を解決するので div で包んでも紐付けは保たれる
         className='flex items-center justify-between gap-2'
       >
-        <Label className={cn(isSmart ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}>
+        <Label className={cn(isCompact ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}>
           {label ?? t('assignee')}
         </Label>
         {canSelectSelf && <SelfAssigneeAction onPress={() => onChange(selfUserId)} />}
@@ -166,9 +168,9 @@ export const AssigneeSelectField = ({
             <XCircleIcon width={16} />
           </span>
         )}
-        <Input // isSmart: 既定 36px を 28px に詰める
+        <Input // isCompact: 既定 36px を 28px に詰める
           className={cn(
-            isSmart ? 'min-h-7 py-1' : undefined,
+            isCompact ? 'min-h-7 py-1' : undefined,
             // 重ねたアバター(inset-s-2 + 16px)とクリア(inset-e-6 + 16px)の分だけ内側を空ける
             hasAvatar ? 'ps-8' : undefined,
             hasClear ? 'pe-11' : undefined,
@@ -177,7 +179,7 @@ export const AssigneeSelectField = ({
         />
         <ComboBox.Trigger /* 必ず最後の子にすること(InputGroup が最後の子を Trigger として扱う) */ />
       </ComboBox.InputGroup>
-      <ErrorMessage className={isSmart ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
+      <ErrorMessage className={hasErrorArea ? 'min-h-4' : ''}>{errorMessage}</ErrorMessage>
       <ComboBox.Popover>
         <ListBox renderEmptyState={() => <EmptyState>{t('msg_no_matching_assignees')}</EmptyState>}>
           {options.map((option) => (

@@ -1,34 +1,36 @@
 'use client'
 import { cn } from '@heroui/react'
 import { ComponentProps, FC } from 'react'
-import { SmartProvider, useIsSmart } from './smart'
+import { SmartProvider, useSmart } from './smart'
 
-export const FlexCol: FC<ComponentProps<'div'> & { isSmart?: boolean }> = ({
+export const FlexCol: FC<ComponentProps<'div'> & { isSmart?: boolean; isSmartForm?: boolean }> = ({
   children,
   className,
   isSmart: isSmartProp,
+  isSmartForm: isSmartFormProp,
   ...props
 }) => {
-  const isSmart = useIsSmart(isSmartProp)
+  const { isCompact } = useSmart(isSmartProp, isSmartFormProp)
   return (
-    <SmartProvider isSmart={isSmart}>
-      <div className={cn('flex flex-col', isSmart ? 'gap-1' : 'gap-2', className)} {...props}>
+    <SmartProvider isSmart={isSmartProp} isSmartForm={isSmartFormProp}>
+      <div className={cn('flex flex-col', isCompact ? 'gap-1' : 'gap-2', className)} {...props}>
         {children}
       </div>
     </SmartProvider>
   )
 }
 
-export const FlexRow: FC<ComponentProps<'div'> & { isSmart?: boolean }> = ({
+export const FlexRow: FC<ComponentProps<'div'> & { isSmart?: boolean; isSmartForm?: boolean }> = ({
   children,
   className,
   isSmart: isSmartProp,
+  isSmartForm: isSmartFormProp,
   ...props
 }) => {
-  const isSmart = useIsSmart(isSmartProp)
+  const { isCompact } = useSmart(isSmartProp, isSmartFormProp)
   return (
-    <SmartProvider isSmart={isSmart}>
-      <div className={cn('flex flex-row', isSmart ? 'gap-1' : 'gap-2', className)} {...props}>
+    <SmartProvider isSmart={isSmartProp} isSmartForm={isSmartFormProp}>
+      <div className={cn('flex flex-row', isCompact ? 'gap-1' : 'gap-2', className)} {...props}>
         {children}
       </div>
     </SmartProvider>

@@ -3,7 +3,7 @@
 import { Chip, cn, ErrorMessage, Label, ListBox, Select } from '@heroui/react'
 import { FC, ReactNode, Ref, SVGProps } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
-import { useIsSmart } from './smart'
+import { useSmart } from './smart'
 
 export const XCircleIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
   <svg
@@ -38,6 +38,7 @@ type SelectFieldBaseProps = {
   isRequired?: boolean
   variant?: 'primary' | 'secondary'
   isSmart?: boolean
+  isSmartForm?: boolean
   errorMessage?: string
   onBlur?: () => void
   ref?: Ref<HTMLDivElement>
@@ -60,6 +61,7 @@ export const MultiSelectField = ({
   isRequired,
   variant,
   isSmart: isSmartProp,
+  isSmartForm: isSmartFormProp,
   errorMessage,
   value,
   onChange,
@@ -67,7 +69,7 @@ export const MultiSelectField = ({
   placeholder,
   ref,
 }: MultiSelectFieldProps) => {
-  const isSmart = useIsSmart(isSmartProp)
+  const { isCompact, hasErrorArea } = useSmart(isSmartProp, isSmartFormProp)
   return (
     <div className='space-y-4'>
       <Select
@@ -78,10 +80,10 @@ export const MultiSelectField = ({
         onBlur={onBlur}
         ref={ref}
       >
-        <Label className={isSmart ? 'text-xs font-light' : ''} isRequired={isRequired}>
+        <Label className={isCompact ? 'text-xs font-light' : ''} isRequired={isRequired}>
           {label}
         </Label>
-        <Select.Trigger className={isSmart ? 'min-h-7 py-1' : undefined}>
+        <Select.Trigger className={isCompact ? 'min-h-7 py-1' : undefined}>
           <Select.Value>
             {() => {
               return value.length > 0 ? (
@@ -118,7 +120,7 @@ export const MultiSelectField = ({
           )}
           <Select.Indicator />
         </Select.Trigger>
-        <ErrorMessage className={isSmart ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
+        <ErrorMessage className={hasErrorArea ? 'min-h-4' : ''}>{errorMessage}</ErrorMessage>
         <Select.Popover>
           <ListBox selectionMode='multiple'>
             {Object.entries(groupOptions).map(([id, name]) => (
@@ -187,13 +189,14 @@ export const SingleSelectField = ({
   isDisabled = false,
   errorMessage,
   isSmart: isSmartProp,
+  isSmartForm: isSmartFormProp,
   triggerLabel,
   value,
   onChange,
   onBlur,
   ref,
 }: SingleSelectFieldProps) => {
-  const isSmart = useIsSmart(isSmartProp)
+  const { isCompact, hasErrorArea } = useSmart(isSmartProp, isSmartFormProp)
   return (
     <div className='space-y-4'>
       <Select
@@ -206,13 +209,13 @@ export const SingleSelectField = ({
         ref={ref}
       >
         <Label
-          className={cn(isSmart ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}
+          className={cn(isCompact ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}
           isRequired={isRequired}
         >
           {label}
         </Label>
-        <Select.Trigger // isSmart: 既定 36px を 28px に詰める
-          className={isSmart ? 'min-h-7 py-1' : undefined}
+        <Select.Trigger // isCompact: 既定 36px を 28px に詰める
+          className={isCompact ? 'min-h-7 py-1' : undefined}
         >
           <Select.Value>
             {() => {
@@ -244,7 +247,7 @@ export const SingleSelectField = ({
           )}
           <Select.Indicator />
         </Select.Trigger>
-        <ErrorMessage className={isSmart ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
+        <ErrorMessage className={hasErrorArea ? 'min-h-4' : ''}>{errorMessage}</ErrorMessage>
         <Select.Popover>
           <ListBox selectionMode='single'>
             {Object.entries(groupOptions).map(([id, name]) => (

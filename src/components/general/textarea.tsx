@@ -4,7 +4,7 @@ import { getFieldConstraints } from '@/lib/schema-util'
 import { cn, ErrorMessage, Label, TextArea, TextAreaProps, TextField } from '@heroui/react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 import { z } from 'zod'
-import { useIsSmart } from './smart'
+import { useSmart } from './smart'
 
 type TextAreaFieldProps = TextAreaProps & {
   label?: string
@@ -12,6 +12,7 @@ type TextAreaFieldProps = TextAreaProps & {
   isReadOnly?: boolean
   errorMessage?: string
   isSmart?: boolean
+  isSmartForm?: boolean
   className?: string
 }
 
@@ -27,10 +28,11 @@ export const TextAreaField = ({
   errorMessage,
   rows = 6,
   isSmart: isSmartProp,
+  isSmartForm: isSmartFormProp,
   className,
   ...props
 }: TextAreaFieldProps) => {
-  const isSmart = useIsSmart(isSmartProp)
+  const { isCompact, hasErrorArea } = useSmart(isSmartProp, isSmartFormProp)
   return (
     <TextField
       isInvalid={!!errorMessage}
@@ -44,12 +46,12 @@ export const TextAreaField = ({
       validationBehavior='aria'
     >
       {label && (
-        <Label className={isSmart ? 'text-xs font-light' : ''} isRequired={isRequired}>
+        <Label className={isCompact ? 'text-xs font-light' : ''} isRequired={isRequired}>
           {label}
         </Label>
       )}
-      <TextArea fullWidth rows={rows} {...props} className={cn(isSmart ? 'py-1' : '', className)} />
-      <ErrorMessage className={isSmart ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
+      <TextArea fullWidth rows={rows} {...props} className={cn(isCompact ? 'py-1' : '', className)} />
+      <ErrorMessage className={hasErrorArea ? 'min-h-4' : ''}>{errorMessage}</ErrorMessage>
     </TextField>
   )
 }

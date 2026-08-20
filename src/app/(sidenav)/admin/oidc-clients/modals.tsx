@@ -75,7 +75,7 @@ export const AddModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, relo
         </>
       }
     >
-      <div className='min-h-76 overflow-hidden'>
+      <div className='min-h-64 overflow-hidden'>
         <AnimatePresence mode='wait' custom={step.direction}>
           {step.id === 'INPUT' && (
             <StepMotion direction={step.direction} key='step_input'>

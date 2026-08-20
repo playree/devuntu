@@ -6,7 +6,7 @@ import { ChangeEvent, FC, SVGProps } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 import { z } from 'zod'
 import { MultiButton } from './button'
-import { useIsSmart } from './smart'
+import { useIsSmart, useSmart } from './smart'
 
 /** 検索実行ボタン用のアイコン(共通部品なのでこのフォルダ内で完結させる) */
 const MagnifyingGlassIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 16, strokeWidth = 2, ...props }) => (
@@ -36,6 +36,7 @@ type InputFieldProps = InputProps & {
   isReadOnly?: boolean
   errorMessage?: string
   isSmart?: boolean
+  isSmartForm?: boolean
   className?: string
 }
 
@@ -52,10 +53,11 @@ export const InputField = ({
   isReadOnly,
   errorMessage,
   isSmart: isSmartProp,
+  isSmartForm: isSmartFormProp,
   className,
   ...props
 }: InputFieldProps) => {
-  const isSmart = useIsSmart(isSmartProp)
+  const { isCompact, hasErrorArea } = useSmart(isSmartProp, isSmartFormProp)
   return (
     <TextField
       isInvalid={!!errorMessage}
@@ -69,18 +71,18 @@ export const InputField = ({
       validationBehavior='aria'
     >
       <Label
-        className={cn(isSmart ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}
+        className={cn(isCompact ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}
         isRequired={isRequired}
       >
         {label}
       </Label>
       <Input
         {...props}
-        // isSmart: 既定 36px を 28px に詰める
-        className={cn(isSmart ? 'py-1' : '', className)}
+        // isCompact: 既定 36px を 28px に詰める
+        className={cn(isCompact ? 'py-1' : '', className)}
         type={type}
       />
-      <ErrorMessage className={isSmart ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
+      <ErrorMessage className={hasErrorArea ? 'min-h-4' : ''}>{errorMessage}</ErrorMessage>
     </TextField>
   )
 }
