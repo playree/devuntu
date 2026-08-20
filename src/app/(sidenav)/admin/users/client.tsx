@@ -1,6 +1,7 @@
 'use client'
 
 import { ActionCell } from '@/components/action-cell'
+import { UserAvatar } from '@/components/general/avatar'
 import { MultiButton } from '@/components/general/button'
 import { OnOffChip } from '@/components/general/chip'
 import { FlexCol } from '@/components/general/flex'
@@ -54,7 +55,7 @@ export const AdminUsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPass
         ariaLabel='user list'
         pagingList={list}
         columns={[
-          { id: 'name', name: t('username'), isRowHeader: true, allowsSorting: true, minWidth: 80 },
+          { id: 'name', name: t('username'), isRowHeader: true, allowsSorting: true, minWidth: 110 },
           { id: 'email', name: t('email'), allowsSorting: true, minWidth: 80, defaultWidth: '1fr' },
           { id: 'isAdmin', name: t('is_admin'), allowsSorting: true, minWidth: 70, defaultWidth: 70 },
           { id: 'groups', name: t('group'), minWidth: 80, defaultWidth: '2fr' },
@@ -65,7 +66,12 @@ export const AdminUsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPass
       >
         {(item) => (
           <Table.Row key={item.id} id={item.id}>
-            <Table.Cell>{item.name}</Table.Cell>
+            <Table.Cell>
+              <span className='flex min-w-0 items-center gap-1'>
+                <UserAvatar name={item.name} image={item.image} size='xs' />
+                <span className='truncate'>{item.name}</span>
+              </span>
+            </Table.Cell>
             <Table.Cell className='truncate font-mono text-xs'>{item.email}</Table.Cell>
             <Table.Cell>
               <OnOffChip isState={item.isAdmin} isIconOnly />
