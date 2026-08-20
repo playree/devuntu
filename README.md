@@ -114,13 +114,52 @@
 
 Proxy の対象外のため、各ルートハンドラ内で個別に認証する。
 
-| パス                                         | アクセス制御                                      |
-| -------------------------------------------- | ------------------------------------------------- |
-| `/api/auth/[...all]`                         | Better Auth のハンドラ(認証処理自体)              |
-| `/api/auth/.well-known/openid-configuration` | 認証不要(OIDC ディスカバリ)                       |
-| `/api/health`                                | 認証不要(ヘルスチェック)                          |
-| `/api/upload`                                | 認証必須(未ログインは401)。画像アップロード(POST) |
-| `/api/upload/[filename]`                     | 認証必須(未ログインは401)。画像配信(GET)          |
+| パス                                               | アクセス制御                                                       |
+| -------------------------------------------------- | ------------------------------------------------------------------ |
+| `/api/auth/[...all]`                               | Better Auth のハンドラ(認証処理自体)                               |
+| `/api/auth/.well-known/openid-configuration`       | 認証不要(OIDC ディスカバリ)                                        |
+| `/api/auth/.well-known/oauth-authorization-server` | 認証不要(RFC 8414 認可サーバーメタデータ)                          |
+| `/.well-known/oauth-authorization-server/api/auth` | 認証不要(RFC 8414 のパス挿入形式。同じ内容を返す)                  |
+| `/.well-known/oauth-protected-resource/api/mcp`    | 認証不要(RFC 9728 保護リソースメタデータ)                          |
+| `/api/auth/oauth2/register`                        | 認証不要(RFC 7591 動的クライアント登録)。`OIDC_DCR_ENABLED` 時のみ |
+| `/api/mcp`                                         | アクセストークン必須(未提示は401 + `WWW-Authenticate`)             |
+| `/api/health`                                      | 認証不要(ヘルスチェック)                                           |
+| `/api/upload`                                      | 認証必須(未ログインは401)。画像アップロード(POST)                  |
+| `/api/upload/[filename]`                           | 認証必須(未ログインは401)。画像配信(GET)                           |
+
+# MCP サーバー
+
+`/api/mcp` を MCP クライアント(Claude Code / VS Code など)へ公開する。devuntu 自身が認可サーバーを
+兼ねるため、クライアントは接続時に動的クライアント登録(DCR)→ 認可コードフローの順で進む。
+利用するには `OIDC_DCR_ENABLED=true` が必要。
+
+## 誰が使えるか
+
+**クライアントを登録できることと、データを読めることは別**。登録しただけでは何も読めない。
+
+- `/oauth2/authorize` は devuntu のログインを要求する。ログインできる利用者だけが認可を完了できる
+- 動的登録されたクライアントは `skip_consent` を指定できないため、同意画面が必ず出る
+- アクセストークンはセッション(`sid`)に紐づく。ログアウトやセッション失効でトークンも無効になるため、
+  `SESSION_EXPIRES_IN`(既定5日)を超えると MCP 側も再認可が必要になる
+- `/api/mcp` はトークンの `sub` から devuntu ユーザーを解決する。ボードやチケットの権限は画面と同じ
+
+## 登録できるクライアントの範囲
+
+`POST /api/auth/oauth2/register` は未認証で叩けるが、リダイレクトURIが**ループバック
+(`http://localhost` / `127.0.0.1` / `[::1]`)か逆ドメイン形式の private-use スキーム**のものだけを
+受け付ける(`src/lib/oauth-registration.ts`)。認可コードが必ず利用者自身の端末へ戻るので、
+外部サーバーへコードを流すクライアントは登録できない。PKCE は常に必須。
+
+## 運用上の注意
+
+- クライアントは利用者ごとではなく**MCP クライアントのインストールごと**に登録される。
+  同じ人でも端末が2台あれば2行、設定を消して再追加すればさらに増える
+- 増えた行は `/admin/oidc-clients` の「動的登録」セクションから無効化・削除できる。
+  無効化は新しい認可を止め、削除は発行済みトークンと同意も一緒に消す(外部キーの Cascade)
+- 利用者本人は `/account` の「許可済みアプリ」から自分の許可を取り消せる
+- MCP はリソース(RFC 8707)として `<BETTER_AUTH_URL>/api/mcp` を持つ。
+  リソースにリンクされたクライアントだけがこのトークンを取れるので、既存の OIDC ログイン用
+  クライアントは MCP を使えない。ただし管理画面から新しく作るクライアントはリンクされる
 
 # 通知
 
@@ -274,6 +313,7 @@ Slack の署名(`src/lib/slack-signature.ts`)だけが門番になるので、�
 | `SESSION_FRESH_AGE`          | セッション fresh 期間(秒)             |      | `86400`(1日)  |
 | `TWO_FA_REQUIRED`            | 2要素認証を必須にするか               |      | `true`        |
 | `DISABLE_PASSWORD_AUTH`      | パスワード認証を無効化                |      | `false`       |
+| `OIDC_DCR_ENABLED`           | 動的クライアント登録を有効化          |      | `false`       |
 | `MAIN_DEVUNTU_URL`           | 連携元 Devuntu の URL                 |      | -             |
 | `MAIN_DEVUNTU_CLIENT_ID`     | 連携元クライアントID                  |      | -             |
 | `MAIN_DEVUNTU_CLIENT_SECRET` | 連携元クライアントシークレット        |      | -             |

@@ -19,4 +19,7 @@ export const errInvalidOperation = () => new ClientError('INVALID_OPERATION', 'I
 /** レート制限超過。クライアント側で errorType を見て分岐するため型名を定数で公開する */
 export const TOO_MANY_REQUESTS = 'TOO_MANY_REQUESTS'
 export const errTooManyRequests = () => new ClientError(TOO_MANY_REQUESTS, 'Too Many Requests')
+/** 同意要求の署名不正・期限切れ。クライアント側で errorType を見て分岐するため型名を定数で公開する */
+export const CONSENT_INVALID = 'CONSENT_INVALID'
+export const errConsentInvalid = () => new ClientError(CONSENT_INVALID, 'Invalid Consent Request')
 export const errSystemError = (message: string) => new Error(`System Error: ${message}`)

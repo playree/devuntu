@@ -9,7 +9,7 @@ import { localeConfig } from './locale/config'
 export const proxy = async (request: NextRequest) => {
   const {
     method,
-    nextUrl: { pathname },
+    nextUrl: { pathname, search },
   } = request
   logger.debug({ pathname, method }, 'proxy in')
 
@@ -19,12 +19,13 @@ export const proxy = async (request: NextRequest) => {
     session = await getServerSession()
     logger.debug({ session }, 'proxy auth')
     if (!session?.user) {
-      // cb はサインイン画面で safeCallbackPath を通すため自サイト内のパスで渡す
-      return redirectSignIn(pathname)
+      // cb はサインイン画面で safeCallbackPath を通すため自サイト内のパスで渡す。
+      // クエリまで含めるのは /consent の署名付きクエリを再ログインで失わないため
+      return redirectSignIn(`${pathname}${search}`)
     }
     if (envu.server.TWO_FA_REQUIRED && !envu.server.DISABLE_PASSWORD_AUTH) {
       if (!session.user.twoFactorEnabled) {
-        return redirectTwoFaEnable(pathname)
+        return redirectTwoFaEnable(`${pathname}${search}`)
       }
     }
 

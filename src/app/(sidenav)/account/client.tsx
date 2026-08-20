@@ -3,17 +3,26 @@
 import { AccordionSection } from '@/components/general/accordion'
 import { FlexCol } from '@/components/general/flex'
 import { ContentHeader } from '@/components/header'
-import { BellIcon, Cog6ToothIcon, FingerPrintIcon, GoogleIcon, SlackIcon, UserCircleIcon } from '@/components/icon'
+import {
+  BellIcon,
+  Cog6ToothIcon,
+  FingerPrintIcon,
+  GoogleIcon,
+  PuzzlePieceIcon,
+  SlackIcon,
+  UserCircleIcon,
+} from '@/components/icon'
 import { useLocale } from '@/locale/client'
 import { Accordion } from '@heroui/react'
 import { FC } from 'react'
 import { GoogleAccountLink } from './google-account'
 import { NotifySettings } from './notify'
+import { MyOAuthConsents } from './oauth-consents'
 import { MyPasskey } from './passkey'
 import { SlackAccountLink } from './slack'
 import { TimezoneSetting } from './timezone'
 
-const defaultExpandedKeys = new Set(['passkey', 'google_account', 'slack', 'timezone', 'notify'])
+const defaultExpandedKeys = new Set(['passkey', 'google_account', 'slack', 'timezone', 'notify', 'oauth_consents'])
 export const AccountClient: FC<{ googleAvailable: boolean; slackAvailable: boolean }> = ({
   googleAvailable,
   slackAvailable,
@@ -40,6 +49,9 @@ export const AccountClient: FC<{ googleAvailable: boolean; slackAvailable: boole
             <SlackAccountLink />
           </AccordionSection>
         )}
+        <AccordionSection id='oauth_consents' icon={<PuzzlePieceIcon />} title={t('consent_apps')}>
+          <MyOAuthConsents />
+        </AccordionSection>
         <AccordionSection // メール通知は Slack 連携の有無に関わらず設定できるので常に表示する
           id='notify'
           icon={<BellIcon />}

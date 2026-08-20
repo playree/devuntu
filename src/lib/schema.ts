@@ -90,8 +90,23 @@ export const scUpdateOidcClient = z.object({
 })
 export type UpdateOidcClient = z.infer<typeof scUpdateOidcClient>
 
+export const scSetOidcClientDisabled = z.object({
+  clientId: z.string(),
+  disabled: z.boolean(),
+})
+
 export const scDeleteOidcClient = z.object({
   clientId: z.string(),
+})
+
+export const scConsent = z.object({
+  accept: z.boolean(),
+  oauthQuery: z.string().min(1),
+})
+export type Consent = z.infer<typeof scConsent>
+
+export const scRevokeConsent = z.object({
+  id: z.uuidv7(),
 })
 
 export const scCreateUser = z.object({
