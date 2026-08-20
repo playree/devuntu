@@ -25,6 +25,8 @@ const ExternalLink: FC<{ href: string; children: string }> = ({ href, children }
 
 export const ConsentClient: FC<{
   isValid: boolean
+  /** 動的登録されたクライアント(管理者が承認していない)かどうか */
+  isUnverified: boolean
   clientName?: string
   clientUri?: string
   logoUri?: string
@@ -32,7 +34,7 @@ export const ConsentClient: FC<{
   policyUri?: string
   scopes: string[]
   claims: string[]
-}> = ({ isValid, clientName, clientUri, logoUri, tosUri, policyUri, scopes, claims }) => {
+}> = ({ isValid, isUnverified, clientName, clientUri, logoUri, tosUri, policyUri, scopes, claims }) => {
   const { t } = useLocale()
   const { data: session } = authClient.useSession()
   const [pending, setPending] = useState<'allow' | 'deny'>()
@@ -84,6 +86,8 @@ export const ConsentClient: FC<{
               {clientUri && <ExternalLink href={clientUri}>{clientUri}</ExternalLink>}
             </FlexCol>
           </div>
+
+          {isUnverified && <NoticePanel className='text-xs'>{t('msg_consent_unverified_client')}</NoticePanel>}
 
           <div className='text-sm'>{t('msg_consent_request', { client: appName })}</div>
 

@@ -37,6 +37,8 @@ const SCOPE_LOCALE_ITEMS: Record<string, LocaleItem> = {
   openid: 'scope_openid',
   profile: 'scope_profile',
   email: 'scope_email',
+  offline_access: 'scope_offline_access',
+  mcp: 'scope_mcp',
 }
 
 /** スコープの説明文用ロケールキー。説明を持たないスコープは undefined(スコープ名をそのまま表示する) */

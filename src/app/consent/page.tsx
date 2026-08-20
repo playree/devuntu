@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth'
 import { logger } from '@/lib/logger'
 import { parseConsentScopes, parseRequestedUserInfoClaims } from '@/lib/oauth-consent'
+import { prisma } from '@/lib/prisma'
 import { isAPIError } from 'better-auth/api'
 import { type Metadata } from 'next'
 import { headers } from 'next/headers'
@@ -37,9 +38,18 @@ const ConsentPage: FC<{
         })
     : undefined
 
+  /**
+   * 動的登録(RFC 7591)のクライアントは登録時にセッションが無いので userId が NULL になる。
+   * クライアント名は自己申告なので、管理者が承認したものではないことを利用者に示す。
+   */
+  const isUnverified = clientId
+    ? (await prisma.oauthClient.findUnique({ where: { clientId }, select: { userId: true } }))?.userId === null
+    : false
+
   return (
     <ConsentClient
       isValid={!!client && signed}
+      isUnverified={isUnverified}
       clientName={client?.client_name}
       clientUri={client?.client_uri}
       logoUri={client?.logo_uri}

@@ -90,6 +90,11 @@ export const scUpdateOidcClient = z.object({
 })
 export type UpdateOidcClient = z.infer<typeof scUpdateOidcClient>
 
+export const scSetOidcClientDisabled = z.object({
+  clientId: z.string(),
+  disabled: z.boolean(),
+})
+
 export const scDeleteOidcClient = z.object({
   clientId: z.string(),
 })

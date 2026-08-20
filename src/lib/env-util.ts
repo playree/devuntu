@@ -94,6 +94,10 @@ const server = {
   get DISABLE_PASSWORD_AUTH() {
     return getEnvBoolean('DISABLE_PASSWORD_AUTH')
   },
+  /** 動的クライアント登録(RFC 7591)を有効にする。MCP クライアントの接続に必要 */
+  get OIDC_DCR_ENABLED() {
+    return getEnvBoolean('OIDC_DCR_ENABLED')
+  },
   get MAIN_DEVUNTU_URL() {
     return getEnv('MAIN_DEVUNTU_URL')
   },

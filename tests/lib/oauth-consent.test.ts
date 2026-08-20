@@ -6,7 +6,7 @@
  * その絞り込みと、重複・順序の保持を固定する。
  */
 
-import { OIDC_PROVIDER_SCOPES } from '@/lib/auth'
+import { MCP_SCOPES } from '@/lib/auth'
 import {
   buildSignedOAuthQuery,
   consentScopeLocaleItem,
@@ -69,13 +69,13 @@ describe('buildSignedOAuthQuery', () => {
 
 describe('consentScopeLocaleItem', () => {
   it('提供している全スコープに説明がある', () => {
-    for (const scope of OIDC_PROVIDER_SCOPES) {
+    for (const scope of MCP_SCOPES) {
       expect(consentScopeLocaleItem(scope)).toBeDefined()
     }
   })
 
   it('未知のスコープは undefined', () => {
-    expect(consentScopeLocaleItem('offline_access')).toBeUndefined()
+    expect(consentScopeLocaleItem('unknown_scope')).toBeUndefined()
   })
 })
 

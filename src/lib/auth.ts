@@ -1,7 +1,8 @@
 import { oauthProvider } from '@better-auth/oauth-provider'
 import { passkey } from '@better-auth/passkey'
-import { APIError, betterAuth, GoogleProfile } from 'better-auth'
+import { APIError, betterAuth, type BetterAuthPlugin, GoogleProfile } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
+import { createAuthMiddleware } from 'better-auth/api'
 import { nextCookies } from 'better-auth/next-js'
 import { admin, emailOTP, genericOAuth, type GenericOAuthConfig, jwt, slack, twoFactor } from 'better-auth/plugins'
 import { decodeJwt } from 'jose'
@@ -14,6 +15,7 @@ import { envu } from './env-util'
 import { CALENDAR_READONLY_SCOPE, GOOGLE_ACCOUNT_PROVIDER_ID } from './google-calendar'
 import { logger } from './logger'
 import { sendEmailOtp } from './mail'
+import { isLocalRegistration } from './oauth-registration'
 import { idTokenStandardClaims } from './oidc-claims'
 import { prisma } from './prisma'
 import { makeUrl } from './server-utils'
@@ -22,6 +24,52 @@ import { slackUserInfo } from './slack-server'
 
 // oauthProvider(自身がOIDCプロバイダとして提供)用のスコープ(OIDCログイン用)
 export const OIDC_PROVIDER_SCOPES = ['openid', 'profile', 'email'] as const
+
+/** MCP サーバーへのアクセスを表すスコープ。同意画面で何を許可するのかを利用者に見せるために分けてある */
+export const MCP_SCOPE = 'mcp'
+
+/**
+ * 動的登録されたクライアント(= MCP クライアント)に与えるスコープ。
+ * 長時間の接続で refresh token を使うため offline_access を含む。
+ */
+export const MCP_SCOPES = [...OIDC_PROVIDER_SCOPES, 'offline_access', MCP_SCOPE] as const
+
+/**
+ * MCP サーバーのリソース識別子(RFC 8707 の `resource`)。
+ *
+ * クライアントがこの値を要求したときだけアクセストークンが JWT(RFC 9068)になり `aud` が載る。
+ * `/.well-known/oauth-protected-resource/api/mcp` が返す `resource` と必ず同じ値にすること。
+ */
+export const MCP_RESOURCE = makeUrl('/api/mcp').toString()
+
+/**
+ * 動的クライアント登録(RFC 7591)の受け入れポリシー。
+ *
+ * `POST /oauth2/register` は未認証で叩ける。ここでリダイレクトURIをローカルに閉じたものだけに絞り、
+ * 併せて `application_type` を native に倒す(未指定だと web 扱いになり、ループバックのURIが
+ * `invalid_redirect_uri` で弾かれてしまう)。
+ */
+const dcrPolicy = {
+  id: 'dcr-policy',
+  hooks: {
+    before: [
+      {
+        matcher: (ctx) => ctx.path === '/oauth2/register',
+        handler: createAuthMiddleware(async (ctx) => {
+          const body = ctx.body as { redirect_uris?: string[] } | undefined
+          if (!isLocalRegistration(body?.redirect_uris)) {
+            logger.info({ redirectUris: body?.redirect_uris }, 'dcr rejected')
+            throw new APIError('BAD_REQUEST', {
+              error: 'invalid_redirect_uri',
+              error_description: 'redirect_uris must be loopback or private-use scheme URIs',
+            })
+          }
+          return { context: { body: { ...body, application_type: 'native' } } }
+        }),
+      },
+    ],
+  },
+} satisfies BetterAuthPlugin
 
 /**
  * genericOAuth プロバイダの account.issuer を明示するための値。
@@ -253,11 +301,33 @@ export const auth = betterAuth({
     oauthProvider({
       loginPage: authConfig.path.signIn,
       consentPage: '/consent',
-      scopes: [...OIDC_PROVIDER_SCOPES],
+      scopes: [...MCP_SCOPES],
       // oauth-provider 1.7 以降、標準クレームは userinfo 専用になった。
       // ID token しか読まないクライアント(NetBird の Dex コネクタ等)向けに載せ直す
       customIdTokenClaims: ({ user, scopes }) => idTokenStandardClaims(user, scopes),
+
+      /**
+       * クライアント管理API(`/oauth2/create-client` など)を管理者だけに開く。
+       * 未設定だとセッションがあるだけで通ってしまい、ログインできる利用者なら誰でも
+       * 自分の OAuth クライアントを登録できる。
+       */
+      clientPrivileges: ({ user }) => user?.role === 'admin',
+
+      /**
+       * 動的クライアント登録(RFC 7591)。MCP クライアントは事前設定を持てないので未認証で開く。
+       * 登録できてもデータは読めない。実際のアクセスは authorize でのログインと同意、
+       * および /api/mcp 側の権限チェックで守る。受け入れる範囲は dcrPolicy で絞っている。
+       */
+      allowDynamicClientRegistration: envu.server.OIDC_DCR_ENABLED,
+      allowUnauthenticatedClientRegistration: envu.server.OIDC_DCR_ENABLED,
+      clientRegistrationDefaultScopes: [...MCP_SCOPES],
+
+      // enforcePerClientResources(既定 true)により、リンクされたクライアントだけがこのリソースを
+      // 要求できる。既存の OIDC ログイン用クライアントはリンクされないので MCP トークンを取れない
+      resources: [{ identifier: MCP_RESOURCE, name: 'Devuntu MCP', allowedScopes: [...MCP_SCOPES] }],
+      clientRegistrationDefaultResources: [MCP_RESOURCE],
     }),
+    dcrPolicy,
     genericOAuth({
       config: oauthConfigs,
     }),
