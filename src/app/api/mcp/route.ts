@@ -1,13 +1,16 @@
 import { MCP_SCOPE } from '@/lib/auth'
+import { logger } from '@/lib/logger'
+import { createDevuntuMcpServer } from '@/lib/mcp-server'
 import { MCP_RESOURCE_METADATA_URL } from '@/lib/oauth-metadata'
 import { parseBearerToken, verifyMcpAccessToken, type ResourceAuthError } from '@/lib/oauth-resource'
+import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
 
 /**
  * MCP サーバーの入口。
  *
- * 現時点では認可だけを担い、MCP プロトコルの応答は実装していない。
  * 未認証のクライアントには RFC 9728 の `resource_metadata` を返し、そこから
  * 認可サーバーのメタデータ → 動的クライアント登録 → 認可フローへ進めるようにする。
+ * 認可済みのリクエストは MCP プロトコル(Streamable HTTP)のハンドラへ委譲する。
  */
 
 /**
@@ -32,6 +35,16 @@ const unauthorized = (error?: ResourceAuthError) =>
     },
   )
 
+/**
+ * 通知を使わない最小構成のため、GET(サーバー→クライアント通知用SSE確立)と
+ * DELETE(セッション終了)には対応しない。
+ */
+const methodNotAllowed = () =>
+  Response.json(
+    { jsonrpc: '2.0', error: { code: -32000, message: 'Method not allowed' }, id: null },
+    { status: 405, headers: { 'Cache-Control': 'no-store' } },
+  )
+
 const handler = async (request: Request) => {
   const token = parseBearerToken(request.headers.get('authorization'))
   if (!token) {
@@ -43,8 +56,27 @@ const handler = async (request: Request) => {
     return unauthorized(result.error)
   }
 
-  // TODO: MCP プロトコルの実装。ツールの権限判定は result.auth.user を画面と同じ権限関数へ渡す
-  return Response.json({ error: 'not_implemented' }, { status: 501, headers: { 'Cache-Control': 'no-store' } })
+  if (request.method !== 'POST') {
+    return methodNotAllowed()
+  }
+
+  const server = createDevuntuMcpServer(result.auth)
+  // ステートレストランスポートはリクエストごとに新規生成する必要がある
+  const transport = new WebStandardStreamableHTTPServerTransport({
+    sessionIdGenerator: undefined,
+    enableJsonResponse: true,
+  })
+
+  try {
+    await server.connect(transport)
+    return await transport.handleRequest(request)
+  } catch (e) {
+    logger.error({ error: e instanceof Error ? e.message : e }, 'mcp request failed')
+    return Response.json(
+      { jsonrpc: '2.0', error: { code: -32603, message: 'Internal server error' }, id: null },
+      { status: 500, headers: { 'Cache-Control': 'no-store' } },
+    )
+  }
 }
 
 export const GET = handler
