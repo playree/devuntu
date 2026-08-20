@@ -90,6 +90,7 @@ export const MyPasskey: FC = () => {
       </ContentHeader>
 
       <MultiTable
+        isSmart
         ariaLabel='passkey list'
         pagingList={list}
         columns={[

@@ -130,7 +130,7 @@ export const TicketsClient: FC<{
 
       <MultiTable
         ariaLabel='ticket list'
-        isCompact
+        isSmart
         pagingList={list}
         selectionMode='single'
         selectionBehavior='toggle'

@@ -47,6 +47,7 @@ export const ManualOidcClients: FC<{ baseUrl: string }> = ({ baseUrl }) => {
       </ContentHeader>
 
       <MultiTable
+        isSmart
         ariaLabel='oidc client list'
         pagingList={list}
         columns={[
