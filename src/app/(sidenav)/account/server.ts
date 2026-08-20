@@ -107,6 +107,9 @@ export type GetMyOAuthConsentsReturnType = Awaited<ReturnType<typeof getMyOAuthC
  * 許可済みアプリの取り消し。
  * 同意行を消すだけでは発行済みのアクセス/リフレッシュトークンは有効なままなので、
  * 対象クライアント宛のトークンも失効させて「取り消し」と実際の権限を一致させる。
+ *
+ * トークンの失効を先に済ませてから同意行を消す。途中で落ちた場合に
+ * 「同意は消えたのにトークンは有効」という権限が残る側の中間状態を作らないため。
  */
 export const revokeOAuthConsent = safeAuthAction
   .metadata({ actionName: 'revokeOAuthConsent', role: 'user' })
@@ -117,14 +120,14 @@ export const revokeOAuthConsent = safeAuthAction
       throw errNotFound()
     }
 
-    await auth.api.deleteOAuthConsent({ headers: await headers(), body: { id } })
-
     const revoked = nowDate()
     const where = { userId: user.id, clientId: consent.clientId, revoked: null }
     const [accessTokens, refreshTokens] = await prisma.$transaction([
       prisma.oauthAccessToken.updateMany({ where, data: { revoked } }),
       prisma.oauthRefreshToken.updateMany({ where, data: { revoked } }),
     ])
+
+    await auth.api.deleteOAuthConsent({ headers: await headers(), body: { id } })
 
     logger.info(
       {
