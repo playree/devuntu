@@ -314,9 +314,7 @@ export const TicketDetailClient: FC<{
               isSmart
               text={ticket.displayId}
               copyText={ticket.shortUrl}
-              // パンくずの隣に置くのでラベルは出さない。名前は支援技術向けにだけ与える
               ariaLabel={t('id')}
-              // アイコンのみのボタンなので、URLがコピーされることは読み上げ名で伝える
               copyLabel={t('copy_url')}
             />
           </>

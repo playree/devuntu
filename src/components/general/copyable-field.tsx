@@ -131,69 +131,72 @@ export const CopyableField: FC<
        * 読み上げ名は input ではなくここへ渡す(input へは inputProps 経由で配られる)
        */
       aria-label={label ? undefined : ariaLabel}
-      className={cn('relative', className)}
+      className={className}
     >
       {label && <Label className={isSmart ? 'text-xs font-light' : ''}>{label}</Label>}
-      <InputGroup // isSmart: 既定 36px を 28px に詰める
-        variant={variant}
-        className={isSmart ? 'min-h-7' : ''}
-      >
-        <InputGroup.Input
-          value={text}
-          disabled
-          // min-w-0: 幅を絞って使ったときに input の既定幅(約20文字)が優先され、コピーボタンが枠外へ押し出されるのを防ぐ
-          className={cn('min-w-0 font-mono', isSmart ? 'py-1' : '')}
-        />
-        <InputGroup.Suffix className='pr-0'>
-          {isMask && (
+      <div className='relative'>
+        <InputGroup // isSmart: 既定 36px を 28px に詰める
+          variant={variant}
+          fullWidth
+          className={isSmart ? 'min-h-7' : ''}
+        >
+          <InputGroup.Input
+            value={text}
+            disabled
+            // min-w-0: 幅を絞って使ったときに input の既定幅(約20文字)が優先され、コピーボタンが枠外へ押し出されるのを防ぐ
+            className={cn('min-w-0 font-mono', isSmart ? 'py-1' : '')}
+          />
+          <InputGroup.Suffix className='pr-0'>
+            {isMask && (
+              <Button
+                isIconOnly
+                size='sm'
+                variant='ghost'
+                // isSmart: size='sm' の 32px は 28px の枠に収まらない
+                className={isSmart ? 'size-6' : ''}
+                // アイコンは aria-hidden なので、読み上げ名はボタン側で与える
+                aria-label={isVisible ? hideLabel : showLabel}
+                onPress={toggleVisibility}
+              >
+                {isVisible ? <EyeSlashIcon /> : <EyeIcon />}
+              </Button>
+            )}
             <Button
               isIconOnly
               size='sm'
               variant='ghost'
-              // isSmart: size='sm' の 32px は 28px の枠に収まらない
               className={isSmart ? 'size-6' : ''}
-              // アイコンは aria-hidden なので、読み上げ名はボタン側で与える
-              aria-label={isVisible ? hideLabel : showLabel}
-              onPress={toggleVisibility}
+              aria-label={copyLabel}
+              onPress={async () => {
+                try {
+                  // 安全なコンテキスト(https / localhost)の外では navigator.clipboard 自体が無く、参照だけで例外になる
+                  await navigator.clipboard.writeText(copyText ?? text)
+                } catch {
+                  /**
+                   * コピーできていないので、成功の表示はしない。
+                   * このフォルダはロケールや通知(`@/components/notify`)へ依存させない方針なので、
+                   * 失敗の通知は出さず、成功表示が出ないことで伝える。
+                   */
+                  return
+                }
+                setIsCopied(true)
+                setTimeout(() => setIsCopied(false), 2000)
+                if (onCopied) {
+                  onCopied()
+                }
+              }}
+              isDisabled={isCopied}
             >
-              {isVisible ? <EyeSlashIcon /> : <EyeIcon />}
+              {isCopied ? <ClipboardDocumentCheckIcon className='text-green-400' /> : <ClipboardDocumentIcon />}
             </Button>
-          )}
-          <Button
-            isIconOnly
-            size='sm'
-            variant='ghost'
-            className={isSmart ? 'size-6' : ''}
-            aria-label={copyLabel}
-            onPress={async () => {
-              try {
-                // 安全なコンテキスト(https / localhost)の外では navigator.clipboard 自体が無く、参照だけで例外になる
-                await navigator.clipboard.writeText(copyText ?? text)
-              } catch {
-                /**
-                 * コピーできていないので、成功の表示はしない。
-                 * このフォルダはロケールや通知(`@/components/notify`)へ依存させない方針なので、
-                 * 失敗の通知は出さず、成功表示が出ないことで伝える。
-                 */
-                return
-              }
-              setIsCopied(true)
-              setTimeout(() => setIsCopied(false), 2000)
-              if (onCopied) {
-                onCopied()
-              }
-            }}
-            isDisabled={isCopied}
-          >
-            {isCopied ? <ClipboardDocumentCheckIcon className='text-green-400' /> : <ClipboardDocumentIcon />}
-          </Button>
-        </InputGroup.Suffix>
-      </InputGroup>
-      {isCopied && (
-        <Chip className='absolute right-0 py-0' color='success' variant='soft'>
-          Copied!
-        </Chip>
-      )}
+          </InputGroup.Suffix>
+        </InputGroup>
+        {isCopied && (
+          <Chip className='absolute right-0 bottom-full mb-0.5 py-0' color='success' variant='soft'>
+            Copied!
+          </Chip>
+        )}
+      </div>
     </TextField>
   )
 }
