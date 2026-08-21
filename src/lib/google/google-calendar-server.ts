@@ -7,12 +7,12 @@
  *       token 更新・FreeBusy 取得は標準 `fetch` で REST を直接呼び出す。
  */
 
-import { auth } from './auth'
-import { DEFAULT_TZ } from './day'
+import { auth } from '../auth'
+import { DEFAULT_TZ } from '../day'
+import { logger } from '../logger'
+import { prisma } from '../prisma'
 import { canUseGoogleAccount, googleAccountQuery } from './google-account'
 import type { BusySlot } from './google-calendar'
-import { logger } from './logger'
-import { prisma } from './prisma'
 
 const FREEBUSY_ENDPOINT = 'https://www.googleapis.com/calendar/v3/freeBusy'
 

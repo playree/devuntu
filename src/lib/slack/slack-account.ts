@@ -6,8 +6,8 @@
  * (クライアント安全な定数・型は `slack.ts` を参照)
  */
 
-import { envu } from './env-util'
-import { createIntegrationSettings } from './integration-settings'
+import { envu } from '../env-util'
+import { createIntegrationSettings } from '../integration-settings'
 
 /** 連携に必要な環境変数が揃っているか。1 つでも欠けると連携も送信も成立しない */
 export const hasSlackCredentials = () =>

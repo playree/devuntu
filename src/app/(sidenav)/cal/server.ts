@@ -2,7 +2,7 @@
 
 import { safeAuthAction } from '@/lib/action-server'
 import { errInvalidOperation, errPermissionDenied } from '@/lib/error'
-import { canUseGoogleAccount, googleAccountQuery } from '@/lib/google-account'
+import { canUseGoogleAccount, googleAccountQuery } from '@/lib/google/google-account'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import {

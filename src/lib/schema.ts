@@ -1,6 +1,6 @@
 import { el } from '@/locale'
 import { z } from 'zod'
-import { NOTIFY_EVENTS } from './notify'
+import { NOTIFY_EVENTS } from './notify/notify'
 import {
   ASSIGNEE_NONE,
   BOARD_KEY_PATTERN,

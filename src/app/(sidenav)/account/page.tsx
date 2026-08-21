@@ -1,6 +1,6 @@
 import { getServerSession } from '@/lib/auth'
-import { canUseGoogleAccount } from '@/lib/google-account'
-import { canUseSlackAccount } from '@/lib/slack-account'
+import { canUseGoogleAccount } from '@/lib/google/google-account'
+import { canUseSlackAccount } from '@/lib/slack/slack-account'
 import { type Metadata } from 'next'
 import { FC } from 'react'
 import { AccountClient } from './client'

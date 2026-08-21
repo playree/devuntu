@@ -6,9 +6,9 @@
  */
 
 import type { NotifyEvent } from '@/generated/prisma/enums'
-import { logger } from './logger'
+import { logger } from '../logger'
+import { prisma } from '../prisma'
 import { NOTIFY_EVENTS, type NotifyChannel } from './notify'
-import { prisma } from './prisma'
 
 export type NotifySetting = { [K in NotifyChannel]: boolean }
 

@@ -1,5 +1,5 @@
 import { getTicketForMcp, searchTicketsForMcp } from '@/lib/mcp-ticket'
-import type { ResourceAuth } from '@/lib/oauth-resource'
+import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import { TICKET_PRIORITIES, TICKET_STATUSES } from '@/lib/task'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'

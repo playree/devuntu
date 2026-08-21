@@ -7,8 +7,8 @@
  */
 
 import type { NotifyEvent } from '@/generated/prisma/enums'
-import { findMentions, stripCodeSpans } from './task'
-import { truncate } from './text-util'
+import { findMentions, stripCodeSpans } from '../task'
+import { truncate } from '../text-util'
 
 /** 通知イベントの種別。Prisma の enum と同じ並びで持つ(tests/lib/notify.test.ts で一致を固定する) */
 export const NOTIFY_EVENTS = ['mention'] as const satisfies readonly NotifyEvent[]

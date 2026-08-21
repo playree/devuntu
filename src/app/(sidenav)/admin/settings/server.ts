@@ -1,11 +1,11 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action-server'
-import { getGoogleAccountSettings, setGoogleAccountSettings } from '@/lib/google-account'
+import { getGoogleAccountSettings, setGoogleAccountSettings } from '@/lib/google/google-account'
 import { prisma } from '@/lib/prisma'
 import { scUpdateIntegrationSettings } from '@/lib/schema'
-import { getSlackSettings, setSlackSettings } from '@/lib/slack-account'
-import { getSlackBotInfo } from '@/lib/slack-server'
+import { getSlackSettings, setSlackSettings } from '@/lib/slack/slack-account'
+import { getSlackBotInfo } from '@/lib/slack/slack-server'
 
 /**
  * 連携設定画面の初期表示データ。

@@ -4,7 +4,7 @@
  * `/api/slack/events` は未認証で叩けるため、ここが唯一の門番になる。
  */
 
-import { MAX_CLOCK_SKEW_SEC, verifySlackSignature } from '@/lib/slack-signature'
+import { MAX_CLOCK_SKEW_SEC, verifySlackSignature } from '@/lib/slack/slack-signature'
 import { createHmac } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
 

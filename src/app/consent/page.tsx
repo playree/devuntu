@@ -1,6 +1,6 @@
 import { auth } from '@/lib/auth'
 import { logger } from '@/lib/logger'
-import { parseConsentScopes, parseRequestedUserInfoClaims } from '@/lib/oauth-consent'
+import { parseConsentScopes, parseRequestedUserInfoClaims } from '@/lib/oauth/oauth-consent'
 import { prisma } from '@/lib/prisma'
 import { isAPIError } from 'better-auth/api'
 import { type Metadata } from 'next'

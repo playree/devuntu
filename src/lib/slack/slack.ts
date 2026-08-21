@@ -5,7 +5,7 @@
  * サーバー専用の処理(prisma / Slack API 呼び出しなど)は `slack-server.ts` に配置する。
  */
 
-import { truncate } from './text-util'
+import { truncate } from '../text-util'
 
 /** Slack 連携用の OAuth プロバイダ ID */
 export const SLACK_PROVIDER_ID = 'slack'

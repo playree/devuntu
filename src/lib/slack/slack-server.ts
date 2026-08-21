@@ -9,11 +9,11 @@
  * SDK を持ち込むほどの規模ではない(`google-calendar-server.ts` と同じ方針)。
  */
 
-import { cached } from './cache'
-import { envu } from './env-util'
-import { logger } from './logger'
+import { cached } from '../cache'
+import { envu } from '../env-util'
+import { logger } from '../logger'
+import { sleep } from '../sleep'
 import { classifySlackError, type SlackSendOutcome } from './slack'
-import { sleep } from './sleep'
 
 const SLACK_API_BASE = 'https://slack.com/api/'
 const USER_INFO_URL = `${SLACK_API_BASE}openid.connect.userInfo`

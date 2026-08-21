@@ -7,7 +7,7 @@ import { ArrowLeftCircleIcon, ArrowRightCircleIcon, CalendarDaysIcon } from '@/c
 import { LocaleSwitch } from '@/components/locale/locale-switch'
 import { makePath } from '@/lib/client-utils'
 import { toZone } from '@/lib/day'
-import type { BusySlot } from '@/lib/google-calendar'
+import type { BusySlot } from '@/lib/google/google-calendar'
 import { useLocale } from '@/locale/client'
 import { cn } from '@heroui/react'
 import { usePathname, useRouter } from 'next/navigation'
