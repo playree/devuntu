@@ -1,7 +1,7 @@
 import { envu } from '@/lib/env-util'
 import { logger } from '@/lib/logger'
-import { verifySlackSignature } from '@/lib/slack-signature'
-import { handleSlackLinkShared, type SlackLinkSharedEvent } from '@/lib/slack-unfurl'
+import { verifySlackSignature } from '@/lib/slack/slack-signature'
+import { handleSlackLinkShared, type SlackLinkSharedEvent } from '@/lib/slack/slack-unfurl'
 import { after, NextResponse } from 'next/server'
 
 /**

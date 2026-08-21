@@ -1,7 +1,7 @@
 /** 「毎週この曜日のこの時刻」は壁時計時刻の指定なので、DST を挟んでも時刻がずれないことを固定する */
 
-import { expandBusyTimes, mergeBusySlots } from '@/lib/calendar-busy'
 import { startOfWeek } from '@/lib/day'
+import { expandBusyTimes, mergeBusySlots } from '@/lib/google/calendar-busy'
 import { describe, expect, it } from 'vitest'
 
 describe('expandBusyTimes', () => {

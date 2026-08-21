@@ -5,7 +5,7 @@
  * 落ちると SSO 先(NetBird など)が認証できなくなるため、scope との対応を固定する。
  */
 
-import { idTokenStandardClaims } from '@/lib/oidc-claims'
+import { idTokenStandardClaims } from '@/lib/oauth/oidc-claims'
 import { describe, expect, it } from 'vitest'
 
 const user = {

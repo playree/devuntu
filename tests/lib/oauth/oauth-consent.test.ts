@@ -13,7 +13,7 @@ import {
   dedupeScopes,
   parseConsentScopes,
   parseRequestedUserInfoClaims,
-} from '@/lib/oauth-consent'
+} from '@/lib/oauth/oauth-consent'
 import { describe, expect, it } from 'vitest'
 
 const signedQuery = [

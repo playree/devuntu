@@ -1,5 +1,5 @@
 import type { Dayjs } from 'dayjs'
-import { addDaysDateOnly, DEFAULT_TZ, zonedMinutes } from './day'
+import { addDaysDateOnly, DEFAULT_TZ, zonedMinutes } from '../day'
 import type { BusySlot } from './google-calendar'
 
 /** 追加Busy時間の1件分(曜日+時間帯)。分は 0:00 からの分 */

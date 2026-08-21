@@ -1,8 +1,8 @@
 import { MCP_SCOPE } from '@/lib/auth'
 import { logger } from '@/lib/logger'
 import { createDevuntuMcpServer } from '@/lib/mcp-server'
-import { MCP_RESOURCE_METADATA_URL } from '@/lib/oauth-metadata'
-import { parseBearerToken, verifyMcpAccessToken, type ResourceAuthError } from '@/lib/oauth-resource'
+import { MCP_RESOURCE_METADATA_URL } from '@/lib/oauth/oauth-metadata'
+import { parseBearerToken, verifyMcpAccessToken, type ResourceAuthError } from '@/lib/oauth/oauth-resource'
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
 
 /**

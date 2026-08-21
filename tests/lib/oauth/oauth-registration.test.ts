@@ -5,7 +5,7 @@
  * この判定が、外部へコードを流すクライアントを登録させないための門番になる。
  */
 
-import { isLocalRedirectUri, isLocalRegistration } from '@/lib/oauth-registration'
+import { isLocalRedirectUri, isLocalRegistration } from '@/lib/oauth/oauth-registration'
 import { describe, expect, it } from 'vitest'
 
 describe('isLocalRedirectUri', () => {

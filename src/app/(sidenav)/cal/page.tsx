@@ -1,6 +1,6 @@
 import { getServerSession } from '@/lib/auth'
 import { envu } from '@/lib/env-util'
-import { canUseGoogleAccount } from '@/lib/google-account'
+import { canUseGoogleAccount } from '@/lib/google/google-account'
 import { type Metadata } from 'next'
 import { FC } from 'react'
 import { CalClient } from './client'

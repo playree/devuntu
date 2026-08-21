@@ -7,7 +7,7 @@
 
 import { NotifyEvent } from '@/generated/prisma/enums'
 import { expandTemplate } from '@/lib/locale-util'
-import { commentExcerpt, NOTIFY_CHANNELS, NOTIFY_EVENTS, NOTIFY_EXCERPT_MAX } from '@/lib/notify'
+import { commentExcerpt, NOTIFY_CHANNELS, NOTIFY_EVENTS, NOTIFY_EXCERPT_MAX } from '@/lib/notify/notify'
 import { en } from '@/locale/lang-en'
 import { ja } from '@/locale/lang-ja'
 import { describe, expect, it } from 'vitest'

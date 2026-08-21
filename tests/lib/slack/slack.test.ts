@@ -6,7 +6,7 @@
  * 純粋関数へ寄せてあるので、そちらを検証する(`google-calendar-server.ts` と同じ方針)。
  */
 
-import { buildMentionMessage, buildTicketUnfurlBlocks, classifySlackError, escapeSlackText } from '@/lib/slack'
+import { buildMentionMessage, buildTicketUnfurlBlocks, classifySlackError, escapeSlackText } from '@/lib/slack/slack'
 import { describe, expect, it } from 'vitest'
 
 describe('escapeSlackText: 利用者入力を mrkdwn の特殊記法として解釈させない', () => {

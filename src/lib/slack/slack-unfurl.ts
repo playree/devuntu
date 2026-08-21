@@ -9,12 +9,12 @@
  */
 
 import { t } from '@/locale/server'
-import { findTicketIdByDisplayId, getTicketAccess } from './board'
-import { dayformat } from './day'
-import { envu } from './env-util'
-import { logger } from './logger'
-import { prisma } from './prisma'
-import { makeUrl } from './server-utils'
+import { findTicketIdByDisplayId, getTicketAccess } from '../board'
+import { dayformat } from '../day'
+import { envu } from '../env-util'
+import { logger } from '../logger'
+import { prisma } from '../prisma'
+import { makeUrl } from '../server-utils'
 import { buildTicketUnfurlBlocks, SLACK_PROVIDER_ID } from './slack'
 import { canUseSlackAccount } from './slack-account'
 import { unfurlSlackLinks, type SlackUnfurlTarget } from './slack-server'
@@ -25,7 +25,7 @@ import {
   ticketDisplayId,
   ticketShortPath,
   type TicketUrlRef,
-} from './task'
+} from '../task'
 
 /**
  * 1 メッセージあたりに展開するリンクの上限。

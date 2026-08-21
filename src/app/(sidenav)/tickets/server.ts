@@ -16,7 +16,7 @@ import {
 import { dateOnlyToUtc, nowDate } from '@/lib/day'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
-import { notifyMention } from '@/lib/notify-mention'
+import { notifyMention } from '@/lib/notify/notify-mention'
 import { prisma } from '@/lib/prisma'
 import { scCreateTag, scCreateTicket, scTicketListQuery, scUUID } from '@/lib/schema'
 import { assertTagIdsInBoard, listVisibleTags, rethrowDuplicatedTagName } from '@/lib/tag'

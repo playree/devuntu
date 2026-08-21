@@ -1,7 +1,7 @@
 import type { TicketPriority, TicketStatus } from '@/generated/prisma/enums'
 import { assertTicketAccess, findTicketIdByDisplayId, getAccessibleBoardIds } from '@/lib/board'
 import { errInvalidOperation } from '@/lib/error'
-import type { ResourceAuth } from '@/lib/oauth-resource'
+import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import { prisma } from '@/lib/prisma'
 import { makeUrl } from '@/lib/server-utils'
 import { buildTicketWhere, parseTicketDisplayId, ticketDisplayId, ticketListOrderBy, ticketShortPath } from '@/lib/task'

@@ -7,9 +7,9 @@
  */
 
 import type { AccountOrderByWithRelationInput, AccountWhereInput } from '@/generated/prisma/models'
-import { envu } from './env-util'
+import { envu } from '../env-util'
+import { createIntegrationSettings } from '../integration-settings'
 import { GOOGLE_ACCOUNT_PROVIDER_ID } from './google-calendar'
-import { createIntegrationSettings } from './integration-settings'
 
 /**
  * カレンダー連携用の account 行を引く条件。

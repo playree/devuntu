@@ -2,7 +2,7 @@ import { FC, ReactNode } from 'react'
 
 import { SideNavbar } from '@/components/general/side-navbar'
 import { getServerSession } from '@/lib/auth'
-import { canUseGoogleAccount } from '@/lib/google-account'
+import { canUseGoogleAccount } from '@/lib/google/google-account'
 import { createMenu, GoogleAvailableProvider } from './menu'
 import { getPendding } from './pendding'
 

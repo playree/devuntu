@@ -1,3 +1,3 @@
-import { openIdConfigMetadataHandler } from '@/lib/oauth-metadata'
+import { openIdConfigMetadataHandler } from '@/lib/oauth/oauth-metadata'
 
 export const GET = openIdConfigMetadataHandler

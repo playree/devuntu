@@ -1,7 +1,7 @@
 'use client'
 
 import { toZone, WEEKDAY_LABELS } from '@/lib/day'
-import type { BusySlot } from '@/lib/google-calendar'
+import type { BusySlot } from '@/lib/google/google-calendar'
 import { useLocale } from '@/locale/client'
 import { cn } from '@heroui/react'
 import dayjs from 'dayjs'
