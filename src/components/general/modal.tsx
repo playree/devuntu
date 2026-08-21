@@ -15,6 +15,7 @@ import {
 } from 'react'
 import { MultiButton } from './button'
 import { FlexCol } from './flex'
+import { SmartProvider } from './smart'
 
 const CheckIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
   <svg
@@ -106,8 +107,12 @@ export const FormModal: FC<{
                 {title.text}
               </Modal.Heading>
             </Modal.Header>
-            <Modal.Body className='pt-2'>{children}</Modal.Body>
-            <Modal.Footer>{footer}</Modal.Footer>
+            <Modal.Body className='pt-2'>
+              <SmartProvider isSmartForm>{children}</SmartProvider>
+            </Modal.Body>
+            <Modal.Footer>
+              <SmartProvider isSmart>{footer}</SmartProvider>
+            </Modal.Footer>
           </form>
         </Modal.Dialog>
       </Modal.Container>
@@ -180,6 +185,7 @@ export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ ui
             {!confirmParam?.onlyOk && (
               <MultiButton
                 variant='ghost'
+                isSmart
                 isDisabled={isPending}
                 onPress={() => {
                   if (response.current) {
@@ -194,6 +200,7 @@ export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ ui
             )}
             <MultiButton
               icon={<CheckIcon />}
+              isSmart
               isDisabled={!isAgree}
               isPending={isPending}
               onPress={async () => {

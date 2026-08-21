@@ -302,6 +302,8 @@ export const auth = betterAuth({
       loginPage: authConfig.path.signIn,
       consentPage: '/consent',
       scopes: [...MCP_SCOPES],
+      // MCP 側の維持期間はWebログインセッションから独立させる(offline_access は MCP_SCOPES にのみ含む)
+      refreshTokenExpiresIn: envu.server.MCP_REFRESH_TOKEN_EXPIRES_IN,
       // oauth-provider 1.7 以降、標準クレームは userinfo 専用になった。
       // ID token しか読まないクライアント(NetBird の Dex コネクタ等)向けに載せ直す
       customIdTokenClaims: ({ user, scopes }) => idTokenStandardClaims(user, scopes),

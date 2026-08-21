@@ -49,6 +49,9 @@ export const parseConsentScopes = (scope: string | undefined): string[] => [
   ...new Set(scope?.split(' ').filter(Boolean) ?? []),
 ]
 
+/** DB に保存済みのスコープ配列から重複を除去する(oauth-provider がクエリの重複をそのまま保存するため) */
+export const dedupeScopes = (scopes: string[]): string[] => [...new Set(scopes)]
+
 /**
  * 認可要求の `claims` パラメータ(OIDC Core の claims request)から userinfo に要求されたクレーム名を取り出す。
  * クライアントが送る値なので、壊れていても画面を落とさず空配列にする。

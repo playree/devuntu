@@ -5,7 +5,7 @@ import { useLocale } from '@/locale/client'
 import { Button, cn, ErrorMessage, InputGroup, InputProps, Label, ProgressBar, TextField } from '@heroui/react'
 import { ChangeEvent, FC, SVGProps, useEffect, useRef, useState } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
-import { useIsSmart } from './general/smart'
+import { useSmart } from './general/smart'
 
 const EyeIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
   <svg
@@ -92,6 +92,7 @@ export const InputCtrlPassword = <
   requiredPasswordScore,
   variant,
   isSmart: isSmartProp,
+  isSmartForm: isSmartFormProp,
   ...props
 }: InputProps & {
   control?: Control<TFieldValues>
@@ -103,9 +104,10 @@ export const InputCtrlPassword = <
   errorMessage?: string
   requiredPasswordScore?: number
   isSmart?: boolean
+  isSmartForm?: boolean
 }) => {
   const { t } = useLocale()
-  const isSmart = useIsSmart(isSmartProp)
+  const { isCompact, hasErrorArea } = useSmart(isSmartProp, isSmartFormProp)
   const [isVisible, setIsVisible] = useState(false)
   const toggleVisibility = () => setIsVisible(!isVisible)
   const [passwordScore, setPasswordScore] = useState(0)
@@ -133,16 +135,16 @@ export const InputCtrlPassword = <
             // validationBehavior の事情は general/input.tsx の InputField と同じ
             validationBehavior='aria'
           >
-            <Label className={isSmart ? 'text-xs font-light' : ''} isRequired={isRequired}>
+            <Label className={isCompact ? 'text-xs font-light' : ''} isRequired={isRequired}>
               {label}
             </Label>
-            <InputGroup // isSmart: 既定 36px を 28px に詰める
+            <InputGroup // isCompact: 既定 36px を 28px に詰める
               variant={variant}
-              className={isSmart ? 'min-h-7' : ''}
+              className={isCompact ? 'min-h-7' : ''}
             >
               <InputGroup.Input
                 {...props}
-                className={cn(isSmart ? 'py-1' : '', props.className)}
+                className={cn(isCompact ? 'py-1' : '', props.className)}
                 onChange={(event) => {
                   if (requiredPasswordScore) {
                     const seq = ++scoreSeqRef.current
@@ -165,8 +167,8 @@ export const InputCtrlPassword = <
                   isIconOnly
                   size='sm'
                   variant='ghost'
-                  // isSmart: size='sm' の 32px は 28px の枠に収まらない
-                  className={isSmart ? 'size-6' : ''}
+                  // isCompact: size='sm' の 32px は 28px の枠に収まらない
+                  className={isCompact ? 'size-6' : ''}
                   // アイコンは aria-hidden なので、読み上げ名はボタン側で与える
                   aria-label={isVisible ? t('hide') : t('show')}
                   onPress={toggleVisibility}
@@ -175,7 +177,7 @@ export const InputCtrlPassword = <
                 </Button>
               </InputGroup.Suffix>
             </InputGroup>
-            <ErrorMessage className={isSmart ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
+            <ErrorMessage className={hasErrorArea ? 'min-h-4' : ''}>{errorMessage}</ErrorMessage>
           </TextField>
         )}
       />

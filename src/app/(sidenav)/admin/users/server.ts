@@ -29,6 +29,7 @@ export const getUsers = safeAuthAction.metadata({ actionName: 'getUsers', role: 
     select: {
       id: true,
       name: true,
+      image: true,
       email: true,
       role: true,
       lastLoginAt: true,

@@ -76,6 +76,7 @@ export const GoogleAccountLink: FC = () => {
         <div className='px-1'>
           <div className='mb-1 text-sm font-bold'>{t('granted_scopes')}</div>
           <MultiTable
+            isSmart
             ariaLabel='granted scopes'
             columns={[{ id: 'scope', name: t('scope'), isRowHeader: true, defaultWidth: '1fr' }]}
             items={status.scopes.map((scope) => ({ id: scope, scope }))}

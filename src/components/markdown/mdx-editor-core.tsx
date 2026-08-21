@@ -37,6 +37,7 @@ import '@mdxeditor/editor/style.css'
 import { basicDark } from 'cm6-theme-basic-dark'
 import { useTheme } from 'next-themes'
 import { FC, ReactElement, useEffect, useMemo, useRef, useState } from 'react'
+import { decoratorClickPlugin } from './mdx-decorator-click-plugin'
 import { MdxImageDialog } from './mdx-image-dialog'
 import { MdxEditImageToolbar, MdxImagePlaceholder } from './mdx-image-toolbar'
 import { MdxLinkDialog } from './mdx-link-dialog'
@@ -187,6 +188,7 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
     return [
       // 危険な生HTMLはここで落とすため、編集して保存すると本文からも消える
       sanitizeHtmlPlugin(),
+      decoratorClickPlugin(),
       headingsPlugin(),
       quotePlugin(),
       listsPlugin(),

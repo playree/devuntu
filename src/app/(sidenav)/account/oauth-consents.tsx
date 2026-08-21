@@ -40,6 +40,7 @@ export const MyOAuthConsents: FC = () => {
   return (
     <FlexCol>
       <MultiTable
+        isSmart
         ariaLabel='oauth consent list'
         pagingList={list}
         columns={[

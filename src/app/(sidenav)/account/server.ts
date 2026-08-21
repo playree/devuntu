@@ -8,6 +8,7 @@ import { canUseGoogleAccount, googleAccountQuery } from '@/lib/google-account'
 import { GOOGLE_ACCOUNT_PROVIDER_ID } from '@/lib/google-calendar'
 import { logger } from '@/lib/logger'
 import { getUserNotifySettings, setUserNotifySetting } from '@/lib/notify-setting'
+import { dedupeScopes } from '@/lib/oauth-consent'
 import { prisma } from '@/lib/prisma'
 import { scRevokeConsent, scUpdateNotifySetting } from '@/lib/schema'
 import { SLACK_PROVIDER_ID } from '@/lib/slack'
@@ -97,7 +98,7 @@ export const getMyOAuthConsents = safeAuthAction
       id,
       clientId: oauthclient.clientId,
       clientName: oauthclient.name ?? '',
-      scopes,
+      scopes: dedupeScopes(scopes),
       updatedAt,
     }))
   })

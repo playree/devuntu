@@ -5,7 +5,7 @@ import { CalendarDate, parseDate } from '@internationalized/date'
 import { ComponentProps } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 import { XCircleIcon } from './select'
-import { useIsSmart } from './smart'
+import { useSmart } from './smart'
 
 /** DateField.Input の children が受け取るセグメント(型を直接 import できないため props から導出する) */
 type DateSegmentValue = ComponentProps<typeof DateField.Segment>['segment']
@@ -59,6 +59,7 @@ type DatePickerFieldProps = {
   isClearable?: boolean
   variant?: 'primary' | 'secondary'
   isSmart?: boolean
+  isSmartForm?: boolean
 }
 
 /**
@@ -75,6 +76,7 @@ export const DatePickerField = ({
   isClearable = true,
   variant,
   isSmart: isSmartProp,
+  isSmartForm: isSmartFormProp,
   value,
   onChange,
   onBlur,
@@ -83,7 +85,7 @@ export const DatePickerField = ({
   onChange: (value: string | null) => void
   onBlur?: () => void
 }) => {
-  const isSmart = useIsSmart(isSmartProp)
+  const { isCompact, hasErrorArea } = useSmart(isSmartProp, isSmartFormProp)
   const selected = toCalendarDate(value)
   return (
     <DatePicker
@@ -105,7 +107,7 @@ export const DatePickerField = ({
     >
       {label && (
         <Label
-          className={cn(isSmart ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}
+          className={cn(isCompact ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}
           isRequired={isRequired}
         >
           {label}
@@ -113,14 +115,14 @@ export const DatePickerField = ({
       )}
       <DateField.Group
         /**
-         * isSmart: .date-input-group の h-9 固定を上書きする。
+         * isCompact: .date-input-group の h-9 固定を上書きする。
          * overflow-hidden で内側がクリップされるため Input の py も詰める
          */
         fullWidth
         variant={variant}
-        className={isSmart ? 'h-7' : undefined}
+        className={isCompact ? 'h-7' : undefined}
       >
-        <DateField.Input className={isSmart ? 'py-1' : undefined}>
+        <DateField.Input className={isCompact ? 'py-1' : undefined}>
           {(segment: DateSegmentValue) => <DateField.Segment segment={segment} />}
         </DateField.Input>
         <DateField.Suffix>
@@ -130,7 +132,7 @@ export const DatePickerField = ({
           </DatePicker.Trigger>
         </DateField.Suffix>
       </DateField.Group>
-      <ErrorMessage className={isSmart ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
+      <ErrorMessage className={hasErrorArea ? 'min-h-4' : ''}>{errorMessage}</ErrorMessage>
       <DatePicker.Popover>
         <Calendar>
           <Calendar.Header>
@@ -198,6 +200,7 @@ export const DateRangePickerField = ({
   isClearable = true,
   variant,
   isSmart: isSmartProp,
+  isSmartForm: isSmartFormProp,
   value,
   onChange,
   onBlur,
@@ -206,7 +209,7 @@ export const DateRangePickerField = ({
   onChange: (value: DateRangeValue | null) => void
   onBlur?: () => void
 }) => {
-  const isSmart = useIsSmart(isSmartProp)
+  const { isCompact, hasErrorArea } = useSmart(isSmartProp, isSmartFormProp)
   const start = toCalendarDate(value?.start)
   const end = toCalendarDate(value?.end)
   // 片側だけでは範囲にならないので未入力扱いにする
@@ -227,25 +230,25 @@ export const DateRangePickerField = ({
     >
       {label && (
         <Label
-          className={cn(isSmart ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}
+          className={cn(isCompact ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}
           isRequired={isRequired}
         >
           {label}
         </Label>
       )}
-      <DateField.Group // isSmart の高さ調整は DatePickerField と同じ
+      <DateField.Group // isCompact の高さ調整は DatePickerField と同じ
         fullWidth
         variant={variant}
-        className={isSmart ? 'h-7' : undefined}
+        className={isCompact ? 'h-7' : undefined}
       >
         <DateField.Input // 範囲の両端は slot で区別する(react-aria の DateRangePicker の仕様)
           slot='start'
-          className={isSmart ? 'py-1' : undefined}
+          className={isCompact ? 'py-1' : undefined}
         >
           {(segment: DateSegmentValue) => <DateField.Segment segment={segment} />}
         </DateField.Input>
         <DateRangePicker.RangeSeparator />
-        <DateField.Input slot='end' className={isSmart ? 'py-1' : undefined}>
+        <DateField.Input slot='end' className={isCompact ? 'py-1' : undefined}>
           {(segment: DateSegmentValue) => <DateField.Segment segment={segment} />}
         </DateField.Input>
         <DateField.Suffix>
@@ -255,7 +258,7 @@ export const DateRangePickerField = ({
           </DateRangePicker.Trigger>
         </DateField.Suffix>
       </DateField.Group>
-      <ErrorMessage className={isSmart ? '' : 'min-h-4'}>{errorMessage}</ErrorMessage>
+      <ErrorMessage className={hasErrorArea ? 'min-h-4' : ''}>{errorMessage}</ErrorMessage>
       <DateRangePicker.Popover>
         <RangeCalendar>
           <RangeCalendar.Header>

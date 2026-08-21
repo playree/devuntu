@@ -10,6 +10,7 @@ import { MCP_SCOPES } from '@/lib/auth'
 import {
   buildSignedOAuthQuery,
   consentScopeLocaleItem,
+  dedupeScopes,
   parseConsentScopes,
   parseRequestedUserInfoClaims,
 } from '@/lib/oauth-consent'
@@ -88,6 +89,22 @@ describe('parseConsentScopes', () => {
     [undefined, []],
   ])('%s を分解する', (scope, expected) => {
     expect(parseConsentScopes(scope)).toEqual(expected)
+  })
+})
+
+describe('dedupeScopes', () => {
+  it.each([
+    [
+      ['openid', 'profile', 'email'],
+      ['openid', 'profile', 'email'],
+    ],
+    [
+      ['openid', 'openid', 'profile'],
+      ['openid', 'profile'],
+    ],
+    [[], []],
+  ])('%s を重複除去する', (scopes, expected) => {
+    expect(dedupeScopes(scopes)).toEqual(expected)
   })
 })
 

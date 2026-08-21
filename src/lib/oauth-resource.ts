@@ -46,9 +46,9 @@ export const parseBearerToken = (authorization: string | null): string | undefin
 /**
  * MCP リソース向けアクセストークンを検証し、対応する devuntu ユーザーを返す。
  *
- * セッション(`sid`)の生存も確認する。ログアウトやセッション失効でこちらのアクセスも止まり、
- * 画面からの利用と同じ寿命になる。better-auth のイントロスペクションは `sid` が無いトークンを
- * 素通しするが、こちらは MCP 用に限られるので必須にしている。
+ * Web ログインセッションからは独立しており、ログアウトやセッション失効の影響を受けない。
+ * 無効化はトークン自身の有効期限(アクセストークンは既定1時間、リフレッシュトークンは
+ * `MCP_REFRESH_TOKEN_EXPIRES_IN`)、OAuth クライアントの無効化、ユーザー BAN で行う。
  */
 export const verifyMcpAccessToken = async (token: string): Promise<ResourceAuthResult> => {
   let payload
@@ -75,22 +75,6 @@ export const verifyMcpAccessToken = async (token: string): Promise<ResourceAuthR
   const client = await prisma.oauthClient.findUnique({ where: { clientId }, select: { disabled: true } })
   if (!client || client.disabled) {
     logger.info({ clientId }, 'mcp token client unavailable')
-    return { ok: false, error: 'invalid_token' }
-  }
-
-  /**
-   * `sid` の無いトークンは受け付けない。セッションに紐付かないトークンを通すと、
-   * ログアウトやセッション失効の影響を受けずに有効期限まで使えてしまう。
-   * MCP のトークンは必ず認可フロー(= ログイン済みセッション)経由で発行されるので `sid` は載っている。
-   */
-  const sessionId = typeof payload.sid === 'string' ? payload.sid : undefined
-  if (!sessionId) {
-    logger.info({ clientId }, 'mcp token without session')
-    return { ok: false, error: 'invalid_token' }
-  }
-  const session = await prisma.session.findUnique({ where: { id: sessionId }, select: { expiresAt: true } })
-  if (!session || session.expiresAt <= new Date()) {
-    logger.info({ sessionId }, 'mcp token session expired')
     return { ok: false, error: 'invalid_token' }
   }
 

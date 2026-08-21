@@ -73,7 +73,7 @@ export const BoardMembers: FC<{
       <MultiTable
         ariaLabel='board member list'
         pagingList={list}
-        isCompact
+        isSmart
         columns={[
           { id: 'name', name: t('name'), isRowHeader: true, allowsSorting: true, minWidth: 100 },
           { id: 'email', name: t('email'), allowsSorting: true, minWidth: 140, defaultWidth: '2fr' },
