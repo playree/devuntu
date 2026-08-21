@@ -88,6 +88,10 @@ const server = {
   get SESSION_FRESH_AGE() {
     return getEnvNumber('SESSION_FRESH_AGE', { default: 60 * 60 * 24 })
   },
+  /** MCP用リフレッシュトークンの有効期限(秒)。Webログインセッションとは独立 */
+  get MCP_REFRESH_TOKEN_EXPIRES_IN() {
+    return getEnvNumber('MCP_REFRESH_TOKEN_EXPIRES_IN', { default: 60 * 60 * 24 * 180 })
+  },
   get TWO_FA_REQUIRED() {
     return getEnvBoolean('TWO_FA_REQUIRED', { default: true })
   },
