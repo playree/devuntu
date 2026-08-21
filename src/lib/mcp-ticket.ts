@@ -6,7 +6,6 @@ import { prisma } from '@/lib/prisma'
 import { makeUrl } from '@/lib/server-utils'
 import { buildTicketWhere, parseTicketDisplayId, ticketDisplayId, ticketListOrderBy, ticketShortPath } from '@/lib/task'
 
-/** 表示ID(`KEY-123`)または UUID からチケットの実 ID を解決する。見つからない/権限なしは errInvalidOperation() */
 const resolveTicketId = async (auth: ResourceAuth, ticketIdOrDisplayId: string): Promise<string> => {
   if (!parseTicketDisplayId(ticketIdOrDisplayId)) {
     return ticketIdOrDisplayId

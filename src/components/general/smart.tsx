@@ -10,10 +10,6 @@ export type SmartMode = 'smart' | 'smartForm' | false
 
 const SmartContext = createContext<SmartMode>(false)
 
-/**
- * isSmart / isSmartForm の解決。優先度は isSmart > isSmartForm > 親からの継承(既定false)。
- * useContextは必ず先に無条件で呼ぶ(条件付き呼び出しを避けるため)。
- */
 const resolveSmartMode = (inherited: SmartMode, isSmart?: boolean, isSmartForm?: boolean): SmartMode => {
   if (isSmart !== undefined) {
     return isSmart ? 'smart' : false
