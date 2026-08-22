@@ -253,6 +253,8 @@ export const updateTicketComment = safeAuthAction
       const mentionedUserIds = resolveMentionUserIds(extractMentionEmails(content), candidates)
 
       await tx.ticketComment.update({ where: { id }, data: { content, mentionedUserIds } })
+      // 検索(更新日時順)の観点でチケット側の updatedAt も更新する
+      await tx.ticket.update({ where: { id: target.ticketId }, data: { updatedAt: new Date() } })
       return {
         mentionedUserIds,
         // コメントを編集し直すたびに同じ相手へ通知しないよう、増えた分だけを通知対象にする

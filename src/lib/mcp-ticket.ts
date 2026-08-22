@@ -385,6 +385,7 @@ export const updateTicketCommentForMcp = async (auth: ResourceAuth, commentId: s
     const mentionedUserIds = resolveMentionUserIds(extractMentionEmails(content), candidates)
 
     await tx.ticketComment.update({ where: { id: commentId }, data: { content, mentionedUserIds } })
+    await tx.ticket.update({ where: { id: target.ticketId }, data: { updatedAt: new Date() } })
     return {
       mentionedUserIds,
       addedMentionUserIds: mentionedUserIds.filter((userId) => !target.mentionedUserIds.includes(userId)),
