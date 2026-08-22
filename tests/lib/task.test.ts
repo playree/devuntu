@@ -11,6 +11,8 @@ import {
   ASSIGNEE_NONE,
   buildTicketWhere,
   canApplyAssignments,
+  canMcpDeleteTicket,
+  canMcpUpdateTicket,
   cardDropId,
   commentAnchorId,
   countLaneMap,
@@ -127,6 +129,38 @@ describe('evaluateTicketAccess: ボードのロールから権限を決める', 
   it('アーカイブ済みボードは member でも書き込み不可', () => {
     const res = evaluateTicketAccess({ userId: 'u1', createdById: 'u1', boardRole: 'member', archived: true })
     expect(res).toEqual({ canView: true, canEdit: false, canDelete: false })
+  })
+})
+
+describe('canMcpUpdateTicket: MCP限定の追加制限(担当者以外は更新不可)', () => {
+  it('owner は他人担当のチケットでも更新できる', () => {
+    expect(canMcpUpdateTicket({ userId: 'u1', boardRole: 'owner', assigneeId: 'u9' })).toBe(true)
+  })
+
+  it('member は他人担当のチケットを更新できない', () => {
+    expect(canMcpUpdateTicket({ userId: 'u1', boardRole: 'member', assigneeId: 'u9' })).toBe(false)
+  })
+
+  it('member は未割り当てのチケットを更新できる', () => {
+    expect(canMcpUpdateTicket({ userId: 'u1', boardRole: 'member', assigneeId: null })).toBe(true)
+  })
+
+  it('member は自分が担当のチケットを更新できる', () => {
+    expect(canMcpUpdateTicket({ userId: 'u1', boardRole: 'member', assigneeId: 'u1' })).toBe(true)
+  })
+})
+
+describe('canMcpDeleteTicket: MCP限定の追加制限(作成者以外は削除不可)', () => {
+  it('作成者本人は削除できる', () => {
+    expect(canMcpDeleteTicket({ userId: 'u1', createdById: 'u1' })).toBe(true)
+  })
+
+  it('作成者以外は owner でも削除できない(Web版の canDelete より厳しい)', () => {
+    expect(canMcpDeleteTicket({ userId: 'u1', createdById: 'u9' })).toBe(false)
+  })
+
+  it('作成者不明(createdById=null)は削除できない', () => {
+    expect(canMcpDeleteTicket({ userId: 'u1', createdById: null })).toBe(false)
   })
 })
 

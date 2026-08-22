@@ -76,6 +76,11 @@
 - `src/generated/**`
 - `prisma/migrations/**`
 
+# MCPサーバーの使い分け(本番/開発)
+
+- 本番devuntuのチケット操作は`mcp__devuntu__*`、開発環境の動作確認は`mcp__devuntu-dev__*`を使う
+- 指示に「本番」「開発」の指定が無い場合は、どちらを使うか確認する
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

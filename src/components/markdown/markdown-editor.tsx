@@ -245,7 +245,7 @@ export const MarkdownField: FC<{
          * 本文が短いときにモードの切り替えで高さが動かないよう、両モードで同じ最小高を確保する。
          * ツールバー + minRows 行がこの高さに収まる範囲で minRows を選ぶこと
          */
-        className='min-h-24'
+        className='min-h-24 px-3'
       >
         {isEditing ? (
           <MdxEditorHost

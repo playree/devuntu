@@ -128,6 +128,23 @@ export const evaluateTicketAccess = ({
 }
 
 /**
+ * MCP限定の追加制限: メンバーは他人が担当のチケットを更新できない(未割り当てなら可能)。
+ * オーナーはこの制限を受けない(Web版の canEdit と同じ)。
+ */
+export const canMcpUpdateTicket = (input: {
+  userId: string
+  boardRole: BoardRole | null
+  assigneeId: string | null
+}): boolean => input.boardRole !== 'member' || input.assigneeId === null || input.assigneeId === input.userId
+
+/**
+ * MCP限定の追加制限: オーナー・メンバーいずれも、自分が作成したチケットのみ削除できる。
+ * Web版の canDelete(owner または作成者)より厳しい。
+ */
+export const canMcpDeleteTicket = (input: { userId: string; createdById: string | null }): boolean =>
+  input.createdById === input.userId
+
+/**
  * owner が 0 人になるアサインは owner 自身には許可しない(ボードが管理不能になる)。
  * 管理者は /admin/boards から実施できる。
  *
