@@ -47,3 +47,6 @@ next-env.d.ts
 # work
 /.work/
 /.plan/
+
+# claude local settings
+/.claude/settings.local.json

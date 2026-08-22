@@ -7,7 +7,16 @@
  */
 
 import { createDevuntuMcpServer } from '@/lib/mcp-server'
-import { getTicketForMcp, searchTicketsForMcp } from '@/lib/mcp-ticket'
+import {
+  addTicketCommentForMcp,
+  createTicketForMcp,
+  deleteTicketCommentForMcp,
+  deleteTicketForMcp,
+  getTicketForMcp,
+  searchTicketsForMcp,
+  updateTicketCommentForMcp,
+  updateTicketForMcp,
+} from '@/lib/mcp-ticket'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
@@ -16,6 +25,12 @@ import { describe, expect, it, vi } from 'vitest'
 vi.mock('@/lib/mcp-ticket', () => ({
   getTicketForMcp: vi.fn(),
   searchTicketsForMcp: vi.fn(),
+  createTicketForMcp: vi.fn(),
+  updateTicketForMcp: vi.fn(),
+  deleteTicketForMcp: vi.fn(),
+  addTicketCommentForMcp: vi.fn(),
+  updateTicketCommentForMcp: vi.fn(),
+  deleteTicketCommentForMcp: vi.fn(),
 }))
 
 const auth: ResourceAuth = {
@@ -33,10 +48,21 @@ const connectClient = async () => {
 }
 
 describe('createDevuntuMcpServer', () => {
-  it('ping/echo/get_ticket/search_tickets が tools/list に現れる', async () => {
+  it('全ツールが tools/list に現れる', async () => {
     const { tools } = await (await connectClient()).listTools()
     expect(tools.map((tool) => tool.name)).toEqual(
-      expect.arrayContaining(['ping', 'echo', 'get_ticket', 'search_tickets']),
+      expect.arrayContaining([
+        'ping',
+        'echo',
+        'get_ticket',
+        'search_tickets',
+        'create_ticket',
+        'update_ticket',
+        'delete_ticket',
+        'add_ticket_comment',
+        'update_ticket_comment',
+        'delete_ticket_comment',
+      ]),
     )
   })
 
@@ -76,5 +102,104 @@ describe('createDevuntuMcpServer', () => {
 
     expect(searchTicketsForMcp).toHaveBeenCalledWith(auth, { keyword: 'テスト', status: ['todo'] })
     expect(result.content).toEqual([{ type: 'text', text: JSON.stringify([{ title: 'テストチケット' }], null, 2) }])
+  })
+
+  it('create_ticket は入力をそのまま渡し、結果をJSONテキストとして返す', async () => {
+    vi.mocked(createTicketForMcp).mockResolvedValueOnce({
+      id: 't1',
+      displayId: 'ABC-1',
+      title: '新規チケット',
+    } as never)
+
+    const result = await (
+      await connectClient()
+    ).callTool({
+      name: 'create_ticket',
+      arguments: { boardId: 'b1', title: '新規チケット' },
+    })
+
+    expect(createTicketForMcp).toHaveBeenCalledWith(auth, {
+      boardId: 'b1',
+      title: '新規チケット',
+      status: 'todo',
+      priority: 'medium',
+    })
+    expect(result.content).toEqual([
+      { type: 'text', text: JSON.stringify({ id: 't1', displayId: 'ABC-1', title: '新規チケット' }, null, 2) },
+    ])
+  })
+
+  it('update_ticket は ticketId を分離して残りをMCPロジックへ渡す', async () => {
+    vi.mocked(updateTicketForMcp).mockResolvedValueOnce({ id: 't1', title: '更新後' } as never)
+
+    const result = await (
+      await connectClient()
+    ).callTool({
+      name: 'update_ticket',
+      arguments: { ticketId: 'ABC-1', title: '更新後' },
+    })
+
+    expect(updateTicketForMcp).toHaveBeenCalledWith(auth, 'ABC-1', { title: '更新後' })
+    expect(result.content).toEqual([{ type: 'text', text: JSON.stringify({ id: 't1', title: '更新後' }, null, 2) }])
+  })
+
+  it('delete_ticket は ticketId を渡し、結果をJSONテキストとして返す', async () => {
+    vi.mocked(deleteTicketForMcp).mockResolvedValueOnce({ id: 't1' } as never)
+
+    const result = await (
+      await connectClient()
+    ).callTool({
+      name: 'delete_ticket',
+      arguments: { ticketId: 'ABC-1' },
+    })
+
+    expect(deleteTicketForMcp).toHaveBeenCalledWith(auth, 'ABC-1')
+    expect(result.content).toEqual([{ type: 'text', text: JSON.stringify({ id: 't1' }, null, 2) }])
+  })
+
+  it('add_ticket_comment は ticketId と content を渡す', async () => {
+    vi.mocked(addTicketCommentForMcp).mockResolvedValueOnce({ id: 'c1' } as never)
+
+    const result = await (
+      await connectClient()
+    ).callTool({
+      name: 'add_ticket_comment',
+      arguments: { ticketId: 'ABC-1', content: 'コメント' },
+    })
+
+    expect(addTicketCommentForMcp).toHaveBeenCalledWith(auth, 'ABC-1', 'コメント')
+    expect(result.content).toEqual([{ type: 'text', text: JSON.stringify({ id: 'c1' }, null, 2) }])
+  })
+
+  it('update_ticket_comment は commentId と content を渡す', async () => {
+    vi.mocked(updateTicketCommentForMcp).mockResolvedValueOnce({ id: 'c1' } as never)
+
+    const result = await (
+      await connectClient()
+    ).callTool({
+      name: 'update_ticket_comment',
+      arguments: { commentId: '0195c1e0-0000-7000-8000-000000000001', content: 'コメント編集後' },
+    })
+
+    expect(updateTicketCommentForMcp).toHaveBeenCalledWith(
+      auth,
+      '0195c1e0-0000-7000-8000-000000000001',
+      'コメント編集後',
+    )
+    expect(result.content).toEqual([{ type: 'text', text: JSON.stringify({ id: 'c1' }, null, 2) }])
+  })
+
+  it('delete_ticket_comment は commentId を渡す', async () => {
+    vi.mocked(deleteTicketCommentForMcp).mockResolvedValueOnce({ id: 'c1' } as never)
+
+    const result = await (
+      await connectClient()
+    ).callTool({
+      name: 'delete_ticket_comment',
+      arguments: { commentId: '0195c1e0-0000-7000-8000-000000000001' },
+    })
+
+    expect(deleteTicketCommentForMcp).toHaveBeenCalledWith(auth, '0195c1e0-0000-7000-8000-000000000001')
+    expect(result.content).toEqual([{ type: 'text', text: JSON.stringify({ id: 'c1' }, null, 2) }])
   })
 })

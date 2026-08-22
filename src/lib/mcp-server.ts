@@ -1,5 +1,15 @@
-import { getTicketForMcp, searchTicketsForMcp } from '@/lib/mcp-ticket'
+import {
+  addTicketCommentForMcp,
+  createTicketForMcp,
+  deleteTicketCommentForMcp,
+  deleteTicketForMcp,
+  getTicketForMcp,
+  searchTicketsForMcp,
+  updateTicketCommentForMcp,
+  updateTicketForMcp,
+} from '@/lib/mcp-ticket'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
+import { zCommentContent, zDueDate, zTagIds, zTicketContent, zTicketTitle } from '@/lib/schema'
 import { TICKET_PRIORITIES, TICKET_STATUSES } from '@/lib/task'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
@@ -57,6 +67,109 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     },
     async (input) => ({
       content: [{ type: 'text' as const, text: JSON.stringify(await searchTicketsForMcp(auth, input), null, 2) }],
+    }),
+  )
+
+  server.registerTool(
+    'create_ticket',
+    {
+      title: 'チケット作成',
+      description: 'ボードにチケットを新規作成する',
+      inputSchema: {
+        boardId: z.string().min(1),
+        title: zTicketTitle,
+        content: zTicketContent.optional(),
+        status: z.enum(TICKET_STATUSES).default('todo'),
+        priority: z.enum(TICKET_PRIORITIES).default('medium'),
+        dueDate: zDueDate,
+        assigneeId: z.uuidv7().nullish(),
+        tagIds: zTagIds.optional(),
+      },
+    },
+    async (input) => ({
+      content: [{ type: 'text' as const, text: JSON.stringify(await createTicketForMcp(auth, input), null, 2) }],
+    }),
+  )
+
+  server.registerTool(
+    'update_ticket',
+    {
+      title: 'チケット更新',
+      description:
+        'チケットの内容(タイトル/本文/優先度/期限/担当者/タグ)やステータスを更新する。' +
+        'メンバーは他人が担当のチケットを更新できない(未割り当てなら可能。オーナーは制限なし)',
+      inputSchema: {
+        ticketId: z.string().min(1),
+        title: zTicketTitle.optional(),
+        content: zTicketContent.optional(),
+        priority: z.enum(TICKET_PRIORITIES).optional(),
+        dueDate: zDueDate,
+        assigneeId: z.uuidv7().nullish(),
+        tagIds: zTagIds.optional(),
+        status: z.enum(TICKET_STATUSES).optional(),
+      },
+    },
+    async ({ ticketId, ...input }) => ({
+      content: [
+        { type: 'text' as const, text: JSON.stringify(await updateTicketForMcp(auth, ticketId, input), null, 2) },
+      ],
+    }),
+  )
+
+  server.registerTool(
+    'delete_ticket',
+    {
+      title: 'チケット削除',
+      description: 'チケットを削除する。オーナー・メンバーともに、自分が作成したチケットのみ削除できる',
+      inputSchema: { ticketId: z.string().min(1) },
+    },
+    async ({ ticketId }) => ({
+      content: [{ type: 'text' as const, text: JSON.stringify(await deleteTicketForMcp(auth, ticketId), null, 2) }],
+    }),
+  )
+
+  server.registerTool(
+    'add_ticket_comment',
+    {
+      title: 'コメント追加',
+      description: 'チケットにコメントを追加する',
+      inputSchema: { ticketId: z.string().min(1), content: zCommentContent },
+    },
+    async ({ ticketId, content }) => ({
+      content: [
+        { type: 'text' as const, text: JSON.stringify(await addTicketCommentForMcp(auth, ticketId, content), null, 2) },
+      ],
+    }),
+  )
+
+  server.registerTool(
+    'update_ticket_comment',
+    {
+      title: 'コメント更新',
+      description: '自分が投稿したコメントを編集する',
+      inputSchema: { commentId: z.uuidv7(), content: zCommentContent },
+    },
+    async ({ commentId, content }) => ({
+      content: [
+        {
+          type: 'text' as const,
+          text: JSON.stringify(await updateTicketCommentForMcp(auth, commentId, content), null, 2),
+        },
+      ],
+    }),
+  )
+
+  server.registerTool(
+    'delete_ticket_comment',
+    {
+      title: 'コメント削除',
+      description: '自分が投稿したコメント、またはチケットを削除できる権限を持つ場合にコメントを削除する',
+      inputSchema: { commentId: z.uuidv7() },
+    },
+    async ({ commentId }) => ({
+      content: [
+        { type: 'text' as const, text: JSON.stringify(await deleteTicketCommentForMcp(auth, commentId), null, 2) },
+      ],
     }),
   )
 
