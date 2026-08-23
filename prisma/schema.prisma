@@ -660,19 +660,31 @@ model Ticket {
 }
 
 model TicketComment {
-  id               String   @id @default(uuid(7))
+  id               String            @id @default(uuid(7))
   ticketId         String
-  ticket           Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticket           Ticket            @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   // 退会ユーザーのコメントも議論履歴として残すため SetNull(表示は no_name)
   authorId         String?
-  author           User?    @relation("TicketCommentAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  author           User?             @relation("TicketCommentAuthor", fields: [authorId], references: [id], onDelete: SetNull)
   content          String
-  mentionedUserIds String[] @default([])
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  // null = 通常コメント。plan/report は詳細画面でデフォルト折りたたみ表示する
+  type             TicketCommentType?
+  // 返信先コメント。1階層のみ許容(親自体が返信の場合は指定できない。制約はアプリ層で検証)
+  parentId         String?
+  parent           TicketComment?    @relation("TicketCommentThread", fields: [parentId], references: [id], onDelete: Cascade)
+  replies          TicketComment[]   @relation("TicketCommentThread")
+  mentionedUserIds String[]          @default([])
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 
   @@index([ticketId, createdAt])
+  @@index([parentId])
   @@map("ticket_comment")
+}
+
+enum TicketCommentType {
+  plan
+  report
 }
 
 enum NotifyEvent {

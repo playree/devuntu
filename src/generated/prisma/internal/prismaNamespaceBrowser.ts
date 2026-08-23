@@ -556,6 +556,8 @@ export const TicketCommentScalarFieldEnum = {
   ticketId: 'ticketId',
   authorId: 'authorId',
   content: 'content',
+  type: 'type',
+  parentId: 'parentId',
   mentionedUserIds: 'mentionedUserIds',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'

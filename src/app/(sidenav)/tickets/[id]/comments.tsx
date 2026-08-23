@@ -1,38 +1,27 @@
 'use client'
 
-import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
-import { useConfirmModal } from '@/components/general/modal'
-import { Panel } from '@/components/general/panel'
-import { ChatBubbleIcon, CheckIcon, PencilSquareIcon, TrashIcon } from '@/components/icon'
+import { SplitButton, type SplitButtonOption } from '@/components/general/split-button'
+import { ChatBubbleIcon, CheckIcon } from '@/components/icon'
 import { MarkdownInput } from '@/components/markdown/markdown-editor'
-import { MarkdownView } from '@/components/markdown/markdown-view'
 import type { MentionCandidate } from '@/components/markdown/mention-menu'
 import { notify } from '@/components/notify'
-import { MentionChips } from '@/components/ticket/mention-chips'
 import { parseAction } from '@/lib/action-client'
-import { dayformat } from '@/lib/day'
 import { scCreateTicketComment } from '@/lib/schema'
 import { getFieldConstraints } from '@/lib/schema-util'
-import { commentAnchorId, decodeSegment } from '@/lib/task'
-import { useUserTimezone } from '@/lib/use-timezone'
+import { commentAnchorId, decodeSegment, TICKET_COMMENT_TYPE_LOCALE, TICKET_COMMENT_TYPES } from '@/lib/task'
 import { useLocale } from '@/locale/client'
 import { FC, useEffect, useState, useSyncExternalStore } from 'react'
-import { tv } from 'tailwind-variants'
-import { addTicketComment, deleteTicketComment, GetTicketReturnType, updateTicketComment } from './server'
+import { CommentItem, CommentReplyAction, type Comment } from './comment-item'
+import { addTicketComment, GetTicketReturnType } from './server'
 
 type Ticket = NonNullable<GetTicketReturnType>
-type Comment = Ticket['comments'][number]
 
 /** コメントの文字数上限(MDXEditor には maxLength 属性が無いのでスキーマから取る) */
 const MAX_COMMENT_LENGTH = getFieldConstraints(scCreateTicketComment, 'content').maxLength
 
-/** 通知のリンクから開いた 1 件を目立たせる枠(かんばんの選択カードと同じ表現) */
-const commentStyles = tv({
-  variants: {
-    isTarget: { true: 'ring-2 ring-blue-500' },
-  },
-})
+/** 投稿フォームの種別選択肢。'none' は通常コメント(type を渡さない) */
+type CommentTypeOption = 'none' | (typeof TICKET_COMMENT_TYPES)[number]
 
 /** 位置の追い直しを打ち切るまでの時間 */
 const ANCHOR_FOLLOW_MS = 3000
@@ -93,135 +82,9 @@ const useCommentAnchor = (comments: Comment[]) => {
   return targetId
 }
 
-/** 投稿・編集の共通チェック(MDXEditor には maxLength 属性が無いためここで見る) */
+/** 投稿の共通チェック(MDXEditor には maxLength 属性が無いためここで見る) */
 const isSubmittable = (draft: string) =>
   !!draft.trim() && (MAX_COMMENT_LENGTH === undefined || draft.length <= MAX_COMMENT_LENGTH)
-
-/** コメント 1 件。投稿者本人なら編集できる */
-const CommentItem: FC<{
-  comment: Comment
-  boardId: string
-  /** `@` 入力時のメンション候補(そのボードのメンバー) */
-  mentionCandidates: MentionCandidate[]
-  canDelete: boolean
-  /** 通知のリンク(`#comment-<id>`)で指されている 1 件 */
-  isTarget: boolean
-  refresh: () => Promise<void>
-}> = ({ comment, boardId, mentionCandidates, canDelete, isTarget, refresh }) => {
-  const { t } = useLocale()
-  const tz = useUserTimezone()
-  const { confirmModal } = useConfirmModal()
-  const [isEditing, setEditing] = useState(false)
-  const [draft, setDraft] = useState(comment.content)
-  const [isSaving, setSaving] = useState(false)
-
-  const save = async () => {
-    setSaving(true)
-    try {
-      await parseAction(updateTicketComment({ id: comment.id, content: draft }))
-      notify.success(t('msg_saved'))
-      // 表示モードへ戻すのはサーバー値が届いた後。先に戻すと旧本文が一瞬見える
-      await refresh()
-      setEditing(false)
-    } catch {
-      // エラー表示は parseAction 側で済んでいる。入力中の内容を失わせないため編集状態は維持する
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const remove = async () => {
-    try {
-      const ok = await confirmModal().confirm({
-        title: t('confirm_deletion'),
-        text: t('msg_confirm_deletion', { target: t('comment') }),
-        requireCheck: true,
-        autoClose: false,
-      })
-      if (ok) {
-        await parseAction(deleteTicketComment({ id: comment.id }))
-        notify.success(t('msg_deleted_target', { target: t('comment') }))
-        await refresh()
-      }
-    } finally {
-      confirmModal().close()
-    }
-  }
-
-  return (
-    <Panel // 通知の URL から直接開けるよう、コメント単位のアンカーを置く
-      variant='shadow'
-      id={commentAnchorId(comment.id)}
-      className={commentStyles({ isTarget })}
-    >
-      <div className='flex items-center gap-2 text-xs text-gray-500'>
-        <span className='font-medium'>{comment.authorName || t('no_name')}</span>
-        <span className='font-mono'>{dayformat(comment.createdAt, 'tz-simple', tz)}</span>
-        <div className='ml-auto flex gap-0.5'>
-          {comment.isMine && !isEditing && (
-            <MultiButton
-              isIconOnly
-              size='sm'
-              variant='ghost'
-              className='h-7 w-7 rounded-sm'
-              tooltip={t('update')}
-              onPress={() => {
-                setDraft(comment.content)
-                setEditing(true)
-              }}
-            >
-              <PencilSquareIcon width={16} />
-            </MultiButton>
-          )}
-          {(comment.isMine || canDelete) && (
-            <MultiButton
-              isIconOnly
-              size='sm'
-              variant='ghost'
-              className='h-7 w-7 rounded-sm'
-              tooltip={t('delete')}
-              onPress={remove}
-            >
-              <TrashIcon width={16} className='text-red-400' />
-            </MultiButton>
-          )}
-        </div>
-      </div>
-
-      {isEditing ? (
-        <div className='mt-2 space-y-2'>
-          <MarkdownInput
-            defaultValue={comment.content}
-            onChange={setDraft}
-            length={draft.length}
-            maxLength={MAX_COMMENT_LENGTH}
-            label={t('comment')}
-            uploadBoardId={boardId}
-            mentionCandidates={mentionCandidates}
-          />
-          <div className='flex justify-end gap-2'>
-            <MultiButton variant='ghost' size='sm' onPress={() => setEditing(false)}>
-              {t('cancel')}
-            </MultiButton>
-            <MultiButton
-              size='sm'
-              icon={<CheckIcon width={16} />}
-              isPending={isSaving}
-              isDisabled={!isSubmittable(draft)}
-              onPress={save}
-            >
-              {t('save')}
-            </MultiButton>
-          </div>
-        </div>
-      ) : (
-        <MarkdownView body={comment.content} className='mt-1' mentionUsers={mentionCandidates} />
-      )}
-
-      <MentionChips names={comment.mentionedNames} className='mt-2' />
-    </Panel>
-  )
-}
 
 /** コメント一覧 + 投稿フォーム */
 export const TicketComments: FC<{
@@ -232,19 +95,35 @@ export const TicketComments: FC<{
 }> = ({ ticket, mentionCandidates, refresh }) => {
   const { t } = useLocale()
   const [draft, setDraft] = useState('')
+  const [commentType, setCommentType] = useState<CommentTypeOption>('none')
   const [isPosting, setPosting] = useState(false)
   // MDXEditor は markdown prop の変更を取り込まないため、key を変えて空の状態に戻す
   const [editorKey, setEditorKey] = useState(0)
 
   const { comments } = ticket
-  const targetId = useCommentAnchor(comments)
+  // 返信込みでフラットに展開したもの。件数表示とアンカー一致の両方で使う
+  const flatComments = comments.flatMap((comment) => [comment, ...comment.replies])
+  const targetId = useCommentAnchor(flatComments)
+
+  const commentTypeOptions: SplitButtonOption<CommentTypeOption>[] = [
+    { id: 'none', menuLabel: t('comment_type_none'), actionLabel: t('send') },
+    { id: 'plan', menuLabel: t(TICKET_COMMENT_TYPE_LOCALE.plan), actionLabel: t('send_as_plan') },
+    { id: 'report', menuLabel: t(TICKET_COMMENT_TYPE_LOCALE.report), actionLabel: t('send_as_report') },
+  ]
 
   const post = async () => {
     setPosting(true)
     try {
-      await parseAction(addTicketComment({ ticketId: ticket.id, content: draft }))
+      await parseAction(
+        addTicketComment({
+          ticketId: ticket.id,
+          content: draft,
+          type: commentType === 'none' ? null : commentType,
+        }),
+      )
       notify.success(t('msg_added_comment'))
       setDraft('')
+      setCommentType('none')
       setEditorKey((n) => n + 1)
       await refresh()
     } catch {
@@ -259,20 +138,51 @@ export const TicketComments: FC<{
       <div className='flex items-center gap-2'>
         <ChatBubbleIcon />
         <span>
-          {t('comment')} ({comments.length})
+          {t('comment')} ({flatComments.length})
         </span>
       </div>
 
       {comments.map((comment) => (
-        <CommentItem
-          key={comment.id}
-          comment={comment}
-          boardId={ticket.boardId}
-          mentionCandidates={mentionCandidates}
-          canDelete={ticket.canDelete}
-          isTarget={commentAnchorId(comment.id) === targetId}
-          refresh={refresh}
-        />
+        <div key={comment.id} className='space-y-2'>
+          <CommentItem
+            comment={comment}
+            boardId={ticket.boardId}
+            mentionCandidates={mentionCandidates}
+            canDelete={ticket.canDelete}
+            isTarget={commentAnchorId(comment.id) === targetId}
+            refresh={refresh}
+          />
+          {(comment.replies.length > 0 || ticket.canEdit) && (
+            <div
+              className={
+                comment.replies.length > 0
+                  ? 'ml-6 space-y-2 border-l border-gray-300/50 pl-4 dark:border-gray-600/50'
+                  : 'space-y-2'
+              }
+            >
+              {comment.replies.map((reply) => (
+                <CommentItem
+                  key={reply.id}
+                  comment={reply}
+                  boardId={ticket.boardId}
+                  mentionCandidates={mentionCandidates}
+                  canDelete={ticket.canDelete}
+                  isTarget={commentAnchorId(reply.id) === targetId}
+                  refresh={refresh}
+                />
+              ))}
+              {ticket.canEdit && (
+                <CommentReplyAction
+                  ticketId={ticket.id}
+                  parentId={comment.id}
+                  boardId={ticket.boardId}
+                  mentionCandidates={mentionCandidates}
+                  refresh={refresh}
+                />
+              )}
+            </div>
+          )}
+        </div>
       ))}
 
       {ticket.canEdit && (
@@ -289,16 +199,18 @@ export const TicketComments: FC<{
           />
           <div className='flex items-center gap-2'>
             <span className='text-xs text-gray-500'>{t('msg_mention_hint')}</span>
-            <MultiButton
+            <SplitButton
               className='ml-auto shrink-0'
               size='sm'
               icon={<CheckIcon width={16} />}
+              options={commentTypeOptions}
+              selectedId={commentType}
+              onSelectChange={setCommentType}
               isPending={isPosting}
               isDisabled={!isSubmittable(draft)}
               onPress={post}
-            >
-              {t('send')}
-            </MultiButton>
+              dropdownLabel={t('comment_type')}
+            />
           </div>
         </div>
       )}

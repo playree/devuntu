@@ -9,7 +9,7 @@ import {
   updateTicketForMcp,
 } from '@/lib/mcp-ticket'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
-import { zCommentContent, zDueDate, zTagIds, zTicketContent, zTicketTitle } from '@/lib/schema'
+import { zCommentContent, zCommentType, zDueDate, zTagIds, zTicketContent, zTicketTitle } from '@/lib/schema'
 import { TICKET_PRIORITIES, TICKET_STATUSES } from '@/lib/task'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
@@ -132,12 +132,22 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     'add_ticket_comment',
     {
       title: 'コメント追加',
-      description: 'チケットにコメントを追加する',
-      inputSchema: { ticketId: z.string().min(1), content: zCommentContent },
+      description:
+        'チケットにコメントを追加する。対応プランは type=plan、対応完了の報告は type=report として残すと' +
+        '詳細画面で折りたたみ表示され、通常コメントと区別できる。既存コメントへの返信は parentId で指定できる(1階層のみ)',
+      inputSchema: {
+        ticketId: z.string().min(1),
+        content: zCommentContent,
+        type: zCommentType.describe('plan=対応プラン、report=対応報告。通常コメントは省略する'),
+        parentId: z.uuidv7().nullish().describe('返信先の親コメントID。親自体が返信の場合は指定できない(1階層のみ)'),
+      },
     },
-    async ({ ticketId, content }) => ({
+    async ({ ticketId, content, type, parentId }) => ({
       content: [
-        { type: 'text' as const, text: JSON.stringify(await addTicketCommentForMcp(auth, ticketId, content), null, 2) },
+        {
+          type: 'text' as const,
+          text: JSON.stringify(await addTicketCommentForMcp(auth, ticketId, content, type, parentId), null, 2),
+        },
       ],
     }),
   )

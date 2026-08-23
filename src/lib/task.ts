@@ -6,7 +6,7 @@
  * サーバー / クライアントの双方から import され、`tests/lib/task.test.ts` の対象になる。
  */
 
-import type { TagColor, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
+import type { TagColor, TicketCommentType, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
 import type { TicketOrderByWithRelationInput, TicketWhereInput } from '@/generated/prisma/models'
 import type { LocaleItemBase } from '@/locale'
 import { nowDate, utcToDateOnly } from './day'
@@ -266,6 +266,14 @@ export const ticketShortPath = (displayId: string): string => `/t/${displayId}`
 
 /** コメントのアンカーID。通知URLのフラグメントと画面側の要素 id で同じ形を使う */
 export const commentAnchorId = (commentId: string): string => `comment-${commentId}`
+
+/** コメントの種別。plan/report は詳細画面でデフォルト折りたたみ表示する。未指定(null)は通常コメント */
+export const TICKET_COMMENT_TYPES = ['plan', 'report'] as const satisfies readonly TicketCommentType[]
+
+export const TICKET_COMMENT_TYPE_LOCALE = {
+  plan: 'comment_type_plan',
+  report: 'comment_type_report',
+} as const satisfies Record<TicketCommentType, LocaleItemBase>
 
 /** 短縮URLのパス(`/t/KEY-123`)。末尾スラッシュは許容する */
 const SHORT_PATH_PATTERN = /^\/t\/([^/]+)\/?$/
