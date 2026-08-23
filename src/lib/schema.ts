@@ -9,6 +9,7 @@ import {
   MAX_TAG_NAME,
   MAX_TICKET_TAGS,
   TAG_COLORS,
+  TICKET_COMMENT_TYPES,
   TICKET_PRIORITIES,
   TICKET_SORT_COLUMNS,
   TICKET_STATUSES,
@@ -234,7 +235,7 @@ export type UpdateNotifySetting = z.infer<typeof scUpdateNotifySetting>
  * -----------------------------------------------------------------------------------------------*/
 
 export const zTicketTitle = z.string().trim().min(1, el('@required_field')).max(120, el('@invalid_title'))
-export const zTicketContent = z.string().max(20000, el('@invalid_content'))
+export const zTicketContent = z.string().max(40000, el('@invalid_content'))
 
 /** タグ名。表示用の文字列。検索条件でも使う */
 export const zTagName = z.string().trim().min(1, el('@invalid_tag')).max(MAX_TAG_NAME, el('@invalid_tag'))
@@ -248,7 +249,9 @@ export const zTagIds = z.array(z.uuidv7()).max(MAX_TICKET_TAGS, el('@invalid_tag
 /** ステータス / 優先度 / ロールは task.ts を単一ソースにする(Prisma の enum とはそちらで突き合わせる) */
 export const zTicketStatus = z.enum(TICKET_STATUSES)
 export const zTicketPriority = z.enum(TICKET_PRIORITIES)
-export const zCommentContent = z.string().trim().min(1, el('@required_field')).max(5000, el('@invalid_content'))
+export const zCommentContent = z.string().trim().min(1, el('@required_field')).max(40000, el('@invalid_content'))
+/** コメントの種別。task.ts の TICKET_COMMENT_TYPES を単一ソースにする。null/未指定は通常コメント */
+export const zCommentType = z.enum(TICKET_COMMENT_TYPES).nullish()
 export const zBoardDescription = z.string().max(200, el('@invalid_description')).optional()
 /**
  * ボードキー(チケット表示ID `KEY-番号` の接頭辞)。小文字で入力されても大文字へ寄せてから検証する。
@@ -359,6 +362,10 @@ export type TicketListQueryIn = z.input<typeof scTicketListQuery>
 export const scCreateTicketComment = z.object({
   ticketId: z.uuidv7(),
   content: zCommentContent,
+  /** plan/report を選べる。未指定/null は通常コメント */
+  type: zCommentType,
+  /** 返信先コメントID。1階層のみ許容(サーバー側で親が返信でないか検証する) */
+  parentId: z.uuidv7().nullish(),
 })
 export type CreateTicketComment = z.infer<typeof scCreateTicketComment>
 

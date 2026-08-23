@@ -646,6 +646,21 @@ export const getTicketMentionCandidates = async (
 ): Promise<{ id: string; email: string }[]> => getBoardMentionCandidates(access.boardId, tx)
 
 /**
+ * コメントの返信先(parentId)が返信可能な相手かを検証する。NG なら errInvalidOperation() を throw。
+ * スレッドは 1 階層のみ許容するため、返信先自体が既に返信(parentId を持つ)である場合は拒否する。
+ * 投稿先チケットと親コメントの所属チケットが一致しない(他チケットのコメントIDを指定した)場合も拒否する。
+ */
+export const assertReplyTarget = async (tx: Db, ticketId: string, parentId: string): Promise<void> => {
+  const parent = await tx.ticketComment.findUnique({
+    where: { id: parentId },
+    select: { ticketId: true, parentId: true },
+  })
+  if (!parent || parent.parentId || parent.ticketId !== ticketId) {
+    throw errInvalidOperation()
+  }
+}
+
+/**
  * チケットのステータス / レーン位置を更新するコア。
  * かんばんの DnD・カード内メニュー・詳細画面のステータス変更が共有する唯一の経路。
  *

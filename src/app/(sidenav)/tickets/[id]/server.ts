@@ -1,7 +1,13 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action-server'
-import { assertBoardAssignee, assertTicketAccess, getTicketMentionCandidates, moveTicketToLane } from '@/lib/board'
+import {
+  assertBoardAssignee,
+  assertReplyTarget,
+  assertTicketAccess,
+  getTicketMentionCandidates,
+  moveTicketToLane,
+} from '@/lib/board'
 import { dateOnlyToUtc } from '@/lib/day'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
@@ -50,6 +56,8 @@ export const getTicket = safeAuthAction
           select: {
             id: true,
             content: true,
+            type: true,
+            parentId: true,
             authorId: true,
             author: { select: { name: true } },
             mentionedUserIds: true,
@@ -96,12 +104,21 @@ export const getTicket = safeAuthAction
       boardKind: board.kind,
       assigneeName: assignee?.name ?? '',
       createdByName: createdBy?.name ?? '',
-      comments: comments.map(({ author, mentionedUserIds: commentMentions, ...comment }) => ({
-        ...comment,
-        authorName: author?.name ?? '',
-        mentionedNames: toMentionedNames(commentMentions),
-        isMine: comment.authorId === user.id,
-      })),
+      // スレッドは 1 階層のみなので、親コメントに自分宛の返信だけをぶら下げれば表示側は再帰不要
+      comments: (() => {
+        const flat = comments.map(({ author, mentionedUserIds: commentMentions, ...comment }) => ({
+          ...comment,
+          authorName: author?.name ?? '',
+          mentionedNames: toMentionedNames(commentMentions),
+          isMine: comment.authorId === user.id,
+        }))
+        return flat
+          .filter((comment) => !comment.parentId)
+          .map((comment) => ({
+            ...comment,
+            replies: flat.filter((reply) => reply.parentId === comment.id),
+          }))
+      })(),
       boardRole: access.boardRole,
       canEdit: access.canEdit,
       canDelete: access.canDelete,
@@ -190,15 +207,18 @@ export const updateTicketStatus = safeAuthAction
 export const addTicketComment = safeAuthAction
   .metadata({ actionName: 'addTicketComment', role: 'user' })
   .inputSchema(scCreateTicketComment)
-  .action(async ({ ctx: { user }, parsedInput: { ticketId, content } }) => {
+  .action(async ({ ctx: { user }, parsedInput: { ticketId, content, type, parentId } }) => {
     const { comment, mentionedUserIds, ticket } = await prisma.$transaction(async (tx) => {
       const access = await assertTicketAccess(user, ticketId, 'edit', tx)
+      if (parentId) {
+        await assertReplyTarget(tx, ticketId, parentId)
+      }
 
       const candidates = await getTicketMentionCandidates(access, tx)
       const mentionedUserIds = resolveMentionUserIds(extractMentionEmails(content), candidates)
 
       const comment = await tx.ticketComment.create({
-        data: { ticketId, authorId: user.id, content, mentionedUserIds },
+        data: { ticketId, authorId: user.id, content, type, parentId, mentionedUserIds },
         select: { id: true },
       })
 

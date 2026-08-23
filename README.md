@@ -1,55 +1,25 @@
 - [Devuntu](#devuntu)
 - [パッケージ構成](#パッケージ構成)
 - [画面一覧](#画面一覧)
-  - [アクセス制御の仕組み](#アクセス制御の仕組み)
   - [一般](#一般)
   - [タスク管理](#タスク管理)
   - [管理者](#管理者)
   - [認証・公開](#認証公開)
-  - [API](#api)
+- [MCP サーバー](#mcp-サーバー)
+  - [Claude Code への登録](#claude-code-への登録)
 - [通知](#通知)
-  - [メンション通知の流れ](#メンション通知の流れ)
-  - [ユーザーごとの通知設定](#ユーザーごとの通知設定)
-  - [メール通知の前提](#メール通知の前提)
-  - [Slack通知の前提](#slack通知の前提)
-  - [イベント・チャネルを増やす場合](#イベントチャネルを増やす場合)
 - [環境変数](#環境変数)
-  - [基本](#基本)
-  - [認証](#認証)
-  - [メール](#メール)
-  - [オブジェクトストレージ](#オブジェクトストレージ)
-  - [Linode](#linode)
-  - [Debug](#debug)
-  - [補足](#補足)
 - [開発](#開発)
-  - [開発用インフラ起動](#開発用インフラ起動)
-  - [s3-toolsサービス](#s3-toolsサービス)
-    - [旧イメージでの実行](#旧イメージでの実行)
-  - [DBバックアップ](#dbバックアップ)
-  - [DBリストア](#dbリストア)
-  - [S3バックアップ](#s3バックアップ)
-    - [Docker環境でのS3バックアップ](#docker環境でのs3バックアップ)
-  - [S3リストア](#s3リストア)
-    - [Docker環境でのS3リストア](#docker環境でのs3リストア)
-    - [ボリュームを作り直す場合](#ボリュームを作り直す場合)
-  - [インストール](#インストール)
-  - [ビルド](#ビルド)
-  - [パッケージ更新](#パッケージ更新)
-  - [パッケージへのパッチ](#パッケージへのパッチ)
-  - [パッケージのバージョン上書き](#パッケージのバージョン上書き)
-  - [TypeScript v7 と v6 の併存](#typescript-v7-と-v6-の併存)
-  - [better-auth](#better-auth)
-  - [イメージ作成](#イメージ作成)
-    - [Docker Build](#docker-build)
-    - [Docker Hub Push](#docker-hub-push)
-  - [sharpの依存関係チェック](#sharpの依存関係チェック)
 
 # Devuntu
+
+Devuntu は、かんばん形式のボード/チケット管理を中心に、カレンダー連携・メール/Slack通知・MCP連携などを備えた
+セルフホスト型のプロジェクト管理ツールです。
 
 # パッケージ構成
 
 - Next.js v16
-- TypeScript v7(v6 と併存。[TypeScript v7 と v6 の併存](#typescript-v7-と-v6-の併存))
+- TypeScript v7(v6 と併存。詳細は[開発](#開発)を参照)
 - pnpm v11
 - Prisma v7
 - Better Auth v1.7
@@ -60,107 +30,56 @@
 
 # 画面一覧
 
-## アクセス制御の仕組み
-
-パス単位の制御は `src/proxy.ts`(Next.js Proxy)が `src/lib/auth-config.ts` の設定に従って行う。
-
-- **認証必須** : `/auth/signin` `/start` `/cal/:id` 以外の全ページ。未ログインは `/auth/signin?cb=<元のURL>` へリダイレクト
-- **管理者のみ** : `/admin/**`。`role !== 'admin'` の場合は 404 へ rewrite(メニューにも表示されない)
-- **2要素認証** : `TWO_FA_REQUIRED=true` かつ `DISABLE_PASSWORD_AUTH=false` の場合、2FA未設定なら `/auth/signin?mode=2FA` へリダイレクト
-- Proxy の matcher は `api/**` と Server Action(`next-action` ヘッダ)を除外している。そのためレコード単位の認可(ボード/チケットの参照・編集権限)は各 Server Action 側で `assertBoardAccess` / `assertTicketAccess`(`src/lib/board.ts`)により検証する
-
-ボードの権限は直接メンバー(`BoardMember`)またはグループ経由(`BoardGroup`)で解決され、`owner` / `member` のロールを持つ。
-
 ## 一般
 
-| 画面名称       | パス       | アクセス制御                                                                    |
-| -------------- | ---------- | ------------------------------------------------------------------------------- |
-| ダッシュボード | `/`        | 認証必須                                                                        |
-| カレンダー     | `/cal`     | 認証必須 + Googleアカウント連携が利用可能なユーザーのみ(不可の場合は案内を表示) |
-| アカウント     | `/account` | 認証必須(自分のアカウント情報のみ)                                              |
+| 画面名称       | パス       |
+| -------------- | ---------- |
+| ダッシュボード | `/`        |
+| カレンダー     | `/cal`     |
+| アカウント     | `/account` |
 
 ## タスク管理
 
-| 画面名称               | パス                    | アクセス制御                                                                                       |
-| ---------------------- | ----------------------- | -------------------------------------------------------------------------------------------------- |
-| ボード一覧             | `/boards`               | 認証必須(自分がアクセスできるボードのみ表示)                                                       |
-| かんばん               | `/boards/[id]`          | 認証必須 + 対象ボードの参照権限(`owner` / `member`)                                                |
-| ボード設定             | `/boards/[id]/settings` | 認証必須 + 対象ボードの参照権限。メンバー/グループ/タグ等の変更は `owner` または管理者のみ         |
-| チケット一覧           | `/tickets`              | 認証必須(アクセスできるボードのチケットのみ表示)                                                   |
-| チケット詳細           | `/tickets/[id]`         | 認証必須 + 対象チケットの参照権限(所属ボード経由で判定)                                            |
-| チケット表示IDでの参照 | `/t/[displayId]`        | 認証必須。表示ID(`ボードキー-番号`)を `/tickets/[id]` へリダイレクトするだけで、権限は遷移先で判定 |
+| 画面名称               | パス                    |
+| ---------------------- | ----------------------- |
+| ボード一覧             | `/boards`               |
+| かんばん               | `/boards/[id]`          |
+| ボード設定             | `/boards/[id]/settings` |
+| チケット一覧           | `/tickets`              |
+| チケット詳細           | `/tickets/[id]`         |
+| チケット表示IDでの参照 | `/t/[displayId]`        |
 
 ## 管理者
 
-いずれも `/admin/**` 配下のため管理者(`role === 'admin'`)のみアクセス可能。
+管理者(`role === 'admin'`)のみアクセスできる画面。
 
-| 画面名称           | パス                  | アクセス制御 |
-| ------------------ | --------------------- | ------------ |
-| ユーザー管理       | `/admin/users`        | 管理者のみ   |
-| グループ管理       | `/admin/groups`       | 管理者のみ   |
-| ダッシュボード管理 | `/admin/dashboard`    | 管理者のみ   |
-| 設定(連携設定)     | `/admin/settings`     | 管理者のみ   |
-| OIDCクライアント   | `/admin/oidc-clients` | 管理者のみ   |
+| 画面名称           | パス                  |
+| ------------------ | --------------------- |
+| ユーザー管理       | `/admin/users`        |
+| グループ管理       | `/admin/groups`       |
+| ダッシュボード管理 | `/admin/dashboard`    |
+| 設定(連携設定)     | `/admin/settings`     |
+| OIDCクライアント   | `/admin/oidc-clients` |
 
 ## 認証・公開
 
-| 画面名称         | パス           | アクセス制御                                                                             |
-| ---------------- | -------------- | ---------------------------------------------------------------------------------------- |
-| サインイン       | `/auth/signin` | 認証不要。`?mode=2FA` で2FA設定の誘導、`?cb=` でサインイン後の遷移先を指定               |
-| 初期セットアップ | `/start`       | 認証不要。初期セットアップ済みの場合は `/` へリダイレクト                                |
-| 空き時間の共有   | `/cal/[id]`    | **認証不要の公開ページ**。共有URLの `publicId` で参照。無効化済み/不正なIDは404。noindex |
+| 画面名称         | パス           | 補足                                        |
+| ---------------- | -------------- | ------------------------------------------- |
+| サインイン       | `/auth/signin` | メールOTPによるサインイン                   |
+| 初期セットアップ | `/start`       | 初回のみ                                    |
+| 空き時間の共有   | `/cal/[id]`    | **認証不要の公開ページ**。共有URLで参照する |
 
-## API
-
-Proxy の対象外のため、各ルートハンドラ内で個別に認証する。
-
-| パス                                               | アクセス制御                                                       |
-| -------------------------------------------------- | ------------------------------------------------------------------ |
-| `/api/auth/[...all]`                               | Better Auth のハンドラ(認証処理自体)                               |
-| `/api/auth/.well-known/openid-configuration`       | 認証不要(OIDC ディスカバリ)                                        |
-| `/api/auth/.well-known/oauth-authorization-server` | 認証不要(RFC 8414 認可サーバーメタデータ)                          |
-| `/.well-known/oauth-authorization-server/api/auth` | 認証不要(RFC 8414 のパス挿入形式。同じ内容を返す)                  |
-| `/.well-known/oauth-protected-resource/api/mcp`    | 認証不要(RFC 9728 保護リソースメタデータ)                          |
-| `/api/auth/oauth2/register`                        | 認証不要(RFC 7591 動的クライアント登録)。`OIDC_DCR_ENABLED` 時のみ |
-| `/api/mcp`                                         | アクセストークン必須(未提示は401 + `WWW-Authenticate`)             |
-| `/api/health`                                      | 認証不要(ヘルスチェック)                                           |
-| `/api/upload`                                      | 認証必須(未ログインは401)。画像アップロード(POST)                  |
-| `/api/upload/[filename]`                           | 認証必須(未ログインは401)。画像配信(GET)                           |
+各画面のアクセス制御の実装詳細、および API のアクセス制御は
+[docs/screens.md](docs/screens.md) を参照。
 
 # MCP サーバー
 
-`/api/mcp` を MCP クライアント(Claude Code / VS Code など)へ公開する。devuntu 自身が認可サーバーを
-兼ねるため、クライアントは接続時に動的クライアント登録(DCR)→ 認可コードフローの順で進む。
-利用するには `OIDC_DCR_ENABLED=true` が必要。
+`/api/mcp` を MCP クライアント(Claude Code / VS Code など)へ公開しており、Devuntu 自身が認可サーバーを
+兼ねるため、クライアントは接続時に動的クライアント登録(DCR)→ 認可コードフローの順で進みます。
+利用するには管理者が `OIDC_DCR_ENABLED=true` を設定している必要があります。
 
-## 誰が使えるか
-
-**クライアントを登録できることと、データを読めることは別**。登録しただけでは何も読めない。
-
-- `/oauth2/authorize` は devuntu のログインを要求する。ログインできる利用者だけが認可を完了できる
-- 動的登録されたクライアントは `skip_consent` を指定できないため、同意画面が必ず出る
-- MCP の認証は devuntu のログインセッションから独立している。ログアウトやセッション失効(`SESSION_EXPIRES_IN`、既定5日)の
-  影響を受けず、リフレッシュトークンの有効期限(`MCP_REFRESH_TOKEN_EXPIRES_IN`、既定180日)まで利用できる。
-  強制的に止めたい場合は OAuth クライアントの無効化、またはユーザーの BAN で行う
-- `/api/mcp` はトークンの `sub` から devuntu ユーザーを解決する。ボードやチケットの権限は画面と同じ
-
-## 登録できるクライアントの範囲
-
-`POST /api/auth/oauth2/register` は未認証で叩けるが、リダイレクトURIが**ループバック
-(`http://localhost` / `127.0.0.1` / `[::1]`)か逆ドメイン形式の private-use スキーム**のものだけを
-受け付ける(`src/lib/oauth-registration.ts`)。認可コードが必ず利用者自身の端末へ戻るので、
-外部サーバーへコードを流すクライアントは登録できない。PKCE は常に必須。
-
-## 運用上の注意
-
-- クライアントは利用者ごとではなく**MCP クライアントのインストールごと**に登録される。
-  同じ人でも端末が2台あれば2行、設定を消して再追加すればさらに増える
-- 増えた行は `/admin/oidc-clients` の「動的登録」セクションから無効化・削除できる。
-  無効化は新しい認可を止め、削除は発行済みトークンと同意も一緒に消す(外部キーの Cascade)
-- 利用者本人は `/account` の「許可済みアプリ」から自分の許可を取り消せる
-- MCP はリソース(RFC 8707)として `<BETTER_AUTH_URL>/api/mcp` を持つ。
-  リソースにリンクされたクライアントだけがこのトークンを取れるので、既存の OIDC ログイン用
-  クライアントは MCP を使えない。ただし管理画面から新しく作るクライアントはリンクされる
+登録しただけではデータは読めず、devuntu へのログインと同意が必要です。詳しい仕組みや運用上の注意は
+[docs/mcp-server.md](docs/mcp-server.md) を参照。
 
 ## Claude Code への登録
 
@@ -169,511 +88,27 @@ claude mcp add --transport http devuntu <BETTER_AUTH_URL>/api/mcp
 ```
 
 登録後、devuntu のツールを最初に呼び出したタイミングでブラウザが開き、DCR → 認可コードフロー(PKCE)
-が始まる。ログインしていない場合はログインし、続く同意画面(動的登録のため必ず表示される。
-[誰が使えるか](#誰が使えるか))で許可すれば以降はリフレッシュトークンで自動的に継続する。
+が始まります。ログインしていない場合はログインし、続く同意画面で許可すれば以降はリフレッシュトークンで
+自動的に継続します。
 
 - 登録状況は `claude mcp list`、削除は `claude mcp remove devuntu`
-- 許可の取り消しは利用者本人なら `/account` の「許可済みアプリ」、管理者なら
-  `/admin/oidc-clients`([運用上の注意](#運用上の注意))
-- サーバー側で `OIDC_DCR_ENABLED=true` になっていない環境では動的登録が失敗するため使えない
+- 許可の取り消しは `/account` の「許可済みアプリ」から行えます
 
 # 通知
 
-現在の通知イベントはメンション(`mention`)のみで、通知チャネルは**メール**と**Slack DM**の 2 つ。
+チケット本文・コメントで `@` によりメンションされたユーザーへ、**メール**または**Slack DM**で通知します。
+通知の ON/OFF はイベント種別 × チャネルごとに `/account` の「通知設定」から切り替えられます。
 
-## メンション通知の流れ
+Slack 通知を利用するには、管理者による連携の有効化と、利用者本人の Slack アカウント連携が必要です。
+また Slack に貼られたチケットURLは、閲覧権限を確認した上でカード表示に展開されます。
 
-チケット本文・コメントのエディタで `@` により指名されたユーザーへ通知する。入口は `notifyMention()`(`src/lib/notify-mention.ts`)ただ 1 つで、チケット作成 / 本文編集 / コメント投稿 / コメント編集(`src/app/(sidenav)/tickets/server.ts`、`src/app/(sidenav)/tickets/[id]/server.ts`)から呼ばれる。
-
-- `next/server` の `after()` でレスポンス後に実行する。外部サービスとの往復でレスポンスを遅らせず、通知の失敗もチケット操作へ波及させない
-- メンションした本人は宛先から除外する(自分の書き込みで自分に通知が飛ばない)
-- 件名は `[表示ID] チケットタイトル`、リンク先は `/t/<表示ID>`。文面は宛先ユーザーのロケールで組み立てる
-- メールと Slack は `Promise.allSettled` で並行に送る。片方のチャネルが失敗してももう片方は止まらない
-- 1 回の通知で送る宛先は `MAX_NOTIFY_RECIPIENTS`(`src/lib/notify.ts`、20 件)で頭打ちにする。暴走時に外部サービスを叩き続けないための歯止めで、超過分は警告ログのみ
-
-## ユーザーごとの通知設定
-
-`/account` の「通知設定」(`src/app/(sidenav)/account/notify.tsx`)で、イベント種別 × チャネルごとに ON/OFF を切り替える。項目数が少ないためフォームにせず切り替え即保存にしている。
-
-- 保存先は `UserNotifySetting`(`userId` + `event` でユニーク)の `email` / `slack` 列
-- **行が無い場合は全チャネル OFF** として扱うオプトイン方式。ON にしたときだけ行が作られるので、全ユーザー分の初期行を用意しなくてよい。絞り込み(`filterNotifiable()` / `src/lib/notify-setting.ts`)も ON の行だけを引いて残す
-- メールのスイッチは常に表示する。Slack のスイッチは Slack 連携を利用できるユーザーにのみ表示する
-
-## メール通知の前提
-
-`MAIL_SEND` が設定されていることが唯一の前提で、ユーザー側の連携作業は不要。メール通知を ON にしたユーザーだけが宛先(`User.email`)になる。
-
-- `MAIL_SEND` 未設定の環境では `isMailConfigured()`(`src/lib/mail.ts`)が false になり、**通知メールは送信を試みずスキップされる**(OTP メールなど他の送信は `Unable to send email` エラーになる)
-- 1 通ずつ送信し、1 通の失敗で残りの宛先を巻き添えにしない
-
-## Slack通知の前提
-
-Slack DM は以下の 3 段がすべて揃ったユーザーにだけ届く。どれかを満たさない相手は宛先から自然に消えるだけで、エラーにはならない。
-
-1. **環境変数** : `SLACK_CLIENT_ID` / `SLACK_CLIENT_SECRET` / `SLACK_BOT_TOKEN` が揃っていること(`hasSlackCredentials()` / `src/lib/slack-account.ts`)。`SLACK_TEAM_ID` は任意で、設定すると別ワークスペースのアカウントを連携の入口で弾く
-2. **管理者による有効化** : `/admin/settings` で Slack 連携を有効にする。許可グループを指定した場合はそのグループのメンバーのみ、空の場合は全ユーザーが対象(設定は kvs の `SLACK` グループに保存)
-3. **ユーザー本人の連携** : `/account` から Slack アカウントを OAuth 連携する(`account.providerId = 'slack'`)
-
-送信は逐次で行い、Bot トークンが無効(`revoked`)と判定された時点で残りを打ち切る。
-
-## Slack でのチケットリンクのプレビュー
-
-Slack に貼られたチケットURLを、Slack Events API の `link_shared` を受けて
-`chat.unfurl` でカード表示に展開する(`src/app/api/slack/events/route.ts` → `src/lib/slack-unfurl.ts`)。
-
-サイト側は認証必須のままなので、未認証の Slack クローラに OGP を読ませる方式は採れない。
-代わりに **リンクを貼った本人の閲覧権限をサーバー側で検証してから展開する**。
-
-対応する URL は 2 形式(`parseTicketUrl()` / `src/lib/task.ts`)。オリジンが `BETTER_AUTH_URL` と一致するものだけ受ける。
-
-| 形式                    | 引き方                                              |
-| ----------------------- | --------------------------------------------------- |
-| `/t/{表示ID}`           | `findTicketIdByDisplayId()` で表示IDから引く        |
-| `/tickets/{チケットID}` | uuid v7 の形式を確認してそのまま引く(詳細画面のURL) |
-
-- カードのリンク先は**どちらの形式でも短縮URLへ正規化**する
-- `link_shared` の `user`(Slack ユーザーID)を `account` テーブルで Devuntu ユーザーへ解決する。未連携なら展開しない
-- 通知と同じ `canUseSlackAccount()` で管理者による有効化・許可グループを確認する
-- `getTicketAccess()` で閲覧権限を確認する。見えないチケットは展開せず URL のまま残す(未存在と権限不足は区別しない)
-- 1 メッセージあたりの展開は 5 件まで
-- カードには表示ID・チケット名・ステータス・優先度・担当者・期限を載せる。文言は貼った本人のロケールで解決する
-
-展開先は `link_shared` の `unfurl_id` + `source` で指定する。これは投稿済みメッセージでも
-**入力中(送信前)のプレビュー**でも付くため、貼った時点でカードが見える。
-入力中のイベントは `channel` が `COMPOSER` という実在しない値になるので、`channel` + `message_ts` は
-`unfurl_id` が無い場合のフォールバックとしてのみ使う。
-
-### Slack App 側の設定
-
-アプリの定義は `slack/manifest.yaml` にある。<https://api.slack.com/apps> の **From a manifest** に貼り付けて作成する
-(既存アプリには App Manifest 画面から反映する)。ホスト名の置き換えと、取得した値をどの環境変数へ入れるかはファイル冒頭のコメントを参照。
-
-| マニフェストの項目                                           | 用途                                                              |
-| ------------------------------------------------------------ | ----------------------------------------------------------------- |
-| `oauth_config.scopes.user`                                   | `/account` からの Sign in with Slack                              |
-| `oauth_config.scopes.bot` の `chat:write`                    | メンション通知の DM 送信とボードのチャンネル通知                  |
-| `oauth_config.scopes.bot` の `links:*`                       | リンクの検知(`link_shared`)とプレビューの反映                     |
-| `oauth_config.scopes.bot` の `channels:read` / `groups:read` | ボード設定で通知先チャンネルを選ぶ一覧取得(`users.conversations`) |
-| `features.unfurl_domains`                                    | 展開対象のドメイン                                                |
-| `settings.event_subscriptions.request_url`                   | `/api/slack/events`                                               |
-
-反映後は以下を確認する。
-
-- Bot スコープを変更したらワークスペースへ**再インストール**する(しないと `links:write` や `users.conversations` が効かない)。
-  再インストールで `xoxb-` が発行し直されるため、`SLACK_BOT_TOKEN` も入れ替えてアプリを再起動する。
-  これは Bot 側の作業で、`/account` からのユーザー連携(user スコープ)のやり直しとは別物
-- 通知先チャンネルの一覧が空になる・`missing_scope` が出る場合は、上の再インストールと `SLACK_BOT_TOKEN` の入れ替えが済んでいない
-- Event Subscriptions の Request URL が **Verified** になっている(Slack が送る `url_verification` に応答している)
-- Signing Secret を `SLACK_SIGNING_SECRET` に設定する。未設定ならエンドポイントは 404 を返し、機能ごと無効になる
-
-`link_shared` は `unfurl_domains` に登録したドメインのリンクにだけ届く。
-また Slack から到達できる公開 HTTPS ドメインが必要なため、`localhost` の開発環境ではイベントが届かない。
-
-### 展開されるのはアプリが参加している会話だけ
-
-**イベントが届くこととカードを出せることは別**なので注意する。
-Slack は `links:read` があると **アプリが参加していない公開チャンネルにも `link_shared` を送る**
-(そのためイベントに `is_bot_user_member` が入っている)。一方 `chat.unfurl` はアプリが会話の参加者でないと
-`not_in_channel` で失敗するため、参加していないチャンネルの投稿は展開できない。
-
-`is_bot_user_member` が false のイベントは `chat.unfurl` を呼ばずに打ち切る(`src/lib/slack-unfurl.ts`)。
-
-動作確認は次のどちらかで行う。
-
-- 対象のチャンネルで `/invite @Devuntu` してアプリを参加させる
-- アプリとの DM(App の Messages タブ)に貼る
-
-**自分への DM では動かない**(アプリが参加しようがないため)。
-
-展開されない場合は `LOG_LEVEL=debug` にして `slack unfurl skipped` の `reason` を見る。
-`bot is not in the channel` / `unlinked user` / `no ticket url`(オリジン不一致なら `baseUrl` も出る)/
-`no viewable ticket` のいずれかで、どの段階で止まったか分かる。
-なお Slack は直近のアンファールをキャッシュするため、同じ URL を貼り直しても再度は展開されない。
-
-### リクエストの検証
-
-`/api/slack/events` は `src/proxy.ts` の matcher が `api/` を除外しているため未認証で叩ける。
-Slack の署名(`src/lib/slack-signature.ts`)だけが門番になるので、検証を通す前に本文を解釈しない。
-
-- 署名は**生ボディ**に対して計算されるため、`request.text()` で読んでから検証する(`request.json()` を先に呼ぶと一致しない)
-- タイムスタンプが 5 分以上ずれたリクエストは、署名が正しくてもリプレイとして拒否する
-- Slack は 3 秒以内の応答を要求するため、200 を返したあと `after()` の中でチケットを照会して `chat.unfurl` を呼ぶ
-
-## イベント・チャネルを増やす場合
-
-- **イベント** : Prisma の `NotifyEvent` enum と `NOTIFY_EVENTS`(`src/lib/notify.ts`)を揃える。並びの一致は `tests/lib/notify.test.ts` で固定している
-- **チャネル** : `UserNotifySetting` に Boolean 列(既定 OFF に揃えるため `@default(false)`)を足し、`NOTIFY_CHANNELS`(`src/lib/notify.ts`)と `scUpdateNotifySetting`(`src/lib/schema.ts`)へ追加する
-- `src/lib/notify.ts` はクライアントからも import されるため、サーバー専用の処理は `notify-setting.ts`(設定の読み書き)と `notify-mention.ts`(送信)へ置く
+実装の詳細や Slack App の設定手順は [docs/notifications.md](docs/notifications.md) を参照。
 
 # 環境変数
 
-環境変数の定義元は `src/lib/env-util.ts`。参照時も同ファイルの `envu` を利用する。
-
-## 基本
-
-| 変数名                 | 説明                         | 必須 | デフォルト   |
-| ---------------------- | ---------------------------- | ---- | ------------ |
-| `NEXT_PUBLIC_APP_NAME` | アプリ名（クライアント公開） |      | `Devuntu`    |
-| `DATABASE_URL`         | DB(PostgreSQL) の接続パス    | 〇   | -            |
-| `DEFAULT_LOCALE`       | デフォルトロケール           |      | -            |
-| `DEFAULT_TIMEZONE`     | デフォルトタイムゾーン       |      | `Asia/Tokyo` |
-| `LOG_LEVEL`            | ログレベル                   |      | `info`       |
-
-## 認証
-
-| 変数名                       | 説明                                  | 必須 | デフォルト    |
-| ---------------------------- | ------------------------------------- | ---- | ------------- |
-| `BETTER_AUTH_URL`            | 運用するベースの URL                  | 〇   | -             |
-| `BETTER_AUTH_SECRET`         | Better Auth 用シークレット            | 〇   | -             |
-| `SESSION_EXPIRES_IN`         | セッション有効期間(秒)                |      | `432000`(5日) |
-| `SESSION_FRESH_AGE`          | セッション fresh 期間(秒)             |      | `86400`(1日)  |
-| `TWO_FA_REQUIRED`            | 2要素認証を必須にするか               |      | `true`        |
-| `DISABLE_PASSWORD_AUTH`      | パスワード認証を無効化                |      | `false`       |
-| `OIDC_DCR_ENABLED`           | 動的クライアント登録を有効化          |      | `false`       |
-| `MAIN_DEVUNTU_URL`           | 連携元 Devuntu の URL                 |      | -             |
-| `MAIN_DEVUNTU_CLIENT_ID`     | 連携元クライアントID                  |      | -             |
-| `MAIN_DEVUNTU_CLIENT_SECRET` | 連携元クライアントシークレット        |      | -             |
-| `GOOGLE_CLIENT_ID`           | Google OAuth クライアントID           |      | -             |
-| `GOOGLE_CLIENT_SECRET`       | Google OAuth クライアントシークレット |      | -             |
-| `GOOGLE_ALLOWED_DOMAINS`     | 許可ドメイン(カンマ区切り)            |      | -             |
-| `SLACK_CLIENT_ID`            | Slack OAuth クライアントID            |      | -             |
-| `SLACK_CLIENT_SECRET`        | Slack OAuth クライアントシークレット  |      | -             |
-| `SLACK_BOT_TOKEN`            | Slack Bot トークン(`xoxb-`)           |      | -             |
-| `SLACK_TEAM_ID`              | Slack ワークスペースID(`T...`)        |      | -             |
-| `SLACK_SIGNING_SECRET`       | Slack リクエスト署名シークレット      |      | -             |
-
-## メール
-
-| 変数名             | 説明                                                                            | 必須                    | デフォルト |
-| ------------------ | ------------------------------------------------------------------------------- | ----------------------- | ---------- |
-| `MAIL_SEND`        | 送信方式 `sendgrid`/`sendmail`/`smtp`/`debug`。未設定の場合はメールを送信しない |                         | -          |
-| `MAIL_FROM`        | 送信元アドレス                                                                  | 〇                      | -          |
-| `SENDGRID_API_KEY` | SendGrid APIキー                                                                | `MAIL_SEND=sendgrid` 時 | -          |
-| `SENDMAIL_PATH`    | sendmail のパス                                                                 | `MAIL_SEND=sendmail` 時 | -          |
-| `SMTP_HOST`        | SMTP ホスト                                                                     | `MAIL_SEND=smtp` 時     | -          |
-| `SMTP_PORT`        | SMTP ポート                                                                     | `MAIL_SEND=smtp` 時     | -          |
-| `SMTP_IGNORE_TLS`  | TLS を無視                                                                      |                         | `false`    |
-| `SMTP_SECURE`      | SSL/TLS 接続                                                                    |                         | `false`    |
-| `SMTP_USER`        | SMTP 認証ユーザー                                                               |                         | -          |
-| `SMTP_PASS`        | SMTP 認証パスワード                                                             |                         | -          |
-
-## オブジェクトストレージ
-
-アップロードファイル(画像)の保存先。S3互換APIを話すストレージであれば何でもよいが、`compose.yaml` では OSS の [SeaweedFS](https://github.com/seaweedfs/seaweedfs) を同梱している。認証情報は `docker/seaweedfs-s3.json` で定義する。
-
-| 変数名                 | 説明                                 | 必須 | デフォルト  |
-| ---------------------- | ------------------------------------ | ---- | ----------- |
-| `S3_ENDPOINT`          | S3 API のエンドポイント              | 〇   | -           |
-| `S3_BUCKET`            | バケット名(存在しない場合は自動作成) |      | `devuntu`   |
-| `S3_REGION`            | リージョン(SeaweedFS では任意値)     |      | `us-east-1` |
-| `S3_ACCESS_KEY_ID`     | アクセスキー                         | 〇   | -           |
-| `S3_SECRET_ACCESS_KEY` | シークレットキー                     | 〇   | -           |
-| `S3_FORCE_PATH_STYLE`  | パススタイルのアドレッシングを強制   |      | `true`      |
-
-## Linode
-
-| 変数名                         | 説明                    | 必須 | デフォルト |
-| ------------------------------ | ----------------------- | ---- | ---------- |
-| `LINODE_ID`                    | Linode インスタンスID   |      | -          |
-| `LINODE_PERSONAL_ACCESS_TOKEN` | Linode アクセストークン |      | -          |
-
-## Debug
-
-| 変数名               | 説明                    | 必須 | デフォルト |
-| -------------------- | ----------------------- | ---- | ---------- |
-| `DEBUG_LINODE_DUMMY` | Linode ダミー応答(JSON) |      | -          |
-
-## 補足
-
-以下はユーザーが直接設定しない内部変数。
-
-- `BUILD_NO` : ビルド番号。`next.config.ts` の `env` で自動生成・注入される
-- `NODE_ENV` : 実行環境(`development`/`production` 等)。実行環境側で設定される
+環境変数の一覧は [docs/environment-variables.md](docs/environment-variables.md) を参照。
 
 # 開発
 
-## 開発用インフラ起動
-
-開発に必要なのは DB(`db`サービス)とオブジェクトストレージ(`s3`サービス)のみ。まとめて起動・停止する。
-
-```sh
-# 起動
-docker compose up -d db s3
-
-# 停止
-docker compose stop db s3
-```
-
-DB は `localhost:5432`、S3 API は `localhost:8333` で公開される。アップロード機能を使うには S3 API が必要。
-
-## s3-toolsサービス
-
-`compose.yaml` で Docker 運用している環境向けに、S3 のバックアップ/リストアスクリプトを実行するための使い捨てコンテナを `s3-tools` サービスとして定義している。スクリプトはイメージに同梱されているので、**リポジトリの clone もホストへの node インストールも不要**で、`compose.yaml` と `.env.docker` があれば実行できる。
-
-```sh
-mkdir -p backup
-
-# バックアップ(既定のコマンド)
-docker compose run --rm s3-tools
-
-# リストアは引数でスクリプトを指定する
-docker compose run --rm s3-tools /app/scripts/restore-s3.mjs /app/backup/s3_YYYYMMDD_HHMMSS
-```
-
-- 同梱版イメージ(`0.3.1` 以降)が前提。それ以前のイメージでは[旧イメージでの実行](#旧イメージでの実行)を参照する
-- `profiles: ['tools']` を付けているので `docker compose up` では起動しない
-- `entrypoint` を `node` にしているので `docker-entrypoint.sh` が動かず、`prisma migrate deploy` は走らない
-- 環境変数は `env_file`(`.env.docker`)から渡るので、コンテナ内の `S3_ENDPOINT` は `http://s3:8333` になる
-- `depends_on` の `condition: service_healthy` により、`s3` が停止していれば起動し、healthcheck が通るまで待ってからスクリプトが実行される
-- `./backup` をマウントしているので、入出力先は `compose.yaml` と同じ階層の `backup/`。引数のパスは**コンテナ内のパス**(`/app/backup/...`)で指定する
-- コンテナは root で動くため、`backup/` 配下の出力は root 所有になる。事前に `mkdir -p backup` しておけばディレクトリ自体は実行ユーザー所有になり、未作成のまま実行すると Docker がマウント時に root 所有で作る
-
-### 旧イメージでの実行
-
-`0.3.0` 以前のイメージには `scripts/` が入っていないため、ホスト側のスクリプトを使い捨てコンテナへマウントして実行する(この場合はホストにスクリプトの実体が必要)。
-
-```sh
-docker compose run --rm \
-  -v "$(pwd)/backup:/app/backup" \
-  -v "$(pwd)/scripts/backup-s3.mjs:/app/backup-s3.mjs:ro" \
-  --entrypoint node \
-  devuntu /app/backup-s3.mjs
-```
-
-スクリプトは `/app/` 直下にマウントする。`WORKDIR` が `/app` なので出力先が `/app/backup` になり、`@aws-sdk/client-s3` も `/app/node_modules` から解決される。
-
-## DBバックアップ
-
-DB(`db`サービス)が起動している状態で実行する。`backup/`配下にタイムスタンプ付き(`.dump`/カスタム形式)で出力される。
-
-```sh
-pnpm db:backup
-# または
-./scripts/backup-db.sh
-```
-
-リポジトリを clone していない Docker 運用環境では、スクリプトと同じ内容を直接実行する。
-
-```sh
-mkdir -p backup
-docker compose exec -T db pg_dump -U devuser -Fc devuntu \
-  > backup/devuntu_$(date +%Y%m%d_%H%M%S).dump
-```
-
-ユーザー名と DB 名は `compose.yaml` の `POSTGRES_USER`/`POSTGRES_DB` に合わせる。
-
-## DBリストア
-
-対象のダンプファイルを引数に指定する。既存オブジェクトは削除された上で復元される。
-
-```sh
-pnpm db:restore backup/devuntu_YYYYMMDD_HHMMSS.dump
-# または
-./scripts/restore-db.sh backup/devuntu_YYYYMMDD_HHMMSS.dump
-```
-
-同じく、リポジトリを clone していない環境では直接実行する。既存 DB を作り直してから復元する(`--clean` ではダンプに含まれないテーブルと外部キーが残り、依存エラーになるため)。
-
-アプリの停止が前提になる。`devuntu` は `restart: unless-stopped` のため、`dropdb -f` で切断してもすぐ接続を張り直して DROP が失敗する。復元後も Prisma の接続プールが古い状態を握るので、止めてから実行して最後に起動し直す。
-
-```sh
-docker compose stop devuntu
-
-docker compose exec -T db dropdb -U devuser -f devuntu
-docker compose exec -T db createdb -U devuser devuntu
-docker compose exec -T db pg_restore -U devuser -d devuntu --no-owner --single-transaction \
-  < backup/devuntu_YYYYMMDD_HHMMSS.dump
-
-docker compose up -d devuntu
-```
-
-## S3バックアップ
-
-アップロードされた画像はオブジェクトストレージ(`s3`サービス)にしか存在せず、Docker の名前付きボリューム`seaweeddata`が消えると復旧できない。DB だけ復元しても`Attachment`レコードや`link_widget.iconPath`、チケット本文の画像 URL が実体を失うため、**DB バックアップと対で取得する**。
-
-S3 サービスが起動している状態で実行する。`.env`の`S3_ENDPOINT`/`S3_ACCESS_KEY_ID`/`S3_SECRET_ACCESS_KEY`が必要。
-
-```sh
-pnpm s3:backup
-# または
-node ./scripts/backup-s3.mjs
-```
-
-S3 API 経由でオブジェクトを 1 件ずつ取得する論理バックアップで、SeaweedFS を停止せずに実行できる。`backup/`配下にタイムスタンプ付きのディレクトリが作られる。
-
-```
-backup/s3_YYYYMMDD_HHMMSS/
-├── manifest.json  … キー・Content-Type・サイズ・ETag の一覧
-└── objects/       … オブジェクト本体(ファイル名=オブジェクトキー)
-```
-
-一時ディレクトリへ書き出して成功時のみ本ディレクトリへ移動するため、途中で失敗しても欠けたバックアップは残らない。オブジェクトキーは`<uuidv7>.<拡張子>`のフラット構成のため、`/`を含むキーがあった場合は警告を出してスキップする。
-
-`weed`の内部レイアウトに依存しないので、AWS S3 や Cloudflare R2 など他の S3 互換ストレージへ`S3_ENDPOINT`を向けて復元することもできる。
-
-### Docker環境でのS3バックアップ
-
-[`s3-tools`サービス](#s3-toolsサービス)の既定コマンドがバックアップなので、引数なしで実行する。
-
-```sh
-mkdir -p backup
-docker compose run --rm s3-tools
-```
-
-`compose.yaml`と同じ階層の`backup/`に出力される。
-
-## S3リストア
-
-対象のバックアップディレクトリを引数に指定する。
-
-```sh
-pnpm s3:restore backup/s3_YYYYMMDD_HHMMSS
-# または
-node ./scripts/restore-s3.mjs backup/s3_YYYYMMDD_HHMMSS
-```
-
-バケット(`S3_BUCKET`、既定`devuntu`)は無ければ自動作成される。Content-Type は`manifest.json`の値で復元する。
-
-**DB リストアと挙動が異なる点**として、バックアップに含まれるキーを上書きするだけで、**ストレージ側にしか無いオブジェクトは削除しない**。同じキーへ何度実行しても安全なので、DB リストアとセットで実行してよい。
-
-### Docker環境でのS3リストア
-
-[`s3-tools`サービス](#s3-toolsサービス)にリストアスクリプトとコンテナ内のパスを渡す。
-
-```sh
-docker compose run --rm s3-tools \
-  /app/scripts/restore-s3.mjs /app/backup/s3_YYYYMMDD_HHMMSS
-```
-
-### ボリュームを作り直す場合
-
-`seaweeddata`ボリュームを作り直すと`/data`のディスク消費をリセットできる。過去のバージョンで作られた volume ファイル(`*.dat`)は 1 ファイルあたり 1GiB を`fallocate`で先行確保しており、実データが数 KB でもディスクを 10GB 以上占有することがある(現行の`compose.yaml`の起動オプションでは先行確保は起きない)。
-
-必ずバックアップを取ってから実行する。
-
-```sh
-pnpm s3:backup
-pnpm db:backup
-
-docker compose stop s3 && docker compose rm -f s3
-docker volume rm devuntu_seaweeddata
-
-docker compose up -d s3
-pnpm s3:restore backup/s3_YYYYMMDD_HHMMSS
-```
-
-Docker 運用環境では `pnpm` の箇所を [Docker環境でのS3バックアップ](#docker環境でのs3バックアップ)・[Docker環境でのS3リストア](#docker環境でのs3リストア)・[DBバックアップ](#dbバックアップ)の直接実行コマンドに読み替える。
-
-消費量は`docker compose exec -T s3 sh -c 'du -sk /data'`で確認できる。
-
-## インストール
-
-```sh
-pnpm install
-```
-
-## ビルド
-
-```sh
-pnpm build
-```
-
-`next build`(`output: 'standalone'`)の後に`scripts/patch-standalone.mjs`が走り、`@swc/helpers`の`esm/`を`.next/standalone`へ補完する。Turbopack のファイルトレースが`cjs/`しか同梱しないのに対し、Node は`module-sync`条件で`esm/`を解決するため、補完しないと`node server.js`が`MODULE_NOT_FOUND`で起動しない。`scripts/test-standalone.sh`と Docker イメージはどちらもこの成果物を使う。
-
-## パッケージ更新
-
-```sh
-pnpm up -i
-pnpm up -i -L
-```
-
-## パッケージへのパッチ
-
-`patches/`配下に`pnpm patch`で作成したパッチを置いている。登録先は`pnpm-workspace.yaml`の`patchedDependencies`で、`pnpm install`時に自動適用される。
-
-**パッチ対象パッケージをバージョンアップした場合は、パッチの当て直しが必要。**
-
-```sh
-# 1. 編集用の一時ディレクトリを作成(パスが出力される)
-pnpm patch @heroui/react
-
-# 2. 出力されたパス配下のファイルを編集
-
-# 3. パッチとして確定(patches/配下に保存され pnpm-workspace.yaml に登録される)
-pnpm patch-commit '<出力されたパス>'
-```
-
-現在適用中のパッチは無い。`@heroui/react` 3.2.2 では`Autocomplete.Popover`が`aria-label`/`aria-labelledby`を内部の`Dialog`へ転送せず react-aria の警告が出続けるためパッチを当てていたが、3.2.3 で本体が修正されたため削除した。
-
-## パッケージのバージョン上書き
-
-依存パッケージが固定しているバージョンに問題がある場合は、`pnpm-workspace.yaml`の`overrides`で差し替える。`パッケージ名>依存パッケージ名`の形式で書くと、そのパッケージの入れ子依存だけを対象にできる。
-
-| 上書き対象 | 指定     | 理由                                       |
-| ---------- | -------- | ------------------------------------------ |
-| `sharp`    | `0.35.3` | Next.js の画像最適化で使うバージョンを固定 |
-
-`lexical`と`@lexical/react`は`package.json`で`0.48.0`に固定している。`@mdxeditor/editor`が`@lexical/*`を`^0.48.0`で要求しているため、ルートだけ 0.49 系へ上げると MDXEditor 配下に 0.48 系が別インスタンスで残り、`useLexicalComposerContext`が別モジュールの Context を引いてメンション機能が実行時に壊れる。`overrides`で全体を 0.49 系へ揃える手もあるが、0.49.0 は組み込みノードの`$config()`移行で`importJSON`/`importDOM`/`clone`/`transform`の static を落としており MDXEditor 側が未対応。MDXEditor が追随したら上げる。
-
-HeroUI 3.2.3 の頃は`@heroui/{react,styles}>tailwind-variants`を`^3.3.1`へ上書きしていた。3.3.0 の slots リゾルバが単一の slots オブジェクトを使い回し、同じ tv を別の props で呼ぶと先に取得済みの slot 関数の戻り値まで後の props に化けるバグがあり、`Modal.Backdrop`の`variant='blur'`が`opaque`に化けていたため。HeroUI 3.2.4 が`tailwind-variants@3.3.1`を固定依存にしたので上書きは削除した。
-
-## TypeScript v7 と v6 の併存
-
-TypeScript 7.0 は JS コンパイラ API を同梱していない(7.1 で提供予定)ため、`require('typescript')`で API を使うツールが動かなくなる。[公式手順](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/#running-side-by-side-with-typescript-6.0)に従い、`package.json`でエイリアスを使って両方を入れている。
-
-| devDependencies の指定                           | 実体         | 提供するもの               |
-| ------------------------------------------------ | ------------ | -------------------------- |
-| `typescript: npm:@typescript/typescript6@^6.0.2` | TypeScript 6 | JS コンパイラ API と`tsc6` |
-| `@typescript/native: npm:typescript@^7.0.2`      | TypeScript 7 | `tsc`                      |
-
-TS6 の API を必要としているもの。
-
-- `typescript-eslint`(`pnpm lint`) : TS7 を検出すると起動時にエラーで終了する
-- `prettier-plugin-organize-imports` : TS7 だとエラーも出さずに import 整列が無効化される
-- `next build`の型チェック : `next.config.ts`の`experimental.useTypeScriptCli: false`で JS API チェッカーを使う。既定の CLI チェッカーは解決した`typescript`パッケージの`bin.tsc`を実行するが、エイリアス先は`tsc6`しか持たないためビルドが止まる
-
-TS7(tsgo)での高速な型チェックは下記で行う。`tsconfig.json`が`.next/dev/types`を含むため、先に`next typegen`でルート型を生成している。
-
-```sh
-pnpm typecheck
-```
-
-TS 7.1 で JS API が復活し typescript-eslint が対応したら、`typescript`を素の`^7.x`に戻して`@typescript/native`と`useTypeScriptCli: false`は削除できる。
-
-## better-auth
-
-```sh
-pnpm dlx auth generate
-```
-
-## イメージ作成
-
-### Docker Build
-
-```sh
-docker build -f docker/Dockerfile \
-             --secret id=database_url,src=docker/database_url.env \
-             --secret id=better_auth_url,src=docker/better_auth_url.env \
-             --secret id=better_auth_secret,src=docker/better_auth_secret.env \
-             -t devuntu .
-```
-
-### Docker Hub Push
-
-```sh
-docker tag devuntu:latest playree/devuntu:latest
-docker push playree/devuntu:latest
-
-docker tag devuntu:latest playree/devuntu:0.2.0
-docker push playree/devuntu:0.2.0
-```
-
-※`0.2.0`のバージョンタグはサンプル
-
-## sharpの依存関係チェック
-
-基本的に`Next.js`の要求バージョンに揃える
-
-```sh
-pnpm why sharp
-```
+開発環境のセットアップ、DB/S3のバックアップ・リストア、ビルド、パッケージ管理、イメージ作成などの
+手順は [docs/development.md](docs/development.md) を参照。

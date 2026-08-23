@@ -3310,6 +3310,8 @@ export const TicketCommentScalarFieldEnum = {
   ticketId: 'ticketId',
   authorId: 'authorId',
   content: 'content',
+  type: 'type',
+  parentId: 'parentId',
   mentionedUserIds: 'mentionedUserIds',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -3515,6 +3517,20 @@ export type EnumTicketPriorityFieldRefInput<$PrismaModel> = FieldRefInputType<$P
  * Reference to a field of type 'TicketPriority[]'
  */
 export type ListEnumTicketPriorityFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TicketPriority[]'>
+    
+
+
+/**
+ * Reference to a field of type 'TicketCommentType'
+ */
+export type EnumTicketCommentTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TicketCommentType'>
+    
+
+
+/**
+ * Reference to a field of type 'TicketCommentType[]'
+ */
+export type ListEnumTicketCommentTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TicketCommentType[]'>
     
 
 

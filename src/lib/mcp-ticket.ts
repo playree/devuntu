@@ -1,7 +1,8 @@
-import type { TicketPriority, TicketStatus } from '@/generated/prisma/enums'
+import type { TicketCommentType, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
 import {
   assertBoardAccess,
   assertBoardAssignee,
+  assertReplyTarget,
   assertTicketAccess,
   findTicketIdByDisplayId,
   getAccessibleBoardIds,
@@ -325,17 +326,26 @@ export const deleteTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId
 /**
  * コメント投稿。MCP限定の追加制限は無く、Web版の addTicketComment と同じ権限判定を使う。
  */
-export const addTicketCommentForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: string, content: string) => {
+export const addTicketCommentForMcp = async (
+  auth: ResourceAuth,
+  ticketIdOrDisplayId: string,
+  content: string,
+  type?: TicketCommentType | null,
+  parentId?: string | null,
+) => {
   const ticketId = await resolveTicketId(auth, ticketIdOrDisplayId)
 
   const { comment, mentionedUserIds, ticket } = await prisma.$transaction(async (tx) => {
     const access = await assertTicketAccess(auth.user, ticketId, 'edit', tx)
+    if (parentId) {
+      await assertReplyTarget(tx, ticketId, parentId)
+    }
 
     const candidates = await getTicketMentionCandidates(access, tx)
     const mentionedUserIds = resolveMentionUserIds(extractMentionEmails(content), candidates)
 
     const comment = await tx.ticketComment.create({
-      data: { ticketId, authorId: auth.user.id, content, mentionedUserIds },
+      data: { ticketId, authorId: auth.user.id, content, type, parentId, mentionedUserIds },
       select: { id: true },
     })
 

@@ -13,7 +13,7 @@ Playwright MCP(サーバ名 `playwright`)で `http://localhost:3000` を開い�
 - **確認が終わったら必ず「5. 後片付け」まで実施する**。ブラウザ(chromium)を閉じずに終わると次のセッションがプロファイルのロックでブラウザを使えなくなる
 - **既定は `http://localhost:3000`**(`pnpm dev`)。`.env` の `BETTER_AUTH_URL` が localhost:3000 なので、`pnpm dev` を別ポートで開くと better-auth が返すリダイレクト先や Cookie のオリジンが食い違い、画面には「認証NG」トーストしか出ず原因が分からない
 - ドメイン運用での確認が必要な場合のみ `pnpm dev:domain` を使う。未追跡の `.env.domain`(`PORT` / `BETTER_AUTH_URL` / `DEV_ALLOWED_ORIGINS`)を読み込んで起動するので、そこで指定したドメインの URL でアクセスする。ログ出力先は `.work/dev-domain.log`
-- 画面一覧とアクセス制御は `README.md` の「画面一覧」を参照する
+- 画面一覧とアクセス制御は `docs/screens.md` を参照する
 - 画面上のラベル文言は `src/locale/lang-ja.ts` を参照する。`data-testid` は存在しないので、role + 日本語ラベルで要素を特定する
 - `playwright` MCP が未接続の場合は、`.mcp.json` 反映のために Claude Code の再起動が必要な旨をユーザーに伝える
 - `.mcp.json` の `--browser chromium` は**外さない**。省略すると Google Chrome チャンネル(`/opt/google/chrome/chrome`)を探して起動に失敗する。ブラウザ本体は `pnpm exec playwright-mcp install-browser chromium` で `~/.cache/ms-playwright` に導入済み

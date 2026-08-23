@@ -167,8 +167,32 @@ describe('createDevuntuMcpServer', () => {
       arguments: { ticketId: 'ABC-1', content: 'コメント' },
     })
 
-    expect(addTicketCommentForMcp).toHaveBeenCalledWith(auth, 'ABC-1', 'コメント')
+    expect(addTicketCommentForMcp).toHaveBeenCalledWith(auth, 'ABC-1', 'コメント', undefined, undefined)
     expect(result.content).toEqual([{ type: 'text', text: JSON.stringify({ id: 'c1' }, null, 2) }])
+  })
+
+  it('add_ticket_comment は type と parentId も渡す', async () => {
+    vi.mocked(addTicketCommentForMcp).mockResolvedValueOnce({ id: 'c1' } as never)
+
+    await (
+      await connectClient()
+    ).callTool({
+      name: 'add_ticket_comment',
+      arguments: {
+        ticketId: 'ABC-1',
+        content: 'プラン',
+        type: 'plan',
+        parentId: '0195c1e0-0000-7000-8000-000000000001',
+      },
+    })
+
+    expect(addTicketCommentForMcp).toHaveBeenCalledWith(
+      auth,
+      'ABC-1',
+      'プラン',
+      'plan',
+      '0195c1e0-0000-7000-8000-000000000001',
+    )
   })
 
   it('update_ticket_comment は commentId と content を渡す', async () => {
