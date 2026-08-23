@@ -338,7 +338,7 @@ export const addTicketCommentForMcp = async (
   const { comment, mentionedUserIds, ticket } = await prisma.$transaction(async (tx) => {
     const access = await assertTicketAccess(auth.user, ticketId, 'edit', tx)
     if (parentId) {
-      await assertReplyTarget(tx, parentId)
+      await assertReplyTarget(tx, ticketId, parentId)
     }
 
     const candidates = await getTicketMentionCandidates(access, tx)

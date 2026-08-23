@@ -1,9 +1,26 @@
 'use client'
 
-import { ChevronUpIcon } from '@/components/icon'
 import { ButtonProps, cn, Dropdown } from '@heroui/react'
-import { ReactNode } from 'react'
+import { FC, ReactNode, SVGProps } from 'react'
 import { MultiButton } from './button'
+
+/** ドロップダウンを開く矢印。src/components/general 配下で完結させるためここに持つ */
+const ChevronDownIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 16, ...props }) => (
+  <svg
+    fill='currentColor'
+    viewBox='0 0 24 24'
+    xmlns='http://www.w3.org/2000/svg'
+    aria-hidden='true'
+    width={width}
+    {...props}
+  >
+    <path
+      clipRule='evenodd'
+      fillRule='evenodd'
+      d='M12.53 16.28a.75.75 0 0 1-1.06 0l-7.5-7.5a.75.75 0 0 1 1.06-1.06L12 14.69l6.97-6.97a.75.75 0 1 1 1.06 1.06l-7.5 7.5Z'
+    />
+  </svg>
+)
 
 export type SplitButtonOption<T extends string> = {
   id: T
@@ -53,9 +70,13 @@ export const SplitButton = <T extends string>({
         {selected.actionLabel}
       </MultiButton>
       <Dropdown>
-        {/* MultiButton にするのは、隣のプライマリボタンと同じ isSmart コンテキストから高さを揃えるため */}
-        <MultiButton isIconOnly size={size} isDisabled={isDisabled} aria-label={dropdownLabel}>
-          <ChevronUpIcon width={16} className='rotate-180' />
+        <MultiButton // 隣のプライマリボタンと同じ isSmart コンテキストから高さを揃えるため素の Button ではなくこちらを使う
+          isIconOnly
+          size={size}
+          isDisabled={isDisabled}
+          aria-label={dropdownLabel}
+        >
+          <ChevronDownIcon />
         </MultiButton>
         <Dropdown.Popover>
           <Dropdown.Menu
