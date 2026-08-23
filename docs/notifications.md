@@ -83,7 +83,8 @@ Slack に貼られたチケットURLを、Slack Events API の `link_shared` を
 | ------------------------------------------------------------ | ----------------------------------------------------------------- |
 | `oauth_config.scopes.user`                                   | `/account` からの Sign in with Slack                              |
 | `oauth_config.scopes.bot` の `chat:write`                    | メンション通知の DM 送信とボードのチャンネル通知                  |
-| `oauth_config.scopes.bot` の `links:*`                       | リンクの検知(`link_shared`)とプレビューの反映                     |
+| `oauth_config.scopes.bot` の `links:read`                    | リンクの検知(`link_shared`)                                       |
+| `oauth_config.scopes.bot` の `links:write`                   | プレビューの反映(`chat.unfurl`)                                   |
 | `oauth_config.scopes.bot` の `channels:read` / `groups:read` | ボード設定で通知先チャンネルを選ぶ一覧取得(`users.conversations`) |
 | `features.unfurl_domains`                                    | 展開対象のドメイン                                                |
 | `settings.event_subscriptions.request_url`                   | `/api/slack/events`                                               |

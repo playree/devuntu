@@ -40,7 +40,7 @@
 | 変数名             | 説明                                                                            | 必須                    | デフォルト |
 | ------------------ | ------------------------------------------------------------------------------- | ----------------------- | ---------- |
 | `MAIL_SEND`        | 送信方式 `sendgrid`/`sendmail`/`smtp`/`debug`。未設定の場合はメールを送信しない |                         | -          |
-| `MAIL_FROM`        | 送信元アドレス                                                                  | 〇                      | -          |
+| `MAIL_FROM`        | 送信元アドレス                                                                  | `MAIL_SEND` 設定時      | -          |
 | `SENDGRID_API_KEY` | SendGrid APIキー                                                                | `MAIL_SEND=sendgrid` 時 | -          |
 | `SENDMAIL_PATH`    | sendmail のパス                                                                 | `MAIL_SEND=sendmail` 時 | -          |
 | `SMTP_HOST`        | SMTP ホスト                                                                     | `MAIL_SEND=smtp` 時     | -          |

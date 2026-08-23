@@ -131,7 +131,7 @@ node ./scripts/backup-s3.mjs
 
 S3 API 経由でオブジェクトを 1 件ずつ取得する論理バックアップで、SeaweedFS を停止せずに実行できる。`backup/`配下にタイムスタンプ付きのディレクトリが作られる。
 
-```
+```text
 backup/s3_YYYYMMDD_HHMMSS/
 ├── manifest.json  … キー・Content-Type・サイズ・ETag の一覧
 └── objects/       … オブジェクト本体(ファイル名=オブジェクトキー)
