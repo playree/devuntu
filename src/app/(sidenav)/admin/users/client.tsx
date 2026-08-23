@@ -101,6 +101,7 @@ export const AdminUsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPass
                       name: item.name,
                       email: item.email,
                       isAdmin: item.isAdmin,
+                      nameLocked: item.nameLocked,
                       groups: item.groups.map((group) => group.id),
                     })
                   },

@@ -1,6 +1,7 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action-server'
+import { removeImageAttachment, saveImageAttachment } from '@/lib/attachment'
 import { auth } from '@/lib/auth'
 import { isValidTimezone, nowDate } from '@/lib/day'
 import { errNotFound, errValidation } from '@/lib/error'
@@ -10,7 +11,7 @@ import { logger } from '@/lib/logger'
 import { getUserNotifySettings, setUserNotifySetting } from '@/lib/notify/notify-setting'
 import { dedupeScopes } from '@/lib/oauth/oauth-consent'
 import { prisma } from '@/lib/prisma'
-import { scRevokeConsent, scUpdateNotifySetting } from '@/lib/schema'
+import { scRevokeConsent, scSetUserAvatar, scUpdateNotifySetting } from '@/lib/schema'
 import { SLACK_PROVIDER_ID } from '@/lib/slack/slack'
 import { canUseSlackAccount } from '@/lib/slack/slack-account'
 import { headers } from 'next/headers'
@@ -164,4 +165,32 @@ export const setUserTimezone = safeAuthAction
     await prisma.user.update({ where: { id: user.id }, data: { timezone } })
     logger.info({ userId: user.id, timezone }, 'user timezone updated')
     return { timezone }
+  })
+
+/**
+ * アバター更新。
+ * 画像アップロード時は独自アバターとみなしOIDC同期を止める。null指定は独自アバターを削除して同期を再開する
+ */
+export const setUserAvatar = safeAuthAction
+  .metadata({ actionName: 'setUserAvatar', role: 'user' })
+  .inputSchema(scSetUserAvatar)
+  .action(async ({ parsedInput: { image }, ctx: { user } }) => {
+    const existing = await prisma.user.findUniqueOrThrow({ where: { id: user.id }, select: { image: true } })
+
+    if (image === null) {
+      await prisma.user.update({ where: { id: user.id }, data: { image: null, avatarLocked: false } })
+      if (existing.image) {
+        await removeImageAttachment(existing.image)
+      }
+      logger.info({ userId: user.id }, 'user avatar removed')
+      return { image: null }
+    }
+
+    const url = await saveImageAttachment(image, user.id)
+    await prisma.user.update({ where: { id: user.id }, data: { image: url, avatarLocked: true } })
+    if (existing.image) {
+      await removeImageAttachment(existing.image)
+    }
+    logger.info({ userId: user.id }, 'user avatar updated')
+    return { image: url }
   })

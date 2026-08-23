@@ -8,6 +8,7 @@ import {
   Cog6ToothIcon,
   FingerPrintIcon,
   GoogleIcon,
+  PhotoIcon,
   PuzzlePieceIcon,
   SlackIcon,
   UserCircleIcon,
@@ -15,6 +16,7 @@ import {
 import { useLocale } from '@/locale/client'
 import { Accordion } from '@heroui/react'
 import { FC } from 'react'
+import { AvatarSetting } from './avatar'
 import { GoogleAccountLink } from './google-account'
 import { NotifySettings } from './notify'
 import { MyOAuthConsents } from './oauth-consents'
@@ -22,7 +24,15 @@ import { MyPasskey } from './passkey'
 import { SlackAccountLink } from './slack'
 import { TimezoneSetting } from './timezone'
 
-const defaultExpandedKeys = new Set(['passkey', 'google_account', 'slack', 'timezone', 'notify', 'oauth_consents'])
+const defaultExpandedKeys = new Set([
+  'avatar',
+  'passkey',
+  'google_account',
+  'slack',
+  'timezone',
+  'notify',
+  'oauth_consents',
+])
 export const AccountClient: FC<{ googleAvailable: boolean; slackAvailable: boolean }> = ({
   googleAvailable,
   slackAvailable,
@@ -33,6 +43,9 @@ export const AccountClient: FC<{ googleAvailable: boolean; slackAvailable: boole
     <FlexCol>
       <ContentHeader icon={<UserCircleIcon />} title={t('account')}></ContentHeader>
       <Accordion allowsMultipleExpanded defaultExpandedKeys={defaultExpandedKeys}>
+        <AccordionSection id='avatar' icon={<PhotoIcon />} title={t('avatar')}>
+          <AvatarSetting />
+        </AccordionSection>
         <AccordionSection id='timezone' icon={<Cog6ToothIcon />} title={t('timezone')}>
           <TimezoneSetting />
         </AccordionSection>

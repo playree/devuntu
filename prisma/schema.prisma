@@ -20,6 +20,8 @@ model User {
   banReason          String?
   banExpires         DateTime?
   twoFactorEnabled   Boolean?            @default(false)
+  avatarLocked       Boolean             @default(false)
+  nameLocked         Boolean             @default(false)
   locale             String?
   lastLoginAt        DateTime?
   sessions           Session[]

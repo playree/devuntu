@@ -126,6 +126,7 @@ export const scUpdateUser = z.object({
   name: zName,
   email: zEmail,
   isAdmin: z.boolean(),
+  nameLocked: z.boolean(),
   groups: z.array(z.uuidv7()),
 })
 export type UpdateUser = z.infer<typeof scUpdateUser>
@@ -167,6 +168,11 @@ export const scUpdateLinkWidget = z.object({
   icon: zImageFile.nullish(), // File | null | undefined
 })
 export type UpdateLinkWidget = z.infer<typeof scUpdateLinkWidget>
+
+export const scSetUserAvatar = z.object({
+  image: zImageFile.nullable(), // File = 新規アップロード / null = 削除してOIDC同期を再開
+})
+export type SetUserAvatar = z.infer<typeof scSetUserAvatar>
 
 export const scCreateGroup = z.object({
   name: zName,

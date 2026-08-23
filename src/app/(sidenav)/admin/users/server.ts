@@ -32,6 +32,7 @@ export const getUsers = safeAuthAction.metadata({ actionName: 'getUsers', role: 
       image: true,
       email: true,
       role: true,
+      nameLocked: true,
       lastLoginAt: true,
       createdAt: true,
       userGroups: { select: { group: { select: { id: true, name: true } } } },
@@ -136,7 +137,7 @@ export const deleteUser = safeAuthAction
 export const updateUser = safeAuthAction
   .metadata({ actionName: 'updateUser', role: 'admin' })
   .inputSchema(scUpdateUser)
-  .action(async ({ parsedInput: { id, name, email, isAdmin, groups } }) => {
+  .action(async ({ parsedInput: { id, name, email, isAdmin, nameLocked, groups } }) => {
     const groupIds = [...new Set(groups)]
 
     // 対象の存在確認
@@ -165,6 +166,7 @@ export const updateUser = safeAuthAction
           name,
           email,
           role: isAdmin ? 'admin' : 'user',
+          nameLocked,
         },
       },
     })

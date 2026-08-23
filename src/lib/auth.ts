@@ -21,6 +21,7 @@ import { prisma } from './prisma'
 import { makeUrl } from './server-utils'
 import { SLACK_PROVIDER_ID } from './slack/slack'
 import { slackUserInfo } from './slack/slack-server'
+import { resolveSyncedProfile } from './user-sync'
 
 // oauthProvider(自身がOIDCプロバイダとして提供)用のスコープ(OIDCログイン用)
 export const OIDC_PROVIDER_SCOPES = ['openid', 'profile', 'email'] as const
@@ -104,7 +105,7 @@ if (
     pkce: true,
     mapProfileToUser: async (profile) => {
       logger.debug({ profile }, 'provider.devuntu')
-      return {}
+      return resolveSyncedProfile(profile.email, { name: profile.name, image: profile.image })
     },
   })
 }
@@ -184,6 +185,16 @@ export const auth = betterAuth({
         required: false,
         input: false,
       },
+      avatarLocked: {
+        type: 'boolean',
+        required: false,
+        input: false,
+      },
+      nameLocked: {
+        type: 'boolean',
+        required: false,
+        input: false,
+      },
     },
   },
   account: {
@@ -258,9 +269,8 @@ export const auth = betterAuth({
 
               return {
                 user: {
-                  name: user.name,
+                  ...(await resolveSyncedProfile(user.email, { name: user.name, image: user.picture })),
                   email: user.email,
-                  image: user.picture,
                   emailVerified: user.email_verified,
                 },
                 data: user,

@@ -32,6 +32,7 @@ export const ja: DefaultLocaleItems = {
   auth: '認証',
   auth_ng: '認証NG',
   authenticator: '認証器',
+  avatar: 'アバター',
   back: '戻る',
   board: 'ボード',
   board_groups: 'グループアサイン',
@@ -120,6 +121,7 @@ export const ja: DefaultLocaleItems = {
   member: 'メンバー',
   mentioned: 'メンション',
   name: '名前',
+  name_locked: '名前をロック',
   next: '次へ',
   next_week: '翌週',
   no_file_selected: '選択されていません',
@@ -249,6 +251,7 @@ export const ja: DefaultLocaleItems = {
   msg_added_passkey_description: '必要に応じて名前を編集してください。',
   msg_added_target: '${target} を追加しました。',
   msg_archive_board: 'アーカイブすると、ボード一覧の既定の表示対象から外れます。チケットは残ります。',
+  msg_avatar_desc: '独自の画像を設定すると、以降のログイン時にDevuntu側の画像で上書きされなくなります。',
   msg_board_key_change: 'キーを変更すると、共有済みのチケットIDは元のチケットを指さなくなります。',
   msg_calendar_share_desc:
     '有効にすると、あなたのカレンダーの空き時間を共有URLで外部の人に見せられます。予定のタイトルや詳細は表示されず、「予定あり」の時間帯だけが公開されます。',
