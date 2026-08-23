@@ -81,6 +81,14 @@
 - 本番devuntuのチケット操作は`mcp__devuntu__*`、開発環境の動作確認は`mcp__devuntu-dev__*`を使う
 - 指示に「本番」「開発」の指定が無い場合は、どちらを使うか確認する
 
+# devuntuチケット対応時のコメント運用
+
+- devuntuのチケットをインプットに対応を行う場合、`add_ticket_comment` MCPツールを使い以下のタイミングでコメントする(都度の確認は不要、自動で投稿する)
+  - プラン作成後: 該当チケットに`type: "plan"`でプラン内容をコメントする
+  - 対応完了後: 該当チケットに`type: "report"`で対応報告(何をしたか、確認結果など)をコメントする
+- 使用するMCPサーバーは対応対象チケットの本番/開発環境に合わせる(上記の使い分けルールに従う)
+- `ticketId`には表示ID(例: ABC-42)を指定する
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know
