@@ -23,6 +23,7 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
 import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/mcp-ticket', () => ({
+  MCP_ASSIGNEE_ME: 'me',
   getTicketForMcp: vi.fn(),
   searchTicketsForMcp: vi.fn(),
   createTicketForMcp: vi.fn(),
@@ -36,6 +37,7 @@ vi.mock('@/lib/mcp-ticket', () => ({
 const auth: ResourceAuth = {
   user: { id: 'u1', name: 'tester', email: 'test@example.com', role: null },
   scopes: ['mcp'],
+  kind: 'oauth',
   clientId: 'test-client',
 }
 
@@ -102,6 +104,19 @@ describe('createDevuntuMcpServer', () => {
 
     expect(searchTicketsForMcp).toHaveBeenCalledWith(auth, { keyword: 'テスト', status: ['todo'] })
     expect(result.content).toEqual([{ type: 'text', text: JSON.stringify([{ title: 'テストチケット' }], null, 2) }])
+  })
+
+  it('search_tickets は担当者の指定も渡す(エージェントが自分の担当を引く経路)', async () => {
+    vi.mocked(searchTicketsForMcp).mockResolvedValueOnce([])
+
+    await (
+      await connectClient()
+    ).callTool({
+      name: 'search_tickets',
+      arguments: { assignee: 'me' },
+    })
+
+    expect(searchTicketsForMcp).toHaveBeenCalledWith(auth, { assignee: 'me' })
   })
 
   it('create_ticket は入力をそのまま渡し、結果をJSONテキストとして返す', async () => {

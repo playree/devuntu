@@ -4,13 +4,14 @@ import {
   deleteTicketCommentForMcp,
   deleteTicketForMcp,
   getTicketForMcp,
+  MCP_ASSIGNEE_ME,
   searchTicketsForMcp,
   updateTicketCommentForMcp,
   updateTicketForMcp,
 } from '@/lib/mcp-ticket'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import { zCommentContent, zCommentType, zDueDate, zTagIds, zTicketContent, zTicketTitle } from '@/lib/schema'
-import { TICKET_PRIORITIES, TICKET_STATUSES } from '@/lib/task'
+import { ASSIGNEE_NONE, TICKET_PRIORITIES, TICKET_STATUSES } from '@/lib/task'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
@@ -55,13 +56,17 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     'search_tickets',
     {
       title: 'チケット検索',
-      description: 'キーワード・ステータス・優先度・タグ・ボードで、アクセス可能なチケットを検索する',
+      description: 'キーワード・ステータス・優先度・タグ・ボード・担当者で、アクセス可能なチケットを検索する',
       inputSchema: {
         keyword: z.string().max(100).optional(),
         status: z.array(z.enum(TICKET_STATUSES)).optional(),
         priority: z.array(z.enum(TICKET_PRIORITIES)).optional(),
         tags: z.array(z.string()).optional(),
         boardId: z.string().optional(),
+        assignee: z
+          .string()
+          .optional()
+          .describe(`担当者。ユーザーID / '${MCP_ASSIGNEE_ME}'(自分) / '${ASSIGNEE_NONE}'(未割り当て)`),
         limit: z.number().int().min(1).max(50).optional(),
       },
     },

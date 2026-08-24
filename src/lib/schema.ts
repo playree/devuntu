@@ -1,5 +1,6 @@
 import { el } from '@/locale'
 import { z } from 'zod'
+import { AGENT_HANDLE_PATTERN, AGENT_TOKEN_EXPIRES } from './agent'
 import { NOTIFY_EVENTS } from './notify/notify'
 import {
   ASSIGNEE_NONE,
@@ -131,6 +132,35 @@ export const scUpdateUser = z.object({
   groups: z.array(z.uuidv7()),
 })
 export type UpdateUser = z.infer<typeof scUpdateUser>
+
+/**
+ * AIエージェントの識別子。メールアドレスのローカル部になるので `agentEmail` の形を崩さない値だけ許す。
+ * 作成後は変更できない(既存本文のメンションが解決できなくなるため)。
+ */
+export const zAgentHandle = z.string().regex(AGENT_HANDLE_PATTERN, el('@invalid_agent_handle'))
+
+export const scCreateAgent = z.object({
+  name: zName,
+  handle: zAgentHandle,
+  groups: z.array(z.uuidv7()).default([]),
+})
+export type CreateAgent = z.infer<typeof scCreateAgent>
+export type CreateAgentIn = z.input<typeof scCreateAgent>
+export type CreateAgentOut = z.output<typeof scCreateAgent>
+
+export const scUpdateAgent = z.object({
+  id: z.uuidv7(),
+  name: zName,
+  groups: z.array(z.uuidv7()),
+})
+export type UpdateAgent = z.infer<typeof scUpdateAgent>
+
+export const scIssueAgentToken = z.object({
+  userId: z.uuidv7(),
+  name: z.string().min(1, el('@required_field')).max(30, el('@invalid_name')),
+  expires: z.enum(AGENT_TOKEN_EXPIRES),
+})
+export type IssueAgentToken = z.infer<typeof scIssueAgentToken>
 
 export const scUpdatePasskey = z.object({
   id: z.uuidv7(),

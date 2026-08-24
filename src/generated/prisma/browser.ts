@@ -23,6 +23,12 @@ export * from './enums';
  */
 export type User = Prisma.UserModel
 /**
+ * Model AgentToken
+ * AIエージェント用ユーザーが MCP サーバーへ接続するための長期トークン。
+ * 平文は発行時の応答にしか現れず、保存するのはハッシュだけ。
+ */
+export type AgentToken = Prisma.AgentTokenModel
+/**
  * Model Session
  * 
  */

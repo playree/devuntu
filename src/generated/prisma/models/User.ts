@@ -42,6 +42,7 @@ export type UserMinAggregateOutputType = {
   locale: string | null
   lastLoginAt: Date | null
   timezone: string | null
+  isAgent: boolean | null
 }
 
 export type UserMaxAggregateOutputType = {
@@ -62,6 +63,7 @@ export type UserMaxAggregateOutputType = {
   locale: string | null
   lastLoginAt: Date | null
   timezone: string | null
+  isAgent: boolean | null
 }
 
 export type UserCountAggregateOutputType = {
@@ -82,6 +84,7 @@ export type UserCountAggregateOutputType = {
   locale: number
   lastLoginAt: number
   timezone: number
+  isAgent: number
   _all: number
 }
 
@@ -104,6 +107,7 @@ export type UserMinAggregateInputType = {
   locale?: true
   lastLoginAt?: true
   timezone?: true
+  isAgent?: true
 }
 
 export type UserMaxAggregateInputType = {
@@ -124,6 +128,7 @@ export type UserMaxAggregateInputType = {
   locale?: true
   lastLoginAt?: true
   timezone?: true
+  isAgent?: true
 }
 
 export type UserCountAggregateInputType = {
@@ -144,6 +149,7 @@ export type UserCountAggregateInputType = {
   locale?: true
   lastLoginAt?: true
   timezone?: true
+  isAgent?: true
   _all?: true
 }
 
@@ -232,11 +238,12 @@ export type UserGroupByOutputType = {
   banReason: string | null
   banExpires: Date | null
   twoFactorEnabled: boolean | null
-  avatarLocked: boolean
-  nameLocked: boolean
+  avatarLocked: boolean | null
+  nameLocked: boolean | null
   locale: string | null
   lastLoginAt: Date | null
   timezone: string | null
+  isAgent: boolean
   _count: UserCountAggregateOutputType | null
   _min: UserMinAggregateOutputType | null
   _max: UserMaxAggregateOutputType | null
@@ -273,11 +280,12 @@ export type UserWhereInput = {
   banReason?: Prisma.StringNullableFilter<"User"> | string | null
   banExpires?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   twoFactorEnabled?: Prisma.BoolNullableFilter<"User"> | boolean | null
-  avatarLocked?: Prisma.BoolFilter<"User"> | boolean
-  nameLocked?: Prisma.BoolFilter<"User"> | boolean
+  avatarLocked?: Prisma.BoolNullableFilter<"User"> | boolean | null
+  nameLocked?: Prisma.BoolNullableFilter<"User"> | boolean | null
   locale?: Prisma.StringNullableFilter<"User"> | string | null
   lastLoginAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   timezone?: Prisma.StringNullableFilter<"User"> | string | null
+  isAgent?: Prisma.BoolFilter<"User"> | boolean
   sessions?: Prisma.SessionListRelationFilter
   accounts?: Prisma.AccountListRelationFilter
   twofactors?: Prisma.TwoFactorListRelationFilter
@@ -297,6 +305,8 @@ export type UserWhereInput = {
   ticketComments?: Prisma.TicketCommentListRelationFilter
   attachments?: Prisma.AttachmentListRelationFilter
   notifySettings?: Prisma.UserNotifySettingListRelationFilter
+  agentTokens?: Prisma.AgentTokenListRelationFilter
+  createdAgentTokens?: Prisma.AgentTokenListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -312,11 +322,12 @@ export type UserOrderByWithRelationInput = {
   banReason?: Prisma.SortOrderInput | Prisma.SortOrder
   banExpires?: Prisma.SortOrderInput | Prisma.SortOrder
   twoFactorEnabled?: Prisma.SortOrderInput | Prisma.SortOrder
-  avatarLocked?: Prisma.SortOrder
-  nameLocked?: Prisma.SortOrder
+  avatarLocked?: Prisma.SortOrderInput | Prisma.SortOrder
+  nameLocked?: Prisma.SortOrderInput | Prisma.SortOrder
   locale?: Prisma.SortOrderInput | Prisma.SortOrder
   lastLoginAt?: Prisma.SortOrderInput | Prisma.SortOrder
   timezone?: Prisma.SortOrderInput | Prisma.SortOrder
+  isAgent?: Prisma.SortOrder
   sessions?: Prisma.SessionOrderByRelationAggregateInput
   accounts?: Prisma.AccountOrderByRelationAggregateInput
   twofactors?: Prisma.TwoFactorOrderByRelationAggregateInput
@@ -336,6 +347,8 @@ export type UserOrderByWithRelationInput = {
   ticketComments?: Prisma.TicketCommentOrderByRelationAggregateInput
   attachments?: Prisma.AttachmentOrderByRelationAggregateInput
   notifySettings?: Prisma.UserNotifySettingOrderByRelationAggregateInput
+  agentTokens?: Prisma.AgentTokenOrderByRelationAggregateInput
+  createdAgentTokens?: Prisma.AgentTokenOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -354,11 +367,12 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   banReason?: Prisma.StringNullableFilter<"User"> | string | null
   banExpires?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   twoFactorEnabled?: Prisma.BoolNullableFilter<"User"> | boolean | null
-  avatarLocked?: Prisma.BoolFilter<"User"> | boolean
-  nameLocked?: Prisma.BoolFilter<"User"> | boolean
+  avatarLocked?: Prisma.BoolNullableFilter<"User"> | boolean | null
+  nameLocked?: Prisma.BoolNullableFilter<"User"> | boolean | null
   locale?: Prisma.StringNullableFilter<"User"> | string | null
   lastLoginAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   timezone?: Prisma.StringNullableFilter<"User"> | string | null
+  isAgent?: Prisma.BoolFilter<"User"> | boolean
   sessions?: Prisma.SessionListRelationFilter
   accounts?: Prisma.AccountListRelationFilter
   twofactors?: Prisma.TwoFactorListRelationFilter
@@ -378,6 +392,8 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   ticketComments?: Prisma.TicketCommentListRelationFilter
   attachments?: Prisma.AttachmentListRelationFilter
   notifySettings?: Prisma.UserNotifySettingListRelationFilter
+  agentTokens?: Prisma.AgentTokenListRelationFilter
+  createdAgentTokens?: Prisma.AgentTokenListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -393,11 +409,12 @@ export type UserOrderByWithAggregationInput = {
   banReason?: Prisma.SortOrderInput | Prisma.SortOrder
   banExpires?: Prisma.SortOrderInput | Prisma.SortOrder
   twoFactorEnabled?: Prisma.SortOrderInput | Prisma.SortOrder
-  avatarLocked?: Prisma.SortOrder
-  nameLocked?: Prisma.SortOrder
+  avatarLocked?: Prisma.SortOrderInput | Prisma.SortOrder
+  nameLocked?: Prisma.SortOrderInput | Prisma.SortOrder
   locale?: Prisma.SortOrderInput | Prisma.SortOrder
   lastLoginAt?: Prisma.SortOrderInput | Prisma.SortOrder
   timezone?: Prisma.SortOrderInput | Prisma.SortOrder
+  isAgent?: Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
   _max?: Prisma.UserMaxOrderByAggregateInput
   _min?: Prisma.UserMinOrderByAggregateInput
@@ -419,11 +436,12 @@ export type UserScalarWhereWithAggregatesInput = {
   banReason?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   banExpires?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   twoFactorEnabled?: Prisma.BoolNullableWithAggregatesFilter<"User"> | boolean | null
-  avatarLocked?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
-  nameLocked?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  avatarLocked?: Prisma.BoolNullableWithAggregatesFilter<"User"> | boolean | null
+  nameLocked?: Prisma.BoolNullableWithAggregatesFilter<"User"> | boolean | null
   locale?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   lastLoginAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   timezone?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  isAgent?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
 }
 
 export type UserCreateInput = {
@@ -439,11 +457,12 @@ export type UserCreateInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
@@ -463,6 +482,8 @@ export type UserCreateInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -478,11 +499,12 @@ export type UserUncheckedCreateInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
@@ -502,6 +524,8 @@ export type UserUncheckedCreateInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUpdateInput = {
@@ -517,11 +541,12 @@ export type UserUpdateInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
@@ -541,6 +566,8 @@ export type UserUpdateInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -556,11 +583,12 @@ export type UserUncheckedUpdateInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
@@ -580,6 +608,8 @@ export type UserUncheckedUpdateInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -595,11 +625,12 @@ export type UserCreateManyInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
 }
 
 export type UserUpdateManyMutationInput = {
@@ -615,11 +646,12 @@ export type UserUpdateManyMutationInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type UserUncheckedUpdateManyInput = {
@@ -635,11 +667,12 @@ export type UserUncheckedUpdateManyInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type UserCountOrderByAggregateInput = {
@@ -660,6 +693,7 @@ export type UserCountOrderByAggregateInput = {
   locale?: Prisma.SortOrder
   lastLoginAt?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
+  isAgent?: Prisma.SortOrder
 }
 
 export type UserMaxOrderByAggregateInput = {
@@ -680,6 +714,7 @@ export type UserMaxOrderByAggregateInput = {
   locale?: Prisma.SortOrder
   lastLoginAt?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
+  isAgent?: Prisma.SortOrder
 }
 
 export type UserMinOrderByAggregateInput = {
@@ -700,6 +735,7 @@ export type UserMinOrderByAggregateInput = {
   locale?: Prisma.SortOrder
   lastLoginAt?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
+  isAgent?: Prisma.SortOrder
 }
 
 export type UserScalarRelationFilter = {
@@ -734,6 +770,36 @@ export type NullableBoolFieldUpdateOperationsInput = {
 
 export type NullableDateTimeFieldUpdateOperationsInput = {
   set?: Date | string | null
+}
+
+export type UserCreateNestedOneWithoutAgentTokensInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAgentTokensInput, Prisma.UserUncheckedCreateWithoutAgentTokensInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAgentTokensInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserCreateNestedOneWithoutCreatedAgentTokensInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCreatedAgentTokensInput, Prisma.UserUncheckedCreateWithoutCreatedAgentTokensInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCreatedAgentTokensInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutAgentTokensNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAgentTokensInput, Prisma.UserUncheckedCreateWithoutAgentTokensInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAgentTokensInput
+  upsert?: Prisma.UserUpsertWithoutAgentTokensInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutAgentTokensInput, Prisma.UserUpdateWithoutAgentTokensInput>, Prisma.UserUncheckedUpdateWithoutAgentTokensInput>
+}
+
+export type UserUpdateOneWithoutCreatedAgentTokensNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCreatedAgentTokensInput, Prisma.UserUncheckedCreateWithoutCreatedAgentTokensInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCreatedAgentTokensInput
+  upsert?: Prisma.UserUpsertWithoutCreatedAgentTokensInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCreatedAgentTokensInput, Prisma.UserUpdateWithoutCreatedAgentTokensInput>, Prisma.UserUncheckedUpdateWithoutCreatedAgentTokensInput>
 }
 
 export type UserCreateNestedOneWithoutSessionsInput = {
@@ -1018,7 +1084,7 @@ export type UserUpdateOneRequiredWithoutNotifySettingsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutNotifySettingsInput, Prisma.UserUpdateWithoutNotifySettingsInput>, Prisma.UserUncheckedUpdateWithoutNotifySettingsInput>
 }
 
-export type UserCreateWithoutSessionsInput = {
+export type UserCreateWithoutAgentTokensInput = {
   id?: string
   name: string
   email: string
@@ -1031,11 +1097,13 @@ export type UserCreateWithoutSessionsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
   passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
@@ -1054,9 +1122,10 @@ export type UserCreateWithoutSessionsInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
 }
 
-export type UserUncheckedCreateWithoutSessionsInput = {
+export type UserUncheckedCreateWithoutAgentTokensInput = {
   id?: string
   name: string
   email: string
@@ -1069,11 +1138,13 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
   passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
@@ -1092,6 +1163,367 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+}
+
+export type UserCreateOrConnectWithoutAgentTokensInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutAgentTokensInput, Prisma.UserUncheckedCreateWithoutAgentTokensInput>
+}
+
+export type UserCreateWithoutCreatedAgentTokensInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
+  locale?: string | null
+  lastLoginAt?: Date | string | null
+  timezone?: string | null
+  isAgent?: boolean
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
+  dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
+  userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
+  boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
+  privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
+  createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
+  assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
+  ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
+  notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutCreatedAgentTokensInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
+  locale?: string | null
+  lastLoginAt?: Date | string | null
+  timezone?: string | null
+  isAgent?: boolean
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientUncheckedCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
+  dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
+  userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
+  boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
+  privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
+  createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
+  ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
+  notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutCreatedAgentTokensInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutCreatedAgentTokensInput, Prisma.UserUncheckedCreateWithoutCreatedAgentTokensInput>
+}
+
+export type UserUpsertWithoutAgentTokensInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutAgentTokensInput, Prisma.UserUncheckedUpdateWithoutAgentTokensInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutAgentTokensInput, Prisma.UserUncheckedCreateWithoutAgentTokensInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutAgentTokensInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutAgentTokensInput, Prisma.UserUncheckedUpdateWithoutAgentTokensInput>
+}
+
+export type UserUpdateWithoutAgentTokensInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
+  dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
+  userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
+  boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
+  privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
+  createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
+  assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
+  ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
+  notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+}
+
+export type UserUncheckedUpdateWithoutAgentTokensInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUncheckedUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
+  dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
+  userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
+  boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
+  privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
+  createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
+  ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
+  notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
+}
+
+export type UserUpsertWithoutCreatedAgentTokensInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutCreatedAgentTokensInput, Prisma.UserUncheckedUpdateWithoutCreatedAgentTokensInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutCreatedAgentTokensInput, Prisma.UserUncheckedCreateWithoutCreatedAgentTokensInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutCreatedAgentTokensInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutCreatedAgentTokensInput, Prisma.UserUncheckedUpdateWithoutCreatedAgentTokensInput>
+}
+
+export type UserUpdateWithoutCreatedAgentTokensInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
+  dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
+  userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
+  boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
+  privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
+  createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
+  assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
+  ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
+  notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutCreatedAgentTokensInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUncheckedUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
+  dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
+  userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
+  boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
+  privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
+  createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
+  ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
+  notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutSessionsInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
+  locale?: string | null
+  lastLoginAt?: Date | string | null
+  timezone?: string | null
+  isAgent?: boolean
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
+  dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
+  userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
+  boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
+  privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
+  createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
+  assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
+  ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
+  notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+}
+
+export type UserUncheckedCreateWithoutSessionsInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
+  locale?: string | null
+  lastLoginAt?: Date | string | null
+  timezone?: string | null
+  isAgent?: boolean
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientUncheckedCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
+  dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
+  userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
+  boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
+  privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
+  createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
+  ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
+  notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -1123,11 +1555,12 @@ export type UserUpdateWithoutSessionsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
   passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
@@ -1146,6 +1579,8 @@ export type UserUpdateWithoutSessionsInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -1161,11 +1596,12 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
   passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
@@ -1184,6 +1620,8 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutAccountsInput = {
@@ -1199,11 +1637,12 @@ export type UserCreateWithoutAccountsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
   passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
@@ -1222,6 +1661,8 @@ export type UserCreateWithoutAccountsInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutAccountsInput = {
@@ -1237,11 +1678,12 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
   passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
@@ -1260,6 +1702,8 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutAccountsInput = {
@@ -1291,11 +1735,12 @@ export type UserUpdateWithoutAccountsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
   passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
@@ -1314,6 +1759,8 @@ export type UserUpdateWithoutAccountsInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -1329,11 +1776,12 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
   passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
@@ -1352,6 +1800,8 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutTwofactorsInput = {
@@ -1367,11 +1817,12 @@ export type UserCreateWithoutTwofactorsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
@@ -1390,6 +1841,8 @@ export type UserCreateWithoutTwofactorsInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutTwofactorsInput = {
@@ -1405,11 +1858,12 @@ export type UserUncheckedCreateWithoutTwofactorsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
@@ -1428,6 +1882,8 @@ export type UserUncheckedCreateWithoutTwofactorsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutTwofactorsInput = {
@@ -1459,11 +1915,12 @@ export type UserUpdateWithoutTwofactorsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
@@ -1482,6 +1939,8 @@ export type UserUpdateWithoutTwofactorsInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTwofactorsInput = {
@@ -1497,11 +1956,12 @@ export type UserUncheckedUpdateWithoutTwofactorsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
@@ -1520,6 +1980,8 @@ export type UserUncheckedUpdateWithoutTwofactorsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutPasskeysInput = {
@@ -1535,11 +1997,12 @@ export type UserCreateWithoutPasskeysInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
@@ -1558,6 +2021,8 @@ export type UserCreateWithoutPasskeysInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutPasskeysInput = {
@@ -1573,11 +2038,12 @@ export type UserUncheckedCreateWithoutPasskeysInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
@@ -1596,6 +2062,8 @@ export type UserUncheckedCreateWithoutPasskeysInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutPasskeysInput = {
@@ -1627,11 +2095,12 @@ export type UserUpdateWithoutPasskeysInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
@@ -1650,6 +2119,8 @@ export type UserUpdateWithoutPasskeysInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPasskeysInput = {
@@ -1665,11 +2136,12 @@ export type UserUncheckedUpdateWithoutPasskeysInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
@@ -1688,6 +2160,8 @@ export type UserUncheckedUpdateWithoutPasskeysInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutOauthclientsInput = {
@@ -1703,11 +2177,12 @@ export type UserCreateWithoutOauthclientsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
@@ -1726,6 +2201,8 @@ export type UserCreateWithoutOauthclientsInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutOauthclientsInput = {
@@ -1741,11 +2218,12 @@ export type UserUncheckedCreateWithoutOauthclientsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
@@ -1764,6 +2242,8 @@ export type UserUncheckedCreateWithoutOauthclientsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutOauthclientsInput = {
@@ -1795,11 +2275,12 @@ export type UserUpdateWithoutOauthclientsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
@@ -1818,6 +2299,8 @@ export type UserUpdateWithoutOauthclientsInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOauthclientsInput = {
@@ -1833,11 +2316,12 @@ export type UserUncheckedUpdateWithoutOauthclientsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
@@ -1856,6 +2340,8 @@ export type UserUncheckedUpdateWithoutOauthclientsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutOauthrefreshtokensInput = {
@@ -1871,11 +2357,12 @@ export type UserCreateWithoutOauthrefreshtokensInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
@@ -1894,6 +2381,8 @@ export type UserCreateWithoutOauthrefreshtokensInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutOauthrefreshtokensInput = {
@@ -1909,11 +2398,12 @@ export type UserUncheckedCreateWithoutOauthrefreshtokensInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
@@ -1932,6 +2422,8 @@ export type UserUncheckedCreateWithoutOauthrefreshtokensInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutOauthrefreshtokensInput = {
@@ -1963,11 +2455,12 @@ export type UserUpdateWithoutOauthrefreshtokensInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
@@ -1986,6 +2479,8 @@ export type UserUpdateWithoutOauthrefreshtokensInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOauthrefreshtokensInput = {
@@ -2001,11 +2496,12 @@ export type UserUncheckedUpdateWithoutOauthrefreshtokensInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
@@ -2024,6 +2520,8 @@ export type UserUncheckedUpdateWithoutOauthrefreshtokensInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutOauthaccesstokensInput = {
@@ -2039,11 +2537,12 @@ export type UserCreateWithoutOauthaccesstokensInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
@@ -2062,6 +2561,8 @@ export type UserCreateWithoutOauthaccesstokensInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutOauthaccesstokensInput = {
@@ -2077,11 +2578,12 @@ export type UserUncheckedCreateWithoutOauthaccesstokensInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
@@ -2100,6 +2602,8 @@ export type UserUncheckedCreateWithoutOauthaccesstokensInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutOauthaccesstokensInput = {
@@ -2131,11 +2635,12 @@ export type UserUpdateWithoutOauthaccesstokensInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
@@ -2154,6 +2659,8 @@ export type UserUpdateWithoutOauthaccesstokensInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOauthaccesstokensInput = {
@@ -2169,11 +2676,12 @@ export type UserUncheckedUpdateWithoutOauthaccesstokensInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
@@ -2192,6 +2700,8 @@ export type UserUncheckedUpdateWithoutOauthaccesstokensInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutOauthconsentsInput = {
@@ -2207,11 +2717,12 @@ export type UserCreateWithoutOauthconsentsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
@@ -2230,6 +2741,8 @@ export type UserCreateWithoutOauthconsentsInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutOauthconsentsInput = {
@@ -2245,11 +2758,12 @@ export type UserUncheckedCreateWithoutOauthconsentsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
@@ -2268,6 +2782,8 @@ export type UserUncheckedCreateWithoutOauthconsentsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutOauthconsentsInput = {
@@ -2299,11 +2815,12 @@ export type UserUpdateWithoutOauthconsentsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
@@ -2322,6 +2839,8 @@ export type UserUpdateWithoutOauthconsentsInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOauthconsentsInput = {
@@ -2337,11 +2856,12 @@ export type UserUncheckedUpdateWithoutOauthconsentsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
@@ -2360,6 +2880,8 @@ export type UserUncheckedUpdateWithoutOauthconsentsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutDashboardInput = {
@@ -2375,11 +2897,12 @@ export type UserCreateWithoutDashboardInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
@@ -2398,6 +2921,8 @@ export type UserCreateWithoutDashboardInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutDashboardInput = {
@@ -2413,11 +2938,12 @@ export type UserUncheckedCreateWithoutDashboardInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
@@ -2436,6 +2962,8 @@ export type UserUncheckedCreateWithoutDashboardInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutDashboardInput = {
@@ -2467,11 +2995,12 @@ export type UserUpdateWithoutDashboardInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
@@ -2490,6 +3019,8 @@ export type UserUpdateWithoutDashboardInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDashboardInput = {
@@ -2505,11 +3036,12 @@ export type UserUncheckedUpdateWithoutDashboardInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
@@ -2528,6 +3060,8 @@ export type UserUncheckedUpdateWithoutDashboardInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutAttachmentsInput = {
@@ -2543,11 +3077,12 @@ export type UserCreateWithoutAttachmentsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
@@ -2566,6 +3101,8 @@ export type UserCreateWithoutAttachmentsInput = {
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutAttachmentsInput = {
@@ -2581,11 +3118,12 @@ export type UserUncheckedCreateWithoutAttachmentsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
@@ -2604,6 +3142,8 @@ export type UserUncheckedCreateWithoutAttachmentsInput = {
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutAttachmentsInput = {
@@ -2635,11 +3175,12 @@ export type UserUpdateWithoutAttachmentsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
@@ -2658,6 +3199,8 @@ export type UserUpdateWithoutAttachmentsInput = {
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAttachmentsInput = {
@@ -2673,11 +3216,12 @@ export type UserUncheckedUpdateWithoutAttachmentsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
@@ -2696,6 +3240,8 @@ export type UserUncheckedUpdateWithoutAttachmentsInput = {
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutUserGroupsInput = {
@@ -2711,11 +3257,12 @@ export type UserCreateWithoutUserGroupsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
@@ -2734,6 +3281,8 @@ export type UserCreateWithoutUserGroupsInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutUserGroupsInput = {
@@ -2749,11 +3298,12 @@ export type UserUncheckedCreateWithoutUserGroupsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
@@ -2772,6 +3322,8 @@ export type UserUncheckedCreateWithoutUserGroupsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutUserGroupsInput = {
@@ -2803,11 +3355,12 @@ export type UserUpdateWithoutUserGroupsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
@@ -2826,6 +3379,8 @@ export type UserUpdateWithoutUserGroupsInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutUserGroupsInput = {
@@ -2841,11 +3396,12 @@ export type UserUncheckedUpdateWithoutUserGroupsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
@@ -2864,6 +3420,8 @@ export type UserUncheckedUpdateWithoutUserGroupsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutCalendarShareInput = {
@@ -2879,11 +3437,12 @@ export type UserCreateWithoutCalendarShareInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
@@ -2902,6 +3461,8 @@ export type UserCreateWithoutCalendarShareInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutCalendarShareInput = {
@@ -2917,11 +3478,12 @@ export type UserUncheckedCreateWithoutCalendarShareInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
@@ -2940,6 +3502,8 @@ export type UserUncheckedCreateWithoutCalendarShareInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutCalendarShareInput = {
@@ -2971,11 +3535,12 @@ export type UserUpdateWithoutCalendarShareInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
@@ -2994,6 +3559,8 @@ export type UserUpdateWithoutCalendarShareInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCalendarShareInput = {
@@ -3009,11 +3576,12 @@ export type UserUncheckedUpdateWithoutCalendarShareInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
@@ -3032,6 +3600,8 @@ export type UserUncheckedUpdateWithoutCalendarShareInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutCalendarBusyTimesInput = {
@@ -3047,11 +3617,12 @@ export type UserCreateWithoutCalendarBusyTimesInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
@@ -3070,6 +3641,8 @@ export type UserCreateWithoutCalendarBusyTimesInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutCalendarBusyTimesInput = {
@@ -3085,11 +3658,12 @@ export type UserUncheckedCreateWithoutCalendarBusyTimesInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
@@ -3108,6 +3682,8 @@ export type UserUncheckedCreateWithoutCalendarBusyTimesInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutCalendarBusyTimesInput = {
@@ -3139,11 +3715,12 @@ export type UserUpdateWithoutCalendarBusyTimesInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
@@ -3162,6 +3739,8 @@ export type UserUpdateWithoutCalendarBusyTimesInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCalendarBusyTimesInput = {
@@ -3177,11 +3756,12 @@ export type UserUncheckedUpdateWithoutCalendarBusyTimesInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
@@ -3200,6 +3780,8 @@ export type UserUncheckedUpdateWithoutCalendarBusyTimesInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutPrivateBoardInput = {
@@ -3215,11 +3797,12 @@ export type UserCreateWithoutPrivateBoardInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
@@ -3238,6 +3821,8 @@ export type UserCreateWithoutPrivateBoardInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutPrivateBoardInput = {
@@ -3253,11 +3838,12 @@ export type UserUncheckedCreateWithoutPrivateBoardInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
@@ -3276,6 +3862,8 @@ export type UserUncheckedCreateWithoutPrivateBoardInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutPrivateBoardInput = {
@@ -3307,11 +3895,12 @@ export type UserUpdateWithoutPrivateBoardInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
@@ -3330,6 +3919,8 @@ export type UserUpdateWithoutPrivateBoardInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPrivateBoardInput = {
@@ -3345,11 +3936,12 @@ export type UserUncheckedUpdateWithoutPrivateBoardInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
@@ -3368,6 +3960,8 @@ export type UserUncheckedUpdateWithoutPrivateBoardInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutBoardMembersInput = {
@@ -3383,11 +3977,12 @@ export type UserCreateWithoutBoardMembersInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
@@ -3406,6 +4001,8 @@ export type UserCreateWithoutBoardMembersInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutBoardMembersInput = {
@@ -3421,11 +4018,12 @@ export type UserUncheckedCreateWithoutBoardMembersInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
@@ -3444,6 +4042,8 @@ export type UserUncheckedCreateWithoutBoardMembersInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutBoardMembersInput = {
@@ -3475,11 +4075,12 @@ export type UserUpdateWithoutBoardMembersInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
@@ -3498,6 +4099,8 @@ export type UserUpdateWithoutBoardMembersInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutBoardMembersInput = {
@@ -3513,11 +4116,12 @@ export type UserUncheckedUpdateWithoutBoardMembersInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
@@ -3536,6 +4140,8 @@ export type UserUncheckedUpdateWithoutBoardMembersInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutCreatedTicketsInput = {
@@ -3551,11 +4157,12 @@ export type UserCreateWithoutCreatedTicketsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
@@ -3574,6 +4181,8 @@ export type UserCreateWithoutCreatedTicketsInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutCreatedTicketsInput = {
@@ -3589,11 +4198,12 @@ export type UserUncheckedCreateWithoutCreatedTicketsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
@@ -3612,6 +4222,8 @@ export type UserUncheckedCreateWithoutCreatedTicketsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutCreatedTicketsInput = {
@@ -3632,11 +4244,12 @@ export type UserCreateWithoutAssignedTicketsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
@@ -3655,6 +4268,8 @@ export type UserCreateWithoutAssignedTicketsInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutAssignedTicketsInput = {
@@ -3670,11 +4285,12 @@ export type UserUncheckedCreateWithoutAssignedTicketsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
@@ -3693,6 +4309,8 @@ export type UserUncheckedCreateWithoutAssignedTicketsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutAssignedTicketsInput = {
@@ -3724,11 +4342,12 @@ export type UserUpdateWithoutCreatedTicketsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
@@ -3747,6 +4366,8 @@ export type UserUpdateWithoutCreatedTicketsInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCreatedTicketsInput = {
@@ -3762,11 +4383,12 @@ export type UserUncheckedUpdateWithoutCreatedTicketsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
@@ -3785,6 +4407,8 @@ export type UserUncheckedUpdateWithoutCreatedTicketsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUpsertWithoutAssignedTicketsInput = {
@@ -3811,11 +4435,12 @@ export type UserUpdateWithoutAssignedTicketsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
@@ -3834,6 +4459,8 @@ export type UserUpdateWithoutAssignedTicketsInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAssignedTicketsInput = {
@@ -3849,11 +4476,12 @@ export type UserUncheckedUpdateWithoutAssignedTicketsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
@@ -3872,6 +4500,8 @@ export type UserUncheckedUpdateWithoutAssignedTicketsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutTicketCommentsInput = {
@@ -3887,11 +4517,12 @@ export type UserCreateWithoutTicketCommentsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
@@ -3910,6 +4541,8 @@ export type UserCreateWithoutTicketCommentsInput = {
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutTicketCommentsInput = {
@@ -3925,11 +4558,12 @@ export type UserUncheckedCreateWithoutTicketCommentsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
@@ -3948,6 +4582,8 @@ export type UserUncheckedCreateWithoutTicketCommentsInput = {
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutTicketCommentsInput = {
@@ -3979,11 +4615,12 @@ export type UserUpdateWithoutTicketCommentsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
@@ -4002,6 +4639,8 @@ export type UserUpdateWithoutTicketCommentsInput = {
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTicketCommentsInput = {
@@ -4017,11 +4656,12 @@ export type UserUncheckedUpdateWithoutTicketCommentsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
@@ -4040,6 +4680,8 @@ export type UserUncheckedUpdateWithoutTicketCommentsInput = {
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutNotifySettingsInput = {
@@ -4055,11 +4697,12 @@ export type UserCreateWithoutNotifySettingsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
@@ -4078,6 +4721,8 @@ export type UserCreateWithoutNotifySettingsInput = {
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
+  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutNotifySettingsInput = {
@@ -4093,11 +4738,12 @@ export type UserUncheckedCreateWithoutNotifySettingsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean
-  nameLocked?: boolean
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
   timezone?: string | null
+  isAgent?: boolean
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
@@ -4116,6 +4762,8 @@ export type UserUncheckedCreateWithoutNotifySettingsInput = {
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
+  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutNotifySettingsInput = {
@@ -4147,11 +4795,12 @@ export type UserUpdateWithoutNotifySettingsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
@@ -4170,6 +4819,8 @@ export type UserUpdateWithoutNotifySettingsInput = {
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
+  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNotifySettingsInput = {
@@ -4185,11 +4836,12 @@ export type UserUncheckedUpdateWithoutNotifySettingsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  nameLocked?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
@@ -4208,6 +4860,8 @@ export type UserUncheckedUpdateWithoutNotifySettingsInput = {
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
+  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 
@@ -4232,6 +4886,8 @@ export type UserCountOutputType = {
   ticketComments: number
   attachments: number
   notifySettings: number
+  agentTokens: number
+  createdAgentTokens: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -4251,6 +4907,8 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   ticketComments?: boolean | UserCountOutputTypeCountTicketCommentsArgs
   attachments?: boolean | UserCountOutputTypeCountAttachmentsArgs
   notifySettings?: boolean | UserCountOutputTypeCountNotifySettingsArgs
+  agentTokens?: boolean | UserCountOutputTypeCountAgentTokensArgs
+  createdAgentTokens?: boolean | UserCountOutputTypeCountCreatedAgentTokensArgs
 }
 
 /**
@@ -4375,6 +5033,20 @@ export type UserCountOutputTypeCountNotifySettingsArgs<ExtArgs extends runtime.T
   where?: Prisma.UserNotifySettingWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountAgentTokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AgentTokenWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountCreatedAgentTokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AgentTokenWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -4394,6 +5066,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   locale?: boolean
   lastLoginAt?: boolean
   timezone?: boolean
+  isAgent?: boolean
   sessions?: boolean | Prisma.User$sessionsArgs<ExtArgs>
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
   twofactors?: boolean | Prisma.User$twofactorsArgs<ExtArgs>
@@ -4413,6 +5086,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   ticketComments?: boolean | Prisma.User$ticketCommentsArgs<ExtArgs>
   attachments?: boolean | Prisma.User$attachmentsArgs<ExtArgs>
   notifySettings?: boolean | Prisma.User$notifySettingsArgs<ExtArgs>
+  agentTokens?: boolean | Prisma.User$agentTokensArgs<ExtArgs>
+  createdAgentTokens?: boolean | Prisma.User$createdAgentTokensArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -4434,6 +5109,7 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   locale?: boolean
   lastLoginAt?: boolean
   timezone?: boolean
+  isAgent?: boolean
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -4454,6 +5130,7 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   locale?: boolean
   lastLoginAt?: boolean
   timezone?: boolean
+  isAgent?: boolean
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectScalar = {
@@ -4474,9 +5151,10 @@ export type UserSelectScalar = {
   locale?: boolean
   lastLoginAt?: boolean
   timezone?: boolean
+  isAgent?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "createdAt" | "updatedAt" | "role" | "banned" | "banReason" | "banExpires" | "twoFactorEnabled" | "avatarLocked" | "nameLocked" | "locale" | "lastLoginAt" | "timezone", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "createdAt" | "updatedAt" | "role" | "banned" | "banReason" | "banExpires" | "twoFactorEnabled" | "avatarLocked" | "nameLocked" | "locale" | "lastLoginAt" | "timezone" | "isAgent", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   sessions?: boolean | Prisma.User$sessionsArgs<ExtArgs>
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
@@ -4497,6 +5175,8 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   ticketComments?: boolean | Prisma.User$ticketCommentsArgs<ExtArgs>
   attachments?: boolean | Prisma.User$attachmentsArgs<ExtArgs>
   notifySettings?: boolean | Prisma.User$notifySettingsArgs<ExtArgs>
+  agentTokens?: boolean | Prisma.User$agentTokensArgs<ExtArgs>
+  createdAgentTokens?: boolean | Prisma.User$createdAgentTokensArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -4524,6 +5204,8 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     ticketComments: Prisma.$TicketCommentPayload<ExtArgs>[]
     attachments: Prisma.$AttachmentPayload<ExtArgs>[]
     notifySettings: Prisma.$UserNotifySettingPayload<ExtArgs>[]
+    agentTokens: Prisma.$AgentTokenPayload<ExtArgs>[]
+    createdAgentTokens: Prisma.$AgentTokenPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -4538,11 +5220,15 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     banReason: string | null
     banExpires: Date | null
     twoFactorEnabled: boolean | null
-    avatarLocked: boolean
-    nameLocked: boolean
+    avatarLocked: boolean | null
+    nameLocked: boolean | null
     locale: string | null
     lastLoginAt: Date | null
     timezone: string | null
+    /**
+     * AIエージェント用ユーザー。Webログインを行わず MCP からのみ利用する
+     */
+    isAgent: boolean
   }, ExtArgs["result"]["user"]>
   composites: {}
 }
@@ -4956,6 +5642,8 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   ticketComments<T extends Prisma.User$ticketCommentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$ticketCommentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TicketCommentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   attachments<T extends Prisma.User$attachmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$attachmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AttachmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   notifySettings<T extends Prisma.User$notifySettingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notifySettingsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserNotifySettingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  agentTokens<T extends Prisma.User$agentTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$agentTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AgentTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  createdAgentTokens<T extends Prisma.User$createdAgentTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$createdAgentTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AgentTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -5002,6 +5690,7 @@ export interface UserFieldRefs {
   readonly locale: Prisma.FieldRef<"User", 'String'>
   readonly lastLoginAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly timezone: Prisma.FieldRef<"User", 'String'>
+  readonly isAgent: Prisma.FieldRef<"User", 'Boolean'>
 }
     
 
@@ -5833,6 +6522,54 @@ export type User$notifySettingsArgs<ExtArgs extends runtime.Types.Extensions.Int
   take?: number
   skip?: number
   distinct?: Prisma.UserNotifySettingScalarFieldEnum | Prisma.UserNotifySettingScalarFieldEnum[]
+}
+
+/**
+ * User.agentTokens
+ */
+export type User$agentTokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AgentToken
+   */
+  select?: Prisma.AgentTokenSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AgentToken
+   */
+  omit?: Prisma.AgentTokenOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AgentTokenInclude<ExtArgs> | null
+  where?: Prisma.AgentTokenWhereInput
+  orderBy?: Prisma.AgentTokenOrderByWithRelationInput | Prisma.AgentTokenOrderByWithRelationInput[]
+  cursor?: Prisma.AgentTokenWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AgentTokenScalarFieldEnum | Prisma.AgentTokenScalarFieldEnum[]
+}
+
+/**
+ * User.createdAgentTokens
+ */
+export type User$createdAgentTokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AgentToken
+   */
+  select?: Prisma.AgentTokenSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AgentToken
+   */
+  omit?: Prisma.AgentTokenOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AgentTokenInclude<ExtArgs> | null
+  where?: Prisma.AgentTokenWhereInput
+  orderBy?: Prisma.AgentTokenOrderByWithRelationInput | Prisma.AgentTokenOrderByWithRelationInput[]
+  cursor?: Prisma.AgentTokenWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AgentTokenScalarFieldEnum | Prisma.AgentTokenScalarFieldEnum[]
 }
 
 /**

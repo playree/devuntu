@@ -100,14 +100,23 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
   }
 }
 
+/** `search_tickets` の `assignee` に指定できる自分自身の別名。担当チケットの巡回に使う */
+export const MCP_ASSIGNEE_ME = 'me'
+
 export type McpTicketSearchInput = {
   keyword?: string
   status?: TicketStatus[]
   priority?: TicketPriority[]
   tags?: string[]
   boardId?: string
+  /** ユーザーID / `me`(自分) / `none`(未割り当て) */
+  assignee?: string
   limit?: number
 }
+
+/** `assignee` の指定を buildTicketWhere が解釈する形へ揃える */
+const resolveAssignee = (assignee: string | undefined, userId: string): string | null =>
+  assignee === MCP_ASSIGNEE_ME ? userId : (assignee ?? null)
 
 const DEFAULT_SEARCH_LIMIT = 20
 const MAX_SEARCH_LIMIT = 50
@@ -121,7 +130,7 @@ export const searchTicketsForMcp = async (auth: ResourceAuth, input: McpTicketSe
       priority: input.priority ?? [],
       tags: input.tags ?? [],
       boardId: input.boardId ?? null,
-      assignee: null,
+      assignee: resolveAssignee(input.assignee, auth.user.id),
     },
     { accessibleBoardIds },
   )

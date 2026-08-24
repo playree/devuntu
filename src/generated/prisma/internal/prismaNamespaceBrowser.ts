@@ -52,6 +52,7 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   User: 'User',
+  AgentToken: 'AgentToken',
   Session: 'Session',
   Account: 'Account',
   Verification: 'Verification',
@@ -118,10 +119,27 @@ export const UserScalarFieldEnum = {
   nameLocked: 'nameLocked',
   locale: 'locale',
   lastLoginAt: 'lastLoginAt',
-  timezone: 'timezone'
+  timezone: 'timezone',
+  isAgent: 'isAgent'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const AgentTokenScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  name: 'name',
+  tokenHash: 'tokenHash',
+  hint: 'hint',
+  expiresAt: 'expiresAt',
+  revokedAt: 'revokedAt',
+  lastUsedAt: 'lastUsedAt',
+  createdById: 'createdById',
+  createdAt: 'createdAt'
+} as const
+
+export type AgentTokenScalarFieldEnum = (typeof AgentTokenScalarFieldEnum)[keyof typeof AgentTokenScalarFieldEnum]
 
 
 export const SessionScalarFieldEnum = {
