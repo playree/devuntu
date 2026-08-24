@@ -2,6 +2,7 @@
 
 import { FlexCol } from '@/components/general/flex'
 import { SplitButton, type SplitButtonOption } from '@/components/general/split-button'
+import { MultiTagField, type MultiTagItem } from '@/components/general/tag-group'
 import { ChatBubbleIcon, CheckIcon } from '@/components/icon'
 import { MarkdownInput } from '@/components/markdown/markdown-editor'
 import type { MentionCandidate } from '@/components/markdown/mention-menu'
@@ -101,9 +102,21 @@ export const TicketComments: FC<{
   const [editorKey, setEditorKey] = useState(0)
 
   const { comments } = ticket
-  // 返信込みでフラットに展開したもの。件数表示とアンカー一致の両方で使う
+  // 返信込みでフラットに展開したもの。通知リンクからのアンカー一致は絞り込みと無関係に動かすため、
+  // ここではフィルタ前の全コメントを使う
   const flatComments = comments.flatMap((comment) => [comment, ...comment.replies])
   const targetId = useCommentAnchor(flatComments)
+
+  const [typeFilter, setTypeFilter] = useState<CommentTypeOption[]>(['none', 'plan', 'report'])
+  // 種別はスレッド(親コメント)単位で絞り込み、返信は親が表示対象のときだけ追従させる
+  const visibleComments = comments.filter((comment) => typeFilter.includes(comment.type ?? 'none'))
+  const visibleCommentCount = visibleComments.flatMap((comment) => [comment, ...comment.replies]).length
+
+  const commentTypeFilterItems: MultiTagItem<CommentTypeOption>[] = [
+    { id: 'none', label: t('comment_type_none') },
+    { id: 'plan', label: t(TICKET_COMMENT_TYPE_LOCALE.plan) },
+    { id: 'report', label: t(TICKET_COMMENT_TYPE_LOCALE.report) },
+  ]
 
   const commentTypeOptions: SplitButtonOption<CommentTypeOption>[] = [
     { id: 'none', menuLabel: t('comment_type_none'), actionLabel: t('send') },
@@ -138,11 +151,18 @@ export const TicketComments: FC<{
       <div className='flex items-center gap-2'>
         <ChatBubbleIcon />
         <span>
-          {t('comment')} ({flatComments.length})
+          {t('comment')} ({visibleCommentCount})
         </span>
       </div>
 
-      {comments.map((comment) => (
+      <MultiTagField
+        label={t('comment_type')}
+        items={commentTypeFilterItems}
+        value={typeFilter}
+        onChange={setTypeFilter}
+      />
+
+      {visibleComments.map((comment) => (
         <div key={comment.id} className='space-y-2'>
           <CommentItem
             comment={comment}
