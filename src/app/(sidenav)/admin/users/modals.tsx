@@ -127,6 +127,7 @@ export const UpdateModal: FC<ModalBaseProps & { target: UpdateUser; groupOptions
       name: target.name,
       email: target.email,
       isAdmin: target.isAdmin,
+      nameLocked: target.nameLocked,
       groups: target.groups,
     },
   })
@@ -182,6 +183,9 @@ export const UpdateModal: FC<ModalBaseProps & { target: UpdateUser; groupOptions
         </div>
         <div className='col-span-12 pb-4'>
           <CheckBoxCtrl control={control} name='isAdmin' id='isAdmin' label={t('is_admin')} />
+        </div>
+        <div className='col-span-12 pb-4'>
+          <CheckBoxCtrl control={control} name='nameLocked' id='nameLocked' label={t('name_locked')} />
         </div>
         <div className='col-span-12'>
           <MultiSelectCtrl control={control} name='groups' groupOptions={groupOptions} label={t('group')} />

@@ -8,6 +8,19 @@ import { prisma } from '@/lib/prisma'
 import { scAddOidcClient, scDeleteOidcClient, scSetOidcClientDisabled, scUpdateOidcClient } from '@/lib/schema'
 import { headers } from 'next/headers'
 
+/** better-auth 側は未設定を client_secret_basic として扱うため表示上もそれに合わせる。それ以外の未対応値は明示的に区別する */
+const toTokenEndpointAuthMethod = (
+  value: string | null,
+): 'client_secret_basic' | 'client_secret_post' | 'unsupported' => {
+  if (value === null || value === 'client_secret_basic') {
+    return 'client_secret_basic'
+  }
+  if (value === 'client_secret_post') {
+    return 'client_secret_post'
+  }
+  return 'unsupported'
+}
+
 /**
  * 一覧・削除・無効化は Prisma を直接参照する。
  * better-auth の `getOAuthClients` / `deleteOAuthClient` は `userId` が自分のものだけを対象にするため、
@@ -27,19 +40,23 @@ export const getOidcClients = safeAuthAction
         redirectUris: true,
         skipConsent: true,
         requirePKCE: true,
+        tokenEndpointAuthMethod: true,
         userId: true,
       },
       orderBy: { createdAt: 'desc' },
     })
-    return clients.map(({ clientId, name, redirectUris, skipConsent, requirePKCE, userId }) => ({
-      clientId,
-      clientName: name ?? '',
-      redirectUri: redirectUris[0] ?? '',
-      skipConsent: skipConsent ?? false,
-      requirePkce: requirePKCE ?? false,
-      // 更新は better-auth 側で所有者チェックが入るため、自分が登録したものだけ編集させる
-      isOwn: userId === ctx.user.id,
-    }))
+    return clients.map(
+      ({ clientId, name, redirectUris, skipConsent, requirePKCE, tokenEndpointAuthMethod, userId }) => ({
+        clientId,
+        clientName: name ?? '',
+        redirectUri: redirectUris[0] ?? '',
+        skipConsent: skipConsent ?? false,
+        requirePkce: requirePKCE ?? false,
+        tokenEndpointAuthMethod: toTokenEndpointAuthMethod(tokenEndpointAuthMethod),
+        // 更新は better-auth 側で所有者チェックが入るため、自分が登録したものだけ編集させる
+        isOwn: userId === ctx.user.id,
+      }),
+    )
   })
 
 /** 動的登録(RFC 7591)のクライアント。登録時にセッションが無いので userId は NULL になる */
@@ -69,7 +86,7 @@ export const getDynamicOidcClients = safeAuthAction
 export const addOidcClient = safeAuthAction
   .metadata({ actionName: 'addOidcClient', role: 'admin' })
   .inputSchema(scAddOidcClient)
-  .action(async ({ parsedInput: { clientName, redirectUri, skipConsent, requirePkce } }) => {
+  .action(async ({ parsedInput: { clientName, redirectUri, skipConsent, requirePkce, tokenEndpointAuthMethod } }) => {
     const res = await auth.api.adminCreateOAuthClient({
       headers: await headers(),
       body: {
@@ -78,6 +95,7 @@ export const addOidcClient = safeAuthAction
         client_secret_expires_at: 0,
         skip_consent: skipConsent,
         require_pkce: requirePkce,
+        token_endpoint_auth_method: tokenEndpointAuthMethod,
         scope: OIDC_PROVIDER_SCOPES.join(' '),
       },
     })

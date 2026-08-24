@@ -6,6 +6,7 @@ import { CopyableField } from '@/components/general/copyable-field'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
 import { FormModal, ModalBaseProps } from '@/components/general/modal'
+import { SingleSelectCtrl, SingleSelectField } from '@/components/general/select'
 import { StepMotion } from '@/components/general/step-motion'
 import { CheckIcon, PencilSquareIcon, PlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
@@ -41,6 +42,7 @@ export const AddModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, relo
       redirectUri: '',
       skipConsent: false,
       requirePkce: false,
+      tokenEndpointAuthMethod: 'client_secret_basic',
     },
   })
 
@@ -105,6 +107,19 @@ export const AddModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, relo
                 <div className='col-span-12'>
                   <CheckBoxCtrl control={control} name='requirePkce' id='requirePkce' label={t('require_pkce')} />
                 </div>
+                <div className='col-span-12'>
+                  <SingleSelectCtrl
+                    control={control}
+                    name='tokenEndpointAuthMethod'
+                    label={t('token_endpoint_auth_method')}
+                    isRequired
+                    errorMessage={fet(errors.tokenEndpointAuthMethod)}
+                    groupOptions={{
+                      client_secret_basic: t('token_endpoint_auth_method_basic'),
+                      client_secret_post: t('token_endpoint_auth_method_post'),
+                    }}
+                  />
+                </div>
               </GridBox>
             </StepMotion>
           )}
@@ -144,11 +159,14 @@ export const AddModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, relo
   )
 }
 
-export const UpdateModal: FC<ModalBaseProps & { target: UpdateOidcClient & { requirePkce: boolean } }> = ({
-  state,
-  reload,
-  target,
-}) => {
+export const UpdateModal: FC<
+  ModalBaseProps & {
+    target: UpdateOidcClient & {
+      requirePkce: boolean
+      tokenEndpointAuthMethod: 'client_secret_basic' | 'client_secret_post' | 'unsupported'
+    }
+  }
+> = ({ state, reload, target }) => {
   const { t, fet } = useLocale()
 
   const {
@@ -216,6 +234,19 @@ export const UpdateModal: FC<ModalBaseProps & { target: UpdateOidcClient & { req
             label={`${t('require_pkce')} (${t('immutable')})`}
             isSelected={target.requirePkce}
             isDisabled
+          />
+        </div>
+        <div className='col-span-12'>
+          <SingleSelectField
+            label={`${t('token_endpoint_auth_method')} (${t('immutable')})`}
+            value={target.tokenEndpointAuthMethod}
+            onChange={() => {}}
+            isDisabled
+            groupOptions={{
+              client_secret_basic: t('token_endpoint_auth_method_basic'),
+              client_secret_post: t('token_endpoint_auth_method_post'),
+              unsupported: t('token_endpoint_auth_method_unsupported'),
+            }}
           />
         </div>
       </GridBox>
