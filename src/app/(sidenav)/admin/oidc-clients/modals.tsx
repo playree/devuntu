@@ -163,7 +163,7 @@ export const UpdateModal: FC<
   ModalBaseProps & {
     target: UpdateOidcClient & {
       requirePkce: boolean
-      tokenEndpointAuthMethod: 'client_secret_basic' | 'client_secret_post'
+      tokenEndpointAuthMethod: 'client_secret_basic' | 'client_secret_post' | 'unsupported'
     }
   }
 > = ({ state, reload, target }) => {
@@ -245,6 +245,7 @@ export const UpdateModal: FC<
             groupOptions={{
               client_secret_basic: t('token_endpoint_auth_method_basic'),
               client_secret_post: t('token_endpoint_auth_method_post'),
+              unsupported: t('token_endpoint_auth_method_unsupported'),
             }}
           />
         </div>

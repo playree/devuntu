@@ -215,6 +215,7 @@ export const ja: DefaultLocaleItems = {
   token_endpoint_auth_method: '認証方式',
   token_endpoint_auth_method_basic: 'client_secret_basic',
   token_endpoint_auth_method_post: 'client_secret_post',
+  token_endpoint_auth_method_unsupported: '未対応',
   transfer_billable: '課金対象転送量',
   transfer_pool_usage: '転送プール使用量',
   trust_device: 'このデバイスを信頼する',

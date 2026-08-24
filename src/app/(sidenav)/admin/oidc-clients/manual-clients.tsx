@@ -23,7 +23,10 @@ export const ManualOidcClients: FC<{ baseUrl: string }> = ({ baseUrl }) => {
   const { t } = useLocale()
   const addModalState = useModalState()
   const updateModalState = useModalState<
-    UpdateOidcClient & { requirePkce: boolean; tokenEndpointAuthMethod: 'client_secret_basic' | 'client_secret_post' }
+    UpdateOidcClient & {
+      requirePkce: boolean
+      tokenEndpointAuthMethod: 'client_secret_basic' | 'client_secret_post' | 'unsupported'
+    }
   >()
 
   const list = usePagingList({
@@ -86,7 +89,9 @@ export const ManualOidcClients: FC<{ baseUrl: string }> = ({ baseUrl }) => {
             <Table.Cell className='text-xs'>
               {item.tokenEndpointAuthMethod === 'client_secret_post'
                 ? t('token_endpoint_auth_method_post')
-                : t('token_endpoint_auth_method_basic')}
+                : item.tokenEndpointAuthMethod === 'client_secret_basic'
+                  ? t('token_endpoint_auth_method_basic')
+                  : t('token_endpoint_auth_method_unsupported')}
             </Table.Cell>
             <ActionCell
               items={[

@@ -14,9 +14,15 @@ export const saveImageAttachment = async (file: File, userId: string, size = 128
   // キャッシュバスティング: 保存ごとにユニークなキーにしてURLを変え、更新を反映させる
   const key = newUploadKey(WEBP_EXT)
   await putObject(key, webp, WEBP_MIME)
-  await prisma.attachment.create({
-    data: { key, mimeType: WEBP_MIME, size: webp.byteLength, originalName: file.name, createdById: userId },
-  })
+  try {
+    await prisma.attachment.create({
+      data: { key, mimeType: WEBP_MIME, size: webp.byteLength, originalName: file.name, createdById: userId },
+    })
+  } catch (err) {
+    // レコード作成に失敗した場合はアップロード済みオブジェクトを残さない
+    await deleteObject(key).catch((delErr) => logger.error({ delErr, key }, 'failed to cleanup orphaned object'))
+    throw err
+  }
   return toUploadUrl(key)
 }
 
@@ -29,6 +35,7 @@ export const removeImageAttachment = async (url: string): Promise<void> => {
     // レコードが無いキーもありうるためdeleteManyで許容する
     await prisma.attachment.deleteMany({ where: { key } })
   } catch (err) {
-    logger.warn({ err, url }, 'failed to remove image attachment')
+    // 呼び出し元は成功扱いのまま進む(ベストエフォート)。追跡できるよう詳細を残す
+    logger.error({ err, url, key }, 'failed to remove image attachment')
   }
 }

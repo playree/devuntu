@@ -8,6 +8,19 @@ import { prisma } from '@/lib/prisma'
 import { scAddOidcClient, scDeleteOidcClient, scSetOidcClientDisabled, scUpdateOidcClient } from '@/lib/schema'
 import { headers } from 'next/headers'
 
+/** better-auth 側は未設定を client_secret_basic として扱うため表示上もそれに合わせる。それ以外の未対応値は明示的に区別する */
+const toTokenEndpointAuthMethod = (
+  value: string | null,
+): 'client_secret_basic' | 'client_secret_post' | 'unsupported' => {
+  if (value === null || value === 'client_secret_basic') {
+    return 'client_secret_basic'
+  }
+  if (value === 'client_secret_post') {
+    return 'client_secret_post'
+  }
+  return 'unsupported'
+}
+
 /**
  * 一覧・削除・無効化は Prisma を直接参照する。
  * better-auth の `getOAuthClients` / `deleteOAuthClient` は `userId` が自分のものだけを対象にするため、
@@ -39,9 +52,7 @@ export const getOidcClients = safeAuthAction
         redirectUri: redirectUris[0] ?? '',
         skipConsent: skipConsent ?? false,
         requirePkce: requirePKCE ?? false,
-        // better-auth 側は未設定を client_secret_basic として扱うため表示上もそれに合わせる
-        tokenEndpointAuthMethod: (tokenEndpointAuthMethod ?? 'client_secret_basic') as
-          'client_secret_basic' | 'client_secret_post',
+        tokenEndpointAuthMethod: toTokenEndpointAuthMethod(tokenEndpointAuthMethod),
         // 更新は better-auth 側で所有者チェックが入るため、自分が登録したものだけ編集させる
         isOwn: userId === ctx.user.id,
       }),

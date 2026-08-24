@@ -94,9 +94,18 @@ export const createLinkWidget = safeAuthAction
   .action(async ({ ctx: { user }, parsedInput: { name, url, description, icon } }) => {
     const id = uuidv7()
     const iconPath = icon ? await saveImageAttachment(icon, user.id) : null
-    const created = await prisma.linkWidget.create({
-      data: { id, name, url, description, iconPath },
-    })
+    let created
+    try {
+      created = await prisma.linkWidget.create({
+        data: { id, name, url, description, iconPath },
+      })
+    } catch (err) {
+      // 作成に失敗した場合は新規保存分を残さない
+      if (iconPath) {
+        await removeImageAttachment(iconPath)
+      }
+      throw err
+    }
     logger.info({ created }, 'linkWidget created')
     return created
   })
@@ -113,26 +122,37 @@ export const updateLinkWidget = safeAuthAction
       url,
       description,
     }
+    // 旧アイコンはDB更新の成功後にのみ削除する(更新失敗時に新旧両方を失わないため)
+    let oldIconPath: string | null = null
+    let newIconPath: string | null = null
     if (icon !== undefined) {
       const existing = await prisma.linkWidget.findUnique({
         where: { id },
         select: { iconPath: true },
       })
+      oldIconPath = existing?.iconPath ?? null
       if (icon === null) {
-        // アイコン削除: 既存ファイルを削除してパスをクリア
-        if (existing?.iconPath) {
-          await removeImageAttachment(existing.iconPath)
-        }
         data.iconPath = null
       } else {
-        // アイコン差し替え: 新しいキーで保存してから旧ファイルを削除
-        data.iconPath = await saveImageAttachment(icon, user.id)
-        if (existing?.iconPath) {
-          await removeImageAttachment(existing.iconPath)
-        }
+        newIconPath = await saveImageAttachment(icon, user.id)
+        data.iconPath = newIconPath
       }
     }
-    const updated = await prisma.linkWidget.update({ where: { id }, data })
+
+    let updated
+    try {
+      updated = await prisma.linkWidget.update({ where: { id }, data })
+    } catch (err) {
+      // 更新に失敗した場合は新規保存分を残さない
+      if (newIconPath) {
+        await removeImageAttachment(newIconPath)
+      }
+      throw err
+    }
+
+    if (oldIconPath) {
+      await removeImageAttachment(oldIconPath)
+    }
     logger.info({ updated }, 'linkWidget updated')
     return updated
   })

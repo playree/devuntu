@@ -215,6 +215,7 @@ export const en: LocaleItems = {
   token_endpoint_auth_method: 'Auth Method',
   token_endpoint_auth_method_basic: 'client_secret_basic',
   token_endpoint_auth_method_post: 'client_secret_post',
+  token_endpoint_auth_method_unsupported: 'Unsupported',
   transfer_billable: 'Billable Transfer',
   transfer_pool_usage: 'Transfer Pool Usage',
   trust_device: 'Trust this device',

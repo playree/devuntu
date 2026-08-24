@@ -187,7 +187,13 @@ export const setUserAvatar = safeAuthAction
     }
 
     const url = await saveImageAttachment(image, user.id)
-    await prisma.user.update({ where: { id: user.id }, data: { image: url, avatarLocked: true } })
+    try {
+      await prisma.user.update({ where: { id: user.id }, data: { image: url, avatarLocked: true } })
+    } catch (err) {
+      // 更新に失敗した場合は新規保存分を残さない
+      await removeImageAttachment(url)
+      throw err
+    }
     if (existing.image) {
       await removeImageAttachment(existing.image)
     }

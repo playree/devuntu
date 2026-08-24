@@ -213,6 +213,7 @@ export type LocaleItemBase =
   | 'token_endpoint_auth_method'
   | 'token_endpoint_auth_method_basic'
   | 'token_endpoint_auth_method_post'
+  | 'token_endpoint_auth_method_unsupported'
   | 'transfer_billable'
   | 'transfer_pool_usage'
   | 'trust_device'

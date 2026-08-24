@@ -108,8 +108,13 @@ export const TicketComments: FC<{
   const targetId = useCommentAnchor(flatComments)
 
   const [typeFilter, setTypeFilter] = useState<CommentTypeOption[]>(['none', 'plan', 'report'])
-  // 種別はスレッド(親コメント)単位で絞り込み、返信は親が表示対象のときだけ追従させる
-  const visibleComments = comments.filter((comment) => typeFilter.includes(comment.type ?? 'none'))
+  // 種別はスレッド(親コメント)単位で絞り込み、返信は親が表示対象のときだけ追従させる。
+  // ただし通知リンクの対象を含むスレッドは、種別に関わらず表示してアンカー移動できるようにする
+  const visibleComments = comments.filter(
+    (comment) =>
+      typeFilter.includes(comment.type ?? 'none') ||
+      [comment, ...comment.replies].some((c) => commentAnchorId(c.id) === targetId),
+  )
   const visibleCommentCount = visibleComments.flatMap((comment) => [comment, ...comment.replies]).length
 
   const commentTypeFilterItems: MultiTagItem<CommentTypeOption>[] = [
