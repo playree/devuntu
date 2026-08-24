@@ -22,7 +22,9 @@ import { deleteOidcClient, getOidcClients } from './server'
 export const ManualOidcClients: FC<{ baseUrl: string }> = ({ baseUrl }) => {
   const { t } = useLocale()
   const addModalState = useModalState()
-  const updateModalState = useModalState<UpdateOidcClient & { requirePkce: boolean }>()
+  const updateModalState = useModalState<
+    UpdateOidcClient & { requirePkce: boolean; tokenEndpointAuthMethod: 'client_secret_basic' | 'client_secret_post' }
+  >()
 
   const list = usePagingList({
     load: async () => {
@@ -56,12 +58,18 @@ export const ManualOidcClients: FC<{ baseUrl: string }> = ({ baseUrl }) => {
             name: t('client_name'),
             isRowHeader: true,
             allowsSorting: true,
-            minWidth: 120,
+            minWidth: 150,
             defaultWidth: '1fr',
           },
           { id: 'clientId', name: t('client_id'), allowsSorting: true, minWidth: 200, defaultWidth: '2fr' },
           { id: 'skipConsent', name: t('skip_consent'), allowsSorting: false, minWidth: 100 },
           { id: 'requirePkce', name: t('require_pkce'), allowsSorting: false, minWidth: 100 },
+          {
+            id: 'tokenEndpointAuthMethod',
+            name: t('token_endpoint_auth_method'),
+            allowsSorting: false,
+            minWidth: 140,
+          },
           { id: 'action', name: t('action'), allowsSorting: false, defaultWidth: 100 },
         ]}
       >
@@ -74,6 +82,11 @@ export const ManualOidcClients: FC<{ baseUrl: string }> = ({ baseUrl }) => {
             </Table.Cell>
             <Table.Cell>
               <OnOffChip isState={item.requirePkce} />
+            </Table.Cell>
+            <Table.Cell className='text-xs'>
+              {item.tokenEndpointAuthMethod === 'client_secret_post'
+                ? t('token_endpoint_auth_method_post')
+                : t('token_endpoint_auth_method_basic')}
             </Table.Cell>
             <ActionCell
               items={[

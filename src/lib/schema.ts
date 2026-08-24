@@ -80,6 +80,7 @@ export const scAddOidcClient = z.object({
   redirectUri: z.url(),
   skipConsent: z.boolean(),
   requirePkce: z.boolean(),
+  tokenEndpointAuthMethod: z.enum(['client_secret_basic', 'client_secret_post']),
 })
 export type AddOidcClient = z.infer<typeof scAddOidcClient>
 
