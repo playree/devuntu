@@ -1,3 +1,4 @@
+import { registerAgentSetupTool, registerAgentTools } from '@/lib/mcp-agent'
 import {
   addTicketCommentForMcp,
   createTicketForMcp,
@@ -21,6 +22,9 @@ import { z } from 'zod'
  * ステートレス運用(リクエストごとに生成)のため、認可済みユーザーはクロージャで閉じ込める。
  * チケット/ボード操作をツール化する際は、ここで auth.user を assertBoardAccess 等の
  * 既存の権限関数へそのまま渡して判定すること。
+ *
+ * 自動運用のツール(`mcp-agent.ts`)はエージェント用の長期トークンで接続した場合だけ登録する。
+ * 人間の MCP クライアントには関係が無く、一覧に出しても誤用のもとにしかならないため。
  */
 export const createDevuntuMcpServer = (auth: ResourceAuth) => {
   const server = new McpServer({ name: 'devuntu', version: '1.0.0' })
@@ -187,6 +191,13 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       ],
     }),
   )
+
+  // セットアップ手順は人が読むものなので接続の種類を問わない
+  registerAgentSetupTool(server)
+
+  if (auth.kind === 'agent') {
+    registerAgentTools(server, auth)
+  }
 
   return server
 }

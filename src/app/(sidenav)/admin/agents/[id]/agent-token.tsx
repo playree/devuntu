@@ -4,22 +4,21 @@ import { MultiButton } from '@/components/general/button'
 import { CopyableField } from '@/components/general/copyable-field'
 import { FlexCol } from '@/components/general/flex'
 import { GridBox } from '@/components/general/grid'
-import { FormModal, ModalBaseProps, useConfirmModal } from '@/components/general/modal'
+import { useConfirmModal } from '@/components/general/modal'
 import { NoticePanel, Panel, PanelSkeleton } from '@/components/general/panel'
 import { SingleSelectCtrl } from '@/components/general/select'
 import { StepMotion } from '@/components/general/step-motion'
-import { ArrowPathIcon, CheckIcon, KeyIcon } from '@/components/icon'
-import { parseAction, useActionData } from '@/lib/action-client'
+import { ArrowPathIcon, CheckIcon } from '@/components/icon'
+import { parseAction } from '@/lib/action-client'
 import { dayformat } from '@/lib/day'
 import { IssueAgentToken, scIssueAgentToken } from '@/lib/schema'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AnimatePresence } from 'framer-motion'
-import { FC, ReactNode, useCallback, useState } from 'react'
+import { FC, ReactNode, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { AgentRow } from './client'
-import { getAgentToken, issueAgentToken } from './server'
+import { GetAgentTokenReturnType, issueAgentToken } from '../server'
 
 type Step = {
   id: 'INPUT' | 'OUTPUT'
@@ -43,20 +42,18 @@ const TokenField: FC<{ label: string; children: ReactNode }> = ({ label, childre
  * エージェントは1本しかトークンを持てないので、発行は既存トークンの置き換え(ローテート)になる。
  * 平文は発行の応答でしか受け取れないため、発行後は OUTPUT ステップで一度だけ見せる。
  */
-export const TokenModal: FC<ModalBaseProps & { target: AgentRow; baseUrl: string }> = ({
-  state,
-  reload,
-  target,
-  baseUrl,
-}) => {
+export const AgentToken: FC<{
+  agentId: string
+  baseUrl: string
+  current: GetAgentTokenReturnType
+  isLoading: boolean
+  reload: () => void
+}> = ({ agentId, baseUrl, current, isLoading, reload }) => {
   const { t } = useLocale()
   const tz = useUserTimezone()
   const { confirmModal } = useConfirmModal()
   const [step, setStep] = useState<Step>({ id: 'INPUT', direction: 0 })
   const [issued, setIssued] = useState<string>()
-
-  const load = useCallback(() => getAgentToken({ id: target.id }), [target.id])
-  const { data: current, isLoading } = useActionData(load)
 
   const {
     control,
@@ -66,23 +63,26 @@ export const TokenModal: FC<ModalBaseProps & { target: AgentRow; baseUrl: string
     resolver: zodResolver(scIssueAgentToken),
     mode: 'onChange',
     defaultValues: {
-      userId: target.id,
+      userId: agentId,
       expires: 'none',
     },
   })
 
   return (
-    <FormModal
-      state={state}
+    <form
       onSubmit={handleSubmit(async (req) => {
         // 置き換えになる場合だけ確認する。今のトークンを使っている接続はその場で切れる
         if (current) {
-          const ok = await confirmModal().confirm({
-            title: t('reissue_token'),
-            text: t('msg_confirm_rotate_token'),
-          })
-          if (!ok) {
-            return
+          try {
+            const ok = await confirmModal().confirm({
+              title: t('reissue_token'),
+              text: t('msg_confirm_rotate_token'),
+            })
+            if (!ok) {
+              return
+            }
+          } finally {
+            confirmModal().close()
           }
         }
         const res = await parseAction(issueAgentToken(req))
@@ -90,32 +90,6 @@ export const TokenModal: FC<ModalBaseProps & { target: AgentRow; baseUrl: string
         setStep({ id: 'OUTPUT', direction: 1 })
         reload()
       })}
-      title={{ text: `${t('agent_token')} - ${target.name}`, icon: <KeyIcon /> }}
-      size='2xl'
-      footer={
-        <>
-          {step.id === 'INPUT' && (
-            <>
-              <MultiButton slot='close' variant='ghost'>
-                {t('cancel')}
-              </MultiButton>
-              <MultiButton
-                type='submit'
-                icon={current ? <ArrowPathIcon /> : <CheckIcon />}
-                isPending={isSubmitting}
-                isDisabled={isLoading}
-              >
-                {current ? t('reissue_token') : t('issue_token')}
-              </MultiButton>
-            </>
-          )}
-          {step.id === 'OUTPUT' && (
-            <MultiButton icon={<CheckIcon />} onPress={() => state.close()}>
-              {t('ok')}
-            </MultiButton>
-          )}
-        </>
-      }
     >
       <div className='min-h-72 overflow-hidden'>
         <AnimatePresence mode='wait' custom={step.direction}>
@@ -158,6 +132,19 @@ export const TokenModal: FC<ModalBaseProps & { target: AgentRow; baseUrl: string
                     <NoticePanel className='text-xs'>{t('not_issued')}</NoticePanel>
                   )}
                 </FlexCol>
+
+                <div className='flex items-center gap-2'>
+                  <MultiButton
+                    className='ml-auto'
+                    type='submit'
+                    size='sm'
+                    icon={current ? <ArrowPathIcon /> : <CheckIcon />}
+                    isPending={isSubmitting}
+                    isDisabled={isLoading}
+                  >
+                    {current ? t('reissue_token') : t('issue_token')}
+                  </MultiButton>
+                </div>
               </FlexCol>
             </StepMotion>
           )}
@@ -193,6 +180,6 @@ export const TokenModal: FC<ModalBaseProps & { target: AgentRow; baseUrl: string
           )}
         </AnimatePresence>
       </div>
-    </FormModal>
+    </form>
   )
 }

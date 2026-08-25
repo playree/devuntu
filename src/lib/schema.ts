@@ -1,6 +1,15 @@
 import { el } from '@/locale'
 import { z } from 'zod'
-import { AGENT_EMAIL_DOMAIN, AGENT_HANDLE_PATTERN, AGENT_TOKEN_EXPIRES } from './agent'
+import {
+  AGENT_EMAIL_DOMAIN,
+  AGENT_HANDLE_PATTERN,
+  AGENT_TASK_MODES,
+  AGENT_TOKEN_EXPIRES,
+  AGENT_WINDOW_MAX_MIN,
+  AGENT_WINDOW_STEP_MIN,
+  MAX_POLL_INTERVAL_SEC,
+  MIN_POLL_INTERVAL_SEC,
+} from './agent'
 import { NOTIFY_EVENTS } from './notify/notify'
 import {
   ASSIGNEE_NONE,
@@ -162,6 +171,38 @@ export const scIssueAgentToken = z.object({
   expires: z.enum(AGENT_TOKEN_EXPIRES),
 })
 export type IssueAgentToken = z.infer<typeof scIssueAgentToken>
+
+/** チケットの処理方式。null は「エージェントに任せない」 */
+export const zAgentMode = z.enum(AGENT_TASK_MODES)
+
+/** 稼働許可時間帯の時刻。0:00 からの分(30分刻み)。null は指定なし(= 終日) */
+const zWindowMin = z
+  .number()
+  .int()
+  .multipleOf(AGENT_WINDOW_STEP_MIN, el('@invalid_time_range'))
+  .min(0, el('@invalid_time_range'))
+  .max(AGENT_WINDOW_MAX_MIN, el('@invalid_time_range'))
+  .nullable()
+
+/**
+ * 自動運用(Devuntu Agent)の設定。
+ *
+ * 稼働許可時間帯は開始・終了のどちらかが未指定なら終日として扱う(`isWithinActiveWindow`)。
+ * 開始 > 終了は日跨ぎ(夜間のみ稼働)を表すため、大小関係の制約は掛けない。
+ */
+export const scSaveAgentRunner = z.object({
+  userId: z.uuidv7(),
+  enabled: z.boolean(),
+  activeFromMin: zWindowMin,
+  activeToMin: zWindowMin,
+  /** 妥当性(IANA 名として解決できるか)は `saveAgentRunner` 側で見る */
+  timezone: z.string().nullable(),
+  pollIntervalSec: z.number().int().min(MIN_POLL_INTERVAL_SEC).max(MAX_POLL_INTERVAL_SEC),
+  defaultMode: zAgentMode,
+  preTask: z.string().max(4000).nullable(),
+  postTask: z.string().max(4000).nullable(),
+})
+export type SaveAgentRunner = z.infer<typeof scSaveAgentRunner>
 
 export const scUpdatePasskey = z.object({
   id: z.uuidv7(),
@@ -341,6 +382,8 @@ export const scPatchTicket = z.object({
   tagIds: zTagIds.optional(),
   /** undefined = 変更しない / null = 未割り当てへ */
   assigneeId: z.uuidv7().nullish(),
+  /** undefined = 変更しない / null = エージェントに任せない */
+  agentMode: zAgentMode.nullish(),
 })
 export type PatchTicket = z.infer<typeof scPatchTicket>
 export type PatchTicketIn = z.input<typeof scPatchTicket>

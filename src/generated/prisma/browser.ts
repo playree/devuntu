@@ -30,6 +30,17 @@ export type User = Prisma.UserModel
  */
 export type AgentToken = Prisma.AgentTokenModel
 /**
+ * Model AgentRunner
+ * AIエージェントの自動運用(Devuntu Agent)の設定と、ランナーの稼働状況。
+ * エージェントユーザーにつき1行だけ持つ。行が無い状態は「自動運用を使わない」を表す。
+ */
+export type AgentRunner = Prisma.AgentRunnerModel
+/**
+ * Model AgentRun
+ * エージェントの1回の実行。稼働状況の確認と、応答が返らないまま落ちた実行の回収に使う。
+ */
+export type AgentRun = Prisma.AgentRunModel
+/**
  * Model Session
  * 
  */

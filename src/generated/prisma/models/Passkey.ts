@@ -535,14 +535,6 @@ export type PasskeyUncheckedUpdateManyWithoutUserNestedInput = {
   deleteMany?: Prisma.PasskeyScalarWhereInput | Prisma.PasskeyScalarWhereInput[]
 }
 
-export type IntFieldUpdateOperationsInput = {
-  set?: number
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 export type PasskeyCreateWithoutUserInput = {
   id?: string
   name?: string | null

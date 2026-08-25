@@ -1,7 +1,7 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action-server'
-import { agentEmail, agentTokenExpiresAt, DUPLICATED_AGENT_HANDLE } from '@/lib/agent'
+import { agentEmail, agentRunnerStatus, agentTokenExpiresAt, DUPLICATED_AGENT_HANDLE } from '@/lib/agent'
 import { generateAgentToken, hashAgentToken } from '@/lib/agent-token'
 import { auth } from '@/lib/auth'
 import { nowDate } from '@/lib/day'
@@ -11,14 +11,7 @@ import { isUniqueViolation, prisma } from '@/lib/prisma'
 import { scCreateAgent, scIssueAgentToken, scUpdateAgent, scUUID } from '@/lib/schema'
 import { isAPIError } from 'better-auth/api'
 import { headers } from 'next/headers'
-
-/** 一覧・更新の対象がエージェントであることを確かめる。人間のユーザーはこの画面から触れない */
-const assertAgent = async (id: string) => {
-  const user = await prisma.user.findUnique({ where: { id }, select: { isAgent: true } })
-  if (!user?.isAgent) {
-    throw errInvalidOperation()
-  }
-}
+import { assertAgent } from './agent-util'
 
 /** グループ存在確認(渡された全 groupId が存在しなければ INVALID_OPERATION) */
 const assertGroupsExist = async (groupIds: string[]) => {
@@ -56,11 +49,12 @@ export const getAgents = safeAuthAction.metadata({ actionName: 'getAgents', role
       createdAt: true,
       userGroups: { select: { group: { select: { id: true, name: true } } } },
       agentToken: { select: { lastUsedAt: true, expiresAt: true } },
+      agentRunner: { select: { enabled: true, pollIntervalSec: true, lastPolledAt: true } },
     },
     orderBy: { createdAt: 'desc' },
   })
 
-  return agents.map(({ userGroups, agentToken, ...agent }) => {
+  return agents.map(({ userGroups, agentToken, agentRunner, ...agent }) => {
     const tokenStatus: AgentTokenStatus = !agentToken
       ? 'none'
       : agentToken.expiresAt && agentToken.expiresAt <= now
@@ -71,10 +65,33 @@ export const getAgents = safeAuthAction.metadata({ actionName: 'getAgents', role
       groups: userGroups.map((ug) => ug.group),
       tokenStatus,
       lastUsedAt: agentToken?.lastUsedAt ?? null,
+      runnerStatus: agentRunnerStatus(agentRunner, now),
     }
   })
 })
 export type GetAgentsReturnType = Awaited<ReturnType<typeof getAgents>>['data']
+
+/** エージェント単票取得。詳細ページの Profile セクションで使う */
+export const getAgent = safeAuthAction
+  .metadata({ actionName: 'getAgent', role: 'admin' })
+  .inputSchema(scUUID)
+  .action(async ({ parsedInput: { id } }) => {
+    await assertAgent(id)
+
+    const agent = await prisma.user.findUniqueOrThrow({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
+        userGroups: { select: { group: { select: { id: true, name: true } } } },
+      },
+    })
+    const { userGroups, ...rest } = agent
+    return { ...rest, groups: userGroups.map((ug) => ug.group) }
+  })
+export type GetAgentReturnType = Awaited<ReturnType<typeof getAgent>>['data']
 
 /** グループ選択肢取得(id: name のマップ) */
 export const getGroupOptions = safeAuthAction

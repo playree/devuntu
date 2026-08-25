@@ -48,8 +48,10 @@ export const getTicket = safeAuthAction
           orderBy: { tag: { order: 'asc' } },
         },
         assigneeId: true,
-        assignee: { select: { name: true } },
+        assignee: { select: { name: true, isAgent: true } },
         createdBy: { select: { name: true } },
+        agentMode: true,
+        agentState: true,
         createdAt: true,
         updatedAt: true,
         comments: {
@@ -103,6 +105,8 @@ export const getTicket = safeAuthAction
       boardName: board.name,
       boardKind: board.kind,
       assigneeName: assignee?.name ?? '',
+      /** 担当がエージェントのときだけ、処理方式(`agentMode`)を選べるようにする */
+      assigneeIsAgent: assignee?.isAgent ?? false,
       createdByName: createdBy?.name ?? '',
       // スレッドは 1 階層のみなので、親コメントに自分宛の返信だけをぶら下げれば表示側は再帰不要
       comments: (() => {
@@ -135,7 +139,7 @@ export type GetTicketReturnType = Awaited<ReturnType<typeof getTicket>>['data']
 export const patchTicket = safeAuthAction
   .metadata({ actionName: 'patchTicket', role: 'user' })
   .inputSchema(scPatchTicket)
-  .action(async ({ ctx: { user }, parsedInput: { id, assigneeId, tagIds, dueDate, ...rest } }) => {
+  .action(async ({ ctx: { user }, parsedInput: { id, assigneeId, tagIds, dueDate, agentMode, ...rest } }) => {
     const { ticket, addedMentionUserIds } = await prisma.$transaction(async (tx) => {
       const access = await assertTicketAccess(user, id, 'edit', tx)
 
@@ -163,6 +167,8 @@ export const patchTicket = safeAuthAction
           ...rest,
           ...(dueDate !== undefined && { dueDate: dateOnlyToUtc(dueDate) }),
           ...(assigneeId !== undefined && { assigneeId: assigneeId ?? null }),
+          // エージェントに任せるのをやめたら処理状態も消す(残すと履歴として誤読される)
+          ...(agentMode !== undefined && { agentMode, ...(agentMode === null && { agentState: null }) }),
           mentionedUserIds,
         },
         select: { id: true, title: true, number: true, board: { select: { key: true } } },

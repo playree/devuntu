@@ -25,7 +25,16 @@ import { notify } from '@/components/notify'
 import { AssigneeSelectField } from '@/components/ticket/assignee-select'
 import { MentionChips } from '@/components/ticket/mention-chips'
 import { TagIdSelectField } from '@/components/ticket/tag-select'
-import { PriorityChip, StatusChip, TagChips, useBoardName, useTicketOptions } from '@/components/ticket/ticket-chip'
+import {
+  AGENT_MODE_NONE,
+  AgentStateChip,
+  PriorityChip,
+  StatusChip,
+  TagChips,
+  useAgentModeOptions,
+  useBoardName,
+  useTicketOptions,
+} from '@/components/ticket/ticket-chip'
 import type { TicketStatus } from '@/generated/prisma/enums'
 import { parseAction, useActionData } from '@/lib/action-client'
 import { dayformat, utcToDateOnly } from '@/lib/day'
@@ -50,7 +59,7 @@ import { getTicket, patchTicket, updateTicketStatus } from './server'
 const MAX_CONTENT_LENGTH = getFieldConstraints(scPatchTicket, 'content').maxLength
 
 /** 保存中の項目。同時に複数の項目は保存させない */
-type EditField = 'title' | 'status' | 'priority' | 'assigneeId' | 'dueDate' | 'tagIds'
+type EditField = 'title' | 'status' | 'priority' | 'assigneeId' | 'dueDate' | 'tagIds' | 'agentMode'
 
 /** 保存中の楽観値。status は patchTicket の対象外なので別枠で持つ */
 type Draft = Partial<PatchTicketIn> & { status?: TicketStatus }
@@ -122,6 +131,7 @@ export const TicketDetailClient: FC<{
   const router = useRouter()
   const { confirmModal } = useConfirmModal()
   const { statusOptions, priorityOptions } = useTicketOptions()
+  const agentModeOptions = useAgentModeOptions()
   const boardName = useBoardName()
 
   const { data: ticket, refresh, isLoading } = useActionData(() => getTicket({ id }))
@@ -282,6 +292,7 @@ export const TicketDetailClient: FC<{
   const assigneeId = draft.assigneeId !== undefined ? draft.assigneeId : ticket.assigneeId
   const dueDate = draft.dueDate !== undefined ? draft.dueDate : utcToDateOnly(ticket.dueDate)
   const tagIds = draft.tagIds ?? ticket.tags.map((tag) => tag.id)
+  const agentMode = draft.agentMode !== undefined ? draft.agentMode : ticket.agentMode
 
   const titleParsed = zTicketTitle.safeParse(title)
   const titleError = titleParsed.success ? undefined : fet({ message: titleParsed.error.issues[0]?.message })
@@ -443,6 +454,39 @@ export const TicketDetailClient: FC<{
               <MetaText label={t('tags')}>{ticket.tags.length > 0 ? <TagChips tags={ticket.tags} /> : '-'}</MetaText>
             )}
           </div>
+
+          {ticket.assigneeIsAgent && (
+            <>
+              <div className='col-span-6 md:col-span-3'>
+                {canEdit ? (
+                  <SingleSelectField
+                    label={t('agent_mode')}
+                    groupOptions={agentModeOptions}
+                    value={agentMode ?? AGENT_MODE_NONE}
+                    isDisabled={savingField === 'agentMode'}
+                    onChange={(next) => {
+                      const value = next === AGENT_MODE_NONE ? null : (next as typeof agentMode)
+                      if (next !== null && value !== (ticket.agentMode ?? null)) {
+                        void patch('agentMode', { agentMode: value })
+                      }
+                    }}
+                  />
+                ) : (
+                  <MetaText label={t('agent_mode')}>
+                    {agentMode ? agentModeOptions[agentMode] : t('agent_mode_none')}
+                  </MetaText>
+                )}
+              </div>
+              <div className='col-span-6 md:col-span-3'>
+                <MetaText label={t('agent_state')}>
+                  {ticket.agentState ? <AgentStateChip state={ticket.agentState} /> : '-'}
+                </MetaText>
+              </div>
+              <div className='col-span-12 md:col-span-6'>
+                <NoticePanel className='text-xs'>{t('msg_agent_mode_desc')}</NoticePanel>
+              </div>
+            </>
+          )}
         </Grid>
 
         <div // 作成 / 更新はチケットの属性ではないので、項目のグリッドから外して注記にする

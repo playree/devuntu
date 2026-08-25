@@ -1,4 +1,3 @@
-import { envu } from '@/lib/env-util'
 import { en } from '@/locale/lang-en'
 import { type Metadata } from 'next'
 import { FC } from 'react'
@@ -8,7 +7,7 @@ export const metadata: Metadata = {
   title: en.agent_manage,
 }
 
-const AdminAgentsPage: FC = async () => {
-  return <AdminAgentsClient baseUrl={envu.server.BETTER_AUTH_URL} />
+const AdminAgentsPage: FC = () => {
+  return <AdminAgentsClient />
 }
 export default AdminAgentsPage

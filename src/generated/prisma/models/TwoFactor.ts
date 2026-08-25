@@ -447,14 +447,6 @@ export type TwoFactorUncheckedUpdateManyWithoutUserNestedInput = {
   deleteMany?: Prisma.TwoFactorScalarWhereInput | Prisma.TwoFactorScalarWhereInput[]
 }
 
-export type NullableIntFieldUpdateOperationsInput = {
-  set?: number | null
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 export type TwoFactorCreateWithoutUserInput = {
   id?: string
   secret: string

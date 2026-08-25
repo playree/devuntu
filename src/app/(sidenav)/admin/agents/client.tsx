@@ -7,20 +7,17 @@ import { useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, CpuChipIcon, KeyIcon, PencilSquareIcon, PlusIcon } from '@/components/icon'
-import { notify } from '@/components/notify'
+import { ArrowPathIcon, Cog6ToothIcon, CpuChipIcon, PlusIcon } from '@/components/icon'
 import { parseAction, useActionData } from '@/lib/action-client'
+import { type AgentRunnerStatus } from '@/lib/agent'
 import { dayformat } from '@/lib/day'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { ButtonGroup, Chip, Table } from '@heroui/react'
+import { useRouter } from 'next/navigation'
 import { FC } from 'react'
-import { AddModal, UpdateModal } from './modals'
-import { type AgentTokenStatus, deleteAgent, getAgents, type GetAgentsReturnType, getGroupOptions } from './server'
-import { TokenModal } from './token-modal'
-
-/** モーダルへ渡す一覧の行。使う列だけに絞って受け渡しの依存を小さくする */
-export type AgentRow = Pick<NonNullable<GetAgentsReturnType>[number], 'id' | 'name' | 'email' | 'groups'>
+import { AddModal } from './modals'
+import { type AgentTokenStatus, getAgents, getGroupOptions } from './server'
 
 /** エージェントは1本しかトークンを持たないので、件数ではなく状態を出す */
 const TokenStatusChip: FC<{ status: AgentTokenStatus }> = ({ status }) => {
@@ -38,12 +35,32 @@ const TokenStatusChip: FC<{ status: AgentTokenStatus }> = ({ status }) => {
   )
 }
 
-export const AdminAgentsClient: FC<{ baseUrl: string }> = ({ baseUrl }) => {
+/** ランナーの稼働状況。未設定 / 停止中 は設定の問題、オフラインはランナー側の問題を表す */
+const RunnerStatusChip: FC<{ status: AgentRunnerStatus }> = ({ status }) => {
+  const { t } = useLocale()
+  const { color, label } = {
+    none: { color: 'default', label: t('agent_runner_none') },
+    disabled: { color: 'default', label: t('agent_runner_disabled') },
+    online: { color: 'success', label: t('agent_runner_online') },
+    offline: { color: 'warning', label: t('agent_runner_offline') },
+  }[status] as { color: 'default' | 'success' | 'warning'; label: string }
+
+  return (
+    <Chip // 「オフライン」が列幅で折り返さないようにする
+      color={color}
+      variant='soft'
+      className='whitespace-nowrap'
+    >
+      {label}
+    </Chip>
+  )
+}
+
+export const AdminAgentsClient: FC = () => {
   const { t } = useLocale()
   const tz = useUserTimezone()
+  const router = useRouter()
   const addModalState = useModalState()
-  const updateModalState = useModalState<AgentRow>()
-  const tokenModalState = useModalState<AgentRow>()
   const { data: groupOptions } = useActionData(getGroupOptions)
 
   const list = usePagingList({
@@ -73,13 +90,14 @@ export const AdminAgentsClient: FC<{ baseUrl: string }> = ({ baseUrl }) => {
         ariaLabel='agent list'
         pagingList={list}
         columns={[
-          { id: 'name', name: t('name'), isRowHeader: true, allowsSorting: true, minWidth: 110 },
-          { id: 'email', name: t('email'), allowsSorting: true, minWidth: 140, defaultWidth: '2fr' },
-          { id: 'groups', name: t('group'), minWidth: 80, defaultWidth: '1fr' },
-          { id: 'tokenStatus', name: t('agent_token'), allowsSorting: true, minWidth: 90, defaultWidth: 100 },
-          { id: 'lastUsedAt', name: t('last_used'), allowsSorting: true, minWidth: 110 },
-          { id: 'createdAt', name: t('created_at'), allowsSorting: true, minWidth: 110 },
-          { id: 'action', name: t('action'), allowsSorting: false, defaultWidth: 130 },
+          { id: 'name', name: t('name'), isRowHeader: true, allowsSorting: true, minWidth: 100 },
+          { id: 'email', name: t('email'), allowsSorting: true, minWidth: 120, defaultWidth: '2fr' },
+          { id: 'groups', name: t('group'), minWidth: 88, defaultWidth: '1fr' },
+          { id: 'tokenStatus', name: t('agent_token'), allowsSorting: true, minWidth: 80, defaultWidth: 90 },
+          { id: 'runnerStatus', name: t('agent_runner'), allowsSorting: true, minWidth: 90, defaultWidth: 100 },
+          { id: 'lastUsedAt', name: t('last_used'), allowsSorting: true, minWidth: 115 },
+          { id: 'createdAt', name: t('created_at'), allowsSorting: true, minWidth: 115 },
+          { id: 'action', name: t('action'), allowsSorting: false, defaultWidth: 90 },
         ]}
       >
         {(item) => (
@@ -98,37 +116,22 @@ export const AdminAgentsClient: FC<{ baseUrl: string }> = ({ baseUrl }) => {
             <Table.Cell>
               <TokenStatusChip status={item.tokenStatus} />
             </Table.Cell>
-            <Table.Cell className='font-mono text-xs'>
-              {item.lastUsedAt ? dayformat(item.lastUsedAt, 'tz-simple', tz) : ''}
+            <Table.Cell>
+              <RunnerStatusChip status={item.runnerStatus} />
             </Table.Cell>
-            <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'tz-simple', tz)}</Table.Cell>
+            <Table.Cell className='font-mono text-xs'>
+              {item.lastUsedAt ? dayformat(item.lastUsedAt, 'tz-minute', tz) : ''}
+            </Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'tz-minute', tz)}</Table.Cell>
             <ActionCell
               items={[
                 {
                   template: 'none',
-                  key: 'token',
-                  icon: <KeyIcon />,
-                  tooltip: t('agent_token'),
+                  key: 'settings',
+                  icon: <Cog6ToothIcon />,
+                  tooltip: t('agent_settings'),
                   onPress: () => {
-                    tokenModalState.open(item)
-                  },
-                },
-                {
-                  template: 'none',
-                  key: 'edit',
-                  icon: <PencilSquareIcon />,
-                  tooltip: t('update'),
-                  onPress: () => {
-                    updateModalState.open(item)
-                  },
-                },
-                {
-                  template: 'delete',
-                  target: item.name,
-                  action: async () => {
-                    await parseAction(deleteAgent({ id: item.id }))
-                    notify.success(t('msg_deleted_target', { target: item.name }))
-                    list.reload()
+                    router.push(`/admin/agents/${item.id}`)
                   },
                 },
               ]}
@@ -138,24 +141,6 @@ export const AdminAgentsClient: FC<{ baseUrl: string }> = ({ baseUrl }) => {
       </MultiTable>
 
       <AddModal state={addModalState} reload={list.reload} key={addModalState.key} groupOptions={groupOptions ?? {}} />
-      {updateModalState.target && (
-        <UpdateModal
-          state={updateModalState}
-          reload={list.reload}
-          key={updateModalState.key}
-          target={updateModalState.target}
-          groupOptions={groupOptions ?? {}}
-        />
-      )}
-      {tokenModalState.target && (
-        <TokenModal
-          state={tokenModalState}
-          reload={list.reload}
-          key={tokenModalState.key}
-          target={tokenModalState.target}
-          baseUrl={baseUrl}
-        />
-      )}
     </FlexCol>
   )
 }
