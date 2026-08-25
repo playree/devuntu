@@ -26,8 +26,9 @@ export const getUserByEmail = safeAction
     // DB 参照より前に消費して、存在判定の探りにもコストが掛かるようにする
     assertRateLimit(`signin:ip:${await getClientIp()}`, IP_RATE_LIMIT)
 
-    // ユーザー検索
-    const user = await prisma.user.findUnique({ where: { email: username } })
+    // ユーザー検索(AIエージェントは Web ログインできないので未存在として扱う)
+    const found = await prisma.user.findUnique({ where: { email: username } })
+    const user = found?.isAgent ? null : found
     // 認証方法
     const next: 'PASSWORD' | 'OTP' = auth.options.emailAndPassword.enabled ? 'PASSWORD' : 'OTP'
 

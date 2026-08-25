@@ -237,6 +237,23 @@ export const auth = betterAuth({
     },
     session: {
       create: {
+        /**
+         * AIエージェント用ユーザーの Web ログインを止める。
+         *
+         * パスワード / OTP / パスキー / ソーシャル / `/oauth2/authorize` はいずれも
+         * セッション生成を通るため、経路ごとに塞がずここ 1 箇所で拒否する。
+         * MCP のトークンはセッションを作らないので影響を受けない。
+         */
+        before: async (session) => {
+          const user = await prisma.user.findUnique({
+            where: { id: session.userId },
+            select: { isAgent: true },
+          })
+          if (user?.isAgent) {
+            logger.info({ userId: session.userId }, 'agent user sign-in rejected')
+            throw new APIError('FORBIDDEN', { code: 'AGENT_USER', message: 'agent user cannot sign in' })
+          }
+        },
         after: async (session) => {
           await prisma.user.update({
             where: { id: session.userId },
@@ -285,9 +302,10 @@ export const auth = betterAuth({
     emailOTP({
       disableSignUp: true,
       sendVerificationOTP: async ({ email, otp, type }) => {
-        const user = await prisma.user.findUnique({ where: { email }, select: { locale: true } })
+        // エージェントはログインできないので、宛先の存在を探る手段にもしない
+        const user = await prisma.user.findUnique({ where: { email }, select: { locale: true, isAgent: true } })
         logger.debug({ email, type, user }, 'sendVerificationOTP')
-        if (user) {
+        if (user && !user.isAgent) {
           await sendEmailOtp({ locale: user.locale, to: email, otp })
         }
       },

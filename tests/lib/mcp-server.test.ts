@@ -23,6 +23,7 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
 import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/mcp-ticket', () => ({
+  MCP_ASSIGNEE_ME: 'me',
   getTicketForMcp: vi.fn(),
   searchTicketsForMcp: vi.fn(),
   createTicketForMcp: vi.fn(),
@@ -36,12 +37,21 @@ vi.mock('@/lib/mcp-ticket', () => ({
 const auth: ResourceAuth = {
   user: { id: 'u1', name: 'tester', email: 'test@example.com', role: null },
   scopes: ['mcp'],
+  kind: 'oauth',
   clientId: 'test-client',
 }
 
-const connectClient = async () => {
+/** エージェント用の長期トークンで認可された場合。`clientId` は AgentToken の id */
+const agentAuth: ResourceAuth = {
+  user: { id: 'a1', name: 'agent', email: 'agent@agents.invalid', role: null },
+  scopes: ['mcp'],
+  kind: 'agent',
+  clientId: 'token-1',
+}
+
+const connectClient = async (resourceAuth: ResourceAuth = auth) => {
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
-  await createDevuntuMcpServer(auth).connect(serverTransport)
+  await createDevuntuMcpServer(resourceAuth).connect(serverTransport)
   const client = new Client({ name: 'test-client', version: '1.0.0' })
   await client.connect(clientTransport)
   return client
@@ -102,6 +112,33 @@ describe('createDevuntuMcpServer', () => {
 
     expect(searchTicketsForMcp).toHaveBeenCalledWith(auth, { keyword: 'テスト', status: ['todo'] })
     expect(result.content).toEqual([{ type: 'text', text: JSON.stringify([{ title: 'テストチケット' }], null, 2) }])
+  })
+
+  it('search_tickets は担当者の指定も渡す(エージェントが自分の担当を引く経路)', async () => {
+    vi.mocked(searchTicketsForMcp).mockResolvedValueOnce([])
+
+    await (
+      await connectClient(agentAuth)
+    ).callTool({
+      name: 'search_tickets',
+      arguments: { assignee: 'me' },
+    })
+
+    expect(searchTicketsForMcp).toHaveBeenCalledWith(agentAuth, { assignee: 'me' })
+  })
+
+  it('search_tickets の担当者はセンチネルか userId のみ受け付ける', async () => {
+    vi.mocked(searchTicketsForMcp).mockClear()
+
+    const result = await (
+      await connectClient(agentAuth)
+    ).callTool({
+      name: 'search_tickets',
+      arguments: { assignee: 'anyone' },
+    })
+
+    expect(result.isError).toBe(true)
+    expect(searchTicketsForMcp).not.toHaveBeenCalled()
   })
 
   it('create_ticket は入力をそのまま渡し、結果をJSONテキストとして返す', async () => {

@@ -58,8 +58,48 @@ model User {
   // add Notify
   notifySettings UserNotifySetting[]
 
+  // add AI Agent
+  /// AIエージェント用ユーザー。Webログインを行わず MCP からのみ利用する
+  isAgent            Boolean      @default(false)
+  agentTokens        AgentToken[] @relation("AgentTokenOwner")
+  createdAgentTokens AgentToken[] @relation("AgentTokenCreator")
+
   @@unique([email])
   @@map("user")
+}
+
+/// AIエージェント用ユーザーが MCP サーバーへ接続するための長期トークン。
+/// 平文は発行時の応答にしか現れず、保存するのはハッシュだけ。
+model AgentToken {
+  id     String @id @default(uuid(7))
+  userId String
+  user   User   @relation("AgentTokenOwner", fields: [userId], references: [id], onDelete: Cascade)
+
+  /// 用途を見分けるためのラベル(端末名など)
+  name String
+
+  /// SHA-256(平文) の hex。照合はこの列の一致だけで行う
+  tokenHash String @unique
+
+  /// 平文の末尾数文字。一覧でどのトークンかを見分けるためだけに持つ
+  hint String
+
+  /// null は無期限
+  expiresAt DateTime?
+
+  /// 失効した時刻。行は監査のため残すので、削除ではなくこの列で止める
+  revokedAt DateTime?
+
+  /// 最終利用時刻。リクエストごとに書かず、一定時間経過した場合だけ更新する
+  lastUsedAt DateTime?
+
+  createdById String?
+  createdBy   User?    @relation("AgentTokenCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdById])
+  @@map("agent_token")
 }
 
 model Session {

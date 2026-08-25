@@ -7,6 +7,8 @@
   - [認証・公開](#認証公開)
 - [MCP サーバー](#mcp-サーバー)
   - [Claude Code への登録](#claude-code-への登録)
+- [AIエージェント](#aiエージェント)
+  - [Claude Code への登録(エージェント)](#claude-code-への登録エージェント)
 - [通知](#通知)
 - [環境変数](#環境変数)
 - [開発](#開発)
@@ -56,6 +58,7 @@ Devuntu は、かんばん形式のボード/チケット管理を中心に、�
 | 画面名称           | パス                  |
 | ------------------ | --------------------- |
 | ユーザー管理       | `/admin/users`        |
+| エージェント管理   | `/admin/agents`       |
 | グループ管理       | `/admin/groups`       |
 | ダッシュボード管理 | `/admin/dashboard`    |
 | 設定(連携設定)     | `/admin/settings`     |
@@ -81,6 +84,9 @@ Devuntu は、かんばん形式のボード/チケット管理を中心に、�
 登録しただけではデータは読めず、devuntu へのログインと同意が必要です。詳しい仕組みや運用上の注意は
 [docs/mcp-server.md](docs/mcp-server.md) を参照。
 
+ブラウザを持たない**AIエージェント**は認可コードフローを踏めないため、管理画面で発行する
+長期トークンで接続します(後述)。
+
 ## Claude Code への登録
 
 ```sh
@@ -93,6 +99,29 @@ claude mcp add --transport http devuntu <BETTER_AUTH_URL>/api/mcp
 
 - 登録状況は `claude mcp list`、削除は `claude mcp remove devuntu`
 - 許可の取り消しは `/account` の「許可済みアプリ」から行えます
+
+# AIエージェント
+
+Web ログインを行わず、MCP からのみ Devuntu を利用するユーザーです。管理者が
+[`/admin/agents`](docs/screens.md) から作成し、接続用の長期トークンを発行します。
+
+- メールアドレスは入力した識別子から `<識別子>@agents.invalid` として自動生成されます。
+  `.invalid` は予約ドメインなのでメールは届かず、作成後に識別子は変更できません
+- ボードやチケットの権限は人間の利用者と同じです。ボードのメンバーに加えれば担当者として選択でき、
+  メンションの宛先にもなります
+- トークンは発行時に一度だけ表示されます。既定は無期限で、任意の期限も選べます。
+  停止は「失効」で行い、最終利用日時は一覧から確認できます
+
+## Claude Code への登録(エージェント)
+
+発行時に表示されるコマンドをそのまま使えます。
+
+```sh
+claude mcp add --transport http devuntu <BETTER_AUTH_URL>/api/mcp \
+  --header "Authorization: Bearer <発行したトークン>"
+```
+
+この経路ではブラウザでのログインと同意は発生しません。
 
 # 通知
 

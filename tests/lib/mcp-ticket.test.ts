@@ -53,6 +53,7 @@ const fakeTx = {
 const auth: ResourceAuth = {
   user: { id: 'u1', name: 'tester', email: 'test@example.com', role: null },
   scopes: ['mcp'],
+  kind: 'oauth',
   clientId: 'test-client',
 }
 

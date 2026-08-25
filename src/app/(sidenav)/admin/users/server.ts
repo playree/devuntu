@@ -21,11 +21,20 @@ const assertGroupsExist = async (groupIds: string[]) => {
   }
 }
 
+/** AIエージェントは /admin/agents で扱うので、この画面の操作対象から外す */
+const assertNotAgent = async (id: string) => {
+  const user = await prisma.user.findUnique({ where: { id }, select: { isAgent: true } })
+  if (user?.isAgent) {
+    throw errInvalidOperation()
+  }
+}
+
 /**
- * ユーザー一覧取得
+ * ユーザー一覧取得(AIエージェントは除く)
  */
 export const getUsers = safeAuthAction.metadata({ actionName: 'getUsers', role: 'admin' }).action(async () => {
   const users = await prisma.user.findMany({
+    where: { isAgent: false },
     select: {
       id: true,
       name: true,
@@ -105,6 +114,8 @@ export const deleteUser = safeAuthAction
   .metadata({ actionName: 'deleteUser', role: 'admin' })
   .inputSchema(scUUID)
   .action(async ({ parsedInput: { id } }) => {
+    await assertNotAgent(id)
+
     await prisma.$transaction(async (tx) => {
       // 対象の存在確認
       const user = await tx.user.findUnique({ where: { id }, select: { id: true, role: true } })
@@ -139,6 +150,8 @@ export const updateUser = safeAuthAction
   .inputSchema(scUpdateUser)
   .action(async ({ parsedInput: { id, name, email, isAdmin, nameLocked, groups } }) => {
     const groupIds = [...new Set(groups)]
+
+    await assertNotAgent(id)
 
     // 対象の存在確認
     const user = await prisma.user.findUnique({ where: { id }, select: { id: true, role: true } })

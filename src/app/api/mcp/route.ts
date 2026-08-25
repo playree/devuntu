@@ -1,3 +1,4 @@
+import { isAgentToken, verifyAgentToken } from '@/lib/agent-token'
 import { MCP_SCOPE } from '@/lib/auth'
 import { logger } from '@/lib/logger'
 import { createDevuntuMcpServer } from '@/lib/mcp-server'
@@ -11,6 +12,9 @@ import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/
  * 未認証のクライアントには RFC 9728 の `resource_metadata` を返し、そこから
  * 認可サーバーのメタデータ → 動的クライアント登録 → 認可フローへ進めるようにする。
  * 認可済みのリクエストは MCP プロトコル(Streamable HTTP)のハンドラへ委譲する。
+ *
+ * Bearer には2種類あり、AIエージェント用の長期トークン(`devuntu_agent_` 接頭辞)だけは
+ * 認可フローを踏まずに使える。どちらも検証後は同じ `ResourceAuth` になるので以降は共通。
  */
 
 /**
@@ -51,7 +55,7 @@ const handler = async (request: Request) => {
     return unauthorized()
   }
 
-  const result = await verifyMcpAccessToken(token)
+  const result = isAgentToken(token) ? await verifyAgentToken(token) : await verifyMcpAccessToken(token)
   if (!result.ok) {
     return unauthorized(result.error)
   }

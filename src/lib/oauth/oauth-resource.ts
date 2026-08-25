@@ -29,7 +29,12 @@ export type ResourceAuthUser = {
 export type ResourceAuth = {
   user: ResourceAuthUser
   scopes: string[]
-  /** トークンを発行したクライアント(`azp`) */
+  /**
+   * トークンの出どころ。
+   * `oauth` は認可コードフローで得た JWT、`agent` は AIエージェント用の長期トークン
+   */
+  kind: 'oauth' | 'agent'
+  /** oauth: トークンを発行したクライアント(`azp`) / agent: AgentToken の id */
   clientId: string
 }
 
@@ -95,6 +100,7 @@ export const verifyMcpAccessToken = async (token: string): Promise<ResourceAuthR
     auth: {
       user: { id: user.id, name: user.name, email: user.email, role: user.role },
       scopes,
+      kind: 'oauth',
       clientId,
     },
   }
