@@ -2957,11 +2957,9 @@ export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof User
 export const AgentTokenScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
-  name: 'name',
   tokenHash: 'tokenHash',
   hint: 'hint',
   expiresAt: 'expiresAt',
-  revokedAt: 'revokedAt',
   lastUsedAt: 'lastUsedAt',
   createdById: 'createdById',
   createdAt: 'createdAt'

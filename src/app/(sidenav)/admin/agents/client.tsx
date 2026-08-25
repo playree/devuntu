@@ -16,11 +16,27 @@ import { useLocale } from '@/locale/client'
 import { ButtonGroup, Chip, Table } from '@heroui/react'
 import { FC } from 'react'
 import { AddModal, UpdateModal } from './modals'
-import { deleteAgent, getAgents, type GetAgentsReturnType, getGroupOptions } from './server'
+import { type AgentTokenStatus, deleteAgent, getAgents, type GetAgentsReturnType, getGroupOptions } from './server'
 import { TokenModal } from './token-modal'
 
 /** モーダルへ渡す一覧の行。使う列だけに絞って受け渡しの依存を小さくする */
 export type AgentRow = Pick<NonNullable<GetAgentsReturnType>[number], 'id' | 'name' | 'email' | 'groups'>
+
+/** エージェントは1本しかトークンを持たないので、件数ではなく状態を出す */
+const TokenStatusChip: FC<{ status: AgentTokenStatus }> = ({ status }) => {
+  const { t } = useLocale()
+  const { color, label } = {
+    none: { color: 'default', label: t('not_issued') },
+    active: { color: 'success', label: t('token_active') },
+    expired: { color: 'warning', label: t('token_expired') },
+  }[status] as { color: 'default' | 'success' | 'warning'; label: string }
+
+  return (
+    <Chip color={color} variant='soft'>
+      {label}
+    </Chip>
+  )
+}
 
 export const AdminAgentsClient: FC<{ baseUrl: string }> = ({ baseUrl }) => {
   const { t } = useLocale()
@@ -60,7 +76,7 @@ export const AdminAgentsClient: FC<{ baseUrl: string }> = ({ baseUrl }) => {
           { id: 'name', name: t('name'), isRowHeader: true, allowsSorting: true, minWidth: 110 },
           { id: 'email', name: t('email'), allowsSorting: true, minWidth: 140, defaultWidth: '2fr' },
           { id: 'groups', name: t('group'), minWidth: 80, defaultWidth: '1fr' },
-          { id: 'tokenCount', name: t('token_count'), allowsSorting: true, minWidth: 90, defaultWidth: 90 },
+          { id: 'tokenStatus', name: t('agent_token'), allowsSorting: true, minWidth: 90, defaultWidth: 100 },
           { id: 'lastUsedAt', name: t('last_used'), allowsSorting: true, minWidth: 110 },
           { id: 'createdAt', name: t('created_at'), allowsSorting: true, minWidth: 110 },
           { id: 'action', name: t('action'), allowsSorting: false, defaultWidth: 130 },
@@ -79,7 +95,9 @@ export const AdminAgentsClient: FC<{ baseUrl: string }> = ({ baseUrl }) => {
                 ))}
               </span>
             </Table.Cell>
-            <Table.Cell className='font-mono text-xs'>{item.tokenCount}</Table.Cell>
+            <Table.Cell>
+              <TokenStatusChip status={item.tokenStatus} />
+            </Table.Cell>
             <Table.Cell className='font-mono text-xs'>
               {item.lastUsedAt ? dayformat(item.lastUsedAt, 'tz-simple', tz) : ''}
             </Table.Cell>

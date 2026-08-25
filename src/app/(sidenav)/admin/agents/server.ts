@@ -41,10 +41,10 @@ const syncGroups = async (userId: string, groupIds: string[]) => {
   ])
 }
 
-/**
- * エージェント一覧取得。
- * トークン数は失効・期限切れを除いた「今使えるもの」だけを数える。
- */
+/** 一覧に出すトークンの状態。エージェントは1本しか持たないので件数ではなく状態で表す */
+export type AgentTokenStatus = 'none' | 'active' | 'expired'
+
+/** エージェント一覧取得 */
 export const getAgents = safeAuthAction.metadata({ actionName: 'getAgents', role: 'admin' }).action(async () => {
   const now = nowDate()
   const agents = await prisma.user.findMany({
@@ -55,22 +55,22 @@ export const getAgents = safeAuthAction.metadata({ actionName: 'getAgents', role
       email: true,
       createdAt: true,
       userGroups: { select: { group: { select: { id: true, name: true } } } },
-      agentTokens: { select: { lastUsedAt: true, revokedAt: true, expiresAt: true } },
+      agentToken: { select: { lastUsedAt: true, expiresAt: true } },
     },
     orderBy: { createdAt: 'desc' },
   })
 
-  return agents.map(({ userGroups, agentTokens, ...agent }) => {
-    const active = agentTokens.filter((token) => !token.revokedAt && (!token.expiresAt || token.expiresAt > now))
-    const lastUsedAt = agentTokens.reduce<Date | null>(
-      (latest, token) => (token.lastUsedAt && (!latest || token.lastUsedAt > latest) ? token.lastUsedAt : latest),
-      null,
-    )
+  return agents.map(({ userGroups, agentToken, ...agent }) => {
+    const tokenStatus: AgentTokenStatus = !agentToken
+      ? 'none'
+      : agentToken.expiresAt && agentToken.expiresAt <= now
+        ? 'expired'
+        : 'active'
     return {
       ...agent,
       groups: userGroups.map((ug) => ug.group),
-      tokenCount: active.length,
-      lastUsedAt,
+      tokenStatus,
+      lastUsedAt: agentToken?.lastUsedAt ?? null,
     }
   })
 })
@@ -180,66 +180,46 @@ export const deleteAgent = safeAuthAction
     return { id }
   })
 
-/** トークン一覧取得。平文は保持していないので、見分け用の末尾数文字だけを返す */
-export const getAgentTokens = safeAuthAction
-  .metadata({ actionName: 'getAgentTokens', role: 'admin' })
+/** 現在のトークン取得。平文は保持していないので、見分け用の末尾数文字だけを返す */
+export const getAgentToken = safeAuthAction
+  .metadata({ actionName: 'getAgentToken', role: 'admin' })
   .inputSchema(scUUID)
   .action(async ({ parsedInput: { id } }) => {
     await assertAgent(id)
 
-    const tokens = await prisma.agentToken.findMany({
+    return await prisma.agentToken.findUnique({
       where: { userId: id },
-      select: {
-        id: true,
-        name: true,
-        hint: true,
-        expiresAt: true,
-        revokedAt: true,
-        lastUsedAt: true,
-        createdAt: true,
-      },
-      orderBy: { createdAt: 'desc' },
+      select: { hint: true, expiresAt: true, lastUsedAt: true, createdAt: true },
     })
-    return tokens
   })
-export type GetAgentTokensReturnType = Awaited<ReturnType<typeof getAgentTokens>>['data']
+export type GetAgentTokenReturnType = Awaited<ReturnType<typeof getAgentToken>>['data']
 
-/** トークン発行。平文を返せるのはこの応答だけで、DB にはハッシュしか残らない */
+/**
+ * トークン発行。1エージェント1本なので、既にあれば置き換える(ローテート)。
+ * 平文を返せるのはこの応答だけで、DB にはハッシュしか残らない。
+ */
 export const issueAgentToken = safeAuthAction
   .metadata({ actionName: 'issueAgentToken', role: 'admin' })
   .inputSchema(scIssueAgentToken)
-  .action(async ({ ctx: { user }, parsedInput: { userId, name, expires } }) => {
+  .action(async ({ ctx: { user }, parsedInput: { userId, expires } }) => {
     await assertAgent(userId)
 
     const { token, hint } = generateAgentToken()
-    const created = await prisma.agentToken.create({
-      data: {
-        userId,
-        name,
-        tokenHash: hashAgentToken(token),
-        hint,
-        expiresAt: agentTokenExpiresAt(expires, nowDate()),
-        createdById: user.id,
-      },
+    const now = nowDate()
+    const data = {
+      tokenHash: hashAgentToken(token),
+      hint,
+      expiresAt: agentTokenExpiresAt(expires, now),
+      createdById: user.id,
+    }
+    // createdAt は発行時刻として使うので、置き換えのときも今の時刻に揃える
+    const issued = await prisma.agentToken.upsert({
+      where: { userId },
+      create: { userId, ...data },
+      update: { ...data, lastUsedAt: null, createdAt: now },
       select: { id: true },
     })
 
-    logger.info({ agentTokenId: created.id, userId }, 'agent token issued')
+    logger.info({ agentTokenId: issued.id, userId }, 'agent token issued')
     return { token }
-  })
-
-/** トークン失効。監査のため行は残し、`revokedAt` で止める */
-export const revokeAgentToken = safeAuthAction
-  .metadata({ actionName: 'revokeAgentToken', role: 'admin' })
-  .inputSchema(scUUID)
-  .action(async ({ parsedInput: { id } }) => {
-    const target = await prisma.agentToken.findUnique({ where: { id }, select: { revokedAt: true } })
-    if (!target || target.revokedAt) {
-      throw errInvalidOperation()
-    }
-
-    await prisma.agentToken.update({ where: { id }, data: { revokedAt: nowDate() } })
-
-    logger.info({ agentTokenId: id }, 'agent token revoked')
-    return { id }
   })

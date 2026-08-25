@@ -15,6 +15,7 @@ import type * as Prisma from "../internal/prismaNamespace"
 /**
  * Model AgentToken
  * AIエージェント用ユーザーが MCP サーバーへ接続するための長期トークン。
+ * 1エージェントにつき1行だけ持ち、再発行はこの行の置き換えで行う。
  * 平文は発行時の応答にしか現れず、保存するのはハッシュだけ。
  */
 export type AgentTokenModel = runtime.Types.Result.DefaultSelection<Prisma.$AgentTokenPayload>
@@ -28,11 +29,9 @@ export type AggregateAgentToken = {
 export type AgentTokenMinAggregateOutputType = {
   id: string | null
   userId: string | null
-  name: string | null
   tokenHash: string | null
   hint: string | null
   expiresAt: Date | null
-  revokedAt: Date | null
   lastUsedAt: Date | null
   createdById: string | null
   createdAt: Date | null
@@ -41,11 +40,9 @@ export type AgentTokenMinAggregateOutputType = {
 export type AgentTokenMaxAggregateOutputType = {
   id: string | null
   userId: string | null
-  name: string | null
   tokenHash: string | null
   hint: string | null
   expiresAt: Date | null
-  revokedAt: Date | null
   lastUsedAt: Date | null
   createdById: string | null
   createdAt: Date | null
@@ -54,11 +51,9 @@ export type AgentTokenMaxAggregateOutputType = {
 export type AgentTokenCountAggregateOutputType = {
   id: number
   userId: number
-  name: number
   tokenHash: number
   hint: number
   expiresAt: number
-  revokedAt: number
   lastUsedAt: number
   createdById: number
   createdAt: number
@@ -69,11 +64,9 @@ export type AgentTokenCountAggregateOutputType = {
 export type AgentTokenMinAggregateInputType = {
   id?: true
   userId?: true
-  name?: true
   tokenHash?: true
   hint?: true
   expiresAt?: true
-  revokedAt?: true
   lastUsedAt?: true
   createdById?: true
   createdAt?: true
@@ -82,11 +75,9 @@ export type AgentTokenMinAggregateInputType = {
 export type AgentTokenMaxAggregateInputType = {
   id?: true
   userId?: true
-  name?: true
   tokenHash?: true
   hint?: true
   expiresAt?: true
-  revokedAt?: true
   lastUsedAt?: true
   createdById?: true
   createdAt?: true
@@ -95,11 +86,9 @@ export type AgentTokenMaxAggregateInputType = {
 export type AgentTokenCountAggregateInputType = {
   id?: true
   userId?: true
-  name?: true
   tokenHash?: true
   hint?: true
   expiresAt?: true
-  revokedAt?: true
   lastUsedAt?: true
   createdById?: true
   createdAt?: true
@@ -181,11 +170,9 @@ export type AgentTokenGroupByArgs<ExtArgs extends runtime.Types.Extensions.Inter
 export type AgentTokenGroupByOutputType = {
   id: string
   userId: string
-  name: string
   tokenHash: string
   hint: string
   expiresAt: Date | null
-  revokedAt: Date | null
   lastUsedAt: Date | null
   createdById: string | null
   createdAt: Date
@@ -215,11 +202,9 @@ export type AgentTokenWhereInput = {
   NOT?: Prisma.AgentTokenWhereInput | Prisma.AgentTokenWhereInput[]
   id?: Prisma.StringFilter<"AgentToken"> | string
   userId?: Prisma.StringFilter<"AgentToken"> | string
-  name?: Prisma.StringFilter<"AgentToken"> | string
   tokenHash?: Prisma.StringFilter<"AgentToken"> | string
   hint?: Prisma.StringFilter<"AgentToken"> | string
   expiresAt?: Prisma.DateTimeNullableFilter<"AgentToken"> | Date | string | null
-  revokedAt?: Prisma.DateTimeNullableFilter<"AgentToken"> | Date | string | null
   lastUsedAt?: Prisma.DateTimeNullableFilter<"AgentToken"> | Date | string | null
   createdById?: Prisma.StringNullableFilter<"AgentToken"> | string | null
   createdAt?: Prisma.DateTimeFilter<"AgentToken"> | Date | string
@@ -230,11 +215,9 @@ export type AgentTokenWhereInput = {
 export type AgentTokenOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
-  name?: Prisma.SortOrder
   tokenHash?: Prisma.SortOrder
   hint?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrderInput | Prisma.SortOrder
-  revokedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastUsedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdById?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -244,30 +227,26 @@ export type AgentTokenOrderByWithRelationInput = {
 
 export type AgentTokenWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  userId?: string
   tokenHash?: string
   AND?: Prisma.AgentTokenWhereInput | Prisma.AgentTokenWhereInput[]
   OR?: Prisma.AgentTokenWhereInput[]
   NOT?: Prisma.AgentTokenWhereInput | Prisma.AgentTokenWhereInput[]
-  userId?: Prisma.StringFilter<"AgentToken"> | string
-  name?: Prisma.StringFilter<"AgentToken"> | string
   hint?: Prisma.StringFilter<"AgentToken"> | string
   expiresAt?: Prisma.DateTimeNullableFilter<"AgentToken"> | Date | string | null
-  revokedAt?: Prisma.DateTimeNullableFilter<"AgentToken"> | Date | string | null
   lastUsedAt?: Prisma.DateTimeNullableFilter<"AgentToken"> | Date | string | null
   createdById?: Prisma.StringNullableFilter<"AgentToken"> | string | null
   createdAt?: Prisma.DateTimeFilter<"AgentToken"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   createdBy?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
-}, "id" | "tokenHash">
+}, "id" | "userId" | "tokenHash">
 
 export type AgentTokenOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
-  name?: Prisma.SortOrder
   tokenHash?: Prisma.SortOrder
   hint?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrderInput | Prisma.SortOrder
-  revokedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastUsedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdById?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -282,11 +261,9 @@ export type AgentTokenScalarWhereWithAggregatesInput = {
   NOT?: Prisma.AgentTokenScalarWhereWithAggregatesInput | Prisma.AgentTokenScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"AgentToken"> | string
   userId?: Prisma.StringWithAggregatesFilter<"AgentToken"> | string
-  name?: Prisma.StringWithAggregatesFilter<"AgentToken"> | string
   tokenHash?: Prisma.StringWithAggregatesFilter<"AgentToken"> | string
   hint?: Prisma.StringWithAggregatesFilter<"AgentToken"> | string
   expiresAt?: Prisma.DateTimeNullableWithAggregatesFilter<"AgentToken"> | Date | string | null
-  revokedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"AgentToken"> | Date | string | null
   lastUsedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"AgentToken"> | Date | string | null
   createdById?: Prisma.StringNullableWithAggregatesFilter<"AgentToken"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"AgentToken"> | Date | string
@@ -294,25 +271,21 @@ export type AgentTokenScalarWhereWithAggregatesInput = {
 
 export type AgentTokenCreateInput = {
   id?: string
-  name: string
   tokenHash: string
   hint: string
   expiresAt?: Date | string | null
-  revokedAt?: Date | string | null
   lastUsedAt?: Date | string | null
   createdAt?: Date | string
-  user: Prisma.UserCreateNestedOneWithoutAgentTokensInput
+  user: Prisma.UserCreateNestedOneWithoutAgentTokenInput
   createdBy?: Prisma.UserCreateNestedOneWithoutCreatedAgentTokensInput
 }
 
 export type AgentTokenUncheckedCreateInput = {
   id?: string
   userId: string
-  name: string
   tokenHash: string
   hint: string
   expiresAt?: Date | string | null
-  revokedAt?: Date | string | null
   lastUsedAt?: Date | string | null
   createdById?: string | null
   createdAt?: Date | string
@@ -320,25 +293,21 @@ export type AgentTokenUncheckedCreateInput = {
 
 export type AgentTokenUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
   tokenHash?: Prisma.StringFieldUpdateOperationsInput | string
   hint?: Prisma.StringFieldUpdateOperationsInput | string
   expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  revokedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  user?: Prisma.UserUpdateOneRequiredWithoutAgentTokensNestedInput
+  user?: Prisma.UserUpdateOneRequiredWithoutAgentTokenNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutCreatedAgentTokensNestedInput
 }
 
 export type AgentTokenUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
   tokenHash?: Prisma.StringFieldUpdateOperationsInput | string
   hint?: Prisma.StringFieldUpdateOperationsInput | string
   expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  revokedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -347,11 +316,9 @@ export type AgentTokenUncheckedUpdateInput = {
 export type AgentTokenCreateManyInput = {
   id?: string
   userId: string
-  name: string
   tokenHash: string
   hint: string
   expiresAt?: Date | string | null
-  revokedAt?: Date | string | null
   lastUsedAt?: Date | string | null
   createdById?: string | null
   createdAt?: Date | string
@@ -359,11 +326,9 @@ export type AgentTokenCreateManyInput = {
 
 export type AgentTokenUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
   tokenHash?: Prisma.StringFieldUpdateOperationsInput | string
   hint?: Prisma.StringFieldUpdateOperationsInput | string
   expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  revokedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -371,14 +336,17 @@ export type AgentTokenUpdateManyMutationInput = {
 export type AgentTokenUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
   tokenHash?: Prisma.StringFieldUpdateOperationsInput | string
   hint?: Prisma.StringFieldUpdateOperationsInput | string
   expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  revokedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type AgentTokenNullableScalarRelationFilter = {
+  is?: Prisma.AgentTokenWhereInput | null
+  isNot?: Prisma.AgentTokenWhereInput | null
 }
 
 export type AgentTokenListRelationFilter = {
@@ -394,11 +362,9 @@ export type AgentTokenOrderByRelationAggregateInput = {
 export type AgentTokenCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
-  name?: Prisma.SortOrder
   tokenHash?: Prisma.SortOrder
   hint?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrder
-  revokedAt?: Prisma.SortOrder
   lastUsedAt?: Prisma.SortOrder
   createdById?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -407,11 +373,9 @@ export type AgentTokenCountOrderByAggregateInput = {
 export type AgentTokenMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
-  name?: Prisma.SortOrder
   tokenHash?: Prisma.SortOrder
   hint?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrder
-  revokedAt?: Prisma.SortOrder
   lastUsedAt?: Prisma.SortOrder
   createdById?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -420,21 +384,18 @@ export type AgentTokenMaxOrderByAggregateInput = {
 export type AgentTokenMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
-  name?: Prisma.SortOrder
   tokenHash?: Prisma.SortOrder
   hint?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrder
-  revokedAt?: Prisma.SortOrder
   lastUsedAt?: Prisma.SortOrder
   createdById?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
-export type AgentTokenCreateNestedManyWithoutUserInput = {
-  create?: Prisma.XOR<Prisma.AgentTokenCreateWithoutUserInput, Prisma.AgentTokenUncheckedCreateWithoutUserInput> | Prisma.AgentTokenCreateWithoutUserInput[] | Prisma.AgentTokenUncheckedCreateWithoutUserInput[]
-  connectOrCreate?: Prisma.AgentTokenCreateOrConnectWithoutUserInput | Prisma.AgentTokenCreateOrConnectWithoutUserInput[]
-  createMany?: Prisma.AgentTokenCreateManyUserInputEnvelope
-  connect?: Prisma.AgentTokenWhereUniqueInput | Prisma.AgentTokenWhereUniqueInput[]
+export type AgentTokenCreateNestedOneWithoutUserInput = {
+  create?: Prisma.XOR<Prisma.AgentTokenCreateWithoutUserInput, Prisma.AgentTokenUncheckedCreateWithoutUserInput>
+  connectOrCreate?: Prisma.AgentTokenCreateOrConnectWithoutUserInput
+  connect?: Prisma.AgentTokenWhereUniqueInput
 }
 
 export type AgentTokenCreateNestedManyWithoutCreatedByInput = {
@@ -444,11 +405,10 @@ export type AgentTokenCreateNestedManyWithoutCreatedByInput = {
   connect?: Prisma.AgentTokenWhereUniqueInput | Prisma.AgentTokenWhereUniqueInput[]
 }
 
-export type AgentTokenUncheckedCreateNestedManyWithoutUserInput = {
-  create?: Prisma.XOR<Prisma.AgentTokenCreateWithoutUserInput, Prisma.AgentTokenUncheckedCreateWithoutUserInput> | Prisma.AgentTokenCreateWithoutUserInput[] | Prisma.AgentTokenUncheckedCreateWithoutUserInput[]
-  connectOrCreate?: Prisma.AgentTokenCreateOrConnectWithoutUserInput | Prisma.AgentTokenCreateOrConnectWithoutUserInput[]
-  createMany?: Prisma.AgentTokenCreateManyUserInputEnvelope
-  connect?: Prisma.AgentTokenWhereUniqueInput | Prisma.AgentTokenWhereUniqueInput[]
+export type AgentTokenUncheckedCreateNestedOneWithoutUserInput = {
+  create?: Prisma.XOR<Prisma.AgentTokenCreateWithoutUserInput, Prisma.AgentTokenUncheckedCreateWithoutUserInput>
+  connectOrCreate?: Prisma.AgentTokenCreateOrConnectWithoutUserInput
+  connect?: Prisma.AgentTokenWhereUniqueInput
 }
 
 export type AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput = {
@@ -458,18 +418,14 @@ export type AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput = {
   connect?: Prisma.AgentTokenWhereUniqueInput | Prisma.AgentTokenWhereUniqueInput[]
 }
 
-export type AgentTokenUpdateManyWithoutUserNestedInput = {
-  create?: Prisma.XOR<Prisma.AgentTokenCreateWithoutUserInput, Prisma.AgentTokenUncheckedCreateWithoutUserInput> | Prisma.AgentTokenCreateWithoutUserInput[] | Prisma.AgentTokenUncheckedCreateWithoutUserInput[]
-  connectOrCreate?: Prisma.AgentTokenCreateOrConnectWithoutUserInput | Prisma.AgentTokenCreateOrConnectWithoutUserInput[]
-  upsert?: Prisma.AgentTokenUpsertWithWhereUniqueWithoutUserInput | Prisma.AgentTokenUpsertWithWhereUniqueWithoutUserInput[]
-  createMany?: Prisma.AgentTokenCreateManyUserInputEnvelope
-  set?: Prisma.AgentTokenWhereUniqueInput | Prisma.AgentTokenWhereUniqueInput[]
-  disconnect?: Prisma.AgentTokenWhereUniqueInput | Prisma.AgentTokenWhereUniqueInput[]
-  delete?: Prisma.AgentTokenWhereUniqueInput | Prisma.AgentTokenWhereUniqueInput[]
-  connect?: Prisma.AgentTokenWhereUniqueInput | Prisma.AgentTokenWhereUniqueInput[]
-  update?: Prisma.AgentTokenUpdateWithWhereUniqueWithoutUserInput | Prisma.AgentTokenUpdateWithWhereUniqueWithoutUserInput[]
-  updateMany?: Prisma.AgentTokenUpdateManyWithWhereWithoutUserInput | Prisma.AgentTokenUpdateManyWithWhereWithoutUserInput[]
-  deleteMany?: Prisma.AgentTokenScalarWhereInput | Prisma.AgentTokenScalarWhereInput[]
+export type AgentTokenUpdateOneWithoutUserNestedInput = {
+  create?: Prisma.XOR<Prisma.AgentTokenCreateWithoutUserInput, Prisma.AgentTokenUncheckedCreateWithoutUserInput>
+  connectOrCreate?: Prisma.AgentTokenCreateOrConnectWithoutUserInput
+  upsert?: Prisma.AgentTokenUpsertWithoutUserInput
+  disconnect?: Prisma.AgentTokenWhereInput | boolean
+  delete?: Prisma.AgentTokenWhereInput | boolean
+  connect?: Prisma.AgentTokenWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.AgentTokenUpdateToOneWithWhereWithoutUserInput, Prisma.AgentTokenUpdateWithoutUserInput>, Prisma.AgentTokenUncheckedUpdateWithoutUserInput>
 }
 
 export type AgentTokenUpdateManyWithoutCreatedByNestedInput = {
@@ -486,18 +442,14 @@ export type AgentTokenUpdateManyWithoutCreatedByNestedInput = {
   deleteMany?: Prisma.AgentTokenScalarWhereInput | Prisma.AgentTokenScalarWhereInput[]
 }
 
-export type AgentTokenUncheckedUpdateManyWithoutUserNestedInput = {
-  create?: Prisma.XOR<Prisma.AgentTokenCreateWithoutUserInput, Prisma.AgentTokenUncheckedCreateWithoutUserInput> | Prisma.AgentTokenCreateWithoutUserInput[] | Prisma.AgentTokenUncheckedCreateWithoutUserInput[]
-  connectOrCreate?: Prisma.AgentTokenCreateOrConnectWithoutUserInput | Prisma.AgentTokenCreateOrConnectWithoutUserInput[]
-  upsert?: Prisma.AgentTokenUpsertWithWhereUniqueWithoutUserInput | Prisma.AgentTokenUpsertWithWhereUniqueWithoutUserInput[]
-  createMany?: Prisma.AgentTokenCreateManyUserInputEnvelope
-  set?: Prisma.AgentTokenWhereUniqueInput | Prisma.AgentTokenWhereUniqueInput[]
-  disconnect?: Prisma.AgentTokenWhereUniqueInput | Prisma.AgentTokenWhereUniqueInput[]
-  delete?: Prisma.AgentTokenWhereUniqueInput | Prisma.AgentTokenWhereUniqueInput[]
-  connect?: Prisma.AgentTokenWhereUniqueInput | Prisma.AgentTokenWhereUniqueInput[]
-  update?: Prisma.AgentTokenUpdateWithWhereUniqueWithoutUserInput | Prisma.AgentTokenUpdateWithWhereUniqueWithoutUserInput[]
-  updateMany?: Prisma.AgentTokenUpdateManyWithWhereWithoutUserInput | Prisma.AgentTokenUpdateManyWithWhereWithoutUserInput[]
-  deleteMany?: Prisma.AgentTokenScalarWhereInput | Prisma.AgentTokenScalarWhereInput[]
+export type AgentTokenUncheckedUpdateOneWithoutUserNestedInput = {
+  create?: Prisma.XOR<Prisma.AgentTokenCreateWithoutUserInput, Prisma.AgentTokenUncheckedCreateWithoutUserInput>
+  connectOrCreate?: Prisma.AgentTokenCreateOrConnectWithoutUserInput
+  upsert?: Prisma.AgentTokenUpsertWithoutUserInput
+  disconnect?: Prisma.AgentTokenWhereInput | boolean
+  delete?: Prisma.AgentTokenWhereInput | boolean
+  connect?: Prisma.AgentTokenWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.AgentTokenUpdateToOneWithWhereWithoutUserInput, Prisma.AgentTokenUpdateWithoutUserInput>, Prisma.AgentTokenUncheckedUpdateWithoutUserInput>
 }
 
 export type AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput = {
@@ -516,11 +468,9 @@ export type AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput = {
 
 export type AgentTokenCreateWithoutUserInput = {
   id?: string
-  name: string
   tokenHash: string
   hint: string
   expiresAt?: Date | string | null
-  revokedAt?: Date | string | null
   lastUsedAt?: Date | string | null
   createdAt?: Date | string
   createdBy?: Prisma.UserCreateNestedOneWithoutCreatedAgentTokensInput
@@ -528,11 +478,9 @@ export type AgentTokenCreateWithoutUserInput = {
 
 export type AgentTokenUncheckedCreateWithoutUserInput = {
   id?: string
-  name: string
   tokenHash: string
   hint: string
   expiresAt?: Date | string | null
-  revokedAt?: Date | string | null
   lastUsedAt?: Date | string | null
   createdById?: string | null
   createdAt?: Date | string
@@ -543,31 +491,22 @@ export type AgentTokenCreateOrConnectWithoutUserInput = {
   create: Prisma.XOR<Prisma.AgentTokenCreateWithoutUserInput, Prisma.AgentTokenUncheckedCreateWithoutUserInput>
 }
 
-export type AgentTokenCreateManyUserInputEnvelope = {
-  data: Prisma.AgentTokenCreateManyUserInput | Prisma.AgentTokenCreateManyUserInput[]
-  skipDuplicates?: boolean
-}
-
 export type AgentTokenCreateWithoutCreatedByInput = {
   id?: string
-  name: string
   tokenHash: string
   hint: string
   expiresAt?: Date | string | null
-  revokedAt?: Date | string | null
   lastUsedAt?: Date | string | null
   createdAt?: Date | string
-  user: Prisma.UserCreateNestedOneWithoutAgentTokensInput
+  user: Prisma.UserCreateNestedOneWithoutAgentTokenInput
 }
 
 export type AgentTokenUncheckedCreateWithoutCreatedByInput = {
   id?: string
   userId: string
-  name: string
   tokenHash: string
   hint: string
   expiresAt?: Date | string | null
-  revokedAt?: Date | string | null
   lastUsedAt?: Date | string | null
   createdAt?: Date | string
 }
@@ -582,36 +521,35 @@ export type AgentTokenCreateManyCreatedByInputEnvelope = {
   skipDuplicates?: boolean
 }
 
-export type AgentTokenUpsertWithWhereUniqueWithoutUserInput = {
-  where: Prisma.AgentTokenWhereUniqueInput
+export type AgentTokenUpsertWithoutUserInput = {
   update: Prisma.XOR<Prisma.AgentTokenUpdateWithoutUserInput, Prisma.AgentTokenUncheckedUpdateWithoutUserInput>
   create: Prisma.XOR<Prisma.AgentTokenCreateWithoutUserInput, Prisma.AgentTokenUncheckedCreateWithoutUserInput>
+  where?: Prisma.AgentTokenWhereInput
 }
 
-export type AgentTokenUpdateWithWhereUniqueWithoutUserInput = {
-  where: Prisma.AgentTokenWhereUniqueInput
+export type AgentTokenUpdateToOneWithWhereWithoutUserInput = {
+  where?: Prisma.AgentTokenWhereInput
   data: Prisma.XOR<Prisma.AgentTokenUpdateWithoutUserInput, Prisma.AgentTokenUncheckedUpdateWithoutUserInput>
 }
 
-export type AgentTokenUpdateManyWithWhereWithoutUserInput = {
-  where: Prisma.AgentTokenScalarWhereInput
-  data: Prisma.XOR<Prisma.AgentTokenUpdateManyMutationInput, Prisma.AgentTokenUncheckedUpdateManyWithoutUserInput>
+export type AgentTokenUpdateWithoutUserInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  tokenHash?: Prisma.StringFieldUpdateOperationsInput | string
+  hint?: Prisma.StringFieldUpdateOperationsInput | string
+  expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdBy?: Prisma.UserUpdateOneWithoutCreatedAgentTokensNestedInput
 }
 
-export type AgentTokenScalarWhereInput = {
-  AND?: Prisma.AgentTokenScalarWhereInput | Prisma.AgentTokenScalarWhereInput[]
-  OR?: Prisma.AgentTokenScalarWhereInput[]
-  NOT?: Prisma.AgentTokenScalarWhereInput | Prisma.AgentTokenScalarWhereInput[]
-  id?: Prisma.StringFilter<"AgentToken"> | string
-  userId?: Prisma.StringFilter<"AgentToken"> | string
-  name?: Prisma.StringFilter<"AgentToken"> | string
-  tokenHash?: Prisma.StringFilter<"AgentToken"> | string
-  hint?: Prisma.StringFilter<"AgentToken"> | string
-  expiresAt?: Prisma.DateTimeNullableFilter<"AgentToken"> | Date | string | null
-  revokedAt?: Prisma.DateTimeNullableFilter<"AgentToken"> | Date | string | null
-  lastUsedAt?: Prisma.DateTimeNullableFilter<"AgentToken"> | Date | string | null
-  createdById?: Prisma.StringNullableFilter<"AgentToken"> | string | null
-  createdAt?: Prisma.DateTimeFilter<"AgentToken"> | Date | string
+export type AgentTokenUncheckedUpdateWithoutUserInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  tokenHash?: Prisma.StringFieldUpdateOperationsInput | string
+  hint?: Prisma.StringFieldUpdateOperationsInput | string
+  expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type AgentTokenUpsertWithWhereUniqueWithoutCreatedByInput = {
@@ -630,86 +568,46 @@ export type AgentTokenUpdateManyWithWhereWithoutCreatedByInput = {
   data: Prisma.XOR<Prisma.AgentTokenUpdateManyMutationInput, Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByInput>
 }
 
-export type AgentTokenCreateManyUserInput = {
-  id?: string
-  name: string
-  tokenHash: string
-  hint: string
-  expiresAt?: Date | string | null
-  revokedAt?: Date | string | null
-  lastUsedAt?: Date | string | null
-  createdById?: string | null
-  createdAt?: Date | string
+export type AgentTokenScalarWhereInput = {
+  AND?: Prisma.AgentTokenScalarWhereInput | Prisma.AgentTokenScalarWhereInput[]
+  OR?: Prisma.AgentTokenScalarWhereInput[]
+  NOT?: Prisma.AgentTokenScalarWhereInput | Prisma.AgentTokenScalarWhereInput[]
+  id?: Prisma.StringFilter<"AgentToken"> | string
+  userId?: Prisma.StringFilter<"AgentToken"> | string
+  tokenHash?: Prisma.StringFilter<"AgentToken"> | string
+  hint?: Prisma.StringFilter<"AgentToken"> | string
+  expiresAt?: Prisma.DateTimeNullableFilter<"AgentToken"> | Date | string | null
+  lastUsedAt?: Prisma.DateTimeNullableFilter<"AgentToken"> | Date | string | null
+  createdById?: Prisma.StringNullableFilter<"AgentToken"> | string | null
+  createdAt?: Prisma.DateTimeFilter<"AgentToken"> | Date | string
 }
 
 export type AgentTokenCreateManyCreatedByInput = {
   id?: string
   userId: string
-  name: string
   tokenHash: string
   hint: string
   expiresAt?: Date | string | null
-  revokedAt?: Date | string | null
   lastUsedAt?: Date | string | null
   createdAt?: Date | string
 }
 
-export type AgentTokenUpdateWithoutUserInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  tokenHash?: Prisma.StringFieldUpdateOperationsInput | string
-  hint?: Prisma.StringFieldUpdateOperationsInput | string
-  expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  revokedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  createdBy?: Prisma.UserUpdateOneWithoutCreatedAgentTokensNestedInput
-}
-
-export type AgentTokenUncheckedUpdateWithoutUserInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  tokenHash?: Prisma.StringFieldUpdateOperationsInput | string
-  hint?: Prisma.StringFieldUpdateOperationsInput | string
-  expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  revokedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-}
-
-export type AgentTokenUncheckedUpdateManyWithoutUserInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  tokenHash?: Prisma.StringFieldUpdateOperationsInput | string
-  hint?: Prisma.StringFieldUpdateOperationsInput | string
-  expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  revokedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-}
-
 export type AgentTokenUpdateWithoutCreatedByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
   tokenHash?: Prisma.StringFieldUpdateOperationsInput | string
   hint?: Prisma.StringFieldUpdateOperationsInput | string
   expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  revokedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  user?: Prisma.UserUpdateOneRequiredWithoutAgentTokensNestedInput
+  user?: Prisma.UserUpdateOneRequiredWithoutAgentTokenNestedInput
 }
 
 export type AgentTokenUncheckedUpdateWithoutCreatedByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
   tokenHash?: Prisma.StringFieldUpdateOperationsInput | string
   hint?: Prisma.StringFieldUpdateOperationsInput | string
   expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  revokedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -717,11 +615,9 @@ export type AgentTokenUncheckedUpdateWithoutCreatedByInput = {
 export type AgentTokenUncheckedUpdateManyWithoutCreatedByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
   tokenHash?: Prisma.StringFieldUpdateOperationsInput | string
   hint?: Prisma.StringFieldUpdateOperationsInput | string
   expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  revokedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -731,11 +627,9 @@ export type AgentTokenUncheckedUpdateManyWithoutCreatedByInput = {
 export type AgentTokenSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
-  name?: boolean
   tokenHash?: boolean
   hint?: boolean
   expiresAt?: boolean
-  revokedAt?: boolean
   lastUsedAt?: boolean
   createdById?: boolean
   createdAt?: boolean
@@ -746,11 +640,9 @@ export type AgentTokenSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
 export type AgentTokenSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
-  name?: boolean
   tokenHash?: boolean
   hint?: boolean
   expiresAt?: boolean
-  revokedAt?: boolean
   lastUsedAt?: boolean
   createdById?: boolean
   createdAt?: boolean
@@ -761,11 +653,9 @@ export type AgentTokenSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
 export type AgentTokenSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
-  name?: boolean
   tokenHash?: boolean
   hint?: boolean
   expiresAt?: boolean
-  revokedAt?: boolean
   lastUsedAt?: boolean
   createdById?: boolean
   createdAt?: boolean
@@ -776,17 +666,15 @@ export type AgentTokenSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
 export type AgentTokenSelectScalar = {
   id?: boolean
   userId?: boolean
-  name?: boolean
   tokenHash?: boolean
   hint?: boolean
   expiresAt?: boolean
-  revokedAt?: boolean
   lastUsedAt?: boolean
   createdById?: boolean
   createdAt?: boolean
 }
 
-export type AgentTokenOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "name" | "tokenHash" | "hint" | "expiresAt" | "revokedAt" | "lastUsedAt" | "createdById" | "createdAt", ExtArgs["result"]["agentToken"]>
+export type AgentTokenOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "tokenHash" | "hint" | "expiresAt" | "lastUsedAt" | "createdById" | "createdAt", ExtArgs["result"]["agentToken"]>
 export type AgentTokenInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   createdBy?: boolean | Prisma.AgentToken$createdByArgs<ExtArgs>
@@ -810,15 +698,11 @@ export type $AgentTokenPayload<ExtArgs extends runtime.Types.Extensions.Internal
     id: string
     userId: string
     /**
-     * 用途を見分けるためのラベル(端末名など)
-     */
-    name: string
-    /**
      * SHA-256(平文) の hex。照合はこの列の一致だけで行う
      */
     tokenHash: string
     /**
-     * 平文の末尾数文字。一覧でどのトークンかを見分けるためだけに持つ
+     * 平文の末尾数文字。管理画面で今のトークンを見分けるためだけに持つ
      */
     hint: string
     /**
@@ -826,14 +710,13 @@ export type $AgentTokenPayload<ExtArgs extends runtime.Types.Extensions.Internal
      */
     expiresAt: Date | null
     /**
-     * 失効した時刻。行は監査のため残すので、削除ではなくこの列で止める
-     */
-    revokedAt: Date | null
-    /**
      * 最終利用時刻。リクエストごとに書かず、一定時間経過した場合だけ更新する
      */
     lastUsedAt: Date | null
     createdById: string | null
+    /**
+     * 行の作成時刻ではなく、いま入っているトークンの発行時刻。再発行のたびに書き換える
+     */
     createdAt: Date
   }, ExtArgs["result"]["agentToken"]>
   composites: {}
@@ -1262,11 +1145,9 @@ export interface Prisma__AgentTokenClient<T, Null = never, ExtArgs extends runti
 export interface AgentTokenFieldRefs {
   readonly id: Prisma.FieldRef<"AgentToken", 'String'>
   readonly userId: Prisma.FieldRef<"AgentToken", 'String'>
-  readonly name: Prisma.FieldRef<"AgentToken", 'String'>
   readonly tokenHash: Prisma.FieldRef<"AgentToken", 'String'>
   readonly hint: Prisma.FieldRef<"AgentToken", 'String'>
   readonly expiresAt: Prisma.FieldRef<"AgentToken", 'DateTime'>
-  readonly revokedAt: Prisma.FieldRef<"AgentToken", 'DateTime'>
   readonly lastUsedAt: Prisma.FieldRef<"AgentToken", 'DateTime'>
   readonly createdById: Prisma.FieldRef<"AgentToken", 'String'>
   readonly createdAt: Prisma.FieldRef<"AgentToken", 'DateTime'>

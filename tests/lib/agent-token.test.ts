@@ -42,7 +42,6 @@ const agentUser = { id: 'a1', name: 'レビューBot', email: 'review-bot@agents
 const fakeRow = (override: Record<string, unknown> = {}) => ({
   id: 'token-1',
   expiresAt: null,
-  revokedAt: null,
   lastUsedAt: null,
   user: { ...agentUser, banned: false, isAgent: true },
   ...override,
@@ -115,12 +114,6 @@ describe('verifyAgentToken', () => {
     findUnique.mockResolvedValue(null as never)
 
     expect(await verifyAgentToken('devuntu_agent_unknown')).toEqual({ ok: false, error: 'invalid_token' })
-  })
-
-  it('失効済みは invalid_token', async () => {
-    findUnique.mockResolvedValue(fakeRow({ revokedAt: new Date() }) as never)
-
-    expect(await verifyAgentToken('devuntu_agent_plain')).toEqual({ ok: false, error: 'invalid_token' })
   })
 
   it('期限切れは invalid_token', async () => {

@@ -25,6 +25,7 @@ export type User = Prisma.UserModel
 /**
  * Model AgentToken
  * AIエージェント用ユーザーが MCP サーバーへ接続するための長期トークン。
+ * 1エージェントにつき1行だけ持ち、再発行はこの行の置き換えで行う。
  * 平文は発行時の応答にしか現れず、保存するのはハッシュだけ。
  */
 export type AgentToken = Prisma.AgentTokenModel

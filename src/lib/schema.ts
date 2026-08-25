@@ -159,7 +159,6 @@ export type UpdateAgent = z.infer<typeof scUpdateAgent>
 
 export const scIssueAgentToken = z.object({
   userId: z.uuidv7(),
-  name: z.string().min(1, el('@required_field')).max(30, el('@invalid_name')),
   expires: z.enum(AGENT_TOKEN_EXPIRES),
 })
 export type IssueAgentToken = z.infer<typeof scIssueAgentToken>

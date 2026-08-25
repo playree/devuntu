@@ -4,8 +4,9 @@
  * エージェントは Web ログインできないため認可コードフローを踏めない。代わりに管理画面で発行した
  * このトークンを `Authorization: Bearer` に載せて `/api/mcp` を利用する。
  *
- * 平文は発行時の応答にしか現れず、DB にはハッシュだけを保存する。停止は失効(`revokedAt`)か
- * 有効期限(`expiresAt`)、またはエージェントユーザー自体の BAN / 削除で行う。
+ * 1エージェントにつき1本だけ持ち、再発行は既存の行を置き換えるローテートになる。平文は発行時の
+ * 応答にしか現れず、DB にはハッシュだけを保存する。停止は有効期限(`expiresAt`)、再発行による
+ * 置き換え、またはエージェントユーザー自体の BAN / 削除で行う。
  */
 
 import { nanoid } from 'nanoid'
@@ -47,7 +48,6 @@ export const verifyAgentToken = async (token: string): Promise<ResourceAuthResul
     select: {
       id: true,
       expiresAt: true,
-      revokedAt: true,
       lastUsedAt: true,
       user: { select: { id: true, name: true, email: true, role: true, banned: true, isAgent: true } },
     },
@@ -57,8 +57,8 @@ export const verifyAgentToken = async (token: string): Promise<ResourceAuthResul
   }
 
   const now = nowDate()
-  if (row.revokedAt || (row.expiresAt && row.expiresAt <= now)) {
-    logger.info({ agentTokenId: row.id }, 'agent token revoked or expired')
+  if (row.expiresAt && row.expiresAt <= now) {
+    logger.info({ agentTokenId: row.id }, 'agent token expired')
     return { ok: false, error: 'invalid_token' }
   }
 

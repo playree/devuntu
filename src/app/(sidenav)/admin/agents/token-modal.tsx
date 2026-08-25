@@ -4,25 +4,22 @@ import { MultiButton } from '@/components/general/button'
 import { CopyableField } from '@/components/general/copyable-field'
 import { FlexCol } from '@/components/general/flex'
 import { GridBox } from '@/components/general/grid'
-import { InputCtrl } from '@/components/general/input'
 import { FormModal, ModalBaseProps, useConfirmModal } from '@/components/general/modal'
-import { NoticePanel } from '@/components/general/panel'
+import { NoticePanel, Panel, PanelSkeleton } from '@/components/general/panel'
 import { SingleSelectCtrl } from '@/components/general/select'
 import { StepMotion } from '@/components/general/step-motion'
-import { CheckIcon, KeyIcon, TrashIcon } from '@/components/icon'
-import { notify } from '@/components/notify'
+import { ArrowPathIcon, CheckIcon, KeyIcon } from '@/components/icon'
 import { parseAction, useActionData } from '@/lib/action-client'
 import { dayformat } from '@/lib/day'
 import { IssueAgentToken, scIssueAgentToken } from '@/lib/schema'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
-import { Chip } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AnimatePresence } from 'framer-motion'
-import { FC, useCallback, useState } from 'react'
+import { FC, ReactNode, useCallback, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { AgentRow } from './client'
-import { getAgentTokens, issueAgentToken, revokeAgentToken } from './server'
+import { getAgentToken, issueAgentToken } from './server'
 
 type Step = {
   id: 'INPUT' | 'OUTPUT'
@@ -33,11 +30,18 @@ type Step = {
 const mcpAddCommand = (baseUrl: string, token: string) =>
   `claude mcp add --transport http devuntu ${new URL('api/mcp', `${baseUrl.replace(/\/+$/, '')}/`).toString()} --header "Authorization: Bearer ${token}"`
 
+const TokenField: FC<{ label: string; children: ReactNode }> = ({ label, children }) => (
+  <div className='flex items-center justify-between gap-2'>
+    <span className='opacity-70'>{label}</span>
+    <span className='truncate font-mono'>{children}</span>
+  </div>
+)
+
 /**
  * エージェントのトークン管理。
  *
- * 平文は発行の応答でしか受け取れないので、発行後は OUTPUT ステップで一度だけ見せる。
- * 既存のトークンは末尾数文字(hint)でしか区別できない。
+ * エージェントは1本しかトークンを持てないので、発行は既存トークンの置き換え(ローテート)になる。
+ * 平文は発行の応答でしか受け取れないため、発行後は OUTPUT ステップで一度だけ見せる。
  */
 export const TokenModal: FC<ModalBaseProps & { target: AgentRow; baseUrl: string }> = ({
   state,
@@ -45,55 +49,45 @@ export const TokenModal: FC<ModalBaseProps & { target: AgentRow; baseUrl: string
   target,
   baseUrl,
 }) => {
-  const { t, fet } = useLocale()
+  const { t } = useLocale()
   const tz = useUserTimezone()
   const { confirmModal } = useConfirmModal()
   const [step, setStep] = useState<Step>({ id: 'INPUT', direction: 0 })
   const [issued, setIssued] = useState<string>()
 
-  const load = useCallback(() => getAgentTokens({ id: target.id }), [target.id])
-  const { data: tokens, reload: reloadTokens } = useActionData(load)
+  const load = useCallback(() => getAgentToken({ id: target.id }), [target.id])
+  const { data: current, isLoading } = useActionData(load)
 
   const {
     control,
     handleSubmit,
-    formState: { isSubmitting, errors },
+    formState: { isSubmitting },
   } = useForm<IssueAgentToken>({
     resolver: zodResolver(scIssueAgentToken),
     mode: 'onChange',
     defaultValues: {
       userId: target.id,
-      name: '',
       expires: 'none',
     },
   })
-
-  const revoke = async (id: string, name: string) => {
-    try {
-      const ok = await confirmModal().confirm({
-        title: t('revoke_target', { target: name }),
-        text: t('msg_confirm_revoke_token'),
-        autoClose: false,
-      })
-      if (ok) {
-        await parseAction(revokeAgentToken({ id }))
-        notify.success(t('msg_revoked_target', { target: name }))
-        reloadTokens()
-        reload()
-      }
-    } finally {
-      confirmModal().close()
-    }
-  }
 
   return (
     <FormModal
       state={state}
       onSubmit={handleSubmit(async (req) => {
+        // 置き換えになる場合だけ確認する。今のトークンを使っている接続はその場で切れる
+        if (current) {
+          const ok = await confirmModal().confirm({
+            title: t('reissue_token'),
+            text: t('msg_confirm_rotate_token'),
+          })
+          if (!ok) {
+            return
+          }
+        }
         const res = await parseAction(issueAgentToken(req))
         setIssued(res.token)
         setStep({ id: 'OUTPUT', direction: 1 })
-        reloadTokens()
         reload()
       })}
       title={{ text: `${t('agent_token')} - ${target.name}`, icon: <KeyIcon /> }}
@@ -105,8 +99,13 @@ export const TokenModal: FC<ModalBaseProps & { target: AgentRow; baseUrl: string
               <MultiButton slot='close' variant='ghost'>
                 {t('cancel')}
               </MultiButton>
-              <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
-                {t('issue_token')}
+              <MultiButton
+                type='submit'
+                icon={current ? <ArrowPathIcon /> : <CheckIcon />}
+                isPending={isSubmitting}
+                isDisabled={isLoading}
+              >
+                {current ? t('reissue_token') : t('issue_token')}
               </MultiButton>
             </>
           )}
@@ -124,16 +123,6 @@ export const TokenModal: FC<ModalBaseProps & { target: AgentRow; baseUrl: string
             <StepMotion direction={step.direction} key='step_input'>
               <FlexCol>
                 <GridBox>
-                  <div className='col-span-12 sm:col-span-7'>
-                    <InputCtrl
-                      control={control}
-                      name='name'
-                      constraintSchema={scIssueAgentToken}
-                      label={t('token_name')}
-                      errorMessage={fet(errors.name)}
-                      autoFocus
-                    />
-                  </div>
                   <div className='col-span-12 sm:col-span-5'>
                     <SingleSelectCtrl
                       control={control}
@@ -150,37 +139,25 @@ export const TokenModal: FC<ModalBaseProps & { target: AgentRow; baseUrl: string
                   </div>
                 </GridBox>
 
-                <ul className='divide-default-200 divide-y text-xs'>
-                  {(tokens ?? []).map((token) => {
-                    const isRevoked = !!token.revokedAt
-                    return (
-                      <li key={token.id} className='flex items-center gap-2 py-2'>
-                        <span className='min-w-0 flex-1 truncate'>{token.name}</span>
-                        <span className='font-mono opacity-70'>…{token.hint}</span>
-                        <span className='font-mono opacity-70'>
-                          {token.expiresAt ? dayformat(token.expiresAt, 'tz-simple', tz) : t('no_expiration')}
-                        </span>
-                        <span className='font-mono opacity-70'>
-                          {token.lastUsedAt ? dayformat(token.lastUsedAt, 'tz-simple', tz) : '-'}
-                        </span>
-                        {isRevoked ? (
-                          <Chip variant='soft'>{t('revoked')}</Chip>
-                        ) : (
-                          <MultiButton
-                            isIconOnly
-                            size='sm'
-                            variant='danger-soft'
-                            className='h-7 w-7 rounded-sm'
-                            tooltip={t('revoke')}
-                            onPress={() => revoke(token.id, token.name)}
-                          >
-                            <TrashIcon />
-                          </MultiButton>
-                        )}
-                      </li>
-                    )
-                  })}
-                </ul>
+                <FlexCol className='gap-1'>
+                  <span className='text-xs opacity-70'>{t('current_token')}</span>
+                  {isLoading ? (
+                    <PanelSkeleton className='min-h-24' />
+                  ) : current ? (
+                    <Panel className='flex flex-col gap-1 py-3 text-xs'>
+                      <TokenField label={t('agent_token')}>…{current.hint}</TokenField>
+                      <TokenField label={t('issued_at')}>{dayformat(current.createdAt, 'tz-simple', tz)}</TokenField>
+                      <TokenField label={t('token_expiration')}>
+                        {current.expiresAt ? dayformat(current.expiresAt, 'tz-simple', tz) : t('no_expiration')}
+                      </TokenField>
+                      <TokenField label={t('last_used')}>
+                        {current.lastUsedAt ? dayformat(current.lastUsedAt, 'tz-simple', tz) : '-'}
+                      </TokenField>
+                    </Panel>
+                  ) : (
+                    <NoticePanel className='text-xs'>{t('not_issued')}</NoticePanel>
+                  )}
+                </FlexCol>
               </FlexCol>
             </StepMotion>
           )}
