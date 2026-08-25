@@ -1,6 +1,6 @@
 import { el } from '@/locale'
 import { z } from 'zod'
-import { AGENT_HANDLE_PATTERN, AGENT_TOKEN_EXPIRES } from './agent'
+import { AGENT_EMAIL_DOMAIN, AGENT_HANDLE_PATTERN, AGENT_TOKEN_EXPIRES } from './agent'
 import { NOTIFY_EVENTS } from './notify/notify'
 import {
   ASSIGNEE_NONE,
@@ -18,6 +18,8 @@ import {
 
 export const zName = z.string().min(2, el('@invalid_name')).max(30, el('@invalid_name'))
 export const zEmail = z.email(el('@invalid_email'))
+/** 人間のユーザー用。エージェント専用のアドレス空間を人間側から埋められないようにする */
+export const zUserEmail = zEmail.refine((email) => !email.endsWith(`@${AGENT_EMAIL_DOMAIN}`), el('@invalid_email'))
 /**
  * パスワード。パスフレーズやパスワードマネージャの生成値を弾かないよう、文字種は制限せず長さだけを見る。
  * 上限は better-auth の maxPasswordLength(既定 128)に合わせる。
@@ -114,7 +116,7 @@ export const scRevokeConsent = z.object({
 
 export const scCreateUser = z.object({
   name: zName,
-  email: zEmail,
+  email: zUserEmail,
   password: zPassword.optional(),
   isAdmin: z.boolean(),
   groups: z.array(z.uuidv7()).default([]),
@@ -126,7 +128,7 @@ export type CreateUserOut = z.output<typeof scCreateUser>
 export const scUpdateUser = z.object({
   id: z.uuidv7(),
   name: zName,
-  email: zEmail,
+  email: zUserEmail,
   isAdmin: z.boolean(),
   nameLocked: z.boolean(),
   groups: z.array(z.uuidv7()),

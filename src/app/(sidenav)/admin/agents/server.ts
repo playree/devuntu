@@ -122,11 +122,20 @@ export const createAgent = safeAuthAction
     }
 
     // エージェント印とメール検証済みを立てる。検証メールは届かないので発行させない
-    await prisma.user.update({ where: { id: user.id }, data: { isAgent: true, emailVerified: true } })
-
-    if (groupIds.length > 0) {
-      await prisma.userGroup.createMany({ data: groupIds.map((groupId) => ({ userId: user.id, groupId })) })
-    }
+    await prisma
+      .$transaction([
+        prisma.user.update({ where: { id: user.id }, data: { isAgent: true, emailVerified: true } }),
+        ...(groupIds.length > 0
+          ? [prisma.userGroup.createMany({ data: groupIds.map((groupId) => ({ userId: user.id, groupId })) })]
+          : []),
+      ])
+      // エージェント印の付かないユーザーが残ると /admin/users に現れ、同じ識別子で作り直せなくなる
+      .catch(async (e: unknown) => {
+        await auth.api
+          .removeUser({ headers: await headers(), body: { userId: user.id } })
+          .catch((error: unknown) => logger.error({ error, userId: user.id }, 'agent rollback failed'))
+        throw e
+      })
 
     logger.info({ agent: { id: user.id, email }, groups: groupIds }, 'agent created')
     return { id: user.id, name: user.name }

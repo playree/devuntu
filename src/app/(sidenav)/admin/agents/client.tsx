@@ -16,16 +16,11 @@ import { useLocale } from '@/locale/client'
 import { ButtonGroup, Chip, Table } from '@heroui/react'
 import { FC } from 'react'
 import { AddModal, UpdateModal } from './modals'
-import { deleteAgent, getAgents, getGroupOptions } from './server'
+import { deleteAgent, getAgents, type GetAgentsReturnType, getGroupOptions } from './server'
 import { TokenModal } from './token-modal'
 
-/** 一覧の 1 行。モーダルへそのまま渡すのでここで型を作る */
-export type AgentRow = {
-  id: string
-  name: string
-  email: string
-  groups: { id: string; name: string }[]
-}
+/** モーダルへ渡す一覧の行。使う列だけに絞って受け渡しの依存を小さくする */
+export type AgentRow = Pick<NonNullable<GetAgentsReturnType>[number], 'id' | 'name' | 'email' | 'groups'>
 
 export const AdminAgentsClient: FC<{ baseUrl: string }> = ({ baseUrl }) => {
   const { t } = useLocale()

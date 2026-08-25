@@ -50,6 +50,7 @@ const fakeRow = (override: Record<string, unknown> = {}) => ({
 
 beforeEach(() => {
   vi.clearAllMocks()
+  update.mockResolvedValue({} as never)
 })
 
 describe('isAgentToken', () => {
@@ -160,6 +161,13 @@ describe('verifyAgentToken', () => {
     await verifyAgentToken('devuntu_agent_plain')
 
     expect(update).not.toHaveBeenCalled()
+  })
+
+  it('最終利用の記録に失敗しても認証は通す', async () => {
+    findUnique.mockResolvedValue(fakeRow() as never)
+    update.mockRejectedValue(new Error('db unavailable') as never)
+
+    expect((await verifyAgentToken('devuntu_agent_plain')).ok).toBe(true)
   })
 
   it('前回の利用から間隔が空いていれば更新する', async () => {

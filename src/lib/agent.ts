@@ -18,10 +18,8 @@ export const AGENT_EMAIL_DOMAIN = 'agents.invalid'
 /** 識別子。メールアドレスのローカル部になるので、記号は先頭末尾に置けないハイフンだけに絞る */
 export const AGENT_HANDLE_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,30}[a-z0-9])?$/
 
-/** 識別子からエージェントのメールアドレスを組み立てる */
 export const agentEmail = (handle: string): string => `${handle}@${AGENT_EMAIL_DOMAIN}`
 
-/** メールアドレスから識別子へ戻す。エージェント以外のアドレスを渡すと null */
 export const agentHandle = (email: string): string | null => {
   const suffix = `@${AGENT_EMAIL_DOMAIN}`
   return email.endsWith(suffix) ? email.slice(0, -suffix.length) : null

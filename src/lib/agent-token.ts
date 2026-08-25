@@ -25,10 +25,9 @@ const HINT_LENGTH = 6
 /** `lastUsedAt` を書き直す間隔。リクエストごとの UPDATE を避けるためのしきい値 */
 const LAST_USED_REFRESH_MINUTES = 5
 
-/** 受け取ったトークンがエージェント用かを接頭辞で判定する */
 export const isAgentToken = (token: string): boolean => token.startsWith(AGENT_TOKEN_PREFIX)
 
-/** 新しいトークンを作る。戻り値の平文はこの1回しか取得できない */
+/** 戻り値の平文はこの1回しか取得できない */
 export const generateAgentToken = (): { token: string; hint: string } => {
   const token = `${AGENT_TOKEN_PREFIX}${nanoid(48)}`
   return { token, hint: token.slice(-HINT_LENGTH) }
@@ -69,8 +68,11 @@ export const verifyAgentToken = async (token: string): Promise<ResourceAuthResul
     return { ok: false, error: 'invalid_token' }
   }
 
+  // 利用記録の失敗で認証まで落とさない
   if (!row.lastUsedAt || !withinMinutes(row.lastUsedAt, LAST_USED_REFRESH_MINUTES)) {
-    await prisma.agentToken.update({ where: { id: row.id }, data: { lastUsedAt: now } })
+    await prisma.agentToken
+      .update({ where: { id: row.id }, data: { lastUsedAt: now } })
+      .catch((error: unknown) => logger.warn({ error, agentTokenId: row.id }, 'agent token lastUsedAt update failed'))
   }
 
   return {

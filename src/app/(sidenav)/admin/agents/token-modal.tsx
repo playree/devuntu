@@ -29,9 +29,9 @@ type Step = {
   direction: number
 }
 
-/** MCP クライアントへ貼り付けるための登録コマンド */
+/** MCP クライアントへ貼り付けるための登録コマンド。相対解決で baseUrl のパス末尾を落とさないよう / を補う */
 const mcpAddCommand = (baseUrl: string, token: string) =>
-  `claude mcp add --transport http devuntu ${new URL('api/mcp', baseUrl).toString()} --header "Authorization: Bearer ${token}"`
+  `claude mcp add --transport http devuntu ${new URL('api/mcp', `${baseUrl.replace(/\/+$/, '')}/`).toString()} --header "Authorization: Bearer ${token}"`
 
 /**
  * エージェントのトークン管理。

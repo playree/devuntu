@@ -64,7 +64,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
         tags: z.array(z.string()).optional(),
         boardId: z.string().optional(),
         assignee: z
-          .string()
+          .union([z.uuidv7(), z.literal(MCP_ASSIGNEE_ME), z.literal(ASSIGNEE_NONE)])
           .optional()
           .describe(`担当者。ユーザーID / '${MCP_ASSIGNEE_ME}'(自分) / '${ASSIGNEE_NONE}'(未割り当て)`),
         limit: z.number().int().min(1).max(50).optional(),

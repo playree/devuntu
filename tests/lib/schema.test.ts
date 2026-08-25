@@ -7,11 +7,13 @@
 import {
   scCreateTag,
   scCreateTicket,
+  scCreateUser,
   scMoveTicket,
   scPatchTicket,
   scTicketSearch,
   scUpdateIntegrationSettings,
   scUpdateNotifySetting,
+  scUpdateUser,
   zBoardKey,
   zPassword,
 } from '@/lib/schema'
@@ -98,6 +100,22 @@ describe('scTicketSearch: 担当者は未選択 / 未割り当て / userId', () 
   it('userId でもセンチネルでもない文字列は受け付けない', () => {
     expect(parseAssignee('me').success, '旧仕様の me').toBe(false)
     expect(parseAssignee('any').success, '旧仕様の any').toBe(false)
+  })
+})
+
+describe('scCreateUser / scUpdateUser: エージェント専用ドメインは人間のユーザーに使わせない', () => {
+  const createUser = (email: string) => scCreateUser.safeParse({ name: 'テスト', email, isAdmin: false })
+  const updateUser = (email: string) =>
+    scUpdateUser.safeParse({ id: userId, name: 'テスト', email, isAdmin: false, nameLocked: false, groups: [] })
+
+  it('通常のメールアドレスは通す', () => {
+    expect(createUser('user@example.com').success, '作成').toBe(true)
+    expect(updateUser('user@example.com').success, '更新').toBe(true)
+  })
+
+  it('agents.invalid のアドレスは弾く', () => {
+    expect(createUser('bot@agents.invalid').success, '作成').toBe(false)
+    expect(updateUser('bot@agents.invalid').success, '更新').toBe(false)
   })
 })
 

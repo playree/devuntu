@@ -41,9 +41,17 @@ const auth: ResourceAuth = {
   clientId: 'test-client',
 }
 
-const connectClient = async () => {
+/** エージェント用の長期トークンで認可された場合。`clientId` は AgentToken の id */
+const agentAuth: ResourceAuth = {
+  user: { id: 'a1', name: 'agent', email: 'agent@agents.invalid', role: null },
+  scopes: ['mcp'],
+  kind: 'agent',
+  clientId: 'token-1',
+}
+
+const connectClient = async (resourceAuth: ResourceAuth = auth) => {
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
-  await createDevuntuMcpServer(auth).connect(serverTransport)
+  await createDevuntuMcpServer(resourceAuth).connect(serverTransport)
   const client = new Client({ name: 'test-client', version: '1.0.0' })
   await client.connect(clientTransport)
   return client
@@ -110,13 +118,27 @@ describe('createDevuntuMcpServer', () => {
     vi.mocked(searchTicketsForMcp).mockResolvedValueOnce([])
 
     await (
-      await connectClient()
+      await connectClient(agentAuth)
     ).callTool({
       name: 'search_tickets',
       arguments: { assignee: 'me' },
     })
 
-    expect(searchTicketsForMcp).toHaveBeenCalledWith(auth, { assignee: 'me' })
+    expect(searchTicketsForMcp).toHaveBeenCalledWith(agentAuth, { assignee: 'me' })
+  })
+
+  it('search_tickets の担当者はセンチネルか userId のみ受け付ける', async () => {
+    vi.mocked(searchTicketsForMcp).mockClear()
+
+    const result = await (
+      await connectClient(agentAuth)
+    ).callTool({
+      name: 'search_tickets',
+      arguments: { assignee: 'anyone' },
+    })
+
+    expect(result.isError).toBe(true)
+    expect(searchTicketsForMcp).not.toHaveBeenCalled()
   })
 
   it('create_ticket は入力をそのまま渡し、結果をJSONテキストとして返す', async () => {
