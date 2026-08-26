@@ -10,6 +10,10 @@
 アクセストークン(JWT)として検証する(`src/lib/oauth/oauth-resource.ts`)。
 検証を通った後は同じ `ResourceAuth` になるため、ツールの実装と権限判定は完全に共通。
 
+エンドポイントは `/api/mcp` で共通だが、Claude Code へ登録する MCP サーバー名(`serverInfo.name`)は
+`auth.kind` に応じて出し分けている(`src/lib/mcp-server.ts`)。人間は `devuntu`、AIエージェントは
+`devuntu-agent` を名乗るので、`claude mcp list` の表示や登録コマンドの時点で経路を取り違えにくい。
+
 | 利用者         | 取得方法                         | 寿命                                      | 止め方                        |
 | -------------- | -------------------------------- | ----------------------------------------- | ----------------------------- |
 | 人間           | DCR → 認可コードフロー(PKCE)     | `MCP_REFRESH_TOKEN_EXPIRES_IN`(既定180日) | クライアント無効化 / BAN      |

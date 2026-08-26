@@ -94,6 +94,12 @@ Devuntu は、かんばん形式のボード/チケット管理を中心に、�
 claude mcp add --transport http devuntu <BETTER_AUTH_URL>/api/mcp
 ```
 
+ユーザースコープで登録する場合
+
+```sh
+claude mcp add ---scope user -transport http devuntu <BETTER_AUTH_URL>/api/mcp
+```
+
 登録後、devuntu のツールを最初に呼び出したタイミングでブラウザが開き、DCR → 認可コードフロー(PKCE)
 が始まります。ログインしていない場合はログインし、続く同意画面で許可すれば以降はリフレッシュトークンで
 自動的に継続します。
@@ -118,7 +124,7 @@ Web ログインを行わず、MCP からのみ Devuntu を利用するユーザ
 発行時に表示されるコマンドをそのまま使えます。
 
 ```sh
-claude mcp add --transport http devuntu <BETTER_AUTH_URL>/api/mcp \
+claude mcp add --transport http devuntu-agent <BETTER_AUTH_URL>/api/mcp \
   --header "Authorization: Bearer <発行したトークン>"
 ```
 

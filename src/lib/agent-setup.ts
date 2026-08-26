@@ -38,10 +38,12 @@ export const agentSetupGuide = (): string => {
 python3 --version   # 3.9 以上
 claude --version
 git --version
-gh --version        # PR を作らせる場合のみ
 \`\`\`
 
 足りないものがあれば先に入れる。
+
+\`gh\`(GitHub CLI)は必須ではない。事後作業で \`gh pr create\` により PR を自動作成させたい場合のみ、
+別途インストールする。
 
 ## 2. 作業ディレクトリを用意する
 
@@ -58,11 +60,11 @@ cd ~/devuntu-agent-work && git status
 エージェントのトークンで devuntu の MCP を登録する。この経路ではブラウザでのログインと同意は起きない。
 
 \`\`\`sh
-claude mcp add --transport http devuntu ${mcpUrl} \\
+claude mcp add --transport http devuntu-agent ${mcpUrl} \\
   --header "Authorization: Bearer <発行したトークン>"
 \`\`\`
 
-\`claude mcp list\` に \`devuntu\` が出ることを確認する。
+\`claude mcp list\` に \`devuntu-agent\` が出ることを確認する。
 
 ## 4. ランナーを取得する
 

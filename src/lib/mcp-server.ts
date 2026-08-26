@@ -27,7 +27,7 @@ import { z } from 'zod'
  * 人間の MCP クライアントには関係が無く、一覧に出しても誤用のもとにしかならないため。
  */
 export const createDevuntuMcpServer = (auth: ResourceAuth) => {
-  const server = new McpServer({ name: 'devuntu', version: '1.0.0' })
+  const server = new McpServer({ name: auth.kind === 'agent' ? 'devuntu-agent' : 'devuntu', version: '1.0.0' })
 
   server.registerTool('ping', { title: 'Ping', description: '接続確認用。認可済みユーザーの情報を返す' }, async () => ({
     content: [{ type: 'text' as const, text: `pong: ${auth.user.email}` }],

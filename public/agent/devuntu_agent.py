@@ -3,7 +3,7 @@
 
 標準ライブラリだけで動く。cron から 5 分おきに `poll` を呼ぶ想定で、常駐はしない。
 
-    */5 * * * * flock -n ~/.cache/devuntu-agent.lock python3 ~/.local/bin/devuntu_agent.py poll
+    */5 * * * * python3 ~/.local/bin/devuntu_agent.py poll
 
 1 回の poll で行うこと:
 
@@ -142,7 +142,7 @@ def build_prompt(task: dict) -> str:
         f"devuntu のチケット {task['displayId']} を担当エージェントとして処理する。\n"
         "\n"
         "手順:\n"
-        f"1. devuntu MCP の get_agent_task を ticketId='{task['displayId']}' で呼ぶ。\n"
+        f"1. devuntu-agent MCP の get_agent_task を ticketId='{task['displayId']}' で呼ぶ。\n"
         "   active が false、または task が null の場合は、何もせずに終了する。\n"
         "2. 返ってきた事前作業(preTask)の指示に従う。\n"
         "3. get_ticket でチケットの本文とコメントを読み、action に従って処理する。\n"
