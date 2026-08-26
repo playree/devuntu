@@ -43,7 +43,7 @@ export const getBoardKanban = safeAuthAction
         dueDate: true,
         completedAt: true,
         assigneeId: true,
-        assignee: { select: { name: true, image: true } },
+        assignee: { select: { name: true, image: true, isAgent: true } },
         tags: {
           select: { tag: { select: { id: true, name: true, color: true } } },
           orderBy: { tag: { order: 'asc' } },
@@ -64,6 +64,7 @@ export const getBoardKanban = safeAuthAction
       assigneeName: assignee?.name ?? '',
       // 未設定は空文字にして、表示側は assigneeName と同じ falsy 判定で扱えるようにする
       assigneeImage: assignee?.image ?? '',
+      assigneeIsAgent: assignee?.isAgent ?? false,
       commentCount: _count.comments,
     }))
 

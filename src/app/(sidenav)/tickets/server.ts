@@ -180,7 +180,7 @@ export const getAssigneeOptions = safeAuthAction
   .action(async ({ ctx: { user }, parsedInput: { id: boardId } }) => {
     await assertBoardAccess(user, boardId, 'view')
     const users = await getBoardMemberUsers(boardId)
-    return users.map(({ id, name, email, image }) => ({ id, name, email, image }))
+    return users.map(({ id, name, email, image, isAgent }) => ({ id, name, email, image, isAgent }))
   })
 export type GetAssigneeOptionsReturnType = Awaited<ReturnType<typeof getAssigneeOptions>>['data']
 

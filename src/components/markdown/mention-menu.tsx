@@ -75,7 +75,7 @@ export const MentionMenu: FC<{
       role='presentation'
       className={styles.base()}
     >
-      {items.map(({ id, name, email, image, setElement }, index) => (
+      {items.map(({ id, name, email, image, isAgent, setElement }, index) => (
         <li
           key={id}
           ref={setElement}
@@ -91,7 +91,7 @@ export const MentionMenu: FC<{
           onMouseEnter={() => onHighlight(index)}
           onClick={() => onSelect(index)}
         >
-          <UserAvatar name={name} image={image} size='xs' />
+          <UserAvatar name={name} image={image} isAgent={isAgent} size='xs' />
           <div className='min-w-0'>
             <div className='truncate'>{name}</div>
             {/* 同名のメンバーを見分けられるようにする(絞り込みにも使える) */}
