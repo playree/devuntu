@@ -8,7 +8,7 @@ import { parseAction } from '@/lib/action-client'
 import { useLocale } from '@/locale/client'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
-import { deleteAgent, GetAgentReturnType } from '../server'
+import { deleteAgent, GetAgentReturnType } from './server'
 
 type Agent = NonNullable<GetAgentReturnType>
 

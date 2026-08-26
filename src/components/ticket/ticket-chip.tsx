@@ -117,10 +117,7 @@ export const StatusChip: FC<{ status: TicketStatus; size?: ChipProps['size'] }> 
   )
 }
 
-/**
- * エージェント処理の状態と Chip の表示色。
- * `planned`(返信待ち)は利用者の操作を促す状態なので、完了 / 失敗とは別の色にする。
- */
+/** `planned`(返信待ち)は利用者の操作を促す状態なので、完了 / 失敗とは別の色にする */
 const AGENT_STATE_STYLE: Record<AgentTaskState, { item: LocaleItemBase; color: ChipColor }> = {
   queued: { item: AGENT_TASK_STATE_LOCALE.queued, color: 'default' },
   running: { item: AGENT_TASK_STATE_LOCALE.running, color: 'accent' },

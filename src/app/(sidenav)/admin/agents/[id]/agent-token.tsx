@@ -18,7 +18,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { AnimatePresence } from 'framer-motion'
 import { FC, ReactNode, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { GetAgentTokenReturnType, issueAgentToken } from '../server'
+import { GetAgentTokenReturnType, issueAgentToken } from './server'
 
 type Step = {
   id: 'INPUT' | 'OUTPUT'

@@ -144,8 +144,12 @@ export const patchTicket = safeAuthAction
       const access = await assertTicketAccess(user, id, 'edit', tx)
 
       // 担当者・タグはそのボードに属するものに限る(DB 制約では防げない)
+      let assigneeIsAgent = false
       if (assigneeId !== undefined) {
         await assertBoardAssignee(tx, access.boardId, assigneeId)
+        assigneeIsAgent = assigneeId
+          ? ((await tx.user.findUnique({ where: { id: assigneeId }, select: { isAgent: true } }))?.isAgent ?? false)
+          : false
       }
       const ids = tagIds !== undefined ? await assertTagIdsInBoard(tx, access.boardId, tagIds) : undefined
 
@@ -169,6 +173,8 @@ export const patchTicket = safeAuthAction
           ...(assigneeId !== undefined && { assigneeId: assigneeId ?? null }),
           // エージェントに任せるのをやめたら処理状態も消す(残すと履歴として誤読される)
           ...(agentMode !== undefined && { agentMode, ...(agentMode === null && { agentState: null }) }),
+          // 担当が人間 / 未割り当てになったら、エージェントの処理設定は残さない
+          ...(assigneeId !== undefined && !assigneeIsAgent && { agentMode: null, agentState: null }),
           mentionedUserIds,
         },
         select: { id: true, title: true, number: true, board: { select: { key: true } } },

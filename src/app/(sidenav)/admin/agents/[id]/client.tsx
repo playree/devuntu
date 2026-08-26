@@ -3,6 +3,7 @@
 import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
+import { usePagingList } from '@/components/general/paging'
 import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
 import {
@@ -14,18 +15,18 @@ import {
   InformationCircleIcon,
   KeyIcon,
 } from '@/components/icon'
-import { useActionData } from '@/lib/action-client'
+import { parseAction, useActionData } from '@/lib/action-client'
 import { useLocale } from '@/locale/client'
 import { Accordion, ButtonGroup } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
-import { getAgentRunner } from '../runner-server'
-import { getAgent, getAgentToken, getGroupOptions } from '../server'
+import { getGroupOptions } from '../server'
 import { AgentProfile } from './agent-profile'
 import { AgentRunHistory } from './agent-run-history'
 import { AgentRunner } from './agent-runner'
 import { AgentToken } from './agent-token'
 import { DangerZone } from './danger-zone'
+import { getAgent, getAgentRunner, getAgentRuns, getAgentToken } from './server'
 
 /** デンジャーゾーンは誤操作を避けるため初期状態で閉じておく */
 const defaultExpandedKeys = new Set(['agent_profile', 'agent_runner', 'agent_run_history', 'agent_token'])
@@ -46,6 +47,10 @@ export const AdminAgentDetailClient: FC<{ agentId: string; baseUrl: string }> = 
     isLoading: isTokenLoading,
   } = useActionData(() => getAgentToken({ id: agentId }))
   const { data: groupOptions } = useActionData(getGroupOptions)
+  const runHistoryList = usePagingList({
+    load: async () => (await parseAction(getAgentRuns({ id: agentId }))) ?? [],
+    sort: { init: { column: 'startedAt', direction: 'descending' } },
+  })
 
   if (isLoading) {
     return <PanelSkeleton />
@@ -78,6 +83,7 @@ export const AdminAgentDetailClient: FC<{ agentId: string; baseUrl: string }> = 
             reload()
             reloadRunner()
             reloadToken()
+            runHistoryList.reload()
           }}
         >
           <ButtonGroup.Separator />
@@ -95,7 +101,7 @@ export const AdminAgentDetailClient: FC<{ agentId: string; baseUrl: string }> = 
         </AccordionSection>
 
         <AccordionSection id='agent_run_history' icon={<ClockIcon />} title={t('agent_run_history')}>
-          <AgentRunHistory agentId={agentId} />
+          <AgentRunHistory pagingList={runHistoryList} />
         </AccordionSection>
 
         <AccordionSection id='agent_token' icon={<KeyIcon />} title={t('agent_token')}>

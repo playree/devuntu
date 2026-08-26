@@ -16,7 +16,7 @@ import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FC, ReactNode } from 'react'
 import { useForm } from 'react-hook-form'
-import { GetAgentReturnType, updateAgent } from '../server'
+import { GetAgentReturnType, updateAgent } from './server'
 
 type Agent = NonNullable<GetAgentReturnType>
 

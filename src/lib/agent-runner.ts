@@ -146,6 +146,8 @@ type AgentTicketRow = {
   id: string
   number: number
   title: string
+  status: string
+  assigneeId: string | null
   agentMode: AgentTaskMode | null
   agentState: AgentTaskState | null
   board: { key: string }
@@ -276,7 +278,12 @@ export type AgentTicket = { id: string; displayId: string; mode: AgentTaskMode; 
  */
 export const findAgentTicket = async (userId: string, ticketId: string): Promise<AgentTicket | null> => {
   const ticket = await prisma.ticket.findUnique({ where: { id: ticketId }, select: agentTicketSelect })
-  if (!ticket || ticket.assigneeId !== userId || ticket.agentMode === null) {
+  if (
+    !ticket ||
+    ticket.assigneeId !== userId ||
+    ticket.agentMode === null ||
+    !(OPEN_TICKET_STATUSES as readonly string[]).includes(ticket.status)
+  ) {
     return null
   }
   return {

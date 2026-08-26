@@ -127,6 +127,7 @@ python3 ~/.local/bin/devuntu_agent.py poll --dry-run
 \`flock\` で多重起動を防ぐ。前回の Claude がまだ動いていれば、その回は何もせず終わる。
 
 \`\`\`sh
+mkdir -p ~/.cache
 ( crontab -l 2>/dev/null; \\
   echo "*/${intervalMinutes} * * * * flock -n ~/.cache/devuntu-agent.lock python3 ~/.local/bin/devuntu_agent.py poll" \\
 ) | crontab -

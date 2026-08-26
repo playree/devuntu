@@ -1,8 +1,7 @@
 'use client'
 
-import { usePagingList } from '@/components/general/paging'
+import { PagingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
-import { parseAction } from '@/lib/action-client'
 import { AGENT_RUN_ACTION_LOCALE, AGENT_RUN_STATUS_LOCALE } from '@/lib/agent'
 import { dayformat } from '@/lib/day'
 import { ticketShortPath } from '@/lib/task'
@@ -11,7 +10,9 @@ import { useLocale } from '@/locale/client'
 import { Chip, Table } from '@heroui/react'
 import Link from 'next/link'
 import { FC } from 'react'
-import { getAgentRuns } from '../runner-server'
+import { GetAgentRunsReturnType } from './server'
+
+type AgentRun = NonNullable<GetAgentRunsReturnType>[number]
 
 /** 結果の配色。実行中は結果が確定していないので既定色のまま出す */
 const STATUS_COLOR = {
@@ -34,22 +35,18 @@ const duration = (startedAt: Date, finishedAt: Date | null): string => {
  * 自動運用の実行履歴。
  *
  * 件数が増え続けるので、サーバー側で新しい順に上限まで絞ってから返している(`getAgentRuns`)。
- * ページングはその範囲内でクライアント側で行う。
+ * ページングはその範囲内でクライアント側で行う。ヘッダーの更新ボタンと合わせてリロードできるよう、
+ * `usePagingList` の呼び出しは親(client.tsx)側で行い、ここでは結果だけを受け取る。
  */
-export const AgentRunHistory: FC<{ agentId: string }> = ({ agentId }) => {
+export const AgentRunHistory: FC<{ pagingList: PagingList<AgentRun> }> = ({ pagingList }) => {
   const { t } = useLocale()
   const tz = useUserTimezone()
-
-  const list = usePagingList({
-    load: async () => (await parseAction(getAgentRuns({ id: agentId }))) ?? [],
-    sort: { init: { column: 'startedAt', direction: 'descending' } },
-  })
 
   return (
     <MultiTable
       isSmart
       ariaLabel='agent run list'
-      pagingList={list}
+      pagingList={pagingList}
       columns={[
         { id: 'ticketRef', name: t('ticket'), isRowHeader: true, allowsSorting: true, minWidth: 90, defaultWidth: 100 },
         { id: 'action', name: t('action'), allowsSorting: true, minWidth: 100, defaultWidth: 110 },

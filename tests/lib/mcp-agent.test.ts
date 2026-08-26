@@ -89,7 +89,8 @@ describe('自動運用ツールの登録', () => {
 
   it('人間の OAuth 接続では登録されない', async () => {
     const { tools } = await (await connectClient(humanAuth)).listTools()
-    expect(tools.map((tool) => tool.name)).not.toEqual(expect.arrayContaining(AGENT_TOOLS))
+    const names = tools.map((tool) => tool.name)
+    AGENT_TOOLS.forEach((name) => expect(names).not.toContain(name))
   })
 })
 

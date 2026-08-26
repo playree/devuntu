@@ -22,13 +22,11 @@ const avatarStyles = tv({
   },
 })
 
-/** エージェントユーザー専用のアバター画像 */
 const AGENT_AVATAR_SRC = '/agent/agent-user.png'
 
 type UserAvatarProps = {
   name: string
   image?: string | null
-  /** trueの場合、imageの値に関わらずエージェント専用アイコンを表示する */
   isAgent?: boolean
   /** xs=16px(かんばんカード / 選択肢) / sm=32px / md=40px */
   size?: 'xs' | 'sm' | 'md'

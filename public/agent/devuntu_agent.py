@@ -213,17 +213,29 @@ def poll(config: Config, dry_run: bool) -> int:
 
     # 1 回の poll で 1 件だけ処理する。残りは次の poll で拾う
     task = tasks[0]
+    display_id = task.get("displayId")
+    ticket_id = task.get("ticketId")
+    action = task.get("action")
+    if not display_id or not ticket_id or not action:
+        raise ApiError(f"POST /api/agent/status の応答にタスクの必須項目が無い: {task}")
+
     if len(tasks) > 1:
-        log.info("処理待ちが %d 件ある。今回は %s だけを処理する", len(tasks), task["displayId"])
+        log.info("処理待ちが %d 件ある。今回は %s だけを処理する", len(tasks), display_id)
 
     if dry_run:
-        log.info("dry-run: %s を %s として処理するところ", task["displayId"], task["action"])
+        log.info("dry-run: %s を %s として処理するところ", display_id, action)
         return 0
 
-    run = call_api(config, "POST", "/api/agent/runs", {"ticketId": task["ticketId"], "action": task["action"]})
-    run_id = run["runId"]
+    run = call_api(config, "POST", "/api/agent/runs", {"ticketId": ticket_id, "action": action})
+    run_id = run.get("runId")
+    if not run_id:
+        raise ApiError(f"POST /api/agent/runs の応答に runId が無い: {run}")
 
-    result, summary = run_claude(config, task)
+    try:
+        result, summary = run_claude(config, task)
+    except Exception as e:  # noqa: BLE001 (実行の記録を必ず閉じるため、想定外の例外も拾う)
+        log.exception("claude の起動処理で予期しない例外が発生した")
+        result, summary = "failed", f"unexpected error: {e}"[:SUMMARY_LIMIT]
 
     # 実行の記録だけは必ず閉じる。開いたままだとこのチケットを二度と拾えなくなる
     try:
@@ -265,12 +277,14 @@ def setup_logging(log_path: Path, verbose: bool) -> None:
 def acquire_lock(lock_path: Path):
     """多重起動を防ぐ。cron 側の flock が無くても重ならないようにする"""
     lock_path.parent.mkdir(parents=True, exist_ok=True)
-    handle = open(lock_path, "w", encoding="utf-8")  # noqa: SIM115 (プロセスが終わるまで保持する)
+    handle = open(lock_path, "a+", encoding="utf-8")  # noqa: SIM115 (プロセスが終わるまで保持する)
     try:
         fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except OSError:
         handle.close()
         return None
+    handle.seek(0)
+    handle.truncate()
     handle.write(str(os.getpid()))
     handle.flush()
     return handle

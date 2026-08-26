@@ -24,7 +24,7 @@ import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FC, ReactNode, useMemo } from 'react'
 import { Control, Controller, FieldPath, useForm } from 'react-hook-form'
-import { GetAgentRunnerReturnType, saveAgentRunner } from '../runner-server'
+import { GetAgentRunnerReturnType, saveAgentRunner } from './server'
 
 /** 稼働許可時間帯の選択肢(00:00〜23:30) */
 const WINDOW_OPTIONS = Object.fromEntries(
