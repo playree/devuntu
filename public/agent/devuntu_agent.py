@@ -33,7 +33,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 DEFAULT_CONFIG_PATH = Path.home() / ".config" / "devuntu-agent" / "config.json"
 DEFAULT_LOG_PATH = Path.home() / ".local" / "state" / "devuntu-agent" / "agent.log"
@@ -70,6 +70,8 @@ class Config:
         self.path = path
         self.base_url: str = str(raw.get("base_url", "")).rstrip("/")
         self.token: str = str(raw.get("token", ""))
+        # 特定のリポジトリではなく、必要なリポジトリをこの配下に clone して使う基点ディレクトリ。
+        # どのリポジトリを対象にするかはチケット本文や事前作業の指示から Claude が判断する
         self.workdir = Path(str(raw.get("workdir", ""))).expanduser()
         self.claude_bin: str = str(raw.get("claude_bin") or "claude")
         self.claude_args: list[str] = list(raw.get("claude_args") or DEFAULT_CLAUDE_ARGS)

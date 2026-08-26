@@ -94,6 +94,8 @@ cron ──> devuntu_agent.py ──1──> POST /api/agent/status   「動い�
 - 1 回の poll で 1 件だけ処理する。残りは次の poll で拾う
 - ログは `~/.local/state/devuntu-agent/agent.log`(1MB × 3 世代)
 - 設定は `~/.config/devuntu-agent/config.json`。トークンを平文で持つのでパーミッションは 600
+- `workdir` は特定のリポジトリではなく、必要なリポジトリをその配下に clone して使う基点ディレクトリ。
+  どのリポジトリを対象にするかはチケット本文や事前作業(`preTask`)の指示から Claude が判断する
 
 `claude_args` の既定は `--permission-mode acceptEdits`。cron からは権限確認に誰も答えられないため。
 
@@ -113,3 +115,4 @@ Claude Code から「devuntu のエージェントをセットアップして」
 | 実行が「実行中」で止まる                 | Claude が `finish_agent_task` を呼べていない。60分で失敗へ落ちる                                   |
 | チケットが拾われない                     | 担当がエージェントか / チケットの「エージェント」が「任せない」でないか / ステータスが完了でないか |
 | `/api/agent/status` が 401               | トークンの再発行で古くなっていないか(1エージェント1本なので再発行は置き換え)                       |
+| ランナーを新しいバージョンにしたい       | セットアップ手順4の `curl` コマンドを再実行する。常駐しないため次回の cron 起動から反映される      |

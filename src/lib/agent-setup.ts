@@ -30,7 +30,7 @@ export const agentSetupGuide = (): string => {
 
 - **エージェント用のトークン**: devuntu の管理者が \`${baseUrl}/admin/agents\` で発行する
   (\`devuntu_agent_\` で始まる文字列。発行時に一度しか表示されない)
-- **作業ディレクトリ**: エージェントに作業させる git リポジトリの場所
+- **作業ディレクトリ**: リポジトリを clone して作業させるための基点ディレクトリ
 
 ## 1. 前提コマンドの確認
 
@@ -47,12 +47,15 @@ git --version
 
 ## 2. 作業ディレクトリを用意する
 
-エージェント専用のクローンを使う。人が作業しているディレクトリと共有すると、
-未コミットの変更を巻き込んだり、ブランチを取り合ったりする。
+対応するリポジトリは 1 つとは限らないので、\`~/devuntu-agent-work\` は特定のリポジトリを
+クローンする場所ではなく、必要なリポジトリをその配下にクローンして使う**基点ディレクトリ**にする。
+どのリポジトリを対象にするかは、チケットの内容や事前作業(手順7)の指示から Claude が判断する。
+
+人が作業しているディレクトリとは共有しない。未コミットの変更を巻き込んだり、
+ブランチを取り合ったりする。
 
 \`\`\`sh
-git clone <リポジトリ> ~/devuntu-agent-work
-cd ~/devuntu-agent-work && git status
+mkdir -p ~/devuntu-agent-work
 \`\`\`
 
 ## 3. MCP を登録する
@@ -74,6 +77,9 @@ curl -fsSL ${scriptUrl} -o ~/.local/bin/devuntu_agent.py
 chmod +x ~/.local/bin/devuntu_agent.py
 python3 ~/.local/bin/devuntu_agent.py --version
 \`\`\`
+
+サーバー側でランナーが更新された後も、この \`curl\` コマンドを再実行すれば最新版に置き換わる。
+常駐プロセスではないため、再起動や cron の再登録は不要で、次回の cron 起動から新しいバージョンが使われる。
 
 ## 5. 設定ファイルを作る
 
@@ -121,7 +127,8 @@ python3 ~/.local/bin/devuntu_agent.py poll --dry-run
 - **ポーリング間隔**: cron の間隔と揃える(選べる値: ${AGENT_POLL_INTERVAL_OPTIONS.map((sec) => `${sec / 60}分`).join(' / ')})
 - **既定の処理方式**: チケット側で指定が無いときの方式
 - **事前作業 / 事後作業**: Claude がチケットの処理前後に読む指示。例:
-  - 事前作業: \`作業ディレクトリで git pull し、チケットの表示IDでブランチを作る\`
+  - 事前作業: \`チケット本文からリポジトリを判断し、~/devuntu-agent-work 配下に無ければ clone、
+    あれば git pull してチケットの表示IDでブランチを作る\`
   - 事後作業: \`lint とビルドを通し、gh pr create で PR を作る\`
 
 ## 8. cron に登録する
