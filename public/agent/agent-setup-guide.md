@@ -82,15 +82,21 @@ cat > ~/.config/devuntu-agent/config.json <<'JSON'
   "token": "<発行したトークン>",
   "workdir": "<作業ディレクトリの絶対パス>",
   "claude_bin": "claude",
-  "claude_args": ["--permission-mode", "acceptEdits"],
+  "claude_args": ["--permission-mode", "auto"],
   "timeout_sec": 3600
 }
 JSON
 chmod 600 ~/.config/devuntu-agent/config.json
 ```
 
-- `claude_args`: cron からは権限確認に誰も答えられないので、既定では編集を自動承認する。
-  もっと広く許可したい場合だけ変える
+- `claude_args`: cron からは権限確認に誰も答えられないので、既定 (`auto`) はファイル編集に
+  限らずツール利用(Bash 含む)全般を自動承認する。
+  **注意**: エージェントが読むチケット本文・コメントの内容がそのまま Claude への指示になり得るため、
+  自動承認の範囲を広げるほど、悪意ある(または誤った)チケット内容から想定外のコマンドが
+  無条件に実行されるリスクも上がる。エージェントに割り当てるチケットを作成・コメントできる範囲を
+  信頼できる人に限定するなど、リスクは運用側で判断すること。より制限したい場合は
+  `--permission-mode acceptEdits`(編集のみ自動承認)に変える、または `--disallowedTools` で
+  危険なツールを個別に禁止する
 - `timeout_sec`: これを超えた Claude は打ち切り、実行は失敗として記録される
 
 ## 6. 疎通を確認する

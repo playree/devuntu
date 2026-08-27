@@ -35,7 +35,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-__version__ = "0.2.2"
+__version__ = "0.2.3"
 
 DEFAULT_CONFIG_PATH = Path.home() / ".config" / "devuntu-agent" / "config.json"
 DEFAULT_LOG_PATH = Path.home() / ".local" / "state" / "devuntu-agent" / "agent.log"
@@ -45,9 +45,9 @@ DEFAULT_LOCK_PATH = Path.home() / ".cache" / "devuntu-agent.lock"
 # (src/lib/agent-setup.ts の AGENT_SCRIPT_PATH と同じ)
 AGENT_SCRIPT_PATH = "/agent/devuntu_agent.py"
 
-# 権限確認で止まると cron からは誰も答えられないので、既定は編集を自動承認する。
-# 他のツールまで許可したい場合は config の claude_args で上書きする。
-DEFAULT_CLAUDE_ARGS = ["--permission-mode", "acceptEdits"]
+# 権限確認で止まると cron からは誰も答えられないので、既定は編集に限らずツール利用を自動承認する。
+# 挙動を変えたい場合は config の claude_args で上書きする。
+DEFAULT_CLAUDE_ARGS = ["--permission-mode", "auto"]
 
 # Claude を待つ上限。超えたら殺して失敗として記録する
 DEFAULT_TIMEOUT_SEC = 3600
@@ -202,12 +202,17 @@ def build_prompt(task: dict) -> str:
         "3. get_ticket でチケットの本文とコメントを読み、action に従って処理する。\n"
         "   - plan: 対応プランを作り、add_ticket_comment に type='plan' で投稿する。実装は行わない。\n"
         "   - execute: プランを作らずに対応を実行する。\n"
-        "   - revise: プランへの返信を読み、その指示に従ってプランを直すか実装に進む。\n"
+        "   - revise: 前回投稿(プランまたは確認事項)への返信を読み、その指示に従って\n"
+        "     プランを直すか実装に進む。\n"
+        "   action によらず、ユーザーに確認したいこと(選択肢やインプットが必要な内容)が\n"
+        "   生じた場合は、add_ticket_comment に type を指定せず通常コメントとして質問を投稿し、\n"
+        "   その回は finish_agent_task を outcome='planned' で報告して終える\n"
+        "   (返信は次回 revise として渡される)。\n"
         "4. get_agent_post_task を呼び、返ってきた事後作業(postTask)の指示に従う。\n"
         "5. 対応の結果を add_ticket_comment に type='report' で投稿する"
-        "(plan で終えた場合は不要)。\n"
+        "(plan や確認事項の投稿で終えた場合は不要)。\n"
         "6. finish_agent_task で結果を報告する。\n"
-        "   outcome は planned(プランを投稿して返信待ち) / completed(対応完了) /\n"
+        "   outcome は planned(プランや確認事項を投稿して返信待ち) / completed(対応完了) /\n"
         "   skipped(見送り) / failed(失敗) から選ぶ。\n"
         "\n"
         "finish_agent_task を必ず呼ぶこと。呼ばずに終わるとチケットは失敗として扱われる。"
