@@ -89,8 +89,9 @@ cron ──> devuntu_agent.py ──1──> POST /api/agent/status   「動い�
 `public/` に置いてあるのは、セットアップ時に `curl <BASE_URL>/agent/devuntu_agent.py` で
 **サーバーと同じ版**を取得できるようにするため(秘密情報は含まない)。
 
-- 常駐しない。cron + `flock` で 5 分おきに単発起動する。プロセス監視も再起動も要らない
-- スクリプト側でも `fcntl.flock` を取るので、cron 側の `flock` を書き忘れても重ならない
+- 常駐しない。cron が 5 分おきに単発起動する。プロセス監視も再起動も要らない
+- 多重起動の防止はスクリプト側の `fcntl.flock` で行う。cron 側で重ねて `flock` を使うと、
+  同じロックファイルへの二重取得で毎回失敗しスキップされてしまうため使わない
 - 1 回の poll で 1 件だけ処理する。残りは次の poll で拾う
 - ログは `~/.local/state/devuntu-agent/agent.log`(1MB × 3 世代)
 - 設定は `~/.config/devuntu-agent/config.json`。トークンを平文で持つのでパーミッションは 600
@@ -106,7 +107,9 @@ cron ──> devuntu_agent.py ──1──> POST /api/agent/status   「動い�
 MCP ツール `get_agent_setup_guide` が、そのマシンで実行できる手順を返す。
 Claude Code から「devuntu のエージェントをセットアップして」と頼めば、この手順に沿って進む。
 
-手順の本文は [src/lib/agent-setup.ts](../src/lib/agent-setup.ts)。URL はサーバー自身のものが埋め込まれる。
+手順の本文は [public/agent/agent-setup-guide.md](../public/agent/agent-setup-guide.md)。
+プレースホルダーの置換は [src/lib/agent-setup.ts](../src/lib/agent-setup.ts) で行い、
+URL はサーバー自身のものが埋め込まれる。
 
 ## 詰まったときに見る場所
 

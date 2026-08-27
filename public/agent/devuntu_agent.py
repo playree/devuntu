@@ -27,6 +27,7 @@ import logging.handlers
 import os
 import platform
 import re
+import shlex
 import socket
 import subprocess
 import sys
@@ -34,7 +35,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 
 DEFAULT_CONFIG_PATH = Path.home() / ".config" / "devuntu-agent" / "config.json"
 DEFAULT_LOG_PATH = Path.home() / ".local" / "state" / "devuntu-agent" / "agent.log"
@@ -213,9 +214,14 @@ def build_prompt(task: dict) -> str:
     )
 
 
+def build_command(config: Config, task: dict) -> list[str]:
+    """claude を起動するコマンド全量"""
+    return [config.claude_bin, "-p", build_prompt(task), *config.claude_args]
+
+
 def run_claude(config: Config, task: dict) -> tuple[str, str]:
     """Claude Code を起動する。戻り値は (実行の結果, 実行履歴に残す要約)"""
-    command = [config.claude_bin, "-p", build_prompt(task), *config.claude_args]
+    command = build_command(config, task)
     log.info("claude を起動する: ticket=%s action=%s cwd=%s", task["displayId"], task["action"], config.workdir)
 
     try:
@@ -276,8 +282,9 @@ def poll(config: Config, dry_run: bool, debug: bool = False) -> int:
         log.info("処理待ちが %d 件ある。今回は %s だけを処理する", len(tasks), display_id)
 
     if debug:
-        log.info("debug: %s の指示内容を表示する", display_id)
-        print(build_prompt(task))
+        log.info("debug: %s のコマンド全量を表示する", display_id)
+        print(f"cd {shlex.quote(str(config.workdir))} && \\")
+        print(" ".join(shlex.quote(part) for part in build_command(config, task)))
         return 0
 
     if dry_run:
@@ -356,7 +363,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--debug",
         action="store_true",
-        help="Claude への指示内容(プロンプト)を表示するだけで、Claude の起動や実行記録は行わない",
+        help="Claude を起動するコマンド全量を表示するだけで、Claude の起動や実行記録は行わない",
     )
     parser.add_argument("--lock", type=Path, default=DEFAULT_LOCK_PATH, help=f"ロックファイル(既定 {DEFAULT_LOCK_PATH})")
     parser.add_argument("--verbose", action="store_true")
