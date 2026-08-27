@@ -26,6 +26,7 @@ import logging
 import logging.handlers
 import os
 import platform
+import re
 import socket
 import subprocess
 import sys
@@ -33,11 +34,15 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-__version__ = "0.1.1"
+__version__ = "0.2.0"
 
 DEFAULT_CONFIG_PATH = Path.home() / ".config" / "devuntu-agent" / "config.json"
 DEFAULT_LOG_PATH = Path.home() / ".local" / "state" / "devuntu-agent" / "agent.log"
 DEFAULT_LOCK_PATH = Path.home() / ".cache" / "devuntu-agent.lock"
+
+# ランナー自体の配布先。curl での初回取得と自動更新の両方でこのパスを使う
+# (src/lib/agent-setup.ts の AGENT_SCRIPT_PATH と同じ)
+AGENT_SCRIPT_PATH = "/agent/devuntu_agent.py"
 
 # 権限確認で止まると cron からは誰も答えられないので、既定は編集を自動承認する。
 # 他のツールまで許可したい場合は config の claude_args で上書きする。
@@ -77,6 +82,7 @@ class Config:
         self.claude_args: list[str] = list(raw.get("claude_args") or DEFAULT_CLAUDE_ARGS)
         self.timeout_sec: int = int(raw.get("timeout_sec") or DEFAULT_TIMEOUT_SEC)
         self.log_path = Path(str(raw.get("log_path") or DEFAULT_LOG_PATH)).expanduser()
+        self.self_update: bool = bool(raw.get("self_update", True))
 
         if not self.base_url:
             raise ConfigError(f"base_url が設定されていない: {path}")
@@ -131,6 +137,51 @@ def call_api(config: Config, method: str, path: str, body: dict | None = None) -
         raise ApiError(f"{method} {path} に到達できない: {e}") from e
     except json.JSONDecodeError as e:
         raise ApiError(f"{method} {path} の応答が JSON ではない: {e}") from e
+
+
+# ---------------------------------------------------------------------------
+# 自動更新
+# ---------------------------------------------------------------------------
+
+
+def self_update(config: Config) -> None:
+    """自分自身を最新版に更新する。失敗しても致命的ではないので warning ログだけ残して戻る"""
+    url = f"{config.base_url}{AGENT_SCRIPT_PATH}"
+    try:
+        request = urllib.request.Request(url, headers={"user-agent": f"devuntu-agent/{__version__}"})
+        with urllib.request.urlopen(request, timeout=30) as response:
+            latest = response.read()
+    except (urllib.error.URLError, TimeoutError, socket.timeout) as e:
+        log.warning("最新版の取得に失敗した: %s", e)
+        return
+
+    # サーバーが壊れた内容を返す事故に備えて、それらしい中身か軽く確認してから書き換える
+    if not latest.startswith(b"#!/usr/bin/env python3") or b"__version__" not in latest:
+        log.warning("最新版の内容がランナーのスクリプトに見えないので更新しない: %s", url)
+        return
+
+    script_path = Path(__file__).resolve()
+    try:
+        current = script_path.read_bytes()
+    except OSError as e:
+        log.warning("自分自身を読み込めないので更新しない: %s", e)
+        return
+
+    if latest == current:
+        return
+
+    tmp_path = script_path.with_suffix(".py.new")
+    try:
+        tmp_path.write_bytes(latest)
+        tmp_path.chmod(script_path.stat().st_mode)
+        tmp_path.replace(script_path)
+    except OSError as e:
+        log.warning("ランナーの更新に失敗した: %s", e)
+        return
+
+    match = re.search(rb'__version__\s*=\s*"([^"]+)"', latest)
+    new_version = match.group(1).decode() if match else "?"
+    log.info("ランナーを %s に更新した(次回の起動から反映される)", new_version)
 
 
 # ---------------------------------------------------------------------------
@@ -319,6 +370,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     try:
+        if config.self_update:
+            self_update(config)
         return poll(config, args.dry_run)
     except ApiError as e:
         log.error("%s", e)
