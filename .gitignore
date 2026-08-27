@@ -52,5 +52,5 @@ next-env.d.ts
 /.claude/settings.local.json
 
 # python
-#*.pyc
-#__pycache__/
+*.pyc
+__pycache__/
