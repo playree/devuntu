@@ -34,7 +34,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 DEFAULT_CONFIG_PATH = Path.home() / ".config" / "devuntu-agent" / "config.json"
 DEFAULT_LOG_PATH = Path.home() / ".local" / "state" / "devuntu-agent" / "agent.log"
@@ -247,7 +247,7 @@ def run_claude(config: Config, task: dict) -> tuple[str, str]:
 # ---------------------------------------------------------------------------
 
 
-def poll(config: Config, dry_run: bool) -> int:
+def poll(config: Config, dry_run: bool, debug: bool = False) -> int:
     status = call_api(
         config,
         "POST",
@@ -274,6 +274,11 @@ def poll(config: Config, dry_run: bool) -> int:
 
     if len(tasks) > 1:
         log.info("処理待ちが %d 件ある。今回は %s だけを処理する", len(tasks), display_id)
+
+    if debug:
+        log.info("debug: %s の指示内容を表示する", display_id)
+        print(build_prompt(task))
+        return 0
 
     if dry_run:
         log.info("dry-run: %s を %s として処理するところ", display_id, action)
@@ -348,6 +353,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("command", choices=["poll"], help="poll: 担当チケットを 1 件処理する")
     parser.add_argument("--config", type=Path, default=None, help=f"設定ファイル(既定 {DEFAULT_CONFIG_PATH})")
     parser.add_argument("--dry-run", action="store_true", help="Claude を起動せず、何を処理するかだけを出す")
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Claude への指示内容(プロンプト)を表示するだけで、Claude の起動や実行記録は行わない",
+    )
     parser.add_argument("--lock", type=Path, default=DEFAULT_LOCK_PATH, help=f"ロックファイル(既定 {DEFAULT_LOCK_PATH})")
     parser.add_argument("--verbose", action="store_true")
     parser.add_argument("--version", action="version", version=__version__)
@@ -372,7 +382,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if config.self_update:
             self_update(config)
-        return poll(config, args.dry_run)
+        return poll(config, args.dry_run, args.debug)
     except ApiError as e:
         log.error("%s", e)
         return 1
