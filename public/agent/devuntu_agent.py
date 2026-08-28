@@ -35,7 +35,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-__version__ = "0.2.7"
+__version__ = "0.3.0"
 
 DEFAULT_CONFIG_PATH = Path.home() / ".config" / "devuntu-agent" / "config.json"
 DEFAULT_LOG_PATH = Path.home() / ".local" / "state" / "devuntu-agent" / "agent.log"
@@ -45,9 +45,17 @@ DEFAULT_LOCK_PATH = Path.home() / ".cache" / "devuntu-agent.lock"
 # (src/lib/agent-setup.ts の AGENT_SCRIPT_PATH と同じ)
 AGENT_SCRIPT_PATH = "/agent/devuntu_agent.py"
 
+# 起動する CLI の種類。将来 claude 以外(例: codex)にも対応する拡張ポイントとして
+# config の cli.kind で指定できるようにしてあるが、現時点でサポートするのは claude のみ
+DEFAULT_CLI_KIND = "claude"
+SUPPORTED_CLI_KINDS = ("claude",)  # 将来 codex などを足す場合はここに追加する
+
 # 権限確認で止まると cron からは誰も答えられないので、既定は編集に限らずツール利用を自動承認する。
-# 挙動を変えたい場合は config の claude_args で上書きする。
+# 挙動を変えたい場合は config の cli.args で上書きする。
 DEFAULT_CLAUDE_ARGS = ["--permission-mode", "auto"]
+
+# config で cli.model が省略された場合に使うモデル
+DEFAULT_CLAUDE_MODEL = "sonnet"
 
 # Claude を待つ上限。超えたら殺して失敗として記録する
 DEFAULT_TIMEOUT_SEC = 3600
@@ -79,8 +87,18 @@ class Config:
         # 特定のリポジトリではなく、必要なリポジトリをこの配下に clone して使う基点ディレクトリ。
         # どのリポジトリを対象にするかはチケット本文や事前作業の指示から Claude が判断する
         self.workdir = Path(str(raw.get("workdir", ""))).expanduser()
-        self.claude_bin: str = str(raw.get("claude_bin") or "claude")
-        self.claude_args: list[str] = list(raw.get("claude_args") or DEFAULT_CLAUDE_ARGS)
+
+        # 起動する CLI まわりの設定。将来 claude 以外にも対応できるよう種類ごとにまとめて持つ
+        cli_raw = raw.get("cli") or {}
+        self.cli_kind: str = str(cli_raw.get("kind") or DEFAULT_CLI_KIND)
+        self.cli_bin: str = str(cli_raw.get("bin") or self.cli_kind)
+        self.cli_args: list[str] = list(
+            cli_raw.get("args") or (DEFAULT_CLAUDE_ARGS if self.cli_kind == "claude" else [])
+        )
+        self.cli_model: str = str(
+            cli_raw.get("model") or (DEFAULT_CLAUDE_MODEL if self.cli_kind == "claude" else "")
+        )
+
         self.timeout_sec: int = int(raw.get("timeout_sec") or DEFAULT_TIMEOUT_SEC)
         self.log_path = Path(str(raw.get("log_path") or DEFAULT_LOG_PATH)).expanduser()
         self.self_update: bool = bool(raw.get("self_update", True))
@@ -93,6 +111,8 @@ class Config:
             raise ConfigError(f"workdir is not set: {path}")
         if not self.workdir.is_dir():
             raise ConfigError(f"workdir does not exist: {self.workdir}")
+        if self.cli_kind not in SUPPORTED_CLI_KINDS:
+            raise ConfigError(f"unsupported cli.kind: {self.cli_kind} (supported: {', '.join(SUPPORTED_CLI_KINDS)})")
 
 
 def load_config(path: Path) -> Config:
@@ -220,8 +240,11 @@ def build_prompt(task: dict) -> str:
 
 
 def build_command(config: Config, task: dict) -> list[str]:
-    """claude を起動するコマンド全量"""
-    return [config.claude_bin, "-p", build_prompt(task), *config.claude_args]
+    """cli を起動するコマンド全量"""
+    command = [config.cli_bin, "-p", build_prompt(task)]
+    if config.cli_model:
+        command += ["--model", config.cli_model]
+    return command + config.cli_args
 
 
 def run_claude(config: Config, task: dict) -> tuple[str, str]:
@@ -239,7 +262,7 @@ def run_claude(config: Config, task: dict) -> tuple[str, str]:
             check=False,
         )
     except FileNotFoundError:
-        return "failed", f"{config.claude_bin} not found"
+        return "failed", f"{config.cli_bin} not found"
     except subprocess.TimeoutExpired:
         log.error("claude did not finish within %d seconds", config.timeout_sec)
         return "failed", f"timeout ({config.timeout_sec}s)"

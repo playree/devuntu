@@ -82,15 +82,22 @@ cat > ~/.config/devuntu-agent/config.json <<'JSON'
   "base_url": "{{baseUrl}}",
   "token": "<発行したトークン>",
   "workdir": "<作業ディレクトリの絶対パス>",
-  "claude_bin": "claude",
-  "claude_args": ["--permission-mode", "auto"],
+  "cli": {
+    "kind": "claude",
+    "bin": "claude",
+    "args": ["--permission-mode", "auto"],
+    "model": "sonnet"
+  },
   "timeout_sec": 3600
 }
 JSON
 chmod 600 ~/.config/devuntu-agent/config.json
 ```
 
-- `claude_args`: cron からは権限確認に誰も答えられないので、既定 (`auto`) はファイル編集に
+- `cli.kind`: 起動する CLI の種類。将来 `claude` 以外の CLI にも対応するための拡張ポイントで、
+  現状は `claude` のみサポートする
+- `cli.bin`: 実行コマンド。省略すると `cli.kind` と同じ値(`claude`)を使う
+- `cli.args`: cron からは権限確認に誰も答えられないので、既定 (`auto`) はファイル編集に
   限らずツール利用(Bash 含む)全般を自動承認する。
   **注意**: エージェントが読むチケット本文・コメントの内容がそのまま Claude への指示になり得るため、
   自動承認の範囲を広げるほど、悪意ある(または誤った)チケット内容から想定外のコマンドが
@@ -98,6 +105,8 @@ chmod 600 ~/.config/devuntu-agent/config.json
   信頼できる人に限定するなど、リスクは運用側で判断すること。より制限したい場合は
   `--permission-mode acceptEdits`(編集のみ自動承認)に変える、または `--disallowedTools` で
   危険なツールを個別に禁止する
+- `cli.model`: 使用する Claude のモデル。既定は `sonnet`。`opus` / `fable` など
+  `claude --help` の `--model` が受け付けるエイリアスを指定できる
 - `timeout_sec`: これを超えた Claude は打ち切り、実行は失敗として記録される
 
 ## 6. 疎通を確認する

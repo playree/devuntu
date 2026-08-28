@@ -102,7 +102,10 @@ cron ──> devuntu_agent.py ──1──> POST /api/agent/status   「動い�
   次回の cron 起動から新しいバージョンで処理される。
   取得や書き換えに失敗しても warning ログを残すだけで実行は継続する。無効化は `self_update: false`
 
-`claude_args` の既定は `--permission-mode acceptEdits`。cron からは権限確認に誰も答えられないため。
+CLI 起動まわりの設定は `config.json` の `cli` にまとめる(`cli.kind` / `cli.bin` / `cli.args` /
+`cli.model`)。`cli.kind` は将来 `claude` 以外の CLI(例: codex)にも対応するための拡張ポイントで、
+現状は `claude` のみサポートする。`cli.args` の既定は `--permission-mode auto`
+(cron からは権限確認に誰も答えられないため)、`cli.model` の既定は `sonnet`。
 
 ## セットアップ
 
