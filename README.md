@@ -97,7 +97,7 @@ claude mcp add --transport http devuntu <BETTER_AUTH_URL>/api/mcp
 ユーザースコープで登録する場合
 
 ```sh
-claude mcp add ---scope user -transport http devuntu <BETTER_AUTH_URL>/api/mcp
+claude mcp add --scope user --transport http devuntu <BETTER_AUTH_URL>/api/mcp
 ```
 
 登録後、devuntu のツールを最初に呼び出したタイミングでブラウザが開き、DCR → 認可コードフロー(PKCE)

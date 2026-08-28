@@ -166,7 +166,7 @@ crontab -l
 同じ環境で作り直せるよう、作業ディレクトリに `.claude/skills/devuntu-agent/SKILL.md` を作り、
 このガイドの内容を書き出しておく。先頭には次の frontmatter を付ける。
 
-```
+```yaml
 ---
 name: devuntu-agent
 description: devuntu の自動運用(Devuntu Agent)をこのマシンにセットアップし、動作を確認する。

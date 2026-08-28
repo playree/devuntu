@@ -59,10 +59,10 @@ docker exec devuntu-postgres createdb -U devuser devuntu-agent
 `S3_ENDPOINT`/`S3_ACCESS_KEY_ID`/`S3_SECRET_ACCESS_KEY` はコンテナ共有のため変更不要。起動は次のとおり。
 
 ```sh
-PORT=3010 pnpm dev
-
 # 初回はマイグレーションも忘れずに
 pnpm migrate
+
+PORT=3010 pnpm dev
 ```
 
 Google/Slack など外部OAuthのコールバックURLは `http://localhost:3000/...` 決め打ちで登録されていることが多い。この並行clone(`localhost:3010`)でOAuthログインを試す場合は、各サービスの管理画面側でコールバックURLを別途追加登録する必要がある。
