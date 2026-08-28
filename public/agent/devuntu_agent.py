@@ -35,7 +35,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-__version__ = "0.2.6"
+__version__ = "0.2.7"
 
 DEFAULT_CONFIG_PATH = Path.home() / ".config" / "devuntu-agent" / "config.json"
 DEFAULT_LOG_PATH = Path.home() / ".local" / "state" / "devuntu-agent" / "agent.log"
@@ -145,8 +145,8 @@ def call_api(config: Config, method: str, path: str, body: dict | None = None) -
 # ---------------------------------------------------------------------------
 
 
-def self_update(config: Config) -> None:
-    """自分自身を最新版に更新する。失敗しても致命的ではないので warning ログだけ残して戻る"""
+def self_update(config: Config) -> bool:
+    """自分自身を最新版に更新する。書き換えたら True。失敗しても致命的ではないので warning ログだけ残して戻る"""
     url = f"{config.base_url}{AGENT_SCRIPT_PATH}"
     try:
         request = urllib.request.Request(url, headers={"user-agent": f"devuntu-agent/{__version__}"})
@@ -154,22 +154,22 @@ def self_update(config: Config) -> None:
             latest = response.read()
     except (urllib.error.URLError, TimeoutError, socket.timeout) as e:
         log.warning("failed to fetch the latest version: %s", e)
-        return
+        return False
 
     # サーバーが壊れた内容を返す事故に備えて、それらしい中身か軽く確認してから書き換える
     if not latest.startswith(b"#!/usr/bin/env python3") or b"__version__" not in latest:
         log.warning("fetched content doesn't look like the runner script, skipping update: %s", url)
-        return
+        return False
 
     script_path = Path(__file__).resolve()
     try:
         current = script_path.read_bytes()
     except OSError as e:
         log.warning("cannot read self, skipping update: %s", e)
-        return
+        return False
 
     if latest == current:
-        return
+        return False
 
     tmp_path = script_path.with_suffix(".py.new")
     try:
@@ -178,11 +178,12 @@ def self_update(config: Config) -> None:
         tmp_path.replace(script_path)
     except OSError as e:
         log.warning("failed to update the runner: %s", e)
-        return
+        return False
 
     match = re.search(rb'__version__\s*=\s*"([^"]+)"', latest)
     new_version = match.group(1).decode() if match else "?"
-    log.info("updated the runner to %s (takes effect on next run)", new_version)
+    log.info("updated the runner to %s, skipping this run so the new version handles the next one", new_version)
+    return True
 
 
 # ---------------------------------------------------------------------------
@@ -398,8 +399,9 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     try:
-        if config.self_update:
-            self_update(config)
+        # 更新後の回を旧コードのまま処理するとサーバーの期待する挙動とずれるため、次の起動に任せる
+        if config.self_update and self_update(config):
+            return 0
         return poll(config, args.dry_run, args.debug)
     except ApiError as e:
         log.error("%s", e)

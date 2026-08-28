@@ -98,6 +98,8 @@ cron ──> devuntu_agent.py ──1──> POST /api/agent/status   「動い�
 - `workdir` は特定のリポジトリではなく、必要なリポジトリをその配下に clone して使う基点ディレクトリ。
   どのリポジトリを対象にするかはチケット本文や事前作業(`preTask`)の指示から Claude が判断する
 - poll のたびに `AGENT_SCRIPT_PATH` から最新版を取得し、差分があれば自分自身を書き換える(自動更新)。
+  書き換えた回はチケットを処理せずに終了する(旧コードのまま処理するとサーバーの期待する挙動とずれるため)。
+  次回の cron 起動から新しいバージョンで処理される。
   取得や書き換えに失敗しても warning ログを残すだけで実行は継続する。無効化は `self_update: false`
 
 `claude_args` の既定は `--permission-mode acceptEdits`。cron からは権限確認に誰も答えられないため。
