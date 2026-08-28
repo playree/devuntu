@@ -31,8 +31,7 @@ export type AgentRunnerRow = {
   timezone: string | null
   pollIntervalSec: number
   defaultMode: AgentTaskMode
-  preTask: string | null
-  postTask: string | null
+  rule: string | null
 }
 
 /** `AgentRunner` を引くときの共通 select。呼び出し側で形がずれないようにここへ置く */
@@ -45,8 +44,7 @@ export const agentRunnerSelect = {
   timezone: true,
   pollIntervalSec: true,
   defaultMode: true,
-  preTask: true,
-  postTask: true,
+  rule: true,
 } as const
 
 export const findAgentRunner = async (userId: string): Promise<AgentRunnerRow | null> =>

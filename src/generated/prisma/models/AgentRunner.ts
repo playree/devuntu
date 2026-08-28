@@ -48,8 +48,7 @@ export type AgentRunnerMinAggregateOutputType = {
   timezone: string | null
   pollIntervalSec: number | null
   defaultMode: $Enums.AgentTaskMode | null
-  preTask: string | null
-  postTask: string | null
+  rule: string | null
   lastPolledAt: Date | null
   hostname: string | null
   version: string | null
@@ -66,8 +65,7 @@ export type AgentRunnerMaxAggregateOutputType = {
   timezone: string | null
   pollIntervalSec: number | null
   defaultMode: $Enums.AgentTaskMode | null
-  preTask: string | null
-  postTask: string | null
+  rule: string | null
   lastPolledAt: Date | null
   hostname: string | null
   version: string | null
@@ -84,8 +82,7 @@ export type AgentRunnerCountAggregateOutputType = {
   timezone: number
   pollIntervalSec: number
   defaultMode: number
-  preTask: number
-  postTask: number
+  rule: number
   lastPolledAt: number
   hostname: number
   version: number
@@ -116,8 +113,7 @@ export type AgentRunnerMinAggregateInputType = {
   timezone?: true
   pollIntervalSec?: true
   defaultMode?: true
-  preTask?: true
-  postTask?: true
+  rule?: true
   lastPolledAt?: true
   hostname?: true
   version?: true
@@ -134,8 +130,7 @@ export type AgentRunnerMaxAggregateInputType = {
   timezone?: true
   pollIntervalSec?: true
   defaultMode?: true
-  preTask?: true
-  postTask?: true
+  rule?: true
   lastPolledAt?: true
   hostname?: true
   version?: true
@@ -152,8 +147,7 @@ export type AgentRunnerCountAggregateInputType = {
   timezone?: true
   pollIntervalSec?: true
   defaultMode?: true
-  preTask?: true
-  postTask?: true
+  rule?: true
   lastPolledAt?: true
   hostname?: true
   version?: true
@@ -257,8 +251,7 @@ export type AgentRunnerGroupByOutputType = {
   timezone: string | null
   pollIntervalSec: number
   defaultMode: $Enums.AgentTaskMode
-  preTask: string | null
-  postTask: string | null
+  rule: string | null
   lastPolledAt: Date | null
   hostname: string | null
   version: string | null
@@ -298,8 +291,7 @@ export type AgentRunnerWhereInput = {
   timezone?: Prisma.StringNullableFilter<"AgentRunner"> | string | null
   pollIntervalSec?: Prisma.IntFilter<"AgentRunner"> | number
   defaultMode?: Prisma.EnumAgentTaskModeFilter<"AgentRunner"> | $Enums.AgentTaskMode
-  preTask?: Prisma.StringNullableFilter<"AgentRunner"> | string | null
-  postTask?: Prisma.StringNullableFilter<"AgentRunner"> | string | null
+  rule?: Prisma.StringNullableFilter<"AgentRunner"> | string | null
   lastPolledAt?: Prisma.DateTimeNullableFilter<"AgentRunner"> | Date | string | null
   hostname?: Prisma.StringNullableFilter<"AgentRunner"> | string | null
   version?: Prisma.StringNullableFilter<"AgentRunner"> | string | null
@@ -318,8 +310,7 @@ export type AgentRunnerOrderByWithRelationInput = {
   timezone?: Prisma.SortOrderInput | Prisma.SortOrder
   pollIntervalSec?: Prisma.SortOrder
   defaultMode?: Prisma.SortOrder
-  preTask?: Prisma.SortOrderInput | Prisma.SortOrder
-  postTask?: Prisma.SortOrderInput | Prisma.SortOrder
+  rule?: Prisma.SortOrderInput | Prisma.SortOrder
   lastPolledAt?: Prisma.SortOrderInput | Prisma.SortOrder
   hostname?: Prisma.SortOrderInput | Prisma.SortOrder
   version?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -341,8 +332,7 @@ export type AgentRunnerWhereUniqueInput = Prisma.AtLeast<{
   timezone?: Prisma.StringNullableFilter<"AgentRunner"> | string | null
   pollIntervalSec?: Prisma.IntFilter<"AgentRunner"> | number
   defaultMode?: Prisma.EnumAgentTaskModeFilter<"AgentRunner"> | $Enums.AgentTaskMode
-  preTask?: Prisma.StringNullableFilter<"AgentRunner"> | string | null
-  postTask?: Prisma.StringNullableFilter<"AgentRunner"> | string | null
+  rule?: Prisma.StringNullableFilter<"AgentRunner"> | string | null
   lastPolledAt?: Prisma.DateTimeNullableFilter<"AgentRunner"> | Date | string | null
   hostname?: Prisma.StringNullableFilter<"AgentRunner"> | string | null
   version?: Prisma.StringNullableFilter<"AgentRunner"> | string | null
@@ -361,8 +351,7 @@ export type AgentRunnerOrderByWithAggregationInput = {
   timezone?: Prisma.SortOrderInput | Prisma.SortOrder
   pollIntervalSec?: Prisma.SortOrder
   defaultMode?: Prisma.SortOrder
-  preTask?: Prisma.SortOrderInput | Prisma.SortOrder
-  postTask?: Prisma.SortOrderInput | Prisma.SortOrder
+  rule?: Prisma.SortOrderInput | Prisma.SortOrder
   lastPolledAt?: Prisma.SortOrderInput | Prisma.SortOrder
   hostname?: Prisma.SortOrderInput | Prisma.SortOrder
   version?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -387,8 +376,7 @@ export type AgentRunnerScalarWhereWithAggregatesInput = {
   timezone?: Prisma.StringNullableWithAggregatesFilter<"AgentRunner"> | string | null
   pollIntervalSec?: Prisma.IntWithAggregatesFilter<"AgentRunner"> | number
   defaultMode?: Prisma.EnumAgentTaskModeWithAggregatesFilter<"AgentRunner"> | $Enums.AgentTaskMode
-  preTask?: Prisma.StringNullableWithAggregatesFilter<"AgentRunner"> | string | null
-  postTask?: Prisma.StringNullableWithAggregatesFilter<"AgentRunner"> | string | null
+  rule?: Prisma.StringNullableWithAggregatesFilter<"AgentRunner"> | string | null
   lastPolledAt?: Prisma.DateTimeNullableWithAggregatesFilter<"AgentRunner"> | Date | string | null
   hostname?: Prisma.StringNullableWithAggregatesFilter<"AgentRunner"> | string | null
   version?: Prisma.StringNullableWithAggregatesFilter<"AgentRunner"> | string | null
@@ -404,8 +392,7 @@ export type AgentRunnerCreateInput = {
   timezone?: string | null
   pollIntervalSec?: number
   defaultMode?: $Enums.AgentTaskMode
-  preTask?: string | null
-  postTask?: string | null
+  rule?: string | null
   lastPolledAt?: Date | string | null
   hostname?: string | null
   version?: string | null
@@ -424,8 +411,7 @@ export type AgentRunnerUncheckedCreateInput = {
   timezone?: string | null
   pollIntervalSec?: number
   defaultMode?: $Enums.AgentTaskMode
-  preTask?: string | null
-  postTask?: string | null
+  rule?: string | null
   lastPolledAt?: Date | string | null
   hostname?: string | null
   version?: string | null
@@ -442,8 +428,7 @@ export type AgentRunnerUpdateInput = {
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pollIntervalSec?: Prisma.IntFieldUpdateOperationsInput | number
   defaultMode?: Prisma.EnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode
-  preTask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  postTask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastPolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hostname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -462,8 +447,7 @@ export type AgentRunnerUncheckedUpdateInput = {
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pollIntervalSec?: Prisma.IntFieldUpdateOperationsInput | number
   defaultMode?: Prisma.EnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode
-  preTask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  postTask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastPolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hostname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -481,8 +465,7 @@ export type AgentRunnerCreateManyInput = {
   timezone?: string | null
   pollIntervalSec?: number
   defaultMode?: $Enums.AgentTaskMode
-  preTask?: string | null
-  postTask?: string | null
+  rule?: string | null
   lastPolledAt?: Date | string | null
   hostname?: string | null
   version?: string | null
@@ -498,8 +481,7 @@ export type AgentRunnerUpdateManyMutationInput = {
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pollIntervalSec?: Prisma.IntFieldUpdateOperationsInput | number
   defaultMode?: Prisma.EnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode
-  preTask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  postTask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastPolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hostname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -516,8 +498,7 @@ export type AgentRunnerUncheckedUpdateManyInput = {
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pollIntervalSec?: Prisma.IntFieldUpdateOperationsInput | number
   defaultMode?: Prisma.EnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode
-  preTask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  postTask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastPolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hostname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -539,8 +520,7 @@ export type AgentRunnerCountOrderByAggregateInput = {
   timezone?: Prisma.SortOrder
   pollIntervalSec?: Prisma.SortOrder
   defaultMode?: Prisma.SortOrder
-  preTask?: Prisma.SortOrder
-  postTask?: Prisma.SortOrder
+  rule?: Prisma.SortOrder
   lastPolledAt?: Prisma.SortOrder
   hostname?: Prisma.SortOrder
   version?: Prisma.SortOrder
@@ -563,8 +543,7 @@ export type AgentRunnerMaxOrderByAggregateInput = {
   timezone?: Prisma.SortOrder
   pollIntervalSec?: Prisma.SortOrder
   defaultMode?: Prisma.SortOrder
-  preTask?: Prisma.SortOrder
-  postTask?: Prisma.SortOrder
+  rule?: Prisma.SortOrder
   lastPolledAt?: Prisma.SortOrder
   hostname?: Prisma.SortOrder
   version?: Prisma.SortOrder
@@ -581,8 +560,7 @@ export type AgentRunnerMinOrderByAggregateInput = {
   timezone?: Prisma.SortOrder
   pollIntervalSec?: Prisma.SortOrder
   defaultMode?: Prisma.SortOrder
-  preTask?: Prisma.SortOrder
-  postTask?: Prisma.SortOrder
+  rule?: Prisma.SortOrder
   lastPolledAt?: Prisma.SortOrder
   hostname?: Prisma.SortOrder
   version?: Prisma.SortOrder
@@ -675,8 +653,7 @@ export type AgentRunnerCreateWithoutUserInput = {
   timezone?: string | null
   pollIntervalSec?: number
   defaultMode?: $Enums.AgentTaskMode
-  preTask?: string | null
-  postTask?: string | null
+  rule?: string | null
   lastPolledAt?: Date | string | null
   hostname?: string | null
   version?: string | null
@@ -693,8 +670,7 @@ export type AgentRunnerUncheckedCreateWithoutUserInput = {
   timezone?: string | null
   pollIntervalSec?: number
   defaultMode?: $Enums.AgentTaskMode
-  preTask?: string | null
-  postTask?: string | null
+  rule?: string | null
   lastPolledAt?: Date | string | null
   hostname?: string | null
   version?: string | null
@@ -727,8 +703,7 @@ export type AgentRunnerUpdateWithoutUserInput = {
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pollIntervalSec?: Prisma.IntFieldUpdateOperationsInput | number
   defaultMode?: Prisma.EnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode
-  preTask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  postTask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastPolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hostname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -745,8 +720,7 @@ export type AgentRunnerUncheckedUpdateWithoutUserInput = {
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pollIntervalSec?: Prisma.IntFieldUpdateOperationsInput | number
   defaultMode?: Prisma.EnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode
-  preTask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  postTask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastPolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hostname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -763,8 +737,7 @@ export type AgentRunnerCreateWithoutRunsInput = {
   timezone?: string | null
   pollIntervalSec?: number
   defaultMode?: $Enums.AgentTaskMode
-  preTask?: string | null
-  postTask?: string | null
+  rule?: string | null
   lastPolledAt?: Date | string | null
   hostname?: string | null
   version?: string | null
@@ -782,8 +755,7 @@ export type AgentRunnerUncheckedCreateWithoutRunsInput = {
   timezone?: string | null
   pollIntervalSec?: number
   defaultMode?: $Enums.AgentTaskMode
-  preTask?: string | null
-  postTask?: string | null
+  rule?: string | null
   lastPolledAt?: Date | string | null
   hostname?: string | null
   version?: string | null
@@ -815,8 +787,7 @@ export type AgentRunnerUpdateWithoutRunsInput = {
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pollIntervalSec?: Prisma.IntFieldUpdateOperationsInput | number
   defaultMode?: Prisma.EnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode
-  preTask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  postTask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastPolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hostname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -834,8 +805,7 @@ export type AgentRunnerUncheckedUpdateWithoutRunsInput = {
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pollIntervalSec?: Prisma.IntFieldUpdateOperationsInput | number
   defaultMode?: Prisma.EnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode
-  preTask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  postTask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastPolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hostname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -883,8 +853,7 @@ export type AgentRunnerSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   timezone?: boolean
   pollIntervalSec?: boolean
   defaultMode?: boolean
-  preTask?: boolean
-  postTask?: boolean
+  rule?: boolean
   lastPolledAt?: boolean
   hostname?: boolean
   version?: boolean
@@ -904,8 +873,7 @@ export type AgentRunnerSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   timezone?: boolean
   pollIntervalSec?: boolean
   defaultMode?: boolean
-  preTask?: boolean
-  postTask?: boolean
+  rule?: boolean
   lastPolledAt?: boolean
   hostname?: boolean
   version?: boolean
@@ -923,8 +891,7 @@ export type AgentRunnerSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   timezone?: boolean
   pollIntervalSec?: boolean
   defaultMode?: boolean
-  preTask?: boolean
-  postTask?: boolean
+  rule?: boolean
   lastPolledAt?: boolean
   hostname?: boolean
   version?: boolean
@@ -942,8 +909,7 @@ export type AgentRunnerSelectScalar = {
   timezone?: boolean
   pollIntervalSec?: boolean
   defaultMode?: boolean
-  preTask?: boolean
-  postTask?: boolean
+  rule?: boolean
   lastPolledAt?: boolean
   hostname?: boolean
   version?: boolean
@@ -951,7 +917,7 @@ export type AgentRunnerSelectScalar = {
   updatedAt?: boolean
 }
 
-export type AgentRunnerOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "enabled" | "activeFromMin" | "activeToMin" | "timezone" | "pollIntervalSec" | "defaultMode" | "preTask" | "postTask" | "lastPolledAt" | "hostname" | "version" | "createdAt" | "updatedAt", ExtArgs["result"]["agentRunner"]>
+export type AgentRunnerOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "enabled" | "activeFromMin" | "activeToMin" | "timezone" | "pollIntervalSec" | "defaultMode" | "rule" | "lastPolledAt" | "hostname" | "version" | "createdAt" | "updatedAt", ExtArgs["result"]["agentRunner"]>
 export type AgentRunnerInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   runs?: boolean | Prisma.AgentRunner$runsArgs<ExtArgs>
@@ -996,10 +962,9 @@ export type $AgentRunnerPayload<ExtArgs extends runtime.Types.Extensions.Interna
      */
     defaultMode: $Enums.AgentTaskMode
     /**
-     * チケットの処理前 / 処理後に Claude が読む指示(Markdown)
+     * エージェントが作業前に読み、処理全体を通じて従う指示(Markdown)
      */
-    preTask: string | null
-    postTask: string | null
+    rule: string | null
     /**
      * ランナーの自己申告。稼働状況の表示にだけ使い、認可には使わない
      */
@@ -1441,8 +1406,7 @@ export interface AgentRunnerFieldRefs {
   readonly timezone: Prisma.FieldRef<"AgentRunner", 'String'>
   readonly pollIntervalSec: Prisma.FieldRef<"AgentRunner", 'Int'>
   readonly defaultMode: Prisma.FieldRef<"AgentRunner", 'AgentTaskMode'>
-  readonly preTask: Prisma.FieldRef<"AgentRunner", 'String'>
-  readonly postTask: Prisma.FieldRef<"AgentRunner", 'String'>
+  readonly rule: Prisma.FieldRef<"AgentRunner", 'String'>
   readonly lastPolledAt: Prisma.FieldRef<"AgentRunner", 'DateTime'>
   readonly hostname: Prisma.FieldRef<"AgentRunner", 'String'>
   readonly version: Prisma.FieldRef<"AgentRunner", 'String'>

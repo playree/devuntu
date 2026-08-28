@@ -52,8 +52,7 @@ const runner = (override: Partial<AgentRunnerRow> = {}): AgentRunnerRow => ({
   timezone: null,
   pollIntervalSec: 300,
   defaultMode: 'plan',
-  preTask: null,
-  postTask: null,
+  rule: null,
   ...override,
 })
 

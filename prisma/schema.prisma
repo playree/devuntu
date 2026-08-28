@@ -123,9 +123,8 @@ model AgentRunner {
   /// チケット側でモード指定が無い場合に使う既定のモード
   defaultMode AgentTaskMode @default(plan)
 
-  /// チケットの処理前 / 処理後に Claude が読む指示(Markdown)
-  preTask  String?
-  postTask String?
+  /// エージェントが作業前に読み、処理全体を通じて従う指示(Markdown)
+  rule String?
 
   /// ランナーの自己申告。稼働状況の表示にだけ使い、認可には使わない
   lastPolledAt DateTime?

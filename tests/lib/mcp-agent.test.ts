@@ -58,7 +58,7 @@ const agentAuth: ResourceAuth = {
 
 const humanAuth: ResourceAuth = { ...agentAuth, kind: 'oauth', clientId: 'client-1' }
 
-const runnerRow = { id: 'r1', userId: 'a1', preTask: '事前作業', postTask: '事後作業' }
+const runnerRow = { id: 'r1', userId: 'a1', rule: 'ルール' }
 
 const connectClient = async (auth: ResourceAuth) => {
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
@@ -80,7 +80,7 @@ beforeEach(() => {
 })
 
 describe('自動運用ツールの登録', () => {
-  const AGENT_TOOLS = ['get_agent_task', 'get_agent_post_task', 'finish_agent_task']
+  const AGENT_TOOLS = ['get_agent_task', 'finish_agent_task']
 
   it('エージェント用トークンの接続では登録される', async () => {
     const { tools } = await (await connectClient(agentAuth)).listTools()
@@ -121,13 +121,13 @@ describe('get_agent_task', () => {
     expect(pickAgentTasks).not.toHaveBeenCalled()
   })
 
-  it('チケット未指定なら処理待ちの一覧と事前作業を返す', async () => {
+  it('チケット未指定なら処理待ちの一覧とルールを返す', async () => {
     const task = { ticketId: 't1', displayId: 'ABC-42', title: 'テスト', mode: 'plan', action: 'plan', state: null }
     vi.mocked(pickAgentTasks).mockResolvedValue([task] as never)
 
     const result = await (await connectClient(agentAuth)).callTool({ name: 'get_agent_task', arguments: {} })
 
-    expect(parseResult(result.content)).toMatchObject({ active: true, preTask: '事前作業', tasks: [task] })
+    expect(parseResult(result.content)).toMatchObject({ active: true, rule: 'ルール', tasks: [task] })
   })
 
   it('チケット指定なら待ち行列ではなくそのチケットを解決する(処理中でも見失わない)', async () => {
@@ -162,13 +162,6 @@ describe('get_agent_task', () => {
 
     expect(body.task).toBeNull()
     expect(body.note).toContain('処理対象ではない')
-  })
-})
-
-describe('get_agent_post_task', () => {
-  it('事後作業の指示を返す', async () => {
-    const result = await (await connectClient(agentAuth)).callTool({ name: 'get_agent_post_task', arguments: {} })
-    expect(parseResult(result.content)).toEqual({ postTask: '事後作業' })
   })
 })
 

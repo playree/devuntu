@@ -5,8 +5,8 @@ import { GridBox } from '@/components/general/grid'
 import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { SingleSelectField } from '@/components/general/select'
 import { SwitchCtrl } from '@/components/general/switch'
-import { TextAreaCtrl } from '@/components/general/textarea'
 import { CheckIcon } from '@/components/icon'
+import { MarkdownEditor } from '@/components/markdown/markdown-editor'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action-client'
 import {
@@ -98,8 +98,7 @@ const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; reloa
       timezone: current?.timezone ?? DEFAULT_TZ,
       pollIntervalSec: current?.pollIntervalSec ?? DEFAULT_POLL_INTERVAL_SEC,
       defaultMode: current?.defaultMode ?? 'plan',
-      preTask: current?.preTask ?? '',
-      postTask: current?.postTask ?? '',
+      rule: current?.rule ?? '',
     },
   })
 
@@ -192,27 +191,13 @@ const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; reloa
         </div>
 
         <div className='col-span-12'>
-          <TextAreaCtrl
+          <MarkdownEditor
             control={control}
-            name='preTask'
+            name='rule'
             constraintSchema={scSaveAgentRunner}
-            // nullable だが任意入力。スキーマからは必須と読めてしまうので明示する
-            isRequired={false}
-            label={t('agent_pre_task')}
-            errorMessage={fet(errors.preTask)}
-            rows={4}
-          />
-        </div>
-        <div className='col-span-12'>
-          <TextAreaCtrl
-            control={control}
-            name='postTask'
-            constraintSchema={scSaveAgentRunner}
-            // nullable だが任意入力。スキーマからは必須と読めてしまうので明示する
-            isRequired={false}
-            label={t('agent_post_task')}
-            errorMessage={fet(errors.postTask)}
-            rows={4}
+            label={t('agent_rule')}
+            errorMessage={fet(errors.rule)}
+            minRows={4}
           />
         </div>
 

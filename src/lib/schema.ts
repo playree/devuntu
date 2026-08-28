@@ -199,8 +199,8 @@ export const scSaveAgentRunner = z.object({
   timezone: z.string().nullable(),
   pollIntervalSec: z.number().int().min(MIN_POLL_INTERVAL_SEC).max(MAX_POLL_INTERVAL_SEC),
   defaultMode: zAgentMode,
-  preTask: z.string().max(4000).nullable(),
-  postTask: z.string().max(4000).nullable(),
+  // optional にしないと isFieldRequired が required 扱いにしてしまう(MarkdownEditor は isRequired の上書きを持たない)
+  rule: z.string().max(8000).nullable().optional(),
 })
 export type SaveAgentRunner = z.infer<typeof scSaveAgentRunner>
 

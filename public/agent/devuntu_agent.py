@@ -35,7 +35,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-__version__ = "0.2.3"
+__version__ = "0.2.4"
 
 DEFAULT_CONFIG_PATH = Path.home() / ".config" / "devuntu-agent" / "config.json"
 DEFAULT_LOG_PATH = Path.home() / ".local" / "state" / "devuntu-agent" / "agent.log"
@@ -191,15 +191,15 @@ def self_update(config: Config) -> None:
 
 
 def build_prompt(task: dict) -> str:
-    """Claude へ渡す指示。作業内容そのものは MCP 側(事前作業 / チケット本文)から読ませる"""
+    """Claude へ渡す指示。作業内容そのものは MCP 側(ルール / チケット本文)から読ませる"""
     return (
         f"devuntu のチケット {task['displayId']} を担当エージェントとして処理する。\n"
         "\n"
         "手順:\n"
         f"1. devuntu-agent MCP の get_agent_task を ticketId='{task['displayId']}' で呼ぶ。\n"
         "   active が false、または task が null の場合は、何もせずに終了する。\n"
-        "2. 返ってきた事前作業(preTask)の指示に従う。\n"
-        "3. get_ticket でチケットの本文とコメントを読み、action に従って処理する。\n"
+        "   返ってきたルール(rule)の指示は、これ以降の作業全体を通じて従うこと。\n"
+        "2. get_ticket でチケットの本文とコメントを読み、action に従って処理する。\n"
         "   - plan: 対応プランを作り、add_ticket_comment に type='plan' で投稿する。実装は行わない。\n"
         "   - execute: プランを作らずに対応を実行する。\n"
         "   - revise: 前回投稿(プランまたは確認事項)への返信を読み、その指示に従って\n"
@@ -208,10 +208,9 @@ def build_prompt(task: dict) -> str:
         "   生じた場合は、add_ticket_comment に type を指定せず通常コメントとして質問を投稿し、\n"
         "   その回は finish_agent_task を outcome='planned' で報告して終える\n"
         "   (返信は次回 revise として渡される)。\n"
-        "4. get_agent_post_task を呼び、返ってきた事後作業(postTask)の指示に従う。\n"
-        "5. 対応の結果を add_ticket_comment に type='report' で投稿する"
+        "3. 対応の結果を add_ticket_comment に type='report' で投稿する"
         "(plan や確認事項の投稿で終えた場合は不要)。\n"
-        "6. finish_agent_task で結果を報告する。\n"
+        "4. finish_agent_task で結果を報告する。\n"
         "   outcome は planned(プランや確認事項を投稿して返信待ち) / completed(対応完了) /\n"
         "   skipped(見送り) / failed(失敗) から選ぶ。\n"
         "\n"

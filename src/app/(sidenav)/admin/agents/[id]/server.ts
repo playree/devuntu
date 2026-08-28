@@ -140,8 +140,7 @@ export const getAgentRunner = safeAuthAction
         timezone: true,
         pollIntervalSec: true,
         defaultMode: true,
-        preTask: true,
-        postTask: true,
+        rule: true,
         lastPolledAt: true,
         hostname: true,
         version: true,
@@ -162,7 +161,7 @@ export const saveAgentRunner = safeAuthAction
     }
 
     // 空欄は「指示なし」。空文字のまま保存すると MCP 側で「空の指示」として渡ってしまう
-    const data = { ...rest, timezone, preTask: rest.preTask || null, postTask: rest.postTask || null }
+    const data = { ...rest, timezone, rule: rest.rule || null }
     await prisma.agentRunner.upsert({
       where: { userId },
       create: { userId, ...data },

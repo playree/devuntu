@@ -64,10 +64,11 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
   server.registerTool(
     'get_agent_task',
     {
-      title: '事前作業の取得',
+      title: 'ルールとタスクの取得',
       description:
         'チケットを処理する前に必ず呼ぶ。稼働条件(稼働可否と許可時間帯)、処理すべきチケット、' +
-        '実行すべきアクション、事前作業の指示を返す。active が false の場合は何もせず終了する',
+        '実行すべきアクション、ルールの指示を返す。ルールは処理全体を通じて従うこと。' +
+        'active が false の場合は何もせず終了する',
       inputSchema: {
         ticketId: z
           .string()
@@ -87,9 +88,9 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
         return jsonResult({ ...base, task: null, tasks: [], note: INACTIVE_NOTE })
       }
 
-      const preTask = runner.preTask ?? null
+      const rule = runner.rule ?? null
       if (!ticketId) {
-        return jsonResult({ ...base, preTask, tasks: await pickAgentTasks(runner) })
+        return jsonResult({ ...base, rule, tasks: await pickAgentTasks(runner) })
       }
 
       // ランナーは起動前に実行を開始するので、名指しのチケットは待ち行列には載っていない
@@ -97,24 +98,10 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
       const task = await resolveAgentTask(runner, id)
       return jsonResult({
         ...base,
-        preTask,
+        rule,
         task,
         note: task ? null : 'このチケットは現在の処理対象ではない。処理せずに終了すること',
       })
-    },
-  )
-
-  server.registerTool(
-    'get_agent_post_task',
-    {
-      title: '事後作業の取得',
-      description:
-        'チケットの処理を終えたあとに呼ぶ。事後作業の指示を返す。処理後は finish_agent_task で結果を報告する',
-      inputSchema: {},
-    },
-    async () => {
-      const { runner } = await loadContext(auth)
-      return jsonResult({ postTask: runner?.postTask ?? null })
     },
   )
 
