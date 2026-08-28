@@ -6,8 +6,8 @@ import {
   S3Client,
   S3ServiceException,
 } from '@aws-sdk/client-s3'
-import { envu } from './env-util'
-import { logger } from './logger'
+import { envu } from '../env-util'
+import { logger } from '../logger'
 
 /**
  * オブジェクトストレージ(S3互換)へのアクセス層。

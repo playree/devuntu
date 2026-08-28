@@ -1,4 +1,4 @@
-import { auth } from '@/lib/auth'
+import { auth } from '@/lib/auth/auth'
 import { logger } from '@/lib/logger'
 import { parseConsentScopes, parseRequestedUserInfoClaims } from '@/lib/oauth/oauth-consent'
 import { prisma } from '@/lib/prisma'

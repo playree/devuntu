@@ -16,7 +16,7 @@ import {
   resolveAgentTask,
   startAgentRun,
   type AgentRunnerRow,
-} from '@/lib/agent-runner'
+} from '@/lib/agent/agent-runner'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 

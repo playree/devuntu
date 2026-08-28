@@ -1,7 +1,7 @@
 'use client'
 
 import { getCookie, setCookie } from '@/components/general/cookie/client'
-import { defaultKanbanFilter, KANBAN_DONE_DAYS_OPTIONS, KanbanFilter } from '@/lib/task'
+import { defaultKanbanFilter, KANBAN_DONE_DAYS_OPTIONS, KanbanFilter } from '@/lib/board/task'
 import { useEffect, useState } from 'react'
 
 /**

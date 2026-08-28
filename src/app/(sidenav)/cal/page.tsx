@@ -1,4 +1,4 @@
-import { getServerSession } from '@/lib/auth'
+import { getServerSession } from '@/lib/auth/auth'
 import { envu } from '@/lib/env-util'
 import { canUseGoogleAccount } from '@/lib/google/google-account'
 import { type Metadata } from 'next'

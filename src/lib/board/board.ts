@@ -11,9 +11,10 @@
 
 import { Prisma } from '@/generated/prisma/client'
 import type { BoardKind, TicketStatus } from '@/generated/prisma/enums'
-import { nowDate } from './day'
-import { errClient, errInvalidOperation } from './error'
-import { isUniqueViolation, prisma } from './prisma'
+import { nowDate } from '../day'
+import { errClient, errInvalidOperation } from '../error'
+import { isUniqueViolation, prisma } from '../prisma'
+import { extractUploadKeys } from '../storage/upload'
 import {
   evaluateTicketAccess,
   insertAt,
@@ -28,7 +29,6 @@ import {
   type BoardRole,
   type TicketPermission,
 } from './task'
-import { extractUploadKeys } from './upload'
 
 /** Server Action の `ctx.user` をそのまま渡せる最小形 */
 export type Actor = { id: string; role?: string | null }

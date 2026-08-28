@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession, redirectSignIn, redirectTwoFaEnable } from './lib/auth'
-import { authConfig } from './lib/auth-config'
+import { getServerSession, redirectSignIn, redirectTwoFaEnable } from './lib/auth/auth'
+import { authConfig } from './lib/auth/auth-config'
 import { envu } from './lib/env-util'
 import { logger } from './lib/logger'
 import { matchCondition } from './lib/match'

@@ -1,6 +1,6 @@
 'use client'
 
-import { getFieldConstraints } from '@/lib/schema-util'
+import { getFieldConstraints } from '@/lib/schema/schema-util'
 import { cn, ErrorMessage, Label, TextArea, TextAreaProps, TextField } from '@heroui/react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 import { z } from 'zod'

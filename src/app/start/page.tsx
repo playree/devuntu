@@ -1,4 +1,4 @@
-import { auth } from '@/lib/auth'
+import { auth } from '@/lib/auth/auth'
 import { type Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { FC } from 'react'

@@ -1,6 +1,6 @@
 'use client'
 
-import { formatMentionSource, normalizeMentionText } from '@/lib/task'
+import { formatMentionSource, normalizeMentionText } from '@/lib/board/task'
 import { DecoratorNode, LexicalNode, NodeKey, SerializedLexicalNode, Spread } from 'lexical'
 import { createContext, FC, ReactNode, useContext, useMemo } from 'react'
 import { tv } from 'tailwind-variants'

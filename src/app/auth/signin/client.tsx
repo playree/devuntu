@@ -20,9 +20,9 @@ import {
 import { InputCtrlPassword } from '@/components/input-ctrl-pw'
 import { notify } from '@/components/notify'
 import { SingleLayout } from '@/components/single-layout'
-import { parseAction } from '@/lib/action-client'
-import { authClient } from '@/lib/auth-client'
-import { authConfig } from '@/lib/auth-config'
+import { parseAction } from '@/lib/action/action-client'
+import { authClient } from '@/lib/auth/auth-client'
+import { authConfig } from '@/lib/auth/auth-config'
 import { makePath, safeCallbackPath } from '@/lib/client-utils'
 import { ClientError, TOO_MANY_REQUESTS } from '@/lib/error'
 import {
@@ -34,7 +34,7 @@ import {
   SignInPassword,
   SignInUsername,
   TwoFaCode,
-} from '@/lib/schema'
+} from '@/lib/schema/schema'
 import { intervalOperation } from '@/lib/sleep'
 import { textStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'

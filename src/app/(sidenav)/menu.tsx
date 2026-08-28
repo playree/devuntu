@@ -17,8 +17,8 @@ import {
   ViewColumnsIcon,
 } from '@/components/icon'
 import { LocaleSwitch } from '@/components/locale/locale-switch'
-import { authClient } from '@/lib/auth-client'
-import { authConfig } from '@/lib/auth-config'
+import { authClient } from '@/lib/auth/auth-client'
+import { authConfig } from '@/lib/auth/auth-config'
 import { useLocale } from '@/locale/client'
 import { Accordion, Button, Card, cn } from '@heroui/react'
 import Image from 'next/image'

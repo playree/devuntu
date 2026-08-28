@@ -1,7 +1,7 @@
 'use server'
 
 import type { Prisma } from '@/generated/prisma/client'
-import { safeAuthAction } from '@/lib/action-server'
+import { safeAuthAction } from '@/lib/action/action-server'
 import {
   assertBoardAccess,
   assertBoardAssignmentTargets,
@@ -13,7 +13,9 @@ import {
   rethrowDuplicatedBoardKey,
   syncBoardGroups,
   type Actor,
-} from '@/lib/board'
+} from '@/lib/board/board'
+import { listBoardTagsForManage, rethrowDuplicatedTagName } from '@/lib/board/tag'
+import { canApplyAssignments, MAX_TAGS_PER_SCOPE, nextOrder, TICKET_STATUSES, type BoardRole } from '@/lib/board/task'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
@@ -26,9 +28,7 @@ import {
   scUpdateTag,
   scUpsertBoardMember,
   scUUID,
-} from '@/lib/schema'
-import { listBoardTagsForManage, rethrowDuplicatedTagName } from '@/lib/tag'
-import { canApplyAssignments, MAX_TAGS_PER_SCOPE, nextOrder, TICKET_STATUSES, type BoardRole } from '@/lib/task'
+} from '@/lib/schema/schema'
 
 const TAG_SELECT = { id: true, boardId: true, name: true, color: true, order: true } as const
 

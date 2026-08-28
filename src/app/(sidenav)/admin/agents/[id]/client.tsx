@@ -15,7 +15,7 @@ import {
   InformationCircleIcon,
   KeyIcon,
 } from '@/components/icon'
-import { parseAction, useActionData } from '@/lib/action-client'
+import { parseAction, useActionData } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'
 import { Accordion, ButtonGroup } from '@heroui/react'
 import { useRouter } from 'next/navigation'

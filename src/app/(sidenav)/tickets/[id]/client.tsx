@@ -36,10 +36,10 @@ import {
   useTicketOptions,
 } from '@/components/ticket/ticket-chip'
 import type { TicketStatus } from '@/generated/prisma/enums'
-import { parseAction, useActionData } from '@/lib/action-client'
+import { parseAction, useActionData } from '@/lib/action/action-client'
 import { dayformat, utcToDateOnly } from '@/lib/day'
-import { PatchTicketIn, scPatchTicket, zTicketTitle } from '@/lib/schema'
-import { getFieldConstraints } from '@/lib/schema-util'
+import { PatchTicketIn, scPatchTicket, zTicketTitle } from '@/lib/schema/schema'
+import { getFieldConstraints } from '@/lib/schema/schema-util'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { Breadcrumbs } from '@heroui/react'

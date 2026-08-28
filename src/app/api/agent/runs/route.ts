@@ -1,6 +1,6 @@
 import { AgentRunAction } from '@/generated/prisma/enums'
-import { agentError, agentJson, authenticateRunner, readJsonBody } from '@/lib/agent-api'
-import { evaluateRunner, startAgentRun } from '@/lib/agent-runner'
+import { agentError, agentJson, authenticateRunner, readJsonBody } from '@/lib/agent/agent-api'
+import { evaluateRunner, startAgentRun } from '@/lib/agent/agent-runner'
 import { z } from 'zod'
 
 /**

@@ -1,4 +1,4 @@
-import { MCP_RESOURCE, MCP_SCOPE } from '@/lib/auth'
+import { MCP_RESOURCE, MCP_SCOPE } from '@/lib/auth/auth'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { makeUrl } from '@/lib/server-utils'

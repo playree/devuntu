@@ -4,6 +4,7 @@
  * 既定値・必須の境界だけを対象にする(項目ごとの文字数制限は UI の constraintSchema が担う)。
  */
 
+import { ASSIGNEE_NONE } from '@/lib/board/task'
 import {
   scCreateTag,
   scCreateTicket,
@@ -16,8 +17,7 @@ import {
   scUpdateUser,
   zBoardKey,
   zPassword,
-} from '@/lib/schema'
-import { ASSIGNEE_NONE } from '@/lib/task'
+} from '@/lib/schema/schema'
 import { describe, expect, it } from 'vitest'
 
 const boardId = '01920000-0000-7000-8000-000000000001'

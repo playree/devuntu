@@ -1,6 +1,6 @@
 'use client'
 
-import { authClient } from './auth-client'
+import { authClient } from './auth/auth-client'
 
 /**
  * ログイン中ユーザーの userId を返すフック。

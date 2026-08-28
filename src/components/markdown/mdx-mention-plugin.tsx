@@ -1,6 +1,6 @@
 'use client'
 
-import { filterMentionCandidates, findMentions, formatMentionSource, matchMentionTrigger } from '@/lib/task'
+import { filterMentionCandidates, findMentions, formatMentionSource, matchMentionTrigger } from '@/lib/board/task'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { LexicalTypeaheadMenuPlugin, MenuOption } from '@lexical/react/LexicalTypeaheadMenuPlugin'
 import {

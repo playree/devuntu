@@ -1,6 +1,6 @@
 'use server'
 
-import { safeAuthAction } from '@/lib/action-server'
+import { safeAuthAction } from '@/lib/action/action-server'
 import { errInvalidOperation, errPermissionDenied } from '@/lib/error'
 import { canUseGoogleAccount, googleAccountQuery } from '@/lib/google/google-account'
 import { logger } from '@/lib/logger'
@@ -11,7 +11,7 @@ import {
   scUpdateBusyTime,
   scUpdateCalendarShareTitle,
   scUUID,
-} from '@/lib/schema'
+} from '@/lib/schema/schema'
 import { nanoid } from 'nanoid'
 
 /** 連携が利用不可なら例外を投げる(ミューテーション用ガード) */

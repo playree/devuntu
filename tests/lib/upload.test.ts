@@ -12,7 +12,7 @@ import {
   toUploadKey,
   toUploadUrl,
   UPLOAD_URL_PREFIX,
-} from '@/lib/upload'
+} from '@/lib/storage/upload'
 import { describe, expect, it } from 'vitest'
 
 describe('toUploadUrl / toUploadKey', () => {

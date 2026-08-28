@@ -61,7 +61,7 @@ import {
   type KanbanFilterCard,
   type LaneMap,
   type TicketSearchParams,
-} from '@/lib/task'
+} from '@/lib/board/task'
 import { describe, expect, it } from 'vitest'
 
 /* -------------------------------------------------------------------------------------------------

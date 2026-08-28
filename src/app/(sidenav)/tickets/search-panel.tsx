@@ -8,8 +8,7 @@ import { AssigneeOption, AssigneeSelectField } from '@/components/ticket/assigne
 import { TagNameSelectField } from '@/components/ticket/tag-select'
 import { useTicketOptions } from '@/components/ticket/ticket-chip'
 import type { BoardKind, TagColor } from '@/generated/prisma/enums'
-import type { AssigneeCandidate } from '@/lib/board'
-import { TicketSearch } from '@/lib/schema'
+import type { AssigneeCandidate } from '@/lib/board/board'
 import {
   ASSIGNEE_NONE,
   dedupeTagOptionsByName,
@@ -17,7 +16,8 @@ import {
   OPEN_TICKET_STATUSES,
   TICKET_PRIORITIES,
   TICKET_STATUSES,
-} from '@/lib/task'
+} from '@/lib/board/task'
+import { TicketSearch } from '@/lib/schema/schema'
 import { useLocale } from '@/locale/client'
 import { FC, useState } from 'react'
 

@@ -1,4 +1,4 @@
-import { scTicketSearch } from '@/lib/schema'
+import { scTicketSearch } from '@/lib/schema/schema'
 import { en } from '@/locale/lang-en'
 import { type Metadata } from 'next'
 import { TicketsClient } from './client'

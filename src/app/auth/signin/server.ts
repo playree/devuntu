@@ -1,10 +1,10 @@
 'use server'
 
-import { safeAction } from '@/lib/action-server'
-import { auth } from '@/lib/auth'
+import { safeAction } from '@/lib/action/action-server'
+import { auth } from '@/lib/auth/auth'
 import { prisma } from '@/lib/prisma'
 import { assertRateLimit } from '@/lib/rate-limit'
-import { scSignInUsername } from '@/lib/schema'
+import { scSignInUsername } from '@/lib/schema/schema'
 import { getClientIp } from '@/lib/server-utils'
 
 /**

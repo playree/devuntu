@@ -1,4 +1,4 @@
-import { getServerSession } from '@/lib/auth'
+import { getServerSession } from '@/lib/auth/auth'
 import { canUseGoogleAccount } from '@/lib/google/google-account'
 import { canUseSlackAccount } from '@/lib/slack/slack-account'
 import { type Metadata } from 'next'

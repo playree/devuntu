@@ -11,8 +11,8 @@
 
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { makeUrl } from '../server-utils'
 import { AGENT_POLL_INTERVAL_OPTIONS, DEFAULT_POLL_INTERVAL_SEC } from './agent'
-import { makeUrl } from './server-utils'
 
 /** ランナー本体の配布先。`public/` 配下なので認証は要らない(秘密情報を含まないため) */
 export const AGENT_SCRIPT_PATH = '/agent/devuntu_agent.py'

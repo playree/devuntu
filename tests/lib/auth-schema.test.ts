@@ -1,4 +1,4 @@
-import { auth } from '@/lib/auth'
+import { auth } from '@/lib/auth/auth'
 import { getSchema } from 'better-auth/db'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'

@@ -1,13 +1,13 @@
 'use server'
 
-import { safeAuthAction } from '@/lib/action-server'
-import { agentEmail, agentRunnerStatus, DUPLICATED_AGENT_HANDLE } from '@/lib/agent'
-import { auth } from '@/lib/auth'
+import { safeAuthAction } from '@/lib/action/action-server'
+import { agentEmail, agentRunnerStatus, DUPLICATED_AGENT_HANDLE } from '@/lib/agent/agent'
+import { auth } from '@/lib/auth/auth'
 import { nowDate } from '@/lib/day'
 import { errClient, errInvalidOperation, errSystemError } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { isUniqueViolation, prisma } from '@/lib/prisma'
-import { scCreateAgent } from '@/lib/schema'
+import { scCreateAgent } from '@/lib/schema/schema'
 import { isAPIError } from 'better-auth/api'
 import { headers } from 'next/headers'
 

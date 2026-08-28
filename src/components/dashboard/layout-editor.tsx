@@ -2,7 +2,7 @@
 
 import { FlexCol } from '@/components/general/flex'
 import { GridBox } from '@/components/general/grid'
-import { DashboardLayout } from '@/lib/schema'
+import { DashboardLayout } from '@/lib/schema/schema'
 import { useLocale } from '@/locale/client'
 import { DragDropProvider, useDraggable, useDroppable } from '@dnd-kit/react'
 import { Chip, cn } from '@heroui/react'

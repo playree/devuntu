@@ -1,7 +1,7 @@
 'use client'
 
 import { notify } from '@/components/notify'
-import { uploadImage } from '@/lib/upload'
+import { uploadImage } from '@/lib/storage/upload'
 import { useLocale } from '@/locale/client'
 import { cn } from '@heroui/react'
 import {

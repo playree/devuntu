@@ -1,6 +1,6 @@
 'use client'
 
-import { authClient } from '@/lib/auth-client'
+import { authClient } from '@/lib/auth/auth-client'
 import type { Selection } from '@heroui/react'
 import { Button, cn, Dropdown, Label, Skeleton } from '@heroui/react'
 import { FC, useState } from 'react'

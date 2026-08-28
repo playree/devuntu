@@ -1,6 +1,6 @@
 'use server'
 
-import { safeAuthAction } from '@/lib/action-server'
+import { safeAuthAction } from '@/lib/action/action-server'
 import { envu } from '@/lib/env-util'
 import { errCommunication } from '@/lib/error'
 import { getString } from '@/lib/kvs'

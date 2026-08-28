@@ -1,10 +1,10 @@
 'use server'
 
-import { safeAuthAction } from '@/lib/action-server'
-import { auth } from '@/lib/auth'
+import { safeAuthAction } from '@/lib/action/action-server'
+import { auth } from '@/lib/auth/auth'
 import { errConsentInvalid, errSystemError } from '@/lib/error'
 import { logger } from '@/lib/logger'
-import { scConsent } from '@/lib/schema'
+import { scConsent } from '@/lib/schema/schema'
 import { makeUrl } from '@/lib/server-utils'
 import { isAPIError } from 'better-auth/api'
 import { headers } from 'next/headers'

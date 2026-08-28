@@ -20,12 +20,12 @@ import {
   finishAgentTask,
   pickAgentTasks,
   resolveAgentTask,
-} from './agent-runner'
-import { agentSetupGuide } from './agent-setup'
-import { assertTicketAccess } from './board'
-import { errInvalidOperation } from './error'
+} from '../agent/agent-runner'
+import { agentSetupGuide } from '../agent/agent-setup'
+import { assertTicketAccess } from '../board/board'
+import { errInvalidOperation } from '../error'
+import type { ResourceAuth } from '../oauth/oauth-resource'
 import { resolveTicketId } from './mcp-ticket'
-import type { ResourceAuth } from './oauth/oauth-resource'
 
 /** 稼働条件を満たさないときに Claude へ返す指示。判断の余地を残さない文にする */
 const INACTIVE_NOTE = '稼働条件を満たしていないため、チケットの処理は行わずに終了すること。コメントの投稿も行わない。'

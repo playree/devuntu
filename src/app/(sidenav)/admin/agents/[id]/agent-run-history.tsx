@@ -2,9 +2,9 @@
 
 import { PagingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
-import { AGENT_RUN_ACTION_LOCALE, AGENT_RUN_STATUS_LOCALE } from '@/lib/agent'
+import { AGENT_RUN_ACTION_LOCALE, AGENT_RUN_STATUS_LOCALE } from '@/lib/agent/agent'
+import { ticketShortPath } from '@/lib/board/task'
 import { dayformat } from '@/lib/day'
-import { ticketShortPath } from '@/lib/task'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { Chip, Table } from '@heroui/react'

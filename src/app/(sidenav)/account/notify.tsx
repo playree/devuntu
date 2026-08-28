@@ -3,7 +3,7 @@
 import { FlexCol, FlexRow } from '@/components/general/flex'
 import { SwitchField } from '@/components/general/switch'
 import { notify } from '@/components/notify'
-import { parseAction, useActionData } from '@/lib/action-client'
+import { parseAction, useActionData } from '@/lib/action/action-client'
 import { NOTIFY_EVENTS } from '@/lib/notify/notify'
 import { useLocale } from '@/locale/client'
 import { FC, useState } from 'react'

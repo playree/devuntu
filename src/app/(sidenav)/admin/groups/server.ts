@@ -1,10 +1,10 @@
 'use server'
 
-import { safeAuthAction } from '@/lib/action-server'
+import { safeAuthAction } from '@/lib/action/action-server'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
-import { scCreateGroup, scUpdateGroup, scUUID } from '@/lib/schema'
+import { scCreateGroup, scUpdateGroup, scUUID } from '@/lib/schema/schema'
 
 /**
  * グループ一覧取得

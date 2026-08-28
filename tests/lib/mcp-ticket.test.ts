@@ -5,8 +5,8 @@
  * vitest.setup.ts のグローバルモックをこのファイル内で上書きする。
  */
 
-import type { TicketAccess } from '@/lib/board'
-import { updateTicketCommentForMcp } from '@/lib/mcp-ticket'
+import type { TicketAccess } from '@/lib/board/board'
+import { updateTicketCommentForMcp } from '@/lib/mcp/mcp-ticket'
 import { notifyMention } from '@/lib/notify/notify-mention'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import { prisma } from '@/lib/prisma'
@@ -16,7 +16,7 @@ vi.mock('@/lib/prisma', () => ({
   prisma: { $transaction: vi.fn((cb: (tx: unknown) => unknown) => cb(fakeTx)) },
 }))
 
-vi.mock('@/lib/board', () => ({
+vi.mock('@/lib/board/board', () => ({
   assertTicketAccess: vi.fn(),
   getTicketMentionCandidates: vi.fn(),
 }))
@@ -66,7 +66,7 @@ beforeEach(async () => {
     ticket: fakeTicket,
   })
 
-  const { assertTicketAccess, getTicketMentionCandidates } = await import('@/lib/board')
+  const { assertTicketAccess, getTicketMentionCandidates } = await import('@/lib/board/board')
   vi.mocked(assertTicketAccess).mockResolvedValue(ticketAccess)
   vi.mocked(getTicketMentionCandidates).mockResolvedValue([])
 })

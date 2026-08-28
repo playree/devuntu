@@ -1,10 +1,10 @@
 'use server'
 
-import { safeAuthAction } from '@/lib/action-server'
+import { safeAuthAction } from '@/lib/action/action-server'
 import { errSystemError } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
-import { scUpdateDashboard } from '@/lib/schema'
+import { scUpdateDashboard } from '@/lib/schema/schema'
 
 /**
  * ダッシュボード更新

@@ -20,7 +20,7 @@ import {
 import { notify } from '@/components/notify'
 import { TagEditor } from '@/components/ticket/tag-editor'
 import { useBoardName } from '@/components/ticket/ticket-chip'
-import { parseAction, useActionData } from '@/lib/action-client'
+import { parseAction, useActionData } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'
 import { Accordion, ButtonGroup } from '@heroui/react'
 import { useRouter } from 'next/navigation'

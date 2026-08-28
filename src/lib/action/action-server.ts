@@ -2,9 +2,9 @@ import { isAPIError } from 'better-auth/api'
 import { createMiddleware, createSafeActionClient } from 'next-safe-action'
 import { headers } from 'next/headers'
 import z from 'zod'
-import { auth } from './auth'
-import { ClientError, errInvalidSession, errPermissionDenied } from './error'
-import { logger } from './logger'
+import { auth } from '../auth/auth'
+import { ClientError, errInvalidSession, errPermissionDenied } from '../error'
+import { logger } from '../logger'
 
 const normalMetaSc = z.object({ actionName: z.string() })
 type NormalMetaSc = z.infer<typeof normalMetaSc>
