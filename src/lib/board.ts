@@ -342,6 +342,7 @@ export type BoardUser = {
   email: string
   /** アバター画像。OIDC のプロフィール由来なので未設定の場合がある */
   image: string | null
+  isAgent: boolean
   /** 直接メンバーのロール。グループ経由のみの場合は null */
   role: BoardRole | null
   via: 'member' | 'group'
@@ -356,13 +357,18 @@ export const getBoardMemberUsers = async (boardId: string, tx: Db = prisma): Pro
     where: { id: boardId },
     select: {
       members: {
-        select: { role: true, user: { select: { id: true, name: true, email: true, image: true } } },
+        select: {
+          role: true,
+          user: { select: { id: true, name: true, email: true, image: true, isAgent: true } },
+        },
       },
       groups: {
         select: {
           group: {
             select: {
-              userGroups: { select: { user: { select: { id: true, name: true, email: true, image: true } } } },
+              userGroups: {
+                select: { user: { select: { id: true, name: true, email: true, image: true, isAgent: true } } },
+              },
             },
           },
         },

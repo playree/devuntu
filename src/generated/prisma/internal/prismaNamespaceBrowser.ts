@@ -53,6 +53,8 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   User: 'User',
   AgentToken: 'AgentToken',
+  AgentRunner: 'AgentRunner',
+  AgentRun: 'AgentRun',
   Session: 'Session',
   Account: 'Account',
   Verification: 'Verification',
@@ -129,17 +131,50 @@ export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof User
 export const AgentTokenScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
-  name: 'name',
   tokenHash: 'tokenHash',
   hint: 'hint',
   expiresAt: 'expiresAt',
-  revokedAt: 'revokedAt',
   lastUsedAt: 'lastUsedAt',
   createdById: 'createdById',
   createdAt: 'createdAt'
 } as const
 
 export type AgentTokenScalarFieldEnum = (typeof AgentTokenScalarFieldEnum)[keyof typeof AgentTokenScalarFieldEnum]
+
+
+export const AgentRunnerScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  enabled: 'enabled',
+  activeFromMin: 'activeFromMin',
+  activeToMin: 'activeToMin',
+  timezone: 'timezone',
+  pollIntervalSec: 'pollIntervalSec',
+  defaultMode: 'defaultMode',
+  rule: 'rule',
+  lastPolledAt: 'lastPolledAt',
+  hostname: 'hostname',
+  version: 'version',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AgentRunnerScalarFieldEnum = (typeof AgentRunnerScalarFieldEnum)[keyof typeof AgentRunnerScalarFieldEnum]
+
+
+export const AgentRunScalarFieldEnum = {
+  id: 'id',
+  runnerId: 'runnerId',
+  ticketId: 'ticketId',
+  ticketRef: 'ticketRef',
+  action: 'action',
+  status: 'status',
+  summary: 'summary',
+  startedAt: 'startedAt',
+  finishedAt: 'finishedAt'
+} as const
+
+export type AgentRunScalarFieldEnum = (typeof AgentRunScalarFieldEnum)[keyof typeof AgentRunScalarFieldEnum]
 
 
 export const SessionScalarFieldEnum = {
@@ -565,7 +600,9 @@ export const TicketScalarFieldEnum = {
   order: 'order',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
-  mentionedUserIds: 'mentionedUserIds'
+  mentionedUserIds: 'mentionedUserIds',
+  agentMode: 'agentMode',
+  agentState: 'agentState'
 } as const
 
 export type TicketScalarFieldEnum = (typeof TicketScalarFieldEnum)[keyof typeof TicketScalarFieldEnum]

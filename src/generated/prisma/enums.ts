@@ -9,6 +9,45 @@
 * 🟢 You can import this file directly.
 */
 
+export const AgentTaskMode = {
+  plan: 'plan',
+  auto: 'auto'
+} as const
+
+export type AgentTaskMode = (typeof AgentTaskMode)[keyof typeof AgentTaskMode]
+
+
+export const AgentTaskState = {
+  queued: 'queued',
+  running: 'running',
+  planned: 'planned',
+  done: 'done',
+  failed: 'failed',
+  skipped: 'skipped'
+} as const
+
+export type AgentTaskState = (typeof AgentTaskState)[keyof typeof AgentTaskState]
+
+
+export const AgentRunAction = {
+  plan: 'plan',
+  execute: 'execute',
+  revise: 'revise'
+} as const
+
+export type AgentRunAction = (typeof AgentRunAction)[keyof typeof AgentRunAction]
+
+
+export const AgentRunStatus = {
+  running: 'running',
+  succeeded: 'succeeded',
+  failed: 'failed',
+  skipped: 'skipped'
+} as const
+
+export type AgentRunStatus = (typeof AgentRunStatus)[keyof typeof AgentRunStatus]
+
+
 export const BoardMemberRole = {
   owner: 'owner',
   member: 'member'

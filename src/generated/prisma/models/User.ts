@@ -305,8 +305,9 @@ export type UserWhereInput = {
   ticketComments?: Prisma.TicketCommentListRelationFilter
   attachments?: Prisma.AttachmentListRelationFilter
   notifySettings?: Prisma.UserNotifySettingListRelationFilter
-  agentTokens?: Prisma.AgentTokenListRelationFilter
+  agentToken?: Prisma.XOR<Prisma.AgentTokenNullableScalarRelationFilter, Prisma.AgentTokenWhereInput> | null
   createdAgentTokens?: Prisma.AgentTokenListRelationFilter
+  agentRunner?: Prisma.XOR<Prisma.AgentRunnerNullableScalarRelationFilter, Prisma.AgentRunnerWhereInput> | null
 }
 
 export type UserOrderByWithRelationInput = {
@@ -347,8 +348,9 @@ export type UserOrderByWithRelationInput = {
   ticketComments?: Prisma.TicketCommentOrderByRelationAggregateInput
   attachments?: Prisma.AttachmentOrderByRelationAggregateInput
   notifySettings?: Prisma.UserNotifySettingOrderByRelationAggregateInput
-  agentTokens?: Prisma.AgentTokenOrderByRelationAggregateInput
+  agentToken?: Prisma.AgentTokenOrderByWithRelationInput
   createdAgentTokens?: Prisma.AgentTokenOrderByRelationAggregateInput
+  agentRunner?: Prisma.AgentRunnerOrderByWithRelationInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -392,8 +394,9 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   ticketComments?: Prisma.TicketCommentListRelationFilter
   attachments?: Prisma.AttachmentListRelationFilter
   notifySettings?: Prisma.UserNotifySettingListRelationFilter
-  agentTokens?: Prisma.AgentTokenListRelationFilter
+  agentToken?: Prisma.XOR<Prisma.AgentTokenNullableScalarRelationFilter, Prisma.AgentTokenWhereInput> | null
   createdAgentTokens?: Prisma.AgentTokenListRelationFilter
+  agentRunner?: Prisma.XOR<Prisma.AgentRunnerNullableScalarRelationFilter, Prisma.AgentRunnerWhereInput> | null
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -482,8 +485,9 @@ export type UserCreateInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -524,8 +528,9 @@ export type UserUncheckedCreateInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -566,8 +571,9 @@ export type UserUpdateInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -608,8 +614,9 @@ export type UserUncheckedUpdateInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -772,9 +779,9 @@ export type NullableDateTimeFieldUpdateOperationsInput = {
   set?: Date | string | null
 }
 
-export type UserCreateNestedOneWithoutAgentTokensInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutAgentTokensInput, Prisma.UserUncheckedCreateWithoutAgentTokensInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAgentTokensInput
+export type UserCreateNestedOneWithoutAgentTokenInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAgentTokenInput, Prisma.UserUncheckedCreateWithoutAgentTokenInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAgentTokenInput
   connect?: Prisma.UserWhereUniqueInput
 }
 
@@ -784,12 +791,12 @@ export type UserCreateNestedOneWithoutCreatedAgentTokensInput = {
   connect?: Prisma.UserWhereUniqueInput
 }
 
-export type UserUpdateOneRequiredWithoutAgentTokensNestedInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutAgentTokensInput, Prisma.UserUncheckedCreateWithoutAgentTokensInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAgentTokensInput
-  upsert?: Prisma.UserUpsertWithoutAgentTokensInput
+export type UserUpdateOneRequiredWithoutAgentTokenNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAgentTokenInput, Prisma.UserUncheckedCreateWithoutAgentTokenInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAgentTokenInput
+  upsert?: Prisma.UserUpsertWithoutAgentTokenInput
   connect?: Prisma.UserWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutAgentTokensInput, Prisma.UserUpdateWithoutAgentTokensInput>, Prisma.UserUncheckedUpdateWithoutAgentTokensInput>
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutAgentTokenInput, Prisma.UserUpdateWithoutAgentTokenInput>, Prisma.UserUncheckedUpdateWithoutAgentTokenInput>
 }
 
 export type UserUpdateOneWithoutCreatedAgentTokensNestedInput = {
@@ -800,6 +807,20 @@ export type UserUpdateOneWithoutCreatedAgentTokensNestedInput = {
   delete?: Prisma.UserWhereInput | boolean
   connect?: Prisma.UserWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCreatedAgentTokensInput, Prisma.UserUpdateWithoutCreatedAgentTokensInput>, Prisma.UserUncheckedUpdateWithoutCreatedAgentTokensInput>
+}
+
+export type UserCreateNestedOneWithoutAgentRunnerInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAgentRunnerInput, Prisma.UserUncheckedCreateWithoutAgentRunnerInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAgentRunnerInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutAgentRunnerNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAgentRunnerInput, Prisma.UserUncheckedCreateWithoutAgentRunnerInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAgentRunnerInput
+  upsert?: Prisma.UserUpsertWithoutAgentRunnerInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutAgentRunnerInput, Prisma.UserUpdateWithoutAgentRunnerInput>, Prisma.UserUncheckedUpdateWithoutAgentRunnerInput>
 }
 
 export type UserCreateNestedOneWithoutSessionsInput = {
@@ -1084,7 +1105,7 @@ export type UserUpdateOneRequiredWithoutNotifySettingsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutNotifySettingsInput, Prisma.UserUpdateWithoutNotifySettingsInput>, Prisma.UserUncheckedUpdateWithoutNotifySettingsInput>
 }
 
-export type UserCreateWithoutAgentTokensInput = {
+export type UserCreateWithoutAgentTokenInput = {
   id?: string
   name: string
   email: string
@@ -1123,9 +1144,10 @@ export type UserCreateWithoutAgentTokensInput = {
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
 }
 
-export type UserUncheckedCreateWithoutAgentTokensInput = {
+export type UserUncheckedCreateWithoutAgentTokenInput = {
   id?: string
   name: string
   email: string
@@ -1164,11 +1186,12 @@ export type UserUncheckedCreateWithoutAgentTokensInput = {
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
 }
 
-export type UserCreateOrConnectWithoutAgentTokensInput = {
+export type UserCreateOrConnectWithoutAgentTokenInput = {
   where: Prisma.UserWhereUniqueInput
-  create: Prisma.XOR<Prisma.UserCreateWithoutAgentTokensInput, Prisma.UserUncheckedCreateWithoutAgentTokensInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutAgentTokenInput, Prisma.UserUncheckedCreateWithoutAgentTokenInput>
 }
 
 export type UserCreateWithoutCreatedAgentTokensInput = {
@@ -1209,7 +1232,8 @@ export type UserCreateWithoutCreatedAgentTokensInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCreatedAgentTokensInput = {
@@ -1250,7 +1274,8 @@ export type UserUncheckedCreateWithoutCreatedAgentTokensInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCreatedAgentTokensInput = {
@@ -1258,18 +1283,18 @@ export type UserCreateOrConnectWithoutCreatedAgentTokensInput = {
   create: Prisma.XOR<Prisma.UserCreateWithoutCreatedAgentTokensInput, Prisma.UserUncheckedCreateWithoutCreatedAgentTokensInput>
 }
 
-export type UserUpsertWithoutAgentTokensInput = {
-  update: Prisma.XOR<Prisma.UserUpdateWithoutAgentTokensInput, Prisma.UserUncheckedUpdateWithoutAgentTokensInput>
-  create: Prisma.XOR<Prisma.UserCreateWithoutAgentTokensInput, Prisma.UserUncheckedCreateWithoutAgentTokensInput>
+export type UserUpsertWithoutAgentTokenInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutAgentTokenInput, Prisma.UserUncheckedUpdateWithoutAgentTokenInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutAgentTokenInput, Prisma.UserUncheckedCreateWithoutAgentTokenInput>
   where?: Prisma.UserWhereInput
 }
 
-export type UserUpdateToOneWithWhereWithoutAgentTokensInput = {
+export type UserUpdateToOneWithWhereWithoutAgentTokenInput = {
   where?: Prisma.UserWhereInput
-  data: Prisma.XOR<Prisma.UserUpdateWithoutAgentTokensInput, Prisma.UserUncheckedUpdateWithoutAgentTokensInput>
+  data: Prisma.XOR<Prisma.UserUpdateWithoutAgentTokenInput, Prisma.UserUncheckedUpdateWithoutAgentTokenInput>
 }
 
-export type UserUpdateWithoutAgentTokensInput = {
+export type UserUpdateWithoutAgentTokenInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1308,9 +1333,10 @@ export type UserUpdateWithoutAgentTokensInput = {
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
 }
 
-export type UserUncheckedUpdateWithoutAgentTokensInput = {
+export type UserUncheckedUpdateWithoutAgentTokenInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1349,6 +1375,7 @@ export type UserUncheckedUpdateWithoutAgentTokensInput = {
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutCreatedAgentTokensInput = {
@@ -1400,7 +1427,8 @@ export type UserUpdateWithoutCreatedAgentTokensInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCreatedAgentTokensInput = {
@@ -1441,7 +1469,192 @@ export type UserUncheckedUpdateWithoutCreatedAgentTokensInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
+}
+
+export type UserCreateWithoutAgentRunnerInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
+  locale?: string | null
+  lastLoginAt?: Date | string | null
+  timezone?: string | null
+  isAgent?: boolean
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
+  dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
+  userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
+  boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
+  privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
+  createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
+  assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
+  ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
+  notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+}
+
+export type UserUncheckedCreateWithoutAgentRunnerInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
+  locale?: string | null
+  lastLoginAt?: Date | string | null
+  timezone?: string | null
+  isAgent?: boolean
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientUncheckedCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
+  dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
+  userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
+  boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
+  privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
+  createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
+  ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
+  notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+}
+
+export type UserCreateOrConnectWithoutAgentRunnerInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutAgentRunnerInput, Prisma.UserUncheckedCreateWithoutAgentRunnerInput>
+}
+
+export type UserUpsertWithoutAgentRunnerInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutAgentRunnerInput, Prisma.UserUncheckedUpdateWithoutAgentRunnerInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutAgentRunnerInput, Prisma.UserUncheckedCreateWithoutAgentRunnerInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutAgentRunnerInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutAgentRunnerInput, Prisma.UserUncheckedUpdateWithoutAgentRunnerInput>
+}
+
+export type UserUpdateWithoutAgentRunnerInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
+  dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
+  userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
+  boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
+  privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
+  createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
+  assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
+  ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
+  notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+}
+
+export type UserUncheckedUpdateWithoutAgentRunnerInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUncheckedUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
+  dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
+  userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
+  boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
+  privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
+  createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
+  ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
+  notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutSessionsInput = {
@@ -1481,8 +1694,9 @@ export type UserCreateWithoutSessionsInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
@@ -1522,8 +1736,9 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -1579,8 +1794,9 @@ export type UserUpdateWithoutSessionsInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -1620,8 +1836,9 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAccountsInput = {
@@ -1661,8 +1878,9 @@ export type UserCreateWithoutAccountsInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAccountsInput = {
@@ -1702,8 +1920,9 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAccountsInput = {
@@ -1759,8 +1978,9 @@ export type UserUpdateWithoutAccountsInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -1800,8 +2020,9 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutTwofactorsInput = {
@@ -1841,8 +2062,9 @@ export type UserCreateWithoutTwofactorsInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutTwofactorsInput = {
@@ -1882,8 +2104,9 @@ export type UserUncheckedCreateWithoutTwofactorsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutTwofactorsInput = {
@@ -1939,8 +2162,9 @@ export type UserUpdateWithoutTwofactorsInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTwofactorsInput = {
@@ -1980,8 +2204,9 @@ export type UserUncheckedUpdateWithoutTwofactorsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPasskeysInput = {
@@ -2021,8 +2246,9 @@ export type UserCreateWithoutPasskeysInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPasskeysInput = {
@@ -2062,8 +2288,9 @@ export type UserUncheckedCreateWithoutPasskeysInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPasskeysInput = {
@@ -2119,8 +2346,9 @@ export type UserUpdateWithoutPasskeysInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPasskeysInput = {
@@ -2160,8 +2388,9 @@ export type UserUncheckedUpdateWithoutPasskeysInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutOauthclientsInput = {
@@ -2201,8 +2430,9 @@ export type UserCreateWithoutOauthclientsInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutOauthclientsInput = {
@@ -2242,8 +2472,9 @@ export type UserUncheckedCreateWithoutOauthclientsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutOauthclientsInput = {
@@ -2299,8 +2530,9 @@ export type UserUpdateWithoutOauthclientsInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOauthclientsInput = {
@@ -2340,8 +2572,9 @@ export type UserUncheckedUpdateWithoutOauthclientsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutOauthrefreshtokensInput = {
@@ -2381,8 +2614,9 @@ export type UserCreateWithoutOauthrefreshtokensInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutOauthrefreshtokensInput = {
@@ -2422,8 +2656,9 @@ export type UserUncheckedCreateWithoutOauthrefreshtokensInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutOauthrefreshtokensInput = {
@@ -2479,8 +2714,9 @@ export type UserUpdateWithoutOauthrefreshtokensInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOauthrefreshtokensInput = {
@@ -2520,8 +2756,9 @@ export type UserUncheckedUpdateWithoutOauthrefreshtokensInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutOauthaccesstokensInput = {
@@ -2561,8 +2798,9 @@ export type UserCreateWithoutOauthaccesstokensInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutOauthaccesstokensInput = {
@@ -2602,8 +2840,9 @@ export type UserUncheckedCreateWithoutOauthaccesstokensInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutOauthaccesstokensInput = {
@@ -2659,8 +2898,9 @@ export type UserUpdateWithoutOauthaccesstokensInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOauthaccesstokensInput = {
@@ -2700,8 +2940,9 @@ export type UserUncheckedUpdateWithoutOauthaccesstokensInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutOauthconsentsInput = {
@@ -2741,8 +2982,9 @@ export type UserCreateWithoutOauthconsentsInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutOauthconsentsInput = {
@@ -2782,8 +3024,9 @@ export type UserUncheckedCreateWithoutOauthconsentsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutOauthconsentsInput = {
@@ -2839,8 +3082,9 @@ export type UserUpdateWithoutOauthconsentsInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOauthconsentsInput = {
@@ -2880,8 +3124,9 @@ export type UserUncheckedUpdateWithoutOauthconsentsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutDashboardInput = {
@@ -2921,8 +3166,9 @@ export type UserCreateWithoutDashboardInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutDashboardInput = {
@@ -2962,8 +3208,9 @@ export type UserUncheckedCreateWithoutDashboardInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutDashboardInput = {
@@ -3019,8 +3266,9 @@ export type UserUpdateWithoutDashboardInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDashboardInput = {
@@ -3060,8 +3308,9 @@ export type UserUncheckedUpdateWithoutDashboardInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAttachmentsInput = {
@@ -3101,8 +3350,9 @@ export type UserCreateWithoutAttachmentsInput = {
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAttachmentsInput = {
@@ -3142,8 +3392,9 @@ export type UserUncheckedCreateWithoutAttachmentsInput = {
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAttachmentsInput = {
@@ -3199,8 +3450,9 @@ export type UserUpdateWithoutAttachmentsInput = {
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAttachmentsInput = {
@@ -3240,8 +3492,9 @@ export type UserUncheckedUpdateWithoutAttachmentsInput = {
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutUserGroupsInput = {
@@ -3281,8 +3534,9 @@ export type UserCreateWithoutUserGroupsInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutUserGroupsInput = {
@@ -3322,8 +3576,9 @@ export type UserUncheckedCreateWithoutUserGroupsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutUserGroupsInput = {
@@ -3379,8 +3634,9 @@ export type UserUpdateWithoutUserGroupsInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutUserGroupsInput = {
@@ -3420,8 +3676,9 @@ export type UserUncheckedUpdateWithoutUserGroupsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutCalendarShareInput = {
@@ -3461,8 +3718,9 @@ export type UserCreateWithoutCalendarShareInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCalendarShareInput = {
@@ -3502,8 +3760,9 @@ export type UserUncheckedCreateWithoutCalendarShareInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCalendarShareInput = {
@@ -3559,8 +3818,9 @@ export type UserUpdateWithoutCalendarShareInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCalendarShareInput = {
@@ -3600,8 +3860,9 @@ export type UserUncheckedUpdateWithoutCalendarShareInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutCalendarBusyTimesInput = {
@@ -3641,8 +3902,9 @@ export type UserCreateWithoutCalendarBusyTimesInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCalendarBusyTimesInput = {
@@ -3682,8 +3944,9 @@ export type UserUncheckedCreateWithoutCalendarBusyTimesInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCalendarBusyTimesInput = {
@@ -3739,8 +4002,9 @@ export type UserUpdateWithoutCalendarBusyTimesInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCalendarBusyTimesInput = {
@@ -3780,8 +4044,9 @@ export type UserUncheckedUpdateWithoutCalendarBusyTimesInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPrivateBoardInput = {
@@ -3821,8 +4086,9 @@ export type UserCreateWithoutPrivateBoardInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPrivateBoardInput = {
@@ -3862,8 +4128,9 @@ export type UserUncheckedCreateWithoutPrivateBoardInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPrivateBoardInput = {
@@ -3919,8 +4186,9 @@ export type UserUpdateWithoutPrivateBoardInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPrivateBoardInput = {
@@ -3960,8 +4228,9 @@ export type UserUncheckedUpdateWithoutPrivateBoardInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutBoardMembersInput = {
@@ -4001,8 +4270,9 @@ export type UserCreateWithoutBoardMembersInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutBoardMembersInput = {
@@ -4042,8 +4312,9 @@ export type UserUncheckedCreateWithoutBoardMembersInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutBoardMembersInput = {
@@ -4099,8 +4370,9 @@ export type UserUpdateWithoutBoardMembersInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutBoardMembersInput = {
@@ -4140,8 +4412,9 @@ export type UserUncheckedUpdateWithoutBoardMembersInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutCreatedTicketsInput = {
@@ -4181,8 +4454,9 @@ export type UserCreateWithoutCreatedTicketsInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCreatedTicketsInput = {
@@ -4222,8 +4496,9 @@ export type UserUncheckedCreateWithoutCreatedTicketsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCreatedTicketsInput = {
@@ -4268,8 +4543,9 @@ export type UserCreateWithoutAssignedTicketsInput = {
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAssignedTicketsInput = {
@@ -4309,8 +4585,9 @@ export type UserUncheckedCreateWithoutAssignedTicketsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAssignedTicketsInput = {
@@ -4366,8 +4643,9 @@ export type UserUpdateWithoutCreatedTicketsInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCreatedTicketsInput = {
@@ -4407,8 +4685,9 @@ export type UserUncheckedUpdateWithoutCreatedTicketsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutAssignedTicketsInput = {
@@ -4459,8 +4738,9 @@ export type UserUpdateWithoutAssignedTicketsInput = {
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAssignedTicketsInput = {
@@ -4500,8 +4780,9 @@ export type UserUncheckedUpdateWithoutAssignedTicketsInput = {
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutTicketCommentsInput = {
@@ -4541,8 +4822,9 @@ export type UserCreateWithoutTicketCommentsInput = {
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutTicketCommentsInput = {
@@ -4582,8 +4864,9 @@ export type UserUncheckedCreateWithoutTicketCommentsInput = {
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
-  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutTicketCommentsInput = {
@@ -4639,8 +4922,9 @@ export type UserUpdateWithoutTicketCommentsInput = {
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTicketCommentsInput = {
@@ -4680,8 +4964,9 @@ export type UserUncheckedUpdateWithoutTicketCommentsInput = {
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
-  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutNotifySettingsInput = {
@@ -4721,8 +5006,9 @@ export type UserCreateWithoutNotifySettingsInput = {
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
-  agentTokens?: Prisma.AgentTokenCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutNotifySettingsInput = {
@@ -4762,8 +5048,9 @@ export type UserUncheckedCreateWithoutNotifySettingsInput = {
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
-  agentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutNotifySettingsInput = {
@@ -4819,8 +5106,9 @@ export type UserUpdateWithoutNotifySettingsInput = {
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
-  agentTokens?: Prisma.AgentTokenUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNotifySettingsInput = {
@@ -4860,8 +5148,9 @@ export type UserUncheckedUpdateWithoutNotifySettingsInput = {
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
-  agentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
 }
 
 
@@ -4886,7 +5175,6 @@ export type UserCountOutputType = {
   ticketComments: number
   attachments: number
   notifySettings: number
-  agentTokens: number
   createdAgentTokens: number
 }
 
@@ -4907,7 +5195,6 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   ticketComments?: boolean | UserCountOutputTypeCountTicketCommentsArgs
   attachments?: boolean | UserCountOutputTypeCountAttachmentsArgs
   notifySettings?: boolean | UserCountOutputTypeCountNotifySettingsArgs
-  agentTokens?: boolean | UserCountOutputTypeCountAgentTokensArgs
   createdAgentTokens?: boolean | UserCountOutputTypeCountCreatedAgentTokensArgs
 }
 
@@ -5036,13 +5323,6 @@ export type UserCountOutputTypeCountNotifySettingsArgs<ExtArgs extends runtime.T
 /**
  * UserCountOutputType without action
  */
-export type UserCountOutputTypeCountAgentTokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.AgentTokenWhereInput
-}
-
-/**
- * UserCountOutputType without action
- */
 export type UserCountOutputTypeCountCreatedAgentTokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.AgentTokenWhereInput
 }
@@ -5086,8 +5366,9 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   ticketComments?: boolean | Prisma.User$ticketCommentsArgs<ExtArgs>
   attachments?: boolean | Prisma.User$attachmentsArgs<ExtArgs>
   notifySettings?: boolean | Prisma.User$notifySettingsArgs<ExtArgs>
-  agentTokens?: boolean | Prisma.User$agentTokensArgs<ExtArgs>
+  agentToken?: boolean | Prisma.User$agentTokenArgs<ExtArgs>
   createdAgentTokens?: boolean | Prisma.User$createdAgentTokensArgs<ExtArgs>
+  agentRunner?: boolean | Prisma.User$agentRunnerArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -5175,8 +5456,9 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   ticketComments?: boolean | Prisma.User$ticketCommentsArgs<ExtArgs>
   attachments?: boolean | Prisma.User$attachmentsArgs<ExtArgs>
   notifySettings?: boolean | Prisma.User$notifySettingsArgs<ExtArgs>
-  agentTokens?: boolean | Prisma.User$agentTokensArgs<ExtArgs>
+  agentToken?: boolean | Prisma.User$agentTokenArgs<ExtArgs>
   createdAgentTokens?: boolean | Prisma.User$createdAgentTokensArgs<ExtArgs>
+  agentRunner?: boolean | Prisma.User$agentRunnerArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -5204,8 +5486,9 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     ticketComments: Prisma.$TicketCommentPayload<ExtArgs>[]
     attachments: Prisma.$AttachmentPayload<ExtArgs>[]
     notifySettings: Prisma.$UserNotifySettingPayload<ExtArgs>[]
-    agentTokens: Prisma.$AgentTokenPayload<ExtArgs>[]
+    agentToken: Prisma.$AgentTokenPayload<ExtArgs> | null
     createdAgentTokens: Prisma.$AgentTokenPayload<ExtArgs>[]
+    agentRunner: Prisma.$AgentRunnerPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -5642,8 +5925,9 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   ticketComments<T extends Prisma.User$ticketCommentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$ticketCommentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TicketCommentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   attachments<T extends Prisma.User$attachmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$attachmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AttachmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   notifySettings<T extends Prisma.User$notifySettingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notifySettingsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserNotifySettingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  agentTokens<T extends Prisma.User$agentTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$agentTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AgentTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  agentToken<T extends Prisma.User$agentTokenArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$agentTokenArgs<ExtArgs>>): Prisma.Prisma__AgentTokenClient<runtime.Types.Result.GetResult<Prisma.$AgentTokenPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   createdAgentTokens<T extends Prisma.User$createdAgentTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$createdAgentTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AgentTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  agentRunner<T extends Prisma.User$agentRunnerArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$agentRunnerArgs<ExtArgs>>): Prisma.Prisma__AgentRunnerClient<runtime.Types.Result.GetResult<Prisma.$AgentRunnerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -6525,9 +6809,9 @@ export type User$notifySettingsArgs<ExtArgs extends runtime.Types.Extensions.Int
 }
 
 /**
- * User.agentTokens
+ * User.agentToken
  */
-export type User$agentTokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type User$agentTokenArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
    * Select specific fields to fetch from the AgentToken
    */
@@ -6541,11 +6825,6 @@ export type User$agentTokensArgs<ExtArgs extends runtime.Types.Extensions.Intern
    */
   include?: Prisma.AgentTokenInclude<ExtArgs> | null
   where?: Prisma.AgentTokenWhereInput
-  orderBy?: Prisma.AgentTokenOrderByWithRelationInput | Prisma.AgentTokenOrderByWithRelationInput[]
-  cursor?: Prisma.AgentTokenWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.AgentTokenScalarFieldEnum | Prisma.AgentTokenScalarFieldEnum[]
 }
 
 /**
@@ -6570,6 +6849,25 @@ export type User$createdAgentTokensArgs<ExtArgs extends runtime.Types.Extensions
   take?: number
   skip?: number
   distinct?: Prisma.AgentTokenScalarFieldEnum | Prisma.AgentTokenScalarFieldEnum[]
+}
+
+/**
+ * User.agentRunner
+ */
+export type User$agentRunnerArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AgentRunner
+   */
+  select?: Prisma.AgentRunnerSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AgentRunner
+   */
+  omit?: Prisma.AgentRunnerOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AgentRunnerInclude<ExtArgs> | null
+  where?: Prisma.AgentRunnerWhereInput
 }
 
 /**

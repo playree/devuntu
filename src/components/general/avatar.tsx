@@ -22,9 +22,12 @@ const avatarStyles = tv({
   },
 })
 
+const AGENT_AVATAR_SRC = '/agent/agent-user.png'
+
 type UserAvatarProps = {
   name: string
   image?: string | null
+  isAgent?: boolean
   /** xs=16px(かんばんカード / 選択肢) / sm=32px / md=40px */
   size?: 'xs' | 'sm' | 'md'
   className?: string
@@ -34,14 +37,14 @@ type UserAvatarProps = {
  * ユーザーのアバター。画像が無い / 読み込めない場合は名前の頭文字を出す。
  * 名前も無い場合は '?' にする。
  */
-export const UserAvatar: FC<UserAvatarProps> = ({ name, image, size = 'md', className }) => {
+export const UserAvatar: FC<UserAvatarProps> = ({ name, image, isAgent, size = 'md', className }) => {
   const styles = avatarStyles({ size })
   return (
     <Avatar // xs は HeroUI のサイズ指定を持たないので既定(md)のまま utility で潰す
       size={size === 'xs' ? undefined : size}
       className={styles.base({ className })}
     >
-      <Avatar.Image src={image ?? ''} />
+      <Avatar.Image src={isAgent ? AGENT_AVATAR_SRC : (image ?? '')} />
       <Avatar.Fallback className={styles.fallback()}>{name.charAt(0) || '?'}</Avatar.Fallback>
     </Avatar>
   )

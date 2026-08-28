@@ -10,6 +10,8 @@
  */
 export type * from './models/User'
 export type * from './models/AgentToken'
+export type * from './models/AgentRunner'
+export type * from './models/AgentRun'
 export type * from './models/Session'
 export type * from './models/Account'
 export type * from './models/Verification'

@@ -1,6 +1,7 @@
 'use client'
 
-import type { BoardKind, TagColor, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
+import type { AgentTaskState, BoardKind, TagColor, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
+import { AGENT_TASK_MODE_LOCALE, AGENT_TASK_MODES, AGENT_TASK_STATE_LOCALE } from '@/lib/agent'
 import { TICKET_PRIORITY_LOCALE, TICKET_STATUS_LOCALE, type BoardRole } from '@/lib/task'
 import { LocaleItemBase } from '@/locale'
 import { useLocale } from '@/locale/client'
@@ -111,6 +112,26 @@ export const StatusChip: FC<{ status: TicketStatus; size?: ChipProps['size'] }> 
       size={size}
       className='whitespace-nowrap'
     >
+      <Chip.Label>{t(item)}</Chip.Label>
+    </Chip>
+  )
+}
+
+/** `planned`(返信待ち)は利用者の操作を促す状態なので、完了 / 失敗とは別の色にする */
+const AGENT_STATE_STYLE: Record<AgentTaskState, { item: LocaleItemBase; color: ChipColor }> = {
+  queued: { item: AGENT_TASK_STATE_LOCALE.queued, color: 'default' },
+  running: { item: AGENT_TASK_STATE_LOCALE.running, color: 'accent' },
+  planned: { item: AGENT_TASK_STATE_LOCALE.planned, color: 'warning' },
+  done: { item: AGENT_TASK_STATE_LOCALE.done, color: 'success' },
+  failed: { item: AGENT_TASK_STATE_LOCALE.failed, color: 'danger' },
+  skipped: { item: AGENT_TASK_STATE_LOCALE.skipped, color: 'default' },
+}
+
+export const AgentStateChip: FC<{ state: AgentTaskState; size?: ChipProps['size'] }> = ({ state, size = 'sm' }) => {
+  const { t } = useLocale()
+  const { item, color } = AGENT_STATE_STYLE[state]
+  return (
+    <Chip variant='soft' color={color} size={size} className='whitespace-nowrap'>
       <Chip.Label>{t(item)}</Chip.Label>
     </Chip>
   )
@@ -271,6 +292,18 @@ export const useTicketOptions = () => {
     priorityOptions: Object.fromEntries(
       (Object.keys(PRIORITY_META) as TicketPriority[]).map((priority) => [priority, t(PRIORITY_META[priority].item)]),
     ),
+  }
+}
+
+/** 「エージェントに任せない」を表すセンチネル。Select は null を選択肢に持てないので値で表す */
+export const AGENT_MODE_NONE = 'none'
+
+/** エージェントの処理方式の選択肢。先頭は「任せない」(= agentMode を null に戻す) */
+export const useAgentModeOptions = (): Record<string, string> => {
+  const { t } = useLocale()
+  return {
+    [AGENT_MODE_NONE]: t('agent_mode_none'),
+    ...Object.fromEntries(AGENT_TASK_MODES.map((mode) => [mode, t(AGENT_TASK_MODE_LOCALE[mode])])),
   }
 }
 

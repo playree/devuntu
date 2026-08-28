@@ -203,7 +203,12 @@ const KanbanCardView: FC<{
             <PriorityChip priority={card.priority} />
             {card.assigneeName && (
               <span className='flex min-w-0 items-center gap-0.5 text-xs text-gray-500'>
-                <UserAvatar name={card.assigneeName} image={card.assigneeImage} size='xs' />
+                <UserAvatar
+                  name={card.assigneeName}
+                  image={card.assigneeImage}
+                  isAgent={card.assigneeIsAgent}
+                  size='xs'
+                />
                 <span className='truncate'>{card.assigneeName}</span>
               </span>
             )}

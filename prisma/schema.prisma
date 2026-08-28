@@ -61,45 +61,147 @@ model User {
   // add AI Agent
   /// AIエージェント用ユーザー。Webログインを行わず MCP からのみ利用する
   isAgent            Boolean      @default(false)
-  agentTokens        AgentToken[] @relation("AgentTokenOwner")
+  agentToken         AgentToken?  @relation("AgentTokenOwner")
   createdAgentTokens AgentToken[] @relation("AgentTokenCreator")
+  agentRunner        AgentRunner? @relation("AgentRunnerOwner")
 
   @@unique([email])
   @@map("user")
 }
 
 /// AIエージェント用ユーザーが MCP サーバーへ接続するための長期トークン。
+/// 1エージェントにつき1行だけ持ち、再発行はこの行の置き換えで行う。
 /// 平文は発行時の応答にしか現れず、保存するのはハッシュだけ。
 model AgentToken {
   id     String @id @default(uuid(7))
-  userId String
+  userId String @unique
   user   User   @relation("AgentTokenOwner", fields: [userId], references: [id], onDelete: Cascade)
-
-  /// 用途を見分けるためのラベル(端末名など)
-  name String
 
   /// SHA-256(平文) の hex。照合はこの列の一致だけで行う
   tokenHash String @unique
 
-  /// 平文の末尾数文字。一覧でどのトークンかを見分けるためだけに持つ
+  /// 平文の末尾数文字。管理画面で今のトークンを見分けるためだけに持つ
   hint String
 
   /// null は無期限
   expiresAt DateTime?
 
-  /// 失効した時刻。行は監査のため残すので、削除ではなくこの列で止める
-  revokedAt DateTime?
-
   /// 最終利用時刻。リクエストごとに書かず、一定時間経過した場合だけ更新する
   lastUsedAt DateTime?
 
   createdById String?
-  createdBy   User?    @relation("AgentTokenCreator", fields: [createdById], references: [id], onDelete: SetNull)
-  createdAt   DateTime @default(now())
+  createdBy   User?   @relation("AgentTokenCreator", fields: [createdById], references: [id], onDelete: SetNull)
 
-  @@index([userId])
+  /// 行の作成時刻ではなく、いま入っているトークンの発行時刻。再発行のたびに書き換える
+  createdAt DateTime @default(now())
+
   @@index([createdById])
   @@map("agent_token")
+}
+
+/// AIエージェントの自動運用(Devuntu Agent)の設定と、ランナーの稼働状況。
+/// エージェントユーザーにつき1行だけ持つ。行が無い状態は「自動運用を使わない」を表す。
+model AgentRunner {
+  id     String @id @default(uuid(7))
+  userId String @unique
+  user   User   @relation("AgentRunnerOwner", fields: [userId], references: [id], onDelete: Cascade)
+
+  /// 自動運用の有効/無効。時間帯の条件を満たしていても、これが false なら動かさない
+  enabled Boolean @default(false)
+
+  /// 稼働を許可する時間帯。0:00 からの分で持つ。
+  /// 両方 null なら終日。from > to は日跨ぎ(夜間のみ稼働)を表す
+  activeFromMin Int?
+  activeToMin   Int?
+
+  /// 時間帯の判定に使うタイムゾーン。null は DEFAULT_TZ
+  timezone String?
+
+  /// ランナーへ返すポーリング間隔(秒)
+  pollIntervalSec Int @default(300)
+
+  /// チケット側でモード指定が無い場合に使う既定のモード
+  defaultMode AgentTaskMode @default(plan)
+
+  /// エージェントが作業前に読み、処理全体を通じて従う指示(Markdown)
+  rule String?
+
+  /// ランナーの自己申告。稼働状況の表示にだけ使い、認可には使わない
+  lastPolledAt DateTime?
+  hostname     String?
+  version      String?
+
+  runs AgentRun[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("agent_runner")
+}
+
+/// エージェントの1回の実行。稼働状況の確認と、応答が返らないまま落ちた実行の回収に使う。
+model AgentRun {
+  id       String      @id @default(uuid(7))
+  runnerId String
+  runner   AgentRunner @relation(fields: [runnerId], references: [id], onDelete: Cascade)
+
+  /// 対象チケット。削除されても履歴は残すので SetNull
+  ticketId String?
+  ticket   Ticket? @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+
+  /// 起動時点の表示ID。チケット削除後に何を処理したかを追えるように持つ
+  ticketRef String?
+
+  action AgentRunAction
+  status AgentRunStatus @default(running)
+
+  /// エージェントが報告した結果の要約
+  summary String?
+
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+
+  @@index([runnerId, startedAt])
+  @@index([ticketId])
+  @@map("agent_run")
+}
+
+/// チケットの処理方式。チケット単位で制御する
+enum AgentTaskMode {
+  /// パターン1: プランを投稿して一旦終了し、利用者の返信を待つ
+  plan
+  /// パターン2: プランを作らずに実行して報告する
+  auto
+}
+
+/// チケットのエージェント処理の状態
+enum AgentTaskState {
+  /// 未着手
+  queued
+  /// エージェントが処理中
+  running
+  /// プラン投稿済み。利用者の返信待ち
+  planned
+  done
+  failed
+  /// 稼働条件やチケットの内容から処理を見送った
+  skipped
+}
+
+enum AgentRunAction {
+  /// プランの作成と投稿
+  plan
+  /// 実装の実行
+  execute
+  /// 返信を受けてのプラン修正 / 実装への移行
+  revise
+}
+
+enum AgentRunStatus {
+  running
+  succeeded
+  failed
+  skipped
 }
 
 model Session {
@@ -691,10 +793,19 @@ model Ticket {
   // 本文中のメンションを解決した結果。保存時点のスナップショット(TicketComment と同じ扱い)
   mentionedUserIds String[] @default([])
 
+  // add AI Agent
+  /// エージェントに任せる場合の処理方式。null はエージェント処理の対象外(オプトインを兼ねる)
+  agentMode  AgentTaskMode?
+  /// エージェント処理の状態。null は未着手と同じ扱い
+  agentState AgentTaskState?
+  agentRuns  AgentRun[]
+
   // @@unique が (boardId, ...) の先頭索引を兼ねるので表示IDからの検索はこれで賄える
   @@unique([boardId, number])
   @@index([boardId, status, order])
   @@index([assigneeId])
+  // ランナーのポーリングは「担当がエージェント」かつ「オプトイン済み」で絞る
+  @@index([assigneeId, agentMode])
   @@index([createdById])
   // チケット一覧の既定の並び順(更新日時の新しい順 + LIMIT)を索引スキャンにする
   @@index([updatedAt])
@@ -702,22 +813,22 @@ model Ticket {
 }
 
 model TicketComment {
-  id               String            @id @default(uuid(7))
+  id               String             @id @default(uuid(7))
   ticketId         String
-  ticket           Ticket            @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticket           Ticket             @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   // 退会ユーザーのコメントも議論履歴として残すため SetNull(表示は no_name)
   authorId         String?
-  author           User?             @relation("TicketCommentAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  author           User?              @relation("TicketCommentAuthor", fields: [authorId], references: [id], onDelete: SetNull)
   content          String
   // null = 通常コメント。plan/report は詳細画面でデフォルト折りたたみ表示する
   type             TicketCommentType?
   // 返信先コメント。1階層のみ許容(親自体が返信の場合は指定できない。制約はアプリ層で検証)
   parentId         String?
-  parent           TicketComment?    @relation("TicketCommentThread", fields: [parentId], references: [id], onDelete: Cascade)
-  replies          TicketComment[]   @relation("TicketCommentThread")
-  mentionedUserIds String[]          @default([])
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  parent           TicketComment?     @relation("TicketCommentThread", fields: [parentId], references: [id], onDelete: Cascade)
+  replies          TicketComment[]    @relation("TicketCommentThread")
+  mentionedUserIds String[]           @default([])
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
 
   @@index([ticketId, createdAt])
   @@index([parentId])

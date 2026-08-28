@@ -1,4 +1,5 @@
 - [開発用インフラ起動](#開発用インフラ起動)
+- [同一PCでの並行clone(エージェント開発用など)](#同一pcでの並行cloneエージェント開発用など)
 - [s3-toolsサービス](#s3-toolsサービス)
   - [旧イメージでの実行](#旧イメージでの実行)
 - [DBバックアップ](#dbバックアップ)
@@ -35,6 +36,36 @@ docker compose stop db s3
 ```
 
 DB は `localhost:5432`、S3 API は `localhost:8333` で公開される。アップロード機能を使うには S3 API が必要。
+
+## 同一PCでの並行clone(エージェント開発用など)
+
+DB・S3のコンテナは増やさず共有したまま、`git clone` したもう一つのディレクトリで別ポートの `next dev` を並行稼働できる。
+
+```sh
+# DB(1回だけ)
+docker exec devuntu-postgres createdb -U devuser devuntu-agent
+
+# バケットは初回アップロード時に自動作成されるため事前作業は不要
+```
+
+2つ目の clone の `.env` は1つ目の内容をコピーしたうえで、以下だけ差し替える。
+
+| 変数名            | 値                                                                            |
+| ----------------- | ----------------------------------------------------------------------------- |
+| `DATABASE_URL`    | `postgresql://devuser:devPassW0rd@localhost:5432/devuntu-agent?schema=public` |
+| `BETTER_AUTH_URL` | `http://localhost:3010`                                                       |
+| `S3_BUCKET`       | `devuntu-agent`                                                               |
+
+`S3_ENDPOINT`/`S3_ACCESS_KEY_ID`/`S3_SECRET_ACCESS_KEY` はコンテナ共有のため変更不要。起動は次のとおり。
+
+```sh
+# 初回はマイグレーションも忘れずに
+pnpm migrate
+
+PORT=3010 pnpm dev
+```
+
+Google/Slack など外部OAuthのコールバックURLは `http://localhost:3000/...` 決め打ちで登録されていることが多い。この並行clone(`localhost:3010`)でOAuthログインを試す場合は、各サービスの管理画面側でコールバックURLを別途追加登録する必要がある。
 
 ## s3-toolsサービス
 

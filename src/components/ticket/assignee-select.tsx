@@ -17,6 +17,7 @@ export type AssigneeOption = {
   /** メンション候補としても使うため保持する。ユーザー以外の選択肢では持たない */
   email?: string
   image?: string | null
+  isAgent?: boolean
   /** アバターを出さない選択肢(絞り込みの「すべて」「未割り当て」などユーザー以外) */
   hideAvatar?: boolean
 }
@@ -145,7 +146,7 @@ export const AssigneeSelectField = ({
          */}
         {hasAvatar && (
           <span className='pointer-events-none absolute inset-y-0 inset-s-2 z-10 flex items-center'>
-            <UserAvatar name={selected.name} image={selected.image} size='xs' />
+            <UserAvatar name={selected.name} image={selected.image} isAgent={selected.isAgent} size='xs' />
           </span>
         )}
         {hasClear && (
@@ -189,7 +190,7 @@ export const AssigneeSelectField = ({
                   // アバターの無い選択肢でも名前の左端を揃える
                   <span className='size-4' />
                 ) : (
-                  <UserAvatar name={option.name} image={option.image} size='xs' />
+                  <UserAvatar name={option.name} image={option.image} isAgent={option.isAgent} size='xs' />
                 )}
                 {option.name}
               </span>

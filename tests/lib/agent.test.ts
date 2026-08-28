@@ -5,7 +5,15 @@
  * (`@[アドレス]`)の突き合わせキーにもなるため、形が崩れないことを固定する。
  */
 
-import { AGENT_EMAIL_DOMAIN, AGENT_HANDLE_PATTERN, agentEmail, agentHandle, agentTokenExpiresAt } from '@/lib/agent'
+import {
+  AGENT_EMAIL_DOMAIN,
+  AGENT_HANDLE_PATTERN,
+  AGENT_OFFLINE_INTERVAL_FACTOR,
+  agentEmail,
+  agentHandle,
+  agentRunnerStatus,
+  agentTokenExpiresAt,
+} from '@/lib/agent'
 import { zEmail } from '@/lib/schema'
 import { describe, expect, it } from 'vitest'
 
@@ -59,5 +67,37 @@ describe('agentTokenExpiresAt', () => {
   it('日数ぶん先の日時を返す', () => {
     expect(agentTokenExpiresAt('30', from)?.toISOString()).toBe('2026-01-31T00:00:00.000Z')
     expect(agentTokenExpiresAt('365', from)?.toISOString()).toBe('2027-01-01T00:00:00.000Z')
+  })
+})
+
+describe('agentRunnerStatus', () => {
+  const now = new Date('2026-01-01T12:00:00.000Z')
+  const runner = (override: Record<string, unknown> = {}) => ({
+    enabled: true,
+    pollIntervalSec: 300,
+    lastPolledAt: null as Date | null,
+    ...override,
+  })
+
+  it('設定が無ければ未設定', () => {
+    expect(agentRunnerStatus(null, now)).toBe('none')
+  })
+
+  it('無効なら停止中(最後のポーリングが新しくても変わらない)', () => {
+    expect(agentRunnerStatus(runner({ enabled: false, lastPolledAt: now }), now)).toBe('disabled')
+  })
+
+  it('一度もポーリングが無ければオフライン', () => {
+    expect(agentRunnerStatus(runner(), now)).toBe('offline')
+  })
+
+  it('ポーリング間隔の許容倍数までは稼働中', () => {
+    const within = new Date(now.getTime() - 300 * AGENT_OFFLINE_INTERVAL_FACTOR * 1000)
+    expect(agentRunnerStatus(runner({ lastPolledAt: within }), now)).toBe('online')
+  })
+
+  it('許容を過ぎたらオフライン', () => {
+    const stale = new Date(now.getTime() - (300 * AGENT_OFFLINE_INTERVAL_FACTOR + 1) * 1000)
+    expect(agentRunnerStatus(runner({ lastPolledAt: stale }), now)).toBe('offline')
   })
 })

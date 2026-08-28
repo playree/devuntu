@@ -32,7 +32,8 @@ import {
   ticketShortPath,
 } from '@/lib/task'
 
-const resolveTicketId = async (auth: ResourceAuth, ticketIdOrDisplayId: string): Promise<string> => {
+/** 表示ID(ABC-42)でもチケットIDでも受け取れるようにする。エージェント向けツールからも使う */
+export const resolveTicketId = async (auth: ResourceAuth, ticketIdOrDisplayId: string): Promise<string> => {
   if (!parseTicketDisplayId(ticketIdOrDisplayId)) {
     return ticketIdOrDisplayId
   }

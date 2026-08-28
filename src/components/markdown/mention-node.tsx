@@ -10,6 +10,7 @@ export type MentionUser = {
   name: string
   email: string
   image?: string | null
+  isAgent?: boolean
 }
 
 const EMPTY_USERS: MentionUser[] = []
