@@ -35,7 +35,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-__version__ = "0.2.4"
+__version__ = "0.2.6"
 
 DEFAULT_CONFIG_PATH = Path.home() / ".config" / "devuntu-agent" / "config.json"
 DEFAULT_LOG_PATH = Path.home() / ".local" / "state" / "devuntu-agent" / "agent.log"
@@ -86,27 +86,27 @@ class Config:
         self.self_update: bool = bool(raw.get("self_update", True))
 
         if not self.base_url:
-            raise ConfigError(f"base_url が設定されていない: {path}")
+            raise ConfigError(f"base_url is not set: {path}")
         if not self.token:
-            raise ConfigError(f"token が設定されていない: {path}")
+            raise ConfigError(f"token is not set: {path}")
         if not str(self.workdir):
-            raise ConfigError(f"workdir が設定されていない: {path}")
+            raise ConfigError(f"workdir is not set: {path}")
         if not self.workdir.is_dir():
-            raise ConfigError(f"workdir が存在しない: {self.workdir}")
+            raise ConfigError(f"workdir does not exist: {self.workdir}")
 
 
 def load_config(path: Path) -> Config:
     if not path.is_file():
-        raise ConfigError(f"設定ファイルが無い: {path}")
+        raise ConfigError(f"config file not found: {path}")
     # トークンを持つファイルなので、他人から読める状態なら気付けるようにする
     if path.stat().st_mode & 0o077:
-        log.warning("設定ファイルが他ユーザーから読める: %s (chmod 600 を推奨)", path)
+        log.warning("config file is readable by other users: %s (chmod 600 recommended)", path)
     try:
         raw = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as e:
-        raise ConfigError(f"設定ファイルが JSON として読めない: {path} ({e})") from e
+        raise ConfigError(f"config file is not valid JSON: {path} ({e})") from e
     if not isinstance(raw, dict):
-        raise ConfigError(f"設定ファイルの中身がオブジェクトではない: {path}")
+        raise ConfigError(f"config file content is not an object: {path}")
     return Config(raw, path)
 
 
@@ -133,11 +133,11 @@ def call_api(config: Config, method: str, path: str, body: dict | None = None) -
             return json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         detail = e.read().decode("utf-8", errors="replace")[:200]
-        raise ApiError(f"{method} {path} が {e.code} を返した: {detail}") from e
+        raise ApiError(f"{method} {path} returned {e.code}: {detail}") from e
     except (urllib.error.URLError, TimeoutError, socket.timeout) as e:
-        raise ApiError(f"{method} {path} に到達できない: {e}") from e
+        raise ApiError(f"{method} {path} is unreachable: {e}") from e
     except json.JSONDecodeError as e:
-        raise ApiError(f"{method} {path} の応答が JSON ではない: {e}") from e
+        raise ApiError(f"{method} {path} response is not JSON: {e}") from e
 
 
 # ---------------------------------------------------------------------------
@@ -153,19 +153,19 @@ def self_update(config: Config) -> None:
         with urllib.request.urlopen(request, timeout=30) as response:
             latest = response.read()
     except (urllib.error.URLError, TimeoutError, socket.timeout) as e:
-        log.warning("最新版の取得に失敗した: %s", e)
+        log.warning("failed to fetch the latest version: %s", e)
         return
 
     # サーバーが壊れた内容を返す事故に備えて、それらしい中身か軽く確認してから書き換える
     if not latest.startswith(b"#!/usr/bin/env python3") or b"__version__" not in latest:
-        log.warning("最新版の内容がランナーのスクリプトに見えないので更新しない: %s", url)
+        log.warning("fetched content doesn't look like the runner script, skipping update: %s", url)
         return
 
     script_path = Path(__file__).resolve()
     try:
         current = script_path.read_bytes()
     except OSError as e:
-        log.warning("自分自身を読み込めないので更新しない: %s", e)
+        log.warning("cannot read self, skipping update: %s", e)
         return
 
     if latest == current:
@@ -177,12 +177,12 @@ def self_update(config: Config) -> None:
         tmp_path.chmod(script_path.stat().st_mode)
         tmp_path.replace(script_path)
     except OSError as e:
-        log.warning("ランナーの更新に失敗した: %s", e)
+        log.warning("failed to update the runner: %s", e)
         return
 
     match = re.search(rb'__version__\s*=\s*"([^"]+)"', latest)
     new_version = match.group(1).decode() if match else "?"
-    log.info("ランナーを %s に更新した(次回の起動から反映される)", new_version)
+    log.info("updated the runner to %s (takes effect on next run)", new_version)
 
 
 # ---------------------------------------------------------------------------
@@ -226,7 +226,7 @@ def build_command(config: Config, task: dict) -> list[str]:
 def run_claude(config: Config, task: dict) -> tuple[str, str]:
     """Claude Code を起動する。戻り値は (実行の結果, 実行履歴に残す要約)"""
     command = build_command(config, task)
-    log.info("claude を起動する: ticket=%s action=%s cwd=%s", task["displayId"], task["action"], config.workdir)
+    log.info("starting claude: ticket=%s action=%s cwd=%s", task["displayId"], task["action"], config.workdir)
 
     try:
         completed = subprocess.run(
@@ -238,18 +238,25 @@ def run_claude(config: Config, task: dict) -> tuple[str, str]:
             check=False,
         )
     except FileNotFoundError:
-        return "failed", f"{config.claude_bin} が見つからない"
+        return "failed", f"{config.claude_bin} not found"
     except subprocess.TimeoutExpired:
-        log.error("claude が %d 秒で終わらなかった", config.timeout_sec)
+        log.error("claude did not finish within %d seconds", config.timeout_sec)
         return "failed", f"timeout ({config.timeout_sec}s)"
 
+    # summary には claude が標準出力した最終応答(ユーザー向けの結果メッセージ)を使う。
+    # 実行履歴で内容が分かるようにするため
+    output = (completed.stdout or "").strip()
+
     if completed.returncode != 0:
-        tail = (completed.stderr or completed.stdout or "").strip()[-SUMMARY_LIMIT:]
-        log.error("claude が終了コード %d で終わった: %s", completed.returncode, tail)
+        if output:
+            log.error("claude exited with code %d: %s", completed.returncode, output[:SUMMARY_LIMIT])
+            return "failed", output[:SUMMARY_LIMIT]
+        tail = (completed.stderr or "").strip()[-SUMMARY_LIMIT:]
+        log.error("claude exited with code %d: %s", completed.returncode, tail)
         return "failed", f"exit {completed.returncode}: {tail}"
 
-    log.info("claude が正常に終了した: ticket=%s", task["displayId"])
-    return "succeeded", "claude exited 0"
+    log.info("claude exited successfully: ticket=%s", task["displayId"])
+    return "succeeded", output[:SUMMARY_LIMIT] if output else "claude exited 0 (no output)"
 
 
 # ---------------------------------------------------------------------------
@@ -266,12 +273,12 @@ def poll(config: Config, dry_run: bool, debug: bool = False) -> int:
     )
 
     if not status.get("active"):
-        log.info("稼働条件を満たしていない: reason=%s", status.get("reason"))
+        log.info("run conditions not met: reason=%s", status.get("reason"))
         return 0
 
     tasks = status.get("tasks") or []
     if not tasks:
-        log.info("処理するチケットは無い")
+        log.info("no tickets to process")
         return 0
 
     # 1 回の poll で 1 件だけ処理する。残りは次の poll で拾う
@@ -280,42 +287,42 @@ def poll(config: Config, dry_run: bool, debug: bool = False) -> int:
     ticket_id = task.get("ticketId")
     action = task.get("action")
     if not display_id or not ticket_id or not action:
-        raise ApiError(f"POST /api/agent/status の応答にタスクの必須項目が無い: {task}")
+        raise ApiError(f"POST /api/agent/status response is missing required task fields: {task}")
 
     if len(tasks) > 1:
-        log.info("処理待ちが %d 件ある。今回は %s だけを処理する", len(tasks), display_id)
+        log.info("%d tickets pending, processing only %s this time", len(tasks), display_id)
 
     if debug:
-        log.info("debug: %s のコマンド全量を表示する", display_id)
+        log.info("debug: printing the full command for %s", display_id)
         print(f"cd {shlex.quote(str(config.workdir))} && \\")
         print(" ".join(shlex.quote(part) for part in build_command(config, task)))
         return 0
 
     if dry_run:
-        log.info("dry-run: %s を %s として処理するところ", display_id, action)
+        log.info("dry-run: would process %s as %s", display_id, action)
         return 0
 
     run = call_api(config, "POST", "/api/agent/runs", {"ticketId": ticket_id, "action": action})
     run_id = run.get("runId")
     if not run_id:
-        raise ApiError(f"POST /api/agent/runs の応答に runId が無い: {run}")
+        raise ApiError(f"POST /api/agent/runs response is missing runId: {run}")
 
     try:
         result, summary = run_claude(config, task)
     except Exception as e:  # noqa: BLE001 (実行の記録を必ず閉じるため、想定外の例外も拾う)
-        log.exception("claude の起動処理で予期しない例外が発生した")
+        log.exception("unexpected exception while launching claude")
         result, summary = "failed", f"unexpected error: {e}"[:SUMMARY_LIMIT]
 
     # 実行の記録だけは必ず閉じる。開いたままだとこのチケットを二度と拾えなくなる
     try:
         call_api(config, "PATCH", f"/api/agent/runs/{run_id}", {"status": result, "summary": summary})
     except ApiError as e:
-        log.error("実行の終了を記録できなかった: %s", e)
+        log.error("failed to record the end of the run: %s", e)
         return 1
 
     # エージェントが finish_agent_task を呼んでいれば、チケットの状態はその報告が優先される。
     # 呼ばずに終わった実行は、ここで成功と伝えてもサーバー側で失敗として閉じられる
-    log.info("実行の終了を記録した: run=%s status=%s", run_id, result)
+    log.info("recorded the end of the run: run=%s status=%s", run_id, result)
 
     return 0 if result == "succeeded" else 1
 
@@ -340,7 +347,7 @@ def setup_logging(log_path: Path, verbose: bool) -> None:
         log.addHandler(rotating)
     except OSError as e:
         # ログを残せないだけで処理は続けられる
-        log.warning("ログファイルを開けない: %s (%s)", log_path, e)
+        log.warning("cannot open log file: %s (%s)", log_path, e)
 
 
 def acquire_lock(lock_path: Path):
@@ -387,7 +394,7 @@ def main(argv: list[str] | None = None) -> int:
 
     lock = acquire_lock(args.lock)
     if lock is None:
-        log.info("前回の実行がまだ動いているので何もしない")
+        log.info("previous run is still active, skipping")
         return 0
 
     try:
