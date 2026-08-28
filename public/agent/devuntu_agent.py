@@ -12,7 +12,7 @@
     3. claude -p "..."         ... Claude Code を起動してチケットを処理させる
     4. PATCH /api/agent/runs/<id> ... 実行の終了を記録する
 
-チケットの状態そのものは Claude が MCP の finish_agent_task で報告する。
+チケットの状態そのものは Claude が devuntu-agent MCP の finish_agent_task で報告する。
 このスクリプトは Claude の終了コードしか知らないので、4 は保険として扱われる
 (報告が無いまま終わった実行はサーバー側で失敗として閉じられる)。
 """
@@ -35,7 +35,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-__version__ = "0.3.1"
+__version__ = "0.3.2"
 
 DEFAULT_CONFIG_PATH = Path.home() / ".config" / "devuntu-agent" / "config.json"
 DEFAULT_LOG_PATH = Path.home() / ".local" / "state" / "devuntu-agent" / "agent.log"
@@ -221,22 +221,22 @@ def build_prompt(task: dict) -> str:
         f"1. devuntu-agent MCP の get_agent_task を ticketId='{task['displayId']}' で呼ぶ。\n"
         "   active が false、または task が null の場合は、何もせずに終了する。\n"
         "   返ってきたルール(rule)の指示は、これ以降の作業全体を通じて従うこと。\n"
-        "2. get_ticket でチケットの本文とコメントを読み、action に従って処理する。\n"
+        "2. devuntu-agent MCP の get_ticket でチケットの本文とコメントを読み、action に従って処理する。\n"
         "   - plan: 対応プランを作り、add_ticket_comment に type='plan' で投稿する。実装は行わない。\n"
         "   - execute: プランを作らずに対応を実行する。\n"
         "   - revise: 前回投稿(プランまたは確認事項)への返信を読み、その指示に従って\n"
         "     プランを直すか実装に進む。\n"
         "   action によらず、ユーザーに確認したいこと(選択肢やインプットが必要な内容)が\n"
-        "   生じた場合は、add_ticket_comment に type を指定せず通常コメントとして質問を投稿し、\n"
+        "   生じた場合は、devuntu-agent MCP の add_ticket_comment に type を指定せず通常コメントとして質問を投稿し、\n"
         "   その回は finish_agent_task を outcome='planned' で報告して終える\n"
         "   (返信は次回 revise として渡される)。\n"
-        "3. 対応の結果を add_ticket_comment に type='report' で投稿する"
+        "3. 対応の結果を devuntu-agent MCP の add_ticket_comment に type='report' で投稿する"
         "(plan や確認事項の投稿で終えた場合は不要)。\n"
-        "4. finish_agent_task で結果を報告する。\n"
+        "4. devuntu-agent MCP の finish_agent_task で結果を報告する。\n"
         "   outcome は planned(プランや確認事項を投稿して返信待ち) / completed(対応完了) /\n"
         "   skipped(見送り) / failed(失敗) から選ぶ。\n"
         "\n"
-        "finish_agent_task を必ず呼ぶこと。呼ばずに終わるとチケットは失敗として扱われる。"
+        "devuntu-agent MCP の finish_agent_task を必ず呼ぶこと。呼ばずに終わるとチケットは失敗として扱われる。"
     )
 
 
