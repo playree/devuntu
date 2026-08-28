@@ -1,4 +1,4 @@
-import { auth } from '@/lib/auth'
+import { auth } from '@/lib/auth/auth'
 import { en } from '@/locale/lang-en'
 import { type Metadata } from 'next'
 import { FC } from 'react'

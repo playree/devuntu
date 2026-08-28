@@ -1,13 +1,13 @@
 'use server'
 
-import { safeAuthAction } from '@/lib/action-server'
-import { assertBoardAccess, assertTicketAccess, isAdminActor, moveTicketToLane } from '@/lib/board'
+import { safeAuthAction } from '@/lib/action/action-server'
+import { assertBoardAccess, assertTicketAccess, isAdminActor, moveTicketToLane } from '@/lib/board/board'
+import { groupByLane, kanbanDoneSince, kanbanTicketWhere, MAX_KANBAN_CARDS, ticketDisplayId } from '@/lib/board/task'
 import { nowDate } from '@/lib/day'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
-import { scMoveTicket, scUUID } from '@/lib/schema'
-import { groupByLane, kanbanDoneSince, kanbanTicketWhere, MAX_KANBAN_CARDS, ticketDisplayId } from '@/lib/task'
+import { scMoveTicket, scUUID } from '@/lib/schema/schema'
 
 /**
  * かんばん表示用のボード + レーン別カード

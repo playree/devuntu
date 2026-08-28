@@ -1,22 +1,28 @@
 'use server'
 
-import { safeAuthAction } from '@/lib/action-server'
+import { safeAuthAction } from '@/lib/action/action-server'
 import {
   assertBoardAssignee,
   assertReplyTarget,
   assertTicketAccess,
   getTicketMentionCandidates,
   moveTicketToLane,
-} from '@/lib/board'
+} from '@/lib/board/board'
+import { assertTagIdsInBoard, syncTicketTags } from '@/lib/board/tag'
+import { extractMentionEmails, resolveMentionUserIds, ticketDisplayId, ticketShortPath } from '@/lib/board/task'
 import { dateOnlyToUtc } from '@/lib/day'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { notifyMention } from '@/lib/notify/notify-mention'
 import { prisma } from '@/lib/prisma'
-import { scCreateTicketComment, scPatchTicket, scUpdateTicketComment, scUpdateTicketStatus, scUUID } from '@/lib/schema'
+import {
+  scCreateTicketComment,
+  scPatchTicket,
+  scUpdateTicketComment,
+  scUpdateTicketStatus,
+  scUUID,
+} from '@/lib/schema/schema'
 import { makeUrl } from '@/lib/server-utils'
-import { assertTagIdsInBoard, syncTicketTags } from '@/lib/tag'
-import { extractMentionEmails, resolveMentionUserIds, ticketDisplayId, ticketShortPath } from '@/lib/task'
 
 /**
  * チケット詳細取得(本文 + コメント + 権限)

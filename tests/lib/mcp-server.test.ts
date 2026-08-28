@@ -6,7 +6,7 @@
  * 単体テストの対象外としている)。
  */
 
-import { createDevuntuMcpServer } from '@/lib/mcp-server'
+import { createDevuntuMcpServer } from '@/lib/mcp/mcp-server'
 import {
   addTicketCommentForMcp,
   createTicketForMcp,
@@ -16,13 +16,13 @@ import {
   searchTicketsForMcp,
   updateTicketCommentForMcp,
   updateTicketForMcp,
-} from '@/lib/mcp-ticket'
+} from '@/lib/mcp/mcp-ticket'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
 import { describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/mcp-ticket', () => ({
+vi.mock('@/lib/mcp/mcp-ticket', () => ({
   MCP_ASSIGNEE_ME: 'me',
   getTicketForMcp: vi.fn(),
   searchTicketsForMcp: vi.fn(),

@@ -6,7 +6,7 @@
  * その絞り込みと、重複・順序の保持を固定する。
  */
 
-import { MCP_SCOPES } from '@/lib/auth'
+import { MCP_SCOPES } from '@/lib/auth/auth'
 import {
   buildSignedOAuthQuery,
   consentScopeLocaleItem,

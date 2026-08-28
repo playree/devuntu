@@ -7,7 +7,7 @@
  */
 
 import { BoardKind, TagColor } from '@/generated/prisma/enums'
-import { dedupeTagNames, dedupeTagOptionsByName, diffTagIds, TAG_COLORS } from '@/lib/task'
+import { dedupeTagNames, dedupeTagOptionsByName, diffTagIds, TAG_COLORS } from '@/lib/board/task'
 import { describe, expect, it } from 'vitest'
 
 describe('TAG_COLORS / BoardKind: Prisma の enum と一致していること', () => {

@@ -1,6 +1,6 @@
 'use server'
 
-import { safeAuthAction } from '@/lib/action-server'
+import { safeAuthAction } from '@/lib/action/action-server'
 import {
   assertBoardAccess,
   assertBoardAssignee,
@@ -12,14 +12,8 @@ import {
   getBoardsMemberUsers,
   nextTicketNumber,
   reassignContentAttachments,
-} from '@/lib/board'
-import { dateOnlyToUtc, nowDate } from '@/lib/day'
-import { errInvalidOperation } from '@/lib/error'
-import { logger } from '@/lib/logger'
-import { notifyMention } from '@/lib/notify/notify-mention'
-import { prisma } from '@/lib/prisma'
-import { scCreateTag, scCreateTicket, scTicketListQuery, scUUID } from '@/lib/schema'
-import { assertTagIdsInBoard, listVisibleTags, rethrowDuplicatedTagName } from '@/lib/tag'
+} from '@/lib/board/board'
+import { assertTagIdsInBoard, listVisibleTags, rethrowDuplicatedTagName } from '@/lib/board/tag'
 import {
   buildTicketWhere,
   extractMentionEmails,
@@ -28,7 +22,13 @@ import {
   resolveMentionUserIds,
   ticketDisplayId,
   ticketListOrderBy,
-} from '@/lib/task'
+} from '@/lib/board/task'
+import { dateOnlyToUtc, nowDate } from '@/lib/day'
+import { errInvalidOperation } from '@/lib/error'
+import { logger } from '@/lib/logger'
+import { notifyMention } from '@/lib/notify/notify-mention'
+import { prisma } from '@/lib/prisma'
+import { scCreateTag, scCreateTicket, scTicketListQuery, scUUID } from '@/lib/schema/schema'
 
 /** タグの選択肢として返す列。`lib/tag.ts` の TagOption と一致させる */
 const TAG_SELECT = { id: true, boardId: true, name: true, color: true, order: true } as const

@@ -14,17 +14,17 @@ import {
   finishAgentTask,
   pickAgentTasks,
   resolveAgentTask,
-} from '@/lib/agent-runner'
-import { assertTicketAccess } from '@/lib/board'
-import { createDevuntuMcpServer } from '@/lib/mcp-server'
-import { resolveTicketId } from '@/lib/mcp-ticket'
+} from '@/lib/agent/agent-runner'
+import { assertTicketAccess } from '@/lib/board/board'
+import { createDevuntuMcpServer } from '@/lib/mcp/mcp-server'
+import { resolveTicketId } from '@/lib/mcp/mcp-ticket'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/agent-runner', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/lib/agent-runner')>()),
+vi.mock('@/lib/agent/agent-runner', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/agent/agent-runner')>()),
   findAgentRunner: vi.fn(),
   evaluateRunner: vi.fn(),
   pickAgentTasks: vi.fn(),
@@ -34,9 +34,9 @@ vi.mock('@/lib/agent-runner', async (importOriginal) => ({
   resolveAgentTask: vi.fn(),
 }))
 
-vi.mock('@/lib/board', () => ({ assertTicketAccess: vi.fn() }))
+vi.mock('@/lib/board/board', () => ({ assertTicketAccess: vi.fn() }))
 
-vi.mock('@/lib/mcp-ticket', () => ({
+vi.mock('@/lib/mcp/mcp-ticket', () => ({
   MCP_ASSIGNEE_ME: 'me',
   resolveTicketId: vi.fn(),
   getTicketForMcp: vi.fn(),

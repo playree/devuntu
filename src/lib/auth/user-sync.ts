@@ -1,4 +1,4 @@
-import { prisma } from './prisma'
+import { prisma } from '../prisma'
 
 /**
  * OIDC/ソーシャルログイン時にDBへ反映するプロフィール値を決める。

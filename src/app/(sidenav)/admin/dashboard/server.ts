@@ -2,8 +2,7 @@
 
 import { WidgetDefaultLayout } from '@/components/dashboard/widget-define'
 import { LinkWidgetUpdateInput } from '@/generated/prisma/models'
-import { safeAuthAction } from '@/lib/action-server'
-import { removeImageAttachment, saveImageAttachment } from '@/lib/attachment'
+import { safeAuthAction } from '@/lib/action/action-server'
 import { getString, setString } from '@/lib/kvs'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
@@ -14,7 +13,8 @@ import {
   scUpdateDashboard,
   scUpdateLinkWidget,
   scUUID,
-} from '@/lib/schema'
+} from '@/lib/schema/schema'
+import { removeImageAttachment, saveImageAttachment } from '@/lib/storage/attachment'
 import { uuidv7 } from 'uuidv7'
 
 /**

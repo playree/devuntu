@@ -1,8 +1,8 @@
 'use client'
 
 import type { AgentTaskState, BoardKind, TagColor, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
-import { AGENT_TASK_MODE_LOCALE, AGENT_TASK_MODES, AGENT_TASK_STATE_LOCALE } from '@/lib/agent'
-import { TICKET_PRIORITY_LOCALE, TICKET_STATUS_LOCALE, type BoardRole } from '@/lib/task'
+import { AGENT_TASK_MODE_LOCALE, AGENT_TASK_MODES, AGENT_TASK_STATE_LOCALE } from '@/lib/agent/agent'
+import { TICKET_PRIORITY_LOCALE, TICKET_STATUS_LOCALE, type BoardRole } from '@/lib/board/task'
 import { LocaleItemBase } from '@/locale'
 import { useLocale } from '@/locale/client'
 import { Chip, ChipProps, cn } from '@heroui/react'

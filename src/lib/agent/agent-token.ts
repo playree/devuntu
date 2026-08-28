@@ -11,11 +11,11 @@
 
 import { nanoid } from 'nanoid'
 import { createHash } from 'node:crypto'
-import { MCP_SCOPE } from './auth'
-import { nowDate, withinMinutes } from './day'
-import { logger } from './logger'
-import type { ResourceAuthResult } from './oauth/oauth-resource'
-import { prisma } from './prisma'
+import { MCP_SCOPE } from '../auth/auth'
+import { nowDate, withinMinutes } from '../day'
+import { logger } from '../logger'
+import type { ResourceAuthResult } from '../oauth/oauth-resource'
+import { prisma } from '../prisma'
 
 /** OAuth のアクセストークン(JWT)と取り違えないための接頭辞 */
 export const AGENT_TOKEN_PREFIX = 'devuntu_agent_'

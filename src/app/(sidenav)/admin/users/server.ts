@@ -1,11 +1,11 @@
 'use server'
 
-import { safeAuthAction } from '@/lib/action-server'
-import { auth } from '@/lib/auth'
+import { safeAuthAction } from '@/lib/action/action-server'
+import { auth } from '@/lib/auth/auth'
 import { ClientError, errInvalidOperation, errSystemError } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
-import { scCreateUser, scUpdateUser, scUUID } from '@/lib/schema'
+import { scCreateUser, scUpdateUser, scUUID } from '@/lib/schema/schema'
 import { headers } from 'next/headers'
 
 /**

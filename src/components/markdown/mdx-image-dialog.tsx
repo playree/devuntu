@@ -3,7 +3,7 @@
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
 import { PhotoIcon } from '@/components/icon'
-import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_SIZE } from '@/lib/schema'
+import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_SIZE } from '@/lib/schema/schema'
 import { useLocale } from '@/locale/client'
 import { Modal } from '@heroui/react'
 import {

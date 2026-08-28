@@ -8,7 +8,7 @@ import { SwitchCtrl } from '@/components/general/switch'
 import { CheckIcon } from '@/components/icon'
 import { MarkdownEditor } from '@/components/markdown/markdown-editor'
 import { notify } from '@/components/notify'
-import { parseAction } from '@/lib/action-client'
+import { parseAction } from '@/lib/action/action-client'
 import {
   AGENT_POLL_INTERVAL_OPTIONS,
   AGENT_TASK_MODE_LOCALE,
@@ -16,9 +16,9 @@ import {
   AGENT_WINDOW_MAX_MIN,
   AGENT_WINDOW_STEP_MIN,
   DEFAULT_POLL_INTERVAL_SEC,
-} from '@/lib/agent'
+} from '@/lib/agent/agent'
 import { COMMON_TIMEZONES, dayformat, DEFAULT_TZ, minToHHmm, tzOffsetLabel, tzOffsetMinutes } from '@/lib/day'
-import { SaveAgentRunner, scSaveAgentRunner } from '@/lib/schema'
+import { SaveAgentRunner, scSaveAgentRunner } from '@/lib/schema/schema'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'

@@ -20,8 +20,7 @@ import { notify } from '@/components/notify'
 import { AssigneeOption } from '@/components/ticket/assignee-select'
 import { useBoardName } from '@/components/ticket/ticket-chip'
 import type { TicketStatus } from '@/generated/prisma/enums'
-import { parseAction, useActionData } from '@/lib/action-client'
-import { nowDate } from '@/lib/day'
+import { parseAction, useActionData } from '@/lib/action/action-client'
 import {
   applyLaneMove,
   countLaneMap,
@@ -33,7 +32,8 @@ import {
   LaneMap,
   MAX_KANBAN_CARDS,
   parseDropTarget,
-} from '@/lib/task'
+} from '@/lib/board/task'
+import { nowDate } from '@/lib/day'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { DragDropProvider } from '@dnd-kit/react'

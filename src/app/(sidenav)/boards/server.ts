@@ -1,17 +1,17 @@
 'use server'
 
-import { safeAuthAction } from '@/lib/action-server'
+import { safeAuthAction } from '@/lib/action/action-server'
 import {
   countTicketsByBoard,
   ensurePrivateBoard,
   listAccessibleBoards,
   reserveBoardKey,
   rethrowDuplicatedBoardKey,
-} from '@/lib/board'
+} from '@/lib/board/board'
+import { TICKET_STATUSES } from '@/lib/board/task'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
-import { scCreateBoard } from '@/lib/schema'
-import { TICKET_STATUSES } from '@/lib/task'
+import { scCreateBoard } from '@/lib/schema/schema'
 
 /**
  * ボード一覧取得(自分がアサインされているボードのみ)

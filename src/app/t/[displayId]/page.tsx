@@ -1,5 +1,5 @@
-import { getServerSession } from '@/lib/auth'
-import { findTicketIdByDisplayId } from '@/lib/board'
+import { getServerSession } from '@/lib/auth/auth'
+import { findTicketIdByDisplayId } from '@/lib/board/board'
 import { notFound, redirect } from 'next/navigation'
 import { FC } from 'react'
 

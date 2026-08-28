@@ -8,6 +8,7 @@
 
 import { t } from '@/locale/server'
 import { after } from 'next/server'
+import { commentAnchorId, extractMentionEmails, normalizeMentionText, ticketShortPath } from '../board/task'
 import { logger } from '../logger'
 import { isMailConfigured, sendMentionMail } from '../mail'
 import { prisma } from '../prisma'
@@ -15,7 +16,6 @@ import { makeUrl } from '../server-utils'
 import { buildMentionMessage, SLACK_PROVIDER_ID } from '../slack/slack'
 import { filterSlackAllowedUserIds } from '../slack/slack-account'
 import { postSlackDm } from '../slack/slack-server'
-import { commentAnchorId, extractMentionEmails, normalizeMentionText, ticketShortPath } from '../task'
 import { commentExcerpt, MAX_NOTIFY_RECIPIENTS } from './notify'
 import { filterNotifiable } from './notify-setting'
 

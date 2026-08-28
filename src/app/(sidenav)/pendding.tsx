@@ -1,6 +1,6 @@
 'use client'
 
-import { authClient } from '@/lib/auth-client'
+import { authClient } from '@/lib/auth/auth-client'
 import { cn, Spinner } from '@heroui/react'
 
 export const getPendding = () => {

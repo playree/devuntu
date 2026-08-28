@@ -9,8 +9,7 @@ import {
   AGENT_WINDOW_STEP_MIN,
   MAX_POLL_INTERVAL_SEC,
   MIN_POLL_INTERVAL_SEC,
-} from './agent'
-import { NOTIFY_EVENTS } from './notify/notify'
+} from '../agent/agent'
 import {
   ASSIGNEE_NONE,
   BOARD_KEY_PATTERN,
@@ -23,7 +22,8 @@ import {
   TICKET_PRIORITIES,
   TICKET_SORT_COLUMNS,
   TICKET_STATUSES,
-} from './task'
+} from '../board/task'
+import { NOTIFY_EVENTS } from '../notify/notify'
 
 export const zName = z.string().min(2, el('@invalid_name')).max(30, el('@invalid_name'))
 export const zEmail = z.email(el('@invalid_email'))

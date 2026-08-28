@@ -7,10 +7,10 @@
  */
 
 import type { AgentRunAction, AgentRunStatus, AgentTaskMode, AgentTaskState } from '@/generated/prisma/enums'
-import { DEFAULT_TZ, minToHHmm, nowDate, toZone } from './day'
-import { logger } from './logger'
-import { prisma } from './prisma'
-import { OPEN_TICKET_STATUSES, ticketDisplayId } from './task'
+import { OPEN_TICKET_STATUSES, ticketDisplayId } from '../board/task'
+import { DEFAULT_TZ, minToHHmm, nowDate, toZone } from '../day'
+import { logger } from '../logger'
+import { prisma } from '../prisma'
 
 /**
  * 応答が返らないまま放置された実行を失敗として回収するまでの時間(分)。

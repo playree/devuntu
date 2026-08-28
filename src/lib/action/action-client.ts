@@ -2,8 +2,8 @@
 
 import { notify } from '@/components/notify'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { errClient } from './error'
-import { intervalOperation } from './sleep'
+import { errClient } from '../error'
+import { intervalOperation } from '../sleep'
 
 type MarkDataResolved<T> = T & {
   data: NonNullable<T extends { data?: infer U } ? U : never>

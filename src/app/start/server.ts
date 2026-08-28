@@ -1,11 +1,11 @@
 'use server'
 
-import { safeAction } from '@/lib/action-server'
-import { auth } from '@/lib/auth'
+import { safeAction } from '@/lib/action/action-server'
+import { auth } from '@/lib/auth/auth'
 import { errInvalidOperation, errSystemError } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
-import { scCreateAdmin } from '@/lib/schema'
+import { scCreateAdmin } from '@/lib/schema/schema'
 
 export const hasCompletedInitialSetup = async () => {
   const userCount = await prisma.user.count()

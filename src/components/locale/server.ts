@@ -1,6 +1,6 @@
 'use server'
 
-import { safeAuthAction } from '@/lib/action-server'
+import { safeAuthAction } from '@/lib/action/action-server'
 import { errValidation } from '@/lib/error'
 import { prisma } from '@/lib/prisma'
 import { localeConfig } from '@/locale/config'

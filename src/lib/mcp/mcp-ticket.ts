@@ -10,15 +10,8 @@ import {
   getTicketMentionCandidates,
   moveTicketToLane,
   nextTicketNumber,
-} from '@/lib/board'
-import { dateOnlyToUtc, nowDate } from '@/lib/day'
-import { errInvalidOperation } from '@/lib/error'
-import { logger } from '@/lib/logger'
-import { notifyMention } from '@/lib/notify/notify-mention'
-import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
-import { prisma } from '@/lib/prisma'
-import { makeUrl } from '@/lib/server-utils'
-import { assertTagIdsInBoard, syncTicketTags } from '@/lib/tag'
+} from '@/lib/board/board'
+import { assertTagIdsInBoard, syncTicketTags } from '@/lib/board/tag'
 import {
   buildTicketWhere,
   canMcpDeleteTicket,
@@ -30,7 +23,14 @@ import {
   ticketDisplayId,
   ticketListOrderBy,
   ticketShortPath,
-} from '@/lib/task'
+} from '@/lib/board/task'
+import { dateOnlyToUtc, nowDate } from '@/lib/day'
+import { errInvalidOperation } from '@/lib/error'
+import { logger } from '@/lib/logger'
+import { notifyMention } from '@/lib/notify/notify-mention'
+import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
+import { prisma } from '@/lib/prisma'
+import { makeUrl } from '@/lib/server-utils'
 
 /** 表示ID(ABC-42)でもチケットIDでも受け取れるようにする。エージェント向けツールからも使う */
 export const resolveTicketId = async (auth: ResourceAuth, ticketIdOrDisplayId: string): Promise<string> => {

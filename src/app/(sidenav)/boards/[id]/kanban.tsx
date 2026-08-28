@@ -15,9 +15,9 @@ import {
   TicketIdText,
 } from '@/components/ticket/ticket-chip'
 import type { TicketStatus } from '@/generated/prisma/enums'
+import { cardDropId, KANBAN_LANES, laneDropId } from '@/lib/board/task'
 import { preventParentSelection } from '@/lib/client-utils'
 import { dayformat, isDateOnlyOverdue } from '@/lib/day'
-import { cardDropId, KANBAN_LANES, laneDropId } from '@/lib/task'
 import { useLocale } from '@/locale/client'
 import { PointerActivationConstraints } from '@dnd-kit/dom'
 import { KeyboardSensor, PointerSensor, useDraggable, useDroppable } from '@dnd-kit/react'

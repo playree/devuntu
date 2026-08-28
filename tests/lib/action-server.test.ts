@@ -1,6 +1,6 @@
 /** 返す errorType でクライアントが分岐するため、エラー種別ごとの返却内容を固定する */
 
-import { handleServerError } from '@/lib/action-server'
+import { handleServerError } from '@/lib/action/action-server'
 import { ClientError, errNotFound } from '@/lib/error'
 import { APIError } from 'better-auth'
 import { describe, expect, it } from 'vitest'

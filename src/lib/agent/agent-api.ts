@@ -6,12 +6,12 @@
  * Proxy の対象外なので、認証・レート制限はこのファイルを通して各ルートハンドラで行う。
  */
 
+import { logger } from '../logger'
+import type { ResourceAuth } from '../oauth/oauth-resource'
+import { parseBearerToken } from '../oauth/oauth-resource'
+import { consumeRateLimit, type RateLimitRule } from '../rate-limit'
 import { findAgentRunner, type AgentRunnerRow } from './agent-runner'
 import { isAgentToken, verifyAgentToken } from './agent-token'
-import { logger } from './logger'
-import type { ResourceAuth } from './oauth/oauth-resource'
-import { parseBearerToken } from './oauth/oauth-resource'
-import { consumeRateLimit, type RateLimitRule } from './rate-limit'
 
 /**
  * ポーリング間隔は既定5分なので、通常は1分に1回も来ない。

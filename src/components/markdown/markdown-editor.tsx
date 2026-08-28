@@ -1,6 +1,6 @@
 'use client'
 
-import { getFieldConstraints } from '@/lib/schema-util'
+import { getFieldConstraints } from '@/lib/schema/schema-util'
 import { useLocale } from '@/locale/client'
 import { cn, ErrorMessage, Label, Skeleton, TextField } from '@heroui/react'
 import dynamic from 'next/dynamic'

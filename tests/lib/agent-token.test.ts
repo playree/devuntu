@@ -12,7 +12,7 @@ import {
   hashAgentToken,
   isAgentToken,
   verifyAgentToken,
-} from '@/lib/agent-token'
+} from '@/lib/agent/agent-token'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 

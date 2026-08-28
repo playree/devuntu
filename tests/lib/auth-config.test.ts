@@ -1,6 +1,6 @@
 /** パターンの書き間違いはゲートの素通りに直結するため、代表的なパスで固定する */
 
-import { authConfig } from '@/lib/auth-config'
+import { authConfig } from '@/lib/auth/auth-config'
 import { matchCondition } from '@/lib/match'
 import { describe, expect, it } from 'vitest'
 

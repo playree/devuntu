@@ -1,8 +1,8 @@
-import { getServerSession } from '@/lib/auth'
-import { getBoardAccess } from '@/lib/board'
+import { getServerSession } from '@/lib/auth/auth'
+import { getBoardAccess } from '@/lib/board/board'
 import { prisma } from '@/lib/prisma'
-import { getObject } from '@/lib/storage'
-import { isValidUploadKey } from '@/lib/upload'
+import { getObject } from '@/lib/storage/storage'
+import { isValidUploadKey } from '@/lib/storage/upload'
 import { NextResponse } from 'next/server'
 
 /**

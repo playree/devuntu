@@ -13,8 +13,8 @@ import {
   agentHandle,
   agentRunnerStatus,
   agentTokenExpiresAt,
-} from '@/lib/agent'
-import { zEmail } from '@/lib/schema'
+} from '@/lib/agent/agent'
+import { zEmail } from '@/lib/schema/schema'
 import { describe, expect, it } from 'vitest'
 
 describe('AGENT_HANDLE_PATTERN', () => {

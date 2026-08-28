@@ -1,4 +1,4 @@
-import { type MatchCondition } from './match'
+import { type MatchCondition } from '../match'
 
 export type AuthConfig = {
   path: {

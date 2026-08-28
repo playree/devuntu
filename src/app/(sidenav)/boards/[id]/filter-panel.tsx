@@ -14,7 +14,7 @@ import {
   KanbanFilter,
   MAX_TICKET_TAGS,
   TICKET_PRIORITIES,
-} from '@/lib/task'
+} from '@/lib/board/task'
 import { useLocale } from '@/locale/client'
 import { FC } from 'react'
 

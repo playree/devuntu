@@ -1,4 +1,5 @@
-import { registerAgentSetupTool, registerAgentTools } from '@/lib/mcp-agent'
+import { ASSIGNEE_NONE, TICKET_PRIORITIES, TICKET_STATUSES } from '@/lib/board/task'
+import { registerAgentSetupTool, registerAgentTools } from '@/lib/mcp/mcp-agent'
 import {
   addTicketCommentForMcp,
   createTicketForMcp,
@@ -9,10 +10,9 @@ import {
   searchTicketsForMcp,
   updateTicketCommentForMcp,
   updateTicketForMcp,
-} from '@/lib/mcp-ticket'
+} from '@/lib/mcp/mcp-ticket'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
-import { zCommentContent, zCommentType, zDueDate, zTagIds, zTicketContent, zTicketTitle } from '@/lib/schema'
-import { ASSIGNEE_NONE, TICKET_PRIORITIES, TICKET_STATUSES } from '@/lib/task'
+import { zCommentContent, zCommentType, zDueDate, zTagIds, zTicketContent, zTicketTitle } from '@/lib/schema/schema'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 

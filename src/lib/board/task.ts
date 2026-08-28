@@ -9,7 +9,7 @@
 import type { TagColor, TicketCommentType, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
 import type { TicketOrderByWithRelationInput, TicketWhereInput } from '@/generated/prisma/models'
 import type { LocaleItemBase } from '@/locale'
-import { nowDate, utcToDateOnly } from './day'
+import { nowDate, utcToDateOnly } from '../day'
 
 /** チケットのステータス(定義順は enum と同じ) */
 export const TICKET_STATUSES = ['backlog', 'todo', 'doing', 'done'] as const satisfies readonly TicketStatus[]

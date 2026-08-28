@@ -10,8 +10,8 @@
 
 import type { Prisma } from '@/generated/prisma/client'
 import type { TagColor } from '@/generated/prisma/enums'
-import { errClient, errInvalidOperation } from './error'
-import { isUniqueViolation, prisma } from './prisma'
+import { errClient, errInvalidOperation } from '../error'
+import { isUniqueViolation, prisma } from '../prisma'
 import { diffTagIds } from './task'
 
 type Db = Prisma.TransactionClient | typeof prisma

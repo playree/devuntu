@@ -1,4 +1,4 @@
-import { assertReplyTarget } from '@/lib/board'
+import { assertReplyTarget } from '@/lib/board/board'
 import { ClientError } from '@/lib/error'
 import { describe, expect, it, vi } from 'vitest'
 
