@@ -2,13 +2,27 @@
 
 import { safeAuthAction } from '@/lib/action/action-server'
 import { AGENT_RUN_HISTORY_LIMIT, agentTokenExpiresAt } from '@/lib/agent/agent'
+import {
+  addAgentApprover,
+  getAgentApprovers as findAgentApprovers,
+  listAgentApproverUsers,
+  removeAgentApprover,
+  syncAgentApproverGroups,
+} from '@/lib/agent/agent-approver'
 import { generateAgentToken, hashAgentToken } from '@/lib/agent/agent-token'
 import { auth } from '@/lib/auth/auth'
 import { isValidTimezone, nowDate } from '@/lib/day'
 import { errInvalidOperation, errValidation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
-import { scIssueAgentToken, scSaveAgentRunner, scUpdateAgent, scUUID } from '@/lib/schema/schema'
+import {
+  scAgentApproverUser,
+  scIssueAgentToken,
+  scSaveAgentRunner,
+  scSetAgentApproverGroups,
+  scUpdateAgent,
+  scUUID,
+} from '@/lib/schema/schema'
 import { headers } from 'next/headers'
 import { assertAgent } from '../agent-util'
 
@@ -70,6 +84,78 @@ export const deleteAgent = safeAuthAction
     })
 
     logger.info({ id }, 'agent deleted')
+    return { id }
+  })
+
+/**
+ * 承認者(エージェントモードの変更を許可する相手)
+ *
+ * 1人も設定していないエージェントは、誰もエージェントモードを変更できない
+ * (= そのエージェントは自動実行の承認を受けられない)。
+ */
+
+/** 設定済みの承認者。ユーザーとグループの ID をそれぞれ返す */
+export const getAgentApprovers = safeAuthAction
+  .metadata({ actionName: 'getAgentApprovers', role: 'admin' })
+  .inputSchema(scUUID)
+  .action(async ({ parsedInput: { id } }) => {
+    await assertAgent(id)
+
+    return await findAgentApprovers(id)
+  })
+export type GetAgentApproversReturnType = Awaited<ReturnType<typeof getAgentApprovers>>['data']
+
+/** 承認ユーザー一覧(テーブル表示用) */
+export const getAgentApproverUsers = safeAuthAction
+  .metadata({ actionName: 'getAgentApproverUsers', role: 'admin' })
+  .inputSchema(scUUID)
+  .action(async ({ parsedInput: { id } }) => {
+    await assertAgent(id)
+
+    return await listAgentApproverUsers(id)
+  })
+export type GetAgentApproverUsersReturnType = Awaited<ReturnType<typeof getAgentApproverUsers>>['data']
+
+/** 承認ユーザーを1人追加する */
+export const addAgentApproverUser = safeAuthAction
+  .metadata({ actionName: 'addAgentApproverUser', role: 'admin' })
+  .inputSchema(scAgentApproverUser)
+  .action(async ({ parsedInput: { id, userId } }) => {
+    await assertAgent(id)
+    await assertApproverUsersExist([userId])
+
+    await addAgentApprover(id, userId)
+
+    logger.info({ id, userId }, 'agent approver user added')
+    return { id }
+  })
+
+/** 承認ユーザーを1人外す */
+export const removeAgentApproverUser = safeAuthAction
+  .metadata({ actionName: 'removeAgentApproverUser', role: 'admin' })
+  .inputSchema(scAgentApproverUser)
+  .action(async ({ parsedInput: { id, userId } }) => {
+    await assertAgent(id)
+
+    await removeAgentApprover(id, userId)
+
+    logger.info({ id, userId }, 'agent approver user removed')
+    return { id }
+  })
+
+/** 承認グループの保存(総入れ替え) */
+export const saveAgentApproverGroups = safeAuthAction
+  .metadata({ actionName: 'saveAgentApproverGroups', role: 'admin' })
+  .inputSchema(scSetAgentApproverGroups)
+  .action(async ({ parsedInput: { id, groupIds } }) => {
+    const uniqueGroupIds = [...new Set(groupIds)]
+
+    await assertAgent(id)
+    await assertGroupsExist(uniqueGroupIds)
+
+    await syncAgentApproverGroups(id, uniqueGroupIds)
+
+    logger.info({ id, groups: uniqueGroupIds.length }, 'agent approver groups saved')
     return { id }
   })
 
@@ -202,6 +288,17 @@ export const getAgentRuns = safeAuthAction
     })
   })
 export type GetAgentRunsReturnType = Awaited<ReturnType<typeof getAgentRuns>>['data']
+
+/** 承認者に指定されたユーザーの存在確認。エージェント同士は承認者にできない */
+const assertApproverUsersExist = async (userIds: string[]) => {
+  if (userIds.length === 0) {
+    return
+  }
+  const count = await prisma.user.count({ where: { id: { in: userIds }, isAgent: false } })
+  if (count !== userIds.length) {
+    throw errInvalidOperation()
+  }
+}
 
 /** グループ存在確認(渡された全 groupId が存在しなければ INVALID_OPERATION) */
 const assertGroupsExist = async (groupIds: string[]) => {

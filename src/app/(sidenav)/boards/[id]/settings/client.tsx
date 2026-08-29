@@ -3,6 +3,7 @@
 import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
+import { usePagingList } from '@/components/general/paging'
 import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
 import {
@@ -34,6 +35,7 @@ import {
   deleteBoardTag,
   getBoardAssignments,
   getBoardDetail,
+  getBoardMembers,
   getBoardTags,
   updateBoardTag,
 } from './server'
@@ -50,6 +52,11 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
   const { data: tags, reload: reloadTags } = useActionData(() => getBoardTags({ id: boardId }))
   // アサイン編集は manage 権限が要るため、取得できない場合は undefined のまま(フォームを出さない)
   const { data: assignments, reload: reloadAssignments } = useActionData(() => getBoardAssignments({ id: boardId }))
+  // ボードグループの保存と合わせてリロードできるよう、ここで生成して BoardMembers に渡す
+  const memberList = usePagingList({
+    load: async () => (await parseAction(getBoardMembers({ id: boardId }))) ?? [],
+    sort: { init: { column: 'name', direction: 'ascending' } },
+  })
 
   if (isLoading) {
     return <PanelSkeleton />
@@ -135,6 +142,7 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
               boardId={board.id}
               assignments={canManageBoard ? assignments : undefined}
               reloadAssignments={reloadAssignments}
+              pagingList={memberList}
             />
           </AccordionSection>
         )}
@@ -157,7 +165,10 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
               key={assignments.groupIds.join(',')}
               boardId={board.id}
               assignments={assignments}
-              reload={reloadAssignments}
+              reload={() => {
+                reloadAssignments()
+                memberList.reload()
+              }}
             />
           </AccordionSection>
         )}

@@ -14,6 +14,7 @@ import {
   scTicketSearch,
   scUpdateIntegrationSettings,
   scUpdateNotifySetting,
+  scUpdateTicketAgentMode,
   scUpdateUser,
   zBoardKey,
   zPassword,
@@ -61,6 +62,21 @@ describe('scPatchTicket: 渡された項目だけを更新する', () => {
   it('クリア不可の項目に null は受け付けない', () => {
     expect(scPatchTicket.safeParse({ id: ticketId, priority: null }).success, '優先度').toBe(false)
     expect(scPatchTicket.safeParse({ id: ticketId, title: null }).success, '件名').toBe(false)
+  })
+})
+
+describe('scUpdateTicketAgentMode: エージェントモードは承認者だけの専用入力', () => {
+  it('null は「選択待ち」として受け付ける', () => {
+    const res = scUpdateTicketAgentMode.parse({ id: ticketId, agentMode: null })
+    expect(res.agentMode).toBeNull()
+  })
+
+  it('未指定は受け付けない(patchTicket と違い常に値を送る)', () => {
+    expect(scUpdateTicketAgentMode.safeParse({ id: ticketId }).success).toBe(false)
+  })
+
+  it('未知のモードは受け付けない', () => {
+    expect(scUpdateTicketAgentMode.safeParse({ id: ticketId, agentMode: 'yolo' }).success).toBe(false)
   })
 })
 

@@ -169,6 +169,12 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
               icon={<TicketIcon />}
               closeMenu={closeMenu}
             />
+            <MenuButton // エージェント(承認)
+              to='/agents'
+              text={t('agent')}
+              icon={<CpuChipIcon />}
+              closeMenu={closeMenu}
+            />
           </AccordionSection>
 
           <AccordionSection // 管理者メニュー

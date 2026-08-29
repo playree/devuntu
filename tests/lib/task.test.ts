@@ -89,46 +89,128 @@ describe('evaluateTicketAccess: ボードのロールから権限を決める', 
   // プライベートチケットもプライベートボード(本人が owner)に属するため、
   // 「本人のみ全操作可」は boardRole='owner' のケースでそのまま担保される
   it('owner は削除まで可能', () => {
-    const res = evaluateTicketAccess({ userId: 'u1', createdById: 'u9', boardRole: 'owner', archived: false })
-    expect(res).toEqual({ canView: true, canEdit: true, canDelete: true })
+    const res = evaluateTicketAccess({
+      userId: 'u1',
+      createdById: 'u9',
+      boardRole: 'owner',
+      archived: false,
+      isAgentApprover: false,
+    })
+    expect(res).toEqual({ canView: true, canEdit: true, canDelete: true, canEditAgentMode: false })
   })
 
   it('プライベートボード相当(自分が owner かつ作成者)は全操作可', () => {
-    const res = evaluateTicketAccess({ userId: 'u1', createdById: 'u1', boardRole: 'owner', archived: false })
+    const res = evaluateTicketAccess({
+      userId: 'u1',
+      createdById: 'u1',
+      boardRole: 'owner',
+      archived: false,
+      isAgentApprover: false,
+    })
     expect(res, 'プライベートチケットの従来挙動と一致する').toEqual({
       canView: true,
       canEdit: true,
       canDelete: true,
+      canEditAgentMode: false,
     })
   })
 
   it('member かつ作成者なら削除可能', () => {
-    const res = evaluateTicketAccess({ userId: 'u1', createdById: 'u1', boardRole: 'member', archived: false })
+    const res = evaluateTicketAccess({
+      userId: 'u1',
+      createdById: 'u1',
+      boardRole: 'member',
+      archived: false,
+      isAgentApprover: false,
+    })
     expect(res.canDelete, '自分が作成したチケットは削除できる').toBe(true)
   })
 
   it('member かつ非作成者は削除不可(閲覧・編集は可能)', () => {
-    const res = evaluateTicketAccess({ userId: 'u1', createdById: 'u9', boardRole: 'member', archived: false })
-    expect(res).toEqual({ canView: true, canEdit: true, canDelete: false })
+    const res = evaluateTicketAccess({
+      userId: 'u1',
+      createdById: 'u9',
+      boardRole: 'member',
+      archived: false,
+      isAgentApprover: false,
+    })
+    expect(res).toEqual({ canView: true, canEdit: true, canDelete: false, canEditAgentMode: false })
   })
 
   it('非メンバー(boardRole=null)は作成者でも一切不可', () => {
-    const res = evaluateTicketAccess({ userId: 'u1', createdById: 'u1', boardRole: null, archived: false })
-    expect(res).toEqual({ canView: false, canEdit: false, canDelete: false })
+    const res = evaluateTicketAccess({
+      userId: 'u1',
+      createdById: 'u1',
+      boardRole: null,
+      archived: false,
+      isAgentApprover: false,
+    })
+    expect(res).toEqual({ canView: false, canEdit: false, canDelete: false, canEditAgentMode: false })
   })
 
   it('アーカイブ済みボードは owner でも読み取り専用', () => {
-    const res = evaluateTicketAccess({ userId: 'u1', createdById: 'u1', boardRole: 'owner', archived: true })
+    const res = evaluateTicketAccess({
+      userId: 'u1',
+      createdById: 'u1',
+      boardRole: 'owner',
+      archived: true,
+      isAgentApprover: false,
+    })
     expect(res, 'アーカイブ解除はボード設定側の権限なのでチケットは書けない').toEqual({
       canView: true,
       canEdit: false,
       canDelete: false,
+      canEditAgentMode: false,
     })
   })
 
   it('アーカイブ済みボードは member でも書き込み不可', () => {
-    const res = evaluateTicketAccess({ userId: 'u1', createdById: 'u1', boardRole: 'member', archived: true })
-    expect(res).toEqual({ canView: true, canEdit: false, canDelete: false })
+    const res = evaluateTicketAccess({
+      userId: 'u1',
+      createdById: 'u1',
+      boardRole: 'member',
+      archived: true,
+      isAgentApprover: false,
+    })
+    expect(res).toEqual({ canView: true, canEdit: false, canDelete: false, canEditAgentMode: false })
+  })
+
+  it('承認者は非メンバーでも閲覧とエージェントモードの変更ができる', () => {
+    const res = evaluateTicketAccess({
+      userId: 'u1',
+      createdById: 'u9',
+      boardRole: null,
+      archived: false,
+      isAgentApprover: true,
+    })
+    expect(res, 'エージェントモード以外の編集はボード権限に従う').toEqual({
+      canView: true,
+      canEdit: false,
+      canDelete: false,
+      canEditAgentMode: true,
+    })
+  })
+
+  it('承認者でない owner はエージェントモードを変更できない', () => {
+    const res = evaluateTicketAccess({
+      userId: 'u1',
+      createdById: 'u1',
+      boardRole: 'owner',
+      archived: false,
+      isAgentApprover: false,
+    })
+    expect(res.canEditAgentMode, '承認者が0人ならボードの owner でも承認できない').toBe(false)
+  })
+
+  it('アーカイブ済みボードは承認者でもエージェントモードを変更できない', () => {
+    const res = evaluateTicketAccess({
+      userId: 'u1',
+      createdById: 'u9',
+      boardRole: 'owner',
+      archived: true,
+      isAgentApprover: true,
+    })
+    expect(res).toEqual({ canView: true, canEdit: false, canDelete: false, canEditAgentMode: false })
   })
 })
 

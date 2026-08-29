@@ -65,7 +65,7 @@
 - 開発サーバーは必ず `http://localhost:3000`。`BETTER_AUTH_URL` が localhost:3000 固定のため、別ポートでは認証の POST が origin チェックで 403 になる
 - 既に `pnpm dev` が起動している場合は再利用し、再起動しない。自分で起動した場合は確認が終わったら停止する
 - ログインはメールOTP。OTP は `verification` テーブル(`sign-in-otp-<小文字メール>`)から取得する
-- 開発DBは実データなので、指示が無い限り画面から作成・更新・削除の操作はしない
+
 - 開発サーバーのログは `.work/dev-server.log`、スクリーンショットは `.work/playwright` に出力する
 
 # ロケールの構成ファイル

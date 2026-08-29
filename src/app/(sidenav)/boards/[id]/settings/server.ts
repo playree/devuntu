@@ -159,7 +159,10 @@ export const getBoardAssignments = safeAuthAction
           groups: { select: { groupId: true } },
         },
       }),
-      prisma.user.findMany({ select: { id: true, name: true, email: true }, orderBy: { name: 'asc' } }),
+      prisma.user.findMany({
+        select: { id: true, name: true, email: true, image: true, isAgent: true },
+        orderBy: { name: 'asc' },
+      }),
       prisma.group.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }),
     ])
     if (!board) {
@@ -170,7 +173,7 @@ export const getBoardAssignments = safeAuthAction
       ownerIds: board.members.filter((m) => m.role === 'owner').map((m) => m.userId),
       memberIds: board.members.filter((m) => m.role === 'member').map((m) => m.userId),
       groupIds: board.groups.map((g) => g.groupId),
-      userOptions: Object.fromEntries(users.map((u) => [u.id, `${u.name} (${u.email})`])) as Record<string, string>,
+      userOptions: users, // 構造は `components/user-select.tsx` の UserSelectOption と一致させること
       groupOptions: Object.fromEntries(groups.map((g) => [g.id, g.name])) as Record<string, string>,
     }
   })

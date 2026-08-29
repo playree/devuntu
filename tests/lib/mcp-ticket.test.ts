@@ -29,11 +29,13 @@ const ticketAccess: TicketAccess = {
   canView: true,
   canEdit: true,
   canDelete: true,
+  canEditAgentMode: false,
   ticketId: 'ticket-1',
   boardId: 'board-1',
   boardKind: 'team',
   createdById: 'u1',
   assigneeId: null,
+  assigneeIsAgent: false,
   status: 'todo',
   boardRole: 'member',
 }

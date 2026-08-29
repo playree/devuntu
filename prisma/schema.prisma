@@ -64,6 +64,11 @@ model User {
   agentToken         AgentToken?  @relation("AgentTokenOwner")
   createdAgentTokens AgentToken[] @relation("AgentTokenCreator")
   agentRunner        AgentRunner? @relation("AgentRunnerOwner")
+  /// このユーザー(エージェント)に設定された承認者
+  agentApprovers      AgentApprover[]      @relation("AgentApproverAgent")
+  agentApproverGroups AgentApproverGroup[] @relation("AgentApproverGroupAgent")
+  /// このユーザーが承認者になっているエージェント
+  approverOf          AgentApprover[]      @relation("AgentApproverUser")
 
   @@unique([email])
   @@map("user")
@@ -164,6 +169,38 @@ model AgentRun {
   @@index([runnerId, startedAt])
   @@index([ticketId])
   @@map("agent_run")
+}
+
+/// エージェントモードの変更(= 自動実行の承認)を許可する相手。ユーザー指定。
+/// 1人も居ないエージェントは誰もエージェントモードを変更できない
+model AgentApprover {
+  id      String @id @default(uuid(7))
+  agentId String
+  agent   User   @relation("AgentApproverAgent", fields: [agentId], references: [id], onDelete: Cascade)
+  userId  String
+  user    User   @relation("AgentApproverUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  // @@unique が (agentId, ...) の先頭索引を兼ねるため @@index([agentId]) は不要
+  @@unique([agentId, userId])
+  @@index([userId])
+  @@map("agent_approver")
+}
+
+/// {@link AgentApprover} のグループ指定版。BoardMember / BoardGroup と同じ2枚構成に揃える
+model AgentApproverGroup {
+  id      String @id @default(uuid(7))
+  agentId String
+  agent   User   @relation("AgentApproverGroupAgent", fields: [agentId], references: [id], onDelete: Cascade)
+  groupId String
+  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([agentId, groupId])
+  @@index([groupId])
+  @@map("agent_approver_group")
 }
 
 /// チケットの処理方式。チケット単位で制御する
@@ -571,6 +608,9 @@ model Group {
 
   // add Board
   boardGroups BoardGroup[]
+
+  // add AI Agent
+  agentApproverGroups AgentApproverGroup[]
 
   @@map("group")
 }

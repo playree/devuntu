@@ -10,9 +10,9 @@ import { CheckIcon, PlusIcon } from '@/components/icon'
 import { MarkdownEditor } from '@/components/markdown/markdown-editor'
 import { MentionCandidate } from '@/components/markdown/mention-menu'
 import { notify } from '@/components/notify'
-import { AssigneeSelectCtrl } from '@/components/ticket/assignee-select'
 import { TagSelect } from '@/components/ticket/tag-select'
 import { useBoardName, useTicketOptions } from '@/components/ticket/ticket-chip'
+import { UserSelectCtrl } from '@/components/user-select'
 import type { TicketStatus } from '@/generated/prisma/enums'
 import { parseAction } from '@/lib/action/action-client'
 import { CreateTicketIn, CreateTicketOut, scCreateTicket } from '@/lib/schema/schema'
@@ -142,7 +142,7 @@ export const AddModal: FC<
           <SingleSelectCtrl control={control} name='priority' groupOptions={priorityOptions} label={t('priority')} />
         </div>
         <div className='col-span-6 md:col-span-2'>
-          <AssigneeSelectCtrl control={control} name='assigneeId' options={boardAssignees} isClearable />
+          <UserSelectCtrl control={control} name='assigneeId' options={boardAssignees} isClearable />
         </div>
         <div className='col-span-6 md:col-span-3'>
           <DatePickerCtrl control={control} name='dueDate' label={t('due_date')} errorMessage={fet(errors.dueDate)} />

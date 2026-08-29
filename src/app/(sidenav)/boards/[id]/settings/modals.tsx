@@ -7,6 +7,7 @@ import { SingleSelectCtrl } from '@/components/general/select'
 import { CheckIcon, PencilSquareIcon, UserPlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { useRoleOptions } from '@/components/ticket/ticket-chip'
+import { UserSelectCtrl } from '@/components/user-select'
 import { parseAction } from '@/lib/action/action-client'
 import type { BoardRole } from '@/lib/board/task'
 import { scUpsertBoardMember, UpsertBoardMemberIn } from '@/lib/schema/schema'
@@ -34,9 +35,7 @@ export const AddMemberModal: FC<ModalBaseProps & { boardId: string; assignments:
   const roleOptions = useRoleOptions()
 
   const assignedIds = new Set([...assignments.ownerIds, ...assignments.memberIds])
-  const userOptions = Object.fromEntries(
-    Object.entries(assignments.userOptions).filter(([userId]) => !assignedIds.has(userId)),
-  )
+  const userOptions = assignments.userOptions.filter((user) => !assignedIds.has(user.id))
 
   const {
     control,
@@ -57,7 +56,8 @@ export const AddMemberModal: FC<ModalBaseProps & { boardId: string; assignments:
       state={state}
       onSubmit={handleSubmit(async (req) => {
         await parseAction(addBoardMember(req))
-        notify.success(t('msg_added_target', { target: assignments.userOptions[req.userId] ?? '' }))
+        const target = assignments.userOptions.find((user) => user.id === req.userId)
+        notify.success(t('msg_added_target', { target: target?.name ?? '' }))
         reload()
         state.close()
       })}
@@ -75,11 +75,14 @@ export const AddMemberModal: FC<ModalBaseProps & { boardId: string; assignments:
     >
       <GridBox>
         <div className='col-span-12'>
-          <SingleSelectCtrl
+          <UserSelectCtrl
             control={control}
             name='userId'
-            groupOptions={userOptions}
+            options={userOptions}
+            showEmail
             label={t('user')}
+            placeholder={t('select_user')}
+            emptyMessage={t('msg_no_matching_users')}
             errorMessage={fet(errors.userId)}
           />
         </div>

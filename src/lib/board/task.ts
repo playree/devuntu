@@ -93,6 +93,8 @@ export type TicketAccessInput = {
   boardRole: BoardRole | null
   /** 所属ボードがアーカイブ済みか。アーカイブ済みは読み取り専用にする */
   archived: boolean
+  /** 担当エージェントの承認者か。担当がエージェントでなければ常に false */
+  isAgentApprover: boolean
 }
 
 export type TicketPermission = {
@@ -100,6 +102,8 @@ export type TicketPermission = {
   /** タイトル/本文/タグ/優先度/期限/担当/ステータスの変更 + コメント投稿 */
   canEdit: boolean
   canDelete: boolean
+  /** エージェントモードの変更(= 自動実行の承認)。ボードの権限とは独立した軸 */
+  canEditAgentMode: boolean
 }
 
 /**
@@ -111,19 +115,25 @@ export type TicketPermission = {
  * アーカイブ済みボードは閲覧だけ許し、チケットへの書き込み(編集 / 削除 / 移動 /
  * ステータス変更 / コメント)を一律で塞ぐ。ボード自体の設定変更は別経路
  * (assertBoardAccess)なので、アーカイブの解除は引き続き可能。
+ *
+ * エージェントモードの変更だけは承認者の軸で決まる。ボードの owner でも承認者でなければ
+ * 変更できず、逆に承認者はボードのメンバーでなくても閲覧と変更ができる。
  */
 export const evaluateTicketAccess = ({
   userId,
   createdById,
   boardRole,
   archived,
+  isAgentApprover,
 }: TicketAccessInput): TicketPermission => {
-  const canView = boardRole !== null
-  const canWrite = canView && !archived
+  const isMember = boardRole !== null
+  const canWrite = isMember && !archived
   return {
-    canView,
+    // 承認者はボードのメンバーでなくても、担当エージェントのチケットを確認できる
+    canView: isMember || isAgentApprover,
     canEdit: canWrite,
     canDelete: canWrite && (boardRole === 'owner' || createdById === userId),
+    canEditAgentMode: isAgentApprover && !archived,
   }
 }
 
