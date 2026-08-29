@@ -306,7 +306,6 @@ export type LocaleItemBase =
   | 'msg_agent_mode_desc'
   | 'msg_agent_runner_desc'
   | 'msg_agent_token_once'
-  | 'msg_agent_window_desc'
   | 'msg_archive_board'
   | 'msg_avatar_desc'
   | 'msg_board_key_change'

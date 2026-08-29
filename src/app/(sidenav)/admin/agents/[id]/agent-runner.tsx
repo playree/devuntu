@@ -119,38 +119,10 @@ const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; refre
           <NoticePanel className='text-xs'>{t('msg_agent_runner_desc')}</NoticePanel>
         </div>
 
-        <div className='col-span-12'>
+        <div className='col-span-12 flex items-center md:col-span-4'>
           <SwitchCtrl control={control} name='enabled' id='agent-runner-enabled' label={t('enabled')} />
         </div>
-
-        <div className='col-span-6 md:col-span-3'>
-          <WindowSelect control={control} name='activeFromMin' label={t('start_time')} />
-        </div>
-        <div className='col-span-6 md:col-span-3'>
-          <WindowSelect control={control} name='activeToMin' label={t('end_time')} />
-        </div>
-        <div className='col-span-12 md:col-span-6'>
-          <Controller
-            control={control}
-            name='timezone'
-            render={({ field: { value, onChange, onBlur, ref } }) => (
-              <SingleSelectField
-                groupOptions={timezoneOptions}
-                label={t('timezone')}
-                errorMessage={fet(errors.timezone)}
-                value={value ?? DEFAULT_TZ}
-                onChange={onChange}
-                onBlur={onBlur}
-                ref={ref}
-              />
-            )}
-          />
-        </div>
-        <div className='col-span-12'>
-          <NoticePanel className='text-xs'>{t('msg_agent_window_desc')}</NoticePanel>
-        </div>
-
-        <div className='col-span-6'>
+        <div className='col-span-6 md:col-span-4'>
           <Controller
             control={control}
             name='pollIntervalSec'
@@ -171,7 +143,7 @@ const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; refre
             )}
           />
         </div>
-        <div className='col-span-6'>
+        <div className='col-span-6 md:col-span-4'>
           <Controller
             control={control}
             name='defaultMode'
@@ -185,6 +157,30 @@ const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; refre
                     onChange(key)
                   }
                 }}
+                onBlur={onBlur}
+                ref={ref}
+              />
+            )}
+          />
+        </div>
+
+        <div className='col-span-6 md:col-span-3'>
+          <WindowSelect control={control} name='activeFromMin' label={t('start_time')} />
+        </div>
+        <div className='col-span-6 md:col-span-3'>
+          <WindowSelect control={control} name='activeToMin' label={t('end_time')} />
+        </div>
+        <div className='col-span-12 md:col-span-6'>
+          <Controller
+            control={control}
+            name='timezone'
+            render={({ field: { value, onChange, onBlur, ref } }) => (
+              <SingleSelectField
+                groupOptions={timezoneOptions}
+                label={t('timezone')}
+                errorMessage={fet(errors.timezone)}
+                value={value ?? DEFAULT_TZ}
+                onChange={onChange}
                 onBlur={onBlur}
                 ref={ref}
               />

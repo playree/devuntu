@@ -311,10 +311,8 @@ Please copy and use the connection information above.
   msg_agent_mode_desc:
     'Choose how the agent handles this ticket. Plan first posts a plan and waits for your reply; Auto carries out the work and reports back.',
   msg_agent_runner_desc:
-    'Settings for the runner that polls for assigned tickets. Claude starts only while these conditions are met.',
+    'Settings for the runner that polls for assigned tickets. Claude starts only while these conditions are met. Leaving either start or end unset means all day; a start later than the end crosses midnight (nights only).',
   msg_agent_token_once: 'This is the only time the token is shown. Copy it before closing.',
-  msg_agent_window_desc:
-    'Leaving either end unset means all day. A start later than the end crosses midnight (nights only).',
   msg_archive_board: 'Archiving hides the board from the default board list. Tickets are kept.',
   msg_avatar_desc: 'Setting a custom image stops it from being overwritten by Devuntu on future sign-ins.',
   msg_board_key_change: 'Changing the key means ticket IDs already shared will no longer point to their tickets.',
