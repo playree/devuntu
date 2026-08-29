@@ -35,15 +35,17 @@ export const AdminAgentDetailClient: FC<{ agentId: string; baseUrl: string }> = 
   const { t } = useLocale()
   const router = useRouter()
 
-  const { data: agent, reload, isLoading } = useActionData(() => getAgent({ id: agentId }))
+  const { data: agent, reload, refresh, isLoading } = useActionData(() => getAgent({ id: agentId }))
   const {
     data: runner,
     reload: reloadRunner,
+    refresh: refreshRunner,
     isLoading: isRunnerLoading,
   } = useActionData(() => getAgentRunner({ id: agentId }))
   const {
     data: token,
     reload: reloadToken,
+    refresh: refreshToken,
     isLoading: isTokenLoading,
   } = useActionData(() => getAgentToken({ id: agentId }))
   const { data: groupOptions } = useActionData(getGroupOptions)
@@ -93,11 +95,11 @@ export const AdminAgentDetailClient: FC<{ agentId: string; baseUrl: string }> = 
 
       <Accordion allowsMultipleExpanded defaultExpandedKeys={defaultExpandedKeys}>
         <AccordionSection id='agent_profile' icon={<InformationCircleIcon />} title={t('agent_profile')}>
-          <AgentProfile agent={agent} groupOptions={groupOptions ?? {}} reload={reload} />
+          <AgentProfile agent={agent} groupOptions={groupOptions ?? {}} refresh={refresh} />
         </AccordionSection>
 
         <AccordionSection id='agent_runner' icon={<Cog6ToothIcon />} title={t('agent_runner')}>
-          <AgentRunner agentId={agentId} current={runner} isLoading={isRunnerLoading} reload={reloadRunner} />
+          <AgentRunner agentId={agentId} current={runner} isLoading={isRunnerLoading} refresh={refreshRunner} />
         </AccordionSection>
 
         <AccordionSection id='agent_run_history' icon={<ClockIcon />} title={t('agent_run_history')}>
@@ -110,7 +112,7 @@ export const AdminAgentDetailClient: FC<{ agentId: string; baseUrl: string }> = 
             baseUrl={baseUrl}
             current={token}
             isLoading={isTokenLoading}
-            reload={reloadToken}
+            refresh={refreshToken}
           />
         </AccordionSection>
 

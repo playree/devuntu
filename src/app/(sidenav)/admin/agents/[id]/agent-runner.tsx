@@ -66,10 +66,10 @@ const StatusField: FC<{ label: string; children: ReactNode }> = ({ label, childr
   </div>
 )
 
-const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; reload: () => void }> = ({
+const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; refresh: () => void }> = ({
   agentId,
   current,
-  reload,
+  refresh,
 }) => {
   const { t, fet } = useLocale()
   const tz = useUserTimezone()
@@ -86,6 +86,7 @@ const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; reloa
   const {
     control,
     handleSubmit,
+    reset,
     formState: { isSubmitting, errors },
   } = useForm<SaveAgentRunner>({
     resolver: zodResolver(scSaveAgentRunner),
@@ -109,7 +110,8 @@ const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; reloa
       onSubmit={handleSubmit(async (req) => {
         await parseAction(saveAgentRunner(req))
         notify.success(t('msg_saved'))
-        reload()
+        reset(req)
+        refresh()
       })}
     >
       <GridBox isSmart>
@@ -231,10 +233,10 @@ export const AgentRunner: FC<{
   agentId: string
   current: GetAgentRunnerReturnType
   isLoading: boolean
-  reload: () => void
-}> = ({ agentId, current, isLoading, reload }) => {
+  refresh: () => void
+}> = ({ agentId, current, isLoading, refresh }) => {
   if (isLoading) {
     return <PanelSkeleton />
   }
-  return <RunnerForm agentId={agentId} current={current} reload={reload} />
+  return <RunnerForm agentId={agentId} current={current} refresh={refresh} />
 }

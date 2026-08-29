@@ -29,10 +29,10 @@ const MetaRow: FC<{ label: string; children: ReactNode }> = ({ label, children }
 )
 
 /** エージェントの概要 + 編集フォーム。識別子(メール)は保存済みメンションが解決できなくなるため編集させない */
-export const AgentProfile: FC<{ agent: Agent; groupOptions: Record<string, string>; reload: () => void }> = ({
+export const AgentProfile: FC<{ agent: Agent; groupOptions: Record<string, string>; refresh: () => void }> = ({
   agent,
   groupOptions,
-  reload,
+  refresh,
 }) => {
   const { t, fet } = useLocale()
   const tz = useUserTimezone()
@@ -58,7 +58,7 @@ export const AgentProfile: FC<{ agent: Agent; groupOptions: Record<string, strin
         await parseAction(updateAgent(req))
         notify.success(t('msg_saved'))
         reset(req)
-        reload()
+        refresh()
       })}
     >
       <GridBox isSmart>
