@@ -221,11 +221,14 @@ export const updateTicketAgentMode = safeAuthAction
     }
 
     // 選択待ちへ戻したら処理状態も消す(残すと履歴として誤読される)
-    await prisma.ticket.update({
-      where: { id },
+    // 担当者がエージェントであることを更新条件に含め、確認〜更新の間に担当者が変わっても不整合が残らないようにする
+    const result = await prisma.ticket.updateMany({
+      where: { id, assignee: { isAgent: true } },
       data: { agentMode, ...(agentMode === null && { agentState: null }) },
-      select: { id: true },
     })
+    if (result.count === 0) {
+      throw errInvalidOperation()
+    }
 
     logger.info({ userId: user.id, id, agentMode }, 'ticket agent mode updated')
     return { id, agentMode }
