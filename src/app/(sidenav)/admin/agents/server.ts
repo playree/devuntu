@@ -67,6 +67,18 @@ export const getGroupOptions = safeAuthAction
     return Object.fromEntries(groups.map((g) => [g.id, g.name])) as Record<string, string>
   })
 
+/** 承認者候補のユーザー選択肢。エージェント同士は承認者にできない */
+export const getApproverUserOptions = safeAuthAction
+  .metadata({ actionName: 'getApproverUserOptions', role: 'admin' })
+  .action(async () => {
+    return await prisma.user.findMany({
+      where: { isAgent: false },
+      select: { id: true, name: true, email: true, image: true },
+      orderBy: { name: 'asc' },
+    })
+  })
+export type GetApproverUserOptionsReturnType = Awaited<ReturnType<typeof getApproverUserOptions>>['data']
+
 /**
  * エージェント作成。
  *

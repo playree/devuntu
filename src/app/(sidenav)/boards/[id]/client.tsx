@@ -17,8 +17,8 @@ import {
   ViewColumnsIcon,
 } from '@/components/icon'
 import { notify } from '@/components/notify'
-import { AssigneeOption } from '@/components/ticket/assignee-select'
 import { useBoardName } from '@/components/ticket/ticket-chip'
+import { UserSelectOption } from '@/components/user-select'
 import type { TicketStatus } from '@/generated/prisma/enums'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import {
@@ -58,7 +58,7 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
 
   const { data, reload, refresh, isLoading } = useActionData(() => getBoardKanban({ id: boardId }))
   const [options, setOptions] = useState<GetTicketFormOptionsReturnType>()
-  const [assigneeOptions, setAssigneeOptions] = useState<AssigneeOption[]>([])
+  const [assigneeOptions, setAssigneeOptions] = useState<UserSelectOption[]>([])
   const [filter, setFilter] = useKanbanFilter()
   // 詳細パネルに表示中のチケット。未選択なら undefined
   const [selectedId, setSelectedId] = useState<string>()

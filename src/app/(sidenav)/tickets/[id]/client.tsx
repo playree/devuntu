@@ -22,7 +22,6 @@ import {
 import { MarkdownField } from '@/components/markdown/markdown-editor'
 import { MentionCandidate } from '@/components/markdown/mention-menu'
 import { notify } from '@/components/notify'
-import { AssigneeSelectField } from '@/components/ticket/assignee-select'
 import { MentionChips } from '@/components/ticket/mention-chips'
 import { TagIdSelectField } from '@/components/ticket/tag-select'
 import {
@@ -35,7 +34,8 @@ import {
   useBoardName,
   useTicketOptions,
 } from '@/components/ticket/ticket-chip'
-import type { TicketStatus } from '@/generated/prisma/enums'
+import { UserSelectField } from '@/components/user-select'
+import type { AgentTaskMode, TicketStatus } from '@/generated/prisma/enums'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { dayformat, utcToDateOnly } from '@/lib/day'
 import { PatchTicketIn, scPatchTicket, zTicketTitle } from '@/lib/schema/schema'
@@ -53,7 +53,7 @@ import {
   GetTicketFormOptionsReturnType,
 } from '../server'
 import { TicketComments } from './comments'
-import { getTicket, patchTicket, updateTicketStatus } from './server'
+import { getTicket, patchTicket, updateTicketAgentMode, updateTicketStatus } from './server'
 
 /** 内容の文字数上限(MDXEditor には maxLength 属性が無いのでスキーマから取る) */
 const MAX_CONTENT_LENGTH = getFieldConstraints(scPatchTicket, 'content').maxLength
@@ -61,8 +61,8 @@ const MAX_CONTENT_LENGTH = getFieldConstraints(scPatchTicket, 'content').maxLeng
 /** 保存中の項目。同時に複数の項目は保存させない */
 type EditField = 'title' | 'status' | 'priority' | 'assigneeId' | 'dueDate' | 'tagIds' | 'agentMode'
 
-/** 保存中の楽観値。status は patchTicket の対象外なので別枠で持つ */
-type Draft = Partial<PatchTicketIn> & { status?: TicketStatus }
+/** 保存中の楽観値。status / agentMode は patchTicket の対象外なので別枠で持つ */
+type Draft = Partial<PatchTicketIn> & { status?: TicketStatus; agentMode?: AgentTaskMode | null }
 
 /**
  * 編集できない項目の 1 セル。
@@ -205,6 +205,21 @@ export const TicketDetailClient: FC<{
       await refreshAll()
     } catch {
       // エラー表示は parseAction 側で済んでいる。楽観値を捨ててサーバー値に戻す
+      setDraft({})
+    } finally {
+      setSavingField(undefined)
+    }
+  }
+
+  /** エージェントモードは承認者だけの操作なので専用 Action を使う */
+  const changeAgentMode = async (agentMode: AgentTaskMode | null) => {
+    setSavingField('agentMode')
+    setDraft({ agentMode })
+    try {
+      await parseAction(updateTicketAgentMode({ id, agentMode }))
+      notify.success(t('msg_saved'))
+      await refreshAll()
+    } catch {
       setDraft({})
     } finally {
       setSavingField(undefined)
@@ -405,7 +420,7 @@ export const TicketDetailClient: FC<{
 
           <div className='col-span-6 md:col-span-2'>
             {canEditAssignee ? (
-              <AssigneeSelectField
+              <UserSelectField
                 isClearable
                 options={boardAssignees}
                 value={assigneeId}
@@ -458,7 +473,7 @@ export const TicketDetailClient: FC<{
           {ticket.assigneeIsAgent && (
             <>
               <div className='col-span-6 md:col-span-3'>
-                {canEdit ? (
+                {ticket.canEditAgentMode ? (
                   <SingleSelectField
                     label={t('agent_mode')}
                     groupOptions={agentModeOptions}
@@ -467,7 +482,7 @@ export const TicketDetailClient: FC<{
                     onChange={(next) => {
                       const value = next === AGENT_MODE_NONE ? null : (next as typeof agentMode)
                       if (next !== null && value !== (ticket.agentMode ?? null)) {
-                        void patch('agentMode', { agentMode: value })
+                        void changeAgentMode(value)
                       }
                     }}
                   />

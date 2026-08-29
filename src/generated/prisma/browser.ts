@@ -41,6 +41,17 @@ export type AgentRunner = Prisma.AgentRunnerModel
  */
 export type AgentRun = Prisma.AgentRunModel
 /**
+ * Model AgentApprover
+ * エージェントモードの変更(= 自動実行の承認)を許可する相手。ユーザー指定。
+ * 1人も居ないエージェントは誰もエージェントモードを変更できない
+ */
+export type AgentApprover = Prisma.AgentApproverModel
+/**
+ * Model AgentApproverGroup
+ * {@link AgentApprover} のグループ指定版。BoardMember / BoardGroup と同じ2枚構成に揃える
+ */
+export type AgentApproverGroup = Prisma.AgentApproverGroupModel
+/**
  * Model Session
  * 
  */

@@ -4,9 +4,9 @@ import { DateRangePickerField } from '@/components/general/date-picker'
 import { GridBox } from '@/components/general/grid'
 import { SingleSelectField } from '@/components/general/select'
 import { MultiTagField } from '@/components/general/tag-group'
-import { AssigneeOption, AssigneeSelectField } from '@/components/ticket/assignee-select'
 import { TagNameSelectField, TagSelectOption } from '@/components/ticket/tag-select'
 import { useTicketOptions } from '@/components/ticket/ticket-chip'
+import { UserSelectField, UserSelectOption } from '@/components/user-select'
 import {
   ASSIGNEE_NONE,
   KANBAN_DONE_DAYS_OPTIONS,
@@ -30,7 +30,7 @@ export const KanbanFilterPanel: FC<{
   filter: KanbanFilter
   onChange: (filter: KanbanFilter) => void
   /** ボードメンバー */
-  assigneeOptions: AssigneeOption[]
+  assigneeOptions: UserSelectOption[]
   /** そのボードのタグ(呼び出し側で絞り込み済み) */
   tags: TagSelectOption[]
 }> = ({ filter, onChange, assigneeOptions, tags }) => {
@@ -38,7 +38,7 @@ export const KanbanFilterPanel: FC<{
   const { priorityOptions } = useTicketOptions()
 
   // 先頭はユーザーではないセンチネルなのでアバターを出さない。「すべて」は選択肢ではなく未選択で表す
-  const assigneeChoices: AssigneeOption[] = [
+  const assigneeChoices: UserSelectOption[] = [
     { id: ASSIGNEE_NONE, name: t('unassigned'), hideAvatar: true },
     ...assigneeOptions,
   ]
@@ -54,8 +54,9 @@ export const KanbanFilterPanel: FC<{
   return (
     <GridBox isSmart>
       <div className='col-span-6 md:col-span-3'>
-        <AssigneeSelectField
+        <UserSelectField
           options={assigneeChoices}
+          showEmail // 表示名が同じユーザーを見分けられるようにする(メールでも絞り込める)
           value={filter.assignee}
           isClearable // 選択後に「すべて」(未選択)へ戻す手段
           placeholder={t('all')}

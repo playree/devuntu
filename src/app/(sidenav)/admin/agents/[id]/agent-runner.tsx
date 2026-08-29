@@ -66,10 +66,10 @@ const StatusField: FC<{ label: string; children: ReactNode }> = ({ label, childr
   </div>
 )
 
-const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; reload: () => void }> = ({
+const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; refresh: () => void }> = ({
   agentId,
   current,
-  reload,
+  refresh,
 }) => {
   const { t, fet } = useLocale()
   const tz = useUserTimezone()
@@ -86,6 +86,7 @@ const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; reloa
   const {
     control,
     handleSubmit,
+    reset,
     formState: { isSubmitting, errors },
   } = useForm<SaveAgentRunner>({
     resolver: zodResolver(scSaveAgentRunner),
@@ -109,7 +110,8 @@ const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; reloa
       onSubmit={handleSubmit(async (req) => {
         await parseAction(saveAgentRunner(req))
         notify.success(t('msg_saved'))
-        reload()
+        reset(req)
+        refresh()
       })}
     >
       <GridBox isSmart>
@@ -117,38 +119,10 @@ const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; reloa
           <NoticePanel className='text-xs'>{t('msg_agent_runner_desc')}</NoticePanel>
         </div>
 
-        <div className='col-span-12'>
+        <div className='col-span-12 flex items-center md:col-span-4'>
           <SwitchCtrl control={control} name='enabled' id='agent-runner-enabled' label={t('enabled')} />
         </div>
-
-        <div className='col-span-6 md:col-span-3'>
-          <WindowSelect control={control} name='activeFromMin' label={t('start_time')} />
-        </div>
-        <div className='col-span-6 md:col-span-3'>
-          <WindowSelect control={control} name='activeToMin' label={t('end_time')} />
-        </div>
-        <div className='col-span-12 md:col-span-6'>
-          <Controller
-            control={control}
-            name='timezone'
-            render={({ field: { value, onChange, onBlur, ref } }) => (
-              <SingleSelectField
-                groupOptions={timezoneOptions}
-                label={t('timezone')}
-                errorMessage={fet(errors.timezone)}
-                value={value ?? DEFAULT_TZ}
-                onChange={onChange}
-                onBlur={onBlur}
-                ref={ref}
-              />
-            )}
-          />
-        </div>
-        <div className='col-span-12'>
-          <NoticePanel className='text-xs'>{t('msg_agent_window_desc')}</NoticePanel>
-        </div>
-
-        <div className='col-span-6'>
+        <div className='col-span-6 md:col-span-4'>
           <Controller
             control={control}
             name='pollIntervalSec'
@@ -169,7 +143,7 @@ const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; reloa
             )}
           />
         </div>
-        <div className='col-span-6'>
+        <div className='col-span-6 md:col-span-4'>
           <Controller
             control={control}
             name='defaultMode'
@@ -183,6 +157,30 @@ const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; reloa
                     onChange(key)
                   }
                 }}
+                onBlur={onBlur}
+                ref={ref}
+              />
+            )}
+          />
+        </div>
+
+        <div className='col-span-6 md:col-span-3'>
+          <WindowSelect control={control} name='activeFromMin' label={t('start_time')} />
+        </div>
+        <div className='col-span-6 md:col-span-3'>
+          <WindowSelect control={control} name='activeToMin' label={t('end_time')} />
+        </div>
+        <div className='col-span-12 md:col-span-6'>
+          <Controller
+            control={control}
+            name='timezone'
+            render={({ field: { value, onChange, onBlur, ref } }) => (
+              <SingleSelectField
+                groupOptions={timezoneOptions}
+                label={t('timezone')}
+                errorMessage={fet(errors.timezone)}
+                value={value ?? DEFAULT_TZ}
+                onChange={onChange}
                 onBlur={onBlur}
                 ref={ref}
               />
@@ -231,10 +229,10 @@ export const AgentRunner: FC<{
   agentId: string
   current: GetAgentRunnerReturnType
   isLoading: boolean
-  reload: () => void
-}> = ({ agentId, current, isLoading, reload }) => {
+  refresh: () => void
+}> = ({ agentId, current, isLoading, refresh }) => {
   if (isLoading) {
     return <PanelSkeleton />
   }
-  return <RunnerForm agentId={agentId} current={current} reload={reload} />
+  return <RunnerForm agentId={agentId} current={current} refresh={refresh} />
 }

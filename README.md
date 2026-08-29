@@ -60,6 +60,7 @@ Devuntu は、かんばん形式のボード/チケット管理を中心に、�
 | ------------------ | --------------------- |
 | ユーザー管理       | `/admin/users`        |
 | エージェント管理   | `/admin/agents`       |
+| エージェント詳細   | `/admin/agents/[id]`  |
 | グループ管理       | `/admin/groups`       |
 | ダッシュボード管理 | `/admin/dashboard`    |
 | 設定(連携設定)     | `/admin/settings`     |
@@ -72,6 +73,7 @@ Devuntu は、かんばん形式のボード/チケット管理を中心に、�
 | サインイン       | `/auth/signin` | メールOTPによるサインイン                   |
 | 初期セットアップ | `/start`       | 初回のみ                                    |
 | 空き時間の共有   | `/cal/[id]`    | **認証不要の公開ページ**。共有URLで参照する |
+| 認可の同意       | `/consent`     | MCPクライアントのOAuth認可フローで表示      |
 
 各画面のアクセス制御の実装詳細、および API のアクセス制御は
 [docs/screens.md](docs/screens.md) を参照。

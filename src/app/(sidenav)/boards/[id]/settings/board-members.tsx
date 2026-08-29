@@ -4,7 +4,7 @@ import { ActionCell } from '@/components/action-cell'
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
 import { useModalState } from '@/components/general/modal'
-import { usePagingList } from '@/components/general/paging'
+import { PagingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
 import { ArrowPathIcon, PencilSquareIcon, UserPlusIcon } from '@/components/icon'
@@ -15,7 +15,7 @@ import { useLocale } from '@/locale/client'
 import { ButtonGroup, Table } from '@heroui/react'
 import { FC } from 'react'
 import { AddMemberModal, UpdateMemberRoleModal } from './modals'
-import { GetBoardAssignmentsReturnType, GetBoardMembersReturnType, getBoardMembers, removeBoardMember } from './server'
+import { GetBoardAssignmentsReturnType, GetBoardMembersReturnType, removeBoardMember } from './server'
 
 type Assignments = NonNullable<GetBoardAssignmentsReturnType>
 type BoardMemberItem = NonNullable<GetBoardMembersReturnType>[number]
@@ -26,30 +26,24 @@ type BoardMemberItem = NonNullable<GetBoardMembersReturnType>[number]
  * 一覧はグループ経由のメンバーも含む。グループ経由のメンバーは BoardMember 行を持たないため
  * ロールが空欄で、削除もできない(外すにはボードグループの設定を変える)。
  * 編集(ロール変更)は直接ロールの付与になるので、グループ経由でも実行できる。
+ *
+ * ボードグループの保存と合わせてリロードできるよう、`usePagingList` の呼び出しは
+ * 親(client.tsx)側で行い、ここでは結果だけを受け取る(agent-run-history.tsx と同じ形)
  */
 export const BoardMembers: FC<{
   boardId: string
   assignments?: Assignments
   reloadAssignments: () => void
-}> = ({ boardId, assignments, reloadAssignments }) => {
+  pagingList: PagingList<BoardMemberItem>
+}> = ({ boardId, assignments, reloadAssignments, pagingList }) => {
   const { t } = useLocale()
   const addModalState = useModalState()
   const updateModalState = useModalState<BoardMemberItem>()
 
-  const list = usePagingList({
-    load: async () => {
-      const res = await parseAction(getBoardMembers({ id: boardId }))
-      return res ?? []
-    },
-    sort: {
-      init: { column: 'name', direction: 'ascending' },
-    },
-  })
-
   // アサインの選択肢(候補ユーザー)も追加後に変わるため、一覧と一緒に取り直す
   const reload = () => {
     reloadAssignments()
-    list.reload()
+    pagingList.reload()
   }
 
   return (
@@ -64,7 +58,7 @@ export const BoardMembers: FC<{
             <UserPlusIcon />
           </MultiButton>
         )}
-        <MultiButton isIconOnly tooltip={t('reload')} onPress={() => list.reload()}>
+        <MultiButton isIconOnly tooltip={t('reload')} onPress={() => pagingList.reload()}>
           {assignments && <ButtonGroup.Separator />}
           <ArrowPathIcon />
         </MultiButton>
@@ -72,7 +66,7 @@ export const BoardMembers: FC<{
 
       <MultiTable
         ariaLabel='board member list'
-        pagingList={list}
+        pagingList={pagingList}
         isSmart
         columns={[
           { id: 'name', name: t('name'), isRowHeader: true, allowsSorting: true, minWidth: 100 },

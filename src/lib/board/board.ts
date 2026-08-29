@@ -11,6 +11,7 @@
 
 import { Prisma } from '@/generated/prisma/client'
 import type { BoardKind, TicketStatus } from '@/generated/prisma/enums'
+import { isAgentApprover } from '../agent/agent-approver'
 import { nowDate } from '../day'
 import { errClient, errInvalidOperation } from '../error'
 import { isUniqueViolation, prisma } from '../prisma'
@@ -398,7 +399,9 @@ export const getBoardMemberUsers = async (boardId: string, tx: Db = prisma): Pro
 export type AssigneeCandidate = {
   id: string
   name: string
+  email: string
   image: string | null
+  isAgent: boolean
   /** 引数で渡したボードのうち、そのユーザーがメンバーであるもの */
   boardIds: string[]
 }
@@ -412,21 +415,18 @@ export const getBoardsMemberUsers = async (boardIds: string[], tx: Db = prisma):
     return []
   }
 
+  const userSelect = { id: true, name: true, email: true, image: true, isAgent: true } as const
   const boards = await tx.board.findMany({
     where: { id: { in: boardIds } },
     select: {
       id: true,
-      members: { select: { user: { select: { id: true, name: true, image: true } } } },
-      groups: {
-        select: {
-          group: { select: { userGroups: { select: { user: { select: { id: true, name: true, image: true } } } } } },
-        },
-      },
+      members: { select: { user: { select: userSelect } } },
+      groups: { select: { group: { select: { userGroups: { select: { user: { select: userSelect } } } } } } },
     },
   })
 
   const users = new Map<string, AssigneeCandidate>()
-  const add = (boardId: string, user: { id: string; name: string; image: string | null }) => {
+  const add = (boardId: string, user: Omit<AssigneeCandidate, 'boardIds'>) => {
     const found = users.get(user.id)
     if (!found) {
       users.set(user.id, { ...user, boardIds: [boardId] })
@@ -572,6 +572,8 @@ export type TicketAccess = TicketPermission & {
   boardKind: BoardKind
   createdById: string | null
   assigneeId: string | null
+  /** 担当がエージェントか。エージェントモードを出し分ける画面側で使う */
+  assigneeIsAgent: boolean
   status: TicketStatus
   boardRole: BoardRole | null
 }
@@ -587,7 +589,14 @@ export const getTicketAccess = async (
 ): Promise<TicketAccess | null> => {
   const ticket = await tx.ticket.findUnique({
     where: { id: ticketId },
-    select: { id: true, boardId: true, createdById: true, assigneeId: true, status: true },
+    select: {
+      id: true,
+      boardId: true,
+      createdById: true,
+      assigneeId: true,
+      status: true,
+      assignee: { select: { isAgent: true } },
+    },
   })
   if (!ticket) {
     return null
@@ -601,23 +610,38 @@ export const getTicketAccess = async (
     return null
   }
 
+  // 担当がエージェントのときだけ承認者を引く(人間担当・未割り当てでは問い合わせない)
+  const approver =
+    ticket.assigneeId && ticket.assignee?.isAgent ? await isAgentApprover(actor.id, ticket.assigneeId, tx) : false
+
   const permission = evaluateTicketAccess({
     userId: actor.id,
     createdById: ticket.createdById,
     boardRole: access?.role ?? null,
     // アクセス不可なら boardRole が null になり書き込みは元々許可されないが、値は実態に合わせておく
     archived: board.archived,
+    isAgentApprover: approver,
   })
 
-  const { id, ...rest } = ticket
-  return { ticketId: id, ...rest, boardKind: board.kind, boardRole: access?.role ?? null, ...permission }
+  const { id, assignee, ...rest } = ticket
+  return {
+    ticketId: id,
+    ...rest,
+    assigneeIsAgent: assignee?.isAgent ?? false,
+    boardKind: board.kind,
+    boardRole: access?.role ?? null,
+    ...permission,
+  }
 }
 
-/** レコード単位の認可の入口。NG なら errInvalidOperation() を throw */
+/**
+ * レコード単位の認可の入口。NG なら errInvalidOperation() を throw。
+ * `agentMode` はエージェントモードの変更専用で、ボードの権限ではなく承認者かどうかで決まる。
+ */
 export const assertTicketAccess = async (
   actor: Actor,
   ticketId: string,
-  need: 'view' | 'edit' | 'delete',
+  need: 'view' | 'edit' | 'delete' | 'agentMode',
   tx: Db = prisma,
 ): Promise<TicketAccess> => {
   const access = await getTicketAccess(actor, ticketId, tx)
@@ -625,7 +649,12 @@ export const assertTicketAccess = async (
     throw errInvalidOperation()
   }
 
-  const allowed = need === 'view' ? access.canView : need === 'edit' ? access.canEdit : access.canDelete
+  const allowed = {
+    view: access.canView,
+    edit: access.canEdit,
+    delete: access.canDelete,
+    agentMode: access.canEditAgentMode,
+  }[need]
   if (!allowed) {
     throw errInvalidOperation()
   }

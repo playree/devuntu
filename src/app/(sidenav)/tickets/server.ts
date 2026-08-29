@@ -169,7 +169,7 @@ export const createTicketTag = safeAuthAction
 /**
  * 担当者の選択肢。そのボードのメンバー(プライベートボードなら本人のみ)。
  * 並びは `getBoardMemberUsers` の名前順のまま。
- * 構造は `components/ticket/assignee-select.tsx` の AssigneeOption と一致させること。
+ * 構造は `components/user-select.tsx` の UserSelectOption と一致させること。
  *
  * メンション候補も同じ集合なのでこの 1 本にまとめている。email はメンションの
  * 保存形式(`@[メールアドレス]`)と候補の絞り込みに使う。

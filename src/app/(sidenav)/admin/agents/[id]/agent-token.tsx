@@ -47,8 +47,8 @@ export const AgentToken: FC<{
   baseUrl: string
   current: GetAgentTokenReturnType
   isLoading: boolean
-  reload: () => void
-}> = ({ agentId, baseUrl, current, isLoading, reload }) => {
+  refresh: () => void
+}> = ({ agentId, baseUrl, current, isLoading, refresh }) => {
   const { t } = useLocale()
   const tz = useUserTimezone()
   const { confirmModal } = useConfirmModal()
@@ -88,7 +88,7 @@ export const AgentToken: FC<{
         const res = await parseAction(issueAgentToken(req))
         setIssued(res.token)
         setStep({ id: 'OUTPUT', direction: 1 })
-        reload()
+        refresh()
       })}
     >
       <div className='min-h-72 overflow-hidden'>

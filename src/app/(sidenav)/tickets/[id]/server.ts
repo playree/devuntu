@@ -18,6 +18,7 @@ import { prisma } from '@/lib/prisma'
 import {
   scCreateTicketComment,
   scPatchTicket,
+  scUpdateTicketAgentMode,
   scUpdateTicketComment,
   scUpdateTicketStatus,
   scUUID,
@@ -132,6 +133,7 @@ export const getTicket = safeAuthAction
       boardRole: access.boardRole,
       canEdit: access.canEdit,
       canDelete: access.canDelete,
+      canEditAgentMode: access.canEditAgentMode,
     }
   })
 export type GetTicketReturnType = Awaited<ReturnType<typeof getTicket>>['data']
@@ -141,11 +143,12 @@ export type GetTicketReturnType = Awaited<ReturnType<typeof getTicket>>['data']
  *
  * 渡された項目だけを更新する(undefined = 変更しない / null = クリア)。
  * status はレーン位置の再採番を伴うため updateTicketStatus 側で扱う。
+ * agentMode は承認者だけの操作なので updateTicketAgentMode 側で扱う。
  */
 export const patchTicket = safeAuthAction
   .metadata({ actionName: 'patchTicket', role: 'user' })
   .inputSchema(scPatchTicket)
-  .action(async ({ ctx: { user }, parsedInput: { id, assigneeId, tagIds, dueDate, agentMode, ...rest } }) => {
+  .action(async ({ ctx: { user }, parsedInput: { id, assigneeId, tagIds, dueDate, ...rest } }) => {
     const { ticket, addedMentionUserIds } = await prisma.$transaction(async (tx) => {
       const access = await assertTicketAccess(user, id, 'edit', tx)
 
@@ -177,8 +180,6 @@ export const patchTicket = safeAuthAction
           ...rest,
           ...(dueDate !== undefined && { dueDate: dateOnlyToUtc(dueDate) }),
           ...(assigneeId !== undefined && { assigneeId: assigneeId ?? null }),
-          // エージェントに任せるのをやめたら処理状態も消す(残すと履歴として誤読される)
-          ...(agentMode !== undefined && { agentMode, ...(agentMode === null && { agentState: null }) }),
           // 担当が人間 / 未割り当てになったら、エージェントの処理設定は残さない
           ...(assigneeId !== undefined && !assigneeIsAgent && { agentMode: null, agentState: null }),
           mentionedUserIds,
@@ -201,6 +202,36 @@ export const patchTicket = safeAuthAction
 
     logger.info({ userId: user.id, id }, 'ticket patched')
     return { id: ticket.id, title: ticket.title }
+  })
+
+/**
+ * エージェントモードのみの更新(= エージェントの自動実行を承認する操作)
+ *
+ * 承認者はボードのメンバーとは限らず `patchTicket` の 'edit' を通せないため、
+ * 専用アクションとして 'agentMode' で認可する。
+ */
+export const updateTicketAgentMode = safeAuthAction
+  .metadata({ actionName: 'updateTicketAgentMode', role: 'user' })
+  .inputSchema(scUpdateTicketAgentMode)
+  .action(async ({ ctx: { user }, parsedInput: { id, agentMode } }) => {
+    const access = await assertTicketAccess(user, id, 'agentMode')
+    // 担当がエージェントでなくなった直後などに、意味を持たない値が残らないようにする
+    if (!access.assigneeIsAgent) {
+      throw errInvalidOperation()
+    }
+
+    // 選択待ちへ戻したら処理状態も消す(残すと履歴として誤読される)
+    // 担当者がエージェントであることを更新条件に含め、確認〜更新の間に担当者が変わっても不整合が残らないようにする
+    const result = await prisma.ticket.updateMany({
+      where: { id, assignee: { isAgent: true } },
+      data: { agentMode, ...(agentMode === null && { agentState: null }) },
+    })
+    if (result.count === 0) {
+      throw errInvalidOperation()
+    }
+
+    logger.info({ userId: user.id, id, agentMode }, 'ticket agent mode updated')
+    return { id, agentMode }
   })
 
 /**

@@ -184,6 +184,7 @@ export type GroupWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"Group"> | Date | string
   userGroups?: Prisma.UserGroupListRelationFilter
   boardGroups?: Prisma.BoardGroupListRelationFilter
+  agentApproverGroups?: Prisma.AgentApproverGroupListRelationFilter
 }
 
 export type GroupOrderByWithRelationInput = {
@@ -194,6 +195,7 @@ export type GroupOrderByWithRelationInput = {
   updatedAt?: Prisma.SortOrder
   userGroups?: Prisma.UserGroupOrderByRelationAggregateInput
   boardGroups?: Prisma.BoardGroupOrderByRelationAggregateInput
+  agentApproverGroups?: Prisma.AgentApproverGroupOrderByRelationAggregateInput
 }
 
 export type GroupWhereUniqueInput = Prisma.AtLeast<{
@@ -207,6 +209,7 @@ export type GroupWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"Group"> | Date | string
   userGroups?: Prisma.UserGroupListRelationFilter
   boardGroups?: Prisma.BoardGroupListRelationFilter
+  agentApproverGroups?: Prisma.AgentApproverGroupListRelationFilter
 }, "id">
 
 export type GroupOrderByWithAggregationInput = {
@@ -239,6 +242,7 @@ export type GroupCreateInput = {
   updatedAt?: Date | string
   userGroups?: Prisma.UserGroupCreateNestedManyWithoutGroupInput
   boardGroups?: Prisma.BoardGroupCreateNestedManyWithoutGroupInput
+  agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutGroupInput
 }
 
 export type GroupUncheckedCreateInput = {
@@ -249,6 +253,7 @@ export type GroupUncheckedCreateInput = {
   updatedAt?: Date | string
   userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutGroupInput
   boardGroups?: Prisma.BoardGroupUncheckedCreateNestedManyWithoutGroupInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutGroupInput
 }
 
 export type GroupUpdateInput = {
@@ -259,6 +264,7 @@ export type GroupUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userGroups?: Prisma.UserGroupUpdateManyWithoutGroupNestedInput
   boardGroups?: Prisma.BoardGroupUpdateManyWithoutGroupNestedInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutGroupNestedInput
 }
 
 export type GroupUncheckedUpdateInput = {
@@ -269,6 +275,7 @@ export type GroupUncheckedUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutGroupNestedInput
   boardGroups?: Prisma.BoardGroupUncheckedUpdateManyWithoutGroupNestedInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutGroupNestedInput
 }
 
 export type GroupCreateManyInput = {
@@ -295,6 +302,11 @@ export type GroupUncheckedUpdateManyInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
+export type GroupScalarRelationFilter = {
+  is?: Prisma.GroupWhereInput
+  isNot?: Prisma.GroupWhereInput
+}
+
 export type GroupCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
@@ -319,9 +331,18 @@ export type GroupMinOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
 }
 
-export type GroupScalarRelationFilter = {
-  is?: Prisma.GroupWhereInput
-  isNot?: Prisma.GroupWhereInput
+export type GroupCreateNestedOneWithoutAgentApproverGroupsInput = {
+  create?: Prisma.XOR<Prisma.GroupCreateWithoutAgentApproverGroupsInput, Prisma.GroupUncheckedCreateWithoutAgentApproverGroupsInput>
+  connectOrCreate?: Prisma.GroupCreateOrConnectWithoutAgentApproverGroupsInput
+  connect?: Prisma.GroupWhereUniqueInput
+}
+
+export type GroupUpdateOneRequiredWithoutAgentApproverGroupsNestedInput = {
+  create?: Prisma.XOR<Prisma.GroupCreateWithoutAgentApproverGroupsInput, Prisma.GroupUncheckedCreateWithoutAgentApproverGroupsInput>
+  connectOrCreate?: Prisma.GroupCreateOrConnectWithoutAgentApproverGroupsInput
+  upsert?: Prisma.GroupUpsertWithoutAgentApproverGroupsInput
+  connect?: Prisma.GroupWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.GroupUpdateToOneWithWhereWithoutAgentApproverGroupsInput, Prisma.GroupUpdateWithoutAgentApproverGroupsInput>, Prisma.GroupUncheckedUpdateWithoutAgentApproverGroupsInput>
 }
 
 export type GroupCreateNestedOneWithoutUserGroupsInput = {
@@ -352,6 +373,62 @@ export type GroupUpdateOneRequiredWithoutBoardGroupsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.GroupUpdateToOneWithWhereWithoutBoardGroupsInput, Prisma.GroupUpdateWithoutBoardGroupsInput>, Prisma.GroupUncheckedUpdateWithoutBoardGroupsInput>
 }
 
+export type GroupCreateWithoutAgentApproverGroupsInput = {
+  id?: string
+  name: string
+  description?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  userGroups?: Prisma.UserGroupCreateNestedManyWithoutGroupInput
+  boardGroups?: Prisma.BoardGroupCreateNestedManyWithoutGroupInput
+}
+
+export type GroupUncheckedCreateWithoutAgentApproverGroupsInput = {
+  id?: string
+  name: string
+  description?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutGroupInput
+  boardGroups?: Prisma.BoardGroupUncheckedCreateNestedManyWithoutGroupInput
+}
+
+export type GroupCreateOrConnectWithoutAgentApproverGroupsInput = {
+  where: Prisma.GroupWhereUniqueInput
+  create: Prisma.XOR<Prisma.GroupCreateWithoutAgentApproverGroupsInput, Prisma.GroupUncheckedCreateWithoutAgentApproverGroupsInput>
+}
+
+export type GroupUpsertWithoutAgentApproverGroupsInput = {
+  update: Prisma.XOR<Prisma.GroupUpdateWithoutAgentApproverGroupsInput, Prisma.GroupUncheckedUpdateWithoutAgentApproverGroupsInput>
+  create: Prisma.XOR<Prisma.GroupCreateWithoutAgentApproverGroupsInput, Prisma.GroupUncheckedCreateWithoutAgentApproverGroupsInput>
+  where?: Prisma.GroupWhereInput
+}
+
+export type GroupUpdateToOneWithWhereWithoutAgentApproverGroupsInput = {
+  where?: Prisma.GroupWhereInput
+  data: Prisma.XOR<Prisma.GroupUpdateWithoutAgentApproverGroupsInput, Prisma.GroupUncheckedUpdateWithoutAgentApproverGroupsInput>
+}
+
+export type GroupUpdateWithoutAgentApproverGroupsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userGroups?: Prisma.UserGroupUpdateManyWithoutGroupNestedInput
+  boardGroups?: Prisma.BoardGroupUpdateManyWithoutGroupNestedInput
+}
+
+export type GroupUncheckedUpdateWithoutAgentApproverGroupsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutGroupNestedInput
+  boardGroups?: Prisma.BoardGroupUncheckedUpdateManyWithoutGroupNestedInput
+}
+
 export type GroupCreateWithoutUserGroupsInput = {
   id?: string
   name: string
@@ -359,6 +436,7 @@ export type GroupCreateWithoutUserGroupsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   boardGroups?: Prisma.BoardGroupCreateNestedManyWithoutGroupInput
+  agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutGroupInput
 }
 
 export type GroupUncheckedCreateWithoutUserGroupsInput = {
@@ -368,6 +446,7 @@ export type GroupUncheckedCreateWithoutUserGroupsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   boardGroups?: Prisma.BoardGroupUncheckedCreateNestedManyWithoutGroupInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutGroupInput
 }
 
 export type GroupCreateOrConnectWithoutUserGroupsInput = {
@@ -393,6 +472,7 @@ export type GroupUpdateWithoutUserGroupsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   boardGroups?: Prisma.BoardGroupUpdateManyWithoutGroupNestedInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutGroupNestedInput
 }
 
 export type GroupUncheckedUpdateWithoutUserGroupsInput = {
@@ -402,6 +482,7 @@ export type GroupUncheckedUpdateWithoutUserGroupsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   boardGroups?: Prisma.BoardGroupUncheckedUpdateManyWithoutGroupNestedInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutGroupNestedInput
 }
 
 export type GroupCreateWithoutBoardGroupsInput = {
@@ -411,6 +492,7 @@ export type GroupCreateWithoutBoardGroupsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   userGroups?: Prisma.UserGroupCreateNestedManyWithoutGroupInput
+  agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutGroupInput
 }
 
 export type GroupUncheckedCreateWithoutBoardGroupsInput = {
@@ -420,6 +502,7 @@ export type GroupUncheckedCreateWithoutBoardGroupsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutGroupInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutGroupInput
 }
 
 export type GroupCreateOrConnectWithoutBoardGroupsInput = {
@@ -445,6 +528,7 @@ export type GroupUpdateWithoutBoardGroupsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userGroups?: Prisma.UserGroupUpdateManyWithoutGroupNestedInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutGroupNestedInput
 }
 
 export type GroupUncheckedUpdateWithoutBoardGroupsInput = {
@@ -454,6 +538,7 @@ export type GroupUncheckedUpdateWithoutBoardGroupsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutGroupNestedInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutGroupNestedInput
 }
 
 
@@ -464,11 +549,13 @@ export type GroupUncheckedUpdateWithoutBoardGroupsInput = {
 export type GroupCountOutputType = {
   userGroups: number
   boardGroups: number
+  agentApproverGroups: number
 }
 
 export type GroupCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   userGroups?: boolean | GroupCountOutputTypeCountUserGroupsArgs
   boardGroups?: boolean | GroupCountOutputTypeCountBoardGroupsArgs
+  agentApproverGroups?: boolean | GroupCountOutputTypeCountAgentApproverGroupsArgs
 }
 
 /**
@@ -495,6 +582,13 @@ export type GroupCountOutputTypeCountBoardGroupsArgs<ExtArgs extends runtime.Typ
   where?: Prisma.BoardGroupWhereInput
 }
 
+/**
+ * GroupCountOutputType without action
+ */
+export type GroupCountOutputTypeCountAgentApproverGroupsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AgentApproverGroupWhereInput
+}
+
 
 export type GroupSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -504,6 +598,7 @@ export type GroupSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   updatedAt?: boolean
   userGroups?: boolean | Prisma.Group$userGroupsArgs<ExtArgs>
   boardGroups?: boolean | Prisma.Group$boardGroupsArgs<ExtArgs>
+  agentApproverGroups?: boolean | Prisma.Group$agentApproverGroupsArgs<ExtArgs>
   _count?: boolean | Prisma.GroupCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["group"]>
 
@@ -535,6 +630,7 @@ export type GroupOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = ru
 export type GroupInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   userGroups?: boolean | Prisma.Group$userGroupsArgs<ExtArgs>
   boardGroups?: boolean | Prisma.Group$boardGroupsArgs<ExtArgs>
+  agentApproverGroups?: boolean | Prisma.Group$agentApproverGroupsArgs<ExtArgs>
   _count?: boolean | Prisma.GroupCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type GroupIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -545,6 +641,7 @@ export type $GroupPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   objects: {
     userGroups: Prisma.$UserGroupPayload<ExtArgs>[]
     boardGroups: Prisma.$BoardGroupPayload<ExtArgs>[]
+    agentApproverGroups: Prisma.$AgentApproverGroupPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -948,6 +1045,7 @@ export interface Prisma__GroupClient<T, Null = never, ExtArgs extends runtime.Ty
   readonly [Symbol.toStringTag]: "PrismaPromise"
   userGroups<T extends Prisma.Group$userGroupsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Group$userGroupsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserGroupPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   boardGroups<T extends Prisma.Group$boardGroupsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Group$boardGroupsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BoardGroupPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  agentApproverGroups<T extends Prisma.Group$agentApproverGroupsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Group$agentApproverGroupsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AgentApproverGroupPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1420,6 +1518,30 @@ export type Group$boardGroupsArgs<ExtArgs extends runtime.Types.Extensions.Inter
   take?: number
   skip?: number
   distinct?: Prisma.BoardGroupScalarFieldEnum | Prisma.BoardGroupScalarFieldEnum[]
+}
+
+/**
+ * Group.agentApproverGroups
+ */
+export type Group$agentApproverGroupsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AgentApproverGroup
+   */
+  select?: Prisma.AgentApproverGroupSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AgentApproverGroup
+   */
+  omit?: Prisma.AgentApproverGroupOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AgentApproverGroupInclude<ExtArgs> | null
+  where?: Prisma.AgentApproverGroupWhereInput
+  orderBy?: Prisma.AgentApproverGroupOrderByWithRelationInput | Prisma.AgentApproverGroupOrderByWithRelationInput[]
+  cursor?: Prisma.AgentApproverGroupWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AgentApproverGroupScalarFieldEnum | Prisma.AgentApproverGroupScalarFieldEnum[]
 }
 
 /**

@@ -10,11 +10,11 @@ import { ComboBox, EmptyState, ErrorMessage, Input, Label, ListBox, cn } from '@
 import { FC, Ref } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 
-/** 担当者の選択肢。`getAssigneeOptions` が返す形と構造的に一致させる */
-export type AssigneeOption = {
+/** ユーザー選択の選択肢。`getAssigneeOptions` が返す形と構造的に一致させる */
+export type UserSelectOption = {
   id: string
   name: string
-  /** メンション候補としても使うため保持する。ユーザー以外の選択肢では持たない */
+  /** メンション候補や `showEmail` でも使うため保持する。ユーザー以外の選択肢では持たない */
   email?: string
   image?: string | null
   isAgent?: boolean
@@ -23,12 +23,12 @@ export type AssigneeOption = {
 }
 
 /**
- * 「自分を選択」ショートカット。担当者 ComboBox のラベル行に置く。
+ * 「自分を選択」ショートカット。ユーザー選択 ComboBox のラベル行に置く。
  *
  * 担当者が userId ではない絞り込み(チケット一覧の 'any' | 'me' | 'none')でも使えるよう、
  * 何をセットするかは呼び出し側の onPress に任せる。
  */
-export const SelfAssigneeAction: FC<{
+const SelfSelectAction: FC<{
   onPress: () => void
   isDisabled?: boolean
 }> = ({ onPress, isDisabled }) => {
@@ -54,12 +54,12 @@ export const SelfAssigneeAction: FC<{
   )
 }
 
-type AssigneeSelectFieldProps = {
+type UserSelectFieldProps = {
   /**
-   * `getAssigneeOptions` が返すボードメンバー。
+   * 選択肢となるユーザー(`getAssigneeOptions` が返すボードメンバーなど)。
    * 絞り込みでは all / none のセンチネルを `hideAvatar` 付きで混ぜてもよい。
    */
-  options: AssigneeOption[]
+  options: UserSelectOption[]
   value: string | null
   onChange: (value: string | null) => void
   /** ラベルは `assignee` 固定だが、絞り込み等で変えたい場合のみ上書きする */
@@ -71,6 +71,13 @@ type AssigneeSelectFieldProps = {
    * 絞り込みでは未選択が「すべて」を意味し、「未割り当て」は実在の選択肢なので上書きすること
    */
   placeholder?: string
+  /**
+   * 候補と入力欄に「名前 (メール)」を出し、メールでも絞り込めるようにする。
+   * 同名ユーザーを区別する必要がある全ユーザーからの選択で使う
+   */
+  showEmail?: boolean
+  /** 候補が 0 件のときの文言。既定は担当者向けの文言 */
+  emptyMessage?: string
   isClearable?: boolean
   isDisabled?: boolean
   errorMessage?: string
@@ -82,22 +89,26 @@ type AssigneeSelectFieldProps = {
 }
 
 /**
- * 担当者の単一選択。入力で候補を絞り込み、候補と入力欄の両方にアバターを出す。
+ * ユーザーの単一選択。入力で候補を絞り込み、候補と入力欄の両方にアバターを出す。
  *
  * HeroUI の ComboBox で構成する。絞り込みは ComboBox 内蔵(react-aria が useFilter の contains を
  * 既定の defaultFilter にする)なので、タグ選択のように Autocomplete.Filter を自前で組む必要はない。
+ * 絞り込みも選択後の入力欄の表示も `ListBox.Item` の textValue が元になるため、`showEmail` では
+ * そこにメールを含める。
  *
  * 自分がその候補に居ない(ボードのメンバーでない)場合や無効時は「自分を選択」を出さない。
  *
  * `isClearable` を付けると未選択(null)へ戻せる。入力を空にした場合も react-aria が値を null にする。
  */
-export const AssigneeSelectField = ({
+export const UserSelectField = ({
   options,
   value,
   onChange,
   label,
   isLabelHidden,
   placeholder,
+  showEmail = false,
+  emptyMessage,
   isClearable = false,
   isDisabled = false,
   errorMessage,
@@ -106,7 +117,7 @@ export const AssigneeSelectField = ({
   isSmartForm: isSmartFormProp,
   onBlur,
   ref,
-}: AssigneeSelectFieldProps) => {
+}: UserSelectFieldProps) => {
   const { t } = useLocale()
   const { isCompact, hasErrorArea } = useSmart(isSmartProp, isSmartFormProp)
   const selfUserId = useSelfUserId()
@@ -114,6 +125,8 @@ export const AssigneeSelectField = ({
   const selected = value ? options.find((option) => option.id === value) : undefined
   const hasAvatar = !!selected && !selected.hideAvatar
   const hasClear = isClearable && !!value && !isDisabled
+  const textValueOf = (option: UserSelectOption) =>
+    showEmail && option.email ? `${option.name} (${option.email})` : option.name
 
   return (
     <ComboBox
@@ -135,7 +148,7 @@ export const AssigneeSelectField = ({
         <Label className={cn(isCompact ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}>
           {label ?? t('assignee')}
         </Label>
-        {canSelectSelf && <SelfAssigneeAction onPress={() => onChange(selfUserId)} />}
+        {canSelectSelf && <SelfSelectAction onPress={() => onChange(selfUserId)} />}
       </div>
       <ComboBox.InputGroup>
         {/**
@@ -182,9 +195,9 @@ export const AssigneeSelectField = ({
       </ComboBox.InputGroup>
       <ErrorMessage className={hasErrorArea ? 'min-h-4' : ''}>{errorMessage}</ErrorMessage>
       <ComboBox.Popover>
-        <ListBox renderEmptyState={() => <EmptyState>{t('msg_no_matching_assignees')}</EmptyState>}>
+        <ListBox renderEmptyState={() => <EmptyState>{emptyMessage ?? t('msg_no_matching_assignees')}</EmptyState>}>
           {options.map((option) => (
-            <ListBox.Item key={option.id} id={option.id} textValue={option.name} className='min-h-min py-1'>
+            <ListBox.Item key={option.id} id={option.id} textValue={textValueOf(option)} className='min-h-min py-1'>
               <span className='flex items-center gap-1.5'>
                 {option.hideAvatar ? (
                   // アバターの無い選択肢でも名前の左端を揃える
@@ -192,7 +205,14 @@ export const AssigneeSelectField = ({
                 ) : (
                   <UserAvatar name={option.name} image={option.image} isAgent={option.isAgent} size='xs' />
                 )}
-                {option.name}
+                {showEmail && option.email ? (
+                  <span className='flex flex-col'>
+                    {option.name}
+                    <span className='text-xs font-light text-gray-500'>{option.email}</span>
+                  </span>
+                ) : (
+                  option.name
+                )}
               </span>
               <ListBox.ItemIndicator />
             </ListBox.Item>
@@ -204,17 +224,17 @@ export const AssigneeSelectField = ({
 }
 
 /**
- * react-hook-form 対応の担当者選択。描画は AssigneeSelectField に委譲する。
+ * react-hook-form 対応のユーザー選択。描画は UserSelectField に委譲する。
  * `SingleSelectCtrl`(general/select.tsx) と同じ形。
  */
-export const AssigneeSelectCtrl = <
+export const UserSelectCtrl = <
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 >({
   control,
   name,
   ...props
-}: Omit<AssigneeSelectFieldProps, 'value' | 'onChange' | 'onBlur' | 'ref'> & {
+}: Omit<UserSelectFieldProps, 'value' | 'onChange' | 'onBlur' | 'ref'> & {
   control: Control<TFieldValues>
   name: TName
 }) => {
@@ -223,7 +243,7 @@ export const AssigneeSelectCtrl = <
       control={control}
       name={name}
       render={({ field: { onChange, value, onBlur, ref } }) => (
-        <AssigneeSelectField {...props} value={value ?? null} onChange={onChange} onBlur={onBlur} ref={ref} />
+        <UserSelectField {...props} value={value ?? null} onChange={onChange} onBlur={onBlur} ref={ref} />
       )}
     />
   )

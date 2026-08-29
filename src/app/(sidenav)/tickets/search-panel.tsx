@@ -4,9 +4,9 @@ import { GridBox } from '@/components/general/grid'
 import { InputSearchField } from '@/components/general/input'
 import { SingleSelectField } from '@/components/general/select'
 import { MultiTagField } from '@/components/general/tag-group'
-import { AssigneeOption, AssigneeSelectField } from '@/components/ticket/assignee-select'
 import { TagNameSelectField } from '@/components/ticket/tag-select'
 import { useTicketOptions } from '@/components/ticket/ticket-chip'
+import { UserSelectField, UserSelectOption } from '@/components/user-select'
 import type { BoardKind, TagColor } from '@/generated/prisma/enums'
 import type { AssigneeCandidate } from '@/lib/board/board'
 import {
@@ -63,7 +63,7 @@ export const TicketSearchPanel: FC<{
 
   // 絞り込み対象のボードのメンバーだけを候補にする(タグと同じ方針)。「すべて」は選択肢ではなく未選択で表す
   const boardId = filter.boardId ?? null
-  const assigneeChoices: AssigneeOption[] = [
+  const assigneeChoices: UserSelectOption[] = [
     { id: ASSIGNEE_NONE, name: t('unassigned'), hideAvatar: true },
     ...(boardId ? assignees.filter((user) => user.boardIds.includes(boardId)) : assignees),
   ]
@@ -114,8 +114,9 @@ export const TicketSearchPanel: FC<{
       </div>
 
       <div className='col-span-6 md:col-span-3'>
-        <AssigneeSelectField
+        <UserSelectField
           options={assigneeChoices}
+          showEmail // 表示名が同じユーザーを見分けられるようにする(メールでも絞り込める)
           value={filter.assignee ?? null}
           isClearable // 選択後に「すべて」(未選択)へ戻す手段
           placeholder={t('all')}

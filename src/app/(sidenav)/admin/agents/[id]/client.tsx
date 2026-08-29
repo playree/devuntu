@@ -14,39 +14,56 @@ import {
   ExclamationTriangleIcon,
   InformationCircleIcon,
   KeyIcon,
+  ShieldCheckIcon,
 } from '@/components/icon'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'
 import { Accordion, ButtonGroup } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
-import { getGroupOptions } from '../server'
+import { getApproverUserOptions, getGroupOptions } from '../server'
+import { AgentApprover } from './agent-approver'
 import { AgentProfile } from './agent-profile'
 import { AgentRunHistory } from './agent-run-history'
 import { AgentRunner } from './agent-runner'
 import { AgentToken } from './agent-token'
 import { DangerZone } from './danger-zone'
-import { getAgent, getAgentRunner, getAgentRuns, getAgentToken } from './server'
+import { getAgent, getAgentApprovers, getAgentRunner, getAgentRuns, getAgentToken } from './server'
 
 /** デンジャーゾーンは誤操作を避けるため初期状態で閉じておく */
-const defaultExpandedKeys = new Set(['agent_profile', 'agent_runner', 'agent_run_history', 'agent_token'])
+const defaultExpandedKeys = new Set([
+  'agent_profile',
+  'agent_approver',
+  'agent_runner',
+  'agent_run_history',
+  'agent_token',
+])
 
 export const AdminAgentDetailClient: FC<{ agentId: string; baseUrl: string }> = ({ agentId, baseUrl }) => {
   const { t } = useLocale()
   const router = useRouter()
 
-  const { data: agent, reload, isLoading } = useActionData(() => getAgent({ id: agentId }))
+  const { data: agent, reload, refresh, isLoading } = useActionData(() => getAgent({ id: agentId }))
   const {
     data: runner,
     reload: reloadRunner,
+    refresh: refreshRunner,
     isLoading: isRunnerLoading,
   } = useActionData(() => getAgentRunner({ id: agentId }))
   const {
     data: token,
     reload: reloadToken,
+    refresh: refreshToken,
     isLoading: isTokenLoading,
   } = useActionData(() => getAgentToken({ id: agentId }))
+  const {
+    data: approvers,
+    reload: reloadApprovers,
+    refresh: refreshApprovers,
+    isLoading: isApproversLoading,
+  } = useActionData(() => getAgentApprovers({ id: agentId }))
   const { data: groupOptions } = useActionData(getGroupOptions)
+  const { data: approverUserOptions } = useActionData(getApproverUserOptions)
   const runHistoryList = usePagingList({
     load: async () => (await parseAction(getAgentRuns({ id: agentId }))) ?? [],
     sort: { init: { column: 'startedAt', direction: 'descending' } },
@@ -81,6 +98,7 @@ export const AdminAgentDetailClient: FC<{ agentId: string; baseUrl: string }> = 
           tooltip={t('reload')}
           onPress={() => {
             reload()
+            reloadApprovers()
             reloadRunner()
             reloadToken()
             runHistoryList.reload()
@@ -93,11 +111,25 @@ export const AdminAgentDetailClient: FC<{ agentId: string; baseUrl: string }> = 
 
       <Accordion allowsMultipleExpanded defaultExpandedKeys={defaultExpandedKeys}>
         <AccordionSection id='agent_profile' icon={<InformationCircleIcon />} title={t('agent_profile')}>
-          <AgentProfile agent={agent} groupOptions={groupOptions ?? {}} reload={reload} />
+          <AgentProfile agent={agent} groupOptions={groupOptions ?? {}} refresh={refresh} />
+        </AccordionSection>
+
+        <AccordionSection id='agent_approver' icon={<ShieldCheckIcon />} title={t('agent_approver')}>
+          {isApproversLoading ? (
+            <PanelSkeleton />
+          ) : (
+            <AgentApprover
+              agentId={agentId}
+              current={approvers}
+              userOptions={approverUserOptions ?? []}
+              groupOptions={groupOptions ?? {}}
+              refresh={refreshApprovers}
+            />
+          )}
         </AccordionSection>
 
         <AccordionSection id='agent_runner' icon={<Cog6ToothIcon />} title={t('agent_runner')}>
-          <AgentRunner agentId={agentId} current={runner} isLoading={isRunnerLoading} reload={reloadRunner} />
+          <AgentRunner agentId={agentId} current={runner} isLoading={isRunnerLoading} refresh={refreshRunner} />
         </AccordionSection>
 
         <AccordionSection id='agent_run_history' icon={<ClockIcon />} title={t('agent_run_history')}>
@@ -110,7 +142,7 @@ export const AdminAgentDetailClient: FC<{ agentId: string; baseUrl: string }> = 
             baseUrl={baseUrl}
             current={token}
             isLoading={isTokenLoading}
-            reload={reloadToken}
+            refresh={refreshToken}
           />
         </AccordionSection>
 

@@ -166,13 +166,28 @@ export const scUpdateAgent = z.object({
 })
 export type UpdateAgent = z.infer<typeof scUpdateAgent>
 
+/** 承認ユーザーの追加・削除(1件ずつ、即時反映) */
+export const scAgentApproverUser = z.object({
+  id: z.uuidv7(),
+  userId: z.uuidv7(),
+})
+export type AgentApproverUser = z.infer<typeof scAgentApproverUser>
+
+/** 承認グループの総入れ替え。0 件を許す(= グループ経由の承認者が居なくなる) */
+export const scSetAgentApproverGroups = z.object({
+  id: z.uuidv7(),
+  groupIds: z.array(z.uuidv7()),
+})
+export type SetAgentApproverGroups = z.infer<typeof scSetAgentApproverGroups>
+export type SetAgentApproverGroupsIn = z.input<typeof scSetAgentApproverGroups>
+
 export const scIssueAgentToken = z.object({
   userId: z.uuidv7(),
   expires: z.enum(AGENT_TOKEN_EXPIRES),
 })
 export type IssueAgentToken = z.infer<typeof scIssueAgentToken>
 
-/** チケットの処理方式。null は「エージェントに任せない」 */
+/** チケットの処理方式。null は「選択待ち」(= エージェント処理の対象外) */
 export const zAgentMode = z.enum(AGENT_TASK_MODES)
 
 /** 稼働許可時間帯の時刻。0:00 からの分(30分刻み)。null は指定なし(= 終日) */
@@ -382,11 +397,19 @@ export const scPatchTicket = z.object({
   tagIds: zTagIds.optional(),
   /** undefined = 変更しない / null = 未割り当てへ */
   assigneeId: z.uuidv7().nullish(),
-  /** undefined = 変更しない / null = エージェントに任せない */
-  agentMode: zAgentMode.nullish(),
 })
 export type PatchTicket = z.infer<typeof scPatchTicket>
 export type PatchTicketIn = z.input<typeof scPatchTicket>
+
+/**
+ * エージェントモードの変更。承認者だけが行えるため patchTicket から切り出してある。
+ * null は「選択待ち」(= エージェント処理の対象外)。
+ */
+export const scUpdateTicketAgentMode = z.object({
+  id: z.uuidv7(),
+  agentMode: zAgentMode.nullable(),
+})
+export type UpdateTicketAgentMode = z.infer<typeof scUpdateTicketAgentMode>
 
 export const scUpdateTicketStatus = z.object({
   id: z.uuidv7(),
@@ -439,6 +462,20 @@ export const scTicketListQuery = scTicketSearch.extend({
 })
 export type TicketListQuery = z.infer<typeof scTicketListQuery>
 export type TicketListQueryIn = z.input<typeof scTicketListQuery>
+
+/**
+ * 承認画面のチケット一覧。担当エージェントを軸に引くので検索条件は持たない。
+ * 並び順の扱いは {@link scTicketListQuery} と同じ。
+ */
+export const scAgentTicketListQuery = z.object({
+  agentId: z.uuidv7(),
+  page: z.number().int().min(1).default(1),
+  rowsPerPage: z.number().int().min(1).max(100).default(10),
+  sortColumn: z.string().default('updatedAt').pipe(zTicketSortColumn.catch('updatedAt')),
+  sortDirection: z.string().default('descending').pipe(zSortDirection.catch('descending')),
+})
+export type AgentTicketListQuery = z.infer<typeof scAgentTicketListQuery>
+export type AgentTicketListQueryIn = z.input<typeof scAgentTicketListQuery>
 
 export const scCreateTicketComment = z.object({
   ticketId: z.uuidv7(),

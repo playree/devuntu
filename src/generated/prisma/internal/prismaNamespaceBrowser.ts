@@ -55,6 +55,8 @@ export const ModelName = {
   AgentToken: 'AgentToken',
   AgentRunner: 'AgentRunner',
   AgentRun: 'AgentRun',
+  AgentApprover: 'AgentApprover',
+  AgentApproverGroup: 'AgentApproverGroup',
   Session: 'Session',
   Account: 'Account',
   Verification: 'Verification',
@@ -175,6 +177,26 @@ export const AgentRunScalarFieldEnum = {
 } as const
 
 export type AgentRunScalarFieldEnum = (typeof AgentRunScalarFieldEnum)[keyof typeof AgentRunScalarFieldEnum]
+
+
+export const AgentApproverScalarFieldEnum = {
+  id: 'id',
+  agentId: 'agentId',
+  userId: 'userId',
+  createdAt: 'createdAt'
+} as const
+
+export type AgentApproverScalarFieldEnum = (typeof AgentApproverScalarFieldEnum)[keyof typeof AgentApproverScalarFieldEnum]
+
+
+export const AgentApproverGroupScalarFieldEnum = {
+  id: 'id',
+  agentId: 'agentId',
+  groupId: 'groupId',
+  createdAt: 'createdAt'
+} as const
+
+export type AgentApproverGroupScalarFieldEnum = (typeof AgentApproverGroupScalarFieldEnum)[keyof typeof AgentApproverGroupScalarFieldEnum]
 
 
 export const SessionScalarFieldEnum = {
