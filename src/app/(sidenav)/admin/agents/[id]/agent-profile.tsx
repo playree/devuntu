@@ -67,7 +67,7 @@ export const AgentProfile: FC<{ agent: Agent; groupOptions: Record<string, strin
             <span className='font-mono text-xs'>{dayformat(agent.createdAt, 'tz-simple', tz)}</span>
           </MetaRow>
         </div>
-        <div className='col-span-12'>
+        <div className='col-span-12 md:col-span-6'>
           <InputCtrl
             control={control}
             name='name'
@@ -76,7 +76,7 @@ export const AgentProfile: FC<{ agent: Agent; groupOptions: Record<string, strin
             errorMessage={fet(errors.name)}
           />
         </div>
-        <div className='col-span-12'>
+        <div className='col-span-12 md:col-span-6'>
           <CopyableField text={agent.email} label={t('email')} copyLabel={t('copy')} />
         </div>
         <div className='col-span-12'>

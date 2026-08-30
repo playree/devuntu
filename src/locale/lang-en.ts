@@ -320,7 +320,7 @@ Please copy and use the connection information above.
     'Choose how the agent handles this ticket. Plan first posts a plan and waits for your reply; Auto carries out the work and reports back. Only approvers of this agent can change it.',
   msg_agent_no_approver: 'No approver is set. Nobody can change the agent mode of tickets assigned to this agent.',
   msg_agent_runner_desc:
-    'Settings for the runner that polls for assigned tickets. Claude starts only while these conditions are met. Leaving either start or end unset means all day; a start later than the end crosses midnight (nights only).',
+    'Settings for the runner that polls for assigned tickets. The AI agent starts only while these conditions are met. Leaving either start or end unset means all day; a start later than the end crosses midnight (nights only).',
   msg_agent_token_once: 'This is the only time the token is shown. Copy it before closing.',
   msg_archive_board: 'Archiving hides the board from the default board list. Tickets are kept.',
   msg_avatar_desc: 'Setting a custom image stops it from being overwritten by Devuntu on future sign-ins.',

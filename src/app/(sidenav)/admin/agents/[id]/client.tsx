@@ -14,6 +14,7 @@ import {
   ExclamationTriangleIcon,
   InformationCircleIcon,
   KeyIcon,
+  RocketLaunchIcon,
   ShieldCheckIcon,
 } from '@/components/icon'
 import { parseAction, useActionData } from '@/lib/action/action-client'
@@ -31,13 +32,7 @@ import { DangerZone } from './danger-zone'
 import { getAgent, getAgentApprovers, getAgentRunner, getAgentRuns, getAgentToken } from './server'
 
 /** デンジャーゾーンは誤操作を避けるため初期状態で閉じておく */
-const defaultExpandedKeys = new Set([
-  'agent_profile',
-  'agent_approver',
-  'agent_runner',
-  'agent_run_history',
-  'agent_token',
-])
+const defaultExpandedKeys = new Set(['agent_profile'])
 
 export const AdminAgentDetailClient: FC<{ agentId: string; baseUrl: string }> = ({ agentId, baseUrl }) => {
   const { t } = useLocale()
@@ -128,7 +123,7 @@ export const AdminAgentDetailClient: FC<{ agentId: string; baseUrl: string }> = 
           )}
         </AccordionSection>
 
-        <AccordionSection id='agent_runner' icon={<Cog6ToothIcon />} title={t('agent_runner')}>
+        <AccordionSection id='agent_runner' icon={<RocketLaunchIcon />} title={t('agent_runner')}>
           <AgentRunner agentId={agentId} current={runner} isLoading={isRunnerLoading} refresh={refreshRunner} />
         </AccordionSection>
 

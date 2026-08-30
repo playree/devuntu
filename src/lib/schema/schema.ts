@@ -4,6 +4,7 @@ import {
   AGENT_EMAIL_DOMAIN,
   AGENT_HANDLE_PATTERN,
   AGENT_TASK_MODES,
+  AGENT_TASK_STATES,
   AGENT_TOKEN_EXPIRES,
   AGENT_WINDOW_MAX_MIN,
   AGENT_WINDOW_STEP_MIN,
@@ -189,6 +190,9 @@ export type IssueAgentToken = z.infer<typeof scIssueAgentToken>
 
 /** チケットの処理方式。null は「選択待ち」(= エージェント処理の対象外) */
 export const zAgentMode = z.enum(AGENT_TASK_MODES)
+
+/** チケットの処理状態。null(未着手)は絞り込み側で queued と同一視する */
+export const zAgentState = z.enum(AGENT_TASK_STATES)
 
 /** 稼働許可時間帯の時刻。0:00 からの分(30分刻み)。null は指定なし(= 終日) */
 const zWindowMin = z
@@ -464,11 +468,14 @@ export type TicketListQuery = z.infer<typeof scTicketListQuery>
 export type TicketListQueryIn = z.input<typeof scTicketListQuery>
 
 /**
- * 承認画面のチケット一覧。担当エージェントを軸に引くので検索条件は持たない。
+ * 承認画面のチケット一覧。担当エージェントを軸に引くので、絞り込みは処理状態だけを持つ
+ * (完了したチケットは承認の対象外なのでサーバー側で常に除外する)。
  * 並び順の扱いは {@link scTicketListQuery} と同じ。
  */
 export const scAgentTicketListQuery = z.object({
   agentId: z.uuidv7(),
+  /** 空配列 = 絞り込みなし。'queued' は agentState が null のチケットも含む */
+  agentState: z.array(zAgentState).default([]),
   page: z.number().int().min(1).default(1),
   rowsPerPage: z.number().int().min(1).max(100).default(10),
   sortColumn: z.string().default('updatedAt').pipe(zTicketSortColumn.catch('updatedAt')),

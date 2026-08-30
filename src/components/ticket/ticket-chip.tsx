@@ -1,7 +1,7 @@
 'use client'
 
 import type { AgentTaskState, BoardKind, TagColor, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
-import { AGENT_TASK_MODE_LOCALE, AGENT_TASK_MODES, AGENT_TASK_STATE_LOCALE } from '@/lib/agent/agent'
+import { AGENT_TASK_MODE_LOCALE, AGENT_TASK_MODES, AGENT_TASK_STATE_LOCALE, AGENT_TASK_STATES } from '@/lib/agent/agent'
 import { TICKET_PRIORITY_LOCALE, TICKET_STATUS_LOCALE, type BoardRole } from '@/lib/board/task'
 import { LocaleItemBase } from '@/locale'
 import { useLocale } from '@/locale/client'
@@ -127,9 +127,13 @@ const AGENT_STATE_STYLE: Record<AgentTaskState, { item: LocaleItemBase; color: C
   skipped: { item: AGENT_TASK_STATE_LOCALE.skipped, color: 'default' },
 }
 
-export const AgentStateChip: FC<{ state: AgentTaskState; size?: ChipProps['size'] }> = ({ state, size = 'sm' }) => {
+/** state が null のチケットは queued 扱い(agent.ts の agentStateWhere と同じ規約) */
+export const AgentStateChip: FC<{ state: AgentTaskState | null; size?: ChipProps['size'] }> = ({
+  state,
+  size = 'sm',
+}) => {
   const { t } = useLocale()
-  const { item, color } = AGENT_STATE_STYLE[state]
+  const { item, color } = AGENT_STATE_STYLE[state ?? 'queued']
   return (
     <Chip variant='soft' color={color} size={size} className='whitespace-nowrap'>
       <Chip.Label>{t(item)}</Chip.Label>
@@ -305,6 +309,15 @@ export const useAgentModeOptions = (): Record<string, string> => {
     [AGENT_MODE_NONE]: t('agent_mode_none'),
     ...Object.fromEntries(AGENT_TASK_MODES.map((mode) => [mode, t(AGENT_TASK_MODE_LOCALE[mode])])),
   }
+}
+
+/** 処理状態の選択肢(Record<id, label>)。AgentStateChip と同じ文言を絞り込みへ渡す */
+export const useAgentStateOptions = (): Record<AgentTaskState, string> => {
+  const { t } = useLocale()
+  return Object.fromEntries(AGENT_TASK_STATES.map((state) => [state, t(AGENT_STATE_STYLE[state].item)])) as Record<
+    AgentTaskState,
+    string
+  >
 }
 
 /** ボードロールの選択肢(Record<id, label>)。RoleChip と同じ文言を SingleSelectCtrl へ渡す */

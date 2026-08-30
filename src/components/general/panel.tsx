@@ -1,4 +1,4 @@
-import { Alert, Skeleton } from '@heroui/react'
+import { Alert, cn, Skeleton } from '@heroui/react'
 import { ComponentProps, FC } from 'react'
 import { tv } from 'tailwind-variants'
 
@@ -16,8 +16,6 @@ const panelStyles = tv({
 })
 
 const skeletonStyles = tv({ base: 'min-h-48 w-full rounded-xl' })
-
-const noticeContentStyles = tv({ base: 'text-sm' })
 
 /**
  * 情報をひとまとめにするサーフェス。
@@ -47,9 +45,18 @@ export const PanelSkeleton: FC<{ className?: string }> = ({ className }) => (
  * Indicator/Content の入れ子を隠し、メッセージ文字列だけで書けるようにする。
  * status を指定すると HeroUI Alert の配色・アイコンで警告/危険/成功等を表現できる(未指定時は default)。
  */
-export const NoticePanel: FC<ComponentProps<typeof Alert>> = ({ children, className, status, ...props }) => (
-  <Alert status={status} {...props}>
+export const NoticePanel: FC<ComponentProps<typeof Alert> & { title?: string }> = ({
+  children,
+  className,
+  status,
+  title,
+  ...props
+}) => (
+  <Alert status={status} className='gap-2 border border-dashed bg-white px-3 py-1 shadow-none dark:bg-black' {...props}>
     <Alert.Indicator />
-    <Alert.Content className={noticeContentStyles({ className })}>{children}</Alert.Content>
+    <Alert.Content className={cn('self-center', className)}>
+      {title && <Alert.Title>{title}</Alert.Title>}
+      <Alert.Description className='text-xs whitespace-pre-line'>{children}</Alert.Description>
+    </Alert.Content>
   </Alert>
 )
