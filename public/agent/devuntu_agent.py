@@ -28,6 +28,7 @@ import os
 import platform
 import re
 import shlex
+import shutil
 import socket
 import subprocess
 import sys
@@ -35,7 +36,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-__version__ = "0.3.2"
+__version__ = "0.5.1"
 
 DEFAULT_CONFIG_PATH = Path.home() / ".config" / "devuntu-agent" / "config.json"
 DEFAULT_LOG_PATH = Path.home() / ".local" / "state" / "devuntu-agent" / "agent.log"
@@ -56,6 +57,14 @@ DEFAULT_CLAUDE_ARGS = ["--permission-mode", "auto"]
 
 # config で cli.model が省略された場合に使うモデル
 DEFAULT_CLAUDE_MODEL = "sonnet"
+
+# cron から起動されると PATH は最小(/usr/bin:/bin 程度)で、ログインシェルの rc も読まれない。
+# 主なインストール先を PATH の先頭に足して、claude 本体と claude が呼ぶコマンドの両方を見つけられるようにする
+DEFAULT_PATH_DIRS = ("~/.local/bin", "~/bin", "~/.claude/local", "/usr/local/bin")
+
+# nvm で入れた node を探す場所。npm 経由で claude を入れた環境では node が無いと起動できない
+NVM_NODE_DIR = Path.home() / ".nvm" / "versions" / "node"
+NVM_DEFAULT_ALIAS = Path.home() / ".nvm" / "alias" / "default"
 
 # Claude を待つ上限。超えたら殺して失敗として記録する
 DEFAULT_TIMEOUT_SEC = 3600
@@ -101,6 +110,9 @@ class Config:
         self.cli_model: str = str(
             cli_raw.get("model") or (DEFAULT_CLAUDE_MODEL if self.cli_kind == "claude" else "")
         )
+        # cron の PATH では足りない場合に足すディレクトリと、CLI へ渡す追加の環境変数
+        self.cli_path: list[str] = [str(entry) for entry in (cli_raw.get("path") or [])]
+        self.cli_env: dict[str, str] = {str(k): str(v) for k, v in (cli_raw.get("env") or {}).items()}
 
         self.timeout_sec: int = int(raw.get("timeout_sec") or DEFAULT_TIMEOUT_SEC)
         self.log_path = Path(str(raw.get("log_path") or DEFAULT_LOG_PATH)).expanduser()
@@ -129,6 +141,51 @@ def load_config(path: Path) -> Config:
     if not isinstance(raw, dict):
         raise ConfigError(f"config file content is not an object: {path}")
     return Config(raw, path)
+
+
+def save_path(config: Config) -> int:
+    """今のシェルの PATH を cli.path に保存する。cron の PATH ではセットアップ時の環境を再現できないため"""
+    dirs: list[str] = []
+    for entry in os.environ.get("PATH", "").split(os.pathsep):
+        if entry and os.path.isabs(entry) and entry not in dirs and Path(entry).is_dir():
+            dirs.append(entry)
+    if not dirs:
+        log.error("no usable directory in PATH: %s", os.environ.get("PATH", ""))
+        return 1
+
+    try:
+        raw = json.loads(config.path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as e:
+        log.error("cannot read the config file: %s (%s)", config.path, e)
+        return 2
+
+    cli_raw = raw.get("cli")
+    raw["cli"] = {**cli_raw, "path": dirs} if isinstance(cli_raw, dict) else {"path": dirs}
+
+    # トークンを持つファイルなので、書き損じで中身やパーミッションを失わないよう入れ替えで書く
+    tmp_path = config.path.with_name(config.path.name + ".new")
+    try:
+        tmp_path.write_text(json.dumps(raw, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        tmp_path.chmod(config.path.stat().st_mode)
+        tmp_path.replace(config.path)
+    except OSError as e:
+        log.error("cannot write the config file: %s (%s)", config.path, e)
+        return 2
+
+    print(f"saved {len(dirs)} directories to cli.path in {config.path}")
+    for entry in dirs:
+        print(f"  {entry}")
+    sys.stdout.flush()  # 続く警告は stderr に出るため、先に出し切って順序を保つ
+
+    # 保存した PATH で実際に CLI を見つけられるかまで、その場で確かめる
+    updated = Config(raw, config.path)
+    env = build_env(updated)
+    cli_bin = resolve_cli_bin(updated, env)
+    if not cli_bin:
+        log.warning("%s", cli_not_found_message(updated, env))
+        return 1
+    print(f"{updated.cli_bin} found at {cli_bin}")
+    return 0
 
 
 # ---------------------------------------------------------------------------
@@ -212,6 +269,66 @@ def self_update(config: Config) -> bool:
 # ---------------------------------------------------------------------------
 
 
+def nvm_node_dir() -> Path | None:
+    """nvm で入れた node の bin。default エイリアスがそれらしければ優先し、無ければ最新の一つを使う"""
+    try:
+        alias = NVM_DEFAULT_ALIAS.read_text(encoding="utf-8").strip()
+    except OSError:
+        alias = ""
+    if alias.startswith("v"):
+        candidate = NVM_NODE_DIR / alias / "bin"
+        if candidate.is_dir():
+            return candidate
+
+    try:
+        versions = sorted(entry for entry in NVM_NODE_DIR.iterdir() if (entry / "bin").is_dir())
+    except OSError:
+        return None
+    return versions[-1] / "bin" if versions else None
+
+
+def build_path_dirs(config: Config) -> list[str]:
+    """PATH の先頭に足すディレクトリ。config の指定を優先し、実在するものだけを重複なく返す"""
+    candidates = [Path(entry).expanduser() for entry in [*config.cli_path, *DEFAULT_PATH_DIRS]]
+    nvm_dir = nvm_node_dir()
+    if nvm_dir:
+        candidates.append(nvm_dir)
+
+    dirs: list[str] = []
+    for candidate in candidates:
+        resolved = str(candidate)
+        if resolved not in dirs and candidate.is_dir():
+            dirs.append(resolved)
+    return dirs
+
+
+def build_env(config: Config) -> dict[str, str]:
+    """CLI へ渡す環境変数。cron の最小 PATH では claude も claude が呼ぶコマンドも見つからないので補う"""
+    env = dict(os.environ)
+    path_dirs = build_path_dirs(config)
+    if path_dirs:
+        current = env.get("PATH", "")
+        env["PATH"] = os.pathsep.join([*path_dirs, current]) if current else os.pathsep.join(path_dirs)
+    env.update(config.cli_env)
+    return env
+
+
+def resolve_cli_bin(config: Config, env: dict[str, str]) -> str | None:
+    """cli.bin を実行できる絶対パスに解決する。見つからなければ None"""
+    if os.sep in config.cli_bin:
+        candidate = Path(config.cli_bin).expanduser()
+        return str(candidate) if os.access(candidate, os.X_OK) else None
+    return shutil.which(config.cli_bin, path=env.get("PATH"))
+
+
+def cli_not_found_message(config: Config, env: dict[str, str]) -> str:
+    """解決に失敗したときのメッセージ。ログにも実行履歴にも残るので、直し方まで含める"""
+    return (
+        f"{config.cli_bin} not found (PATH={env.get('PATH', '')}). "
+        "set cli.bin to an absolute path, or add the directory to cli.path in the config file"
+    )
+
+
 def build_prompt(task: dict) -> str:
     """Claude へ渡す指示。作業内容そのものは MCP 側(ルール / チケット本文)から読ませる"""
     return (
@@ -240,9 +357,9 @@ def build_prompt(task: dict) -> str:
     )
 
 
-def build_command(config: Config, task: dict) -> list[str]:
+def build_command(config: Config, task: dict, cli_bin: str | None = None) -> list[str]:
     """cli を起動するコマンド全量"""
-    command = [config.cli_bin, "-p", build_prompt(task)]
+    command = [cli_bin or config.cli_bin, "-p", build_prompt(task)]
     if config.cli_model:
         command += ["--model", config.cli_model]
     return command + config.cli_args
@@ -250,8 +367,21 @@ def build_command(config: Config, task: dict) -> list[str]:
 
 def run_claude(config: Config, task: dict) -> tuple[str, str]:
     """Claude Code を起動する。戻り値は (実行の結果, 実行履歴に残す要約)"""
-    command = build_command(config, task)
-    log.info("starting claude: ticket=%s action=%s cwd=%s", task["displayId"], task["action"], config.workdir)
+    env = build_env(config)
+    cli_bin = resolve_cli_bin(config, env)
+    if not cli_bin:
+        message = cli_not_found_message(config, env)
+        log.error("%s", message)
+        return "failed", message
+
+    command = build_command(config, task, cli_bin)
+    log.info(
+        "starting claude: ticket=%s action=%s cwd=%s bin=%s",
+        task["displayId"],
+        task["action"],
+        config.workdir,
+        cli_bin,
+    )
 
     try:
         completed = subprocess.run(
@@ -261,9 +391,10 @@ def run_claude(config: Config, task: dict) -> tuple[str, str]:
             text=True,
             timeout=config.timeout_sec,
             check=False,
+            env=env,
         )
-    except FileNotFoundError:
-        return "failed", f"{config.cli_bin} not found"
+    except OSError as e:
+        return "failed", f"failed to start {cli_bin}: {e}"
     except subprocess.TimeoutExpired:
         log.error("claude did not finish within %d seconds", config.timeout_sec)
         return "failed", f"timeout ({config.timeout_sec}s)"
@@ -317,14 +448,21 @@ def poll(config: Config, dry_run: bool, debug: bool = False) -> int:
     if len(tasks) > 1:
         log.info("%d tickets pending, processing only %s this time", len(tasks), display_id)
 
-    if debug:
-        log.info("debug: printing the full command for %s", display_id)
-        print(f"cd {shlex.quote(str(config.workdir))} && \\")
-        print(" ".join(shlex.quote(part) for part in build_command(config, task)))
-        return 0
-
-    if dry_run:
-        log.info("dry-run: would process %s as %s", display_id, action)
+    if debug or dry_run:
+        # Claude は起動しないが、CLI の解決結果まで見せて PATH の不備に気付けるようにする
+        env = build_env(config)
+        cli_bin = resolve_cli_bin(config, env)
+        if debug:
+            log.info("debug: printing the full command for %s", display_id)
+            print(f"PATH={env.get('PATH', '')}")
+            print(f"cd {shlex.quote(str(config.workdir))} && \\")
+            print(" ".join(shlex.quote(part) for part in build_command(config, task, cli_bin)))
+            if not cli_bin:
+                print(f"# {cli_not_found_message(config, env)}")
+        elif cli_bin:
+            log.info("dry-run: would process %s as %s with %s", display_id, action, cli_bin)
+        else:
+            log.error("dry-run: would process %s as %s, but %s", display_id, action, cli_not_found_message(config, env))
         return 0
 
     run = call_api(config, "POST", "/api/agent/runs", {"ticketId": ticket_id, "action": action})
@@ -376,7 +514,7 @@ def setup_logging(log_path: Path, verbose: bool) -> None:
 
 
 def acquire_lock(lock_path: Path):
-    """多重起動を防ぐ。cron 側の flock が無くても重ならないようにする"""
+    """多重起動を防ぐ。cron が重なって起動しても 1 プロセスだけが動くようにする"""
     lock_path.parent.mkdir(parents=True, exist_ok=True)
     handle = open(lock_path, "a+", encoding="utf-8")  # noqa: SIM115 (プロセスが終わるまで保持する)
     try:
@@ -393,7 +531,11 @@ def acquire_lock(lock_path: Path):
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Devuntu Agent")
-    parser.add_argument("command", choices=["poll"], help="poll: 担当チケットを 1 件処理する")
+    parser.add_argument(
+        "command",
+        choices=["poll", "save-path"],
+        help="poll: 担当チケットを 1 件処理する / save-path: 今のシェルの PATH を設定に保存する",
+    )
     parser.add_argument("--config", type=Path, default=None, help=f"設定ファイル(既定 {DEFAULT_CONFIG_PATH})")
     parser.add_argument("--dry-run", action="store_true", help="Claude を起動せず、何を処理するかだけを出す")
     parser.add_argument(
@@ -416,6 +558,10 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     setup_logging(config.log_path, args.verbose)
+
+    # チケット処理ではないので、ロックにも自動更新にも通さない
+    if args.command == "save-path":
+        return save_path(config)
 
     lock = acquire_lock(args.lock)
     if lock is None:

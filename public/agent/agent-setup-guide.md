@@ -17,10 +17,14 @@
 ```sh
 python3 --version   # 3.9 以上
 claude --version
+command -v claude   # 実体の場所。cron で見つからないときに使う
 git --version
 ```
 
 足りないものがあれば先に入れる。
+
+cron はシェルの設定ファイル(`.bashrc` など)を読まないため、ここで見えている PATH は cron には
+引き継がれない。この差は手順 5 の `save-path` で埋める。
 
 `gh`(GitHub CLI)は必須ではない。事後作業で `gh pr create` により PR を自動作成させたい場合のみ、
 別途インストールする。
@@ -86,7 +90,9 @@ cat > ~/.config/devuntu-agent/config.json <<'JSON'
     "kind": "claude",
     "bin": "claude",
     "args": ["--permission-mode", "auto"],
-    "model": "sonnet"
+    "model": "sonnet",
+    "path": [],
+    "env": {}
   },
   "timeout_sec": 3600
 }
@@ -107,7 +113,30 @@ chmod 600 ~/.config/devuntu-agent/config.json
   危険なツールを個別に禁止する
 - `cli.model`: 使用する Claude のモデル。既定は `sonnet`。`opus` / `fable` など
   `claude --help` の `--model` が受け付けるエイリアスを指定できる
+- `cli.path`: Claude を起動するときに PATH の先頭へ足すディレクトリ。空のままにしておき、
+  次の `save-path` で入れる(手で書くのは特殊な配置のときだけ)。この PATH は Claude 自身にも
+  渡るので、Claude が Bash ツールから叩く `git` / `node` / `pnpm` / `gh` の解決にも効く
+- `cli.env`: Claude へ渡す追加の環境変数(例: `{"GH_TOKEN": "..."}`)。cron 実行では
+  シェルで export している変数が引き継がれないため、必要なものはここに書く
 - `timeout_sec`: これを超えた Claude は打ち切り、実行は失敗として記録される
+
+設定を作ったら、いま使っているシェルの PATH をそのまま設定に取り込む。
+
+```sh
+python3 ~/.local/bin/devuntu_agent.py save-path
+```
+
+cron はシェルの設定ファイルを読まないので、cron の PATH は `/usr/bin:/bin` 程度しかない。
+このコマンドは、`claude` も `git` も見つかっている**いまのシェルの PATH**(実在するディレクトリのみ)を
+`cli.path` に保存する。ランナーはこれを PATH の先頭に置いてから Claude を起動するため、
+cron からでもこのシェルと同じようにコマンドを解決できる。
+
+保存したディレクトリと `claude` の見つかった場所が表示される。
+`claude not found` と出た場合は、そのシェルで `claude` が使えていない。
+
+node のバージョンを上げた、claude を入れ直したなど PATH が変わったときは、もう一度実行する。
+(`save-path` を実行しなくても、ランナーは `~/.local/bin` や nvm の node など主なインストール先を
+自分で探しにいく。`save-path` はそれを確実にするためのもの)
 
 ## 6. 疎通を確認する
 
@@ -117,10 +146,12 @@ python3 ~/.local/bin/devuntu_agent.py poll --dry-run
 
 出力の読み方:
 
-- `稼働条件を満たしていない: reason=no_runner` → 管理画面で自動運用がまだ設定されていない(次の手順へ)
-- `稼働条件を満たしていない: reason=disabled` → 設定はあるが無効。管理画面で有効にする
-- `稼働条件を満たしていない: reason=outside_hours` → 稼働許可時間帯の外。設定どおりの動き
-- `処理するチケットは無い` → 疎通も稼働条件も問題なし
+- `run conditions not met: reason=no_runner` → 管理画面で自動運用がまだ設定されていない(次の手順へ)
+- `run conditions not met: reason=disabled` → 設定はあるが無効。管理画面で有効にする
+- `run conditions not met: reason=outside_hours` → 稼働許可時間帯の外。設定どおりの動き
+- `no tickets to process` → 疎通も稼働条件も問題なし
+- `dry-run: would process ... with /path/to/claude` → 起動する Claude の場所まで確認できている
+- `claude not found (PATH=...)` → Claude を見つけられない。`cli.path` か `cli.bin` を設定する
 - `401` が返る → トークンが違う(または再発行されて古くなった)
 
 ## 7. 管理画面で自動運用を設定する
@@ -138,10 +169,9 @@ python3 ~/.local/bin/devuntu_agent.py poll --dry-run
 
 ## 8. cron に登録する
 
-多重起動の防止はランナー自身が `~/.cache/devuntu-agent.lock` を `fcntl.flock` で取得して行う。
-前回の Claude がまだ動いていれば、その回は何もせず終わる。cron 側で `flock` は使わない
-(同じロックファイルに対して cron 側とランナー側で二重にロックを取ると、ランナー側の取得が
-毎回失敗し、常にスキップされてしまうため)。
+多重起動の防止はランナー自身が `~/.cache/devuntu-agent.lock` で行う。前回の Claude がまだ動いていれば、
+その回は何もせず終わる。cron 行はランナーを実行するだけにし、排他の仕組みを cron 側に足さない
+(ランナー側のロックと二重になり、ランナー側の取得が毎回失敗して常にスキップされてしまうため)。
 
 ```sh
 ( crontab -l 2>/dev/null; \
@@ -149,6 +179,10 @@ python3 ~/.local/bin/devuntu_agent.py poll --dry-run
 ) | crontab -
 crontab -l
 ```
+
+cron 行に PATH を書き足す必要は無い。手順 5 の `save-path` で保存した PATH を
+ランナーが Claude に渡す。それでも `claude not found` になる場合は、`config.json` の
+`cli.bin` に `command -v claude` で確認した絶対パスを書く。
 
 ログは `~/.local/state/devuntu-agent/agent.log`(1MB で 3 世代までローテート)。
 
@@ -177,9 +211,10 @@ description: devuntu の自動運用(Devuntu Agent)をこのマシンにセッ�
 
 ## うまく動かないとき
 
-| 症状                                     | 見るところ                                                                     |
-| ---------------------------------------- | ------------------------------------------------------------------------------ |
-| 管理画面の自動運用が「オフライン」のまま | cron が動いているか(`crontab -l`)、`~/.local/state/devuntu-agent/agent.log`    |
-| 実行履歴に「失敗」が並ぶ                 | 履歴の「内容」に終了コードと標準エラーの末尾が入っている                       |
-| 実行が「実行中」のまま止まる             | Claude が `finish_agent_task` を呼べていない。60 分で自動的に失敗へ落ちる      |
-| チケットが拾われない                     | 担当がエージェントか、チケットの「エージェント」が「任せない」になっていないか |
+| 症状                                     | 見るところ                                                                                                       |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| 管理画面の自動運用が「オフライン」のまま | cron が動いているか(`crontab -l`)、`~/.local/state/devuntu-agent/agent.log`                                      |
+| 実行履歴に「失敗」が並ぶ                 | 履歴の「内容」に終了コードと標準エラーの末尾が入っている                                                         |
+| 実行が「実行中」のまま止まる             | Claude が `finish_agent_task` を呼べていない。60 分で自動的に失敗へ落ちる                                        |
+| チケットが拾われない                     | 担当がエージェントか、チケットの「エージェント」が「任せない」になっていないか                                   |
+| `claude not found` で失敗する            | `claude` が使えるシェルで `devuntu_agent.py save-path` を実行し直す。それでも駄目なら `cli.bin` に絶対パスを書く |

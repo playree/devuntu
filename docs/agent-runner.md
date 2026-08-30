@@ -90,8 +90,12 @@ cron ──> devuntu_agent.py ──1──> POST /api/agent/status   「動い�
 **サーバーと同じ版**を取得できるようにするため(秘密情報は含まない)。
 
 - 常駐しない。cron が 5 分おきに単発起動する。プロセス監視も再起動も要らない
-- 多重起動の防止はスクリプト側の `fcntl.flock` で行う。cron 側で重ねて `flock` を使うと、
-  同じロックファイルへの二重取得で毎回失敗しスキップされてしまうため使わない
+- cron の PATH では `claude` を解決できないため、ランナーが PATH を補ってから CLI を起動する。
+  補う内容は `cli.path`(セットアップ時に `save-path` サブコマンドで対話シェルの PATH を保存する)が
+  優先で、主なインストール先(`~/.local/bin`、nvm の node など)の推測はそのフォールバック。
+  補った PATH は Claude 自身にも渡るので、Claude が呼ぶコマンドの解決にも効く
+- 多重起動の防止はランナー側のファイルロックで行う。cron 行に排他の仕組みを足すと同じロックファイルの
+  二重取得になり、ランナー側が毎回失敗してスキップされてしまうため足さない
 - 1 回の poll で 1 件だけ処理する。残りは次の poll で拾う
 - ログは `~/.local/state/devuntu-agent/agent.log`(1MB × 3 世代)
 - 設定は `~/.config/devuntu-agent/config.json`。トークンを平文で持つのでパーミッションは 600
@@ -103,7 +107,7 @@ cron ──> devuntu_agent.py ──1──> POST /api/agent/status   「動い�
   取得や書き換えに失敗しても warning ログを残すだけで実行は継続する。無効化は `self_update: false`
 
 CLI 起動まわりの設定は `config.json` の `cli` にまとめる(`cli.kind` / `cli.bin` / `cli.args` /
-`cli.model`)。`cli.kind` は将来 `claude` 以外の CLI(例: codex)にも対応するための拡張ポイントで、
+`cli.model` / `cli.path` / `cli.env`)。`cli.kind` は将来 `claude` 以外の CLI(例: codex)にも対応するための拡張ポイントで、
 現状は `claude` のみサポートする。`cli.args` の既定は `--permission-mode auto`
 (cron からは権限確認に誰も答えられないため)、`cli.model` の既定は `sonnet`。
 
