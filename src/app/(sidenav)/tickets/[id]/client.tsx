@@ -351,7 +351,7 @@ export const TicketDetailClient: FC<{
         <Grid // 項目の並びは作成モーダル(../modals.tsx の AddModal)と揃えている
           isSmart
         >
-          <div className='col-span-12 md:col-span-8'>
+          <div className='col-span-12'>
             {canEdit ? (
               <InputField
                 label={t('title')}
@@ -370,12 +370,27 @@ export const TicketDetailClient: FC<{
             )}
           </div>
 
-          <div className='col-span-12 md:col-span-4'>
+          <div className='col-span-12 md:col-span-6'>
             <MetaText // ボードは詳細画面では変更させない
               label={t('board')}
             >
               {boardName({ name: ticket.boardName, kind: ticket.boardKind })}
             </MetaText>
+          </div>
+
+          <div className='col-span-12 md:col-span-6'>
+            {canEditTags ? (
+              <TagIdSelectField
+                // そのボードのタグだけを候補にする(他ボードのタグはサーバー側で弾かれる)
+                options={options.tags.filter((tag) => tag.boardId === ticket.boardId)}
+                onCreate={async (name) => parseAction(createTicketTag({ boardId: ticket.boardId, name }))}
+                value={tagIds}
+                // 保存中に isDisabled にするとポップオーバーが閉じて連続選択できないため無効化しない
+                onChange={(next) => void patch('tagIds', { tagIds: next })}
+              />
+            ) : (
+              <MetaText label={t('tags')}>{ticket.tags.length > 0 ? <TagChips tags={ticket.tags} /> : '-'}</MetaText>
+            )}
           </div>
 
           <div className='col-span-6 md:col-span-2'>
@@ -398,7 +413,7 @@ export const TicketDetailClient: FC<{
             )}
           </div>
 
-          <div className='col-span-6 md:col-span-1'>
+          <div className='col-span-6 md:col-span-2'>
             {canEdit ? (
               <SingleSelectField
                 label={t('priority')}
@@ -418,7 +433,7 @@ export const TicketDetailClient: FC<{
             )}
           </div>
 
-          <div className='col-span-6 md:col-span-2'>
+          <div className='col-span-6 md:col-span-4'>
             {canEditAssignee ? (
               <UserSelectField
                 isClearable
@@ -436,7 +451,7 @@ export const TicketDetailClient: FC<{
             )}
           </div>
 
-          <div className='col-span-6 md:col-span-3'>
+          <div className='col-span-6 md:col-span-4'>
             {canEdit ? (
               <DatePickerField
                 label={t('due_date')}
@@ -452,21 +467,6 @@ export const TicketDetailClient: FC<{
               <MetaText label={t('due_date')}>
                 <span className='font-mono text-xs'>{dayformat(ticket.dueDate, 'date') || '-'}</span>
               </MetaText>
-            )}
-          </div>
-
-          <div className='col-span-12 md:col-span-4'>
-            {canEditTags ? (
-              <TagIdSelectField
-                // そのボードのタグだけを候補にする(他ボードのタグはサーバー側で弾かれる)
-                options={options.tags.filter((tag) => tag.boardId === ticket.boardId)}
-                onCreate={async (name) => parseAction(createTicketTag({ boardId: ticket.boardId, name }))}
-                value={tagIds}
-                // 保存中に isDisabled にするとポップオーバーが閉じて連続選択できないため無効化しない
-                onChange={(next) => void patch('tagIds', { tagIds: next })}
-              />
-            ) : (
-              <MetaText label={t('tags')}>{ticket.tags.length > 0 ? <TagChips tags={ticket.tags} /> : '-'}</MetaText>
             )}
           </div>
 
