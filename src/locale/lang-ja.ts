@@ -30,6 +30,9 @@ export const ja: DefaultLocaleItems = {
   agent_approver: '承認者',
   agent_approver_group: '承認グループ',
   agent_approver_user: '承認ユーザー',
+  agent_daily_limit: '1日の処理上限',
+  agent_daily_reset: '上限リセット時刻',
+  agent_daily_usage: '本日の処理数',
   agent_default_mode: '既定の処理方式',
   agent_duration: '所要時間',
   agent_handle: '識別子',
@@ -63,6 +66,7 @@ export const ja: DefaultLocaleItems = {
   agent_state_running: '処理中',
   agent_state_skipped: '見送り',
   agent_token: 'トークン',
+  agent_unlimited: '無制限',
   admin_regist: '管理者登録',
   all: 'すべて',
   allow: '許可',
@@ -320,7 +324,7 @@ export const ja: DefaultLocaleItems = {
     'エージェントに任せる方式を選びます。プラン先行はプランを投稿して返信を待ち、自動実行はそのまま対応して報告します。変更できるのはこのエージェントの承認者だけです。',
   msg_agent_no_approver: '承認者が未設定です。このエージェントのチケットは誰もエージェントモードを変更できません。',
   msg_agent_runner_desc:
-    '担当チケットを定期的に取りに来る常駐エージェントの設定です。稼働条件を満たすときだけAIエージェントが起動します。\n開始・終了はどちらか未指定なら終日稼働、開始が終了より後の場合は日跨ぎ(夜間のみ)として扱います。',
+    '担当チケットを定期的に取りに来る常駐エージェントの設定です。稼働条件を満たすときだけAIエージェントが起動します。\n開始・終了はどちらか未指定なら終日稼働、開始が終了より後の場合は日跨ぎ(夜間のみ)として扱います。\n1日の処理上限は起動1回ごとに数え、0を指定すると無制限です。カウントは上限リセット時刻(タイムゾーン設定に従う)を境に0へ戻ります。',
   msg_agent_token_once: 'トークンを確認できるのはこの画面だけです。閉じる前に控えてください。',
   msg_archive_board: 'アーカイブすると、ボード一覧の既定の表示対象から外れます。チケットは残ります。',
   msg_avatar_desc: '独自の画像を設定すると、以降のログイン時にDevuntu側の画像で上書きされなくなります。',
@@ -448,4 +452,5 @@ export const ja: DefaultLocaleItems = {
   '@reserved_board_key': 'PRV で始まるキーはシステムが予約しています',
   '@invalid_tag': 'タグ名は1～20文字、1チケット10個まで',
   '@invalid_agent_handle': '識別子は英小文字・数字・ハイフンで32文字まで(先頭と末尾はハイフン不可)',
+  '@invalid_daily_limit': '0(無制限)～999の整数',
 }

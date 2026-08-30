@@ -2,6 +2,7 @@
 
 import { MultiButton } from '@/components/general/button'
 import { GridBox } from '@/components/general/grid'
+import { InputCtrl } from '@/components/general/input'
 import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { SingleSelectField } from '@/components/general/select'
 import { SwitchCtrl } from '@/components/general/switch'
@@ -13,8 +14,10 @@ import {
   AGENT_POLL_INTERVAL_OPTIONS,
   AGENT_TASK_MODE_LOCALE,
   AGENT_TASK_MODES,
+  AGENT_UNLIMITED_DAILY_RUNS,
   AGENT_WINDOW_MAX_MIN,
   AGENT_WINDOW_STEP_MIN,
+  DEFAULT_AGENT_DAILY_RESET_MIN,
   DEFAULT_POLL_INTERVAL_SEC,
 } from '@/lib/agent/agent'
 import { COMMON_TIMEZONES, dayformat, DEFAULT_TZ, minToHHmm, tzOffsetLabel, tzOffsetMinutes } from '@/lib/day'
@@ -36,22 +39,27 @@ const WINDOW_OPTIONS = Object.fromEntries(
 /** ポーリング間隔は分で見せる。ラベル側に単位を持たせているので数値だけを並べる */
 const POLL_OPTIONS = Object.fromEntries(AGENT_POLL_INTERVAL_OPTIONS.map((sec) => [String(sec), String(sec / 60)]))
 
-/** 時刻(0:00 からの分)の選択。未選択(null)は「指定なし」= 終日 */
-const WindowSelect: FC<{
+/** 時刻(0:00 からの分)の選択。稼働時間帯は未選択(null)を「指定なし」= 終日として許す */
+const TimeSelect: FC<{
   control: Control<SaveAgentRunner>
-  name: Extract<FieldPath<SaveAgentRunner>, 'activeFromMin' | 'activeToMin'>
+  name: Extract<FieldPath<SaveAgentRunner>, 'activeFromMin' | 'activeToMin' | 'dailyResetMin'>
   label: string
-}> = ({ control, name, label }) => (
+  isClearable?: boolean
+}> = ({ control, name, label, isClearable }) => (
   <Controller
     control={control}
     name={name}
     render={({ field: { value, onChange, onBlur, ref } }) => (
       <SingleSelectField
-        isClearable
+        isClearable={isClearable}
         groupOptions={WINDOW_OPTIONS}
         label={label}
-        value={value === null ? null : String(value)}
-        onChange={(key) => onChange(key === null ? null : Number(key))}
+        value={value === null || value === undefined ? null : String(value)}
+        onChange={(key) => {
+          if (key !== null || isClearable) {
+            onChange(key === null ? null : Number(key))
+          }
+        }}
         onBlur={onBlur}
         ref={ref}
       />
@@ -99,6 +107,8 @@ const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; refre
       timezone: current?.timezone ?? DEFAULT_TZ,
       pollIntervalSec: current?.pollIntervalSec ?? DEFAULT_POLL_INTERVAL_SEC,
       defaultMode: current?.defaultMode ?? 'plan',
+      dailyRunLimit: current?.dailyRunLimit ?? AGENT_UNLIMITED_DAILY_RUNS,
+      dailyResetMin: current?.dailyResetMin ?? DEFAULT_AGENT_DAILY_RESET_MIN,
       rule: current?.rule ?? '',
     },
   })
@@ -119,10 +129,10 @@ const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; refre
           <NoticePanel className='text-xs'>{t('msg_agent_runner_desc')}</NoticePanel>
         </div>
 
-        <div className='col-span-12 flex items-center md:col-span-4'>
+        <div className='col-span-6 flex items-center md:col-span-2'>
           <SwitchCtrl control={control} name='enabled' id='agent-runner-enabled' label={t('enabled')} />
         </div>
-        <div className='col-span-6 md:col-span-4'>
+        <div className='col-span-6 md:col-span-2'>
           <Controller
             control={control}
             name='pollIntervalSec'
@@ -143,7 +153,7 @@ const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; refre
             )}
           />
         </div>
-        <div className='col-span-6 md:col-span-4'>
+        <div className='col-span-6 md:col-span-3'>
           <Controller
             control={control}
             name='defaultMode'
@@ -163,14 +173,7 @@ const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; refre
             )}
           />
         </div>
-
-        <div className='col-span-6 md:col-span-3'>
-          <WindowSelect control={control} name='activeFromMin' label={t('start_time')} />
-        </div>
-        <div className='col-span-6 md:col-span-3'>
-          <WindowSelect control={control} name='activeToMin' label={t('end_time')} />
-        </div>
-        <div className='col-span-12 md:col-span-6'>
+        <div className='col-span-6 md:col-span-5'>
           <Controller
             control={control}
             name='timezone'
@@ -188,6 +191,28 @@ const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; refre
           />
         </div>
 
+        <div className='col-span-6 md:col-span-3'>
+          <TimeSelect isClearable control={control} name='activeFromMin' label={t('start_time')} />
+        </div>
+        <div className='col-span-6 md:col-span-3'>
+          <TimeSelect isClearable control={control} name='activeToMin' label={t('end_time')} />
+        </div>
+
+        <div className='col-span-6 md:col-span-3'>
+          <InputCtrl
+            control={control}
+            name='dailyRunLimit'
+            constraintSchema={scSaveAgentRunner}
+            isRequired={false} // 既定値(無制限)が必ず入るため、必須の印は出さない
+            type='number'
+            label={t('agent_daily_limit')}
+            errorMessage={fet(errors.dailyRunLimit)}
+          />
+        </div>
+        <div className='col-span-6 md:col-span-3'>
+          <TimeSelect control={control} name='dailyResetMin' label={t('agent_daily_reset')} />
+        </div>
+
         <div className='col-span-12'>
           <MarkdownEditor
             control={control}
@@ -203,6 +228,11 @@ const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; refre
           <div className='col-span-12 space-y-1 border-t pt-2 text-xs'>
             <StatusField label={t('agent_last_polled')}>
               {current.lastPolledAt ? dayformat(current.lastPolledAt, 'tz-simple', tz) : '-'}
+            </StatusField>
+            <StatusField label={t('agent_daily_usage')}>
+              {`${current.todayRuns} / ${
+                current.dailyRunLimit === AGENT_UNLIMITED_DAILY_RUNS ? t('agent_unlimited') : current.dailyRunLimit
+              }`}
             </StatusField>
             <StatusField label={t('agent_host')}>{current.hostname || '-'}</StatusField>
             <StatusField label={t('version')}>{current.version || '-'}</StatusField>

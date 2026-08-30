@@ -8,7 +8,7 @@
 
 import {
   activeWindowLabel,
-  evaluateRunner,
+  evaluateRunnerActivity,
   findAgentRunner,
   findAgentTicket,
   finishAgentTask,
@@ -26,7 +26,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('@/lib/agent/agent-runner', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/agent/agent-runner')>()),
   findAgentRunner: vi.fn(),
-  evaluateRunner: vi.fn(),
+  evaluateRunnerActivity: vi.fn(),
   pickAgentTasks: vi.fn(),
   activeWindowLabel: vi.fn(),
   findAgentTicket: vi.fn(),
@@ -74,7 +74,7 @@ const parseResult = (content: unknown) => JSON.parse((content as { text: string 
 beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(findAgentRunner).mockResolvedValue(runnerRow as never)
-  vi.mocked(evaluateRunner).mockReturnValue({ active: true, reason: null })
+  vi.mocked(evaluateRunnerActivity).mockResolvedValue({ active: true, reason: null })
   vi.mocked(activeWindowLabel).mockReturnValue(null)
   vi.mocked(pickAgentTasks).mockResolvedValue([])
 })
@@ -111,7 +111,7 @@ describe('get_agent_setup_guide', () => {
 
 describe('get_agent_task', () => {
   it('稼働条件を満たさない場合は作業を返さず、処理しないよう指示する', async () => {
-    vi.mocked(evaluateRunner).mockReturnValue({ active: false, reason: 'outside_hours' })
+    vi.mocked(evaluateRunnerActivity).mockResolvedValue({ active: false, reason: 'outside_hours' })
 
     const result = await (await connectClient(agentAuth)).callTool({ name: 'get_agent_task', arguments: {} })
     const body = parseResult(result.content)
