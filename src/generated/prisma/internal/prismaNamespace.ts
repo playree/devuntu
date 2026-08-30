@@ -3278,6 +3278,8 @@ export const AgentRunnerScalarFieldEnum = {
   pollIntervalSec: 'pollIntervalSec',
   defaultMode: 'defaultMode',
   rule: 'rule',
+  dailyRunLimit: 'dailyRunLimit',
+  dailyResetMin: 'dailyResetMin',
   lastPolledAt: 'lastPolledAt',
   hostname: 'hostname',
   version: 'version',

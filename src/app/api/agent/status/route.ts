@@ -1,5 +1,5 @@
 import { agentError, agentJson, authenticateRunner, readJsonBody } from '@/lib/agent/agent-api'
-import { activeWindowLabel, evaluateRunner, failStaleAgentRuns, pickAgentTasks } from '@/lib/agent/agent-runner'
+import { activeWindowLabel, evaluateRunnerActivity, failStaleAgentRuns, pickAgentTasks } from '@/lib/agent/agent-runner'
 import { nowDate } from '@/lib/day'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
@@ -38,7 +38,7 @@ export const POST = async (request: Request) => {
     })
   }
 
-  const activity = evaluateRunner(runner, now)
+  const activity = await evaluateRunnerActivity(runner, now)
   // 稼働できないときは作業を渡さない。渡してしまうとランナー側の実装次第で動き出せてしまう
   if (!runner || !activity.active) {
     return agentJson({

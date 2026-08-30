@@ -9,6 +9,7 @@ import {
   removeAgentApprover,
   syncAgentApproverGroups,
 } from '@/lib/agent/agent-approver'
+import { countAgentRunsSince, dailyRunWindow } from '@/lib/agent/agent-runner'
 import { generateAgentToken, hashAgentToken } from '@/lib/agent/agent-token'
 import { auth } from '@/lib/auth/auth'
 import { isValidTimezone, nowDate } from '@/lib/day'
@@ -217,9 +218,10 @@ export const getAgentRunner = safeAuthAction
   .action(async ({ parsedInput: { id } }) => {
     await assertAgent(id)
 
-    return await prisma.agentRunner.findUnique({
+    const runner = await prisma.agentRunner.findUnique({
       where: { userId: id },
       select: {
+        id: true,
         enabled: true,
         activeFromMin: true,
         activeToMin: true,
@@ -227,11 +229,20 @@ export const getAgentRunner = safeAuthAction
         pollIntervalSec: true,
         defaultMode: true,
         rule: true,
+        dailyRunLimit: true,
+        dailyResetMin: true,
         lastPolledAt: true,
         hostname: true,
         version: true,
       },
     })
+    if (!runner) {
+      return null
+    }
+
+    // 上限の判定と同じ期間で数える。上限が無制限でも消化状況としては見せる
+    const { since } = dailyRunWindow(runner)
+    return { ...runner, todayRuns: await countAgentRunsSince(runner.id, since) }
   })
 export type GetAgentRunnerReturnType = Awaited<ReturnType<typeof getAgentRunner>>['data']
 

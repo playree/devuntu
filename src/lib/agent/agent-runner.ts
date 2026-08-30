@@ -8,9 +8,10 @@
 
 import type { AgentRunAction, AgentRunStatus, AgentTaskMode, AgentTaskState } from '@/generated/prisma/enums'
 import { OPEN_TICKET_STATUSES, ticketDisplayId } from '../board/task'
-import { DEFAULT_TZ, minToHHmm, nowDate, toZone } from '../day'
+import { addDaysDateOnly, DEFAULT_TZ, minToHHmm, nowDate, toZone, zonedMinutes } from '../day'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
+import { AGENT_UNLIMITED_DAILY_RUNS } from './agent'
 
 /**
  * 応答が返らないまま放置された実行を失敗として回収するまでの時間(分)。
@@ -20,7 +21,7 @@ import { prisma } from '../prisma'
 export const AGENT_RUN_TIMEOUT_MIN = 60
 
 /** 稼働できない理由。ランナーとエージェントの双方へそのまま返す */
-export type AgentInactiveReason = 'no_runner' | 'disabled' | 'outside_hours'
+export type AgentInactiveReason = 'no_runner' | 'disabled' | 'outside_hours' | 'daily_limit'
 
 export type AgentRunnerRow = {
   id: string
@@ -32,6 +33,8 @@ export type AgentRunnerRow = {
   pollIntervalSec: number
   defaultMode: AgentTaskMode
   rule: string | null
+  dailyRunLimit: number
+  dailyResetMin: number
 }
 
 /** `AgentRunner` を引くときの共通 select。呼び出し側で形がずれないようにここへ置く */
@@ -45,6 +48,8 @@ export const agentRunnerSelect = {
   pollIntervalSec: true,
   defaultMode: true,
   rule: true,
+  dailyRunLimit: true,
+  dailyResetMin: true,
 } as const
 
 export const findAgentRunner = async (userId: string): Promise<AgentRunnerRow | null> =>
@@ -77,7 +82,14 @@ export const activeWindowLabel = (window: ActiveWindow): { from: string; to: str
   return { from: minToHHmm(from), to: minToHHmm(to), timezone: window.timezone ?? DEFAULT_TZ }
 }
 
-export type AgentActivity = { active: boolean; reason: AgentInactiveReason | null }
+/** 処理上限の消化状況。上限が無制限のときは持たない */
+export type AgentRunUsage = { used: number; limit: number; resetAt: Date }
+
+export type AgentActivity = {
+  active: boolean
+  reason: AgentInactiveReason | null
+  usage?: AgentRunUsage | null
+}
 
 /** 稼働条件の判定。設定が無い(= 自動運用を使わない)場合も稼働不可として扱う */
 export const evaluateRunner = (runner: AgentRunnerRow | null, now: Date = nowDate()): AgentActivity => {
@@ -91,6 +103,51 @@ export const evaluateRunner = (runner: AgentRunnerRow | null, now: Date = nowDat
     return { active: false, reason: 'outside_hours' }
   }
   return { active: true, reason: null }
+}
+
+type DailyWindow = Pick<AgentRunnerRow, 'dailyResetMin' | 'timezone'>
+
+/**
+ * 処理上限のカウント期間。暦日ではなくリセット時刻を境にする。
+ *
+ * リセット時刻前は前日ぶんの期間がまだ続いているとみなす。`resetAt` は次にカウントが
+ * 0 に戻る時刻で、上限に達したときに「いつ再開するか」を伝えるために返す。
+ */
+export const dailyRunWindow = (window: DailyWindow, now: Date = nowDate()): { since: Date; resetAt: Date } => {
+  const tz = window.timezone ?? DEFAULT_TZ
+  const today = toZone(now, tz).format('YYYY-MM-DD')
+  const todayReset = zonedMinutes(today, window.dailyResetMin, tz)
+  const startDate = todayReset.valueOf() <= now.getTime() ? today : addDaysDateOnly(today, -1)
+  return {
+    since: zonedMinutes(startDate, window.dailyResetMin, tz).toDate(),
+    resetAt: zonedMinutes(addDaysDateOnly(startDate, 1), window.dailyResetMin, tz).toDate(),
+  }
+}
+
+/** カウント期間に開始した実行の数。失敗や見送りも起動した以上は数える */
+export const countAgentRunsSince = async (runnerId: string, since: Date): Promise<number> =>
+  prisma.agentRun.count({ where: { runnerId, startedAt: { gte: since } } })
+
+/**
+ * 稼働条件の判定に1日の処理上限を加えたもの。DB を引くので非同期。
+ *
+ * 上限が無制限、または他の理由で既に稼働不可なら件数は数えない(ポーリングのたびに引かせない)。
+ */
+export const evaluateRunnerActivity = async (
+  runner: AgentRunnerRow | null,
+  now: Date = nowDate(),
+): Promise<AgentActivity> => {
+  const activity = evaluateRunner(runner, now)
+  if (!runner || !activity.active || runner.dailyRunLimit <= AGENT_UNLIMITED_DAILY_RUNS) {
+    return activity
+  }
+
+  const { since, resetAt } = dailyRunWindow(runner, now)
+  const used = await countAgentRunsSince(runner.id, since)
+  const usage: AgentRunUsage = { used, limit: runner.dailyRunLimit, resetAt }
+  return used >= runner.dailyRunLimit
+    ? { active: false, reason: 'daily_limit', usage }
+    : { active: true, reason: null, usage }
 }
 
 export type AgentTask = {

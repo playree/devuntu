@@ -14,7 +14,7 @@ import { z } from 'zod'
 import {
   activeWindowLabel,
   AGENT_OUTCOMES,
-  evaluateRunner,
+  evaluateRunnerActivity,
   findAgentRunner,
   findAgentTicket,
   finishAgentTask,
@@ -37,7 +37,7 @@ const jsonResult = (value: unknown) => ({
 /** 自動運用の設定と稼働条件をまとめて引く。3ツールとも入口はこれ */
 const loadContext = async (auth: ResourceAuth) => {
   const runner = await findAgentRunner(auth.user.id)
-  return { runner, activity: evaluateRunner(runner) }
+  return { runner, activity: await evaluateRunnerActivity(runner) }
 }
 
 /**

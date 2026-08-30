@@ -28,6 +28,9 @@ export type LocaleItemBase =
   | 'agent_approver'
   | 'agent_approver_group'
   | 'agent_approver_user'
+  | 'agent_daily_limit'
+  | 'agent_daily_reset'
+  | 'agent_daily_usage'
   | 'agent_default_mode'
   | 'agent_duration'
   | 'agent_handle'
@@ -61,6 +64,7 @@ export type LocaleItemBase =
   | 'agent_state_running'
   | 'agent_state_skipped'
   | 'agent_token'
+  | 'agent_unlimited'
   | 'admin_regist'
   | 'all'
   | 'allow'
@@ -408,6 +412,7 @@ export type LocaleItemError =
   | '@reserved_board_key'
   | '@invalid_tag'
   | '@invalid_agent_handle'
+  | '@invalid_daily_limit'
 export const el = (item: LocaleItemError) => item
 
 export type LocaleItem = LocaleItemBase | LocaleItemError

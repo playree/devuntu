@@ -1,6 +1,6 @@
 import { AgentRunAction } from '@/generated/prisma/enums'
 import { agentError, agentJson, authenticateRunner, readJsonBody } from '@/lib/agent/agent-api'
-import { evaluateRunner, startAgentRun } from '@/lib/agent/agent-runner'
+import { evaluateRunnerActivity, startAgentRun } from '@/lib/agent/agent-runner'
 import { z } from 'zod'
 
 /**
@@ -27,7 +27,7 @@ export const POST = async (request: Request) => {
     return agentError(400, 'invalid_request')
   }
 
-  const activity = evaluateRunner(runner)
+  const activity = await evaluateRunnerActivity(runner)
   if (!runner || !activity.active) {
     return agentError(409, activity.reason ?? 'inactive')
   }

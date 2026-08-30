@@ -7,7 +7,9 @@
 
 import {
   activeWindowLabel,
+  dailyRunWindow,
   evaluateRunner,
+  evaluateRunnerActivity,
   failStaleAgentRuns,
   finishAgentRunById,
   finishAgentTask,
@@ -24,6 +26,7 @@ vi.mock('@/lib/prisma', () => {
   const ticket = { findMany: vi.fn(), findUnique: vi.fn(), update: vi.fn(), updateMany: vi.fn() }
   const ticketComment = { findFirst: vi.fn() }
   const agentRun = {
+    count: vi.fn(),
     findMany: vi.fn(),
     findFirst: vi.fn(),
     findUnique: vi.fn(),
@@ -53,6 +56,8 @@ const runner = (override: Partial<AgentRunnerRow> = {}): AgentRunnerRow => ({
   pollIntervalSec: 300,
   defaultMode: 'plan',
   rule: null,
+  dailyRunLimit: 0,
+  dailyResetMin: 5 * 60,
   ...override,
 })
 
@@ -129,6 +134,61 @@ describe('evaluateRunner', () => {
 
   it('有効かつ時間帯の内側なら稼働できる', () => {
     expect(evaluateRunner(runner(), jst('14:00'))).toEqual({ active: true, reason: null })
+  })
+})
+
+describe('dailyRunWindow', () => {
+  it('リセット時刻を過ぎていればその日の分から数える', () => {
+    const { since, resetAt } = dailyRunWindow(runner(), jst('05:00'))
+    expect(since.toISOString()).toBe(new Date('2026-08-25T05:00:00+09:00').toISOString())
+    expect(resetAt.toISOString()).toBe(new Date('2026-08-26T05:00:00+09:00').toISOString())
+  })
+
+  it('リセット時刻より前は前日の分がまだ続いている', () => {
+    const { since, resetAt } = dailyRunWindow(runner(), jst('04:59'))
+    expect(since.toISOString()).toBe(new Date('2026-08-24T05:00:00+09:00').toISOString())
+    expect(resetAt.toISOString()).toBe(new Date('2026-08-25T05:00:00+09:00').toISOString())
+  })
+
+  it('タイムゾーンの指定に従う', () => {
+    // 05:00 JST は 20:00 UTC(前日)なので、UTC 基準ではまだリセット前
+    const { since } = dailyRunWindow(runner({ timezone: 'UTC' }), jst('05:00'))
+    expect(since.toISOString()).toBe(new Date('2026-08-24T05:00:00Z').toISOString())
+  })
+})
+
+describe('evaluateRunnerActivity', () => {
+  it('上限が無制限なら件数を数えない', async () => {
+    await expect(evaluateRunnerActivity(runner(), jst('14:00'))).resolves.toEqual({ active: true, reason: null })
+    expect(agentRun.count).not.toHaveBeenCalled()
+  })
+
+  it('他の理由で稼働できない場合も件数を数えない', async () => {
+    const target = runner({ enabled: false, dailyRunLimit: 5 })
+    await expect(evaluateRunnerActivity(target, jst('14:00'))).resolves.toEqual({ active: false, reason: 'disabled' })
+    expect(agentRun.count).not.toHaveBeenCalled()
+  })
+
+  it('上限に達していなければ稼働できる', async () => {
+    agentRun.count.mockResolvedValue(2)
+    const activity = await evaluateRunnerActivity(runner({ dailyRunLimit: 5 }), jst('14:00'))
+    expect(activity.active).toBe(true)
+    expect(activity.usage).toEqual({
+      used: 2,
+      limit: 5,
+      resetAt: new Date('2026-08-26T05:00:00+09:00'),
+    })
+    expect(agentRun.count).toHaveBeenCalledWith({
+      where: { runnerId: 'r1', startedAt: { gte: new Date('2026-08-25T05:00:00+09:00') } },
+    })
+  })
+
+  it('上限に達していれば稼働できない', async () => {
+    agentRun.count.mockResolvedValue(5)
+    const activity = await evaluateRunnerActivity(runner({ dailyRunLimit: 5 }), jst('14:00'))
+    expect(activity.active).toBe(false)
+    expect(activity.reason).toBe('daily_limit')
+    expect(activity.usage?.used).toBe(5)
   })
 })
 

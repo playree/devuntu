@@ -30,6 +30,9 @@ export const en: LocaleItems = {
   agent_approver: 'Approvers',
   agent_approver_group: 'Approver Groups',
   agent_approver_user: 'Approver Users',
+  agent_daily_limit: 'Daily Run Limit',
+  agent_daily_reset: 'Limit Reset Time',
+  agent_daily_usage: 'Runs Today',
   agent_default_mode: 'Default Mode',
   agent_duration: 'Duration',
   agent_handle: 'Handle',
@@ -63,6 +66,7 @@ export const en: LocaleItems = {
   agent_state_running: 'Running',
   agent_state_skipped: 'Skipped',
   agent_token: 'Token',
+  agent_unlimited: 'Unlimited',
   admin_regist: 'Admin Regist',
   all: 'All',
   allow: 'Allow',
@@ -320,7 +324,7 @@ Please copy and use the connection information above.
     'Choose how the agent handles this ticket. Plan first posts a plan and waits for your reply; Auto carries out the work and reports back. Only approvers of this agent can change it.',
   msg_agent_no_approver: 'No approver is set. Nobody can change the agent mode of tickets assigned to this agent.',
   msg_agent_runner_desc:
-    'Settings for the runner that polls for assigned tickets. The AI agent starts only while these conditions are met. Leaving either start or end unset means all day; a start later than the end crosses midnight (nights only).',
+    'Settings for the runner that polls for assigned tickets. The AI agent starts only while these conditions are met. Leaving either start or end unset means all day; a start later than the end crosses midnight (nights only). The daily run limit counts every start, and 0 means unlimited; the count returns to 0 at the reset time, based on the timezone setting.',
   msg_agent_token_once: 'This is the only time the token is shown. Copy it before closing.',
   msg_archive_board: 'Archiving hides the board from the default board list. Tickets are kept.',
   msg_avatar_desc: 'Setting a custom image stops it from being overwritten by Devuntu on future sign-ins.',
@@ -448,4 +452,5 @@ Expiration time: 5 minutes
   '@reserved_board_key': 'Keys starting with PRV are reserved by the system',
   '@invalid_tag': 'Tag names are 1-20 characters, up to 10 per ticket',
   '@invalid_agent_handle': 'Handles are up to 32 lowercase letters, digits, and hyphens (not at the start or end)',
+  '@invalid_daily_limit': 'An integer from 0 (unlimited) to 999',
 }

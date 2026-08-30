@@ -8,6 +8,7 @@ import {
   AGENT_TOKEN_EXPIRES,
   AGENT_WINDOW_MAX_MIN,
   AGENT_WINDOW_STEP_MIN,
+  MAX_AGENT_DAILY_LIMIT,
   MAX_POLL_INTERVAL_SEC,
   MIN_POLL_INTERVAL_SEC,
 } from '../agent/agent'
@@ -194,14 +195,16 @@ export const zAgentMode = z.enum(AGENT_TASK_MODES)
 /** チケットの処理状態。null(未着手)は絞り込み側で queued と同一視する */
 export const zAgentState = z.enum(AGENT_TASK_STATES)
 
-/** 稼働許可時間帯の時刻。0:00 からの分(30分刻み)。null は指定なし(= 終日) */
-const zWindowMin = z
+/** 1日のうちの時刻。0:00 からの分(30分刻み) */
+const zDayMin = z
   .number()
   .int()
   .multipleOf(AGENT_WINDOW_STEP_MIN, el('@invalid_time_range'))
   .min(0, el('@invalid_time_range'))
   .max(AGENT_WINDOW_MAX_MIN, el('@invalid_time_range'))
-  .nullable()
+
+/** 稼働許可時間帯の時刻。null は指定なし(= 終日) */
+const zWindowMin = zDayMin.nullable()
 
 /**
  * 自動運用(Devuntu Agent)の設定。
@@ -218,6 +221,13 @@ export const scSaveAgentRunner = z.object({
   timezone: z.string().nullable(),
   pollIntervalSec: z.number().int().min(MIN_POLL_INTERVAL_SEC).max(MAX_POLL_INTERVAL_SEC),
   defaultMode: zAgentMode,
+  /** 1日に開始できる実行の上限。0 は無制限 */
+  dailyRunLimit: z
+    .number(el('@invalid_daily_limit'))
+    .int(el('@invalid_daily_limit'))
+    .min(0, el('@invalid_daily_limit'))
+    .max(MAX_AGENT_DAILY_LIMIT, el('@invalid_daily_limit')),
+  dailyResetMin: zDayMin,
   // optional にしないと isFieldRequired が required 扱いにしてしまう(MarkdownEditor は isRequired の上書きを持たない)
   rule: z.string().max(8000).nullable().optional(),
 })

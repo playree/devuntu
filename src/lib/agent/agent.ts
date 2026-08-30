@@ -119,6 +119,18 @@ export const AGENT_WINDOW_STEP_MIN = 30
 /** 稼働許可時間帯に指定できる最大値(23:30) */
 export const AGENT_WINDOW_MAX_MIN = 24 * 60 - AGENT_WINDOW_STEP_MIN
 
+/** 1日の処理上限として無制限を表す値 */
+export const AGENT_UNLIMITED_DAILY_RUNS = 0
+
+/**
+ * 1日の処理上限に指定できる最大値。
+ * ポーリング間隔が最短(60秒)でも1日で到達できない回数を上限にし、入力ミスの歯止めだけを掛ける。
+ */
+export const MAX_AGENT_DAILY_LIMIT = 999
+
+/** 処理上限のカウントをリセットする時刻の既定値(5:00) */
+export const DEFAULT_AGENT_DAILY_RESET_MIN = 5 * 60
+
 /**
  * ランナーの状態。一覧の表示にだけ使う。
  *

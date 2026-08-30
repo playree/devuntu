@@ -131,6 +131,12 @@ model AgentRunner {
   /// エージェントが作業前に読み、処理全体を通じて従う指示(Markdown)
   rule String?
 
+  /// 1日に開始できる実行の上限。0 は無制限
+  dailyRunLimit Int @default(0)
+
+  /// 上限のカウントをリセットする時刻。0:00 からの分。判定は timezone に従う
+  dailyResetMin Int @default(300)
+
   /// ランナーの自己申告。稼働状況の表示にだけ使い、認可には使わない
   lastPolledAt DateTime?
   hostname     String?
