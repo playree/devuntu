@@ -90,6 +90,7 @@ export const AgentsClient: FC = () => {
   }, [agentId])
 
   const applyAgentStates = (next: AgentTaskState[]) => {
+    setSelectedId(undefined)
     agentStatesRef.current = next
     setAgentStates(next)
     // 条件が変われば件数も変わるため、前の条件でのページ位置は引き継がない
