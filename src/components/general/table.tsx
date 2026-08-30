@@ -4,6 +4,7 @@ import {
   Checkbox,
   cn,
   Pagination,
+  Popover,
   type SortDescriptor,
   Spinner,
   Table,
@@ -91,6 +92,29 @@ const SelectionCheckbox: FC = () => (
 export const SelectionCell: FC = () => (
   <Table.Cell className={cn('py-2', SELECTION_COLUMN_PADDING)}>
     <SelectionCheckbox />
+  </Table.Cell>
+)
+
+/**
+ * 列幅に収まらない長文を省略表示し、クリックで全文をポップオーバー表示するセル。
+ *
+ * Popover.Trigger は既定で inline-block なので、display を上書きせずに済む
+ * max-w-full + truncate で省略する(block に変えると HeroUI 側の CSS と競合する)。
+ */
+export const TruncatedCell: FC<{ value: string; className?: string }> = ({ value, className }) => (
+  <Table.Cell className={cn('truncate', className)}>
+    {value && (
+      <Popover>
+        <Popover.Trigger tabIndex={0} className='max-w-full truncate align-middle hover:underline'>
+          {value}
+        </Popover.Trigger>
+        <Popover.Content placement='bottom start' className='max-w-sm'>
+          <Popover.Dialog className='max-h-64 overflow-y-auto text-sm wrap-break-word whitespace-pre-wrap'>
+            {value}
+          </Popover.Dialog>
+        </Popover.Content>
+      </Popover>
+    )}
   </Table.Cell>
 )
 
