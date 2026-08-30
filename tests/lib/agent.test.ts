@@ -12,7 +12,9 @@ import {
   agentEmail,
   agentHandle,
   agentRunnerStatus,
+  agentStateWhere,
   agentTokenExpiresAt,
+  OPEN_AGENT_TASK_STATES,
 } from '@/lib/agent/agent'
 import { zEmail } from '@/lib/schema/schema'
 import { describe, expect, it } from 'vitest'
@@ -99,5 +101,33 @@ describe('agentRunnerStatus', () => {
   it('許容を過ぎたらオフライン', () => {
     const stale = new Date(now.getTime() - (300 * AGENT_OFFLINE_INTERVAL_FACTOR + 1) * 1000)
     expect(agentRunnerStatus(runner({ lastPolledAt: stale }), now)).toBe('offline')
+  })
+})
+
+/**
+ * 承認画面の処理状態による絞り込み。
+ *
+ * `Ticket.agentState` は nullable で null は未着手(queued)と同じ扱いのため、
+ * queued を選んだときに null 行が落ちないことを固定する。
+ */
+describe('agentStateWhere', () => {
+  it('空配列は絞り込みなし', () => {
+    expect(agentStateWhere([])).toEqual({})
+  })
+
+  it('queued を含むと agentState が null のチケットも対象になる', () => {
+    expect(agentStateWhere(['queued', 'running'])).toEqual({
+      OR: [{ agentState: null }, { agentState: { in: ['queued', 'running'] } }],
+    })
+  })
+
+  it('queued を含まなければ指定した状態だけを引く', () => {
+    expect(agentStateWhere(['done'])).toEqual({ agentState: { in: ['done'] } })
+  })
+
+  it('初期値(完了以外)は null 行を含み done を含まない', () => {
+    expect(agentStateWhere(OPEN_AGENT_TASK_STATES)).toEqual({
+      OR: [{ agentState: null }, { agentState: { in: ['queued', 'running', 'planned', 'failed', 'skipped'] } }],
+    })
   })
 })

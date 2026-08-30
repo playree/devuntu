@@ -7,6 +7,7 @@
  */
 
 import type { AgentRunAction, AgentRunStatus, AgentTaskMode, AgentTaskState } from '@/generated/prisma/enums'
+import type { TicketWhereInput } from '@/generated/prisma/models'
 import type { LocaleItemBase } from '@/locale'
 
 /**
@@ -51,6 +52,33 @@ export const AGENT_TASK_MODE_LOCALE = {
   plan: 'agent_mode_plan',
   auto: 'agent_mode_auto',
 } as const satisfies Record<AgentTaskMode, LocaleItemBase>
+
+/** チケットの処理状態。定義順は選択肢の表示順になる */
+export const AGENT_TASK_STATES = [
+  'queued',
+  'running',
+  'planned',
+  'done',
+  'failed',
+  'skipped',
+] as const satisfies readonly AgentTaskState[]
+
+/** 完了(done)以外の処理状態。承認画面の絞り込み初期値に使う */
+export const OPEN_AGENT_TASK_STATES = AGENT_TASK_STATES.filter((state) => state !== 'done')
+
+/**
+ * 処理状態による絞り込み条件。空配列は絞り込みなし。
+ *
+ * `agentState` が null のチケットは未着手(queued)として扱う(`agent-runner.ts` のポーリング条件と同じ規約)。
+ */
+export const agentStateWhere = (states: readonly AgentTaskState[]): TicketWhereInput => {
+  if (states.length === 0) {
+    return {}
+  }
+  return states.includes('queued')
+    ? { OR: [{ agentState: null }, { agentState: { in: [...states] } }] }
+    : { agentState: { in: [...states] } }
+}
 
 export const AGENT_TASK_STATE_LOCALE = {
   queued: 'agent_state_queued',

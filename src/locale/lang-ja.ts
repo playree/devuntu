@@ -59,7 +59,7 @@ export const ja: DefaultLocaleItems = {
   agent_state_done: '完了',
   agent_state_failed: '失敗',
   agent_state_planned: '返信待ち',
-  agent_state_queued: '未着手',
+  agent_state_queued: '処理待ち',
   agent_state_running: '処理中',
   agent_state_skipped: '見送り',
   agent_token: 'トークン',
