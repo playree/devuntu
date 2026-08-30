@@ -67,24 +67,6 @@ export const TicketsClient: FC<{
     filterRef.current = filter
   }, [filter])
 
-  // Escape で詳細パネルを閉じる。
-  // モーダルやポップオーバーが処理済みの Escape(defaultPrevented)と、
-  // 入力中の Escape は入力内容を失わせないため無視する。
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape' || e.defaultPrevented) {
-        return
-      }
-      const el = e.target as HTMLElement | null
-      if (el?.closest('input, textarea, [contenteditable="true"]')) {
-        return
-      }
-      setSelectedId(undefined)
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [])
-
   const applyFilter = (next: TicketSearch) => {
     filterRef.current = next
     setFilter(next)
@@ -199,7 +181,12 @@ export const TicketsClient: FC<{
         )}
       </MultiTable>
 
-      <SideDrawer isOpen={!!selectedId} ariaLabel={t('ticket')} className='bg-background border-l p-4 shadow-2xl'>
+      <SideDrawer
+        isOpen={!!selectedId}
+        ariaLabel={t('ticket')}
+        onClose={() => setSelectedId(undefined)}
+        className='bg-background border-l p-4 shadow-2xl'
+      >
         {selectedId && (
           <TicketDetailClient
             // id が変わっても useActionData は再取得しないため、選択のたびに作り直す

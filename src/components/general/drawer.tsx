@@ -18,8 +18,10 @@ export const SideDrawer: FC<{
   children: ReactNode
   /** 読み上げ用のパネル名。共通部品なのでロケールは呼び出し側で解決する */
   ariaLabel?: string
+  /** 指定すると開いている間だけ Escape で閉じられるようになる */
+  onClose?: () => void
   className?: string
-}> = ({ isOpen, children, ariaLabel, className }) => {
+}> = ({ isOpen, children, ariaLabel, onClose, className }) => {
   const panelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -31,6 +33,26 @@ export const SideDrawer: FC<{
     const id = requestAnimationFrame(() => panelRef.current?.focus())
     return () => cancelAnimationFrame(id)
   }, [isOpen])
+
+  // モーダルやポップオーバーが処理済みの Escape(defaultPrevented)と、
+  // 入力中の Escape は入力内容を失わせないため無視する。
+  useEffect(() => {
+    if (!isOpen || !onClose) {
+      return
+    }
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || e.defaultPrevented) {
+        return
+      }
+      const el = e.target as HTMLElement | null
+      if (el?.closest('input, textarea, [contenteditable="true"]')) {
+        return
+      }
+      onClose()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [isOpen, onClose])
 
   return (
     <AnimatePresence>

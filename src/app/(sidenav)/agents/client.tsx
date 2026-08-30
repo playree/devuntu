@@ -6,7 +6,7 @@ import { FlexCol } from '@/components/general/flex'
 import { useServerPagingList } from '@/components/general/paging'
 import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { SingleSelectField } from '@/components/general/select'
-import { MultiTable } from '@/components/general/table'
+import { MultiTable, SelectionCell } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
 import { ArrowPathIcon, CpuChipIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
@@ -139,6 +139,7 @@ export const AgentsClient: FC = () => {
             isSmart
             pagingList={list}
             selectionMode='single'
+            selectionBehavior='toggle'
             selectedKeys={selectedId ? [selectedId] : []}
             onSelectionChange={(keys) => {
               // 'all' は単一選択では発生しないが、型の都合で除外する
@@ -157,7 +158,6 @@ export const AgentsClient: FC = () => {
               },
               { id: 'status', name: t('status'), allowsSorting: true, minWidth: 120, defaultWidth: 120 },
               { id: 'priority', name: t('priority'), allowsSorting: true, minWidth: 70, defaultWidth: 70 },
-              { id: 'dueDate', name: t('due_date'), allowsSorting: true, minWidth: 110, defaultWidth: 110 },
               { id: 'agentState', name: t('agent_state'), allowsSorting: false, minWidth: 100, defaultWidth: 110 },
               { id: 'agentMode', name: t('agent_mode'), allowsSorting: false, minWidth: 150, defaultWidth: 170 },
               { id: 'updatedAt', name: t('updated_at'), allowsSorting: true, minWidth: 110, defaultWidth: 110 },
@@ -165,6 +165,7 @@ export const AgentsClient: FC = () => {
           >
             {(item) => (
               <Table.Row key={item.id} id={item.id}>
+                <SelectionCell />
                 <Table.Cell>
                   <TicketIdText displayId={item.displayId} />
                 </Table.Cell>
@@ -188,7 +189,6 @@ export const AgentsClient: FC = () => {
                 <Table.Cell>
                   <PriorityChip priority={item.priority} />
                 </Table.Cell>
-                <Table.Cell className='font-mono text-xs'>{dayformat(item.dueDate, 'date') || '-'}</Table.Cell>
                 <Table.Cell>{item.agentState ? <AgentStateChip state={item.agentState} /> : '-'}</Table.Cell>
                 <Table.Cell {...preventParentSelection}>
                   <SingleSelectField
@@ -213,7 +213,12 @@ export const AgentsClient: FC = () => {
         </>
       )}
 
-      <SideDrawer isOpen={!!selectedId} ariaLabel={t('ticket')} className='bg-background border-l p-4 shadow-2xl'>
+      <SideDrawer
+        isOpen={!!selectedId}
+        ariaLabel={t('ticket')}
+        onClose={() => setSelectedId(undefined)}
+        className='bg-background border-l p-4 shadow-2xl'
+      >
         {selectedId && (
           <TicketDetailClient
             // id が変わっても useActionData は再取得しないため、選択のたびに作り直す
