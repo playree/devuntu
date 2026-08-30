@@ -111,27 +111,27 @@ export const AgentToken: FC<{
                       }}
                     />
                   </div>
-                </GridBox>
 
-                <FlexCol className='gap-1'>
-                  <span className='text-xs opacity-70'>{t('current_token')}</span>
-                  {isLoading ? (
-                    <PanelSkeleton className='min-h-24' />
-                  ) : current ? (
-                    <Panel className='flex flex-col gap-1 py-3 text-xs'>
-                      <TokenField label={t('agent_token')}>…{current.hint}</TokenField>
-                      <TokenField label={t('issued_at')}>{dayformat(current.createdAt, 'tz-simple', tz)}</TokenField>
-                      <TokenField label={t('token_expiration')}>
-                        {current.expiresAt ? dayformat(current.expiresAt, 'tz-simple', tz) : t('no_expiration')}
-                      </TokenField>
-                      <TokenField label={t('last_used')}>
-                        {current.lastUsedAt ? dayformat(current.lastUsedAt, 'tz-simple', tz) : '-'}
-                      </TokenField>
-                    </Panel>
-                  ) : (
-                    <NoticePanel className='text-xs'>{t('not_issued')}</NoticePanel>
-                  )}
-                </FlexCol>
+                  <FlexCol className='col-span-12 gap-1 sm:col-span-7'>
+                    <span className='text-xs opacity-70'>{t('current_token')}</span>
+                    {isLoading ? (
+                      <PanelSkeleton className='min-h-24' />
+                    ) : current ? (
+                      <Panel className='flex flex-col gap-1 py-3 text-xs'>
+                        <TokenField label={t('agent_token')}>…{current.hint}</TokenField>
+                        <TokenField label={t('issued_at')}>{dayformat(current.createdAt, 'tz-simple', tz)}</TokenField>
+                        <TokenField label={t('token_expiration')}>
+                          {current.expiresAt ? dayformat(current.expiresAt, 'tz-simple', tz) : t('no_expiration')}
+                        </TokenField>
+                        <TokenField label={t('last_used')}>
+                          {current.lastUsedAt ? dayformat(current.lastUsedAt, 'tz-simple', tz) : '-'}
+                        </TokenField>
+                      </Panel>
+                    ) : (
+                      <NoticePanel className='text-xs'>{t('not_issued')}</NoticePanel>
+                    )}
+                  </FlexCol>
+                </GridBox>
 
                 <div className='flex items-center gap-2'>
                   <MultiButton
