@@ -6,12 +6,15 @@
  * `Ticket.agentState` の遷移を1箇所だけにする。
  */
 
+import { Prisma } from '@/generated/prisma/client'
 import type { AgentRunAction, AgentRunStatus, AgentTaskMode, AgentTaskState } from '@/generated/prisma/enums'
 import { OPEN_TICKET_STATUSES, ticketDisplayId } from '../board/task'
 import { addDaysDateOnly, DEFAULT_TZ, minToHHmm, nowDate, toZone, zonedMinutes } from '../day'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
 import { AGENT_UNLIMITED_DAILY_RUNS } from './agent'
+
+type Db = Prisma.TransactionClient | typeof prisma
 
 /**
  * 応答が返らないまま放置された実行を失敗として回収するまでの時間(分)。
@@ -125,8 +128,15 @@ export const dailyRunWindow = (window: DailyWindow, now: Date = nowDate()): { si
 }
 
 /** カウント期間に開始した実行の数。失敗や見送りも起動した以上は数える */
-export const countAgentRunsSince = async (runnerId: string, since: Date): Promise<number> =>
-  prisma.agentRun.count({ where: { runnerId, startedAt: { gte: since } } })
+export const countAgentRunsSince = async (db: Db, runnerId: string, since: Date): Promise<number> =>
+  db.agentRun.count({ where: { runnerId, startedAt: { gte: since } } })
+
+/** 処理上限の消化状況を算出する。上限チェックと実行作成の両方から使うので共通化している */
+const computeAgentRunUsage = async (db: Db, runner: AgentRunnerRow, now: Date): Promise<AgentRunUsage> => {
+  const { since, resetAt } = dailyRunWindow(runner, now)
+  const used = await countAgentRunsSince(db, runner.id, since)
+  return { used, limit: runner.dailyRunLimit, resetAt }
+}
 
 /**
  * 稼働条件の判定に1日の処理上限を加えたもの。DB を引くので非同期。
@@ -142,10 +152,8 @@ export const evaluateRunnerActivity = async (
     return activity
   }
 
-  const { since, resetAt } = dailyRunWindow(runner, now)
-  const used = await countAgentRunsSince(runner.id, since)
-  const usage: AgentRunUsage = { used, limit: runner.dailyRunLimit, resetAt }
-  return used >= runner.dailyRunLimit
+  const usage = await computeAgentRunUsage(prisma, runner, now)
+  return usage.used >= usage.limit
     ? { active: false, reason: 'daily_limit', usage }
     : { active: true, reason: null, usage }
 }
@@ -349,31 +357,47 @@ export const findAgentTicket = async (userId: string, ticketId: string): Promise
   }
 }
 
+export type StartAgentRunResult =
+  | { ok: true; run: { id: string; displayId: string } }
+  | { ok: false; reason: 'ticket_not_available' }
+  | { ok: false; reason: 'daily_limit'; usage: AgentRunUsage }
+
 /**
  * 実行の開始を記録し、チケットを処理中にする。
- * 対象がエージェントの担当でない、またはオプトインされていない場合は null を返す。
+ * 対象がエージェントの担当でない、またはオプトインされていない場合は `ticket_not_available` を返す。
+ *
+ * 上限チェックと実行作成を同一トランザクション内で行い、対象ランナーの行をロックすることで、
+ * 並行リクエストが上限チェックを両方すり抜けて `dailyRunLimit` を超過するのを防ぐ。
  */
 export const startAgentRun = async (
   runner: AgentRunnerRow,
   ticketId: string,
   action: AgentRunAction,
-): Promise<{ id: string; displayId: string } | null> => {
+  now: Date = nowDate(),
+): Promise<StartAgentRunResult> => {
   const target = await findAgentTicket(runner.userId, ticketId)
   if (!target) {
-    return null
+    return { ok: false, reason: 'ticket_not_available' }
   }
 
-  const run = await prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx) => {
+    if (runner.dailyRunLimit > AGENT_UNLIMITED_DAILY_RUNS) {
+      await tx.$queryRaw`SELECT "id" FROM "agent_runner" WHERE "id" = ${runner.id} FOR UPDATE`
+      const usage = await computeAgentRunUsage(tx, runner, now)
+      if (usage.used >= usage.limit) {
+        return { ok: false, reason: 'daily_limit', usage }
+      }
+    }
+
     const created = await tx.agentRun.create({
       data: { runnerId: runner.id, ticketId: target.id, ticketRef: target.displayId, action },
       select: { id: true },
     })
     await tx.ticket.update({ where: { id: target.id }, data: { agentState: 'running' } })
-    return created
-  })
 
-  logger.info({ runnerId: runner.id, runId: run.id, ticketRef: target.displayId, action }, 'agent run started')
-  return { id: run.id, displayId: target.displayId }
+    logger.info({ runnerId: runner.id, runId: created.id, ticketRef: target.displayId, action }, 'agent run started')
+    return { ok: true, run: { id: created.id, displayId: target.displayId } }
+  })
 }
 
 /**

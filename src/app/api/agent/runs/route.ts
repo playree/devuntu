@@ -1,6 +1,6 @@
 import { AgentRunAction } from '@/generated/prisma/enums'
 import { agentError, agentJson, authenticateRunner, readJsonBody } from '@/lib/agent/agent-api'
-import { evaluateRunnerActivity, startAgentRun } from '@/lib/agent/agent-runner'
+import { evaluateRunner, startAgentRun } from '@/lib/agent/agent-runner'
 import { z } from 'zod'
 
 /**
@@ -27,15 +27,15 @@ export const POST = async (request: Request) => {
     return agentError(400, 'invalid_request')
   }
 
-  const activity = await evaluateRunnerActivity(runner)
+  const activity = evaluateRunner(runner)
   if (!runner || !activity.active) {
     return agentError(409, activity.reason ?? 'inactive')
   }
 
-  const run = await startAgentRun(runner, parsed.data.ticketId, parsed.data.action)
-  if (!run) {
-    return agentError(404, 'ticket_not_available')
+  const started = await startAgentRun(runner, parsed.data.ticketId, parsed.data.action)
+  if (!started.ok) {
+    return agentError(started.reason === 'ticket_not_available' ? 404 : 409, started.reason)
   }
 
-  return agentJson({ runId: run.id, displayId: run.displayId })
+  return agentJson({ runId: started.run.id, displayId: started.run.displayId })
 }

@@ -242,7 +242,7 @@ export const getAgentRunner = safeAuthAction
 
     // 上限の判定と同じ期間で数える。上限が無制限でも消化状況としては見せる
     const { since } = dailyRunWindow(runner)
-    return { ...runner, todayRuns: await countAgentRunsSince(runner.id, since) }
+    return { ...runner, todayRuns: await countAgentRunsSince(prisma, runner.id, since) }
   })
 export type GetAgentRunnerReturnType = Awaited<ReturnType<typeof getAgentRunner>>['data']
 

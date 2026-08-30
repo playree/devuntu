@@ -35,7 +35,8 @@ vi.mock('@/lib/prisma', () => {
     updateMany: vi.fn(),
   }
   const agentRunner = { findUnique: vi.fn(), update: vi.fn() }
-  const models = { ticket, ticketComment, agentRun, agentRunner }
+  const $queryRaw = vi.fn()
+  const models = { ticket, ticketComment, agentRun, agentRunner, $queryRaw }
   const $transaction = vi.fn(async (arg: unknown) =>
     typeof arg === 'function' ? await (arg as (tx: unknown) => unknown)(models) : await Promise.all(arg as unknown[]),
   )
@@ -337,56 +338,83 @@ describe('finishAgentRunById', () => {
 })
 
 describe('startAgentRun', () => {
-  it('担当外のチケットは開始できない', async () => {
-    ticket.findUnique.mockResolvedValueOnce({
-      id: 't1',
-      number: 42,
-      title: 'テストチケット',
-      status: 'todo',
-      assigneeId: 'other',
-      agentMode: 'plan',
-      agentState: null,
-      board: { key: 'ABC' },
-    } as never)
+  const openTicket = (override: Record<string, unknown> = {}) => ({
+    id: 't1',
+    number: 42,
+    title: 'テストチケット',
+    status: 'todo',
+    assigneeId: 'a1',
+    agentMode: 'plan',
+    agentState: null,
+    board: { key: 'ABC' },
+    ...override,
+  })
 
-    expect(await startAgentRun(runner(), 't1', 'plan')).toBeNull()
+  it('担当外のチケットは開始できない', async () => {
+    ticket.findUnique.mockResolvedValueOnce(openTicket({ assigneeId: 'other' }) as never)
+
+    expect(await startAgentRun(runner(), 't1', 'plan')).toEqual({ ok: false, reason: 'ticket_not_available' })
   })
 
   it('オプトインされていないチケットは開始できない', async () => {
-    ticket.findUnique.mockResolvedValueOnce({
-      id: 't1',
-      number: 42,
-      title: 'テストチケット',
-      status: 'todo',
-      assigneeId: 'a1',
-      agentMode: null,
-      agentState: null,
-      board: { key: 'ABC' },
-    } as never)
+    ticket.findUnique.mockResolvedValueOnce(openTicket({ agentMode: null }) as never)
 
-    expect(await startAgentRun(runner(), 't1', 'plan')).toBeNull()
+    expect(await startAgentRun(runner(), 't1', 'plan')).toEqual({ ok: false, reason: 'ticket_not_available' })
   })
 
   it('実行を記録してチケットを処理中にする', async () => {
-    ticket.findUnique.mockResolvedValueOnce({
-      id: 't1',
-      number: 42,
-      title: 'テストチケット',
-      status: 'todo',
-      assigneeId: 'a1',
-      agentMode: 'plan',
-      agentState: null,
-      board: { key: 'ABC' },
-    } as never)
+    ticket.findUnique.mockResolvedValueOnce(openTicket() as never)
     agentRun.create.mockResolvedValueOnce({ id: 'run1' } as never)
 
-    expect(await startAgentRun(runner(), 't1', 'plan')).toEqual({ id: 'run1', displayId: 'ABC-42' })
+    expect(await startAgentRun(runner(), 't1', 'plan')).toEqual({
+      ok: true,
+      run: { id: 'run1', displayId: 'ABC-42' },
+    })
     expect(agentRun.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: { runnerId: 'r1', ticketId: 't1', ticketRef: 'ABC-42', action: 'plan' },
       }),
     )
     expect(ticket.update).toHaveBeenCalledWith({ where: { id: 't1' }, data: { agentState: 'running' } })
+  })
+
+  it('上限が無制限なら件数を数えずに開始する', async () => {
+    ticket.findUnique.mockResolvedValueOnce(openTicket() as never)
+    agentRun.create.mockResolvedValueOnce({ id: 'run1' } as never)
+
+    expect(await startAgentRun(runner({ dailyRunLimit: 0 }), 't1', 'plan')).toEqual({
+      ok: true,
+      run: { id: 'run1', displayId: 'ABC-42' },
+    })
+    expect(agentRun.count).not.toHaveBeenCalled()
+  })
+
+  it('上限に達していれば実行を作成しない(チェックと作成を同一トランザクションで行う)', async () => {
+    ticket.findUnique.mockResolvedValueOnce(openTicket() as never)
+    agentRun.count.mockResolvedValueOnce(5)
+
+    const result = await startAgentRun(runner({ dailyRunLimit: 5 }), 't1', 'plan', jst('14:00'))
+
+    expect(result).toEqual({
+      ok: false,
+      reason: 'daily_limit',
+      usage: { used: 5, limit: 5, resetAt: new Date('2026-08-26T05:00:00+09:00') },
+    })
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1)
+    expect(agentRun.create).not.toHaveBeenCalled()
+    expect(ticket.update).not.toHaveBeenCalled()
+  })
+
+  it('上限未達なら件数を数えたうえで実行を作成する', async () => {
+    ticket.findUnique.mockResolvedValueOnce(openTicket() as never)
+    agentRun.count.mockResolvedValueOnce(4)
+    agentRun.create.mockResolvedValueOnce({ id: 'run1' } as never)
+
+    const result = await startAgentRun(runner({ dailyRunLimit: 5 }), 't1', 'plan', jst('14:00'))
+
+    expect(result).toEqual({ ok: true, run: { id: 'run1', displayId: 'ABC-42' } })
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1)
+    expect(agentRun.count.mock.invocationCallOrder[0]).toBeLessThan(agentRun.create.mock.invocationCallOrder[0])
   })
 })
 
