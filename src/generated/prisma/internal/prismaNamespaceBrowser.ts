@@ -152,7 +152,6 @@ export const AgentRunnerScalarFieldEnum = {
   activeToMin: 'activeToMin',
   timezone: 'timezone',
   pollIntervalSec: 'pollIntervalSec',
-  defaultMode: 'defaultMode',
   rule: 'rule',
   dailyRunLimit: 'dailyRunLimit',
   dailyResetMin: 'dailyResetMin',

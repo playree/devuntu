@@ -33,7 +33,6 @@ export const en: LocaleItems = {
   agent_daily_limit: 'Daily Run Limit',
   agent_daily_reset: 'Limit Reset Time',
   agent_daily_usage: 'Runs Today',
-  agent_default_mode: 'Default Mode',
   agent_duration: 'Duration',
   agent_handle: 'Handle',
   agent_host: 'Host',

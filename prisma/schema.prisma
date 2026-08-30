@@ -125,9 +125,6 @@ model AgentRunner {
   /// ランナーへ返すポーリング間隔(秒)
   pollIntervalSec Int @default(300)
 
-  /// チケット側でモード指定が無い場合に使う既定のモード
-  defaultMode AgentTaskMode @default(plan)
-
   /// エージェントが作業前に読み、処理全体を通じて従う指示(Markdown)
   rule String?
 

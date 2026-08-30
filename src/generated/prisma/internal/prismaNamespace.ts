@@ -3276,7 +3276,6 @@ export const AgentRunnerScalarFieldEnum = {
   activeToMin: 'activeToMin',
   timezone: 'timezone',
   pollIntervalSec: 'pollIntervalSec',
-  defaultMode: 'defaultMode',
   rule: 'rule',
   dailyRunLimit: 'dailyRunLimit',
   dailyResetMin: 'dailyResetMin',
@@ -3888,20 +3887,6 @@ export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel,
 
 
 /**
- * Reference to a field of type 'AgentTaskMode'
- */
-export type EnumAgentTaskModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AgentTaskMode'>
-    
-
-
-/**
- * Reference to a field of type 'AgentTaskMode[]'
- */
-export type ListEnumAgentTaskModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AgentTaskMode[]'>
-    
-
-
-/**
  * Reference to a field of type 'AgentRunAction'
  */
 export type EnumAgentRunActionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AgentRunAction'>
@@ -4010,6 +3995,20 @@ export type EnumTicketPriorityFieldRefInput<$PrismaModel> = FieldRefInputType<$P
  * Reference to a field of type 'TicketPriority[]'
  */
 export type ListEnumTicketPriorityFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TicketPriority[]'>
+    
+
+
+/**
+ * Reference to a field of type 'AgentTaskMode'
+ */
+export type EnumAgentTaskModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AgentTaskMode'>
+    
+
+
+/**
+ * Reference to a field of type 'AgentTaskMode[]'
+ */
+export type ListEnumAgentTaskModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AgentTaskMode[]'>
     
 
 
