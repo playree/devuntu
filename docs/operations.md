@@ -83,11 +83,14 @@ pnpm db:backup
 ```
 
 リポジトリを clone していない Docker 運用環境では、スクリプトと同じ内容を直接実行する。
+一時ファイルへ出力して成功時だけ本ファイルへ移す(直接リダイレクトすると `pg_dump` 失敗時に
+空や壊れた `.dump` が残り、後のリストアで事故になる)。
 
 ```sh
 mkdir -p backup
-docker compose exec -T db pg_dump -U devuser -Fc devuntu \
-  > backup/devuntu_$(date +%Y%m%d_%H%M%S).dump
+OUT=backup/devuntu_$(date +%Y%m%d_%H%M%S).dump
+docker compose exec -T db pg_dump -U devuser -Fc devuntu > "${OUT}.tmp" \
+  && mv "${OUT}.tmp" "${OUT}" || rm -f "${OUT}.tmp"
 ```
 
 ユーザー名と DB 名は `compose.yaml` の `POSTGRES_USER`/`POSTGRES_DB` に合わせる。
@@ -186,13 +189,23 @@ pnpm s3:backup
 pnpm db:backup
 
 docker compose stop s3 && docker compose rm -f s3
-docker volume rm devuntu_seaweeddata
 
-docker compose up -d s3
-pnpm s3:restore backup/s3_YYYYMMDD_HHMMSS
+# ボリューム名を確認してから削除する
+docker volume ls --filter name=seaweeddata
+docker volume rm <確認したボリューム名>
+
+docker compose run --rm s3-tools \
+  /app/scripts/restore-s3.mjs /app/backup/s3_YYYYMMDD_HHMMSS
 ```
 
-Docker 運用環境では `pnpm` の箇所を [Docker環境でのS3バックアップ](#docker環境でのs3バックアップ)・[Docker環境でのS3リストア](#docker環境でのs3リストア)・[DBバックアップ](#dbバックアップ)の直接実行コマンドに読み替える。
+ボリューム名の接頭辞は Compose のプロジェクト名(既定では `compose.yaml` を置いたディレクトリ名)に
+なるため、`devuntu_seaweeddata` とは限らない。
+
+リストアは `s3-tools` 経由で行う。`depends_on` の `condition: service_healthy` により `s3` が起動して
+healthcheck を通るまで待ってから実行されるので、`docker compose up -d s3` の直後にホスト側の
+`pnpm s3:restore` を叩くより安全(`up -d` は `--wait` を付けない限り healthy を待たない)。
+
+Docker 運用環境では `pnpm s3:backup` / `pnpm db:backup` の箇所も [Docker環境でのS3バックアップ](#docker環境でのs3バックアップ)・[DBバックアップ](#dbバックアップ)の直接実行コマンドに読み替える。
 
 消費量は`docker compose exec -T s3 sh -c 'du -sk /data'`で確認できる。
 
@@ -203,8 +216,12 @@ cron から実行する場合は、DB と S3 を続けて取得する。`compose
 ```sh
 # 毎日 3:00 に取得する例(clone していない Docker 運用環境)
 0 3 * * * cd /opt/devuntu && mkdir -p backup \
-  && docker compose exec -T db pg_dump -U devuser -Fc devuntu > backup/devuntu_$(date +\%Y\%m\%d_\%H\%M\%S).dump \
+  && OUT=backup/devuntu_$(date +\%Y\%m\%d_\%H\%M\%S).dump \
+  && { docker compose exec -T db pg_dump -U devuser -Fc devuntu > "$OUT.tmp" || { rm -f "$OUT.tmp"; false; }; } \
+  && mv "$OUT.tmp" "$OUT" \
   && docker compose run --rm s3-tools
 ```
+
+`pg_dump` が途中で失敗したときに壊れた `.dump` を残さないよう、ここでも一時ファイル経由にしている。
 
 `backup/`は際限なく増えるため、世代を残す期間を決めて古いものを削除する運用を別途用意する。

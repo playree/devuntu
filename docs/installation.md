@@ -22,7 +22,7 @@ Docker Compose で Devuntu を立ち上げるまでの手順。運用開始後�
 
 - Docker / Docker Compose が動くホスト
 - 利用者に見せる URL を決めてあること(`BETTER_AUTH_URL` に設定する)
-- **メール送信手段**。既定の構成(`DISABLE_PASSWORD_AUTH=true`)ではメールOTPがサインインの唯一の手段になるため、
+- **メール送信手段**。本手順の最小構成(`DISABLE_PASSWORD_AUTH=true`)ではメールOTPがサインインの唯一の手段になるため、
   SendGrid / sendmail / SMTP のいずれかを用意する。試用のみであれば `MAIL_SEND=debug` でサーバーログに
   OTP を出力させることもできる
 
@@ -136,19 +136,23 @@ curl -s http://localhost:3000/api/health
 
 ## 外部サービス連携(任意)
 
-いずれも環境変数を設定して `devuntu` を再起動したうえで、管理者が `/admin/settings` で有効化する。
+いずれも環境変数を設定して `devuntu` を再起動する。加えて必要な操作は連携ごとに異なる。
 
 ### Googleアカウント連携
 
 `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` (必要に応じて `GOOGLE_ALLOWED_DOMAINS`)を設定する。
 Google 側のコールバックURLには `<BETTER_AUTH_URL>/api/auth/callback/google` を登録する。
 
+そのうえで、管理者が `/admin/settings` で「Googleアカウント連携」を有効化する。この設定が効くのは
+アカウント連携とカレンダー機能で、**サインイン画面の「Googleでサインイン」は環境変数だけで決まる**。
+
 **カレンダー機能(`/cal`)は Google アカウント連携が前提**で、未連携のユーザーには案内だけが表示される。
 
 ### Slack連携
 
 `SLACK_CLIENT_ID` / `SLACK_CLIENT_SECRET` / `SLACK_BOT_TOKEN` / `SLACK_TEAM_ID` / `SLACK_SIGNING_SECRET`
-を設定する。Slack App のマニフェストは `slack/manifest.yaml`。
+を設定し、管理者が `/admin/settings` で「Slack連携」を有効化する。Slack App のマニフェストは
+`slack/manifest.yaml`。
 
 メンションの Slack DM 通知と、Slack に貼られたチケットURLの展開が使えるようになる。
 手順の詳細は [notifications.md](notifications.md#slack通知の前提) を参照。
@@ -157,11 +161,13 @@ Google 側のコールバックURLには `<BETTER_AUTH_URL>/api/auth/callback/go
 
 `OIDC_DCR_ENABLED=true` を設定すると、Claude Code などの MCP クライアントが
 `<BETTER_AUTH_URL>/api/mcp` へ動的クライアント登録(DCR)で接続できるようになる。
+環境変数だけで有効になり、`/admin/settings` での操作は不要。
 詳細と運用上の注意は [mcp-server.md](mcp-server.md) を参照。
 
 ### AIエージェント
 
-管理者が `/admin/agents` からエージェントユーザーを作り、接続用の長期トークンを発行する。
+`/admin/settings` ではなく `/admin/agents` から設定する。管理者がエージェントユーザーを作り、
+接続用の長期トークンを発行する。
 利用者のマシンで Claude Code を自動起動させる仕組みは [agent-runner.md](agent-runner.md) を参照。
 
 ## アップデート
