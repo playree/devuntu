@@ -32,11 +32,12 @@ import shutil
 import socket
 import subprocess
 import sys
+import tempfile
 import urllib.error
 import urllib.request
 from pathlib import Path
 
-__version__ = "0.5.1"
+__version__ = "0.5.2"
 
 DEFAULT_CONFIG_PATH = Path.home() / ".config" / "devuntu-agent" / "config.json"
 DEFAULT_LOG_PATH = Path.home() / ".local" / "state" / "devuntu-agent" / "agent.log"
@@ -162,14 +163,24 @@ def save_path(config: Config) -> int:
     cli_raw = raw.get("cli")
     raw["cli"] = {**cli_raw, "path": dirs} if isinstance(cli_raw, dict) else {"path": dirs}
 
-    # トークンを持つファイルなので、書き損じで中身やパーミッションを失わないよう入れ替えで書く
-    tmp_path = config.path.with_name(config.path.name + ".new")
+    # トークンを持つファイルなので、書き損じで中身やパーミッションを失わないよう入れ替えで書く。
+    # 一時ファイルは他人から読めない状態で作りたいので、umask 任せの write_text ではなく mkstemp を使う
     try:
-        tmp_path.write_text(json.dumps(raw, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-        tmp_path.chmod(config.path.stat().st_mode)
-        tmp_path.replace(config.path)
+        fd, tmp_name = tempfile.mkstemp(dir=config.path.parent, prefix=config.path.name + ".", suffix=".new")
     except OSError as e:
         log.error("cannot write the config file: %s (%s)", config.path, e)
+        return 2
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(json.dumps(raw, indent=2, ensure_ascii=False) + "\n")
+        os.chmod(tmp_name, config.path.stat().st_mode & 0o7777)
+        os.replace(tmp_name, config.path)
+    except OSError as e:
+        log.error("cannot write the config file: %s (%s)", config.path, e)
+        try:
+            os.unlink(tmp_name)
+        except OSError:
+            pass
         return 2
 
     print(f"saved {len(dirs)} directories to cli.path in {config.path}")
@@ -269,6 +280,11 @@ def self_update(config: Config) -> bool:
 # ---------------------------------------------------------------------------
 
 
+def node_version_key(name: str) -> tuple[int, ...]:
+    """nvm のディレクトリ名 (v22.0.0 など) を比較用の数値タプルにする。文字列順では v9 が v22 より後になるため"""
+    return tuple(int(part) for part in re.findall(r"\d+", name))
+
+
 def nvm_node_dir() -> Path | None:
     """nvm で入れた node の bin。default エイリアスがそれらしければ優先し、無ければ最新の一つを使う"""
     try:
@@ -281,7 +297,10 @@ def nvm_node_dir() -> Path | None:
             return candidate
 
     try:
-        versions = sorted(entry for entry in NVM_NODE_DIR.iterdir() if (entry / "bin").is_dir())
+        versions = sorted(
+            (entry for entry in NVM_NODE_DIR.iterdir() if (entry / "bin").is_dir()),
+            key=lambda entry: node_version_key(entry.name),
+        )
     except OSError:
         return None
     return versions[-1] / "bin" if versions else None
