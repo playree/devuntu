@@ -1,8 +1,8 @@
 # AIエージェントの自動運用(Devuntu Agent)
 
 担当チケットが積まれたら自動で Claude Code が起動して処理する仕組み。
-概要とセットアップは [README.md](../README.md#自動運用devuntu-agent) を参照。ここでは全体の作りと、
-運用していて詰まったときに見る場所をまとめる。
+ここでは全体の作りと、運用していて詰まったときに見る場所をまとめる。
+利用者から見た使い方は [user-guide.md](user-guide.md#エージェントにチケットを任せる) を参照。
 
 エージェントユーザーそのもの(作成・トークン)は [docs/mcp-server.md](mcp-server.md#aiエージェント用ユーザー) を参照。
 
@@ -43,7 +43,7 @@ cron ──> devuntu_agent.py ──1──> POST /api/agent/status   「動い�
 
 ## チケットの状態
 
-`Ticket.agentState`。遷移させるのは `agent-runner.ts` だけ。
+`Ticket.agentState`。遷移させるのは `src/lib/agent/agent-runner.ts` だけ。
 
 | 状態                          | 意味                     | 次                                           |
 | ----------------------------- | ------------------------ | -------------------------------------------- |
@@ -56,7 +56,7 @@ cron ──> devuntu_agent.py ──1──> POST /api/agent/status   「動い�
 
 1. エージェントの `finish_agent_task`(正常系)
 2. ランナーの `PATCH /api/agent/runs/:id`(Claude が報告せずに終了した場合)
-3. `failStaleAgentRuns`(ランナーごと落ちた場合。`AGENT_RUN_TIMEOUT_MIN` = 60分)
+3. `failStaleAgentRuns`(ランナーごと落ちた場合。`src/lib/agent/agent-runner.ts` の定数 `AGENT_RUN_TIMEOUT_MIN` = 60分)
 
 2 で「成功」と伝えられても失敗として閉じる。ランナーが知っているのは Claude の終了コードだけで、
 終了コード 0 でも何をしたかは分からないため。
@@ -117,7 +117,7 @@ MCP ツール `get_agent_setup_guide` が、そのマシンで実行できる手
 Claude Code から「devuntu のエージェントをセットアップして」と頼めば、この手順に沿って進む。
 
 手順の本文は [public/agent/agent-setup-guide.md](../public/agent/agent-setup-guide.md)。
-プレースホルダーの置換は [src/lib/agent-setup.ts](../src/lib/agent-setup.ts) で行い、
+プレースホルダーの置換は [src/lib/agent/agent-setup.ts](../src/lib/agent/agent-setup.ts) で行い、
 URL はサーバー自身のものが埋め込まれる。
 
 ## 詰まったときに見る場所

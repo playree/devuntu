@@ -9,12 +9,12 @@
 
 ## アクセス制御の仕組み
 
-パス単位の制御は `src/proxy.ts`(Next.js Proxy)が `src/lib/auth-config.ts` の設定に従って行う。
+パス単位の制御は `src/proxy.ts`(Next.js Proxy)が `src/lib/auth/auth-config.ts` の設定に従って行う。
 
 - **認証必須** : `/auth/signin` `/start` `/cal/:id` 以外の全ページ。未ログインは `/auth/signin?cb=<元のURL>` へリダイレクト
 - **管理者のみ** : `/admin/**`。`role !== 'admin'` の場合は 404 へ rewrite(メニューにも表示されない)
 - **2要素認証** : `TWO_FA_REQUIRED=true` かつ `DISABLE_PASSWORD_AUTH=false` の場合、2FA未設定なら `/auth/signin?mode=2FA` へリダイレクト
-- Proxy の matcher は `api/**` と Server Action(`next-action` ヘッダ)を除外している。そのためレコード単位の認可(ボード/チケットの参照・編集権限)は各 Server Action 側で `assertBoardAccess` / `assertTicketAccess`(`src/lib/board.ts`)により検証する
+- Proxy の matcher は `api/**` と Server Action(`next-action` ヘッダ)を除外している。そのためレコード単位の認可(ボード/チケットの参照・編集権限)は各 Server Action 側で `assertBoardAccess` / `assertTicketAccess`(`src/lib/board/board.ts`)により検証する
 
 ボードの権限は直接メンバー(`BoardMember`)またはグループ経由(`BoardGroup`)で解決され、`owner` / `member` のロールを持つ。
 
@@ -25,6 +25,7 @@
 | ダッシュボード | `/`        | 認証必須                                                                        |
 | カレンダー     | `/cal`     | 認証必須 + Googleアカウント連携が利用可能なユーザーのみ(不可の場合は案内を表示) |
 | アカウント     | `/account` | 認証必須(自分のアカウント情報のみ)                                              |
+| エージェント   | `/agents`  | 認証必須(自分が承認者に設定されているエージェントのみ表示)                      |
 
 ## タスク管理
 

@@ -4,36 +4,38 @@
 
 ## 基本
 
-| 変数名                 | 説明                       | 必須 | デフォルト   |
-| ---------------------- | -------------------------- | ---- | ------------ |
-| `NEXT_PUBLIC_APP_NAME` | アプリ名(クライアント公開) |      | `Devuntu`    |
-| `DATABASE_URL`         | DB(PostgreSQL) の接続パス  | 〇   | -            |
-| `DEFAULT_LOCALE`       | デフォルトロケール         |      | -            |
-| `DEFAULT_TIMEZONE`     | デフォルトタイムゾーン     |      | `Asia/Tokyo` |
-| `LOG_LEVEL`            | ログレベル                 |      | `info`       |
+| 変数名                 | 説明                                                            | 必須 | デフォルト   |
+| ---------------------- | --------------------------------------------------------------- | ---- | ------------ |
+| `NEXT_PUBLIC_APP_NAME` | アプリ名(クライアント公開)                                      |      | `Devuntu`    |
+| `DATABASE_URL`         | DB(PostgreSQL) の接続パス                                       | 〇   | -            |
+| `DEFAULT_LOCALE`       | デフォルトロケール                                              |      | -            |
+| `DEFAULT_TIMEZONE`     | デフォルトタイムゾーン                                          |      | `Asia/Tokyo` |
+| `LOG_LEVEL`            | ログレベル                                                      |      | `info`       |
+| `DEV_ALLOWED_ORIGINS`  | `next dev` で許可する追加オリジン(カンマ区切り)。開発時のみ有効 |      | -            |
 
 ## 認証
 
-| 変数名                       | 説明                                  | 必須 | デフォルト    |
-| ---------------------------- | ------------------------------------- | ---- | ------------- |
-| `BETTER_AUTH_URL`            | 運用するベースの URL                  | 〇   | -             |
-| `BETTER_AUTH_SECRET`         | Better Auth 用シークレット            | 〇   | -             |
-| `SESSION_EXPIRES_IN`         | セッション有効期間(秒)                |      | `432000`(5日) |
-| `SESSION_FRESH_AGE`          | セッション fresh 期間(秒)             |      | `86400`(1日)  |
-| `TWO_FA_REQUIRED`            | 2要素認証を必須にするか               |      | `true`        |
-| `DISABLE_PASSWORD_AUTH`      | パスワード認証を無効化                |      | `false`       |
-| `OIDC_DCR_ENABLED`           | 動的クライアント登録を有効化          |      | `false`       |
-| `MAIN_DEVUNTU_URL`           | 連携元 Devuntu の URL                 |      | -             |
-| `MAIN_DEVUNTU_CLIENT_ID`     | 連携元クライアントID                  |      | -             |
-| `MAIN_DEVUNTU_CLIENT_SECRET` | 連携元クライアントシークレット        |      | -             |
-| `GOOGLE_CLIENT_ID`           | Google OAuth クライアントID           |      | -             |
-| `GOOGLE_CLIENT_SECRET`       | Google OAuth クライアントシークレット |      | -             |
-| `GOOGLE_ALLOWED_DOMAINS`     | 許可ドメイン(カンマ区切り)            |      | -             |
-| `SLACK_CLIENT_ID`            | Slack OAuth クライアントID            |      | -             |
-| `SLACK_CLIENT_SECRET`        | Slack OAuth クライアントシークレット  |      | -             |
-| `SLACK_BOT_TOKEN`            | Slack Bot トークン(`xoxb-`)           |      | -             |
-| `SLACK_TEAM_ID`              | Slack ワークスペースID(`T...`)        |      | -             |
-| `SLACK_SIGNING_SECRET`       | Slack リクエスト署名シークレット      |      | -             |
+| 変数名                         | 説明                                   | 必須 | デフォルト        |
+| ------------------------------ | -------------------------------------- | ---- | ----------------- |
+| `BETTER_AUTH_URL`              | 運用するベースの URL                   | 〇   | -                 |
+| `BETTER_AUTH_SECRET`           | Better Auth 用シークレット             | 〇   | -                 |
+| `SESSION_EXPIRES_IN`           | セッション有効期間(秒)                 |      | `432000`(5日)     |
+| `SESSION_FRESH_AGE`            | セッション fresh 期間(秒)              |      | `86400`(1日)      |
+| `TWO_FA_REQUIRED`              | 2要素認証を必須にするか                |      | `true`            |
+| `DISABLE_PASSWORD_AUTH`        | パスワード認証を無効化                 |      | `false`           |
+| `OIDC_DCR_ENABLED`             | 動的クライアント登録を有効化           |      | `false`           |
+| `MCP_REFRESH_TOKEN_EXPIRES_IN` | MCP リフレッシュトークンの有効期間(秒) |      | `15552000`(180日) |
+| `MAIN_DEVUNTU_URL`             | 連携元 Devuntu の URL                  |      | -                 |
+| `MAIN_DEVUNTU_CLIENT_ID`       | 連携元クライアントID                   |      | -                 |
+| `MAIN_DEVUNTU_CLIENT_SECRET`   | 連携元クライアントシークレット         |      | -                 |
+| `GOOGLE_CLIENT_ID`             | Google OAuth クライアントID            |      | -                 |
+| `GOOGLE_CLIENT_SECRET`         | Google OAuth クライアントシークレット  |      | -                 |
+| `GOOGLE_ALLOWED_DOMAINS`       | 許可ドメイン(カンマ区切り)             |      | -                 |
+| `SLACK_CLIENT_ID`              | Slack OAuth クライアントID             |      | -                 |
+| `SLACK_CLIENT_SECRET`          | Slack OAuth クライアントシークレット   |      | -                 |
+| `SLACK_BOT_TOKEN`              | Slack Bot トークン(`xoxb-`)            |      | -                 |
+| `SLACK_TEAM_ID`                | Slack ワークスペースID(`T...`)         |      | -                 |
+| `SLACK_SIGNING_SECRET`         | Slack リクエスト署名シークレット       |      | -                 |
 
 ## メール
 
