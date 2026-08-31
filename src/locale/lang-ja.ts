@@ -33,7 +33,6 @@ export const ja: DefaultLocaleItems = {
   agent_daily_limit: '1日の処理上限',
   agent_daily_reset: '上限リセット時刻',
   agent_daily_usage: '本日の処理数',
-  agent_default_mode: '既定の処理方式',
   agent_duration: '所要時間',
   agent_handle: '識別子',
   agent_host: 'ホスト',

@@ -34,7 +34,6 @@ export type AgentRunnerRow = {
   activeToMin: number | null
   timezone: string | null
   pollIntervalSec: number
-  defaultMode: AgentTaskMode
   rule: string | null
   dailyRunLimit: number
   dailyResetMin: number
@@ -49,7 +48,6 @@ export const agentRunnerSelect = {
   activeToMin: true,
   timezone: true,
   pollIntervalSec: true,
-  defaultMode: true,
   rule: true,
   dailyRunLimit: true,
   dailyResetMin: true,
@@ -222,8 +220,11 @@ type AgentTicketRow = {
  * 処理中(`running`)のものは、開始時に記録したアクションをそのまま返す。ランナーが実行を
  * 開始してから Claude が問い合わせる順序になるため、ここを落とすと自分の作業を見失う。
  */
-const deriveAction = async (runner: AgentRunnerRow, ticket: AgentTicketRow): Promise<AgentRunAction | null> => {
-  const mode = ticket.agentMode ?? runner.defaultMode
+const deriveAction = async (
+  runner: AgentRunnerRow,
+  ticket: AgentTicketRow,
+  mode: AgentTaskMode,
+): Promise<AgentRunAction | null> => {
   const initial: AgentRunAction = mode === 'plan' ? 'plan' : 'execute'
 
   if (ticket.agentState === 'running') {
@@ -243,11 +244,11 @@ const deriveAction = async (runner: AgentRunnerRow, ticket: AgentTicketRow): Pro
   return initial
 }
 
-const toAgentTask = (runner: AgentRunnerRow, ticket: AgentTicketRow, action: AgentRunAction): AgentTask => ({
+const toAgentTask = (ticket: AgentTicketRow, mode: AgentTaskMode, action: AgentRunAction): AgentTask => ({
   ticketId: ticket.id,
   displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
   title: ticket.title,
-  mode: ticket.agentMode ?? runner.defaultMode,
+  mode,
   action,
   state: ticket.agentState,
 })
@@ -302,9 +303,12 @@ export const pickAgentTasks = async (runner: AgentRunnerRow): Promise<AgentTask[
 
   const tasks: AgentTask[] = []
   for (const ticket of tickets) {
-    const action = await deriveAction(runner, ticket)
+    if (ticket.agentMode === null) {
+      continue
+    }
+    const action = await deriveAction(runner, ticket, ticket.agentMode)
     if (action) {
-      tasks.push(toAgentTask(runner, ticket, action))
+      tasks.push(toAgentTask(ticket, ticket.agentMode, action))
     }
   }
   return tasks
@@ -328,8 +332,8 @@ export const resolveAgentTask = async (runner: AgentRunnerRow, ticketId: string)
     return null
   }
 
-  const action = await deriveAction(runner, ticket)
-  return action ? toAgentTask(runner, ticket, action) : null
+  const action = await deriveAction(runner, ticket, ticket.agentMode)
+  return action ? toAgentTask(ticket, ticket.agentMode, action) : null
 }
 
 /** 対象チケット1件分の情報。実行の開始・終了で共通に使う */

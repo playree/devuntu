@@ -7,6 +7,7 @@
   - [認証・公開](#認証公開)
 - [MCP サーバー](#mcp-サーバー)
   - [Claude Code への登録](#claude-code-への登録)
+    - [サーバー環境で認証したい場合](#サーバー環境で認証したい場合)
 - [AIエージェント](#aiエージェント)
   - [Claude Code への登録(エージェント)](#claude-code-への登録エージェント)
   - [自動運用(Devuntu Agent)](#自動運用devuntu-agent)
@@ -108,6 +109,12 @@ claude mcp add --scope user --transport http devuntu <BETTER_AUTH_URL>/api/mcp
 
 - 登録状況は `claude mcp list`、削除は `claude mcp remove devuntu`
 - 許可の取り消しは `/account` の「許可済みアプリ」から行えます
+
+### サーバー環境で認証したい場合
+
+```sh
+claude mcp login --no-browser devuntu
+```
 
 # AIエージェント
 

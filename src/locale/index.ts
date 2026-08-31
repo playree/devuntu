@@ -31,7 +31,6 @@ export type LocaleItemBase =
   | 'agent_daily_limit'
   | 'agent_daily_reset'
   | 'agent_daily_usage'
-  | 'agent_default_mode'
   | 'agent_duration'
   | 'agent_handle'
   | 'agent_host'

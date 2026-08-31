@@ -220,7 +220,6 @@ export const scSaveAgentRunner = z.object({
   /** 妥当性(IANA 名として解決できるか)は `saveAgentRunner` 側で見る */
   timezone: z.string().nullable(),
   pollIntervalSec: z.number().int().min(MIN_POLL_INTERVAL_SEC).max(MAX_POLL_INTERVAL_SEC),
-  defaultMode: zAgentMode,
   /** 1日に開始できる実行の上限。0 は無制限 */
   dailyRunLimit: z
     .number(el('@invalid_daily_limit'))

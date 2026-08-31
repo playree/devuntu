@@ -51,7 +51,6 @@ export type AgentRunnerMinAggregateOutputType = {
   activeToMin: number | null
   timezone: string | null
   pollIntervalSec: number | null
-  defaultMode: $Enums.AgentTaskMode | null
   rule: string | null
   dailyRunLimit: number | null
   dailyResetMin: number | null
@@ -70,7 +69,6 @@ export type AgentRunnerMaxAggregateOutputType = {
   activeToMin: number | null
   timezone: string | null
   pollIntervalSec: number | null
-  defaultMode: $Enums.AgentTaskMode | null
   rule: string | null
   dailyRunLimit: number | null
   dailyResetMin: number | null
@@ -89,7 +87,6 @@ export type AgentRunnerCountAggregateOutputType = {
   activeToMin: number
   timezone: number
   pollIntervalSec: number
-  defaultMode: number
   rule: number
   dailyRunLimit: number
   dailyResetMin: number
@@ -126,7 +123,6 @@ export type AgentRunnerMinAggregateInputType = {
   activeToMin?: true
   timezone?: true
   pollIntervalSec?: true
-  defaultMode?: true
   rule?: true
   dailyRunLimit?: true
   dailyResetMin?: true
@@ -145,7 +141,6 @@ export type AgentRunnerMaxAggregateInputType = {
   activeToMin?: true
   timezone?: true
   pollIntervalSec?: true
-  defaultMode?: true
   rule?: true
   dailyRunLimit?: true
   dailyResetMin?: true
@@ -164,7 +159,6 @@ export type AgentRunnerCountAggregateInputType = {
   activeToMin?: true
   timezone?: true
   pollIntervalSec?: true
-  defaultMode?: true
   rule?: true
   dailyRunLimit?: true
   dailyResetMin?: true
@@ -270,7 +264,6 @@ export type AgentRunnerGroupByOutputType = {
   activeToMin: number | null
   timezone: string | null
   pollIntervalSec: number
-  defaultMode: $Enums.AgentTaskMode
   rule: string | null
   dailyRunLimit: number
   dailyResetMin: number
@@ -312,7 +305,6 @@ export type AgentRunnerWhereInput = {
   activeToMin?: Prisma.IntNullableFilter<"AgentRunner"> | number | null
   timezone?: Prisma.StringNullableFilter<"AgentRunner"> | string | null
   pollIntervalSec?: Prisma.IntFilter<"AgentRunner"> | number
-  defaultMode?: Prisma.EnumAgentTaskModeFilter<"AgentRunner"> | $Enums.AgentTaskMode
   rule?: Prisma.StringNullableFilter<"AgentRunner"> | string | null
   dailyRunLimit?: Prisma.IntFilter<"AgentRunner"> | number
   dailyResetMin?: Prisma.IntFilter<"AgentRunner"> | number
@@ -333,7 +325,6 @@ export type AgentRunnerOrderByWithRelationInput = {
   activeToMin?: Prisma.SortOrderInput | Prisma.SortOrder
   timezone?: Prisma.SortOrderInput | Prisma.SortOrder
   pollIntervalSec?: Prisma.SortOrder
-  defaultMode?: Prisma.SortOrder
   rule?: Prisma.SortOrderInput | Prisma.SortOrder
   dailyRunLimit?: Prisma.SortOrder
   dailyResetMin?: Prisma.SortOrder
@@ -357,7 +348,6 @@ export type AgentRunnerWhereUniqueInput = Prisma.AtLeast<{
   activeToMin?: Prisma.IntNullableFilter<"AgentRunner"> | number | null
   timezone?: Prisma.StringNullableFilter<"AgentRunner"> | string | null
   pollIntervalSec?: Prisma.IntFilter<"AgentRunner"> | number
-  defaultMode?: Prisma.EnumAgentTaskModeFilter<"AgentRunner"> | $Enums.AgentTaskMode
   rule?: Prisma.StringNullableFilter<"AgentRunner"> | string | null
   dailyRunLimit?: Prisma.IntFilter<"AgentRunner"> | number
   dailyResetMin?: Prisma.IntFilter<"AgentRunner"> | number
@@ -378,7 +368,6 @@ export type AgentRunnerOrderByWithAggregationInput = {
   activeToMin?: Prisma.SortOrderInput | Prisma.SortOrder
   timezone?: Prisma.SortOrderInput | Prisma.SortOrder
   pollIntervalSec?: Prisma.SortOrder
-  defaultMode?: Prisma.SortOrder
   rule?: Prisma.SortOrderInput | Prisma.SortOrder
   dailyRunLimit?: Prisma.SortOrder
   dailyResetMin?: Prisma.SortOrder
@@ -405,7 +394,6 @@ export type AgentRunnerScalarWhereWithAggregatesInput = {
   activeToMin?: Prisma.IntNullableWithAggregatesFilter<"AgentRunner"> | number | null
   timezone?: Prisma.StringNullableWithAggregatesFilter<"AgentRunner"> | string | null
   pollIntervalSec?: Prisma.IntWithAggregatesFilter<"AgentRunner"> | number
-  defaultMode?: Prisma.EnumAgentTaskModeWithAggregatesFilter<"AgentRunner"> | $Enums.AgentTaskMode
   rule?: Prisma.StringNullableWithAggregatesFilter<"AgentRunner"> | string | null
   dailyRunLimit?: Prisma.IntWithAggregatesFilter<"AgentRunner"> | number
   dailyResetMin?: Prisma.IntWithAggregatesFilter<"AgentRunner"> | number
@@ -423,7 +411,6 @@ export type AgentRunnerCreateInput = {
   activeToMin?: number | null
   timezone?: string | null
   pollIntervalSec?: number
-  defaultMode?: $Enums.AgentTaskMode
   rule?: string | null
   dailyRunLimit?: number
   dailyResetMin?: number
@@ -444,7 +431,6 @@ export type AgentRunnerUncheckedCreateInput = {
   activeToMin?: number | null
   timezone?: string | null
   pollIntervalSec?: number
-  defaultMode?: $Enums.AgentTaskMode
   rule?: string | null
   dailyRunLimit?: number
   dailyResetMin?: number
@@ -463,7 +449,6 @@ export type AgentRunnerUpdateInput = {
   activeToMin?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pollIntervalSec?: Prisma.IntFieldUpdateOperationsInput | number
-  defaultMode?: Prisma.EnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode
   rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dailyRunLimit?: Prisma.IntFieldUpdateOperationsInput | number
   dailyResetMin?: Prisma.IntFieldUpdateOperationsInput | number
@@ -484,7 +469,6 @@ export type AgentRunnerUncheckedUpdateInput = {
   activeToMin?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pollIntervalSec?: Prisma.IntFieldUpdateOperationsInput | number
-  defaultMode?: Prisma.EnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode
   rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dailyRunLimit?: Prisma.IntFieldUpdateOperationsInput | number
   dailyResetMin?: Prisma.IntFieldUpdateOperationsInput | number
@@ -504,7 +488,6 @@ export type AgentRunnerCreateManyInput = {
   activeToMin?: number | null
   timezone?: string | null
   pollIntervalSec?: number
-  defaultMode?: $Enums.AgentTaskMode
   rule?: string | null
   dailyRunLimit?: number
   dailyResetMin?: number
@@ -522,7 +505,6 @@ export type AgentRunnerUpdateManyMutationInput = {
   activeToMin?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pollIntervalSec?: Prisma.IntFieldUpdateOperationsInput | number
-  defaultMode?: Prisma.EnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode
   rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dailyRunLimit?: Prisma.IntFieldUpdateOperationsInput | number
   dailyResetMin?: Prisma.IntFieldUpdateOperationsInput | number
@@ -541,7 +523,6 @@ export type AgentRunnerUncheckedUpdateManyInput = {
   activeToMin?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pollIntervalSec?: Prisma.IntFieldUpdateOperationsInput | number
-  defaultMode?: Prisma.EnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode
   rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dailyRunLimit?: Prisma.IntFieldUpdateOperationsInput | number
   dailyResetMin?: Prisma.IntFieldUpdateOperationsInput | number
@@ -565,7 +546,6 @@ export type AgentRunnerCountOrderByAggregateInput = {
   activeToMin?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
   pollIntervalSec?: Prisma.SortOrder
-  defaultMode?: Prisma.SortOrder
   rule?: Prisma.SortOrder
   dailyRunLimit?: Prisma.SortOrder
   dailyResetMin?: Prisma.SortOrder
@@ -592,7 +572,6 @@ export type AgentRunnerMaxOrderByAggregateInput = {
   activeToMin?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
   pollIntervalSec?: Prisma.SortOrder
-  defaultMode?: Prisma.SortOrder
   rule?: Prisma.SortOrder
   dailyRunLimit?: Prisma.SortOrder
   dailyResetMin?: Prisma.SortOrder
@@ -611,7 +590,6 @@ export type AgentRunnerMinOrderByAggregateInput = {
   activeToMin?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
   pollIntervalSec?: Prisma.SortOrder
-  defaultMode?: Prisma.SortOrder
   rule?: Prisma.SortOrder
   dailyRunLimit?: Prisma.SortOrder
   dailyResetMin?: Prisma.SortOrder
@@ -683,10 +661,6 @@ export type IntFieldUpdateOperationsInput = {
   divide?: number
 }
 
-export type EnumAgentTaskModeFieldUpdateOperationsInput = {
-  set?: $Enums.AgentTaskMode
-}
-
 export type AgentRunnerCreateNestedOneWithoutRunsInput = {
   create?: Prisma.XOR<Prisma.AgentRunnerCreateWithoutRunsInput, Prisma.AgentRunnerUncheckedCreateWithoutRunsInput>
   connectOrCreate?: Prisma.AgentRunnerCreateOrConnectWithoutRunsInput
@@ -708,7 +682,6 @@ export type AgentRunnerCreateWithoutUserInput = {
   activeToMin?: number | null
   timezone?: string | null
   pollIntervalSec?: number
-  defaultMode?: $Enums.AgentTaskMode
   rule?: string | null
   dailyRunLimit?: number
   dailyResetMin?: number
@@ -727,7 +700,6 @@ export type AgentRunnerUncheckedCreateWithoutUserInput = {
   activeToMin?: number | null
   timezone?: string | null
   pollIntervalSec?: number
-  defaultMode?: $Enums.AgentTaskMode
   rule?: string | null
   dailyRunLimit?: number
   dailyResetMin?: number
@@ -762,7 +734,6 @@ export type AgentRunnerUpdateWithoutUserInput = {
   activeToMin?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pollIntervalSec?: Prisma.IntFieldUpdateOperationsInput | number
-  defaultMode?: Prisma.EnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode
   rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dailyRunLimit?: Prisma.IntFieldUpdateOperationsInput | number
   dailyResetMin?: Prisma.IntFieldUpdateOperationsInput | number
@@ -781,7 +752,6 @@ export type AgentRunnerUncheckedUpdateWithoutUserInput = {
   activeToMin?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pollIntervalSec?: Prisma.IntFieldUpdateOperationsInput | number
-  defaultMode?: Prisma.EnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode
   rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dailyRunLimit?: Prisma.IntFieldUpdateOperationsInput | number
   dailyResetMin?: Prisma.IntFieldUpdateOperationsInput | number
@@ -800,7 +770,6 @@ export type AgentRunnerCreateWithoutRunsInput = {
   activeToMin?: number | null
   timezone?: string | null
   pollIntervalSec?: number
-  defaultMode?: $Enums.AgentTaskMode
   rule?: string | null
   dailyRunLimit?: number
   dailyResetMin?: number
@@ -820,7 +789,6 @@ export type AgentRunnerUncheckedCreateWithoutRunsInput = {
   activeToMin?: number | null
   timezone?: string | null
   pollIntervalSec?: number
-  defaultMode?: $Enums.AgentTaskMode
   rule?: string | null
   dailyRunLimit?: number
   dailyResetMin?: number
@@ -854,7 +822,6 @@ export type AgentRunnerUpdateWithoutRunsInput = {
   activeToMin?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pollIntervalSec?: Prisma.IntFieldUpdateOperationsInput | number
-  defaultMode?: Prisma.EnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode
   rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dailyRunLimit?: Prisma.IntFieldUpdateOperationsInput | number
   dailyResetMin?: Prisma.IntFieldUpdateOperationsInput | number
@@ -874,7 +841,6 @@ export type AgentRunnerUncheckedUpdateWithoutRunsInput = {
   activeToMin?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pollIntervalSec?: Prisma.IntFieldUpdateOperationsInput | number
-  defaultMode?: Prisma.EnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode
   rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dailyRunLimit?: Prisma.IntFieldUpdateOperationsInput | number
   dailyResetMin?: Prisma.IntFieldUpdateOperationsInput | number
@@ -924,7 +890,6 @@ export type AgentRunnerSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   activeToMin?: boolean
   timezone?: boolean
   pollIntervalSec?: boolean
-  defaultMode?: boolean
   rule?: boolean
   dailyRunLimit?: boolean
   dailyResetMin?: boolean
@@ -946,7 +911,6 @@ export type AgentRunnerSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   activeToMin?: boolean
   timezone?: boolean
   pollIntervalSec?: boolean
-  defaultMode?: boolean
   rule?: boolean
   dailyRunLimit?: boolean
   dailyResetMin?: boolean
@@ -966,7 +930,6 @@ export type AgentRunnerSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   activeToMin?: boolean
   timezone?: boolean
   pollIntervalSec?: boolean
-  defaultMode?: boolean
   rule?: boolean
   dailyRunLimit?: boolean
   dailyResetMin?: boolean
@@ -986,7 +949,6 @@ export type AgentRunnerSelectScalar = {
   activeToMin?: boolean
   timezone?: boolean
   pollIntervalSec?: boolean
-  defaultMode?: boolean
   rule?: boolean
   dailyRunLimit?: boolean
   dailyResetMin?: boolean
@@ -997,7 +959,7 @@ export type AgentRunnerSelectScalar = {
   updatedAt?: boolean
 }
 
-export type AgentRunnerOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "enabled" | "activeFromMin" | "activeToMin" | "timezone" | "pollIntervalSec" | "defaultMode" | "rule" | "dailyRunLimit" | "dailyResetMin" | "lastPolledAt" | "hostname" | "version" | "createdAt" | "updatedAt", ExtArgs["result"]["agentRunner"]>
+export type AgentRunnerOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "enabled" | "activeFromMin" | "activeToMin" | "timezone" | "pollIntervalSec" | "rule" | "dailyRunLimit" | "dailyResetMin" | "lastPolledAt" | "hostname" | "version" | "createdAt" | "updatedAt", ExtArgs["result"]["agentRunner"]>
 export type AgentRunnerInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   runs?: boolean | Prisma.AgentRunner$runsArgs<ExtArgs>
@@ -1037,10 +999,6 @@ export type $AgentRunnerPayload<ExtArgs extends runtime.Types.Extensions.Interna
      * ランナーへ返すポーリング間隔(秒)
      */
     pollIntervalSec: number
-    /**
-     * チケット側でモード指定が無い場合に使う既定のモード
-     */
-    defaultMode: $Enums.AgentTaskMode
     /**
      * エージェントが作業前に読み、処理全体を通じて従う指示(Markdown)
      */
@@ -1493,7 +1451,6 @@ export interface AgentRunnerFieldRefs {
   readonly activeToMin: Prisma.FieldRef<"AgentRunner", 'Int'>
   readonly timezone: Prisma.FieldRef<"AgentRunner", 'String'>
   readonly pollIntervalSec: Prisma.FieldRef<"AgentRunner", 'Int'>
-  readonly defaultMode: Prisma.FieldRef<"AgentRunner", 'AgentTaskMode'>
   readonly rule: Prisma.FieldRef<"AgentRunner", 'String'>
   readonly dailyRunLimit: Prisma.FieldRef<"AgentRunner", 'Int'>
   readonly dailyResetMin: Prisma.FieldRef<"AgentRunner", 'Int'>

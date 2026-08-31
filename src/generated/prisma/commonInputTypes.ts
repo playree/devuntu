@@ -183,13 +183,6 @@ export type IntFilter<$PrismaModel = never> = {
   not?: Prisma.NestedIntFilter<$PrismaModel> | number
 }
 
-export type EnumAgentTaskModeFilter<$PrismaModel = never> = {
-  equals?: $Enums.AgentTaskMode | Prisma.EnumAgentTaskModeFieldRefInput<$PrismaModel>
-  in?: $Enums.AgentTaskMode[] | Prisma.ListEnumAgentTaskModeFieldRefInput<$PrismaModel>
-  notIn?: $Enums.AgentTaskMode[] | Prisma.ListEnumAgentTaskModeFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumAgentTaskModeFilter<$PrismaModel> | $Enums.AgentTaskMode
-}
-
 export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
   equals?: number | Prisma.IntFieldRefInput<$PrismaModel> | null
   in?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel> | null
@@ -220,16 +213,6 @@ export type IntWithAggregatesFilter<$PrismaModel = never> = {
   _sum?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedIntFilter<$PrismaModel>
   _max?: Prisma.NestedIntFilter<$PrismaModel>
-}
-
-export type EnumAgentTaskModeWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: $Enums.AgentTaskMode | Prisma.EnumAgentTaskModeFieldRefInput<$PrismaModel>
-  in?: $Enums.AgentTaskMode[] | Prisma.ListEnumAgentTaskModeFieldRefInput<$PrismaModel>
-  notIn?: $Enums.AgentTaskMode[] | Prisma.ListEnumAgentTaskModeFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumAgentTaskModeWithAggregatesFilter<$PrismaModel> | $Enums.AgentTaskMode
-  _count?: Prisma.NestedIntFilter<$PrismaModel>
-  _min?: Prisma.NestedEnumAgentTaskModeFilter<$PrismaModel>
-  _max?: Prisma.NestedEnumAgentTaskModeFilter<$PrismaModel>
 }
 
 export type EnumAgentRunActionFilter<$PrismaModel = never> = {
@@ -681,13 +664,6 @@ export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedDateTimeNullableFilter<$PrismaModel>
 }
 
-export type NestedEnumAgentTaskModeFilter<$PrismaModel = never> = {
-  equals?: $Enums.AgentTaskMode | Prisma.EnumAgentTaskModeFieldRefInput<$PrismaModel>
-  in?: $Enums.AgentTaskMode[] | Prisma.ListEnumAgentTaskModeFieldRefInput<$PrismaModel>
-  notIn?: $Enums.AgentTaskMode[] | Prisma.ListEnumAgentTaskModeFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumAgentTaskModeFilter<$PrismaModel> | $Enums.AgentTaskMode
-}
-
 export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
   equals?: number | Prisma.IntFieldRefInput<$PrismaModel> | null
   in?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel> | null
@@ -740,16 +716,6 @@ export type NestedFloatFilter<$PrismaModel = never> = {
   gt?: number | Prisma.FloatFieldRefInput<$PrismaModel>
   gte?: number | Prisma.FloatFieldRefInput<$PrismaModel>
   not?: Prisma.NestedFloatFilter<$PrismaModel> | number
-}
-
-export type NestedEnumAgentTaskModeWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: $Enums.AgentTaskMode | Prisma.EnumAgentTaskModeFieldRefInput<$PrismaModel>
-  in?: $Enums.AgentTaskMode[] | Prisma.ListEnumAgentTaskModeFieldRefInput<$PrismaModel>
-  notIn?: $Enums.AgentTaskMode[] | Prisma.ListEnumAgentTaskModeFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumAgentTaskModeWithAggregatesFilter<$PrismaModel> | $Enums.AgentTaskMode
-  _count?: Prisma.NestedIntFilter<$PrismaModel>
-  _min?: Prisma.NestedEnumAgentTaskModeFilter<$PrismaModel>
-  _max?: Prisma.NestedEnumAgentTaskModeFilter<$PrismaModel>
 }
 
 export type NestedEnumAgentRunActionFilter<$PrismaModel = never> = {

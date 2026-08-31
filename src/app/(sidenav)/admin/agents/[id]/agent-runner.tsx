@@ -12,8 +12,6 @@ import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action/action-client'
 import {
   AGENT_POLL_INTERVAL_OPTIONS,
-  AGENT_TASK_MODE_LOCALE,
-  AGENT_TASK_MODES,
   AGENT_UNLIMITED_DAILY_RUNS,
   AGENT_WINDOW_MAX_MIN,
   AGENT_WINDOW_STEP_MIN,
@@ -106,14 +104,11 @@ const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; refre
       activeToMin: current?.activeToMin ?? null,
       timezone: current?.timezone ?? DEFAULT_TZ,
       pollIntervalSec: current?.pollIntervalSec ?? DEFAULT_POLL_INTERVAL_SEC,
-      defaultMode: current?.defaultMode ?? 'plan',
       dailyRunLimit: current?.dailyRunLimit ?? AGENT_UNLIMITED_DAILY_RUNS,
       dailyResetMin: current?.dailyResetMin ?? DEFAULT_AGENT_DAILY_RESET_MIN,
       rule: current?.rule ?? '',
     },
   })
-
-  const modeOptions = Object.fromEntries(AGENT_TASK_MODES.map((mode) => [mode, t(AGENT_TASK_MODE_LOCALE[mode])]))
 
   return (
     <form
@@ -153,27 +148,7 @@ const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; refre
             )}
           />
         </div>
-        <div className='col-span-6 md:col-span-3'>
-          <Controller
-            control={control}
-            name='defaultMode'
-            render={({ field: { value, onChange, onBlur, ref } }) => (
-              <SingleSelectField
-                groupOptions={modeOptions}
-                label={t('agent_default_mode')}
-                value={value}
-                onChange={(key) => {
-                  if (key !== null) {
-                    onChange(key)
-                  }
-                }}
-                onBlur={onBlur}
-                ref={ref}
-              />
-            )}
-          />
-        </div>
-        <div className='col-span-6 md:col-span-5'>
+        <div className='col-span-6 md:col-span-8'>
           <Controller
             control={control}
             name='timezone'

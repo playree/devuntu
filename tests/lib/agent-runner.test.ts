@@ -55,7 +55,6 @@ const runner = (override: Partial<AgentRunnerRow> = {}): AgentRunnerRow => ({
   activeToMin: null,
   timezone: null,
   pollIntervalSec: 300,
-  defaultMode: 'plan',
   rule: null,
   dailyRunLimit: 0,
   dailyResetMin: 5 * 60,

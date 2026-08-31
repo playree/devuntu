@@ -227,7 +227,6 @@ export const getAgentRunner = safeAuthAction
         activeToMin: true,
         timezone: true,
         pollIntervalSec: true,
-        defaultMode: true,
         rule: true,
         dailyRunLimit: true,
         dailyResetMin: true,
