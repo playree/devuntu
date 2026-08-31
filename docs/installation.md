@@ -22,6 +22,10 @@ Docker Compose で Devuntu を立ち上げるまでの手順。運用開始後�
 
 - Docker / Docker Compose が動くホスト
 - 利用者に見せる URL を決めてあること(`BETTER_AUTH_URL` に設定する)
+- **HTTPS で公開する場合は DNS とリバースプロキシ(またはロードバランサー)**。`compose.yaml` が公開するのは
+  HTTP の 3000 番だけで、TLS 終端もホスト名の振り分けも行わない。`https://` の `BETTER_AUTH_URL` を
+  そのまま開けるようにするには、決めたホスト名を DNS で解決させ、TLS を終端するプロキシから 3000 番へ
+  転送する構成が必要
 - **メール送信手段**。本手順の最小構成(`DISABLE_PASSWORD_AUTH=true`)ではメールOTPがサインインの唯一の手段になるため、
   SendGrid / sendmail / SMTP のいずれかを用意する。試用のみであれば `MAIL_SEND=debug` でサーバーログに
   OTP を出力させることもできる
@@ -30,11 +34,20 @@ Docker Compose で Devuntu を立ち上げるまでの手順。運用開始後�
 
 `compose.yaml` は3つのサービスを定義している。
 
-| サービス  | イメージ                 | 役割                             | 公開ポート |
-| --------- | ------------------------ | -------------------------------- | ---------- |
-| `devuntu` | `playree/devuntu:latest` | アプリ本体(Next.js)              | 3000       |
-| `db`      | `postgres:18`            | データベース                     | 5432       |
-| `s3`      | `chrislusf/seaweedfs`    | アップロード画像の保存先(S3互換) | 8333       |
+| サービス  | イメージ                 | 役割                             | ホストへの公開ポート       |
+| --------- | ------------------------ | -------------------------------- | -------------------------- |
+| `devuntu` | `playree/devuntu:latest` | アプリ本体(Next.js)              | `3000`(全インターフェース) |
+| `db`      | `postgres:18`            | データベース                     | `127.0.0.1:5432`           |
+| `s3`      | `chrislusf/seaweedfs`    | アップロード画像の保存先(S3互換) | `127.0.0.1:8333`           |
+
+`devuntu` から `db` / `s3` へは Compose のネットワーク内(`db:5432` / `s3:8333`)で到達するため、
+**`db` と `s3` のホスト公開は運用上は不要**。ホストから直接繋ぐ用途(開発時の psql や、リポジトリを
+clone している環境での `pnpm s3:backup`)のために loopback だけへ公開している。不要なら
+`compose.yaml` の該当 `ports` を削除してよい。公開ホストで全インターフェースへ bind すると、
+PostgreSQL とオブジェクトストレージへ外部から直接到達できてしまうので戻さないこと。
+
+リバースプロキシを同じホストに置く場合は、`devuntu` の `ports` も `127.0.0.1:3000:3000` に絞って
+プロキシ経由だけに限定できる。
 
 `s3-tools` はバックアップ用の使い捨てサービスで、`profiles: ['tools']` が付いているため
 `docker compose up` では起動しない([operations.md](operations.md#s3-toolsサービス))。
@@ -140,8 +153,23 @@ curl -s http://localhost:3000/api/health
 
 ### Googleアカウント連携
 
-`GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` (必要に応じて `GOOGLE_ALLOWED_DOMAINS`)を設定する。
-Google 側のコールバックURLには `<BETTER_AUTH_URL>/api/auth/callback/google` を登録する。
+`GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` を設定する。
+
+`GOOGLE_ALLOWED_DOMAINS`(カンマ区切り)の扱いは用途で分かれる。
+
+- **Googleサインインを使うなら最低1件必要。** 未設定だと許可ドメインが空のまま全ドメインのサインインが
+  拒否される(サインイン時に必ず許可リストとの突き合わせが行われる)
+- `/account` からのカレンダー連携だけであればドメインチェックは効かないため省略できる
+
+Google 側のコールバックURLには**次の2つ**を登録する。
+
+```text
+<BETTER_AUTH_URL>/api/auth/callback/google
+<BETTER_AUTH_URL>/api/auth/callback/google-account
+```
+
+サインイン用と、カレンダー連携用(refresh token を取るための別プロバイダ)で `providerId` が異なる。
+後者を登録しないと `/account` のカレンダー連携で `redirect_uri_mismatch` になる。
 
 そのうえで、管理者が `/admin/settings` で「Googleアカウント連携」を有効化する。この設定が効くのは
 アカウント連携とカレンダー機能で、**サインイン画面の「Googleでサインイン」は環境変数だけで決まる**。

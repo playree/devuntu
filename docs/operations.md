@@ -7,6 +7,7 @@
   - [Docker環境でのS3バックアップ](#docker環境でのs3バックアップ)
 - [S3リストア](#s3リストア)
   - [Docker環境でのS3リストア](#docker環境でのs3リストア)
+  - [対で復元する手順](#対で復元する手順)
   - [ボリュームを作り直す場合](#ボリュームを作り直す場合)
 - [定期実行](#定期実行)
 
@@ -24,6 +25,7 @@ Devuntu の永続データは2箇所に分かれている。**どちらか片方
 | アップロード | `s3`サービス / volume `seaweeddata` | [S3バックアップ](#s3バックアップ) |
 
 DB だけ復元しても`Attachment`レコードや`link_widget.iconPath`、チケット本文の画像 URL が実体を失う。
+復元も対で行い、両方が終わるまでアプリを起動しない([対で復元する手順](#対で復元する手順))。
 
 リポジトリを clone している環境では `package.json` のスクリプトを使える。
 
@@ -120,6 +122,11 @@ docker compose exec -T db pg_restore -U devuser -d devuntu --no-owner --single-t
 docker compose up -d devuntu
 ```
 
+**対の S3 リストアも行う場合、ここで `up -d devuntu` しない。** DB だけ戻した状態で公開すると、
+S3 リストアが終わるまで実体の無い画像を参照したまま利用・更新されてしまう。
+`devuntu` を止めたまま S3 リストアまで済ませ、最後に一度だけ起動する
+([対で復元する手順](#対で復元する手順))。
+
 ## S3バックアップ
 
 アップロードされた画像はオブジェクトストレージ(`s3`サービス)にしか存在せず、Docker の名前付きボリューム`seaweeddata`が消えると復旧できない。**DB バックアップと対で取得する**。
@@ -178,6 +185,29 @@ docker compose run --rm s3-tools \
   /app/scripts/restore-s3.mjs /app/backup/s3_YYYYMMDD_HHMMSS
 ```
 
+### 対で復元する手順
+
+DB と S3 を対で戻すときは、`devuntu` を止めたまま両方を復元し、最後に一度だけ起動する。
+
+```sh
+docker compose stop devuntu
+
+# DB リストア(詳細は「DBリストア」を参照)
+docker compose exec -T db dropdb -U devuser -f devuntu
+docker compose exec -T db createdb -U devuser devuntu
+docker compose exec -T db pg_restore -U devuser -d devuntu --no-owner --single-transaction \
+  < backup/devuntu_YYYYMMDD_HHMMSS.dump
+
+# S3 リストア
+docker compose run --rm s3-tools \
+  /app/scripts/restore-s3.mjs /app/backup/s3_YYYYMMDD_HHMMSS
+
+docker compose up -d devuntu
+```
+
+`s3-tools` は `depends_on` の `condition: service_healthy` で `s3` を待つため、`s3` を止めていても
+healthcheck が通ってから復元が走る。
+
 ### ボリュームを作り直す場合
 
 `seaweeddata`ボリュームを作り直すと`/data`のディスク消費をリセットできる。過去のバージョンで作られた volume ファイル(`*.dat`)は 1 ファイルあたり 1GiB を`fallocate`で先行確保しており、実データが数 KB でもディスクを 10GB 以上占有することがある(現行の`compose.yaml`の起動オプションでは先行確保は起きない)。
@@ -223,5 +253,12 @@ cron から実行する場合は、DB と S3 を続けて取得する。`compose
 ```
 
 `pg_dump` が途中で失敗したときに壊れた `.dump` を残さないよう、ここでも一時ファイル経由にしている。
+
+アプリを動かしたまま DB と S3 を順に取得するため、**厳密には同一時点のスナップショットにはならない**。
+取得の間に添付を削除する操作があると、DB ダンプ側は参照を残したまま S3 バックアップからは実体が
+消えるので、復元後にその画像だけ失われる。逆に取得の間に追加されたものは S3 側にしか無い
+未参照オブジェクトとして残るだけで害がないため、この順(DB → S3)にしている。
+利用の少ない時間帯を選ぶ、あるいは厳密な整合性が必要なら `docker compose stop devuntu` で
+書き込みを止めてから両方を取得する。
 
 `backup/`は際限なく増えるため、世代を残す期間を決めて古いものを削除する運用を別途用意する。
