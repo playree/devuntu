@@ -1,162 +1,104 @@
 - [Devuntu](#devuntu)
-- [パッケージ構成](#パッケージ構成)
-- [画面一覧](#画面一覧)
-  - [一般](#一般)
-  - [タスク管理](#タスク管理)
-  - [管理者](#管理者)
-  - [認証・公開](#認証公開)
-- [MCP サーバー](#mcp-サーバー)
-  - [Claude Code への登録](#claude-code-への登録)
-    - [サーバー環境で認証したい場合](#サーバー環境で認証したい場合)
-- [AIエージェント](#aiエージェント)
-  - [Claude Code への登録(エージェント)](#claude-code-への登録エージェント)
-  - [自動運用(Devuntu Agent)](#自動運用devuntu-agent)
-- [通知](#通知)
-- [環境変数](#環境変数)
-- [開発](#開発)
+  - [できること](#できること)
+  - [設計・開発方針](#設計開発方針)
+- [導入者向け](#導入者向け)
+  - [構成](#構成)
+  - [導入の流れ](#導入の流れ)
+  - [外部サービス連携](#外部サービス連携)
+  - [運用](#運用)
+  - [環境変数](#環境変数)
+- [利用者向け](#利用者向け)
+  - [ボードとチケット](#ボードとチケット)
+  - [カレンダーと空き時間の共有](#カレンダーと空き時間の共有)
+  - [通知](#通知)
+  - [AIとの連携](#aiとの連携)
+- [開発者向け](#開発者向け)
+  - [パッケージ構成](#パッケージ構成)
+  - [開発環境](#開発環境)
+  - [画面とアクセス制御](#画面とアクセス制御)
+  - [テスト・Lint](#テストlint)
 
 # Devuntu
 
-Devuntu は、かんばん形式のボード/チケット管理を中心に、カレンダー連携・メール/Slack通知・MCP連携などを備えた
+Devuntu は、かんばん形式のボード/チケット管理を中心に、カレンダー連携・メール/Slack通知・MCP/AIエージェント連携などを備えた
 セルフホスト型のプロジェクト管理ツールです。
 
-# パッケージ構成
+## できること
 
-- Next.js v16
-- TypeScript v7(v6 と併存。詳細は[開発](#開発)を参照)
-- pnpm v11
-- Prisma v7
-- Better Auth v1.7
-- Tailwind CSS v4
-- HeroUI v3
-- Zod v4
-- next-safe-action v8
+- かんばんとチケット管理(ボード、タグ、担当者、優先度、期日、コメント、メンション)
+- Googleカレンダー連携と、認証不要な公開URLでの空き時間共有
+- メンションのメール / Slack DM 通知
+- MCP サーバーとしての公開。Claude Code などから自分の権限でチケットを操作できる
+- AIエージェントへのチケット委任。担当エージェントが Claude Code を自動起動して対応する
 
-# 画面一覧
+## 設計・開発方針
 
-## 一般
+- できるだけシンプルな機能やUIに
+- できるだけ最新のライブラリやフレームワークを利用
+- できるだけアップデートを続ける
 
-| 画面名称       | パス       |
-| -------------- | ---------- |
-| ダッシュボード | `/`        |
-| カレンダー     | `/cal`     |
-| アカウント     | `/account` |
+# 導入者向け
 
-## タスク管理
+## 構成
 
-| 画面名称               | パス                    |
-| ---------------------- | ----------------------- |
-| ボード一覧             | `/boards`               |
-| かんばん               | `/boards/[id]`          |
-| ボード設定             | `/boards/[id]/settings` |
-| チケット一覧           | `/tickets`              |
-| チケット詳細           | `/tickets/[id]`         |
-| チケット表示IDでの参照 | `/t/[displayId]`        |
+Docker Compose で3つのサービスを起動します(`compose.yaml`)。
 
-## 管理者
+| サービス  | 役割                                |
+| --------- | ----------------------------------- |
+| `devuntu` | アプリ本体(Next.js)                 |
+| `db`      | PostgreSQL                          |
+| `s3`      | アップロード画像の保存先(SeaweedFS) |
 
-管理者(`role === 'admin'`)のみアクセスできる画面。
+## 導入の流れ
 
-| 画面名称           | パス                  |
-| ------------------ | --------------------- |
-| ユーザー管理       | `/admin/users`        |
-| エージェント管理   | `/admin/agents`       |
-| エージェント詳細   | `/admin/agents/[id]`  |
-| グループ管理       | `/admin/groups`       |
-| ダッシュボード管理 | `/admin/dashboard`    |
-| 設定(連携設定)     | `/admin/settings`     |
-| OIDCクライアント   | `/admin/oidc-clients` |
+1. `compose.yaml` と `docker/seaweedfs-s3.json` をホストへ配置する
+2. `.env.docker` を作る(`BETTER_AUTH_URL` / `BETTER_AUTH_SECRET` / `DATABASE_URL` / メール / S3)
+3. `docker compose up -d` で起動する(DBマイグレーションは起動時に自動実行)
+4. `<BETTER_AUTH_URL>/start` を開いて最初の管理者を登録する
+5. 必要に応じて Google / Slack / MCP / AIエージェントの連携を設定する
 
-## 認証・公開
+手順の詳細と注意点は [docs/installation.md](docs/installation.md) を参照。
 
-| 画面名称         | パス           | 補足                                        |
-| ---------------- | -------------- | ------------------------------------------- |
-| サインイン       | `/auth/signin` | メールOTPによるサインイン                   |
-| 初期セットアップ | `/start`       | 初回のみ                                    |
-| 空き時間の共有   | `/cal/[id]`    | **認証不要の公開ページ**。共有URLで参照する |
-| 認可の同意       | `/consent`     | MCPクライアントのOAuth認可フローで表示      |
+## 外部サービス連携
 
-各画面のアクセス制御の実装詳細、および API のアクセス制御は
-[docs/screens.md](docs/screens.md) を参照。
+いずれも環境変数の設定が前提で、Google と Slack は管理者が `/admin/settings` で有効化します。
 
-# MCP サーバー
+| 連携           | 前提                                               | 有効にすると                            |
+| -------------- | -------------------------------------------------- | --------------------------------------- |
+| メール         | `MAIL_SEND` / `MAIL_FROM`                          | メールOTPでのサインインとメンション通知 |
+| Google         | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`        | Googleサインインとカレンダー機能        |
+| Slack          | `SLACK_*` 一式                                     | Slack DM 通知とチケットURLの展開        |
+| MCP            | `OIDC_DCR_ENABLED=true`                            | MCPクライアントからの接続               |
+| AIエージェント | `/admin/agents` でのエージェント作成とトークン発行 | エージェントによるチケットの自動処理    |
 
-`/api/mcp` を MCP クライアント(Claude Code / VS Code など)へ公開しており、Devuntu 自身が認可サーバーを
-兼ねるため、クライアントは接続時に動的クライアント登録(DCR)→ 認可コードフローの順で進みます。
-利用するには管理者が `OIDC_DCR_ENABLED=true` を設定している必要があります。
+## 運用
 
-登録しただけではデータは読めず、devuntu へのログインと同意が必要です。詳しい仕組みや運用上の注意は
-[docs/mcp-server.md](docs/mcp-server.md) を参照。
+DB とアップロード画像は別々に保存されるため、バックアップは**必ず対で取得**します。
+手順・リストア・定期実行は [docs/operations.md](docs/operations.md) を参照。
 
-ブラウザを持たない**AIエージェント**は認可コードフローを踏めないため、管理画面で発行する
-長期トークンで接続します(後述)。
+アップデートは `docker compose pull && docker compose up -d`。マイグレーションは起動時に自動適用されます。
 
-## Claude Code への登録
+## 環境変数
 
-```sh
-claude mcp add --transport http devuntu <BETTER_AUTH_URL>/api/mcp
-```
+環境変数の一覧は [docs/environment-variables.md](docs/environment-variables.md) を参照。
 
-ユーザースコープで登録する場合
+# 利用者向け
 
-```sh
-claude mcp add --scope user --transport http devuntu <BETTER_AUTH_URL>/api/mcp
-```
+画面の使い方は [docs/user-guide.md](docs/user-guide.md) にまとめています。
 
-登録後、devuntu のツールを最初に呼び出したタイミングでブラウザが開き、DCR → 認可コードフロー(PKCE)
-が始まります。ログインしていない場合はログインし、続く同意画面で許可すれば以降はリフレッシュトークンで
-自動的に継続します。
+## ボードとチケット
 
-- 登録状況は `claude mcp list`、削除は `claude mcp remove devuntu`
-- 許可の取り消しは `/account` の「許可済みアプリ」から行えます
+かんばん(バックログ / 対応予定 / 対応中 / 完了)でチケットを管理します。
+ボードにはボードキーがあり、チケットは `ABC-42` のような表示IDで参照できます(`/t/ABC-42`)。
 
-### サーバー環境で認証したい場合
+ボードはチームで共有するもののほか、1ユーザーにつき1つのプライベートボードが自動で用意されます。
 
-```sh
-claude mcp login --no-browser devuntu
-```
+## カレンダーと空き時間の共有
 
-# AIエージェント
+Googleアカウントと連携すると、`/cal` で自分の予定を確認できます。
+「空き時間の共有」を有効にすると**認証不要の公開URL**が発行され、予定の詳細を見せずに空き状況だけを共有できます。
 
-Web ログインを行わず、MCP からのみ Devuntu を利用するユーザーです。管理者が
-[`/admin/agents`](docs/screens.md) から作成し、接続用の長期トークンを発行します。
-
-- メールアドレスは入力した識別子から `<識別子>@agents.invalid` として自動生成されます。
-  `.invalid` は予約ドメインなのでメールは届かず、作成後に識別子は変更できません
-- ボードやチケットの権限は人間の利用者と同じです。ボードのメンバーに加えれば担当者として選択でき、
-  メンションの宛先にもなります
-- トークンは1エージェントにつき1本です。発行時に一度だけ表示され、既定は無期限で任意の期限も選べます
-- 再発行すると前のトークンは即座に使えなくなります。最終利用日時は一覧から確認できます
-
-## Claude Code への登録(エージェント)
-
-発行時に表示されるコマンドをそのまま使えます。
-
-```sh
-claude mcp add --transport http devuntu-agent <BETTER_AUTH_URL>/api/mcp \
-  --header "Authorization: Bearer <発行したトークン>"
-```
-
-この経路ではブラウザでのログインと同意は発生しません。
-
-## 自動運用(Devuntu Agent)
-
-エージェントに担当チケットを任せると、利用者のマシンで **Claude Code が自動的に起動して処理**します。
-常駐プロセスは作らず、cron が 5 分おきに単発のランナー(Python・標準ライブラリのみ)を起動し、
-処理すべきチケットがあるときだけ Claude Code を立ち上げます。
-
-- チケットの処理方式はチケットごとに選べます
-  - **プラン先行**: プランをコメントで投稿して一旦終了し、返信を受けてから実装に進みます
-  - **自動実行**: プランを作らずに対応して結果を報告します
-- 担当を割り当てただけでは動きません。チケット詳細で処理方式を指定したものだけが対象です
-- 稼働の有効/無効、稼働許可時間帯(夜間のみ動かすなど)、処理の前後に読ませる指示は
-  `/admin/agents` の「自動運用」から設定します。稼働状況と実行履歴も同じ画面で確認できます
-
-セットアップは Claude Code から「devuntu のエージェントをセットアップして」と頼めば、
-MCP ツール `get_agent_setup_guide` が返す手順に沿って進みます。
-仕組みの詳細は [docs/agent-runner.md](docs/agent-runner.md) を参照。
-
-# 通知
+## 通知
 
 チケット本文・コメントで `@` によりメンションされたユーザーへ、**メール**または**Slack DM**で通知します。
 通知の ON/OFF はイベント種別 × チャネルごとに `/account` の「通知設定」から切り替えられます。
@@ -166,11 +108,45 @@ Slack 通知を利用するには、管理者による連携の有効化と、�
 
 実装の詳細や Slack App の設定手順は [docs/notifications.md](docs/notifications.md) を参照。
 
-# 環境変数
+## AIとの連携
 
-環境変数の一覧は [docs/environment-variables.md](docs/environment-variables.md) を参照。
+- **MCPクライアントから使う** — `/api/mcp` へ接続すると、自分の権限でチケットの検索・作成・更新ができます。
+  登録手順と仕組みは [docs/mcp-server.md](docs/mcp-server.md) を参照
+- **エージェントに任せる** — エージェントを担当者にし、チケットの「エージェントモード」を選ぶと、
+  利用者のマシンで Claude Code が自動起動して対応します。プランを先に投稿させることもできます。
+  仕組みは [docs/agent-runner.md](docs/agent-runner.md) を参照
+- **承認** — 自分が承認者になっているエージェントのチケットは `/agents` からまとめて確認・許可できます
 
-# 開発
+# 開発者向け
 
-開発環境のセットアップ、DB/S3のバックアップ・リストア、ビルド、パッケージ管理、イメージ作成などの
-手順は [docs/development.md](docs/development.md) を参照。
+## パッケージ構成
+
+- Next.js v16
+- TypeScript v7(v6 と併存。詳細は[docs/development.md](docs/development.md#typescript-v7-と-v6-の併存)を参照)
+- pnpm v11
+- Prisma v7
+- Better Auth v1.7
+- Tailwind CSS v4
+- HeroUI v3
+- Zod v4
+- next-safe-action v8
+
+## 開発環境
+
+開発環境のセットアップ、ビルド、パッケージ管理、イメージ作成などの手順は
+[docs/development.md](docs/development.md) を参照。
+
+## 画面とアクセス制御
+
+画面一覧とアクセス制御の実装、および API のアクセス制御は [docs/screens.md](docs/screens.md) を参照。
+
+## テスト・Lint
+
+```sh
+pnpm test       # vitest
+pnpm lint       # eslint
+pnpm typecheck  # tsgo
+pnpm build      # ビルド確認
+```
+
+コーディングルールは [CLAUDE.md](CLAUDE.md) を参照。

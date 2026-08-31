@@ -1,17 +1,69 @@
-# MCP サーバー詳細
+- [Claude Code への登録](#claude-code-への登録)
+  - [サーバー環境で認証したい場合](#サーバー環境で認証したい場合)
+  - [エージェントとして登録する場合](#エージェントとして登録する場合)
+- [認証の2経路](#認証の2経路)
+- [誰が使えるか](#誰が使えるか)
+- [AIエージェント用ユーザー](#aiエージェント用ユーザー)
+  - [メールアドレス](#メールアドレス)
+  - [トークンの運用](#トークンの運用)
+  - [自動運用のツール](#自動運用のツール)
+- [登録できるクライアントの範囲](#登録できるクライアントの範囲)
+- [運用上の注意](#運用上の注意)
 
-概要とClaude Codeへの登録手順は [README.md](../README.md#mcp-サーバー) を参照。ここでは、誰が使えるか・
-登録できるクライアントの範囲・運用上の注意といった、管理者/運用者向けの詳細をまとめる。
+# MCP サーバー
+
+`/api/mcp` を MCP クライアント(Claude Code / VS Code など)へ公開しており、Devuntu 自身が認可サーバーを
+兼ねるため、クライアントは接続時に動的クライアント登録(DCR)→ 認可コードフローの順で進む。
+利用するには管理者が `OIDC_DCR_ENABLED=true` を設定している必要がある。
+
+ブラウザを持たない**AIエージェント**は認可コードフローを踏めないため、管理画面で発行する
+長期トークンで接続する。
+
+## Claude Code への登録
+
+```sh
+claude mcp add --transport http devuntu <BETTER_AUTH_URL>/api/mcp
+```
+
+ユーザースコープで登録する場合
+
+```sh
+claude mcp add --scope user --transport http devuntu <BETTER_AUTH_URL>/api/mcp
+```
+
+登録後、devuntu のツールを最初に呼び出したタイミングでブラウザが開き、DCR → 認可コードフロー(PKCE)
+が始まる。ログインしていない場合はログインし、続く同意画面で許可すれば以降はリフレッシュトークンで
+自動的に継続する。
+
+- 登録状況は `claude mcp list`、削除は `claude mcp remove devuntu`
+- 許可の取り消しは `/account` の「許可済みアプリ」から行える
+
+### サーバー環境で認証したい場合
+
+```sh
+claude mcp login --no-browser devuntu
+```
+
+### エージェントとして登録する場合
+
+`/admin/agents` でトークンを発行した際に表示されるコマンドをそのまま使える。
+
+```sh
+claude mcp add --transport http devuntu-agent <BETTER_AUTH_URL>/api/mcp \
+  --header "Authorization: Bearer <発行したトークン>"
+```
+
+この経路ではブラウザでのログインと同意は発生しない。
 
 ## 認証の2経路
 
 `/api/mcp` が受け取る `Authorization: Bearer` には2種類あり、`devuntu_agent_` で始まるものだけを
-エージェントトークンとして扱う(`src/lib/agent-token.ts`)。それ以外は従来どおり OAuth の
+エージェントトークンとして扱う(`src/lib/agent/agent-token.ts`)。それ以外は従来どおり OAuth の
 アクセストークン(JWT)として検証する(`src/lib/oauth/oauth-resource.ts`)。
 検証を通った後は同じ `ResourceAuth` になるため、ツールの実装と権限判定は完全に共通。
 
 エンドポイントは `/api/mcp` で共通だが、Claude Code へ登録する MCP サーバー名(`serverInfo.name`)は
-`auth.kind` に応じて出し分けている(`src/lib/mcp-server.ts`)。人間は `devuntu`、AIエージェントは
+`auth.kind` に応じて出し分けている(`src/lib/mcp/mcp-server.ts`)。人間は `devuntu`、AIエージェントは
 `devuntu-agent` を名乗るので、`claude mcp list` の表示や登録コマンドの時点で経路を取り違えにくい。
 
 | 利用者         | 取得方法                         | 寿命                                      | 止め方                        |
@@ -66,7 +118,7 @@ MCP からのみ利用できる。ボードやチケットの権限は人間の�
 ### 自動運用のツール
 
 エージェント用トークンで接続した場合だけ、自動運用(Devuntu Agent)のツールが追加で登録される
-(`src/lib/mcp-agent.ts`)。人間の MCP クライアントには関係が無く、一覧に出しても誤用のもとにしかならないため。
+(`src/lib/mcp/mcp-agent.ts`)。人間の MCP クライアントには関係が無く、一覧に出しても誤用のもとにしかならないため。
 
 | ツール                | 用途                                                                               |
 | --------------------- | ---------------------------------------------------------------------------------- |
@@ -82,7 +134,7 @@ MCP からのみ利用できる。ボードやチケットの権限は人間の�
 
 `POST /api/auth/oauth2/register` は未認証で叩けるが、リダイレクトURIが**ループバック
 (`http://localhost` / `127.0.0.1` / `[::1]`)か逆ドメイン形式の private-use スキーム**のものだけを
-受け付ける(`src/lib/oauth-registration.ts`)。認可コードが必ず利用者自身の端末へ戻るので、
+受け付ける(`src/lib/oauth/oauth-registration.ts`)。認可コードが必ず利用者自身の端末へ戻るので、
 外部サーバーへコードを流すクライアントは登録できない。PKCE は常に必須。
 
 ## 運用上の注意
