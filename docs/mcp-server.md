@@ -3,6 +3,10 @@
   - [エージェントとして登録する場合](#エージェントとして登録する場合)
 - [認証の2経路](#認証の2経路)
 - [誰が使えるか](#誰が使えるか)
+- [ツール一覧](#ツール一覧)
+  - [共通のツール](#共通のツール)
+  - [エージェント専用のツール](#エージェント専用のツール)
+  - [入力の約束ごと](#入力の約束ごと)
 - [AIエージェント用ユーザー](#aiエージェント用ユーザー)
   - [メールアドレス](#メールアドレス)
   - [トークンの運用](#トークンの運用)
@@ -82,6 +86,60 @@ claude mcp add --transport http devuntu-agent <BETTER_AUTH_URL>/api/mcp \
   強制的に止めたい場合は OAuth クライアントの無効化、またはユーザーの BAN で行う
 - `/api/mcp` はトークンの `sub` から devuntu ユーザーを解決する。ボードやチケットの権限は画面と同じ
 
+## ツール一覧
+
+`ping` から `get_agent_setup_guide` までは接続の種類(人間 / AIエージェント)を問わず登録される。
+`get_agent_task` と `finish_agent_task` だけはエージェント用トークンで接続した場合のみ登録される
+(`src/lib/mcp/mcp-server.ts`)。
+
+### 共通のツール
+
+| ツール                  | 用途                                                                          | 入力                                                                                           |
+| ----------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `ping`                  | 接続確認。認可済みユーザーのメールアドレスを返す                              | なし                                                                                           |
+| `echo`                  | 入力した文字列をそのまま返す                                                  | `message`                                                                                      |
+| `get_ticket`            | チケットの詳細(本文・ステータス・担当者・タグ・コメント・短縮URL)を取得       | `ticketId`                                                                                     |
+| `search_tickets`        | アクセスできるチケットを検索(更新日時の降順)                                  | `keyword` / `status` / `priority` / `tags` / `boardId` / `assignee` / `limit`                  |
+| `create_ticket`         | ボードにチケットを新規作成                                                    | `boardId` / `title` / `content` / `status` / `priority` / `dueDate` / `assigneeId` / `tagIds`  |
+| `update_ticket`         | チケットの内容とステータスを更新                                              | `ticketId` / `title` / `content` / `priority` / `dueDate` / `assigneeId` / `tagIds` / `status` |
+| `delete_ticket`         | チケットを削除                                                                | `ticketId`                                                                                     |
+| `add_ticket_comment`    | コメントを追加(対応プラン・対応報告・返信もここから)                          | `ticketId` / `content` / `type` / `parentId`                                                   |
+| `update_ticket_comment` | 自分が投稿したコメントを編集                                                  | `commentId` / `content`                                                                        |
+| `delete_ticket_comment` | コメントを削除                                                                | `commentId`                                                                                    |
+| `get_agent_setup_guide` | 自動運用(Devuntu Agent)を自分のマシンへ用意する手順を返す。人が読むためのもの | なし                                                                                           |
+
+権限はボードのロールで決まり、基本は画面と同じ。ただしチケットの更新・削除だけは MCP 経由に
+追加の制限がある(`src/lib/board/task.ts` の `canMcpUpdateTicket` / `canMcpDeleteTicket`)。
+
+- `update_ticket` — メンバーは**他人が担当のチケットを更新できない**(未割り当てなら可能。オーナーは制限なし)
+- `delete_ticket` — オーナー・メンバーともに**自分が作成したチケットのみ**削除できる(画面より厳しい)
+- `delete_ticket_comment` — 自分が投稿したコメント、またはチケットを削除できる権限を持つ場合
+- 本文やコメントのメンション(`@[アドレス]`)は画面から書いた場合と同じように解決され、通知も飛ぶ
+
+### エージェント専用のツール
+
+自動運用(Devuntu Agent)で Claude 自身が「処理してよいか」「何をするか」を確かめ、結果を書き戻すための口
+(`src/lib/mcp/mcp-agent.ts`)。人間の MCP クライアントには関係が無く、一覧に出しても誤用のもとにしかならない。
+
+| ツール              | 用途                                                                             | 入力                               |
+| ------------------- | -------------------------------------------------------------------------------- | ---------------------------------- |
+| `get_agent_task`    | チケットを処理する前に必ず呼ぶ。稼働条件・処理すべきチケット・ルールの指示を返す | `ticketId`(省略時は処理待ちの一覧) |
+| `finish_agent_task` | 処理結果を報告して1回の実行を閉じる                                              | `ticketId` / `outcome` / `summary` |
+
+- `get_agent_task` の応答が `active: false` の場合は、何もせず終了する(コメントの投稿もしない)
+- `outcome` は `planned`(プランを投稿して返信待ち) / `completed`(対応完了) / `skipped`(見送り) / `failed`(失敗)
+- 仕組みの詳細は [docs/agent-runner.md](agent-runner.md) を参照
+
+### 入力の約束ごと
+
+- `ticketId` は**表示ID(例: ABC-42)でもチケットIDでも**受け取れる(`resolveTicketId`)。
+  `commentId` と `assigneeId` は UUIDv7 のみ
+- `search_tickets` の `assignee` は ユーザーID / `me`(自分) / `none`(未割り当て)。`limit` は既定20・最大50
+- `dueDate` は `YYYY-MM-DD`。`null` を渡すと解除、省略すると変更しない。`assigneeId` と `tagIds` も同じ扱い
+- 文字数は画面と共通(`src/lib/schema/schema.ts`)。タイトル120文字、本文・コメント40000文字、タグは10個まで
+- `add_ticket_comment` の `type` は `plan`(対応プラン) / `report`(対応報告)。指定すると詳細画面で
+  折りたたみ表示され、通常コメントと区別できる。`parentId` での返信は**1階層のみ**
+
 ## AIエージェント用ユーザー
 
 `User.isAgent` が立ったユーザー。Web ログインは経路を問わず拒否され(`databaseHooks.session.create.before`)、
@@ -117,18 +175,10 @@ MCP からのみ利用できる。ボードやチケットの権限は人間の�
 
 ### 自動運用のツール
 
-エージェント用トークンで接続した場合だけ、自動運用(Devuntu Agent)のツールが追加で登録される
-(`src/lib/mcp/mcp-agent.ts`)。人間の MCP クライアントには関係が無く、一覧に出しても誤用のもとにしかならないため。
-
-| ツール                | 用途                                                                               |
-| --------------------- | ---------------------------------------------------------------------------------- |
-| `get_agent_task`      | 事前作業。稼働条件・処理すべきチケット・実行すべきアクション・事前作業の指示を返す |
-| `get_agent_post_task` | 事後作業の指示を返す                                                               |
-| `finish_agent_task`   | 処理結果を報告して 1 回の実行を閉じる                                              |
-
-セットアップ手順を返す `get_agent_setup_guide` だけは、人が読むものなので接続の種類を問わず使える。
-
-仕組みの詳細は [docs/agent-runner.md](agent-runner.md) を参照。
+エージェント用トークンで接続した場合だけ、自動運用(Devuntu Agent)のツール
+(`get_agent_task` / `finish_agent_task`)が追加で登録される。
+一覧は [エージェント専用のツール](#エージェント専用のツール)、仕組みの詳細は
+[docs/agent-runner.md](agent-runner.md) を参照。
 
 ## 登録できるクライアントの範囲
 
