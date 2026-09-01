@@ -112,7 +112,9 @@ S3_SECRET_ACCESS_KEY=<シークレットキー>
 - `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` は `docker/seaweedfs-s3.json` の内容と揃える。
   バケットは初回アップロード時に自動作成されるため事前作業は不要
 - `DISABLE_PASSWORD_AUTH=false`(パスワード認証あり)にする場合、既定の `TWO_FA_REQUIRED=true` により
-  2要素認証の設定が必須になる。挙動は [screens.md](screens.md#アクセス制御の仕組み) を参照
+  2要素認証の設定が必須になる。挙動は [screens.md](screens.md#アクセス制御の仕組み) を参照。
+  `TWO_FA_REQUIRED=false` にすると 2要素認証を一切行わない(過去に有効化した利用者も
+  パスワードのみでログインする)
 
 ## 3. 起動
 

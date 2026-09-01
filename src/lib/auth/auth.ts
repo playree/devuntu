@@ -150,6 +150,29 @@ if (!!envu.server.SLACK_CLIENT_ID && !!envu.server.SLACK_CLIENT_SECRET) {
   })
 }
 
+/**
+ * 2要素認証。
+ *
+ * このプラグインが持つ hook は `/sign-in/email` のチャレンジ差し替え 1 つだけで、
+ * user.twoFactorEnabled が true なら必ずセッションを破棄して OTP 入力を要求する。
+ * TWO_FA_REQUIRED=false ではその hook を外し、過去に有効化した利用者も含めて 2FA を実行しない。
+ *
+ * プラグイン自体を登録から外すと user.twoFactorEnabled のフィールド定義(型)まで失われるため、
+ * 登録は常に行う。twoFactorEnabled と TwoFactor テーブルはそのまま残り、
+ * TWO_FA_REQUIRED=true に戻せば元の動作に戻る。
+ */
+const twoFactorPlugin = {
+  ...twoFactor({
+    // skipVerificationOnEnable: true,
+    otpOptions: {
+      sendOTP: async ({ user: { locale = '', email }, otp }) => {
+        await sendEmailOtp({ locale, to: email, otp })
+      },
+    },
+  }),
+  ...(!envu.server.TWO_FA_REQUIRED && { hooks: {} }),
+}
+
 export const auth = betterAuth({
   appName: envu.server.NEXT_PUBLIC_APP_NAME,
   session: {
@@ -201,6 +224,9 @@ export const auth = betterAuth({
     accountLinking: {
       enabled: true,
       trustedProviders: ['google'],
+      // ローカルの emailVerified は OTP サインインか 2FA 完了でしか立たない。
+      // 2FA 不要運用では作成直後の false が残り続けるため、プロバイダ側の検証に委ねる
+      requireLocalEmailVerified: envu.server.TWO_FA_REQUIRED,
     },
   },
   emailAndPassword: {
@@ -310,14 +336,7 @@ export const auth = betterAuth({
         }
       },
     }),
-    twoFactor({
-      // skipVerificationOnEnable: true,
-      otpOptions: {
-        sendOTP: async ({ user: { locale = '', email }, otp }) => {
-          await sendEmailOtp({ locale, to: email, otp })
-        },
-      },
-    }),
+    twoFactorPlugin,
     passkey({
       authenticatorSelection: {
         authenticatorAttachment: 'platform',
