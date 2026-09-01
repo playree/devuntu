@@ -78,6 +78,7 @@ const resolveUploadTarget = async (
     throw errValidation('ticketId と boardId はどちらか一方を指定してください')
   }
   if (ticketId) {
+    // 'edit' は canEdit(= メンバー かつ 未アーカイブ)なので、アーカイブ済みボードはここで弾かれる
     const access = await assertTicketAccess(auth.user, await resolveTicketId(auth, ticketId), 'edit')
     return access.boardId
   }

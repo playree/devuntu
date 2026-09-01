@@ -73,6 +73,7 @@ export const ModelName = {
   Dashboard: 'Dashboard',
   LinkWidget: 'LinkWidget',
   Attachment: 'Attachment',
+  UploadNonce: 'UploadNonce',
   KeyValueStore: 'KeyValueStore',
   AppVersion: 'AppVersion',
   Group: 'Group',
@@ -467,6 +468,16 @@ export const AttachmentScalarFieldEnum = {
 } as const
 
 export type AttachmentScalarFieldEnum = (typeof AttachmentScalarFieldEnum)[keyof typeof AttachmentScalarFieldEnum]
+
+
+export const UploadNonceScalarFieldEnum = {
+  id: 'id',
+  jti: 'jti',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt'
+} as const
+
+export type UploadNonceScalarFieldEnum = (typeof UploadNonceScalarFieldEnum)[keyof typeof UploadNonceScalarFieldEnum]
 
 
 export const KeyValueStoreScalarFieldEnum = {
