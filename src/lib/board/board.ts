@@ -553,6 +553,9 @@ const isAttachmentInUse = async (
  * 使われている画像を貼り直したときに動かしてしまうと、元のボードのメンバーからその本文の画像が
  * 読めなくなる(添付の可視範囲は Attachment.boardId 1つで決まるため)。
  * 使用中のものは動かさないので、貼り直した先では元のボードのメンバーにしか見えない。
+ *
+ * チケット自身はボードを移動しない前提で成り立っている(docs/development.md
+ * 「チケットはボードを移動しない」)。移動を許容する場合はここも設計し直すこと。
  */
 export const reassignContentAttachments = async (
   tx: Prisma.TransactionClient,

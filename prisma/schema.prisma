@@ -823,7 +823,9 @@ model BoardGroup {
 
 model Ticket {
   id          String          @id @default(uuid(7))
-  // プライベートも必ずボード(kind=private)に属する。所有者による別スコープは持たない
+  // プライベートも必ずボード(kind=private)に属する。所有者による別スコープは持たない。
+  // 作成時に決まり以後変更しない(ボード移動は無い)。本文に貼った添付の可視範囲がこの前提に依存する
+  // (docs/development.md「チケットはボードを移動しない」)
   boardId     String
   board       Board           @relation(fields: [boardId], references: [id], onDelete: Cascade)
   createdById String?
