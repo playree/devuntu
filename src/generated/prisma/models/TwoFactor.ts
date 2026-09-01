@@ -14,7 +14,7 @@ import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model TwoFactor
- * 
+ * 2要素認証(TOTP)の設定。better-auth の twoFactor プラグインが要求するテーブル。
  */
 export type TwoFactorModel = runtime.Types.Result.DefaultSelection<Prisma.$TwoFactorPayload>
 
@@ -603,11 +603,29 @@ export type $TwoFactorPayload<ExtArgs extends runtime.Types.Extensions.InternalA
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * TOTP の共有シークレット
+     */
     secret: string
+    /**
+     * バックアップコード
+     */
     backupCodes: string
+    /**
+     * 設定の持ち主
+     */
     userId: string
+    /**
+     * 初回検証が済んで有効化された状態か
+     */
     verified: boolean | null
+    /**
+     * 連続で失敗した検証の回数。ロックの判定に使う
+     */
     failedVerificationCount: number | null
+    /**
+     * ロックの解除時刻。この時刻まで検証を受け付けない
+     */
     lockedUntil: Date | null
   }, ExtArgs["result"]["twoFactor"]>
   composites: {}

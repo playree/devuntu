@@ -7,23 +7,62 @@ datasource db {
   provider = "postgresql"
 }
 
+/// アプリの利用者。Webにログインする人のほか、MCP からのみ利用するAIエージェント用ユーザー
+/// (isAgent = true)も同じテーブルで持つ。
 model User {
-  id                 String              @id @default(uuid(7))
-  name               String
-  email              String
-  emailVerified      Boolean             @default(false)
-  image              String?
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  role               String?
-  banned             Boolean?            @default(false)
-  banReason          String?
-  banExpires         DateTime?
-  twoFactorEnabled   Boolean?            @default(false)
-  avatarLocked       Boolean?            @default(false)
-  nameLocked         Boolean?            @default(false)
-  locale             String?
-  lastLoginAt        DateTime?
+  id String @id @default(uuid(7))
+
+  /// 表示名
+  name String
+
+  /// ログインIDと通知の宛先を兼ねる。全ユーザーで一意
+  email String
+
+  /// メールアドレスの確認済みフラグ。2FA の完了時にも true にする
+  emailVerified Boolean @default(false)
+
+  /// アバター画像のURL。アップロードした場合は `/api/upload/<key>`
+  image String?
+
+  /// 管理者は `admin`。null は一般ユーザー
+  role String?
+
+  /// 利用停止中
+  banned Boolean? @default(false)
+
+  /// 利用停止の理由
+  banReason String?
+
+  /// 利用停止の解除時刻。null は無期限
+  banExpires DateTime?
+
+  /// 2要素認証の有効/無効
+  twoFactorEnabled Boolean? @default(false)
+
+  /// アバターを本人が設定済み。ソーシャルログインで取得した画像で上書きしない
+  avatarLocked Boolean? @default(false)
+
+  /// 表示名を本人が設定済み。ソーシャルログインで取得した名前で上書きしない
+  nameLocked Boolean? @default(false)
+
+  /// 表示言語。ログイン時にクッキーへ反映する。null はブラウザ設定に従う
+  locale String?
+
+  /// 最終ログイン時刻。セッションの生成時に更新する
+  lastLoginAt DateTime?
+
+  /// 日時の表示に使うタイムゾーン。null は DEFAULT_TZ
+  timezone String?
+
+  /// AIエージェント用ユーザー。Webログインを行わず MCP からのみ利用する
+  isAgent Boolean @default(false)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // relation
+
   sessions           Session[]
   accounts           Account[]
   twofactors         TwoFactor[]
@@ -32,42 +71,29 @@ model User {
   oauthrefreshtokens OauthRefreshToken[]
   oauthaccesstokens  OauthAccessToken[]
   oauthconsents      OauthConsent[]
-  dashboard          Dashboard?
 
-  // add Group
-  userGroups UserGroup[]
+  userGroups     UserGroup[]
+  dashboard      Dashboard?
+  attachments    Attachment[]
+  notifySettings UserNotifySetting[]
 
-  // add CalendarShare
+  // CalendarShare
   calendarShare     CalendarShare?
   calendarBusyTimes CalendarBusyTime[]
 
-  // add timezone
-  timezone String?
-
-  // add Board / Ticket
+  // Board / Ticket
   boardMembers    BoardMember[]
-  // プライベートボード(1ユーザー1つ)。Board.privateOwnerId の @unique で担保する
-  privateBoard    Board?          @relation("PrivateBoardOwner")
+  privateBoard    Board?
   createdTickets  Ticket[]        @relation("TicketCreator")
   assignedTickets Ticket[]        @relation("TicketAssignee")
-  ticketComments  TicketComment[] @relation("TicketCommentAuthor")
+  ticketComments  TicketComment[]
 
-  // add Attachment
-  attachments Attachment[]
-
-  // add Notify
-  notifySettings UserNotifySetting[]
-
-  // add AI Agent
-  /// AIエージェント用ユーザー。Webログインを行わず MCP からのみ利用する
-  isAgent            Boolean      @default(false)
-  agentToken         AgentToken?  @relation("AgentTokenOwner")
-  createdAgentTokens AgentToken[] @relation("AgentTokenCreator")
-  agentRunner        AgentRunner? @relation("AgentRunnerOwner")
-  /// このユーザー(エージェント)に設定された承認者
+  // Agent
+  agentToken          AgentToken?          @relation("AgentTokenOwner")
+  createdAgentTokens  AgentToken[]         @relation("AgentTokenCreator")
+  agentRunner         AgentRunner?
   agentApprovers      AgentApprover[]      @relation("AgentApproverAgent")
-  agentApproverGroups AgentApproverGroup[] @relation("AgentApproverGroupAgent")
-  /// このユーザーが承認者になっているエージェント
+  agentApproverGroups AgentApproverGroup[]
   approverOf          AgentApprover[]      @relation("AgentApproverUser")
 
   @@unique([email])
@@ -78,7 +104,9 @@ model User {
 /// 1エージェントにつき1行だけ持ち、再発行はこの行の置き換えで行う。
 /// 平文は発行時の応答にしか現れず、保存するのはハッシュだけ。
 model AgentToken {
-  id     String @id @default(uuid(7))
+  id String @id @default(uuid(7))
+
+  /// トークンの持ち主となるAIエージェント用ユーザー
   userId String @unique
   user   User   @relation("AgentTokenOwner", fields: [userId], references: [id], onDelete: Cascade)
 
@@ -88,12 +116,13 @@ model AgentToken {
   /// 平文の末尾数文字。管理画面で今のトークンを見分けるためだけに持つ
   hint String
 
-  /// null は無期限
+  /// 有効期限。null は無期限
   expiresAt DateTime?
 
   /// 最終利用時刻。リクエストごとに書かず、一定時間経過した場合だけ更新する
   lastUsedAt DateTime?
 
+  /// 発行操作を行った管理者。ユーザー削除時は SetNull で記録だけ残す
   createdById String?
   createdBy   User?   @relation("AgentTokenCreator", fields: [createdById], references: [id], onDelete: SetNull)
 
@@ -107,17 +136,20 @@ model AgentToken {
 /// AIエージェントの自動運用(Devuntu Agent)の設定と、ランナーの稼働状況。
 /// エージェントユーザーにつき1行だけ持つ。行が無い状態は「自動運用を使わない」を表す。
 model AgentRunner {
-  id     String @id @default(uuid(7))
+  id String @id @default(uuid(7))
+
+  /// 自動運用の対象となるAIエージェント用ユーザー
   userId String @unique
-  user   User   @relation("AgentRunnerOwner", fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   /// 自動運用の有効/無効。時間帯の条件を満たしていても、これが false なら動かさない
   enabled Boolean @default(false)
 
-  /// 稼働を許可する時間帯。0:00 からの分で持つ。
-  /// 両方 null なら終日。from > to は日跨ぎ(夜間のみ稼働)を表す
+  /// 稼働を許可する時間帯の開始。0:00 からの分。activeToMin と共に null なら終日
   activeFromMin Int?
-  activeToMin   Int?
+
+  /// 稼働を許可する時間帯の終了。0:00 からの分。from > to は日跨ぎ(夜間のみ稼働)を表す
+  activeToMin Int?
 
   /// 時間帯の判定に使うタイムゾーン。null は DEFAULT_TZ
   timezone String?
@@ -134,22 +166,31 @@ model AgentRunner {
   /// 上限のカウントをリセットする時刻。0:00 からの分。判定は timezone に従う
   dailyResetMin Int @default(300)
 
-  /// ランナーの自己申告。稼働状況の表示にだけ使い、認可には使わない
+  /// 最終ポーリング時刻。ランナーの自己申告で、稼働状況の表示にだけ使い認可には使わない
   lastPolledAt DateTime?
-  hostname     String?
-  version      String?
 
-  runs AgentRun[]
+  /// ランナーが動いているホスト名(自己申告)
+  hostname String?
 
+  /// ランナー(devuntu_agent.py)のバージョン(自己申告)
+  version String?
+
+  // メタデータ
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // relation
+
+  runs AgentRun[]
 
   @@map("agent_runner")
 }
 
 /// エージェントの1回の実行。稼働状況の確認と、応答が返らないまま落ちた実行の回収に使う。
 model AgentRun {
-  id       String      @id @default(uuid(7))
+  id String @id @default(uuid(7))
+
+  /// 実行したランナー
   runnerId String
   runner   AgentRunner @relation(fields: [runnerId], references: [id], onDelete: Cascade)
 
@@ -160,13 +201,19 @@ model AgentRun {
   /// 起動時点の表示ID。チケット削除後に何を処理したかを追えるように持つ
   ticketRef String?
 
+  /// 実行した処理の種別
   action AgentRunAction
+
+  /// 実行の状態
   status AgentRunStatus @default(running)
 
   /// エージェントが報告した結果の要約
   summary String?
 
-  startedAt  DateTime  @default(now())
+  /// 実行の開始時刻
+  startedAt DateTime @default(now())
+
+  /// 実行の終了時刻。null は実行中、または応答が返らないまま落ちた実行
   finishedAt DateTime?
 
   @@index([runnerId, startedAt])
@@ -177,12 +224,17 @@ model AgentRun {
 /// エージェントモードの変更(= 自動実行の承認)を許可する相手。ユーザー指定。
 /// 1人も居ないエージェントは誰もエージェントモードを変更できない
 model AgentApprover {
-  id      String @id @default(uuid(7))
+  id String @id @default(uuid(7))
+
+  /// 承認対象のAIエージェント用ユーザー
   agentId String
   agent   User   @relation("AgentApproverAgent", fields: [agentId], references: [id], onDelete: Cascade)
-  userId  String
-  user    User   @relation("AgentApproverUser", fields: [userId], references: [id], onDelete: Cascade)
 
+  /// 承認者となるユーザー
+  userId String
+  user   User   @relation("AgentApproverUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  // メタデータ
   createdAt DateTime @default(now())
 
   // @@unique が (agentId, ...) の先頭索引を兼ねるため @@index([agentId]) は不要
@@ -193,12 +245,17 @@ model AgentApprover {
 
 /// {@link AgentApprover} のグループ指定版。BoardMember / BoardGroup と同じ2枚構成に揃える
 model AgentApproverGroup {
-  id      String @id @default(uuid(7))
+  id String @id @default(uuid(7))
+
+  /// 承認対象のAIエージェント用ユーザー
   agentId String
-  agent   User   @relation("AgentApproverGroupAgent", fields: [agentId], references: [id], onDelete: Cascade)
+  agent   User   @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  /// 承認者となるグループ。所属ユーザー全員が承認者になる
   groupId String
   group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
+  // メタデータ
   createdAt DateTime @default(now())
 
   @@unique([agentId, groupId])
@@ -222,12 +279,15 @@ enum AgentTaskState {
   running
   /// プラン投稿済み。利用者の返信待ち
   planned
+  /// 処理を終えて報告済み
   done
+  /// 処理に失敗
   failed
   /// 稼働条件やチケットの内容から処理を見送った
   skipped
 }
 
+/// エージェントが行った処理の種別
 enum AgentRunAction {
   /// プランの作成と投稿
   plan
@@ -237,24 +297,45 @@ enum AgentRunAction {
   revise
 }
 
+/// エージェントの1回の実行の状態
 enum AgentRunStatus {
+  /// 実行中。応答が返らないまま落ちた実行もこの状態で残る
   running
+  /// 正常終了
   succeeded
+  /// 失敗
   failed
+  /// 処理を見送った
   skipped
 }
 
+/// ログインセッション。better-auth が要求するテーブルで、列の増減はライブラリ側の要求に従う。
 model Session {
-  id                 String              @id @default(uuid(7))
-  expiresAt          DateTime
-  token              String
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  ipAddress          String?
-  userAgent          String?
-  userId             String
-  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  impersonatedBy     String?
+  id String @id @default(uuid(7))
+
+  /// セッションの有効期限
+  expiresAt DateTime
+
+  /// セッションクッキーに入るトークン
+  token String
+
+  /// ログイン時の接続元IPアドレス
+  ipAddress String?
+
+  /// ログイン時の User-Agent
+  userAgent String?
+
+  /// セッションの持ち主
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// 管理者による成り代わり中の場合、その管理者のユーザーID
+  impersonatedBy String?
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   oauthrefreshtokens OauthRefreshToken[]
   oauthaccesstokens  OauthAccessToken[]
 
@@ -263,162 +344,346 @@ model Session {
   @@map("session")
 }
 
+/// ユーザーと認証プロバイダのアカウントの紐づけ。パスワード認証のハッシュもここに持つ。
+/// better-auth が要求するテーブルで、列の増減はライブラリ側の要求に従う。
 model Account {
-  id                    String    @id @default(uuid(7))
-  issuer                String
-  accountId             String
-  providerId            String
-  userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accessToken           String?
-  refreshToken          String?
-  idToken               String?
-  accessTokenExpiresAt  DateTime?
+  id String @id @default(uuid(7))
+
+  /// アカウントの発行元。accountId はこの単位で一意になる
+  issuer String
+
+  /// 発行元でのアカウントID。パスワード認証の場合はユーザーID
+  accountId String
+
+  /// 認証プロバイダの識別子(credential / google など)
+  providerId String
+
+  /// 紐づくユーザー
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// プロバイダから受け取ったアクセストークン
+  accessToken String?
+
+  /// プロバイダから受け取ったリフレッシュトークン
+  refreshToken String?
+
+  /// プロバイダから受け取ったIDトークン
+  idToken String?
+
+  /// アクセストークンの有効期限
+  accessTokenExpiresAt DateTime?
+
+  /// リフレッシュトークンの有効期限
   refreshTokenExpiresAt DateTime?
-  scope                 String?
-  password              String?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+
+  /// プロバイダへ要求したスコープ
+  scope String?
+
+  /// パスワード認証のハッシュ値。パスワード認証以外では null
+  password String?
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([issuer, accountId])
   @@index([userId])
   @@map("account")
 }
 
+/// メールOTP等の使い捨ての検証値。better-auth が要求するテーブルで、列の増減はライブラリ側の要求に従う。
 model Verification {
-  id         String   @id @default(uuid(7))
+  id String @id @default(uuid(7))
+
+  /// 検証対象を表すキー(メールOTPなら `sign-in-otp-<メールアドレス>` など)
   identifier String
-  value      String
-  expiresAt  DateTime
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+
+  /// 検証に使う値(OTP やトークン)
+  value String
+
+  /// 値の有効期限
+  expiresAt DateTime
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([identifier])
   @@map("verification")
 }
 
+/// 2要素認証(TOTP)の設定。better-auth の twoFactor プラグインが要求するテーブル。
 model TwoFactor {
-  id          String   @id @default(uuid(7))
-  secret      String
-  backupCodes String
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  verified    Boolean? @default(true)
+  id String @id @default(uuid(7))
 
-  failedVerificationCount Int?      @default(0)
-  lockedUntil             DateTime?
+  /// TOTP の共有シークレット
+  secret String
+
+  /// バックアップコード
+  backupCodes String
+
+  /// 設定の持ち主
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// 初回検証が済んで有効化された状態か
+  verified Boolean? @default(true)
+
+  /// 連続で失敗した検証の回数。ロックの判定に使う
+  failedVerificationCount Int? @default(0)
+
+  /// ロックの解除時刻。この時刻まで検証を受け付けない
+  lockedUntil DateTime?
 
   @@index([secret])
   @@index([userId])
   @@map("two_factor")
 }
 
+/// 登録済みのパスキー(WebAuthn 資格情報)。better-auth の passkey プラグインが要求するテーブル。
 model Passkey {
-  id           String    @id @default(uuid(7))
-  name         String?
-  publicKey    String
-  userId       String
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id String @id @default(uuid(7))
+
+  /// 利用者が付けたパスキーの表示名
+  name String?
+
+  /// 認証に使う公開鍵
+  publicKey String
+
+  /// パスキーの持ち主
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// 認証器が発行した資格情報のID
   credentialID String
-  counter      Int
-  deviceType   String
-  backedUp     Boolean
-  transports   String?
-  createdAt    DateTime?
-  aaguid       String?
+
+  /// 署名カウンタ。複製された認証器の検出に使う
+  counter Int
+
+  /// 認証器の種別(singleDevice / multiDevice)
+  deviceType String
+
+  /// 認証器のバックアップ(同期)が有効か
+  backedUp Boolean
+
+  /// 認証器が対応する通信方式(usb / nfc / ble / internal など)
+  transports String?
+
+  /// 認証器のモデルを表すID
+  aaguid String?
+
+  /// 登録日時
+  createdAt DateTime?
 
   @@index([userId])
   @@index([credentialID])
   @@map("passkey")
 }
 
+/// IDトークンの署名に使う鍵ペア。better-auth が要求するテーブルで、列の増減はライブラリ側の要求に従う。
 model Jwks {
-  id         String    @id @default(uuid(7))
-  publicKey  String
+  id String @id @default(uuid(7))
+
+  /// JWK 形式の公開鍵。JWKS エンドポイントで配信する
+  publicKey String
+
+  /// 署名に使う秘密鍵(暗号化して保存される)
   privateKey String
-  createdAt  DateTime
-  expiresAt  DateTime?
-  alg        String?
-  crv        String?
+
+  /// 鍵の作成日時
+  createdAt DateTime
+
+  /// 鍵の有効期限。null は無期限
+  expiresAt DateTime?
+
+  /// 署名アルゴリズム(EdDSA / RS256 など)
+  alg String?
+
+  /// 楕円曲線の種別(Ed25519 など)
+  crv String?
 
   @@map("jwks")
 }
 
+/// OIDC プロバイダとして受け付けるクライアントの登録情報。
+/// better-auth の oauth-provider プラグインが要求するテーブルで、列の増減はライブラリ側の要求に従う。
 model OauthClient {
-  id                      String    @id @default(uuid(7))
-  clientId                String
-  clientSecret            String?
-  clientDiscoveryId       String?
-  disabled                Boolean?  @default(false)
-  skipConsent             Boolean?
-  enableEndSession        Boolean?
-  subjectType             String?
-  scopes                  String[]  @default([])
-  clientCredentialsScopes String[]  @default([])
-  userId                  String?
-  user                    User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt               DateTime?
-  updatedAt               DateTime?
-  name                    String?
-  uri                     String?
-  icon                    String?
-  contacts                String[]  @default([])
-  tos                     String?
-  policy                  String?
-  softwareId              String?
-  softwareVersion         String?
-  softwareStatement       String?
-  redirectUris            String[]  @default([])
-  postLogoutRedirectUris  String[]  @default([])
+  id String @id @default(uuid(7))
 
-  backchannelLogoutUri             String?
+  /// クライアント識別子(RFC 6749 の client_id)
+  clientId String
+
+  /// クライアントシークレット。パブリッククライアントでは null
+  clientSecret String?
+
+  /// このクライアントを登録したディスカバリの識別子。null は手動登録 / 動的登録
+  clientDiscoveryId String?
+
+  /// 無効化されたクライアントは認可を受け付けない
+  disabled Boolean? @default(false)
+
+  /// 同意画面を省略する
+  skipConsent Boolean?
+
+  /// `/oauth2/end-session` でのログアウトを許可する
+  enableEndSession Boolean?
+
+  /// sub の払い出し方(public / pairwise)
+  subjectType String?
+
+  /// 要求を許可するスコープ。空は制限なし
+  scopes String[] @default([])
+
+  /// client_credentials グラントで許可するスコープ。空は発行を許可しない
+  clientCredentialsScopes String[] @default([])
+
+  /// クライアントの登録者
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// 同意画面に表示するクライアント名
+  name String?
+
+  /// クライアントのWebサイトURL
+  uri String?
+
+  /// 同意画面に表示するアイコンのURL
+  icon String?
+
+  /// 連絡先(メールアドレス等)
+  contacts String[] @default([])
+
+  /// 利用規約のURL
+  tos String?
+
+  /// プライバシーポリシーのURL
+  policy String?
+
+  /// クライアントソフトウェアの識別子
+  softwareId String?
+
+  /// クライアントソフトウェアのバージョン
+  softwareVersion String?
+
+  /// 動的登録で提示されたソフトウェアステートメント(JWT)
+  softwareStatement String?
+
+  /// 許可するリダイレクト先。プロトコル・ポート・パスまで含めた完全一致で照合する
+  redirectUris String[] @default([])
+
+  /// ログアウト後のリダイレクト先として許可するURL
+  postLogoutRedirectUris String[] @default([])
+
+  /// バックチャネルログアウトの通知先URL。登録がこの機能のオプトインになる
+  backchannelLogoutUri String?
+
+  /// ログアウトトークンに sid クレームを必須とするか
   backchannelLogoutSessionRequired Boolean?
 
+  /// トークンエンドポイントのクライアント認証方式
   tokenEndpointAuthMethod String?
-  applicationType         String?
-  jwks                    String?
-  jwksUri                 String?
-  grantTypes              String[]              @default([])
-  responseTypes           String[]              @default([])
-  requirePKCE             Boolean?
-  dpopBoundAccessTokens   Boolean?              @default(false)
-  referenceId             String?
-  metadata                Json?
-  oauthrefreshtokens      OauthRefreshToken[]
-  oauthaccesstokens       OauthAccessToken[]
-  oauthconsents           OauthConsent[]
-  oauthclientresources    OauthClientResource[]
+
+  /// リダイレクトURIの検証方針を決めるアプリ種別(web / native)
+  applicationType String?
+
+  /// クライアントの公開鍵(JWK Set)。jwksUri とは排他
+  jwks String?
+
+  /// クライアントの公開鍵の取得先URI。jwks とは排他
+  jwksUri String?
+
+  /// 許可する認可グラント種別
+  grantTypes String[] @default([])
+
+  /// 許可するレスポンス種別
+  responseTypes String[] @default([])
+
+  /// 認可コードフローで PKCE を必須にする
+  requirePKCE Boolean?
+
+  /// DPoP による送信者制約付きトークンを必須にする
+  dpopBoundAccessTokens Boolean? @default(false)
+
+  /// クライアントの所有者を表す外部の識別子(組織やチームなど)
+  referenceId String?
+
+  /// 追加情報
+  metadata Json?
+
+  // メタデータ
+  createdAt DateTime?
+  updatedAt DateTime?
+
+  oauthrefreshtokens   OauthRefreshToken[]
+  oauthaccesstokens    OauthAccessToken[]
+  oauthconsents        OauthConsent[]
+  oauthclientresources OauthClientResource[]
 
   @@unique([clientId])
   @@index([userId])
   @@map("oauth_client")
 }
 
+/// 発行済みのリフレッシュトークン。better-auth の oauth-provider プラグインが要求するテーブル。
 model OauthRefreshToken {
-  id          String      @id @default(uuid(7))
-  token       String
+  id String @id @default(uuid(7))
+
+  /// リフレッシュトークンの値
+  token String
+
+  /// 発行先クライアント
   clientId    String
   oauthclient OauthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
-  sessionId   String?
-  session     Session?    @relation(fields: [sessionId], references: [id], onDelete: SetNull)
-  userId      String
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// 発行の元になったログインセッション。セッション削除時は SetNull
+  sessionId String?
+  session   Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  /// トークンの対象ユーザー
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// クライアントの所有者を表す外部の識別子
   referenceId String?
 
-  authorizationCodeId     String?
-  resources               String[]
+  /// 発行の元になった認可コードの識別子
+  authorizationCodeId String?
+
+  /// アクセストークンの発行先として認可された保護リソース(RFC 8707)
+  resources String[]
+
+  /// UserInfo で返すよう要求されたクレーム
   requestedUserInfoClaims String[]
 
-  expiresAt               DateTime
-  createdAt               DateTime           @default(now())
-  revoked                 DateTime?
-  rotatedAt               DateTime?
-  rotationReplayResponse  String?
+  /// トークンの有効期限
+  expiresAt DateTime
+
+  /// 失効させた時刻。null は有効
+  revoked DateTime?
+
+  /// ローテーション(再発行)した時刻
+  rotatedAt DateTime?
+
+  /// ローテーション済みトークンが再提示された場合に返す応答。リプレイの検出に使う
+  rotationReplayResponse String?
+
+  /// 上記の応答を保持する期限
   rotationReplayExpiresAt DateTime?
-  authTime                DateTime?
-  confirmation            Json?
-  scopes                  String[]
-  oauthaccesstokens       OauthAccessToken[]
+
+  /// 元になったユーザー認証の時刻(auth_time クレーム)
+  authTime DateTime?
+
+  /// 送信者制約(DPoP の cnf クレーム)
+  confirmation Json?
+
+  /// 認可されたスコープ
+  scopes String[]
+
+  // メタデータ
+  createdAt DateTime @default(now())
+
+  oauthaccesstokens OauthAccessToken[]
 
   @@unique([token])
   @@index([clientId])
@@ -428,28 +693,55 @@ model OauthRefreshToken {
   @@map("oauth_refresh_token")
 }
 
+/// 発行済みのアクセストークン。better-auth の oauth-provider プラグインが要求するテーブル。
 model OauthAccessToken {
-  id          String      @id @default(uuid(7))
-  token       String
+  id String @id @default(uuid(7))
+
+  /// アクセストークンの値
+  token String
+
+  /// 発行先クライアント
   clientId    String
   oauthclient OauthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
-  sessionId   String?
-  session     Session?    @relation(fields: [sessionId], references: [id], onDelete: SetNull)
-  userId      String?
-  user        User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// 発行の元になったログインセッション。セッション削除時は SetNull
+  sessionId String?
+  session   Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  /// トークンの対象ユーザー。client_credentials では null
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// クライアントの所有者を表す外部の識別子
   referenceId String?
 
-  authorizationCodeId     String?
-  resources               String[]
+  /// 発行の元になった認可コードの識別子
+  authorizationCodeId String?
+
+  /// トークンの発行先となる保護リソース(RFC 8707)
+  resources String[]
+
+  /// UserInfo で返すよう要求されたクレーム
   requestedUserInfoClaims String[]
 
+  /// 発行の元になったリフレッシュトークン
   refreshId         String?
   oauthrefreshtoken OauthRefreshToken? @relation(fields: [refreshId], references: [id], onDelete: Cascade)
-  expiresAt         DateTime
-  createdAt         DateTime           @default(now())
-  revoked           DateTime?
-  confirmation      Json?
-  scopes            String[]
+
+  /// トークンの有効期限
+  expiresAt DateTime
+
+  /// 失効させた時刻。null は有効
+  revoked DateTime?
+
+  /// 送信者制約(DPoP の cnf クレーム)
+  confirmation Json?
+
+  /// 認可されたスコープ
+  scopes String[]
+
+  // メタデータ
+  createdAt DateTime @default(now())
 
   @@unique([token])
   @@index([clientId])
@@ -460,18 +752,31 @@ model OauthAccessToken {
   @@map("oauth_access_token")
 }
 
+/// ユーザーがクライアントへ与えた同意の記録。同意画面の省略判定に使う。
 model OauthConsent {
-  id          String      @id @default(uuid(7))
+  id String @id @default(uuid(7))
+
+  /// 同意の対象クライアント
   clientId    String
   oauthclient OauthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
-  userId      String?
-  user        User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// 同意したユーザー
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// クライアントの所有者を表す外部の識別子
   referenceId String?
 
-  resources               String[]
+  /// 同意した保護リソース(RFC 8707)
+  resources String[]
+
+  /// 同意した UserInfo のクレーム
   requestedUserInfoClaims String[]
 
-  scopes    String[]
+  /// 同意したスコープ
+  scopes String[]
+
+  // メタデータ
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -483,21 +788,47 @@ model OauthConsent {
 /// アクセストークンの発行先となる保護リソース(RFC 8707 の `resource`)。
 /// TTL・スコープ・クレームを null にしておくとプラグイン既定値を継承する。
 model OauthResource {
-  id                            String    @id @default(uuid(7))
-  identifier                    String
-  name                          String
-  accessTokenTtl                Int?
-  refreshTokenTtl               Int?
-  signingAlgorithm              String?
-  signingKeyId                  String?
-  allowedScopes                 String[]
-  customClaims                  Json?
-  dpopBoundAccessTokensRequired Boolean?  @default(false)
-  disabled                      Boolean?  @default(false)
-  createdAt                     DateTime?
-  updatedAt                     DateTime?
-  policyVersion                 Int?      @default(1)
-  metadata                      Json?
+  id String @id @default(uuid(7))
+
+  /// リソース識別子。トークン要求の `resource` パラメータと一致させる
+  identifier String
+
+  /// 管理画面に表示する名称
+  name String
+
+  /// アクセストークンの有効期間(秒)
+  accessTokenTtl Int?
+
+  /// リフレッシュトークンの有効期間(秒)
+  refreshTokenTtl Int?
+
+  /// アクセストークンの署名アルゴリズム
+  signingAlgorithm String?
+
+  /// 署名に使う鍵(Jwks)のID
+  signingKeyId String?
+
+  /// このリソース向けに許可するスコープ
+  allowedScopes String[]
+
+  /// アクセストークンへ追加するクレーム
+  customClaims Json?
+
+  /// DPoP による送信者制約付きトークンを必須にする
+  dpopBoundAccessTokensRequired Boolean? @default(false)
+
+  /// 無効化されたリソースはトークンの発行先にできない
+  disabled Boolean? @default(false)
+
+  /// 設定を変更した際に上げる版数
+  policyVersion Int? @default(1)
+
+  /// 追加情報
+  metadata Json?
+
+  // メタデータ
+  createdAt DateTime?
+  updatedAt DateTime?
 
   oauthclientresources OauthClientResource[]
 
@@ -507,13 +838,21 @@ model OauthResource {
 
 /// どのクライアントがどのリソースを要求できるかの中間テーブル。
 model OauthClientResource {
-  id            String        @id @default(uuid(7))
-  clientId      String
-  oauthclient   OauthClient   @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  id String @id @default(uuid(7))
+
+  /// 要求元のクライアント
+  clientId    String
+  oauthclient OauthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+
+  /// 要求先の保護リソース
   resourceId    String
   oauthresource OauthResource @relation(fields: [resourceId], references: [identifier], onDelete: Cascade)
-  metadata      Json?
-  createdAt     DateTime?
+
+  /// 追加情報
+  metadata Json?
+
+  // メタデータ
+  createdAt DateTime?
 
   @@unique([clientId, resourceId])
   @@index([clientId])
@@ -522,32 +861,51 @@ model OauthClientResource {
 }
 
 /// private_key_jwt のクライアントアサーション `jti` の使い捨て記録。
-/// id はアサーション由来のダイジェストを better-auth が入れるため既定値は持たない。
 model OauthClientAssertion {
-  id        String   @id
+  /// アサーション由来のダイジェスト。better-auth が入れるため既定値は持たない
+  id String @id
+
+  /// この記録を掃除してよくなる時刻(アサーションの有効期限)
   expiresAt DateTime
 
   @@map("oauth_client_assertion")
 }
 
+/// ユーザーごとのダッシュボードのウィジェット配置。
 model Dashboard {
-  userId    String   @id
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  layout    Json
+  /// ダッシュボードの持ち主。1ユーザー1行
+  userId String @id
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// ウィジェットの配置。`{ left: ウィジェットID[], right: ウィジェットID[] }` の2カラム構成
+  layout Json
+
+  // メタデータ
   updatedAt DateTime @updatedAt
   createdAt DateTime @default(now())
 
   @@map("dashboard")
 }
 
+/// ダッシュボードのリンクウィジェットに並べる共通リンク。管理者が登録する。
 model LinkWidget {
-  id          String   @id @default(uuid(7))
-  name        String
-  url         String
+  id String @id @default(uuid(7))
+
+  /// リンクの表示名
+  name String
+
+  /// リンク先のURL
+  url String
+
+  /// 補足説明
   description String?
-  iconPath    String?
-  updatedAt   DateTime @updatedAt
-  createdAt   DateTime @default(now())
+
+  /// アイコン画像のURL(`/api/upload/<key>`)
+  iconPath String?
+
+  // メタデータ
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
 
   @@map("link_widget")
 }
@@ -555,18 +913,31 @@ model LinkWidget {
 /// オブジェクトストレージに保存したアップロードファイルのメタデータ。
 /// 公開URLは `/api/upload/<key>` で、配信時はここから mimeType を引いて存在確認も兼ねる。
 model Attachment {
-  id           String   @id @default(uuid(7))
-  key          String   @unique
-  mimeType     String
-  size         Int
+  id String @id @default(uuid(7))
+
+  /// オブジェクトストレージ上のキー。公開URL `/api/upload/<key>` の一部になる
+  key String @unique
+
+  /// 配信時に返す Content-Type
+  mimeType String
+
+  /// ファイルサイズ(バイト)
+  size Int
+
+  /// アップロード時のファイル名
   originalName String
+
   /// 添付先のボード。値がある場合は配信時にそのボードの可視判定を通す。
   /// null は全ログインユーザーへ配信してよいもの(お知らせ / リンクウィジェットのアイコン)
-  boardId      String?
-  board        Board?   @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  createdById  String?
-  createdBy    User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
-  createdAt    DateTime @default(now())
+  boardId String?
+  board   Board?  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  /// アップロードしたユーザー。ユーザー削除時は SetNull でファイルの記録だけ残す
+  createdById String?
+
+  // メタデータ
+  createdBy User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
 
   @@index([boardId])
   @@map("attachment")
@@ -576,21 +947,35 @@ model Attachment {
 /// jti の一意制約により2回目の INSERT が必ず失敗することを、リプレイ防止に使う。
 /// 期限切れの行は記録のついでにまとめて消すので、定期ジョブは要らない。
 model UploadNonce {
-  id        String   @id @default(uuid(7))
-  jti       String   @unique
+  id String @id @default(uuid(7))
+
+  /// 使用済みトークンの識別子。この一意制約が2回目の利用を弾く
+  jti String @unique
+
   /// 元になったトークンの有効期限。これを過ぎた行は掃除の対象
   expiresAt DateTime
+
+  // メタデータ
   createdAt DateTime @default(now())
 
   @@index([expiresAt])
   @@map("upload_nonce")
 }
 
+/// アプリ全体の設定値を key/value で持つ汎用ストア。参照は `src/lib/kvs.ts` を通す。
 model KeyValueStore {
-  id        String   @id @default(uuid(7))
-  key       String   @unique
-  group     String?
-  value     String
+  id String @id @default(uuid(7))
+
+  /// 設定のキー(`src/lib/kvs.ts` の KeyString)
+  key String @unique
+
+  /// キーをまとめて引くための名前空間(同 KvsGroup)
+  group String?
+
+  /// 設定値。構造を持つ場合は JSON 文字列で保存する
+  value String
+
+  // メタデータ
   updatedAt DateTime @updatedAt
   createdAt DateTime @default(now())
 
@@ -608,36 +993,51 @@ model AppVersion {
   version String @unique
 
   /// 最終起動時のビルド番号(next.config.ts で生成する BUILD_NO)。同一バージョンの再デプロイを識別する
-  buildNo   String
+  buildNo String
+
+  /// このバージョンでの最終起動日時
   updatedAt DateTime @updatedAt
+
+  /// このバージョンでの初回起動日時
   createdAt DateTime @default(now())
 
   @@map("app_version")
 }
 
+/// ユーザーをまとめる単位。ボードの共有先や、エージェントの承認者の指定に使う。
 model Group {
-  id          String      @id @default(uuid(7))
-  name        String
+  id String @id @default(uuid(7))
+
+  /// グループ名
+  name String
+
+  /// グループの説明
   description String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  userGroups  UserGroup[]
 
-  // add Board
-  boardGroups BoardGroup[]
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  // add AI Agent
+  userGroups          UserGroup[]
+  boardGroups         BoardGroup[]
   agentApproverGroups AgentApproverGroup[]
 
   @@map("group")
 }
 
+/// ユーザーとグループの所属を表す中間テーブル。
 model UserGroup {
-  id        String   @id @default(uuid(7))
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  groupId   String
-  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  id String @id @default(uuid(7))
+
+  /// 所属するユーザー
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// 所属先のグループ
+  groupId String
+  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  // メタデータ
   createdAt DateTime @default(now())
 
   @@unique([userId, groupId])
@@ -646,12 +1046,21 @@ model UserGroup {
   @@map("user_group")
 }
 
+/// 予定表の公開設定。publicId を知っている人だけが公開ページを開ける。
 model CalendarShare {
-  id        String   @id @default(uuid(7))
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  publicId  String   @unique // 公開URL用のランダムID
-  options   Json? // 設定(将来用)
+  id String @id @default(uuid(7))
+
+  /// 予定表を公開するユーザー。1ユーザー1行
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// 公開URLに使うランダムID。作り直すと以前のURLは無効になる
+  publicId String @unique
+
+  /// 公開設定。`title` に公開ページの表示タイトルを持つ
+  options Json?
+
+  // メタデータ
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -659,14 +1068,27 @@ model CalendarShare {
   @@map("calendar_share")
 }
 
+/// 予定表に固定で埋める予定(定例など)。曜日と時間帯で繰り返す。
 model CalendarBusyTime {
-  id        String   @id @default(uuid(7))
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title     String // 件名(管理画面での識別ラベル。公開カレンダーには非表示)
-  weekdays  Int[] // dayjs .day() と同じ 0=日 .. 6=土。1件で複数曜日を保持
-  startMin  Int // 0:00 からの分。0..1410、30分刻み
-  endMin    Int // 0:00 からの分。30..1440(24:00=1440)、30分刻み。startMin < endMin
+  id String @id @default(uuid(7))
+
+  /// 設定の持ち主
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// 件名(管理画面での識別ラベル。公開カレンダーには非表示)
+  title String
+
+  /// 対象の曜日。dayjs .day() と同じ 0=日 .. 6=土。1件で複数曜日を保持
+  weekdays Int[]
+
+  /// 開始時刻。0:00 からの分。0..1410、30分刻み
+  startMin Int
+
+  /// 終了時刻。0:00 からの分。30..1440(24:00=1440)、30分刻み。startMin < endMin
+  endMin Int
+
+  // メタデータ
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -674,8 +1096,11 @@ model CalendarBusyTime {
   @@map("calendar_busy_time")
 }
 
+/// ボード参加者の権限
 enum BoardMemberRole {
-  owner // ボードの権限周りの操作が可能
+  /// ボードの権限周りの操作が可能
+  owner
+  /// 参加者。チケットの操作ができる
   member
 }
 
@@ -683,8 +1108,10 @@ enum BoardMemberRole {
 /// PostgreSQL の enum は宣言順で比較されるため、一覧を `orderBy: { kind: 'asc' }` に
 /// したときプライベートが先頭へ来るよう private を先に宣言する。
 enum BoardKind {
-  private // 1ユーザー1つの個人用ボード。privateOwnerId が所有者
-  team // 複数人で共有するボード
+  /// 1ユーザー1つの個人用ボード。privateOwnerId が所有者
+  private
+  /// 複数人で共有するボード
+  team
 }
 
 /// タグの表示色。HeroUI Chip は5色しか持たないため Tailwind パレットへ自前でマップする
@@ -701,47 +1128,72 @@ enum TagColor {
   pink
 }
 
+/// チケットの状態。かんばんのレーンに対応する
 enum TicketStatus {
-  backlog // バックログ
-  todo // 対応予定
-  doing // 対応中
-  done // 完了
+  /// バックログ
+  backlog
+  /// 対応予定
+  todo
+  /// 対応中
+  doing
+  /// 完了
+  done
 }
 
+/// チケットの優先度
 enum TicketPriority {
-  urgent // 緊急
-  high // 高
-  medium // 中
-  low // 低
+  /// 緊急
+  urgent
+  /// 高
+  high
+  /// 中
+  medium
+  /// 低
+  low
 }
 
+/// チケットを載せるかんばんボード。個人用(private)と共有(team)の2種類がある。
 model Board {
-  id             String            @id @default(uuid(7))
-  kind           BoardKind         @default(team)
-  // プライベートボードの所有者。team では常に null。
-  // PostgreSQL の UNIQUE は NULL を互いに異なる値として扱うため、これ1本で
-  // 「1ユーザー1プライベートボード」を担保でき、部分索引が不要になる。
-  // kind='private' <=> privateOwnerId IS NOT NULL の整合はアプリ側で保証する
-  // (作成経路を ensurePrivateBoard と createBoard の2つに限定している)
-  privateOwnerId String?           @unique
-  privateOwner   User?             @relation("PrivateBoardOwner", fields: [privateOwnerId], references: [id], onDelete: Cascade)
-  // チケット表示ID(`key-number`)の接頭辞。大文字英数(BOARD_KEY_PATTERN)で全ボード一意。
-  // 変更すると共有済みの表示IDが解決できなくなるため、変更できるのは owner と管理者に限る
-  key            String            @unique
-  // 採番済みチケット番号の最大値。UPDATE の行ロックで採番を直列化する。
-  // 連番の欠けを避けるためシーケンスではなくこの列で持つ(ロールバック時は番号も戻る)
-  ticketSeq      Int               @default(0)
-  name           String
-  description    String?
-  archived       Boolean           @default(false)
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-  members        BoardMember[]
-  groups         BoardGroup[]
-  tickets        Ticket[]
-  tags           Tag[]
-  attachments    Attachment[]
-  keyHistories   BoardKeyHistory[]
+  id String @id @default(uuid(7))
+
+  /// ボードの種別
+  kind BoardKind @default(team)
+
+  /// プライベートボードの所有者。team では常に null。
+  /// PostgreSQL の UNIQUE は NULL を互いに異なる値として扱うため、これ1本で
+  /// 「1ユーザー1プライベートボード」を担保でき、部分索引が不要になる。
+  /// kind='private' <=> privateOwnerId IS NOT NULL の整合はアプリ側で保証する
+  /// (作成経路を ensurePrivateBoard と createBoard の2つに限定している)
+  privateOwnerId String? @unique
+  privateOwner   User?   @relation(fields: [privateOwnerId], references: [id], onDelete: Cascade)
+
+  /// チケット表示ID(`key-number`)の接頭辞。大文字英数(BOARD_KEY_PATTERN)で全ボード一意。
+  /// 変更すると共有済みの表示IDが解決できなくなるため、変更できるのは owner と管理者に限る
+  key String @unique
+
+  /// 採番済みチケット番号の最大値。UPDATE の行ロックで採番を直列化する。
+  /// 連番の欠けを避けるためシーケンスではなくこの列で持つ(ロールバック時は番号も戻る)
+  ticketSeq Int @default(0)
+
+  /// ボード名
+  name String
+
+  /// ボードの説明
+  description String?
+
+  /// アーカイブ済み。一覧の既定の表示からは外れる
+  archived Boolean @default(false)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members      BoardMember[]
+  groups       BoardGroup[]
+  tickets      Ticket[]
+  tags         Tag[]
+  attachments  Attachment[]
+  keyHistories BoardKeyHistory[]
 
   @@map("board")
 }
@@ -750,41 +1202,62 @@ model Board {
 /// 共有済みの表示ID(`KEY-番号`)が別ボードの同番号チケットへ解決されるのを防ぐ。
 /// 行はボードを消しても残す(消すと再利用できてしまうため)。
 model BoardKeyHistory {
+  /// 過去に使われたボードキー
   key String @id
 
   /// このキーを使った(使っている)ボード。削除時は SetNull で行だけ残す。
   /// 同じボードがキー変更を戻すのは表示IDの指す先が変わらないので安全で、その判定に使う
-  boardId   String?
-  board     Board?   @relation(fields: [boardId], references: [id], onDelete: SetNull)
+  boardId String?
+  board   Board?  @relation(fields: [boardId], references: [id], onDelete: SetNull)
+
+  // メタデータ
   createdAt DateTime @default(now())
 
   @@index([boardId])
   @@map("board_key_history")
 }
 
+/// ボード内で使うチケットのタグ。
 model Tag {
-  id        String      @id @default(uuid(7))
-  boardId   String
-  board     Board       @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  name      String
-  color     TagColor    @default(gray)
-  // ボード内の表示順。昇順。同値は name 昇順で安定させる
-  order     Int         @default(0)
-  tickets   TicketTag[]
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  id String @id @default(uuid(7))
+
+  /// タグを持つボード。タグはボードをまたがない
+  boardId String
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  /// タグ名。ボード内で一意
+  name String
+
+  /// 表示色
+  color TagColor @default(gray)
+
+  /// ボード内の表示順。昇順。同値は name 昇順で安定させる
+  order Int @default(0)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tickets TicketTag[]
 
   // @@unique が (boardId, ...) の先頭索引を兼ねるため @@index([boardId]) は不要
   @@unique([boardId, name])
   @@map("tag")
 }
 
+/// チケットとタグの紐づけを表す中間テーブル。
 model TicketTag {
-  id        String   @id @default(uuid(7))
-  ticketId  String
-  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  tagId     String
-  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  id String @id @default(uuid(7))
+
+  /// タグを付けたチケット
+  ticketId String
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  /// 付けたタグ
+  tagId String
+  tag   Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  // メタデータ
   createdAt DateTime @default(now())
 
   // チケット内のタグの並びは Tag.order を単一ソースにするため order は持たせない
@@ -793,14 +1266,23 @@ model TicketTag {
   @@map("ticket_tag")
 }
 
+/// ボードの参加者。ユーザー単位の指定。
 model BoardMember {
-  id        String          @id @default(uuid(7))
-  boardId   String
-  board     Board           @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role      BoardMemberRole @default(member)
-  createdAt DateTime        @default(now())
+  id String @id @default(uuid(7))
+
+  /// 参加先のボード
+  boardId String
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  /// 参加するユーザー
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// ボード内での権限
+  role BoardMemberRole @default(member)
+
+  // メタデータ
+  createdAt DateTime @default(now())
 
   // @@unique が (boardId, ...) の先頭索引を兼ねるため @@index([boardId]) は不要
   @@unique([boardId, userId])
@@ -808,12 +1290,19 @@ model BoardMember {
   @@map("board_member")
 }
 
+/// {@link BoardMember} のグループ指定版。グループの所属ユーザーがボードの参加者になる。
 model BoardGroup {
-  id        String   @id @default(uuid(7))
-  boardId   String
-  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  groupId   String
-  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  id String @id @default(uuid(7))
+
+  /// 参加先のボード
+  boardId String
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  /// 参加するグループ。所属ユーザー全員がボードの参加者になる
+  groupId String
+  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  /// ボード内での権限
   createdAt DateTime @default(now())
 
   @@unique([boardId, groupId])
@@ -821,43 +1310,62 @@ model BoardGroup {
   @@map("board_group")
 }
 
+/// かんばんに並べるチケット。
 model Ticket {
-  id          String          @id @default(uuid(7))
-  // プライベートも必ずボード(kind=private)に属する。所有者による別スコープは持たない。
-  // 作成時に決まり以後変更しない(ボード移動は無い)。本文に貼った添付の可視範囲がこの前提に依存する
-  // (docs/development.md「チケットはボードを移動しない」)
-  boardId     String
-  board       Board           @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  createdById String?
-  createdBy   User?           @relation("TicketCreator", fields: [createdById], references: [id], onDelete: SetNull)
-  assigneeId  String?
-  assignee    User?           @relation("TicketAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
-  // ボード内の連番(1始まり)。利用者へ見せる表示IDは `Board.key`-`number`(ticketDisplayId)
-  number      Int
-  title       String
-  content     String?
-  status      TicketStatus    @default(todo)
-  priority    TicketPriority  @default(medium)
-  dueDate     DateTime? // 日付のみの概念。UTC 0:00 で保存する
-  // status を done にした時刻。done から他のステータスへ戻すと null に戻す
-  completedAt DateTime?
-  tags        TicketTag[]
-  // 同一レーン(boardId + status)内の表示順。昇順・0始まりの連番で保持する。
-  // done レーンは盤面に表示されるカードのみを連番の対象とし、表示期限を過ぎた完了の order は据え置く
-  order       Int             @default(0)
-  comments    TicketComment[]
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  id String @id @default(uuid(7))
 
-  // 本文中のメンションを解決した結果。保存時点のスナップショット(TicketComment と同じ扱い)
+  /// プライベートも必ずボード(kind=private)に属する。所有者による別スコープは持たない。
+  /// 作成時に決まり以後変更しない(ボード移動は無い)。本文に貼った添付の可視範囲がこの前提に依存する
+  /// (docs/development.md「チケットはボードを移動しない」)
+  boardId String
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  /// 作成者。ユーザー削除時は SetNull でチケットは残す
+  createdById String?
+  createdBy   User?   @relation("TicketCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  /// 担当者。AIエージェント用ユーザーを指定すると自動処理の対象になる
+  assigneeId String?
+  assignee   User?   @relation("TicketAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  /// ボード内の連番(1始まり)。利用者へ見せる表示IDは `Board.key`-`number`(ticketDisplayId)
+  number Int
+
+  /// 件名
+  title String
+
+  /// 本文(Markdown)
+  content String?
+
+  /// 状態。かんばんのレーンに対応する
+  status TicketStatus @default(todo)
+
+  /// 優先度
+  priority TicketPriority @default(medium)
+
+  /// 期限。日付のみの概念。UTC 0:00 で保存する
+  dueDate DateTime?
+
+  /// status を done にした時刻。done から他のステータスへ戻すと null に戻す
+  completedAt DateTime?
+
+  /// 同一レーン(boardId + status)内の表示順。昇順・0始まりの連番で保持する。
+  /// done レーンは盤面に表示されるカードのみを連番の対象とし、表示期限を過ぎた完了の order は据え置く
+  order Int @default(0)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// 本文中のメンションを解決した結果。保存時点のスナップショット(TicketComment と同じ扱い)
   mentionedUserIds String[] @default([])
 
-  // add AI Agent
-  /// エージェントに任せる場合の処理方式。null はエージェント処理の対象外(オプトインを兼ねる)
   agentMode  AgentTaskMode?
-  /// エージェント処理の状態。null は未着手と同じ扱い
   agentState AgentTaskState?
-  agentRuns  AgentRun[]
+
+  tags      TicketTag[]
+  comments  TicketComment[]
+  agentRuns AgentRun[]
 
   // @@unique が (boardId, ...) の先頭索引を兼ねるので表示IDからの検索はこれで賄える
   @@unique([boardId, number])
@@ -871,48 +1379,76 @@ model Ticket {
   @@map("ticket")
 }
 
+/// チケットへのコメント。1階層の返信を持てる。
 model TicketComment {
-  id               String             @id @default(uuid(7))
-  ticketId         String
-  ticket           Ticket             @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  // 退会ユーザーのコメントも議論履歴として残すため SetNull(表示は no_name)
-  authorId         String?
-  author           User?              @relation("TicketCommentAuthor", fields: [authorId], references: [id], onDelete: SetNull)
-  content          String
-  // null = 通常コメント。plan/report は詳細画面でデフォルト折りたたみ表示する
-  type             TicketCommentType?
-  // 返信先コメント。1階層のみ許容(親自体が返信の場合は指定できない。制約はアプリ層で検証)
-  parentId         String?
-  parent           TicketComment?     @relation("TicketCommentThread", fields: [parentId], references: [id], onDelete: Cascade)
-  replies          TicketComment[]    @relation("TicketCommentThread")
-  mentionedUserIds String[]           @default([])
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
+  id String @id @default(uuid(7))
+
+  /// コメント先のチケット
+  ticketId String
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  /// 投稿者。退会ユーザーのコメントも議論履歴として残すため SetNull(表示は no_name)
+  authorId String?
+  author   User?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  /// 本文(Markdown)
+  content String
+
+  /// null = 通常コメント。plan/report は詳細画面でデフォルト折りたたみ表示する
+  type TicketCommentType?
+
+  /// 返信先コメント。1階層のみ許容(親自体が返信の場合は指定できない。制約はアプリ層で検証)
+  parentId String?
+  parent   TicketComment?  @relation("TicketCommentThread", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  TicketComment[] @relation("TicketCommentThread")
+
+  /// 本文中のメンションを解決した結果。保存時点のスナップショット
+  mentionedUserIds String[] @default([])
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([ticketId, createdAt])
   @@index([parentId])
   @@map("ticket_comment")
 }
 
+/// コメントの種別。null(通常コメント)以外はエージェントの投稿を表す
 enum TicketCommentType {
+  /// エージェントが投稿した作業プラン
   plan
+  /// エージェントが投稿した対応報告
   report
 }
 
+/// 通知の対象となるイベント
 enum NotifyEvent {
+  /// チケットやコメントで自分がメンションされた
   mention
 }
 
-// 行が無い場合は全チャネル OFF として扱う。通知チャネルを増やすときは列を足す。
+/// ユーザーごとの通知設定。
+/// 行が無い場合は全チャネル OFF として扱う。通知チャネルを増やすときは列を足す。
 model UserNotifySetting {
-  id        String      @id @default(uuid(7))
-  userId    String
-  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  event     NotifyEvent
-  email     Boolean     @default(false)
-  slack     Boolean     @default(false)
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  id String @id @default(uuid(7))
+
+  /// 設定の持ち主
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// 通知の対象イベント
+  event NotifyEvent
+
+  /// メールで通知する
+  email Boolean @default(false)
+
+  /// Slack で通知する
+  slack Boolean @default(false)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // (userId, event) の @@unique が userId 先頭の索引を兼ねるので @@index([userId]) は不要
   @@unique([userId, event])

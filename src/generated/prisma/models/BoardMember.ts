@@ -14,7 +14,7 @@ import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model BoardMember
- * 
+ * ボードの参加者。ユーザー単位の指定。
  */
 export type BoardMemberModel = runtime.Types.Result.DefaultSelection<Prisma.$BoardMemberPayload>
 
@@ -622,8 +622,17 @@ export type $BoardMemberPayload<ExtArgs extends runtime.Types.Extensions.Interna
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * 参加先のボード
+     */
     boardId: string
+    /**
+     * 参加するユーザー
+     */
     userId: string
+    /**
+     * ボード内での権限
+     */
     role: $Enums.BoardMemberRole
     createdAt: Date
   }, ExtArgs["result"]["boardMember"]>

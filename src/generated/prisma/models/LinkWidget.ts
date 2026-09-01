@@ -14,7 +14,7 @@ import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model LinkWidget
- * 
+ * ダッシュボードのリンクウィジェットに並べる共通リンク。管理者が登録する。
  */
 export type LinkWidgetModel = runtime.Types.Result.DefaultSelection<Prisma.$LinkWidgetPayload>
 
@@ -398,9 +398,21 @@ export type $LinkWidgetPayload<ExtArgs extends runtime.Types.Extensions.Internal
   objects: {}
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * リンクの表示名
+     */
     name: string
+    /**
+     * リンク先のURL
+     */
     url: string
+    /**
+     * 補足説明
+     */
     description: string | null
+    /**
+     * アイコン画像のURL(`/api/upload/<key>`)
+     */
     iconPath: string | null
     updatedAt: Date
     createdAt: Date

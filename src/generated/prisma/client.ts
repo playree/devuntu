@@ -43,7 +43,8 @@ export { Prisma }
 
 /**
  * Model User
- * 
+ * アプリの利用者。Webにログインする人のほか、MCP からのみ利用するAIエージェント用ユーザー
+ * (isAgent = true)も同じテーブルで持つ。
  */
 export type User = Prisma.UserModel
 /**
@@ -77,52 +78,54 @@ export type AgentApprover = Prisma.AgentApproverModel
 export type AgentApproverGroup = Prisma.AgentApproverGroupModel
 /**
  * Model Session
- * 
+ * ログインセッション。better-auth が要求するテーブルで、列の増減はライブラリ側の要求に従う。
  */
 export type Session = Prisma.SessionModel
 /**
  * Model Account
- * 
+ * ユーザーと認証プロバイダのアカウントの紐づけ。パスワード認証のハッシュもここに持つ。
+ * better-auth が要求するテーブルで、列の増減はライブラリ側の要求に従う。
  */
 export type Account = Prisma.AccountModel
 /**
  * Model Verification
- * 
+ * メールOTP等の使い捨ての検証値。better-auth が要求するテーブルで、列の増減はライブラリ側の要求に従う。
  */
 export type Verification = Prisma.VerificationModel
 /**
  * Model TwoFactor
- * 
+ * 2要素認証(TOTP)の設定。better-auth の twoFactor プラグインが要求するテーブル。
  */
 export type TwoFactor = Prisma.TwoFactorModel
 /**
  * Model Passkey
- * 
+ * 登録済みのパスキー(WebAuthn 資格情報)。better-auth の passkey プラグインが要求するテーブル。
  */
 export type Passkey = Prisma.PasskeyModel
 /**
  * Model Jwks
- * 
+ * IDトークンの署名に使う鍵ペア。better-auth が要求するテーブルで、列の増減はライブラリ側の要求に従う。
  */
 export type Jwks = Prisma.JwksModel
 /**
  * Model OauthClient
- * 
+ * OIDC プロバイダとして受け付けるクライアントの登録情報。
+ * better-auth の oauth-provider プラグインが要求するテーブルで、列の増減はライブラリ側の要求に従う。
  */
 export type OauthClient = Prisma.OauthClientModel
 /**
  * Model OauthRefreshToken
- * 
+ * 発行済みのリフレッシュトークン。better-auth の oauth-provider プラグインが要求するテーブル。
  */
 export type OauthRefreshToken = Prisma.OauthRefreshTokenModel
 /**
  * Model OauthAccessToken
- * 
+ * 発行済みのアクセストークン。better-auth の oauth-provider プラグインが要求するテーブル。
  */
 export type OauthAccessToken = Prisma.OauthAccessTokenModel
 /**
  * Model OauthConsent
- * 
+ * ユーザーがクライアントへ与えた同意の記録。同意画面の省略判定に使う。
  */
 export type OauthConsent = Prisma.OauthConsentModel
 /**
@@ -139,17 +142,16 @@ export type OauthClientResource = Prisma.OauthClientResourceModel
 /**
  * Model OauthClientAssertion
  * private_key_jwt のクライアントアサーション `jti` の使い捨て記録。
- * id はアサーション由来のダイジェストを better-auth が入れるため既定値は持たない。
  */
 export type OauthClientAssertion = Prisma.OauthClientAssertionModel
 /**
  * Model Dashboard
- * 
+ * ユーザーごとのダッシュボードのウィジェット配置。
  */
 export type Dashboard = Prisma.DashboardModel
 /**
  * Model LinkWidget
- * 
+ * ダッシュボードのリンクウィジェットに並べる共通リンク。管理者が登録する。
  */
 export type LinkWidget = Prisma.LinkWidgetModel
 /**
@@ -167,7 +169,7 @@ export type Attachment = Prisma.AttachmentModel
 export type UploadNonce = Prisma.UploadNonceModel
 /**
  * Model KeyValueStore
- * 
+ * アプリ全体の設定値を key/value で持つ汎用ストア。参照は `src/lib/kvs.ts` を通す。
  */
 export type KeyValueStore = Prisma.KeyValueStoreModel
 /**
@@ -179,27 +181,27 @@ export type KeyValueStore = Prisma.KeyValueStoreModel
 export type AppVersion = Prisma.AppVersionModel
 /**
  * Model Group
- * 
+ * ユーザーをまとめる単位。ボードの共有先や、エージェントの承認者の指定に使う。
  */
 export type Group = Prisma.GroupModel
 /**
  * Model UserGroup
- * 
+ * ユーザーとグループの所属を表す中間テーブル。
  */
 export type UserGroup = Prisma.UserGroupModel
 /**
  * Model CalendarShare
- * 
+ * 予定表の公開設定。publicId を知っている人だけが公開ページを開ける。
  */
 export type CalendarShare = Prisma.CalendarShareModel
 /**
  * Model CalendarBusyTime
- * 
+ * 予定表に固定で埋める予定(定例など)。曜日と時間帯で繰り返す。
  */
 export type CalendarBusyTime = Prisma.CalendarBusyTimeModel
 /**
  * Model Board
- * 
+ * チケットを載せるかんばんボード。個人用(private)と共有(team)の2種類がある。
  */
 export type Board = Prisma.BoardModel
 /**
@@ -211,36 +213,37 @@ export type Board = Prisma.BoardModel
 export type BoardKeyHistory = Prisma.BoardKeyHistoryModel
 /**
  * Model Tag
- * 
+ * ボード内で使うチケットのタグ。
  */
 export type Tag = Prisma.TagModel
 /**
  * Model TicketTag
- * 
+ * チケットとタグの紐づけを表す中間テーブル。
  */
 export type TicketTag = Prisma.TicketTagModel
 /**
  * Model BoardMember
- * 
+ * ボードの参加者。ユーザー単位の指定。
  */
 export type BoardMember = Prisma.BoardMemberModel
 /**
  * Model BoardGroup
- * 
+ * {@link BoardMember} のグループ指定版。グループの所属ユーザーがボードの参加者になる。
  */
 export type BoardGroup = Prisma.BoardGroupModel
 /**
  * Model Ticket
- * 
+ * かんばんに並べるチケット。
  */
 export type Ticket = Prisma.TicketModel
 /**
  * Model TicketComment
- * 
+ * チケットへのコメント。1階層の返信を持てる。
  */
 export type TicketComment = Prisma.TicketCommentModel
 /**
  * Model UserNotifySetting
- * 
+ * ユーザーごとの通知設定。
+ * 行が無い場合は全チャネル OFF として扱う。通知チャネルを増やすときは列を足す。
  */
 export type UserNotifySetting = Prisma.UserNotifySettingModel

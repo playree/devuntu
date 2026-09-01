@@ -696,6 +696,9 @@ export type $AgentTokenPayload<ExtArgs extends runtime.Types.Extensions.Internal
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * トークンの持ち主となるAIエージェント用ユーザー
+     */
     userId: string
     /**
      * SHA-256(平文) の hex。照合はこの列の一致だけで行う
@@ -706,13 +709,16 @@ export type $AgentTokenPayload<ExtArgs extends runtime.Types.Extensions.Internal
      */
     hint: string
     /**
-     * null は無期限
+     * 有効期限。null は無期限
      */
     expiresAt: Date | null
     /**
      * 最終利用時刻。リクエストごとに書かず、一定時間経過した場合だけ更新する
      */
     lastUsedAt: Date | null
+    /**
+     * 発行操作を行った管理者。ユーザー削除時は SetNull で記録だけ残す
+     */
     createdById: string | null
     /**
      * 行の作成時刻ではなく、いま入っているトークンの発行時刻。再発行のたびに書き換える

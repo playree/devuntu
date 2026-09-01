@@ -580,7 +580,13 @@ export type $AgentApproverPayload<ExtArgs extends runtime.Types.Extensions.Inter
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * 承認対象のAIエージェント用ユーザー
+     */
     agentId: string
+    /**
+     * 承認者となるユーザー
+     */
     userId: string
     createdAt: Date
   }, ExtArgs["result"]["agentApprover"]>

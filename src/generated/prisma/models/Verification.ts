@@ -14,7 +14,7 @@ import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model Verification
- * 
+ * メールOTP等の使い捨ての検証値。better-auth が要求するテーブルで、列の増減はライブラリ側の要求に従う。
  */
 export type VerificationModel = runtime.Types.Result.DefaultSelection<Prisma.$VerificationPayload>
 
@@ -372,8 +372,17 @@ export type $VerificationPayload<ExtArgs extends runtime.Types.Extensions.Intern
   objects: {}
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * 検証対象を表すキー(メールOTPなら `sign-in-otp-<メールアドレス>` など)
+     */
     identifier: string
+    /**
+     * 検証に使う値(OTP やトークン)
+     */
     value: string
+    /**
+     * 値の有効期限
+     */
     expiresAt: Date
     createdAt: Date
     updatedAt: Date

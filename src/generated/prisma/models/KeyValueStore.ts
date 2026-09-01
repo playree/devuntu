@@ -14,7 +14,7 @@ import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model KeyValueStore
- * 
+ * アプリ全体の設定値を key/value で持つ汎用ストア。参照は `src/lib/kvs.ts` を通す。
  */
 export type KeyValueStoreModel = runtime.Types.Result.DefaultSelection<Prisma.$KeyValueStorePayload>
 
@@ -372,8 +372,17 @@ export type $KeyValueStorePayload<ExtArgs extends runtime.Types.Extensions.Inter
   objects: {}
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * 設定のキー(`src/lib/kvs.ts` の KeyString)
+     */
     key: string
+    /**
+     * キーをまとめて引くための名前空間(同 KvsGroup)
+     */
     group: string | null
+    /**
+     * 設定値。構造を持つ場合は JSON 文字列で保存する
+     */
     value: string
     updatedAt: Date
     createdAt: Date

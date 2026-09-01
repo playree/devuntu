@@ -14,7 +14,7 @@ import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model Group
- * 
+ * ユーザーをまとめる単位。ボードの共有先や、エージェントの承認者の指定に使う。
  */
 export type GroupModel = runtime.Types.Result.DefaultSelection<Prisma.$GroupPayload>
 
@@ -645,7 +645,13 @@ export type $GroupPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * グループ名
+     */
     name: string
+    /**
+     * グループの説明
+     */
     description: string | null
     createdAt: Date
     updatedAt: Date

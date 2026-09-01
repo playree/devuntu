@@ -776,6 +776,9 @@ export type $AgentRunPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * 実行したランナー
+     */
     runnerId: string
     /**
      * 対象チケット。削除されても履歴は残すので SetNull
@@ -785,13 +788,25 @@ export type $AgentRunPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
      * 起動時点の表示ID。チケット削除後に何を処理したかを追えるように持つ
      */
     ticketRef: string | null
+    /**
+     * 実行した処理の種別
+     */
     action: $Enums.AgentRunAction
+    /**
+     * 実行の状態
+     */
     status: $Enums.AgentRunStatus
     /**
      * エージェントが報告した結果の要約
      */
     summary: string | null
+    /**
+     * 実行の開始時刻
+     */
     startedAt: Date
+    /**
+     * 実行の終了時刻。null は実行中、または応答が返らないまま落ちた実行
+     */
     finishedAt: Date | null
   }, ExtArgs["result"]["agentRun"]>
   composites: {}

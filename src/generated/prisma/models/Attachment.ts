@@ -774,15 +774,30 @@ export type $AttachmentPayload<ExtArgs extends runtime.Types.Extensions.Internal
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * オブジェクトストレージ上のキー。公開URL `/api/upload/<key>` の一部になる
+     */
     key: string
+    /**
+     * 配信時に返す Content-Type
+     */
     mimeType: string
+    /**
+     * ファイルサイズ(バイト)
+     */
     size: number
+    /**
+     * アップロード時のファイル名
+     */
     originalName: string
     /**
      * 添付先のボード。値がある場合は配信時にそのボードの可視判定を通す。
      * null は全ログインユーザーへ配信してよいもの(お知らせ / リンクウィジェットのアイコン)
      */
     boardId: string | null
+    /**
+     * アップロードしたユーザー。ユーザー削除時は SetNull でファイルの記録だけ残す
+     */
     createdById: string | null
     createdAt: Date
   }, ExtArgs["result"]["attachment"]>

@@ -14,7 +14,8 @@ import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model UserNotifySetting
- * 
+ * ユーザーごとの通知設定。
+ * 行が無い場合は全チャネル OFF として扱う。通知チャネルを増やすときは列を足す。
  */
 export type UserNotifySettingModel = runtime.Types.Result.DefaultSelection<Prisma.$UserNotifySettingPayload>
 
@@ -569,9 +570,21 @@ export type $UserNotifySettingPayload<ExtArgs extends runtime.Types.Extensions.I
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * 設定の持ち主
+     */
     userId: string
+    /**
+     * 通知の対象イベント
+     */
     event: $Enums.NotifyEvent
+    /**
+     * メールで通知する
+     */
     email: boolean
+    /**
+     * Slack で通知する
+     */
     slack: boolean
     createdAt: Date
     updatedAt: Date

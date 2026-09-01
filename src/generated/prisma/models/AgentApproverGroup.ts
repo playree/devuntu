@@ -579,7 +579,13 @@ export type $AgentApproverGroupPayload<ExtArgs extends runtime.Types.Extensions.
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * 承認対象のAIエージェント用ユーザー
+     */
     agentId: string
+    /**
+     * 承認者となるグループ。所属ユーザー全員が承認者になる
+     */
     groupId: string
     createdAt: Date
   }, ExtArgs["result"]["agentApproverGroup"]>

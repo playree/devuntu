@@ -14,7 +14,7 @@ import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model OauthConsent
- * 
+ * ユーザーがクライアントへ与えた同意の記録。同意画面の省略判定に使う。
  */
 export type OauthConsentModel = runtime.Types.Result.DefaultSelection<Prisma.$OauthConsentPayload>
 
@@ -777,11 +777,29 @@ export type $OauthConsentPayload<ExtArgs extends runtime.Types.Extensions.Intern
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * 同意の対象クライアント
+     */
     clientId: string
+    /**
+     * 同意したユーザー
+     */
     userId: string | null
+    /**
+     * クライアントの所有者を表す外部の識別子
+     */
     referenceId: string | null
+    /**
+     * 同意した保護リソース(RFC 8707)
+     */
     resources: string[]
+    /**
+     * 同意した UserInfo のクレーム
+     */
     requestedUserInfoClaims: string[]
+    /**
+     * 同意したスコープ
+     */
     scopes: string[]
     createdAt: Date
     updatedAt: Date

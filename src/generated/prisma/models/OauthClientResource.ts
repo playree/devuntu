@@ -612,8 +612,17 @@ export type $OauthClientResourcePayload<ExtArgs extends runtime.Types.Extensions
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * 要求元のクライアント
+     */
     clientId: string
+    /**
+     * 要求先の保護リソース
+     */
     resourceId: string
+    /**
+     * 追加情報
+     */
     metadata: runtime.JsonValue | null
     createdAt: Date | null
   }, ExtArgs["result"]["oauthClientResource"]>

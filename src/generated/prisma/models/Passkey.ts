@@ -14,7 +14,7 @@ import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model Passkey
- * 
+ * 登録済みのパスキー(WebAuthn 資格情報)。better-auth の passkey プラグインが要求するテーブル。
  */
 export type PasskeyModel = runtime.Types.Result.DefaultSelection<Prisma.$PasskeyPayload>
 
@@ -44,8 +44,8 @@ export type PasskeyMinAggregateOutputType = {
   deviceType: string | null
   backedUp: boolean | null
   transports: string | null
-  createdAt: Date | null
   aaguid: string | null
+  createdAt: Date | null
 }
 
 export type PasskeyMaxAggregateOutputType = {
@@ -58,8 +58,8 @@ export type PasskeyMaxAggregateOutputType = {
   deviceType: string | null
   backedUp: boolean | null
   transports: string | null
-  createdAt: Date | null
   aaguid: string | null
+  createdAt: Date | null
 }
 
 export type PasskeyCountAggregateOutputType = {
@@ -72,8 +72,8 @@ export type PasskeyCountAggregateOutputType = {
   deviceType: number
   backedUp: number
   transports: number
-  createdAt: number
   aaguid: number
+  createdAt: number
   _all: number
 }
 
@@ -96,8 +96,8 @@ export type PasskeyMinAggregateInputType = {
   deviceType?: true
   backedUp?: true
   transports?: true
-  createdAt?: true
   aaguid?: true
+  createdAt?: true
 }
 
 export type PasskeyMaxAggregateInputType = {
@@ -110,8 +110,8 @@ export type PasskeyMaxAggregateInputType = {
   deviceType?: true
   backedUp?: true
   transports?: true
-  createdAt?: true
   aaguid?: true
+  createdAt?: true
 }
 
 export type PasskeyCountAggregateInputType = {
@@ -124,8 +124,8 @@ export type PasskeyCountAggregateInputType = {
   deviceType?: true
   backedUp?: true
   transports?: true
-  createdAt?: true
   aaguid?: true
+  createdAt?: true
   _all?: true
 }
 
@@ -225,8 +225,8 @@ export type PasskeyGroupByOutputType = {
   deviceType: string
   backedUp: boolean
   transports: string | null
-  createdAt: Date | null
   aaguid: string | null
+  createdAt: Date | null
   _count: PasskeyCountAggregateOutputType | null
   _avg: PasskeyAvgAggregateOutputType | null
   _sum: PasskeySumAggregateOutputType | null
@@ -262,8 +262,8 @@ export type PasskeyWhereInput = {
   deviceType?: Prisma.StringFilter<"Passkey"> | string
   backedUp?: Prisma.BoolFilter<"Passkey"> | boolean
   transports?: Prisma.StringNullableFilter<"Passkey"> | string | null
-  createdAt?: Prisma.DateTimeNullableFilter<"Passkey"> | Date | string | null
   aaguid?: Prisma.StringNullableFilter<"Passkey"> | string | null
+  createdAt?: Prisma.DateTimeNullableFilter<"Passkey"> | Date | string | null
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }
 
@@ -277,8 +277,8 @@ export type PasskeyOrderByWithRelationInput = {
   deviceType?: Prisma.SortOrder
   backedUp?: Prisma.SortOrder
   transports?: Prisma.SortOrderInput | Prisma.SortOrder
-  createdAt?: Prisma.SortOrderInput | Prisma.SortOrder
   aaguid?: Prisma.SortOrderInput | Prisma.SortOrder
+  createdAt?: Prisma.SortOrderInput | Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
 }
 
@@ -295,8 +295,8 @@ export type PasskeyWhereUniqueInput = Prisma.AtLeast<{
   deviceType?: Prisma.StringFilter<"Passkey"> | string
   backedUp?: Prisma.BoolFilter<"Passkey"> | boolean
   transports?: Prisma.StringNullableFilter<"Passkey"> | string | null
-  createdAt?: Prisma.DateTimeNullableFilter<"Passkey"> | Date | string | null
   aaguid?: Prisma.StringNullableFilter<"Passkey"> | string | null
+  createdAt?: Prisma.DateTimeNullableFilter<"Passkey"> | Date | string | null
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }, "id">
 
@@ -310,8 +310,8 @@ export type PasskeyOrderByWithAggregationInput = {
   deviceType?: Prisma.SortOrder
   backedUp?: Prisma.SortOrder
   transports?: Prisma.SortOrderInput | Prisma.SortOrder
-  createdAt?: Prisma.SortOrderInput | Prisma.SortOrder
   aaguid?: Prisma.SortOrderInput | Prisma.SortOrder
+  createdAt?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.PasskeyCountOrderByAggregateInput
   _avg?: Prisma.PasskeyAvgOrderByAggregateInput
   _max?: Prisma.PasskeyMaxOrderByAggregateInput
@@ -332,8 +332,8 @@ export type PasskeyScalarWhereWithAggregatesInput = {
   deviceType?: Prisma.StringWithAggregatesFilter<"Passkey"> | string
   backedUp?: Prisma.BoolWithAggregatesFilter<"Passkey"> | boolean
   transports?: Prisma.StringNullableWithAggregatesFilter<"Passkey"> | string | null
-  createdAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Passkey"> | Date | string | null
   aaguid?: Prisma.StringNullableWithAggregatesFilter<"Passkey"> | string | null
+  createdAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Passkey"> | Date | string | null
 }
 
 export type PasskeyCreateInput = {
@@ -345,8 +345,8 @@ export type PasskeyCreateInput = {
   deviceType: string
   backedUp: boolean
   transports?: string | null
-  createdAt?: Date | string | null
   aaguid?: string | null
+  createdAt?: Date | string | null
   user: Prisma.UserCreateNestedOneWithoutPasskeysInput
 }
 
@@ -360,8 +360,8 @@ export type PasskeyUncheckedCreateInput = {
   deviceType: string
   backedUp: boolean
   transports?: string | null
-  createdAt?: Date | string | null
   aaguid?: string | null
+  createdAt?: Date | string | null
 }
 
 export type PasskeyUpdateInput = {
@@ -373,8 +373,8 @@ export type PasskeyUpdateInput = {
   deviceType?: Prisma.StringFieldUpdateOperationsInput | string
   backedUp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   transports?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   aaguid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutPasskeysNestedInput
 }
 
@@ -388,8 +388,8 @@ export type PasskeyUncheckedUpdateInput = {
   deviceType?: Prisma.StringFieldUpdateOperationsInput | string
   backedUp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   transports?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   aaguid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type PasskeyCreateManyInput = {
@@ -402,8 +402,8 @@ export type PasskeyCreateManyInput = {
   deviceType: string
   backedUp: boolean
   transports?: string | null
-  createdAt?: Date | string | null
   aaguid?: string | null
+  createdAt?: Date | string | null
 }
 
 export type PasskeyUpdateManyMutationInput = {
@@ -415,8 +415,8 @@ export type PasskeyUpdateManyMutationInput = {
   deviceType?: Prisma.StringFieldUpdateOperationsInput | string
   backedUp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   transports?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   aaguid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type PasskeyUncheckedUpdateManyInput = {
@@ -429,8 +429,8 @@ export type PasskeyUncheckedUpdateManyInput = {
   deviceType?: Prisma.StringFieldUpdateOperationsInput | string
   backedUp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   transports?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   aaguid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type PasskeyListRelationFilter = {
@@ -453,8 +453,8 @@ export type PasskeyCountOrderByAggregateInput = {
   deviceType?: Prisma.SortOrder
   backedUp?: Prisma.SortOrder
   transports?: Prisma.SortOrder
-  createdAt?: Prisma.SortOrder
   aaguid?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
 }
 
 export type PasskeyAvgOrderByAggregateInput = {
@@ -471,8 +471,8 @@ export type PasskeyMaxOrderByAggregateInput = {
   deviceType?: Prisma.SortOrder
   backedUp?: Prisma.SortOrder
   transports?: Prisma.SortOrder
-  createdAt?: Prisma.SortOrder
   aaguid?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
 }
 
 export type PasskeyMinOrderByAggregateInput = {
@@ -485,8 +485,8 @@ export type PasskeyMinOrderByAggregateInput = {
   deviceType?: Prisma.SortOrder
   backedUp?: Prisma.SortOrder
   transports?: Prisma.SortOrder
-  createdAt?: Prisma.SortOrder
   aaguid?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
 }
 
 export type PasskeySumOrderByAggregateInput = {
@@ -544,8 +544,8 @@ export type PasskeyCreateWithoutUserInput = {
   deviceType: string
   backedUp: boolean
   transports?: string | null
-  createdAt?: Date | string | null
   aaguid?: string | null
+  createdAt?: Date | string | null
 }
 
 export type PasskeyUncheckedCreateWithoutUserInput = {
@@ -557,8 +557,8 @@ export type PasskeyUncheckedCreateWithoutUserInput = {
   deviceType: string
   backedUp: boolean
   transports?: string | null
-  createdAt?: Date | string | null
   aaguid?: string | null
+  createdAt?: Date | string | null
 }
 
 export type PasskeyCreateOrConnectWithoutUserInput = {
@@ -600,8 +600,8 @@ export type PasskeyScalarWhereInput = {
   deviceType?: Prisma.StringFilter<"Passkey"> | string
   backedUp?: Prisma.BoolFilter<"Passkey"> | boolean
   transports?: Prisma.StringNullableFilter<"Passkey"> | string | null
-  createdAt?: Prisma.DateTimeNullableFilter<"Passkey"> | Date | string | null
   aaguid?: Prisma.StringNullableFilter<"Passkey"> | string | null
+  createdAt?: Prisma.DateTimeNullableFilter<"Passkey"> | Date | string | null
 }
 
 export type PasskeyCreateManyUserInput = {
@@ -613,8 +613,8 @@ export type PasskeyCreateManyUserInput = {
   deviceType: string
   backedUp: boolean
   transports?: string | null
-  createdAt?: Date | string | null
   aaguid?: string | null
+  createdAt?: Date | string | null
 }
 
 export type PasskeyUpdateWithoutUserInput = {
@@ -626,8 +626,8 @@ export type PasskeyUpdateWithoutUserInput = {
   deviceType?: Prisma.StringFieldUpdateOperationsInput | string
   backedUp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   transports?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   aaguid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type PasskeyUncheckedUpdateWithoutUserInput = {
@@ -639,8 +639,8 @@ export type PasskeyUncheckedUpdateWithoutUserInput = {
   deviceType?: Prisma.StringFieldUpdateOperationsInput | string
   backedUp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   transports?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   aaguid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type PasskeyUncheckedUpdateManyWithoutUserInput = {
@@ -652,8 +652,8 @@ export type PasskeyUncheckedUpdateManyWithoutUserInput = {
   deviceType?: Prisma.StringFieldUpdateOperationsInput | string
   backedUp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   transports?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   aaguid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 
@@ -668,8 +668,8 @@ export type PasskeySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   deviceType?: boolean
   backedUp?: boolean
   transports?: boolean
-  createdAt?: boolean
   aaguid?: boolean
+  createdAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["passkey"]>
 
@@ -683,8 +683,8 @@ export type PasskeySelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   deviceType?: boolean
   backedUp?: boolean
   transports?: boolean
-  createdAt?: boolean
   aaguid?: boolean
+  createdAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["passkey"]>
 
@@ -698,8 +698,8 @@ export type PasskeySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   deviceType?: boolean
   backedUp?: boolean
   transports?: boolean
-  createdAt?: boolean
   aaguid?: boolean
+  createdAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["passkey"]>
 
@@ -713,11 +713,11 @@ export type PasskeySelectScalar = {
   deviceType?: boolean
   backedUp?: boolean
   transports?: boolean
-  createdAt?: boolean
   aaguid?: boolean
+  createdAt?: boolean
 }
 
-export type PasskeyOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "publicKey" | "userId" | "credentialID" | "counter" | "deviceType" | "backedUp" | "transports" | "createdAt" | "aaguid", ExtArgs["result"]["passkey"]>
+export type PasskeyOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "publicKey" | "userId" | "credentialID" | "counter" | "deviceType" | "backedUp" | "transports" | "aaguid" | "createdAt", ExtArgs["result"]["passkey"]>
 export type PasskeyInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -735,16 +735,46 @@ export type $PasskeyPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * 利用者が付けたパスキーの表示名
+     */
     name: string | null
+    /**
+     * 認証に使う公開鍵
+     */
     publicKey: string
+    /**
+     * パスキーの持ち主
+     */
     userId: string
+    /**
+     * 認証器が発行した資格情報のID
+     */
     credentialID: string
+    /**
+     * 署名カウンタ。複製された認証器の検出に使う
+     */
     counter: number
+    /**
+     * 認証器の種別(singleDevice / multiDevice)
+     */
     deviceType: string
+    /**
+     * 認証器のバックアップ(同期)が有効か
+     */
     backedUp: boolean
+    /**
+     * 認証器が対応する通信方式(usb / nfc / ble / internal など)
+     */
     transports: string | null
-    createdAt: Date | null
+    /**
+     * 認証器のモデルを表すID
+     */
     aaguid: string | null
+    /**
+     * 登録日時
+     */
+    createdAt: Date | null
   }, ExtArgs["result"]["passkey"]>
   composites: {}
 }
@@ -1178,8 +1208,8 @@ export interface PasskeyFieldRefs {
   readonly deviceType: Prisma.FieldRef<"Passkey", 'String'>
   readonly backedUp: Prisma.FieldRef<"Passkey", 'Boolean'>
   readonly transports: Prisma.FieldRef<"Passkey", 'String'>
-  readonly createdAt: Prisma.FieldRef<"Passkey", 'DateTime'>
   readonly aaguid: Prisma.FieldRef<"Passkey", 'String'>
+  readonly createdAt: Prisma.FieldRef<"Passkey", 'DateTime'>
 }
     
 

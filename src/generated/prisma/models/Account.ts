@@ -14,7 +14,8 @@ import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model Account
- * 
+ * ユーザーと認証プロバイダのアカウントの紐づけ。パスワード認証のハッシュもここに持つ。
+ * better-auth が要求するテーブルで、列の増減はライブラリ側の要求に従う。
  */
 export type AccountModel = runtime.Types.Result.DefaultSelection<Prisma.$AccountPayload>
 
@@ -796,16 +797,49 @@ export type $AccountPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * アカウントの発行元。accountId はこの単位で一意になる
+     */
     issuer: string
+    /**
+     * 発行元でのアカウントID。パスワード認証の場合はユーザーID
+     */
     accountId: string
+    /**
+     * 認証プロバイダの識別子(credential / google など)
+     */
     providerId: string
+    /**
+     * 紐づくユーザー
+     */
     userId: string
+    /**
+     * プロバイダから受け取ったアクセストークン
+     */
     accessToken: string | null
+    /**
+     * プロバイダから受け取ったリフレッシュトークン
+     */
     refreshToken: string | null
+    /**
+     * プロバイダから受け取ったIDトークン
+     */
     idToken: string | null
+    /**
+     * アクセストークンの有効期限
+     */
     accessTokenExpiresAt: Date | null
+    /**
+     * リフレッシュトークンの有効期限
+     */
     refreshTokenExpiresAt: Date | null
+    /**
+     * プロバイダへ要求したスコープ
+     */
     scope: string | null
+    /**
+     * パスワード認証のハッシュ値。パスワード認証以外では null
+     */
     password: string | null
     createdAt: Date
     updatedAt: Date
