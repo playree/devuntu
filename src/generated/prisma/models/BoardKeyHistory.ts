@@ -428,6 +428,9 @@ export type $BoardKeyHistoryPayload<ExtArgs extends runtime.Types.Extensions.Int
     board: Prisma.$BoardPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
+    /**
+     * 過去に使われたボードキー
+     */
     key: string
     /**
      * このキーを使った(使っている)ボード。削除時は SetNull で行だけ残す。

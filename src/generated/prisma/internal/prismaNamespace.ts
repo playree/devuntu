@@ -3311,8 +3311,6 @@ export const UserScalarFieldEnum = {
   email: 'email',
   emailVerified: 'emailVerified',
   image: 'image',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
   role: 'role',
   banned: 'banned',
   banReason: 'banReason',
@@ -3323,7 +3321,9 @@ export const UserScalarFieldEnum = {
   locale: 'locale',
   lastLoginAt: 'lastLoginAt',
   timezone: 'timezone',
-  isAgent: 'isAgent'
+  isAgent: 'isAgent',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -3403,12 +3403,12 @@ export const SessionScalarFieldEnum = {
   id: 'id',
   expiresAt: 'expiresAt',
   token: 'token',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
   ipAddress: 'ipAddress',
   userAgent: 'userAgent',
   userId: 'userId',
-  impersonatedBy: 'impersonatedBy'
+  impersonatedBy: 'impersonatedBy',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 } as const
 
 export type SessionScalarFieldEnum = (typeof SessionScalarFieldEnum)[keyof typeof SessionScalarFieldEnum]
@@ -3469,8 +3469,8 @@ export const PasskeyScalarFieldEnum = {
   deviceType: 'deviceType',
   backedUp: 'backedUp',
   transports: 'transports',
-  createdAt: 'createdAt',
-  aaguid: 'aaguid'
+  aaguid: 'aaguid',
+  createdAt: 'createdAt'
 } as const
 
 export type PasskeyScalarFieldEnum = (typeof PasskeyScalarFieldEnum)[keyof typeof PasskeyScalarFieldEnum]
@@ -3501,8 +3501,6 @@ export const OauthClientScalarFieldEnum = {
   scopes: 'scopes',
   clientCredentialsScopes: 'clientCredentialsScopes',
   userId: 'userId',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
   name: 'name',
   uri: 'uri',
   icon: 'icon',
@@ -3525,7 +3523,9 @@ export const OauthClientScalarFieldEnum = {
   requirePKCE: 'requirePKCE',
   dpopBoundAccessTokens: 'dpopBoundAccessTokens',
   referenceId: 'referenceId',
-  metadata: 'metadata'
+  metadata: 'metadata',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 } as const
 
 export type OauthClientScalarFieldEnum = (typeof OauthClientScalarFieldEnum)[keyof typeof OauthClientScalarFieldEnum]
@@ -3542,14 +3542,14 @@ export const OauthRefreshTokenScalarFieldEnum = {
   resources: 'resources',
   requestedUserInfoClaims: 'requestedUserInfoClaims',
   expiresAt: 'expiresAt',
-  createdAt: 'createdAt',
   revoked: 'revoked',
   rotatedAt: 'rotatedAt',
   rotationReplayResponse: 'rotationReplayResponse',
   rotationReplayExpiresAt: 'rotationReplayExpiresAt',
   authTime: 'authTime',
   confirmation: 'confirmation',
-  scopes: 'scopes'
+  scopes: 'scopes',
+  createdAt: 'createdAt'
 } as const
 
 export type OauthRefreshTokenScalarFieldEnum = (typeof OauthRefreshTokenScalarFieldEnum)[keyof typeof OauthRefreshTokenScalarFieldEnum]
@@ -3567,10 +3567,10 @@ export const OauthAccessTokenScalarFieldEnum = {
   requestedUserInfoClaims: 'requestedUserInfoClaims',
   refreshId: 'refreshId',
   expiresAt: 'expiresAt',
-  createdAt: 'createdAt',
   revoked: 'revoked',
   confirmation: 'confirmation',
-  scopes: 'scopes'
+  scopes: 'scopes',
+  createdAt: 'createdAt'
 } as const
 
 export type OauthAccessTokenScalarFieldEnum = (typeof OauthAccessTokenScalarFieldEnum)[keyof typeof OauthAccessTokenScalarFieldEnum]
@@ -3603,10 +3603,10 @@ export const OauthResourceScalarFieldEnum = {
   customClaims: 'customClaims',
   dpopBoundAccessTokensRequired: 'dpopBoundAccessTokensRequired',
   disabled: 'disabled',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
   policyVersion: 'policyVersion',
-  metadata: 'metadata'
+  metadata: 'metadata',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 } as const
 
 export type OauthResourceScalarFieldEnum = (typeof OauthResourceScalarFieldEnum)[keyof typeof OauthResourceScalarFieldEnum]

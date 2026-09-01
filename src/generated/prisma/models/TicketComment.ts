@@ -14,7 +14,7 @@ import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model TicketComment
- * 
+ * チケットへのコメント。1階層の返信を持てる。
  */
 export type TicketCommentModel = runtime.Types.Result.DefaultSelection<Prisma.$TicketCommentPayload>
 
@@ -1056,11 +1056,29 @@ export type $TicketCommentPayload<ExtArgs extends runtime.Types.Extensions.Inter
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * コメント先のチケット
+     */
     ticketId: string
+    /**
+     * 投稿者。退会ユーザーのコメントも議論履歴として残すため SetNull(表示は no_name)
+     */
     authorId: string | null
+    /**
+     * 本文(Markdown)
+     */
     content: string
+    /**
+     * null = 通常コメント。plan/report は詳細画面でデフォルト折りたたみ表示する
+     */
     type: $Enums.TicketCommentType | null
+    /**
+     * 返信先コメント。1階層のみ許容(親自体が返信の場合は指定できない。制約はアプリ層で検証)
+     */
     parentId: string | null
+    /**
+     * 本文中のメンションを解決した結果。保存時点のスナップショット
+     */
     mentionedUserIds: string[]
     createdAt: Date
     updatedAt: Date

@@ -14,7 +14,7 @@ import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model Tag
- * 
+ * ボード内で使うチケットのタグ。
  */
 export type TagModel = runtime.Types.Result.DefaultSelection<Prisma.$TagPayload>
 
@@ -733,9 +733,21 @@ export type $TagPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * タグを持つボード。タグはボードをまたがない
+     */
     boardId: string
+    /**
+     * タグ名。ボード内で一意
+     */
     name: string
+    /**
+     * 表示色
+     */
     color: $Enums.TagColor
+    /**
+     * ボード内の表示順。昇順。同値は name 昇順で安定させる
+     */
     order: number
     createdAt: Date
     updatedAt: Date

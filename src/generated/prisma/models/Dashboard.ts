@@ -14,7 +14,7 @@ import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model Dashboard
- * 
+ * ユーザーごとのダッシュボードのウィジェット配置。
  */
 export type DashboardModel = runtime.Types.Result.DefaultSelection<Prisma.$DashboardPayload>
 
@@ -406,7 +406,13 @@ export type $DashboardPayload<ExtArgs extends runtime.Types.Extensions.InternalA
     user: Prisma.$UserPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
+    /**
+     * ダッシュボードの持ち主。1ユーザー1行
+     */
     userId: string
+    /**
+     * ウィジェットの配置。`{ left: ウィジェットID[], right: ウィジェットID[] }` の2カラム構成
+     */
     layout: runtime.JsonValue
     updatedAt: Date
     createdAt: Date

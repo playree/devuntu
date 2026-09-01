@@ -14,7 +14,7 @@ import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model CalendarShare
- * 
+ * 予定表の公開設定。publicId を知っている人だけが公開ページを開ける。
  */
 export type CalendarShareModel = runtime.Types.Result.DefaultSelection<Prisma.$CalendarSharePayload>
 
@@ -467,8 +467,17 @@ export type $CalendarSharePayload<ExtArgs extends runtime.Types.Extensions.Inter
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * 予定表を公開するユーザー。1ユーザー1行
+     */
     userId: string
+    /**
+     * 公開URLに使うランダムID。作り直すと以前のURLは無効になる
+     */
     publicId: string
+    /**
+     * 公開設定。`title` に公開ページの表示タイトルを持つ
+     */
     options: runtime.JsonValue | null
     createdAt: Date
     updatedAt: Date

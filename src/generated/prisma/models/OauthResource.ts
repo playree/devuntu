@@ -49,9 +49,9 @@ export type OauthResourceMinAggregateOutputType = {
   signingKeyId: string | null
   dpopBoundAccessTokensRequired: boolean | null
   disabled: boolean | null
+  policyVersion: number | null
   createdAt: Date | null
   updatedAt: Date | null
-  policyVersion: number | null
 }
 
 export type OauthResourceMaxAggregateOutputType = {
@@ -64,9 +64,9 @@ export type OauthResourceMaxAggregateOutputType = {
   signingKeyId: string | null
   dpopBoundAccessTokensRequired: boolean | null
   disabled: boolean | null
+  policyVersion: number | null
   createdAt: Date | null
   updatedAt: Date | null
-  policyVersion: number | null
 }
 
 export type OauthResourceCountAggregateOutputType = {
@@ -81,10 +81,10 @@ export type OauthResourceCountAggregateOutputType = {
   customClaims: number
   dpopBoundAccessTokensRequired: number
   disabled: number
-  createdAt: number
-  updatedAt: number
   policyVersion: number
   metadata: number
+  createdAt: number
+  updatedAt: number
   _all: number
 }
 
@@ -111,9 +111,9 @@ export type OauthResourceMinAggregateInputType = {
   signingKeyId?: true
   dpopBoundAccessTokensRequired?: true
   disabled?: true
+  policyVersion?: true
   createdAt?: true
   updatedAt?: true
-  policyVersion?: true
 }
 
 export type OauthResourceMaxAggregateInputType = {
@@ -126,9 +126,9 @@ export type OauthResourceMaxAggregateInputType = {
   signingKeyId?: true
   dpopBoundAccessTokensRequired?: true
   disabled?: true
+  policyVersion?: true
   createdAt?: true
   updatedAt?: true
-  policyVersion?: true
 }
 
 export type OauthResourceCountAggregateInputType = {
@@ -143,10 +143,10 @@ export type OauthResourceCountAggregateInputType = {
   customClaims?: true
   dpopBoundAccessTokensRequired?: true
   disabled?: true
-  createdAt?: true
-  updatedAt?: true
   policyVersion?: true
   metadata?: true
+  createdAt?: true
+  updatedAt?: true
   _all?: true
 }
 
@@ -248,10 +248,10 @@ export type OauthResourceGroupByOutputType = {
   customClaims: runtime.JsonValue | null
   dpopBoundAccessTokensRequired: boolean | null
   disabled: boolean | null
-  createdAt: Date | null
-  updatedAt: Date | null
   policyVersion: number | null
   metadata: runtime.JsonValue | null
+  createdAt: Date | null
+  updatedAt: Date | null
   _count: OauthResourceCountAggregateOutputType | null
   _avg: OauthResourceAvgAggregateOutputType | null
   _sum: OauthResourceSumAggregateOutputType | null
@@ -289,10 +289,10 @@ export type OauthResourceWhereInput = {
   customClaims?: Prisma.JsonNullableFilter<"OauthResource">
   dpopBoundAccessTokensRequired?: Prisma.BoolNullableFilter<"OauthResource"> | boolean | null
   disabled?: Prisma.BoolNullableFilter<"OauthResource"> | boolean | null
-  createdAt?: Prisma.DateTimeNullableFilter<"OauthResource"> | Date | string | null
-  updatedAt?: Prisma.DateTimeNullableFilter<"OauthResource"> | Date | string | null
   policyVersion?: Prisma.IntNullableFilter<"OauthResource"> | number | null
   metadata?: Prisma.JsonNullableFilter<"OauthResource">
+  createdAt?: Prisma.DateTimeNullableFilter<"OauthResource"> | Date | string | null
+  updatedAt?: Prisma.DateTimeNullableFilter<"OauthResource"> | Date | string | null
   oauthclientresources?: Prisma.OauthClientResourceListRelationFilter
 }
 
@@ -308,10 +308,10 @@ export type OauthResourceOrderByWithRelationInput = {
   customClaims?: Prisma.SortOrderInput | Prisma.SortOrder
   dpopBoundAccessTokensRequired?: Prisma.SortOrderInput | Prisma.SortOrder
   disabled?: Prisma.SortOrderInput | Prisma.SortOrder
-  createdAt?: Prisma.SortOrderInput | Prisma.SortOrder
-  updatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   policyVersion?: Prisma.SortOrderInput | Prisma.SortOrder
   metadata?: Prisma.SortOrderInput | Prisma.SortOrder
+  createdAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  updatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   oauthclientresources?: Prisma.OauthClientResourceOrderByRelationAggregateInput
 }
 
@@ -330,10 +330,10 @@ export type OauthResourceWhereUniqueInput = Prisma.AtLeast<{
   customClaims?: Prisma.JsonNullableFilter<"OauthResource">
   dpopBoundAccessTokensRequired?: Prisma.BoolNullableFilter<"OauthResource"> | boolean | null
   disabled?: Prisma.BoolNullableFilter<"OauthResource"> | boolean | null
-  createdAt?: Prisma.DateTimeNullableFilter<"OauthResource"> | Date | string | null
-  updatedAt?: Prisma.DateTimeNullableFilter<"OauthResource"> | Date | string | null
   policyVersion?: Prisma.IntNullableFilter<"OauthResource"> | number | null
   metadata?: Prisma.JsonNullableFilter<"OauthResource">
+  createdAt?: Prisma.DateTimeNullableFilter<"OauthResource"> | Date | string | null
+  updatedAt?: Prisma.DateTimeNullableFilter<"OauthResource"> | Date | string | null
   oauthclientresources?: Prisma.OauthClientResourceListRelationFilter
 }, "id" | "identifier">
 
@@ -349,10 +349,10 @@ export type OauthResourceOrderByWithAggregationInput = {
   customClaims?: Prisma.SortOrderInput | Prisma.SortOrder
   dpopBoundAccessTokensRequired?: Prisma.SortOrderInput | Prisma.SortOrder
   disabled?: Prisma.SortOrderInput | Prisma.SortOrder
-  createdAt?: Prisma.SortOrderInput | Prisma.SortOrder
-  updatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   policyVersion?: Prisma.SortOrderInput | Prisma.SortOrder
   metadata?: Prisma.SortOrderInput | Prisma.SortOrder
+  createdAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  updatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.OauthResourceCountOrderByAggregateInput
   _avg?: Prisma.OauthResourceAvgOrderByAggregateInput
   _max?: Prisma.OauthResourceMaxOrderByAggregateInput
@@ -375,10 +375,10 @@ export type OauthResourceScalarWhereWithAggregatesInput = {
   customClaims?: Prisma.JsonNullableWithAggregatesFilter<"OauthResource">
   dpopBoundAccessTokensRequired?: Prisma.BoolNullableWithAggregatesFilter<"OauthResource"> | boolean | null
   disabled?: Prisma.BoolNullableWithAggregatesFilter<"OauthResource"> | boolean | null
-  createdAt?: Prisma.DateTimeNullableWithAggregatesFilter<"OauthResource"> | Date | string | null
-  updatedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"OauthResource"> | Date | string | null
   policyVersion?: Prisma.IntNullableWithAggregatesFilter<"OauthResource"> | number | null
   metadata?: Prisma.JsonNullableWithAggregatesFilter<"OauthResource">
+  createdAt?: Prisma.DateTimeNullableWithAggregatesFilter<"OauthResource"> | Date | string | null
+  updatedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"OauthResource"> | Date | string | null
 }
 
 export type OauthResourceCreateInput = {
@@ -393,10 +393,10 @@ export type OauthResourceCreateInput = {
   customClaims?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   dpopBoundAccessTokensRequired?: boolean | null
   disabled?: boolean | null
-  createdAt?: Date | string | null
-  updatedAt?: Date | string | null
   policyVersion?: number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string | null
+  updatedAt?: Date | string | null
   oauthclientresources?: Prisma.OauthClientResourceCreateNestedManyWithoutOauthresourceInput
 }
 
@@ -412,10 +412,10 @@ export type OauthResourceUncheckedCreateInput = {
   customClaims?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   dpopBoundAccessTokensRequired?: boolean | null
   disabled?: boolean | null
-  createdAt?: Date | string | null
-  updatedAt?: Date | string | null
   policyVersion?: number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string | null
+  updatedAt?: Date | string | null
   oauthclientresources?: Prisma.OauthClientResourceUncheckedCreateNestedManyWithoutOauthresourceInput
 }
 
@@ -431,10 +431,10 @@ export type OauthResourceUpdateInput = {
   customClaims?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   dpopBoundAccessTokensRequired?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   disabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   policyVersion?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   oauthclientresources?: Prisma.OauthClientResourceUpdateManyWithoutOauthresourceNestedInput
 }
 
@@ -450,10 +450,10 @@ export type OauthResourceUncheckedUpdateInput = {
   customClaims?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   dpopBoundAccessTokensRequired?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   disabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   policyVersion?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   oauthclientresources?: Prisma.OauthClientResourceUncheckedUpdateManyWithoutOauthresourceNestedInput
 }
 
@@ -469,10 +469,10 @@ export type OauthResourceCreateManyInput = {
   customClaims?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   dpopBoundAccessTokensRequired?: boolean | null
   disabled?: boolean | null
-  createdAt?: Date | string | null
-  updatedAt?: Date | string | null
   policyVersion?: number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string | null
+  updatedAt?: Date | string | null
 }
 
 export type OauthResourceUpdateManyMutationInput = {
@@ -487,10 +487,10 @@ export type OauthResourceUpdateManyMutationInput = {
   customClaims?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   dpopBoundAccessTokensRequired?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   disabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   policyVersion?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type OauthResourceUncheckedUpdateManyInput = {
@@ -505,10 +505,10 @@ export type OauthResourceUncheckedUpdateManyInput = {
   customClaims?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   dpopBoundAccessTokensRequired?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   disabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   policyVersion?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type OauthResourceCountOrderByAggregateInput = {
@@ -523,10 +523,10 @@ export type OauthResourceCountOrderByAggregateInput = {
   customClaims?: Prisma.SortOrder
   dpopBoundAccessTokensRequired?: Prisma.SortOrder
   disabled?: Prisma.SortOrder
-  createdAt?: Prisma.SortOrder
-  updatedAt?: Prisma.SortOrder
   policyVersion?: Prisma.SortOrder
   metadata?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
 }
 
 export type OauthResourceAvgOrderByAggregateInput = {
@@ -545,9 +545,9 @@ export type OauthResourceMaxOrderByAggregateInput = {
   signingKeyId?: Prisma.SortOrder
   dpopBoundAccessTokensRequired?: Prisma.SortOrder
   disabled?: Prisma.SortOrder
+  policyVersion?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
-  policyVersion?: Prisma.SortOrder
 }
 
 export type OauthResourceMinOrderByAggregateInput = {
@@ -560,9 +560,9 @@ export type OauthResourceMinOrderByAggregateInput = {
   signingKeyId?: Prisma.SortOrder
   dpopBoundAccessTokensRequired?: Prisma.SortOrder
   disabled?: Prisma.SortOrder
+  policyVersion?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
-  policyVersion?: Prisma.SortOrder
 }
 
 export type OauthResourceSumOrderByAggregateInput = {
@@ -611,10 +611,10 @@ export type OauthResourceCreateWithoutOauthclientresourcesInput = {
   customClaims?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   dpopBoundAccessTokensRequired?: boolean | null
   disabled?: boolean | null
-  createdAt?: Date | string | null
-  updatedAt?: Date | string | null
   policyVersion?: number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string | null
+  updatedAt?: Date | string | null
 }
 
 export type OauthResourceUncheckedCreateWithoutOauthclientresourcesInput = {
@@ -629,10 +629,10 @@ export type OauthResourceUncheckedCreateWithoutOauthclientresourcesInput = {
   customClaims?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   dpopBoundAccessTokensRequired?: boolean | null
   disabled?: boolean | null
-  createdAt?: Date | string | null
-  updatedAt?: Date | string | null
   policyVersion?: number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string | null
+  updatedAt?: Date | string | null
 }
 
 export type OauthResourceCreateOrConnectWithoutOauthclientresourcesInput = {
@@ -663,10 +663,10 @@ export type OauthResourceUpdateWithoutOauthclientresourcesInput = {
   customClaims?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   dpopBoundAccessTokensRequired?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   disabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   policyVersion?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type OauthResourceUncheckedUpdateWithoutOauthclientresourcesInput = {
@@ -681,10 +681,10 @@ export type OauthResourceUncheckedUpdateWithoutOauthclientresourcesInput = {
   customClaims?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   dpopBoundAccessTokensRequired?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   disabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   policyVersion?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 
@@ -730,10 +730,10 @@ export type OauthResourceSelect<ExtArgs extends runtime.Types.Extensions.Interna
   customClaims?: boolean
   dpopBoundAccessTokensRequired?: boolean
   disabled?: boolean
-  createdAt?: boolean
-  updatedAt?: boolean
   policyVersion?: boolean
   metadata?: boolean
+  createdAt?: boolean
+  updatedAt?: boolean
   oauthclientresources?: boolean | Prisma.OauthResource$oauthclientresourcesArgs<ExtArgs>
   _count?: boolean | Prisma.OauthResourceCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["oauthResource"]>
@@ -750,10 +750,10 @@ export type OauthResourceSelectCreateManyAndReturn<ExtArgs extends runtime.Types
   customClaims?: boolean
   dpopBoundAccessTokensRequired?: boolean
   disabled?: boolean
-  createdAt?: boolean
-  updatedAt?: boolean
   policyVersion?: boolean
   metadata?: boolean
+  createdAt?: boolean
+  updatedAt?: boolean
 }, ExtArgs["result"]["oauthResource"]>
 
 export type OauthResourceSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -768,10 +768,10 @@ export type OauthResourceSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
   customClaims?: boolean
   dpopBoundAccessTokensRequired?: boolean
   disabled?: boolean
-  createdAt?: boolean
-  updatedAt?: boolean
   policyVersion?: boolean
   metadata?: boolean
+  createdAt?: boolean
+  updatedAt?: boolean
 }, ExtArgs["result"]["oauthResource"]>
 
 export type OauthResourceSelectScalar = {
@@ -786,13 +786,13 @@ export type OauthResourceSelectScalar = {
   customClaims?: boolean
   dpopBoundAccessTokensRequired?: boolean
   disabled?: boolean
-  createdAt?: boolean
-  updatedAt?: boolean
   policyVersion?: boolean
   metadata?: boolean
+  createdAt?: boolean
+  updatedAt?: boolean
 }
 
-export type OauthResourceOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "identifier" | "name" | "accessTokenTtl" | "refreshTokenTtl" | "signingAlgorithm" | "signingKeyId" | "allowedScopes" | "customClaims" | "dpopBoundAccessTokensRequired" | "disabled" | "createdAt" | "updatedAt" | "policyVersion" | "metadata", ExtArgs["result"]["oauthResource"]>
+export type OauthResourceOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "identifier" | "name" | "accessTokenTtl" | "refreshTokenTtl" | "signingAlgorithm" | "signingKeyId" | "allowedScopes" | "customClaims" | "dpopBoundAccessTokensRequired" | "disabled" | "policyVersion" | "metadata" | "createdAt" | "updatedAt", ExtArgs["result"]["oauthResource"]>
 export type OauthResourceInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   oauthclientresources?: boolean | Prisma.OauthResource$oauthclientresourcesArgs<ExtArgs>
   _count?: boolean | Prisma.OauthResourceCountOutputTypeDefaultArgs<ExtArgs>
@@ -807,20 +807,56 @@ export type $OauthResourcePayload<ExtArgs extends runtime.Types.Extensions.Inter
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * リソース識別子。トークン要求の `resource` パラメータと一致させる
+     */
     identifier: string
+    /**
+     * 管理画面に表示する名称
+     */
     name: string
+    /**
+     * アクセストークンの有効期間(秒)
+     */
     accessTokenTtl: number | null
+    /**
+     * リフレッシュトークンの有効期間(秒)
+     */
     refreshTokenTtl: number | null
+    /**
+     * アクセストークンの署名アルゴリズム
+     */
     signingAlgorithm: string | null
+    /**
+     * 署名に使う鍵(Jwks)のID
+     */
     signingKeyId: string | null
+    /**
+     * このリソース向けに許可するスコープ
+     */
     allowedScopes: string[]
+    /**
+     * アクセストークンへ追加するクレーム
+     */
     customClaims: runtime.JsonValue | null
+    /**
+     * DPoP による送信者制約付きトークンを必須にする
+     */
     dpopBoundAccessTokensRequired: boolean | null
+    /**
+     * 無効化されたリソースはトークンの発行先にできない
+     */
     disabled: boolean | null
+    /**
+     * 設定を変更した際に上げる版数
+     */
+    policyVersion: number | null
+    /**
+     * 追加情報
+     */
+    metadata: runtime.JsonValue | null
     createdAt: Date | null
     updatedAt: Date | null
-    policyVersion: number | null
-    metadata: runtime.JsonValue | null
   }, ExtArgs["result"]["oauthResource"]>
   composites: {}
 }
@@ -1256,10 +1292,10 @@ export interface OauthResourceFieldRefs {
   readonly customClaims: Prisma.FieldRef<"OauthResource", 'Json'>
   readonly dpopBoundAccessTokensRequired: Prisma.FieldRef<"OauthResource", 'Boolean'>
   readonly disabled: Prisma.FieldRef<"OauthResource", 'Boolean'>
-  readonly createdAt: Prisma.FieldRef<"OauthResource", 'DateTime'>
-  readonly updatedAt: Prisma.FieldRef<"OauthResource", 'DateTime'>
   readonly policyVersion: Prisma.FieldRef<"OauthResource", 'Int'>
   readonly metadata: Prisma.FieldRef<"OauthResource", 'Json'>
+  readonly createdAt: Prisma.FieldRef<"OauthResource", 'DateTime'>
+  readonly updatedAt: Prisma.FieldRef<"OauthResource", 'DateTime'>
 }
     
 

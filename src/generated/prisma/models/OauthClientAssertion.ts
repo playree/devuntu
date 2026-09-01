@@ -15,7 +15,6 @@ import type * as Prisma from "../internal/prismaNamespace"
 /**
  * Model OauthClientAssertion
  * private_key_jwt のクライアントアサーション `jti` の使い捨て記録。
- * id はアサーション由来のダイジェストを better-auth が入れるため既定値は持たない。
  */
 export type OauthClientAssertionModel = runtime.Types.Result.DefaultSelection<Prisma.$OauthClientAssertionPayload>
 
@@ -268,7 +267,13 @@ export type $OauthClientAssertionPayload<ExtArgs extends runtime.Types.Extension
   name: "OauthClientAssertion"
   objects: {}
   scalars: runtime.Types.Extensions.GetPayloadResult<{
+    /**
+     * アサーション由来のダイジェスト。better-auth が入れるため既定値は持たない
+     */
     id: string
+    /**
+     * この記録を掃除してよくなる時刻(アサーションの有効期限)
+     */
     expiresAt: Date
   }, ExtArgs["result"]["oauthClientAssertion"]>
   composites: {}

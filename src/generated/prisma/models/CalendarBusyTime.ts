@@ -14,7 +14,7 @@ import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model CalendarBusyTime
- * 
+ * 予定表に固定で埋める予定(定例など)。曜日と時間帯で繰り返す。
  */
 export type CalendarBusyTimeModel = runtime.Types.Result.DefaultSelection<Prisma.$CalendarBusyTimePayload>
 
@@ -659,10 +659,25 @@ export type $CalendarBusyTimePayload<ExtArgs extends runtime.Types.Extensions.In
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * 設定の持ち主
+     */
     userId: string
+    /**
+     * 件名(管理画面での識別ラベル。公開カレンダーには非表示)
+     */
     title: string
+    /**
+     * 対象の曜日。dayjs .day() と同じ 0=日 .. 6=土。1件で複数曜日を保持
+     */
     weekdays: number[]
+    /**
+     * 開始時刻。0:00 からの分。0..1410、30分刻み
+     */
     startMin: number
+    /**
+     * 終了時刻。0:00 からの分。30..1440(24:00=1440)、30分刻み。startMin < endMin
+     */
     endMin: number
     createdAt: Date
     updatedAt: Date

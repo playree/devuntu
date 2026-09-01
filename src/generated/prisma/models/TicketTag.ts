@@ -14,7 +14,7 @@ import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model TicketTag
- * 
+ * チケットとタグの紐づけを表す中間テーブル。
  */
 export type TicketTagModel = runtime.Types.Result.DefaultSelection<Prisma.$TicketTagPayload>
 
@@ -579,7 +579,13 @@ export type $TicketTagPayload<ExtArgs extends runtime.Types.Extensions.InternalA
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * タグを付けたチケット
+     */
     ticketId: string
+    /**
+     * 付けたタグ
+     */
     tagId: string
     createdAt: Date
   }, ExtArgs["result"]["ticketTag"]>

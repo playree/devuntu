@@ -14,7 +14,7 @@ import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model UserGroup
- * 
+ * ユーザーとグループの所属を表す中間テーブル。
  */
 export type UserGroupModel = runtime.Types.Result.DefaultSelection<Prisma.$UserGroupPayload>
 
@@ -579,7 +579,13 @@ export type $UserGroupPayload<ExtArgs extends runtime.Types.Extensions.InternalA
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * 所属するユーザー
+     */
     userId: string
+    /**
+     * 所属先のグループ
+     */
     groupId: string
     createdAt: Date
   }, ExtArgs["result"]["userGroup"]>

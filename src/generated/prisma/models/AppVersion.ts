@@ -356,7 +356,13 @@ export type $AppVersionPayload<ExtArgs extends runtime.Types.Extensions.Internal
      * 最終起動時のビルド番号(next.config.ts で生成する BUILD_NO)。同一バージョンの再デプロイを識別する
      */
     buildNo: string
+    /**
+     * このバージョンでの最終起動日時
+     */
     updatedAt: Date
+    /**
+     * このバージョンでの初回起動日時
+     */
     createdAt: Date
   }, ExtArgs["result"]["appVersion"]>
   composites: {}

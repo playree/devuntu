@@ -322,6 +322,9 @@ export type $UploadNoncePayload<ExtArgs extends runtime.Types.Extensions.Interna
   objects: {}
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * 使用済みトークンの識別子。この一意制約が2回目の利用を弾く
+     */
     jti: string
     /**
      * 元になったトークンの有効期限。これを過ぎた行は掃除の対象

@@ -980,16 +980,21 @@ export type $AgentRunnerPayload<ExtArgs extends runtime.Types.Extensions.Interna
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * 自動運用の対象となるAIエージェント用ユーザー
+     */
     userId: string
     /**
      * 自動運用の有効/無効。時間帯の条件を満たしていても、これが false なら動かさない
      */
     enabled: boolean
     /**
-     * 稼働を許可する時間帯。0:00 からの分で持つ。
-     * 両方 null なら終日。from > to は日跨ぎ(夜間のみ稼働)を表す
+     * 稼働を許可する時間帯の開始。0:00 からの分。activeToMin と共に null なら終日
      */
     activeFromMin: number | null
+    /**
+     * 稼働を許可する時間帯の終了。0:00 からの分。from > to は日跨ぎ(夜間のみ稼働)を表す
+     */
     activeToMin: number | null
     /**
      * 時間帯の判定に使うタイムゾーン。null は DEFAULT_TZ
@@ -1012,10 +1017,16 @@ export type $AgentRunnerPayload<ExtArgs extends runtime.Types.Extensions.Interna
      */
     dailyResetMin: number
     /**
-     * ランナーの自己申告。稼働状況の表示にだけ使い、認可には使わない
+     * 最終ポーリング時刻。ランナーの自己申告で、稼働状況の表示にだけ使い認可には使わない
      */
     lastPolledAt: Date | null
+    /**
+     * ランナーが動いているホスト名(自己申告)
+     */
     hostname: string | null
+    /**
+     * ランナー(devuntu_agent.py)のバージョン(自己申告)
+     */
     version: string | null
     createdAt: Date
     updatedAt: Date

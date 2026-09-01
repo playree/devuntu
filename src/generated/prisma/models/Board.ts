@@ -14,7 +14,7 @@ import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model Board
- * 
+ * チケットを載せるかんばんボード。個人用(private)と共有(team)の2種類がある。
  */
 export type BoardModel = runtime.Types.Result.DefaultSelection<Prisma.$BoardPayload>
 
@@ -1422,12 +1422,39 @@ export type $BoardPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * ボードの種別
+     */
     kind: $Enums.BoardKind
+    /**
+     * プライベートボードの所有者。team では常に null。
+     * PostgreSQL の UNIQUE は NULL を互いに異なる値として扱うため、これ1本で
+     * 「1ユーザー1プライベートボード」を担保でき、部分索引が不要になる。
+     * kind='private' <=> privateOwnerId IS NOT NULL の整合はアプリ側で保証する
+     * (作成経路を ensurePrivateBoard と createBoard の2つに限定している)
+     */
     privateOwnerId: string | null
+    /**
+     * チケット表示ID(`key-number`)の接頭辞。大文字英数(BOARD_KEY_PATTERN)で全ボード一意。
+     * 変更すると共有済みの表示IDが解決できなくなるため、変更できるのは owner と管理者に限る
+     */
     key: string
+    /**
+     * 採番済みチケット番号の最大値。UPDATE の行ロックで採番を直列化する。
+     * 連番の欠けを避けるためシーケンスではなくこの列で持つ(ロールバック時は番号も戻る)
+     */
     ticketSeq: number
+    /**
+     * ボード名
+     */
     name: string
+    /**
+     * ボードの説明
+     */
     description: string | null
+    /**
+     * アーカイブ済み。一覧の既定の表示からは外れる
+     */
     archived: boolean
     createdAt: Date
     updatedAt: Date

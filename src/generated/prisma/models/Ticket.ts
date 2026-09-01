@@ -14,7 +14,7 @@ import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model Ticket
- * 
+ * かんばんに並べるチケット。
  */
 export type TicketModel = runtime.Types.Result.DefaultSelection<Prisma.$TicketPayload>
 
@@ -1827,27 +1827,60 @@ export type $TicketPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * プライベートも必ずボード(kind=private)に属する。所有者による別スコープは持たない。
+     * 作成時に決まり以後変更しない(ボード移動は無い)。本文に貼った添付の可視範囲がこの前提に依存する
+     * (docs/development.md「チケットはボードを移動しない」)
+     */
     boardId: string
+    /**
+     * 作成者。ユーザー削除時は SetNull でチケットは残す
+     */
     createdById: string | null
+    /**
+     * 担当者。AIエージェント用ユーザーを指定すると自動処理の対象になる
+     */
     assigneeId: string | null
+    /**
+     * ボード内の連番(1始まり)。利用者へ見せる表示IDは `Board.key`-`number`(ticketDisplayId)
+     */
     number: number
+    /**
+     * 件名
+     */
     title: string
+    /**
+     * 本文(Markdown)
+     */
     content: string | null
+    /**
+     * 状態。かんばんのレーンに対応する
+     */
     status: $Enums.TicketStatus
+    /**
+     * 優先度
+     */
     priority: $Enums.TicketPriority
+    /**
+     * 期限。日付のみの概念。UTC 0:00 で保存する
+     */
     dueDate: Date | null
+    /**
+     * status を done にした時刻。done から他のステータスへ戻すと null に戻す
+     */
     completedAt: Date | null
+    /**
+     * 同一レーン(boardId + status)内の表示順。昇順・0始まりの連番で保持する。
+     * done レーンは盤面に表示されるカードのみを連番の対象とし、表示期限を過ぎた完了の order は据え置く
+     */
     order: number
     createdAt: Date
     updatedAt: Date
+    /**
+     * 本文中のメンションを解決した結果。保存時点のスナップショット(TicketComment と同じ扱い)
+     */
     mentionedUserIds: string[]
-    /**
-     * エージェントに任せる場合の処理方式。null はエージェント処理の対象外(オプトインを兼ねる)
-     */
     agentMode: $Enums.AgentTaskMode | null
-    /**
-     * エージェント処理の状態。null は未着手と同じ扱い
-     */
     agentState: $Enums.AgentTaskState | null
   }, ExtArgs["result"]["ticket"]>
   composites: {}

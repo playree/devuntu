@@ -14,7 +14,7 @@ import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model Jwks
- * 
+ * IDトークンの署名に使う鍵ペア。better-auth が要求するテーブルで、列の増減はライブラリ側の要求に従う。
  */
 export type JwksModel = runtime.Types.Result.DefaultSelection<Prisma.$JwksPayload>
 
@@ -398,11 +398,29 @@ export type $JwksPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   objects: {}
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    /**
+     * JWK 形式の公開鍵。JWKS エンドポイントで配信する
+     */
     publicKey: string
+    /**
+     * 署名に使う秘密鍵(暗号化して保存される)
+     */
     privateKey: string
+    /**
+     * 鍵の作成日時
+     */
     createdAt: Date
+    /**
+     * 鍵の有効期限。null は無期限
+     */
     expiresAt: Date | null
+    /**
+     * 署名アルゴリズム(EdDSA / RS256 など)
+     */
     alg: string | null
+    /**
+     * 楕円曲線の種別(Ed25519 など)
+     */
     crv: string | null
   }, ExtArgs["result"]["jwks"]>
   composites: {}
