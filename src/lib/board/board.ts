@@ -15,7 +15,7 @@ import { isAgentApprover } from '../agent/agent-approver'
 import { nowDate } from '../day'
 import { errClient, errInvalidOperation } from '../error'
 import { isUniqueViolation, prisma } from '../prisma'
-import { extractUploadKeys } from '../storage/upload'
+import { extractUploadKeys, toUploadUrl } from '../storage/upload'
 import {
   evaluateTicketAccess,
   insertAt,
@@ -516,27 +516,77 @@ export const nextTicketNumber = async (tx: Prisma.TransactionClient, boardId: st
 }
 
 /**
+ * その添付が、指定チケット以外の本文から使われているかを調べる。
+ *
+ * 同じチケット(とそのコメント)からの参照は保存先ボードと同じボードなので、
+ * 付け替えを止める理由にならない。`excludeTicketId` はそれを除くためのもの。
+ */
+const isAttachmentInUse = async (
+  tx: Prisma.TransactionClient,
+  key: string,
+  excludeTicketId: string | undefined,
+): Promise<boolean> => {
+  const url = toUploadUrl(key)
+  const ticket = await tx.ticket.findFirst({
+    where: { content: { contains: url }, ...(excludeTicketId && { id: { not: excludeTicketId } }) },
+    select: { id: true },
+  })
+  if (ticket) {
+    return true
+  }
+  const comment = await tx.ticketComment.findFirst({
+    where: { content: { contains: url }, ...(excludeTicketId && { ticketId: { not: excludeTicketId } }) },
+    select: { id: true },
+  })
+  return comment !== null
+}
+
+/**
  * 本文に貼られた添付を、本文の保存先ボードへ紐付け直す。
  *
  * アップロードは本文の保存より前に走るので、作成フォームでボードを選び直すと添付だけが
  * 前のボードに残り、保存先ボードのメンバーが `/api/upload/<キー>` を読めなくなる。
  * 付け替えは本人がアップロードしたものに限る(他人の添付を自分のボードへ引き込めないようにする)。
  * 保存先ボードへのアクセスは呼び出し元で `assertBoardAccess` を通していること。
+ *
+ * 付け替えるのは**まだどの本文からも使われていない**添付だけ。既に別のボードの本文で
+ * 使われている画像を貼り直したときに動かしてしまうと、元のボードのメンバーからその本文の画像が
+ * 読めなくなる(添付の可視範囲は Attachment.boardId 1つで決まるため)。
+ * 使用中のものは動かさないので、貼り直した先では元のボードのメンバーにしか見えない。
  */
 export const reassignContentAttachments = async (
   tx: Prisma.TransactionClient,
   content: string | null | undefined,
   boardId: string,
   actor: Actor,
+  /** 保存対象のチケット。このチケットとそのコメントからの参照は「使用中」に数えない */
+  excludeTicketId?: string,
 ): Promise<void> => {
   const keys = content ? extractUploadKeys(content) : []
   if (keys.length === 0) {
     return
   }
-  await tx.attachment.updateMany({
+
+  // 保存先と同じボードの添付・他人の添付は対象外。通常はここが0件で終わる
+  const candidates = await tx.attachment.findMany({
     where: { key: { in: keys }, createdById: actor.id, boardId: { not: boardId } },
-    data: { boardId },
+    select: { key: true },
   })
+  if (candidates.length === 0) {
+    return
+  }
+
+  const movable: string[] = []
+  for (const { key } of candidates) {
+    if (!(await isAttachmentInUse(tx, key, excludeTicketId))) {
+      movable.push(key)
+    }
+  }
+  if (movable.length === 0) {
+    return
+  }
+
+  await tx.attachment.updateMany({ where: { key: { in: movable } }, data: { boardId } })
 }
 
 /**

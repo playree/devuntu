@@ -234,8 +234,9 @@ export const createTicket = safeAuthAction
         select: { id: true, title: true, number: true, board: { select: { key: true } } },
       })
 
-      // 本文の画像はボードを選び直す前にアップロードされている場合があるので、作成先へ付け替える
-      await reassignContentAttachments(tx, rest.content, boardId, user)
+      // 本文の画像はボードを選び直す前にアップロードされている場合があるので、作成先へ付け替える。
+      // 作成直後に呼ぶので、いま作ったチケット自身は「使用中」から除く
+      await reassignContentAttachments(tx, rest.content, boardId, user, created.id)
 
       // 表示IDは組み立てて返す(作成直後の通知でそのまま出せるようにする)
       return {

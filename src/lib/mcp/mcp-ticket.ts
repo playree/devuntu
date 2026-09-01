@@ -281,7 +281,7 @@ export const updateTicketForMcp = async (
       const candidates = await getTicketMentionCandidates(access, tx)
       mentionedUserIds = resolveMentionUserIds(extractMentionEmails(rest.content ?? ''), candidates)
       addedMentionUserIds = mentionedUserIds.filter((userId) => !before.mentionedUserIds.includes(userId))
-      await reassignContentAttachments(tx, rest.content, access.boardId, auth.user)
+      await reassignContentAttachments(tx, rest.content, access.boardId, auth.user, id)
     }
 
     const updated = await tx.ticket.update({
@@ -359,7 +359,7 @@ export const addTicketCommentForMcp = async (
 
     const candidates = await getTicketMentionCandidates(access, tx)
     const mentionedUserIds = resolveMentionUserIds(extractMentionEmails(content), candidates)
-    await reassignContentAttachments(tx, content, access.boardId, auth.user)
+    await reassignContentAttachments(tx, content, access.boardId, auth.user, ticketId)
 
     const comment = await tx.ticketComment.create({
       data: { ticketId, authorId: auth.user.id, content, type, parentId, mentionedUserIds },
@@ -410,7 +410,7 @@ export const updateTicketCommentForMcp = async (auth: ResourceAuth, commentId: s
     const access = await assertTicketAccess(auth.user, target.ticketId, 'edit', tx)
     const candidates = await getTicketMentionCandidates(access, tx)
     const mentionedUserIds = resolveMentionUserIds(extractMentionEmails(content), candidates)
-    await reassignContentAttachments(tx, content, access.boardId, auth.user)
+    await reassignContentAttachments(tx, content, access.boardId, auth.user, target.ticketId)
 
     await tx.ticketComment.update({ where: { id: commentId }, data: { content, mentionedUserIds } })
     await tx.ticket.update({ where: { id: target.ticketId }, data: { updatedAt: new Date() } })

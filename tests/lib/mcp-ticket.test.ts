@@ -93,6 +93,6 @@ describe('updateTicketCommentForMcp', () => {
   it('本文に貼られた添付をチケットのボードへ付け替える', async () => {
     await updateTicketCommentForMcp(auth, 'comment-1', '更新後の本文')
 
-    expect(reassignContentAttachments).toHaveBeenCalledWith(fakeTx, '更新後の本文', 'board-1', auth.user)
+    expect(reassignContentAttachments).toHaveBeenCalledWith(fakeTx, '更新後の本文', 'board-1', auth.user, 'ticket-1')
   })
 })
