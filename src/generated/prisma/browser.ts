@@ -135,6 +135,13 @@ export type LinkWidget = Prisma.LinkWidgetModel
  */
 export type Attachment = Prisma.AttachmentModel
 /**
+ * Model UploadNonce
+ * 使い捨てアップロードトークン(`/api/upload` の Bearer)の使用済み記録。
+ * jti の一意制約により2回目の INSERT が必ず失敗することを、リプレイ防止に使う。
+ * 期限切れの行は記録のついでにまとめて消すので、定期ジョブは要らない。
+ */
+export type UploadNonce = Prisma.UploadNonceModel
+/**
  * Model KeyValueStore
  * 
  */

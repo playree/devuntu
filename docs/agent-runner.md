@@ -16,8 +16,7 @@ cron ──> devuntu_agent.py ──1──> POST /api/agent/status   「動い�
                             ──2──> POST /api/agent/runs    実行の開始を記録(チケットが処理中になる)
                             ──3──> claude -p "..."         ─┐
                             ──5──> PATCH /api/agent/runs/:id │  4. Claude が MCP で
-                                                             │     get_agent_task → 処理 →
-                                                             └───   get_agent_post_task → finish_agent_task
+                                                             └───   get_agent_task → 処理 → finish_agent_task
 ```
 
 チケットの状態を決めるのは **4 の Claude 自身**。5 は保険で、Claude が報告せずに落ちた場合だけ効く。
@@ -80,7 +79,7 @@ cron ──> devuntu_agent.py ──1──> POST /api/agent/status   「動い�
 ランナーの API はエージェント用の長期トークン専用。`devuntu_agent_` で始まらない Bearer は、
 有効な OAuth アクセストークンでも 401 で弾く。人間の MCP クライアントが使う口ではないため。
 
-エージェント専用の MCP ツール(`get_agent_task` / `get_agent_post_task` / `finish_agent_task`)も、
+エージェント専用の MCP ツール(`get_agent_task` / `finish_agent_task`)も、
 エージェント用トークンで接続した場合だけ登録する。人間の一覧には出ない。
 
 ## ランナー(devuntu_agent.py)

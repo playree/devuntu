@@ -7,6 +7,7 @@ import {
   assertTicketAccess,
   getTicketMentionCandidates,
   moveTicketToLane,
+  reassignContentAttachments,
 } from '@/lib/board/board'
 import { assertTagIdsInBoard, syncTicketTags } from '@/lib/board/tag'
 import { extractMentionEmails, resolveMentionUserIds, ticketDisplayId, ticketShortPath } from '@/lib/board/task'
@@ -171,6 +172,7 @@ export const patchTicket = safeAuthAction
         mentionedUserIds = resolveMentionUserIds(extractMentionEmails(rest.content ?? ''), candidates)
         // 本文を編集し直すたびに同じ相手へ通知しないよう、増えた分だけを通知対象にする
         addedMentionUserIds = mentionedUserIds.filter((userId) => !before.mentionedUserIds.includes(userId))
+        await reassignContentAttachments(tx, rest.content, access.boardId, user, id)
       }
 
       const updated = await tx.ticket.update({
@@ -265,6 +267,7 @@ export const addTicketComment = safeAuthAction
 
       const candidates = await getTicketMentionCandidates(access, tx)
       const mentionedUserIds = resolveMentionUserIds(extractMentionEmails(content), candidates)
+      await reassignContentAttachments(tx, content, access.boardId, user, ticketId)
 
       const comment = await tx.ticketComment.create({
         data: { ticketId, authorId: user.id, content, type, parentId, mentionedUserIds },
@@ -320,6 +323,7 @@ export const updateTicketComment = safeAuthAction
       const access = await assertTicketAccess(user, target.ticketId, 'edit', tx)
       const candidates = await getTicketMentionCandidates(access, tx)
       const mentionedUserIds = resolveMentionUserIds(extractMentionEmails(content), candidates)
+      await reassignContentAttachments(tx, content, access.boardId, user, target.ticketId)
 
       await tx.ticketComment.update({ where: { id }, data: { content, mentionedUserIds } })
       // 検索(更新日時順)の観点でチケット側の updatedAt も更新する

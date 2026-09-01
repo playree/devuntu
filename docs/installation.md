@@ -25,7 +25,8 @@ Docker Compose で Devuntu を立ち上げるまでの手順。運用開始後�
 - **HTTPS で公開する場合は DNS とリバースプロキシ(またはロードバランサー)**。`compose.yaml` が公開するのは
   HTTP の 3000 番だけで、TLS 終端もホスト名の振り分けも行わない。`https://` の `BETTER_AUTH_URL` を
   そのまま開けるようにするには、決めたホスト名を DNS で解決させ、TLS を終端するプロキシから 3000 番へ
-  転送する構成が必要
+  転送する構成が必要。画像アップロードが 5MB まで通るよう、**リクエストボディの上限を 6MB 以上**に
+  広げておくこと(nginx の `client_max_body_size` は既定 1MB)
 - **メール送信手段**。本手順の最小構成(`DISABLE_PASSWORD_AUTH=true`)ではメールOTPがサインインの唯一の手段になるため、
   SendGrid / sendmail / SMTP のいずれかを用意する。試用のみであれば `MAIL_SEND=debug` でサーバーログに
   OTP を出力させることもできる

@@ -419,6 +419,7 @@ export const ModelName = {
   Dashboard: 'Dashboard',
   LinkWidget: 'LinkWidget',
   Attachment: 'Attachment',
+  UploadNonce: 'UploadNonce',
   KeyValueStore: 'KeyValueStore',
   AppVersion: 'AppVersion',
   Group: 'Group',
@@ -449,7 +450,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "agentToken" | "agentRunner" | "agentRun" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "keyValueStore" | "appVersion" | "group" | "userGroup" | "calendarShare" | "calendarBusyTime" | "board" | "boardKeyHistory" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "ticket" | "ticketComment" | "userNotifySetting"
+    modelProps: "user" | "agentToken" | "agentRunner" | "agentRun" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "group" | "userGroup" | "calendarShare" | "calendarBusyTime" | "board" | "boardKeyHistory" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "ticket" | "ticketComment" | "userNotifySetting"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2081,6 +2082,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    UploadNonce: {
+      payload: Prisma.$UploadNoncePayload<ExtArgs>
+      fields: Prisma.UploadNonceFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.UploadNonceFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UploadNoncePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.UploadNonceFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UploadNoncePayload>
+        }
+        findFirst: {
+          args: Prisma.UploadNonceFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UploadNoncePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.UploadNonceFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UploadNoncePayload>
+        }
+        findMany: {
+          args: Prisma.UploadNonceFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UploadNoncePayload>[]
+        }
+        create: {
+          args: Prisma.UploadNonceCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UploadNoncePayload>
+        }
+        createMany: {
+          args: Prisma.UploadNonceCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.UploadNonceCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UploadNoncePayload>[]
+        }
+        delete: {
+          args: Prisma.UploadNonceDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UploadNoncePayload>
+        }
+        update: {
+          args: Prisma.UploadNonceUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UploadNoncePayload>
+        }
+        deleteMany: {
+          args: Prisma.UploadNonceDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.UploadNonceUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.UploadNonceUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UploadNoncePayload>[]
+        }
+        upsert: {
+          args: Prisma.UploadNonceUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UploadNoncePayload>
+        }
+        aggregate: {
+          args: Prisma.UploadNonceAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateUploadNonce>
+        }
+        groupBy: {
+          args: Prisma.UploadNonceGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UploadNonceGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.UploadNonceCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UploadNonceCountAggregateOutputType> | number
+        }
+      }
+    }
     KeyValueStore: {
       payload: Prisma.$KeyValueStorePayload<ExtArgs>
       fields: Prisma.KeyValueStoreFieldRefs
@@ -3593,6 +3668,16 @@ export const AttachmentScalarFieldEnum = {
 export type AttachmentScalarFieldEnum = (typeof AttachmentScalarFieldEnum)[keyof typeof AttachmentScalarFieldEnum]
 
 
+export const UploadNonceScalarFieldEnum = {
+  id: 'id',
+  jti: 'jti',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt'
+} as const
+
+export type UploadNonceScalarFieldEnum = (typeof UploadNonceScalarFieldEnum)[keyof typeof UploadNonceScalarFieldEnum]
+
+
 export const KeyValueStoreScalarFieldEnum = {
   id: 'id',
   key: 'key',
@@ -4240,6 +4325,7 @@ export type GlobalOmitConfig = {
   dashboard?: Prisma.DashboardOmit
   linkWidget?: Prisma.LinkWidgetOmit
   attachment?: Prisma.AttachmentOmit
+  uploadNonce?: Prisma.UploadNonceOmit
   keyValueStore?: Prisma.KeyValueStoreOmit
   appVersion?: Prisma.AppVersionOmit
   group?: Prisma.GroupOmit

@@ -1,5 +1,6 @@
 import { ASSIGNEE_NONE, TICKET_PRIORITIES, TICKET_STATUSES } from '@/lib/board/task'
 import { registerAgentSetupTool, registerAgentTools } from '@/lib/mcp/mcp-agent'
+import { registerImageTools } from '@/lib/mcp/mcp-image'
 import {
   addTicketCommentForMcp,
   createTicketForMcp,
@@ -191,6 +192,9 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       ],
     }),
   )
+
+  // 画像の添付・取得は人間の利用者もエージェントも使う
+  registerImageTools(server, auth)
 
   // セットアップ手順は人が読むものなので接続の種類を問わない
   registerAgentSetupTool(server)

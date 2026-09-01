@@ -79,5 +79,5 @@ Proxy の対象外のため、各ルートハンドラ内で個別に認証す�
 | `/api/agent/runs`                                  | エージェント用トークン必須(POST)。実行の開始を記録                 |
 | `/api/agent/runs/[id]`                             | エージェント用トークン必須(PATCH)。実行の終了を記録                |
 | `/agent/devuntu_agent.py`                          | 認証不要(`public/` の静的配布)。ランナー本体。秘密情報は含まない   |
-| `/api/upload`                                      | 認証必須(未ログインは401)。画像アップロード(POST)                  |
+| `/api/upload`                                      | 認証必須(セッション、またはMCPの短命トークン)。画像アップロード(POST) |
 | `/api/upload/[filename]`                           | 認証必須(未ログインは401)。画像配信(GET)                           |
