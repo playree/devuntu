@@ -5,7 +5,7 @@
  * vitest.setup.ts のグローバルモックをこのファイル内で上書きする。
  */
 
-import type { TicketAccess } from '@/lib/board/board'
+import { reassignContentAttachments, type TicketAccess } from '@/lib/board/board'
 import { updateTicketCommentForMcp } from '@/lib/mcp/mcp-ticket'
 import { notifyMention } from '@/lib/notify/notify-mention'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
@@ -19,6 +19,7 @@ vi.mock('@/lib/prisma', () => ({
 vi.mock('@/lib/board/board', () => ({
   assertTicketAccess: vi.fn(),
   getTicketMentionCandidates: vi.fn(),
+  reassignContentAttachments: vi.fn(),
 }))
 
 vi.mock('@/lib/notify/notify-mention', () => ({
@@ -87,5 +88,11 @@ describe('updateTicketCommentForMcp', () => {
       data: { updatedAt: expect.any(Date) },
     })
     expect(notifyMention).toHaveBeenCalled()
+  })
+
+  it('本文に貼られた添付をチケットのボードへ付け替える', async () => {
+    await updateTicketCommentForMcp(auth, 'comment-1', '更新後の本文')
+
+    expect(reassignContentAttachments).toHaveBeenCalledWith(fakeTx, '更新後の本文', 'board-1', auth.user)
   })
 })

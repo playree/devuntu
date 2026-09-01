@@ -72,6 +72,9 @@ describe('createDevuntuMcpServer', () => {
         'add_ticket_comment',
         'update_ticket_comment',
         'delete_ticket_comment',
+        'create_image_upload_token',
+        'upload_image',
+        'get_image',
       ]),
     )
   })
