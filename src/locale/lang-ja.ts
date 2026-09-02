@@ -233,6 +233,7 @@ export const ja: DefaultLocaleItems = {
   search_tag: 'タグを検索',
   select_file: 'ファイルを選択',
   select_self: '自分を選択',
+  select_target_board_first: '対象ボードを選択してください',
   select_user: 'ユーザーを選択',
   send: '送信',
   send_as_plan: 'プランとして送信',

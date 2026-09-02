@@ -56,10 +56,9 @@ export const TicketSearchPanel: FC<{
     ...Object.fromEntries(boards.map((board) => [board.id, board.name])),
   }
 
-  // 絞り込み対象のボードのタグだけを出し、同名(別ボード)は 1 チップに畳む
-  const tagChoices = dedupeTagOptionsByName(
-    filter.boardId ? tags.filter((tag) => tag.boardId === filter.boardId) : tags,
-  )
+  // 絞り込み対象のボードのタグだけを候補にする(ボード未選択時はボード横断で選べてしまうので候補なし)。
+  // 同名(別ボード)は 1 チップに畳む
+  const tagChoices = filter.boardId ? dedupeTagOptionsByName(tags.filter((tag) => tag.boardId === filter.boardId)) : []
 
   // 絞り込み対象のボードのメンバーだけを候補にする(タグと同じ方針)。「すべて」は選択肢ではなく未選択で表す
   const boardId = filter.boardId ?? null
@@ -142,16 +141,16 @@ export const TicketSearchPanel: FC<{
         />
       </div>
 
-      {tagChoices.length > 0 && (
-        <div className='col-span-12 md:col-span-5'>
-          <TagNameSelectField // 絞り込みの値は tagId ではなく名前(ボード横断でも同名を 1 条件にまとめる)
-            options={tagChoices}
-            value={filter.tags}
-            max={MAX_TICKET_TAGS}
-            onChange={(tags) => onChange({ ...filter, tags })}
-          />
-        </div>
-      )}
+      <div className='col-span-12 md:col-span-5'>
+        <TagNameSelectField // 絞り込みの値は tagId ではなく名前(ボード横断でも同名を 1 条件にまとめる)
+          options={tagChoices}
+          value={filter.tags}
+          max={MAX_TICKET_TAGS}
+          isDisabled={!boardId}
+          tooltip={boardId ? undefined : t('select_target_board_first')}
+          onChange={(tags) => onChange({ ...filter, tags })}
+        />
+      </div>
     </GridBox>
   )
 }
