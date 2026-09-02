@@ -115,9 +115,10 @@ const PasswordForm: FC<{
   email?: string
   callbackURL: string
   mode: Mode
+  twoFaRequired: boolean
   next: (password: string) => void
   back: () => void
-}> = ({ direction, email, callbackURL, mode, next, back }) => {
+}> = ({ direction, email, callbackURL, mode, twoFaRequired, next, back }) => {
   const { t, fet } = useLocale()
   const router = useRouter()
   const {
@@ -159,8 +160,8 @@ const PasswordForm: FC<{
                   }
 
                   if (user) {
-                    // 2FA有効化の確認
-                    if (!user.twoFactorEnabled) {
+                    // 2FA有効化の確認(運用として不要なら有効化もしない)
+                    if (twoFaRequired && !user.twoFactorEnabled) {
                       await authClient.twoFactor.enable({ password })
                       await authClient.twoFactor.sendOtp()
                       notify.success(t('msg_otp_sent'))
@@ -413,7 +414,10 @@ const TwoFaForm: FC<{
   )
 }
 
-export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) => {
+export const SignInClient: FC<{ sessionEmail?: string; twoFaRequired: boolean }> = ({
+  sessionEmail,
+  twoFaRequired,
+}) => {
   const searchParams = useSearchParams()
   const { t } = useLocale()
   const router = useRouter()
@@ -428,7 +432,8 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
   const callbackURL = clientId
     ? makePath('/api/auth/oauth2/authorize', searchParams)
     : safeCallbackPath(searchParams.get('cb'))
-  const mode = searchParams.get('mode') as Mode
+  // 2FA不要運用では有効化を促す画面に意味が無いので、mode を無視して通常のサインイン画面として扱う
+  const mode = twoFaRequired ? (searchParams.get('mode') as Mode) : null
   const errorCode = searchParams.get('error')
   const hasErrorToasted = useRef(false)
 
@@ -497,6 +502,7 @@ export const SignInClient: FC<{ sessionEmail?: string }> = ({ sessionEmail }) =>
               direction={step.direction}
               email={email}
               mode={mode}
+              twoFaRequired={twoFaRequired}
               callbackURL={callbackURL}
               next={(password) => {
                 setPassword(password)

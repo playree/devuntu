@@ -40,6 +40,11 @@ Next の起動前に評価されるため `envu` を解決できず、`process.e
 | `SLACK_TEAM_ID`                | Slack ワークスペースID(`T...`)             |      | -                 |
 | `SLACK_SIGNING_SECRET`         | Slack リクエスト署名シークレット           |      | -                 |
 
+`TWO_FA_REQUIRED=false` にすると 2要素認証を行わない。パスワード認証時に OTP 入力へ遷移せず、
+過去に 2FA を有効化した利用者もパスワードのみでサインインする(サインイン時の 2FA チャレンジ自体を
+行わないため)。`DISABLE_PASSWORD_AUTH=true`(メールOTPでのサインイン)の場合はこの値に関わらず
+2要素認証の経路を通らない。
+
 `GOOGLE_ALLOWED_DOMAINS` は **Googleサインインを使う場合は最低1件必要**。未設定だと許可ドメインが空になり、
 すべてのドメインのサインインが拒否される。`/account` からのカレンダー連携だけであれば省略できる。
 
