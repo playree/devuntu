@@ -432,7 +432,8 @@ export const SignInClient: FC<{ sessionEmail?: string; twoFaRequired: boolean }>
   const callbackURL = clientId
     ? makePath('/api/auth/oauth2/authorize', searchParams)
     : safeCallbackPath(searchParams.get('cb'))
-  const mode = searchParams.get('mode') as Mode
+  // 2FA不要運用では有効化を促す画面に意味が無いので、mode を無視して通常のサインイン画面として扱う
+  const mode = twoFaRequired ? (searchParams.get('mode') as Mode) : null
   const errorCode = searchParams.get('error')
   const hasErrorToasted = useRef(false)
 

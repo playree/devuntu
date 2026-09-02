@@ -16,7 +16,8 @@ const SignInPage: FC<{
 
   const twoFaRequired = envu.server.TWO_FA_REQUIRED
 
-  if (mode === '2FA') {
+  // 2FA不要運用では有効化を促す画面自体が意味を持たないため通常のサインイン画面にする
+  if (mode === '2FA' && twoFaRequired) {
     const session = await auth.api.getSession({ headers: await headers() })
     const email = session?.user.email
     return <SignInClient sessionEmail={email} twoFaRequired={twoFaRequired} />

@@ -225,8 +225,9 @@ export const auth = betterAuth({
       enabled: true,
       trustedProviders: ['google'],
       // ローカルの emailVerified は OTP サインインか 2FA 完了でしか立たない。
-      // 2FA 不要運用では作成直後の false が残り続けるため、プロバイダ側の検証に委ねる
-      requireLocalEmailVerified: envu.server.TWO_FA_REQUIRED,
+      // パスワード認証かつ 2FA 不要の運用だけは作成直後の false が残り続けるため、
+      // そのケースに限りプロバイダ側の検証に委ねる
+      requireLocalEmailVerified: envu.server.TWO_FA_REQUIRED || envu.server.DISABLE_PASSWORD_AUTH,
     },
   },
   emailAndPassword: {
