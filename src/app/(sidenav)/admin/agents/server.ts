@@ -2,6 +2,7 @@
 
 import { safeAuthAction } from '@/lib/action/action-server'
 import { agentEmail, agentRunnerStatus, DUPLICATED_AGENT_HANDLE } from '@/lib/agent/agent'
+import { addAgentApprover } from '@/lib/agent/agent-approver'
 import { auth } from '@/lib/auth/auth'
 import { nowDate } from '@/lib/day'
 import { errClient, errInvalidOperation, errSystemError } from '@/lib/error'
@@ -89,7 +90,7 @@ export type GetApproverUserOptionsReturnType = Awaited<ReturnType<typeof getAppr
 export const createAgent = safeAuthAction
   .metadata({ actionName: 'createAgent', role: 'admin' })
   .inputSchema(scCreateAgent)
-  .action(async ({ parsedInput: { name, handle, groups } }) => {
+  .action(async ({ ctx: { user: actor }, parsedInput: { name, handle, groups } }) => {
     const groupIds = [...new Set(groups)]
     const email = agentEmail(handle)
 
@@ -118,12 +119,13 @@ export const createAgent = safeAuthAction
 
     // エージェント印とメール検証済みを立てる。検証メールは届かないので発行させない
     await prisma
-      .$transaction([
-        prisma.user.update({ where: { id: user.id }, data: { isAgent: true, emailVerified: true } }),
-        ...(groupIds.length > 0
-          ? [prisma.userGroup.createMany({ data: groupIds.map((groupId) => ({ userId: user.id, groupId })) })]
-          : []),
-      ])
+      .$transaction(async (tx) => {
+        await tx.user.update({ where: { id: user.id }, data: { isAgent: true, emailVerified: true } })
+        if (groupIds.length > 0) {
+          await tx.userGroup.createMany({ data: groupIds.map((groupId) => ({ userId: user.id, groupId })) })
+        }
+        await addAgentApprover(user.id, actor.id, tx)
+      })
       // エージェント印の付かないユーザーが残ると /admin/users に現れ、同じ識別子で作り直せなくなる
       .catch(async (e: unknown) => {
         await auth.api
