@@ -8,6 +8,7 @@ import {
   CalendarDaysIcon,
   Cog6ToothIcon,
   CpuChipIcon,
+  RocketLaunchIcon,
   ServerStackIcon,
   Squares2X2Icon,
   TicketIcon,
@@ -172,7 +173,7 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
             <MenuButton // エージェント(承認)
               to='/agents'
               text={t('agent')}
-              icon={<CpuChipIcon />}
+              icon={<RocketLaunchIcon />}
               closeMenu={closeMenu}
             />
           </AccordionSection>
