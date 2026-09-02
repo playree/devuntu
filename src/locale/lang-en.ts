@@ -233,6 +233,7 @@ export const en: LocaleItems = {
   search_tag: 'Search tags',
   select_file: 'Choose file',
   select_self: 'Select myself',
+  select_target_board_first: 'Select a target board first',
   select_user: 'Select user',
   send: 'Send',
   send_as_plan: 'Send as plan',

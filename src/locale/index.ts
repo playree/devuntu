@@ -231,6 +231,7 @@ export type LocaleItemBase =
   | 'search_tag'
   | 'select_file'
   | 'select_self'
+  | 'select_target_board_first'
   | 'select_user'
   | 'send'
   | 'send_as_plan'

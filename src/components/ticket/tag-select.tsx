@@ -16,6 +16,7 @@ import {
   ListBox,
   SearchField,
   Select,
+  Tooltip,
   useFilter,
 } from '@heroui/react'
 import { FC, Ref, useState } from 'react'
@@ -340,6 +341,9 @@ export const TagNameSelectField: FC<{
   errorMessage?: string
   isSmart?: boolean
   isSmartForm?: boolean
+  isDisabled?: boolean
+  /** 指定時、非活性でもマウスオーバーで理由を表示する */
+  tooltip?: string
 }> = ({
   options,
   value,
@@ -350,6 +354,8 @@ export const TagNameSelectField: FC<{
   errorMessage,
   isSmart: isSmartProp,
   isSmartForm: isSmartFormProp,
+  isDisabled,
+  tooltip,
 }) => {
   const { isCompact, hasErrorArea } = useSmart(isSmartProp, isSmartFormProp)
   const { t } = useLocale()
@@ -361,12 +367,13 @@ export const TagNameSelectField: FC<{
   // 選択済みも無効にすると disabledBehavior='all' により press が届かず解除もできなくなる。
   const disabledKeys = isFull ? options.filter((tag) => !value.includes(tag.name)).map((tag) => tag.name) : NO_KEYS
 
-  return (
+  const select = (
     <Select
       selectionMode='multiple'
       value={value}
       variant={variant}
       isInvalid={!!errorMessage}
+      isDisabled={isDisabled}
       disabledKeys={disabledKeys}
       // タグが 0 件でも開けるようにする(react-aria は collection が空だと開かない)
       allowsEmptyCollection
@@ -428,5 +435,15 @@ export const TagNameSelectField: FC<{
         </ListBox>
       </Select.Popover>
     </Select>
+  )
+
+  return tooltip ? (
+    <Tooltip delay={300}>
+      {/* isDisabled な Select はホバー系のイベントを自ら拾わなくなるため、Trigger 側でホバーを検知させる */}
+      <Tooltip.Trigger className='block'>{select}</Tooltip.Trigger>
+      <Tooltip.Content showArrow>{tooltip}</Tooltip.Content>
+    </Tooltip>
+  ) : (
+    select
   )
 }
