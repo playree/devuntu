@@ -424,12 +424,37 @@ describe('finishAgentTask', () => {
     ['skipped', 'skipped', 'skipped'],
     ['failed', 'failed', 'failed'],
   ] as const)('%s はチケットを %s、実行を %s にする', async (outcome, state, runStatus) => {
-    agentRun.findFirst.mockResolvedValueOnce({ id: 'run1' } as never)
+    agentRun.findFirst.mockResolvedValueOnce({ id: 'run1', action: 'execute' } as never)
 
     expect(await finishAgentTask(runner(), 't1', outcome, '要約')).toEqual({ state })
     expect(ticket.update).toHaveBeenCalledWith({ where: { id: 't1' }, data: { agentState: state } })
     expect(agentRun.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ status: runStatus, summary: '要約' }) }),
+      expect.objectContaining({
+        data: expect.objectContaining({ status: runStatus, summary: '要約', action: undefined }),
+      }),
+    )
+  })
+
+  it('revise で開始した実行は完了報告なら execute へ確定する', async () => {
+    agentRun.findFirst.mockResolvedValueOnce({ id: 'run1', action: 'revise' } as never)
+
+    await finishAgentTask(runner(), 't1', 'completed')
+
+    expect(agentRun.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ action: 'execute' }) }),
+    )
+  })
+
+  it.each([
+    ['revise', 'planned'],
+    ['plan', 'completed'],
+  ] as const)('%s で開始し %s を報告した実行はアクションを書き換えない', async (action, outcome) => {
+    agentRun.findFirst.mockResolvedValueOnce({ id: 'run1', action } as never)
+
+    await finishAgentTask(runner(), 't1', outcome)
+
+    expect(agentRun.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ action: undefined }) }),
     )
   })
 

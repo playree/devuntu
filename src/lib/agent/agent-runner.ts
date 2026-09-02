@@ -461,6 +461,15 @@ const OUTCOME_MAP: Record<AgentOutcome, { state: AgentTaskState; run: Exclude<Ag
 }
 
 /**
+ * 実行に記録するアクション。
+ *
+ * `revise` はプラン修正と実装への移行の両方を含み、開始時点ではどちらか決まらない。
+ * 完了報告で閉じるときだけ、実際に行った処理へ寄せる。変更が不要なら undefined を返す。
+ */
+const settleAction = (action: AgentRunAction, outcome: AgentOutcome): AgentRunAction | undefined =>
+  action === 'revise' && outcome === 'completed' ? 'execute' : undefined
+
+/**
  * エージェント自身による結果の報告。チケットの状態と、開始済みの実行の両方を閉じる。
  * ランナーを介さず MCP だけで動かした場合は実行の行が無いので、その場合は状態だけ更新する。
  */
@@ -480,13 +489,18 @@ export const finishAgentTask = async (
       ? await tx.agentRun.findFirst({
           where: { runnerId: runner.id, ticketId, status: 'running' },
           orderBy: { startedAt: 'desc' },
-          select: { id: true },
+          select: { id: true, action: true },
         })
       : null
     if (open) {
       await tx.agentRun.update({
         where: { id: open.id },
-        data: { status: run, summary: summary ?? undefined, finishedAt: now },
+        data: {
+          status: run,
+          summary: summary ?? undefined,
+          finishedAt: now,
+          action: settleAction(open.action, outcome),
+        },
       })
     }
   })
