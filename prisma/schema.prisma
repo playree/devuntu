@@ -293,7 +293,7 @@ enum AgentRunAction {
   plan
   /// 実装の実行
   execute
-  /// 返信を受けてのプラン修正 / 実装への移行
+  /// 返信を受けてのプラン修正。実装まで進んだ場合は完了報告時に execute へ確定する
   revise
 }
 
