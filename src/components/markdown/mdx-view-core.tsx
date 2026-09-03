@@ -16,6 +16,8 @@ import {
 import '@mdxeditor/editor/style.css'
 import { useTheme } from 'next-themes'
 import { FC, MouseEvent, useEffect, useMemo, useRef } from 'react'
+import { useModalState } from '../general/modal'
+import { findLightboxImage, ImageLightbox, LightboxImage } from './image-lightbox'
 import { mentionPlugin } from './mdx-mention-plugin'
 import { sanitizeHtmlPlugin } from './mdx-sanitize-plugin'
 import { readOnlyCodeBlockDescriptor, readOnlyTablePlugin } from './mdx-view-plugins'
@@ -63,6 +65,25 @@ const MdxViewCore: FC<MdxViewCoreProps> = ({ markdown, onError, mentionUsers }) 
    * MDXEditor 側の値は正規化されていて prop と一致しないので、比較には prop の生の値を使う
    */
   const appliedRef = useRef(markdown)
+  const lightbox = useModalState<LightboxImage>()
+
+  /**
+   * リンク遷移を優先し、それ以外の画像クリックでライトボックスを開く。
+   *
+   * `[![alt](img)](url)` は LinkNode の中に ImageNode が入るため、`openLinkInNewTab` が
+   * `preventDefault` を済ませていれば拡大は行わない。
+   * 画像は Lexical の DecoratorNode(portal)だが、合成イベントは React ツリーを遡るのでここに届く。
+   */
+  const onContentClick = (e: MouseEvent<HTMLDivElement>) => {
+    openLinkInNewTab(e)
+    if (e.defaultPrevented) {
+      return
+    }
+    const image = findLightboxImage(e)
+    if (image) {
+      lightbox.open(image)
+    }
+  }
 
   // MDXEditor は markdown prop の変更を取り込まないため、明示的に差し替える
   useEffect(() => {
@@ -96,7 +117,7 @@ const MdxViewCore: FC<MdxViewCoreProps> = ({ markdown, onError, mentionUsers }) 
     return null
   }
   return (
-    <div onClickCapture={openLinkInNewTab}>
+    <div onClickCapture={onContentClick}>
       <MentionUsersProvider users={mentionUsers}>
         <MDXEditor
           ref={editorRef}
@@ -109,6 +130,7 @@ const MdxViewCore: FC<MdxViewCoreProps> = ({ markdown, onError, mentionUsers }) 
           plugins={plugins}
         />
       </MentionUsersProvider>
+      <ImageLightbox key={lightbox.key} state={lightbox} image={lightbox.target} />
     </div>
   )
 }

@@ -160,12 +160,16 @@ export const TicketComments: FC<{
         </span>
       </div>
 
-      <MultiTagField
-        label={t('comment_type')}
-        items={commentTypeFilterItems}
-        value={typeFilter}
-        onChange={setTypeFilter}
-      />
+      <div // 親の FlexCol に引き伸ばされないよう、タグの内容幅に収める
+        className='w-fit max-w-full'
+      >
+        <MultiTagField
+          label={t('comment_type')}
+          items={commentTypeFilterItems}
+          value={typeFilter}
+          onChange={setTypeFilter}
+        />
+      </div>
 
       {visibleComments.map((comment) => (
         <div key={comment.id} className='space-y-2'>

@@ -155,6 +155,8 @@ export const en: LocaleItems = {
   hide: 'Hide',
   icon: 'Icon',
   id: 'ID',
+  image_actual_size: 'Actual size',
+  image_fit_screen: 'Fit to screen',
   immutable: 'Immutable',
   insert_image: 'Insert image',
   integration_settings: 'Settings',
