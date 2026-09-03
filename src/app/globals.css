@@ -272,6 +272,16 @@
   outline: none;
 }
 
+/* 表示モードの画像はクリックで実寸表示できることをカーソルで示す(mdx-view-core.tsx)。
+   リンク内の画像はリンク遷移が優先されるので、リンクのカーソルに戻す */
+.mdxeditor.mdxeditor-view .markdown img {
+  cursor: zoom-in;
+}
+
+.mdxeditor.mdxeditor-view .markdown a img {
+  cursor: pointer;
+}
+
 /* MDXEditor のポップアップ(ツールバーのプルダウン・リンク/画像ダイアログ)の重なり順。
  *
  * MDXEditor は Portal 先のコンテナを overlayContainer(既定は document.body)直下に作り、

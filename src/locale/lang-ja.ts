@@ -155,6 +155,8 @@ export const ja: DefaultLocaleItems = {
   hide: '隠す',
   icon: 'アイコン',
   id: 'ID',
+  image_actual_size: '実寸大',
+  image_fit_screen: '画面に合わせる',
   immutable: '変更不可',
   insert_image: '画像を挿入',
   integration_settings: '設定',

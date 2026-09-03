@@ -153,6 +153,8 @@ export type LocaleItemBase =
   | 'hide'
   | 'icon'
   | 'id'
+  | 'image_actual_size'
+  | 'image_fit_screen'
   | 'immutable'
   | 'insert_image'
   | 'integration_settings'
