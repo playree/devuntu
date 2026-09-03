@@ -3,7 +3,7 @@
 
 標準ライブラリだけで動く。cron から 5 分おきに `poll` を呼ぶ想定で、常駐はしない。
 
-    */5 * * * * python3 ~/.local/bin/devuntu_agent.py poll
+    */5 * * * * python3 ~/devuntu-agent-work/.devuntu-agent/devuntu_agent.py poll
 
 1 回の poll で行うこと:
 
@@ -37,14 +37,22 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-__version__ = "0.5.2"
+__version__ = "0.6.0"
 
-DEFAULT_CONFIG_PATH = Path.home() / ".config" / "devuntu-agent" / "config.json"
-DEFAULT_LOG_PATH = Path.home() / ".local" / "state" / "devuntu-agent" / "agent.log"
-DEFAULT_LOCK_PATH = Path.home() / ".cache" / "devuntu-agent.lock"
+# 1 Agent の構成を作業ディレクトリだけで完結させるため、config・ログ・ロックは本体と同じ
+# <作業ディレクトリ>/.devuntu-agent へ置く。作業ディレクトリを分ければ同一ホストに複数の Agent を並べられる
+AGENT_DIR = Path(__file__).resolve().parent
+DEFAULT_WORKDIR = AGENT_DIR.parent
+DEFAULT_CONFIG_PATH = AGENT_DIR / "config.json"
+DEFAULT_LOG_PATH = AGENT_DIR / "agent.log"
+DEFAULT_LOCK_PATH = AGENT_DIR / "agent.lock"
+
+# 旧バージョンは config をホーム配下に置いていた。移行し忘れた環境が理由の分からないまま
+# 止まらないよう、旧パスに残っている場合は移行を促す
+LEGACY_CONFIG_PATH = Path.home() / ".config" / "devuntu-agent" / "config.json"
 
 # ランナー自体の配布先。curl での初回取得と自動更新の両方でこのパスを使う
-# (src/lib/agent-setup.ts の AGENT_SCRIPT_PATH と同じ)
+# (src/lib/agent/agent-setup.ts の AGENT_SCRIPT_PATH と同じ)
 AGENT_SCRIPT_PATH = "/agent/devuntu_agent.py"
 
 # 起動する CLI の種類。将来 claude 以外(例: codex)にも対応する拡張ポイントとして
@@ -89,6 +97,14 @@ class ApiError(Exception):
 # ---------------------------------------------------------------------------
 
 
+def resolve_agent_path(value: object, default: Path) -> Path:
+    """config のパス指定を解決する。相対パスは cron の cwd に依存させないため AGENT_DIR 基準にする"""
+    if not value:
+        return default
+    path = Path(str(value)).expanduser()
+    return path if path.is_absolute() else AGENT_DIR / path
+
+
 class Config:
     def __init__(self, raw: dict, path: Path):
         self.path = path
@@ -96,10 +112,9 @@ class Config:
         self.token: str = str(raw.get("token", ""))
         # 特定のリポジトリではなく、必要なリポジトリをこの配下に clone して使う基点ディレクトリ。
         # どのリポジトリを対象にするかはチケット本文や事前作業の指示から Claude が判断する
+        # 省略時は .devuntu-agent の 1 つ上を使う
         workdir_raw = str(raw.get("workdir", ""))
-        if not workdir_raw:
-            raise ConfigError(f"workdir is not set: {path}")
-        self.workdir = Path(workdir_raw).expanduser()
+        self.workdir = Path(workdir_raw).expanduser() if workdir_raw else DEFAULT_WORKDIR
 
         # 起動する CLI まわりの設定。将来 claude 以外にも対応できるよう種類ごとにまとめて持つ
         cli_raw = raw.get("cli") or {}
@@ -116,7 +131,7 @@ class Config:
         self.cli_env: dict[str, str] = {str(k): str(v) for k, v in (cli_raw.get("env") or {}).items()}
 
         self.timeout_sec: int = int(raw.get("timeout_sec") or DEFAULT_TIMEOUT_SEC)
-        self.log_path = Path(str(raw.get("log_path") or DEFAULT_LOG_PATH)).expanduser()
+        self.log_path = resolve_agent_path(raw.get("log_path"), DEFAULT_LOG_PATH)
         self.self_update: bool = bool(raw.get("self_update", True))
 
         if not self.base_url:
@@ -131,6 +146,11 @@ class Config:
 
 def load_config(path: Path) -> Config:
     if not path.is_file():
+        if path == DEFAULT_CONFIG_PATH and LEGACY_CONFIG_PATH.is_file():
+            raise ConfigError(
+                f"config file not found: {path} (the old location {LEGACY_CONFIG_PATH} still exists: "
+                "move it next to this script and re-register cron with the new path)"
+            )
         raise ConfigError(f"config file not found: {path}")
     # トークンを持つファイルなので、他人から読める状態なら気付けるようにする
     if path.stat().st_mode & 0o077:
