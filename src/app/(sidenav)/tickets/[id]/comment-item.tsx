@@ -216,7 +216,7 @@ export const CommentReplyAction: FC<{
   }
 
   return isReplying ? (
-    <div className='space-y-2'>
+    <div className='space-y-2 pb-2'>
       <MarkdownInput
         defaultValue=''
         onChange={setReplyDraft}
@@ -242,7 +242,13 @@ export const CommentReplyAction: FC<{
       </div>
     </div>
   ) : (
-    <MultiButton variant='outline' icon={<ReplyIcon width={16} />} size='sm' onPress={() => setReplying(true)}>
+    <MultiButton
+      className='mb-2'
+      variant='outline'
+      icon={<ReplyIcon width={16} />}
+      size='sm'
+      onPress={() => setReplying(true)}
+    >
       {t('reply')}
     </MultiButton>
   )
