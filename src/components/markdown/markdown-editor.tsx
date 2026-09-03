@@ -24,8 +24,11 @@ const FLAT_CLASS = 'mdxeditor-flat'
  */
 const DEFAULT_MIN_ROWS = 6
 
-/** ローディング Skeleton も同じ変数で高さを合わせ、マウント時のガタつきを防ぐ */
-const MIN_HEIGHT = 'calc(var(--mdx-min-rows, 6) * 1.5rem)'
+/**
+ * ローディング Skeleton も同じ変数で高さを合わせ、マウント時のガタつきを防ぐ。
+ * 1 行の高さは globals.css の `.markdown`(text-sm = 0.875rem / leading-normal = 1.5)と手で同期させる。
+ */
+const MIN_HEIGHT = 'calc(var(--mdx-min-rows, 6) * 1.3125rem)'
 
 // MDXEditor はブラウザ専用なので SSR から外す(lexical / codemirror も別チャンクへ分離される)
 const MdxEditorCore = dynamic(() => import('./mdx-editor-core'), {

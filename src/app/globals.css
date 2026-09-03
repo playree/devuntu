@@ -65,8 +65,10 @@
     --default: oklch(0.35 0.006 286.033);
   }
 
+  /* 本文サイズは継承任せにしない。祖先(body / HeroUI の .modal__body)によって 16px と 14px に
+     分かれてしまうため、ここで確定させる。行送り 1.5 は min-height の 1.5em 換算と対応 */
   .markdown {
-    @apply leading-normal wrap-break-word;
+    @apply text-sm leading-normal wrap-break-word;
   }
 
   .markdown > * + * {
@@ -118,7 +120,7 @@
   }
 
   .markdown blockquote {
-    @apply border-l-4 border-gray-300 pr-4 pl-4 text-sm text-gray-600 dark:border-gray-600 dark:text-gray-300;
+    @apply border-l-4 border-gray-300 pr-4 pl-4 text-gray-600 dark:border-gray-600 dark:text-gray-300;
   }
 
   .markdown code {
@@ -134,11 +136,11 @@
   }
 
   .markdown ul {
-    @apply list-disc pl-5 text-sm;
+    @apply list-disc pl-5;
   }
 
   .markdown ol {
-    @apply list-decimal pl-5 text-sm;
+    @apply list-decimal pl-5;
   }
 
   .markdown kbd {
@@ -151,7 +153,7 @@
   }
 
   .markdown table {
-    @apply border-gray-600 text-sm dark:border-gray-300;
+    @apply border-gray-600 dark:border-gray-300;
   }
 
   .markdown th {
