@@ -113,8 +113,7 @@ class Config:
         # 特定のリポジトリではなく、必要なリポジトリをこの配下に clone して使う基点ディレクトリ。
         # どのリポジトリを対象にするかはチケット本文や事前作業の指示から Claude が判断する
         # 省略時は .devuntu-agent の 1 つ上を使う
-        workdir_raw = str(raw.get("workdir", ""))
-        self.workdir = Path(workdir_raw).expanduser() if workdir_raw else DEFAULT_WORKDIR
+        self.workdir = resolve_agent_path(raw.get("workdir"), DEFAULT_WORKDIR)
 
         # 起動する CLI まわりの設定。将来 claude 以外にも対応できるよう種類ごとにまとめて持つ
         cli_raw = raw.get("cli") or {}

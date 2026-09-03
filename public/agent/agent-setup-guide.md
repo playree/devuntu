@@ -228,7 +228,7 @@ description: devuntu の自動運用(Devuntu Agent)をこのマシンにセッ�
 1 エージェントの構成は作業ディレクトリだけで完結するので、エージェントごとに作業ディレクトリを
 用意して手順2から8を繰り返すだけでよい。
 
-```
+```text
 ~/devuntu-agent-work-a/.devuntu-agent/{devuntu_agent.py,config.json,agent.log,agent.lock}
 ~/devuntu-agent-work-b/.devuntu-agent/{devuntu_agent.py,config.json,agent.log,agent.lock}
 ```
