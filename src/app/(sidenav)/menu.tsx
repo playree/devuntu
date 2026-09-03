@@ -54,7 +54,7 @@ export const MenuButton: FC<{
       <Button
         size='sm'
         fullWidth
-        className='my-0.5 justify-start rounded-xl px-4 hover:bg-gray-100 dark:hover:bg-neutral-900'
+        className='my-0.5 justify-start rounded-xl px-4 hover:bg-mist-100 dark:hover:bg-neutral-900'
         variant='ghost'
         onPress={() => {
           router.push(to)
