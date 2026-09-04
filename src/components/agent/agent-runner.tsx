@@ -8,7 +8,7 @@ import { SingleSelectField } from '@/components/general/select'
 import { SwitchCtrl } from '@/components/general/switch'
 import { CheckIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
-import { parseAction } from '@/lib/action/action-client'
+import { ActionResult, parseAction } from '@/lib/action/action-client'
 import {
   AGENT_POLL_INTERVAL_OPTIONS,
   AGENT_UNLIMITED_DAILY_RUNS,
@@ -17,6 +17,7 @@ import {
   DEFAULT_AGENT_DAILY_RESET_MIN,
   DEFAULT_POLL_INTERVAL_SEC,
 } from '@/lib/agent/agent'
+import type { AgentRunnerConfig } from '@/lib/agent/agent-runner-config'
 import { COMMON_TIMEZONES, dayformat, DEFAULT_TZ, minToHHmm, tzOffsetLabel, tzOffsetMinutes } from '@/lib/day'
 import { SaveAgentRunner, scSaveAgentRunner } from '@/lib/schema/schema'
 import { useUserTimezone } from '@/lib/use-timezone'
@@ -24,7 +25,9 @@ import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FC, ReactNode, useMemo } from 'react'
 import { Control, Controller, FieldPath, useForm } from 'react-hook-form'
-import { GetAgentRunnerReturnType, saveAgentRunner } from './server'
+
+/** 設定を保存する Server Action。管理者用と承認者用で権限判定が違うため、呼び出し側から渡す */
+type SaveRunnerAction = (input: SaveAgentRunner) => Promise<ActionResult<{ userId: string }>>
 
 /** 稼働許可時間帯の選択肢(00:00〜23:30) */
 const WINDOW_OPTIONS = Object.fromEntries(
@@ -71,11 +74,12 @@ const StatusField: FC<{ label: string; children: ReactNode }> = ({ label, childr
   </div>
 )
 
-const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; refresh: () => void }> = ({
-  agentId,
-  current,
-  refresh,
-}) => {
+const RunnerForm: FC<{
+  agentId: string
+  current: AgentRunnerConfig | null | undefined
+  refresh: () => void
+  save: SaveRunnerAction
+}> = ({ agentId, current, refresh, save }) => {
   const { t, fet } = useLocale()
   const tz = useUserTimezone()
 
@@ -111,7 +115,7 @@ const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; refre
   return (
     <form
       onSubmit={handleSubmit(async (req) => {
-        await parseAction(saveAgentRunner(req))
+        await parseAction(save(req))
         notify.success(t('msg_saved'))
         reset(req)
         refresh()
@@ -219,12 +223,13 @@ const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; refre
  */
 export const AgentRunner: FC<{
   agentId: string
-  current: GetAgentRunnerReturnType
+  current: AgentRunnerConfig | null | undefined
   isLoading: boolean
   refresh: () => void
-}> = ({ agentId, current, isLoading, refresh }) => {
+  save: SaveRunnerAction
+}> = ({ agentId, current, isLoading, refresh, save }) => {
   if (isLoading) {
     return <PanelSkeleton />
   }
-  return <RunnerForm agentId={agentId} current={current} refresh={refresh} />
+  return <RunnerForm agentId={agentId} current={current} refresh={refresh} save={save} />
 }

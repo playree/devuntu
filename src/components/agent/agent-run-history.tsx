@@ -3,16 +3,13 @@
 import { PagingList } from '@/components/general/paging'
 import { MultiTable, TruncatedCell } from '@/components/general/table'
 import { AGENT_RUN_ACTION_LOCALE, AGENT_RUN_STATUS_LOCALE } from '@/lib/agent/agent'
-import { ticketShortPath } from '@/lib/board/task'
+import type { AgentRunSummary } from '@/lib/agent/agent-runner-config'
 import { dayformat } from '@/lib/day'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { Chip, Table } from '@heroui/react'
 import Link from 'next/link'
 import { FC } from 'react'
-import { GetAgentRunsReturnType } from './server'
-
-type AgentRun = NonNullable<GetAgentRunsReturnType>[number]
 
 /** 結果の配色。実行中は結果が確定していないので既定色のまま出す */
 const STATUS_COLOR = {
@@ -38,7 +35,7 @@ const duration = (startedAt: Date, finishedAt: Date | null): string => {
  * ページングはその範囲内でクライアント側で行う。ヘッダーの更新ボタンと合わせてリロードできるよう、
  * `usePagingList` の呼び出しは親(client.tsx)側で行い、ここでは結果だけを受け取る。
  */
-export const AgentRunHistory: FC<{ pagingList: PagingList<AgentRun> }> = ({ pagingList }) => {
+export const AgentRunHistory: FC<{ pagingList: PagingList<AgentRunSummary> }> = ({ pagingList }) => {
   const { t } = useLocale()
   const tz = useUserTimezone()
 
@@ -60,7 +57,10 @@ export const AgentRunHistory: FC<{ pagingList: PagingList<AgentRun> }> = ({ pagi
         <Table.Row key={item.id} id={item.id}>
           <Table.Cell className='font-mono text-xs'>
             {item.ticketId && item.ticketRef ? (
-              <Link className='hover:underline' href={ticketShortPath(item.ticketRef)}>
+              <Link // 短縮 URL(/t/[displayId])はボードのメンバーしか辿れないため、承認者でも開ける詳細ページへ直接リンクする
+                className='hover:underline'
+                href={`/tickets/${item.ticketId}`}
+              >
                 {item.ticketRef}
               </Link>
             ) : (

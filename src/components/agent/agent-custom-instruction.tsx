@@ -5,27 +5,31 @@ import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { CheckIcon, PencilSquareIcon } from '@/components/icon'
 import { MarkdownField } from '@/components/markdown/markdown-editor'
 import { notify } from '@/components/notify'
-import { parseAction } from '@/lib/action/action-client'
-import { scSaveAgentRunnerRule } from '@/lib/schema/schema'
+import { ActionResult, parseAction } from '@/lib/action/action-client'
+import type { AgentRunnerConfig } from '@/lib/agent/agent-runner-config'
+import { SaveAgentRunnerRule, scSaveAgentRunnerRule } from '@/lib/schema/schema'
 import { getFieldConstraints } from '@/lib/schema/schema-util'
 import { useLocale } from '@/locale/client'
 import { FC, useState } from 'react'
-import { GetAgentRunnerReturnType, saveAgentRunnerRule } from './server'
 
 const MAX_RULE_LENGTH = getFieldConstraints(scSaveAgentRunnerRule, 'rule').maxLength
+
+/** ルールを保存する Server Action。管理者用と承認者用で権限判定が違うため、呼び出し側から渡す */
+type SaveRuleAction = (input: SaveAgentRunnerRule) => Promise<ActionResult<{ userId: string }>>
 
 /**
  * カスタム指示(自動運用が作業全体を通じて従うルール)。
  *
  * チケット本文と同じ View⇄編集の切り替え(`MarkdownField`)で表示する。
- * 自動運用の設定行が無い状態でも保存できるよう、専用の Server Action(`saveAgentRunnerRule`)
- * で単独保存する(自動運用フォームの他項目とは無関係に更新できる)。
+ * 自動運用の設定行が無い状態でも保存できるよう、専用の Server Action(`saveRule`)で単独保存する
+ * (自動運用フォームの他項目とは無関係に更新できる)。
  */
-const CustomInstructionForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; refresh: () => void }> = ({
-  agentId,
-  current,
-  refresh,
-}) => {
+const CustomInstructionForm: FC<{
+  agentId: string
+  current: AgentRunnerConfig | null | undefined
+  refresh: () => void
+  saveRule: SaveRuleAction
+}> = ({ agentId, current, refresh, saveRule }) => {
   const { t } = useLocale()
   const [isEditing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
@@ -37,7 +41,7 @@ const CustomInstructionForm: FC<{ agentId: string; current: GetAgentRunnerReturn
   const save = async () => {
     setSaving(true)
     try {
-      await parseAction(saveAgentRunnerRule({ userId: agentId, rule: draft }))
+      await parseAction(saveRule({ userId: agentId, rule: draft }))
       notify.success(t('msg_saved'))
       refresh()
       setEditing(false)
@@ -101,12 +105,13 @@ const CustomInstructionForm: FC<{ agentId: string; current: GetAgentRunnerReturn
 
 export const AgentCustomInstruction: FC<{
   agentId: string
-  current: GetAgentRunnerReturnType
+  current: AgentRunnerConfig | null | undefined
   isLoading: boolean
   refresh: () => void
-}> = ({ agentId, current, isLoading, refresh }) => {
+  saveRule: SaveRuleAction
+}> = ({ agentId, current, isLoading, refresh, saveRule }) => {
   if (isLoading) {
     return <PanelSkeleton />
   }
-  return <CustomInstructionForm agentId={agentId} current={current} refresh={refresh} />
+  return <CustomInstructionForm agentId={agentId} current={current} refresh={refresh} saveRule={saveRule} />
 }

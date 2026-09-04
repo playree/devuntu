@@ -1,7 +1,7 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action/action-server'
-import { AGENT_RUN_HISTORY_LIMIT, agentTokenExpiresAt } from '@/lib/agent/agent'
+import { agentTokenExpiresAt } from '@/lib/agent/agent'
 import {
   addAgentApprover,
   getAgentApprovers as findAgentApprovers,
@@ -9,11 +9,16 @@ import {
   removeAgentApprover,
   syncAgentApproverGroups,
 } from '@/lib/agent/agent-approver'
-import { countAgentRunsSince, dailyRunWindow } from '@/lib/agent/agent-runner'
+import {
+  findAgentRunnerConfig,
+  listAgentRuns,
+  saveAgentRunnerConfig,
+  saveAgentRunnerRuleValue,
+} from '@/lib/agent/agent-runner-config'
 import { generateAgentToken, hashAgentToken } from '@/lib/agent/agent-token'
 import { auth } from '@/lib/auth/auth'
-import { isValidTimezone, nowDate } from '@/lib/day'
-import { errInvalidOperation, errValidation } from '@/lib/error'
+import { nowDate } from '@/lib/day'
+import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import {
@@ -219,76 +224,28 @@ export const getAgentRunner = safeAuthAction
   .action(async ({ parsedInput: { id } }) => {
     await assertAgent(id)
 
-    const runner = await prisma.agentRunner.findUnique({
-      where: { userId: id },
-      select: {
-        id: true,
-        enabled: true,
-        activeFromMin: true,
-        activeToMin: true,
-        timezone: true,
-        pollIntervalSec: true,
-        rule: true,
-        dailyRunLimit: true,
-        dailyResetMin: true,
-        lastPolledAt: true,
-        hostname: true,
-        version: true,
-      },
-    })
-    if (!runner) {
-      return null
-    }
-
-    // 上限の判定と同じ期間で数える。上限が無制限でも消化状況としては見せる
-    const { since } = dailyRunWindow(runner)
-    return { ...runner, todayRuns: await countAgentRunsSince(prisma, runner.id, since) }
+    return await findAgentRunnerConfig(id)
   })
-export type GetAgentRunnerReturnType = Awaited<ReturnType<typeof getAgentRunner>>['data']
 
 /** 設定保存(無ければ作成)。ランナーの自己申告(ホスト名・版)はここでは触らない */
 export const saveAgentRunner = safeAuthAction
   .metadata({ actionName: 'saveAgentRunner', role: 'admin' })
   .inputSchema(scSaveAgentRunner)
-  .action(async ({ parsedInput: { userId, timezone, ...rest } }) => {
-    await assertAgent(userId)
-    // IANA 名として解決できるかは zod では見られない(実行環境の ICU に依存する)
-    if (timezone && !isValidTimezone(timezone)) {
-      throw errValidation('timezone')
-    }
+  .action(async ({ parsedInput }) => {
+    await assertAgent(parsedInput.userId)
 
-    const data = { ...rest, timezone }
-    await prisma.agentRunner.upsert({
-      where: { userId },
-      create: { userId, ...data },
-      update: data,
-      select: { id: true },
-    })
-
-    logger.info({ userId, enabled: data.enabled }, 'agent runner saved')
-    return { userId }
+    await saveAgentRunnerConfig(parsedInput)
+    return { userId: parsedInput.userId }
   })
 
-/**
- * カスタム指示(ルール)単体の保存。
- * 設定行が無い状態(自動運用が未設定)でもルールだけ先に保存できるよう upsert する。
- */
+/** カスタム指示(ルール)単体の保存 */
 export const saveAgentRunnerRule = safeAuthAction
   .metadata({ actionName: 'saveAgentRunnerRule', role: 'admin' })
   .inputSchema(scSaveAgentRunnerRule)
   .action(async ({ parsedInput: { userId, rule } }) => {
     await assertAgent(userId)
 
-    // 空欄は「指示なし」。空文字のまま保存すると MCP 側で「空の指示」として渡ってしまう
-    const data = { rule: rule || null }
-    await prisma.agentRunner.upsert({
-      where: { userId },
-      create: { userId, ...data },
-      update: data,
-      select: { id: true },
-    })
-
-    logger.info({ userId }, 'agent runner rule saved')
+    await saveAgentRunnerRuleValue(userId, rule)
     return { userId }
   })
 
@@ -299,28 +256,8 @@ export const getAgentRuns = safeAuthAction
   .action(async ({ parsedInput: { id } }) => {
     await assertAgent(id)
 
-    const runner = await prisma.agentRunner.findUnique({ where: { userId: id }, select: { id: true } })
-    if (!runner) {
-      return []
-    }
-
-    return await prisma.agentRun.findMany({
-      where: { runnerId: runner.id },
-      select: {
-        id: true,
-        ticketId: true,
-        ticketRef: true,
-        action: true,
-        status: true,
-        summary: true,
-        startedAt: true,
-        finishedAt: true,
-      },
-      orderBy: { startedAt: 'desc' },
-      take: AGENT_RUN_HISTORY_LIMIT,
-    })
+    return await listAgentRuns(id)
   })
-export type GetAgentRunsReturnType = Awaited<ReturnType<typeof getAgentRuns>>['data']
 
 /** 承認者に指定されたユーザーの存在確認。エージェント同士は承認者にできない */
 const assertApproverUsersExist = async (userIds: string[]) => {
