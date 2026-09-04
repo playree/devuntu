@@ -30,6 +30,7 @@ export const ja: DefaultLocaleItems = {
   agent_approver: '承認者',
   agent_approver_group: '承認グループ',
   agent_approver_user: '承認ユーザー',
+  agent_custom_instruction: 'カスタム指示',
   agent_daily_limit: '1日の処理上限',
   agent_daily_reset: '上限リセット時刻',
   agent_daily_usage: '本日の処理数',
@@ -324,7 +325,10 @@ export const ja: DefaultLocaleItems = {
     'メールアドレスは識別子から自動生成され、後から変更できません。このアドレスにメールは届きません。',
   msg_agent_mode_desc:
     'エージェントに任せる方式を選びます。プラン先行はプランを投稿して返信を待ち、自動実行はそのまま対応して報告します。変更できるのはこのエージェントの承認者だけです。',
+  msg_agent_custom_instruction_desc:
+    'エージェントが作業前に読み、処理全体を通じて従う指示(Markdown)です。空欄は指示なしとして扱われます。',
   msg_agent_no_approver: '承認者が未設定です。このエージェントのチケットは誰もエージェントモードを変更できません。',
+  msg_agent_rule_none: '指示は設定されていません。',
   msg_agent_runner_desc:
     '担当チケットを定期的に取りに来る常駐エージェントの設定です。稼働条件を満たすときだけAIエージェントが起動します。\n開始・終了はどちらか未指定なら終日稼働、開始が終了より後の場合は日跨ぎ(夜間のみ)として扱います。\n1日の処理上限は起動1回ごとに数え、0を指定すると無制限です。カウントは上限リセット時刻(タイムゾーン設定に従う)を境に0へ戻ります。',
   msg_agent_token_once: 'トークンを確認できるのはこの画面だけです。閉じる前に控えてください。',

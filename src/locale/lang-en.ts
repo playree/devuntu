@@ -30,6 +30,7 @@ export const en: LocaleItems = {
   agent_approver: 'Approvers',
   agent_approver_group: 'Approver Groups',
   agent_approver_user: 'Approver Users',
+  agent_custom_instruction: 'Custom Instruction',
   agent_daily_limit: 'Daily Run Limit',
   agent_daily_reset: 'Limit Reset Time',
   agent_daily_usage: 'Runs Today',
@@ -324,7 +325,10 @@ Please copy and use the connection information above.
     'The email address is generated from the handle and cannot be changed later. Mail is never delivered to it.',
   msg_agent_mode_desc:
     'Choose how the agent handles this ticket. Plan first posts a plan and waits for your reply; Auto carries out the work and reports back. Only approvers of this agent can change it.',
+  msg_agent_custom_instruction_desc:
+    'The instructions (Markdown) the agent reads before starting work and follows throughout. Leaving it blank means no instructions.',
   msg_agent_no_approver: 'No approver is set. Nobody can change the agent mode of tickets assigned to this agent.',
+  msg_agent_rule_none: 'No instructions are set.',
   msg_agent_runner_desc:
     'Settings for the runner that polls for assigned tickets. The AI agent starts only while these conditions are met. Leaving either start or end unset means all day; a start later than the end crosses midnight (nights only). The daily run limit counts every start, and 0 means unlimited; the count returns to 0 at the reset time, based on the timezone setting.',
   msg_agent_token_once: 'This is the only time the token is shown. Copy it before closing.',

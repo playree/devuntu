@@ -20,6 +20,7 @@ import {
   scAgentApproverUser,
   scIssueAgentToken,
   scSaveAgentRunner,
+  scSaveAgentRunnerRule,
   scSetAgentApproverGroups,
   scUpdateAgent,
   scUUID,
@@ -256,8 +257,7 @@ export const saveAgentRunner = safeAuthAction
       throw errValidation('timezone')
     }
 
-    // 空欄は「指示なし」。空文字のまま保存すると MCP 側で「空の指示」として渡ってしまう
-    const data = { ...rest, timezone, rule: rest.rule || null }
+    const data = { ...rest, timezone }
     await prisma.agentRunner.upsert({
       where: { userId },
       create: { userId, ...data },
@@ -266,6 +266,29 @@ export const saveAgentRunner = safeAuthAction
     })
 
     logger.info({ userId, enabled: data.enabled }, 'agent runner saved')
+    return { userId }
+  })
+
+/**
+ * カスタム指示(ルール)単体の保存。
+ * 設定行が無い状態(自動運用が未設定)でもルールだけ先に保存できるよう upsert する。
+ */
+export const saveAgentRunnerRule = safeAuthAction
+  .metadata({ actionName: 'saveAgentRunnerRule', role: 'admin' })
+  .inputSchema(scSaveAgentRunnerRule)
+  .action(async ({ parsedInput: { userId, rule } }) => {
+    await assertAgent(userId)
+
+    // 空欄は「指示なし」。空文字のまま保存すると MCP 側で「空の指示」として渡ってしまう
+    const data = { rule: rule || null }
+    await prisma.agentRunner.upsert({
+      where: { userId },
+      create: { userId, ...data },
+      update: data,
+      select: { id: true },
+    })
+
+    logger.info({ userId }, 'agent runner rule saved')
     return { userId }
   })
 

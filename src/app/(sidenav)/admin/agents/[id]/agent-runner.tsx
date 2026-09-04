@@ -7,7 +7,6 @@ import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { SingleSelectField } from '@/components/general/select'
 import { SwitchCtrl } from '@/components/general/switch'
 import { CheckIcon } from '@/components/icon'
-import { MarkdownEditor } from '@/components/markdown/markdown-editor'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action/action-client'
 import {
@@ -106,7 +105,6 @@ const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; refre
       pollIntervalSec: current?.pollIntervalSec ?? DEFAULT_POLL_INTERVAL_SEC,
       dailyRunLimit: current?.dailyRunLimit ?? AGENT_UNLIMITED_DAILY_RUNS,
       dailyResetMin: current?.dailyResetMin ?? DEFAULT_AGENT_DAILY_RESET_MIN,
-      rule: current?.rule ?? '',
     },
   })
 
@@ -186,17 +184,6 @@ const RunnerForm: FC<{ agentId: string; current: GetAgentRunnerReturnType; refre
         </div>
         <div className='col-span-6 md:col-span-3'>
           <TimeSelect control={control} name='dailyResetMin' label={t('agent_daily_reset')} />
-        </div>
-
-        <div className='col-span-12'>
-          <MarkdownEditor
-            control={control}
-            name='rule'
-            constraintSchema={scSaveAgentRunner}
-            label={t('agent_rule')}
-            errorMessage={fet(errors.rule)}
-            minRows={4}
-          />
         </div>
 
         {current && (

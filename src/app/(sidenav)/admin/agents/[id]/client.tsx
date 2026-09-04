@@ -9,6 +9,7 @@ import { ContentHeader } from '@/components/header'
 import {
   ArrowLeftCircleIcon,
   ArrowPathIcon,
+  ClipboardDocumentIcon,
   ClockIcon,
   Cog6ToothIcon,
   ExclamationTriangleIcon,
@@ -24,6 +25,7 @@ import { useRouter } from 'next/navigation'
 import { FC } from 'react'
 import { getApproverUserOptions, getGroupOptions } from '../server'
 import { AgentApprover } from './agent-approver'
+import { AgentCustomInstruction } from './agent-custom-instruction'
 import { AgentProfile } from './agent-profile'
 import { AgentRunHistory } from './agent-run-history'
 import { AgentRunner } from './agent-runner'
@@ -125,6 +127,19 @@ export const AdminAgentDetailClient: FC<{ agentId: string; baseUrl: string }> = 
 
         <AccordionSection id='agent_runner' icon={<RocketLaunchIcon />} title={t('agent_runner')}>
           <AgentRunner agentId={agentId} current={runner} isLoading={isRunnerLoading} refresh={refreshRunner} />
+        </AccordionSection>
+
+        <AccordionSection
+          id='agent_custom_instruction'
+          icon={<ClipboardDocumentIcon />}
+          title={t('agent_custom_instruction')}
+        >
+          <AgentCustomInstruction
+            agentId={agentId}
+            current={runner}
+            isLoading={isRunnerLoading}
+            refresh={refreshRunner}
+          />
         </AccordionSection>
 
         <AccordionSection id='agent_run_history' icon={<ClockIcon />} title={t('agent_run_history')}>
