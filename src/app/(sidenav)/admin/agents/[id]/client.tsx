@@ -1,5 +1,8 @@
 'use client'
 
+import { AgentCustomInstruction } from '@/components/agent/agent-custom-instruction'
+import { AgentRunHistory } from '@/components/agent/agent-run-history'
+import { AgentRunner } from '@/components/agent/agent-runner'
 import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
@@ -9,6 +12,7 @@ import { ContentHeader } from '@/components/header'
 import {
   ArrowLeftCircleIcon,
   ArrowPathIcon,
+  ClipboardDocumentIcon,
   ClockIcon,
   Cog6ToothIcon,
   ExclamationTriangleIcon,
@@ -25,11 +29,17 @@ import { FC } from 'react'
 import { getApproverUserOptions, getGroupOptions } from '../server'
 import { AgentApprover } from './agent-approver'
 import { AgentProfile } from './agent-profile'
-import { AgentRunHistory } from './agent-run-history'
-import { AgentRunner } from './agent-runner'
 import { AgentToken } from './agent-token'
 import { DangerZone } from './danger-zone'
-import { getAgent, getAgentApprovers, getAgentRunner, getAgentRuns, getAgentToken } from './server'
+import {
+  getAgent,
+  getAgentApprovers,
+  getAgentRunner,
+  getAgentRuns,
+  getAgentToken,
+  saveAgentRunner,
+  saveAgentRunnerRule,
+} from './server'
 
 /** デンジャーゾーンは誤操作を避けるため初期状態で閉じておく */
 const defaultExpandedKeys = new Set(['agent_profile'])
@@ -124,10 +134,35 @@ export const AdminAgentDetailClient: FC<{ agentId: string; baseUrl: string }> = 
         </AccordionSection>
 
         <AccordionSection id='agent_runner' icon={<RocketLaunchIcon />} title={t('agent_runner')}>
-          <AgentRunner agentId={agentId} current={runner} isLoading={isRunnerLoading} refresh={refreshRunner} />
+          <AgentRunner
+            agentId={agentId}
+            current={runner}
+            isLoading={isRunnerLoading}
+            refresh={refreshRunner}
+            save={saveAgentRunner}
+          />
         </AccordionSection>
 
-        <AccordionSection id='agent_run_history' icon={<ClockIcon />} title={t('agent_run_history')}>
+        <AccordionSection
+          id='agent_custom_instruction'
+          icon={<ClipboardDocumentIcon />}
+          title={t('agent_custom_instruction')}
+        >
+          <AgentCustomInstruction
+            agentId={agentId}
+            current={runner}
+            isLoading={isRunnerLoading}
+            refresh={refreshRunner}
+            saveRule={saveAgentRunnerRule}
+          />
+        </AccordionSection>
+
+        <AccordionSection // 履歴表は行数が多く、Popover を含むので開くまで作らない
+          isLazyBody
+          id='agent_run_history'
+          icon={<ClockIcon />}
+          title={t('agent_run_history')}
+        >
           <AgentRunHistory pagingList={runHistoryList} />
         </AccordionSection>
 

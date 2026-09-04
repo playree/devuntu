@@ -34,6 +34,7 @@ import Link from 'next/link'
 import { FC, useEffect, useRef, useState } from 'react'
 import { TicketDetailClient } from '../tickets/[id]/client'
 import { updateTicketAgentMode } from '../tickets/[id]/server'
+import { AgentSectionKeys, AgentSections } from './agent-sections'
 import { getAgentTickets, getApprovableAgents } from './server'
 
 /**
@@ -59,6 +60,11 @@ export const AgentsClient: FC = () => {
 
   // 処理状態の絞り込み。完了済みは承認する余地が無いので初期表示から外す
   const [agentStates, setAgentStates] = useState<AgentTaskState[]>([...OPEN_AGENT_TASK_STATES])
+
+  // 設定セクションの開閉。初期値は空(= すべて閉じた状態)
+  const [expandedKeys, setExpandedKeys] = useState<AgentSectionKeys>(new Set())
+  // 設定セクションはリマウントで取得し直す。更新ボタンからも作り直せるよう世代を持つ
+  const [sectionGen, setSectionGen] = useState(0)
 
   const agentId = pickedAgentId ?? agents?.[0]?.id ?? null
   // loadPage は毎レンダリング作り直されるため、対象のエージェントと絞り込み条件は ref から読む
@@ -101,6 +107,7 @@ export const AgentsClient: FC = () => {
   const reloadAll = () => {
     reloadAgents()
     list.reload()
+    setSectionGen((gen) => gen + 1)
   }
 
   const changeAgentMode = async (ticketId: string, agentMode: AgentTaskMode | null) => {
@@ -241,6 +248,15 @@ export const AgentsClient: FC = () => {
               </Table.Row>
             )}
           </MultiTable>
+
+          {agentId && (
+            <AgentSections // 対象エージェントが変われば取得もやり直す
+              key={`${agentId}:${sectionGen}`}
+              agentId={agentId}
+              expandedKeys={expandedKeys}
+              onExpandedChange={setExpandedKeys}
+            />
+          )}
         </>
       )}
 

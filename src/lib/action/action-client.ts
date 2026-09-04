@@ -9,6 +9,17 @@ type MarkDataResolved<T> = T & {
   data: NonNullable<T extends { data?: infer U } ? U : never>
 }
 
+/**
+ * Server Action の戻りのうち、`parseAction` / `useActionData` が解釈できる最小形。
+ * next-safe-action の `SafeActionFn` は型引数が多く補助型も export されていないため、
+ * アクションを props で受け渡す場合はこの構造的な型で受ける。
+ */
+export type ActionResult<T> = {
+  data?: T
+  serverError?: { name?: string; errorType: string }
+  validationErrors?: unknown
+}
+
 export function checkError<T extends { data?: unknown; serverError?: unknown; validationErrors?: unknown }>(
   res: T,
 ): asserts res is MarkDataResolved<T> {
@@ -61,13 +72,7 @@ export const parseAction = async <
  * refresh は isLoading を立てない再取得。表示を差し替えるだけで DOM を作り直したくない
  * (= ローディング表示に切り替えたくない)保存後の再取得に使う。
  */
-export const useActionData = <T>(
-  action: () => Promise<{
-    data?: T
-    serverError?: { name?: string; errorType: string }
-    validationErrors?: unknown
-  }>,
-) => {
+export const useActionData = <T>(action: () => Promise<ActionResult<T>>) => {
   const [data, setData] = useState<T>()
   const [isLoading, setIsLoading] = useState(true)
   // reload 連打時に古いレスポンスが後着で state を上書きしないよう世代トークンで管理

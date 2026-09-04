@@ -227,10 +227,14 @@ export const scSaveAgentRunner = z.object({
     .min(0, el('@invalid_daily_limit'))
     .max(MAX_AGENT_DAILY_LIMIT, el('@invalid_daily_limit')),
   dailyResetMin: zDayMin,
-  // optional にしないと isFieldRequired が required 扱いにしてしまう(MarkdownEditor は isRequired の上書きを持たない)
-  rule: z.string().max(8000).nullable().optional(),
 })
 export type SaveAgentRunner = z.infer<typeof scSaveAgentRunner>
+
+export const scSaveAgentRunnerRule = z.object({
+  userId: z.uuidv7(),
+  rule: z.string().max(8000).nullable().optional(),
+})
+export type SaveAgentRunnerRule = z.infer<typeof scSaveAgentRunnerRule>
 
 export const scUpdatePasskey = z.object({
   id: z.uuidv7(),
