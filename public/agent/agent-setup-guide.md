@@ -108,7 +108,7 @@ Claude Code は読み込み時にこの記法を環境変数へ展開するた�
 ```sh
 cd ~/devuntu-agent-work
 mkdir -p .codex
-cat >> .codex/config.toml <<'TOML'
+grep -qF '[mcp_servers.devuntu-agent]' .codex/config.toml 2>/dev/null || cat >> .codex/config.toml <<'TOML'
 
 [mcp_servers.devuntu-agent]
 url = "{{mcpUrl}}"
@@ -116,11 +116,16 @@ bearer_token_env_var = "DEVUNTU_AGENT_TOKEN"
 TOML
 ```
 
+TOML は同じテーブルを 2 回定義できず、重複すると codex が設定ファイルを読めなくなる。
+そのため既にブロックがある場合は追記しないようにしてある。URL やトークンの環境変数名を変えたいときは、
+このコマンドではなく既存のブロックを直接書き換える。
+
 Codex はプロジェクト側の設定を**信頼済みのディレクトリでしか読まない**ので、ユーザー設定
 (`~/.codex/config.toml`)にも作業ディレクトリを信頼する 1 行を足す。
 
 ```sh
-cat >> ~/.codex/config.toml <<TOML
+mkdir -p ~/.codex
+grep -qF "[projects.\"$HOME/devuntu-agent-work\"]" ~/.codex/config.toml 2>/dev/null || cat >> ~/.codex/config.toml <<TOML
 
 [projects."$HOME/devuntu-agent-work"]
 trust_level = "trusted"
@@ -182,12 +187,18 @@ Codex CLI の場合は `"kind": "codex"` にする。`bin` / `args` / `model` �
   - claude: `--permission-mode auto`(ファイル編集に限らず Bash 含むツール利用全般を自動承認)
   - codex: `--sandbox danger-full-access --skip-git-repo-check`。作業ディレクトリは clone の基点で
     git リポジトリではないため、`--skip-git-repo-check` を外すと codex は起動を拒否する
-  - **注意**: エージェントが読むチケット本文・コメントの内容がそのままエージェントへの指示になり得るため、
-    自動承認の範囲を広げるほど、悪意ある(または誤った)チケット内容から想定外のコマンドが
-    無条件に実行されるリスクも上がる。エージェントに割り当てるチケットを作成・コメントできる範囲を
-    信頼できる人に限定するなど、リスクは運用側で判断すること。より制限したい場合は、
+  - **注意**: この既定値は**エージェント専用ホストで動かすことを前提**にしている。エージェントが読む
+    チケット本文・コメントの内容がそのままエージェントへの指示になり得るため、既定のままだと
+    悪意ある(または誤った)チケット内容から、作業ディレクトリの外のファイル操作や外部通信まで
+    無条件に実行され得る。人が普段使うマシンや、エージェントに触らせたくない鍵・認証情報がある
+    ホストでは動かさないこと。エージェントに割り当てるチケットを作成・コメントできる範囲を
+    信頼できる人に限定するなど、リスクは運用側で判断する。より制限したい場合は、
     claude なら `--permission-mode acceptEdits`(編集のみ自動承認)や `--disallowedTools`、
-    codex なら `--sandbox workspace-write` に変える
+    codex なら `--sandbox workspace-write -c sandbox_workspace_write.network_access=true` に変える
+    (`--skip-git-repo-check` は残す)。`workspace-write` は既定でネットワークを遮断するため
+    `network_access=true` を併せて指定しないと `git clone` や依存関係のインストールが失敗する。
+    `~/.npm` や `~/.cache` などワークスペース外への書き込みも弾かれるので、エージェントに
+    ビルドまでさせる場合はそこで詰まらないかを確認してから使う
   - codex では、ここに `-c <キー>=<値>` を足すと設定を上書きできる(繰り返し可)。よく使うのは
     推論の強さで、`-c model_reasoning_effort="high"`(`minimal` / `low` / `medium` / `high` / `xhigh`)。
     モデルと推論設定をまとめて切り替えたい場合は `--profile <名前>`

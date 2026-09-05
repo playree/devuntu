@@ -126,6 +126,24 @@ cron からは権限確認に誰も答えられないため、`cli.args` の既�
 `codex` の `--skip-git-repo-check` は外せない。codex は git リポジトリの中でしか動かないが、
 `workdir` は clone の基点であってリポジトリではないため。
 
+**この既定値はエージェント専用ホストで動かすことを前提にしている。** チケット本文とコメントの内容が
+そのままエージェントへの指示になるため、既定のままだと悪意ある(または誤った)チケットから
+`workdir` の外のファイル操作や外部通信まで実行され得る。claude の `--permission-mode auto` も
+codex の `--sandbox danger-full-access` も同じ前提で、CLI 間に差は無い。人が普段使うマシンや、
+エージェントに触らせたくない鍵・認証情報があるホストでは動かさないこと。
+
+制限したい場合は `cli.args` を上書きする。codex なら次のようにする。
+
+```json
+"args": ["--sandbox", "workspace-write", "-c", "sandbox_workspace_write.network_access=true", "--skip-git-repo-check"]
+```
+
+`workspace-write` は既定でネットワークを遮断するため、`network_access=true` を併せて指定しないと
+`git clone` や依存関係のインストールが失敗する。また `~/.npm` や `~/.cache`、`~/.gitconfig` など
+ワークスペース外への書き込みも弾かれるので、エージェントにビルドまでさせる場合は
+そこで詰まらないかを確認してから使う。claude なら `--permission-mode acceptEdits`(編集のみ自動承認)や
+`--disallowedTools` で絞る。
+
 `cli.model` は claude では `--model` のエイリアス(`sonnet` など)、codex ではモデル名(`gpt-5.5` など)を
 そのまま渡す。codex で省略した場合は `~/.codex/config.toml` の `model` に従う。推論の強さのように
 モデル以外の設定を変えたい場合は、`cli.args` に `-c model_reasoning_effort="high"` や

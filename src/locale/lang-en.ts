@@ -333,7 +333,7 @@ Please copy and use the connection information above.
     'The instructions (Markdown) the agent reads before starting work and follows throughout. Leaving it blank means no instructions.',
   msg_agent_no_approver: 'No approver is set. Nobody can change the agent mode of tickets assigned to this agent.',
   msg_agent_token_env:
-    'The registration command does not contain the token. Set the token in the runner config.json; it is passed to the CLI as the DEVUNTU_AGENT_TOKEN environment variable. See the setup guide for keeping the configuration per working directory.',
+    "The registration command does not contain the token. Set the token in the runner config.json; it is passed to the CLI as the DEVUNTU_AGENT_TOKEN environment variable. To start the CLI by hand, run export DEVUNTU_AGENT_TOKEN='<issued token>' first. See the setup guide for keeping the configuration per working directory.",
   msg_agent_rule_none: 'No instructions are set.',
   msg_agent_runner_desc:
     'Settings for the runner that polls for assigned tickets. The AI agent starts only while these conditions are met. Leaving either start or end unset means all day; a start later than the end crosses midnight (nights only). The daily run limit counts every start, and 0 means unlimited; the count returns to 0 at the reset time, based on the timezone setting.',

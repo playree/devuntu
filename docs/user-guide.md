@@ -179,7 +179,9 @@ Claude Code や Codex CLI などの MCP クライアントから `<Devuntu の U
 許可の取り消しは `/account` の「許可済みアプリ」から。
 
 登録手順は [mcp-server.md](mcp-server.md#claude-code-への登録) を参照。
-ブラウザを開けない環境や Codex CLI から使う場合は、`/account` の「MCPトークン」で発行したトークンを使う。
+ブラウザを開けない環境や Codex CLI から使う場合は、`/account` の「MCPトークン」で発行したトークンを使う
+(Claude Code / Codex CLI それぞれの登録コマンドは
+[ブラウザを使わずユーザーとして登録する場合](mcp-server.md#ブラウザを使わずユーザーとして登録する場合))。
 管理者が MCP を有効にしていない環境では利用できない。
 
 ### エージェントにチケットを任せる
