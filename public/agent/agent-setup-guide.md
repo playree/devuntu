@@ -188,8 +188,15 @@ Codex CLI の場合は `"kind": "codex"` にする。`bin` / `args` / `model` �
     信頼できる人に限定するなど、リスクは運用側で判断すること。より制限したい場合は、
     claude なら `--permission-mode acceptEdits`(編集のみ自動承認)や `--disallowedTools`、
     codex なら `--sandbox workspace-write` に変える
-- `cli.model`: 使用するモデル。claude の既定は `sonnet` で、`opus` / `fable` など `--model` が
-  受け付けるエイリアスを指定できる。codex は既定を持たず、指定しなければ CLI 側の既定モデルを使う
+  - codex では、ここに `-c <キー>=<値>` を足すと設定を上書きできる(繰り返し可)。よく使うのは
+    推論の強さで、`-c model_reasoning_effort="high"`(`minimal` / `low` / `medium` / `high` / `xhigh`)。
+    モデルと推論設定をまとめて切り替えたい場合は `--profile <名前>`
+    (`~/.codex/<名前>.config.toml` が基本設定に重なる)
+- `cli.model`: 使用するモデル。
+  - claude: 既定は `sonnet`。`opus` / `fable` など `--model` が受け付けるエイリアスを指定できる
+  - codex: 既定は持たない。指定する場合は `"model": "gpt-5.5"` のようにモデル名をそのまま書く
+    (`codex exec --model <値>` として渡る)。省略した場合は `~/.codex/config.toml` の `model`、
+    それも無ければ codex の既定モデルが使われる
 - `cli.path`: CLI を起動するときに PATH の先頭へ足すディレクトリ。空のままにしておき、
   次の `save-path` で入れる(手で書くのは特殊な配置のときだけ)。この PATH は CLI 自身にも
   渡るので、エージェントが叩く `git` / `node` / `pnpm` / `gh` の解決にも効く

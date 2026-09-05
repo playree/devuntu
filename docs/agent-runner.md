@@ -126,6 +126,11 @@ cron からは権限確認に誰も答えられないため、`cli.args` の既�
 `codex` の `--skip-git-repo-check` は外せない。codex は git リポジトリの中でしか動かないが、
 `workdir` は clone の基点であってリポジトリではないため。
 
+`cli.model` は claude では `--model` のエイリアス(`sonnet` など)、codex ではモデル名(`gpt-5.5` など)を
+そのまま渡す。codex で省略した場合は `~/.codex/config.toml` の `model` に従う。推論の強さのように
+モデル以外の設定を変えたい場合は、`cli.args` に `-c model_reasoning_effort="high"` や
+`--profile <名前>` を足す(どちらも codex 側の設定を上書きするフラグ)。
+
 ### トークンの渡り方
 
 ランナーは CLI を起動するとき、`config.json` の `token` を環境変数 `DEVUNTU_AGENT_TOKEN` として渡す
