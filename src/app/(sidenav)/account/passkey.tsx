@@ -3,7 +3,7 @@
 import { ActionCell } from '@/components/action-cell'
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
-import { useConfirmModal, useModalState } from '@/components/general/modal'
+import { useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
@@ -11,24 +11,20 @@ import { PencilSquareIcon, PlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 
 import { authClient } from '@/lib/auth/auth-client'
-import { authConfig } from '@/lib/auth/auth-config'
-import { makePath } from '@/lib/client-utils'
+import { useReAuth } from '@/lib/auth/use-re-auth'
 import { dayformat } from '@/lib/day'
 import { UpdatePasskey } from '@/lib/schema/schema'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { getAuthenticatorName } from '@better-auth/passkey'
 import { Table } from '@heroui/react'
-import { useRouter } from 'next/navigation'
 import { FC } from 'react'
 import { UpdatePasskeyModal } from './modals'
 
 export const MyPasskey: FC = () => {
   const { t } = useLocale()
   const tz = useUserTimezone()
-  const router = useRouter()
-  const { confirmModal } = useConfirmModal()
-  const { data: session } = authClient.useSession()
+  const reAuth = useReAuth()
   const updateModalState = useModalState<UpdatePasskey>()
 
   const list = usePagingList({
@@ -65,23 +61,7 @@ export const MyPasskey: FC = () => {
               list.reload()
             }
             if (error?.status === 403) {
-              try {
-                const ok = await confirmModal().confirm({
-                  title: t('re_auth'),
-                  text: t('msg_re_auth'),
-                  autoClose: false,
-                })
-                if (ok) {
-                  router.push(
-                    makePath(authConfig.path.signIn, {
-                      cb: window.location.href,
-                      re: session?.user.email ?? '',
-                    }).toString(),
-                  )
-                }
-              } finally {
-                confirmModal().close()
-              }
+              await reAuth()
             }
           }}
         >

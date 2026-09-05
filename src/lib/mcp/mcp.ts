@@ -14,6 +14,9 @@ export const MAX_MCP_TOKENS_PER_USER = 10
 /** MCP トークンの名前の重複。Server Action は非同期関数しか export できないため定数はここに置く */
 export const DUPLICATED_MCP_TOKEN_NAME = 'DUPLICATED_MCP_TOKEN_NAME'
 
+/** MCP トークンの本数が上限に達した。汎用のバリデーションエラーと区別して発行画面で理由を出す */
+export const MCP_TOKEN_LIMIT_REACHED = 'MCP_TOKEN_LIMIT_REACHED'
+
 /**
  * `claude mcp add` の登録先スコープ。
  * `local` は CLI の既定なのでフラグを出さない(エージェント向けの表示コマンドを変えないため)。

@@ -12,8 +12,15 @@ import { notify } from '@/components/notify'
 import { TokenExpiresSelect } from '@/components/token-expires-select'
 import { parseAction } from '@/lib/action/action-client'
 import { authClient } from '@/lib/auth/auth-client'
-import { ClientError } from '@/lib/error'
-import { DUPLICATED_MCP_TOKEN_NAME, mcpAddCommand } from '@/lib/mcp/mcp'
+import { SESSION_NOT_FRESH } from '@/lib/auth/auth-config'
+import { useReAuth } from '@/lib/auth/use-re-auth'
+import { ClientError, TOO_MANY_REQUESTS } from '@/lib/error'
+import {
+  DUPLICATED_MCP_TOKEN_NAME,
+  MAX_MCP_TOKENS_PER_USER,
+  MCP_TOKEN_LIMIT_REACHED,
+  mcpAddCommand,
+} from '@/lib/mcp/mcp'
 import { IssueMcpToken, scIssueMcpToken, scUpdatePasskey, UpdatePasskey } from '@/lib/schema/schema'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -93,6 +100,7 @@ type Step = {
  */
 export const IssueMcpTokenModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, reload, baseUrl }) => {
   const { t, fet } = useLocale()
+  const reAuth = useReAuth()
   const [step, setStep] = useState<Step>({ id: 'INPUT', direction: 0 })
   const [issued, setIssued] = useState<string>()
 
@@ -125,11 +133,28 @@ export const IssueMcpTokenModal: FC<ModalBaseProps & { baseUrl: string }> = ({ s
           setIssued(res.token)
           setStep({ id: 'OUTPUT', direction: 1 })
         } catch (e) {
-          if (e instanceof ClientError && e.errorType === DUPLICATED_MCP_TOKEN_NAME) {
-            setError('name', { message: t('msg_duplicated_token_name') })
-            return
+          if (!(e instanceof ClientError)) {
+            throw e
           }
-          throw e
+          switch (e.errorType) {
+            case DUPLICATED_MCP_TOKEN_NAME:
+              setError('name', { message: t('msg_duplicated_token_name') })
+              return
+            case MCP_TOKEN_LIMIT_REACHED:
+              // 別のタブで上限に達した場合。閉じて一覧を読み直せば発行ボタンの無効化も追いつく
+              notify.warn(t('msg_mcp_token_limit', { max: MAX_MCP_TOKENS_PER_USER }))
+              close()
+              return
+            case TOO_MANY_REQUESTS:
+              // 時間をおけば同じ入力で再試行できるのでモーダルは閉じない
+              notify.warn(t('msg_too_many_requests'))
+              return
+            case SESSION_NOT_FRESH:
+              await reAuth()
+              return
+            default:
+              throw e
+          }
         }
       })}
       title={{ text: t('issue_token'), icon: <KeyIcon /> }}

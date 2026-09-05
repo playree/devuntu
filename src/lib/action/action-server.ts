@@ -95,7 +95,7 @@ const authMiddleware = createMiddleware<{
     throw errPermissionDenied()
   }
 
-  return next({ ctx: { user: session.user } })
+  return next({ ctx: { user: session.user, session: session.session } })
 })
 
 /**

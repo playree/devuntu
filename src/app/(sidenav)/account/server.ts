@@ -2,12 +2,13 @@
 
 import { safeAuthAction } from '@/lib/action/action-server'
 import { auth } from '@/lib/auth/auth'
+import { assertFreshSession } from '@/lib/auth/session-fresh'
 import { isValidTimezone, nowDate } from '@/lib/day'
 import { errClient, errNotFound, errValidation } from '@/lib/error'
 import { canUseGoogleAccount, googleAccountQuery } from '@/lib/google/google-account'
 import { GOOGLE_ACCOUNT_PROVIDER_ID } from '@/lib/google/google-calendar'
 import { logger } from '@/lib/logger'
-import { DUPLICATED_MCP_TOKEN_NAME, MAX_MCP_TOKENS_PER_USER } from '@/lib/mcp/mcp'
+import { DUPLICATED_MCP_TOKEN_NAME, MAX_MCP_TOKENS_PER_USER, MCP_TOKEN_LIMIT_REACHED } from '@/lib/mcp/mcp'
 import { generateMcpToken, hashMcpToken } from '@/lib/mcp/mcp-token'
 import { getUserNotifySettings, setUserNotifySetting } from '@/lib/notify/notify-setting'
 import { dedupeScopes } from '@/lib/oauth/oauth-consent'
@@ -171,17 +172,22 @@ export type GetMyMcpTokensReturnType = Awaited<ReturnType<typeof getMyMcpTokens>
 /**
  * トークン発行。平文を返せるのはこの応答だけで、DB にはハッシュしか残らない。
  *
+ * 発行するのはセッションより長生きする資格情報なので、パスキー登録と同じくセッションの鮮度を要求する。
+ * セッション Cookie だけを奪われた場合に、セッション失効後も使えるトークンを残させないため。
+ *
  * 本数の上限は UI のボタン無効化と合わせた二重の歯止め。件数の確認から作成までの間に
- * 別のタブから発行されると上限を1本超えうるが、実害が無いので楽観で許容する。
+ * 別のタブから発行されると上限を超えうる(レート制限の範囲で最大4本)が、実害が無いので楽観で許容する。
  */
 export const issueMcpToken = safeAuthAction
   .metadata({ actionName: 'issueMcpToken', role: 'user' })
   .inputSchema(scIssueMcpToken)
-  .action(async ({ parsedInput: { name, expires }, ctx: { user } }) => {
+  .action(async ({ parsedInput: { name, expires }, ctx: { user, session } }) => {
+    // 再認証してやり直す正常なフローで発行回数の枠を使わせないよう、レート制限より前に判定する
+    assertFreshSession(session)
     assertRateLimit(`mcp-token-issue:${user.id}`, MCP_TOKEN_ISSUE_RATE_LIMIT)
 
     if ((await prisma.mcpToken.count({ where: { userId: user.id } })) >= MAX_MCP_TOKENS_PER_USER) {
-      throw errValidation('mcp token limit reached')
+      throw errClient(MCP_TOKEN_LIMIT_REACHED)
     }
 
     const { token, hint } = generateMcpToken()
