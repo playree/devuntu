@@ -18,9 +18,7 @@ import { nowDate } from '../day'
 import { logger } from '../logger'
 import type { ResourceAuthResult } from '../oauth/oauth-resource'
 import { prisma } from '../prisma'
-
-/** エージェント用トークンや OAuth のアクセストークン(JWT)と取り違えないための接頭辞 */
-export const MCP_TOKEN_PREFIX = 'devuntu_pat_'
+import { MCP_TOKEN_PREFIX } from './mcp'
 
 export const isMcpToken = (token: string): boolean => token.startsWith(MCP_TOKEN_PREFIX)
 

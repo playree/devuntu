@@ -12,7 +12,7 @@ import { PlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action/action-client'
 import { dayformat, nowDate } from '@/lib/day'
-import { MAX_MCP_TOKENS_PER_USER } from '@/lib/token-expires'
+import { MAX_MCP_TOKENS_PER_USER, MCP_TOKEN_PREFIX } from '@/lib/mcp/mcp'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { Chip, Table } from '@heroui/react'
@@ -75,7 +75,7 @@ export const MyMcpTokens: FC<{ baseUrl: string }> = ({ baseUrl }) => {
         pagingList={list}
         columns={[
           { id: 'name', name: t('name'), isRowHeader: true, allowsSorting: true, minWidth: 160, defaultWidth: '1fr' },
-          { id: 'hint', name: t('mcp_token'), allowsSorting: false, minWidth: 110 },
+          { id: 'hint', name: t('mcp_token'), allowsSorting: false, minWidth: 180 },
           { id: 'expiresAt', name: t('token_expiration'), allowsSorting: true, minWidth: 150 },
           { id: 'lastUsedAt', name: t('last_used'), allowsSorting: true, minWidth: 130 },
           { id: 'createdAt', name: t('issued_at'), allowsSorting: true, minWidth: 130 },
@@ -85,7 +85,9 @@ export const MyMcpTokens: FC<{ baseUrl: string }> = ({ baseUrl }) => {
         {(item) => (
           <Table.Row key={item.id} id={item.id}>
             <Table.Cell>{item.name}</Table.Cell>
-            <Table.Cell className='font-mono text-xs'>…{item.hint}</Table.Cell>
+            <Table.Cell className='font-mono text-xs'>
+              {MCP_TOKEN_PREFIX}…{item.hint}
+            </Table.Cell>
             <Table.Cell>
               <ExpiryChip expiresAt={item.expiresAt} />
             </Table.Cell>

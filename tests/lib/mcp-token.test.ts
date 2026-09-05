@@ -9,8 +9,10 @@
  * エージェントユーザーの拒否は特に固定しておく。
  */
 
-import { AGENT_TOKEN_PREFIX, hashAgentToken } from '@/lib/agent/agent-token'
-import { generateMcpToken, hashMcpToken, isMcpToken, MCP_TOKEN_PREFIX, verifyMcpToken } from '@/lib/mcp/mcp-token'
+import { AGENT_TOKEN_PREFIX } from '@/lib/agent/agent'
+import { hashAgentToken } from '@/lib/agent/agent-token'
+import { MCP_TOKEN_PREFIX } from '@/lib/mcp/mcp'
+import { generateMcpToken, hashMcpToken, isMcpToken, verifyMcpToken } from '@/lib/mcp/mcp-token'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 

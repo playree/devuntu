@@ -12,9 +12,3 @@ export type TokenExpires = (typeof TOKEN_EXPIRES)[number]
 /** 選択肢を実際の有効期限へ変換する。無期限は null */
 export const tokenExpiresAt = (value: TokenExpires, from: Date): Date | null =>
   value === 'none' ? null : new Date(from.getTime() + Number(value) * 24 * 60 * 60 * 1000)
-
-/** 1ユーザーが持てる MCP トークンの本数。UI とサーバーの双方で歯止めに使う */
-export const MAX_MCP_TOKENS_PER_USER = 10
-
-/** MCP トークンの名前の重複。Server Action は非同期関数しか export できないため定数はここに置く */
-export const DUPLICATED_MCP_TOKEN_NAME = 'DUPLICATED_MCP_TOKEN_NAME'

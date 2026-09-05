@@ -18,9 +18,7 @@ import { nowDate } from '../day'
 import { logger } from '../logger'
 import type { ResourceAuthResult } from '../oauth/oauth-resource'
 import { prisma } from '../prisma'
-
-/** OAuth のアクセストークン(JWT)やユーザー用トークンと取り違えないための接頭辞 */
-export const AGENT_TOKEN_PREFIX = 'devuntu_agent_'
+import { AGENT_TOKEN_PREFIX } from './agent'
 
 export const isAgentToken = (token: string): boolean => token.startsWith(AGENT_TOKEN_PREFIX)
 

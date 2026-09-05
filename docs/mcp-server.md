@@ -58,12 +58,12 @@ claude mcp login --no-browser devuntu
 CI やサーバーなど、ブラウザを開けない環境から自分の権限で使いたい場合はこちら。
 
 ```sh
-claude mcp add --transport http devuntu-token <BETTER_AUTH_URL>/api/mcp \
+claude mcp add --scope user --transport http devuntu <BETTER_AUTH_URL>/api/mcp \
   --header "Authorization: Bearer <発行したトークン>"
 ```
 
-`devuntu-token` は登録先のローカル別名。認可コードフローで登録済みの `devuntu` を
-上書きしないよう、既定では別名にしてある。
+そのマシンで恒常的に使うトークンなので、既定はユーザースコープ(`--scope user`)にしてある。
+登録名は認可コードフローの場合と同じ `devuntu`。同じサーバーへの接続方法違いなので、どちらか一方で登録する。
 
 ### エージェントとして登録する場合
 

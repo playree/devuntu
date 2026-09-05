@@ -13,9 +13,8 @@ import { TokenExpiresSelect } from '@/components/token-expires-select'
 import { parseAction } from '@/lib/action/action-client'
 import { authClient } from '@/lib/auth/auth-client'
 import { ClientError } from '@/lib/error'
-import { mcpAddCommand } from '@/lib/mcp/mcp-add-command'
+import { DUPLICATED_MCP_TOKEN_NAME, mcpAddCommand } from '@/lib/mcp/mcp'
 import { IssueMcpToken, scIssueMcpToken, scUpdatePasskey, UpdatePasskey } from '@/lib/schema/schema'
-import { DUPLICATED_MCP_TOKEN_NAME } from '@/lib/token-expires'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AnimatePresence } from 'framer-motion'
@@ -189,7 +188,7 @@ export const IssueMcpTokenModal: FC<ModalBaseProps & { baseUrl: string }> = ({ s
                 </div>
                 <div className='col-span-12'>
                   <CopyableField
-                    text={mcpAddCommand(baseUrl, issued, 'devuntu-token')}
+                    text={mcpAddCommand(baseUrl, issued, 'devuntu', 'user')}
                     label={t('mcp_add_command')}
                     isMask
                     copyLabel={t('copy')}

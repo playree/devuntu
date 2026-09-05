@@ -10,8 +10,9 @@ import { StepMotion } from '@/components/general/step-motion'
 import { ArrowPathIcon, CheckIcon } from '@/components/icon'
 import { TokenExpiresSelect } from '@/components/token-expires-select'
 import { parseAction } from '@/lib/action/action-client'
+import { AGENT_TOKEN_PREFIX } from '@/lib/agent/agent'
 import { dayformat } from '@/lib/day'
-import { mcpAddCommand } from '@/lib/mcp/mcp-add-command'
+import { mcpAddCommand } from '@/lib/mcp/mcp'
 import { IssueAgentToken, scIssueAgentToken } from '@/lib/schema/schema'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
@@ -104,7 +105,9 @@ export const AgentToken: FC<{
                       <PanelSkeleton className='min-h-24' />
                     ) : current ? (
                       <Panel className='flex flex-col gap-1 py-3 text-xs'>
-                        <TokenField label={t('agent_token')}>…{current.hint}</TokenField>
+                        <TokenField label={t('agent_token')}>
+                          {AGENT_TOKEN_PREFIX}…{current.hint}
+                        </TokenField>
                         <TokenField label={t('issued_at')}>{dayformat(current.createdAt, 'tz-simple', tz)}</TokenField>
                         <TokenField label={t('token_expiration')}>
                           {current.expiresAt ? dayformat(current.expiresAt, 'tz-simple', tz) : t('no_expiration')}
@@ -150,7 +153,7 @@ export const AgentToken: FC<{
                 </div>
                 <div className='col-span-12'>
                   <CopyableField
-                    text={mcpAddCommand(baseUrl, issued, 'devuntu-agent')}
+                    text={mcpAddCommand(baseUrl, issued, 'devuntu-agent', 'local')}
                     label={t('mcp_add_command')}
                     isMask
                     copyLabel={t('copy')}
