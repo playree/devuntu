@@ -13,7 +13,6 @@ import {
   agentHandle,
   agentRunnerStatus,
   agentStateWhere,
-  agentTokenExpiresAt,
   OPEN_AGENT_TASK_STATES,
 } from '@/lib/agent/agent'
 import { zEmail } from '@/lib/schema/schema'
@@ -56,19 +55,6 @@ describe('agentEmail / agentHandle', () => {
 
   it('生成したアドレスはメールアドレスの検証を通る', () => {
     expect(zEmail.safeParse(agentEmail('review-bot')).success).toBe(true)
-  })
-})
-
-describe('agentTokenExpiresAt', () => {
-  const from = new Date('2026-01-01T00:00:00.000Z')
-
-  it('none は無期限(null)', () => {
-    expect(agentTokenExpiresAt('none', from)).toBeNull()
-  })
-
-  it('日数ぶん先の日時を返す', () => {
-    expect(agentTokenExpiresAt('30', from)?.toISOString()).toBe('2026-01-31T00:00:00.000Z')
-    expect(agentTokenExpiresAt('365', from)?.toISOString()).toBe('2027-01-01T00:00:00.000Z')
   })
 })
 

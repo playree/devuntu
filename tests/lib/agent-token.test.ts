@@ -6,13 +6,8 @@
  * agentToken 以外のモデルは、`@/lib/auth` の初期化が引く分だけ setup と同じスタブで受ける。
  */
 
-import {
-  AGENT_TOKEN_PREFIX,
-  generateAgentToken,
-  hashAgentToken,
-  isAgentToken,
-  verifyAgentToken,
-} from '@/lib/agent/agent-token'
+import { AGENT_TOKEN_PREFIX } from '@/lib/agent/agent'
+import { generateAgentToken, hashAgentToken, isAgentToken, verifyAgentToken } from '@/lib/agent/agent-token'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 

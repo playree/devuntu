@@ -7,35 +7,26 @@
  * 1エージェントにつき1本だけ持ち、再発行は既存の行を置き換えるローテートになる。平文は発行時の
  * 応答にしか現れず、DB にはハッシュだけを保存する。停止は有効期限(`expiresAt`)、再発行による
  * 置き換え、またはエージェントユーザー自体の BAN / 削除で行う。
+ *
+ * 生成とハッシュの形式は通常ユーザー向けの MCP トークン(`../mcp/mcp-token.ts`)と共通で、
+ * 接頭辞だけが違う。共通部分は `../bearer-token.ts` にある。
  */
 
-import { nanoid } from 'nanoid'
-import { createHash } from 'node:crypto'
 import { MCP_SCOPE } from '../auth/auth'
-import { nowDate, withinMinutes } from '../day'
+import { generateBearerToken, hashBearerToken, shouldRefreshLastUsed } from '../bearer-token'
+import { nowDate } from '../day'
 import { logger } from '../logger'
 import type { ResourceAuthResult } from '../oauth/oauth-resource'
 import { prisma } from '../prisma'
-
-/** OAuth のアクセストークン(JWT)と取り違えないための接頭辞 */
-export const AGENT_TOKEN_PREFIX = 'devuntu_agent_'
-
-/** 一覧に出す末尾の文字数。先頭は全トークン共通の接頭辞なので末尾側を見せる */
-const HINT_LENGTH = 6
-
-/** `lastUsedAt` を書き直す間隔。リクエストごとの UPDATE を避けるためのしきい値 */
-const LAST_USED_REFRESH_MINUTES = 5
+import { AGENT_TOKEN_PREFIX } from './agent'
 
 export const isAgentToken = (token: string): boolean => token.startsWith(AGENT_TOKEN_PREFIX)
 
 /** 戻り値の平文はこの1回しか取得できない */
-export const generateAgentToken = (): { token: string; hint: string } => {
-  const token = `${AGENT_TOKEN_PREFIX}${nanoid(48)}`
-  return { token, hint: token.slice(-HINT_LENGTH) }
-}
+export const generateAgentToken = (): { token: string; hint: string } => generateBearerToken(AGENT_TOKEN_PREFIX)
 
-/** 保存 / 照合に使うハッシュ。トークンは十分な長さの乱数なのでソルトもストレッチも要らない */
-export const hashAgentToken = (token: string): string => createHash('sha256').update(token).digest('hex')
+/** 保存 / 照合に使うハッシュ */
+export const hashAgentToken = (token: string): string => hashBearerToken(token)
 
 /**
  * エージェントトークンを検証し、対応するエージェントユーザーを返す。
@@ -69,7 +60,7 @@ export const verifyAgentToken = async (token: string): Promise<ResourceAuthResul
   }
 
   // 利用記録の失敗で認証まで落とさない
-  if (!row.lastUsedAt || !withinMinutes(row.lastUsedAt, LAST_USED_REFRESH_MINUTES)) {
+  if (shouldRefreshLastUsed(row.lastUsedAt)) {
     await prisma.agentToken
       .update({ where: { id: row.id }, data: { lastUsedAt: now } })
       .catch((error: unknown) => logger.warn({ error, agentTokenId: row.id }, 'agent token lastUsedAt update failed'))

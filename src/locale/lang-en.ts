@@ -175,6 +175,7 @@ export const en: LocaleItems = {
   list: 'List',
   member: 'Member',
   mcp_add_command: 'MCP Registration Command',
+  mcp_token: 'MCP Token',
   mentioned: 'Mentioned',
   name: 'Name',
   name_locked: 'Lock name',
@@ -331,7 +332,6 @@ Please copy and use the connection information above.
   msg_agent_rule_none: 'No instructions are set.',
   msg_agent_runner_desc:
     'Settings for the runner that polls for assigned tickets. The AI agent starts only while these conditions are met. Leaving either start or end unset means all day; a start later than the end crosses midnight (nights only). The daily run limit counts every start, and 0 means unlimited; the count returns to 0 at the reset time, based on the timezone setting.',
-  msg_agent_token_once: 'This is the only time the token is shown. Copy it before closing.',
   msg_archive_board: 'Archiving hides the board from the default board list. Tickets are kept.',
   msg_avatar_desc: 'Setting a custom image stops it from being overwritten by Devuntu on future sign-ins.',
   msg_board_key_change: 'Changing the key means ticket IDs already shared will no longer point to their tickets.',
@@ -345,6 +345,7 @@ Please copy and use the connection information above.
   msg_cannot_delete_last_admin: 'Cannot delete the last admin.',
   msg_confirm_archive_board: 'Archive ${target}.',
   msg_confirm_delete_board: 'Delete ${target}. All tickets and comments in this board will also be deleted.',
+  msg_confirm_delete_mcp_token: 'Deleting it immediately stops any connection using this token.',
   msg_confirm_deletion: 'Delete ${target}.',
   msg_confirm_disable_share: 'Disabling sharing will invalidate the current share URL. Are you sure?',
   msg_confirm_revoke_consent:
@@ -360,6 +361,7 @@ Please copy and use the connection information above.
   msg_delete_board: 'All tickets and comments in the board are deleted as well. This cannot be undone.',
   msg_deleted_target: 'Deleted ${target}.',
   msg_drop_image: 'Drop an image here, or click to select',
+  msg_duplicated_token_name: 'A token with this name already exists.',
   msg_duplicated_agent_handle: 'That handle is already in use.',
   msg_duplicated_board_key: 'That board key has already been used. Keys used in the past cannot be reused.',
   msg_duplicated_tag_name: 'A tag with the same name already exists.',
@@ -379,6 +381,9 @@ Please copy and use the connection information above.
   msg_invalid_email_or_password: 'Invalid email or password.',
   msg_link_google_for_calendar:
     'Calendar sharing requires a linked Google account. Please link it on the account page.',
+  msg_mcp_token_desc:
+    'A token for connecting MCP clients without a browser sign-in. It can read and write tickets with your permissions, so keep it secret.',
+  msg_mcp_token_limit: 'You can hold up to ${max} tokens. Delete unused ones first.',
   msg_mention_hint: 'Type @ followed by a name or email address to pick someone to mention.',
   msg_no_access: 'You do not have permission to view this content.',
   msg_no_approvable_agent: 'You are not set as an approver for any agent.',
@@ -402,6 +407,7 @@ Please copy and use the connection information above.
   msg_slack_enable_desc: 'When enabled, users can connect Slack and receive notifications there.',
   msg_slack_not_connected: 'Not connected to Slack',
   msg_ticket_list_limit: 'Up to ${max} results are shown.',
+  msg_token_once: 'This is the only time the token is shown. Copy it before closing.',
   msg_too_many_requests: 'Too many attempts. Please wait a while and try again.',
   msg_updated_target: 'Updated ${target}.',
   msg_user_not_exist: 'User does not exist.',

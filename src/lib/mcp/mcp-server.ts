@@ -25,10 +25,22 @@ import { z } from 'zod'
  * 既存の権限関数へそのまま渡して判定すること。
  *
  * 自動運用のツール(`mcp-agent.ts`)はエージェント用の長期トークンで接続した場合だけ登録する。
- * 人間の MCP クライアントには関係が無く、一覧に出しても誤用のもとにしかならないため。
+ * 人間の MCP クライアント(OAuth / ユーザー発行トークンのどちらも)には関係が無く、
+ * 一覧に出しても誤用のもとにしかならないため。
  */
+
+/**
+ * Claude Code へ登録されるサーバー名。人間の経路はどちらも `devuntu` を名乗る。
+ * 網羅を強制して、認証経路が増えたときにここの見直しをコンパイルエラーで気付けるようにする。
+ */
+const SERVER_NAME = {
+  oauth: 'devuntu',
+  pat: 'devuntu',
+  agent: 'devuntu-agent',
+} as const satisfies Record<ResourceAuth['kind'], string>
+
 export const createDevuntuMcpServer = (auth: ResourceAuth) => {
-  const server = new McpServer({ name: auth.kind === 'agent' ? 'devuntu-agent' : 'devuntu', version: '1.0.0' })
+  const server = new McpServer({ name: SERVER_NAME[auth.kind], version: '1.0.0' })
 
   server.registerTool('ping', { title: 'Ping', description: '接続確認用。認可済みユーザーの情報を返す' }, async () => ({
     content: [{ type: 'text' as const, text: `pong: ${auth.user.email}` }],

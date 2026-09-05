@@ -2,6 +2,8 @@
  * AIエージェント用ユーザーの共通定義(クライアント / サーバー共用)
  *
  * トークンの生成・検証は prisma と `node:crypto` に依存するため `agent-token.ts` に分けてある。
+ * 接頭辞は一覧表示からも読むのでここに置く。
+ * 有効期限の選択肢はユーザー用の MCP トークンと共通なので `../token-expires.ts` にある。
  * 自動運用(Devuntu Agent)の判定ロジックも DB を引くので `agent-runner.ts` に分けてある。
  * ここはフォームのバリデーションや一覧表示からも読むので、純粋な値と関数だけを置くこと。
  */
@@ -33,13 +35,8 @@ export const agentHandle = (email: string): string | null => {
 /** 識別子の重複。Server Action は非同期関数しか export できないため定数はここに置く */
 export const DUPLICATED_AGENT_HANDLE = 'DUPLICATED_AGENT_HANDLE'
 
-/** トークンの有効期限の選択肢。`none` は無期限、それ以外は発行日からの日数 */
-export const AGENT_TOKEN_EXPIRES = ['none', '30', '90', '180', '365'] as const
-export type AgentTokenExpires = (typeof AGENT_TOKEN_EXPIRES)[number]
-
-/** 選択肢を実際の有効期限へ変換する。無期限は null */
-export const agentTokenExpiresAt = (value: AgentTokenExpires, from: Date): Date | null =>
-  value === 'none' ? null : new Date(from.getTime() + Number(value) * 24 * 60 * 60 * 1000)
+/** ユーザー用の MCP トークンや OAuth のアクセストークン(JWT)と取り違えないための接頭辞 */
+export const AGENT_TOKEN_PREFIX = 'devuntu_agent_'
 
 /* -------------------------------------------------------------------------------------------------
  * 自動運用(Devuntu Agent)

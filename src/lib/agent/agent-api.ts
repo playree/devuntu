@@ -36,7 +36,8 @@ export type RunnerAuthResult = { ok: true; ctx: RunnerContext } | { ok: false; r
 /**
  * ランナーの認証。
  *
- * `devuntu_agent_` 接頭辞を持たない Bearer は、たとえ有効な OAuth アクセストークンでも拒否する。
+ * `devuntu_agent_` 接頭辞を持たない Bearer は、たとえ有効な OAuth アクセストークンや
+ * ユーザーが自分で発行した MCP トークン(`devuntu_pat_`)でも拒否する。
  * この経路はエージェント本人の巡回専用で、人間の MCP クライアントが使う口ではない。
  */
 export const authenticateRunner = async (request: Request): Promise<RunnerAuthResult> => {

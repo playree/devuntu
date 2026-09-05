@@ -1,5 +1,12 @@
 import { type MatchCondition } from '../match'
 
+/**
+ * セッションが新しくないため再認証が必要。
+ * 値は better-auth の BASE_ERROR_CODES と揃えてあり、パスキー登録(better-auth の APIError 由来)と
+ * Server Action(自前の ClientError 由来)を同じキーで分岐できる。
+ */
+export const SESSION_NOT_FRESH = 'SESSION_NOT_FRESH'
+
 export type AuthConfig = {
   path: {
     signIn: string

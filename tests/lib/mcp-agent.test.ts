@@ -58,6 +58,9 @@ const agentAuth: ResourceAuth = {
 
 const humanAuth: ResourceAuth = { ...agentAuth, kind: 'oauth', clientId: 'client-1' }
 
+/** ユーザーが自分で発行した MCP トークンでの接続。`clientId` は McpToken の id */
+const patAuth: ResourceAuth = { ...agentAuth, kind: 'pat', clientId: 'mcp-token-1' }
+
 const runnerRow = { id: 'r1', userId: 'a1', rule: 'ルール' }
 
 const connectClient = async (auth: ResourceAuth) => {
@@ -89,6 +92,12 @@ describe('自動運用ツールの登録', () => {
 
   it('人間の OAuth 接続では登録されない', async () => {
     const { tools } = await (await connectClient(humanAuth)).listTools()
+    const names = tools.map((tool) => tool.name)
+    AGENT_TOOLS.forEach((name) => expect(names).not.toContain(name))
+  })
+
+  it('ユーザーが自分で発行した MCP トークンの接続でも登録されない', async () => {
+    const { tools } = await (await connectClient(patAuth)).listTools()
     const names = tools.map((tool) => tool.name)
     AGENT_TOOLS.forEach((name) => expect(names).not.toContain(name))
   })
