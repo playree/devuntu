@@ -399,6 +399,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 export const ModelName = {
   User: 'User',
   AgentToken: 'AgentToken',
+  McpToken: 'McpToken',
   AgentRunner: 'AgentRunner',
   AgentRun: 'AgentRun',
   AgentApprover: 'AgentApprover',
@@ -450,7 +451,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "agentToken" | "agentRunner" | "agentRun" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "group" | "userGroup" | "calendarShare" | "calendarBusyTime" | "board" | "boardKeyHistory" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "ticket" | "ticketComment" | "userNotifySetting"
+    modelProps: "user" | "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "group" | "userGroup" | "calendarShare" | "calendarBusyTime" | "board" | "boardKeyHistory" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "ticket" | "ticketComment" | "userNotifySetting"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -599,6 +600,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.AgentTokenCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.AgentTokenCountAggregateOutputType> | number
+        }
+      }
+    }
+    McpToken: {
+      payload: Prisma.$McpTokenPayload<ExtArgs>
+      fields: Prisma.McpTokenFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.McpTokenFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpTokenPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.McpTokenFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpTokenPayload>
+        }
+        findFirst: {
+          args: Prisma.McpTokenFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpTokenPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.McpTokenFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpTokenPayload>
+        }
+        findMany: {
+          args: Prisma.McpTokenFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpTokenPayload>[]
+        }
+        create: {
+          args: Prisma.McpTokenCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpTokenPayload>
+        }
+        createMany: {
+          args: Prisma.McpTokenCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.McpTokenCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpTokenPayload>[]
+        }
+        delete: {
+          args: Prisma.McpTokenDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpTokenPayload>
+        }
+        update: {
+          args: Prisma.McpTokenUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpTokenPayload>
+        }
+        deleteMany: {
+          args: Prisma.McpTokenDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.McpTokenUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.McpTokenUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpTokenPayload>[]
+        }
+        upsert: {
+          args: Prisma.McpTokenUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpTokenPayload>
+        }
+        aggregate: {
+          args: Prisma.McpTokenAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMcpToken>
+        }
+        groupBy: {
+          args: Prisma.McpTokenGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.McpTokenGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.McpTokenCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.McpTokenCountAggregateOutputType> | number
         }
       }
     }
@@ -3343,6 +3418,20 @@ export const AgentTokenScalarFieldEnum = {
 export type AgentTokenScalarFieldEnum = (typeof AgentTokenScalarFieldEnum)[keyof typeof AgentTokenScalarFieldEnum]
 
 
+export const McpTokenScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  name: 'name',
+  tokenHash: 'tokenHash',
+  hint: 'hint',
+  expiresAt: 'expiresAt',
+  lastUsedAt: 'lastUsedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type McpTokenScalarFieldEnum = (typeof McpTokenScalarFieldEnum)[keyof typeof McpTokenScalarFieldEnum]
+
+
 export const AgentRunnerScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -4305,6 +4394,7 @@ export type PrismaClientOptions = PrismaClientOptionsWithAccelerateUrl | PrismaC
 export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   agentToken?: Prisma.AgentTokenOmit
+  mcpToken?: Prisma.McpTokenOmit
   agentRunner?: Prisma.AgentRunnerOmit
   agentRun?: Prisma.AgentRunOmit
   agentApprover?: Prisma.AgentApproverOmit

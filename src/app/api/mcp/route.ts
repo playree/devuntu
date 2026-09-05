@@ -2,6 +2,7 @@ import { isAgentToken, verifyAgentToken } from '@/lib/agent/agent-token'
 import { MCP_SCOPE } from '@/lib/auth/auth'
 import { logger } from '@/lib/logger'
 import { createDevuntuMcpServer } from '@/lib/mcp/mcp-server'
+import { isMcpToken, verifyMcpToken } from '@/lib/mcp/mcp-token'
 import { MCP_RESOURCE_METADATA_URL } from '@/lib/oauth/oauth-metadata'
 import { parseBearerToken, verifyMcpAccessToken, type ResourceAuthError } from '@/lib/oauth/oauth-resource'
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
@@ -13,8 +14,10 @@ import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/
  * 認可サーバーのメタデータ → 動的クライアント登録 → 認可フローへ進めるようにする。
  * 認可済みのリクエストは MCP プロトコル(Streamable HTTP)のハンドラへ委譲する。
  *
- * Bearer には2種類あり、AIエージェント用の長期トークン(`devuntu_agent_` 接頭辞)だけは
- * 認可フローを踏まずに使える。どちらも検証後は同じ `ResourceAuth` になるので以降は共通。
+ * Bearer には3種類あり、接頭辞を持つ長期トークン(AIエージェント用の `devuntu_agent_`、
+ * ユーザーが自分で発行する `devuntu_pat_`)は認可フローを踏まずに使える。接頭辞を持たない
+ * ものは OAuth のアクセストークン(JWT)として検証する。いずれも検証後は同じ `ResourceAuth`
+ * になるので以降は共通。
  */
 
 /**
@@ -55,7 +58,11 @@ const handler = async (request: Request) => {
     return unauthorized()
   }
 
-  const result = isAgentToken(token) ? await verifyAgentToken(token) : await verifyMcpAccessToken(token)
+  const result = isAgentToken(token)
+    ? await verifyAgentToken(token)
+    : isMcpToken(token)
+      ? await verifyMcpToken(token)
+      : await verifyMcpAccessToken(token)
   if (!result.ok) {
     return unauthorized(result.error)
   }

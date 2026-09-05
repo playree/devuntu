@@ -49,6 +49,14 @@ const agentAuth: ResourceAuth = {
   clientId: 'token-1',
 }
 
+/** ユーザーが自分で発行した MCP トークンで認可された場合。`clientId` は McpToken の id */
+const patAuth: ResourceAuth = {
+  user: { id: 'u2', name: 'tester', email: 'test2@example.com', role: null },
+  scopes: ['mcp'],
+  kind: 'pat',
+  clientId: 'mcp-token-1',
+}
+
 const connectClient = async (resourceAuth: ResourceAuth = auth) => {
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
   await createDevuntuMcpServer(resourceAuth).connect(serverTransport)
@@ -76,6 +84,19 @@ describe('createDevuntuMcpServer', () => {
         'upload_image',
         'get_image',
       ]),
+    )
+  })
+
+  it('サーバー名は人間の経路(OAuth / ユーザートークン)では devuntu、エージェントだけ devuntu-agent', async () => {
+    expect((await connectClient()).getServerVersion()?.name).toBe('devuntu')
+    expect((await connectClient(patAuth)).getServerVersion()?.name).toBe('devuntu')
+    expect((await connectClient(agentAuth)).getServerVersion()?.name).toBe('devuntu-agent')
+  })
+
+  it('ユーザートークンの接続でも共通ツールは登録される', async () => {
+    const { tools } = await (await connectClient(patAuth)).listTools()
+    expect(tools.map((tool) => tool.name)).toEqual(
+      expect.arrayContaining(['ping', 'get_ticket', 'search_tickets', 'get_image', 'get_agent_setup_guide']),
     )
   })
 

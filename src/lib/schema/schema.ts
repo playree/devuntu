@@ -5,7 +5,6 @@ import {
   AGENT_HANDLE_PATTERN,
   AGENT_TASK_MODES,
   AGENT_TASK_STATES,
-  AGENT_TOKEN_EXPIRES,
   AGENT_WINDOW_MAX_MIN,
   AGENT_WINDOW_STEP_MIN,
   MAX_AGENT_DAILY_LIMIT,
@@ -26,6 +25,7 @@ import {
   TICKET_STATUSES,
 } from '../board/task'
 import { NOTIFY_EVENTS } from '../notify/notify'
+import { TOKEN_EXPIRES } from '../token-expires'
 
 export const zName = z.string().min(2, el('@invalid_name')).max(30, el('@invalid_name'))
 export const zEmail = z.email(el('@invalid_email'))
@@ -185,9 +185,16 @@ export type SetAgentApproverGroupsIn = z.input<typeof scSetAgentApproverGroups>
 
 export const scIssueAgentToken = z.object({
   userId: z.uuidv7(),
-  expires: z.enum(AGENT_TOKEN_EXPIRES),
+  expires: z.enum(TOKEN_EXPIRES),
 })
 export type IssueAgentToken = z.infer<typeof scIssueAgentToken>
+
+/** ユーザー用 MCP トークンの発行。名前は持ち主の中で一意 */
+export const scIssueMcpToken = z.object({
+  name: zName,
+  expires: z.enum(TOKEN_EXPIRES),
+})
+export type IssueMcpToken = z.infer<typeof scIssueMcpToken>
 
 /** チケットの処理方式。null は「選択待ち」(= エージェント処理の対象外) */
 export const zAgentMode = z.enum(AGENT_TASK_MODES)

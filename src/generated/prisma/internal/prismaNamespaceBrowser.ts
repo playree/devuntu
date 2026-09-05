@@ -53,6 +53,7 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   User: 'User',
   AgentToken: 'AgentToken',
+  McpToken: 'McpToken',
   AgentRunner: 'AgentRunner',
   AgentRun: 'AgentRun',
   AgentApprover: 'AgentApprover',
@@ -143,6 +144,20 @@ export const AgentTokenScalarFieldEnum = {
 } as const
 
 export type AgentTokenScalarFieldEnum = (typeof AgentTokenScalarFieldEnum)[keyof typeof AgentTokenScalarFieldEnum]
+
+
+export const McpTokenScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  name: 'name',
+  tokenHash: 'tokenHash',
+  hint: 'hint',
+  expiresAt: 'expiresAt',
+  lastUsedAt: 'lastUsedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type McpTokenScalarFieldEnum = (typeof McpTokenScalarFieldEnum)[keyof typeof McpTokenScalarFieldEnum]
 
 
 export const AgentRunnerScalarFieldEnum = {

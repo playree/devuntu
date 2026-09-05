@@ -3,19 +3,25 @@
 import { safeAuthAction } from '@/lib/action/action-server'
 import { auth } from '@/lib/auth/auth'
 import { isValidTimezone, nowDate } from '@/lib/day'
-import { errNotFound, errValidation } from '@/lib/error'
+import { errClient, errNotFound, errValidation } from '@/lib/error'
 import { canUseGoogleAccount, googleAccountQuery } from '@/lib/google/google-account'
 import { GOOGLE_ACCOUNT_PROVIDER_ID } from '@/lib/google/google-calendar'
 import { logger } from '@/lib/logger'
+import { generateMcpToken, hashMcpToken } from '@/lib/mcp/mcp-token'
 import { getUserNotifySettings, setUserNotifySetting } from '@/lib/notify/notify-setting'
 import { dedupeScopes } from '@/lib/oauth/oauth-consent'
-import { prisma } from '@/lib/prisma'
-import { scRevokeConsent, scSetUserAvatar, scUpdateNotifySetting } from '@/lib/schema/schema'
+import { isUniqueViolation, prisma } from '@/lib/prisma'
+import { assertRateLimit } from '@/lib/rate-limit'
+import { scIssueMcpToken, scRevokeConsent, scSetUserAvatar, scUpdateNotifySetting, scUUID } from '@/lib/schema/schema'
 import { SLACK_PROVIDER_ID } from '@/lib/slack/slack'
 import { canUseSlackAccount } from '@/lib/slack/slack-account'
 import { removeImageAttachment, saveImageAttachment } from '@/lib/storage/attachment'
+import { DUPLICATED_MCP_TOKEN_NAME, MAX_MCP_TOKENS_PER_USER, tokenExpiresAt } from '@/lib/token-expires'
 import { headers } from 'next/headers'
 import { z } from 'zod'
+
+/** MCP トークン発行の連打防止。誤操作で使い捨てのトークンを量産させない */
+const MCP_TOKEN_ISSUE_RATE_LIMIT = { limit: 5, windowMs: 60 * 60 * 1000 }
 
 export const getGoogleAccountStatus = safeAuthAction
   .metadata({ actionName: 'getGoogleAccountStatus', role: 'user' })
@@ -140,6 +146,80 @@ export const revokeOAuthConsent = safeAuthAction
       },
       'oauth consent revoked',
     )
+    return { id }
+  })
+
+/* -------------------------------------------------------------------------------------------------
+ * ユーザー用 MCP トークン
+ *
+ * ブラウザを開けない環境から MCP を使うための長期トークン。発行できるのは本人だけで、
+ * 平文は発行の応答にしか現れない。検証は `src/lib/mcp/mcp-token.ts`。
+ * ---------------------------------------------------------------------------------------------- */
+
+/** 一覧取得。平文は保持していないので、見分け用の末尾数文字だけを返す */
+export const getMyMcpTokens = safeAuthAction
+  .metadata({ actionName: 'getMyMcpTokens', role: 'user' })
+  .action(async ({ ctx: { user } }) =>
+    prisma.mcpToken.findMany({
+      where: { userId: user.id },
+      select: { id: true, name: true, hint: true, expiresAt: true, lastUsedAt: true, createdAt: true },
+    }),
+  )
+export type GetMyMcpTokensReturnType = Awaited<ReturnType<typeof getMyMcpTokens>>['data']
+
+/**
+ * トークン発行。平文を返せるのはこの応答だけで、DB にはハッシュしか残らない。
+ *
+ * 本数の上限は UI のボタン無効化と合わせた二重の歯止め。件数の確認から作成までの間に
+ * 別のタブから発行されると上限を1本超えうるが、実害が無いので楽観で許容する。
+ */
+export const issueMcpToken = safeAuthAction
+  .metadata({ actionName: 'issueMcpToken', role: 'user' })
+  .inputSchema(scIssueMcpToken)
+  .action(async ({ parsedInput: { name, expires }, ctx: { user } }) => {
+    assertRateLimit(`mcp-token-issue:${user.id}`, MCP_TOKEN_ISSUE_RATE_LIMIT)
+
+    if ((await prisma.mcpToken.count({ where: { userId: user.id } })) >= MAX_MCP_TOKENS_PER_USER) {
+      throw errValidation('mcp token limit reached')
+    }
+
+    const { token, hint } = generateMcpToken()
+    const issued = await prisma.mcpToken
+      .create({
+        data: {
+          userId: user.id,
+          name,
+          tokenHash: hashMcpToken(token),
+          hint,
+          expiresAt: tokenExpiresAt(expires, nowDate()),
+        },
+        select: { id: true },
+      })
+      .catch((e: unknown) => {
+        if (isUniqueViolation(e)) {
+          throw errClient(DUPLICATED_MCP_TOKEN_NAME)
+        }
+        throw e
+      })
+
+    logger.info({ mcpTokenId: issued.id, userId: user.id }, 'mcp token issued')
+    return { token }
+  })
+
+/** トークン削除。行を消すので、このトークンを使っている接続はその場で切れる */
+export const deleteMcpToken = safeAuthAction
+  .metadata({ actionName: 'deleteMcpToken', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ parsedInput: { id }, ctx: { user } }) => {
+    const token = await prisma.mcpToken.findUnique({ where: { id }, select: { userId: true } })
+    // 他人の行は存在自体を伏せる
+    if (!token || token.userId !== user.id) {
+      throw errNotFound()
+    }
+
+    await prisma.mcpToken.delete({ where: { id } })
+
+    logger.info({ mcpTokenId: id, userId: user.id }, 'mcp token deleted')
     return { id }
   })
 

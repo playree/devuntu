@@ -175,6 +175,7 @@ export const ja: DefaultLocaleItems = {
   list: '一覧',
   member: 'メンバー',
   mcp_add_command: 'MCP登録コマンド',
+  mcp_token: 'MCPトークン',
   mentioned: 'メンション',
   name: '名前',
   name_locked: '名前をロック',
@@ -331,7 +332,6 @@ export const ja: DefaultLocaleItems = {
   msg_agent_rule_none: '指示は設定されていません。',
   msg_agent_runner_desc:
     '担当チケットを定期的に取りに来る常駐エージェントの設定です。稼働条件を満たすときだけAIエージェントが起動します。\n開始・終了はどちらか未指定なら終日稼働、開始が終了より後の場合は日跨ぎ(夜間のみ)として扱います。\n1日の処理上限は起動1回ごとに数え、0を指定すると無制限です。カウントは上限リセット時刻(タイムゾーン設定に従う)を境に0へ戻ります。',
-  msg_agent_token_once: 'トークンを確認できるのはこの画面だけです。閉じる前に控えてください。',
   msg_archive_board: 'アーカイブすると、ボード一覧の既定の表示対象から外れます。チケットは残ります。',
   msg_avatar_desc: '独自の画像を設定すると、以降のログイン時にDevuntu側の画像で上書きされなくなります。',
   msg_board_key_change: 'キーを変更すると、共有済みのチケットIDは元のチケットを指さなくなります。',
@@ -345,6 +345,7 @@ export const ja: DefaultLocaleItems = {
   msg_cannot_delete_last_admin: '最後の管理者は削除できません。',
   msg_confirm_archive_board: '${target} をアーカイブします。',
   msg_confirm_delete_board: '${target} を削除します。ボード内のチケットとコメントもすべて削除されます。',
+  msg_confirm_delete_mcp_token: '削除すると、このトークンを使っている接続はすぐに利用できなくなります。',
   msg_confirm_deletion: '${target} を削除します。',
   msg_confirm_disable_share: '共有を無効にすると、現在の共有URLは無効になります。よろしいですか？',
   msg_confirm_revoke_consent:
@@ -361,6 +362,7 @@ export const ja: DefaultLocaleItems = {
   msg_delete_board: 'ボード内のチケットとコメントもすべて削除されます。この操作は取り消せません。',
   msg_deleted_target: '${target} を削除しました。',
   msg_drop_image: '画像をドロップ、またはクリックして選択',
+  msg_duplicated_token_name: 'この名前のトークンは既にあります。',
   msg_duplicated_agent_handle: 'この識別子は既に使われています。',
   msg_duplicated_board_key: 'このボードキーは使用済みです。過去に使われたキーも再利用できません。',
   msg_duplicated_tag_name: '同じ名前のタグが既に存在します。',
@@ -379,6 +381,9 @@ export const ja: DefaultLocaleItems = {
   msg_invalid_email_or_password: 'Eメールまたはパスワードが違います。',
   msg_link_google_for_calendar:
     'カレンダーの共有には Google アカウントとの連携が必要です。アカウントページで連携してください。',
+  msg_mcp_token_desc:
+    'MCPクライアントからブラウザのログインを経由せずに接続するためのトークンです。あなたの権限でチケットを読み書きできるので、取り扱いに注意してください。',
+  msg_mcp_token_limit: '発行できるトークンは最大${max}本です。不要なトークンを削除してください。',
   msg_mention_hint: '@ に続けて名前かメールアドレスを入力すると、候補からメンションできます。',
   msg_no_access: 'この内容にアクセスする権限がありません。',
   msg_no_approvable_agent: '承認者に設定されているエージェントがありません。',
@@ -402,6 +407,7 @@ export const ja: DefaultLocaleItems = {
   msg_slack_enable_desc: '有効にすると、ユーザーがSlackと連携して通知を受け取れるようになります。',
   msg_slack_not_connected: 'Slackと連携していません',
   msg_ticket_list_limit: '検索結果は最大${max}件まで表示されます。',
+  msg_token_once: 'トークンを確認できるのはこの画面だけです。閉じる前に控えてください。',
   msg_too_many_requests: '試行回数が多すぎます。しばらく時間をおいてからお試しください。',
   msg_updated_target: '${target} を更新しました。',
   msg_user_not_exist: 'ユーザーが存在しません。',

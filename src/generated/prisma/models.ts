@@ -10,6 +10,7 @@
  */
 export type * from './models/User'
 export type * from './models/AgentToken'
+export type * from './models/McpToken'
 export type * from './models/AgentRunner'
 export type * from './models/AgentRun'
 export type * from './models/AgentApprover'

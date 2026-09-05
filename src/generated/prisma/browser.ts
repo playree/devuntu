@@ -31,6 +31,13 @@ export type User = Prisma.UserModel
  */
 export type AgentToken = Prisma.AgentTokenModel
 /**
+ * Model McpToken
+ * 通常ユーザーが MCP サーバーへ接続するための長期トークン(Personal Access Token)。
+ * ブラウザを開けない環境から使うための経路で、アカウントページから本人が発行する。
+ * 1ユーザーが複数本を持てる。平文は発行時の応答にしか現れず、保存するのはハッシュだけ。
+ */
+export type McpToken = Prisma.McpTokenModel
+/**
  * Model AgentRunner
  * AIエージェントの自動運用(Devuntu Agent)の設定と、ランナーの稼働状況。
  * エージェントユーザーにつき1行だけ持つ。行が無い状態は「自動運用を使わない」を表す。

@@ -31,10 +31,11 @@ export type ResourceAuth = {
   scopes: string[]
   /**
    * トークンの出どころ。
-   * `oauth` は認可コードフローで得た JWT、`agent` は AIエージェント用の長期トークン
+   * `oauth` は認可コードフローで得た JWT、`pat` はユーザーが自分で発行した長期トークン、
+   * `agent` は AIエージェント用の長期トークン
    */
-  kind: 'oauth' | 'agent'
-  /** oauth: トークンを発行したクライアント(`azp`) / agent: AgentToken の id */
+  kind: 'oauth' | 'pat' | 'agent'
+  /** oauth: トークンを発行したクライアント(`azp`) / pat: McpToken の id / agent: AgentToken の id */
   clientId: string
 }
 

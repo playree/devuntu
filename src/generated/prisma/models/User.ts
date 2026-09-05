@@ -306,6 +306,7 @@ export type UserWhereInput = {
   createdTickets?: Prisma.TicketListRelationFilter
   assignedTickets?: Prisma.TicketListRelationFilter
   ticketComments?: Prisma.TicketCommentListRelationFilter
+  mcpTokens?: Prisma.McpTokenListRelationFilter
   agentToken?: Prisma.XOR<Prisma.AgentTokenNullableScalarRelationFilter, Prisma.AgentTokenWhereInput> | null
   createdAgentTokens?: Prisma.AgentTokenListRelationFilter
   agentRunner?: Prisma.XOR<Prisma.AgentRunnerNullableScalarRelationFilter, Prisma.AgentRunnerWhereInput> | null
@@ -352,6 +353,7 @@ export type UserOrderByWithRelationInput = {
   createdTickets?: Prisma.TicketOrderByRelationAggregateInput
   assignedTickets?: Prisma.TicketOrderByRelationAggregateInput
   ticketComments?: Prisma.TicketCommentOrderByRelationAggregateInput
+  mcpTokens?: Prisma.McpTokenOrderByRelationAggregateInput
   agentToken?: Prisma.AgentTokenOrderByWithRelationInput
   createdAgentTokens?: Prisma.AgentTokenOrderByRelationAggregateInput
   agentRunner?: Prisma.AgentRunnerOrderByWithRelationInput
@@ -401,6 +403,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   createdTickets?: Prisma.TicketListRelationFilter
   assignedTickets?: Prisma.TicketListRelationFilter
   ticketComments?: Prisma.TicketCommentListRelationFilter
+  mcpTokens?: Prisma.McpTokenListRelationFilter
   agentToken?: Prisma.XOR<Prisma.AgentTokenNullableScalarRelationFilter, Prisma.AgentTokenWhereInput> | null
   createdAgentTokens?: Prisma.AgentTokenListRelationFilter
   agentRunner?: Prisma.XOR<Prisma.AgentRunnerNullableScalarRelationFilter, Prisma.AgentRunnerWhereInput> | null
@@ -495,6 +498,7 @@ export type UserCreateInput = {
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
@@ -541,6 +545,7 @@ export type UserUncheckedCreateInput = {
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
@@ -587,6 +592,7 @@ export type UserUpdateInput = {
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
@@ -633,6 +639,7 @@ export type UserUncheckedUpdateInput = {
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
@@ -829,6 +836,20 @@ export type UserUpdateOneWithoutCreatedAgentTokensNestedInput = {
   delete?: Prisma.UserWhereInput | boolean
   connect?: Prisma.UserWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCreatedAgentTokensInput, Prisma.UserUpdateWithoutCreatedAgentTokensInput>, Prisma.UserUncheckedUpdateWithoutCreatedAgentTokensInput>
+}
+
+export type UserCreateNestedOneWithoutMcpTokensInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutMcpTokensInput, Prisma.UserUncheckedCreateWithoutMcpTokensInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutMcpTokensInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutMcpTokensNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutMcpTokensInput, Prisma.UserUncheckedCreateWithoutMcpTokensInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutMcpTokensInput
+  upsert?: Prisma.UserUpsertWithoutMcpTokensInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutMcpTokensInput, Prisma.UserUpdateWithoutMcpTokensInput>, Prisma.UserUncheckedUpdateWithoutMcpTokensInput>
 }
 
 export type UserCreateNestedOneWithoutAgentRunnerInput = {
@@ -1207,6 +1228,7 @@ export type UserCreateWithoutAgentTokenInput = {
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
@@ -1252,6 +1274,7 @@ export type UserUncheckedCreateWithoutAgentTokenInput = {
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
@@ -1302,6 +1325,7 @@ export type UserCreateWithoutCreatedAgentTokensInput = {
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
@@ -1347,6 +1371,7 @@ export type UserUncheckedCreateWithoutCreatedAgentTokensInput = {
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
@@ -1408,6 +1433,7 @@ export type UserUpdateWithoutAgentTokenInput = {
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
@@ -1453,6 +1479,7 @@ export type UserUncheckedUpdateWithoutAgentTokenInput = {
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
@@ -1509,6 +1536,7 @@ export type UserUpdateWithoutCreatedAgentTokensInput = {
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
@@ -1554,7 +1582,208 @@ export type UserUncheckedUpdateWithoutCreatedAgentTokensInput = {
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
+  agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
+  approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutMcpTokensInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
+  locale?: string | null
+  lastLoginAt?: Date | string | null
+  timezone?: string | null
+  isAgent?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
+  userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
+  dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
+  attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
+  notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
+  boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
+  privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
+  createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
+  assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
+  ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
+  agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
+  agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
+  approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutMcpTokensInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
+  locale?: string | null
+  lastLoginAt?: Date | string | null
+  timezone?: string | null
+  isAgent?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientUncheckedCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
+  userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
+  dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
+  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
+  notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
+  boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
+  privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
+  createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
+  ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
+  agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
+  approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutMcpTokensInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutMcpTokensInput, Prisma.UserUncheckedCreateWithoutMcpTokensInput>
+}
+
+export type UserUpsertWithoutMcpTokensInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutMcpTokensInput, Prisma.UserUncheckedUpdateWithoutMcpTokensInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutMcpTokensInput, Prisma.UserUncheckedCreateWithoutMcpTokensInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutMcpTokensInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutMcpTokensInput, Prisma.UserUncheckedUpdateWithoutMcpTokensInput>
+}
+
+export type UserUpdateWithoutMcpTokensInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
+  userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
+  dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
+  attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
+  notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
+  boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
+  privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
+  createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
+  assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
+  ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
+  agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
+  approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutMcpTokensInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUncheckedUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
+  userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
+  dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
+  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
+  notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
+  boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
+  privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
+  createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
+  ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
@@ -1599,6 +1828,7 @@ export type UserCreateWithoutAgentRunnerInput = {
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
@@ -1644,6 +1874,7 @@ export type UserUncheckedCreateWithoutAgentRunnerInput = {
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
@@ -1705,6 +1936,7 @@ export type UserUpdateWithoutAgentRunnerInput = {
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
@@ -1750,6 +1982,7 @@ export type UserUncheckedUpdateWithoutAgentRunnerInput = {
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
@@ -1795,6 +2028,7 @@ export type UserCreateWithoutAgentApproversInput = {
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
@@ -1840,6 +2074,7 @@ export type UserUncheckedCreateWithoutAgentApproversInput = {
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
@@ -1890,6 +2125,7 @@ export type UserCreateWithoutApproverOfInput = {
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
@@ -1935,6 +2171,7 @@ export type UserUncheckedCreateWithoutApproverOfInput = {
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
@@ -1996,6 +2233,7 @@ export type UserUpdateWithoutAgentApproversInput = {
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
@@ -2041,6 +2279,7 @@ export type UserUncheckedUpdateWithoutAgentApproversInput = {
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
@@ -2097,6 +2336,7 @@ export type UserUpdateWithoutApproverOfInput = {
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
@@ -2142,6 +2382,7 @@ export type UserUncheckedUpdateWithoutApproverOfInput = {
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
@@ -2187,6 +2428,7 @@ export type UserCreateWithoutAgentApproverGroupsInput = {
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
@@ -2232,6 +2474,7 @@ export type UserUncheckedCreateWithoutAgentApproverGroupsInput = {
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
@@ -2293,6 +2536,7 @@ export type UserUpdateWithoutAgentApproverGroupsInput = {
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
@@ -2338,6 +2582,7 @@ export type UserUncheckedUpdateWithoutAgentApproverGroupsInput = {
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
@@ -2382,6 +2627,7 @@ export type UserCreateWithoutSessionsInput = {
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
@@ -2427,6 +2673,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
@@ -2488,6 +2735,7 @@ export type UserUpdateWithoutSessionsInput = {
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
@@ -2533,6 +2781,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
@@ -2578,6 +2827,7 @@ export type UserCreateWithoutAccountsInput = {
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
@@ -2623,6 +2873,7 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
@@ -2684,6 +2935,7 @@ export type UserUpdateWithoutAccountsInput = {
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
@@ -2729,6 +2981,7 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
@@ -2774,6 +3027,7 @@ export type UserCreateWithoutTwofactorsInput = {
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
@@ -2819,6 +3073,7 @@ export type UserUncheckedCreateWithoutTwofactorsInput = {
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
@@ -2880,6 +3135,7 @@ export type UserUpdateWithoutTwofactorsInput = {
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
@@ -2925,6 +3181,7 @@ export type UserUncheckedUpdateWithoutTwofactorsInput = {
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
@@ -2970,6 +3227,7 @@ export type UserCreateWithoutPasskeysInput = {
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
@@ -3015,6 +3273,7 @@ export type UserUncheckedCreateWithoutPasskeysInput = {
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
@@ -3076,6 +3335,7 @@ export type UserUpdateWithoutPasskeysInput = {
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
@@ -3121,6 +3381,7 @@ export type UserUncheckedUpdateWithoutPasskeysInput = {
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
@@ -3166,6 +3427,7 @@ export type UserCreateWithoutOauthclientsInput = {
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
@@ -3211,6 +3473,7 @@ export type UserUncheckedCreateWithoutOauthclientsInput = {
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
@@ -3272,6 +3535,7 @@ export type UserUpdateWithoutOauthclientsInput = {
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
@@ -3317,6 +3581,7 @@ export type UserUncheckedUpdateWithoutOauthclientsInput = {
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
@@ -3362,6 +3627,7 @@ export type UserCreateWithoutOauthrefreshtokensInput = {
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
@@ -3407,6 +3673,7 @@ export type UserUncheckedCreateWithoutOauthrefreshtokensInput = {
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
@@ -3468,6 +3735,7 @@ export type UserUpdateWithoutOauthrefreshtokensInput = {
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
@@ -3513,6 +3781,7 @@ export type UserUncheckedUpdateWithoutOauthrefreshtokensInput = {
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
@@ -3558,6 +3827,7 @@ export type UserCreateWithoutOauthaccesstokensInput = {
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
@@ -3603,6 +3873,7 @@ export type UserUncheckedCreateWithoutOauthaccesstokensInput = {
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
@@ -3664,6 +3935,7 @@ export type UserUpdateWithoutOauthaccesstokensInput = {
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
@@ -3709,6 +3981,7 @@ export type UserUncheckedUpdateWithoutOauthaccesstokensInput = {
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
@@ -3754,6 +4027,7 @@ export type UserCreateWithoutOauthconsentsInput = {
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
@@ -3799,6 +4073,7 @@ export type UserUncheckedCreateWithoutOauthconsentsInput = {
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
@@ -3860,6 +4135,7 @@ export type UserUpdateWithoutOauthconsentsInput = {
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
@@ -3905,6 +4181,7 @@ export type UserUncheckedUpdateWithoutOauthconsentsInput = {
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
@@ -3950,6 +4227,7 @@ export type UserCreateWithoutDashboardInput = {
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
@@ -3995,6 +4273,7 @@ export type UserUncheckedCreateWithoutDashboardInput = {
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
@@ -4056,6 +4335,7 @@ export type UserUpdateWithoutDashboardInput = {
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
@@ -4101,6 +4381,7 @@ export type UserUncheckedUpdateWithoutDashboardInput = {
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
@@ -4146,6 +4427,7 @@ export type UserCreateWithoutAttachmentsInput = {
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
@@ -4191,6 +4473,7 @@ export type UserUncheckedCreateWithoutAttachmentsInput = {
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
@@ -4252,6 +4535,7 @@ export type UserUpdateWithoutAttachmentsInput = {
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
@@ -4297,6 +4581,7 @@ export type UserUncheckedUpdateWithoutAttachmentsInput = {
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
@@ -4342,6 +4627,7 @@ export type UserCreateWithoutUserGroupsInput = {
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
@@ -4387,6 +4673,7 @@ export type UserUncheckedCreateWithoutUserGroupsInput = {
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
@@ -4448,6 +4735,7 @@ export type UserUpdateWithoutUserGroupsInput = {
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
@@ -4493,6 +4781,7 @@ export type UserUncheckedUpdateWithoutUserGroupsInput = {
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
@@ -4538,6 +4827,7 @@ export type UserCreateWithoutCalendarShareInput = {
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
@@ -4583,6 +4873,7 @@ export type UserUncheckedCreateWithoutCalendarShareInput = {
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
@@ -4644,6 +4935,7 @@ export type UserUpdateWithoutCalendarShareInput = {
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
@@ -4689,6 +4981,7 @@ export type UserUncheckedUpdateWithoutCalendarShareInput = {
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
@@ -4734,6 +5027,7 @@ export type UserCreateWithoutCalendarBusyTimesInput = {
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
@@ -4779,6 +5073,7 @@ export type UserUncheckedCreateWithoutCalendarBusyTimesInput = {
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
@@ -4840,6 +5135,7 @@ export type UserUpdateWithoutCalendarBusyTimesInput = {
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
@@ -4885,6 +5181,7 @@ export type UserUncheckedUpdateWithoutCalendarBusyTimesInput = {
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
@@ -4930,6 +5227,7 @@ export type UserCreateWithoutPrivateBoardInput = {
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
@@ -4975,6 +5273,7 @@ export type UserUncheckedCreateWithoutPrivateBoardInput = {
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
@@ -5036,6 +5335,7 @@ export type UserUpdateWithoutPrivateBoardInput = {
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
@@ -5081,6 +5381,7 @@ export type UserUncheckedUpdateWithoutPrivateBoardInput = {
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
@@ -5126,6 +5427,7 @@ export type UserCreateWithoutBoardMembersInput = {
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
@@ -5171,6 +5473,7 @@ export type UserUncheckedCreateWithoutBoardMembersInput = {
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
@@ -5232,6 +5535,7 @@ export type UserUpdateWithoutBoardMembersInput = {
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
@@ -5277,6 +5581,7 @@ export type UserUncheckedUpdateWithoutBoardMembersInput = {
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
@@ -5322,6 +5627,7 @@ export type UserCreateWithoutCreatedTicketsInput = {
   privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
@@ -5367,6 +5673,7 @@ export type UserUncheckedCreateWithoutCreatedTicketsInput = {
   privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
@@ -5417,6 +5724,7 @@ export type UserCreateWithoutAssignedTicketsInput = {
   privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
@@ -5462,6 +5770,7 @@ export type UserUncheckedCreateWithoutAssignedTicketsInput = {
   privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
@@ -5523,6 +5832,7 @@ export type UserUpdateWithoutCreatedTicketsInput = {
   privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
@@ -5568,6 +5878,7 @@ export type UserUncheckedUpdateWithoutCreatedTicketsInput = {
   privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
@@ -5624,6 +5935,7 @@ export type UserUpdateWithoutAssignedTicketsInput = {
   privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
@@ -5669,6 +5981,7 @@ export type UserUncheckedUpdateWithoutAssignedTicketsInput = {
   privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
@@ -5714,6 +6027,7 @@ export type UserCreateWithoutTicketCommentsInput = {
   privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
@@ -5759,6 +6073,7 @@ export type UserUncheckedCreateWithoutTicketCommentsInput = {
   privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
@@ -5820,6 +6135,7 @@ export type UserUpdateWithoutTicketCommentsInput = {
   privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
@@ -5865,6 +6181,7 @@ export type UserUncheckedUpdateWithoutTicketCommentsInput = {
   privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
@@ -5910,6 +6227,7 @@ export type UserCreateWithoutNotifySettingsInput = {
   createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
@@ -5955,6 +6273,7 @@ export type UserUncheckedCreateWithoutNotifySettingsInput = {
   createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
   assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
   ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
@@ -6016,6 +6335,7 @@ export type UserUpdateWithoutNotifySettingsInput = {
   createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
@@ -6061,6 +6381,7 @@ export type UserUncheckedUpdateWithoutNotifySettingsInput = {
   createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
   ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
@@ -6091,6 +6412,7 @@ export type UserCountOutputType = {
   createdTickets: number
   assignedTickets: number
   ticketComments: number
+  mcpTokens: number
   createdAgentTokens: number
   agentApprovers: number
   agentApproverGroups: number
@@ -6114,6 +6436,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   createdTickets?: boolean | UserCountOutputTypeCountCreatedTicketsArgs
   assignedTickets?: boolean | UserCountOutputTypeCountAssignedTicketsArgs
   ticketComments?: boolean | UserCountOutputTypeCountTicketCommentsArgs
+  mcpTokens?: boolean | UserCountOutputTypeCountMcpTokensArgs
   createdAgentTokens?: boolean | UserCountOutputTypeCountCreatedAgentTokensArgs
   agentApprovers?: boolean | UserCountOutputTypeCountAgentApproversArgs
   agentApproverGroups?: boolean | UserCountOutputTypeCountAgentApproverGroupsArgs
@@ -6245,6 +6568,13 @@ export type UserCountOutputTypeCountTicketCommentsArgs<ExtArgs extends runtime.T
 /**
  * UserCountOutputType without action
  */
+export type UserCountOutputTypeCountMcpTokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.McpTokenWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
 export type UserCountOutputTypeCountCreatedAgentTokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.AgentTokenWhereInput
 }
@@ -6309,6 +6639,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   createdTickets?: boolean | Prisma.User$createdTicketsArgs<ExtArgs>
   assignedTickets?: boolean | Prisma.User$assignedTicketsArgs<ExtArgs>
   ticketComments?: boolean | Prisma.User$ticketCommentsArgs<ExtArgs>
+  mcpTokens?: boolean | Prisma.User$mcpTokensArgs<ExtArgs>
   agentToken?: boolean | Prisma.User$agentTokenArgs<ExtArgs>
   createdAgentTokens?: boolean | Prisma.User$createdAgentTokensArgs<ExtArgs>
   agentRunner?: boolean | Prisma.User$agentRunnerArgs<ExtArgs>
@@ -6402,6 +6733,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   createdTickets?: boolean | Prisma.User$createdTicketsArgs<ExtArgs>
   assignedTickets?: boolean | Prisma.User$assignedTicketsArgs<ExtArgs>
   ticketComments?: boolean | Prisma.User$ticketCommentsArgs<ExtArgs>
+  mcpTokens?: boolean | Prisma.User$mcpTokensArgs<ExtArgs>
   agentToken?: boolean | Prisma.User$agentTokenArgs<ExtArgs>
   createdAgentTokens?: boolean | Prisma.User$createdAgentTokensArgs<ExtArgs>
   agentRunner?: boolean | Prisma.User$agentRunnerArgs<ExtArgs>
@@ -6435,6 +6767,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     createdTickets: Prisma.$TicketPayload<ExtArgs>[]
     assignedTickets: Prisma.$TicketPayload<ExtArgs>[]
     ticketComments: Prisma.$TicketCommentPayload<ExtArgs>[]
+    mcpTokens: Prisma.$McpTokenPayload<ExtArgs>[]
     agentToken: Prisma.$AgentTokenPayload<ExtArgs> | null
     createdAgentTokens: Prisma.$AgentTokenPayload<ExtArgs>[]
     agentRunner: Prisma.$AgentRunnerPayload<ExtArgs> | null
@@ -6919,6 +7252,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   createdTickets<T extends Prisma.User$createdTicketsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$createdTicketsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TicketPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   assignedTickets<T extends Prisma.User$assignedTicketsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$assignedTicketsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TicketPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   ticketComments<T extends Prisma.User$ticketCommentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$ticketCommentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TicketCommentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  mcpTokens<T extends Prisma.User$mcpTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$mcpTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$McpTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   agentToken<T extends Prisma.User$agentTokenArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$agentTokenArgs<ExtArgs>>): Prisma.Prisma__AgentTokenClient<runtime.Types.Result.GetResult<Prisma.$AgentTokenPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   createdAgentTokens<T extends Prisma.User$createdAgentTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$createdAgentTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AgentTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   agentRunner<T extends Prisma.User$agentRunnerArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$agentRunnerArgs<ExtArgs>>): Prisma.Prisma__AgentRunnerClient<runtime.Types.Result.GetResult<Prisma.$AgentRunnerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
@@ -7803,6 +8137,30 @@ export type User$ticketCommentsArgs<ExtArgs extends runtime.Types.Extensions.Int
   take?: number
   skip?: number
   distinct?: Prisma.TicketCommentScalarFieldEnum | Prisma.TicketCommentScalarFieldEnum[]
+}
+
+/**
+ * User.mcpTokens
+ */
+export type User$mcpTokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the McpToken
+   */
+  select?: Prisma.McpTokenSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the McpToken
+   */
+  omit?: Prisma.McpTokenOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.McpTokenInclude<ExtArgs> | null
+  where?: Prisma.McpTokenWhereInput
+  orderBy?: Prisma.McpTokenOrderByWithRelationInput | Prisma.McpTokenOrderByWithRelationInput[]
+  cursor?: Prisma.McpTokenWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.McpTokenScalarFieldEnum | Prisma.McpTokenScalarFieldEnum[]
 }
 
 /**

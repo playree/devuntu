@@ -8,6 +8,7 @@ import {
   Cog6ToothIcon,
   FingerPrintIcon,
   GoogleIcon,
+  KeyIcon,
   PhotoIcon,
   PuzzlePieceIcon,
   SlackIcon,
@@ -18,24 +19,18 @@ import { Accordion } from '@heroui/react'
 import { FC } from 'react'
 import { AvatarSetting } from './avatar'
 import { GoogleAccountLink } from './google-account'
+import { MyMcpTokens } from './mcp-token'
 import { NotifySettings } from './notify'
 import { MyOAuthConsents } from './oauth-consents'
 import { MyPasskey } from './passkey'
 import { SlackAccountLink } from './slack'
 import { TimezoneSetting } from './timezone'
 
-const defaultExpandedKeys = new Set([
-  'avatar',
-  'passkey',
-  'google_account',
-  'slack',
-  'timezone',
-  'notify',
-  'oauth_consents',
-])
-export const AccountClient: FC<{ googleAvailable: boolean; slackAvailable: boolean }> = ({
+const defaultExpandedKeys = new Set(['avatar', 'passkey', 'timezone', 'notify'])
+export const AccountClient: FC<{ googleAvailable: boolean; slackAvailable: boolean; baseUrl: string }> = ({
   googleAvailable,
   slackAvailable,
+  baseUrl,
 }) => {
   const { t } = useLocale()
 
@@ -64,6 +59,9 @@ export const AccountClient: FC<{ googleAvailable: boolean; slackAvailable: boole
         )}
         <AccordionSection id='oauth_consents' icon={<PuzzlePieceIcon />} title={t('consent_apps')}>
           <MyOAuthConsents />
+        </AccordionSection>
+        <AccordionSection id='mcp_token' icon={<KeyIcon />} title={t('mcp_token')}>
+          <MyMcpTokens baseUrl={baseUrl} />
         </AccordionSection>
         <AccordionSection // メール通知は Slack 連携の有無に関わらず設定できるので常に表示する
           id='notify'

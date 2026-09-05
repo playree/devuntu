@@ -1,7 +1,6 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action/action-server'
-import { agentTokenExpiresAt } from '@/lib/agent/agent'
 import {
   addAgentApprover,
   getAgentApprovers as findAgentApprovers,
@@ -30,6 +29,7 @@ import {
   scUpdateAgent,
   scUUID,
 } from '@/lib/schema/schema'
+import { tokenExpiresAt } from '@/lib/token-expires'
 import { headers } from 'next/headers'
 import { assertAgent } from '../agent-util'
 
@@ -195,7 +195,7 @@ export const issueAgentToken = safeAuthAction
     const data = {
       tokenHash: hashAgentToken(token),
       hint,
-      expiresAt: agentTokenExpiresAt(expires, now),
+      expiresAt: tokenExpiresAt(expires, now),
       createdById: user.id,
     }
     // createdAt は発行時刻として使うので、置き換えのときも今の時刻に揃える

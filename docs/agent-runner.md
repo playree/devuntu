@@ -77,7 +77,8 @@ cron ──> devuntu_agent.py ──1──> POST /api/agent/status   「動い�
 ## 認証
 
 ランナーの API はエージェント用の長期トークン専用。`devuntu_agent_` で始まらない Bearer は、
-有効な OAuth アクセストークンでも 401 で弾く。人間の MCP クライアントが使う口ではないため。
+有効な OAuth アクセストークンでも、ユーザーが自分で発行した MCP トークン(`devuntu_pat_`)でも
+401 で弾く。人間の MCP クライアントが使う口ではないため。
 
 エージェント専用の MCP ツール(`get_agent_task` / `finish_agent_task`)も、
 エージェント用トークンで接続した場合だけ登録する。人間の一覧には出ない。
