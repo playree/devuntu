@@ -59,22 +59,52 @@ CI やサーバーなど、ブラウザを開けない環境から自分の権�
 
 ```sh
 claude mcp add --scope user --transport http devuntu <BETTER_AUTH_URL>/api/mcp \
-  --header "Authorization: Bearer <発行したトークン>"
+  --header 'Authorization: Bearer <発行したトークン>'
 ```
 
 そのマシンで恒常的に使うトークンなので、既定はユーザースコープ(`--scope user`)にしてある。
 登録名は認可コードフローの場合と同じ `devuntu`。同じサーバーへの接続方法違いなので、どちらか一方で登録する。
 
+Codex CLI の場合は、トークンを環境変数へ置いてから登録する。
+
+```sh
+codex mcp add --url <BETTER_AUTH_URL>/api/mcp --bearer-token-env-var DEVUNTU_MCP_TOKEN devuntu
+```
+
+```sh
+export DEVUNTU_MCP_TOKEN='<発行したトークン>'   # .bashrc / .zshrc などに残す
+```
+
+Codex は設定ファイルにトークンそのものを書けない(`mcp_servers.<id>` が受けるのは
+`bearer_token_env_var` / `http_headers` / `env_http_headers` / `http_headers_helper` で、
+リテラルの `bearer_token` は無い)。接続のたびに環境変数を読むので、シェルの設定ファイルに残す必要がある。
+発行画面はこの `export` 行もコピーできる形で表示する(トークンは発行時にしか見せられないため)。
+
 ### エージェントとして登録する場合
 
-`/admin/agents` でトークンを発行した際に表示されるコマンドをそのまま使える。
+`/admin/agents` でトークンを発行した際に表示されるコマンドをそのまま使える。CLI(Claude Code / Codex CLI)を
+切り替えると、その CLI 向けの登録方法が表示される。
 
 ```sh
 claude mcp add --transport http devuntu-agent <BETTER_AUTH_URL>/api/mcp \
-  --header "Authorization: Bearer <発行したトークン>"
+  --scope project \
+  --header 'Authorization: Bearer ${DEVUNTU_AGENT_TOKEN}'
+```
+
+Codex CLI の場合は `.codex/config.toml` に次を足す。
+
+```toml
+[mcp_servers.devuntu-agent]
+url = "<BETTER_AUTH_URL>/api/mcp"
+bearer_token_env_var = "DEVUNTU_AGENT_TOKEN"
 ```
 
 この経路ではブラウザでのログインと同意は発生しない。
+
+トークンを設定ファイルへ直接書かず環境変数の参照にしてあるのは、自動運用のランナーが
+`config.json` の `token` を `DEVUNTU_AGENT_TOKEN` として CLI へ渡すため
+([agent-runner.md](agent-runner.md#トークンの渡り方))。トークンの在処が 1 箇所になり、
+再発行時に直す場所も 1 箇所で済む。人が手動で使う場合は、環境変数を export してから CLI を起動する。
 
 ## 認証の3経路
 
