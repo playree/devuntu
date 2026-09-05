@@ -94,11 +94,13 @@ export const en: LocaleItems = {
   calendar: 'Calendar',
   calendar_share: 'Availability Sharing',
   cancel: 'Cancel',
+  claude_code: 'Claude Code',
   client_id: 'Client ID',
   client_name: 'Client Name',
   client_secret: 'Client Secret',
   clear: 'Clear',
   close: 'Close',
+  codex_cli: 'Codex CLI',
   comment: 'Comment',
   comment_type: 'Type',
   comment_type_none: 'Normal',
@@ -176,6 +178,7 @@ export const en: LocaleItems = {
   member: 'Member',
   mcp_add_command: 'MCP Registration Command',
   mcp_token: 'MCP Token',
+  mcp_token_env_command: 'Environment Variable',
   mentioned: 'Mentioned',
   name: 'Name',
   name_locked: 'Lock name',
@@ -329,6 +332,8 @@ Please copy and use the connection information above.
   msg_agent_custom_instruction_desc:
     'The instructions (Markdown) the agent reads before starting work and follows throughout. Leaving it blank means no instructions.',
   msg_agent_no_approver: 'No approver is set. Nobody can change the agent mode of tickets assigned to this agent.',
+  msg_agent_token_env:
+    "The registration command does not contain the token. Set the token in the runner config.json; it is passed to the CLI as the DEVUNTU_AGENT_TOKEN environment variable. To start the CLI by hand, run export DEVUNTU_AGENT_TOKEN='<issued token>' first. See the setup guide for keeping the configuration per working directory.",
   msg_agent_rule_none: 'No instructions are set.',
   msg_agent_runner_desc:
     'Settings for the runner that polls for assigned tickets. The AI agent starts only while these conditions are met. Leaving either start or end unset means all day; a start later than the end crosses midnight (nights only). The daily run limit counts every start, and 0 means unlimited; the count returns to 0 at the reset time, based on the timezone setting.',
@@ -383,6 +388,8 @@ Please copy and use the connection information above.
     'Calendar sharing requires a linked Google account. Please link it on the account page.',
   msg_mcp_token_desc:
     'A token for connecting MCP clients without a browser sign-in. It can read and write tickets with your permissions, so keep it secret.',
+  msg_mcp_token_env:
+    'Codex CLI reads the token from an environment variable on every connection. Add the export line to your shell configuration (.bashrc, .zshrc, etc.).',
   msg_mcp_token_limit: 'You can hold up to ${max} tokens. Delete unused ones first.',
   msg_mention_hint: 'Type @ followed by a name or email address to pick someone to mention.',
   msg_no_access: 'You do not have permission to view this content.',

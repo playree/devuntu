@@ -7,12 +7,13 @@ import { GridBox } from '@/components/general/grid'
 import { useConfirmModal } from '@/components/general/modal'
 import { NoticePanel, Panel, PanelSkeleton } from '@/components/general/panel'
 import { StepMotion } from '@/components/general/step-motion'
+import { TabsBox } from '@/components/general/tabs'
 import { ArrowPathIcon, CheckIcon } from '@/components/icon'
 import { TokenExpiresSelect } from '@/components/token-expires-select'
 import { parseAction } from '@/lib/action/action-client'
-import { AGENT_TOKEN_PREFIX } from '@/lib/agent/agent'
+import { AGENT_TOKEN_ENV, AGENT_TOKEN_PREFIX, AGENT_TOKEN_REF } from '@/lib/agent/agent'
 import { dayformat } from '@/lib/day'
-import { mcpAddCommand } from '@/lib/mcp/mcp'
+import { AGENT_MCP_SERVER_NAME, mcpAddCommand, mcpCodexAddCommand } from '@/lib/mcp/mcp'
 import { IssueAgentToken, scIssueAgentToken } from '@/lib/schema/schema'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
@@ -152,17 +153,40 @@ export const AgentToken: FC<{
                   />
                 </div>
                 <div className='col-span-12'>
-                  <CopyableField
-                    text={mcpAddCommand(baseUrl, issued, 'devuntu-agent', 'local')}
-                    label={t('mcp_add_command')}
-                    isMask
-                    copyLabel={t('copy')}
-                    showLabel={t('show')}
-                    hideLabel={t('hide')}
+                  <NoticePanel className='text-xs'>{t('msg_token_once')}</NoticePanel>
+                </div>
+                <div className='col-span-12'>
+                  <TabsBox
+                    variant='secondary'
+                    ariaLabel={t('mcp_add_command')}
+                    items={[
+                      {
+                        id: 'claude',
+                        label: t('claude_code'),
+                        content: (
+                          <CopyableField // トークンではなく環境変数の参照が入るので伏せ字にしない
+                            text={mcpAddCommand(baseUrl, AGENT_TOKEN_REF, AGENT_MCP_SERVER_NAME, 'project')}
+                            label={t('mcp_add_command')}
+                            copyLabel={t('copy')}
+                          />
+                        ),
+                      },
+                      {
+                        id: 'codex',
+                        label: t('codex_cli'),
+                        content: (
+                          <CopyableField
+                            text={mcpCodexAddCommand(baseUrl, AGENT_MCP_SERVER_NAME, AGENT_TOKEN_ENV)}
+                            label={t('mcp_add_command')}
+                            copyLabel={t('copy')}
+                          />
+                        ),
+                      },
+                    ]}
                   />
                 </div>
                 <div className='col-span-12'>
-                  <NoticePanel className='text-xs'>{t('msg_token_once')}</NoticePanel>
+                  <NoticePanel className='text-xs'>{t('msg_agent_token_env')}</NoticePanel>
                 </div>
               </GridBox>
             </StepMotion>

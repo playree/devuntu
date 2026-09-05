@@ -94,11 +94,13 @@ export const ja: DefaultLocaleItems = {
   calendar: 'カレンダー',
   calendar_share: '空き時間の共有',
   cancel: 'キャンセル',
+  claude_code: 'Claude Code',
   client_id: 'クライアントID',
   client_name: 'クライアント名',
   client_secret: 'クライアントシークレット',
   clear: 'クリア',
   close: '閉じる',
+  codex_cli: 'Codex CLI',
   comment: 'コメント',
   comment_type: '種別',
   comment_type_none: '通常',
@@ -176,6 +178,7 @@ export const ja: DefaultLocaleItems = {
   member: 'メンバー',
   mcp_add_command: 'MCP登録コマンド',
   mcp_token: 'MCPトークン',
+  mcp_token_env_command: '環境変数の設定',
   mentioned: 'メンション',
   name: '名前',
   name_locked: '名前をロック',
@@ -329,6 +332,8 @@ export const ja: DefaultLocaleItems = {
   msg_agent_custom_instruction_desc:
     'エージェントが作業前に読み、処理全体を通じて従う指示(Markdown)です。空欄は指示なしとして扱われます。',
   msg_agent_no_approver: '承認者が未設定です。このエージェントのチケットは誰もエージェントモードを変更できません。',
+  msg_agent_token_env:
+    "登録コマンドにトークンは含まれません。トークンはランナーの config.json に設定し、環境変数 DEVUNTU_AGENT_TOKEN として CLI へ渡されます。手動で CLI を起動して確認する場合は、先に export DEVUNTU_AGENT_TOKEN='<発行したトークン>' を実行してください。作業ディレクトリごとに設定を分ける手順はセットアップ手順を参照してください。",
   msg_agent_rule_none: '指示は設定されていません。',
   msg_agent_runner_desc:
     '担当チケットを定期的に取りに来る常駐エージェントの設定です。稼働条件を満たすときだけAIエージェントが起動します。\n開始・終了はどちらか未指定なら終日稼働、開始が終了より後の場合は日跨ぎ(夜間のみ)として扱います。\n1日の処理上限は起動1回ごとに数え、0を指定すると無制限です。カウントは上限リセット時刻(タイムゾーン設定に従う)を境に0へ戻ります。',
@@ -383,6 +388,8 @@ export const ja: DefaultLocaleItems = {
     'カレンダーの共有には Google アカウントとの連携が必要です。アカウントページで連携してください。',
   msg_mcp_token_desc:
     'MCPクライアントからブラウザのログインを経由せずに接続するためのトークンです。あなたの権限でチケットを読み書きできるので、取り扱いに注意してください。',
+  msg_mcp_token_env:
+    'Codex CLI は接続のたびにトークンを環境変数から読みます。シェルの設定ファイル(.bashrc / .zshrc など)に環境変数の設定を追加してください。',
   msg_mcp_token_limit: '発行できるトークンは最大${max}本です。不要なトークンを削除してください。',
   msg_mention_hint: '@ に続けて名前かメールアドレスを入力すると、候補からメンションできます。',
   msg_no_access: 'この内容にアクセスする権限がありません。',

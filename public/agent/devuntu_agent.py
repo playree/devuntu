@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Devuntu Agent - 担当チケットを取りに来て Claude Code を起動するランナー。
+"""Devuntu Agent - 担当チケットを取りに来て AI エージェントの CLI を起動するランナー。
 
 標準ライブラリだけで動く。cron から 5 分おきに `poll` を呼ぶ想定で、常駐はしない。
 
@@ -9,12 +9,15 @@
 
     1. POST /api/agent/status  ... 稼働条件と処理すべきチケットを聞く
     2. POST /api/agent/runs    ... 実行の開始を記録する(チケットが処理中になる)
-    3. claude -p "..."         ... Claude Code を起動してチケットを処理させる
+    3. claude -p "..." / codex exec "..." ... CLI を起動してチケットを処理させる
     4. PATCH /api/agent/runs/<id> ... 実行の終了を記録する
 
-チケットの状態そのものは Claude が devuntu-agent MCP の finish_agent_task で報告する。
-このスクリプトは Claude の終了コードしか知らないので、4 は保険として扱われる
+チケットの状態そのものは CLI 側のエージェントが devuntu-agent MCP の finish_agent_task で報告する。
+このスクリプトは CLI の終了コードしか知らないので、4 は保険として扱われる
 (報告が無いまま終わった実行はサーバー側で失敗として閉じられる)。
+
+起動する CLI は config の `cli.kind` で選ぶ(`claude` / `codex`)。CLI ごとに違うのは
+起動コマンドの組み立てと既定値だけで、チケットの処理内容そのものは MCP 側から読ませるため共通。
 """
 
 from __future__ import annotations
@@ -37,7 +40,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-__version__ = "0.6.0"
+__version__ = "0.7.0"
 
 # 1 Agent の構成を作業ディレクトリだけで完結させるため、config・ログ・ロックは本体と同じ
 # <作業ディレクトリ>/.devuntu-agent へ置く。作業ディレクトリを分ければ同一ホストに複数の Agent を並べられる
@@ -55,27 +58,41 @@ LEGACY_CONFIG_PATH = Path.home() / ".config" / "devuntu-agent" / "config.json"
 # (src/lib/agent/agent-setup.ts の AGENT_SCRIPT_PATH と同じ)
 AGENT_SCRIPT_PATH = "/agent/devuntu_agent.py"
 
-# 起動する CLI の種類。将来 claude 以外(例: codex)にも対応する拡張ポイントとして
-# config の cli.kind で指定できるようにしてあるが、現時点でサポートするのは claude のみ
+# 起動する CLI の種類。config の cli.kind で選ぶ
 DEFAULT_CLI_KIND = "claude"
-SUPPORTED_CLI_KINDS = ("claude",)  # 将来 codex などを足す場合はここに追加する
 
-# 権限確認で止まると cron からは誰も答えられないので、既定は編集に限らずツール利用を自動承認する。
-# 挙動を変えたい場合は config の cli.args で上書きする。
-DEFAULT_CLAUDE_ARGS = ["--permission-mode", "auto"]
+# CLI ごとの既定値。cli.args / cli.model が config で省略された場合に使う
+#
+# args: 権限確認で止まると cron からは誰も答えられないので、既定はツール利用を自動承認する。
+#   codex は git リポジトリの中でしか動かないため、clone の基点でしかない作業ディレクトリでも
+#   起動できるよう --skip-git-repo-check を足す
+# model: codex は空にして CLI 側の既定モデルに任せる
+CLI_DEFAULTS: dict[str, dict[str, object]] = {
+    "claude": {"args": ["--permission-mode", "auto"], "model": "sonnet"},
+    "codex": {"args": ["--sandbox", "danger-full-access", "--skip-git-repo-check"], "model": ""},
+}
+SUPPORTED_CLI_KINDS = tuple(CLI_DEFAULTS)
 
-# config で cli.model が省略された場合に使うモデル
-DEFAULT_CLAUDE_MODEL = "sonnet"
+# MCP の設定ファイル(.mcp.json / .codex/config.toml)がトークンを参照するための環境変数名。
+# 設定ファイルへ平文で書かせず、トークンの在処を config.json だけに保つために CLI へ渡す
+AGENT_TOKEN_ENV = "DEVUNTU_AGENT_TOKEN"
 
 # cron から起動されると PATH は最小(/usr/bin:/bin 程度)で、ログインシェルの rc も読まれない。
-# 主なインストール先を PATH の先頭に足して、claude 本体と claude が呼ぶコマンドの両方を見つけられるようにする
-DEFAULT_PATH_DIRS = ("~/.local/bin", "~/bin", "~/.claude/local", "/usr/local/bin")
+# 主なインストール先を PATH の先頭に足して、CLI 本体と CLI が呼ぶコマンドの両方を見つけられるようにする
+DEFAULT_PATH_DIRS = (
+    "~/.local/bin",
+    "~/bin",
+    "~/.claude/local",
+    "~/.codex/bin",
+    "/usr/local/bin",
+    "/opt/homebrew/bin",
+)
 
-# nvm で入れた node を探す場所。npm 経由で claude を入れた環境では node が無いと起動できない
+# nvm で入れた node を探す場所。npm 経由で CLI を入れた環境では node が無いと起動できない
 NVM_NODE_DIR = Path.home() / ".nvm" / "versions" / "node"
 NVM_DEFAULT_ALIAS = Path.home() / ".nvm" / "alias" / "default"
 
-# Claude を待つ上限。超えたら殺して失敗として記録する
+# CLI を待つ上限。超えたら殺して失敗として記録する
 DEFAULT_TIMEOUT_SEC = 3600
 
 # 実行履歴に残す要約の上限(サーバー側は 2000 まで)
@@ -111,20 +128,17 @@ class Config:
         self.base_url: str = str(raw.get("base_url", "")).rstrip("/")
         self.token: str = str(raw.get("token", ""))
         # 特定のリポジトリではなく、必要なリポジトリをこの配下に clone して使う基点ディレクトリ。
-        # どのリポジトリを対象にするかはチケット本文や事前作業の指示から Claude が判断する
+        # どのリポジトリを対象にするかはチケット本文や事前作業の指示からエージェントが判断する
         # 省略時は .devuntu-agent の 1 つ上を使う
         self.workdir = resolve_agent_path(raw.get("workdir"), DEFAULT_WORKDIR)
 
-        # 起動する CLI まわりの設定。将来 claude 以外にも対応できるよう種類ごとにまとめて持つ
+        # 起動する CLI まわりの設定。CLI ごとの違いをここに閉じ込める
         cli_raw = raw.get("cli") or {}
         self.cli_kind: str = str(cli_raw.get("kind") or DEFAULT_CLI_KIND)
+        defaults = CLI_DEFAULTS.get(self.cli_kind, {})
         self.cli_bin: str = str(cli_raw.get("bin") or self.cli_kind)
-        self.cli_args: list[str] = list(
-            cli_raw.get("args") or (DEFAULT_CLAUDE_ARGS if self.cli_kind == "claude" else [])
-        )
-        self.cli_model: str = str(
-            cli_raw.get("model") or (DEFAULT_CLAUDE_MODEL if self.cli_kind == "claude" else "")
-        )
+        self.cli_args: list[str] = [str(arg) for arg in (cli_raw.get("args") or defaults.get("args") or [])]
+        self.cli_model: str = str(cli_raw.get("model") or defaults.get("model") or "")
         # cron の PATH では足りない場合に足すディレクトリと、CLI へ渡す追加の環境変数
         self.cli_path: list[str] = [str(entry) for entry in (cli_raw.get("path") or [])]
         self.cli_env: dict[str, str] = {str(k): str(v) for k, v in (cli_raw.get("env") or {}).items()}
@@ -295,7 +309,7 @@ def self_update(config: Config) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# Claude の起動
+# CLI の起動
 # ---------------------------------------------------------------------------
 
 
@@ -341,12 +355,14 @@ def build_path_dirs(config: Config) -> list[str]:
 
 
 def build_env(config: Config) -> dict[str, str]:
-    """CLI へ渡す環境変数。cron の最小 PATH では claude も claude が呼ぶコマンドも見つからないので補う"""
+    """CLI へ渡す環境変数。cron の最小 PATH では CLI も CLI が呼ぶコマンドも見つからないので補う"""
     env = dict(os.environ)
     path_dirs = build_path_dirs(config)
     if path_dirs:
         current = env.get("PATH", "")
         env["PATH"] = os.pathsep.join([*path_dirs, current]) if current else os.pathsep.join(path_dirs)
+    # MCP の設定ファイルはトークンをこの環境変数から読む。cli.env で明示された場合はそちらを優先する
+    env[AGENT_TOKEN_ENV] = config.token
     env.update(config.cli_env)
     return env
 
@@ -367,8 +383,20 @@ def cli_not_found_message(config: Config, env: dict[str, str]) -> str:
     )
 
 
+def print_env(config: Config) -> int:
+    """ランナーが CLI へ渡している環境変数を export 形式で出す。
+
+    MCP の設定ファイルはトークンを環境変数から読むので、人が同じ作業ディレクトリで CLI を手動起動して
+    確認するときは `eval "$(python3 .devuntu-agent/devuntu_agent.py env)"` を先に実行する必要がある。
+    """
+    env = build_env(config)
+    for key in dict.fromkeys([AGENT_TOKEN_ENV, "PATH", *config.cli_env]):
+        print(f"export {key}={shlex.quote(env.get(key, ''))}")
+    return 0
+
+
 def build_prompt(task: dict) -> str:
-    """Claude へ渡す指示。作業内容そのものは MCP 側(ルール / チケット本文)から読ませる"""
+    """CLI へ渡す指示。作業内容そのものは MCP 側(ルール / チケット本文)から読ませるので CLI によらず共通"""
     return (
         f"devuntu のチケット {task['displayId']} を担当エージェントとして処理する。\n"
         "\n"
@@ -396,15 +424,19 @@ def build_prompt(task: dict) -> str:
 
 
 def build_command(config: Config, task: dict, cli_bin: str | None = None) -> list[str]:
-    """cli を起動するコマンド全量"""
-    command = [cli_bin or config.cli_bin, "-p", build_prompt(task)]
-    if config.cli_model:
-        command += ["--model", config.cli_model]
-    return command + config.cli_args
+    """CLI を起動するコマンド全量。CLI ごとの流儀の違いはここに閉じる"""
+    prompt = build_prompt(task)
+    model = ["--model", config.cli_model] if config.cli_model else []
+    command = [cli_bin or config.cli_bin]
+
+    if config.cli_kind == "codex":
+        # codex の非対話モードはサブコマンド exec で、指示は位置引数として最後に置く
+        return [*command, "exec", *model, *config.cli_args, prompt]
+    return [*command, "-p", prompt, *model, *config.cli_args]
 
 
-def run_claude(config: Config, task: dict) -> tuple[str, str]:
-    """Claude Code を起動する。戻り値は (実行の結果, 実行履歴に残す要約)"""
+def run_cli(config: Config, task: dict) -> tuple[str, str]:
+    """CLI を起動する。戻り値は (実行の結果, 実行履歴に残す要約)"""
     env = build_env(config)
     cli_bin = resolve_cli_bin(config, env)
     if not cli_bin:
@@ -414,7 +446,8 @@ def run_claude(config: Config, task: dict) -> tuple[str, str]:
 
     command = build_command(config, task, cli_bin)
     log.info(
-        "starting claude: ticket=%s action=%s cwd=%s bin=%s",
+        "starting %s: ticket=%s action=%s cwd=%s bin=%s",
+        config.cli_kind,
         task["displayId"],
         task["action"],
         config.workdir,
@@ -434,23 +467,24 @@ def run_claude(config: Config, task: dict) -> tuple[str, str]:
     except OSError as e:
         return "failed", f"failed to start {cli_bin}: {e}"
     except subprocess.TimeoutExpired:
-        log.error("claude did not finish within %d seconds", config.timeout_sec)
+        log.error("%s did not finish within %d seconds", config.cli_kind, config.timeout_sec)
         return "failed", f"timeout ({config.timeout_sec}s)"
 
-    # summary には claude が標準出力した最終応答(ユーザー向けの結果メッセージ)を使う。
-    # 実行履歴で内容が分かるようにするため
+    # summary には CLI が標準出力した最終応答(ユーザー向けの結果メッセージ)を使う。
+    # 実行履歴で内容が分かるようにするため。claude -p も codex exec も、途中経過は標準エラーへ流し
+    # 標準出力には最終メッセージだけを出すので、この扱いは CLI によらず共通でよい
     output = (completed.stdout or "").strip()
 
     if completed.returncode != 0:
         if output:
-            log.error("claude exited with code %d: %s", completed.returncode, output[:SUMMARY_LIMIT])
+            log.error("%s exited with code %d: %s", config.cli_kind, completed.returncode, output[:SUMMARY_LIMIT])
             return "failed", output[:SUMMARY_LIMIT]
         tail = (completed.stderr or "").strip()[-SUMMARY_LIMIT:]
-        log.error("claude exited with code %d: %s", completed.returncode, tail)
+        log.error("%s exited with code %d: %s", config.cli_kind, completed.returncode, tail)
         return "failed", f"exit {completed.returncode}: {tail}"
 
-    log.info("claude exited successfully: ticket=%s", task["displayId"])
-    return "succeeded", output[:SUMMARY_LIMIT] if output else "claude exited 0 (no output)"
+    log.info("%s exited successfully: ticket=%s", config.cli_kind, task["displayId"])
+    return "succeeded", output[:SUMMARY_LIMIT] if output else f"{config.cli_kind} exited 0 (no output)"
 
 
 # ---------------------------------------------------------------------------
@@ -463,7 +497,11 @@ def poll(config: Config, dry_run: bool, debug: bool = False) -> int:
         config,
         "POST",
         "/api/agent/status",
-        {"hostname": socket.gethostname(), "version": f"{__version__} ({platform.system()})"},
+        {
+            "hostname": socket.gethostname(),
+            # どの CLI で動いているかは管理画面の表示にしか使わないので、版の文字列に含めて済ませる
+            "version": f"{__version__} ({platform.system()}, {config.cli_kind})",
+        },
     )
 
     if not status.get("active"):
@@ -487,12 +525,13 @@ def poll(config: Config, dry_run: bool, debug: bool = False) -> int:
         log.info("%d tickets pending, processing only %s this time", len(tasks), display_id)
 
     if debug or dry_run:
-        # Claude は起動しないが、CLI の解決結果まで見せて PATH の不備に気付けるようにする
+        # CLI は起動しないが、解決結果まで見せて PATH の不備に気付けるようにする
         env = build_env(config)
         cli_bin = resolve_cli_bin(config, env)
         if debug:
             log.info("debug: printing the full command for %s", display_id)
             print(f"PATH={env.get('PATH', '')}")
+            print(f'# {AGENT_TOKEN_ENV} には config.json の token が渡る(手で実行するなら env サブコマンド)')
             print(f"cd {shlex.quote(str(config.workdir))} && \\")
             print(" ".join(shlex.quote(part) for part in build_command(config, task, cli_bin)))
             if not cli_bin:
@@ -509,9 +548,9 @@ def poll(config: Config, dry_run: bool, debug: bool = False) -> int:
         raise ApiError(f"POST /api/agent/runs response is missing runId: {run}")
 
     try:
-        result, summary = run_claude(config, task)
+        result, summary = run_cli(config, task)
     except Exception as e:  # noqa: BLE001 (実行の記録を必ず閉じるため、想定外の例外も拾う)
-        log.exception("unexpected exception while launching claude")
+        log.exception("unexpected exception while launching %s", config.cli_kind)
         result, summary = "failed", f"unexpected error: {e}"[:SUMMARY_LIMIT]
 
     # 実行の記録だけは必ず閉じる。開いたままだとこのチケットを二度と拾えなくなる
@@ -571,15 +610,18 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Devuntu Agent")
     parser.add_argument(
         "command",
-        choices=["poll", "save-path"],
-        help="poll: 担当チケットを 1 件処理する / save-path: 今のシェルの PATH を設定に保存する",
+        choices=["poll", "save-path", "env"],
+        help=(
+            "poll: 担当チケットを 1 件処理する / save-path: 今のシェルの PATH を設定に保存する / "
+            "env: CLI へ渡している環境変数を export 形式で出す"
+        ),
     )
     parser.add_argument("--config", type=Path, default=None, help=f"設定ファイル(既定 {DEFAULT_CONFIG_PATH})")
-    parser.add_argument("--dry-run", action="store_true", help="Claude を起動せず、何を処理するかだけを出す")
+    parser.add_argument("--dry-run", action="store_true", help="CLI を起動せず、何を処理するかだけを出す")
     parser.add_argument(
         "--debug",
         action="store_true",
-        help="Claude を起動するコマンド全量を表示するだけで、Claude の起動や実行記録は行わない",
+        help="CLI を起動するコマンド全量を表示するだけで、CLI の起動や実行記録は行わない",
     )
     parser.add_argument("--lock", type=Path, default=DEFAULT_LOCK_PATH, help=f"ロックファイル(既定 {DEFAULT_LOCK_PATH})")
     parser.add_argument("--verbose", action="store_true")
@@ -600,6 +642,8 @@ def main(argv: list[str] | None = None) -> int:
     # チケット処理ではないので、ロックにも自動更新にも通さない
     if args.command == "save-path":
         return save_path(config)
+    if args.command == "env":
+        return print_env(config)
 
     lock = acquire_lock(args.lock)
     if lock is None:

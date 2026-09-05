@@ -38,6 +38,15 @@ export const DUPLICATED_AGENT_HANDLE = 'DUPLICATED_AGENT_HANDLE'
 /** ユーザー用の MCP トークンや OAuth のアクセストークン(JWT)と取り違えないための接頭辞 */
 export const AGENT_TOKEN_PREFIX = 'devuntu_agent_'
 
+/**
+ * 自動運用のランナーが CLI へ渡す環境変数名(`public/agent/devuntu_agent.py` の `AGENT_TOKEN_ENV` と対)。
+ * MCP の設定ファイルはトークンをここから読むので、設定ファイル側に平文のトークンが残らない。
+ */
+export const AGENT_TOKEN_ENV = 'DEVUNTU_AGENT_TOKEN'
+
+/** MCP の設定ファイルへ書くトークンの参照 */
+export const AGENT_TOKEN_REF = `\${${AGENT_TOKEN_ENV}}`
+
 /* -------------------------------------------------------------------------------------------------
  * 自動運用(Devuntu Agent)
  * ---------------------------------------------------------------------------------------------- */

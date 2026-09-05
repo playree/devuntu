@@ -1,4 +1,5 @@
 import { ASSIGNEE_NONE, TICKET_PRIORITIES, TICKET_STATUSES } from '@/lib/board/task'
+import { AGENT_MCP_SERVER_NAME, MCP_SERVER_NAME } from '@/lib/mcp/mcp'
 import { registerAgentSetupTool, registerAgentTools } from '@/lib/mcp/mcp-agent'
 import { registerImageTools } from '@/lib/mcp/mcp-image'
 import {
@@ -30,13 +31,13 @@ import { z } from 'zod'
  */
 
 /**
- * Claude Code へ登録されるサーバー名。人間の経路はどちらも `devuntu` を名乗る。
+ * MCP クライアントへ登録されるサーバー名。人間の経路はどちらも `devuntu` を名乗る。
  * 網羅を強制して、認証経路が増えたときにここの見直しをコンパイルエラーで気付けるようにする。
  */
 const SERVER_NAME = {
-  oauth: 'devuntu',
-  pat: 'devuntu',
-  agent: 'devuntu-agent',
+  oauth: MCP_SERVER_NAME,
+  pat: MCP_SERVER_NAME,
+  agent: AGENT_MCP_SERVER_NAME,
 } as const satisfies Record<ResourceAuth['kind'], string>
 
 export const createDevuntuMcpServer = (auth: ResourceAuth) => {
