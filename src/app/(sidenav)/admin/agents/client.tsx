@@ -90,7 +90,7 @@ export const AdminAgentsClient: FC = () => {
         ariaLabel='agent list'
         pagingList={list}
         columns={[
-          { id: 'name', name: t('name'), isRowHeader: true, allowsSorting: true, minWidth: 100 },
+          { id: 'name', name: t('name'), isRowHeader: true, allowsSorting: true, minWidth: 100, defaultWidth: '2fr' },
           { id: 'groups', name: t('group'), minWidth: 88, defaultWidth: '1fr' },
           { id: 'tokenStatus', name: t('agent_token'), allowsSorting: true, minWidth: 80, defaultWidth: 90 },
           { id: 'runnerStatus', name: t('agent_runner'), allowsSorting: true, minWidth: 90, defaultWidth: 100 },
