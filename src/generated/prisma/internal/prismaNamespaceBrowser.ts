@@ -574,6 +574,7 @@ export const BoardScalarFieldEnum = {
   name: 'name',
   description: 'description',
   archived: 'archived',
+  slackChannelId: 'slackChannelId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

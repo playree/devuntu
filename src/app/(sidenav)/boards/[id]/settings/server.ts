@@ -16,7 +16,7 @@ import {
 } from '@/lib/board/board'
 import { listBoardTagsForManage, rethrowDuplicatedTagName } from '@/lib/board/tag'
 import { canApplyAssignments, MAX_TAGS_PER_SCOPE, nextOrder, TICKET_STATUSES, type BoardRole } from '@/lib/board/task'
-import { errInvalidOperation } from '@/lib/error'
+import { errInvalidOperation, errValidation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import {
@@ -24,11 +24,14 @@ import {
   scRemoveBoardMember,
   scSetBoardArchived,
   scSetBoardGroups,
+  scSetBoardSlackChannel,
   scUpdateBoard,
   scUpdateTag,
   scUpsertBoardMember,
   scUUID,
 } from '@/lib/schema/schema'
+import { getSlackSettings, hasSlackCredentials } from '@/lib/slack/slack-account'
+import { listSlackChannels } from '@/lib/slack/slack-server'
 
 const TAG_SELECT = { id: true, boardId: true, name: true, color: true, order: true } as const
 
@@ -46,7 +49,16 @@ export const getBoardDetail = safeAuthAction
 
     const board = await prisma.board.findUnique({
       where: { id },
-      select: { id: true, kind: true, key: true, name: true, description: true, archived: true, createdAt: true },
+      select: {
+        id: true,
+        kind: true,
+        key: true,
+        name: true,
+        description: true,
+        archived: true,
+        slackChannelId: true,
+        createdAt: true,
+      },
     })
     if (!board) {
       throw errInvalidOperation()
@@ -63,6 +75,8 @@ export const getBoardDetail = safeAuthAction
       // 権限境界: ユーザー単位のアサインは owner、グループ単位は管理者のみ
       canManage: access.role === 'owner' || isAdminActor(user),
       isAdmin: isAdminActor(user),
+      // Slack通知セクションの表示可否。連携が使えない環境では設定させても届かない
+      slackEnabled: hasSlackCredentials() && (await getSlackSettings()).enabled,
       ticketCounts: Object.fromEntries(TICKET_STATUSES.map((status) => [status, byStatus[status] ?? 0])),
     }
   })
@@ -122,6 +136,51 @@ export const setBoardArchived = safeAuthAction
     })
 
     logger.info({ userId: user.id, id, archived }, 'board archived updated')
+    return { id }
+  })
+
+/**
+ * 通知先に選べる Slack チャンネルの一覧(owner または管理者)。
+ *
+ * Bot が参加している会話だけが返る。未参加のチャンネルは投稿できないので、
+ * 「一覧に出ている = 必ず投稿できる」が成立する。取得できない場合は null。
+ */
+export const getBoardSlackChannels = safeAuthAction
+  .metadata({ actionName: 'getBoardSlackChannels', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => {
+    await assertBoardAccess(user, id, 'manage')
+    return listSlackChannels()
+  })
+export type GetBoardSlackChannelsReturnType = Awaited<ReturnType<typeof getBoardSlackChannels>>['data']
+
+/**
+ * エージェントの実行結果を通知する Slack チャンネルの設定(owner または管理者)。
+ *
+ * 空文字は「通知しない」。存在しない / Bot が参加していないチャンネルを保存すると
+ * 設定できたように見えて通知だけ届かなくなるため、一覧と突き合わせてから保存する
+ * (一覧はキャッシュ済みなので追加のコストはほぼ無い)。
+ */
+export const setBoardSlackChannel = safeAuthAction
+  .metadata({ actionName: 'setBoardSlackChannel', role: 'user' })
+  .inputSchema(scSetBoardSlackChannel)
+  .action(async ({ ctx: { user }, parsedInput: { id, slackChannelId } }) => {
+    const channelId = slackChannelId || null
+
+    if (channelId) {
+      const channels = await listSlackChannels()
+      if (!channels?.some((channel) => channel.id === channelId)) {
+        throw errValidation('slackChannelId')
+      }
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await assertBoardAccess(user, id, 'manage', tx)
+      await assertTeamBoard(tx, id)
+      await tx.board.update({ where: { id }, data: { slackChannelId: channelId }, select: { id: true } })
+    })
+
+    logger.info({ userId: user.id, id, slackChannelId: channelId }, 'board slack channel updated')
     return { id }
   })
 

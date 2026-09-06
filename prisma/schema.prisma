@@ -1219,6 +1219,10 @@ model Board {
   /// アーカイブ済み。一覧の既定の表示からは外れる
   archived Boolean @default(false)
 
+  /// エージェントの実行結果を通知する Slack チャンネル(`C...`)。null なら通知しない。
+  /// Bot が招待されているチャンネルだけを設定画面に出す(users.conversations)
+  slackChannelId String?
+
   // メタデータ
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

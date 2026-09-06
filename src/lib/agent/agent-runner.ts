@@ -11,6 +11,8 @@ import type { AgentRunAction, AgentRunStatus, AgentTaskMode, AgentTaskState } fr
 import { OPEN_TICKET_STATUSES, ticketDisplayId } from '../board/task'
 import { addDaysDateOnly, DEFAULT_TZ, minToHHmm, nowDate, toZone, zonedMinutes } from '../day'
 import { logger } from '../logger'
+import { MAX_NOTIFY_RECIPIENTS } from '../notify/notify'
+import { type AgentRunNotification, notifyAgentRun } from '../notify/notify-agent-run'
 import { prisma } from '../prisma'
 import { AGENT_UNLIMITED_DAILY_RUNS } from './agent'
 
@@ -22,6 +24,9 @@ type Db = Prisma.TransactionClient | typeof prisma
  * ランナーごと落ちた場合はこの経路でしか `running` が解けない。
  */
 export const AGENT_RUN_TIMEOUT_MIN = 60
+
+/** 時間切れで閉じた実行の要約。ランナーが何も報告せずに消えたことを履歴と通知で示す */
+const TIMEOUT_SUMMARY = 'timeout'
 
 /** 稼働できない理由。ランナーとエージェントの双方へそのまま返す */
 export type AgentInactiveReason = 'no_runner' | 'disabled' | 'outside_hours' | 'daily_limit'
@@ -37,6 +42,8 @@ export type AgentRunnerRow = {
   rule: string | null
   dailyRunLimit: number
   dailyResetMin: number
+  /** エージェントユーザー。実行結果の通知に表示名を載せる */
+  user: { name: string }
 }
 
 /** `AgentRunner` を引くときの共通 select。呼び出し側で形がずれないようにここへ置く */
@@ -51,6 +58,7 @@ export const agentRunnerSelect = {
   rule: true,
   dailyRunLimit: true,
   dailyResetMin: true,
+  user: { select: { name: true } },
 } as const
 
 export const findAgentRunner = async (userId: string): Promise<AgentRunnerRow | null> =>
@@ -254,6 +262,53 @@ const toAgentTask = (ticket: AgentTicketRow, mode: AgentTaskMode, action: AgentR
 })
 
 /**
+ * 実行結果の通知に要るチケットの項目。宛先(ボードのチャンネル)もここから引く。
+ * 実行を閉じる 3 経路で形がずれないよう共通化する。
+ */
+const agentRunNotifySelect = {
+  id: true,
+  number: true,
+  title: true,
+  board: { select: { key: true, slackChannelId: true } },
+} as const
+
+type AgentRunNotifyTicket = {
+  id: string
+  number: number
+  title: string
+  board: { key: string; slackChannelId: string | null }
+}
+
+/**
+ * 閉じた実行から通知の内容を組み立てる。
+ *
+ * チケットが削除済み(ticket が null)の実行は宛先のボードを辿れないので通知しない。
+ * 送るかどうかの最終判断(チャンネル未設定 / Slack 無効)は `notifyAgentRun` 側に任せる。
+ */
+const buildAgentRunNotification = (param: {
+  runId: string
+  agentName: string
+  ticket: AgentRunNotifyTicket | null
+  action: AgentRunAction
+  status: Exclude<AgentRunStatus, 'running'>
+  summary: string | null
+  startedAt: Date
+  finishedAt: Date
+}): AgentRunNotification | null => {
+  const { ticket, ...rest } = param
+  if (!ticket) {
+    return null
+  }
+  return {
+    ...rest,
+    slackChannelId: ticket.board.slackChannelId,
+    ticketId: ticket.id,
+    displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
+    ticketTitle: ticket.title,
+  }
+}
+
+/**
  * 応答が返らないまま時間切れになった実行を失敗として閉じる。
  * チケットが `running` のまま残ると二度と拾えなくなるので、ポーリングのたびに掃除する。
  */
@@ -261,7 +316,14 @@ export const failStaleAgentRuns = async (runnerId: string, now: Date = nowDate()
   const deadline = new Date(now.getTime() - AGENT_RUN_TIMEOUT_MIN * 60 * 1000)
   const stale = await prisma.agentRun.findMany({
     where: { runnerId, status: 'running', startedAt: { lt: deadline } },
-    select: { id: true, ticketId: true },
+    select: {
+      id: true,
+      ticketId: true,
+      action: true,
+      startedAt: true,
+      ticket: { select: agentRunNotifySelect },
+      runner: { select: { user: { select: { name: true } } } },
+    },
   })
   if (stale.length === 0) {
     return 0
@@ -271,7 +333,7 @@ export const failStaleAgentRuns = async (runnerId: string, now: Date = nowDate()
   await prisma.$transaction([
     prisma.agentRun.updateMany({
       where: { id: { in: stale.map((run) => run.id) } },
-      data: { status: 'failed', finishedAt: now, summary: 'timeout' },
+      data: { status: 'failed', finishedAt: now, summary: TIMEOUT_SUMMARY },
     }),
     prisma.ticket.updateMany({
       where: { id: { in: ticketIds }, agentState: 'running' },
@@ -280,6 +342,28 @@ export const failStaleAgentRuns = async (runnerId: string, now: Date = nowDate()
   ])
 
   logger.warn({ runnerId, count: stale.length }, 'agent runs timed out')
+
+  // まとめて時間切れになった場合に Slack を叩き続けないよう頭打ちにする
+  const notifyTo = stale.slice(0, MAX_NOTIFY_RECIPIENTS)
+  if (stale.length > notifyTo.length) {
+    logger.warn({ runnerId, total: stale.length, notified: notifyTo.length }, 'agent run notify truncated')
+  }
+  for (const run of notifyTo) {
+    const notification = buildAgentRunNotification({
+      runId: run.id,
+      agentName: run.runner.user.name,
+      ticket: run.ticket,
+      action: run.action,
+      status: 'failed',
+      summary: TIMEOUT_SUMMARY,
+      startedAt: run.startedAt,
+      finishedAt: now,
+    })
+    if (notification) {
+      await notifyAgentRun(notification)
+    }
+  }
+
   return stale.length
 }
 
@@ -419,7 +503,16 @@ export const finishAgentRunById = async (
 ): Promise<boolean> => {
   const run = await prisma.agentRun.findUnique({
     where: { id: runId },
-    select: { id: true, runnerId: true, status: true, ticketId: true },
+    select: {
+      id: true,
+      runnerId: true,
+      status: true,
+      ticketId: true,
+      action: true,
+      startedAt: true,
+      ticket: { select: agentRunNotifySelect },
+      runner: { select: { user: { select: { name: true } } } },
+    },
   })
   if (!run || run.runnerId !== runnerId) {
     return false
@@ -446,6 +539,24 @@ export const finishAgentRunById = async (
   })
 
   logger.info({ runnerId, runId, status: finalStatus, unreported }, 'agent run finished')
+
+  // 報告済みの実行はここでは閉じていない(finishAgentTask が既に通知している)ので二重に送らない
+  const notification = unreported
+    ? buildAgentRunNotification({
+        runId: run.id,
+        agentName: run.runner.user.name,
+        ticket: run.ticket,
+        action: run.action,
+        status: finalStatus,
+        summary: summary ?? null,
+        startedAt: run.startedAt,
+        finishedAt: now,
+      })
+    : null
+  if (notification) {
+    await notifyAgentRun(notification)
+  }
+
   return true
 }
 
@@ -482,29 +593,54 @@ export const finishAgentTask = async (
   const { state, run } = OUTCOME_MAP[outcome]
   const now = nowDate()
 
-  await prisma.$transaction(async (tx) => {
-    await tx.ticket.update({ where: { id: ticketId }, data: { agentState: state } })
+  const notification = await prisma.$transaction(async (tx) => {
+    const ticket = await tx.ticket.update({
+      where: { id: ticketId },
+      data: { agentState: state },
+      select: agentRunNotifySelect,
+    })
     // 自動運用の設定が無い(ランナーを介さず MCP だけで動かした)場合は閉じる実行が無い
     const open = runner
       ? await tx.agentRun.findFirst({
           where: { runnerId: runner.id, ticketId, status: 'running' },
           orderBy: { startedAt: 'desc' },
-          select: { id: true, action: true },
+          select: { id: true, action: true, startedAt: true },
         })
       : null
-    if (open) {
-      await tx.agentRun.update({
-        where: { id: open.id },
-        data: {
-          status: run,
-          summary: summary ?? undefined,
-          finishedAt: now,
-          action: settleAction(open.action, outcome),
-        },
-      })
+    if (!open || !runner) {
+      return null
     }
+
+    const settled = settleAction(open.action, outcome)
+    await tx.agentRun.update({
+      where: { id: open.id },
+      data: {
+        status: run,
+        summary: summary ?? undefined,
+        finishedAt: now,
+        action: settled,
+      },
+    })
+
+    return buildAgentRunNotification({
+      runId: open.id,
+      agentName: runner.user.name,
+      ticket,
+      // 実際に記録した処理へ寄せる(revise のまま通知すると履歴と食い違う)
+      action: settled ?? open.action,
+      status: run,
+      summary: summary ?? null,
+      startedAt: open.startedAt,
+      finishedAt: now,
+    })
   })
 
   logger.info({ runnerId: runner?.id ?? null, ticketId, outcome }, 'agent task finished')
+
+  // 実行の行が無い(MCP 単体実行)場合は実行履歴が登録されていないので通知もしない
+  if (notification) {
+    await notifyAgentRun(notification)
+  }
+
   return { state }
 }

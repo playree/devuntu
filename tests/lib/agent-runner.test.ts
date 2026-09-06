@@ -19,8 +19,12 @@ import {
   startAgentRun,
   type AgentRunnerRow,
 } from '@/lib/agent/agent-runner'
+import { notifyAgentRun } from '@/lib/notify/notify-agent-run'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+// 通知は実行を閉じたことの副作用。ここでは「どう呼ばれたか」だけを見る
+vi.mock('@/lib/notify/notify-agent-run', () => ({ notifyAgentRun: vi.fn() }))
 
 vi.mock('@/lib/prisma', () => {
   const ticket = { findMany: vi.fn(), findUnique: vi.fn(), update: vi.fn(), updateMany: vi.fn() }
@@ -47,6 +51,16 @@ const ticket = vi.mocked(prisma.ticket)
 const ticketComment = vi.mocked(prisma.ticketComment)
 const agentRun = vi.mocked(prisma.agentRun)
 
+const notifyMock = vi.mocked(notifyAgentRun)
+
+/** 通知の宛先を引くためにチケットへ足した select。既定は通知先が設定済みのボード */
+const notifyTicket = (slackChannelId: string | null = 'C0123ABCD') => ({
+  id: 't1',
+  number: 42,
+  title: 'テストチケット',
+  board: { key: 'ABC', slackChannelId },
+})
+
 const runner = (override: Partial<AgentRunnerRow> = {}): AgentRunnerRow => ({
   id: 'r1',
   userId: 'a1',
@@ -58,6 +72,7 @@ const runner = (override: Partial<AgentRunnerRow> = {}): AgentRunnerRow => ({
   rule: null,
   dailyRunLimit: 0,
   dailyResetMin: 5 * 60,
+  user: { name: 'テストエージェント' },
   ...override,
 })
 
@@ -245,6 +260,15 @@ describe('pickAgentTasks', () => {
 })
 
 describe('failStaleAgentRuns', () => {
+  const staleRun = () => ({
+    id: 'run1',
+    ticketId: 't1',
+    action: 'execute',
+    startedAt: new Date('2026-08-25T00:00:00Z'),
+    ticket: notifyTicket(),
+    runner: { user: { name: 'テストエージェント' } },
+  })
+
   it('時間切れが無ければ何もしない', async () => {
     agentRun.findMany.mockResolvedValueOnce([] as never)
 
@@ -253,7 +277,7 @@ describe('failStaleAgentRuns', () => {
   })
 
   it('時間切れの実行を失敗にし、処理中のチケットも解除する', async () => {
-    agentRun.findMany.mockResolvedValueOnce([{ id: 'run1', ticketId: 't1' }] as never)
+    agentRun.findMany.mockResolvedValueOnce([staleRun()] as never)
 
     expect(await failStaleAgentRuns('r1')).toBe(1)
     expect(prisma.$transaction).toHaveBeenCalled()
@@ -261,6 +285,29 @@ describe('failStaleAgentRuns', () => {
       where: { id: { in: ['t1'] }, agentState: 'running' },
       data: { agentState: 'failed' },
     })
+  })
+
+  it('時間切れは失敗としてボードのチャンネルへ通知する', async () => {
+    agentRun.findMany.mockResolvedValueOnce([staleRun()] as never)
+
+    await failStaleAgentRuns('r1')
+
+    expect(notifyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        runId: 'run1',
+        slackChannelId: 'C0123ABCD',
+        displayId: 'ABC-42',
+        status: 'failed',
+        summary: 'timeout',
+      }),
+    )
+  })
+
+  it('チケットが削除済みの実行は通知しない(宛先のボードを辿れない)', async () => {
+    agentRun.findMany.mockResolvedValueOnce([{ ...staleRun(), ticketId: null, ticket: null }] as never)
+
+    expect(await failStaleAgentRuns('r1')).toBe(1)
+    expect(notifyMock).not.toHaveBeenCalled()
   })
 })
 
@@ -299,6 +346,17 @@ describe('resolveAgentTask', () => {
 })
 
 describe('finishAgentRunById', () => {
+  const openRun = () => ({
+    id: 'run1',
+    runnerId: 'r1',
+    status: 'running',
+    ticketId: 't1',
+    action: 'execute',
+    startedAt: new Date('2026-08-25T00:00:00Z'),
+    ticket: notifyTicket(),
+    runner: { user: { name: 'テストエージェント' } },
+  })
+
   it('他のランナーの実行は閉じられない', async () => {
     agentRun.findUnique.mockResolvedValueOnce({ id: 'run1', runnerId: 'other', status: 'running' } as never)
 
@@ -306,12 +364,7 @@ describe('finishAgentRunById', () => {
   })
 
   it('報告が無いまま成功と伝えられた実行は失敗として閉じる', async () => {
-    agentRun.findUnique.mockResolvedValueOnce({
-      id: 'run1',
-      runnerId: 'r1',
-      status: 'running',
-      ticketId: 't1',
-    } as never)
+    agentRun.findUnique.mockResolvedValueOnce(openRun() as never)
 
     expect(await finishAgentRunById('r1', 'run1', 'succeeded', 'exit 0')).toBe(true)
     expect(agentRun.update).toHaveBeenCalledWith(
@@ -321,18 +374,17 @@ describe('finishAgentRunById', () => {
       where: { id: 't1', agentState: 'running' },
       data: { agentState: 'failed' },
     })
+    expect(notifyMock, '閉じたのはこの経路なので通知もここから出す').toHaveBeenCalledWith(
+      expect.objectContaining({ runId: 'run1', status: 'failed', summary: 'exit 0' }),
+    )
   })
 
   it('報告済みの実行は上書きしない', async () => {
-    agentRun.findUnique.mockResolvedValueOnce({
-      id: 'run1',
-      runnerId: 'r1',
-      status: 'succeeded',
-      ticketId: 't1',
-    } as never)
+    agentRun.findUnique.mockResolvedValueOnce({ ...openRun(), status: 'succeeded' } as never)
 
     expect(await finishAgentRunById('r1', 'run1', 'failed')).toBe(true)
     expect(agentRun.update).not.toHaveBeenCalled()
+    expect(notifyMock, '報告時に finishAgentTask が通知済みなので二重に送らない').not.toHaveBeenCalled()
   })
 })
 
@@ -424,10 +476,13 @@ describe('finishAgentTask', () => {
     ['skipped', 'skipped', 'skipped'],
     ['failed', 'failed', 'failed'],
   ] as const)('%s はチケットを %s、実行を %s にする', async (outcome, state, runStatus) => {
+    ticket.update.mockResolvedValueOnce(notifyTicket() as never)
     agentRun.findFirst.mockResolvedValueOnce({ id: 'run1', action: 'execute' } as never)
 
     expect(await finishAgentTask(runner(), 't1', outcome, '要約')).toEqual({ state })
-    expect(ticket.update).toHaveBeenCalledWith({ where: { id: 't1' }, data: { agentState: state } })
+    expect(ticket.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 't1' }, data: { agentState: state } }),
+    )
     expect(agentRun.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ status: runStatus, summary: '要約', action: undefined }),

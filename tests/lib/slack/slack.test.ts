@@ -6,8 +6,30 @@
  * 純粋関数へ寄せてあるので、そちらを検証する(`google-calendar-server.ts` と同じ方針)。
  */
 
-import { buildMentionMessage, buildTicketUnfurlBlocks, classifySlackError, escapeSlackText } from '@/lib/slack/slack'
+import {
+  buildTicketMessage,
+  buildTicketUnfurlBlocks,
+  classifySlackError,
+  escapeSlackText,
+  SLACK_CHANNEL_ID_PATTERN,
+} from '@/lib/slack/slack'
 import { describe, expect, it } from 'vitest'
+
+describe('SLACK_CHANNEL_ID_PATTERN: 保存できるのはチャンネルIDだけ', () => {
+  it.each(['C0123ABCD', 'GABCDEFGH', 'C0123ABCDEFGH'])('チャンネルIDを受け付ける(%s)', (id) => {
+    expect(SLACK_CHANNEL_ID_PATTERN.test(id)).toBe(true)
+  })
+
+  it.each([
+    ['#general', 'チャンネル名は chat.postMessage の宛先にできるが、改名で壊れるので受けない'],
+    ['U0123ABCD', 'ユーザーIDを保存すると DM が飛んでしまう'],
+    ['C012', '短すぎる'],
+    ['c0123ABCD', '小文字始まり'],
+    ['', '未設定は null として扱うので空文字はここへ来ない'],
+  ])('チャンネルID以外は弾く(%s)', (id, reason) => {
+    expect(SLACK_CHANNEL_ID_PATTERN.test(id), reason).toBe(false)
+  })
+})
 
 describe('escapeSlackText: 利用者入力を mrkdwn の特殊記法として解釈させない', () => {
   it('& を最初に置換するので二重エスケープにならない', () => {
@@ -62,7 +84,7 @@ describe('classifySlackError: error コードを後処理の分類へ落とす',
   })
 })
 
-describe('buildMentionMessage: chat.postMessage のペイロードを組み立てる', () => {
+describe('buildTicketMessage: chat.postMessage のペイロードを組み立てる', () => {
   const base = {
     subject: '[PRJ-12] ログイン画面のレイアウト崩れ',
     url: 'https://devuntu.example.com/t/PRJ-12',
@@ -72,28 +94,28 @@ describe('buildMentionMessage: chat.postMessage のペイロードを組み立�
 
   it('text(フォールバック)が空にならない', () => {
     // blocks だけだと通知バナー / プッシュ通知の本文が空になる
-    const res = buildMentionMessage(base)
+    const res = buildTicketMessage(base)
     expect(res.text.length, '通知プレビューに使われるので必須').toBeGreaterThan(0)
     expect(res.text).toContain('[PRJ-12]')
   })
 
   it('section にチケットURLのリンクが入る', () => {
-    const res = buildMentionMessage(base)
+    const res = buildTicketMessage(base)
     expect(JSON.stringify(res.blocks)).toContain(`<${base.url}|`)
   })
 
   it('チケットを開くボタンに URL が入る', () => {
-    const res = buildMentionMessage(base)
+    const res = buildTicketMessage(base)
     expect(JSON.stringify(res.blocks)).toContain('"url":"https://devuntu.example.com/t/PRJ-12"')
   })
 
   it('本文の差し替えで文言が切り替わる(コメント経由かどうかは呼び出し側が決める)', () => {
-    const res = buildMentionMessage({ ...base, body: '田中太郎さんがあなたをメンションしました' })
+    const res = buildTicketMessage({ ...base, body: '田中太郎さんがあなたをメンションしました' })
     expect(res.text).toContain('田中太郎さんがあなたをメンションしました')
   })
 
   it('件名の利用者入力がエスケープされる', () => {
-    const res = buildMentionMessage({ ...base, subject: '[PRJ-1] <!channel> を直す' })
+    const res = buildTicketMessage({ ...base, subject: '[PRJ-1] <!channel> を直す' })
     const blocks = JSON.stringify(res.blocks)
     expect(blocks, 'blocks 側は必ずエスケープを通す').toContain('&lt;!channel&gt;')
     expect(blocks, '生の全体メンションが残ってはいけない').not.toContain('<!channel>')
@@ -102,7 +124,7 @@ describe('buildMentionMessage: chat.postMessage のペイロードを組み立�
   })
 
   it('3000字を超える件名は切り詰める(invalid_blocks で落ちないようにする)', () => {
-    const res = buildMentionMessage({ ...base, subject: 'あ'.repeat(5000) })
+    const res = buildTicketMessage({ ...base, subject: 'あ'.repeat(5000) })
     const sectionText = (res.blocks[0] as { text: { text: string } }).text.text
     expect(sectionText.length, 'Block Kit の section は 3000 字が上限').toBeLessThanOrEqual(3000)
     expect(res.text.length).toBeLessThanOrEqual(3000)
@@ -112,7 +134,7 @@ describe('buildMentionMessage: chat.postMessage のペイロードを組み立�
   })
 
   it('本文が長くてもリンク記法は壊さない', () => {
-    const res = buildMentionMessage({ ...base, body: 'い'.repeat(5000) })
+    const res = buildTicketMessage({ ...base, body: 'い'.repeat(5000) })
     const sectionText = (res.blocks[0] as { text: { text: string } }).text.text
     expect(sectionText.length).toBeLessThanOrEqual(3000)
     // 切り詰めの対象は本文側。見出しのリンクは丸ごと残る
@@ -120,7 +142,7 @@ describe('buildMentionMessage: chat.postMessage のペイロードを組み立�
   })
 
   it('抜粋が引用として本文の下に入る', () => {
-    const res = buildMentionMessage({ ...base, excerpt: 'iOS Safari だけで再現しました' })
+    const res = buildTicketMessage({ ...base, excerpt: 'iOS Safari だけで再現しました' })
     const sectionText = (res.blocks[0] as { text: { text: string } }).text.text
     expect(sectionText, 'mrkdwn の引用にして本文と区別する').toContain('\n>iOS Safari だけで再現しました')
     // 抜粋を届けるのが目的なので、プッシュ通知の時点で内容が見えるようにする
@@ -128,19 +150,19 @@ describe('buildMentionMessage: chat.postMessage のペイロードを組み立�
   })
 
   it('抜粋が無い場合は引用行を作らない', () => {
-    const res = buildMentionMessage(base)
+    const res = buildTicketMessage(base)
     const sectionText = (res.blocks[0] as { text: { text: string } }).text.text
     expect(sectionText).toBe(`*<${base.url}|${base.subject}>*\n${base.body}`)
   })
 
   it('抜粋の利用者入力がエスケープされる', () => {
-    const res = buildMentionMessage({ ...base, excerpt: '<!channel> 見てください' })
+    const res = buildTicketMessage({ ...base, excerpt: '<!channel> 見てください' })
     expect(JSON.stringify(res.blocks)).not.toContain('<!channel>')
     expect(res.text, 'フォールバックの text にも生の全体メンションを残さない').not.toContain('<!channel>')
   })
 
   it('本文で予算を使い切ったら抜粋を落とす(壊れた記法より欠落を選ぶ)', () => {
-    const res = buildMentionMessage({ ...base, body: 'い'.repeat(5000), excerpt: 'う'.repeat(500) })
+    const res = buildTicketMessage({ ...base, body: 'い'.repeat(5000), excerpt: 'う'.repeat(500) })
     const sectionText = (res.blocks[0] as { text: { text: string } }).text.text
     expect(sectionText.length).toBeLessThanOrEqual(3000)
     expect(sectionText.startsWith(`*<${base.url}|${base.subject}>*\n`)).toBe(true)

@@ -25,6 +25,7 @@ import {
   TICKET_STATUSES,
 } from '../board/task'
 import { NOTIFY_EVENTS } from '../notify/notify'
+import { SLACK_CHANNEL_ID_PATTERN } from '../slack/slack'
 import { TOKEN_EXPIRES } from '../token-expires'
 
 export const zName = z.string().min(2, el('@invalid_name')).max(30, el('@invalid_name'))
@@ -544,6 +545,19 @@ export const scSetBoardArchived = z.object({
   archived: z.boolean(),
 })
 export type SetBoardArchived = z.infer<typeof scSetBoardArchived>
+
+/**
+ * エージェントの実行結果を通知する Slack チャンネル。
+ * アーカイブと同じく、プロフィール編集とは経路を分けて他の項目を書き戻さないようにする。
+ *
+ * 空文字は「通知しない」(= null へ正規化)。実在の確認は Bot が参加しているチャンネルの
+ * 一覧と突き合わせて Server Action 側で行う。
+ */
+export const scSetBoardSlackChannel = z.object({
+  id: z.uuidv7(),
+  slackChannelId: z.union([z.literal(''), z.string().regex(SLACK_CHANNEL_ID_PATTERN, el('@invalid_slack_channel'))]),
+})
+export type SetBoardSlackChannel = z.infer<typeof scSetBoardSlackChannel>
 
 /**
  * ユーザー単位のアサインをメンバー 1 人ずつ追加 / 変更する(owner も実行可能)。

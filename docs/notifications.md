@@ -2,6 +2,7 @@
 - [ユーザーごとの通知設定](#ユーザーごとの通知設定)
 - [メール通知の前提](#メール通知の前提)
 - [Slack通知の前提](#slack通知の前提)
+- [エージェント実行結果のチャンネル通知](#エージェント実行結果のチャンネル通知)
 - [Slackでのチケットリンクのプレビュー](#slackでのチケットリンクのプレビュー)
   - [Slack App側の設定](#slack-app側の設定)
   - [展開されるのはアプリが参加している会話だけ](#展開されるのはアプリが参加している会話だけ)
@@ -10,7 +11,9 @@
 
 # 通知の実装詳細
 
-現在の通知イベントはメンション(`mention`)のみで、通知チャネルは**メール**と**Slack DM**の 2 つ。
+ユーザー宛の通知イベントはメンション(`mention`)のみで、通知チャネルは**メール**と**Slack DM**の 2 つ。
+これとは別に、宛先がユーザーではなくチャンネルの通知として
+[エージェント実行結果のチャンネル通知](#エージェント実行結果のチャンネル通知)がある。
 
 ## メンション通知の流れ
 
@@ -47,6 +50,54 @@ Slack DM は以下の 3 段がすべて揃ったユーザーにだけ届く。�
 
 送信は逐次で行い、Bot トークンが無効(`revoked`)と判定された時点で残りを打ち切る。
 
+## エージェント実行結果のチャンネル通知
+
+AIエージェントの自動運用(`docs/agent-runner.md`)は無人で動くため、実行履歴を見に行かないと結果が分からない。
+**ボードごとに Slack チャンネルを設定**し、そのボードのチケットの実行が終わった時点で結果を投稿する。
+
+入口は `notifyAgentRun()`(`src/lib/notify/notify-agent-run.ts`)ただ 1 つ。メンション通知と同じく
+`after()` の中で送り、例外は握り潰してログに落とすだけでエージェントの実行記録へ波及させない。
+
+- 設定は `Board.slackChannelId`。`/boards/[id]/settings` の「Slack通知」で選ぶ。**null なら通知しない**
+- 設定できるのはボードの `owner` と管理者(`assertBoardAccess(..., 'manage')`)。
+  プライベートボードは他の構成変更と同じく `assertTeamBoard` で弾く
+- **通知するのは実行が終了したときだけ**(成功 / 失敗 / スキップ)。開始時は通知しない
+- 呼ぶのは実行が閉じる 3 経路すべて(`src/lib/agent/agent-runner.ts`)。いずれもトランザクションを抜けた直後に呼ぶ
+
+| 経路 | 関数 | 通知する条件 |
+| --- | --- | --- |
+| エージェント自身の報告(正常系) | `finishAgentTask` | 実行の行を実際に閉じたとき。ランナーを介さず MCP だけで動かした場合は実行の行が無いので通知もしない |
+| ランナーの終了報告(保険) | `finishAgentRunById` | 報告が無いまま閉じたときだけ。報告済みなら `finishAgentTask` が既に通知している(二重送信の防止) |
+| 時間切れ(60分) | `failStaleAgentRuns` | 潰した実行ぶん。まとめて時間切れになっても `MAX_NOTIFY_RECIPIENTS` 件で頭打ちにする |
+
+- チケットが削除済みの実行は宛先のボードを辿れないので通知しない
+- 投稿には表示ID・チケット名・エージェント名・処理種別・結果・所要時間と、エージェントが報告した要約を載せる。
+  要約は `commentExcerpt()` で記法を落として引用 1 行にする
+- ボタンのリンク先は**短縮URLではなくチケット詳細(`/tickets/<id>`)**。短縮URLはボードメンバーの
+  可視スコープで解決するため、実行履歴の一覧(`agent-run-history.tsx`)と同じ判断に揃えている
+- **宛先がユーザーではないのでロケールを解決する相手がいない**。文面は `t(null, ...)` で
+  既定ロケール(`DEFAULT_LOCALE`)に固定する
+- `UserNotifySetting` のオプトインとは独立している(チャンネルの購読者を個人設定では表せないため)。
+  ただし管理者が `/admin/settings` で Slack 連携を無効にすれば、この通知も止まる
+
+### 通知先チャンネルの一覧
+
+`listSlackChannels()`(`src/lib/slack/slack-server.ts`)が `users.conversations` で取得する。
+
+- `conversations.list` は Bot が未参加の公開チャンネルまで返すため、選んでも投稿時に `not_in_channel` で
+  失敗するものが一覧に混ざる。`users.conversations` なら**「一覧に出ている = 必ず投稿できる」**が成立し、
+  招待漏れによる設定ミスが構造的に起きない
+- 一覧に出てこない = Bot が招待されていない、なので空のときは `/invite @Devuntu` を案内する
+- 結果は 5 分キャッシュする。招待した直後は一覧に現れないことがある
+- 保存時にも一覧と突き合わせ、含まれないIDは弾く(設定できたように見えて通知だけ届かない状態を作らない)
+- スコープは `channels:read` / `groups:read`。**マニフェストにこれらが入る前に導入したワークスペースでは
+  再インストールと `SLACK_BOT_TOKEN` の差し替えが必要**(不足していれば `missing_scope` が返る)
+- **取得系のメソッドは form-urlencoded で送る**(`callSlackApi` の `encoding` に `'form'` を渡す)。
+  Slack が JSON ボディを受け付けるのは `chat.postMessage` / `chat.unfurl` のように
+  `application/json` を明記しているメソッドだけで、`users.conversations` へ JSON を送ると
+  **エラーにならずパラメータが黙って無視される**。`types` が既定の `public_channel` へ戻るため、
+  招待済みのプライベートチャンネルが `ok: true` のまま返らず、Bot 未招待と見分けが付かなくなる
+
 ## Slackでのチケットリンクのプレビュー
 
 Slack に貼られたチケットURLを、Slack Events API の `link_shared` を受けて
@@ -82,10 +133,10 @@ Slack に貼られたチケットURLを、Slack Events API の `link_shared` を
 | マニフェストの項目                                           | 用途                                                     |
 | ------------------------------------------------------------ | -------------------------------------------------------- |
 | `oauth_config.scopes.user`                                   | `/account` からの Sign in with Slack                     |
-| `oauth_config.scopes.bot` の `chat:write`                    | メンション通知の DM 送信                                 |
+| `oauth_config.scopes.bot` の `chat:write`                    | メンション通知の DM 送信とボードのチャンネル通知         |
 | `oauth_config.scopes.bot` の `links:read`                    | リンクの検知(`link_shared`)                              |
 | `oauth_config.scopes.bot` の `links:write`                   | プレビューの反映(`chat.unfurl`)                          |
-| `oauth_config.scopes.bot` の `channels:read` / `groups:read` | 将来のチャンネル通知向けに確保。現時点のアプリでは未使用 |
+| `oauth_config.scopes.bot` の `channels:read` / `groups:read` | 通知先チャンネルの一覧取得(`users.conversations`)        |
 | `features.unfurl_domains`                                    | 展開対象のドメイン                                       |
 | `settings.event_subscriptions.request_url`                   | `/api/slack/events`                                      |
 
@@ -135,4 +186,6 @@ Slack の署名(`src/lib/slack/slack-signature.ts`)だけが門番になるの�
 
 - **イベント** : Prisma の `NotifyEvent` enum と `NOTIFY_EVENTS`(`src/lib/notify/notify.ts`)を揃える。並びの一致は `tests/lib/notify/notify.test.ts` で固定している
 - **チャネル** : `UserNotifySetting` に Boolean 列(既定 OFF に揃えるため `@default(false)`)を足し、`NOTIFY_CHANNELS`(`src/lib/notify/notify.ts`)と `scUpdateNotifySetting`(`src/lib/schema/schema.ts`)へ追加する
-- `src/lib/notify/notify.ts` はクライアントからも import されるため、サーバー専用の処理は `notify-setting.ts`(設定の読み書き)と `notify-mention.ts`(送信)へ置く
+- `src/lib/notify/notify.ts` はクライアントからも import されるため、サーバー専用の処理は `notify-setting.ts`(設定の読み書き)と `notify-mention.ts` / `notify-agent-run.ts`(送信)へ置く
+- 宛先が**チャンネル**の通知は `UserNotifySetting` では表せないので、上の 2 点は要らない。
+  エージェント実行結果の通知と同じく、宛先の設定を持つエンティティ(ボードなど)へ列を足して送信の入口を 1 本作る

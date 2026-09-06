@@ -126,6 +126,18 @@ export const MAX_POLL_INTERVAL_SEC = 3600
 /** 実行履歴として画面に出す最大件数。これより古い実行は一覧に現れない */
 export const AGENT_RUN_HISTORY_LIMIT = 100
 
+/**
+ * 実行の所要時間。分と秒だけで足りるので `mm:ss` で出す。
+ * 履歴の一覧と Slack 通知で同じ見え方に揃えるため、ここで共有する。
+ */
+export const agentRunDuration = (startedAt: Date, finishedAt: Date | null): string => {
+  if (!finishedAt) {
+    return '-'
+  }
+  const sec = Math.max(0, Math.round((finishedAt.getTime() - startedAt.getTime()) / 1000))
+  return `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`
+}
+
 /** ポーリング間隔(秒)の選択肢 */
 export const AGENT_POLL_INTERVAL_OPTIONS = [60, 180, 300, 600, 900, 1800, 3600]
 
