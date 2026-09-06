@@ -90,8 +90,7 @@ export const AdminAgentsClient: FC = () => {
         ariaLabel='agent list'
         pagingList={list}
         columns={[
-          { id: 'name', name: t('name'), isRowHeader: true, allowsSorting: true, minWidth: 100 },
-          { id: 'email', name: t('email'), allowsSorting: true, minWidth: 120, defaultWidth: '2fr' },
+          { id: 'name', name: t('name'), isRowHeader: true, allowsSorting: true, minWidth: 100, defaultWidth: '2fr' },
           { id: 'groups', name: t('group'), minWidth: 88, defaultWidth: '1fr' },
           { id: 'tokenStatus', name: t('agent_token'), allowsSorting: true, minWidth: 80, defaultWidth: 90 },
           { id: 'runnerStatus', name: t('agent_runner'), allowsSorting: true, minWidth: 90, defaultWidth: 100 },
@@ -103,7 +102,6 @@ export const AdminAgentsClient: FC = () => {
         {(item) => (
           <Table.Row key={item.id} id={item.id}>
             <Table.Cell className='truncate'>{item.name}</Table.Cell>
-            <Table.Cell className='truncate font-mono text-xs'>{item.email}</Table.Cell>
             <Table.Cell>
               <span className='flex flex-wrap gap-1'>
                 {item.groups.map((group) => (
