@@ -109,12 +109,26 @@ describe('get_agent_setup_guide', () => {
     expect(tools.map((tool) => tool.name)).toContain('get_agent_setup_guide')
   })
 
-  it('このサーバーのランナー配布先と MCP のURLを埋めて返す', async () => {
-    const result = await (await connectClient(agentAuth)).callTool({ name: 'get_agent_setup_guide', arguments: {} })
+  it('指定した CLI の手順を返す', async () => {
+    const result = await (
+      await connectClient(agentAuth)
+    ).callTool({
+      name: 'get_agent_setup_guide',
+      arguments: { cli: 'codex' },
+    })
     const text = (result.content as { text: string }[])[0].text
 
     expect(text).toContain('http://localhost:3000/agent/devuntu_agent.py')
     expect(text).toContain('http://localhost:3000/api/mcp')
+    expect(text).not.toContain('claude')
+  })
+
+  it('CLI 未指定では手順を返さず、利用者に選ばせる', async () => {
+    const result = await (await connectClient(agentAuth)).callTool({ name: 'get_agent_setup_guide', arguments: {} })
+    const text = (result.content as { text: string }[])[0].text
+
+    expect(text).not.toContain('# Devuntu Agent のセットアップ')
+    expect(text).toContain('利用者に確認')
   })
 })
 

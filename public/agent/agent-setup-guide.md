@@ -8,9 +8,8 @@
 
 ## 事前に用意するもの
 
-- **使う CLI**: **Claude Code**(`claude`)と **Codex CLI**(`codex`)に対応している。
-  どちらか一方を選び、以降の手順で「Claude Code の場合 / Codex CLI の場合」の該当する方を実行する。
-  チケットの処理内容そのものは devuntu 側(MCP)から読ませるため、どちらを選んでも動きは変わらない
+- **使う CLI**: この手順は **{{cliLabel}}**(`{{cliKind}}`)で動かす前提で書いてある。
+  チケットの処理内容そのものは devuntu 側(MCP)から読ませるため、どちらの CLI でも動きは変わらない
 - **エージェント用のトークン**: devuntu の管理者が `{{baseUrl}}/admin/agents` で発行する
   (`devuntu_agent_` で始まる文字列。発行時に一度しか表示されない)
 - **作業ディレクトリ**: リポジトリを clone して作業させるための基点ディレクトリ。
@@ -26,19 +25,18 @@ python3 --version   # 3.9 以上
 git --version
 ```
 
-Claude Code の場合:
-
+<!-- cli:claude -->
 ```sh
 claude --version
 command -v claude   # 実体の場所。cron で見つからないときに使う
 ```
-
-Codex CLI の場合:
-
+<!-- /cli -->
+<!-- cli:codex -->
 ```sh
 codex --version
 command -v codex    # 実体の場所。cron で見つからないときに使う
 ```
+<!-- /cli -->
 
 足りないものがあれば先に入れる。
 
@@ -81,8 +79,7 @@ grep -qxF '.devuntu-agent' .gitignore 2>/dev/null || echo '.devuntu-agent' >> .g
 
 **設定ファイルは上書きせず追記する。** 他の MCP サーバーの設定が同居していることがあるため。
 
-### Claude Code の場合
-
+<!-- cli:claude -->
 `.mcp.json` に保存する(`--scope project`)。`${DEVUNTU_AGENT_TOKEN}` という文字列のまま保存したいので、
 シェルに展開させないようシングルクォートで囲む。
 
@@ -100,9 +97,8 @@ Claude Code は読み込み時にこの記法を環境変数へ展開するた�
 作業ディレクトリの中で `claude mcp list` を実行し、`devuntu-agent` が出ることを確認する
 (project スコープの設定はカレントディレクトリに紐づくため、別の場所で実行すると出てこない)。
 この時点ではシェルに `DEVUNTU_AGENT_TOKEN` が無いため接続は失敗する。それでよい(手順6で確認する)。
-
-### Codex CLI の場合
-
+<!-- /cli -->
+<!-- cli:codex -->
 `.codex/config.toml` に次のブロックを足す(ファイルが無ければ作られる)。
 
 ```sh
@@ -138,6 +134,7 @@ TOML
 `codex mcp add --url {{mcpUrl}} --bearer-token-env-var DEVUNTU_AGENT_TOKEN devuntu-agent` の
 1 コマンドでユーザー設定へ登録してもよい。この場合は信頼の設定も要らないが、
 人が普段使う Codex のセッションにも `devuntu-agent` が出続ける。
+<!-- /cli -->
 
 ## 4. ランナーを取得する
 
@@ -166,7 +163,7 @@ cat > ~/devuntu-agent-work/.devuntu-agent/config.json <<'JSON'
   "base_url": "{{baseUrl}}",
   "token": "<発行したトークン>",
   "cli": {
-    "kind": "claude",
+    "kind": "{{cliKind}}",
     "path": [],
     "env": {}
   },
@@ -176,38 +173,49 @@ JSON
 chmod 600 ~/devuntu-agent-work/.devuntu-agent/config.json
 ```
 
-Codex CLI の場合は `"kind": "codex"` にする。`bin` / `args` / `model` は CLI ごとの既定値があるので、
-変えたいときだけ書く。
+`bin` / `args` / `model` は CLI ごとの既定値があるので、変えたいときだけ書く。
 
 - `workdir`: 作業ディレクトリ。省略すると `.devuntu-agent` の 1 つ上(手順2で作ったディレクトリ)を
   使うので、通常は書かない。別の場所を作業起点にしたいときだけ絶対パスで指定する
-- `cli.kind`: 起動する CLI の種類。`claude`(Claude Code)または `codex`(Codex CLI)。既定は `claude`
-- `cli.bin`: 実行コマンド。省略すると `cli.kind` と同じ値(`claude` / `codex`)を使う
+- `cli.kind`: 起動する CLI の種類。この手順では `{{cliKind}}`({{cliLabel}})
+- `cli.bin`: 実行コマンド。省略すると `cli.kind` と同じ値(`{{cliKind}}`)を使う
 - `cli.args`: cron からは権限確認に誰も答えられないので、既定は自動承認にしてある。
-  - claude: `--permission-mode auto`(ファイル編集に限らず Bash 含むツール利用全般を自動承認)
-  - codex: `--sandbox danger-full-access --skip-git-repo-check`。作業ディレクトリは clone の基点で
+<!-- cli:claude -->
+  - 既定は `--permission-mode auto`(ファイル編集に限らず Bash 含むツール利用全般を自動承認)
+<!-- /cli -->
+<!-- cli:codex -->
+  - 既定は `--sandbox danger-full-access --skip-git-repo-check`。作業ディレクトリは clone の基点で
     git リポジトリではないため、`--skip-git-repo-check` を外すと codex は起動を拒否する
+<!-- /cli -->
   - **注意**: この既定値は**エージェント専用ホストで動かすことを前提**にしている。エージェントが読む
     チケット本文・コメントの内容がそのままエージェントへの指示になり得るため、既定のままだと
     悪意ある(または誤った)チケット内容から、作業ディレクトリの外のファイル操作や外部通信まで
     無条件に実行され得る。人が普段使うマシンや、エージェントに触らせたくない鍵・認証情報がある
     ホストでは動かさないこと。エージェントに割り当てるチケットを作成・コメントできる範囲を
     信頼できる人に限定するなど、リスクは運用側で判断する。より制限したい場合は、
-    claude なら `--permission-mode acceptEdits`(編集のみ自動承認)や `--disallowedTools`、
-    codex なら `--sandbox workspace-write -c sandbox_workspace_write.network_access=true` に変える
+<!-- cli:claude -->
+    `--permission-mode acceptEdits`(編集のみ自動承認)や `--disallowedTools` に変える
+<!-- /cli -->
+<!-- cli:codex -->
+    `--sandbox workspace-write -c sandbox_workspace_write.network_access=true` に変える
     (`--skip-git-repo-check` は残す)。`workspace-write` は既定でネットワークを遮断するため
     `network_access=true` を併せて指定しないと `git clone` や依存関係のインストールが失敗する。
     `~/.npm` や `~/.cache` などワークスペース外への書き込みも弾かれるので、エージェントに
     ビルドまでさせる場合はそこで詰まらないかを確認してから使う
-  - codex では、ここに `-c <キー>=<値>` を足すと設定を上書きできる(繰り返し可)。よく使うのは
+  - ここに `-c <キー>=<値>` を足すと codex の設定を上書きできる(繰り返し可)。よく使うのは
     推論の強さで、`-c model_reasoning_effort="high"`(`minimal` / `low` / `medium` / `high` / `xhigh`)。
     モデルと推論設定をまとめて切り替えたい場合は `--profile <名前>`
     (`~/.codex/<名前>.config.toml` が基本設定に重なる)
-- `cli.model`: 使用するモデル。
-  - claude: 既定は `sonnet`。`opus` / `fable` など `--model` が受け付けるエイリアスを指定できる
-  - codex: 既定は持たない。指定する場合は `"model": "gpt-5.5"` のようにモデル名をそのまま書く
-    (`codex exec --model <値>` として渡る)。省略した場合は `~/.codex/config.toml` の `model`、
-    それも無ければ codex の既定モデルが使われる
+<!-- /cli -->
+<!-- cli:claude -->
+- `cli.model`: 使用するモデル。既定は `sonnet`。`opus` / `fable` など `--model` が受け付ける
+  エイリアスを指定できる
+<!-- /cli -->
+<!-- cli:codex -->
+- `cli.model`: 使用するモデル。既定は持たない。指定する場合は `"model": "gpt-5.5"` のように
+  モデル名をそのまま書く(`codex exec --model <値>` として渡る)。省略した場合は
+  `~/.codex/config.toml` の `model`、それも無ければ codex の既定モデルが使われる
+<!-- /cli -->
 - `cli.path`: CLI を起動するときに PATH の先頭へ足すディレクトリ。空のままにしておき、
   次の `save-path` で入れる(手で書くのは特殊な配置のときだけ)。この PATH は CLI 自身にも
   渡るので、エージェントが叩く `git` / `node` / `pnpm` / `gh` の解決にも効く
@@ -246,9 +254,8 @@ python3 ~/devuntu-agent-work/.devuntu-agent/devuntu_agent.py poll --dry-run
 - `run conditions not met: reason=disabled` → 設定はあるが無効。管理画面で有効にする
 - `run conditions not met: reason=outside_hours` → 稼働許可時間帯の外。設定どおりの動き
 - `no tickets to process` → 疎通も稼働条件も問題なし
-- `dry-run: would process ... with /path/to/claude` → 起動する CLI の場所まで確認できている
-- `claude not found (PATH=...)` / `codex not found (PATH=...)` → CLI を見つけられない。
-  `cli.path` か `cli.bin` を設定する
+- `dry-run: would process ... with /path/to/{{cliKind}}` → 起動する CLI の場所まで確認できている
+- `{{cliKind}} not found (PATH=...)` → CLI を見つけられない。`cli.path` か `cli.bin` を設定する
 - `401` が返る → トークンが違う(または再発行されて古くなった)
 
 MCP 側の疎通(トークンが CLI へ渡り、devuntu へ接続できるか)は、環境変数を読み込んでから
@@ -257,7 +264,7 @@ CLI の一覧コマンドで確認する。
 ```sh
 cd ~/devuntu-agent-work
 eval "$(python3 .devuntu-agent/devuntu_agent.py env)"
-claude mcp list   # Codex の場合は codex mcp list
+{{cliKind}} mcp list
 ```
 
 `env` サブコマンドは、ランナーが CLI へ渡しているのと同じ環境変数(`DEVUNTU_AGENT_TOKEN` と PATH)を
@@ -292,7 +299,7 @@ crontab -l
 
 cron 行に PATH を書き足す必要は無い。手順 5 の `save-path` で保存した PATH を
 ランナーが CLI に渡す。それでも `not found` になる場合は、`config.json` の
-`cli.bin` に `command -v claude`(または `command -v codex`)で確認した絶対パスを書く。
+`cli.bin` に `command -v {{cliKind}}` で確認した絶対パスを書く。
 
 ログは `~/devuntu-agent-work/.devuntu-agent/agent.log`(1MB で 3 世代までローテート)。
 
@@ -309,7 +316,8 @@ cron 行に PATH を書き足す必要は無い。手順 5 の `save-path` で�
 
 同じ環境で作り直せるよう、このガイドの内容を作業ディレクトリに書き出しておく。
 
-Claude Code の場合は `.claude/skills/devuntu-agent/SKILL.md` に置き、先頭に次の frontmatter を付ける。
+<!-- cli:claude -->
+`.claude/skills/devuntu-agent/SKILL.md` に置き、先頭に次の frontmatter を付ける。
 
 ```yaml
 ---
@@ -317,10 +325,12 @@ name: devuntu-agent
 description: devuntu の自動運用(Devuntu Agent)をこのマシンにセットアップし、動作を確認する。
 ---
 ```
+<!-- /cli -->
+<!-- cli:codex -->
+`AGENTS.md` に書き出す(frontmatter は要らない)。
+<!-- /cli -->
 
-Codex CLI の場合は `AGENTS.md` に書き出す(frontmatter は要らない)。
-
-どちらの場合もトークンは書かない(設定ファイルにだけ置く)。
+トークンは書かない(設定ファイルにだけ置く)。
 
 ## 同じマシンに複数のエージェントを置く
 
@@ -334,10 +344,13 @@ Codex CLI の場合は `AGENTS.md` に書き出す(frontmatter は要らない)�
 
 - トークンはエージェントごとに発行し、それぞれの作業ディレクトリで MCP を登録する(手順3)。
   MCP の設定に入るのは環境変数の参照だけで、実際のトークンは作業ディレクトリごとの `config.json` から渡る
-- Codex の場合、信頼の設定(`projects.<path>.trust_level`)はユーザー設定にあるので、作業ディレクトリごとに 1 行ずつ足す
+<!-- cli:codex -->
+- 信頼の設定(`projects.<path>.trust_level`)はユーザー設定にあるので、作業ディレクトリごとに 1 行ずつ足す
+<!-- /cli -->
 - cron 行も作業ディレクトリごとに登録する
 - ロックとログは作業ディレクトリごとに分かれるため、互いにスキップさせたりログを混ぜたりしない
 
+<!-- cli:claude -->
 ## 0.7.0 での変更(トークンの環境変数化)
 
 0.7.0 より前は MCP の設定ファイルにトークンを平文で書いていた。そのままでも動くが、トークンが
@@ -353,6 +366,7 @@ claude mcp add --transport http devuntu-agent {{mcpUrl}} \
 ```
 
 書き換えたら手順6の `eval` + `claude mcp list` で接続を確かめる。
+<!-- /cli -->
 
 ## 旧配置(0.6.0 より前)からの移行
 
@@ -378,11 +392,16 @@ rm -rf ~/.config/devuntu-agent ~/.local/state/devuntu-agent ~/.cache/devuntu-age
 
 ## うまく動かないとき
 
-| 症状                                     | 見るところ                                                                                                       |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| 管理画面の自動運用が「オフライン」のまま | cron が動いているか(`crontab -l`)、`.devuntu-agent/agent.log`                                                    |
-| 実行履歴に「失敗」が並ぶ                 | 履歴の「内容」に終了コードと標準エラーの末尾が入っている                                                         |
-| 実行が「実行中」のまま止まる             | エージェントが `finish_agent_task` を呼べていない。60 分で自動的に失敗へ落ちる                                   |
-| チケットが拾われない                     | 担当がエージェントか、チケットの「エージェント」が「任せない」になっていないか                                   |
-| `... not found` で失敗する               | その CLI が使えるシェルで `devuntu_agent.py save-path` を実行し直す。それでも駄目なら `cli.bin` に絶対パスを書く |
-| エージェントが MCP に繋がらない          | `.mcp.json` の `${DEVUNTU_AGENT_TOKEN}` が展開済みの値になっていないか(手順3)。Codex なら信頼の設定(手順3)       |
+| 症状                                     | 見るところ                                                                                                            |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| 管理画面の自動運用が「オフライン」のまま | cron が動いているか(`crontab -l`)、`.devuntu-agent/agent.log`                                                         |
+| 実行履歴に「失敗」が並ぶ                 | 履歴の「内容」に終了コードと標準エラーの末尾が入っている                                                              |
+| 実行が「実行中」のまま止まる             | エージェントが `finish_agent_task` を呼べていない。60 分で自動的に失敗へ落ちる                                        |
+| チケットが拾われない                     | 担当がエージェントか、チケットの「エージェント」が「任せない」になっていないか                                        |
+| `... not found` で失敗する               | その CLI が使えるシェルで `devuntu_agent.py save-path` を実行し直す。それでも駄目なら `cli.bin` に絶対パスを書く      |
+<!-- cli:claude -->
+| エージェントが MCP に繋がらない          | `.mcp.json` の `${DEVUNTU_AGENT_TOKEN}` が展開済みの値になっていないか(手順3)                                         |
+<!-- /cli -->
+<!-- cli:codex -->
+| エージェントが MCP に繋がらない          | `.codex/config.toml` の `bearer_token_env_var` と、作業ディレクトリの信頼の設定(手順3)                                |
+<!-- /cli -->

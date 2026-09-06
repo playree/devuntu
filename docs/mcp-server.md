@@ -159,7 +159,7 @@ AIエージェントは `devuntu-agent` を名乗るので、`claude mcp list` �
 | `add_ticket_comment`    | コメントを追加(対応プラン・対応報告・返信もここから)                          | `ticketId` / `content` / `type` / `parentId`                                                   |
 | `update_ticket_comment` | 自分が投稿したコメントを編集                                                  | `commentId` / `content`                                                                        |
 | `delete_ticket_comment` | コメントを削除                                                                | `commentId`                                                                                    |
-| `get_agent_setup_guide` | 自動運用(Devuntu Agent)を自分のマシンへ用意する手順を返す。人が読むためのもの | なし                                                                                           |
+| `get_agent_setup_guide` | 自動運用(Devuntu Agent)を自分のマシンへ用意する手順を返す。人が読むためのもの | `cli`(任意。未指定なら手順ではなく CLI の選択を促す)                                          |
 
 権限はボードのロールで決まり、基本は画面と同じ。ただしチケットの更新・削除だけは MCP 経由に
 追加の制限がある(`src/lib/board/task.ts` の `canMcpUpdateTicket` / `canMcpDeleteTicket`)。
