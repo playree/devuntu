@@ -34,7 +34,6 @@ export const getAgents = safeAuthAction.metadata({ actionName: 'getAgents', role
     select: {
       id: true,
       name: true,
-      email: true,
       createdAt: true,
       userGroups: { select: { group: { select: { id: true, name: true } } } },
       agentToken: { select: { lastUsedAt: true, expiresAt: true } },
