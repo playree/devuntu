@@ -166,8 +166,13 @@ codex の `--sandbox danger-full-access` も同じ前提で、CLI 間に差は�
 MCP ツール `get_agent_setup_guide` が、そのマシンで実行できる手順を返す。
 Claude Code や Codex CLI から「devuntu のエージェントをセットアップして」と頼めば、この手順に沿って進む。
 
+どちらの CLI で動かすかは引数 `cli` で決まり、手順はその CLI の分だけが返る。**未指定で呼ばれた場合は
+手順を返さず、利用者に確認するよう促す**。頼んだ CLI とエージェントに使わせたい CLI は別のことがあるので、
+呼び出し側に選ばせない(未指定のまま手順を返すと、本文で先に出てくる方で進めてしまう)。
+
 手順の本文は [public/agent/agent-setup-guide.md](../public/agent/agent-setup-guide.md)。
-プレースホルダーの置換は [src/lib/agent/agent-setup.ts](../src/lib/agent/agent-setup.ts) で行い、
+CLI 別の記述は `<!-- cli:claude -->` … `<!-- /cli -->` で囲んであり、プレースホルダーの置換と
+ブロックの絞り込みは [src/lib/agent/agent-setup.ts](../src/lib/agent/agent-setup.ts) で行う。
 URL はサーバー自身のものが埋め込まれる。
 
 ## 詰まったときに見る場所

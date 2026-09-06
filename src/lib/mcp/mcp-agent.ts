@@ -11,6 +11,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
+import { AGENT_CLI_KINDS } from '../agent/agent'
 import {
   activeWindowLabel,
   AGENT_OUTCOMES,
@@ -21,7 +22,7 @@ import {
   pickAgentTasks,
   resolveAgentTask,
 } from '../agent/agent-runner'
-import { agentSetupGuide } from '../agent/agent-setup'
+import { agentSetupCliPrompt, agentSetupGuide } from '../agent/agent-setup'
 import { assertTicketAccess } from '../board/board'
 import { errInvalidOperation } from '../error'
 import type { ResourceAuth } from '../oauth/oauth-resource'
@@ -53,10 +54,18 @@ export const registerAgentSetupTool = (server: McpServer) => {
       title: '自動運用のセットアップ手順',
       description:
         'AIエージェントの自動運用(Devuntu Agent)を自分のマシンへ用意する手順を返す。' +
-        '作業ディレクトリの準備からランナーの取得・設定・cron 登録・動作確認までを含む',
-      inputSchema: {},
+        '作業ディレクトリの準備からランナーの取得・設定・cron 登録・動作確認までを含む。' +
+        'どの CLI で動かすかは利用者が選ぶため、cli を指定せずに呼んだ場合は手順ではなく確認の指示を返す',
+      inputSchema: {
+        cli: z
+          .enum(AGENT_CLI_KINDS)
+          .optional()
+          .describe('セットアップに使う CLI。claude=Claude Code / codex=Codex CLI。利用者に確認して指定する'),
+      },
     },
-    async () => ({ content: [{ type: 'text' as const, text: agentSetupGuide() }] }),
+    async ({ cli }) => ({
+      content: [{ type: 'text' as const, text: cli ? agentSetupGuide(cli) : agentSetupCliPrompt() }],
+    }),
   )
 }
 
