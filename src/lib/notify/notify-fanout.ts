@@ -16,6 +16,7 @@ import { SLACK_PROVIDER_ID } from '../slack/slack'
 import { filterSlackAllowedUserIds, getSlackSettings, hasSlackCredentials } from '../slack/slack-account'
 import { MAX_NOTIFY_RECIPIENTS, type NotifyChannel } from './notify'
 import type { NotifyTargets } from './notify-recipient'
+import { nextEmailWindowAt } from './notify-schedule'
 import { filterNotifiable } from './notify-setting'
 
 /** 作る配信行。`createMany` へそのまま渡す */
@@ -87,7 +88,8 @@ const slackDmTargets = async (userIds: string[], event: NotifyEvent): Promise<st
 /**
  * 展開する配信行を組み立てる。
  *
- * `scheduledAt` は現時点ではどのチャネルも即時。メールの集約ウィンドウはここで丸める。
+ * `scheduledAt` は即時が既定で、**メールだけ次のウィンドウ境界へ丸める**。
+ * 同じ区間に発生した通知が同じ時刻へ寄るので、配信側でユーザー単位に 1 通へまとめられる。
  */
 export const buildDeliveries = async (param: {
   outboxId: string
@@ -97,6 +99,7 @@ export const buildDeliveries = async (param: {
 }): Promise<DeliveryInput[]> => {
   const { outboxId, event, targets, now = nowDate() } = param
   const deliveries: DeliveryInput[] = []
+  const emailAt = nextEmailWindowAt(now)
 
   const [emailUserIds, slackUserIds] = await Promise.all([
     emailTargets(targets.userIds, event),
@@ -104,7 +107,7 @@ export const buildDeliveries = async (param: {
   ])
 
   for (const userId of capRecipients(emailUserIds, 'mail', { outboxId, event })) {
-    deliveries.push({ outboxId, channel: 'email', userId, scheduledAt: now })
+    deliveries.push({ outboxId, channel: 'email', userId, scheduledAt: emailAt })
   }
   for (const userId of capRecipients(slackUserIds, 'slack dm', { outboxId, event })) {
     deliveries.push({ outboxId, channel: 'slack', userId, scheduledAt: now })

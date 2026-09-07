@@ -427,7 +427,22 @@ export const ja: DefaultLocaleItems = {
   msg_within_a_day: '1日以内',
   msg_within_days: '${days}日以内',
 
-  mail_mention_body: `\${message}
+  mail_digest_body: `\${count}件の通知があります。
+
+\${items}
+
+※この通知はアカウント画面の通知設定から停止できます。
+`,
+  mail_digest_item: `■ \${message}
+\${subject}
+\${url}`,
+  mail_digest_item_excerpt: `■ \${message}
+\${subject}
+\${excerpt}
+\${url}`,
+  mail_digest_more: 'ほか${count}件',
+  mail_digest_subject: '[${appname}] ${count}件の新しい通知',
+  mail_notify_body: `\${message}
 
 \${subject}
 
@@ -435,7 +450,7 @@ export const ja: DefaultLocaleItems = {
 
 ※この通知はアカウント画面の通知設定から停止できます。
 `,
-  mail_mention_comment_body: `\${message}
+  mail_notify_excerpt_body: `\${message}
 
 \${subject}
 

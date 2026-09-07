@@ -58,7 +58,13 @@ const sendSmtp = async (param: SendEmail) => {
   await tp.sendMail(param)
 }
 
-const sendEmail = async (param: Omit<SendEmail, 'from'>) => {
+/**
+ * 送信元を補って構成された方式で送る。
+ *
+ * 文面は呼び出し側で組み立てる(通知メールは `notify-email.ts`)。
+ * 件名・本文は利用者の入力を含むことがあるため、`debug` 以外ではログに出さない。
+ */
+export const sendEmail = async (param: Omit<SendEmail, 'from'>) => {
   const mailFrom = envu.server.MAIL_FROM
 
   const from = {
@@ -94,35 +100,6 @@ const sendEmail = async (param: Omit<SendEmail, 'from'>) => {
  * `Unable to send email` になるだけなので、通知側はこれを見て送信自体を諦める。
  */
 export const isMailConfigured = () => !!envu.server.MAIL_SEND
-
-/**
- * メンション通知メール。
- *
- * 件名・本文は利用者の入力(チケット名)を含むためログには出さない。
- */
-export const sendMentionMail = async (param: {
-  locale: string | null
-  to: string
-  /** 件名。`[表示ID] チケット名` をそのまま使う */
-  subject: string
-  /** 誰が何をしたかの一文 */
-  message: string
-  /** チケット(コメント経由ならそのコメント)への絶対URL */
-  url: string
-  /** コメント本文の抜粋。コメント経由のメンションのみ */
-  excerpt?: string
-}) => {
-  const { locale, to, subject, message, url, excerpt } = param
-
-  logger.info({ to }, 'sendMentionMail')
-  await sendEmail({
-    to,
-    subject,
-    text: excerpt
-      ? t(locale, 'mail_mention_comment_body', { message, subject, excerpt, url })
-      : t(locale, 'mail_mention_body', { message, subject, url }),
-  })
-}
 
 export const sendEmailOtp = async (param: { locale: string | null; to: string; otp: string }) => {
   const { locale, to, otp } = param

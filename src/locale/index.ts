@@ -406,8 +406,13 @@ export type LocaleItemBase =
   | 'msg_within_a_day'
   | 'msg_within_days'
   // for Mail
-  | 'mail_mention_body'
-  | 'mail_mention_comment_body'
+  | 'mail_digest_body'
+  | 'mail_digest_item'
+  | 'mail_digest_item_excerpt'
+  | 'mail_digest_more'
+  | 'mail_digest_subject'
+  | 'mail_notify_body'
+  | 'mail_notify_excerpt_body'
   | 'mail_otp_body'
   | 'mail_otp_subject'
   // for Notify(メール / Slack で共用する文面)

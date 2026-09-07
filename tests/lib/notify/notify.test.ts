@@ -61,7 +61,7 @@ describe('NOTIFY_CHANNELS: Prisma の enum / UserNotifySetting の列名と一�
   })
 })
 
-describe('mail_mention_body: メンション通知メールの本文', () => {
+describe('mail_notify_body: 通知メールの本文(1件)', () => {
   const values = {
     message: '田中太郎さんがコメントであなたをメンションしました',
     subject: '[PRJ-12] ログイン画面のレイアウト崩れ',
@@ -74,7 +74,7 @@ describe('mail_mention_body: メンション通知メールの本文', () => {
   ] as const) {
     it(`${lang}: 全てのプレースホルダが値で埋まる`, () => {
       // テンプレートリテラルで書くため `\${...}` のエスケープを落とすと実評価されて空になる
-      const body = expandTemplate(resources.mail_mention_body ?? '', values)
+      const body = expandTemplate(resources.mail_notify_body ?? '', values)
       expect(body).toContain(values.message)
       expect(body).toContain(values.subject)
       expect(body).toContain(values.url)
@@ -83,7 +83,7 @@ describe('mail_mention_body: メンション通知メールの本文', () => {
   }
 })
 
-describe('mail_mention_comment_body: コメント経由のメンション通知メールの本文', () => {
+describe('mail_notify_excerpt_body: 抜粋付きの通知メールの本文(1件)', () => {
   const values = {
     message: '田中太郎さんがコメントであなたをメンションしました',
     subject: '[PRJ-12] ログイン画面のレイアウト崩れ',
@@ -96,12 +96,58 @@ describe('mail_mention_comment_body: コメント経由のメンション通知�
     ['en', en],
   ] as const) {
     it(`${lang}: 全てのプレースホルダが値で埋まる`, () => {
-      const body = expandTemplate(resources.mail_mention_comment_body ?? '', values)
+      const body = expandTemplate(resources.mail_notify_excerpt_body ?? '', values)
       expect(body).toContain(values.message)
       expect(body).toContain(values.subject)
       expect(body, 'コメント内容を届けるのがこの本文の目的').toContain(values.excerpt)
       expect(body).toContain(values.url)
       expect(body, '未置換のプレースホルダが残っていない').not.toMatch(/\$\{/)
+    })
+  }
+})
+
+describe('mail_digest_*: まとめた通知メールのテンプレート', () => {
+  for (const [lang, resources] of [
+    ['ja', ja],
+    ['en', en],
+  ] as const) {
+    it(`${lang}: 件名に件数が入る`, () => {
+      const subject = expandTemplate(resources.mail_digest_subject ?? '', { appname: 'Devuntu', count: 3 })
+      expect(subject).toContain('Devuntu')
+      expect(subject).toContain('3')
+      expect(subject, '未置換のプレースホルダが残っていない').not.toMatch(/\$\{/)
+    })
+
+    it(`${lang}: 本文に件数と項目が入る`, () => {
+      const body = expandTemplate(resources.mail_digest_body ?? '', { count: 3, items: '項目のテスト' })
+      expect(body).toContain('3')
+      expect(body).toContain('項目のテスト')
+      expect(body, '未置換のプレースホルダが残っていない').not.toMatch(/\$\{/)
+    })
+
+    it(`${lang}: 項目は抜粋の有無で 2 種類`, () => {
+      const values = {
+        message: '田中太郎さんがあなたをメンションしました',
+        subject: '[PRJ-12] ログイン画面のレイアウト崩れ',
+        excerpt: 'iOS Safari だけで再現しました',
+        url: 'https://devuntu.example.com/t/PRJ-12',
+      }
+      const item = expandTemplate(resources.mail_digest_item ?? '', values)
+      expect(item).toContain(values.message)
+      expect(item).toContain(values.subject)
+      expect(item).toContain(values.url)
+      expect(item, '抜粋なしの項目には抜粋を出さない').not.toContain(values.excerpt)
+      expect(item).not.toMatch(/\$\{/)
+
+      const withExcerpt = expandTemplate(resources.mail_digest_item_excerpt ?? '', values)
+      expect(withExcerpt).toContain(values.excerpt)
+      expect(withExcerpt).not.toMatch(/\$\{/)
+    })
+
+    it(`${lang}: 畳んだ分は件数だけを示す`, () => {
+      const more = expandTemplate(resources.mail_digest_more ?? '', { count: 5 })
+      expect(more).toContain('5')
+      expect(more).not.toMatch(/\$\{/)
     })
   }
 })

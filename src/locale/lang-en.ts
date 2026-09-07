@@ -427,7 +427,22 @@ Please copy and use the connection information above.
   msg_within_a_day: 'Within 1 day',
   msg_within_days: 'Within ${days} days',
 
-  mail_mention_body: `\${message}
+  mail_digest_body: `You have \${count} notifications.
+
+\${items}
+
+*You can stop this notification from the notification settings on the account page.
+`,
+  mail_digest_item: `- \${message}
+\${subject}
+\${url}`,
+  mail_digest_item_excerpt: `- \${message}
+\${subject}
+\${excerpt}
+\${url}`,
+  mail_digest_more: 'and ${count} more',
+  mail_digest_subject: '[${appname}] ${count} new notifications',
+  mail_notify_body: `\${message}
 
 \${subject}
 
@@ -435,7 +450,7 @@ Please copy and use the connection information above.
 
 *You can stop this notification from the notification settings on the account page.
 `,
-  mail_mention_comment_body: `\${message}
+  mail_notify_excerpt_body: `\${message}
 
 \${subject}
 

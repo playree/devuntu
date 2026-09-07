@@ -42,8 +42,23 @@ export const NOTIFY_TICK_MS = 10_000
 /** 1 tick で展開するアウトボックスの上限 */
 export const NOTIFY_FANOUT_BATCH = 20
 
-/** 1 tick で送る配信の上限(チャネル別)。1周あたりの外部サービス呼び出し回数の頭打ち */
+/**
+ * 1 tick で送る配信の上限(チャネル別)。1周あたりの外部サービス呼び出し回数の頭打ち。
+ *
+ * メールはユーザー単位で 1 通へまとめるので、この値は**宛先ユーザー数**の上限になる。
+ */
 export const NOTIFY_DELIVER_BATCH: Record<NotifyChannel, number> = { email: 20, slack: 20 }
+
+/**
+ * メールの集約ウィンドウ。
+ *
+ * この幅で区切った境界へ配信時刻を丸めることで、同じ区間に発生した通知が必ず 1 通にまとまる。
+ * 個々の通知は最大でこの時間だけ遅れる代わりに、**ユーザーあたりこの間隔に 1 通**が構造的に保証される。
+ */
+export const NOTIFY_EMAIL_WINDOW_MS = 300_000
+
+/** 集約した 1 通に載せる項目の上限。超えた分は「ほか N 件」の 1 行へ畳む */
+export const MAX_DIGEST_ITEMS = 20
 
 /** 送信の試行回数の上限。使い切った配信は failed にして原因追跡用に残す */
 export const NOTIFY_MAX_ATTEMPTS = 3
