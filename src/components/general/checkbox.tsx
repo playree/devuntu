@@ -19,7 +19,7 @@ export const CheckBoxField: FC<CheckboxProps & { id: string; label: string; isSm
   return (
     <Checkbox {...props} id={id}>
       <Checkbox.Content // isSmart: ラベル相当の文言なので他フィールドのラベルと同じ体裁に揃える
-        className={isSmart ? 'gap-2 text-xs font-light' : ''}
+        className={isSmart ? 'gap-2 text-sm font-normal' : ''}
       >
         <Checkbox.Control className={cn('size-5', isSmart ? 'size-4' : '')}>
           <Checkbox.Indicator />

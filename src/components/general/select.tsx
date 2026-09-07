@@ -266,6 +266,10 @@ export const SingleSelectField = ({
 /**
  * react-hook-form 対応の単一選択 Select。描画は SingleSelectField に委譲する。
  * react-hook-form の値は選択肢の ID(string) または null。
+ *
+ * `emptyKey` は空値を選択肢として見せたい場合に指定する。react-aria の Select は空文字を
+ * 未選択として扱いトリガーに何も出さないため、「なし」相当の選択肢には非空のキーが要る。
+ * 指定時は空値を空文字で表すので、null へ戻す `isClearable` とは併用しない。
  */
 export const SingleSelectCtrl = <
   TFieldValues extends FieldValues = FieldValues,
@@ -273,17 +277,25 @@ export const SingleSelectCtrl = <
 >({
   control,
   name,
+  emptyKey,
   ...props
 }: Omit<SingleSelectFieldProps, 'value' | 'onChange' | 'onBlur' | 'ref'> & {
   control: Control<TFieldValues>
   name: TName
+  emptyKey?: string
 }) => {
   return (
     <Controller
       control={control}
       name={name}
       render={({ field: { onChange, value, onBlur, ref } }) => (
-        <SingleSelectField {...props} value={value ?? null} onChange={onChange} onBlur={onBlur} ref={ref} />
+        <SingleSelectField
+          {...props}
+          value={emptyKey && !value ? emptyKey : (value ?? null)}
+          onChange={(key) => onChange(emptyKey && (key === null || key === emptyKey) ? '' : key)}
+          onBlur={onBlur}
+          ref={ref}
+        />
       )}
     />
   )

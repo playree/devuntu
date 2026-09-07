@@ -43,7 +43,7 @@ import {
 } from './server'
 
 /** デンジャーゾーンは誤操作を避けるため初期状態で閉じておく */
-const defaultExpandedKeys = new Set(['board_profile', 'board_members', 'board_groups', 'tag_manage'])
+const defaultExpandedKeys = new Set(['board_profile'])
 
 export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
   const { t } = useLocale()
