@@ -254,3 +254,20 @@ export type TicketComment = Prisma.TicketCommentModel
  * 行が無い場合は全チャネル OFF として扱う。通知チャネルを増やすときは列を足す。
  */
 export type UserNotifySetting = Prisma.UserNotifySettingModel
+/**
+ * Model NotifyOutbox
+ * 通知の発生記録(アウトボックス)。
+ * 
+ * トリガー側はチケット操作と同じトランザクションでここへ1行書くだけで済み、
+ * 宛先の解決とチャネル別の配信はワーカー(`notify-dispatch.ts`)が行う。
+ * トリガーを増やしても呼び出し元は「何が起きたか」だけを書けばよい。
+ */
+export type NotifyOutbox = Prisma.NotifyOutboxModel
+/**
+ * Model NotifyDelivery
+ * 1宛先 × 1チャネルぶんの配信。ワーカーがアウトボックスを展開して作る。
+ * 
+ * 送信できた行は削除する(送信の記録はログに残る)ので、残っているのは
+ * 未送信・再試行待ち・試行回数を使い切ったものだけ。
+ */
+export type NotifyDelivery = Prisma.NotifyDeliveryModel

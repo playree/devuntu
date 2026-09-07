@@ -267,3 +267,28 @@ cron から実行する場合は、DB と S3 を続けて取得する。`compose
 チケット・コメントを消したあとの画像は S3 と `attachment` テーブルに残り続ける
 (消えるのはボード削除の Cascade と、アバター・アイコンの差し替え時だけ)。
 容量が気になる場合は定期的に確認すること。
+
+## 通知キューの確認
+
+通知はキュー経由で送るため、届かない場合は行の状態を見れば止まった段階が分かる
+(設計は [通知の実装詳細](./notifications.md#通知キューと配信ワーカー))。
+
+```sh
+# 試行回数を使い切った配信を数える
+docker compose exec -T db psql -U devuser -d devuntu \
+  -c "SELECT channel, \"lastError\", count(*) FROM notify_delivery WHERE status = 'failed' GROUP BY 1, 2"
+
+# 展開されないまま溜まっている発生記録
+docker compose exec -T db psql -U devuser -d devuntu \
+  -c "SELECT status, count(*), min(\"createdAt\") FROM notify_outbox GROUP BY 1"
+```
+
+- `notify_delivery` に `failed` が溜まっている : 送信そのものが通っていない。`lastError` の分類
+  (`revoked` なら `SLACK_BOT_TOKEN` の失効、`retryable` なら送信先の障害)で切り分ける
+- `notify_outbox` に `pending` が溜まっている : ワーカーが回っていない。`NOTIFY_WORKER_ENABLED` と
+  起動ログ(`notify worker started`)を確認する
+- `notify_outbox` の `failed` : ペイロードが壊れている(アプリのバージョン差など)。行を消して差し支えない
+- 送信できた配信は行ごと消えるので、**空であることが正常**。送信の記録はアプリログ側に残る
+
+行が溜まったまま原因が解消できない場合、削除して差し支えない(通知は再送されないだけで、
+チケットの内容には影響しない)。

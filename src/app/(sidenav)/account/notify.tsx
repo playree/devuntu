@@ -4,7 +4,7 @@ import { FlexCol, FlexRow } from '@/components/general/flex'
 import { SwitchField } from '@/components/general/switch'
 import { notify } from '@/components/notify'
 import { parseAction, useActionData } from '@/lib/action/action-client'
-import { NOTIFY_EVENTS } from '@/lib/notify/notify'
+import { DM_NOTIFY_EVENTS } from '@/lib/notify/notify'
 import { useLocale } from '@/locale/client'
 import { FC, useState } from 'react'
 import { getNotifySettings, updateNotifySetting } from './server'
@@ -25,7 +25,7 @@ export const NotifySettings: FC<{ slackAvailable: boolean }> = ({ slackAvailable
 
   return (
     <FlexCol className='gap-4 px-1'>
-      {NOTIFY_EVENTS.map((event) => {
+      {DM_NOTIFY_EVENTS.map((event) => {
         const setting = settings[event]
         const save = async (next: typeof setting) => {
           setIsSaving(true)

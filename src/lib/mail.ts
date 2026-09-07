@@ -103,7 +103,7 @@ export const isMailConfigured = () => !!envu.server.MAIL_SEND
 export const sendMentionMail = async (param: {
   locale: string | null
   to: string
-  /** 件名。`mentionSubject()` の結果をそのまま使う */
+  /** 件名。`[表示ID] チケット名` をそのまま使う */
   subject: string
   /** 誰が何をしたかの一文 */
   message: string

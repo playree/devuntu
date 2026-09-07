@@ -8,7 +8,7 @@
 import type { NotifyEvent } from '@/generated/prisma/enums'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
-import { NOTIFY_EVENTS, type NotifyChannel } from './notify'
+import { DM_NOTIFY_EVENTS, type DmNotifyEvent, type NotifyChannel } from './notify'
 
 export type NotifySetting = { [K in NotifyChannel]: boolean }
 
@@ -16,9 +16,9 @@ export type NotifySetting = { [K in NotifyChannel]: boolean }
 const DEFAULT_SETTING: NotifySetting = { email: false, slack: false }
 
 /**
- * 指定ユーザーの通知設定を全イベント分返す。行が無いイベントは既定値(OFF)で埋める。
+ * 指定ユーザーの通知設定を DM 通知のイベント分返す。行が無いイベントは既定値(OFF)で埋める。
  */
-export const getUserNotifySettings = async (userId: string): Promise<Record<NotifyEvent, NotifySetting>> => {
+export const getUserNotifySettings = async (userId: string): Promise<Record<DmNotifyEvent, NotifySetting>> => {
   const rows = await prisma.userNotifySetting.findMany({
     where: { userId },
     select: { event: true, email: true, slack: true },
@@ -26,8 +26,8 @@ export const getUserNotifySettings = async (userId: string): Promise<Record<Noti
   const byEvent = new Map(rows.map(({ event, email, slack }) => [event, { email, slack }]))
 
   return Object.fromEntries(
-    NOTIFY_EVENTS.map((event) => [event, byEvent.get(event) ?? { ...DEFAULT_SETTING }]),
-  ) as Record<NotifyEvent, NotifySetting>
+    DM_NOTIFY_EVENTS.map((event) => [event, byEvent.get(event) ?? { ...DEFAULT_SETTING }]),
+  ) as Record<DmNotifyEvent, NotifySetting>
 }
 
 /**
@@ -36,7 +36,7 @@ export const getUserNotifySettings = async (userId: string): Promise<Record<Noti
  */
 export const setUserNotifySetting = async (
   userId: string,
-  event: NotifyEvent,
+  event: DmNotifyEvent,
   setting: NotifySetting,
 ): Promise<void> => {
   await prisma.userNotifySetting.upsert({

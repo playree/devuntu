@@ -77,6 +77,10 @@ model User {
   attachments    Attachment[]
   notifySettings UserNotifySetting[]
 
+  // Notify
+  notifyOutboxes   NotifyOutbox[]   @relation("NotifyOutboxActor")
+  notifyDeliveries NotifyDelivery[]
+
   // CalendarShare
   calendarShare     CalendarShare?
   calendarBusyTimes CalendarBusyTime[]
@@ -1461,10 +1465,34 @@ enum TicketCommentType {
   report
 }
 
-/// 通知の対象となるイベント
+/// 通知の対象となるイベント。
+/// NOTIFY_EVENTS(`src/lib/notify/notify.ts`)と並びを揃える(tests/lib/notify/notify.test.ts で固定)。
+/// 値の追加は末尾のみ。既存値の前に挿入すると並びの一致が崩れる。
 enum NotifyEvent {
   /// チケットやコメントで自分がメンションされた
   mention
+
+  /// AIエージェントの実行が終了した
+  agent_run
+}
+
+/// 通知チャネル。UserNotifySetting の列名と一致させる(NOTIFY_CHANNELS)
+enum NotifyChannel {
+  email
+  slack
+}
+
+/// キューの行の状態。
+/// 送信できた配信は行ごと消すので、`done` は展開を終えたアウトボックスにだけ付く。
+enum NotifyJobStatus {
+  /// 未処理。`scheduledAt` を過ぎたものがワーカーの対象になる
+  pending
+  /// ワーカーが掴んでいる。`claimedAt` が古いものは取りこぼしとして回収する
+  processing
+  /// 展開済み(アウトボックスのみ)
+  done
+  /// 試行回数を使い切った。原因を追うために一定期間残す
+  failed
 }
 
 /// ユーザーごとの通知設定。
@@ -1492,4 +1520,83 @@ model UserNotifySetting {
   // (userId, event) の @@unique が userId 先頭の索引を兼ねるので @@index([userId]) は不要
   @@unique([userId, event])
   @@map("user_notify_setting")
+}
+
+/// 通知の発生記録(アウトボックス)。
+///
+/// トリガー側はチケット操作と同じトランザクションでここへ1行書くだけで済み、
+/// 宛先の解決とチャネル別の配信はワーカー(`notify-dispatch.ts`)が行う。
+/// トリガーを増やしても呼び出し元は「何が起きたか」だけを書けばよい。
+model NotifyOutbox {
+  id String @id @default(uuid(7))
+
+  /// 発生したイベント
+  event NotifyEvent
+
+  /// 発生させた人。DM の宛先から除外する(自分の操作で自分へ通知しない)
+  actorId String?
+  actor   User?   @relation("NotifyOutboxActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  /// トリガー側でしか決められない DM の宛先(増えたメンションなど)。
+  /// 規則で導ける宛先はワーカーが解決する
+  targetUserIds String[] @default([])
+
+  /// トリガー側でしか決められないチャンネルの宛先。DM だけの通知では空
+  targetSlackChannelIds String[] @default([])
+
+  /// 文面の組み立てに必要な値。イベントごとに形が違うので Json で持つ(`notify-payload.ts` で検証)。
+  /// チケットが後から消えても通知が壊れないよう、表示IDや件名はここへスナップショットする
+  payload Json
+
+  status    NotifyJobStatus @default(pending)
+  attempts  Int             @default(0)
+  claimedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  deliveries NotifyDelivery[]
+
+  // ワーカーは未処理を発生順に引く
+  @@index([status, createdAt])
+  @@map("notify_outbox")
+}
+
+/// 1宛先 × 1チャネルぶんの配信。ワーカーがアウトボックスを展開して作る。
+///
+/// 送信できた行は削除する(送信の記録はログに残る)ので、残っているのは
+/// 未送信・再試行待ち・試行回数を使い切ったものだけ。
+model NotifyDelivery {
+  id String @id @default(uuid(7))
+
+  outboxId String
+  outbox   NotifyOutbox @relation(fields: [outboxId], references: [id], onDelete: Cascade)
+
+  channel NotifyChannel
+
+  /// DM の宛先。チャンネル通知では null
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// チャンネル通知の宛先。DM では null
+  slackChannelId String?
+
+  status NotifyJobStatus @default(pending)
+
+  /// この時刻以降に送る。再試行のバックオフと、メールの集約ウィンドウで使う
+  scheduledAt DateTime
+
+  attempts  Int       @default(0)
+  claimedAt DateTime?
+
+  /// 直近の失敗理由。分類(SlackSendOutcome 等)だけを入れ、利用者の入力は載せない
+  lastError String?
+
+  createdAt DateTime @default(now())
+
+  // ワーカーの取り出し(チャネル別・期限到来順)を索引スキャンにする
+  @@index([channel, status, scheduledAt])
+  // メールの集約はユーザー単位でまとめて取り出す
+  @@index([userId, channel, status, scheduledAt])
+  @@index([outboxId])
+  @@map("notify_delivery")
 }

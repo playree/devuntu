@@ -24,7 +24,7 @@ import {
   TICKET_SORT_COLUMNS,
   TICKET_STATUSES,
 } from '../board/task'
-import { NOTIFY_EVENTS } from '../notify/notify'
+import { DM_NOTIFY_EVENTS } from '../notify/notify'
 import { SLACK_CHANNEL_ID_PATTERN } from '../slack/slack'
 import { TOKEN_EXPIRES } from '../token-expires'
 
@@ -339,9 +339,11 @@ export type UpdateIntegrationSettings = z.infer<typeof scUpdateIntegrationSettin
 /**
  * 通知設定(イベント種別ごと・チャネルごとの ON/OFF)。種別が増えても z.enum が自動で追従する。
  * チャネルは常に全部まとめて受け取り、サーバー側に部分更新の分岐を作らない。
+ *
+ * 宛先がチャンネルだけのイベントは `UserNotifySetting` で表せないので受け付けない。
  */
 export const scUpdateNotifySetting = z.object({
-  event: z.enum(NOTIFY_EVENTS),
+  event: z.enum(DM_NOTIFY_EVENTS),
   email: z.boolean(),
   slack: z.boolean(),
 })

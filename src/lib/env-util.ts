@@ -141,6 +141,15 @@ const server = {
     return domains ? domains.split(',') : []
   },
 
+  // 通知
+  /**
+   * 通知の配信ワーカー(`notify-worker.ts`)を動かすか。
+   * 止めるとキューへの投入だけが続き、配信は行われない(切り分け用)。
+   */
+  get NOTIFY_WORKER_ENABLED() {
+    return getEnvBoolean('NOTIFY_WORKER_ENABLED', { default: true })
+  },
+
   // メール
   get MAIL_SEND() {
     return getEnv<'sendgrid' | 'sendmail' | 'smtp' | 'debug'>('MAIL_SEND')

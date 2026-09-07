@@ -14,4 +14,7 @@ export const register = async () => {
    */
   const { recordAppVersion } = await import('./lib/app-version')
   await recordAppVersion()
+
+  const { startNotifyWorker } = await import('./lib/notify/notify-worker')
+  startNotifyWorker()
 }

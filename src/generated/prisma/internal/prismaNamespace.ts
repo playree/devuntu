@@ -435,7 +435,9 @@ export const ModelName = {
   BoardGroup: 'BoardGroup',
   Ticket: 'Ticket',
   TicketComment: 'TicketComment',
-  UserNotifySetting: 'UserNotifySetting'
+  UserNotifySetting: 'UserNotifySetting',
+  NotifyOutbox: 'NotifyOutbox',
+  NotifyDelivery: 'NotifyDelivery'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -451,7 +453,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "group" | "userGroup" | "calendarShare" | "calendarBusyTime" | "board" | "boardKeyHistory" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "ticket" | "ticketComment" | "userNotifySetting"
+    modelProps: "user" | "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "group" | "userGroup" | "calendarShare" | "calendarBusyTime" | "board" | "boardKeyHistory" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "ticket" | "ticketComment" | "userNotifySetting" | "notifyOutbox" | "notifyDelivery"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -3341,6 +3343,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    NotifyOutbox: {
+      payload: Prisma.$NotifyOutboxPayload<ExtArgs>
+      fields: Prisma.NotifyOutboxFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.NotifyOutboxFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotifyOutboxPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.NotifyOutboxFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotifyOutboxPayload>
+        }
+        findFirst: {
+          args: Prisma.NotifyOutboxFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotifyOutboxPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.NotifyOutboxFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotifyOutboxPayload>
+        }
+        findMany: {
+          args: Prisma.NotifyOutboxFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotifyOutboxPayload>[]
+        }
+        create: {
+          args: Prisma.NotifyOutboxCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotifyOutboxPayload>
+        }
+        createMany: {
+          args: Prisma.NotifyOutboxCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.NotifyOutboxCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotifyOutboxPayload>[]
+        }
+        delete: {
+          args: Prisma.NotifyOutboxDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotifyOutboxPayload>
+        }
+        update: {
+          args: Prisma.NotifyOutboxUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotifyOutboxPayload>
+        }
+        deleteMany: {
+          args: Prisma.NotifyOutboxDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.NotifyOutboxUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.NotifyOutboxUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotifyOutboxPayload>[]
+        }
+        upsert: {
+          args: Prisma.NotifyOutboxUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotifyOutboxPayload>
+        }
+        aggregate: {
+          args: Prisma.NotifyOutboxAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateNotifyOutbox>
+        }
+        groupBy: {
+          args: Prisma.NotifyOutboxGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NotifyOutboxGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.NotifyOutboxCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NotifyOutboxCountAggregateOutputType> | number
+        }
+      }
+    }
+    NotifyDelivery: {
+      payload: Prisma.$NotifyDeliveryPayload<ExtArgs>
+      fields: Prisma.NotifyDeliveryFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.NotifyDeliveryFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotifyDeliveryPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.NotifyDeliveryFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotifyDeliveryPayload>
+        }
+        findFirst: {
+          args: Prisma.NotifyDeliveryFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotifyDeliveryPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.NotifyDeliveryFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotifyDeliveryPayload>
+        }
+        findMany: {
+          args: Prisma.NotifyDeliveryFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotifyDeliveryPayload>[]
+        }
+        create: {
+          args: Prisma.NotifyDeliveryCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotifyDeliveryPayload>
+        }
+        createMany: {
+          args: Prisma.NotifyDeliveryCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.NotifyDeliveryCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotifyDeliveryPayload>[]
+        }
+        delete: {
+          args: Prisma.NotifyDeliveryDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotifyDeliveryPayload>
+        }
+        update: {
+          args: Prisma.NotifyDeliveryUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotifyDeliveryPayload>
+        }
+        deleteMany: {
+          args: Prisma.NotifyDeliveryDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.NotifyDeliveryUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.NotifyDeliveryUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotifyDeliveryPayload>[]
+        }
+        upsert: {
+          args: Prisma.NotifyDeliveryUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotifyDeliveryPayload>
+        }
+        aggregate: {
+          args: Prisma.NotifyDeliveryAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateNotifyDelivery>
+        }
+        groupBy: {
+          args: Prisma.NotifyDeliveryGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NotifyDeliveryGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.NotifyDeliveryCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NotifyDeliveryCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -3958,6 +4108,39 @@ export const UserNotifySettingScalarFieldEnum = {
 export type UserNotifySettingScalarFieldEnum = (typeof UserNotifySettingScalarFieldEnum)[keyof typeof UserNotifySettingScalarFieldEnum]
 
 
+export const NotifyOutboxScalarFieldEnum = {
+  id: 'id',
+  event: 'event',
+  actorId: 'actorId',
+  targetUserIds: 'targetUserIds',
+  targetSlackChannelIds: 'targetSlackChannelIds',
+  payload: 'payload',
+  status: 'status',
+  attempts: 'attempts',
+  claimedAt: 'claimedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type NotifyOutboxScalarFieldEnum = (typeof NotifyOutboxScalarFieldEnum)[keyof typeof NotifyOutboxScalarFieldEnum]
+
+
+export const NotifyDeliveryScalarFieldEnum = {
+  id: 'id',
+  outboxId: 'outboxId',
+  channel: 'channel',
+  userId: 'userId',
+  slackChannelId: 'slackChannelId',
+  status: 'status',
+  scheduledAt: 'scheduledAt',
+  attempts: 'attempts',
+  claimedAt: 'claimedAt',
+  lastError: 'lastError',
+  createdAt: 'createdAt'
+} as const
+
+export type NotifyDeliveryScalarFieldEnum = (typeof NotifyDeliveryScalarFieldEnum)[keyof typeof NotifyDeliveryScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -4230,6 +4413,34 @@ export type ListEnumNotifyEventFieldRefInput<$PrismaModel> = FieldRefInputType<$
 
 
 /**
+ * Reference to a field of type 'NotifyJobStatus'
+ */
+export type EnumNotifyJobStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'NotifyJobStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'NotifyJobStatus[]'
+ */
+export type ListEnumNotifyJobStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'NotifyJobStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'NotifyChannel'
+ */
+export type EnumNotifyChannelFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'NotifyChannel'>
+    
+
+
+/**
+ * Reference to a field of type 'NotifyChannel[]'
+ */
+export type ListEnumNotifyChannelFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'NotifyChannel[]'>
+    
+
+
+/**
  * Reference to a field of type 'Float'
  */
 export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
@@ -4432,6 +4643,8 @@ export type GlobalOmitConfig = {
   ticket?: Prisma.TicketOmit
   ticketComment?: Prisma.TicketCommentOmit
   userNotifySetting?: Prisma.UserNotifySettingOmit
+  notifyOutbox?: Prisma.NotifyOutboxOmit
+  notifyDelivery?: Prisma.NotifyDeliveryOmit
 }
 
 /* Types for Logging */

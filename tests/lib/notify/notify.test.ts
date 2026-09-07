@@ -1,13 +1,21 @@
 /**
  * 通知の共通定義の単体テスト
  *
- * 設定の読み書き(`src/lib/notify-setting.ts`)と送信(`src/lib/notify-mention.ts`)は
+ * 設定の読み書き(`notify-setting.ts`)と配信(`notify-dispatch.ts`)は
  * DB / 外部サービスに依存するためテスト対象にしない。
  */
 
-import { NotifyEvent } from '@/generated/prisma/enums'
+import { NotifyChannel, NotifyEvent } from '@/generated/prisma/enums'
 import { expandTemplate } from '@/lib/locale-util'
-import { commentExcerpt, NOTIFY_CHANNELS, NOTIFY_EVENTS, NOTIFY_EXCERPT_MAX } from '@/lib/notify/notify'
+import {
+  CHANNEL_NOTIFY_EVENTS,
+  commentExcerpt,
+  DM_NOTIFY_EVENTS,
+  NOTIFY_CHANNELS,
+  NOTIFY_DELIVER_BATCH,
+  NOTIFY_EVENTS,
+  NOTIFY_EXCERPT_MAX,
+} from '@/lib/notify/notify'
 import { en } from '@/locale/lang-en'
 import { ja } from '@/locale/lang-ja'
 import { describe, expect, it } from 'vitest'
@@ -19,10 +27,37 @@ describe('NOTIFY_EVENTS: Prisma の enum と一致していること', () => {
   })
 })
 
-describe('NOTIFY_CHANNELS: UserNotifySetting の列名と一致していること', () => {
-  it('メールと Slack の 2 チャネル', () => {
+describe('DM_NOTIFY_EVENTS / CHANNEL_NOTIFY_EVENTS: 宛先ごとの内訳', () => {
+  for (const [label, events] of [
+    ['DM_NOTIFY_EVENTS', DM_NOTIFY_EVENTS],
+    ['CHANNEL_NOTIFY_EVENTS', CHANNEL_NOTIFY_EVENTS],
+  ] as const) {
+    it(`${label} は NOTIFY_EVENTS の部分集合`, () => {
+      // 設定画面はここから項目を作るので、enum に無い値が混ざるとロケールキーも引けなくなる
+      expect(events.every((event) => NOTIFY_EVENTS.includes(event))).toBe(true)
+    })
+
+    it(`${label} は定義順が NOTIFY_EVENTS と同じ`, () => {
+      // 設定画面の並びを NOTIFY_EVENTS の定義順に揃える
+      expect([...events]).toEqual(NOTIFY_EVENTS.filter((event) => events.includes(event)))
+    })
+  }
+
+  it('どちらの宛先にも出ないイベントは無い(設定できない通知を作らない)', () => {
+    const covered = new Set<string>([...DM_NOTIFY_EVENTS, ...CHANNEL_NOTIFY_EVENTS])
+    expect(NOTIFY_EVENTS.filter((event) => !covered.has(event))).toEqual([])
+  })
+})
+
+describe('NOTIFY_CHANNELS: Prisma の enum / UserNotifySetting の列名と一致していること', () => {
+  it('NotifyChannel enum と同じ値・同じ件数', () => {
     // 列名をそのままキーに使うので、ここがずれると設定の保存先を取り違える
-    expect(NOTIFY_CHANNELS).toEqual(['email', 'slack'])
+    expect(NOTIFY_CHANNELS).toEqual(Object.values(NotifyChannel))
+  })
+
+  it('全チャネルに 1 tick の上限がある', () => {
+    // 上限の指定漏れは undefined が LIMIT へ渡って配信が止まるので、キーの網羅を固定する
+    expect(Object.keys(NOTIFY_DELIVER_BATCH).sort()).toEqual([...NOTIFY_CHANNELS].sort())
   })
 })
 

@@ -1,30 +1,18 @@
 /**
- * エージェント実行結果のチャンネル通知の単体テスト
+ * エージェント実行結果通知の単体テスト
  *
- * Slack API(`slack-server.ts`)と管理者設定(`slack-account.ts`)は差し替え、
- * 「どういうときに送らないか」と「何を載せるか」だけを検証する。
- * `after()` は本番ではレスポンス後に走るが、ここでは即時実行にして結果を見る。
+ * この入口が行うのはキューへの投入まで(送信は配信ワーカー)。
+ * 「送らない条件」と「投入時に確定させる内容」を検証する。
+ * 投稿の中身は `notify-content.test.ts` / `notify-slack.test.ts` で見る。
  */
 
 import { notifyAgentRun, type AgentRunNotification } from '@/lib/notify/notify-agent-run'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('next/server', () => ({ after: (fn: () => unknown) => fn() }))
-vi.mock('@/lib/server-utils', () => ({
-  makeUrl: (path: string) => new URL(path, 'https://devuntu.example.com'),
-}))
-vi.mock('@/lib/slack/slack-account', () => ({
-  hasSlackCredentials: vi.fn(() => true),
-  getSlackSettings: vi.fn(async () => ({ enabled: true, allowedGroupIds: [] })),
-}))
-vi.mock('@/lib/slack/slack-server', () => ({ postSlackMessage: vi.fn(async () => 'ok') }))
+vi.mock('@/lib/notify/notify-enqueue', () => ({ enqueueNotify: vi.fn(async () => undefined) }))
 
-const { hasSlackCredentials, getSlackSettings } = await import('@/lib/slack/slack-account')
-const { postSlackMessage } = await import('@/lib/slack/slack-server')
-
-const post = vi.mocked(postSlackMessage)
-const credentials = vi.mocked(hasSlackCredentials)
-const settings = vi.mocked(getSlackSettings)
+const { enqueueNotify } = await import('@/lib/notify/notify-enqueue')
+const enqueue = vi.mocked(enqueueNotify)
 
 const startedAt = new Date('2026-08-25T00:00:00Z')
 
@@ -43,77 +31,56 @@ const notification = (override: Partial<AgentRunNotification> = {}): AgentRunNot
   ...override,
 })
 
-/** 投稿されたペイロードのうち、通知バナーに出る text 部分 */
-const postedText = () => (post.mock.calls[0]?.[1] as { text: string }).text
+/** 投入されたアウトボックスの内容 */
+const enqueued = () => enqueue.mock.calls[0][0]
 
 beforeEach(() => {
   vi.clearAllMocks()
-  credentials.mockReturnValue(true)
-  settings.mockResolvedValue({ enabled: true, allowedGroupIds: [] })
 })
 
 describe('notifyAgentRun: 送らない条件', () => {
-  it('チャンネル未設定のボードには送らない', async () => {
+  it('チャンネル未設定のボードには投入しない', async () => {
     await notifyAgentRun(notification({ slackChannelId: null }))
-    expect(post).not.toHaveBeenCalled()
-  })
-
-  it('環境変数が揃っていなければ送らない', async () => {
-    credentials.mockReturnValue(false)
-    await notifyAgentRun(notification())
-    expect(post).not.toHaveBeenCalled()
-  })
-
-  it('管理者が Slack 連携を無効にしていれば送らない', async () => {
-    settings.mockResolvedValue({ enabled: false, allowedGroupIds: [] })
-    await notifyAgentRun(notification())
-    expect(post).not.toHaveBeenCalled()
-  })
-
-  it('Slack が失敗しても呼び出し元へ例外を伝えない', async () => {
-    post.mockRejectedValueOnce(new Error('boom'))
-    await expect(notifyAgentRun(notification())).resolves.toBeUndefined()
+    expect(enqueue).not.toHaveBeenCalled()
   })
 })
 
-describe('notifyAgentRun: 送る内容', () => {
-  it('設定されたチャンネルへ投稿する', async () => {
+describe('notifyAgentRun: 投入する内容', () => {
+  it('設定されたチャンネルを宛先にする', async () => {
     await notifyAgentRun(notification())
-    expect(post).toHaveBeenCalledWith('C0123ABCD', expect.objectContaining({ text: expect.any(String) }))
+    expect(enqueued()).toMatchObject({ event: 'agent_run', targetSlackChannelIds: ['C0123ABCD'] })
   })
 
-  it('見出しは表示IDとチケット名', async () => {
+  it('宛先はチャンネルだけ(ユーザーの通知設定とは独立している)', async () => {
     await notifyAgentRun(notification())
-    expect(postedText()).toContain('[ABC-42] ログイン画面のレイアウト崩れ')
+    expect(enqueued().targetUserIds).toBeUndefined()
   })
 
-  it('本文にエージェント名・処理・結果・所要時間が入る', async () => {
+  it('文面に必要な値をスナップショットする(配信時にチケットが消えていても組み立てられる)', async () => {
     await notifyAgentRun(notification())
-    const text = postedText()
-    expect(text).toContain('テストエージェント')
-    expect(text, '所要時間は履歴と同じ mm:ss').toContain('01:30')
+    expect(enqueued().payload).toMatchObject({
+      ticketId: '0198c0de-0000-7000-8000-000000000001',
+      displayId: 'ABC-42',
+      ticketTitle: 'ログイン画面のレイアウト崩れ',
+      agentName: 'テストエージェント',
+      action: 'execute',
+      status: 'succeeded',
+      startedAt,
+    })
   })
 
-  it('報告の要約を引用として載せる', async () => {
-    await notifyAgentRun(notification())
-    expect(postedText()).toContain('>原因を特定して修正した')
+  it('要約は記法を落とした抜粋にする', async () => {
+    await notifyAgentRun(notification({ summary: '## 調査結果\n- **原因** は CSS' }))
+    expect(enqueued().payload).toMatchObject({ excerpt: '調査結果 原因 は CSS' })
   })
 
-  it('要約が無ければ引用行を出さない', async () => {
+  it('要約が無ければ抜粋を持たせない', async () => {
     await notifyAgentRun(notification({ summary: null }))
-    expect(postedText()).not.toContain('\n>')
+    expect(enqueued().payload).not.toHaveProperty('excerpt')
   })
 
-  it('記法だけの要約は引用行にしない(落とすと空になるため)', async () => {
+  it('記法だけの要約は抜粋にしない(落とすと空になるため)', async () => {
     await notifyAgentRun(notification({ summary: '**' }))
-    expect(postedText()).not.toContain('\n>')
-  })
-
-  it('チケット詳細へリンクする(短縮URLはボードメンバーしか辿れない)', async () => {
-    await notifyAgentRun(notification())
-    const { blocks } = post.mock.calls[0][1] as { blocks: { elements?: { url?: string }[] }[] }
-    expect(blocks.at(-1)?.elements?.[0]?.url).toBe(
-      'https://devuntu.example.com/tickets/0198c0de-0000-7000-8000-000000000001',
-    )
+    expect(enqueued().payload).not.toHaveProperty('excerpt')
   })
 })
