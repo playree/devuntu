@@ -97,4 +97,10 @@ describe('deliverWebPush: 鍵の不正(401 / 403)の切り分け', () => {
     expect(await deliverWebPush({ userId: 'user-1', content })).toBe('retryable')
     expect(deleteSubscription).toHaveBeenCalledExactlyOnceWith('sub-1')
   })
+
+  it('残りが失効だけなら、鍵の不正が 1 台でも構成障害として扱う', async () => {
+    setupDevices('revoked', 'unlinked')
+    expect(await deliverWebPush({ userId: 'user-1', content })).toBe('revoked')
+    expect(deleteSubscription, '構成障害では購読を消さない').not.toHaveBeenCalled()
+  })
 })

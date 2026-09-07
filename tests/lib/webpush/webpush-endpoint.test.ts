@@ -16,6 +16,10 @@ describe('通すエンドポイント', () => {
     'https://example.notify.windows.com/w/?token=abc',
     // 公開アドレスであれば IP 直指定も通す
     'https://8.8.8.8/wpush',
+    // 予約範囲の境界の外側
+    'https://198.17.255.255/wpush',
+    'https://198.20.0.1/wpush',
+    'https://192.0.1.1/wpush',
   ])('%s', (endpoint) => {
     expect(isAllowedWebPushEndpoint(endpoint)).toBe(true)
   })
@@ -44,6 +48,15 @@ describe('通さないエンドポイント', () => {
     'https://169.254.169.254/latest/meta-data',
     'https://100.64.0.1/wpush',
     'https://0.0.0.0/wpush',
+    // 予約範囲(ベンチマーク用 / TEST-NET / プロトコル割り当て / マルチキャスト / ブロードキャスト)
+    'https://198.18.0.1/wpush',
+    'https://198.19.255.255/wpush',
+    'https://192.0.0.1/wpush',
+    'https://192.0.2.1/wpush',
+    'https://198.51.100.1/wpush',
+    'https://203.0.113.1/wpush',
+    'https://224.0.0.1/wpush',
+    'https://255.255.255.255/wpush',
     // IPv6(ループバック / 未指定 / ユニークローカル / リンクローカル / IPv4 射影)
     'https://[::1]/wpush',
     'https://[::]/wpush',
@@ -51,6 +64,7 @@ describe('通さないエンドポイント', () => {
     'https://[fe80::1]/wpush',
     'https://[::ffff:127.0.0.1]/wpush',
     'https://[::ffff:10.0.0.1]/wpush',
+    'https://[::ffff:198.18.0.1]/wpush',
     // 既定以外のポートと資格情報付き
     'https://example.com:8443/wpush',
     'https://user:pass@fcm.googleapis.com/fcm/send/abc',

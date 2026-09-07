@@ -18,11 +18,12 @@ import { isDeliveryAborting, isDeliverySettled, type DeliveryOutcome } from './n
  *
  * 鍵の不正(401 / 403)は端末ごとにも起きる。VAPID 鍵を差し替えた後、再購読していない
  * 端末の行は古い鍵のまま残るので、**打ち切り相当でも残りの端末へは送り切ってから**
- * 構成障害かどうかを判断する。全端末が同じ結果になった場合だけ VAPID の構成障害とみなす。
+ * 構成障害かどうかを判断する。失効した端末を除いた全てが鍵の不正だった場合だけ
+ * VAPID の構成障害とみなす。
  *
  * 結果は次の順で決める。
  *
- * - 全端末が鍵の不正なら、そのまま打ち切りを伝える(チャネルごと止める)
+ * - 失効を除く全端末が鍵の不正なら、そのまま打ち切りを伝える(チャネルごと止める)
  * - 1 台でも送れたら `ok`(再送すると届いた端末に二重で出てしまう)
  * - それ以外は最初の失敗を返して再試行に回す
  *
@@ -57,9 +58,11 @@ export const deliverWebPush = async (param: {
   }
 
   const aborting = results.filter(({ outcome }) => isDeliveryAborting(outcome))
+  // 失効(unlinked)は送信まで至っていないので、構成障害かどうかの判断材料にはしない
+  const attempted = results.filter(({ outcome }) => outcome !== 'unlinked')
 
-  // 全端末が鍵の不正。端末ごとの問題ではなく VAPID の構成障害なので、直すまで送れない
-  if (aborting.length === results.length) {
+  // 送信を試せた端末が全て鍵の不正。端末ごとの問題ではなく VAPID の構成障害なので、直すまで送れない
+  if (attempted.length > 0 && aborting.length === attempted.length) {
     return aborting[0].outcome
   }
 
