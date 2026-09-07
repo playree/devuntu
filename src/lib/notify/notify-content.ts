@@ -71,6 +71,12 @@ const BUILDERS = {
       ...(excerpt && { excerpt }),
     }
   },
+  /** 担当に指定された本人へ送る。リンク先はメンションと同じ短縮URL */
+  ticket_assigned: (payload, locale) => ({
+    subject: subjectOf(payload),
+    body: t(locale, 'notify_msg_ticket_assigned', { from: payload.fromName }),
+    url: makeUrl(ticketShortPath(payload.displayId)).toString(),
+  }),
 } as const satisfies { [E in NotifyEvent]: ContentBuilder<E> }
 
 /**

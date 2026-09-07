@@ -45,10 +45,16 @@ const scAgentRun = scTicketRef.extend({
   finishedAt: z.coerce.date(),
 })
 
+const scTicketAssigned = scTicketRef.extend({
+  /** 担当者を変えた本人の表示名 */
+  fromName: z.string(),
+})
+
 /** イベントごとのペイロード定義。イベントを足すとここが型エラーになる */
 export const NOTIFY_PAYLOAD_SCHEMA = {
   mention: scMention,
   agent_run: scAgentRun,
+  ticket_assigned: scTicketAssigned,
 } as const satisfies Record<NotifyEvent, z.ZodType>
 
 export type NotifyPayloadMap = { [E in NotifyEvent]: z.infer<(typeof NOTIFY_PAYLOAD_SCHEMA)[E]> }

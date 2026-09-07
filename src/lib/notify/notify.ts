@@ -2,8 +2,8 @@
  * 通知の共通定義
  *
  * NOTE: このファイルはクライアント('use client')からも import されるため、
- * サーバー専用の処理は `notify-setting.ts`(設定の読み書き) や
- * `notify-mention.ts`(送信) に配置する。
+ * サーバー専用の処理は `notify-setting.ts`(設定の読み書き)、`notify-trigger.ts`(投入)、
+ * `notify-dispatch.ts`(配信) に配置する。
  */
 
 import type { NotifyEvent, NotifyChannel as PrismaNotifyChannel } from '@/generated/prisma/enums'
@@ -11,13 +11,13 @@ import { findMentions, stripCodeSpans } from '../board/task'
 import { truncate } from '../text-util'
 
 /** 通知イベントの種別。Prisma の enum と同じ並びで持つ(tests/lib/notify/notify.test.ts で一致を固定する) */
-export const NOTIFY_EVENTS = ['mention', 'agent_run'] as const satisfies readonly NotifyEvent[]
+export const NOTIFY_EVENTS = ['mention', 'agent_run', 'ticket_assigned'] as const satisfies readonly NotifyEvent[]
 
 /**
  * ユーザーごとの設定(`/account` の通知設定)に出す DM 通知のイベント。
  * 宛先がチャンネルだけのイベントは `UserNotifySetting` で表せないので含めない。
  */
-export const DM_NOTIFY_EVENTS = ['mention'] as const satisfies readonly NotifyEvent[]
+export const DM_NOTIFY_EVENTS = ['mention', 'agent_run', 'ticket_assigned'] as const satisfies readonly NotifyEvent[]
 export type DmNotifyEvent = (typeof DM_NOTIFY_EVENTS)[number]
 
 /** ボードごとの設定に出すチャネル通知のイベント */

@@ -192,7 +192,9 @@ export const en: LocaleItems = {
   not_issued: 'Not issued',
   notify_channel_email: 'Email',
   notify_channel_slack: 'Slack',
+  notify_event_agent_run: 'When an agent run finishes',
   notify_event_mention: 'When I am mentioned',
+  notify_event_ticket_assigned: 'When I am assigned to a ticket',
   notify_settings: 'Notifications',
   oidc_clients: 'OIDC Clients',
   oidc_clients_dynamic: 'Dynamically Registered',
@@ -475,6 +477,7 @@ Expiration time: 5 minutes
   notify_msg_agent_run_finished: '${agent} ran ${action} (${result} / ${duration})',
   notify_msg_mentioned: '${from} mentioned you',
   notify_msg_mentioned_comment: '${from} mentioned you in a comment',
+  notify_msg_ticket_assigned: '${from} assigned this ticket to you',
 
   slack_msg_open_ticket: 'Open ticket',
 

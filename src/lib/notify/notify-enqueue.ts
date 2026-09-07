@@ -19,7 +19,7 @@ const ENQUEUE_RATE_LIMIT = { limit: 120, windowMs: 60_000 }
 
 export type EnqueueNotifyParam<E extends NotifyEvent = NotifyEvent> = {
   event: E
-  /** 発生させた人。DM の宛先から除外する。システム由来の通知では省略する */
+  /** 発生させた人。DM の宛先から除外する(展開時に効く)。システム由来の通知では省略する */
   actorId?: string | null
   /** トリガー側でしか決められない DM の宛先。actor 自身は呼び出し側で除いておく */
   targetUserIds?: string[]
@@ -29,19 +29,17 @@ export type EnqueueNotifyParam<E extends NotifyEvent = NotifyEvent> = {
 }
 
 /**
- * 通知を投入する。
+ * 通知を投入する。`tx` を渡すとそのトランザクションに乗る。
  *
- * `tx` を渡すとそのトランザクションに乗る。宛先が 1 つも無い場合は行を作らない
- * (ワーカーが引いても展開する先が無く、キューを無駄に回すだけになる)。
+ * 「送る相手がいるか」はここでは判断しない。規則で導く宛先(依頼者など)は配信直前に
+ * 解決するので、投入の時点では宛先が空に見えることがある。無駄な行を作らない判断は
+ * それを知っているトリガー側(`notify-trigger.ts`)が行う。
  */
 export const enqueueNotify = async <E extends NotifyEvent>(
   param: EnqueueNotifyParam<E>,
   tx: Prisma.TransactionClient = prisma,
 ): Promise<void> => {
   const { event, actorId, targetUserIds = [], targetSlackChannelIds = [], payload } = param
-  if (targetUserIds.length === 0 && targetSlackChannelIds.length === 0) {
-    return
-  }
 
   // 通知の欠落より外部サービスを叩き続ける方が重い、という既存の判断に合わせて投入を捨てる
   if (!consumeRateLimit(`notify:enqueue:${actorId ?? 'system'}`, ENQUEUE_RATE_LIMIT)) {

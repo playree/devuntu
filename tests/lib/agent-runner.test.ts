@@ -19,12 +19,12 @@ import {
   startAgentRun,
   type AgentRunnerRow,
 } from '@/lib/agent/agent-runner'
-import { notifyAgentRun } from '@/lib/notify/notify-agent-run'
+import { enqueueAgentRunFinished } from '@/lib/notify/notify-trigger'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // 通知は実行を閉じたことの副作用。ここでは「どう呼ばれたか」だけを見る
-vi.mock('@/lib/notify/notify-agent-run', () => ({ notifyAgentRun: vi.fn() }))
+vi.mock('@/lib/notify/notify-trigger', () => ({ enqueueAgentRunFinished: vi.fn() }))
 
 vi.mock('@/lib/prisma', () => {
   const ticket = { findMany: vi.fn(), findUnique: vi.fn(), update: vi.fn(), updateMany: vi.fn() }
@@ -51,7 +51,7 @@ const ticket = vi.mocked(prisma.ticket)
 const ticketComment = vi.mocked(prisma.ticketComment)
 const agentRun = vi.mocked(prisma.agentRun)
 
-const notifyMock = vi.mocked(notifyAgentRun)
+const notifyMock = vi.mocked(enqueueAgentRunFinished)
 
 /** 通知の宛先を引くためにチケットへ足した select。既定は通知先が設定済みのボード */
 const notifyTicket = (slackChannelId: string | null = 'C0123ABCD') => ({
@@ -299,7 +299,7 @@ describe('failStaleAgentRuns', () => {
       expect.objectContaining({
         runId: 'run1',
         slackChannelId: 'C0123ABCD',
-        displayId: 'ABC-42',
+        ticket: expect.objectContaining({ displayId: 'ABC-42' }),
         status: 'failed',
         summary: 'timeout',
       }),

@@ -94,17 +94,22 @@ const slackDmTargets = async (userIds: string[], event: NotifyEvent): Promise<st
 export const buildDeliveries = async (param: {
   outboxId: string
   event: NotifyEvent
+  /** 発生させた人。自分の操作で自分へ通知しないよう DM の宛先から外す */
+  actorId: string | null
   targets: NotifyTargets
   now?: Date
 }): Promise<DeliveryInput[]> => {
-  const { outboxId, event, targets, now = nowDate() } = param
+  const { outboxId, event, actorId, targets, now = nowDate() } = param
   const deliveries: DeliveryInput[] = []
   const emailAt = nextEmailWindowAt(now)
 
-  const [emailUserIds, slackUserIds] = await Promise.all([
-    emailTargets(targets.userIds, event),
-    slackDmTargets(targets.userIds, event),
-  ])
+  /**
+   * 規則で導く宛先(依頼者など)は宛先解決の時点で actor を知らないため、ここで一律に外す。
+   * トリガー側で渡す宛先も同じ扱いになるので、除外の判断がこの 1 箇所に揃う。
+   */
+  const userIds = targets.userIds.filter((userId) => userId !== actorId)
+
+  const [emailUserIds, slackUserIds] = await Promise.all([emailTargets(userIds, event), slackDmTargets(userIds, event)])
 
   for (const userId of capRecipients(emailUserIds, 'mail', { outboxId, event })) {
     deliveries.push({ outboxId, channel: 'email', userId, scheduledAt: emailAt })

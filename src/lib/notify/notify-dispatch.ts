@@ -54,7 +54,7 @@ const fanoutOutbox = async (now: Date): Promise<void> => {
         userIds: targetUserIds,
         slackChannelIds: targetSlackChannelIds,
       })
-      const deliveries = await buildDeliveries({ outboxId: id, event, targets, now })
+      const deliveries = await buildDeliveries({ outboxId: id, event, actorId: outbox.actorId, targets, now })
 
       await prisma.$transaction(async (tx) => {
         await createDeliveries(deliveries, tx)
@@ -171,7 +171,7 @@ const deliverChannel = async (channel: NotifyChannel, now: Date): Promise<void> 
  * 1 tick ぶんの処理。
  *
  * チャネル間は `Promise.allSettled` で並行に送り、片方のチャネルの失敗で
- * もう片方を止めない(既存の `notifyMention` と同じ判断)。
+ * もう片方を止めない。
  */
 export const runNotifyDispatch = async (now: Date = nowDate()): Promise<void> => {
   await reclaimStale(now)

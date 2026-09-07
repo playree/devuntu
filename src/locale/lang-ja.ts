@@ -192,7 +192,9 @@ export const ja: DefaultLocaleItems = {
   not_issued: '未発行',
   notify_channel_email: 'メール',
   notify_channel_slack: 'Slack',
+  notify_event_agent_run: 'エージェントの実行が終わったとき',
   notify_event_mention: 'メンションされたとき',
+  notify_event_ticket_assigned: 'チケットの担当者に指定されたとき',
   notify_settings: '通知設定',
   oidc_clients: 'OIDCクライアント',
   oidc_clients_dynamic: '動的登録',
@@ -475,6 +477,7 @@ export const ja: DefaultLocaleItems = {
   notify_msg_agent_run_finished: '${agent}が${action}を実行しました(${result} / ${duration})',
   notify_msg_mentioned: '${from}さんがあなたをメンションしました',
   notify_msg_mentioned_comment: '${from}さんがコメントであなたをメンションしました',
+  notify_msg_ticket_assigned: '${from}さんがあなたを担当者に指定しました',
 
   slack_msg_open_ticket: 'チケットを開く',
 

@@ -28,7 +28,7 @@ import {
 import { dateOnlyToUtc, nowDate } from '@/lib/day'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
-import { notifyMention } from '@/lib/notify/notify-mention'
+import { enqueueTicketCommented, enqueueTicketCreated, enqueueTicketUpdated } from '@/lib/notify/notify-trigger'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import { prisma } from '@/lib/prisma'
 import { makeUrl } from '@/lib/server-utils'
@@ -229,12 +229,11 @@ export const createTicketForMcp = async (auth: ResourceAuth, input: McpCreateTic
     }
   })
 
-  await notifyMention({
-    ticketId: ticket.id,
-    displayId: ticket.displayId,
-    ticketTitle: ticket.title,
-    fromUserId: auth.user.id,
-    toUserIds: mentionedUserIds,
+  await enqueueTicketCreated({
+    actorId: auth.user.id,
+    ticket: { id: ticket.id, displayId: ticket.displayId, title: ticket.title },
+    assigneeId: assigneeId ?? null,
+    mentionedUserIds,
   })
 
   logger.info({ userId: auth.user.id, ticket }, 'mcp ticket created')
@@ -263,11 +262,13 @@ export const updateTicketForMcp = async (
   const id = await resolveTicketId(auth, ticketIdOrDisplayId)
   const { assigneeId, tagIds, dueDate, status, ...rest } = input
 
-  const { ticket, addedMentionUserIds } = await prisma.$transaction(async (tx) => {
+  const { ticket, addedMentionUserIds, before } = await prisma.$transaction(async (tx) => {
     const access = await assertTicketAccess(auth.user, id, 'edit', tx)
     if (!canMcpUpdateTicket({ userId: auth.user.id, boardRole: access.boardRole, assigneeId: access.assigneeId })) {
       throw errInvalidOperation()
     }
+    // 通知の判断に使う変更前の状態。認可の問い合わせで既に読めているので追加の SELECT は要らない
+    const before = { assigneeId: access.assigneeId }
 
     if (assigneeId !== undefined) {
       await assertBoardAssignee(tx, access.boardId, assigneeId)
@@ -304,16 +305,18 @@ export const updateTicketForMcp = async (
     return {
       ticket: { ...updated, status: moved?.status ?? updated.status },
       addedMentionUserIds,
+      before,
     }
   })
 
   const displayId = ticketDisplayId({ key: ticket.board.key, number: ticket.number })
-  await notifyMention({
-    ticketId: id,
-    displayId,
-    ticketTitle: ticket.title,
-    fromUserId: auth.user.id,
-    toUserIds: addedMentionUserIds,
+  await enqueueTicketUpdated({
+    actorId: auth.user.id,
+    ticket: { id, displayId, title: ticket.title },
+    before,
+    // 担当者を指定しない更新では変更なしとして扱う
+    after: { assigneeId: assigneeId !== undefined ? (assigneeId ?? null) : before.assigneeId },
+    addedMentionUserIds,
   })
 
   logger.info({ userId: auth.user.id, id }, 'mcp ticket updated')
@@ -375,14 +378,15 @@ export const addTicketCommentForMcp = async (
     return { comment, mentionedUserIds, ticket }
   })
 
-  await notifyMention({
-    ticketId,
-    displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
-    ticketTitle: ticket.title,
-    commentId: comment.id,
-    commentContent: content,
-    fromUserId: auth.user.id,
-    toUserIds: mentionedUserIds,
+  await enqueueTicketCommented({
+    actorId: auth.user.id,
+    ticket: {
+      id: ticketId,
+      displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
+      title: ticket.title,
+    },
+    comment: { id: comment.id, content },
+    addedMentionUserIds: mentionedUserIds,
   })
 
   logger.info({ userId: auth.user.id, ticketId, commentId: comment.id }, 'mcp ticket comment added')
@@ -422,14 +426,15 @@ export const updateTicketCommentForMcp = async (auth: ResourceAuth, commentId: s
     }
   })
 
-  await notifyMention({
-    ticketId,
-    displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
-    ticketTitle: ticket.title,
-    commentId,
-    commentContent: content,
-    fromUserId: auth.user.id,
-    toUserIds: addedMentionUserIds,
+  await enqueueTicketCommented({
+    actorId: auth.user.id,
+    ticket: {
+      id: ticketId,
+      displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
+      title: ticket.title,
+    },
+    comment: { id: commentId, content },
+    addedMentionUserIds,
   })
 
   logger.info({ userId: auth.user.id, commentId }, 'mcp ticket comment updated')

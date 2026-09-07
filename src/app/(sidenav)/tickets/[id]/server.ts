@@ -14,7 +14,7 @@ import { extractMentionEmails, resolveMentionUserIds, ticketDisplayId, ticketSho
 import { dateOnlyToUtc } from '@/lib/day'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
-import { notifyMention } from '@/lib/notify/notify-mention'
+import { enqueueTicketCommented, enqueueTicketUpdated } from '@/lib/notify/notify-trigger'
 import { prisma } from '@/lib/prisma'
 import {
   scCreateTicketComment,
@@ -150,8 +150,10 @@ export const patchTicket = safeAuthAction
   .metadata({ actionName: 'patchTicket', role: 'user' })
   .inputSchema(scPatchTicket)
   .action(async ({ ctx: { user }, parsedInput: { id, assigneeId, tagIds, dueDate, ...rest } }) => {
-    const { ticket, addedMentionUserIds } = await prisma.$transaction(async (tx) => {
+    const { ticket, addedMentionUserIds, before } = await prisma.$transaction(async (tx) => {
       const access = await assertTicketAccess(user, id, 'edit', tx)
+      // 通知の判断に使う変更前の状態。認可の問い合わせで既に読めているので追加の SELECT は要らない
+      const before = { assigneeId: access.assigneeId }
 
       // 担当者・タグはそのボードに属するものに限る(DB 制約では防げない)
       let assigneeIsAgent = false
@@ -192,14 +194,19 @@ export const patchTicket = safeAuthAction
         await syncTicketTags(tx, id, ids)
       }
 
-      return { ticket: updated, addedMentionUserIds }
+      return { ticket: updated, addedMentionUserIds, before }
     })
-    await notifyMention({
-      ticketId: id,
-      displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
-      ticketTitle: ticket.title,
-      fromUserId: user.id,
-      toUserIds: addedMentionUserIds,
+    await enqueueTicketUpdated({
+      actorId: user.id,
+      ticket: {
+        id,
+        displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
+        title: ticket.title,
+      },
+      before,
+      // 担当者を指定しない更新では変更なしとして扱う
+      after: { assigneeId: assigneeId !== undefined ? (assigneeId ?? null) : before.assigneeId },
+      addedMentionUserIds,
     })
 
     logger.info({ userId: user.id, id }, 'ticket patched')
@@ -284,14 +291,15 @@ export const addTicketComment = safeAuthAction
 
       return { comment, mentionedUserIds, ticket }
     })
-    await notifyMention({
-      ticketId,
-      displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
-      ticketTitle: ticket.title,
-      commentId: comment.id,
-      commentContent: content,
-      fromUserId: user.id,
-      toUserIds: mentionedUserIds,
+    await enqueueTicketCommented({
+      actorId: user.id,
+      ticket: {
+        id: ticketId,
+        displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
+        title: ticket.title,
+      },
+      comment: { id: comment.id, content },
+      addedMentionUserIds: mentionedUserIds,
     })
 
     logger.info({ userId: user.id, ticketId, commentId: comment.id }, 'ticket comment added')
@@ -336,14 +344,15 @@ export const updateTicketComment = safeAuthAction
         ticket: target.ticket,
       }
     })
-    await notifyMention({
-      ticketId,
-      displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
-      ticketTitle: ticket.title,
-      commentId: id,
-      commentContent: content,
-      fromUserId: user.id,
-      toUserIds: addedMentionUserIds,
+    await enqueueTicketCommented({
+      actorId: user.id,
+      ticket: {
+        id: ticketId,
+        displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
+        title: ticket.title,
+      },
+      comment: { id, content },
+      addedMentionUserIds,
     })
 
     logger.info({ userId: user.id, id }, 'ticket comment updated')

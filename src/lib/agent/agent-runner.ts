@@ -12,7 +12,7 @@ import { OPEN_TICKET_STATUSES, ticketDisplayId } from '../board/task'
 import { addDaysDateOnly, DEFAULT_TZ, minToHHmm, nowDate, toZone, zonedMinutes } from '../day'
 import { logger } from '../logger'
 import { MAX_NOTIFY_RECIPIENTS } from '../notify/notify'
-import { type AgentRunNotification, notifyAgentRun } from '../notify/notify-agent-run'
+import { type AgentRunNotification, enqueueAgentRunFinished } from '../notify/notify-trigger'
 import { prisma } from '../prisma'
 import { AGENT_UNLIMITED_DAILY_RUNS } from './agent'
 
@@ -283,7 +283,7 @@ type AgentRunNotifyTicket = {
  * 閉じた実行から通知の内容を組み立てる。
  *
  * チケットが削除済み(ticket が null)の実行は宛先のボードを辿れないので通知しない。
- * 送るかどうかの最終判断(チャンネル未設定 / Slack 無効)は `notifyAgentRun` 側に任せる。
+ * 送るかどうかの最終判断(通知設定 / チャンネル未設定 / Slack 無効)は配信側に任せる。
  */
 const buildAgentRunNotification = (param: {
   runId: string
@@ -302,9 +302,11 @@ const buildAgentRunNotification = (param: {
   return {
     ...rest,
     slackChannelId: ticket.board.slackChannelId,
-    ticketId: ticket.id,
-    displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
-    ticketTitle: ticket.title,
+    ticket: {
+      id: ticket.id,
+      displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
+      title: ticket.title,
+    },
   }
 }
 
@@ -375,7 +377,7 @@ export const failStaleAgentRuns = async (runnerId: string, now: Date = nowDate()
       finishedAt: now,
     })
     if (notification) {
-      await notifyAgentRun(notification)
+      await enqueueAgentRunFinished(notification)
     }
   }
 
@@ -571,7 +573,7 @@ export const finishAgentRunById = async (
       })
     : null
   if (notification) {
-    await notifyAgentRun(notification)
+    await enqueueAgentRunFinished(notification)
   }
 
   return true
@@ -669,7 +671,7 @@ export const finishAgentTask = async (
   logger.info({ runnerId: runner?.id ?? null, ticketId, outcome, state: result.state }, 'agent task finished')
 
   if (result.notification) {
-    await notifyAgentRun(result.notification)
+    await enqueueAgentRunFinished(result.notification)
   }
 
   return { state: result.state }

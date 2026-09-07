@@ -190,7 +190,9 @@ export type LocaleItemBase =
   | 'not_issued'
   | 'notify_channel_email'
   | 'notify_channel_slack'
+  | 'notify_event_agent_run'
   | 'notify_event_mention'
+  | 'notify_event_ticket_assigned'
   | 'notify_settings'
   | 'oidc_clients'
   | 'oidc_clients_dynamic'
@@ -419,6 +421,7 @@ export type LocaleItemBase =
   | 'notify_msg_agent_run_finished'
   | 'notify_msg_mentioned'
   | 'notify_msg_mentioned_comment'
+  | 'notify_msg_ticket_assigned'
   // for Slack
   | 'slack_msg_open_ticket'
 

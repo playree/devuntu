@@ -26,7 +26,7 @@ import {
 import { dateOnlyToUtc, nowDate } from '@/lib/day'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
-import { notifyMention } from '@/lib/notify/notify-mention'
+import { enqueueTicketCreated } from '@/lib/notify/notify-trigger'
 import { prisma } from '@/lib/prisma'
 import { scCreateTag, scCreateTicket, scTicketListQuery, scUUID } from '@/lib/schema/schema'
 
@@ -248,12 +248,11 @@ export const createTicket = safeAuthAction
         mentionedUserIds,
       }
     })
-    await notifyMention({
-      ticketId: ticket.id,
-      displayId: ticket.displayId,
-      ticketTitle: ticket.title,
-      fromUserId: user.id,
-      toUserIds: mentionedUserIds,
+    await enqueueTicketCreated({
+      actorId: user.id,
+      ticket: { id: ticket.id, displayId: ticket.displayId, title: ticket.title },
+      assigneeId: assigneeId ?? null,
+      mentionedUserIds,
     })
 
     logger.info({ userId: user.id, ticket }, 'ticket created')

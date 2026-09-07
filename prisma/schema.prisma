@@ -1474,6 +1474,9 @@ enum NotifyEvent {
 
   /// AIエージェントの実行が終了した
   agent_run
+
+  /// チケットの担当者が変わった(DM は新しい担当者へ)
+  ticket_assigned
 }
 
 /// 通知チャネル。UserNotifySetting の列名と一致させる(NOTIFY_CHANNELS)

@@ -25,6 +25,12 @@ const mention = (override: Partial<NotifyPayload<'mention'>> = {}): NotifyPayloa
   ...override,
 })
 
+const assigned = (override: Partial<NotifyPayload<'ticket_assigned'>> = {}): NotifyPayload<'ticket_assigned'> => ({
+  ...ticketRef,
+  fromName: 'テストユーザー',
+  ...override,
+})
+
 const startedAt = new Date('2026-08-25T00:00:00Z')
 
 const agentRun = (override: Partial<NotifyPayload<'agent_run'>> = {}): NotifyPayload<'agent_run'> => ({
@@ -45,6 +51,26 @@ describe('buildNotifyContent: 見出しは表示IDとチケット名', () => {
 
   it('agent_run', () => {
     expect(buildNotifyContent('agent_run', agentRun(), null).subject).toBe('[ABC-42] ログイン画面のレイアウト崩れ')
+  })
+
+  it('ticket_assigned', () => {
+    expect(buildNotifyContent('ticket_assigned', assigned(), 'ja').subject).toBe(
+      '[ABC-42] ログイン画面のレイアウト崩れ',
+    )
+  })
+})
+
+describe('buildNotifyContent: ticket_assigned', () => {
+  it('短縮URLへリンクする', () => {
+    expect(buildNotifyContent('ticket_assigned', assigned(), 'ja').url).toBe('https://devuntu.example.com/t/ABC-42')
+  })
+
+  it('本文に担当者を変えた人の名前が入る', () => {
+    expect(buildNotifyContent('ticket_assigned', assigned(), 'ja').body).toContain('テストユーザー')
+  })
+
+  it('抜粋は持たない(担当変更に引用する本文が無い)', () => {
+    expect(buildNotifyContent('ticket_assigned', assigned(), 'ja')).not.toHaveProperty('excerpt')
   })
 })
 
@@ -94,6 +120,7 @@ describe('buildNotifyContent: ロケール', () => {
       for (const content of [
         buildNotifyContent('mention', mention({ commentId: 'comment-1' }), locale),
         buildNotifyContent('agent_run', agentRun(), locale),
+        buildNotifyContent('ticket_assigned', assigned(), locale),
       ]) {
         expect(content.subject).not.toMatch(/\$\{/)
         expect(content.body).not.toMatch(/\$\{/)

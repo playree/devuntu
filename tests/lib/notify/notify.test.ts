@@ -47,6 +47,14 @@ describe('DM_NOTIFY_EVENTS / CHANNEL_NOTIFY_EVENTS: 宛先ごとの内訳', () =
     const covered = new Set<string>([...DM_NOTIFY_EVENTS, ...CHANNEL_NOTIFY_EVENTS])
     expect(NOTIFY_EVENTS.filter((event) => !covered.has(event))).toEqual([])
   })
+
+  it('DM 通知の全イベントに設定画面の項目名がある', () => {
+    // 設定画面は `notify_event_<event>` でラベルを引くので、キーが無いとイベント名が出ない
+    for (const event of DM_NOTIFY_EVENTS) {
+      expect(ja[`notify_event_${event}`], `ja: notify_event_${event}`).toBeTruthy()
+      expect(en[`notify_event_${event}`], `en: notify_event_${event}`).toBeTruthy()
+    }
+  })
 })
 
 describe('NOTIFY_CHANNELS: Prisma の enum / UserNotifySetting の列名と一致していること', () => {
