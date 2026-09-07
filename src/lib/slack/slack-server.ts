@@ -257,7 +257,8 @@ export type SlackChannel = { id: string; name: string; isPrivate: boolean }
  *
  * `conversations.list` ではなく `users.conversations` を使う。前者は Bot が未参加の公開
  * チャンネルまで返すため、選んでも投稿時に `not_in_channel` で失敗するものが一覧に混ざる。
- * 後者なら「一覧に出ている = 必ず投稿できる」が成立し、招待漏れによる設定ミスが起きない。
+ * 後者は参加しているチャンネルだけを返すので、招待漏れによる設定ミスが起きない。
+ * ただし参加は投稿権限までは保証しない(read-only channel などでは投稿が拒否される)。
  *
  * 取得できない場合は null を返し、画面側で案内文言に落とす(空配列と区別しない)。
  */
@@ -278,7 +279,7 @@ export const listSlackChannels = async (): Promise<SlackChannel[] | null> => {
             limit: CHANNELS_PAGE_SIZE,
             ...(cursor && { cursor }),
           },
-          // 取得系は form のみ。JSON だと types が既定へ戻り、プライベートチャンネルが返らない
+          // 取得系は form のみ。JSON では types が効かず、プライベートチャンネルが返らない
           'form',
         )
         if (!res.ok) {

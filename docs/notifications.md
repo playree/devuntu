@@ -85,18 +85,21 @@ AIエージェントの自動運用(`docs/agent-runner.md`)は無人で動くた
 `listSlackChannels()`(`src/lib/slack/slack-server.ts`)が `users.conversations` で取得する。
 
 - `conversations.list` は Bot が未参加の公開チャンネルまで返すため、選んでも投稿時に `not_in_channel` で
-  失敗するものが一覧に混ざる。`users.conversations` なら**「一覧に出ている = 必ず投稿できる」**が成立し、
+  失敗するものが一覧に混ざる。`users.conversations` が返すのは**Bot が参加しているチャンネルだけ**なので、
   招待漏れによる設定ミスが構造的に起きない
+- ただし参加は投稿権限を保証しない。read-only channel などでは `chat.postMessage` が
+  `restricted_action_read_only_channel` を返して投稿が拒否される。`classifySlackError` はこれを
+  `failed` に分類し、`callWithBotToken` が warn ログへ落とすだけで**画面には出ない**
 - 一覧に出てこない = Bot が招待されていない、なので空のときは `/invite @Devuntu` を案内する
 - 結果は 5 分キャッシュする。招待した直後は一覧に現れないことがある
 - 保存時にも一覧と突き合わせ、含まれないIDは弾く(設定できたように見えて通知だけ届かない状態を作らない)
 - スコープは `channels:read` / `groups:read`。**マニフェストにこれらが入る前に導入したワークスペースでは
   再インストールと `SLACK_BOT_TOKEN` の差し替えが必要**(不足していれば `missing_scope` が返る)
 - **取得系のメソッドは form-urlencoded で送る**(`callSlackApi` の `encoding` に `'form'` を渡す)。
-  Slack が JSON ボディを受け付けるのは `chat.postMessage` / `chat.unfurl` のように
+  Slack Web API が JSON ボディを受け付けるのは `chat.postMessage` / `chat.unfurl` のように
   `application/json` を明記しているメソッドだけで、`users.conversations` へ JSON を送ると
-  **エラーにならずパラメータが黙って無視される**。`types` が既定の `public_channel` へ戻るため、
-  招待済みのプライベートチャンネルが `ok: true` のまま返らず、Bot 未招待と見分けが付かなくなる
+  パラメータが期待どおりに解釈されない。`types` が効かないとプライベートチャンネルが返らず、
+  Bot 未招待と見分けが付かなくなる
 
 ## Slackでのチケットリンクのプレビュー
 

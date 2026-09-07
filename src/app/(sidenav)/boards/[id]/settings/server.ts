@@ -142,14 +142,18 @@ export const setBoardArchived = safeAuthAction
 /**
  * 通知先に選べる Slack チャンネルの一覧(owner または管理者)。
  *
- * Bot が参加している会話だけが返る。未参加のチャンネルは投稿できないので、
- * 「一覧に出ている = 必ず投稿できる」が成立する。取得できない場合は null。
+ * Bot が参加している会話だけが返るので、招待漏れのチャンネルを選んでしまうことはない
+ * (参加していても read-only channel などで投稿を拒否されることはある)。取得できない場合は null。
+ *
+ * プライベートチャンネル名を含む一覧なので、Slack を叩く前に権限を確定させる。
+ * 全ユーザーが自分のプライベートボードの owner なので、manage 権限だけでは絞れない
  */
 export const getBoardSlackChannels = safeAuthAction
   .metadata({ actionName: 'getBoardSlackChannels', role: 'user' })
   .inputSchema(scUUID)
   .action(async ({ ctx: { user }, parsedInput: { id } }) => {
     await assertBoardAccess(user, id, 'manage')
+    await assertTeamBoard(prisma, id)
     return listSlackChannels()
   })
 export type GetBoardSlackChannelsReturnType = Awaited<ReturnType<typeof getBoardSlackChannels>>['data']
@@ -160,12 +164,18 @@ export type GetBoardSlackChannelsReturnType = Awaited<ReturnType<typeof getBoard
  * 空文字は「通知しない」。存在しない / Bot が参加していないチャンネルを保存すると
  * 設定できたように見えて通知だけ届かなくなるため、一覧と突き合わせてから保存する
  * (一覧はキャッシュ済みなので追加のコストはほぼ無い)。
+ *
+ * 突き合わせの成否はチャンネルの実在を教えてしまうので、権限の確定を先に済ませる。
+ * トランザクション内の再検証は、確定から更新までの間に権限が変わる場合のために残す。
  */
 export const setBoardSlackChannel = safeAuthAction
   .metadata({ actionName: 'setBoardSlackChannel', role: 'user' })
   .inputSchema(scSetBoardSlackChannel)
   .action(async ({ ctx: { user }, parsedInput: { id, slackChannelId } }) => {
     const channelId = slackChannelId || null
+
+    await assertBoardAccess(user, id, 'manage')
+    await assertTeamBoard(prisma, id)
 
     if (channelId) {
       const channels = await listSlackChannels()

@@ -329,24 +329,39 @@ export const failStaleAgentRuns = async (runnerId: string, now: Date = nowDate()
     return 0
   }
 
-  const ticketIds = stale.map((run) => run.ticketId).filter((id): id is string => id !== null)
-  await prisma.$transaction([
-    prisma.agentRun.updateMany({
-      where: { id: { in: stale.map((run) => run.id) } },
-      data: { status: 'failed', finishedAt: now, summary: TIMEOUT_SUMMARY },
-    }),
-    prisma.ticket.updateMany({
-      where: { id: { in: ticketIds }, agentState: 'running' },
-      data: { agentState: 'failed' },
-    }),
-  ])
+  // 掴めた実行だけを対象にする。読み出しから更新までの間に別経路が閉じた実行は、
+  // 向こうが確定させた結果と通知を持っているのでこちらは触らない
+  const claimed = await prisma.$transaction(async (tx) => {
+    const closed: typeof stale = []
+    for (const run of stale) {
+      const { count } = await tx.agentRun.updateMany({
+        where: { id: run.id, status: 'running' },
+        data: { status: 'failed', finishedAt: now, summary: TIMEOUT_SUMMARY },
+      })
+      if (count > 0) {
+        closed.push(run)
+      }
+    }
 
-  logger.warn({ runnerId, count: stale.length }, 'agent runs timed out')
+    const ticketIds = closed.map((run) => run.ticketId).filter((id): id is string => id !== null)
+    if (ticketIds.length > 0) {
+      await tx.ticket.updateMany({
+        where: { id: { in: ticketIds }, agentState: 'running' },
+        data: { agentState: 'failed' },
+      })
+    }
+    return closed
+  })
+  if (claimed.length === 0) {
+    return 0
+  }
+
+  logger.warn({ runnerId, count: claimed.length }, 'agent runs timed out')
 
   // まとめて時間切れになった場合に Slack を叩き続けないよう頭打ちにする
-  const notifyTo = stale.slice(0, MAX_NOTIFY_RECIPIENTS)
-  if (stale.length > notifyTo.length) {
-    logger.warn({ runnerId, total: stale.length, notified: notifyTo.length }, 'agent run notify truncated')
+  const notifyTo = claimed.slice(0, MAX_NOTIFY_RECIPIENTS)
+  if (claimed.length > notifyTo.length) {
+    logger.warn({ runnerId, total: claimed.length, notified: notifyTo.length }, 'agent run notify truncated')
   }
   for (const run of notifyTo) {
     const notification = buildAgentRunNotification({
@@ -364,7 +379,7 @@ export const failStaleAgentRuns = async (runnerId: string, now: Date = nowDate()
     }
   }
 
-  return stale.length
+  return claimed.length
 }
 
 /**
@@ -494,6 +509,9 @@ export const startAgentRun = async (
  * エージェントが結果を報告していれば実行は既に閉じているので、ここで開いたままなのは
  * 報告が無かった場合だけ。ランナーは Claude の終了コードしか知らず、終了コード 0 でも
  * 何をしたかは分からないため、その場合は成功と伝えられても失敗として閉じる。
+ *
+ * 報告とプロセス終了は数百ms差で連続するため、読み出した時点の status では判断できない。
+ * `status: 'running'` の条件付き更新で閉じられたときだけ、こちらが閉じた実行として扱う。
  */
 export const finishAgentRunById = async (
   runnerId: string,
@@ -519,16 +537,14 @@ export const finishAgentRunById = async (
   }
 
   const now = nowDate()
-  const unreported = run.status === 'running'
-  const finalStatus = unreported && status === 'succeeded' ? 'failed' : status
+  // 終了コード 0 でも報告が無ければ何をしたか分からないので、成功と伝えられても失敗として閉じる
+  const finalStatus = run.status === 'running' && status === 'succeeded' ? 'failed' : status
 
-  await prisma.$transaction(async (tx) => {
-    if (unreported) {
-      await tx.agentRun.update({
-        where: { id: run.id },
-        data: { status: finalStatus, summary: summary ?? undefined, finishedAt: now },
-      })
-    }
+  const unreported = await prisma.$transaction(async (tx) => {
+    const { count } = await tx.agentRun.updateMany({
+      where: { id: run.id, status: 'running' },
+      data: { status: finalStatus, summary: summary ?? undefined, finishedAt: now },
+    })
     if (run.ticketId) {
       // エージェントが結果を報告済みならその状態を尊重し、running のままの場合だけ失敗にする
       await tx.ticket.updateMany({
@@ -536,6 +552,7 @@ export const finishAgentRunById = async (
         data: { agentState: 'failed' },
       })
     }
+    return count > 0
   })
 
   logger.info({ runnerId, runId, status: finalStatus, unreported }, 'agent run finished')
@@ -583,6 +600,10 @@ const settleAction = (action: AgentRunAction, outcome: AgentOutcome): AgentRunAc
 /**
  * エージェント自身による結果の報告。チケットの状態と、開始済みの実行の両方を閉じる。
  * ランナーを介さず MCP だけで動かした場合は実行の行が無いので、その場合は状態だけ更新する。
+ *
+ * 実行を閉じるのは `status: 'running'` の条件付き更新で、掴めたときだけチケットの状態を進める。
+ * 時間切れ(`failStaleAgentRuns`)などが先に閉じていた場合は、向こうが確定させた状態を尊重して
+ * 報告どおりの状態へ巻き戻さず、通知も送らない(向こうが既に送っている)。
  */
 export const finishAgentTask = async (
   runner: AgentRunnerRow | null,
@@ -593,12 +614,7 @@ export const finishAgentTask = async (
   const { state, run } = OUTCOME_MAP[outcome]
   const now = nowDate()
 
-  const notification = await prisma.$transaction(async (tx) => {
-    const ticket = await tx.ticket.update({
-      where: { id: ticketId },
-      data: { agentState: state },
-      select: agentRunNotifySelect,
-    })
+  const result = await prisma.$transaction(async (tx) => {
     // 自動運用の設定が無い(ランナーを介さず MCP だけで動かした)場合は閉じる実行が無い
     const open = runner
       ? await tx.agentRun.findFirst({
@@ -608,12 +624,14 @@ export const finishAgentTask = async (
         })
       : null
     if (!open || !runner) {
-      return null
+      // 実行履歴が無いので通知もしない。チケットが無ければここで例外になる
+      await tx.ticket.update({ where: { id: ticketId }, data: { agentState: state }, select: { id: true } })
+      return { state, notification: null }
     }
 
     const settled = settleAction(open.action, outcome)
-    await tx.agentRun.update({
-      where: { id: open.id },
+    const { count } = await tx.agentRun.updateMany({
+      where: { id: open.id, status: 'running' },
       data: {
         status: run,
         summary: summary ?? undefined,
@@ -621,26 +639,38 @@ export const finishAgentTask = async (
         action: settled,
       },
     })
+    if (count === 0) {
+      const current = await tx.ticket.findUnique({ where: { id: ticketId }, select: { agentState: true } })
+      return { state: current?.agentState ?? state, notification: null }
+    }
 
-    return buildAgentRunNotification({
-      runId: open.id,
-      agentName: runner.user.name,
-      ticket,
-      // 実際に記録した処理へ寄せる(revise のまま通知すると履歴と食い違う)
-      action: settled ?? open.action,
-      status: run,
-      summary: summary ?? null,
-      startedAt: open.startedAt,
-      finishedAt: now,
+    const ticket = await tx.ticket.update({
+      where: { id: ticketId },
+      data: { agentState: state },
+      select: agentRunNotifySelect,
     })
+
+    return {
+      state,
+      notification: buildAgentRunNotification({
+        runId: open.id,
+        agentName: runner.user.name,
+        ticket,
+        // 実際に記録した処理へ寄せる(revise のまま通知すると履歴と食い違う)
+        action: settled ?? open.action,
+        status: run,
+        summary: summary ?? null,
+        startedAt: open.startedAt,
+        finishedAt: now,
+      }),
+    }
   })
 
-  logger.info({ runnerId: runner?.id ?? null, ticketId, outcome }, 'agent task finished')
+  logger.info({ runnerId: runner?.id ?? null, ticketId, outcome, state: result.state }, 'agent task finished')
 
-  // 実行の行が無い(MCP 単体実行)場合は実行履歴が登録されていないので通知もしない
-  if (notification) {
-    await notifyAgentRun(notification)
+  if (result.notification) {
+    await notifyAgentRun(result.notification)
   }
 
-  return { state }
+  return { state: result.state }
 }
