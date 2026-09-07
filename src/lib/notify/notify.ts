@@ -36,7 +36,7 @@ export const CHANNEL_NOTIFY_EVENTS = [
 export type ChannelNotifyEvent = (typeof CHANNEL_NOTIFY_EVENTS)[number]
 
 /** 通知チャネル。UserNotifySetting の列名と一致させる */
-export const NOTIFY_CHANNELS = ['email', 'slack'] as const satisfies readonly PrismaNotifyChannel[]
+export const NOTIFY_CHANNELS = ['email', 'slack', 'webpush'] as const satisfies readonly PrismaNotifyChannel[]
 export type NotifyChannel = (typeof NOTIFY_CHANNELS)[number]
 
 /** 1回の通知で送る宛先の上限。暴走時に外部サービスを叩き続けないための歯止め */
@@ -58,7 +58,7 @@ export const NOTIFY_FANOUT_BATCH = 20
  *
  * メールはユーザー単位で 1 通へまとめるので、この値は**宛先ユーザー数**の上限になる。
  */
-export const NOTIFY_DELIVER_BATCH: Record<NotifyChannel, number> = { email: 20, slack: 20 }
+export const NOTIFY_DELIVER_BATCH: Record<NotifyChannel, number> = { email: 20, slack: 20, webpush: 50 }
 
 /**
  * メールの集約ウィンドウ。
@@ -87,6 +87,8 @@ export const NOTIFY_FAILED_RETENTION_MS = 7 * 24 * 60 * 60 * 1000
 export const NOTIFY_CHANNEL_RATE_LIMIT: Record<NotifyChannel, { limit: number; windowMs: number }> = {
   email: { limit: 120, windowMs: 60_000 },
   slack: { limit: 60, windowMs: 60_000 },
+  // 宛先ごとに端末数ぶん叩くので、他のチャネルより枠を広く取る
+  webpush: { limit: 300, windowMs: 60_000 },
 }
 
 /** 通知に載せる本文抜粋の上限。Slack の section 上限(3000)には余裕を持って収まる長さにする */

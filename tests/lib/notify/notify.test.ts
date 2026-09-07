@@ -11,6 +11,7 @@ import {
   CHANNEL_NOTIFY_EVENTS,
   commentExcerpt,
   DM_NOTIFY_EVENTS,
+  NOTIFY_CHANNEL_RATE_LIMIT,
   NOTIFY_CHANNELS,
   NOTIFY_DELIVER_BATCH,
   NOTIFY_EVENTS,
@@ -64,9 +65,15 @@ describe('NOTIFY_CHANNELS: Prisma の enum / UserNotifySetting の列名と一�
     expect(NOTIFY_CHANNELS).toEqual(Object.values(NotifyChannel))
   })
 
-  it('全チャネルに 1 tick の上限がある', () => {
-    // 上限の指定漏れは undefined が LIMIT へ渡って配信が止まるので、キーの網羅を固定する
+  it('全チャネルに 1 tick の上限とスロットルがある', () => {
+    // 指定漏れは undefined が LIMIT へ渡って配信が止まるので、キーの網羅を固定する
     expect(Object.keys(NOTIFY_DELIVER_BATCH).sort()).toEqual([...NOTIFY_CHANNELS].sort())
+    expect(Object.keys(NOTIFY_CHANNEL_RATE_LIMIT).sort()).toEqual([...NOTIFY_CHANNELS].sort())
+  })
+
+  it('チャネル名は UserNotifySetting の列名としても使える', () => {
+    // `filterNotifiable` が `[channel]: true` で列を引くので、列名とずれると絞り込みが壊れる
+    expect(NOTIFY_CHANNELS).toEqual(['email', 'slack', 'webpush'])
   })
 })
 

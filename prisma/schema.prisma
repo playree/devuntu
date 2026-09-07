@@ -78,8 +78,9 @@ model User {
   notifySettings UserNotifySetting[]
 
   // Notify
-  notifyOutboxes   NotifyOutbox[]   @relation("NotifyOutboxActor")
-  notifyDeliveries NotifyDelivery[]
+  notifyOutboxes       NotifyOutbox[]        @relation("NotifyOutboxActor")
+  notifyDeliveries     NotifyDelivery[]
+  webPushSubscriptions WebPushSubscription[]
 
   // CalendarShare
   calendarShare     CalendarShare?
@@ -1488,6 +1489,7 @@ enum NotifyEvent {
 enum NotifyChannel {
   email
   slack
+  webpush
 }
 
 /// キューの行の状態。
@@ -1521,6 +1523,9 @@ model UserNotifySetting {
   /// Slack で通知する
   slack Boolean @default(false)
 
+  /// Web プッシュで通知する
+  webpush Boolean @default(false)
+
   // メタデータ
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1528,6 +1533,39 @@ model UserNotifySetting {
   // (userId, event) の @@unique が userId 先頭の索引を兼ねるので @@index([userId]) は不要
   @@unique([userId, event])
   @@map("user_notify_setting")
+}
+
+/// Web プッシュの購読。1ユーザーが複数の端末を登録できる。
+///
+/// 通知の ON/OFF は UserNotifySetting 側で持ち、ここは「どの端末へ送れるか」だけを表す。
+/// プッシュサービスが失効(404 / 410)を返した購読は行ごと削除する。
+model WebPushSubscription {
+  id String @id @default(uuid(7))
+
+  /// 購読の持ち主
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// プッシュサービスのエンドポイント。購読の同一性はこれで決まる
+  endpoint String @unique
+
+  /// UA の公開鍵(p256dh, base64url)
+  p256dh String
+
+  /// 共有秘密(auth, base64url)
+  auth String
+
+  /// 一覧で端末を見分けるための自己申告。認可には使わない
+  label String?
+
+  /// 最後に送信できた時刻。使われていない購読の掃除に使う
+  lastUsedAt DateTime?
+
+  // メタデータ
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("web_push_subscription")
 }
 
 /// ボードごとのチャネル通知設定。

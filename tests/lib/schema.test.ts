@@ -17,6 +17,7 @@ import {
   scUpdateNotifySetting,
   scUpdateTicketAgentMode,
   scUpdateUser,
+  scWebPushSubscription,
   zBoardKey,
   zPassword,
 } from '@/lib/schema/schema'
@@ -223,19 +224,53 @@ describe('scUpdateIntegrationSettings: 許可グループはグループIDの配
 })
 
 describe('scUpdateNotifySetting: 通知イベントは enum で受ける', () => {
+  const setting = (override: object) => ({ event: 'mention', email: true, slack: false, webpush: false, ...override })
+
   it('既知のイベントを通す', () => {
-    expect(scUpdateNotifySetting.safeParse({ event: 'mention', email: true, slack: false }).success).toBe(true)
+    expect(scUpdateNotifySetting.safeParse(setting({})).success).toBe(true)
   })
 
   it('未知のイベントは弾く', () => {
-    // NOTIFY_EVENTS から生成しているので、Prisma に種別を足せば自動で追従する
-    expect(scUpdateNotifySetting.safeParse({ event: 'assigned', email: true, slack: true }).success).toBe(false)
+    // DM_NOTIFY_EVENTS から生成しているので、対象を増やせば自動で追従する
+    expect(scUpdateNotifySetting.safeParse(setting({ event: 'assigned' })).success).toBe(false)
+  })
+
+  it('チャネル通知だけのイベントは弾く(個人設定では表せない)', () => {
+    expect(scUpdateNotifySetting.safeParse(setting({ event: 'ticket_created' })).success).toBe(false)
   })
 
   it('チャネルの指定漏れは弾く', () => {
     // 部分更新を許すとサーバー側に「未指定なら据え置き」の分岐が必要になるので全部必須にしている
-    expect(scUpdateNotifySetting.safeParse({ event: 'mention', slack: true }).success).toBe(false)
-    expect(scUpdateNotifySetting.safeParse({ event: 'mention', email: true }).success).toBe(false)
+    expect(scUpdateNotifySetting.safeParse({ event: 'mention', slack: true, webpush: true }).success).toBe(false)
+    expect(scUpdateNotifySetting.safeParse({ event: 'mention', email: true, webpush: true }).success).toBe(false)
+    expect(scUpdateNotifySetting.safeParse({ event: 'mention', email: true, slack: true }).success).toBe(false)
+  })
+})
+
+describe('scWebPushSubscription: Web プッシュの購読', () => {
+  const subscription = (override: object) => ({
+    endpoint: 'https://fcm.googleapis.com/fcm/send/abc123',
+    p256dh: 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkTVHVBtE3P4',
+    auth: 'k8JV6sjdbhAi5ZoLmB0Vsw',
+    ...override,
+  })
+
+  it('ブラウザが返す形を通す', () => {
+    expect(scWebPushSubscription.safeParse(subscription({})).success).toBe(true)
+  })
+
+  it('端末名は任意', () => {
+    expect(scWebPushSubscription.safeParse(subscription({ label: 'Mac / Chrome' })).success).toBe(true)
+  })
+
+  it('エンドポイントが URL でなければ弾く', () => {
+    expect(scWebPushSubscription.safeParse(subscription({ endpoint: 'not-a-url' })).success).toBe(false)
+  })
+
+  it('鍵が base64url でなければ弾く', () => {
+    // 標準 base64 の `+` `/` `=` は base64url では使わない
+    expect(scWebPushSubscription.safeParse(subscription({ p256dh: 'BEl62iUY+gUivxIkv/69yViE=' })).success).toBe(false)
+    expect(scWebPushSubscription.safeParse(subscription({ auth: '' })).success).toBe(false)
   })
 })
 

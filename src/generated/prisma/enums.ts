@@ -121,7 +121,8 @@ export type NotifyEvent = (typeof NotifyEvent)[keyof typeof NotifyEvent]
 
 export const NotifyChannel = {
   email: 'email',
-  slack: 'slack'
+  slack: 'slack',
+  webpush: 'webpush'
 } as const
 
 export type NotifyChannel = (typeof NotifyChannel)[keyof typeof NotifyChannel]

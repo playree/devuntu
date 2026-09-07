@@ -13,7 +13,7 @@ import { DM_NOTIFY_EVENTS, type DmNotifyEvent, type NotifyChannel } from './noti
 export type NotifySetting = { [K in NotifyChannel]: boolean }
 
 /** 行が無いイベントに使う既定値 */
-const DEFAULT_SETTING: NotifySetting = { email: false, slack: false }
+const DEFAULT_SETTING: NotifySetting = { email: false, slack: false, webpush: false }
 
 /**
  * 指定ユーザーの通知設定を DM 通知のイベント分返す。行が無いイベントは既定値(OFF)で埋める。
@@ -21,9 +21,9 @@ const DEFAULT_SETTING: NotifySetting = { email: false, slack: false }
 export const getUserNotifySettings = async (userId: string): Promise<Record<DmNotifyEvent, NotifySetting>> => {
   const rows = await prisma.userNotifySetting.findMany({
     where: { userId },
-    select: { event: true, email: true, slack: true },
+    select: { event: true, email: true, slack: true, webpush: true },
   })
-  const byEvent = new Map(rows.map(({ event, email, slack }) => [event, { email, slack }]))
+  const byEvent = new Map(rows.map(({ event, ...setting }) => [event, setting]))
 
   return Object.fromEntries(
     DM_NOTIFY_EVENTS.map((event) => [event, byEvent.get(event) ?? { ...DEFAULT_SETTING }]),

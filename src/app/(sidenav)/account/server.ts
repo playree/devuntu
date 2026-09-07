@@ -4,6 +4,7 @@ import { safeAuthAction } from '@/lib/action/action-server'
 import { auth } from '@/lib/auth/auth'
 import { assertFreshSession } from '@/lib/auth/session-fresh'
 import { isValidTimezone, nowDate } from '@/lib/day'
+import { envu } from '@/lib/env-util'
 import { errClient, errNotFound, errValidation } from '@/lib/error'
 import { canUseGoogleAccount, googleAccountQuery } from '@/lib/google/google-account'
 import { GOOGLE_ACCOUNT_PROVIDER_ID } from '@/lib/google/google-calendar'
@@ -14,11 +15,19 @@ import { getUserNotifySettings, setUserNotifySetting } from '@/lib/notify/notify
 import { dedupeScopes } from '@/lib/oauth/oauth-consent'
 import { isUniqueViolation, prisma } from '@/lib/prisma'
 import { assertRateLimit } from '@/lib/rate-limit'
-import { scIssueMcpToken, scRevokeConsent, scSetUserAvatar, scUpdateNotifySetting, scUUID } from '@/lib/schema/schema'
+import {
+  scIssueMcpToken,
+  scRevokeConsent,
+  scSetUserAvatar,
+  scUpdateNotifySetting,
+  scUUID,
+  scWebPushSubscription,
+} from '@/lib/schema/schema'
 import { SLACK_PROVIDER_ID } from '@/lib/slack/slack'
 import { canUseSlackAccount } from '@/lib/slack/slack-account'
 import { removeImageAttachment, saveImageAttachment } from '@/lib/storage/attachment'
 import { tokenExpiresAt } from '@/lib/token-expires'
+import { isWebPushConfigured, saveWebPushSubscription } from '@/lib/webpush/webpush-server'
 import { headers } from 'next/headers'
 import { z } from 'zod'
 
@@ -240,6 +249,58 @@ export const updateNotifySetting = safeAuthAction
   .action(async ({ parsedInput: { event, ...setting }, ctx: { user } }) => {
     await setUserNotifySetting(user.id, event, setting)
     return { event, ...setting }
+  })
+
+/**
+ * Web プッシュの購読に使う VAPID 公開鍵。
+ *
+ * `NEXT_PUBLIC_*` にできない(事前ビルド済みのイメージではビルド時にインライン化された値が
+ * 空になる)ため、実行時に Server Action で返す。未構成なら null で、画面は購読 UI を出さない。
+ */
+export const getWebPushPublicKey = safeAuthAction
+  .metadata({ actionName: 'getWebPushPublicKey', role: 'user' })
+  .action(async () => (isWebPushConfigured() ? (envu.server.VAPID_PUBLIC_KEY as string) : null))
+
+/** この利用者が登録している端末の一覧(解除の対象) */
+export const getWebPushDevices = safeAuthAction
+  .metadata({ actionName: 'getWebPushDevices', role: 'user' })
+  .action(async ({ ctx: { user } }) =>
+    prisma.webPushSubscription.findMany({
+      where: { userId: user.id },
+      select: { id: true, endpoint: true, label: true, createdAt: true, lastUsedAt: true },
+      orderBy: { createdAt: 'desc' },
+    }),
+  )
+export type GetWebPushDevicesReturnType = Awaited<ReturnType<typeof getWebPushDevices>>['data']
+
+/** 端末の購読を登録する。同じ端末から登録し直しても行は増えない(エンドポイントで一意) */
+export const registerWebPushDevice = safeAuthAction
+  .metadata({ actionName: 'registerWebPushDevice', role: 'user' })
+  .inputSchema(scWebPushSubscription)
+  .action(async ({ parsedInput, ctx: { user } }) => {
+    if (!isWebPushConfigured()) {
+      throw errValidation('web push is not configured')
+    }
+    await saveWebPushSubscription(user.id, parsedInput)
+    return { endpoint: parsedInput.endpoint }
+  })
+
+/**
+ * 端末の購読を解除する。
+ *
+ * 自分の購読だけを消せるよう、`deleteMany` の条件に `userId` を含める
+ * (id を推測されても他人の端末は消せない)。
+ */
+export const deleteWebPushDevice = safeAuthAction
+  .metadata({ actionName: 'deleteWebPushDevice', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ parsedInput: { id }, ctx: { user } }) => {
+    const { count } = await prisma.webPushSubscription.deleteMany({ where: { id, userId: user.id } })
+    if (count === 0) {
+      throw errNotFound()
+    }
+    logger.info({ userId: user.id, subscriptionId: id }, 'web push device removed')
+    return { id }
   })
 
 export const setUserTimezone = safeAuthAction

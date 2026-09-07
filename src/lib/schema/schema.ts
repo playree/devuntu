@@ -27,6 +27,7 @@ import {
 import { CHANNEL_NOTIFY_EVENTS, DM_NOTIFY_EVENTS } from '../notify/notify'
 import { SLACK_CHANNEL_ID_PATTERN } from '../slack/slack'
 import { TOKEN_EXPIRES } from '../token-expires'
+import { BASE64URL_PATTERN, MAX_WEBPUSH_ENDPOINT, MAX_WEBPUSH_LABEL } from '../webpush/webpush'
 
 export const zName = z.string().min(2, el('@invalid_name')).max(30, el('@invalid_name'))
 export const zEmail = z.email(el('@invalid_email'))
@@ -346,8 +347,26 @@ export const scUpdateNotifySetting = z.object({
   event: z.enum(DM_NOTIFY_EVENTS),
   email: z.boolean(),
   slack: z.boolean(),
+  webpush: z.boolean(),
 })
 export type UpdateNotifySetting = z.infer<typeof scUpdateNotifySetting>
+
+/**
+ * Web プッシュの購読。ブラウザの `PushSubscription` から必要な値だけを受け取る。
+ *
+ * エンドポイントはプッシュサービスの URL で、購読の同一性もこれで決まる。
+ * 保存するだけで外部へ叩きに行くのは通知の送信時なので、ここでは形だけを見る。
+ */
+export const scWebPushSubscription = z.object({
+  endpoint: z.url().max(MAX_WEBPUSH_ENDPOINT),
+  /** UA の公開鍵(非圧縮点 65 バイトの base64url) */
+  p256dh: z.string().regex(BASE64URL_PATTERN, el('@invalid_webpush_subscription')).max(200),
+  /** 共有秘密(16 バイトの base64url) */
+  auth: z.string().regex(BASE64URL_PATTERN, el('@invalid_webpush_subscription')).max(100),
+  /** 一覧で端末を見分けるための自己申告 */
+  label: z.string().max(MAX_WEBPUSH_LABEL).optional(),
+})
+export type WebPushSubscriptionInput = z.infer<typeof scWebPushSubscription>
 
 /* -------------------------------------------------------------------------------------------------
  * タスク管理(チケット / ボード)

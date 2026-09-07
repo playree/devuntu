@@ -150,6 +150,24 @@ const server = {
     return getEnvBoolean('NOTIFY_WORKER_ENABLED', { default: true })
   },
 
+  /**
+   * Web プッシュの VAPID 鍵(P-256, base64url)。
+   *
+   * NOTE: 公開鍵も `NEXT_PUBLIC_*` にはできない。配布物は事前ビルド済みのイメージで、
+   * `NEXT_PUBLIC_*` はビルド時にインライン化されるため起動時に渡した値が入らない。
+   * 購読の登録では Server Action(`getWebPushPublicKey`)で実行時に返す。
+   */
+  get VAPID_PUBLIC_KEY() {
+    return getEnv('VAPID_PUBLIC_KEY')
+  },
+  get VAPID_PRIVATE_KEY() {
+    return getEnv('VAPID_PRIVATE_KEY')
+  },
+  /** VAPID の `sub`。プッシュサービスからの連絡先(`mailto:` / `https:`)。既定は送信元アドレス */
+  get VAPID_SUBJECT() {
+    return getEnv('VAPID_SUBJECT') ?? `mailto:${getEnv('MAIL_FROM', { default: 'devuntu@example.com' })}`
+  },
+
   // メール
   get MAIL_SEND() {
     return getEnv<'sendgrid' | 'sendmail' | 'smtp' | 'debug'>('MAIL_SEND')

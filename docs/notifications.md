@@ -9,6 +9,7 @@
 - [メール通知の前提](#メール通知の前提)
   - [まとめて1通にする](#まとめて1通にする)
 - [Slack通知の前提](#slack通知の前提)
+- [Webプッシュ通知の前提](#webプッシュ通知の前提)
 - [ボードごとのチャネル通知設定](#ボードごとのチャネル通知設定)
 - [エージェント実行結果の通知](#エージェント実行結果の通知)
 - [Slackでのチケットリンクのプレビュー](#slackでのチケットリンクのプレビュー)
@@ -21,10 +22,10 @@
 
 通知は宛先の決まり方で 2 種類に分かれる。
 
-| 種類         | 宛先             | 設定場所                                      | イベント                                                                | チャネル          |
-| ------------ | ---------------- | --------------------------------------------- | ----------------------------------------------------------------------- | ----------------- |
-| DM 通知      | ユーザー個人     | `/account` の通知設定(`UserNotifySetting`)    | `mention` / `agent_run` / `ticket_assigned`                             | メール / Slack DM |
-| チャネル通知 | Slack チャンネル | `/boards/[id]/settings`(`BoardNotifySetting`) | `agent_run` / `ticket_assigned` / `ticket_created` / `ticket_completed` | Slack             |
+| 種類         | 宛先             | 設定場所                                      | イベント                                                                | チャネル                         |
+| ------------ | ---------------- | --------------------------------------------- | ----------------------------------------------------------------------- | -------------------------------- |
+| DM 通知      | ユーザー個人     | `/account` の通知設定(`UserNotifySetting`)    | `mention` / `agent_run` / `ticket_assigned`                             | メール / Slack DM / Web プッシュ |
+| チャネル通知 | Slack チャンネル | `/boards/[id]/settings`(`BoardNotifySetting`) | `agent_run` / `ticket_assigned` / `ticket_created` / `ticket_completed` | Slack                            |
 
 イベント種別は Prisma の `NotifyEvent`、チャネルは `NotifyChannel`。どちらの宛先に出るイベントかは
 `DM_NOTIFY_EVENTS` / `CHANNEL_NOTIFY_EVENTS`(`src/lib/notify/notify.ts`)で分ける。
@@ -50,7 +51,7 @@
       ↓
 [NotifyDelivery] 宛先 × チャネルの 1 行。`scheduledAt` を過ぎたものが送信対象
       ↓
-[配信]          notify-email.ts(ユーザー単位で1通へ) / notify-slack.ts
+[配信]          notify-email.ts(ユーザー単位で1通へ) / notify-slack.ts / notify-webpush.ts
 ```
 
 アウトボックス(発生記録)とデリバリ(宛先 × チャネル)を分けているのは次の理由から。
@@ -176,9 +177,11 @@ SELECT が増えることはない。
 
 `/account` の「通知設定」(`src/app/(sidenav)/account/notify.tsx`)で、イベント種別 × チャネルごとに ON/OFF を切り替える。項目数が少ないためフォームにせず切り替え即保存にしている。
 
-- 保存先は `UserNotifySetting`(`userId` + `event` でユニーク)の `email` / `slack` 列
+- 保存先は `UserNotifySetting`(`userId` + `event` でユニーク)の `email` / `slack` / `webpush` 列。
+  **列名は `NOTIFY_CHANNELS` と一致させる**(`filterNotifiable()` が `[channel]: true` で列を引く)
 - **行が無い場合は全チャネル OFF** として扱うオプトイン方式。ON にしたときだけ行が作られるので、全ユーザー分の初期行を用意しなくてよい。絞り込み(`filterNotifiable()` / `src/lib/notify/notify-setting.ts`)も ON の行だけを引いて残す
-- メールのスイッチは常に表示する。Slack のスイッチは Slack 連携を利用できるユーザーにのみ表示する
+- スイッチは**届く見込みがあるチャネルだけ**出す。メールは常に表示、Slack は連携を利用できるユーザー、
+  Web プッシュは端末を 1 つ以上登録済みのユーザーに限る
 
 ## メール通知の前提
 
@@ -219,6 +222,63 @@ Slack DM は以下の 3 段がすべて揃ったユーザーにだけ届く。�
 送信は逐次で行い、Bot トークンが無効(`revoked`)と判定された時点で残りを打ち切る
 ([再試行と失敗](#再試行と失敗))。未連携のユーザーは展開の時点で宛先から外すので、
 送っても必ず失敗する配信行は作らない。
+
+## Webプッシュ通知の前提
+
+ブラウザ / スマートフォンの通知として届ける。**端末ごとに購読の登録が必要**で、
+`/account` の「Webプッシュ通知」(`webpush.tsx`)から登録・解除する。
+
+以下の 3 段がすべて揃った端末にだけ届く。
+
+1. **環境変数** : `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`(`isWebPushConfigured()`)。
+   未設定なら購読 UI ごと出さず、通知も送信を試みずスキップする
+2. **端末の購読** : `/account` から「この端末で通知を受け取る」を押す。保存先は `WebPushSubscription`
+3. **通知 ON** : `/account` の通知設定で `webpush` を ON にする。
+   **端末を 1 つも登録していない間はスイッチを出さない**(届かないスイッチを見せない)
+
+> ⚠️ **公開鍵も `NEXT_PUBLIC_*` にはできない。** 配布物は事前ビルド済みのイメージで、
+> `NEXT_PUBLIC_*` はビルド時にインライン化されるため起動時に渡した値が入らない。
+> 購読の登録では Server Action(`getWebPushPublicKey`)で実行時に返す。
+
+### 実装
+
+- 送信は `web-push`(RFC 8291 の本文暗号化と RFC 8292 の VAPID JWT)に任せる。
+  結果は `classifyWebPushStatus()` で Slack と同じ語彙(`DeliveryOutcome`)へ落とすので、
+  再試行の判断は `notify-queue.ts` の 1 箇所で済む
+- **1 配信行に対して送信先が複数になる**(1 ユーザーが複数端末を登録できる)。
+  1 台でも送れたら `ok` にする(再送すると届いた端末に二重で出てしまう)
+- `404` / `410` は購読の失効なので**行ごと削除**する。放っておくと失敗する宛先を送り続ける
+- `401` / `403` は鍵の不正で、他の購読も同じ鍵なので打ち切る
+- 1 ユーザーの購読は `MAX_WEBPUSH_SUBSCRIPTIONS`(10)で頭打ちにし、超えた分は古い順に消す
+  (端末を買い替えるたびに積み上がると 1 回の通知で叩く先が際限なく増える)
+- 通知には `tag` にチケットIDを入れる。同じチケットの通知は端末上で 1 件に畳まれる
+
+### Service Worker
+
+`public/sw.js`(Next のビルド対象外。ルートスコープを取るため `public/` に置く)。
+
+- `push` → `showNotification`。`userVisibleOnly: true` で購読しているので**受け取ったら必ず通知を出す**
+  (出さないとブラウザが「バックグラウンドで動作しました」の代替通知を出す)。
+  ペイロードが読めない場合も既定の文面で出す
+- `notificationclick` → 同一オリジンのタブがあれば `focus()` して目的の画面へ移し、無ければ `openWindow()`
+  (タブが増え続けないようにする)
+- `pushsubscriptionchange` → 再購読して `/api/webpush/subscribe` へ報告する。
+  **Service Worker から Server Action は呼べない**ため、このルートだけを別に用意している
+  (門番はセッション確認だけなので、確認を通す前に本文を解釈しない)
+- `install` で `skipWaiting()`、`activate` で `clients.claim()`。更新を配ったあと古い Service Worker が
+  残ると通知の出方が端末ごとに食い違う
+
+PWA manifest は `src/app/manifest.ts`(`display: 'standalone'`、アイコンは `public/icon-192.png` /
+`icon-512.png`)。`src/proxy.ts` の matcher は `.*\.` を除外しているので、`/sw.js` と
+`/manifest.webmanifest` は認証をかけずに配信される。
+
+### iOS / iPadOS の制約
+
+- **iOS / iPadOS 16.4 以降**、かつ**ホーム画面に追加した(standalone 起動の)場合だけ** Push API が使える。
+  Safari のタブでは `window.PushManager` が存在しない
+- 権限の要求は**ユーザー操作(クリック)から直接**呼ばないと拒否される
+- iOS でタブから開いている場合は「ホーム画面に追加してください」の案内を出す
+  (非対応ブラウザとは案内を分ける)
 
 ## ボードごとのチャネル通知設定
 

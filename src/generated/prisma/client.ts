@@ -255,6 +255,14 @@ export type TicketComment = Prisma.TicketCommentModel
  */
 export type UserNotifySetting = Prisma.UserNotifySettingModel
 /**
+ * Model WebPushSubscription
+ * Web プッシュの購読。1ユーザーが複数の端末を登録できる。
+ * 
+ * 通知の ON/OFF は UserNotifySetting 側で持ち、ここは「どの端末へ送れるか」だけを表す。
+ * プッシュサービスが失効(404 / 410)を返した購読は行ごと削除する。
+ */
+export type WebPushSubscription = Prisma.WebPushSubscriptionModel
+/**
  * Model BoardNotifySetting
  * ボードごとのチャネル通知設定。
  * 

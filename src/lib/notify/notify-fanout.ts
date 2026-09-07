@@ -14,6 +14,7 @@ import { isMailConfigured } from '../mail'
 import { prisma } from '../prisma'
 import { SLACK_PROVIDER_ID } from '../slack/slack'
 import { filterSlackAllowedUserIds, getSlackSettings, hasSlackCredentials } from '../slack/slack-account'
+import { isWebPushConfigured } from '../webpush/webpush-server'
 import { MAX_NOTIFY_RECIPIENTS, type NotifyChannel } from './notify'
 import type { NotifyTargets } from './notify-recipient'
 import { nextEmailWindowAt } from './notify-schedule'
@@ -86,6 +87,30 @@ const slackDmTargets = async (userIds: string[], event: NotifyEvent): Promise<st
 }
 
 /**
+ * Web プッシュを受け取るユーザーへ絞る。
+ *
+ * 通知 OFF / 未構成 / 端末を 1 つも登録していない のいずれかで宛先から消える。
+ * 購読が無い相手を外すのは、送っても必ず失敗する行を作らないため。
+ */
+const webPushTargets = async (userIds: string[], event: NotifyEvent): Promise<string[]> => {
+  if (userIds.length === 0 || !isWebPushConfigured()) {
+    return []
+  }
+  const notMuted = await filterNotifiable(userIds, event, 'webpush')
+  if (notMuted.length === 0) {
+    return []
+  }
+  const subscribed = await prisma.webPushSubscription.findMany({
+    where: { userId: { in: notMuted } },
+    select: { userId: true },
+    distinct: ['userId'],
+    // 切り詰めの順序を固定する
+    orderBy: { userId: 'asc' },
+  })
+  return subscribed.map(({ userId }) => userId)
+}
+
+/**
  * 展開する配信行を組み立てる。
  *
  * `scheduledAt` は即時が既定で、**メールだけ次のウィンドウ境界へ丸める**。
@@ -109,13 +134,20 @@ export const buildDeliveries = async (param: {
    */
   const userIds = targets.userIds.filter((userId) => userId !== actorId)
 
-  const [emailUserIds, slackUserIds] = await Promise.all([emailTargets(userIds, event), slackDmTargets(userIds, event)])
+  const [emailUserIds, slackUserIds, webPushUserIds] = await Promise.all([
+    emailTargets(userIds, event),
+    slackDmTargets(userIds, event),
+    webPushTargets(userIds, event),
+  ])
 
   for (const userId of capRecipients(emailUserIds, 'mail', { outboxId, event })) {
     deliveries.push({ outboxId, channel: 'email', userId, scheduledAt: emailAt })
   }
   for (const userId of capRecipients(slackUserIds, 'slack dm', { outboxId, event })) {
     deliveries.push({ outboxId, channel: 'slack', userId, scheduledAt: now })
+  }
+  for (const userId of capRecipients(webPushUserIds, 'web push', { outboxId, event })) {
+    deliveries.push({ outboxId, channel: 'webpush', userId, scheduledAt: now })
   }
 
   // チャンネル通知は管理者が Slack 連携ごと止めたら止まる(ユーザーの通知設定では表せない)

@@ -289,6 +289,9 @@ docker compose exec -T db psql -U devuser -d devuntu \
   起動ログ(`notify worker started`)を確認する
 - `notify_outbox` の `failed` : ペイロードが壊れている(アプリのバージョン差など)。行を消して差し支えない
 - 送信できた配信は行ごと消えるので、**空であることが正常**。送信の記録はアプリログ側に残る
+- Web プッシュが届かない場合は `web_push_subscription` に端末の行があるかを見る。
+  失効(`404` / `410`)を返した購読は自動で消えるので、行が無ければ利用者に再登録してもらう
+  (`lastError` が `revoked` なら `VAPID_PRIVATE_KEY` の入れ替えを疑う)
 
 行が溜まったまま原因が解消できない場合、削除して差し支えない(通知は再送されないだけで、
 チケットの内容には影響しない)。

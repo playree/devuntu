@@ -36,6 +36,7 @@ import {
 } from './notify-queue'
 import { resolveNotifyTargets } from './notify-recipient'
 import { deliverSlack } from './notify-slack'
+import { deliverWebPush } from './notify-webpush'
 
 /**
  * 掴んだアウトボックスを配信行へ展開する。
@@ -160,9 +161,59 @@ const deliverEmailBatch = async (now: Date): Promise<void> => {
   }
 }
 
+/**
+ * Web プッシュを送る。
+ *
+ * 宛先は必ずユーザー(チャンネル通知は Slack だけ)。1 配信で登録済みの全端末へ送るので、
+ * ここでは配信行を 1 つずつ処理する。
+ */
+const deliverWebPushBatch = async (now: Date): Promise<void> => {
+  const claimed = await claimDeliveries('webpush', NOTIFY_DELIVER_BATCH.webpush)
+
+  for (const [index, delivery] of claimed.entries()) {
+    const { userId } = delivery
+    let outcome: DeliveryOutcome
+    try {
+      if (!userId) {
+        outcome = 'unlinked'
+      } else {
+        const locale = await userLocale(userId)
+        outcome = await deliverWebPush({
+          userId,
+          content: await contentOf(delivery, locale),
+          // 同じチケットの通知を積み上げない
+          tag: ticketTagOf(delivery),
+        })
+      }
+    } catch (error) {
+      logger.error({ error, deliveryId: delivery.id }, 'notify delivery failed')
+      outcome = 'failed'
+    }
+    await settleDelivery(delivery, outcome, now)
+
+    if (isDeliveryAborting(outcome)) {
+      // VAPID 鍵が不正なら残りも全滅する
+      const rest = claimed.slice(index + 1)
+      logger.error({ channel: 'webpush', aborted: rest.length }, 'notify channel aborted')
+      await releaseDeliveries(
+        rest.map(({ id }) => id),
+        outcome,
+      )
+      return
+    }
+  }
+}
+
+/** 通知のまとめキー。同じチケットの通知は端末上で 1 件に畳まれる */
+const ticketTagOf = (delivery: ClaimedDelivery): string | undefined => {
+  const payload = parseNotifyPayload(delivery.event, delivery.payload)
+  return payload.ticketId
+}
+
 const DELIVERERS: Record<NotifyChannel, (now: Date) => Promise<void>> = {
   email: deliverEmailBatch,
   slack: deliverSlackBatch,
+  webpush: deliverWebPushBatch,
 }
 
 /** チャネル全体のスロットルを消費してから送る。超過した tick は次へ持ち越す */
