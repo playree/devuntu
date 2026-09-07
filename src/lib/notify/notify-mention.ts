@@ -13,9 +13,9 @@ import { logger } from '../logger'
 import { isMailConfigured, sendMentionMail } from '../mail'
 import { prisma } from '../prisma'
 import { makeUrl } from '../server-utils'
-import { buildMentionMessage, SLACK_PROVIDER_ID } from '../slack/slack'
+import { buildTicketMessage, SLACK_PROVIDER_ID } from '../slack/slack'
 import { filterSlackAllowedUserIds } from '../slack/slack-account'
-import { postSlackDm } from '../slack/slack-server'
+import { postSlackMessage } from '../slack/slack-server'
 import { commentExcerpt, MAX_NOTIFY_RECIPIENTS } from './notify'
 import { filterNotifiable } from './notify-setting'
 
@@ -180,9 +180,9 @@ const notifyMentionToSlack = async (
   // バーストも避けられる
   for (const { userId, accountId } of sendTo) {
     const locale = localeByUserId.get(userId) ?? null
-    const outcome = await postSlackDm(
+    const outcome = await postSlackMessage(
       accountId,
-      buildMentionMessage({
+      buildTicketMessage({
         subject,
         url,
         body: message(locale),

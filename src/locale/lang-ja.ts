@@ -88,6 +88,7 @@ export const ja: DefaultLocaleItems = {
   board_members: 'ボードメンバー',
   board_profile: 'ボード概要',
   board_settings: 'ボード設定',
+  board_slack_notify: 'Slack通知',
   buildno: 'ビルド番号',
   busy: '予定あり',
   busy_time_manage: '予定の追加登録',
@@ -248,6 +249,8 @@ export const ja: DefaultLocaleItems = {
   slack: 'Slack',
   slack_allowed_groups: 'Slack連携を許可するグループ',
   slack_enable: 'Slack連携を有効にする',
+  slack_notify_channel: '通知先チャンネル',
+  slack_notify_channel_none: '通知しない',
   slack_workspace: '接続先ワークスペース',
   server_info: 'サーバー情報',
   settings: '設定',
@@ -340,6 +343,7 @@ export const ja: DefaultLocaleItems = {
   msg_archive_board: 'アーカイブすると、ボード一覧の既定の表示対象から外れます。チケットは残ります。',
   msg_avatar_desc: '独自の画像を設定すると、以降のログイン時にDevuntu側の画像で上書きされなくなります。',
   msg_board_key_change: 'キーを変更すると、共有済みのチケットIDは元のチケットを指さなくなります。',
+  msg_board_slack_notify_desc: 'このボードのチケットをAIエージェントが処理し終えたときに、結果をSlackへ投稿します。',
   msg_calendar_share_desc:
     '有効にすると、あなたのカレンダーの空き時間を共有URLで外部の人に見せられます。予定のタイトルや詳細は表示されず、「予定あり」の時間帯だけが公開されます。',
   msg_calendar_share_disabled: '共有を無効にしました。共有URLは無効になりました。',
@@ -409,6 +413,8 @@ export const ja: DefaultLocaleItems = {
   msg_saved: '保存しました。',
   msg_slack_allowed_groups_desc: '未指定の場合は全ユーザーがSlack連携を利用できます。',
   msg_slack_bot_unavailable: 'Slack Botトークンが未設定または無効です。SLACK_BOT_TOKEN を確認してください。',
+  msg_slack_channel_empty:
+    '選択できるチャンネルがありません。通知したいチャンネルで「/invite @Devuntu」を実行してください。',
   msg_slack_connected: 'Slackと連携済みです',
   msg_slack_email_must_match: 'SlackのメールアドレスがDevuntuのものと一致している必要があります。',
   msg_slack_enable_desc: '有効にすると、ユーザーがSlackと連携して通知を受け取れるようになります。',
@@ -451,6 +457,7 @@ export const ja: DefaultLocaleItems = {
 `,
   mail_otp_subject: '[${appname}] Eメール認証OTP : ${otp}',
 
+  notify_msg_agent_run_finished: '${agent}が${action}を実行しました(${result} / ${duration})',
   notify_msg_mentioned: '${from}さんがあなたをメンションしました',
   notify_msg_mentioned_comment: '${from}さんがコメントであなたをメンションしました',
 
@@ -472,4 +479,5 @@ export const ja: DefaultLocaleItems = {
   '@invalid_tag': 'タグ名は1～20文字、1チケット10個まで',
   '@invalid_agent_handle': '識別子は英小文字・数字・ハイフンで32文字まで(先頭と末尾はハイフン不可)',
   '@invalid_daily_limit': '0(無制限)～999の整数',
+  '@invalid_slack_channel': 'Slackチャンネルの指定が正しくありません',
 }

@@ -10,6 +10,13 @@ import { truncate } from '../text-util'
 /** Slack 連携用の OAuth プロバイダ ID */
 export const SLACK_PROVIDER_ID = 'slack'
 
+/**
+ * Slack のチャンネルID。公開は `C`、古いプライベートチャンネルは `G` で始まる。
+ * ユーザーID(`U...`)やチャンネル名(`#general`)を保存させないための入口の検査で、
+ * 実在の確認は保存時に `listSlackChannels()` の結果と突き合わせて行う。
+ */
+export const SLACK_CHANNEL_ID_PATTERN = /^[CG][A-Z0-9]{7,}$/
+
 /** Block Kit の section が受け付ける mrkdwn の上限。超えると chat.postMessage が invalid_blocks で落ちる */
 const SECTION_TEXT_MAX = 3000
 
@@ -129,14 +136,14 @@ export const buildTicketUnfurlBlocks = ({ url, displayId, title, fields }: Ticke
   return filled.length > 0 ? [heading, { type: 'section', fields: filled }] : [heading]
 }
 
-export type MentionMessageParam = {
+export type TicketMessageParam = {
   /** 見出し(表示ID + チケット名)。利用者入力を含むのでエスケープ前の生文字列を渡す */
   subject: string
   /** チケットを開く URL */
   url: string
-  /** 「〇〇さんがメンションしました」の本文。呼び出し側でロケール解決済みのものを渡す */
+  /** 「〇〇さんがメンションしました」などの本文。呼び出し側でロケール解決済みのものを渡す */
   body: string
-  /** コメント本文の抜粋。引用として本文の下に出す。利用者入力を含むので生文字列を渡す */
+  /** 引用として本文の下に出す抜粋(コメント本文 / エージェントの報告要約)。利用者入力を含むので生文字列を渡す */
   excerpt?: string
   /** ボタンのラベル */
   openLabel: string
@@ -167,12 +174,13 @@ const fitLines = (lines: string[], max: number): string => {
 }
 
 /**
- * メンション通知の chat.postMessage ペイロードを組み立てる。
+ * チケットに紐づく通知の chat.postMessage ペイロードを組み立てる。
+ * メンションの DM と、ボードのチャンネル通知で共用する。
  *
  * `text` は通知バナー / プッシュ通知のフォールバックに使われるため必ず埋める
  * (blocks だけだと通知に本文が出ない)。抜粋もここに含めて、開かなくても内容が分かるようにする。
  */
-export const buildMentionMessage = ({ subject, url, body, excerpt, openLabel }: MentionMessageParam) => {
+export const buildTicketMessage = ({ subject, url, body, excerpt, openLabel }: TicketMessageParam) => {
   const safeSubject = escapeSlackText(subject)
   const safeBody = escapeSlackText(body)
   // mrkdwn の引用。抜粋は改行を畳んだ 1 行で渡ってくる前提

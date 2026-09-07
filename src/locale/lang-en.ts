@@ -88,6 +88,7 @@ export const en: LocaleItems = {
   board_members: 'Board Members',
   board_profile: 'Board Overview',
   board_settings: 'Board Settings',
+  board_slack_notify: 'Slack Notification',
   buildno: 'Build No',
   busy: 'Busy',
   busy_time_manage: 'Busy Time',
@@ -248,6 +249,8 @@ export const en: LocaleItems = {
   slack: 'Slack',
   slack_allowed_groups: 'Groups allowed to use Slack',
   slack_enable: 'Enable Slack integration',
+  slack_notify_channel: 'Notification channel',
+  slack_notify_channel_none: 'Do not notify',
   slack_workspace: 'Connected workspace',
   server_info: 'Server Info',
   settings: 'Settings',
@@ -340,6 +343,7 @@ Please copy and use the connection information above.
   msg_archive_board: 'Archiving hides the board from the default board list. Tickets are kept.',
   msg_avatar_desc: 'Setting a custom image stops it from being overwritten by Devuntu on future sign-ins.',
   msg_board_key_change: 'Changing the key means ticket IDs already shared will no longer point to their tickets.',
+  msg_board_slack_notify_desc: 'Posts the result to Slack when an AI agent finishes processing a ticket on this board.',
   msg_calendar_share_desc:
     'When enabled, you can share your availability with external people via a share URL. Event titles and details are not shown; only busy time slots are made public.',
   msg_calendar_share_disabled: 'Sharing disabled. The share URL is no longer valid.',
@@ -409,6 +413,8 @@ Please copy and use the connection information above.
   msg_saved: 'Saved.',
   msg_slack_allowed_groups_desc: 'If not specified, all users can use the Slack integration.',
   msg_slack_bot_unavailable: 'The Slack bot token is missing or invalid. Please check SLACK_BOT_TOKEN.',
+  msg_slack_channel_empty:
+    'No channels are available. Run "/invite @Devuntu" in the channel you want to be notified in.',
   msg_slack_connected: 'Connected to Slack',
   msg_slack_email_must_match: 'Your Slack email address must match the one used in Devuntu.',
   msg_slack_enable_desc: 'When enabled, users can connect Slack and receive notifications there.',
@@ -451,6 +457,7 @@ Expiration time: 5 minutes
 `,
   mail_otp_subject: '[${appname}] Email OTP : ${otp}',
 
+  notify_msg_agent_run_finished: '${agent} ran ${action} (${result} / ${duration})',
   notify_msg_mentioned: '${from} mentioned you',
   notify_msg_mentioned_comment: '${from} mentioned you in a comment',
 
@@ -472,4 +479,5 @@ Expiration time: 5 minutes
   '@invalid_tag': 'Tag names are 1-20 characters, up to 10 per ticket',
   '@invalid_agent_handle': 'Handles are up to 32 lowercase letters, digits, and hyphens (not at the start or end)',
   '@invalid_daily_limit': 'An integer from 0 (unlimited) to 999',
+  '@invalid_slack_channel': 'The Slack channel is not valid',
 }

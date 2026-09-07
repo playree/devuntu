@@ -13,6 +13,7 @@ import {
   Cog6ToothIcon,
   ExclamationTriangleIcon,
   InformationCircleIcon,
+  SlackIcon,
   TagIcon,
   UserGroupIcon,
   UsersIcon,
@@ -39,6 +40,7 @@ import {
   getBoardTags,
   updateBoardTag,
 } from './server'
+import { BoardSlackNotify } from './slack-notify'
 
 /** デンジャーゾーンは誤操作を避けるため初期状態で閉じておく */
 const defaultExpandedKeys = new Set(['board_profile', 'board_members', 'board_groups', 'tag_manage'])
@@ -48,7 +50,7 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
   const router = useRouter()
   const boardName = useBoardName()
 
-  const { data: board, reload, isLoading } = useActionData(() => getBoardDetail({ id: boardId }))
+  const { data: board, reload, refresh, isLoading } = useActionData(() => getBoardDetail({ id: boardId }))
   const { data: tags, reload: reloadTags } = useActionData(() => getBoardTags({ id: boardId }))
   // アサイン編集は manage 権限が要るため、取得できない場合は undefined のまま(フォームを出さない)
   const { data: assignments, reload: reloadAssignments } = useActionData(() => getBoardAssignments({ id: boardId }))
@@ -201,6 +203,24 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
             }}
           />
         </AccordionSection>
+
+        {canManageBoard && board.slackEnabled && (
+          <AccordionSection
+            /**
+             * Slack通知: エージェントの実行結果を投稿するチャンネル。設定できるのはボードの
+             * オーナー(と管理者)だけで、Slack 連携が使えない環境ではセクションごと出さない
+             */
+            id='board_slack'
+            icon={<SlackIcon />}
+            title={t('board_slack_notify')}
+          >
+            <BoardSlackNotify // 保存後に現在値を取り直す。reload だとセクションがローディング表示に戻り、フォームが作り直される
+              boardId={board.id}
+              slackChannelId={board.slackChannelId}
+              refresh={refresh}
+            />
+          </AccordionSection>
+        )}
 
         {canManageBoard && (
           <AccordionSection

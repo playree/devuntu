@@ -11,6 +11,7 @@ import {
   AGENT_OFFLINE_INTERVAL_FACTOR,
   agentEmail,
   agentHandle,
+  agentRunDuration,
   agentRunnerStatus,
   agentStateWhere,
   OPEN_AGENT_TASK_STATES,
@@ -115,5 +116,26 @@ describe('agentStateWhere', () => {
     expect(agentStateWhere(OPEN_AGENT_TASK_STATES)).toEqual({
       OR: [{ agentState: null }, { agentState: { in: ['queued', 'running', 'planned', 'failed', 'skipped'] } }],
     })
+  })
+})
+
+describe('agentRunDuration: 実行の所要時間', () => {
+  const startedAt = new Date('2026-08-25T00:00:00Z')
+
+  it('未終了は - を返す(実行中、または応答が返らないまま落ちた実行)', () => {
+    expect(agentRunDuration(startedAt, null)).toBe('-')
+  })
+
+  it.each([
+    [0, '00:00'],
+    [59_000, '00:59'],
+    [90_000, '01:30'],
+    [3600_000, '60:00'],
+  ])('mm:ss で出す(%s ミリ秒 -> %s)', (ms, expected) => {
+    expect(agentRunDuration(startedAt, new Date(startedAt.getTime() + ms))).toBe(expected)
+  })
+
+  it('終了が開始より前でも負の時間にしない', () => {
+    expect(agentRunDuration(startedAt, new Date(startedAt.getTime() - 5_000))).toBe('00:00')
   })
 })

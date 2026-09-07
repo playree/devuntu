@@ -2,7 +2,7 @@
 
 import { PagingList } from '@/components/general/paging'
 import { MultiTable, TruncatedCell } from '@/components/general/table'
-import { AGENT_RUN_ACTION_LOCALE, AGENT_RUN_STATUS_LOCALE } from '@/lib/agent/agent'
+import { AGENT_RUN_ACTION_LOCALE, AGENT_RUN_STATUS_LOCALE, agentRunDuration } from '@/lib/agent/agent'
 import type { AgentRunSummary } from '@/lib/agent/agent-runner-config'
 import { dayformat } from '@/lib/day'
 import { useUserTimezone } from '@/lib/use-timezone'
@@ -18,15 +18,6 @@ const STATUS_COLOR = {
   failed: 'danger',
   skipped: 'warning',
 } as const
-
-/** 所要時間。分と秒だけで足りるので mm:ss で出す */
-const duration = (startedAt: Date, finishedAt: Date | null): string => {
-  if (!finishedAt) {
-    return '-'
-  }
-  const sec = Math.max(0, Math.round((finishedAt.getTime() - startedAt.getTime()) / 1000))
-  return `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`
-}
 
 /**
  * 自動運用の実行履歴。
@@ -74,7 +65,7 @@ export const AgentRunHistory: FC<{ pagingList: PagingList<AgentRunSummary> }> = 
             </Chip>
           </Table.Cell>
           <Table.Cell className='font-mono text-xs'>{dayformat(item.startedAt, 'tz-simple', tz)}</Table.Cell>
-          <Table.Cell className='font-mono text-xs'>{duration(item.startedAt, item.finishedAt)}</Table.Cell>
+          <Table.Cell className='font-mono text-xs'>{agentRunDuration(item.startedAt, item.finishedAt)}</Table.Cell>
           <TruncatedCell value={item.summary ?? ''} />
         </Table.Row>
       )}

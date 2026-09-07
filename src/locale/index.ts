@@ -86,6 +86,7 @@ export type LocaleItemBase =
   | 'board_members'
   | 'board_profile'
   | 'board_settings'
+  | 'board_slack_notify'
   | 'buildno'
   | 'busy'
   | 'busy_time_manage'
@@ -246,6 +247,8 @@ export type LocaleItemBase =
   | 'slack'
   | 'slack_allowed_groups'
   | 'slack_enable'
+  | 'slack_notify_channel'
+  | 'slack_notify_channel_none'
   | 'slack_workspace'
   | 'server_info'
   | 'settings'
@@ -330,6 +333,7 @@ export type LocaleItemBase =
   | 'msg_archive_board'
   | 'msg_avatar_desc'
   | 'msg_board_key_change'
+  | 'msg_board_slack_notify_desc'
   | 'msg_calendar_share_desc'
   | 'msg_calendar_share_disabled'
   | 'msg_calendar_share_enabled'
@@ -389,6 +393,7 @@ export type LocaleItemBase =
   | 'msg_saved'
   | 'msg_slack_allowed_groups_desc'
   | 'msg_slack_bot_unavailable'
+  | 'msg_slack_channel_empty'
   | 'msg_slack_connected'
   | 'msg_slack_email_must_match'
   | 'msg_slack_enable_desc'
@@ -406,6 +411,7 @@ export type LocaleItemBase =
   | 'mail_otp_body'
   | 'mail_otp_subject'
   // for Notify(メール / Slack で共用する文面)
+  | 'notify_msg_agent_run_finished'
   | 'notify_msg_mentioned'
   | 'notify_msg_mentioned_comment'
   // for Slack
@@ -428,6 +434,7 @@ export type LocaleItemError =
   | '@invalid_tag'
   | '@invalid_agent_handle'
   | '@invalid_daily_limit'
+  | '@invalid_slack_channel'
 export const el = (item: LocaleItemError) => item
 
 export type LocaleItem = LocaleItemBase | LocaleItemError

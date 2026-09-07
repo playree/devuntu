@@ -11,6 +11,7 @@ import {
   scCreateUser,
   scMoveTicket,
   scPatchTicket,
+  scSetBoardSlackChannel,
   scTicketSearch,
   scUpdateIntegrationSettings,
   scUpdateNotifySetting,
@@ -235,5 +236,21 @@ describe('scUpdateNotifySetting: 通知イベントは enum で受ける', () =>
     // 部分更新を許すとサーバー側に「未指定なら据え置き」の分岐が必要になるので全部必須にしている
     expect(scUpdateNotifySetting.safeParse({ event: 'mention', slack: true }).success).toBe(false)
     expect(scUpdateNotifySetting.safeParse({ event: 'mention', email: true }).success).toBe(false)
+  })
+})
+
+describe('scSetBoardSlackChannel: 通知先チャンネル', () => {
+  it('空文字は「通知しない」として通す(Server Action 側で null へ正規化する)', () => {
+    expect(scSetBoardSlackChannel.safeParse({ id: boardId, slackChannelId: '' }).success).toBe(true)
+  })
+
+  it('チャンネルIDを通す', () => {
+    expect(scSetBoardSlackChannel.safeParse({ id: boardId, slackChannelId: 'C0123ABCD' }).success).toBe(true)
+  })
+
+  it('チャンネル名やユーザーIDは弾く', () => {
+    // 実在の確認は一覧との突き合わせで行うが、明らかに宛先の種類が違うものは入口で落とす
+    expect(scSetBoardSlackChannel.safeParse({ id: boardId, slackChannelId: '#general' }).success).toBe(false)
+    expect(scSetBoardSlackChannel.safeParse({ id: boardId, slackChannelId: 'U0123ABCD' }).success).toBe(false)
   })
 })
