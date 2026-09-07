@@ -52,7 +52,10 @@ export const classifyWebPushStatus = (statusCode: number | undefined): DeliveryO
     case 404:
     case 410:
       return 'unlinked'
-    // 鍵が違う / 権限が無い。他の購読も同じ鍵なので全滅する
+    /**
+     * 鍵が違う / 権限が無い。全端末で起きていれば VAPID の構成障害なので打ち切る。
+     * 一部だけなら鍵を差し替える前に登録された購読なので、`notify-webpush.ts` が行を消す。
+     */
     case 401:
     case 403:
       return 'revoked'

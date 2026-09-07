@@ -11,7 +11,7 @@
 import { nowDate } from '../day'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
-import { consumeRateLimit } from '../rate-limit'
+import { consumeRateLimit, remainingRateLimit } from '../rate-limit'
 import {
   NOTIFY_CHANNEL_RATE_LIMIT,
   NOTIFY_CHANNELS,
@@ -23,15 +23,17 @@ import { buildNotifyContent } from './notify-content'
 import { deliverEmail, findMailRecipient } from './notify-email'
 import { buildDeliveries, createDeliveries } from './notify-fanout'
 import { isDeliveryAborting, type DeliveryOutcome } from './notify-outcome'
-import { parseNotifyPayload } from './notify-payload'
+import { parseNotifyPayload, type NotifyPayload } from './notify-payload'
 import {
   claimDeliveries,
   claimEmailDeliveries,
   claimOutbox,
+  failOutbox,
   purge,
   reclaimStale,
   releaseDeliveries,
   settleDelivery,
+  settleOutbox,
   type ClaimedDelivery,
 } from './notify-queue'
 import { resolveNotifyTargets } from './notify-recipient'
@@ -42,15 +44,28 @@ import { deliverWebPush } from './notify-webpush'
  * 掴んだアウトボックスを配信行へ展開する。
  *
  * 宛先が 1 つも残らなかった場合も `done` にする(送らないことは失敗ではない)。
- * ペイロードが壊れている行は文面を組み立てられないので `failed` にして残す。
+ *
+ * 失敗の扱いは原因で分ける。ペイロードが壊れている行は掴み直しても直らないので即 `failed`、
+ * 宛先の解決や配信行の作成(どちらも DB に触る)で落ちた分は一時障害の可能性があるので
+ * 試行回数を使い切るまで未処理へ戻す。
  */
 const fanoutOutbox = async (now: Date): Promise<void> => {
   const claimed = await claimOutbox(NOTIFY_FANOUT_BATCH)
 
   for (const outbox of claimed) {
     const { id, event, targetUserIds } = outbox
+
+    // 文面を組み立てられない行は再試行しても同じ結果になる
+    let payload: NotifyPayload
     try {
-      const payload = parseNotifyPayload(event, outbox.payload)
+      payload = parseNotifyPayload(event, outbox.payload)
+    } catch (error) {
+      logger.error({ error, outboxId: id, event }, 'notify payload invalid')
+      await failOutbox(outbox)
+      continue
+    }
+
+    try {
       const targets = await resolveNotifyTargets(event, payload, { userIds: targetUserIds })
       const deliveries = await buildDeliveries({ outboxId: id, event, actorId: outbox.actorId, targets, now })
 
@@ -61,7 +76,7 @@ const fanoutOutbox = async (now: Date): Promise<void> => {
       logger.info({ outboxId: id, event, deliveries: deliveries.length }, 'notify fanned out')
     } catch (error) {
       logger.error({ error, outboxId: id, event }, 'notify fanout failed')
-      await prisma.notifyOutbox.update({ where: { id }, data: { status: 'failed', claimedAt: null } })
+      await settleOutbox(outbox)
     }
   }
 }
@@ -92,8 +107,8 @@ const contentOf = async (delivery: ClaimedDelivery, locale: string | null) =>
  * 並行に送らないのはワークスペース単位のバーストを避けるため(既存の方針を踏襲)。
  * トークン失効を掴んだ時点で残りも全滅するので、掴んだ分を未処理へ戻して打ち切る。
  */
-const deliverSlackBatch = async (now: Date): Promise<void> => {
-  const claimed = await claimDeliveries('slack', NOTIFY_DELIVER_BATCH.slack)
+const deliverSlackBatch = async (now: Date, limit: number): Promise<number> => {
+  const claimed = await claimDeliveries('slack', limit)
 
   for (const [index, delivery] of claimed.entries()) {
     const { userId, slackChannelId } = delivery
@@ -114,9 +129,11 @@ const deliverSlackBatch = async (now: Date): Promise<void> => {
         rest.map(({ id }) => id),
         outcome,
       )
-      return
+      // 送らずに戻した分は枠を使っていない
+      return index + 1
     }
   }
+  return claimed.length
 }
 
 /**
@@ -125,8 +142,8 @@ const deliverSlackBatch = async (now: Date): Promise<void> => {
  * 取り出しの時点で同じ相手の期限到来ぶんが揃っているので、ここでまとめれば
  * **ユーザーあたりウィンドウに 1 通**になる。宛先が引けない行は送る先が無いので諦める。
  */
-const deliverEmailBatch = async (now: Date): Promise<void> => {
-  const claimed = await claimEmailDeliveries(NOTIFY_DELIVER_BATCH.email)
+const deliverEmailBatch = async (now: Date, limit: number): Promise<number> => {
+  const claimed = await claimEmailDeliveries(limit)
 
   const byUser = new Map<string, ClaimedDelivery[]>()
   for (const delivery of claimed) {
@@ -159,6 +176,9 @@ const deliverEmailBatch = async (now: Date): Promise<void> => {
       await settleDelivery(delivery, outcome, now)
     }
   }
+
+  // ユーザーあたり 1 通なので、送信数は宛先ユーザー数
+  return byUser.size
 }
 
 /**
@@ -167,8 +187,8 @@ const deliverEmailBatch = async (now: Date): Promise<void> => {
  * 宛先は必ずユーザー(チャンネル通知は Slack だけ)。1 配信で登録済みの全端末へ送るので、
  * ここでは配信行を 1 つずつ処理する。
  */
-const deliverWebPushBatch = async (now: Date): Promise<void> => {
-  const claimed = await claimDeliveries('webpush', NOTIFY_DELIVER_BATCH.webpush)
+const deliverWebPushBatch = async (now: Date, limit: number): Promise<number> => {
+  const claimed = await claimDeliveries('webpush', limit)
 
   for (const [index, delivery] of claimed.entries()) {
     const { userId } = delivery
@@ -199,9 +219,11 @@ const deliverWebPushBatch = async (now: Date): Promise<void> => {
         rest.map(({ id }) => id),
         outcome,
       )
-      return
+      // 送らずに戻した分は枠を使っていない
+      return index + 1
     }
   }
+  return claimed.length
 }
 
 /** 通知のまとめキー。同じチケットの通知は端末上で 1 件に畳まれる */
@@ -210,19 +232,34 @@ const ticketTagOf = (delivery: ClaimedDelivery): string | undefined => {
   return payload.ticketId
 }
 
-const DELIVERERS: Record<NotifyChannel, (now: Date) => Promise<void>> = {
+/** 引数は 1 周で扱う上限、戻り値は実際に送った件数(= 消費する枠) */
+const DELIVERERS: Record<NotifyChannel, (now: Date, limit: number) => Promise<number>> = {
   email: deliverEmailBatch,
   slack: deliverSlackBatch,
   webpush: deliverWebPushBatch,
 }
 
-/** チャネル全体のスロットルを消費してから送る。超過した tick は次へ持ち越す */
+/**
+ * チャネル全体のスロットルの枠内で送る。
+ *
+ * 1 周で最大 `NOTIFY_DELIVER_BATCH` 件送るため、tick ごとに 1 件だけ消費すると枠が実際の
+ * 送信数を数えられない。残枠とバッチ上限の小さい方を取り出しの上限にし、送った件数ぶんを
+ * 消費する。枠が空の tick は何も送らず次へ持ち越す。
+ */
 const deliverChannel = async (channel: NotifyChannel, now: Date): Promise<void> => {
-  if (!consumeRateLimit(`notify:${channel}`, NOTIFY_CHANNEL_RATE_LIMIT[channel])) {
+  const key = `notify:${channel}`
+  const rule = NOTIFY_CHANNEL_RATE_LIMIT[channel]
+
+  const limit = Math.min(remainingRateLimit(key, rule), NOTIFY_DELIVER_BATCH[channel])
+  if (limit <= 0) {
     logger.warn({ channel }, 'notify channel throttled')
     return
   }
-  await DELIVERERS[channel](now)
+
+  const sent = await DELIVERERS[channel](now, limit)
+  if (sent > 0) {
+    consumeRateLimit(key, rule, sent)
+  }
 }
 
 /**

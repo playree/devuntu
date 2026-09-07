@@ -15,7 +15,7 @@ describe('classifyWebPushStatus: HTTP ステータスの分類', () => {
     expect(classifyWebPushStatus(410)).toBe('unlinked')
   })
 
-  it('鍵の不正(401 / 403)は打ち切る(他の購読も同じ鍵なので全滅する)', () => {
+  it('鍵の不正(401 / 403)は打ち切り相当(全端末で起きていれば構成障害)', () => {
     expect(classifyWebPushStatus(401)).toBe('revoked')
     expect(classifyWebPushStatus(403)).toBe('revoked')
   })

@@ -85,9 +85,10 @@ export const NOTIFY_FAILED_RETENTION_MS = 7 * 24 * 60 * 60 * 1000
 
 /** チャネル単位の全体スロットル。ワーカーは実質1プロセスなのでプロセス内カウンタで足りる */
 export const NOTIFY_CHANNEL_RATE_LIMIT: Record<NotifyChannel, { limit: number; windowMs: number }> = {
+  // ユーザー単位でまとめるので、枠は「ウィンドウ内に送るメールの通数」
   email: { limit: 120, windowMs: 60_000 },
   slack: { limit: 60, windowMs: 60_000 },
-  // 宛先ごとに端末数ぶん叩くので、他のチャネルより枠を広く取る
+  // 1 配信で端末数ぶん叩くため、枠(= 配信行の数)は他のチャネルより広く取る
   webpush: { limit: 300, windowMs: 60_000 },
 }
 

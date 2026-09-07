@@ -89,10 +89,13 @@ const evict = (now: number) => {
 }
 
 /**
- * 1 回ぶん消費して、まだ制限内かを返す。制限を超えている場合は false。
+ * `count` 回ぶん消費して、まだ制限内かを返す。制限を超えている場合は false。
  * `key` は用途とスコープを含めて一意にすること(例: `otp:ip:1.2.3.4`)。
+ *
+ * まとめて何件か送る処理では、送る件数を `count` で渡すことで 1 回の呼び出しを
+ * 1 件と数えてしまうのを防げる(`remainingRateLimit()` で残枠を見てから件数を決める)。
  */
-export const consumeRateLimit = (key: string, { limit, windowMs }: RateLimitRule): boolean => {
+export const consumeRateLimit = (key: string, { limit, windowMs }: RateLimitRule, count = 1): boolean => {
   const now = Date.now()
 
   const counter = counters.get(key)
@@ -100,12 +103,26 @@ export const consumeRateLimit = (key: string, { limit, windowMs }: RateLimitRule
     if (counters.size >= MAX_ENTRIES) {
       evict(now)
     }
-    counters.set(key, { count: 1, resetAt: now + windowMs, limit })
-    return true
+    counters.set(key, { count, resetAt: now + windowMs, limit })
+    return count <= limit
   }
 
-  counter.count += 1
+  counter.count += count
   return counter.count <= limit
+}
+
+/**
+ * ウィンドウ内に残っている回数。
+ *
+ * 消費はしないので、これで得た件数ぶんを送ってから `consumeRateLimit()` で消費する。
+ * 単一プロセス内で同期的に呼ぶ前提なので、見てから消費するまでの間に他が割り込む余地は無い。
+ */
+export const remainingRateLimit = (key: string, { limit }: RateLimitRule): number => {
+  const counter = counters.get(key)
+  if (!counter || counter.resetAt <= Date.now()) {
+    return limit
+  }
+  return Math.max(0, limit - counter.count)
 }
 
 /**

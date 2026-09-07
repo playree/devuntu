@@ -1,7 +1,7 @@
 /** カウンタはモジュールスコープで共有されるため、テストごとに別のキーを使う */
 
 import { ClientError, TOO_MANY_REQUESTS } from '@/lib/error'
-import { assertRateLimit, consumeRateLimit, MAX_ENTRIES } from '@/lib/rate-limit'
+import { assertRateLimit, consumeRateLimit, MAX_ENTRIES, remainingRateLimit } from '@/lib/rate-limit'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const RULE = { limit: 3, windowMs: 1000 }
@@ -31,6 +31,54 @@ describe('consumeRateLimit: 固定ウィンドウのカウンタ', () => {
 
     vi.advanceTimersByTime(RULE.windowMs + 1)
     expect(consumeRateLimit(key, RULE), 'ウィンドウ明けは再び通る').toBe(true)
+  })
+})
+
+describe('consumeRateLimit: まとめて消費する', () => {
+  it('count 回ぶん消費し、枠を超えたら false', () => {
+    const key = 'test:count'
+    expect(consumeRateLimit(key, RULE, 2), '2 回ぶん').toBe(true)
+    expect(consumeRateLimit(key, RULE, 2), '合計 4 回で超過').toBe(false)
+  })
+
+  it('最初の呼び出しで枠を超える件数を渡した場合も false', () => {
+    expect(consumeRateLimit('test:count-over', RULE, RULE.limit + 1)).toBe(false)
+  })
+
+  it('count を省略すると 1 回ぶん', () => {
+    const key = 'test:count-default'
+    consumeRateLimit(key, RULE, 2)
+    expect(consumeRateLimit(key, RULE), '3 回目までは通る').toBe(true)
+    expect(consumeRateLimit(key, RULE)).toBe(false)
+  })
+})
+
+describe('remainingRateLimit: 残枠を消費せずに見る', () => {
+  it('未使用のキーは limit がそのまま残枠', () => {
+    expect(remainingRateLimit('test:remaining-fresh', RULE)).toBe(RULE.limit)
+  })
+
+  it('消費した分だけ減り、見るだけでは減らない', () => {
+    const key = 'test:remaining'
+    consumeRateLimit(key, RULE, 2)
+    expect(remainingRateLimit(key, RULE)).toBe(1)
+    expect(remainingRateLimit(key, RULE), '見るだけなら変わらない').toBe(1)
+  })
+
+  it('超過していても負にはならない', () => {
+    const key = 'test:remaining-over'
+    consumeRateLimit(key, RULE, RULE.limit + 5)
+    expect(remainingRateLimit(key, RULE)).toBe(0)
+  })
+
+  it('ウィンドウが明けると残枠が戻る', () => {
+    vi.useFakeTimers()
+    const key = 'test:remaining-window'
+    consumeRateLimit(key, RULE, RULE.limit)
+    expect(remainingRateLimit(key, RULE)).toBe(0)
+
+    vi.advanceTimersByTime(RULE.windowMs + 1)
+    expect(remainingRateLimit(key, RULE)).toBe(RULE.limit)
   })
 })
 

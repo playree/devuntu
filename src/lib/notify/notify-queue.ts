@@ -5,6 +5,9 @@
  * 処理することが無いので、**リーダー選出の仕組みが要らない**(Prisma のコネクションプールでは
  * セッションレベルの advisory lock を保持できないため、そもそも採れない)。
  *
+ * 行単位の排他はこれで足りるが、メールの集約(`claimEmailDeliveries()`)だけは
+ * **ユーザー単位のまとまり**を前提にしているため単一ワーカーであることに依存する。
+ *
  * 掴んだ時点で `attempts` を加算するため、掴んだまま落ちた行を回収し続けても無限には試行しない。
  */
 
@@ -20,6 +23,7 @@ export type ClaimedOutbox = {
   event: NotifyEvent
   actorId: string | null
   targetUserIds: string[]
+  attempts: number
   payload: unknown
 }
 
@@ -68,7 +72,7 @@ export const claimOutbox = (limit: number) => prisma.$queryRaw<ClaimedOutbox[]>`
     LIMIT ${limit}
     FOR UPDATE SKIP LOCKED
   )
-  RETURNING "id", "event", "actorId", "targetUserIds", "payload"
+  RETURNING "id", "event", "actorId", "targetUserIds", "attempts", "payload"
 `
 
 /** 期限が来た配信を掴む。アウトボックスの内容も一緒に引いて往復を減らす */
@@ -98,6 +102,10 @@ export const claimDeliveries = (channel: NotifyChannel, limit: number) => prisma
  *
  * メールの配信行は必ずユーザー宛(チャンネル通知は Slack だけ)なので、宛先の選定では
  * `userId` が入っている行だけを見る。
+ *
+ * NOTE: 宛先を選ぶ内側の集約にはロックを掛けていないため、**単一ワーカー前提**。複数プロセスで
+ *       同時に回すと同じユーザーを別々のワーカーが選び、行が分かれて同じウィンドウに 2 通出る。
+ *       水平スケールする場合はユーザー単位の所有権を先に取る仕組みが必要(`notify-worker.ts` を参照)。
  */
 export const claimEmailDeliveries = (userLimit: number) => prisma.$queryRaw<ClaimedDelivery[]>`
   WITH claimed AS (
@@ -122,6 +130,33 @@ export const claimEmailDeliveries = (userLimit: number) => prisma.$queryRaw<Clai
   FROM claimed c JOIN "notify_outbox" o ON o."id" = c."outboxId"
   ORDER BY c."createdAt", c."id"
 `
+
+/**
+ * 展開しても直らないアウトボックスを失敗として残す。
+ * ペイロードが壊れている行など、掴み直しても同じ結果になるものに使う。
+ */
+export const failOutbox = async (outbox: Pick<ClaimedOutbox, 'id'>): Promise<void> => {
+  await prisma.notifyOutbox.update({ where: { id: outbox.id }, data: { status: 'failed', claimedAt: null } })
+}
+
+/**
+ * 展開に失敗したアウトボックスを片付ける。
+ *
+ * 宛先の解決も配信行の作成も DB に触るので、一時的な障害でも失敗しうる。1 度の失敗で
+ * `failed` に確定させると短い障害で通知が消えてしまうため、試行回数を使い切るまでは
+ * 未処理へ戻す。`notify_outbox` は配信時刻を持たないので、次の tick で掴み直される。
+ */
+export const settleOutbox = async (outbox: Pick<ClaimedOutbox, 'id' | 'attempts' | 'event'>): Promise<void> => {
+  const { id, attempts, event } = outbox
+
+  if (isRetryExhausted(attempts)) {
+    logger.error({ outboxId: id, event, attempts }, 'notify fanout gave up')
+    await failOutbox(outbox)
+    return
+  }
+
+  await prisma.notifyOutbox.update({ where: { id }, data: { status: 'pending', claimedAt: null } })
+}
 
 /** 送信結果に応じて配信行を片付ける */
 export const settleDelivery = async (

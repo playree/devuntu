@@ -9,17 +9,21 @@
  */
 
 import { logger } from '../logger'
-import { findWebPushSubscriptions, sendWebPush } from '../webpush/webpush-server'
+import { deleteWebPushSubscription, findWebPushSubscriptions, sendWebPush } from '../webpush/webpush-server'
 import type { NotifyContent } from './notify-content'
 import { isDeliveryAborting, isDeliverySettled, type DeliveryOutcome } from './notify-outcome'
 
 /**
  * 1 配信ぶんを、そのユーザーの全端末へ送る。
  *
+ * 鍵の不正(401 / 403)は端末ごとにも起きる。VAPID 鍵を差し替えた後、再購読していない
+ * 端末の行は古い鍵のまま残るので、**打ち切り相当でも残りの端末へは送り切ってから**
+ * 構成障害かどうかを判断する。全端末が同じ結果になった場合だけ VAPID の構成障害とみなす。
+ *
  * 結果は次の順で決める。
  *
+ * - 全端末が鍵の不正なら、そのまま打ち切りを伝える(チャネルごと止める)
  * - 1 台でも送れたら `ok`(再送すると届いた端末に二重で出てしまう)
- * - どれも送れず打ち切り相当(鍵の不正)があれば、そのまま打ち切りを伝える
  * - それ以外は最初の失敗を返して再試行に回す
  *
  * 失効した購読は `sendWebPush()` が行ごと消すので、次の通知では宛先から消えている。
@@ -46,28 +50,34 @@ export const deliverWebPush = async (param: {
     ...(tag && { tag }),
   }
 
-  let failure: DeliveryOutcome | null = null
-  let delivered = 0
-
+  // 全端末の結果を見てから構成障害かを判断するため、先に送り切って結果を集める
+  const results: { id: string; outcome: DeliveryOutcome }[] = []
   for (const subscription of subscriptions) {
-    const outcome = await sendWebPush(subscription, message)
-    if (outcome === 'ok') {
-      delivered += 1
-      continue
-    }
-    // 失効(unlinked)はその端末だけの問題なので、他の端末の結果を上書きしない
-    if (!isDeliverySettled(outcome)) {
-      failure ??= outcome
-    }
-    if (isDeliveryAborting(outcome)) {
-      // 鍵が不正なら残りの端末も全滅する
-      break
-    }
+    results.push({ id: subscription.id, outcome: await sendWebPush(subscription, message) })
   }
 
+  const aborting = results.filter(({ outcome }) => isDeliveryAborting(outcome))
+
+  // 全端末が鍵の不正。端末ごとの問題ではなく VAPID の構成障害なので、直すまで送れない
+  if (aborting.length === results.length) {
+    return aborting[0].outcome
+  }
+
+  /**
+   * 一部だけ鍵が不正な場合は、鍵を差し替える前に登録された購読が残っている。
+   * 失効(404 / 410)にはならないので掃除されず、放っておくと毎回この端末で失敗する。
+   */
+  for (const { id } of aborting) {
+    await deleteWebPushSubscription(id)
+  }
+
+  const delivered = results.filter(({ outcome }) => outcome === 'ok').length
   if (delivered > 0) {
     logger.info({ userId, delivered, devices: subscriptions.length }, 'web push notify')
     return 'ok'
   }
-  return failure ?? 'unlinked'
+
+  // 失効(unlinked)はその端末だけの問題なので、配信の結果としては採らない
+  const failure = results.find(({ outcome }) => !isDeliverySettled(outcome) && !isDeliveryAborting(outcome))
+  return failure?.outcome ?? 'unlinked'
 }
