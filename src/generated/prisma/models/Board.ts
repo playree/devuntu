@@ -43,7 +43,6 @@ export type BoardMinAggregateOutputType = {
   name: string | null
   description: string | null
   archived: boolean | null
-  slackChannelId: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -57,7 +56,6 @@ export type BoardMaxAggregateOutputType = {
   name: string | null
   description: string | null
   archived: boolean | null
-  slackChannelId: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -71,7 +69,6 @@ export type BoardCountAggregateOutputType = {
   name: number
   description: number
   archived: number
-  slackChannelId: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -95,7 +92,6 @@ export type BoardMinAggregateInputType = {
   name?: true
   description?: true
   archived?: true
-  slackChannelId?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -109,7 +105,6 @@ export type BoardMaxAggregateInputType = {
   name?: true
   description?: true
   archived?: true
-  slackChannelId?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -123,7 +118,6 @@ export type BoardCountAggregateInputType = {
   name?: true
   description?: true
   archived?: true
-  slackChannelId?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -224,7 +218,6 @@ export type BoardGroupByOutputType = {
   name: string
   description: string | null
   archived: boolean
-  slackChannelId: string | null
   createdAt: Date
   updatedAt: Date
   _count: BoardCountAggregateOutputType | null
@@ -261,7 +254,6 @@ export type BoardWhereInput = {
   name?: Prisma.StringFilter<"Board"> | string
   description?: Prisma.StringNullableFilter<"Board"> | string | null
   archived?: Prisma.BoolFilter<"Board"> | boolean
-  slackChannelId?: Prisma.StringNullableFilter<"Board"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Board"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Board"> | Date | string
   privateOwner?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
@@ -271,6 +263,7 @@ export type BoardWhereInput = {
   tags?: Prisma.TagListRelationFilter
   attachments?: Prisma.AttachmentListRelationFilter
   keyHistories?: Prisma.BoardKeyHistoryListRelationFilter
+  notifySettings?: Prisma.BoardNotifySettingListRelationFilter
 }
 
 export type BoardOrderByWithRelationInput = {
@@ -282,7 +275,6 @@ export type BoardOrderByWithRelationInput = {
   name?: Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   archived?: Prisma.SortOrder
-  slackChannelId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   privateOwner?: Prisma.UserOrderByWithRelationInput
@@ -292,6 +284,7 @@ export type BoardOrderByWithRelationInput = {
   tags?: Prisma.TagOrderByRelationAggregateInput
   attachments?: Prisma.AttachmentOrderByRelationAggregateInput
   keyHistories?: Prisma.BoardKeyHistoryOrderByRelationAggregateInput
+  notifySettings?: Prisma.BoardNotifySettingOrderByRelationAggregateInput
 }
 
 export type BoardWhereUniqueInput = Prisma.AtLeast<{
@@ -306,7 +299,6 @@ export type BoardWhereUniqueInput = Prisma.AtLeast<{
   name?: Prisma.StringFilter<"Board"> | string
   description?: Prisma.StringNullableFilter<"Board"> | string | null
   archived?: Prisma.BoolFilter<"Board"> | boolean
-  slackChannelId?: Prisma.StringNullableFilter<"Board"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Board"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Board"> | Date | string
   privateOwner?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
@@ -316,6 +308,7 @@ export type BoardWhereUniqueInput = Prisma.AtLeast<{
   tags?: Prisma.TagListRelationFilter
   attachments?: Prisma.AttachmentListRelationFilter
   keyHistories?: Prisma.BoardKeyHistoryListRelationFilter
+  notifySettings?: Prisma.BoardNotifySettingListRelationFilter
 }, "id" | "privateOwnerId" | "key">
 
 export type BoardOrderByWithAggregationInput = {
@@ -327,7 +320,6 @@ export type BoardOrderByWithAggregationInput = {
   name?: Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   archived?: Prisma.SortOrder
-  slackChannelId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.BoardCountOrderByAggregateInput
@@ -349,7 +341,6 @@ export type BoardScalarWhereWithAggregatesInput = {
   name?: Prisma.StringWithAggregatesFilter<"Board"> | string
   description?: Prisma.StringNullableWithAggregatesFilter<"Board"> | string | null
   archived?: Prisma.BoolWithAggregatesFilter<"Board"> | boolean
-  slackChannelId?: Prisma.StringNullableWithAggregatesFilter<"Board"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Board"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Board"> | Date | string
 }
@@ -362,7 +353,6 @@ export type BoardCreateInput = {
   name: string
   description?: string | null
   archived?: boolean
-  slackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -372,6 +362,7 @@ export type BoardCreateInput = {
   tags?: Prisma.TagCreateNestedManyWithoutBoardInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutBoardInput
   keyHistories?: Prisma.BoardKeyHistoryCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateInput = {
@@ -383,7 +374,6 @@ export type BoardUncheckedCreateInput = {
   name: string
   description?: string | null
   archived?: boolean
-  slackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -392,6 +382,7 @@ export type BoardUncheckedCreateInput = {
   tags?: Prisma.TagUncheckedCreateNestedManyWithoutBoardInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutBoardInput
   keyHistories?: Prisma.BoardKeyHistoryUncheckedCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUpdateInput = {
@@ -402,7 +393,6 @@ export type BoardUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  slackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -412,6 +402,7 @@ export type BoardUpdateInput = {
   tags?: Prisma.TagUpdateManyWithoutBoardNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutBoardNestedInput
   keyHistories?: Prisma.BoardKeyHistoryUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateInput = {
@@ -423,7 +414,6 @@ export type BoardUncheckedUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  slackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
@@ -432,6 +422,7 @@ export type BoardUncheckedUpdateInput = {
   tags?: Prisma.TagUncheckedUpdateManyWithoutBoardNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutBoardNestedInput
   keyHistories?: Prisma.BoardKeyHistoryUncheckedUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateManyInput = {
@@ -443,7 +434,6 @@ export type BoardCreateManyInput = {
   name: string
   description?: string | null
   archived?: boolean
-  slackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -456,7 +446,6 @@ export type BoardUpdateManyMutationInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  slackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -470,7 +459,6 @@ export type BoardUncheckedUpdateManyInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  slackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -489,7 +477,6 @@ export type BoardCountOrderByAggregateInput = {
   name?: Prisma.SortOrder
   description?: Prisma.SortOrder
   archived?: Prisma.SortOrder
-  slackChannelId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -507,7 +494,6 @@ export type BoardMaxOrderByAggregateInput = {
   name?: Prisma.SortOrder
   description?: Prisma.SortOrder
   archived?: Prisma.SortOrder
-  slackChannelId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -521,7 +507,6 @@ export type BoardMinOrderByAggregateInput = {
   name?: Prisma.SortOrder
   description?: Prisma.SortOrder
   archived?: Prisma.SortOrder
-  slackChannelId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -659,6 +644,20 @@ export type BoardUpdateOneRequiredWithoutTicketsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.BoardUpdateToOneWithWhereWithoutTicketsInput, Prisma.BoardUpdateWithoutTicketsInput>, Prisma.BoardUncheckedUpdateWithoutTicketsInput>
 }
 
+export type BoardCreateNestedOneWithoutNotifySettingsInput = {
+  create?: Prisma.XOR<Prisma.BoardCreateWithoutNotifySettingsInput, Prisma.BoardUncheckedCreateWithoutNotifySettingsInput>
+  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutNotifySettingsInput
+  connect?: Prisma.BoardWhereUniqueInput
+}
+
+export type BoardUpdateOneRequiredWithoutNotifySettingsNestedInput = {
+  create?: Prisma.XOR<Prisma.BoardCreateWithoutNotifySettingsInput, Prisma.BoardUncheckedCreateWithoutNotifySettingsInput>
+  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutNotifySettingsInput
+  upsert?: Prisma.BoardUpsertWithoutNotifySettingsInput
+  connect?: Prisma.BoardWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.BoardUpdateToOneWithWhereWithoutNotifySettingsInput, Prisma.BoardUpdateWithoutNotifySettingsInput>, Prisma.BoardUncheckedUpdateWithoutNotifySettingsInput>
+}
+
 export type BoardCreateWithoutPrivateOwnerInput = {
   id?: string
   kind?: $Enums.BoardKind
@@ -667,7 +666,6 @@ export type BoardCreateWithoutPrivateOwnerInput = {
   name: string
   description?: string | null
   archived?: boolean
-  slackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberCreateNestedManyWithoutBoardInput
@@ -676,6 +674,7 @@ export type BoardCreateWithoutPrivateOwnerInput = {
   tags?: Prisma.TagCreateNestedManyWithoutBoardInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutBoardInput
   keyHistories?: Prisma.BoardKeyHistoryCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutPrivateOwnerInput = {
@@ -686,7 +685,6 @@ export type BoardUncheckedCreateWithoutPrivateOwnerInput = {
   name: string
   description?: string | null
   archived?: boolean
-  slackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -695,6 +693,7 @@ export type BoardUncheckedCreateWithoutPrivateOwnerInput = {
   tags?: Prisma.TagUncheckedCreateNestedManyWithoutBoardInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutBoardInput
   keyHistories?: Prisma.BoardKeyHistoryUncheckedCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutPrivateOwnerInput = {
@@ -721,7 +720,6 @@ export type BoardUpdateWithoutPrivateOwnerInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  slackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUpdateManyWithoutBoardNestedInput
@@ -730,6 +728,7 @@ export type BoardUpdateWithoutPrivateOwnerInput = {
   tags?: Prisma.TagUpdateManyWithoutBoardNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutBoardNestedInput
   keyHistories?: Prisma.BoardKeyHistoryUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutPrivateOwnerInput = {
@@ -740,7 +739,6 @@ export type BoardUncheckedUpdateWithoutPrivateOwnerInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  slackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
@@ -749,6 +747,7 @@ export type BoardUncheckedUpdateWithoutPrivateOwnerInput = {
   tags?: Prisma.TagUncheckedUpdateManyWithoutBoardNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutBoardNestedInput
   keyHistories?: Prisma.BoardKeyHistoryUncheckedUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutAttachmentsInput = {
@@ -759,7 +758,6 @@ export type BoardCreateWithoutAttachmentsInput = {
   name: string
   description?: string | null
   archived?: boolean
-  slackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -768,6 +766,7 @@ export type BoardCreateWithoutAttachmentsInput = {
   tickets?: Prisma.TicketCreateNestedManyWithoutBoardInput
   tags?: Prisma.TagCreateNestedManyWithoutBoardInput
   keyHistories?: Prisma.BoardKeyHistoryCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutAttachmentsInput = {
@@ -779,7 +778,6 @@ export type BoardUncheckedCreateWithoutAttachmentsInput = {
   name: string
   description?: string | null
   archived?: boolean
-  slackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -787,6 +785,7 @@ export type BoardUncheckedCreateWithoutAttachmentsInput = {
   tickets?: Prisma.TicketUncheckedCreateNestedManyWithoutBoardInput
   tags?: Prisma.TagUncheckedCreateNestedManyWithoutBoardInput
   keyHistories?: Prisma.BoardKeyHistoryUncheckedCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutAttachmentsInput = {
@@ -813,7 +812,6 @@ export type BoardUpdateWithoutAttachmentsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  slackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -822,6 +820,7 @@ export type BoardUpdateWithoutAttachmentsInput = {
   tickets?: Prisma.TicketUpdateManyWithoutBoardNestedInput
   tags?: Prisma.TagUpdateManyWithoutBoardNestedInput
   keyHistories?: Prisma.BoardKeyHistoryUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutAttachmentsInput = {
@@ -833,7 +832,6 @@ export type BoardUncheckedUpdateWithoutAttachmentsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  slackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
@@ -841,6 +839,7 @@ export type BoardUncheckedUpdateWithoutAttachmentsInput = {
   tickets?: Prisma.TicketUncheckedUpdateManyWithoutBoardNestedInput
   tags?: Prisma.TagUncheckedUpdateManyWithoutBoardNestedInput
   keyHistories?: Prisma.BoardKeyHistoryUncheckedUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutKeyHistoriesInput = {
@@ -851,7 +850,6 @@ export type BoardCreateWithoutKeyHistoriesInput = {
   name: string
   description?: string | null
   archived?: boolean
-  slackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -860,6 +858,7 @@ export type BoardCreateWithoutKeyHistoriesInput = {
   tickets?: Prisma.TicketCreateNestedManyWithoutBoardInput
   tags?: Prisma.TagCreateNestedManyWithoutBoardInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutKeyHistoriesInput = {
@@ -871,7 +870,6 @@ export type BoardUncheckedCreateWithoutKeyHistoriesInput = {
   name: string
   description?: string | null
   archived?: boolean
-  slackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -879,6 +877,7 @@ export type BoardUncheckedCreateWithoutKeyHistoriesInput = {
   tickets?: Prisma.TicketUncheckedCreateNestedManyWithoutBoardInput
   tags?: Prisma.TagUncheckedCreateNestedManyWithoutBoardInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutKeyHistoriesInput = {
@@ -905,7 +904,6 @@ export type BoardUpdateWithoutKeyHistoriesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  slackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -914,6 +912,7 @@ export type BoardUpdateWithoutKeyHistoriesInput = {
   tickets?: Prisma.TicketUpdateManyWithoutBoardNestedInput
   tags?: Prisma.TagUpdateManyWithoutBoardNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutKeyHistoriesInput = {
@@ -925,7 +924,6 @@ export type BoardUncheckedUpdateWithoutKeyHistoriesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  slackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
@@ -933,6 +931,7 @@ export type BoardUncheckedUpdateWithoutKeyHistoriesInput = {
   tickets?: Prisma.TicketUncheckedUpdateManyWithoutBoardNestedInput
   tags?: Prisma.TagUncheckedUpdateManyWithoutBoardNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutTagsInput = {
@@ -943,7 +942,6 @@ export type BoardCreateWithoutTagsInput = {
   name: string
   description?: string | null
   archived?: boolean
-  slackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -952,6 +950,7 @@ export type BoardCreateWithoutTagsInput = {
   tickets?: Prisma.TicketCreateNestedManyWithoutBoardInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutBoardInput
   keyHistories?: Prisma.BoardKeyHistoryCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutTagsInput = {
@@ -963,7 +962,6 @@ export type BoardUncheckedCreateWithoutTagsInput = {
   name: string
   description?: string | null
   archived?: boolean
-  slackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -971,6 +969,7 @@ export type BoardUncheckedCreateWithoutTagsInput = {
   tickets?: Prisma.TicketUncheckedCreateNestedManyWithoutBoardInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutBoardInput
   keyHistories?: Prisma.BoardKeyHistoryUncheckedCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutTagsInput = {
@@ -997,7 +996,6 @@ export type BoardUpdateWithoutTagsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  slackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -1006,6 +1004,7 @@ export type BoardUpdateWithoutTagsInput = {
   tickets?: Prisma.TicketUpdateManyWithoutBoardNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutBoardNestedInput
   keyHistories?: Prisma.BoardKeyHistoryUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutTagsInput = {
@@ -1017,7 +1016,6 @@ export type BoardUncheckedUpdateWithoutTagsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  slackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
@@ -1025,6 +1023,7 @@ export type BoardUncheckedUpdateWithoutTagsInput = {
   tickets?: Prisma.TicketUncheckedUpdateManyWithoutBoardNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutBoardNestedInput
   keyHistories?: Prisma.BoardKeyHistoryUncheckedUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutMembersInput = {
@@ -1035,7 +1034,6 @@ export type BoardCreateWithoutMembersInput = {
   name: string
   description?: string | null
   archived?: boolean
-  slackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -1044,6 +1042,7 @@ export type BoardCreateWithoutMembersInput = {
   tags?: Prisma.TagCreateNestedManyWithoutBoardInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutBoardInput
   keyHistories?: Prisma.BoardKeyHistoryCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutMembersInput = {
@@ -1055,7 +1054,6 @@ export type BoardUncheckedCreateWithoutMembersInput = {
   name: string
   description?: string | null
   archived?: boolean
-  slackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   groups?: Prisma.BoardGroupUncheckedCreateNestedManyWithoutBoardInput
@@ -1063,6 +1061,7 @@ export type BoardUncheckedCreateWithoutMembersInput = {
   tags?: Prisma.TagUncheckedCreateNestedManyWithoutBoardInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutBoardInput
   keyHistories?: Prisma.BoardKeyHistoryUncheckedCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutMembersInput = {
@@ -1089,7 +1088,6 @@ export type BoardUpdateWithoutMembersInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  slackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -1098,6 +1096,7 @@ export type BoardUpdateWithoutMembersInput = {
   tags?: Prisma.TagUpdateManyWithoutBoardNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutBoardNestedInput
   keyHistories?: Prisma.BoardKeyHistoryUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutMembersInput = {
@@ -1109,7 +1108,6 @@ export type BoardUncheckedUpdateWithoutMembersInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  slackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   groups?: Prisma.BoardGroupUncheckedUpdateManyWithoutBoardNestedInput
@@ -1117,6 +1115,7 @@ export type BoardUncheckedUpdateWithoutMembersInput = {
   tags?: Prisma.TagUncheckedUpdateManyWithoutBoardNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutBoardNestedInput
   keyHistories?: Prisma.BoardKeyHistoryUncheckedUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutGroupsInput = {
@@ -1127,7 +1126,6 @@ export type BoardCreateWithoutGroupsInput = {
   name: string
   description?: string | null
   archived?: boolean
-  slackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -1136,6 +1134,7 @@ export type BoardCreateWithoutGroupsInput = {
   tags?: Prisma.TagCreateNestedManyWithoutBoardInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutBoardInput
   keyHistories?: Prisma.BoardKeyHistoryCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutGroupsInput = {
@@ -1147,7 +1146,6 @@ export type BoardUncheckedCreateWithoutGroupsInput = {
   name: string
   description?: string | null
   archived?: boolean
-  slackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -1155,6 +1153,7 @@ export type BoardUncheckedCreateWithoutGroupsInput = {
   tags?: Prisma.TagUncheckedCreateNestedManyWithoutBoardInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutBoardInput
   keyHistories?: Prisma.BoardKeyHistoryUncheckedCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutGroupsInput = {
@@ -1181,7 +1180,6 @@ export type BoardUpdateWithoutGroupsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  slackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -1190,6 +1188,7 @@ export type BoardUpdateWithoutGroupsInput = {
   tags?: Prisma.TagUpdateManyWithoutBoardNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutBoardNestedInput
   keyHistories?: Prisma.BoardKeyHistoryUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutGroupsInput = {
@@ -1201,7 +1200,6 @@ export type BoardUncheckedUpdateWithoutGroupsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  slackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
@@ -1209,6 +1207,7 @@ export type BoardUncheckedUpdateWithoutGroupsInput = {
   tags?: Prisma.TagUncheckedUpdateManyWithoutBoardNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutBoardNestedInput
   keyHistories?: Prisma.BoardKeyHistoryUncheckedUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutTicketsInput = {
@@ -1219,7 +1218,6 @@ export type BoardCreateWithoutTicketsInput = {
   name: string
   description?: string | null
   archived?: boolean
-  slackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -1228,6 +1226,7 @@ export type BoardCreateWithoutTicketsInput = {
   tags?: Prisma.TagCreateNestedManyWithoutBoardInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutBoardInput
   keyHistories?: Prisma.BoardKeyHistoryCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutTicketsInput = {
@@ -1239,7 +1238,6 @@ export type BoardUncheckedCreateWithoutTicketsInput = {
   name: string
   description?: string | null
   archived?: boolean
-  slackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -1247,6 +1245,7 @@ export type BoardUncheckedCreateWithoutTicketsInput = {
   tags?: Prisma.TagUncheckedCreateNestedManyWithoutBoardInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutBoardInput
   keyHistories?: Prisma.BoardKeyHistoryUncheckedCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutTicketsInput = {
@@ -1273,7 +1272,6 @@ export type BoardUpdateWithoutTicketsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  slackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -1282,6 +1280,7 @@ export type BoardUpdateWithoutTicketsInput = {
   tags?: Prisma.TagUpdateManyWithoutBoardNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutBoardNestedInput
   keyHistories?: Prisma.BoardKeyHistoryUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutTicketsInput = {
@@ -1293,11 +1292,103 @@ export type BoardUncheckedUpdateWithoutTicketsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  slackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
   groups?: Prisma.BoardGroupUncheckedUpdateManyWithoutBoardNestedInput
+  tags?: Prisma.TagUncheckedUpdateManyWithoutBoardNestedInput
+  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutBoardNestedInput
+  keyHistories?: Prisma.BoardKeyHistoryUncheckedUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
+}
+
+export type BoardCreateWithoutNotifySettingsInput = {
+  id?: string
+  kind?: $Enums.BoardKind
+  key: string
+  ticketSeq?: number
+  name: string
+  description?: string | null
+  archived?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
+  members?: Prisma.BoardMemberCreateNestedManyWithoutBoardInput
+  groups?: Prisma.BoardGroupCreateNestedManyWithoutBoardInput
+  tickets?: Prisma.TicketCreateNestedManyWithoutBoardInput
+  tags?: Prisma.TagCreateNestedManyWithoutBoardInput
+  attachments?: Prisma.AttachmentCreateNestedManyWithoutBoardInput
+  keyHistories?: Prisma.BoardKeyHistoryCreateNestedManyWithoutBoardInput
+}
+
+export type BoardUncheckedCreateWithoutNotifySettingsInput = {
+  id?: string
+  kind?: $Enums.BoardKind
+  privateOwnerId?: string | null
+  key: string
+  ticketSeq?: number
+  name: string
+  description?: string | null
+  archived?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
+  groups?: Prisma.BoardGroupUncheckedCreateNestedManyWithoutBoardInput
+  tickets?: Prisma.TicketUncheckedCreateNestedManyWithoutBoardInput
+  tags?: Prisma.TagUncheckedCreateNestedManyWithoutBoardInput
+  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutBoardInput
+  keyHistories?: Prisma.BoardKeyHistoryUncheckedCreateNestedManyWithoutBoardInput
+}
+
+export type BoardCreateOrConnectWithoutNotifySettingsInput = {
+  where: Prisma.BoardWhereUniqueInput
+  create: Prisma.XOR<Prisma.BoardCreateWithoutNotifySettingsInput, Prisma.BoardUncheckedCreateWithoutNotifySettingsInput>
+}
+
+export type BoardUpsertWithoutNotifySettingsInput = {
+  update: Prisma.XOR<Prisma.BoardUpdateWithoutNotifySettingsInput, Prisma.BoardUncheckedUpdateWithoutNotifySettingsInput>
+  create: Prisma.XOR<Prisma.BoardCreateWithoutNotifySettingsInput, Prisma.BoardUncheckedCreateWithoutNotifySettingsInput>
+  where?: Prisma.BoardWhereInput
+}
+
+export type BoardUpdateToOneWithWhereWithoutNotifySettingsInput = {
+  where?: Prisma.BoardWhereInput
+  data: Prisma.XOR<Prisma.BoardUpdateWithoutNotifySettingsInput, Prisma.BoardUncheckedUpdateWithoutNotifySettingsInput>
+}
+
+export type BoardUpdateWithoutNotifySettingsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
+  members?: Prisma.BoardMemberUpdateManyWithoutBoardNestedInput
+  groups?: Prisma.BoardGroupUpdateManyWithoutBoardNestedInput
+  tickets?: Prisma.TicketUpdateManyWithoutBoardNestedInput
+  tags?: Prisma.TagUpdateManyWithoutBoardNestedInput
+  attachments?: Prisma.AttachmentUpdateManyWithoutBoardNestedInput
+  keyHistories?: Prisma.BoardKeyHistoryUpdateManyWithoutBoardNestedInput
+}
+
+export type BoardUncheckedUpdateWithoutNotifySettingsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  privateOwnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
+  groups?: Prisma.BoardGroupUncheckedUpdateManyWithoutBoardNestedInput
+  tickets?: Prisma.TicketUncheckedUpdateManyWithoutBoardNestedInput
   tags?: Prisma.TagUncheckedUpdateManyWithoutBoardNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutBoardNestedInput
   keyHistories?: Prisma.BoardKeyHistoryUncheckedUpdateManyWithoutBoardNestedInput
@@ -1315,6 +1406,7 @@ export type BoardCountOutputType = {
   tags: number
   attachments: number
   keyHistories: number
+  notifySettings: number
 }
 
 export type BoardCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1324,6 +1416,7 @@ export type BoardCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.
   tags?: boolean | BoardCountOutputTypeCountTagsArgs
   attachments?: boolean | BoardCountOutputTypeCountAttachmentsArgs
   keyHistories?: boolean | BoardCountOutputTypeCountKeyHistoriesArgs
+  notifySettings?: boolean | BoardCountOutputTypeCountNotifySettingsArgs
 }
 
 /**
@@ -1378,6 +1471,13 @@ export type BoardCountOutputTypeCountKeyHistoriesArgs<ExtArgs extends runtime.Ty
   where?: Prisma.BoardKeyHistoryWhereInput
 }
 
+/**
+ * BoardCountOutputType without action
+ */
+export type BoardCountOutputTypeCountNotifySettingsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.BoardNotifySettingWhereInput
+}
+
 
 export type BoardSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1388,7 +1488,6 @@ export type BoardSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   name?: boolean
   description?: boolean
   archived?: boolean
-  slackChannelId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   privateOwner?: boolean | Prisma.Board$privateOwnerArgs<ExtArgs>
@@ -1398,6 +1497,7 @@ export type BoardSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   tags?: boolean | Prisma.Board$tagsArgs<ExtArgs>
   attachments?: boolean | Prisma.Board$attachmentsArgs<ExtArgs>
   keyHistories?: boolean | Prisma.Board$keyHistoriesArgs<ExtArgs>
+  notifySettings?: boolean | Prisma.Board$notifySettingsArgs<ExtArgs>
   _count?: boolean | Prisma.BoardCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["board"]>
 
@@ -1410,7 +1510,6 @@ export type BoardSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   name?: boolean
   description?: boolean
   archived?: boolean
-  slackChannelId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   privateOwner?: boolean | Prisma.Board$privateOwnerArgs<ExtArgs>
@@ -1425,7 +1524,6 @@ export type BoardSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   name?: boolean
   description?: boolean
   archived?: boolean
-  slackChannelId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   privateOwner?: boolean | Prisma.Board$privateOwnerArgs<ExtArgs>
@@ -1440,12 +1538,11 @@ export type BoardSelectScalar = {
   name?: boolean
   description?: boolean
   archived?: boolean
-  slackChannelId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type BoardOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "kind" | "privateOwnerId" | "key" | "ticketSeq" | "name" | "description" | "archived" | "slackChannelId" | "createdAt" | "updatedAt", ExtArgs["result"]["board"]>
+export type BoardOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "kind" | "privateOwnerId" | "key" | "ticketSeq" | "name" | "description" | "archived" | "createdAt" | "updatedAt", ExtArgs["result"]["board"]>
 export type BoardInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   privateOwner?: boolean | Prisma.Board$privateOwnerArgs<ExtArgs>
   members?: boolean | Prisma.Board$membersArgs<ExtArgs>
@@ -1454,6 +1551,7 @@ export type BoardInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   tags?: boolean | Prisma.Board$tagsArgs<ExtArgs>
   attachments?: boolean | Prisma.Board$attachmentsArgs<ExtArgs>
   keyHistories?: boolean | Prisma.Board$keyHistoriesArgs<ExtArgs>
+  notifySettings?: boolean | Prisma.Board$notifySettingsArgs<ExtArgs>
   _count?: boolean | Prisma.BoardCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type BoardIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1473,6 +1571,7 @@ export type $BoardPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     tags: Prisma.$TagPayload<ExtArgs>[]
     attachments: Prisma.$AttachmentPayload<ExtArgs>[]
     keyHistories: Prisma.$BoardKeyHistoryPayload<ExtArgs>[]
+    notifySettings: Prisma.$BoardNotifySettingPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1510,11 +1609,6 @@ export type $BoardPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
      * アーカイブ済み。一覧の既定の表示からは外れる
      */
     archived: boolean
-    /**
-     * エージェントの実行結果を通知する Slack チャンネル(`C...`)。null なら通知しない。
-     * Bot が招待されているチャンネルだけを設定画面に出す(users.conversations)
-     */
-    slackChannelId: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["board"]>
@@ -1918,6 +2012,7 @@ export interface Prisma__BoardClient<T, Null = never, ExtArgs extends runtime.Ty
   tags<T extends Prisma.Board$tagsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Board$tagsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TagPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   attachments<T extends Prisma.Board$attachmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Board$attachmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AttachmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   keyHistories<T extends Prisma.Board$keyHistoriesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Board$keyHistoriesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BoardKeyHistoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  notifySettings<T extends Prisma.Board$notifySettingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Board$notifySettingsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BoardNotifySettingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1955,7 +2050,6 @@ export interface BoardFieldRefs {
   readonly name: Prisma.FieldRef<"Board", 'String'>
   readonly description: Prisma.FieldRef<"Board", 'String'>
   readonly archived: Prisma.FieldRef<"Board", 'Boolean'>
-  readonly slackChannelId: Prisma.FieldRef<"Board", 'String'>
   readonly createdAt: Prisma.FieldRef<"Board", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Board", 'DateTime'>
 }
@@ -2519,6 +2613,30 @@ export type Board$keyHistoriesArgs<ExtArgs extends runtime.Types.Extensions.Inte
   take?: number
   skip?: number
   distinct?: Prisma.BoardKeyHistoryScalarFieldEnum | Prisma.BoardKeyHistoryScalarFieldEnum[]
+}
+
+/**
+ * Board.notifySettings
+ */
+export type Board$notifySettingsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the BoardNotifySetting
+   */
+  select?: Prisma.BoardNotifySettingSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the BoardNotifySetting
+   */
+  omit?: Prisma.BoardNotifySettingOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.BoardNotifySettingInclude<ExtArgs> | null
+  where?: Prisma.BoardNotifySettingWhereInput
+  orderBy?: Prisma.BoardNotifySettingOrderByWithRelationInput | Prisma.BoardNotifySettingOrderByWithRelationInput[]
+  cursor?: Prisma.BoardNotifySettingWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.BoardNotifySettingScalarFieldEnum | Prisma.BoardNotifySettingScalarFieldEnum[]
 }
 
 /**

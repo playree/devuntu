@@ -20,7 +20,6 @@ export type ClaimedOutbox = {
   event: NotifyEvent
   actorId: string | null
   targetUserIds: string[]
-  targetSlackChannelIds: string[]
   payload: unknown
 }
 
@@ -69,7 +68,7 @@ export const claimOutbox = (limit: number) => prisma.$queryRaw<ClaimedOutbox[]>`
     LIMIT ${limit}
     FOR UPDATE SKIP LOCKED
   )
-  RETURNING "id", "event", "actorId", "targetUserIds", "targetSlackChannelIds", "payload"
+  RETURNING "id", "event", "actorId", "targetUserIds", "payload"
 `
 
 /** 期限が来た配信を掴む。アウトボックスの内容も一緒に引いて往復を減らす */

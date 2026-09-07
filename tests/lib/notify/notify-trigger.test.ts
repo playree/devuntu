@@ -31,7 +31,12 @@ const findUser = vi.mocked(prisma.user.findUnique)
 const ACTOR = 'user-actor'
 const OTHER = 'user-other'
 
-const ticket = { id: '0198c0de-0000-7000-8000-000000000001', displayId: 'ABC-42', title: 'ログイン画面の崩れ' }
+const ticket = {
+  id: '0198c0de-0000-7000-8000-000000000001',
+  boardId: '0198c0de-0000-7000-8000-0000000000b1',
+  displayId: 'ABC-42',
+  title: 'ログイン画面の崩れ',
+}
 
 /** 投入されたイベントの一覧 */
 const events = () => enqueue.mock.calls.map(([param]) => param.event)
@@ -47,24 +52,42 @@ beforeEach(() => {
 
 describe('メンション: 発火しない条件', () => {
   it('増えたメンションが無ければ投入しない', async () => {
-    await enqueueTicketCreated({ actorId: ACTOR, ticket, assigneeId: null, mentionedUserIds: [] })
-    expect(enqueue).not.toHaveBeenCalled()
+    await enqueueTicketUpdated({
+      actorId: ACTOR,
+      ticket,
+      before: { assigneeId: OTHER, status: 'todo' },
+      after: { assigneeId: OTHER, status: 'todo' },
+      addedMentionUserIds: [],
+    })
+    expect(events()).not.toContain('mention')
   })
 
   it('自分自身へのメンションだけなら投入しない(自分の書き込みで自分に通知が飛ばない)', async () => {
-    await enqueueTicketCreated({ actorId: ACTOR, ticket, assigneeId: null, mentionedUserIds: [ACTOR] })
-    expect(enqueue).not.toHaveBeenCalled()
+    await enqueueTicketUpdated({
+      actorId: ACTOR,
+      ticket,
+      before: { assigneeId: OTHER, status: 'todo' },
+      after: { assigneeId: OTHER, status: 'todo' },
+      addedMentionUserIds: [ACTOR],
+    })
+    expect(events()).not.toContain('mention')
   })
 })
 
 describe('メンション: 投入する内容', () => {
   it('自分自身は宛先から外す', async () => {
-    await enqueueTicketCreated({ actorId: ACTOR, ticket, assigneeId: null, mentionedUserIds: [ACTOR, OTHER] })
+    await enqueueTicketCreated({
+      actorId: ACTOR,
+      ticket,
+      assigneeId: null,
+      status: 'todo',
+      mentionedUserIds: [ACTOR, OTHER],
+    })
     expect(enqueued('mention')?.targetUserIds).toEqual([OTHER])
   })
 
   it('チケット本文のメンションはコメントIDを持たない', async () => {
-    await enqueueTicketCreated({ actorId: ACTOR, ticket, assigneeId: null, mentionedUserIds: [OTHER] })
+    await enqueueTicketCreated({ actorId: ACTOR, ticket, assigneeId: null, status: 'todo', mentionedUserIds: [OTHER] })
     expect(enqueued('mention')?.payload).not.toHaveProperty('commentId')
   })
 
@@ -108,7 +131,7 @@ describe('メンション: 投入する内容', () => {
 })
 
 describe('担当者の指定: 発火しない条件', () => {
-  const state = (assigneeId: string | null) => ({ assigneeId })
+  const state = (assigneeId: string | null) => ({ assigneeId, status: 'todo' }) as const
 
   it('担当者が変わっていなければ投入しない', async () => {
     await enqueueTicketUpdated({
@@ -121,7 +144,7 @@ describe('担当者の指定: 発火しない条件', () => {
     expect(enqueue).not.toHaveBeenCalled()
   })
 
-  it('担当者を外しただけなら投入しない(通知する相手がいない)', async () => {
+  it('担当者を外しただけなら投入しない(知らせる相手も内容も無い)', async () => {
     await enqueueTicketUpdated({
       actorId: ACTOR,
       ticket,
@@ -132,7 +155,7 @@ describe('担当者の指定: 発火しない条件', () => {
     expect(enqueue).not.toHaveBeenCalled()
   })
 
-  it('自分で自分を担当にしたら投入しない', async () => {
+  it('自分で自分を担当にしたら DM の宛先を作らない(チャンネルへは知らせる)', async () => {
     await enqueueTicketUpdated({
       actorId: ACTOR,
       ticket,
@@ -140,10 +163,10 @@ describe('担当者の指定: 発火しない条件', () => {
       after: state(ACTOR),
       addedMentionUserIds: [],
     })
-    expect(enqueue).not.toHaveBeenCalled()
+    expect(enqueued('ticket_assigned')?.targetUserIds).toEqual([])
   })
 
-  it('担当がエージェント用ユーザーなら投入しない(DM を読まない)', async () => {
+  it('担当がエージェント用ユーザーなら DM の宛先を作らない(DM を読まない)', async () => {
     findUser.mockResolvedValue({ name: 'エージェント', isAgent: true } as never)
     await enqueueTicketUpdated({
       actorId: ACTOR,
@@ -152,7 +175,7 @@ describe('担当者の指定: 発火しない条件', () => {
       after: state(OTHER),
       addedMentionUserIds: [],
     })
-    expect(events()).not.toContain('ticket_assigned')
+    expect(enqueued('ticket_assigned')?.targetUserIds).toEqual([])
   })
 
   it('担当ユーザーが引けなければ投入しない', async () => {
@@ -173,8 +196,8 @@ describe('担当者の指定: 投入する内容', () => {
     await enqueueTicketUpdated({
       actorId: ACTOR,
       ticket,
-      before: { assigneeId: null },
-      after: { assigneeId: OTHER },
+      before: { assigneeId: null, status: 'todo' },
+      after: { assigneeId: OTHER, status: 'todo' },
       addedMentionUserIds: [],
     })
     expect(enqueued('ticket_assigned')).toMatchObject({
@@ -186,21 +209,21 @@ describe('担当者の指定: 投入する内容', () => {
   })
 
   it('作成時に担当者を付けるのも「指定された」ものとして扱う', async () => {
-    await enqueueTicketCreated({ actorId: ACTOR, ticket, assigneeId: OTHER, mentionedUserIds: [] })
+    await enqueueTicketCreated({ actorId: ACTOR, ticket, assigneeId: OTHER, status: 'todo', mentionedUserIds: [] })
     expect(enqueued('ticket_assigned')?.targetUserIds).toEqual([OTHER])
   })
 
-  it('作成時に担当者を付けなければ投入しない', async () => {
-    await enqueueTicketCreated({ actorId: ACTOR, ticket, assigneeId: null, mentionedUserIds: [] })
-    expect(enqueue).not.toHaveBeenCalled()
+  it('作成時に担当者を付けなければ担当変更は投入しない', async () => {
+    await enqueueTicketCreated({ actorId: ACTOR, ticket, assigneeId: null, status: 'todo', mentionedUserIds: [] })
+    expect(events()).not.toContain('ticket_assigned')
   })
 
   it('メンションと担当変更は別のイベントとして投入する', async () => {
     await enqueueTicketUpdated({
       actorId: ACTOR,
       ticket,
-      before: { assigneeId: null },
-      after: { assigneeId: OTHER },
+      before: { assigneeId: null, status: 'todo' },
+      after: { assigneeId: OTHER, status: 'todo' },
       addedMentionUserIds: [OTHER],
     })
     expect(events()).toEqual(['mention', 'ticket_assigned'])
@@ -223,7 +246,6 @@ describe('エージェントの実行終了', () => {
   const startedAt = new Date('2026-08-25T00:00:00Z')
 
   const notification = (override: Partial<AgentRunNotification> = {}): AgentRunNotification => ({
-    slackChannelId: 'C0123ABCD',
     runId: 'run1',
     agentName: 'テストエージェント',
     ticket,
@@ -235,19 +257,14 @@ describe('エージェントの実行終了', () => {
     ...override,
   })
 
-  it('チャンネル未設定でも投入する(依頼者への DM は送る)', async () => {
-    await enqueueAgentRunFinished(notification({ slackChannelId: null }))
-    expect(enqueued('agent_run')).toMatchObject({ event: 'agent_run', targetSlackChannelIds: [] })
-  })
-
-  it('チャンネル設定があれば宛先に含める', async () => {
-    await enqueueAgentRunFinished(notification())
-    expect(enqueued('agent_run')?.targetSlackChannelIds).toEqual(['C0123ABCD'])
-  })
-
-  it('DM の宛先はトリガー側では決めない(依頼者は配信直前に解決する)', async () => {
+  it('宛先はトリガー側では決めない(依頼者もチャンネルも配信直前に解決する)', async () => {
     await enqueueAgentRunFinished(notification())
     expect(enqueued('agent_run')?.targetUserIds).toBeUndefined()
+  })
+
+  it('チャネル通知の宛先を引くためにボードをスナップショットする', async () => {
+    await enqueueAgentRunFinished(notification())
+    expect(enqueued('agent_run')?.payload).toMatchObject({ boardId: ticket.boardId })
   })
 
   it('actor を置かない(実行はエージェントだが宛先は依頼者)', async () => {
@@ -272,5 +289,64 @@ describe('エージェントの実行終了', () => {
   it('要約が無ければ抜粋を持たせない', async () => {
     await enqueueAgentRunFinished(notification({ summary: null }))
     expect(enqueued('agent_run')?.payload).not.toHaveProperty('excerpt')
+  })
+})
+
+describe('作成 / 完了: チャネル通知だけのイベント', () => {
+  it('作成すると必ず ticket_created を投入する(宛先はボードの設定次第)', async () => {
+    await enqueueTicketCreated({ actorId: ACTOR, ticket, assigneeId: null, status: 'todo', mentionedUserIds: [] })
+    expect(events()).toEqual(['ticket_created'])
+  })
+
+  it('最初から完了で作ったら完了も投入する', async () => {
+    await enqueueTicketCreated({ actorId: ACTOR, ticket, assigneeId: null, status: 'done', mentionedUserIds: [] })
+    expect(events()).toEqual(['ticket_created', 'ticket_completed'])
+  })
+
+  it('完了レーンへ入った瞬間だけ投入する', async () => {
+    await enqueueTicketUpdated({
+      actorId: ACTOR,
+      ticket,
+      before: { assigneeId: null, status: 'doing' },
+      after: { assigneeId: null, status: 'done' },
+      addedMentionUserIds: [],
+    })
+    expect(events()).toEqual(['ticket_completed'])
+  })
+
+  it('完了のまま更新しても投入しない(並べ替えで通知が飛ばない)', async () => {
+    await enqueueTicketUpdated({
+      actorId: ACTOR,
+      ticket,
+      before: { assigneeId: null, status: 'done' },
+      after: { assigneeId: null, status: 'done' },
+      addedMentionUserIds: [],
+    })
+    expect(enqueue).not.toHaveBeenCalled()
+  })
+
+  it('完了から戻しても投入しない', async () => {
+    await enqueueTicketUpdated({
+      actorId: ACTOR,
+      ticket,
+      before: { assigneeId: null, status: 'done' },
+      after: { assigneeId: null, status: 'todo' },
+      addedMentionUserIds: [],
+    })
+    expect(enqueue).not.toHaveBeenCalled()
+  })
+
+  it('DM の宛先は持たない(個人設定では表せない)', async () => {
+    await enqueueTicketCreated({ actorId: ACTOR, ticket, assigneeId: null, status: 'todo', mentionedUserIds: [] })
+    expect(enqueued('ticket_created')?.targetUserIds).toBeUndefined()
+  })
+
+  it('チャネル通知の宛先を引くためにボードをスナップショットする', async () => {
+    await enqueueTicketCreated({ actorId: ACTOR, ticket, assigneeId: null, status: 'todo', mentionedUserIds: [] })
+    expect(enqueued('ticket_created')?.payload).toMatchObject({
+      boardId: ticket.boardId,
+      displayId: ticket.displayId,
+      fromName: '操作した人',
+    })
   })
 })

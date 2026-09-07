@@ -88,7 +88,7 @@ export const en: LocaleItems = {
   board_members: 'Board Members',
   board_profile: 'Board Overview',
   board_settings: 'Board Settings',
-  board_slack_notify: 'Slack Notification',
+  board_slack_notify: 'Channel notifications',
   buildno: 'Build No',
   busy: 'Busy',
   busy_time_manage: 'Busy Time',
@@ -195,6 +195,8 @@ export const en: LocaleItems = {
   notify_event_agent_run: 'When an agent run finishes',
   notify_event_mention: 'When I am mentioned',
   notify_event_ticket_assigned: 'When I am assigned to a ticket',
+  notify_event_ticket_completed: 'When a ticket is completed',
+  notify_event_ticket_created: 'When a ticket is created',
   notify_settings: 'Notifications',
   oidc_clients: 'OIDC Clients',
   oidc_clients_dynamic: 'Dynamically Registered',
@@ -252,6 +254,7 @@ export const en: LocaleItems = {
   slack_allowed_groups: 'Groups allowed to use Slack',
   slack_enable: 'Enable Slack integration',
   slack_notify_channel: 'Notification channel',
+  slack_notify_events: 'Events to notify',
   slack_notify_channel_none: 'Do not notify',
   slack_workspace: 'Connected workspace',
   server_info: 'Server Info',
@@ -345,7 +348,8 @@ Please copy and use the connection information above.
   msg_archive_board: 'Archiving hides the board from the default board list. Tickets are kept.',
   msg_avatar_desc: 'Setting a custom image stops it from being overwritten by Devuntu on future sign-ins.',
   msg_board_key_change: 'Changing the key means ticket IDs already shared will no longer point to their tickets.',
-  msg_board_slack_notify_desc: 'Posts the result to Slack when an AI agent finishes processing a ticket on this board.',
+  msg_board_slack_notify_desc:
+    'Posts the selected events on this board to a Slack channel. Choose both a channel and the events.',
   msg_calendar_share_desc:
     'When enabled, you can share your availability with external people via a share URL. Event titles and details are not shown; only busy time slots are made public.',
   msg_calendar_share_disabled: 'Sharing disabled. The share URL is no longer valid.',
@@ -478,6 +482,9 @@ Expiration time: 5 minutes
   notify_msg_mentioned: '${from} mentioned you',
   notify_msg_mentioned_comment: '${from} mentioned you in a comment',
   notify_msg_ticket_assigned: '${from} assigned this ticket to you',
+  notify_msg_ticket_assigned_channel: '${from} assigned this ticket to ${assignee}',
+  notify_msg_ticket_completed: '${from} completed this ticket',
+  notify_msg_ticket_created: '${from} created this ticket',
 
   slack_msg_open_ticket: 'Open ticket',
 

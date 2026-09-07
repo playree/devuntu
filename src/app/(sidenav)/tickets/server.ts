@@ -250,8 +250,9 @@ export const createTicket = safeAuthAction
     })
     await enqueueTicketCreated({
       actorId: user.id,
-      ticket: { id: ticket.id, displayId: ticket.displayId, title: ticket.title },
+      ticket: { id: ticket.id, boardId, displayId: ticket.displayId, title: ticket.title },
       assigneeId: assigneeId ?? null,
+      status,
       mentionedUserIds,
     })
 

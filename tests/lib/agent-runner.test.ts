@@ -53,12 +53,13 @@ const agentRun = vi.mocked(prisma.agentRun)
 
 const notifyMock = vi.mocked(enqueueAgentRunFinished)
 
-/** 通知の宛先を引くためにチケットへ足した select。既定は通知先が設定済みのボード */
-const notifyTicket = (slackChannelId: string | null = 'C0123ABCD') => ({
+/** 通知の宛先と文面を組み立てるためにチケットへ足した select */
+const notifyTicket = () => ({
   id: 't1',
+  boardId: 'b1',
   number: 42,
   title: 'テストチケット',
-  board: { key: 'ABC', slackChannelId },
+  board: { key: 'ABC' },
 })
 
 const runner = (override: Partial<AgentRunnerRow> = {}): AgentRunnerRow => ({
@@ -290,7 +291,7 @@ describe('failStaleAgentRuns', () => {
     })
   })
 
-  it('時間切れは失敗としてボードのチャンネルへ通知する', async () => {
+  it('時間切れは失敗として通知する', async () => {
     agentRun.findMany.mockResolvedValueOnce([staleRun()] as never)
 
     await failStaleAgentRuns('r1')
@@ -298,7 +299,6 @@ describe('failStaleAgentRuns', () => {
     expect(notifyMock).toHaveBeenCalledWith(
       expect.objectContaining({
         runId: 'run1',
-        slackChannelId: 'C0123ABCD',
         ticket: expect.objectContaining({ displayId: 'ABC-42' }),
         status: 'failed',
         summary: 'timeout',

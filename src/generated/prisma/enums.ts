@@ -111,7 +111,9 @@ export type TicketCommentType = (typeof TicketCommentType)[keyof typeof TicketCo
 export const NotifyEvent = {
   mention: 'mention',
   agent_run: 'agent_run',
-  ticket_assigned: 'ticket_assigned'
+  ticket_assigned: 'ticket_assigned',
+  ticket_created: 'ticket_created',
+  ticket_completed: 'ticket_completed'
 } as const
 
 export type NotifyEvent = (typeof NotifyEvent)[keyof typeof NotifyEvent]

@@ -1224,19 +1224,18 @@ model Board {
   archived Boolean @default(false)
 
   /// エージェントの実行結果を通知する Slack チャンネル(`C...`)。null なら通知しない。
-  /// Bot が招待されているチャンネルだけを設定画面に出す(users.conversations)
-  slackChannelId String?
 
   // メタデータ
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  members      BoardMember[]
-  groups       BoardGroup[]
-  tickets      Ticket[]
-  tags         Tag[]
-  attachments  Attachment[]
-  keyHistories BoardKeyHistory[]
+  members        BoardMember[]
+  groups         BoardGroup[]
+  tickets        Ticket[]
+  tags           Tag[]
+  attachments    Attachment[]
+  keyHistories   BoardKeyHistory[]
+  notifySettings BoardNotifySetting[]
 
   @@map("board")
 }
@@ -1477,6 +1476,12 @@ enum NotifyEvent {
 
   /// チケットの担当者が変わった(DM は新しい担当者へ)
   ticket_assigned
+
+  /// チケットが作成された
+  ticket_created
+
+  /// チケットが完了した(status = done)
+  ticket_completed
 }
 
 /// 通知チャネル。UserNotifySetting の列名と一致させる(NOTIFY_CHANNELS)
@@ -1525,6 +1530,34 @@ model UserNotifySetting {
   @@map("user_notify_setting")
 }
 
+/// ボードごとのチャネル通知設定。
+///
+/// 行が無いイベントは通知しない(UserNotifySetting と同じオプトイン方式)。
+/// 宛先がユーザーではないので、ユーザーごとの通知設定とは独立している。
+/// イベントごとに別のチャンネルを指定できる形にしてあるが、画面では「通知先1つ + イベントの ON/OFF」
+/// として扱う(イベント別チャンネルが必要になってもマイグレーションが要らない)。
+model BoardNotifySetting {
+  id String @id @default(uuid(7))
+
+  /// 設定の持ち主
+  boardId String
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  /// 通知の対象イベント。チャネル通知を持つイベント(CHANNEL_NOTIFY_EVENTS)に限る
+  event NotifyEvent
+
+  /// 投稿先の Slack チャンネル(`C...` / `G...`)
+  slackChannelId String
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // (boardId, event) の @@unique が boardId 先頭の索引を兼ねる
+  @@unique([boardId, event])
+  @@map("board_notify_setting")
+}
+
 /// 通知の発生記録(アウトボックス)。
 ///
 /// トリガー側はチケット操作と同じトランザクションでここへ1行書くだけで済み、
@@ -1543,9 +1576,6 @@ model NotifyOutbox {
   /// トリガー側でしか決められない DM の宛先(増えたメンションなど)。
   /// 規則で導ける宛先はワーカーが解決する
   targetUserIds String[] @default([])
-
-  /// トリガー側でしか決められないチャンネルの宛先。DM だけの通知では空
-  targetSlackChannelIds String[] @default([])
 
   /// 文面の組み立てに必要な値。イベントごとに形が違うので Json で持つ(`notify-payload.ts` で検証)。
   /// チケットが後から消えても通知が壊れないよう、表示IDや件名はここへスナップショットする

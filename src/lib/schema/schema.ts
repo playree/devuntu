@@ -24,7 +24,7 @@ import {
   TICKET_SORT_COLUMNS,
   TICKET_STATUSES,
 } from '../board/task'
-import { DM_NOTIFY_EVENTS } from '../notify/notify'
+import { CHANNEL_NOTIFY_EVENTS, DM_NOTIFY_EVENTS } from '../notify/notify'
 import { SLACK_CHANNEL_ID_PATTERN } from '../slack/slack'
 import { TOKEN_EXPIRES } from '../token-expires'
 
@@ -549,17 +549,21 @@ export const scSetBoardArchived = z.object({
 export type SetBoardArchived = z.infer<typeof scSetBoardArchived>
 
 /**
- * エージェントの実行結果を通知する Slack チャンネル。
+ * ボードのチャネル通知(通知先の Slack チャンネル + 通知するイベント)。
  * アーカイブと同じく、プロフィール編集とは経路を分けて他の項目を書き戻さないようにする。
  *
  * 空文字は「通知しない」(= null へ正規化)。実在の確認は Bot が参加しているチャンネルの
  * 一覧と突き合わせて Server Action 側で行う。
+ *
+ * イベントは常に全部まとめて受け取り、サーバー側に部分更新の分岐を作らない。
+ * 宛先が個人の DM だけのイベントはチャンネルへ出せないので受け付けない。
  */
-export const scSetBoardSlackChannel = z.object({
+export const scSetBoardNotifySetting = z.object({
   id: z.uuidv7(),
   slackChannelId: z.union([z.literal(''), z.string().regex(SLACK_CHANNEL_ID_PATTERN, el('@invalid_slack_channel'))]),
+  events: z.array(z.enum(CHANNEL_NOTIFY_EVENTS)),
 })
-export type SetBoardSlackChannel = z.infer<typeof scSetBoardSlackChannel>
+export type SetBoardNotifySetting = z.infer<typeof scSetBoardNotifySetting>
 
 /**
  * ユーザー単位のアサインをメンバー 1 人ずつ追加 / 変更する(owner も実行可能)。

@@ -1,18 +1,27 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
+import { FlexCol } from '@/components/general/flex'
 import { GridBox } from '@/components/general/grid'
 import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { SingleSelectField } from '@/components/general/select'
+import { SwitchField } from '@/components/general/switch'
 import { CheckIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction, useActionData } from '@/lib/action/action-client'
-import { scSetBoardSlackChannel, SetBoardSlackChannel } from '@/lib/schema/schema'
+import { CHANNEL_NOTIFY_EVENTS } from '@/lib/notify/notify'
+import { scSetBoardNotifySetting, SetBoardNotifySetting } from '@/lib/schema/schema'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FC, useMemo } from 'react'
 import { Controller, useForm } from 'react-hook-form'
-import { getBoardSlackChannels, GetBoardSlackChannelsReturnType, setBoardSlackChannel } from './server'
+import {
+  getBoardNotify,
+  GetBoardNotifyReturnType,
+  getBoardSlackChannels,
+  GetBoardSlackChannelsReturnType,
+  setBoardNotify,
+} from './server'
 
 /**
  * 「通知しない」を表す選択肢のキー。
@@ -26,9 +35,9 @@ const NONE_KEY = 'none'
 /** 保存する値(空文字 = 通知しない)を選択肢のキーへ寄せる */
 const toKey = (slackChannelId: string) => slackChannelId || NONE_KEY
 
-const ChannelForm: FC<{
+const NotifyForm: FC<{
   boardId: string
-  current: string | null
+  current: NonNullable<GetBoardNotifyReturnType>
   channels: NonNullable<GetBoardSlackChannelsReturnType>
   refresh: () => void
 }> = ({ boardId, current, channels, refresh }) => {
@@ -43,30 +52,32 @@ const ChannelForm: FC<{
     )
     return {
       [NONE_KEY]: t('slack_notify_channel_none'),
-      ...(current && !known[current] ? { [current]: current } : {}),
+      ...(current.slackChannelId && !known[current.slackChannelId]
+        ? { [current.slackChannelId]: current.slackChannelId }
+        : {}),
       ...known,
     }
-  }, [channels, current, t])
+  }, [channels, current.slackChannelId, t])
 
   const {
     control,
     handleSubmit,
     reset,
     formState: { isSubmitting, errors },
-  } = useForm<SetBoardSlackChannel>({
-    resolver: zodResolver(scSetBoardSlackChannel),
+  } = useForm<SetBoardNotifySetting>({
+    resolver: zodResolver(scSetBoardNotifySetting),
     mode: 'onChange',
-    defaultValues: { id: boardId, slackChannelId: current ?? '' },
+    defaultValues: { id: boardId, slackChannelId: current.slackChannelId ?? '', events: [...current.events] },
   })
 
   return (
     <form
       onSubmit={handleSubmit(async (req) => {
-        await parseAction(setBoardSlackChannel(req))
+        await parseAction(setBoardNotify(req))
         notify.success(t('msg_saved'))
         // 再取得しても useForm の defaultValues は追従しないので、保存値で dirty を落としておく
         reset(req)
-        // 変わったのは現在値だけでチャンネルの一覧は変わらないので、取り直すのはボード側
+        // 変わったのは現在値だけでチャンネルの一覧は変わらないので、取り直すのはこのセクション
         refresh()
       })}
     >
@@ -95,6 +106,31 @@ const ChannelForm: FC<{
             )}
           />
         </div>
+        <div className='col-span-12'>
+          <Controller
+            control={control}
+            name='events'
+            render={({ field: { value, onChange } }) => (
+              // スマホでは縦積みになるよう、横並びにせず1列で並べる
+              <FlexCol className='gap-2'>
+                <div className='text-sm font-bold'>{t('slack_notify_events')}</div>
+                {CHANNEL_NOTIFY_EVENTS.map((event) => (
+                  <SwitchField
+                    key={event}
+                    id={`board_notify_${event}`}
+                    label={t(`notify_event_${event}`)}
+                    isSelected={value.includes(event)}
+                    onChange={(selected) => {
+                      // 保存の並びを画面の並びに揃える(サーバー側で並べ直さずに済む)
+                      const next = selected ? [...value, event] : value.filter((item) => item !== event)
+                      onChange(CHANNEL_NOTIFY_EVENTS.filter((item) => next.includes(item)))
+                    }}
+                  />
+                ))}
+              </FlexCol>
+            )}
+          />
+        </div>
         <div className='col-span-12 flex items-center gap-2'>
           <MultiButton className='ml-auto' type='submit' size='sm' icon={<CheckIcon />} isPending={isSubmitting}>
             {t('save')}
@@ -106,27 +142,26 @@ const ChannelForm: FC<{
 }
 
 /**
- * エージェントの実行結果を通知する Slack チャンネルの設定。
+ * ボードのチャネル通知の設定(通知先チャンネル + 通知するイベント)。
  *
  * 一覧には Bot が参加しているチャンネルだけが出る。出てこない = 招待されていない、と
  * 1 対 1 で対応するので、空のときは選択させずに招待を案内する。
  */
-export const BoardSlackNotify: FC<{
-  boardId: string
-  slackChannelId: string | null
-  /** 保存後にボード詳細(= 現在値)を取り直す。ローディング表示に戻さない refresh を渡すこと */
-  refresh: () => void
-}> = ({ boardId, slackChannelId, refresh }) => {
+export const BoardChannelNotify: FC<{ boardId: string }> = ({ boardId }) => {
   const { t } = useLocale()
   const { data: channels, isLoading } = useActionData(() => getBoardSlackChannels({ id: boardId }))
+  const { data: current, isLoading: isCurrentLoading, refresh } = useActionData(() => getBoardNotify({ id: boardId }))
 
-  if (isLoading) {
+  if (isLoading || isCurrentLoading) {
     return <PanelSkeleton />
   }
   // 取得失敗(null)も空も、利用者から見れば「選べない」なので同じ案内に寄せる
   if (!channels || channels.length === 0) {
     return <NoticePanel className='text-xs'>{t('msg_slack_channel_empty')}</NoticePanel>
   }
+  if (!current) {
+    return null
+  }
 
-  return <ChannelForm boardId={boardId} current={slackChannelId} channels={channels} refresh={refresh} />
+  return <NotifyForm boardId={boardId} current={current} channels={channels} refresh={refresh} />
 }

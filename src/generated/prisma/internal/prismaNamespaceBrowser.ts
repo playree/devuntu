@@ -90,6 +90,7 @@ export const ModelName = {
   Ticket: 'Ticket',
   TicketComment: 'TicketComment',
   UserNotifySetting: 'UserNotifySetting',
+  BoardNotifySetting: 'BoardNotifySetting',
   NotifyOutbox: 'NotifyOutbox',
   NotifyDelivery: 'NotifyDelivery'
 } as const
@@ -576,7 +577,6 @@ export const BoardScalarFieldEnum = {
   name: 'name',
   description: 'description',
   archived: 'archived',
-  slackChannelId: 'slackChannelId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -688,12 +688,23 @@ export const UserNotifySettingScalarFieldEnum = {
 export type UserNotifySettingScalarFieldEnum = (typeof UserNotifySettingScalarFieldEnum)[keyof typeof UserNotifySettingScalarFieldEnum]
 
 
+export const BoardNotifySettingScalarFieldEnum = {
+  id: 'id',
+  boardId: 'boardId',
+  event: 'event',
+  slackChannelId: 'slackChannelId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BoardNotifySettingScalarFieldEnum = (typeof BoardNotifySettingScalarFieldEnum)[keyof typeof BoardNotifySettingScalarFieldEnum]
+
+
 export const NotifyOutboxScalarFieldEnum = {
   id: 'id',
   event: 'event',
   actorId: 'actorId',
   targetUserIds: 'targetUserIds',
-  targetSlackChannelIds: 'targetSlackChannelIds',
   payload: 'payload',
   status: 'status',
   attempts: 'attempts',

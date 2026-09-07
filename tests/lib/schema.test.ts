@@ -11,7 +11,7 @@ import {
   scCreateUser,
   scMoveTicket,
   scPatchTicket,
-  scSetBoardSlackChannel,
+  scSetBoardNotifySetting,
   scTicketSearch,
   scUpdateIntegrationSettings,
   scUpdateNotifySetting,
@@ -239,18 +239,34 @@ describe('scUpdateNotifySetting: 通知イベントは enum で受ける', () =>
   })
 })
 
-describe('scSetBoardSlackChannel: 通知先チャンネル', () => {
+describe('scSetBoardNotifySetting: ボードのチャネル通知', () => {
+  const setting = (override: object) => ({ id: boardId, slackChannelId: 'C0123ABCD', events: [], ...override })
+
   it('空文字は「通知しない」として通す(Server Action 側で null へ正規化する)', () => {
-    expect(scSetBoardSlackChannel.safeParse({ id: boardId, slackChannelId: '' }).success).toBe(true)
+    expect(scSetBoardNotifySetting.safeParse(setting({ slackChannelId: '' })).success).toBe(true)
   })
 
   it('チャンネルIDを通す', () => {
-    expect(scSetBoardSlackChannel.safeParse({ id: boardId, slackChannelId: 'C0123ABCD' }).success).toBe(true)
+    expect(scSetBoardNotifySetting.safeParse(setting({})).success).toBe(true)
   })
 
   it('チャンネル名やユーザーIDは弾く', () => {
     // 実在の確認は一覧との突き合わせで行うが、明らかに宛先の種類が違うものは入口で落とす
-    expect(scSetBoardSlackChannel.safeParse({ id: boardId, slackChannelId: '#general' }).success).toBe(false)
-    expect(scSetBoardSlackChannel.safeParse({ id: boardId, slackChannelId: 'U0123ABCD' }).success).toBe(false)
+    expect(scSetBoardNotifySetting.safeParse(setting({ slackChannelId: '#general' })).success).toBe(false)
+    expect(scSetBoardNotifySetting.safeParse(setting({ slackChannelId: 'U0123ABCD' })).success).toBe(false)
+  })
+
+  it('チャネル通知を持つイベントを通す', () => {
+    expect(scSetBoardNotifySetting.safeParse(setting({ events: ['ticket_created', 'agent_run'] })).success).toBe(true)
+  })
+
+  it('DM だけのイベントは弾く(チャンネルへ出せない)', () => {
+    // CHANNEL_NOTIFY_EVENTS から生成しているので、対象を増やせば自動で追従する
+    expect(scSetBoardNotifySetting.safeParse(setting({ events: ['mention'] })).success).toBe(false)
+  })
+
+  it('イベントの指定漏れは弾く', () => {
+    // 部分更新を許すとサーバー側に「未指定なら据え置き」の分岐が必要になるので必須にしている
+    expect(scSetBoardNotifySetting.safeParse({ id: boardId, slackChannelId: 'C0123ABCD' }).success).toBe(false)
   })
 })

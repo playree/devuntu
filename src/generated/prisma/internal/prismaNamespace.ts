@@ -436,6 +436,7 @@ export const ModelName = {
   Ticket: 'Ticket',
   TicketComment: 'TicketComment',
   UserNotifySetting: 'UserNotifySetting',
+  BoardNotifySetting: 'BoardNotifySetting',
   NotifyOutbox: 'NotifyOutbox',
   NotifyDelivery: 'NotifyDelivery'
 } as const
@@ -453,7 +454,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "group" | "userGroup" | "calendarShare" | "calendarBusyTime" | "board" | "boardKeyHistory" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "ticket" | "ticketComment" | "userNotifySetting" | "notifyOutbox" | "notifyDelivery"
+    modelProps: "user" | "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "group" | "userGroup" | "calendarShare" | "calendarBusyTime" | "board" | "boardKeyHistory" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "ticket" | "ticketComment" | "userNotifySetting" | "boardNotifySetting" | "notifyOutbox" | "notifyDelivery"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -3343,6 +3344,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    BoardNotifySetting: {
+      payload: Prisma.$BoardNotifySettingPayload<ExtArgs>
+      fields: Prisma.BoardNotifySettingFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BoardNotifySettingFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNotifySettingPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BoardNotifySettingFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNotifySettingPayload>
+        }
+        findFirst: {
+          args: Prisma.BoardNotifySettingFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNotifySettingPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BoardNotifySettingFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNotifySettingPayload>
+        }
+        findMany: {
+          args: Prisma.BoardNotifySettingFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNotifySettingPayload>[]
+        }
+        create: {
+          args: Prisma.BoardNotifySettingCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNotifySettingPayload>
+        }
+        createMany: {
+          args: Prisma.BoardNotifySettingCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BoardNotifySettingCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNotifySettingPayload>[]
+        }
+        delete: {
+          args: Prisma.BoardNotifySettingDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNotifySettingPayload>
+        }
+        update: {
+          args: Prisma.BoardNotifySettingUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNotifySettingPayload>
+        }
+        deleteMany: {
+          args: Prisma.BoardNotifySettingDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BoardNotifySettingUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BoardNotifySettingUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNotifySettingPayload>[]
+        }
+        upsert: {
+          args: Prisma.BoardNotifySettingUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNotifySettingPayload>
+        }
+        aggregate: {
+          args: Prisma.BoardNotifySettingAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBoardNotifySetting>
+        }
+        groupBy: {
+          args: Prisma.BoardNotifySettingGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BoardNotifySettingGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BoardNotifySettingCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BoardNotifySettingCountAggregateOutputType> | number
+        }
+      }
+    }
     NotifyOutbox: {
       payload: Prisma.$NotifyOutboxPayload<ExtArgs>
       fields: Prisma.NotifyOutboxFieldRefs
@@ -3996,7 +4071,6 @@ export const BoardScalarFieldEnum = {
   name: 'name',
   description: 'description',
   archived: 'archived',
-  slackChannelId: 'slackChannelId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -4108,12 +4182,23 @@ export const UserNotifySettingScalarFieldEnum = {
 export type UserNotifySettingScalarFieldEnum = (typeof UserNotifySettingScalarFieldEnum)[keyof typeof UserNotifySettingScalarFieldEnum]
 
 
+export const BoardNotifySettingScalarFieldEnum = {
+  id: 'id',
+  boardId: 'boardId',
+  event: 'event',
+  slackChannelId: 'slackChannelId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BoardNotifySettingScalarFieldEnum = (typeof BoardNotifySettingScalarFieldEnum)[keyof typeof BoardNotifySettingScalarFieldEnum]
+
+
 export const NotifyOutboxScalarFieldEnum = {
   id: 'id',
   event: 'event',
   actorId: 'actorId',
   targetUserIds: 'targetUserIds',
-  targetSlackChannelIds: 'targetSlackChannelIds',
   payload: 'payload',
   status: 'status',
   attempts: 'attempts',
@@ -4643,6 +4728,7 @@ export type GlobalOmitConfig = {
   ticket?: Prisma.TicketOmit
   ticketComment?: Prisma.TicketCommentOmit
   userNotifySetting?: Prisma.UserNotifySettingOmit
+  boardNotifySetting?: Prisma.BoardNotifySettingOmit
   notifyOutbox?: Prisma.NotifyOutboxOmit
   notifyDelivery?: Prisma.NotifyDeliveryOmit
 }

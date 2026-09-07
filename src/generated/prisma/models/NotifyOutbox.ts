@@ -63,7 +63,6 @@ export type NotifyOutboxCountAggregateOutputType = {
   event: number
   actorId: number
   targetUserIds: number
-  targetSlackChannelIds: number
   payload: number
   status: number
   attempts: number
@@ -106,7 +105,6 @@ export type NotifyOutboxCountAggregateInputType = {
   event?: true
   actorId?: true
   targetUserIds?: true
-  targetSlackChannelIds?: true
   payload?: true
   status?: true
   attempts?: true
@@ -206,7 +204,6 @@ export type NotifyOutboxGroupByOutputType = {
   event: $Enums.NotifyEvent
   actorId: string | null
   targetUserIds: string[]
-  targetSlackChannelIds: string[]
   payload: runtime.JsonValue
   status: $Enums.NotifyJobStatus
   attempts: number
@@ -242,7 +239,6 @@ export type NotifyOutboxWhereInput = {
   event?: Prisma.EnumNotifyEventFilter<"NotifyOutbox"> | $Enums.NotifyEvent
   actorId?: Prisma.StringNullableFilter<"NotifyOutbox"> | string | null
   targetUserIds?: Prisma.StringNullableListFilter<"NotifyOutbox">
-  targetSlackChannelIds?: Prisma.StringNullableListFilter<"NotifyOutbox">
   payload?: Prisma.JsonFilter<"NotifyOutbox">
   status?: Prisma.EnumNotifyJobStatusFilter<"NotifyOutbox"> | $Enums.NotifyJobStatus
   attempts?: Prisma.IntFilter<"NotifyOutbox"> | number
@@ -257,7 +253,6 @@ export type NotifyOutboxOrderByWithRelationInput = {
   event?: Prisma.SortOrder
   actorId?: Prisma.SortOrderInput | Prisma.SortOrder
   targetUserIds?: Prisma.SortOrder
-  targetSlackChannelIds?: Prisma.SortOrder
   payload?: Prisma.SortOrder
   status?: Prisma.SortOrder
   attempts?: Prisma.SortOrder
@@ -275,7 +270,6 @@ export type NotifyOutboxWhereUniqueInput = Prisma.AtLeast<{
   event?: Prisma.EnumNotifyEventFilter<"NotifyOutbox"> | $Enums.NotifyEvent
   actorId?: Prisma.StringNullableFilter<"NotifyOutbox"> | string | null
   targetUserIds?: Prisma.StringNullableListFilter<"NotifyOutbox">
-  targetSlackChannelIds?: Prisma.StringNullableListFilter<"NotifyOutbox">
   payload?: Prisma.JsonFilter<"NotifyOutbox">
   status?: Prisma.EnumNotifyJobStatusFilter<"NotifyOutbox"> | $Enums.NotifyJobStatus
   attempts?: Prisma.IntFilter<"NotifyOutbox"> | number
@@ -290,7 +284,6 @@ export type NotifyOutboxOrderByWithAggregationInput = {
   event?: Prisma.SortOrder
   actorId?: Prisma.SortOrderInput | Prisma.SortOrder
   targetUserIds?: Prisma.SortOrder
-  targetSlackChannelIds?: Prisma.SortOrder
   payload?: Prisma.SortOrder
   status?: Prisma.SortOrder
   attempts?: Prisma.SortOrder
@@ -311,7 +304,6 @@ export type NotifyOutboxScalarWhereWithAggregatesInput = {
   event?: Prisma.EnumNotifyEventWithAggregatesFilter<"NotifyOutbox"> | $Enums.NotifyEvent
   actorId?: Prisma.StringNullableWithAggregatesFilter<"NotifyOutbox"> | string | null
   targetUserIds?: Prisma.StringNullableListFilter<"NotifyOutbox">
-  targetSlackChannelIds?: Prisma.StringNullableListFilter<"NotifyOutbox">
   payload?: Prisma.JsonWithAggregatesFilter<"NotifyOutbox">
   status?: Prisma.EnumNotifyJobStatusWithAggregatesFilter<"NotifyOutbox"> | $Enums.NotifyJobStatus
   attempts?: Prisma.IntWithAggregatesFilter<"NotifyOutbox"> | number
@@ -323,7 +315,6 @@ export type NotifyOutboxCreateInput = {
   id?: string
   event: $Enums.NotifyEvent
   targetUserIds?: Prisma.NotifyOutboxCreatetargetUserIdsInput | string[]
-  targetSlackChannelIds?: Prisma.NotifyOutboxCreatetargetSlackChannelIdsInput | string[]
   payload: Prisma.JsonNullValueInput | runtime.InputJsonValue
   status?: $Enums.NotifyJobStatus
   attempts?: number
@@ -338,7 +329,6 @@ export type NotifyOutboxUncheckedCreateInput = {
   event: $Enums.NotifyEvent
   actorId?: string | null
   targetUserIds?: Prisma.NotifyOutboxCreatetargetUserIdsInput | string[]
-  targetSlackChannelIds?: Prisma.NotifyOutboxCreatetargetSlackChannelIdsInput | string[]
   payload: Prisma.JsonNullValueInput | runtime.InputJsonValue
   status?: $Enums.NotifyJobStatus
   attempts?: number
@@ -351,7 +341,6 @@ export type NotifyOutboxUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   event?: Prisma.EnumNotifyEventFieldUpdateOperationsInput | $Enums.NotifyEvent
   targetUserIds?: Prisma.NotifyOutboxUpdatetargetUserIdsInput | string[]
-  targetSlackChannelIds?: Prisma.NotifyOutboxUpdatetargetSlackChannelIdsInput | string[]
   payload?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   status?: Prisma.EnumNotifyJobStatusFieldUpdateOperationsInput | $Enums.NotifyJobStatus
   attempts?: Prisma.IntFieldUpdateOperationsInput | number
@@ -366,7 +355,6 @@ export type NotifyOutboxUncheckedUpdateInput = {
   event?: Prisma.EnumNotifyEventFieldUpdateOperationsInput | $Enums.NotifyEvent
   actorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetUserIds?: Prisma.NotifyOutboxUpdatetargetUserIdsInput | string[]
-  targetSlackChannelIds?: Prisma.NotifyOutboxUpdatetargetSlackChannelIdsInput | string[]
   payload?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   status?: Prisma.EnumNotifyJobStatusFieldUpdateOperationsInput | $Enums.NotifyJobStatus
   attempts?: Prisma.IntFieldUpdateOperationsInput | number
@@ -380,7 +368,6 @@ export type NotifyOutboxCreateManyInput = {
   event: $Enums.NotifyEvent
   actorId?: string | null
   targetUserIds?: Prisma.NotifyOutboxCreatetargetUserIdsInput | string[]
-  targetSlackChannelIds?: Prisma.NotifyOutboxCreatetargetSlackChannelIdsInput | string[]
   payload: Prisma.JsonNullValueInput | runtime.InputJsonValue
   status?: $Enums.NotifyJobStatus
   attempts?: number
@@ -392,7 +379,6 @@ export type NotifyOutboxUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   event?: Prisma.EnumNotifyEventFieldUpdateOperationsInput | $Enums.NotifyEvent
   targetUserIds?: Prisma.NotifyOutboxUpdatetargetUserIdsInput | string[]
-  targetSlackChannelIds?: Prisma.NotifyOutboxUpdatetargetSlackChannelIdsInput | string[]
   payload?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   status?: Prisma.EnumNotifyJobStatusFieldUpdateOperationsInput | $Enums.NotifyJobStatus
   attempts?: Prisma.IntFieldUpdateOperationsInput | number
@@ -405,7 +391,6 @@ export type NotifyOutboxUncheckedUpdateManyInput = {
   event?: Prisma.EnumNotifyEventFieldUpdateOperationsInput | $Enums.NotifyEvent
   actorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetUserIds?: Prisma.NotifyOutboxUpdatetargetUserIdsInput | string[]
-  targetSlackChannelIds?: Prisma.NotifyOutboxUpdatetargetSlackChannelIdsInput | string[]
   payload?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   status?: Prisma.EnumNotifyJobStatusFieldUpdateOperationsInput | $Enums.NotifyJobStatus
   attempts?: Prisma.IntFieldUpdateOperationsInput | number
@@ -428,7 +413,6 @@ export type NotifyOutboxCountOrderByAggregateInput = {
   event?: Prisma.SortOrder
   actorId?: Prisma.SortOrder
   targetUserIds?: Prisma.SortOrder
-  targetSlackChannelIds?: Prisma.SortOrder
   payload?: Prisma.SortOrder
   status?: Prisma.SortOrder
   attempts?: Prisma.SortOrder
@@ -515,16 +499,7 @@ export type NotifyOutboxCreatetargetUserIdsInput = {
   set: string[]
 }
 
-export type NotifyOutboxCreatetargetSlackChannelIdsInput = {
-  set: string[]
-}
-
 export type NotifyOutboxUpdatetargetUserIdsInput = {
-  set?: string[]
-  push?: string | string[]
-}
-
-export type NotifyOutboxUpdatetargetSlackChannelIdsInput = {
   set?: string[]
   push?: string | string[]
 }
@@ -551,7 +526,6 @@ export type NotifyOutboxCreateWithoutActorInput = {
   id?: string
   event: $Enums.NotifyEvent
   targetUserIds?: Prisma.NotifyOutboxCreatetargetUserIdsInput | string[]
-  targetSlackChannelIds?: Prisma.NotifyOutboxCreatetargetSlackChannelIdsInput | string[]
   payload: Prisma.JsonNullValueInput | runtime.InputJsonValue
   status?: $Enums.NotifyJobStatus
   attempts?: number
@@ -564,7 +538,6 @@ export type NotifyOutboxUncheckedCreateWithoutActorInput = {
   id?: string
   event: $Enums.NotifyEvent
   targetUserIds?: Prisma.NotifyOutboxCreatetargetUserIdsInput | string[]
-  targetSlackChannelIds?: Prisma.NotifyOutboxCreatetargetSlackChannelIdsInput | string[]
   payload: Prisma.JsonNullValueInput | runtime.InputJsonValue
   status?: $Enums.NotifyJobStatus
   attempts?: number
@@ -607,7 +580,6 @@ export type NotifyOutboxScalarWhereInput = {
   event?: Prisma.EnumNotifyEventFilter<"NotifyOutbox"> | $Enums.NotifyEvent
   actorId?: Prisma.StringNullableFilter<"NotifyOutbox"> | string | null
   targetUserIds?: Prisma.StringNullableListFilter<"NotifyOutbox">
-  targetSlackChannelIds?: Prisma.StringNullableListFilter<"NotifyOutbox">
   payload?: Prisma.JsonFilter<"NotifyOutbox">
   status?: Prisma.EnumNotifyJobStatusFilter<"NotifyOutbox"> | $Enums.NotifyJobStatus
   attempts?: Prisma.IntFilter<"NotifyOutbox"> | number
@@ -619,7 +591,6 @@ export type NotifyOutboxCreateWithoutDeliveriesInput = {
   id?: string
   event: $Enums.NotifyEvent
   targetUserIds?: Prisma.NotifyOutboxCreatetargetUserIdsInput | string[]
-  targetSlackChannelIds?: Prisma.NotifyOutboxCreatetargetSlackChannelIdsInput | string[]
   payload: Prisma.JsonNullValueInput | runtime.InputJsonValue
   status?: $Enums.NotifyJobStatus
   attempts?: number
@@ -633,7 +604,6 @@ export type NotifyOutboxUncheckedCreateWithoutDeliveriesInput = {
   event: $Enums.NotifyEvent
   actorId?: string | null
   targetUserIds?: Prisma.NotifyOutboxCreatetargetUserIdsInput | string[]
-  targetSlackChannelIds?: Prisma.NotifyOutboxCreatetargetSlackChannelIdsInput | string[]
   payload: Prisma.JsonNullValueInput | runtime.InputJsonValue
   status?: $Enums.NotifyJobStatus
   attempts?: number
@@ -661,7 +631,6 @@ export type NotifyOutboxUpdateWithoutDeliveriesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   event?: Prisma.EnumNotifyEventFieldUpdateOperationsInput | $Enums.NotifyEvent
   targetUserIds?: Prisma.NotifyOutboxUpdatetargetUserIdsInput | string[]
-  targetSlackChannelIds?: Prisma.NotifyOutboxUpdatetargetSlackChannelIdsInput | string[]
   payload?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   status?: Prisma.EnumNotifyJobStatusFieldUpdateOperationsInput | $Enums.NotifyJobStatus
   attempts?: Prisma.IntFieldUpdateOperationsInput | number
@@ -675,7 +644,6 @@ export type NotifyOutboxUncheckedUpdateWithoutDeliveriesInput = {
   event?: Prisma.EnumNotifyEventFieldUpdateOperationsInput | $Enums.NotifyEvent
   actorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetUserIds?: Prisma.NotifyOutboxUpdatetargetUserIdsInput | string[]
-  targetSlackChannelIds?: Prisma.NotifyOutboxUpdatetargetSlackChannelIdsInput | string[]
   payload?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   status?: Prisma.EnumNotifyJobStatusFieldUpdateOperationsInput | $Enums.NotifyJobStatus
   attempts?: Prisma.IntFieldUpdateOperationsInput | number
@@ -687,7 +655,6 @@ export type NotifyOutboxCreateManyActorInput = {
   id?: string
   event: $Enums.NotifyEvent
   targetUserIds?: Prisma.NotifyOutboxCreatetargetUserIdsInput | string[]
-  targetSlackChannelIds?: Prisma.NotifyOutboxCreatetargetSlackChannelIdsInput | string[]
   payload: Prisma.JsonNullValueInput | runtime.InputJsonValue
   status?: $Enums.NotifyJobStatus
   attempts?: number
@@ -699,7 +666,6 @@ export type NotifyOutboxUpdateWithoutActorInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   event?: Prisma.EnumNotifyEventFieldUpdateOperationsInput | $Enums.NotifyEvent
   targetUserIds?: Prisma.NotifyOutboxUpdatetargetUserIdsInput | string[]
-  targetSlackChannelIds?: Prisma.NotifyOutboxUpdatetargetSlackChannelIdsInput | string[]
   payload?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   status?: Prisma.EnumNotifyJobStatusFieldUpdateOperationsInput | $Enums.NotifyJobStatus
   attempts?: Prisma.IntFieldUpdateOperationsInput | number
@@ -712,7 +678,6 @@ export type NotifyOutboxUncheckedUpdateWithoutActorInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   event?: Prisma.EnumNotifyEventFieldUpdateOperationsInput | $Enums.NotifyEvent
   targetUserIds?: Prisma.NotifyOutboxUpdatetargetUserIdsInput | string[]
-  targetSlackChannelIds?: Prisma.NotifyOutboxUpdatetargetSlackChannelIdsInput | string[]
   payload?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   status?: Prisma.EnumNotifyJobStatusFieldUpdateOperationsInput | $Enums.NotifyJobStatus
   attempts?: Prisma.IntFieldUpdateOperationsInput | number
@@ -725,7 +690,6 @@ export type NotifyOutboxUncheckedUpdateManyWithoutActorInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   event?: Prisma.EnumNotifyEventFieldUpdateOperationsInput | $Enums.NotifyEvent
   targetUserIds?: Prisma.NotifyOutboxUpdatetargetUserIdsInput | string[]
-  targetSlackChannelIds?: Prisma.NotifyOutboxUpdatetargetSlackChannelIdsInput | string[]
   payload?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   status?: Prisma.EnumNotifyJobStatusFieldUpdateOperationsInput | $Enums.NotifyJobStatus
   attempts?: Prisma.IntFieldUpdateOperationsInput | number
@@ -769,7 +733,6 @@ export type NotifyOutboxSelect<ExtArgs extends runtime.Types.Extensions.Internal
   event?: boolean
   actorId?: boolean
   targetUserIds?: boolean
-  targetSlackChannelIds?: boolean
   payload?: boolean
   status?: boolean
   attempts?: boolean
@@ -785,7 +748,6 @@ export type NotifyOutboxSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   event?: boolean
   actorId?: boolean
   targetUserIds?: boolean
-  targetSlackChannelIds?: boolean
   payload?: boolean
   status?: boolean
   attempts?: boolean
@@ -799,7 +761,6 @@ export type NotifyOutboxSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   event?: boolean
   actorId?: boolean
   targetUserIds?: boolean
-  targetSlackChannelIds?: boolean
   payload?: boolean
   status?: boolean
   attempts?: boolean
@@ -813,7 +774,6 @@ export type NotifyOutboxSelectScalar = {
   event?: boolean
   actorId?: boolean
   targetUserIds?: boolean
-  targetSlackChannelIds?: boolean
   payload?: boolean
   status?: boolean
   attempts?: boolean
@@ -821,7 +781,7 @@ export type NotifyOutboxSelectScalar = {
   createdAt?: boolean
 }
 
-export type NotifyOutboxOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "event" | "actorId" | "targetUserIds" | "targetSlackChannelIds" | "payload" | "status" | "attempts" | "claimedAt" | "createdAt", ExtArgs["result"]["notifyOutbox"]>
+export type NotifyOutboxOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "event" | "actorId" | "targetUserIds" | "payload" | "status" | "attempts" | "claimedAt" | "createdAt", ExtArgs["result"]["notifyOutbox"]>
 export type NotifyOutboxInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   actor?: boolean | Prisma.NotifyOutbox$actorArgs<ExtArgs>
   deliveries?: boolean | Prisma.NotifyOutbox$deliveriesArgs<ExtArgs>
@@ -855,10 +815,6 @@ export type $NotifyOutboxPayload<ExtArgs extends runtime.Types.Extensions.Intern
      * 規則で導ける宛先はワーカーが解決する
      */
     targetUserIds: string[]
-    /**
-     * トリガー側でしか決められないチャンネルの宛先。DM だけの通知では空
-     */
-    targetSlackChannelIds: string[]
     /**
      * 文面の組み立てに必要な値。イベントごとに形が違うので Json で持つ(`notify-payload.ts` で検証)。
      * チケットが後から消えても通知が壊れないよう、表示IDや件名はここへスナップショットする
@@ -1297,7 +1253,6 @@ export interface NotifyOutboxFieldRefs {
   readonly event: Prisma.FieldRef<"NotifyOutbox", 'NotifyEvent'>
   readonly actorId: Prisma.FieldRef<"NotifyOutbox", 'String'>
   readonly targetUserIds: Prisma.FieldRef<"NotifyOutbox", 'String[]'>
-  readonly targetSlackChannelIds: Prisma.FieldRef<"NotifyOutbox", 'String[]'>
   readonly payload: Prisma.FieldRef<"NotifyOutbox", 'Json'>
   readonly status: Prisma.FieldRef<"NotifyOutbox", 'NotifyJobStatus'>
   readonly attempts: Prisma.FieldRef<"NotifyOutbox", 'Int'>

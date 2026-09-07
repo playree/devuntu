@@ -47,13 +47,10 @@ const fanoutOutbox = async (now: Date): Promise<void> => {
   const claimed = await claimOutbox(NOTIFY_FANOUT_BATCH)
 
   for (const outbox of claimed) {
-    const { id, event, targetUserIds, targetSlackChannelIds } = outbox
+    const { id, event, targetUserIds } = outbox
     try {
       const payload = parseNotifyPayload(event, outbox.payload)
-      const targets = await resolveNotifyTargets(event, payload, {
-        userIds: targetUserIds,
-        slackChannelIds: targetSlackChannelIds,
-      })
+      const targets = await resolveNotifyTargets(event, payload, { userIds: targetUserIds })
       const deliveries = await buildDeliveries({ outboxId: id, event, actorId: outbox.actorId, targets, now })
 
       await prisma.$transaction(async (tx) => {
@@ -74,9 +71,19 @@ const userLocale = async (userId: string): Promise<string | null> => {
   return user?.locale ?? null
 }
 
-/** 配信行から文面を組み立てる */
+/**
+ * 配信行から文面を組み立てる。
+ *
+ * 同じイベントでも本人宛の DM と第三者が読むチャンネルでは文面が変わるので、
+ * 宛先の種別を渡す(チャンネルIDが入っている行がチャンネル宛)。
+ */
 const contentOf = async (delivery: ClaimedDelivery, locale: string | null) =>
-  buildNotifyContent(delivery.event, parseNotifyPayload(delivery.event, delivery.payload), locale)
+  buildNotifyContent(
+    delivery.event,
+    parseNotifyPayload(delivery.event, delivery.payload),
+    locale,
+    delivery.slackChannelId ? 'channel' : 'dm',
+  )
 
 /**
  * Slack へ逐次で送る。

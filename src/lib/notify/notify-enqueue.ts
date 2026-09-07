@@ -21,10 +21,13 @@ export type EnqueueNotifyParam<E extends NotifyEvent = NotifyEvent> = {
   event: E
   /** 発生させた人。DM の宛先から除外する(展開時に効く)。システム由来の通知では省略する */
   actorId?: string | null
-  /** トリガー側でしか決められない DM の宛先。actor 自身は呼び出し側で除いておく */
+  /**
+   * トリガー側でしか決められない DM の宛先。
+   *
+   * 規則で導ける宛先(依頼者・ボードの通知先チャンネル)は配信直前に `notify-recipient.ts`
+   * が引くので、ここへは渡さない。
+   */
   targetUserIds?: string[]
-  /** トリガー側でしか決められないチャンネルの宛先 */
-  targetSlackChannelIds?: string[]
   payload: NotifyPayload<E>
 }
 
@@ -39,7 +42,7 @@ export const enqueueNotify = async <E extends NotifyEvent>(
   param: EnqueueNotifyParam<E>,
   tx: Prisma.TransactionClient = prisma,
 ): Promise<void> => {
-  const { event, actorId, targetUserIds = [], targetSlackChannelIds = [], payload } = param
+  const { event, actorId, targetUserIds = [], payload } = param
 
   // 通知の欠落より外部サービスを叩き続ける方が重い、という既存の判断に合わせて投入を捨てる
   if (!consumeRateLimit(`notify:enqueue:${actorId ?? 'system'}`, ENQUEUE_RATE_LIMIT)) {
@@ -52,12 +55,11 @@ export const enqueueNotify = async <E extends NotifyEvent>(
       event,
       actorId: actorId ?? null,
       targetUserIds,
-      targetSlackChannelIds,
       payload: payload as Prisma.InputJsonValue,
     },
     select: { id: true },
   })
-  logger.info({ outboxId: id, event, actorId, targetUserIds, targetSlackChannelIds }, 'notify enqueued')
+  logger.info({ outboxId: id, event, actorId, targetUserIds }, 'notify enqueued')
 
   /**
    * tick を待たずに送るためレスポンス後の1周を予約する。

@@ -12,16 +12,22 @@
  * そのときにはコメントやチケットが消えていることもある。
  */
 
-import type { AgentRunAction, AgentRunStatus } from '@/generated/prisma/enums'
-import { extractMentionEmails, normalizeMentionText } from '../board/task'
+import type { AgentRunAction, AgentRunStatus, TicketStatus } from '@/generated/prisma/enums'
+import { extractMentionEmails, normalizeMentionText, ticketDisplayId } from '../board/task'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
 import { commentExcerpt } from './notify'
 import { enqueueNotify } from './notify-enqueue'
 
-/** 通知に載せるチケットの識別。表示IDは呼び出し元で組み立てて渡す */
+/**
+ * 通知に載せるチケットの識別。表示IDは呼び出し元で組み立てて渡す。
+ *
+ * `boardId` はチャネル通知の宛先(ボードの設定)を配信直前に引くために持つ。
+ * ペイロードへスナップショットするので、チケットが消えても宛先を辿れる。
+ */
 export type TicketNotifyRef = {
   id: string
+  boardId: string
   displayId: string
   title: string
 }
@@ -29,7 +35,16 @@ export type TicketNotifyRef = {
 /** 通知の判断に使うチケットの状態。`assertTicketAccess()` の戻り(`TicketAccess`)からそのまま作れる */
 export type TicketNotifyState = {
   assigneeId: string | null
+  status: TicketStatus
 }
+
+/** ペイロードのチケット部分。どのイベントも同じ形で持つ */
+const ticketPayload = (ticket: TicketNotifyRef) => ({
+  ticketId: ticket.id,
+  boardId: ticket.boardId,
+  displayId: ticket.displayId,
+  ticketTitle: ticket.title,
+})
 
 /** 操作した人の表示名。文面の「〇〇さんが…」に出す */
 const actorName = async (actorId: string): Promise<string> => {
@@ -87,9 +102,7 @@ const enqueueMentioned = async (param: {
     actorId,
     targetUserIds,
     payload: {
-      ticketId: ticket.id,
-      displayId: ticket.displayId,
-      ticketTitle: ticket.title,
+      ...ticketPayload(ticket),
       fromName: await actorName(actorId),
       ...(comment && { commentId: comment.id }),
       // 記法を落とした結果が空になることもあるので、その場合は無かったことにする
@@ -99,10 +112,13 @@ const enqueueMentioned = async (param: {
 }
 
 /**
- * 担当者に指定されたことの通知。
+ * 担当者が変わったことの通知。
  *
- * 送るのは担当が実際に変わったときだけ。自分で自分を担当にした場合と、
- * 担当がエージェント用ユーザーの場合(DM を読まない)は送らない。
+ * 発火するのは担当が実際に変わって、かつ新しい担当者がいるときだけ
+ * (担当を外しただけでは知らせる相手も内容も無い)。
+ *
+ * DM の宛先は新しい担当者。自分で自分を担当にした場合と、担当がエージェント用ユーザー
+ * (DM を読まない)の場合は DM の宛先から外すが、**チャネル通知は宛先が別なので発火させる**。
  */
 const enqueueAssigned = async (param: {
   actorId: string
@@ -111,27 +127,45 @@ const enqueueAssigned = async (param: {
   after: string | null
 }): Promise<void> => {
   const { actorId, ticket, before, after } = param
-  if (!after || after === before || after === actorId) {
+  if (!after || after === before) {
     return
   }
 
-  const assignee = await prisma.user.findUnique({ where: { id: after }, select: { isAgent: true } })
-  if (!assignee || assignee.isAgent) {
+  const assignee = await prisma.user.findUnique({ where: { id: after }, select: { name: true, isAgent: true } })
+  if (!assignee) {
     return
   }
 
-  logger.info({ ticketId: ticket.id, actorId, assigneeId: after }, 'ticket assigned notify')
+  // DM を届ける相手がいない場合も、チャンネルへは「誰が担当になったか」を知らせる
+  const targetUserIds = assignee.isAgent || after === actorId ? [] : [after]
+
+  logger.info({ ticketId: ticket.id, actorId, assigneeId: after, targetUserIds }, 'ticket assigned notify')
 
   await enqueueNotify({
     event: 'ticket_assigned',
     actorId,
-    targetUserIds: [after],
+    targetUserIds,
     payload: {
-      ticketId: ticket.id,
-      displayId: ticket.displayId,
-      ticketTitle: ticket.title,
+      ...ticketPayload(ticket),
       fromName: await actorName(actorId),
+      assigneeName: assignee.name,
     },
+  })
+}
+
+/** 完了 / 作成のようにチャネル通知だけのイベント。宛先はボードの設定から引く */
+const enqueueTicketChanged = async (
+  event: 'ticket_created' | 'ticket_completed',
+  param: { actorId: string; ticket: TicketNotifyRef },
+): Promise<void> => {
+  const { actorId, ticket } = param
+
+  logger.info({ ticketId: ticket.id, actorId, event }, 'ticket notify')
+
+  await enqueueNotify({
+    event,
+    actorId,
+    payload: { ...ticketPayload(ticket), fromName: await actorName(actorId) },
   })
 }
 
@@ -145,11 +179,17 @@ export const enqueueTicketCreated = async (param: {
   actorId: string
   ticket: TicketNotifyRef
   assigneeId: string | null
+  status: TicketStatus
   mentionedUserIds: string[]
 }): Promise<void> => {
-  const { actorId, ticket, assigneeId, mentionedUserIds } = param
+  const { actorId, ticket, assigneeId, status, mentionedUserIds } = param
+  await enqueueTicketChanged('ticket_created', { actorId, ticket })
   await enqueueMentioned({ actorId, ticket, userIds: mentionedUserIds })
   await enqueueAssigned({ actorId, ticket, before: null, after: assigneeId })
+  // 最初から完了で作ることもできる
+  if (status === 'done') {
+    await enqueueTicketChanged('ticket_completed', { actorId, ticket })
+  }
 }
 
 /**
@@ -168,6 +208,51 @@ export const enqueueTicketUpdated = async (param: {
   const { actorId, ticket, before, after, addedMentionUserIds } = param
   await enqueueMentioned({ actorId, ticket, userIds: addedMentionUserIds })
   await enqueueAssigned({ actorId, ticket, before: before.assigneeId, after: after.assigneeId })
+  // 完了レーンへ入った瞬間だけ発火する(完了のまま並べ替えても発火しない)
+  if (before.status !== 'done' && after.status === 'done') {
+    await enqueueTicketChanged('ticket_completed', { actorId, ticket })
+  }
+}
+
+/**
+ * ステータスだけの更新(詳細画面のステータス変更・かんばんの DnD)。
+ *
+ * これらの経路は通知に載せる表示IDや件名を読んでいないので、**発火が決まってから引く**
+ * (完了へ動いたときだけの 1 回で、並べ替えのたびに SELECT は増えない)。
+ */
+export const enqueueTicketMoved = async (param: {
+  actorId: string
+  ticketId: string
+  before: TicketStatus
+  after: TicketStatus
+}): Promise<void> => {
+  const { actorId, ticketId, before, after } = param
+  if (before === 'done' || after !== 'done') {
+    return
+  }
+
+  const ticket = await loadTicketNotifyRef(ticketId)
+  if (!ticket) {
+    return
+  }
+  await enqueueTicketChanged('ticket_completed', { actorId, ticket })
+}
+
+/** 通知に載せるチケットの識別を引く。削除済みなら通知しないので null */
+const loadTicketNotifyRef = async (ticketId: string): Promise<TicketNotifyRef | null> => {
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    select: { id: true, boardId: true, number: true, title: true, board: { select: { key: true } } },
+  })
+  if (!ticket) {
+    return null
+  }
+  return {
+    id: ticket.id,
+    boardId: ticket.boardId,
+    displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
+    title: ticket.title,
+  }
 }
 
 /** コメントの投稿・編集。コメント経由のメンションだけを発火する */
@@ -184,13 +269,10 @@ export const enqueueTicketCommented = async (param: {
 /**
  * エージェントの実行終了。
  *
- * 呼び出し元は実行を閉じる 3 経路(`agent-runner.ts`)。宛先は依頼者への DM
- * (`notify-recipient.ts` が解決する)と、ボードに設定があれば Slack チャンネル。
- * チャンネル未設定でも DM は送るので、ここでは宛先の有無で分岐しない。
+ * 呼び出し元は実行を閉じる 3 経路(`agent-runner.ts`)。宛先(依頼者への DM とボードの
+ * 通知先チャンネル)はどちらも規則で導けるので、`notify-recipient.ts` が配信直前に解決する。
  */
 export type AgentRunNotification = {
-  /** 通知先チャンネル。null ならチャンネルへは投稿しない */
-  slackChannelId: string | null
   runId: string
   /** 実行したエージェントの表示名 */
   agentName: string
@@ -206,7 +288,7 @@ export type AgentRunNotification = {
 }
 
 export const enqueueAgentRunFinished = async (param: AgentRunNotification): Promise<void> => {
-  const { slackChannelId, runId, agentName, ticket, action, status, summary, startedAt, finishedAt } = param
+  const { runId, agentName, ticket, action, status, summary, startedAt, finishedAt } = param
   const excerpt = summary ? commentExcerpt(summary) : ''
 
   logger.info({ runId, ticketId: ticket.id, status }, 'agent run notify')
@@ -214,11 +296,8 @@ export const enqueueAgentRunFinished = async (param: AgentRunNotification): Prom
   await enqueueNotify({
     event: 'agent_run',
     // 実行はエージェントが行うが、DM の宛先は依頼者なので actor は置かない
-    targetSlackChannelIds: slackChannelId ? [slackChannelId] : [],
     payload: {
-      ticketId: ticket.id,
-      displayId: ticket.displayId,
-      ticketTitle: ticket.title,
+      ...ticketPayload(ticket),
       runId,
       agentName,
       action,

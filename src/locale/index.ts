@@ -193,6 +193,8 @@ export type LocaleItemBase =
   | 'notify_event_agent_run'
   | 'notify_event_mention'
   | 'notify_event_ticket_assigned'
+  | 'notify_event_ticket_completed'
+  | 'notify_event_ticket_created'
   | 'notify_settings'
   | 'oidc_clients'
   | 'oidc_clients_dynamic'
@@ -251,6 +253,7 @@ export type LocaleItemBase =
   | 'slack_enable'
   | 'slack_notify_channel'
   | 'slack_notify_channel_none'
+  | 'slack_notify_events'
   | 'slack_workspace'
   | 'server_info'
   | 'settings'
@@ -422,6 +425,9 @@ export type LocaleItemBase =
   | 'notify_msg_mentioned'
   | 'notify_msg_mentioned_comment'
   | 'notify_msg_ticket_assigned'
+  | 'notify_msg_ticket_assigned_channel'
+  | 'notify_msg_ticket_completed'
+  | 'notify_msg_ticket_created'
   // for Slack
   | 'slack_msg_open_ticket'
 

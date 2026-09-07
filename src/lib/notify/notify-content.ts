@@ -16,6 +16,14 @@ import { commentAnchorId, ticketShortPath } from '../board/task'
 import { makeUrl } from '../server-utils'
 import type { NotifyPayload } from './notify-payload'
 
+/**
+ * 宛先の種別。
+ *
+ * 同じイベントでも、本人へ送る DM と第三者が見るチャンネルでは文面が変わる
+ * (担当変更を「あなたを」と書けるのは DM だけ)。
+ */
+export type NotifyAudience = 'dm' | 'channel'
+
 export type NotifyContent = {
   /** 見出し。メールの件名にもそのまま使えるよう表示IDを先頭に置く */
   subject: string
@@ -34,20 +42,27 @@ export type NotifyContent = {
 const subjectOf = ({ displayId, ticketTitle }: { displayId: string; ticketTitle: string }) =>
   `[${displayId}] ${ticketTitle}`
 
-type ContentBuilder<E extends NotifyEvent> = (payload: NotifyPayload<E>, locale: string | null) => NotifyContent
+/** チケットの短縮URL(`/t/<表示ID>`) */
+const shortUrl = (displayId: string, commentId?: string) =>
+  makeUrl(commentId ? `${ticketShortPath(displayId)}#${commentAnchorId(commentId)}` : ticketShortPath(displayId))
+
+type ContentBuilder<E extends NotifyEvent> = (
+  payload: NotifyPayload<E>,
+  locale: string | null,
+  audience: NotifyAudience,
+) => NotifyContent
 
 const BUILDERS = {
   /**
-   * メンションのリンク先は短縮URL(`/t/<表示ID>`)。
+   * メンションのリンク先は短縮URL。
    * コメント宛のときだけ、該当コメントの位置まで開けるようフラグメントを付ける。
    */
   mention: (payload, locale) => {
     const { displayId, commentId, excerpt, fromName } = payload
-    const path = commentId ? `${ticketShortPath(displayId)}#${commentAnchorId(commentId)}` : ticketShortPath(displayId)
     return {
       subject: subjectOf(payload),
       body: t(locale, commentId ? 'notify_msg_mentioned_comment' : 'notify_msg_mentioned', { from: fromName }),
-      url: makeUrl(path).toString(),
+      url: shortUrl(displayId, commentId).toString(),
       ...(excerpt && { excerpt }),
     }
   },
@@ -71,11 +86,33 @@ const BUILDERS = {
       ...(excerpt && { excerpt }),
     }
   },
-  /** 担当に指定された本人へ送る。リンク先はメンションと同じ短縮URL */
-  ticket_assigned: (payload, locale) => ({
+
+  /**
+   * 担当変更は宛先で文面が変わる。DM は本人へ送るので「あなたを」、
+   * チャンネルは第三者が読むので担当者の名前を出す。
+   */
+  ticket_assigned: (payload, locale, audience) => ({
     subject: subjectOf(payload),
-    body: t(locale, 'notify_msg_ticket_assigned', { from: payload.fromName }),
-    url: makeUrl(ticketShortPath(payload.displayId)).toString(),
+    body:
+      audience === 'dm'
+        ? t(locale, 'notify_msg_ticket_assigned', { from: payload.fromName })
+        : t(locale, 'notify_msg_ticket_assigned_channel', {
+            from: payload.fromName,
+            assignee: payload.assigneeName ?? '',
+          }),
+    url: shortUrl(payload.displayId).toString(),
+  }),
+
+  ticket_created: (payload, locale) => ({
+    subject: subjectOf(payload),
+    body: t(locale, 'notify_msg_ticket_created', { from: payload.fromName }),
+    url: shortUrl(payload.displayId).toString(),
+  }),
+
+  ticket_completed: (payload, locale) => ({
+    subject: subjectOf(payload),
+    body: t(locale, 'notify_msg_ticket_completed', { from: payload.fromName }),
+    url: shortUrl(payload.displayId).toString(),
   }),
 } as const satisfies { [E in NotifyEvent]: ContentBuilder<E> }
 
@@ -89,4 +126,5 @@ export const buildNotifyContent = <E extends NotifyEvent>(
   event: E,
   payload: NotifyPayload<E>,
   locale: string | null,
-): NotifyContent => (BUILDERS[event] as ContentBuilder<E>)(payload, locale)
+  audience: NotifyAudience,
+): NotifyContent => (BUILDERS[event] as ContentBuilder<E>)(payload, locale, audience)

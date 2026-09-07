@@ -16,6 +16,13 @@ import { errValidation } from '../error'
 /** どのイベントも持つチケットの参照。件名とリンクの組み立てに使う */
 const scTicketRef = z.object({
   ticketId: z.string().min(1),
+  /**
+   * チャネル通知の宛先を引くためのボード。
+   *
+   * チケットが消えても宛先を辿れるようスナップショットする。旧バージョンで投入された行にも
+   * 対応できるよう任意にしてあり、無い場合はチャネル通知の宛先が空になる(DM は届く)。
+   */
+  boardId: z.string().min(1).optional(),
   /** 利用者向けの表示ID(`KEY-番号`) */
   displayId: z.string().min(1),
   ticketTitle: z.string(),
@@ -48,6 +55,13 @@ const scAgentRun = scTicketRef.extend({
 const scTicketAssigned = scTicketRef.extend({
   /** 担当者を変えた本人の表示名 */
   fromName: z.string(),
+  /** 新しい担当者の表示名。宛先が本人でないチャネル通知で「誰が担当になったか」に使う */
+  assigneeName: z.string().optional(),
+})
+
+/** 作成 / 完了はチャネル通知のみ。操作した人の名前だけを出す */
+const scTicketChanged = scTicketRef.extend({
+  fromName: z.string(),
 })
 
 /** イベントごとのペイロード定義。イベントを足すとここが型エラーになる */
@@ -55,6 +69,8 @@ export const NOTIFY_PAYLOAD_SCHEMA = {
   mention: scMention,
   agent_run: scAgentRun,
   ticket_assigned: scTicketAssigned,
+  ticket_created: scTicketChanged,
+  ticket_completed: scTicketChanged,
 } as const satisfies Record<NotifyEvent, z.ZodType>
 
 export type NotifyPayloadMap = { [E in NotifyEvent]: z.infer<(typeof NOTIFY_PAYLOAD_SCHEMA)[E]> }

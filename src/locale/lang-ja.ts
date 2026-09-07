@@ -88,7 +88,7 @@ export const ja: DefaultLocaleItems = {
   board_members: 'ボードメンバー',
   board_profile: 'ボード概要',
   board_settings: 'ボード設定',
-  board_slack_notify: 'Slack通知',
+  board_slack_notify: 'チャネル通知',
   buildno: 'ビルド番号',
   busy: '予定あり',
   busy_time_manage: '予定の追加登録',
@@ -195,6 +195,8 @@ export const ja: DefaultLocaleItems = {
   notify_event_agent_run: 'エージェントの実行が終わったとき',
   notify_event_mention: 'メンションされたとき',
   notify_event_ticket_assigned: 'チケットの担当者に指定されたとき',
+  notify_event_ticket_completed: 'チケットが完了したとき',
+  notify_event_ticket_created: 'チケットが作成されたとき',
   notify_settings: '通知設定',
   oidc_clients: 'OIDCクライアント',
   oidc_clients_dynamic: '動的登録',
@@ -252,6 +254,7 @@ export const ja: DefaultLocaleItems = {
   slack_allowed_groups: 'Slack連携を許可するグループ',
   slack_enable: 'Slack連携を有効にする',
   slack_notify_channel: '通知先チャンネル',
+  slack_notify_events: '通知するイベント',
   slack_notify_channel_none: '通知しない',
   slack_workspace: '接続先ワークスペース',
   server_info: 'サーバー情報',
@@ -345,7 +348,8 @@ export const ja: DefaultLocaleItems = {
   msg_archive_board: 'アーカイブすると、ボード一覧の既定の表示対象から外れます。チケットは残ります。',
   msg_avatar_desc: '独自の画像を設定すると、以降のログイン時にDevuntu側の画像で上書きされなくなります。',
   msg_board_key_change: 'キーを変更すると、共有済みのチケットIDは元のチケットを指さなくなります。',
-  msg_board_slack_notify_desc: 'このボードのチケットをAIエージェントが処理し終えたときに、結果をSlackへ投稿します。',
+  msg_board_slack_notify_desc:
+    'このボードで選んだ出来事をSlackチャンネルへ投稿します。通知先とイベントの両方を選んでください。',
   msg_calendar_share_desc:
     '有効にすると、あなたのカレンダーの空き時間を共有URLで外部の人に見せられます。予定のタイトルや詳細は表示されず、「予定あり」の時間帯だけが公開されます。',
   msg_calendar_share_disabled: '共有を無効にしました。共有URLは無効になりました。',
@@ -478,6 +482,9 @@ export const ja: DefaultLocaleItems = {
   notify_msg_mentioned: '${from}さんがあなたをメンションしました',
   notify_msg_mentioned_comment: '${from}さんがコメントであなたをメンションしました',
   notify_msg_ticket_assigned: '${from}さんがあなたを担当者に指定しました',
+  notify_msg_ticket_assigned_channel: '${from}さんが${assignee}さんを担当者に指定しました',
+  notify_msg_ticket_completed: '${from}さんがチケットを完了しました',
+  notify_msg_ticket_created: '${from}さんがチケットを作成しました',
 
   slack_msg_open_ticket: 'チケットを開く',
 

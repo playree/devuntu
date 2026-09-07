@@ -14,7 +14,7 @@ import { extractMentionEmails, resolveMentionUserIds, ticketDisplayId, ticketSho
 import { dateOnlyToUtc } from '@/lib/day'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
-import { enqueueTicketCommented, enqueueTicketUpdated } from '@/lib/notify/notify-trigger'
+import { enqueueTicketCommented, enqueueTicketMoved, enqueueTicketUpdated } from '@/lib/notify/notify-trigger'
 import { prisma } from '@/lib/prisma'
 import {
   scCreateTicketComment,
@@ -150,10 +150,11 @@ export const patchTicket = safeAuthAction
   .metadata({ actionName: 'patchTicket', role: 'user' })
   .inputSchema(scPatchTicket)
   .action(async ({ ctx: { user }, parsedInput: { id, assigneeId, tagIds, dueDate, ...rest } }) => {
-    const { ticket, addedMentionUserIds, before } = await prisma.$transaction(async (tx) => {
+    const { ticket, addedMentionUserIds, before, boardId } = await prisma.$transaction(async (tx) => {
       const access = await assertTicketAccess(user, id, 'edit', tx)
       // 通知の判断に使う変更前の状態。認可の問い合わせで既に読めているので追加の SELECT は要らない
-      const before = { assigneeId: access.assigneeId }
+      const before = { assigneeId: access.assigneeId, status: access.status }
+      const boardId = access.boardId
 
       // 担当者・タグはそのボードに属するものに限る(DB 制約では防げない)
       let assigneeIsAgent = false
@@ -194,18 +195,22 @@ export const patchTicket = safeAuthAction
         await syncTicketTags(tx, id, ids)
       }
 
-      return { ticket: updated, addedMentionUserIds, before }
+      return { ticket: updated, addedMentionUserIds, before, boardId }
     })
     await enqueueTicketUpdated({
       actorId: user.id,
       ticket: {
         id,
+        boardId,
         displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
         title: ticket.title,
       },
       before,
-      // 担当者を指定しない更新では変更なしとして扱う
-      after: { assigneeId: assigneeId !== undefined ? (assigneeId ?? null) : before.assigneeId },
+      // 指定しなかった項目は変更なしとして扱う。status は updateTicketStatus 側で扱う
+      after: {
+        assigneeId: assigneeId !== undefined ? (assigneeId ?? null) : before.assigneeId,
+        status: before.status,
+      },
       addedMentionUserIds,
     })
 
@@ -250,10 +255,12 @@ export const updateTicketStatus = safeAuthAction
   .metadata({ actionName: 'updateTicketStatus', role: 'user' })
   .inputSchema(scUpdateTicketStatus)
   .action(async ({ ctx: { user }, parsedInput: { id, status } }) => {
-    const moved = await prisma.$transaction(async (tx) => {
+    const { moved, before } = await prisma.$transaction(async (tx) => {
       const access = await assertTicketAccess(user, id, 'edit', tx)
-      return moveTicketToLane(tx, { access, status })
+      // 完了へ動いたかの判断に使う。認可の問い合わせで既に読めている
+      return { moved: await moveTicketToLane(tx, { access, status }), before: access.status }
     })
+    await enqueueTicketMoved({ actorId: user.id, ticketId: id, before, after: moved.status })
 
     logger.info({ userId: user.id, ...moved }, 'ticket status updated')
     return moved
@@ -266,7 +273,7 @@ export const addTicketComment = safeAuthAction
   .metadata({ actionName: 'addTicketComment', role: 'user' })
   .inputSchema(scCreateTicketComment)
   .action(async ({ ctx: { user }, parsedInput: { ticketId, content, type, parentId } }) => {
-    const { comment, mentionedUserIds, ticket } = await prisma.$transaction(async (tx) => {
+    const { comment, mentionedUserIds, ticket, boardId } = await prisma.$transaction(async (tx) => {
       const access = await assertTicketAccess(user, ticketId, 'edit', tx)
       if (parentId) {
         await assertReplyTarget(tx, ticketId, parentId)
@@ -289,12 +296,13 @@ export const addTicketComment = safeAuthAction
         select: { number: true, title: true, board: { select: { key: true } } },
       })
 
-      return { comment, mentionedUserIds, ticket }
+      return { comment, mentionedUserIds, ticket, boardId: access.boardId }
     })
     await enqueueTicketCommented({
       actorId: user.id,
       ticket: {
         id: ticketId,
+        boardId,
         displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
         title: ticket.title,
       },
@@ -313,41 +321,45 @@ export const updateTicketComment = safeAuthAction
   .metadata({ actionName: 'updateTicketComment', role: 'user' })
   .inputSchema(scUpdateTicketComment)
   .action(async ({ ctx: { user }, parsedInput: { id, content } }) => {
-    const { mentionedUserIds, addedMentionUserIds, ticketId, ticket } = await prisma.$transaction(async (tx) => {
-      const target = await tx.ticketComment.findUnique({
-        where: { id },
-        select: {
-          ticketId: true,
-          authorId: true,
-          mentionedUserIds: true,
-          // 通知の見出しに使う表示ID / 件名。この SELECT で併せて取り、追加の問い合わせを増やさない
-          ticket: { select: { number: true, title: true, board: { select: { key: true } } } },
-        },
-      })
-      if (!target || target.authorId !== user.id) {
-        throw errInvalidOperation()
-      }
+    const { mentionedUserIds, addedMentionUserIds, ticketId, ticket, boardId } = await prisma.$transaction(
+      async (tx) => {
+        const target = await tx.ticketComment.findUnique({
+          where: { id },
+          select: {
+            ticketId: true,
+            authorId: true,
+            mentionedUserIds: true,
+            // 通知の見出しに使う表示ID / 件名。この SELECT で併せて取り、追加の問い合わせを増やさない
+            ticket: { select: { number: true, title: true, board: { select: { key: true } } } },
+          },
+        })
+        if (!target || target.authorId !== user.id) {
+          throw errInvalidOperation()
+        }
 
-      const access = await assertTicketAccess(user, target.ticketId, 'edit', tx)
-      const candidates = await getTicketMentionCandidates(access, tx)
-      const mentionedUserIds = resolveMentionUserIds(extractMentionEmails(content), candidates)
-      await reassignContentAttachments(tx, content, access.boardId, user, target.ticketId)
+        const access = await assertTicketAccess(user, target.ticketId, 'edit', tx)
+        const candidates = await getTicketMentionCandidates(access, tx)
+        const mentionedUserIds = resolveMentionUserIds(extractMentionEmails(content), candidates)
+        await reassignContentAttachments(tx, content, access.boardId, user, target.ticketId)
 
-      await tx.ticketComment.update({ where: { id }, data: { content, mentionedUserIds } })
-      // 検索(更新日時順)の観点でチケット側の updatedAt も更新する
-      await tx.ticket.update({ where: { id: target.ticketId }, data: { updatedAt: new Date() } })
-      return {
-        mentionedUserIds,
-        // コメントを編集し直すたびに同じ相手へ通知しないよう、増えた分だけを通知対象にする
-        addedMentionUserIds: mentionedUserIds.filter((userId) => !target.mentionedUserIds.includes(userId)),
-        ticketId: target.ticketId,
-        ticket: target.ticket,
-      }
-    })
+        await tx.ticketComment.update({ where: { id }, data: { content, mentionedUserIds } })
+        // 検索(更新日時順)の観点でチケット側の updatedAt も更新する
+        await tx.ticket.update({ where: { id: target.ticketId }, data: { updatedAt: new Date() } })
+        return {
+          mentionedUserIds,
+          // コメントを編集し直すたびに同じ相手へ通知しないよう、増えた分だけを通知対象にする
+          addedMentionUserIds: mentionedUserIds.filter((userId) => !target.mentionedUserIds.includes(userId)),
+          ticketId: target.ticketId,
+          ticket: target.ticket,
+          boardId: access.boardId,
+        }
+      },
+    )
     await enqueueTicketCommented({
       actorId: user.id,
       ticket: {
         id: ticketId,
+        boardId,
         displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
         title: ticket.title,
       },

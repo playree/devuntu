@@ -255,6 +255,16 @@ export type TicketComment = Prisma.TicketCommentModel
  */
 export type UserNotifySetting = Prisma.UserNotifySettingModel
 /**
+ * Model BoardNotifySetting
+ * ボードごとのチャネル通知設定。
+ * 
+ * 行が無いイベントは通知しない(UserNotifySetting と同じオプトイン方式)。
+ * 宛先がユーザーではないので、ユーザーごとの通知設定とは独立している。
+ * イベントごとに別のチャンネルを指定できる形にしてあるが、画面では「通知先1つ + イベントの ON/OFF」
+ * として扱う(イベント別チャンネルが必要になってもマイグレーションが要らない)。
+ */
+export type BoardNotifySetting = Prisma.BoardNotifySettingModel
+/**
  * Model NotifyOutbox
  * 通知の発生記録(アウトボックス)。
  * 

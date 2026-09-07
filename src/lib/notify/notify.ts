@@ -11,7 +11,13 @@ import { findMentions, stripCodeSpans } from '../board/task'
 import { truncate } from '../text-util'
 
 /** 通知イベントの種別。Prisma の enum と同じ並びで持つ(tests/lib/notify/notify.test.ts で一致を固定する) */
-export const NOTIFY_EVENTS = ['mention', 'agent_run', 'ticket_assigned'] as const satisfies readonly NotifyEvent[]
+export const NOTIFY_EVENTS = [
+  'mention',
+  'agent_run',
+  'ticket_assigned',
+  'ticket_created',
+  'ticket_completed',
+] as const satisfies readonly NotifyEvent[]
 
 /**
  * ユーザーごとの設定(`/account` の通知設定)に出す DM 通知のイベント。
@@ -21,7 +27,12 @@ export const DM_NOTIFY_EVENTS = ['mention', 'agent_run', 'ticket_assigned'] as c
 export type DmNotifyEvent = (typeof DM_NOTIFY_EVENTS)[number]
 
 /** ボードごとの設定に出すチャネル通知のイベント */
-export const CHANNEL_NOTIFY_EVENTS = ['agent_run'] as const satisfies readonly NotifyEvent[]
+export const CHANNEL_NOTIFY_EVENTS = [
+  'agent_run',
+  'ticket_assigned',
+  'ticket_created',
+  'ticket_completed',
+] as const satisfies readonly NotifyEvent[]
 export type ChannelNotifyEvent = (typeof CHANNEL_NOTIFY_EVENTS)[number]
 
 /** 通知チャネル。UserNotifySetting の列名と一致させる */

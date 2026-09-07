@@ -267,23 +267,25 @@ const toAgentTask = (ticket: AgentTicketRow, mode: AgentTaskMode, action: AgentR
  */
 const agentRunNotifySelect = {
   id: true,
+  boardId: true,
   number: true,
   title: true,
-  board: { select: { key: true, slackChannelId: true } },
+  board: { select: { key: true } },
 } as const
 
 type AgentRunNotifyTicket = {
   id: string
+  boardId: string
   number: number
   title: string
-  board: { key: string; slackChannelId: string | null }
+  board: { key: string }
 }
 
 /**
  * 閉じた実行から通知の内容を組み立てる。
  *
  * チケットが削除済み(ticket が null)の実行は宛先のボードを辿れないので通知しない。
- * 送るかどうかの最終判断(通知設定 / チャンネル未設定 / Slack 無効)は配信側に任せる。
+ * 送るかどうかの最終判断(通知設定 / ボードの通知先 / Slack 無効)は配信側に任せる。
  */
 const buildAgentRunNotification = (param: {
   runId: string
@@ -301,9 +303,9 @@ const buildAgentRunNotification = (param: {
   }
   return {
     ...rest,
-    slackChannelId: ticket.board.slackChannelId,
     ticket: {
       id: ticket.id,
+      boardId: ticket.boardId,
       displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
       title: ticket.title,
     },

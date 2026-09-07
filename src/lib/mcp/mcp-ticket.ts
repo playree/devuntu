@@ -231,8 +231,9 @@ export const createTicketForMcp = async (auth: ResourceAuth, input: McpCreateTic
 
   await enqueueTicketCreated({
     actorId: auth.user.id,
-    ticket: { id: ticket.id, displayId: ticket.displayId, title: ticket.title },
+    ticket: { id: ticket.id, boardId, displayId: ticket.displayId, title: ticket.title },
     assigneeId: assigneeId ?? null,
+    status,
     mentionedUserIds,
   })
 
@@ -262,13 +263,14 @@ export const updateTicketForMcp = async (
   const id = await resolveTicketId(auth, ticketIdOrDisplayId)
   const { assigneeId, tagIds, dueDate, status, ...rest } = input
 
-  const { ticket, addedMentionUserIds, before } = await prisma.$transaction(async (tx) => {
+  const { ticket, addedMentionUserIds, before, boardId } = await prisma.$transaction(async (tx) => {
     const access = await assertTicketAccess(auth.user, id, 'edit', tx)
     if (!canMcpUpdateTicket({ userId: auth.user.id, boardRole: access.boardRole, assigneeId: access.assigneeId })) {
       throw errInvalidOperation()
     }
     // 通知の判断に使う変更前の状態。認可の問い合わせで既に読めているので追加の SELECT は要らない
-    const before = { assigneeId: access.assigneeId }
+    const before = { assigneeId: access.assigneeId, status: access.status }
+    const boardId = access.boardId
 
     if (assigneeId !== undefined) {
       await assertBoardAssignee(tx, access.boardId, assigneeId)
@@ -306,16 +308,20 @@ export const updateTicketForMcp = async (
       ticket: { ...updated, status: moved?.status ?? updated.status },
       addedMentionUserIds,
       before,
+      boardId,
     }
   })
 
   const displayId = ticketDisplayId({ key: ticket.board.key, number: ticket.number })
   await enqueueTicketUpdated({
     actorId: auth.user.id,
-    ticket: { id, displayId, title: ticket.title },
+    ticket: { id, boardId, displayId, title: ticket.title },
     before,
-    // 担当者を指定しない更新では変更なしとして扱う
-    after: { assigneeId: assigneeId !== undefined ? (assigneeId ?? null) : before.assigneeId },
+    // 指定しなかった項目は変更なしとして扱う
+    after: {
+      assigneeId: assigneeId !== undefined ? (assigneeId ?? null) : before.assigneeId,
+      status: ticket.status,
+    },
     addedMentionUserIds,
   })
 
@@ -354,7 +360,7 @@ export const addTicketCommentForMcp = async (
 ) => {
   const ticketId = await resolveTicketId(auth, ticketIdOrDisplayId)
 
-  const { comment, mentionedUserIds, ticket } = await prisma.$transaction(async (tx) => {
+  const { comment, mentionedUserIds, ticket, boardId } = await prisma.$transaction(async (tx) => {
     const access = await assertTicketAccess(auth.user, ticketId, 'edit', tx)
     if (parentId) {
       await assertReplyTarget(tx, ticketId, parentId)
@@ -375,13 +381,14 @@ export const addTicketCommentForMcp = async (
       select: { number: true, title: true, board: { select: { key: true } } },
     })
 
-    return { comment, mentionedUserIds, ticket }
+    return { comment, mentionedUserIds, ticket, boardId: access.boardId }
   })
 
   await enqueueTicketCommented({
     actorId: auth.user.id,
     ticket: {
       id: ticketId,
+      boardId,
       displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
       title: ticket.title,
     },
@@ -397,7 +404,7 @@ export const addTicketCommentForMcp = async (
  * コメント更新(投稿者本人のみ)。MCP限定の追加制限は無く、Web版の updateTicketComment と同じ。
  */
 export const updateTicketCommentForMcp = async (auth: ResourceAuth, commentId: string, content: string) => {
-  const { addedMentionUserIds, ticketId, ticket } = await prisma.$transaction(async (tx) => {
+  const { addedMentionUserIds, ticketId, ticket, boardId } = await prisma.$transaction(async (tx) => {
     const target = await tx.ticketComment.findUnique({
       where: { id: commentId },
       select: {
@@ -419,10 +426,10 @@ export const updateTicketCommentForMcp = async (auth: ResourceAuth, commentId: s
     await tx.ticketComment.update({ where: { id: commentId }, data: { content, mentionedUserIds } })
     await tx.ticket.update({ where: { id: target.ticketId }, data: { updatedAt: new Date() } })
     return {
-      mentionedUserIds,
       addedMentionUserIds: mentionedUserIds.filter((userId) => !target.mentionedUserIds.includes(userId)),
       ticketId: target.ticketId,
       ticket: target.ticket,
+      boardId: access.boardId,
     }
   })
 
@@ -430,6 +437,7 @@ export const updateTicketCommentForMcp = async (auth: ResourceAuth, commentId: s
     actorId: auth.user.id,
     ticket: {
       id: ticketId,
+      boardId,
       displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
       title: ticket.title,
     },

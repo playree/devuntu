@@ -6,6 +6,7 @@ import { groupByLane, kanbanDoneSince, kanbanTicketWhere, MAX_KANBAN_CARDS, tick
 import { nowDate } from '@/lib/day'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
+import { enqueueTicketMoved } from '@/lib/notify/notify-trigger'
 import { prisma } from '@/lib/prisma'
 import { scMoveTicket, scUUID } from '@/lib/schema/schema'
 
@@ -88,10 +89,12 @@ export const moveTicket = safeAuthAction
   .metadata({ actionName: 'moveTicket', role: 'user' })
   .inputSchema(scMoveTicket)
   .action(async ({ ctx: { user }, parsedInput: { id, status, index } }) => {
-    const moved = await prisma.$transaction(async (tx) => {
+    const { moved, before } = await prisma.$transaction(async (tx) => {
       const access = await assertTicketAccess(user, id, 'edit', tx)
-      return moveTicketToLane(tx, { access, status, index })
+      // 完了へ動いたかの判断に使う。認可の問い合わせで既に読めている
+      return { moved: await moveTicketToLane(tx, { access, status, index }), before: access.status }
     })
+    await enqueueTicketMoved({ actorId: user.id, ticketId: id, before, after: moved.status })
 
     logger.info({ userId: user.id, ...moved }, 'ticket moved')
     return moved
