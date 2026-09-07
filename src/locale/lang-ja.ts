@@ -429,6 +429,7 @@ export const ja: DefaultLocaleItems = {
   msg_webpush_desc: 'ブラウザやスマートフォンの通知として受け取ります。端末ごとに登録が必要です。',
   msg_webpush_ios_standalone: 'iPhone / iPad では、ホーム画面に追加したアプリから開いた場合のみ通知を受け取れます。',
   msg_webpush_no_device: '通知を受け取る端末が登録されていません。',
+  msg_webpush_unavailable: 'この環境ではWebプッシュ通知を利用できません。サーバー側の設定が必要です。',
   msg_webpush_unsupported: 'このブラウザはWebプッシュ通知に対応していません。',
   msg_slack_connected: 'Slackと連携済みです',
   msg_slack_email_must_match: 'SlackのメールアドレスがDevuntuのものと一致している必要があります。',

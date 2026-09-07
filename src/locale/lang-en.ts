@@ -430,6 +430,8 @@ Please copy and use the connection information above.
   msg_webpush_ios_standalone:
     'On iPhone / iPad, notifications work only when opened from an app added to the Home Screen.',
   msg_webpush_no_device: 'No device is registered to receive notifications.',
+  msg_webpush_unavailable:
+    'Web push notifications are not available in this environment. Server-side configuration is required.',
   msg_webpush_unsupported: 'This browser does not support web push notifications.',
   msg_slack_connected: 'Connected to Slack',
   msg_slack_email_must_match: 'Your Slack email address must match the one used in Devuntu.',

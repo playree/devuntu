@@ -407,6 +407,7 @@ export type LocaleItemBase =
   | 'msg_webpush_desc'
   | 'msg_webpush_ios_standalone'
   | 'msg_webpush_no_device'
+  | 'msg_webpush_unavailable'
   | 'msg_webpush_unsupported'
   | 'msg_slack_connected'
   | 'msg_slack_email_must_match'

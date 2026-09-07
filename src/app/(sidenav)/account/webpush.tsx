@@ -91,9 +91,9 @@ export const WebPushSettings: FC = () => {
   if (isKeyLoading || isLoading) {
     return <PanelSkeleton />
   }
-  // 未構成(VAPID 鍵が無い)の環境では登録させても送る手段が無い
+  // 未構成(VAPID 鍵が無い)の環境では登録させても送る手段が無いので、その旨だけ伝える
   if (!publicKey) {
-    return null
+    return <NoticePanel className='text-xs'>{t('msg_webpush_unavailable')}</NoticePanel>
   }
 
   /**

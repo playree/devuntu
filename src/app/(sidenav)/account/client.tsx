@@ -27,7 +27,7 @@ import { SlackAccountLink } from './slack'
 import { TimezoneSetting } from './timezone'
 import { WebPushSettings } from './webpush'
 
-const defaultExpandedKeys = new Set(['avatar', 'passkey', 'timezone', 'notify'])
+const defaultExpandedKeys = new Set(['avatar', 'timezone'])
 export const AccountClient: FC<{ googleAvailable: boolean; slackAvailable: boolean; baseUrl: string }> = ({
   googleAvailable,
   slackAvailable,
@@ -71,7 +71,7 @@ export const AccountClient: FC<{ googleAvailable: boolean; slackAvailable: boole
         >
           <NotifySettings slackAvailable={slackAvailable} />
         </AccordionSection>
-        <AccordionSection // Webプッシュ: 端末ごとの購読。VAPID 未構成の環境ではコンポーネント側で何も出さない
+        <AccordionSection // Webプッシュ: 端末ごとの購読。利用できない環境ではコンポーネント側で案内を出す
           id='webpush'
           icon={<BellIcon />}
           title={t('notify_webpush')}
