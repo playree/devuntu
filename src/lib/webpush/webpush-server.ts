@@ -124,12 +124,16 @@ export const deleteWebPushSubscription = async (id: string): Promise<void> => {
  *
  * 購読の同一性はエンドポイントで決まるので、同じ端末から登録し直しても行は増えない。
  * 鍵は再購読で変わるため、既存の行があっても上書きする。
+ *
+ * `replacedEndpoint` は解除済みの古い購読。VAPID 鍵を差し替えた場合の再購読では
+ * エンドポイントごと変わるため、消さないと同じ端末の行が二重に残る。鍵違いの購読は
+ * 送信が 401 で落ちるだけで失効(404 / 410)として掃除されないので、ここで消す。
  */
 export const saveWebPushSubscription = async (
   userId: string,
-  input: { endpoint: string; p256dh: string; auth: string; label?: string },
+  input: { endpoint: string; p256dh: string; auth: string; label?: string; replacedEndpoint?: string },
 ): Promise<void> => {
-  const { endpoint, p256dh, auth } = input
+  const { endpoint, p256dh, auth, replacedEndpoint } = input
   const label = input.label?.slice(0, MAX_WEBPUSH_LABEL) || null
 
   await prisma.webPushSubscription.upsert({
@@ -138,6 +142,16 @@ export const saveWebPushSubscription = async (
     update: { userId, p256dh, auth, label },
     create: { userId, endpoint, p256dh, auth, label },
   })
+
+  if (replacedEndpoint && replacedEndpoint !== endpoint) {
+    // 他人の行を消せないよう userId も条件に含める
+    const { count } = await prisma.webPushSubscription.deleteMany({
+      where: { endpoint: replacedEndpoint, userId },
+    })
+    if (count > 0) {
+      logger.info({ userId }, 'web push subscription replaced')
+    }
+  }
 
   await pruneWebPushSubscriptions(userId)
   logger.info({ userId }, 'web push subscription saved')

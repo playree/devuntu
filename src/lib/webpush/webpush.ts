@@ -61,6 +61,23 @@ export const urlBase64ToUint8Array = (base64Url: string): Uint8Array<ArrayBuffer
 }
 
 /**
+ * 購読が指定の VAPID 公開鍵で作られたものか。
+ *
+ * 鍵を差し替えた後に古い購読が残っていると `subscribe()` は
+ * `A subscription with a different applicationServerKey ... already exists` で失敗する。
+ * 解除してから購読し直す必要があるので、その判定に使う。
+ *
+ * 引数は `PushSubscription.options.applicationServerKey` と `urlBase64ToUint8Array()` の戻り。
+ */
+export const isSameApplicationServerKey = (current: ArrayBuffer | null, key: Uint8Array): boolean => {
+  if (!current) {
+    return false
+  }
+  const bytes = new Uint8Array(current)
+  return bytes.length === key.length && bytes.every((byte, index) => byte === key[index])
+}
+
+/**
  * ブラウザが Web プッシュを扱えるか。
  *
  * iOS / iPadOS は 16.4 以降かつ**ホーム画面に追加した(standalone)場合だけ** `PushManager` が

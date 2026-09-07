@@ -4,7 +4,12 @@
  * 送信(`webpush-server.ts`)は外部サービスに依存するので、結果の分類だけを別で見る。
  */
 
-import { guessDeviceLabel, MAX_WEBPUSH_LABEL, urlBase64ToUint8Array } from '@/lib/webpush/webpush'
+import {
+  guessDeviceLabel,
+  isSameApplicationServerKey,
+  MAX_WEBPUSH_LABEL,
+  urlBase64ToUint8Array,
+} from '@/lib/webpush/webpush'
 import { describe, expect, it } from 'vitest'
 
 describe('urlBase64ToUint8Array: VAPID 公開鍵の変換', () => {
@@ -32,6 +37,26 @@ describe('urlBase64ToUint8Array: VAPID 公開鍵の変換', () => {
   it('BufferSource として渡せる ArrayBuffer 裏付けになる', () => {
     // SharedArrayBuffer 裏付けだと pushManager.subscribe() へ渡せない
     expect(urlBase64ToUint8Array('SGVsbG8').buffer).toBeInstanceOf(ArrayBuffer)
+  })
+})
+
+describe('isSameApplicationServerKey: 既存購読の鍵の一致', () => {
+  const key = urlBase64ToUint8Array('SGVsbG8')
+
+  it('同じ鍵なら購読をそのまま使える', () => {
+    expect(isSameApplicationServerKey(urlBase64ToUint8Array('SGVsbG8').buffer, key)).toBe(true)
+  })
+
+  it('鍵を差し替えた後の購読は不一致になる(解除してから購読し直す必要がある)', () => {
+    expect(isSameApplicationServerKey(urlBase64ToUint8Array('V29ybGQ').buffer, key)).toBe(false)
+  })
+
+  it('長さが違えば不一致(前方が一致していても使い回せない)', () => {
+    expect(isSameApplicationServerKey(urlBase64ToUint8Array('SGVsbA').buffer, key)).toBe(false)
+  })
+
+  it('鍵を持たない購読(gcm_sender_id 由来など)は不一致として扱う', () => {
+    expect(isSameApplicationServerKey(null, key)).toBe(false)
   })
 })
 

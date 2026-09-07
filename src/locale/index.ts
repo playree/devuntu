@@ -405,6 +405,7 @@ export type LocaleItemBase =
   | 'msg_slack_channel_empty'
   | 'msg_webpush_blocked'
   | 'msg_webpush_desc'
+  | 'msg_webpush_failed'
   | 'msg_webpush_ios_standalone'
   | 'msg_webpush_no_device'
   | 'msg_webpush_unavailable'

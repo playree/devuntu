@@ -427,6 +427,7 @@ Please copy and use the connection information above.
     'No channels are available. Run "/invite @Devuntu" in the channel you want to be notified in.',
   msg_webpush_blocked: 'Notifications are blocked. Allow notifications for this site in your browser settings.',
   msg_webpush_desc: 'Receive notifications from your browser or phone. Each device must be registered separately.',
+  msg_webpush_failed: 'Failed to register for web push notifications. Please try again later.',
   msg_webpush_ios_standalone:
     'On iPhone / iPad, notifications work only when opened from an app added to the Home Screen.',
   msg_webpush_no_device: 'No device is registered to receive notifications.',

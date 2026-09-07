@@ -359,6 +359,12 @@ export type UpdateNotifySetting = z.infer<typeof scUpdateNotifySetting>
  */
 export const scWebPushSubscription = z.object({
   endpoint: z.url().max(MAX_WEBPUSH_ENDPOINT),
+  /**
+   * この購読を作るために解除した古い購読のエンドポイント。
+   *
+   * 同じ端末を指す行が残ると、送れない宛先へ送り続けることになるので消す。
+   */
+  replacedEndpoint: z.url().max(MAX_WEBPUSH_ENDPOINT).optional(),
   /** UA の公開鍵(非圧縮点 65 バイトの base64url) */
   p256dh: z.string().regex(BASE64URL_PATTERN, el('@invalid_webpush_subscription')).max(200),
   /** 共有秘密(16 バイトの base64url) */

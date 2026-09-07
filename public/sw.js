@@ -18,10 +18,12 @@ const toBase64Url = (buffer) => {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
-const toPayload = (subscription) => ({
+const toPayload = (subscription, replacedEndpoint) => ({
   endpoint: subscription.endpoint,
   p256dh: toBase64Url(subscription.getKey('p256dh')),
   auth: toBase64Url(subscription.getKey('auth')),
+  // 作り直しでエンドポイントが変わるため、報告しないと同じ端末の行が二重に残る
+  replacedEndpoint: replacedEndpoint && replacedEndpoint !== subscription.endpoint ? replacedEndpoint : undefined,
 })
 
 /**
@@ -117,7 +119,7 @@ self.addEventListener('pushsubscriptionchange', (event) => {
         method: 'POST',
         credentials: 'include',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(toPayload(subscription)),
+        body: JSON.stringify(toPayload(subscription, event.oldSubscription && event.oldSubscription.endpoint)),
       })
     })(),
   )

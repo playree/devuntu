@@ -7,7 +7,7 @@ import { parseAction, useActionData } from '@/lib/action/action-client'
 import { DM_NOTIFY_EVENTS } from '@/lib/notify/notify'
 import { useLocale } from '@/locale/client'
 import { FC, useState } from 'react'
-import { getNotifySettings, getWebPushDevices, updateNotifySetting } from './server'
+import { getNotifySettings, updateNotifySetting } from './server'
 
 /**
  * イベント種別ごとに通知チャネルの ON/OFF を切り替える。
@@ -16,11 +16,13 @@ import { getNotifySettings, getWebPushDevices, updateNotifySetting } from './ser
  * メールは常に表示する。Slack は連携を利用できるユーザーにだけ、Web プッシュは
  * 端末を登録済みのユーザーにだけ出す(届かないチェックボックスを見せない)。
  */
-export const NotifySettings: FC<{ slackAvailable: boolean }> = ({ slackAvailable }) => {
+export const NotifySettings: FC<{ slackAvailable: boolean; hasWebPushDevice: boolean }> = ({
+  slackAvailable,
+  // 端末を1つも登録していないユーザーに Web プッシュのチェックボックスを見せても届かない
+  hasWebPushDevice,
+}) => {
   const { t } = useLocale()
   const { data: settings, refresh } = useActionData(getNotifySettings)
-  // 端末を1つも登録していないユーザーに Web プッシュのチェックボックスを見せても届かない
-  const { data: devices } = useActionData(getWebPushDevices)
   // 保存中はチェックボックスを止める。連打すると後着の保存結果で表示が巻き戻る
   const [isSaving, setIsSaving] = useState(false)
 
@@ -66,7 +68,7 @@ export const NotifySettings: FC<{ slackAvailable: boolean }> = ({ slackAvailable
                   onChange={(slack) => save({ ...setting, slack })}
                 />
               )}
-              {!!devices?.length && (
+              {hasWebPushDevice && (
                 <CheckBoxField
                   className='shrink-0'
                   id={`notify_${event}_webpush`}

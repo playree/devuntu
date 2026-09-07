@@ -7,10 +7,16 @@ import { BellIcon, TrashIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { dayformat } from '@/lib/day'
-import { guessDeviceLabel, isWebPushSupported, SERVICE_WORKER_PATH, urlBase64ToUint8Array } from '@/lib/webpush/webpush'
+import {
+  guessDeviceLabel,
+  isSameApplicationServerKey,
+  isWebPushSupported,
+  SERVICE_WORKER_PATH,
+  urlBase64ToUint8Array,
+} from '@/lib/webpush/webpush'
 import { useLocale } from '@/locale/client'
 import { FC, useState } from 'react'
-import { deleteWebPushDevice, getWebPushDevices, getWebPushPublicKey, registerWebPushDevice } from './server'
+import { deleteWebPushDevice, GetWebPushDevicesReturnType, getWebPushPublicKey, registerWebPushDevice } from './server'
 
 /** `PushSubscription` の鍵を報告に載せる形(base64url)へ直す */
 const toBase64Url = (buffer: ArrayBuffer | null): string => {
@@ -45,6 +51,37 @@ const detectSupport = (): WebPushSupport => {
 }
 
 /**
+ * ブラウザ側の購読を作る。
+ *
+ * 鍵の不一致やプッシュサービスへ到達できない場合は例外になるが、利用者に打てる手が
+ * 無いので理由は分けず `failed` にまとめる(詳細はコンソールに残す)。
+ */
+const createSubscription = async (publicKey: string) => {
+  const registration = await navigator.serviceWorker.register(SERVICE_WORKER_PATH)
+  // 登録直後は activate 前で pushManager を触れないことがある
+  await navigator.serviceWorker.ready
+
+  const applicationServerKey = urlBase64ToUint8Array(publicKey)
+  /**
+   * 鍵を差し替えた後は古い購読が残っていると購読し直せないので、先に解除する。
+   * 解除した購読はサーバー側にも残るため、エンドポイントを報告して消してもらう。
+   */
+  const current = await registration.pushManager.getSubscription()
+  let replacedEndpoint: string | undefined
+  if (current && !isSameApplicationServerKey(current.options.applicationServerKey, applicationServerKey)) {
+    replacedEndpoint = current.endpoint
+    await current.unsubscribe()
+  }
+
+  const subscription = await registration.pushManager.subscribe({
+    // ブラウザの要件。受け取ったら必ず通知を出す(Service Worker 側で守る)
+    userVisibleOnly: true,
+    applicationServerKey,
+  })
+  return { subscription, replacedEndpoint }
+}
+
+/**
  * この端末で通知を受け取れるようにする。
  *
  * 権限の要求は**クリックを起点に呼ばないと拒否される**ので、必ずボタンのハンドラから呼ぶ。
@@ -55,22 +92,23 @@ const subscribeThisDevice = async (publicKey: string) => {
     return { ok: false as const, reason: 'blocked' as const }
   }
 
-  const registration = await navigator.serviceWorker.register(SERVICE_WORKER_PATH)
-  // 登録直後は activate 前で pushManager を触れないことがある
-  await navigator.serviceWorker.ready
+  let created: Awaited<ReturnType<typeof createSubscription>>
+  try {
+    created = await createSubscription(publicKey)
+  } catch (error) {
+    // ここで握らないと画面には何も出ず、押しても無反応に見える
+    console.error(error)
+    return { ok: false as const, reason: 'failed' as const }
+  }
 
-  const subscription = await registration.pushManager.subscribe({
-    // ブラウザの要件。受け取ったら必ず通知を出す(Service Worker 側で守る)
-    userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(publicKey),
-  })
-
+  const { subscription, replacedEndpoint } = created
   await parseAction(
     registerWebPushDevice({
       endpoint: subscription.endpoint,
       p256dh: toBase64Url(subscription.getKey('p256dh')),
       auth: toBase64Url(subscription.getKey('auth')),
       label: guessDeviceLabel(navigator.userAgent) || undefined,
+      replacedEndpoint,
     }),
   )
   return { ok: true as const }
@@ -82,13 +120,16 @@ const subscribeThisDevice = async (publicKey: string) => {
  * 通知の ON/OFF はイベントごとの通知設定(`notify.tsx`)で行い、ここは
  * **「どの端末で受け取るか」**だけを扱う(端末ごとに登録が必要)。
  */
-export const WebPushSettings: FC = () => {
+export const WebPushSettings: FC<{
+  devices: GetWebPushDevicesReturnType
+  isDevicesLoading: boolean
+  refreshDevices: () => Promise<void>
+}> = ({ devices, isDevicesLoading, refreshDevices }) => {
   const { t, lvt } = useLocale()
   const { data: publicKey, isLoading: isKeyLoading } = useActionData(getWebPushPublicKey)
-  const { data: devices, isLoading, refresh } = useActionData(getWebPushDevices)
   const [isPending, setIsPending] = useState(false)
 
-  if (isKeyLoading || isLoading) {
+  if (isKeyLoading || isDevicesLoading) {
     return <PanelSkeleton />
   }
   // 未構成(VAPID 鍵が無い)の環境では登録させても送る手段が無いので、その旨だけ伝える
@@ -116,11 +157,11 @@ export const WebPushSettings: FC = () => {
     try {
       const result = await subscribeThisDevice(publicKey)
       if (!result.ok) {
-        notify.error(t('msg_webpush_blocked'))
+        notify.error(t(result.reason === 'blocked' ? 'msg_webpush_blocked' : 'msg_webpush_failed'))
         return
       }
       notify.success(t('msg_saved'))
-      await refresh()
+      await refreshDevices()
     } finally {
       setIsPending(false)
     }
@@ -131,7 +172,7 @@ export const WebPushSettings: FC = () => {
     try {
       await parseAction(deleteWebPushDevice({ id }))
       notify.success(t('msg_deleted_target', { target: t('notify_webpush_devices') }))
-      await refresh()
+      await refreshDevices()
     } finally {
       setIsPending(false)
     }
