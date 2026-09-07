@@ -303,6 +303,8 @@ describe('failStaleAgentRuns', () => {
         status: 'failed',
         summary: 'timeout',
       }),
+      // 実行を閉じるのと同じトランザクションで投入する
+      expect.anything(),
     )
   })
 
@@ -335,7 +337,7 @@ describe('failStaleAgentRuns', () => {
       data: { agentState: 'failed' },
     })
     expect(notifyMock).toHaveBeenCalledTimes(1)
-    expect(notifyMock).toHaveBeenCalledWith(expect.objectContaining({ runId: 'run2' }))
+    expect(notifyMock).toHaveBeenCalledWith(expect.objectContaining({ runId: 'run2' }), expect.anything())
   })
 })
 
@@ -405,6 +407,7 @@ describe('finishAgentRunById', () => {
     })
     expect(notifyMock, '閉じたのはこの経路なので通知もここから出す').toHaveBeenCalledWith(
       expect.objectContaining({ runId: 'run1', status: 'failed', summary: 'exit 0' }),
+      expect.anything(),
     )
   })
 

@@ -278,20 +278,26 @@ cron から実行する場合は、DB と S3 を続けて取得する。`compose
 docker compose exec -T db psql -U devuser -d devuntu \
   -c "SELECT channel, \"lastError\", count(*) FROM notify_delivery WHERE status = 'failed' GROUP BY 1, 2"
 
+# 打ち切って未処理へ戻した配信(再試行では直らないもの)
+docker compose exec -T db psql -U devuser -d devuntu \
+  -c "SELECT channel, \"lastError\", count(*) FROM notify_delivery WHERE status = 'pending' AND \"lastError\" IS NOT NULL GROUP BY 1, 2"
+
 # 展開されないまま溜まっている発生記録
 docker compose exec -T db psql -U devuser -d devuntu \
   -c "SELECT status, count(*), min(\"createdAt\") FROM notify_outbox GROUP BY 1"
 ```
 
-- `notify_delivery` に `failed` が溜まっている : 送信そのものが通っていない。`lastError` の分類
-  (`revoked` なら `SLACK_BOT_TOKEN` の失効、`retryable` なら送信先の障害)で切り分ける
+- `notify_delivery` に `failed` が溜まっている : 試行回数を使い切っている。`lastError` の分類
+  (`retryable` なら送信先の障害、`rate_limited` なら流量の超過)で切り分ける
+- `notify_delivery` の `lastError` が `revoked` : 認証情報が失効している。再試行では直らないので
+  `pending` のまま残り続ける(`failed` にはならない)。見る先は `channel` で変わり、`slack` なら
+  `SLACK_BOT_TOKEN`、`webpush` なら VAPID 鍵(`VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`)を確認する
 - `notify_outbox` に `pending` が溜まっている : ワーカーが回っていない。`NOTIFY_WORKER_ENABLED` と
   起動ログ(`notify worker started`)を確認する
 - `notify_outbox` の `failed` : ペイロードが壊れている(アプリのバージョン差など)。行を消して差し支えない
 - 送信できた配信は行ごと消えるので、**空であることが正常**。送信の記録はアプリログ側に残る
 - Web プッシュが届かない場合は `web_push_subscription` に端末の行があるかを見る。
   失効(`404` / `410`)を返した購読は自動で消えるので、行が無ければ利用者に再登録してもらう
-  (`lastError` が `revoked` なら `VAPID_PRIVATE_KEY` の入れ替えを疑う)
 
 行が溜まったまま原因が解消できない場合、削除して差し支えない(通知は再送されないだけで、
 チケットの内容には影響しない)。

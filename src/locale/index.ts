@@ -364,6 +364,7 @@ export type LocaleItemBase =
   | 'msg_consent_request'
   | 'msg_consent_unverified_client'
   | 'msg_delete_board'
+  | 'msg_delete_failed_target'
   | 'msg_deleted_target'
   | 'msg_drop_image'
   | 'msg_duplicated_agent_handle'

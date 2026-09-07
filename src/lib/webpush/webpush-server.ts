@@ -14,6 +14,7 @@ import { logger } from '../logger'
 import type { DeliveryOutcome } from '../notify/notify-outcome'
 import { prisma } from '../prisma'
 import { MAX_WEBPUSH_LABEL, MAX_WEBPUSH_SUBSCRIPTIONS, type WebPushMessage } from './webpush'
+import { isAllowedWebPushEndpoint } from './webpush-endpoint'
 
 /** 送信のタイムアウト。Slack と同じ歯止めに揃える */
 const SEND_TIMEOUT_MS = 5000
@@ -86,6 +87,16 @@ export const sendWebPush = async (
   subscription: StoredSubscription,
   message: WebPushMessage,
 ): Promise<DeliveryOutcome> => {
+  /**
+   * 保存時にも検査しているが、検査を入れる前に登録された行が残っていることがある。
+   * 送る先が無いのと同じなので行ごと消す(再登録すれば正しい購読で入り直す)。
+   */
+  if (!isAllowedWebPushEndpoint(subscription.endpoint)) {
+    logger.warn({ subscriptionId: subscription.id }, 'web push endpoint rejected')
+    await deleteWebPushSubscription(subscription.id)
+    return 'unlinked'
+  }
+
   applyVapidDetails()
 
   try {

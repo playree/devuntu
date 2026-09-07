@@ -99,8 +99,12 @@ const NotifyForm: FC<{
       onSubmit={handleSubmit(async (req) => {
         await parseAction(setBoardNotify(req))
         notify.success(t('msg_saved'))
-        // 再取得しても useForm の defaultValues は追従しないので、保存値で dirty を落としておく
-        reset(req)
+        /**
+         * 再取得しても useForm の defaultValues は追従しないので、保存値で dirty を落としておく。
+         * 通知先とイベントの片方が空の保存は「通知しない」なので、画面も両方空へ揃える
+         * (保存した値のまま残すと、設定が消えているのに選択が残って見える)。
+         */
+        reset(req.slackChannelId && req.events.length > 0 ? req : { id: req.id, slackChannelId: '', events: [] })
         // 変わったのは現在値だけでチャンネルの一覧は変わらないので、取り直すのはこのセクション
         refresh()
       })}

@@ -379,6 +379,7 @@ export const ja: DefaultLocaleItems = {
   msg_consent_unverified_client:
     'このアプリは自動登録されたものです。管理者が承認したものではないため、心当たりのある操作から遷移した場合のみ許可してください。',
   msg_delete_board: 'ボード内のチケットとコメントもすべて削除されます。この操作は取り消せません。',
+  msg_delete_failed_target: '${target} の削除に失敗しました。',
   msg_deleted_target: '${target} を削除しました。',
   msg_drop_image: '画像をドロップ、またはクリックして選択',
   msg_duplicated_token_name: 'この名前のトークンは既にあります。',

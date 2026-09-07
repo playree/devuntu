@@ -150,7 +150,7 @@ export const patchTicket = safeAuthAction
   .metadata({ actionName: 'patchTicket', role: 'user' })
   .inputSchema(scPatchTicket)
   .action(async ({ ctx: { user }, parsedInput: { id, assigneeId, tagIds, dueDate, ...rest } }) => {
-    const { ticket, addedMentionUserIds, before, boardId } = await prisma.$transaction(async (tx) => {
+    const ticket = await prisma.$transaction(async (tx) => {
       const access = await assertTicketAccess(user, id, 'edit', tx)
       // 通知の判断に使う変更前の状態。認可の問い合わせで既に読めているので追加の SELECT は要らない
       const before = { assigneeId: access.assigneeId, status: access.status }
@@ -195,23 +195,28 @@ export const patchTicket = safeAuthAction
         await syncTicketTags(tx, id, ids)
       }
 
-      return { ticket: updated, addedMentionUserIds, before, boardId }
-    })
-    await enqueueTicketUpdated({
-      actorId: user.id,
-      ticket: {
-        id,
-        boardId,
-        displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
-        title: ticket.title,
-      },
-      before,
-      // 指定しなかった項目は変更なしとして扱う。status は updateTicketStatus 側で扱う
-      after: {
-        assigneeId: assigneeId !== undefined ? (assigneeId ?? null) : before.assigneeId,
-        status: before.status,
-      },
-      addedMentionUserIds,
+      // 更新と同じトランザクションで投入する(コミット後に落ちると通知だけが消える)
+      await enqueueTicketUpdated(
+        {
+          actorId: user.id,
+          ticket: {
+            id,
+            boardId,
+            displayId: ticketDisplayId({ key: updated.board.key, number: updated.number }),
+            title: updated.title,
+          },
+          before,
+          // 指定しなかった項目は変更なしとして扱う。status は updateTicketStatus 側で扱う
+          after: {
+            assigneeId: assigneeId !== undefined ? (assigneeId ?? null) : before.assigneeId,
+            status: before.status,
+          },
+          addedMentionUserIds,
+        },
+        tx,
+      )
+
+      return updated
     })
 
     logger.info({ userId: user.id, id }, 'ticket patched')
@@ -255,12 +260,16 @@ export const updateTicketStatus = safeAuthAction
   .metadata({ actionName: 'updateTicketStatus', role: 'user' })
   .inputSchema(scUpdateTicketStatus)
   .action(async ({ ctx: { user }, parsedInput: { id, status } }) => {
-    const { moved, before } = await prisma.$transaction(async (tx) => {
+    const moved = await prisma.$transaction(async (tx) => {
       const access = await assertTicketAccess(user, id, 'edit', tx)
       // 完了へ動いたかの判断に使う。認可の問い合わせで既に読めている
-      return { moved: await moveTicketToLane(tx, { access, status }), before: access.status }
+      const before = access.status
+      const lane = await moveTicketToLane(tx, { access, status })
+
+      // 更新と同じトランザクションで投入する(コミット後に落ちると通知だけが消える)
+      await enqueueTicketMoved({ actorId: user.id, ticketId: id, before, after: lane.status }, tx)
+      return lane
     })
-    await enqueueTicketMoved({ actorId: user.id, ticketId: id, before, after: moved.status })
 
     logger.info({ userId: user.id, ...moved }, 'ticket status updated')
     return moved
@@ -273,7 +282,7 @@ export const addTicketComment = safeAuthAction
   .metadata({ actionName: 'addTicketComment', role: 'user' })
   .inputSchema(scCreateTicketComment)
   .action(async ({ ctx: { user }, parsedInput: { ticketId, content, type, parentId } }) => {
-    const { comment, mentionedUserIds, ticket, boardId } = await prisma.$transaction(async (tx) => {
+    const { comment, mentionedUserIds } = await prisma.$transaction(async (tx) => {
       const access = await assertTicketAccess(user, ticketId, 'edit', tx)
       if (parentId) {
         await assertReplyTarget(tx, ticketId, parentId)
@@ -296,18 +305,23 @@ export const addTicketComment = safeAuthAction
         select: { number: true, title: true, board: { select: { key: true } } },
       })
 
-      return { comment, mentionedUserIds, ticket, boardId: access.boardId }
-    })
-    await enqueueTicketCommented({
-      actorId: user.id,
-      ticket: {
-        id: ticketId,
-        boardId,
-        displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
-        title: ticket.title,
-      },
-      comment: { id: comment.id, content },
-      addedMentionUserIds: mentionedUserIds,
+      // 投稿と同じトランザクションで投入する(コミット後に落ちると通知だけが消える)
+      await enqueueTicketCommented(
+        {
+          actorId: user.id,
+          ticket: {
+            id: ticketId,
+            boardId: access.boardId,
+            displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
+            title: ticket.title,
+          },
+          comment: { id: comment.id, content },
+          addedMentionUserIds: mentionedUserIds,
+        },
+        tx,
+      )
+
+      return { comment, mentionedUserIds }
     })
 
     logger.info({ userId: user.id, ticketId, commentId: comment.id }, 'ticket comment added')
@@ -321,50 +335,48 @@ export const updateTicketComment = safeAuthAction
   .metadata({ actionName: 'updateTicketComment', role: 'user' })
   .inputSchema(scUpdateTicketComment)
   .action(async ({ ctx: { user }, parsedInput: { id, content } }) => {
-    const { mentionedUserIds, addedMentionUserIds, ticketId, ticket, boardId } = await prisma.$transaction(
-      async (tx) => {
-        const target = await tx.ticketComment.findUnique({
-          where: { id },
-          select: {
-            ticketId: true,
-            authorId: true,
-            mentionedUserIds: true,
-            // 通知の見出しに使う表示ID / 件名。この SELECT で併せて取り、追加の問い合わせを増やさない
-            ticket: { select: { number: true, title: true, board: { select: { key: true } } } },
+    const { mentionedUserIds } = await prisma.$transaction(async (tx) => {
+      const target = await tx.ticketComment.findUnique({
+        where: { id },
+        select: {
+          ticketId: true,
+          authorId: true,
+          mentionedUserIds: true,
+          // 通知の見出しに使う表示ID / 件名。この SELECT で併せて取り、追加の問い合わせを増やさない
+          ticket: { select: { number: true, title: true, board: { select: { key: true } } } },
+        },
+      })
+      if (!target || target.authorId !== user.id) {
+        throw errInvalidOperation()
+      }
+
+      const access = await assertTicketAccess(user, target.ticketId, 'edit', tx)
+      const candidates = await getTicketMentionCandidates(access, tx)
+      const mentionedUserIds = resolveMentionUserIds(extractMentionEmails(content), candidates)
+      await reassignContentAttachments(tx, content, access.boardId, user, target.ticketId)
+
+      await tx.ticketComment.update({ where: { id }, data: { content, mentionedUserIds } })
+      // 検索(更新日時順)の観点でチケット側の updatedAt も更新する
+      await tx.ticket.update({ where: { id: target.ticketId }, data: { updatedAt: new Date() } })
+
+      // 更新と同じトランザクションで投入する(コミット後に落ちると通知だけが消える)
+      await enqueueTicketCommented(
+        {
+          actorId: user.id,
+          ticket: {
+            id: target.ticketId,
+            boardId: access.boardId,
+            displayId: ticketDisplayId({ key: target.ticket.board.key, number: target.ticket.number }),
+            title: target.ticket.title,
           },
-        })
-        if (!target || target.authorId !== user.id) {
-          throw errInvalidOperation()
-        }
-
-        const access = await assertTicketAccess(user, target.ticketId, 'edit', tx)
-        const candidates = await getTicketMentionCandidates(access, tx)
-        const mentionedUserIds = resolveMentionUserIds(extractMentionEmails(content), candidates)
-        await reassignContentAttachments(tx, content, access.boardId, user, target.ticketId)
-
-        await tx.ticketComment.update({ where: { id }, data: { content, mentionedUserIds } })
-        // 検索(更新日時順)の観点でチケット側の updatedAt も更新する
-        await tx.ticket.update({ where: { id: target.ticketId }, data: { updatedAt: new Date() } })
-        return {
-          mentionedUserIds,
+          comment: { id, content },
           // コメントを編集し直すたびに同じ相手へ通知しないよう、増えた分だけを通知対象にする
           addedMentionUserIds: mentionedUserIds.filter((userId) => !target.mentionedUserIds.includes(userId)),
-          ticketId: target.ticketId,
-          ticket: target.ticket,
-          boardId: access.boardId,
-        }
-      },
-    )
-    await enqueueTicketCommented({
-      actorId: user.id,
-      ticket: {
-        id: ticketId,
-        boardId,
-        displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
-        title: ticket.title,
-      },
-      comment: { id, content },
-      addedMentionUserIds,
+        },
+        tx,
+      )
+
+      return { mentionedUserIds }
     })
 
     logger.info({ userId: user.id, id }, 'ticket comment updated')

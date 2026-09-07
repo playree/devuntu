@@ -194,7 +194,7 @@ export const createTicket = safeAuthAction
   .metadata({ actionName: 'createTicket', role: 'user' })
   .inputSchema(scCreateTicket)
   .action(async ({ ctx: { user }, parsedInput: { boardId, status, assigneeId, tagIds, dueDate, ...rest } }) => {
-    const { ticket, mentionedUserIds } = await prisma.$transaction(async (tx) => {
+    const ticket = await prisma.$transaction(async (tx) => {
       // 参加しているボードのみ
       const board = await assertBoardAccess(user, boardId, 'view', tx)
       // アーカイブ済みボードは読み取り専用(evaluateTicketAccess と同じ方針)
@@ -239,21 +239,25 @@ export const createTicket = safeAuthAction
       await reassignContentAttachments(tx, rest.content, boardId, user, created.id)
 
       // 表示IDは組み立てて返す(作成直後の通知でそのまま出せるようにする)
-      return {
-        ticket: {
-          id: created.id,
-          title: created.title,
-          displayId: ticketDisplayId({ key: created.board.key, number: created.number }),
-        },
-        mentionedUserIds,
+      const ticket = {
+        id: created.id,
+        title: created.title,
+        displayId: ticketDisplayId({ key: created.board.key, number: created.number }),
       }
-    })
-    await enqueueTicketCreated({
-      actorId: user.id,
-      ticket: { id: ticket.id, boardId, displayId: ticket.displayId, title: ticket.title },
-      assigneeId: assigneeId ?? null,
-      status,
-      mentionedUserIds,
+
+      // 作成と同じトランザクションで投入する(コミット後に落ちると通知だけが消える)
+      await enqueueTicketCreated(
+        {
+          actorId: user.id,
+          ticket: { id: ticket.id, boardId, displayId: ticket.displayId, title: ticket.title },
+          assigneeId: assigneeId ?? null,
+          status,
+          mentionedUserIds,
+        },
+        tx,
+      )
+
+      return ticket
     })
 
     logger.info({ userId: user.id, ticket }, 'ticket created')

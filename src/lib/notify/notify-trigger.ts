@@ -10,8 +10,13 @@
  *
  * 文面に出すもの(操作した人の名前・コメントの抜粋)は投入時に確定させる。配信は遅れて走るため、
  * そのときにはコメントやチケットが消えていることもある。
+ *
+ * どのトリガーも**業務更新と同じトランザクションで呼ぶ**(`tx` を渡す)。コミット後に投入すると、
+ * その間にプロセスが落ちた場合に操作だけが残って通知が消える。文面のために引く名前も同じ `tx` で
+ * 読むので、更新した内容と食い違わない。
  */
 
+import type { Prisma } from '@/generated/prisma/client'
 import type { AgentRunAction, AgentRunStatus, TicketStatus } from '@/generated/prisma/enums'
 import { extractMentionEmails, normalizeMentionText, ticketDisplayId } from '../board/task'
 import { logger } from '../logger'
@@ -47,8 +52,8 @@ const ticketPayload = (ticket: TicketNotifyRef) => ({
 })
 
 /** 操作した人の表示名。文面の「〇〇さんが…」に出す */
-const actorName = async (actorId: string): Promise<string> => {
-  const actor = await prisma.user.findUnique({ where: { id: actorId }, select: { name: true } })
+const actorName = async (actorId: string, tx: Prisma.TransactionClient): Promise<string> => {
+  const actor = await tx.user.findUnique({ where: { id: actorId }, select: { name: true } })
   return actor?.name ?? ''
 }
 
@@ -58,14 +63,14 @@ const actorName = async (actorId: string): Promise<string> => {
  * 画面(`mention-node.tsx`)は `@表示名` で描画するので、通知でも同じ見え方に揃える。
  * 引けなかったメールアドレスは画面と同じくそのまま出す。
  */
-const resolveMentionNames = async (content: string): Promise<Map<string, string>> => {
+const resolveMentionNames = async (content: string, tx: Prisma.TransactionClient): Promise<Map<string, string>> => {
   // 正規化・重複除去済み(コードブロック内のメンションも除かれている)
   const emails = extractMentionEmails(content)
   if (emails.length === 0) {
     return new Map()
   }
 
-  const users = await prisma.user.findMany({
+  const users = await tx.user.findMany({
     // 保存されている大文字小文字に依存しないよう、正規化した形と突き合わせる
     where: { OR: emails.map((email) => ({ email: { equals: email, mode: 'insensitive' as const } })) },
     select: { email: true, name: true },
@@ -80,13 +85,16 @@ const resolveMentionNames = async (content: string): Promise<Map<string, string>
  * 宛先は呼び出し元が渡す「増えた分」だけ(本文を編集し直すたびに同じ相手へ通知しない)。
  * 自分の書き込みで自分に通知が飛ばないよう、操作した本人は除く。
  */
-const enqueueMentioned = async (param: {
-  actorId: string
-  ticket: TicketNotifyRef
-  userIds: string[]
-  /** コメント経由のメンションのみ。抜粋の元にもする */
-  comment?: { id: string; content: string }
-}): Promise<void> => {
+const enqueueMentioned = async (
+  param: {
+    actorId: string
+    ticket: TicketNotifyRef
+    userIds: string[]
+    /** コメント経由のメンションのみ。抜粋の元にもする */
+    comment?: { id: string; content: string }
+  },
+  tx: Prisma.TransactionClient,
+): Promise<void> => {
   const { actorId, ticket, comment } = param
   const targetUserIds = param.userIds.filter((userId) => userId !== actorId)
   if (targetUserIds.length === 0) {
@@ -95,20 +103,23 @@ const enqueueMentioned = async (param: {
 
   logger.info({ ticketId: ticket.id, commentId: comment?.id, actorId, targetUserIds }, 'mention notify')
 
-  const excerpt = comment ? commentExcerpt(comment.content, await resolveMentionNames(comment.content)) : ''
+  const excerpt = comment ? commentExcerpt(comment.content, await resolveMentionNames(comment.content, tx)) : ''
 
-  await enqueueNotify({
-    event: 'mention',
-    actorId,
-    targetUserIds,
-    payload: {
-      ...ticketPayload(ticket),
-      fromName: await actorName(actorId),
-      ...(comment && { commentId: comment.id }),
-      // 記法を落とした結果が空になることもあるので、その場合は無かったことにする
-      ...(excerpt && { excerpt }),
+  await enqueueNotify(
+    {
+      event: 'mention',
+      actorId,
+      targetUserIds,
+      payload: {
+        ...ticketPayload(ticket),
+        fromName: await actorName(actorId, tx),
+        ...(comment && { commentId: comment.id }),
+        // 記法を落とした結果が空になることもあるので、その場合は無かったことにする
+        ...(excerpt && { excerpt }),
+      },
     },
-  })
+    tx,
+  )
 }
 
 /**
@@ -120,18 +131,21 @@ const enqueueMentioned = async (param: {
  * DM の宛先は新しい担当者。自分で自分を担当にした場合と、担当がエージェント用ユーザー
  * (DM を読まない)の場合は DM の宛先から外すが、**チャネル通知は宛先が別なので発火させる**。
  */
-const enqueueAssigned = async (param: {
-  actorId: string
-  ticket: TicketNotifyRef
-  before: string | null
-  after: string | null
-}): Promise<void> => {
+const enqueueAssigned = async (
+  param: {
+    actorId: string
+    ticket: TicketNotifyRef
+    before: string | null
+    after: string | null
+  },
+  tx: Prisma.TransactionClient,
+): Promise<void> => {
   const { actorId, ticket, before, after } = param
   if (!after || after === before) {
     return
   }
 
-  const assignee = await prisma.user.findUnique({ where: { id: after }, select: { name: true, isAgent: true } })
+  const assignee = await tx.user.findUnique({ where: { id: after }, select: { name: true, isAgent: true } })
   if (!assignee) {
     return
   }
@@ -141,32 +155,39 @@ const enqueueAssigned = async (param: {
 
   logger.info({ ticketId: ticket.id, actorId, assigneeId: after, targetUserIds }, 'ticket assigned notify')
 
-  await enqueueNotify({
-    event: 'ticket_assigned',
-    actorId,
-    targetUserIds,
-    payload: {
-      ...ticketPayload(ticket),
-      fromName: await actorName(actorId),
-      assigneeName: assignee.name,
+  await enqueueNotify(
+    {
+      event: 'ticket_assigned',
+      actorId,
+      targetUserIds,
+      payload: {
+        ...ticketPayload(ticket),
+        fromName: await actorName(actorId, tx),
+        assigneeName: assignee.name,
+      },
     },
-  })
+    tx,
+  )
 }
 
 /** 完了 / 作成のようにチャネル通知だけのイベント。宛先はボードの設定から引く */
 const enqueueTicketChanged = async (
   event: 'ticket_created' | 'ticket_completed',
   param: { actorId: string; ticket: TicketNotifyRef },
+  tx: Prisma.TransactionClient,
 ): Promise<void> => {
   const { actorId, ticket } = param
 
   logger.info({ ticketId: ticket.id, actorId, event }, 'ticket notify')
 
-  await enqueueNotify({
-    event,
-    actorId,
-    payload: { ...ticketPayload(ticket), fromName: await actorName(actorId) },
-  })
+  await enqueueNotify(
+    {
+      event,
+      actorId,
+      payload: { ...ticketPayload(ticket), fromName: await actorName(actorId, tx) },
+    },
+    tx,
+  )
 }
 
 /**
@@ -175,20 +196,23 @@ const enqueueTicketChanged = async (
  * 作成時に担当者を付けるのも「担当者に指定された」ことなので、更新時と同じ扱いにする
  * (`before` が無い状態からの変更とみなす)。
  */
-export const enqueueTicketCreated = async (param: {
-  actorId: string
-  ticket: TicketNotifyRef
-  assigneeId: string | null
-  status: TicketStatus
-  mentionedUserIds: string[]
-}): Promise<void> => {
+export const enqueueTicketCreated = async (
+  param: {
+    actorId: string
+    ticket: TicketNotifyRef
+    assigneeId: string | null
+    status: TicketStatus
+    mentionedUserIds: string[]
+  },
+  tx: Prisma.TransactionClient = prisma,
+): Promise<void> => {
   const { actorId, ticket, assigneeId, status, mentionedUserIds } = param
-  await enqueueTicketChanged('ticket_created', { actorId, ticket })
-  await enqueueMentioned({ actorId, ticket, userIds: mentionedUserIds })
-  await enqueueAssigned({ actorId, ticket, before: null, after: assigneeId })
+  await enqueueTicketChanged('ticket_created', { actorId, ticket }, tx)
+  await enqueueMentioned({ actorId, ticket, userIds: mentionedUserIds }, tx)
+  await enqueueAssigned({ actorId, ticket, before: null, after: assigneeId }, tx)
   // 最初から完了で作ることもできる
   if (status === 'done') {
-    await enqueueTicketChanged('ticket_completed', { actorId, ticket })
+    await enqueueTicketChanged('ticket_completed', { actorId, ticket }, tx)
   }
 }
 
@@ -197,20 +221,23 @@ export const enqueueTicketCreated = async (param: {
  *
  * 新しいトリガーを足すときに触るのはこの関数で、呼び出し元(Server Action / MCP)は変わらない。
  */
-export const enqueueTicketUpdated = async (param: {
-  actorId: string
-  ticket: TicketNotifyRef
-  before: TicketNotifyState
-  after: TicketNotifyState
-  /** 本文の編集で増えたメンション。本文を触らない更新では空 */
-  addedMentionUserIds: string[]
-}): Promise<void> => {
+export const enqueueTicketUpdated = async (
+  param: {
+    actorId: string
+    ticket: TicketNotifyRef
+    before: TicketNotifyState
+    after: TicketNotifyState
+    /** 本文の編集で増えたメンション。本文を触らない更新では空 */
+    addedMentionUserIds: string[]
+  },
+  tx: Prisma.TransactionClient = prisma,
+): Promise<void> => {
   const { actorId, ticket, before, after, addedMentionUserIds } = param
-  await enqueueMentioned({ actorId, ticket, userIds: addedMentionUserIds })
-  await enqueueAssigned({ actorId, ticket, before: before.assigneeId, after: after.assigneeId })
+  await enqueueMentioned({ actorId, ticket, userIds: addedMentionUserIds }, tx)
+  await enqueueAssigned({ actorId, ticket, before: before.assigneeId, after: after.assigneeId }, tx)
   // 完了レーンへ入った瞬間だけ発火する(完了のまま並べ替えても発火しない)
   if (before.status !== 'done' && after.status === 'done') {
-    await enqueueTicketChanged('ticket_completed', { actorId, ticket })
+    await enqueueTicketChanged('ticket_completed', { actorId, ticket }, tx)
   }
 }
 
@@ -220,27 +247,30 @@ export const enqueueTicketUpdated = async (param: {
  * これらの経路は通知に載せる表示IDや件名を読んでいないので、**発火が決まってから引く**
  * (完了へ動いたときだけの 1 回で、並べ替えのたびに SELECT は増えない)。
  */
-export const enqueueTicketMoved = async (param: {
-  actorId: string
-  ticketId: string
-  before: TicketStatus
-  after: TicketStatus
-}): Promise<void> => {
+export const enqueueTicketMoved = async (
+  param: {
+    actorId: string
+    ticketId: string
+    before: TicketStatus
+    after: TicketStatus
+  },
+  tx: Prisma.TransactionClient = prisma,
+): Promise<void> => {
   const { actorId, ticketId, before, after } = param
   if (before === 'done' || after !== 'done') {
     return
   }
 
-  const ticket = await loadTicketNotifyRef(ticketId)
+  const ticket = await loadTicketNotifyRef(ticketId, tx)
   if (!ticket) {
     return
   }
-  await enqueueTicketChanged('ticket_completed', { actorId, ticket })
+  await enqueueTicketChanged('ticket_completed', { actorId, ticket }, tx)
 }
 
 /** 通知に載せるチケットの識別を引く。削除済みなら通知しないので null */
-const loadTicketNotifyRef = async (ticketId: string): Promise<TicketNotifyRef | null> => {
-  const ticket = await prisma.ticket.findUnique({
+const loadTicketNotifyRef = async (ticketId: string, tx: Prisma.TransactionClient): Promise<TicketNotifyRef | null> => {
+  const ticket = await tx.ticket.findUnique({
     where: { id: ticketId },
     select: { id: true, boardId: true, number: true, title: true, board: { select: { key: true } } },
   })
@@ -256,14 +286,17 @@ const loadTicketNotifyRef = async (ticketId: string): Promise<TicketNotifyRef | 
 }
 
 /** コメントの投稿・編集。コメント経由のメンションだけを発火する */
-export const enqueueTicketCommented = async (param: {
-  actorId: string
-  ticket: TicketNotifyRef
-  comment: { id: string; content: string }
-  addedMentionUserIds: string[]
-}): Promise<void> => {
+export const enqueueTicketCommented = async (
+  param: {
+    actorId: string
+    ticket: TicketNotifyRef
+    comment: { id: string; content: string }
+    addedMentionUserIds: string[]
+  },
+  tx: Prisma.TransactionClient = prisma,
+): Promise<void> => {
   const { actorId, ticket, comment, addedMentionUserIds } = param
-  await enqueueMentioned({ actorId, ticket, userIds: addedMentionUserIds, comment })
+  await enqueueMentioned({ actorId, ticket, userIds: addedMentionUserIds, comment }, tx)
 }
 
 /**
@@ -287,25 +320,31 @@ export type AgentRunNotification = {
   finishedAt: Date
 }
 
-export const enqueueAgentRunFinished = async (param: AgentRunNotification): Promise<void> => {
+export const enqueueAgentRunFinished = async (
+  param: AgentRunNotification,
+  tx: Prisma.TransactionClient = prisma,
+): Promise<void> => {
   const { runId, agentName, ticket, action, status, summary, startedAt, finishedAt } = param
   const excerpt = summary ? commentExcerpt(summary) : ''
 
   logger.info({ runId, ticketId: ticket.id, status }, 'agent run notify')
 
-  await enqueueNotify({
-    event: 'agent_run',
-    // 実行はエージェントが行うが、DM の宛先は依頼者なので actor は置かない
-    payload: {
-      ...ticketPayload(ticket),
-      runId,
-      agentName,
-      action,
-      status,
-      startedAt,
-      finishedAt,
-      // 記法を落とした結果が空になることもあるので、その場合は無かったことにする
-      ...(excerpt && { excerpt }),
+  await enqueueNotify(
+    {
+      event: 'agent_run',
+      // 実行はエージェントが行うが、DM の宛先は依頼者なので actor は置かない
+      payload: {
+        ...ticketPayload(ticket),
+        runId,
+        agentName,
+        action,
+        status,
+        startedAt,
+        finishedAt,
+        // 記法を落とした結果が空になることもあるので、その場合は無かったことにする
+        ...(excerpt && { excerpt }),
+      },
     },
-  })
+    tx,
+  )
 }

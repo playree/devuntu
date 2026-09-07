@@ -8,6 +8,9 @@
 /** 購読の再登録を報告する先。Service Worker から Server Action は呼べないので専用ルートを叩く */
 const SUBSCRIBE_PATH = '/api/webpush/subscribe'
 
+/** 再購読に使う VAPID 公開鍵の取得先。旧購読から鍵を引けない場合の頼り先 */
+const KEY_PATH = '/api/webpush/key'
+
 /** 鍵は ArrayBuffer で返るので、報告に載せるため base64url へ直す */
 const toBase64Url = (buffer) => {
   const bytes = new Uint8Array(buffer)
@@ -16,6 +19,43 @@ const toBase64Url = (buffer) => {
     binary += String.fromCharCode(byte)
   }
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+/**
+ * base64url の公開鍵を `subscribe()` が要求するバイト列へ直す。
+ *
+ * `src/lib/webpush/webpush.ts` の `urlBase64ToUint8Array()` と同じ処理。ここは Next の
+ * ビルド対象外で import できないため、同じものを持つ。
+ */
+const toApplicationServerKey = (base64Url) => {
+  const padded = base64Url.padEnd(base64Url.length + ((4 - (base64Url.length % 4)) % 4), '=')
+  const raw = atob(padded.replace(/-/g, '+').replace(/_/g, '/'))
+  const bytes = new Uint8Array(raw.length)
+  for (let i = 0; i < raw.length; i += 1) {
+    bytes[i] = raw.charCodeAt(i)
+  }
+  return bytes
+}
+
+/**
+ * 再購読に使う鍵を決める。
+ *
+ * 旧購読が鍵を持っていればサーバーへ問い合わせずに済むが、ブラウザは前の購読を渡せない
+ * ことがある(内部状態を失った場合)。鍵を省いて `subscribe()` を呼ぶと VAPID を要求する
+ * プッシュサービスでは拒否されるため、その場合は実行時の鍵を引く。
+ */
+const applicationServerKey = async (oldSubscription) => {
+  const known = oldSubscription && oldSubscription.options && oldSubscription.options.applicationServerKey
+  if (known) {
+    return known
+  }
+
+  const res = await fetch(KEY_PATH, { credentials: 'include' })
+  if (!res.ok) {
+    throw new Error(`web push key request failed: ${res.status}`)
+  }
+  const { publicKey } = await res.json()
+  return toApplicationServerKey(publicKey)
 }
 
 const toPayload = (subscription, replacedEndpoint) => ({
@@ -108,19 +148,26 @@ self.addEventListener('pushsubscriptionchange', (event) => {
         event.newSubscription ||
         (await self.registration.pushManager.subscribe({
           userVisibleOnly: true,
-          // 旧購読の鍵をそのまま使う(サーバーへ問い合わせずに再購読できる)
-          applicationServerKey: event.oldSubscription && event.oldSubscription.options.applicationServerKey,
+          applicationServerKey: await applicationServerKey(event.oldSubscription),
         }))
       if (!subscription) {
         return
       }
 
-      await fetch(SUBSCRIBE_PATH, {
+      const res = await fetch(SUBSCRIBE_PATH, {
         method: 'POST',
         credentials: 'include',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(toPayload(subscription, event.oldSubscription && event.oldSubscription.endpoint)),
       })
+      /**
+       * 報告できていないのに成功として終えると、サーバーには古い購読だけが残って
+       * 通知が届かなくなる。理由は打てる手が変わるので状態を残す
+       * (401 は次回のサインイン、404 は Web プッシュの構成、それ以外は再送で直る)。
+       */
+      if (!res.ok) {
+        throw new Error(`web push resubscribe report failed: ${res.status}`)
+      }
     })(),
   )
 })

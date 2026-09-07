@@ -28,6 +28,7 @@ import { CHANNEL_NOTIFY_EVENTS, DM_NOTIFY_EVENTS } from '../notify/notify'
 import { SLACK_CHANNEL_ID_PATTERN } from '../slack/slack'
 import { TOKEN_EXPIRES } from '../token-expires'
 import { BASE64URL_PATTERN, MAX_WEBPUSH_ENDPOINT, MAX_WEBPUSH_LABEL } from '../webpush/webpush'
+import { isAllowedWebPushEndpoint } from '../webpush/webpush-endpoint'
 
 export const zName = z.string().min(2, el('@invalid_name')).max(30, el('@invalid_name'))
 export const zEmail = z.email(el('@invalid_email'))
@@ -355,16 +356,22 @@ export type UpdateNotifySetting = z.infer<typeof scUpdateNotifySetting>
  * Web プッシュの購読。ブラウザの `PushSubscription` から必要な値だけを受け取る。
  *
  * エンドポイントはプッシュサービスの URL で、購読の同一性もこれで決まる。
- * 保存するだけで外部へ叩きに行くのは通知の送信時なので、ここでは形だけを見る。
+ * 送信時に `web-push` がそのまま接続先にするため、内部を指す URL を保存させない
+ * (`isAllowedWebPushEndpoint()`)。
  */
+const zWebPushEndpoint = z
+  .url()
+  .max(MAX_WEBPUSH_ENDPOINT)
+  .refine(isAllowedWebPushEndpoint, el('@invalid_webpush_subscription'))
+
 export const scWebPushSubscription = z.object({
-  endpoint: z.url().max(MAX_WEBPUSH_ENDPOINT),
+  endpoint: zWebPushEndpoint,
   /**
    * この購読を作るために解除した古い購読のエンドポイント。
    *
    * 同じ端末を指す行が残ると、送れない宛先へ送り続けることになるので消す。
    */
-  replacedEndpoint: z.url().max(MAX_WEBPUSH_ENDPOINT).optional(),
+  replacedEndpoint: zWebPushEndpoint.optional(),
   /** UA の公開鍵(非圧縮点 65 バイトの base64url) */
   p256dh: z.string().regex(BASE64URL_PATTERN, el('@invalid_webpush_subscription')).max(200),
   /** 共有秘密(16 バイトの base64url) */

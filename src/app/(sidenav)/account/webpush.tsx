@@ -102,15 +102,21 @@ const subscribeThisDevice = async (publicKey: string) => {
   }
 
   const { subscription, replacedEndpoint } = created
-  await parseAction(
-    registerWebPushDevice({
-      endpoint: subscription.endpoint,
-      p256dh: toBase64Url(subscription.getKey('p256dh')),
-      auth: toBase64Url(subscription.getKey('auth')),
-      label: guessDeviceLabel(navigator.userAgent) || undefined,
-      replacedEndpoint,
-    }),
-  )
+  try {
+    await parseAction(
+      registerWebPushDevice({
+        endpoint: subscription.endpoint,
+        p256dh: toBase64Url(subscription.getKey('p256dh')),
+        auth: toBase64Url(subscription.getKey('auth')),
+        label: guessDeviceLabel(navigator.userAgent) || undefined,
+        replacedEndpoint,
+      }),
+    )
+  } catch (error) {
+    // ブラウザ側の購読だけ出来てサーバーに届いていない状態。握らないと成功したように見える
+    console.error(error)
+    return { ok: false as const, reason: 'failed' as const }
+  }
   return { ok: true as const }
 }
 
@@ -173,6 +179,10 @@ export const WebPushSettings: FC<{
       await parseAction(deleteWebPushDevice({ id }))
       notify.success(t('msg_deleted_target', { target: t('notify_webpush_devices') }))
       await refreshDevices()
+    } catch (error) {
+      // `parseAction` は `ClientError` を通知せずに throw するので、ここで拾わないと画面に何も出ない
+      console.error(error)
+      notify.error(t('msg_delete_failed_target', { target: t('notify_webpush_devices') }))
     } finally {
       setIsPending(false)
     }

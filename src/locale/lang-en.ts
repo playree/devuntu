@@ -378,6 +378,7 @@ Please copy and use the connection information above.
   msg_consent_unverified_client:
     'This app registered itself automatically and has not been approved by an administrator. Authorize it only if you started this from an action you recognize.',
   msg_delete_board: 'All tickets and comments in the board are deleted as well. This cannot be undone.',
+  msg_delete_failed_target: 'Failed to delete ${target}.',
   msg_deleted_target: 'Deleted ${target}.',
   msg_drop_image: 'Drop an image here, or click to select',
   msg_duplicated_token_name: 'A token with this name already exists.',
