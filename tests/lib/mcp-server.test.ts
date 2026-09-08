@@ -6,6 +6,7 @@
  * 単体テストの対象外としている)。
  */
 
+import { getBoardForMcp, listBoardsForMcp } from '@/lib/mcp/mcp-board'
 import { createDevuntuMcpServer } from '@/lib/mcp/mcp-server'
 import {
   addTicketCommentForMcp,
@@ -21,6 +22,11 @@ import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
 import { describe, expect, it, vi } from 'vitest'
+
+vi.mock('@/lib/mcp/mcp-board', () => ({
+  listBoardsForMcp: vi.fn(),
+  getBoardForMcp: vi.fn(),
+}))
 
 vi.mock('@/lib/mcp/mcp-ticket', () => ({
   MCP_ASSIGNEE_ME: 'me',
@@ -72,6 +78,8 @@ describe('createDevuntuMcpServer', () => {
       expect.arrayContaining([
         'ping',
         'echo',
+        'list_boards',
+        'get_board',
         'get_ticket',
         'search_tickets',
         'create_ticket',
@@ -96,7 +104,14 @@ describe('createDevuntuMcpServer', () => {
   it('ユーザートークンの接続でも共通ツールは登録される', async () => {
     const { tools } = await (await connectClient(patAuth)).listTools()
     expect(tools.map((tool) => tool.name)).toEqual(
-      expect.arrayContaining(['ping', 'get_ticket', 'search_tickets', 'get_image', 'get_agent_setup_guide']),
+      expect.arrayContaining([
+        'ping',
+        'list_boards',
+        'get_ticket',
+        'search_tickets',
+        'get_image',
+        'get_agent_setup_guide',
+      ]),
     )
   })
 
@@ -108,6 +123,36 @@ describe('createDevuntuMcpServer', () => {
   it('echo は入力をそのまま返す', async () => {
     const result = await (await connectClient()).callTool({ name: 'echo', arguments: { message: 'hello' } })
     expect(result.content).toEqual([{ type: 'text', text: 'hello' }])
+  })
+
+  it('list_boards は auth を渡し、結果をJSONテキストとして返す', async () => {
+    vi.mocked(listBoardsForMcp).mockResolvedValueOnce([{ key: 'ABC', name: 'テストボード' } as never])
+
+    const result = await (await connectClient()).callTool({ name: 'list_boards', arguments: {} })
+
+    expect(listBoardsForMcp).toHaveBeenCalledWith(auth, { includeArchived: undefined })
+    expect(result.content).toEqual([
+      { type: 'text', text: JSON.stringify([{ key: 'ABC', name: 'テストボード' }], null, 2) },
+    ])
+  })
+
+  it('list_boards は includeArchived を渡す', async () => {
+    vi.mocked(listBoardsForMcp).mockResolvedValueOnce([])
+
+    await (await connectClient()).callTool({ name: 'list_boards', arguments: { includeArchived: true } })
+
+    expect(listBoardsForMcp).toHaveBeenCalledWith(auth, { includeArchived: true })
+  })
+
+  it('get_board は boardId をそのまま渡す(ボードキーの解決はMCPロジック側)', async () => {
+    vi.mocked(getBoardForMcp).mockResolvedValueOnce({ key: 'ABC', members: [], tags: [] } as never)
+
+    const result = await (await connectClient()).callTool({ name: 'get_board', arguments: { boardId: 'ABC' } })
+
+    expect(getBoardForMcp).toHaveBeenCalledWith(auth, 'ABC')
+    expect(result.content).toEqual([
+      { type: 'text', text: JSON.stringify({ key: 'ABC', members: [], tags: [] }, null, 2) },
+    ])
   })
 
   it('get_ticket は auth と ticketId を渡し、結果をJSONテキストとして返す', async () => {

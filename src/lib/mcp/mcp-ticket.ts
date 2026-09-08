@@ -28,6 +28,7 @@ import {
 import { dateOnlyToUtc, nowDate } from '@/lib/day'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
+import { resolveBoardId } from '@/lib/mcp/mcp-board'
 import { enqueueTicketCommented, enqueueTicketCreated, enqueueTicketUpdated } from '@/lib/notify/notify-trigger'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import { prisma } from '@/lib/prisma'
@@ -113,6 +114,7 @@ export type McpTicketSearchInput = {
   status?: TicketStatus[]
   priority?: TicketPriority[]
   tags?: string[]
+  /** ボードID またはボードキー(例: ABC) */
   boardId?: string
   /** ユーザーID / `me`(自分) / `none`(未割り当て) */
   assignee?: string
@@ -128,13 +130,14 @@ const MAX_SEARCH_LIMIT = 50
 
 export const searchTicketsForMcp = async (auth: ResourceAuth, input: McpTicketSearchInput) => {
   const accessibleBoardIds = await getAccessibleBoardIds(auth.user.id)
+  const boardId = input.boardId ? await resolveBoardId(input.boardId) : null
   const where = buildTicketWhere(
     {
       keyword: input.keyword ?? '',
       status: input.status ?? [],
       priority: input.priority ?? [],
       tags: input.tags ?? [],
-      boardId: input.boardId ?? null,
+      boardId,
       assignee: resolveAssignee(input.assignee, auth.user.id),
     },
     { accessibleBoardIds },
@@ -169,6 +172,7 @@ export const searchTicketsForMcp = async (auth: ResourceAuth, input: McpTicketSe
 }
 
 export type McpCreateTicketInput = {
+  /** ボードID またはボードキー(例: ABC) */
   boardId: string
   title: string
   content?: string
@@ -183,7 +187,8 @@ export type McpCreateTicketInput = {
  * MCP経由のチケット作成。追加制限は無く、Web版の createTicket アクションと同じ権限判定を使う。
  */
 export const createTicketForMcp = async (auth: ResourceAuth, input: McpCreateTicketInput) => {
-  const { boardId, title, content, status = 'todo', priority = 'medium', dueDate, assigneeId, tagIds = [] } = input
+  const { title, content, status = 'todo', priority = 'medium', dueDate, assigneeId, tagIds = [] } = input
+  const boardId = await resolveBoardId(input.boardId)
 
   const ticket = await prisma.$transaction(async (tx) => {
     const board = await assertBoardAccess(auth.user, boardId, 'view', tx)

@@ -1,6 +1,7 @@
 import { ASSIGNEE_NONE, TICKET_PRIORITIES, TICKET_STATUSES } from '@/lib/board/task'
 import { AGENT_MCP_SERVER_NAME, MCP_SERVER_NAME } from '@/lib/mcp/mcp'
 import { registerAgentSetupTool, registerAgentTools } from '@/lib/mcp/mcp-agent'
+import { getBoardForMcp, listBoardsForMcp } from '@/lib/mcp/mcp-board'
 import { registerImageTools } from '@/lib/mcp/mcp-image'
 import {
   addTicketCommentForMcp,
@@ -58,6 +59,38 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
   )
 
   server.registerTool(
+    'list_boards',
+    {
+      title: 'ボード一覧',
+      description:
+        'アクセスできるボードの一覧を返す。チケットを作成・検索する前に、対象ボードの ID(またはキー)を' +
+        'ここで特定する。担当者やタグの候補はボードごとに異なるため、続けて get_board を呼ぶ',
+      inputSchema: {
+        includeArchived: z.boolean().optional().describe('アーカイブ済みのボードも含める。既定は含めない'),
+      },
+    },
+    async ({ includeArchived }) => ({
+      content: [
+        { type: 'text' as const, text: JSON.stringify(await listBoardsForMcp(auth, { includeArchived }), null, 2) },
+      ],
+    }),
+  )
+
+  server.registerTool(
+    'get_board',
+    {
+      title: 'ボード詳細',
+      description:
+        'ボードの詳細(メンバー・タグ・ステータス別のチケット件数)を返す。' +
+        'create_ticket / update_ticket の assigneeId と tagIds には、ここで得た ID を使う',
+      inputSchema: { boardId: z.string().min(1).describe('ボードIDまたはボードキー(例: ABC)') },
+    },
+    async ({ boardId }) => ({
+      content: [{ type: 'text' as const, text: JSON.stringify(await getBoardForMcp(auth, boardId), null, 2) }],
+    }),
+  )
+
+  server.registerTool(
     'get_ticket',
     {
       title: 'チケット取得',
@@ -80,7 +113,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
         status: z.array(z.enum(TICKET_STATUSES)).optional(),
         priority: z.array(z.enum(TICKET_PRIORITIES)).optional(),
         tags: z.array(z.string()).optional(),
-        boardId: z.string().optional(),
+        boardId: z.string().min(1).optional().describe('ボードIDまたはボードキー(例: ABC)'),
         assignee: z
           .union([z.uuidv7(), z.literal(MCP_ASSIGNEE_ME), z.literal(ASSIGNEE_NONE)])
           .optional()
@@ -99,7 +132,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       title: 'チケット作成',
       description: 'ボードにチケットを新規作成する',
       inputSchema: {
-        boardId: z.string().min(1),
+        boardId: z.string().min(1).describe('ボードIDまたはボードキー(例: ABC)。list_boards で特定する'),
         title: zTicketTitle,
         content: zTicketContent.optional(),
         status: z.enum(TICKET_STATUSES).default('todo'),
