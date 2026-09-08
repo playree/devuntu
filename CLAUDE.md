@@ -36,6 +36,7 @@
 - ソースやテストに個人情報(氏名やメアド)を利用しない
 - `public/agent/devuntu_agent.py`を更新したら、中に定義されている`__version__`のバージョン情報をインクリメントすること
 - UIはスマホレイアウトも考慮する
+- `schema.prisma`を更新したら、`pnpm generate`を行うこと。
 
 ## tsxでのコメント
 

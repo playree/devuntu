@@ -45,6 +45,7 @@ export type NotifyOutboxMinAggregateOutputType = {
   status: $Enums.NotifyJobStatus | null
   attempts: number | null
   claimedAt: Date | null
+  failedAt: Date | null
   createdAt: Date | null
 }
 
@@ -55,6 +56,7 @@ export type NotifyOutboxMaxAggregateOutputType = {
   status: $Enums.NotifyJobStatus | null
   attempts: number | null
   claimedAt: Date | null
+  failedAt: Date | null
   createdAt: Date | null
 }
 
@@ -67,6 +69,7 @@ export type NotifyOutboxCountAggregateOutputType = {
   status: number
   attempts: number
   claimedAt: number
+  failedAt: number
   createdAt: number
   _all: number
 }
@@ -87,6 +90,7 @@ export type NotifyOutboxMinAggregateInputType = {
   status?: true
   attempts?: true
   claimedAt?: true
+  failedAt?: true
   createdAt?: true
 }
 
@@ -97,6 +101,7 @@ export type NotifyOutboxMaxAggregateInputType = {
   status?: true
   attempts?: true
   claimedAt?: true
+  failedAt?: true
   createdAt?: true
 }
 
@@ -109,6 +114,7 @@ export type NotifyOutboxCountAggregateInputType = {
   status?: true
   attempts?: true
   claimedAt?: true
+  failedAt?: true
   createdAt?: true
   _all?: true
 }
@@ -208,6 +214,7 @@ export type NotifyOutboxGroupByOutputType = {
   status: $Enums.NotifyJobStatus
   attempts: number
   claimedAt: Date | null
+  failedAt: Date | null
   createdAt: Date
   _count: NotifyOutboxCountAggregateOutputType | null
   _avg: NotifyOutboxAvgAggregateOutputType | null
@@ -243,6 +250,7 @@ export type NotifyOutboxWhereInput = {
   status?: Prisma.EnumNotifyJobStatusFilter<"NotifyOutbox"> | $Enums.NotifyJobStatus
   attempts?: Prisma.IntFilter<"NotifyOutbox"> | number
   claimedAt?: Prisma.DateTimeNullableFilter<"NotifyOutbox"> | Date | string | null
+  failedAt?: Prisma.DateTimeNullableFilter<"NotifyOutbox"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"NotifyOutbox"> | Date | string
   actor?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   deliveries?: Prisma.NotifyDeliveryListRelationFilter
@@ -257,6 +265,7 @@ export type NotifyOutboxOrderByWithRelationInput = {
   status?: Prisma.SortOrder
   attempts?: Prisma.SortOrder
   claimedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  failedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   actor?: Prisma.UserOrderByWithRelationInput
   deliveries?: Prisma.NotifyDeliveryOrderByRelationAggregateInput
@@ -274,6 +283,7 @@ export type NotifyOutboxWhereUniqueInput = Prisma.AtLeast<{
   status?: Prisma.EnumNotifyJobStatusFilter<"NotifyOutbox"> | $Enums.NotifyJobStatus
   attempts?: Prisma.IntFilter<"NotifyOutbox"> | number
   claimedAt?: Prisma.DateTimeNullableFilter<"NotifyOutbox"> | Date | string | null
+  failedAt?: Prisma.DateTimeNullableFilter<"NotifyOutbox"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"NotifyOutbox"> | Date | string
   actor?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   deliveries?: Prisma.NotifyDeliveryListRelationFilter
@@ -288,6 +298,7 @@ export type NotifyOutboxOrderByWithAggregationInput = {
   status?: Prisma.SortOrder
   attempts?: Prisma.SortOrder
   claimedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  failedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.NotifyOutboxCountOrderByAggregateInput
   _avg?: Prisma.NotifyOutboxAvgOrderByAggregateInput
@@ -308,6 +319,7 @@ export type NotifyOutboxScalarWhereWithAggregatesInput = {
   status?: Prisma.EnumNotifyJobStatusWithAggregatesFilter<"NotifyOutbox"> | $Enums.NotifyJobStatus
   attempts?: Prisma.IntWithAggregatesFilter<"NotifyOutbox"> | number
   claimedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"NotifyOutbox"> | Date | string | null
+  failedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"NotifyOutbox"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"NotifyOutbox"> | Date | string
 }
 
@@ -319,6 +331,7 @@ export type NotifyOutboxCreateInput = {
   status?: $Enums.NotifyJobStatus
   attempts?: number
   claimedAt?: Date | string | null
+  failedAt?: Date | string | null
   createdAt?: Date | string
   actor?: Prisma.UserCreateNestedOneWithoutNotifyOutboxesInput
   deliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutOutboxInput
@@ -333,6 +346,7 @@ export type NotifyOutboxUncheckedCreateInput = {
   status?: $Enums.NotifyJobStatus
   attempts?: number
   claimedAt?: Date | string | null
+  failedAt?: Date | string | null
   createdAt?: Date | string
   deliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutOutboxInput
 }
@@ -345,6 +359,7 @@ export type NotifyOutboxUpdateInput = {
   status?: Prisma.EnumNotifyJobStatusFieldUpdateOperationsInput | $Enums.NotifyJobStatus
   attempts?: Prisma.IntFieldUpdateOperationsInput | number
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  failedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   actor?: Prisma.UserUpdateOneWithoutNotifyOutboxesNestedInput
   deliveries?: Prisma.NotifyDeliveryUpdateManyWithoutOutboxNestedInput
@@ -359,6 +374,7 @@ export type NotifyOutboxUncheckedUpdateInput = {
   status?: Prisma.EnumNotifyJobStatusFieldUpdateOperationsInput | $Enums.NotifyJobStatus
   attempts?: Prisma.IntFieldUpdateOperationsInput | number
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  failedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutOutboxNestedInput
 }
@@ -372,6 +388,7 @@ export type NotifyOutboxCreateManyInput = {
   status?: $Enums.NotifyJobStatus
   attempts?: number
   claimedAt?: Date | string | null
+  failedAt?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -383,6 +400,7 @@ export type NotifyOutboxUpdateManyMutationInput = {
   status?: Prisma.EnumNotifyJobStatusFieldUpdateOperationsInput | $Enums.NotifyJobStatus
   attempts?: Prisma.IntFieldUpdateOperationsInput | number
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  failedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -395,6 +413,7 @@ export type NotifyOutboxUncheckedUpdateManyInput = {
   status?: Prisma.EnumNotifyJobStatusFieldUpdateOperationsInput | $Enums.NotifyJobStatus
   attempts?: Prisma.IntFieldUpdateOperationsInput | number
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  failedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -417,6 +436,7 @@ export type NotifyOutboxCountOrderByAggregateInput = {
   status?: Prisma.SortOrder
   attempts?: Prisma.SortOrder
   claimedAt?: Prisma.SortOrder
+  failedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -431,6 +451,7 @@ export type NotifyOutboxMaxOrderByAggregateInput = {
   status?: Prisma.SortOrder
   attempts?: Prisma.SortOrder
   claimedAt?: Prisma.SortOrder
+  failedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -441,6 +462,7 @@ export type NotifyOutboxMinOrderByAggregateInput = {
   status?: Prisma.SortOrder
   attempts?: Prisma.SortOrder
   claimedAt?: Prisma.SortOrder
+  failedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -530,6 +552,7 @@ export type NotifyOutboxCreateWithoutActorInput = {
   status?: $Enums.NotifyJobStatus
   attempts?: number
   claimedAt?: Date | string | null
+  failedAt?: Date | string | null
   createdAt?: Date | string
   deliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutOutboxInput
 }
@@ -542,6 +565,7 @@ export type NotifyOutboxUncheckedCreateWithoutActorInput = {
   status?: $Enums.NotifyJobStatus
   attempts?: number
   claimedAt?: Date | string | null
+  failedAt?: Date | string | null
   createdAt?: Date | string
   deliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutOutboxInput
 }
@@ -584,6 +608,7 @@ export type NotifyOutboxScalarWhereInput = {
   status?: Prisma.EnumNotifyJobStatusFilter<"NotifyOutbox"> | $Enums.NotifyJobStatus
   attempts?: Prisma.IntFilter<"NotifyOutbox"> | number
   claimedAt?: Prisma.DateTimeNullableFilter<"NotifyOutbox"> | Date | string | null
+  failedAt?: Prisma.DateTimeNullableFilter<"NotifyOutbox"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"NotifyOutbox"> | Date | string
 }
 
@@ -595,6 +620,7 @@ export type NotifyOutboxCreateWithoutDeliveriesInput = {
   status?: $Enums.NotifyJobStatus
   attempts?: number
   claimedAt?: Date | string | null
+  failedAt?: Date | string | null
   createdAt?: Date | string
   actor?: Prisma.UserCreateNestedOneWithoutNotifyOutboxesInput
 }
@@ -608,6 +634,7 @@ export type NotifyOutboxUncheckedCreateWithoutDeliveriesInput = {
   status?: $Enums.NotifyJobStatus
   attempts?: number
   claimedAt?: Date | string | null
+  failedAt?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -635,6 +662,7 @@ export type NotifyOutboxUpdateWithoutDeliveriesInput = {
   status?: Prisma.EnumNotifyJobStatusFieldUpdateOperationsInput | $Enums.NotifyJobStatus
   attempts?: Prisma.IntFieldUpdateOperationsInput | number
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  failedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   actor?: Prisma.UserUpdateOneWithoutNotifyOutboxesNestedInput
 }
@@ -648,6 +676,7 @@ export type NotifyOutboxUncheckedUpdateWithoutDeliveriesInput = {
   status?: Prisma.EnumNotifyJobStatusFieldUpdateOperationsInput | $Enums.NotifyJobStatus
   attempts?: Prisma.IntFieldUpdateOperationsInput | number
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  failedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -659,6 +688,7 @@ export type NotifyOutboxCreateManyActorInput = {
   status?: $Enums.NotifyJobStatus
   attempts?: number
   claimedAt?: Date | string | null
+  failedAt?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -670,6 +700,7 @@ export type NotifyOutboxUpdateWithoutActorInput = {
   status?: Prisma.EnumNotifyJobStatusFieldUpdateOperationsInput | $Enums.NotifyJobStatus
   attempts?: Prisma.IntFieldUpdateOperationsInput | number
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  failedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deliveries?: Prisma.NotifyDeliveryUpdateManyWithoutOutboxNestedInput
 }
@@ -682,6 +713,7 @@ export type NotifyOutboxUncheckedUpdateWithoutActorInput = {
   status?: Prisma.EnumNotifyJobStatusFieldUpdateOperationsInput | $Enums.NotifyJobStatus
   attempts?: Prisma.IntFieldUpdateOperationsInput | number
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  failedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutOutboxNestedInput
 }
@@ -694,6 +726,7 @@ export type NotifyOutboxUncheckedUpdateManyWithoutActorInput = {
   status?: Prisma.EnumNotifyJobStatusFieldUpdateOperationsInput | $Enums.NotifyJobStatus
   attempts?: Prisma.IntFieldUpdateOperationsInput | number
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  failedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -737,6 +770,7 @@ export type NotifyOutboxSelect<ExtArgs extends runtime.Types.Extensions.Internal
   status?: boolean
   attempts?: boolean
   claimedAt?: boolean
+  failedAt?: boolean
   createdAt?: boolean
   actor?: boolean | Prisma.NotifyOutbox$actorArgs<ExtArgs>
   deliveries?: boolean | Prisma.NotifyOutbox$deliveriesArgs<ExtArgs>
@@ -752,6 +786,7 @@ export type NotifyOutboxSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   status?: boolean
   attempts?: boolean
   claimedAt?: boolean
+  failedAt?: boolean
   createdAt?: boolean
   actor?: boolean | Prisma.NotifyOutbox$actorArgs<ExtArgs>
 }, ExtArgs["result"]["notifyOutbox"]>
@@ -765,6 +800,7 @@ export type NotifyOutboxSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   status?: boolean
   attempts?: boolean
   claimedAt?: boolean
+  failedAt?: boolean
   createdAt?: boolean
   actor?: boolean | Prisma.NotifyOutbox$actorArgs<ExtArgs>
 }, ExtArgs["result"]["notifyOutbox"]>
@@ -778,10 +814,11 @@ export type NotifyOutboxSelectScalar = {
   status?: boolean
   attempts?: boolean
   claimedAt?: boolean
+  failedAt?: boolean
   createdAt?: boolean
 }
 
-export type NotifyOutboxOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "event" | "actorId" | "targetUserIds" | "payload" | "status" | "attempts" | "claimedAt" | "createdAt", ExtArgs["result"]["notifyOutbox"]>
+export type NotifyOutboxOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "event" | "actorId" | "targetUserIds" | "payload" | "status" | "attempts" | "claimedAt" | "failedAt" | "createdAt", ExtArgs["result"]["notifyOutbox"]>
 export type NotifyOutboxInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   actor?: boolean | Prisma.NotifyOutbox$actorArgs<ExtArgs>
   deliveries?: boolean | Prisma.NotifyOutbox$deliveriesArgs<ExtArgs>
@@ -823,6 +860,11 @@ export type $NotifyOutboxPayload<ExtArgs extends runtime.Types.Extensions.Intern
     status: $Enums.NotifyJobStatus
     attempts: number
     claimedAt: Date | null
+    /**
+     * `failed` へ移った時刻。保持期間の起点。作成日時を起点にすると、長く残った
+     * `pending` が失敗した瞬間に保持期間を過ぎた扱いになり、原因を追う前に消える
+     */
+    failedAt: Date | null
     createdAt: Date
   }, ExtArgs["result"]["notifyOutbox"]>
   composites: {}
@@ -1257,6 +1299,7 @@ export interface NotifyOutboxFieldRefs {
   readonly status: Prisma.FieldRef<"NotifyOutbox", 'NotifyJobStatus'>
   readonly attempts: Prisma.FieldRef<"NotifyOutbox", 'Int'>
   readonly claimedAt: Prisma.FieldRef<"NotifyOutbox", 'DateTime'>
+  readonly failedAt: Prisma.FieldRef<"NotifyOutbox", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"NotifyOutbox", 'DateTime'>
 }
     

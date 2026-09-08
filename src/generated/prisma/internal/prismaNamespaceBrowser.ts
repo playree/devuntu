@@ -725,6 +725,7 @@ export const NotifyOutboxScalarFieldEnum = {
   status: 'status',
   attempts: 'attempts',
   claimedAt: 'claimedAt',
+  failedAt: 'failedAt',
   createdAt: 'createdAt'
 } as const
 
@@ -742,6 +743,7 @@ export const NotifyDeliveryScalarFieldEnum = {
   attempts: 'attempts',
   claimedAt: 'claimedAt',
   lastError: 'lastError',
+  failedAt: 'failedAt',
   createdAt: 'createdAt'
 } as const
 

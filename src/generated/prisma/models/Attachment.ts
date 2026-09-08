@@ -792,7 +792,8 @@ export type $AttachmentPayload<ExtArgs extends runtime.Types.Extensions.Internal
     originalName: string
     /**
      * 添付先のボード。値がある場合は配信時にそのボードの可視判定を通す。
-     * null は全ログインユーザーへ配信してよいもの(お知らせ / リンクウィジェットのアイコン)
+     * null は全ログインユーザーへ配信してよいもの(お知らせ / リンクウィジェットのアイコン)。
+     * ボード削除で紐付けを外した添付も、掃除が回収するまでの間だけこの状態を通る
      */
     boardId: string | null
     /**
