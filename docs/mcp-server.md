@@ -151,6 +151,8 @@ AIエージェントは `devuntu-agent` を名乗るので、`claude mcp list` �
 | ----------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | `ping`                  | 接続確認。認可済みユーザーのメールアドレスを返す                              | なし                                                                                           |
 | `echo`                  | 入力した文字列をそのまま返す                                                  | `message`                                                                                      |
+| `list_boards`           | アクセスできるボードの一覧。チケットを作る前に対象ボードを特定する            | `includeArchived`(任意)                                                                        |
+| `get_board`             | ボードの詳細(メンバー・タグ・ステータス別のチケット件数)                      | `boardId`                                                                                      |
 | `get_ticket`            | チケットの詳細(本文・ステータス・担当者・タグ・コメント・短縮URL)を取得       | `ticketId`                                                                                     |
 | `search_tickets`        | アクセスできるチケットを検索(更新日時の降順)                                  | `keyword` / `status` / `priority` / `tags` / `boardId` / `assignee` / `limit`                  |
 | `create_ticket`         | ボードにチケットを新規作成                                                    | `boardId` / `title` / `content` / `status` / `priority` / `dueDate` / `assigneeId` / `tagIds`  |
@@ -187,6 +189,12 @@ AIエージェントは `devuntu-agent` を名乗るので、`claude mcp list` �
 
 - `ticketId` は**表示ID(例: ABC-42)でもチケットIDでも**受け取れる(`resolveTicketId`)。
   `commentId` と `assigneeId` は UUIDv7 のみ
+- `boardId` は**ボードID でもボードキー(例: ABC)でも**受け取れる(`resolveBoardId`)。
+  キーは全ボード一意で、UUIDv7 は `BOARD_KEY_PATTERN`(大文字英数)に一致しないため取り違えない。
+  ただし `search_tickets` の絞り込みでは未知のキーもエラーにせず0件を返す
+  (エラーと0件の差でアクセスできないボードの存在を判定できないようにするため)
+- `create_ticket` の `assigneeId` / `tagIds` は `get_board` が返すメンバー・タグの ID を使う。
+  他ボードのタグは付けられず、メンバー以外は担当者にできない
 - `search_tickets` の `assignee` は ユーザーID / `me`(自分) / `none`(未割り当て)。`limit` は既定20・最大50
 - `dueDate` は `YYYY-MM-DD`。`null` を渡すと解除、省略すると変更しない。`assigneeId` と `tagIds` も同じ扱い
 - 文字数は画面と共通(`src/lib/schema/schema.ts`)。タイトル120文字、本文・コメント40000文字、タグは10個まで
@@ -266,7 +274,7 @@ MCP からのみ利用できる。ボードやチケットの権限は人間の�
 | `upload_image`              | base64 を直接渡す。シェルを実行できないクライアント向けの退避手段          |
 | `get_image`                 | 保存済みの画像を取得して画像として返す。貼られたスクショを見たいときに使う |
 
-添付先のボードは `ticketId`(表示IDでも可)か `boardId` の**どちらか一方**で指定する。省略はできない
+添付先のボードは `ticketId`(表示IDでも可)か `boardId`(ボードキーでも可)の**どちらか一方**で指定する。省略はできない
 (ボードに属さない添付は全ログインユーザーが読めてしまうため、MCP からは作らせない)。
 `ticketId` を指定した場合は、そのチケットを編集できることを確認してからボードを決める。
 

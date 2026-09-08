@@ -27,6 +27,7 @@ import { resizeWebp, WEBP_MIME } from '../storage/image'
 import { getObject } from '../storage/storage'
 import { isValidUploadKey, toUploadKey, UPLOAD_URL_PREFIX } from '../storage/upload'
 import { signUploadToken, UPLOAD_TOKEN_TTL_SECONDS } from '../storage/upload-token'
+import { resolveBoardId } from './mcp-board'
 import { resolveTicketId } from './mcp-ticket'
 
 /**
@@ -61,7 +62,11 @@ const targetSchema = {
     .min(1)
     .optional()
     .describe('添付先チケットの表示ID(例: ABC-42)またはチケットID。boardId とはどちらか一方を指定する'),
-  boardId: z.uuidv7().optional().describe('添付先ボードのID。これから作成するチケット向け。ticketId とは排他'),
+  boardId: z
+    .string()
+    .min(1)
+    .optional()
+    .describe('添付先ボードのIDまたはボードキー(例: ABC)。これから作成するチケット向け。ticketId とは排他'),
 }
 
 /**
@@ -82,7 +87,7 @@ const resolveUploadTarget = async (
     const access = await assertTicketAccess(auth.user, await resolveTicketId(auth, ticketId), 'edit')
     return access.boardId
   }
-  const board = await assertBoardAccess(auth.user, boardId as string, 'view')
+  const board = await assertBoardAccess(auth.user, await resolveBoardId(boardId as string), 'view')
   if (board.archived) {
     throw errInvalidOperation()
   }
