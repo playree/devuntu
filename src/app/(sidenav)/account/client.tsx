@@ -14,6 +14,7 @@ import {
   SlackIcon,
   UserCircleIcon,
 } from '@/components/icon'
+import { useActionData } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'
 import { Accordion } from '@heroui/react'
 import { FC } from 'react'
@@ -23,16 +24,27 @@ import { MyMcpTokens } from './mcp-token'
 import { NotifySettings } from './notify'
 import { MyOAuthConsents } from './oauth-consents'
 import { MyPasskey } from './passkey'
+import { getWebPushDevices } from './server'
 import { SlackAccountLink } from './slack'
 import { TimezoneSetting } from './timezone'
+import { WebPushSettings } from './webpush'
 
-const defaultExpandedKeys = new Set(['avatar', 'passkey', 'timezone', 'notify'])
+const defaultExpandedKeys = new Set(['avatar', 'timezone'])
 export const AccountClient: FC<{ googleAvailable: boolean; slackAvailable: boolean; baseUrl: string }> = ({
   googleAvailable,
   slackAvailable,
   baseUrl,
 }) => {
   const { t } = useLocale()
+  /**
+   * Webプッシュの端末一覧は通知設定とWebプッシュ設定の両方が参照するので、ここで一度だけ取得して共有する。
+   * セクションごとに取得すると、端末を登録/削除しても他方のセクションが追従しない。
+   */
+  const {
+    data: webPushDevices,
+    isLoading: isWebPushDevicesLoading,
+    refresh: refreshWebPushDevices,
+  } = useActionData(getWebPushDevices)
 
   return (
     <FlexCol>
@@ -68,7 +80,18 @@ export const AccountClient: FC<{ googleAvailable: boolean; slackAvailable: boole
           icon={<BellIcon />}
           title={t('notify_settings')}
         >
-          <NotifySettings slackAvailable={slackAvailable} />
+          <NotifySettings slackAvailable={slackAvailable} hasWebPushDevice={!!webPushDevices?.length} />
+        </AccordionSection>
+        <AccordionSection // Webプッシュ: 端末ごとの購読。利用できない環境ではコンポーネント側で案内を出す
+          id='webpush'
+          icon={<BellIcon />}
+          title={t('notify_webpush')}
+        >
+          <WebPushSettings
+            devices={webPushDevices}
+            isDevicesLoading={isWebPushDevicesLoading}
+            refreshDevices={refreshWebPushDevices}
+          />
         </AccordionSection>
       </Accordion>
     </FlexCol>

@@ -1,13 +1,22 @@
 /**
  * 通知の共通定義の単体テスト
  *
- * 設定の読み書き(`src/lib/notify-setting.ts`)と送信(`src/lib/notify-mention.ts`)は
+ * 設定の読み書き(`notify-setting.ts`)と配信(`notify-dispatch.ts`)は
  * DB / 外部サービスに依存するためテスト対象にしない。
  */
 
-import { NotifyEvent } from '@/generated/prisma/enums'
+import { NotifyChannel, NotifyEvent } from '@/generated/prisma/enums'
 import { expandTemplate } from '@/lib/locale-util'
-import { commentExcerpt, NOTIFY_CHANNELS, NOTIFY_EVENTS, NOTIFY_EXCERPT_MAX } from '@/lib/notify/notify'
+import {
+  CHANNEL_NOTIFY_EVENTS,
+  commentExcerpt,
+  DM_NOTIFY_EVENTS,
+  NOTIFY_CHANNEL_RATE_LIMIT,
+  NOTIFY_CHANNELS,
+  NOTIFY_DELIVER_BATCH,
+  NOTIFY_EVENTS,
+  NOTIFY_EXCERPT_MAX,
+} from '@/lib/notify/notify'
 import { en } from '@/locale/lang-en'
 import { ja } from '@/locale/lang-ja'
 import { describe, expect, it } from 'vitest'
@@ -19,14 +28,56 @@ describe('NOTIFY_EVENTS: Prisma の enum と一致していること', () => {
   })
 })
 
-describe('NOTIFY_CHANNELS: UserNotifySetting の列名と一致していること', () => {
-  it('メールと Slack の 2 チャネル', () => {
-    // 列名をそのままキーに使うので、ここがずれると設定の保存先を取り違える
-    expect(NOTIFY_CHANNELS).toEqual(['email', 'slack'])
+describe('DM_NOTIFY_EVENTS / CHANNEL_NOTIFY_EVENTS: 宛先ごとの内訳', () => {
+  for (const [label, events] of [
+    ['DM_NOTIFY_EVENTS', DM_NOTIFY_EVENTS],
+    ['CHANNEL_NOTIFY_EVENTS', CHANNEL_NOTIFY_EVENTS],
+  ] as const) {
+    it(`${label} は NOTIFY_EVENTS の部分集合`, () => {
+      // 設定画面はここから項目を作るので、enum に無い値が混ざるとロケールキーも引けなくなる
+      expect(events.every((event) => NOTIFY_EVENTS.includes(event))).toBe(true)
+    })
+
+    it(`${label} は定義順が NOTIFY_EVENTS と同じ`, () => {
+      // 設定画面の並びを NOTIFY_EVENTS の定義順に揃える
+      expect([...events]).toEqual(NOTIFY_EVENTS.filter((event) => events.includes(event)))
+    })
+  }
+
+  it('どちらの宛先にも出ないイベントは無い(設定できない通知を作らない)', () => {
+    const covered = new Set<string>([...DM_NOTIFY_EVENTS, ...CHANNEL_NOTIFY_EVENTS])
+    expect(NOTIFY_EVENTS.filter((event) => !covered.has(event))).toEqual([])
+  })
+
+  it('設定画面に出る全イベントに項目名がある', () => {
+    // 設定画面(`/account` とボード設定)は `notify_event_<event>` でラベルを引くので、
+    // キーが無いとイベント名が出ない
+    for (const event of [...DM_NOTIFY_EVENTS, ...CHANNEL_NOTIFY_EVENTS]) {
+      expect(ja[`notify_event_${event}`], `ja: notify_event_${event}`).toBeTruthy()
+      expect(en[`notify_event_${event}`], `en: notify_event_${event}`).toBeTruthy()
+    }
   })
 })
 
-describe('mail_mention_body: メンション通知メールの本文', () => {
+describe('NOTIFY_CHANNELS: Prisma の enum / UserNotifySetting の列名と一致していること', () => {
+  it('NotifyChannel enum と同じ値・同じ件数', () => {
+    // 列名をそのままキーに使うので、ここがずれると設定の保存先を取り違える
+    expect(NOTIFY_CHANNELS).toEqual(Object.values(NotifyChannel))
+  })
+
+  it('全チャネルに 1 tick の上限とスロットルがある', () => {
+    // 指定漏れは undefined が LIMIT へ渡って配信が止まるので、キーの網羅を固定する
+    expect(Object.keys(NOTIFY_DELIVER_BATCH).sort()).toEqual([...NOTIFY_CHANNELS].sort())
+    expect(Object.keys(NOTIFY_CHANNEL_RATE_LIMIT).sort()).toEqual([...NOTIFY_CHANNELS].sort())
+  })
+
+  it('チャネル名は UserNotifySetting の列名としても使える', () => {
+    // `filterNotifiable` が `[channel]: true` で列を引くので、列名とずれると絞り込みが壊れる
+    expect(NOTIFY_CHANNELS).toEqual(['email', 'slack', 'webpush'])
+  })
+})
+
+describe('mail_notify_body: 通知メールの本文(1件)', () => {
   const values = {
     message: '田中太郎さんがコメントであなたをメンションしました',
     subject: '[PRJ-12] ログイン画面のレイアウト崩れ',
@@ -39,7 +90,7 @@ describe('mail_mention_body: メンション通知メールの本文', () => {
   ] as const) {
     it(`${lang}: 全てのプレースホルダが値で埋まる`, () => {
       // テンプレートリテラルで書くため `\${...}` のエスケープを落とすと実評価されて空になる
-      const body = expandTemplate(resources.mail_mention_body ?? '', values)
+      const body = expandTemplate(resources.mail_notify_body ?? '', values)
       expect(body).toContain(values.message)
       expect(body).toContain(values.subject)
       expect(body).toContain(values.url)
@@ -48,7 +99,7 @@ describe('mail_mention_body: メンション通知メールの本文', () => {
   }
 })
 
-describe('mail_mention_comment_body: コメント経由のメンション通知メールの本文', () => {
+describe('mail_notify_excerpt_body: 抜粋付きの通知メールの本文(1件)', () => {
   const values = {
     message: '田中太郎さんがコメントであなたをメンションしました',
     subject: '[PRJ-12] ログイン画面のレイアウト崩れ',
@@ -61,12 +112,58 @@ describe('mail_mention_comment_body: コメント経由のメンション通知�
     ['en', en],
   ] as const) {
     it(`${lang}: 全てのプレースホルダが値で埋まる`, () => {
-      const body = expandTemplate(resources.mail_mention_comment_body ?? '', values)
+      const body = expandTemplate(resources.mail_notify_excerpt_body ?? '', values)
       expect(body).toContain(values.message)
       expect(body).toContain(values.subject)
       expect(body, 'コメント内容を届けるのがこの本文の目的').toContain(values.excerpt)
       expect(body).toContain(values.url)
       expect(body, '未置換のプレースホルダが残っていない').not.toMatch(/\$\{/)
+    })
+  }
+})
+
+describe('mail_digest_*: まとめた通知メールのテンプレート', () => {
+  for (const [lang, resources] of [
+    ['ja', ja],
+    ['en', en],
+  ] as const) {
+    it(`${lang}: 件名に件数が入る`, () => {
+      const subject = expandTemplate(resources.mail_digest_subject ?? '', { appname: 'Devuntu', count: 3 })
+      expect(subject).toContain('Devuntu')
+      expect(subject).toContain('3')
+      expect(subject, '未置換のプレースホルダが残っていない').not.toMatch(/\$\{/)
+    })
+
+    it(`${lang}: 本文に件数と項目が入る`, () => {
+      const body = expandTemplate(resources.mail_digest_body ?? '', { count: 3, items: '項目のテスト' })
+      expect(body).toContain('3')
+      expect(body).toContain('項目のテスト')
+      expect(body, '未置換のプレースホルダが残っていない').not.toMatch(/\$\{/)
+    })
+
+    it(`${lang}: 項目は抜粋の有無で 2 種類`, () => {
+      const values = {
+        message: '田中太郎さんがあなたをメンションしました',
+        subject: '[PRJ-12] ログイン画面のレイアウト崩れ',
+        excerpt: 'iOS Safari だけで再現しました',
+        url: 'https://devuntu.example.com/t/PRJ-12',
+      }
+      const item = expandTemplate(resources.mail_digest_item ?? '', values)
+      expect(item).toContain(values.message)
+      expect(item).toContain(values.subject)
+      expect(item).toContain(values.url)
+      expect(item, '抜粋なしの項目には抜粋を出さない').not.toContain(values.excerpt)
+      expect(item).not.toMatch(/\$\{/)
+
+      const withExcerpt = expandTemplate(resources.mail_digest_item_excerpt ?? '', values)
+      expect(withExcerpt).toContain(values.excerpt)
+      expect(withExcerpt).not.toMatch(/\$\{/)
+    })
+
+    it(`${lang}: 畳んだ分は件数だけを示す`, () => {
+      const more = expandTemplate(resources.mail_digest_more ?? '', { count: 5 })
+      expect(more).toContain('5')
+      expect(more).not.toMatch(/\$\{/)
     })
   }
 })

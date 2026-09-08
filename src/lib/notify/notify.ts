@@ -2,23 +2,95 @@
  * 通知の共通定義
  *
  * NOTE: このファイルはクライアント('use client')からも import されるため、
- * サーバー専用の処理は `notify-setting.ts`(設定の読み書き) や
- * `notify-mention.ts`(送信) に配置する。
+ * サーバー専用の処理は `notify-setting.ts`(設定の読み書き)、`notify-trigger.ts`(投入)、
+ * `notify-dispatch.ts`(配信) に配置する。
  */
 
-import type { NotifyEvent } from '@/generated/prisma/enums'
+import type { NotifyEvent, NotifyChannel as PrismaNotifyChannel } from '@/generated/prisma/enums'
 import { findMentions, stripCodeSpans } from '../board/task'
 import { truncate } from '../text-util'
 
-/** 通知イベントの種別。Prisma の enum と同じ並びで持つ(tests/lib/notify.test.ts で一致を固定する) */
-export const NOTIFY_EVENTS = ['mention'] as const satisfies readonly NotifyEvent[]
+/** 通知イベントの種別。Prisma の enum と同じ並びで持つ(tests/lib/notify/notify.test.ts で一致を固定する) */
+export const NOTIFY_EVENTS = [
+  'mention',
+  'agent_run',
+  'ticket_assigned',
+  'ticket_created',
+  'ticket_completed',
+] as const satisfies readonly NotifyEvent[]
+
+/**
+ * ユーザーごとの設定(`/account` の通知設定)に出す DM 通知のイベント。
+ * 宛先がチャンネルだけのイベントは `UserNotifySetting` で表せないので含めない。
+ */
+export const DM_NOTIFY_EVENTS = ['mention', 'agent_run', 'ticket_assigned'] as const satisfies readonly NotifyEvent[]
+export type DmNotifyEvent = (typeof DM_NOTIFY_EVENTS)[number]
+
+/** ボードごとの設定に出すチャネル通知のイベント */
+export const CHANNEL_NOTIFY_EVENTS = [
+  'agent_run',
+  'ticket_assigned',
+  'ticket_created',
+  'ticket_completed',
+] as const satisfies readonly NotifyEvent[]
+export type ChannelNotifyEvent = (typeof CHANNEL_NOTIFY_EVENTS)[number]
 
 /** 通知チャネル。UserNotifySetting の列名と一致させる */
-export const NOTIFY_CHANNELS = ['email', 'slack'] as const
+export const NOTIFY_CHANNELS = ['email', 'slack', 'webpush'] as const satisfies readonly PrismaNotifyChannel[]
 export type NotifyChannel = (typeof NOTIFY_CHANNELS)[number]
 
 /** 1回の通知で送る宛先の上限。暴走時に外部サービスを叩き続けないための歯止め */
 export const MAX_NOTIFY_RECIPIENTS = 20
+
+/**
+ * ワーカーの tick 間隔。
+ *
+ * 即時に送りたい通知は投入時の `kickNotifyDispatch()` がレスポンス後に1周回すので、
+ * この間隔は「kick が使えなかった分」と再試行・集約の待ちを拾う保険として効く。
+ */
+export const NOTIFY_TICK_MS = 10_000
+
+/** 1 tick で展開するアウトボックスの上限 */
+export const NOTIFY_FANOUT_BATCH = 20
+
+/**
+ * 1 tick で送る配信の上限(チャネル別)。1周あたりの外部サービス呼び出し回数の頭打ち。
+ *
+ * メールはユーザー単位で 1 通へまとめるので、この値は**宛先ユーザー数**の上限になる。
+ */
+export const NOTIFY_DELIVER_BATCH: Record<NotifyChannel, number> = { email: 20, slack: 20, webpush: 50 }
+
+/**
+ * メールの集約ウィンドウ。
+ *
+ * この幅で区切った境界へ配信時刻を丸めることで、同じ区間に発生した通知が必ず 1 通にまとまる。
+ * 個々の通知は最大でこの時間だけ遅れる代わりに、**ユーザーあたりこの間隔に 1 通**が構造的に保証される。
+ */
+export const NOTIFY_EMAIL_WINDOW_MS = 300_000
+
+/** 集約した 1 通に載せる項目の上限。超えた分は「ほか N 件」の 1 行へ畳む */
+export const MAX_DIGEST_ITEMS = 20
+
+/** 送信の試行回数の上限。使い切った配信は failed にして原因追跡用に残す */
+export const NOTIFY_MAX_ATTEMPTS = 3
+
+/** 再試行の待ち時間(試行回数に比例)。数回で諦めるので指数にはしない */
+export const NOTIFY_RETRY_BASE_MS = 60_000
+
+/** `processing` のまま放置された行を取りこぼしとみなす時間。再起動やクラッシュぶんを拾う */
+export const NOTIFY_CLAIM_TIMEOUT_MS = 300_000
+
+/** 試行回数を使い切った配信を残しておく期間 */
+export const NOTIFY_FAILED_RETENTION_MS = 7 * 24 * 60 * 60 * 1000
+
+/** チャネル単位の全体スロットル。ワーカーは実質1プロセスなのでプロセス内カウンタで足りる */
+export const NOTIFY_CHANNEL_RATE_LIMIT: Record<NotifyChannel, { limit: number; windowMs: number }> = {
+  // ユーザー単位でまとめるので、枠は「ウィンドウ内に送るメールの通数」
+  email: { limit: 120, windowMs: 60_000 },
+  slack: { limit: 60, windowMs: 60_000 },
+  // 1 配信で端末数ぶん叩くため、枠(= 配信行の数)は他のチャネルより広く取る
+  webpush: { limit: 300, windowMs: 60_000 },
+}
 
 /** 通知に載せる本文抜粋の上限。Slack の section 上限(3000)には余裕を持って収まる長さにする */
 export const NOTIFY_EXCERPT_MAX = 500

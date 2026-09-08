@@ -88,7 +88,7 @@ export const ja: DefaultLocaleItems = {
   board_members: 'ボードメンバー',
   board_profile: 'ボード概要',
   board_settings: 'ボード設定',
-  board_slack_notify: 'Slack通知',
+  board_slack_notify: 'チャネル通知',
   buildno: 'ビルド番号',
   busy: '予定あり',
   busy_time_manage: '予定の追加登録',
@@ -192,8 +192,16 @@ export const ja: DefaultLocaleItems = {
   not_issued: '未発行',
   notify_channel_email: 'メール',
   notify_channel_slack: 'Slack',
+  notify_channel_webpush: 'Webプッシュ',
+  notify_event_agent_run: 'エージェントの実行が終わったとき',
   notify_event_mention: 'メンションされたとき',
+  notify_event_ticket_assigned: 'チケットの担当者に指定されたとき',
+  notify_event_ticket_completed: 'チケットが完了したとき',
+  notify_event_ticket_created: 'チケットが作成されたとき',
   notify_settings: '通知設定',
+  notify_webpush: 'Webプッシュ通知',
+  notify_webpush_enable: 'この端末で通知を受け取る',
+  notify_webpush_devices: '登録済みの端末',
   oidc_clients: 'OIDCクライアント',
   oidc_clients_dynamic: '動的登録',
   oidc_clients_manual: '手動登録',
@@ -250,6 +258,7 @@ export const ja: DefaultLocaleItems = {
   slack_allowed_groups: 'Slack連携を許可するグループ',
   slack_enable: 'Slack連携を有効にする',
   slack_notify_channel: '通知先チャンネル',
+  slack_notify_events: '通知するイベント',
   slack_notify_channel_none: '通知しない',
   slack_workspace: '接続先ワークスペース',
   server_info: 'サーバー情報',
@@ -343,7 +352,8 @@ export const ja: DefaultLocaleItems = {
   msg_archive_board: 'アーカイブすると、ボード一覧の既定の表示対象から外れます。チケットは残ります。',
   msg_avatar_desc: '独自の画像を設定すると、以降のログイン時にDevuntu側の画像で上書きされなくなります。',
   msg_board_key_change: 'キーを変更すると、共有済みのチケットIDは元のチケットを指さなくなります。',
-  msg_board_slack_notify_desc: 'このボードのチケットをAIエージェントが処理し終えたときに、結果をSlackへ投稿します。',
+  msg_board_slack_notify_desc:
+    'このボードで選んだ出来事をSlackチャンネルへ投稿します。通知先とイベントの両方を選んでください。',
   msg_calendar_share_desc:
     '有効にすると、あなたのカレンダーの空き時間を共有URLで外部の人に見せられます。予定のタイトルや詳細は表示されず、「予定あり」の時間帯だけが公開されます。',
   msg_calendar_share_disabled: '共有を無効にしました。共有URLは無効になりました。',
@@ -369,6 +379,7 @@ export const ja: DefaultLocaleItems = {
   msg_consent_unverified_client:
     'このアプリは自動登録されたものです。管理者が承認したものではないため、心当たりのある操作から遷移した場合のみ許可してください。',
   msg_delete_board: 'ボード内のチケットとコメントもすべて削除されます。この操作は取り消せません。',
+  msg_delete_failed_target: '${target} の削除に失敗しました。',
   msg_deleted_target: '${target} を削除しました。',
   msg_drop_image: '画像をドロップ、またはクリックして選択',
   msg_duplicated_token_name: 'この名前のトークンは既にあります。',
@@ -415,6 +426,13 @@ export const ja: DefaultLocaleItems = {
   msg_slack_bot_unavailable: 'Slack Botトークンが未設定または無効です。SLACK_BOT_TOKEN を確認してください。',
   msg_slack_channel_empty:
     '選択できるチャンネルがありません。通知したいチャンネルで「/invite @Devuntu」を実行してください。',
+  msg_webpush_blocked: 'ブラウザの通知が拒否されています。ブラウザの設定でこのサイトの通知を許可してください。',
+  msg_webpush_desc: 'ブラウザやスマートフォンの通知として受け取ります。端末ごとに登録が必要です。',
+  msg_webpush_failed: 'Webプッシュ通知の登録に失敗しました。時間をおいて再度お試しください。',
+  msg_webpush_ios_standalone: 'iPhone / iPad では、ホーム画面に追加したアプリから開いた場合のみ通知を受け取れます。',
+  msg_webpush_no_device: '通知を受け取る端末が登録されていません。',
+  msg_webpush_unavailable: 'この環境ではWebプッシュ通知を利用できません。サーバー側の設定が必要です。',
+  msg_webpush_unsupported: 'このブラウザはWebプッシュ通知に対応していません。',
   msg_slack_connected: 'Slackと連携済みです',
   msg_slack_email_must_match: 'SlackのメールアドレスがDevuntuのものと一致している必要があります。',
   msg_slack_enable_desc: '有効にすると、ユーザーがSlackと連携して通知を受け取れるようになります。',
@@ -427,7 +445,22 @@ export const ja: DefaultLocaleItems = {
   msg_within_a_day: '1日以内',
   msg_within_days: '${days}日以内',
 
-  mail_mention_body: `\${message}
+  mail_digest_body: `\${count}件の通知があります。
+
+\${items}
+
+※この通知はアカウント画面の通知設定から停止できます。
+`,
+  mail_digest_item: `■ \${message}
+\${subject}
+\${url}`,
+  mail_digest_item_excerpt: `■ \${message}
+\${subject}
+\${excerpt}
+\${url}`,
+  mail_digest_more: 'ほか${count}件',
+  mail_digest_subject: '[${appname}] ${count}件の新しい通知',
+  mail_notify_body: `\${message}
 
 \${subject}
 
@@ -435,7 +468,7 @@ export const ja: DefaultLocaleItems = {
 
 ※この通知はアカウント画面の通知設定から停止できます。
 `,
-  mail_mention_comment_body: `\${message}
+  mail_notify_excerpt_body: `\${message}
 
 \${subject}
 
@@ -460,6 +493,10 @@ export const ja: DefaultLocaleItems = {
   notify_msg_agent_run_finished: '${agent}が${action}を実行しました(${result} / ${duration})',
   notify_msg_mentioned: '${from}さんがあなたをメンションしました',
   notify_msg_mentioned_comment: '${from}さんがコメントであなたをメンションしました',
+  notify_msg_ticket_assigned: '${from}さんがあなたを担当者に指定しました',
+  notify_msg_ticket_assigned_channel: '${from}さんが${assignee}さんを担当者に指定しました',
+  notify_msg_ticket_completed: '${from}さんがチケットを完了しました',
+  notify_msg_ticket_created: '${from}さんがチケットを作成しました',
 
   slack_msg_open_ticket: 'チケットを開く',
 
@@ -480,4 +517,5 @@ export const ja: DefaultLocaleItems = {
   '@invalid_agent_handle': '識別子は英小文字・数字・ハイフンで32文字まで(先頭と末尾はハイフン不可)',
   '@invalid_daily_limit': '0(無制限)～999の整数',
   '@invalid_slack_channel': 'Slackチャンネルの指定が正しくありません',
+  '@invalid_webpush_subscription': '購読の形式が正しくありません。',
 }

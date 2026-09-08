@@ -188,6 +188,24 @@ Google 側のコールバックURLには**次の2つ**を登録する。
 メンションの Slack DM 通知と、Slack に貼られたチケットURLの展開が使えるようになる。
 手順の詳細は [notifications.md](notifications.md#slack通知の前提) を参照。
 
+### Webプッシュ通知
+
+ブラウザ / スマートフォンの通知として受け取る場合は VAPID 鍵を生成し、`.env.docker` へ設定する。
+未設定なら購読の UI ごと出ないので、使わない場合は省略してよい。
+
+```sh
+docker compose exec -T devuntu node -e "const w=require('web-push');const k=w.generateVAPIDKeys();console.log('VAPID_PUBLIC_KEY='+k.publicKey);console.log('VAPID_PRIVATE_KEY='+k.privateKey)"
+```
+
+出力の 2 行をそのまま `.env.docker` へ追記して再起動する。プッシュサービスからの連絡先を変えたい
+場合は `VAPID_SUBJECT`(`mailto:` か `https:`)も設定する(既定は `mailto:${MAIL_FROM}`)。
+
+- **鍵を入れ替えると既存の購読はすべて無効になる**(登録済みの端末へ送ると `401` になり、
+  利用者は再登録が必要)。生成し直すのは鍵が漏れた場合だけにする
+- 通知は HTTPS のオリジンでのみ動く(`localhost` は例外)
+- **iPhone / iPad はホーム画面に追加したアプリから開いた場合だけ**通知を受け取れる
+  (詳細は [notifications.md](notifications.md#ios--ipados-の制約))
+
 ### MCP サーバーの公開
 
 `OIDC_DCR_ENABLED=true` を設定すると、Claude Code などの MCP クライアントが

@@ -77,6 +77,11 @@ model User {
   attachments    Attachment[]
   notifySettings UserNotifySetting[]
 
+  // Notify
+  notifyOutboxes       NotifyOutbox[]        @relation("NotifyOutboxActor")
+  notifyDeliveries     NotifyDelivery[]
+  webPushSubscriptions WebPushSubscription[]
+
   // CalendarShare
   calendarShare     CalendarShare?
   calendarBusyTimes CalendarBusyTime[]
@@ -1220,19 +1225,18 @@ model Board {
   archived Boolean @default(false)
 
   /// エージェントの実行結果を通知する Slack チャンネル(`C...`)。null なら通知しない。
-  /// Bot が招待されているチャンネルだけを設定画面に出す(users.conversations)
-  slackChannelId String?
 
   // メタデータ
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  members      BoardMember[]
-  groups       BoardGroup[]
-  tickets      Ticket[]
-  tags         Tag[]
-  attachments  Attachment[]
-  keyHistories BoardKeyHistory[]
+  members        BoardMember[]
+  groups         BoardGroup[]
+  tickets        Ticket[]
+  tags           Tag[]
+  attachments    Attachment[]
+  keyHistories   BoardKeyHistory[]
+  notifySettings BoardNotifySetting[]
 
   @@map("board")
 }
@@ -1461,10 +1465,44 @@ enum TicketCommentType {
   report
 }
 
-/// 通知の対象となるイベント
+/// 通知の対象となるイベント。
+/// NOTIFY_EVENTS(`src/lib/notify/notify.ts`)と並びを揃える(tests/lib/notify/notify.test.ts で固定)。
+/// 値の追加は末尾のみ。既存値の前に挿入すると並びの一致が崩れる。
 enum NotifyEvent {
   /// チケットやコメントで自分がメンションされた
   mention
+
+  /// AIエージェントの実行が終了した
+  agent_run
+
+  /// チケットの担当者が変わった(DM は新しい担当者へ)
+  ticket_assigned
+
+  /// チケットが作成された
+  ticket_created
+
+  /// チケットが完了した(status = done)
+  ticket_completed
+}
+
+/// 通知チャネル。UserNotifySetting の列名と一致させる(NOTIFY_CHANNELS)
+enum NotifyChannel {
+  email
+  slack
+  webpush
+}
+
+/// キューの行の状態。
+/// 送信できた配信は行ごと消すので、`done` は展開を終えたアウトボックスにだけ付く。
+enum NotifyJobStatus {
+  /// 未処理。`scheduledAt` を過ぎたものがワーカーの対象になる
+  pending
+  /// ワーカーが掴んでいる。`claimedAt` が古いものは取りこぼしとして回収する
+  processing
+  /// 展開済み(アウトボックスのみ)
+  done
+  /// 試行回数を使い切った。原因を追うために一定期間残す
+  failed
 }
 
 /// ユーザーごとの通知設定。
@@ -1485,6 +1523,9 @@ model UserNotifySetting {
   /// Slack で通知する
   slack Boolean @default(false)
 
+  /// Web プッシュで通知する
+  webpush Boolean @default(false)
+
   // メタデータ
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1492,4 +1533,141 @@ model UserNotifySetting {
   // (userId, event) の @@unique が userId 先頭の索引を兼ねるので @@index([userId]) は不要
   @@unique([userId, event])
   @@map("user_notify_setting")
+}
+
+/// Web プッシュの購読。1ユーザーが複数の端末を登録できる。
+///
+/// 通知の ON/OFF は UserNotifySetting 側で持ち、ここは「どの端末へ送れるか」だけを表す。
+/// プッシュサービスが失効(404 / 410)を返した購読は行ごと削除する。
+model WebPushSubscription {
+  id String @id @default(uuid(7))
+
+  /// 購読の持ち主
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// プッシュサービスのエンドポイント。購読の同一性はこれで決まる
+  endpoint String @unique
+
+  /// UA の公開鍵(p256dh, base64url)
+  p256dh String
+
+  /// 共有秘密(auth, base64url)
+  auth String
+
+  /// 一覧で端末を見分けるための自己申告。認可には使わない
+  label String?
+
+  /// 最後に送信できた時刻。使われていない購読の掃除に使う
+  lastUsedAt DateTime?
+
+  // メタデータ
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("web_push_subscription")
+}
+
+/// ボードごとのチャネル通知設定。
+///
+/// 行が無いイベントは通知しない(UserNotifySetting と同じオプトイン方式)。
+/// 宛先がユーザーではないので、ユーザーごとの通知設定とは独立している。
+/// イベントごとに別のチャンネルを指定できる形にしてあるが、画面では「通知先1つ + イベントの ON/OFF」
+/// として扱う(イベント別チャンネルが必要になってもマイグレーションが要らない)。
+model BoardNotifySetting {
+  id String @id @default(uuid(7))
+
+  /// 設定の持ち主
+  boardId String
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  /// 通知の対象イベント。チャネル通知を持つイベント(CHANNEL_NOTIFY_EVENTS)に限る
+  event NotifyEvent
+
+  /// 投稿先の Slack チャンネル(`C...` / `G...`)
+  slackChannelId String
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // (boardId, event) の @@unique が boardId 先頭の索引を兼ねる
+  @@unique([boardId, event])
+  @@map("board_notify_setting")
+}
+
+/// 通知の発生記録(アウトボックス)。
+///
+/// トリガー側はチケット操作と同じトランザクションでここへ1行書くだけで済み、
+/// 宛先の解決とチャネル別の配信はワーカー(`notify-dispatch.ts`)が行う。
+/// トリガーを増やしても呼び出し元は「何が起きたか」だけを書けばよい。
+model NotifyOutbox {
+  id String @id @default(uuid(7))
+
+  /// 発生したイベント
+  event NotifyEvent
+
+  /// 発生させた人。DM の宛先から除外する(自分の操作で自分へ通知しない)
+  actorId String?
+  actor   User?   @relation("NotifyOutboxActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  /// トリガー側でしか決められない DM の宛先(増えたメンションなど)。
+  /// 規則で導ける宛先はワーカーが解決する
+  targetUserIds String[] @default([])
+
+  /// 文面の組み立てに必要な値。イベントごとに形が違うので Json で持つ(`notify-payload.ts` で検証)。
+  /// チケットが後から消えても通知が壊れないよう、表示IDや件名はここへスナップショットする
+  payload Json
+
+  status    NotifyJobStatus @default(pending)
+  attempts  Int             @default(0)
+  claimedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  deliveries NotifyDelivery[]
+
+  // ワーカーは未処理を発生順に引く
+  @@index([status, createdAt])
+  @@map("notify_outbox")
+}
+
+/// 1宛先 × 1チャネルぶんの配信。ワーカーがアウトボックスを展開して作る。
+///
+/// 送信できた行は削除する(送信の記録はログに残る)ので、残っているのは
+/// 未送信・再試行待ち・試行回数を使い切ったものだけ。
+model NotifyDelivery {
+  id String @id @default(uuid(7))
+
+  outboxId String
+  outbox   NotifyOutbox @relation(fields: [outboxId], references: [id], onDelete: Cascade)
+
+  channel NotifyChannel
+
+  /// DM の宛先。チャンネル通知では null
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// チャンネル通知の宛先。DM では null
+  slackChannelId String?
+
+  status NotifyJobStatus @default(pending)
+
+  /// この時刻以降に送る。再試行のバックオフと、メールの集約ウィンドウで使う
+  scheduledAt DateTime
+
+  attempts  Int       @default(0)
+  claimedAt DateTime?
+
+  /// 直近の失敗理由。分類(SlackSendOutcome 等)だけを入れ、利用者の入力は載せない
+  lastError String?
+
+  createdAt DateTime @default(now())
+
+  // ワーカーの取り出し(チャネル別・期限到来順)を索引スキャンにする
+  @@index([channel, status, scheduledAt])
+  // メールの集約はユーザー単位でまとめて取り出す
+  @@index([userId, channel, status, scheduledAt])
+  @@index([outboxId])
+  @@map("notify_delivery")
 }

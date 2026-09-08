@@ -19,12 +19,12 @@ import {
   startAgentRun,
   type AgentRunnerRow,
 } from '@/lib/agent/agent-runner'
-import { notifyAgentRun } from '@/lib/notify/notify-agent-run'
+import { enqueueAgentRunFinished } from '@/lib/notify/notify-trigger'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // 通知は実行を閉じたことの副作用。ここでは「どう呼ばれたか」だけを見る
-vi.mock('@/lib/notify/notify-agent-run', () => ({ notifyAgentRun: vi.fn() }))
+vi.mock('@/lib/notify/notify-trigger', () => ({ enqueueAgentRunFinished: vi.fn() }))
 
 vi.mock('@/lib/prisma', () => {
   const ticket = { findMany: vi.fn(), findUnique: vi.fn(), update: vi.fn(), updateMany: vi.fn() }
@@ -51,14 +51,15 @@ const ticket = vi.mocked(prisma.ticket)
 const ticketComment = vi.mocked(prisma.ticketComment)
 const agentRun = vi.mocked(prisma.agentRun)
 
-const notifyMock = vi.mocked(notifyAgentRun)
+const notifyMock = vi.mocked(enqueueAgentRunFinished)
 
-/** 通知の宛先を引くためにチケットへ足した select。既定は通知先が設定済みのボード */
-const notifyTicket = (slackChannelId: string | null = 'C0123ABCD') => ({
+/** 通知の宛先と文面を組み立てるためにチケットへ足した select */
+const notifyTicket = () => ({
   id: 't1',
+  boardId: 'b1',
   number: 42,
   title: 'テストチケット',
-  board: { key: 'ABC', slackChannelId },
+  board: { key: 'ABC' },
 })
 
 const runner = (override: Partial<AgentRunnerRow> = {}): AgentRunnerRow => ({
@@ -290,7 +291,7 @@ describe('failStaleAgentRuns', () => {
     })
   })
 
-  it('時間切れは失敗としてボードのチャンネルへ通知する', async () => {
+  it('時間切れは失敗として通知する', async () => {
     agentRun.findMany.mockResolvedValueOnce([staleRun()] as never)
 
     await failStaleAgentRuns('r1')
@@ -298,11 +299,12 @@ describe('failStaleAgentRuns', () => {
     expect(notifyMock).toHaveBeenCalledWith(
       expect.objectContaining({
         runId: 'run1',
-        slackChannelId: 'C0123ABCD',
-        displayId: 'ABC-42',
+        ticket: expect.objectContaining({ displayId: 'ABC-42' }),
         status: 'failed',
         summary: 'timeout',
       }),
+      // 実行を閉じるのと同じトランザクションで投入する
+      expect.anything(),
     )
   })
 
@@ -335,7 +337,7 @@ describe('failStaleAgentRuns', () => {
       data: { agentState: 'failed' },
     })
     expect(notifyMock).toHaveBeenCalledTimes(1)
-    expect(notifyMock).toHaveBeenCalledWith(expect.objectContaining({ runId: 'run2' }))
+    expect(notifyMock).toHaveBeenCalledWith(expect.objectContaining({ runId: 'run2' }), expect.anything())
   })
 })
 
@@ -405,6 +407,7 @@ describe('finishAgentRunById', () => {
     })
     expect(notifyMock, '閉じたのはこの経路なので通知もここから出す').toHaveBeenCalledWith(
       expect.objectContaining({ runId: 'run1', status: 'failed', summary: 'exit 0' }),
+      expect.anything(),
     )
   })
 

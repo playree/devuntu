@@ -65,19 +65,19 @@
 
 Proxy の対象外のため、各ルートハンドラ内で個別に認証する。
 
-| パス                                               | アクセス制御                                                       |
-| -------------------------------------------------- | ------------------------------------------------------------------ |
-| `/api/auth/[...all]`                               | Better Auth のハンドラ(認証処理自体)                               |
-| `/api/auth/.well-known/openid-configuration`       | 認証不要(OIDC ディスカバリ)                                        |
-| `/api/auth/.well-known/oauth-authorization-server` | 認証不要(RFC 8414 認可サーバーメタデータ)                          |
-| `/.well-known/oauth-authorization-server/api/auth` | 認証不要(RFC 8414 のパス挿入形式。同じ内容を返す)                  |
-| `/.well-known/oauth-protected-resource/api/mcp`    | 認証不要(RFC 9728 保護リソースメタデータ)                          |
-| `/api/auth/oauth2/register`                        | 認証不要(RFC 7591 動的クライアント登録)。`OIDC_DCR_ENABLED` 時のみ |
-| `/api/mcp`                                         | アクセストークン必須(未提示は401 + `WWW-Authenticate`)             |
-| `/api/health`                                      | 認証不要(ヘルスチェック)                                           |
-| `/api/agent/status`                                | エージェント用トークン必須(POST)。稼働条件と処理対象チケットを返す |
-| `/api/agent/runs`                                  | エージェント用トークン必須(POST)。実行の開始を記録                 |
-| `/api/agent/runs/[id]`                             | エージェント用トークン必須(PATCH)。実行の終了を記録                |
-| `/agent/devuntu_agent.py`                          | 認証不要(`public/` の静的配布)。ランナー本体。秘密情報は含まない   |
+| パス                                               | アクセス制御                                                          |
+| -------------------------------------------------- | --------------------------------------------------------------------- |
+| `/api/auth/[...all]`                               | Better Auth のハンドラ(認証処理自体)                                  |
+| `/api/auth/.well-known/openid-configuration`       | 認証不要(OIDC ディスカバリ)                                           |
+| `/api/auth/.well-known/oauth-authorization-server` | 認証不要(RFC 8414 認可サーバーメタデータ)                             |
+| `/.well-known/oauth-authorization-server/api/auth` | 認証不要(RFC 8414 のパス挿入形式。同じ内容を返す)                     |
+| `/.well-known/oauth-protected-resource/api/mcp`    | 認証不要(RFC 9728 保護リソースメタデータ)                             |
+| `/api/auth/oauth2/register`                        | 認証不要(RFC 7591 動的クライアント登録)。`OIDC_DCR_ENABLED` 時のみ    |
+| `/api/mcp`                                         | アクセストークン必須(未提示は401 + `WWW-Authenticate`)                |
+| `/api/health`                                      | 認証不要(ヘルスチェック)                                              |
+| `/api/agent/status`                                | エージェント用トークン必須(POST)。稼働条件と処理対象チケットを返す    |
+| `/api/agent/runs`                                  | エージェント用トークン必須(POST)。実行の開始を記録                    |
+| `/api/agent/runs/[id]`                             | エージェント用トークン必須(PATCH)。実行の終了を記録                   |
+| `/agent/devuntu_agent.py`                          | 認証不要(`public/` の静的配布)。ランナー本体。秘密情報は含まない      |
 | `/api/upload`                                      | 認証必須(セッション、またはMCPの短命トークン)。画像アップロード(POST) |
-| `/api/upload/[filename]`                           | 認証必須(未ログインは401)。画像配信(GET)                           |
+| `/api/upload/[filename]`                           | 認証必須(未ログインは401)。画像配信(GET)                              |

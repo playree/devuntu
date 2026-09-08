@@ -18,13 +18,14 @@ import { listBoardTagsForManage, rethrowDuplicatedTagName } from '@/lib/board/ta
 import { canApplyAssignments, MAX_TAGS_PER_SCOPE, nextOrder, TICKET_STATUSES, type BoardRole } from '@/lib/board/task'
 import { errInvalidOperation, errValidation } from '@/lib/error'
 import { logger } from '@/lib/logger'
+import { getBoardNotifySetting, setBoardNotifySetting } from '@/lib/notify/notify-board-setting'
 import { prisma } from '@/lib/prisma'
 import {
   scCreateTag,
   scRemoveBoardMember,
   scSetBoardArchived,
   scSetBoardGroups,
-  scSetBoardSlackChannel,
+  scSetBoardNotifySetting,
   scUpdateBoard,
   scUpdateTag,
   scUpsertBoardMember,
@@ -56,7 +57,6 @@ export const getBoardDetail = safeAuthAction
         name: true,
         description: true,
         archived: true,
-        slackChannelId: true,
         createdAt: true,
       },
     })
@@ -75,7 +75,7 @@ export const getBoardDetail = safeAuthAction
       // 権限境界: ユーザー単位のアサインは owner、グループ単位は管理者のみ
       canManage: access.role === 'owner' || isAdminActor(user),
       isAdmin: isAdminActor(user),
-      // Slack通知セクションの表示可否。連携が使えない環境では設定させても届かない
+      // チャネル通知セクションの表示可否。連携が使えない環境では設定させても届かない
       slackEnabled: hasSlackCredentials() && (await getSlackSettings()).enabled,
       ticketCounts: Object.fromEntries(TICKET_STATUSES.map((status) => [status, byStatus[status] ?? 0])),
     }
@@ -158,20 +158,31 @@ export const getBoardSlackChannels = safeAuthAction
   })
 export type GetBoardSlackChannelsReturnType = Awaited<ReturnType<typeof getBoardSlackChannels>>['data']
 
+/** ボードのチャネル通知の現在値(owner または管理者) */
+export const getBoardNotify = safeAuthAction
+  .metadata({ actionName: 'getBoardNotify', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => {
+    await assertBoardAccess(user, id, 'manage')
+    await assertTeamBoard(prisma, id)
+    return getBoardNotifySetting(id)
+  })
+export type GetBoardNotifyReturnType = Awaited<ReturnType<typeof getBoardNotify>>['data']
+
 /**
- * エージェントの実行結果を通知する Slack チャンネルの設定(owner または管理者)。
+ * ボードのチャネル通知の設定(owner または管理者)。
  *
- * 空文字は「通知しない」。存在しない / Bot が参加していないチャンネルを保存すると
- * 設定できたように見えて通知だけ届かなくなるため、一覧と突き合わせてから保存する
- * (一覧はキャッシュ済みなので追加のコストはほぼ無い)。
+ * 通知先が空文字、またはイベントが 1 つも選ばれていなければ「通知しない」。
+ * 存在しない / Bot が参加していないチャンネルを保存すると設定できたように見えて通知だけ
+ * 届かなくなるため、一覧と突き合わせてから保存する(一覧はキャッシュ済みなので追加のコストはほぼ無い)。
  *
  * 突き合わせの成否はチャンネルの実在を教えてしまうので、権限の確定を先に済ませる。
  * トランザクション内の再検証は、確定から更新までの間に権限が変わる場合のために残す。
  */
-export const setBoardSlackChannel = safeAuthAction
-  .metadata({ actionName: 'setBoardSlackChannel', role: 'user' })
-  .inputSchema(scSetBoardSlackChannel)
-  .action(async ({ ctx: { user }, parsedInput: { id, slackChannelId } }) => {
+export const setBoardNotify = safeAuthAction
+  .metadata({ actionName: 'setBoardNotify', role: 'user' })
+  .inputSchema(scSetBoardNotifySetting)
+  .action(async ({ ctx: { user }, parsedInput: { id, slackChannelId, events } }) => {
     const channelId = slackChannelId || null
 
     await assertBoardAccess(user, id, 'manage')
@@ -187,10 +198,9 @@ export const setBoardSlackChannel = safeAuthAction
     await prisma.$transaction(async (tx) => {
       await assertBoardAccess(user, id, 'manage', tx)
       await assertTeamBoard(tx, id)
-      await tx.board.update({ where: { id }, data: { slackChannelId: channelId }, select: { id: true } })
+      await setBoardNotifySetting(id, { slackChannelId: channelId, events }, tx)
     })
 
-    logger.info({ userId: user.id, id, slackChannelId: channelId }, 'board slack channel updated')
     return { id }
   })
 

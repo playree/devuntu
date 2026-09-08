@@ -299,6 +299,9 @@ export type UserWhereInput = {
   dashboard?: Prisma.XOR<Prisma.DashboardNullableScalarRelationFilter, Prisma.DashboardWhereInput> | null
   attachments?: Prisma.AttachmentListRelationFilter
   notifySettings?: Prisma.UserNotifySettingListRelationFilter
+  notifyOutboxes?: Prisma.NotifyOutboxListRelationFilter
+  notifyDeliveries?: Prisma.NotifyDeliveryListRelationFilter
+  webPushSubscriptions?: Prisma.WebPushSubscriptionListRelationFilter
   calendarShare?: Prisma.XOR<Prisma.CalendarShareNullableScalarRelationFilter, Prisma.CalendarShareWhereInput> | null
   calendarBusyTimes?: Prisma.CalendarBusyTimeListRelationFilter
   boardMembers?: Prisma.BoardMemberListRelationFilter
@@ -346,6 +349,9 @@ export type UserOrderByWithRelationInput = {
   dashboard?: Prisma.DashboardOrderByWithRelationInput
   attachments?: Prisma.AttachmentOrderByRelationAggregateInput
   notifySettings?: Prisma.UserNotifySettingOrderByRelationAggregateInput
+  notifyOutboxes?: Prisma.NotifyOutboxOrderByRelationAggregateInput
+  notifyDeliveries?: Prisma.NotifyDeliveryOrderByRelationAggregateInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionOrderByRelationAggregateInput
   calendarShare?: Prisma.CalendarShareOrderByWithRelationInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeOrderByRelationAggregateInput
   boardMembers?: Prisma.BoardMemberOrderByRelationAggregateInput
@@ -396,6 +402,9 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   dashboard?: Prisma.XOR<Prisma.DashboardNullableScalarRelationFilter, Prisma.DashboardWhereInput> | null
   attachments?: Prisma.AttachmentListRelationFilter
   notifySettings?: Prisma.UserNotifySettingListRelationFilter
+  notifyOutboxes?: Prisma.NotifyOutboxListRelationFilter
+  notifyDeliveries?: Prisma.NotifyDeliveryListRelationFilter
+  webPushSubscriptions?: Prisma.WebPushSubscriptionListRelationFilter
   calendarShare?: Prisma.XOR<Prisma.CalendarShareNullableScalarRelationFilter, Prisma.CalendarShareWhereInput> | null
   calendarBusyTimes?: Prisma.CalendarBusyTimeListRelationFilter
   boardMembers?: Prisma.BoardMemberListRelationFilter
@@ -491,6 +500,9 @@ export type UserCreateInput = {
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
@@ -538,6 +550,9 @@ export type UserUncheckedCreateInput = {
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
@@ -585,6 +600,9 @@ export type UserUpdateInput = {
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
@@ -632,6 +650,9 @@ export type UserUncheckedUpdateInput = {
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
@@ -1190,6 +1211,52 @@ export type UserUpdateOneRequiredWithoutNotifySettingsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutNotifySettingsInput, Prisma.UserUpdateWithoutNotifySettingsInput>, Prisma.UserUncheckedUpdateWithoutNotifySettingsInput>
 }
 
+export type UserCreateNestedOneWithoutWebPushSubscriptionsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutWebPushSubscriptionsInput, Prisma.UserUncheckedCreateWithoutWebPushSubscriptionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutWebPushSubscriptionsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutWebPushSubscriptionsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutWebPushSubscriptionsInput, Prisma.UserUncheckedCreateWithoutWebPushSubscriptionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutWebPushSubscriptionsInput
+  upsert?: Prisma.UserUpsertWithoutWebPushSubscriptionsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutWebPushSubscriptionsInput, Prisma.UserUpdateWithoutWebPushSubscriptionsInput>, Prisma.UserUncheckedUpdateWithoutWebPushSubscriptionsInput>
+}
+
+export type UserCreateNestedOneWithoutNotifyOutboxesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutNotifyOutboxesInput, Prisma.UserUncheckedCreateWithoutNotifyOutboxesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutNotifyOutboxesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutNotifyOutboxesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutNotifyOutboxesInput, Prisma.UserUncheckedCreateWithoutNotifyOutboxesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutNotifyOutboxesInput
+  upsert?: Prisma.UserUpsertWithoutNotifyOutboxesInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutNotifyOutboxesInput, Prisma.UserUpdateWithoutNotifyOutboxesInput>, Prisma.UserUncheckedUpdateWithoutNotifyOutboxesInput>
+}
+
+export type UserCreateNestedOneWithoutNotifyDeliveriesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutNotifyDeliveriesInput, Prisma.UserUncheckedCreateWithoutNotifyDeliveriesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutNotifyDeliveriesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutNotifyDeliveriesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutNotifyDeliveriesInput, Prisma.UserUncheckedCreateWithoutNotifyDeliveriesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutNotifyDeliveriesInput
+  upsert?: Prisma.UserUpsertWithoutNotifyDeliveriesInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutNotifyDeliveriesInput, Prisma.UserUpdateWithoutNotifyDeliveriesInput>, Prisma.UserUncheckedUpdateWithoutNotifyDeliveriesInput>
+}
+
 export type UserCreateWithoutAgentTokenInput = {
   id?: string
   name: string
@@ -1221,6 +1288,9 @@ export type UserCreateWithoutAgentTokenInput = {
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
@@ -1267,6 +1337,9 @@ export type UserUncheckedCreateWithoutAgentTokenInput = {
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
@@ -1318,6 +1391,9 @@ export type UserCreateWithoutCreatedAgentTokensInput = {
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
@@ -1364,6 +1440,9 @@ export type UserUncheckedCreateWithoutCreatedAgentTokensInput = {
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
@@ -1426,6 +1505,9 @@ export type UserUpdateWithoutAgentTokenInput = {
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
@@ -1472,6 +1554,9 @@ export type UserUncheckedUpdateWithoutAgentTokenInput = {
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
@@ -1529,6 +1614,9 @@ export type UserUpdateWithoutCreatedAgentTokensInput = {
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
@@ -1575,6 +1663,9 @@ export type UserUncheckedUpdateWithoutCreatedAgentTokensInput = {
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
@@ -1621,6 +1712,9 @@ export type UserCreateWithoutMcpTokensInput = {
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
@@ -1667,6 +1761,9 @@ export type UserUncheckedCreateWithoutMcpTokensInput = {
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
@@ -1729,6 +1826,9 @@ export type UserUpdateWithoutMcpTokensInput = {
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
@@ -1775,6 +1875,9 @@ export type UserUncheckedUpdateWithoutMcpTokensInput = {
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
@@ -1821,6 +1924,9 @@ export type UserCreateWithoutAgentRunnerInput = {
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
@@ -1867,6 +1973,9 @@ export type UserUncheckedCreateWithoutAgentRunnerInput = {
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
@@ -1929,6 +2038,9 @@ export type UserUpdateWithoutAgentRunnerInput = {
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
@@ -1975,6 +2087,9 @@ export type UserUncheckedUpdateWithoutAgentRunnerInput = {
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
@@ -2021,6 +2136,9 @@ export type UserCreateWithoutAgentApproversInput = {
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
@@ -2067,6 +2185,9 @@ export type UserUncheckedCreateWithoutAgentApproversInput = {
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
@@ -2118,6 +2239,9 @@ export type UserCreateWithoutApproverOfInput = {
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
@@ -2164,6 +2288,9 @@ export type UserUncheckedCreateWithoutApproverOfInput = {
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
@@ -2226,6 +2353,9 @@ export type UserUpdateWithoutAgentApproversInput = {
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
@@ -2272,6 +2402,9 @@ export type UserUncheckedUpdateWithoutAgentApproversInput = {
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
@@ -2329,6 +2462,9 @@ export type UserUpdateWithoutApproverOfInput = {
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
@@ -2375,6 +2511,9 @@ export type UserUncheckedUpdateWithoutApproverOfInput = {
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
@@ -2421,6 +2560,9 @@ export type UserCreateWithoutAgentApproverGroupsInput = {
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
@@ -2467,6 +2609,9 @@ export type UserUncheckedCreateWithoutAgentApproverGroupsInput = {
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
@@ -2529,6 +2674,9 @@ export type UserUpdateWithoutAgentApproverGroupsInput = {
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
@@ -2575,6 +2723,9 @@ export type UserUncheckedUpdateWithoutAgentApproverGroupsInput = {
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
@@ -2620,6 +2771,9 @@ export type UserCreateWithoutSessionsInput = {
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
@@ -2666,6 +2820,9 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
@@ -2728,6 +2885,9 @@ export type UserUpdateWithoutSessionsInput = {
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
@@ -2774,6 +2934,9 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
@@ -2820,6 +2983,9 @@ export type UserCreateWithoutAccountsInput = {
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
@@ -2866,6 +3032,9 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
@@ -2928,6 +3097,9 @@ export type UserUpdateWithoutAccountsInput = {
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
@@ -2974,6 +3146,9 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
@@ -3020,6 +3195,9 @@ export type UserCreateWithoutTwofactorsInput = {
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
@@ -3066,6 +3244,9 @@ export type UserUncheckedCreateWithoutTwofactorsInput = {
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
@@ -3128,6 +3309,9 @@ export type UserUpdateWithoutTwofactorsInput = {
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
@@ -3174,6 +3358,9 @@ export type UserUncheckedUpdateWithoutTwofactorsInput = {
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
@@ -3220,6 +3407,9 @@ export type UserCreateWithoutPasskeysInput = {
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
@@ -3266,6 +3456,9 @@ export type UserUncheckedCreateWithoutPasskeysInput = {
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
@@ -3328,6 +3521,9 @@ export type UserUpdateWithoutPasskeysInput = {
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
@@ -3374,6 +3570,9 @@ export type UserUncheckedUpdateWithoutPasskeysInput = {
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
@@ -3420,6 +3619,9 @@ export type UserCreateWithoutOauthclientsInput = {
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
@@ -3466,6 +3668,9 @@ export type UserUncheckedCreateWithoutOauthclientsInput = {
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
@@ -3528,6 +3733,9 @@ export type UserUpdateWithoutOauthclientsInput = {
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
@@ -3574,6 +3782,9 @@ export type UserUncheckedUpdateWithoutOauthclientsInput = {
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
@@ -3620,6 +3831,9 @@ export type UserCreateWithoutOauthrefreshtokensInput = {
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
@@ -3666,6 +3880,9 @@ export type UserUncheckedCreateWithoutOauthrefreshtokensInput = {
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
@@ -3728,6 +3945,9 @@ export type UserUpdateWithoutOauthrefreshtokensInput = {
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
@@ -3774,6 +3994,9 @@ export type UserUncheckedUpdateWithoutOauthrefreshtokensInput = {
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
@@ -3820,6 +4043,9 @@ export type UserCreateWithoutOauthaccesstokensInput = {
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
@@ -3866,6 +4092,9 @@ export type UserUncheckedCreateWithoutOauthaccesstokensInput = {
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
@@ -3928,6 +4157,9 @@ export type UserUpdateWithoutOauthaccesstokensInput = {
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
@@ -3974,6 +4206,9 @@ export type UserUncheckedUpdateWithoutOauthaccesstokensInput = {
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
@@ -4020,6 +4255,9 @@ export type UserCreateWithoutOauthconsentsInput = {
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
@@ -4066,6 +4304,9 @@ export type UserUncheckedCreateWithoutOauthconsentsInput = {
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
@@ -4128,6 +4369,9 @@ export type UserUpdateWithoutOauthconsentsInput = {
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
@@ -4174,6 +4418,9 @@ export type UserUncheckedUpdateWithoutOauthconsentsInput = {
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
@@ -4220,6 +4467,9 @@ export type UserCreateWithoutDashboardInput = {
   userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
@@ -4266,6 +4516,9 @@ export type UserUncheckedCreateWithoutDashboardInput = {
   userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
@@ -4328,6 +4581,9 @@ export type UserUpdateWithoutDashboardInput = {
   userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
@@ -4374,6 +4630,9 @@ export type UserUncheckedUpdateWithoutDashboardInput = {
   userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
@@ -4420,6 +4679,9 @@ export type UserCreateWithoutAttachmentsInput = {
   userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
@@ -4466,6 +4728,9 @@ export type UserUncheckedCreateWithoutAttachmentsInput = {
   userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
@@ -4528,6 +4793,9 @@ export type UserUpdateWithoutAttachmentsInput = {
   userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
@@ -4574,6 +4842,9 @@ export type UserUncheckedUpdateWithoutAttachmentsInput = {
   userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
@@ -4620,6 +4891,9 @@ export type UserCreateWithoutUserGroupsInput = {
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
@@ -4666,6 +4940,9 @@ export type UserUncheckedCreateWithoutUserGroupsInput = {
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
@@ -4728,6 +5005,9 @@ export type UserUpdateWithoutUserGroupsInput = {
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
@@ -4774,6 +5054,9 @@ export type UserUncheckedUpdateWithoutUserGroupsInput = {
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
@@ -4821,6 +5104,9 @@ export type UserCreateWithoutCalendarShareInput = {
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
   privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
@@ -4867,6 +5153,9 @@ export type UserUncheckedCreateWithoutCalendarShareInput = {
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
   privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
@@ -4929,6 +5218,9 @@ export type UserUpdateWithoutCalendarShareInput = {
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
   privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
@@ -4975,6 +5267,9 @@ export type UserUncheckedUpdateWithoutCalendarShareInput = {
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
   privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
@@ -5021,6 +5316,9 @@ export type UserCreateWithoutCalendarBusyTimesInput = {
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
   privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
@@ -5067,6 +5365,9 @@ export type UserUncheckedCreateWithoutCalendarBusyTimesInput = {
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
   privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
@@ -5129,6 +5430,9 @@ export type UserUpdateWithoutCalendarBusyTimesInput = {
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
   privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
@@ -5175,6 +5479,9 @@ export type UserUncheckedUpdateWithoutCalendarBusyTimesInput = {
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
   privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
@@ -5221,6 +5528,9 @@ export type UserCreateWithoutPrivateBoardInput = {
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
@@ -5267,6 +5577,9 @@ export type UserUncheckedCreateWithoutPrivateBoardInput = {
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
@@ -5329,6 +5642,9 @@ export type UserUpdateWithoutPrivateBoardInput = {
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
@@ -5375,6 +5691,9 @@ export type UserUncheckedUpdateWithoutPrivateBoardInput = {
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
@@ -5421,6 +5740,9 @@ export type UserCreateWithoutBoardMembersInput = {
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
@@ -5467,6 +5789,9 @@ export type UserUncheckedCreateWithoutBoardMembersInput = {
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
@@ -5529,6 +5854,9 @@ export type UserUpdateWithoutBoardMembersInput = {
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
@@ -5575,6 +5903,9 @@ export type UserUncheckedUpdateWithoutBoardMembersInput = {
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
@@ -5621,6 +5952,9 @@ export type UserCreateWithoutCreatedTicketsInput = {
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
@@ -5667,6 +6001,9 @@ export type UserUncheckedCreateWithoutCreatedTicketsInput = {
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
@@ -5718,6 +6055,9 @@ export type UserCreateWithoutAssignedTicketsInput = {
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
@@ -5764,6 +6104,9 @@ export type UserUncheckedCreateWithoutAssignedTicketsInput = {
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
@@ -5826,6 +6169,9 @@ export type UserUpdateWithoutCreatedTicketsInput = {
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
@@ -5872,6 +6218,9 @@ export type UserUncheckedUpdateWithoutCreatedTicketsInput = {
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
@@ -5929,6 +6278,9 @@ export type UserUpdateWithoutAssignedTicketsInput = {
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
@@ -5975,6 +6327,9 @@ export type UserUncheckedUpdateWithoutAssignedTicketsInput = {
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
@@ -6021,6 +6376,9 @@ export type UserCreateWithoutTicketCommentsInput = {
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
@@ -6067,6 +6425,9 @@ export type UserUncheckedCreateWithoutTicketCommentsInput = {
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
   notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
@@ -6129,6 +6490,9 @@ export type UserUpdateWithoutTicketCommentsInput = {
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
@@ -6175,6 +6539,9 @@ export type UserUncheckedUpdateWithoutTicketCommentsInput = {
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
   notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
@@ -6220,6 +6587,9 @@ export type UserCreateWithoutNotifySettingsInput = {
   userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
   dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
@@ -6266,6 +6636,9 @@ export type UserUncheckedCreateWithoutNotifySettingsInput = {
   userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
   dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
   boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
@@ -6328,6 +6701,9 @@ export type UserUpdateWithoutNotifySettingsInput = {
   userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
   dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
@@ -6374,6 +6750,645 @@ export type UserUncheckedUpdateWithoutNotifySettingsInput = {
   userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
   dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
+  boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
+  privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
+  createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
+  ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
+  agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
+  approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutWebPushSubscriptionsInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
+  locale?: string | null
+  lastLoginAt?: Date | string | null
+  timezone?: string | null
+  isAgent?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
+  userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
+  dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
+  attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
+  notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
+  boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
+  privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
+  createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
+  assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
+  ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
+  agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
+  agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
+  approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutWebPushSubscriptionsInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
+  locale?: string | null
+  lastLoginAt?: Date | string | null
+  timezone?: string | null
+  isAgent?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientUncheckedCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
+  userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
+  dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
+  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
+  notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
+  boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
+  privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
+  createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
+  ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
+  agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
+  approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutWebPushSubscriptionsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutWebPushSubscriptionsInput, Prisma.UserUncheckedCreateWithoutWebPushSubscriptionsInput>
+}
+
+export type UserUpsertWithoutWebPushSubscriptionsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutWebPushSubscriptionsInput, Prisma.UserUncheckedUpdateWithoutWebPushSubscriptionsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutWebPushSubscriptionsInput, Prisma.UserUncheckedCreateWithoutWebPushSubscriptionsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutWebPushSubscriptionsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutWebPushSubscriptionsInput, Prisma.UserUncheckedUpdateWithoutWebPushSubscriptionsInput>
+}
+
+export type UserUpdateWithoutWebPushSubscriptionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
+  userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
+  dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
+  attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
+  notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
+  boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
+  privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
+  createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
+  assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
+  ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
+  agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
+  approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutWebPushSubscriptionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUncheckedUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
+  userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
+  dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
+  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
+  notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
+  boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
+  privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
+  createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
+  ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
+  agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
+  approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutNotifyOutboxesInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
+  locale?: string | null
+  lastLoginAt?: Date | string | null
+  timezone?: string | null
+  isAgent?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
+  userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
+  dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
+  attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
+  notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
+  boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
+  privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
+  createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
+  assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
+  ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
+  agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
+  agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
+  approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutNotifyOutboxesInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
+  locale?: string | null
+  lastLoginAt?: Date | string | null
+  timezone?: string | null
+  isAgent?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientUncheckedCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
+  userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
+  dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
+  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
+  notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
+  boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
+  privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
+  createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
+  ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
+  agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
+  approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutNotifyOutboxesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutNotifyOutboxesInput, Prisma.UserUncheckedCreateWithoutNotifyOutboxesInput>
+}
+
+export type UserUpsertWithoutNotifyOutboxesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutNotifyOutboxesInput, Prisma.UserUncheckedUpdateWithoutNotifyOutboxesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutNotifyOutboxesInput, Prisma.UserUncheckedCreateWithoutNotifyOutboxesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutNotifyOutboxesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutNotifyOutboxesInput, Prisma.UserUncheckedUpdateWithoutNotifyOutboxesInput>
+}
+
+export type UserUpdateWithoutNotifyOutboxesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
+  userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
+  dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
+  attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
+  notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
+  boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
+  privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
+  createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
+  assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
+  ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
+  agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
+  approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutNotifyOutboxesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUncheckedUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
+  userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
+  dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
+  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
+  notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
+  boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
+  privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
+  createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
+  ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
+  agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
+  approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutNotifyDeliveriesInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
+  locale?: string | null
+  lastLoginAt?: Date | string | null
+  timezone?: string | null
+  isAgent?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
+  userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
+  dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
+  attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
+  notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
+  boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
+  privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
+  createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
+  assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
+  ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
+  agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
+  agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
+  approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutNotifyDeliveriesInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  avatarLocked?: boolean | null
+  nameLocked?: boolean | null
+  locale?: string | null
+  lastLoginAt?: Date | string | null
+  timezone?: string | null
+  isAgent?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientUncheckedCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
+  userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
+  dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
+  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
+  notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
+  boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
+  privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
+  createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
+  ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
+  agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
+  approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutNotifyDeliveriesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutNotifyDeliveriesInput, Prisma.UserUncheckedCreateWithoutNotifyDeliveriesInput>
+}
+
+export type UserUpsertWithoutNotifyDeliveriesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutNotifyDeliveriesInput, Prisma.UserUncheckedUpdateWithoutNotifyDeliveriesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutNotifyDeliveriesInput, Prisma.UserUncheckedCreateWithoutNotifyDeliveriesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutNotifyDeliveriesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutNotifyDeliveriesInput, Prisma.UserUncheckedUpdateWithoutNotifyDeliveriesInput>
+}
+
+export type UserUpdateWithoutNotifyDeliveriesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
+  userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
+  dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
+  attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
+  notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
+  boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
+  privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
+  createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
+  assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
+  ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
+  agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
+  approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutNotifyDeliveriesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUncheckedUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
+  userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
+  dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
+  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
+  notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
   calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
   boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
@@ -6407,6 +7422,9 @@ export type UserCountOutputType = {
   userGroups: number
   attachments: number
   notifySettings: number
+  notifyOutboxes: number
+  notifyDeliveries: number
+  webPushSubscriptions: number
   calendarBusyTimes: number
   boardMembers: number
   createdTickets: number
@@ -6431,6 +7449,9 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   userGroups?: boolean | UserCountOutputTypeCountUserGroupsArgs
   attachments?: boolean | UserCountOutputTypeCountAttachmentsArgs
   notifySettings?: boolean | UserCountOutputTypeCountNotifySettingsArgs
+  notifyOutboxes?: boolean | UserCountOutputTypeCountNotifyOutboxesArgs
+  notifyDeliveries?: boolean | UserCountOutputTypeCountNotifyDeliveriesArgs
+  webPushSubscriptions?: boolean | UserCountOutputTypeCountWebPushSubscriptionsArgs
   calendarBusyTimes?: boolean | UserCountOutputTypeCountCalendarBusyTimesArgs
   boardMembers?: boolean | UserCountOutputTypeCountBoardMembersArgs
   createdTickets?: boolean | UserCountOutputTypeCountCreatedTicketsArgs
@@ -6528,6 +7549,27 @@ export type UserCountOutputTypeCountAttachmentsArgs<ExtArgs extends runtime.Type
  */
 export type UserCountOutputTypeCountNotifySettingsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.UserNotifySettingWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountNotifyOutboxesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.NotifyOutboxWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountNotifyDeliveriesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.NotifyDeliveryWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountWebPushSubscriptionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.WebPushSubscriptionWhereInput
 }
 
 /**
@@ -6632,6 +7674,9 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   dashboard?: boolean | Prisma.User$dashboardArgs<ExtArgs>
   attachments?: boolean | Prisma.User$attachmentsArgs<ExtArgs>
   notifySettings?: boolean | Prisma.User$notifySettingsArgs<ExtArgs>
+  notifyOutboxes?: boolean | Prisma.User$notifyOutboxesArgs<ExtArgs>
+  notifyDeliveries?: boolean | Prisma.User$notifyDeliveriesArgs<ExtArgs>
+  webPushSubscriptions?: boolean | Prisma.User$webPushSubscriptionsArgs<ExtArgs>
   calendarShare?: boolean | Prisma.User$calendarShareArgs<ExtArgs>
   calendarBusyTimes?: boolean | Prisma.User$calendarBusyTimesArgs<ExtArgs>
   boardMembers?: boolean | Prisma.User$boardMembersArgs<ExtArgs>
@@ -6726,6 +7771,9 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   dashboard?: boolean | Prisma.User$dashboardArgs<ExtArgs>
   attachments?: boolean | Prisma.User$attachmentsArgs<ExtArgs>
   notifySettings?: boolean | Prisma.User$notifySettingsArgs<ExtArgs>
+  notifyOutboxes?: boolean | Prisma.User$notifyOutboxesArgs<ExtArgs>
+  notifyDeliveries?: boolean | Prisma.User$notifyDeliveriesArgs<ExtArgs>
+  webPushSubscriptions?: boolean | Prisma.User$webPushSubscriptionsArgs<ExtArgs>
   calendarShare?: boolean | Prisma.User$calendarShareArgs<ExtArgs>
   calendarBusyTimes?: boolean | Prisma.User$calendarBusyTimesArgs<ExtArgs>
   boardMembers?: boolean | Prisma.User$boardMembersArgs<ExtArgs>
@@ -6760,6 +7808,9 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     dashboard: Prisma.$DashboardPayload<ExtArgs> | null
     attachments: Prisma.$AttachmentPayload<ExtArgs>[]
     notifySettings: Prisma.$UserNotifySettingPayload<ExtArgs>[]
+    notifyOutboxes: Prisma.$NotifyOutboxPayload<ExtArgs>[]
+    notifyDeliveries: Prisma.$NotifyDeliveryPayload<ExtArgs>[]
+    webPushSubscriptions: Prisma.$WebPushSubscriptionPayload<ExtArgs>[]
     calendarShare: Prisma.$CalendarSharePayload<ExtArgs> | null
     calendarBusyTimes: Prisma.$CalendarBusyTimePayload<ExtArgs>[]
     boardMembers: Prisma.$BoardMemberPayload<ExtArgs>[]
@@ -7245,6 +8296,9 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   dashboard<T extends Prisma.User$dashboardArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$dashboardArgs<ExtArgs>>): Prisma.Prisma__DashboardClient<runtime.Types.Result.GetResult<Prisma.$DashboardPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   attachments<T extends Prisma.User$attachmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$attachmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AttachmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   notifySettings<T extends Prisma.User$notifySettingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notifySettingsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserNotifySettingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  notifyOutboxes<T extends Prisma.User$notifyOutboxesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notifyOutboxesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotifyOutboxPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  notifyDeliveries<T extends Prisma.User$notifyDeliveriesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notifyDeliveriesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotifyDeliveryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  webPushSubscriptions<T extends Prisma.User$webPushSubscriptionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$webPushSubscriptionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WebPushSubscriptionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   calendarShare<T extends Prisma.User$calendarShareArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$calendarShareArgs<ExtArgs>>): Prisma.Prisma__CalendarShareClient<runtime.Types.Result.GetResult<Prisma.$CalendarSharePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   calendarBusyTimes<T extends Prisma.User$calendarBusyTimesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$calendarBusyTimesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CalendarBusyTimePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   boardMembers<T extends Prisma.User$boardMembersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$boardMembersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BoardMemberPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -7979,6 +9033,78 @@ export type User$notifySettingsArgs<ExtArgs extends runtime.Types.Extensions.Int
   take?: number
   skip?: number
   distinct?: Prisma.UserNotifySettingScalarFieldEnum | Prisma.UserNotifySettingScalarFieldEnum[]
+}
+
+/**
+ * User.notifyOutboxes
+ */
+export type User$notifyOutboxesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the NotifyOutbox
+   */
+  select?: Prisma.NotifyOutboxSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the NotifyOutbox
+   */
+  omit?: Prisma.NotifyOutboxOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.NotifyOutboxInclude<ExtArgs> | null
+  where?: Prisma.NotifyOutboxWhereInput
+  orderBy?: Prisma.NotifyOutboxOrderByWithRelationInput | Prisma.NotifyOutboxOrderByWithRelationInput[]
+  cursor?: Prisma.NotifyOutboxWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.NotifyOutboxScalarFieldEnum | Prisma.NotifyOutboxScalarFieldEnum[]
+}
+
+/**
+ * User.notifyDeliveries
+ */
+export type User$notifyDeliveriesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the NotifyDelivery
+   */
+  select?: Prisma.NotifyDeliverySelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the NotifyDelivery
+   */
+  omit?: Prisma.NotifyDeliveryOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.NotifyDeliveryInclude<ExtArgs> | null
+  where?: Prisma.NotifyDeliveryWhereInput
+  orderBy?: Prisma.NotifyDeliveryOrderByWithRelationInput | Prisma.NotifyDeliveryOrderByWithRelationInput[]
+  cursor?: Prisma.NotifyDeliveryWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.NotifyDeliveryScalarFieldEnum | Prisma.NotifyDeliveryScalarFieldEnum[]
+}
+
+/**
+ * User.webPushSubscriptions
+ */
+export type User$webPushSubscriptionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the WebPushSubscription
+   */
+  select?: Prisma.WebPushSubscriptionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the WebPushSubscription
+   */
+  omit?: Prisma.WebPushSubscriptionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.WebPushSubscriptionInclude<ExtArgs> | null
+  where?: Prisma.WebPushSubscriptionWhereInput
+  orderBy?: Prisma.WebPushSubscriptionOrderByWithRelationInput | Prisma.WebPushSubscriptionOrderByWithRelationInput[]
+  cursor?: Prisma.WebPushSubscriptionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.WebPushSubscriptionScalarFieldEnum | Prisma.WebPushSubscriptionScalarFieldEnum[]
 }
 
 /**

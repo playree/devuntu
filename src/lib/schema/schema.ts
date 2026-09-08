@@ -24,9 +24,11 @@ import {
   TICKET_SORT_COLUMNS,
   TICKET_STATUSES,
 } from '../board/task'
-import { NOTIFY_EVENTS } from '../notify/notify'
+import { CHANNEL_NOTIFY_EVENTS, DM_NOTIFY_EVENTS } from '../notify/notify'
 import { SLACK_CHANNEL_ID_PATTERN } from '../slack/slack'
 import { TOKEN_EXPIRES } from '../token-expires'
+import { BASE64URL_PATTERN, MAX_WEBPUSH_ENDPOINT, MAX_WEBPUSH_LABEL } from '../webpush/webpush'
+import { isAllowedWebPushEndpoint } from '../webpush/webpush-endpoint'
 
 export const zName = z.string().min(2, el('@invalid_name')).max(30, el('@invalid_name'))
 export const zEmail = z.email(el('@invalid_email'))
@@ -339,13 +341,45 @@ export type UpdateIntegrationSettings = z.infer<typeof scUpdateIntegrationSettin
 /**
  * 通知設定(イベント種別ごと・チャネルごとの ON/OFF)。種別が増えても z.enum が自動で追従する。
  * チャネルは常に全部まとめて受け取り、サーバー側に部分更新の分岐を作らない。
+ *
+ * 宛先がチャンネルだけのイベントは `UserNotifySetting` で表せないので受け付けない。
  */
 export const scUpdateNotifySetting = z.object({
-  event: z.enum(NOTIFY_EVENTS),
+  event: z.enum(DM_NOTIFY_EVENTS),
   email: z.boolean(),
   slack: z.boolean(),
+  webpush: z.boolean(),
 })
 export type UpdateNotifySetting = z.infer<typeof scUpdateNotifySetting>
+
+/**
+ * Web プッシュの購読。ブラウザの `PushSubscription` から必要な値だけを受け取る。
+ *
+ * エンドポイントはプッシュサービスの URL で、購読の同一性もこれで決まる。
+ * 送信時に `web-push` がそのまま接続先にするため、内部を指す URL を保存させない
+ * (`isAllowedWebPushEndpoint()`)。
+ */
+const zWebPushEndpoint = z
+  .url()
+  .max(MAX_WEBPUSH_ENDPOINT)
+  .refine(isAllowedWebPushEndpoint, el('@invalid_webpush_subscription'))
+
+export const scWebPushSubscription = z.object({
+  endpoint: zWebPushEndpoint,
+  /**
+   * この購読を作るために解除した古い購読のエンドポイント。
+   *
+   * 同じ端末を指す行が残ると、送れない宛先へ送り続けることになるので消す。
+   */
+  replacedEndpoint: zWebPushEndpoint.optional(),
+  /** UA の公開鍵(非圧縮点 65 バイトの base64url) */
+  p256dh: z.string().regex(BASE64URL_PATTERN, el('@invalid_webpush_subscription')).max(200),
+  /** 共有秘密(16 バイトの base64url) */
+  auth: z.string().regex(BASE64URL_PATTERN, el('@invalid_webpush_subscription')).max(100),
+  /** 一覧で端末を見分けるための自己申告 */
+  label: z.string().max(MAX_WEBPUSH_LABEL).optional(),
+})
+export type WebPushSubscriptionInput = z.infer<typeof scWebPushSubscription>
 
 /* -------------------------------------------------------------------------------------------------
  * タスク管理(チケット / ボード)
@@ -547,17 +581,21 @@ export const scSetBoardArchived = z.object({
 export type SetBoardArchived = z.infer<typeof scSetBoardArchived>
 
 /**
- * エージェントの実行結果を通知する Slack チャンネル。
+ * ボードのチャネル通知(通知先の Slack チャンネル + 通知するイベント)。
  * アーカイブと同じく、プロフィール編集とは経路を分けて他の項目を書き戻さないようにする。
  *
  * 空文字は「通知しない」(= null へ正規化)。実在の確認は Bot が参加しているチャンネルの
  * 一覧と突き合わせて Server Action 側で行う。
+ *
+ * イベントは常に全部まとめて受け取り、サーバー側に部分更新の分岐を作らない。
+ * 宛先が個人の DM だけのイベントはチャンネルへ出せないので受け付けない。
  */
-export const scSetBoardSlackChannel = z.object({
+export const scSetBoardNotifySetting = z.object({
   id: z.uuidv7(),
   slackChannelId: z.union([z.literal(''), z.string().regex(SLACK_CHANNEL_ID_PATTERN, el('@invalid_slack_channel'))]),
+  events: z.array(z.enum(CHANNEL_NOTIFY_EVENTS)),
 })
-export type SetBoardSlackChannel = z.infer<typeof scSetBoardSlackChannel>
+export type SetBoardNotifySetting = z.infer<typeof scSetBoardNotifySetting>
 
 /**
  * ユーザー単位のアサインをメンバー 1 人ずつ追加 / 変更する(owner も実行可能)。

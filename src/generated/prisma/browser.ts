@@ -230,3 +230,38 @@ export type TicketComment = Prisma.TicketCommentModel
  * 行が無い場合は全チャネル OFF として扱う。通知チャネルを増やすときは列を足す。
  */
 export type UserNotifySetting = Prisma.UserNotifySettingModel
+/**
+ * Model WebPushSubscription
+ * Web プッシュの購読。1ユーザーが複数の端末を登録できる。
+ * 
+ * 通知の ON/OFF は UserNotifySetting 側で持ち、ここは「どの端末へ送れるか」だけを表す。
+ * プッシュサービスが失効(404 / 410)を返した購読は行ごと削除する。
+ */
+export type WebPushSubscription = Prisma.WebPushSubscriptionModel
+/**
+ * Model BoardNotifySetting
+ * ボードごとのチャネル通知設定。
+ * 
+ * 行が無いイベントは通知しない(UserNotifySetting と同じオプトイン方式)。
+ * 宛先がユーザーではないので、ユーザーごとの通知設定とは独立している。
+ * イベントごとに別のチャンネルを指定できる形にしてあるが、画面では「通知先1つ + イベントの ON/OFF」
+ * として扱う(イベント別チャンネルが必要になってもマイグレーションが要らない)。
+ */
+export type BoardNotifySetting = Prisma.BoardNotifySettingModel
+/**
+ * Model NotifyOutbox
+ * 通知の発生記録(アウトボックス)。
+ * 
+ * トリガー側はチケット操作と同じトランザクションでここへ1行書くだけで済み、
+ * 宛先の解決とチャネル別の配信はワーカー(`notify-dispatch.ts`)が行う。
+ * トリガーを増やしても呼び出し元は「何が起きたか」だけを書けばよい。
+ */
+export type NotifyOutbox = Prisma.NotifyOutboxModel
+/**
+ * Model NotifyDelivery
+ * 1宛先 × 1チャネルぶんの配信。ワーカーがアウトボックスを展開して作る。
+ * 
+ * 送信できた行は削除する(送信の記録はログに残る)ので、残っているのは
+ * 未送信・再試行待ち・試行回数を使い切ったものだけ。
+ */
+export type NotifyDelivery = Prisma.NotifyDeliveryModel

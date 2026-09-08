@@ -48,6 +48,25 @@ Next の起動前に評価されるため `envu` を解決できず、`process.e
 `GOOGLE_ALLOWED_DOMAINS` は **Googleサインインを使う場合は最低1件必要**。未設定だと許可ドメインが空になり、
 すべてのドメインのサインインが拒否される。`/account` からのカレンダー連携だけであれば省略できる。
 
+## 通知
+
+| 変数名                  | 説明                                               | 必須 | デフォルト            |
+| ----------------------- | -------------------------------------------------- | ---- | --------------------- |
+| `NOTIFY_WORKER_ENABLED` | 通知の配信ワーカーを動かすか                       |      | `true`                |
+| `VAPID_PUBLIC_KEY`      | Web プッシュの VAPID 公開鍵(base64url)             |      | -                     |
+| `VAPID_PRIVATE_KEY`     | Web プッシュの VAPID 秘密鍵(base64url)             |      | -                     |
+| `VAPID_SUBJECT`         | プッシュサービスからの連絡先(`mailto:` / `https:`) |      | `mailto:${MAIL_FROM}` |
+
+`NOTIFY_WORKER_ENABLED=false` にすると通知はキュー(`notify_outbox`)へ溜まるだけで配信されない。
+通知が届かない原因が投入側か配信側かを切り分けるときに使う。詳細は
+[通知の実装詳細](./notifications.md#通知キューと配信ワーカー)を参照。
+
+VAPID 鍵は Web プッシュ通知を使う場合のみ必要で、**公開鍵と秘密鍵の両方**が揃っていないと
+購読 UI ごと出ない。生成手順は [installation.md](./installation.md#webプッシュ通知) を参照。
+
+> ⚠️ 公開鍵も `NEXT_PUBLIC_*` にはしない。配布物は事前ビルド済みのイメージで、`NEXT_PUBLIC_*` は
+> ビルド時にインライン化されるため起動時に渡した値が入らない(実行時に Server Action で返している)。
+
 ## メール
 
 | 変数名             | 説明                                                                            | 必須                    | デフォルト |

@@ -12,7 +12,7 @@ import { OPEN_TICKET_STATUSES, ticketDisplayId } from '../board/task'
 import { addDaysDateOnly, DEFAULT_TZ, minToHHmm, nowDate, toZone, zonedMinutes } from '../day'
 import { logger } from '../logger'
 import { MAX_NOTIFY_RECIPIENTS } from '../notify/notify'
-import { type AgentRunNotification, notifyAgentRun } from '../notify/notify-agent-run'
+import { type AgentRunNotification, enqueueAgentRunFinished } from '../notify/notify-trigger'
 import { prisma } from '../prisma'
 import { AGENT_UNLIMITED_DAILY_RUNS } from './agent'
 
@@ -267,23 +267,25 @@ const toAgentTask = (ticket: AgentTicketRow, mode: AgentTaskMode, action: AgentR
  */
 const agentRunNotifySelect = {
   id: true,
+  boardId: true,
   number: true,
   title: true,
-  board: { select: { key: true, slackChannelId: true } },
+  board: { select: { key: true } },
 } as const
 
 type AgentRunNotifyTicket = {
   id: string
+  boardId: string
   number: number
   title: string
-  board: { key: string; slackChannelId: string | null }
+  board: { key: string }
 }
 
 /**
  * 閉じた実行から通知の内容を組み立てる。
  *
  * チケットが削除済み(ticket が null)の実行は宛先のボードを辿れないので通知しない。
- * 送るかどうかの最終判断(チャンネル未設定 / Slack 無効)は `notifyAgentRun` 側に任せる。
+ * 送るかどうかの最終判断(通知設定 / ボードの通知先 / Slack 無効)は配信側に任せる。
  */
 const buildAgentRunNotification = (param: {
   runId: string
@@ -301,10 +303,12 @@ const buildAgentRunNotification = (param: {
   }
   return {
     ...rest,
-    slackChannelId: ticket.board.slackChannelId,
-    ticketId: ticket.id,
-    displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
-    ticketTitle: ticket.title,
+    ticket: {
+      id: ticket.id,
+      boardId: ticket.boardId,
+      displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
+      title: ticket.title,
+    },
   }
 }
 
@@ -350,6 +354,29 @@ export const failStaleAgentRuns = async (runnerId: string, now: Date = nowDate()
         data: { agentState: 'failed' },
       })
     }
+
+    // まとめて時間切れになった場合に Slack を叩き続けないよう頭打ちにする
+    const notifyTo = closed.slice(0, MAX_NOTIFY_RECIPIENTS)
+    if (closed.length > notifyTo.length) {
+      logger.warn({ runnerId, total: closed.length, notified: notifyTo.length }, 'agent run notify truncated')
+    }
+    // 実行を閉じるのと同じトランザクションで投入する(コミット後に落ちると通知だけが消える)
+    for (const run of notifyTo) {
+      const notification = buildAgentRunNotification({
+        runId: run.id,
+        agentName: run.runner.user.name,
+        ticket: run.ticket,
+        action: run.action,
+        status: 'failed',
+        summary: TIMEOUT_SUMMARY,
+        startedAt: run.startedAt,
+        finishedAt: now,
+      })
+      if (notification) {
+        await enqueueAgentRunFinished(notification, tx)
+      }
+    }
+
     return closed
   })
   if (claimed.length === 0) {
@@ -357,28 +384,6 @@ export const failStaleAgentRuns = async (runnerId: string, now: Date = nowDate()
   }
 
   logger.warn({ runnerId, count: claimed.length }, 'agent runs timed out')
-
-  // まとめて時間切れになった場合に Slack を叩き続けないよう頭打ちにする
-  const notifyTo = claimed.slice(0, MAX_NOTIFY_RECIPIENTS)
-  if (claimed.length > notifyTo.length) {
-    logger.warn({ runnerId, total: claimed.length, notified: notifyTo.length }, 'agent run notify truncated')
-  }
-  for (const run of notifyTo) {
-    const notification = buildAgentRunNotification({
-      runId: run.id,
-      agentName: run.runner.user.name,
-      ticket: run.ticket,
-      action: run.action,
-      status: 'failed',
-      summary: TIMEOUT_SUMMARY,
-      startedAt: run.startedAt,
-      finishedAt: now,
-    })
-    if (notification) {
-      await notifyAgentRun(notification)
-    }
-  }
-
   return claimed.length
 }
 
@@ -552,28 +557,30 @@ export const finishAgentRunById = async (
         data: { agentState: 'failed' },
       })
     }
+
+    // 報告済みの実行はここでは閉じていない(finishAgentTask が既に通知している)ので二重に送らない
+    const notification =
+      count > 0
+        ? buildAgentRunNotification({
+            runId: run.id,
+            agentName: run.runner.user.name,
+            ticket: run.ticket,
+            action: run.action,
+            status: finalStatus,
+            summary: summary ?? null,
+            startedAt: run.startedAt,
+            finishedAt: now,
+          })
+        : null
+    // 実行を閉じるのと同じトランザクションで投入する(コミット後に落ちると通知だけが消える)
+    if (notification) {
+      await enqueueAgentRunFinished(notification, tx)
+    }
+
     return count > 0
   })
 
   logger.info({ runnerId, runId, status: finalStatus, unreported }, 'agent run finished')
-
-  // 報告済みの実行はここでは閉じていない(finishAgentTask が既に通知している)ので二重に送らない
-  const notification = unreported
-    ? buildAgentRunNotification({
-        runId: run.id,
-        agentName: run.runner.user.name,
-        ticket: run.ticket,
-        action: run.action,
-        status: finalStatus,
-        summary: summary ?? null,
-        startedAt: run.startedAt,
-        finishedAt: now,
-      })
-    : null
-  if (notification) {
-    await notifyAgentRun(notification)
-  }
-
   return true
 }
 
@@ -626,7 +633,7 @@ export const finishAgentTask = async (
     if (!open || !runner) {
       // 実行履歴が無いので通知もしない。チケットが無ければここで例外になる
       await tx.ticket.update({ where: { id: ticketId }, data: { agentState: state }, select: { id: true } })
-      return { state, notification: null }
+      return { state }
     }
 
     const settled = settleAction(open.action, outcome)
@@ -641,7 +648,7 @@ export const finishAgentTask = async (
     })
     if (count === 0) {
       const current = await tx.ticket.findUnique({ where: { id: ticketId }, select: { agentState: true } })
-      return { state: current?.agentState ?? state, notification: null }
+      return { state: current?.agentState ?? state }
     }
 
     const ticket = await tx.ticket.update({
@@ -650,27 +657,25 @@ export const finishAgentTask = async (
       select: agentRunNotifySelect,
     })
 
-    return {
-      state,
-      notification: buildAgentRunNotification({
-        runId: open.id,
-        agentName: runner.user.name,
-        ticket,
-        // 実際に記録した処理へ寄せる(revise のまま通知すると履歴と食い違う)
-        action: settled ?? open.action,
-        status: run,
-        summary: summary ?? null,
-        startedAt: open.startedAt,
-        finishedAt: now,
-      }),
+    const notification = buildAgentRunNotification({
+      runId: open.id,
+      agentName: runner.user.name,
+      ticket,
+      // 実際に記録した処理へ寄せる(revise のまま通知すると履歴と食い違う)
+      action: settled ?? open.action,
+      status: run,
+      summary: summary ?? null,
+      startedAt: open.startedAt,
+      finishedAt: now,
+    })
+    // 実行を閉じるのと同じトランザクションで投入する(コミット後に落ちると通知だけが消える)
+    if (notification) {
+      await enqueueAgentRunFinished(notification, tx)
     }
+
+    return { state }
   })
 
   logger.info({ runnerId: runner?.id ?? null, ticketId, outcome, state: result.state }, 'agent task finished')
-
-  if (result.notification) {
-    await notifyAgentRun(result.notification)
-  }
-
   return { state: result.state }
 }

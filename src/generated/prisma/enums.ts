@@ -109,7 +109,30 @@ export type TicketCommentType = (typeof TicketCommentType)[keyof typeof TicketCo
 
 
 export const NotifyEvent = {
-  mention: 'mention'
+  mention: 'mention',
+  agent_run: 'agent_run',
+  ticket_assigned: 'ticket_assigned',
+  ticket_created: 'ticket_created',
+  ticket_completed: 'ticket_completed'
 } as const
 
 export type NotifyEvent = (typeof NotifyEvent)[keyof typeof NotifyEvent]
+
+
+export const NotifyChannel = {
+  email: 'email',
+  slack: 'slack',
+  webpush: 'webpush'
+} as const
+
+export type NotifyChannel = (typeof NotifyChannel)[keyof typeof NotifyChannel]
+
+
+export const NotifyJobStatus = {
+  pending: 'pending',
+  processing: 'processing',
+  done: 'done',
+  failed: 'failed'
+} as const
+
+export type NotifyJobStatus = (typeof NotifyJobStatus)[keyof typeof NotifyJobStatus]

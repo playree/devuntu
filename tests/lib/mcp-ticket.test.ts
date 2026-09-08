@@ -7,7 +7,7 @@
 
 import { reassignContentAttachments, type TicketAccess } from '@/lib/board/board'
 import { updateTicketCommentForMcp } from '@/lib/mcp/mcp-ticket'
-import { notifyMention } from '@/lib/notify/notify-mention'
+import { enqueueTicketCommented } from '@/lib/notify/notify-trigger'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -22,8 +22,10 @@ vi.mock('@/lib/board/board', () => ({
   reassignContentAttachments: vi.fn(),
 }))
 
-vi.mock('@/lib/notify/notify-mention', () => ({
-  notifyMention: vi.fn(),
+vi.mock('@/lib/notify/notify-trigger', () => ({
+  enqueueTicketCommented: vi.fn(),
+  enqueueTicketCreated: vi.fn(),
+  enqueueTicketUpdated: vi.fn(),
 }))
 
 const ticketAccess: TicketAccess = {
@@ -87,7 +89,7 @@ describe('updateTicketCommentForMcp', () => {
       where: { id: 'ticket-1' },
       data: { updatedAt: expect.any(Date) },
     })
-    expect(notifyMention).toHaveBeenCalled()
+    expect(enqueueTicketCommented).toHaveBeenCalled()
   })
 
   it('本文に貼られた添付をチケットのボードへ付け替える', async () => {

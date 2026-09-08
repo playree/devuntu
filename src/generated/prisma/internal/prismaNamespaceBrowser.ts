@@ -89,7 +89,11 @@ export const ModelName = {
   BoardGroup: 'BoardGroup',
   Ticket: 'Ticket',
   TicketComment: 'TicketComment',
-  UserNotifySetting: 'UserNotifySetting'
+  UserNotifySetting: 'UserNotifySetting',
+  WebPushSubscription: 'WebPushSubscription',
+  BoardNotifySetting: 'BoardNotifySetting',
+  NotifyOutbox: 'NotifyOutbox',
+  NotifyDelivery: 'NotifyDelivery'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -574,7 +578,6 @@ export const BoardScalarFieldEnum = {
   name: 'name',
   description: 'description',
   archived: 'archived',
-  slackChannelId: 'slackChannelId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -679,11 +682,70 @@ export const UserNotifySettingScalarFieldEnum = {
   event: 'event',
   email: 'email',
   slack: 'slack',
+  webpush: 'webpush',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type UserNotifySettingScalarFieldEnum = (typeof UserNotifySettingScalarFieldEnum)[keyof typeof UserNotifySettingScalarFieldEnum]
+
+
+export const WebPushSubscriptionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  endpoint: 'endpoint',
+  p256dh: 'p256dh',
+  auth: 'auth',
+  label: 'label',
+  lastUsedAt: 'lastUsedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type WebPushSubscriptionScalarFieldEnum = (typeof WebPushSubscriptionScalarFieldEnum)[keyof typeof WebPushSubscriptionScalarFieldEnum]
+
+
+export const BoardNotifySettingScalarFieldEnum = {
+  id: 'id',
+  boardId: 'boardId',
+  event: 'event',
+  slackChannelId: 'slackChannelId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BoardNotifySettingScalarFieldEnum = (typeof BoardNotifySettingScalarFieldEnum)[keyof typeof BoardNotifySettingScalarFieldEnum]
+
+
+export const NotifyOutboxScalarFieldEnum = {
+  id: 'id',
+  event: 'event',
+  actorId: 'actorId',
+  targetUserIds: 'targetUserIds',
+  payload: 'payload',
+  status: 'status',
+  attempts: 'attempts',
+  claimedAt: 'claimedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type NotifyOutboxScalarFieldEnum = (typeof NotifyOutboxScalarFieldEnum)[keyof typeof NotifyOutboxScalarFieldEnum]
+
+
+export const NotifyDeliveryScalarFieldEnum = {
+  id: 'id',
+  outboxId: 'outboxId',
+  channel: 'channel',
+  userId: 'userId',
+  slackChannelId: 'slackChannelId',
+  status: 'status',
+  scheduledAt: 'scheduledAt',
+  attempts: 'attempts',
+  claimedAt: 'claimedAt',
+  lastError: 'lastError',
+  createdAt: 'createdAt'
+} as const
+
+export type NotifyDeliveryScalarFieldEnum = (typeof NotifyDeliveryScalarFieldEnum)[keyof typeof NotifyDeliveryScalarFieldEnum]
 
 
 export const SortOrder = {
