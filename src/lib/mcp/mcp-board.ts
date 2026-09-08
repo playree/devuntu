@@ -19,15 +19,22 @@ import { prisma } from '@/lib/prisma'
  * ボードID でもボードキー(例: ABC)でも受け取れるようにする。`resolveTicketId` と同じ役割。
  *
  * キーは全ボード一意で、UUIDv7 は BOARD_KEY_PATTERN(大文字英数)に一致しないため取り違えない。
- * 存在の有無を漏らさないよう、ここでは認可を見ない(呼び出し側の assertBoardAccess /
- * buildTicketWhere が可視スコープで弾く)。
+ * 認可はここでは見ない(呼び出し側の assertBoardAccess / buildTicketWhere が可視スコープで弾く)。
+ *
+ * `allowUnknownKey` は絞り込み条件としてキーを受ける経路向け。既定では未知キーをエラーにするが、
+ * 「エラー = 存在しない / 0 件 = 存在するがアクセス外」という応答差でボードの存在を
+ * 推測できてしまう経路では、未知キーも解決せずに返してアクセス外と同じ結果へ寄せる。
  */
-export const resolveBoardId = async (boardIdOrKey: string): Promise<string> => {
+export const resolveBoardId = async (boardIdOrKey: string, opts?: { allowUnknownKey?: boolean }): Promise<string> => {
   if (!BOARD_KEY_PATTERN.test(boardIdOrKey)) {
     return boardIdOrKey
   }
   const board = await prisma.board.findUnique({ where: { key: boardIdOrKey }, select: { id: true } })
   if (!board) {
+    if (opts?.allowUnknownKey) {
+      // 未解決のキーは可視ボードのどのIDとも一致しないため、呼び出し側で 0 件になる
+      return boardIdOrKey
+    }
     throw errInvalidOperation()
   }
   return board.id

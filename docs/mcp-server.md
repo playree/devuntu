@@ -190,7 +190,9 @@ AIエージェントは `devuntu-agent` を名乗るので、`claude mcp list` �
 - `ticketId` は**表示ID(例: ABC-42)でもチケットIDでも**受け取れる(`resolveTicketId`)。
   `commentId` と `assigneeId` は UUIDv7 のみ
 - `boardId` は**ボードID でもボードキー(例: ABC)でも**受け取れる(`resolveBoardId`)。
-  キーは全ボード一意で、UUIDv7 は `BOARD_KEY_PATTERN`(大文字英数)に一致しないため取り違えない
+  キーは全ボード一意で、UUIDv7 は `BOARD_KEY_PATTERN`(大文字英数)に一致しないため取り違えない。
+  ただし `search_tickets` の絞り込みでは未知のキーもエラーにせず0件を返す
+  (エラーと0件の差でアクセスできないボードの存在を判定できないようにするため)
 - `create_ticket` の `assigneeId` / `tagIds` は `get_board` が返すメンバー・タグの ID を使う。
   他ボードのタグは付けられず、メンバー以外は担当者にできない
 - `search_tickets` の `assignee` は ユーザーID / `me`(自分) / `none`(未割り当て)。`limit` は既定20・最大50

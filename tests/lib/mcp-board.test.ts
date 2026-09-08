@@ -64,6 +64,12 @@ describe('resolveBoardId', () => {
 
     await expect(resolveBoardId('NOPE')).rejects.toThrow()
   })
+
+  it('allowUnknownKey では存在しないキーもエラーにせずそのまま返す', async () => {
+    vi.mocked(prisma.board.findUnique).mockResolvedValueOnce(null as never)
+
+    expect(await resolveBoardId('NOPE', { allowUnknownKey: true })).toBe('NOPE')
+  })
 })
 
 describe('listBoardsForMcp', () => {

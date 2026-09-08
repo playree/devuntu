@@ -130,7 +130,8 @@ const MAX_SEARCH_LIMIT = 50
 
 export const searchTicketsForMcp = async (auth: ResourceAuth, input: McpTicketSearchInput) => {
   const accessibleBoardIds = await getAccessibleBoardIds(auth.user.id)
-  const boardId = input.boardId ? await resolveBoardId(input.boardId) : null
+  // 未知キーもアクセス外と同じ 0 件に寄せる(応答差でボードの存在を推測させない)
+  const boardId = input.boardId ? await resolveBoardId(input.boardId, { allowUnknownKey: true }) : null
   const where = buildTicketWhere(
     {
       keyword: input.keyword ?? '',
