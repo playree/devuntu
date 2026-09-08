@@ -20,8 +20,10 @@ import { errInvalidOperation, errValidation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { getBoardNotifySetting, setBoardNotifySetting } from '@/lib/notify/notify-board-setting'
 import { prisma } from '@/lib/prisma'
+import { assertRateLimit } from '@/lib/rate-limit'
 import {
   scCreateTag,
+  scGetBoardSlackChannels,
   scRemoveBoardMember,
   scSetBoardArchived,
   scSetBoardGroups,
@@ -36,6 +38,13 @@ import { listSlackChannels } from '@/lib/slack/slack-server'
 import { detachBoardAttachments, listBoardAttachmentKeys, removeAttachmentByKey } from '@/lib/storage/attachment'
 
 const TAG_SELECT = { id: true, boardId: true, name: true, color: true, order: true } as const
+
+/**
+ * チャンネル一覧の強制再取得の連打防止。
+ * キャッシュは Slack を叩く回数を抑えるための仕組みなので、迂回する経路には歯止めを置く
+ * (1 回の取得で最大 CHANNELS_MAX_PAGES 回 Slack を呼ぶ)。
+ */
+const CHANNELS_REFRESH_RATE_LIMIT = { limit: 10, windowMs: 60 * 1000 }
 
 /**
  * ボード詳細(概要 + 権限)
@@ -148,14 +157,20 @@ export const setBoardArchived = safeAuthAction
  *
  * プライベートチャンネル名を含む一覧なので、Slack を叩く前に権限を確定させる。
  * 全ユーザーが自分のプライベートボードの owner なので、manage 権限だけでは絞れない
+ *
+ * `force` はキャッシュを捨てて取り直す(Bot を招待した直後に選べるようにするため)。
  */
 export const getBoardSlackChannels = safeAuthAction
   .metadata({ actionName: 'getBoardSlackChannels', role: 'user' })
-  .inputSchema(scUUID)
-  .action(async ({ ctx: { user }, parsedInput: { id } }) => {
+  .inputSchema(scGetBoardSlackChannels)
+  .action(async ({ ctx: { user }, parsedInput: { id, force } }) => {
     await assertBoardAccess(user, id, 'manage')
     await assertTeamBoard(prisma, id)
-    return listSlackChannels()
+
+    if (force) {
+      assertRateLimit(`slack-channels-refresh:${user.id}`, CHANNELS_REFRESH_RATE_LIMIT)
+    }
+    return listSlackChannels({ force })
   })
 export type GetBoardSlackChannelsReturnType = Awaited<ReturnType<typeof getBoardSlackChannels>>['data']
 

@@ -8,7 +8,6 @@ import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
 import {
   ArrowLeftCircleIcon,
-  ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
   Cog6ToothIcon,
   ExclamationTriangleIcon,
@@ -94,18 +93,6 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
         <MultiButton isIconOnly tooltip={t('ticket')} onPress={() => router.push(`/tickets?boardId=${board.id}`)}>
           <ButtonGroup.Separator />
           <ArrowTopRightOnSquareIcon />
-        </MultiButton>
-        <MultiButton
-          isIconOnly
-          tooltip={t('reload')}
-          onPress={() => {
-            reload()
-            reloadTags()
-            reloadAssignments()
-          }}
-        >
-          <ButtonGroup.Separator />
-          <ArrowPathIcon />
         </MultiButton>
       </ContentHeader>
 

@@ -590,6 +590,15 @@ export type SetBoardArchived = z.infer<typeof scSetBoardArchived>
  * イベントは常に全部まとめて受け取り、サーバー側に部分更新の分岐を作らない。
  * 宛先が個人の DM だけのイベントはチャンネルへ出せないので受け付けない。
  */
+/**
+ * 通知先に選べる Slack チャンネルの一覧。`id` はボード ID。
+ * `force` はキャッシュを捨てて Slack から取り直す(招待直後に一覧へ反映させるため)。
+ */
+export const scGetBoardSlackChannels = z.object({
+  id: z.uuidv7(),
+  force: z.boolean().optional(),
+})
+
 export const scSetBoardNotifySetting = z.object({
   id: z.uuidv7(),
   slackChannelId: z.union([z.literal(''), z.string().regex(SLACK_CHANNEL_ID_PATTERN, el('@invalid_slack_channel'))]),

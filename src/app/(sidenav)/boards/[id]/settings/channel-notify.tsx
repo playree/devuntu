@@ -2,11 +2,12 @@
 
 import { MultiButton } from '@/components/general/button'
 import { CheckBoxField } from '@/components/general/checkbox'
+import { FlexCol } from '@/components/general/flex'
 import { GridBox } from '@/components/general/grid'
 import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { SingleSelectCtrl } from '@/components/general/select'
 import { useSmart } from '@/components/general/smart'
-import { CheckIcon } from '@/components/icon'
+import { ArrowPathIcon, CheckIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { CHANNEL_NOTIFY_EVENTS } from '@/lib/notify/notify'
@@ -14,7 +15,7 @@ import { scSetBoardNotifySetting, SetBoardNotifySetting } from '@/lib/schema/sch
 import { useLocale } from '@/locale/client'
 import { CheckboxGroup, Label } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { FC, useMemo } from 'react'
+import { FC, useMemo, useRef, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import {
   getBoardNotify,
@@ -64,7 +65,9 @@ const NotifyForm: FC<{
   current: NonNullable<GetBoardNotifyReturnType>
   channels: NonNullable<GetBoardSlackChannelsReturnType>
   refresh: () => void
-}> = ({ boardId, current, channels, refresh }) => {
+  refreshChannels: () => void
+  isChannelsRefreshing: boolean
+}> = ({ boardId, current, channels, refresh, refreshChannels, isChannelsRefreshing }) => {
   const { t, fet } = useLocale()
 
   // 「通知しない」を先頭に置く。設定済みのチャンネルが一覧から消えている(Bot が外された)場合も
@@ -113,15 +116,28 @@ const NotifyForm: FC<{
         <div className='col-span-12'>
           <NoticePanel className='text-xs'>{t('msg_board_slack_notify_desc')}</NoticePanel>
         </div>
-        <div className='col-span-12 md:col-span-6'>
-          <SingleSelectCtrl
-            control={control}
-            name='slackChannelId'
-            groupOptions={options}
-            label={t('slack_notify_channel')}
-            errorMessage={fet(errors.slackChannelId)}
-            emptyKey={NONE_KEY}
-          />
+        <div className='col-span-12 flex items-end gap-2 md:col-span-6'>
+          <div className='grow'>
+            <SingleSelectCtrl
+              control={control}
+              name='slackChannelId'
+              groupOptions={options}
+              label={t('slack_notify_channel')}
+              errorMessage={fet(errors.slackChannelId)}
+              emptyKey={NONE_KEY}
+            />
+          </div>
+          <MultiButton // Bot を招待した直後は一覧のキャッシュに乗っていないので、その場で取り直せるようにする
+            isIconOnly
+            size='sm'
+            variant='outline'
+            tooltip={t('reload')}
+            coolTime={5}
+            isPending={isChannelsRefreshing}
+            onPress={refreshChannels}
+          >
+            <ArrowPathIcon width={16} />
+          </MultiButton>
         </div>
         <Controller
           control={control}
@@ -146,19 +162,70 @@ const NotifyForm: FC<{
  */
 export const BoardChannelNotify: FC<{ boardId: string }> = ({ boardId }) => {
   const { t } = useLocale()
-  const { data: channels, isLoading } = useActionData(() => getBoardSlackChannels({ id: boardId }))
+  const [isChannelsRefreshing, setChannelsRefreshing] = useState(false)
+  // useActionData は毎レンダーのインライン関数を ref 経由で常に最新を呼ぶので、force は ref で渡せる
+  const forceRef = useRef(false)
+  const {
+    data: channels,
+    isLoading,
+    refresh: refreshChannelsData,
+  } = useActionData(() => {
+    const force = forceRef.current
+    // マウント時や後続の再取得までキャッシュを捨て続けないよう、1 回で戻す
+    forceRef.current = false
+    return getBoardSlackChannels({ id: boardId, force })
+  })
   const { data: current, isLoading: isCurrentLoading, refresh } = useActionData(() => getBoardNotify({ id: boardId }))
+
+  /**
+   * キャッシュを捨てて Slack から取り直す。
+   * reload だとローディング表示へ切り替わってフォームが作り直され、未保存の選択が消えるので refresh を使う。
+   */
+  const refreshChannels = async () => {
+    forceRef.current = true
+    setChannelsRefreshing(true)
+    try {
+      await refreshChannelsData()
+    } finally {
+      setChannelsRefreshing(false)
+    }
+  }
 
   if (isLoading || isCurrentLoading) {
     return <PanelSkeleton />
   }
   // 取得失敗(null)も空も、利用者から見れば「選べない」なので同じ案内に寄せる
   if (!channels || channels.length === 0) {
-    return <NoticePanel className='text-xs'>{t('msg_slack_channel_empty')}</NoticePanel>
+    return (
+      <FlexCol>
+        <NoticePanel className='text-xs'>{t('msg_slack_channel_empty')}</NoticePanel>
+        <div>
+          <MultiButton // 招待したてのチャンネルはここへ落ちるため、TTL を待たずに取り直せるようにする
+            size='sm'
+            variant='outline'
+            icon={<ArrowPathIcon width={16} />}
+            coolTime={5}
+            isPending={isChannelsRefreshing}
+            onPress={refreshChannels}
+          >
+            {t('reload')}
+          </MultiButton>
+        </div>
+      </FlexCol>
+    )
   }
   if (!current) {
     return null
   }
 
-  return <NotifyForm boardId={boardId} current={current} channels={channels} refresh={refresh} />
+  return (
+    <NotifyForm
+      boardId={boardId}
+      current={current}
+      channels={channels}
+      refresh={refresh}
+      refreshChannels={refreshChannels}
+      isChannelsRefreshing={isChannelsRefreshing}
+    />
+  )
 }
