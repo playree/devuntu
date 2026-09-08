@@ -51,7 +51,7 @@ describe('purge', () => {
 
   it('保持期間内の失敗は残す', async () => {
     await purge(now)
-    const where = vi.mocked(prisma.notifyOutbox.deleteMany).mock.calls[1][0].where as {
+    const where = vi.mocked(prisma.notifyOutbox.deleteMany).mock.calls[1][0]?.where as {
       createdAt: { lt: Date }
     }
     expect(where.createdAt.lt.getTime()).toBeLessThan(now.getTime())

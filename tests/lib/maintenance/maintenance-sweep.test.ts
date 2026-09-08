@@ -58,8 +58,8 @@ beforeEach(() => {
   ]) {
     vi.mocked(model.deleteMany).mockResolvedValue({ count: 0 })
   }
-  vi.mocked(prisma.agentRunner.findMany).mockResolvedValue([])
-  vi.mocked(prisma.agentRun.findMany).mockResolvedValue([])
+  vi.mocked(prisma.agentRunner.findMany).mockResolvedValue([] as never)
+  vi.mocked(prisma.agentRun.findMany).mockResolvedValue([] as never)
 })
 
 describe('sweepSessions', () => {
@@ -72,7 +72,7 @@ describe('sweepSessions', () => {
 
   it('境界は現在時刻ではなく保持期間ぶん過去(処理中のリクエストを巻き込まない)', async () => {
     await sweepSessions(now)
-    const where = vi.mocked(prisma.session.deleteMany).mock.calls[0][0].where as {
+    const where = vi.mocked(prisma.session.deleteMany).mock.calls[0][0]?.where as {
       expiresAt: { lt: Date }
     }
     expect(where.expiresAt.lt.getTime()).toBeLessThan(now.getTime())
@@ -90,7 +90,7 @@ describe('sweepVerifications', () => {
 
 describe('sweepOauthRefreshTokens', () => {
   const whereOf = () =>
-    vi.mocked(prisma.oauthRefreshToken.deleteMany).mock.calls[0][0].where as {
+    vi.mocked(prisma.oauthRefreshToken.deleteMany).mock.calls[0][0]?.where as {
       AND: { OR: Record<string, unknown>[] }[]
       oauthaccesstokens: { none: Record<string, unknown> }
     }
@@ -139,13 +139,13 @@ describe('sweepOauthClientAssertions / sweepUploadNonces', () => {
 describe('sweepAgentRuns', () => {
   it('実行中の行には触らない(時間切れの回収が持ち主)', async () => {
     await sweepAgentRuns(now)
-    const where = vi.mocked(prisma.agentRun.deleteMany).mock.calls[0][0].where as { status: unknown }
+    const where = vi.mocked(prisma.agentRun.deleteMany).mock.calls[0][0]?.where as { status: unknown }
     expect(where.status).toEqual({ not: 'running' })
   })
 
   it('ランナーごとに上限を超えた古い分を消す', async () => {
-    vi.mocked(prisma.agentRunner.findMany).mockResolvedValue([{ id: 'runner-1' }])
-    vi.mocked(prisma.agentRun.findMany).mockResolvedValue([{ id: 'run-old' }])
+    vi.mocked(prisma.agentRunner.findMany).mockResolvedValue([{ id: 'runner-1' }] as never)
+    vi.mocked(prisma.agentRun.findMany).mockResolvedValue([{ id: 'run-old' }] as never)
     vi.mocked(prisma.agentRun.deleteMany).mockResolvedValue({ count: 1 })
 
     const removed = await sweepAgentRuns(now)
@@ -158,8 +158,8 @@ describe('sweepAgentRuns', () => {
   })
 
   it('上限を超えていなければ削除しない', async () => {
-    vi.mocked(prisma.agentRunner.findMany).mockResolvedValue([{ id: 'runner-1' }])
-    vi.mocked(prisma.agentRun.findMany).mockResolvedValue([])
+    vi.mocked(prisma.agentRunner.findMany).mockResolvedValue([{ id: 'runner-1' }] as never)
+    vi.mocked(prisma.agentRun.findMany).mockResolvedValue([] as never)
     await sweepAgentRuns(now)
     expect(vi.mocked(prisma.agentRun.deleteMany)).toHaveBeenCalledTimes(1)
   })
