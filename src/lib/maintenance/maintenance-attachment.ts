@@ -24,7 +24,7 @@ import {
   retentionBefore,
 } from './maintenance'
 
-/** 本文の全走査を伴うので、tick ごとではなくこの間隔で回す */
+/** 本文の全走査を伴うので、tick ごとではなくこの間隔で回す。走り切った周の時刻だけを記録する */
 let lastSweptAt: Date | null = null
 
 /** テスト用に間隔の記録を戻す */
@@ -40,7 +40,6 @@ export const sweepOrphanAttachments = async (now: Date): Promise<number> => {
   if (lastSweptAt && now.getTime() - lastSweptAt.getTime() < ATTACHMENT_SWEEP_INTERVAL_MS) {
     return 0
   }
-  lastSweptAt = now
 
   const cutoff = retentionBefore(now, envu.server.MAINTENANCE_ATTACHMENT_GRACE_HOURS * 60 * 60 * 1000)
   const referenced = await collectReferencedUploadKeys()
@@ -86,6 +85,9 @@ export const sweepOrphanAttachments = async (now: Date): Promise<number> => {
     }
     cursor = page[page.length - 1].id
   }
+
+  // 記録は最後まで走り切ってから。途中で落ちた周は次の tick でやり直す
+  lastSweptAt = now
 
   logger.info({ deleted, mode }, 'orphan attachment sweep finished')
   return deleted

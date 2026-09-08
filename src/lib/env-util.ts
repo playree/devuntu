@@ -184,7 +184,12 @@ const server = {
    * `dry-run` で対象をログに出して確かめてから `delete` へ切り替えられるようにしている。
    */
   get MAINTENANCE_ATTACHMENT_MODE() {
-    return getEnv<'off' | 'dry-run' | 'delete'>('MAINTENANCE_ATTACHMENT_MODE', { default: 'delete' })
+    const value = getEnv<'off' | 'dry-run' | 'delete'>('MAINTENANCE_ATTACHMENT_MODE', { default: 'delete' })
+    // 綴り違いを黙って `delete` 相当として扱うと、止めたつもりで実体が消える
+    if (value !== 'off' && value !== 'dry-run' && value !== 'delete') {
+      throw errSystemError('MAINTENANCE_ATTACHMENT_MODE must be off, dry-run or delete')
+    }
+    return value
   },
 
   /**

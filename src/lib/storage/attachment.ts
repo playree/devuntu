@@ -84,8 +84,8 @@ export const removeImageAttachment = async (url: string): Promise<void> => {
 }
 
 /**
- * ボードに属する添付のキー。ボード削除では Cascade でレコードが消えるので、
- * 実体を消すには**消える前に**控えておく必要がある。
+ * ボードに属する添付のキー。紐付けを外すとボードから辿れなくなるので、
+ * 実体を消すには**外す前に**控えておく必要がある。
  */
 export const listBoardAttachmentKeys = async (tx: Prisma.TransactionClient, boardId: string): Promise<string[]> => {
   const rows = await tx.attachment.findMany({ where: { boardId }, select: { key: true } })
@@ -93,18 +93,11 @@ export const listBoardAttachmentKeys = async (tx: Prisma.TransactionClient, boar
 }
 
 /**
- * 実体だけをまとめて消す(レコードは Cascade で消えている前提)。
- * 1件の失敗で残りを止めないよう、結果は消せた件数で返す。
+ * ボードに属する添付の紐付けを外す。ボード削除の直前に呼ぶ。
+ *
+ * Cascade でレコードごと消すと、実体の削除に失敗した分がどこからも辿れなくなる。
+ * 行を残しておけば未参照の添付として掃除が拾い直すので、失敗しても収束する。
  */
-export const deleteAttachmentObjects = async (keys: string[]): Promise<number> => {
-  let removed = 0
-  for (const key of keys) {
-    try {
-      await deleteObject(key)
-      removed += 1
-    } catch (err) {
-      logger.error({ err, key }, 'failed to delete attachment object')
-    }
-  }
-  return removed
+export const detachBoardAttachments = async (tx: Prisma.TransactionClient, boardId: string): Promise<void> => {
+  await tx.attachment.updateMany({ where: { boardId }, data: { boardId: null } })
 }

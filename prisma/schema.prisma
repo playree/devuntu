@@ -970,7 +970,8 @@ model Attachment {
   originalName String
 
   /// 添付先のボード。値がある場合は配信時にそのボードの可視判定を通す。
-  /// null は全ログインユーザーへ配信してよいもの(お知らせ / リンクウィジェットのアイコン)
+  /// null は全ログインユーザーへ配信してよいもの(お知らせ / リンクウィジェットのアイコン)。
+  /// ボード削除で紐付けを外した添付も、掃除が回収するまでの間だけこの状態を通る
   boardId String?
   board   Board?  @relation(fields: [boardId], references: [id], onDelete: Cascade)
 
@@ -1629,6 +1630,10 @@ model NotifyOutbox {
   attempts  Int             @default(0)
   claimedAt DateTime?
 
+  /// `failed` へ移った時刻。保持期間の起点。作成日時を起点にすると、長く残った
+  /// `pending` が失敗した瞬間に保持期間を過ぎた扱いになり、原因を追う前に消える
+  failedAt DateTime?
+
   createdAt DateTime @default(now())
 
   deliveries NotifyDelivery[]
@@ -1667,6 +1672,9 @@ model NotifyDelivery {
 
   /// 直近の失敗理由。分類(SlackSendOutcome 等)だけを入れ、利用者の入力は載せない
   lastError String?
+
+  /// `failed` へ移った時刻。保持期間の起点(`notify_outbox.failedAt` と同じ理由)
+  failedAt DateTime?
 
   createdAt DateTime @default(now())
 

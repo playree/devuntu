@@ -174,4 +174,23 @@ describe('上限と実行間隔', () => {
     await sweepOrphanAttachments(later)
     expect(collectReferencedUploadKeys).toHaveBeenCalledTimes(2)
   })
+
+  it('参照の収集に失敗した周は間隔を空けずにやり直す', async () => {
+    // 失敗した時点で間隔を記録すると、DBが復旧しても次の1周ぶん掃除が止まる
+    collectReferencedUploadKeys.mockRejectedValueOnce(new Error('db down'))
+    await expect(sweepOrphanAttachments(now)).rejects.toThrow('db down')
+
+    vi.mocked(prisma.attachment.findMany).mockResolvedValue([orphan] as never)
+    const soon = new Date(now.getTime() + 1000)
+    expect(await sweepOrphanAttachments(soon)).toBe(1)
+  })
+
+  it('走査に失敗した周も間隔を空けずにやり直す', async () => {
+    vi.mocked(prisma.attachment.findMany).mockRejectedValueOnce(new Error('db down'))
+    await expect(sweepOrphanAttachments(now)).rejects.toThrow('db down')
+
+    vi.mocked(prisma.attachment.findMany).mockResolvedValue([orphan] as never)
+    const soon = new Date(now.getTime() + 1000)
+    expect(await sweepOrphanAttachments(soon)).toBe(1)
+  })
 })

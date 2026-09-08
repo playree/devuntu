@@ -135,8 +135,11 @@ export const claimEmailDeliveries = (userLimit: number) => prisma.$queryRaw<Clai
  * 展開しても直らないアウトボックスを失敗として残す。
  * ペイロードが壊れている行など、掴み直しても同じ結果になるものに使う。
  */
-export const failOutbox = async (outbox: Pick<ClaimedOutbox, 'id'>): Promise<void> => {
-  await prisma.notifyOutbox.update({ where: { id: outbox.id }, data: { status: 'failed', claimedAt: null } })
+export const failOutbox = async (outbox: Pick<ClaimedOutbox, 'id'>, now: Date): Promise<void> => {
+  await prisma.notifyOutbox.update({
+    where: { id: outbox.id },
+    data: { status: 'failed', claimedAt: null, failedAt: now },
+  })
 }
 
 /**
@@ -146,12 +149,15 @@ export const failOutbox = async (outbox: Pick<ClaimedOutbox, 'id'>): Promise<voi
  * `failed` に確定させると短い障害で通知が消えてしまうため、試行回数を使い切るまでは
  * 未処理へ戻す。`notify_outbox` は配信時刻を持たないので、次の tick で掴み直される。
  */
-export const settleOutbox = async (outbox: Pick<ClaimedOutbox, 'id' | 'attempts' | 'event'>): Promise<void> => {
+export const settleOutbox = async (
+  outbox: Pick<ClaimedOutbox, 'id' | 'attempts' | 'event'>,
+  now: Date,
+): Promise<void> => {
   const { id, attempts, event } = outbox
 
   if (isRetryExhausted(attempts)) {
     logger.error({ outboxId: id, event, attempts }, 'notify fanout gave up')
-    await failOutbox(outbox)
+    await failOutbox(outbox, now)
     return
   }
 
@@ -182,7 +188,7 @@ export const settleDelivery = async (
     logger.error({ deliveryId: id, channel, attempts, outcome }, 'notify delivery gave up')
     await prisma.notifyDelivery.update({
       where: { id },
-      data: { status: 'failed', claimedAt: null, lastError: outcome },
+      data: { status: 'failed', claimedAt: null, lastError: outcome, failedAt: now },
     })
     return
   }
@@ -207,12 +213,18 @@ export const releaseDeliveries = async (ids: string[], reason: DeliveryOutcome):
   })
 }
 
-/** 役目を終えた行を片付ける。失敗した配信は原因を追えるよう一定期間残す */
+/**
+ * 役目を終えた行を片付ける。失敗した配信は原因を追えるよう一定期間残す。
+ *
+ * 保持期間は作成日時ではなく `failedAt` から数える。作成日時を起点にすると、ワーカーが
+ * 長く止まっている間に溜まった行が失敗した瞬間に保持期間を過ぎた扱いになり、
+ * 原因を追う前に消えてしまう。
+ */
 export const purge = async (now: Date): Promise<void> => {
   const failedBefore = new Date(now.getTime() - NOTIFY_FAILED_RETENTION_MS)
 
   await prisma.notifyOutbox.deleteMany({ where: { status: 'done', deliveries: { none: {} } } })
-  await prisma.notifyDelivery.deleteMany({ where: { status: 'failed', createdAt: { lt: failedBefore } } })
+  await prisma.notifyDelivery.deleteMany({ where: { status: 'failed', failedAt: { lt: failedBefore } } })
   // 展開できずに終わった発生記録。配信行が作られていないため上の2つのどちらにも当たらない
-  await prisma.notifyOutbox.deleteMany({ where: { status: 'failed', createdAt: { lt: failedBefore } } })
+  await prisma.notifyOutbox.deleteMany({ where: { status: 'failed', failedAt: { lt: failedBefore } } })
 }
