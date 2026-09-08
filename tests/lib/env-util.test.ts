@@ -34,3 +34,31 @@ describe('MAINTENANCE_ATTACHMENT_MODE', () => {
     expect(() => envu.server.MAINTENANCE_ATTACHMENT_MODE).toThrow()
   })
 })
+
+describe('SEARCH_ENGINE_INDEXING', () => {
+  const originalIndexing = process.env.SEARCH_ENGINE_INDEXING
+
+  afterEach(() => {
+    if (originalIndexing === undefined) {
+      delete process.env.SEARCH_ENGINE_INDEXING
+    } else {
+      process.env.SEARCH_ENGINE_INDEXING = originalIndexing
+    }
+  })
+
+  it('未設定なら false', () => {
+    // 設定を書き忘れた環境が検索結果へ載らないよう、既定はインデックス拒否側に倒す
+    delete process.env.SEARCH_ENGINE_INDEXING
+    expect(envu.server.SEARCH_ENGINE_INDEXING).toBe(false)
+  })
+
+  it('true でインデックスを許可する', () => {
+    process.env.SEARCH_ENGINE_INDEXING = 'true'
+    expect(envu.server.SEARCH_ENGINE_INDEXING).toBe(true)
+  })
+
+  it('false でインデックスを拒否する', () => {
+    process.env.SEARCH_ENGINE_INDEXING = 'false'
+    expect(envu.server.SEARCH_ENGINE_INDEXING).toBe(false)
+  })
+})

@@ -74,6 +74,13 @@ const server = {
   get DEFAULT_TIMEZONE() {
     return getEnv('DEFAULT_TIMEZONE', { default: 'Asia/Tokyo' })
   },
+  /**
+   * 検索エンジンにインデックスさせるか。既定の false では robots.txt / meta robots /
+   * X-Robots-Tag のいずれもインデックス拒否になる。検索結果へ載せたい場合だけ true にする。
+   */
+  get SEARCH_ENGINE_INDEXING() {
+    return getEnvBoolean('SEARCH_ENGINE_INDEXING')
+  },
 
   // 認証
   get BETTER_AUTH_SECRET() {

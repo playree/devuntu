@@ -40,6 +40,11 @@ export const proxy = async (request: NextRequest) => {
 
   const response = NextResponse.next()
 
+  // meta robots だけでは非HTMLの応答を覆えないため、ヘッダでも同じ指示を返す
+  if (!envu.server.SEARCH_ENGINE_INDEXING) {
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow')
+  }
+
   if (session?.user) {
     // ロケールCookie
     if (request.method.toUpperCase() === 'GET') {

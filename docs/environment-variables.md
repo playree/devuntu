@@ -4,17 +4,28 @@
 
 ## 基本
 
-| 変数名                 | 説明                                                            | 必須 | デフォルト   |
-| ---------------------- | --------------------------------------------------------------- | ---- | ------------ |
-| `NEXT_PUBLIC_APP_NAME` | アプリ名(クライアント公開)                                      |      | `Devuntu`    |
-| `DATABASE_URL`         | DB(PostgreSQL) の接続パス                                       | 〇   | -            |
-| `DEFAULT_LOCALE`       | デフォルトロケール                                              |      | -            |
-| `DEFAULT_TIMEZONE`     | デフォルトタイムゾーン                                          |      | `Asia/Tokyo` |
-| `LOG_LEVEL`            | ログレベル                                                      |      | `info`       |
-| `DEV_ALLOWED_ORIGINS`  | `next dev` で許可する追加オリジン(カンマ区切り)。開発時のみ有効 |      | -            |
+| 変数名                   | 説明                                                            | 必須 | デフォルト   |
+| ------------------------ | --------------------------------------------------------------- | ---- | ------------ |
+| `NEXT_PUBLIC_APP_NAME`   | アプリ名(クライアント公開)                                      |      | `Devuntu`    |
+| `DATABASE_URL`           | DB(PostgreSQL) の接続パス                                       | 〇   | -            |
+| `DEFAULT_LOCALE`         | デフォルトロケール                                              |      | -            |
+| `DEFAULT_TIMEZONE`       | デフォルトタイムゾーン                                          |      | `Asia/Tokyo` |
+| `LOG_LEVEL`              | ログレベル                                                      |      | `info`       |
+| `DEV_ALLOWED_ORIGINS`    | `next dev` で許可する追加オリジン(カンマ区切り)。開発時のみ有効 |      | -            |
+| `SEARCH_ENGINE_INDEXING` | 検索エンジンにインデックスさせるか                              |      | `false`      |
 
 `DEV_ALLOWED_ORIGINS` だけは例外で、`src/lib/env-util.ts` には定義していない。参照元の `next.config.ts` は
 Next の起動前に評価されるため `envu` を解決できず、`process.env` を直接読んでいる。
+
+`SEARCH_ENGINE_INDEXING` は**既定でインデックス拒否**。社内向けに立てた環境をうっかり検索結果へ
+載せないため、明示的に `true` にしたときだけ許可する。次の3か所へまとめて効く。
+
+- `/robots.txt`(`src/app/robots.ts`) : 拒否時は全パスを `Disallow`、許可時は `/api/` と `/cal/` のみ除外
+- `<meta name="robots">`(`src/app/layout.tsx`) : 拒否時は `noindex, nofollow`
+- `X-Robots-Tag` ヘッダ(`src/proxy.ts`) : 拒否時は `noindex, nofollow`。meta が付かない応答を覆う
+
+値の変更は再起動で反映される。空き時間の共有(`/cal/[id]`)は共有URLを知る人だけが見る画面なので、
+この設定に関わらず常に `noindex` のままにしている。
 
 ## 認証
 
