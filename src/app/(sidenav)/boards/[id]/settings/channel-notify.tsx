@@ -15,7 +15,7 @@ import { scSetBoardNotifySetting, SetBoardNotifySetting } from '@/lib/schema/sch
 import { useLocale } from '@/locale/client'
 import { CheckboxGroup, Label } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { FC, useMemo, useRef, useState } from 'react'
+import { ComponentProps, FC, useMemo, useRef, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import {
   getBoardNotify,
@@ -155,10 +155,44 @@ const NotifyForm: FC<{
 }
 
 /**
+ * チャンネルを選べないときの案内 + リロード。
+ * 招待したてのチャンネルも、取得に失敗した状態もここへ落ちるため、TTL を待たずに取り直せるようにする。
+ */
+const ChannelsNotice: FC<{
+  message: string
+  status?: ComponentProps<typeof NoticePanel>['status']
+  onReload: () => void
+  isPending: boolean
+}> = ({ message, status, onReload, isPending }) => {
+  const { t } = useLocale()
+
+  return (
+    <FlexCol>
+      <NoticePanel className='text-xs' status={status}>
+        {message}
+      </NoticePanel>
+      <div>
+        <MultiButton
+          size='sm'
+          variant='outline'
+          icon={<ArrowPathIcon width={16} />}
+          coolTime={5}
+          isPending={isPending}
+          onPress={onReload}
+        >
+          {t('reload')}
+        </MultiButton>
+      </div>
+    </FlexCol>
+  )
+}
+
+/**
  * ボードのチャネル通知の設定(通知先チャンネル + 通知するイベント)。
  *
  * 一覧には Bot が参加しているチャンネルだけが出る。出てこない = 招待されていない、と
  * 1 対 1 で対応するので、空のときは選択させずに招待を案内する。
+ * 取得に失敗したときは招待しても解決しないので、案内を分ける。
  */
 export const BoardChannelNotify: FC<{ boardId: string }> = ({ boardId }) => {
   const { t } = useLocale()
@@ -194,24 +228,24 @@ export const BoardChannelNotify: FC<{ boardId: string }> = ({ boardId }) => {
   if (isLoading || isCurrentLoading) {
     return <PanelSkeleton />
   }
-  // 取得失敗(null)も空も、利用者から見れば「選べない」なので同じ案内に寄せる
-  if (!channels || channels.length === 0) {
+  // 取得失敗は Bot の招待では解決しないので、招待手順は空のときだけ出す
+  if (!channels) {
     return (
-      <FlexCol>
-        <NoticePanel className='text-xs'>{t('msg_slack_channel_empty')}</NoticePanel>
-        <div>
-          <MultiButton // 招待したてのチャンネルはここへ落ちるため、TTL を待たずに取り直せるようにする
-            size='sm'
-            variant='outline'
-            icon={<ArrowPathIcon width={16} />}
-            coolTime={5}
-            isPending={isChannelsRefreshing}
-            onPress={refreshChannels}
-          >
-            {t('reload')}
-          </MultiButton>
-        </div>
-      </FlexCol>
+      <ChannelsNotice
+        message={t('msg_slack_channel_failed')}
+        status='warning'
+        onReload={refreshChannels}
+        isPending={isChannelsRefreshing}
+      />
+    )
+  }
+  if (channels.length === 0) {
+    return (
+      <ChannelsNotice
+        message={t('msg_slack_channel_empty')}
+        onReload={refreshChannels}
+        isPending={isChannelsRefreshing}
+      />
     )
   }
   if (!current) {
