@@ -33,6 +33,7 @@ import {
 } from '@/lib/schema/schema'
 import { getSlackSettings, hasSlackCredentials } from '@/lib/slack/slack-account'
 import { listSlackChannels } from '@/lib/slack/slack-server'
+import { deleteAttachmentObjects, listBoardAttachmentKeys } from '@/lib/storage/attachment'
 
 const TAG_SELECT = { id: true, boardId: true, name: true, color: true, order: true } as const
 
@@ -209,13 +210,19 @@ export const deleteBoard = safeAuthAction
   .metadata({ actionName: 'deleteBoard', role: 'user' })
   .inputSchema(scUUID)
   .action(async ({ ctx: { user }, parsedInput: { id } }) => {
-    await prisma.$transaction(async (tx) => {
+    const keys = await prisma.$transaction(async (tx) => {
       await assertBoardAccess(user, id, 'manage', tx)
       await assertTeamBoard(tx, id)
+      // Cascade でレコードが消えると実体のキーを辿れなくなるので、削除前に控える
+      const keys = await listBoardAttachmentKeys(tx, id)
       await tx.board.delete({ where: { id } })
+      return keys
     })
 
-    logger.info({ userId: user.id, id }, 'board deleted')
+    // ロールバックで実データを失わないよう、コミットしてから実体を消す
+    const removed = await deleteAttachmentObjects(keys)
+
+    logger.info({ userId: user.id, id, attachments: keys.length, removed }, 'board deleted')
     return { id }
   })
 

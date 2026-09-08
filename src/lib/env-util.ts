@@ -168,6 +168,39 @@ const server = {
     return getEnv('VAPID_SUBJECT') ?? `mailto:${getEnv('MAIL_FROM', { default: 'devuntu@example.com' })}`
   },
 
+  // メンテナンス
+  /**
+   * 定期メンテナンス(`maintenance-worker.ts`)を動かすか。
+   * 止めると期限切れ行の掃除が行われなくなるだけで、アプリの動作には影響しない。
+   */
+  get MAINTENANCE_WORKER_ENABLED() {
+    return getEnvBoolean('MAINTENANCE_WORKER_ENABLED', { default: true })
+  },
+
+  /**
+   * どの本文からも参照されていない添付の扱い。
+   *
+   * 掃除の中で唯一の不可逆操作(オブジェクトストレージからの削除)なので、
+   * `dry-run` で対象をログに出して確かめてから `delete` へ切り替えられるようにしている。
+   */
+  get MAINTENANCE_ATTACHMENT_MODE() {
+    return getEnv<'off' | 'dry-run' | 'delete'>('MAINTENANCE_ATTACHMENT_MODE', { default: 'delete' })
+  },
+
+  /**
+   * アップロードから削除対象になるまでの猶予(時間)。
+   *
+   * 添付は本文の保存より先に作られるため、作成フォームを開いたまま放置している間は
+   * まだどこからも参照されていない。その間に消さないための幅。
+   */
+  get MAINTENANCE_ATTACHMENT_GRACE_HOURS() {
+    const value = getEnvNumber('MAINTENANCE_ATTACHMENT_GRACE_HOURS', { default: 24 })
+    if (!Number.isFinite(value) || value < 1) {
+      throw errSystemError('MAINTENANCE_ATTACHMENT_GRACE_HOURS must be at least 1')
+    }
+    return value
+  },
+
   // メール
   get MAIL_SEND() {
     return getEnv<'sendgrid' | 'sendmail' | 'smtp' | 'debug'>('MAIL_SEND')

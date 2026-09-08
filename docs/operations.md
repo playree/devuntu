@@ -10,6 +10,7 @@
   - [対で復元する手順](#対で復元する手順)
   - [ボリュームを作り直す場合](#ボリュームを作り直す場合)
 - [定期実行](#定期実行)
+- [自動メンテナンス](#自動メンテナンス)
 
 # 運用(バックアップ・リストア)
 
@@ -263,10 +264,96 @@ cron から実行する場合は、DB と S3 を続けて取得する。`compose
 
 `backup/`は際限なく増えるため、世代を残す期間を決めて古いものを削除する運用を別途用意する。
 
-なお、**本文に貼られないまま残った添付は自動削除されない**。アップロードだけして本文に書かなかった画像や、
-チケット・コメントを消したあとの画像は S3 と `attachment` テーブルに残り続ける
-(消えるのはボード削除の Cascade と、アバター・アイコンの差し替え時だけ)。
-容量が気になる場合は定期的に確認すること。
+バックアップの時間帯は[自動メンテナンス](#自動メンテナンス)の掃除と重ならないようにする。
+DB と S3 を順に取得する間に添付が消えると、復元後にその画像だけ失われるため
+(このズレ自体は手動削除でも起こるが、掃除がある分だけ当たる機会が増える)。
+
+## 自動メンテナンス
+
+期限切れの行と、どこからも参照されなくなった添付をアプリ自身が定期的に消す
+(`src/lib/maintenance/`)。ホスト側の cron は要らない。起動の1分後に1周し、以降は1時間ごと。
+
+| 対象                     | 消す条件                                                                    | 保持       |
+| ------------------------ | --------------------------------------------------------------------------- | ---------- |
+| `session`                | `expiresAt` 超過                                                            | 24時間     |
+| `verification`           | `expiresAt` 超過(使われなかったOTPなど)                                     | 24時間     |
+| `oauth_refresh_token`    | 期限切れ/失効済み、かつ再提示の検出期間も過ぎ、生きたアクセストークンが無い | 24時間     |
+| `oauth_access_token`     | `expiresAt` または `revoked` が過去                                         | 24時間     |
+| `oauth_client_assertion` | `expiresAt` 超過                                                            | なし       |
+| `upload_nonce`           | `expiresAt` 超過(アップロード時の掃除の取りこぼし)                          | なし       |
+| `agent_run`              | 開始が保持期間より古い + ランナーごとに新しい500件だけ残す                  | 90日       |
+| `attachment` + 実体      | どの本文からも参照されていない                                              | 既定24時間 |
+
+消す条件はすべて、書き手が「もう使わない」と記録した列に紐づけてある。
+`session` を消しても MCP のトークンは失効しない(参照は `SetNull` で、Webの5日とMCPの180日は独立)。
+
+### 添付の掃除
+
+添付は `attachment` テーブルと実体の両方を消す。参照は外部キーではなく本文中のURLなので、
+次の5箇所を見て「どこからも参照されていない」ことを確かめてから消す。
+
+- チケット本文 / コメント本文の Markdown
+- ユーザーのアバター(`user.image`)
+- リンクウィジェットのアイコン(`link_widget.iconPath`)
+- お知らせ本文(`key_value_store` の `DASHBOARD_ANNOUNCEMENT`)
+
+作成フォームを開いたままの画像を消さないよう、アップロードから
+`MAINTENANCE_ATTACHMENT_GRACE_HOURS`(既定24時間)は対象にしない。
+本文の全走査を伴うので、この掃除だけは1日1回に絞っている。
+
+削除は**実体 → レコードの順**。逆順にするとレコードだけ消えた場合にキーを辿れなくなり、
+掃除の対象から永久に外れてしまう。この順なら実体だけ消えても次回に拾い直して収束する。
+
+導入時は `MAINTENANCE_ATTACHMENT_MODE=dry-run` で起動し、`orphan attachment (dry-run)` に
+出たキーが本当に参照されていないことを確かめてから `delete` へ切り替える。
+
+### 掃除で回収できないもの
+
+ボード削除では `attachment` の行が Cascade で消えるため、**行が消えた後に実体の削除が失敗すると
+そのキーはDBから辿れなくなる**。掃除はDBを起点にするので、この実体だけは見つけられない。
+`board deleted` のログに出る `attachments`(控えた件数)と `removed`(消せた件数)が食い違って
+いれば発生している。棚卸しは S3 の一覧と突き合わせる。
+
+```sh
+pnpm s3:backup
+docker compose exec -T db psql -U devuser -d devuntu -Atc 'SELECT key FROM attachment' | sort > /tmp/db-keys
+jq -r '.[].key' backup/s3_YYYYMMDD_HHMMSS/manifest.json | sort > /tmp/s3-keys
+comm -13 /tmp/db-keys /tmp/s3-keys
+```
+
+差分に出たキーが、記録の無い実体の候補になる。ただし**掃除やアップロードの最中に取った
+バックアップでは正常な行も差分に出る**(実体を書いてからレコードを作るため)ので、
+消す前に作成日時を確かめること。
+
+### 確認と停止
+
+```sh
+# 1周ぶんの結果(手順ごとの削除件数)
+docker compose logs devuntu | grep 'maintenance sweep finished'
+
+# 失敗した手順。件数が -1 になっている手順に対応する
+docker compose logs devuntu | grep 'maintenance step failed'
+
+# 1周の削除上限に達した(消し切れていない)
+docker compose logs devuntu | grep 'orphan attachment sweep capped'
+```
+
+1つの手順が失敗しても他の手順は動く。停止は3段階:
+
+- `MAINTENANCE_WORKER_ENABLED=false` — 掃除をすべて止める
+- `MAINTENANCE_ATTACHMENT_MODE=off` — 添付の掃除だけ止める(他の掃除は動く)
+- `MAINTENANCE_ATTACHMENT_MODE=dry-run` — 対象をログに出すだけで消さない
+
+### インデックスを足す目安
+
+いまは掃除用のインデックスを置いていない。`session.expiresAt` はセッション更新のたびに
+書き換わる列で、最も書き込みの多いテーブルに索引を足すと1時間に1回のスキャンと引き換えに
+リクエストごとの索引更新を招くため、あえて入れていない。
+
+`oauth_access_token` が100万行を超える、または `maintenance sweep finished` の間隔が
+目に見えて延びた場合に `@@index([expiresAt])` の追加を検討する。その際は
+`CREATE INDEX CONCURRENTLY` を使うが、Prisma のマイグレーションはトランザクションで走るため
+生成された SQL の手直しが要る。
 
 ## 通知キューの確認
 
@@ -294,7 +381,7 @@ docker compose exec -T db psql -U devuser -d devuntu \
   `SLACK_BOT_TOKEN`、`webpush` なら VAPID 鍵(`VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`)を確認する
 - `notify_outbox` に `pending` が溜まっている : ワーカーが回っていない。`NOTIFY_WORKER_ENABLED` と
   起動ログ(`notify worker started`)を確認する
-- `notify_outbox` の `failed` : ペイロードが壊れている(アプリのバージョン差など)。行を消して差し支えない
+- `notify_outbox` の `failed` : ペイロードが壊れている(アプリのバージョン差など)。保持期間を過ぎれば自動で消える
 - 送信できた配信は行ごと消えるので、**空であることが正常**。送信の記録はアプリログ側に残る
 - Web プッシュが届かない場合は `web_push_subscription` に端末の行があるかを見る。
   失効(`404` / `410`)を返した購読は自動で消えるので、行が無ければ利用者に再登録してもらう

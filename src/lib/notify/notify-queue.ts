@@ -209,8 +209,10 @@ export const releaseDeliveries = async (ids: string[], reason: DeliveryOutcome):
 
 /** 役目を終えた行を片付ける。失敗した配信は原因を追えるよう一定期間残す */
 export const purge = async (now: Date): Promise<void> => {
+  const failedBefore = new Date(now.getTime() - NOTIFY_FAILED_RETENTION_MS)
+
   await prisma.notifyOutbox.deleteMany({ where: { status: 'done', deliveries: { none: {} } } })
-  await prisma.notifyDelivery.deleteMany({
-    where: { status: 'failed', createdAt: { lt: new Date(now.getTime() - NOTIFY_FAILED_RETENTION_MS) } },
-  })
+  await prisma.notifyDelivery.deleteMany({ where: { status: 'failed', createdAt: { lt: failedBefore } } })
+  // 展開できずに終わった発生記録。配信行が作られていないため上の2つのどちらにも当たらない
+  await prisma.notifyOutbox.deleteMany({ where: { status: 'failed', createdAt: { lt: failedBefore } } })
 }

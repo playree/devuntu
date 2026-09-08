@@ -256,6 +256,8 @@ model AgentRun {
   /// 実行の終了時刻。null は実行中、または応答が返らないまま落ちた実行
   finishedAt DateTime?
 
+  // 保持期間とランナーごとの件数で `maintenance-sweep.ts` が打ち切る
+
   @@index([runnerId, startedAt])
   @@index([ticketId])
   @@map("agent_run")
@@ -975,6 +977,9 @@ model Attachment {
   /// アップロードしたユーザー。ユーザー削除時は SetNull でファイルの記録だけ残す
   createdById String?
 
+  // NOTE: 本文からの参照は外部キーではなく Markdown 中のURLなので、参照が外れても行は残る。
+  // どこからも参照されない行は猶予を置いて `maintenance-attachment.ts` が実体ごと消す
+
   // メタデータ
   createdBy User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
   createdAt DateTime @default(now())
@@ -985,7 +990,8 @@ model Attachment {
 
 /// 使い捨てアップロードトークン(`/api/upload` の Bearer)の使用済み記録。
 /// jti の一意制約により2回目の INSERT が必ず失敗することを、リプレイ防止に使う。
-/// 期限切れの行は記録のついでにまとめて消すので、定期ジョブは要らない。
+/// 期限切れの行はアップロードのついでにまとめて消し、アップロードが無い期間ぶんは
+/// 定期メンテナンス(`maintenance-sweep.ts`)が拾う。
 model UploadNonce {
   id String @id @default(uuid(7))
 
