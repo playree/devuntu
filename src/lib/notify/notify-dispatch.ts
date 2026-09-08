@@ -61,7 +61,7 @@ const fanoutOutbox = async (now: Date): Promise<void> => {
       payload = parseNotifyPayload(event, outbox.payload)
     } catch (error) {
       logger.error({ error, outboxId: id, event }, 'notify payload invalid')
-      await failOutbox(outbox)
+      await failOutbox(outbox, now)
       continue
     }
 
@@ -76,7 +76,7 @@ const fanoutOutbox = async (now: Date): Promise<void> => {
       logger.info({ outboxId: id, event, deliveries: deliveries.length }, 'notify fanned out')
     } catch (error) {
       logger.error({ error, outboxId: id, event }, 'notify fanout failed')
-      await settleOutbox(outbox)
+      await settleOutbox(outbox, now)
     }
   }
 }

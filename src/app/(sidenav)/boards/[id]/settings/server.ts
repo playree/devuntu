@@ -33,6 +33,7 @@ import {
 } from '@/lib/schema/schema'
 import { getSlackSettings, hasSlackCredentials } from '@/lib/slack/slack-account'
 import { listSlackChannels } from '@/lib/slack/slack-server'
+import { detachBoardAttachments, listBoardAttachmentKeys, removeAttachmentByKey } from '@/lib/storage/attachment'
 
 const TAG_SELECT = { id: true, boardId: true, name: true, color: true, order: true } as const
 
@@ -204,18 +205,40 @@ export const setBoardNotify = safeAuthAction
     return { id }
   })
 
-/** ボード削除(owner または管理者)。チケット / タグ / アサインは Cascade で消える */
+/**
+ * ボード削除(owner または管理者)。チケット / タグ / アサインは Cascade で消える。
+ *
+ * 添付のレコードは Cascade に任せず、削除の前にボードとの紐付けだけを外して残す。
+ * レコードごと消してしまうと、コミット後の実体削除が失敗した分を誰も辿れなくなり、
+ * DBを起点にした掃除の対象から永久に外れる。行が残っていれば、本文が消えて参照が
+ * 外れた添付として `maintenance-attachment.ts` が拾い直し、実体ごと回収して収束する。
+ *
+ * 回収されるまでの間 `boardId` は null(全ログインユーザーへ配信してよい扱い)になるが、
+ * キーは推測できず、URLを知っているのは削除したボードのメンバーだけなので実害は無い。
+ */
 export const deleteBoard = safeAuthAction
   .metadata({ actionName: 'deleteBoard', role: 'user' })
   .inputSchema(scUUID)
   .action(async ({ ctx: { user }, parsedInput: { id } }) => {
-    await prisma.$transaction(async (tx) => {
+    const keys = await prisma.$transaction(async (tx) => {
       await assertBoardAccess(user, id, 'manage', tx)
       await assertTeamBoard(tx, id)
+      // 紐付けを外すとボードから辿れなくなるので、キーはここで控える
+      const keys = await listBoardAttachmentKeys(tx, id)
+      await detachBoardAttachments(tx, id)
       await tx.board.delete({ where: { id } })
+      return keys
     })
 
-    logger.info({ userId: user.id, id }, 'board deleted')
+    // ロールバックで実データを失わないよう、コミットしてから実体を消す
+    let removed = 0
+    for (const key of keys) {
+      if (await removeAttachmentByKey(key)) {
+        removed += 1
+      }
+    }
+
+    logger.info({ userId: user.id, id, attachments: keys.length, removed }, 'board deleted')
     return { id }
   })
 

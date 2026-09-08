@@ -1,3 +1,4 @@
+import { Prisma } from '@/generated/prisma/client'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
 import { toWebp, WEBP_EXT, WEBP_MIME } from './image'
@@ -55,16 +56,48 @@ export const saveContentImage = async (file: File, { boardId, userId }: { boardI
   return { url: toUploadUrl(attachment.key), key: attachment.key, size: attachment.size }
 }
 
-/** saveImageAttachment で保存した画像を削除する */
-export const removeImageAttachment = async (url: string): Promise<void> => {
-  // urlは`/api/upload/<key>`形式なのでキーを抽出
-  const key = toUploadKey(url)
+/**
+ * 添付をキーで消す。**実体 → レコードの順**で消す。
+ *
+ * 逆順にすると、レコードだけ消えて実体が残った場合に誰もそのキーへ辿り着けなくなり、
+ * DBを起点にした掃除の対象から永久に外れる。この順なら実体だけ消えた中途半端な状態でも
+ * レコードが残るので、次の掃除が同じキーを拾い直して収束する。
+ * 存在しないキーの削除はどちらもエラーにならないため、やり直しても壊れない。
+ */
+export const removeAttachmentByKey = async (key: string): Promise<boolean> => {
   try {
     await deleteObject(key)
     // レコードが無いキーもありうるためdeleteManyで許容する
     await prisma.attachment.deleteMany({ where: { key } })
+    return true
   } catch (err) {
     // 呼び出し元は成功扱いのまま進む(ベストエフォート)。追跡できるよう詳細を残す
-    logger.error({ err, url, key }, 'failed to remove image attachment')
+    logger.error({ err, key }, 'failed to remove attachment')
+    return false
   }
+}
+
+/** saveImageAttachment で保存した画像を削除する */
+export const removeImageAttachment = async (url: string): Promise<void> => {
+  // urlは`/api/upload/<key>`形式なのでキーを抽出
+  await removeAttachmentByKey(toUploadKey(url))
+}
+
+/**
+ * ボードに属する添付のキー。紐付けを外すとボードから辿れなくなるので、
+ * 実体を消すには**外す前に**控えておく必要がある。
+ */
+export const listBoardAttachmentKeys = async (tx: Prisma.TransactionClient, boardId: string): Promise<string[]> => {
+  const rows = await tx.attachment.findMany({ where: { boardId }, select: { key: true } })
+  return rows.map(({ key }) => key)
+}
+
+/**
+ * ボードに属する添付の紐付けを外す。ボード削除の直前に呼ぶ。
+ *
+ * Cascade でレコードごと消すと、実体の削除に失敗した分がどこからも辿れなくなる。
+ * 行を残しておけば未参照の添付として掃除が拾い直すので、失敗しても収束する。
+ */
+export const detachBoardAttachments = async (tx: Prisma.TransactionClient, boardId: string): Promise<void> => {
+  await tx.attachment.updateMany({ where: { boardId }, data: { boardId: null } })
 }

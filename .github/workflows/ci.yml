@@ -33,5 +33,10 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      # 型が壊れた状態でテストを流しても情報が増えないので、テストの前に置く。
+      # src/generated はコミット済みなので prisma generate は不要
+      - name: Typecheck
+        run: pnpm typecheck
+
       - name: Test
         run: pnpm test

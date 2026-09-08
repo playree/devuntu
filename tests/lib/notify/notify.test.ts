@@ -39,8 +39,11 @@ describe('DM_NOTIFY_EVENTS / CHANNEL_NOTIFY_EVENTS: 宛先ごとの内訳', () =
     })
 
     it(`${label} は定義順が NOTIFY_EVENTS と同じ`, () => {
-      // 設定画面の並びを NOTIFY_EVENTS の定義順に揃える
-      expect([...events]).toEqual(NOTIFY_EVENTS.filter((event) => events.includes(event)))
+      // 設定画面の並びを NOTIFY_EVENTS の定義順に揃える。
+      // 2つの tuple の union へ直接 includes すると引数が共通要素型に絞られるため、
+      // 下の「どちらの宛先にも出ないイベント」と同じく Set で判定する
+      const target = new Set<string>(events)
+      expect([...events]).toEqual(NOTIFY_EVENTS.filter((event) => target.has(event)))
     })
   }
 
