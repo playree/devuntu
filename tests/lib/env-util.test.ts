@@ -61,4 +61,48 @@ describe('SEARCH_ENGINE_INDEXING', () => {
     process.env.SEARCH_ENGINE_INDEXING = 'false'
     expect(envu.server.SEARCH_ENGINE_INDEXING).toBe(false)
   })
+
+  it.each(['TRUE', 'False'])('大文字小文字は問わない (%s)', (value) => {
+    process.env.SEARCH_ENGINE_INDEXING = value
+    expect(envu.server.SEARCH_ENGINE_INDEXING).toBe(value.toLowerCase() === 'true')
+  })
+
+  it('空文字は未設定と同じ扱い', () => {
+    process.env.SEARCH_ENGINE_INDEXING = ''
+    expect(envu.server.SEARCH_ENGINE_INDEXING).toBe(false)
+  })
+
+  it.each(['ture', '1', 'yes', 'on'])('綴り違いは起動時に弾く (%s)', (value) => {
+    // 黙って true 側へ倒すと、社内向けに立てた環境が検索結果へ載る
+    process.env.SEARCH_ENGINE_INDEXING = value
+    expect(() => envu.server.SEARCH_ENGINE_INDEXING).toThrow()
+  })
+})
+
+describe('TWO_FA_REQUIRED', () => {
+  const originalTwoFa = process.env.TWO_FA_REQUIRED
+
+  afterEach(() => {
+    if (originalTwoFa === undefined) {
+      delete process.env.TWO_FA_REQUIRED
+    } else {
+      process.env.TWO_FA_REQUIRED = originalTwoFa
+    }
+  })
+
+  it('未設定なら true', () => {
+    delete process.env.TWO_FA_REQUIRED
+    expect(envu.server.TWO_FA_REQUIRED).toBe(true)
+  })
+
+  it('false で無効になる', () => {
+    process.env.TWO_FA_REQUIRED = 'false'
+    expect(envu.server.TWO_FA_REQUIRED).toBe(false)
+  })
+
+  it('綴り違いは起動時に弾く', () => {
+    // 既定が true の変数でも、黙って既定へ倒すと止めたつもりの 2FA が有効なままになる
+    process.env.TWO_FA_REQUIRED = 'flase'
+    expect(() => envu.server.TWO_FA_REQUIRED).toThrow()
+  })
 })

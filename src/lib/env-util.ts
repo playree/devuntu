@@ -1,9 +1,5 @@
 import { errSystemError } from './error'
 
-const convBoolean = (value: string | undefined, defaultValue: boolean) => {
-  return value ? value.toLowerCase() !== 'false' : defaultValue
-}
-
 function getEnv<T extends string = string>(key: string, opts: { required: true }): T
 function getEnv<T extends string = string>(key: string, opts: { default: T }): T
 function getEnv<T extends string = string>(key: string): T | undefined
@@ -20,8 +16,22 @@ function getEnv<T extends string = string>(key: string, opts?: { required?: bool
   return value as T | undefined
 }
 
+/**
+ * 真偽値の環境変数。`true` / `false` 以外は起動時に弾く。
+ *
+ * 綴り違いを黙って既定の反対側へ倒すと、`SEARCH_ENGINE_INDEXING=ture` で検索結果へ載る、
+ * `DISABLE_PASSWORD_AUTH=1` でパスワード認証が消えるといった、設定した本人が気づけない事故になる。
+ */
 function getEnvBoolean(key: string, opts?: { default?: boolean }): boolean {
-  return convBoolean(process.env[key], opts?.default ?? false)
+  const value = process.env[key]?.trim()
+  if (!value) {
+    return opts?.default ?? false
+  }
+  const lower = value.toLowerCase()
+  if (lower !== 'true' && lower !== 'false') {
+    throw errSystemError(`${key} must be true or false`)
+  }
+  return lower === 'true'
 }
 
 function getEnvNumber(key: string, opts: { required: true }): number
