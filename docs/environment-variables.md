@@ -4,17 +4,36 @@
 
 ## 基本
 
-| 変数名                 | 説明                                                            | 必須 | デフォルト   |
-| ---------------------- | --------------------------------------------------------------- | ---- | ------------ |
-| `NEXT_PUBLIC_APP_NAME` | アプリ名(クライアント公開)                                      |      | `Devuntu`    |
-| `DATABASE_URL`         | DB(PostgreSQL) の接続パス                                       | 〇   | -            |
-| `DEFAULT_LOCALE`       | デフォルトロケール                                              |      | -            |
-| `DEFAULT_TIMEZONE`     | デフォルトタイムゾーン                                          |      | `Asia/Tokyo` |
-| `LOG_LEVEL`            | ログレベル                                                      |      | `info`       |
-| `DEV_ALLOWED_ORIGINS`  | `next dev` で許可する追加オリジン(カンマ区切り)。開発時のみ有効 |      | -            |
+| 変数名                   | 説明                                                            | 必須 | デフォルト   |
+| ------------------------ | --------------------------------------------------------------- | ---- | ------------ |
+| `NEXT_PUBLIC_APP_NAME`   | アプリ名(クライアント公開)                                      |      | `Devuntu`    |
+| `DATABASE_URL`           | DB(PostgreSQL) の接続パス                                       | 〇   | -            |
+| `DEFAULT_LOCALE`         | デフォルトロケール                                              |      | -            |
+| `DEFAULT_TIMEZONE`       | デフォルトタイムゾーン                                          |      | `Asia/Tokyo` |
+| `LOG_LEVEL`              | ログレベル                                                      |      | `info`       |
+| `DEV_ALLOWED_ORIGINS`    | `next dev` で許可する追加オリジン(カンマ区切り)。開発時のみ有効 |      | -            |
+| `SEARCH_ENGINE_INDEXING` | 検索エンジンにインデックスさせるか                              |      | `false`      |
 
 `DEV_ALLOWED_ORIGINS` だけは例外で、`src/lib/env-util.ts` には定義していない。参照元の `next.config.ts` は
 Next の起動前に評価されるため `envu` を解決できず、`process.env` を直接読んでいる。
+
+真偽値の変数は `true` / `false`(大文字小文字は問わない)だけを受け付ける。`1` や綴り違いは
+黙って既定の反対側へ倒れると気づけないため、読み取り時にエラーにしている。
+
+`SEARCH_ENGINE_INDEXING` は**既定でインデックス拒否**。社内向けに立てた環境をうっかり検索結果へ
+載せないため、明示的に `true` にしたときだけ許可する。次の3か所へまとめて効く。
+
+- `/robots.txt`(`src/app/robots.ts`) : 拒否時は全パスを `Disallow`、許可時は `/api/` と `/cal/` のみ除外
+- `<meta name="robots">`(`src/app/layout.tsx`) : 拒否時は `noindex, nofollow`
+- `X-Robots-Tag` ヘッダ(`src/proxy.ts`) : 拒否時は `noindex, nofollow`
+
+`X-Robots-Tag` が付くのは Proxy が通常処理を継続したページ応答だけ。`/api/`・拡張子を含むパス・
+Server Action(`next-action` ヘッダ)は matcher の対象外で、認証リダイレクトと管理者拒否の rewrite は
+ヘッダを付ける前に返る。これらを追わないのは、拒否時は `/robots.txt` が全パスを `Disallow` するため
+巡回自体が起きず、静的アセットまで Proxy を通すと全リクエストでセッション取得が走るため。
+
+値の変更は再起動で反映される。空き時間の共有(`/cal/[id]`)は共有URLを知る人だけが見る画面なので、
+この設定に関わらず常に `noindex` のままにしている。
 
 ## 認証
 

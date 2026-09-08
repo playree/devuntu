@@ -20,13 +20,18 @@ const RobotoMono = Roboto_Mono({
   variable: '--font-roboto-mono',
 })
 
-export const metadata: Metadata = {
+/**
+ * 静的な metadata はモジュール評価時に確定してビルド時プリレンダへ巻き込まれるため、
+ * 起動時の環境変数を反映できるよう generateMetadata で組み立てる。
+ */
+export const generateMetadata = async (): Promise<Metadata> => ({
   title: {
     default: 'Devuntu',
     template: `%s - Devuntu`,
   },
   description: 'Devuntu',
-}
+  ...(envu.server.SEARCH_ENGINE_INDEXING ? {} : { robots: { index: false, follow: false } }),
+})
 
 export default async function RootLayout({
   children,
