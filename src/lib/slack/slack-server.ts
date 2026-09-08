@@ -10,7 +10,7 @@
  * (`google-calendar-server.ts` と同じ方針)。
  */
 
-import { cached } from '../cache'
+import { cached, dropCached } from '../cache'
 import { envu } from '../env-util'
 import { logger } from '../logger'
 import { sleep } from '../sleep'
@@ -30,6 +30,9 @@ const BOT_INFO_TTL_MS = 10 * 60 * 1000
 
 /** チャンネル一覧を使い回す時間。設定画面を開くたびに Slack を叩かない */
 const CHANNELS_TTL_MS = 5 * 60 * 1000
+
+/** チャンネル一覧のキャッシュキー。強制再取得で捨てるため定数にしてある */
+const CHANNELS_CACHE_KEY = 'slack:channels'
 
 /** 1 回の users.conversations で取る件数(Slack の上限は 1000 だが、応答を軽く保つ) */
 const CHANNELS_PAGE_SIZE = 200
@@ -260,13 +263,22 @@ export type SlackChannel = { id: string; name: string; isPrivate: boolean }
  * 後者は参加しているチャンネルだけを返すので、招待漏れによる設定ミスが起きない。
  * ただし参加は投稿権限までは保証しない(read-only channel などでは投稿が拒否される)。
  *
- * 取得できない場合は null を返し、画面側で案内文言に落とす(空配列と区別しない)。
+ * 取得できない場合は null を返す。空配列(招待漏れ)とは対処が違うので、画面側で別の案内に落とす。
+ *
+ * `force` はキャッシュを捨てて Slack から取り直す。Bot をチャンネルへ招待しても TTL の間は
+ * 一覧に出てこないので、利用者が明示的にリロードする経路から指定する。
  */
-export const listSlackChannels = async (): Promise<SlackChannel[] | null> => {
+export const listSlackChannels = async ({ force = false }: { force?: boolean } = {}): Promise<
+  SlackChannel[] | null
+> => {
+  if (force) {
+    dropCached(CHANNELS_CACHE_KEY)
+  }
+
   try {
     // 失敗を null で返すと TTL の間キャッシュされ、招待やトークンを直しても反映されない。
     // cached は reject した Promise を残さないので、失敗は throw で伝える
-    return await cached('slack:channels', CHANNELS_TTL_MS, async () => {
+    return await cached(CHANNELS_CACHE_KEY, CHANNELS_TTL_MS, async () => {
       const channels: SlackChannel[] = []
       let cursor: string | undefined
 

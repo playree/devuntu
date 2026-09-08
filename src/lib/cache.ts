@@ -61,3 +61,12 @@ export const cached = <T>(key: string, ttlMs: number, load: () => Promise<T>): P
   entries.set(key, { value, expiresAt: now + ttlMs })
   return value
 }
+
+/**
+ * `key` のキャッシュを捨てる。次の `cached` で必ず `load` が走る。
+ *
+ * TTL を待たずに取り直したい操作(利用者が明示的にリロードする場合など)から呼ぶ。
+ */
+export const dropCached = (key: string): void => {
+  entries.delete(key)
+}

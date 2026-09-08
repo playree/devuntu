@@ -425,7 +425,8 @@ export const ja: DefaultLocaleItems = {
   msg_slack_allowed_groups_desc: '未指定の場合は全ユーザーがSlack連携を利用できます。',
   msg_slack_bot_unavailable: 'Slack Botトークンが未設定または無効です。SLACK_BOT_TOKEN を確認してください。',
   msg_slack_channel_empty:
-    '選択できるチャンネルがありません。通知したいチャンネルで「/invite @Devuntu」を実行してください。',
+    '選択できるチャンネルがありません。通知したいチャンネルで「/invite @Devuntu」を実行し、リロードしてください。',
+  msg_slack_channel_failed: 'チャンネル一覧を取得できませんでした。時間をおいてリロードしてください。',
   msg_webpush_blocked: 'ブラウザの通知が拒否されています。ブラウザの設定でこのサイトの通知を許可してください。',
   msg_webpush_desc: 'ブラウザやスマートフォンの通知として受け取ります。端末ごとに登録が必要です。',
   msg_webpush_failed: 'Webプッシュ通知の登録に失敗しました。時間をおいて再度お試しください。',

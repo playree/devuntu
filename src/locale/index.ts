@@ -404,6 +404,7 @@ export type LocaleItemBase =
   | 'msg_slack_allowed_groups_desc'
   | 'msg_slack_bot_unavailable'
   | 'msg_slack_channel_empty'
+  | 'msg_slack_channel_failed'
   | 'msg_webpush_blocked'
   | 'msg_webpush_desc'
   | 'msg_webpush_failed'

@@ -425,7 +425,8 @@ Please copy and use the connection information above.
   msg_slack_allowed_groups_desc: 'If not specified, all users can use the Slack integration.',
   msg_slack_bot_unavailable: 'The Slack bot token is missing or invalid. Please check SLACK_BOT_TOKEN.',
   msg_slack_channel_empty:
-    'No channels are available. Run "/invite @Devuntu" in the channel you want to be notified in.',
+    'No channels are available. Run "/invite @Devuntu" in the channel you want to be notified in, then reload.',
+  msg_slack_channel_failed: 'Failed to load the channel list. Please wait a moment and reload.',
   msg_webpush_blocked: 'Notifications are blocked. Allow notifications for this site in your browser settings.',
   msg_webpush_desc: 'Receive notifications from your browser or phone. Each device must be registered separately.',
   msg_webpush_failed: 'Failed to register for web push notifications. Please try again later.',
