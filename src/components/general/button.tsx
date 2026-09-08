@@ -65,7 +65,7 @@ export const MultiButton: FC<
       isDisabled={waitTime > 0 ? true : isDisabled}
     >
       {isPending ? <Spinner color='current' size='sm' className='-mx-0.5' /> : icon}
-      <>{waitTime > 0 ? `wait ${waitTime}s` : children}</>
+      <>{waitTime > 0 ? (props.isIconOnly ? (isPending ? '' : `${waitTime}`) : `wait ${waitTime}s`) : children}</>
     </Button>
   )
 
