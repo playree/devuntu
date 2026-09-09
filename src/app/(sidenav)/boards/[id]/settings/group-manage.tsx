@@ -2,13 +2,13 @@
 
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
+import { NoticePanel } from '@/components/general/panel'
 import { MultiSelectCtrl } from '@/components/general/select'
 import { CheckIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action/action-client'
 import { scSetBoardGroups, SetBoardGroupsIn } from '@/lib/schema/schema'
 import { useLocale } from '@/locale/client'
-import { Chip } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FC } from 'react'
 import { useForm } from 'react-hook-form'
@@ -52,10 +52,10 @@ export const GroupManage: FC<{ boardId: string; assignments: Assignments; reload
           groupOptions={assignments.groupOptions}
           label={t('board_groups')}
         />
+        <NoticePanel className='text-xs' status='warning'>
+          {t('msg_group_assign_admin_only')}
+        </NoticePanel>
         <div className='flex items-center gap-2'>
-          <Chip variant='soft' color='warning' size='sm'>
-            <Chip.Label>{t('msg_group_assign_admin_only')}</Chip.Label>
-          </Chip>
           <MultiButton className='ml-auto' type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
             {t('save')}
           </MultiButton>

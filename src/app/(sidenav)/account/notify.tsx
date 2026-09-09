@@ -3,10 +3,11 @@
 import { MultiButton } from '@/components/general/button'
 import { CheckBoxCtrl } from '@/components/general/checkbox'
 import { FlexCol, FlexRow } from '@/components/general/flex'
+import { NoticePanel } from '@/components/general/panel'
 import { CheckIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction, useActionData } from '@/lib/action/action-client'
-import { DM_NOTIFY_EVENTS, DmNotifyEvent } from '@/lib/notify/notify'
+import { DM_NOTIFY_EVENTS, DmNotifyEvent, NOTIFY_EMAIL_WINDOW_MS } from '@/lib/notify/notify'
 import { NotifySetting } from '@/lib/notify/notify-setting'
 import { UpdateNotifySettings } from '@/lib/schema/schema'
 import { useLocale } from '@/locale/client'
@@ -49,6 +50,9 @@ const NotifyForm: FC<{
       })}
     >
       <FlexCol className='gap-4 px-1'>
+        <NoticePanel className='text-xs'>
+          {t('msg_notify_email_digest', { minutes: NOTIFY_EMAIL_WINDOW_MS / 60_000 })}
+        </NoticePanel>
         {DM_NOTIFY_EVENTS.map((event) => (
           <FlexCol key={event} className='gap-2'>
             <div className='text-foreground text-sm'>{t(`notify_event_${event}`)}</div>
