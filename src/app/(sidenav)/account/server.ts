@@ -11,7 +11,7 @@ import { GOOGLE_ACCOUNT_PROVIDER_ID } from '@/lib/google/google-calendar'
 import { logger } from '@/lib/logger'
 import { DUPLICATED_MCP_TOKEN_NAME, MAX_MCP_TOKENS_PER_USER, MCP_TOKEN_LIMIT_REACHED } from '@/lib/mcp/mcp'
 import { generateMcpToken, hashMcpToken } from '@/lib/mcp/mcp-token'
-import { getUserNotifySettings, setUserNotifySetting } from '@/lib/notify/notify-setting'
+import { getUserNotifySettings, setUserNotifySettings } from '@/lib/notify/notify-setting'
 import { dedupeScopes } from '@/lib/oauth/oauth-consent'
 import { isUniqueViolation, prisma } from '@/lib/prisma'
 import { assertRateLimit } from '@/lib/rate-limit'
@@ -19,7 +19,7 @@ import {
   scIssueMcpToken,
   scRevokeConsent,
   scSetUserAvatar,
-  scUpdateNotifySetting,
+  scUpdateNotifySettings,
   scUUID,
   scWebPushSubscription,
 } from '@/lib/schema/schema'
@@ -243,12 +243,12 @@ export const getNotifySettings = safeAuthAction
   .metadata({ actionName: 'getNotifySettings', role: 'user' })
   .action(async ({ ctx: { user } }) => getUserNotifySettings(user.id))
 
-export const updateNotifySetting = safeAuthAction
-  .metadata({ actionName: 'updateNotifySetting', role: 'user' })
-  .inputSchema(scUpdateNotifySetting)
-  .action(async ({ parsedInput: { event, ...setting }, ctx: { user } }) => {
-    await setUserNotifySetting(user.id, event, setting)
-    return { event, ...setting }
+export const updateNotifySettings = safeAuthAction
+  .metadata({ actionName: 'updateNotifySettings', role: 'user' })
+  .inputSchema(scUpdateNotifySettings)
+  .action(async ({ parsedInput: { settings }, ctx: { user } }) => {
+    await setUserNotifySettings(user.id, settings)
+    return { settings }
   })
 
 /**

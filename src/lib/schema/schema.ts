@@ -352,6 +352,12 @@ export const scUpdateNotifySetting = z.object({
 })
 export type UpdateNotifySetting = z.infer<typeof scUpdateNotifySetting>
 
+/** 通知設定の一括保存。画面は切り替え即保存ではなく保存ボタン押下でイベント分をまとめて送る */
+export const scUpdateNotifySettings = z.object({
+  settings: z.array(scUpdateNotifySetting),
+})
+export type UpdateNotifySettings = z.infer<typeof scUpdateNotifySettings>
+
 /**
  * Web プッシュの購読。ブラウザの `PushSubscription` から必要な値だけを受け取る。
  *
