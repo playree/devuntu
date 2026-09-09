@@ -86,6 +86,10 @@ export const ja: DefaultLocaleItems = {
   board_groups: 'グループアサイン',
   board_key: 'ボードキー',
   board_members: 'ボードメンバー',
+  board_notify_event_agent_run: 'エージェント実行結果',
+  board_notify_event_ticket_assigned: 'チケットの担当者変更',
+  board_notify_event_ticket_completed: 'チケット完了',
+  board_notify_event_ticket_created: 'チケット作成',
   board_profile: 'ボード概要',
   board_settings: 'ボード設定',
   board_slack_notify: 'チャネル通知',
@@ -419,6 +423,7 @@ export const ja: DefaultLocaleItems = {
   msg_no_tickets: 'チケットがありません。',
   msg_not_allowed_domain_in_google:
     'このアカウントでのGoogleサインインは許可されていません。\nEメール又はパスキーでのサインインをご利用ください。',
+  msg_notify_email_digest: 'メール通知は${minutes}分間隔でまとめて1通で届きます。',
   msg_otp_sent: '認証コードを送信しました。',
   msg_owner_required: 'オーナーを1人以上指定してください。',
   msg_private_board_immutable: 'プライベートボードの構成は変更できません。',
@@ -493,7 +498,7 @@ export const ja: DefaultLocaleItems = {
 `,
   mail_otp_subject: '[${appname}] Eメール認証OTP : ${otp}',
 
-  notify_msg_agent_run_finished: '${agent}が${action}を実行しました(${result} / ${duration})',
+  notify_msg_agent_run_finished: '${agent}の${action}が完了(${result} / ${duration})',
   notify_msg_mentioned: '${from}さんがあなたをメンションしました',
   notify_msg_mentioned_comment: '${from}さんがコメントであなたをメンションしました',
   notify_msg_ticket_assigned: '${from}さんがあなたを担当者に指定しました',

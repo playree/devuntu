@@ -54,7 +54,12 @@ const EventsField: FC<{
     >
       <Label className={isCompact ? 'text-xs font-light' : ''}>{t('slack_notify_events')}</Label>
       {CHANNEL_NOTIFY_EVENTS.map((event) => (
-        <CheckBoxField key={event} id={`board_notify_${event}`} value={event} label={t(`notify_event_${event}`)} />
+        <CheckBoxField
+          key={event}
+          id={`board_notify_${event}`}
+          value={event}
+          label={t(`board_notify_event_${event}`)}
+        />
       ))}
     </CheckboxGroup>
   )

@@ -86,6 +86,10 @@ export const en: LocaleItems = {
   board_groups: 'Group Assignment',
   board_key: 'Board Key',
   board_members: 'Board Members',
+  board_notify_event_agent_run: 'Agent run result',
+  board_notify_event_ticket_assigned: 'Ticket assignee changed',
+  board_notify_event_ticket_completed: 'Ticket completed',
+  board_notify_event_ticket_created: 'Ticket created',
   board_profile: 'Board Overview',
   board_settings: 'Board Settings',
   board_slack_notify: 'Channel notifications',
@@ -419,6 +423,7 @@ Please copy and use the connection information above.
   msg_no_tickets: 'No tickets.',
   msg_not_allowed_domain_in_google:
     'Google sign in is not allowed for this account.\nPlease sign in with your email or passkey instead.',
+  msg_notify_email_digest: 'Email notifications are batched into a single message every ${minutes} minutes.',
   msg_otp_sent: 'Verification code sent.',
   msg_owner_required: 'At least one owner is required.',
   msg_private_board_immutable: 'The private board cannot be reconfigured.',
@@ -495,7 +500,7 @@ Expiration time: 5 minutes
 `,
   mail_otp_subject: '[${appname}] Email OTP : ${otp}',
 
-  notify_msg_agent_run_finished: '${agent} ran ${action} (${result} / ${duration})',
+  notify_msg_agent_run_finished: '${agent} finished ${action} (${result} / ${duration})',
   notify_msg_mentioned: '${from} mentioned you',
   notify_msg_mentioned_comment: '${from} mentioned you in a comment',
   notify_msg_ticket_assigned: '${from} assigned this ticket to you',
