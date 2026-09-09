@@ -3,83 +3,22 @@
 import { MultiButton } from '@/components/general/button'
 import { FlexCol, FlexRow } from '@/components/general/flex'
 import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
-import { BellIcon, TrashIcon } from '@/components/icon'
+import { BellIcon, BellSlashIcon, TrashIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { dayformat } from '@/lib/day'
+import { resolveThisDeviceStatus } from '@/lib/webpush/webpush'
 import {
-  guessDeviceLabel,
-  isSameApplicationServerKey,
-  isWebPushSupported,
-  SERVICE_WORKER_PATH,
-  urlBase64ToUint8Array,
-} from '@/lib/webpush/webpush'
+  LocalSubscriptionPayload,
+  LocalWebPushState,
+  readLocalWebPushState,
+  subscribeLocalPush,
+  unsubscribeLocalPush,
+} from '@/lib/webpush/webpush-client'
 import { useLocale } from '@/locale/client'
-import { FC, useState } from 'react'
+import { Chip } from '@heroui/react'
+import { FC, useCallback, useEffect, useState } from 'react'
 import { deleteWebPushDevice, GetWebPushDevicesReturnType, getWebPushPublicKey, registerWebPushDevice } from './server'
-
-/** `PushSubscription` の鍵を報告に載せる形(base64url)へ直す */
-const toBase64Url = (buffer: ArrayBuffer | null): string => {
-  if (!buffer) {
-    return ''
-  }
-  const binary = String.fromCharCode(...new Uint8Array(buffer))
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-}
-
-/** iOS / iPadOS か。ホーム画面に追加していないと Push API が使えないので案内を出し分ける */
-const isIos = (userAgent: string) => /iPhone|iPad|iPod/.test(userAgent)
-
-/** ホーム画面から起動しているか(standalone) */
-const isStandalone = () =>
-  window.matchMedia('(display-mode: standalone)').matches ||
-  // iOS Safari は display-mode を返さないことがあるので独自プロパティも見る
-  ('standalone' in window.navigator && window.navigator.standalone === true)
-
-type WebPushSupport = 'ok' | 'unsupported' | 'ios-standalone'
-
-/**
- * この環境で Web プッシュを使えるか。
- *
- * iOS はホーム画面に追加すれば使えるので、非対応とは案内を分ける。
- */
-const detectSupport = (): WebPushSupport => {
-  if (isWebPushSupported()) {
-    return 'ok'
-  }
-  return isIos(navigator.userAgent) && !isStandalone() ? 'ios-standalone' : 'unsupported'
-}
-
-/**
- * ブラウザ側の購読を作る。
- *
- * 鍵の不一致やプッシュサービスへ到達できない場合は例外になるが、利用者に打てる手が
- * 無いので理由は分けず `failed` にまとめる(詳細はコンソールに残す)。
- */
-const createSubscription = async (publicKey: string) => {
-  const registration = await navigator.serviceWorker.register(SERVICE_WORKER_PATH)
-  // 登録直後は activate 前で pushManager を触れないことがある
-  await navigator.serviceWorker.ready
-
-  const applicationServerKey = urlBase64ToUint8Array(publicKey)
-  /**
-   * 鍵を差し替えた後は古い購読が残っていると購読し直せないので、先に解除する。
-   * 解除した購読はサーバー側にも残るため、エンドポイントを報告して消してもらう。
-   */
-  const current = await registration.pushManager.getSubscription()
-  let replacedEndpoint: string | undefined
-  if (current && !isSameApplicationServerKey(current.options.applicationServerKey, applicationServerKey)) {
-    replacedEndpoint = current.endpoint
-    await current.unsubscribe()
-  }
-
-  const subscription = await registration.pushManager.subscribe({
-    // ブラウザの要件。受け取ったら必ず通知を出す(Service Worker 側で守る)
-    userVisibleOnly: true,
-    applicationServerKey,
-  })
-  return { subscription, replacedEndpoint }
-}
 
 /**
  * この端末で通知を受け取れるようにする。
@@ -92,32 +31,46 @@ const subscribeThisDevice = async (publicKey: string) => {
     return { ok: false as const, reason: 'blocked' as const }
   }
 
-  let created: Awaited<ReturnType<typeof createSubscription>>
+  let payload: LocalSubscriptionPayload
   try {
-    created = await createSubscription(publicKey)
+    payload = await subscribeLocalPush(publicKey)
   } catch (error) {
     // ここで握らないと画面には何も出ず、押しても無反応に見える
     console.error(error)
     return { ok: false as const, reason: 'failed' as const }
   }
 
-  const { subscription, replacedEndpoint } = created
   try {
-    await parseAction(
-      registerWebPushDevice({
-        endpoint: subscription.endpoint,
-        p256dh: toBase64Url(subscription.getKey('p256dh')),
-        auth: toBase64Url(subscription.getKey('auth')),
-        label: guessDeviceLabel(navigator.userAgent) || undefined,
-        replacedEndpoint,
-      }),
-    )
+    await parseAction(registerWebPushDevice(payload))
   } catch (error) {
     // ブラウザ側の購読だけ出来てサーバーに届いていない状態。握らないと成功したように見える
     console.error(error)
     return { ok: false as const, reason: 'failed' as const }
   }
   return { ok: true as const }
+}
+
+/**
+ * ブラウザ側の状態を読む。
+ *
+ * VAPID 鍵が確定するまでは読まない(鍵が無いと購読の新旧を判定できない)。
+ */
+const useLocalWebPushState = (publicKey: string | null | undefined) => {
+  const [localState, setLocalState] = useState<LocalWebPushState>()
+  const reloadLocalState = useCallback(() => {
+    if (!publicKey) {
+      return Promise.resolve()
+    }
+    return readLocalWebPushState(publicKey).then((state) => {
+      setLocalState(state)
+    })
+  }, [publicKey])
+
+  useEffect(() => {
+    void reloadLocalState()
+  }, [reloadLocalState])
+
+  return { localState, reloadLocalState }
 }
 
 /**
@@ -133,6 +86,7 @@ export const WebPushSettings: FC<{
 }> = ({ devices, isDevicesLoading, refreshDevices }) => {
   const { t, lvt } = useLocale()
   const { data: publicKey, isLoading: isKeyLoading } = useActionData(getWebPushPublicKey)
+  const { localState, reloadLocalState } = useLocalWebPushState(publicKey)
   const [isPending, setIsPending] = useState(false)
 
   if (isKeyLoading || isDevicesLoading) {
@@ -142,43 +96,69 @@ export const WebPushSettings: FC<{
   if (!publicKey) {
     return <NoticePanel className='text-xs'>{t('msg_webpush_unavailable')}</NoticePanel>
   }
-
   /**
-   * ここから先はデータ取得後なのでクライアントのみ。
-   *
-   * `useActionData` は `isLoading: true` で始まり、サーバーレンダリングと初回レンダーは
-   * どちらもスケルトンを返すので、ブラウザ API を触ってもハイドレーションはずれない。
+   * ブラウザ側の状態は `useEffect` で読むため初回レンダーでは未確定。
+   * サーバーレンダリングと初回レンダーはどちらもスケルトンを返すのでハイドレーションはずれない。
    */
-  const support = detectSupport()
-  if (support !== 'ok') {
+  if (!localState) {
+    return <PanelSkeleton />
+  }
+  if (localState.support !== 'ok') {
     return (
       <NoticePanel className='text-xs'>
-        {support === 'ios-standalone' ? t('msg_webpush_ios_standalone') : t('msg_webpush_unsupported')}
+        {localState.support === 'ios-standalone' ? t('msg_webpush_ios_standalone') : t('msg_webpush_unsupported')}
       </NoticePanel>
     )
   }
+
+  const status = resolveThisDeviceStatus(localState.subscription, devices)
+  const thisDevice = devices?.find(({ id }) => id === status.deviceId)
+  /**
+   * 鍵を差し替える前に登録した行。再購読は古い購読を解除してから作り直すため、途中で失敗すると
+   * 解除済みの購読を指したまま残る(押し直しても解除済みの購読は読めず、消す手掛かりが無くなる)。
+   * 鍵違いの送信は 401 で落ちるだけで失効として掃除されないので、失敗した時点でここで消す。
+   */
+  const staleDevice =
+    status.kind === 'stale-key'
+      ? devices?.find(({ endpoint }) => endpoint === localState.subscription?.endpoint)
+      : undefined
+  // 拒否されたままでは登録できないので、押させる前に案内する
+  const isBlocked = localState.permission === 'denied'
 
   const enable = async () => {
     setIsPending(true)
     try {
       const result = await subscribeThisDevice(publicKey)
       if (!result.ok) {
+        // 権限の拒否ではブラウザ側の購読に触れていないので、消す対象も無い
+        if (result.reason === 'failed' && staleDevice) {
+          // 消せなくても登録の失敗を伝えたいので、通知は上書きしない
+          await parseAction(deleteWebPushDevice({ id: staleDevice.id })).catch(console.error)
+        }
         notify.error(t(result.reason === 'blocked' ? 'msg_webpush_blocked' : 'msg_webpush_failed'))
+        // 拒否された場合は権限が変わっているので読み直す
+        await Promise.all([refreshDevices(), reloadLocalState()])
         return
       }
       notify.success(t('msg_saved'))
-      await refreshDevices()
+      /**
+       * 端末一覧とブラウザ側の状態を両方待つ。
+       * 片方だけだと突き合わせが1フレーム未登録側に転んでボタンがちらつく。
+       */
+      await Promise.all([refreshDevices(), reloadLocalState()])
     } finally {
       setIsPending(false)
     }
   }
 
-  const remove = async (id: string) => {
+  const remove = async (id: string, endpoint: string) => {
     setIsPending(true)
     try {
       await parseAction(deleteWebPushDevice({ id }))
+      // 行を消してからブラウザ側を解除する(逆順だと送信先が死んでいる行が残りうる)
+      await unsubscribeLocalPush(endpoint)
       notify.success(t('msg_deleted_target', { target: t('notify_webpush_devices') }))
-      await refreshDevices()
+      await Promise.all([refreshDevices(), reloadLocalState()])
     } catch (error) {
       // `parseAction` は `ClientError` を通知せずに throw するので、ここで拾わないと画面に何も出ない
       console.error(error)
@@ -192,20 +172,47 @@ export const WebPushSettings: FC<{
     <FlexCol className='gap-4 px-1'>
       <NoticePanel className='text-xs'>{t('msg_webpush_desc')}</NoticePanel>
 
-      <MultiButton className='self-start' size='sm' icon={<BellIcon />} isPending={isPending} onPress={enable}>
-        {t('notify_webpush_enable')}
-      </MultiButton>
+      {isBlocked && (
+        <NoticePanel className='text-xs' status='warning'>
+          {t('msg_webpush_blocked')}
+        </NoticePanel>
+      )}
+      {thisDevice ? (
+        <MultiButton
+          className='self-start'
+          size='sm'
+          variant='danger-soft'
+          icon={<BellSlashIcon />}
+          isPending={isPending}
+          onPress={() => remove(thisDevice.id, thisDevice.endpoint)}
+        >
+          {t('notify_webpush_disable')}
+        </MultiButton>
+      ) : (
+        !isBlocked && (
+          <MultiButton className='self-start' size='sm' icon={<BellIcon />} isPending={isPending} onPress={enable}>
+            {t('notify_webpush_enable')}
+          </MultiButton>
+        )
+      )}
 
       <FlexCol className='gap-2'>
         <div className='text-sm font-bold'>{t('notify_webpush_devices')}</div>
         {!devices || devices.length === 0 ? (
           <div className='text-default-500 text-sm'>{t('msg_webpush_no_device')}</div>
         ) : (
-          devices.map(({ id, label, createdAt, lastUsedAt }) => (
+          devices.map(({ id, endpoint, label, createdAt, lastUsedAt }) => (
             // スマホでは端末名と操作が縦積みになるよう折り返す
             <FlexRow key={id} className='border-default-200 flex-wrap items-center gap-2 border-b pb-2'>
               <FlexCol className='min-w-0 grow gap-0.5'>
-                <div className='truncate text-sm'>{label || t('notify_webpush')}</div>
+                <FlexRow className='min-w-0 items-center gap-1.5'>
+                  <div className='truncate text-sm'>{label || t('notify_webpush')}</div>
+                  {id === status.deviceId && (
+                    <Chip className='shrink-0' color='success' variant='soft' size='sm'>
+                      <Chip.Label>{t('notify_webpush_this_device')}</Chip.Label>
+                    </Chip>
+                  )}
+                </FlexRow>
                 <div className='text-default-500 text-xs'>
                   {lvt({ ja: '登録', en: 'Registered' })}: {dayformat(createdAt)}
                   {lastUsedAt ? ` / ${lvt({ ja: '最終送信', en: 'Last sent' })}: ${dayformat(lastUsedAt)}` : ''}
@@ -216,7 +223,7 @@ export const WebPushSettings: FC<{
                 variant='danger-soft'
                 icon={<TrashIcon />}
                 isPending={isPending}
-                onPress={() => remove(id)}
+                onPress={() => remove(id, endpoint)}
               >
                 {t('delete')}
               </MultiButton>

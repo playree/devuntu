@@ -20,6 +20,27 @@ export const MAX_WEBPUSH_ENDPOINT = 1000
 /** 鍵の形式。`p256dh` / `auth` はどちらも base64url */
 export const BASE64URL_PATTERN = /^[A-Za-z0-9_-]+$/
 
+/**
+ * この環境で Web プッシュを使えるか。
+ *
+ * iOS はホーム画面に追加すれば使えるので、非対応とは案内を分ける。
+ */
+export type WebPushSupport = 'ok' | 'unsupported' | 'ios-standalone'
+
+/** この端末の登録状態。通知が届くのは `registered` のときだけ */
+export type ThisDeviceStatus = {
+  kind: 'none' | 'orphan' | 'stale-key' | 'registered'
+  /** DB 上のこの端末の行。`registered` のときだけ入る */
+  deviceId: string | null
+}
+
+/** ブラウザ側から読んだこの端末の購読 */
+export type LocalSubscription = {
+  endpoint: string
+  /** 現在の VAPID 公開鍵で作られた購読か */
+  isCurrentKey: boolean
+}
+
 /** ブラウザから受け取る購読。`PushSubscription.toJSON()` の必要な部分 */
 export type WebPushSubscriptionInput = {
   endpoint: string
@@ -112,4 +133,44 @@ export const guessDeviceLabel = (userAgent: string): string => {
   ].find(([needle]) => userAgent.includes(needle))?.[1]
 
   return [os, browser].filter(Boolean).join(' / ').slice(0, MAX_WEBPUSH_LABEL)
+}
+
+/** `PushSubscription` の鍵を報告に載せる形(base64url)へ直す */
+export const toBase64Url = (buffer: ArrayBuffer | null): string => {
+  if (!buffer) {
+    return ''
+  }
+  const binary = String.fromCharCode(...new Uint8Array(buffer))
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+/**
+ * iOS / iPadOS か。ホーム画面に追加していないと Push API が使えないので案内を出し分ける。
+ *
+ * iPadOS 13 以降の Safari は既定でデスクトップ相当の `Macintosh` UA を送るため、UA だけでは
+ * Mac と区別できない。Mac にはタッチ画面が無いので `maxTouchPoints` で見分ける。
+ */
+export const isIos = (userAgent: string, maxTouchPoints = 0): boolean =>
+  /iPhone|iPad|iPod/.test(userAgent) || (/Macintosh/.test(userAgent) && maxTouchPoints > 0)
+
+/**
+ * ブラウザ側の購読と DB の端末一覧を突き合わせる。
+ *
+ * `stale-key` は VAPID 鍵を差し替えた後に残った購読。エンドポイントが DB にあっても
+ * 送信は鍵違いで拒否されるので登録済みとは見なさない。
+ * `orphan` はブラウザに購読があるのに自分の端末一覧に無い状態(他アカウントで登録した、
+ * 他のタブで削除した、上限を超えて消された)。登録し直せば持ち主が移るので未登録として扱う。
+ */
+export const resolveThisDeviceStatus = (
+  local: LocalSubscription | null,
+  devices: readonly { id: string; endpoint: string }[] | undefined,
+): ThisDeviceStatus => {
+  if (!local) {
+    return { kind: 'none', deviceId: null }
+  }
+  if (!local.isCurrentKey) {
+    return { kind: 'stale-key', deviceId: null }
+  }
+  const device = devices?.find(({ endpoint }) => endpoint === local.endpoint)
+  return device ? { kind: 'registered', deviceId: device.id } : { kind: 'orphan', deviceId: null }
 }
