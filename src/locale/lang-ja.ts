@@ -521,4 +521,5 @@ export const ja: DefaultLocaleItems = {
   '@invalid_daily_limit': '0(無制限)～999の整数',
   '@invalid_slack_channel': 'Slackチャンネルの指定が正しくありません',
   '@invalid_webpush_subscription': '購読の形式が正しくありません。',
+  '@invalid_notify_setting': '通知設定の指定が正しくありません。',
 }

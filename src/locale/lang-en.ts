@@ -523,4 +523,5 @@ Expiration time: 5 minutes
   '@invalid_daily_limit': 'An integer from 0 (unlimited) to 999',
   '@invalid_slack_channel': 'The Slack channel is not valid',
   '@invalid_webpush_subscription': 'Invalid subscription format.',
+  '@invalid_notify_setting': 'Invalid notification settings.',
 }

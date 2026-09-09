@@ -352,9 +352,20 @@ export const scUpdateNotifySetting = z.object({
 })
 export type UpdateNotifySetting = z.infer<typeof scUpdateNotifySetting>
 
-/** 通知設定の一括保存。画面は切り替え即保存ではなく保存ボタン押下でイベント分をまとめて送る */
+/**
+ * 通知設定の一括保存。画面は切り替え即保存ではなく保存ボタン押下でイベント分をまとめて送る。
+ *
+ * イベントごとにちょうど1件だけ受け取る。空・部分・重複を許すと、保存側の
+ * トランザクションに入る upsert 件数を呼び出し側が自由に増やせてしまう。
+ */
 export const scUpdateNotifySettings = z.object({
-  settings: z.array(scUpdateNotifySetting),
+  settings: z
+    .array(scUpdateNotifySetting)
+    .length(DM_NOTIFY_EVENTS.length, el('@invalid_notify_setting'))
+    .refine(
+      (settings) => new Set(settings.map(({ event }) => event)).size === settings.length,
+      el('@invalid_notify_setting'),
+    ),
 })
 export type UpdateNotifySettings = z.infer<typeof scUpdateNotifySettings>
 

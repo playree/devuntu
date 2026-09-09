@@ -465,6 +465,7 @@ export type LocaleItemError =
   | '@invalid_daily_limit'
   | '@invalid_slack_channel'
   | '@invalid_webpush_subscription'
+  | '@invalid_notify_setting'
 export const el = (item: LocaleItemError) => item
 
 export type LocaleItem = LocaleItemBase | LocaleItemError
