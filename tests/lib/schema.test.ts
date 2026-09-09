@@ -5,6 +5,7 @@
  */
 
 import { ASSIGNEE_NONE } from '@/lib/board/task'
+import { DM_NOTIFY_EVENTS } from '@/lib/notify/notify'
 import {
   scCreateTag,
   scCreateTicket,
@@ -15,6 +16,7 @@ import {
   scTicketSearch,
   scUpdateIntegrationSettings,
   scUpdateNotifySetting,
+  scUpdateNotifySettings,
   scUpdateTicketAgentMode,
   scUpdateUser,
   scWebPushSubscription,
@@ -244,6 +246,28 @@ describe('scUpdateNotifySetting: 通知イベントは enum で受ける', () =>
     expect(scUpdateNotifySetting.safeParse({ event: 'mention', slack: true, webpush: true }).success).toBe(false)
     expect(scUpdateNotifySetting.safeParse({ event: 'mention', email: true, webpush: true }).success).toBe(false)
     expect(scUpdateNotifySetting.safeParse({ event: 'mention', email: true, slack: true }).success).toBe(false)
+  })
+})
+
+describe('scUpdateNotifySettings: 一括保存はイベントごとにちょうど1件', () => {
+  const all = DM_NOTIFY_EVENTS.map((event) => ({ event, email: true, slack: false, webpush: false }))
+
+  it('全イベントそろっていれば通す', () => {
+    expect(scUpdateNotifySettings.safeParse({ settings: all }).success).toBe(true)
+  })
+
+  it('空配列は弾く', () => {
+    expect(scUpdateNotifySettings.safeParse({ settings: [] }).success).toBe(false)
+  })
+
+  it('一部のイベントだけは弾く', () => {
+    expect(scUpdateNotifySettings.safeParse({ settings: all.slice(1) }).success).toBe(false)
+  })
+
+  it('同じイベントの重複は弾く(件数が合っていても)', () => {
+    const duped = [all[0], ...all.slice(0, -1)]
+    expect(duped).toHaveLength(all.length)
+    expect(scUpdateNotifySettings.safeParse({ settings: duped }).success).toBe(false)
   })
 })
 

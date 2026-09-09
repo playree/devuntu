@@ -31,20 +31,23 @@ export const getUserNotifySettings = async (userId: string): Promise<Record<DmNo
 }
 
 /**
- * 1 イベント分の通知設定を保存する。チャネルは常に全部まとめて受け取り、
- * 部分更新の分岐を作らない。
+ * イベント分まとめて通知設定を保存する。画面が保存ボタンでの一括保存になったため、
+ * 1件ずつではなくトランザクションでまとめて反映し、途中失敗で一部だけ保存された状態を避ける。
  */
-export const setUserNotifySetting = async (
+export const setUserNotifySettings = async (
   userId: string,
-  event: DmNotifyEvent,
-  setting: NotifySetting,
+  settings: ({ event: DmNotifyEvent } & NotifySetting)[],
 ): Promise<void> => {
-  await prisma.userNotifySetting.upsert({
-    where: { userId_event: { userId, event } },
-    update: setting,
-    create: { userId, event, ...setting },
-  })
-  logger.info({ userId, event, ...setting }, 'user notify setting updated')
+  await prisma.$transaction(
+    settings.map(({ event, ...setting }) =>
+      prisma.userNotifySetting.upsert({
+        where: { userId_event: { userId, event } },
+        update: setting,
+        create: { userId, event, ...setting },
+      }),
+    ),
+  )
+  logger.info({ userId, settings }, 'user notify settings updated')
 }
 
 /**
