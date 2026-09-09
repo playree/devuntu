@@ -29,7 +29,7 @@ export const detectWebPushSupport = (): WebPushSupport => {
   if (isWebPushSupported()) {
     return 'ok'
   }
-  return isIos(navigator.userAgent) && !isStandalone() ? 'ios-standalone' : 'unsupported'
+  return isIos(navigator.userAgent, navigator.maxTouchPoints) && !isStandalone() ? 'ios-standalone' : 'unsupported'
 }
 
 /** 画面の出し分けに必要なブラウザ側の状態 */

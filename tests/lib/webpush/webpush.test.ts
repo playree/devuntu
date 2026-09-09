@@ -128,6 +128,24 @@ describe('isIos: iOS / iPadOS の判定', () => {
   ])('%s -> %s', (userAgent, expected) => {
     expect(isIos(userAgent)).toBe(expected)
   })
+
+  // iPadOS 13 以降は既定でデスクトップ相当の UA を送るため、UA だけでは Mac と区別できない
+  const desktopUserAgent =
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15'
+
+  it('タッチ点を持つ Macintosh UA は iPadOS として扱う', () => {
+    expect(isIos(desktopUserAgent, 5)).toBe(true)
+  })
+
+  it('タッチ点が無ければ Mac のまま(非対応の案内へ落とす)', () => {
+    expect(isIos(desktopUserAgent, 0)).toBe(false)
+  })
+
+  it('タッチ点があっても iOS 以外の UA は巻き込まない', () => {
+    expect(
+      isIos('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131.0.0.0 Safari/537.36', 10),
+    ).toBe(false)
+  })
 })
 
 describe('resolveThisDeviceStatus: この端末の登録状態', () => {

@@ -144,8 +144,14 @@ export const toBase64Url = (buffer: ArrayBuffer | null): string => {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
-/** iOS / iPadOS か。ホーム画面に追加していないと Push API が使えないので案内を出し分ける */
-export const isIos = (userAgent: string): boolean => /iPhone|iPad|iPod/.test(userAgent)
+/**
+ * iOS / iPadOS か。ホーム画面に追加していないと Push API が使えないので案内を出し分ける。
+ *
+ * iPadOS 13 以降の Safari は既定でデスクトップ相当の `Macintosh` UA を送るため、UA だけでは
+ * Mac と区別できない。Mac にはタッチ画面が無いので `maxTouchPoints` で見分ける。
+ */
+export const isIos = (userAgent: string, maxTouchPoints = 0): boolean =>
+  /iPhone|iPad|iPod/.test(userAgent) || (/Macintosh/.test(userAgent) && maxTouchPoints > 0)
 
 /**
  * ブラウザ側の購読と DB の端末一覧を突き合わせる。

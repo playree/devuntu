@@ -113,6 +113,15 @@ export const WebPushSettings: FC<{
 
   const status = resolveThisDeviceStatus(localState.subscription, devices)
   const thisDevice = devices?.find(({ id }) => id === status.deviceId)
+  /**
+   * 鍵を差し替える前に登録した行。再購読は古い購読を解除してから作り直すため、途中で失敗すると
+   * 解除済みの購読を指したまま残る(押し直しても解除済みの購読は読めず、消す手掛かりが無くなる)。
+   * 鍵違いの送信は 401 で落ちるだけで失効として掃除されないので、失敗した時点でここで消す。
+   */
+  const staleDevice =
+    status.kind === 'stale-key'
+      ? devices?.find(({ endpoint }) => endpoint === localState.subscription?.endpoint)
+      : undefined
   // 拒否されたままでは登録できないので、押させる前に案内する
   const isBlocked = localState.permission === 'denied'
 
@@ -121,9 +130,14 @@ export const WebPushSettings: FC<{
     try {
       const result = await subscribeThisDevice(publicKey)
       if (!result.ok) {
+        // 権限の拒否ではブラウザ側の購読に触れていないので、消す対象も無い
+        if (result.reason === 'failed' && staleDevice) {
+          // 消せなくても登録の失敗を伝えたいので、通知は上書きしない
+          await parseAction(deleteWebPushDevice({ id: staleDevice.id })).catch(console.error)
+        }
         notify.error(t(result.reason === 'blocked' ? 'msg_webpush_blocked' : 'msg_webpush_failed'))
         // 拒否された場合は権限が変わっているので読み直す
-        await reloadLocalState()
+        await Promise.all([refreshDevices(), reloadLocalState()])
         return
       }
       notify.success(t('msg_saved'))
