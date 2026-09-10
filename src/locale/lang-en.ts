@@ -424,6 +424,7 @@ Please copy and use the connection information above.
   msg_not_allowed_domain_in_google:
     'Google sign in is not allowed for this account.\nPlease sign in with your email or passkey instead.',
   msg_notify_email_digest: 'Email notifications are batched into a single message every ${minutes} minutes.',
+  msg_notify_slack_unavailable: 'Slack integration is not available in this environment.',
   msg_otp_sent: 'Verification code sent.',
   msg_owner_required: 'At least one owner is required.',
   msg_private_board_immutable: 'The private board cannot be reconfigured.',

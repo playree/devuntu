@@ -169,7 +169,7 @@ export const WebPushSettings: FC<{
   }
 
   return (
-    <FlexCol className='gap-4 px-1'>
+    <FlexCol className='gap-4'>
       <NoticePanel className='text-xs'>{t('msg_webpush_desc')}</NoticePanel>
 
       {isBlocked && (

@@ -403,6 +403,7 @@ export type LocaleItemBase =
   | 'msg_no_tickets'
   | 'msg_not_allowed_domain_in_google'
   | 'msg_notify_email_digest'
+  | 'msg_notify_slack_unavailable'
   | 'msg_otp_sent'
   | 'msg_owner_required'
   | 'msg_private_board_immutable'
