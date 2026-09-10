@@ -44,7 +44,7 @@ services:
       - 127.0.0.1:8333:8333 # S3 API
     volumes:
       - seaweeddata:/data
-      - ./docker/seaweedfs-s3.json:/etc/seaweedfs/s3.json:ro
+      - ./seaweedfs-s3.json:/etc/seaweedfs/s3.json:ro
     restart: unless-stopped
     healthcheck:
       test: ['CMD', 'curl', '-fsS', 'http://localhost:9333/cluster/status']
