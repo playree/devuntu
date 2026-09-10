@@ -10,6 +10,9 @@ import { fetchRemoteImage } from '@/lib/storage/remote-image'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const fetchMock = vi.fn()
+const lookupMock = vi.fn()
+
+vi.mock('node:dns/promises', () => ({ lookup: (...args: unknown[]) => lookupMock(...args) }))
 
 const bodyOf = (bytes: Uint8Array) =>
   new ReadableStream<Uint8Array>({
@@ -30,6 +33,8 @@ const redirectTo = (location: string) => ({
 
 beforeEach(() => {
   fetchMock.mockReset()
+  lookupMock.mockReset()
+  lookupMock.mockResolvedValue([{ address: '203.0.113.10', family: 4 }])
   vi.stubGlobal('fetch', fetchMock)
 })
 
@@ -88,6 +93,45 @@ describe('fetchRemoteImage', () => {
     fetchMock.mockResolvedValue({ ok: false, status: 404, body: null, headers: new Headers() })
 
     await expect(fetchRemoteImage('https://idp.example.com/a.png')).resolves.toBeUndefined()
+  })
+
+  it('クラウドのメタデータサービスへは繋がない', async () => {
+    lookupMock.mockResolvedValue([{ address: '169.254.169.254', family: 4 }])
+
+    await expect(fetchRemoteImage('https://idp.example.com/a.png')).resolves.toBeUndefined()
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('IPv6のメタデータアドレスも弾く', async () => {
+    lookupMock.mockResolvedValue([{ address: 'fd00:ec2::254', family: 6 }])
+
+    await expect(fetchRemoteImage('https://idp.example.com/a.png')).resolves.toBeUndefined()
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('自ホスト運用のためプライベートアドレスは許可する', async () => {
+    const bytes = new Uint8Array([7])
+    lookupMock.mockResolvedValue([{ address: '192.168.1.10', family: 4 }])
+    fetchMock.mockResolvedValue(okResponse(bytes))
+
+    await expect(fetchRemoteImage('https://idp.internal/a.png')).resolves.toEqual(bytes)
+  })
+
+  it('リダイレクト先もホストを確かめる', async () => {
+    lookupMock
+      .mockResolvedValueOnce([{ address: '203.0.113.10', family: 4 }])
+      .mockResolvedValueOnce([{ address: '169.254.169.254', family: 4 }])
+    fetchMock.mockResolvedValue(redirectTo('https://metadata.example.com/a.png'))
+
+    await expect(fetchRemoteImage('https://idp.example.com/a.png')).resolves.toBeUndefined()
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('名前解決できなければ取得しない', async () => {
+    lookupMock.mockRejectedValue(new Error('ENOTFOUND'))
+
+    await expect(fetchRemoteImage('https://idp.example.com/a.png')).resolves.toBeUndefined()
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 
   it('通信に失敗しても例外にしない', async () => {

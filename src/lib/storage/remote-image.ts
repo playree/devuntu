@@ -1,3 +1,4 @@
+import { lookup } from 'node:dns/promises'
 import { logger } from '../logger'
 import { MAX_IMAGE_SIZE } from '../schema/schema'
 
@@ -9,12 +10,47 @@ import { MAX_IMAGE_SIZE } from '../schema/schema'
  * サインインをそのまま続けさせる(次回ログインで再試行される)。
  *
  * 取得先はIdPが申告したURLで、そのIdPは認証そのものを委ねている相手なので信用の前提は変わらない。
- * 自ホスト運用でIdPがプライベートネットワークに居る構成が普通にあるため、宛先IPでの遮断は行わない。
- * 代わりにスキーム・リダイレクト段数・サイズ・時間で被害の上限を抑える。
+ * 自ホスト運用ではIdPがプライベートネットワークに居る構成が普通にあるため、プライベートアドレスは
+ * 遮断しない。ただしクラウドのメタデータサービスだけは正当な取得先になりえず、
+ * 踏み台にされたときの被害が大きいので名前解決の結果で弾く。
+ * 残りはスキーム・リダイレクト段数・サイズ・時間で被害の上限を抑える。
  */
 
 const TIMEOUT_MS = 5000
 const MAX_REDIRECTS = 3
+
+/** IPv4射影(`::ffff:a.b.c.d`)を素のIPv4に戻す */
+const toPlainV4 = (address: string) => /^::ffff:(\d+\.\d+\.\d+\.\d+)$/i.exec(address)?.[1] ?? address
+
+/**
+ * リンクローカル(IPv4 169.254.0.0/16 / IPv6 fe80::/10)と、そこに置かれる
+ * クラウドのインスタンスメタデータ、および未指定アドレス。
+ */
+const isBlockedAddress = (address: string) => {
+  const addr = toPlainV4(address.toLowerCase())
+  if (addr.includes(':')) {
+    // AWS の IPv6 メタデータは ULA なので、ULA 全体ではなくこのアドレスだけを落とす
+    return addr === '::' || addr === 'fd00:ec2::254' || /^fe[89ab]/.test(addr)
+  }
+  const [a, b] = addr.split('.').map(Number)
+  return a === 0 || (a === 169 && b === 254)
+}
+
+/**
+ * 名前解決してから宛先を確かめる。ホスト名でメタデータサービスを指されても弾くため。
+ *
+ * 解決してから fetch が繋ぐまでの間に応答が変わる余地(DNSリバインディング)は残るが、
+ * 取得先はIdPが申告したURLなので、そこまでの攻撃者はすでに認証を握っている。
+ */
+const isAllowedHost = async (hostname: string) => {
+  try {
+    const addresses = await lookup(hostname, { all: true })
+    return addresses.length > 0 && !addresses.some(({ address }) => isBlockedAddress(address))
+  } catch {
+    // 引けない宛先はどのみち取得できない
+    return false
+  }
+}
 
 /** `http:` / `https:` の絶対URLだけを通す。相対パスはここで弾かれる */
 const parseFetchableUrl = (url: string) => {
@@ -69,6 +105,12 @@ export const fetchRemoteImage = async (url: string): Promise<Uint8Array | undefi
   let target: URL = origin
 
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+    // リダイレクトのたびに確かめる。1ホップ目だけ見ても迂回されるため
+    if (!(await isAllowedHost(target.hostname))) {
+      logger.warn({ url, host: target.hostname }, 'remote image host is not allowed')
+      return undefined
+    }
+
     let res: Response
     try {
       res = await fetch(target, {
