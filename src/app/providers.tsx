@@ -23,11 +23,7 @@ const MyRouterProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const router = useRouter()
 
   return (
-    <RouterProvider // navigate の第2引数(routerOptions)は router.push のオプションと別物なので渡さない
-      navigate={(href) => router.push(href)}
-    >
-      {children}
-    </RouterProvider>
+    <RouterProvider navigate={(href, routerOptions) => router.push(href, routerOptions)}>{children}</RouterProvider>
   )
 }
 
