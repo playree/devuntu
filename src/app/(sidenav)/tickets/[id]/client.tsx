@@ -10,15 +10,7 @@ import { useConfirmModal } from '@/components/general/modal'
 import { NoticePanel, Panel, PanelSkeleton } from '@/components/general/panel'
 import { SingleSelectField } from '@/components/general/select'
 import { ContentHeader } from '@/components/header'
-import {
-  ArrowLeftCircleIcon,
-  CheckIcon,
-  PencilSquareIcon,
-  TicketIcon,
-  TrashIcon,
-  ViewColumnsIcon,
-  XMarkIcon,
-} from '@/components/icon'
+import { CheckIcon, PencilSquareIcon, TicketIcon, TrashIcon, ViewColumnsIcon, XMarkIcon } from '@/components/icon'
 import { MarkdownField } from '@/components/markdown/markdown-editor'
 import { MentionCandidate } from '@/components/markdown/mention-menu'
 import { notify } from '@/components/notify'
@@ -78,13 +70,13 @@ const MetaText: FC<{ label: string; children: React.ReactNode }> = ({ label, chi
 
 /**
  * ヘッダの閉じるボタン。
- * 一覧に埋め込んだとき(onClose あり)はパネルを閉じる操作、単独ページでは一覧へ戻る操作になる。
+ * 一覧に埋め込んだときだけ出す。単独ページではパンくずが上位への導線になるため置かない。
  */
-const CloseButton: FC<{ onClose?: () => void; onPress: () => void }> = ({ onClose, onPress }) => {
+const CloseButton: FC<{ onClose: () => void }> = ({ onClose }) => {
   const { t } = useLocale()
   return (
-    <MultiButton isIconOnly variant='ghost' tooltip={onClose ? t('close') : t('back')} onPress={onPress}>
-      {onClose ? <XMarkIcon /> : <ArrowLeftCircleIcon />}
+    <MultiButton isIconOnly variant='ghost' tooltip={t('close')} onPress={onClose}>
+      <XMarkIcon />
     </MultiButton>
   )
 }
@@ -288,7 +280,7 @@ export const TicketDetailClient: FC<{
         <ContentHeader
           title={
             <>
-              <CloseButton onClose={onClose} onPress={close} />
+              {onClose && <CloseButton onClose={onClose} />}
               <TicketIcon />
               {t('ticket')}
             </>
@@ -327,7 +319,7 @@ export const TicketDetailClient: FC<{
       <ContentHeader
         title={
           <>
-            <CloseButton onClose={onClose} onPress={close} />
+            {onClose && <CloseButton onClose={onClose} />}
             <TicketBreadcrumbs
               ticketId={id}
               boardId={ticket.boardId}
