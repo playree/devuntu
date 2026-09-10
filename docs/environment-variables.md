@@ -2,6 +2,10 @@
 
 環境変数の定義元は `src/lib/env-util.ts`。参照時も同ファイルの `envu` を利用する。
 
+セルフホスト用の `.env.docker` は `docker compose run --rm setup-env` で対話生成できる
+([installation.md](./installation.md#2-設定ファイルの作成))。ここに載っている変数のうち
+デバッグ用と内部変数を除いたものを尋ねる。
+
 ## 基本
 
 | 変数名                   | 説明                                                            | 必須 | デフォルト   |
@@ -123,7 +127,7 @@ VAPID 鍵は Web プッシュ通知を使う場合のみ必要で、**公開鍵�
 
 ## オブジェクトストレージ
 
-アップロードファイル(画像)の保存先。S3互換APIを話すストレージであれば何でもよいが、`compose.yaml` では OSS の [SeaweedFS](https://github.com/seaweedfs/seaweedfs) を同梱している。認証情報は `docker/seaweedfs-s3.json` で定義する。
+アップロードファイル(画像)の保存先。S3互換APIを話すストレージであれば何でもよいが、`compose.yaml` では OSS の [SeaweedFS](https://github.com/seaweedfs/seaweedfs) を同梱している。認証情報は `compose.yaml` と同じ階層の `seaweedfs-s3.json` で定義する。
 
 | 変数名                 | 説明                                 | 必須 | デフォルト  |
 | ---------------------- | ------------------------------------ | ---- | ----------- |

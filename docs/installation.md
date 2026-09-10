@@ -1,7 +1,7 @@
 - [前提](#前提)
 - [構成](#構成)
 - [1. compose.yaml の配置](#1-composeyaml-の配置)
-- [2. 環境変数ファイルの作成](#2-環境変数ファイルの作成)
+- [2. 設定ファイルの作成](#2-設定ファイルの作成)
 - [3. 起動](#3-起動)
 - [4. 初期セットアップ(最初の管理者を作る)](#4-初期セットアップ最初の管理者を作る)
 - [5. サインインの確認](#5-サインインの確認)
@@ -57,24 +57,60 @@ PostgreSQL とオブジェクトストレージへ外部から直接到達でき
 
 ## 1. compose.yaml の配置
 
-任意のディレクトリ(例: `/opt/devuntu`)に、このリポジトリの `compose.yaml` と
-`docker/seaweedfs-s3.json` を同じ相対パスで置く。アプリはイメージから起動するため、
-リポジトリ全体の clone は不要。
+任意のディレクトリ(例: `/opt/devuntu`)に、このリポジトリの `compose.yaml` を置く。
+アプリはイメージから起動するため、リポジトリ全体の clone は不要。**必要なファイルはこの1つだけ**で、
+残りは次の手順で生成する。
 
 ```text
 /opt/devuntu/
-├── compose.yaml
-├── .env.docker
-└── docker/
-    └── seaweedfs-s3.json
+├── compose.yaml       # 配置する
+├── .env.docker        # 手順2で生成される
+├── .env.db            # 手順2で生成される
+└── seaweedfs-s3.json  # 手順2で生成される
 ```
 
-`docker/seaweedfs-s3.json` は S3 のアクセスキーを定義するファイル。後述の
-`S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` と値を揃える。
+書き込めるディレクトリを使うこと。設定ファイルは実行したユーザーの所有で作られる。
 
-## 2. 環境変数ファイルの作成
+## 2. 設定ファイルの作成
 
-`compose.yaml` と同じ階層に `.env.docker` を作る。最小構成は次のとおり。
+`compose.yaml` を置いたディレクトリで次を実行する。対話形式で設定を尋ね、3つのファイルを生成する。
+
+```sh
+docker compose run --rm setup-env
+```
+
+| 生成されるファイル  | 内容                                     | 読むサービス |
+| ------------------- | ---------------------------------------- | ------------ |
+| `.env.docker`       | アプリの環境変数                         | `devuntu`    |
+| `.env.db`           | PostgreSQL の初期化パラメータ            | `db`         |
+| `seaweedfs-s3.json` | オブジェクトストレージの S3 アクセスキー | `s3`         |
+
+尋ねられるのは最小構成(ロケール / DB / 公開URL / メール / オブジェクトストレージ)で、
+外部サービス連携などの任意項目は「設定しますか?」で分岐する。既に設定ファイルがある場合は
+現在値を既定値として提示するので、Enter を押し続ければ内容は変わらない(設定変更や項目追加にも使える)。
+上書き前の内容は `<ファイル名>.<日時>.bak` へ退避される。
+
+このスクリプトが自動でやること。手で書くと食い違いに気づきにくい箇所を引き受けている。
+
+- `BETTER_AUTH_SECRET` の生成(`openssl rand -base64 32` 相当)
+- `BETTER_AUTH_URL` の検証。**実際に配信するオリジンと完全に一致していないとサインインなどの
+  POST が origin チェックで拒否される**ため、パスやクエリを含む入力は受け付けず、末尾スラッシュは落とす
+- DBパスワードの生成と、`.env.db` の `POSTGRES_*` から `DATABASE_URL` を組み立てること
+- S3 のシークレットキーを `.env.docker` と `seaweedfs-s3.json` の両方へ同じ値で書くこと
+- VAPID 鍵の生成(Webプッシュ通知を有効にした場合)
+
+全変数の一覧とデフォルト値は [environment-variables.md](environment-variables.md) を参照。
+`DISABLE_PASSWORD_AUTH=false`(パスワード認証あり)を選んだ場合の 2要素認証の挙動は
+[screens.md](screens.md#アクセス制御の仕組み) を参照。
+
+> ⚠️ **DBパスワードは初回起動より後には変えられない。** postgres は最初の `docker compose up` で
+> ボリュームを初期化し、そのときのパスワードを保持する。後から `.env.db` を書き換えても DB 側は
+> 変わらず、アプリが認証エラーになる。変更するにはボリューム(`pgdata`)を作り直すか、
+> DB 側で `ALTER USER` する。
+
+### スクリプトを使わない場合
+
+`.env.docker` は手で書いてもよい。最小構成は次のとおり。
 
 ```sh
 # 基本
@@ -100,23 +136,32 @@ S3_ACCESS_KEY_ID=<アクセスキー>
 S3_SECRET_ACCESS_KEY=<シークレットキー>
 ```
 
-全変数の一覧とデフォルト値は [environment-variables.md](environment-variables.md) を参照。
+この場合は `.env.db` と `seaweedfs-s3.json` も自分で用意する。**`.env.db` が無いと `db` サービスが
+起動せず、`seaweedfs-s3.json` が無いと `s3` サービスの起動がエラーになる。**
 
-設定時の注意点。
+```sh
+# .env.db
+POSTGRES_USER=devuser
+POSTGRES_PASSWORD=<DBパスワード>   # DATABASE_URL と揃える
+POSTGRES_DB=devuntu
+```
 
-- **`BETTER_AUTH_URL` は実際に配信するオリジンと完全に一致させる。** 不一致だとサインインなどの
-  POST が origin チェックで拒否される
-- `BETTER_AUTH_SECRET` は必ず自前で生成する(`openssl rand -base64 32`)
-- `compose.yaml` の `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` と `DATABASE_URL` を揃える。
-  **リポジトリ既定の `devuser` / `devPassW0rd` は開発用なので本番では必ず変更する**
-- `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` は `docker/seaweedfs-s3.json` の内容と揃える。
-  バケットは初回アップロード時に自動作成されるため事前作業は不要
-- `DISABLE_PASSWORD_AUTH=false`(パスワード認証あり)にする場合、既定の `TWO_FA_REQUIRED=true` により
-  2要素認証の設定が必須になる。挙動は [screens.md](screens.md#アクセス制御の仕組み) を参照。
-  `TWO_FA_REQUIRED=false` にすると 2要素認証を一切行わない(過去に有効化した利用者も
-  パスワードのみでログインする)
-- 検索エンジンへのインデックスは**既定で拒否**している。社外へ公開して検索結果に載せたい場合のみ
-  `SEARCH_ENGINE_INDEXING=true` を設定する
+```json
+// seaweedfs-s3.json
+{
+  "identities": [
+    {
+      "name": "devuntu",
+      "credentials": [{ "accessKey": "<アクセスキー>", "secretKey": "<シークレットキー>" }],
+      "actions": ["Read", "Write", "List", "Tagging", "Admin"]
+    }
+  ]
+}
+```
+
+`S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` をこの JSON と揃える。バケットは初回アップロード時に
+自動作成されるため事前作業は不要。検索エンジンへのインデックスは**既定で拒否**しているので、
+社外へ公開して検索結果に載せたい場合のみ `SEARCH_ENGINE_INDEXING=true` を設定する。
 
 ## 3. 起動
 
@@ -192,15 +237,21 @@ Google 側のコールバックURLには**次の2つ**を登録する。
 
 ### Webプッシュ通知
 
-ブラウザ / スマートフォンの通知として受け取る場合は VAPID 鍵を生成し、`.env.docker` へ設定する。
-未設定なら購読の UI ごと出ないので、使わない場合は省略してよい。
+ブラウザ / スマートフォンの通知として受け取る場合は VAPID 鍵が必要。未設定なら購読の UI ごと
+出ないので、使わない場合は省略してよい。
+
+`docker compose run --rm setup-env` の「Webプッシュ通知を有効にしますか?」で `y` を選ぶと鍵を生成する。
+プッシュサービスからの連絡先(`VAPID_SUBJECT`)も同じ流れで設定できる(既定は `mailto:${MAIL_FROM}`)。
+
+手で用意する場合は次のワンライナーで生成し、出力の 2 行を `.env.docker` へ追記して再起動する。
 
 ```sh
-docker compose exec -T devuntu node -e "const w=require('web-push');const k=w.generateVAPIDKeys();console.log('VAPID_PUBLIC_KEY='+k.publicKey);console.log('VAPID_PRIVATE_KEY='+k.privateKey)"
+docker compose run --rm --entrypoint node setup-env -e "const {generateKeyPairSync}=require('node:crypto');const {privateKey}=generateKeyPairSync('ec',{namedCurve:'prime256v1'});const j=privateKey.export({format:'jwk'});const b=(v)=>Buffer.from(v,'base64url');console.log('VAPID_PUBLIC_KEY='+Buffer.concat([Buffer.from([4]),b(j.x),b(j.y)]).toString('base64url'));console.log('VAPID_PRIVATE_KEY='+j.d)"
 ```
 
-出力の 2 行をそのまま `.env.docker` へ追記して再起動する。プッシュサービスからの連絡先を変えたい
-場合は `VAPID_SUBJECT`(`mailto:` か `https:`)も設定する(既定は `mailto:${MAIL_FROM}`)。
+> ⚠️ `web-push` の `generateVAPIDKeys()` はイメージ内では使えない。standalone ビルドでは
+> `web-push` がサーバーチャンクへバンドルされ、`node_modules` に実体が残らないため
+> `require('web-push')` が `MODULE_NOT_FOUND` になる。
 
 - **鍵を入れ替えると既存の購読はすべて無効になる**(登録済みの端末へ送ると `401` になり、
   利用者は再登録が必要)。生成し直すのは鍵が漏れた場合だけにする
@@ -231,13 +282,26 @@ docker compose up -d
 新しいイメージで起動する際、entrypoint が `prisma migrate deploy` を実行して DB を追随させる。
 **アップデート前にバックアップを取得する**こと([operations.md](operations.md))。
 
+### compose.yaml を新しいものへ差し替える場合
+
+`db` サービスの `POSTGRES_*` は `compose.yaml` へ直接書く形をやめ、`.env.db` から読むようにした。
+新しい `compose.yaml` をコピーしたら `.env.db` が必要になる。
+
+**既存の postgres ボリュームは初期化時のパスワードを保持している**ため、`POSTGRES_PASSWORD` には
+今の `DATABASE_URL` に入っているパスワード(差し替え前の `compose.yaml` に書いてあった値)を入れる。
+`docker compose run --rm setup-env` は差し替え前の `compose.yaml` が残っていればそこから、
+無ければ `.env.docker` の `DATABASE_URL` から既定値を引くので、Enter を押し続ければ揃う。
+
 ## 困ったとき
 
 | 症状                                     | 見るところ                                                                                |
 | ---------------------------------------- | ----------------------------------------------------------------------------------------- |
 | アプリが起動しない                       | `docker compose logs devuntu`。マイグレーション失敗なら `DATABASE_URL` と `db` の状態     |
+| `env file ... not found` で落ちる        | `.env.docker` / `.env.db` が無い。`docker compose run --rm setup-env` で生成する          |
+| `bind source path does not exist`        | `seaweedfs-s3.json` が無い。同じく `setup-env` で生成する                                 |
+| `db` が起動しない・認証エラーになる      | `.env.db` の `POSTGRES_PASSWORD` と `DATABASE_URL` のパスワードが一致しているか           |
 | サインインの操作が失敗する               | `BETTER_AUTH_URL` が実際のオリジンと一致しているか                                        |
 | `/start` が `/` へリダイレクトされる     | 既にユーザーが登録済み。`/auth/signin` からサインインする                                 |
 | OTP メールが届かない                     | `MAIL_SEND` / `MAIL_FROM` と送信手段の設定。`debug` の場合はログに出力される              |
-| 画像がアップロードできない・表示されない | `s3` サービスの状態と `S3_*` の設定、`docker/seaweedfs-s3.json` との突き合わせ            |
+| 画像がアップロードできない・表示されない | `s3` サービスの状態と `S3_*` の設定、`seaweedfs-s3.json` との突き合わせ                   |
 | カレンダーが使えない                     | Googleアカウント連携が有効か(`/admin/settings`)、利用者本人が `/account` で連携しているか |

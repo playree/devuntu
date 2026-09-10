@@ -18,7 +18,8 @@
     "db:backup": "./scripts/backup-db.sh",
     "db:restore": "./scripts/restore-db.sh",
     "s3:backup": "node ./scripts/backup-s3.mjs",
-    "s3:restore": "node ./scripts/restore-s3.mjs"
+    "s3:restore": "node ./scripts/restore-s3.mjs",
+    "setup:env": "node ./scripts/setup-env/index.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1112.0",

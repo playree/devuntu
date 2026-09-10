@@ -96,6 +96,15 @@ DB/S3 のバックアップとリストア、`s3-tools`サービスの使い方�
 pnpm install
 ```
 
+開発用の `.env` は手で用意する(参照する変数は [environment-variables.md](environment-variables.md))。
+`pnpm setup:env` はセルフホスト用の `.env.docker` / `.env.db` / `seaweedfs-s3.json` を生成する
+スクリプトで、**開発用の `.env` は対象外**。リポジトリ直下で実行すると同名のファイルを上書きするため、
+動作を試すときは `--dir` で別の場所を指定する。
+
+```sh
+pnpm setup:env --dir /tmp/setup-test --dry-run
+```
+
 ## ビルド
 
 ```sh

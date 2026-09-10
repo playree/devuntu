@@ -17,10 +17,10 @@ services:
   db:
     image: postgres:18
     container_name: devuntu-postgres
-    environment:
-      POSTGRES_USER: devuser
-      POSTGRES_PASSWORD: devPassW0rd
-      POSTGRES_DB: devuntu
+    # POSTGRES_* は setup-env が生成する .env.db から読む。
+    # DATABASE_URL と別ファイルにしているのは、env_file がファイル内の全変数を
+    # コンテナへ渡すため、アプリ側の秘密を db コンテナの環境に載せないようにするため
+    env_file: ./.env.db
     # アプリからは devuntu ネットワーク内の db:5432 で到達するため、ホスト公開は
     # 開発時にホストから psql / prisma を繋ぐためだけのもの。外部へ晒さないよう loopback に限定する
     ports:
@@ -29,7 +29,7 @@ services:
       - pgdata:/var/lib/postgresql
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'pg_isready', '-d', 'devuntu', '-U', 'devuser']
+      test: ['CMD-SHELL', 'pg_isready -d "$$POSTGRES_DB" -U "$$POSTGRES_USER"']
       interval: 30s
       timeout: 20s
       retries: 3
@@ -44,13 +44,37 @@ services:
       - 127.0.0.1:8333:8333 # S3 API
     volumes:
       - seaweeddata:/data
-      - ./seaweedfs-s3.json:/etc/seaweedfs/s3.json:ro
+      - type: bind
+        source: ./seaweedfs-s3.json
+        target: /etc/seaweedfs/s3.json
+        read_only: true
+        # 未作成のまま up すると Docker が同名の root 所有ディレクトリを作ってしまうため、
+        # 存在しない場合はエラーにする(setup-env で生成する)
+        bind:
+          create_host_path: false
     restart: unless-stopped
     healthcheck:
       test: ['CMD', 'curl', '-fsS', 'http://localhost:9333/cluster/status']
       interval: 30s
       timeout: 20s
       retries: 3
+
+  # .env.docker / .env.db / seaweedfs-s3.json を対話生成するための使い捨てコンテナ。
+  # compose.yaml だけを置いた状態から docker compose run --rm setup-env で実行できる
+  # (env_file を持つのは devuntu と s3-tools だけなので、.env.docker が無くても run は通る)。
+  setup-env:
+    image: *app-image
+    profiles: ['tools']
+    # entrypoint を node にすると node が PID 1 になり、シグナルの既定処理が無効で
+    # Ctrl+C が効かなくなるため tini を挟む
+    init: true
+    # docker-entrypoint.sh を上書きして prisma migrate deploy を走らせない
+    entrypoint: ['node']
+    command: ['/app/scripts/setup-env/index.mjs']
+    # /app へ重ねるとイメージ同梱の scripts/ と node_modules を潰すため /work へ当てる
+    working_dir: /work
+    volumes:
+      - ./:/work
 
   # S3のバックアップ/リストアスクリプトを実行するための使い捨てコンテナ。
   # profiles を付けているので docker compose up では起動せず、
