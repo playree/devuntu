@@ -1,9 +1,10 @@
 import { Prisma } from '@/generated/prisma/client'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
-import { toWebp, WEBP_EXT, WEBP_MIME } from './image'
+import { toWebp, toWebpBytes, WEBP_EXT, WEBP_MIME } from './image'
+import { fetchRemoteImage } from './remote-image'
 import { deleteObject, putObject } from './storage'
-import { newUploadKey, toUploadKey, toUploadUrl } from './upload'
+import { isUploadUrl, newUploadKey, toUploadKey, toUploadUrl } from './upload'
 
 /**
  * 変換済みのwebpをオブジェクトストレージへ保存し、Attachment を作る。
@@ -30,15 +31,46 @@ const storeWebp = async (webp: Uint8Array, meta: { originalName: string; boardId
   }
 }
 
+/** アイコン用途の一辺(px) */
+const ICON_SIZE = 128
+
+const saveSquareImage = async (bytes: Uint8Array, originalName: string, userId: string, size: number) => {
+  const webp = await toWebpBytes(bytes, { size, fit: 'cover' }) // 正方形にクロップ
+  const attachment = await storeWebp(webp, { originalName, boardId: null, userId })
+  return toUploadUrl(attachment.key)
+}
+
 /**
  * 画像を正方形にクロップしてwebpでオブジェクトストレージに保存し、公開URLを返す。
  * LinkWidgetアイコン・ユーザーアバターなど、全ログインユーザーへ配信してよい画像
  * (Attachment.boardId は null のまま)で共通利用する。
  */
-export const saveImageAttachment = async (file: File, userId: string, size = 128) => {
-  const webp = await toWebp(file, { size, fit: 'cover' }) // 正方形にクロップ
-  const attachment = await storeWebp(webp, { originalName: file.name, boardId: null, userId })
-  return toUploadUrl(attachment.key)
+export const saveImageAttachment = async (file: File, userId: string, size = ICON_SIZE) =>
+  saveSquareImage(new Uint8Array(await file.arrayBuffer()), file.name, userId, size)
+
+/**
+ * 外部URLのアバター画像を取得して保存し、公開URLを返す。
+ *
+ * OIDC/ソーシャルログインの `picture` を Devuntu 側へコピーする用途。ログインの途中で走るため、
+ * 取得・変換・保存のどこで失敗しても例外にせず undefined を返してサインインを続けさせる。
+ *
+ * **null ではなく undefined を返すこと。** 呼び出し元(better-auth のプロフィール同期)は
+ * undefined を「更新しない」として扱うが、null はそのまま `image = NULL` として書き込まれる。
+ */
+export const saveImageAttachmentFromUrl = async (url: string, userId: string): Promise<string | undefined> => {
+  const bytes = await fetchRemoteImage(url)
+  if (!bytes) {
+    return undefined
+  }
+  try {
+    const saved = await saveSquareImage(bytes, 'avatar', userId, ICON_SIZE)
+    logger.info({ userId }, 'remote avatar copied')
+    return saved
+  } catch (err) {
+    // 変換できない形式・ストレージ障害。次回ログインで再試行される
+    logger.warn({ err, userId }, 'failed to copy remote avatar')
+    return undefined
+  }
 }
 
 /**
@@ -77,8 +109,16 @@ export const removeAttachmentByKey = async (key: string): Promise<boolean> => {
   }
 }
 
-/** saveImageAttachment で保存した画像を削除する */
+/**
+ * saveImageAttachment で保存した画像を削除する。
+ *
+ * 管理下のURLでなければ何もしない。`toUploadKey` は最後の `/` 以降を切り出すだけなので、
+ * 外部URLを渡すと無関係な文字列をキーとしてストレージへ投げてしまう。
+ */
 export const removeImageAttachment = async (url: string): Promise<void> => {
+  if (!isUploadUrl(url)) {
+    return
+  }
   // urlは`/api/upload/<key>`形式なのでキーを抽出
   await removeAttachmentByKey(toUploadKey(url))
 }

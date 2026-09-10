@@ -384,7 +384,8 @@ export const slackUserInfo = async (tokens: { accessToken?: string }) => {
     sub: id,
     name: profile.name,
     email: profile.email,
-    image: profile.picture,
+    // `User.image` に入れてよいのは Devuntu 管理の画像だけなので Slack のアバターURLは渡さない。
+    // この連携は通知の宛先を特定するためのもので、プロフィールの同期は目的ではない
     emailVerified: profile.email_verified ?? false,
   }
 }

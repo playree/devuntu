@@ -15,7 +15,7 @@ import { CALENDAR_READONLY_SCOPE, GOOGLE_ACCOUNT_PROVIDER_ID } from '../google/g
 import { logger } from '../logger'
 import { sendEmailOtp } from '../mail'
 import { isLocalRegistration } from '../oauth/oauth-registration'
-import { idTokenStandardClaims } from '../oauth/oidc-claims'
+import { idTokenStandardClaims, toPublicAvatarUrl } from '../oauth/oidc-claims'
 import { prisma } from '../prisma'
 import { makeUrl } from '../server-utils'
 import { SLACK_PROVIDER_ID } from '../slack/slack'
@@ -208,11 +208,6 @@ export const auth = betterAuth({
         required: false,
         input: false,
       },
-      avatarLocked: {
-        type: 'boolean',
-        required: false,
-        input: false,
-      },
       nameLocked: {
         type: 'boolean',
         required: false,
@@ -355,6 +350,12 @@ export const auth = betterAuth({
       // oauth-provider 1.7 以降、標準クレームは userinfo 専用になった。
       // ID token しか読まないクライアント(NetBird の Dex コネクタ等)向けに載せ直す
       customIdTokenClaims: ({ user, scopes }) => idTokenStandardClaims(user, scopes),
+
+      /**
+       * userinfo エンドポイントは `picture` に `User.image` をそのまま出す。
+       * その値は相対パスかつ配信にログインが要るのでクライアントからは読めない。
+       */
+      customUserInfoClaims: ({ user }) => (user.image ? { picture: toPublicAvatarUrl(user.image) } : {}),
 
       /**
        * クライアント管理API(`/oauth2/create-client` など)を管理者だけに開く。

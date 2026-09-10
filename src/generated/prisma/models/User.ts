@@ -36,7 +36,6 @@ export type UserMinAggregateOutputType = {
   banReason: string | null
   banExpires: Date | null
   twoFactorEnabled: boolean | null
-  avatarLocked: boolean | null
   nameLocked: boolean | null
   locale: string | null
   lastLoginAt: Date | null
@@ -57,7 +56,6 @@ export type UserMaxAggregateOutputType = {
   banReason: string | null
   banExpires: Date | null
   twoFactorEnabled: boolean | null
-  avatarLocked: boolean | null
   nameLocked: boolean | null
   locale: string | null
   lastLoginAt: Date | null
@@ -78,7 +76,6 @@ export type UserCountAggregateOutputType = {
   banReason: number
   banExpires: number
   twoFactorEnabled: number
-  avatarLocked: number
   nameLocked: number
   locale: number
   lastLoginAt: number
@@ -101,7 +98,6 @@ export type UserMinAggregateInputType = {
   banReason?: true
   banExpires?: true
   twoFactorEnabled?: true
-  avatarLocked?: true
   nameLocked?: true
   locale?: true
   lastLoginAt?: true
@@ -122,7 +118,6 @@ export type UserMaxAggregateInputType = {
   banReason?: true
   banExpires?: true
   twoFactorEnabled?: true
-  avatarLocked?: true
   nameLocked?: true
   locale?: true
   lastLoginAt?: true
@@ -143,7 +138,6 @@ export type UserCountAggregateInputType = {
   banReason?: true
   banExpires?: true
   twoFactorEnabled?: true
-  avatarLocked?: true
   nameLocked?: true
   locale?: true
   lastLoginAt?: true
@@ -237,7 +231,6 @@ export type UserGroupByOutputType = {
   banReason: string | null
   banExpires: Date | null
   twoFactorEnabled: boolean | null
-  avatarLocked: boolean | null
   nameLocked: boolean | null
   locale: string | null
   lastLoginAt: Date | null
@@ -279,7 +272,6 @@ export type UserWhereInput = {
   banReason?: Prisma.StringNullableFilter<"User"> | string | null
   banExpires?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   twoFactorEnabled?: Prisma.BoolNullableFilter<"User"> | boolean | null
-  avatarLocked?: Prisma.BoolNullableFilter<"User"> | boolean | null
   nameLocked?: Prisma.BoolNullableFilter<"User"> | boolean | null
   locale?: Prisma.StringNullableFilter<"User"> | string | null
   lastLoginAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
@@ -329,7 +321,6 @@ export type UserOrderByWithRelationInput = {
   banReason?: Prisma.SortOrderInput | Prisma.SortOrder
   banExpires?: Prisma.SortOrderInput | Prisma.SortOrder
   twoFactorEnabled?: Prisma.SortOrderInput | Prisma.SortOrder
-  avatarLocked?: Prisma.SortOrderInput | Prisma.SortOrder
   nameLocked?: Prisma.SortOrderInput | Prisma.SortOrder
   locale?: Prisma.SortOrderInput | Prisma.SortOrder
   lastLoginAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -382,7 +373,6 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   banReason?: Prisma.StringNullableFilter<"User"> | string | null
   banExpires?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   twoFactorEnabled?: Prisma.BoolNullableFilter<"User"> | boolean | null
-  avatarLocked?: Prisma.BoolNullableFilter<"User"> | boolean | null
   nameLocked?: Prisma.BoolNullableFilter<"User"> | boolean | null
   locale?: Prisma.StringNullableFilter<"User"> | string | null
   lastLoginAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
@@ -432,7 +422,6 @@ export type UserOrderByWithAggregationInput = {
   banReason?: Prisma.SortOrderInput | Prisma.SortOrder
   banExpires?: Prisma.SortOrderInput | Prisma.SortOrder
   twoFactorEnabled?: Prisma.SortOrderInput | Prisma.SortOrder
-  avatarLocked?: Prisma.SortOrderInput | Prisma.SortOrder
   nameLocked?: Prisma.SortOrderInput | Prisma.SortOrder
   locale?: Prisma.SortOrderInput | Prisma.SortOrder
   lastLoginAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -459,7 +448,6 @@ export type UserScalarWhereWithAggregatesInput = {
   banReason?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   banExpires?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   twoFactorEnabled?: Prisma.BoolNullableWithAggregatesFilter<"User"> | boolean | null
-  avatarLocked?: Prisma.BoolNullableWithAggregatesFilter<"User"> | boolean | null
   nameLocked?: Prisma.BoolNullableWithAggregatesFilter<"User"> | boolean | null
   locale?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   lastLoginAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
@@ -480,7 +468,6 @@ export type UserCreateInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -530,7 +517,6 @@ export type UserUncheckedCreateInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -580,7 +566,6 @@ export type UserUpdateInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -630,7 +615,6 @@ export type UserUncheckedUpdateInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -680,7 +664,6 @@ export type UserCreateManyInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -701,7 +684,6 @@ export type UserUpdateManyMutationInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -722,7 +704,6 @@ export type UserUncheckedUpdateManyInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -743,7 +724,6 @@ export type UserCountOrderByAggregateInput = {
   banReason?: Prisma.SortOrder
   banExpires?: Prisma.SortOrder
   twoFactorEnabled?: Prisma.SortOrder
-  avatarLocked?: Prisma.SortOrder
   nameLocked?: Prisma.SortOrder
   locale?: Prisma.SortOrder
   lastLoginAt?: Prisma.SortOrder
@@ -764,7 +744,6 @@ export type UserMaxOrderByAggregateInput = {
   banReason?: Prisma.SortOrder
   banExpires?: Prisma.SortOrder
   twoFactorEnabled?: Prisma.SortOrder
-  avatarLocked?: Prisma.SortOrder
   nameLocked?: Prisma.SortOrder
   locale?: Prisma.SortOrder
   lastLoginAt?: Prisma.SortOrder
@@ -785,7 +764,6 @@ export type UserMinOrderByAggregateInput = {
   banReason?: Prisma.SortOrder
   banExpires?: Prisma.SortOrder
   twoFactorEnabled?: Prisma.SortOrder
-  avatarLocked?: Prisma.SortOrder
   nameLocked?: Prisma.SortOrder
   locale?: Prisma.SortOrder
   lastLoginAt?: Prisma.SortOrder
@@ -1268,7 +1246,6 @@ export type UserCreateWithoutAgentTokenInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -1317,7 +1294,6 @@ export type UserUncheckedCreateWithoutAgentTokenInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -1371,7 +1347,6 @@ export type UserCreateWithoutCreatedAgentTokensInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -1420,7 +1395,6 @@ export type UserUncheckedCreateWithoutCreatedAgentTokensInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -1485,7 +1459,6 @@ export type UserUpdateWithoutAgentTokenInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1534,7 +1507,6 @@ export type UserUncheckedUpdateWithoutAgentTokenInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1594,7 +1566,6 @@ export type UserUpdateWithoutCreatedAgentTokensInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1643,7 +1614,6 @@ export type UserUncheckedUpdateWithoutCreatedAgentTokensInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1692,7 +1662,6 @@ export type UserCreateWithoutMcpTokensInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -1741,7 +1710,6 @@ export type UserUncheckedCreateWithoutMcpTokensInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -1806,7 +1774,6 @@ export type UserUpdateWithoutMcpTokensInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1855,7 +1822,6 @@ export type UserUncheckedUpdateWithoutMcpTokensInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1904,7 +1870,6 @@ export type UserCreateWithoutAgentRunnerInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -1953,7 +1918,6 @@ export type UserUncheckedCreateWithoutAgentRunnerInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -2018,7 +1982,6 @@ export type UserUpdateWithoutAgentRunnerInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2067,7 +2030,6 @@ export type UserUncheckedUpdateWithoutAgentRunnerInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2116,7 +2078,6 @@ export type UserCreateWithoutAgentApproversInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -2165,7 +2126,6 @@ export type UserUncheckedCreateWithoutAgentApproversInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -2219,7 +2179,6 @@ export type UserCreateWithoutApproverOfInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -2268,7 +2227,6 @@ export type UserUncheckedCreateWithoutApproverOfInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -2333,7 +2291,6 @@ export type UserUpdateWithoutAgentApproversInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2382,7 +2339,6 @@ export type UserUncheckedUpdateWithoutAgentApproversInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2442,7 +2398,6 @@ export type UserUpdateWithoutApproverOfInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2491,7 +2446,6 @@ export type UserUncheckedUpdateWithoutApproverOfInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2540,7 +2494,6 @@ export type UserCreateWithoutAgentApproverGroupsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -2589,7 +2542,6 @@ export type UserUncheckedCreateWithoutAgentApproverGroupsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -2654,7 +2606,6 @@ export type UserUpdateWithoutAgentApproverGroupsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2703,7 +2654,6 @@ export type UserUncheckedUpdateWithoutAgentApproverGroupsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2752,7 +2702,6 @@ export type UserCreateWithoutSessionsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -2801,7 +2750,6 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -2866,7 +2814,6 @@ export type UserUpdateWithoutSessionsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2915,7 +2862,6 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2964,7 +2910,6 @@ export type UserCreateWithoutAccountsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -3013,7 +2958,6 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -3078,7 +3022,6 @@ export type UserUpdateWithoutAccountsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3127,7 +3070,6 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3176,7 +3118,6 @@ export type UserCreateWithoutTwofactorsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -3225,7 +3166,6 @@ export type UserUncheckedCreateWithoutTwofactorsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -3290,7 +3230,6 @@ export type UserUpdateWithoutTwofactorsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3339,7 +3278,6 @@ export type UserUncheckedUpdateWithoutTwofactorsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3388,7 +3326,6 @@ export type UserCreateWithoutPasskeysInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -3437,7 +3374,6 @@ export type UserUncheckedCreateWithoutPasskeysInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -3502,7 +3438,6 @@ export type UserUpdateWithoutPasskeysInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3551,7 +3486,6 @@ export type UserUncheckedUpdateWithoutPasskeysInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3600,7 +3534,6 @@ export type UserCreateWithoutOauthclientsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -3649,7 +3582,6 @@ export type UserUncheckedCreateWithoutOauthclientsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -3714,7 +3646,6 @@ export type UserUpdateWithoutOauthclientsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3763,7 +3694,6 @@ export type UserUncheckedUpdateWithoutOauthclientsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3812,7 +3742,6 @@ export type UserCreateWithoutOauthrefreshtokensInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -3861,7 +3790,6 @@ export type UserUncheckedCreateWithoutOauthrefreshtokensInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -3926,7 +3854,6 @@ export type UserUpdateWithoutOauthrefreshtokensInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3975,7 +3902,6 @@ export type UserUncheckedUpdateWithoutOauthrefreshtokensInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4024,7 +3950,6 @@ export type UserCreateWithoutOauthaccesstokensInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -4073,7 +3998,6 @@ export type UserUncheckedCreateWithoutOauthaccesstokensInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -4138,7 +4062,6 @@ export type UserUpdateWithoutOauthaccesstokensInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4187,7 +4110,6 @@ export type UserUncheckedUpdateWithoutOauthaccesstokensInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4236,7 +4158,6 @@ export type UserCreateWithoutOauthconsentsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -4285,7 +4206,6 @@ export type UserUncheckedCreateWithoutOauthconsentsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -4350,7 +4270,6 @@ export type UserUpdateWithoutOauthconsentsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4399,7 +4318,6 @@ export type UserUncheckedUpdateWithoutOauthconsentsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4448,7 +4366,6 @@ export type UserCreateWithoutDashboardInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -4497,7 +4414,6 @@ export type UserUncheckedCreateWithoutDashboardInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -4562,7 +4478,6 @@ export type UserUpdateWithoutDashboardInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4611,7 +4526,6 @@ export type UserUncheckedUpdateWithoutDashboardInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4660,7 +4574,6 @@ export type UserCreateWithoutAttachmentsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -4709,7 +4622,6 @@ export type UserUncheckedCreateWithoutAttachmentsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -4774,7 +4686,6 @@ export type UserUpdateWithoutAttachmentsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4823,7 +4734,6 @@ export type UserUncheckedUpdateWithoutAttachmentsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4872,7 +4782,6 @@ export type UserCreateWithoutUserGroupsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -4921,7 +4830,6 @@ export type UserUncheckedCreateWithoutUserGroupsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -4986,7 +4894,6 @@ export type UserUpdateWithoutUserGroupsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -5035,7 +4942,6 @@ export type UserUncheckedUpdateWithoutUserGroupsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -5084,7 +4990,6 @@ export type UserCreateWithoutCalendarShareInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -5133,7 +5038,6 @@ export type UserUncheckedCreateWithoutCalendarShareInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -5198,7 +5102,6 @@ export type UserUpdateWithoutCalendarShareInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -5247,7 +5150,6 @@ export type UserUncheckedUpdateWithoutCalendarShareInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -5296,7 +5198,6 @@ export type UserCreateWithoutCalendarBusyTimesInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -5345,7 +5246,6 @@ export type UserUncheckedCreateWithoutCalendarBusyTimesInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -5410,7 +5310,6 @@ export type UserUpdateWithoutCalendarBusyTimesInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -5459,7 +5358,6 @@ export type UserUncheckedUpdateWithoutCalendarBusyTimesInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -5508,7 +5406,6 @@ export type UserCreateWithoutPrivateBoardInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -5557,7 +5454,6 @@ export type UserUncheckedCreateWithoutPrivateBoardInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -5622,7 +5518,6 @@ export type UserUpdateWithoutPrivateBoardInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -5671,7 +5566,6 @@ export type UserUncheckedUpdateWithoutPrivateBoardInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -5720,7 +5614,6 @@ export type UserCreateWithoutBoardMembersInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -5769,7 +5662,6 @@ export type UserUncheckedCreateWithoutBoardMembersInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -5834,7 +5726,6 @@ export type UserUpdateWithoutBoardMembersInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -5883,7 +5774,6 @@ export type UserUncheckedUpdateWithoutBoardMembersInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -5932,7 +5822,6 @@ export type UserCreateWithoutCreatedTicketsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -5981,7 +5870,6 @@ export type UserUncheckedCreateWithoutCreatedTicketsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -6035,7 +5923,6 @@ export type UserCreateWithoutAssignedTicketsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -6084,7 +5971,6 @@ export type UserUncheckedCreateWithoutAssignedTicketsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -6149,7 +6035,6 @@ export type UserUpdateWithoutCreatedTicketsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -6198,7 +6083,6 @@ export type UserUncheckedUpdateWithoutCreatedTicketsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -6258,7 +6142,6 @@ export type UserUpdateWithoutAssignedTicketsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -6307,7 +6190,6 @@ export type UserUncheckedUpdateWithoutAssignedTicketsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -6356,7 +6238,6 @@ export type UserCreateWithoutTicketCommentsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -6405,7 +6286,6 @@ export type UserUncheckedCreateWithoutTicketCommentsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -6470,7 +6350,6 @@ export type UserUpdateWithoutTicketCommentsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -6519,7 +6398,6 @@ export type UserUncheckedUpdateWithoutTicketCommentsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -6568,7 +6446,6 @@ export type UserCreateWithoutNotifySettingsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -6617,7 +6494,6 @@ export type UserUncheckedCreateWithoutNotifySettingsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -6682,7 +6558,6 @@ export type UserUpdateWithoutNotifySettingsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -6731,7 +6606,6 @@ export type UserUncheckedUpdateWithoutNotifySettingsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -6780,7 +6654,6 @@ export type UserCreateWithoutWebPushSubscriptionsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -6829,7 +6702,6 @@ export type UserUncheckedCreateWithoutWebPushSubscriptionsInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -6894,7 +6766,6 @@ export type UserUpdateWithoutWebPushSubscriptionsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -6943,7 +6814,6 @@ export type UserUncheckedUpdateWithoutWebPushSubscriptionsInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -6992,7 +6862,6 @@ export type UserCreateWithoutNotifyOutboxesInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -7041,7 +6910,6 @@ export type UserUncheckedCreateWithoutNotifyOutboxesInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -7106,7 +6974,6 @@ export type UserUpdateWithoutNotifyOutboxesInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -7155,7 +7022,6 @@ export type UserUncheckedUpdateWithoutNotifyOutboxesInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -7204,7 +7070,6 @@ export type UserCreateWithoutNotifyDeliveriesInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -7253,7 +7118,6 @@ export type UserUncheckedCreateWithoutNotifyDeliveriesInput = {
   banReason?: string | null
   banExpires?: Date | string | null
   twoFactorEnabled?: boolean | null
-  avatarLocked?: boolean | null
   nameLocked?: boolean | null
   locale?: string | null
   lastLoginAt?: Date | string | null
@@ -7318,7 +7182,6 @@ export type UserUpdateWithoutNotifyDeliveriesInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -7367,7 +7230,6 @@ export type UserUncheckedUpdateWithoutNotifyDeliveriesInput = {
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  avatarLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -7654,7 +7516,6 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   banReason?: boolean
   banExpires?: boolean
   twoFactorEnabled?: boolean
-  avatarLocked?: boolean
   nameLocked?: boolean
   locale?: boolean
   lastLoginAt?: boolean
@@ -7705,7 +7566,6 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   banReason?: boolean
   banExpires?: boolean
   twoFactorEnabled?: boolean
-  avatarLocked?: boolean
   nameLocked?: boolean
   locale?: boolean
   lastLoginAt?: boolean
@@ -7726,7 +7586,6 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   banReason?: boolean
   banExpires?: boolean
   twoFactorEnabled?: boolean
-  avatarLocked?: boolean
   nameLocked?: boolean
   locale?: boolean
   lastLoginAt?: boolean
@@ -7747,7 +7606,6 @@ export type UserSelectScalar = {
   banReason?: boolean
   banExpires?: boolean
   twoFactorEnabled?: boolean
-  avatarLocked?: boolean
   nameLocked?: boolean
   locale?: boolean
   lastLoginAt?: boolean
@@ -7757,7 +7615,7 @@ export type UserSelectScalar = {
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "role" | "banned" | "banReason" | "banExpires" | "twoFactorEnabled" | "avatarLocked" | "nameLocked" | "locale" | "lastLoginAt" | "timezone" | "isAgent" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "role" | "banned" | "banReason" | "banExpires" | "twoFactorEnabled" | "nameLocked" | "locale" | "lastLoginAt" | "timezone" | "isAgent" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   sessions?: boolean | Prisma.User$sessionsArgs<ExtArgs>
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
@@ -7841,7 +7699,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
      */
     emailVerified: boolean
     /**
-     * アバター画像のURL。アップロードした場合は `/api/upload/<key>`
+     * アバター画像のURL。常に `/api/upload/<key>`(ソーシャルログインで得た画像もコピーして保存する)
      */
     image: string | null
     /**
@@ -7864,10 +7722,6 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
      * 2要素認証の有効/無効
      */
     twoFactorEnabled: boolean | null
-    /**
-     * アバターを本人が設定済み。ソーシャルログインで取得した画像で上書きしない
-     */
-    avatarLocked: boolean | null
     /**
      * 表示名を本人が設定済み。ソーシャルログインで取得した名前で上書きしない
      */
@@ -8352,7 +8206,6 @@ export interface UserFieldRefs {
   readonly banReason: Prisma.FieldRef<"User", 'String'>
   readonly banExpires: Prisma.FieldRef<"User", 'DateTime'>
   readonly twoFactorEnabled: Prisma.FieldRef<"User", 'Boolean'>
-  readonly avatarLocked: Prisma.FieldRef<"User", 'Boolean'>
   readonly nameLocked: Prisma.FieldRef<"User", 'Boolean'>
   readonly locale: Prisma.FieldRef<"User", 'String'>
   readonly lastLoginAt: Prisma.FieldRef<"User", 'DateTime'>

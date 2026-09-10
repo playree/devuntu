@@ -12,7 +12,7 @@
 import { getString } from '../kvs'
 import { ATTACHMENT_SCAN_BATCH } from '../maintenance/maintenance'
 import { prisma } from '../prisma'
-import { extractUploadKeys, toUploadKey, toUploadUrl, UPLOAD_URL_PREFIX } from './upload'
+import { extractUploadKeys, isUploadUrl, toUploadKey, toUploadUrl, UPLOAD_URL_PREFIX } from './upload'
 
 /** 添付を参照しうる場所 */
 export type AttachmentRefSource = 'ticket' | 'comment' | 'user' | 'linkWidget' | 'announcement'
@@ -60,7 +60,7 @@ const collectFromContent = async (
 
 /** URL文字列をそのまま持つ列から、アップロードのキーだけを取り出す */
 const toKeys = (urls: (string | null)[]): string[] =>
-  urls.filter((url): url is string => !!url && url.startsWith(UPLOAD_URL_PREFIX)).map(toUploadKey)
+  urls.filter((url): url is string => !!url && isUploadUrl(url)).map(toUploadKey)
 
 /**
  * いずれかの場所から参照されている添付キーを集める。
@@ -75,9 +75,9 @@ export const collectReferencedUploadKeys = async (): Promise<Set<string>> => {
   await collectFromContent((args) => prisma.ticketComment.findMany(args), keys)
 
   const [users, widgets, announcement] = await Promise.all([
-    prisma.user.findMany({ where: { image: { startsWith: UPLOAD_URL_PREFIX } }, select: { image: true } }),
+    prisma.user.findMany({ where: { image: { startsWith: `${UPLOAD_URL_PREFIX}/` } }, select: { image: true } }),
     prisma.linkWidget.findMany({
-      where: { iconPath: { startsWith: UPLOAD_URL_PREFIX } },
+      where: { iconPath: { startsWith: `${UPLOAD_URL_PREFIX}/` } },
       select: { iconPath: true },
     }),
     getString('DASHBOARD_ANNOUNCEMENT'),

@@ -10,14 +10,34 @@ import { uuidv7 } from 'uuidv7'
 
 export const UPLOAD_URL_PREFIX = '/api/upload'
 
+/**
+ * アバター画像を未認証で配信するパス。実体は `/api/upload` と同じキーを指す。
+ *
+ * OIDC クライアントへ `picture` として渡すため認証を掛けられない。
+ * **DBにはこの形式で保存しないこと**。参照判定({@link isUploadUrl})が `/api/upload` 始まりしか
+ * 見ておらず、保存形式を変えると未参照とみなされて添付の掃除で消える。
+ */
+export const AVATAR_URL_PREFIX = '/api/avatar'
+
 /** 許可するキーの形式(`<uuidv7>.<拡張子>`) */
 const UPLOAD_KEY_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(webp|png|jpe?g|gif)$/
 
 /** 保存キーから公開URLを生成 */
 export const toUploadUrl = (key: string) => `${UPLOAD_URL_PREFIX}/${key}`
 
+/** 保存キーからアバターの未認証配信URLを生成 */
+export const toAvatarUrl = (key: string) => `${AVATAR_URL_PREFIX}/${key}`
+
 /** 公開URL(`/api/upload/<キー>`)から保存キーを取り出す */
 export const toUploadKey = (url: string) => url.slice(url.lastIndexOf('/') + 1)
+
+/**
+ * この保存先が管理下のアップロードURLか。
+ *
+ * 区切りの `/` まで含めて見ることで `/api/uploads-xxx` のような別パスを取り違えない。
+ * 外部URL(ソーシャルログインで取得した画像など)を除外する判定に使う。
+ */
+export const isUploadUrl = (url: string) => url.startsWith(`${UPLOAD_URL_PREFIX}/`)
 
 /** 保存キーの形式検証(ホワイトリスト方式のため別途のパストラバーサル対策は不要) */
 export const isValidUploadKey = (key: string) => UPLOAD_KEY_REGEX.test(key)

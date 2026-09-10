@@ -317,7 +317,9 @@ export const setUserTimezone = safeAuthAction
 
 /**
  * アバター更新。
- * 画像アップロード時は独自アバターとみなしOIDC同期を止める。null指定は独自アバターを削除して同期を再開する
+ *
+ * 画像を設定している間はログイン時のコピーが走らない。null指定で削除すると、
+ * 次回のOIDCログインでIdP側のアバターが改めてコピーされる
  */
 export const setUserAvatar = safeAuthAction
   .metadata({ actionName: 'setUserAvatar', role: 'user' })
@@ -326,7 +328,7 @@ export const setUserAvatar = safeAuthAction
     const existing = await prisma.user.findUniqueOrThrow({ where: { id: user.id }, select: { image: true } })
 
     if (image === null) {
-      await prisma.user.update({ where: { id: user.id }, data: { image: null, avatarLocked: false } })
+      await prisma.user.update({ where: { id: user.id }, data: { image: null } })
       if (existing.image) {
         await removeImageAttachment(existing.image)
       }
@@ -336,7 +338,7 @@ export const setUserAvatar = safeAuthAction
 
     const url = await saveImageAttachment(image, user.id)
     try {
-      await prisma.user.update({ where: { id: user.id }, data: { image: url, avatarLocked: true } })
+      await prisma.user.update({ where: { id: user.id }, data: { image: url } })
     } catch (err) {
       // 更新に失敗した場合は新規保存分を残さない
       await removeImageAttachment(url)
