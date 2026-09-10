@@ -39,8 +39,11 @@ const isBlockedAddress = (address: string) => {
 /**
  * 名前解決してから宛先を確かめる。ホスト名でメタデータサービスを指されても弾くため。
  *
- * 解決してから fetch が繋ぐまでの間に応答が変わる余地(DNSリバインディング)は残るが、
- * 取得先はIdPが申告したURLなので、そこまでの攻撃者はすでに認証を握っている。
+ * 解決してから fetch が繋ぐまでの間に応答が変わる余地(DNSリバインディング)は残る。
+ * 塞ぐには接続時のアドレスを検査する dispatcher が要るが、そもそもプライベートアドレスは
+ * 意図的に許可しているので、ピン留めで追加的に防げるのはリンクローカル宛てだけ。
+ * 応答は保存時に sharp が画像として検証するため内容の持ち出しは成立せず、
+ * 残るのはブラインドGETに留まる。得られるものに対して割に合わないため対応していない。
  */
 const isAllowedHost = async (hostname: string) => {
   try {
@@ -52,11 +55,17 @@ const isAllowedHost = async (hostname: string) => {
   }
 }
 
-/** `http:` / `https:` の絶対URLだけを通す。相対パスはここで弾かれる */
-const parseFetchableUrl = (url: string) => {
+/**
+ * `http:` / `https:` の絶対URLだけを通す。base 無しなら相対パスもここで弾かれる。
+ *
+ * リダイレクト先の解決もここに通すこと。`Location` は相手が決める文字列で、
+ * `http://` のような値だと `new URL()` が投げる。呼び出し側で解いてから渡すと、
+ * その例外がサインイン処理まで伝播してしまう。
+ */
+const parseFetchableUrl = (url: string, base?: URL) => {
   let parsed: URL
   try {
-    parsed = new URL(url)
+    parsed = new URL(url, base)
   } catch {
     return undefined
   }
@@ -124,8 +133,10 @@ export const fetchRemoteImage = async (url: string): Promise<Uint8Array | undefi
     }
 
     if (res.status >= 300 && res.status < 400) {
+      // 読まないボディは捨てる。undici は消費するまで接続をプールへ返さない
+      await res.body?.cancel().catch(() => undefined)
       const location = res.headers.get('location')
-      const next: URL | undefined = location ? parseFetchableUrl(new URL(location, target).toString()) : undefined
+      const next = location ? parseFetchableUrl(location, target) : undefined
       if (!next) {
         logger.warn({ url, status: res.status }, 'remote image redirect is not followable')
         return undefined
@@ -135,6 +146,7 @@ export const fetchRemoteImage = async (url: string): Promise<Uint8Array | undefi
     }
 
     if (!res.ok || !res.body) {
+      await res.body?.cancel().catch(() => undefined)
       logger.warn({ url, status: res.status }, 'remote image responded with error')
       return undefined
     }

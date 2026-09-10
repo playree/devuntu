@@ -127,6 +127,19 @@ describe('fetchRemoteImage', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 
+  it('壊れた Location ヘッダーでも例外にしない', async () => {
+    // `new URL()` が投げる値。取りこぼすとサインイン処理まで例外が伝播する
+    fetchMock.mockResolvedValue(redirectTo('http://'))
+
+    await expect(fetchRemoteImage('https://idp.example.com/a.png')).resolves.toBeUndefined()
+  })
+
+  it('Location ヘッダーが無いリダイレクトは追わない', async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 302, body: null, headers: new Headers() })
+
+    await expect(fetchRemoteImage('https://idp.example.com/a.png')).resolves.toBeUndefined()
+  })
+
   it('名前解決できなければ取得しない', async () => {
     lookupMock.mockRejectedValue(new Error('ENOTFOUND'))
 

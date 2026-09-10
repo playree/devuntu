@@ -54,8 +54,12 @@ export const GET = async (_req: Request, { params }: { params: Promise<{ filenam
       'Content-Type': WEBP_MIME,
       ...(object.contentLength ? { 'Content-Length': String(object.contentLength) } : {}),
       'X-Content-Type-Options': 'nosniff',
-      // 未認証で読めるためpublic。キーは保存ごとに変わるため長期キャッシュ可能
-      'Cache-Control': 'public, max-age=31536000, immutable',
+      /**
+       * 未認証で読めるため public。ただし immutable は付けない。
+       * キーは保存ごとに変わるのでアバターの差し替えでは陳腐化しないが、
+       * 削除された後も共有キャッシュが返し続ける窓をこの長さに抑える。
+       */
+      'Cache-Control': 'public, max-age=3600',
       'X-Robots-Tag': 'noindex',
     },
   })

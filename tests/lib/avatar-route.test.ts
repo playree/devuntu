@@ -36,7 +36,8 @@ describe('GET /api/avatar/[filename]', () => {
 
     expect(res.status).toBe(200)
     expect(res.headers.get('Content-Type')).toBe(WEBP_MIME)
-    expect(res.headers.get('Cache-Control')).toContain('public')
+    // 削除後も共有キャッシュが返し続けないよう、期限なし(immutable)にはしない
+    expect(res.headers.get('Cache-Control')).toBe('public, max-age=3600')
     expect(prisma.user.findFirst).toHaveBeenCalledWith({ where: { image: toUploadUrl(key) }, select: { id: true } })
   })
 
