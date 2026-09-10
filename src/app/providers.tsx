@@ -5,7 +5,9 @@ import { LocaleProvider } from '@/components/locale/client'
 import { NotifyProvider } from '@/components/notify'
 import { useLocale } from '@/locale/client'
 import { localeConfig } from '@/locale/config'
+import { RouterProvider } from '@heroui/react'
 import { ThemeProvider, type ThemeProviderProps } from 'next-themes'
+import { useRouter } from 'next/navigation'
 import { FC, ReactNode } from 'react'
 
 export interface ProvidersProps {
@@ -14,6 +16,15 @@ export interface ProvidersProps {
   defaultLocale: string
   acceptLanguage: string | null
   cookieLocale: string | null
+}
+
+/** HeroUI(react-aria)の href を Next.js のクライアント遷移に繋ぐ */
+const MyRouterProvider: FC<{ children: ReactNode }> = ({ children }) => {
+  const router = useRouter()
+
+  return (
+    <RouterProvider navigate={(href, routerOptions) => router.push(href, routerOptions)}>{children}</RouterProvider>
+  )
 }
 
 const MyConfirmModalProvider: FC<{ children: ReactNode }> = ({ children }) => {
@@ -42,7 +53,9 @@ export const Providers: FC<ProvidersProps> = ({
         acceptLanguage={acceptLanguage}
         cookieLocale={cookieLocale}
       >
-        <MyConfirmModalProvider>{children}</MyConfirmModalProvider>
+        <MyConfirmModalProvider>
+          <MyRouterProvider>{children}</MyRouterProvider>
+        </MyConfirmModalProvider>
       </LocaleProvider>
     </ThemeProvider>
   )

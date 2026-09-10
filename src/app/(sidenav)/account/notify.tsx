@@ -11,11 +11,35 @@ import { DM_NOTIFY_EVENTS, DmNotifyEvent, NOTIFY_EMAIL_WINDOW_MS } from '@/lib/n
 import { NotifySetting } from '@/lib/notify/notify-setting'
 import { UpdateNotifySettings } from '@/lib/schema/schema'
 import { useLocale } from '@/locale/client'
-import { FC } from 'react'
-import { useForm } from 'react-hook-form'
+import { Tooltip } from '@heroui/react'
+import { ComponentProps, FC } from 'react'
+import { Control, useForm } from 'react-hook-form'
 import { getNotifySettings, updateNotifySettings } from './server'
 
 type FormValues = Record<DmNotifyEvent, NotifySetting>
+
+/**
+ * チャネル1つ分のチェックボックス。
+ * 利用できないチャネルは隠さずに `isDisabled` で出し、`tooltip` でその理由を伝える。
+ */
+const ChannelCheckBox: FC<
+  Omit<ComponentProps<typeof CheckBoxCtrl<FormValues>>, 'control' | 'className'> & {
+    control: Control<FormValues>
+    /** 指定すると理由として表示する(未指定なら Tooltip を付けない) */
+    tooltip?: string
+  }
+> = ({ tooltip, ...props }) => {
+  const checkbox = <CheckBoxCtrl className='shrink-0' {...props} />
+  return tooltip ? (
+    <Tooltip delay={300}>
+      {/* isDisabled な Checkbox はホバー系のイベントを自ら拾わなくなるため、Trigger 側でホバーを検知させる */}
+      <Tooltip.Trigger className='block'>{checkbox}</Tooltip.Trigger>
+      <Tooltip.Content showArrow>{tooltip}</Tooltip.Content>
+    </Tooltip>
+  ) : (
+    checkbox
+  )
+}
 
 /**
  * 通知設定フォーム本体。
@@ -49,7 +73,7 @@ const NotifyForm: FC<{
         await refresh()
       })}
     >
-      <FlexCol className='gap-4 px-1'>
+      <FlexCol className='gap-4'>
         <NoticePanel className='text-xs'>
           {t('msg_notify_email_digest', { minutes: NOTIFY_EMAIL_WINDOW_MS / 60_000 })}
         </NoticePanel>
@@ -57,32 +81,29 @@ const NotifyForm: FC<{
           <FlexCol key={event} className='gap-2'>
             <div className='text-foreground text-sm'>{t(`notify_event_${event}`)}</div>
             {/* チャネルが増えるとスマホ幅では収まらないので、縮めずに折り返す */}
-            <FlexRow className='flex-wrap gap-x-6 gap-y-2 px-2'>
-              <CheckBoxCtrl
-                className='shrink-0'
+            <FlexRow className='flex-wrap items-center gap-x-6 gap-y-2 px-2'>
+              <ChannelCheckBox
                 control={control}
                 name={`${event}.email`}
                 id={`notify_${event}_email`}
                 label={t('notify_channel_email')}
               />
-              {slackAvailable && (
-                <CheckBoxCtrl
-                  className='shrink-0'
-                  control={control}
-                  name={`${event}.slack`}
-                  id={`notify_${event}_slack`}
-                  label={t('notify_channel_slack')}
-                />
-              )}
-              {hasWebPushDevice && (
-                <CheckBoxCtrl
-                  className='shrink-0'
-                  control={control}
-                  name={`${event}.webpush`}
-                  id={`notify_${event}_webpush`}
-                  label={t('notify_channel_webpush')}
-                />
-              )}
+              <ChannelCheckBox
+                control={control}
+                name={`${event}.slack`}
+                id={`notify_${event}_slack`}
+                label={t('notify_channel_slack')}
+                isDisabled={!slackAvailable}
+                tooltip={slackAvailable ? undefined : t('msg_notify_slack_unavailable')}
+              />
+              <ChannelCheckBox
+                control={control}
+                name={`${event}.webpush`}
+                id={`notify_${event}_webpush`}
+                label={t('notify_channel_webpush')}
+                isDisabled={!hasWebPushDevice}
+                tooltip={hasWebPushDevice ? undefined : t('msg_webpush_no_device')}
+              />
             </FlexRow>
           </FlexCol>
         ))}
@@ -100,12 +121,12 @@ const NotifyForm: FC<{
  * イベント種別ごとに通知チャネルの ON/OFF を切り替える。
  * 保存ボタン押下でイベント分をまとめて保存する(切り替え単位での即時保存は行わない)。
  *
- * メールは常に表示する。Slack は連携を利用できるユーザーにだけ、Web プッシュは
- * 端末を登録済みのユーザーにだけ出す(届かないチェックボックスを見せない)。
+ * 全チャネルを常に表示する。今は届かないチャネルも、隠すと機能の存在自体が伝わらないため、
+ * 操作だけを止めて理由を Tooltip で示す。
  */
 export const NotifySettings: FC<{ slackAvailable: boolean; hasWebPushDevice: boolean }> = ({
   slackAvailable,
-  // 端末を1つも登録していないユーザーに Web プッシュのチェックボックスを見せても届かない
+  // 端末を1つも登録していない間は Web プッシュを選んでも届かない
   hasWebPushDevice,
 }) => {
   const { data: settings, refresh } = useActionData(getNotifySettings)

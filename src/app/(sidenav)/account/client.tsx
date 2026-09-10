@@ -16,7 +16,7 @@ import {
 } from '@/components/icon'
 import { useActionData } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'
-import { Accordion } from '@heroui/react'
+import { Accordion, Separator } from '@heroui/react'
 import { FC } from 'react'
 import { AvatarSetting } from './avatar'
 import { GoogleAccountLink } from './google-account'
@@ -37,8 +37,8 @@ export const AccountClient: FC<{ googleAvailable: boolean; slackAvailable: boole
 }) => {
   const { t } = useLocale()
   /**
-   * Webプッシュの端末一覧は通知設定とWebプッシュ設定の両方が参照するので、ここで一度だけ取得して共有する。
-   * セクションごとに取得すると、端末を登録/削除しても他方のセクションが追従しない。
+   * Webプッシュの端末一覧はチェックボックスの可否判定と端末一覧の両方が参照するので、
+   * ここで一度だけ取得して共有する。別々に取得すると、端末を登録/削除しても片方が追従しない。
    */
   const {
     data: webPushDevices,
@@ -80,18 +80,20 @@ export const AccountClient: FC<{ googleAvailable: boolean; slackAvailable: boole
           icon={<BellIcon />}
           title={t('notify_settings')}
         >
-          <NotifySettings slackAvailable={slackAvailable} hasWebPushDevice={!!webPushDevices?.length} />
-        </AccordionSection>
-        <AccordionSection // Webプッシュ: 端末ごとの購読。利用できない環境ではコンポーネント側で案内を出す
-          id='webpush'
-          icon={<BellIcon />}
-          title={t('notify_webpush')}
-        >
-          <WebPushSettings
-            devices={webPushDevices}
-            isDevicesLoading={isWebPushDevicesLoading}
-            refreshDevices={refreshWebPushDevices}
-          />
+          <FlexCol className='gap-4 px-1'>
+            <NotifySettings slackAvailable={slackAvailable} hasWebPushDevice={!!webPushDevices?.length} />
+            <Separator />
+            <FlexCol // Webプッシュのチェックボックスを有効にする手段なので、通知設定と同じセクションに置く
+              className='gap-2'
+            >
+              <div className='text-sm font-bold'>{t('notify_webpush')}</div>
+              <WebPushSettings
+                devices={webPushDevices}
+                isDevicesLoading={isWebPushDevicesLoading}
+                refreshDevices={refreshWebPushDevices}
+              />
+            </FlexCol>
+          </FlexCol>
         </AccordionSection>
       </Accordion>
     </FlexCol>

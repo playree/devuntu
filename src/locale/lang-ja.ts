@@ -425,6 +425,7 @@ export const ja: DefaultLocaleItems = {
   msg_not_allowed_domain_in_google:
     'このアカウントでのGoogleサインインは許可されていません。\nEメール又はパスキーでのサインインをご利用ください。',
   msg_notify_email_digest: 'メール通知は${minutes}分間隔でまとめて1通で届きます。',
+  msg_notify_slack_unavailable: 'この環境ではSlack連携を利用できません。',
   msg_otp_sent: '認証コードを送信しました。',
   msg_owner_required: 'オーナーを1人以上指定してください。',
   msg_private_board_immutable: 'プライベートボードの構成は変更できません。',
