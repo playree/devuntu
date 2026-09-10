@@ -91,33 +91,32 @@ const CloseButton: FC<{ onClose?: () => void; onPress: () => void }> = ({ onClos
 
 /**
  * ヘッダのパンくず。ボード名 > 件名 の 2 階層。
- * 長い名前は幅で省略する。最後の項目(件名)は react-aria が現在地として扱うためリンクにならない。
+ * 長い名前は幅で省略する。件名のリンクは、サイド表示中の詳細を単独ページとして開くための導線。
  */
-const TicketBreadcrumbs: FC<{ boardId: string; boardName: string; title: string }> = ({
+const TicketBreadcrumbs: FC<{ ticketId: string; boardId: string; boardName: string; title: string }> = ({
+  ticketId,
   boardId,
   boardName,
   title,
-}) => {
-  const router = useRouter()
-  return (
-    <Breadcrumbs className='min-w-0'>
-      <Breadcrumbs.Item // RouterProvider を置いていないため href ではなく router.push で遷移する
-        onPress={() => router.push(`/boards/${boardId}`)}
-      >
-        <span className='flex items-center gap-1'>
-          <ViewColumnsIcon width={16} />
-          <span className='max-w-32 truncate sm:max-w-48'>{boardName}</span>
-        </span>
-      </Breadcrumbs.Item>
-      <Breadcrumbs.Item>
-        <span className='flex items-center gap-1'>
-          <TicketIcon width={16} />
-          <span className='max-w-40 truncate sm:max-w-72'>{title}</span>
-        </span>
-      </Breadcrumbs.Item>
-    </Breadcrumbs>
-  )
-}
+}) => (
+  <Breadcrumbs className='min-w-0'>
+    <Breadcrumbs.Item href={`/boards/${boardId}`}>
+      <span className='flex items-center gap-1'>
+        <ViewColumnsIcon width={16} />
+        <span className='max-w-32 truncate sm:max-w-48'>{boardName}</span>
+      </span>
+    </Breadcrumbs.Item>
+    <Breadcrumbs.Item
+      href={`/tickets/${ticketId}`}
+      isDisabled={false} // react-aria は最後の項目を現在地として無効化するため、明示的に打ち消してリンクにする
+    >
+      <span className='flex items-center gap-1'>
+        <TicketIcon width={16} />
+        <span className='max-w-40 truncate sm:max-w-72'>{title}</span>
+      </span>
+    </Breadcrumbs.Item>
+  </Breadcrumbs>
+)
 
 export const TicketDetailClient: FC<{
   id: string
@@ -330,6 +329,7 @@ export const TicketDetailClient: FC<{
           <>
             <CloseButton onClose={onClose} onPress={close} />
             <TicketBreadcrumbs
+              ticketId={id}
               boardId={ticket.boardId}
               boardName={boardName({ name: ticket.boardName, kind: ticket.boardKind })}
               title={ticket.title}
