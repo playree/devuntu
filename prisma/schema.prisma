@@ -21,7 +21,7 @@ model User {
   /// メールアドレスの確認済みフラグ。2FA の完了時にも true にする
   emailVerified Boolean @default(false)
 
-  /// アバター画像のURL。アップロードした場合は `/api/upload/<key>`
+  /// アバター画像のURL。常に `/api/upload/<key>`(ソーシャルログインで得た画像もコピーして保存する)
   image String?
 
   /// 管理者は `admin`。null は一般ユーザー
@@ -38,9 +38,6 @@ model User {
 
   /// 2要素認証の有効/無効
   twoFactorEnabled Boolean? @default(false)
-
-  /// アバターを本人が設定済み。ソーシャルログインで取得した画像で上書きしない
-  avatarLocked Boolean? @default(false)
 
   /// 表示名を本人が設定済み。ソーシャルログインで取得した名前で上書きしない
   nameLocked Boolean? @default(false)
@@ -105,6 +102,8 @@ model User {
   approverOf          AgentApprover[]      @relation("AgentApproverUser")
 
   @@unique([email])
+  /// 未認証で開く `/api/avatar` がキーからアバターの持ち主を引くため
+  @@index([image])
   @@map("user")
 }
 

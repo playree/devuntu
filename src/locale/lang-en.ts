@@ -356,7 +356,8 @@ Please copy and use the connection information above.
   msg_agent_runner_desc:
     'Settings for the runner that polls for assigned tickets. The AI agent starts only while these conditions are met. Leaving either start or end unset means all day; a start later than the end crosses midnight (nights only). The daily run limit counts every start, and 0 means unlimited; the count returns to 0 at the reset time, based on the timezone setting.',
   msg_archive_board: 'Archiving hides the board from the default board list. Tickets are kept.',
-  msg_avatar_desc: 'Setting a custom image stops it from being overwritten by Devuntu on future sign-ins.',
+  msg_avatar_desc:
+    'Your avatar is copied from the sign-in provider. Setting a custom image stops it from being copied again.',
   msg_board_key_change: 'Changing the key means ticket IDs already shared will no longer point to their tickets.',
   msg_board_slack_notify_desc:
     'Posts the selected events on this board to a Slack channel. Choose both a channel and the events.',

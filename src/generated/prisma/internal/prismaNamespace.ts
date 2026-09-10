@@ -3691,7 +3691,6 @@ export const UserScalarFieldEnum = {
   banReason: 'banReason',
   banExpires: 'banExpires',
   twoFactorEnabled: 'twoFactorEnabled',
-  avatarLocked: 'avatarLocked',
   nameLocked: 'nameLocked',
   locale: 'locale',
   lastLoginAt: 'lastLoginAt',

@@ -27,7 +27,12 @@ type WebpOptions = {
   quality?: number
 }
 
-const convertToWebp = async (input: Uint8Array, { size, fit, animated = true, quality = 80 }: WebpOptions) => {
+/**
+ * バイト列を webp に変換して返す。
+ *
+ * 許可フォーマット外(sharp が実データから判定)は `errInvalidOperation()` を投げる。
+ */
+export const toWebpBytes = async (input: Uint8Array, { size, fit, animated = true, quality = 80 }: WebpOptions) => {
   const format = await sharp(input)
     .metadata()
     .then((meta) => meta.format)
@@ -53,7 +58,7 @@ const convertToWebp = async (input: Uint8Array, { size, fit, animated = true, qu
  * アニメーションGIFを1フレームに潰さないよう `animated: true` で読み込む。
  */
 export const toWebp = async (file: File, { size, fit }: { size: number; fit: 'cover' | 'inside' }) =>
-  convertToWebp(new Uint8Array(await file.arrayBuffer()), { size, fit })
+  toWebpBytes(new Uint8Array(await file.arrayBuffer()), { size, fit })
 
 /**
  * 保存済みの画像を読み取り用に縮小する。
@@ -62,4 +67,4 @@ export const toWebp = async (file: File, { size, fit }: { size: number; fit: 'co
  * 読み取り用途ではアニメーションを保持せず1フレームに潰す。
  */
 export const resizeWebp = async (input: Uint8Array, size: number) =>
-  convertToWebp(input, { size, fit: 'inside', animated: false, quality: 75 })
+  toWebpBytes(input, { size, fit: 'inside', animated: false, quality: 75 })
