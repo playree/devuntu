@@ -46,7 +46,7 @@ Server Action(`next-action` ヘッダ)は matcher の対象外で、認証リダ
 | `BETTER_AUTH_URL`              | 運用するベースの URL                       | 〇   | -                 |
 | `BETTER_AUTH_SECRET`           | Better Auth 用シークレット                 | 〇   | -                 |
 | `SESSION_EXPIRES_IN`           | セッション有効期間(秒)                     |      | `432000`(5日)     |
-| `SESSION_FRESH_AGE`            | セッション fresh 期間(秒)                  |      | `86400`(1日)      |
+| `SESSION_FRESH_AGE`            | セッション fresh 期間(秒)。`0` で無効      |      | `86400`(1日)      |
 | `TWO_FA_REQUIRED`              | 2要素認証を必須にするか                    |      | `true`            |
 | `DISABLE_PASSWORD_AUTH`        | パスワード認証を無効化                     |      | `false`           |
 | `OIDC_DCR_ENABLED`             | 動的クライアント登録を有効化               |      | `false`           |
@@ -67,6 +67,9 @@ Server Action(`next-action` ヘッダ)は matcher の対象外で、認証リダ
 過去に 2FA を有効化した利用者もパスワードのみでサインインする(サインイン時の 2FA チャレンジ自体を
 行わないため)。`DISABLE_PASSWORD_AUTH=true`(メールOTPでのサインイン)の場合はこの値に関わらず
 2要素認証の経路を通らない。
+
+`SESSION_FRESH_AGE` は、パスワード変更など重要な操作に「サインインからの経過時間」の上限を課す。
+`0` にするとこのチェックを行わない(`src/lib/auth/session-fresh.ts`)。
 
 `GOOGLE_ALLOWED_DOMAINS` は **Googleサインインを使う場合は最低1件必要**。未設定だと許可ドメインが空になり、
 すべてのドメインのサインインが拒否される。`/account` からのカレンダー連携だけであれば省略できる。

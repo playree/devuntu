@@ -16,7 +16,7 @@ import { chown, mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/pro
 import path from 'node:path'
 import { createInterface } from 'node:readline/promises'
 import { parseArgs, styleText } from 'node:util'
-import { diffEnv, maskSecret, parseEnvFile, quoteEnvValue, serializeEnv } from './env-file.mjs'
+import { diffEnv, isSecretKey, maskSecret, parseEnvFile, quoteEnvValue, serializeEnv } from './env-file.mjs'
 import {
   BUNDLED_S3_ENDPOINT,
   DEFAULTS,
@@ -31,6 +31,8 @@ import {
   generatePassword,
   generateSecret,
   generateVapidKeys,
+  isBundledDbUrl,
+  isBundledS3Endpoint,
   parseDatabaseUrl,
   validateAllowedDomains,
   validateBetterAuthUrl,
@@ -141,7 +143,7 @@ const writable = (value) => {
  * スクロールバックに秘密を残さないため)。入力中のエコー抑制は readline の内部APIに
  * 依存するので行わない。
  */
-const ask = async ({ label, help, def, validate, secret = false, allowEmpty = false }) => {
+const ask = async ({ label, help, def, validate, secret = false }) => {
   if (help) {
     note(help)
   }
@@ -150,9 +152,6 @@ const ask = async ({ label, help, def, validate, secret = false, allowEmpty = fa
     const answer = (await question(`${color('cyan', '?')} ${label}${shown}: `)).trim()
     const input = answer === '' ? def : answer
     if (input === undefined || input === '') {
-      if (allowEmpty) {
-        return ''
-      }
       warn('必須です')
       continue
     }
@@ -315,7 +314,11 @@ const existingDbCreds =
     ? { user: prevDb.POSTGRES_USER, password: prevDb.POSTGRES_PASSWORD, db: prevDb.POSTGRES_DB }
     : undefined) ?? parseDatabaseUrl(prev.DATABASE_URL)
 
-const useBundledDb = await askYesNo('compose.yaml に同梱の db サービスを使いますか?', true)
+// 既存が外部DBを指している場合に Enter で同梱DBへ書き換わらないよう、現状を既定にする
+const useBundledDb = await askYesNo(
+  'compose.yaml に同梱の db サービスを使いますか?',
+  isBundledDbUrl(prev.DATABASE_URL) ?? true,
+)
 const dbUser = await ask({
   label: 'DBユーザー (POSTGRES_USER)',
   def: existingDbCreds?.user || DEFAULTS.POSTGRES_USER,
@@ -409,7 +412,9 @@ let mailSend = await askChoice(
     { value: 'debug', label: 'debug(送信せずサーバーログへ出力)' },
     { value: '', label: '設定しない(メールを送信しない)' },
   ],
-  prevOr('MAIL_SEND', 'smtp'),
+  // 既存ファイルに MAIL_SEND が無いのは「メールを送信しない」構成。
+  // ここで smtp を既定にすると、Enter だけで MAIL_FROM や SMTP_HOST の入力を強制してしまう
+  prevOr('MAIL_SEND', prevEnvText ? '' : 'smtp'),
 )
 
 if (mailSend === '' && disablePasswordAuth) {
@@ -462,25 +467,23 @@ if (mailSend !== '') {
     env.SMTP_IGNORE_TLS = String(
       await askYesNo('TLSを使わずに接続しますか? (SMTP_IGNORE_TLS)', prevBool('SMTP_IGNORE_TLS', port === 25)),
     )
-    // 片方だけでは認証できず、メールOTPが唯一のサインイン手段の構成では誰もログインできなくなる。
-    // 両方空(認証なし)か両方入力のどちらかに揃うまで聞き直す
-    for (;;) {
-      const smtpUser = await ask({ label: 'SMTP認証ユーザー (SMTP_USER)', def: prev.SMTP_USER, allowEmpty: true })
-      const smtpPass = await ask({
+    /**
+     * 片方だけでは認証できないので、2項目をまとめてゲートで囲む。
+     * 空入力は既定値(既存の値)へ戻るため、ゲートが無いと既存の認証情報を
+     * 空へ戻す手段が無くなる。
+     */
+    if (await askYesNo('SMTP認証(ユーザー・パスワード)を設定しますか?', has('SMTP_USER') || has('SMTP_PASS'))) {
+      env.SMTP_USER = await ask({
+        label: 'SMTP認証ユーザー (SMTP_USER)',
+        def: prev.SMTP_USER,
+        validate: validateRequired,
+      })
+      env.SMTP_PASS = await ask({
         label: 'SMTP認証パスワード (SMTP_PASS)',
         def: prev.SMTP_PASS,
-        allowEmpty: true,
+        validate: validateRequired,
         secret: true,
       })
-      if ((smtpUser === '') !== (smtpPass === '')) {
-        warn('SMTP_USER と SMTP_PASS は両方揃っていないと認証できません。両方入力するか、両方空にしてください')
-        continue
-      }
-      if (smtpUser !== '') {
-        env.SMTP_USER = smtpUser
-        env.SMTP_PASS = smtpPass
-      }
-      break
     }
   } else {
     note('OTP は送信されず、サーバーログ(docker compose logs devuntu)に出力されます')
@@ -491,7 +494,10 @@ if (mailSend !== '') {
 // E. オブジェクトストレージ
 // ---
 section('オブジェクトストレージ')
-const useBundledS3 = await askYesNo('compose.yaml に同梱の SeaweedFS を使いますか?', true)
+const useBundledS3 = await askYesNo(
+  'compose.yaml に同梱の SeaweedFS を使いますか?',
+  isBundledS3Endpoint(prev.S3_ENDPOINT) ?? true,
+)
 if (useBundledS3) {
   env.S3_ENDPOINT = BUNDLED_S3_ENDPOINT
   note(`S3_ENDPOINT = ${BUNDLED_S3_ENDPOINT}`)
@@ -544,7 +550,13 @@ if (await askYesNo('Googleアカウント連携を設定しますか?', has('GOO
     validate: validateRequired,
     secret: true,
   })
-  if (await askYesNo('Googleサインイン(アカウントでのログイン)に使いますか?', true)) {
+  /**
+   * 許可ドメインが既にあれば維持、Google 未設定からの新規追加なら有効、
+   * カレンダー連携のみの既存構成だけ無効を既定にする。
+   * 固定で有効にすると、その構成では既定値の無い許可ドメインを入力するまで終われない。
+   */
+  const useGoogleSignIn = has('GOOGLE_ALLOWED_DOMAINS') || !has('GOOGLE_CLIENT_ID')
+  if (await askYesNo('Googleサインイン(アカウントでのログイン)に使いますか?', useGoogleSignIn)) {
     env.GOOGLE_ALLOWED_DOMAINS = await ask({
       label: 'サインインを許可するドメイン (GOOGLE_ALLOWED_DOMAINS)',
       def: prev.GOOGLE_ALLOWED_DOMAINS,
@@ -689,7 +701,9 @@ if (await askYesNo('ログレベル・セッション期間・自動メンテナ
   env.SESSION_FRESH_AGE = await ask({
     label: 'セッション fresh 期間(秒) (SESSION_FRESH_AGE)',
     def: prevOr('SESSION_FRESH_AGE', String(60 * 60 * 24)),
-    validate: validatePositiveInt(1),
+    // 0 は `src/lib/auth/session-fresh.ts` が fresh チェック無効として扱う有効な設定
+    validate: validatePositiveInt(0),
+    help: '0 にすると再認証の要求(fresh チェック)を行わない',
   })
   if (env.OIDC_DCR_ENABLED === 'true' || has('MCP_REFRESH_TOKEN_EXPIRES_IN')) {
     env.MCP_REFRESH_TOKEN_EXPIRES_IN = await ask({
@@ -799,21 +813,8 @@ const s3Identity = useBundledS3
   : (prevS3Credentials ?? { accessKey: S3_IDENTITY_NAME, secretKey: generatePassword() })
 const s3ConfigBody = `${JSON.stringify(buildSeaweedS3Config(s3Identity, prevS3Config), null, 2)}\n`
 
-const SECRET_KEYS = new Set([
-  'BETTER_AUTH_SECRET',
-  'DATABASE_URL',
-  'SENDGRID_API_KEY',
-  'SMTP_PASS',
-  'GOOGLE_CLIENT_SECRET',
-  'SLACK_CLIENT_SECRET',
-  'SLACK_BOT_TOKEN',
-  'SLACK_SIGNING_SECRET',
-  'MAIN_DEVUNTU_CLIENT_SECRET',
-  'LINODE_PERSONAL_ACCESS_TOKEN',
-  'VAPID_PRIVATE_KEY',
-  'S3_SECRET_ACCESS_KEY',
-  'POSTGRES_PASSWORD',
-])
+/** spec が管理しているキー。ここに無いものは未知キーとして扱う */
+const managedKeys = new Set([...ENV_DOCKER_SECTIONS, ...ENV_DB_SECTIONS].flatMap((s) => s.keys))
 
 /** プレビューは秘密値を伏せて出す */
 const maskBody = (body) =>
@@ -821,7 +822,7 @@ const maskBody = (body) =>
     .split('\n')
     .map((line) => {
       const matched = line.match(/^([A-Z0-9_]+)=(.*)$/)
-      if (!matched || !SECRET_KEYS.has(matched[1])) {
+      if (!matched || !isSecretKey(matched[1], managedKeys)) {
         return line
       }
       return `${matched[1]}=${maskSecret(matched[2].replace(/^'|'$/g, ''))}`
@@ -929,7 +930,12 @@ const targets = [
 const commit = async () => {
   for (const target of targets) {
     if (target.previousText !== undefined && opts.backup) {
-      await writeFile(`${target.path}.${suffix}.bak`, target.previousText, { mode: MODE })
+      const bak = `${target.path}.${suffix}.bak`
+      await writeFile(bak, target.previousText, { mode: MODE })
+      // 本体と同じ所有者にする。root のコンテナから書くとホスト側で整理できなくなる
+      if (owner) {
+        await chown(bak, owner.uid, owner.gid).catch(() => {})
+      }
     }
     await writeFile(`${target.path}.tmp`, target.body, { mode: MODE })
   }

@@ -169,6 +169,27 @@ export const parseDatabaseUrl = (value) => {
   }
 }
 
+/**
+ * 既存の設定が同梱の db / s3 サービスを指しているか。
+ *
+ * 分岐の既定値をこれで決める。固定で「同梱を使う」にしていると、外部のDBやS3を
+ * 指している既存ファイルに対して Enter を押しただけで接続先が書き換わる。
+ * ホスト名だけを見るのは、ポートを省いた `db` / `s3` も同梱扱いにするため。
+ */
+const hasHostname = (value, hostname) => {
+  if (!value) {
+    return undefined
+  }
+  try {
+    return new URL(value).hostname === hostname
+  } catch {
+    return undefined
+  }
+}
+
+export const isBundledDbUrl = (url) => hasHostname(url, 'db')
+export const isBundledS3Endpoint = (endpoint) => hasHostname(endpoint, 's3')
+
 /** アプリが使う identity の名前。この名前の資格情報だけを差し替える */
 export const S3_IDENTITY_NAME = 'devuntu'
 

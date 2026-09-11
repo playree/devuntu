@@ -151,8 +151,9 @@ POSTGRES_PASSWORD=<DBパスワード>   # DATABASE_URL と揃える
 POSTGRES_DB=devuntu
 ```
 
+`seaweedfs-s3.json`(JSON にコメントは書けないので、次の内容をそのまま保存する)。
+
 ```json
-// seaweedfs-s3.json
 {
   "identities": [
     {

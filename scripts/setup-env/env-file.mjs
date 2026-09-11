@@ -117,6 +117,39 @@ export const serializeEnv = ({ header = [], sections, values, extrasTitle = 'そ
   return `${lines.join('\n')}\n`
 }
 
+/** 画面へ出してはいけないと分かっているキー */
+const SECRET_KEYS = new Set([
+  'BETTER_AUTH_SECRET',
+  'DATABASE_URL',
+  'SENDGRID_API_KEY',
+  'SMTP_PASS',
+  'GOOGLE_CLIENT_SECRET',
+  'SLACK_CLIENT_SECRET',
+  'SLACK_BOT_TOKEN',
+  'SLACK_SIGNING_SECRET',
+  'MAIN_DEVUNTU_CLIENT_SECRET',
+  'LINODE_PERSONAL_ACCESS_TOKEN',
+  'VAPID_PRIVATE_KEY',
+  'S3_SECRET_ACCESS_KEY',
+  'POSTGRES_PASSWORD',
+])
+
+/** 秘密らしい名前。将来キーが増えたときに列挙漏れで平文が出ないようにする */
+const SECRET_NAME = /SECRET|TOKEN|PASSWORD|_PASS$|CREDENTIAL/i
+
+/**
+ * 画面へ出すときにマスクすべきキーか。
+ *
+ * `managedKeys` に無いキー(利用者が独自に足した値)も一律マスクする。
+ * 列挙に頼ると `MY_API_KEY` のような名前を取りこぼすため、安全側へ倒している。
+ * 代わりに無害な未知キーもマスクされるが、キー名自体はプレビューの手前で列挙している。
+ *
+ * @param {string} key
+ * @param {Set<string>} managedKeys このスクリプトが定義として持っているキー
+ * @returns {boolean}
+ */
+export const isSecretKey = (key, managedKeys) => SECRET_KEYS.has(key) || !managedKeys.has(key) || SECRET_NAME.test(key)
+
 /** 秘密値を画面へ出すための伏せ字。短い値は全体を隠す */
 export const maskSecret = (value) => {
   const text = String(value ?? '')

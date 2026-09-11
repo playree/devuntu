@@ -13,6 +13,8 @@ import {
   generatePassword,
   generateSecret,
   generateVapidKeys,
+  isBundledDbUrl,
+  isBundledS3Endpoint,
   mailRequiredKeys,
   parseDatabaseUrl,
   validateAllowedDomains,
@@ -69,6 +71,28 @@ describe('DATABASE_URL', () => {
 
   it('DB名が無いURLを拒否する', () => {
     expect(parseDatabaseUrl('postgresql://u:p@h:5432/')).toBeUndefined()
+  })
+})
+
+describe('同梱サービスの判定', () => {
+  it('DATABASE_URL が同梱 db を指しているかを見る', () => {
+    // 分岐の既定値に使う。固定で true にすると外部DBの既存設定が Enter で書き換わる
+    expect(isBundledDbUrl('postgresql://u:p@db:5432/x?schema=public')).toBe(true)
+    expect(isBundledDbUrl('postgresql://u:p@db/x')).toBe(true)
+    expect(isBundledDbUrl('postgresql://u:p@db.example.com:5432/x')).toBe(false)
+  })
+
+  it('S3_ENDPOINT が同梱 SeaweedFS を指しているかを見る', () => {
+    expect(isBundledS3Endpoint('http://s3:8333')).toBe(true)
+    expect(isBundledS3Endpoint('https://s3.example.com')).toBe(false)
+  })
+
+  it('値が無い・壊れている場合は undefined を返す', () => {
+    // 呼び出し側が ?? で既定値へ落とせるよう、false と区別する
+    expect(isBundledDbUrl(undefined)).toBeUndefined()
+    expect(isBundledDbUrl('')).toBeUndefined()
+    expect(isBundledDbUrl('not a url')).toBeUndefined()
+    expect(isBundledS3Endpoint(undefined)).toBeUndefined()
   })
 })
 
@@ -166,6 +190,12 @@ describe('その他の検証', () => {
     expect(validatePositiveInt(1)('1')).toMatchObject({ ok: true })
     expect(validatePositiveInt(1)('0').error).toBeDefined()
     expect(validatePositiveInt(1)('abc').error).toBeDefined()
+  })
+
+  it('下限0なら0を通す', () => {
+    // SESSION_FRESH_AGE=0 は fresh チェック無効として扱われる有効な設定
+    expect(validatePositiveInt(0)('0')).toMatchObject({ ok: true, value: '0' })
+    expect(validatePositiveInt(0)('-1').error).toBeDefined()
   })
 
   it('送信元アドレスの形式を見る', () => {

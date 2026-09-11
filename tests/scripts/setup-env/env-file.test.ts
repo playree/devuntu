@@ -7,7 +7,14 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { diffEnv, maskSecret, parseEnvFile, quoteEnvValue, serializeEnv } from '../../../scripts/setup-env/env-file.mjs'
+import {
+  diffEnv,
+  isSecretKey,
+  maskSecret,
+  parseEnvFile,
+  quoteEnvValue,
+  serializeEnv,
+} from '../../../scripts/setup-env/env-file.mjs'
 
 describe('parseEnvFile', () => {
   it('インラインコメントを値に含めない', () => {
@@ -103,6 +110,33 @@ describe('serializeEnv', () => {
   it('ヘッダをコメントとして先頭へ置く', () => {
     const header: string[] = ['説明', '2行目']
     expect(serializeEnv({ header, sections, values: { A: '1' } })).toBe('# 説明\n# 2行目\n\n# 基本\nA=1\n')
+  })
+})
+
+describe('isSecretKey', () => {
+  const managed = new Set(['BETTER_AUTH_URL', 'DEFAULT_LOCALE', 'POSTGRES_USER', 'SMTP_PASS'])
+
+  it('列挙済みの秘密キーをマスクする', () => {
+    expect(isSecretKey('SMTP_PASS', managed)).toBe(true)
+  })
+
+  it('既知の非秘密キーは素で出す', () => {
+    expect(isSecretKey('BETTER_AUTH_URL', managed)).toBe(false)
+    expect(isSecretKey('DEFAULT_LOCALE', managed)).toBe(false)
+    expect(isSecretKey('POSTGRES_USER', managed)).toBe(false)
+  })
+
+  it('未知キーは一律マスクする', () => {
+    // 列挙に頼ると MY_API_KEY のような独自のキーで平文が出てしまう
+    expect(isSecretKey('MY_API_KEY', managed)).toBe(true)
+    expect(isSecretKey('MCP_ENABLED', managed)).toBe(true)
+  })
+
+  it('秘密らしい名前は既知でもマスクする', () => {
+    // 将来キーが増えたときの列挙漏れに備える
+    expect(isSecretKey('NEW_SECRET', new Set(['NEW_SECRET']))).toBe(true)
+    expect(isSecretKey('SOME_TOKEN', new Set(['SOME_TOKEN']))).toBe(true)
+    expect(isSecretKey('DB_CREDENTIAL', new Set(['DB_CREDENTIAL']))).toBe(true)
   })
 })
 
