@@ -19,6 +19,9 @@
 
 ボードの権限は直接メンバー(`BoardMember`)またはグループ経由(`BoardGroup`)で解決され、`owner` / `member` のロールを持つ。
 
+Proxy の matcher は拡張子を含むパス(`.*\.`)も除外しているため、`/sw.js`(Service Worker)と
+`/manifest.webmanifest`(PWA manifest)、`/robots.txt` は認証をかけずに配信される。
+
 ## 一般
 
 | 画面名称       | パス       | アクセス制御                                                                    |
@@ -82,3 +85,7 @@ Proxy の対象外のため、各ルートハンドラ内で個別に認証す�
 | `/agent/devuntu_agent.py`                          | 認証不要(`public/` の静的配布)。ランナー本体。秘密情報は含まない      |
 | `/api/upload`                                      | 認証必須(セッション、またはMCPの短命トークン)。画像アップロード(POST) |
 | `/api/upload/[filename]`                           | 認証必須(未ログインは401)。画像配信(GET)                              |
+| `/api/avatar/[filename]`                           | **認証不要**。`user.image` から参照中のキーだけを配信(GET)            |
+| `/api/slack/events`                                | 認証不要。Slack の署名検証だけが門番(POST)                            |
+| `/api/webpush/key`                                 | 認証必須。VAPID 公開鍵を返す(GET)。Service Worker の再購読用          |
+| `/api/webpush/subscribe`                           | 認証必須。`pushsubscriptionchange` の再購読報告(POST)                 |
