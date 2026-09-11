@@ -1,5 +1,5 @@
 - [バックアップの考え方](#バックアップの考え方)
-- [s3-toolsサービス](#s3-toolsサービス)
+- [toolsサービス](#toolsサービス)
   - [旧イメージでの実行](#旧イメージでの実行)
 - [DBバックアップ](#dbバックアップ)
 - [DBリストア](#dbリストア)
@@ -37,39 +37,33 @@ DB だけ復元しても`Attachment`レコードや`link_widget.iconPath`、チ�
 | `pnpm s3:backup`  | `scripts/backup-s3.mjs`  |
 | `pnpm s3:restore` | `scripts/restore-s3.mjs` |
 
-clone していない Docker 運用環境では、各節の「直接実行」または [`s3-tools`サービス](#s3-toolsサービス)を使う。
+clone していない Docker 運用環境では、各節の「直接実行」または [`tools`サービス](#toolsサービス)を使う。
 
-## s3-toolsサービス
+## toolsサービス
 
-`compose.yaml` で Docker 運用している環境向けに、S3 のバックアップ/リストアスクリプトを実行するための使い捨てコンテナを `s3-tools` サービスとして定義している。スクリプトはイメージに同梱されているので、**リポジトリの clone もホストへの node インストールも不要**で、`compose.yaml` と `.env.docker` があれば実行できる。
+`compose.yaml` で Docker 運用している環境向けに、イメージ同梱のスクリプトを実行するための使い捨てコンテナを `tools` サービスとして定義している。設定ファイルの対話生成と S3 のバックアップ/リストアをサブコマンドで選ぶ。スクリプトはイメージに同梱されているので、**リポジトリの clone もホストへの node インストールも不要**で、`compose.yaml` があれば実行できる。
 
 ```sh
-mkdir -p backup
+# 設定ファイル(.env.docker / .env.db / seaweedfs-s3.json)の対話生成
+docker compose run --rm tools setup-env
 
-# バックアップ(既定のコマンド)
-docker compose run --rm s3-tools
+# S3 バックアップ
+docker compose run --rm tools s3-backup
 
-# リストアは引数でスクリプトを指定する
-docker compose run --rm s3-tools /app/scripts/restore-s3.mjs /app/backup/s3_YYYYMMDD_HHMMSS
+# S3 リストア
+docker compose run --rm tools s3-restore backup/s3_YYYYMMDD_HHMMSS
 ```
 
-- 同梱版イメージ(`0.3.1` 以降)が前提。それ以前のイメージでは[旧イメージでの実行](#旧イメージでの実行)を参照する
+サブコマンドより後ろの引数はそのまま渡る(`tools setup-env --dry-run` など)。サブコマンド無しで実行すると一覧が出る。
+`setup-env` は導入時と設定変更時のどちらでも使う。尋ねられる項目や既存ファイルの扱いは [installation.md](installation.md#2-設定ファイルの作成) を参照。
+
+- 同梱版イメージ(`0.7.2` 以降)が前提。`0.3.1`〜`0.7.1` のイメージには S3 用の `s3-tools` サービスしか無く、`0.3.0` 以前では[旧イメージでの実行](#旧イメージでの実行)を参照する
 - `profiles: ['tools']` を付けているので `docker compose up` では起動しない
-- `entrypoint` を `node` にしているので `docker-entrypoint.sh` が動かず、`prisma migrate deploy` は走らない
-- 環境変数は `env_file`(`.env.docker`)から渡るので、コンテナ内の `S3_ENDPOINT` は `http://s3:8333` になる
-- `depends_on` の `condition: service_healthy` により、`s3` が停止していれば起動し、healthcheck が通るまで待ってからスクリプトが実行される
-- `./backup` をマウントしているので、入出力先は `compose.yaml` と同じ階層の `backup/`。引数のパスは**コンテナ内のパス**(`/app/backup/...`)で指定する
-- コンテナは root で動くため、`backup/` 配下の出力は root 所有になる。事前に `mkdir -p backup` しておけばディレクトリ自体は実行ユーザー所有になり、未作成のまま実行すると Docker がマウント時に root 所有で作る
-
-### setup-envサービス
-
-同じ仕組みで、設定ファイル(`.env.docker` / `.env.db` / `seaweedfs-s3.json`)を対話生成する `setup-env` サービスも定義している。`compose.yaml` だけを置いた状態から実行できるので、導入時と設定変更時のどちらでも使う。詳細は [installation.md](installation.md#2-設定ファイルの作成) を参照。
-
-```sh
-docker compose run --rm setup-env
-```
-
-`s3-tools` と違い `env_file` を持たない(`.env.docker` を作る側なので、まだ無い状態で実行される)。`env_file` を持つのは `devuntu` と `s3-tools` だけで、Compose は実行対象のサービスの分だけ `env_file` を解決するため、`.env.docker` が無くてもこの `run` は通る。
+- `entrypoint` を `node /app/scripts/tools.mjs` にしているので `docker-entrypoint.sh` が動かず、`prisma migrate deploy` は走らない
+- 環境変数は `env_file`(`.env.docker`)から渡るので、コンテナ内の `S3_ENDPOINT` は `http://s3:8333` になる。`setup-env` は `.env.docker` を作る側なので、`required: false` を付けて「あれば読む」にしてある(Docker Compose v2.24 以降が必要)
+- `compose.yaml` のあるディレクトリを `/work` へマウントして作業ディレクトリにしているため、設定ファイルの生成先も `backup/` の入出力先も `compose.yaml` と同じ階層になる。引数のパスはホストで見えるパス(`backup/...`)をそのまま書ける
+- コンテナは root で動くため、`backup/` 配下の出力は root 所有になる(`setup-env` が生成する設定ファイルは、実行ユーザーが扱えるよう所有者を合わせている)
+- `s3` への `depends_on` は持たない(`setup-env` は `s3` が必要とする `seaweedfs-s3.json` を作る側のため)。`s3` を止めている状態から復元するときは、先に `docker compose up -d --wait s3` で healthy まで待つ
 
 ### 旧イメージでの実行
 
@@ -164,11 +158,10 @@ backup/s3_YYYYMMDD_HHMMSS/
 
 ### Docker環境でのS3バックアップ
 
-[`s3-tools`サービス](#s3-toolsサービス)の既定コマンドがバックアップなので、引数なしで実行する。
+[`tools`サービス](#toolsサービス)の`s3-backup`サブコマンドを使う。
 
 ```sh
-mkdir -p backup
-docker compose run --rm s3-tools
+docker compose run --rm tools s3-backup
 ```
 
 `compose.yaml`と同じ階層の`backup/`に出力される。
@@ -189,11 +182,10 @@ node ./scripts/restore-s3.mjs backup/s3_YYYYMMDD_HHMMSS
 
 ### Docker環境でのS3リストア
 
-[`s3-tools`サービス](#s3-toolsサービス)にリストアスクリプトとコンテナ内のパスを渡す。
+[`tools`サービス](#toolsサービス)の`s3-restore`サブコマンドにバックアップディレクトリを渡す。
 
 ```sh
-docker compose run --rm s3-tools \
-  /app/scripts/restore-s3.mjs /app/backup/s3_YYYYMMDD_HHMMSS
+docker compose run --rm tools s3-restore backup/s3_YYYYMMDD_HHMMSS
 ```
 
 ### 対で復元する手順
@@ -210,14 +202,12 @@ docker compose exec -T db pg_restore -U devuser -d devuntu --no-owner --single-t
   < backup/devuntu_YYYYMMDD_HHMMSS.dump
 
 # S3 リストア
-docker compose run --rm s3-tools \
-  /app/scripts/restore-s3.mjs /app/backup/s3_YYYYMMDD_HHMMSS
+docker compose run --rm tools s3-restore backup/s3_YYYYMMDD_HHMMSS
 
 docker compose up -d devuntu
 ```
 
-`s3-tools` は `depends_on` の `condition: service_healthy` で `s3` を待つため、`s3` を止めていても
-healthcheck が通ってから復元が走る。
+`s3` を止めている場合は、先に `docker compose up -d --wait s3` で healthy になるまで待ってから復元する。
 
 ### ボリュームを作り直す場合
 
@@ -235,16 +225,15 @@ docker compose stop s3 && docker compose rm -f s3
 docker volume ls --filter name=seaweeddata
 docker volume rm <確認したボリューム名>
 
-docker compose run --rm s3-tools \
-  /app/scripts/restore-s3.mjs /app/backup/s3_YYYYMMDD_HHMMSS
+docker compose up -d --wait s3
+docker compose run --rm tools s3-restore backup/s3_YYYYMMDD_HHMMSS
 ```
 
 ボリューム名の接頭辞は Compose のプロジェクト名(既定では `compose.yaml` を置いたディレクトリ名)に
 なるため、`devuntu_seaweeddata` とは限らない。
 
-リストアは `s3-tools` 経由で行う。`depends_on` の `condition: service_healthy` により `s3` が起動して
-healthcheck を通るまで待ってから実行されるので、`docker compose up -d s3` の直後にホスト側の
-`pnpm s3:restore` を叩くより安全(`up -d` は `--wait` を付けない限り healthy を待たない)。
+`up -d` は `--wait` を付けない限り healthy を待たないため、ここでは `--wait` を付けて `s3` の
+healthcheck が通ってからリストアする。
 
 Docker 運用環境では `pnpm s3:backup` / `pnpm db:backup` の箇所も [Docker環境でのS3バックアップ](#docker環境でのs3バックアップ)・[DBバックアップ](#dbバックアップ)の直接実行コマンドに読み替える。
 
@@ -260,7 +249,7 @@ cron から実行する場合は、DB と S3 を続けて取得する。`compose
   && OUT=backup/devuntu_$(date +\%Y\%m\%d_\%H\%M\%S).dump \
   && { docker compose exec -T db pg_dump -U devuser -Fc devuntu > "$OUT.tmp" || { rm -f "$OUT.tmp"; false; }; } \
   && mv "$OUT.tmp" "$OUT" \
-  && docker compose run --rm s3-tools
+  && docker compose run --rm tools s3-backup
 ```
 
 `pg_dump` が途中で失敗したときに壊れた `.dump` を残さないよう、ここでも一時ファイル経由にしている。

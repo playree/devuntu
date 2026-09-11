@@ -17,7 +17,7 @@ services:
   db:
     image: postgres:18
     container_name: devuntu-postgres
-    # POSTGRES_* は setup-env が生成する .env.db から読む。
+    # POSTGRES_* は tools の setup-env が生成する .env.db から読む。
     # DATABASE_URL と別ファイルにしているのは、env_file がファイル内の全変数を
     # コンテナへ渡すため、アプリ側の秘密を db コンテナの環境に載せないようにするため
     env_file: ./.env.db
@@ -49,7 +49,7 @@ services:
         target: /etc/seaweedfs/s3.json
         read_only: true
         # 未作成のまま up すると Docker が同名の root 所有ディレクトリを作ってしまうため、
-        # 存在しない場合はエラーにする(setup-env で生成する)
+        # 存在しない場合はエラーにする(tools の setup-env で生成する)
         bind:
           create_host_path: false
     restart: unless-stopped
@@ -59,39 +59,29 @@ services:
       timeout: 20s
       retries: 3
 
-  # .env.docker / .env.db / seaweedfs-s3.json を対話生成するための使い捨てコンテナ。
-  # compose.yaml だけを置いた状態から docker compose run --rm setup-env で実行できる
-  # (env_file を持つのは devuntu と s3-tools だけなので、.env.docker が無くても run は通る)。
-  setup-env:
+  # 同梱スクリプト(設定ファイルの生成 / S3のバックアップ・リストア)を実行するための使い捨てコンテナ。
+  # profiles を付けているので docker compose up では起動せず、
+  # docker compose run --rm tools <サブコマンド> で指定したときだけ有効になる。
+  # compose.yaml だけを置いた状態から docker compose run --rm tools setup-env で実行できる。
+  tools:
     image: *app-image
     profiles: ['tools']
     # entrypoint を node にすると node が PID 1 になり、シグナルの既定処理が無効で
     # Ctrl+C が効かなくなるため tini を挟む
     init: true
     # docker-entrypoint.sh を上書きして prisma migrate deploy を走らせない
-    entrypoint: ['node']
-    command: ['/app/scripts/setup-env/index.mjs']
-    # /app へ重ねるとイメージ同梱の scripts/ と node_modules を潰すため /work へ当てる
+    entrypoint: ['node', '/app/scripts/tools.mjs']
+    # 空にしないとイメージの CMD(node server.js)がサブコマンドとして渡ってしまう
+    command: []
+    # setup-env は .env.docker を作る側なので、まだ無い状態でも run できるようにする
+    env_file:
+      - path: ./.env.docker
+        required: false
+    # /app へ重ねるとイメージ同梱の scripts/ と node_modules を潰すため /work へ当てる。
+    # 設定ファイルの生成先も backup/ の入出力先も compose.yaml と同じ階層になる
     working_dir: /work
     volumes:
       - ./:/work
-
-  # S3のバックアップ/リストアスクリプトを実行するための使い捨てコンテナ。
-  # profiles を付けているので docker compose up では起動せず、
-  # docker compose run --rm s3-tools で指定したときだけ有効になる。
-  s3-tools:
-    image: *app-image
-    profiles: ['tools']
-    env_file: ./.env.docker
-    # docker-entrypoint.sh を上書きして prisma migrate deploy を走らせない
-    entrypoint: ['node']
-    command: ['/app/scripts/backup-s3.mjs']
-    volumes:
-      # ホスト側に backup/ が無いと Docker が root 所有で作るので、実行前に mkdir -p backup しておく
-      - ./backup:/app/backup
-    depends_on:
-      s3:
-        condition: service_healthy
 
 volumes:
   pgdata:

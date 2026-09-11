@@ -41,12 +41,11 @@ COPY --from=builder /app/prisma.config.ts ./migrate/prisma.config.ts
 COPY --from=builder /app/prisma ./migrate/prisma
 RUN mkdir /app/db && ln -s /app/db /app/migrate/db
 
-# バックアップ/リストアスクリプト(compose.yaml の s3-tools サービスから実行する)
-COPY --from=builder /app/scripts/backup-s3.mjs \
+# 運用スクリプト(compose.yaml の tools サービスから tools.mjs 経由で実行する)
+COPY --from=builder /app/scripts/tools.mjs \
+                    /app/scripts/backup-s3.mjs \
                     /app/scripts/restore-s3.mjs \
                     ./scripts/
-
-# 設定ファイルの対話生成スクリプト(compose.yaml の setup-env サービスから実行する)
 COPY --from=builder /app/scripts/setup-env ./scripts/setup-env
 
 # エントリーポイントスクリプトをコピー

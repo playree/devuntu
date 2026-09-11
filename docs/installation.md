@@ -20,7 +20,8 @@ Docker Compose で Devuntu を立ち上げるまでの手順。運用開始後�
 
 ## 前提
 
-- Docker / Docker Compose が動くホスト
+- Docker / Docker Compose が動くホスト。`compose.yaml` が `env_file` の `required: false` を使うため
+  **Docker Compose は v2.24 以降**が必要
 - 利用者に見せる URL を決めてあること(`BETTER_AUTH_URL` に設定する)
 - **HTTPS で公開する場合は DNS とリバースプロキシ(またはロードバランサー)**。`compose.yaml` が公開するのは
   HTTP の 3000 番だけで、TLS 終端もホスト名の振り分けも行わない。`https://` の `BETTER_AUTH_URL` を
@@ -50,8 +51,8 @@ PostgreSQL とオブジェクトストレージへ外部から直接到達でき
 リバースプロキシを同じホストに置く場合は、`devuntu` の `ports` も `127.0.0.1:3000:3000` に絞って
 プロキシ経由だけに限定できる。
 
-`s3-tools` はバックアップ用の使い捨てサービスで、`profiles: ['tools']` が付いているため
-`docker compose up` では起動しない([operations.md](operations.md#s3-toolsサービス))。
+`tools` は設定ファイルの生成とバックアップ/リストアを行う使い捨てサービスで、`profiles: ['tools']` が
+付いているため `docker compose up` では起動しない([operations.md](operations.md#toolsサービス))。
 
 永続データは名前付きボリューム `pgdata` / `seaweeddata` に入る。
 
@@ -76,7 +77,7 @@ PostgreSQL とオブジェクトストレージへ外部から直接到達でき
 `compose.yaml` を置いたディレクトリで次を実行する。対話形式で設定を尋ね、3つのファイルを生成する。
 
 ```sh
-docker compose run --rm setup-env
+docker compose run --rm tools setup-env
 ```
 
 | 生成されるファイル  | 内容                                     | 読むサービス |
@@ -246,13 +247,13 @@ Google 側のコールバックURLには**次の2つ**を登録する。
 ブラウザ / スマートフォンの通知として受け取る場合は VAPID 鍵が必要。未設定なら購読の UI ごと
 出ないので、使わない場合は省略してよい。
 
-`docker compose run --rm setup-env` の「Webプッシュ通知を有効にしますか?」で `y` を選ぶと鍵を生成する。
+`docker compose run --rm tools setup-env` の「Webプッシュ通知を有効にしますか?」で `y` を選ぶと鍵を生成する。
 プッシュサービスからの連絡先(`VAPID_SUBJECT`)も同じ流れで設定できる(既定は `mailto:${MAIL_FROM}`)。
 
 手で用意する場合は次のワンライナーで生成し、出力の 2 行を `.env.docker` へ追記して再起動する。
 
 ```sh
-docker compose run --rm --entrypoint node setup-env -e "const {generateKeyPairSync}=require('node:crypto');const {privateKey}=generateKeyPairSync('ec',{namedCurve:'prime256v1'});const j=privateKey.export({format:'jwk'});const b=(v)=>Buffer.from(v,'base64url');console.log('VAPID_PUBLIC_KEY='+Buffer.concat([Buffer.from([4]),b(j.x),b(j.y)]).toString('base64url'));console.log('VAPID_PRIVATE_KEY='+j.d)"
+docker compose run --rm --entrypoint node tools -e "const {generateKeyPairSync}=require('node:crypto');const {privateKey}=generateKeyPairSync('ec',{namedCurve:'prime256v1'});const j=privateKey.export({format:'jwk'});const b=(v)=>Buffer.from(v,'base64url');console.log('VAPID_PUBLIC_KEY='+Buffer.concat([Buffer.from([4]),b(j.x),b(j.y)]).toString('base64url'));console.log('VAPID_PRIVATE_KEY='+j.d)"
 ```
 
 > ⚠️ `web-push` の `generateVAPIDKeys()` はイメージ内では使えない。standalone ビルドでは
@@ -295,16 +296,21 @@ docker compose up -d
 
 **既存の postgres ボリュームは初期化時のパスワードを保持している**ため、`POSTGRES_PASSWORD` には
 今の `DATABASE_URL` に入っているパスワード(差し替え前の `compose.yaml` に書いてあった値)を入れる。
-`docker compose run --rm setup-env` は差し替え前の `compose.yaml` が残っていればそこから、
+`docker compose run --rm tools setup-env` は差し替え前の `compose.yaml` が残っていればそこから、
 無ければ `.env.docker` の `DATABASE_URL` から既定値を引くので、Enter を押し続ければ揃う。
+
+使い捨てコンテナは `tools` サービス1本に統合した(`0.7.2` 以降)。`0.7.1` 以前の `compose.yaml` にあった
+`s3-tools` は `tools s3-backup` / `tools s3-restore` に変わるため、**cron などに
+`docker compose run --rm s3-tools` を登録している場合は書き換える**
+([operations.md](operations.md#toolsサービス))。
 
 ## 困ったとき
 
 | 症状                                     | 見るところ                                                                                |
 | ---------------------------------------- | ----------------------------------------------------------------------------------------- |
 | アプリが起動しない                       | `docker compose logs devuntu`。マイグレーション失敗なら `DATABASE_URL` と `db` の状態     |
-| `env file ... not found` で落ちる        | `.env.docker` / `.env.db` が無い。`docker compose run --rm setup-env` で生成する          |
-| `bind source path does not exist`        | `seaweedfs-s3.json` が無い。同じく `setup-env` で生成する                                 |
+| `env file ... not found` で落ちる        | `.env.docker` / `.env.db` が無い。`docker compose run --rm tools setup-env` で生成する    |
+| `bind source path does not exist`        | `seaweedfs-s3.json` が無い。同じく `tools setup-env` で生成する                           |
 | `db` が起動しない・認証エラーになる      | `.env.db` の `POSTGRES_PASSWORD` と `DATABASE_URL` のパスワードが一致しているか           |
 | サインインの操作が失敗する               | `BETTER_AUTH_URL` が実際のオリジンと一致しているか                                        |
 | `/start` が `/` へリダイレクトされる     | 既にユーザーが登録済み。`/auth/signin` からサインインする                                 |

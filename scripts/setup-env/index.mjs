@@ -1,8 +1,8 @@
 /**
  * セルフホスト用の設定ファイル(`.env.docker` / `.env.db` / `seaweedfs-s3.json`)を対話生成する。
  *
- *   docker compose run --rm setup-env   # セルフホスト先(compose.yaml だけを配置した状態で実行できる)
- *   pnpm setup:env                      # リポジトリ内
+ *   docker compose run --rm tools setup-env   # セルフホスト先(compose.yaml だけを配置した状態で実行できる)
+ *   pnpm setup:env                            # リポジトリ内
  *
  * `compose.yaml` 1ファイルだけを置いた状態から起動まで到達できるようにするのが目的。
  * 手で書くと、オリジン不一致の `BETTER_AUTH_URL`、`DATABASE_URL` と `POSTGRES_PASSWORD` の
@@ -88,7 +88,7 @@ const note = (text) => say(color('dim', `  ${text}`))
 if (process.stdin.isTTY !== true) {
   say(color('red', '対話的な入力ができません(TTY が割り当てられていません)。'))
   say('次のいずれかで実行してください。')
-  say('  docker compose run --rm setup-env')
+  say('  docker compose run --rm tools setup-env')
   say('  pnpm setup:env')
   process.exit(1)
 }
@@ -803,7 +803,7 @@ const build = (params) => {
 
 const envDockerBody = build({
   header: [
-    'Devuntu セルフホスト用の環境変数(docker compose run --rm setup-env で再生成できる)',
+    'Devuntu セルフホスト用の環境変数(docker compose run --rm tools setup-env で再生成できる)',
     '全変数の一覧は docs/environment-variables.md を参照',
   ],
   sections: ENV_DOCKER_SECTIONS,
