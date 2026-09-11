@@ -2,7 +2,7 @@
 
 環境変数の定義元は `src/lib/env-util.ts`。参照時も同ファイルの `envu` を利用する。
 
-セルフホスト用の `.env.docker` は `docker compose run --rm setup-env` で対話生成できる
+セルフホスト用の `.env.docker` は `docker compose run --rm tools setup-env` で対話生成できる
 ([installation.md](./installation.md#2-設定ファイルの作成))。ここに載っている変数のうち
 デバッグ用と内部変数を除いたものを尋ねる。
 

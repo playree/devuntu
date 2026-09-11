@@ -122,7 +122,7 @@ Google/Slack など外部OAuthのコールバックURLは `http://localhost:3000
 
 ## バックアップ・リストア
 
-DB/S3 のバックアップとリストア、`s3-tools`サービスの使い方は [operations.md](operations.md) を参照。
+DB/S3 のバックアップとリストア、`tools`サービスの使い方は [operations.md](operations.md) を参照。
 
 ## インストール
 

@@ -52,7 +52,7 @@ Docker Compose で3つのサービスを起動します(`compose.yaml`)。
 ## 導入の流れ
 
 1. `compose.yaml` をホストへ配置する(必要なファイルはこれだけ)
-2. `docker compose run --rm setup-env` で設定ファイル(`.env.docker` / `.env.db` / `seaweedfs-s3.json`)を対話生成する
+2. `docker compose run --rm tools setup-env` で設定ファイル(`.env.docker` / `.env.db` / `seaweedfs-s3.json`)を対話生成する
 3. `docker compose up -d` で起動する(DBマイグレーションは起動時に自動実行)
 4. `<BETTER_AUTH_URL>/start` を開いて最初の管理者を登録する
 5. 必要に応じて Google / Slack / MCP / AIエージェントの連携を設定する

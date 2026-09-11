@@ -3,7 +3,7 @@
  *
  *   pnpm s3:backup
  *
- * Docker環境では使い捨てコンテナで実行する(手順はREADME参照)。
+ * Docker環境では compose.yaml の tools サービスで実行する(手順は docs/operations.md 参照)。
  *
  * S3 API 経由の論理バックアップにしているのは、無停止で取得でき、
  * SeaweedFS の内部レイアウトに依存せず他の S3 互換ストレージへも復元できるため。
