@@ -46,6 +46,9 @@ COPY --from=builder /app/scripts/backup-s3.mjs \
                     /app/scripts/restore-s3.mjs \
                     ./scripts/
 
+# 設定ファイルの対話生成スクリプト(compose.yaml の setup-env サービスから実行する)
+COPY --from=builder /app/scripts/setup-env ./scripts/setup-env
+
 # エントリーポイントスクリプトをコピー
 COPY --from=builder /app/docker/docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x docker-entrypoint.sh

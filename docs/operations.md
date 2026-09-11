@@ -61,6 +61,16 @@ docker compose run --rm s3-tools /app/scripts/restore-s3.mjs /app/backup/s3_YYYY
 - `./backup` をマウントしているので、入出力先は `compose.yaml` と同じ階層の `backup/`。引数のパスは**コンテナ内のパス**(`/app/backup/...`)で指定する
 - コンテナは root で動くため、`backup/` 配下の出力は root 所有になる。事前に `mkdir -p backup` しておけばディレクトリ自体は実行ユーザー所有になり、未作成のまま実行すると Docker がマウント時に root 所有で作る
 
+### setup-envサービス
+
+同じ仕組みで、設定ファイル(`.env.docker` / `.env.db` / `seaweedfs-s3.json`)を対話生成する `setup-env` サービスも定義している。`compose.yaml` だけを置いた状態から実行できるので、導入時と設定変更時のどちらでも使う。詳細は [installation.md](installation.md#2-設定ファイルの作成) を参照。
+
+```sh
+docker compose run --rm setup-env
+```
+
+`s3-tools` と違い `env_file` を持たない(`.env.docker` を作る側なので、まだ無い状態で実行される)。`env_file` を持つのは `devuntu` と `s3-tools` だけで、Compose は実行対象のサービスの分だけ `env_file` を解決するため、`.env.docker` が無くてもこの `run` は通る。
+
 ### 旧イメージでの実行
 
 `0.3.0` 以前のイメージには `scripts/` が入っていないため、ホスト側のスクリプトを使い捨てコンテナへマウントして実行する(この場合はホストにスクリプトの実体が必要)。

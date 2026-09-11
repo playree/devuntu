@@ -2,6 +2,10 @@
 
 環境変数の定義元は `src/lib/env-util.ts`。参照時も同ファイルの `envu` を利用する。
 
+セルフホスト用の `.env.docker` は `docker compose run --rm setup-env` で対話生成できる
+([installation.md](./installation.md#2-設定ファイルの作成))。ここに載っている変数のうち
+デバッグ用と内部変数を除いたものを尋ねる。
+
 ## 基本
 
 | 変数名                   | 説明                                                            | 必須 | デフォルト   |
@@ -42,7 +46,7 @@ Server Action(`next-action` ヘッダ)は matcher の対象外で、認証リダ
 | `BETTER_AUTH_URL`              | 運用するベースの URL                       | 〇   | -                 |
 | `BETTER_AUTH_SECRET`           | Better Auth 用シークレット                 | 〇   | -                 |
 | `SESSION_EXPIRES_IN`           | セッション有効期間(秒)                     |      | `432000`(5日)     |
-| `SESSION_FRESH_AGE`            | セッション fresh 期間(秒)                  |      | `86400`(1日)      |
+| `SESSION_FRESH_AGE`            | セッション fresh 期間(秒)。`0` で無効      |      | `86400`(1日)      |
 | `TWO_FA_REQUIRED`              | 2要素認証を必須にするか                    |      | `true`            |
 | `DISABLE_PASSWORD_AUTH`        | パスワード認証を無効化                     |      | `false`           |
 | `OIDC_DCR_ENABLED`             | 動的クライアント登録を有効化               |      | `false`           |
@@ -63,6 +67,9 @@ Server Action(`next-action` ヘッダ)は matcher の対象外で、認証リダ
 過去に 2FA を有効化した利用者もパスワードのみでサインインする(サインイン時の 2FA チャレンジ自体を
 行わないため)。`DISABLE_PASSWORD_AUTH=true`(メールOTPでのサインイン)の場合はこの値に関わらず
 2要素認証の経路を通らない。
+
+`SESSION_FRESH_AGE` は、パスワード変更など重要な操作に「サインインからの経過時間」の上限を課す。
+`0` にするとこのチェックを行わない(`src/lib/auth/session-fresh.ts`)。
 
 `GOOGLE_ALLOWED_DOMAINS` は **Googleサインインを使う場合は最低1件必要**。未設定だと許可ドメインが空になり、
 すべてのドメインのサインインが拒否される。`/account` からのカレンダー連携だけであれば省略できる。
@@ -123,7 +130,7 @@ VAPID 鍵は Web プッシュ通知を使う場合のみ必要で、**公開鍵�
 
 ## オブジェクトストレージ
 
-アップロードファイル(画像)の保存先。S3互換APIを話すストレージであれば何でもよいが、`compose.yaml` では OSS の [SeaweedFS](https://github.com/seaweedfs/seaweedfs) を同梱している。認証情報は `docker/seaweedfs-s3.json` で定義する。
+アップロードファイル(画像)の保存先。S3互換APIを話すストレージであれば何でもよいが、`compose.yaml` では OSS の [SeaweedFS](https://github.com/seaweedfs/seaweedfs) を同梱している。認証情報は `compose.yaml` と同じ階層の `seaweedfs-s3.json` で定義する。
 
 | 変数名                 | 説明                                 | 必須 | デフォルト  |
 | ---------------------- | ------------------------------------ | ---- | ----------- |

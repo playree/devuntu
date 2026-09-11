@@ -56,6 +56,40 @@ docker compose stop db s3
 
 DB は `localhost:5432`、S3 API は `localhost:8333` で公開される。アップロード機能を使うには S3 API が必要。
 
+### 初回に用意するファイル
+
+`db` と `s3` は設定ファイルを読むため、clone 直後は起動しない。いずれも資格情報を含むので
+リポジトリには入っていない(`.gitignore`)。`.env` に書いた値と揃えて2つ作る。
+
+```sh
+# .env.db — db サービスが読む。.env の DATABASE_URL と同じユーザー・パスワード・DB名にする
+cat > .env.db <<'EOF'
+POSTGRES_USER=devuser
+POSTGRES_PASSWORD=<DATABASE_URL と同じパスワード>
+POSTGRES_DB=devuntu
+EOF
+
+# seaweedfs-s3.json — s3 サービスが読む。.env の S3_ACCESS_KEY_ID / S3_SECRET_ACCESS_KEY と揃える
+cat > seaweedfs-s3.json <<'EOF'
+{
+  "identities": [
+    {
+      "name": "devuntu",
+      "credentials": [{ "accessKey": "<アクセスキー>", "secretKey": "<シークレットキー>" }],
+      "actions": ["Read", "Write", "List", "Tagging", "Admin"]
+    }
+  ]
+}
+EOF
+```
+
+`.env.db` が無いと `db` が起動せず(`env file not found`)、`seaweedfs-s3.json` が無いと `s3` の起動が
+エラーになる(`bind source path does not exist`)。後者は `create_host_path: false` を付けているためで、
+これが無いと Docker が同名の root 所有ディレクトリを黙って作ってしまう。
+
+**`POSTGRES_PASSWORD` は初回起動より後には変えられない。** postgres は最初の起動でボリュームを
+初期化し、そのときのパスワードを保持する。変えるには `pgdata` ボリュームを作り直す。
+
 ## 同一PCでの並行clone(エージェント開発用など)
 
 DB・S3のコンテナは増やさず共有したまま、`git clone` したもう一つのディレクトリで別ポートの `next dev` を並行稼働できる。
@@ -94,6 +128,15 @@ DB/S3 のバックアップとリストア、`s3-tools`サービスの使い方�
 
 ```sh
 pnpm install
+```
+
+開発用の `.env` は手で用意する(参照する変数は [environment-variables.md](environment-variables.md))。
+`pnpm setup:env` はセルフホスト用の `.env.docker` / `.env.db` / `seaweedfs-s3.json` を生成する
+スクリプトで、**開発用の `.env` は対象外**。リポジトリ直下で実行すると同名のファイルを上書きするため、
+動作を試すときは `--dir` で別の場所を指定する。
+
+```sh
+pnpm setup:env --dir /tmp/setup-test --dry-run
 ```
 
 ## ビルド
