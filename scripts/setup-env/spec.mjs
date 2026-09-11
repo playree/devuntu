@@ -92,6 +92,28 @@ export const ENV_DOCKER_SECTIONS = [
   { title: 'ホスト情報の表示', keys: ['LINODE_ID', 'LINODE_PERSONAL_ACCESS_TOKEN'] },
 ]
 
+/**
+ * 対話では尋ねず、既存ファイルに値があればそのまま引き継ぐキー。
+ * 導入時に判断の必要がない設定を質問から外している(変更は `.env.docker` を直接編集する)。
+ * 引き継いだ値を「その他」セクションへ落とさないため、すべて `ENV_DOCKER_SECTIONS` に含める。
+ */
+export const MANUAL_KEYS = [
+  'SEARCH_ENGINE_INDEXING',
+  'LOG_LEVEL',
+  'SESSION_EXPIRES_IN',
+  'SESSION_FRESH_AGE',
+  'MCP_REFRESH_TOKEN_EXPIRES_IN',
+  'NOTIFY_WORKER_ENABLED',
+  'MAINTENANCE_WORKER_ENABLED',
+  'MAINTENANCE_ATTACHMENT_MODE',
+  'MAINTENANCE_ATTACHMENT_GRACE_HOURS',
+  'MAIN_DEVUNTU_URL',
+  'MAIN_DEVUNTU_CLIENT_ID',
+  'MAIN_DEVUNTU_CLIENT_SECRET',
+  'LINODE_ID',
+  'LINODE_PERSONAL_ACCESS_TOKEN',
+]
+
 /** `.env.db` は postgres の公式イメージが読む変数だけを持つ */
 export const ENV_DB_SECTIONS = [{ title: 'PostgreSQL', keys: ['POSTGRES_USER', 'POSTGRES_PASSWORD', 'POSTGRES_DB'] }]
 
