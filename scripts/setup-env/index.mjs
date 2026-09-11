@@ -753,14 +753,32 @@ if (unknownKeys.length > 0) {
   say()
   warn(`このスクリプトが管理していないキーが既存の .env.docker にあります: ${unknownKeys.join(', ')}`)
   if (await askYesNo('そのまま残しますか?', true)) {
+    const undroppable = []
     for (const key of unknownKeys) {
       try {
         quoteEnvValue(prev[key])
         env[key] = prev[key]
       } catch (e) {
-        // 退避した .bak には元の行が残るので、ここで落としても値は失われない
-        warn(`${key} は${e.message}。このキーは残せません(元の値は退避ファイルに残ります)`)
+        undroppable.push({ key, reason: e.message })
       }
+    }
+    /**
+     * 残したいと言われたのに書き出せないキーは、こちらの判断で落とすことになる。
+     * `.bak` があれば元の行が残るので復元できるが、`--no-backup` では上書きと同時に
+     * 値が失われる。黙って消さず、退避を有効にして実行し直させる。
+     */
+    if (undroppable.length > 0 && !opts.backup) {
+      say()
+      for (const { key, reason } of undroppable) {
+        say(color('red', `${key} は${reason}。`))
+      }
+      say(color('red', '--no-backup では上書きと同時にこの値が失われるため中断しました。'))
+      say('--no-backup を外して実行するか、該当キーを先に手で退避してください。')
+      rl.close()
+      process.exit(1)
+    }
+    for (const { key, reason } of undroppable) {
+      warn(`${key} は${reason}。このキーは残せません(元の値は退避ファイルに残ります)`)
     }
   }
 }
