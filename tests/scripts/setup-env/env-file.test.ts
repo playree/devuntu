@@ -44,12 +44,30 @@ describe('quoteEnvValue', () => {
     expect(quoteEnvValue('a b')).toBe("'a b'")
     expect(quoteEnvValue('a#b')).toBe("'a#b'")
     expect(quoteEnvValue('a"b')).toBe("'a\"b'")
+    // JSON は引用符を含むため囲むが、読み戻しは素の値に戻る
+    expect(quoteEnvValue('{"used":1}')).toBe('\'{"used":1}\'')
+  })
+
+  it('$ を含む値を裸で出さない', () => {
+    // godotenv は未引用の値へ補間をかけるため、PASS=pa$HOME はホストの $HOME へ化ける
+    expect(quoteEnvValue('pa$HOME')).toBe("'pa$HOME'")
+    expect(quoteEnvValue('a${B}c')).toBe("'a${B}c'")
+    expect(parseEnvFile(`A=${quoteEnvValue('pa$HOME')}`)).toEqual({ A: 'pa$HOME' })
+  })
+
+  it('途中のバックスラッシュは許可する', () => {
+    // godotenv も parseEnv も同じ値を返すので、過剰に弾かない
+    expect(parseEnvFile(`A=${quoteEnvValue('pa\\ss')}`)).toEqual({ A: 'pa\\ss' })
+    expect(parseEnvFile(`A=${quoteEnvValue('pa\\ss word')}`)).toEqual({ A: 'pa\\ss word' })
   })
 
   it('囲めない値は書き出さずエラーにする', () => {
     // ダブルクォートは Compose(godotenv)側で ${VAR} 補間とエスケープ解釈が起きるため使えない
     expect(() => quoteEnvValue("a'b c")).toThrow()
     expect(() => quoteEnvValue('a\nb')).toThrow()
+    // 末尾のバックスラッシュは godotenv がクォートのエスケープと解釈し、env ファイル全体が読めなくなる
+    expect(() => quoteEnvValue('pa\\')).toThrow()
+    expect(() => quoteEnvValue('plain\\')).toThrow()
   })
 
   it('引用した値を parseEnvFile で読み戻せる', () => {
@@ -83,7 +101,8 @@ describe('serializeEnv', () => {
   })
 
   it('ヘッダをコメントとして先頭へ置く', () => {
-    expect(serializeEnv({ header: ['説明'], sections, values: { A: '1' } })).toBe('# 説明\n\n# 基本\nA=1\n')
+    const header: string[] = ['説明', '2行目']
+    expect(serializeEnv({ header, sections, values: { A: '1' } })).toBe('# 説明\n# 2行目\n\n# 基本\nA=1\n')
   })
 })
 

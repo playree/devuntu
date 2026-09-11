@@ -128,6 +128,9 @@ export const generatePassword = (length = 24) => {
 export const generateVapidKeys = () => {
   const { privateKey } = generateKeyPairSync('ec', { namedCurve: 'prime256v1' })
   const jwk = privateKey.export({ format: 'jwk' })
+  if (!jwk.x || !jwk.y || !jwk.d) {
+    throw new Error('VAPID鍵の生成に失敗しました(P-256のJWKに x / y / d が揃っていません)')
+  }
   const x = Buffer.from(jwk.x, 'base64url')
   const y = Buffer.from(jwk.y, 'base64url')
   return {
@@ -166,34 +169,23 @@ export const parseDatabaseUrl = (value) => {
   }
 }
 
+/** アプリが使う identity の名前。この名前の資格情報だけを差し替える */
+export const S3_IDENTITY_NAME = 'devuntu'
+
 /**
- * 旧構成の `compose.yaml` から `POSTGRES_*` を読む(書き換えはしない)。
+ * SeaweedFS の S3 認証情報。既存ファイルがあれば該当箇所だけ差し替える。
  *
- * 既に `docker compose up` 済みの環境では postgres のボリュームが初期化時のパスワードを
- * 保持しているため、`.env.db` の既定値をここから引く必要がある。
+ * `identities` は複数持てるため、先頭ではなく名前で探す。利用者が別の identity を
+ * 足していた場合に、その資格情報を上書きしないようにしている。
  */
-export const parseComposePostgres = (yamlText) => {
-  const pick = (key) => {
-    const matched = yamlText.match(new RegExp(`^\\s*${key}\\s*:\\s*(?:['"]?)([^'"\\s#]+)`, 'm'))
-    return matched?.[1]
-  }
-  const user = pick('POSTGRES_USER')
-  const password = pick('POSTGRES_PASSWORD')
-  const db = pick('POSTGRES_DB')
-  if (!user && !password && !db) {
-    return undefined
-  }
-  return { user, password, db }
-}
-
-/** SeaweedFS の S3 認証情報。既存ファイルがあれば該当箇所だけ差し替える */
 export const buildSeaweedS3Config = ({ accessKey, secretKey }, existing) => {
-  const base =
-    existing && Array.isArray(existing.identities) && existing.identities.length > 0
-      ? structuredClone(existing)
-      : { identities: [{ name: 'devuntu', credentials: [{}], actions: ['Read', 'Write', 'List', 'Tagging', 'Admin'] }] }
+  const base = existing && Array.isArray(existing.identities) ? structuredClone(existing) : { identities: [] }
 
-  const identity = base.identities[0]
+  let identity = base.identities.find((i) => i?.name === S3_IDENTITY_NAME)
+  if (!identity) {
+    identity = { name: S3_IDENTITY_NAME, credentials: [], actions: ['Read', 'Write', 'List', 'Tagging', 'Admin'] }
+    base.identities.push(identity)
+  }
   if (!Array.isArray(identity.credentials) || identity.credentials.length === 0) {
     identity.credentials = [{}]
   }
@@ -205,8 +197,30 @@ export const buildSeaweedS3Config = ({ accessKey, secretKey }, existing) => {
 // 検証
 // ---
 
-const ok = (value) => ({ ok: true, value })
-const err = (message) => ({ error: message })
+/**
+ * 検証結果。成功と失敗で形を変えず1つの型に揃えている。
+ * TypeScript のテストから `allowJs` 経由で読むため、union になると
+ * `.error` / `.warn` の参照が型エラーになる。
+ *
+ * @typedef {object} ValidationResult
+ * @property {boolean} ok
+ * @property {string} value 正規化後の値(失敗時は空文字)
+ * @property {string | undefined} error 失敗の理由
+ * @property {string | undefined} warn 続行はできるが伝えるべきこと
+ * @property {boolean} normalized 入力から値を書き換えたか
+ */
+
+/** @type {(value: string, extra?: { warn?: string, normalized?: boolean }) => ValidationResult} */
+const ok = (value, extra) => ({
+  ok: true,
+  value,
+  error: undefined,
+  warn: extra?.warn,
+  normalized: extra?.normalized ?? false,
+})
+
+/** @type {(message: string) => ValidationResult} */
+const err = (message) => ({ ok: false, value: '', error: message, warn: undefined, normalized: false })
 
 /**
  * 運用するベースURL。
@@ -238,7 +252,7 @@ export const validateBetterAuthUrl = (input) => {
     url.protocol === 'http:' && url.hostname !== 'localhost' && url.hostname !== '127.0.0.1'
       ? 'http:// のため Cookie に Secure が付かず、Webプッシュ通知もブラウザに拒否されます'
       : undefined
-  return { ok: true, value: url.origin, warn, normalized: url.origin !== text }
+  return ok(url.origin, { warn, normalized: url.origin !== text })
 }
 
 export const validateDatabaseUrl = (input) => {

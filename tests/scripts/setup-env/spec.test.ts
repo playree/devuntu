@@ -14,7 +14,6 @@ import {
   generateSecret,
   generateVapidKeys,
   mailRequiredKeys,
-  parseComposePostgres,
   parseDatabaseUrl,
   validateAllowedDomains,
   validateBetterAuthUrl,
@@ -73,28 +72,6 @@ describe('DATABASE_URL', () => {
   })
 })
 
-describe('parseComposePostgres', () => {
-  it('environment ブロックから3値を読む', () => {
-    // 既存のボリュームは初期化時のパスワードを保持しているため、既定値の引き元として必要
-    const yaml = [
-      '  db:',
-      '    environment:',
-      '      POSTGRES_USER: devuser',
-      '      POSTGRES_PASSWORD: devPassW0rd',
-      '      POSTGRES_DB: devuntu',
-    ].join('\n')
-    expect(parseComposePostgres(yaml)).toEqual({ user: 'devuser', password: 'devPassW0rd', db: 'devuntu' })
-  })
-
-  it('引用符付きの値を読む', () => {
-    expect(parseComposePostgres("      POSTGRES_PASSWORD: 'pw'")).toMatchObject({ password: 'pw' })
-  })
-
-  it('POSTGRES_* が無ければ undefined', () => {
-    expect(parseComposePostgres('services:\n  db:\n    env_file: ./.env.db')).toBeUndefined()
-  })
-})
-
 describe('buildSeaweedS3Config', () => {
   it('既存の他のフィールドを保ったまま資格情報だけ差し替える', () => {
     const existing = {
@@ -111,6 +88,40 @@ describe('buildSeaweedS3Config', () => {
     const result = buildSeaweedS3Config({ accessKey: 'ak', secretKey: 'sk' })
     expect(result.identities[0].credentials[0]).toEqual({ accessKey: 'ak', secretKey: 'sk' })
     expect(result.identities[0].actions).toContain('Write')
+  })
+
+  it('devuntu が先頭でなくても他の identity を壊さない', () => {
+    // identities は複数持てるため、先頭決め打ちだと別 identity の資格情報を上書きしてしまう
+    const existing = {
+      identities: [
+        { name: 'other', credentials: [{ accessKey: 'o-ak', secretKey: 'o-sk' }], actions: ['Read'] },
+        { name: 'devuntu', credentials: [{ accessKey: 'old', secretKey: 'old' }], actions: ['Read', 'Write'] },
+      ],
+    }
+    const result = buildSeaweedS3Config({ accessKey: 'ak', secretKey: 'sk' }, existing)
+    expect(result.identities[0].credentials[0]).toEqual({ accessKey: 'o-ak', secretKey: 'o-sk' })
+    expect(result.identities[1].credentials[0]).toEqual({ accessKey: 'ak', secretKey: 'sk' })
+  })
+
+  it('devuntu identity が無ければ既存を保ったまま追加する', () => {
+    const existing = { identities: [{ name: 'other', credentials: [{ accessKey: 'o-ak', secretKey: 'o-sk' }] }] }
+    const result = buildSeaweedS3Config({ accessKey: 'ak', secretKey: 'sk' }, existing)
+    expect(result.identities).toHaveLength(2)
+    expect(result.identities[0].name).toBe('other')
+    expect(result.identities[1]).toMatchObject({ name: 'devuntu' })
+    expect(result.identities[1].credentials[0]).toEqual({ accessKey: 'ak', secretKey: 'sk' })
+  })
+})
+
+describe('検証結果の形状', () => {
+  it('成功と失敗で同じ形を返す', () => {
+    // TypeScript のテストから allowJs 経由で読むため、union になると .error / .warn が型エラーになる
+    const okResult = validatePort('25')
+    const ngResult = validatePort('0')
+    expect(Object.keys(okResult).sort()).toEqual(Object.keys(ngResult).sort())
+    expect(okResult).toMatchObject({ ok: true, value: '25', error: undefined })
+    expect(ngResult).toMatchObject({ ok: false, value: '' })
+    expect(ngResult.error).toBeDefined()
   })
 })
 

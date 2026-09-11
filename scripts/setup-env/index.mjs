@@ -12,11 +12,11 @@
  * `src/lib/env-util.ts` と同名の環境変数として揃えている。
  * 既存ファイルがあれば現在値を各質問の既定値として提示し、Enter で現状維持できる。
  */
-import { chown, mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises'
+import { chown, mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { createInterface } from 'node:readline/promises'
 import { parseArgs, styleText } from 'node:util'
-import { diffEnv, maskSecret, parseEnvFile, serializeEnv } from './env-file.mjs'
+import { diffEnv, maskSecret, parseEnvFile, quoteEnvValue, serializeEnv } from './env-file.mjs'
 import {
   BUNDLED_S3_ENDPOINT,
   DEFAULTS,
@@ -25,12 +25,12 @@ import {
   LOCALES,
   LOG_LEVELS,
   MAIL_SEND_MODES,
+  S3_IDENTITY_NAME,
   buildDatabaseUrl,
   buildSeaweedS3Config,
   generatePassword,
   generateSecret,
   generateVapidKeys,
-  parseComposePostgres,
   parseDatabaseUrl,
   validateAllowedDomains,
   validateBetterAuthUrl,
@@ -62,6 +62,8 @@ const { values: opts } = parseArgs({
     backup: { type: 'boolean', default: true },
     help: { type: 'boolean', default: false },
   },
+  // --no-backup のような否定形を受け付けるために必要
+  allowNegative: true,
 })
 
 if (opts.help) {
@@ -116,6 +118,23 @@ const question = async (prompt) => {
 }
 
 /**
+ * env ファイルへ書き出せる値か。
+ *
+ * 書けない値(シングルクォート・改行・末尾のバックスラッシュ)は、全項目に答えた後の
+ * `serializeEnv` で例外になる。そこは書き出し用の try の外なので、
+ * 利用者はスタックトレースだけを受け取ることになる。入力の時点で弾く。
+ */
+const writable = (value) => {
+  try {
+    quoteEnvValue(value)
+    return true
+  } catch (e) {
+    warn(e.message)
+    return false
+  }
+}
+
+/**
  * 1項目を尋ねる。
  *
  * 秘密値は既定値をマスクして表示する(Enter で実値を維持できるので、画面と
@@ -138,11 +157,17 @@ const ask = async ({ label, help, def, validate, secret = false, allowEmpty = fa
       continue
     }
     if (!validate) {
+      if (!writable(input)) {
+        continue
+      }
       return input
     }
     const result = validate(input)
     if (result.error) {
       warn(result.error)
+      continue
+    }
+    if (!writable(result.value)) {
       continue
     }
     if (result.warn) {
@@ -208,6 +233,21 @@ const readTextIfExists = async (file) => {
     if (e.code === 'ENOENT') {
       return undefined
     }
+    /**
+     * 古い compose.yaml で未作成のまま `up` すると、Docker が設定ファイルと同名の
+     * ディレクトリを作ってしまう。そのまま読むと EISDIR のスタックトレースになるだけなので、
+     * 何を消せばよいかを伝える。
+     */
+    if (e.code === 'EISDIR') {
+      say(color('red', `${file} がディレクトリになっています。`))
+      say('Docker が設定ファイルの代わりに作ったディレクトリです。削除してから実行し直してください。')
+      say(`  sudo rm -rf ${file}`)
+      process.exit(1)
+    }
+    if (e.code === 'EACCES' || e.code === 'EPERM') {
+      say(color('red', `${file} を読めません。ファイルの所有者を確認してください`))
+      process.exit(1)
+    }
     throw e
   }
 }
@@ -215,15 +255,12 @@ const readTextIfExists = async (file) => {
 const envDockerPath = path.join(outDir, '.env.docker')
 const envDbPath = path.join(outDir, '.env.db')
 const s3ConfigPath = path.join(outDir, 'seaweedfs-s3.json')
-const composePath = path.join(outDir, 'compose.yaml')
 
 const prevEnvText = await readTextIfExists(envDockerPath)
 const prev = prevEnvText ? parseEnvFile(prevEnvText) : {}
 const prevDbText = await readTextIfExists(envDbPath)
 const prevDb = prevDbText ? parseEnvFile(prevDbText) : {}
 const prevS3Text = await readTextIfExists(s3ConfigPath)
-const composeText = await readTextIfExists(composePath)
-const composePg = composeText ? parseComposePostgres(composeText) : undefined
 
 let prevS3Config
 if (prevS3Text) {
@@ -233,6 +270,7 @@ if (prevS3Text) {
     warn(`${s3ConfigPath} が JSON として読めないため、内容を作り直します`)
   }
 }
+const prevS3Credentials = prevS3Config?.identities?.find((i) => i?.name === S3_IDENTITY_NAME)?.credentials?.[0]
 
 const has = (key) => prev[key] !== undefined && prev[key] !== ''
 const prevOr = (key, fallback) => (has(key) ? prev[key] : fallback)
@@ -268,12 +306,14 @@ env.DEFAULT_TIMEZONE = await ask({
 // B. データベース
 // ---
 section('データベース')
+/**
+ * 既定値の引き元。旧構成からの移行では `.env.db` がまだ無いため、
+ * `.env.docker` の `DATABASE_URL` を分解して既存のボリュームと同じ値を引き継ぐ。
+ */
 const existingDbCreds =
   (prevDb.POSTGRES_PASSWORD
     ? { user: prevDb.POSTGRES_USER, password: prevDb.POSTGRES_PASSWORD, db: prevDb.POSTGRES_DB }
-    : undefined) ??
-  parseDatabaseUrl(prev.DATABASE_URL) ??
-  composePg
+    : undefined) ?? parseDatabaseUrl(prev.DATABASE_URL)
 
 const useBundledDb = await askYesNo('compose.yaml に同梱の db サービスを使いますか?', true)
 const dbUser = await ask({
@@ -422,21 +462,25 @@ if (mailSend !== '') {
     env.SMTP_IGNORE_TLS = String(
       await askYesNo('TLSを使わずに接続しますか? (SMTP_IGNORE_TLS)', prevBool('SMTP_IGNORE_TLS', port === 25)),
     )
-    const smtpUser = await ask({ label: 'SMTP認証ユーザー (SMTP_USER)', def: prev.SMTP_USER, allowEmpty: true })
-    const smtpPass = await ask({
-      label: 'SMTP認証パスワード (SMTP_PASS)',
-      def: prev.SMTP_PASS,
-      allowEmpty: true,
-      secret: true,
-    })
-    if (smtpUser !== '') {
-      env.SMTP_USER = smtpUser
-    }
-    if (smtpPass !== '') {
-      env.SMTP_PASS = smtpPass
-    }
-    if ((smtpUser === '') !== (smtpPass === '')) {
-      warn('SMTP_USER と SMTP_PASS は両方揃っていないと認証できません')
+    // 片方だけでは認証できず、メールOTPが唯一のサインイン手段の構成では誰もログインできなくなる。
+    // 両方空(認証なし)か両方入力のどちらかに揃うまで聞き直す
+    for (;;) {
+      const smtpUser = await ask({ label: 'SMTP認証ユーザー (SMTP_USER)', def: prev.SMTP_USER, allowEmpty: true })
+      const smtpPass = await ask({
+        label: 'SMTP認証パスワード (SMTP_PASS)',
+        def: prev.SMTP_PASS,
+        allowEmpty: true,
+        secret: true,
+      })
+      if ((smtpUser === '') !== (smtpPass === '')) {
+        warn('SMTP_USER と SMTP_PASS は両方揃っていないと認証できません。両方入力するか、両方空にしてください')
+        continue
+      }
+      if (smtpUser !== '') {
+        env.SMTP_USER = smtpUser
+        env.SMTP_PASS = smtpPass
+      }
+      break
     }
   } else {
     note('OTP は送信されず、サーバーログ(docker compose logs devuntu)に出力されます')
@@ -696,7 +740,13 @@ if (unknownKeys.length > 0) {
   warn(`このスクリプトが管理していないキーが既存の .env.docker にあります: ${unknownKeys.join(', ')}`)
   if (await askYesNo('そのまま残しますか?', true)) {
     for (const key of unknownKeys) {
-      env[key] = prev[key]
+      try {
+        quoteEnvValue(prev[key])
+        env[key] = prev[key]
+      } catch (e) {
+        // 退避した .bak には元の行が残るので、ここで落としても値は失われない
+        warn(`${key} は${e.message}。このキーは残せません(元の値は退避ファイルに残ります)`)
+      }
     }
   }
 }
@@ -704,7 +754,22 @@ if (unknownKeys.length > 0) {
 // ---
 // 確認
 // ---
-const envDockerBody = serializeEnv({
+
+/**
+ * 入力の時点で書き出せない値は弾いているが、想定外の値が残っていた場合に
+ * スタックトレースだけを見せないようにする。
+ */
+const build = (params) => {
+  try {
+    return serializeEnv(params)
+  } catch (e) {
+    say()
+    say(color('red', `設定を組み立てられませんでした: ${e.message}`))
+    process.exit(1)
+  }
+}
+
+const envDockerBody = build({
   header: [
     'Devuntu セルフホスト用の環境変数(docker compose run --rm setup-env で再生成できる)',
     '全変数の一覧は docs/environment-variables.md を参照',
@@ -713,7 +778,7 @@ const envDockerBody = serializeEnv({
   values: env,
   extrasTitle: 'その他(このスクリプトが管理していない設定)',
 })
-const envDbBody = serializeEnv({
+const envDbBody = build({
   header: [
     'compose.yaml の db サービス(postgres)が読む変数',
     '外部のPostgreSQLを使う場合、このファイルと db サービスは不要',
@@ -721,7 +786,18 @@ const envDbBody = serializeEnv({
   sections: ENV_DB_SECTIONS,
   values: db,
 })
-const s3ConfigBody = `${JSON.stringify(buildSeaweedS3Config({ accessKey: env.S3_ACCESS_KEY_ID, secretKey: env.S3_SECRET_ACCESS_KEY }, prevS3Config), null, 2)}\n`
+/**
+ * SeaweedFS 側の資格情報。
+ *
+ * 同梱の SeaweedFS を使う場合はアプリと同じ値を書く。外部のS3を使う場合は、
+ * その資格情報をこのファイルへ複製しない(用途の違うファイルへ秘密を広げないため)。
+ * 既定の Compose は `s3` サービスを常に起動しこのファイルを必須マウントするので、
+ * 使わない場合でも生成自体は省けない。
+ */
+const s3Identity = useBundledS3
+  ? { accessKey: env.S3_ACCESS_KEY_ID, secretKey: env.S3_SECRET_ACCESS_KEY }
+  : (prevS3Credentials ?? { accessKey: S3_IDENTITY_NAME, secretKey: generatePassword() })
+const s3ConfigBody = `${JSON.stringify(buildSeaweedS3Config(s3Identity, prevS3Config), null, 2)}\n`
 
 const SECRET_KEYS = new Set([
   'BETTER_AUTH_SECRET',
@@ -758,7 +834,8 @@ say(maskBody(envDockerBody))
 say(color('bold', `${envDbPath}`))
 say(maskBody(envDbBody))
 say(color('bold', `${s3ConfigPath}`))
-say(s3ConfigBody.replace(/("secretKey":\s*)"([^"]*)"/, (_, head, value) => `${head}"${maskSecret(value)}"`))
+// identities は複数あり得るので、すべての secretKey をマスクする
+say(s3ConfigBody.replace(/("secretKey":\s*)"([^"]*)"/g, (_, head, value) => `${head}"${maskSecret(value)}"`))
 
 if (prevEnvText) {
   const { added, changed, removed } = diffEnv(prev, env)
@@ -828,33 +905,68 @@ const ownerOf = async (dir) => {
   }
 }
 
+/** 生成物はいずれも資格情報を含む。s3 コンテナは root で動くので 0600 でも読める */
+const MODE = 0o600
+
 await mkdir(outDir, { recursive: true })
 const owner = await ownerOf(outDir)
 const suffix = stamp()
 
-const write = async (file, body, mode, previousText) => {
-  if (previousText !== undefined && opts.backup) {
-    await writeFile(`${file}.${suffix}.bak`, previousText, { mode })
+const targets = [
+  { path: envDockerPath, body: envDockerBody, previousText: prevEnvText },
+  { path: envDbPath, body: envDbBody, previousText: prevDbText },
+  { path: s3ConfigPath, body: s3ConfigBody, previousText: prevS3Text },
+]
+
+/**
+ * 3ファイルをまとめて確定する。
+ *
+ * DBパスワードとS3の資格情報は3ファイルに跨がっているため、途中で失敗して一部だけが
+ * 新しい値になると、どのファイルが正しいのか分からない状態で残る。
+ * 先に全ての退避と一時ファイルを作り、差し替えは最後にまとめて行う。
+ * 差し替え中に失敗した場合は、それまでに置き換えたファイルを元へ戻す。
+ */
+const commit = async () => {
+  for (const target of targets) {
+    if (target.previousText !== undefined && opts.backup) {
+      await writeFile(`${target.path}.${suffix}.bak`, target.previousText, { mode: MODE })
+    }
+    await writeFile(`${target.path}.tmp`, target.body, { mode: MODE })
   }
-  // 途中で失敗しても既存ファイルを壊さないよう、一時ファイルへ書いてから差し替える
-  const tmp = `${file}.tmp`
-  await writeFile(tmp, body, { mode })
-  await rename(tmp, file)
-  if (owner) {
-    await chown(file, owner.uid, owner.gid).catch(() => {})
+
+  const replaced = []
+  try {
+    for (const target of targets) {
+      await rename(`${target.path}.tmp`, target.path)
+      replaced.push(target)
+      if (owner) {
+        await chown(target.path, owner.uid, owner.gid).catch(() => {})
+      }
+    }
+  } catch (e) {
+    for (const target of replaced) {
+      if (target.previousText === undefined) {
+        await rm(target.path, { force: true }).catch(() => {})
+      } else {
+        await writeFile(target.path, target.previousText, { mode: MODE }).catch(() => {})
+      }
+    }
+    throw e
   }
 }
 
 try {
-  await write(envDockerPath, envDockerBody, 0o600, prevEnvText)
-  await write(envDbPath, envDbBody, 0o600, prevDbText)
-  await write(s3ConfigPath, s3ConfigBody, 0o644, prevS3Text)
+  await commit()
 } catch (e) {
   say()
   if (e.code === 'EACCES' || e.code === 'EPERM') {
     say(color('red', `${outDir} へ書き込めません。ディレクトリの所有者を確認するか、sudo を付けて実行してください`))
   } else {
     say(color('red', `書き出しに失敗しました: ${e.message}`))
+  }
+  // 作り終えていない一時ファイルを残さない
+  for (const target of targets) {
+    await rm(`${target.path}.tmp`, { force: true }).catch(() => {})
   }
   process.exit(1)
 }

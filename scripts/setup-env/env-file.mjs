@@ -15,27 +15,45 @@ import { parseEnv } from 'node:util'
  */
 export const parseEnvFile = (content) => parseEnv(content)
 
-/** 引用符で囲まなくても曖昧にならない値か */
-const isBareValue = (value) => !/[\s#'"]/.test(value)
+/**
+ * 引用符で囲まなくても曖昧にならない値か。
+ *
+ * `$` を含めているのは、godotenv が未引用の値へ補間をかけるため。`PASS=pa$HOME` は
+ * ホスト側の `$HOME` へ置き換わり、設定した本人が気づけないまま別の値になる。
+ */
+const isBareValue = (value) => !/[\s#$'"]/.test(value)
 
 /**
  * env ファイルへ書き出す値を引用する。
  *
- * 生成したファイルは `util.parseEnv` と Docker Compose(godotenv 系)の両方に読まれる。
- * ダブルクォートは godotenv では `${VAR}` の補間とエスケープ解釈が起きるが `parseEnv` では
- * 起きないため、両者で解釈が一致するシングルクォートだけを使う。
- * シングルクォートを含む値は囲めないので、呼び出し側で入力し直させる。
+ * 生成したファイルは `util.parseEnv` と Docker Compose(godotenv 系)の両方に読まれるため、
+ * 両者で解釈が一致する書き方だけを使う。実測した差異は次のとおり。
+ *
+ * | 出力          | godotenv                  | parseEnv |
+ * | ------------- | ------------------------- | -------- |
+ * | `V=pa$HOME`   | `pa/home/...`(補間される) | `pa$HOME` |
+ * | `V='pa$HOME'` | `pa$HOME`                 | `pa$HOME` |
+ * | `V='pa\ss'`   | `pa\ss`                   | `pa\ss`  |
+ * | `V='pa\'`     | ファイル全体が読めない     | `pa\`    |
+ *
+ * ダブルクォートは godotenv だけが補間とエスケープを解釈するので使わない。
+ * 末尾のバックスラッシュは godotenv がシングルクォートのエスケープとみなし、
+ * **その行以降を含む env ファイル全体が読めなくなる**ため書けない。
+ * 途中のバックスラッシュは両者で一致するので許可する。
  */
 export const quoteEnvValue = (value) => {
   const text = String(value)
   if (text.includes('\n') || text.includes('\r')) {
     throw new Error('改行を含む値は env ファイルへ書けません')
   }
-  if (text === '' || isBareValue(text)) {
-    return text
-  }
   if (text.includes("'")) {
     throw new Error("シングルクォート(')を含む値は env ファイルへ書けません")
+  }
+  if (text.endsWith('\\')) {
+    throw new Error('バックスラッシュで終わる値は env ファイルへ書けません')
+  }
+  if (text === '' || isBareValue(text)) {
+    return text
   }
   return `'${text}'`
 }
@@ -51,9 +69,16 @@ const normalize = (value) => {
 /**
  * セクションコメント付きの env ファイル本文を組み立てる。
  *
- * `sections` は `{ title, keys }` の配列。`values` に値が無いキーは行を出さない(未設定として扱う)。
+ * `values` に値が無いキーは行を出さない(未設定として扱う)。
  * `sections` のどこにも属さないキーは末尾へ退避する。利用者が独自に足した値や、
  * アプリ側で使われなくなった値を黙って落とさないため。
+ *
+ * @param {object} params
+ * @param {string[]} [params.header] 先頭へ置くコメント行
+ * @param {{ title: string, keys: string[] }[]} params.sections
+ * @param {Record<string, string | boolean | number | undefined>} params.values
+ * @param {string} [params.extrasTitle] sections に無いキーをまとめる見出し
+ * @returns {string}
  */
 export const serializeEnv = ({ header = [], sections, values, extrasTitle = 'その他' }) => {
   const lines = header.map((line) => `# ${line}`)

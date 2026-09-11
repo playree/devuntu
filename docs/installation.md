@@ -85,6 +85,9 @@ docker compose run --rm setup-env
 | `.env.db`           | PostgreSQL の初期化パラメータ            | `db`         |
 | `seaweedfs-s3.json` | オブジェクトストレージの S3 アクセスキー | `s3`         |
 
+生成されるファイルはいずれも資格情報を含むため `0600` で作られる。`s3` サービスは root で動くため
+`0600` のままマウントして読める。
+
 尋ねられるのは最小構成(ロケール / DB / 公開URL / メール / オブジェクトストレージ)で、
 外部サービス連携などの任意項目は「設定しますか?」で分岐する。既に設定ファイルがある場合は
 現在値を既定値として提示するので、Enter を押し続ければ内容は変わらない(設定変更や項目追加にも使える)。
@@ -97,6 +100,8 @@ docker compose run --rm setup-env
   POST が origin チェックで拒否される**ため、パスやクエリを含む入力は受け付けず、末尾スラッシュは落とす
 - DBパスワードの生成と、`.env.db` の `POSTGRES_*` から `DATABASE_URL` を組み立てること
 - S3 のシークレットキーを `.env.docker` と `seaweedfs-s3.json` の両方へ同じ値で書くこと
+  (外部のS3を使う場合は、その資格情報を `seaweedfs-s3.json` へ複製せず、同梱の SeaweedFS 用に
+  別の値を生成する)
 - VAPID 鍵の生成(Webプッシュ通知を有効にした場合)
 
 全変数の一覧とデフォルト値は [environment-variables.md](environment-variables.md) を参照。
