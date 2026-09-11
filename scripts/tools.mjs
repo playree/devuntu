@@ -42,11 +42,12 @@ if (command === 'help' || command === '--help' || command === '-h') {
   process.exit(0)
 }
 
-const script = COMMANDS[command]
-if (script === undefined) {
+// プロトタイプ由来のプロパティ(toString など)を拾わないよう、自身のキーだけを見る
+if (!Object.hasOwn(COMMANDS, command)) {
   process.stderr.write(`不明なサブコマンドです: ${command}\n\n${USAGE}`)
   process.exit(1)
 }
+const script = COMMANDS[command]
 
 // コンテナ内のパスを決め打ちにせず、このファイルの位置から解決する
 const scriptsDir = path.dirname(fileURLToPath(import.meta.url))
