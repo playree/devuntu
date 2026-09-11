@@ -94,6 +94,16 @@ docker compose run --rm tools setup-env
 現在値を既定値として提示するので、Enter を押し続ければ内容は変わらない(設定変更や項目追加にも使える)。
 上書き前の内容は `<ファイル名>.<日時>.bak` へ退避される。
 
+次の設定は対話では尋ねない。変更する場合は `.env.docker` を直接編集する(変数名と既定値は
+[environment-variables.md](environment-variables.md) を参照)。既存の設定ファイルに値があれば、
+再実行しても現在値を引き継ぐ。
+
+- 検索エンジンへのインデックス(`SEARCH_ENGINE_INDEXING`)
+- 連携元 Devuntu との連携(`MAIN_DEVUNTU_*`)
+- ホスト情報の表示(`LINODE_*`)
+- ログレベル・セッション期間・自動メンテナンス(`LOG_LEVEL` / `SESSION_*` /
+  `MCP_REFRESH_TOKEN_EXPIRES_IN` / `NOTIFY_WORKER_ENABLED` / `MAINTENANCE_*`)
+
 このスクリプトが自動でやること。手で書くと食い違いに気づきにくい箇所を引き受けている。
 
 - `BETTER_AUTH_SECRET` の生成(`openssl rand -base64 32` 相当)

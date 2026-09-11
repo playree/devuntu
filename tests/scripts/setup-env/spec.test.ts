@@ -8,6 +8,8 @@
 import { describe, expect, it } from 'vitest'
 import webpush from 'web-push'
 import {
+  ENV_DOCKER_SECTIONS,
+  MANUAL_KEYS,
   buildDatabaseUrl,
   buildSeaweedS3Config,
   generatePassword,
@@ -207,6 +209,14 @@ describe('その他の検証', () => {
     expect(validateVapidSubject('mailto:devuntu@example.com')).toMatchObject({ ok: true })
     expect(validateVapidSubject('https://example.com')).toMatchObject({ ok: true })
     expect(validateVapidSubject('devuntu@example.com').error).toBeDefined()
+  })
+})
+
+describe('MANUAL_KEYS', () => {
+  it('すべて .env.docker のセクションに含まれる', () => {
+    // 含まれていないと、引き継いだ値が「その他」セクションへ落ちてしまう
+    const known = new Set(ENV_DOCKER_SECTIONS.flatMap((s) => s.keys))
+    expect(MANUAL_KEYS.filter((key) => !known.has(key))).toEqual([])
   })
 })
 

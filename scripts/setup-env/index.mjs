@@ -23,8 +23,8 @@ import {
   ENV_DB_SECTIONS,
   ENV_DOCKER_SECTIONS,
   LOCALES,
-  LOG_LEVELS,
   MAIL_SEND_MODES,
+  MANUAL_KEYS,
   S3_IDENTITY_NAME,
   buildDatabaseUrl,
   buildSeaweedS3Config,
@@ -40,7 +40,6 @@ import {
   validateDatabaseUrl,
   validateMailFrom,
   validatePort,
-  validatePositiveInt,
   validateRequired,
   validateTimezone,
   validateUrl,
@@ -396,6 +395,10 @@ if (!disablePasswordAuth) {
   }
 }
 
+env.OIDC_DCR_ENABLED = String(
+  await askYesNo('MCPサーバーを公開しますか? (OIDC_DCR_ENABLED)', prevBool('OIDC_DCR_ENABLED', true)),
+)
+
 // ---
 // D. メール
 // ---
@@ -640,112 +643,33 @@ if (await askYesNo('Webプッシュ通知を有効にしますか?', has('VAPID_
   }
 }
 
-section('その他(任意)')
-if (await askYesNo('MCPサーバーを公開しますか? (OIDC_DCR_ENABLED)', prevBool('OIDC_DCR_ENABLED', false))) {
-  env.OIDC_DCR_ENABLED = 'true'
-}
-if (
-  await askYesNo(
-    '検索エンジンへのインデックスを許可しますか? (SEARCH_ENGINE_INDEXING)',
-    prevBool('SEARCH_ENGINE_INDEXING', false),
-  )
-) {
-  env.SEARCH_ENGINE_INDEXING = 'true'
-}
-if (await askYesNo('連携元 Devuntu との連携を設定しますか?', has('MAIN_DEVUNTU_URL'))) {
-  env.MAIN_DEVUNTU_URL = await ask({
-    label: '連携元のURL (MAIN_DEVUNTU_URL)',
-    def: prev.MAIN_DEVUNTU_URL,
-    validate: validateUrl,
-  })
-  env.MAIN_DEVUNTU_CLIENT_ID = await ask({
-    label: 'クライアントID (MAIN_DEVUNTU_CLIENT_ID)',
-    def: prev.MAIN_DEVUNTU_CLIENT_ID,
-    validate: validateRequired,
-  })
-  env.MAIN_DEVUNTU_CLIENT_SECRET = await ask({
-    label: 'クライアントシークレット (MAIN_DEVUNTU_CLIENT_SECRET)',
-    def: prev.MAIN_DEVUNTU_CLIENT_SECRET,
-    validate: validateRequired,
-    secret: true,
-  })
-}
-if (await askYesNo('ホスト情報(Linode)の表示を設定しますか?', has('LINODE_ID'))) {
-  env.LINODE_ID = await ask({ label: 'インスタンスID (LINODE_ID)', def: prev.LINODE_ID, validate: validateRequired })
-  env.LINODE_PERSONAL_ACCESS_TOKEN = await ask({
-    label: 'アクセストークン (LINODE_PERSONAL_ACCESS_TOKEN)',
-    def: prev.LINODE_PERSONAL_ACCESS_TOKEN,
-    validate: validateRequired,
-    secret: true,
-  })
-}
-
-// 既存ファイルに値がある項目は、詳細設定を開かなくても維持できるよう既定を Y にする
-const hasAdvanced = [
-  'LOG_LEVEL',
-  'SESSION_EXPIRES_IN',
-  'SESSION_FRESH_AGE',
-  'MCP_REFRESH_TOKEN_EXPIRES_IN',
-  'NOTIFY_WORKER_ENABLED',
-  'MAINTENANCE_WORKER_ENABLED',
-  'MAINTENANCE_ATTACHMENT_MODE',
-  'MAINTENANCE_ATTACHMENT_GRACE_HOURS',
-].some(has)
-if (await askYesNo('ログレベル・セッション期間・自動メンテナンスを設定しますか?', hasAdvanced)) {
-  env.LOG_LEVEL = await askChoice('ログレベル (LOG_LEVEL)', LOG_LEVELS, prevOr('LOG_LEVEL', DEFAULTS.LOG_LEVEL))
-  env.SESSION_EXPIRES_IN = await ask({
-    label: 'セッション有効期間(秒) (SESSION_EXPIRES_IN)',
-    def: prevOr('SESSION_EXPIRES_IN', String(60 * 60 * 24 * 5)),
-    validate: validatePositiveInt(1),
-  })
-  env.SESSION_FRESH_AGE = await ask({
-    label: 'セッション fresh 期間(秒) (SESSION_FRESH_AGE)',
-    def: prevOr('SESSION_FRESH_AGE', String(60 * 60 * 24)),
-    // 0 は `src/lib/auth/session-fresh.ts` が fresh チェック無効として扱う有効な設定
-    validate: validatePositiveInt(0),
-    help: '0 にすると再認証の要求(fresh チェック)を行わない',
-  })
-  if (env.OIDC_DCR_ENABLED === 'true' || has('MCP_REFRESH_TOKEN_EXPIRES_IN')) {
-    env.MCP_REFRESH_TOKEN_EXPIRES_IN = await ask({
-      label: 'MCPリフレッシュトークンの有効期間(秒) (MCP_REFRESH_TOKEN_EXPIRES_IN)',
-      def: prevOr('MCP_REFRESH_TOKEN_EXPIRES_IN', String(60 * 60 * 24 * 180)),
-      validate: validatePositiveInt(1),
-    })
+// ---
+// G. 対話で尋ねない設定の引き継ぎ
+// ---
+/**
+ * 質問から外した設定は、既存ファイルの値をそのまま書き戻す。
+ * 尋ねなくなったことで、手で設定した値が再実行で消えるのを防ぐ。
+ */
+const carried = []
+for (const key of MANUAL_KEYS) {
+  if (!has(key)) {
+    continue
   }
-  env.NOTIFY_WORKER_ENABLED = String(
-    await askYesNo(
-      '通知の配信ワーカーを動かしますか? (NOTIFY_WORKER_ENABLED)',
-      prevBool('NOTIFY_WORKER_ENABLED', true),
-    ),
-  )
-  env.MAINTENANCE_WORKER_ENABLED = String(
-    await askYesNo(
-      '定期メンテナンスを動かしますか? (MAINTENANCE_WORKER_ENABLED)',
-      prevBool('MAINTENANCE_WORKER_ENABLED', true),
-    ),
-  )
-  if (env.MAINTENANCE_WORKER_ENABLED === 'true') {
-    env.MAINTENANCE_ATTACHMENT_MODE = await askChoice(
-      '未参照の添付の扱い (MAINTENANCE_ATTACHMENT_MODE)',
-      [
-        { value: 'delete', label: 'delete(削除する)' },
-        { value: 'dry-run', label: 'dry-run(対象をログに出すだけ)' },
-        { value: 'off', label: 'off(添付の掃除だけ止める)' },
-      ],
-      prevOr('MAINTENANCE_ATTACHMENT_MODE', DEFAULTS.MAINTENANCE_ATTACHMENT_MODE),
-    )
-    if (env.MAINTENANCE_ATTACHMENT_MODE !== 'off') {
-      env.MAINTENANCE_ATTACHMENT_GRACE_HOURS = await ask({
-        label: '添付が削除対象になるまでの猶予(時間) (MAINTENANCE_ATTACHMENT_GRACE_HOURS)',
-        def: prevOr('MAINTENANCE_ATTACHMENT_GRACE_HOURS', DEFAULTS.MAINTENANCE_ATTACHMENT_GRACE_HOURS),
-        validate: validatePositiveInt(1),
-      })
-    }
+  try {
+    quoteEnvValue(prev[key])
+    env[key] = prev[key]
+    carried.push(key)
+  } catch (e) {
+    warn(`${key} は${e.message}。このキーは残せません(元の値は退避ファイルに残ります)`)
   }
+}
+if (carried.length > 0) {
+  say()
+  note(`次の設定は尋ねずに現在値を引き継ぎます: ${carried.join(', ')}`)
 }
 
 // ---
-// G. 未知キーの扱い
+// H. 未知キーの扱い
 // ---
 const knownKeys = new Set(ENV_DOCKER_SECTIONS.flatMap((s) => s.keys))
 const unknownKeys = Object.keys(prev).filter((key) => !knownKeys.has(key))
