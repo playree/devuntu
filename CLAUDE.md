@@ -7,14 +7,36 @@
 
 # プロジェクト概要
 
+かんばん形式のボード/チケット管理を中心に、カレンダー連携・通知(メール / Slack / Webプッシュ)・
+MCPサーバー・AIエージェント連携を備えたセルフホスト型のプロジェクト管理ツール。
+
+- Node.js v24
 - Next.js v16
-- pnpm v11
+- TypeScript v7(TypeScript v6 と併存)
+- pnpm v12
 - Prisma v7
 - Better Auth v1.7
 - Tailwind CSS v4
 - HeroUI v3
 - Zod v4
 - next-safe-action v8
+
+## ドキュメント
+
+機能や仕様を調べるとき・変更したときは、対応するドキュメントを参照して更新する。
+
+| ファイル                                                       | 内容                                    |
+| -------------------------------------------------------------- | --------------------------------------- |
+| [README.md](README.md)                                         | 全体の入口。各ドキュメントへの索引      |
+| [docs/user-guide.md](docs/user-guide.md)                       | 画面ごとの使い方(利用者向け)            |
+| [docs/screens.md](docs/screens.md)                             | 画面・APIの一覧とアクセス制御           |
+| [docs/installation.md](docs/installation.md)                   | セルフホストの導入手順                  |
+| [docs/operations.md](docs/operations.md)                       | バックアップ/リストア・自動メンテナンス |
+| [docs/environment-variables.md](docs/environment-variables.md) | 環境変数の一覧                          |
+| [docs/development.md](docs/development.md)                     | 開発環境・ビルド・パッケージ管理        |
+| [docs/notifications.md](docs/notifications.md)                 | 通知(キュー・チャネル・Slack連携)の実装 |
+| [docs/mcp-server.md](docs/mcp-server.md)                       | MCPサーバーと認証経路・ツール一覧       |
+| [docs/agent-runner.md](docs/agent-runner.md)                   | AIエージェントの自動運用(Devuntu Agent) |
 
 # コーディングルール
 
@@ -70,7 +92,6 @@
 - 開発サーバーは必ず `http://localhost:3000`。`BETTER_AUTH_URL` が localhost:3000 固定のため、別ポートでは認証の POST が origin チェックで 403 になる
 - 既に `pnpm dev` が起動している場合は再利用し、再起動しない。自分で起動した場合は確認が終わったら停止する
 - ログインはメールOTP。OTP は `verification` テーブル(`sign-in-otp-<小文字メール>`)から取得する
-
 - 開発サーバーのログは `.work/dev-server.log`、スクリーンショットは `.work/playwright` に出力する
 
 # ロケールの構成ファイル
@@ -81,8 +102,11 @@
 
 # コードレビュー除外ファイル
 
+`.coderabbit.yaml` の `path_filters` と揃える。
+
 - `src/generated/**`
 - `prisma/migrations/**`
+- `**/*.lock`
 
 # MCPサーバーの使い分け(本番/開発)
 

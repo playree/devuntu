@@ -2,15 +2,18 @@
 - [構成](#構成)
 - [1. compose.yaml の配置](#1-composeyaml-の配置)
 - [2. 設定ファイルの作成](#2-設定ファイルの作成)
+  - [スクリプトを使わない場合](#スクリプトを使わない場合)
 - [3. 起動](#3-起動)
 - [4. 初期セットアップ(最初の管理者を作る)](#4-初期セットアップ最初の管理者を作る)
 - [5. サインインの確認](#5-サインインの確認)
 - [外部サービス連携(任意)](#外部サービス連携任意)
   - [Googleアカウント連携](#googleアカウント連携)
   - [Slack連携](#slack連携)
+  - [Webプッシュ通知](#webプッシュ通知)
   - [MCP サーバーの公開](#mcp-サーバーの公開)
   - [AIエージェント](#aiエージェント)
 - [アップデート](#アップデート)
+  - [compose.yaml を新しいものへ差し替える場合](#composeyaml-を新しいものへ差し替える場合)
 - [困ったとき](#困ったとき)
 
 # 導入(セルフホスト)
@@ -240,16 +243,18 @@ Google 側のコールバックURLには**次の2つ**を登録する。
 
 そのうえで、管理者が `/admin/settings` で「Googleアカウント連携」を有効化する。この設定が効くのは
 アカウント連携とカレンダー機能で、**サインイン画面の「Googleでサインイン」は環境変数だけで決まる**。
+許可グループを指定すると、そのグループのメンバーだけがアカウント連携を行える(空なら全ユーザー)。
 
 **カレンダー機能(`/cal`)は Google アカウント連携が前提**で、未連携のユーザーには案内だけが表示される。
 
 ### Slack連携
 
 `SLACK_CLIENT_ID` / `SLACK_CLIENT_SECRET` / `SLACK_BOT_TOKEN` / `SLACK_TEAM_ID` / `SLACK_SIGNING_SECRET`
-を設定し、管理者が `/admin/settings` で「Slack連携」を有効化する。Slack App のマニフェストは
-`slack/manifest.yaml`。
+を設定し、管理者が `/admin/settings` で「Slack連携」を有効化する。Googleと同じく許可グループを指定できる。
+Slack App のマニフェストは `slack/manifest.yaml`。
 
-メンションの Slack DM 通知と、Slack に貼られたチケットURLの展開が使えるようになる。
+Slack DM 通知(メンション / 担当者の変更 / エージェントの実行結果)、ボードごとのチャンネル通知、
+Slack に貼られたチケットURLの展開が使えるようになる。
 手順の詳細は [notifications.md](notifications.md#slack通知の前提) を参照。
 
 ### Webプッシュ通知
@@ -278,7 +283,7 @@ docker compose run --rm --entrypoint node tools -e "const {generateKeyPairSync}=
 
 ### MCP サーバーの公開
 
-`OIDC_DCR_ENABLED=true` を設定すると、Claude Code などの MCP クライアントが
+`OIDC_DCR_ENABLED=true` を設定すると、AIエージェントなどの MCP クライアントが
 `<BETTER_AUTH_URL>/api/mcp` へ動的クライアント登録(DCR)で接続できるようになる。
 環境変数だけで有効になり、`/admin/settings` での操作は不要。
 詳細と運用上の注意は [mcp-server.md](mcp-server.md) を参照。
@@ -287,7 +292,7 @@ docker compose run --rm --entrypoint node tools -e "const {generateKeyPairSync}=
 
 `/admin/settings` ではなく `/admin/agents` から設定する。管理者がエージェントユーザーを作り、
 接続用の長期トークンを発行する。
-利用者のマシンで Claude Code を自動起動させる仕組みは [agent-runner.md](agent-runner.md) を参照。
+利用者のマシンで AIエージェントのCLI を自動起動させる仕組みは [agent-runner.md](agent-runner.md) を参照。
 
 ## アップデート
 

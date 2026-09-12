@@ -1,6 +1,7 @@
 - [設計上の決めごと](#設計上の決めごと)
   - [チケットはボードを移動しない](#チケットはボードを移動しない)
 - [開発用インフラ起動](#開発用インフラ起動)
+  - [初回に用意するファイル](#初回に用意するファイル)
 - [同一PCでの並行clone(エージェント開発用など)](#同一pcでの並行cloneエージェント開発用など)
 - [バックアップ・リストア](#バックアップリストア)
 - [インストール](#インストール)
@@ -159,7 +160,9 @@ pnpm typecheck   # next typegen && tsc --noEmit(TS7/tsgo)
 pnpm prettier    # 整形
 ```
 
-`.github/workflows/ci.yml` では `pnpm lint` と `pnpm test` を実行している。
+`.github/workflows/ci.yml` では `pnpm lint` → `pnpm typecheck` → `pnpm test` の順で実行している
+(型が壊れた状態でテストを流しても情報が増えないため)。`src/generated` はコミット済みなので
+`prisma generate` は要らない。
 
 standalone ビルドの起動確認は `pnpm test:standalone`(`scripts/test-standalone.sh`)。
 
@@ -177,7 +180,7 @@ pnpm up -i -L
 
 ## パッケージへのパッチ
 
-`patches/`配下に`pnpm patch`で作成したパッチを置いている。登録先は`pnpm-workspace.yaml`の`patchedDependencies`で、`pnpm install`時に自動適用される。
+`pnpm patch`で作成したパッチは`patches/`配下へ置く。登録先は`pnpm-workspace.yaml`の`patchedDependencies`で、`pnpm install`時に自動適用される。
 
 **パッチ対象パッケージをバージョンアップした場合は、パッチの当て直しが必要。**
 
@@ -191,7 +194,7 @@ pnpm patch @heroui/react
 pnpm patch-commit '<出力されたパス>'
 ```
 
-現在適用中のパッチは無い。`@heroui/react` 3.2.2 では`Autocomplete.Popover`が`aria-label`/`aria-labelledby`を内部の`Dialog`へ転送せず react-aria の警告が出続けるためパッチを当てていたが、3.2.3 で本体が修正されたため削除した。
+現在適用中のパッチは無いため、`patches/`ディレクトリと`patchedDependencies`も存在しない。`@heroui/react` 3.2.2 では`Autocomplete.Popover`が`aria-label`/`aria-labelledby`を内部の`Dialog`へ転送せず react-aria の警告が出続けるためパッチを当てていたが、3.2.3 で本体が修正されたため削除した。
 
 ## パッケージのバージョン上書き
 
