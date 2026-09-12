@@ -13,8 +13,8 @@ import { GOOGLE_ACCOUNT_PROVIDER_ID } from './google-calendar'
 
 /**
  * カレンダー連携用の account 行を引く条件。
- * 連携をやり直すと同一 `(userId, providerId)` の行が複数残り得る(1.7 の一意制約は
- * `(issuer, accountId)`)ので、refresh token を持つ最新の行に絞って結果を一意にする。
+ * account には `(userId, providerId)` の一意制約が無く、連携をやり直すと同じ組み合わせの
+ * 行が複数残り得るので、refresh token を持つ最新の行に絞って結果を一意にする。
  */
 export const googleAccountQuery = (userId: string) => ({
   where: {

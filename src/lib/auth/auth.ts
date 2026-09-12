@@ -72,22 +72,6 @@ const dcrPolicy = {
   },
 } satisfies BetterAuthPlugin
 
-/**
- * genericOAuth プロバイダの account.issuer を明示するための値。
- * better-auth が discovery を持たないプロバイダへ与える合成 issuer と同じ形式にしてある。
- *
- * better-auth 1.7 から account の識別子が `(issuer, accountId)` になり、既定では
- * discovery の issuer が入る。それをそのまま使うと下記2点で困るので固定する。
- *
- * - devuntu: issuer がメイン devuntu の baseURL になるため、環境ごとに値が変わってしまう
- * - google-account: ログイン用 'google' と同じ Google アカウント(= 同じ sub)を
- *   別用途で持つ設計なので、issuer まで同じだと `(issuer, accountId)` が衝突する
- *
- * この値は account.issuer として永続化され、照合にも使われる。変えると既存の行に一致せず
- * 連携し直しが必要になるので、一度動かした後は変更しないこと。
- */
-const accountIssuer = (providerId: string) => `local:oauth:${providerId}`
-
 const oauthConfigs: GenericOAuthConfig[] = []
 if (
   !!envu.server.MAIN_DEVUNTU_URL &&
@@ -96,7 +80,6 @@ if (
 ) {
   oauthConfigs.push({
     providerId: 'devuntu',
-    accountIssuer: accountIssuer('devuntu'),
     clientId: envu.server.MAIN_DEVUNTU_CLIENT_ID,
     clientSecret: envu.server.MAIN_DEVUNTU_CLIENT_SECRET,
     discoveryUrl: new URL('.well-known/openid-configuration', envu.server.MAIN_DEVUNTU_URL).toString(),
@@ -115,7 +98,6 @@ if (
 if (!!envu.server.GOOGLE_CLIENT_ID && !!envu.server.GOOGLE_CLIENT_SECRET) {
   oauthConfigs.push({
     providerId: GOOGLE_ACCOUNT_PROVIDER_ID,
-    accountIssuer: accountIssuer(GOOGLE_ACCOUNT_PROVIDER_ID),
     clientId: envu.server.GOOGLE_CLIENT_ID,
     clientSecret: envu.server.GOOGLE_CLIENT_SECRET,
     discoveryUrl: 'https://accounts.google.com/.well-known/openid-configuration',
