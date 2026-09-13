@@ -7,6 +7,7 @@ import {
   ArrowLeftStartOnRectangleIcon,
   CalendarDaysIcon,
   Cog6ToothIcon,
+  CommandLineIcon,
   CpuChipIcon,
   RocketLaunchIcon,
   ServerStackIcon,
@@ -212,6 +213,12 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
               to='/admin/oidc-clients'
               text={t('oidc_clients')}
               icon={<ServerStackIcon />}
+              closeMenu={closeMenu}
+            />
+            <MenuButton // コマンド管理
+              to='/admin/commands'
+              text={t('command_manage')}
+              icon={<CommandLineIcon />}
               closeMenu={closeMenu}
             />
             <MenuButton // 連携設定

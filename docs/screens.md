@@ -55,6 +55,7 @@ Proxy の matcher は拡張子を含むパス(`.*\.`)も除外しているため
 | ダッシュボード管理 | `/admin/dashboard`    | 管理者のみ   |
 | 設定(連携設定)     | `/admin/settings`     | 管理者のみ   |
 | OIDCクライアント   | `/admin/oidc-clients` | 管理者のみ   |
+| コマンド管理       | `/admin/commands`     | 管理者のみ   |
 
 ## 認証・公開
 

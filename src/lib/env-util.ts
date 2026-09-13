@@ -223,6 +223,43 @@ const server = {
     return value
   },
 
+  // コマンド実行
+  /**
+   * 画面からのコマンド実行を有効にするか。
+   *
+   * 既定を false にしているのは、この機能が「サーバーから対象ホストへ SSH してプロセスを起動する」
+   * という他に無い性質を持つため。定義ファイルを置いただけでも、環境変数を入れただけでも動かない。
+   */
+  get COMMAND_EXEC_ENABLED() {
+    return getEnvBoolean('COMMAND_EXEC_ENABLED')
+  },
+
+  /** コマンド定義(YAML)のパス。運用者が read-only でマウントする */
+  get COMMAND_DEF_PATH() {
+    return getEnv('COMMAND_DEF_PATH', { default: '/app/config/commands.yaml' })
+  },
+
+  /**
+   * SSH の秘密鍵と known_hosts を置くディレクトリ。
+   *
+   * 定義ファイルからはこの配下の**ファイル名**しか指定できない。
+   * 鍵そのものは DB に持たず、read-only のバインドマウントで渡す。
+   */
+  get COMMAND_SSH_DIR() {
+    return getEnv('COMMAND_SSH_DIR', { default: '/app/config/ssh' })
+  },
+
+  /**
+   * known_hosts のパス(ホストごとの指定が無い場合の既定)。
+   *
+   * StrictHostKeyChecking=yes と組み合わせるため、ここが無いホストへは接続できない(fail closed)。
+   */
+  get COMMAND_SSH_KNOWN_HOSTS() {
+    return (
+      getEnv('COMMAND_SSH_KNOWN_HOSTS') ?? `${getEnv('COMMAND_SSH_DIR', { default: '/app/config/ssh' })}/known_hosts`
+    )
+  },
+
   // メール
   get MAIL_SEND() {
     return getEnv<'sendgrid' | 'sendmail' | 'smtp' | 'debug'>('MAIL_SEND')
