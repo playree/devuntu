@@ -46,6 +46,18 @@ export const safeCallbackPath = (raw: string | null | undefined, fallback: strin
   }
 }
 
+/**
+ * 認証状態が変わった後の遷移。
+ *
+ * `router.push` だと、未認証で踏んだパスに対して proxy が返したリダイレクト先が
+ * クライアントのルートキャッシュへ static の staleTime(既定5分)で残るため、
+ * ログイン後の遷移までサインイン画面へ差し戻されてしまう。
+ * 認証状態が変わった直後はツリーごと作り直す必要もあるので、フルナビゲーションで遷移する。
+ */
+export const navigateAfterAuth = (path: string) => {
+  window.location.assign(path)
+}
+
 export const makePath = (path: string, params?: Record<string, string> | ReadonlyURLSearchParams) => {
   if (params) {
     if (params instanceof ReadonlyURLSearchParams) {

@@ -1,22 +1,23 @@
-- [設計上の決めごと](#設計上の決めごと)
-  - [チケットはボードを移動しない](#チケットはボードを移動しない)
-- [開発用インフラ起動](#開発用インフラ起動)
-  - [初回に用意するファイル](#初回に用意するファイル)
-- [同一PCでの並行clone(エージェント開発用など)](#同一pcでの並行cloneエージェント開発用など)
-- [バックアップ・リストア](#バックアップリストア)
-- [インストール](#インストール)
-- [ビルド](#ビルド)
-- [テスト・Lint](#テストlint)
-- [画面の動作確認](#画面の動作確認)
-- [パッケージ更新](#パッケージ更新)
-- [パッケージへのパッチ](#パッケージへのパッチ)
-- [パッケージのバージョン上書き](#パッケージのバージョン上書き)
-- [TypeScript v7 と v6 の併存](#typescript-v7-と-v6-の併存)
-- [better-auth](#better-auth)
-- [イメージ作成](#イメージ作成)
-  - [Docker Build](#docker-build)
-  - [Docker Hub Push](#docker-hub-push)
-- [sharpの依存関係チェック](#sharpの依存関係チェック)
+- [開発](#開発)
+  - [設計上の決めごと](#設計上の決めごと)
+    - [チケットはボードを移動しない](#チケットはボードを移動しない)
+  - [開発用インフラ起動](#開発用インフラ起動)
+    - [初回に用意するファイル](#初回に用意するファイル)
+  - [同一PCでの並行clone(エージェント開発用など)](#同一pcでの並行cloneエージェント開発用など)
+  - [バックアップ・リストア](#バックアップリストア)
+  - [インストール](#インストール)
+  - [ビルド](#ビルド)
+  - [テスト・Lint](#テストlint)
+  - [画面の動作確認](#画面の動作確認)
+  - [パッケージ更新](#パッケージ更新)
+  - [パッケージへのパッチ](#パッケージへのパッチ)
+  - [パッケージのバージョン上書き](#パッケージのバージョン上書き)
+  - [TypeScript v7 と v6 の併存](#typescript-v7-と-v6-の併存)
+  - [better-auth](#better-auth)
+  - [イメージ作成](#イメージ作成)
+    - [Docker Build](#docker-build)
+    - [Docker Hub Push](#docker-hub-push)
+  - [sharpの依存関係チェック](#sharpの依存関係チェック)
 
 # 開発
 
@@ -252,6 +253,9 @@ docker build -f docker/Dockerfile \
 ### Docker Hub Push
 
 ```sh
+docker tag devuntu:latest playree/devuntu:edge
+docker push playree/devuntu:edge
+
 docker tag devuntu:latest playree/devuntu:latest
 docker push playree/devuntu:latest
 

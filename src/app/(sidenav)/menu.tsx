@@ -20,6 +20,7 @@ import {
 import { LocaleSwitch } from '@/components/locale/locale-switch'
 import { authClient } from '@/lib/auth/auth-client'
 import { authConfig } from '@/lib/auth/auth-config'
+import { navigateAfterAuth } from '@/lib/client-utils'
 import { useLocale } from '@/locale/client'
 import { Accordion, Button, Card, cn } from '@heroui/react'
 import Image from 'next/image'
@@ -72,16 +73,15 @@ export const MenuButton: FC<{
 
 const SignOutButton: FC = () => {
   const { t } = useLocale()
-  const router = useRouter()
 
   return (
     <MultiButton
       isSmart
       variant='outline'
       icon={<ArrowLeftStartOnRectangleIcon />}
-      onPress={() => {
-        authClient.signOut()
-        router.push(authConfig.path.signIn)
+      onPress={async () => {
+        await authClient.signOut()
+        navigateAfterAuth(authConfig.path.signIn)
       }}
     >
       {t('signout')}
