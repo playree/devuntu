@@ -7,18 +7,16 @@ import { CheckIcon, Cog6ToothIcon } from '@/components/icon'
 import { InputCtrlPassword } from '@/components/input-ctrl-pw'
 import { SingleLayout } from '@/components/single-layout'
 import { parseAction } from '@/lib/action/action-client'
+import { navigateAfterAuth } from '@/lib/client-utils'
 import { CreateAdmin, scCreateAdmin } from '@/lib/schema/schema'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useRouter } from 'next/navigation'
 import { FC } from 'react'
 import { useForm } from 'react-hook-form'
 import { createAdmin } from './server'
 
 export const StartClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword }) => {
   const { t, fet } = useLocale()
-  const router = useRouter()
-
   const {
     control,
     handleSubmit,
@@ -38,7 +36,7 @@ export const StartClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword 
       <form
         onSubmit={handleSubmit(async (input) => {
           await parseAction(createAdmin(input))
-          router.push('/')
+          navigateAfterAuth('/')
         })}
       >
         <GridBox>

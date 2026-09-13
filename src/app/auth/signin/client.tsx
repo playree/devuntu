@@ -23,7 +23,7 @@ import { SingleLayout } from '@/components/single-layout'
 import { parseAction } from '@/lib/action/action-client'
 import { authClient } from '@/lib/auth/auth-client'
 import { authConfig } from '@/lib/auth/auth-config'
-import { makePath, safeCallbackPath } from '@/lib/client-utils'
+import { makePath, navigateAfterAuth, safeCallbackPath } from '@/lib/client-utils'
 import { ClientError, TOO_MANY_REQUESTS } from '@/lib/error'
 import {
   Otp,
@@ -41,7 +41,7 @@ import { useLocale } from '@/locale/client'
 import { cn, Separator } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AnimatePresence } from 'framer-motion'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { FC, useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { getUserByEmail } from './server'
@@ -120,7 +120,6 @@ const PasswordForm: FC<{
   back: () => void
 }> = ({ direction, email, callbackURL, mode, twoFaRequired, next, back }) => {
   const { t, fet } = useLocale()
-  const router = useRouter()
   const {
     control,
     handleSubmit,
@@ -159,18 +158,22 @@ const PasswordForm: FC<{
                     return
                   }
 
-                  if (user) {
-                    // 2FA有効化の確認(運用として不要なら有効化もしない)
-                    if (twoFaRequired && !user.twoFactorEnabled) {
-                      await authClient.twoFactor.enable({ password })
-                      await authClient.twoFactor.sendOtp()
-                      notify.success(t('msg_otp_sent'))
-                      next(password)
-                      return
-                    }
-
-                    router.push(callbackURL)
+                  if (!user) {
+                    // 遷移も通知もしないまま画面が固まるのを避ける
+                    notify.warn(t('auth_ng'))
+                    return
                   }
+
+                  // 2FA有効化の確認(運用として不要なら有効化もしない)
+                  if (twoFaRequired && !user.twoFactorEnabled) {
+                    await authClient.twoFactor.enable({ password })
+                    await authClient.twoFactor.sendOtp()
+                    notify.success(t('msg_otp_sent'))
+                    next(password)
+                    return
+                  }
+
+                  navigateAfterAuth(callbackURL)
                 }
               },
             },
@@ -229,7 +232,6 @@ const OtpForm: FC<{
   back: () => void
 }> = ({ direction, email, callbackURL, back }) => {
   const { t } = useLocale()
-  const router = useRouter()
   const {
     control,
     handleSubmit,
@@ -258,7 +260,7 @@ const OtpForm: FC<{
             notify.warn(t('auth_ng'))
             return
           }
-          router.push(callbackURL)
+          navigateAfterAuth(callbackURL)
         })}
       >
         <div className={cn(textStyles().light(), 'text-xs')}>{t('msg_enter_otp')}</div>
@@ -325,7 +327,6 @@ const TwoFaForm: FC<{
   callbackURL: string
 }> = ({ direction, password, callbackURL }) => {
   const { t } = useLocale()
-  const router = useRouter()
   const {
     control,
     handleSubmit,
@@ -358,7 +359,7 @@ const TwoFaForm: FC<{
             notify.warn(t('auth_ng'))
             return
           }
-          router.push(callbackURL)
+          navigateAfterAuth(callbackURL)
         })}
       >
         <div className={cn(textStyles().light(), 'text-xs')}>{t('msg_enter_otp')}</div>
@@ -420,7 +421,6 @@ export const SignInClient: FC<{ sessionEmail?: string; twoFaRequired: boolean }>
 }) => {
   const searchParams = useSearchParams()
   const { t } = useLocale()
-  const router = useRouter()
   const [step, setStep] = useState<Step>(
     sessionEmail ? { id: 'PASSWORD', direction: 0 } : { id: 'EMAIL', direction: 0 },
   )
@@ -568,7 +568,7 @@ export const SignInClient: FC<{ sessionEmail?: string; twoFaRequired: boolean }>
                 notify.warn(t('auth_ng'))
                 return
               }
-              router.push(callbackURL)
+              navigateAfterAuth(callbackURL)
             }}
           >
             {t('passkey_signin')}
