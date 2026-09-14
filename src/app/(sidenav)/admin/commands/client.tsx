@@ -2,6 +2,7 @@
 
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
+import { useModalState } from '@/components/general/modal'
 import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
 import { ArrowPathIcon, CommandLineIcon } from '@/components/icon'
@@ -11,18 +12,25 @@ import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { FC } from 'react'
 import { CommandDefTable, CommandHostTable } from './command-tables'
-import { type GetCommandDefsReturnType, getCommandDefsAction, reloadCommandDefsAction } from './server'
+import { SettingModal } from './modals'
+import {
+  type CommandDefView,
+  type GetCommandDefsReturnType,
+  getCommandDefsAction,
+  reloadCommandDefsAction,
+} from './server'
 
 /**
- * コマンド管理(Phase 1 は読み取り専用)
+ * コマンド管理
  *
- * 定義そのものはサーバー上の YAML が持つ。この画面は「置いた定義が正しく読めているか」を
- * 確かめる場所で、有効化と許可グループの編集は Phase 2 で足す。
+ * 定義そのものはサーバー上の YAML が持つ。この画面で編集できるのは
+ * 有効化・許可グループ・表示順だけで、実行先や引数は画面から作れない。
  */
 export const AdminCommandsClient: FC = () => {
   const { t } = useLocale()
   const tz = useUserTimezone()
   const { data, isLoading, refresh } = useActionData(getCommandDefsAction)
+  const settingModalState = useModalState<CommandDefView>()
 
   return (
     <FlexCol>
@@ -41,12 +49,30 @@ export const AdminCommandsClient: FC = () => {
         </MultiButton>
       </ContentHeader>
 
-      {isLoading && !data ? <PanelSkeleton /> : <CommandDefsBody data={data} tz={tz} />}
+      {isLoading && !data ? (
+        <PanelSkeleton />
+      ) : (
+        <CommandDefsBody data={data} tz={tz} onEdit={(command) => settingModalState.open(command)} />
+      )}
+
+      {settingModalState.target && (
+        <SettingModal
+          state={settingModalState}
+          reload={refresh}
+          key={settingModalState.key}
+          target={settingModalState.target}
+          groupOptions={data?.groupOptions ?? {}}
+        />
+      )}
     </FlexCol>
   )
 }
 
-const CommandDefsBody: FC<{ data: GetCommandDefsReturnType; tz: string }> = ({ data, tz }) => {
+const CommandDefsBody: FC<{
+  data: GetCommandDefsReturnType
+  tz: string
+  onEdit: (command: CommandDefView) => void
+}> = ({ data, tz, onEdit }) => {
   const { t } = useLocale()
 
   if (!data) {
@@ -69,7 +95,7 @@ const CommandDefsBody: FC<{ data: GetCommandDefsReturnType; tz: string }> = ({ d
           {data.commands.length === 0 ? (
             <NoticePanel>{t('command_no_def')}</NoticePanel>
           ) : (
-            <CommandDefTable commands={data.commands} />
+            <CommandDefTable commands={data.commands} onEdit={onEdit} />
           )}
         </>
       ) : (

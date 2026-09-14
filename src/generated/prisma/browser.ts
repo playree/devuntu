@@ -266,3 +266,21 @@ export type NotifyOutbox = Prisma.NotifyOutboxModel
  * 未送信・再試行待ち・試行回数を使い切ったものだけ。
  */
 export type NotifyDelivery = Prisma.NotifyDeliveryModel
+/**
+ * Model CommandSetting
+ * 定義ファイル上のコマンドに対する、画面で管理するメタ情報。
+ * 
+ * コマンドの定義そのもの(実行先・引数・入力項目)はサーバー上の YAML が持ち、ここには持たせない。
+ * 画面から定義を作れないようにすることで、Web 経由で任意のコマンドを仕込む経路を作らないため。
+ * 行は定義キーごとに遅延作成し、定義ファイル側からコマンドが消えても履歴の整合のために残す。
+ */
+export type CommandSetting = Prisma.CommandSettingModel
+/**
+ * Model CommandAllowedGroup
+ * コマンドの実行を許可するグループ。
+ * 
+ * 空(1行も無い)は「管理者のみ」を意味する。連携設定(`integration-settings.ts`)の
+ * 「空 = 全ユーザー許可」とは**意図的に逆**にしてある。コマンド実行は誤って全員へ開くと
+ * 取り返しがつかないため、指定漏れが緩い側へ倒れないようにする。
+ */
+export type CommandAllowedGroup = Prisma.CommandAllowedGroupModel

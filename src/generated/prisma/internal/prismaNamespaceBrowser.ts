@@ -93,7 +93,9 @@ export const ModelName = {
   WebPushSubscription: 'WebPushSubscription',
   BoardNotifySetting: 'BoardNotifySetting',
   NotifyOutbox: 'NotifyOutbox',
-  NotifyDelivery: 'NotifyDelivery'
+  NotifyDelivery: 'NotifyDelivery',
+  CommandSetting: 'CommandSetting',
+  CommandAllowedGroup: 'CommandAllowedGroup'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -746,6 +748,28 @@ export const NotifyDeliveryScalarFieldEnum = {
 } as const
 
 export type NotifyDeliveryScalarFieldEnum = (typeof NotifyDeliveryScalarFieldEnum)[keyof typeof NotifyDeliveryScalarFieldEnum]
+
+
+export const CommandSettingScalarFieldEnum = {
+  id: 'id',
+  commandKey: 'commandKey',
+  enabled: 'enabled',
+  sortOrder: 'sortOrder',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CommandSettingScalarFieldEnum = (typeof CommandSettingScalarFieldEnum)[keyof typeof CommandSettingScalarFieldEnum]
+
+
+export const CommandAllowedGroupScalarFieldEnum = {
+  id: 'id',
+  settingId: 'settingId',
+  groupId: 'groupId',
+  createdAt: 'createdAt'
+} as const
+
+export type CommandAllowedGroupScalarFieldEnum = (typeof CommandAllowedGroupScalarFieldEnum)[keyof typeof CommandAllowedGroupScalarFieldEnum]
 
 
 export const SortOrder = {

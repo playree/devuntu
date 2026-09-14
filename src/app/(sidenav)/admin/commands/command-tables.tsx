@@ -1,7 +1,9 @@
 'use client'
 
+import { MultiButton } from '@/components/general/button'
 import { FlexCol, FlexRow } from '@/components/general/flex'
 import { Panel } from '@/components/general/panel'
+import { PencilSquareIcon } from '@/components/icon'
 import { type CommandInputType } from '@/lib/command/command'
 import { type CommandHostStatus } from '@/lib/command/command-catalog'
 import { type LocaleItem } from '@/locale'
@@ -59,8 +61,16 @@ export const CommandHostTable: FC<{ hosts: CommandHostStatus[] }> = ({ hosts }) 
   )
 }
 
-/** コマンド定義の一覧。実行内容は argsPreview と同じ形で出し、接続先は表示名だけにする */
-export const CommandDefTable: FC<{ commands: CommandDefView[] }> = ({ commands }) => {
+/**
+ * コマンド定義と設定の一覧。
+ *
+ * 定義ファイル由来の情報(実行先・引数・入力項目)は読み取り専用で、
+ * 編集できるのは有効化・許可グループ・表示順だけ。
+ */
+export const CommandDefTable: FC<{ commands: CommandDefView[]; onEdit: (command: CommandDefView) => void }> = ({
+  commands,
+  onEdit,
+}) => {
   const { t } = useLocale()
 
   return (
@@ -73,11 +83,28 @@ export const CommandDefTable: FC<{ commands: CommandDefView[] }> = ({ commands }
               <span className='font-semibold'>{command.label}</span>
               <span className='text-foreground-500 font-mono text-xs'>{command.id}</span>
               <span className='grow' />
+              <Chip
+                color={command.setting.enabled ? 'success' : 'default'}
+                variant='soft'
+                className='whitespace-nowrap'
+              >
+                {command.setting.enabled ? t('enabled') : t('disabled')}
+              </Chip>
               {command.hostLabel && (
                 <Chip variant='soft' className='whitespace-nowrap'>
                   {command.hostLabel}
                 </Chip>
               )}
+              <MultiButton
+                isIconOnly
+                variant='outline'
+                tooltip={t('settings')}
+                onPress={() => {
+                  onEdit(command)
+                }}
+              >
+                <PencilSquareIcon />
+              </MultiButton>
             </FlexRow>
 
             {command.description && <div className='text-foreground-500 text-xs'>{command.description}</div>}
@@ -105,6 +132,14 @@ export const CommandDefTable: FC<{ commands: CommandDefView[] }> = ({ commands }
               {command.singleton && <span>{t('command_singleton')}</span>}
               {command.requireConfirm && <span>{t('command_confirm_required')}</span>}
               {command.requireFreshSession && <span>{t('command_fresh_session_required')}</span>}
+              <span className='grow' />
+              <span>
+                {/* 許可グループが空 = 管理者のみ。連携設定の「空 = 全員」とは逆なので明示する */}
+                {t('command_allowed_groups')}:{' '}
+                {command.setting.allowedGroupIds.length === 0
+                  ? t('command_allowed_admin_only')
+                  : `${command.setting.allowedGroupIds.length}`}
+              </span>
             </FlexRow>
           </FlexCol>
         </Panel>

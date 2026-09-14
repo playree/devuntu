@@ -24,6 +24,7 @@ import {
   TICKET_SORT_COLUMNS,
   TICKET_STATUSES,
 } from '../board/task'
+import { COMMAND_ID_PATTERN } from '../command/command'
 import { CHANNEL_NOTIFY_EVENTS, DM_NOTIFY_EVENTS } from '../notify/notify'
 import { SLACK_CHANNEL_ID_PATTERN } from '../slack/slack'
 import { TOKEN_EXPIRES } from '../token-expires'
@@ -337,6 +338,20 @@ export const scUpdateIntegrationSettings = z.object({
   allowedGroupIds: z.array(z.uuidv7()),
 })
 export type UpdateIntegrationSettings = z.infer<typeof scUpdateIntegrationSettings>
+
+/**
+ * コマンドごとの実行設定。
+ *
+ * 連携設定と似た形だが、`allowedGroupIds` の空は「全ユーザー許可」ではなく
+ * **管理者のみ**を意味する(`src/lib/command/command-access.ts`)。
+ */
+export const scUpdateCommandSetting = z.object({
+  commandKey: z.string().regex(COMMAND_ID_PATTERN, el('@invalid_command_input')),
+  enabled: z.boolean(),
+  sortOrder: z.number().int().min(-9999).max(9999),
+  allowedGroupIds: z.array(z.uuidv7()),
+})
+export type UpdateCommandSetting = z.infer<typeof scUpdateCommandSetting>
 
 /**
  * 通知設定(イベント種別ごと・チャネルごとの ON/OFF)。種別が増えても z.enum が自動で追従する。

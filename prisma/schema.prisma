@@ -1060,9 +1060,10 @@ model Group {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  userGroups          UserGroup[]
-  boardGroups         BoardGroup[]
-  agentApproverGroups AgentApproverGroup[]
+  userGroups           UserGroup[]
+  boardGroups          BoardGroup[]
+  agentApproverGroups  AgentApproverGroup[]
+  commandAllowedGroups CommandAllowedGroup[]
 
   @@map("group")
 }
@@ -1679,4 +1680,55 @@ model NotifyDelivery {
   @@index([userId, channel, status, scheduledAt])
   @@index([outboxId])
   @@map("notify_delivery")
+}
+
+/// 定義ファイル上のコマンドに対する、画面で管理するメタ情報。
+///
+/// コマンドの定義そのもの(実行先・引数・入力項目)はサーバー上の YAML が持ち、ここには持たせない。
+/// 画面から定義を作れないようにすることで、Web 経由で任意のコマンドを仕込む経路を作らないため。
+/// 行は定義キーごとに遅延作成し、定義ファイル側からコマンドが消えても履歴の整合のために残す。
+model CommandSetting {
+  id String @id @default(uuid(7))
+
+  /// 定義ファイルの command.id
+  commandKey String @unique
+
+  /// 画面からの実行を許可するか。既定は無効で、定義を置いただけでは動かない
+  enabled Boolean @default(false)
+
+  /// 一覧での表示順。定義ファイルの sortOrder より優先する
+  sortOrder Int @default(0)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // relation
+  allowedGroups CommandAllowedGroup[]
+
+  @@map("command_setting")
+}
+
+/// コマンドの実行を許可するグループ。
+///
+/// 空(1行も無い)は「管理者のみ」を意味する。連携設定(`integration-settings.ts`)の
+/// 「空 = 全ユーザー許可」とは**意図的に逆**にしてある。コマンド実行は誤って全員へ開くと
+/// 取り返しがつかないため、指定漏れが緩い側へ倒れないようにする。
+model CommandAllowedGroup {
+  id String @id @default(uuid(7))
+
+  /// 対象のコマンド設定
+  settingId String
+  setting   CommandSetting @relation(fields: [settingId], references: [id], onDelete: Cascade)
+
+  /// 実行を許可するグループ。所属ユーザー全員が実行できる
+  groupId String
+  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+
+  @@unique([settingId, groupId])
+  @@index([groupId])
+  @@map("command_allowed_group")
 }

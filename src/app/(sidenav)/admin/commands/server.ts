@@ -2,10 +2,14 @@
 
 import { safeAuthAction } from '@/lib/action/action-server'
 import { type CommandDef } from '@/lib/command/command'
+import { effectiveSortOrder } from '@/lib/command/command-access'
 import { buildCommandHostStatus, type CommandHostStatus, getCommandCatalog } from '@/lib/command/command-catalog'
+import { defaultCommandSetting, getCommandSettings, setCommandSetting } from '@/lib/command/command-settings'
 import { envu } from '@/lib/env-util'
-import { errTooManyRequests } from '@/lib/error'
+import { errInvalidOperation, errTooManyRequests } from '@/lib/error'
+import { prisma } from '@/lib/prisma'
 import { consumeRateLimit } from '@/lib/rate-limit'
+import { scUpdateCommandSetting } from '@/lib/schema/schema'
 
 /** 定義の再読み込みは I/O を伴うので、連打で叩き続けられないようにする */
 const RELOAD_RATE_LIMIT = { limit: 10, windowMs: 60_000 }
@@ -28,10 +32,15 @@ export type CommandDefView = {
   requireConfirm: boolean
   requireFreshSession: boolean
   singleton: boolean
-  sortOrder: number
+  /** 画面で編集する設定。定義ファイル側の sortOrder はここで上書きされる */
+  setting: { enabled: boolean; sortOrder: number; allowedGroupIds: string[] }
 }
 
-const toDefView = (def: CommandDef, hostLabels: Map<string, string>): CommandDefView => ({
+const toDefView = (
+  def: CommandDef,
+  hostLabels: Map<string, string>,
+  setting: { enabled: boolean; sortOrder: number; allowedGroupIds: string[] },
+): CommandDefView => ({
   id: def.id,
   label: def.label,
   description: def.description ?? null,
@@ -49,31 +58,46 @@ const toDefView = (def: CommandDef, hostLabels: Map<string, string>): CommandDef
   requireConfirm: def.requireConfirm,
   requireFreshSession: def.requireFreshSession,
   singleton: def.singleton,
-  sortOrder: def.sortOrder,
+  setting,
 })
 
-const buildView = (opts?: { force?: boolean }) => {
+const buildView = async (opts?: { force?: boolean }) => {
   const result = getCommandCatalog(opts)
   const base = {
     enabled: envu.server.COMMAND_EXEC_ENABLED,
     path: result.path,
     loadedAt: result.loadedAt,
   }
+  // グループ一覧はコマンドをまたいで共通なので、取得はこの 1 箇所にまとめる
+  const groups = await prisma.group.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } })
+  const groupOptions = Object.fromEntries(groups.map((group) => [group.id, group.name])) as Record<string, string>
+
   if (!result.ok) {
-    return { ...base, ok: false as const, issues: result.issues, hosts: [], commands: [] }
+    return { ...base, ok: false as const, issues: result.issues, groupOptions, hosts: [], commands: [] }
   }
+
+  const settings = await getCommandSettings(result.catalog.commands.map((def) => def.id))
   const hostLabels = new Map(result.catalog.hosts.map((host) => [host.id, host.label]))
+  const commands = result.catalog.commands
+    .map((def) => {
+      const setting = settings.get(def.id) ?? defaultCommandSetting(def.id)
+      // 並びの決め方は利用者向け画面と同じ関数に寄せる(食い違うと設定の効き方が読めなくなる)
+      return toDefView(def, hostLabels, { ...setting, sortOrder: effectiveSortOrder(setting, def) })
+    })
+    .sort((a, b) => a.setting.sortOrder - b.setting.sortOrder || a.label.localeCompare(b.label))
+
   return {
     ...base,
     ok: true as const,
     issues: [] as string[],
+    groupOptions,
     hosts: result.catalog.hosts.map<CommandHostStatus>(buildCommandHostStatus),
-    commands: result.catalog.commands.map((def) => toDefView(def, hostLabels)),
+    commands,
   }
 }
 
 /**
- * コマンド定義の一覧(読み取り専用)。
+ * コマンド定義と設定の一覧。
  *
  * 定義ファイルが壊れていても画面は開けるようにし、原因をそのまま表示する。
  * 直前の正常な定義は保持しないので、ここでエラーが出ている間はコマンドを実行できない。
@@ -97,4 +121,22 @@ export const reloadCommandDefsAction = safeAuthAction
       throw errTooManyRequests()
     }
     return buildView({ force: true })
+  })
+
+/**
+ * コマンドごとの設定を保存する。
+ *
+ * 定義ファイルに無いキーは受け付けない。行だけが増えても実行はできないが、
+ * 綴り違いを黙って保存すると「有効にしたのに一覧へ出ない」の原因になる。
+ */
+export const updateCommandSettingAction = safeAuthAction
+  .metadata({ actionName: 'updateCommandSetting', role: 'admin' })
+  .inputSchema(scUpdateCommandSetting)
+  .action(async ({ parsedInput }) => {
+    const result = getCommandCatalog()
+    if (!result.ok || !result.catalog.commands.some((def) => def.id === parsedInput.commandKey)) {
+      throw errInvalidOperation()
+    }
+    await setCommandSetting(parsedInput)
+    return parsedInput
   })
