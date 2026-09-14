@@ -150,6 +150,7 @@ VAPID 鍵は Web プッシュ通知を使う場合のみ必要で、**公開鍵�
 誤って全員へ開くと取り返しがつかないため、既定を逆にしてある。
 
 `COMMAND_MAX_CONCURRENT` は同時に張る SSH 接続の数がそのまま増えるため、控えめな既定にしてある。
+`COMMAND_MAX_QUEUED` とあわせて**1以上の整数**のみ受け付け、それ以外は起動時に落とす。
 `COMMAND_WORKER_ENABLED` を false にすると待ち行列に積まれるだけで実行されない(切り分け用)。
 
 実行ログは SSE(`/api/command/runs/[id]/stream`)で配信する。リバースプロキシを挟む場合は、
