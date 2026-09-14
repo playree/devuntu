@@ -538,6 +538,40 @@ export type EnumNotifyChannelWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumNotifyChannelFilter<$PrismaModel>
 }
 
+export type EnumCommandRunStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.CommandRunStatus | Prisma.EnumCommandRunStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.CommandRunStatus[] | Prisma.ListEnumCommandRunStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CommandRunStatus[] | Prisma.ListEnumCommandRunStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCommandRunStatusFilter<$PrismaModel> | $Enums.CommandRunStatus
+}
+
+export type EnumCommandRunStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CommandRunStatus | Prisma.EnumCommandRunStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.CommandRunStatus[] | Prisma.ListEnumCommandRunStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CommandRunStatus[] | Prisma.ListEnumCommandRunStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCommandRunStatusWithAggregatesFilter<$PrismaModel> | $Enums.CommandRunStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCommandRunStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCommandRunStatusFilter<$PrismaModel>
+}
+
+export type EnumCommandStreamFilter<$PrismaModel = never> = {
+  equals?: $Enums.CommandStream | Prisma.EnumCommandStreamFieldRefInput<$PrismaModel>
+  in?: $Enums.CommandStream[] | Prisma.ListEnumCommandStreamFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CommandStream[] | Prisma.ListEnumCommandStreamFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCommandStreamFilter<$PrismaModel> | $Enums.CommandStream
+}
+
+export type EnumCommandStreamWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CommandStream | Prisma.EnumCommandStreamFieldRefInput<$PrismaModel>
+  in?: $Enums.CommandStream[] | Prisma.ListEnumCommandStreamFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CommandStream[] | Prisma.ListEnumCommandStreamFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCommandStreamWithAggregatesFilter<$PrismaModel> | $Enums.CommandStream
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCommandStreamFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCommandStreamFilter<$PrismaModel>
+}
+
 export type NestedStringFilter<$PrismaModel = never> = {
   equals?: string | Prisma.StringFieldRefInput<$PrismaModel>
   in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
@@ -1019,6 +1053,40 @@ export type NestedEnumNotifyChannelWithAggregatesFilter<$PrismaModel = never> = 
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumNotifyChannelFilter<$PrismaModel>
   _max?: Prisma.NestedEnumNotifyChannelFilter<$PrismaModel>
+}
+
+export type NestedEnumCommandRunStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.CommandRunStatus | Prisma.EnumCommandRunStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.CommandRunStatus[] | Prisma.ListEnumCommandRunStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CommandRunStatus[] | Prisma.ListEnumCommandRunStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCommandRunStatusFilter<$PrismaModel> | $Enums.CommandRunStatus
+}
+
+export type NestedEnumCommandRunStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CommandRunStatus | Prisma.EnumCommandRunStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.CommandRunStatus[] | Prisma.ListEnumCommandRunStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CommandRunStatus[] | Prisma.ListEnumCommandRunStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCommandRunStatusWithAggregatesFilter<$PrismaModel> | $Enums.CommandRunStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCommandRunStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCommandRunStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumCommandStreamFilter<$PrismaModel = never> = {
+  equals?: $Enums.CommandStream | Prisma.EnumCommandStreamFieldRefInput<$PrismaModel>
+  in?: $Enums.CommandStream[] | Prisma.ListEnumCommandStreamFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CommandStream[] | Prisma.ListEnumCommandStreamFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCommandStreamFilter<$PrismaModel> | $Enums.CommandStream
+}
+
+export type NestedEnumCommandStreamWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CommandStream | Prisma.EnumCommandStreamFieldRefInput<$PrismaModel>
+  in?: $Enums.CommandStream[] | Prisma.ListEnumCommandStreamFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CommandStream[] | Prisma.ListEnumCommandStreamFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCommandStreamWithAggregatesFilter<$PrismaModel> | $Enums.CommandStream
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCommandStreamFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCommandStreamFilter<$PrismaModel>
 }
 
 

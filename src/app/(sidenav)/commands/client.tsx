@@ -2,23 +2,27 @@
 
 import { MultiButton } from '@/components/general/button'
 import { FlexCol, FlexRow } from '@/components/general/flex'
+import { useModalState } from '@/components/general/modal'
 import { NoticePanel, Panel, PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, CommandLineIcon } from '@/components/icon'
+import { ArrowPathIcon, CommandLineIcon, PlayIcon } from '@/components/icon'
 import { useActionData } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'
 import { Chip } from '@heroui/react'
 import { FC } from 'react'
-import { getAvailableCommandsAction } from './server'
+import { CommandForm } from './command-form'
+import { type AvailableCommandView, getAvailableCommandsAction } from './server'
 
 /**
  * 実行できるコマンドの一覧。
  *
- * Phase 2 の時点では一覧までで、実行フォームと実行ボタンは Phase 3 で足す。
+ * 出るのは「今このユーザーが実行できるもの」だけ(`listAvailableCommands(user, 'execute')`)。
+ * 一覧に出るのに押すと弾かれる、という状態を作らないため。
  */
 export const CommandsClient: FC = () => {
   const { t } = useLocale()
   const { data, isLoading, reload } = useActionData(getAvailableCommandsAction)
+  const formState = useModalState<AvailableCommandView>()
 
   return (
     <FlexCol>
@@ -45,12 +49,19 @@ export const CommandsClient: FC = () => {
                       {command.hostLabel}
                     </Chip>
                   )}
+                  <MultiButton icon={<PlayIcon />} variant='outline' onPress={() => formState.open(command)}>
+                    {t('command_run')}
+                  </MultiButton>
                 </FlexRow>
                 {command.description && <div className='text-foreground-500 text-xs'>{command.description}</div>}
               </FlexCol>
             </Panel>
           ))}
         </FlexCol>
+      )}
+
+      {formState.target && (
+        <CommandForm state={formState} reload={reload} key={formState.key} target={formState.target} />
       )}
     </FlexCol>
   )

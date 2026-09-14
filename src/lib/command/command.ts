@@ -80,6 +80,88 @@ export const COMMAND_START_SENTINEL = 'devuntu-start'
 /** 番兵行の区切り文字(RS: record separator) */
 export const COMMAND_SENTINEL_MARK = '\u001e'
 
+/* -------------------------------------------------------------------------------------------------
+ * 実行時の定数
+ * -----------------------------------------------------------------------------------------------*/
+
+/** ワーカーの tick 間隔。実行の立ち上がりを速くしたいので通知より短くする */
+export const COMMAND_TICK_MS = 2_000
+
+/** ワーカー起動から最初の tick までの待ち。起動直後の負荷と重ねない */
+export const COMMAND_START_DELAY_MS = 5_000
+
+/** ログをまとめて書き出す間隔。1秒あたりの INSERT 回数の上限を決める */
+export const COMMAND_FLUSH_INTERVAL_MS = 250
+
+/** ログをまとめて書き出すサイズ。間隔より先に達したらその時点で書く */
+export const COMMAND_FLUSH_BYTES = 8 * 1024
+
+/**
+ * 保存するログの上限。
+ *
+ * 超えても**実行は続ける**。ログが長いだけの正常なジョブを殺さないため、
+ * 保存だけを止めて `truncated` を立てる。
+ */
+export const COMMAND_MAX_OUTPUT_BYTES = 2 * 1024 * 1024
+
+/** 明らかな暴走とみなして kill する出力量 */
+export const COMMAND_RUNAWAY_BYTES = 32 * 1024 * 1024
+
+/** 保存するチャンク数の上限 */
+export const COMMAND_MAX_CHUNKS = 5_000
+
+/** 生存申告の間隔 */
+export const COMMAND_HEARTBEAT_MS = 5_000
+
+/** これを超えて生存申告が無い running は、掴んだプロセスが落ちたとみなす */
+export const COMMAND_STALE_MS = 60_000
+
+/** 中断要求から SIGTERM までの猶予(リモートが stdin の EOF で自分から降りるのを待つ) */
+export const COMMAND_ABORT_GRACE_MS = 5_000
+
+/** SIGTERM から SIGKILL までの猶予 */
+export const COMMAND_KILL_GRACE_MS = 5_000
+
+/** ログの書き出しに連続で失敗したら実行を打ち切る回数 */
+export const COMMAND_FLUSH_MAX_RETRIES = 3
+
+/** 実行の終了状態。ここに入ったら以降 status は変わらない */
+export const COMMAND_TERMINAL_STATUSES = ['succeeded', 'failed', 'canceled'] as const
+
+/** 打ち切りの分類。画面には出さずログと履歴の絞り込みに使う */
+export const COMMAND_FAILURE_KINDS = [
+  /** 定義の timeoutSec を超えた */
+  'timeout',
+  /** 画面から中断された */
+  'canceled',
+  /** アプリの再起動などで掴んだプロセスが消えた */
+  'interrupted',
+  /** 出力が暴走した */
+  'output_limit',
+  /** ssh 自身が失敗した(接続不可・認証失敗・ホスト鍵不一致) */
+  'ssh_error',
+  /** 接続が途中で切れた */
+  'connection_lost',
+  /** ログを保存できなかった */
+  'log_write_failed',
+  /** ssh プロセスを起動できなかった */
+  'start_failed',
+] as const
+export type CommandFailureKind = (typeof COMMAND_FAILURE_KINDS)[number]
+
+/* -------------------------------------------------------------------------------------------------
+ * 画面へ返すエラーコード
+ *
+ * 画面側の分岐で使うため、prisma を持ち込む `command-run.ts` ではなくここに置く
+ * (クライアントバンドルに fs / dns が引きずり込まれてしまうため)。
+ * -----------------------------------------------------------------------------------------------*/
+
+/** 同じコマンドが既に動いている */
+export const COMMAND_ALREADY_RUNNING = 'COMMAND_ALREADY_RUNNING'
+
+/** 順番待ちが上限に達している */
+export const COMMAND_QUEUE_FULL = 'COMMAND_QUEUE_FULL'
+
 /** ホスト定義。identityFile などの秘密は画面にも API 応答にも出さない */
 export type CommandHost = {
   id: string

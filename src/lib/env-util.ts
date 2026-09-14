@@ -260,6 +260,36 @@ const server = {
     )
   },
 
+  /**
+   * 実行ワーカー(`command-worker.ts`)を動かすか。
+   * 止めると待ち行列に積まれるだけで実行されない(切り分け用)。
+   */
+  get COMMAND_WORKER_ENABLED() {
+    return getEnvBoolean('COMMAND_WORKER_ENABLED', { default: true })
+  },
+
+  /**
+   * 同時に走らせる実行の上限。
+   *
+   * サーバーから対象ホストへ SSH を張る数がそのままこの値になるので、控えめな既定にしてある。
+   */
+  get COMMAND_MAX_CONCURRENT() {
+    const value = getEnvNumber('COMMAND_MAX_CONCURRENT', { default: 2 })
+    if (!Number.isFinite(value) || value < 1) {
+      throw errSystemError('COMMAND_MAX_CONCURRENT must be at least 1')
+    }
+    return value
+  },
+
+  /** 順番待ちに積める実行の上限。これを超える投入は拒否する */
+  get COMMAND_MAX_QUEUED() {
+    const value = getEnvNumber('COMMAND_MAX_QUEUED', { default: 20 })
+    if (!Number.isFinite(value) || value < 1) {
+      throw errSystemError('COMMAND_MAX_QUEUED must be at least 1')
+    }
+    return value
+  },
+
   // メール
   get MAIL_SEND() {
     return getEnv<'sendgrid' | 'sendmail' | 'smtp' | 'debug'>('MAIL_SEND')

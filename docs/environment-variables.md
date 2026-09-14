@@ -133,6 +133,9 @@ VAPID 鍵は Web プッシュ通知を使う場合のみ必要で、**公開鍵�
 | `COMMAND_DEF_PATH`        | コマンド定義(YAML)のパス                     |      | `/app/config/commands.yaml`      |
 | `COMMAND_SSH_DIR`         | 秘密鍵 / known_hosts を置くディレクトリ      |      | `/app/config/ssh`                |
 | `COMMAND_SSH_KNOWN_HOSTS` | known_hosts のパス(ホスト側の指定が無い場合) |      | `${COMMAND_SSH_DIR}/known_hosts` |
+| `COMMAND_WORKER_ENABLED`  | 実行ワーカーを動かすか                       |      | `true`                           |
+| `COMMAND_MAX_CONCURRENT`  | 同時に走らせる実行の上限                     |      | `2`                              |
+| `COMMAND_MAX_QUEUED`      | 順番待ちに積める実行の上限                   |      | `20`                             |
 
 あらかじめ定義しておいた処理を画面から実行する機能。`COMMAND_EXEC_ENABLED` の既定を `false` に
 しているのは、この機能だけが「サーバーから対象ホストへ SSH してプロセスを起動する」という性質を
@@ -145,6 +148,12 @@ VAPID 鍵は Web プッシュ通知を使う場合のみ必要で、**公開鍵�
 実行を許可する相手はコマンドごとに `/admin/commands` から設定する。**許可グループを指定しない場合は
 管理者のみ**が実行できる。Google / Slack の連携設定では「空欄 = 全ユーザー許可」だが、コマンド実行は
 誤って全員へ開くと取り返しがつかないため、既定を逆にしてある。
+
+`COMMAND_MAX_CONCURRENT` は同時に張る SSH 接続の数がそのまま増えるため、控えめな既定にしてある。
+`COMMAND_WORKER_ENABLED` を false にすると待ち行列に積まれるだけで実行されない(切り分け用)。
+
+実行が失敗しても**自動では再試行しない**。副作用のあるコマンドを勝手に再実行しないためで、
+アプリの再起動などで実行中のまま残った記録は、一定時間後に失敗(`interrupted`)として閉じられる。
 
 `COMMAND_SSH_DIR` は秘密鍵と known_hosts の置き場所で、read-only のバインドマウントで渡す。
 定義ファイルからはこの配下の**ファイル名**しか指定できず、パスやディレクトリ区切りは書けない。

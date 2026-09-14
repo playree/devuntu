@@ -95,7 +95,9 @@ export const ModelName = {
   NotifyOutbox: 'NotifyOutbox',
   NotifyDelivery: 'NotifyDelivery',
   CommandSetting: 'CommandSetting',
-  CommandAllowedGroup: 'CommandAllowedGroup'
+  CommandAllowedGroup: 'CommandAllowedGroup',
+  CommandRun: 'CommandRun',
+  CommandRunChunk: 'CommandRunChunk'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -770,6 +772,48 @@ export const CommandAllowedGroupScalarFieldEnum = {
 } as const
 
 export type CommandAllowedGroupScalarFieldEnum = (typeof CommandAllowedGroupScalarFieldEnum)[keyof typeof CommandAllowedGroupScalarFieldEnum]
+
+
+export const CommandRunScalarFieldEnum = {
+  id: 'id',
+  commandKey: 'commandKey',
+  commandLabel: 'commandLabel',
+  hostLabel: 'hostLabel',
+  userId: 'userId',
+  userName: 'userName',
+  params: 'params',
+  argsPreview: 'argsPreview',
+  status: 'status',
+  activeKey: 'activeKey',
+  workerId: 'workerId',
+  claimedAt: 'claimedAt',
+  heartbeatAt: 'heartbeatAt',
+  cancelRequestedAt: 'cancelRequestedAt',
+  cancelRequestedBy: 'cancelRequestedBy',
+  exitCode: 'exitCode',
+  failureKind: 'failureKind',
+  lastSeq: 'lastSeq',
+  bytes: 'bytes',
+  truncated: 'truncated',
+  queuedAt: 'queuedAt',
+  startedAt: 'startedAt',
+  finishedAt: 'finishedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CommandRunScalarFieldEnum = (typeof CommandRunScalarFieldEnum)[keyof typeof CommandRunScalarFieldEnum]
+
+
+export const CommandRunChunkScalarFieldEnum = {
+  runId: 'runId',
+  seq: 'seq',
+  stream: 'stream',
+  text: 'text',
+  at: 'at'
+} as const
+
+export type CommandRunChunkScalarFieldEnum = (typeof CommandRunChunkScalarFieldEnum)[keyof typeof CommandRunChunkScalarFieldEnum]
 
 
 export const SortOrder = {

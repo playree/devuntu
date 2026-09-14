@@ -284,3 +284,19 @@ export type CommandSetting = Prisma.CommandSettingModel
  * 取り返しがつかないため、指定漏れが緩い側へ倒れないようにする。
  */
 export type CommandAllowedGroup = Prisma.CommandAllowedGroupModel
+/**
+ * Model CommandRun
+ * コマンドの1回の実行。
+ * 
+ * 監査記録も兼ねるので、定義ファイルからコマンドが消えても実行者が削除されても行は残す。
+ * そのため表示に使う値(コマンド名・接続先名・実行者名)は実行時点のものを複写する。
+ */
+export type CommandRun = Prisma.CommandRunModel
+/**
+ * Model CommandRunChunk
+ * 出力の1チャンク。
+ * 
+ * 行単位ではなく一定間隔/サイズでまとめた塊にしてある。冗長な出力で INSERT が
+ * 実行を律速しないようにするためで、SSE の追いつきと履歴の表示は同じテーブルで賄う。
+ */
+export type CommandRunChunk = Prisma.CommandRunChunkModel

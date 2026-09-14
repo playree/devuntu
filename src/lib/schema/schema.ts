@@ -354,6 +354,19 @@ export const scUpdateCommandSetting = z.object({
 export type UpdateCommandSetting = z.infer<typeof scUpdateCommandSetting>
 
 /**
+ * コマンドの実行要求。
+ *
+ * `params` の中身は定義ごとに形が違うので、ここでは器の形だけを見る。
+ * 値が選択肢の中にあるかは `resolveCommandArgs`(`src/lib/command/command-args.ts`)が
+ * 定義を突き合わせて確かめる。フリー入力を受け付けないため、値の型はこの3つに限る。
+ */
+export const scStartCommandRun = z.object({
+  commandKey: z.string().regex(COMMAND_ID_PATTERN, el('@invalid_command_input')),
+  params: z.record(z.string(), z.union([z.string(), z.array(z.string()), z.boolean()])),
+})
+export type StartCommandRun = z.infer<typeof scStartCommandRun>
+
+/**
  * 通知設定(イベント種別ごと・チャネルごとの ON/OFF)。種別が増えても z.enum が自動で追従する。
  * チャネルは常に全部まとめて受け取り、サーバー側に部分更新の分岐を作らない。
  *
