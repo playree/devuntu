@@ -152,6 +152,11 @@ VAPID 鍵は Web プッシュ通知を使う場合のみ必要で、**公開鍵�
 `COMMAND_MAX_CONCURRENT` は同時に張る SSH 接続の数がそのまま増えるため、控えめな既定にしてある。
 `COMMAND_WORKER_ENABLED` を false にすると待ち行列に積まれるだけで実行されない(切り分け用)。
 
+実行ログは SSE(`/api/command/runs/[id]/stream`)で配信する。リバースプロキシを挟む場合は、
+応答をバッファリングしないこと(nginx なら `proxy_buffering off;`)。アプリ側でも
+`X-Accel-Buffering: no` と `Cache-Control: no-transform` を付けているが、
+設定によっては proxy 側が優先される。
+
 実行が失敗しても**自動では再試行しない**。副作用のあるコマンドを勝手に再実行しないためで、
 アプリの再起動などで実行中のまま残った記録は、一定時間後に失敗(`interrupted`)として閉じられる。
 

@@ -134,6 +134,7 @@ export const ja: DefaultLocaleItems = {
   command_no_available: '実行できるコマンドがありません。',
   command_no_def: '定義されているコマンドがありません。',
   command_no_input: '入力項目はありません。',
+  command_reconnecting: '再接続中',
   command_run: '実行',
   command_run_cancel: '中断',
   command_run_detail: '実行の詳細',

@@ -134,6 +134,7 @@ export const en: LocaleItems = {
   command_no_available: 'No commands are available to you.',
   command_no_def: 'No commands are defined.',
   command_no_input: 'No inputs.',
+  command_reconnecting: 'Reconnecting',
   command_run: 'Run',
   command_run_cancel: 'Cancel run',
   command_run_detail: 'Run detail',

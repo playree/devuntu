@@ -131,6 +131,7 @@ export type LocaleItemBase =
   | 'command_no_available'
   | 'command_no_def'
   | 'command_no_input'
+  | 'command_reconnecting'
   | 'command_run'
   | 'command_run_cancel'
   | 'command_run_detail'
