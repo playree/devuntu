@@ -71,13 +71,28 @@ export const useCommandStream = (runId: string, enabled: boolean) => {
       cursorRef.current = { runId, seq: 0 }
     }
 
+    /**
+     * この effect がまだ現役か。
+     *
+     * `close()` の後でも、既にキューへ積まれた message イベントは配送されうる。
+     * それを通すと新しい実行の状態を「前の実行の空」で上書きし、カーソルも巻き戻してしまう。
+     */
+    let active = true
+
     /** 前の実行の状態へ書き足さないよう、必ず runId を確かめてから更新する */
-    const update = (apply: (prev: StreamState) => StreamState) =>
+    const update = (apply: (prev: StreamState) => StreamState) => {
+      if (!active) {
+        return
+      }
       setState((prev) => apply(prev.runId === runId ? prev : emptyState(runId)))
+    }
 
     const source = new EventSource(`/api/command/runs/${runId}/stream?cursor=${cursorRef.current.seq}`)
 
     source.addEventListener('log', (event) => {
+      if (!active) {
+        return
+      }
       const seq = Number((event as MessageEvent).lastEventId)
       if (!Number.isSafeInteger(seq)) {
         return
@@ -102,7 +117,10 @@ export const useCommandStream = (runId: string, enabled: boolean) => {
     source.addEventListener('open', () => setReconnecting(false))
     source.addEventListener('error', () => setReconnecting(true))
 
-    return () => source.close()
+    return () => {
+      active = false
+      source.close()
+    }
   }, [runId, enabled])
 
   return { lines: current.lines, ended: current.ended, reconnecting: current.reconnecting }

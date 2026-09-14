@@ -240,26 +240,46 @@ command="/opt/devuntu/bin/devuntu-run",no-pty,no-port-forwarding,no-agent-forwar
 
 devuntu が送るのは `printf '<番兵>' >&2; exec '<実行ファイル>' '<引数>' ...` という 1 行で、
 実行ファイルも引数もシングルクォートで包まれている(`command-args.ts` の `shellQuote`)。
-`exec '<実行ファイル>'` の部分を照合すれば、この鍵で起動できるものを固定できる。
+引数に使える文字も `[A-Za-z0-9._:@=/+,-]` に限られている(`COMMAND_VALUE_PATTERN`)。
+
+**`SSH_ORIGINAL_COMMAND` をそのままシェルへ渡してはいけない。** 許可済みの断片が含まれるかを
+部分一致で確かめるだけでは、`rm -rf /; exec '/opt/devuntu/bin/deploy.sh'` のように
+前後へ任意のシェル構文を足した要求が通ってしまう。`exec` 以降だけを取り出し、
+**文字列ではなく引数の並びとして起動し直す**。
 
 `devuntu-run` を次の形にしておくと、許可外のコマンドを弾いたうえで、
 **中断したときにリモート側のプロセスも確実に落ちる**。アプリは中断時にまず stdin を閉じるので、それが合図になる。
 
 ```sh
 #!/bin/sh
-set -eu
+# -f: グロブ展開を止める(引数に * が残っていても展開させない)
+set -euf
+
+deny() { echo "$1" >&2; exit 126; }
 
 cmd=${SSH_ORIGINAL_COMMAND:-}
 
-# この鍵で起動してよい実行ファイルを列挙する。引数の中身までは見ない
-case "$cmd" in
-  *"; exec '/opt/devuntu/bin/deploy.sh'"*) ;;
-  *"; exec '/opt/devuntu/bin/reindex.sh'"*) ;;
-  *) echo 'この鍵では許可されていないコマンドです' >&2; exit 126 ;;
+# 1. exec 以降だけを取り出す。ここより前は捨てるので、前置きに何を書かれても実行されない
+rest=${cmd#*"; exec "}
+[ "$rest" != "$cmd" ] || deny 'この鍵では許可されていない形式です'
+
+# 2. この鍵で起動してよい実行ファイル。引数が続く場合は空白で区切られる(先頭一致で確かめる)
+case "$rest" in
+  "'/opt/devuntu/bin/deploy.sh'" | "'/opt/devuntu/bin/deploy.sh' "*) ;;
+  "'/opt/devuntu/bin/reindex.sh'" | "'/opt/devuntu/bin/reindex.sh' "*) ;;
+  *) deny 'この鍵では許可されていないコマンドです' ;;
 esac
 
+# 3. シェルの制御文字が残っていないことを確かめる。devuntu 側が通す文字にこれらは含まれない
+case "$rest" in
+  *[\;\&\|\`\$\<\>\(\)\{\}\\\"\~\*\?\[\]]*) deny '引数に使えない文字が含まれています' ;;
+esac
+
+# 4. 残るのはシングルクォートと安全な文字だけ。引数の並びへ戻して起動する($cmd は評価しない)
+eval "set -- $rest"
+
 # setsid で別のプロセスグループにしておく。そうしないと後段の kill でグループごと落とせない
-setsid timeout -s TERM "${DEVUNTU_TIMEOUT:-900}" /bin/sh -c "$cmd" &
+setsid timeout -s TERM "${DEVUNTU_TIMEOUT:-900}" "$@" &
 job=$!
 
 # ssh が切れる / アプリが stdin を閉じると EOF になり、プロセスグループごと落とす
@@ -272,8 +292,9 @@ kill "$watch" 2>/dev/null || true
 exit "$rc"
 ```
 
-許可リストは必ず入れる。`SSH_ORIGINAL_COMMAND` を検証せずに実行すると、
-`command=` を付けていても鍵を持つ相手が任意のコマンドを実行できることに変わりはない。
+この層で狭められるのは**何を起動できるか**まで。列挙した実行ファイルを、
+許可した文字種の引数で動かせること自体は鍵を持つ相手に残る。
+引数の値そのものを縛りたい場合は、スクリプト側でも受け取った値を検証する。
 
 **この wrapper は必須ではない。** 置かない場合、中断してもリモート側に処理が残ることがある
 (ローカルの ssh プロセスは必ず落ちる)。
