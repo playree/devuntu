@@ -31,7 +31,7 @@ vi.mock('@/lib/prisma', () => {
   }
 })
 
-const { enqueueCommandRun, finishCommandRun, reclaimStaleRuns, requestCancelCommandRun } =
+const { enqueueCommandRun, finishCommandRun, listCommandRuns, reclaimStaleRuns, requestCancelCommandRun } =
   await import('@/lib/command/command-run')
 
 const def = (overrides: Partial<CommandDef> = {}): CommandDef => ({
@@ -175,5 +175,51 @@ describe('reclaimStaleRuns', () => {
     vi.mocked(prisma.commandRun.findMany).mockResolvedValue([] as never)
     expect(await reclaimStaleRuns(new Date())).toBe(0)
     expect(prisma.commandRun.updateMany).not.toHaveBeenCalled()
+  })
+})
+
+describe('listCommandRuns', () => {
+  beforeEach(() => {
+    vi.mocked(prisma.commandRun.findMany).mockResolvedValue([] as never)
+    vi.mocked(prisma.commandRun.count).mockResolvedValue(0 as never)
+  })
+
+  const query = {
+    status: [] as never[],
+    page: 1,
+    rowsPerPage: 20,
+    sortColumn: 'queuedAt' as const,
+    sortDirection: 'descending' as const,
+  }
+
+  it('userId を渡せば自分の実行だけに絞る', async () => {
+    await listCommandRuns({ ...query, userId: 'user-1' })
+    expect(vi.mocked(prisma.commandRun.findMany).mock.calls[0][0]).toMatchObject({ where: { userId: 'user-1' } })
+  })
+
+  it('userId が null なら絞り込まない(管理者の全件表示)', async () => {
+    await listCommandRuns({ ...query, userId: null })
+    expect(vi.mocked(prisma.commandRun.findMany).mock.calls[0][0]?.where).toEqual({})
+  })
+
+  it('並び順は必ず id で決着させる', async () => {
+    // 同値の行が page をまたいで重複・欠落しないようにする
+    await listCommandRuns({ ...query, userId: 'user-1' })
+    expect(vi.mocked(prisma.commandRun.findMany).mock.calls[0][0]?.orderBy).toEqual([
+      { queuedAt: 'desc' },
+      { id: 'desc' },
+    ])
+  })
+
+  it('状態で絞り込める', async () => {
+    await listCommandRuns({ ...query, userId: null, status: ['failed', 'canceled'] as never })
+    expect(vi.mocked(prisma.commandRun.findMany).mock.calls[0][0]?.where).toEqual({
+      status: { in: ['failed', 'canceled'] },
+    })
+  })
+
+  it('ページングは 1 始まり', async () => {
+    await listCommandRuns({ ...query, userId: null, page: 3, rowsPerPage: 20 })
+    expect(vi.mocked(prisma.commandRun.findMany).mock.calls[0][0]).toMatchObject({ skip: 40, take: 20 })
   })
 })

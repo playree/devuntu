@@ -5,10 +5,11 @@ import { FlexCol, FlexRow } from '@/components/general/flex'
 import { useModalState } from '@/components/general/modal'
 import { NoticePanel, Panel, PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, CommandLineIcon, PlayIcon } from '@/components/icon'
+import { ArrowPathIcon, ClockIcon, CommandLineIcon, PlayIcon } from '@/components/icon'
 import { useActionData } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'
-import { Chip } from '@heroui/react'
+import { ButtonGroup, Chip } from '@heroui/react'
+import { useRouter } from 'next/navigation'
 import { FC } from 'react'
 import { CommandForm } from './command-form'
 import { type AvailableCommandView, getAvailableCommandsAction } from './server'
@@ -21,13 +22,18 @@ import { type AvailableCommandView, getAvailableCommandsAction } from './server'
  */
 export const CommandsClient: FC = () => {
   const { t } = useLocale()
+  const router = useRouter()
   const { data, isLoading, reload } = useActionData(getAvailableCommandsAction)
   const formState = useModalState<AvailableCommandView>()
 
   return (
     <FlexCol>
       <ContentHeader icon={<CommandLineIcon />} title={t('command_exec')}>
+        <MultiButton isIconOnly tooltip={t('command_run_history')} onPress={() => router.push('/commands/runs')}>
+          <ClockIcon />
+        </MultiButton>
         <MultiButton isIconOnly tooltip={t('reload')} onPress={() => reload()}>
+          <ButtonGroup.Separator />
           <ArrowPathIcon />
         </MultiButton>
       </ContentHeader>

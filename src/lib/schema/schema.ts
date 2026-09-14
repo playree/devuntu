@@ -24,7 +24,7 @@ import {
   TICKET_SORT_COLUMNS,
   TICKET_STATUSES,
 } from '../board/task'
-import { COMMAND_ID_PATTERN } from '../command/command'
+import { COMMAND_ID_PATTERN, COMMAND_RUN_SORT_COLUMNS, COMMAND_RUN_STATUSES } from '../command/command'
 import { CHANNEL_NOTIFY_EVENTS, DM_NOTIFY_EVENTS } from '../notify/notify'
 import { SLACK_CHANNEL_ID_PATTERN } from '../slack/slack'
 import { TOKEN_EXPIRES } from '../token-expires'
@@ -583,6 +583,25 @@ export const scAgentTicketListQuery = z.object({
 })
 export type AgentTicketListQuery = z.infer<typeof scAgentTicketListQuery>
 export type AgentTicketListQueryIn = z.input<typeof scAgentTicketListQuery>
+
+/**
+ * 実行履歴の問い合わせ条件。
+ *
+ * 一般ユーザーは自分の実行だけが対象で、管理者は `scope: 'all'` で全件を見られる。
+ * 並び順の扱いは {@link scTicketListQuery} と同じで、想定外の列名は既定へ落とす。
+ */
+export const scCommandRunListQuery = z.object({
+  /** 'all' は管理者のみ。一般ユーザーが指定してもサーバー側で自分の分に絞る */
+  scope: z.enum(['mine', 'all']).default('mine'),
+  /** 空配列 = 絞り込みなし */
+  status: z.array(z.enum(COMMAND_RUN_STATUSES)).default([]),
+  page: z.number().int().min(1).default(1),
+  rowsPerPage: z.number().int().min(1).max(100).default(10),
+  sortColumn: z.string().default('queuedAt').pipe(z.enum(COMMAND_RUN_SORT_COLUMNS).catch('queuedAt')),
+  sortDirection: z.string().default('descending').pipe(zSortDirection.catch('descending')),
+})
+export type CommandRunListQuery = z.infer<typeof scCommandRunListQuery>
+export type CommandRunListQueryIn = z.input<typeof scCommandRunListQuery>
 
 export const scCreateTicketComment = z.object({
   ticketId: z.uuidv7(),

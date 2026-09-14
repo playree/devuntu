@@ -24,6 +24,8 @@ import {
   type CommandDef,
   type CommandFailureKind,
   type CommandInputValues,
+  type CommandRunSortColumn,
+  type CommandRunStatusValue,
 } from './command'
 import { appendSystemChunk } from './command-log'
 
@@ -242,6 +244,56 @@ export const getCommandRun = async (runId: string) =>
   })
 
 export type CommandRunDetail = NonNullable<Awaited<ReturnType<typeof getCommandRun>>>
+
+/**
+ * 実行履歴の一覧。
+ *
+ * 一般ユーザーは自分の実行だけを見る。`scope: 'all'` は呼び出し側で管理者を確かめてから渡す
+ * (ここは絞り込みの組み立てに徹し、認可は持ち込まない)。
+ */
+export const listCommandRuns = async (input: {
+  /** null なら絞り込みなし(管理者の全件表示) */
+  userId: string | null
+  status: CommandRunStatusValue[]
+  page: number
+  rowsPerPage: number
+  sortColumn: CommandRunSortColumn
+  sortDirection: 'ascending' | 'descending'
+}) => {
+  const { userId, status, page, rowsPerPage, sortColumn, sortDirection } = input
+  const where = {
+    ...(userId ? { userId } : {}),
+    ...(status.length > 0 ? { status: { in: status } } : {}),
+  }
+
+  const [items, total] = await Promise.all([
+    prisma.commandRun.findMany({
+      where,
+      select: {
+        id: true,
+        commandKey: true,
+        commandLabel: true,
+        hostLabel: true,
+        userName: true,
+        argsPreview: true,
+        status: true,
+        exitCode: true,
+        failureKind: true,
+        queuedAt: true,
+        finishedAt: true,
+      },
+      // 同値の行が page をまたいで重複・欠落しないよう、必ず id で決着させる
+      orderBy: [{ [sortColumn]: sortDirection === 'ascending' ? 'asc' : 'desc' }, { id: 'desc' }],
+      skip: (page - 1) * rowsPerPage,
+      take: rowsPerPage,
+    }),
+    prisma.commandRun.count({ where }),
+  ])
+
+  return { items, total }
+}
+
+export type CommandRunListItem = Awaited<ReturnType<typeof listCommandRuns>>['items'][number]
 
 /** 実行中の件数。同時実行数の枠を数えるのに使う */
 export const countRunningRuns = async (): Promise<number> => prisma.commandRun.count({ where: { status: 'running' } })

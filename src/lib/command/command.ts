@@ -128,6 +128,17 @@ export const COMMAND_FLUSH_MAX_RETRIES = 3
 /** 実行の終了状態。ここに入ったら以降 status は変わらない */
 export const COMMAND_TERMINAL_STATUSES = ['succeeded', 'failed', 'canceled'] as const
 
+/** 実行の状態。Prisma の enum と同じ並びで持つ(tests で一致を固定する) */
+export const COMMAND_RUN_STATUSES = ['queued', 'running', 'succeeded', 'failed', 'canceled'] as const
+export type CommandRunStatusValue = (typeof COMMAND_RUN_STATUSES)[number]
+
+/** 履歴一覧で並べ替えできる列。想定外の列名は既定へ落とす */
+export const COMMAND_RUN_SORT_COLUMNS = ['queuedAt', 'finishedAt', 'commandLabel', 'status', 'userName'] as const
+export type CommandRunSortColumn = (typeof COMMAND_RUN_SORT_COLUMNS)[number]
+
+/** 履歴一覧の1ページの既定件数 */
+export const COMMAND_RUN_ROWS_PER_PAGE = 20
+
 /** 打ち切りの分類。画面には出さずログと履歴の絞り込みに使う */
 export const COMMAND_FAILURE_KINDS = [
   /** 定義の timeoutSec を超えた */

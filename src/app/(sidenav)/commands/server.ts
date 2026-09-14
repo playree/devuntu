@@ -7,12 +7,12 @@ import { type CommandDef, type CommandInput } from '@/lib/command/command'
 import { assertCommandAccess, listAvailableCommands } from '@/lib/command/command-access'
 import { buildArgsPreview, buildCommandInputDefaults, resolveCommandArgs } from '@/lib/command/command-args'
 import { findCommandHost, getCommandCatalog } from '@/lib/command/command-catalog'
-import { enqueueCommandRun, getCommandRun, requestCancelCommandRun } from '@/lib/command/command-run'
+import { enqueueCommandRun, getCommandRun, listCommandRuns, requestCancelCommandRun } from '@/lib/command/command-run'
 import { kickCommandDispatch } from '@/lib/command/command-worker'
 import { envu } from '@/lib/env-util'
 import { errInvalidOperation, errNotFound, errTooManyRequests } from '@/lib/error'
 import { consumeRateLimit } from '@/lib/rate-limit'
-import { scStartCommandRun, scUUID } from '@/lib/schema/schema'
+import { scCommandRunListQuery, scStartCommandRun, scUUID } from '@/lib/schema/schema'
 
 /** 起動の連打を抑える。1人が短時間に大量のジョブを積めないようにする */
 const START_RATE_LIMIT = { limit: 10, windowMs: 60_000 }
@@ -147,3 +147,20 @@ export const cancelCommandRunAction = safeAuthAction
     kickCommandDispatch()
     return { status }
   })
+
+/**
+ * 実行履歴の一覧。
+ *
+ * 一般ユーザーは自分の実行だけ。管理者が `scope: 'all'` を渡したときだけ全件を返す。
+ * 一覧に出すのは表示名と結果だけで、選択された値(`params`)は詳細でしか見せない。
+ */
+export const getCommandRunsAction = safeAuthAction
+  .metadata({ actionName: 'getCommandRuns', role: 'user' })
+  .inputSchema(scCommandRunListQuery)
+  .action(async ({ parsedInput: { scope, status, page, rowsPerPage, sortColumn, sortDirection }, ctx: { user } }) => {
+    // 一般ユーザーが scope を偽っても、ここで自分の分に絞る
+    const userId = scope === 'all' && isAdminActor(user) ? null : user.id
+    return listCommandRuns({ userId, status, page, rowsPerPage, sortColumn, sortDirection })
+  })
+
+export type GetCommandRunsReturnType = Awaited<ReturnType<typeof getCommandRunsAction>>['data']
