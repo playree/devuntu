@@ -48,15 +48,19 @@ vi.mock('@/lib/command/command-log', () => ({
   },
 }))
 
-const finishMock = vi.hoisted(() => ({ calls: [] as Record<string, unknown>[] }))
+const finishMock = vi.hoisted(() => ({ calls: [] as Record<string, unknown>[], throws: false }))
 vi.mock('@/lib/command/command-run', () => ({
   finishCommandRun: async (input: Record<string, unknown>) => {
     finishMock.calls.push(input)
+    if (finishMock.throws) {
+      throw new Error('db down')
+    }
     return true
   },
 }))
 
 const { executeCommandRun, resolveOutcome } = await import('@/lib/command/command-exec')
+const { runningCount } = await import('@/lib/command/command-registry')
 
 const def: CommandDef = {
   id: 'deploy-web',
@@ -129,6 +133,7 @@ beforeEach(() => {
   logMock.flushResult = true
   logMock.flushThrows = false
   finishMock.calls = []
+  finishMock.throws = false
   vi.useRealTimers()
 })
 
@@ -275,11 +280,34 @@ describe('executeCommandRun', () => {
     expect(finishMock.calls[0]).toMatchObject({ status: 'succeeded', exitCode: 0 })
   })
 
+  it('最終の書き出しに失敗したら履歴が欠けたことを残す', async () => {
+    // 終了コードが 0 だと succeeded で確定するため、これが無いと欠落を判別できない
+    logMock.flushThrows = true
+    const fake = createFakeSsh()
+    const promise = run(fake)
+    fake.stdout.write('working\n')
+    await fake.finish(0)
+    await promise
+
+    expect(logMock.systemChunks.some((text) => text.includes('欠けています'))).toBe(true)
+  })
+
   it('終了時は必ず finishCommandRun を1回だけ呼ぶ', async () => {
     const fake = createFakeSsh()
     const promise = run(fake)
     await fake.finish(0)
     await promise
     expect(finishMock.calls).toHaveLength(1)
+  })
+
+  it('終了の記録に失敗しても実行枠を解放する', async () => {
+    // 解放し損ねるとレジストリに残り続け、同時実行の枠をプロセス再起動まで食い潰す
+    finishMock.throws = true
+    const fake = createFakeSsh()
+    const promise = run(fake)
+    await fake.finish(0)
+    await expect(promise).rejects.toThrow('db down')
+
+    expect(runningCount()).toBe(0)
   })
 })

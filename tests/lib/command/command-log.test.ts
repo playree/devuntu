@@ -114,6 +114,29 @@ describe('createLogBuffer', () => {
     expect(notices[0].text).toContain('上限')
   })
 
+  it('NUL だけの出力も受け取ったバイト数に数える', () => {
+    // sanitize 後に数えると、NUL を出し続けるだけで暴走の判定をすり抜けられてしまう
+    const buffer = createLogBuffer('run-1', 'worker-1')
+    buffer.push('stdout', '\u0000'.repeat(1024))
+    expect(buffer.received()).toBe(1024)
+  })
+
+  it('書き込みに失敗した分は次の書き出しへ持ち越す', async () => {
+    // 捨ててしまうと、呼び出し元が再試行しても対象のログが残っていない
+    const buffer = createLogBuffer('run-1', 'worker-1')
+    buffer.push('stdout', 'a\n')
+    buffer.push('stdout', 'b\n')
+
+    vi.mocked(prisma.commandRunChunk.createMany).mockRejectedValueOnce(new Error('db down'))
+    await expect(buffer.flush()).rejects.toThrow('db down')
+
+    buffer.push('stdout', 'c\n')
+    expect(await buffer.flush()).toBe(true)
+
+    const arg = vi.mocked(prisma.commandRunChunk.createMany).mock.calls[1][0] as { data: { text: string }[] }
+    expect(arg.data.map((chunk) => chunk.text)).toEqual(['a\n', 'b\n', 'c\n'])
+  })
+
   it('サイズ閾値に達したら間隔を待たずに書くよう知らせる', () => {
     const buffer = createLogBuffer('run-1', 'worker-1')
     expect(buffer.shouldFlush()).toBe(false)

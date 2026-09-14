@@ -15,6 +15,8 @@ vi.mock('@/lib/logger', () => ({
 
 vi.mock('@/lib/command/command-log', () => ({ appendSystemChunk: vi.fn() }))
 
+const { appendSystemChunk } = await import('@/lib/command/command-log')
+
 const prismaMock = vi.hoisted(() => ({ uniqueViolation: false }))
 
 vi.mock('@/lib/prisma', () => {
@@ -26,7 +28,7 @@ vi.mock('@/lib/prisma', () => {
     updateMany: vi.fn(),
   }
   return {
-    prisma: { commandRun },
+    prisma: { commandRun, $queryRaw: vi.fn() },
     isUniqueViolation: () => prismaMock.uniqueViolation,
   }
 })
@@ -161,20 +163,35 @@ describe('requestCancelCommandRun', () => {
 })
 
 describe('reclaimStaleRuns', () => {
+  /** $queryRaw へ渡された SQL。埋め込む値は ? に潰して本文だけを見る */
+  const lastSql = () => (vi.mocked(prisma.$queryRaw).mock.calls[0][0] as unknown as string[]).join('?')
+
   it('生存申告が途切れた実行を失敗として閉じる', async () => {
-    vi.mocked(prisma.commandRun.findMany).mockResolvedValue([{ id: 'run-1' }] as never)
+    vi.mocked(prisma.$queryRaw).mockResolvedValue([{ id: 'run-1' }] as never)
     expect(await reclaimStaleRuns(new Date())).toBe(1)
 
-    const arg = vi.mocked(prisma.commandRun.updateMany).mock.calls[0][0] as { data: Record<string, unknown> }
+    const sql = lastSql()
     // 副作用のあるコマンドを勝手に再実行しないため、queued へは戻さない
-    expect(arg.data).toMatchObject({ status: 'failed', failureKind: 'interrupted', activeKey: null })
-    expect(arg.data.status).not.toBe('queued')
+    expect(sql).toContain(`"status" = 'failed'`)
+    expect(sql).toContain(`"failureKind" = 'interrupted'`)
+    expect(sql).toContain('"activeKey" = NULL')
+    expect(sql).not.toContain(`= 'queued'`)
+    expect(appendSystemChunk).toHaveBeenCalledTimes(1)
+  })
+
+  it('回収の条件を更新と同じ1文に入れる', async () => {
+    // 抽出と更新に分けると、その隙間に生存申告を入れた動いている実行まで閉じてしまう
+    vi.mocked(prisma.$queryRaw).mockResolvedValue([] as never)
+    await reclaimStaleRuns(new Date())
+
+    expect(lastSql()).toContain('"heartbeatAt"')
+    expect(prisma.commandRun.findMany).not.toHaveBeenCalled()
   })
 
   it('対象が無ければ何もしない', async () => {
-    vi.mocked(prisma.commandRun.findMany).mockResolvedValue([] as never)
+    vi.mocked(prisma.$queryRaw).mockResolvedValue([] as never)
     expect(await reclaimStaleRuns(new Date())).toBe(0)
-    expect(prisma.commandRun.updateMany).not.toHaveBeenCalled()
+    expect(appendSystemChunk).not.toHaveBeenCalled()
   })
 })
 

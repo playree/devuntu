@@ -177,16 +177,42 @@ describe('listAvailableCommands の need', () => {
 })
 
 describe('effectiveSortOrder', () => {
-  it('未登録(0)なら定義ファイルの並びを使う', () => {
+  it('未登録なら定義ファイルの並びを使う', () => {
     expect(
-      effectiveSortOrder({ commandKey: 'a', enabled: false, sortOrder: 0, allowedGroupIds: [] }, def('a', 30)),
+      effectiveSortOrder(
+        { commandKey: 'a', enabled: false, sortOrder: 0, allowedGroupIds: [], registered: false },
+        def('a', 30),
+      ),
     ).toBe(30)
   })
 
   it('保存された値があればそちらを優先する', () => {
     expect(
-      effectiveSortOrder({ commandKey: 'a', enabled: true, sortOrder: 5, allowedGroupIds: [] }, def('a', 30)),
+      effectiveSortOrder(
+        { commandKey: 'a', enabled: true, sortOrder: 5, allowedGroupIds: [], registered: true },
+        def('a', 30),
+      ),
     ).toBe(5)
+  })
+
+  it('明示的に保存された 0 を定義ファイルの値へ戻さない', () => {
+    // 0 は先頭へ寄せる正当な指定。値の真偽で未登録と見分けようとすると消えてしまう
+    expect(
+      effectiveSortOrder(
+        { commandKey: 'a', enabled: true, sortOrder: 0, allowedGroupIds: [], registered: true },
+        def('a', 30),
+      ),
+    ).toBe(0)
+  })
+
+  it('保存された 0 のコマンドが先頭へ来る', async () => {
+    catalogMock.listCommandDefs.mockReturnValue([def('pinned', 30), def('other', 10)])
+    setSettings([
+      { commandKey: 'pinned', enabled: true, sortOrder: 0 },
+      { commandKey: 'other', enabled: true, sortOrder: 10 },
+    ])
+    const available = await listAvailableCommands(admin)
+    expect(available.map((item) => item.def.id)).toEqual(['pinned', 'other'])
   })
 
   it('未登録のコマンドも定義ファイルの並びで表示される', async () => {

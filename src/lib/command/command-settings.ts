@@ -13,6 +13,13 @@ export type CommandSettingRecord = {
   enabled: boolean
   sortOrder: number
   allowedGroupIds: string[]
+  /**
+   * DB に行があるか。
+   *
+   * `sortOrder` は 0 が正当な値なので、既定の 0 と画面から保存された 0 を値だけでは見分けられない。
+   * 定義ファイル側の値へ倒してよいかの判断はこのフラグで行う(`effectiveSortOrder`)。
+   */
+  registered: boolean
 }
 
 /** 未登録のコマンドの既定。定義を置いただけでは動かない */
@@ -21,6 +28,7 @@ export const defaultCommandSetting = (commandKey: string): CommandSettingRecord 
   enabled: false,
   sortOrder: 0,
   allowedGroupIds: [],
+  registered: false,
 })
 
 /** 指定したコマンドキーの設定をまとめて引く。未登録のキーは既定値で埋める */
@@ -45,6 +53,7 @@ export const getCommandSettings = async (commandKeys: string[]): Promise<Map<str
       enabled: row.enabled,
       sortOrder: row.sortOrder,
       allowedGroupIds: row.allowedGroups.map((allowed) => allowed.groupId),
+      registered: true,
     })
   })
   return settings

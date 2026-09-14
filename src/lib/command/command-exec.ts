@@ -226,27 +226,46 @@ export const executeCommandRun = async (input: ExecuteInput): Promise<void> => {
   const flushTimer = setInterval(() => void flushNow(), COMMAND_FLUSH_INTERVAL_MS)
   flushTimer.unref()
 
-  const { code } = await child.wait()
-  finished = true
-  clearTimeout(timeout)
-  clearInterval(flushTimer)
-
-  // 残りを書き切る。ここで失敗しても実行の結果は記録する
+  /**
+   * 登録を外すのは必ずこの `finally`。
+   *
+   * ここを通らないとレジストリに実行が残り、`runningCount()` が数える同時実行枠を
+   * プロセスの再起動まで食い潰す。DB 側の行は `reclaimStaleRuns()` が生存申告の途切れで閉じるので、
+   * 異常経路でも「枠だけ残る」状態を作らないことがここの役目。
+   */
   try {
-    await buffer.flush()
-  } catch (error) {
-    logger.warn({ error, runId }, 'final command log flush failed')
-  }
+    const { code } = await child.wait()
+    finished = true
 
-  const outcome = resolveOutcome({ exitCode: code, aborted, sentinelSeen })
-  const notice = outcome.failureKind ? FAILURE_NOTICE[outcome.failureKind] : undefined
-  if (notice) {
-    await appendSystemChunk(runId, notice(def))
-  }
+    // 残りを書き切る。ここで失敗しても実行の結果は記録する
+    try {
+      await buffer.flush()
+    } catch (error) {
+      logger.warn({ error, runId }, 'final command log flush failed')
+      // 終了コードが 0 でも履歴が欠けていることを読み取れるようにする
+      await appendSystemChunk(runId, 'ログの一部を保存できなかったため、履歴が途中で欠けています。')
+    }
 
-  await finishCommandRun({ runId, workerId, status: outcome.status, exitCode: code, failureKind: outcome.failureKind })
-  unregisterRun(runId)
-  signalRun(runId)
+    const outcome = resolveOutcome({ exitCode: code, aborted, sentinelSeen })
+    const notice = outcome.failureKind ? FAILURE_NOTICE[outcome.failureKind] : undefined
+    if (notice) {
+      await appendSystemChunk(runId, notice(def))
+    }
+
+    await finishCommandRun({
+      runId,
+      workerId,
+      status: outcome.status,
+      exitCode: code,
+      failureKind: outcome.failureKind,
+    })
+  } finally {
+    finished = true
+    clearTimeout(timeout)
+    clearInterval(flushTimer)
+    unregisterRun(runId)
+    signalRun(runId)
+  }
 }
 
 /**

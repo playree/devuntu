@@ -182,4 +182,21 @@ describe('参照の整合', () => {
     })
     expect(issuesOf(input).some((issue) => issue.includes('minSelected'))).toBe(true)
   })
+
+  it('multiselect の minSelected が選択肢の数を超えていれば弾く', () => {
+    // 満たせる選択が無い定義。読み込めてしまうと実行できないコマンドが一覧に出る
+    const input = file({
+      inputs: [
+        {
+          type: 'multiselect',
+          key: 'targets',
+          label: '対象',
+          options: [{ value: 'a', label: 'a' }],
+          minSelected: 2,
+          maxSelected: 3,
+        },
+      ],
+    })
+    expect(issuesOf(input).some((issue) => issue.includes('minSelected が選択肢の数を超えている'))).toBe(true)
+  })
 })

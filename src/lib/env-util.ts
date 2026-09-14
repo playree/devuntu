@@ -275,8 +275,8 @@ const server = {
    */
   get COMMAND_MAX_CONCURRENT() {
     const value = getEnvNumber('COMMAND_MAX_CONCURRENT', { default: 2 })
-    if (!Number.isFinite(value) || value < 1) {
-      throw errSystemError('COMMAND_MAX_CONCURRENT must be at least 1')
+    if (!Number.isInteger(value) || value < 1) {
+      throw errSystemError('COMMAND_MAX_CONCURRENT must be an integer of at least 1')
     }
     return value
   },
@@ -284,8 +284,8 @@ const server = {
   /** 順番待ちに積める実行の上限。これを超える投入は拒否する */
   get COMMAND_MAX_QUEUED() {
     const value = getEnvNumber('COMMAND_MAX_QUEUED', { default: 20 })
-    if (!Number.isFinite(value) || value < 1) {
-      throw errSystemError('COMMAND_MAX_QUEUED must be at least 1')
+    if (!Number.isInteger(value) || value < 1) {
+      throw errSystemError('COMMAND_MAX_QUEUED must be an integer of at least 1')
     }
     return value
   },

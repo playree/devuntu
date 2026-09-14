@@ -43,11 +43,14 @@ const canUse = (setting: CommandSettingRecord, actor: Actor, groupIds: Set<strin
 /**
  * 一覧に使う並び順。
  *
- * 未登録(既定の 0)のうちは定義ファイルの `sortOrder` を使い、画面から保存された値があればそちらを優先する。
+ * 未登録のうちは定義ファイルの `sortOrder` を使い、画面から保存された値があればそちらを優先する。
  * 管理画面と利用者向け画面で並びが食い違わないよう、判定はこの関数だけに置く。
+ *
+ * 値の真偽では判断しない。`0` は先頭へ寄せる正当な指定なので、
+ * 保存された `0` を未登録の既定と同じ扱いにすると定義ファイル側の値へ戻ってしまう。
  */
 export const effectiveSortOrder = (setting: CommandSettingRecord, def: CommandDef): number =>
-  setting.sortOrder || def.sortOrder
+  setting.registered ? setting.sortOrder : def.sortOrder
 
 /**
  * 利用者が扱えるコマンドの一覧。

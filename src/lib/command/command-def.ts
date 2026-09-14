@@ -204,6 +204,14 @@ const checkInputDefaults = (input: CommandInput, ctx: z.RefinementCtx, path: (st
         message: 'minSelected が maxSelected を超えている',
       })
     }
+    // 満たせる選択が存在しない定義。読み込めてしまうと実行できないコマンドが一覧に出る
+    if (input.minSelected > input.options.length) {
+      ctx.addIssue({
+        code: 'custom',
+        path: [...path, 'minSelected'],
+        message: 'minSelected が選択肢の数を超えている',
+      })
+    }
   }
 }
 

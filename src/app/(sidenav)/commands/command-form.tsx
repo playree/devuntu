@@ -42,6 +42,7 @@ const InputControl: FC<{ input: CommandInput; control: Control<CommandInputValue
           name={input.key}
           groupOptions={options}
           label={input.label}
+          isRequired={input.required}
           errorMessage={errorMessage}
         />
       )
@@ -52,6 +53,7 @@ const InputControl: FC<{ input: CommandInput; control: Control<CommandInputValue
           name={input.key}
           options={input.options}
           label={input.label}
+          isRequired={input.required}
           errorMessage={errorMessage}
         />
       )

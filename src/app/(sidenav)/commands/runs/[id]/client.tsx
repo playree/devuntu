@@ -71,8 +71,11 @@ export const CommandRunClient: FC<{ runId: string }> = ({ runId }) => {
               if (!ok) {
                 return
               }
-              await parseAction(cancelCommandRunAction({ id: runId }))
-              notify.info(t('msg_command_cancel_requested'))
+              // 確認している間に実行が終わっていると status は null。中断できていないので通知しない
+              const { status } = await parseAction(cancelCommandRunAction({ id: runId }))
+              if (status) {
+                notify.info(t('msg_command_cancel_requested'))
+              }
               await refresh()
             }}
           >

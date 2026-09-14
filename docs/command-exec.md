@@ -188,8 +188,22 @@ mkdir -p config/ssh && chmod 700 config/ssh
 ssh-keygen -t ed25519 -N '' -f config/ssh/ops_ed25519 -C 'devuntu-command'
 chmod 600 config/ssh/ops_ed25519
 
-# 接続先のホスト鍵を登録する。登録が無いホストへは接続できない
-ssh-keyscan -t ed25519 web01.internal >> config/ssh/known_hosts
+# 接続先のホスト鍵を取得する。登録が無いホストへは接続できない
+ssh-keyscan -t ed25519 web01.internal > /tmp/web01.pub
+
+# 取得した鍵のフィンガープリントを表示する
+ssh-keygen -lf /tmp/web01.pub
+```
+
+`ssh-keyscan` は**接続先が本物かを検証しない**。取得の時点で経路に割り込まれていると、
+攻撃者の鍵をそのまま固定してしまい、以降の `StrictHostKeyChecking=yes` はその誤った鍵を信頼し続ける。
+
+表示されたフィンガープリントを、**SSH 以外の経路**(サーバーの管理コンソール、
+クラウドのインスタンス作成ログ、構築担当者からの連絡など)で得た値と照合する。
+一致したときだけ登録する。
+
+```sh
+cat /tmp/web01.pub >> config/ssh/known_hosts && rm /tmp/web01.pub
 ```
 
 `compose.yaml` の devuntu サービスへ:
@@ -220,21 +234,46 @@ volumes:
 command="/opt/devuntu/bin/devuntu-run",no-pty,no-port-forwarding,no-agent-forwarding,no-X11-forwarding ssh-ed25519 AAAA...
 ```
 
-`devuntu-run` を次の形にしておくと、**中断したときにリモート側のプロセスも確実に落ちる**。
-アプリは中断時にまず stdin を閉じるので、それが合図になる。
+`command=` を付けると、ssh は要求されたコマンドを実行せず**必ずこのスクリプトを起動する**。
+要求された内容は引数ではなく環境変数 `SSH_ORIGINAL_COMMAND` に入るので、
+スクリプト側はそれを読んで実行する。
+
+devuntu が送るのは `printf '<番兵>' >&2; exec '<実行ファイル>' '<引数>' ...` という 1 行で、
+実行ファイルも引数もシングルクォートで包まれている(`command-args.ts` の `shellQuote`)。
+`exec '<実行ファイル>'` の部分を照合すれば、この鍵で起動できるものを固定できる。
+
+`devuntu-run` を次の形にしておくと、許可外のコマンドを弾いたうえで、
+**中断したときにリモート側のプロセスも確実に落ちる**。アプリは中断時にまず stdin を閉じるので、それが合図になる。
 
 ```sh
 #!/bin/sh
 set -eu
-timeout -s TERM "${DEVUNTU_TIMEOUT:-900}" "$@" &
+
+cmd=${SSH_ORIGINAL_COMMAND:-}
+
+# この鍵で起動してよい実行ファイルを列挙する。引数の中身までは見ない
+case "$cmd" in
+  *"; exec '/opt/devuntu/bin/deploy.sh'"*) ;;
+  *"; exec '/opt/devuntu/bin/reindex.sh'"*) ;;
+  *) echo 'この鍵では許可されていないコマンドです' >&2; exit 126 ;;
+esac
+
+# setsid で別のプロセスグループにしておく。そうしないと後段の kill でグループごと落とせない
+setsid timeout -s TERM "${DEVUNTU_TIMEOUT:-900}" /bin/sh -c "$cmd" &
 job=$!
+
 # ssh が切れる / アプリが stdin を閉じると EOF になり、プロセスグループごと落とす
 ( cat >/dev/null; kill -TERM -"$job" 2>/dev/null ) &
 watch=$!
-wait "$job"; rc=$?
+
+rc=0
+wait "$job" || rc=$?
 kill "$watch" 2>/dev/null || true
 exit "$rc"
 ```
+
+許可リストは必ず入れる。`SSH_ORIGINAL_COMMAND` を検証せずに実行すると、
+`command=` を付けていても鍵を持つ相手が任意のコマンドを実行できることに変わりはない。
 
 **この wrapper は必須ではない。** 置かない場合、中断してもリモート側に処理が残ることがある
 (ローカルの ssh プロセスは必ず落ちる)。

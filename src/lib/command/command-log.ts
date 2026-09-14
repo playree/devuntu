@@ -67,11 +67,13 @@ export const createLogBuffer = (runId: string, workerId: string): LogBuffer => {
   }
 
   const push: LogBuffer['push'] = (stream, raw) => {
+    // sanitize より前に数える。NUL だけを吐き続けて暴走の判定をすり抜けられないようにする
+    receivedBytes += Buffer.byteLength(raw, 'utf8')
+
     const text = sanitizeLogText(raw)
     if (text.length === 0) {
       return
     }
-    receivedBytes += Buffer.byteLength(text, 'utf8')
 
     if (isTruncated) {
       return
@@ -102,31 +104,40 @@ export const createLogBuffer = (runId: string, workerId: string): LogBuffer => {
     queuedBytes = 0
 
     // seq は「保存済みの最大 + 1」から振る。欠番も逆転も作らないよう同一トランザクションで更新する
-    const applied = await prisma.$transaction(async (tx) => {
-      const updated = await tx.commandRun.updateMany({
-        where: { id: runId, status: 'running', workerId },
-        data: {
-          lastSeq: { increment: batch.length },
-          bytes: { increment: batchBytes },
-          truncated: isTruncated,
-          heartbeatAt: new Date(),
-        },
+    let applied: boolean
+    try {
+      applied = await prisma.$transaction(async (tx) => {
+        const updated = await tx.commandRun.updateMany({
+          where: { id: runId, status: 'running', workerId },
+          data: {
+            lastSeq: { increment: batch.length },
+            bytes: { increment: batchBytes },
+            truncated: isTruncated,
+            heartbeatAt: new Date(),
+          },
+        })
+        if (updated.count === 0) {
+          return false
+        }
+        const run = await tx.commandRun.findUniqueOrThrow({ where: { id: runId }, select: { lastSeq: true } })
+        const firstSeq = run.lastSeq - batch.length + 1
+        await tx.commandRunChunk.createMany({
+          data: batch.map((chunk, index) => ({
+            runId,
+            seq: firstSeq + index,
+            stream: chunk.stream,
+            text: chunk.text,
+          })),
+        })
+        return true
       })
-      if (updated.count === 0) {
-        return false
-      }
-      const run = await tx.commandRun.findUniqueOrThrow({ where: { id: runId }, select: { lastSeq: true } })
-      const firstSeq = run.lastSeq - batch.length + 1
-      await tx.commandRunChunk.createMany({
-        data: batch.map((chunk, index) => ({
-          runId,
-          seq: firstSeq + index,
-          stream: chunk.stream,
-          text: chunk.text,
-        })),
-      })
-      return true
-    })
+    } catch (error) {
+      // 書けなかった分を queue の先頭へ戻す。捨ててしまうと呼び出し元が再試行しても対象が残らず、
+      // 次の空 flush が成功して失敗回数までリセットされてしまう
+      queue = [...batch, ...queue]
+      queuedBytes += batchBytes
+      throw error
+    }
 
     if (!applied) {
       logger.warn({ runId, workerId }, 'command run ownership lost while flushing')

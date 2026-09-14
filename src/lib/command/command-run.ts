@@ -39,8 +39,12 @@ export type ClaimedRun = {
 /**
  * 実行を待ち行列へ入れる。
  *
- * `activeKey` の一意制約で多重実行を弾く。件数を数えてから INSERT するより競合に強い
+ * 同じコマンドの多重実行は `activeKey` の一意制約で弾く。件数を数えて判断するより競合に強い
  * (数えた直後に別のリクエストが入る隙間が無い)。
+ *
+ * 一方で `maxQueued` は**ソフト上限**。数えてから INSERT するまでの隙間に別のリクエストが入ると
+ * 同時投入ぶんだけ超えうる。実際に走る本数は `COMMAND_MAX_CONCURRENT` が別に抑えるため、
+ * ここを直列化してまで厳密には守っていない。
  */
 export const enqueueCommandRun = async (input: {
   def: CommandDef
@@ -190,33 +194,31 @@ export const listCancelRequestedRuns = async (workerId: string): Promise<string[
 export const reclaimStaleRuns = async (now: Date = nowDate()): Promise<number> => {
   const before = new Date(now.getTime() - COMMAND_STALE_MS)
 
-  const stale = await prisma.commandRun.findMany({
-    where: { status: 'running', OR: [{ heartbeatAt: { lt: before } }, { heartbeatAt: null }] },
-    select: { id: true },
-  })
-  if (stale.length === 0) {
+  /**
+   * 対象の特定と更新を1文にまとめる(`claimQueuedRuns` と同じ形)。
+   *
+   * 抽出と更新を分けると、その隙間に生存申告を入れた**動いている実行**まで
+   * `interrupted` として閉じてしまう。
+   */
+  const reclaimed = await prisma.$queryRaw<{ id: string }[]>`
+    UPDATE "command_run"
+    SET "status" = 'failed', "failureKind" = 'interrupted', "finishedAt" = ${now},
+        "activeKey" = NULL, "workerId" = NULL
+    WHERE "status" = 'running' AND ("heartbeatAt" IS NULL OR "heartbeatAt" < ${before})
+    RETURNING "id"
+  `
+  if (reclaimed.length === 0) {
     return 0
   }
 
-  const ids = stale.map((run) => run.id)
-  const updated = await prisma.commandRun.updateMany({
-    where: { id: { in: ids }, status: 'running' },
-    data: {
-      status: 'failed',
-      failureKind: 'interrupted',
-      finishedAt: now,
-      activeKey: null,
-      workerId: null,
-    },
-  })
-
+  // 実際に閉じた行にだけ説明を残す
   await Promise.all(
-    ids.map((runId) =>
-      appendSystemChunk(runId, '実行していたプロセスが応答しなくなったため、失敗として記録しました。'),
+    reclaimed.map(({ id }) =>
+      appendSystemChunk(id, '実行していたプロセスが応答しなくなったため、失敗として記録しました。'),
     ),
   )
-  logger.warn({ count: updated.count }, 'command runs reclaimed')
-  return updated.count
+  logger.warn({ count: reclaimed.length }, 'command runs reclaimed')
+  return reclaimed.length
 }
 
 /** 1件引く。SSE と履歴詳細が使う */
