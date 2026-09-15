@@ -9,7 +9,7 @@ import {
   indentUnit,
   syntaxHighlighting,
 } from '@codemirror/language'
-import { EditorState } from '@codemirror/state'
+import { Compartment, EditorState, Extension } from '@codemirror/state'
 import { placeholder as cmPlaceholder, EditorView, highlightActiveLine, keymap, lineNumbers } from '@codemirror/view'
 import { basicDark } from 'cm6-theme-basic-dark'
 import { useTheme } from 'next-themes'
@@ -34,6 +34,10 @@ const baseTheme = EditorView.theme({
   '.cm-scroller': { overflow: 'auto' },
 })
 
+/** ダークは basicDark に任せ、ライトは CodeMirror 既定のハイライトを当てる */
+const colorTheme = (isDark: boolean): Extension =>
+  isDark ? basicDark : syntaxHighlighting(defaultHighlightStyle, { fallback: true })
+
 /**
  * CodeMirror の実体。ブラウザ専用なので `next/dynamic` の `ssr: false` 経由で読み込む前提。
  *
@@ -51,6 +55,11 @@ const YamlEditorInner: FC<YamlEditorCoreProps & { isDark: boolean }> = ({
   isDark,
 }) => {
   const hostRef = useRef<HTMLDivElement | null>(null)
+  const viewRef = useRef<EditorView | null>(null)
+  // 色だけを後から差し替えるための仕切り
+  const themeRef = useRef(new Compartment())
+  // 生成時に読む値。依存に入れるとテーマの切り替えでエディタを作り直すことになる
+  const isDarkRef = useRef(isDark)
   // 拡張の再構成でエディタを作り直さないよう、コールバックは ref 経由で最新を見る
   const handlers = useRef({ onChange, onBlur })
   useEffect(() => {
@@ -80,8 +89,7 @@ const YamlEditorInner: FC<YamlEditorCoreProps & { isDark: boolean }> = ({
           EditorView.contentAttributes.of({ 'aria-label': 'YAML' }),
           ...(placeholder ? [cmPlaceholder(placeholder)] : []),
           baseTheme,
-          // ダークは basicDark に任せ、ライトは CodeMirror 既定のハイライトを当てる
-          ...(isDark ? [basicDark] : [syntaxHighlighting(defaultHighlightStyle, { fallback: true })]),
+          themeRef.current.of(colorTheme(isDarkRef.current)),
           EditorView.updateListener.of((update) => {
             if (update.docChanged) {
               handlers.current.onChange(update.state.doc.toString())
@@ -93,12 +101,23 @@ const YamlEditorInner: FC<YamlEditorCoreProps & { isDark: boolean }> = ({
         ],
       }),
     })
+    viewRef.current = view
 
     return () => {
       view.destroy()
+      viewRef.current = null
     }
     // 内容は初回マウント時の値で固定する(入れ替えは呼び出し側の key で行う)
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  /**
+   * テーマは色の拡張だけを入れ替える。作り直すと文書が `initialValue` へ巻き戻り、
+   * 親が持つ編集後の値と食い違ったまま保存できてしまう。
+   */
+  useEffect(() => {
+    isDarkRef.current = isDark
+    viewRef.current?.dispatch({ effects: themeRef.current.reconfigure(colorTheme(isDark)) })
   }, [isDark])
 
   return <div ref={hostRef} style={{ minHeight: `calc(${minRows} * 1.4rem)` }} />
@@ -106,7 +125,7 @@ const YamlEditorInner: FC<YamlEditorCoreProps & { isDark: boolean }> = ({
 
 /**
  * `useTheme` の resolvedTheme は初回レンダーでは undefined なので、確定するまで本体をマウントしない。
- * 先にマウントすると、確定直後にテーマ差し替えでエディタが作り直されて入力位置が飛ぶ。
+ * 先にマウントすると、ダークの利用者に一瞬ライトの編集面が見える。
  */
 const YamlEditorCore: FC<YamlEditorCoreProps> = (props) => {
   const { resolvedTheme } = useTheme()

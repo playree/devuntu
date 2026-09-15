@@ -123,12 +123,19 @@ const writeFileAtomic = async (path: string, text: string): Promise<void> => {
 
   const handle = await open(tmpPath, 'wx', mode).catch(rethrowWriteError)
   try {
-    // open の mode は umask で削られるので明示的に合わせ直す
-    await handle.chmod(mode)
-    await handle.writeFile(text, 'utf-8')
-    await handle.sync()
-  } finally {
-    await handle.close()
+    try {
+      // open の mode は umask で削られるので明示的に合わせ直す
+      await handle.chmod(mode)
+      await handle.writeFile(text, 'utf-8')
+      await handle.sync()
+    } finally {
+      await handle.close()
+    }
+  } catch (error) {
+    // 書き切れなかった一時ファイルを残さない。ENOSPC のような障害では
+    // 再試行のたびに積み上がり、空きを更に食う
+    await rm(tmpPath, { force: true }).catch(() => {})
+    rethrowWriteError(error)
   }
 
   try {

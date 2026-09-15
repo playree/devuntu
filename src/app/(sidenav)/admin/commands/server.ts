@@ -93,8 +93,6 @@ const toDefView = (
 /** カタログが注入した `targetId` を落として、定義ファイルに書ける形へ戻す */
 const toSource = ({ targetId: _targetId, ...rest }: CommandDef): CommandDefEntry => rest
 
-export type CommandDefsView = Awaited<ReturnType<typeof buildView>>
-
 const buildView = async (opts?: { force?: boolean }) => {
   const result = getCommandCatalog(opts)
   // グループ一覧はコマンドをまたいで共通なので、取得はこの 1 箇所にまとめる
@@ -188,7 +186,24 @@ export const updateCommandSettingAction = safeAuthAction
  * 検証エラーの明細は `errorType` に載せられないので、**明細付きのものだけ成功応答で返す**。
  * 状態の問題(競合・編集不可・読み取り専用)は `errorType` で分岐できるよう throw する。
  */
-export type EditCommandDefResult = { ok: true; view: CommandDefsView } | { ok: false; messages: string[] }
+export type EditCommandDefResult = { ok: true } | { ok: false; messages: string[] }
+
+/**
+ * 定義ファイルを書いた後に残った設定行を落とす。
+ *
+ * ここへ来る時点でファイルは既に書けているので、失敗しても操作は成功として返す。
+ * 失敗して行が残っても、その ID で作り直すときに同じ後始末が走るため
+ * 「昔の許可が新しいコマンドに効く」までは進まない。
+ */
+const dropCommandSettings = async (commandKeys: string[], context: Record<string, unknown>): Promise<void> => {
+  for (const commandKey of commandKeys) {
+    try {
+      await deleteCommandSetting(commandKey)
+    } catch (error) {
+      logger.error({ ...context, commandKey, error }, 'failed to delete command setting')
+    }
+  }
+}
 
 /** 検証で落ちたものだけ画面向けの形へ詰め替え、それ以外はそのまま投げる */
 const toEditResult = async (error: unknown): Promise<EditCommandDefResult> => {
@@ -234,9 +249,14 @@ export const upsertCommandDefAction = safeAuthAction
       })
 
       // ID を変えた更新は履歴の上でも別のコマンドになるので、古い ID の設定は引き継がず捨てる。
-      // 残すと、同じ ID を後から別の用途で作ったときに昔の許可がそのまま効く
-      if (replaceId && replaceId !== command.id) {
-        await deleteCommandSetting(replaceId)
+      // 残すと、同じ ID を後から別の用途で作ったときに昔の許可がそのまま効く。
+      // 新しい ID の側も同時に落とす。以前そのIDで消し損ねた行が残っていても、
+      // ここで作った分は必ず既定値(無効・許可グループ無し)から始まる
+      if (replaceId !== command.id) {
+        await dropCommandSettings([command.id, ...(replaceId ? [replaceId] : [])], {
+          userId: user.id,
+          fileName,
+        })
       }
 
       // 実行履歴は残るのに定義の変更履歴がどこにも残らないのは非対称なので、監査ログを残す
@@ -244,7 +264,9 @@ export const upsertCommandDefAction = safeAuthAction
         { userId: user.id, fileName, replaceId, commandId: command.id, executable: command.executable },
         'command def updated',
       )
-      return { ok: true as const, view: await buildView({ force: true }) }
+      // view は返さない。ここで組み立てに失敗すると、書けているのに失敗として返ってしまう
+      // (画面は成功後に自分で取り直す)
+      return { ok: true as const }
     } catch (error) {
       return toEditResult(error)
     }
@@ -274,9 +296,9 @@ export const deleteCommandDefAction = safeAuthAction
 
       // ファイルが書けてから設定を消す。逆順にすると、書き込みに失敗したときに
       // 「定義は生きているのに許可だけ消えた」状態が残る
-      await deleteCommandSetting(commandId)
+      await dropCommandSettings([commandId], { userId: user.id, fileName })
       logger.warn({ userId: user.id, fileName, commandId }, 'command def deleted')
-      return { ok: true as const, view: await buildView({ force: true }) }
+      return { ok: true as const }
     } catch (error) {
       return toEditResult(error)
     }
