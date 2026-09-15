@@ -8,12 +8,15 @@
  * 手順は逐次に実行する。どれもDBへの書き込みで、並行させるとコネクションを余分に掴むだけになる。
  */
 
+import { type CommandRunStatus } from '@/generated/prisma/enums'
 import { nowDate } from '../day'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
 import {
   AGENT_RUN_KEEP_PER_RUNNER,
   AGENT_RUN_RETENTION_MS,
+  COMMAND_RUN_KEEP_PER_COMMAND,
+  COMMAND_RUN_RETENTION_MS,
   MAINTENANCE_DELETE_BATCH,
   OAUTH_TOKEN_RETENTION_MS,
   retentionBefore,
@@ -122,6 +125,43 @@ export const sweepAgentRuns = async (now: Date): Promise<number> => {
   return count + capped
 }
 
+/**
+ * コマンドの実行履歴。保持期間とコマンドごとの件数の2本で抑える。
+ *
+ * ログ(`command_run_chunk`)は Cascade で一緒に消える。
+ * `queued` / `running` は実行側(`command-run.ts` の `finishCommandRun` / `reclaimStaleRuns`)が
+ * 持ち主なので触らない。掃除が先に消すと、実行中のワーカーが書き込み先を失う。
+ */
+export const sweepCommandRuns = async (now: Date): Promise<number> => {
+  // 終了済みだけを対象にする。queued / running は実行側が持ち主
+  const settled = { status: { in: ['succeeded', 'failed', 'canceled'] as CommandRunStatus[] } }
+
+  const { count } = await prisma.commandRun.deleteMany({
+    where: { queuedAt: { lt: retentionBefore(now, COMMAND_RUN_RETENTION_MS) }, ...settled },
+  })
+
+  let capped = 0
+  // 定義ファイルから消えたコマンドの履歴も対象にしたいので、実在するキーを履歴側から引く
+  const keys = await prisma.commandRun.findMany({
+    distinct: ['commandKey'],
+    select: { commandKey: true },
+  })
+  for (const { commandKey } of keys) {
+    const excess = await prisma.commandRun.findMany({
+      where: { commandKey, ...settled },
+      select: { id: true },
+      orderBy: [{ queuedAt: 'desc' }, { id: 'desc' }],
+      skip: COMMAND_RUN_KEEP_PER_COMMAND,
+      take: MAINTENANCE_DELETE_BATCH,
+    })
+    if (excess.length > 0) {
+      capped += (await prisma.commandRun.deleteMany({ where: { id: { in: excess.map(({ id }) => id) } } })).count
+    }
+  }
+
+  return count + capped
+}
+
 /** 1手順ぶん。1つ失敗しても残りの手順は続ける */
 const runStep = async (counts: SweepCounts, step: string, fn: () => Promise<number>): Promise<void> => {
   try {
@@ -144,6 +184,7 @@ export const runMaintenanceSweep = async (now: Date = nowDate()): Promise<SweepC
   await runStep(counts, 'oauthClientAssertion', () => sweepOauthClientAssertions(now))
   await runStep(counts, 'uploadNonce', () => sweepUploadNonces(now))
   await runStep(counts, 'agentRun', () => sweepAgentRuns(now))
+  await runStep(counts, 'commandRun', () => sweepCommandRuns(now))
   await runStep(counts, 'attachment', () => sweepOrphanAttachments(now))
 
   logger.info(counts, 'maintenance sweep finished')

@@ -308,6 +308,7 @@ export type UserWhereInput = {
   agentApprovers?: Prisma.AgentApproverListRelationFilter
   agentApproverGroups?: Prisma.AgentApproverGroupListRelationFilter
   approverOf?: Prisma.AgentApproverListRelationFilter
+  commandRuns?: Prisma.CommandRunListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -357,6 +358,7 @@ export type UserOrderByWithRelationInput = {
   agentApprovers?: Prisma.AgentApproverOrderByRelationAggregateInput
   agentApproverGroups?: Prisma.AgentApproverGroupOrderByRelationAggregateInput
   approverOf?: Prisma.AgentApproverOrderByRelationAggregateInput
+  commandRuns?: Prisma.CommandRunOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -409,6 +411,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   agentApprovers?: Prisma.AgentApproverListRelationFilter
   agentApproverGroups?: Prisma.AgentApproverGroupListRelationFilter
   approverOf?: Prisma.AgentApproverListRelationFilter
+  commandRuns?: Prisma.CommandRunListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -504,6 +507,7 @@ export type UserCreateInput = {
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -553,6 +557,7 @@ export type UserUncheckedCreateInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -602,6 +607,7 @@ export type UserUpdateInput = {
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -651,6 +657,7 @@ export type UserUncheckedUpdateInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -1235,6 +1242,22 @@ export type UserUpdateOneWithoutNotifyDeliveriesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutNotifyDeliveriesInput, Prisma.UserUpdateWithoutNotifyDeliveriesInput>, Prisma.UserUncheckedUpdateWithoutNotifyDeliveriesInput>
 }
 
+export type UserCreateNestedOneWithoutCommandRunsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCommandRunsInput, Prisma.UserUncheckedCreateWithoutCommandRunsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCommandRunsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutCommandRunsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCommandRunsInput, Prisma.UserUncheckedCreateWithoutCommandRunsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCommandRunsInput
+  upsert?: Prisma.UserUpsertWithoutCommandRunsInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCommandRunsInput, Prisma.UserUpdateWithoutCommandRunsInput>, Prisma.UserUncheckedUpdateWithoutCommandRunsInput>
+}
+
 export type UserCreateWithoutAgentTokenInput = {
   id?: string
   name: string
@@ -1281,6 +1304,7 @@ export type UserCreateWithoutAgentTokenInput = {
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAgentTokenInput = {
@@ -1329,6 +1353,7 @@ export type UserUncheckedCreateWithoutAgentTokenInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAgentTokenInput = {
@@ -1382,6 +1407,7 @@ export type UserCreateWithoutCreatedAgentTokensInput = {
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCreatedAgentTokensInput = {
@@ -1430,6 +1456,7 @@ export type UserUncheckedCreateWithoutCreatedAgentTokensInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCreatedAgentTokensInput = {
@@ -1494,6 +1521,7 @@ export type UserUpdateWithoutAgentTokenInput = {
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAgentTokenInput = {
@@ -1542,6 +1570,7 @@ export type UserUncheckedUpdateWithoutAgentTokenInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutCreatedAgentTokensInput = {
@@ -1601,6 +1630,7 @@ export type UserUpdateWithoutCreatedAgentTokensInput = {
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCreatedAgentTokensInput = {
@@ -1649,6 +1679,7 @@ export type UserUncheckedUpdateWithoutCreatedAgentTokensInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutMcpTokensInput = {
@@ -1697,6 +1728,7 @@ export type UserCreateWithoutMcpTokensInput = {
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutMcpTokensInput = {
@@ -1745,6 +1777,7 @@ export type UserUncheckedCreateWithoutMcpTokensInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutMcpTokensInput = {
@@ -1809,6 +1842,7 @@ export type UserUpdateWithoutMcpTokensInput = {
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMcpTokensInput = {
@@ -1857,6 +1891,7 @@ export type UserUncheckedUpdateWithoutMcpTokensInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAgentRunnerInput = {
@@ -1905,6 +1940,7 @@ export type UserCreateWithoutAgentRunnerInput = {
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAgentRunnerInput = {
@@ -1953,6 +1989,7 @@ export type UserUncheckedCreateWithoutAgentRunnerInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAgentRunnerInput = {
@@ -2017,6 +2054,7 @@ export type UserUpdateWithoutAgentRunnerInput = {
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAgentRunnerInput = {
@@ -2065,6 +2103,7 @@ export type UserUncheckedUpdateWithoutAgentRunnerInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAgentApproversInput = {
@@ -2113,6 +2152,7 @@ export type UserCreateWithoutAgentApproversInput = {
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAgentApproversInput = {
@@ -2161,6 +2201,7 @@ export type UserUncheckedCreateWithoutAgentApproversInput = {
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAgentApproversInput = {
@@ -2214,6 +2255,7 @@ export type UserCreateWithoutApproverOfInput = {
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutApproverOfInput = {
@@ -2262,6 +2304,7 @@ export type UserUncheckedCreateWithoutApproverOfInput = {
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutApproverOfInput = {
@@ -2326,6 +2369,7 @@ export type UserUpdateWithoutAgentApproversInput = {
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAgentApproversInput = {
@@ -2374,6 +2418,7 @@ export type UserUncheckedUpdateWithoutAgentApproversInput = {
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutApproverOfInput = {
@@ -2433,6 +2478,7 @@ export type UserUpdateWithoutApproverOfInput = {
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutApproverOfInput = {
@@ -2481,6 +2527,7 @@ export type UserUncheckedUpdateWithoutApproverOfInput = {
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAgentApproverGroupsInput = {
@@ -2529,6 +2576,7 @@ export type UserCreateWithoutAgentApproverGroupsInput = {
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAgentApproverGroupsInput = {
@@ -2577,6 +2625,7 @@ export type UserUncheckedCreateWithoutAgentApproverGroupsInput = {
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAgentApproverGroupsInput = {
@@ -2641,6 +2690,7 @@ export type UserUpdateWithoutAgentApproverGroupsInput = {
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAgentApproverGroupsInput = {
@@ -2689,6 +2739,7 @@ export type UserUncheckedUpdateWithoutAgentApproverGroupsInput = {
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutSessionsInput = {
@@ -2737,6 +2788,7 @@ export type UserCreateWithoutSessionsInput = {
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
@@ -2785,6 +2837,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -2849,6 +2902,7 @@ export type UserUpdateWithoutSessionsInput = {
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -2897,6 +2951,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAccountsInput = {
@@ -2945,6 +3000,7 @@ export type UserCreateWithoutAccountsInput = {
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAccountsInput = {
@@ -2993,6 +3049,7 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAccountsInput = {
@@ -3057,6 +3114,7 @@ export type UserUpdateWithoutAccountsInput = {
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -3105,6 +3163,7 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutTwofactorsInput = {
@@ -3153,6 +3212,7 @@ export type UserCreateWithoutTwofactorsInput = {
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutTwofactorsInput = {
@@ -3201,6 +3261,7 @@ export type UserUncheckedCreateWithoutTwofactorsInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutTwofactorsInput = {
@@ -3265,6 +3326,7 @@ export type UserUpdateWithoutTwofactorsInput = {
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTwofactorsInput = {
@@ -3313,6 +3375,7 @@ export type UserUncheckedUpdateWithoutTwofactorsInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPasskeysInput = {
@@ -3361,6 +3424,7 @@ export type UserCreateWithoutPasskeysInput = {
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPasskeysInput = {
@@ -3409,6 +3473,7 @@ export type UserUncheckedCreateWithoutPasskeysInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPasskeysInput = {
@@ -3473,6 +3538,7 @@ export type UserUpdateWithoutPasskeysInput = {
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPasskeysInput = {
@@ -3521,6 +3587,7 @@ export type UserUncheckedUpdateWithoutPasskeysInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutOauthclientsInput = {
@@ -3569,6 +3636,7 @@ export type UserCreateWithoutOauthclientsInput = {
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutOauthclientsInput = {
@@ -3617,6 +3685,7 @@ export type UserUncheckedCreateWithoutOauthclientsInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutOauthclientsInput = {
@@ -3681,6 +3750,7 @@ export type UserUpdateWithoutOauthclientsInput = {
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOauthclientsInput = {
@@ -3729,6 +3799,7 @@ export type UserUncheckedUpdateWithoutOauthclientsInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutOauthrefreshtokensInput = {
@@ -3777,6 +3848,7 @@ export type UserCreateWithoutOauthrefreshtokensInput = {
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutOauthrefreshtokensInput = {
@@ -3825,6 +3897,7 @@ export type UserUncheckedCreateWithoutOauthrefreshtokensInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutOauthrefreshtokensInput = {
@@ -3889,6 +3962,7 @@ export type UserUpdateWithoutOauthrefreshtokensInput = {
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOauthrefreshtokensInput = {
@@ -3937,6 +4011,7 @@ export type UserUncheckedUpdateWithoutOauthrefreshtokensInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutOauthaccesstokensInput = {
@@ -3985,6 +4060,7 @@ export type UserCreateWithoutOauthaccesstokensInput = {
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutOauthaccesstokensInput = {
@@ -4033,6 +4109,7 @@ export type UserUncheckedCreateWithoutOauthaccesstokensInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutOauthaccesstokensInput = {
@@ -4097,6 +4174,7 @@ export type UserUpdateWithoutOauthaccesstokensInput = {
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOauthaccesstokensInput = {
@@ -4145,6 +4223,7 @@ export type UserUncheckedUpdateWithoutOauthaccesstokensInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutOauthconsentsInput = {
@@ -4193,6 +4272,7 @@ export type UserCreateWithoutOauthconsentsInput = {
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutOauthconsentsInput = {
@@ -4241,6 +4321,7 @@ export type UserUncheckedCreateWithoutOauthconsentsInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutOauthconsentsInput = {
@@ -4305,6 +4386,7 @@ export type UserUpdateWithoutOauthconsentsInput = {
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOauthconsentsInput = {
@@ -4353,6 +4435,7 @@ export type UserUncheckedUpdateWithoutOauthconsentsInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutDashboardInput = {
@@ -4401,6 +4484,7 @@ export type UserCreateWithoutDashboardInput = {
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutDashboardInput = {
@@ -4449,6 +4533,7 @@ export type UserUncheckedCreateWithoutDashboardInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutDashboardInput = {
@@ -4513,6 +4598,7 @@ export type UserUpdateWithoutDashboardInput = {
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDashboardInput = {
@@ -4561,6 +4647,7 @@ export type UserUncheckedUpdateWithoutDashboardInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAttachmentsInput = {
@@ -4609,6 +4696,7 @@ export type UserCreateWithoutAttachmentsInput = {
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAttachmentsInput = {
@@ -4657,6 +4745,7 @@ export type UserUncheckedCreateWithoutAttachmentsInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAttachmentsInput = {
@@ -4721,6 +4810,7 @@ export type UserUpdateWithoutAttachmentsInput = {
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAttachmentsInput = {
@@ -4769,6 +4859,7 @@ export type UserUncheckedUpdateWithoutAttachmentsInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutUserGroupsInput = {
@@ -4817,6 +4908,7 @@ export type UserCreateWithoutUserGroupsInput = {
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutUserGroupsInput = {
@@ -4865,6 +4957,7 @@ export type UserUncheckedCreateWithoutUserGroupsInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutUserGroupsInput = {
@@ -4929,6 +5022,7 @@ export type UserUpdateWithoutUserGroupsInput = {
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutUserGroupsInput = {
@@ -4977,6 +5071,7 @@ export type UserUncheckedUpdateWithoutUserGroupsInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutCalendarShareInput = {
@@ -5025,6 +5120,7 @@ export type UserCreateWithoutCalendarShareInput = {
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCalendarShareInput = {
@@ -5073,6 +5169,7 @@ export type UserUncheckedCreateWithoutCalendarShareInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCalendarShareInput = {
@@ -5137,6 +5234,7 @@ export type UserUpdateWithoutCalendarShareInput = {
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCalendarShareInput = {
@@ -5185,6 +5283,7 @@ export type UserUncheckedUpdateWithoutCalendarShareInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutCalendarBusyTimesInput = {
@@ -5233,6 +5332,7 @@ export type UserCreateWithoutCalendarBusyTimesInput = {
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCalendarBusyTimesInput = {
@@ -5281,6 +5381,7 @@ export type UserUncheckedCreateWithoutCalendarBusyTimesInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCalendarBusyTimesInput = {
@@ -5345,6 +5446,7 @@ export type UserUpdateWithoutCalendarBusyTimesInput = {
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCalendarBusyTimesInput = {
@@ -5393,6 +5495,7 @@ export type UserUncheckedUpdateWithoutCalendarBusyTimesInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPrivateBoardInput = {
@@ -5441,6 +5544,7 @@ export type UserCreateWithoutPrivateBoardInput = {
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPrivateBoardInput = {
@@ -5489,6 +5593,7 @@ export type UserUncheckedCreateWithoutPrivateBoardInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPrivateBoardInput = {
@@ -5553,6 +5658,7 @@ export type UserUpdateWithoutPrivateBoardInput = {
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPrivateBoardInput = {
@@ -5601,6 +5707,7 @@ export type UserUncheckedUpdateWithoutPrivateBoardInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutBoardMembersInput = {
@@ -5649,6 +5756,7 @@ export type UserCreateWithoutBoardMembersInput = {
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutBoardMembersInput = {
@@ -5697,6 +5805,7 @@ export type UserUncheckedCreateWithoutBoardMembersInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutBoardMembersInput = {
@@ -5761,6 +5870,7 @@ export type UserUpdateWithoutBoardMembersInput = {
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutBoardMembersInput = {
@@ -5809,6 +5919,7 @@ export type UserUncheckedUpdateWithoutBoardMembersInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutCreatedTicketsInput = {
@@ -5857,6 +5968,7 @@ export type UserCreateWithoutCreatedTicketsInput = {
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCreatedTicketsInput = {
@@ -5905,6 +6017,7 @@ export type UserUncheckedCreateWithoutCreatedTicketsInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCreatedTicketsInput = {
@@ -5958,6 +6071,7 @@ export type UserCreateWithoutAssignedTicketsInput = {
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAssignedTicketsInput = {
@@ -6006,6 +6120,7 @@ export type UserUncheckedCreateWithoutAssignedTicketsInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAssignedTicketsInput = {
@@ -6070,6 +6185,7 @@ export type UserUpdateWithoutCreatedTicketsInput = {
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCreatedTicketsInput = {
@@ -6118,6 +6234,7 @@ export type UserUncheckedUpdateWithoutCreatedTicketsInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutAssignedTicketsInput = {
@@ -6177,6 +6294,7 @@ export type UserUpdateWithoutAssignedTicketsInput = {
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAssignedTicketsInput = {
@@ -6225,6 +6343,7 @@ export type UserUncheckedUpdateWithoutAssignedTicketsInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutTicketCommentsInput = {
@@ -6273,6 +6392,7 @@ export type UserCreateWithoutTicketCommentsInput = {
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutTicketCommentsInput = {
@@ -6321,6 +6441,7 @@ export type UserUncheckedCreateWithoutTicketCommentsInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutTicketCommentsInput = {
@@ -6385,6 +6506,7 @@ export type UserUpdateWithoutTicketCommentsInput = {
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTicketCommentsInput = {
@@ -6433,6 +6555,7 @@ export type UserUncheckedUpdateWithoutTicketCommentsInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutNotifySettingsInput = {
@@ -6481,6 +6604,7 @@ export type UserCreateWithoutNotifySettingsInput = {
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutNotifySettingsInput = {
@@ -6529,6 +6653,7 @@ export type UserUncheckedCreateWithoutNotifySettingsInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutNotifySettingsInput = {
@@ -6593,6 +6718,7 @@ export type UserUpdateWithoutNotifySettingsInput = {
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNotifySettingsInput = {
@@ -6641,6 +6767,7 @@ export type UserUncheckedUpdateWithoutNotifySettingsInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutWebPushSubscriptionsInput = {
@@ -6689,6 +6816,7 @@ export type UserCreateWithoutWebPushSubscriptionsInput = {
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutWebPushSubscriptionsInput = {
@@ -6737,6 +6865,7 @@ export type UserUncheckedCreateWithoutWebPushSubscriptionsInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutWebPushSubscriptionsInput = {
@@ -6801,6 +6930,7 @@ export type UserUpdateWithoutWebPushSubscriptionsInput = {
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutWebPushSubscriptionsInput = {
@@ -6849,6 +6979,7 @@ export type UserUncheckedUpdateWithoutWebPushSubscriptionsInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutNotifyOutboxesInput = {
@@ -6897,6 +7028,7 @@ export type UserCreateWithoutNotifyOutboxesInput = {
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutNotifyOutboxesInput = {
@@ -6945,6 +7077,7 @@ export type UserUncheckedCreateWithoutNotifyOutboxesInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutNotifyOutboxesInput = {
@@ -7009,6 +7142,7 @@ export type UserUpdateWithoutNotifyOutboxesInput = {
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNotifyOutboxesInput = {
@@ -7057,6 +7191,7 @@ export type UserUncheckedUpdateWithoutNotifyOutboxesInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutNotifyDeliveriesInput = {
@@ -7105,6 +7240,7 @@ export type UserCreateWithoutNotifyDeliveriesInput = {
   agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutNotifyDeliveriesInput = {
@@ -7153,6 +7289,7 @@ export type UserUncheckedCreateWithoutNotifyDeliveriesInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
   approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutNotifyDeliveriesInput = {
@@ -7217,6 +7354,7 @@ export type UserUpdateWithoutNotifyDeliveriesInput = {
   agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNotifyDeliveriesInput = {
@@ -7265,6 +7403,219 @@ export type UserUncheckedUpdateWithoutNotifyDeliveriesInput = {
   agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
   approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutCommandRunsInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  nameLocked?: boolean | null
+  locale?: string | null
+  lastLoginAt?: Date | string | null
+  timezone?: string | null
+  isAgent?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
+  userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
+  dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
+  attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
+  notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
+  boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
+  privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
+  createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
+  assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
+  ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
+  agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
+  agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
+  approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutCommandRunsInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  nameLocked?: boolean | null
+  locale?: string | null
+  lastLoginAt?: Date | string | null
+  timezone?: string | null
+  isAgent?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientUncheckedCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
+  userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
+  dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
+  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
+  notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
+  boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
+  privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
+  createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
+  ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
+  agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
+  approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutCommandRunsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutCommandRunsInput, Prisma.UserUncheckedCreateWithoutCommandRunsInput>
+}
+
+export type UserUpsertWithoutCommandRunsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutCommandRunsInput, Prisma.UserUncheckedUpdateWithoutCommandRunsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutCommandRunsInput, Prisma.UserUncheckedCreateWithoutCommandRunsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutCommandRunsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutCommandRunsInput, Prisma.UserUncheckedUpdateWithoutCommandRunsInput>
+}
+
+export type UserUpdateWithoutCommandRunsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
+  userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
+  dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
+  attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
+  notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
+  boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
+  privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
+  createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
+  assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
+  ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
+  agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
+  approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutCommandRunsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUncheckedUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
+  userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
+  dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
+  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
+  notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
+  boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
+  privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
+  createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
+  ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
+  agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
+  approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -7297,6 +7648,7 @@ export type UserCountOutputType = {
   agentApprovers: number
   agentApproverGroups: number
   approverOf: number
+  commandRuns: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -7324,6 +7676,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   agentApprovers?: boolean | UserCountOutputTypeCountAgentApproversArgs
   agentApproverGroups?: boolean | UserCountOutputTypeCountAgentApproverGroupsArgs
   approverOf?: boolean | UserCountOutputTypeCountApproverOfArgs
+  commandRuns?: boolean | UserCountOutputTypeCountCommandRunsArgs
 }
 
 /**
@@ -7504,6 +7857,13 @@ export type UserCountOutputTypeCountApproverOfArgs<ExtArgs extends runtime.Types
   where?: Prisma.AgentApproverWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountCommandRunsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CommandRunWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -7552,6 +7912,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   agentApprovers?: boolean | Prisma.User$agentApproversArgs<ExtArgs>
   agentApproverGroups?: boolean | Prisma.User$agentApproverGroupsArgs<ExtArgs>
   approverOf?: boolean | Prisma.User$approverOfArgs<ExtArgs>
+  commandRuns?: boolean | Prisma.User$commandRunsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -7646,6 +8007,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   agentApprovers?: boolean | Prisma.User$agentApproversArgs<ExtArgs>
   agentApproverGroups?: boolean | Prisma.User$agentApproverGroupsArgs<ExtArgs>
   approverOf?: boolean | Prisma.User$approverOfArgs<ExtArgs>
+  commandRuns?: boolean | Prisma.User$commandRunsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -7683,6 +8045,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     agentApprovers: Prisma.$AgentApproverPayload<ExtArgs>[]
     agentApproverGroups: Prisma.$AgentApproverGroupPayload<ExtArgs>[]
     approverOf: Prisma.$AgentApproverPayload<ExtArgs>[]
+    commandRuns: Prisma.$CommandRunPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -8167,6 +8530,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   agentApprovers<T extends Prisma.User$agentApproversArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$agentApproversArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AgentApproverPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   agentApproverGroups<T extends Prisma.User$agentApproverGroupsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$agentApproverGroupsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AgentApproverGroupPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   approverOf<T extends Prisma.User$approverOfArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$approverOfArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AgentApproverPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  commandRuns<T extends Prisma.User$commandRunsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$commandRunsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CommandRunPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -9274,6 +9638,30 @@ export type User$approverOfArgs<ExtArgs extends runtime.Types.Extensions.Interna
   take?: number
   skip?: number
   distinct?: Prisma.AgentApproverScalarFieldEnum | Prisma.AgentApproverScalarFieldEnum[]
+}
+
+/**
+ * User.commandRuns
+ */
+export type User$commandRunsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CommandRun
+   */
+  select?: Prisma.CommandRunSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the CommandRun
+   */
+  omit?: Prisma.CommandRunOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CommandRunInclude<ExtArgs> | null
+  where?: Prisma.CommandRunWhereInput
+  orderBy?: Prisma.CommandRunOrderByWithRelationInput | Prisma.CommandRunOrderByWithRelationInput[]
+  cursor?: Prisma.CommandRunWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.CommandRunScalarFieldEnum | Prisma.CommandRunScalarFieldEnum[]
 }
 
 /**

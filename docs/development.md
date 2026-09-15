@@ -141,6 +141,17 @@ pnpm install
 pnpm setup:env --dir /tmp/setup-test --dry-run
 ```
 
+コマンド実行機能([command-exec.md](command-exec.md))を動かす場合は、**ホストに `ssh` コマンドが必要**
+(Docker イメージには `openssh-client` を同梱しているが、`pnpm dev` はホストの `ssh` を使う)。
+開発時は環境変数を渡して起動すると、`.env` を汚さずに試せる。
+
+```sh
+COMMAND_EXEC_ENABLED=true \
+COMMAND_DEF_DIR=$PWD/.work/command-config/commands \
+COMMAND_SSH_DIR=$PWD/.work/command-config/ssh \
+pnpm dev
+```
+
 ## ビルド
 
 ```sh

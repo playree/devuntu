@@ -297,6 +297,66 @@ docker compose run --rm --entrypoint node tools -e "const {generateKeyPairSync}=
 接続用の長期トークンを発行する。
 利用者のマシンで AIエージェントのCLI を自動起動させる仕組みは [agent-runner.md](agent-runner.md) を参照。
 
+### コマンド実行
+
+画面からあらかじめ定義した処理を実行する機能。**既定では無効**で、次の3つが揃って初めて動く。
+
+1. `COMMAND_EXEC_ENABLED=true`
+2. 定義ファイルの配置(`COMMAND_DEF_DIR` の直下、既定 `/app/config/commands`)
+3. `/admin/commands` でのコマンドごとの有効化
+
+定義ファイルと SSH の鍵はコンテナへ read-only でマウントする。`compose.yaml` の `devuntu` サービスへ:
+
+```yaml
+volumes:
+  - type: bind
+    source: ./config
+    target: /app/config
+    read_only: true
+```
+
+```text
+/opt/devuntu/config/
+├── commands/
+│   ├── web01.yaml      # コマンドの定義(1ファイル1実行先)
+│   └── db01.yaml
+└── ssh/
+    ├── ops_ed25519     # 秘密鍵(0600)。パスフレーズ無し
+    └── known_hosts     # 接続先のホスト鍵。登録が無いホストへは接続できない
+```
+
+コマンドの定義を**画面から編集できるようにする**場合は、`commands` だけを書き込み可で重ねる。
+`config` 全体を書き込み可にすると SSH の秘密鍵まで書き込み可になってしまう。
+
+```yaml
+volumes:
+  - type: bind
+    source: ./config
+    target: /app/config
+    read_only: true
+  # commands だけ書き込み可。ssh(秘密鍵)は read-only のまま
+  - type: bind
+    source: ./config/commands
+    target: /app/config/commands
+```
+
+この場合でも、実際に編集できるのは定義ファイルへ `target.editable: true` を書いた実行先だけで、
+接続先(`target`)そのものは画面から変えられない。詳しくは
+[command-exec.md](command-exec.md#画面から編集する)を参照。
+
+devuntu が載っている**ホスト側**で実行したい場合は、コンテナからホストへ SSH する構成になるので、
+`devuntu` サービスに `extra_hosts` を足す。
+
+```yaml
+extra_hosts:
+  - 'host.docker.internal:host-gateway'
+```
+
+リバースプロキシを挟む場合は、実行ログの配信(SSE)を**バッファリングしない**設定にする
+(nginx なら該当ロケーションで `proxy_buffering off;`)。
+
+定義ファイルの書き方・鍵の準備・権限の考え方は [command-exec.md](command-exec.md) を参照。
+
 ## アップデート
 
 ```sh

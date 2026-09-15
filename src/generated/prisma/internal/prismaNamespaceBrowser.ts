@@ -93,7 +93,11 @@ export const ModelName = {
   WebPushSubscription: 'WebPushSubscription',
   BoardNotifySetting: 'BoardNotifySetting',
   NotifyOutbox: 'NotifyOutbox',
-  NotifyDelivery: 'NotifyDelivery'
+  NotifyDelivery: 'NotifyDelivery',
+  CommandSetting: 'CommandSetting',
+  CommandAllowedGroup: 'CommandAllowedGroup',
+  CommandRun: 'CommandRun',
+  CommandRunChunk: 'CommandRunChunk'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -746,6 +750,70 @@ export const NotifyDeliveryScalarFieldEnum = {
 } as const
 
 export type NotifyDeliveryScalarFieldEnum = (typeof NotifyDeliveryScalarFieldEnum)[keyof typeof NotifyDeliveryScalarFieldEnum]
+
+
+export const CommandSettingScalarFieldEnum = {
+  id: 'id',
+  commandKey: 'commandKey',
+  enabled: 'enabled',
+  sortOrder: 'sortOrder',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CommandSettingScalarFieldEnum = (typeof CommandSettingScalarFieldEnum)[keyof typeof CommandSettingScalarFieldEnum]
+
+
+export const CommandAllowedGroupScalarFieldEnum = {
+  id: 'id',
+  settingId: 'settingId',
+  groupId: 'groupId',
+  createdAt: 'createdAt'
+} as const
+
+export type CommandAllowedGroupScalarFieldEnum = (typeof CommandAllowedGroupScalarFieldEnum)[keyof typeof CommandAllowedGroupScalarFieldEnum]
+
+
+export const CommandRunScalarFieldEnum = {
+  id: 'id',
+  commandKey: 'commandKey',
+  commandLabel: 'commandLabel',
+  targetLabel: 'targetLabel',
+  userId: 'userId',
+  userName: 'userName',
+  params: 'params',
+  argsPreview: 'argsPreview',
+  status: 'status',
+  activeKey: 'activeKey',
+  workerId: 'workerId',
+  claimedAt: 'claimedAt',
+  heartbeatAt: 'heartbeatAt',
+  cancelRequestedAt: 'cancelRequestedAt',
+  cancelRequestedBy: 'cancelRequestedBy',
+  exitCode: 'exitCode',
+  failureKind: 'failureKind',
+  lastSeq: 'lastSeq',
+  bytes: 'bytes',
+  truncated: 'truncated',
+  queuedAt: 'queuedAt',
+  startedAt: 'startedAt',
+  finishedAt: 'finishedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CommandRunScalarFieldEnum = (typeof CommandRunScalarFieldEnum)[keyof typeof CommandRunScalarFieldEnum]
+
+
+export const CommandRunChunkScalarFieldEnum = {
+  runId: 'runId',
+  seq: 'seq',
+  stream: 'stream',
+  text: 'text',
+  at: 'at'
+} as const
+
+export type CommandRunChunkScalarFieldEnum = (typeof CommandRunChunkScalarFieldEnum)[keyof typeof CommandRunChunkScalarFieldEnum]
 
 
 export const SortOrder = {
