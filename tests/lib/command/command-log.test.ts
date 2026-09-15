@@ -137,6 +137,64 @@ describe('createLogBuffer', () => {
     expect(arg.data.map((chunk) => chunk.text)).toEqual(['a\n', 'b\n', 'c\n'])
   })
 
+  it('並行して呼ばれても直列化し、seq を投入順に振る', async () => {
+    // サイズ閾値の書き出しの最中に終了処理の書き出しが始まると、後から積んだ分の
+    // トランザクションが先に lastSeq を取り、後の出力に小さい seq が付いて履歴の順序が逆転する
+    let lastSeq = 0
+    let active = 0
+    let maxActive = 0
+    vi.mocked(prisma.commandRun.updateMany).mockImplementation((async (args: {
+      data: { lastSeq: { increment: number } }
+    }) => {
+      active += 1
+      maxActive = Math.max(maxActive, active)
+      lastSeq += args.data.lastSeq.increment
+      return { count: 1 }
+    }) as never)
+    vi.mocked(prisma.commandRun.findUniqueOrThrow).mockImplementation((async () => ({ lastSeq })) as never)
+    vi.mocked(prisma.commandRunChunk.createMany).mockImplementation((async () => {
+      // トランザクションの中に非同期の切れ目を作り、並走していれば割り込めるようにする
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      active -= 1
+      return { count: 1 }
+    }) as never)
+
+    const buffer = createLogBuffer('run-1', 'worker-1')
+    buffer.push('stdout', 'a\n')
+    const first = buffer.flush()
+    // 先頭の書き出しが queue を切り離すところまで進めてから、次の分を積む
+    await Promise.resolve()
+    buffer.push('stdout', 'b\n')
+    const second = buffer.flush()
+    expect(await Promise.all([first, second])).toEqual([true, true])
+
+    expect(maxActive).toBe(1)
+    const written = vi
+      .mocked(prisma.commandRunChunk.createMany)
+      .mock.calls.flatMap((call) => (call[0] as { data: { seq: number; text: string }[] }).data)
+    expect(written.map((chunk) => [chunk.seq, chunk.text])).toEqual([
+      [1, 'a\n'],
+      [2, 'b\n'],
+    ])
+  })
+
+  it('直列化しても失敗した分の持ち越しは壊れない', async () => {
+    // 失敗で queue へ戻した分を、後続の書き出しが先頭から拾えること
+    const buffer = createLogBuffer('run-1', 'worker-1')
+    buffer.push('stdout', 'a\n')
+    vi.mocked(prisma.commandRunChunk.createMany).mockRejectedValueOnce(new Error('db down'))
+    const failing = buffer.flush()
+    await Promise.resolve()
+    buffer.push('stdout', 'b\n')
+    const following = buffer.flush()
+
+    await expect(failing).rejects.toThrow('db down')
+    expect(await following).toBe(true)
+
+    const arg = vi.mocked(prisma.commandRunChunk.createMany).mock.calls[1][0] as { data: { text: string }[] }
+    expect(arg.data.map((chunk) => chunk.text)).toEqual(['a\n', 'b\n'])
+  })
+
   it('サイズ閾値に達したら間隔を待たずに書くよう知らせる', () => {
     const buffer = createLogBuffer('run-1', 'worker-1')
     expect(buffer.shouldFlush()).toBe(false)

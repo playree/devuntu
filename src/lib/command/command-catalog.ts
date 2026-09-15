@@ -92,7 +92,14 @@ export const listCommandDefFileNames = (entries: string[]): string[] =>
     .filter((name) => (COMMAND_DEF_EXTENSIONS as readonly string[]).includes(extname(name).toLowerCase()))
     .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
 
-type ScanResult = { fileNames: string[]; fingerprint: string; issue?: CommandCatalogIssue }
+type ScanResult = {
+  fileNames: string[]
+  fingerprint: string
+  /** ディレクトリ自体が読めない。カタログは空になる */
+  issue?: CommandCatalogIssue
+  /** 読み込み自体は続けられるが伝えたいこと。読み込んだ結果の issues へ混ぜる */
+  overflowIssues: CommandCatalogIssue[]
+}
 
 /**
  * ディレクトリを走査し、対象ファイルの一覧と指紋を作る。
@@ -100,8 +107,12 @@ type ScanResult = { fileNames: string[]; fingerprint: string; issue?: CommandCat
  * 指紋には mtime / size に加えて inode を含める。エディタや配布ツールが「一時ファイルを作って rename」で
  * 置き換える場合、mtime の粒度によっては変化を取りこぼすため。
  *
- * ファイル数の上限はここでは掛けない。指紋を上限適用後のリストで作ると、
- * 上限を超えたファイルを足しても指紋が変わらず、警告が永久に出なくなる。
+ * ここで掛けるのは stat の回数を抑える `MAX_COMMAND_DEF_ENTRIES` だけで、読み込むファイル数の上限
+ * (`MAX_COMMAND_DEF_FILES`)は `loadCatalog` 側に置く。
+ *
+ * 上限は**選別と名前順の確定より後**に掛ける。`readdirSync` の並びは順序が保証されないので、
+ * 先に掛けると無関係なエントリが多いディレクトリで対象の YAML が落ちる。
+ * さらに落ちたファイルは指紋にも入らず、編集しても読み直されなくなる。
  */
 const scanDir = (dir: string): ScanResult => {
   let entries: string[]
@@ -112,6 +123,7 @@ const scanDir = (dir: string): ScanResult => {
         fileNames: [],
         fingerprint: 'not-a-directory',
         issue: { fileName: null, messages: ['COMMAND_DEF_DIR にはディレクトリを指定する(ファイルは指定できない)'] },
+        overflowIssues: [],
       }
     }
     entries = readdirSync(dir)
@@ -121,14 +133,30 @@ const scanDir = (dir: string): ScanResult => {
       fileNames: [],
       fingerprint: 'unreadable',
       issue: { fileName: null, messages: [`定義ディレクトリを読み込めない: ${message}`] },
+      overflowIssues: [],
     }
   }
 
+  const targets = listCommandDefFileNames(entries)
   // 指定を誤って巨大なディレクトリを指した場合に、間隔ごとの stat が膨らまないようにする
-  const fileNames = listCommandDefFileNames(entries.slice(0, MAX_COMMAND_DEF_ENTRIES))
+  const fileNames = targets.slice(0, MAX_COMMAND_DEF_ENTRIES)
+  const overflowIssues: CommandCatalogIssue[] =
+    targets.length > fileNames.length
+      ? [
+          {
+            fileName: null,
+            messages: [
+              `定義ファイルが ${targets.length} 件あり、走査の上限 ${MAX_COMMAND_DEF_ENTRIES} 件を超えるため名前順で先頭からしか見ていない`,
+            ],
+          },
+        ]
+      : []
 
-  const fingerprint = fileNames
-    .map((fileName) => {
+  const fingerprint = [
+    // 上限を超えたぶんは stat しないので、件数そのものを指紋に入れて増減に追随する。
+    // これが無いと上限超過の警告が固着し、超えた側のファイルを消しても消えない
+    `count:${targets.length}`,
+    ...fileNames.map((fileName) => {
       try {
         // シンボリックリンクを辿って見る。ConfigMap マウントは実体がリンク越しになる
         const stat = statSync(join(dir, fileName))
@@ -136,10 +164,10 @@ const scanDir = (dir: string): ScanResult => {
       } catch {
         return `${fileName}:missing`
       }
-    })
-    .join('\n')
+    }),
+  ].join('\n')
 
-  return { fileNames, fingerprint }
+  return { fileNames, fingerprint, overflowIssues }
 }
 
 /**
@@ -226,9 +254,9 @@ export const mergeCommandFiles = (
 }
 
 /** 定義ディレクトリを読み直し、検証する。キャッシュには触らない */
-const loadCatalog = (dir: string, fileNames: string[]): CommandCatalogResult => {
+const loadCatalog = (dir: string, fileNames: string[], scanIssues: CommandCatalogIssue[]): CommandCatalogResult => {
   const loadedAt = new Date()
-  const issues: CommandCatalogIssue[] = []
+  const issues: CommandCatalogIssue[] = [...scanIssues]
   const parsed: { fileName: string; file: ParsedCommandFile }[] = []
 
   const targets = fileNames.slice(0, MAX_COMMAND_DEF_FILES)
@@ -291,7 +319,7 @@ export const getCommandCatalog = (opts?: { force?: boolean }): CommandCatalogRes
 
   const result = scanned.issue
     ? { catalog: emptyCatalog(), issues: [scanned.issue], dir, loadedAt: new Date() }
-    : loadCatalog(dir, scanned.fileNames)
+    : loadCatalog(dir, scanned.fileNames, scanned.overflowIssues)
   cache = { dir, fingerprint: scanned.fingerprint, checkedAt: now, result }
 
   logger.info(

@@ -34,6 +34,8 @@ export type LogBuffer = {
    *
    * 所有権(status=running かつ自分が掴んだ行)を失っていたら false を返す。
    * stale 回収が先に実行を閉じた場合で、呼び出し元はそこで打ち切る。
+   *
+   * 複数の呼び出しは内部で直列化される。並行して呼んでも seq は投入順に振られる。
    */
   flush: () => Promise<boolean>
   /** 保存を打ち切ったか */
@@ -92,7 +94,7 @@ export const createLogBuffer = (runId: string, workerId: string): LogBuffer => {
     enqueue(stream, text)
   }
 
-  const flush: LogBuffer['flush'] = async () => {
+  const runFlush = async (): Promise<boolean> => {
     if (queue.length === 0) {
       // 書くものが無くても生存申告は必要なので、所有権の確認だけは行う
       return touchRun(runId, workerId)
@@ -147,6 +149,27 @@ export const createLogBuffer = (runId: string, workerId: string): LogBuffer => {
     savedBytes += batchBytes
     savedChunks += batch.length
     return true
+  }
+
+  /**
+   * 直列化の待ち行列。`flush()` の呼び出し元は1つとは限らない
+   * (間隔・サイズ閾値・終了処理)ので、並行を防ぐのは呼び出し元ではなくここの責任にする。
+   *
+   * 並走させると queue の切り離しが割り込み、後から積んだ分のトランザクションが先に
+   * `lastSeq` を取って seq が逆転する。切り離しからトランザクション完了までを 1 本に繋ぐ。
+   */
+  let chain: Promise<unknown> = Promise.resolve()
+
+  const flush: LogBuffer['flush'] = () => {
+    // 直前が失敗しても次は走らせる。失敗した分は queue へ戻っているので、次の flush が拾う
+    const next = chain.then(runFlush, runFlush)
+    // 待ち行列側では握りつぶす。ここを未処理にすると unhandled rejection になる。
+    // 例外は呼び出し元へ返す `next` の側が受け取る
+    chain = next.then(
+      () => {},
+      () => {},
+    )
+    return next
   }
 
   return {

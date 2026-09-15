@@ -7,6 +7,7 @@
  * - ディレクトリの中身の変化にプロセスが自律的に追随する(リロードの伝播機構を持たなくてよい根拠)
  */
 
+import { MAX_COMMAND_DEF_ENTRIES } from '@/lib/command/command'
 import { mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -16,6 +17,21 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('@/lib/logger', () => ({
   logger: { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} },
 }))
+
+/**
+ * `readdirSync` の並びはファイルシステム任せで、作成順とも名前順とも限らない。
+ * 走査の上限をどの段階で掛けるかを確かめるには並びが決まっている必要があるので、名前順に固定する。
+ */
+vi.mock('node:fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs')>()
+  return {
+    ...actual,
+    default: actual,
+    // 実装が呼ぶのは文字列を返すオーバーロードだけ
+    readdirSync: (...args: Parameters<typeof actual.readdirSync>) =>
+      (actual.readdirSync(...args) as unknown as string[]).sort(),
+  }
+})
 
 const {
   buildCommandHostStatus,
@@ -103,6 +119,33 @@ describe('対象ファイルの選別', () => {
   it('ドットで始まるものは読まない', () => {
     // エディタのロックファイル(実体の無いリンク)や ConfigMap の ..data を踏まないため
     expect(listCommandDefFileNames(['.#a.yaml', '..data', 'a.yaml'])).toEqual(['a.yaml'])
+  })
+
+  it('走査の上限は選別と名前順の確定より後に掛ける', () => {
+    // 選別より前に上限を掛けると、無関係なエントリが上限を埋めた時点で対象の YAML が落ちる。
+    // 落ちたファイルは指紋にも入らないので、編集しても読み直されなくなる
+    for (let index = 0; index < MAX_COMMAND_DEF_ENTRIES; index += 1) {
+      write(`pad-${String(index).padStart(4, '0')}.txt`, 'padding')
+    }
+    // 名前順で pad-* より後ろに来るので、選別前に上限を掛けると必ず溢れる
+    write('web01.yaml', yaml('web01', [['deploy-web', 1]]))
+
+    const result = getCommandCatalog({ force: true })
+    expect(result.issues).toEqual([])
+    expect(result.catalog.commands.map((command) => command.id)).toEqual(['deploy-web'])
+  })
+
+  it('対象ファイルが走査の上限を超えたらディレクトリ単位の問題として返す', () => {
+    write('web01.yaml', yaml('web01', [['deploy-web', 1]]))
+    for (let index = 0; index < MAX_COMMAND_DEF_ENTRIES; index += 1) {
+      write(`zz-${String(index).padStart(4, '0')}.yaml`, 'version: 1\n')
+    }
+
+    const result = getCommandCatalog({ force: true })
+    const overflow = result.issues.find((issue) => issue.fileName === null)
+    expect(overflow?.messages[0]).toContain(`走査の上限 ${MAX_COMMAND_DEF_ENTRIES} 件`)
+    // 名前順の先頭は拾えている
+    expect(result.catalog.commands.map((command) => command.id)).toEqual(['deploy-web'])
   })
 
   it('サブディレクトリの中は見ない', () => {

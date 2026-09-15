@@ -141,7 +141,12 @@ export const executeCommandRun = async (input: ExecuteInput): Promise<void> => {
   let sentinelSeen = false
   let flushFailures = 0
   let finished = false
-  /** 書き出しの多重起動を防ぐ。間隔とサイズ閾値の両方から呼ばれる */
+  /**
+   * 間隔とサイズ閾値の両方から呼ばれるので、書き出し中の重複起動を省く。
+   *
+   * 書き出し同士がぶつからないこと自体は `createLogBuffer` の側が直列化で保証する。
+   * ここはその待ち行列に無駄な flush を積まないための間引き。
+   */
   let flushing = false
 
   let args: string[]
@@ -237,7 +242,8 @@ export const executeCommandRun = async (input: ExecuteInput): Promise<void> => {
     const { code } = await child.wait()
     finished = true
 
-    // 残りを書き切る。ここで失敗しても実行の結果は記録する
+    // 残りを書き切る。進行中の書き出しがあれば buffer 側の直列化で待たされる。
+    // ここで失敗しても実行の結果は記録する
     try {
       await buffer.flush()
     } catch (error) {
