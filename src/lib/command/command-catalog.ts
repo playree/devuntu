@@ -4,8 +4,8 @@
  * 定義の本体はサーバー上の YAML に置き、画面(DB)では有効化と許可グループだけを持つ。
  * 画面から定義そのものを作れないようにすることで、Web 経由で任意のコマンドを仕込む経路を作らない。
  *
- * 定義は `COMMAND_DEF_DIR` の直下に置いた YAML を**1 ファイル 1 ホスト**で並べる。
- * ホストの追加がファイルの追加になり、ホスト単位で足したり消したりできる。
+ * 定義は `COMMAND_DEF_DIR` の直下に置いた YAML を**1 ファイル 1 実行先**で並べる。
+ * 実行先の追加がファイルの追加になり、実行先の単位で足したり消したりできる。
  *
  * キャッシュは stat ベースにしてある。「リロードしろ」を KVS などで全プロセスへ伝播させる代わりに、
  * 各プロセスが自分でディレクトリの中身の変化に追随する。ファイル編集から反映までの遅れは
@@ -13,9 +13,10 @@
  *
  * 読み込みに失敗したファイルは**そのファイルだけを捨てる**(直前の内容は保持しない)。
  * 古い定義で動き続けると「直したつもりが反映されていない」に気付けないため。
- * ただし 1 ファイルの書き損じで全ホストのコマンドが止まるのも困るので、巻き込む範囲はファイル単位に留める。
+ * ただし 1 ファイルの書き損じで全実行先のコマンドが止まるのも困るので、巻き込む範囲はファイル単位に留める。
  */
 
+import { createHash } from 'node:crypto'
 import { accessSync, constants, readdirSync, readFileSync, statSync } from 'node:fs'
 import { extname, isAbsolute, join, resolve, sep } from 'node:path'
 import { parse as parseYaml } from 'yaml'
@@ -24,8 +25,9 @@ import { logger } from '../logger'
 import {
   COMMAND_CATALOG_STAT_INTERVAL_MS,
   COMMAND_DEF_EXTENSIONS,
+  COMMAND_FILE_NAME_PATTERN,
   type CommandDef,
-  type CommandHost,
+  type CommandTarget,
   compareCommandDefs,
   MAX_COMMAND_DEF_ENTRIES,
   MAX_COMMAND_DEF_FILES,
@@ -36,9 +38,20 @@ import { formatCommandIssues, type ParsedCommandFile, scCommandFile } from './co
 /** 読み込めた定義ファイル 1 件 */
 export type CommandCatalogFile = {
   fileName: string
-  host: CommandHost
+  /** 読み込んだ時点の内容の指紋({@link commandFileRevision})。画面から書き戻すときの突き合わせに使う */
+  revision: string
+  target: CommandTarget
   commands: CommandDef[]
 }
+
+/**
+ * ファイルの内容の指紋。
+ *
+ * 書き戻しの楽観ロックに使う。mtime を使わないのは、秒未満の粒度が潰れる環境があるうえ、
+ * `touch` しただけで「変わった」ことになってしまうため。内容が同じなら必ず同じ値になる。
+ */
+export const commandFileRevision = (text: string): string =>
+  createHash('sha256').update(text).digest('hex').slice(0, 16)
 
 /** 読み込めなかった理由。ディレクトリ自体の問題なら `fileName` は null */
 export type CommandCatalogIssue = {
@@ -48,8 +61,8 @@ export type CommandCatalogIssue = {
 
 export type CommandCatalog = {
   files: CommandCatalogFile[]
-  /** `files` の平坦化。ホストIDから引く経路のために持つ */
-  hosts: CommandHost[]
+  /** `files` の平坦化。実行先IDから引く経路のために持つ */
+  targets: CommandTarget[]
   /** `files` の平坦化。並びはファイルをまたいで `compareCommandDefs` で決める */
   commands: CommandDef[]
 }
@@ -64,6 +77,14 @@ export type CommandCatalogResult = {
   catalog: CommandCatalog
   issues: CommandCatalogIssue[]
   dir: string
+  /**
+   * 定義ディレクトリへ書けるか。
+   *
+   * `access(2)` はマウントの read-only もマウントフラグとして見て EROFS を返すので、
+   * `read_only: true` でバインドマウントされた構成をこれ 1 つで見分けられる。
+   * 画面に編集の導線を出すかどうかの判断に使い、実際の可否は書く瞬間に改めて確かめる。
+   */
+  writable: boolean
   loadedAt: Date
 }
 
@@ -78,7 +99,7 @@ type CacheEntry = {
 
 let cache: CacheEntry | null = null
 
-const emptyCatalog = (): CommandCatalog => ({ files: [], hosts: [], commands: [] })
+const emptyCatalog = (): CommandCatalog => ({ files: [], targets: [], commands: [] })
 
 /**
  * 定義ファイルとして読む名前を選ぶ。
@@ -170,10 +191,13 @@ const scanDir = (dir: string): ScanResult => {
   return { fileNames, fingerprint, overflowIssues }
 }
 
+/** 検証を通った定義ファイル 1 件。`revision` は読み込んだテキストから作る */
+export type ParsedCommandFileEntry = { fileName: string; file: ParsedCommandFile; revision: string }
+
 /**
  * 読み込めたファイルを 1 つのカタログへまとめる。
  *
- * ホストIDとコマンドIDは**ディレクトリ全体で一意**でなければならない。コマンドIDは実行履歴の
+ * 実行先IDとコマンドIDは**ディレクトリ全体で一意**でなければならない。コマンドIDは実行履歴の
  * `commandKey` と多重実行の占有キーの素になるので、重複したまま片方を採ると
  * 「履歴に残ったキー」と「実際に走った実行ファイル」が食い違う。
  *
@@ -181,7 +205,7 @@ const scanDir = (dir: string): ScanResult => {
  * ファイル名の順で勝敗を決めると、後から書いたタイポのファイルが稼働中のファイルを追い出す事故になる。
  */
 export const mergeCommandFiles = (
-  parsed: { fileName: string; file: ParsedCommandFile }[],
+  parsed: ParsedCommandFileEntry[],
 ): { catalog: CommandCatalog; issues: CommandCatalogIssue[] } => {
   const issues: CommandCatalogIssue[] = []
   const excluded = new Map<string, string[]>()
@@ -196,10 +220,10 @@ export const mergeCommandFiles = (
 
   // 誰と誰がぶつかっているかを先に確定させる。除外した結果で別のファイルが復活すると、
   // 同じ内容でも処理順によって結果が変わってしまう
-  const hostOwners = new Map<string, string[]>()
+  const targetOwners = new Map<string, string[]>()
   const commandOwners = new Map<string, string[]>()
   parsed.forEach(({ fileName, file }) => {
-    hostOwners.set(file.host.id, [...(hostOwners.get(file.host.id) ?? []), fileName])
+    targetOwners.set(file.target.id, [...(targetOwners.get(file.target.id) ?? []), fileName])
     file.commands.forEach((command) => {
       commandOwners.set(command.id, [...(commandOwners.get(command.id) ?? []), fileName])
     })
@@ -216,12 +240,12 @@ export const mergeCommandFiles = (
       })
     })
   }
-  reportDuplicates(hostOwners, 'ホストID')
+  reportDuplicates(targetOwners, '実行先ID')
   reportDuplicates(commandOwners, 'コマンドID')
 
   const files: CommandCatalogFile[] = []
   let total = 0
-  parsed.forEach(({ fileName, file }) => {
+  parsed.forEach(({ fileName, file, revision }) => {
     if (excluded.has(fileName)) {
       return
     }
@@ -233,9 +257,10 @@ export const mergeCommandFiles = (
     total += file.commands.length
     files.push({
       fileName,
-      host: file.host,
-      // hostId は YAML に書かせず、ここでファイルのホストを入れる
-      commands: file.commands.map((command) => ({ ...command, hostId: file.host.id })),
+      revision,
+      target: file.target,
+      // targetId は YAML に書かせず、ここでファイルの実行先を入れる
+      commands: file.commands.map((command) => ({ ...command, targetId: file.target.id })),
     })
   })
 
@@ -245,7 +270,7 @@ export const mergeCommandFiles = (
   return {
     catalog: {
       files,
-      hosts: files.map((file) => file.host),
+      targets: files.map((file) => file.target),
       // 並びはファイルをまたいで決める。ファイルごとに並べるとファイルの境界で順序が割れる
       commands: files.flatMap((file) => file.commands).sort(compareCommandDefs),
     },
@@ -257,14 +282,14 @@ export const mergeCommandFiles = (
 const loadCatalog = (dir: string, fileNames: string[], scanIssues: CommandCatalogIssue[]): CommandCatalogResult => {
   const loadedAt = new Date()
   const issues: CommandCatalogIssue[] = [...scanIssues]
-  const parsed: { fileName: string; file: ParsedCommandFile }[] = []
+  const parsed: ParsedCommandFileEntry[] = []
 
-  const targets = fileNames.slice(0, MAX_COMMAND_DEF_FILES)
+  const loadFileNames = fileNames.slice(0, MAX_COMMAND_DEF_FILES)
   fileNames.slice(MAX_COMMAND_DEF_FILES).forEach((fileName) => {
     issues.push({ fileName, messages: [`定義ファイルが上限 ${MAX_COMMAND_DEF_FILES} 件を超えるため読み込まない`] })
   })
 
-  targets.forEach((fileName) => {
+  loadFileNames.forEach((fileName) => {
     let text: string
     try {
       text = readFileSync(join(dir, fileName), 'utf-8')
@@ -288,11 +313,17 @@ const loadCatalog = (dir: string, fileNames: string[], scanIssues: CommandCatalo
       issues.push({ fileName, messages: formatCommandIssues(result.error) })
       return
     }
-    parsed.push({ fileName, file: result.data })
+    parsed.push({ fileName, file: result.data, revision: commandFileRevision(text) })
   })
 
   const merged = mergeCommandFiles(parsed)
-  return { catalog: merged.catalog, issues: [...issues, ...merged.issues], dir, loadedAt }
+  return {
+    catalog: merged.catalog,
+    issues: [...issues, ...merged.issues],
+    dir,
+    writable: isWritable(dir),
+    loadedAt,
+  }
 }
 
 /**
@@ -318,7 +349,7 @@ export const getCommandCatalog = (opts?: { force?: boolean }): CommandCatalogRes
   }
 
   const result = scanned.issue
-    ? { catalog: emptyCatalog(), issues: [scanned.issue], dir, loadedAt: new Date() }
+    ? { catalog: emptyCatalog(), issues: [scanned.issue], dir, writable: false, loadedAt: new Date() }
     : loadCatalog(dir, scanned.fileNames, scanned.overflowIssues)
   cache = { dir, fingerprint: scanned.fingerprint, checkedAt: now, result }
 
@@ -332,7 +363,7 @@ export const getCommandCatalog = (opts?: { force?: boolean }): CommandCatalogRes
   return result
 }
 
-/** テスト用。プロセス内キャッシュを捨てる */
+/** プロセス内キャッシュを捨てる。テストと、定義ファイルを書き換えた直後の無効化に使う */
 export const clearCommandCatalogCache = (): void => {
   cache = null
 }
@@ -349,9 +380,9 @@ export const listCommandDefs = (): CommandDef[] => {
 export const findCommandDef = (commandKey: string): CommandDef | null =>
   listCommandDefs().find((command) => command.id === commandKey) ?? null
 
-/** ホストIDから定義を引く。見つからなければ null */
-export const findCommandHost = (hostId: string): CommandHost | null =>
-  getCommandCatalog().catalog.hosts.find((host) => host.id === hostId) ?? null
+/** 実行先IDから定義を引く。見つからなければ null */
+export const findCommandTarget = (targetId: string): CommandTarget | null =>
+  getCommandCatalog().catalog.targets.find((target) => target.id === targetId) ?? null
 
 /**
  * 鍵ファイルの絶対パスを解決する。
@@ -370,13 +401,42 @@ export const resolveSshFilePath = (fileName: string): string | null => {
   return path
 }
 
-/** known_hosts の絶対パス。ホストごとの指定が無ければ全体の既定を使う */
-export const resolveKnownHostsPath = (host: CommandHost): string | null => {
-  if (host.knownHostsFile) {
-    return resolveSshFilePath(host.knownHostsFile)
+/** known_hosts の絶対パス。実行先ごとの指定が無ければ全体の既定を使う */
+export const resolveKnownHostsPath = (target: CommandTarget): string | null => {
+  if (target.knownHostsFile) {
+    return resolveSshFilePath(target.knownHostsFile)
   }
   const path = envu.server.COMMAND_SSH_KNOWN_HOSTS
   return isAbsolute(path) ? path : resolve(path)
+}
+
+/**
+ * 定義ファイル名を絶対パスへ解決する。定義ディレクトリの直下でなければ null。
+ *
+ * 書式(`COMMAND_FILE_NAME_PATTERN`)が既にディレクトリ区切りと `..` を禁じているが、
+ * 書き込み先を外へ向けられると被害が大きいので、`resolveSshFilePath` と同じく
+ * 解決後のパスが期待どおりかを改めて確かめる。
+ */
+export const resolveCommandDefPath = (fileName: string): string | null => {
+  if (!COMMAND_FILE_NAME_PATTERN.test(fileName)) {
+    return null
+  }
+  if (!(COMMAND_DEF_EXTENSIONS as readonly string[]).includes(extname(fileName).toLowerCase())) {
+    return null
+  }
+  const dir = resolve(envu.server.COMMAND_DEF_DIR)
+  const path = resolve(dir, fileName)
+  return path === join(dir, fileName) ? path : null
+}
+
+/** ディレクトリへ書けるか。read-only マウントは access(2) が EROFS を返すのでここで分かる */
+const isWritable = (dir: string): boolean => {
+  try {
+    accessSync(dir, constants.W_OK)
+    return true
+  } catch {
+    return false
+  }
 }
 
 /** ファイルが読めるか。管理画面には真偽値だけを出し、パスそのものは見せない */
@@ -393,25 +453,31 @@ const isReadable = (path: string | null): boolean => {
 }
 
 /**
- * 管理画面へ出すホストの状態。
+ * 管理画面へ出す実行先の状態。
  *
  * 接続先ホスト名・ユーザー・鍵のパスは秘密として扱い、準備できているかどうかだけを返す。
- * known_hosts が無いホストは fail closed で使用不可になるので、その場で気付けるようにする。
+ * known_hosts が無い実行先は fail closed で使用不可になるので、その場で気付けるようにする。
  *
  * `fileName` を載せるのは、読み込めなかったファイルの一覧と突き合わせられるようにするため。
  */
-export type CommandHostStatus = {
+export type CommandTargetStatus = {
   id: string
   label: string
   fileName: string
+  /** この実行先の `commands` を画面から編集してよいか */
+  editable: boolean
+  /** 画面が見た時点の指紋。書き戻すときにディスクの現物と突き合わせる */
+  revision: string
   identityReady: boolean
   knownHostsReady: boolean
 }
 
-export const buildCommandHostStatus = (file: CommandCatalogFile): CommandHostStatus => ({
-  id: file.host.id,
-  label: file.host.label,
+export const buildCommandTargetStatus = (file: CommandCatalogFile): CommandTargetStatus => ({
+  id: file.target.id,
+  label: file.target.label,
   fileName: file.fileName,
-  identityReady: isReadable(resolveSshFilePath(file.host.identityFile)),
-  knownHostsReady: isReadable(resolveKnownHostsPath(file.host)),
+  editable: file.target.editable,
+  revision: file.revision,
+  identityReady: isReadable(resolveSshFilePath(file.target.identityFile)),
+  knownHostsReady: isReadable(resolveKnownHostsPath(file.target)),
 })

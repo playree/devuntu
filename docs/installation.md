@@ -318,12 +318,31 @@ volumes:
 ```text
 /opt/devuntu/config/
 ├── commands/
-│   ├── web01.yaml      # コマンドの定義(1ファイル1ホスト)
+│   ├── web01.yaml      # コマンドの定義(1ファイル1実行先)
 │   └── db01.yaml
 └── ssh/
     ├── ops_ed25519     # 秘密鍵(0600)。パスフレーズ無し
     └── known_hosts     # 接続先のホスト鍵。登録が無いホストへは接続できない
 ```
+
+コマンドの定義を**画面から編集できるようにする**場合は、`commands` だけを書き込み可で重ねる。
+`config` 全体を書き込み可にすると SSH の秘密鍵まで書き込み可になってしまう。
+
+```yaml
+volumes:
+  - type: bind
+    source: ./config
+    target: /app/config
+    read_only: true
+  # commands だけ書き込み可。ssh(秘密鍵)は read-only のまま
+  - type: bind
+    source: ./config/commands
+    target: /app/config/commands
+```
+
+この場合でも、実際に編集できるのは定義ファイルへ `target.editable: true` を書いた実行先だけで、
+接続先(`target`)そのものは画面から変えられない。詳しくは
+[command-exec.md](command-exec.md#画面から編集する)を参照。
 
 devuntu が載っている**ホスト側**で実行したい場合は、コンテナからホストへ SSH する構成になるので、
 `devuntu` サービスに `extra_hosts` を足す。

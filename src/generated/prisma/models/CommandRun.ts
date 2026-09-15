@@ -45,7 +45,7 @@ export type CommandRunMinAggregateOutputType = {
   id: string | null
   commandKey: string | null
   commandLabel: string | null
-  hostLabel: string | null
+  targetLabel: string | null
   userId: string | null
   userName: string | null
   argsPreview: string | null
@@ -72,7 +72,7 @@ export type CommandRunMaxAggregateOutputType = {
   id: string | null
   commandKey: string | null
   commandLabel: string | null
-  hostLabel: string | null
+  targetLabel: string | null
   userId: string | null
   userName: string | null
   argsPreview: string | null
@@ -99,7 +99,7 @@ export type CommandRunCountAggregateOutputType = {
   id: number
   commandKey: number
   commandLabel: number
-  hostLabel: number
+  targetLabel: number
   userId: number
   userName: number
   params: number
@@ -141,7 +141,7 @@ export type CommandRunMinAggregateInputType = {
   id?: true
   commandKey?: true
   commandLabel?: true
-  hostLabel?: true
+  targetLabel?: true
   userId?: true
   userName?: true
   argsPreview?: true
@@ -168,7 +168,7 @@ export type CommandRunMaxAggregateInputType = {
   id?: true
   commandKey?: true
   commandLabel?: true
-  hostLabel?: true
+  targetLabel?: true
   userId?: true
   userName?: true
   argsPreview?: true
@@ -195,7 +195,7 @@ export type CommandRunCountAggregateInputType = {
   id?: true
   commandKey?: true
   commandLabel?: true
-  hostLabel?: true
+  targetLabel?: true
   userId?: true
   userName?: true
   params?: true
@@ -310,7 +310,7 @@ export type CommandRunGroupByOutputType = {
   id: string
   commandKey: string
   commandLabel: string
-  hostLabel: string
+  targetLabel: string
   userId: string | null
   userName: string
   params: runtime.JsonValue
@@ -361,7 +361,7 @@ export type CommandRunWhereInput = {
   id?: Prisma.StringFilter<"CommandRun"> | string
   commandKey?: Prisma.StringFilter<"CommandRun"> | string
   commandLabel?: Prisma.StringFilter<"CommandRun"> | string
-  hostLabel?: Prisma.StringFilter<"CommandRun"> | string
+  targetLabel?: Prisma.StringFilter<"CommandRun"> | string
   userId?: Prisma.StringNullableFilter<"CommandRun"> | string | null
   userName?: Prisma.StringFilter<"CommandRun"> | string
   params?: Prisma.JsonFilter<"CommandRun">
@@ -391,7 +391,7 @@ export type CommandRunOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   commandKey?: Prisma.SortOrder
   commandLabel?: Prisma.SortOrder
-  hostLabel?: Prisma.SortOrder
+  targetLabel?: Prisma.SortOrder
   userId?: Prisma.SortOrderInput | Prisma.SortOrder
   userName?: Prisma.SortOrder
   params?: Prisma.SortOrder
@@ -425,7 +425,7 @@ export type CommandRunWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.CommandRunWhereInput | Prisma.CommandRunWhereInput[]
   commandKey?: Prisma.StringFilter<"CommandRun"> | string
   commandLabel?: Prisma.StringFilter<"CommandRun"> | string
-  hostLabel?: Prisma.StringFilter<"CommandRun"> | string
+  targetLabel?: Prisma.StringFilter<"CommandRun"> | string
   userId?: Prisma.StringNullableFilter<"CommandRun"> | string | null
   userName?: Prisma.StringFilter<"CommandRun"> | string
   params?: Prisma.JsonFilter<"CommandRun">
@@ -454,7 +454,7 @@ export type CommandRunOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   commandKey?: Prisma.SortOrder
   commandLabel?: Prisma.SortOrder
-  hostLabel?: Prisma.SortOrder
+  targetLabel?: Prisma.SortOrder
   userId?: Prisma.SortOrderInput | Prisma.SortOrder
   userName?: Prisma.SortOrder
   params?: Prisma.SortOrder
@@ -490,7 +490,7 @@ export type CommandRunScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"CommandRun"> | string
   commandKey?: Prisma.StringWithAggregatesFilter<"CommandRun"> | string
   commandLabel?: Prisma.StringWithAggregatesFilter<"CommandRun"> | string
-  hostLabel?: Prisma.StringWithAggregatesFilter<"CommandRun"> | string
+  targetLabel?: Prisma.StringWithAggregatesFilter<"CommandRun"> | string
   userId?: Prisma.StringNullableWithAggregatesFilter<"CommandRun"> | string | null
   userName?: Prisma.StringWithAggregatesFilter<"CommandRun"> | string
   params?: Prisma.JsonWithAggregatesFilter<"CommandRun">
@@ -518,7 +518,7 @@ export type CommandRunCreateInput = {
   id?: string
   commandKey: string
   commandLabel: string
-  hostLabel: string
+  targetLabel: string
   userName: string
   params: Prisma.JsonNullValueInput | runtime.InputJsonValue
   argsPreview: string
@@ -547,7 +547,7 @@ export type CommandRunUncheckedCreateInput = {
   id?: string
   commandKey: string
   commandLabel: string
-  hostLabel: string
+  targetLabel: string
   userId?: string | null
   userName: string
   params: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -576,7 +576,7 @@ export type CommandRunUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   commandKey?: Prisma.StringFieldUpdateOperationsInput | string
   commandLabel?: Prisma.StringFieldUpdateOperationsInput | string
-  hostLabel?: Prisma.StringFieldUpdateOperationsInput | string
+  targetLabel?: Prisma.StringFieldUpdateOperationsInput | string
   userName?: Prisma.StringFieldUpdateOperationsInput | string
   params?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   argsPreview?: Prisma.StringFieldUpdateOperationsInput | string
@@ -605,7 +605,7 @@ export type CommandRunUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   commandKey?: Prisma.StringFieldUpdateOperationsInput | string
   commandLabel?: Prisma.StringFieldUpdateOperationsInput | string
-  hostLabel?: Prisma.StringFieldUpdateOperationsInput | string
+  targetLabel?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userName?: Prisma.StringFieldUpdateOperationsInput | string
   params?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -634,7 +634,7 @@ export type CommandRunCreateManyInput = {
   id?: string
   commandKey: string
   commandLabel: string
-  hostLabel: string
+  targetLabel: string
   userId?: string | null
   userName: string
   params: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -662,7 +662,7 @@ export type CommandRunUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   commandKey?: Prisma.StringFieldUpdateOperationsInput | string
   commandLabel?: Prisma.StringFieldUpdateOperationsInput | string
-  hostLabel?: Prisma.StringFieldUpdateOperationsInput | string
+  targetLabel?: Prisma.StringFieldUpdateOperationsInput | string
   userName?: Prisma.StringFieldUpdateOperationsInput | string
   params?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   argsPreview?: Prisma.StringFieldUpdateOperationsInput | string
@@ -689,7 +689,7 @@ export type CommandRunUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   commandKey?: Prisma.StringFieldUpdateOperationsInput | string
   commandLabel?: Prisma.StringFieldUpdateOperationsInput | string
-  hostLabel?: Prisma.StringFieldUpdateOperationsInput | string
+  targetLabel?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userName?: Prisma.StringFieldUpdateOperationsInput | string
   params?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -727,7 +727,7 @@ export type CommandRunCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   commandKey?: Prisma.SortOrder
   commandLabel?: Prisma.SortOrder
-  hostLabel?: Prisma.SortOrder
+  targetLabel?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   userName?: Prisma.SortOrder
   params?: Prisma.SortOrder
@@ -761,7 +761,7 @@ export type CommandRunMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   commandKey?: Prisma.SortOrder
   commandLabel?: Prisma.SortOrder
-  hostLabel?: Prisma.SortOrder
+  targetLabel?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   userName?: Prisma.SortOrder
   argsPreview?: Prisma.SortOrder
@@ -788,7 +788,7 @@ export type CommandRunMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   commandKey?: Prisma.SortOrder
   commandLabel?: Prisma.SortOrder
-  hostLabel?: Prisma.SortOrder
+  targetLabel?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   userName?: Prisma.SortOrder
   argsPreview?: Prisma.SortOrder
@@ -886,7 +886,7 @@ export type CommandRunCreateWithoutUserInput = {
   id?: string
   commandKey: string
   commandLabel: string
-  hostLabel: string
+  targetLabel: string
   userName: string
   params: Prisma.JsonNullValueInput | runtime.InputJsonValue
   argsPreview: string
@@ -914,7 +914,7 @@ export type CommandRunUncheckedCreateWithoutUserInput = {
   id?: string
   commandKey: string
   commandLabel: string
-  hostLabel: string
+  targetLabel: string
   userName: string
   params: Prisma.JsonNullValueInput | runtime.InputJsonValue
   argsPreview: string
@@ -971,7 +971,7 @@ export type CommandRunScalarWhereInput = {
   id?: Prisma.StringFilter<"CommandRun"> | string
   commandKey?: Prisma.StringFilter<"CommandRun"> | string
   commandLabel?: Prisma.StringFilter<"CommandRun"> | string
-  hostLabel?: Prisma.StringFilter<"CommandRun"> | string
+  targetLabel?: Prisma.StringFilter<"CommandRun"> | string
   userId?: Prisma.StringNullableFilter<"CommandRun"> | string | null
   userName?: Prisma.StringFilter<"CommandRun"> | string
   params?: Prisma.JsonFilter<"CommandRun">
@@ -999,7 +999,7 @@ export type CommandRunCreateWithoutChunksInput = {
   id?: string
   commandKey: string
   commandLabel: string
-  hostLabel: string
+  targetLabel: string
   userName: string
   params: Prisma.JsonNullValueInput | runtime.InputJsonValue
   argsPreview: string
@@ -1027,7 +1027,7 @@ export type CommandRunUncheckedCreateWithoutChunksInput = {
   id?: string
   commandKey: string
   commandLabel: string
-  hostLabel: string
+  targetLabel: string
   userId?: string | null
   userName: string
   params: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -1071,7 +1071,7 @@ export type CommandRunUpdateWithoutChunksInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   commandKey?: Prisma.StringFieldUpdateOperationsInput | string
   commandLabel?: Prisma.StringFieldUpdateOperationsInput | string
-  hostLabel?: Prisma.StringFieldUpdateOperationsInput | string
+  targetLabel?: Prisma.StringFieldUpdateOperationsInput | string
   userName?: Prisma.StringFieldUpdateOperationsInput | string
   params?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   argsPreview?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1099,7 +1099,7 @@ export type CommandRunUncheckedUpdateWithoutChunksInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   commandKey?: Prisma.StringFieldUpdateOperationsInput | string
   commandLabel?: Prisma.StringFieldUpdateOperationsInput | string
-  hostLabel?: Prisma.StringFieldUpdateOperationsInput | string
+  targetLabel?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userName?: Prisma.StringFieldUpdateOperationsInput | string
   params?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -1127,7 +1127,7 @@ export type CommandRunCreateManyUserInput = {
   id?: string
   commandKey: string
   commandLabel: string
-  hostLabel: string
+  targetLabel: string
   userName: string
   params: Prisma.JsonNullValueInput | runtime.InputJsonValue
   argsPreview: string
@@ -1154,7 +1154,7 @@ export type CommandRunUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   commandKey?: Prisma.StringFieldUpdateOperationsInput | string
   commandLabel?: Prisma.StringFieldUpdateOperationsInput | string
-  hostLabel?: Prisma.StringFieldUpdateOperationsInput | string
+  targetLabel?: Prisma.StringFieldUpdateOperationsInput | string
   userName?: Prisma.StringFieldUpdateOperationsInput | string
   params?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   argsPreview?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1182,7 +1182,7 @@ export type CommandRunUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   commandKey?: Prisma.StringFieldUpdateOperationsInput | string
   commandLabel?: Prisma.StringFieldUpdateOperationsInput | string
-  hostLabel?: Prisma.StringFieldUpdateOperationsInput | string
+  targetLabel?: Prisma.StringFieldUpdateOperationsInput | string
   userName?: Prisma.StringFieldUpdateOperationsInput | string
   params?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   argsPreview?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1210,7 +1210,7 @@ export type CommandRunUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   commandKey?: Prisma.StringFieldUpdateOperationsInput | string
   commandLabel?: Prisma.StringFieldUpdateOperationsInput | string
-  hostLabel?: Prisma.StringFieldUpdateOperationsInput | string
+  targetLabel?: Prisma.StringFieldUpdateOperationsInput | string
   userName?: Prisma.StringFieldUpdateOperationsInput | string
   params?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   argsPreview?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1268,7 +1268,7 @@ export type CommandRunSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   id?: boolean
   commandKey?: boolean
   commandLabel?: boolean
-  hostLabel?: boolean
+  targetLabel?: boolean
   userId?: boolean
   userName?: boolean
   params?: boolean
@@ -1299,7 +1299,7 @@ export type CommandRunSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   id?: boolean
   commandKey?: boolean
   commandLabel?: boolean
-  hostLabel?: boolean
+  targetLabel?: boolean
   userId?: boolean
   userName?: boolean
   params?: boolean
@@ -1328,7 +1328,7 @@ export type CommandRunSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   id?: boolean
   commandKey?: boolean
   commandLabel?: boolean
-  hostLabel?: boolean
+  targetLabel?: boolean
   userId?: boolean
   userName?: boolean
   params?: boolean
@@ -1357,7 +1357,7 @@ export type CommandRunSelectScalar = {
   id?: boolean
   commandKey?: boolean
   commandLabel?: boolean
-  hostLabel?: boolean
+  targetLabel?: boolean
   userId?: boolean
   userName?: boolean
   params?: boolean
@@ -1381,7 +1381,7 @@ export type CommandRunSelectScalar = {
   updatedAt?: boolean
 }
 
-export type CommandRunOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "commandKey" | "commandLabel" | "hostLabel" | "userId" | "userName" | "params" | "argsPreview" | "status" | "activeKey" | "workerId" | "claimedAt" | "heartbeatAt" | "cancelRequestedAt" | "cancelRequestedBy" | "exitCode" | "failureKind" | "lastSeq" | "bytes" | "truncated" | "queuedAt" | "startedAt" | "finishedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["commandRun"]>
+export type CommandRunOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "commandKey" | "commandLabel" | "targetLabel" | "userId" | "userName" | "params" | "argsPreview" | "status" | "activeKey" | "workerId" | "claimedAt" | "heartbeatAt" | "cancelRequestedAt" | "cancelRequestedBy" | "exitCode" | "failureKind" | "lastSeq" | "bytes" | "truncated" | "queuedAt" | "startedAt" | "finishedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["commandRun"]>
 export type CommandRunInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.CommandRun$userArgs<ExtArgs>
   chunks?: boolean | Prisma.CommandRun$chunksArgs<ExtArgs>
@@ -1411,9 +1411,9 @@ export type $CommandRunPayload<ExtArgs extends runtime.Types.Extensions.Internal
      */
     commandLabel: string
     /**
-     * 実行時点の接続先の表示名。ホスト名・ユーザー・鍵のパスは秘密なので入れない
+     * 実行時点の実行先の表示名。ホスト名・ユーザー・鍵のパスは秘密なので入れない
      */
-    hostLabel: string
+    targetLabel: string
     /**
      * 実行者。削除されても履歴は残すので SetNull
      */
@@ -1913,7 +1913,7 @@ export interface CommandRunFieldRefs {
   readonly id: Prisma.FieldRef<"CommandRun", 'String'>
   readonly commandKey: Prisma.FieldRef<"CommandRun", 'String'>
   readonly commandLabel: Prisma.FieldRef<"CommandRun", 'String'>
-  readonly hostLabel: Prisma.FieldRef<"CommandRun", 'String'>
+  readonly targetLabel: Prisma.FieldRef<"CommandRun", 'String'>
   readonly userId: Prisma.FieldRef<"CommandRun", 'String'>
   readonly userName: Prisma.FieldRef<"CommandRun", 'String'>
   readonly params: Prisma.FieldRef<"CommandRun", 'Json'>

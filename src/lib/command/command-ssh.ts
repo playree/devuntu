@@ -13,7 +13,7 @@
 import { spawn } from 'node:child_process'
 import { type Readable } from 'node:stream'
 import { logger } from '../logger'
-import { type CommandHost } from './command'
+import { type CommandTarget } from './command'
 import { resolveKnownHostsPath, resolveSshFilePath } from './command-catalog'
 
 export type SshExit = { code: number | null; signal: NodeJS.Signals | null }
@@ -94,17 +94,17 @@ export const buildSshArgs = (target: SshTarget, remoteCommand: string): string[]
 /**
  * ホスト定義から接続先を解決する。
  *
- * 鍵か known_hosts のパスが解決できないホストは使えない。パスの検証は
+ * 鍵か known_hosts のパスが解決できない実行先は使えない。パスの検証は
  * `command-catalog.ts` 側(`COMMAND_SSH_DIR` の外を指していないか)で行う。
  */
-export const resolveSshTarget = (host: CommandHost): SshTarget | null => {
-  const identityFile = resolveSshFilePath(host.identityFile)
-  const knownHostsFile = resolveKnownHostsPath(host)
+export const resolveSshTarget = (target: CommandTarget): SshTarget | null => {
+  const identityFile = resolveSshFilePath(target.identityFile)
+  const knownHostsFile = resolveKnownHostsPath(target)
   if (!identityFile || !knownHostsFile) {
-    logger.error({ hostId: host.id }, 'ssh target has no usable identity or known_hosts')
+    logger.error({ targetId: target.id }, 'ssh target has no usable identity or known_hosts')
     return null
   }
-  return { hostname: host.host, port: host.port, user: host.user, identityFile, knownHostsFile }
+  return { hostname: target.host, port: target.port, user: target.user, identityFile, knownHostsFile }
 }
 
 /**

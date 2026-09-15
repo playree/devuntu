@@ -6,7 +6,7 @@ import { isAdminActor } from '@/lib/board/board'
 import { type CommandDef, type CommandInput } from '@/lib/command/command'
 import { assertCommandAccess, listAvailableCommands } from '@/lib/command/command-access'
 import { buildArgsPreview, buildCommandInputDefaults, resolveCommandArgs } from '@/lib/command/command-args'
-import { findCommandHost, getCommandCatalog } from '@/lib/command/command-catalog'
+import { findCommandTarget, getCommandCatalog } from '@/lib/command/command-catalog'
 import { enqueueCommandRun, getCommandRun, listCommandRuns, requestCancelCommandRun } from '@/lib/command/command-run'
 import { kickCommandDispatch } from '@/lib/command/command-worker'
 import { envu } from '@/lib/env-util'
@@ -26,7 +26,7 @@ export type AvailableCommandView = {
   id: string
   label: string
   description: string | null
-  hostLabel: string | null
+  targetLabel: string | null
   inputs: CommandInput[]
   defaults: Record<string, string | string[] | boolean>
   requireConfirm: boolean
@@ -35,11 +35,11 @@ export type AvailableCommandView = {
   timeoutSec: number
 }
 
-const toView = (def: CommandDef, hostLabel: string | null): AvailableCommandView => ({
+const toView = (def: CommandDef, targetLabel: string | null): AvailableCommandView => ({
   id: def.id,
   label: def.label,
   description: def.description ?? null,
-  hostLabel,
+  targetLabel,
   // 入力項目は画面のフォームを組み立てるのに要る。選択肢は元々利用者へ見せる値なので秘密ではない
   inputs: def.inputs,
   defaults: buildCommandInputDefaults(def),
@@ -60,9 +60,9 @@ export const getAvailableCommandsAction = safeAuthAction
   .action(async ({ ctx: { user } }) => {
     // 一覧に出るのに実行すると弾かれる状態を作らないよう、実行できるものだけを返す
     const available = await listAvailableCommands(user, 'execute')
-    const hostLabels = new Map(getCommandCatalog().catalog.hosts.map((host) => [host.id, host.label]))
+    const targetLabels = new Map(getCommandCatalog().catalog.targets.map((target) => [target.id, target.label]))
 
-    return available.map(({ def }) => toView(def, hostLabels.get(def.hostId) ?? null))
+    return available.map(({ def }) => toView(def, targetLabels.get(def.targetId) ?? null))
   })
 
 export type GetAvailableCommandsReturnType = Awaited<ReturnType<typeof getAvailableCommandsAction>>['data']
@@ -88,7 +88,7 @@ export const startCommandRunAction = safeAuthAction
       assertFreshSession(session)
     }
 
-    const host = findCommandHost(def.hostId)
+    const host = findCommandTarget(def.targetId)
     if (!host) {
       throw errInvalidOperation()
     }
@@ -98,7 +98,7 @@ export const startCommandRunAction = safeAuthAction
 
     const run = await enqueueCommandRun({
       def,
-      hostLabel: host.label,
+      targetLabel: host.label,
       actor: { id: user.id, name: user.name },
       params,
       argsPreview: buildArgsPreview(def, args),

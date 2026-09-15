@@ -5,7 +5,12 @@
  * `PassThrough` 2本と手で解決する Promise の偽物へ差し替えれば全経路を通せる。
  */
 
-import { COMMAND_SENTINEL_MARK, COMMAND_START_SENTINEL, type CommandDef, type CommandHost } from '@/lib/command/command'
+import {
+  COMMAND_SENTINEL_MARK,
+  COMMAND_START_SENTINEL,
+  type CommandDef,
+  type CommandTarget,
+} from '@/lib/command/command'
 import { type SshProcess } from '@/lib/command/command-ssh'
 import { PassThrough } from 'node:stream'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -65,7 +70,7 @@ const { runningCount } = await import('@/lib/command/command-registry')
 const def: CommandDef = {
   id: 'deploy-web',
   label: 'デプロイ',
-  hostId: 'web01',
+  targetId: 'web01',
   executable: '/opt/bin/deploy.sh',
   args: ['{{env}}'],
   inputs: [
@@ -84,7 +89,7 @@ const def: CommandDef = {
   sortOrder: 0,
 }
 
-const host: CommandHost = {
+const target: CommandTarget = {
   id: 'web01',
   label: 'Web',
   kind: 'ssh',
@@ -92,6 +97,7 @@ const host: CommandHost = {
   port: 22,
   user: 'deploy',
   identityFile: 'ops_ed25519',
+  editable: false,
 }
 
 /** 手で終了させられる偽の ssh */
@@ -146,7 +152,7 @@ const run = async (fake: ReturnType<typeof createFakeSsh>) =>
     runId: 'run-1',
     workerId: 'worker-1',
     def,
-    host,
+    target,
     params: { env: 'staging' },
     spawnSsh: () => fake.process,
   })
@@ -245,7 +251,7 @@ describe('executeCommandRun', () => {
       runId: 'run-1',
       workerId: 'worker-1',
       def,
-      host,
+      target,
       params: { env: 'staging' },
       spawnSsh: () => null,
     })
@@ -259,7 +265,7 @@ describe('executeCommandRun', () => {
       runId: 'run-1',
       workerId: 'worker-1',
       def,
-      host,
+      target,
       params: { env: 'production' },
       spawnSsh: () => {
         throw new Error('should not spawn')

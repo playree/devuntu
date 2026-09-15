@@ -8,7 +8,7 @@
 import { formatCommandIssues, scCommandFile } from '@/lib/command/command-def'
 import { describe, expect, it } from 'vitest'
 
-const host = {
+const target = {
   id: 'web01',
   label: 'Web',
   host: 'web01.internal',
@@ -18,7 +18,7 @@ const host = {
 
 const file = (overrides: Record<string, unknown>) => ({
   version: 1,
-  host,
+  target,
   commands: [
     {
       id: 'deploy-web',
@@ -44,8 +44,8 @@ describe('既定値の補完', () => {
     expect(command.requireFreshSession).toBe(false)
     expect(command.args).toEqual([])
     expect(command.inputs).toEqual([])
-    expect(parsed.host.port).toBe(22)
-    expect(parsed.host.kind).toBe('ssh')
+    expect(parsed.target.port).toBe(22)
+    expect(parsed.target.kind).toBe('ssh')
   })
 
   it('version が違えば読み込まない', () => {
@@ -57,13 +57,13 @@ describe('鍵ファイル名', () => {
   it.each(['../id_rsa', '..', '.', 'sub/dir/key', '/etc/passwd', '.hidden'])(
     'ディレクトリを辿れる名前は弾く (%s)',
     (identityFile) => {
-      const input = { version: 1, host: { ...host, identityFile }, commands: [] }
+      const input = { version: 1, target: { ...target, identityFile }, commands: [] }
       expect(scCommandFile.safeParse(input).success).toBe(false)
     },
   )
 
   it('英数字始まりの単純なファイル名は通す', () => {
-    const input = { version: 1, host: { ...host, identityFile: 'ops_ed25519' }, commands: [] }
+    const input = { version: 1, target: { ...target, identityFile: 'ops_ed25519' }, commands: [] }
     expect(scCommandFile.safeParse(input).success).toBe(true)
   })
 })
@@ -131,19 +131,25 @@ describe('引数の文字集合', () => {
 })
 
 describe('書けない項目', () => {
-  it('commands[].hostId は弾き、理由を出す', () => {
+  it('commands[].targetId は弾き、理由を出す', () => {
     // ホストはファイル単位で決まる。書けてしまうと「どのホストで動くか」がファイルを見ても分からない
-    const issues = issuesOf(file({ hostId: 'web01' }))
-    expect(issues.some((issue) => issue.includes('commands[].hostId は書けない'))).toBe(true)
+    const issues = issuesOf(file({ targetId: 'web01' }))
+    expect(issues.some((issue) => issue.includes('commands[].targetId は書けない'))).toBe(true)
   })
 
   it('トップレベルの hosts 配列は弾き、理由を出す', () => {
-    const issues = issuesOf({ ...file({}), hosts: [host] })
-    expect(issues.some((issue) => issue.includes('1 ファイルに 1 ホストを host へ書く'))).toBe(true)
+    const issues = issuesOf({ ...file({}), hosts: [target] })
+    expect(issues.some((issue) => issue.includes('1 ファイルに 1 実行先を target へ書く'))).toBe(true)
   })
 
-  it('host が無ければ弾く', () => {
-    const { host: _host, ...rest } = file({})
+  it('旧形式の host は弾き、target へ書くよう促す', () => {
+    const { target: _target, ...rest } = file({})
+    const issues = issuesOf({ ...rest, host: target })
+    expect(issues.some((issue) => issue.includes('接続先は target へ書く'))).toBe(true)
+  })
+
+  it('target が無ければ弾く', () => {
+    const { target: _target, ...rest } = file({})
     expect(scCommandFile.safeParse(rest).success).toBe(false)
   })
 

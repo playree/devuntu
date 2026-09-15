@@ -3,9 +3,9 @@
 import { MultiButton } from '@/components/general/button'
 import { FlexCol, FlexRow } from '@/components/general/flex'
 import { Panel } from '@/components/general/panel'
-import { PencilSquareIcon } from '@/components/icon'
+import { Cog6ToothIcon, PencilSquareIcon, PlusIcon, TrashIcon } from '@/components/icon'
 import { type CommandInputType } from '@/lib/command/command'
-import { type CommandHostStatus } from '@/lib/command/command-catalog'
+import { type CommandTargetStatus } from '@/lib/command/command-catalog'
 import { type LocaleItem } from '@/locale'
 import { useLocale } from '@/locale/client'
 import { Chip } from '@heroui/react'
@@ -33,29 +33,47 @@ const ReadyChip: FC<{ label: string; ready: boolean }> = ({ label, ready }) => {
 /**
  * ホストの状態。
  *
- * known_hosts が読めないホストは StrictHostKeyChecking=yes により接続できない(fail closed)ので、
+ * known_hosts が読めない実行先は StrictHostKeyChecking=yes により接続できない(fail closed)ので、
  * 実行を試す前にここで気付けるようにする。
  */
-export const CommandHostTable: FC<{ hosts: CommandHostStatus[] }> = ({ hosts }) => {
+export const CommandTargetTable: FC<{
+  targets: CommandTargetStatus[]
+  /** 定義ディレクトリへ書けるか。書けない構成では編集の導線を出さない */
+  writable: boolean
+  onAdd: (target: CommandTargetStatus) => void
+}> = ({ targets, writable, onAdd }) => {
   const { t } = useLocale()
 
-  if (hosts.length === 0) {
+  if (targets.length === 0) {
     return null
   }
 
   return (
     <FlexCol>
-      <div className='text-sm font-semibold'>{t('command_host')}</div>
-      {hosts.map((host) => (
-        <Panel key={host.id}>
+      <div className='text-sm font-semibold'>{t('command_target')}</div>
+      {targets.map((target) => (
+        <Panel key={target.id}>
           <FlexRow className='flex-wrap items-center'>
-            <span className='font-semibold'>{host.label}</span>
-            <span className='text-foreground-500 font-mono text-xs'>{host.id}</span>
+            <span className='font-semibold'>{target.label}</span>
+            <span className='text-foreground-500 font-mono text-xs'>{target.id}</span>
             {/* 読み込めなかったファイルの一覧と突き合わせられるようにする */}
-            <span className='text-foreground-500 font-mono text-xs break-all'>{host.fileName}</span>
+            <span className='text-foreground-500 font-mono text-xs break-all'>{target.fileName}</span>
             <span className='grow' />
-            <ReadyChip label={t('command_host_identity')} ready={host.identityReady} />
-            <ReadyChip label={t('command_host_known_hosts')} ready={host.knownHostsReady} />
+            <ReadyChip label={t('command_target_identity')} ready={target.identityReady} />
+            <ReadyChip label={t('command_target_known_hosts')} ready={target.knownHostsReady} />
+            {/* editable を書いたファイルにだけ出す。target 自体はどのファイルでも画面から変えられない */}
+            {target.editable && writable && (
+              <MultiButton
+                isIconOnly
+                variant='outline'
+                tooltip={t('command_def_add')}
+                onPress={() => {
+                  onAdd(target)
+                }}
+              >
+                <PlusIcon />
+              </MultiButton>
+            )}
           </FlexRow>
         </Panel>
       ))}
@@ -69,10 +87,13 @@ export const CommandHostTable: FC<{ hosts: CommandHostStatus[] }> = ({ hosts }) 
  * 定義ファイル由来の情報(実行先・引数・入力項目)は読み取り専用で、
  * 編集できるのは有効化・許可グループ・表示順だけ。
  */
-export const CommandDefTable: FC<{ commands: CommandDefView[]; onEdit: (command: CommandDefView) => void }> = ({
-  commands,
-  onEdit,
-}) => {
+export const CommandDefTable: FC<{
+  commands: CommandDefView[]
+  writable: boolean
+  onEdit: (command: CommandDefView) => void
+  onEditDef: (command: CommandDefView) => void
+  onDeleteDef: (command: CommandDefView) => void
+}> = ({ commands, writable, onEdit, onEditDef, onDeleteDef }) => {
   const { t } = useLocale()
 
   return (
@@ -92,9 +113,9 @@ export const CommandDefTable: FC<{ commands: CommandDefView[]; onEdit: (command:
               >
                 {command.setting.enabled ? t('enabled') : t('disabled')}
               </Chip>
-              {command.hostLabel && (
+              {command.targetLabel && (
                 <Chip variant='soft' className='whitespace-nowrap'>
-                  {command.hostLabel}
+                  {command.targetLabel}
                 </Chip>
               )}
               <MultiButton
@@ -105,8 +126,32 @@ export const CommandDefTable: FC<{ commands: CommandDefView[]; onEdit: (command:
                   onEdit(command)
                 }}
               >
-                <PencilSquareIcon />
+                <Cog6ToothIcon />
               </MultiButton>
+              {command.editable && writable && (
+                <>
+                  <MultiButton
+                    isIconOnly
+                    variant='outline'
+                    tooltip={t('command_def_edit')}
+                    onPress={() => {
+                      onEditDef(command)
+                    }}
+                  >
+                    <PencilSquareIcon />
+                  </MultiButton>
+                  <MultiButton
+                    isIconOnly
+                    variant='danger-soft'
+                    tooltip={t('command_def_delete')}
+                    onPress={() => {
+                      onDeleteDef(command)
+                    }}
+                  >
+                    <TrashIcon />
+                  </MultiButton>
+                </>
+              )}
             </FlexRow>
 
             {command.description && <div className='text-foreground-500 text-xs'>{command.description}</div>}

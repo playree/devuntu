@@ -21,7 +21,7 @@ import { describe, expect, it } from 'vitest'
 const def = (overrides: Partial<CommandDef> = {}): CommandDef => ({
   id: 'deploy-web',
   label: 'デプロイ',
-  hostId: 'web01',
+  targetId: 'web01',
   executable: '/opt/bin/deploy.sh',
   args: [],
   inputs: [],

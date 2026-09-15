@@ -59,6 +59,20 @@ export const getCommandSettings = async (commandKeys: string[]): Promise<Map<str
   return settings
 }
 
+/**
+ * 設定行を消す。
+ *
+ * 履歴(`command_run`)は実行時点のコマンド名・実行先名を複写していて FK も持たないので、
+ * この行を消しても履歴の意味は変わらない。
+ *
+ * 残さないのは、定義の無いコマンドの設定行が画面のどこにも出ないため。放っておくと
+ * **見えない場所に有効化と許可グループが保管され**、後日同じ ID で別の中身のコマンドが
+ * 作られた瞬間に昔の許可がそのまま効いてしまう。
+ */
+export const deleteCommandSetting = async (commandKey: string): Promise<void> => {
+  await prisma.commandSetting.deleteMany({ where: { commandKey } })
+}
+
 /** 1件だけ引く。未登録なら既定値 */
 export const getCommandSetting = async (commandKey: string): Promise<CommandSettingRecord> =>
   (await getCommandSettings([commandKey])).get(commandKey) ?? defaultCommandSetting(commandKey)

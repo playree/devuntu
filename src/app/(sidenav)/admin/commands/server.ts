@@ -1,18 +1,30 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action/action-server'
-import { type CommandDef } from '@/lib/command/command'
+import { assertFreshSession } from '@/lib/auth/session-fresh'
+import { COMMAND_DEF_CONFLICT, type CommandDef } from '@/lib/command/command'
 import { effectiveSortOrder } from '@/lib/command/command-access'
-import { buildCommandHostStatus, type CommandHostStatus, getCommandCatalog } from '@/lib/command/command-catalog'
-import { defaultCommandSetting, getCommandSettings, setCommandSetting } from '@/lib/command/command-settings'
+import { buildCommandTargetStatus, type CommandTargetStatus, getCommandCatalog } from '@/lib/command/command-catalog'
+import { scDeleteCommandDef, scUpsertCommandDef } from '@/lib/command/command-def'
+import {
+  defaultCommandSetting,
+  deleteCommandSetting,
+  getCommandSettings,
+  setCommandSetting,
+} from '@/lib/command/command-settings'
+import { type CommandDefEntry, CommandDefWriteError, editCommandFileCommands } from '@/lib/command/command-writer'
 import { envu } from '@/lib/env-util'
 import { errInvalidOperation, errTooManyRequests } from '@/lib/error'
+import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { consumeRateLimit } from '@/lib/rate-limit'
 import { scUpdateCommandSetting } from '@/lib/schema/schema'
 
 /** 定義の再読み込みは I/O を伴うので、連打で叩き続けられないようにする */
 const RELOAD_RATE_LIMIT = { limit: 10, windowMs: 60_000 }
+
+/** 定義ファイルの書き換えは I/O とディレクトリの全走査を伴うので、連打で叩けないようにする */
+const EDIT_RATE_LIMIT = { limit: 20, windowMs: 60_000 }
 
 /**
  * 画面へ出す 1 コマンドぶんの情報。
@@ -23,8 +35,8 @@ export type CommandDefView = {
   id: string
   label: string
   description: string | null
-  hostId: string
-  hostLabel: string | null
+  targetId: string
+  targetLabel: string | null
   executable: string
   args: string[]
   inputs: { type: CommandDef['inputs'][number]['type']; key: string; label: string; optionCount: number }[]
@@ -34,18 +46,30 @@ export type CommandDefView = {
   singleton: boolean
   /** 画面で編集する設定。定義ファイル側の sortOrder はここで上書きされる */
   setting: { enabled: boolean; sortOrder: number; allowedGroupIds: string[] }
+  /** このコマンドが書かれているファイル。編集の宛先になる */
+  fileName: string
+  /** 画面が見た時点のファイルの指紋。保存時にディスクの現物と突き合わせる */
+  revision: string
+  /** そのファイルが `target.editable: true` か */
+  editable: boolean
+  /**
+   * 編集画面へ渡す定義の現物。編集できないファイルでは null。
+   *
+   * 秘密(接続先・鍵)は `target` 側にあり、ここには入らない。
+   */
+  source: CommandDefEntry | null
 }
 
 const toDefView = (
   def: CommandDef,
-  hostLabels: Map<string, string>,
+  file: { fileName: string; revision: string; editable: boolean; label: string },
   setting: { enabled: boolean; sortOrder: number; allowedGroupIds: string[] },
 ): CommandDefView => ({
   id: def.id,
   label: def.label,
   description: def.description ?? null,
-  hostId: def.hostId,
-  hostLabel: hostLabels.get(def.hostId) ?? null,
+  targetId: def.targetId,
+  targetLabel: file.label,
   executable: def.executable,
   args: def.args,
   inputs: def.inputs.map((input) => ({
@@ -59,7 +83,15 @@ const toDefView = (
   requireFreshSession: def.requireFreshSession,
   singleton: def.singleton,
   setting,
+  fileName: file.fileName,
+  revision: file.revision,
+  editable: file.editable,
+  // targetId は YAML に書かせない項目なので、編集画面へ戻す形からも外す
+  source: file.editable ? toSource(def) : null,
 })
+
+/** カタログが注入した `targetId` を落として、定義ファイルに書ける形へ戻す */
+const toSource = ({ targetId: _targetId, ...rest }: CommandDef): CommandDefEntry => rest
 
 const buildView = async (opts?: { force?: boolean }) => {
   const result = getCommandCatalog(opts)
@@ -68,12 +100,22 @@ const buildView = async (opts?: { force?: boolean }) => {
   const groupOptions = Object.fromEntries(groups.map((group) => [group.id, group.name])) as Record<string, string>
 
   const settings = await getCommandSettings(result.catalog.commands.map((def) => def.id))
-  const hostLabels = new Map(result.catalog.hosts.map((host) => [host.id, host.label]))
+  // コマンドから「どのファイルに書かれているか」を引けるようにする。編集の宛先になる
+  const fileOf = new Map(
+    result.catalog.files.map((file) => [
+      file.target.id,
+      { fileName: file.fileName, revision: file.revision, editable: file.target.editable, label: file.target.label },
+    ]),
+  )
   const commands = result.catalog.commands
     .map((def) => {
       const setting = settings.get(def.id) ?? defaultCommandSetting(def.id)
+      const file = fileOf.get(def.targetId)
       // 並びの決め方は利用者向け画面と同じ関数に寄せる(食い違うと設定の効き方が読めなくなる)
-      return toDefView(def, hostLabels, { ...setting, sortOrder: effectiveSortOrder(setting, def) })
+      return toDefView(def, file ?? { fileName: '', revision: '', editable: false, label: '' }, {
+        ...setting,
+        sortOrder: effectiveSortOrder(setting, def),
+      })
     })
     .sort((a, b) => a.setting.sortOrder - b.setting.sortOrder || a.label.localeCompare(b.label))
 
@@ -82,10 +124,13 @@ const buildView = async (opts?: { force?: boolean }) => {
   return {
     enabled: envu.server.COMMAND_EXEC_ENABLED,
     dir: result.dir,
+    // 読み取り専用でマウントされている構成では編集の導線を出さない。
+    // 押してから失敗させるより、初めから「できない」ことが見えている方がよい
+    writable: result.writable,
     loadedAt: result.loadedAt,
     groupOptions,
     issues: result.issues,
-    hosts: result.catalog.files.map<CommandHostStatus>(buildCommandHostStatus),
+    targets: result.catalog.files.map<CommandTargetStatus>(buildCommandTargetStatus),
     commands,
   }
 }
@@ -133,4 +178,128 @@ export const updateCommandSettingAction = safeAuthAction
     }
     await setCommandSetting(parsedInput)
     return parsedInput
+  })
+
+/**
+ * 書き込み系アクションの戻り値。
+ *
+ * 検証エラーの明細は `errorType` に載せられないので、**明細付きのものだけ成功応答で返す**。
+ * 状態の問題(競合・編集不可・読み取り専用)は `errorType` で分岐できるよう throw する。
+ */
+export type EditCommandDefResult = { ok: true } | { ok: false; messages: string[] }
+
+/**
+ * 定義ファイルを書いた後に残った設定行を落とす。
+ *
+ * ここへ来る時点でファイルは既に書けているので、失敗しても操作は成功として返す。
+ * 失敗して行が残っても、その ID で作り直すときに同じ後始末が走るため
+ * 「昔の許可が新しいコマンドに効く」までは進まない。
+ */
+const dropCommandSettings = async (commandKeys: string[], context: Record<string, unknown>): Promise<void> => {
+  for (const commandKey of commandKeys) {
+    try {
+      await deleteCommandSetting(commandKey)
+    } catch (error) {
+      logger.error({ ...context, commandKey, error }, 'failed to delete command setting')
+    }
+  }
+}
+
+/** 検証で落ちたものだけ画面向けの形へ詰め替え、それ以外はそのまま投げる */
+const toEditResult = async (error: unknown): Promise<EditCommandDefResult> => {
+  if (error instanceof CommandDefWriteError && error.messages.length > 0) {
+    return { ok: false, messages: error.messages }
+  }
+  throw error
+}
+
+/**
+ * コマンド定義の追加・更新。
+ *
+ * 書けるのは `target.editable: true` のファイルの `commands` だけで、接続先(`target`)は
+ * どのファイルでも画面から触れない。接続先を増やせない = 画面から到達できる実行先が増えないので、
+ * この経路で広がる範囲は「既に鍵が通っている実行先」に閉じる。
+ *
+ * 実行時の `requireFreshSession` と同じ理由で再認証を求める。実行は一度きりだが、
+ * 定義の書き換えは以後ずっと効くので、要求する理由はむしろ強い。
+ */
+export const upsertCommandDefAction = safeAuthAction
+  .metadata({ actionName: 'upsertCommandDef', role: 'admin' })
+  .inputSchema(scUpsertCommandDef)
+  .action(async ({ parsedInput: { fileName, revision, replaceId, command }, ctx: { user, session } }) => {
+    if (!consumeRateLimit(`command-def-edit:${user.id}`, EDIT_RATE_LIMIT)) {
+      throw errTooManyRequests()
+    }
+    assertFreshSession(session)
+
+    try {
+      await editCommandFileCommands({
+        fileName,
+        revision,
+        apply: (current) => {
+          if (!replaceId) {
+            return [...current.commands, command]
+          }
+          if (!current.commands.some((entry) => entry.id === replaceId)) {
+            // 画面が見ていた 1 件が既に消えている。上書きで復活させない
+            throw new CommandDefWriteError(COMMAND_DEF_CONFLICT)
+          }
+          return current.commands.map((entry) => (entry.id === replaceId ? command : entry))
+        },
+      })
+
+      // ID を変えた更新は履歴の上でも別のコマンドになるので、古い ID の設定は引き継がず捨てる。
+      // 残すと、同じ ID を後から別の用途で作ったときに昔の許可がそのまま効く。
+      // 新しい ID の側も同時に落とす。以前そのIDで消し損ねた行が残っていても、
+      // ここで作った分は必ず既定値(無効・許可グループ無し)から始まる
+      if (replaceId !== command.id) {
+        await dropCommandSettings([command.id, ...(replaceId ? [replaceId] : [])], {
+          userId: user.id,
+          fileName,
+        })
+      }
+
+      // 実行履歴は残るのに定義の変更履歴がどこにも残らないのは非対称なので、監査ログを残す
+      logger.warn(
+        { userId: user.id, fileName, replaceId, commandId: command.id, executable: command.executable },
+        'command def updated',
+      )
+      // view は返さない。ここで組み立てに失敗すると、書けているのに失敗として返ってしまう
+      // (画面は成功後に自分で取り直す)
+      return { ok: true as const }
+    } catch (error) {
+      return toEditResult(error)
+    }
+  })
+
+/** コマンド定義の削除。定義を消したら設定行も消す(理由は `deleteCommandSetting` を参照) */
+export const deleteCommandDefAction = safeAuthAction
+  .metadata({ actionName: 'deleteCommandDef', role: 'admin' })
+  .inputSchema(scDeleteCommandDef)
+  .action(async ({ parsedInput: { fileName, revision, commandId }, ctx: { user, session } }) => {
+    if (!consumeRateLimit(`command-def-edit:${user.id}`, EDIT_RATE_LIMIT)) {
+      throw errTooManyRequests()
+    }
+    assertFreshSession(session)
+
+    try {
+      await editCommandFileCommands({
+        fileName,
+        revision,
+        apply: (current) => {
+          if (!current.commands.some((entry) => entry.id === commandId)) {
+            throw new CommandDefWriteError(COMMAND_DEF_CONFLICT)
+          }
+          return current.commands.filter((entry) => entry.id !== commandId)
+        },
+      })
+
+      // ファイルが書けてから設定を消す。逆順にすると、書き込みに失敗したときに
+      // 「定義は生きているのに許可だけ消えた」状態が残る
+      await dropCommandSettings([commandId], { userId: user.id, fileName })
+      logger.warn({ userId: user.id, fileName, commandId }, 'command def deleted')
+      return { ok: true as const }
+    } catch (error) {
+      return toEditResult(error)
+    }
   })

@@ -15,8 +15,8 @@ import {
   COMMAND_KILL_GRACE_MS,
   type CommandDef,
   type CommandFailureKind,
-  type CommandHost,
   type CommandInputValues,
+  type CommandTarget,
 } from './command'
 import { buildRemoteCommand, isSentinelLine, resolveCommandArgs } from './command-args'
 import { appendSystemChunk, createLogBuffer, isRunaway, type LogBuffer } from './command-log'
@@ -26,21 +26,21 @@ import { signalRun } from './command-signal'
 import { resolveSshTarget, spawnSshCommand, type SshProcess } from './command-ssh'
 
 /** SSH をテストで差し替えるための境界。null は「接続先を用意できない」 */
-export type SpawnSsh = (host: CommandHost, remoteCommand: string) => SshProcess | null
+export type SpawnSsh = (target: CommandTarget, remoteCommand: string) => SshProcess | null
 
 export type ExecuteInput = {
   runId: string
   workerId: string
   def: CommandDef
-  host: CommandHost
+  target: CommandTarget
   params: CommandInputValues
   spawnSsh?: SpawnSsh
 }
 
 /** 既定の起動。鍵か known_hosts が解決できなければ実行しない(fail closed) */
-const defaultSpawnSsh: SpawnSsh = (host, remoteCommand) => {
-  const target = resolveSshTarget(host)
-  return target ? spawnSshCommand(target, remoteCommand) : null
+const defaultSpawnSsh: SpawnSsh = (target, remoteCommand) => {
+  const ssh = resolveSshTarget(target)
+  return ssh ? spawnSshCommand(ssh, remoteCommand) : null
 }
 
 /**
@@ -134,7 +134,7 @@ const pipeStream = (
  * 実行の寿命はプロセスの寿命の側に置く。
  */
 export const executeCommandRun = async (input: ExecuteInput): Promise<void> => {
-  const { runId, workerId, def, host, params, spawnSsh = defaultSpawnSsh } = input
+  const { runId, workerId, def, target, params, spawnSsh = defaultSpawnSsh } = input
   const buffer = createLogBuffer(runId, workerId)
 
   let aborted: CommandFailureKind | null = null
@@ -160,7 +160,7 @@ export const executeCommandRun = async (input: ExecuteInput): Promise<void> => {
     return
   }
 
-  const child = spawnSsh(host, buildRemoteCommand(def.executable, args))
+  const child = spawnSsh(target, buildRemoteCommand(def.executable, args))
   if (!child) {
     await appendSystemChunk(runId, '接続先の秘密鍵または known_hosts を読み込めないため実行できません。')
     await finishCommandRun({ runId, workerId, status: 'failed', exitCode: null, failureKind: 'start_failed' })
