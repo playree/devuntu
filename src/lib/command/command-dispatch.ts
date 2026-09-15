@@ -13,7 +13,7 @@ import { nowDate } from '../day'
 import { envu } from '../env-util'
 import { logger } from '../logger'
 import { type CommandInputValues } from './command'
-import { findCommandDef, findCommandHost } from './command-catalog'
+import { findCommandDef, findCommandTarget } from './command-catalog'
 import { applyCancel, executeCommandRun } from './command-exec'
 import { appendSystemChunk } from './command-log'
 import { runningCount } from './command-registry'
@@ -47,8 +47,8 @@ export const runCommandDispatch = async (now: Date = nowDate()): Promise<void> =
   const claimed = await claimQueuedRuns(slots, WORKER_ID)
   for (const run of claimed) {
     const def = findCommandDef(run.commandKey)
-    const host = def ? findCommandHost(def.hostId) : null
-    if (!def || !host) {
+    const target = def ? findCommandTarget(def.targetId) : null
+    if (!def || !target) {
       // 待っている間に定義ファイルから消えた / 壊れた
       await appendSystemChunk(run.id, '実行しようとした定義が見つかりません。定義ファイルを確認してください。')
       await finishCommandRun({
@@ -66,7 +66,7 @@ export const runCommandDispatch = async (now: Date = nowDate()): Promise<void> =
       runId: run.id,
       workerId: WORKER_ID,
       def,
-      host,
+      target,
       params: (run.params ?? {}) as CommandInputValues,
     }).catch((error: unknown) => {
       logger.error({ error, runId: run.id }, 'command run crashed')

@@ -25,7 +25,7 @@ const { assertCommandAccess, canUseAnyCommand, effectiveSortOrder, listAvailable
 const def = (id: string, sortOrder = 0): CommandDef => ({
   id,
   label: id,
-  hostId: 'web01',
+  targetId: 'web01',
   executable: '/opt/bin/run.sh',
   args: [],
   inputs: [],

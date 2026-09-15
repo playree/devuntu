@@ -48,13 +48,13 @@ export type ClaimedRun = {
  */
 export const enqueueCommandRun = async (input: {
   def: CommandDef
-  hostLabel: string
+  targetLabel: string
   actor: { id: string; name: string }
   params: CommandInputValues
   argsPreview: string
   maxQueued: number
 }): Promise<{ id: string }> => {
-  const { def, hostLabel, actor, params, argsPreview, maxQueued } = input
+  const { def, targetLabel, actor, params, argsPreview, maxQueued } = input
 
   const waiting = await prisma.commandRun.count({ where: { status: 'queued' } })
   if (waiting >= maxQueued) {
@@ -66,7 +66,7 @@ export const enqueueCommandRun = async (input: {
       data: {
         commandKey: def.id,
         commandLabel: def.label,
-        hostLabel,
+        targetLabel,
         userId: actor.id,
         userName: actor.name,
         params: params as object,
@@ -229,7 +229,7 @@ export const getCommandRun = async (runId: string) =>
       id: true,
       commandKey: true,
       commandLabel: true,
-      hostLabel: true,
+      targetLabel: true,
       userId: true,
       userName: true,
       params: true,
@@ -275,7 +275,7 @@ export const listCommandRuns = async (input: {
         id: true,
         commandKey: true,
         commandLabel: true,
-        hostLabel: true,
+        targetLabel: true,
         userName: true,
         argsPreview: true,
         status: true,

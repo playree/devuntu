@@ -39,7 +39,7 @@ const { enqueueCommandRun, finishCommandRun, listCommandRuns, reclaimStaleRuns, 
 const def = (overrides: Partial<CommandDef> = {}): CommandDef => ({
   id: 'deploy-web',
   label: 'デプロイ',
-  hostId: 'web01',
+  targetId: 'web01',
   executable: '/opt/bin/deploy.sh',
   args: [],
   inputs: [],
@@ -54,7 +54,7 @@ const def = (overrides: Partial<CommandDef> = {}): CommandDef => ({
 const enqueue = (overrides: Partial<CommandDef> = {}) =>
   enqueueCommandRun({
     def: def(overrides),
-    hostLabel: 'Web',
+    targetLabel: 'Web',
     actor: { id: 'user-1', name: '実行者' },
     params: {},
     argsPreview: '/opt/bin/deploy.sh',
@@ -107,9 +107,9 @@ describe('enqueueCommandRun / activeKey', () => {
     // 定義が変わっても履歴の意味が変わらないようにする
     await enqueue({ label: 'デプロイ v1' })
     const arg = vi.mocked(prisma.commandRun.create).mock.calls[0][0] as {
-      data: { commandLabel: string; hostLabel: string; userName: string }
+      data: { commandLabel: string; targetLabel: string; userName: string }
     }
-    expect(arg.data).toMatchObject({ commandLabel: 'デプロイ v1', hostLabel: 'Web', userName: '実行者' })
+    expect(arg.data).toMatchObject({ commandLabel: 'デプロイ v1', targetLabel: 'Web', userName: '実行者' })
   })
 })
 

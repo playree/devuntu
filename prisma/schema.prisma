@@ -1771,8 +1771,8 @@ model CommandRun {
   /// 実行時点のコマンド表示名。定義が変わっても履歴の意味が変わらないよう複写する
   commandLabel String
 
-  /// 実行時点の接続先の表示名。ホスト名・ユーザー・鍵のパスは秘密なので入れない
-  hostLabel String
+  /// 実行時点の実行先の表示名。ホスト名・ユーザー・鍵のパスは秘密なので入れない
+  targetLabel String
 
   /// 実行者。削除されても履歴は残すので SetNull
   userId String?

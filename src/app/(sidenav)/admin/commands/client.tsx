@@ -2,21 +2,29 @@
 
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
-import { useModalState } from '@/components/general/modal'
+import { useConfirmModal, useModalState } from '@/components/general/modal'
 import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
 import { ArrowPathIcon, CommandLineIcon } from '@/components/icon'
+import { notify } from '@/components/notify'
 import { parseAction, useActionData } from '@/lib/action/action-client'
+import { SESSION_NOT_FRESH } from '@/lib/auth/auth-config'
+import { useReAuth } from '@/lib/auth/use-re-auth'
+import { COMMAND_DEF_CONFLICT, COMMAND_DEF_NOT_EDITABLE, COMMAND_DEF_READ_ONLY } from '@/lib/command/command'
+import { type CommandTargetStatus } from '@/lib/command/command-catalog'
 import { dayformat } from '@/lib/day'
+import { ClientError, TOO_MANY_REQUESTS } from '@/lib/error'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { FC } from 'react'
-import { CommandDefTable, CommandHostTable } from './command-tables'
+import { CommandDefTable, CommandTargetTable } from './command-tables'
+import { CommandDefModal, type CommandDefTarget } from './def-modal'
 import { SettingModal } from './modals'
 import {
   type CommandDefView,
-  type GetCommandDefsReturnType,
+  deleteCommandDefAction,
   getCommandDefsAction,
+  type GetCommandDefsReturnType,
   reloadCommandDefsAction,
 } from './server'
 
@@ -31,6 +39,54 @@ export const AdminCommandsClient: FC = () => {
   const tz = useUserTimezone()
   const { data, isLoading, refresh } = useActionData(getCommandDefsAction)
   const settingModalState = useModalState<CommandDefView>()
+  const defModalState = useModalState<CommandDefTarget>()
+  const { confirmModal } = useConfirmModal()
+  const reAuth = useReAuth()
+
+  /** 定義そのものの削除。設定行も一緒に消えるので、そのことを確認文で伝える */
+  const deleteDef = async (command: CommandDefView) => {
+    const ok = await confirmModal().confirm({
+      title: t('command_def_delete'),
+      text: t('command_def_delete_confirm'),
+    })
+    if (!ok) {
+      return
+    }
+    try {
+      const result = await parseAction(
+        deleteCommandDefAction({ fileName: command.fileName, revision: command.revision, commandId: command.id }),
+      )
+      if (!result?.ok) {
+        notify.error(t('error'), { description: result?.messages.join(' / ') })
+        return
+      }
+      notify.success(t('msg_saved'))
+    } catch (e) {
+      if (!(e instanceof ClientError)) {
+        throw e
+      }
+      switch (e.errorType) {
+        case COMMAND_DEF_CONFLICT:
+          notify.warn(t('command_def_conflict'))
+          break
+        case COMMAND_DEF_NOT_EDITABLE:
+          notify.warn(t('command_def_not_editable'))
+          break
+        case COMMAND_DEF_READ_ONLY:
+          notify.warn(t('command_def_read_only'))
+          break
+        case TOO_MANY_REQUESTS:
+          notify.warn(t('msg_too_many_requests'))
+          break
+        case SESSION_NOT_FRESH:
+          await reAuth()
+          return
+        default:
+          throw e
+      }
+    }
+    await refresh()
+  }
 
   return (
     <FlexCol>
@@ -52,7 +108,28 @@ export const AdminCommandsClient: FC = () => {
       {isLoading && !data ? (
         <PanelSkeleton />
       ) : (
-        <CommandDefsBody data={data} tz={tz} onEdit={(command) => settingModalState.open(command)} />
+        <CommandDefsBody
+          data={data}
+          tz={tz}
+          onEdit={(command) => settingModalState.open(command)}
+          onEditDef={(command) =>
+            defModalState.open({
+              fileName: command.fileName,
+              revision: command.revision,
+              targetLabel: command.targetLabel ?? '',
+              command,
+            })
+          }
+          onDeleteDef={deleteDef}
+          onAdd={(target) =>
+            defModalState.open({
+              fileName: target.fileName,
+              revision: target.revision,
+              targetLabel: target.label,
+              command: null,
+            })
+          }
+        />
       )}
 
       {settingModalState.target && (
@@ -64,6 +141,10 @@ export const AdminCommandsClient: FC = () => {
           groupOptions={data?.groupOptions ?? {}}
         />
       )}
+
+      {defModalState.target && (
+        <CommandDefModal state={defModalState} reload={refresh} key={defModalState.key} target={defModalState.target} />
+      )}
     </FlexCol>
   )
 }
@@ -72,7 +153,10 @@ const CommandDefsBody: FC<{
   data: GetCommandDefsReturnType
   tz: string
   onEdit: (command: CommandDefView) => void
-}> = ({ data, tz, onEdit }) => {
+  onEditDef: (command: CommandDefView) => void
+  onDeleteDef: (command: CommandDefView) => void
+  onAdd: (target: CommandTargetStatus) => void
+}> = ({ data, tz, onEdit, onEditDef, onDeleteDef, onAdd }) => {
   const { t } = useLocale()
 
   if (!data) {
@@ -86,7 +170,7 @@ const CommandDefsBody: FC<{
       <div className='text-foreground-500 text-xs'>
         {t('command_def_dir')}: <span className='font-mono break-all'>{data.dir}</span>
         {' / '}
-        {t('command_def_loaded', { loaded: data.hosts.length, excluded: data.issues.length })}
+        {t('command_def_loaded', { loaded: data.targets.length, excluded: data.issues.length })}
         {' / '}
         {dayformat(data.loadedAt, 'tz-minute', tz)}
       </div>
@@ -111,11 +195,17 @@ const CommandDefsBody: FC<{
         </NoticePanel>
       )}
 
-      <CommandHostTable hosts={data.hosts} />
+      <CommandTargetTable targets={data.targets} writable={data.writable} onAdd={onAdd} />
       {data.commands.length === 0 ? (
         <NoticePanel>{t('command_no_def')}</NoticePanel>
       ) : (
-        <CommandDefTable commands={data.commands} onEdit={onEdit} />
+        <CommandDefTable
+          commands={data.commands}
+          writable={data.writable}
+          onEdit={onEdit}
+          onEditDef={onEditDef}
+          onDeleteDef={onDeleteDef}
+        />
       )}
     </FlexCol>
   )

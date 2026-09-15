@@ -10,7 +10,7 @@
 export const COMMAND_DEF_VERSION = 1
 
 /**
- * コマンド / ホスト / 入力項目の識別子。
+ * コマンド / 実行先 / 入力項目の識別子。
  * 英数字始まりに固定し、`..` のような相対パス片が紛れ込めないようにする。
  */
 export const COMMAND_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{1,63}$/
@@ -38,8 +38,8 @@ export const COMMAND_PLACEHOLDER_PATTERN = /^\{\{([a-z0-9][a-z0-9_-]{1,63})\}\}$
 export const COMMAND_PLACEHOLDER_LOOSE_PATTERN = /\{\{.*?\}\}/
 
 /** 実行先の種別。v1 は SSH のみで、ホスト側実行もコンテナ内実行も SSH 経由で表現する */
-export const COMMAND_HOST_KINDS = ['ssh'] as const
-export type CommandHostKind = (typeof COMMAND_HOST_KINDS)[number]
+export const COMMAND_TARGET_KINDS = ['ssh'] as const
+export type CommandTargetKind = (typeof COMMAND_TARGET_KINDS)[number]
 
 /** 入力項目の種別。フリー入力は型として存在させない */
 export const COMMAND_INPUT_TYPES = ['select', 'radio', 'multiselect', 'checkbox'] as const
@@ -55,7 +55,7 @@ export const MAX_COMMAND_INPUTS = 20
 export const MAX_COMMAND_OPTIONS = 200
 export const MAX_COMMAND_ARGS = 50
 
-/** 読み込む定義ファイルの数の上限(1 ファイル 1 ホストなのでホスト数の上限でもある) */
+/** 読み込む定義ファイルの数の上限(1 ファイル 1 実行先なので実行先の数の上限でもある) */
 export const MAX_COMMAND_DEF_FILES = 100
 
 /** 1 ファイルに書けるコマンドの数の上限。スキーマ側で見る */
@@ -212,16 +212,30 @@ export const COMMAND_ALREADY_RUNNING = 'COMMAND_ALREADY_RUNNING'
 /** 順番待ちが上限に達している */
 export const COMMAND_QUEUE_FULL = 'COMMAND_QUEUE_FULL'
 
-/** ホスト定義。identityFile などの秘密は画面にも API 応答にも出さない */
-export type CommandHost = {
+/** 画面が見ていた内容から変わっている(他の人が編集した / 対象のコマンドが消えた) */
+export const COMMAND_DEF_CONFLICT = 'COMMAND_DEF_CONFLICT'
+
+/** そのファイルは `target.editable` が false なので画面から書けない */
+export const COMMAND_DEF_NOT_EDITABLE = 'COMMAND_DEF_NOT_EDITABLE'
+
+/** 定義ディレクトリが読み取り専用でマウントされている */
+export const COMMAND_DEF_READ_ONLY = 'COMMAND_DEF_READ_ONLY'
+
+/** 現物が壊れている、または書こうとした内容が検証を通らない */
+export const COMMAND_DEF_INVALID = 'COMMAND_DEF_INVALID'
+
+/** 実行先の定義。identityFile などの秘密は画面にも API 応答にも出さない */
+export type CommandTarget = {
   id: string
   label: string
-  kind: CommandHostKind
+  kind: CommandTargetKind
   host: string
   port: number
   user: string
   identityFile: string
   knownHostsFile?: string
+  /** `commands` を画面から編集してよいか。`target` 自体はこの値に関わらず画面から変えられない */
+  editable: boolean
 }
 
 /** 選択肢 */
@@ -250,8 +264,8 @@ export type CommandDef = {
   id: string
   label: string
   description?: string
-  /** YAML には書かない。1 ファイル 1 ホストなので、カタログがそのファイルの host.id を入れる */
-  hostId: string
+  /** YAML には書かない。1 ファイル 1 実行先なので、カタログがそのファイルの target.id を入れる */
+  targetId: string
   executable: string
   args: string[]
   inputs: CommandInput[]
@@ -263,12 +277,12 @@ export type CommandDef = {
   sortOrder: number
 }
 
-/** 定義ファイル 1 件。ホストは 1 ファイルに 1 つで、そのファイルのコマンドはすべてこのホストで動く */
+/** 定義ファイル 1 件。実行先は 1 ファイルに 1 つで、そのファイルのコマンドはすべてこの実行先で動く */
 export type CommandFile = {
   version: number
-  host: CommandHost
-  /** ファイルの中では hostId を書かないので、その分だけ型を落とす */
-  commands: Omit<CommandDef, 'hostId'>[]
+  target: CommandTarget
+  /** ファイルの中では targetId を書かないので、その分だけ型を落とす */
+  commands: Omit<CommandDef, 'targetId'>[]
 }
 
 /** 入力値。フリー入力が無いので文字列 / 文字列配列 / 真偽値しか取らない */

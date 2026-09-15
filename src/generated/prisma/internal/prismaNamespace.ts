@@ -4642,7 +4642,7 @@ export const CommandRunScalarFieldEnum = {
   id: 'id',
   commandKey: 'commandKey',
   commandLabel: 'commandLabel',
-  hostLabel: 'hostLabel',
+  targetLabel: 'targetLabel',
   userId: 'userId',
   userName: 'userName',
   params: 'params',

@@ -50,9 +50,9 @@ export const CommandsClient: FC = () => {
                 <FlexRow className='flex-wrap items-center'>
                   <span className='font-semibold'>{command.label}</span>
                   <span className='grow' />
-                  {command.hostLabel && (
+                  {command.targetLabel && (
                     <Chip variant='soft' className='whitespace-nowrap'>
-                      {command.hostLabel}
+                      {command.targetLabel}
                     </Chip>
                   )}
                   <MultiButton icon={<PlayIcon />} variant='outline' onPress={() => formState.open(command)}>

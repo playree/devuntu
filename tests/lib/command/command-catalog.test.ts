@@ -34,21 +34,21 @@ vi.mock('node:fs', async (importOriginal) => {
 })
 
 const {
-  buildCommandHostStatus,
+  buildCommandTargetStatus,
   clearCommandCatalogCache,
   getCommandCatalog,
   listCommandDefFileNames,
   resolveSshFilePath,
 } = await import('@/lib/command/command-catalog')
 
-/** ホスト1件ぶんの定義ファイル。コマンドは `id: sortOrder` の組で与える */
-const yaml = (hostId: string, commands: [string, number][]) =>
+/** 実行先1件ぶんの定義ファイル。コマンドは `id: sortOrder` の組で与える */
+const yaml = (targetId: string, commands: [string, number][]) =>
   [
     'version: 1',
-    'host:',
-    `  id: ${hostId}`,
-    `  label: ${hostId.toUpperCase()}`,
-    `  host: ${hostId}.internal`,
+    'target:',
+    `  id: ${targetId}`,
+    `  label: ${targetId.toUpperCase()}`,
+    `  host: ${targetId}.internal`,
     '  user: deploy',
     '  identityFile: ops_ed25519',
     'commands:',
@@ -166,23 +166,23 @@ describe('読み込み', () => {
     const result = getCommandCatalog({ force: true })
     expect(result.issues).toEqual([])
     expect(result.catalog.commands.map((command) => command.id)).toEqual(['dump-db', 'deploy-web'])
-    expect(result.catalog.hosts.map((host) => host.id).sort()).toEqual(['db01', 'web01'])
+    expect(result.catalog.targets.map((target) => target.id).sort()).toEqual(['db01', 'web01'])
   })
 
-  it('コマンドにそのファイルのホストを紐づける', () => {
-    // hostId は YAML に書かないので、ファイルの境界が唯一の手がかりになる
+  it('コマンドにそのファイルの実行先を紐づける', () => {
+    // targetId は YAML に書かないので、ファイルの境界が唯一の手がかりになる
     write('web01.yaml', yaml('web01', [['deploy-web', 1]]))
     write('db01.yaml', yaml('db01', [['dump-db', 1]]))
 
     const result = getCommandCatalog({ force: true })
-    const byId = new Map(result.catalog.commands.map((command) => [command.id, command.hostId]))
+    const byId = new Map(result.catalog.commands.map((command) => [command.id, command.targetId]))
     expect(byId.get('deploy-web')).toBe('web01')
     expect(byId.get('dump-db')).toBe('db01')
   })
 
   it('壊れたファイルだけを除外し、他のファイルは生かす', () => {
     write('web01.yaml', yaml('web01', [['deploy-web', 1]]))
-    write('broken.yaml', 'version: 1\nhost: [unclosed')
+    write('broken.yaml', 'version: 1\ntarget: [unclosed')
 
     const result = getCommandCatalog({ force: true })
     expect(result.catalog.commands.map((command) => command.id)).toEqual(['deploy-web'])
@@ -192,12 +192,12 @@ describe('読み込み', () => {
   })
 
   it('スキーマ違反はどこが悪いかを返す', () => {
-    write('web01.yaml', 'version: 1\nhost:\n  id: web01\ncommands: []\n')
+    write('web01.yaml', 'version: 1\ntarget:\n  id: web01\ncommands: []\n')
 
     const result = getCommandCatalog({ force: true })
     expect(result.catalog.commands).toEqual([])
     expect(result.issues[0].fileName).toBe('web01.yaml')
-    expect(result.issues[0].messages.some((message) => message.startsWith('host.'))).toBe(true)
+    expect(result.issues[0].messages.some((message) => message.startsWith('target.'))).toBe(true)
   })
 
   it('対象ファイルが無ければ空になるが、それ自体は問題として扱わない', () => {
@@ -226,14 +226,14 @@ describe('読み込み', () => {
 })
 
 describe('ファイルをまたぐ重複', () => {
-  it('ホストIDが重複していればどちらのファイルも読まない', () => {
+  it('実行先IDが重複していればどちらのファイルも読まない', () => {
     write('app-web.yaml', yaml('web01', [['deploy-app', 1]]))
     write('web01.yaml', yaml('web01', [['deploy-web', 1]]))
 
     const result = getCommandCatalog({ force: true })
     expect(result.catalog.commands).toEqual([])
     expect(result.issues.map((issue) => issue.fileName)).toEqual(['app-web.yaml', 'web01.yaml'])
-    expect(result.issues[0].messages[0]).toContain('ホストID web01')
+    expect(result.issues[0].messages[0]).toContain('実行先ID web01')
   })
 
   it('コマンドIDが重複していればどちらのファイルも読まない', () => {
@@ -304,7 +304,7 @@ describe('キャッシュ', () => {
     write('web01.yaml', yaml('web01', [['deploy-web', 1]]))
     expect(getCommandCatalog().catalog.commands).toHaveLength(1)
 
-    write('web01.yaml', 'version: 1\nhost: [unclosed')
+    write('web01.yaml', 'version: 1\ntarget: [unclosed')
     advance()
     expect(getCommandCatalog().catalog.commands).toEqual([])
   })
@@ -337,10 +337,11 @@ describe('鍵ファイルのパス解決', () => {
   })
 })
 
-describe('ホストの状態', () => {
+describe('実行先の状態', () => {
   const file = {
     fileName: 'web01.yaml',
-    host: {
+    revision: '0123456789abcdef',
+    target: {
       id: 'web01',
       label: 'Web',
       kind: 'ssh' as const,
@@ -348,15 +349,18 @@ describe('ホストの状態', () => {
       port: 22,
       user: 'deploy',
       identityFile: 'ops_ed25519',
+      editable: false,
     },
     commands: [],
   }
 
   it('鍵と known_hosts が無ければ未準備を返す', () => {
-    expect(buildCommandHostStatus(file)).toEqual({
+    expect(buildCommandTargetStatus(file)).toEqual({
       id: 'web01',
       label: 'Web',
       fileName: 'web01.yaml',
+      editable: false,
+      revision: '0123456789abcdef',
       identityReady: false,
       knownHostsReady: false,
     })
@@ -365,10 +369,12 @@ describe('ホストの状態', () => {
   it('両方あれば準備済みを返す', () => {
     writeFileSync(join(dir, 'ops_ed25519'), 'dummy-key')
     writeFileSync(join(dir, 'known_hosts'), 'dummy-known-hosts')
-    expect(buildCommandHostStatus(file)).toEqual({
+    expect(buildCommandTargetStatus(file)).toEqual({
       id: 'web01',
       label: 'Web',
       fileName: 'web01.yaml',
+      editable: false,
+      revision: '0123456789abcdef',
       identityReady: true,
       knownHostsReady: true,
     })
@@ -376,7 +382,15 @@ describe('ホストの状態', () => {
 
   it('接続先やパスは含めない', () => {
     // 画面にも API 応答にも出さないので、状態オブジェクトの時点で持たせない
-    const status = buildCommandHostStatus(file)
-    expect(Object.keys(status).sort()).toEqual(['fileName', 'id', 'identityReady', 'knownHostsReady', 'label'])
+    const status = buildCommandTargetStatus(file)
+    expect(Object.keys(status).sort()).toEqual([
+      'editable',
+      'fileName',
+      'id',
+      'identityReady',
+      'knownHostsReady',
+      'label',
+      'revision',
+    ])
   })
 })
