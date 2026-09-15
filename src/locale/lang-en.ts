@@ -111,7 +111,8 @@ export const en: LocaleItems = {
   command_allowed_groups_description:
     'If left empty, only administrators can run it. Unlike integration settings, empty does NOT mean everyone.',
   command_confirm_required: 'Confirm before run',
-  command_def_path: 'Definition file',
+  command_def_dir: 'Definition directory',
+  command_def_loaded: '${loaded} file(s) loaded / ${excluded} excluded',
   command_def_reload: 'Reload definitions',
   command_definition: 'Command definitions',
   command_disabled: 'Command execution is disabled. Enable the COMMAND_EXEC_ENABLED environment variable.',
@@ -129,7 +130,7 @@ export const en: LocaleItems = {
   command_input_type_radio: 'Radio',
   command_input_type_select: 'Select',
   command_inputs: 'Inputs',
-  command_invalid_def: 'Failed to load the definition file. Commands cannot run until it is fixed.',
+  command_invalid_def: 'The files below could not be loaded. Their commands cannot run until they are fixed.',
   command_manage: 'Command management',
   command_no_available: 'No commands are available to you.',
   command_no_def: 'No commands are defined.',

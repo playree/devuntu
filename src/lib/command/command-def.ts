@@ -24,8 +24,7 @@ import {
   COMMAND_VALUE_PATTERN,
   type CommandInput,
   MAX_COMMAND_ARGS,
-  MAX_COMMAND_DEFS,
-  MAX_COMMAND_HOSTS,
+  MAX_COMMAND_DEFS_PER_FILE,
   MAX_COMMAND_INPUTS,
   MAX_COMMAND_OPTIONS,
 } from './command'
@@ -42,12 +41,12 @@ const zFileName = z
 /** 引数テンプレートの1要素。丸ごとプレースホルダか、固定文字列のどちらか */
 const zArgToken = z.string().min(1).max(500)
 
-const scCommandOption = z.object({
+const scCommandOption = z.strictObject({
   value: zOptionValue,
   label: zLabel,
 })
 
-const scSelectLike = z.object({
+const scSelectLike = z.strictObject({
   key: zCommandId,
   label: zLabel,
   options: z.array(scCommandOption).min(1).max(MAX_COMMAND_OPTIONS),
@@ -58,7 +57,7 @@ const scSelectLike = z.object({
 const scCommandInput = z.discriminatedUnion('type', [
   scSelectLike.extend({ type: z.literal('select') }),
   scSelectLike.extend({ type: z.literal('radio') }),
-  z.object({
+  z.strictObject({
     type: z.literal('multiselect'),
     key: zCommandId,
     label: zLabel,
@@ -67,7 +66,7 @@ const scCommandInput = z.discriminatedUnion('type', [
     minSelected: z.number().int().min(0).default(0),
     maxSelected: z.number().int().min(1).default(COMMAND_MULTISELECT_MAX_DEFAULT),
   }),
-  z.object({
+  z.strictObject({
     type: z.literal('checkbox'),
     key: zCommandId,
     label: zLabel,
@@ -78,7 +77,7 @@ const scCommandInput = z.discriminatedUnion('type', [
   }),
 ])
 
-const scCommandHost = z.object({
+const scCommandHost = z.strictObject({
   id: zCommandId,
   label: zLabel,
   /** v1 は ssh のみ。ホスト側実行もコンテナ内実行も SSH 経由で表現する */
@@ -92,11 +91,10 @@ const scCommandHost = z.object({
   knownHostsFile: zFileName.optional(),
 })
 
-const scCommandDef = z.object({
+const scCommandDef = z.strictObject({
   id: zCommandId,
   label: zLabel,
   description: z.string().max(500).optional(),
-  hostId: zCommandId,
   /** 絶対パス推奨。リモート側のシェルに解釈させる余地を減らすため文字集合を絞る */
   executable: z.string().regex(/^[A-Za-z0-9._/-]{1,200}$/, '実行ファイルのパスに使えない文字が含まれている'),
   args: z.array(zArgToken).max(MAX_COMMAND_ARGS).default([]),
@@ -117,26 +115,23 @@ const scCommandDef = z.object({
 })
 
 /**
- * 定義ファイル全体。
+ * 定義ファイル 1 件。
  *
- * 個々のフィールドの検証を通ったあとに、参照の整合(未知の hostId、id の重複、
+ * **1 ファイルに 1 ホスト**で、そのファイルのコマンドはすべてこのホストで動く。
+ * コマンド側に `hostId` を書かないのは、書ける形にすると「どのファイルのホストで動くのか」が
+ * ファイルを開いただけでは分からなくなるため。ホストとコマンドの対応はファイルの境界で決まる。
+ *
+ * 個々のフィールドの検証を通ったあとに、ファイル内で閉じた整合(id の重複、
  * プレースホルダの対応)を `superRefine` でまとめて見る。
+ * ファイルをまたぐ整合(ホストID・コマンドIDの重複)は `command-catalog.ts` が見る。
  */
 export const scCommandFile = z
-  .object({
+  .strictObject({
     version: z.literal(COMMAND_DEF_VERSION),
-    hosts: z.array(scCommandHost).max(MAX_COMMAND_HOSTS).default([]),
-    commands: z.array(scCommandDef).max(MAX_COMMAND_DEFS).default([]),
+    host: scCommandHost,
+    commands: z.array(scCommandDef).max(MAX_COMMAND_DEFS_PER_FILE).default([]),
   })
   .superRefine((file, ctx) => {
-    const hostIds = new Set<string>()
-    file.hosts.forEach((host, index) => {
-      if (hostIds.has(host.id)) {
-        ctx.addIssue({ code: 'custom', path: ['hosts', index, 'id'], message: `ホストID ${host.id} が重複している` })
-      }
-      hostIds.add(host.id)
-    })
-
     const commandIds = new Set<string>()
     file.commands.forEach((command, index) => {
       const at = (...path: (string | number)[]) => ['commands', index, ...path]
@@ -145,10 +140,6 @@ export const scCommandFile = z
         ctx.addIssue({ code: 'custom', path: at('id'), message: `コマンドID ${command.id} が重複している` })
       }
       commandIds.add(command.id)
-
-      if (!hostIds.has(command.hostId)) {
-        ctx.addIssue({ code: 'custom', path: at('hostId'), message: `未定義のホスト ${command.hostId} を参照している` })
-      }
 
       const inputKeys = new Set<string>()
       command.inputs.forEach((input, inputIndex) => {
@@ -254,11 +245,30 @@ const checkArgTokens = (
   })
 }
 
-/** zod の issue を「どこが」「なぜ」だけの1行にする。管理画面へそのまま出す */
+/**
+ * 書けない項目の説明。
+ *
+ * 未知キーは黙って捨てず弾くが、廃止した項目は「書けない」だけだと直し方が分からないので理由まで出す。
+ */
+const UNKNOWN_KEY_REASONS: Record<string, string> = {
+  hostId: 'ホストは定義ファイル単位で決まるため commands[].hostId は書けない',
+  hosts: 'hosts の配列は書けない。1 ファイルに 1 ホストを host へ書く',
+}
+
+/**
+ * zod の issue を「どこが」「なぜ」だけの1行にする。管理画面へそのまま出す。
+ *
+ * 未知キーの issue は path がオブジェクトの位置までしか無く、キー名は `keys` にしか入らないので、
+ * ここで本文へ混ぜ直す。
+ */
 export const formatCommandIssues = (error: z.ZodError): string[] =>
   error.issues.map((issue) => {
     const path = issue.path.join('.')
-    return path ? `${path}: ${issue.message}` : issue.message
+    const message =
+      issue.code === 'unrecognized_keys'
+        ? issue.keys.map((key) => UNKNOWN_KEY_REASONS[key] ?? `書けない項目 ${key} がある`).join(' / ')
+        : issue.message
+    return path ? `${path}: ${message}` : message
   })
 
 /**

@@ -63,18 +63,9 @@ const toDefView = (
 
 const buildView = async (opts?: { force?: boolean }) => {
   const result = getCommandCatalog(opts)
-  const base = {
-    enabled: envu.server.COMMAND_EXEC_ENABLED,
-    path: result.path,
-    loadedAt: result.loadedAt,
-  }
   // グループ一覧はコマンドをまたいで共通なので、取得はこの 1 箇所にまとめる
   const groups = await prisma.group.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } })
   const groupOptions = Object.fromEntries(groups.map((group) => [group.id, group.name])) as Record<string, string>
-
-  if (!result.ok) {
-    return { ...base, ok: false as const, issues: result.issues, groupOptions, hosts: [], commands: [] }
-  }
 
   const settings = await getCommandSettings(result.catalog.commands.map((def) => def.id))
   const hostLabels = new Map(result.catalog.hosts.map((host) => [host.id, host.label]))
@@ -86,12 +77,15 @@ const buildView = async (opts?: { force?: boolean }) => {
     })
     .sort((a, b) => a.setting.sortOrder - b.setting.sortOrder || a.label.localeCompare(b.label))
 
+  // 読み込めたファイルと読み込めなかったファイルを両方出す。壊れたファイルがあっても
+  // 残りのコマンドは実行できるので、画面も「全滅」ではなく「この分が欠けている」を見せる
   return {
-    ...base,
-    ok: true as const,
-    issues: [] as string[],
+    enabled: envu.server.COMMAND_EXEC_ENABLED,
+    dir: result.dir,
+    loadedAt: result.loadedAt,
     groupOptions,
-    hosts: result.catalog.hosts.map<CommandHostStatus>(buildCommandHostStatus),
+    issues: result.issues,
+    hosts: result.catalog.files.map<CommandHostStatus>(buildCommandHostStatus),
     commands,
   }
 }
@@ -99,8 +93,8 @@ const buildView = async (opts?: { force?: boolean }) => {
 /**
  * コマンド定義と設定の一覧。
  *
- * 定義ファイルが壊れていても画面は開けるようにし、原因をそのまま表示する。
- * 直前の正常な定義は保持しないので、ここでエラーが出ている間はコマンドを実行できない。
+ * 読み込めなかったファイルがあっても画面は開けるようにし、原因をそのまま表示する。
+ * 除外されたファイルのコマンドは、直せるまで一覧にも出ず実行もできない。
  */
 export const getCommandDefsAction = safeAuthAction
   .metadata({ actionName: 'getCommandDefs', role: 'admin' })
@@ -134,7 +128,7 @@ export const updateCommandSettingAction = safeAuthAction
   .inputSchema(scUpdateCommandSetting)
   .action(async ({ parsedInput }) => {
     const result = getCommandCatalog()
-    if (!result.ok || !result.catalog.commands.some((def) => def.id === parsedInput.commandKey)) {
+    if (!result.catalog.commands.some((def) => def.id === parsedInput.commandKey)) {
       throw errInvalidOperation()
     }
     await setCommandSetting(parsedInput)

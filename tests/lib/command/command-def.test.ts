@@ -18,12 +18,11 @@ const host = {
 
 const file = (overrides: Record<string, unknown>) => ({
   version: 1,
-  hosts: [host],
+  host,
   commands: [
     {
       id: 'deploy-web',
       label: 'デプロイ',
-      hostId: 'web01',
       executable: '/opt/bin/deploy.sh',
       ...overrides,
     },
@@ -45,8 +44,8 @@ describe('既定値の補完', () => {
     expect(command.requireFreshSession).toBe(false)
     expect(command.args).toEqual([])
     expect(command.inputs).toEqual([])
-    expect(parsed.hosts[0].port).toBe(22)
-    expect(parsed.hosts[0].kind).toBe('ssh')
+    expect(parsed.host.port).toBe(22)
+    expect(parsed.host.kind).toBe('ssh')
   })
 
   it('version が違えば読み込まない', () => {
@@ -58,13 +57,13 @@ describe('鍵ファイル名', () => {
   it.each(['../id_rsa', '..', '.', 'sub/dir/key', '/etc/passwd', '.hidden'])(
     'ディレクトリを辿れる名前は弾く (%s)',
     (identityFile) => {
-      const input = { version: 1, hosts: [{ ...host, identityFile }], commands: [] }
+      const input = { version: 1, host: { ...host, identityFile }, commands: [] }
       expect(scCommandFile.safeParse(input).success).toBe(false)
     },
   )
 
   it('英数字始まりの単純なファイル名は通す', () => {
-    const input = { version: 1, hosts: [{ ...host, identityFile: 'ops_ed25519' }], commands: [] }
+    const input = { version: 1, host: { ...host, identityFile: 'ops_ed25519' }, commands: [] }
     expect(scCommandFile.safeParse(input).success).toBe(true)
   })
 })
@@ -131,21 +130,39 @@ describe('引数の文字集合', () => {
   })
 })
 
-describe('参照の整合', () => {
-  it('未定義のホストを参照していれば弾く', () => {
-    const issues = issuesOf({ ...file({}), hosts: [] })
-    expect(issues.some((issue) => issue.includes('未定義のホスト web01'))).toBe(true)
+describe('書けない項目', () => {
+  it('commands[].hostId は弾き、理由を出す', () => {
+    // ホストはファイル単位で決まる。書けてしまうと「どのホストで動くか」がファイルを見ても分からない
+    const issues = issuesOf(file({ hostId: 'web01' }))
+    expect(issues.some((issue) => issue.includes('commands[].hostId は書けない'))).toBe(true)
   })
 
+  it('トップレベルの hosts 配列は弾き、理由を出す', () => {
+    const issues = issuesOf({ ...file({}), hosts: [host] })
+    expect(issues.some((issue) => issue.includes('1 ファイルに 1 ホストを host へ書く'))).toBe(true)
+  })
+
+  it('host が無ければ弾く', () => {
+    const { host: _host, ...rest } = file({})
+    expect(scCommandFile.safeParse(rest).success).toBe(false)
+  })
+
+  it('綴りを間違えた項目は黙って捨てずに弾く', () => {
+    // 既定値が効かないだけの状態で読み込めてしまうと、定義した本人が気付けない
+    const input = file({
+      inputs: [
+        { type: 'select', key: 'env', label: '環境', options: [{ value: 'stg', label: 'stg' }], default: 'stg' },
+      ],
+    })
+    expect(issuesOf(input).some((issue) => issue.includes('default'))).toBe(true)
+  })
+})
+
+describe('参照の整合', () => {
   it('コマンドIDの重複を弾く', () => {
     const base = file({})
     const issues = issuesOf({ ...base, commands: [base.commands[0], base.commands[0]] })
     expect(issues.some((issue) => issue.includes('コマンドID deploy-web が重複'))).toBe(true)
-  })
-
-  it('ホストIDの重複を弾く', () => {
-    const issues = issuesOf({ ...file({}), hosts: [host, host] })
-    expect(issues.some((issue) => issue.includes('ホストID web01 が重複'))).toBe(true)
   })
 
   it('入力項目のキーの重複を弾く', () => {

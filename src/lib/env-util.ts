@@ -234,9 +234,14 @@ const server = {
     return getEnvBoolean('COMMAND_EXEC_ENABLED')
   },
 
-  /** コマンド定義(YAML)のパス。運用者が read-only でマウントする */
-  get COMMAND_DEF_PATH() {
-    return getEnv('COMMAND_DEF_PATH', { default: '/app/config/commands.yaml' })
+  /**
+   * コマンド定義(YAML)を置くディレクトリ。運用者が read-only でマウントする。
+   *
+   * 直下の `*.yaml` / `*.yml` が対象で、1 ファイルに 1 ホストを書く。
+   * ファイルパスではなくディレクトリを指す。
+   */
+  get COMMAND_DEF_DIR() {
+    return getEnv('COMMAND_DEF_DIR', { default: '/app/config/commands' })
   },
 
   /**

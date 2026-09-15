@@ -51,6 +51,8 @@ export const CommandHostTable: FC<{ hosts: CommandHostStatus[] }> = ({ hosts }) 
           <FlexRow className='flex-wrap items-center'>
             <span className='font-semibold'>{host.label}</span>
             <span className='text-foreground-500 font-mono text-xs'>{host.id}</span>
+            {/* 読み込めなかったファイルの一覧と突き合わせられるようにする */}
+            <span className='text-foreground-500 font-mono text-xs break-all'>{host.fileName}</span>
             <span className='grow' />
             <ReadyChip label={t('command_host_identity')} ready={host.identityReady} />
             <ReadyChip label={t('command_host_known_hosts')} ready={host.knownHostsReady} />

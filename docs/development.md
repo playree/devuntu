@@ -147,7 +147,7 @@ pnpm setup:env --dir /tmp/setup-test --dry-run
 
 ```sh
 COMMAND_EXEC_ENABLED=true \
-COMMAND_DEF_PATH=$PWD/.work/command-config/commands.yaml \
+COMMAND_DEF_DIR=$PWD/.work/command-config/commands \
 COMMAND_SSH_DIR=$PWD/.work/command-config/ssh \
 pnpm dev
 ```

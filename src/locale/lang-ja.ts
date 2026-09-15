@@ -111,7 +111,8 @@ export const ja: DefaultLocaleItems = {
   command_allowed_groups_description:
     '指定しない場合は管理者のみ実行できます。連携設定とは異なり、空欄は「全員に許可」ではありません。',
   command_confirm_required: '実行前の確認',
-  command_def_path: '定義ファイル',
+  command_def_dir: '定義ディレクトリ',
+  command_def_loaded: '読み込み ${loaded} ファイル / 除外 ${excluded} ファイル',
   command_def_reload: '定義を再読み込み',
   command_definition: 'コマンド定義',
   command_disabled: 'コマンド実行機能は無効です。環境変数 COMMAND_EXEC_ENABLED を有効にしてください。',
@@ -129,7 +130,7 @@ export const ja: DefaultLocaleItems = {
   command_input_type_radio: 'ラジオ',
   command_input_type_select: 'リスト選択',
   command_inputs: '入力項目',
-  command_invalid_def: '定義ファイルを読み込めませんでした。修正するまでコマンドは実行できません。',
+  command_invalid_def: '以下のファイルは読み込めませんでした。修正するまでこれらのコマンドは実行できません。',
   command_manage: 'コマンド管理',
   command_no_available: '実行できるコマンドがありません。',
   command_no_def: '定義されているコマンドがありません。',

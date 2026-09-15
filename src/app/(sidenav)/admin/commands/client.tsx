@@ -84,24 +84,38 @@ const CommandDefsBody: FC<{
       {!data.enabled && <NoticePanel status='warning'>{t('command_disabled')}</NoticePanel>}
 
       <div className='text-foreground-500 text-xs'>
-        {t('command_def_path')}: <span className='font-mono break-all'>{data.path}</span>
+        {t('command_def_dir')}: <span className='font-mono break-all'>{data.dir}</span>
+        {' / '}
+        {t('command_def_loaded', { loaded: data.hosts.length, excluded: data.issues.length })}
         {' / '}
         {dayformat(data.loadedAt, 'tz-minute', tz)}
       </div>
 
-      {data.ok ? (
-        <>
-          <CommandHostTable hosts={data.hosts} />
-          {data.commands.length === 0 ? (
-            <NoticePanel>{t('command_no_def')}</NoticePanel>
-          ) : (
-            <CommandDefTable commands={data.commands} onEdit={onEdit} />
-          )}
-        </>
-      ) : (
+      {/* 読み込めなかったファイルがあっても、読み込めた分は使えるので一覧は常に出す */}
+      {data.issues.length > 0 && (
         <NoticePanel status='danger' title={t('command_invalid_def')}>
-          {data.issues.join('\n')}
+          <FlexCol className='gap-1'>
+            {data.issues.map((issue) => (
+              <div key={issue.fileName ?? ''}>
+                <span className='font-mono font-semibold break-all'>{issue.fileName ?? t('command_def_dir')}</span>
+                <ul className='list-disc pl-5'>
+                  {issue.messages.map((message) => (
+                    <li key={message} className='break-all'>
+                      {message}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </FlexCol>
         </NoticePanel>
+      )}
+
+      <CommandHostTable hosts={data.hosts} />
+      {data.commands.length === 0 ? (
+        <NoticePanel>{t('command_no_def')}</NoticePanel>
+      ) : (
+        <CommandDefTable commands={data.commands} onEdit={onEdit} />
       )}
     </FlexCol>
   )

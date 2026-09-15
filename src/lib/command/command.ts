@@ -54,8 +54,25 @@ export const COMMAND_TIMEOUT_DEFAULT_SEC = 900
 export const MAX_COMMAND_INPUTS = 20
 export const MAX_COMMAND_OPTIONS = 200
 export const MAX_COMMAND_ARGS = 50
-export const MAX_COMMAND_HOSTS = 100
+
+/** 読み込む定義ファイルの数の上限(1 ファイル 1 ホストなのでホスト数の上限でもある) */
+export const MAX_COMMAND_DEF_FILES = 100
+
+/** 1 ファイルに書けるコマンドの数の上限。スキーマ側で見る */
+export const MAX_COMMAND_DEFS_PER_FILE = 100
+
+/** ディレクトリ全体で読み込むコマンドの数の上限。ファイルをまたぐのでマージ後に見る */
 export const MAX_COMMAND_DEFS = 200
+
+/**
+ * 走査するディレクトリエントリ数の上限。
+ *
+ * 指定を誤って巨大なディレクトリを指した場合に、間隔ごとに数万回の stat が走るのを防ぐ。
+ */
+export const MAX_COMMAND_DEF_ENTRIES = 500
+
+/** 定義ファイルとして読む拡張子 */
+export const COMMAND_DEF_EXTENSIONS = ['.yaml', '.yml'] as const
 
 /** multiselect で選べる数の上限の既定 */
 export const COMMAND_MULTISELECT_MAX_DEFAULT = 20
@@ -233,6 +250,7 @@ export type CommandDef = {
   id: string
   label: string
   description?: string
+  /** YAML には書かない。1 ファイル 1 ホストなので、カタログがそのファイルの host.id を入れる */
   hostId: string
   executable: string
   args: string[]
@@ -245,11 +263,12 @@ export type CommandDef = {
   sortOrder: number
 }
 
-/** 定義ファイル全体 */
+/** 定義ファイル 1 件。ホストは 1 ファイルに 1 つで、そのファイルのコマンドはすべてこのホストで動く */
 export type CommandFile = {
   version: number
-  hosts: CommandHost[]
-  commands: CommandDef[]
+  host: CommandHost
+  /** ファイルの中では hostId を書かないので、その分だけ型を落とす */
+  commands: Omit<CommandDef, 'hostId'>[]
 }
 
 /** 入力値。フリー入力が無いので文字列 / 文字列配列 / 真偽値しか取らない */

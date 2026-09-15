@@ -60,8 +60,7 @@ export const getAvailableCommandsAction = safeAuthAction
   .action(async ({ ctx: { user } }) => {
     // 一覧に出るのに実行すると弾かれる状態を作らないよう、実行できるものだけを返す
     const available = await listAvailableCommands(user, 'execute')
-    const result = getCommandCatalog()
-    const hostLabels = new Map(result.ok ? result.catalog.hosts.map((host) => [host.id, host.label]) : [])
+    const hostLabels = new Map(getCommandCatalog().catalog.hosts.map((host) => [host.id, host.label]))
 
     return available.map(({ def }) => toView(def, hostLabels.get(def.hostId) ?? null))
   })

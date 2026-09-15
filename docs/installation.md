@@ -302,7 +302,7 @@ docker compose run --rm --entrypoint node tools -e "const {generateKeyPairSync}=
 画面からあらかじめ定義した処理を実行する機能。**既定では無効**で、次の3つが揃って初めて動く。
 
 1. `COMMAND_EXEC_ENABLED=true`
-2. 定義ファイル(`COMMAND_DEF_PATH`、既定 `/app/config/commands.yaml`)の配置
+2. 定義ファイルの配置(`COMMAND_DEF_DIR` の直下、既定 `/app/config/commands`)
 3. `/admin/commands` でのコマンドごとの有効化
 
 定義ファイルと SSH の鍵はコンテナへ read-only でマウントする。`compose.yaml` の `devuntu` サービスへ:
@@ -317,7 +317,9 @@ volumes:
 
 ```text
 /opt/devuntu/config/
-├── commands.yaml       # コマンドの定義
+├── commands/
+│   ├── web01.yaml      # コマンドの定義(1ファイル1ホスト)
+│   └── db01.yaml
 └── ssh/
     ├── ops_ed25519     # 秘密鍵(0600)。パスフレーズ無し
     └── known_hosts     # 接続先のホスト鍵。登録が無いホストへは接続できない
