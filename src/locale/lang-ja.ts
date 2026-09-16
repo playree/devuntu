@@ -85,7 +85,7 @@ export const ja: DefaultLocaleItems = {
   board: 'ボード',
   board_groups: 'グループアサイン',
   board_key: 'ボードキー',
-  board_members: 'ボードメンバー',
+  board_members: 'ユーザーアサイン',
   board_notify_event_agent_run: 'エージェント実行結果',
   board_notify_event_ticket_assigned: 'チケットの担当者変更',
   board_notify_event_ticket_completed: 'チケット完了',
@@ -162,7 +162,7 @@ export const ja: DefaultLocaleItems = {
   command_target_groups: 'グループアサイン',
   command_target_identity: '秘密鍵',
   command_target_known_hosts: 'known_hosts',
-  command_target_members: 'ターゲットのメンバー',
+  command_target_members: 'ユーザーアサイン',
   command_target_no_member: 'このターゲットにアサインされたユーザーはいません。',
   command_target_orphan: '定義に存在しないターゲット',
   command_target_orphan_description:

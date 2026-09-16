@@ -85,7 +85,7 @@ export const en: LocaleItems = {
   board: 'Board',
   board_groups: 'Group Assignment',
   board_key: 'Board Key',
-  board_members: 'Board Members',
+  board_members: 'User Assignment',
   board_notify_event_agent_run: 'Agent run result',
   board_notify_event_ticket_assigned: 'Ticket assignee change',
   board_notify_event_ticket_completed: 'Ticket completion',
@@ -161,7 +161,7 @@ export const en: LocaleItems = {
   command_target_groups: 'Group assignment',
   command_target_identity: 'Private key',
   command_target_known_hosts: 'known_hosts',
-  command_target_members: 'Target members',
+  command_target_members: 'User assignment',
   command_target_no_member: 'No users are assigned to this target.',
   command_target_orphan: 'Targets missing from the definitions',
   command_target_orphan_description:

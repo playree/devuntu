@@ -16,7 +16,7 @@ import { getCommandTargetAssignmentsAction, getCommandTargetMembersAction } from
 import { GroupManage } from './group-manage'
 import { TargetMembers } from './target-members'
 
-const defaultExpandedKeys = new Set(['command_target_members'])
+const defaultExpandedKeys = new Set(['command_target_members', 'command_target_groups'])
 
 /**
  * ターゲットのアサイン編集(管理者のみ)。
