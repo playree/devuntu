@@ -197,10 +197,19 @@ export const listAvailableCommands = async (
 }
 
 /**
- * メニューの出し分け用。1つでも扱えるターゲットがあるか。
+ * メニューの出し分け用。1つでも行き先があるか。
  *
- * 「実行できるコマンドがあるか」ではないのは、コマンドが 0 件のターゲットでも
- * オーナーは定義を作りに行く必要があるため。
+ * 「アサインされたターゲットがあるか」だけでは足りない。コマンドが 0 件のターゲットに
+ * member をアサインすると、実行するものも設定への導線も無い画面へ送ることになる。
+ * オーナーは空のターゲットでも定義を作りに行く必要があるので、そちらは出す。
  */
-export const canUseAnyCommand = async (actor: Actor): Promise<boolean> =>
-  (await listCommandTargetsForActor(actor)).length > 0
+export const canUseAnyCommand = async (actor: Actor): Promise<boolean> => {
+  const targets = await listCommandTargetsForActor(actor)
+  if (targets.length === 0) {
+    // 機能が無効なときもここに入る。カタログを読みに行かせない
+    return false
+  }
+
+  const commandTargetKeys = new Set(getCommandCatalog().catalog.commands.map((command) => command.targetId))
+  return targets.some(({ status, access }) => access.role === 'owner' || commandTargetKeys.has(status.id))
+}

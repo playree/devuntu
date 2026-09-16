@@ -224,4 +224,30 @@ describe('一覧', () => {
     expect(await listCommandTargetsForActor(user)).toHaveLength(1)
     expect(await canUseAnyCommand(user)).toBe(true)
   })
+
+  it('コマンドが 0 件のターゲットの member にはメニューを出さない(できることが無い)', async () => {
+    // 実行するものも設定への導線も無いので、開いても行き止まりになる
+    setCatalog([], ['web01'])
+    setMembers([{ targetKey: 'web01', role: 'member' }])
+
+    expect(await listCommandTargetsForActor(user)).toHaveLength(1)
+    expect(await canUseAnyCommand(user)).toBe(false)
+  })
+
+  it('グループ経由の member も同じに扱う', async () => {
+    setCatalog([], ['web01'])
+    setGroupTargets(['web01'])
+
+    expect(await canUseAnyCommand(user)).toBe(false)
+  })
+
+  it('コマンドを持つターゲットがあれば member にも出す', async () => {
+    setCatalog([def('deploy-web', 'web01')], ['web01', 'db01'])
+    setMembers([
+      { targetKey: 'db01', role: 'member' },
+      { targetKey: 'web01', role: 'member' },
+    ])
+
+    expect(await canUseAnyCommand(user)).toBe(true)
+  })
 })
