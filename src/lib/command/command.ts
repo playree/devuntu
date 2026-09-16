@@ -1,5 +1,5 @@
 /**
- * コマンド実行の共通定義(クライアント / サーバー共用)
+ * リモート実行の共通定義(クライアント / サーバー共用)
  *
  * NOTE: このファイルはクライアント('use client')からも import されるため、
  * `node:` モジュールや環境変数を持ち込まない。定義ファイルの読み込みは `command-catalog.ts`、
@@ -10,7 +10,7 @@
 export const COMMAND_DEF_VERSION = 1
 
 /**
- * コマンド / 実行先 / 入力項目の識別子。
+ * コマンド / ターゲット / 入力項目の識別子。
  * 英数字始まりに固定し、`..` のような相対パス片が紛れ込めないようにする。
  */
 export const COMMAND_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{1,63}$/
@@ -37,7 +37,7 @@ export const COMMAND_PLACEHOLDER_PATTERN = /^\{\{([a-z0-9][a-z0-9_-]{1,63})\}\}$
 /** 部分埋め込み(`--flag={{env}}` のような書き方)を検出するための緩いパターン */
 export const COMMAND_PLACEHOLDER_LOOSE_PATTERN = /\{\{.*?\}\}/
 
-/** 実行先の種別。v1 は SSH のみで、ホスト側実行もコンテナ内実行も SSH 経由で表現する */
+/** ターゲットの種別。v1 は SSH のみで、ホスト側実行もコンテナ内実行も SSH 経由で表現する */
 export const COMMAND_TARGET_KINDS = ['ssh'] as const
 export type CommandTargetKind = (typeof COMMAND_TARGET_KINDS)[number]
 
@@ -55,7 +55,7 @@ export const MAX_COMMAND_INPUTS = 20
 export const MAX_COMMAND_OPTIONS = 200
 export const MAX_COMMAND_ARGS = 50
 
-/** 読み込む定義ファイルの数の上限(1 ファイル 1 実行先なので実行先の数の上限でもある) */
+/** 読み込む定義ファイルの数の上限(1 ファイル 1 ターゲットなのでターゲットの数の上限でもある) */
 export const MAX_COMMAND_DEF_FILES = 100
 
 /** 1 ファイルに書けるコマンドの数の上限。スキーマ側で見る */
@@ -224,7 +224,28 @@ export const COMMAND_DEF_READ_ONLY = 'COMMAND_DEF_READ_ONLY'
 /** 現物が壊れている、または書こうとした内容が検証を通らない */
 export const COMMAND_DEF_INVALID = 'COMMAND_DEF_INVALID'
 
-/** 実行先の定義。identityFile などの秘密は画面にも API 応答にも出さない */
+/* -------------------------------------------------------------------------------------------------
+ * ターゲットの権限
+ * -----------------------------------------------------------------------------------------------*/
+
+/** ターゲット内でのロール。Prisma の CommandTargetMemberRole と一致させる */
+export type CommandTargetRole = 'owner' | 'member'
+
+/**
+ * ターゲットの実効ロールを解決する。
+ * - 直接メンバー(CommandTargetMember)のロールが最優先
+ * - グループ経由(CommandTargetGroup)は常に member 相当
+ * - どちらも無ければ null(アクセス不可)
+ *
+ * 管理者特権はここに含めない。管理者にできるのはアサインの操作だけで、
+ * アサインされていないターゲットのコマンドは管理者でも実行できない。
+ */
+export const resolveCommandTargetRole = (
+  directRole: CommandTargetRole | null,
+  hasGroupAccess: boolean,
+): CommandTargetRole | null => directRole ?? (hasGroupAccess ? 'member' : null)
+
+/** ターゲットの定義。identityFile などの秘密は画面にも API 応答にも出さない */
 export type CommandTarget = {
   id: string
   label: string
@@ -264,7 +285,7 @@ export type CommandDef = {
   id: string
   label: string
   description?: string
-  /** YAML には書かない。1 ファイル 1 実行先なので、カタログがそのファイルの target.id を入れる */
+  /** YAML には書かない。1 ファイル 1 ターゲットなので、カタログがそのファイルの target.id を入れる */
   targetId: string
   executable: string
   args: string[]
@@ -277,7 +298,7 @@ export type CommandDef = {
   sortOrder: number
 }
 
-/** 定義ファイル 1 件。実行先は 1 ファイルに 1 つで、そのファイルのコマンドはすべてこの実行先で動く */
+/** 定義ファイル 1 件。ターゲットは 1 ファイルに 1 つで、そのファイルのコマンドはすべてこのターゲットで動く */
 export type CommandFile = {
   version: number
   target: CommandTarget

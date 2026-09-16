@@ -4,8 +4,8 @@
  * 定義の本体はサーバー上の YAML に置き、画面(DB)では有効化と許可グループだけを持つ。
  * 画面から定義そのものを作れないようにすることで、Web 経由で任意のコマンドを仕込む経路を作らない。
  *
- * 定義は `COMMAND_DEF_DIR` の直下に置いた YAML を**1 ファイル 1 実行先**で並べる。
- * 実行先の追加がファイルの追加になり、実行先の単位で足したり消したりできる。
+ * 定義は `COMMAND_DEF_DIR` の直下に置いた YAML を**1 ファイル 1 ターゲット**で並べる。
+ * ターゲットの追加がファイルの追加になり、ターゲットの単位で足したり消したりできる。
  *
  * キャッシュは stat ベースにしてある。「リロードしろ」を KVS などで全プロセスへ伝播させる代わりに、
  * 各プロセスが自分でディレクトリの中身の変化に追随する。ファイル編集から反映までの遅れは
@@ -13,7 +13,7 @@
  *
  * 読み込みに失敗したファイルは**そのファイルだけを捨てる**(直前の内容は保持しない)。
  * 古い定義で動き続けると「直したつもりが反映されていない」に気付けないため。
- * ただし 1 ファイルの書き損じで全実行先のコマンドが止まるのも困るので、巻き込む範囲はファイル単位に留める。
+ * ただし 1 ファイルの書き損じで全ターゲットのコマンドが止まるのも困るので、巻き込む範囲はファイル単位に留める。
  */
 
 import { createHash } from 'node:crypto'
@@ -61,7 +61,7 @@ export type CommandCatalogIssue = {
 
 export type CommandCatalog = {
   files: CommandCatalogFile[]
-  /** `files` の平坦化。実行先IDから引く経路のために持つ */
+  /** `files` の平坦化。ターゲットIDから引く経路のために持つ */
   targets: CommandTarget[]
   /** `files` の平坦化。並びはファイルをまたいで `compareCommandDefs` で決める */
   commands: CommandDef[]
@@ -197,7 +197,7 @@ export type ParsedCommandFileEntry = { fileName: string; file: ParsedCommandFile
 /**
  * 読み込めたファイルを 1 つのカタログへまとめる。
  *
- * 実行先IDとコマンドIDは**ディレクトリ全体で一意**でなければならない。コマンドIDは実行履歴の
+ * ターゲットIDとコマンドIDは**ディレクトリ全体で一意**でなければならない。コマンドIDは実行履歴の
  * `commandKey` と多重実行の占有キーの素になるので、重複したまま片方を採ると
  * 「履歴に残ったキー」と「実際に走った実行ファイル」が食い違う。
  *
@@ -240,7 +240,7 @@ export const mergeCommandFiles = (
       })
     })
   }
-  reportDuplicates(targetOwners, '実行先ID')
+  reportDuplicates(targetOwners, 'ターゲットID')
   reportDuplicates(commandOwners, 'コマンドID')
 
   const files: CommandCatalogFile[] = []
@@ -259,7 +259,7 @@ export const mergeCommandFiles = (
       fileName,
       revision,
       target: file.target,
-      // targetId は YAML に書かせず、ここでファイルの実行先を入れる
+      // targetId は YAML に書かせず、ここでファイルのターゲットを入れる
       commands: file.commands.map((command) => ({ ...command, targetId: file.target.id })),
     })
   })
@@ -380,7 +380,7 @@ export const listCommandDefs = (): CommandDef[] => {
 export const findCommandDef = (commandKey: string): CommandDef | null =>
   listCommandDefs().find((command) => command.id === commandKey) ?? null
 
-/** 実行先IDから定義を引く。見つからなければ null */
+/** ターゲットIDから定義を引く。見つからなければ null */
 export const findCommandTarget = (targetId: string): CommandTarget | null =>
   getCommandCatalog().catalog.targets.find((target) => target.id === targetId) ?? null
 
@@ -401,7 +401,7 @@ export const resolveSshFilePath = (fileName: string): string | null => {
   return path
 }
 
-/** known_hosts の絶対パス。実行先ごとの指定が無ければ全体の既定を使う */
+/** known_hosts の絶対パス。ターゲットごとの指定が無ければ全体の既定を使う */
 export const resolveKnownHostsPath = (target: CommandTarget): string | null => {
   if (target.knownHostsFile) {
     return resolveSshFilePath(target.knownHostsFile)
@@ -453,10 +453,10 @@ const isReadable = (path: string | null): boolean => {
 }
 
 /**
- * 管理画面へ出す実行先の状態。
+ * 管理画面へ出すターゲットの状態。
  *
  * 接続先ホスト名・ユーザー・鍵のパスは秘密として扱い、準備できているかどうかだけを返す。
- * known_hosts が無い実行先は fail closed で使用不可になるので、その場で気付けるようにする。
+ * known_hosts が無いターゲットは fail closed で使用不可になるので、その場で気付けるようにする。
  *
  * `fileName` を載せるのは、読み込めなかったファイルの一覧と突き合わせられるようにするため。
  */
@@ -464,7 +464,7 @@ export type CommandTargetStatus = {
   id: string
   label: string
   fileName: string
-  /** この実行先の `commands` を画面から編集してよいか */
+  /** このターゲットの `commands` を画面から編集してよいか */
   editable: boolean
   /** 画面が見た時点の指紋。書き戻すときにディスクの現物と突き合わせる */
   revision: string

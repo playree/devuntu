@@ -538,6 +538,23 @@ export type EnumNotifyChannelWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumNotifyChannelFilter<$PrismaModel>
 }
 
+export type EnumCommandTargetMemberRoleFilter<$PrismaModel = never> = {
+  equals?: $Enums.CommandTargetMemberRole | Prisma.EnumCommandTargetMemberRoleFieldRefInput<$PrismaModel>
+  in?: $Enums.CommandTargetMemberRole[] | Prisma.ListEnumCommandTargetMemberRoleFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CommandTargetMemberRole[] | Prisma.ListEnumCommandTargetMemberRoleFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCommandTargetMemberRoleFilter<$PrismaModel> | $Enums.CommandTargetMemberRole
+}
+
+export type EnumCommandTargetMemberRoleWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CommandTargetMemberRole | Prisma.EnumCommandTargetMemberRoleFieldRefInput<$PrismaModel>
+  in?: $Enums.CommandTargetMemberRole[] | Prisma.ListEnumCommandTargetMemberRoleFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CommandTargetMemberRole[] | Prisma.ListEnumCommandTargetMemberRoleFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCommandTargetMemberRoleWithAggregatesFilter<$PrismaModel> | $Enums.CommandTargetMemberRole
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCommandTargetMemberRoleFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCommandTargetMemberRoleFilter<$PrismaModel>
+}
+
 export type EnumCommandRunStatusFilter<$PrismaModel = never> = {
   equals?: $Enums.CommandRunStatus | Prisma.EnumCommandRunStatusFieldRefInput<$PrismaModel>
   in?: $Enums.CommandRunStatus[] | Prisma.ListEnumCommandRunStatusFieldRefInput<$PrismaModel>
@@ -1053,6 +1070,23 @@ export type NestedEnumNotifyChannelWithAggregatesFilter<$PrismaModel = never> = 
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumNotifyChannelFilter<$PrismaModel>
   _max?: Prisma.NestedEnumNotifyChannelFilter<$PrismaModel>
+}
+
+export type NestedEnumCommandTargetMemberRoleFilter<$PrismaModel = never> = {
+  equals?: $Enums.CommandTargetMemberRole | Prisma.EnumCommandTargetMemberRoleFieldRefInput<$PrismaModel>
+  in?: $Enums.CommandTargetMemberRole[] | Prisma.ListEnumCommandTargetMemberRoleFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CommandTargetMemberRole[] | Prisma.ListEnumCommandTargetMemberRoleFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCommandTargetMemberRoleFilter<$PrismaModel> | $Enums.CommandTargetMemberRole
+}
+
+export type NestedEnumCommandTargetMemberRoleWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CommandTargetMemberRole | Prisma.EnumCommandTargetMemberRoleFieldRefInput<$PrismaModel>
+  in?: $Enums.CommandTargetMemberRole[] | Prisma.ListEnumCommandTargetMemberRoleFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CommandTargetMemberRole[] | Prisma.ListEnumCommandTargetMemberRoleFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCommandTargetMemberRoleWithAggregatesFilter<$PrismaModel> | $Enums.CommandTargetMemberRole
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCommandTargetMemberRoleFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCommandTargetMemberRoleFilter<$PrismaModel>
 }
 
 export type NestedEnumCommandRunStatusFilter<$PrismaModel = never> = {

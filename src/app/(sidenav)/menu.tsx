@@ -109,7 +109,7 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
   const { t } = useLocale()
   // Google連携が利用可能なユーザーのみカレンダーを表示する
   const googleAvailable = useContext(GoogleAvailableContext)
-  // 実行できるコマンドを持つユーザーのみコマンド実行を表示する
+  // アサインされたターゲットを持つユーザーのみリモート実行を表示する
   const commandAvailable = useContext(CommandAvailableContext)
 
   return (
@@ -194,7 +194,7 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
           </AccordionSection>
 
           {commandAvailable && (
-            <MenuButton // コマンド実行
+            <MenuButton // リモート実行
               to='/commands'
               text={t('command_exec')}
               icon={<CommandLineIcon />}
@@ -238,7 +238,7 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
               icon={<ServerStackIcon />}
               closeMenu={closeMenu}
             />
-            <MenuButton // コマンド管理
+            <MenuButton // リモート管理
               to='/admin/commands'
               text={t('command_manage')}
               icon={<CommandLineIcon />}

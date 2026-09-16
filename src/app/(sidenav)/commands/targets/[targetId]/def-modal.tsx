@@ -21,9 +21,9 @@ import { type CommandDefView, upsertCommandDefAction } from './server'
 /** 追加のときに出す雛形。最低限の必須項目だけを置き、あとは書き足してもらう */
 const TEMPLATE = ['id: my-command', 'label: コマンド名', 'executable: /opt/bin/example.sh'].join('\n')
 
-/** 編集の宛先。追加はファイルだけ、更新は置き換える 1 件も持つ */
+/** 編集の宛先。追加はターゲットだけ、更新は置き換える 1 件も持つ */
 export type CommandDefTarget = {
-  fileName: string
+  targetKey: string
   revision: string
   targetLabel: string
   /** 更新するコマンド。追加なら null */
@@ -76,7 +76,7 @@ export const CommandDefModal: FC<ModalBaseProps & { target: CommandDefTarget }> 
         try {
           const result = await parseAction(
             upsertCommandDefAction({
-              fileName: target.fileName,
+              targetKey: target.targetKey,
               revision: target.revision,
               replaceId,
               command: parsed.data,
@@ -133,11 +133,8 @@ export const CommandDefModal: FC<ModalBaseProps & { target: CommandDefTarget }> 
       }
     >
       <FlexCol>
-        <div className='text-foreground-500 text-xs'>
-          <span className='font-mono break-all'>{target.fileName}</span> / {target.targetLabel}
-        </div>
+        <div className='text-foreground-500 text-xs'>{target.targetLabel}</div>
         <YamlInput defaultValue={text} onChange={setText} minRows={16} />
-        {replaceId && <p className='text-foreground-500 text-xs'>{t('command_def_id_changed')}</p>}
         {messages.length > 0 && (
           <NoticePanel status='danger'>
             <ul className='list-inside list-disc text-xs'>

@@ -41,7 +41,7 @@ const {
   resolveSshFilePath,
 } = await import('@/lib/command/command-catalog')
 
-/** 実行先1件ぶんの定義ファイル。コマンドは `id: sortOrder` の組で与える */
+/** ターゲット1件ぶんの定義ファイル。コマンドは `id: sortOrder` の組で与える */
 const yaml = (targetId: string, commands: [string, number][]) =>
   [
     'version: 1',
@@ -169,7 +169,7 @@ describe('読み込み', () => {
     expect(result.catalog.targets.map((target) => target.id).sort()).toEqual(['db01', 'web01'])
   })
 
-  it('コマンドにそのファイルの実行先を紐づける', () => {
+  it('コマンドにそのファイルのターゲットを紐づける', () => {
     // targetId は YAML に書かないので、ファイルの境界が唯一の手がかりになる
     write('web01.yaml', yaml('web01', [['deploy-web', 1]]))
     write('db01.yaml', yaml('db01', [['dump-db', 1]]))
@@ -226,14 +226,14 @@ describe('読み込み', () => {
 })
 
 describe('ファイルをまたぐ重複', () => {
-  it('実行先IDが重複していればどちらのファイルも読まない', () => {
+  it('ターゲットIDが重複していればどちらのファイルも読まない', () => {
     write('app-web.yaml', yaml('web01', [['deploy-app', 1]]))
     write('web01.yaml', yaml('web01', [['deploy-web', 1]]))
 
     const result = getCommandCatalog({ force: true })
     expect(result.catalog.commands).toEqual([])
     expect(result.issues.map((issue) => issue.fileName)).toEqual(['app-web.yaml', 'web01.yaml'])
-    expect(result.issues[0].messages[0]).toContain('実行先ID web01')
+    expect(result.issues[0].messages[0]).toContain('ターゲットID web01')
   })
 
   it('コマンドIDが重複していればどちらのファイルも読まない', () => {
@@ -337,7 +337,7 @@ describe('鍵ファイルのパス解決', () => {
   })
 })
 
-describe('実行先の状態', () => {
+describe('ターゲットの状態', () => {
   const file = {
     fileName: 'web01.yaml',
     revision: '0123456789abcdef',

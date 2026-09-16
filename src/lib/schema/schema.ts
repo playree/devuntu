@@ -340,18 +340,40 @@ export const scUpdateIntegrationSettings = z.object({
 export type UpdateIntegrationSettings = z.infer<typeof scUpdateIntegrationSettings>
 
 /**
- * コマンドごとの実行設定。
+ * ターゲットの識別子。定義ファイルの `target.id` で、DB の UUID ではない。
  *
- * 連携設定と似た形だが、`allowedGroupIds` の空は「全ユーザー許可」ではなく
- * **管理者のみ**を意味する(`src/lib/command/command-access.ts`)。
+ * アサインはこのキーで持つ(ターゲットの実体は YAML 側にあり DB に行が無い)。
  */
-export const scUpdateCommandSetting = z.object({
-  commandKey: z.string().regex(COMMAND_ID_PATTERN, el('@invalid_command_input')),
-  enabled: z.boolean(),
-  sortOrder: z.number().int().min(-9999).max(9999),
-  allowedGroupIds: z.array(z.uuidv7()),
+export const zCommandTargetKey = z.string().regex(COMMAND_ID_PATTERN, el('@invalid_command_input'))
+
+/** ターゲットのロール。Prisma の CommandTargetMemberRole / command.ts の CommandTargetRole と一致させる */
+export const zCommandTargetRole = z.enum(['owner', 'member'])
+
+export const scCommandTargetKey = z.object({ targetKey: zCommandTargetKey })
+export type CommandTargetKeyIn = z.input<typeof scCommandTargetKey>
+
+/** ターゲットへのユーザー単位のアサイン。追加と更新で同じ形 */
+export const scUpsertCommandTargetMember = z.object({
+  targetKey: zCommandTargetKey,
+  // 未選択(空文字)のままの送信をフォーム側でも弾けるようメッセージを付ける
+  userId: z.uuidv7(el('@required_field')),
+  role: zCommandTargetRole,
 })
-export type UpdateCommandSetting = z.infer<typeof scUpdateCommandSetting>
+export type UpsertCommandTargetMember = z.infer<typeof scUpsertCommandTargetMember>
+export type UpsertCommandTargetMemberIn = z.input<typeof scUpsertCommandTargetMember>
+
+/** 直接メンバー1行の解除。グループ経由メンバーには使えない */
+export const scRemoveCommandTargetMember = z.object({
+  targetKey: zCommandTargetKey,
+  userId: z.uuidv7(),
+})
+
+/** グループ単位のアサイン。総入れ替えで受け取る */
+export const scSetCommandTargetGroups = z.object({
+  targetKey: zCommandTargetKey,
+  groupIds: z.array(z.uuidv7()).default([]),
+})
+export type SetCommandTargetGroupsIn = z.input<typeof scSetCommandTargetGroups>
 
 /**
  * コマンドの実行要求。

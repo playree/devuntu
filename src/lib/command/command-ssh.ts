@@ -94,7 +94,7 @@ export const buildSshArgs = (target: SshTarget, remoteCommand: string): string[]
 /**
  * ホスト定義から接続先を解決する。
  *
- * 鍵か known_hosts のパスが解決できない実行先は使えない。パスの検証は
+ * 鍵か known_hosts のパスが解決できないターゲットは使えない。パスの検証は
  * `command-catalog.ts` 側(`COMMAND_SSH_DIR` の外を指していないか)で行う。
  */
 export const resolveSshTarget = (target: CommandTarget): SshTarget | null => {

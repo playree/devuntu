@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 }
 
 /**
- * コマンド実行ページ
+ * リモート実行ページ
  */
 const CommandsPage: FC = async () => {
   return <CommandsClient />

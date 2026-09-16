@@ -440,8 +440,8 @@ export const ModelName = {
   BoardNotifySetting: 'BoardNotifySetting',
   NotifyOutbox: 'NotifyOutbox',
   NotifyDelivery: 'NotifyDelivery',
-  CommandSetting: 'CommandSetting',
-  CommandAllowedGroup: 'CommandAllowedGroup',
+  CommandTargetMember: 'CommandTargetMember',
+  CommandTargetGroup: 'CommandTargetGroup',
   CommandRun: 'CommandRun',
   CommandRunChunk: 'CommandRunChunk'
 } as const
@@ -459,7 +459,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "group" | "userGroup" | "calendarShare" | "calendarBusyTime" | "board" | "boardKeyHistory" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "ticket" | "ticketComment" | "userNotifySetting" | "webPushSubscription" | "boardNotifySetting" | "notifyOutbox" | "notifyDelivery" | "commandSetting" | "commandAllowedGroup" | "commandRun" | "commandRunChunk"
+    modelProps: "user" | "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "group" | "userGroup" | "calendarShare" | "calendarBusyTime" | "board" | "boardKeyHistory" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "ticket" | "ticketComment" | "userNotifySetting" | "webPushSubscription" | "boardNotifySetting" | "notifyOutbox" | "notifyDelivery" | "commandTargetMember" | "commandTargetGroup" | "commandRun" | "commandRunChunk"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -3645,151 +3645,151 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
-    CommandSetting: {
-      payload: Prisma.$CommandSettingPayload<ExtArgs>
-      fields: Prisma.CommandSettingFieldRefs
+    CommandTargetMember: {
+      payload: Prisma.$CommandTargetMemberPayload<ExtArgs>
+      fields: Prisma.CommandTargetMemberFieldRefs
       operations: {
         findUnique: {
-          args: Prisma.CommandSettingFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandSettingPayload> | null
+          args: Prisma.CommandTargetMemberFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandTargetMemberPayload> | null
         }
         findUniqueOrThrow: {
-          args: Prisma.CommandSettingFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandSettingPayload>
+          args: Prisma.CommandTargetMemberFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandTargetMemberPayload>
         }
         findFirst: {
-          args: Prisma.CommandSettingFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandSettingPayload> | null
+          args: Prisma.CommandTargetMemberFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandTargetMemberPayload> | null
         }
         findFirstOrThrow: {
-          args: Prisma.CommandSettingFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandSettingPayload>
+          args: Prisma.CommandTargetMemberFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandTargetMemberPayload>
         }
         findMany: {
-          args: Prisma.CommandSettingFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandSettingPayload>[]
+          args: Prisma.CommandTargetMemberFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandTargetMemberPayload>[]
         }
         create: {
-          args: Prisma.CommandSettingCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandSettingPayload>
+          args: Prisma.CommandTargetMemberCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandTargetMemberPayload>
         }
         createMany: {
-          args: Prisma.CommandSettingCreateManyArgs<ExtArgs>
+          args: Prisma.CommandTargetMemberCreateManyArgs<ExtArgs>
           result: BatchPayload
         }
         createManyAndReturn: {
-          args: Prisma.CommandSettingCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandSettingPayload>[]
+          args: Prisma.CommandTargetMemberCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandTargetMemberPayload>[]
         }
         delete: {
-          args: Prisma.CommandSettingDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandSettingPayload>
+          args: Prisma.CommandTargetMemberDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandTargetMemberPayload>
         }
         update: {
-          args: Prisma.CommandSettingUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandSettingPayload>
+          args: Prisma.CommandTargetMemberUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandTargetMemberPayload>
         }
         deleteMany: {
-          args: Prisma.CommandSettingDeleteManyArgs<ExtArgs>
+          args: Prisma.CommandTargetMemberDeleteManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateMany: {
-          args: Prisma.CommandSettingUpdateManyArgs<ExtArgs>
+          args: Prisma.CommandTargetMemberUpdateManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateManyAndReturn: {
-          args: Prisma.CommandSettingUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandSettingPayload>[]
+          args: Prisma.CommandTargetMemberUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandTargetMemberPayload>[]
         }
         upsert: {
-          args: Prisma.CommandSettingUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandSettingPayload>
+          args: Prisma.CommandTargetMemberUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandTargetMemberPayload>
         }
         aggregate: {
-          args: Prisma.CommandSettingAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateCommandSetting>
+          args: Prisma.CommandTargetMemberAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCommandTargetMember>
         }
         groupBy: {
-          args: Prisma.CommandSettingGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.CommandSettingGroupByOutputType>[]
+          args: Prisma.CommandTargetMemberGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CommandTargetMemberGroupByOutputType>[]
         }
         count: {
-          args: Prisma.CommandSettingCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.CommandSettingCountAggregateOutputType> | number
+          args: Prisma.CommandTargetMemberCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CommandTargetMemberCountAggregateOutputType> | number
         }
       }
     }
-    CommandAllowedGroup: {
-      payload: Prisma.$CommandAllowedGroupPayload<ExtArgs>
-      fields: Prisma.CommandAllowedGroupFieldRefs
+    CommandTargetGroup: {
+      payload: Prisma.$CommandTargetGroupPayload<ExtArgs>
+      fields: Prisma.CommandTargetGroupFieldRefs
       operations: {
         findUnique: {
-          args: Prisma.CommandAllowedGroupFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandAllowedGroupPayload> | null
+          args: Prisma.CommandTargetGroupFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandTargetGroupPayload> | null
         }
         findUniqueOrThrow: {
-          args: Prisma.CommandAllowedGroupFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandAllowedGroupPayload>
+          args: Prisma.CommandTargetGroupFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandTargetGroupPayload>
         }
         findFirst: {
-          args: Prisma.CommandAllowedGroupFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandAllowedGroupPayload> | null
+          args: Prisma.CommandTargetGroupFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandTargetGroupPayload> | null
         }
         findFirstOrThrow: {
-          args: Prisma.CommandAllowedGroupFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandAllowedGroupPayload>
+          args: Prisma.CommandTargetGroupFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandTargetGroupPayload>
         }
         findMany: {
-          args: Prisma.CommandAllowedGroupFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandAllowedGroupPayload>[]
+          args: Prisma.CommandTargetGroupFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandTargetGroupPayload>[]
         }
         create: {
-          args: Prisma.CommandAllowedGroupCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandAllowedGroupPayload>
+          args: Prisma.CommandTargetGroupCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandTargetGroupPayload>
         }
         createMany: {
-          args: Prisma.CommandAllowedGroupCreateManyArgs<ExtArgs>
+          args: Prisma.CommandTargetGroupCreateManyArgs<ExtArgs>
           result: BatchPayload
         }
         createManyAndReturn: {
-          args: Prisma.CommandAllowedGroupCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandAllowedGroupPayload>[]
+          args: Prisma.CommandTargetGroupCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandTargetGroupPayload>[]
         }
         delete: {
-          args: Prisma.CommandAllowedGroupDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandAllowedGroupPayload>
+          args: Prisma.CommandTargetGroupDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandTargetGroupPayload>
         }
         update: {
-          args: Prisma.CommandAllowedGroupUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandAllowedGroupPayload>
+          args: Prisma.CommandTargetGroupUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandTargetGroupPayload>
         }
         deleteMany: {
-          args: Prisma.CommandAllowedGroupDeleteManyArgs<ExtArgs>
+          args: Prisma.CommandTargetGroupDeleteManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateMany: {
-          args: Prisma.CommandAllowedGroupUpdateManyArgs<ExtArgs>
+          args: Prisma.CommandTargetGroupUpdateManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateManyAndReturn: {
-          args: Prisma.CommandAllowedGroupUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandAllowedGroupPayload>[]
+          args: Prisma.CommandTargetGroupUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandTargetGroupPayload>[]
         }
         upsert: {
-          args: Prisma.CommandAllowedGroupUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandAllowedGroupPayload>
+          args: Prisma.CommandTargetGroupUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CommandTargetGroupPayload>
         }
         aggregate: {
-          args: Prisma.CommandAllowedGroupAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateCommandAllowedGroup>
+          args: Prisma.CommandTargetGroupAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCommandTargetGroup>
         }
         groupBy: {
-          args: Prisma.CommandAllowedGroupGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.CommandAllowedGroupGroupByOutputType>[]
+          args: Prisma.CommandTargetGroupGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CommandTargetGroupGroupByOutputType>[]
         }
         count: {
-          args: Prisma.CommandAllowedGroupCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.CommandAllowedGroupCountAggregateOutputType> | number
+          args: Prisma.CommandTargetGroupCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CommandTargetGroupCountAggregateOutputType> | number
         }
       }
     }
@@ -4616,26 +4616,26 @@ export const NotifyDeliveryScalarFieldEnum = {
 export type NotifyDeliveryScalarFieldEnum = (typeof NotifyDeliveryScalarFieldEnum)[keyof typeof NotifyDeliveryScalarFieldEnum]
 
 
-export const CommandSettingScalarFieldEnum = {
+export const CommandTargetMemberScalarFieldEnum = {
   id: 'id',
-  commandKey: 'commandKey',
-  enabled: 'enabled',
-  sortOrder: 'sortOrder',
+  targetKey: 'targetKey',
+  userId: 'userId',
+  role: 'role',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
-export type CommandSettingScalarFieldEnum = (typeof CommandSettingScalarFieldEnum)[keyof typeof CommandSettingScalarFieldEnum]
+export type CommandTargetMemberScalarFieldEnum = (typeof CommandTargetMemberScalarFieldEnum)[keyof typeof CommandTargetMemberScalarFieldEnum]
 
 
-export const CommandAllowedGroupScalarFieldEnum = {
+export const CommandTargetGroupScalarFieldEnum = {
   id: 'id',
-  settingId: 'settingId',
+  targetKey: 'targetKey',
   groupId: 'groupId',
   createdAt: 'createdAt'
 } as const
 
-export type CommandAllowedGroupScalarFieldEnum = (typeof CommandAllowedGroupScalarFieldEnum)[keyof typeof CommandAllowedGroupScalarFieldEnum]
+export type CommandTargetGroupScalarFieldEnum = (typeof CommandTargetGroupScalarFieldEnum)[keyof typeof CommandTargetGroupScalarFieldEnum]
 
 
 export const CommandRunScalarFieldEnum = {
@@ -4980,6 +4980,20 @@ export type ListEnumNotifyChannelFieldRefInput<$PrismaModel> = FieldRefInputType
 
 
 /**
+ * Reference to a field of type 'CommandTargetMemberRole'
+ */
+export type EnumCommandTargetMemberRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CommandTargetMemberRole'>
+    
+
+
+/**
+ * Reference to a field of type 'CommandTargetMemberRole[]'
+ */
+export type ListEnumCommandTargetMemberRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CommandTargetMemberRole[]'>
+    
+
+
+/**
  * Reference to a field of type 'CommandRunStatus'
  */
 export type EnumCommandRunStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CommandRunStatus'>
@@ -5214,8 +5228,8 @@ export type GlobalOmitConfig = {
   boardNotifySetting?: Prisma.BoardNotifySettingOmit
   notifyOutbox?: Prisma.NotifyOutboxOmit
   notifyDelivery?: Prisma.NotifyDeliveryOmit
-  commandSetting?: Prisma.CommandSettingOmit
-  commandAllowedGroup?: Prisma.CommandAllowedGroupOmit
+  commandTargetMember?: Prisma.CommandTargetMemberOmit
+  commandTargetGroup?: Prisma.CommandTargetGroupOmit
   commandRun?: Prisma.CommandRunOmit
   commandRunChunk?: Prisma.CommandRunChunkOmit
 }

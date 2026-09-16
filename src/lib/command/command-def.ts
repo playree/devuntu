@@ -11,7 +11,6 @@
 
 import { z } from 'zod'
 import {
-  COMMAND_DEF_EXTENSIONS,
   COMMAND_DEF_VERSION,
   COMMAND_FILE_NAME_PATTERN,
   COMMAND_ID_PATTERN,
@@ -38,10 +37,6 @@ const zOptionValue = z.string().regex(COMMAND_VALUE_PATTERN, '選択肢の値に
 const zFileName = z
   .string()
   .regex(COMMAND_FILE_NAME_PATTERN, 'ファイル名は英数字で始まる 1〜64 文字で指定する(ディレクトリ区切りは不可)')
-
-/** 定義ファイルとして読まれる拡張子か。読み込み側の選別(`listCommandDefFileNames`)と同じ集合で見る */
-const hasYamlExtension = (fileName: string): boolean =>
-  COMMAND_DEF_EXTENSIONS.some((extension) => fileName.toLowerCase().endsWith(extension))
 
 /** 引数テンプレートの1要素。丸ごとプレースホルダか、固定文字列のどちらか */
 const zArgToken = z.string().min(1).max(500)
@@ -130,13 +125,13 @@ const scCommandDef = z.strictObject({
 /**
  * 定義ファイル 1 件。
  *
- * **1 ファイルに 1 実行先**で、そのファイルのコマンドはすべてこの実行先で動く。
- * コマンド側に `targetId` を書かないのは、書ける形にすると「どのファイルの実行先で動くのか」が
- * ファイルを開いただけでは分からなくなるため。実行先とコマンドの対応はファイルの境界で決まる。
+ * **1 ファイルに 1 ターゲット**で、そのファイルのコマンドはすべてこのターゲットで動く。
+ * コマンド側に `targetId` を書かないのは、書ける形にすると「どのファイルのターゲットで動くのか」が
+ * ファイルを開いただけでは分からなくなるため。ターゲットとコマンドの対応はファイルの境界で決まる。
  *
  * 個々のフィールドの検証を通ったあとに、ファイル内で閉じた整合(id の重複、
  * プレースホルダの対応)を `superRefine` でまとめて見る。
- * ファイルをまたぐ整合(実行先ID・コマンドIDの重複)は `command-catalog.ts` が見る。
+ * ファイルをまたぐ整合(ターゲットID・コマンドIDの重複)は `command-catalog.ts` が見る。
  */
 export const scCommandFile = z
   .strictObject({
@@ -265,9 +260,9 @@ const checkArgTokens = (
  */
 const UNKNOWN_KEY_REASONS: Record<string, string> = {
   host: '接続先は target へ書く(第一階層の host は target へ改名した)',
-  hostId: '実行先は定義ファイル単位で決まるため commands[].hostId は書けない',
-  targetId: '実行先は定義ファイル単位で決まるため commands[].targetId は書けない',
-  hosts: 'hosts の配列は書けない。1 ファイルに 1 実行先を target へ書く',
+  hostId: 'ターゲットは定義ファイル単位で決まるため commands[].hostId は書けない',
+  targetId: 'ターゲットは定義ファイル単位で決まるため commands[].targetId は書けない',
+  hosts: 'hosts の配列は書けない。1 ファイルに 1 ターゲットを target へ書く',
 }
 
 /**
@@ -296,8 +291,15 @@ export const formatCommandIssues = (error: z.ZodError): string[] =>
 /** 画面から送る 1 コマンドぶんの定義 */
 export const scCommandDefInput = scCommandDef
 
+/**
+ * 編集の宛先。
+ *
+ * **ファイル名ではなくターゲットIDで受け取る。** 書き込みの許可はターゲットへのアサインで決まるので、
+ * 宛先もそこから引き直さないと、権限のあるターゲットの名で別ファイルを指せてしまう。
+ * ファイル名への変換はサーバー側でカタログを引いて行う。
+ */
 const scCommandDefFileRef = z.object({
-  fileName: z.string().regex(COMMAND_FILE_NAME_PATTERN).refine(hasYamlExtension, '定義ファイルの拡張子ではない'),
+  targetKey: zCommandId,
   /** 画面が見た時点の指紋。読んでから書くまでに変わっていれば保存を断る */
   revision: z.string().regex(/^[0-9a-f]{16}$/),
 })

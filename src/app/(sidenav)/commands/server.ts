@@ -3,10 +3,10 @@
 import { safeAuthAction } from '@/lib/action/action-server'
 import { assertFreshSession } from '@/lib/auth/session-fresh'
 import { isAdminActor } from '@/lib/board/board'
-import { type CommandDef, type CommandInput } from '@/lib/command/command'
-import { assertCommandAccess, listAvailableCommands } from '@/lib/command/command-access'
+import { type CommandDef, type CommandInput, type CommandTargetRole } from '@/lib/command/command'
+import { assertCommandAccess, listAvailableCommands, listCommandTargetsForActor } from '@/lib/command/command-access'
 import { buildArgsPreview, buildCommandInputDefaults, resolveCommandArgs } from '@/lib/command/command-args'
-import { findCommandTarget, getCommandCatalog } from '@/lib/command/command-catalog'
+import { findCommandTarget } from '@/lib/command/command-catalog'
 import { enqueueCommandRun, getCommandRun, listCommandRuns, requestCancelCommandRun } from '@/lib/command/command-run'
 import { kickCommandDispatch } from '@/lib/command/command-worker'
 import { envu } from '@/lib/env-util'
@@ -26,6 +26,8 @@ export type AvailableCommandView = {
   id: string
   label: string
   description: string | null
+  /** どのターゲットに属するか。画面はこれでグルーピングする */
+  targetKey: string
   targetLabel: string | null
   inputs: CommandInput[]
   defaults: Record<string, string | string[] | boolean>
@@ -39,6 +41,7 @@ const toView = (def: CommandDef, targetLabel: string | null): AvailableCommandVi
   id: def.id,
   label: def.label,
   description: def.description ?? null,
+  targetKey: def.targetId,
   targetLabel,
   // 入力項目は画面のフォームを組み立てるのに要る。選択肢は元々利用者へ見せる値なので秘密ではない
   inputs: def.inputs,
@@ -49,20 +52,33 @@ const toView = (def: CommandDef, targetLabel: string | null): AvailableCommandVi
   timeoutSec: def.timeoutSec,
 })
 
+/** 画面に出すターゲット1件。オーナーには設定画面への導線を出す */
+export type AvailableTargetView = {
+  key: string
+  label: string
+  role: CommandTargetRole
+}
+
 /**
- * 実行できるコマンドの一覧。
+ * 実行できるコマンドと、アサインされているターゲットの一覧。
  *
- * 認可は `listAvailableCommands` に集約する(`src/proxy.ts` は Server Action を通らないため、
+ * ターゲットも返すのは、コマンドが 0 件でもオーナーは定義を作りに行く必要があるため。
+ * 認可は `command-access.ts` に集約する(`src/proxy.ts` は Server Action を通らないため、
  * パス単位の制御ではこの機能を守れない)。
  */
 export const getAvailableCommandsAction = safeAuthAction
   .metadata({ actionName: 'getAvailableCommands', role: 'user' })
   .action(async ({ ctx: { user } }) => {
-    // 一覧に出るのに実行すると弾かれる状態を作らないよう、実行できるものだけを返す
-    const available = await listAvailableCommands(user, 'execute')
-    const targetLabels = new Map(getCommandCatalog().catalog.targets.map((target) => [target.id, target.label]))
+    const [targets, available] = await Promise.all([listCommandTargetsForActor(user), listAvailableCommands(user)])
 
-    return available.map(({ def }) => toView(def, targetLabels.get(def.targetId) ?? null))
+    return {
+      targets: targets.map<AvailableTargetView>(({ status, access }) => ({
+        key: status.id,
+        label: status.label,
+        role: access.role,
+      })),
+      commands: available.map(({ def, targetLabel }) => toView(def, targetLabel)),
+    }
   })
 
 export type GetAvailableCommandsReturnType = Awaited<ReturnType<typeof getAvailableCommandsAction>>['data']
