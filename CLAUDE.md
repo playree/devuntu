@@ -37,6 +37,7 @@ MCPサーバー・AIエージェント連携を備えたセルフホスト型の
 | [docs/notifications.md](docs/notifications.md)                 | 通知(キュー・チャネル・Slack連携)の実装 |
 | [docs/mcp-server.md](docs/mcp-server.md)                       | MCPサーバーと認証経路・ツール一覧       |
 | [docs/agent-runner.md](docs/agent-runner.md)                   | AIエージェントの自動運用(Devuntu Agent) |
+| [docs/command-exec.md](docs/command-exec.md)                   | リモート実行(定義・SSH・権限)           |
 
 # コーディングルール
 

@@ -20,4 +20,7 @@ export const register = async () => {
 
   const { startMaintenanceWorker } = await import('./lib/maintenance/maintenance-worker')
   startMaintenanceWorker()
+
+  const { startCommandWorker } = await import('./lib/command/command-worker')
+  startCommandWorker()
 }

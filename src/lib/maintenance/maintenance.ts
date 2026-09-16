@@ -31,6 +31,17 @@ export const AGENT_RUN_RETENTION_MS = 90 * 24 * 60 * 60 * 1000
  */
 export const AGENT_RUN_KEEP_PER_RUNNER = 500
 
+/** コマンドの実行履歴を残す期間 */
+export const COMMAND_RUN_RETENTION_MS = 90 * 24 * 60 * 60 * 1000
+
+/**
+ * コマンド1本あたりに残す実行履歴の上限。期間内に積み上がった分への歯止め。
+ *
+ * ログ(`command_run_chunk`)は実行1件あたり数千行になりうるので、
+ * エージェントの実行履歴(500件)より絞ってある。
+ */
+export const COMMAND_RUN_KEEP_PER_COMMAND = 300
+
 /** 添付の掃除を回す間隔。本文の全走査を伴うので tick ごとには行わない */
 export const ATTACHMENT_SWEEP_INTERVAL_MS = 24 * 60 * 60 * 1000
 

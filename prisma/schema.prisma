@@ -101,6 +101,10 @@ model User {
   agentApproverGroups AgentApproverGroup[]
   approverOf          AgentApprover[]      @relation("AgentApproverUser")
 
+  // Command
+  commandRuns          CommandRun[]
+  commandTargetMembers CommandTargetMember[]
+
   @@unique([email])
   /// 未認証で開く `/api/avatar` がキーからアバターの持ち主を引くため
   @@index([image])
@@ -1060,9 +1064,10 @@ model Group {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  userGroups          UserGroup[]
-  boardGroups         BoardGroup[]
-  agentApproverGroups AgentApproverGroup[]
+  userGroups           UserGroup[]
+  boardGroups          BoardGroup[]
+  agentApproverGroups  AgentApproverGroup[]
+  commandTargetGroups  CommandTargetGroup[]
 
   @@map("group")
 }
@@ -1679,4 +1684,196 @@ model NotifyDelivery {
   @@index([userId, channel, status, scheduledAt])
   @@index([outboxId])
   @@map("notify_delivery")
+}
+
+/// リモート実行のターゲットに対する参加者の権限
+enum CommandTargetMemberRole {
+  /// 実行に加えて、editable なファイルのコマンド定義を編集できる
+  owner
+  /// 実行のみ
+  member
+}
+
+/// リモート実行のターゲットの参加者。ユーザー単位の指定。
+///
+/// ターゲットの実体はサーバー上の YAML にあり DB に行を持たないため、`targetKey` に FK を張れない。
+/// 参照側は必ず読み込み済みのカタログに載っているキーの集合でのみこのテーブルを引くこと
+/// (`command-access.ts`)。定義から消えたターゲットの行が残っても、権限を与える経路が無くなる。
+///
+/// **管理者もアサインされていなければ実行できない。** 管理者の特権はアサインの操作だけで、
+/// ボード(`assertBoardAccess`)が manage に管理者を含めるのとは切り分けてある。
+model CommandTargetMember {
+  id String @id @default(uuid(7))
+
+  /// 定義ファイルの target.id
+  targetKey String
+
+  /// 参加するユーザー
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// ターゲット内での権限
+  role CommandTargetMemberRole @default(member)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // @@unique が (targetKey, ...) の先頭索引を兼ねるため @@index([targetKey]) は不要
+  @@unique([targetKey, userId])
+  @@index([userId])
+  @@map("command_target_member")
+}
+
+/// {@link CommandTargetMember} のグループ指定版。グループの所属ユーザーがターゲットの参加者になる。
+/// ロールは持たず、常に member 相当(BoardGroup と同じ形)。
+model CommandTargetGroup {
+  id String @id @default(uuid(7))
+
+  /// 定義ファイルの target.id
+  targetKey String
+
+  /// 参加するグループ。所属ユーザー全員がターゲットの参加者になる
+  groupId String
+  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+
+  @@unique([targetKey, groupId])
+  @@index([groupId])
+  @@map("command_target_group")
+}
+
+/// コマンド実行の状態
+enum CommandRunStatus {
+  /// 順番待ち。ワーカーがまだ掴んでいない
+  queued
+  /// 実行中
+  running
+  /// 正常終了(終了コード 0)
+  succeeded
+  /// 失敗(非 0 終了・接続失敗・タイムアウトなど)
+  failed
+  /// 画面から中断された
+  canceled
+}
+
+/// 出力の種別
+enum CommandStream {
+  stdout
+  stderr
+  /// アプリが差し込む説明(打ち切り・中断・回収など)。リモートの出力ではない
+  system
+}
+
+/// コマンドの1回の実行。
+///
+/// 監査記録も兼ねるので、定義ファイルからコマンドが消えても実行者が削除されても行は残す。
+/// そのため表示に使う値(コマンド名・接続先名・実行者名)は実行時点のものを複写する。
+model CommandRun {
+  id String @id @default(uuid(7))
+
+  /// 定義ファイルの command.id
+  commandKey String
+
+  /// 実行時点のコマンド表示名。定義が変わっても履歴の意味が変わらないよう複写する
+  commandLabel String
+
+  /// 実行時点の実行先の表示名。ホスト名・ユーザー・鍵のパスは秘密なので入れない
+  targetLabel String
+
+  /// 実行者。削除されても履歴は残すので SetNull
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  /// 実行時点の実行者名。ユーザー削除後も誰が実行したかを追えるように持つ
+  userName String
+
+  /// 画面で選択された値(検証済み)。再実行と監査に使う
+  params Json
+
+  /// 実行したコマンドの表示用文字列。秘密(鍵パス・接続先)は含めない
+  argsPreview String
+
+  status CommandRunStatus @default(queued)
+
+  /// 実行中の占有キー。singleton なコマンドは commandKey が入り、終了時に null へ戻す。
+  ///
+  /// PostgreSQL の UNIQUE は既定(NULLS DISTINCT)で null 同士を重複扱いしないため、
+  /// これだけで「同じコマンドの queued/running は同時に1本」を DB 制約として表せる。
+  /// Prisma は部分インデックス(WHERE 付き UNIQUE)を書けないので、この形を採っている。
+  activeKey String? @unique
+
+  /// 掴んだプロセスの識別子。再起動後に自分が掴んでいた実行かを見分ける
+  workerId String?
+
+  /// ワーカーが掴んだ時刻
+  claimedAt DateTime?
+
+  /// ワーカーの生存申告。これが古い running は回収対象
+  heartbeatAt DateTime?
+
+  /// 中断の要求時刻。実行を掴んでいるワーカーがこれを見て子プロセスを終了させる
+  cancelRequestedAt DateTime?
+
+  /// 中断を要求したユーザー
+  cancelRequestedBy String?
+
+  /// リモートコマンドの終了コード。起動できなかった場合は null
+  exitCode Int?
+
+  /// 打ち切りの分類。利用者の入力は載せない
+  /// (timeout | canceled | interrupted | output_limit | ssh_error | connection_lost | log_write_failed | start_failed)
+  failureKind String?
+
+  /// 保存済みチャンクの最大 seq。SSE の「これ以上は来ない」判定に使う
+  lastSeq Int @default(0)
+
+  /// 保存したログの総バイト数
+  bytes Int @default(0)
+
+  /// 上限に達してログの保存を打ち切ったか
+  truncated Boolean @default(false)
+
+  queuedAt   DateTime  @default(now())
+  startedAt  DateTime?
+  finishedAt DateTime?
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // relation
+  chunks CommandRunChunk[]
+
+  // ワーカーは未処理を投入順に引く
+  @@index([status, queuedAt])
+  @@index([userId, queuedAt])
+  @@index([commandKey, queuedAt])
+  @@map("command_run")
+}
+
+/// 出力の1チャンク。
+///
+/// 行単位ではなく一定間隔/サイズでまとめた塊にしてある。冗長な出力で INSERT が
+/// 実行を律速しないようにするためで、SSE の追いつきと履歴の表示は同じテーブルで賄う。
+model CommandRunChunk {
+  runId String
+  run   CommandRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  /// 実行内で単調増加。SSE の id(= Last-Event-ID)になるので欠番も逆転も作らない
+  seq Int
+
+  stream CommandStream
+
+  /// 1回のフラッシュ分の出力
+  text String
+
+  /// 出力を受け取った時刻
+  at DateTime @default(now())
+
+  /// SSE の読み出し(runId + seq > cursor)がそのまま主キーの索引スキャンになる
+  @@id([runId, seq])
+  @@map("command_run_chunk")
 }
