@@ -97,6 +97,7 @@ describe('編集の許可', () => {
 
     const result = await editCommandFileCommands({
       fileName: 'web01.yaml',
+      targetId: 'web01',
       revision: revisionOf('web01.yaml'),
       apply: (current) => [...current.commands, command('reindex')],
     })
@@ -111,6 +112,7 @@ describe('編集の許可', () => {
       'web01.yaml',
       editCommandFileCommands({
         fileName: 'web01.yaml',
+        targetId: 'web01',
         revision: revisionOf('web01.yaml'),
         apply: () => [command('reindex')],
       }),
@@ -127,6 +129,7 @@ describe('編集の許可', () => {
       'web01.yaml',
       editCommandFileCommands({
         fileName: 'web01.yaml',
+        targetId: 'web01',
         revision: revisionOf('web01.yaml'),
         apply: () => [command('reindex')],
       }),
@@ -134,9 +137,31 @@ describe('編集の許可', () => {
     )
   })
 
+  it('ファイル名が指すターゲットが権限を確かめた相手と違えば書かない', async () => {
+    // ファイル名の解決はロックの外で行われるので、その間に target.id が差し替わる余地がある。
+    // 現物のIDで確かめないと、権限の無いターゲットのファイルを書いてしまう
+    write('web01.yaml', yaml('db01', { editable: true }))
+
+    await expectRejected(
+      'web01.yaml',
+      editCommandFileCommands({
+        fileName: 'web01.yaml',
+        targetId: 'web01',
+        revision: revisionOf('web01.yaml'),
+        apply: () => [command('reindex')],
+      }),
+      COMMAND_DEF_CONFLICT,
+    )
+  })
+
   it('定義ディレクトリの外は指せない', async () => {
     await expect(
-      editCommandFileCommands({ fileName: '../escape.yaml', revision: 'x'.repeat(16), apply: () => [] }),
+      editCommandFileCommands({
+        fileName: '../escape.yaml',
+        targetId: 'web01',
+        revision: 'x'.repeat(16),
+        apply: () => [],
+      }),
     ).rejects.toMatchObject({ errorType: COMMAND_DEF_INVALID })
   })
 })
@@ -149,6 +174,7 @@ describe('同時編集', () => {
     // 別の誰かが先に書いた
     await editCommandFileCommands({
       fileName: 'web01.yaml',
+      targetId: 'web01',
       revision: stale,
       apply: (current) => [...current.commands, command('reindex')],
     })
@@ -157,6 +183,7 @@ describe('同時編集', () => {
       'web01.yaml',
       editCommandFileCommands({
         fileName: 'web01.yaml',
+        targetId: 'web01',
         revision: stale,
         apply: (current) => [...current.commands, command('dump')],
       }),
@@ -170,6 +197,7 @@ describe('同時編集', () => {
 
     const result = await editCommandFileCommands({
       fileName: 'web01.yaml',
+      targetId: 'web01',
       revision: before,
       apply: (current) => [...current.commands, command('reindex')],
     })
@@ -185,6 +213,7 @@ describe('ファイルの保ち方', () => {
 
     await editCommandFileCommands({
       fileName: 'web01.yaml',
+      targetId: 'web01',
       revision: revisionOf('web01.yaml'),
       apply: (current) => current.commands,
     })
@@ -201,6 +230,7 @@ describe('ファイルの保ち方', () => {
 
     await editCommandFileCommands({
       fileName: 'web01.yaml',
+      targetId: 'web01',
       revision: revisionOf('web01.yaml'),
       apply: () => [command('reindex')],
     })
@@ -224,6 +254,7 @@ describe('検証', () => {
       'web01.yaml',
       editCommandFileCommands({
         fileName: 'web01.yaml',
+        targetId: 'web01',
         revision: revisionOf('web01.yaml'),
         apply: () => [command('reindex')],
       }),
@@ -237,6 +268,7 @@ describe('検証', () => {
       'web01.yaml',
       editCommandFileCommands({
         fileName: 'web01.yaml',
+        targetId: 'web01',
         revision: revisionOf('web01.yaml'),
         // 未定義の入力項目を参照する引数
         apply: () => [{ ...command('reindex'), args: ['{{env}}'] }],
@@ -253,6 +285,7 @@ describe('検証', () => {
       'web01.yaml',
       editCommandFileCommands({
         fileName: 'web01.yaml',
+        targetId: 'web01',
         revision: revisionOf('web01.yaml'),
         apply: (current) => [...current.commands, command('dump-db')],
       }),
@@ -266,6 +299,7 @@ describe('検証', () => {
       'web01.yaml',
       editCommandFileCommands({
         fileName: 'web01.yaml',
+        targetId: 'web01',
         revision: revisionOf('web01.yaml'),
         apply: () => Array.from({ length: 101 }, (_, index) => command(`cmd-${index}`)),
       }),
@@ -287,6 +321,7 @@ describe('検証', () => {
       'a-web01.yaml',
       editCommandFileCommands({
         fileName: 'a-web01.yaml',
+        targetId: 'web01',
         revision: revisionOf('a-web01.yaml'),
         apply: (current) => [...current.commands.slice(0, 99), command('extra-1'), command('extra-2')],
       }),
@@ -302,6 +337,7 @@ describe('反映', () => {
 
     await editCommandFileCommands({
       fileName: 'web01.yaml',
+      targetId: 'web01',
       revision: revisionOf('web01.yaml'),
       apply: (current) => [...current.commands, command('reindex')],
     })

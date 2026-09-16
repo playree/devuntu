@@ -297,13 +297,13 @@ docker compose run --rm --entrypoint node tools -e "const {generateKeyPairSync}=
 接続用の長期トークンを発行する。
 利用者のマシンで AIエージェントのCLI を自動起動させる仕組みは [agent-runner.md](agent-runner.md) を参照。
 
-### コマンド実行
+### リモート実行
 
 画面からあらかじめ定義した処理を実行する機能。**既定では無効**で、次の3つが揃って初めて動く。
 
 1. `COMMAND_EXEC_ENABLED=true`
 2. 定義ファイルの配置(`COMMAND_DEF_DIR` の直下、既定 `/app/config/commands`)
-3. `/admin/commands` でのコマンドごとの有効化
+3. `/admin/commands` でのターゲットへのアサイン(管理者自身も、アサインしないと実行できない)
 
 定義ファイルと SSH の鍵はコンテナへ read-only でマウントする。`compose.yaml` の `devuntu` サービスへ:
 
@@ -318,7 +318,7 @@ volumes:
 ```text
 /opt/devuntu/config/
 ├── commands/
-│   ├── web01.yaml      # コマンドの定義(1ファイル1実行先)
+│   ├── web01.yaml      # コマンドの定義(1ファイル1ターゲット)
 │   └── db01.yaml
 └── ssh/
     ├── ops_ed25519     # 秘密鍵(0600)。パスフレーズ無し
@@ -340,8 +340,8 @@ volumes:
     target: /app/config/commands
 ```
 
-この場合でも、実際に編集できるのは定義ファイルへ `target.editable: true` を書いた実行先だけで、
-接続先(`target`)そのものは画面から変えられない。詳しくは
+この場合でも、実際に編集できるのは定義ファイルへ `target.editable: true` を書いたターゲットだけで、
+編集できるのはそのターゲットのオーナーに限られる。接続先(`target`)そのものは画面から変えられない。詳しくは
 [command-exec.md](command-exec.md#画面から編集する)を参照。
 
 devuntu が載っている**ホスト側**で実行したい場合は、コンテナからホストへ SSH する構成になるので、

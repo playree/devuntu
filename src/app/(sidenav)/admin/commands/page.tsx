@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 }
 
 /**
- * コマンド管理ページ
+ * リモート管理ページ
  */
 const AdminCommandsPage: FC = async () => {
   return <AdminCommandsClient />

@@ -267,23 +267,23 @@ export type NotifyOutbox = Prisma.NotifyOutboxModel
  */
 export type NotifyDelivery = Prisma.NotifyDeliveryModel
 /**
- * Model CommandSetting
- * 定義ファイル上のコマンドに対する、画面で管理するメタ情報。
+ * Model CommandTargetMember
+ * リモート実行のターゲットの参加者。ユーザー単位の指定。
  * 
- * コマンドの定義そのもの(実行先・引数・入力項目)はサーバー上の YAML が持ち、ここには持たせない。
- * 画面から定義を作れないようにすることで、Web 経由で任意のコマンドを仕込む経路を作らないため。
- * 行は定義キーごとに遅延作成し、定義ファイル側からコマンドが消えても履歴の整合のために残す。
+ * ターゲットの実体はサーバー上の YAML にあり DB に行を持たないため、`targetKey` に FK を張れない。
+ * 参照側は必ず読み込み済みのカタログに載っているキーの集合でのみこのテーブルを引くこと
+ * (`command-access.ts`)。定義から消えたターゲットの行が残っても、権限を与える経路が無くなる。
+ * 
+ * **管理者もアサインされていなければ実行できない。** 管理者の特権はアサインの操作だけで、
+ * ボード(`assertBoardAccess`)が manage に管理者を含めるのとは切り分けてある。
  */
-export type CommandSetting = Prisma.CommandSettingModel
+export type CommandTargetMember = Prisma.CommandTargetMemberModel
 /**
- * Model CommandAllowedGroup
- * コマンドの実行を許可するグループ。
- * 
- * 空(1行も無い)は「管理者のみ」を意味する。連携設定(`integration-settings.ts`)の
- * 「空 = 全ユーザー許可」とは**意図的に逆**にしてある。コマンド実行は誤って全員へ開くと
- * 取り返しがつかないため、指定漏れが緩い側へ倒れないようにする。
+ * Model CommandTargetGroup
+ * {@link CommandTargetMember} のグループ指定版。グループの所属ユーザーがターゲットの参加者になる。
+ * ロールは持たず、常に member 相当(BoardGroup と同じ形)。
  */
-export type CommandAllowedGroup = Prisma.CommandAllowedGroupModel
+export type CommandTargetGroup = Prisma.CommandTargetGroupModel
 /**
  * Model CommandRun
  * コマンドの1回の実行。

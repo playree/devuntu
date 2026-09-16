@@ -1,151 +1,121 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action/action-server'
-import { assertFreshSession } from '@/lib/auth/session-fresh'
-import { COMMAND_DEF_CONFLICT, type CommandDef } from '@/lib/command/command'
-import { effectiveSortOrder } from '@/lib/command/command-access'
-import { buildCommandTargetStatus, type CommandTargetStatus, getCommandCatalog } from '@/lib/command/command-catalog'
-import { scDeleteCommandDef, scUpsertCommandDef } from '@/lib/command/command-def'
+import { isAdminActor } from '@/lib/board/board'
 import {
-  defaultCommandSetting,
-  deleteCommandSetting,
-  getCommandSettings,
-  setCommandSetting,
-} from '@/lib/command/command-settings'
-import { type CommandDefEntry, CommandDefWriteError, editCommandFileCommands } from '@/lib/command/command-writer'
+  assertCommandAssignmentTargets,
+  countCommandTargetAssignments,
+  deleteCommandTargetAssignments,
+  getCommandTargetAssignments,
+  getCommandTargetUsers,
+  listAssignedTargetKeys,
+  removeCommandTargetMember,
+  syncCommandTargetGroups,
+  upsertCommandTargetMember,
+} from '@/lib/command/command-assign'
+import {
+  buildCommandTargetStatus,
+  type CommandCatalogFile,
+  type CommandTargetStatus,
+  getCommandCatalog,
+} from '@/lib/command/command-catalog'
 import { envu } from '@/lib/env-util'
 import { errInvalidOperation, errTooManyRequests } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { consumeRateLimit } from '@/lib/rate-limit'
-import { scUpdateCommandSetting } from '@/lib/schema/schema'
+import {
+  scCommandTargetKey,
+  scRemoveCommandTargetMember,
+  scSetCommandTargetGroups,
+  scUpsertCommandTargetMember,
+} from '@/lib/schema/schema'
 
 /** 定義の再読み込みは I/O を伴うので、連打で叩き続けられないようにする */
 const RELOAD_RATE_LIMIT = { limit: 10, windowMs: 60_000 }
 
-/** 定義ファイルの書き換えは I/O とディレクトリの全走査を伴うので、連打で叩けないようにする */
-const EDIT_RATE_LIMIT = { limit: 20, windowMs: 60_000 }
-
-/**
- * 画面へ出す 1 コマンドぶんの情報。
- *
- * 接続先(ホスト名・ユーザー・鍵のパス)は秘密として扱い、ホストの表示名だけを載せる。
- */
-export type CommandDefView = {
-  id: string
-  label: string
-  description: string | null
-  targetId: string
-  targetLabel: string | null
-  executable: string
-  args: string[]
-  inputs: { type: CommandDef['inputs'][number]['type']; key: string; label: string; optionCount: number }[]
-  timeoutSec: number
-  requireConfirm: boolean
-  requireFreshSession: boolean
-  singleton: boolean
-  /** 画面で編集する設定。定義ファイル側の sortOrder はここで上書きされる */
-  setting: { enabled: boolean; sortOrder: number; allowedGroupIds: string[] }
-  /** このコマンドが書かれているファイル。編集の宛先になる */
-  fileName: string
-  /** 画面が見た時点のファイルの指紋。保存時にディスクの現物と突き合わせる */
-  revision: string
-  /** そのファイルが `target.editable: true` か */
-  editable: boolean
-  /**
-   * 編集画面へ渡す定義の現物。編集できないファイルでは null。
-   *
-   * 秘密(接続先・鍵)は `target` 側にあり、ここには入らない。
-   */
-  source: CommandDefEntry | null
+/** 一覧に出すターゲット1件ぶん。アサインの件数を添えて、割り当て漏れに気付けるようにする */
+export type CommandTargetView = CommandTargetStatus & {
+  memberCount: number
+  groupCount: number
 }
 
-const toDefView = (
-  def: CommandDef,
-  file: { fileName: string; revision: string; editable: boolean; label: string },
-  setting: { enabled: boolean; sortOrder: number; allowedGroupIds: string[] },
-): CommandDefView => ({
-  id: def.id,
-  label: def.label,
-  description: def.description ?? null,
-  targetId: def.targetId,
-  targetLabel: file.label,
-  executable: def.executable,
-  args: def.args,
-  inputs: def.inputs.map((input) => ({
-    type: input.type,
-    key: input.key,
-    label: input.label,
-    optionCount: 'options' in input ? input.options.length : 0,
-  })),
-  timeoutSec: def.timeoutSec,
-  requireConfirm: def.requireConfirm,
-  requireFreshSession: def.requireFreshSession,
-  singleton: def.singleton,
-  setting,
-  fileName: file.fileName,
-  revision: file.revision,
-  editable: file.editable,
-  // targetId は YAML に書かせない項目なので、編集画面へ戻す形からも外す
-  source: file.editable ? toSource(def) : null,
-})
-
-/** カタログが注入した `targetId` を落として、定義ファイルに書ける形へ戻す */
-const toSource = ({ targetId: _targetId, ...rest }: CommandDef): CommandDefEntry => rest
+/**
+ * アサイン操作の共通前処理。
+ *
+ * `role: 'admin'` のメタデータだけでは足りない。定義に無いターゲットへ行を作られると、
+ * どの画面にも出ないアサインが増えてしまうので、カタログに載っていることもここで確かめる。
+ */
+const assertManageableTarget = (actor: { id: string; role?: string | null }, targetKey: string): CommandCatalogFile => {
+  if (!isAdminActor(actor)) {
+    throw errInvalidOperation()
+  }
+  const file = getCommandCatalog().catalog.files.find((entry) => entry.target.id === targetKey)
+  if (!file) {
+    throw errInvalidOperation()
+  }
+  return file
+}
 
 const buildView = async (opts?: { force?: boolean }) => {
   const result = getCommandCatalog(opts)
-  // グループ一覧はコマンドをまたいで共通なので、取得はこの 1 箇所にまとめる
-  const groups = await prisma.group.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } })
-  const groupOptions = Object.fromEntries(groups.map((group) => [group.id, group.name])) as Record<string, string>
+  const targetKeys = result.catalog.files.map((file) => file.target.id)
 
-  const settings = await getCommandSettings(result.catalog.commands.map((def) => def.id))
-  // コマンドから「どのファイルに書かれているか」を引けるようにする。編集の宛先になる
-  const fileOf = new Map(
-    result.catalog.files.map((file) => [
-      file.target.id,
-      { fileName: file.fileName, revision: file.revision, editable: file.target.editable, label: file.target.label },
-    ]),
-  )
-  const commands = result.catalog.commands
-    .map((def) => {
-      const setting = settings.get(def.id) ?? defaultCommandSetting(def.id)
-      const file = fileOf.get(def.targetId)
-      // 並びの決め方は利用者向け画面と同じ関数に寄せる(食い違うと設定の効き方が読めなくなる)
-      return toDefView(def, file ?? { fileName: '', revision: '', editable: false, label: '' }, {
-        ...setting,
-        sortOrder: effectiveSortOrder(setting, def),
-      })
-    })
-    .sort((a, b) => a.setting.sortOrder - b.setting.sortOrder || a.label.localeCompare(b.label))
+  const [counts, assignedKeys] = await Promise.all([
+    countCommandTargetAssignments(targetKeys),
+    listAssignedTargetKeys(),
+  ])
+
+  const targets = result.catalog.files.map<CommandTargetView>((file) => {
+    const count = counts.get(file.target.id) ?? { members: 0, groups: 0 }
+    return { ...buildCommandTargetStatus(file), memberCount: count.members, groupCount: count.groups }
+  })
+
+  /**
+   * 定義ディレクトリを読めていない状態かどうか。
+   *
+   * ディレクトリ自体の問題(`fileName` が null)や、アサインはあるのにファイルが 1 件も
+   * 読めていない状態では、孤児の判定ができない。マウント漏れの一時障害を「消してよい行」と
+   * 見せると、復旧後に全部やり直すことになる。
+   */
+  const degraded =
+    result.issues.some((issue) => issue.fileName === null) ||
+    (result.catalog.files.length === 0 && assignedKeys.length > 0)
+
+  const known = new Set(targetKeys)
+  const orphans = degraded ? [] : assignedKeys.filter((key) => !known.has(key))
 
   // 読み込めたファイルと読み込めなかったファイルを両方出す。壊れたファイルがあっても
   // 残りのコマンドは実行できるので、画面も「全滅」ではなく「この分が欠けている」を見せる
   return {
     enabled: envu.server.COMMAND_EXEC_ENABLED,
     dir: result.dir,
-    // 読み取り専用でマウントされている構成では編集の導線を出さない。
-    // 押してから失敗させるより、初めから「できない」ことが見えている方がよい
+    // 読み取り専用でマウントされている構成では編集の導線を出さない
     writable: result.writable,
     loadedAt: result.loadedAt,
-    groupOptions,
     issues: result.issues,
-    targets: result.catalog.files.map<CommandTargetStatus>(buildCommandTargetStatus),
-    commands,
+    targets,
+    orphans: await Promise.all(
+      orphans.map(async (targetKey) => {
+        const count = (await countCommandTargetAssignments([targetKey])).get(targetKey)
+        return { targetKey, memberCount: count?.members ?? 0, groupCount: count?.groups ?? 0 }
+      }),
+    ),
+    orphanUnknown: degraded,
   }
 }
 
 /**
- * コマンド定義と設定の一覧。
+ * ターゲットの一覧。
  *
  * 読み込めなかったファイルがあっても画面は開けるようにし、原因をそのまま表示する。
  * 除外されたファイルのコマンドは、直せるまで一覧にも出ず実行もできない。
  */
-export const getCommandDefsAction = safeAuthAction
-  .metadata({ actionName: 'getCommandDefs', role: 'admin' })
+export const getCommandTargetsAction = safeAuthAction
+  .metadata({ actionName: 'getCommandTargets', role: 'admin' })
   .action(async () => buildView())
 
-export type GetCommandDefsReturnType = Awaited<ReturnType<typeof getCommandDefsAction>>['data']
+export type GetCommandTargetsReturnType = Awaited<ReturnType<typeof getCommandTargetsAction>>['data']
 
 /**
  * 定義ファイルの再読み込み。
@@ -162,144 +132,103 @@ export const reloadCommandDefsAction = safeAuthAction
     return buildView({ force: true })
   })
 
+/** アサイン編集フォームの初期値と選択肢 */
+export const getCommandTargetAssignmentsAction = safeAuthAction
+  .metadata({ actionName: 'getCommandTargetAssignments', role: 'admin' })
+  .inputSchema(scCommandTargetKey)
+  .action(async ({ parsedInput: { targetKey }, ctx: { user } }) => {
+    const file = assertManageableTarget(user, targetKey)
+    return { ...(await getCommandTargetAssignments(targetKey)), targetLabel: file.target.label }
+  })
+
+export type GetCommandTargetAssignmentsReturnType = Awaited<
+  ReturnType<typeof getCommandTargetAssignmentsAction>
+>['data']
+
+/** ターゲットのメンバー一覧(直接 ∪ グループ経由) */
+export const getCommandTargetMembersAction = safeAuthAction
+  .metadata({ actionName: 'getCommandTargetMembersForAdmin', role: 'admin' })
+  .inputSchema(scCommandTargetKey)
+  .action(async ({ parsedInput: { targetKey }, ctx: { user } }) => {
+    assertManageableTarget(user, targetKey)
+    return getCommandTargetUsers(targetKey)
+  })
+
+export type GetCommandTargetMembersReturnType = Awaited<ReturnType<typeof getCommandTargetMembersAction>>['data']
+
+/** 直接メンバーの追加。追加と更新で処理が同じなので実体は `upsertCommandTargetMember` を共有する */
+export const addCommandTargetMemberAction = safeAuthAction
+  .metadata({ actionName: 'addCommandTargetMember', role: 'admin' })
+  .inputSchema(scUpsertCommandTargetMember)
+  .action(async ({ parsedInput: { targetKey, userId, role }, ctx: { user } }) => {
+    assertManageableTarget(user, targetKey)
+    await prisma.$transaction(async (tx) => {
+      await assertCommandAssignmentTargets(tx, { userIds: [userId], groupIds: [] })
+      await upsertCommandTargetMember(tx, { targetKey, userId, role })
+    })
+
+    logger.info({ userId: user.id, targetKey, targetId: userId, role }, 'command target member added')
+    return { targetKey }
+  })
+
+/** 直接メンバーのロール変更。グループ経由メンバーへの付与もここを通る(行が無ければ作られる) */
+export const updateCommandTargetMemberRoleAction = safeAuthAction
+  .metadata({ actionName: 'updateCommandTargetMemberRole', role: 'admin' })
+  .inputSchema(scUpsertCommandTargetMember)
+  .action(async ({ parsedInput: { targetKey, userId, role }, ctx: { user } }) => {
+    assertManageableTarget(user, targetKey)
+    await prisma.$transaction(async (tx) => {
+      await assertCommandAssignmentTargets(tx, { userIds: [userId], groupIds: [] })
+      await upsertCommandTargetMember(tx, { targetKey, userId, role })
+    })
+
+    logger.info({ userId: user.id, targetKey, targetId: userId, role }, 'command target member role updated')
+    return { targetKey }
+  })
+
+/** 直接メンバーを外す。グループ経由メンバーは行を持たないため対象外(グループ設定で外す) */
+export const removeCommandTargetMemberAction = safeAuthAction
+  .metadata({ actionName: 'removeCommandTargetMember', role: 'admin' })
+  .inputSchema(scRemoveCommandTargetMember)
+  .action(async ({ parsedInput: { targetKey, userId }, ctx: { user } }) => {
+    assertManageableTarget(user, targetKey)
+    await prisma.$transaction((tx) => removeCommandTargetMember(tx, { targetKey, userId }))
+
+    logger.info({ userId: user.id, targetKey, targetId: userId }, 'command target member removed')
+    return { targetKey }
+  })
+
+/** グループ単位のアサインを更新する */
+export const setCommandTargetGroupsAction = safeAuthAction
+  .metadata({ actionName: 'setCommandTargetGroups', role: 'admin' })
+  .inputSchema(scSetCommandTargetGroups)
+  .action(async ({ parsedInput: { targetKey, groupIds }, ctx: { user } }) => {
+    assertManageableTarget(user, targetKey)
+    await prisma.$transaction(async (tx) => {
+      await assertCommandAssignmentTargets(tx, { userIds: [], groupIds })
+      await syncCommandTargetGroups(tx, targetKey, groupIds)
+    })
+
+    logger.info({ userId: user.id, targetKey }, 'command target groups updated')
+    return { targetKey }
+  })
+
 /**
- * コマンドごとの設定を保存する。
+ * 定義に存在しないターゲットのアサインを消す。
  *
- * 定義ファイルに無いキーは受け付けない。行だけが増えても実行はできないが、
- * 綴り違いを黙って保存すると「有効にしたのに一覧へ出ない」の原因になる。
+ * 自動では消さない。カタログはファイルシステム依存なので、マウント漏れの一時障害でも
+ * 「全ターゲットが消えた」ように見えてしまう。消す対象は管理者が名指しで指定する。
  */
-export const updateCommandSettingAction = safeAuthAction
-  .metadata({ actionName: 'updateCommandSetting', role: 'admin' })
-  .inputSchema(scUpdateCommandSetting)
-  .action(async ({ parsedInput }) => {
-    const result = getCommandCatalog()
-    if (!result.catalog.commands.some((def) => def.id === parsedInput.commandKey)) {
+export const purgeOrphanCommandAssignsAction = safeAuthAction
+  .metadata({ actionName: 'purgeOrphanCommandAssigns', role: 'admin' })
+  .inputSchema(scCommandTargetKey)
+  .action(async ({ parsedInput: { targetKey }, ctx: { user } }) => {
+    // 定義に「ある」ターゲットを消させない。一覧を見た後に定義が戻っている場合がある
+    if (getCommandCatalog().catalog.files.some((file) => file.target.id === targetKey)) {
       throw errInvalidOperation()
     }
-    await setCommandSetting(parsedInput)
-    return parsedInput
-  })
 
-/**
- * 書き込み系アクションの戻り値。
- *
- * 検証エラーの明細は `errorType` に載せられないので、**明細付きのものだけ成功応答で返す**。
- * 状態の問題(競合・編集不可・読み取り専用)は `errorType` で分岐できるよう throw する。
- */
-export type EditCommandDefResult = { ok: true } | { ok: false; messages: string[] }
-
-/**
- * 定義ファイルを書いた後に残った設定行を落とす。
- *
- * ここへ来る時点でファイルは既に書けているので、失敗しても操作は成功として返す。
- * 失敗して行が残っても、その ID で作り直すときに同じ後始末が走るため
- * 「昔の許可が新しいコマンドに効く」までは進まない。
- */
-const dropCommandSettings = async (commandKeys: string[], context: Record<string, unknown>): Promise<void> => {
-  for (const commandKey of commandKeys) {
-    try {
-      await deleteCommandSetting(commandKey)
-    } catch (error) {
-      logger.error({ ...context, commandKey, error }, 'failed to delete command setting')
-    }
-  }
-}
-
-/** 検証で落ちたものだけ画面向けの形へ詰め替え、それ以外はそのまま投げる */
-const toEditResult = async (error: unknown): Promise<EditCommandDefResult> => {
-  if (error instanceof CommandDefWriteError && error.messages.length > 0) {
-    return { ok: false, messages: error.messages }
-  }
-  throw error
-}
-
-/**
- * コマンド定義の追加・更新。
- *
- * 書けるのは `target.editable: true` のファイルの `commands` だけで、接続先(`target`)は
- * どのファイルでも画面から触れない。接続先を増やせない = 画面から到達できる実行先が増えないので、
- * この経路で広がる範囲は「既に鍵が通っている実行先」に閉じる。
- *
- * 実行時の `requireFreshSession` と同じ理由で再認証を求める。実行は一度きりだが、
- * 定義の書き換えは以後ずっと効くので、要求する理由はむしろ強い。
- */
-export const upsertCommandDefAction = safeAuthAction
-  .metadata({ actionName: 'upsertCommandDef', role: 'admin' })
-  .inputSchema(scUpsertCommandDef)
-  .action(async ({ parsedInput: { fileName, revision, replaceId, command }, ctx: { user, session } }) => {
-    if (!consumeRateLimit(`command-def-edit:${user.id}`, EDIT_RATE_LIMIT)) {
-      throw errTooManyRequests()
-    }
-    assertFreshSession(session)
-
-    try {
-      await editCommandFileCommands({
-        fileName,
-        revision,
-        apply: (current) => {
-          if (!replaceId) {
-            return [...current.commands, command]
-          }
-          if (!current.commands.some((entry) => entry.id === replaceId)) {
-            // 画面が見ていた 1 件が既に消えている。上書きで復活させない
-            throw new CommandDefWriteError(COMMAND_DEF_CONFLICT)
-          }
-          return current.commands.map((entry) => (entry.id === replaceId ? command : entry))
-        },
-      })
-
-      // ID を変えた更新は履歴の上でも別のコマンドになるので、古い ID の設定は引き継がず捨てる。
-      // 残すと、同じ ID を後から別の用途で作ったときに昔の許可がそのまま効く。
-      // 新しい ID の側も同時に落とす。以前そのIDで消し損ねた行が残っていても、
-      // ここで作った分は必ず既定値(無効・許可グループ無し)から始まる
-      if (replaceId !== command.id) {
-        await dropCommandSettings([command.id, ...(replaceId ? [replaceId] : [])], {
-          userId: user.id,
-          fileName,
-        })
-      }
-
-      // 実行履歴は残るのに定義の変更履歴がどこにも残らないのは非対称なので、監査ログを残す
-      logger.warn(
-        { userId: user.id, fileName, replaceId, commandId: command.id, executable: command.executable },
-        'command def updated',
-      )
-      // view は返さない。ここで組み立てに失敗すると、書けているのに失敗として返ってしまう
-      // (画面は成功後に自分で取り直す)
-      return { ok: true as const }
-    } catch (error) {
-      return toEditResult(error)
-    }
-  })
-
-/** コマンド定義の削除。定義を消したら設定行も消す(理由は `deleteCommandSetting` を参照) */
-export const deleteCommandDefAction = safeAuthAction
-  .metadata({ actionName: 'deleteCommandDef', role: 'admin' })
-  .inputSchema(scDeleteCommandDef)
-  .action(async ({ parsedInput: { fileName, revision, commandId }, ctx: { user, session } }) => {
-    if (!consumeRateLimit(`command-def-edit:${user.id}`, EDIT_RATE_LIMIT)) {
-      throw errTooManyRequests()
-    }
-    assertFreshSession(session)
-
-    try {
-      await editCommandFileCommands({
-        fileName,
-        revision,
-        apply: (current) => {
-          if (!current.commands.some((entry) => entry.id === commandId)) {
-            throw new CommandDefWriteError(COMMAND_DEF_CONFLICT)
-          }
-          return current.commands.filter((entry) => entry.id !== commandId)
-        },
-      })
-
-      // ファイルが書けてから設定を消す。逆順にすると、書き込みに失敗したときに
-      // 「定義は生きているのに許可だけ消えた」状態が残る
-      await dropCommandSettings([commandId], { userId: user.id, fileName })
-      logger.warn({ userId: user.id, fileName, commandId }, 'command def deleted')
-      return { ok: true as const }
-    } catch (error) {
-      return toEditResult(error)
-    }
+    const deleted = await deleteCommandTargetAssignments(targetKey)
+    logger.warn({ userId: user.id, targetKey, ...deleted }, 'orphan command target assignments purged')
+    return deleted
   })

@@ -102,7 +102,8 @@ model User {
   approverOf          AgentApprover[]      @relation("AgentApproverUser")
 
   // Command
-  commandRuns CommandRun[]
+  commandRuns          CommandRun[]
+  commandTargetMembers CommandTargetMember[]
 
   @@unique([email])
   /// 未認証で開く `/api/avatar` がキーからアバターの持ち主を引くため
@@ -1066,7 +1067,7 @@ model Group {
   userGroups           UserGroup[]
   boardGroups          BoardGroup[]
   agentApproverGroups  AgentApproverGroup[]
-  commandAllowedGroups CommandAllowedGroup[]
+  commandTargetGroups  CommandTargetGroup[]
 
   @@map("group")
 }
@@ -1685,55 +1686,63 @@ model NotifyDelivery {
   @@map("notify_delivery")
 }
 
-/// 定義ファイル上のコマンドに対する、画面で管理するメタ情報。
+/// リモート実行のターゲットに対する参加者の権限
+enum CommandTargetMemberRole {
+  /// 実行に加えて、editable なファイルのコマンド定義を編集できる
+  owner
+  /// 実行のみ
+  member
+}
+
+/// リモート実行のターゲットの参加者。ユーザー単位の指定。
 ///
-/// コマンドの定義そのもの(実行先・引数・入力項目)はサーバー上の YAML が持ち、ここには持たせない。
-/// 画面から定義を作れないようにすることで、Web 経由で任意のコマンドを仕込む経路を作らないため。
-/// 行は定義キーごとに遅延作成し、定義ファイル側からコマンドが消えても履歴の整合のために残す。
-model CommandSetting {
+/// ターゲットの実体はサーバー上の YAML にあり DB に行を持たないため、`targetKey` に FK を張れない。
+/// 参照側は必ず読み込み済みのカタログに載っているキーの集合でのみこのテーブルを引くこと
+/// (`command-access.ts`)。定義から消えたターゲットの行が残っても、権限を与える経路が無くなる。
+///
+/// **管理者もアサインされていなければ実行できない。** 管理者の特権はアサインの操作だけで、
+/// ボード(`assertBoardAccess`)が manage に管理者を含めるのとは切り分けてある。
+model CommandTargetMember {
   id String @id @default(uuid(7))
 
-  /// 定義ファイルの command.id
-  commandKey String @unique
+  /// 定義ファイルの target.id
+  targetKey String
 
-  /// 画面からの実行を許可するか。既定は無効で、定義を置いただけでは動かない
-  enabled Boolean @default(false)
+  /// 参加するユーザー
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  /// 一覧での表示順。定義ファイルの sortOrder より優先する
-  sortOrder Int @default(0)
+  /// ターゲット内での権限
+  role CommandTargetMemberRole @default(member)
 
   // メタデータ
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // relation
-  allowedGroups CommandAllowedGroup[]
-
-  @@map("command_setting")
+  // @@unique が (targetKey, ...) の先頭索引を兼ねるため @@index([targetKey]) は不要
+  @@unique([targetKey, userId])
+  @@index([userId])
+  @@map("command_target_member")
 }
 
-/// コマンドの実行を許可するグループ。
-///
-/// 空(1行も無い)は「管理者のみ」を意味する。連携設定(`integration-settings.ts`)の
-/// 「空 = 全ユーザー許可」とは**意図的に逆**にしてある。コマンド実行は誤って全員へ開くと
-/// 取り返しがつかないため、指定漏れが緩い側へ倒れないようにする。
-model CommandAllowedGroup {
+/// {@link CommandTargetMember} のグループ指定版。グループの所属ユーザーがターゲットの参加者になる。
+/// ロールは持たず、常に member 相当(BoardGroup と同じ形)。
+model CommandTargetGroup {
   id String @id @default(uuid(7))
 
-  /// 対象のコマンド設定
-  settingId String
-  setting   CommandSetting @relation(fields: [settingId], references: [id], onDelete: Cascade)
+  /// 定義ファイルの target.id
+  targetKey String
 
-  /// 実行を許可するグループ。所属ユーザー全員が実行できる
+  /// 参加するグループ。所属ユーザー全員がターゲットの参加者になる
   groupId String
   group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   // メタデータ
   createdAt DateTime @default(now())
 
-  @@unique([settingId, groupId])
+  @@unique([targetKey, groupId])
   @@index([groupId])
-  @@map("command_allowed_group")
+  @@map("command_target_group")
 }
 
 /// コマンド実行の状態

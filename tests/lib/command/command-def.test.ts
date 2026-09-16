@@ -139,7 +139,7 @@ describe('書けない項目', () => {
 
   it('トップレベルの hosts 配列は弾き、理由を出す', () => {
     const issues = issuesOf({ ...file({}), hosts: [target] })
-    expect(issues.some((issue) => issue.includes('1 ファイルに 1 実行先を target へ書く'))).toBe(true)
+    expect(issues.some((issue) => issue.includes('1 ファイルに 1 ターゲットを target へ書く'))).toBe(true)
   })
 
   it('旧形式の host は弾き、target へ書くよう促す', () => {

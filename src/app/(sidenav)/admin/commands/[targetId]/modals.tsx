@@ -6,56 +6,55 @@ import { FormModal, ModalBaseProps } from '@/components/general/modal'
 import { SingleSelectCtrl } from '@/components/general/select'
 import { CheckIcon, PencilSquareIcon, UserPlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
-import { useRoleOptions } from '@/components/role-chip'
+import { type AssignRole, useRoleOptions } from '@/components/role-chip'
 import { UserSelectCtrl } from '@/components/user-select'
 import { parseAction } from '@/lib/action/action-client'
-import type { BoardRole } from '@/lib/board/task'
-import { scUpsertBoardMember, UpsertBoardMemberIn } from '@/lib/schema/schema'
+import { scUpsertCommandTargetMember, type UpsertCommandTargetMemberIn } from '@/lib/schema/schema'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FC } from 'react'
 import { useForm } from 'react-hook-form'
-import { addBoardMember, GetBoardAssignmentsReturnType, updateBoardMemberRole } from './server'
+import {
+  addCommandTargetMemberAction,
+  type GetCommandTargetAssignmentsReturnType,
+  updateCommandTargetMemberRoleAction,
+} from '../server'
 
-type Assignments = NonNullable<GetBoardAssignmentsReturnType>
+type Assignments = NonNullable<GetCommandTargetAssignmentsReturnType>
 
 /**
- * メンバー追加モーダル。ユーザーとロールを選んで直接メンバー(BoardMember)を 1 行作る。
+ * メンバー追加モーダル。ユーザーとロールを選んで直接メンバーを 1 行作る。
  *
  * 候補は「まだ直接メンバーではないユーザー」。グループ経由のユーザーも候補に含まれ、
  * 選ぶと直接ロールが付く(一覧の `via` が group から direct へ変わる)。
  */
-export const AddMemberModal: FC<ModalBaseProps & { boardId: string; assignments: Assignments }> = ({
+export const AddMemberModal: FC<ModalBaseProps & { targetKey: string; assignments: Assignments }> = ({
   state,
   reload,
-  boardId,
+  targetKey,
   assignments,
 }) => {
   const { t, fet } = useLocale()
   const roleOptions = useRoleOptions()
 
-  const assignedIds = new Set([...assignments.ownerIds, ...assignments.memberIds])
-  const userOptions = assignments.userOptions.filter((user) => !assignedIds.has(user.id))
+  const assigned = new Set(assignments.memberUserIds)
+  const userOptions = assignments.userOptions.filter((user) => !assigned.has(user.id))
 
   const {
     control,
     handleSubmit,
     formState: { isSubmitting, errors },
-  } = useForm<UpsertBoardMemberIn>({
-    resolver: zodResolver(scUpsertBoardMember),
+  } = useForm<UpsertCommandTargetMemberIn>({
+    resolver: zodResolver(scUpsertCommandTargetMember),
     mode: 'onChange',
-    defaultValues: {
-      id: boardId,
-      userId: '',
-      role: 'member',
-    },
+    defaultValues: { targetKey, userId: '', role: 'member' },
   })
 
   return (
     <FormModal
       state={state}
       onSubmit={handleSubmit(async (req) => {
-        await parseAction(addBoardMember(req))
+        await parseAction(addCommandTargetMemberAction(req))
         const target = assignments.userOptions.find((user) => user.id === req.userId)
         notify.success(t('msg_added_target', { target: target?.name ?? '' }))
         reload()
@@ -94,6 +93,7 @@ export const AddMemberModal: FC<ModalBaseProps & { boardId: string; assignments:
             label={t('role')}
             errorMessage={fet(errors.role)}
           />
+          <p className='text-foreground-500 mt-1 text-xs'>{t('msg_command_owner_can_edit')}</p>
         </div>
       </GridBox>
     </FormModal>
@@ -106,8 +106,8 @@ export const AddMemberModal: FC<ModalBaseProps & { boardId: string; assignments:
  * グループ経由メンバー(role が null)を対象にした場合は直接ロールの付与になる。
  */
 export const UpdateMemberRoleModal: FC<
-  ModalBaseProps & { boardId: string; target: { id: string; name: string; role: BoardRole | null } }
-> = ({ state, reload, boardId, target }) => {
+  ModalBaseProps & { targetKey: string; target: { id: string; name: string; role: AssignRole | null } }
+> = ({ state, reload, targetKey, target }) => {
   const { t, fet } = useLocale()
   const roleOptions = useRoleOptions()
 
@@ -115,21 +115,17 @@ export const UpdateMemberRoleModal: FC<
     control,
     handleSubmit,
     formState: { isSubmitting, errors },
-  } = useForm<UpsertBoardMemberIn>({
-    resolver: zodResolver(scUpsertBoardMember),
+  } = useForm<UpsertCommandTargetMemberIn>({
+    resolver: zodResolver(scUpsertCommandTargetMember),
     mode: 'onChange',
-    defaultValues: {
-      id: boardId,
-      userId: target.id,
-      role: target.role ?? 'member',
-    },
+    defaultValues: { targetKey, userId: target.id, role: target.role ?? 'member' },
   })
 
   return (
     <FormModal
       state={state}
       onSubmit={handleSubmit(async (req) => {
-        await parseAction(updateBoardMemberRole(req))
+        await parseAction(updateCommandTargetMemberRoleAction(req))
         notify.success(t('msg_updated_target', { target: target.name }))
         reload()
         state.close()
@@ -148,15 +144,6 @@ export const UpdateMemberRoleModal: FC<
     >
       <GridBox>
         <div className='col-span-12'>
-          <SingleSelectCtrl // 対象ユーザーは変更させない(別のメンバーを編集したい場合は一覧から開き直す)
-            control={control}
-            name='userId'
-            groupOptions={{ [target.id]: target.name }}
-            label={t('user')}
-            isDisabled
-          />
-        </div>
-        <div className='col-span-12'>
           <SingleSelectCtrl
             control={control}
             name='role'
@@ -164,8 +151,8 @@ export const UpdateMemberRoleModal: FC<
             label={t('role')}
             errorMessage={fet(errors.role)}
           />
+          <p className='text-foreground-500 mt-1 text-xs'>{t('msg_command_owner_can_edit')}</p>
         </div>
-        <div className='col-span-12 text-xs text-gray-500'>{t('msg_owner_required')}</div>
       </GridBox>
     </FormModal>
   )

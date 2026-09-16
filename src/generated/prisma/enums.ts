@@ -138,6 +138,14 @@ export const NotifyJobStatus = {
 export type NotifyJobStatus = (typeof NotifyJobStatus)[keyof typeof NotifyJobStatus]
 
 
+export const CommandTargetMemberRole = {
+  owner: 'owner',
+  member: 'member'
+} as const
+
+export type CommandTargetMemberRole = (typeof CommandTargetMemberRole)[keyof typeof CommandTargetMemberRole]
+
+
 export const CommandRunStatus = {
   queued: 'queued',
   running: 'running',

@@ -4,7 +4,7 @@
  * 画面から書き換えられるのは `target.editable: true` のファイルの `commands` だけで、
  * `target`(接続先・ユーザー・鍵)はどのファイルでも画面から触れない。
  * **接続先を画面から増やせない**ので、この経路で広がる範囲は
- * 「既に鍵が通っている実行先で、その鍵のユーザーにできること」に閉じる。
+ * 「既に鍵が通っているターゲットで、その鍵のユーザーにできること」に閉じる。
  * ここが編集を許してよいと判断した根拠なので、`target` を書けるようにしてはいけない。
  *
  * 読み込み側(`command-catalog.ts`)が持つ検証はここでは一切複製しない。
@@ -55,6 +55,13 @@ export type CommandDefEntry = CommandFile['commands'][number]
 
 export type EditCommandFileParams = {
   fileName: string
+  /**
+   * 呼び出し元が権限を確かめたターゲットID。
+   *
+   * ファイル名はカタログから引いた値だが、その解決はロックの外で行われる。
+   * 読み直した現物の `target.id` がこれと違えば、権限を確かめた相手とは別のターゲットなので書かない。
+   */
+  targetId: string
   /** 画面が見た時点の指紋。ディスクの現物と一致しなければ書かない */
   revision: string
   /** ディスクから読み直した現物を受け取り、書き込む commands を返す */
@@ -240,6 +247,12 @@ export const editCommandFileCommands = async (
     // そうしないと editable を外した直後の書き込みが通る窓ができる
     if (!current.data.target.editable) {
       throw new CommandDefWriteError(COMMAND_DEF_NOT_EDITABLE)
+    }
+
+    // 同じ理由で、ターゲットIDも現物で確かめる。ロックの外で引いたファイル名を信用すると、
+    // その間に target.id が差し替わっていた場合、権限の無いターゲットのファイルを書いてしまう
+    if (current.data.target.id !== params.targetId) {
+      throw new CommandDefWriteError(COMMAND_DEF_CONFLICT)
     }
 
     doc.set('commands', doc.createNode(params.apply(current.data)))

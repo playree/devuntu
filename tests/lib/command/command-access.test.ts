@@ -1,31 +1,52 @@
 /**
- * コマンド実行の認可判定の単体テスト
+ * リモート実行の認可判定の単体テスト
  *
  * `src/proxy.ts` は Server Action と `/api/**` を通らないので、この判定がこの機能の認可そのものになる。
- * 特に「許可グループが空 = 管理者のみ」は、連携設定(空 = 全ユーザー許可)と逆の既定なので、
- * 実装を読み替えたときに緩い側へ倒れないよう固定しておく。
+ * 特に「管理者にも特権が無い」と「カタログに無いターゲットのアサインは効かない」は、
+ * 実装を読み替えたときに緩い側へ倒れると被害が大きいので固定しておく。
  */
 
-import { type CommandDef } from '@/lib/command/command'
+import { type CommandDef, type CommandTarget } from '@/lib/command/command'
 import { prisma } from '@/lib/prisma'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/prisma', () => {
-  const userGroup = { findMany: vi.fn() }
-  const commandSetting = { findMany: vi.fn() }
-  return { prisma: { userGroup, commandSetting } }
+  const commandTargetMember = { findMany: vi.fn() }
+  const commandTargetGroup = { findMany: vi.fn() }
+  return { prisma: { commandTargetMember, commandTargetGroup } }
 })
 
-const catalogMock = vi.hoisted(() => ({ listCommandDefs: vi.fn(), findCommandDef: vi.fn() }))
+const catalogMock = vi.hoisted(() => ({
+  getCommandCatalog: vi.fn(),
+  findCommandDef: vi.fn(),
+  buildCommandTargetStatus: vi.fn(),
+}))
 vi.mock('@/lib/command/command-catalog', () => catalogMock)
 
-const { assertCommandAccess, canUseAnyCommand, effectiveSortOrder, listAvailableCommands } =
-  await import('@/lib/command/command-access')
+const {
+  assertCommandAccess,
+  assertCommandTargetAccess,
+  canUseAnyCommand,
+  getCommandTargetAccess,
+  listAvailableCommands,
+  listCommandTargetsForActor,
+} = await import('@/lib/command/command-access')
 
-const def = (id: string, sortOrder = 0): CommandDef => ({
+const target = (id: string): CommandTarget => ({
+  id,
+  label: id.toUpperCase(),
+  kind: 'ssh',
+  host: `${id}.internal`,
+  port: 22,
+  user: 'deploy',
+  identityFile: 'ops_ed25519',
+  editable: false,
+})
+
+const def = (id: string, targetId = 'web01', sortOrder = 0): CommandDef => ({
   id,
   label: id,
-  targetId: 'web01',
+  targetId,
   executable: '/opt/bin/run.sh',
   args: [],
   inputs: [],
@@ -36,34 +57,47 @@ const def = (id: string, sortOrder = 0): CommandDef => ({
   sortOrder,
 })
 
-const admin = { id: 'admin-1', role: 'admin' }
-const member = { id: 'user-1', role: null }
+/** カタログの中身。ここに載っていないターゲットのアサインは効かないことを確かめるために使う */
+const setCatalog = (defs: CommandDef[], targetIds: string[] = ['web01']) => {
+  const files = targetIds.map((id) => ({
+    fileName: `${id}.yaml`,
+    revision: '0'.repeat(16),
+    target: target(id),
+    commands: defs.filter((entry) => entry.targetId === id),
+  }))
+  catalogMock.getCommandCatalog.mockReturnValue({
+    catalog: { files, targets: targetIds.map(target), commands: defs },
+  })
+  catalogMock.findCommandDef.mockImplementation((key: string) => defs.find((entry) => entry.id === key) ?? null)
+  catalogMock.buildCommandTargetStatus.mockImplementation((file: { target: CommandTarget }) => ({
+    id: file.target.id,
+    label: file.target.label,
+  }))
+}
 
-/** DB の設定行。省略したコマンドは「未登録」= 既定(無効・許可グループ無し)になる */
-const setSettings = (rows: { commandKey: string; enabled: boolean; sortOrder?: number; groupIds?: string[] }[]) => {
-  vi.mocked(prisma.commandSetting.findMany).mockResolvedValue(
-    rows.map((row) => ({
-      commandKey: row.commandKey,
-      enabled: row.enabled,
-      sortOrder: row.sortOrder ?? 0,
-      allowedGroups: (row.groupIds ?? []).map((groupId) => ({ groupId })),
-    })) as never,
+/** 直接メンバーの行。`where` はモックでは解釈されないので、返す行を直接組む */
+const setMembers = (rows: { targetKey: string; role: 'owner' | 'member' }[]) => {
+  vi.mocked(prisma.commandTargetMember.findMany).mockResolvedValue(rows as never)
+}
+
+/** グループ経由でアクセスできるターゲット */
+const setGroupTargets = (targetKeys: string[]) => {
+  vi.mocked(prisma.commandTargetGroup.findMany).mockResolvedValue(
+    targetKeys.map((targetKey) => ({ targetKey })) as never,
   )
 }
 
-const setMemberships = (groupIds: string[]) => {
-  vi.mocked(prisma.userGroup.findMany).mockResolvedValue(groupIds.map((groupId) => ({ groupId })) as never)
-}
+const admin = { id: 'admin-1', role: 'admin' }
+const user = { id: 'user-1', role: null }
 
 const originalEnabled = process.env.COMMAND_EXEC_ENABLED
 
 beforeEach(() => {
   vi.clearAllMocks()
   process.env.COMMAND_EXEC_ENABLED = 'true'
-  catalogMock.listCommandDefs.mockReturnValue([def('deploy-web')])
-  catalogMock.findCommandDef.mockImplementation((key: string) => (key === 'deploy-web' ? def('deploy-web') : null))
-  setSettings([])
-  setMemberships([])
+  setCatalog([def('deploy-web')])
+  setMembers([])
+  setGroupTargets([])
 })
 
 afterEach(() => {
@@ -74,152 +108,146 @@ afterEach(() => {
   }
 })
 
-describe('許可グループが空 = 管理者のみ', () => {
-  it('有効でも許可グループが空なら一般ユーザーは扱えない', () => {
-    // integration-settings.ts の「空 = 全ユーザー許可」とは意図的に逆
-    setSettings([{ commandKey: 'deploy-web', enabled: true, groupIds: [] }])
-    return expect(listAvailableCommands(member)).resolves.toEqual([])
+describe('管理者に特権は無い', () => {
+  it('アサインされていない管理者は実行も編集もできない', async () => {
+    await expect(assertCommandAccess(admin, 'deploy-web', 'execute')).rejects.toThrow()
+    await expect(assertCommandAccess(admin, 'deploy-web', 'edit')).rejects.toThrow()
+    expect(await listAvailableCommands(admin)).toEqual([])
+    expect(await canUseAnyCommand(admin)).toBe(false)
   })
 
-  it('許可グループに属していれば扱える', async () => {
-    setSettings([{ commandKey: 'deploy-web', enabled: true, groupIds: ['group-a'] }])
-    setMemberships(['group-a'])
-    const available = await listAvailableCommands(member)
-    expect(available.map((item) => item.def.id)).toEqual(['deploy-web'])
-  })
-
-  it('別のグループにしか属していなければ扱えない', async () => {
-    setSettings([{ commandKey: 'deploy-web', enabled: true, groupIds: ['group-a'] }])
-    setMemberships(['group-b'])
-    expect(await listAvailableCommands(member)).toEqual([])
-  })
-
-  it('管理者は許可グループが空でも扱える', async () => {
-    setSettings([{ commandKey: 'deploy-web', enabled: true, groupIds: [] }])
+  it('アサインされていれば一般ユーザーと同じに扱える', async () => {
+    setMembers([{ targetKey: 'web01', role: 'member' }])
     const available = await listAvailableCommands(admin)
     expect(available.map((item) => item.def.id)).toEqual(['deploy-web'])
   })
 })
 
-describe('有効化', () => {
-  it('未登録(既定は無効)のコマンドは一般ユーザーに出さない', async () => {
-    setSettings([])
-    setMemberships(['group-a'])
-    expect(await listAvailableCommands(member)).toEqual([])
+describe('ロールの解決', () => {
+  it('グループ経由は member になる(owner にはならない)', async () => {
+    setGroupTargets(['web01'])
+    const access = await getCommandTargetAccess(user, 'web01')
+    expect(access).toEqual({ targetKey: 'web01', role: 'member', via: 'group' })
+    await expect(assertCommandTargetAccess(user, 'web01', 'edit')).rejects.toThrow()
   })
 
-  it('無効でも管理者には見える(設定するために一覧が要る)', async () => {
-    setSettings([{ commandKey: 'deploy-web', enabled: false }])
-    const available = await listAvailableCommands(admin)
-    expect(available.map((item) => item.def.id)).toEqual(['deploy-web'])
+  it('直接ロールがグループ経由より優先される', async () => {
+    setMembers([{ targetKey: 'web01', role: 'owner' }])
+    setGroupTargets(['web01'])
+    const access = await getCommandTargetAccess(user, 'web01')
+    expect(access).toEqual({ targetKey: 'web01', role: 'owner', via: 'member' })
   })
 
-  it('管理者でも無効なコマンドは実行できない', async () => {
-    // 見えることと実行できることを分けないと、有効化の設定が意味を失う
-    setSettings([{ commandKey: 'deploy-web', enabled: false }])
-    await expect(assertCommandAccess(admin, 'deploy-web', 'view')).resolves.toBeTruthy()
-    await expect(assertCommandAccess(admin, 'deploy-web', 'execute')).rejects.toThrow()
+  it('アサインが無ければ null', async () => {
+    expect(await getCommandTargetAccess(user, 'web01')).toBeNull()
+  })
+})
+
+describe('定義の編集はオーナーだけ', () => {
+  it('member は編集できない', async () => {
+    setMembers([{ targetKey: 'web01', role: 'member' }])
+    await expect(assertCommandAccess(user, 'deploy-web', 'execute')).resolves.toBeTruthy()
+    await expect(assertCommandAccess(user, 'deploy-web', 'edit')).rejects.toThrow()
+  })
+
+  it('owner は実行も編集もできる', async () => {
+    setMembers([{ targetKey: 'web01', role: 'owner' }])
+    await expect(assertCommandAccess(user, 'deploy-web', 'execute')).resolves.toBeTruthy()
+    await expect(assertCommandAccess(user, 'deploy-web', 'edit')).resolves.toBeTruthy()
+  })
+
+  it('editable でなくても access は通す(書けない理由は writer が返す)', async () => {
+    // ここで潰すと COMMAND_DEF_NOT_EDITABLE と権限不足が同じエラーになり、画面が理由を出し分けられない
+    setMembers([{ targetKey: 'web01', role: 'owner' }])
+    const { target: resolved } = await assertCommandTargetAccess(user, 'web01', 'edit')
+    expect(resolved.editable).toBe(false)
+  })
+})
+
+describe('カタログに無いターゲット', () => {
+  it('定義から消えたターゲットのアサインは権限を持たない', async () => {
+    // 定義ファイルを消した後もアサイン行は残る。ここが効くと見えない場所の許可が生き続ける
+    setCatalog([def('deploy-web')], ['web01'])
+    setMembers([{ targetKey: 'removed-target', role: 'owner' }])
+
+    expect(await getCommandTargetAccess(user, 'removed-target')).toBeNull()
+    await expect(assertCommandTargetAccess(user, 'removed-target', 'execute')).rejects.toThrow()
+    expect(await listCommandTargetsForActor(user)).toEqual([])
+    expect(await canUseAnyCommand(user)).toBe(false)
   })
 })
 
 describe('機能全体の無効化', () => {
-  it('COMMAND_EXEC_ENABLED が false なら管理者でも扱えない', async () => {
+  it('COMMAND_EXEC_ENABLED が false なら誰も扱えない', async () => {
     process.env.COMMAND_EXEC_ENABLED = 'false'
-    setSettings([{ commandKey: 'deploy-web', enabled: true, groupIds: [] }])
-    await expect(assertCommandAccess(admin, 'deploy-web', 'view')).rejects.toThrow()
-    expect(await canUseAnyCommand(admin)).toBe(false)
+    setMembers([{ targetKey: 'web01', role: 'owner' }])
+
+    await expect(assertCommandAccess(user, 'deploy-web', 'execute')).rejects.toThrow()
+    await expect(assertCommandTargetAccess(user, 'web01', 'edit')).rejects.toThrow()
+    expect(await listAvailableCommands(user)).toEqual([])
+    expect(await canUseAnyCommand(user)).toBe(false)
   })
 })
 
-describe('assertCommandAccess', () => {
-  it('存在しないコマンドは権限不足と同じ扱いにする', async () => {
+describe('存在の秘匿', () => {
+  it('存在しないコマンドと権限不足を同じ扱いにする', async () => {
     // どのコマンドが定義されているかを、扱えない相手に教えない
-    setSettings([{ commandKey: 'deploy-web', enabled: true, groupIds: [] }])
-    const unknown = assertCommandAccess(admin, 'no-such-command', 'view').catch((e: Error) => e.message)
-    const denied = assertCommandAccess(member, 'deploy-web', 'view').catch((e: Error) => e.message)
-    expect(await unknown).toBe(await denied)
-  })
-
-  it('扱えるなら定義と設定を返す', async () => {
-    setSettings([{ commandKey: 'deploy-web', enabled: true, groupIds: ['group-a'] }])
-    setMemberships(['group-a'])
-    const { def: resolved, setting } = await assertCommandAccess(member, 'deploy-web', 'execute')
-    expect(resolved.id).toBe('deploy-web')
-    expect(setting.allowedGroupIds).toEqual(['group-a'])
+    const unknown = await assertCommandAccess(user, 'no-such-command', 'execute').catch((e: Error) => e.message)
+    const denied = await assertCommandAccess(user, 'deploy-web', 'execute').catch((e: Error) => e.message)
+    expect(unknown).toBe(denied)
   })
 })
 
-describe('並び順', () => {
-  it('DB の sortOrder が定義ファイルの並びより優先される', async () => {
-    catalogMock.listCommandDefs.mockReturnValue([def('a', 1), def('b', 2)])
-    setSettings([
-      { commandKey: 'a', enabled: true, sortOrder: 20 },
-      { commandKey: 'b', enabled: true, sortOrder: 10 },
-    ])
-    const available = await listAvailableCommands(admin)
+describe('一覧', () => {
+  it('アサインされたターゲットのコマンドだけを返す', async () => {
+    setCatalog([def('deploy-web', 'web01'), def('reindex', 'db01')], ['web01', 'db01'])
+    setMembers([{ targetKey: 'db01', role: 'member' }])
+
+    const available = await listAvailableCommands(user)
+    expect(available.map((item) => item.def.id)).toEqual(['reindex'])
+    expect(available[0].targetLabel).toBe('DB01')
+  })
+
+  it('定義ファイルの sortOrder 順に並ぶ', async () => {
+    setCatalog([def('a', 'web01', 20), def('b', 'web01', 10)])
+    setMembers([{ targetKey: 'web01', role: 'member' }])
+
+    const available = await listAvailableCommands(user)
     expect(available.map((item) => item.def.id)).toEqual(['b', 'a'])
   })
-})
 
-describe('listAvailableCommands の need', () => {
-  it("need='execute' なら無効なコマンドは管理者にも出さない", async () => {
-    // 一覧に出るのに実行すると弾かれる、という食い違いを作らない
-    catalogMock.listCommandDefs.mockReturnValue([def('enabled-one'), def('disabled-one')])
-    setSettings([
-      { commandKey: 'enabled-one', enabled: true },
-      { commandKey: 'disabled-one', enabled: false },
+  it('コマンドが 0 件のターゲットでもオーナーには見える(定義を作りに行くため)', async () => {
+    setCatalog([], ['web01'])
+    setMembers([{ targetKey: 'web01', role: 'owner' }])
+
+    expect(await listAvailableCommands(user)).toEqual([])
+    expect(await listCommandTargetsForActor(user)).toHaveLength(1)
+    expect(await canUseAnyCommand(user)).toBe(true)
+  })
+
+  it('コマンドが 0 件のターゲットの member にはメニューを出さない(できることが無い)', async () => {
+    // 実行するものも設定への導線も無いので、開いても行き止まりになる
+    setCatalog([], ['web01'])
+    setMembers([{ targetKey: 'web01', role: 'member' }])
+
+    expect(await listCommandTargetsForActor(user)).toHaveLength(1)
+    expect(await canUseAnyCommand(user)).toBe(false)
+  })
+
+  it('グループ経由の member も同じに扱う', async () => {
+    setCatalog([], ['web01'])
+    setGroupTargets(['web01'])
+
+    expect(await canUseAnyCommand(user)).toBe(false)
+  })
+
+  it('コマンドを持つターゲットがあれば member にも出す', async () => {
+    setCatalog([def('deploy-web', 'web01')], ['web01', 'db01'])
+    setMembers([
+      { targetKey: 'db01', role: 'member' },
+      { targetKey: 'web01', role: 'member' },
     ])
-    const view = await listAvailableCommands(admin, 'view')
-    const execute = await listAvailableCommands(admin, 'execute')
-    expect(view.map((item) => item.def.id).sort()).toEqual(['disabled-one', 'enabled-one'])
-    expect(execute.map((item) => item.def.id)).toEqual(['enabled-one'])
-  })
-})
 
-describe('effectiveSortOrder', () => {
-  it('未登録なら定義ファイルの並びを使う', () => {
-    expect(
-      effectiveSortOrder(
-        { commandKey: 'a', enabled: false, sortOrder: 0, allowedGroupIds: [], registered: false },
-        def('a', 30),
-      ),
-    ).toBe(30)
-  })
-
-  it('保存された値があればそちらを優先する', () => {
-    expect(
-      effectiveSortOrder(
-        { commandKey: 'a', enabled: true, sortOrder: 5, allowedGroupIds: [], registered: true },
-        def('a', 30),
-      ),
-    ).toBe(5)
-  })
-
-  it('明示的に保存された 0 を定義ファイルの値へ戻さない', () => {
-    // 0 は先頭へ寄せる正当な指定。値の真偽で未登録と見分けようとすると消えてしまう
-    expect(
-      effectiveSortOrder(
-        { commandKey: 'a', enabled: true, sortOrder: 0, allowedGroupIds: [], registered: true },
-        def('a', 30),
-      ),
-    ).toBe(0)
-  })
-
-  it('保存された 0 のコマンドが先頭へ来る', async () => {
-    catalogMock.listCommandDefs.mockReturnValue([def('pinned', 30), def('other', 10)])
-    setSettings([
-      { commandKey: 'pinned', enabled: true, sortOrder: 0 },
-      { commandKey: 'other', enabled: true, sortOrder: 10 },
-    ])
-    const available = await listAvailableCommands(admin)
-    expect(available.map((item) => item.def.id)).toEqual(['pinned', 'other'])
-  })
-
-  it('未登録のコマンドも定義ファイルの並びで表示される', async () => {
-    // DB 側の既定 0 をそのまま使うと、未設定のコマンドが必ず先頭へ来てしまう
-    catalogMock.listCommandDefs.mockReturnValue([def('later', 30), def('earlier', 10)])
-    setSettings([])
-    const available = await listAvailableCommands(admin)
-    expect(available.map((item) => item.def.id)).toEqual(['earlier', 'later'])
+    expect(await canUseAnyCommand(user)).toBe(true)
   })
 })

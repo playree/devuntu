@@ -94,8 +94,8 @@ export const ModelName = {
   BoardNotifySetting: 'BoardNotifySetting',
   NotifyOutbox: 'NotifyOutbox',
   NotifyDelivery: 'NotifyDelivery',
-  CommandSetting: 'CommandSetting',
-  CommandAllowedGroup: 'CommandAllowedGroup',
+  CommandTargetMember: 'CommandTargetMember',
+  CommandTargetGroup: 'CommandTargetGroup',
   CommandRun: 'CommandRun',
   CommandRunChunk: 'CommandRunChunk'
 } as const
@@ -752,26 +752,26 @@ export const NotifyDeliveryScalarFieldEnum = {
 export type NotifyDeliveryScalarFieldEnum = (typeof NotifyDeliveryScalarFieldEnum)[keyof typeof NotifyDeliveryScalarFieldEnum]
 
 
-export const CommandSettingScalarFieldEnum = {
+export const CommandTargetMemberScalarFieldEnum = {
   id: 'id',
-  commandKey: 'commandKey',
-  enabled: 'enabled',
-  sortOrder: 'sortOrder',
+  targetKey: 'targetKey',
+  userId: 'userId',
+  role: 'role',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
-export type CommandSettingScalarFieldEnum = (typeof CommandSettingScalarFieldEnum)[keyof typeof CommandSettingScalarFieldEnum]
+export type CommandTargetMemberScalarFieldEnum = (typeof CommandTargetMemberScalarFieldEnum)[keyof typeof CommandTargetMemberScalarFieldEnum]
 
 
-export const CommandAllowedGroupScalarFieldEnum = {
+export const CommandTargetGroupScalarFieldEnum = {
   id: 'id',
-  settingId: 'settingId',
+  targetKey: 'targetKey',
   groupId: 'groupId',
   createdAt: 'createdAt'
 } as const
 
-export type CommandAllowedGroupScalarFieldEnum = (typeof CommandAllowedGroupScalarFieldEnum)[keyof typeof CommandAllowedGroupScalarFieldEnum]
+export type CommandTargetGroupScalarFieldEnum = (typeof CommandTargetGroupScalarFieldEnum)[keyof typeof CommandTargetGroupScalarFieldEnum]
 
 
 export const CommandRunScalarFieldEnum = {
