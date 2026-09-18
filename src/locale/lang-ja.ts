@@ -253,7 +253,6 @@ export const ja: DefaultLocaleItems = {
   mcp_token_env_command: '環境変数の設定',
   mentioned: 'メンション',
   msg_command_already_running: 'このコマンドは既に実行中です。終了してから再度お試しください。',
-  msg_command_assign_admin_only: 'ターゲットへのアサインは管理者のみが変更できます。',
   msg_command_cancel_confirm: '実行中のコマンドを中断します。よろしいですか?',
   msg_command_cancel_requested: '中断を要求しました。',
   msg_command_confirm: 'このコマンドを実行します。よろしいですか?',

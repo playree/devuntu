@@ -247,7 +247,6 @@ export type LocaleItemBase =
   | 'mcp_token_env_command'
   | 'mentioned'
   | 'msg_command_already_running'
-  | 'msg_command_assign_admin_only'
   | 'msg_command_cancel_confirm'
   | 'msg_command_cancel_requested'
   | 'msg_command_confirm'

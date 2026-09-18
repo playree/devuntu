@@ -4,7 +4,6 @@ import { safeAuthAction } from '@/lib/action/action-server'
 import { assertFreshSession } from '@/lib/auth/session-fresh'
 import { COMMAND_DEF_CONFLICT, type CommandDef, type CommandTargetRole } from '@/lib/command/command'
 import { assertCommandTargetAccess } from '@/lib/command/command-access'
-import { getCommandTargetUsers } from '@/lib/command/command-assign'
 import { buildCommandTargetStatus, type CommandTargetStatus, getCommandCatalog } from '@/lib/command/command-catalog'
 import { scDeleteCommandDef, scUpsertCommandDef } from '@/lib/command/command-def'
 import { type CommandDefEntry, CommandDefWriteError, editCommandFileCommands } from '@/lib/command/command-writer'
@@ -106,17 +105,6 @@ export const getCommandTargetDetailAction = safeAuthAction
   })
 
 export type GetCommandTargetDetailReturnType = Awaited<ReturnType<typeof getCommandTargetDetailAction>>['data']
-
-/** ターゲットのメンバー一覧。アサインの変更は管理者だけなので、ここは読み取りのみ */
-export const getCommandTargetMembersAction = safeAuthAction
-  .metadata({ actionName: 'getCommandTargetMembers', role: 'user' })
-  .inputSchema(scCommandTargetKey)
-  .action(async ({ parsedInput: { targetKey }, ctx: { user } }) => {
-    await assertCommandTargetAccess(user, targetKey, 'execute')
-    return getCommandTargetUsers(targetKey)
-  })
-
-export type GetCommandTargetMembersReturnType = Awaited<ReturnType<typeof getCommandTargetMembersAction>>['data']
 
 /**
  * 書き込み系アクションの戻り値。

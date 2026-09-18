@@ -252,7 +252,6 @@ export const en: LocaleItems = {
   mcp_token_env_command: 'Environment Variable',
   mentioned: 'Mentioned',
   msg_command_already_running: 'This command is already running. Try again after it finishes.',
-  msg_command_assign_admin_only: 'Only administrators can change target assignments.',
   msg_command_cancel_confirm: 'Cancel the running command?',
   msg_command_cancel_requested: 'Cancellation requested.',
   msg_command_confirm: 'Run this command?',

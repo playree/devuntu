@@ -96,11 +96,14 @@ const CommandTargetsBody: FC<{
       {!data.enabled && <NoticePanel status='warning'>{t('command_disabled')}</NoticePanel>}
 
       <div className='text-foreground-500 text-xs'>
-        {t('command_def_dir')}: <span className='font-mono break-all'>{data.dir}</span>
-        {' / '}
-        {t('command_def_loaded', { loaded: data.targets.length, excluded: data.issues.length })}
-        {' / '}
-        {dayformat(data.loadedAt, 'tz-minute', tz)}
+        <div>
+          {t('command_def_dir')}: <span className='font-mono break-all'>{data.dir}</span>
+        </div>
+        <div>
+          {t('command_def_loaded', { loaded: data.targets.length, excluded: data.issues.length })}
+          {' / '}
+          {dayformat(data.loadedAt, 'tz-minute', tz)}
+        </div>
       </div>
 
       {/* 読み込めなかったファイルがあっても、読み込めた分は使えるので一覧は常に出す */}

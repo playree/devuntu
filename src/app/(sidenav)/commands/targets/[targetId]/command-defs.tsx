@@ -3,7 +3,8 @@
 import { MultiButton } from '@/components/general/button'
 import { FlexCol, FlexRow } from '@/components/general/flex'
 import { NoticePanel, Panel } from '@/components/general/panel'
-import { PencilSquareIcon, PlusIcon, TrashIcon } from '@/components/icon'
+import { ContentHeader } from '@/components/header'
+import { CommandLineIcon, PencilSquareIcon, PlusIcon, TrashIcon } from '@/components/icon'
 import { type CommandInputType } from '@/lib/command/command'
 import { type LocaleItem } from '@/locale'
 import { useLocale } from '@/locale/client'
@@ -36,14 +37,13 @@ export const CommandDefs: FC<{
 
   return (
     <FlexCol>
-      {canEdit && (
-        <FlexRow className='items-center'>
-          <span className='grow' />
-          <MultiButton isIconOnly variant='outline' tooltip={t('command_def_add')} onPress={onAdd}>
+      <ContentHeader icon={<CommandLineIcon />} title={t('command_definition')}>
+        {canEdit && (
+          <MultiButton isIconOnly tooltip={t('command_def_add')} onPress={onAdd}>
             <PlusIcon />
           </MultiButton>
-        </FlexRow>
-      )}
+        )}
+      </ContentHeader>
 
       {commands.length === 0 ? (
         <NoticePanel>{t('command_no_def')}</NoticePanel>

@@ -1,13 +1,11 @@
 'use client'
 
-import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
 import { FlexCol, FlexRow } from '@/components/general/flex'
 import { useConfirmModal, useModalState } from '@/components/general/modal'
-import { usePagingList } from '@/components/general/paging'
 import { NoticePanel, Panel, PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
-import { ArrowLeftCircleIcon, Cog6ToothIcon, CommandLineIcon, UsersIcon } from '@/components/icon'
+import { ArrowLeftCircleIcon, Cog6ToothIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { RoleChip } from '@/components/role-chip'
 import { parseAction, useActionData } from '@/lib/action/action-client'
@@ -16,26 +14,17 @@ import { useReAuth } from '@/lib/auth/use-re-auth'
 import { COMMAND_DEF_CONFLICT, COMMAND_DEF_NOT_EDITABLE, COMMAND_DEF_READ_ONLY } from '@/lib/command/command'
 import { ClientError, TOO_MANY_REQUESTS } from '@/lib/error'
 import { useLocale } from '@/locale/client'
-import { Accordion, Chip } from '@heroui/react'
+import { Chip } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
 import { CommandDefs } from './command-defs'
 import { CommandDefModal, type CommandDefTarget } from './def-modal'
-import {
-  type CommandDefView,
-  deleteCommandDefAction,
-  getCommandTargetDetailAction,
-  getCommandTargetMembersAction,
-} from './server'
-import { TargetMembers } from './target-members'
-
-const defaultExpandedKeys = new Set(['command_definition'])
+import { type CommandDefView, deleteCommandDefAction, getCommandTargetDetailAction } from './server'
 
 /**
  * ターゲット設定。
  *
  * 見られるのはアサインされたユーザーだけで、コマンド定義を編集できるのはオーナーだけ。
- * アサインそのものの変更は管理者の領分なので、この画面には導線を置かない。
  */
 export const CommandTargetClient: FC<{ targetKey: string }> = ({ targetKey }) => {
   const { t } = useLocale()
@@ -44,11 +33,6 @@ export const CommandTargetClient: FC<{ targetKey: string }> = ({ targetKey }) =>
   const { data, isLoading, reload } = useActionData(() => getCommandTargetDetailAction({ targetKey }))
   const defModalState = useModalState<CommandDefTarget>()
   const { confirmModal } = useConfirmModal()
-
-  const memberList = usePagingList({
-    load: async () => (await parseAction(getCommandTargetMembersAction({ targetKey }))) ?? [],
-    sort: { init: { column: 'name', direction: 'ascending' } },
-  })
 
   const deleteDef = async (command: CommandDefView) => {
     if (!data) {
@@ -145,35 +129,27 @@ export const CommandTargetClient: FC<{ targetKey: string }> = ({ targetKey }) =>
         )}
       </Panel>
 
-      <Accordion allowsMultipleExpanded defaultExpandedKeys={defaultExpandedKeys}>
-        <AccordionSection id='command_definition' icon={<CommandLineIcon />} title={t('command_definition')}>
-          <CommandDefs
-            commands={data.commands}
-            canEdit={data.canEditDef}
-            onAdd={() =>
-              defModalState.open({
-                targetKey,
-                revision: data.target.revision,
-                targetLabel: data.target.label,
-                command: null,
-              })
-            }
-            onEdit={(command) =>
-              defModalState.open({
-                targetKey,
-                revision: data.target.revision,
-                targetLabel: data.target.label,
-                command,
-              })
-            }
-            onDelete={deleteDef}
-          />
-        </AccordionSection>
-
-        <AccordionSection id='command_target_members' icon={<UsersIcon />} title={t('command_target_members')}>
-          <TargetMembers pagingList={memberList} />
-        </AccordionSection>
-      </Accordion>
+      <CommandDefs
+        commands={data.commands}
+        canEdit={data.canEditDef}
+        onAdd={() =>
+          defModalState.open({
+            targetKey,
+            revision: data.target.revision,
+            targetLabel: data.target.label,
+            command: null,
+          })
+        }
+        onEdit={(command) =>
+          defModalState.open({
+            targetKey,
+            revision: data.target.revision,
+            targetLabel: data.target.label,
+            command,
+          })
+        }
+        onDelete={deleteDef}
+      />
 
       {defModalState.target && (
         <CommandDefModal state={defModalState} reload={reload} key={defModalState.key} target={defModalState.target} />
