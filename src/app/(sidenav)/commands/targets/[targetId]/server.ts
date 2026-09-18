@@ -123,6 +123,34 @@ const toEditResult = async (error: unknown): Promise<EditCommandDefResult> => {
 }
 
 /**
+ * 定義を書き換えてよい相手か。編集を始める前の事前確認と、保存時の本判定で同じものを使う。
+ */
+const assertCommandDefEditable = async (
+  user: { id: string; role?: string | null },
+  session: { createdAt: Date },
+  targetKey: string,
+): Promise<void> => {
+  await assertCommandTargetAccess(user, targetKey, 'edit')
+  // 実行時の requireFreshSession と同じ理由で再認証を求める。実行は一度きりだが、
+  // 定義の書き換えは以後ずっと効くので、要求する理由はむしろ強い
+  assertFreshSession(session)
+}
+
+/**
+ * 編集モーダルを開く前の事前確認。
+ *
+ * 保存時に再認証で弾かれると、画面を離れることになって書いた内容が失われる。書き始める前に確かめる。
+ * 書き込みはしないので編集のレート制限は消費しない(モーダルを開くたびに保存できる回数を削らない)。
+ */
+export const checkCommandDefEditableAction = safeAuthAction
+  .metadata({ actionName: 'checkCommandDefEditable', role: 'user' })
+  .inputSchema(scCommandTargetKey)
+  .action(async ({ parsedInput: { targetKey }, ctx: { user, session } }) => {
+    await assertCommandDefEditable(user, session, targetKey)
+    return { ok: true as const }
+  })
+
+/**
  * 編集の前段。オーナーであることを確かめ、書き込む先のファイル名をカタログから引く。
  *
  * 画面からはターゲットIDしか受け取らない。ファイル名を受け取る形にすると、
@@ -137,10 +165,7 @@ const resolveEditTarget = async (
   if (!consumeRateLimit(`command-def-edit:${user.id}`, EDIT_RATE_LIMIT)) {
     throw errTooManyRequests()
   }
-  await assertCommandTargetAccess(user, targetKey, 'edit')
-  // 実行時の requireFreshSession と同じ理由で再認証を求める。実行は一度きりだが、
-  // 定義の書き換えは以後ずっと効くので、要求する理由はむしろ強い
-  assertFreshSession(session)
+  await assertCommandDefEditable(user, session, targetKey)
 
   const file = getCommandCatalog().catalog.files.find((entry) => entry.target.id === targetKey)
   if (!file) {

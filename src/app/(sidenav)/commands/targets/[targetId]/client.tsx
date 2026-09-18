@@ -16,10 +16,15 @@ import { ClientError, TOO_MANY_REQUESTS } from '@/lib/error'
 import { useLocale } from '@/locale/client'
 import { Chip } from '@heroui/react'
 import { useRouter } from 'next/navigation'
-import { FC } from 'react'
+import { FC, useState } from 'react'
 import { CommandDefs } from './command-defs'
 import { CommandDefModal, type CommandDefTarget } from './def-modal'
-import { type CommandDefView, deleteCommandDefAction, getCommandTargetDetailAction } from './server'
+import {
+  checkCommandDefEditableAction,
+  type CommandDefView,
+  deleteCommandDefAction,
+  getCommandTargetDetailAction,
+} from './server'
 
 /**
  * ターゲット設定。
@@ -33,6 +38,43 @@ export const CommandTargetClient: FC<{ targetKey: string }> = ({ targetKey }) =>
   const { data, isLoading, reload } = useActionData(() => getCommandTargetDetailAction({ targetKey }))
   const defModalState = useModalState<CommandDefTarget>()
   const { confirmModal } = useConfirmModal()
+  const [checking, setChecking] = useState<{ commandId: string | null } | null>(null)
+
+  /**
+   * 編集モーダルは、書き換えてよい相手かをサーバーへ確かめてから開く。
+   *
+   * 保存時に再認証を求められると画面を離れることになり、書いた内容が失われる。
+   * 連打で `reAuth` が二重に走ると確認モーダルが使用中で落ちるため、確認中は弾く。
+   */
+  const openDefModal = async (command: CommandDefView | null) => {
+    if (!data || checking) {
+      return
+    }
+    setChecking({ commandId: command?.id ?? null })
+    try {
+      await parseAction(checkCommandDefEditableAction({ targetKey }), 0)
+    } catch (e) {
+      if (!(e instanceof ClientError)) {
+        throw e
+      }
+      if (e.errorType === SESSION_NOT_FRESH) {
+        await reAuth()
+        return
+      }
+      // 権限やカタログの状態が変わっている。開かずに読み直す
+      notify.warn(t('command_def_not_editable'))
+      await reload()
+      return
+    } finally {
+      setChecking(null)
+    }
+    defModalState.open({
+      targetKey,
+      revision: data.target.revision,
+      targetLabel: data.target.label,
+      command,
+    })
+  }
 
   const deleteDef = async (command: CommandDefView) => {
     if (!data) {
@@ -132,22 +174,13 @@ export const CommandTargetClient: FC<{ targetKey: string }> = ({ targetKey }) =>
       <CommandDefs
         commands={data.commands}
         canEdit={data.canEditDef}
-        onAdd={() =>
-          defModalState.open({
-            targetKey,
-            revision: data.target.revision,
-            targetLabel: data.target.label,
-            command: null,
-          })
-        }
-        onEdit={(command) =>
-          defModalState.open({
-            targetKey,
-            revision: data.target.revision,
-            targetLabel: data.target.label,
-            command,
-          })
-        }
+        checking={checking}
+        onAdd={() => {
+          void openDefModal(null)
+        }}
+        onEdit={(command) => {
+          void openDefModal(command)
+        }}
         onDelete={deleteDef}
       />
 

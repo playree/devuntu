@@ -29,17 +29,24 @@ const INPUT_TYPE_LABEL = {
 export const CommandDefs: FC<{
   commands: CommandDefView[]
   canEdit: boolean
+  /** 編集モーダルを開いてよいかを確かめている対象。追加ボタンなら commandId は null */
+  checking?: { commandId: string | null } | null
   onAdd: () => void
   onEdit: (command: CommandDefView) => void
   onDelete: (command: CommandDefView) => void
-}> = ({ commands, canEdit, onAdd, onEdit, onDelete }) => {
+}> = ({ commands, canEdit, checking, onAdd, onEdit, onDelete }) => {
   const { t } = useLocale()
 
   return (
     <FlexCol>
       <ContentHeader icon={<CommandLineIcon />} title={t('command_definition')}>
         {canEdit && (
-          <MultiButton isIconOnly tooltip={t('command_def_add')} onPress={onAdd}>
+          <MultiButton
+            isIconOnly
+            tooltip={t('command_def_add')}
+            isPending={!!checking && checking.commandId === null}
+            onPress={onAdd}
+          >
             <PlusIcon />
           </MultiButton>
         )}
@@ -61,6 +68,7 @@ export const CommandDefs: FC<{
                       isIconOnly
                       variant='outline'
                       tooltip={t('command_def_edit')}
+                      isPending={checking?.commandId === command.id}
                       onPress={() => {
                         onEdit(command)
                       }}
