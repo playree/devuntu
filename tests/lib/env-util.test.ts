@@ -4,6 +4,7 @@
  * 値の綴り違いが不可逆な操作へ落ちないことを確認する。
  */
 
+import { AGENT_RUN_HISTORY_LIMIT } from '@/lib/agent/agent'
 import { envu } from '@/lib/env-util'
 import { afterEach, describe, expect, it } from 'vitest'
 
@@ -104,5 +105,88 @@ describe('TWO_FA_REQUIRED', () => {
     // 既定が true の変数でも、黙って既定へ倒すと止めたつもりの 2FA が有効なままになる
     process.env.TWO_FA_REQUIRED = 'flase'
     expect(() => envu.server.TWO_FA_REQUIRED).toThrow()
+  })
+})
+
+/** 実行履歴の保持は運用者が変える値なので、読み取りのたびに元へ戻す */
+const restoreEnv = (key: string): void => {
+  const before = process.env[key]
+  afterEach(() => {
+    if (before === undefined) {
+      delete process.env[key]
+    } else {
+      process.env[key] = before
+    }
+  })
+}
+
+describe('AGENT_RUN_RETENTION_DAYS / COMMAND_RUN_RETENTION_DAYS', () => {
+  restoreEnv('AGENT_RUN_RETENTION_DAYS')
+  restoreEnv('COMMAND_RUN_RETENTION_DAYS')
+
+  it('未設定なら90日', () => {
+    delete process.env.AGENT_RUN_RETENTION_DAYS
+    delete process.env.COMMAND_RUN_RETENTION_DAYS
+    expect(envu.server.AGENT_RUN_RETENTION_DAYS).toBe(90)
+    expect(envu.server.COMMAND_RUN_RETENTION_DAYS).toBe(90)
+  })
+
+  it('設定した日数を返す', () => {
+    process.env.AGENT_RUN_RETENTION_DAYS = '7'
+    process.env.COMMAND_RUN_RETENTION_DAYS = '365'
+    expect(envu.server.AGENT_RUN_RETENTION_DAYS).toBe(7)
+    expect(envu.server.COMMAND_RUN_RETENTION_DAYS).toBe(365)
+  })
+
+  it.each(['0', '-1', '1.5', 'ninety'])('1以上の整数でなければ起動時に弾く (%s)', (value) => {
+    // 0 や負数を通すと、掃除が「すべての履歴」を対象にしてしまう
+    process.env.AGENT_RUN_RETENTION_DAYS = value
+    process.env.COMMAND_RUN_RETENTION_DAYS = value
+    expect(() => envu.server.AGENT_RUN_RETENTION_DAYS).toThrow()
+    expect(() => envu.server.COMMAND_RUN_RETENTION_DAYS).toThrow()
+  })
+})
+
+describe('AGENT_RUN_KEEP', () => {
+  restoreEnv('AGENT_RUN_KEEP')
+
+  it('未設定なら500件', () => {
+    delete process.env.AGENT_RUN_KEEP
+    expect(envu.server.AGENT_RUN_KEEP).toBe(500)
+  })
+
+  it('画面が出せる件数までは下げられる', () => {
+    process.env.AGENT_RUN_KEEP = String(AGENT_RUN_HISTORY_LIMIT)
+    expect(envu.server.AGENT_RUN_KEEP).toBe(AGENT_RUN_HISTORY_LIMIT)
+  })
+
+  it('画面が出せる件数を下回ると起動時に弾く', () => {
+    // 下回ると「一覧に出ているのに実体が無い」履歴が生まれる
+    process.env.AGENT_RUN_KEEP = String(AGENT_RUN_HISTORY_LIMIT - 1)
+    expect(() => envu.server.AGENT_RUN_KEEP).toThrow()
+  })
+
+  it.each(['0', '-1', '500.5', 'many'])('整数でなければ起動時に弾く (%s)', (value) => {
+    process.env.AGENT_RUN_KEEP = value
+    expect(() => envu.server.AGENT_RUN_KEEP).toThrow()
+  })
+})
+
+describe('COMMAND_RUN_KEEP', () => {
+  restoreEnv('COMMAND_RUN_KEEP')
+
+  it('未設定なら300件', () => {
+    delete process.env.COMMAND_RUN_KEEP
+    expect(envu.server.COMMAND_RUN_KEEP).toBe(300)
+  })
+
+  it('設定した件数を返す', () => {
+    process.env.COMMAND_RUN_KEEP = '10'
+    expect(envu.server.COMMAND_RUN_KEEP).toBe(10)
+  })
+
+  it.each(['0', '-1', '10.5', 'ten'])('1以上の整数でなければ起動時に弾く (%s)', (value) => {
+    process.env.COMMAND_RUN_KEEP = value
+    expect(() => envu.server.COMMAND_RUN_KEEP).toThrow()
   })
 })

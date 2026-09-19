@@ -108,6 +108,7 @@ export const CommandForm: FC<ModalBaseProps & { target: AvailableCommandView }> 
 
   return (
     <FormModal
+      size='2xl'
       state={state}
       onSubmit={handleSubmit(async (params) => {
         if (target.requireConfirm) {

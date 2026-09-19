@@ -6,9 +6,6 @@
  */
 
 import {
-  AGENT_RUN_KEEP_PER_RUNNER,
-  COMMAND_RUN_KEEP_PER_COMMAND,
-  COMMAND_RUN_RETENTION_MS,
   OAUTH_TOKEN_RETENTION_MS,
   retentionBefore,
   SESSION_RETENTION_MS,
@@ -27,6 +24,32 @@ import {
 } from '@/lib/maintenance/maintenance-sweep'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+// 保持の設定は環境変数から読むので、既定値に引きずられないよう固定値を入れる
+const AGENT_RETENTION_DAYS = 30
+const AGENT_KEEP = 200
+const COMMAND_RETENTION_DAYS = 10
+const COMMAND_KEEP = 50
+const DAY_MS = 24 * 60 * 60 * 1000
+
+vi.mock('@/lib/env-util', () => ({
+  envu: {
+    server: {
+      get AGENT_RUN_RETENTION_DAYS() {
+        return AGENT_RETENTION_DAYS
+      },
+      get AGENT_RUN_KEEP() {
+        return AGENT_KEEP
+      },
+      get COMMAND_RUN_RETENTION_DAYS() {
+        return COMMAND_RETENTION_DAYS
+      },
+      get COMMAND_RUN_KEEP() {
+        return COMMAND_KEEP
+      },
+    },
+  },
+}))
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
@@ -149,6 +172,12 @@ describe('sweepAgentRuns', () => {
     expect(where.status).toEqual({ not: 'running' })
   })
 
+  it('保持期間は環境変数の日数から算出する', async () => {
+    await sweepAgentRuns(now)
+    const where = vi.mocked(prisma.agentRun.deleteMany).mock.calls[0][0]?.where as { startedAt: { lt: Date } }
+    expect(where.startedAt.lt).toEqual(retentionBefore(now, AGENT_RETENTION_DAYS * DAY_MS))
+  })
+
   it('ランナーごとに上限を超えた古い分を消す', async () => {
     vi.mocked(prisma.agentRunner.findMany).mockResolvedValue([{ id: 'runner-1' }] as never)
     vi.mocked(prisma.agentRun.findMany).mockResolvedValue([{ id: 'run-old' }] as never)
@@ -157,7 +186,7 @@ describe('sweepAgentRuns', () => {
     const removed = await sweepAgentRuns(now)
 
     const args = vi.mocked(prisma.agentRun.findMany).mock.calls[0][0]
-    expect(args?.skip, '新しい方から上限件を残す').toBe(AGENT_RUN_KEEP_PER_RUNNER)
+    expect(args?.skip, '新しい方から上限件を残す').toBe(AGENT_KEEP)
     expect(args?.orderBy).toEqual([{ startedAt: 'desc' }, { id: 'desc' }])
     // 期間ぶん + 上限超過ぶん
     expect(removed).toBe(2)
@@ -177,7 +206,7 @@ describe('sweepCommandRuns', () => {
     await sweepCommandRuns(now)
     expect(vi.mocked(prisma.commandRun.deleteMany).mock.calls[0][0]).toEqual({
       where: {
-        queuedAt: { lt: retentionBefore(now, COMMAND_RUN_RETENTION_MS) },
+        queuedAt: { lt: retentionBefore(now, COMMAND_RETENTION_DAYS * DAY_MS) },
         status: { in: ['succeeded', 'failed', 'canceled'] },
       },
     })
@@ -192,7 +221,7 @@ describe('sweepCommandRuns', () => {
     const removed = await sweepCommandRuns(now)
 
     const args = vi.mocked(prisma.commandRun.findMany).mock.calls[1][0]
-    expect(args?.skip, '新しい方から上限件を残す').toBe(COMMAND_RUN_KEEP_PER_COMMAND)
+    expect(args?.skip, '新しい方から上限件を残す').toBe(COMMAND_KEEP)
     expect(args?.orderBy).toEqual([{ queuedAt: 'desc' }, { id: 'desc' }])
     // 期間ぶん + 上限超過ぶん
     expect(removed).toBe(2)

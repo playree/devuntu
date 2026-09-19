@@ -1,3 +1,4 @@
+import { AGENT_RUN_HISTORY_LIMIT } from './agent/agent'
 import { errSystemError } from './error'
 
 function getEnv<T extends string = string>(key: string, opts: { required: true }): T
@@ -223,6 +224,29 @@ const server = {
     return value
   },
 
+  /** エージェントの実行履歴を残す期間(日) */
+  get AGENT_RUN_RETENTION_DAYS() {
+    const value = getEnvNumber('AGENT_RUN_RETENTION_DAYS', { default: 90 })
+    if (!Number.isInteger(value) || value < 1) {
+      throw errSystemError('AGENT_RUN_RETENTION_DAYS must be an integer of at least 1')
+    }
+    return value
+  },
+
+  /**
+   * ランナー1台あたりに残す実行履歴の上限。期間内に積み上がった分への歯止め。
+   *
+   * 画面が出せる件数(`AGENT_RUN_HISTORY_LIMIT`)を下回ると「一覧に出ているのに実体が無い」
+   * 履歴が生まれるため、そこを下限にする。
+   */
+  get AGENT_RUN_KEEP() {
+    const value = getEnvNumber('AGENT_RUN_KEEP', { default: 500 })
+    if (!Number.isInteger(value) || value < AGENT_RUN_HISTORY_LIMIT) {
+      throw errSystemError(`AGENT_RUN_KEEP must be an integer of at least ${AGENT_RUN_HISTORY_LIMIT}`)
+    }
+    return value
+  },
+
   // リモート実行
   /**
    * 画面からのリモート実行を有効にするか。
@@ -291,6 +315,29 @@ const server = {
     const value = getEnvNumber('COMMAND_MAX_QUEUED', { default: 20 })
     if (!Number.isInteger(value) || value < 1) {
       throw errSystemError('COMMAND_MAX_QUEUED must be an integer of at least 1')
+    }
+    return value
+  },
+
+  /** コマンドの実行履歴を残す期間(日) */
+  get COMMAND_RUN_RETENTION_DAYS() {
+    const value = getEnvNumber('COMMAND_RUN_RETENTION_DAYS', { default: 90 })
+    if (!Number.isInteger(value) || value < 1) {
+      throw errSystemError('COMMAND_RUN_RETENTION_DAYS must be an integer of at least 1')
+    }
+    return value
+  },
+
+  /**
+   * コマンド1本あたりに残す実行履歴の上限。期間内に積み上がった分への歯止め。
+   *
+   * ログ(`command_run_chunk`)は実行1件あたり数千行になりうるので、
+   * エージェントの実行履歴(`AGENT_RUN_KEEP`)より絞った既定にしてある。
+   */
+  get COMMAND_RUN_KEEP() {
+    const value = getEnvNumber('COMMAND_RUN_KEEP', { default: 300 })
+    if (!Number.isInteger(value) || value < 1) {
+      throw errSystemError('COMMAND_RUN_KEEP must be an integer of at least 1')
     }
     return value
   },
