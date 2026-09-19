@@ -12,6 +12,7 @@ import { SESSION_NOT_FRESH } from '@/lib/auth/auth-config'
 import { useReAuth } from '@/lib/auth/use-re-auth'
 import { COMMAND_DEF_CONFLICT, COMMAND_DEF_NOT_EDITABLE, COMMAND_DEF_READ_ONLY } from '@/lib/command/command'
 import { formatCommandIssues, scCommandDefInput } from '@/lib/command/command-def'
+import { lintCommandDefYaml } from '@/lib/command/command-def-lint'
 import { ClientError, TOO_MANY_REQUESTS } from '@/lib/error'
 import { useLocale } from '@/locale/client'
 import { FC, useState } from 'react'
@@ -134,7 +135,7 @@ export const CommandDefModal: FC<ModalBaseProps & { target: CommandDefTarget }> 
     >
       <FlexCol>
         <div className='text-foreground-500 text-xs'>{target.targetLabel}</div>
-        <YamlInput defaultValue={text} onChange={setText} minRows={16} />
+        <YamlInput defaultValue={text} onChange={setText} minRows={16} lint={lintCommandDefYaml} />
         {messages.length > 0 && (
           <NoticePanel status='danger'>
             <ul className='list-inside list-disc text-xs'>

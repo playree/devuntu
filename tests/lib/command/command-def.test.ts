@@ -5,7 +5,7 @@
  * 定義ロード時のチェックが緩むと、実行時の検証だけが最後の砦になってしまう。
  */
 
-import { formatCommandIssues, scCommandFile } from '@/lib/command/command-def'
+import { formatCommandIssues, scCommandDefInput, scCommandFile } from '@/lib/command/command-def'
 import { describe, expect, it } from 'vitest'
 
 const target = {
@@ -221,5 +221,52 @@ describe('参照の整合', () => {
       ],
     })
     expect(issuesOf(input).some((issue) => issue.includes('minSelected が選択肢の数を超えている'))).toBe(true)
+  })
+})
+
+/**
+ * 画面からは 1 コマンドだけを送るので、ファイル全体でしか見ない検証になっていると
+ * 「画面では何も出ないのに保存するとサーバーから怒られる」状態になる。
+ */
+describe('コマンド1件だけでの検証', () => {
+  const command = (overrides: Record<string, unknown>) => ({
+    id: 'deploy-web',
+    label: 'デプロイ',
+    executable: '/opt/bin/deploy.sh',
+    ...overrides,
+  })
+
+  const defIssuesOf = (input: unknown): string[] => {
+    const parsed = scCommandDefInput.safeParse(input)
+    return parsed.success ? [] : formatCommandIssues(parsed.error)
+  }
+
+  it('未定義の入力項目への参照を弾く', () => {
+    expect(defIssuesOf(command({ args: ['{{env}}'] })).some((issue) => issue.includes('未定義の入力項目 env'))).toBe(
+      true,
+    )
+  })
+
+  it('選択肢に無い既定値を弾く', () => {
+    const input = command({
+      inputs: [
+        { type: 'select', key: 'env', label: '環境', options: [{ value: 'stg', label: 'stg' }], defaultValue: 'prod' },
+      ],
+    })
+    expect(defIssuesOf(input).some((issue) => issue.includes('既定値 prod が選択肢に無い'))).toBe(true)
+  })
+
+  it('入力項目のキーの重複を弾く', () => {
+    const input = command({
+      inputs: [
+        { type: 'checkbox', key: 'dry', label: '空実行' },
+        { type: 'checkbox', key: 'dry', label: '空実行2' },
+      ],
+    })
+    expect(defIssuesOf(input).some((issue) => issue.includes('入力項目のキー dry が重複している'))).toBe(true)
+  })
+
+  it('問題が無ければ通る', () => {
+    expect(defIssuesOf(command({}))).toEqual([])
   })
 })
