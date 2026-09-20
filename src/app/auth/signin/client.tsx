@@ -544,7 +544,7 @@ export const SignInClient: FC<{ sessionEmail?: string; twoFaRequired: boolean }>
           <MultiButton
             className='mx-auto mt-2 max-w-xs'
             fullWidth
-            variant='tertiary'
+            variant='outline'
             icon={<GoogleIcon />}
             onPress={async () => {
               await authClient.signIn.social({
@@ -559,7 +559,7 @@ export const SignInClient: FC<{ sessionEmail?: string; twoFaRequired: boolean }>
           <MultiButton
             className='mx-auto mt-2 max-w-xs'
             fullWidth
-            variant='tertiary'
+            variant='outline'
             icon={<FingerPrintIcon />}
             onPress={async () => {
               const { error } = await authClient.signIn.passkey()
