@@ -10,6 +10,8 @@
   - [テスト・Lint](#テストlint)
   - [画面の動作確認](#画面の動作確認)
   - [パッケージ更新](#パッケージ更新)
+    - [`pnpm outdated`に出るが上げないもの](#pnpm-outdatedに出るが上げないもの)
+    - [重複インスタンスの確認](#重複インスタンスの確認)
   - [パッケージへのパッチ](#パッケージへのパッチ)
   - [パッケージのバージョン上書き](#パッケージのバージョン上書き)
   - [TypeScript v7 と v6 の併存](#typescript-v7-と-v6-の併存)
@@ -190,6 +192,21 @@ pnpm up -i
 pnpm up -i -L
 ```
 
+### `pnpm outdated`に出るが上げないもの
+
+- **`prisma`** … `latest`のdist-tagが8系のRCを指している(`@prisma/client`の`latest`は7系)。`^7`の範囲では入らないので実害は無い。8系への移行はCLIとクライアントの安定版が揃ってから行う
+- **`lexical` / `@lexical/react`** … 後述の[パッケージのバージョン上書き](#パッケージのバージョン上書き)を参照
+
+### 重複インスタンスの確認
+
+`@codemirror/*`のようにインスタンスの同一性が前提のパッケージを上げたときは、コピーが1つに収束しているかを見る。
+
+```sh
+ls -d node_modules/.pnpm/@codemirror+state@*
+```
+
+`pnpm up`直後は解決済みの依存から外れた旧バージョンのディレクトリが`node_modules/.pnpm`に残るため、ここだけを見ても判断できない。`pnpm-lock.yaml`に旧バージョンが残っていないことと、`node_modules`を消して`pnpm install`し直した状態を確認する。
+
 ## パッケージへのパッチ
 
 `pnpm patch`で作成したパッチは`patches/`配下へ置く。登録先は`pnpm-workspace.yaml`の`patchedDependencies`で、`pnpm install`時に自動適用される。
@@ -214,9 +231,9 @@ pnpm patch-commit '<出力されたパス>'
 
 | 上書き対象 | 指定     | 理由                                       |
 | ---------- | -------- | ------------------------------------------ |
-| `sharp`    | `0.35.3` | Next.js の画像最適化で使うバージョンを固定 |
+| `sharp`    | `0.35.4` | Next.js の画像最適化で使うバージョンを固定 |
 
-`lexical`と`@lexical/react`は`package.json`で`0.48.0`に固定している。`@mdxeditor/editor`が`@lexical/*`を`^0.48.0`で要求しているため、ルートだけ 0.49 系へ上げると MDXEditor 配下に 0.48 系が別インスタンスで残り、`useLexicalComposerContext`が別モジュールの Context を引いてメンション機能が実行時に壊れる。`overrides`で全体を 0.49 系へ揃える手もあるが、0.49.0 は組み込みノードの`$config()`移行で`importJSON`/`importDOM`/`clone`/`transform`の static を落としており MDXEditor 側が未対応。MDXEditor が追随したら上げる。
+`lexical`と`@lexical/react`は`package.json`で`0.48.0`に固定している。`@mdxeditor/editor`が`@lexical/*`を`^0.48.0`で要求しているため、ルートだけ 0.49 系以降へ上げると MDXEditor 配下に 0.48 系が別インスタンスで残り、`useLexicalComposerContext`が別モジュールの Context を引いてメンション機能が実行時に壊れる。`overrides`で全体を揃える手もあるが、0.49.0 が組み込みノードの`$config()`移行で`importJSON`/`importDOM`/`clone`/`transform`の static を落としており、以降のバージョンも含めて MDXEditor 側が未対応。MDXEditor が追随したら上げる。
 
 HeroUI 3.2.3 の頃は`@heroui/{react,styles}>tailwind-variants`を`^3.3.1`へ上書きしていた。3.3.0 の slots リゾルバが単一の slots オブジェクトを使い回し、同じ tv を別の props で呼ぶと先に取得済みの slot 関数の戻り値まで後の props に化けるバグがあり、`Modal.Backdrop`の`variant='blur'`が`opaque`に化けていたため。HeroUI 3.2.4 が`tailwind-variants@3.3.1`を固定依存にしたので上書きは削除した。
 
