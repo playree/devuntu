@@ -252,19 +252,24 @@ export type CommandRunDetail = NonNullable<Awaited<ReturnType<typeof getCommandR
  *
  * 一般ユーザーは自分の実行だけを見る。`scope: 'all'` は呼び出し側で管理者を確かめてから渡す
  * (ここは絞り込みの組み立てに徹し、認可は持ち込まない)。
+ *
+ * `commandKey` はコマンド単位の履歴用。`@@index([commandKey, queuedAt])` が効く。
  */
 export const listCommandRuns = async (input: {
   /** null なら絞り込みなし(管理者の全件表示) */
   userId: string | null
+  /** null なら絞り込みなし。コマンド単位の履歴を見るときに指定する */
+  commandKey: string | null
   status: CommandRunStatusValue[]
   page: number
   rowsPerPage: number
   sortColumn: CommandRunSortColumn
   sortDirection: 'ascending' | 'descending'
 }) => {
-  const { userId, status, page, rowsPerPage, sortColumn, sortDirection } = input
+  const { userId, commandKey, status, page, rowsPerPage, sortColumn, sortDirection } = input
   const where = {
     ...(userId ? { userId } : {}),
+    ...(commandKey ? { commandKey } : {}),
     ...(status.length > 0 ? { status: { in: status } } : {}),
   }
 

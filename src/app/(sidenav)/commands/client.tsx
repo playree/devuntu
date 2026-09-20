@@ -60,6 +60,7 @@ export const CommandsClient: FC = () => {
               commands={data.commands.filter((command) => command.targetKey === target.key)}
               onSettings={() => router.push(`/commands/targets/${target.key}`)}
               onRun={(command) => formState.open(command)}
+              onHistory={(command) => router.push(`/commands/runs?commandKey=${command.id}`)}
             />
           ))}
         </Accordion>
@@ -77,7 +78,8 @@ const TargetSection: FC<{
   commands: AvailableCommandView[]
   onSettings: () => void
   onRun: (command: AvailableCommandView) => void
-}> = ({ target, commands, onSettings, onRun }) => {
+  onHistory: (command: AvailableCommandView) => void
+}> = ({ target, commands, onSettings, onRun, onHistory }) => {
   const { t } = useLocale()
 
   return (
@@ -101,9 +103,19 @@ const TargetSection: FC<{
                 <Card.Title>{command.label}</Card.Title>
                 <Card.Description>{command.description}</Card.Description>
               </Card.Header>
-              <Card.Footer>
-                <MultiButton icon={<PlayIcon />} variant='outline' size='sm' onPress={() => onRun(command)}>
+              {/* 説明の行数がカードごとに違うので、ボタンは下端に寄せて揃える */}
+              <Card.Footer className='mt-auto justify-between'>
+                <MultiButton icon={<PlayIcon />} variant='primary' size='sm' onPress={() => onRun(command)}>
                   {t('command_run')}
+                </MultiButton>
+                <MultiButton
+                  isIconOnly
+                  variant='outline'
+                  size='sm'
+                  tooltip={t('command_run_history')}
+                  onPress={() => onHistory(command)}
+                >
+                  <ClockIcon />
                 </MultiButton>
               </Card.Footer>
             </Card>

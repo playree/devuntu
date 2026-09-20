@@ -168,14 +168,30 @@ export const cancelCommandRunAction = safeAuthAction
  *
  * 一般ユーザーは自分の実行だけ。管理者が `scope: 'all'` を渡したときだけ全件を返す。
  * 一覧に出すのは表示名と結果だけで、選択された値(`params`)は詳細でしか見せない。
+ *
+ * `commandKey` はコマンド単位に絞るだけで、見える範囲は広がらない。実行の許可は確かめない
+ * (ターゲットのアサインを外されても、自分が実行した履歴は見られるようにする)。
  */
 export const getCommandRunsAction = safeAuthAction
   .metadata({ actionName: 'getCommandRuns', role: 'user' })
   .inputSchema(scCommandRunListQuery)
-  .action(async ({ parsedInput: { scope, status, page, rowsPerPage, sortColumn, sortDirection }, ctx: { user } }) => {
-    // 一般ユーザーが scope を偽っても、ここで自分の分に絞る
-    const userId = scope === 'all' && isAdminActor(user) ? null : user.id
-    return listCommandRuns({ userId, status, page, rowsPerPage, sortColumn, sortDirection })
-  })
+  .action(
+    async ({
+      parsedInput: { scope, commandKey, status, page, rowsPerPage, sortColumn, sortDirection },
+      ctx: { user },
+    }) => {
+      // 一般ユーザーが scope を偽っても、ここで自分の分に絞る
+      const userId = scope === 'all' && isAdminActor(user) ? null : user.id
+      return listCommandRuns({
+        userId,
+        commandKey: commandKey ?? null,
+        status,
+        page,
+        rowsPerPage,
+        sortColumn,
+        sortDirection,
+      })
+    },
+  )
 
 export type GetCommandRunsReturnType = Awaited<ReturnType<typeof getCommandRunsAction>>['data']

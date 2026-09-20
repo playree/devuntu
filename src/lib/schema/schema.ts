@@ -615,6 +615,8 @@ export type AgentTicketListQueryIn = z.input<typeof scAgentTicketListQuery>
 export const scCommandRunListQuery = z.object({
   /** 'all' は管理者のみ。一般ユーザーが指定してもサーバー側で自分の分に絞る */
   scope: z.enum(['mine', 'all']).default('mine'),
+  /** 未指定 = 絞り込みなし。コマンド定義のID(画面の絞り込みと URL の検証で共用する) */
+  commandKey: z.string().regex(COMMAND_ID_PATTERN).nullish(),
   /** 空配列 = 絞り込みなし */
   status: z.array(z.enum(COMMAND_RUN_STATUSES)).default([]),
   page: z.number().int().min(1).default(1),

@@ -202,6 +202,7 @@ describe('listCommandRuns', () => {
   })
 
   const query = {
+    commandKey: null,
     status: [] as never[],
     page: 1,
     rowsPerPage: 20,
@@ -232,6 +233,14 @@ describe('listCommandRuns', () => {
     await listCommandRuns({ ...query, userId: null, status: ['failed', 'canceled'] as never })
     expect(vi.mocked(prisma.commandRun.findMany).mock.calls[0][0]?.where).toEqual({
       status: { in: ['failed', 'canceled'] },
+    })
+  })
+
+  it('commandKey でコマンド単位に絞り込める', async () => {
+    await listCommandRuns({ ...query, userId: 'user-1', commandKey: 'deploy-web' })
+    expect(vi.mocked(prisma.commandRun.findMany).mock.calls[0][0]?.where).toEqual({
+      userId: 'user-1',
+      commandKey: 'deploy-web',
     })
   })
 
