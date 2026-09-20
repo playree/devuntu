@@ -23,7 +23,7 @@ export type SshProcess = {
   stderr: Readable
   /** ssh の終了を待つ。起動自体に失敗した場合も解決する(code は null) */
   wait: () => Promise<SshExit>
-  /** stdin を閉じる。リモート側の wrapper がある場合はこれが中断の合図になる */
+  /** stdin を閉じる。リモート側の実行ゲートがある場合はこれが中断の合図になる */
   closeStdin: () => void
   kill: (signal: NodeJS.Signals) => void
 }

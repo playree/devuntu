@@ -170,7 +170,7 @@ export const executeCommandRun = async (input: ExecuteInput): Promise<void> => {
   /**
    * 中断の実体。
    *
-   * まず stdin を閉じる。リモート側に wrapper を置いている場合はこれが EOF になり、
+   * まず stdin を閉じる。リモート側に実行ゲートを置いている場合はこれが EOF になり、
    * リモートのプロセスグループごと落ちる。置いていない場合に備えて SIGTERM → SIGKILL も続ける。
    */
   const abort = (reason: CommandFailureKind) => {
