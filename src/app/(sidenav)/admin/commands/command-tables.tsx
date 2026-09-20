@@ -52,12 +52,11 @@ export const CommandTargetTable: FC<{
                 isIconOnly
                 variant='outline'
                 tooltip={t('settings')}
+                icon={<Cog6ToothIcon />}
                 onPress={() => {
                   onManage(target)
                 }}
-              >
-                <Cog6ToothIcon />
-              </MultiButton>
+              />
             </FlexRow>
             <FlexRow className='flex-wrap items-center'>
               {/* 0 件は「誰も実行できない」を意味するので目立たせる */}
@@ -113,12 +112,11 @@ export const OrphanTargetTable: FC<{
               isIconOnly
               variant='danger-soft'
               tooltip={t('command_target_purge')}
+              icon={<TrashIcon />}
               onPress={() => {
                 onPurge(orphan.targetKey)
               }}
-            >
-              <TrashIcon />
-            </MultiButton>
+            />
           </FlexRow>
         ))}
       </FlexCol>

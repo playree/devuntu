@@ -36,6 +36,7 @@ export const ActionCell: FC<{
                 key='delete'
                 variant='danger-soft'
                 tooltip={t('delete')}
+                icon={<TrashIcon />}
                 onPress={async () => {
                   try {
                     const ok = await confirmModal().confirm({
@@ -54,9 +55,7 @@ export const ActionCell: FC<{
                 isIconOnly
                 size='sm'
                 className='h-7 w-7 rounded-sm'
-              >
-                <TrashIcon />
-              </MultiButton>
+              />
             )
           }
 
@@ -64,14 +63,13 @@ export const ActionCell: FC<{
             <MultiButton
               key={item.key}
               variant={item.variant || 'tertiary'}
+              icon={item.icon}
               onPress={item.onPress}
               isIconOnly
               size='sm'
               className='h-7 w-7 rounded-sm'
               tooltip={item.tooltip}
-            >
-              {item.icon}
-            </MultiButton>
+            />
           )
         })}
       </div>

@@ -46,10 +46,9 @@ export const CommandDefs: FC<{
             isIconOnly
             tooltip={t('command_def_add')}
             isPending={!!checking && checking.commandId === null}
+            icon={<PlusIcon />}
             onPress={onAdd}
-          >
-            <PlusIcon />
-          </MultiButton>
+          />
         )}
       </ContentHeader>
 
@@ -70,22 +69,20 @@ export const CommandDefs: FC<{
                       variant='outline'
                       tooltip={t('command_def_edit')}
                       isPending={checking?.commandId === command.id}
+                      icon={<PencilSquareIcon />}
                       onPress={() => {
                         onEdit(command)
                       }}
-                    >
-                      <PencilSquareIcon />
-                    </MultiButton>
+                    />
                     <MultiButton
                       isIconOnly
                       variant='danger-soft'
                       tooltip={t('command_def_delete')}
+                      icon={<TrashIcon />}
                       onPress={() => {
                         onDelete(command)
                       }}
-                    >
-                      <TrashIcon />
-                    </MultiButton>
+                    />
                   </>
                 )}
               </FlexRow>

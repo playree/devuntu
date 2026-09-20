@@ -76,12 +76,9 @@ export const AdminAgentsClient: FC = () => {
   return (
     <FlexCol>
       <ContentHeader icon={<CpuChipIcon />} title={t('agent_manage')}>
-        <MultiButton isIconOnly tooltip={t('add_agent')} onPress={() => addModalState.open()}>
-          <PlusIcon />
-        </MultiButton>
-        <MultiButton isIconOnly tooltip={t('reload')} onPress={() => list.reload()}>
+        <MultiButton isIconOnly tooltip={t('add_agent')} icon={<PlusIcon />} onPress={() => addModalState.open()} />
+        <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={() => list.reload()}>
           <ButtonGroup.Separator />
-          <ArrowPathIcon />
         </MultiButton>
       </ContentHeader>
 

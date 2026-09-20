@@ -68,9 +68,12 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
     return (
       <FlexCol>
         <ContentHeader icon={<Cog6ToothIcon />} title={t('board_settings')}>
-          <MultiButton isIconOnly tooltip={t('back')} onPress={() => router.push('/boards')}>
-            <ArrowLeftCircleIcon />
-          </MultiButton>
+          <MultiButton
+            isIconOnly
+            tooltip={t('back')}
+            icon={<ArrowLeftCircleIcon />}
+            onPress={() => router.push('/boards')}
+          />
         </ContentHeader>
         <NoticePanel>{t('msg_no_access')}</NoticePanel>
       </FlexCol>
@@ -83,16 +86,27 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
   return (
     <FlexCol>
       <ContentHeader icon={<Cog6ToothIcon />} title={boardName(board)}>
-        <MultiButton isIconOnly tooltip={t('back')} onPress={() => router.push('/boards')}>
-          <ArrowLeftCircleIcon />
-        </MultiButton>
-        <MultiButton isIconOnly tooltip={t('kanban')} onPress={() => router.push(`/boards/${board.id}`)}>
+        <MultiButton
+          isIconOnly
+          tooltip={t('back')}
+          icon={<ArrowLeftCircleIcon />}
+          onPress={() => router.push('/boards')}
+        />
+        <MultiButton
+          isIconOnly
+          tooltip={t('kanban')}
+          icon={<ViewColumnsIcon />}
+          onPress={() => router.push(`/boards/${board.id}`)}
+        >
           <ButtonGroup.Separator />
-          <ViewColumnsIcon />
         </MultiButton>
-        <MultiButton isIconOnly tooltip={t('ticket')} onPress={() => router.push(`/tickets?boardId=${board.id}`)}>
+        <MultiButton
+          isIconOnly
+          tooltip={t('ticket')}
+          icon={<ArrowTopRightOnSquareIcon />}
+          onPress={() => router.push(`/tickets?boardId=${board.id}`)}
+        >
           <ButtonGroup.Separator />
-          <ArrowTopRightOnSquareIcon />
         </MultiButton>
       </ContentHeader>
 

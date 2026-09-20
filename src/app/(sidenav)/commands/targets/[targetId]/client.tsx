@@ -133,9 +133,12 @@ export const CommandTargetClient: FC<{ targetKey: string }> = ({ targetKey }) =>
     return (
       <FlexCol>
         <ContentHeader icon={<Cog6ToothIcon />} title={t('command_target_settings')}>
-          <MultiButton isIconOnly tooltip={t('back')} onPress={() => router.push('/commands')}>
-            <ArrowLeftCircleIcon />
-          </MultiButton>
+          <MultiButton
+            isIconOnly
+            tooltip={t('back')}
+            icon={<ArrowLeftCircleIcon />}
+            onPress={() => router.push('/commands')}
+          />
         </ContentHeader>
         <NoticePanel>{t('msg_no_access')}</NoticePanel>
       </FlexCol>
@@ -145,9 +148,12 @@ export const CommandTargetClient: FC<{ targetKey: string }> = ({ targetKey }) =>
   return (
     <FlexCol>
       <ContentHeader icon={<Cog6ToothIcon />} title={data.target.label}>
-        <MultiButton isIconOnly tooltip={t('back')} onPress={() => router.push('/commands')}>
-          <ArrowLeftCircleIcon />
-        </MultiButton>
+        <MultiButton
+          isIconOnly
+          tooltip={t('back')}
+          icon={<ArrowLeftCircleIcon />}
+          onPress={() => router.push('/commands')}
+        />
       </ContentHeader>
 
       <Panel>

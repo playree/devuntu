@@ -55,14 +55,13 @@ export const AdminCommandsClient: FC = () => {
           isIconOnly
           tooltip={t('command_def_reload')}
           coolTime={3}
+          icon={<ArrowPathIcon />}
           onPress={async () => {
             // 押したプロセスに即時反映させ、表示はいつもの取得経路で描き直す
             await parseAction(reloadCommandDefsAction())
             await refresh()
           }}
-        >
-          <ArrowPathIcon />
-        </MultiButton>
+        />
       </ContentHeader>
 
       {isLoading && !data ? (

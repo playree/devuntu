@@ -71,13 +71,12 @@ const CustomInstructionForm: FC<{
               size='sm'
               variant='outline'
               tooltip={t('update')}
+              icon={<PencilSquareIcon width={16} />}
               onPress={() => {
                 setDraft(rule)
                 setEditing(true)
               }}
-            >
-              <PencilSquareIcon width={16} />
-            </MultiButton>
+            />
           )
         }
         footer={

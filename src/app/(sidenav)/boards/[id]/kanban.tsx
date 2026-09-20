@@ -291,10 +291,9 @@ export const KanbanLane: FC<{
              * isIconOnly の min-w も効くので min-w-0 で解除する
              */
             className='min-w-0 px-0.5 py-0'
+            icon={<PlusIcon width={12} />}
             onPress={onAdd}
-          >
-            <PlusIcon width={12} />
-          </MultiButton>
+          />
         )}
       </legend>
 

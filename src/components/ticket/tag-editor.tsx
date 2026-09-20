@@ -99,9 +99,14 @@ const TagRowForm: FC<{
           {submitLabel}
         </MultiButton>
         {onCancel && (
-          <MultiButton isIconOnly size='sm' variant='ghost' tooltip={t('cancel')} onPress={onCancel}>
-            <XMarkIcon width={16} />
-          </MultiButton>
+          <MultiButton
+            isIconOnly
+            size='sm'
+            variant='ghost'
+            tooltip={t('cancel')}
+            icon={<XMarkIcon width={16} />}
+            onPress={onCancel}
+          />
         )}
       </div>
     </FlexRow>
@@ -196,20 +201,18 @@ export const TagEditor: FC<{
                       variant='tertiary'
                       className='h-7 w-7 rounded-sm'
                       tooltip={t('update')}
+                      icon={<PencilSquareIcon width={16} />}
                       onPress={() => setEditingId(tag.id)}
-                    >
-                      <PencilSquareIcon width={16} />
-                    </MultiButton>
+                    />
                     <MultiButton
                       isIconOnly
                       size='sm'
                       variant='danger-soft'
                       className='h-7 w-7 rounded-sm'
                       tooltip={t('delete')}
+                      icon={<TrashIcon width={16} />}
                       onPress={() => remove(tag)}
-                    >
-                      <TrashIcon width={16} />
-                    </MultiButton>
+                    />
                   </div>
                 )}
               </div>

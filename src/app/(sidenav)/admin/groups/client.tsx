@@ -38,12 +38,9 @@ export const AdminGroupsClient: FC = () => {
   return (
     <FlexCol>
       <ContentHeader icon={<UserGroupIcon />} title={t('group_manage')}>
-        <MultiButton isIconOnly tooltip={t('add_group')} onPress={() => addModalState.open()}>
-          <PlusIcon />
-        </MultiButton>
-        <MultiButton isIconOnly tooltip={t('reload')} onPress={() => list.reload()}>
+        <MultiButton isIconOnly tooltip={t('add_group')} icon={<PlusIcon />} onPress={() => addModalState.open()} />
+        <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={() => list.reload()}>
           <ButtonGroup.Separator />
-          <ArrowPathIcon />
         </MultiButton>
       </ContentHeader>
 

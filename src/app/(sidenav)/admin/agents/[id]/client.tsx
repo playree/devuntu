@@ -83,9 +83,12 @@ export const AdminAgentDetailClient: FC<{ agentId: string; baseUrl: string }> = 
     return (
       <FlexCol>
         <ContentHeader icon={<Cog6ToothIcon />} title={t('agent_settings')}>
-          <MultiButton isIconOnly tooltip={t('back')} onPress={() => router.push('/admin/agents')}>
-            <ArrowLeftCircleIcon />
-          </MultiButton>
+          <MultiButton
+            isIconOnly
+            tooltip={t('back')}
+            icon={<ArrowLeftCircleIcon />}
+            onPress={() => router.push('/admin/agents')}
+          />
         </ContentHeader>
         <NoticePanel>{t('msg_no_access')}</NoticePanel>
       </FlexCol>
@@ -95,12 +98,16 @@ export const AdminAgentDetailClient: FC<{ agentId: string; baseUrl: string }> = 
   return (
     <FlexCol>
       <ContentHeader icon={<Cog6ToothIcon />} title={agent.name}>
-        <MultiButton isIconOnly tooltip={t('back')} onPress={() => router.push('/admin/agents')}>
-          <ArrowLeftCircleIcon />
-        </MultiButton>
+        <MultiButton
+          isIconOnly
+          tooltip={t('back')}
+          icon={<ArrowLeftCircleIcon />}
+          onPress={() => router.push('/admin/agents')}
+        />
         <MultiButton
           isIconOnly
           tooltip={t('reload')}
+          icon={<ArrowPathIcon />}
           onPress={() => {
             reload()
             reloadApprovers()
@@ -110,7 +117,6 @@ export const AdminAgentDetailClient: FC<{ agentId: string; baseUrl: string }> = 
           }}
         >
           <ButtonGroup.Separator />
-          <ArrowPathIcon />
         </MultiButton>
       </ContentHeader>
 

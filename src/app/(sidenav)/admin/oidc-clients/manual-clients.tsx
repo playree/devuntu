@@ -42,12 +42,9 @@ export const ManualOidcClients: FC<{ baseUrl: string }> = ({ baseUrl }) => {
   return (
     <FlexCol>
       <ContentHeader className='text-foreground'>
-        <MultiButton isIconOnly tooltip={t('add_client')} onPress={() => addModalState.open()}>
-          <PlusIcon />
-        </MultiButton>
-        <MultiButton isIconOnly tooltip={t('reload')} onPress={() => list.reload()}>
+        <MultiButton isIconOnly tooltip={t('add_client')} icon={<PlusIcon />} onPress={() => addModalState.open()} />
+        <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={() => list.reload()}>
           <ButtonGroup.Separator />
-          <ArrowPathIcon />
         </MultiButton>
       </ContentHeader>
 

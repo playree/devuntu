@@ -40,9 +40,7 @@ export const DynamicOidcClients: FC = () => {
   return (
     <FlexCol>
       <ContentHeader className='text-foreground'>
-        <MultiButton isIconOnly tooltip={t('reload')} onPress={() => list.reload()}>
-          <ArrowPathIcon />
-        </MultiButton>
+        <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={() => list.reload()} />
       </ContentHeader>
 
       <MultiTable

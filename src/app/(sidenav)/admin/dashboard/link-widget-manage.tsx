@@ -214,12 +214,9 @@ export const LinkWidgetManage: FC = () => {
   return (
     <FlexCol>
       <ContentHeader>
-        <MultiButton isIconOnly tooltip={t('add_link')} onPress={() => addModalState.open()}>
-          <PlusIcon />
-        </MultiButton>
-        <MultiButton isIconOnly tooltip={t('reload')} onPress={() => list.reload()}>
+        <MultiButton isIconOnly tooltip={t('add_link')} icon={<PlusIcon />} onPress={() => addModalState.open()} />
+        <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={() => list.reload()}>
           <ButtonGroup.Separator />
-          <ArrowPathIcon />
         </MultiButton>
       </ContentHeader>
 

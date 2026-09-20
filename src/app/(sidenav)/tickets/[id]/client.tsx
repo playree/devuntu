@@ -74,11 +74,7 @@ const MetaText: FC<{ label: string; children: React.ReactNode }> = ({ label, chi
  */
 const CloseButton: FC<{ onClose: () => void }> = ({ onClose }) => {
   const { t } = useLocale()
-  return (
-    <MultiButton isIconOnly variant='ghost' tooltip={t('close')} onPress={onClose}>
-      <XMarkIcon />
-    </MultiButton>
-  )
+  return <MultiButton isIconOnly variant='ghost' tooltip={t('close')} icon={<XMarkIcon />} onPress={onClose} />
 }
 
 /**
@@ -518,10 +514,9 @@ export const TicketDetailClient: FC<{
               variant='danger-soft'
               className='ml-auto'
               tooltip={t('delete')}
+              icon={<TrashIcon width={16} />}
               onPress={remove}
-            >
-              <TrashIcon width={16} />
-            </MultiButton>
+            />
           )}
         </div>
       </Panel>
@@ -549,13 +544,12 @@ export const TicketDetailClient: FC<{
                 size='sm'
                 variant='outline'
                 tooltip={t('update')}
+                icon={<PencilSquareIcon width={16} />}
                 onPress={() => {
                   setContentDraft(ticket.content ?? '')
                   setEditingContent(true)
                 }}
-              >
-                <PencilSquareIcon width={16} />
-              </MultiButton>
+              />
             )
           }
           footer={

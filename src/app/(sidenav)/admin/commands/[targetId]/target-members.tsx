@@ -50,12 +50,14 @@ export const TargetMembers: FC<{
   return (
     <FlexCol>
       <ContentHeader>
-        <MultiButton isIconOnly tooltip={t('add_member')} onPress={() => addModalState.open()}>
-          <UserPlusIcon />
-        </MultiButton>
-        <MultiButton isIconOnly tooltip={t('reload')} onPress={() => pagingList.reload()}>
+        <MultiButton
+          isIconOnly
+          tooltip={t('add_member')}
+          icon={<UserPlusIcon />}
+          onPress={() => addModalState.open()}
+        />
+        <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={() => pagingList.reload()}>
           <ButtonGroup.Separator />
-          <ArrowPathIcon />
         </MultiButton>
       </ContentHeader>
 

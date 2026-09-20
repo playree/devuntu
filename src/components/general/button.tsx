@@ -34,6 +34,8 @@ export const MultiButton: FC<
   const ariaLabel = props['aria-label'] ?? (props.isIconOnly ? tooltip : undefined)
   const isSmart = useIsSmart(isSmartProp)
   const [waitTime, setWaitTime] = useState(0)
+  // アイコンのみのボタンはクールタイム中に残り秒数だけを出すため、アイコンは隠す
+  const isIconHidden = waitTime > 0 && !!props.isIconOnly
 
   useEffect(() => {
     if (waitTime > 0) {
@@ -64,7 +66,7 @@ export const MultiButton: FC<
       isPending={isPending}
       isDisabled={waitTime > 0 ? true : isDisabled}
     >
-      {isPending ? <Spinner color='current' size='sm' className='-mx-0.5' /> : icon}
+      {isPending ? <Spinner color='current' size='sm' className='-mx-0.5' /> : isIconHidden ? null : icon}
       <>{waitTime > 0 ? (props.isIconOnly ? (isPending ? '' : `${waitTime}`) : `wait ${waitTime}s`) : children}</>
     </Button>
   )

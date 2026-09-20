@@ -232,31 +232,36 @@ export const MdxLinkDialog: FC = () => {
             <span className='truncate'>{linkDialogState.url}</span>
             {linkDialogState.url.startsWith('http') && <ArrowTopRightOnSquareIcon width={14} />}
           </a>
-          <MultiButton size='sm' variant='ghost' isIconOnly tooltip={t('edit_link')} onPress={() => switchToEdit()}>
-            <PencilSquareIcon width={16} />
-          </MultiButton>
+          <MultiButton
+            size='sm'
+            variant='ghost'
+            isIconOnly
+            tooltip={t('edit_link')}
+            icon={<PencilSquareIcon width={16} />}
+            onPress={() => switchToEdit()}
+          />
           <MultiButton
             size='sm'
             variant='ghost'
             isIconOnly
             tooltip={t('copy')}
+            icon={
+              isCopied ? (
+                <ClipboardDocumentCheckIcon width={16} className='text-success' />
+              ) : (
+                <ClipboardDocumentIcon width={16} />
+              )
+            }
             onPress={() => void window.navigator.clipboard.writeText(linkDialogState.url).then(() => setCopied(true))}
-          >
-            {isCopied ? (
-              <ClipboardDocumentCheckIcon width={16} className='text-success' />
-            ) : (
-              <ClipboardDocumentIcon width={16} />
-            )}
-          </MultiButton>
+          />
           <MultiButton
             size='sm'
             variant='danger-soft'
             isIconOnly
             tooltip={t('remove_link')}
+            icon={<XMarkIcon width={16} />}
             onPress={() => removeLink()}
-          >
-            <XMarkIcon width={16} />
-          </MultiButton>
+          />
         </div>
       ) : (
         <LinkEditForm

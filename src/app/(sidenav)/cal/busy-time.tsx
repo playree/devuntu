@@ -38,12 +38,21 @@ export const BusyTimeManage: FC = () => {
     <FlexCol>
       <div className='flex justify-end'>
         <ButtonGroup variant='outline'>
-          <MultiButton isIconOnly size='sm' tooltip={t('add_busy_time')} onPress={() => modalState.open()}>
-            <PlusIcon />
-          </MultiButton>
-          <MultiButton isIconOnly size='sm' tooltip={t('reload')} onPress={() => list.reload()}>
+          <MultiButton
+            isIconOnly
+            size='sm'
+            tooltip={t('add_busy_time')}
+            icon={<PlusIcon />}
+            onPress={() => modalState.open()}
+          />
+          <MultiButton
+            isIconOnly
+            size='sm'
+            tooltip={t('reload')}
+            icon={<ArrowPathIcon />}
+            onPress={() => list.reload()}
+          >
             <ButtonGroup.Separator />
-            <ArrowPathIcon />
           </MultiButton>
         </ButtonGroup>
       </div>

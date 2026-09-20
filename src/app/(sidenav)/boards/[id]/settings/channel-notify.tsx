@@ -139,10 +139,9 @@ const NotifyForm: FC<{
             tooltip={t('reload')}
             coolTime={5}
             isPending={isChannelsRefreshing}
+            icon={<ArrowPathIcon width={16} />}
             onPress={refreshChannels}
-          >
-            <ArrowPathIcon width={16} />
-          </MultiButton>
+          />
         </div>
         <Controller
           control={control}

@@ -50,6 +50,7 @@ export const MdxEditImageToolbar: FC<MdxEditImageToolbarProps> = ({
         variant='ghost'
         isIconOnly
         tooltip={t('replace_image')}
+        icon={<PencilSquareIcon width={16} />}
         onPress={() =>
           openEditImageDialog({
             nodeKey,
@@ -63,18 +64,15 @@ export const MdxEditImageToolbar: FC<MdxEditImageToolbarProps> = ({
             },
           })
         }
-      >
-        <PencilSquareIcon width={16} />
-      </MultiButton>
+      />
       <MultiButton
         size='sm'
         variant='danger-soft'
         isIconOnly
         tooltip={t('delete_image')}
+        icon={<TrashIcon width={16} />}
         onPress={() => activeEditor?.update(() => $getNodeByKey(nodeKey)?.remove())}
-      >
-        <TrashIcon width={16} />
-      </MultiButton>
+      />
     </div>
   )
 }
