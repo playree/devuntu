@@ -129,6 +129,7 @@ export const en: LocaleItems = {
   command_follow_latest: 'Follow latest',
   command_fresh_session_required: 'Require re-authentication',
   command_input_type_checkbox: 'Checkbox',
+  command_input_type_input: 'Text input',
   command_input_type_multiselect: 'Multi select',
   command_input_type_radio: 'Radio',
   command_input_type_select: 'Select',
@@ -610,4 +611,5 @@ Expiration time: 5 minutes
   '@invalid_webpush_subscription': 'Invalid subscription format.',
   '@invalid_notify_setting': 'Invalid notification settings.',
   '@invalid_command_input': 'Invalid selection.',
+  '@invalid_command_value': "Only letters, digits and . _ : @ = / + , - are allowed (not '-' as the first character).",
 }

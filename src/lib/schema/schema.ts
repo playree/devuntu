@@ -379,8 +379,9 @@ export type SetCommandTargetGroupsIn = z.input<typeof scSetCommandTargetGroups>
  * コマンドの実行要求。
  *
  * `params` の中身は定義ごとに形が違うので、ここでは器の形だけを見る。
- * 値が選択肢の中にあるかは `resolveCommandArgs`(`src/lib/command/command-args.ts`)が
- * 定義を突き合わせて確かめる。フリー入力を受け付けないため、値の型はこの3つに限る。
+ * 値が選択肢の中にあるか(フリー入力なら使える文字と長さに収まっているか)は
+ * `resolveCommandArgs`(`src/lib/command/command-args.ts`)が定義を突き合わせて確かめる。
+ * 入力欄の種別がどれでも値は文字列・文字列配列・真偽値のどれかになるので、器はこの3つで足りる。
  */
 export const scStartCommandRun = z.object({
   commandKey: z.string().regex(COMMAND_ID_PATTERN, el('@invalid_command_input')),

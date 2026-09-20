@@ -11,8 +11,8 @@ import { describe, expect, it } from 'vitest'
 const HEAD = ['id: my-command', 'label: デプロイ', 'executable: /opt/bin/deploy.sh'].join('\n')
 
 /** 指摘を「指している文字列」と対にして取り出す */
-const lint = (text: string) =>
-  lintCommandDefYaml(text).map((issue) => ({
+const lint = (text: string, context?: { allowFreeInput: boolean }) =>
+  lintCommandDefYaml(text, context).map((issue) => ({
     slice: text.slice(issue.from, issue.to),
     severity: issue.severity,
     message: issue.message,
@@ -125,6 +125,30 @@ describe('YAML として読めない場合', () => {
   it('タブのインデントを拾う', () => {
     const issues = lint('id: my-command\ninputs:\n\t- key: env\n')
     expect(issues.some((issue) => issue.message.includes('Tabs are not allowed'))).toBe(true)
+  })
+})
+
+/**
+ * フリー入力の許可はターゲット側にあり、ここで検証するコマンド 1 件の YAML には現れない。
+ * 画面が知っている許可を渡したときだけ指摘する。
+ */
+describe('フリー入力', () => {
+  const text = [HEAD, 'inputs:', '  - type: input', '    key: tag', '    label: タグ', ''].join('\n')
+
+  it('許可が無いターゲットでは type の位置を指す', () => {
+    const issues = lint(text, { allowFreeInput: false })
+    expect(issues).toHaveLength(1)
+    expect(issues[0].slice).toBe('input')
+    expect(issues[0].severity).toBe('error')
+    expect(issues[0].message).toContain('allowFreeInput: true')
+  })
+
+  it('許可のあるターゲットでは出ない', () => {
+    expect(lint(text, { allowFreeInput: true })).toEqual([])
+  })
+
+  it('文脈を渡さなければ判定しない', () => {
+    expect(lint(text)).toEqual([])
   })
 })
 

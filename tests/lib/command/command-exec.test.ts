@@ -98,6 +98,7 @@ const target: CommandTarget = {
   user: 'deploy',
   identityFile: 'ops_ed25519',
   editable: false,
+  allowFreeInput: false,
 }
 
 /** 手で終了させられる偽の ssh */

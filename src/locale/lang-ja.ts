@@ -130,6 +130,7 @@ export const ja: DefaultLocaleItems = {
   command_follow_latest: '最新へ追従',
   command_fresh_session_required: '再認証の要求',
   command_input_type_checkbox: 'チェックボックス',
+  command_input_type_input: 'テキスト入力',
   command_input_type_multiselect: '複数選択',
   command_input_type_radio: 'ラジオ',
   command_input_type_select: 'リスト選択',
@@ -610,4 +611,5 @@ export const ja: DefaultLocaleItems = {
   '@invalid_webpush_subscription': '購読の形式が正しくありません。',
   '@invalid_notify_setting': '通知設定の指定が正しくありません。',
   '@invalid_command_input': '選択内容が正しくありません。',
+  '@invalid_command_value': '使えるのは英数字と . _ : @ = / + , - だけです(先頭の - は使えません)。',
 }

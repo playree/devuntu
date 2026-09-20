@@ -27,6 +27,8 @@ export type CommandDefTarget = {
   targetKey: string
   revision: string
   targetLabel: string
+  /** ターゲットがフリー入力を許しているか。書いている最中の検証に渡す */
+  allowFreeInput: boolean
   /** 更新するコマンド。追加なら null */
   command: CommandDefView | null
 }
@@ -135,7 +137,13 @@ export const CommandDefModal: FC<ModalBaseProps & { target: CommandDefTarget }> 
     >
       <FlexCol>
         <div className='text-foreground-500 text-xs'>{target.targetLabel}</div>
-        <YamlInput defaultValue={text} onChange={setText} minRows={16} lint={lintCommandDefYaml} />
+        <YamlInput
+          defaultValue={text}
+          onChange={setText}
+          minRows={16}
+          // 許可はターゲット側にあり、コマンド 1 件の YAML からは読めないので渡す
+          lint={(value) => lintCommandDefYaml(value, { allowFreeInput: target.allowFreeInput })}
+        />
         {messages.length > 0 && (
           <NoticePanel status='danger'>
             <ul className='list-inside list-disc text-xs'>

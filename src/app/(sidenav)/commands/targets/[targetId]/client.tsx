@@ -72,6 +72,7 @@ export const CommandTargetClient: FC<{ targetKey: string }> = ({ targetKey }) =>
       targetKey,
       revision: data.target.revision,
       targetLabel: data.target.label,
+      allowFreeInput: data.target.allowFreeInput,
       command,
     })
   }

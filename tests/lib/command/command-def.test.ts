@@ -225,6 +225,45 @@ describe('参照の整合', () => {
 })
 
 /**
+ * フリー入力は「選択肢の閉包」が効かない唯一の種別なので、
+ * どのファイルでも書ける状態になっていないことを固定する。
+ */
+describe('フリー入力', () => {
+  const withFreeInput = (input: Record<string, unknown>, allowFreeInput?: boolean) => ({
+    ...file({ args: ['{{tag}}'], inputs: [input] }),
+    target: allowFreeInput === undefined ? target : { ...target, allowFreeInput },
+  })
+
+  const freeInput = { type: 'input', key: 'tag', label: 'タグ' }
+
+  it('target.allowFreeInput が無ければ弾く', () => {
+    expect(
+      issuesOf(withFreeInput(freeInput)).some((issue) => issue.includes('target.allowFreeInput: true が要る')),
+    ).toBe(true)
+  })
+
+  it('target.allowFreeInput が true なら通り、省略項目に既定が入る', () => {
+    const parsed = scCommandFile.parse(withFreeInput(freeInput, true))
+    const input = parsed.commands[0].inputs[0]
+    expect(input).toMatchObject({ type: 'input', required: true, maxLength: 100 })
+  })
+
+  it.each(['-rf', 'a b', '$(id)', "a'b"])('既定値に使えない値は弾く (%s)', (defaultValue) => {
+    const input = withFreeInput({ ...freeInput, defaultValue }, true)
+    expect(issuesOf(input).some((issue) => issue.includes('フリー入力の値に使えない文字'))).toBe(true)
+  })
+
+  it('既定値が maxLength を超えていれば弾く', () => {
+    const input = withFreeInput({ ...freeInput, defaultValue: 'abcdef', maxLength: 5 }, true)
+    expect(issuesOf(input).some((issue) => issue.includes('既定値が maxLength を超えている'))).toBe(true)
+  })
+
+  it('maxLength は値の文字数の上限を超えられない', () => {
+    expect(scCommandFile.safeParse(withFreeInput({ ...freeInput, maxLength: 201 }, true)).success).toBe(false)
+  })
+})
+
+/**
  * 画面からは 1 コマンドだけを送るので、ファイル全体でしか見ない検証になっていると
  * 「画面では何も出ないのに保存するとサーバーから怒られる」状態になる。
  */

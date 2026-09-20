@@ -18,6 +18,7 @@ const INPUT_TYPE_LABEL = {
   radio: 'command_input_type_radio',
   multiselect: 'command_input_type_multiselect',
   checkbox: 'command_input_type_checkbox',
+  input: 'command_input_type_input',
 } as const satisfies Record<CommandInputType, LocaleItem>
 
 /**

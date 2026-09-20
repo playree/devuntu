@@ -201,6 +201,54 @@ describe('resolveCommandArgs / checkbox', () => {
   })
 })
 
+describe('resolveCommandArgs / input', () => {
+  const inputDef = def({
+    args: ['--tag', '{{tag}}'],
+    inputs: [{ type: 'input', key: 'tag', label: 'タグ', required: true, maxLength: 20 }],
+  })
+
+  it.each(['v1.2.3', 'feature/DEV-1', 'user@example.net', 'a=b,c'])('使える文字はそのまま渡す (%s)', (value) => {
+    expect(resolveCommandArgs(inputDef, { tag: value })).toEqual(['--tag', value])
+  })
+
+  it.each([
+    // 先頭の `-` は、受け取ったスクリプトからオプションに見えてしまう
+    '-rf',
+    '--force',
+    '$(id)',
+    'a b',
+    'a;id',
+    "a'b",
+    'a\nb',
+  ])('使えない値は弾く (%s)', (value) => {
+    expect(() => resolveCommandArgs(inputDef, { tag: value })).toThrow(CommandArgsError)
+  })
+
+  it('maxLength を超えれば弾く', () => {
+    expect(resolveCommandArgs(inputDef, { tag: 'a'.repeat(20) })).toEqual(['--tag', 'a'.repeat(20)])
+    expect(() => resolveCommandArgs(inputDef, { tag: 'a'.repeat(21) })).toThrow(CommandArgsError)
+  })
+
+  it('必須なのに空なら弾く', () => {
+    expect(() => resolveCommandArgs(inputDef, { tag: '' })).toThrow(CommandArgsError)
+    expect(() => resolveCommandArgs(inputDef, {})).toThrow(CommandArgsError)
+  })
+
+  it('文字列以外は弾く', () => {
+    expect(() => resolveCommandArgs(inputDef, { tag: true })).toThrow(CommandArgsError)
+    expect(() => resolveCommandArgs(inputDef, { tag: ['v1'] })).toThrow(CommandArgsError)
+  })
+
+  it('必須でなければ空を許し、引数は増えない', () => {
+    const optional = def({
+      args: ['--tag', '{{tag}}'],
+      inputs: [{ type: 'input', key: 'tag', label: 'タグ', required: false, maxLength: 10 }],
+    })
+    // プレースホルダごと消えるので、値の無い `--tag` だけが残ることはない
+    expect(resolveCommandArgs(optional, { tag: '' })).toEqual(['--tag'])
+  })
+})
+
 describe('buildCommandInputSchema', () => {
   it('選択肢の外の値を弾く', () => {
     const schema = buildCommandInputSchema(selectDef)
@@ -211,6 +259,18 @@ describe('buildCommandInputSchema', () => {
   it('定義に無いキーを弾く', () => {
     const schema = buildCommandInputSchema(selectDef)
     expect(schema.safeParse({ env: 'production', extra: 'x' }).success).toBe(false)
+  })
+
+  it('フリー入力は使える文字と長さで弾く', () => {
+    const schema = buildCommandInputSchema(
+      def({ inputs: [{ type: 'input', key: 'tag', label: 'タグ', required: true, maxLength: 5 }] }),
+    )
+    expect(schema.safeParse({ tag: 'v1.2' }).success).toBe(true)
+    expect(schema.safeParse({ tag: '-rf' }).success).toBe(false)
+    expect(schema.safeParse({ tag: 'a b' }).success).toBe(false)
+    expect(schema.safeParse({ tag: 'abcdef' }).success).toBe(false)
+    // 必須なので空も通さない
+    expect(schema.safeParse({ tag: '' }).success).toBe(false)
   })
 })
 
@@ -239,17 +299,24 @@ describe('buildCommandInputDefaults', () => {
           options: [{ value: 'alpha', label: 'a' }],
         },
         { type: 'checkbox', key: 'verbose', label: '詳細', default: true, whenTrue: [], whenFalse: [] },
+        { type: 'input', key: 'tag', label: 'タグ', required: true, maxLength: 10, defaultValue: 'v1.0.0' },
       ],
     })
     expect(buildCommandInputDefaults(withDefaults)).toEqual({
       env: 'production',
       targets: ['alpha'],
       verbose: true,
+      tag: 'v1.0.0',
     })
   })
 
   it('必須で既定値が無ければ先頭の選択肢を使う', () => {
     expect(buildCommandInputDefaults(selectDef)).toEqual({ env: 'staging' })
+  })
+
+  it('フリー入力に既定値が無ければ空にする', () => {
+    const noDefault = def({ inputs: [{ type: 'input', key: 'tag', label: 'タグ', required: true, maxLength: 10 }] })
+    expect(buildCommandInputDefaults(noDefault)).toEqual({ tag: '' })
   })
 })
 

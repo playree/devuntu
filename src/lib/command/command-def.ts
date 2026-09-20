@@ -13,6 +13,8 @@ import { z } from 'zod'
 import {
   COMMAND_DEF_VERSION,
   COMMAND_FILE_NAME_PATTERN,
+  COMMAND_FREE_INPUT_MAX_LEN_DEFAULT,
+  COMMAND_FREE_VALUE_PATTERN,
   COMMAND_ID_PATTERN,
   COMMAND_MULTISELECT_MAX_DEFAULT,
   COMMAND_PLACEHOLDER_LOOSE_PATTERN,
@@ -21,6 +23,7 @@ import {
   COMMAND_TIMEOUT_DEFAULT_SEC,
   COMMAND_TIMEOUT_MAX_SEC,
   COMMAND_TIMEOUT_MIN_SEC,
+  COMMAND_VALUE_MAX_LEN,
   COMMAND_VALUE_PATTERN,
   type CommandInput,
   MAX_COMMAND_ARGS,
@@ -34,6 +37,9 @@ const zCommandId = z
   .regex(COMMAND_ID_PATTERN, '識別子は英数字で始まる 2〜64 文字(英小文字・数字・_・-)で指定する')
 const zLabel = z.string().min(1).max(120)
 const zOptionValue = z.string().regex(COMMAND_VALUE_PATTERN, '選択肢の値に使えない文字が含まれている')
+const zFreeValue = z
+  .string()
+  .regex(COMMAND_FREE_VALUE_PATTERN, 'フリー入力の値に使えない文字が含まれている(先頭の - も使えない)')
 const zFileName = z
   .string()
   .regex(COMMAND_FILE_NAME_PATTERN, 'ファイル名は英数字で始まる 1〜64 文字で指定する(ディレクトリ区切りは不可)')
@@ -75,6 +81,21 @@ const scCommandInput = z.discriminatedUnion('type', [
     whenTrue: z.array(zArgToken).max(MAX_COMMAND_ARGS).default([]),
     whenFalse: z.array(zArgToken).max(MAX_COMMAND_ARGS).default([]),
   }),
+  /**
+   * フリー入力。`target.allowFreeInput: true` のファイルでしか使えない(`scCommandFile` が見る)。
+   *
+   * 選択肢の閉包が効かない唯一の種別なので、値は `COMMAND_FREE_VALUE_PATTERN` と `maxLength` で縛る。
+   */
+  z.strictObject({
+    type: z.literal('input'),
+    key: zCommandId,
+    label: zLabel,
+    defaultValue: zFreeValue.optional(),
+    /** 入力欄に薄く出す例。値ではないので文字集合は縛らない */
+    placeholder: z.string().max(60).optional(),
+    required: z.boolean().default(true),
+    maxLength: z.number().int().min(1).max(COMMAND_VALUE_MAX_LEN).default(COMMAND_FREE_INPUT_MAX_LEN_DEFAULT),
+  }),
 ])
 
 const scCommandTarget = z.strictObject({
@@ -97,6 +118,14 @@ const scCommandTarget = z.strictObject({
    * 画面から変えられないので、編集を許しても画面から到達できる接続先は増えない。
    */
   editable: z.boolean().default(false),
+  /**
+   * このターゲットのコマンドで `type: input`(フリー入力)を使ってよいか。
+   *
+   * 既定は false。フリー入力は「選択肢の閉包」が効かない唯一の経路なので、
+   * リモート側に実行ゲート(`authorized_keys` の `command=`)を置いたホストだけで開ける想定にしてある。
+   * `target` は画面から編集できないため、この許可も画面からは増やせない。
+   */
+  allowFreeInput: z.boolean().default(false),
 })
 
 const scCommandDef = z
@@ -180,6 +209,22 @@ export const scCommandFile = z
         })
       }
       commandIds.add(command.id)
+
+      /**
+       * フリー入力の許可はターゲット側にあるので、コマンド 1 件のスキーマでは見られない。
+       * 画面からの保存もファイル全体をこのスキーマへ通すため、判定はここ 1 か所で足りる。
+       */
+      if (!file.target.allowFreeInput) {
+        command.inputs.forEach((input, inputIndex) => {
+          if (input.type === 'input') {
+            ctx.addIssue({
+              code: 'custom',
+              path: ['commands', index, 'inputs', inputIndex, 'type'],
+              message: 'フリー入力を使うには target.allowFreeInput: true が要る',
+            })
+          }
+        })
+      }
     })
   })
 
@@ -219,6 +264,16 @@ const checkInputDefaults = (input: CommandInput, ctx: z.RefinementCtx, path: (st
         code: 'custom',
         path: [...path, 'minSelected'],
         message: 'minSelected が選択肢の数を超えている',
+      })
+    }
+    return
+  }
+  if (input.type === 'input') {
+    if (input.defaultValue && input.defaultValue.length > input.maxLength) {
+      ctx.addIssue({
+        code: 'custom',
+        path: [...path, 'defaultValue'],
+        message: '既定値が maxLength を超えている',
       })
     }
   }

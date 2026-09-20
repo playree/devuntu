@@ -28,11 +28,22 @@ type Located = Pick<CommandDefIssue, 'from' | 'to' | 'severity'> & {
 type PathSegment = string | number
 
 /**
+ * YAML だけでは決まらない文脈。
+ *
+ * ここで検証するのはコマンド 1 件なので、定義ファイルの `target` は見えない。
+ * 省略した場合はその文脈に依る検証を行わない(保存時にサーバーが同じ判定をする)。
+ */
+export type CommandDefLintContext = {
+  /** ターゲットが `allowFreeInput: true` か。false なら `type: input` は書けない */
+  allowFreeInput: boolean
+}
+
+/**
  * YAML テキストを読んで、構文エラーとスキーマ違反を位置つきで返す。
  *
  * 検証するのは**コマンド 1 件ぶん**の定義(`scCommandDefInput`)。定義ファイル全体ではない。
  */
-export const lintCommandDefYaml = (text: string): CommandDefIssue[] => {
+export const lintCommandDefYaml = (text: string, context?: CommandDefLintContext): CommandDefIssue[] => {
   if (!text.trim()) {
     return []
   }
@@ -70,11 +81,43 @@ export const lintCommandDefYaml = (text: string): CommandDefIssue[] => {
     return normalize([...syntax, { ...firstLine(text), severity: 'error', message }], text)
   }
 
+  const free = context?.allowFreeInput === false ? locateFreeInputs(doc, text, value) : []
+
   const parsed = scCommandDefInput.safeParse(value)
   if (parsed.success) {
-    return normalize(syntax, text)
+    return normalize([...syntax, ...free], text)
   }
-  return normalize([...syntax, ...parsed.error.issues.flatMap((issue) => locateIssue(doc, text, issue))], text)
+  return normalize([...syntax, ...free, ...parsed.error.issues.flatMap((issue) => locateIssue(doc, text, issue))], text)
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value)
+
+/**
+ * フリー入力の指摘。
+ *
+ * 許可はターゲット側にあるため `scCommandDefInput` では判定できない。保存時にはサーバーが
+ * ファイル全体を検証して断るが、それだけだと書き終えるまで気付けないので、
+ * 画面が知っている許可をここで先に反映する。
+ */
+const locateFreeInputs = (doc: Document, text: string, value: unknown): CommandDefIssue[] => {
+  const inputs = isRecord(value) ? value.inputs : undefined
+  if (!Array.isArray(inputs)) {
+    return []
+  }
+  return inputs.flatMap((input: unknown, index) => {
+    if (!isRecord(input) || input.type !== 'input') {
+      return []
+    }
+    const located = locatePath(doc, text, ['inputs', index, 'type'])
+    return [
+      {
+        ...located,
+        severity: 'error' as const,
+        message: 'フリー入力を使うには、定義ファイルの target に allowFreeInput: true が要る',
+      },
+    ]
+  })
 }
 
 /** issue 1 件を位置つきへ。未知キーはキーごとに分けて、それぞれの位置を指す */

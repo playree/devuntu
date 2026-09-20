@@ -125,6 +125,7 @@ export type LocaleItemBase =
   | 'command_follow_latest'
   | 'command_fresh_session_required'
   | 'command_input_type_checkbox'
+  | 'command_input_type_input'
   | 'command_input_type_multiselect'
   | 'command_input_type_radio'
   | 'command_input_type_select'
@@ -548,6 +549,7 @@ export type LocaleItemError =
   | '@invalid_webpush_subscription'
   | '@invalid_notify_setting'
   | '@invalid_command_input'
+  | '@invalid_command_value'
 export const el = (item: LocaleItemError) => item
 
 export type LocaleItem = LocaleItemBase | LocaleItemError
