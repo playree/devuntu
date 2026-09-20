@@ -53,14 +53,12 @@ export const BoardMembers: FC<{
           <MultiButton // manage 権限が無い場合はアサインを編集させない(assignments が渡ってこない)
             isIconOnly
             tooltip={t('add_member')}
+            icon={<UserPlusIcon />}
             onPress={() => addModalState.open()}
-          >
-            <UserPlusIcon />
-          </MultiButton>
+          />
         )}
-        <MultiButton isIconOnly tooltip={t('reload')} onPress={() => pagingList.reload()}>
+        <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={() => pagingList.reload()}>
           {assignments && <ButtonGroup.Separator />}
-          <ArrowPathIcon />
         </MultiButton>
       </ContentHeader>
 

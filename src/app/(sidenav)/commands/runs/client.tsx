@@ -78,15 +78,14 @@ export const CommandRunsClient: FC<{ initialCommandKey: string | null }> = ({ in
                   size='sm'
                   variant='ghost'
                   tooltip={t('clear')}
+                  icon={<XMarkIcon />}
                   onPress={() => {
                     commandKeyRef.current = null
                     setCommandKey(null)
                     list.resetPage()
                     list.reload()
                   }}
-                >
-                  <XMarkIcon />
-                </MultiButton>
+                />
               </FlexRow>
             )}
             {isAdmin && (
@@ -107,9 +106,7 @@ export const CommandRunsClient: FC<{ initialCommandKey: string | null }> = ({ in
           </>
         }
       >
-        <MultiButton isIconOnly tooltip={t('reload')} onPress={() => list.reload()}>
-          <ArrowPathIcon />
-        </MultiButton>
+        <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={() => list.reload()} />
       </ContentHeader>
 
       <MultiTable

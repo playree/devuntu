@@ -75,9 +75,8 @@ export const SplitButton = <T extends string>({
           size={size}
           isDisabled={isDisabled}
           aria-label={dropdownLabel}
-        >
-          <ChevronDownIcon />
-        </MultiButton>
+          icon={<ChevronDownIcon />}
+        />
         <Dropdown.Popover>
           <Dropdown.Menu
             disallowEmptySelection

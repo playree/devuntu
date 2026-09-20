@@ -38,12 +38,14 @@ export const CommandsClient: FC = () => {
   return (
     <FlexCol>
       <ContentHeader icon={<CommandLineIcon />} title={t('command_exec')}>
-        <MultiButton isIconOnly tooltip={t('command_run_history')} onPress={() => router.push('/commands/runs')}>
-          <ClockIcon />
-        </MultiButton>
-        <MultiButton isIconOnly tooltip={t('reload')} onPress={() => reload()}>
+        <MultiButton
+          isIconOnly
+          tooltip={t('command_run_history')}
+          icon={<ClockIcon />}
+          onPress={() => router.push('/commands/runs')}
+        />
+        <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={() => reload()}>
           <ButtonGroup.Separator />
-          <ArrowPathIcon />
         </MultiButton>
       </ContentHeader>
 
@@ -88,9 +90,13 @@ const TargetSection: FC<{
         {/* 定義を編集できるのはオーナーだけなので、導線もオーナーにだけ出す。見出しはトリガーなのでボタンを置けない */}
         {target.role === 'owner' && (
           <FlexRow className='col-span-12 justify-end'>
-            <MultiButton isIconOnly variant='outline' tooltip={t('command_target_settings')} onPress={onSettings}>
-              <Cog6ToothIcon />
-            </MultiButton>
+            <MultiButton
+              isIconOnly
+              variant='outline'
+              tooltip={t('command_target_settings')}
+              icon={<Cog6ToothIcon />}
+              onPress={onSettings}
+            />
           </FlexRow>
         )}
 
@@ -113,10 +119,9 @@ const TargetSection: FC<{
                   variant='outline'
                   size='sm'
                   tooltip={t('command_run_history')}
+                  icon={<ClockIcon />}
                   onPress={() => onHistory(command)}
-                >
-                  <ClockIcon />
-                </MultiButton>
+                />
               </Card.Footer>
             </Card>
           ))

@@ -42,12 +42,9 @@ export const AdminUsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPass
   return (
     <FlexCol>
       <ContentHeader icon={<UsersIcon />} title={t('user_manage')}>
-        <MultiButton isIconOnly tooltip={t('add_user')} onPress={() => addModalState.open()}>
-          <UserPlusIcon />
-        </MultiButton>
-        <MultiButton isIconOnly tooltip={t('reload')} onPress={() => list.reload()}>
+        <MultiButton isIconOnly tooltip={t('add_user')} icon={<UserPlusIcon />} onPress={() => addModalState.open()} />
+        <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={() => list.reload()}>
           <ButtonGroup.Separator />
-          <ArrowPathIcon />
         </MultiButton>
       </ContentHeader>
 

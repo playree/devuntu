@@ -55,12 +55,9 @@ export const BoardsClient: FC = () => {
           />
         }
       >
-        <MultiButton isIconOnly tooltip={t('add_board')} onPress={() => addModalState.open()}>
-          <PlusIcon />
-        </MultiButton>
-        <MultiButton isIconOnly tooltip={t('reload')} onPress={() => list.reload()}>
+        <MultiButton isIconOnly tooltip={t('add_board')} icon={<PlusIcon />} onPress={() => addModalState.open()} />
+        <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={() => list.reload()}>
           <ButtonGroup.Separator />
-          <ArrowPathIcon />
         </MultiButton>
       </ContentHeader>
 

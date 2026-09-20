@@ -113,9 +113,7 @@ export const AnnouncementManage: FC = () => {
   return (
     <FlexCol>
       <ContentHeader>
-        <MultiButton isIconOnly tooltip={t('update')} onPress={() => modalState.open()}>
-          <PencilSquareIcon />
-        </MultiButton>
+        <MultiButton isIconOnly tooltip={t('update')} icon={<PencilSquareIcon />} onPress={() => modalState.open()} />
       </ContentHeader>
 
       {body !== undefined ? (

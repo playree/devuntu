@@ -122,9 +122,12 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
     return (
       <FlexCol>
         <ContentHeader icon={<ViewColumnsIcon />} title={t('board')}>
-          <MultiButton isIconOnly tooltip={t('back')} onPress={() => router.push('/boards')}>
-            <ArrowLeftCircleIcon />
-          </MultiButton>
+          <MultiButton
+            isIconOnly
+            tooltip={t('back')}
+            icon={<ArrowLeftCircleIcon />}
+            onPress={() => router.push('/boards')}
+          />
         </ContentHeader>
         <NoticePanel>{t('msg_no_access')}</NoticePanel>
       </FlexCol>
@@ -153,24 +156,30 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
       className={cn('max-w-7xl md:max-h-full', !selectedId && 'mx-auto')}
     >
       <ContentHeader icon={<ViewColumnsIcon />} title={boardName(board)}>
-        <MultiButton isIconOnly tooltip={t('back')} onPress={() => router.push('/boards')}>
-          <ArrowLeftCircleIcon />
-        </MultiButton>
-        <MultiButton isIconOnly tooltip={t('ticket')} onPress={() => router.push(`/tickets?boardId=${board.id}`)}>
+        <MultiButton
+          isIconOnly
+          tooltip={t('back')}
+          icon={<ArrowLeftCircleIcon />}
+          onPress={() => router.push('/boards')}
+        />
+        <MultiButton
+          isIconOnly
+          tooltip={t('ticket')}
+          icon={<ArrowTopRightOnSquareIcon />}
+          onPress={() => router.push(`/tickets?boardId=${board.id}`)}
+        >
           <ButtonGroup.Separator />
-          <ArrowTopRightOnSquareIcon />
         </MultiButton>
         <MultiButton
           isIconOnly
           tooltip={t('board_settings')}
+          icon={<Cog6ToothIcon />}
           onPress={() => router.push(`/boards/${board.id}/settings`)}
         >
           <ButtonGroup.Separator />
-          <Cog6ToothIcon />
         </MultiButton>
-        <MultiButton isIconOnly tooltip={t('reload')} onPress={reload}>
+        <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={reload}>
           <ButtonGroup.Separator />
-          <ArrowPathIcon />
         </MultiButton>
       </ContentHeader>
 

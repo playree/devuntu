@@ -44,12 +44,14 @@ export const AgentApproverUsers: FC<{
   return (
     <FlexCol>
       <ContentHeader>
-        <MultiButton isIconOnly tooltip={t('add_agent_approver_user')} onPress={() => addModalState.open()}>
-          <UserPlusIcon />
-        </MultiButton>
-        <MultiButton isIconOnly tooltip={t('reload')} onPress={() => pagingList.reload()}>
+        <MultiButton
+          isIconOnly
+          tooltip={t('add_agent_approver_user')}
+          icon={<UserPlusIcon />}
+          onPress={() => addModalState.open()}
+        />
+        <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={() => pagingList.reload()}>
           <ButtonGroup.Separator />
-          <ArrowPathIcon />
         </MultiButton>
       </ContentHeader>
 

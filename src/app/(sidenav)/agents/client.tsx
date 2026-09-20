@@ -137,9 +137,7 @@ export const AgentsClient: FC = () => {
       className={cn('max-w-6xl', !selectedId && 'mx-auto')}
     >
       <ContentHeader icon={<CpuChipIcon />} title={t('agent')}>
-        <MultiButton isIconOnly tooltip={t('reload')} onPress={reloadAll}>
-          <ArrowPathIcon />
-        </MultiButton>
+        <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={reloadAll} />
       </ContentHeader>
 
       {(agents ?? []).length === 0 ? (

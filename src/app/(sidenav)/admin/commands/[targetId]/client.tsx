@@ -48,9 +48,12 @@ export const AdminCommandTargetClient: FC<{ targetKey: string }> = ({ targetKey 
     return (
       <FlexCol>
         <ContentHeader icon={<Cog6ToothIcon />} title={t('command_target_assign')}>
-          <MultiButton isIconOnly tooltip={t('back')} onPress={() => router.push('/admin/commands')}>
-            <ArrowLeftCircleIcon />
-          </MultiButton>
+          <MultiButton
+            isIconOnly
+            tooltip={t('back')}
+            icon={<ArrowLeftCircleIcon />}
+            onPress={() => router.push('/admin/commands')}
+          />
         </ContentHeader>
         <NoticePanel>{t('msg_no_access')}</NoticePanel>
       </FlexCol>
@@ -60,9 +63,12 @@ export const AdminCommandTargetClient: FC<{ targetKey: string }> = ({ targetKey 
   return (
     <FlexCol>
       <ContentHeader icon={<Cog6ToothIcon />} title={assignments.targetLabel}>
-        <MultiButton isIconOnly tooltip={t('back')} onPress={() => router.push('/admin/commands')}>
-          <ArrowLeftCircleIcon />
-        </MultiButton>
+        <MultiButton
+          isIconOnly
+          tooltip={t('back')}
+          icon={<ArrowLeftCircleIcon />}
+          onPress={() => router.push('/admin/commands')}
+        />
       </ContentHeader>
 
       <div className='text-foreground-500 font-mono text-xs break-all'>{targetKey}</div>

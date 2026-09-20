@@ -114,13 +114,12 @@ export const CommentItem: FC<{
               variant='outline'
               className='h-7 w-7 rounded-sm'
               tooltip={t('update')}
+              icon={<PencilSquareIcon width={16} />}
               onPress={() => {
                 setDraft(comment.content)
                 setEditing(true)
               }}
-            >
-              <PencilSquareIcon width={16} />
-            </MultiButton>
+            />
           )}
           {(comment.isMine || canDelete) && (
             <MultiButton
@@ -129,10 +128,9 @@ export const CommentItem: FC<{
               variant='outline'
               className='h-7 w-7 rounded-sm'
               tooltip={t('delete')}
+              icon={<TrashIcon width={16} className='text-red-400' />}
               onPress={remove}
-            >
-              <TrashIcon width={16} className='text-red-400' />
-            </MultiButton>
+            />
           )}
         </div>
       </div>
