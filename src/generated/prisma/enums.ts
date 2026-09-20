@@ -136,3 +136,31 @@ export const NotifyJobStatus = {
 } as const
 
 export type NotifyJobStatus = (typeof NotifyJobStatus)[keyof typeof NotifyJobStatus]
+
+
+export const CommandTargetMemberRole = {
+  owner: 'owner',
+  member: 'member'
+} as const
+
+export type CommandTargetMemberRole = (typeof CommandTargetMemberRole)[keyof typeof CommandTargetMemberRole]
+
+
+export const CommandRunStatus = {
+  queued: 'queued',
+  running: 'running',
+  succeeded: 'succeeded',
+  failed: 'failed',
+  canceled: 'canceled'
+} as const
+
+export type CommandRunStatus = (typeof CommandRunStatus)[keyof typeof CommandRunStatus]
+
+
+export const CommandStream = {
+  stdout: 'stdout',
+  stderr: 'stderr',
+  system: 'system'
+} as const
+
+export type CommandStream = (typeof CommandStream)[keyof typeof CommandStream]

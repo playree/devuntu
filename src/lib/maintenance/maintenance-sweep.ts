@@ -8,12 +8,12 @@
  * 手順は逐次に実行する。どれもDBへの書き込みで、並行させるとコネクションを余分に掴むだけになる。
  */
 
+import { type CommandRunStatus } from '@/generated/prisma/enums'
 import { nowDate } from '../day'
+import { envu } from '../env-util'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
 import {
-  AGENT_RUN_KEEP_PER_RUNNER,
-  AGENT_RUN_RETENTION_MS,
   MAINTENANCE_DELETE_BATCH,
   OAUTH_TOKEN_RETENTION_MS,
   retentionBefore,
@@ -21,6 +21,9 @@ import {
   VERIFICATION_RETENTION_MS,
 } from './maintenance'
 import { sweepOrphanAttachments } from './maintenance-attachment'
+
+/** 実行履歴の保持期間は日で受け取るので、境界の計算前に ms へ直す */
+const DAY_MS = 24 * 60 * 60 * 1000
 
 /** 手順ごとの削除件数。失敗した手順は `-1` */
 export type SweepCounts = Record<string, number>
@@ -95,13 +98,19 @@ export const sweepUploadNonces = async (now: Date): Promise<number> =>
   (await prisma.uploadNonce.deleteMany({ where: { expiresAt: { lt: now } } })).count
 
 /**
- * エージェントの実行履歴。保持期間とランナーごとの件数の2本で抑える。
+ * エージェントの実行履歴。保持期間(`AGENT_RUN_RETENTION_DAYS`)とランナーごとの件数
+ * (`AGENT_RUN_KEEP`)の2本で抑える。
  *
  * `running` は時間切れの回収(`agent-runner.ts` の `failStaleAgentRuns`)が持ち主なので触らない。
  */
 export const sweepAgentRuns = async (now: Date): Promise<number> => {
+  const keep = envu.server.AGENT_RUN_KEEP
+
   const { count } = await prisma.agentRun.deleteMany({
-    where: { startedAt: { lt: retentionBefore(now, AGENT_RUN_RETENTION_MS) }, status: { not: 'running' } },
+    where: {
+      startedAt: { lt: retentionBefore(now, envu.server.AGENT_RUN_RETENTION_DAYS * DAY_MS) },
+      status: { not: 'running' },
+    },
   })
 
   let capped = 0
@@ -111,11 +120,50 @@ export const sweepAgentRuns = async (now: Date): Promise<number> => {
       where: { runnerId: id, status: { not: 'running' } },
       select: { id: true },
       orderBy: [{ startedAt: 'desc' }, { id: 'desc' }],
-      skip: AGENT_RUN_KEEP_PER_RUNNER,
+      skip: keep,
       take: MAINTENANCE_DELETE_BATCH,
     })
     if (excess.length > 0) {
       capped += (await prisma.agentRun.deleteMany({ where: { id: { in: excess.map(({ id }) => id) } } })).count
+    }
+  }
+
+  return count + capped
+}
+
+/**
+ * コマンドの実行履歴。保持期間(`COMMAND_RUN_RETENTION_DAYS`)とコマンドごとの件数
+ * (`COMMAND_RUN_KEEP`)の2本で抑える。
+ *
+ * ログ(`command_run_chunk`)は Cascade で一緒に消える。
+ * `queued` / `running` は実行側(`command-run.ts` の `finishCommandRun` / `reclaimStaleRuns`)が
+ * 持ち主なので触らない。掃除が先に消すと、実行中のワーカーが書き込み先を失う。
+ */
+export const sweepCommandRuns = async (now: Date): Promise<number> => {
+  // 終了済みだけを対象にする。queued / running は実行側が持ち主
+  const settled = { status: { in: ['succeeded', 'failed', 'canceled'] as CommandRunStatus[] } }
+  const keep = envu.server.COMMAND_RUN_KEEP
+
+  const { count } = await prisma.commandRun.deleteMany({
+    where: { queuedAt: { lt: retentionBefore(now, envu.server.COMMAND_RUN_RETENTION_DAYS * DAY_MS) }, ...settled },
+  })
+
+  let capped = 0
+  // 定義ファイルから消えたコマンドの履歴も対象にしたいので、実在するキーを履歴側から引く
+  const keys = await prisma.commandRun.findMany({
+    distinct: ['commandKey'],
+    select: { commandKey: true },
+  })
+  for (const { commandKey } of keys) {
+    const excess = await prisma.commandRun.findMany({
+      where: { commandKey, ...settled },
+      select: { id: true },
+      orderBy: [{ queuedAt: 'desc' }, { id: 'desc' }],
+      skip: keep,
+      take: MAINTENANCE_DELETE_BATCH,
+    })
+    if (excess.length > 0) {
+      capped += (await prisma.commandRun.deleteMany({ where: { id: { in: excess.map(({ id }) => id) } } })).count
     }
   }
 
@@ -144,6 +192,7 @@ export const runMaintenanceSweep = async (now: Date = nowDate()): Promise<SweepC
   await runStep(counts, 'oauthClientAssertion', () => sweepOauthClientAssertions(now))
   await runStep(counts, 'uploadNonce', () => sweepUploadNonces(now))
   await runStep(counts, 'agentRun', () => sweepAgentRuns(now))
+  await runStep(counts, 'commandRun', () => sweepCommandRuns(now))
   await runStep(counts, 'attachment', () => sweepOrphanAttachments(now))
 
   logger.info(counts, 'maintenance sweep finished')

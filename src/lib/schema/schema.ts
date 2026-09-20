@@ -24,6 +24,7 @@ import {
   TICKET_SORT_COLUMNS,
   TICKET_STATUSES,
 } from '../board/task'
+import { COMMAND_ID_PATTERN, COMMAND_RUN_SORT_COLUMNS, COMMAND_RUN_STATUSES } from '../command/command'
 import { CHANNEL_NOTIFY_EVENTS, DM_NOTIFY_EVENTS } from '../notify/notify'
 import { SLACK_CHANNEL_ID_PATTERN } from '../slack/slack'
 import { TOKEN_EXPIRES } from '../token-expires'
@@ -339,6 +340,56 @@ export const scUpdateIntegrationSettings = z.object({
 export type UpdateIntegrationSettings = z.infer<typeof scUpdateIntegrationSettings>
 
 /**
+ * ターゲットの識別子。定義ファイルの `target.id` で、DB の UUID ではない。
+ *
+ * アサインはこのキーで持つ(ターゲットの実体は YAML 側にあり DB に行が無い)。
+ */
+export const zCommandTargetKey = z.string().regex(COMMAND_ID_PATTERN, el('@invalid_command_input'))
+
+/** ターゲットのロール。Prisma の CommandTargetMemberRole / command.ts の CommandTargetRole と一致させる */
+export const zCommandTargetRole = z.enum(['owner', 'member'])
+
+export const scCommandTargetKey = z.object({ targetKey: zCommandTargetKey })
+export type CommandTargetKeyIn = z.input<typeof scCommandTargetKey>
+
+/** ターゲットへのユーザー単位のアサイン。追加と更新で同じ形 */
+export const scUpsertCommandTargetMember = z.object({
+  targetKey: zCommandTargetKey,
+  // 未選択(空文字)のままの送信をフォーム側でも弾けるようメッセージを付ける
+  userId: z.uuidv7(el('@required_field')),
+  role: zCommandTargetRole,
+})
+export type UpsertCommandTargetMember = z.infer<typeof scUpsertCommandTargetMember>
+export type UpsertCommandTargetMemberIn = z.input<typeof scUpsertCommandTargetMember>
+
+/** 直接メンバー1行の解除。グループ経由メンバーには使えない */
+export const scRemoveCommandTargetMember = z.object({
+  targetKey: zCommandTargetKey,
+  userId: z.uuidv7(),
+})
+
+/** グループ単位のアサイン。総入れ替えで受け取る */
+export const scSetCommandTargetGroups = z.object({
+  targetKey: zCommandTargetKey,
+  groupIds: z.array(z.uuidv7()).default([]),
+})
+export type SetCommandTargetGroupsIn = z.input<typeof scSetCommandTargetGroups>
+
+/**
+ * コマンドの実行要求。
+ *
+ * `params` の中身は定義ごとに形が違うので、ここでは器の形だけを見る。
+ * 値が選択肢の中にあるか(フリー入力なら使える文字と長さに収まっているか)は
+ * `resolveCommandArgs`(`src/lib/command/command-args.ts`)が定義を突き合わせて確かめる。
+ * 入力欄の種別がどれでも値は文字列・文字列配列・真偽値のどれかになるので、器はこの3つで足りる。
+ */
+export const scStartCommandRun = z.object({
+  commandKey: z.string().regex(COMMAND_ID_PATTERN, el('@invalid_command_input')),
+  params: z.record(z.string(), z.union([z.string(), z.array(z.string()), z.boolean()])),
+})
+export type StartCommandRun = z.infer<typeof scStartCommandRun>
+
+/**
  * 通知設定(イベント種別ごと・チャネルごとの ON/OFF)。種別が増えても z.enum が自動で追従する。
  * チャネルは常に全部まとめて受け取り、サーバー側に部分更新の分岐を作らない。
  *
@@ -555,6 +606,27 @@ export const scAgentTicketListQuery = z.object({
 })
 export type AgentTicketListQuery = z.infer<typeof scAgentTicketListQuery>
 export type AgentTicketListQueryIn = z.input<typeof scAgentTicketListQuery>
+
+/**
+ * 実行履歴の問い合わせ条件。
+ *
+ * 一般ユーザーは自分の実行だけが対象で、管理者は `scope: 'all'` で全件を見られる。
+ * 並び順の扱いは {@link scTicketListQuery} と同じで、想定外の列名は既定へ落とす。
+ */
+export const scCommandRunListQuery = z.object({
+  /** 'all' は管理者のみ。一般ユーザーが指定してもサーバー側で自分の分に絞る */
+  scope: z.enum(['mine', 'all']).default('mine'),
+  /** 未指定 = 絞り込みなし。コマンド定義のID(画面の絞り込みと URL の検証で共用する) */
+  commandKey: z.string().regex(COMMAND_ID_PATTERN).nullish(),
+  /** 空配列 = 絞り込みなし */
+  status: z.array(z.enum(COMMAND_RUN_STATUSES)).default([]),
+  page: z.number().int().min(1).default(1),
+  rowsPerPage: z.number().int().min(1).max(100).default(10),
+  sortColumn: z.string().default('queuedAt').pipe(z.enum(COMMAND_RUN_SORT_COLUMNS).catch('queuedAt')),
+  sortDirection: z.string().default('descending').pipe(zSortDirection.catch('descending')),
+})
+export type CommandRunListQuery = z.infer<typeof scCommandRunListQuery>
+export type CommandRunListQueryIn = z.input<typeof scCommandRunListQuery>
 
 export const scCreateTicketComment = z.object({
   ticketId: z.uuidv7(),

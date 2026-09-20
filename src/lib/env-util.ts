@@ -1,3 +1,4 @@
+import { AGENT_RUN_HISTORY_LIMIT } from './agent/agent'
 import { errSystemError } from './error'
 
 function getEnv<T extends string = string>(key: string, opts: { required: true }): T
@@ -57,6 +58,15 @@ const client = {
     return process.env.NEXT_PUBLIC_APP_NAME || 'Devuntu'
   },
 }
+
+/**
+ * 履歴の保持期間(日)の上限。
+ *
+ * 保持期間は `now - days * 24h` で削除の境界に直すので、Date の有効範囲
+ * (±8,640,000,000,000,000ms = 現在時刻から約1億日)を超えると Invalid Date になる。
+ * Prisma は無効な DateTime フィルタを受け付けず、掃除が丸ごと止まるので入口で弾く。
+ */
+const MAX_RETENTION_DAYS = 100_000_000
 
 const server = {
   ...client,
@@ -219,6 +229,124 @@ const server = {
     const value = getEnvNumber('MAINTENANCE_ATTACHMENT_GRACE_HOURS', { default: 24 })
     if (!Number.isFinite(value) || value < 1) {
       throw errSystemError('MAINTENANCE_ATTACHMENT_GRACE_HOURS must be at least 1')
+    }
+    return value
+  },
+
+  /** エージェントの実行履歴を残す期間(日) */
+  get AGENT_RUN_RETENTION_DAYS() {
+    const value = getEnvNumber('AGENT_RUN_RETENTION_DAYS', { default: 90 })
+    if (!Number.isInteger(value) || value < 1 || value > MAX_RETENTION_DAYS) {
+      throw errSystemError(`AGENT_RUN_RETENTION_DAYS must be an integer between 1 and ${MAX_RETENTION_DAYS}`)
+    }
+    return value
+  },
+
+  /**
+   * ランナー1台あたりに残す実行履歴の上限。期間内に積み上がった分への歯止め。
+   *
+   * 画面が出せる件数(`AGENT_RUN_HISTORY_LIMIT`)を下回ると「一覧に出ているのに実体が無い」
+   * 履歴が生まれるため、そこを下限にする。
+   */
+  get AGENT_RUN_KEEP() {
+    const value = getEnvNumber('AGENT_RUN_KEEP', { default: 500 })
+    if (!Number.isInteger(value) || value < AGENT_RUN_HISTORY_LIMIT) {
+      throw errSystemError(`AGENT_RUN_KEEP must be an integer of at least ${AGENT_RUN_HISTORY_LIMIT}`)
+    }
+    return value
+  },
+
+  // リモート実行
+  /**
+   * 画面からのリモート実行を有効にするか。
+   *
+   * 既定を false にしているのは、この機能が「サーバーから対象ホストへ SSH してプロセスを起動する」
+   * という他に無い性質を持つため。定義ファイルを置いただけでも、環境変数を入れただけでも動かない。
+   */
+  get COMMAND_EXEC_ENABLED() {
+    return getEnvBoolean('COMMAND_EXEC_ENABLED')
+  },
+
+  /**
+   * コマンド定義(YAML)を置くディレクトリ。運用者が read-only でマウントする。
+   *
+   * 直下の `*.yaml` / `*.yml` が対象で、1 ファイルに 1 ホストを書く。
+   * ファイルパスではなくディレクトリを指す。
+   */
+  get COMMAND_DEF_DIR() {
+    return getEnv('COMMAND_DEF_DIR', { default: '/app/config/commands' })
+  },
+
+  /**
+   * SSH の秘密鍵と known_hosts を置くディレクトリ。
+   *
+   * 定義ファイルからはこの配下の**ファイル名**しか指定できない。
+   * 鍵そのものは DB に持たず、read-only のバインドマウントで渡す。
+   */
+  get COMMAND_SSH_DIR() {
+    return getEnv('COMMAND_SSH_DIR', { default: '/app/config/ssh' })
+  },
+
+  /**
+   * known_hosts のパス(ホストごとの指定が無い場合の既定)。
+   *
+   * StrictHostKeyChecking=yes と組み合わせるため、ここが無いホストへは接続できない(fail closed)。
+   */
+  get COMMAND_SSH_KNOWN_HOSTS() {
+    return (
+      getEnv('COMMAND_SSH_KNOWN_HOSTS') ?? `${getEnv('COMMAND_SSH_DIR', { default: '/app/config/ssh' })}/known_hosts`
+    )
+  },
+
+  /**
+   * 実行ワーカー(`command-worker.ts`)を動かすか。
+   * 止めると待ち行列に積まれるだけで実行されない(切り分け用)。
+   */
+  get COMMAND_WORKER_ENABLED() {
+    return getEnvBoolean('COMMAND_WORKER_ENABLED', { default: true })
+  },
+
+  /**
+   * 同時に走らせる実行の上限。
+   *
+   * サーバーから対象ホストへ SSH を張る数がそのままこの値になるので、控えめな既定にしてある。
+   */
+  get COMMAND_MAX_CONCURRENT() {
+    const value = getEnvNumber('COMMAND_MAX_CONCURRENT', { default: 2 })
+    if (!Number.isInteger(value) || value < 1) {
+      throw errSystemError('COMMAND_MAX_CONCURRENT must be an integer of at least 1')
+    }
+    return value
+  },
+
+  /** 順番待ちに積める実行の上限。これを超える投入は拒否する */
+  get COMMAND_MAX_QUEUED() {
+    const value = getEnvNumber('COMMAND_MAX_QUEUED', { default: 20 })
+    if (!Number.isInteger(value) || value < 1) {
+      throw errSystemError('COMMAND_MAX_QUEUED must be an integer of at least 1')
+    }
+    return value
+  },
+
+  /** コマンドの実行履歴を残す期間(日) */
+  get COMMAND_RUN_RETENTION_DAYS() {
+    const value = getEnvNumber('COMMAND_RUN_RETENTION_DAYS', { default: 90 })
+    if (!Number.isInteger(value) || value < 1 || value > MAX_RETENTION_DAYS) {
+      throw errSystemError(`COMMAND_RUN_RETENTION_DAYS must be an integer between 1 and ${MAX_RETENTION_DAYS}`)
+    }
+    return value
+  },
+
+  /**
+   * コマンド1本あたりに残す実行履歴の上限。期間内に積み上がった分への歯止め。
+   *
+   * ログ(`command_run_chunk`)は実行1件あたり数千行になりうるので、
+   * エージェントの実行履歴(`AGENT_RUN_KEEP`)より絞った既定にしてある。
+   */
+  get COMMAND_RUN_KEEP() {
+    const value = getEnvNumber('COMMAND_RUN_KEEP', { default: 300 })
+    if (!Number.isInteger(value) || value < 1) {
+      throw errSystemError('COMMAND_RUN_KEEP must be an integer of at least 1')
     }
     return value
   },

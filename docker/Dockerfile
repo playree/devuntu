@@ -29,7 +29,9 @@ RUN mkdir migrate && cd migrate \
 FROM node:24-slim AS runner
 WORKDIR /app
 
-RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+# openssh-client はコマンド実行機能(COMMAND_EXEC_ENABLED)が spawn する ssh 本体。
+# ssh2 などの npm パッケージを使わないのは、output: 'standalone' に native 依存を持ち込まないため
+RUN apt-get update -y && apt-get install -y openssl openssh-client && rm -rf /var/lib/apt/lists/*
 
 # 実行に必要なファイルをビルド環境からコピー
 COPY --from=builder /app/public ./public

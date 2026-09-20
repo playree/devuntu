@@ -7,6 +7,7 @@ import {
   ArrowLeftStartOnRectangleIcon,
   CalendarDaysIcon,
   Cog6ToothIcon,
+  CommandLineIcon,
   CpuChipIcon,
   RocketLaunchIcon,
   ServerStackIcon,
@@ -37,6 +38,18 @@ const GoogleAvailableContext = createContext(false)
 
 export const GoogleAvailableProvider: FC<{ value: boolean; children: ReactNode }> = ({ value, children }) => (
   <GoogleAvailableContext.Provider value={value}>{children}</GoogleAvailableContext.Provider>
+)
+
+/**
+ * 実行できるコマンドを1つでも持っているか(既定はfalse)。
+ *
+ * 許可グループのユーザーにも `/commands` を出すため、role では判定できない。
+ * GoogleAvailableContext と同じ理由でレイアウトの Provider 経由で渡す。
+ */
+const CommandAvailableContext = createContext(false)
+
+export const CommandAvailableProvider: FC<{ value: boolean; children: ReactNode }> = ({ value, children }) => (
+  <CommandAvailableContext.Provider value={value}>{children}</CommandAvailableContext.Provider>
 )
 
 export const MenuButton: FC<{
@@ -96,6 +109,8 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
   const { t } = useLocale()
   // Google連携が利用可能なユーザーのみカレンダーを表示する
   const googleAvailable = useContext(GoogleAvailableContext)
+  // アサインされたターゲットを持つユーザーのみリモート実行を表示する
+  const commandAvailable = useContext(CommandAvailableContext)
 
   return (
     <div>
@@ -178,6 +193,15 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
             />
           </AccordionSection>
 
+          {commandAvailable && (
+            <MenuButton // リモート実行
+              to='/commands'
+              text={t('command_exec')}
+              icon={<CommandLineIcon />}
+              closeMenu={closeMenu}
+            />
+          )}
+
           <AccordionSection // 管理者メニュー
             id='group_admin'
             hidden={session?.user.role !== 'admin'}
@@ -212,6 +236,12 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
               to='/admin/oidc-clients'
               text={t('oidc_clients')}
               icon={<ServerStackIcon />}
+              closeMenu={closeMenu}
+            />
+            <MenuButton // リモート管理
+              to='/admin/commands'
+              text={t('command_manage')}
+              icon={<CommandLineIcon />}
               closeMenu={closeMenu}
             />
             <MenuButton // 連携設定

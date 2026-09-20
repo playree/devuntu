@@ -290,3 +290,37 @@ export type NotifyOutbox = Prisma.NotifyOutboxModel
  * 未送信・再試行待ち・試行回数を使い切ったものだけ。
  */
 export type NotifyDelivery = Prisma.NotifyDeliveryModel
+/**
+ * Model CommandTargetMember
+ * リモート実行のターゲットの参加者。ユーザー単位の指定。
+ * 
+ * ターゲットの実体はサーバー上の YAML にあり DB に行を持たないため、`targetKey` に FK を張れない。
+ * 参照側は必ず読み込み済みのカタログに載っているキーの集合でのみこのテーブルを引くこと
+ * (`command-access.ts`)。定義から消えたターゲットの行が残っても、権限を与える経路が無くなる。
+ * 
+ * **管理者もアサインされていなければ実行できない。** 管理者の特権はアサインの操作だけで、
+ * ボード(`assertBoardAccess`)が manage に管理者を含めるのとは切り分けてある。
+ */
+export type CommandTargetMember = Prisma.CommandTargetMemberModel
+/**
+ * Model CommandTargetGroup
+ * {@link CommandTargetMember} のグループ指定版。グループの所属ユーザーがターゲットの参加者になる。
+ * ロールは持たず、常に member 相当(BoardGroup と同じ形)。
+ */
+export type CommandTargetGroup = Prisma.CommandTargetGroupModel
+/**
+ * Model CommandRun
+ * コマンドの1回の実行。
+ * 
+ * 監査記録も兼ねるので、定義ファイルからコマンドが消えても実行者が削除されても行は残す。
+ * そのため表示に使う値(コマンド名・接続先名・実行者名)は実行時点のものを複写する。
+ */
+export type CommandRun = Prisma.CommandRunModel
+/**
+ * Model CommandRunChunk
+ * 出力の1チャンク。
+ * 
+ * 行単位ではなく一定間隔/サイズでまとめた塊にしてある。冗長な出力で INSERT が
+ * 実行を律速しないようにするためで、SSE の追いつきと履歴の表示は同じテーブルで賄う。
+ */
+export type CommandRunChunk = Prisma.CommandRunChunkModel
