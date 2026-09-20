@@ -1,16 +1,18 @@
 'use client'
 
+import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
 import { FlexCol, FlexRow } from '@/components/general/flex'
+import { Grid } from '@/components/general/grid'
 import { useModalState } from '@/components/general/modal'
-import { NoticePanel, Panel, PanelSkeleton } from '@/components/general/panel'
+import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, ClockIcon, Cog6ToothIcon, CommandLineIcon, PlayIcon } from '@/components/icon'
+import { ArrowPathIcon, ClockIcon, Cog6ToothIcon, CommandLineIcon, PlayIcon, ServerStackIcon } from '@/components/icon'
 import { useActionData } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'
-import { ButtonGroup } from '@heroui/react'
+import { Accordion, ButtonGroup, Card } from '@heroui/react'
 import { useRouter } from 'next/navigation'
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 import { CommandForm } from './command-form'
 import { type AvailableCommandView, type AvailableTargetView, getAvailableCommandsAction } from './server'
 
@@ -26,6 +28,12 @@ export const CommandsClient: FC = () => {
   const router = useRouter()
   const { data, isLoading, reload } = useActionData(getAvailableCommandsAction)
   const formState = useModalState<AvailableCommandView>()
+  /**
+   * 既定は全ターゲット展開。
+   * Accordion は data が揃ってから初めて描画されるため、マウント時には全キーが出そろっている。
+   * 非制御なのでリロードで開閉状態は戻らない(その代わり後から増えたターゲットは閉じた状態で出る)。
+   */
+  const defaultExpandedKeys = useMemo(() => new Set(data?.targets.map((target) => target.key)), [data])
 
   return (
     <FlexCol>
@@ -44,7 +52,7 @@ export const CommandsClient: FC = () => {
       ) : !data || data.targets.length === 0 ? (
         <NoticePanel>{t('command_no_target')}</NoticePanel>
       ) : (
-        <FlexCol className='gap-6'>
+        <Accordion allowsMultipleExpanded defaultExpandedKeys={defaultExpandedKeys}>
           {data.targets.map((target) => (
             <TargetSection
               key={target.key}
@@ -54,7 +62,7 @@ export const CommandsClient: FC = () => {
               onRun={(command) => formState.open(command)}
             />
           ))}
-        </FlexCol>
+        </Accordion>
       )}
 
       {formState.target && (
@@ -73,36 +81,35 @@ const TargetSection: FC<{
   const { t } = useLocale()
 
   return (
-    <FlexCol>
-      <FlexRow className='flex-wrap items-center'>
-        <span className='text-sm font-semibold'>{target.label}</span>
-        <span className='grow' />
-        {/* 定義を編集できるのはオーナーだけなので、導線もオーナーにだけ出す */}
+    <AccordionSection id={target.key} icon={<ServerStackIcon />} title={target.label}>
+      <Grid>
+        {/* 定義を編集できるのはオーナーだけなので、導線もオーナーにだけ出す。見出しはトリガーなのでボタンを置けない */}
         {target.role === 'owner' && (
-          <MultiButton isIconOnly variant='outline' tooltip={t('command_target_settings')} onPress={onSettings}>
-            <Cog6ToothIcon />
-          </MultiButton>
+          <FlexRow className='col-span-12 justify-end'>
+            <MultiButton isIconOnly variant='outline' tooltip={t('command_target_settings')} onPress={onSettings}>
+              <Cog6ToothIcon />
+            </MultiButton>
+          </FlexRow>
         )}
-      </FlexRow>
 
-      {commands.length === 0 ? (
-        <NoticePanel>{t('command_no_def')}</NoticePanel>
-      ) : (
-        commands.map((command) => (
-          <Panel key={command.id}>
-            <FlexCol>
-              <FlexRow className='flex-wrap items-center'>
-                <span className='font-semibold'>{command.label}</span>
-                <span className='grow' />
-                <MultiButton icon={<PlayIcon />} variant='outline' onPress={() => onRun(command)}>
+        {commands.length === 0 ? (
+          <NoticePanel className='col-span-12'>{t('command_no_def')}</NoticePanel>
+        ) : (
+          commands.map((command) => (
+            <Card key={command.id} className='col-span-12 md:col-span-6'>
+              <Card.Header>
+                <Card.Title>{command.label}</Card.Title>
+                <Card.Description>{command.description}</Card.Description>
+              </Card.Header>
+              <Card.Footer>
+                <MultiButton icon={<PlayIcon />} variant='outline' size='sm' onPress={() => onRun(command)}>
                   {t('command_run')}
                 </MultiButton>
-              </FlexRow>
-              {command.description && <div className='text-foreground-500 text-xs'>{command.description}</div>}
-            </FlexCol>
-          </Panel>
-        ))
-      )}
-    </FlexCol>
+              </Card.Footer>
+            </Card>
+          ))
+        )}
+      </Grid>
+    </AccordionSection>
   )
 }
