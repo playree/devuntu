@@ -145,6 +145,23 @@ describe('AGENT_RUN_RETENTION_DAYS / COMMAND_RUN_RETENTION_DAYS', () => {
     expect(() => envu.server.AGENT_RUN_RETENTION_DAYS).toThrow()
     expect(() => envu.server.COMMAND_RUN_RETENTION_DAYS).toThrow()
   })
+
+  it.each(['1e100', '100000001'])('Date の範囲を超える日数は起動時に弾く (%s)', (value) => {
+    // 境界が Invalid Date になると Prisma が受け付けず、掃除が丸ごと止まる
+    process.env.AGENT_RUN_RETENTION_DAYS = value
+    process.env.COMMAND_RUN_RETENTION_DAYS = value
+    expect(() => envu.server.AGENT_RUN_RETENTION_DAYS).toThrow()
+    expect(() => envu.server.COMMAND_RUN_RETENTION_DAYS).toThrow()
+  })
+
+  it('上限ちょうどは通り、境界が Date として有効', () => {
+    process.env.AGENT_RUN_RETENTION_DAYS = '100000000'
+    process.env.COMMAND_RUN_RETENTION_DAYS = '100000000'
+    expect(envu.server.AGENT_RUN_RETENTION_DAYS).toBe(100_000_000)
+    expect(envu.server.COMMAND_RUN_RETENTION_DAYS).toBe(100_000_000)
+    const before = new Date(Date.now() - envu.server.COMMAND_RUN_RETENTION_DAYS * 24 * 60 * 60 * 1000)
+    expect(Number.isNaN(before.getTime())).toBe(false)
+  })
 })
 
 describe('AGENT_RUN_KEEP', () => {

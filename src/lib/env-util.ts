@@ -59,6 +59,15 @@ const client = {
   },
 }
 
+/**
+ * 履歴の保持期間(日)の上限。
+ *
+ * 保持期間は `now - days * 24h` で削除の境界に直すので、Date の有効範囲
+ * (±8,640,000,000,000,000ms = 現在時刻から約1億日)を超えると Invalid Date になる。
+ * Prisma は無効な DateTime フィルタを受け付けず、掃除が丸ごと止まるので入口で弾く。
+ */
+const MAX_RETENTION_DAYS = 100_000_000
+
 const server = {
   ...client,
 
@@ -227,8 +236,8 @@ const server = {
   /** エージェントの実行履歴を残す期間(日) */
   get AGENT_RUN_RETENTION_DAYS() {
     const value = getEnvNumber('AGENT_RUN_RETENTION_DAYS', { default: 90 })
-    if (!Number.isInteger(value) || value < 1) {
-      throw errSystemError('AGENT_RUN_RETENTION_DAYS must be an integer of at least 1')
+    if (!Number.isInteger(value) || value < 1 || value > MAX_RETENTION_DAYS) {
+      throw errSystemError(`AGENT_RUN_RETENTION_DAYS must be an integer between 1 and ${MAX_RETENTION_DAYS}`)
     }
     return value
   },
@@ -322,8 +331,8 @@ const server = {
   /** コマンドの実行履歴を残す期間(日) */
   get COMMAND_RUN_RETENTION_DAYS() {
     const value = getEnvNumber('COMMAND_RUN_RETENTION_DAYS', { default: 90 })
-    if (!Number.isInteger(value) || value < 1) {
-      throw errSystemError('COMMAND_RUN_RETENTION_DAYS must be an integer of at least 1')
+    if (!Number.isInteger(value) || value < 1 || value > MAX_RETENTION_DAYS) {
+      throw errSystemError(`COMMAND_RUN_RETENTION_DAYS must be an integer between 1 and ${MAX_RETENTION_DAYS}`)
     }
     return value
   },
