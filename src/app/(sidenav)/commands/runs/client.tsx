@@ -2,19 +2,19 @@
 
 import { CommandStatusChip } from '@/components/command/command-status-chip'
 import { MultiButton } from '@/components/general/button'
-import { FlexCol } from '@/components/general/flex'
+import { FlexCol, FlexRow } from '@/components/general/flex'
 import { useServerPagingList } from '@/components/general/paging'
 import { SwitchField } from '@/components/general/switch'
 import { MultiTable, TruncatedCell } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, ClockIcon } from '@/components/icon'
+import { ArrowPathIcon, ClockIcon, XMarkIcon } from '@/components/icon'
 import { parseAction } from '@/lib/action/action-client'
 import { authClient } from '@/lib/auth/auth-client'
 import { COMMAND_RUN_ROWS_PER_PAGE } from '@/lib/command/command'
 import { dayformat } from '@/lib/day'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
-import { Table } from '@heroui/react'
+import { Chip, Table } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC, useRef, useState } from 'react'
 import { getCommandRunsAction } from '../server'
@@ -23,8 +23,9 @@ import { getCommandRunsAction } from '../server'
  * コマンドの実行履歴。
  *
  * 件数が積み上がるのでサーバー側ページング。管理者は「全員の実行」に切り替えられる。
+ * `initialCommandKey` が渡されたときはそのコマンドだけを出す(リモート実行のカードからの導線)。
  */
-export const CommandRunsClient: FC = () => {
+export const CommandRunsClient: FC<{ initialCommandKey: string | null }> = ({ initialCommandKey }) => {
   const { t } = useLocale()
   const tz = useUserTimezone()
   const router = useRouter()
@@ -32,13 +33,20 @@ export const CommandRunsClient: FC = () => {
   const isAdmin = session?.user.role === 'admin'
 
   const [showAll, setShowAll] = useState(false)
+  // 絞り込みは URL の初期値を引き継ぐだけで、以降は画面の状態として持つ(URL は書き換えない)
+  const [commandKey, setCommandKey] = useState(initialCommandKey)
   // loadPage は毎レンダリング作り直されるため、絞り込み条件は ref から読む
   const showAllRef = useRef(false)
+  const commandKeyRef = useRef(initialCommandKey)
 
   const list = useServerPagingList({
     loadPage: async (query) => {
       const res = await parseAction(
-        getCommandRunsAction({ scope: showAllRef.current && isAdmin ? 'all' : 'mine', ...query }),
+        getCommandRunsAction({
+          scope: showAllRef.current && isAdmin ? 'all' : 'mine',
+          commandKey: commandKeyRef.current,
+          ...query,
+        }),
       )
       return res ?? { items: [], total: 0 }
     },
@@ -46,27 +54,57 @@ export const CommandRunsClient: FC = () => {
     rowsPerPage: COMMAND_RUN_ROWS_PER_PAGE,
   })
 
+  /**
+   * 絞り込み中の見出しに出す名前。
+   * 定義から引かず行の値を使うのは、アサインされていないコマンドの表示名を
+   * URL を打つだけで引き出せてしまうのを避けるため(行は権限で絞られている)
+   */
+  const commandLabel = list.items[0]?.commandLabel ?? commandKey
+
   return (
     <FlexCol>
       <ContentHeader
         icon={<ClockIcon />}
         title={t('command_run_history')}
         extra={
-          isAdmin && (
-            <SwitchField
-              isSmart
-              id='command-runs-scope'
-              label={t('command_run_scope_all')}
-              isSelected={showAll}
-              onChange={(selected) => {
-                showAllRef.current = selected
-                setShowAll(selected)
-                // 条件が変われば件数も変わるため、前の条件でのページ位置は引き継がない
-                list.resetPage()
-                list.reload()
-              }}
-            />
-          )
+          <>
+            {commandKey && (
+              <FlexRow className='min-w-0 items-center gap-1'>
+                <Chip variant='soft' className='min-w-0'>
+                  <Chip.Label className='truncate'>{commandLabel}</Chip.Label>
+                </Chip>
+                <MultiButton
+                  isIconOnly
+                  size='sm'
+                  variant='ghost'
+                  tooltip={t('clear')}
+                  onPress={() => {
+                    commandKeyRef.current = null
+                    setCommandKey(null)
+                    list.resetPage()
+                    list.reload()
+                  }}
+                >
+                  <XMarkIcon />
+                </MultiButton>
+              </FlexRow>
+            )}
+            {isAdmin && (
+              <SwitchField
+                isSmart
+                id='command-runs-scope'
+                label={t('command_run_scope_all')}
+                isSelected={showAll}
+                onChange={(selected) => {
+                  showAllRef.current = selected
+                  setShowAll(selected)
+                  // 条件が変われば件数も変わるため、前の条件でのページ位置は引き継がない
+                  list.resetPage()
+                  list.reload()
+                }}
+              />
+            )}
+          </>
         }
       >
         <MultiButton isIconOnly tooltip={t('reload')} onPress={() => list.reload()}>

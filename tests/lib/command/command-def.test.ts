@@ -5,7 +5,7 @@
  * 定義ロード時のチェックが緩むと、実行時の検証だけが最後の砦になってしまう。
  */
 
-import { formatCommandIssues, scCommandFile } from '@/lib/command/command-def'
+import { formatCommandIssues, scCommandDefInput, scCommandFile } from '@/lib/command/command-def'
 import { describe, expect, it } from 'vitest'
 
 const target = {
@@ -221,5 +221,91 @@ describe('参照の整合', () => {
       ],
     })
     expect(issuesOf(input).some((issue) => issue.includes('minSelected が選択肢の数を超えている'))).toBe(true)
+  })
+})
+
+/**
+ * フリー入力は「選択肢の閉包」が効かない唯一の種別なので、
+ * どのファイルでも書ける状態になっていないことを固定する。
+ */
+describe('フリー入力', () => {
+  const withFreeInput = (input: Record<string, unknown>, allowFreeInput?: boolean) => ({
+    ...file({ args: ['{{tag}}'], inputs: [input] }),
+    target: allowFreeInput === undefined ? target : { ...target, allowFreeInput },
+  })
+
+  const freeInput = { type: 'input', key: 'tag', label: 'タグ' }
+
+  it('target.allowFreeInput が無ければ弾く', () => {
+    expect(
+      issuesOf(withFreeInput(freeInput)).some((issue) => issue.includes('target.allowFreeInput: true が要る')),
+    ).toBe(true)
+  })
+
+  it('target.allowFreeInput が true なら通り、省略項目に既定が入る', () => {
+    const parsed = scCommandFile.parse(withFreeInput(freeInput, true))
+    const input = parsed.commands[0].inputs[0]
+    expect(input).toMatchObject({ type: 'input', required: true, maxLength: 100 })
+  })
+
+  it.each(['-rf', 'a b', '$(id)', "a'b"])('既定値に使えない値は弾く (%s)', (defaultValue) => {
+    const input = withFreeInput({ ...freeInput, defaultValue }, true)
+    expect(issuesOf(input).some((issue) => issue.includes('フリー入力の値に使えない文字'))).toBe(true)
+  })
+
+  it('既定値が maxLength を超えていれば弾く', () => {
+    const input = withFreeInput({ ...freeInput, defaultValue: 'abcdef', maxLength: 5 }, true)
+    expect(issuesOf(input).some((issue) => issue.includes('既定値が maxLength を超えている'))).toBe(true)
+  })
+
+  it('maxLength は値の文字数の上限を超えられない', () => {
+    expect(scCommandFile.safeParse(withFreeInput({ ...freeInput, maxLength: 201 }, true)).success).toBe(false)
+  })
+})
+
+/**
+ * 画面からは 1 コマンドだけを送るので、ファイル全体でしか見ない検証になっていると
+ * 「画面では何も出ないのに保存するとサーバーから怒られる」状態になる。
+ */
+describe('コマンド1件だけでの検証', () => {
+  const command = (overrides: Record<string, unknown>) => ({
+    id: 'deploy-web',
+    label: 'デプロイ',
+    executable: '/opt/bin/deploy.sh',
+    ...overrides,
+  })
+
+  const defIssuesOf = (input: unknown): string[] => {
+    const parsed = scCommandDefInput.safeParse(input)
+    return parsed.success ? [] : formatCommandIssues(parsed.error)
+  }
+
+  it('未定義の入力項目への参照を弾く', () => {
+    expect(defIssuesOf(command({ args: ['{{env}}'] })).some((issue) => issue.includes('未定義の入力項目 env'))).toBe(
+      true,
+    )
+  })
+
+  it('選択肢に無い既定値を弾く', () => {
+    const input = command({
+      inputs: [
+        { type: 'select', key: 'env', label: '環境', options: [{ value: 'stg', label: 'stg' }], defaultValue: 'prod' },
+      ],
+    })
+    expect(defIssuesOf(input).some((issue) => issue.includes('既定値 prod が選択肢に無い'))).toBe(true)
+  })
+
+  it('入力項目のキーの重複を弾く', () => {
+    const input = command({
+      inputs: [
+        { type: 'checkbox', key: 'dry', label: '空実行' },
+        { type: 'checkbox', key: 'dry', label: '空実行2' },
+      ],
+    })
+    expect(defIssuesOf(input).some((issue) => issue.includes('入力項目のキー dry が重複している'))).toBe(true)
+  })
+
+  it('問題が無ければ通る', () => {
+    expect(defIssuesOf(command({}))).toEqual([])
   })
 })

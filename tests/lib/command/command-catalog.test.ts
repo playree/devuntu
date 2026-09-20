@@ -350,6 +350,7 @@ describe('ターゲットの状態', () => {
       user: 'deploy',
       identityFile: 'ops_ed25519',
       editable: false,
+      allowFreeInput: false,
     },
     commands: [],
   }
@@ -360,6 +361,7 @@ describe('ターゲットの状態', () => {
       label: 'Web',
       fileName: 'web01.yaml',
       editable: false,
+      allowFreeInput: false,
       revision: '0123456789abcdef',
       identityReady: false,
       knownHostsReady: false,
@@ -374,6 +376,7 @@ describe('ターゲットの状態', () => {
       label: 'Web',
       fileName: 'web01.yaml',
       editable: false,
+      allowFreeInput: false,
       revision: '0123456789abcdef',
       identityReady: true,
       knownHostsReady: true,
@@ -384,6 +387,7 @@ describe('ターゲットの状態', () => {
     // 画面にも API 応答にも出さないので、状態オブジェクトの時点で持たせない
     const status = buildCommandTargetStatus(file)
     expect(Object.keys(status).sort()).toEqual([
+      'allowFreeInput',
       'editable',
       'fileName',
       'id',

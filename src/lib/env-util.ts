@@ -1,3 +1,4 @@
+import { AGENT_RUN_HISTORY_LIMIT } from './agent/agent'
 import { errSystemError } from './error'
 
 function getEnv<T extends string = string>(key: string, opts: { required: true }): T
@@ -57,6 +58,15 @@ const client = {
     return process.env.NEXT_PUBLIC_APP_NAME || 'Devuntu'
   },
 }
+
+/**
+ * 履歴の保持期間(日)の上限。
+ *
+ * 保持期間は `now - days * 24h` で削除の境界に直すので、Date の有効範囲
+ * (±8,640,000,000,000,000ms = 現在時刻から約1億日)を超えると Invalid Date になる。
+ * Prisma は無効な DateTime フィルタを受け付けず、掃除が丸ごと止まるので入口で弾く。
+ */
+const MAX_RETENTION_DAYS = 100_000_000
 
 const server = {
   ...client,
@@ -223,6 +233,29 @@ const server = {
     return value
   },
 
+  /** エージェントの実行履歴を残す期間(日) */
+  get AGENT_RUN_RETENTION_DAYS() {
+    const value = getEnvNumber('AGENT_RUN_RETENTION_DAYS', { default: 90 })
+    if (!Number.isInteger(value) || value < 1 || value > MAX_RETENTION_DAYS) {
+      throw errSystemError(`AGENT_RUN_RETENTION_DAYS must be an integer between 1 and ${MAX_RETENTION_DAYS}`)
+    }
+    return value
+  },
+
+  /**
+   * ランナー1台あたりに残す実行履歴の上限。期間内に積み上がった分への歯止め。
+   *
+   * 画面が出せる件数(`AGENT_RUN_HISTORY_LIMIT`)を下回ると「一覧に出ているのに実体が無い」
+   * 履歴が生まれるため、そこを下限にする。
+   */
+  get AGENT_RUN_KEEP() {
+    const value = getEnvNumber('AGENT_RUN_KEEP', { default: 500 })
+    if (!Number.isInteger(value) || value < AGENT_RUN_HISTORY_LIMIT) {
+      throw errSystemError(`AGENT_RUN_KEEP must be an integer of at least ${AGENT_RUN_HISTORY_LIMIT}`)
+    }
+    return value
+  },
+
   // リモート実行
   /**
    * 画面からのリモート実行を有効にするか。
@@ -291,6 +324,29 @@ const server = {
     const value = getEnvNumber('COMMAND_MAX_QUEUED', { default: 20 })
     if (!Number.isInteger(value) || value < 1) {
       throw errSystemError('COMMAND_MAX_QUEUED must be an integer of at least 1')
+    }
+    return value
+  },
+
+  /** コマンドの実行履歴を残す期間(日) */
+  get COMMAND_RUN_RETENTION_DAYS() {
+    const value = getEnvNumber('COMMAND_RUN_RETENTION_DAYS', { default: 90 })
+    if (!Number.isInteger(value) || value < 1 || value > MAX_RETENTION_DAYS) {
+      throw errSystemError(`COMMAND_RUN_RETENTION_DAYS must be an integer between 1 and ${MAX_RETENTION_DAYS}`)
+    }
+    return value
+  },
+
+  /**
+   * コマンド1本あたりに残す実行履歴の上限。期間内に積み上がった分への歯止め。
+   *
+   * ログ(`command_run_chunk`)は実行1件あたり数千行になりうるので、
+   * エージェントの実行履歴(`AGENT_RUN_KEEP`)より絞った既定にしてある。
+   */
+  get COMMAND_RUN_KEEP() {
+    const value = getEnvNumber('COMMAND_RUN_KEEP', { default: 300 })
+    if (!Number.isInteger(value) || value < 1) {
+      throw errSystemError('COMMAND_RUN_KEEP must be an integer of at least 1')
     }
     return value
   },

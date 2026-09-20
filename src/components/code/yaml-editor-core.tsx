@@ -14,6 +14,7 @@ import { placeholder as cmPlaceholder, EditorView, highlightActiveLine, keymap, 
 import { basicDark } from 'cm6-theme-basic-dark'
 import { useTheme } from 'next-themes'
 import { FC, useEffect, useRef } from 'react'
+import { yamlLint, type EditorIssue } from './yaml-lint'
 
 export type YamlEditorCoreProps = {
   /** 初回マウント時の内容。以後の変更は取り込まないので、外から入れ替えるときは key を変える */
@@ -23,6 +24,13 @@ export type YamlEditorCoreProps = {
   placeholder?: string
   /** 編集面の最小行数 */
   minRows?: number
+  /**
+   * 内容から指摘を作る。渡すと該当箇所へ印が付く。
+   *
+   * 組み込むかどうかは**初回マウント時に決まる**(拡張を差し替えると内容が巻き戻るため)。
+   * 関数そのものは毎回読み直すので、後から中身が変わるぶんには追随する。
+   */
+  lint?: (value: string) => EditorIssue[]
 }
 
 /** 編集面の見た目。枠と角丸は呼び出し側の器に任せ、ここは中身の体裁だけを決める */
@@ -41,7 +49,7 @@ const colorTheme = (isDark: boolean): Extension =>
 /**
  * CodeMirror の実体。ブラウザ専用なので `next/dynamic` の `ssr: false` 経由で読み込む前提。
  *
- * 拡張は必要なものだけを並べる(`codemirror` の basicSetup は検索・補完・lint まで抱き込む)。
+ * 拡張は必要なものだけを並べる(`codemirror` の basicSetup は検索・補完まで抱き込む)。
  * **Tab キーは束縛しない。** `indentWithTab` を入れるとモーダルの中でフォーカスが閉じ込められ、
  * キーボード操作で抜けられなくなる。YAML はタブ文字を許さないので、インデントは
  * `indentUnit` の半角スペース 2 つと、改行時の自動インデント(`defaultKeymap`)に任せる。
@@ -52,6 +60,7 @@ const YamlEditorInner: FC<YamlEditorCoreProps & { isDark: boolean }> = ({
   onBlur,
   placeholder,
   minRows = 12,
+  lint,
   isDark,
 }) => {
   const hostRef = useRef<HTMLDivElement | null>(null)
@@ -61,10 +70,10 @@ const YamlEditorInner: FC<YamlEditorCoreProps & { isDark: boolean }> = ({
   // 生成時に読む値。依存に入れるとテーマの切り替えでエディタを作り直すことになる
   const isDarkRef = useRef(isDark)
   // 拡張の再構成でエディタを作り直さないよう、コールバックは ref 経由で最新を見る
-  const handlers = useRef({ onChange, onBlur })
+  const handlers = useRef({ onChange, onBlur, lint })
   useEffect(() => {
-    handlers.current = { onChange, onBlur }
-  }, [onChange, onBlur])
+    handlers.current = { onChange, onBlur, lint }
+  }, [onChange, onBlur, lint])
 
   useEffect(() => {
     const parent = hostRef.current
@@ -88,6 +97,7 @@ const YamlEditorInner: FC<YamlEditorCoreProps & { isDark: boolean }> = ({
           EditorView.lineWrapping,
           EditorView.contentAttributes.of({ 'aria-label': 'YAML' }),
           ...(placeholder ? [cmPlaceholder(placeholder)] : []),
+          ...(lint ? yamlLint(() => handlers.current.lint) : []),
           baseTheme,
           themeRef.current.of(colorTheme(isDarkRef.current)),
           EditorView.updateListener.of((update) => {

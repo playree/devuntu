@@ -3,7 +3,8 @@
 import { MultiButton } from '@/components/general/button'
 import { FlexCol, FlexRow } from '@/components/general/flex'
 import { NoticePanel, Panel } from '@/components/general/panel'
-import { PencilSquareIcon, PlusIcon, TrashIcon } from '@/components/icon'
+import { ContentHeader } from '@/components/header'
+import { CommandLineIcon, PencilSquareIcon, PlusIcon, TrashIcon } from '@/components/icon'
 import { type CommandInputType } from '@/lib/command/command'
 import { type LocaleItem } from '@/locale'
 import { useLocale } from '@/locale/client'
@@ -17,6 +18,7 @@ const INPUT_TYPE_LABEL = {
   radio: 'command_input_type_radio',
   multiselect: 'command_input_type_multiselect',
   checkbox: 'command_input_type_checkbox',
+  input: 'command_input_type_input',
 } as const satisfies Record<CommandInputType, LocaleItem>
 
 /**
@@ -28,22 +30,28 @@ const INPUT_TYPE_LABEL = {
 export const CommandDefs: FC<{
   commands: CommandDefView[]
   canEdit: boolean
+  /** 編集モーダルを開いてよいかを確かめている対象。追加ボタンなら commandId は null */
+  checking?: { commandId: string | null } | null
   onAdd: () => void
   onEdit: (command: CommandDefView) => void
   onDelete: (command: CommandDefView) => void
-}> = ({ commands, canEdit, onAdd, onEdit, onDelete }) => {
+}> = ({ commands, canEdit, checking, onAdd, onEdit, onDelete }) => {
   const { t } = useLocale()
 
   return (
     <FlexCol>
-      {canEdit && (
-        <FlexRow className='items-center'>
-          <span className='grow' />
-          <MultiButton isIconOnly variant='outline' tooltip={t('command_def_add')} onPress={onAdd}>
+      <ContentHeader icon={<CommandLineIcon />} title={t('command_definition')}>
+        {canEdit && (
+          <MultiButton
+            isIconOnly
+            tooltip={t('command_def_add')}
+            isPending={!!checking && checking.commandId === null}
+            onPress={onAdd}
+          >
             <PlusIcon />
           </MultiButton>
-        </FlexRow>
-      )}
+        )}
+      </ContentHeader>
 
       {commands.length === 0 ? (
         <NoticePanel>{t('command_no_def')}</NoticePanel>
@@ -61,6 +69,7 @@ export const CommandDefs: FC<{
                       isIconOnly
                       variant='outline'
                       tooltip={t('command_def_edit')}
+                      isPending={checking?.commandId === command.id}
                       onPress={() => {
                         onEdit(command)
                       }}

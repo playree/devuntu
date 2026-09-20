@@ -112,6 +112,8 @@ VAPID 鍵は Web プッシュ通知を使う場合のみ必要で、**公開鍵�
 | `MAINTENANCE_WORKER_ENABLED`         | 定期メンテナンスを動かすか                       |      | `true`     |
 | `MAINTENANCE_ATTACHMENT_MODE`        | 未参照の添付の扱い(`off` / `dry-run` / `delete`) |      | `delete`   |
 | `MAINTENANCE_ATTACHMENT_GRACE_HOURS` | 添付が削除対象になるまでの猶予(時間)             |      | `24`       |
+| `AGENT_RUN_RETENTION_DAYS`           | エージェントの実行履歴を残す期間(日)             |      | `90`       |
+| `AGENT_RUN_KEEP`                     | ランナー1台あたりに残す実行履歴の件数            |      | `500`      |
 
 期限切れのセッション・検証値・OAuthトークンや、古いエージェント実行履歴を定期的に消す。
 止めても表示や操作には影響しない(消えないだけ)。詳細は
@@ -125,17 +127,24 @@ VAPID 鍵は Web プッシュ通知を使う場合のみ必要で、**公開鍵�
 作成フォームを開いたまま放置している間、その画像はまだどこからも参照されていないため、
 この時間が経つまでは削除対象にしない。
 
+実行履歴は**期間と件数の2本**で抑える。`AGENT_RUN_RETENTION_DAYS` を過ぎた履歴を消したうえで、
+期間内でも `AGENT_RUN_KEEP` を超えた古い分をランナーごとに消す。`AGENT_RUN_KEEP` には画面が出せる
+件数(100)より小さい値を設定できない(設定すると起動時に落ちる)。下回ると「一覧に出ているのに
+実体が無い」履歴が生まれるため。リモート実行の履歴は別の変数で、[リモート実行](#リモート実行)にある。
+
 ## リモート実行
 
-| 変数名                    | 説明                                         | 必須 | デフォルト                       |
-| ------------------------- | -------------------------------------------- | ---- | -------------------------------- |
-| `COMMAND_EXEC_ENABLED`    | 画面からのリモート実行を有効にするか         |      | `false`                          |
-| `COMMAND_DEF_DIR`         | コマンド定義(YAML)を置くディレクトリ         |      | `/app/config/commands`           |
-| `COMMAND_SSH_DIR`         | 秘密鍵 / known_hosts を置くディレクトリ      |      | `/app/config/ssh`                |
-| `COMMAND_SSH_KNOWN_HOSTS` | known_hosts のパス(ホスト側の指定が無い場合) |      | `${COMMAND_SSH_DIR}/known_hosts` |
-| `COMMAND_WORKER_ENABLED`  | 実行ワーカーを動かすか                       |      | `true`                           |
-| `COMMAND_MAX_CONCURRENT`  | 同時に走らせる実行の上限                     |      | `2`                              |
-| `COMMAND_MAX_QUEUED`      | 順番待ちに積める実行の上限                   |      | `20`                             |
+| 変数名                       | 説明                                         | 必須 | デフォルト                       |
+| ---------------------------- | -------------------------------------------- | ---- | -------------------------------- |
+| `COMMAND_EXEC_ENABLED`       | 画面からのリモート実行を有効にするか         |      | `false`                          |
+| `COMMAND_DEF_DIR`            | コマンド定義(YAML)を置くディレクトリ         |      | `/app/config/commands`           |
+| `COMMAND_SSH_DIR`            | 秘密鍵 / known_hosts を置くディレクトリ      |      | `/app/config/ssh`                |
+| `COMMAND_SSH_KNOWN_HOSTS`    | known_hosts のパス(ホスト側の指定が無い場合) |      | `${COMMAND_SSH_DIR}/known_hosts` |
+| `COMMAND_WORKER_ENABLED`     | 実行ワーカーを動かすか                       |      | `true`                           |
+| `COMMAND_MAX_CONCURRENT`     | 同時に走らせる実行の上限                     |      | `2`                              |
+| `COMMAND_MAX_QUEUED`         | 順番待ちに積める実行の上限                   |      | `20`                             |
+| `COMMAND_RUN_RETENTION_DAYS` | コマンドの実行履歴を残す期間(日)             |      | `90`                             |
+| `COMMAND_RUN_KEEP`           | コマンド1本あたりに残す実行履歴の件数        |      | `300`                            |
 
 あらかじめ定義しておいた処理を画面から実行する機能。`COMMAND_EXEC_ENABLED` の既定を `false` に
 しているのは、この機能だけが「サーバーから対象ホストへ SSH してプロセスを起動する」という性質を
@@ -168,6 +177,11 @@ VAPID 鍵は Web プッシュ通知を使う場合のみ必要で、**公開鍵�
 
 実行が失敗しても**自動では再試行しない**。副作用のあるコマンドを勝手に再実行しないためで、
 アプリの再起動などで実行中のまま残った記録は、一定時間後に失敗(`interrupted`)として閉じられる。
+
+実行履歴はエージェントと同じく**期間と件数の2本**で抑える(`COMMAND_RUN_RETENTION_DAYS` /
+`COMMAND_RUN_KEEP`、どちらも1以上の整数)。履歴を消すとログ(`command_run_chunk`)も一緒に消える。
+実行 1 件のログは数千行になりうるため、件数の既定はエージェントの実行履歴(`AGENT_RUN_KEEP`)より
+絞ってある。実行中・順番待ちの記録は保持期間を過ぎても消さない(実行側が持ち主のため)。
 
 `COMMAND_SSH_DIR` は秘密鍵と known_hosts の置き場所で、read-only のバインドマウントで渡す。
 定義ファイルからはこの配下の**ファイル名**しか指定できず、パスやディレクトリ区切りは書けない。

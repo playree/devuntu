@@ -286,13 +286,17 @@ DB と S3 を順に取得する間に添付が消えると、復元後にその�
 | `oauth_access_token`     | `expiresAt` または `revoked` が過去                                         | 24時間     |
 | `oauth_client_assertion` | `expiresAt` 超過                                                            | なし       |
 | `upload_nonce`           | `expiresAt` 超過(アップロード時の掃除の取りこぼし)                          | なし       |
-| `agent_run`              | 開始が保持期間より古い + ランナーごとに新しい500件だけ残す                  | 90日       |
-| `command_run`            | 受付が保持期間より古い + コマンドごとに新しい300件だけ残す                  | 90日       |
+| `agent_run`              | 開始が保持期間より古い + ランナーごとに新しい N 件だけ残す                  | 既定90日   |
+| `command_run`            | 受付が保持期間より古い + コマンドごとに新しい N 件だけ残す                  | 既定90日   |
 | `attachment` + 実体      | どの本文からも参照されていない                                              | 既定24時間 |
 
+実行履歴の保持期間と残す件数は環境変数で変えられる(`AGENT_RUN_RETENTION_DAYS` / `AGENT_RUN_KEEP` と
+`COMMAND_RUN_RETENTION_DAYS` / `COMMAND_RUN_KEEP`、既定は 90日 / 500件 / 90日 / 300件。
+[環境変数](./environment-variables.md#メンテナンス)を参照)。
+
 `command_run` を消すとログ(`command_run_chunk`)も一緒に消える。実行 1 件のログは数千行になりうるため、
-残す件数はエージェントの実行履歴より絞ってある。`queued` / `running` は実行側が持ち主なので掃除は触らない
-(掃除が先に消すと、実行中のワーカーが書き込み先を失う)。
+残す件数の既定はエージェントの実行履歴より絞ってある。`queued` / `running` は実行側が持ち主なので
+掃除は触らない(掃除が先に消すと、実行中のワーカーが書き込み先を失う)。
 
 消す条件はすべて、書き手が「もう使わない」と記録した列に紐づけてある。
 `session` を消しても MCP のトークンは失効しない(参照は `SetNull` で、Webの5日とMCPの180日は独立)。

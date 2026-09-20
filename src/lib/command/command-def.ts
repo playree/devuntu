@@ -13,6 +13,8 @@ import { z } from 'zod'
 import {
   COMMAND_DEF_VERSION,
   COMMAND_FILE_NAME_PATTERN,
+  COMMAND_FREE_INPUT_MAX_LEN_DEFAULT,
+  COMMAND_FREE_VALUE_PATTERN,
   COMMAND_ID_PATTERN,
   COMMAND_MULTISELECT_MAX_DEFAULT,
   COMMAND_PLACEHOLDER_LOOSE_PATTERN,
@@ -21,6 +23,7 @@ import {
   COMMAND_TIMEOUT_DEFAULT_SEC,
   COMMAND_TIMEOUT_MAX_SEC,
   COMMAND_TIMEOUT_MIN_SEC,
+  COMMAND_VALUE_MAX_LEN,
   COMMAND_VALUE_PATTERN,
   type CommandInput,
   MAX_COMMAND_ARGS,
@@ -34,6 +37,9 @@ const zCommandId = z
   .regex(COMMAND_ID_PATTERN, '識別子は英数字で始まる 2〜64 文字(英小文字・数字・_・-)で指定する')
 const zLabel = z.string().min(1).max(120)
 const zOptionValue = z.string().regex(COMMAND_VALUE_PATTERN, '選択肢の値に使えない文字が含まれている')
+const zFreeValue = z
+  .string()
+  .regex(COMMAND_FREE_VALUE_PATTERN, 'フリー入力の値に使えない文字が含まれている(先頭の - も使えない)')
 const zFileName = z
   .string()
   .regex(COMMAND_FILE_NAME_PATTERN, 'ファイル名は英数字で始まる 1〜64 文字で指定する(ディレクトリ区切りは不可)')
@@ -75,6 +81,21 @@ const scCommandInput = z.discriminatedUnion('type', [
     whenTrue: z.array(zArgToken).max(MAX_COMMAND_ARGS).default([]),
     whenFalse: z.array(zArgToken).max(MAX_COMMAND_ARGS).default([]),
   }),
+  /**
+   * フリー入力。`target.allowFreeInput: true` のファイルでしか使えない(`scCommandFile` が見る)。
+   *
+   * 選択肢の閉包が効かない唯一の種別なので、値は `COMMAND_FREE_VALUE_PATTERN` と `maxLength` で縛る。
+   */
+  z.strictObject({
+    type: z.literal('input'),
+    key: zCommandId,
+    label: zLabel,
+    defaultValue: zFreeValue.optional(),
+    /** 入力欄に薄く出す例。値ではないので文字集合は縛らない */
+    placeholder: z.string().max(60).optional(),
+    required: z.boolean().default(true),
+    maxLength: z.number().int().min(1).max(COMMAND_VALUE_MAX_LEN).default(COMMAND_FREE_INPUT_MAX_LEN_DEFAULT),
+  }),
 ])
 
 const scCommandTarget = z.strictObject({
@@ -97,30 +118,68 @@ const scCommandTarget = z.strictObject({
    * 画面から変えられないので、編集を許しても画面から到達できる接続先は増えない。
    */
   editable: z.boolean().default(false),
+  /**
+   * このターゲットのコマンドで `type: input`(フリー入力)を使ってよいか。
+   *
+   * 既定は false。フリー入力は「選択肢の閉包」が効かない唯一の経路なので、
+   * リモート側に実行ゲート(`authorized_keys` の `command=`)を置いたホストだけで開ける想定にしてある。
+   * `target` は画面から編集できないため、この許可も画面からは増やせない。
+   */
+  allowFreeInput: z.boolean().default(false),
 })
 
-const scCommandDef = z.strictObject({
-  id: zCommandId,
-  label: zLabel,
-  description: z.string().max(500).optional(),
-  /** 絶対パス推奨。リモート側のシェルに解釈させる余地を減らすため文字集合を絞る */
-  executable: z.string().regex(/^[A-Za-z0-9._/-]{1,200}$/, '実行ファイルのパスに使えない文字が含まれている'),
-  args: z.array(zArgToken).max(MAX_COMMAND_ARGS).default([]),
-  inputs: z.array(scCommandInput).max(MAX_COMMAND_INPUTS).default([]),
-  timeoutSec: z
-    .number()
-    .int()
-    .min(COMMAND_TIMEOUT_MIN_SEC)
-    .max(COMMAND_TIMEOUT_MAX_SEC)
-    .default(COMMAND_TIMEOUT_DEFAULT_SEC),
-  requireConfirm: z.boolean().default(true),
-  confirmText: z.string().max(300).optional(),
-  /** 破壊的なコマンドだけが opt-in する。常時強制すると日常運用で使われなくなる */
-  requireFreshSession: z.boolean().default(false),
-  /** 同じコマンドの同時実行を禁止するか */
-  singleton: z.boolean().default(true),
-  sortOrder: z.number().int().default(0),
-})
+const scCommandDef = z
+  .strictObject({
+    id: zCommandId,
+    label: zLabel,
+    description: z.string().max(500).optional(),
+    /** 絶対パス推奨。リモート側のシェルに解釈させる余地を減らすため文字集合を絞る */
+    executable: z.string().regex(/^[A-Za-z0-9._/-]{1,200}$/, '実行ファイルのパスに使えない文字が含まれている'),
+    args: z.array(zArgToken).max(MAX_COMMAND_ARGS).default([]),
+    inputs: z.array(scCommandInput).max(MAX_COMMAND_INPUTS).default([]),
+    timeoutSec: z
+      .number()
+      .int()
+      .min(COMMAND_TIMEOUT_MIN_SEC)
+      .max(COMMAND_TIMEOUT_MAX_SEC)
+      .default(COMMAND_TIMEOUT_DEFAULT_SEC),
+    requireConfirm: z.boolean().default(true),
+    confirmText: z.string().max(300).optional(),
+    /** 破壊的なコマンドだけが opt-in する。常時強制すると日常運用で使われなくなる */
+    requireFreshSession: z.boolean().default(false),
+    /** 同じコマンドの同時実行を禁止するか */
+    singleton: z.boolean().default(true),
+    sortOrder: z.number().int().default(0),
+  })
+  /**
+   * コマンド 1 件の中で閉じた整合。
+   *
+   * ファイル全体ではなくここに置くのは、**画面から 1 件だけを編集するときにも同じ検証を効かせる**ため。
+   * `scCommandDefInput` はこのスキーマそのものなので、ここに無いものは保存を試みるまで気付けない。
+   */
+  .superRefine((command, ctx) => {
+    const inputKeys = new Set<string>()
+    command.inputs.forEach((input, index) => {
+      if (inputKeys.has(input.key)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['inputs', index, 'key'],
+          message: `入力項目のキー ${input.key} が重複している`,
+        })
+      }
+      inputKeys.add(input.key)
+      checkInputDefaults(input, ctx, ['inputs', index])
+    })
+
+    checkArgTokens(command.args, inputKeys, ctx, ['args'])
+    // checkbox の展開結果も引数としてそのまま渡るので、プレースホルダを書けないことを固定する
+    command.inputs.forEach((input, index) => {
+      if (input.type === 'checkbox') {
+        checkArgTokens(input.whenTrue, new Set(), ctx, ['inputs', index, 'whenTrue'])
+        checkArgTokens(input.whenFalse, new Set(), ctx, ['inputs', index, 'whenFalse'])
+      }
+    })
+  })
 
 /**
  * 定義ファイル 1 件。
@@ -129,8 +188,8 @@ const scCommandDef = z.strictObject({
  * コマンド側に `targetId` を書かないのは、書ける形にすると「どのファイルのターゲットで動くのか」が
  * ファイルを開いただけでは分からなくなるため。ターゲットとコマンドの対応はファイルの境界で決まる。
  *
- * 個々のフィールドの検証を通ったあとに、ファイル内で閉じた整合(id の重複、
- * プレースホルダの対応)を `superRefine` でまとめて見る。
+ * コマンド 1 件の中で閉じた整合(入力キーの重複、既定値、プレースホルダの対応)は `scCommandDef` が見る。
+ * ここで見るのはファイル単位でしか分からない整合(コマンドIDの重複)だけ。
  * ファイルをまたぐ整合(ターゲットID・コマンドIDの重複)は `command-catalog.ts` が見る。
  */
 export const scCommandFile = z
@@ -142,34 +201,30 @@ export const scCommandFile = z
   .superRefine((file, ctx) => {
     const commandIds = new Set<string>()
     file.commands.forEach((command, index) => {
-      const at = (...path: (string | number)[]) => ['commands', index, ...path]
-
       if (commandIds.has(command.id)) {
-        ctx.addIssue({ code: 'custom', path: at('id'), message: `コマンドID ${command.id} が重複している` })
+        ctx.addIssue({
+          code: 'custom',
+          path: ['commands', index, 'id'],
+          message: `コマンドID ${command.id} が重複している`,
+        })
       }
       commandIds.add(command.id)
 
-      const inputKeys = new Set<string>()
-      command.inputs.forEach((input, inputIndex) => {
-        if (inputKeys.has(input.key)) {
-          ctx.addIssue({
-            code: 'custom',
-            path: at('inputs', inputIndex, 'key'),
-            message: `入力項目のキー ${input.key} が重複している`,
-          })
-        }
-        inputKeys.add(input.key)
-        checkInputDefaults(input, ctx, at('inputs', inputIndex))
-      })
-
-      checkArgTokens(command.args, inputKeys, ctx, at('args'))
-      // checkbox の展開結果も引数としてそのまま渡るので、プレースホルダを書けないことを固定する
-      command.inputs.forEach((input, inputIndex) => {
-        if (input.type === 'checkbox') {
-          checkArgTokens(input.whenTrue, new Set(), ctx, at('inputs', inputIndex, 'whenTrue'))
-          checkArgTokens(input.whenFalse, new Set(), ctx, at('inputs', inputIndex, 'whenFalse'))
-        }
-      })
+      /**
+       * フリー入力の許可はターゲット側にあるので、コマンド 1 件のスキーマでは見られない。
+       * 画面からの保存もファイル全体をこのスキーマへ通すため、判定はここ 1 か所で足りる。
+       */
+      if (!file.target.allowFreeInput) {
+        command.inputs.forEach((input, inputIndex) => {
+          if (input.type === 'input') {
+            ctx.addIssue({
+              code: 'custom',
+              path: ['commands', index, 'inputs', inputIndex, 'type'],
+              message: 'フリー入力を使うには target.allowFreeInput: true が要る',
+            })
+          }
+        })
+      }
     })
   })
 
@@ -209,6 +264,16 @@ const checkInputDefaults = (input: CommandInput, ctx: z.RefinementCtx, path: (st
         code: 'custom',
         path: [...path, 'minSelected'],
         message: 'minSelected が選択肢の数を超えている',
+      })
+    }
+    return
+  }
+  if (input.type === 'input') {
+    if (input.defaultValue && input.defaultValue.length > input.maxLength) {
+      ctx.addIssue({
+        code: 'custom',
+        path: [...path, 'defaultValue'],
+        message: '既定値が maxLength を超えている',
       })
     }
   }
@@ -265,19 +330,23 @@ const UNKNOWN_KEY_REASONS: Record<string, string> = {
   hosts: 'hosts の配列は書けない。1 ファイルに 1 ターゲットを target へ書く',
 }
 
+/** 未知キー1件ぶんの説明。位置を自前で示せる側(エディタの lint)はキーごとに引ける */
+export const unknownKeyMessage = (key: string): string => UNKNOWN_KEY_REASONS[key] ?? `書けない項目 ${key} がある`
+
 /**
- * zod の issue を「どこが」「なぜ」だけの1行にする。管理画面へそのまま出す。
+ * issue の「なぜ」の部分。
  *
  * 未知キーの issue は path がオブジェクトの位置までしか無く、キー名は `keys` にしか入らないので、
  * ここで本文へ混ぜ直す。
  */
+export const commandIssueMessage = (issue: z.core.$ZodIssue): string =>
+  issue.code === 'unrecognized_keys' ? issue.keys.map(unknownKeyMessage).join(' / ') : issue.message
+
+/** zod の issue を「どこが」「なぜ」だけの1行にする。管理画面へそのまま出す */
 export const formatCommandIssues = (error: z.ZodError): string[] =>
   error.issues.map((issue) => {
     const path = issue.path.join('.')
-    const message =
-      issue.code === 'unrecognized_keys'
-        ? issue.keys.map((key) => UNKNOWN_KEY_REASONS[key] ?? `書けない項目 ${key} がある`).join(' / ')
-        : issue.message
+    const message = commandIssueMessage(issue)
     return path ? `${path}: ${message}` : message
   })
 

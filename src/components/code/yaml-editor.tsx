@@ -5,6 +5,7 @@ import { ErrorMessage, Label, Skeleton, TextField } from '@heroui/react'
 import dynamic from 'next/dynamic'
 import { FC, ReactNode, useState } from 'react'
 import { Control, FieldPath, FieldValues, useController } from 'react-hook-form'
+import type { EditorIssue } from './yaml-lint'
 
 /** 編集面の既定の最小行数 */
 const DEFAULT_MIN_ROWS = 12
@@ -48,7 +49,9 @@ export const YamlInput: FC<{
   placeholder?: string
   minRows?: number
   action?: ReactNode
-}> = ({ defaultValue, onChange, label, errorMessage, placeholder, minRows, action }) => {
+  /** 内容から指摘を作る。渡すと該当箇所へ印が付く */
+  lint?: (value: string) => EditorIssue[]
+}> = ({ defaultValue, onChange, label, errorMessage, placeholder, minRows, action, lint }) => {
   const { t } = useLocale()
   // 初回マウント時の値を固定する(CodeMirror は doc の差し替えを prop では取り込まない)
   const [initialValue] = useState(defaultValue)
@@ -60,6 +63,7 @@ export const YamlInput: FC<{
         onChange={onChange}
         placeholder={placeholder}
         minRows={minRows ?? DEFAULT_MIN_ROWS}
+        lint={lint}
       />
     </EditorField>
   )
@@ -77,6 +81,7 @@ export const YamlEditor = <
   placeholder,
   minRows,
   action,
+  lint,
 }: {
   control: Control<TFieldValues>
   name: TName
@@ -85,6 +90,8 @@ export const YamlEditor = <
   placeholder?: string
   minRows?: number
   action?: ReactNode
+  /** 内容から指摘を作る。渡すと該当箇所へ印が付く */
+  lint?: (value: string) => EditorIssue[]
 }) => {
   const { t } = useLocale()
   const { field } = useController({ control, name })
@@ -99,6 +106,7 @@ export const YamlEditor = <
         onBlur={field.onBlur}
         placeholder={placeholder}
         minRows={minRows ?? DEFAULT_MIN_ROWS}
+        lint={lint}
       />
     </EditorField>
   )

@@ -466,6 +466,8 @@ export type CommandTargetStatus = {
   fileName: string
   /** このターゲットの `commands` を画面から編集してよいか */
   editable: boolean
+  /** このターゲットのコマンドで `type: input`(フリー入力)を使ってよいか */
+  allowFreeInput: boolean
   /** 画面が見た時点の指紋。書き戻すときにディスクの現物と突き合わせる */
   revision: string
   identityReady: boolean
@@ -477,6 +479,7 @@ export const buildCommandTargetStatus = (file: CommandCatalogFile): CommandTarge
   label: file.target.label,
   fileName: file.fileName,
   editable: file.target.editable,
+  allowFreeInput: file.target.allowFreeInput,
   revision: file.revision,
   identityReady: isReadable(resolveSshFilePath(file.target.identityFile)),
   knownHostsReady: isReadable(resolveKnownHostsPath(file.target)),

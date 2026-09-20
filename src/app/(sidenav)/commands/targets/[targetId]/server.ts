@@ -2,9 +2,14 @@
 
 import { safeAuthAction } from '@/lib/action/action-server'
 import { assertFreshSession } from '@/lib/auth/session-fresh'
-import { COMMAND_DEF_CONFLICT, type CommandDef, type CommandTargetRole } from '@/lib/command/command'
+import {
+  COMMAND_DEF_CONFLICT,
+  COMMAND_DEF_NOT_EDITABLE,
+  COMMAND_DEF_READ_ONLY,
+  type CommandDef,
+  type CommandTargetRole,
+} from '@/lib/command/command'
 import { assertCommandTargetAccess } from '@/lib/command/command-access'
-import { getCommandTargetUsers } from '@/lib/command/command-assign'
 import { buildCommandTargetStatus, type CommandTargetStatus, getCommandCatalog } from '@/lib/command/command-catalog'
 import { scDeleteCommandDef, scUpsertCommandDef } from '@/lib/command/command-def'
 import { type CommandDefEntry, CommandDefWriteError, editCommandFileCommands } from '@/lib/command/command-writer'
@@ -107,17 +112,6 @@ export const getCommandTargetDetailAction = safeAuthAction
 
 export type GetCommandTargetDetailReturnType = Awaited<ReturnType<typeof getCommandTargetDetailAction>>['data']
 
-/** ターゲットのメンバー一覧。アサインの変更は管理者だけなので、ここは読み取りのみ */
-export const getCommandTargetMembersAction = safeAuthAction
-  .metadata({ actionName: 'getCommandTargetMembers', role: 'user' })
-  .inputSchema(scCommandTargetKey)
-  .action(async ({ parsedInput: { targetKey }, ctx: { user } }) => {
-    await assertCommandTargetAccess(user, targetKey, 'execute')
-    return getCommandTargetUsers(targetKey)
-  })
-
-export type GetCommandTargetMembersReturnType = Awaited<ReturnType<typeof getCommandTargetMembersAction>>['data']
-
 /**
  * 書き込み系アクションの戻り値。
  *
@@ -135,7 +129,53 @@ const toEditResult = async (error: unknown): Promise<EditCommandDefResult> => {
 }
 
 /**
- * 編集の前段。オーナーであることを確かめ、書き込む先のファイル名をカタログから引く。
+ * 定義を書き換えてよい相手か。編集を始める前の事前確認と、保存時の本判定で同じものを使う。
+ *
+ * 権限・再認証だけでなく、カタログの `target.editable` と定義ディレクトリの書き込み可否も見る。
+ * ここを保存時と揃えておかないと、画面を開いた後に構成が変わった場合に
+ * 「モーダルは開けたが保存で断られる」になり、書いた内容が失われる。
+ * 書き込み対象の現物での確認は、この後もロック内で別途行う。
+ */
+const assertCommandDefEditable = async (
+  user: { id: string; role?: string | null },
+  session: { createdAt: Date },
+  targetKey: string,
+): Promise<{ fileName: string }> => {
+  await assertCommandTargetAccess(user, targetKey, 'edit')
+  // 実行時の requireFreshSession と同じ理由で再認証を求める。実行は一度きりだが、
+  // 定義の書き換えは以後ずっと効くので、要求する理由はむしろ強い
+  assertFreshSession(session)
+
+  const { catalog, writable } = getCommandCatalog()
+  const file = catalog.files.find((entry) => entry.target.id === targetKey)
+  if (!file) {
+    throw errInvalidOperation()
+  }
+  if (!file.target.editable) {
+    throw new CommandDefWriteError(COMMAND_DEF_NOT_EDITABLE)
+  }
+  if (!writable) {
+    throw new CommandDefWriteError(COMMAND_DEF_READ_ONLY)
+  }
+  return { fileName: file.fileName }
+}
+
+/**
+ * 編集モーダルを開く前の事前確認。
+ *
+ * 保存時に再認証で弾かれると、画面を離れることになって書いた内容が失われる。書き始める前に確かめる。
+ * 書き込みはしないので編集のレート制限は消費しない(モーダルを開くたびに保存できる回数を削らない)。
+ */
+export const checkCommandDefEditableAction = safeAuthAction
+  .metadata({ actionName: 'checkCommandDefEditable', role: 'user' })
+  .inputSchema(scCommandTargetKey)
+  .action(async ({ parsedInput: { targetKey }, ctx: { user, session } }) => {
+    await assertCommandDefEditable(user, session, targetKey)
+    return { ok: true as const }
+  })
+
+/**
+ * 編集の前段。書き換えてよい相手かを確かめ、書き込む先のファイル名をカタログから引く。
  *
  * 画面からはターゲットIDしか受け取らない。ファイル名を受け取る形にすると、
  * 権限のあるターゲットの名で別のファイルを指せてしまう。
@@ -149,16 +189,8 @@ const resolveEditTarget = async (
   if (!consumeRateLimit(`command-def-edit:${user.id}`, EDIT_RATE_LIMIT)) {
     throw errTooManyRequests()
   }
-  await assertCommandTargetAccess(user, targetKey, 'edit')
-  // 実行時の requireFreshSession と同じ理由で再認証を求める。実行は一度きりだが、
-  // 定義の書き換えは以後ずっと効くので、要求する理由はむしろ強い
-  assertFreshSession(session)
-
-  const file = getCommandCatalog().catalog.files.find((entry) => entry.target.id === targetKey)
-  if (!file) {
-    throw errInvalidOperation()
-  }
-  return file.fileName
+  const { fileName } = await assertCommandDefEditable(user, session, targetKey)
+  return fileName
 }
 
 /**

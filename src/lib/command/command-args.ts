@@ -6,7 +6,8 @@
  *
  * SSH の exec はリモートのログインシェルに1本の文字列を渡す仕様なので、
  * 「配列で渡したから安全」はローカル側の spawn でしか成立しない。ここでは
- *   1. 値が定義の選択肢に含まれること(`resolveCommandArgs`)
+ *   1. 値が定義の選択肢に含まれること(`resolveCommandArgs`)。
+ *      フリー入力(`type: input`)だけはここが効かないので、文字集合と長さで代わりに縛る
  *   2. 生成された引数が使える文字集合に収まること(`resolveCommandArgs` の最終確認)
  *   3. シングルクォートで包むこと(`shellQuote`)
  * の3つを担当する。リモート側 `authorized_keys` の `command=` 制限が4つ目の層になる。
@@ -15,6 +16,7 @@
 import { el } from '@/locale'
 import { z } from 'zod'
 import {
+  COMMAND_FREE_VALUE_PATTERN,
   COMMAND_PLACEHOLDER_PATTERN,
   COMMAND_SENTINEL_MARK,
   COMMAND_START_SENTINEL,
@@ -87,6 +89,14 @@ export const buildCommandInputSchema = (def: CommandDef) => {
         shape[input.key] = z.boolean()
         break
       }
+      case 'input': {
+        const base = z
+          .string()
+          .regex(COMMAND_FREE_VALUE_PATTERN, el('@invalid_command_value'))
+          .max(input.maxLength, el('@invalid_command_value'))
+        shape[input.key] = input.required ? base : base.or(z.literal('')).optional()
+        break
+      }
     }
   })
 
@@ -107,6 +117,9 @@ export const buildCommandInputDefaults = (def: CommandDef): CommandInputValues =
         break
       case 'checkbox':
         values[input.key] = input.default
+        break
+      case 'input':
+        values[input.key] = input.defaultValue ?? ''
         break
     }
   })
@@ -167,6 +180,25 @@ const expandInput = (input: CommandInput, raw: unknown): string[] => {
         throw new CommandArgsError(`${input.key} は真偽値で指定する`)
       }
       return raw ? [...input.whenTrue] : [...input.whenFalse]
+    }
+    case 'input': {
+      if (raw === undefined || raw === null || raw === '') {
+        if (input.required) {
+          throw new CommandArgsError(`${input.key} は必須`)
+        }
+        return []
+      }
+      if (typeof raw !== 'string') {
+        throw new CommandArgsError(`${input.key} は文字列で指定する`)
+      }
+      // 前後の空白は落とさない。見えない差で渡る値が変わるより、使えない文字として弾く
+      if (!COMMAND_FREE_VALUE_PATTERN.test(raw)) {
+        throw new CommandArgsError(`${input.key} に使えない文字が含まれている`)
+      }
+      if (raw.length > input.maxLength) {
+        throw new CommandArgsError(`${input.key} が ${input.maxLength} 文字を超えている`)
+      }
+      return [raw]
     }
   }
 }

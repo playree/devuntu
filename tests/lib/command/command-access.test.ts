@@ -41,6 +41,7 @@ const target = (id: string): CommandTarget => ({
   user: 'deploy',
   identityFile: 'ops_ed25519',
   editable: false,
+  allowFreeInput: false,
 })
 
 const def = (id: string, targetId = 'web01', sortOrder = 0): CommandDef => ({

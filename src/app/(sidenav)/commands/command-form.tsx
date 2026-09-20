@@ -3,6 +3,7 @@
 import { MultiButton } from '@/components/general/button'
 import { CheckBoxCtrl } from '@/components/general/checkbox'
 import { GridBox } from '@/components/general/grid'
+import { InputCtrl } from '@/components/general/input'
 import { FormModal, ModalBaseProps, useConfirmModal } from '@/components/general/modal'
 import { RadioCtrl } from '@/components/general/radio'
 import { MultiSelectCtrl, SingleSelectCtrl } from '@/components/general/select'
@@ -69,6 +70,18 @@ const InputControl: FC<{ input: CommandInput; control: Control<CommandInputValue
       )
     case 'checkbox':
       return <CheckBoxCtrl control={control} name={input.key} id={`command-input-${input.key}`} label={input.label} />
+    case 'input':
+      return (
+        <InputCtrl
+          control={control}
+          name={input.key}
+          label={input.label}
+          isRequired={input.required}
+          maxLength={input.maxLength}
+          placeholder={input.placeholder}
+          errorMessage={errorMessage}
+        />
+      )
   }
 }
 
@@ -79,7 +92,7 @@ const InputControl: FC<{ input: CommandInput; control: Control<CommandInputValue
  * (`buildCommandInputSchema` / `resolveCommandArgs`)を使う。別々に書くと片方だけが緩くなる。
  */
 export const CommandForm: FC<ModalBaseProps & { target: AvailableCommandView }> = ({ state, reload, target }) => {
-  const { t } = useLocale()
+  const { t, fet } = useLocale()
   const router = useRouter()
   const { confirmModal } = useConfirmModal()
   const reAuth = useReAuth()
@@ -108,6 +121,7 @@ export const CommandForm: FC<ModalBaseProps & { target: AvailableCommandView }> 
 
   return (
     <FormModal
+      size='2xl'
       state={state}
       onSubmit={handleSubmit(async (params) => {
         if (target.requireConfirm) {
@@ -168,7 +182,7 @@ export const CommandForm: FC<ModalBaseProps & { target: AvailableCommandView }> 
         {target.inputs.length === 0 && <div className='col-span-12 text-sm'>{t('command_no_input')}</div>}
         {target.inputs.map((input) => (
           <div key={input.key} className='col-span-12'>
-            <InputControl input={input} control={control} errorMessage={errors[input.key]?.message as string} />
+            <InputControl input={input} control={control} errorMessage={fet(errors[input.key])} />
           </div>
         ))}
       </GridBox>

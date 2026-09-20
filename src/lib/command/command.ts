@@ -23,6 +23,22 @@ export const COMMAND_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{1,63}$/
  */
 export const COMMAND_VALUE_PATTERN = /^[A-Za-z0-9._:@=/+,-]{1,200}$/
 
+/** `COMMAND_VALUE_PATTERN` が許す長さの上限。`input` の `maxLength` の上限としても使う */
+export const COMMAND_VALUE_MAX_LEN = 200
+
+/**
+ * フリー入力(`type: input`)の値として許す文字集合。
+ *
+ * 通す文字は `COMMAND_VALUE_PATTERN` と同じだが、**先頭の `-` だけは許さない**。
+ * 引数は 1 要素ずつ渡るので、`-rf` のような値をそのまま渡せると、
+ * 受け取ったスクリプトからは利用者の入力ではなくオプションに見えてしまう。
+ * 選択系は定義側が値を決めるのでこの縛りは要らない。
+ */
+export const COMMAND_FREE_VALUE_PATTERN = /^[A-Za-z0-9._:@=/+,][A-Za-z0-9._:@=/+,-]{0,199}$/
+
+/** フリー入力の文字数の既定。定義側で縮められる */
+export const COMMAND_FREE_INPUT_MAX_LEN_DEFAULT = 100
+
 /**
  * 鍵ファイル / known_hosts のファイル名。
  *
@@ -41,8 +57,13 @@ export const COMMAND_PLACEHOLDER_LOOSE_PATTERN = /\{\{.*?\}\}/
 export const COMMAND_TARGET_KINDS = ['ssh'] as const
 export type CommandTargetKind = (typeof COMMAND_TARGET_KINDS)[number]
 
-/** 入力項目の種別。フリー入力は型として存在させない */
-export const COMMAND_INPUT_TYPES = ['select', 'radio', 'multiselect', 'checkbox'] as const
+/**
+ * 入力項目の種別。
+ *
+ * フリー入力(`input`)は `target.allowFreeInput: true` を書いたファイルでしか使えない。
+ * 既定では選択系だけで、利用者が任意の文字列を渡せる経路は開かない。
+ */
+export const COMMAND_INPUT_TYPES = ['select', 'radio', 'multiselect', 'checkbox', 'input'] as const
 export type CommandInputType = (typeof COMMAND_INPUT_TYPES)[number]
 
 /** タイムアウトの範囲と既定 */
@@ -257,6 +278,8 @@ export type CommandTarget = {
   knownHostsFile?: string
   /** `commands` を画面から編集してよいか。`target` 自体はこの値に関わらず画面から変えられない */
   editable: boolean
+  /** このターゲットのコマンドで `type: input`(フリー入力)を使ってよいか */
+  allowFreeInput: boolean
 }
 
 /** 選択肢 */
@@ -279,6 +302,15 @@ export type CommandInput =
       maxSelected: number
     }
   | { type: 'checkbox'; key: string; label: string; default: boolean; whenTrue: string[]; whenFalse: string[] }
+  | {
+      type: 'input'
+      key: string
+      label: string
+      defaultValue?: string
+      placeholder?: string
+      required: boolean
+      maxLength: number
+    }
 
 /** コマンド定義 */
 export type CommandDef = {

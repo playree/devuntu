@@ -41,33 +41,37 @@ export const CommandTargetTable: FC<{
       <div className='text-sm font-semibold'>{t('command_target')}</div>
       {targets.map((target) => (
         <Panel key={target.id}>
-          <FlexRow className='flex-wrap items-center'>
-            <span className='font-semibold'>{target.label}</span>
-            <span className='text-foreground-500 font-mono text-xs'>{target.id}</span>
-            {/* 読み込めなかったファイルの一覧と突き合わせられるようにする */}
-            <span className='text-foreground-500 font-mono text-xs break-all'>{target.fileName}</span>
-            <span className='grow' />
-            {/* 0 件は「誰も実行できない」を意味するので目立たせる */}
-            <Chip
-              color={target.memberCount + target.groupCount > 0 ? 'default' : 'warning'}
-              variant='soft'
-              className='whitespace-nowrap'
-            >
-              {t('command_target_assign')}: {target.memberCount} / {target.groupCount}
-            </Chip>
-            <ReadyChip label={t('command_target_identity')} ready={target.identityReady} />
-            <ReadyChip label={t('command_target_known_hosts')} ready={target.knownHostsReady} />
-            <MultiButton
-              isIconOnly
-              variant='outline'
-              tooltip={t('command_target_assign')}
-              onPress={() => {
-                onManage(target)
-              }}
-            >
-              <Cog6ToothIcon />
-            </MultiButton>
-          </FlexRow>
+          <FlexCol>
+            <FlexRow className='flex-wrap items-center'>
+              <span className='font-semibold'>{target.label}</span>
+              <span className='text-foreground-500 font-mono text-xs'>{target.id}</span>
+              {/* 読み込めなかったファイルの一覧と突き合わせられるようにする */}
+              <span className='text-foreground-500 font-mono text-xs break-all'>{target.fileName}</span>
+              <span className='grow' />
+              <MultiButton
+                isIconOnly
+                variant='outline'
+                tooltip={t('settings')}
+                onPress={() => {
+                  onManage(target)
+                }}
+              >
+                <Cog6ToothIcon />
+              </MultiButton>
+            </FlexRow>
+            <FlexRow className='flex-wrap items-center'>
+              {/* 0 件は「誰も実行できない」を意味するので目立たせる */}
+              <Chip
+                color={target.memberCount + target.groupCount > 0 ? 'default' : 'warning'}
+                variant='soft'
+                className='whitespace-nowrap'
+              >
+                {t('command_target_assign')}: {target.memberCount} / {target.groupCount}
+              </Chip>
+              <ReadyChip label={t('command_target_identity')} ready={target.identityReady} />
+              <ReadyChip label={t('command_target_known_hosts')} ready={target.knownHostsReady} />
+            </FlexRow>
+          </FlexCol>
         </Panel>
       ))}
     </FlexCol>
