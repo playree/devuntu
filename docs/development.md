@@ -94,6 +94,25 @@ EOF
 **`POSTGRES_PASSWORD` は初回起動より後には変えられない。** postgres は最初の起動でボリュームを
 初期化し、そのときのパスワードを保持する。変えるには `pgdata` ボリュームを作り直す。
 
+## マイグレーションのベースライン貼り替え(既存の開発DBを持っている場合)
+
+`prisma/migrations` は積み上がっていた36本を `schema.prisma` から再生成したフルDDL 1本(`0_init`)へ統合した。
+
+**この変更を取り込む前から使っている開発DBは、そのままでは `prisma migrate` が動かない。**
+`_prisma_migrations` に残る旧 `0_init` の checksum が新しい `migration.sql` と一致せず、
+`migrate deploy` / `migrate dev` が「適用済みのマイグレーションが変更されている」として失敗する。
+
+履歴を1行の `0_init` に貼り替える。DDL は流れないのでデータはそのまま残る。
+
+```sh
+echo 'DELETE FROM "_prisma_migrations";' | pnpm exec prisma db execute --stdin
+pnpm exec prisma migrate resolve --applied 0_init
+pnpm exec prisma migrate status   # Database schema is up to date!
+```
+
+データが要らないなら `pnpm exec prisma migrate reset` で作り直してもよい。
+新しく作るDBは `pnpm migrate` を1回流すだけでよく、この作業は不要。
+
 ## 同一PCでの並行clone(エージェント開発用など)
 
 DB・S3のコンテナは増やさず共有したまま、`git clone` したもう一つのディレクトリで別ポートの `next dev` を並行稼働できる。
