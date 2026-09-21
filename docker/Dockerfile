@@ -30,8 +30,25 @@ FROM node:24-slim AS runner
 WORKDIR /app
 
 # openssh-client はコマンド実行機能(COMMAND_EXEC_ENABLED)が spawn する ssh 本体。
-# ssh2 などの npm パッケージを使わないのは、output: 'standalone' に native 依存を持ち込まないため
-RUN apt-get update -y && apt-get install -y openssl openssh-client && rm -rf /var/lib/apt/lists/*
+# ssh2 などの npm パッケージを使わないのは、output: 'standalone' に native 依存を持ち込まないため。
+#
+# postgresql-client は tools サービスの db-backup / db-restore が使う(pg_dump / pg_restore / psql)。
+# Debian 標準のリポジトリはメジャーバージョンが古く、新しいサーバからは dump できないため PGDG から入れる。
+# バージョンは compose.yaml の db サービス(postgres:18)と揃えること。
+# ディストリのコード名は /etc/os-release から取り、ベースイメージの更新で壊れないようにする
+RUN apt-get update -y \
+    && apt-get install -y openssl openssh-client ca-certificates curl \
+    && install -d /usr/share/postgresql-common/pgdg \
+    && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+         -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+    && . /etc/os-release \
+    && echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" \
+         > /etc/apt/sources.list.d/pgdg.list \
+    && apt-get update -y && apt-get install -y postgresql-client-18 \
+    && rm -rf /var/lib/apt/lists/*
+
+# /usr/bin の pg_dump は pg_wrapper 経由でバージョンを解決するため、実体のあるパスを先に見せる
+ENV PATH=/usr/lib/postgresql/18/bin:$PATH
 
 # 実行に必要なファイルをビルド環境からコピー
 COPY --from=builder /app/public ./public
@@ -45,6 +62,9 @@ RUN mkdir /app/db && ln -s /app/db /app/migrate/db
 
 # 運用スクリプト(compose.yaml の tools サービスから tools.mjs 経由で実行する)
 COPY --from=builder /app/scripts/tools.mjs \
+                    /app/scripts/db-connect.mjs \
+                    /app/scripts/backup-db.mjs \
+                    /app/scripts/restore-db.mjs \
                     /app/scripts/backup-s3.mjs \
                     /app/scripts/restore-s3.mjs \
                     ./scripts/

@@ -57,7 +57,8 @@ PostgreSQL とオブジェクトストレージへ外部から直接到達でき
 リバースプロキシを同じホストに置く場合は、`devuntu` の `ports` も `127.0.0.1:3000:3000` に絞って
 プロキシ経由だけに限定できる。
 
-`tools` は設定ファイルの生成とバックアップ/リストアを行う使い捨てサービスで、`profiles: ['tools']` が
+`tools` は設定ファイルの生成(`setup-env`)と DB / S3 のバックアップ・リストア(`db-backup` / `db-restore` /
+`s3-backup` / `s3-restore`)を行う使い捨てサービスで、`profiles: ['tools']` が
 付いているため `docker compose up` では起動しない([operations.md](operations.md#toolsサービス))。
 
 永続データは名前付きボリューム `pgdata` / `seaweeddata` に入る。

@@ -16,8 +16,8 @@
     "migrate": "prisma migrate dev",
     "generate": "prisma generate",
     "studio": "prisma studio",
-    "db:backup": "./scripts/backup-db.sh",
-    "db:restore": "./scripts/restore-db.sh",
+    "db:backup": "node ./scripts/backup-db.mjs",
+    "db:restore": "node ./scripts/restore-db.mjs",
     "s3:backup": "node ./scripts/backup-s3.mjs",
     "s3:restore": "node ./scripts/restore-s3.mjs",
     "setup:env": "node ./scripts/setup-env/index.mjs"
