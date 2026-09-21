@@ -21,10 +21,11 @@ import { MAINTENANCE_MODE_STAT_INTERVAL_MS, MAINTENANCE_MODE_WATCH_MS } from './
 /**
  * 遮断の対象。
  *
- * `/api/health` だけは生かす。監視と `compose.yaml` の疎通確認がここを見ており、
+ * `/api/health` は生かす。監視と `compose.yaml` の疎通確認がここを見ており、
  * 遮断してしまうとメンテナンス中にコンテナが落ちたのと区別が付かなくなる。
+ * `/favicon.ico` はメンテナンス画面のタブアイコン(`_next/*` は matcher 側で除外済み)。
  */
-export const MAINTENANCE_MODE_TARGET: MatchCondition = { exclude: ['/api/health'] }
+export const MAINTENANCE_MODE_TARGET: MatchCondition = { exclude: ['/api/health', '/favicon.ico'] }
 
 let cached = false
 let checkedAt = 0
@@ -41,6 +42,10 @@ export const isMaintenanceMode = (): boolean => {
 }
 
 let watcher: NodeJS.Timeout | null = null
+/**
+ * 直前に観測した状態。**起動時点で ON でも遷移として扱う**ため、実際の状態ではなく false から始める。
+ * 起動時から ON の場合も接続を解放しておかないと、リストア側の接続チェックに引っかかる。
+ */
 let watched = false
 
 /**
@@ -53,7 +58,6 @@ export const startMaintenanceModeWatcher = (): void => {
   if (watcher) {
     return
   }
-  watched = isMaintenanceMode()
 
   watcher = setInterval(() => {
     const current = isMaintenanceMode()

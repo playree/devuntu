@@ -223,12 +223,16 @@ docker compose run --rm tools s3-restore backup/s3_YYYYMMDD_HHMMSS
 [メンテナンスモード](#メンテナンスモード)にしてから両方を復元し、表示を確認してから解除する。
 アプリを止めるのではなく遮断するのは、利用者に接続拒否ではなく案内を見せるため。
 
+`maintenance on` の直後に `db-restore` を叩いてよいが、`--wait` を付けること。アプリが遮断に気づいて
+接続を手放すまでには数秒の遅れがあり、実行中の処理が終わるまでの時間も読めない。`--wait` は
+**接続数が 0 になるのを待ってから**復元を始める(上限まで残っていれば復元せず中断する)。
+
 ```sh
 # 遮断する(アプリは動いたまま。DB の接続プールも解放される)
 docker compose run --rm tools maintenance on
 
 # DB リストア(詳細は「DBリストア」を参照)
-docker compose run --rm tools db-restore backup/devuntu_YYYYMMDD_HHMMSS.dump
+docker compose run --rm tools db-restore backup/devuntu_YYYYMMDD_HHMMSS.dump --wait 60
 
 # S3 リストア
 docker compose run --rm tools s3-restore backup/s3_YYYYMMDD_HHMMSS
@@ -299,6 +303,11 @@ backup/full_YYYYMMDD_HHMMSS/
 - 片方が失敗したら即中断し、一時ディレクトリごと捨てる。`DATABASE_URL` が壊れている場合は
   S3 側を走らせる前に止まる
 
+**対を1つにまとめるだけで、同一時点のスナップショットにはならない。** アプリを動かしたまま DB → S3 の
+順に取得するため、その間に添付を削除する操作があると、DB ダンプ側は参照を残したまま S3 バックアップ
+からは実体が消える(復元後にその画像だけ失われる)。ずれの中身と、厳密な整合性が要る場合の取り方は
+[定期実行](#定期実行)を参照。取得中も[メンテナンスモード](#メンテナンスモード)にすれば止められる。
+
 ## 一括リストア
 
 `full-backup` が出力したディレクトリを渡すと、[メンテナンスモード](#メンテナンスモード)にしてから
@@ -312,10 +321,14 @@ docker compose run --rm tools full-restore backup/full_YYYYMMDD_HHMMSS
 
 処理の流れ。
 
-1. 中身を検証する(直下の `*.dump` が1件、`s3/manifest.json` が存在する)。
-   `restore-db.mjs` は `DROP DATABASE` から始めるため、**破壊的操作の前に**対が揃っているか確かめる
-2. メンテナンスモードを ON にし、アプリが DB の接続を解放するまで10秒待つ
-3. DB を復元する。失敗したら S3 へは進まない(`--force` はそのまま `restore-db.mjs` へ渡る)
+1. 中身を検証する。`restore-db.mjs` は `DROP DATABASE` から始めるため、**破壊的操作の前に**確かめる
+   - 直下の `*.dump` が1件、`s3/manifest.json` が存在する
+   - `restore-s3.mjs --check`(ストレージへは接続しない)で、manifest が JSON として読めること、
+     参照されている `objects/<キー>` がすべて実在すること、Content-Type が決まることまで確かめる
+2. メンテナンスモードを ON にする
+3. DB を復元する。`--wait 60` 付きで呼ぶので、**接続数が 0 になってから**始まる
+   (上限まで残っていれば復元せず中断する)。失敗したら S3 へは進まない
+   (`--force` はそのまま `restore-db.mjs` へ渡る)
 4. S3 を復元する
 5. **成否に関わらずメンテナンスモードは ON のまま**。戻ったデータを確認してから手で解除する
 
@@ -345,13 +358,18 @@ docker compose run --rm tools maintenance on
 
 **ファイルの有無**で持つ。DB に載せないのは、DB を作り直している最中でも遮断が効いている必要があるため。
 
-| 見る側                 | パス                                                        |
-| ---------------------- | ----------------------------------------------------------- |
-| アプリ                 | `/app/config/maintenance`(環境変数 `MAINTENANCE_MODE_FILE`) |
-| 操作側(tools / ホスト) | `config/maintenance`(cwd 相対。`--file` で変更できる)       |
+| 見る側                 | パス                                                         |
+| ---------------------- | ------------------------------------------------------------ |
+| アプリ                 | `<cwd>/config/maintenance`(環境変数 `MAINTENANCE_MODE_FILE`) |
+| 操作側(tools / ホスト) | `config/maintenance`(cwd 相対。`--file` で変更できる)        |
 
-`compose.yaml` はホストの `./config` を `devuntu` へ `/app/config`、`tools` へ `/work/config` として
-マウントしているので、この2つは同じファイルを指す。**compose.yaml の変更は要らない。**
+どちらも cwd 相対なので、Docker 運用でも clone した環境でも同じファイルを指す。
+Docker では `WORKDIR /app` なのでアプリ側は `/app/config/maintenance` になり、`compose.yaml` が
+ホストの `./config` を `devuntu` へ `/app/config`、`tools` へ `/work/config` としてマウントして
+いるため、両者は同じ実体になる。**compose.yaml の変更は要らない。**
+
+clone した環境(`pnpm dev` / `pnpm maintenance`)では、どちらもリポジトリ直下の `config/maintenance`
+になる。アプリ側だけ絶対パス固定にすると、この場合に両者が食い違って遮断できない。
 
 切り替えは各プロセスが自分でファイルの有無に追随する形で反映される(遅れは最大1秒)。
 
@@ -363,10 +381,12 @@ docker compose run --rm tools maintenance on
 | Server Action(画面操作)               | 503 JSON                                     |
 | API(`/api/**`。MCP `/api/mcp` を含む) | 503 JSON                                     |
 | `/api/health`                         | **通常どおり 200**(監視と compose の疎通)    |
-| 静的アセット(`_next/*`・拡張子付き)   | **通常どおり配信**(案内画面を出すために必要) |
+| `_next/*` と `/favicon.ico`           | **通常どおり配信**(案内画面を出すために必要) |
 
 いずれも `Retry-After` を付けて返す。遮断は `src/proxy.ts` の1箇所に集約してあり、
-各 API ルートや Server Action には手を入れていない。
+各 API ルートや Server Action には手を入れていない。`/sw.js` や `/robots.txt` のような
+拡張子付きのパスも遮断される(Proxy の matcher から外すと、`/api/upload/<キー>.webp` のような
+**拡張子を持つルートハンドラ**まで素通しになり、遮断中に DB を引いて接続を張り直してしまうため)。
 
 - **全員が遮断される。管理者も入れない。** 判定にセッションを使わないので、DB が止まっていても確実に効く。
   裏返しとして、画面からは解除できない(解除はコマンドのみ)

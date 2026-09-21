@@ -209,10 +209,15 @@ const server = {
    *
    * DB に持たないのは、DB リストア中でも遮断が効いている必要があるため。
    * 切り替えは `scripts/maintenance.mjs` 側で行い、こちらは読むだけ。
-   * `COMMAND_DEF_DIR` と同じく、既定値はコンテナ内のパス(`./config` のマウント先)を指す。
+   *
+   * 既定値を cwd 相対にしているのは、切り替える側(`scripts/maintenance.mjs` の既定も cwd 相対)と
+   * 同じファイルを指させるため。Docker では `WORKDIR /app` なので `/app/config/maintenance` になり、
+   * clone した環境ではリポジトリ直下の `config/maintenance` になる。
+   * `COMMAND_DEF_DIR` のような絶対パス固定にすると、後者で両者が食い違い遮断できない。
    */
   get MAINTENANCE_MODE_FILE() {
-    return getEnv('MAINTENANCE_MODE_FILE', { default: '/app/config/maintenance' })
+    // node:path は import しない(クライアント用バンドルへ node 組み込みを持ち込まないため)
+    return getEnv('MAINTENANCE_MODE_FILE', { default: `${process.cwd()}/config/maintenance` })
   },
 
   /**

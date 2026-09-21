@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession, redirectSignIn, redirectTwoFaEnable } from './lib/auth/auth'
-import { authConfig } from './lib/auth/auth-config'
+import { authConfig, isProxyAuthBypassPath } from './lib/auth/auth-config'
 import { envu } from './lib/env-util'
 import { logger } from './lib/logger'
 import { MAINTENANCE_MODE_RETRY_AFTER_SEC } from './lib/maintenance/maintenance'
@@ -11,12 +11,12 @@ import { localeConfig } from './locale/config'
 /**
  * 認証を Proxy では扱わない経路か。
  *
- * API ルートと Server Action は、レコード単位の認可を各ハンドラ側で行っている
+ * ルートハンドラ・静的アセット・Server Action は、認可を各ハンドラ側で行っている
  * (`assertBoardAccess` / `assertTicketAccess` など)。matcher から除外していたのを
  * メンテナンスモードの遮断のために外したので、ここで従来と同じ「素通し」に戻す。
  */
 const bypassesProxyAuth = (request: NextRequest) =>
-  request.nextUrl.pathname.startsWith('/api/') || request.headers.has('next-action')
+  isProxyAuthBypassPath(request.nextUrl.pathname) || request.headers.has('next-action')
 
 export const proxy = async (request: NextRequest) => {
   const {
@@ -107,12 +107,13 @@ export const proxy = async (request: NextRequest) => {
 }
 
 /**
- * `api/` と Server Action(`next-action` ヘッダ)を**除外していない**。
- * メンテナンスモードの遮断を Proxy 1箇所に集約するためで、通常時の扱いは
- * `bypassesProxyAuth` で従来どおり素通しに戻している。
+ * 除外するのは `_next/*` だけ。メンテナンス画面のアセットを配信するために必要なものに絞ってある。
  *
- * 拡張子を含むパス(`.*\.`)と `_next/*` は除外したまま。メンテナンス画面のアセットを配信するため。
+ * `api/`・Server Action・拡張子を含むパスを除外しないのは、メンテナンスモードの遮断を
+ * Proxy 1箇所に集約するため。matcher から外すと Proxy 自体が動かず遮断できないので、
+ * `/api/upload/<uuidv7>.webp` のような**拡張子を持つルートハンドラ**が素通しになってしまう。
+ * 通常時の扱いは `bypassesProxyAuth` で従来どおり素通しに戻している。
  */
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|_next/webpack-hmr|.*\\.).*)'],
+  matcher: ['/((?!_next/static|_next/image|_next/webpack-hmr).*)'],
 }

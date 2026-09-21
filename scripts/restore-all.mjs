@@ -12,17 +12,17 @@
  */
 import { existsSync, readdirSync } from 'node:fs'
 import path from 'node:path'
-import { setTimeout as sleep } from 'node:timers/promises'
 import { runScript } from './run-script.mjs'
 
 /**
- * メンテナンスON後、アプリが接続を解放するまでの待ち。
+ * メンテナンスON後、アプリが接続を解放するまで待つ上限(秒)。
  *
- * アプリ側の監視(`src/lib/maintenance/maintenance-mode.ts` の `MAINTENANCE_MODE_WATCH_MS`)は
- * 5秒間隔なので、取りこぼさないよう2周ぶん待つ。ここで待たないと `restore-db.mjs` の
- * 接続チェックにアイドル接続が引っかかる。
+ * 固定時間の見切り発車にはしない。アプリが遮断に気づくまでの遅れ(最大5秒)に加え、
+ * 実行中のリモートコマンドや通知の配信が終わるまでの時間は読めないため、
+ * `restore-db.mjs` の `--wait` で**接続数が 0 になったこと**を確かめてから進む。
+ * 上限まで残っていれば復元は始まらず中断するので、長い処理を抱えたまま DROP することはない。
  */
-const DRAIN_MS = 10_000
+const DRAIN_WAIT_SEC = 60
 
 const usage = () => {
   console.error('Usage: node ./scripts/restore-all.mjs <backup-dir> [--force] [--file <maintenance-flag>]')
@@ -58,7 +58,7 @@ const resolveBackup = (backupDir) => {
   return { dumpFile: path.join(backupDir, dumps[0]), s3Dir }
 }
 
-const main = async () => {
+const main = () => {
   const args = process.argv.slice(2)
   const force = args.includes('--force')
   const fileIndex = args.indexOf('--file')
@@ -75,17 +75,21 @@ const main = async () => {
 
   const { dumpFile, s3Dir } = resolveBackup(backupDir)
 
+  // S3 側は実体まで確かめる。`restore-db.mjs` は DROP DATABASE から始まるので、この後では遅い
+  const checkCode = runScript('restore-s3.mjs', [s3Dir, '--check'])
+  if (checkCode !== 0) {
+    console.error('S3 バックアップの検証に失敗したため中断しました(DB には触れていません)')
+    process.exit(checkCode)
+  }
+
   const onCode = runScript('maintenance.mjs', ['on', ...fileArgs])
   if (onCode !== 0) {
     console.error(`メンテナンスモードにできなかったため中断しました (exit ${onCode})`)
     process.exit(onCode)
   }
 
-  console.log(`アプリが接続を解放するまで ${DRAIN_MS / 1000} 秒待ちます...`)
-  await sleep(DRAIN_MS)
-
   const steps = [
-    ['restore-db.mjs', [dumpFile, ...(force ? ['--force'] : [])]],
+    ['restore-db.mjs', [dumpFile, '--wait', String(DRAIN_WAIT_SEC), ...(force ? ['--force'] : [])]],
     ['restore-s3.mjs', [s3Dir]],
   ]
 
@@ -104,4 +108,4 @@ const main = async () => {
   console.log('  docker compose run --rm tools maintenance off')
 }
 
-await main()
+main()
