@@ -67,7 +67,7 @@ services:
       timeout: 20s
       retries: 3
 
-  # 同梱スクリプト(設定ファイルの生成 / S3のバックアップ・リストア)を実行するための使い捨てコンテナ。
+  # 同梱スクリプト(設定ファイルの生成 / DB・S3のバックアップ・リストア)を実行するための使い捨てコンテナ。
   # profiles を付けているので docker compose up では起動せず、
   # docker compose run --rm tools <サブコマンド> で指定したときだけ有効になる。
   # compose.yaml だけを置いた状態から docker compose run --rm tools setup-env で実行できる。
@@ -81,7 +81,8 @@ services:
     entrypoint: ['node', '/app/scripts/tools.mjs']
     # 空にしないとイメージの CMD(node server.js)がサブコマンドとして渡ってしまう
     command: []
-    # setup-env は .env.docker を作る側なので、まだ無い状態でも run できるようにする
+    # setup-env は .env.docker を作る側なので、まだ無い状態でも run できるようにする。
+    # db-backup / db-restore の接続先も、ここから渡る DATABASE_URL で解決する
     env_file:
       - path: ./.env.docker
         required: false

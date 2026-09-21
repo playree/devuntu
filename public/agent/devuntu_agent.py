@@ -40,7 +40,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-__version__ = "0.7.0"
+__version__ = "0.7.1"
 
 # 1 Agent の構成を作業ディレクトリだけで完結させるため、config・ログ・ロックは本体と同じ
 # <作業ディレクトリ>/.devuntu-agent へ置く。作業ディレクトリを分ければ同一ホストに複数の Agent を並べられる
@@ -49,10 +49,6 @@ DEFAULT_WORKDIR = AGENT_DIR.parent
 DEFAULT_CONFIG_PATH = AGENT_DIR / "config.json"
 DEFAULT_LOG_PATH = AGENT_DIR / "agent.log"
 DEFAULT_LOCK_PATH = AGENT_DIR / "agent.lock"
-
-# 旧バージョンは config をホーム配下に置いていた。移行し忘れた環境が理由の分からないまま
-# 止まらないよう、旧パスに残っている場合は移行を促す
-LEGACY_CONFIG_PATH = Path.home() / ".config" / "devuntu-agent" / "config.json"
 
 # ランナー自体の配布先。curl での初回取得と自動更新の両方でこのパスを使う
 # (src/lib/agent/agent-setup.ts の AGENT_SCRIPT_PATH と同じ)
@@ -159,11 +155,6 @@ class Config:
 
 def load_config(path: Path) -> Config:
     if not path.is_file():
-        if path == DEFAULT_CONFIG_PATH and LEGACY_CONFIG_PATH.is_file():
-            raise ConfigError(
-                f"config file not found: {path} (the old location {LEGACY_CONFIG_PATH} still exists: "
-                "move it next to this script and re-register cron with the new path)"
-            )
         raise ConfigError(f"config file not found: {path}")
     # トークンを持つファイルなので、他人から読める状態なら気付けるようにする
     if path.stat().st_mode & 0o077:

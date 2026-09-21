@@ -58,3 +58,9 @@ next-env.d.ts
 
 *.pyc
 __pycache__/
+
+# エージェントランナーを配布元(public/agent)で直接動かしたときの生成物。
+# public 配下は静的配信されるため、トークンを持つ config.json を置いたまま commit しない
+/public/agent/config.json
+/public/agent/agent.log
+/public/agent/agent.lock

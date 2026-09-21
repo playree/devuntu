@@ -94,24 +94,7 @@ EOF
 **`POSTGRES_PASSWORD` は初回起動より後には変えられない。** postgres は最初の起動でボリュームを
 初期化し、そのときのパスワードを保持する。変えるには `pgdata` ボリュームを作り直す。
 
-## マイグレーションのベースライン貼り替え(既存の開発DBを持っている場合)
-
-`prisma/migrations` は積み上がっていた36本を `schema.prisma` から再生成したフルDDL 1本(`0_init`)へ統合した。
-
-**この変更を取り込む前から使っている開発DBは、そのままでは `prisma migrate` が動かない。**
-`_prisma_migrations` に残る旧 `0_init` の checksum が新しい `migration.sql` と一致せず、
-`migrate deploy` / `migrate dev` が「適用済みのマイグレーションが変更されている」として失敗する。
-
-履歴を1行の `0_init` に貼り替える。DDL は流れないのでデータはそのまま残る。
-
-```sh
-echo 'DELETE FROM "_prisma_migrations";' | pnpm exec prisma db execute --stdin
-pnpm exec prisma migrate resolve --applied 0_init
-pnpm exec prisma migrate status   # Database schema is up to date!
-```
-
-データが要らないなら `pnpm exec prisma migrate reset` で作り直してもよい。
-新しく作るDBは `pnpm migrate` を1回流すだけでよく、この作業は不要。
+`prisma/migrations` は `schema.prisma` から生成したフルDDL 1本(`0_init`)だけを持つ。
 
 ## 同一PCでの並行clone(エージェント開発用など)
 
@@ -242,7 +225,7 @@ pnpm patch @heroui/react
 pnpm patch-commit '<出力されたパス>'
 ```
 
-現在適用中のパッチは無いため、`patches/`ディレクトリと`patchedDependencies`も存在しない。`@heroui/react` 3.2.2 では`Autocomplete.Popover`が`aria-label`/`aria-labelledby`を内部の`Dialog`へ転送せず react-aria の警告が出続けるためパッチを当てていたが、3.2.3 で本体が修正されたため削除した。
+現在適用中のパッチは無いため、`patches/`ディレクトリと`patchedDependencies`も存在しない。
 
 ## パッケージのバージョン上書き
 
@@ -253,8 +236,6 @@ pnpm patch-commit '<出力されたパス>'
 | `sharp`    | `0.35.4` | Next.js の画像最適化で使うバージョンを固定 |
 
 `lexical`と`@lexical/react`は`package.json`で`0.48.0`に固定している。`@mdxeditor/editor`が`@lexical/*`を`^0.48.0`で要求しているため、ルートだけ 0.49 系以降へ上げると MDXEditor 配下に 0.48 系が別インスタンスで残り、`useLexicalComposerContext`が別モジュールの Context を引いてメンション機能が実行時に壊れる。`overrides`で全体を揃える手もあるが、0.49.0 が組み込みノードの`$config()`移行で`importJSON`/`importDOM`/`clone`/`transform`の static を落としており、以降のバージョンも含めて MDXEditor 側が未対応。MDXEditor が追随したら上げる。
-
-HeroUI 3.2.3 の頃は`@heroui/{react,styles}>tailwind-variants`を`^3.3.1`へ上書きしていた。3.3.0 の slots リゾルバが単一の slots オブジェクトを使い回し、同じ tv を別の props で呼ぶと先に取得済みの slot 関数の戻り値まで後の props に化けるバグがあり、`Modal.Backdrop`の`variant='blur'`が`opaque`に化けていたため。HeroUI 3.2.4 が`tailwind-variants@3.3.1`を固定依存にしたので上書きは削除した。
 
 ## TypeScript v7 と v6 の併存
 

@@ -2,6 +2,8 @@
  * 同梱スクリプトをサブコマンドで呼び出す。
  *
  *   docker compose run --rm tools setup-env
+ *   docker compose run --rm tools db-backup
+ *   docker compose run --rm tools db-restore backup/devuntu_YYYYMMDD_HHMMSS.dump
  *   docker compose run --rm tools s3-backup
  *   docker compose run --rm tools s3-restore backup/s3_YYYYMMDD_HHMMSS
  *
@@ -16,6 +18,8 @@ import { fileURLToPath } from 'node:url'
 
 const COMMANDS = {
   'setup-env': 'setup-env/index.mjs',
+  'db-backup': 'backup-db.mjs',
+  'db-restore': 'restore-db.mjs',
   's3-backup': 'backup-s3.mjs',
   's3-restore': 'restore-s3.mjs',
 }
@@ -23,6 +27,8 @@ const COMMANDS = {
 const USAGE = `使い方: node scripts/tools.mjs <サブコマンド> [引数...]
 
   setup-env    設定ファイル(.env.docker / .env.db / seaweedfs-s3.json)を対話生成する
+  db-backup    データベースの中身を backup/ へバックアップする
+  db-restore   ダンプファイルの内容をデータベースへ復元する
   s3-backup    オブジェクトストレージの中身を backup/ へバックアップする
   s3-restore   バックアップディレクトリの内容をオブジェクトストレージへ復元する
   help         この使い方を表示する

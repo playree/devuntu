@@ -1,8 +1,9 @@
 - [バックアップの考え方](#バックアップの考え方)
 - [toolsサービス](#toolsサービス)
-  - [旧イメージでの実行](#旧イメージでの実行)
 - [DBバックアップ](#dbバックアップ)
+  - [Docker環境でのDBバックアップ](#docker環境でのdbバックアップ)
 - [DBリストア](#dbリストア)
+  - [Docker環境でのDBリストア](#docker環境でのdbリストア)
 - [S3バックアップ](#s3バックアップ)
   - [Docker環境でのS3バックアップ](#docker環境でのs3バックアップ)
 - [S3リストア](#s3リストア)
@@ -38,52 +39,40 @@ DB だけ復元しても`Attachment`レコードや`link_widget.iconPath`、チ�
 
 | コマンド          | 実体                     |
 | ----------------- | ------------------------ |
-| `pnpm db:backup`  | `scripts/backup-db.sh`   |
-| `pnpm db:restore` | `scripts/restore-db.sh`  |
+| `pnpm db:backup`  | `scripts/backup-db.mjs`  |
+| `pnpm db:restore` | `scripts/restore-db.mjs` |
 | `pnpm s3:backup`  | `scripts/backup-s3.mjs`  |
 | `pnpm s3:restore` | `scripts/restore-s3.mjs` |
 
-clone していない Docker 運用環境では、各節の「直接実行」または [`tools`サービス](#toolsサービス)を使う。
+clone していない Docker 運用環境では [`tools`サービス](#toolsサービス)を使う。同じスクリプトをイメージ同梱のまま実行できる。
 
 ## toolsサービス
 
-`compose.yaml` で Docker 運用している環境向けに、イメージ同梱のスクリプトを実行するための使い捨てコンテナを `tools` サービスとして定義している。設定ファイルの対話生成と S3 のバックアップ/リストアをサブコマンドで選ぶ。スクリプトはイメージに同梱されているので、**リポジトリの clone もホストへの node インストールも不要**で、`compose.yaml` があれば実行できる。
+`compose.yaml` で Docker 運用している環境向けに、イメージ同梱のスクリプトを実行するための使い捨てコンテナを `tools` サービスとして定義している。設定ファイルの対話生成と DB / S3 のバックアップ・リストアをサブコマンドで選ぶ。スクリプトはイメージに同梱されているので、**リポジトリの clone もホストへの node インストールも不要**で、`compose.yaml` があれば実行できる。
 
 ```sh
 # 設定ファイル(.env.docker / .env.db / seaweedfs-s3.json)の対話生成
 docker compose run --rm tools setup-env
 
-# S3 バックアップ
-docker compose run --rm tools s3-backup
+# DB バックアップ / リストア
+docker compose run --rm tools db-backup
+docker compose run --rm tools db-restore backup/devuntu_YYYYMMDD_HHMMSS.dump
 
-# S3 リストア
+# S3 バックアップ / リストア
+docker compose run --rm tools s3-backup
 docker compose run --rm tools s3-restore backup/s3_YYYYMMDD_HHMMSS
 ```
 
 サブコマンドより後ろの引数はそのまま渡る(`tools setup-env --dry-run` など)。サブコマンド無しで実行すると一覧が出る。
 `setup-env` は導入時と設定変更時のどちらでも使う。尋ねられる項目や既存ファイルの扱いは [installation.md](installation.md#2-設定ファイルの作成) を参照。
 
-- 同梱版イメージ(`0.7.2` 以降)が前提。`0.3.1`〜`0.7.1` のイメージには S3 用の `s3-tools` サービスしか無く、`0.3.0` 以前では[旧イメージでの実行](#旧イメージでの実行)を参照する
 - `profiles: ['tools']` を付けているので `docker compose up` では起動しない
 - `entrypoint` を `node /app/scripts/tools.mjs` にしているので `docker-entrypoint.sh` が動かず、`prisma migrate deploy` は走らない
-- 環境変数は `env_file`(`.env.docker`)から渡るので、コンテナ内の `S3_ENDPOINT` は `http://s3:8333` になる。`setup-env` は `.env.docker` を作る側なので、`required: false` を付けて「あれば読む」にしてある(Docker Compose v2.24 以降が必要)
+- 環境変数は `env_file`(`.env.docker`)から渡るので、コンテナ内の `S3_ENDPOINT` は `http://s3:8333`、`DATABASE_URL` の接続先は `db:5432` になる。`setup-env` は `.env.docker` を作る側なので、`required: false` を付けて「あれば読む」にしてある(Docker Compose v2.24 以降が必要)
 - `compose.yaml` のあるディレクトリを `/work` へマウントして作業ディレクトリにしているため、設定ファイルの生成先も `backup/` の入出力先も `compose.yaml` と同じ階層になる。引数のパスはホストで見えるパス(`backup/...`)をそのまま書ける
 - コンテナは root で動くため、`backup/` 配下の出力は root 所有になる(`setup-env` が生成する設定ファイルは、実行ユーザーが扱えるよう所有者を合わせている)
-- `s3` への `depends_on` は持たない(`setup-env` は `s3` が必要とする `seaweedfs-s3.json` を作る側のため)。`s3` を止めている状態から復元するときは、先に `docker compose up -d --wait s3` で healthy まで待つ
-
-### 旧イメージでの実行
-
-`0.3.0` 以前のイメージには `scripts/` が入っていないため、ホスト側のスクリプトを使い捨てコンテナへマウントして実行する(この場合はホストにスクリプトの実体が必要)。
-
-```sh
-docker compose run --rm \
-  -v "$(pwd)/backup:/app/backup" \
-  -v "$(pwd)/scripts/backup-s3.mjs:/app/backup-s3.mjs:ro" \
-  --entrypoint node \
-  devuntu /app/backup-s3.mjs
-```
-
-スクリプトは `/app/` 直下にマウントする。`WORKDIR` が `/app` なので出力先が `/app/backup` になり、`@aws-sdk/client-s3` も `/app/node_modules` から解決される。
+- `db` / `s3` への `depends_on` は持たない(`setup-env` は `db` / `s3` が必要とする設定ファイルを作る側のため)。止めている状態からバックアップ/リストアするときは、先に `docker compose up -d --wait db s3` で healthy まで待つ
+- `db-backup` / `db-restore` が使う `pg_dump` / `pg_restore` / `psql` はイメージに同梱している。バージョンは `compose.yaml` の `postgres:18` と揃えているので、`db` サービスのメジャーバージョンを上げるときは `docker/Dockerfile` の `postgresql-client-18` も合わせる
 
 ## DBバックアップ
 
@@ -92,43 +81,42 @@ DB(`db`サービス)が起動している状態で実行する。`backup/`配下
 ```sh
 pnpm db:backup
 # または
-./scripts/backup-db.sh
+node ./scripts/backup-db.mjs
 ```
 
-リポジトリを clone していない Docker 運用環境では、スクリプトと同じ内容を直接実行する。
-一時ファイルへ出力して成功時だけ本ファイルへ移す(直接リダイレクトすると `pg_dump` 失敗時に
+接続先は `DATABASE_URL` から解決するので、外部の PostgreSQL を使う構成でもそのまま動く。
+ホストに `pg_dump` が無い場合は `docker compose exec -T db` 経由へ自動で切り替わるため、
+postgres クライアントをホストへ入れる必要はない(どちらで実行したかは1行目に出力される)。
+
+ただし `docker compose exec` 経由はコンテナ内のローカル接続になり、接続先ホストを指定できない。
+外部の PostgreSQL を使う構成では、実行するホストに `postgresql-client` を入れる
+(入っていない場合は同梱の `db` を誤って操作しないよう、実行前にエラーで止まる)。
+
+一時ファイルへ出力して成功時だけ本ファイルへ移す(直接書くと `pg_dump` 失敗時に
 空や壊れた `.dump` が残り、後のリストアで事故になる)。
 
+### Docker環境でのDBバックアップ
+
+[`tools`サービス](#toolsサービス)の`db-backup`サブコマンドを使う。
+
 ```sh
-mkdir -p backup
-OUT=backup/devuntu_$(date +%Y%m%d_%H%M%S).dump
-docker compose exec -T db pg_dump -U devuser -Fc devuntu > "${OUT}.tmp" \
-  && mv "${OUT}.tmp" "${OUT}" || rm -f "${OUT}.tmp"
+docker compose run --rm tools db-backup
 ```
 
-ユーザー名と DB 名は `compose.yaml` の `POSTGRES_USER`/`POSTGRES_DB` に合わせる。
+`compose.yaml`と同じ階層の`backup/`に出力される。
 
 ## DBリストア
 
-対象のダンプファイルを引数に指定する。既存オブジェクトは削除された上で復元される。
+対象のダンプファイルを引数に指定する。既存 DB を作り直してから復元する(`--clean` ではダンプに含まれないテーブルと外部キーが残り、依存エラーになるため)。
 
-```sh
-pnpm db:restore backup/devuntu_YYYYMMDD_HHMMSS.dump
-# または
-./scripts/restore-db.sh backup/devuntu_YYYYMMDD_HHMMSS.dump
-```
-
-同じく、リポジトリを clone していない環境では直接実行する。既存 DB を作り直してから復元する(`--clean` ではダンプに含まれないテーブルと外部キーが残り、依存エラーになるため)。
-
-アプリの停止が前提になる。`devuntu` は `restart: unless-stopped` のため、`dropdb -f` で切断してもすぐ接続を張り直して DROP が失敗する。復元後も Prisma の接続プールが古い状態を握るので、止めてから実行して最後に起動し直す。
+アプリの停止が前提になる。`devuntu` は `restart: unless-stopped` のため、止めずに実行すると `DROP DATABASE` の直後に接続を張り直す。復元後も Prisma の接続プールが古い状態を握るので、止めてから実行して最後に起動し直す。対象 DB に他の接続が残っている場合は実行前に中断する(`--force` で無視できる)。
 
 ```sh
 docker compose stop devuntu
 
-docker compose exec -T db dropdb -U devuser -f devuntu
-docker compose exec -T db createdb -U devuser devuntu
-docker compose exec -T db pg_restore -U devuser -d devuntu --no-owner --single-transaction \
-  < backup/devuntu_YYYYMMDD_HHMMSS.dump
+pnpm db:restore backup/devuntu_YYYYMMDD_HHMMSS.dump
+# または
+node ./scripts/restore-db.mjs backup/devuntu_YYYYMMDD_HHMMSS.dump
 
 docker compose up -d devuntu
 ```
@@ -137,6 +125,17 @@ docker compose up -d devuntu
 S3 リストアが終わるまで実体の無い画像を参照したまま利用・更新されてしまう。
 `devuntu` を止めたまま S3 リストアまで済ませ、最後に一度だけ起動する
 ([対で復元する手順](#対で復元する手順))。
+
+### Docker環境でのDBリストア
+
+[`tools`サービス](#toolsサービス)の`db-restore`サブコマンドにダンプファイルを渡す。
+コンテナ内からは `devuntu` を止められないため、停止は先に済ませておく。
+
+```sh
+docker compose stop devuntu
+docker compose run --rm tools db-restore backup/devuntu_YYYYMMDD_HHMMSS.dump
+docker compose up -d devuntu
+```
 
 ## S3バックアップ
 
@@ -202,10 +201,7 @@ DB と S3 を対で戻すときは、`devuntu` を止めたまま両方を復元
 docker compose stop devuntu
 
 # DB リストア(詳細は「DBリストア」を参照)
-docker compose exec -T db dropdb -U devuser -f devuntu
-docker compose exec -T db createdb -U devuser devuntu
-docker compose exec -T db pg_restore -U devuser -d devuntu --no-owner --single-transaction \
-  < backup/devuntu_YYYYMMDD_HHMMSS.dump
+docker compose run --rm tools db-restore backup/devuntu_YYYYMMDD_HHMMSS.dump
 
 # S3 リストア
 docker compose run --rm tools s3-restore backup/s3_YYYYMMDD_HHMMSS
@@ -213,11 +209,11 @@ docker compose run --rm tools s3-restore backup/s3_YYYYMMDD_HHMMSS
 docker compose up -d devuntu
 ```
 
-`s3` を止めている場合は、先に `docker compose up -d --wait s3` で healthy になるまで待ってから復元する。
+`db` / `s3` を止めている場合は、先に `docker compose up -d --wait db s3` で healthy になるまで待ってから復元する。
 
 ### ボリュームを作り直す場合
 
-`seaweeddata`ボリュームを作り直すと`/data`のディスク消費をリセットできる。過去のバージョンで作られた volume ファイル(`*.dat`)は 1 ファイルあたり 1GiB を`fallocate`で先行確保しており、実データが数 KB でもディスクを 10GB 以上占有することがある(現行の`compose.yaml`の起動オプションでは先行確保は起きない)。
+`seaweeddata`ボリュームを作り直すと`/data`のディスク消費をリセットできる。古い起動オプションで作られた volume ファイル(`*.dat`)は 1 ファイルあたり 1GiB を`fallocate`で先行確保しており、実データが数 KB でもディスクを 10GB 以上占有することがある(現行の`compose.yaml`の起動オプションでは先行確保は起きない)。
 
 必ずバックアップを取ってから実行する。
 
@@ -241,7 +237,7 @@ docker compose run --rm tools s3-restore backup/s3_YYYYMMDD_HHMMSS
 `up -d` は `--wait` を付けない限り healthy を待たないため、ここでは `--wait` を付けて `s3` の
 healthcheck が通ってからリストアする。
 
-Docker 運用環境では `pnpm s3:backup` / `pnpm db:backup` の箇所も [Docker環境でのS3バックアップ](#docker環境でのs3バックアップ)・[DBバックアップ](#dbバックアップ)の直接実行コマンドに読み替える。
+Docker 運用環境では `pnpm s3:backup` / `pnpm db:backup` を `docker compose run --rm tools s3-backup` / `docker compose run --rm tools db-backup` に読み替える。
 
 消費量は`docker compose exec -T s3 sh -c 'du -sk /data'`で確認できる。
 
@@ -251,14 +247,13 @@ cron から実行する場合は、DB と S3 を続けて取得する。`compose
 
 ```sh
 # 毎日 3:00 に取得する例(clone していない Docker 運用環境)
-0 3 * * * cd /opt/devuntu && mkdir -p backup \
-  && OUT=backup/devuntu_$(date +\%Y\%m\%d_\%H\%M\%S).dump \
-  && { docker compose exec -T db pg_dump -U devuser -Fc devuntu > "$OUT.tmp" || { rm -f "$OUT.tmp"; false; }; } \
-  && mv "$OUT.tmp" "$OUT" \
+0 3 * * * cd /opt/devuntu \
+  && docker compose run --rm tools db-backup \
   && docker compose run --rm tools s3-backup
 ```
 
-`pg_dump` が途中で失敗したときに壊れた `.dump` を残さないよう、ここでも一時ファイル経由にしている。
+どちらも一時ファイル/一時ディレクトリへ書き出して成功時のみ本体へ移すため、途中で失敗しても
+壊れたバックアップは残らない。
 
 アプリを動かしたまま DB と S3 を順に取得するため、**厳密には同一時点のスナップショットにはならない**。
 取得の間に添付を削除する操作があると、DB ダンプ側は参照を残したまま S3 バックアップからは実体が
@@ -343,7 +338,7 @@ IdP から取り込む側も、リンクローカル(`169.254.0.0/16` / `fe80::/
 IdP を信頼できない環境では `profile` スコープの付与ごと見直すこと。
 
 公開されるのは「今この瞬間 `user.image` から参照されているキー」だけで、同じ添付でも
-お知らせ本文の画像やリンクウィジェットのアイコンは従来どおりログイン必須の `/api/upload` から
+お知らせ本文の画像やリンクウィジェットのアイコンは引き続きログイン必須の `/api/upload` から
 しか読めない。キーは保存ごとに変わる uuidv7 なので推測はできないが、**キーを知る第三者は
 誰でもそのアバターを読める**。アバターを OIDC 連携先へ渡さない運用にしたい場合は、
 クライアントに `profile` スコープを与えないこと。

@@ -26,16 +26,20 @@ git --version
 ```
 
 <!-- cli:claude -->
+
 ```sh
 claude --version
 command -v claude   # 実体の場所。cron で見つからないときに使う
 ```
+
 <!-- /cli -->
 <!-- cli:codex -->
+
 ```sh
 codex --version
 command -v codex    # 実体の場所。cron で見つからないときに使う
 ```
+
 <!-- /cli -->
 
 足りないものがあれば先に入れる。
@@ -80,6 +84,7 @@ grep -qxF '.devuntu-agent' .gitignore 2>/dev/null || echo '.devuntu-agent' >> .g
 **設定ファイルは上書きせず追記する。** 他の MCP サーバーの設定が同居していることがあるため。
 
 <!-- cli:claude -->
+
 `.mcp.json` に保存する(`--scope project`)。`${DEVUNTU_AGENT_TOKEN}` という文字列のまま保存したいので、
 シェルに展開させないようシングルクォートで囲む。
 
@@ -99,6 +104,7 @@ Claude Code は読み込み時にこの記法を環境変数へ展開するた�
 この時点ではシェルに `DEVUNTU_AGENT_TOKEN` が無いため接続は失敗する。それでよい(手順6で確認する)。
 <!-- /cli -->
 <!-- cli:codex -->
+
 `.codex/config.toml` に次のブロックを足す(ファイルが無ければ作られる)。
 
 ```sh
@@ -180,42 +186,59 @@ chmod 600 ~/devuntu-agent-work/.devuntu-agent/config.json
 - `cli.kind`: 起動する CLI の種類。この手順では `{{cliKind}}`({{cliLabel}})
 - `cli.bin`: 実行コマンド。省略すると `cli.kind` と同じ値(`{{cliKind}}`)を使う
 - `cli.args`: cron からは権限確認に誰も答えられないので、既定は自動承認にしてある。
+
 <!-- cli:claude -->
-  - 既定は `--permission-mode auto`(ファイル編集に限らず Bash 含むツール利用全般を自動承認)
+
+- 既定は `--permission-mode auto`(ファイル編集に限らず Bash 含むツール利用全般を自動承認)
+
 <!-- /cli -->
 <!-- cli:codex -->
-  - 既定は `--sandbox danger-full-access --skip-git-repo-check`。作業ディレクトリは clone の基点で
-    git リポジトリではないため、`--skip-git-repo-check` を外すと codex は起動を拒否する
+
+- 既定は `--sandbox danger-full-access --skip-git-repo-check`。作業ディレクトリは clone の基点で
+  git リポジトリではないため、`--skip-git-repo-check` を外すと codex は起動を拒否する
+
 <!-- /cli -->
-  - **注意**: この既定値は**エージェント専用ホストで動かすことを前提**にしている。エージェントが読む
-    チケット本文・コメントの内容がそのままエージェントへの指示になり得るため、既定のままだと
-    悪意ある(または誤った)チケット内容から、作業ディレクトリの外のファイル操作や外部通信まで
-    無条件に実行され得る。人が普段使うマシンや、エージェントに触らせたくない鍵・認証情報がある
-    ホストでは動かさないこと。エージェントに割り当てるチケットを作成・コメントできる範囲を
-    信頼できる人に限定するなど、リスクは運用側で判断する。より制限したい場合は、
+
+- **注意**: この既定値は**エージェント専用ホストで動かすことを前提**にしている。エージェントが読む
+  チケット本文・コメントの内容がそのままエージェントへの指示になり得るため、既定のままだと
+  悪意ある(または誤った)チケット内容から、作業ディレクトリの外のファイル操作や外部通信まで
+  無条件に実行され得る。人が普段使うマシンや、エージェントに触らせたくない鍵・認証情報がある
+  ホストでは動かさないこと。エージェントに割り当てるチケットを作成・コメントできる範囲を
+  信頼できる人に限定するなど、リスクは運用側で判断する。より制限したい場合は、
+
 <!-- cli:claude -->
+
     `--permission-mode acceptEdits`(編集のみ自動承認)や `--disallowedTools` に変える
+
 <!-- /cli -->
 <!-- cli:codex -->
+
     `--sandbox workspace-write -c sandbox_workspace_write.network_access=true` に変える
     (`--skip-git-repo-check` は残す)。`workspace-write` は既定でネットワークを遮断するため
     `network_access=true` を併せて指定しないと `git clone` や依存関係のインストールが失敗する。
     `~/.npm` や `~/.cache` などワークスペース外への書き込みも弾かれるので、エージェントに
     ビルドまでさせる場合はそこで詰まらないかを確認してから使う
-  - ここに `-c <キー>=<値>` を足すと codex の設定を上書きできる(繰り返し可)。よく使うのは
-    推論の強さで、`-c model_reasoning_effort="high"`(`minimal` / `low` / `medium` / `high` / `xhigh`)。
-    モデルと推論設定をまとめて切り替えたい場合は `--profile <名前>`
-    (`~/.codex/<名前>.config.toml` が基本設定に重なる)
+
+- ここに `-c <キー>=<値>` を足すと codex の設定を上書きできる(繰り返し可)。よく使うのは
+  推論の強さで、`-c model_reasoning_effort="high"`(`minimal` / `low` / `medium` / `high` / `xhigh`)。
+  モデルと推論設定をまとめて切り替えたい場合は `--profile <名前>`
+  (`~/.codex/<名前>.config.toml` が基本設定に重なる)
+
 <!-- /cli -->
 <!-- cli:claude -->
+
 - `cli.model`: 使用するモデル。既定は `sonnet`。`opus` / `fable` など `--model` が受け付ける
   エイリアスを指定できる
+
 <!-- /cli -->
 <!-- cli:codex -->
+
 - `cli.model`: 使用するモデル。既定は持たない。指定する場合は `"model": "gpt-5.5"` のように
   モデル名をそのまま書く(`codex exec --model <値>` として渡る)。省略した場合は
   `~/.codex/config.toml` の `model`、それも無ければ codex の既定モデルが使われる
+
 <!-- /cli -->
+
 - `cli.path`: CLI を起動するときに PATH の先頭へ足すディレクトリ。空のままにしておき、
   次の `save-path` で入れる(手で書くのは特殊な配置のときだけ)。この PATH は CLI 自身にも
   渡るので、エージェントが叩く `git` / `node` / `pnpm` / `gh` の解決にも効く
@@ -317,6 +340,7 @@ cron 行に PATH を書き足す必要は無い。手順 5 の `save-path` で�
 同じ環境で作り直せるよう、このガイドの内容を作業ディレクトリに書き出しておく。
 
 <!-- cli:claude -->
+
 `.claude/skills/devuntu-agent/SKILL.md` に置き、先頭に次の frontmatter を付ける。
 
 ```yaml
@@ -325,8 +349,10 @@ name: devuntu-agent
 description: devuntu の自動運用(Devuntu Agent)をこのマシンにセットアップし、動作を確認する。
 ---
 ```
+
 <!-- /cli -->
 <!-- cli:codex -->
+
 `AGENTS.md` に書き出す(frontmatter は要らない)。
 <!-- /cli -->
 
@@ -344,64 +370,31 @@ description: devuntu の自動運用(Devuntu Agent)をこのマシンにセッ�
 
 - トークンはエージェントごとに発行し、それぞれの作業ディレクトリで MCP を登録する(手順3)。
   MCP の設定に入るのは環境変数の参照だけで、実際のトークンは作業ディレクトリごとの `config.json` から渡る
+
 <!-- cli:codex -->
+
 - 信頼の設定(`projects.<path>.trust_level`)はユーザー設定にあるので、作業ディレクトリごとに 1 行ずつ足す
+
 <!-- /cli -->
+
 - cron 行も作業ディレクトリごとに登録する
 - ロックとログは作業ディレクトリごとに分かれるため、互いにスキップさせたりログを混ぜたりしない
 
-<!-- cli:claude -->
-## 0.7.0 での変更(トークンの環境変数化)
-
-0.7.0 より前は MCP の設定ファイルにトークンを平文で書いていた。そのままでも動くが、トークンが
-`config.json` と MCP の設定の 2 箇所にあるため、再発行のたびに両方を直す必要がある。
-次のように書き換えると `config.json` の 1 箇所だけで済むようになる。
-
-```sh
-cd ~/devuntu-agent-work
-claude mcp remove --scope project devuntu-agent
-claude mcp add --transport http devuntu-agent {{mcpUrl}} \
-  --scope project \
-  --header 'Authorization: Bearer ${DEVUNTU_AGENT_TOKEN}'
-```
-
-書き換えたら手順6の `eval` + `claude mcp list` で接続を確かめる。
-<!-- /cli -->
-
-## 旧配置(0.6.0 より前)からの移行
-
-0.6.0 より前は本体を `~/.local/bin`、設定を `~/.config/devuntu-agent` に置いていた。
-新しいランナーは自分の隣の `config.json` しか読まないため、**旧配置のまま放置すると自己更新で
-0.6.0 になった時点で設定を見失って止まる**。次の手順で移し替える。
-
-```sh
-crontab -l 2>/dev/null | grep -v 'devuntu_agent.py' | crontab -   # 旧 cron 行を外す
-mkdir -p ~/devuntu-agent-work/.devuntu-agent
-mv ~/.config/devuntu-agent/config.json ~/devuntu-agent-work/.devuntu-agent/config.json
-mv ~/.local/bin/devuntu_agent.py ~/devuntu-agent-work/.devuntu-agent/devuntu_agent.py
-cd ~/devuntu-agent-work
-grep -qxF '.devuntu-agent' .gitignore 2>/dev/null || echo '.devuntu-agent' >> .gitignore
-rm -rf ~/.config/devuntu-agent ~/.local/state/devuntu-agent ~/.cache/devuntu-agent.lock
-```
-
-`config.json` の `workdir` は、移した先の 1 つ上と同じなら消してよい(別の場所を指しているなら残す)。
-そのあと手順8の cron 登録と手順6の疎通確認をやり直す。
-
-設定だけ旧パスに残った状態で新しいランナーを起動した場合は、設定が見つからない旨と
-旧パスにファイルが残っていることを伝えるエラーが出る。
-
 ## うまく動かないとき
 
-| 症状                                     | 見るところ                                                                                                            |
-| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| 管理画面の自動運用が「オフライン」のまま | cron が動いているか(`crontab -l`)、`.devuntu-agent/agent.log`                                                         |
-| 実行履歴に「失敗」が並ぶ                 | 履歴の「内容」に終了コードと標準エラーの末尾が入っている                                                              |
-| 実行が「実行中」のまま止まる             | エージェントが `finish_agent_task` を呼べていない。60 分で自動的に失敗へ落ちる                                        |
-| チケットが拾われない                     | 担当がエージェントか、チケットの「エージェント」が「任せない」になっていないか                                        |
-| `... not found` で失敗する               | その CLI が使えるシェルで `devuntu_agent.py save-path` を実行し直す。それでも駄目なら `cli.bin` に絶対パスを書く      |
+| 症状                                     | 見るところ                                                                                                       |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| 管理画面の自動運用が「オフライン」のまま | cron が動いているか(`crontab -l`)、`.devuntu-agent/agent.log`                                                    |
+| 実行履歴に「失敗」が並ぶ                 | 履歴の「内容」に終了コードと標準エラーの末尾が入っている                                                         |
+| 実行が「実行中」のまま止まる             | エージェントが `finish_agent_task` を呼べていない。60 分で自動的に失敗へ落ちる                                   |
+| チケットが拾われない                     | 担当がエージェントか、チケットの「エージェント」が「任せない」になっていないか                                   |
+| `... not found` で失敗する               | その CLI が使えるシェルで `devuntu_agent.py save-path` を実行し直す。それでも駄目なら `cli.bin` に絶対パスを書く |
+
 <!-- cli:claude -->
-| エージェントが MCP に繋がらない          | `.mcp.json` の `${DEVUNTU_AGENT_TOKEN}` が展開済みの値になっていないか(手順3)                                         |
+
+| エージェントが MCP に繋がらない | `.mcp.json` の `${DEVUNTU_AGENT_TOKEN}` が展開済みの値になっていないか(手順3) |
 <!-- /cli -->
 <!-- cli:codex -->
-| エージェントが MCP に繋がらない          | `.codex/config.toml` の `bearer_token_env_var` と、作業ディレクトリの信頼の設定(手順3)                                |
+
+| エージェントが MCP に繋がらない | `.codex/config.toml` の `bearer_token_env_var` と、作業ディレクトリの信頼の設定(手順3) |
 <!-- /cli -->
