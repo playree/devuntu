@@ -13,6 +13,14 @@ services:
         condition: service_healthy
       s3:
         condition: service_healthy
+    volumes:
+      - type: bind
+        source: ./config
+        target: /app/config
+        read_only: true
+      - type: bind
+        source: ./config/commands
+        target: /app/config/commands
 
   db:
     image: postgres:18
