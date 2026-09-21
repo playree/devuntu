@@ -15,10 +15,10 @@
 import { after } from 'next/server'
 import { envu } from '../env-util'
 import { logger } from '../logger'
-import { isMaintenanceMode } from '../maintenance/maintenance-mode'
+import { isMaintenanceMode, registerMaintenanceDrainSource } from '../maintenance/maintenance-mode'
 import { COMMAND_START_DELAY_MS, COMMAND_TICK_MS } from './command'
 import { runCommandDispatch } from './command-dispatch'
-import { abortAllRuns } from './command-registry'
+import { abortAllRuns, runningCount } from './command-registry'
 
 let timer: NodeJS.Timeout | null = null
 let running = false
@@ -75,6 +75,13 @@ export const startCommandWorker = (): void => {
    */
   process.once('SIGTERM', () => abortAllRuns('interrupted'))
   process.once('SIGINT', () => abortAllRuns('interrupted'))
+
+  /**
+   * `runCommandDispatch()` は実行の完走を待たずに返るので、dispatch 中かどうかだけでは足りない。
+   * レジストリから外れるのは `command-exec.ts` の finally、つまり終了状態を書き終えた後なので、
+   * `runningCount()` が 0 なら DB への書き込みも終わっている。
+   */
+  registerMaintenanceDrainSource('command', () => running || runningCount() > 0)
 
   logger.info({ intervalMs: COMMAND_TICK_MS }, 'command worker started')
 }
