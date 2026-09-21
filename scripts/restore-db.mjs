@@ -19,8 +19,11 @@ import { hasLocalPgClient, resolveDbEnv, runPg, showTransport } from './db-conne
  */
 await import('dotenv/config').catch(() => {})
 
-/** 接続中のDBは DROP できないため、DROP/CREATE と接続数の確認はこのDB経由で行う */
-const MAINTENANCE_DB = 'postgres'
+/**
+ * 接続中のDBは DROP できないため、DROP/CREATE と接続数の確認は対象とは別のDB経由で行う。
+ * 対象が `postgres` 自身の場合は、同じく既定で接続できる `template1` へ逃がす
+ */
+const maintenanceDb = (pgEnv) => (pgEnv.PGDATABASE === 'postgres' ? 'template1' : 'postgres')
 
 /** SQLリテラル・識別子の埋め込み。DB名は `DATABASE_URL` 由来だが、引用符を含む名前でも壊れないようにする */
 const sqlLiteral = (value) => `'${value.replaceAll("'", "''")}'`
@@ -41,7 +44,7 @@ const usage = () => {
  */
 const assertNoOtherConnections = (pgEnv) => {
   const sql = `SELECT count(*) FROM pg_stat_activity WHERE datname = ${sqlLiteral(pgEnv.PGDATABASE)} AND pid <> pg_backend_pid()`
-  const res = runPg('psql', ['-Atc', sql], { pgEnv, database: MAINTENANCE_DB, capture: true })
+  const res = runPg('psql', ['-Atc', sql], { pgEnv, database: maintenanceDb(pgEnv), capture: true })
   const count = Number.parseInt(res.stdout.trim(), 10)
   if (Number.isNaN(count) || count === 0) {
     return
@@ -89,7 +92,7 @@ const main = () => {
       '-c',
       `CREATE DATABASE ${sqlIdent(pgEnv.PGDATABASE)} OWNER ${sqlIdent(pgEnv.PGUSER)};`,
     ],
-    { pgEnv, database: MAINTENANCE_DB },
+    { pgEnv, database: maintenanceDb(pgEnv) },
   )
 
   // --single-transaction: 全体を1トランザクション化(--exit-on-error を含む)。

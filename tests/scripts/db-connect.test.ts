@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { resolveDbEnv } from '../../scripts/db-connect.mjs'
+import { isBundledDbHost, resolveDbEnv } from '../../scripts/db-connect.mjs'
 
 describe('resolveDbEnv', () => {
   it('接続URLを PG* へ分解する', () => {
@@ -50,5 +50,29 @@ describe('resolveDbEnv', () => {
     expect(() => resolveDbEnv(undefined)).toThrow()
     expect(() => resolveDbEnv('not-a-url')).toThrow()
     expect(() => resolveDbEnv('postgresql://db:5432/devuntu')).toThrow()
+  })
+})
+
+describe('isBundledDbHost', () => {
+  it('同梱のdbサービスを指す接続先を受け入れる', () => {
+    // compose ネットワーク内の `db` と、ホスト公開(127.0.0.1:5432)経由の loopback
+    for (const url of [
+      'postgresql://devuser:secret@db:5432/devuntu',
+      'postgresql://devuser:secret@localhost:5432/devuntu',
+      'postgresql://devuser:secret@127.0.0.1:5432/devuntu',
+      'postgresql://devuser:secret@[::1]:5432/devuntu',
+    ]) {
+      expect(isBundledDbHost(resolveDbEnv(url))).toBe(true)
+    }
+  })
+
+  it('外部のPostgreSQLは受け入れない', () => {
+    // docker compose exec 経路へ倒すと、外部DBのつもりで同梱dbを操作してしまう
+    for (const url of [
+      'postgresql://devuser:secret@example.test:5432/devuntu',
+      'postgresql://devuser:secret@10.0.0.5:5432/devuntu',
+    ]) {
+      expect(isBundledDbHost(resolveDbEnv(url))).toBe(false)
+    }
   })
 })

@@ -71,6 +71,18 @@ export const hasLocalPgClient = () => {
   return localClient
 }
 
+/**
+ * `docker compose exec -T db` 経路で扱える接続先か。
+ *
+ * この経路はコンテナ内のローカル接続になり、`PGHOST` / `PGPORT` を渡せない。
+ * 外部の PostgreSQL を指す `DATABASE_URL` でそのまま倒すと、バックアップは同梱 db の中身を取り、
+ * リストアは同梱 db を `DROP DATABASE` してしまうため、同梱 db 以外は拒否する。
+ *
+ * `db` は compose ネットワーク内から、loopback は `127.0.0.1:5432` のホスト公開からの接続。
+ */
+const BUNDLED_DB_HOSTS = new Set(['db', 'localhost', '127.0.0.1', '::1'])
+export const isBundledDbHost = (pgEnv) => BUNDLED_DB_HOSTS.has(pgEnv.PGHOST)
+
 /** 実行経路を1度だけ表示する(どちらで動いたか分からないまま失敗するのを避ける) */
 let transportShown = false
 export const showTransport = () => {
@@ -91,6 +103,12 @@ export const buildPgCommand = (bin, args, { pgEnv, database }) => {
   const db = database ?? pgEnv.PGDATABASE
   if (hasLocalPgClient()) {
     return { command: bin, args: ['-d', db, ...args], env: { ...process.env, ...pgEnv, PGDATABASE: db } }
+  }
+  if (!isBundledDbHost(pgEnv)) {
+    throw new Error(
+      `DATABASE_URL の接続先 (${pgEnv.PGHOST}) は同梱の db サービスではないため、docker compose exec では扱えません。` +
+        '実行するホストに postgresql-client を入れてください',
+    )
   }
   return {
     command: 'docker',
