@@ -14,7 +14,6 @@
   - [AIエージェント](#aiエージェント)
   - [リモート実行](#リモート実行)
 - [アップデート](#アップデート)
-  - [compose.yaml を新しいものへ差し替える場合](#composeyaml-を新しいものへ差し替える場合)
 - [困ったとき](#困ったとき)
 
 # 導入(セルフホスト)
@@ -369,21 +368,6 @@ docker compose up -d
 
 新しいイメージで起動する際、entrypoint が `prisma migrate deploy` を実行して DB を追随させる。
 **アップデート前にバックアップを取得する**こと([operations.md](operations.md))。
-
-### compose.yaml を新しいものへ差し替える場合
-
-`db` サービスの `POSTGRES_*` は `compose.yaml` へ直接書く形をやめ、`.env.db` から読むようにした。
-新しい `compose.yaml` をコピーしたら `.env.db` が必要になる。
-
-**既存の postgres ボリュームは初期化時のパスワードを保持している**ため、`POSTGRES_PASSWORD` には
-今の `DATABASE_URL` に入っているパスワード(差し替え前の `compose.yaml` に書いてあった値)を入れる。
-`docker compose run --rm tools setup-env` は差し替え前の `compose.yaml` が残っていればそこから、
-無ければ `.env.docker` の `DATABASE_URL` から既定値を引くので、Enter を押し続ければ揃う。
-
-使い捨てコンテナは `tools` サービス1本に統合した(`0.7.2` 以降)。`0.7.1` 以前の `compose.yaml` にあった
-`s3-tools` は `tools s3-backup` / `tools s3-restore` に変わるため、**cron などに
-`docker compose run --rm s3-tools` を登録している場合は書き換える**
-([operations.md](operations.md#toolsサービス))。
 
 ## 困ったとき
 

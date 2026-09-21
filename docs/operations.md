@@ -1,6 +1,5 @@
 - [バックアップの考え方](#バックアップの考え方)
 - [toolsサービス](#toolsサービス)
-  - [旧イメージでの実行](#旧イメージでの実行)
 - [DBバックアップ](#dbバックアップ)
 - [DBリストア](#dbリストア)
 - [S3バックアップ](#s3バックアップ)
@@ -63,27 +62,12 @@ docker compose run --rm tools s3-restore backup/s3_YYYYMMDD_HHMMSS
 サブコマンドより後ろの引数はそのまま渡る(`tools setup-env --dry-run` など)。サブコマンド無しで実行すると一覧が出る。
 `setup-env` は導入時と設定変更時のどちらでも使う。尋ねられる項目や既存ファイルの扱いは [installation.md](installation.md#2-設定ファイルの作成) を参照。
 
-- 同梱版イメージ(`0.7.2` 以降)が前提。`0.3.1`〜`0.7.1` のイメージには S3 用の `s3-tools` サービスしか無く、`0.3.0` 以前では[旧イメージでの実行](#旧イメージでの実行)を参照する
 - `profiles: ['tools']` を付けているので `docker compose up` では起動しない
 - `entrypoint` を `node /app/scripts/tools.mjs` にしているので `docker-entrypoint.sh` が動かず、`prisma migrate deploy` は走らない
 - 環境変数は `env_file`(`.env.docker`)から渡るので、コンテナ内の `S3_ENDPOINT` は `http://s3:8333` になる。`setup-env` は `.env.docker` を作る側なので、`required: false` を付けて「あれば読む」にしてある(Docker Compose v2.24 以降が必要)
 - `compose.yaml` のあるディレクトリを `/work` へマウントして作業ディレクトリにしているため、設定ファイルの生成先も `backup/` の入出力先も `compose.yaml` と同じ階層になる。引数のパスはホストで見えるパス(`backup/...`)をそのまま書ける
 - コンテナは root で動くため、`backup/` 配下の出力は root 所有になる(`setup-env` が生成する設定ファイルは、実行ユーザーが扱えるよう所有者を合わせている)
 - `s3` への `depends_on` は持たない(`setup-env` は `s3` が必要とする `seaweedfs-s3.json` を作る側のため)。`s3` を止めている状態から復元するときは、先に `docker compose up -d --wait s3` で healthy まで待つ
-
-### 旧イメージでの実行
-
-`0.3.0` 以前のイメージには `scripts/` が入っていないため、ホスト側のスクリプトを使い捨てコンテナへマウントして実行する(この場合はホストにスクリプトの実体が必要)。
-
-```sh
-docker compose run --rm \
-  -v "$(pwd)/backup:/app/backup" \
-  -v "$(pwd)/scripts/backup-s3.mjs:/app/backup-s3.mjs:ro" \
-  --entrypoint node \
-  devuntu /app/backup-s3.mjs
-```
-
-スクリプトは `/app/` 直下にマウントする。`WORKDIR` が `/app` なので出力先が `/app/backup` になり、`@aws-sdk/client-s3` も `/app/node_modules` から解決される。
 
 ## DBバックアップ
 
@@ -217,7 +201,7 @@ docker compose up -d devuntu
 
 ### ボリュームを作り直す場合
 
-`seaweeddata`ボリュームを作り直すと`/data`のディスク消費をリセットできる。過去のバージョンで作られた volume ファイル(`*.dat`)は 1 ファイルあたり 1GiB を`fallocate`で先行確保しており、実データが数 KB でもディスクを 10GB 以上占有することがある(現行の`compose.yaml`の起動オプションでは先行確保は起きない)。
+`seaweeddata`ボリュームを作り直すと`/data`のディスク消費をリセットできる。古い起動オプションで作られた volume ファイル(`*.dat`)は 1 ファイルあたり 1GiB を`fallocate`で先行確保しており、実データが数 KB でもディスクを 10GB 以上占有することがある(現行の`compose.yaml`の起動オプションでは先行確保は起きない)。
 
 必ずバックアップを取ってから実行する。
 
@@ -343,7 +327,7 @@ IdP から取り込む側も、リンクローカル(`169.254.0.0/16` / `fe80::/
 IdP を信頼できない環境では `profile` スコープの付与ごと見直すこと。
 
 公開されるのは「今この瞬間 `user.image` から参照されているキー」だけで、同じ添付でも
-お知らせ本文の画像やリンクウィジェットのアイコンは従来どおりログイン必須の `/api/upload` から
+お知らせ本文の画像やリンクウィジェットのアイコンは引き続きログイン必須の `/api/upload` から
 しか読めない。キーは保存ごとに変わる uuidv7 なので推測はできないが、**キーを知る第三者は
 誰でもそのアバターを読める**。アバターを OIDC 連携先へ渡さない運用にしたい場合は、
 クライアントに `profile` スコープを与えないこと。
