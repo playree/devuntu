@@ -24,11 +24,15 @@
 **処理すべきチケットがあるときだけ** CLI を起動する。
 
 ```
-cron ──> devuntu_agent.py ──1──> POST /api/agent/status   「動いてよいか / 何を処理するか」
-                            ──2──> POST /api/agent/runs    実行の開始を記録(チケットが処理中になる)
-                            ──3──> claude -p / codex exec  ─┐
-                            ──5──> PATCH /api/agent/runs/:id │  4. エージェントが MCP で
-                                                             └───   get_agent_task → 処理 → finish_agent_task
+cron
+ │
+ ▼
+devuntu_agent.py
+ ├─ 1. POST  /api/agent/status        動いてよいか / 何を処理するか
+ ├─ 2. POST  /api/agent/runs          実行の開始を記録(チケットが処理中になる)
+ ├─ 3. claude -p / codex exec         CLI を起動
+ │     └─ 4. エージェントが MCP で get_agent_task → 処理 → finish_agent_task
+ └─ 5. PATCH /api/agent/runs/:id      未報告のまま終了した場合の保険
 ```
 
 チケットの状態を決めるのは **4 のエージェント自身**。5 は保険で、報告せずに落ちた場合だけ効く。

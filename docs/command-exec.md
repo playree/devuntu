@@ -29,18 +29,25 @@
 ## 全体の流れ
 
 ```
-commands/*.yaml ──> /commands(実行できるコマンドの一覧)
-                      │  選択して実行
-                      ▼
-              command_run を queued で作成 ──> ワーカーが掴む
-                                                  │
-                                                  ▼
-                                        ssh <host> '<コマンド>'
-                                                  │ 出力
-                                                  ▼
-                                        command_run_chunk へ保存
-                                                  │
-                      /commands/runs/[id] <──SSE──┘
+commands/*.yaml
+  │
+  ▼
+/commands                 実行できるコマンドの一覧。ここから選択して実行
+  │
+  ▼
+command_run (queued)      待ち行列に積む。押した瞬間には走らない
+  │
+  ▼
+worker                    queued を掴んで実行する
+  │
+  ▼
+ssh <host> '<コマンド>'
+  │
+  ▼
+command_run_chunk         出力を逐次 DB へ保存
+  │
+  ▼
+/commands/runs/[id]       SSE で画面へ流す
 ```
 
 実行は待ち行列に積まれ、ワーカーが順に処理する。押した瞬間に走るのではないのは、
