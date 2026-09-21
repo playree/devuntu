@@ -25,7 +25,7 @@ describe('認証ゲート: 公開ページだけ除外する', () => {
     expect(needsAuth(path)).toBe(true)
   })
 
-  it.each(['/auth/signin', '/start', '/cal/abcdef123456'])('%s は認証不要', (path) => {
+  it.each(['/auth/signin', '/start', '/cal/abcdef123456', '/maintenance'])('%s は認証不要', (path) => {
     expect(needsAuth(path)).toBe(false)
   })
 })

@@ -15,6 +15,7 @@
 import { after } from 'next/server'
 import { envu } from '../env-util'
 import { logger } from '../logger'
+import { isMaintenanceMode } from '../maintenance/maintenance-mode'
 import { COMMAND_START_DELAY_MS, COMMAND_TICK_MS } from './command'
 import { runCommandDispatch } from './command-dispatch'
 import { abortAllRuns } from './command-registry'
@@ -25,6 +26,10 @@ let running = false
 let pending = false
 
 const tick = async (): Promise<void> => {
+  // メンテナンス中は DB を触らない。残ったアイドル接続がリストアを妨げる
+  if (isMaintenanceMode()) {
+    return
+  }
   if (running) {
     pending = true
     return

@@ -28,7 +28,8 @@ export const authConfig: AuthConfig = {
     auth: {
       // '/cal/:id' はカレンダー空き時間の公開共有ページ(ログイン不要)
       // ':id' は1セグメント必須のため、管理ページ '/cal'(認証必須)はマッチしない
-      exclude: ['/auth/signin', '/start', '/cal/:id'],
+      // '/maintenance' はメンテナンスモードの rewrite 先(遮断中はセッションを引けない)
+      exclude: ['/auth/signin', '/start', '/cal/:id', '/maintenance'],
     },
     admin: {
       // ':path' は1セグメントしかマッチしないため、ネストしたルートも含む '*path'(0セグメント以上)で受ける

@@ -15,6 +15,9 @@ export const register = async () => {
   const { recordAppVersion } = await import('./lib/app-version')
   await recordAppVersion()
 
+  const { startMaintenanceModeWatcher } = await import('./lib/maintenance/maintenance-mode')
+  startMaintenanceModeWatcher()
+
   const { startNotifyWorker } = await import('./lib/notify/notify-worker')
   startNotifyWorker()
 

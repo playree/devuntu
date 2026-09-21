@@ -15,7 +15,8 @@
 - **管理者のみ** : `/admin/**`。`role !== 'admin'` の場合は 404 へ rewrite(メニューにも表示されない)
 - **2要素認証** : `TWO_FA_REQUIRED=true` かつ `DISABLE_PASSWORD_AUTH=false` の場合、2FA未設定なら `/auth/signin?mode=2FA` へリダイレクト。`TWO_FA_REQUIRED=false` の場合はサインイン時の 2FA チャレンジを行わないため、`twoFactorEnabled` が true の利用者もパスワードのみでサインインする(`?mode=2FA` へ直接アクセスした場合も通常のサインイン画面になる)
 - **検索エンジンのインデックス** : インデックスの可否は `SEARCH_ENGINE_INDEXING`(`<meta name="robots">`・`X-Robots-Tag`)、`/robots.txt` でのクロールの可否は `SEARCH_ENGINE_ROBOTS_ALLOW` で決まる(いずれも既定は拒否)。詳細は [environment-variables.md](environment-variables.md#基本) を参照
-- Proxy の matcher は `api/**` と Server Action(`next-action` ヘッダ)を除外している。そのためレコード単位の認可(ボード/チケットの参照・編集権限)は各 Server Action 側で `assertBoardAccess` / `assertTicketAccess`(`src/lib/board/board.ts`)により検証する
+- **メンテナンスモード** : フラグファイルがあると、画面・Server Action・API を Proxy が 503 で遮断する(画面は `/maintenance` へ rewrite)。セッションを見ないため**管理者も含めて全員が対象**。`/api/health` と静的アセットだけは通す。詳細は [operations.md](operations.md#メンテナンスモード) を参照
+- Proxy の matcher は `api/**` と Server Action(`next-action` ヘッダ)も通す(メンテナンスモードの遮断を Proxy 1箇所に集約するため)。ただし通常時はどちらも認証処理を通さず素通しするので、レコード単位の認可(ボード/チケットの参照・編集権限)は従来どおり各 Server Action 側で `assertBoardAccess` / `assertTicketAccess`(`src/lib/board/board.ts`)により検証する
 
 ボードの権限は直接メンバー(`BoardMember`)またはグループ経由(`BoardGroup`)で解決され、`owner` / `member` のロールを持つ。
 
@@ -74,10 +75,11 @@ Proxy の matcher は拡張子を含むパス(`.*\.`)も除外しているため
 | 初期セットアップ | `/start`       | 認証不要。初期セットアップ済みの場合は `/` へリダイレクト                                |
 | 空き時間の共有   | `/cal/[id]`    | **認証不要の公開ページ**。共有URLの `publicId` で参照。無効化済み/不正なIDは404。noindex |
 | 認可の同意       | `/consent`     | 認証必須。OAuthクライアントの認可要求(署名付きクエリ)を提示して表示する同意画面          |
+| メンテナンス中   | `/maintenance` | 認証不要。メンテナンスモード中に Proxy が 503 で rewrite する案内画面。noindex           |
 
 ## API
 
-Proxy の対象外のため、各ルートハンドラ内で個別に認証する。
+Proxy は認証処理を通さず素通しするため、各ルートハンドラ内で個別に認証する(メンテナンスモード中の遮断だけは Proxy が行う)。
 
 | パス                                               | アクセス制御                                                          |
 | -------------------------------------------------- | --------------------------------------------------------------------- |

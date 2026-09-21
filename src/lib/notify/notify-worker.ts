@@ -15,6 +15,7 @@
 import { after } from 'next/server'
 import { envu } from '../env-util'
 import { logger } from '../logger'
+import { isMaintenanceMode } from '../maintenance/maintenance-mode'
 import { NOTIFY_TICK_MS } from './notify'
 import { runNotifyDispatch } from './notify-dispatch'
 
@@ -24,6 +25,10 @@ let running = false
 let pending = false
 
 const tick = async (): Promise<void> => {
+  // メンテナンス中は DB を触らない。残ったアイドル接続がリストアを妨げる
+  if (isMaintenanceMode()) {
+    return
+  }
   if (running) {
     pending = true
     return

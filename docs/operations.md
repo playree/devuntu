@@ -10,6 +10,11 @@
   - [Docker環境でのS3リストア](#docker環境でのs3リストア)
   - [対で復元する手順](#対で復元する手順)
   - [ボリュームを作り直す場合](#ボリュームを作り直す場合)
+- [一括バックアップ(DB+S3)](#一括バックアップdbs3)
+- [一括リストア](#一括リストア)
+- [メンテナンスモード](#メンテナンスモード)
+  - [フラグの実体](#フラグの実体)
+  - [遮断されるもの / 生かすもの](#遮断されるもの--生かすもの)
 - [定期実行](#定期実行)
 - [自動メンテナンス](#自動メンテナンス)
   - [添付の掃除](#添付の掃除)
@@ -33,16 +38,22 @@ Devuntu の永続データは2箇所に分かれている。**どちらか片方
 | アップロード | `s3`サービス / volume `seaweeddata` | [S3バックアップ](#s3バックアップ) |
 
 DB だけ復元しても`Attachment`レコードや`link_widget.iconPath`、チケット本文の画像 URL が実体を失う。
-復元も対で行い、両方が終わるまでアプリを起動しない([対で復元する手順](#対で復元する手順))。
+
+**通常は[一括バックアップ](#一括バックアップdbs3) / [一括リストア](#一括リストア)を使う。** 対を1つの
+ディレクトリにまとめるので、取り漏れも対応付けの目視も要らない。個別のコマンドは、片方だけ取り直したい
+場合や既存の運用を続ける場合に使う(個別に取った場合の復元手順は[対で復元する手順](#対で復元する手順))。
 
 リポジトリを clone している環境では `package.json` のスクリプトを使える。
 
-| コマンド          | 実体                     |
-| ----------------- | ------------------------ |
-| `pnpm db:backup`  | `scripts/backup-db.mjs`  |
-| `pnpm db:restore` | `scripts/restore-db.mjs` |
-| `pnpm s3:backup`  | `scripts/backup-s3.mjs`  |
-| `pnpm s3:restore` | `scripts/restore-s3.mjs` |
+| コマンド            | 実体                      |
+| ------------------- | ------------------------- |
+| `pnpm db:backup`    | `scripts/backup-db.mjs`   |
+| `pnpm db:restore`   | `scripts/restore-db.mjs`  |
+| `pnpm s3:backup`    | `scripts/backup-s3.mjs`   |
+| `pnpm s3:restore`   | `scripts/restore-s3.mjs`  |
+| `pnpm full:backup`  | `scripts/backup-all.mjs`  |
+| `pnpm full:restore` | `scripts/restore-all.mjs` |
+| `pnpm maintenance`  | `scripts/maintenance.mjs` |
 
 clone していない Docker 運用環境では [`tools`サービス](#toolsサービス)を使う。同じスクリプトをイメージ同梱のまま実行できる。
 
@@ -61,6 +72,15 @@ docker compose run --rm tools db-restore backup/devuntu_YYYYMMDD_HHMMSS.dump
 # S3 バックアップ / リストア
 docker compose run --rm tools s3-backup
 docker compose run --rm tools s3-restore backup/s3_YYYYMMDD_HHMMSS
+
+# DB と S3 をまとめてバックアップ / リストア
+docker compose run --rm tools full-backup
+docker compose run --rm tools full-restore backup/full_YYYYMMDD_HHMMSS
+
+# メンテナンスモードの切り替え
+docker compose run --rm tools maintenance on
+docker compose run --rm tools maintenance status
+docker compose run --rm tools maintenance off
 ```
 
 サブコマンドより後ろの引数はそのまま渡る(`tools setup-env --dry-run` など)。サブコマンド無しで実行すると一覧が出る。
@@ -109,7 +129,9 @@ docker compose run --rm tools db-backup
 
 対象のダンプファイルを引数に指定する。既存 DB を作り直してから復元する(`--clean` ではダンプに含まれないテーブルと外部キーが残り、依存エラーになるため)。
 
-アプリの停止が前提になる。`devuntu` は `restart: unless-stopped` のため、止めずに実行すると `DROP DATABASE` の直後に接続を張り直す。復元後も Prisma の接続プールが古い状態を握るので、止めてから実行して最後に起動し直す。対象 DB に他の接続が残っている場合は実行前に中断する(`--force` で無視できる)。
+対象 DB に他の接続が残っている場合は実行前に中断する(`--force` で無視できる)。`devuntu` は `restart: unless-stopped` のため、動かしたまま実行すると `DROP DATABASE` の直後に接続を張り直し、復元後も Prisma の接続プールが古い状態を握る。
+
+接続を切る方法は2つある。[メンテナンスモード](#メンテナンスモード)にする(アプリは動いたままで、利用者には案内が出る)か、`docker compose stop devuntu` で止めるか。[一括リストア](#一括リストア)は前者を自動で行う。以下は後者の手順。
 
 ```sh
 docker compose stop devuntu
@@ -195,10 +217,15 @@ docker compose run --rm tools s3-restore backup/s3_YYYYMMDD_HHMMSS
 
 ### 対で復元する手順
 
-DB と S3 を対で戻すときは、`devuntu` を止めたまま両方を復元し、最後に一度だけ起動する。
+**`full_*` のバックアップなら[一括リストア](#一括リストア)の1コマンドで済む。** 以下は個別に取った
+`devuntu_*.dump` と `s3_*` を対で戻す場合の手順。
+
+[メンテナンスモード](#メンテナンスモード)にしてから両方を復元し、表示を確認してから解除する。
+アプリを止めるのではなく遮断するのは、利用者に接続拒否ではなく案内を見せるため。
 
 ```sh
-docker compose stop devuntu
+# 遮断する(アプリは動いたまま。DB の接続プールも解放される)
+docker compose run --rm tools maintenance on
 
 # DB リストア(詳細は「DBリストア」を参照)
 docker compose run --rm tools db-restore backup/devuntu_YYYYMMDD_HHMMSS.dump
@@ -206,10 +233,14 @@ docker compose run --rm tools db-restore backup/devuntu_YYYYMMDD_HHMMSS.dump
 # S3 リストア
 docker compose run --rm tools s3-restore backup/s3_YYYYMMDD_HHMMSS
 
-docker compose up -d devuntu
+# 戻ったデータを確認してから解除する
+docker compose run --rm tools maintenance off
 ```
 
 `db` / `s3` を止めている場合は、先に `docker compose up -d --wait db s3` で healthy になるまで待ってから復元する。
+
+メンテナンスモードを使わない場合は、代わりに `docker compose stop devuntu` で止めたまま両方を復元し、
+最後に一度だけ `docker compose up -d devuntu` する(DB だけ戻した状態で公開しないため)。
 
 ### ボリュームを作り直す場合
 
@@ -241,19 +272,120 @@ Docker 運用環境では `pnpm s3:backup` / `pnpm db:backup` を `docker compos
 
 消費量は`docker compose exec -T s3 sh -c 'du -sk /data'`で確認できる。
 
+## 一括バックアップ(DB+S3)
+
+DB と S3 を1つのディレクトリへまとめて取得する。**対の取り漏れと対応付けの目視が無くなる**ので、
+定期実行も手動の取得もこちらを使う。
+
+```sh
+pnpm full:backup
+# または
+docker compose run --rm tools full-backup
+```
+
+```text
+backup/full_YYYYMMDD_HHMMSS/
+├── devuntu.dump   … DB(ファイル名は DATABASE_URL の DB 名)
+└── s3/
+    ├── manifest.json
+    └── objects/
+```
+
+中身は個別のコマンドと同じもので、`backup-db.mjs` / `backup-s3.mjs` を `--out` 付きで順に呼んでいる。
+`pnpm db:backup` / `pnpm s3:backup` を引数なしで実行したときの挙動は変えていない。
+
+- DB → S3 の順で取得する(理由は[定期実行](#定期実行)と同じ)
+- 一時ディレクトリ `full_*.tmp/` へ書き、**両方成功したときだけ** `full_*/` へ移す
+- 片方が失敗したら即中断し、一時ディレクトリごと捨てる。`DATABASE_URL` が壊れている場合は
+  S3 側を走らせる前に止まる
+
+## 一括リストア
+
+`full-backup` が出力したディレクトリを渡すと、[メンテナンスモード](#メンテナンスモード)にしてから
+DB → S3 の順に復元する。**`docker compose stop devuntu` は要らない。**
+
+```sh
+pnpm full:restore backup/full_YYYYMMDD_HHMMSS
+# または
+docker compose run --rm tools full-restore backup/full_YYYYMMDD_HHMMSS
+```
+
+処理の流れ。
+
+1. 中身を検証する(直下の `*.dump` が1件、`s3/manifest.json` が存在する)。
+   `restore-db.mjs` は `DROP DATABASE` から始めるため、**破壊的操作の前に**対が揃っているか確かめる
+2. メンテナンスモードを ON にし、アプリが DB の接続を解放するまで10秒待つ
+3. DB を復元する。失敗したら S3 へは進まない(`--force` はそのまま `restore-db.mjs` へ渡る)
+4. S3 を復元する
+5. **成否に関わらずメンテナンスモードは ON のまま**。戻ったデータを確認してから手で解除する
+
+```sh
+pnpm maintenance off
+# または
+docker compose run --rm tools maintenance off
+```
+
+`db` / `s3` を止めている場合は、先に `docker compose up -d --wait db s3` で healthy になるまで待つ。
+
+## メンテナンスモード
+
+リストア中に**全アクセスを遮断する**モード。[自動メンテナンス](#自動メンテナンス)(期限切れ行の掃除)
+とは別物で、こちらは運用者が明示的に入り切りする。
+
+```sh
+pnpm maintenance on      # 遮断する
+pnpm maintenance status  # 今の状態を表示する
+pnpm maintenance off     # 解除する
+
+# Docker 運用環境
+docker compose run --rm tools maintenance on
+```
+
+### フラグの実体
+
+**ファイルの有無**で持つ。DB に載せないのは、DB を作り直している最中でも遮断が効いている必要があるため。
+
+| 見る側                 | パス                                                        |
+| ---------------------- | ----------------------------------------------------------- |
+| アプリ                 | `/app/config/maintenance`(環境変数 `MAINTENANCE_MODE_FILE`) |
+| 操作側(tools / ホスト) | `config/maintenance`(cwd 相対。`--file` で変更できる)       |
+
+`compose.yaml` はホストの `./config` を `devuntu` へ `/app/config`、`tools` へ `/work/config` として
+マウントしているので、この2つは同じファイルを指す。**compose.yaml の変更は要らない。**
+
+切り替えは各プロセスが自分でファイルの有無に追随する形で反映される(遅れは最大1秒)。
+
+### 遮断されるもの / 生かすもの
+
+| 対象                                  | メンテナンス中                               |
+| ------------------------------------- | -------------------------------------------- |
+| 画面                                  | `/maintenance` の案内を 503 で表示           |
+| Server Action(画面操作)               | 503 JSON                                     |
+| API(`/api/**`。MCP `/api/mcp` を含む) | 503 JSON                                     |
+| `/api/health`                         | **通常どおり 200**(監視と compose の疎通)    |
+| 静的アセット(`_next/*`・拡張子付き)   | **通常どおり配信**(案内画面を出すために必要) |
+
+いずれも `Retry-After` を付けて返す。遮断は `src/proxy.ts` の1箇所に集約してあり、
+各 API ルートや Server Action には手を入れていない。
+
+- **全員が遮断される。管理者も入れない。** 判定にセッションを使わないので、DB が止まっていても確実に効く。
+  裏返しとして、画面からは解除できない(解除はコマンドのみ)
+- バックグラウンドの3つのワーカー(通知 / 掃除 / リモート実行)も止まる。
+  動いたままだと DB の接続が復活し、リストアの接続チェックに引っかかるため
+- `full-restore` は開始時に**自動で ON** にし、**完了しても ON のまま**にする。
+  戻ったデータを確認してから解除するのが前提
+
 ## 定期実行
 
-cron から実行する場合は、DB と S3 を続けて取得する。`compose.yaml` のあるディレクトリで実行すること。
+cron からは[一括バックアップ](#一括バックアップdbs3)を使う。`compose.yaml` のあるディレクトリで実行すること。
 
 ```sh
 # 毎日 3:00 に取得する例(clone していない Docker 運用環境)
-0 3 * * * cd /opt/devuntu \
-  && docker compose run --rm tools db-backup \
-  && docker compose run --rm tools s3-backup
+0 3 * * * cd /opt/devuntu && docker compose run --rm tools full-backup
 ```
 
-どちらも一時ファイル/一時ディレクトリへ書き出して成功時のみ本体へ移すため、途中で失敗しても
-壊れたバックアップは残らない。
+一時ディレクトリへ書き出して両方成功したときのみ本体へ移すため、途中で失敗しても
+壊れたバックアップも欠けた対も残らない。
 
 アプリを動かしたまま DB と S3 を順に取得するため、**厳密には同一時点のスナップショットにはならない**。
 取得の間に添付を削除する操作があると、DB ダンプ側は参照を残したまま S3 バックアップからは実体が
@@ -272,6 +404,9 @@ DB と S3 を順に取得する間に添付が消えると、復元後にその�
 
 期限切れの行と、どこからも参照されなくなった添付をアプリ自身が定期的に消す
 (`src/lib/maintenance/`)。ホスト側の cron は要らない。起動の1分後に1周し、以降は1時間ごと。
+
+リストア中に全アクセスを遮断する[メンテナンスモード](#メンテナンスモード)とは別物。こちらは常時動く
+掃除で、遮断中は止まる。
 
 | 対象                     | 消す条件                                                                    | 保持       |
 | ------------------------ | --------------------------------------------------------------------------- | ---------- |

@@ -205,6 +205,17 @@ const server = {
 
   // メンテナンス
   /**
+   * メンテナンスモードのフラグファイル。**存在すれば遮断中**として扱う。
+   *
+   * DB に持たないのは、DB リストア中でも遮断が効いている必要があるため。
+   * 切り替えは `scripts/maintenance.mjs` 側で行い、こちらは読むだけ。
+   * `COMMAND_DEF_DIR` と同じく、既定値はコンテナ内のパス(`./config` のマウント先)を指す。
+   */
+  get MAINTENANCE_MODE_FILE() {
+    return getEnv('MAINTENANCE_MODE_FILE', { default: '/app/config/maintenance' })
+  },
+
+  /**
    * 定期メンテナンス(`maintenance-worker.ts`)を動かすか。
    * 止めると期限切れ行の掃除が行われなくなるだけで、アプリの動作には影響しない。
    */

@@ -3,8 +3,20 @@ import { getServerSession, redirectSignIn, redirectTwoFaEnable } from './lib/aut
 import { authConfig } from './lib/auth/auth-config'
 import { envu } from './lib/env-util'
 import { logger } from './lib/logger'
+import { MAINTENANCE_MODE_RETRY_AFTER_SEC } from './lib/maintenance/maintenance'
+import { isMaintenanceMode, MAINTENANCE_MODE_TARGET } from './lib/maintenance/maintenance-mode'
 import { matchCondition } from './lib/match'
 import { localeConfig } from './locale/config'
+
+/**
+ * 認証を Proxy では扱わない経路か。
+ *
+ * API ルートと Server Action は、レコード単位の認可を各ハンドラ側で行っている
+ * (`assertBoardAccess` / `assertTicketAccess` など)。matcher から除外していたのを
+ * メンテナンスモードの遮断のために外したので、ここで従来と同じ「素通し」に戻す。
+ */
+const bypassesProxyAuth = (request: NextRequest) =>
+  request.nextUrl.pathname.startsWith('/api/') || request.headers.has('next-action')
 
 export const proxy = async (request: NextRequest) => {
   const {
@@ -12,6 +24,30 @@ export const proxy = async (request: NextRequest) => {
     nextUrl: { pathname, search },
   } = request
   logger.debug({ pathname, method }, 'proxy in')
+
+  const bypassAuth = bypassesProxyAuth(request)
+
+  /**
+   * メンテナンスモード。画面・Server Action・API を1箇所で塞ぐ。
+   *
+   * 判定はファイルの有無だけで、セッションを引かない(DB リストア中でも動く必要がある)。
+   * このため管理者も含めて全員が遮断される。解除は `pnpm maintenance off`。
+   *
+   * Next.js v16 の Proxy は既定で Node.js ランタイムのため `node:fs` を使える
+   * (`node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md`)。
+   */
+  if (matchCondition(pathname, MAINTENANCE_MODE_TARGET) && isMaintenanceMode()) {
+    logger.debug({ pathname }, 'proxy maintenance')
+    const headers = { 'Retry-After': String(MAINTENANCE_MODE_RETRY_AFTER_SEC) }
+    if (bypassAuth) {
+      return NextResponse.json({ error: 'maintenance' }, { status: 503, headers })
+    }
+    return NextResponse.rewrite(new URL('/maintenance', request.url), { status: 503, headers })
+  }
+
+  if (bypassAuth) {
+    return NextResponse.next()
+  }
 
   // 認証
   let session
@@ -70,14 +106,13 @@ export const proxy = async (request: NextRequest) => {
   return response
 }
 
+/**
+ * `api/` と Server Action(`next-action` ヘッダ)を**除外していない**。
+ * メンテナンスモードの遮断を Proxy 1箇所に集約するためで、通常時の扱いは
+ * `bypassesProxyAuth` で従来どおり素通しに戻している。
+ *
+ * 拡張子を含むパス(`.*\.`)と `_next/*` は除外したまま。メンテナンス画面のアセットを配信するため。
+ */
 export const config = {
-  matcher: [
-    {
-      source: '/((?!_next/static|_next/image|_next/webpack-hmr|api/|.*\\.).*)',
-      missing: [
-        // Server Actions を除外する
-        { type: 'header', key: 'next-action' },
-      ],
-    },
-  ],
+  matcher: ['/((?!_next/static|_next/image|_next/webpack-hmr|.*\\.).*)'],
 }

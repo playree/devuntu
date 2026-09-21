@@ -34,5 +34,16 @@ export const ATTACHMENT_DELETE_MAX = 200
 /** ID を集めてから消す手順での1回ぶんの件数 */
 export const MAINTENANCE_DELETE_BATCH = 1000
 
+// ここから下は掃除ではなく、リストア中に全アクセスを遮断する「メンテナンスモード」の定数
+
+/** フラグファイルの有無を見に行く間隔。これがリクエストごとの stat 回数の上限になる */
+export const MAINTENANCE_MODE_STAT_INTERVAL_MS = 1000
+
+/** OFF→ON の遷移を拾う間隔。`scripts/restore-all.mjs` の接続解放待ちはこの2周ぶん */
+export const MAINTENANCE_MODE_WATCH_MS = 5 * 1000
+
+/** 遮断時に返す `Retry-After`(秒)。リストアが数分で終わる想定の目安 */
+export const MAINTENANCE_MODE_RETRY_AFTER_SEC = 120
+
 /** 保持期間を過ぎた境界時刻。これより古いものが削除対象になる */
 export const retentionBefore = (now: Date, ms: number): Date => new Date(now.getTime() - ms)

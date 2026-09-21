@@ -41,6 +41,8 @@ const usage = () => {
  * 直後に接続を張り直し、復元後も Prisma の接続プールが古い状態を握る。
  * tools サービスのコンテナ内からは `docker compose stop` ができないので、
  * 警告ではなく中断して利用者に止めてもらう。
+ *
+ * メンテナンスモード(`maintenance.mjs`)でも接続は解放される。`restore-all.mjs` はそちらを使う。
  */
 const assertNoOtherConnections = (pgEnv) => {
   const sql = `SELECT count(*) FROM pg_stat_activity WHERE datname = ${sqlLiteral(pgEnv.PGDATABASE)} AND pid <> pg_backend_pid()`
@@ -50,7 +52,8 @@ const assertNoOtherConnections = (pgEnv) => {
     return
   }
   console.error(`${pgEnv.PGDATABASE} に他の接続が ${count} 件残っています。`)
-  console.error('先に `docker compose stop devuntu` でアプリを止めてから実行してください(--force で無視できます)。')
+  console.error('先に `pnpm maintenance on` で遮断するか、`docker compose stop devuntu` で止めてから')
+  console.error('実行してください(--force で無視できます)。')
   process.exit(1)
 }
 

@@ -57,8 +57,9 @@ PostgreSQL とオブジェクトストレージへ外部から直接到達でき
 リバースプロキシを同じホストに置く場合は、`devuntu` の `ports` も `127.0.0.1:3000:3000` に絞って
 プロキシ経由だけに限定できる。
 
-`tools` は設定ファイルの生成(`setup-env`)と DB / S3 のバックアップ・リストア(`db-backup` / `db-restore` /
-`s3-backup` / `s3-restore`)を行う使い捨てサービスで、`profiles: ['tools']` が
+`tools` は設定ファイルの生成(`setup-env`)、DB / S3 のバックアップ・リストア(`db-backup` / `db-restore` /
+`s3-backup` / `s3-restore` と、対でまとめて行う `full-backup` / `full-restore`)、
+メンテナンスモードの切り替え(`maintenance`)を行う使い捨てサービスで、`profiles: ['tools']` が
 付いているため `docker compose up` では起動しない([operations.md](operations.md#toolsサービス))。
 
 永続データは名前付きボリューム `pgdata` / `seaweeddata` に入る。
@@ -323,10 +324,15 @@ volumes:
 ├── commands/               # コマンドの定義(1ファイル1ターゲット)
 │   ├── web01.yaml
 │   └── db01.yaml
-└── ssh/
-    ├── ops_ed25519         # 秘密鍵(0600)。パスフレーズ無し
-    └── known_hosts         # 接続先のホスト鍵。登録が無いホストへは接続できない
+├── ssh/
+│   ├── ops_ed25519         # 秘密鍵(0600)。パスフレーズ無し
+│   └── known_hosts         # 接続先のホスト鍵。登録が無いホストへは接続できない
+└── maintenance             # メンテナンスモードのフラグ(あれば遮断中)
 ```
+
+`maintenance` はリモート実行とは無関係で、`docker compose run --rm tools maintenance on|off` が
+作ったり消したりする([operations.md](operations.md#メンテナンスモード))。`./config` は
+リモート実行を使わない構成でもこのフラグの置き場として使うため、マウントしたままにしておく。
 
 コマンドの定義を**画面から編集できるようにする**場合は、`commands` だけを書き込み可で重ねる。
 `config` 全体を書き込み可にすると SSH の秘密鍵まで書き込み可になってしまう。
