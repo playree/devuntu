@@ -292,11 +292,12 @@ DB と S3 を順に取得する間に添付が消えると、復元後にその�
 
 実行履歴の保持期間と残す件数は環境変数で変えられる(`AGENT_RUN_RETENTION_DAYS` / `AGENT_RUN_KEEP` と
 `COMMAND_RUN_RETENTION_DAYS` / `COMMAND_RUN_KEEP`、既定は 90日 / 500件 / 90日 / 300件。
-[環境変数](./environment-variables.md#メンテナンス)を参照)。
+[環境変数](./environment-variables.md#メンテナンス)と[リモート実行](./environment-variables.md#リモート実行)を参照)。
 
 `command_run` を消すとログ(`command_run_chunk`)も一緒に消える。実行 1 件のログは数千行になりうるため、
 残す件数の既定はエージェントの実行履歴より絞ってある。`queued` / `running` は実行側が持ち主なので
-掃除は触らない(掃除が先に消すと、実行中のワーカーが書き込み先を失う)。
+掃除は触らない(掃除が先に消すと、実行中のワーカーが書き込み先を失う)。履歴に残る項目は
+[command-exec.md](./command-exec.md#実行の記録)を参照。
 
 消す条件はすべて、書き手が「もう使わない」と記録した列に紐づけてある。
 `session` を消しても MCP のトークンは失効しない(参照は `SetNull` で、Webの5日とMCPの180日は独立)。
