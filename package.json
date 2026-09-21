@@ -2,6 +2,7 @@
   "name": "devuntu",
   "version": "0.8.1",
   "private": true,
+  "license": "MIT",
   "scripts": {
     "dev": "next dev",
     "dev:domain": "DOTENV_CONFIG_PATH=.env.domain DOTENV_CONFIG_QUIET=true NODE_OPTIONS=\"--require dotenv/config\" next dev",
