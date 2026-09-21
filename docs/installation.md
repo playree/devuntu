@@ -12,6 +12,7 @@
   - [Webプッシュ通知](#webプッシュ通知)
   - [MCP サーバーの公開](#mcp-サーバーの公開)
   - [AIエージェント](#aiエージェント)
+  - [リモート実行](#リモート実行)
 - [アップデート](#アップデート)
   - [compose.yaml を新しいものへ差し替える場合](#composeyaml-を新しいものへ差し替える場合)
 - [困ったとき](#困ったとき)
@@ -104,7 +105,7 @@ docker compose run --rm tools setup-env
 [environment-variables.md](environment-variables.md) を参照)。既存の設定ファイルに値があれば、
 再実行しても現在値を引き継ぐ。
 
-- 検索エンジンへのインデックス(`SEARCH_ENGINE_INDEXING`)
+- 検索エンジンへのインデックスとクロール(`SEARCH_ENGINE_INDEXING` / `SEARCH_ENGINE_ROBOTS_ALLOW`)
 - 連携元 Devuntu との連携(`MAIN_DEVUNTU_*`)
 - ホスト情報の表示(`LINODE_*`)
 - ログレベル・セッション期間・自動メンテナンス(`LOG_LEVEL` / `SESSION_*` /
@@ -183,8 +184,10 @@ POSTGRES_DB=devuntu
 ```
 
 `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` をこの JSON と揃える。バケットは初回アップロード時に
-自動作成されるため事前作業は不要。検索エンジンへのインデックスは**既定で拒否**しているので、
-社外へ公開して検索結果に載せたい場合のみ `SEARCH_ENGINE_INDEXING=true` を設定する。
+自動作成されるため事前作業は不要。検索エンジンへのインデックスとクロールは**既定で拒否**しているので、
+社外へ公開して検索結果に載せたい場合のみ `SEARCH_ENGINE_INDEXING=true` を設定する
+(載せたくないが既にインデックスされてしまった場合の `SEARCH_ENGINE_ROBOTS_ALLOW` は
+[environment-variables.md](environment-variables.md#基本) を参照)。
 
 ## 3. 起動
 

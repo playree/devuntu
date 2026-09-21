@@ -8,7 +8,12 @@ import type { MetadataRoute } from 'next'
 export const dynamic = 'force-dynamic'
 
 export default function robots(): MetadataRoute.Robots {
-  if (!envu.server.SEARCH_ENGINE_INDEXING) {
+  /**
+   * 全パスを Disallow にするとページ本体が取得されず noindex が読まれないため、
+   * インデックスを消したい場合は SEARCH_ENGINE_ROBOTS_ALLOW だけ true にしてクロールを通す。
+   * SEARCH_ENGINE_INDEXING=true は載せる意思表示なのでクロール許可も含む。
+   */
+  if (!envu.server.SEARCH_ENGINE_INDEXING && !envu.server.SEARCH_ENGINE_ROBOTS_ALLOW) {
     return { rules: { userAgent: '*', disallow: '/' } }
   }
   return {

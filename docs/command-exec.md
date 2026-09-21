@@ -123,6 +123,7 @@ commands:
 | 項目             | 必須 | 説明                                                                                     |
 | ---------------- | ---- | ---------------------------------------------------------------------------------------- |
 | `id`             | 〇   | 英数字で始まる 2〜64 文字。ディレクトリ全体で一意にする                                  |
+| `kind`           |      | 既定 `ssh`。現状は `ssh` のみ。ホスト側実行もコンテナ内実行も SSH 経由で表現する         |
 | `label`          | 〇   | 画面に出す表示名。**ホスト名やユーザー名は画面に出さない**ので、ここだけが手がかりになる |
 | `host`           | 〇   | 接続先のホスト名                                                                         |
 | `port`           |      | 既定 22                                                                                  |
@@ -166,6 +167,7 @@ commands:
 
 `select` / `radio` / `multiselect` の共通項目は `key` / `label` / `options`(`{ value, label }` の配列)。
 `select` / `radio` は `defaultValue` と `required`、`multiselect` は `defaultValues` / `minSelected` / `maxSelected` を持つ。
+`checkbox` は `whenTrue` / `whenFalse` のほかに `default`(既定 false。初期状態でチェックを入れるか)を持つ。
 
 #### フリー入力(`input`)
 

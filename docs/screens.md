@@ -14,7 +14,7 @@
 - **認証必須** : `/auth/signin` `/start` `/cal/:id` 以外の全ページ。未ログインは `/auth/signin?cb=<元のURL>` へリダイレクト
 - **管理者のみ** : `/admin/**`。`role !== 'admin'` の場合は 404 へ rewrite(メニューにも表示されない)
 - **2要素認証** : `TWO_FA_REQUIRED=true` かつ `DISABLE_PASSWORD_AUTH=false` の場合、2FA未設定なら `/auth/signin?mode=2FA` へリダイレクト。`TWO_FA_REQUIRED=false` の場合はサインイン時の 2FA チャレンジを行わないため、`twoFactorEnabled` が true の利用者もパスワードのみでサインインする(`?mode=2FA` へ直接アクセスした場合も通常のサインイン画面になる)
-- **検索エンジンのインデックス** : サイト全体の可否は `SEARCH_ENGINE_INDEXING` で決まる(既定は拒否)。`/robots.txt`・`<meta name="robots">`・`X-Robots-Tag` の3か所へ効く。詳細は [environment-variables.md](environment-variables.md#基本) を参照
+- **検索エンジンのインデックス** : インデックスの可否は `SEARCH_ENGINE_INDEXING`(`<meta name="robots">`・`X-Robots-Tag`)、`/robots.txt` でのクロールの可否は `SEARCH_ENGINE_ROBOTS_ALLOW` で決まる(いずれも既定は拒否)。詳細は [environment-variables.md](environment-variables.md#基本) を参照
 - Proxy の matcher は `api/**` と Server Action(`next-action` ヘッダ)を除外している。そのためレコード単位の認可(ボード/チケットの参照・編集権限)は各 Server Action 側で `assertBoardAccess` / `assertTicketAccess`(`src/lib/board/board.ts`)により検証する
 
 ボードの権限は直接メンバー(`BoardMember`)またはグループ経由(`BoardGroup`)で解決され、`owner` / `member` のロールを持つ。
@@ -34,6 +34,10 @@ Proxy の matcher は拡張子を含むパス(`.*\.`)も除外しているため
 | ターゲット設定     | `/commands/targets/[targetId]` | 認証必須 + 対象ターゲットのメンバー。コマンド定義の編集は owner のみ                                |
 | リモート実行の履歴 | `/commands/runs`               | 認証必須。一般は自分の実行のみ、管理者は全件も表示できる(`?commandKey=` でコマンド単位に絞り込める) |
 | リモート実行の詳細 | `/commands/runs/[id]`          | 認証必須 + 実行者本人または管理者のみ                                                               |
+
+`/commands` 以下の画面は `COMMAND_EXEC_ENABLED=true` のときだけ表示される。ターゲットにアサインされて
+いないユーザーにはメニューにも出ない(管理者でもアサインが無ければ実行できない)。アサインとロールの
+考え方は [command-exec.md](command-exec.md#権限) を参照。
 
 ## タスク管理
 

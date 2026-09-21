@@ -20,15 +20,16 @@
 
 ## 基本
 
-| 変数名                   | 説明                                                            | 必須 | デフォルト   |
-| ------------------------ | --------------------------------------------------------------- | ---- | ------------ |
-| `NEXT_PUBLIC_APP_NAME`   | アプリ名(クライアント公開)                                      |      | `Devuntu`    |
-| `DATABASE_URL`           | DB(PostgreSQL) の接続パス                                       | 〇   | -            |
-| `DEFAULT_LOCALE`         | デフォルトロケール                                              |      | -            |
-| `DEFAULT_TIMEZONE`       | デフォルトタイムゾーン                                          |      | `Asia/Tokyo` |
-| `LOG_LEVEL`              | ログレベル                                                      |      | `info`       |
-| `DEV_ALLOWED_ORIGINS`    | `next dev` で許可する追加オリジン(カンマ区切り)。開発時のみ有効 |      | -            |
-| `SEARCH_ENGINE_INDEXING` | 検索エンジンにインデックスさせるか                              |      | `false`      |
+| 変数名                       | 説明                                                            | 必須 | デフォルト   |
+| ---------------------------- | --------------------------------------------------------------- | ---- | ------------ |
+| `NEXT_PUBLIC_APP_NAME`       | アプリ名(クライアント公開)                                      |      | `Devuntu`    |
+| `DATABASE_URL`               | DB(PostgreSQL) の接続パス                                       | 〇   | -            |
+| `DEFAULT_LOCALE`             | デフォルトロケール                                              |      | -            |
+| `DEFAULT_TIMEZONE`           | デフォルトタイムゾーン                                          |      | `Asia/Tokyo` |
+| `LOG_LEVEL`                  | ログレベル                                                      |      | `info`       |
+| `DEV_ALLOWED_ORIGINS`        | `next dev` で許可する追加オリジン(カンマ区切り)。開発時のみ有効 |      | -            |
+| `SEARCH_ENGINE_INDEXING`     | 検索エンジンにインデックスさせるか                              |      | `false`      |
+| `SEARCH_ENGINE_ROBOTS_ALLOW` | `robots.txt` でクロールを許可するか                             |      | `false`      |
 
 `DEV_ALLOWED_ORIGINS` だけは例外で、`src/lib/env-util.ts` には定義していない。参照元の `next.config.ts` は
 Next の起動前に評価されるため `envu` を解決できず、`process.env` を直接読んでいる。
@@ -36,20 +37,34 @@ Next の起動前に評価されるため `envu` を解決できず、`process.e
 真偽値の変数は `true` / `false`(大文字小文字は問わない)だけを受け付ける。`1` や綴り違いは
 黙って既定の反対側へ倒れると気づけないため、読み取り時にエラーにしている。
 
-`SEARCH_ENGINE_INDEXING` は**既定でインデックス拒否**。社内向けに立てた環境をうっかり検索結果へ
-載せないため、明示的に `true` にしたときだけ許可する。次の3か所へまとめて効く。
+検索エンジン向けの設定は2つに分かれている。どちらも**既定は拒否**で、社内向けに立てた環境を
+うっかり検索結果へ載せないため、明示的に `true` にしたときだけ許可する。
 
-- `/robots.txt`(`src/app/robots.ts`) : 拒否時は全パスを `Disallow`、許可時は `/api/` と `/cal/` のみ除外
-- `<meta name="robots">`(`src/app/layout.tsx`) : 拒否時は `noindex, nofollow`
-- `X-Robots-Tag` ヘッダ(`src/proxy.ts`) : 拒否時は `noindex, nofollow`
+- `SEARCH_ENGINE_INDEXING` : インデックスの可否。拒否時は `<meta name="robots">`(`src/app/layout.tsx`)と
+  `X-Robots-Tag` ヘッダ(`src/proxy.ts`)が `noindex, nofollow` になる
+- `SEARCH_ENGINE_ROBOTS_ALLOW` : `/robots.txt`(`src/app/robots.ts`)でクロールを許可するか。
+  `SEARCH_ENGINE_INDEXING=true` は載せる意思表示なので、この変数によらずクロール許可になる
+
+| `SEARCH_ENGINE_INDEXING` | `SEARCH_ENGINE_ROBOTS_ALLOW` | `/robots.txt`                      | `noindex` |
+| ------------------------ | ---------------------------- | ---------------------------------- | --------- |
+| `false`(既定)            | `false`(既定)                | `Disallow: /`                      | あり      |
+| `false`                  | `true`                       | `Allow: /`(`/api/` `/cal/` は除外) | あり      |
+| `true`                   | -                            | `Allow: /`(`/api/` `/cal/` は除外) | なし      |
+
+2つに分けているのは、`Disallow: /` だけではインデックスを防げないため。クロールを拒否すると
+ページ本体が取得されず `noindex` が読まれないので、外部リンクから発見された URL は
+「robots.txt によりブロックされましたが、インデックスに登録しました」として検索結果に残り続ける。
+消したい場合は `SEARCH_ENGINE_ROBOTS_ALLOW=true` にしてクロールを通し、`noindex` を読ませる
+(Search Console でインデックスが消えたのを確認したら `false` へ戻してもよい)。
 
 `X-Robots-Tag` が付くのは Proxy が通常処理を継続したページ応答だけ。`/api/`・拡張子を含むパス・
 Server Action(`next-action` ヘッダ)は matcher の対象外で、認証リダイレクトと管理者拒否の rewrite は
-ヘッダを付ける前に返る。これらを追わないのは、拒否時は `/robots.txt` が全パスを `Disallow` するため
-巡回自体が起きず、静的アセットまで Proxy を通すと全リクエストでセッション取得が走るため。
+ヘッダを付ける前に返る。これらを追わないのは、`/api/` と `/cal/` はクロール許可時も `/robots.txt` で
+`Disallow` しており、拡張子を含むパスは検索結果に載る HTML ではないため。静的アセットまで Proxy を
+通すと全リクエストでセッション取得が走る点も避けている。
 
 値の変更は再起動で反映される。空き時間の共有(`/cal/[id]`)は共有URLを知る人だけが見る画面なので、
-この設定に関わらず常に `noindex` のままにしている。
+これらの設定に関わらず常に `noindex` のままにしている。
 
 ## 認証
 

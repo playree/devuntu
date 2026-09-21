@@ -34,7 +34,10 @@ export const ATTACHMENT_MODES = ['off', 'dry-run', 'delete']
 
 /** `.env.docker` のセクション構成。`docs/environment-variables.md` の見出しと揃えている */
 export const ENV_DOCKER_SECTIONS = [
-  { title: '基本', keys: ['DEFAULT_LOCALE', 'DEFAULT_TIMEZONE', 'LOG_LEVEL', 'SEARCH_ENGINE_INDEXING'] },
+  {
+    title: '基本',
+    keys: ['DEFAULT_LOCALE', 'DEFAULT_TIMEZONE', 'LOG_LEVEL', 'SEARCH_ENGINE_INDEXING', 'SEARCH_ENGINE_ROBOTS_ALLOW'],
+  },
   {
     title: '認証',
     keys: [
@@ -99,6 +102,7 @@ export const ENV_DOCKER_SECTIONS = [
  */
 export const MANUAL_KEYS = [
   'SEARCH_ENGINE_INDEXING',
+  'SEARCH_ENGINE_ROBOTS_ALLOW',
   'LOG_LEVEL',
   'SESSION_EXPIRES_IN',
   'SESSION_FRESH_AGE',
