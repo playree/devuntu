@@ -80,6 +80,39 @@ describe('SEARCH_ENGINE_INDEXING', () => {
   })
 })
 
+describe('SEARCH_ENGINE_ROBOTS_ALLOW', () => {
+  const originalRobotsAllow = process.env.SEARCH_ENGINE_ROBOTS_ALLOW
+
+  afterEach(() => {
+    if (originalRobotsAllow === undefined) {
+      delete process.env.SEARCH_ENGINE_ROBOTS_ALLOW
+    } else {
+      process.env.SEARCH_ENGINE_ROBOTS_ALLOW = originalRobotsAllow
+    }
+  })
+
+  it('未設定なら false', () => {
+    // 書き忘れた環境の robots.txt を開けないよう、既定はクロール拒否側に倒す
+    delete process.env.SEARCH_ENGINE_ROBOTS_ALLOW
+    expect(envu.server.SEARCH_ENGINE_ROBOTS_ALLOW).toBe(false)
+  })
+
+  it('true でクロールを許可する', () => {
+    process.env.SEARCH_ENGINE_ROBOTS_ALLOW = 'true'
+    expect(envu.server.SEARCH_ENGINE_ROBOTS_ALLOW).toBe(true)
+  })
+
+  it('空文字は未設定と同じ扱い', () => {
+    process.env.SEARCH_ENGINE_ROBOTS_ALLOW = ''
+    expect(envu.server.SEARCH_ENGINE_ROBOTS_ALLOW).toBe(false)
+  })
+
+  it.each(['ture', '1', 'yes', 'on'])('綴り違いは起動時に弾く (%s)', (value) => {
+    process.env.SEARCH_ENGINE_ROBOTS_ALLOW = value
+    expect(() => envu.server.SEARCH_ENGINE_ROBOTS_ALLOW).toThrow()
+  })
+})
+
 describe('TWO_FA_REQUIRED', () => {
   const originalTwoFa = process.env.TWO_FA_REQUIRED
 

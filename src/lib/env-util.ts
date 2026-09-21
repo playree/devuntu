@@ -95,11 +95,19 @@ const server = {
     return getEnv('DEFAULT_TIMEZONE', { default: 'Asia/Tokyo' })
   },
   /**
-   * 検索エンジンにインデックスさせるか。既定の false では robots.txt / meta robots /
-   * X-Robots-Tag のいずれもインデックス拒否になる。検索結果へ載せたい場合だけ true にする。
+   * 検索エンジンにインデックスさせるか。既定の false では meta robots / X-Robots-Tag が
+   * インデックス拒否になる。検索結果へ載せたい場合だけ true にする。
+   * robots.txt は SEARCH_ENGINE_ROBOTS_ALLOW と合わせて決まる。
    */
   get SEARCH_ENGINE_INDEXING() {
     return getEnvBoolean('SEARCH_ENGINE_INDEXING')
+  },
+  /**
+   * robots.txt でクロールを許可するか。
+   * SEARCH_ENGINE_INDEXING=false のまま true にすると、クロールさせた上で noindex を読ませられる。
+   */
+  get SEARCH_ENGINE_ROBOTS_ALLOW() {
+    return getEnvBoolean('SEARCH_ENGINE_ROBOTS_ALLOW')
   },
 
   // 認証
