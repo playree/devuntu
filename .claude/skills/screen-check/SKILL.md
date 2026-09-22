@@ -76,10 +76,15 @@ echo "${DEVUNTU_SCREEN_CHECK_EMAIL:-未設定}"
 3. OTP をDBから取得する(プライマリ):
 
 ```sh
-docker exec devuntu-postgres psql -U devuser -d devuntu -Atc "select split_part(value, ':', 1) from verification where identifier = 'sign-in-otp-${DEVUNTU_SCREEN_CHECK_EMAIL,,}' and \"expiresAt\" > now() order by \"createdAt\" desc limit 1"
+docker exec -i devuntu-postgres psql -U devuser -d devuntu -v otp_email="$DEVUNTU_SCREEN_CHECK_EMAIL" -At <<'SQL'
+select split_part(value, ':', 1) from verification
+where identifier = 'sign-in-otp-' || lower(:'otp_email') and "expiresAt" > now()
+order by "createdAt" desc limit 1;
+SQL
 ```
 
-- `identifier` は `sign-in-otp-` + **小文字化した**メールアドレス。`${VAR,,}` がその小文字化。`value` は `<6桁数字>:<試行回数>`
+- `identifier` は `sign-in-otp-` + **小文字化した**メールアドレス。`lower()` がその小文字化。`value` は `<6桁数字>:<試行回数>`
+- メールアドレスは psql 変数(`-v` / `:'otp_email'`)として渡す。SQL リテラルへ直接埋め込むと `'` を含むアドレスでクエリが壊れる。`-c` では psql 変数が展開されないので標準入力から流す
 - 有効期限は 300 秒。検証成功時に行は削除される
 - 空が返る場合: ユーザーが存在しない / 期限切れ / 既に消費済み。画面の `再送`(30秒クールタイム)を押してから再取得する
 - フォールバック(自分で起動したサーバーの場合のみ。`MAIL_SEND=debug` でメール本文がログに出る):
