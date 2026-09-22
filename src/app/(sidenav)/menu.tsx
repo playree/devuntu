@@ -25,6 +25,7 @@ import { navigateAfterAuth } from '@/lib/client-utils'
 import { useLocale } from '@/locale/client'
 import { Accordion, Button, Card, cn } from '@heroui/react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createContext, FC, ReactNode, useContext } from 'react'
 
@@ -255,18 +256,20 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
       </div>
 
       <div className='absolute inset-x-4 bottom-2'>
-        <Image
-          /**
-           * ロゴ。
-           * サイドメニュー内で常に描画され LCP と判定されるため preload で先読みさせる
-           */
-          src='/logo.png'
-          preload
-          width={120}
-          height={45}
-          alt='Devuntu'
-          className='mt-8'
-        />
+        <Link href='https://github.com/playree/devuntu' target='_blank' rel='noopener noreferrer'>
+          <Image
+            /**
+             * ロゴ。
+             * サイドメニュー内で常に描画され LCP と判定されるため preload で先読みさせる
+             */
+            src='/logo.png'
+            preload
+            width={120}
+            height={45}
+            alt='Devuntu'
+            className='mt-8'
+          />
+        </Link>
       </div>
     </div>
   )
