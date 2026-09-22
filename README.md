@@ -1,5 +1,9 @@
 # Devuntu
 
+[![CI](https://github.com/playree/devuntu/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/playree/devuntu/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/github/license/playree/devuntu)](LICENSE)
+[![Docker Pulls](https://img.shields.io/docker/pulls/playree/devuntu)](https://hub.docker.com/r/playree/devuntu)
+
 Devuntu is a self-hosted development server setup tool centered around Kanban-style board/ticket management, featuring calendar integration, email/Slack/web push notifications, MCP/AI agent integration, and remote execution.
 
 > [!NOTE]
