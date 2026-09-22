@@ -1,17 +1,19 @@
 # Devuntu
 
-Devuntu は、かんばん形式のボード/チケット管理を中心に、
-カレンダー連携、メール/Slack/Webプッシュ通知、MCP/AIエージェント連携、リモート実行などを備えた
-セルフホスト型の開発サーバー構築ツールです。
-
-個人・少数チーム開発をするうえで、自分が欲しいと思った機能を形にしたものになります。  
-開発中にAI開発が普及してきたこともあり、AI開発にも最適化しています。
+Devuntu is a self-hosted development server setup tool centered around Kanban-style board/ticket management, featuring calendar integration, email/Slack/web push notifications, MCP/AI agent integration, and remote execution.
 
 > [!NOTE]
 > **The documentation is available in Japanese only.**
 > Translation tools and AI have become accurate enough that we keep Japanese as
 > the single source of truth, rather than maintaining versions in several languages.
 > If you do not read Japanese, please use a translation tool or an AI assistant.
+
+Devuntu は、かんばん形式のボード/チケット管理を中心に、
+カレンダー連携、メール/Slack/Webプッシュ通知、MCP/AIエージェント連携、リモート実行などを備えた
+セルフホスト型の開発サーバー構築ツールです。
+
+個人・少数チーム開発をするうえで、自分が欲しいと思った機能を形にしたものになります。  
+開発中にAI開発が普及してきたこともあり、AI開発にも最適化しています。
 
 ---
 
