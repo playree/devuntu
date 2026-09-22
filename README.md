@@ -8,10 +8,10 @@ Devuntu は、かんばん形式のボード/チケット管理を中心に、
 開発中にAI開発が普及してきたこともあり、AI開発にも最適化しています。
 
 > [!NOTE]
-> **ドキュメントは日本語のみで提供しています。**
-> 翻訳ツールや AI の精度が上がっているため、多言語版を維持するよりも
-> 日本語を正としてメンテナンスする方針としています。
-> 日本語以外で読む場合は、翻訳ツールや AI での翻訳をご利用ください。
+> **The documentation is available in Japanese only.**
+> Translation tools and AI have become accurate enough that we keep Japanese as
+> the single source of truth, rather than maintaining versions in several languages.
+> If you do not read Japanese, please use a translation tool or an AI assistant.
 
 ---
 
