@@ -4,12 +4,21 @@
 FROM node:24-slim AS builder
 WORKDIR /app
 
+RUN corepack enable pnpm
+
+# 依存の解決はソースを変えるたびにやり直さないよう、入力になるファイルだけ先に入れる
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+RUN pnpm install --frozen-lockfile
+
+# Prisma Migrate用
+RUN mkdir migrate && cd migrate \
+    && npm init -y \
+    && npm install prisma@$(node -p "require('/app/node_modules/prisma/package.json').version")
+
 # ソースをコピー
 COPY . .
 
-# ビルド
-RUN corepack enable pnpm
-RUN pnpm install --frozen-lockfile
+# ビルド。secret はビルドを通すためだけに要るもので、中身は docker/dummy-secrets のダミー値
 RUN --mount=type=secret,id=database_url \
     --mount=type=secret,id=better_auth_secret \
     --mount=type=secret,id=better_auth_url \
@@ -17,11 +26,6 @@ RUN --mount=type=secret,id=database_url \
     BETTER_AUTH_URL=$(cat /run/secrets/better_auth_url) \
     BETTER_AUTH_SECRET=$(cat /run/secrets/better_auth_secret) \
     pnpm build
-
-# Prisma Migrate用
-RUN mkdir migrate && cd migrate \
-    && npm init -y \
-    && npm install prisma@$(node -p "require('/app/node_modules/prisma/package.json').version")
 
 # ---
 # 実行環境

@@ -1,0 +1,99 @@
+name: Release
+
+on:
+  # edge の publish は手動。実行時に対象の ref を選ぶ
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  # push 済みタグの処理を途中で止めないよう、キャンセルはしない
+  cancel-in-progress: false
+
+env:
+  IMAGE: playree/devuntu
+
+jobs:
+  # 選んだ ref から edge をビルドして push する
+  edge:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: type=raw,value=edge
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          # ここで付く org.opencontainers.image.revision を promote 側の突合に使う
+          labels: ${{ steps.meta.outputs.labels }}
+          secret-files: |
+            database_url=docker/dummy-secrets/database_url.env
+            better_auth_url=docker/dummy-secrets/better_auth_url.env
+            better_auth_secret=docker/dummy-secrets/better_auth_secret.env
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # edge で確認済みのイメージに、そのまま version と latest を付ける
+  promote:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Verify version
+        run: |
+          pkg=$(node -p "require('./package.json').version")
+          tag="${GITHUB_REF_NAME#v}"
+          if [ "$pkg" != "$tag" ]; then
+            echo "package.json=$pkg but tag=$tag" >&2
+            exit 1
+          fi
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 再ビルドすると確認したものと別のイメージになるため、edge を付け替える。
+      # 検査と付け替えの間に edge が動いても巻き込まれないよう digest で固定し、
+      # 付け替えてよいイメージかはビルド元の commit で判定する
+      - name: Promote edge
+        run: |
+          digest=$(docker buildx imagetools inspect "$IMAGE:edge" --format '{{ .Manifest.Digest }}')
+          # マルチアーキにすると .Image はプラットフォームをキーにしたマップになる
+          rev=$(docker buildx imagetools inspect "$IMAGE@$digest" \
+                --format '{{ index .Image.Config.Labels "org.opencontainers.image.revision" }}')
+          if [ "$rev" != "$GITHUB_SHA" ]; then
+            echo "edge ($digest) is built from $rev, not $GITHUB_SHA" >&2
+            exit 1
+          fi
+          docker buildx imagetools create \
+            -t "$IMAGE:${GITHUB_REF_NAME#v}" \
+            -t "$IMAGE:latest" \
+            "$IMAGE@$digest"
