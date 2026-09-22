@@ -53,7 +53,7 @@ curl -s -o /dev/null http://localhost:3000/auth/signin   # 初回コンパイル
 
 ## 3. メールOTPログイン
 
-既定ユーザーは `kazuki.minakawa@funlab.jp`(admin)。別のユーザーで確認したい場合はユーザーに確認する。
+確認に使うユーザー(admin)のメールアドレスはユーザーに確認する。以降の `<メールアドレス>` は、その値に読み替える。
 
 1. `browser_snapshot` でフォームを確認し、ラベル `Eメール` の入力欄にメールアドレスを入力 → `次へ` ボタンをクリック
 2. `Eメールに届いた認証コードを入力してください。` の表示を `browser_wait_for` で待つ
@@ -61,7 +61,7 @@ curl -s -o /dev/null http://localhost:3000/auth/signin   # 初回コンパイル
 3. OTP をDBから取得する(プライマリ):
 
 ```sh
-docker exec devuntu-postgres psql -U devuser -d devuntu -Atc "select split_part(value, ':', 1) from verification where identifier = 'sign-in-otp-kazuki.minakawa@funlab.jp' and \"expiresAt\" > now() order by \"createdAt\" desc limit 1"
+docker exec devuntu-postgres psql -U devuser -d devuntu -Atc "select split_part(value, ':', 1) from verification where identifier = 'sign-in-otp-<小文字メールアドレス>' and \"expiresAt\" > now() order by \"createdAt\" desc limit 1"
 ```
 
 - `identifier` は `sign-in-otp-` + **小文字化した**メールアドレス。`value` は `<6桁数字>:<試行回数>`
