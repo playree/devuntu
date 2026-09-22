@@ -40,3 +40,12 @@ jobs:
 
       - name: Test
         run: pnpm test
+
+      # イメージと同じダミー値で standalone 出力まで通ることを見る。
+      # リリース時のビルド失敗を PR の時点で拾う
+      - name: Build
+        run: |
+          export DATABASE_URL="$(cat docker/dummy-secrets/database_url.env)"
+          export BETTER_AUTH_URL="$(cat docker/dummy-secrets/better_auth_url.env)"
+          export BETTER_AUTH_SECRET="$(cat docker/dummy-secrets/better_auth_secret.env)"
+          pnpm build

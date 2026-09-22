@@ -17,8 +17,8 @@
   - [TypeScript v7 と v6 の併存](#typescript-v7-と-v6-の併存)
   - [better-auth](#better-auth)
   - [イメージ作成](#イメージ作成)
-    - [Docker Build](#docker-build)
-    - [Docker Hub Push](#docker-hub-push)
+    - [リリース手順](#リリース手順)
+    - [ローカルでのビルド](#ローカルでのビルド)
   - [sharpの依存関係チェック](#sharpの依存関係チェック)
 
 # 開発
@@ -268,30 +268,41 @@ pnpm dlx auth generate
 
 ## イメージ作成
 
-### Docker Build
+Docker Hub(`playree/devuntu`)への publish は GitHub Actions の `Release`
+([.github/workflows/release.yml](../.github/workflows/release.yml))で行う。ローカルからは push しない。
+
+タグの意味は下記のとおり。
+
+| タグ        | 中身                                                     |
+| ----------- | -------------------------------------------------------- |
+| `edge`      | 手動実行したときの最新ビルド。確認用                     |
+| `<version>` | `edge` で確認したイメージそのもの。`package.json` と同じ |
+| `latest`    | 同上。`compose.yaml` が参照する                          |
+
+### リリース手順
+
+1. `package.json`の`version`を上げて main に入れる
+2. Actions の `Release` を手動実行(`Run workflow`)する。ビルドされた`edge`が publish される
+3. `docker pull playree/devuntu:edge`で動作確認する
+4. 問題なければ**2で実行したのと同じ commit**に`v<version>`のタグを打って push する
+5. `Release`が`edge`と同一のイメージに`<version>`と`latest`を付ける
+
+`promote`ジョブは再ビルドせずタグを付け替えるだけなので、3で確認したものがそのまま公開される。
+ビルド元の commit とタグの commit が食い違う場合と、`package.json`の`version`とタグ名が
+食い違う場合はジョブが失敗する。その場合は2からやり直す。
+
+### ローカルでのビルド
+
+手元で動かして確かめたいときだけ使う。`docker/dummy-secrets`の中身はビルドを通すためだけの
+ダミー値で、実行時の設定は`.env.docker`から渡る。
 
 ```sh
 docker build -f docker/Dockerfile \
-             --secret id=database_url,src=docker/database_url.env \
-             --secret id=better_auth_url,src=docker/better_auth_url.env \
-             --secret id=better_auth_secret,src=docker/better_auth_secret.env \
+             --secret id=database_url,src=docker/dummy-secrets/database_url.env \
+             --secret id=better_auth_url,src=docker/dummy-secrets/better_auth_url.env \
+             --secret id=better_auth_secret,src=docker/dummy-secrets/better_auth_secret.env \
              -t devuntu .
 ```
-
-### Docker Hub Push
-
-```sh
-docker tag devuntu:latest playree/devuntu:edge
-docker push playree/devuntu:edge
-
-docker tag devuntu:latest playree/devuntu:latest
-docker push playree/devuntu:latest
-
-docker tag devuntu:latest playree/devuntu:<version>
-docker push playree/devuntu:<version>
-```
-
-※`<version>`は`package.json`の`version`に合わせる
 
 ## sharpの依存関係チェック
 
