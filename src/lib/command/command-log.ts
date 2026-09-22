@@ -9,9 +9,12 @@
  */
 
 import { type CommandStream } from '@/generated/prisma/enums'
+import { type LocaleValues } from '@/lib/locale-util'
+import { type LocaleItem } from '@/locale'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
 import { COMMAND_FLUSH_BYTES, COMMAND_MAX_CHUNKS, COMMAND_MAX_OUTPUT_BYTES, COMMAND_RUNAWAY_BYTES } from './command'
+import { encodeSystemMessage } from './command-log-message'
 
 /**
  * PostgreSQL の text は NUL を格納できない。孤立サロゲートも UTF-8 として不正なので落とす。
@@ -86,7 +89,7 @@ export const createLogBuffer = (runId: string, workerId: string): LogBuffer => {
       if (!truncationNoticeQueued) {
         truncationNoticeQueued = true
         // 「途中で切れている」ことを履歴からも分かるようにする
-        enqueue('system', '出力が上限に達したため、これ以降のログは保存していません。')
+        enqueue('system', encodeSystemMessage('command_truncated'))
       }
       return
     }
@@ -228,3 +231,11 @@ export const appendSystemChunk = async (runId: string, text: string): Promise<vo
     logger.warn({ error, runId }, 'failed to append system chunk')
   }
 }
+
+/**
+ * アプリが差し込む1行をロケールキーのまま残す。
+ *
+ * 書き手は実行中のワーカーで表示するロケールを知らないので、文言の解決は表示側に任せる。
+ */
+export const appendSystemMessage = async (runId: string, item: LocaleItem, values?: LocaleValues): Promise<void> =>
+  appendSystemChunk(runId, encodeSystemMessage(item, values))

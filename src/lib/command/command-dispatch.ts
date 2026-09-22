@@ -15,7 +15,7 @@ import { logger } from '../logger'
 import { type CommandInputValues } from './command'
 import { findCommandDef, findCommandTarget } from './command-catalog'
 import { applyCancel, executeCommandRun } from './command-exec'
-import { appendSystemChunk } from './command-log'
+import { appendSystemMessage } from './command-log'
 import { runningCount } from './command-registry'
 import { claimQueuedRuns, finishCommandRun, listCancelRequestedRuns, reclaimStaleRuns } from './command-run'
 
@@ -50,7 +50,7 @@ export const runCommandDispatch = async (now: Date = nowDate()): Promise<void> =
     const target = def ? findCommandTarget(def.targetId) : null
     if (!def || !target) {
       // 待っている間に定義ファイルから消えた / 壊れた
-      await appendSystemChunk(run.id, '実行しようとした定義が見つかりません。定義ファイルを確認してください。')
+      await appendSystemMessage(run.id, 'command_sys_def_missing')
       await finishCommandRun({
         runId: run.id,
         workerId: WORKER_ID,

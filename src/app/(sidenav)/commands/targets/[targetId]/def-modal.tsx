@@ -20,7 +20,8 @@ import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { type CommandDefView, upsertCommandDefAction } from './server'
 
 /** 追加のときに出す雛形。最低限の必須項目だけを置き、あとは書き足してもらう */
-const TEMPLATE = ['id: my-command', 'label: コマンド名', 'executable: /opt/bin/example.sh'].join('\n')
+const templateOf = (label: string) =>
+  ['id: my-command', `label: ${label}`, 'executable: /opt/bin/example.sh'].join('\n')
 
 /** 編集の宛先。追加はターゲットだけ、更新は置き換える 1 件も持つ */
 export type CommandDefTarget = {
@@ -45,7 +46,9 @@ export const CommandDefModal: FC<ModalBaseProps & { target: CommandDefTarget }> 
   const reAuth = useReAuth()
   const [text, setText] = useState(
     // 編集時は定義の現物を YAML へ起こす。`targetId` は YAML に書かない項目なのでサーバー側で落としてある
-    target.command?.source ? stringifyYaml(target.command.source, { lineWidth: 0 }) : TEMPLATE,
+    target.command?.source
+      ? stringifyYaml(target.command.source, { lineWidth: 0 })
+      : templateOf(t('command_def_template_label')),
   )
   const [messages, setMessages] = useState<string[]>([])
   const [isSubmitting, setSubmitting] = useState(false)

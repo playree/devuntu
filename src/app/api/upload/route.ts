@@ -8,9 +8,8 @@ import { saveContentImage } from '@/lib/storage/attachment'
 import { UPLOAD_BOARD_ID_FIELD } from '@/lib/storage/upload'
 import { resolveUploadToken, type UploadActor } from '@/lib/storage/upload-token'
 import { LocaleItem } from '@/locale'
-import { localeConfig } from '@/locale/config'
+import { requestLocale } from '@/locale/request'
 import { t } from '@/locale/server'
-import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
@@ -34,10 +33,8 @@ const MAX_BODY_SIZE = MAX_IMAGE_SIZE + 1024 * 1024
 const UPLOAD_RATE_LIMIT = { limit: 60, windowMs: 10 * 60 * 1000 }
 
 /** ロケールキーのまま返しても呼び元(`uploadImage`)が解決できないので、ここで文言にする */
-const badRequest = async (message: LocaleItem) => {
-  const locale = (await cookies()).get(localeConfig.cookie.name)?.value ?? null
-  return NextResponse.json({ message: t(locale, message) }, { status: 400 })
-}
+const badRequest = async (message: LocaleItem) =>
+  NextResponse.json({ message: t(await requestLocale(), message) }, { status: 400 })
 
 type UploadAuth = { kind: 'token'; actor: UploadActor } | { kind: 'session'; user: Actor }
 

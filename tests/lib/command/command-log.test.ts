@@ -6,6 +6,7 @@
  */
 
 import { COMMAND_MAX_OUTPUT_BYTES } from '@/lib/command/command'
+import { decodeSystemMessage } from '@/lib/command/command-log-message'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -111,7 +112,7 @@ describe('createLogBuffer', () => {
     }
     const notices = arg.data.filter((chunk) => chunk.stream === 'system')
     expect(notices).toHaveLength(1)
-    expect(notices[0].text).toContain('上限')
+    expect(decodeSystemMessage(notices[0].text)).toEqual({ item: 'command_truncated' })
   })
 
   it('NUL だけの出力も受け取ったバイト数に数える', () => {

@@ -2,6 +2,7 @@
 
 import { Panel } from '@/components/general/panel'
 import { type CommandStream } from '@/generated/prisma/enums'
+import { decodeSystemMessage } from '@/lib/command/command-log-message'
 import { useLocale } from '@/locale/client'
 import { Chip, cn } from '@heroui/react'
 import { FC, useEffect, useRef, useState } from 'react'
@@ -66,11 +67,16 @@ export const CommandLogView: FC<{ lines: CommandLogLine[]; isLive: boolean }> = 
           className='max-h-[32rem] overflow-y-auto'
           aria-label={t('command_run_log')}
         >
-          {lines.map((line) => (
-            <div key={line.seq} className={lineStyles({ stream: line.stream })}>
-              {line.text.replace(/\n$/, '')}
-            </div>
-          ))}
+          {lines.map((line) => {
+            // システム行はロケールキーで保存されている。この仕組みより前の行は平文なのでそのまま出す
+            const message = line.stream === 'system' ? decodeSystemMessage(line.text) : null
+            const text = message ? t(message.item, message.values) : line.text
+            return (
+              <div key={line.seq} className={lineStyles({ stream: line.stream })}>
+                {text.replace(/\n$/, '')}
+              </div>
+            )
+          })}
         </div>
       </Panel>
       {isLive && !following && (
