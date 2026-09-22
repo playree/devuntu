@@ -7,6 +7,9 @@
  *
  *   docker compose run --rm tools db-backup
  *
+ * `--out <file>` で出力先を指定できる(`backup-all.mjs` から対のディレクトリへ書かせるため)。
+ * 引数なしの場合は従来どおり `backup/<DB名>_<stamp>.dump` へ出力する。
+ *
  * 接続先は `DATABASE_URL`、実行経路の切り替えは `db-connect.mjs` を参照。
  */
 import { closeSync, mkdirSync, openSync, renameSync, rmSync } from 'node:fs'
@@ -22,13 +25,28 @@ await import('dotenv/config').catch(() => {})
 
 const BACKUP_DIR = path.join(process.cwd(), 'backup')
 
+/** `--out <file>` の値。無ければ undefined */
+const parseOut = (args) => {
+  const index = args.indexOf('--out')
+  if (index < 0) {
+    return undefined
+  }
+  const value = args[index + 1]
+  if (!value || value.startsWith('--')) {
+    console.error('--out には出力先のファイルパスを指定してください')
+    process.exit(1)
+  }
+  return value
+}
+
 const main = () => {
+  const out = parseOut(process.argv.slice(2))
+
   const pgEnv = resolveDbEnv(process.env.DATABASE_URL)
   showTransport()
 
-  mkdirSync(BACKUP_DIR, { recursive: true })
-  const name = `${pgEnv.PGDATABASE}_${stamp()}.dump`
-  const outFile = path.join(BACKUP_DIR, name)
+  const outFile = out ? path.resolve(out) : path.join(BACKUP_DIR, `${pgEnv.PGDATABASE}_${stamp()}.dump`)
+  mkdirSync(path.dirname(outFile), { recursive: true })
 
   // 一時ファイルへ出力し、成功時のみ本ファイルへ移動する。
   // (直接書くと失敗時に空/壊れたdumpが残り、後のrestoreで事故になるため)
@@ -53,7 +71,7 @@ const main = () => {
     throw err
   }
 
-  console.log(`Backup created: backup/${name}`)
+  console.log(`Backup created: ${path.relative(process.cwd(), outFile) || outFile}`)
 }
 
 main()

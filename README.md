@@ -105,8 +105,12 @@ Docker Compose で3つのサービスを起動します(`compose.yaml`)。
 ## 運用
 
 DB とアップロード画像は別々に保存されるため、バックアップは**必ず対で取得**します。
-`docker compose run --rm tools db-backup` / `s3-backup` で、リポジトリを clone せずに実行できます。
-手順・リストア・定期実行は [docs/operations.md](docs/operations.md) を参照。
+`docker compose run --rm tools full-backup` で両方を1つのディレクトリへまとめて取得でき、
+`full-restore` で対のまま復元できます(リポジトリを clone せずに実行できます)。
+
+リストア中は**メンテナンスモード**で全アクセスを遮断できます
+(`docker compose run --rm tools maintenance on|off`)。アプリを止めずに、利用者へは案内画面を返します。
+手順・定期実行は [docs/operations.md](docs/operations.md) を参照。
 
 アップデートは `docker compose pull && docker compose up -d`。マイグレーションは起動時に自動適用されます。
 

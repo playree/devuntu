@@ -5,6 +5,9 @@
  *
  * Docker環境では compose.yaml の tools サービスで実行する(手順は docs/operations.md 参照)。
  *
+ * `--out <dir>` で出力先を指定できる(`backup-all.mjs` から対のディレクトリへ書かせるため)。
+ * 引数なしの場合は従来どおり `backup/s3_<stamp>/` へ出力する。
+ *
  * S3 API 経由の論理バックアップにしているのは、無停止で取得でき、
  * SeaweedFS の内部レイアウトに依存せず他の S3 互換ストレージへも復元できるため。
  *
@@ -39,7 +42,7 @@ const client = new S3Client({
   },
 })
 
-/** `backup-db.sh` と揃えた `YYYYMMDD_HHMMSS`(ローカル時刻) */
+/** `backup-db.mjs` と揃えた `YYYYMMDD_HHMMSS`(ローカル時刻) */
 const stamp = () => {
   const d = new Date()
   const p = (n, len = 2) => String(n).padStart(len, '0')
@@ -65,13 +68,28 @@ const listAll = async () => {
   return objects
 }
 
+/** `--out <dir>` の値。無ければ undefined */
+const parseOut = (args) => {
+  const index = args.indexOf('--out')
+  if (index < 0) {
+    return undefined
+  }
+  const value = args[index + 1]
+  if (!value || value.startsWith('--')) {
+    console.error('--out には出力先のディレクトリパスを指定してください')
+    process.exit(1)
+  }
+  return value
+}
+
 const main = async () => {
+  const out = parseOut(process.argv.slice(2))
+
   if (!process.env.S3_ENDPOINT) {
     throw new Error('S3_ENDPOINT is not set')
   }
 
-  const name = `s3_${stamp()}`
-  const outDir = path.join(BACKUP_DIR, name)
+  const outDir = out ? path.resolve(out) : path.join(BACKUP_DIR, `s3_${stamp()}`)
   // 一時ディレクトリへ書き、成功時のみ本ディレクトリへ移動する。
   // (途中で失敗したものを残すと、後のrestoreで欠けたまま復元してしまうため)
   const tmpDir = `${outDir}.tmp`
@@ -119,7 +137,8 @@ const main = async () => {
     await rm(outDir, { recursive: true, force: true })
     await rename(tmpDir, outDir)
 
-    console.log(`Backup created: backup/${name} (${objects.length} objects, ${totalBytes} bytes, skipped=${skipped})`)
+    const shown = path.relative(process.cwd(), outDir) || outDir
+    console.log(`Backup created: ${shown} (${objects.length} objects, ${totalBytes} bytes, skipped=${skipped})`)
   } catch (err) {
     await rm(tmpDir, { recursive: true, force: true })
     throw err

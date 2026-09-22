@@ -1,6 +1,6 @@
 {
   "name": "devuntu",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "private": true,
   "license": "MIT",
   "scripts": {
@@ -20,6 +20,9 @@
     "db:restore": "node ./scripts/restore-db.mjs",
     "s3:backup": "node ./scripts/backup-s3.mjs",
     "s3:restore": "node ./scripts/restore-s3.mjs",
+    "full:backup": "node ./scripts/backup-all.mjs",
+    "full:restore": "node ./scripts/restore-all.mjs",
+    "maintenance": "node ./scripts/maintenance.mjs",
     "setup:env": "node ./scripts/setup-env/index.mjs"
   },
   "dependencies": {
@@ -97,5 +100,5 @@
   "engines": {
     "node": "^24.0.0"
   },
-  "packageManager": "pnpm@12.3.4"
+  "packageManager": "pnpm@12.5.1"
 }

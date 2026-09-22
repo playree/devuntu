@@ -37,6 +37,9 @@ manifest-*.yaml
 # 資格情報を含む生成ファイル(setup-env で作る)
 /seaweedfs-s3.json
 
+# 運用者がコンテナへマウントする設定の置き場(メンテナンスモードのフラグ・コマンド定義・SSH鍵)
+/config/
+
 # vercel
 .vercel
 

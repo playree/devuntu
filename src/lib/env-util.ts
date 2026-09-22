@@ -205,6 +205,22 @@ const server = {
 
   // メンテナンス
   /**
+   * メンテナンスモードのフラグファイル。**存在すれば遮断中**として扱う。
+   *
+   * DB に持たないのは、DB リストア中でも遮断が効いている必要があるため。
+   * 切り替えは `scripts/maintenance.mjs` 側で行い、こちらは読むだけ。
+   *
+   * 既定値を cwd 相対にしているのは、切り替える側(`scripts/maintenance.mjs` の既定も cwd 相対)と
+   * 同じファイルを指させるため。Docker では `WORKDIR /app` なので `/app/config/maintenance` になり、
+   * clone した環境ではリポジトリ直下の `config/maintenance` になる。
+   * `COMMAND_DEF_DIR` のような絶対パス固定にすると、後者で両者が食い違い遮断できない。
+   */
+  get MAINTENANCE_MODE_FILE() {
+    // node:path は import しない(クライアント用バンドルへ node 組み込みを持ち込まないため)
+    return getEnv('MAINTENANCE_MODE_FILE', { default: `${process.cwd()}/config/maintenance` })
+  },
+
+  /**
    * 定期メンテナンス(`maintenance-worker.ts`)を動かすか。
    * 止めると期限切れ行の掃除が行われなくなるだけで、アプリの動作には影響しない。
    */

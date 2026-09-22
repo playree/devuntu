@@ -62,11 +62,15 @@ RUN mkdir /app/db && ln -s /app/db /app/migrate/db
 
 # 運用スクリプト(compose.yaml の tools サービスから tools.mjs 経由で実行する)
 COPY --from=builder /app/scripts/tools.mjs \
+                    /app/scripts/run-script.mjs \
                     /app/scripts/db-connect.mjs \
                     /app/scripts/backup-db.mjs \
                     /app/scripts/restore-db.mjs \
                     /app/scripts/backup-s3.mjs \
                     /app/scripts/restore-s3.mjs \
+                    /app/scripts/backup-all.mjs \
+                    /app/scripts/restore-all.mjs \
+                    /app/scripts/maintenance.mjs \
                     ./scripts/
 COPY --from=builder /app/scripts/setup-env ./scripts/setup-env
 

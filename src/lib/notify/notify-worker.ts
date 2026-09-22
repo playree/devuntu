@@ -15,6 +15,7 @@
 import { after } from 'next/server'
 import { envu } from '../env-util'
 import { logger } from '../logger'
+import { isMaintenanceMode, registerMaintenanceDrainSource } from '../maintenance/maintenance-mode'
 import { NOTIFY_TICK_MS } from './notify'
 import { runNotifyDispatch } from './notify-dispatch'
 
@@ -24,6 +25,10 @@ let running = false
 let pending = false
 
 const tick = async (): Promise<void> => {
+  // メンテナンス中は DB を触らない。残ったアイドル接続がリストアを妨げる
+  if (isMaintenanceMode()) {
+    return
+  }
   if (running) {
     pending = true
     return
@@ -60,6 +65,10 @@ export const startNotifyWorker = (): void => {
   // プロセスの終了を妨げないようにする
   timer = setInterval(() => void tick(), NOTIFY_TICK_MS)
   timer.unref()
+
+  // 配信の途中で接続を切られると、配信後の更新が接続を張り直してリストアを妨げる
+  registerMaintenanceDrainSource('notify', () => running)
+
   logger.info({ intervalMs: NOTIFY_TICK_MS }, 'notify worker started')
 }
 

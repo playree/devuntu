@@ -6,15 +6,14 @@
  *   docker compose run --rm tools db-restore backup/devuntu_YYYYMMDD_HHMMSS.dump
  *   docker compose run --rm tools s3-backup
  *   docker compose run --rm tools s3-restore backup/s3_YYYYMMDD_HHMMSS
+ *   docker compose run --rm tools full-backup
+ *   docker compose run --rm tools full-restore backup/full_YYYYMMDD_HHMMSS
+ *   docker compose run --rm tools maintenance on
  *
  * compose.yaml の使い捨てコンテナを tools 1本にまとめるための入口。
- * 呼び出し先を子プロセスとして起動するのは、各スクリプトが `process.argv` を直接読むため。
- * import で取り込むと argv を組み替える必要があり、単体実行との二重管理になる。
+ * 呼び出し先の起動は `run-script.mjs` に集約している。
  */
-import { spawnSync } from 'node:child_process'
-import { constants } from 'node:os'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { runScript } from './run-script.mjs'
 
 const COMMANDS = {
   'setup-env': 'setup-env/index.mjs',
@@ -22,16 +21,22 @@ const COMMANDS = {
   'db-restore': 'restore-db.mjs',
   's3-backup': 'backup-s3.mjs',
   's3-restore': 'restore-s3.mjs',
+  'full-backup': 'backup-all.mjs',
+  'full-restore': 'restore-all.mjs',
+  maintenance: 'maintenance.mjs',
 }
 
 const USAGE = `使い方: node scripts/tools.mjs <サブコマンド> [引数...]
 
-  setup-env    設定ファイル(.env.docker / .env.db / seaweedfs-s3.json)を対話生成する
-  db-backup    データベースの中身を backup/ へバックアップする
-  db-restore   ダンプファイルの内容をデータベースへ復元する
-  s3-backup    オブジェクトストレージの中身を backup/ へバックアップする
-  s3-restore   バックアップディレクトリの内容をオブジェクトストレージへ復元する
-  help         この使い方を表示する
+  setup-env     設定ファイル(.env.docker / .env.db / seaweedfs-s3.json)を対話生成する
+  db-backup     データベースの中身を backup/ へバックアップする
+  db-restore    ダンプファイルの内容をデータベースへ復元する
+  s3-backup     オブジェクトストレージの中身を backup/ へバックアップする
+  s3-restore    バックアップディレクトリの内容をオブジェクトストレージへ復元する
+  full-backup   DB と S3 を backup/full_<stamp>/ へまとめてバックアップする
+  full-restore  full-backup の出力から DB と S3 をまとめて復元する
+  maintenance   メンテナンスモードを切り替える(on / off / status)
+  help          この使い方を表示する
 
 サブコマンドより後ろの引数はそのまま渡される(例: setup-env --dry-run)。
 `
@@ -53,19 +58,5 @@ if (!Object.hasOwn(COMMANDS, command)) {
   process.stderr.write(`不明なサブコマンドです: ${command}\n\n${USAGE}`)
   process.exit(1)
 }
-const script = COMMANDS[command]
 
-// コンテナ内のパスを決め打ちにせず、このファイルの位置から解決する
-const scriptsDir = path.dirname(fileURLToPath(import.meta.url))
-
-const { status, signal, error } = spawnSync(process.execPath, [path.join(scriptsDir, script), ...rest], {
-  stdio: 'inherit',
-})
-
-if (error) {
-  process.stderr.write(`${command} を起動できませんでした: ${error.message}\n`)
-  process.exit(1)
-}
-
-// シグナルで終了した場合 status は null になるため、シェルの慣習に合わせて 128+シグナル番号を返す
-process.exit(signal ? 128 + (constants.signals[signal] ?? 0) : status)
+process.exit(runScript(COMMANDS[command], rest))

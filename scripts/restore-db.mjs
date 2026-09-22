@@ -7,9 +7,13 @@
  *
  *   docker compose run --rm tools db-restore backup/devuntu_YYYYMMDD_HHMMSS.dump
  *
+ * `--wait <秒>` を付けると、対象DBへの他の接続が解放されるまでその秒数まで待つ
+ * (メンテナンスモードにした直後など。既定は待たずに中断)。
+ *
  * 接続先は `DATABASE_URL`、実行経路の切り替えは `db-connect.mjs` を参照。
  */
 import { closeSync, existsSync, openSync } from 'node:fs'
+import { setTimeout as sleep } from 'node:timers/promises'
 import { hasLocalPgClient, resolveDbEnv, runPg, showTransport } from './db-connect.mjs'
 
 /**
@@ -30,8 +34,16 @@ const sqlLiteral = (value) => `'${value.replaceAll("'", "''")}'`
 const sqlIdent = (value) => `"${value.replaceAll('"', '""')}"`
 
 const usage = () => {
-  console.error('Usage: node ./scripts/restore-db.mjs <dump-file> [--force]')
+  console.error('Usage: node ./scripts/restore-db.mjs <dump-file> [--force] [--wait <秒>]')
   console.error('Example: node ./scripts/restore-db.mjs backup/devuntu_20260719_120000.dump')
+}
+
+/** 対象DBへの他の接続の数 */
+const countOtherConnections = (pgEnv) => {
+  const sql = `SELECT count(*) FROM pg_stat_activity WHERE datname = ${sqlLiteral(pgEnv.PGDATABASE)} AND pid <> pg_backend_pid()`
+  const res = runPg('psql', ['-Atc', sql], { pgEnv, database: maintenanceDb(pgEnv), capture: true })
+  const count = Number.parseInt(res.stdout.trim(), 10)
+  return Number.isNaN(count) ? 0 : count
 }
 
 /**
@@ -41,23 +53,53 @@ const usage = () => {
  * 直後に接続を張り直し、復元後も Prisma の接続プールが古い状態を握る。
  * tools サービスのコンテナ内からは `docker compose stop` ができないので、
  * 警告ではなく中断して利用者に止めてもらう。
+ *
+ * メンテナンスモード(`maintenance.mjs`)でも接続は解放されるが、アプリが遮断に気づくまでの
+ * 遅れと、実行中のワーカーが処理を終えるまでの時間がある。`--wait` はその間を待つためのもので、
+ * 固定時間の見切り発車ではなく**接続数が 0 になったこと**を確かめてから進む。
+ * 上限まで残っていれば中断するので、長い処理を抱えたまま復元を始めてしまうことはない。
  */
-const assertNoOtherConnections = (pgEnv) => {
-  const sql = `SELECT count(*) FROM pg_stat_activity WHERE datname = ${sqlLiteral(pgEnv.PGDATABASE)} AND pid <> pg_backend_pid()`
-  const res = runPg('psql', ['-Atc', sql], { pgEnv, database: maintenanceDb(pgEnv), capture: true })
-  const count = Number.parseInt(res.stdout.trim(), 10)
-  if (Number.isNaN(count) || count === 0) {
+const assertNoOtherConnections = async (pgEnv, waitSec) => {
+  const deadline = Date.now() + waitSec * 1000
+  let count = countOtherConnections(pgEnv)
+  if (count > 0 && waitSec > 0) {
+    console.log(`${pgEnv.PGDATABASE} の接続が解放されるまで待ちます(最大 ${waitSec} 秒)...`)
+    while (count > 0 && Date.now() < deadline) {
+      await sleep(1000)
+      count = countOtherConnections(pgEnv)
+    }
+  }
+  if (count === 0) {
     return
   }
   console.error(`${pgEnv.PGDATABASE} に他の接続が ${count} 件残っています。`)
-  console.error('先に `docker compose stop devuntu` でアプリを止めてから実行してください(--force で無視できます)。')
+  console.error('先に `pnpm maintenance on` で遮断するか、`docker compose stop devuntu` で止めてから')
+  console.error('実行してください(--force で無視できます)。')
   process.exit(1)
 }
 
-const main = () => {
+/** `--wait <秒>` の値。無ければ 0(待たずに即中断) */
+const parseWait = (args) => {
+  const index = args.indexOf('--wait')
+  if (index < 0) {
+    return 0
+  }
+  const value = Number(args[index + 1])
+  if (!Number.isFinite(value) || value < 0) {
+    console.error('--wait には待つ秒数を指定してください')
+    process.exit(1)
+  }
+  return value
+}
+
+const main = async () => {
   const args = process.argv.slice(2)
   const force = args.includes('--force')
-  const dumpFile = args.find((arg) => !arg.startsWith('--'))
+  const waitSec = parseWait(args)
+  // `--wait` の値はオプションの一部なので、ダンプファイルとして拾わない
+  const waitIndex = args.indexOf('--wait')
+  const valueIndex = waitIndex >= 0 ? waitIndex + 1 : -1
+  const dumpFile = args.find((arg, index) => !arg.startsWith('--') && index !== valueIndex)
 
   if (!dumpFile) {
     usage()
@@ -72,7 +114,7 @@ const main = () => {
   showTransport()
 
   if (!force) {
-    assertNoOtherConnections(pgEnv)
+    await assertNoOtherConnections(pgEnv, waitSec)
   }
 
   console.log(`Restoring ${dumpFile} into ${pgEnv.PGDATABASE} (database will be recreated)...`)
@@ -113,4 +155,4 @@ const main = () => {
   console.log('Restore completed.')
 }
 
-main()
+await main()

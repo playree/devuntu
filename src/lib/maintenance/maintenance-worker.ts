@@ -11,12 +11,17 @@
 import { envu } from '../env-util'
 import { logger } from '../logger'
 import { MAINTENANCE_START_DELAY_MS, MAINTENANCE_TICK_MS } from './maintenance'
+import { isMaintenanceMode, registerMaintenanceDrainSource } from './maintenance-mode'
 import { runMaintenanceSweep } from './maintenance-sweep'
 
 let started = false
 let running = false
 
 const tick = async (): Promise<void> => {
+  // メンテナンス中は DB を触らない。残ったアイドル接続がリストアを妨げる
+  if (isMaintenanceMode()) {
+    return
+  }
   // 前回が長引いているだけなので、次の間隔で拾い直す
   if (running) {
     return
@@ -48,6 +53,9 @@ export const startMaintenanceWorker = (): void => {
     void tick()
     setInterval(() => void tick(), MAINTENANCE_TICK_MS).unref()
   }, MAINTENANCE_START_DELAY_MS).unref()
+
+  // 掃除は件数に応じて長引くので、途中で接続を切らずに1周の終わりを待つ
+  registerMaintenanceDrainSource('maintenance', () => running)
 
   logger.info({ intervalMs: MAINTENANCE_TICK_MS }, 'maintenance worker started')
 }
