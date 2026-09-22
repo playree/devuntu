@@ -12,6 +12,8 @@ import {
   scUpdateCalendarShareTitle,
   scUUID,
 } from '@/lib/schema/schema'
+import { requestLocale } from '@/locale/request'
+import { t } from '@/locale/server'
 import { nanoid } from 'nanoid'
 
 /** 連携が利用不可なら例外を投げる(ミューテーション用ガード) */
@@ -69,7 +71,7 @@ export const enableCalendarShare = safeAuthAction
       create: {
         userId: user.id,
         publicId: genPublicId(),
-        options: { title: `${user.name ?? ''} の予定表` },
+        options: { title: t(await requestLocale(), 'calendar_share_default_title', { name: user.name ?? '' }) },
       },
       select: { publicId: true },
     })

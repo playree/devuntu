@@ -13,9 +13,9 @@ vi.mock('@/lib/logger', () => ({
   logger: { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} },
 }))
 
-vi.mock('@/lib/command/command-log', () => ({ appendSystemChunk: vi.fn() }))
+vi.mock('@/lib/command/command-log', () => ({ appendSystemMessage: vi.fn() }))
 
-const { appendSystemChunk } = await import('@/lib/command/command-log')
+const { appendSystemMessage } = await import('@/lib/command/command-log')
 
 const prismaMock = vi.hoisted(() => ({ uniqueViolation: false }))
 
@@ -176,7 +176,7 @@ describe('reclaimStaleRuns', () => {
     expect(sql).toContain(`"failureKind" = 'interrupted'`)
     expect(sql).toContain('"activeKey" = NULL')
     expect(sql).not.toContain(`= 'queued'`)
-    expect(appendSystemChunk).toHaveBeenCalledTimes(1)
+    expect(appendSystemMessage).toHaveBeenCalledTimes(1)
   })
 
   it('回収の条件を更新と同じ1文に入れる', async () => {
@@ -191,7 +191,7 @@ describe('reclaimStaleRuns', () => {
   it('対象が無ければ何もしない', async () => {
     vi.mocked(prisma.$queryRaw).mockResolvedValue([] as never)
     expect(await reclaimStaleRuns(new Date())).toBe(0)
-    expect(appendSystemChunk).not.toHaveBeenCalled()
+    expect(appendSystemMessage).not.toHaveBeenCalled()
   })
 })
 

@@ -84,7 +84,7 @@ export const WebPushSettings: FC<{
   isDevicesLoading: boolean
   refreshDevices: () => Promise<void>
 }> = ({ devices, isDevicesLoading, refreshDevices }) => {
-  const { t, lvt } = useLocale()
+  const { t } = useLocale()
   const { data: publicKey, isLoading: isKeyLoading } = useActionData(getWebPushPublicKey)
   const { localState, reloadLocalState } = useLocalWebPushState(publicKey)
   const [isPending, setIsPending] = useState(false)
@@ -214,8 +214,8 @@ export const WebPushSettings: FC<{
                   )}
                 </FlexRow>
                 <div className='text-default-500 text-xs'>
-                  {lvt({ ja: '登録', en: 'Registered' })}: {dayformat(createdAt)}
-                  {lastUsedAt ? ` / ${lvt({ ja: '最終送信', en: 'Last sent' })}: ${dayformat(lastUsedAt)}` : ''}
+                  {t('registered_at')}: {dayformat(createdAt)}
+                  {lastUsedAt ? ` / ${t('last_sent')}: ${dayformat(lastUsedAt)}` : ''}
                 </div>
               </FlexCol>
               <MultiButton

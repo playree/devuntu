@@ -6,6 +6,8 @@
  * テストではそこだけを差し替えれば実際に接続しなくても全経路を通せる。
  */
 
+import { type LocaleValues } from '@/lib/locale-util'
+import { type LocaleItem } from '@/locale'
 import { StringDecoder } from 'node:string_decoder'
 import { logger } from '../logger'
 import {
@@ -19,7 +21,7 @@ import {
   type CommandTarget,
 } from './command'
 import { buildRemoteCommand, isSentinelLine, resolveCommandArgs } from './command-args'
-import { appendSystemChunk, createLogBuffer, isRunaway, type LogBuffer } from './command-log'
+import { appendSystemMessage, createLogBuffer, isRunaway, type LogBuffer } from './command-log'
 import { abortRun, registerRun, unregisterRun } from './command-registry'
 import { finishCommandRun } from './command-run'
 import { signalRun } from './command-signal'
@@ -155,14 +157,14 @@ export const executeCommandRun = async (input: ExecuteInput): Promise<void> => {
   } catch (error) {
     // 待っている間に定義が変わって選択肢が消えた、など。実行前に閉じる
     logger.error({ error, runId }, 'command args could not be resolved')
-    await appendSystemChunk(runId, '選択された値が現在の定義と一致しないため実行できません。')
+    await appendSystemMessage(runId, 'command_sys_args_mismatch')
     await finishCommandRun({ runId, workerId, status: 'failed', exitCode: null, failureKind: 'start_failed' })
     return
   }
 
   const child = spawnSsh(target, buildRemoteCommand(def.executable, args))
   if (!child) {
-    await appendSystemChunk(runId, '接続先の秘密鍵または known_hosts を読み込めないため実行できません。')
+    await appendSystemMessage(runId, 'command_sys_ssh_setup_failed')
     await finishCommandRun({ runId, workerId, status: 'failed', exitCode: null, failureKind: 'start_failed' })
     return
   }
@@ -249,13 +251,13 @@ export const executeCommandRun = async (input: ExecuteInput): Promise<void> => {
     } catch (error) {
       logger.warn({ error, runId }, 'final command log flush failed')
       // 終了コードが 0 でも履歴が欠けていることを読み取れるようにする
-      await appendSystemChunk(runId, 'ログの一部を保存できなかったため、履歴が途中で欠けています。')
+      await appendSystemMessage(runId, 'command_sys_log_partial')
     }
 
     const outcome = resolveOutcome({ exitCode: code, aborted, sentinelSeen })
     const notice = outcome.failureKind ? FAILURE_NOTICE[outcome.failureKind] : undefined
     if (notice) {
-      await appendSystemChunk(runId, notice(def))
+      await appendSystemMessage(runId, notice.item, notice.values?.(def))
     }
 
     await finishCommandRun({
@@ -280,13 +282,15 @@ export const executeCommandRun = async (input: ExecuteInput): Promise<void> => {
  * 分類がそのままでは何が起きたか読み取れないので、履歴の末尾に説明を残す。
  * 接続先や鍵のパスは秘密なので含めない。
  */
-const FAILURE_NOTICE: Partial<Record<CommandFailureKind, (def: CommandDef) => string>> = {
-  timeout: (def) => `タイムアウト(${def.timeoutSec}秒)により中断しました。`,
-  output_limit: () => '出力が異常に多いため中断しました。',
-  ssh_error: () => '接続に失敗しました。ホスト鍵・鍵の権限・接続先の設定を確認してください。',
-  connection_lost: () => '実行中に接続が切れました。リモート側の状態を確認してください。',
-  log_write_failed: () => 'ログを保存できなかったため中断しました。',
-  canceled: () => '中断されました。',
+const FAILURE_NOTICE: Partial<
+  Record<CommandFailureKind, { item: LocaleItem; values?: (def: CommandDef) => LocaleValues }>
+> = {
+  timeout: { item: 'command_sys_timeout', values: (def) => ({ sec: def.timeoutSec }) },
+  output_limit: { item: 'command_sys_output_limit' },
+  ssh_error: { item: 'command_sys_ssh_error' },
+  connection_lost: { item: 'command_sys_connection_lost' },
+  log_write_failed: { item: 'command_sys_log_write_failed' },
+  canceled: { item: 'command_sys_canceled' },
 }
 
 /** 中断要求を、このプロセスが掴んでいる実行へ反映する */

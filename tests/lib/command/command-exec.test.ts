@@ -23,7 +23,7 @@ const logMock = vi.hoisted(() => ({
   pushed: [] as { stream: string; text: string }[],
   flushResult: true,
   flushThrows: false,
-  systemChunks: [] as string[],
+  systemMessages: [] as { item: string; values?: Record<string, unknown> }[],
 }))
 
 vi.mock('@/lib/command/command-log', () => ({
@@ -48,8 +48,8 @@ vi.mock('@/lib/command/command-log', () => ({
     }
   },
   isRunaway: () => false,
-  appendSystemChunk: async (_runId: string, text: string) => {
-    logMock.systemChunks.push(text)
+  appendSystemMessage: async (_runId: string, item: string, values?: Record<string, unknown>) => {
+    logMock.systemMessages.push({ item, values })
   },
 }))
 
@@ -136,7 +136,7 @@ const createFakeSsh = () => {
 
 beforeEach(() => {
   logMock.pushed = []
-  logMock.systemChunks = []
+  logMock.systemMessages = []
   logMock.flushResult = true
   logMock.flushThrows = false
   finishMock.calls = []
@@ -257,7 +257,7 @@ describe('executeCommandRun', () => {
       spawnSsh: () => null,
     })
     expect(finishMock.calls[0]).toMatchObject({ status: 'failed', failureKind: 'start_failed' })
-    expect(logMock.systemChunks[0]).toContain('known_hosts')
+    expect(logMock.systemMessages[0]?.item).toBe('command_sys_ssh_setup_failed')
   })
 
   it('選択肢の外の値が残っていれば起動前に弾く', async () => {
@@ -296,7 +296,7 @@ describe('executeCommandRun', () => {
     await fake.finish(0)
     await promise
 
-    expect(logMock.systemChunks.some((text) => text.includes('欠けています'))).toBe(true)
+    expect(logMock.systemMessages.some(({ item }) => item === 'command_sys_log_partial')).toBe(true)
   })
 
   it('終了時は必ず finishCommandRun を1回だけ呼ぶ', async () => {

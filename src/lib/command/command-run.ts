@@ -27,7 +27,7 @@ import {
   type CommandRunSortColumn,
   type CommandRunStatusValue,
 } from './command'
-import { appendSystemChunk } from './command-log'
+import { appendSystemMessage } from './command-log'
 
 export type ClaimedRun = {
   id: string
@@ -162,7 +162,7 @@ export const requestCancelCommandRun = async (runId: string, actorId: string): P
     },
   })
   if (canceled.count > 0) {
-    await appendSystemChunk(runId, '順番待ちの間に中断されました。')
+    await appendSystemMessage(runId, 'command_sys_queued_canceled')
     return 'canceled'
   }
 
@@ -212,11 +212,7 @@ export const reclaimStaleRuns = async (now: Date = nowDate()): Promise<number> =
   }
 
   // 実際に閉じた行にだけ説明を残す
-  await Promise.all(
-    reclaimed.map(({ id }) =>
-      appendSystemChunk(id, '実行していたプロセスが応答しなくなったため、失敗として記録しました。'),
-    ),
-  )
+  await Promise.all(reclaimed.map(({ id }) => appendSystemMessage(id, 'command_sys_interrupted')))
   logger.warn({ count: reclaimed.length }, 'command runs reclaimed')
   return reclaimed.length
 }
