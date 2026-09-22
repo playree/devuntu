@@ -46,3 +46,36 @@ next-env.d.ts
 # work
 /.work/
 /.plan/
+
+# 以下は .gitignore と揃える。
+# builder ステージが `COPY . .` でコンテキスト全体を取り込むため、
+# 最終イメージに残らなくても builder レイヤには残る。
+
+# 資格情報を含む生成ファイル(setup-env で作る)
+/seaweedfs-s3.json
+
+# 運用者がコンテナへマウントする設定の置き場(メンテナンスモードのフラグ・コマンド定義・SSH鍵)
+/config/
+
+# 実運用のドメインを含む Slack マニフェスト
+manifest-*.yaml
+
+# backup
+/backup/
+*.bak
+
+# ローカル設定
+/.config/
+/.claude/
+
+# git
+.git
+.gitignore
+
+# エージェントランナーを配布元(public/agent)で直接動かしたときの生成物(config.json はトークンを持つ)
+/public/agent/config.json
+/public/agent/agent.log
+/public/agent/agent.lock
+
+*.pyc
+__pycache__/

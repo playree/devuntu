@@ -53,7 +53,22 @@ curl -s -o /dev/null http://localhost:3000/auth/signin   # 初回コンパイル
 
 ## 3. メールOTPログイン
 
-既定ユーザーは `kazuki.minakawa@funlab.jp`(admin)。別のユーザーで確認したい場合はユーザーに確認する。
+確認に使うユーザーは環境変数 `DEVUNTU_SCREEN_CHECK_EMAIL` から取る。Playwright MCP へは環境変数が渡らないので、フォームへ入力する前に値を取り出しておく:
+
+```sh
+echo "${DEVUNTU_SCREEN_CHECK_EMAIL:-未設定}"
+```
+
+- `未設定` が返る → どのユーザーで確認するかをユーザーに確認する。別のユーザーで確認したい場合も同じ
+- 値は `.claude/settings.local.json`(git 管理外)の `env` に置く。開発者ごとに違う値になるので、git 管理下のファイルには書かない
+
+```json
+{
+  "env": {
+    "DEVUNTU_SCREEN_CHECK_EMAIL": "<開発DBの admin ユーザーのメールアドレス>"
+  }
+}
+```
 
 1. `browser_snapshot` でフォームを確認し、ラベル `Eメール` の入力欄にメールアドレスを入力 → `次へ` ボタンをクリック
 2. `Eメールに届いた認証コードを入力してください。` の表示を `browser_wait_for` で待つ
@@ -61,10 +76,15 @@ curl -s -o /dev/null http://localhost:3000/auth/signin   # 初回コンパイル
 3. OTP をDBから取得する(プライマリ):
 
 ```sh
-docker exec devuntu-postgres psql -U devuser -d devuntu -Atc "select split_part(value, ':', 1) from verification where identifier = 'sign-in-otp-kazuki.minakawa@funlab.jp' and \"expiresAt\" > now() order by \"createdAt\" desc limit 1"
+docker exec -i devuntu-postgres psql -U devuser -d devuntu -v otp_email="$DEVUNTU_SCREEN_CHECK_EMAIL" -At <<'SQL'
+select split_part(value, ':', 1) from verification
+where identifier = 'sign-in-otp-' || lower(:'otp_email') and "expiresAt" > now()
+order by "createdAt" desc limit 1;
+SQL
 ```
 
-- `identifier` は `sign-in-otp-` + **小文字化した**メールアドレス。`value` は `<6桁数字>:<試行回数>`
+- `identifier` は `sign-in-otp-` + **小文字化した**メールアドレス。`lower()` がその小文字化。`value` は `<6桁数字>:<試行回数>`
+- メールアドレスは psql 変数(`-v` / `:'otp_email'`)として渡す。SQL リテラルへ直接埋め込むと `'` を含むアドレスでクエリが壊れる。`-c` では psql 変数が展開されないので標準入力から流す
 - 有効期限は 300 秒。検証成功時に行は削除される
 - 空が返る場合: ユーザーが存在しない / 期限切れ / 既に消費済み。画面の `再送`(30秒クールタイム)を押してから再取得する
 - フォールバック(自分で起動したサーバーの場合のみ。`MAIL_SEND=debug` でメール本文がログに出る):
