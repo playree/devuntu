@@ -81,16 +81,19 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       # 再ビルドすると確認したものと別のイメージになるため、edge を付け替える。
-      # 付け替えてよい edge かはビルド元の commit で判定する
+      # 検査と付け替えの間に edge が動いても巻き込まれないよう digest で固定し、
+      # 付け替えてよいイメージかはビルド元の commit で判定する
       - name: Promote edge
         run: |
-          rev=$(docker buildx imagetools inspect "$IMAGE:edge" \
+          digest=$(docker buildx imagetools inspect "$IMAGE:edge" --format '{{ .Manifest.Digest }}')
+          # マルチアーキにすると .Image はプラットフォームをキーにしたマップになる
+          rev=$(docker buildx imagetools inspect "$IMAGE@$digest" \
                 --format '{{ index .Image.Config.Labels "org.opencontainers.image.revision" }}')
           if [ "$rev" != "$GITHUB_SHA" ]; then
-            echo "edge is built from $rev, not $GITHUB_SHA" >&2
+            echo "edge ($digest) is built from $rev, not $GITHUB_SHA" >&2
             exit 1
           fi
           docker buildx imagetools create \
             -t "$IMAGE:${GITHUB_REF_NAME#v}" \
             -t "$IMAGE:latest" \
-            "$IMAGE:edge"
+            "$IMAGE@$digest"
