@@ -20,6 +20,7 @@
     - [リリース手順](#リリース手順)
     - [ローカルでのビルド](#ローカルでのビルド)
   - [sharpの依存関係チェック](#sharpの依存関係チェック)
+  - [紹介サイト(GitHub Pages)](#紹介サイトgithub-pages)
 
 # 開発
 
@@ -315,3 +316,17 @@ docker build -f docker/Dockerfile \
 ```sh
 pnpm why sharp
 ```
+
+## 紹介サイト(GitHub Pages)
+
+`site/` は紹介用の静的サイト(`https://playree.github.io/devuntu/`)のソース。アプリとは独立しており、
+ビルドツールは使わず素の HTML/CSS をそのまま配信する。
+
+- `site/` 直下がそのまま公開ルートになる。ページを増やすときは `site/<名前>/index.html` を追加し、
+  共通のスタイル・画像は `site/assets/` に置く
+- Google Search Console などの所有権確認ファイル(`google<ID>.html` 等)は `site/` 直下に置く。
+  Jekyll を通さないので、ファイルは加工されずに配信される
+- デプロイは GitHub Actions の `Pages`([.github/workflows/pages.yml](../.github/workflows/pages.yml))。
+  main への push で `site/` が変わったときと、手動実行で動く
+- リポジトリの Settings → Pages → Source を「GitHub Actions」にしておく必要がある
+- アプリのビルドとイメージには含めない(`.dockerignore` と `eslint.config.ts` で除外している)

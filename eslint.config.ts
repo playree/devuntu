@@ -25,6 +25,8 @@ const eslintConfig = defineConfig([
     'next-env.d.ts',
     '.yarn/**',
     '**/generated/**/*',
+    // GitHub Pages のソース。アプリとは別物なので Next.js 向けのルールをかけない
+    'site/**',
   ]),
   {
     rules: {
