@@ -109,6 +109,28 @@ const server = {
   get SEARCH_ENGINE_ROBOTS_ALLOW() {
     return getEnvBoolean('SEARCH_ENGINE_ROBOTS_ALLOW')
   },
+  /**
+   * ダッシュボードのリリースノートの取得元(GitHub の owner/repo)。
+   * URL を丸ごと入れるとパスが壊れ、取得失敗として黙って空表示になるため形式を確かめる。
+   */
+  get RELEASE_NOTES_REPO() {
+    const value = getEnv('RELEASE_NOTES_REPO', { default: 'playree/devuntu' }).trim()
+    if (!/^[\w.-]+\/[\w.-]+$/.test(value) || value.split('/').some((s) => s === '.' || s === '..')) {
+      throw errSystemError('RELEASE_NOTES_REPO must be owner/repo')
+    }
+    return value
+  },
+  /**
+   * リリースノートの最大取得件数。
+   * GitHub API の per_page は100が上限で、超えた値は黙って100に丸められる。
+   */
+  get RELEASE_NOTES_LIMIT() {
+    const value = getEnvNumber('RELEASE_NOTES_LIMIT', { default: 20 })
+    if (!Number.isInteger(value) || value < 1 || value > 100) {
+      throw errSystemError('RELEASE_NOTES_LIMIT must be an integer between 1 and 100')
+    }
+    return value
+  },
 
   // 認証
   get BETTER_AUTH_SECRET() {

@@ -36,7 +36,15 @@ export const ATTACHMENT_MODES = ['off', 'dry-run', 'delete']
 export const ENV_DOCKER_SECTIONS = [
   {
     title: '基本',
-    keys: ['DEFAULT_LOCALE', 'DEFAULT_TIMEZONE', 'LOG_LEVEL', 'SEARCH_ENGINE_INDEXING', 'SEARCH_ENGINE_ROBOTS_ALLOW'],
+    keys: [
+      'DEFAULT_LOCALE',
+      'DEFAULT_TIMEZONE',
+      'LOG_LEVEL',
+      'SEARCH_ENGINE_INDEXING',
+      'SEARCH_ENGINE_ROBOTS_ALLOW',
+      'RELEASE_NOTES_REPO',
+      'RELEASE_NOTES_LIMIT',
+    ],
   },
   {
     title: '認証',
@@ -103,6 +111,8 @@ export const ENV_DOCKER_SECTIONS = [
 export const MANUAL_KEYS = [
   'SEARCH_ENGINE_INDEXING',
   'SEARCH_ENGINE_ROBOTS_ALLOW',
+  'RELEASE_NOTES_REPO',
+  'RELEASE_NOTES_LIMIT',
   'LOG_LEVEL',
   'SESSION_EXPIRES_IN',
   'SESSION_FRESH_AGE',

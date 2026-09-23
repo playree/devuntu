@@ -21,19 +21,25 @@
 
 ## 基本
 
-| 変数名                       | 説明                                                            | 必須 | デフォルト   |
-| ---------------------------- | --------------------------------------------------------------- | ---- | ------------ |
-| `NEXT_PUBLIC_APP_NAME`       | アプリ名(クライアント公開)                                      |      | `Devuntu`    |
-| `DATABASE_URL`               | DB(PostgreSQL) の接続パス                                       | 〇   | -            |
-| `DEFAULT_LOCALE`             | デフォルトロケール                                              |      | -            |
-| `DEFAULT_TIMEZONE`           | デフォルトタイムゾーン                                          |      | `Asia/Tokyo` |
-| `LOG_LEVEL`                  | ログレベル                                                      |      | `info`       |
-| `DEV_ALLOWED_ORIGINS`        | `next dev` で許可する追加オリジン(カンマ区切り)。開発時のみ有効 |      | -            |
-| `SEARCH_ENGINE_INDEXING`     | 検索エンジンにインデックスさせるか                              |      | `false`      |
-| `SEARCH_ENGINE_ROBOTS_ALLOW` | `robots.txt` でクロールを許可するか                             |      | `false`      |
+| 変数名                       | 説明                                                            | 必須 | デフォルト        |
+| ---------------------------- | --------------------------------------------------------------- | ---- | ----------------- |
+| `NEXT_PUBLIC_APP_NAME`       | アプリ名(クライアント公開)                                      |      | `Devuntu`         |
+| `DATABASE_URL`               | DB(PostgreSQL) の接続パス                                       | 〇   | -                 |
+| `DEFAULT_LOCALE`             | デフォルトロケール                                              |      | -                 |
+| `DEFAULT_TIMEZONE`           | デフォルトタイムゾーン                                          |      | `Asia/Tokyo`      |
+| `LOG_LEVEL`                  | ログレベル                                                      |      | `info`            |
+| `DEV_ALLOWED_ORIGINS`        | `next dev` で許可する追加オリジン(カンマ区切り)。開発時のみ有効 |      | -                 |
+| `SEARCH_ENGINE_INDEXING`     | 検索エンジンにインデックスさせるか                              |      | `false`           |
+| `SEARCH_ENGINE_ROBOTS_ALLOW` | `robots.txt` でクロールを許可するか                             |      | `false`           |
+| `RELEASE_NOTES_REPO`         | ダッシュボードのリリースノートの取得元(GitHub の `owner/repo`)  |      | `playree/devuntu` |
+| `RELEASE_NOTES_LIMIT`        | リリースノートの最大取得件数(1〜100)                            |      | `20`              |
 
 `DEV_ALLOWED_ORIGINS` だけは例外で、`src/lib/env-util.ts` には定義していない。参照元の `next.config.ts` は
 Next の起動前に評価されるため `envu` を解決できず、`process.env` を直接読んでいる。
+
+リリースノートは `RELEASE_NOTES_REPO` の GitHub Releases を取得する。フォークして運用する場合は
+自分のリポジトリを指定すると、上流ではなく自分のリリースノートが表示される。`owner/repo` 形式以外(URL や `.` / `..` を含むものなど)や、
+`RELEASE_NOTES_LIMIT` の範囲外の値は読み取り時にエラーにしている。件数の上限100は GitHub API の `per_page` の上限に合わせている。
 
 真偽値の変数は `true` / `false`(大文字小文字は問わない)だけを受け付ける。`1` や綴り違いは
 黙って既定の反対側へ倒れると気づけないため、読み取り時にエラーにしている。
