@@ -163,7 +163,7 @@ cron からは権限確認に誰も答えられないため、`cli.args` の既�
 
 | `cli.kind` | 起動コマンド          | `cli.args` の既定                                    | `cli.model` の既定 |
 | ---------- | --------------------- | ---------------------------------------------------- | ------------------ |
-| `claude`   | `claude -p <prompt>`  | `--permission-mode auto`                             | `sonnet`           |
+| `claude`   | `claude -p <prompt>`  | `--permission-mode auto`                             | `opus`             |
 | `codex`    | `codex exec <prompt>` | `--sandbox danger-full-access --skip-git-repo-check` | なし(CLI 側の既定) |
 
 `codex` の `--skip-git-repo-check` は外せない。codex は git リポジトリの中でしか動かないが、
@@ -187,7 +187,7 @@ codex の `--sandbox danger-full-access` も同じ前提で、CLI 間に差は�
 そこで詰まらないかを確認してから使う。claude なら `--permission-mode acceptEdits`(編集のみ自動承認)や
 `--disallowedTools` で絞る。
 
-`cli.model` は claude では `--model` のエイリアス(`sonnet` など)、codex ではモデル名(`gpt-5.5` など)を
+`cli.model` は claude では `--model` のエイリアス(`opus` など)、codex ではモデル名(`gpt-5.5` など)を
 そのまま渡す。codex で省略した場合は `~/.codex/config.toml` の `model` に従う。推論の強さのように
 モデル以外の設定を変えたい場合は、`cli.args` に `-c model_reasoning_effort="high"` や
 `--profile <名前>` を足す(どちらも codex 側の設定を上書きするフラグ)。

@@ -227,7 +227,7 @@ chmod 600 ~/devuntu-agent-work/.devuntu-agent/config.json
 <!-- /cli -->
 <!-- cli:claude -->
 
-- `cli.model`: 使用するモデル。既定は `sonnet`。`opus` / `fable` など `--model` が受け付ける
+- `cli.model`: 使用するモデル。既定は `opus`。`sonnet` / `fable` など `--model` が受け付ける
   エイリアスを指定できる
 
 <!-- /cli -->
