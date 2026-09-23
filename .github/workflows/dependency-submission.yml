@@ -1,0 +1,43 @@
+name: Dependency submission
+
+# pnpm v12 のロックファイルは Dependency graph が読み切れないため、依存を API で送る。
+# 仕組みは scripts/submit-dependencies.mjs を参照
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - pnpm-lock.yaml
+      - scripts/submit-dependencies.mjs
+      - .github/workflows/dependency-submission.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dependency-submission
+  cancel-in-progress: true
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      # スクリプトが使う yaml だけあればよいので、ビルドスクリプトは走らせない
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Submit dependencies
+        run: node scripts/submit-dependencies.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
