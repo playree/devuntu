@@ -1,8 +1,17 @@
 {
   "name": "devuntu",
   "version": "0.8.2",
+  "description": "Self-hosted project management tool centered on Kanban boards and tickets, with calendar, notifications, MCP server and AI agent integration.",
   "private": true,
   "license": "MIT",
+  "homepage": "https://github.com/playree/devuntu#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/playree/devuntu.git"
+  },
+  "bugs": {
+    "url": "https://github.com/playree/devuntu/issues"
+  },
   "scripts": {
     "dev": "next dev",
     "dev:domain": "DOTENV_CONFIG_PATH=.env.domain DOTENV_CONFIG_QUIET=true NODE_OPTIONS=\"--require dotenv/config\" next dev",
