@@ -10,7 +10,7 @@ import { SingleSelectField } from '@/components/general/select'
 import { MultiTable, SelectionCell } from '@/components/general/table'
 import { MultiTagField } from '@/components/general/tag-group'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, CpuChipIcon } from '@/components/icon'
+import { ArrowPathIcon, RocketLaunchIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import {
   AGENT_MODE_NONE,
@@ -136,7 +136,7 @@ export const AgentsClient: FC = () => {
       data-nav-hidden={selectedId ? '' : undefined}
       className={cn('max-w-6xl', !selectedId && 'mx-auto')}
     >
-      <ContentHeader icon={<CpuChipIcon />} title={t('agent')}>
+      <ContentHeader icon={<RocketLaunchIcon />} title={t('agent')}>
         <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={reloadAll} />
       </ContentHeader>
 

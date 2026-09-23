@@ -8,7 +8,6 @@ import {
   CalendarDaysIcon,
   Cog6ToothIcon,
   CommandLineIcon,
-  CpuChipIcon,
   RocketLaunchIcon,
   ServerStackIcon,
   Squares2X2Icon,
@@ -215,12 +214,6 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
               icon={<UsersIcon />}
               closeMenu={closeMenu}
             />
-            <MenuButton // エージェント管理
-              to='/admin/agents'
-              text={t('agent_manage')}
-              icon={<CpuChipIcon />}
-              closeMenu={closeMenu}
-            />
             <MenuButton // グループ管理
               to='/admin/groups'
               text={t('group_manage')}
@@ -239,13 +232,19 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
               icon={<ServerStackIcon />}
               closeMenu={closeMenu}
             />
+            <MenuButton // エージェント管理
+              to='/admin/agents'
+              text={t('agent_manage')}
+              icon={<RocketLaunchIcon />}
+              closeMenu={closeMenu}
+            />
             <MenuButton // リモート管理
               to='/admin/commands'
               text={t('command_manage')}
               icon={<CommandLineIcon />}
               closeMenu={closeMenu}
             />
-            <MenuButton // 連携設定
+            <MenuButton // 設定
               to='/admin/settings'
               text={t('integration_settings')}
               icon={<Cog6ToothIcon />}
