@@ -7,7 +7,7 @@ import { useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, Cog6ToothIcon, CpuChipIcon, PlusIcon } from '@/components/icon'
+import { ArrowPathIcon, Cog6ToothIcon, PlusIcon, RocketLaunchIcon } from '@/components/icon'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { type AgentRunnerStatus } from '@/lib/agent/agent'
 import { dayformat } from '@/lib/day'
@@ -75,7 +75,7 @@ export const AdminAgentsClient: FC = () => {
 
   return (
     <FlexCol>
-      <ContentHeader icon={<CpuChipIcon />} title={t('agent_manage')}>
+      <ContentHeader icon={<RocketLaunchIcon />} title={t('agent_manage')}>
         <MultiButton isIconOnly tooltip={t('add_agent')} icon={<PlusIcon />} onPress={() => addModalState.open()} />
         <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={() => list.reload()}>
           <ButtonGroup.Separator />

@@ -5,7 +5,7 @@ import { AgentRunHistory } from '@/components/agent/agent-run-history'
 import { AgentRunner } from '@/components/agent/agent-runner'
 import { AccordionSection } from '@/components/general/accordion'
 import { usePagingList } from '@/components/general/paging'
-import { ClipboardDocumentIcon, ClockIcon, RocketLaunchIcon } from '@/components/icon'
+import { ClipboardDocumentIcon, ClockIcon, TruckIcon } from '@/components/icon'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'
 import { Accordion } from '@heroui/react'
@@ -40,7 +40,7 @@ export const AgentSections: FC<{
 
   return (
     <Accordion allowsMultipleExpanded expandedKeys={expandedKeys} onExpandedChange={onExpandedChange}>
-      <AccordionSection id='agent_runner' icon={<RocketLaunchIcon />} title={t('agent_runner')}>
+      <AccordionSection id='agent_runner' icon={<TruckIcon />} title={t('agent_runner')}>
         <AgentRunner
           agentId={agentId}
           current={runner}
