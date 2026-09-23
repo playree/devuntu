@@ -67,3 +67,6 @@ __pycache__/
 /public/agent/config.json
 /public/agent/agent.log
 /public/agent/agent.lock
+
+# Claude Code の個人用設定
+/CLAUDE.local.md
