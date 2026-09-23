@@ -65,15 +65,18 @@ export type GetServerInfoReturnType = Awaited<ReturnType<typeof getServerInfo>>[
 export const getReleaseNotes = safeAuthAction
   .metadata({ actionName: 'getReleaseNotes', role: 'user' })
   .action(async () => {
-    const res = await fetch('https://api.github.com/repos/playree/devuntu/releases', {
-      headers: {
-        Accept: 'application/vnd.github+json',
-        'X-GitHub-Api-Version': '2022-11-28',
+    const res = await fetch(
+      `https://api.github.com/repos/${envu.server.RELEASE_NOTES_REPO}/releases?per_page=${envu.server.RELEASE_NOTES_LIMIT}`,
+      {
+        headers: {
+          Accept: 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+        next: {
+          revalidate: 180,
+        },
       },
-      next: {
-        revalidate: 180,
-      },
-    })
+    )
     if (!res.ok) {
       return []
     }

@@ -240,3 +240,62 @@ describe('COMMAND_RUN_KEEP', () => {
     expect(() => envu.server.COMMAND_RUN_KEEP).toThrow()
   })
 })
+
+describe('RELEASE_NOTES_REPO', () => {
+  const originalRepo = process.env.RELEASE_NOTES_REPO
+
+  afterEach(() => {
+    if (originalRepo === undefined) {
+      delete process.env.RELEASE_NOTES_REPO
+    } else {
+      process.env.RELEASE_NOTES_REPO = originalRepo
+    }
+  })
+
+  it('未設定なら上流リポジトリ', () => {
+    delete process.env.RELEASE_NOTES_REPO
+    expect(envu.server.RELEASE_NOTES_REPO).toBe('playree/devuntu')
+  })
+
+  it('設定したリポジトリを返す', () => {
+    process.env.RELEASE_NOTES_REPO = ' example-org/devuntu.fork '
+    expect(envu.server.RELEASE_NOTES_REPO).toBe('example-org/devuntu.fork')
+  })
+
+  it.each(['https://github.com/example/devuntu', 'devuntu', 'example/devuntu/releases', 'example/dev untu'])(
+    'owner/repo 形式以外は起動時に弾く (%s)',
+    (value) => {
+      // 黙って取得に失敗すると、リリースノートが空になった理由に気づけない
+      process.env.RELEASE_NOTES_REPO = value
+      expect(() => envu.server.RELEASE_NOTES_REPO).toThrow()
+    },
+  )
+})
+
+describe('RELEASE_NOTES_LIMIT', () => {
+  const originalLimit = process.env.RELEASE_NOTES_LIMIT
+
+  afterEach(() => {
+    if (originalLimit === undefined) {
+      delete process.env.RELEASE_NOTES_LIMIT
+    } else {
+      process.env.RELEASE_NOTES_LIMIT = originalLimit
+    }
+  })
+
+  it('未設定なら20件', () => {
+    delete process.env.RELEASE_NOTES_LIMIT
+    expect(envu.server.RELEASE_NOTES_LIMIT).toBe(20)
+  })
+
+  it.each([1, 50, 100])('1〜100 の整数はそのまま返す (%i)', (value) => {
+    process.env.RELEASE_NOTES_LIMIT = String(value)
+    expect(envu.server.RELEASE_NOTES_LIMIT).toBe(value)
+  })
+
+  it.each(['0', '101', '1.5', 'abc'])('範囲外や整数以外は起動時に弾く (%s)', (value) => {
+    // GitHub API は100を超える per_page を黙って100に丸める
+    process.env.RELEASE_NOTES_LIMIT = value
+    expect(() => envu.server.RELEASE_NOTES_LIMIT).toThrow()
+  })
+})
