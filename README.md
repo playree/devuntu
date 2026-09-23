@@ -247,7 +247,8 @@ pnpm typecheck  # tsgo
 pnpm build      # ビルド確認
 ```
 
-コーディングルールは [CLAUDE.md](CLAUDE.md) を参照。
+ブランチ・コミット・Pull Request の出し方とコーディングルールは [CONTRIBUTING.md](CONTRIBUTING.md) を参照。  
+脆弱性の報告は公開の Issue にせず、[SECURITY.md](SECURITY.md) の手順で非公開に行ってください。
 
 # ライセンス
 

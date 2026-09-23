@@ -1,9 +1,6 @@
 # 基本ルール
 
 - 回答は日本語でお願い
-- コミットやPRの内容に個人情報やURLを載せないこと
-- PRの内容は簡潔に箇条書き程度にする
-- チケット対応の場合は、チケットIDでブランチを作成する(例 : `feature/DEV-1`)
 
 # プロジェクト概要
 
@@ -25,66 +22,27 @@ MCPサーバー・AIエージェント連携を備えたセルフホスト型の
 
 機能や仕様を調べるとき・変更したときは、対応するドキュメントを参照して更新する。
 
-| ファイル                                                       | 内容                                    |
-| -------------------------------------------------------------- | --------------------------------------- |
-| [README.md](README.md)                                         | 全体の入口。各ドキュメントへの索引      |
-| [docs/user-guide.md](docs/user-guide.md)                       | 画面ごとの使い方(利用者向け)            |
-| [docs/screens.md](docs/screens.md)                             | 画面・APIの一覧とアクセス制御           |
-| [docs/installation.md](docs/installation.md)                   | セルフホストの導入手順                  |
-| [docs/operations.md](docs/operations.md)                       | バックアップ/リストア・自動メンテナンス |
-| [docs/environment-variables.md](docs/environment-variables.md) | 環境変数の一覧                          |
-| [docs/development.md](docs/development.md)                     | 開発環境・ビルド・パッケージ管理        |
-| [docs/notifications.md](docs/notifications.md)                 | 通知(キュー・チャネル・Slack連携)の実装 |
-| [docs/mcp-server.md](docs/mcp-server.md)                       | MCPサーバーと認証経路・ツール一覧       |
-| [docs/agent-runner.md](docs/agent-runner.md)                   | AIエージェントの自動運用(Devuntu Agent) |
-| [docs/command-exec.md](docs/command-exec.md)                   | リモート実行(定義・SSH・権限)           |
+| ファイル                                                       | 内容                                                 |
+| -------------------------------------------------------------- | ---------------------------------------------------- |
+| [README.md](README.md)                                         | 全体の入口。各ドキュメントへの索引                   |
+| [docs/user-guide.md](docs/user-guide.md)                       | 画面ごとの使い方(利用者向け)                         |
+| [docs/screens.md](docs/screens.md)                             | 画面・APIの一覧とアクセス制御                        |
+| [docs/installation.md](docs/installation.md)                   | セルフホストの導入手順                               |
+| [docs/operations.md](docs/operations.md)                       | バックアップ/リストア・自動メンテナンス              |
+| [docs/environment-variables.md](docs/environment-variables.md) | 環境変数の一覧                                       |
+| [docs/development.md](docs/development.md)                     | 開発環境・ビルド・パッケージ管理                     |
+| [docs/notifications.md](docs/notifications.md)                 | 通知(キュー・チャネル・Slack連携)の実装              |
+| [docs/mcp-server.md](docs/mcp-server.md)                       | MCPサーバーと認証経路・ツール一覧                    |
+| [docs/agent-runner.md](docs/agent-runner.md)                   | AIエージェントの自動運用(Devuntu Agent)              |
+| [docs/command-exec.md](docs/command-exec.md)                   | リモート実行(定義・SSH・権限)                        |
+| [CONTRIBUTING.md](CONTRIBUTING.md)                             | 開発規約(ブランチ・コミット・PR・コーディングルール) |
+| [SECURITY.md](SECURITY.md)                                     | 脆弱性の報告方法                                     |
 
-# コーディングルール
+# 開発規約
 
-- コンポーネントは`src/components`配下に配置し、まずは既存の部品を利用できないか検討する
-- `MultiButton`のアイコンは`children`ではなく`icon`に指定する(`isPending`時のSpinner切替が効かなくなる為)
-- 外部ライブラリを追加する場合は事前に確認する
-- if文は必ず{}を利用する
-- Util系は`src/lib`配下に配置し、まずは既存のUtilを利用できないか検討する
-- `src/lib`配下でファイル数が増えたドメインは、接頭辞が共通する、または相互に強く依存するファイル群をサブディレクトリにまとめる(例: `agent-*.ts` → `agent/`)。ファイル名は変更しない
-- 汎用的で複数ドメインから参照される基盤ユーティリティ(day, logger, error, env-util等)や、単体で完結するファイルはトップレベルに残し、「utils」的な寄せ集めフォルダは作らない
-- 環境変数の参照は`src/lib/env-util.ts`を利用する
-- Server Actionsは基本的に利用するClientファイルと同じ階層の`server.ts`に配置する
-- `src/components/general`配下は共通部品として独立させたいので、このフォルダ内で完結するようにする
-- テストソースは`tests`配下に配置する
-- better-authをバージョンアップする場合には、ライブラリが要求するテーブル定義に変更が無いかをチェックする
-- コンパイル、ビルド確認は`pnpm build`
-- ソース修正後には`pnpm lint`と`pnpm typecheck`を実施する
-- 修正ファイルには`pnpm exec prettier --write`を実施する
-- classNameの外部定義はなるべく`tailwind-variants`を利用する
-- 1ファイルが肥大化しないように考慮する
-- コメントにはコードから復元可能な内容は書かない。変更履歴としての内容も不要。
-- ソースやテストに個人情報(氏名やメアド)を利用しない
-- `public/agent/devuntu_agent.py`を更新したら、中に定義されている`__version__`のバージョン情報をインクリメントすること
-- UIはスマホレイアウトも考慮する
-- `schema.prisma`を更新したら、`pnpm generate`を行うこと。
+ブランチ・コミット・PR・コーディングルールは CONTRIBUTING.md にまとめている。
 
-## tsxでのコメント
-
-わざわざ{}は使わず、下記のようにタグ内にコメントを記載する
-
-```tsx
-<Link // コメント
-  href='./test'
->
-```
-
-複数行の場合
-
-```tsx
-<Link
-  /**
-   * 複数行
-   * の場合
-   */
-  href='./test'
->
-```
+@CONTRIBUTING.md
 
 # 画面の動作確認
 

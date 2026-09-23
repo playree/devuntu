@@ -194,6 +194,10 @@ pnpm up -i
 pnpm up -i -L
 ```
 
+依存の更新は手動で行う。脆弱性のある依存は GitHub の Dependabot alerts で通知されるが、Dependabot による更新の Pull Request は作らない設定にしている(`dependabot.yml` は置かない)。通知が来たら上記の手順で該当パッケージを上げる。
+
+pnpm v12 の `pnpm-lock.yaml` は YAML の2ドキュメント構成(1つ目が pnpm 本体、2つ目がアプリの依存)で、GitHub の Dependency graph は1つ目しか読まない。そのため `main` のロックファイルが変わるたびに、`.github/workflows/dependency-submission.yml` が `scripts/submit-dependencies.mjs` で2つ目の依存を Dependency submission API へ送っている。送る内容は `node scripts/submit-dependencies.mjs --dry-run` で件数を確認できる。
+
 ### `pnpm outdated`に出るが上げないもの
 
 - **`prisma`** … `latest`のdist-tagが8系のRCを指している(`@prisma/client`の`latest`は7系)。`^7`の範囲では入らないので実害は無い。8系への移行はCLIとクライアントの安定版が揃ってから行う
