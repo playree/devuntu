@@ -262,14 +262,20 @@ describe('RELEASE_NOTES_REPO', () => {
     expect(envu.server.RELEASE_NOTES_REPO).toBe('example-org/devuntu.fork')
   })
 
-  it.each(['https://github.com/example/devuntu', 'devuntu', 'example/devuntu/releases', 'example/dev untu'])(
-    'owner/repo 形式以外は起動時に弾く (%s)',
-    (value) => {
-      // 黙って取得に失敗すると、リリースノートが空になった理由に気づけない
-      process.env.RELEASE_NOTES_REPO = value
-      expect(() => envu.server.RELEASE_NOTES_REPO).toThrow()
-    },
-  )
+  it.each([
+    'https://github.com/example/devuntu',
+    'devuntu',
+    'example/devuntu/releases',
+    'example/dev untu',
+    '../repo',
+    './repo',
+    'owner/..',
+    'owner/.',
+  ])('owner/repo 形式以外は起動時に弾く (%s)', (value) => {
+    // 黙って取得に失敗すると、リリースノートが空になった理由に気づけない
+    process.env.RELEASE_NOTES_REPO = value
+    expect(() => envu.server.RELEASE_NOTES_REPO).toThrow()
+  })
 })
 
 describe('RELEASE_NOTES_LIMIT', () => {

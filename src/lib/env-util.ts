@@ -115,7 +115,7 @@ const server = {
    */
   get RELEASE_NOTES_REPO() {
     const value = getEnv('RELEASE_NOTES_REPO', { default: 'playree/devuntu' }).trim()
-    if (!/^[\w.-]+\/[\w.-]+$/.test(value)) {
+    if (!/^[\w.-]+\/[\w.-]+$/.test(value) || value.split('/').some((s) => s === '.' || s === '..')) {
       throw errSystemError('RELEASE_NOTES_REPO must be owner/repo')
     }
     return value
