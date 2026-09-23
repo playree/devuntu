@@ -3,7 +3,7 @@
 > [!NOTE]
 > Contributions are welcome in English as well. The documentation is maintained in Japanese only.
 
-Devuntu への Issue・Pull Request を歓迎します。参加する方は [行動規範](CODE_OF_CONDUCT.md) に従ってください。
+Devuntu への Issue・Pull Request を歓迎します。
 
 脆弱性は公開の Issue にせず、[SECURITY.md](SECURITY.md) の手順で非公開に報告してください。
 
