@@ -47,6 +47,9 @@ next-env.d.ts
 /.work/
 /.plan/
 
+# GitHub Pages のソース(アプリ・イメージには不要)
+/site/
+
 # 以下は .gitignore と揃える。
 # builder ステージが `COPY . .` でコンテキスト全体を取り込むため、
 # 最終イメージに残らなくても builder レイヤには残る。

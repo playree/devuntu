@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Devuntu - セルフホスト型の開発サーバー構築ツール</title>
+    <meta
+      name="description"
+      content="Devuntu は、かんばん形式のボード/チケット管理を中心に、カレンダー連携、メール/Slack/Webプッシュ通知、MCP/AIエージェント連携、リモート実行などを備えたセルフホスト型の開発サーバー構築ツールです。"
+    />
+    <link rel="canonical" href="https://playree.github.io/devuntu/" />
+    <link rel="icon" type="image/png" href="assets/icon-192.png" />
+    <link rel="apple-touch-icon" href="assets/icon-192.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Devuntu" />
+    <meta
+      property="og:description"
+      content="かんばん・カレンダー・通知・MCP/AIエージェント連携・リモート実行を備えたセルフホスト型の開発サーバー構築ツール"
+    />
+    <meta property="og:url" content="https://playree.github.io/devuntu/" />
+    <meta property="og:image" content="https://playree.github.io/devuntu/assets/icon-512.png" />
+    <meta name="twitter:card" content="summary" />
+    <link rel="stylesheet" href="assets/style.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <div class="container">
+        <h1 class="logo">
+          <img src="assets/logo.png" alt="Devuntu" width="340" height="128" />
+        </h1>
+        <p class="lead">
+          かんばん形式のボード/チケット管理を中心に、カレンダー連携、メール/Slack/Webプッシュ通知、MCP/AIエージェント連携、リモート実行などを備えたセルフホスト型の開発サーバー構築ツール
+        </p>
+        <p class="lead-en" lang="en">
+          A self-hosted development server setup tool centered around Kanban-style board/ticket management.
+        </p>
+        <div class="actions">
+          <a class="button primary" href="https://github.com/playree/devuntu">GitHub でソースを見る</a>
+          <a class="button" href="https://hub.docker.com/r/playree/devuntu">Docker Hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="container">
+        <h2>できること</h2>
+        <ul class="features">
+          <li>
+            <h3>かんばんとチケット管理</h3>
+            <p>ボード、タグ、担当者、優先度、期日、コメント、メンション</p>
+          </li>
+          <li>
+            <h3>カレンダー連携</h3>
+            <p>Googleカレンダー連携と、認証不要な公開URLでの空き時間共有</p>
+          </li>
+          <li>
+            <h3>通知</h3>
+            <p>メンションや担当者変更をメール / Slack DM / Webプッシュで通知</p>
+          </li>
+          <li>
+            <h3>MCPサーバー</h3>
+            <p>AIエージェントから自分の権限でチケットを操作できる</p>
+          </li>
+          <li>
+            <h3>AIエージェントの自動運用</h3>
+            <p>AIエージェントを担当者として登録し、担当チケットを自動で処理させられる(Claude / Codex に対応)</p>
+          </li>
+          <li>
+            <h3>リモート実行</h3>
+            <p>定義済みの処理をリモートのサーバーで実行し、出力をリアルタイムで確認できる</p>
+          </li>
+          <li>
+            <h3>認証</h3>
+            <p>パスキー認証、Googleログイン。OAuthプロバイダとしても利用できる</p>
+          </li>
+        </ul>
+      </section>
+
+      <section class="container">
+        <h2>はじめる</h2>
+        <p>
+          Docker Compose で導入できます。手順は<a
+            href="https://github.com/playree/devuntu/blob/main/docs/installation.md"
+            >導入手順</a
+          >を、機能の詳細は<a href="https://github.com/playree/devuntu#readme">README</a>を参照してください。
+        </p>
+        <p class="note" lang="en">The documentation is available in Japanese only.</p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container">
+        <a href="https://github.com/playree/devuntu/blob/main/LICENSE">MIT License</a>
+        <span>&copy; 2026 Devuntu Contributors</span>
+      </div>
+    </footer>
+  </body>
+</html>
