@@ -194,6 +194,8 @@ pnpm up -i
 pnpm up -i -L
 ```
 
+依存の更新は手動で行う。脆弱性のある依存は GitHub の Dependabot alerts で通知されるが、Dependabot による更新の Pull Request は作らない設定にしている(`dependabot.yml` は置かない)。通知が来たら上記の手順で該当パッケージを上げる。
+
 ### `pnpm outdated`に出るが上げないもの
 
 - **`prisma`** … `latest`のdist-tagが8系のRCを指している(`@prisma/client`の`latest`は7系)。`^7`の範囲では入らないので実害は無い。8系への移行はCLIとクライアントの安定版が揃ってから行う

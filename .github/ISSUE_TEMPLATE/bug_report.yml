@@ -1,0 +1,59 @@
+name: バグ報告 / Bug report
+description: 不具合を報告する(English is welcome)
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        脆弱性は公開の Issue にせず、Security タブの「Report a vulnerability」から報告してください。
+        Please report vulnerabilities privately via the Security tab, not here.
+  - type: textarea
+    id: summary
+    attributes:
+      label: 事象
+      description: 何が起きたか
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現手順
+      placeholder: |
+        1. /boards を開く
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待する動作
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: バージョン
+      description: リリースのバージョン、または Docker イメージのタグ(`latest` / `edge` など)
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: 導入方法
+      options:
+        - Docker Compose
+        - ソースから起動
+        - その他
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: ブラウザ・端末
+      description: '画面の不具合の場合(例: Chrome / iPhone Safari)'
+  - type: textarea
+    id: logs
+    attributes:
+      label: ログ・スクリーンショット
+      description: 個人情報やトークン・秘密鍵などは伏せてください
+      render: text
