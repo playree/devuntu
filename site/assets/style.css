@@ -58,6 +58,7 @@ a {
 /* ロゴの文字色は紺なので、ダークモードでも読めるよう白地に載せる */
 .logo {
   display: inline-block;
+  margin: 0;
   padding: 8px 16px;
   border-radius: 16px;
   background: #ffffff;
