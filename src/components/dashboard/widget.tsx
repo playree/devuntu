@@ -26,8 +26,10 @@ import {
   getServerInfo,
   GetServerInfoReturnType,
 } from './server'
-
-type WidgetFC = FC<{ id: string; editable: boolean }>
+import { DueSoonWidget, DueSoonWidgetName } from './widgets/due-soon'
+import { MyTicketsWidget, MyTicketsWidgetName } from './widgets/my-tickets'
+import { TicketSummaryWidget, TicketSummaryWidgetName } from './widgets/ticket-summary'
+import { WidgetFC } from './widgets/widget-card'
 
 export type WidgetSet = {
   id: string
@@ -324,6 +326,18 @@ const BaseWidgetMap: Record<string, Omit<WidgetSet, 'id'>> = {
   announcement: {
     name: AnnouncementWidgetName,
     widget: AnnouncementWidget,
+  },
+  my_tickets: {
+    name: MyTicketsWidgetName,
+    widget: MyTicketsWidget,
+  },
+  due_soon: {
+    name: DueSoonWidgetName,
+    widget: DueSoonWidget,
+  },
+  ticket_summary: {
+    name: TicketSummaryWidgetName,
+    widget: TicketSummaryWidget,
   },
 } as const
 

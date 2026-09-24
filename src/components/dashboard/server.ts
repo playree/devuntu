@@ -1,6 +1,8 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action/action-server'
+import { countMyTicketsByStatus, listDueSoonTickets, listMyTickets } from '@/lib/board/ticket-widget'
+import { DEFAULT_TZ } from '@/lib/day'
 import { envu } from '@/lib/env-util'
 import { errCommunication } from '@/lib/error'
 import { getString } from '@/lib/kvs'
@@ -131,3 +133,27 @@ export const getLinodeTransferInfo = safeAuthAction
     }
   })
 export type GetLinodeTransferInfoReturnType = Awaited<ReturnType<typeof getLinodeTransferInfo>>['data']
+
+/**
+ * 自分の担当チケット取得(未完了・優先度順)
+ */
+export const getMyTickets = safeAuthAction
+  .metadata({ actionName: 'getMyTickets', role: 'user' })
+  .action(async ({ ctx: { user } }) => listMyTickets(user.id))
+export type GetMyTicketsReturnType = Awaited<ReturnType<typeof getMyTickets>>['data']
+
+/**
+ * 期限切れ・期限間近の担当チケット取得
+ */
+export const getDueSoonTickets = safeAuthAction
+  .metadata({ actionName: 'getDueSoonTickets', role: 'user' })
+  .action(async ({ ctx: { user } }) => listDueSoonTickets(user.id, user.timezone ?? DEFAULT_TZ))
+export type GetDueSoonTicketsReturnType = Awaited<ReturnType<typeof getDueSoonTickets>>['data']
+
+/**
+ * 担当チケットのステータス別件数取得
+ */
+export const getTicketSummary = safeAuthAction
+  .metadata({ actionName: 'getTicketSummary', role: 'user' })
+  .action(async ({ ctx: { user } }) => ({ counts: await countMyTicketsByStatus(user.id), selfUserId: user.id }))
+export type GetTicketSummaryReturnType = Awaited<ReturnType<typeof getTicketSummary>>['data']
