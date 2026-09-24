@@ -309,7 +309,7 @@ export const MultiTable = <T extends object>({
                 {({ sortDirection }) => (
                   <SortableColumnHeader sortDirection={sortDirection}>
                     {column.name}
-                    {column.minWidth && <Table.ColumnResizer />}
+                    {!!column.minWidth && <Table.ColumnResizer />}
                   </SortableColumnHeader>
                 )}
               </Table.Column>

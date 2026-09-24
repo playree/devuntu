@@ -4,7 +4,8 @@
  * `link_shared` イベントの入口。`/api/slack/events` はここだけを呼ぶ。
  *
  * unfurl はチャンネルの全員に見えるため、**リンクを貼った本人の閲覧権限**を必ず確認してから
- * 展開する。権限が無い / 未連携の場合は何もしない(URL のまま残る)。
+ * 展開する。権限が無い / 未連携 / 利用停止中の場合と、プライベートボードのチケットは
+ * 何もしない(URL のまま残る)。
  * 展開しないこと自体はエラーではないので、どの段階でも例外は投げない。
  */
 
@@ -74,10 +75,15 @@ const resolveSharedBy = async (slackUserId: string) => {
     return null
   }
 
-  return prisma.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { id: account.userId },
-    select: { id: true, role: true, locale: true },
+    select: { id: true, role: true, locale: true, banned: true },
   })
+  // 利用停止中の人は Web からは読めないので、Slack 経由でも中身を出さない
+  if (!user || user.banned) {
+    return null
+  }
+  return { id: user.id, role: user.role, locale: user.locale }
 }
 
 type SharedBy = NonNullable<Awaited<ReturnType<typeof resolveSharedBy>>>
@@ -104,11 +110,12 @@ const buildUnfurl = async (user: SharedBy, ref: TicketUrlRef) => {
       status: true,
       priority: true,
       dueDate: true,
-      board: { select: { key: true } },
+      board: { select: { key: true, kind: true } },
       assignee: { select: { name: true } },
     },
   })
-  if (!ticket) {
+  // プライベートボードは本人しか見られない。チャンネルの全員へ中身を見せることになるので展開しない
+  if (!ticket || ticket.board.kind === 'private') {
     return null
   }
 

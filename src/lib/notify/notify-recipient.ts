@@ -14,6 +14,7 @@
  */
 
 import type { NotifyEvent } from '@/generated/prisma/enums'
+import { getTicketAccess } from '../board/board'
 import { prisma } from '../prisma'
 import { getBoardNotifyChannels } from './notify-board-setting'
 import type { NotifyPayload } from './notify-payload'
@@ -34,15 +35,19 @@ export type ExplicitTargets = {
  * チケットの作成者。エージェントの実行結果を知りたいのは処理を依頼した本人。
  *
  * エージェント用ユーザーは DM を読まないので除く。チケットが削除済みなら辿れないので空になる
- * (配信は投入から遅れて走るため起こりうる)。
+ * (配信は投入から遅れて走るため起こりうる)。ボードから外れるなどして今はチケットを
+ * 閲覧できない作成者にも送らない(DM にチケットのタイトルや要約が載るため)。
  */
 const ticketRequesterIds = async (ticketId: string): Promise<string[]> => {
   const ticket = await prisma.ticket.findUnique({
     where: { id: ticketId },
-    select: { createdBy: { select: { id: true, isAgent: true } } },
+    select: { createdBy: { select: { id: true, role: true, isAgent: true } } },
   })
   const requester = ticket?.createdBy
-  return requester && !requester.isAgent ? [requester.id] : []
+  if (!requester || requester.isAgent) {
+    return []
+  }
+  return (await getTicketAccess(requester, ticketId))?.canView ? [requester.id] : []
 }
 
 /**

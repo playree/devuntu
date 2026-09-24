@@ -11,7 +11,7 @@
 
 import { Prisma } from '@/generated/prisma/client'
 import type { BoardKind, TicketStatus } from '@/generated/prisma/enums'
-import { isAgentApprover } from '../agent/agent-approver'
+import { approvableAgentWhere, isAgentApprover } from '../agent/agent-approver'
 import { nowDate } from '../day'
 import { errClient, errInvalidOperation } from '../error'
 import { isUniqueViolation, prisma } from '../prisma'
@@ -601,6 +601,9 @@ export const reassignContentAttachments = async (
  *
  * アクセス不可を未存在と区別せずに潰すことで、短縮URLが「そのチケットが在るか」と
  * 内部 ID を答えてしまわないようにする。
+ *
+ * ボードのメンバーでなくても、担当エージェントの承認者はそのチケットを閲覧できるので、
+ * ボードに入れない場合はチケット単位の閲覧権限で判定し直す。
  */
 export const findTicketIdByDisplayId = async (actor: Actor, raw: string): Promise<string | null> => {
   const parsed = parseTicketDisplayId(raw)
@@ -611,15 +614,47 @@ export const findTicketIdByDisplayId = async (actor: Actor, raw: string): Promis
   if (!board) {
     return null
   }
-  const access = await getBoardAccess(actor, board.id)
-  if (!access) {
-    return null
-  }
   const ticket = await prisma.ticket.findUnique({
     where: { boardId_number: { boardId: board.id, number: parsed.number } },
     select: { id: true },
   })
-  return ticket?.id ?? null
+  if (!ticket) {
+    return null
+  }
+  if (await getBoardAccess(actor, board.id)) {
+    return ticket.id
+  }
+  return (await getTicketAccess(actor, ticket.id))?.canView ? ticket.id : null
+}
+
+/**
+ * 添付を配信してよいか。配信API と MCP の画像取得で共通に使う。
+ *
+ * ボードに属さない添付(お知らせ / リンクウィジェットのアイコン)は全ログインユーザーへ配信する。
+ * ボードのメンバーでない承認者には、承認対象(担当が自分の承認するエージェント)のチケット本文か
+ * そのコメントから参照されている添付だけを許す。ボード単位で許すと、同じボードの無関係な
+ * チケットの画像までキーさえ分かれば読めてしまう。
+ */
+export const canViewAttachment = async (
+  actor: Actor,
+  attachment: { key: string; boardId: string | null },
+): Promise<boolean> => {
+  const { key, boardId } = attachment
+  if (!boardId) {
+    return true
+  }
+  if (await getBoardAccess(actor, boardId)) {
+    return true
+  }
+  const url = toUploadUrl(key)
+  const count = await prisma.ticket.count({
+    where: {
+      boardId,
+      assignee: approvableAgentWhere(actor.id),
+      OR: [{ content: { contains: url } }, { comments: { some: { content: { contains: url } } } }],
+    },
+  })
+  return count > 0
 }
 
 export type TicketAccess = TicketPermission & {

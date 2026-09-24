@@ -83,7 +83,8 @@ const slackDmTargets = async (userIds: string[], event: NotifyEvent): Promise<st
     // 切り詰めの順序を固定する
     orderBy: { id: 'asc' },
   })
-  return accounts.map(({ userId }) => userId)
+  // 1人が複数の Slack アカウントを連携していると行が重複し、同じ DM が複数届いてしまう
+  return [...new Set(accounts.map(({ userId }) => userId))]
 }
 
 /**

@@ -1,5 +1,5 @@
 import { getServerSession } from '@/lib/auth/auth'
-import { getBoardAccess } from '@/lib/board/board'
+import { canViewAttachment } from '@/lib/board/board'
 import { prisma } from '@/lib/prisma'
 import { getObject } from '@/lib/storage/storage'
 import { isValidUploadKey } from '@/lib/storage/upload'
@@ -11,7 +11,8 @@ import { NextResponse } from 'next/server'
  * オブジェクトストレージへ直リンクさせず必ずここを通すことで、参照にも
  * ログイン認証を強制する(署名付きURLは使わないのでURLが漏れても読めない)。
  *
- * さらに添付先ボード(Attachment.boardId)があるものはそのボードの可視判定も通す。
+ * さらに添付先ボード(Attachment.boardId)があるものはそのボードの可視判定も通す
+ * (承認者の扱いは `canViewAttachment`)。
  * ログイン済みなら誰でも読めると、プライベートボードのチケットに貼った画像が
  * URL さえ知られれば他ユーザーから読めてしまうため。
  * boardId が null のものはボードに属さない本文(お知らせ / リンクウィジェットのアイコン)なので
@@ -39,7 +40,7 @@ export const GET = async (_req: Request, { params }: { params: Promise<{ filenam
   }
 
   // アクセス不可は未存在と区別せず 404 にして、キーの当たり判定を返さない
-  if (attachment.boardId && !(await getBoardAccess(session.user, attachment.boardId))) {
+  if (!(await canViewAttachment(session.user, { key: filename, boardId: attachment.boardId }))) {
     return new NextResponse(null, { status: 404 })
   }
 

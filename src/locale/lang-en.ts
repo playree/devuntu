@@ -449,6 +449,7 @@ Please copy and use the connection information above.
 *The secret cannot be retrieved later.`,
   msg_added_passkey: 'Passkey registered.',
   msg_added_passkey_description: 'Edit the name as needed.',
+  msg_passkey_failed: 'Passkey operation failed. Please try again.',
   msg_added_target: 'Added ${target}.',
   msg_agent_approver_desc:
     'Only approvers can change the agent mode of a ticket. If an agent has no approvers, nobody can change its agent mode.',

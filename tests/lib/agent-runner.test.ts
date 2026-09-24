@@ -27,7 +27,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('@/lib/notify/notify-trigger', () => ({ enqueueAgentRunFinished: vi.fn() }))
 
 vi.mock('@/lib/prisma', () => {
-  const ticket = { findMany: vi.fn(), findUnique: vi.fn(), update: vi.fn(), updateMany: vi.fn() }
+  const ticket = { findMany: vi.fn(), findFirst: vi.fn(), findUnique: vi.fn(), update: vi.fn(), updateMany: vi.fn() }
   const ticketComment = { findFirst: vi.fn() }
   const agentRun = {
     count: vi.fn(),
@@ -261,6 +261,20 @@ describe('pickAgentTasks', () => {
       }),
     )
   })
+
+  it('アーカイブ済みのボードと、エージェントがメンバーでないボードは除く', async () => {
+    ticket.findMany.mockResolvedValueOnce([] as never)
+    await pickAgentTasks(runner())
+
+    const where = ticket.findMany.mock.calls[0][0]?.where
+    expect(where?.board).toEqual({
+      archived: false,
+      OR: [
+        { members: { some: { userId: 'a1' } } },
+        { groups: { some: { group: { userGroups: { some: { userId: 'a1' } } } } } },
+      ],
+    })
+  })
 })
 
 describe('failStaleAgentRuns', () => {
@@ -355,20 +369,23 @@ describe('resolveAgentTask', () => {
   })
 
   it('処理中のチケットは開始時のアクションのまま返す(待ち行列には載らない)', async () => {
-    ticket.findUnique.mockResolvedValueOnce(row({ agentState: 'running' }) as never)
+    ticket.findFirst.mockResolvedValueOnce(row({ agentState: 'running' }) as never)
     agentRun.findFirst.mockResolvedValueOnce({ action: 'revise' } as never)
 
     expect(await resolveAgentTask(runner(), 't1')).toMatchObject({ action: 'revise', state: 'running' })
   })
 
-  it('完了済みのチケットは対象外', async () => {
-    ticket.findUnique.mockResolvedValueOnce(row({ status: 'done' }) as never)
+  it('処理してよい条件(担当・オプトイン・未完了・ボード)を満たさなければ対象外', async () => {
+    ticket.findFirst.mockResolvedValueOnce(null as never)
 
     expect(await resolveAgentTask(runner(), 't1')).toBeNull()
+    expect(ticket.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ id: 't1', assigneeId: 'a1' }) }),
+    )
   })
 
   it('返信待ちのチケットは対象外', async () => {
-    ticket.findUnique.mockResolvedValueOnce(row({ agentState: 'planned' }) as never)
+    ticket.findFirst.mockResolvedValueOnce(row({ agentState: 'planned' }) as never)
     ticketComment.findFirst.mockResolvedValueOnce(null as never)
 
     expect(await resolveAgentTask(runner(), 't1')).toBeNull()
@@ -446,20 +463,15 @@ describe('startAgentRun', () => {
     ...override,
   })
 
-  it('担当外のチケットは開始できない', async () => {
-    ticket.findUnique.mockResolvedValueOnce(openTicket({ assigneeId: 'other' }) as never)
+  it('処理してよい条件を満たさないチケットは開始できない', async () => {
+    ticket.findFirst.mockResolvedValueOnce(null as never)
 
     expect(await startAgentRun(runner(), 't1', 'plan')).toEqual({ ok: false, reason: 'ticket_not_available' })
-  })
-
-  it('オプトインされていないチケットは開始できない', async () => {
-    ticket.findUnique.mockResolvedValueOnce(openTicket({ agentMode: null }) as never)
-
-    expect(await startAgentRun(runner(), 't1', 'plan')).toEqual({ ok: false, reason: 'ticket_not_available' })
+    expect(agentRun.create).not.toHaveBeenCalled()
   })
 
   it('実行を記録してチケットを処理中にする', async () => {
-    ticket.findUnique.mockResolvedValueOnce(openTicket() as never)
+    ticket.findFirst.mockResolvedValueOnce(openTicket() as never)
     agentRun.create.mockResolvedValueOnce({ id: 'run1' } as never)
 
     expect(await startAgentRun(runner(), 't1', 'plan')).toEqual({
@@ -475,7 +487,7 @@ describe('startAgentRun', () => {
   })
 
   it('上限が無制限なら件数を数えずに開始する', async () => {
-    ticket.findUnique.mockResolvedValueOnce(openTicket() as never)
+    ticket.findFirst.mockResolvedValueOnce(openTicket() as never)
     agentRun.create.mockResolvedValueOnce({ id: 'run1' } as never)
 
     expect(await startAgentRun(runner({ dailyRunLimit: 0 }), 't1', 'plan')).toEqual({
@@ -486,7 +498,7 @@ describe('startAgentRun', () => {
   })
 
   it('上限に達していれば実行を作成しない(チェックと作成を同一トランザクションで行う)', async () => {
-    ticket.findUnique.mockResolvedValueOnce(openTicket() as never)
+    ticket.findFirst.mockResolvedValueOnce(openTicket() as never)
     agentRun.count.mockResolvedValueOnce(5)
 
     const result = await startAgentRun(runner({ dailyRunLimit: 5 }), 't1', 'plan', jst('14:00'))
@@ -502,7 +514,7 @@ describe('startAgentRun', () => {
   })
 
   it('上限未達なら件数を数えたうえで実行を作成する', async () => {
-    ticket.findUnique.mockResolvedValueOnce(openTicket() as never)
+    ticket.findFirst.mockResolvedValueOnce(openTicket() as never)
     agentRun.count.mockResolvedValueOnce(4)
     agentRun.create.mockResolvedValueOnce({ id: 'run1' } as never)
 

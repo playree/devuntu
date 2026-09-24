@@ -21,6 +21,12 @@ import { Table } from '@heroui/react'
 import { FC } from 'react'
 import { UpdatePasskeyModal } from './modals'
 
+/**
+ * 認証器のダイアログを閉じたときに返るコード。ブラウザの NotAllowedError(キャンセル・時間切れ)は
+ * `@simplewebauthn/browser` が ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY として素通しする
+ */
+const PASSKEY_CANCEL_CODES = ['ERROR_CEREMONY_ABORTED', 'ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY']
+
 export const MyPasskey: FC = () => {
   const { t } = useLocale()
   const tz = useUserTimezone()
@@ -30,8 +36,10 @@ export const MyPasskey: FC = () => {
   const list = usePagingList({
     load: async () => {
       const res = await authClient.passkey.listUserPasskeys()
+      if (res.error) {
+        notify.warn(t('msg_passkey_failed'))
+      }
       if (res.data) {
-        console.debug(res.data)
         return res.data.map(({ id, name, aaguid, createdAt }) => ({
           id,
           name: name ?? '',
@@ -55,13 +63,18 @@ export const MyPasskey: FC = () => {
             const { data, error } = await authClient.passkey.addPasskey({
               authenticatorAttachment: 'platform',
             })
-            console.debug('addPasskey', { data, error })
             if (data?.id) {
               notify.success(t('msg_added_passkey'), { description: t('msg_added_passkey_description') })
               list.reload()
+              return
             }
             if (error?.status === 403) {
               await reAuth()
+              return
+            }
+            // 認証器のダイアログを閉じた場合は本人の操作なので通知しない
+            if (error && !('code' in error && PASSKEY_CANCEL_CODES.includes(error.code))) {
+              notify.warn(t('msg_passkey_failed'))
             }
           }}
         >
@@ -103,10 +116,12 @@ export const MyPasskey: FC = () => {
                   target: item.name || item.authenticator,
                   action: async () => {
                     const { data } = await authClient.passkey.deletePasskey({ id: item.id })
-                    if (data) {
-                      notify.success(t('msg_deleted_target', { target: item.name || item.authenticator }))
-                      list.reload()
+                    if (!data) {
+                      notify.warn(t('msg_passkey_failed'))
+                      return
                     }
+                    notify.success(t('msg_deleted_target', { target: item.name || item.authenticator }))
+                    list.reload()
                   },
                 },
               ]}

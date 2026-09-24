@@ -303,25 +303,28 @@ export const useWidgetMap = () => {
   const [widgetMap, setWidgetMap] = useState<Record<string, Omit<WidgetSet, 'id'>>>(BaseWidgetMap)
 
   useEffect(() => {
-    parseAction(getOtherWidgets()).then((otherWidgets) => {
-      const otherWidgetMap = Object.fromEntries(
-        otherWidgets.linkWidgets.map((link) => [`link:${link.id}`, createLinkWidgetSet(link)]),
-      )
-      if (otherWidgets.enabledLinodeTransferInfo) {
-        otherWidgetMap['linode_transfer_info'] = {
-          name: LinodeTransferInfoWidgetName,
-          widget: LinodeTransferInfoWidget,
+    parseAction(getOtherWidgets())
+      .then((otherWidgets) => {
+        const otherWidgetMap = Object.fromEntries(
+          otherWidgets.linkWidgets.map((link) => [`link:${link.id}`, createLinkWidgetSet(link)]),
+        )
+        if (otherWidgets.enabledLinodeTransferInfo) {
+          otherWidgetMap['linode_transfer_info'] = {
+            name: LinodeTransferInfoWidgetName,
+            widget: LinodeTransferInfoWidget,
+          }
         }
-      }
-      if (otherWidgets.enabledAgentWidgets) {
-        otherWidgetMap['agent_approvals'] = { name: AgentApprovalsWidgetName, widget: AgentApprovalsWidget }
-        otherWidgetMap['agent_runs'] = { name: AgentRunsWidgetName, widget: AgentRunsWidget }
-      }
-      if (otherWidgets.enabledCommandRuns) {
-        otherWidgetMap['command_runs'] = { name: CommandRunsWidgetName, widget: CommandRunsWidget }
-      }
-      setWidgetMap({ ...BaseWidgetMap, ...otherWidgetMap })
-    })
+        if (otherWidgets.enabledAgentWidgets) {
+          otherWidgetMap['agent_approvals'] = { name: AgentApprovalsWidgetName, widget: AgentApprovalsWidget }
+          otherWidgetMap['agent_runs'] = { name: AgentRunsWidgetName, widget: AgentRunsWidget }
+        }
+        if (otherWidgets.enabledCommandRuns) {
+          otherWidgetMap['command_runs'] = { name: CommandRunsWidgetName, widget: CommandRunsWidget }
+        }
+        setWidgetMap({ ...BaseWidgetMap, ...otherWidgetMap })
+      })
+      // 失敗の通知は parseAction が済ませている。組み込みの Widget だけで表示を続ける
+      .catch(() => {})
   }, [])
 
   return widgetMap

@@ -1,33 +1,31 @@
 'use server'
 
 import { safeAction } from '@/lib/action/action-server'
+import { ADVISORY_LOCK_KEYS, withAdvisoryLock } from '@/lib/advisory-lock'
 import { auth } from '@/lib/auth/auth'
 import { errInvalidOperation, errSystemError } from '@/lib/error'
+import { hasCompletedInitialSetup } from '@/lib/initial-setup'
 import { logger } from '@/lib/logger'
-import { prisma } from '@/lib/prisma'
 import { scCreateAdmin } from '@/lib/schema/schema'
-
-export const hasCompletedInitialSetup = async () => {
-  const userCount = await prisma.user.count()
-  return userCount > 0
-}
 
 export const createAdmin = safeAction
   .metadata({ actionName: 'createAdmin' })
   .inputSchema(scCreateAdmin)
   .action(async ({ parsedInput: { name, email, password } }) => {
-    if (await hasCompletedInitialSetup()) {
-      throw errInvalidOperation()
-    }
+    // 同時に送られると両方が「未セットアップ」と判定して管理者が複数作られるので、判定と作成を直列化する
+    const { user } = await withAdvisoryLock(ADVISORY_LOCK_KEYS.initialSetup, async (tx) => {
+      if (await hasCompletedInitialSetup(tx)) {
+        throw errInvalidOperation()
+      }
 
-    // 管理者登録
-    const { user } = await auth.api.createUser({
-      body: {
-        email,
-        password,
-        name,
-        role: 'admin',
-      },
+      return auth.api.createUser({
+        body: {
+          email,
+          password,
+          name,
+          role: 'admin',
+        },
+      })
     })
 
     if (!user) {

@@ -1,7 +1,7 @@
 'use client'
 
 import { Button, Chip, cn, InputGroup, InputGroupProps, Label, TextField } from '@heroui/react'
-import { FC, SVGProps, useState } from 'react'
+import { FC, SVGProps, useEffect, useRef, useState } from 'react'
 import { useIsSmart } from './smart'
 
 const EyeIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
@@ -121,6 +121,9 @@ export const CopyableField: FC<
   const [isVisible, setIsVisible] = useState(false)
   const toggleVisibility = () => setIsVisible(!isVisible)
   const [isCopied, setIsCopied] = useState(false)
+  // 「コピーしました」を戻すタイマー。表示中に閉じられたモーダルなどでアンマウント後に setState しないよう片付ける
+  const copiedTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  useEffect(() => () => clearTimeout(copiedTimer.current), [])
 
   return (
     <TextField
@@ -180,7 +183,8 @@ export const CopyableField: FC<
                   return
                 }
                 setIsCopied(true)
-                setTimeout(() => setIsCopied(false), 2000)
+                clearTimeout(copiedTimer.current)
+                copiedTimer.current = setTimeout(() => setIsCopied(false), 2000)
                 if (onCopied) {
                   onCopied()
                 }

@@ -2,12 +2,14 @@
 
 import { authClient } from '@/lib/auth/auth-client'
 import { cn, Spinner } from '@heroui/react'
+import { FC, ReactNode } from 'react'
 
-export const getPendding = () => {
+/** セッションを取得できるまでは待機表示を出し、取得できたら children を描画する */
+export const SessionPending: FC<{ children: ReactNode }> = ({ children }) => {
   const { data: session } = authClient.useSession()
 
   if (session?.user) {
-    return null
+    return children
   }
 
   return (

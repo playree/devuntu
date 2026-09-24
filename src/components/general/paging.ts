@@ -85,8 +85,9 @@ export const sortFunction: AsyncListLoadFunction<Record<string, unknown>, string
   items: T[]
   sortDescriptor?: SortDescriptor
 }) => {
+  // useAsyncList が持つ配列をそのまま並べ替えると state を書き換えてしまうので、複製してから並べる
   return {
-    items: items.sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
+    items: [...items].sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
       let cmp = 0
       if (sortDescriptor) {
         const { column, direction } = sortDescriptor
@@ -96,7 +97,7 @@ export const sortFunction: AsyncListLoadFunction<Record<string, unknown>, string
 
           // string
           if (typeof acol === 'string' && typeof bcol === 'string') {
-            cmp = acol == bcol ? 0 : acol < bcol ? -1 : 1
+            cmp = acol.localeCompare(bcol)
           }
           // number
           else if (typeof acol === 'number' && typeof bcol === 'number') {
@@ -108,7 +109,8 @@ export const sortFunction: AsyncListLoadFunction<Record<string, unknown>, string
           }
           // Date
           else if (acol instanceof Date && bcol instanceof Date) {
-            cmp = acol == bcol ? 0 : acol < bcol ? -1 : 1
+            // == は参照の比較になるので、同じ時刻でも別インスタンスだと等しくならない
+            cmp = acol.getTime() - bcol.getTime()
           }
           //
           else if (!acol || !bcol) {

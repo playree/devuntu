@@ -9,7 +9,8 @@
 import { Prisma } from '@/generated/prisma/client'
 import type { AgentRunAction, AgentRunStatus, AgentTaskMode, AgentTaskState } from '@/generated/prisma/enums'
 import { OPEN_TICKET_STATUSES, ticketDisplayId } from '../board/task'
-import { addDaysDateOnly, DEFAULT_TZ, minToHHmm, nowDate, toZone, zonedMinutes } from '../day'
+import { addDaysDateOnly, minToHHmm, nowDate, toZone, zonedMinutes } from '../day'
+import { envu } from '../env-util'
 import { logger } from '../logger'
 import { MAX_NOTIFY_RECIPIENTS } from '../notify/notify'
 import { type AgentRunNotification, enqueueAgentRunFinished } from '../notify/notify-trigger'
@@ -66,6 +67,10 @@ export const findAgentRunner = async (userId: string): Promise<AgentRunnerRow | 
 
 type ActiveWindow = Pick<AgentRunnerRow, 'activeFromMin' | 'activeToMin' | 'timezone'>
 
+/** 時間帯の判定に使うタイムゾーン。ランナーに未設定ならサーバーの既定(`DEFAULT_TIMEZONE`) */
+const runnerTimezone = (window: Pick<AgentRunnerRow, 'timezone'>): string =>
+  window.timezone ?? envu.server.DEFAULT_TIMEZONE
+
 /**
  * 稼働許可時間帯の内側かどうか。
  *
@@ -77,7 +82,7 @@ export const isWithinActiveWindow = (window: ActiveWindow, now: Date = nowDate()
   if (from === null || to === null || from === to) {
     return true
   }
-  const zoned = toZone(now, window.timezone ?? DEFAULT_TZ)
+  const zoned = toZone(now, runnerTimezone(window))
   const current = zoned.hour() * 60 + zoned.minute()
   return from < to ? current >= from && current < to : current >= from || current < to
 }
@@ -88,7 +93,7 @@ export const activeWindowLabel = (window: ActiveWindow): { from: string; to: str
   if (from === null || to === null || from === to) {
     return null
   }
-  return { from: minToHHmm(from), to: minToHHmm(to), timezone: window.timezone ?? DEFAULT_TZ }
+  return { from: minToHHmm(from), to: minToHHmm(to), timezone: runnerTimezone(window) }
 }
 
 /** 処理上限の消化状況。上限が無制限のときは持たない */
@@ -123,7 +128,7 @@ type DailyWindow = Pick<AgentRunnerRow, 'dailyResetMin' | 'timezone'>
  * 0 に戻る時刻で、上限に達したときに「いつ再開するか」を伝えるために返す。
  */
 export const dailyRunWindow = (window: DailyWindow, now: Date = nowDate()): { since: Date; resetAt: Date } => {
-  const tz = window.timezone ?? DEFAULT_TZ
+  const tz = runnerTimezone(window)
   const today = toZone(now, tz).format('YYYY-MM-DD')
   const todayReset = zonedMinutes(today, window.dailyResetMin, tz)
   const startDate = todayReset.valueOf() <= now.getTime() ? today : addDaysDateOnly(today, -1)
@@ -388,17 +393,31 @@ export const failStaleAgentRuns = async (runnerId: string, now: Date = nowDate()
 }
 
 /**
+ * エージェントが処理してよいチケットの条件。待ち行列・名指し・開始時の確認で共通に使う。
+ *
+ * 「担当がこのエージェント」かつ「`agentMode` が指定済み(オプトイン)」かつ「未完了」に加えて、
+ * ボードが未アーカイブで、エージェント自身がそのボードのメンバー(直接 / グループ経由)であること。
+ * 担当のまま外されたボードやアーカイブ済みのボードでは、エージェントはチケットを読み書きできない。
+ */
+const agentWorkableTicketWhere = (userId: string): Prisma.TicketWhereInput => ({
+  assigneeId: userId,
+  agentMode: { not: null },
+  status: { in: [...OPEN_TICKET_STATUSES] },
+  board: {
+    archived: false,
+    OR: [{ members: { some: { userId } } }, { groups: { some: { group: { userGroups: { some: { userId } } } } } }],
+  },
+})
+
+/**
  * 処理すべきチケットの一覧。
  *
- * 拾う条件は「担当がこのエージェント」かつ「`agentMode` が指定済み(オプトイン)」かつ「未完了」。
  * `running` は処理中なので拾わない(時間切れ分は `failStaleAgentRuns` が先に解除している)。
  */
 export const pickAgentTasks = async (runner: AgentRunnerRow): Promise<AgentTask[]> => {
   const tickets = await prisma.ticket.findMany({
     where: {
-      assigneeId: runner.userId,
-      agentMode: { not: null },
-      status: { in: [...OPEN_TICKET_STATUSES] },
+      ...agentWorkableTicketWhere(runner.userId),
       OR: [{ agentState: null }, { agentState: { in: ['queued', 'planned'] } }],
     },
     select: agentTicketSelect,
@@ -426,13 +445,11 @@ export const pickAgentTasks = async (runner: AgentRunnerRow): Promise<AgentTask[
  * 待ち行列(`pickAgentTasks`)とは別に、処理中のものも解決できる経路を用意する。
  */
 export const resolveAgentTask = async (runner: AgentRunnerRow, ticketId: string): Promise<AgentTask | null> => {
-  const ticket = await prisma.ticket.findUnique({ where: { id: ticketId }, select: agentTicketSelect })
-  if (
-    !ticket ||
-    ticket.assigneeId !== runner.userId ||
-    ticket.agentMode === null ||
-    !(OPEN_TICKET_STATUSES as readonly string[]).includes(ticket.status)
-  ) {
+  const ticket = await prisma.ticket.findFirst({
+    where: { id: ticketId, ...agentWorkableTicketWhere(runner.userId) },
+    select: agentTicketSelect,
+  })
+  if (!ticket || ticket.agentMode === null) {
     return null
   }
 
@@ -443,18 +460,13 @@ export const resolveAgentTask = async (runner: AgentRunnerRow, ticketId: string)
 /** 対象チケット1件分の情報。実行の開始・終了で共通に使う */
 export type AgentTicket = { id: string; displayId: string; mode: AgentTaskMode; state: AgentTaskState | null }
 
-/**
- * エージェントが処理してよいチケットかを確かめる。
- * 担当がこのエージェントで、かつオプトイン(`agentMode` 指定済み)のものだけを返す。
- */
+/** エージェントが処理してよいチケットかを確かめる。条件は `agentWorkableTicketWhere` */
 export const findAgentTicket = async (userId: string, ticketId: string): Promise<AgentTicket | null> => {
-  const ticket = await prisma.ticket.findUnique({ where: { id: ticketId }, select: agentTicketSelect })
-  if (
-    !ticket ||
-    ticket.assigneeId !== userId ||
-    ticket.agentMode === null ||
-    !(OPEN_TICKET_STATUSES as readonly string[]).includes(ticket.status)
-  ) {
+  const ticket = await prisma.ticket.findFirst({
+    where: { id: ticketId, ...agentWorkableTicketWhere(userId) },
+    select: agentTicketSelect,
+  })
+  if (!ticket || ticket.agentMode === null) {
     return null
   }
   return {

@@ -181,7 +181,7 @@ export const InputCtrlPassword = <
           </TextField>
         )}
       />
-      {requiredPasswordScore && (
+      {!!requiredPasswordScore && (
         <PasswordScore
           label={`${t('password_score')} = ${passwordScore} ( ${t('password_score_required', { score: requiredPasswordScore })} )`}
           score={passwordScore}
