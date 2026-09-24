@@ -297,12 +297,21 @@ const createLinkWidgetSet = (link: LinkWidgetData): Omit<WidgetSet, 'id'> => {
       </>
     )
 
+    // チケット系ウィジェットの行(RowLink)と同じくマウスオーバーで背景を付ける。
+    // 負の margin で打ち消し、見た目の位置と高さは従来どおりに保つ
+    const className = '-mx-2 flex items-center gap-2 rounded-lg px-2 py-1.5 font-bold'
+
     return (
-      <Card ref={ref} className='w-full gap-1 py-4'>
+      <Card ref={ref} className='w-full gap-1 py-2.5'>
         {editable ? (
-          <div className='flex items-center gap-2 font-bold'>{Content}</div>
+          <div className={className}>{Content}</div>
         ) : (
-          <Link href={link.url} target='_blank' rel='noopener noreferrer' className='flex items-center gap-2 font-bold'>
+          <Link
+            href={link.url}
+            target='_blank'
+            rel='noopener noreferrer'
+            className={`${className} hover:bg-default/40`}
+          >
             {Content}
           </Link>
         )}
