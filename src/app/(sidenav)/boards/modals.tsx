@@ -38,10 +38,8 @@ export const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
           reload()
           state.close()
         } catch (e) {
-          // キーは全ボードで一意。他のボードが使っている場合は入力し直してもらう
-          if (e instanceof ClientError && e.errorType === 'DUPLICATED_BOARD_KEY') {
-            notify.warn(t('msg_duplicated_board_key'))
-          } else {
+          // キーの重複などは parseAction が通知済み。入力し直してもらうため画面はそのまま残す
+          if (!(e instanceof ClientError)) {
             throw e
           }
         }

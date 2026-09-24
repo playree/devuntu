@@ -244,6 +244,12 @@ export const MAX_BOARD_KEY = 8
  */
 export const BOARD_KEY_PATTERN = /^[A-Z][A-Z0-9]{1,7}$/
 
+/** ボードキーの重複(DB の @unique 違反)。画面側で分岐するため 'use client' の付かないここに置く */
+export const DUPLICATED_BOARD_KEY = 'DUPLICATED_BOARD_KEY'
+
+/** 同じボード内でのタグ名の重複(DB の @@unique([boardId, name]) 違反) */
+export const DUPLICATED_TAG_NAME = 'DUPLICATED_TAG_NAME'
+
 /** プライベートボードのキーの接頭辞。利用者は入力せず PRV<連番> で自動採番する */
 export const PRIVATE_BOARD_KEY_PREFIX = 'PRV'
 

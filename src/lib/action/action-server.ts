@@ -3,7 +3,7 @@ import { createMiddleware, createSafeActionClient } from 'next-safe-action'
 import { headers } from 'next/headers'
 import z from 'zod'
 import { auth } from '../auth/auth'
-import { ClientError, errInvalidSession, errPermissionDenied } from '../error'
+import { ClientError, errInvalidSession, errPermissionDenied, SYSTEM_ERROR } from '../error'
 import { logger } from '../logger'
 
 const normalMetaSc = z.object({ actionName: z.string() })
@@ -45,7 +45,7 @@ export const handleServerError = (error: Error) => {
   // システムエラー系
   logger.error(error)
   return {
-    errorType: 'SYSTEM_ERROR',
+    errorType: SYSTEM_ERROR,
     message: 'Internal Server Error',
   }
 }

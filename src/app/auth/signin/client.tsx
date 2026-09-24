@@ -24,7 +24,7 @@ import { parseAction } from '@/lib/action/action-client'
 import { authClient } from '@/lib/auth/auth-client'
 import { authConfig } from '@/lib/auth/auth-config'
 import { makePath, navigateAfterAuth, safeCallbackPath } from '@/lib/client-utils'
-import { ClientError, TOO_MANY_REQUESTS } from '@/lib/error'
+import { ClientError } from '@/lib/error'
 import {
   Otp,
   scOtp,
@@ -82,10 +82,8 @@ const UsernameForm: FC<{
               next(input.username, res.next)
             }
           } catch (e) {
-            // 時間をおけば再試行できるので画面はそのまま残す
-            if (e instanceof ClientError && e.errorType === TOO_MANY_REQUESTS) {
-              notify.warn(t('msg_too_many_requests'))
-            } else {
+            // レート制限などは parseAction が通知済み。時間をおけば再試行できるので画面はそのまま残す
+            if (!(e instanceof ClientError)) {
               throw e
             }
           }

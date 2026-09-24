@@ -2,7 +2,7 @@
 
 import { notify } from '@/components/notify'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { errClient } from '../error'
+import { errClient, SYSTEM_ERROR, VALIDATION_ERROR } from '../error'
 import { intervalOperation } from '../sleep'
 
 type MarkDataResolved<T> = T & {
@@ -28,25 +28,70 @@ export function checkError<T extends { data?: unknown; serverError?: unknown; va
   }
 }
 
+/**
+ * 失敗の通知を受け持つ関数。文言の翻訳や再認証の誘導にフックが要るため、
+ * Providers 配下のコンポーネント(ActionErrorNotifier)が登録する。
+ */
+export type ActionErrorNotifier = (errorType: string) => void
+let actionErrorNotifier: ActionErrorNotifier | undefined
+export const setActionErrorNotifier = (notifier: ActionErrorNotifier | undefined) => {
+  actionErrorNotifier = notifier
+}
+const notifyActionError = (errorType: string) => {
+  if (actionErrorNotifier) {
+    actionErrorNotifier(errorType)
+  } else {
+    notify.error('Error', { description: errorType })
+  }
+}
+
+export type ParseActionOptions = {
+  /** 実行が速すぎるときに待つ最小時間(ms)。ボタンのスピナーが一瞬で消えるのを防ぐ */
+  wait?: number
+  /**
+   * 呼び出し側が自分で扱う ClientError の errorType。これらは通知せずに throw だけする。
+   * 'all' はすべての ClientError を通知しない(取得系で、失敗を画面の表示で伝える場合など)。
+   * システムエラー・入力検証エラーは常に通知する。
+   */
+  handled?: readonly string[] | 'all'
+}
+
+/**
+ * Server Action の結果を解釈してデータを返す。
+ * 失敗時(応答を受け取れなかった場合を含む)は通知(または再認証の誘導)をしてから throw する。ClientError は errorType 付きで throw するので、
+ * 個別に扱う場合は `handled` に errorType を渡し、catch で `e.errorType` を見て分岐する。
+ */
 export const parseAction = async <
   T extends { data?: unknown; serverError?: { name?: string; errorType: string }; validationErrors?: unknown },
 >(
   res: Promise<T>,
-  wait: number = 300,
+  { wait = 300, handled }: ParseActionOptions = {},
 ) => {
   const start = performance.now()
-  const result = await res
+  let result: T
+  try {
+    result = await res
+  } catch (e) {
+    // 通信断などで応答自体を受け取れなかった
+    console.error('action failed', e)
+    notifyActionError(SYSTEM_ERROR)
+    throw e
+  }
   const execTime = ~~(performance.now() - start)
   console.debug('action exec', execTime)
 
   if (result.serverError?.name === 'ClientError') {
+    const { errorType } = result.serverError
     console.debug(result.serverError)
-    throw errClient(result.serverError.errorType)
+    if (handled !== 'all' && !handled?.includes(errorType)) {
+      notifyActionError(errorType)
+    }
+    throw errClient(errorType)
   }
 
   if (result.serverError || result.validationErrors) {
-    notify.error('Error', { description: 'An error has occurred' })
     console.error('action error', result.serverError || result.validationErrors)
+    notifyActionError(result.serverError?.errorType ?? VALIDATION_ERROR)
     throw new Error()
   }
 
@@ -65,7 +110,8 @@ export const parseAction = async <
 /**
  * サーバーアクションをマウント時に実行し、結果を返す。
  * reload で再取得でき、isLoading で取得中かどうかを判定できる。
- * エラー時は parseAction が throw / notify するため data は undefined のまま。
+ * エラー時は data が undefined のまま。ClientError は通知しない(権限が無い等は呼び出し側が
+ * data の有無で画面に出す)ため、通知するのはシステムエラーだけ。
  * action は毎レンダー再生成されるインライン関数でもよい(常に最新のものを呼ぶ)。
  * ただし action が参照する値の変化では自動再取得しないため、必要なら reload を呼ぶ。
  *
@@ -91,7 +137,7 @@ export const useActionData = <T>(action: () => Promise<ActionResult<T>>) => {
     if (!silent) {
       isPendingLoadingRef.current = true
     }
-    return parseAction(actionRef.current())
+    return parseAction(actionRef.current(), { handled: 'all' })
       .then((res) => {
         if (gen === genRef.current) {
           setData(res)

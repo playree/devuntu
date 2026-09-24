@@ -478,6 +478,7 @@ Please copy and use the connection information above.
   msg_calendar_share_unavailable: 'This shared calendar is currently unavailable.',
   msg_calendar_share_url_rotated: 'A new share URL has been issued. The previous URL is no longer valid.',
   msg_cannot_delete_last_admin: 'Cannot delete the last admin.',
+  msg_communication_error: 'Failed to communicate with an external service. Please try again later.',
   msg_confirm_archive_board: 'Archive ${target}.',
   msg_confirm_delete_board: 'Delete ${target}. All tickets and comments in this board will also be deleted.',
   msg_confirm_delete_mcp_token: 'Deleting it immediately stops any connection using this token.',
@@ -494,7 +495,6 @@ Please copy and use the connection information above.
   msg_consent_unverified_client:
     'This app registered itself automatically and has not been approved by an administrator. Authorize it only if you started this from an action you recognize.',
   msg_delete_board: 'All tickets and comments in the board are deleted as well. This cannot be undone.',
-  msg_delete_failed_target: 'Failed to delete ${target}.',
   msg_deleted_target: 'Deleted ${target}.',
   msg_drop_image: 'Drop an image here, or click to select',
   msg_duplicated_token_name: 'A token with this name already exists.',
@@ -515,6 +515,8 @@ Please copy and use the connection information above.
   msg_group_assign_admin_only: 'Only administrators can change group assignments.',
   msg_image_upload_failed: 'Failed to upload the image.',
   msg_invalid_email_or_password: 'Invalid email or password.',
+  msg_invalid_operation: 'This operation cannot be performed. Reload the page and try again.',
+  msg_invalid_session: 'Your session is invalid. Please sign in again.',
   msg_link_google_for_calendar:
     'Calendar sharing requires a linked Google account. Please link it on the account page.',
   msg_mcp_token_desc:
@@ -532,6 +534,8 @@ Please copy and use the connection information above.
   msg_no_due_soon_tickets: 'No overdue or upcoming tickets.',
   msg_no_mentions: 'No mentions.',
   msg_no_recent_activity: 'No recently updated tickets.',
+  msg_system_error: 'An error has occurred. Please try again later.',
+  msg_validation_error: 'The input is invalid.',
   msg_widget_load_failed: 'Could not load. Please reload after a while.',
   msg_no_matching_assignees: 'No matching assignees.',
   msg_no_matching_users: 'No matching users.',

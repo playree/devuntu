@@ -1,3 +1,4 @@
+import { ClientError } from '@/lib/error'
 import { useLocale } from '@/locale/client'
 import { ButtonProps, Table } from '@heroui/react'
 import { FC, ReactNode } from 'react'
@@ -47,6 +48,11 @@ export const ActionCell: FC<{
                     })
                     if (ok) {
                       await action()
+                    }
+                  } catch (e) {
+                    // 削除できない理由は parseAction が通知済み
+                    if (!(e instanceof ClientError)) {
+                      throw e
                     }
                   } finally {
                     confirmModal().close()

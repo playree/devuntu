@@ -35,7 +35,7 @@ export const AdminCommandTargetClient: FC<{ targetKey: string }> = ({ targetKey 
 
   // グループの保存と合わせてリロードできるよう、ここで生成して TargetMembers へ渡す
   const memberList = usePagingList({
-    load: async () => (await parseAction(getCommandTargetMembersAction({ targetKey }))) ?? [],
+    load: async () => (await parseAction(getCommandTargetMembersAction({ targetKey }), { handled: 'all' })) ?? [],
     sort: { init: { column: 'name', direction: 'ascending' } },
   })
 
@@ -43,7 +43,7 @@ export const AdminCommandTargetClient: FC<{ targetKey: string }> = ({ targetKey 
     return <PanelSkeleton />
   }
 
-  // parseAction は ClientError を notify せず throw するため、ここで明示的に表示する
+  // useActionData は ClientError を通知しないため、取得できなかったことをここで表示する
   if (!assignments) {
     return (
       <FlexCol>

@@ -8,6 +8,7 @@ import { CheckIcon, PencilSquareIcon, TrashIcon, XMarkIcon } from '@/components/
 import { notify } from '@/components/notify'
 import type { TagColor } from '@/generated/prisma/enums'
 import { MAX_TAG_NAME, MAX_TAGS_PER_SCOPE, TAG_COLORS } from '@/lib/board/task'
+import { ClientError } from '@/lib/error'
 import { useLocale } from '@/locale/client'
 import { FC, useState } from 'react'
 import { tv } from 'tailwind-variants'
@@ -65,7 +66,15 @@ const TagRowForm: FC<{
     if (!trimmed) {
       return
     }
-    await onSubmit({ name: trimmed, color, order: Number(order) || 0 })
+    try {
+      await onSubmit({ name: trimmed, color, order: Number(order) || 0 })
+    } catch (e) {
+      // 名前の重複などは parseAction が通知済み。直して再送できるよう入力は残す
+      if (e instanceof ClientError) {
+        return
+      }
+      throw e
+    }
     if (!initial) {
       // 新規作成のときは続けて入力できるよう名前だけ空に戻す
       setName('')
@@ -152,6 +161,10 @@ export const TagEditor: FC<{
       if (ok) {
         await onDelete(tag)
         notify.success(t('msg_deleted_target', { target: tag.name }))
+      }
+    } catch (e) {
+      if (!(e instanceof ClientError)) {
+        throw e
       }
     } finally {
       confirmModal().close()

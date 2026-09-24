@@ -142,9 +142,8 @@ export const UpdateModal: FC<ModalBaseProps & { target: UpdateUser; groupOptions
           reload()
           state.close()
         } catch (e) {
-          if (e instanceof ClientError && e.errorType === 'CANNOT_DELETE_LAST_ADMIN') {
-            notify.warn(t('msg_cannot_delete_last_admin'))
-          } else {
+          // 最後の管理者の降格などは parseAction が通知済み。修正できるよう画面はそのまま残す
+          if (!(e instanceof ClientError)) {
             throw e
           }
         }

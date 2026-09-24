@@ -4,7 +4,6 @@ import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
 import { NoticePanel } from '@/components/general/panel'
 import { ArrowTopRightOnSquareIcon, PuzzlePieceIcon, ShieldCheckIcon, XMarkIcon } from '@/components/icon'
-import { notify } from '@/components/notify'
 import { SingleLayout } from '@/components/single-layout'
 import { parseAction } from '@/lib/action/action-client'
 import { authClient } from '@/lib/auth/auth-client'
@@ -59,7 +58,6 @@ export const ConsentClient: FC<{
       setPending(undefined)
       if (e instanceof ClientError && e.errorType === CONSENT_INVALID) {
         setIsInvalid(true)
-        notify.warn(t('msg_consent_invalid'))
         return
       }
       throw e

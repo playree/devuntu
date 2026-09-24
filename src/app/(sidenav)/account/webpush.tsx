@@ -133,7 +133,7 @@ export const WebPushSettings: FC<{
         // 権限の拒否ではブラウザ側の購読に触れていないので、消す対象も無い
         if (result.reason === 'failed' && staleDevice) {
           // 消せなくても登録の失敗を伝えたいので、通知は上書きしない
-          await parseAction(deleteWebPushDevice({ id: staleDevice.id })).catch(console.error)
+          await parseAction(deleteWebPushDevice({ id: staleDevice.id }), { handled: 'all' }).catch(console.error)
         }
         notify.error(t(result.reason === 'blocked' ? 'msg_webpush_blocked' : 'msg_webpush_failed'))
         // 拒否された場合は権限が変わっているので読み直す
@@ -154,15 +154,14 @@ export const WebPushSettings: FC<{
   const remove = async (id: string, endpoint: string) => {
     setIsPending(true)
     try {
+      // 行の削除に失敗した場合の通知は parseAction が出す
       await parseAction(deleteWebPushDevice({ id }))
       // 行を消してからブラウザ側を解除する(逆順だと送信先が死んでいる行が残りうる)
       await unsubscribeLocalPush(endpoint)
       notify.success(t('msg_deleted_target', { target: t('notify_webpush_devices') }))
       await Promise.all([refreshDevices(), reloadLocalState()])
     } catch (error) {
-      // `parseAction` は `ClientError` を通知せずに throw するので、ここで拾わないと画面に何も出ない
       console.error(error)
-      notify.error(t('msg_delete_failed_target', { target: t('notify_webpush_devices') }))
     } finally {
       setIsPending(false)
     }

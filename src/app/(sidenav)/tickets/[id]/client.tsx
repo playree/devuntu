@@ -135,7 +135,7 @@ export const TicketDetailClient: FC<{
   const [isSavingContent, setSavingContent] = useState(false)
 
   useEffect(() => {
-    parseAction(getTicketFormOptions())
+    parseAction(getTicketFormOptions(), { handled: 'all' })
       .then(setOptions)
       .catch(() => setOptions(undefined))
   }, [])
@@ -148,7 +148,7 @@ export const TicketDetailClient: FC<{
     }
     // ボードが変わったときに古い要求が後着しうるので、対象が変わった結果は捨てる
     let isCurrent = true
-    parseAction(getAssigneeOptions({ id: boardId }))
+    parseAction(getAssigneeOptions({ id: boardId }), { handled: 'all' })
       .then((res) => isCurrent && setBoardAssignees(res ?? []))
       .catch(() => isCurrent && setBoardAssignees([]))
     return () => {
@@ -269,7 +269,7 @@ export const TicketDetailClient: FC<{
     return <PanelSkeleton />
   }
 
-  // parseAction は ClientError を notify せず throw するため、ここで明示的に表示する
+  // useActionData は ClientError を通知しないため、取得できなかったことをここで表示する
   if (!ticket) {
     return (
       <FlexCol>

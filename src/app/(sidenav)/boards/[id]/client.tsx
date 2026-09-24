@@ -16,7 +16,6 @@ import {
   FunnelIcon,
   ViewColumnsIcon,
 } from '@/components/icon'
-import { notify } from '@/components/notify'
 import { useBoardName } from '@/components/ticket/ticket-chip'
 import { UserSelectOption } from '@/components/user-select'
 import type { TicketStatus } from '@/generated/prisma/enums'
@@ -73,7 +72,7 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
   const visibleLanes = useMemo(() => filterLaneMap(lanes, filter, nowDate()), [lanes, filter])
 
   useEffect(() => {
-    parseAction(getTicketFormOptions())
+    parseAction(getTicketFormOptions(), { handled: 'all' })
       .then(setOptions)
       .catch(() => setOptions(undefined))
   }, [])
@@ -81,7 +80,7 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
   useEffect(() => {
     // ボードを続けて切り替えると古い要求が後着しうるので、対象が変わった結果は捨てる
     let isCurrent = true
-    parseAction(getAssigneeOptions({ id: boardId }))
+    parseAction(getAssigneeOptions({ id: boardId }), { handled: 'all' })
       .then((res) => isCurrent && setAssigneeOptions(res ?? []))
       .catch(() => isCurrent && setAssigneeOptions([]))
     return () => {
@@ -109,8 +108,6 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
       // 再取得すれば optimistic.base !== data になり楽観値も自動で破棄される
       // (巻き戻しのために盤面をスケルトンへ差し替える必要はないので silent な refresh を使う)
       refresh()
-      // parseAction は ClientError を notify せず throw するため、ここで明示的に表示する
-      notify.error(t('error'))
     }
   }
 

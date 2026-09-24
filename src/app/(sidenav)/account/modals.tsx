@@ -13,9 +13,7 @@ import { notify } from '@/components/notify'
 import { TokenExpiresSelect } from '@/components/token-expires-select'
 import { parseAction } from '@/lib/action/action-client'
 import { authClient } from '@/lib/auth/auth-client'
-import { SESSION_NOT_FRESH } from '@/lib/auth/auth-config'
-import { useReAuth } from '@/lib/auth/use-re-auth'
-import { ClientError, TOO_MANY_REQUESTS } from '@/lib/error'
+import { ClientError } from '@/lib/error'
 import {
   DUPLICATED_MCP_TOKEN_NAME,
   MAX_MCP_TOKENS_PER_USER,
@@ -105,7 +103,6 @@ type Step = {
  */
 export const IssueMcpTokenModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, reload, baseUrl }) => {
   const { t, fet } = useLocale()
-  const reAuth = useReAuth()
   const [step, setStep] = useState<Step>({ id: 'INPUT', direction: 0 })
   const [issued, setIssued] = useState<string>()
 
@@ -134,7 +131,9 @@ export const IssueMcpTokenModal: FC<ModalBaseProps & { baseUrl: string }> = ({ s
       state={state}
       onSubmit={handleSubmit(async (req) => {
         try {
-          const res = await parseAction(issueMcpToken(req))
+          const res = await parseAction(issueMcpToken(req), {
+            handled: [DUPLICATED_MCP_TOKEN_NAME, MCP_TOKEN_LIMIT_REACHED],
+          })
           setIssued(res.token)
           setStep({ id: 'OUTPUT', direction: 1 })
         } catch (e) {
@@ -150,15 +149,9 @@ export const IssueMcpTokenModal: FC<ModalBaseProps & { baseUrl: string }> = ({ s
               notify.warn(t('msg_mcp_token_limit', { max: MAX_MCP_TOKENS_PER_USER }))
               close()
               return
-            case TOO_MANY_REQUESTS:
-              // 時間をおけば同じ入力で再試行できるのでモーダルは閉じない
-              notify.warn(t('msg_too_many_requests'))
-              return
-            case SESSION_NOT_FRESH:
-              await reAuth()
-              return
             default:
-              throw e
+              // 通知・再認証の誘導は parseAction が済ませている。同じ入力で再試行できるようモーダルは閉じない
+              return
           }
         }
       })}

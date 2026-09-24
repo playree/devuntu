@@ -34,7 +34,7 @@ export const AgentSections: FC<{
     isLoading: isRunnerLoading,
   } = useActionData(() => getAgentRunner({ id: agentId }))
   const runHistoryList = usePagingList({
-    load: async () => (await parseAction(getAgentRuns({ id: agentId }))) ?? [],
+    load: async () => (await parseAction(getAgentRuns({ id: agentId }), { handled: 'all' })) ?? [],
     sort: { init: { column: 'startedAt', direction: 'descending' } },
   })
 

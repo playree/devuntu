@@ -17,6 +17,7 @@ import { errClient, errInvalidOperation } from '../error'
 import { isUniqueViolation, prisma } from '../prisma'
 import { extractUploadKeys, toUploadUrl } from '../storage/upload'
 import {
+  DUPLICATED_BOARD_KEY,
   evaluateTicketAccess,
   insertAt,
   kanbanDoneSince,
@@ -50,9 +51,6 @@ export type BoardAccess = {
   via: 'member' | 'group'
   archived: boolean
 }
-
-/** 重複するボードキーは DB の @unique で弾かれる。クライアントへ専用コードで返す */
-const DUPLICATED_BOARD_KEY = 'DUPLICATED_BOARD_KEY'
 
 /** キー重複の一意制約違反を DUPLICATED_BOARD_KEY へ変換して再 throw する */
 export const rethrowDuplicatedBoardKey = (e: unknown): never => {

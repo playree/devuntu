@@ -10,9 +10,7 @@ import { notify } from '@/components/notify'
 import { RoleChip } from '@/components/role-chip'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { SESSION_NOT_FRESH } from '@/lib/auth/auth-config'
-import { useReAuth } from '@/lib/auth/use-re-auth'
-import { COMMAND_DEF_CONFLICT, COMMAND_DEF_NOT_EDITABLE, COMMAND_DEF_READ_ONLY } from '@/lib/command/command'
-import { ClientError, TOO_MANY_REQUESTS } from '@/lib/error'
+import { ClientError } from '@/lib/error'
 import { useLocale } from '@/locale/client'
 import { Chip } from '@heroui/react'
 import { useRouter } from 'next/navigation'
@@ -34,7 +32,6 @@ import {
 export const CommandTargetClient: FC<{ targetKey: string }> = ({ targetKey }) => {
   const { t } = useLocale()
   const router = useRouter()
-  const reAuth = useReAuth()
   const { data, isLoading, reload } = useActionData(() => getCommandTargetDetailAction({ targetKey }))
   const defModalState = useModalState<CommandDefTarget>()
   const { confirmModal } = useConfirmModal()
@@ -44,7 +41,7 @@ export const CommandTargetClient: FC<{ targetKey: string }> = ({ targetKey }) =>
    * 編集モーダルは、書き換えてよい相手かをサーバーへ確かめてから開く。
    *
    * 保存時に再認証を求められると画面を離れることになり、書いた内容が失われる。
-   * 連打で `reAuth` が二重に走ると確認モーダルが使用中で落ちるため、確認中は弾く。
+   * 失敗の通知・再認証の誘導は parseAction が行う。
    */
   const openDefModal = async (command: CommandDefView | null) => {
     if (!data || checking) {
@@ -52,18 +49,15 @@ export const CommandTargetClient: FC<{ targetKey: string }> = ({ targetKey }) =>
     }
     setChecking({ commandId: command?.id ?? null })
     try {
-      await parseAction(checkCommandDefEditableAction({ targetKey }), 0)
+      await parseAction(checkCommandDefEditableAction({ targetKey }), { wait: 0 })
     } catch (e) {
       if (!(e instanceof ClientError)) {
         throw e
       }
-      if (e.errorType === SESSION_NOT_FRESH) {
-        await reAuth()
-        return
+      if (e.errorType !== SESSION_NOT_FRESH) {
+        // 権限やカタログの状態が変わっている。開かずに読み直す
+        await reload()
       }
-      // 権限やカタログの状態が変わっている。開かずに読み直す
-      notify.warn(t('command_def_not_editable'))
-      await reload()
       return
     } finally {
       setChecking(null)
@@ -101,24 +95,8 @@ export const CommandTargetClient: FC<{ targetKey: string }> = ({ targetKey }) =>
       if (!(e instanceof ClientError)) {
         throw e
       }
-      switch (e.errorType) {
-        case COMMAND_DEF_CONFLICT:
-          notify.warn(t('command_def_conflict'))
-          break
-        case COMMAND_DEF_NOT_EDITABLE:
-          notify.warn(t('command_def_not_editable'))
-          break
-        case COMMAND_DEF_READ_ONLY:
-          notify.warn(t('command_def_read_only'))
-          break
-        case TOO_MANY_REQUESTS:
-          notify.warn(t('msg_too_many_requests'))
-          break
-        case SESSION_NOT_FRESH:
-          await reAuth()
-          return
-        default:
-          throw e
+      if (e.errorType === SESSION_NOT_FRESH) {
+        return
       }
     }
     await reload()
@@ -128,7 +106,7 @@ export const CommandTargetClient: FC<{ targetKey: string }> = ({ targetKey }) =>
     return <PanelSkeleton />
   }
 
-  // parseAction は ClientError を notify せず throw するため、ここで明示的に表示する
+  // useActionData は ClientError を通知しないため、取得できなかったことをここで表示する
   if (!data) {
     return (
       <FlexCol>
