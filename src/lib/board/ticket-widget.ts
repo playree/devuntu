@@ -49,7 +49,7 @@ const toWidgetTicket = ({ board, number, ...ticket }: WidgetTicketRow) => ({
 })
 
 /** 可視ボードの一覧。プライベートチケットもボード経由で可視化するため、先にプライベートボードを用意する */
-const resolveAccessibleBoardIds = async (userId: string) => {
+export const resolveAccessibleBoardIds = async (userId: string) => {
   await ensurePrivateBoard({ id: userId })
   return getAccessibleBoardIds(userId)
 }

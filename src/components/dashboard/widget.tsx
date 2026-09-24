@@ -30,7 +30,9 @@ import { AgentApprovalsWidget, AgentApprovalsWidgetName } from './widgets/agent-
 import { AgentRunsWidget, AgentRunsWidgetName } from './widgets/agent-runs'
 import { CommandRunsWidget, CommandRunsWidgetName } from './widgets/command-runs'
 import { DueSoonWidget, DueSoonWidgetName } from './widgets/due-soon'
+import { MentionsWidget, MentionsWidgetName } from './widgets/mentions'
 import { MyTicketsWidget, MyTicketsWidgetName } from './widgets/my-tickets'
+import { RecentActivityWidget, RecentActivityWidgetName } from './widgets/recent-activity'
 import { TicketSummaryWidget, TicketSummaryWidgetName } from './widgets/ticket-summary'
 import { WidgetFC } from './widgets/widget-card'
 
@@ -341,6 +343,14 @@ const BaseWidgetMap: Record<string, Omit<WidgetSet, 'id'>> = {
   ticket_summary: {
     name: TicketSummaryWidgetName,
     widget: TicketSummaryWidget,
+  },
+  mentions: {
+    name: MentionsWidgetName,
+    widget: MentionsWidget,
+  },
+  recent_activity: {
+    name: RecentActivityWidgetName,
+    widget: RecentActivityWidget,
   },
 } as const
 

@@ -2,6 +2,7 @@
 
 import { safeAuthAction } from '@/lib/action/action-server'
 import { canUseAgentWidgets, listPendingApprovalTickets, listRecentAgentRuns } from '@/lib/agent/agent-widget'
+import { listMentions, listRecentActivity } from '@/lib/board/activity-widget'
 import { countMyTicketsByStatus, listDueSoonTickets, listMyTickets } from '@/lib/board/ticket-widget'
 import { canUseAnyCommand } from '@/lib/command/command-access'
 import { listMyRecentCommandRuns } from '@/lib/command/command-widget'
@@ -167,6 +168,22 @@ export const getTicketSummary = safeAuthAction
   .metadata({ actionName: 'getTicketSummary', role: 'user' })
   .action(async ({ ctx: { user } }) => ({ counts: await countMyTicketsByStatus(user.id), selfUserId: user.id }))
 export type GetTicketSummaryReturnType = Awaited<ReturnType<typeof getTicketSummary>>['data']
+
+/**
+ * 自分宛てのメンション(チケット本文・コメント)取得
+ */
+export const getMentions = safeAuthAction
+  .metadata({ actionName: 'getMentions', role: 'user' })
+  .action(async ({ ctx: { user } }) => listMentions(user.id))
+export type GetMentionsReturnType = Awaited<ReturnType<typeof getMentions>>['data']
+
+/**
+ * アクセスできるボードの最近更新されたチケット取得
+ */
+export const getRecentActivity = safeAuthAction
+  .metadata({ actionName: 'getRecentActivity', role: 'user' })
+  .action(async ({ ctx: { user } }) => listRecentActivity(user.id))
+export type GetRecentActivityReturnType = Awaited<ReturnType<typeof getRecentActivity>>['data']
 
 /**
  * 承認者になっているエージェントの承認待ちチケット取得

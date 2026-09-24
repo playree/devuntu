@@ -95,7 +95,7 @@ EOF
 **`POSTGRES_PASSWORD` は初回起動より後には変えられない。** postgres は最初の起動でボリュームを
 初期化し、そのときのパスワードを保持する。変えるには `pgdata` ボリュームを作り直す。
 
-`prisma/migrations` は `schema.prisma` から生成したフルDDL 1本(`0_init`)だけを持つ。
+`prisma/migrations` は `schema.prisma` から生成したフルDDL(`0_init`)をベースラインに、以降のスキーマ変更を差分マイグレーションとして積む。
 
 ## 同一PCでの並行clone(エージェント開発用など)
 
