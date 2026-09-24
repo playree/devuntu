@@ -1,4 +1,4 @@
-import { assertReplyTarget, reassignContentAttachments } from '@/lib/board/board'
+import { assertBoardAccess, assertReplyTarget, reassignContentAttachments } from '@/lib/board/board'
 import { ClientError } from '@/lib/error'
 import { toUploadUrl } from '@/lib/storage/upload'
 import { describe, expect, it, vi } from 'vitest'
@@ -111,5 +111,46 @@ describe('reassignContentAttachments', () => {
       select: { id: true },
     })
     expect(tx.attachment.updateMany).toHaveBeenCalled()
+  })
+})
+
+/** 'write' は 'view' に「アーカイブ済みでない」を足したもの。チケット作成と添付の入口で使う */
+describe('assertBoardAccess', () => {
+  const boardTx = (board: { archived: boolean; role: 'owner' | 'member' } | null) =>
+    ({
+      board: {
+        findUnique: vi.fn().mockResolvedValue(
+          board && {
+            id: 'board-1',
+            kind: 'team',
+            archived: board.archived,
+            members: [{ role: board.role }],
+            groups: [],
+          },
+        ),
+      },
+    }) as never
+  const actor = { id: 'u1', role: null }
+
+  it('write はメンバーかつ未アーカイブなら通す', async () => {
+    await expect(
+      assertBoardAccess(actor, 'board-1', 'write', boardTx({ archived: false, role: 'member' })),
+    ).resolves.toMatchObject({ boardId: 'board-1', role: 'member' })
+  })
+
+  it('write はアーカイブ済みボードを拒否する(オーナーでも)', async () => {
+    await expect(
+      assertBoardAccess(actor, 'board-1', 'write', boardTx({ archived: true, role: 'owner' })),
+    ).rejects.toThrow(ClientError)
+  })
+
+  it('view はアーカイブ済みボードでも通す', async () => {
+    await expect(
+      assertBoardAccess(actor, 'board-1', 'view', boardTx({ archived: true, role: 'member' })),
+    ).resolves.toMatchObject({ archived: true })
+  })
+
+  it('write はメンバーでなければ拒否する', async () => {
+    await expect(assertBoardAccess(actor, 'board-1', 'write', boardTx(null))).rejects.toThrow(ClientError)
   })
 })

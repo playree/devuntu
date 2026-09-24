@@ -1,35 +1,27 @@
 import type { TicketCommentType, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
-import {
-  assertBoardAccess,
-  assertBoardAssignee,
-  assertReplyTarget,
-  assertTicketAccess,
-  findTicketIdByDisplayId,
-  getAccessibleBoardIds,
-  getBoardMentionCandidates,
-  getTicketMentionCandidates,
-  moveTicketToLane,
-  nextTicketNumber,
-  reassignContentAttachments,
-} from '@/lib/board/board'
-import { assertTagIdsInBoard, syncTicketTags } from '@/lib/board/tag'
+import { assertTicketAccess, findTicketIdByDisplayId, getAccessibleBoardIds } from '@/lib/board/board'
 import {
   buildTicketWhere,
   canMcpDeleteTicket,
   canMcpUpdateTicket,
-  extractMentionEmails,
-  nextOrder,
   parseTicketDisplayId,
-  resolveMentionUserIds,
   ticketDisplayId,
   ticketListOrderBy,
   ticketShortPath,
 } from '@/lib/board/task'
-import { dateOnlyToUtc, nowDate } from '@/lib/day'
+import {
+  addComment,
+  createTicket,
+  type CreateTicketInput,
+  deleteComment,
+  deleteTicket,
+  updateComment,
+  updateTicket,
+  type UpdateTicketInput,
+} from '@/lib/board/ticket-mutation'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { resolveBoardId } from '@/lib/mcp/mcp-board'
-import { enqueueTicketCommented, enqueueTicketCreated, enqueueTicketUpdated } from '@/lib/notify/notify-trigger'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import { prisma } from '@/lib/prisma'
 import { makeUrl } from '@/lib/server-utils'
@@ -172,93 +164,23 @@ export const searchTicketsForMcp = async (auth: ResourceAuth, input: McpTicketSe
   }))
 }
 
-export type McpCreateTicketInput = {
+export type McpCreateTicketInput = Omit<CreateTicketInput, 'boardId'> & {
   /** ボードID またはボードキー(例: ABC) */
   boardId: string
-  title: string
-  content?: string
-  status?: TicketStatus
-  priority?: TicketPriority
-  dueDate?: string | null
-  assigneeId?: string | null
-  tagIds?: string[]
 }
 
 /**
  * MCP経由のチケット作成。追加制限は無く、Web版の createTicket アクションと同じ権限判定を使う。
  */
 export const createTicketForMcp = async (auth: ResourceAuth, input: McpCreateTicketInput) => {
-  const { title, content, status = 'todo', priority = 'medium', dueDate, assigneeId, tagIds = [] } = input
   const boardId = await resolveBoardId(input.boardId)
-
-  const ticket = await prisma.$transaction(async (tx) => {
-    const board = await assertBoardAccess(auth.user, boardId, 'view', tx)
-    if (board.archived) {
-      throw errInvalidOperation()
-    }
-    await assertBoardAssignee(tx, boardId, assigneeId)
-    const ids = await assertTagIdsInBoard(tx, boardId, tagIds)
-
-    const number = await nextTicketNumber(tx, boardId)
-    const lane = await tx.ticket.aggregate({ where: { boardId, status }, _max: { order: true } })
-
-    const candidates = await getBoardMentionCandidates(boardId, tx)
-    const mentionedUserIds = resolveMentionUserIds(extractMentionEmails(content ?? ''), candidates)
-    await reassignContentAttachments(tx, content, boardId, auth.user)
-
-    const created = await tx.ticket.create({
-      data: {
-        boardId,
-        title,
-        content,
-        status,
-        priority,
-        dueDate: dateOnlyToUtc(dueDate),
-        completedAt: status === 'done' ? nowDate() : null,
-        createdById: auth.user.id,
-        assigneeId: assigneeId ?? null,
-        number,
-        mentionedUserIds,
-        tags: { create: ids.map((tagId) => ({ tagId })) },
-        order: nextOrder(lane._max.order === null ? [] : [lane._max.order]),
-      },
-      select: { id: true, title: true, number: true, board: { select: { key: true } } },
-    })
-
-    const ticket = {
-      id: created.id,
-      title: created.title,
-      displayId: ticketDisplayId({ key: created.board.key, number: created.number }),
-    }
-
-    // 作成と同じトランザクションで投入する(コミット後に落ちると通知だけが消える)
-    await enqueueTicketCreated(
-      {
-        actorId: auth.user.id,
-        ticket: { id: ticket.id, boardId, displayId: ticket.displayId, title: ticket.title },
-        assigneeId: assigneeId ?? null,
-        status,
-        mentionedUserIds,
-      },
-      tx,
-    )
-
-    return ticket
-  })
+  const ticket = await createTicket(auth.user, { ...input, boardId })
 
   logger.info({ userId: auth.user.id, ticket }, 'mcp ticket created')
   return ticket
 }
 
-export type McpUpdateTicketInput = {
-  title?: string
-  content?: string
-  priority?: TicketPriority
-  dueDate?: string | null
-  assigneeId?: string | null
-  tagIds?: string[]
-  status?: TicketStatus
-}
+export type McpUpdateTicketInput = UpdateTicketInput
 
 /**
  * MCP経由のチケット更新(フィールド編集 + ステータス変更)。
@@ -270,73 +192,16 @@ export const updateTicketForMcp = async (
   input: McpUpdateTicketInput,
 ) => {
   const id = await resolveTicketId(auth, ticketIdOrDisplayId)
-  const { assigneeId, tagIds, dueDate, status, ...rest } = input
-
-  const { ticket, displayId } = await prisma.$transaction(async (tx) => {
-    const access = await assertTicketAccess(auth.user, id, 'edit', tx)
-    if (!canMcpUpdateTicket({ userId: auth.user.id, boardRole: access.boardRole, assigneeId: access.assigneeId })) {
-      throw errInvalidOperation()
-    }
-    // 通知の判断に使う変更前の状態。認可の問い合わせで既に読めているので追加の SELECT は要らない
-    const before = { assigneeId: access.assigneeId, status: access.status }
-    const boardId = access.boardId
-
-    if (assigneeId !== undefined) {
-      await assertBoardAssignee(tx, access.boardId, assigneeId)
-    }
-    const ids = tagIds !== undefined ? await assertTagIdsInBoard(tx, access.boardId, tagIds) : undefined
-
-    let mentionedUserIds: string[] | undefined
-    let addedMentionUserIds: string[] = []
-    if (rest.content !== undefined) {
-      const before = await tx.ticket.findUniqueOrThrow({ where: { id }, select: { mentionedUserIds: true } })
-      const candidates = await getTicketMentionCandidates(access, tx)
-      mentionedUserIds = resolveMentionUserIds(extractMentionEmails(rest.content ?? ''), candidates)
-      addedMentionUserIds = mentionedUserIds.filter((userId) => !before.mentionedUserIds.includes(userId))
-      await reassignContentAttachments(tx, rest.content, access.boardId, auth.user, id)
-    }
-
-    const updated = await tx.ticket.update({
-      where: { id },
-      data: {
-        ...rest,
-        ...(dueDate !== undefined && { dueDate: dateOnlyToUtc(dueDate) }),
-        ...(assigneeId !== undefined && { assigneeId: assigneeId ?? null }),
-        mentionedUserIds,
-      },
-      select: { id: true, title: true, number: true, status: true, board: { select: { key: true } } },
-    })
-    if (ids) {
-      await syncTicketTags(tx, id, ids)
-    }
-
-    const moved =
-      status !== undefined && status !== access.status ? await moveTicketToLane(tx, { access, status }) : null
-
-    const ticket = { ...updated, status: moved?.status ?? updated.status }
-    const displayId = ticketDisplayId({ key: updated.board.key, number: updated.number })
-
-    // 更新と同じトランザクションで投入する(コミット後に落ちると通知だけが消える)
-    await enqueueTicketUpdated(
-      {
-        actorId: auth.user.id,
-        ticket: { id, boardId, displayId, title: ticket.title },
-        before,
-        // 指定しなかった項目は変更なしとして扱う
-        after: {
-          assigneeId: assigneeId !== undefined ? (assigneeId ?? null) : before.assigneeId,
-          status: ticket.status,
-        },
-        addedMentionUserIds,
-      },
-      tx,
-    )
-
-    return { ticket, displayId }
+  const ticket = await updateTicket(auth.user, id, input, {
+    authorize: (access) => {
+      if (!canMcpUpdateTicket({ userId: auth.user.id, boardRole: access.boardRole, assigneeId: access.assigneeId })) {
+        throw errInvalidOperation()
+      }
+    },
   })
 
   logger.info({ userId: auth.user.id, id }, 'mcp ticket updated')
-  return { id: ticket.id, displayId, title: ticket.title, status: ticket.status }
+  return ticket
 }
 
 /**
@@ -345,13 +210,12 @@ export const updateTicketForMcp = async (
  */
 export const deleteTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: string) => {
   const id = await resolveTicketId(auth, ticketIdOrDisplayId)
-
-  await prisma.$transaction(async (tx) => {
-    const access = await assertTicketAccess(auth.user, id, 'delete', tx)
-    if (!canMcpDeleteTicket({ userId: auth.user.id, createdById: access.createdById })) {
-      throw errInvalidOperation()
-    }
-    await tx.ticket.delete({ where: { id } })
+  await deleteTicket(auth.user, id, {
+    authorize: (access) => {
+      if (!canMcpDeleteTicket({ userId: auth.user.id, createdById: access.createdById })) {
+        throw errInvalidOperation()
+      }
+    },
   })
 
   logger.info({ userId: auth.user.id, id }, 'mcp ticket deleted')
@@ -369,46 +233,7 @@ export const addTicketCommentForMcp = async (
   parentId?: string | null,
 ) => {
   const ticketId = await resolveTicketId(auth, ticketIdOrDisplayId)
-
-  const { comment } = await prisma.$transaction(async (tx) => {
-    const access = await assertTicketAccess(auth.user, ticketId, 'edit', tx)
-    if (parentId) {
-      await assertReplyTarget(tx, ticketId, parentId)
-    }
-
-    const candidates = await getTicketMentionCandidates(access, tx)
-    const mentionedUserIds = resolveMentionUserIds(extractMentionEmails(content), candidates)
-    await reassignContentAttachments(tx, content, access.boardId, auth.user, ticketId)
-
-    const comment = await tx.ticketComment.create({
-      data: { ticketId, authorId: auth.user.id, content, type, parentId, mentionedUserIds },
-      select: { id: true },
-    })
-
-    const ticket = await tx.ticket.update({
-      where: { id: ticketId },
-      data: { updatedAt: new Date() },
-      select: { number: true, title: true, board: { select: { key: true } } },
-    })
-
-    // 投稿と同じトランザクションで投入する(コミット後に落ちると通知だけが消える)
-    await enqueueTicketCommented(
-      {
-        actorId: auth.user.id,
-        ticket: {
-          id: ticketId,
-          boardId: access.boardId,
-          displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
-          title: ticket.title,
-        },
-        comment: { id: comment.id, content },
-        addedMentionUserIds: mentionedUserIds,
-      },
-      tx,
-    )
-
-    return { comment }
-  })
+  const comment = await addComment(auth.user, { ticketId, content, type, parentId })
 
   logger.info({ userId: auth.user.id, ticketId, commentId: comment.id }, 'mcp ticket comment added')
   return { id: comment.id }
@@ -418,44 +243,7 @@ export const addTicketCommentForMcp = async (
  * コメント更新(投稿者本人のみ)。MCP限定の追加制限は無く、Web版の updateTicketComment と同じ。
  */
 export const updateTicketCommentForMcp = async (auth: ResourceAuth, commentId: string, content: string) => {
-  await prisma.$transaction(async (tx) => {
-    const target = await tx.ticketComment.findUnique({
-      where: { id: commentId },
-      select: {
-        ticketId: true,
-        authorId: true,
-        mentionedUserIds: true,
-        ticket: { select: { number: true, title: true, board: { select: { key: true } } } },
-      },
-    })
-    if (!target || target.authorId !== auth.user.id) {
-      throw errInvalidOperation()
-    }
-
-    const access = await assertTicketAccess(auth.user, target.ticketId, 'edit', tx)
-    const candidates = await getTicketMentionCandidates(access, tx)
-    const mentionedUserIds = resolveMentionUserIds(extractMentionEmails(content), candidates)
-    await reassignContentAttachments(tx, content, access.boardId, auth.user, target.ticketId)
-
-    await tx.ticketComment.update({ where: { id: commentId }, data: { content, mentionedUserIds } })
-    await tx.ticket.update({ where: { id: target.ticketId }, data: { updatedAt: new Date() } })
-
-    // 更新と同じトランザクションで投入する(コミット後に落ちると通知だけが消える)
-    await enqueueTicketCommented(
-      {
-        actorId: auth.user.id,
-        ticket: {
-          id: target.ticketId,
-          boardId: access.boardId,
-          displayId: ticketDisplayId({ key: target.ticket.board.key, number: target.ticket.number }),
-          title: target.ticket.title,
-        },
-        comment: { id: commentId, content },
-        addedMentionUserIds: mentionedUserIds.filter((userId) => !target.mentionedUserIds.includes(userId)),
-      },
-      tx,
-    )
-  })
+  await updateComment(auth.user, commentId, content)
 
   logger.info({ userId: auth.user.id, commentId }, 'mcp ticket comment updated')
   return { id: commentId }
@@ -466,22 +254,7 @@ export const updateTicketCommentForMcp = async (auth: ResourceAuth, commentId: s
  * MCP限定の追加制限(canMcpDeleteTicket)は挟まず、Web版の deleteTicketComment と同じ。
  */
 export const deleteTicketCommentForMcp = async (auth: ResourceAuth, commentId: string) => {
-  await prisma.$transaction(async (tx) => {
-    const target = await tx.ticketComment.findUnique({
-      where: { id: commentId },
-      select: { ticketId: true, authorId: true },
-    })
-    if (!target) {
-      throw errInvalidOperation()
-    }
-
-    const access = await assertTicketAccess(auth.user, target.ticketId, 'edit', tx)
-    if (target.authorId !== auth.user.id && !access.canDelete) {
-      throw errInvalidOperation()
-    }
-
-    await tx.ticketComment.delete({ where: { id: commentId } })
-  })
+  await deleteComment(auth.user, commentId)
 
   logger.info({ userId: auth.user.id, commentId }, 'mcp ticket comment deleted')
   return { id: commentId }

@@ -28,7 +28,8 @@ export type TagOption = {
 /** タグ管理画面用。使用中のチケット件数を含む */
 export type TagManageItem = TagOption & { ticketCount: number }
 
-const TAG_SELECT = { id: true, boardId: true, name: true, color: true, order: true } as const
+/** {@link TagOption} を返す select。チケットのタグ表示やタグ管理でも使う */
+export const TAG_SELECT = { id: true, boardId: true, name: true, color: true, order: true } as const
 
 /** 同値の order でも並びが揺れないよう name を第 2 キーにする */
 const TAG_ORDER_BY = [{ order: 'asc' }, { name: 'asc' }] as const

@@ -87,10 +87,7 @@ const resolveUploadTarget = async (
     const access = await assertTicketAccess(auth.user, await resolveTicketId(auth, ticketId), 'edit')
     return access.boardId
   }
-  const board = await assertBoardAccess(auth.user, await resolveBoardId(boardId as string), 'view')
-  if (board.archived) {
-    throw errInvalidOperation()
-  }
+  const board = await assertBoardAccess(auth.user, await resolveBoardId(boardId as string), 'write')
   return board.boardId
 }
 
