@@ -185,7 +185,10 @@ export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ ui
         response.current = resolve
       })
     },
-    close: state.close,
+    close: () => {
+      settle(false)
+      state.close()
+    },
   }))
 
   return (
