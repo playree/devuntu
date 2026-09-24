@@ -49,6 +49,12 @@ describe('parseAction', () => {
     expect(notifier).toHaveBeenCalledWith('VALIDATION_ERROR')
   })
 
+  it('応答を受け取れなかった場合は SYSTEM_ERROR として通知する', async () => {
+    const failure = new Error('network')
+    await expect(parseAction(Promise.reject(failure), { wait: 0, handled: 'all' })).rejects.toBe(failure)
+    expect(notifier).toHaveBeenCalledWith('SYSTEM_ERROR')
+  })
+
   it('成功時は data を返し通知しない', async () => {
     await expect(parseAction(Promise.resolve({ data: { id: 'x' } }), { wait: 0 })).resolves.toEqual({ id: 'x' })
     expect(notifier).not.toHaveBeenCalled()

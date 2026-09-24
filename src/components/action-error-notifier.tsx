@@ -24,9 +24,12 @@ export const ActionErrorNotifier: FC = () => {
           return
         }
         isReAuthingRef.current = true
-        reAuth().finally(() => {
-          isReAuthingRef.current = false
-        })
+        reAuth()
+          // 別の確認モーダルが使用中だと confirm が投げる。誘導できないだけなので記録に留める
+          .catch(console.error)
+          .finally(() => {
+            isReAuthingRef.current = false
+          })
         return
       }
       const { item, level } = resolveActionErrorMessage(errorType)

@@ -2,7 +2,7 @@
 
 import { notify } from '@/components/notify'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { errClient, VALIDATION_ERROR } from '../error'
+import { errClient, SYSTEM_ERROR, VALIDATION_ERROR } from '../error'
 import { intervalOperation } from '../sleep'
 
 type MarkDataResolved<T> = T & {
@@ -58,7 +58,7 @@ export type ParseActionOptions = {
 
 /**
  * Server Action の結果を解釈してデータを返す。
- * 失敗時は通知(または再認証の誘導)をしてから throw する。ClientError は errorType 付きで throw するので、
+ * 失敗時(応答を受け取れなかった場合を含む)は通知(または再認証の誘導)をしてから throw する。ClientError は errorType 付きで throw するので、
  * 個別に扱う場合は `handled` に errorType を渡し、catch で `e.errorType` を見て分岐する。
  */
 export const parseAction = async <
@@ -68,7 +68,15 @@ export const parseAction = async <
   { wait = 300, handled }: ParseActionOptions = {},
 ) => {
   const start = performance.now()
-  const result = await res
+  let result: T
+  try {
+    result = await res
+  } catch (e) {
+    // 通信断などで応答自体を受け取れなかった
+    console.error('action failed', e)
+    notifyActionError(SYSTEM_ERROR)
+    throw e
+  }
   const execTime = ~~(performance.now() - start)
   console.debug('action exec', execTime)
 

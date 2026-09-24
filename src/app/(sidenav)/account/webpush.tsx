@@ -156,14 +156,9 @@ export const WebPushSettings: FC<{
     try {
       // 行の削除に失敗した場合の通知は parseAction が出す
       await parseAction(deleteWebPushDevice({ id }))
-      try {
-        // 行を消してからブラウザ側を解除する(逆順だと送信先が死んでいる行が残りうる)
-        await unsubscribeLocalPush(endpoint)
-        notify.success(t('msg_deleted_target', { target: t('notify_webpush_devices') }))
-      } catch (error) {
-        console.error(error)
-        notify.error(t('msg_delete_failed_target', { target: t('notify_webpush_devices') }))
-      }
+      // 行を消してからブラウザ側を解除する(逆順だと送信先が死んでいる行が残りうる)
+      await unsubscribeLocalPush(endpoint)
+      notify.success(t('msg_deleted_target', { target: t('notify_webpush_devices') }))
       await Promise.all([refreshDevices(), reloadLocalState()])
     } catch (error) {
       console.error(error)
