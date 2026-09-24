@@ -2,14 +2,14 @@
 
 import { ClockIcon } from '@/components/icon'
 import { StatusChip, TicketIdText } from '@/components/ticket/ticket-chip'
-import { parseAction } from '@/lib/action/action-client'
+import { useActionData } from '@/lib/action/action-client'
 import { dayformat } from '@/lib/day'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
-import { FC, useEffect, useState } from 'react'
-import { getRecentActivity, GetRecentActivityReturnType } from '../server'
+import { FC } from 'react'
+import { getRecentActivity } from '../server'
 import { RowLink } from './ticket-row'
-import { WidgetCard, WidgetFC, WidgetRowList, WidgetSkeleton } from './widget-card'
+import { WidgetCard, WidgetFC, WidgetLoadError, WidgetRowList, WidgetSkeleton } from './widget-card'
 
 /**
  * アクセスできるボードのチケットを更新日時の新しい順に表示する Widget。
@@ -17,11 +17,7 @@ import { WidgetCard, WidgetFC, WidgetRowList, WidgetSkeleton } from './widget-ca
 export const RecentActivityWidget: WidgetFC = ({ id, editable }) => {
   const { t } = useLocale()
   const tz = useUserTimezone()
-  const [data, setData] = useState<GetRecentActivityReturnType>()
-
-  useEffect(() => {
-    parseAction(getRecentActivity()).then((res) => setData(res))
-  }, [])
+  const { data, isLoading } = useActionData(getRecentActivity)
 
   return (
     <WidgetCard id={id} editable={editable} icon={<ClockIcon />} title={t('recent_activity')}>
@@ -40,8 +36,10 @@ export const RecentActivityWidget: WidgetFC = ({ id, editable }) => {
             </RowLink>
           ))}
         </WidgetRowList>
-      ) : (
+      ) : isLoading ? (
         <WidgetSkeleton />
+      ) : (
+        <WidgetLoadError />
       )}
     </WidgetCard>
   )

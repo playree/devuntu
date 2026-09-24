@@ -533,6 +533,7 @@ export const ja: DefaultLocaleItems = {
   msg_no_due_soon_tickets: '期限切れ・期限間近のチケットはありません。',
   msg_no_mentions: '自分宛てのメンションはありません。',
   msg_no_recent_activity: '更新されたチケットはありません。',
+  msg_widget_load_failed: '取得できませんでした。時間をおいてリロードしてください。',
   msg_no_matching_assignees: '該当する担当者がありません。',
   msg_no_matching_users: '該当するユーザーがありません。',
   msg_no_matching_tags: '該当するタグがありません。',

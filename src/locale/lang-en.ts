@@ -532,6 +532,7 @@ Please copy and use the connection information above.
   msg_no_due_soon_tickets: 'No overdue or upcoming tickets.',
   msg_no_mentions: 'No mentions.',
   msg_no_recent_activity: 'No recently updated tickets.',
+  msg_widget_load_failed: 'Could not load. Please reload after a while.',
   msg_no_matching_assignees: 'No matching assignees.',
   msg_no_matching_users: 'No matching users.',
   msg_no_matching_tags: 'No matching tags.',

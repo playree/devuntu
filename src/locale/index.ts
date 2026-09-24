@@ -507,6 +507,7 @@ export type LocaleItemBase =
   | 'msg_no_due_soon_tickets'
   | 'msg_no_mentions'
   | 'msg_no_recent_activity'
+  | 'msg_widget_load_failed'
   | 'msg_no_matching_assignees'
   | 'msg_no_matching_users'
   | 'msg_no_matching_tags'

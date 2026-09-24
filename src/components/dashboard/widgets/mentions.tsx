@@ -2,14 +2,14 @@
 
 import { ChatBubbleIcon } from '@/components/icon'
 import { TicketIdText } from '@/components/ticket/ticket-chip'
-import { parseAction } from '@/lib/action/action-client'
+import { useActionData } from '@/lib/action/action-client'
 import { dayformat } from '@/lib/day'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
-import { FC, useEffect, useState } from 'react'
-import { getMentions, GetMentionsReturnType } from '../server'
+import { FC } from 'react'
+import { getMentions } from '../server'
 import { RowLink } from './ticket-row'
-import { WidgetCard, WidgetFC, WidgetRowList, WidgetSkeleton } from './widget-card'
+import { WidgetCard, WidgetFC, WidgetLoadError, WidgetRowList, WidgetSkeleton } from './widget-card'
 
 /**
  * 自分宛てのメンション(チケット本文・コメント)を新しい順に表示する Widget。
@@ -17,11 +17,7 @@ import { WidgetCard, WidgetFC, WidgetRowList, WidgetSkeleton } from './widget-ca
 export const MentionsWidget: WidgetFC = ({ id, editable }) => {
   const { t } = useLocale()
   const tz = useUserTimezone()
-  const [data, setData] = useState<GetMentionsReturnType>()
-
-  useEffect(() => {
-    parseAction(getMentions()).then((res) => setData(res))
-  }, [])
+  const { data, isLoading } = useActionData(getMentions)
 
   return (
     <WidgetCard id={id} editable={editable} icon={<ChatBubbleIcon />} title={t('my_mentions')}>
@@ -44,8 +40,10 @@ export const MentionsWidget: WidgetFC = ({ id, editable }) => {
             </RowLink>
           ))}
         </WidgetRowList>
-      ) : (
+      ) : isLoading ? (
         <WidgetSkeleton />
+      ) : (
+        <WidgetLoadError />
       )}
     </WidgetCard>
   )
