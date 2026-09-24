@@ -3,12 +3,12 @@
 import { MultiButton } from '@/components/general/button'
 import { FlexCol, FlexRow } from '@/components/general/flex'
 import { InputField } from '@/components/general/input'
-import { useConfirmModal } from '@/components/general/modal'
 import { CheckIcon, PencilSquareIcon, TrashIcon, XMarkIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import type { TagColor } from '@/generated/prisma/enums'
 import { MAX_TAG_NAME, MAX_TAGS_PER_SCOPE, TAG_COLORS } from '@/lib/board/task'
 import { ClientError } from '@/lib/error'
+import { useConfirmAction } from '@/lib/use-confirm-action'
 import { useLocale } from '@/locale/client'
 import { FC, useState } from 'react'
 import { tv } from 'tailwind-variants'
@@ -137,7 +137,7 @@ export const TagEditor: FC<{
   onDelete: (tag: TagEditorItem) => Promise<void>
 }> = ({ tags, canManage, onCreate, onUpdate, onDelete }) => {
   const { t } = useLocale()
-  const { confirmModal } = useConfirmModal()
+  const confirmAction = useConfirmAction()
   const [editingId, setEditingId] = useState<string>()
   const [isPending, setPending] = useState(false)
 
@@ -150,26 +150,11 @@ export const TagEditor: FC<{
     }
   }
 
-  const remove = async (tag: TagEditorItem) => {
-    try {
-      const ok = await confirmModal().confirm({
-        title: t('confirm_deletion'),
-        text: t('msg_confirm_deletion', { target: tag.name }),
-        requireCheck: true,
-        autoClose: false,
-      })
-      if (ok) {
-        await onDelete(tag)
-        notify.success(t('msg_deleted_target', { target: tag.name }))
-      }
-    } catch (e) {
-      if (!(e instanceof ClientError)) {
-        throw e
-      }
-    } finally {
-      confirmModal().close()
-    }
-  }
+  const remove = (tag: TagEditorItem) =>
+    confirmAction({ title: t('confirm_deletion'), text: t('msg_confirm_deletion', { target: tag.name }) }, async () => {
+      await onDelete(tag)
+      notify.success(t('msg_deleted_target', { target: tag.name }))
+    })
 
   return (
     <FlexCol>
