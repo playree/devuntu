@@ -13,7 +13,6 @@ import { ArrowPathIcon, PencilSquareIcon, UserPlusIcon, UsersIcon } from '@/comp
 import { notify } from '@/components/notify'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { dayformat } from '@/lib/day'
-import { ClientError } from '@/lib/error'
 import { UpdateUser } from '@/lib/schema/schema'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
@@ -107,15 +106,9 @@ export const AdminUsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPass
                   template: 'delete',
                   target: item.name,
                   action: async () => {
-                    try {
-                      await parseAction(deleteUser({ id: item.id }))
-                      notify.success(t('msg_deleted_target', { target: item.name }))
-                      list.reload()
-                    } catch (e) {
-                      if (e instanceof ClientError && e.errorType === 'CANNOT_DELETE_LAST_ADMIN') {
-                        notify.warn(t('msg_cannot_delete_last_admin'))
-                      }
-                    }
+                    await parseAction(deleteUser({ id: item.id }))
+                    notify.success(t('msg_deleted_target', { target: item.name }))
+                    list.reload()
                   },
                 },
               ]}

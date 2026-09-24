@@ -479,6 +479,7 @@ export const ja: DefaultLocaleItems = {
   msg_calendar_share_unavailable: 'この共有カレンダーは現在利用できません。',
   msg_calendar_share_url_rotated: '共有URLを再発行しました。以前のURLは無効になりました。',
   msg_cannot_delete_last_admin: '最後の管理者は削除できません。',
+  msg_communication_error: '外部サービスとの通信に失敗しました。時間をおいてからお試しください。',
   msg_confirm_archive_board: '${target} をアーカイブします。',
   msg_confirm_delete_board: '${target} を削除します。ボード内のチケットとコメントもすべて削除されます。',
   msg_confirm_delete_mcp_token: '削除すると、このトークンを使っている接続はすぐに利用できなくなります。',
@@ -516,6 +517,8 @@ export const ja: DefaultLocaleItems = {
   msg_group_assign_admin_only: 'グループ単位のアサインは管理者のみが変更できます。',
   msg_image_upload_failed: '画像のアップロードに失敗しました。',
   msg_invalid_email_or_password: 'Eメールまたはパスワードが違います。',
+  msg_invalid_operation: 'この操作は実行できません。画面を再読み込みしてからお試しください。',
+  msg_invalid_session: 'セッションが無効です。再度ログインしてください。',
   msg_link_google_for_calendar:
     'カレンダーの共有には Google アカウントとの連携が必要です。アカウントページで連携してください。',
   msg_mcp_token_desc:
@@ -533,6 +536,8 @@ export const ja: DefaultLocaleItems = {
   msg_no_due_soon_tickets: '期限切れ・期限間近のチケットはありません。',
   msg_no_mentions: '自分宛てのメンションはありません。',
   msg_no_recent_activity: '更新されたチケットはありません。',
+  msg_system_error: 'エラーが発生しました。時間をおいてからお試しください。',
+  msg_validation_error: '入力内容が正しくありません。',
   msg_widget_load_failed: '取得できませんでした。時間をおいてリロードしてください。',
   msg_no_matching_assignees: '該当する担当者がありません。',
   msg_no_matching_users: '該当するユーザーがありません。',

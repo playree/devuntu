@@ -70,7 +70,7 @@ export const AdminAgentDetailClient: FC<{ agentId: string; baseUrl: string }> = 
   const { data: groupOptions } = useActionData(getGroupOptions)
   const { data: approverUserOptions } = useActionData(getApproverUserOptions)
   const runHistoryList = usePagingList({
-    load: async () => (await parseAction(getAgentRuns({ id: agentId }))) ?? [],
+    load: async () => (await parseAction(getAgentRuns({ id: agentId }), { handled: 'all' })) ?? [],
     sort: { init: { column: 'startedAt', direction: 'descending' } },
   })
 
@@ -78,7 +78,7 @@ export const AdminAgentDetailClient: FC<{ agentId: string; baseUrl: string }> = 
     return <PanelSkeleton />
   }
 
-  // parseAction は ClientError を notify せず throw するため、ここで明示的に表示する
+  // useActionData は ClientError を通知しないため、取得できなかったことをここで表示する
   if (!agent) {
     return (
       <FlexCol>

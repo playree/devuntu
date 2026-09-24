@@ -1,5 +1,6 @@
 'use client'
 
+import { ActionErrorNotifier } from '@/components/action-error-notifier'
 import { ConfirmModalProvider } from '@/components/general/modal'
 import { LocaleProvider } from '@/components/locale/client'
 import { NotifyProvider } from '@/components/notify'
@@ -54,6 +55,7 @@ export const Providers: FC<ProvidersProps> = ({
         cookieLocale={cookieLocale}
       >
         <MyConfirmModalProvider>
+          <ActionErrorNotifier />
           <MyRouterProvider>{children}</MyRouterProvider>
         </MyConfirmModalProvider>
       </LocaleProvider>

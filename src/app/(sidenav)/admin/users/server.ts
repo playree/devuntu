@@ -2,7 +2,7 @@
 
 import { safeAuthAction } from '@/lib/action/action-server'
 import { auth } from '@/lib/auth/auth'
-import { ClientError, errInvalidOperation, errSystemError } from '@/lib/error'
+import { errCannotDeleteLastAdmin, errInvalidOperation, errSystemError } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { scCreateUser, scUpdateUser, scUUID } from '@/lib/schema/schema'
@@ -126,7 +126,7 @@ export const deleteUser = safeAuthAction
       if (user.role === 'admin') {
         if ((await tx.user.count({ where: { role: 'admin', id: { not: id } } })) === 0) {
           // 最後の管理者ユーザーは削除不可
-          throw new ClientError('CANNOT_DELETE_LAST_ADMIN')
+          throw errCannotDeleteLastAdmin()
         }
       }
 
@@ -163,7 +163,7 @@ export const updateUser = safeAuthAction
     if (user.role === 'admin' && !isAdmin) {
       if ((await prisma.user.count({ where: { role: 'admin', id: { not: id } } })) === 0) {
         // 最後の管理者ユーザーは不可
-        throw new ClientError('CANNOT_DELETE_LAST_ADMIN')
+        throw errCannotDeleteLastAdmin()
       }
     }
 

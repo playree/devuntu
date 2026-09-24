@@ -10,7 +10,7 @@ import { MultiSelectCtrl } from '@/components/general/select'
 import { CheckIcon, PlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action/action-client'
-import { agentEmail, DUPLICATED_AGENT_HANDLE } from '@/lib/agent/agent'
+import { agentEmail } from '@/lib/agent/agent'
 import { ClientError } from '@/lib/error'
 import { CreateAgentIn, CreateAgentOut, scCreateAgent } from '@/lib/schema/schema'
 import { useLocale } from '@/locale/client'
@@ -53,9 +53,8 @@ export const AddModal: FC<ModalBaseProps & { groupOptions: Record<string, string
           reload()
           state.close()
         } catch (e) {
-          if (e instanceof ClientError && e.errorType === DUPLICATED_AGENT_HANDLE) {
-            notify.warn(t('msg_duplicated_agent_handle'))
-          } else {
+          // 識別子の重複などは parseAction が通知済み。入力し直してもらうため画面はそのまま残す
+          if (!(e instanceof ClientError)) {
             throw e
           }
         }

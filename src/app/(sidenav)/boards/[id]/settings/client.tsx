@@ -55,7 +55,7 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
   const { data: assignments, reload: reloadAssignments } = useActionData(() => getBoardAssignments({ id: boardId }))
   // ボードグループの保存と合わせてリロードできるよう、ここで生成して BoardMembers に渡す
   const memberList = usePagingList({
-    load: async () => (await parseAction(getBoardMembers({ id: boardId }))) ?? [],
+    load: async () => (await parseAction(getBoardMembers({ id: boardId }), { handled: 'all' })) ?? [],
     sort: { init: { column: 'name', direction: 'ascending' } },
   })
 
@@ -63,7 +63,7 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
     return <PanelSkeleton />
   }
 
-  // parseAction は ClientError を notify せず throw するため、ここで明示的に表示する
+  // useActionData は ClientError を通知しないため、取得できなかったことをここで表示する
   if (!board) {
     return (
       <FlexCol>

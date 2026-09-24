@@ -8,18 +8,10 @@ import { FormModal, ModalBaseProps, useConfirmModal } from '@/components/general
 import { RadioCtrl } from '@/components/general/radio'
 import { MultiSelectCtrl, SingleSelectCtrl } from '@/components/general/select'
 import { CommandLineIcon } from '@/components/icon'
-import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action/action-client'
-import { SESSION_NOT_FRESH } from '@/lib/auth/auth-config'
-import { useReAuth } from '@/lib/auth/use-re-auth'
-import {
-  COMMAND_ALREADY_RUNNING,
-  COMMAND_QUEUE_FULL,
-  type CommandInput,
-  type CommandInputValues,
-} from '@/lib/command/command'
+import { type CommandInput, type CommandInputValues } from '@/lib/command/command'
 import { buildCommandInputSchema } from '@/lib/command/command-args'
-import { ClientError, TOO_MANY_REQUESTS } from '@/lib/error'
+import { ClientError } from '@/lib/error'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
@@ -95,7 +87,6 @@ export const CommandForm: FC<ModalBaseProps & { target: AvailableCommandView }> 
   const { t, fet } = useLocale()
   const router = useRouter()
   const { confirmModal } = useConfirmModal()
-  const reAuth = useReAuth()
 
   // 定義が変わらない限り作り直さない
   /**
@@ -142,26 +133,9 @@ export const CommandForm: FC<ModalBaseProps & { target: AvailableCommandView }> 
           // 実行中の表示と履歴詳細は同じ画面。開始直後もそこへ送る
           router.push(`/commands/runs/${run.id}`)
         } catch (e) {
+          // 実行中・順番待ちの上限・再認証などは parseAction が通知済み。同じ入力で再試行できるようモーダルは閉じない
           if (!(e instanceof ClientError)) {
             throw e
-          }
-          switch (e.errorType) {
-            case COMMAND_ALREADY_RUNNING:
-              // 別のタブや別の人が先に始めた。終わるまで待てば同じ入力で再試行できる
-              notify.warn(t('msg_command_already_running'))
-              return
-            case COMMAND_QUEUE_FULL:
-              notify.warn(t('msg_command_queue_full'))
-              return
-            case TOO_MANY_REQUESTS:
-              notify.warn(t('msg_too_many_requests'))
-              return
-            case SESSION_NOT_FRESH:
-              // 破壊的なコマンドはログインからの経過時間を要求する
-              await reAuth()
-              return
-            default:
-              throw e
           }
         }
       })}

@@ -77,7 +77,7 @@ export const AddModal: FC<
   useEffect(() => {
     // ボードを続けて切り替えると古い要求が後着しうるので、対象が変わった結果は捨てる
     let isCurrent = true
-    parseAction(getAssigneeOptions({ id: boardId }))
+    parseAction(getAssigneeOptions({ id: boardId }), { handled: 'all' })
       .then((res) => isCurrent && setBoardAssignees(res ?? []))
       .catch(() => isCurrent && setBoardAssignees([]))
     return () => {

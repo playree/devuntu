@@ -8,12 +8,10 @@ import { NoticePanel } from '@/components/general/panel'
 import { CheckIcon, PencilSquareIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action/action-client'
-import { SESSION_NOT_FRESH } from '@/lib/auth/auth-config'
-import { useReAuth } from '@/lib/auth/use-re-auth'
 import { COMMAND_DEF_CONFLICT, COMMAND_DEF_NOT_EDITABLE, COMMAND_DEF_READ_ONLY } from '@/lib/command/command'
 import { formatCommandIssues, scCommandDefInput } from '@/lib/command/command-def'
 import { lintCommandDefYaml } from '@/lib/command/command-def-lint'
-import { ClientError, TOO_MANY_REQUESTS } from '@/lib/error'
+import { ClientError } from '@/lib/error'
 import { useLocale } from '@/locale/client'
 import { FC, useState } from 'react'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
@@ -43,7 +41,6 @@ export type CommandDefTarget = {
  */
 export const CommandDefModal: FC<ModalBaseProps & { target: CommandDefTarget }> = ({ state, reload, target }) => {
   const { t } = useLocale()
-  const reAuth = useReAuth()
   const [text, setText] = useState(
     // 編集時は定義の現物を YAML へ起こす。`targetId` は YAML に書かない項目なのでサーバー側で落としてある
     target.command?.source
@@ -87,6 +84,7 @@ export const CommandDefModal: FC<ModalBaseProps & { target: CommandDefTarget }> 
               replaceId,
               command: parsed.data,
             }),
+            { handled: [COMMAND_DEF_CONFLICT, COMMAND_DEF_NOT_EDITABLE, COMMAND_DEF_READ_ONLY] },
           )
           if (!result?.ok) {
             setMessages(result?.messages ?? [])
@@ -112,15 +110,9 @@ export const CommandDefModal: FC<ModalBaseProps & { target: CommandDefTarget }> 
             case COMMAND_DEF_READ_ONLY:
               setMessages([t('command_def_read_only')])
               return
-            case TOO_MANY_REQUESTS:
-              notify.warn(t('msg_too_many_requests'))
-              return
-            case SESSION_NOT_FRESH:
-              // 定義の書き換えは以後ずっと効くので、実行と同じく再認証を求める
-              await reAuth()
-              return
             default:
-              throw e
+              // レート制限・再認証などは parseAction が通知済み
+              return
           }
         } finally {
           setSubmitting(false)
