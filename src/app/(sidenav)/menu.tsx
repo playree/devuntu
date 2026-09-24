@@ -8,6 +8,7 @@ import {
   CalendarDaysIcon,
   Cog6ToothIcon,
   CommandLineIcon,
+  GithubIcon,
   RocketLaunchIcon,
   ServerStackIcon,
   Squares2X2Icon,
@@ -254,8 +255,8 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
         </Accordion>
       </div>
 
-      <div className='absolute inset-x-4 bottom-2'>
-        <Link href='https://github.com/playree/devuntu' target='_blank' rel='noopener noreferrer'>
+      <div className='absolute inset-x-4 bottom-2 mt-8 flex items-end gap-2'>
+        <Link href='https://playree.github.io/devuntu/' target='_blank' rel='noopener noreferrer'>
           <Image
             /**
              * ロゴ。
@@ -266,8 +267,16 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
             width={120}
             height={45}
             alt='Devuntu'
-            className='mt-8'
           />
+        </Link>
+        <Link
+          href='https://github.com/playree/devuntu/'
+          target='_blank'
+          rel='noopener noreferrer'
+          aria-label='GitHub'
+          className='text-foreground/70 hover:text-foreground'
+        >
+          <GithubIcon width={32} />
         </Link>
       </div>
     </div>
