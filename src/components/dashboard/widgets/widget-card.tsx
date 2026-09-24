@@ -1,5 +1,7 @@
 'use client'
 
+import { NoticePanel } from '@/components/general/panel'
+import { useLocale } from '@/locale/client'
 import { useDraggable } from '@dnd-kit/react'
 import { Card, cn, Separator, Skeleton } from '@heroui/react'
 import { FC, ReactNode } from 'react'
@@ -38,6 +40,12 @@ export const WidgetCard: FC<{
 
 /** 取得中の表示 */
 export const WidgetSkeleton: FC = () => <Skeleton className='h-full min-h-14 w-full rounded-xl' />
+
+/** 取得に失敗したときの表示 */
+export const WidgetLoadError: FC = () => {
+  const { t } = useLocale()
+  return <NoticePanel status='danger'>{t('msg_widget_load_failed')}</NoticePanel>
+}
 
 /** Widget 内の行一覧。0 件なら message を出す */
 export const WidgetRowList: FC<{ isEmpty: boolean; message: string; children: ReactNode }> = ({
