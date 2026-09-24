@@ -26,6 +26,9 @@ import {
   getServerInfo,
   GetServerInfoReturnType,
 } from './server'
+import { AgentApprovalsWidget, AgentApprovalsWidgetName } from './widgets/agent-approvals'
+import { AgentRunsWidget, AgentRunsWidgetName } from './widgets/agent-runs'
+import { CommandRunsWidget, CommandRunsWidgetName } from './widgets/command-runs'
 import { DueSoonWidget, DueSoonWidgetName } from './widgets/due-soon'
 import { MyTicketsWidget, MyTicketsWidgetName } from './widgets/my-tickets'
 import { TicketSummaryWidget, TicketSummaryWidgetName } from './widgets/ticket-summary'
@@ -342,7 +345,7 @@ const BaseWidgetMap: Record<string, Omit<WidgetSet, 'id'>> = {
 } as const
 
 /**
- * 組み込み Widget にサーバー登録された LinkWidget をマージして返すフック。
+ * 組み込み Widget に、サーバー登録された LinkWidget と条件付きの Widget をマージして返すフック。
  */
 export const useWidgetMap = () => {
   const [widgetMap, setWidgetMap] = useState<Record<string, Omit<WidgetSet, 'id'>>>(BaseWidgetMap)
@@ -357,6 +360,13 @@ export const useWidgetMap = () => {
           name: LinodeTransferInfoWidgetName,
           widget: LinodeTransferInfoWidget,
         }
+      }
+      if (otherWidgets.enabledAgentWidgets) {
+        otherWidgetMap['agent_approvals'] = { name: AgentApprovalsWidgetName, widget: AgentApprovalsWidget }
+        otherWidgetMap['agent_runs'] = { name: AgentRunsWidgetName, widget: AgentRunsWidget }
+      }
+      if (otherWidgets.enabledCommandRuns) {
+        otherWidgetMap['command_runs'] = { name: CommandRunsWidgetName, widget: CommandRunsWidget }
       }
       setWidgetMap({ ...BaseWidgetMap, ...otherWidgetMap })
     })
