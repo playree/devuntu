@@ -27,9 +27,9 @@ import { getTicketFormOptions, GetTicketFormOptionsReturnType, getTickets } from
 const defaultExpandedKeys = new Set(['search'])
 
 export const TicketsClient: FC<{
-  /** URL の ?boardId= 由来の初期絞り込み対象。null = すべてのボード */
-  initialBoardId?: string | null
-}> = ({ initialBoardId }) => {
+  /** URL の ?boardId= / ?status= / ?assignee= 由来の初期絞り込み。未指定の項目は既定の条件になる */
+  initialFilter?: Partial<Pick<TicketSearch, 'boardId' | 'status' | 'assignee'>>
+}> = ({ initialFilter }) => {
   const { t } = useLocale()
   const tz = useUserTimezone()
   const boardName = useBoardName()
@@ -37,7 +37,12 @@ export const TicketsClient: FC<{
 
   // 詳細パネルに表示中のチケット。未選択なら undefined
   const [selectedId, setSelectedId] = useState<string>()
-  const [filter, setFilter] = useState<TicketSearch>({ ...defaultTicketFilter, boardId: initialBoardId ?? null })
+  const [filter, setFilter] = useState<TicketSearch>({
+    ...defaultTicketFilter,
+    boardId: initialFilter?.boardId ?? null,
+    status: initialFilter?.status ?? defaultTicketFilter.status,
+    assignee: initialFilter?.assignee ?? null,
+  })
   // usePagingList の load は再生成されるため、最新の検索条件は ref から読む
   const filterRef = useRef(filter)
   const [options, setOptions] = useState<GetTicketFormOptionsReturnType>()

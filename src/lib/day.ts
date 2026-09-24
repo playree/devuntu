@@ -110,6 +110,9 @@ export const dateOnlyToUtc = (value?: string | null): Date | null => {
 export const utcToDateOnly = (date?: Date | null): string | null =>
   date ? dayjs(date).utc().format('YYYY-MM-DD') : null
 
+/** 指定タイムゾーンでの今日の暦日(YYYY-MM-DD) */
+export const todayDateOnly = (tz: string = DEFAULT_TZ): string => dayjs().tz(tz).format('YYYY-MM-DD')
+
 /**
  * UTC 0:00 で保存された期日が、指定タイムゾーンの今日より前かを判定する(当日は期限切れにしない)。
  *
@@ -117,7 +120,7 @@ export const utcToDateOnly = (date?: Date | null): string | null =>
  */
 export const isDateOnlyOverdue = (date?: Date | null, tz: string = DEFAULT_TZ): boolean => {
   const due = utcToDateOnly(date)
-  return !!due && due < dayjs().tz(tz).format('YYYY-MM-DD')
+  return !!due && due < todayDateOnly(tz)
 }
 
 /** xx分以内かのチェック */
