@@ -2,13 +2,13 @@
 
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
-import { useConfirmModal } from '@/components/general/modal'
 import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
 import { ArrowPathIcon, CommandLineIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { dayformat } from '@/lib/day'
+import { useConfirmAction } from '@/lib/use-confirm-action'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { useRouter } from 'next/navigation'
@@ -33,20 +33,17 @@ export const AdminCommandsClient: FC = () => {
   const tz = useUserTimezone()
   const router = useRouter()
   const { data, isLoading, refresh } = useActionData(getCommandTargetsAction)
-  const { confirmModal } = useConfirmModal()
+  const confirmAction = useConfirmAction()
 
-  const purge = async (targetKey: string) => {
-    const ok = await confirmModal().confirm({
-      title: t('command_target_purge'),
-      text: t('msg_confirm_deletion', { target: targetKey }),
-    })
-    if (!ok) {
-      return
-    }
-    await parseAction(purgeOrphanCommandAssignsAction({ targetKey }))
-    notify.success(t('msg_deleted_target', { target: targetKey }))
-    await refresh()
-  }
+  const purge = (targetKey: string) =>
+    confirmAction(
+      { title: t('command_target_purge'), text: t('msg_confirm_deletion', { target: targetKey }) },
+      async () => {
+        await parseAction(purgeOrphanCommandAssignsAction({ targetKey }))
+        notify.success(t('msg_deleted_target', { target: targetKey }))
+        await refresh()
+      },
+    )
 
   return (
     <FlexCol>

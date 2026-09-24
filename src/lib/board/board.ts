@@ -213,12 +213,13 @@ export const getBoardAccess = async (actor: Actor, boardId: string, tx: Db = pri
 /**
  * ボードへのアクセスを検証する。NG なら errInvalidOperation() を throw。
  * - view   : メンバー(owner|member)
+ * - write  : メンバー かつ 未アーカイブ(アーカイブ済みボードは読み取り専用。evaluateTicketAccess と同じ方針)
  * - manage : owner または管理者(管理画面から権限操作を代行できる)
  */
 export const assertBoardAccess = async (
   actor: Actor,
   boardId: string,
-  need: 'view' | 'manage',
+  need: 'view' | 'write' | 'manage',
   tx: Db = prisma,
 ): Promise<BoardAccess> => {
   const access = await getBoardAccess(actor, boardId, tx)
@@ -235,6 +236,9 @@ export const assertBoardAccess = async (
   }
 
   if (need === 'manage' && access.role !== 'owner' && !isAdminActor(actor)) {
+    throw errInvalidOperation()
+  }
+  if (need === 'write' && access.archived) {
     throw errInvalidOperation()
   }
 
@@ -335,6 +339,9 @@ export const countTicketsByBoard = async (
   return counts
 }
 
+/** ボードのメンバーとして返すユーザーの列。担当者・メンション候補・メンバー設定で共有する */
+export const BOARD_USER_SELECT = { id: true, name: true, email: true, image: true, isAgent: true } as const
+
 export type BoardUser = {
   id: string
   name: string
@@ -358,7 +365,7 @@ export const getBoardMemberUsers = async (boardId: string, tx: Db = prisma): Pro
       members: {
         select: {
           role: true,
-          user: { select: { id: true, name: true, email: true, image: true, isAgent: true } },
+          user: { select: BOARD_USER_SELECT },
         },
       },
       groups: {
@@ -366,7 +373,7 @@ export const getBoardMemberUsers = async (boardId: string, tx: Db = prisma): Pro
           group: {
             select: {
               userGroups: {
-                select: { user: { select: { id: true, name: true, email: true, image: true, isAgent: true } } },
+                select: { user: { select: BOARD_USER_SELECT } },
               },
             },
           },
@@ -413,13 +420,12 @@ export const getBoardsMemberUsers = async (boardIds: string[], tx: Db = prisma):
     return []
   }
 
-  const userSelect = { id: true, name: true, email: true, image: true, isAgent: true } as const
   const boards = await tx.board.findMany({
     where: { id: { in: boardIds } },
     select: {
       id: true,
-      members: { select: { user: { select: userSelect } } },
-      groups: { select: { group: { select: { userGroups: { select: { user: { select: userSelect } } } } } } },
+      members: { select: { user: { select: BOARD_USER_SELECT } } },
+      groups: { select: { group: { select: { userGroups: { select: { user: { select: BOARD_USER_SELECT } } } } } } },
     },
   })
 

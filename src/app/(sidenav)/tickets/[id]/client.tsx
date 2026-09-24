@@ -6,7 +6,6 @@ import { DatePickerField } from '@/components/general/date-picker'
 import { FlexCol } from '@/components/general/flex'
 import { Grid } from '@/components/general/grid'
 import { InputField } from '@/components/general/input'
-import { useConfirmModal } from '@/components/general/modal'
 import { NoticePanel, Panel, PanelSkeleton } from '@/components/general/panel'
 import { SingleSelectField } from '@/components/general/select'
 import { ContentHeader } from '@/components/header'
@@ -32,6 +31,7 @@ import { parseAction, useActionData } from '@/lib/action/action-client'
 import { dayformat, utcToDateOnly } from '@/lib/day'
 import { PatchTicketIn, scPatchTicket, zTicketTitle } from '@/lib/schema/schema'
 import { getFieldConstraints } from '@/lib/schema/schema-util'
+import { useConfirmAction } from '@/lib/use-confirm-action'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { Breadcrumbs } from '@heroui/react'
@@ -116,7 +116,7 @@ export const TicketDetailClient: FC<{
   const { t, fet } = useLocale()
   const tz = useUserTimezone()
   const router = useRouter()
-  const { confirmModal } = useConfirmModal()
+  const confirmAction = useConfirmAction()
   const { statusOptions, priorityOptions } = useTicketOptions()
   const agentModeOptions = useAgentModeOptions()
   const boardName = useBoardName()
@@ -247,22 +247,15 @@ export const TicketDetailClient: FC<{
     if (!ticket) {
       return
     }
-    try {
-      const ok = await confirmModal().confirm({
-        title: t('confirm_deletion'),
-        text: t('msg_confirm_deletion', { target: ticket.title }),
-        requireCheck: true,
-        autoClose: false,
-      })
-      if (ok) {
+    await confirmAction(
+      { title: t('confirm_deletion'), text: t('msg_confirm_deletion', { target: ticket.title }) },
+      async () => {
         await parseAction(deleteTicket({ id }))
         notify.success(t('msg_deleted_target', { target: ticket.title }))
         onChanged?.()
         close()
-      }
-    } finally {
-      confirmModal().close()
-    }
+      },
+    )
   }
 
   if (isLoading) {

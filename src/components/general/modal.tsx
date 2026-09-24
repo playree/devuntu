@@ -1,3 +1,5 @@
+'use client'
+
 import { Checkbox, Modal, ModalContainerProps, useOverlayState, UseOverlayStateReturn } from '@heroui/react'
 import { nanoid } from 'nanoid'
 import { usePathname } from 'next/navigation'
@@ -9,6 +11,7 @@ import {
   ReactNode,
   SVGProps,
   useContext,
+  useEffect,
   useImperativeHandle,
   useRef,
   useState,
@@ -38,16 +41,22 @@ const CheckIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, .
 export const useModalState = <T = string,>() => {
   const id = nanoid()
   const [key, setKey] = useState({ id, key: id })
-  const state = useOverlayState({ onOpenChange: (isOpen) => setKey(({ id }) => ({ id, key: `${id}_${isOpen}` })) })
   const [targetObj, setTargetObj] = useState<T>()
+  const state = useOverlayState({
+    onOpenChange: (isOpen) => {
+      setKey(({ id }) => ({ id, key: `${id}_${isOpen}` }))
+      // CloseTrigger や Esc で閉じた場合も、次の open() に前回の target を持ち越さない
+      if (!isOpen) {
+        setTargetObj(undefined)
+      }
+    },
+  })
 
   return {
     ...state,
     key: key.key,
     open: (target?: T) => {
-      if (target) {
-        setTargetObj(target)
-      }
+      setTargetObj(target)
       state.open()
     },
     close: () => {
@@ -120,7 +129,13 @@ export const FormModal: FC<{
   )
 }
 
-type ConfirmParam = { title: string; text: string; requireCheck?: boolean; autoClose?: boolean; onlyOk?: boolean }
+export type ConfirmParam = {
+  title: string
+  text: string
+  requireCheck?: boolean
+  autoClose?: boolean
+  onlyOk?: boolean
+}
 type ConfirmModalParam = { uiText?: { ok?: string; cancel?: string; confirmed?: string } }
 export type ConfirmModalRef = {
   confirm: (param: ConfirmParam) => Promise<boolean>
@@ -135,11 +150,25 @@ export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ ui
   const pathname = usePathname()
   const [prevPathname, setPrevPathname] = useState(pathname)
 
+  // 待っている confirm() を必ず解決する。解決されないと呼び出し側の finally が永久に実行されない
+  const settle = (value: boolean) => {
+    if (response.current) {
+      response.current(value)
+      response.current = undefined
+    }
+  }
+
   // レンダリング中にパスの変更をチェック
   if (pathname !== prevPathname) {
     setPrevPathname(pathname)
     setConfirmParam(undefined)
+    state.close()
   }
+
+  // 画面遷移で閉じた場合も、待っている confirm() はキャンセル扱いで解決する
+  useEffect(() => {
+    settle(false)
+  }, [pathname])
 
   useImperativeHandle(ref, () => ({
     confirm: (param) => {
@@ -156,11 +185,25 @@ export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ ui
         response.current = resolve
       })
     },
-    close: state.close,
+    close: () => {
+      settle(false)
+      state.close()
+    },
   }))
 
   return (
-    <Modal.Backdrop variant='blur' isOpen={state.isOpen} onOpenChange={state.setOpen} isDismissable={false}>
+    <Modal.Backdrop
+      variant='blur'
+      isOpen={state.isOpen}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          settle(false)
+        }
+        state.setOpen(isOpen)
+      }}
+      isDismissable={false}
+      isKeyboardDismissDisabled={isPending}
+    >
       <Modal.Container placement='top'>
         <Modal.Dialog>
           <Modal.Header>
@@ -188,10 +231,7 @@ export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ ui
                 isSmart
                 isDisabled={isPending}
                 onPress={() => {
-                  if (response.current) {
-                    response.current(false)
-                    response.current = undefined
-                  }
+                  settle(false)
                   state.close()
                 }}
               >
@@ -203,11 +243,8 @@ export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ ui
               isSmart
               isDisabled={!isAgree}
               isPending={isPending}
-              onPress={async () => {
-                if (response.current) {
-                  response.current(true)
-                  response.current = undefined
-                }
+              onPress={() => {
+                settle(true)
                 if (confirmParam?.autoClose === false) {
                   setPending(true)
                 } else {

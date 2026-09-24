@@ -179,7 +179,13 @@ describe('createDevuntuMcpServer', () => {
       arguments: { keyword: 'テスト', status: ['todo'] },
     })
 
-    expect(searchTicketsForMcp).toHaveBeenCalledWith(auth, { keyword: 'テスト', status: ['todo'] })
+    // 未指定の条件は Web の検索スキーマ(scTicketSearch)の既定値で埋まる
+    expect(searchTicketsForMcp).toHaveBeenCalledWith(auth, {
+      keyword: 'テスト',
+      status: ['todo'],
+      priority: [],
+      tags: [],
+    })
     expect(result.content).toEqual([{ type: 'text', text: JSON.stringify([{ title: 'テストチケット' }], null, 2) }])
   })
 
@@ -193,7 +199,13 @@ describe('createDevuntuMcpServer', () => {
       arguments: { assignee: 'me' },
     })
 
-    expect(searchTicketsForMcp).toHaveBeenCalledWith(agentAuth, { assignee: 'me' })
+    expect(searchTicketsForMcp).toHaveBeenCalledWith(agentAuth, {
+      assignee: 'me',
+      keyword: '',
+      status: [],
+      priority: [],
+      tags: [],
+    })
   })
 
   it('search_tickets の担当者はセンチネルか userId のみ受け付ける', async () => {
@@ -229,6 +241,7 @@ describe('createDevuntuMcpServer', () => {
       title: '新規チケット',
       status: 'todo',
       priority: 'medium',
+      tagIds: [],
     })
     expect(result.content).toEqual([
       { type: 'text', text: JSON.stringify({ id: 't1', displayId: 'ABC-1', title: '新規チケット' }, null, 2) },

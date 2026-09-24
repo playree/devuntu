@@ -1,11 +1,11 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
-import { useConfirmModal } from '@/components/general/modal'
 import { ArchiveBoxIcon, TrashIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { useBoardName } from '@/components/ticket/ticket-chip'
 import { parseAction } from '@/lib/action/action-client'
+import { useConfirmAction } from '@/lib/use-confirm-action'
 import { useLocale } from '@/locale/client'
 import { useRouter } from 'next/navigation'
 import { FC, ReactNode } from 'react'
@@ -36,48 +36,37 @@ export const DangerZone: FC<{ board: Board; reload: () => void }> = ({ board, re
   const { t } = useLocale()
   const router = useRouter()
   const boardName = useBoardName()
-  const { confirmModal } = useConfirmModal()
+  const confirmAction = useConfirmAction()
 
   const toggleArchive = async () => {
     const name = boardName(board)
     const next = !board.archived
-    try {
-      const ok = await confirmModal().confirm({
+    await confirmAction(
+      {
         title: t('confirm_archive'),
         text: next
           ? t('msg_confirm_archive_board', { target: name })
           : t('msg_confirm_unarchive_board', { target: name }),
-        requireCheck: true,
-        autoClose: false,
-      })
-      if (ok) {
+      },
+      async () => {
         await parseAction(setBoardArchived({ id: board.id, archived: next }))
         notify.success(t('msg_saved'))
         reload()
-      }
-    } finally {
-      confirmModal().close()
-    }
+      },
+    )
   }
 
   // ボード削除は配下のチケット / コメントごと消えるので、ボード名入りの専用確認文をチェック付きで出す
   const removeBoard = async () => {
     const name = boardName(board)
-    try {
-      const ok = await confirmModal().confirm({
-        title: t('confirm_deletion'),
-        text: t('msg_confirm_delete_board', { target: name }),
-        requireCheck: true,
-        autoClose: false,
-      })
-      if (ok) {
+    await confirmAction(
+      { title: t('confirm_deletion'), text: t('msg_confirm_delete_board', { target: name }) },
+      async () => {
         await parseAction(deleteBoard({ id: board.id }))
         notify.success(t('msg_deleted_target', { target: name }))
         router.push('/boards')
-      }
-    } finally {
-      confirmModal().close()
-    }
+      },
+    )
   }
 
   return (

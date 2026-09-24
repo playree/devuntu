@@ -3,35 +3,18 @@
 import { safeAuthAction } from '@/lib/action/action-server'
 import {
   assertBoardAccess,
-  assertBoardAssignee,
-  assertTicketAccess,
   ensurePrivateBoard,
   getAccessibleBoardIds,
   getBoardMemberUsers,
-  getBoardMentionCandidates,
   getBoardsMemberUsers,
-  nextTicketNumber,
-  reassignContentAttachments,
 } from '@/lib/board/board'
-import { assertTagIdsInBoard, listVisibleTags, rethrowDuplicatedTagName } from '@/lib/board/tag'
-import {
-  buildTicketWhere,
-  extractMentionEmails,
-  MAX_TAGS_PER_SCOPE,
-  nextOrder,
-  resolveMentionUserIds,
-  ticketDisplayId,
-  ticketListOrderBy,
-} from '@/lib/board/task'
-import { dateOnlyToUtc, nowDate } from '@/lib/day'
+import { listVisibleTags, rethrowDuplicatedTagName, TAG_SELECT } from '@/lib/board/tag'
+import { buildTicketWhere, MAX_TAGS_PER_SCOPE, nextOrder, ticketDisplayId, ticketListOrderBy } from '@/lib/board/task'
+import { createTicket as createTicketCore, deleteTicket as deleteTicketCore } from '@/lib/board/ticket-mutation'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
-import { enqueueTicketCreated } from '@/lib/notify/notify-trigger'
 import { prisma } from '@/lib/prisma'
 import { scCreateTag, scCreateTicket, scTicketListQuery, scUUID } from '@/lib/schema/schema'
-
-/** タグの選択肢として返す列。`lib/tag.ts` の TagOption と一致させる */
-const TAG_SELECT = { id: true, boardId: true, name: true, color: true, order: true } as const
 
 /** チケット一覧・詳細で共有する select。TicketTag を平坦化するために使う */
 const TICKET_TAGS_SELECT = { select: { tag: { select: TAG_SELECT } }, orderBy: { tag: { order: 'asc' } } } as const
@@ -188,77 +171,12 @@ export type GetAssigneeOptionsReturnType = Awaited<ReturnType<typeof getAssignee
  * チケット作成
  *
  * プライベートもプライベートボードに属するため経路は 1 本。
- * 担当者・タグがそのボードに属することは DB 制約では防げないのでここで検証する。
  */
 export const createTicket = safeAuthAction
   .metadata({ actionName: 'createTicket', role: 'user' })
   .inputSchema(scCreateTicket)
-  .action(async ({ ctx: { user }, parsedInput: { boardId, status, assigneeId, tagIds, dueDate, ...rest } }) => {
-    const ticket = await prisma.$transaction(async (tx) => {
-      // 参加しているボードのみ
-      const board = await assertBoardAccess(user, boardId, 'view', tx)
-      // アーカイブ済みボードは読み取り専用(evaluateTicketAccess と同じ方針)
-      if (board.archived) {
-        throw errInvalidOperation()
-      }
-      // 担当者はそのボードのメンバーに限る
-      await assertBoardAssignee(tx, boardId, assigneeId)
-      // タグもそのボードのものに限る
-      const ids = await assertTagIdsInBoard(tx, boardId, tagIds)
-
-      // 採番はボード行をロックする。レーンの読み取りより先に取ることで、同一ボードへの同時作成は
-      // 先行トランザクションのコミット後にレーンを読み直すことになり、order の重複も防げる
-      const number = await nextTicketNumber(tx, boardId)
-      // 対象レーンの末尾へ追加する。必要なのは最大値だけなので全行は読まない
-      const lane = await tx.ticket.aggregate({ where: { boardId, status }, _max: { order: true } })
-
-      // 本文のメンションはこのボードのメンバーに限って解決する
-      const candidates = await getBoardMentionCandidates(boardId, tx)
-      const mentionedUserIds = resolveMentionUserIds(extractMentionEmails(rest.content ?? ''), candidates)
-
-      const created = await tx.ticket.create({
-        data: {
-          ...rest,
-          number,
-          status,
-          boardId,
-          dueDate: dateOnlyToUtc(dueDate),
-          // 最初から完了で作ることもできるので、その場合はここで完了日時を入れる
-          completedAt: status === 'done' ? nowDate() : null,
-          createdById: user.id,
-          assigneeId: assigneeId ?? null,
-          mentionedUserIds,
-          tags: { create: ids.map((tagId) => ({ tagId })) },
-          order: nextOrder(lane._max.order === null ? [] : [lane._max.order]),
-        },
-        select: { id: true, title: true, number: true, board: { select: { key: true } } },
-      })
-
-      // 本文の画像はボードを選び直す前にアップロードされている場合があるので、作成先へ付け替える。
-      // 作成直後に呼ぶので、いま作ったチケット自身は「使用中」から除く
-      await reassignContentAttachments(tx, rest.content, boardId, user, created.id)
-
-      // 表示IDは組み立てて返す(作成直後の通知でそのまま出せるようにする)
-      const ticket = {
-        id: created.id,
-        title: created.title,
-        displayId: ticketDisplayId({ key: created.board.key, number: created.number }),
-      }
-
-      // 作成と同じトランザクションで投入する(コミット後に落ちると通知だけが消える)
-      await enqueueTicketCreated(
-        {
-          actorId: user.id,
-          ticket: { id: ticket.id, boardId, displayId: ticket.displayId, title: ticket.title },
-          assigneeId: assigneeId ?? null,
-          status,
-          mentionedUserIds,
-        },
-        tx,
-      )
-
-      return ticket
-    })
+  .action(async ({ ctx: { user }, parsedInput }) => {
+    const ticket = await createTicketCore(user, parsedInput)
 
     logger.info({ userId: user.id, ticket }, 'ticket created')
     return ticket
@@ -273,11 +191,7 @@ export const deleteTicket = safeAuthAction
   .metadata({ actionName: 'deleteTicket', role: 'user' })
   .inputSchema(scUUID)
   .action(async ({ ctx: { user }, parsedInput: { id } }) => {
-    await prisma.$transaction(async (tx) => {
-      await assertTicketAccess(user, id, 'delete', tx)
-      // TicketComment は onDelete: Cascade で自動削除される
-      await tx.ticket.delete({ where: { id } })
-    })
+    await deleteTicketCore(user, id)
 
     logger.info({ userId: user.id, id }, 'ticket deleted')
     return { id }

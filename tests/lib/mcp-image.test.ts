@@ -6,6 +6,7 @@
  */
 
 import { assertBoardAccess, assertTicketAccess, getBoardAccess } from '@/lib/board/board'
+import { errInvalidOperation } from '@/lib/error'
 import { registerImageTools } from '@/lib/mcp/mcp-image'
 import { resolveTicketId } from '@/lib/mcp/mcp-ticket'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
@@ -104,7 +105,7 @@ describe('create_image_upload_token', () => {
       await connectClient()
     ).callTool({ name: 'create_image_upload_token', arguments: { boardId: BOARD_ID } })
 
-    expect(assertBoardAccess).toHaveBeenCalledWith(auth.user, BOARD_ID, 'view')
+    expect(assertBoardAccess).toHaveBeenCalledWith(auth.user, BOARD_ID, 'write')
     const json = jsonOf(result)
     expect(json.uploadUrl).toBe('http://localhost:3000/api/upload')
     expect(json.boardId).toBe(BOARD_ID)
@@ -122,8 +123,9 @@ describe('create_image_upload_token', () => {
     expect(jsonOf(result).boardId).toBe(TICKET_BOARD_ID)
   })
 
-  it('アーカイブ済みボードへの添付を拒否する', async () => {
-    vi.mocked(assertBoardAccess).mockResolvedValue({ boardId: BOARD_ID, archived: true } as never)
+  it('書き込めないボード(アーカイブ済みなど)への添付を拒否する', async () => {
+    // アーカイブ済みの判定は assertBoardAccess の 'write' が受け持つ
+    vi.mocked(assertBoardAccess).mockRejectedValue(errInvalidOperation())
 
     const result = await (
       await connectClient()

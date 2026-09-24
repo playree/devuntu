@@ -1,4 +1,4 @@
-import { ASSIGNEE_NONE, TICKET_PRIORITIES, TICKET_STATUSES } from '@/lib/board/task'
+import { ASSIGNEE_NONE } from '@/lib/board/task'
 import { AGENT_MCP_SERVER_NAME, MCP_SERVER_NAME } from '@/lib/mcp/mcp'
 import { registerAgentSetupTool, registerAgentTools } from '@/lib/mcp/mcp-agent'
 import { getBoardForMcp, listBoardsForMcp } from '@/lib/mcp/mcp-board'
@@ -15,7 +15,14 @@ import {
   updateTicketForMcp,
 } from '@/lib/mcp/mcp-ticket'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
-import { zCommentContent, zCommentType, zDueDate, zTagIds, zTicketContent, zTicketTitle } from '@/lib/schema/schema'
+import {
+  scCreateTicket,
+  scPatchTicket,
+  scTicketSearch,
+  zCommentContent,
+  zCommentType,
+  zTicketStatus,
+} from '@/lib/schema/schema'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
@@ -40,6 +47,32 @@ const SERVER_NAME = {
   pat: MCP_SERVER_NAME,
   agent: AGENT_MCP_SERVER_NAME,
 } as const satisfies Record<ResourceAuth['kind'], string>
+
+/**
+ * チケット系ツールの入力。Web のスキーマから派生させ、MCP で違うところだけを差し替える。
+ * - ボードは ID に加えてボードキーでも受ける(`resolveBoardId` が解決する)
+ * - チケットは表示ID(ABC-42)でも受ける(`resolveTicketId` が解決する)
+ */
+const zBoardIdOrKey = z.string().min(1)
+
+const mcpCreateTicketSchema = scCreateTicket.extend({
+  boardId: zBoardIdOrKey.describe('ボードIDまたはボードキー(例: ABC)。list_boards で特定する'),
+})
+
+/** Web の詳細画面と違い、ステータスの変更も同じツールで受ける */
+const mcpUpdateTicketSchema = scPatchTicket.omit({ id: true }).extend({
+  ticketId: z.string().min(1),
+  status: zTicketStatus.optional(),
+})
+
+const mcpTicketSearchSchema = scTicketSearch.extend({
+  boardId: zBoardIdOrKey.optional().describe('ボードIDまたはボードキー(例: ABC)'),
+  assignee: z
+    .union([z.uuidv7(), z.literal(MCP_ASSIGNEE_ME), z.literal(ASSIGNEE_NONE)])
+    .optional()
+    .describe(`担当者。ユーザーID / '${MCP_ASSIGNEE_ME}'(自分) / '${ASSIGNEE_NONE}'(未割り当て)`),
+  limit: z.number().int().min(1).max(50).optional(),
+})
 
 export const createDevuntuMcpServer = (auth: ResourceAuth) => {
   const server = new McpServer({ name: SERVER_NAME[auth.kind], version: '1.0.0' })
@@ -108,18 +141,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     {
       title: 'チケット検索',
       description: 'キーワード・ステータス・優先度・タグ・ボード・担当者で、アクセス可能なチケットを検索する',
-      inputSchema: {
-        keyword: z.string().max(100).optional(),
-        status: z.array(z.enum(TICKET_STATUSES)).optional(),
-        priority: z.array(z.enum(TICKET_PRIORITIES)).optional(),
-        tags: z.array(z.string()).optional(),
-        boardId: z.string().min(1).optional().describe('ボードIDまたはボードキー(例: ABC)'),
-        assignee: z
-          .union([z.uuidv7(), z.literal(MCP_ASSIGNEE_ME), z.literal(ASSIGNEE_NONE)])
-          .optional()
-          .describe(`担当者。ユーザーID / '${MCP_ASSIGNEE_ME}'(自分) / '${ASSIGNEE_NONE}'(未割り当て)`),
-        limit: z.number().int().min(1).max(50).optional(),
-      },
+      inputSchema: mcpTicketSearchSchema.shape,
     },
     async (input) => ({
       content: [{ type: 'text' as const, text: JSON.stringify(await searchTicketsForMcp(auth, input), null, 2) }],
@@ -131,16 +153,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     {
       title: 'チケット作成',
       description: 'ボードにチケットを新規作成する',
-      inputSchema: {
-        boardId: z.string().min(1).describe('ボードIDまたはボードキー(例: ABC)。list_boards で特定する'),
-        title: zTicketTitle,
-        content: zTicketContent.optional(),
-        status: z.enum(TICKET_STATUSES).default('todo'),
-        priority: z.enum(TICKET_PRIORITIES).default('medium'),
-        dueDate: zDueDate,
-        assigneeId: z.uuidv7().nullish(),
-        tagIds: zTagIds.optional(),
-      },
+      inputSchema: mcpCreateTicketSchema.shape,
     },
     async (input) => ({
       content: [{ type: 'text' as const, text: JSON.stringify(await createTicketForMcp(auth, input), null, 2) }],
@@ -154,16 +167,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       description:
         'チケットの内容(タイトル/本文/優先度/期限/担当者/タグ)やステータスを更新する。' +
         'メンバーは他人が担当のチケットを更新できない(未割り当てなら可能。オーナーは制限なし)',
-      inputSchema: {
-        ticketId: z.string().min(1),
-        title: zTicketTitle.optional(),
-        content: zTicketContent.optional(),
-        priority: z.enum(TICKET_PRIORITIES).optional(),
-        dueDate: zDueDate,
-        assigneeId: z.uuidv7().nullish(),
-        tagIds: zTagIds.optional(),
-        status: z.enum(TICKET_STATUSES).optional(),
-      },
+      inputSchema: mcpUpdateTicketSchema.shape,
     },
     async ({ ticketId, ...input }) => ({
       content: [

@@ -6,6 +6,7 @@ import {
   assertBoardAccess,
   assertBoardAssignmentTargets,
   assertTeamBoard,
+  BOARD_USER_SELECT,
   countTicketsByBoard,
   getBoardMemberUsers,
   isAdminActor,
@@ -14,7 +15,7 @@ import {
   syncBoardGroups,
   type Actor,
 } from '@/lib/board/board'
-import { listBoardTagsForManage, rethrowDuplicatedTagName } from '@/lib/board/tag'
+import { listBoardTagsForManage, rethrowDuplicatedTagName, TAG_SELECT } from '@/lib/board/tag'
 import { canApplyAssignments, MAX_TAGS_PER_SCOPE, nextOrder, TICKET_STATUSES, type BoardRole } from '@/lib/board/task'
 import { errInvalidOperation, errValidation } from '@/lib/error'
 import { logger } from '@/lib/logger'
@@ -36,8 +37,6 @@ import {
 import { getSlackSettings, hasSlackCredentials } from '@/lib/slack/slack-account'
 import { listSlackChannels } from '@/lib/slack/slack-server'
 import { detachBoardAttachments, listBoardAttachmentKeys, removeAttachmentByKey } from '@/lib/storage/attachment'
-
-const TAG_SELECT = { id: true, boardId: true, name: true, color: true, order: true } as const
 
 /**
  * チャンネル一覧の強制再取得の連打防止。
@@ -277,7 +276,7 @@ export const getBoardAssignments = safeAuthAction
         },
       }),
       prisma.user.findMany({
-        select: { id: true, name: true, email: true, image: true, isAgent: true },
+        select: BOARD_USER_SELECT,
         orderBy: { name: 'asc' },
       }),
       prisma.group.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }),

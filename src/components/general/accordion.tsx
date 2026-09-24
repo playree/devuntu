@@ -1,3 +1,5 @@
+'use client'
+
 import { Accordion } from '@heroui/react'
 import { ComponentProps, FC, ReactNode } from 'react'
 import { tv } from 'tailwind-variants'

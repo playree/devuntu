@@ -1,12 +1,12 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action/action-server'
-import { assertBoardAccess, assertTicketAccess, isAdminActor, moveTicketToLane } from '@/lib/board/board'
+import { assertBoardAccess, isAdminActor } from '@/lib/board/board'
 import { groupByLane, kanbanDoneSince, kanbanTicketWhere, MAX_KANBAN_CARDS, ticketDisplayId } from '@/lib/board/task'
+import { changeTicketStatus } from '@/lib/board/ticket-mutation'
 import { nowDate } from '@/lib/day'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
-import { enqueueTicketMoved } from '@/lib/notify/notify-trigger'
 import { prisma } from '@/lib/prisma'
 import { scMoveTicket, scUUID } from '@/lib/schema/schema'
 
@@ -89,16 +89,7 @@ export const moveTicket = safeAuthAction
   .metadata({ actionName: 'moveTicket', role: 'user' })
   .inputSchema(scMoveTicket)
   .action(async ({ ctx: { user }, parsedInput: { id, status, index } }) => {
-    const moved = await prisma.$transaction(async (tx) => {
-      const access = await assertTicketAccess(user, id, 'edit', tx)
-      // 完了へ動いたかの判断に使う。認可の問い合わせで既に読めている
-      const before = access.status
-      const lane = await moveTicketToLane(tx, { access, status, index })
-
-      // 移動と同じトランザクションで投入する(コミット後に落ちると通知だけが消える)
-      await enqueueTicketMoved({ actorId: user.id, ticketId: id, before, after: lane.status }, tx)
-      return lane
-    })
+    const moved = await changeTicketStatus(user, id, status, index)
 
     logger.info({ userId: user.id, ...moved }, 'ticket moved')
     return moved

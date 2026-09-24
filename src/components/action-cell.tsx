@@ -1,9 +1,10 @@
-import { ClientError } from '@/lib/error'
+'use client'
+
+import { useConfirmAction } from '@/lib/use-confirm-action'
 import { useLocale } from '@/locale/client'
 import { ButtonProps, Table } from '@heroui/react'
 import { FC, ReactNode } from 'react'
 import { MultiButton } from './general/button'
-import { useConfirmModal } from './general/modal'
 import { TrashIcon } from './icon'
 
 export const ActionCell: FC<{
@@ -24,7 +25,7 @@ export const ActionCell: FC<{
   )[]
 }> = ({ items }) => {
   const { t } = useLocale()
-  const { confirmModal } = useConfirmModal()
+  const confirmAction = useConfirmAction()
 
   return (
     <Table.Cell className='py-2'>
@@ -38,26 +39,9 @@ export const ActionCell: FC<{
                 variant='danger-soft'
                 tooltip={t('delete')}
                 icon={<TrashIcon />}
-                onPress={async () => {
-                  try {
-                    const ok = await confirmModal().confirm({
-                      title: t('confirm_deletion'),
-                      text: t('msg_confirm_deletion', { target }),
-                      requireCheck: true,
-                      autoClose: false,
-                    })
-                    if (ok) {
-                      await action()
-                    }
-                  } catch (e) {
-                    // 削除できない理由は parseAction が通知済み
-                    if (!(e instanceof ClientError)) {
-                      throw e
-                    }
-                  } finally {
-                    confirmModal().close()
-                  }
-                }}
+                onPress={() =>
+                  confirmAction({ title: t('confirm_deletion'), text: t('msg_confirm_deletion', { target }) }, action)
+                }
                 isIconOnly
                 size='sm'
                 className='h-7 w-7 rounded-sm'

@@ -1,5 +1,5 @@
 import { getServerSession } from '@/lib/auth/auth'
-import { getBoardAccess, type Actor } from '@/lib/board/board'
+import { assertBoardAccess, type Actor } from '@/lib/board/board'
 import { ClientError } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { consumeRateLimit } from '@/lib/rate-limit'
@@ -55,6 +55,21 @@ const authenticate = async (req: Request): Promise<UploadAuth | null> => {
  * 巨大な本文をメモリへ載せられてしまう。上限を超えた時点でストリームを落とし、
  * `formData()` を失敗させる。
  */
+/**
+ * 添付先ボードへ本文を書けるか(メンバー かつ 未アーカイブ)。MCP の添付と同じ判定を使う。
+ * 権限が無いことだけを false にし、DB エラーなどはそのまま投げて 500 にする
+ */
+const canWriteBoard = (user: Actor, boardId: string): Promise<boolean> =>
+  assertBoardAccess(user, boardId, 'write').then(
+    () => true,
+    (err) => {
+      if (err instanceof ClientError) {
+        return false
+      }
+      throw err
+    },
+  )
+
 const limitBody = (req: Request, max: number) => {
   let exceeded = false
   if (!req.body) {
@@ -119,7 +134,7 @@ export const POST = async (req: Request) => {
     if (boardId === false) {
       return new NextResponse(null, { status: 400 })
     }
-    if (boardId && !(await getBoardAccess(auth.user, boardId))) {
+    if (boardId && !(await canWriteBoard(auth.user, boardId))) {
       return new NextResponse(null, { status: 403 })
     }
     actor = { userId, boardId }

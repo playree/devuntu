@@ -2,7 +2,6 @@
 
 import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
-import { useConfirmModal } from '@/components/general/modal'
 import { Panel } from '@/components/general/panel'
 import {
   CheckIcon,
@@ -22,6 +21,7 @@ import { commentAnchorId, TICKET_COMMENT_TYPE_LOCALE } from '@/lib/board/task'
 import { dayformat } from '@/lib/day'
 import { scCreateTicketComment } from '@/lib/schema/schema'
 import { getFieldConstraints } from '@/lib/schema/schema-util'
+import { useConfirmAction } from '@/lib/use-confirm-action'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { Accordion } from '@heroui/react'
@@ -59,7 +59,7 @@ export const CommentItem: FC<{
 }> = ({ comment, boardId, mentionCandidates, canDelete, isTarget, refresh }) => {
   const { t } = useLocale()
   const tz = useUserTimezone()
-  const { confirmModal } = useConfirmModal()
+  const confirmAction = useConfirmAction()
   const [isEditing, setEditing] = useState(false)
   const [draft, setDraft] = useState(comment.content)
   const [isSaving, setSaving] = useState(false)
@@ -79,23 +79,15 @@ export const CommentItem: FC<{
     }
   }
 
-  const remove = async () => {
-    try {
-      const ok = await confirmModal().confirm({
-        title: t('confirm_deletion'),
-        text: t('msg_confirm_deletion', { target: t('comment') }),
-        requireCheck: true,
-        autoClose: false,
-      })
-      if (ok) {
+  const remove = () =>
+    confirmAction(
+      { title: t('confirm_deletion'), text: t('msg_confirm_deletion', { target: t('comment') }) },
+      async () => {
         await parseAction(deleteTicketComment({ id: comment.id }))
         notify.success(t('msg_deleted_target', { target: t('comment') }))
         await refresh()
-      }
-    } finally {
-      confirmModal().close()
-    }
-  }
+      },
+    )
 
   return (
     <Panel // 通知の URL から直接開けるよう、コメント単位のアンカーを置く
