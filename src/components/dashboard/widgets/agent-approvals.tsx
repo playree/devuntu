@@ -2,13 +2,13 @@
 
 import { RocketLaunchIcon } from '@/components/icon'
 import { PriorityChip, TicketIdText } from '@/components/ticket/ticket-chip'
-import { parseAction } from '@/lib/action/action-client'
+import { useActionData } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'
 import { Chip } from '@heroui/react'
-import { FC, useEffect, useState } from 'react'
-import { getAgentApprovals, GetAgentApprovalsReturnType } from '../server'
+import { FC } from 'react'
+import { getAgentApprovals } from '../server'
 import { RowLink } from './ticket-row'
-import { WidgetCard, WidgetFC, WidgetRowList, WidgetSkeleton } from './widget-card'
+import { WidgetCard, WidgetFC, WidgetLoadError, WidgetRowList, WidgetSkeleton } from './widget-card'
 
 /**
  * 自分が承認者になっているエージェントの、エージェントモード未選択のチケットを表示する Widget。
@@ -16,11 +16,7 @@ import { WidgetCard, WidgetFC, WidgetRowList, WidgetSkeleton } from './widget-ca
  */
 export const AgentApprovalsWidget: WidgetFC = ({ id, editable }) => {
   const { t } = useLocale()
-  const [data, setData] = useState<GetAgentApprovalsReturnType>()
-
-  useEffect(() => {
-    parseAction(getAgentApprovals()).then((res) => setData(res))
-  }, [])
+  const { data, isLoading } = useActionData(getAgentApprovals)
 
   return (
     <WidgetCard
@@ -53,8 +49,10 @@ export const AgentApprovalsWidget: WidgetFC = ({ id, editable }) => {
             </RowLink>
           ))}
         </WidgetRowList>
-      ) : (
+      ) : isLoading ? (
         <WidgetSkeleton />
+      ) : (
+        <WidgetLoadError />
       )}
     </WidgetCard>
   )

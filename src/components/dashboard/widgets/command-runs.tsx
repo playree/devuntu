@@ -2,14 +2,14 @@
 
 import { CommandStatusChip } from '@/components/command/command-status-chip'
 import { CommandLineIcon } from '@/components/icon'
-import { parseAction } from '@/lib/action/action-client'
+import { useActionData } from '@/lib/action/action-client'
 import { dayformat } from '@/lib/day'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
-import { FC, useEffect, useState } from 'react'
-import { getRecentCommandRuns, GetRecentCommandRunsReturnType } from '../server'
+import { FC } from 'react'
+import { getRecentCommandRuns } from '../server'
 import { RowLink } from './ticket-row'
-import { WidgetCard, WidgetFC, WidgetRowList, WidgetSkeleton } from './widget-card'
+import { WidgetCard, WidgetFC, WidgetLoadError, WidgetRowList, WidgetSkeleton } from './widget-card'
 
 /**
  * 自分が実行したリモート実行の最近の結果を表示する Widget。
@@ -17,11 +17,7 @@ import { WidgetCard, WidgetFC, WidgetRowList, WidgetSkeleton } from './widget-ca
 export const CommandRunsWidget: WidgetFC = ({ id, editable }) => {
   const { t } = useLocale()
   const tz = useUserTimezone()
-  const [data, setData] = useState<GetRecentCommandRunsReturnType>()
-
-  useEffect(() => {
-    parseAction(getRecentCommandRuns()).then((res) => setData(res))
-  }, [])
+  const { data, isLoading } = useActionData(getRecentCommandRuns)
 
   return (
     <WidgetCard id={id} editable={editable} icon={<CommandLineIcon />} title={t('command_runs_recent')}>
@@ -42,8 +38,10 @@ export const CommandRunsWidget: WidgetFC = ({ id, editable }) => {
             </RowLink>
           ))}
         </WidgetRowList>
-      ) : (
+      ) : isLoading ? (
         <WidgetSkeleton />
+      ) : (
+        <WidgetLoadError />
       )}
     </WidgetCard>
   )

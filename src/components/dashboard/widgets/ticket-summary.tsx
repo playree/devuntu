@@ -3,13 +3,13 @@
 import { TableCellsIcon } from '@/components/icon'
 import { statusBgClass } from '@/components/ticket/ticket-chip'
 import type { TicketStatus } from '@/generated/prisma/enums'
-import { parseAction } from '@/lib/action/action-client'
+import { useActionData } from '@/lib/action/action-client'
 import { TICKET_STATUS_LOCALE, TICKET_STATUSES } from '@/lib/board/task'
 import { useLocale } from '@/locale/client'
 import Link from 'next/link'
-import { FC, ReactNode, useEffect, useState } from 'react'
-import { getTicketSummary, GetTicketSummaryReturnType } from '../server'
-import { WidgetCard, WidgetFC, WidgetSkeleton } from './widget-card'
+import { FC, ReactNode } from 'react'
+import { getTicketSummary } from '../server'
+import { WidgetCard, WidgetFC, WidgetLoadError, WidgetSkeleton } from './widget-card'
 
 /** 編集モード中はドラッグ操作と衝突しないよう遷移させない */
 const Tile: FC<{ status: TicketStatus; href: string; editable: boolean; children: ReactNode }> = ({
@@ -34,11 +34,7 @@ const Tile: FC<{ status: TicketStatus; href: string; editable: boolean; children
  */
 export const TicketSummaryWidget: WidgetFC = ({ id, editable }) => {
   const { t } = useLocale()
-  const [data, setData] = useState<GetTicketSummaryReturnType>()
-
-  useEffect(() => {
-    parseAction(getTicketSummary()).then((res) => setData(res))
-  }, [])
+  const { data, isLoading } = useActionData(getTicketSummary)
 
   return (
     <WidgetCard id={id} editable={editable} icon={<TableCellsIcon />} title={t('ticket_summary')}>
@@ -58,8 +54,10 @@ export const TicketSummaryWidget: WidgetFC = ({ id, editable }) => {
             </Tile>
           ))}
         </div>
-      ) : (
+      ) : isLoading ? (
         <WidgetSkeleton />
+      ) : (
+        <WidgetLoadError />
       )}
     </WidgetCard>
   )

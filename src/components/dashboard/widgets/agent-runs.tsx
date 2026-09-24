@@ -2,15 +2,15 @@
 
 import { AgentRunStatusChip } from '@/components/agent/agent-run-history'
 import { CpuChipIcon } from '@/components/icon'
-import { parseAction } from '@/lib/action/action-client'
+import { useActionData } from '@/lib/action/action-client'
 import { AGENT_RUN_ACTION_LOCALE } from '@/lib/agent/agent'
 import { dayformat } from '@/lib/day'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
-import { FC, useEffect, useState } from 'react'
-import { getRecentAgentRuns, GetRecentAgentRunsReturnType } from '../server'
+import { FC } from 'react'
+import { getRecentAgentRuns } from '../server'
 import { RowLink } from './ticket-row'
-import { WidgetCard, WidgetFC, WidgetRowList, WidgetSkeleton } from './widget-card'
+import { WidgetCard, WidgetFC, WidgetLoadError, WidgetRowList, WidgetSkeleton } from './widget-card'
 
 /**
  * 自分が承認者になっているエージェントの最近の実行を表示する Widget。
@@ -18,11 +18,7 @@ import { WidgetCard, WidgetFC, WidgetRowList, WidgetSkeleton } from './widget-ca
 export const AgentRunsWidget: WidgetFC = ({ id, editable }) => {
   const { t } = useLocale()
   const tz = useUserTimezone()
-  const [data, setData] = useState<GetRecentAgentRunsReturnType>()
-
-  useEffect(() => {
-    parseAction(getRecentAgentRuns()).then((res) => setData(res))
-  }, [])
+  const { data, isLoading } = useActionData(getRecentAgentRuns)
 
   return (
     <WidgetCard id={id} editable={editable} icon={<CpuChipIcon />} title={t('agent_runs_recent')}>
@@ -42,8 +38,10 @@ export const AgentRunsWidget: WidgetFC = ({ id, editable }) => {
             </RowLink>
           ))}
         </WidgetRowList>
-      ) : (
+      ) : isLoading ? (
         <WidgetSkeleton />
+      ) : (
+        <WidgetLoadError />
       )}
     </WidgetCard>
   )

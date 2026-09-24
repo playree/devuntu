@@ -4,27 +4,22 @@ import { Grid } from '@/components/general/grid'
 import { ProgressBar } from '@/components/general/progress'
 import { ArrowTopRightOnSquareIcon, InformationCircleIcon } from '@/components/icon'
 import { MarkdownView } from '@/components/markdown/markdown-view'
-import { parseAction } from '@/lib/action/action-client'
+import { parseAction, useActionData } from '@/lib/action/action-client'
 import { calcPercent, formatByte, formatTime } from '@/lib/math'
 import { useLocale } from '@/locale/client'
 import { useDraggable } from '@dnd-kit/react'
-import { Card, Description, Separator, Skeleton } from '@heroui/react'
+import { Card, Description, Separator } from '@heroui/react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { FC, useEffect, useState } from 'react'
 import {
   getAnnouncement,
-  GetAnnouncementReturnType,
   getAppInfo,
-  GetAppInfoReturnType,
   getLinodeTransferInfo,
-  GetLinodeTransferInfoReturnType,
   getOtherWidgets,
   GetOtherWidgetsReturnType,
   getReleaseNotes,
-  GetReleaseNotesReturnType,
   getServerInfo,
-  GetServerInfoReturnType,
 } from './server'
 import { AgentApprovalsWidget, AgentApprovalsWidgetName } from './widgets/agent-approvals'
 import { AgentRunsWidget, AgentRunsWidgetName } from './widgets/agent-runs'
@@ -34,7 +29,7 @@ import { MentionsWidget, MentionsWidgetName } from './widgets/mentions'
 import { MyTicketsWidget, MyTicketsWidgetName } from './widgets/my-tickets'
 import { RecentActivityWidget, RecentActivityWidgetName } from './widgets/recent-activity'
 import { TicketSummaryWidget, TicketSummaryWidgetName } from './widgets/ticket-summary'
-import { WidgetFC } from './widgets/widget-card'
+import { WidgetCard, WidgetFC, WidgetLoadError, WidgetSkeleton } from './widgets/widget-card'
 
 export type WidgetSet = {
   id: string
@@ -47,38 +42,23 @@ export type WidgetSet = {
  */
 export const AppInfoWidget: WidgetFC = ({ id, editable }) => {
   const { t } = useLocale()
-  const { ref } = useDraggable({
-    id,
-    disabled: !editable,
-  })
-  const [data, setData] = useState<GetAppInfoReturnType>()
-
-  useEffect(() => {
-    parseAction(getAppInfo()).then((res) => setData(res))
-  }, [])
+  const { data, isLoading } = useActionData(getAppInfo)
 
   return (
-    <Card ref={ref} className='h-full w-full gap-1 py-2'>
-      <Card.Header>
-        <div className='flex gap-1 font-bold'>
-          <InformationCircleIcon />
-          {t('app_info')}
-        </div>
-      </Card.Header>
-      <Card.Content>
-        <Separator className='my-1' />
-        {data ? (
-          <Grid>
-            <div className='col-span-4 text-sm'>{t('version')} :</div>
-            <div className='col-span-8'>{data.version}</div>
-            <div className='col-span-4 text-sm'>{t('buildno')} :</div>
-            <div className='col-span-8'>{data.buildno}</div>
-          </Grid>
-        ) : (
-          <Skeleton className='h-full min-h-14 w-full rounded-xl' />
-        )}
-      </Card.Content>
-    </Card>
+    <WidgetCard id={id} editable={editable} icon={<InformationCircleIcon />} title={t('app_info')} className='h-full'>
+      {data ? (
+        <Grid>
+          <div className='col-span-4 text-sm'>{t('version')} :</div>
+          <div className='col-span-8'>{data.version}</div>
+          <div className='col-span-4 text-sm'>{t('buildno')} :</div>
+          <div className='col-span-8'>{data.buildno}</div>
+        </Grid>
+      ) : isLoading ? (
+        <WidgetSkeleton />
+      ) : (
+        <WidgetLoadError />
+      )}
+    </WidgetCard>
   )
 }
 export const AppInfoWidgetName: FC = () => {
@@ -91,42 +71,33 @@ export const AppInfoWidgetName: FC = () => {
  */
 export const ServerInfoWidget: WidgetFC = ({ id, editable }) => {
   const { t } = useLocale()
-  const { ref } = useDraggable({
-    id,
-    disabled: !editable,
-  })
-  const [data, setData] = useState<GetServerInfoReturnType>()
-
-  useEffect(() => {
-    parseAction(getServerInfo()).then((res) => setData(res))
-  }, [])
+  const { data, isLoading } = useActionData(getServerInfo)
 
   return (
-    <Card ref={ref} className='h-full w-full gap-1 py-2'>
-      <Card.Header>
-        <div className='flex gap-1 font-bold'>
-          <InformationCircleIcon />
-          {t('server_info')}
-        </div>
-      </Card.Header>
-      <Card.Content>
-        <Separator className='my-1' />
-        {data ? (
-          <Grid>
-            <div className='col-span-4 text-sm'>{t('free_memory')} :</div>
-            <div className='col-span-8'>
-              <ProgressBar progress={calcPercent(data.memory.free, data.memory.total)} ariaLabel={t('free_memory')}>
-                {formatByte(data.memory.free)} / {formatByte(data.memory.total)}
-              </ProgressBar>
-            </div>
-            <div className='col-span-4 text-sm'>{t('uptime')} :</div>
-            <div className='col-span-8'>{formatTime(data.uptime)}</div>
-          </Grid>
-        ) : (
-          <Skeleton className='h-full min-h-14 w-full rounded-xl' />
-        )}
-      </Card.Content>
-    </Card>
+    <WidgetCard
+      id={id}
+      editable={editable}
+      icon={<InformationCircleIcon />}
+      title={t('server_info')}
+      className='h-full'
+    >
+      {data ? (
+        <Grid>
+          <div className='col-span-4 text-sm'>{t('free_memory')} :</div>
+          <div className='col-span-8'>
+            <ProgressBar progress={calcPercent(data.memory.free, data.memory.total)} ariaLabel={t('free_memory')}>
+              {formatByte(data.memory.free)} / {formatByte(data.memory.total)}
+            </ProgressBar>
+          </div>
+          <div className='col-span-4 text-sm'>{t('uptime')} :</div>
+          <div className='col-span-8'>{formatTime(data.uptime)}</div>
+        </Grid>
+      ) : isLoading ? (
+        <WidgetSkeleton />
+      ) : (
+        <WidgetLoadError />
+      )}
+    </WidgetCard>
   )
 }
 export const ServerInfoWidgetName: FC = () => {
@@ -136,45 +107,37 @@ export const ServerInfoWidgetName: FC = () => {
 
 /**
  * Linode Transfer情報を表示する Widget。
+ * `LINODE_*` が未設定で Action が null を返した場合も、取得完了後は失敗として扱う。
  */
 export const LinodeTransferInfoWidget: WidgetFC = ({ id, editable }) => {
   const { t } = useLocale()
-  const { ref } = useDraggable({
-    id,
-    disabled: !editable,
-  })
-  const [data, setData] = useState<GetLinodeTransferInfoReturnType>()
-
-  useEffect(() => {
-    parseAction(getLinodeTransferInfo()).then((res) => setData(res))
-  }, [])
+  const { data, isLoading } = useActionData(getLinodeTransferInfo)
 
   return (
-    <Card ref={ref} className='h-full w-full gap-1 py-2'>
-      <Card.Header>
-        <div className='flex gap-1 font-bold'>
-          <InformationCircleIcon />
-          {t('linode_transfer_info')}
-        </div>
-      </Card.Header>
-      <Card.Content>
-        <Separator className='my-1' />
-        {data ? (
-          <Grid>
-            <div className='col-span-4 text-sm'>{t('transfer_pool_usage')} :</div>
-            <div className='col-span-8'>
-              <ProgressBar progress={calcPercent(data.used, data.total)} ariaLabel={t('transfer_pool_usage')}>
-                {formatByte(data.used)} / {data.quota}GiB
-              </ProgressBar>
-            </div>
-            <div className='col-span-4 text-sm'>{t('transfer_billable')} :</div>
-            <div className='col-span-8'>{data.billable}GiB</div>
-          </Grid>
-        ) : (
-          <Skeleton className='h-full min-h-14 w-full rounded-xl' />
-        )}
-      </Card.Content>
-    </Card>
+    <WidgetCard
+      id={id}
+      editable={editable}
+      icon={<InformationCircleIcon />}
+      title={t('linode_transfer_info')}
+      className='h-full'
+    >
+      {data ? (
+        <Grid>
+          <div className='col-span-4 text-sm'>{t('transfer_pool_usage')} :</div>
+          <div className='col-span-8'>
+            <ProgressBar progress={calcPercent(data.used, data.total)} ariaLabel={t('transfer_pool_usage')}>
+              {formatByte(data.used)} / {data.quota}GiB
+            </ProgressBar>
+          </div>
+          <div className='col-span-4 text-sm'>{t('transfer_billable')} :</div>
+          <div className='col-span-8'>{data.billable}GiB</div>
+        </Grid>
+      ) : isLoading ? (
+        <WidgetSkeleton />
+      ) : (
+        <WidgetLoadError />
+      )}
+    </WidgetCard>
   )
 }
 export const LinodeTransferInfoWidgetName: FC = () => {
@@ -187,43 +150,28 @@ export const LinodeTransferInfoWidgetName: FC = () => {
  */
 export const ReleaseNoteWidget: WidgetFC = ({ id, editable }) => {
   const { t } = useLocale()
-  const { ref } = useDraggable({
-    id,
-    disabled: !editable,
-  })
-  const [data, setData] = useState<GetReleaseNotesReturnType>()
-
-  useEffect(() => {
-    parseAction(getReleaseNotes()).then((res) => setData(res))
-  }, [])
+  const { data, isLoading } = useActionData(getReleaseNotes)
 
   return (
-    <Card ref={ref} className='w-full gap-1 py-2'>
-      <Card.Header>
-        <div className='flex gap-1 font-bold'>
-          <InformationCircleIcon />
-          {t('release_note')}
+    <WidgetCard id={id} editable={editable} icon={<InformationCircleIcon />} title={t('release_note')}>
+      {data ? (
+        <div className='max-h-80 min-h-14 flex-1 overflow-y-auto'>
+          {data.map((note) => {
+            return (
+              <div key={note.id}>
+                <div className='text-base font-bold'>{note.name}</div>
+                <MarkdownView body={note.body} />
+                <Separator className='my-2' />
+              </div>
+            )
+          })}
         </div>
-      </Card.Header>
-      <Card.Content>
-        <Separator className='my-1' />
-        {data ? (
-          <div className='max-h-80 min-h-14 flex-1 overflow-y-auto'>
-            {data.map((note) => {
-              return (
-                <div key={note.id}>
-                  <div className='text-base font-bold'>{note.name}</div>
-                  <MarkdownView body={note.body} />
-                  <Separator className='my-2' />
-                </div>
-              )
-            })}
-          </div>
-        ) : (
-          <Skeleton className='h-full min-h-14 w-full rounded-xl' />
-        )}
-      </Card.Content>
-    </Card>
+      ) : isLoading ? (
+        <WidgetSkeleton />
+      ) : (
+        <WidgetLoadError />
+      )}
+    </WidgetCard>
   )
 }
 export const ReleaseNoteWidgetName: FC = () => {
@@ -236,35 +184,20 @@ export const ReleaseNoteWidgetName: FC = () => {
  */
 export const AnnouncementWidget: WidgetFC = ({ id, editable }) => {
   const { t } = useLocale()
-  const { ref } = useDraggable({
-    id,
-    disabled: !editable,
-  })
-  const [data, setData] = useState<GetAnnouncementReturnType>()
-
-  useEffect(() => {
-    parseAction(getAnnouncement()).then((res) => setData(res))
-  }, [])
+  const { data, isLoading } = useActionData(getAnnouncement)
 
   return (
-    <Card ref={ref} className='w-full gap-1 py-2'>
-      <Card.Header>
-        <div className='flex gap-1 font-bold'>
-          <InformationCircleIcon />
-          {t('announcement')}
+    <WidgetCard id={id} editable={editable} icon={<InformationCircleIcon />} title={t('announcement')}>
+      {data ? (
+        <div className='max-h-80 min-h-14 flex-1 overflow-y-auto'>
+          <MarkdownView body={data.body} />
         </div>
-      </Card.Header>
-      <Card.Content>
-        <Separator className='my-1' />
-        {data ? (
-          <div className='max-h-80 min-h-14 flex-1 overflow-y-auto'>
-            <MarkdownView body={data.body} />
-          </div>
-        ) : (
-          <Skeleton className='h-full min-h-14 w-full rounded-xl' />
-        )}
-      </Card.Content>
-    </Card>
+      ) : isLoading ? (
+        <WidgetSkeleton />
+      ) : (
+        <WidgetLoadError />
+      )}
+    </WidgetCard>
   )
 }
 export const AnnouncementWidgetName: FC = () => {
