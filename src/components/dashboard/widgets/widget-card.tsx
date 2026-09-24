@@ -38,3 +38,15 @@ export const WidgetCard: FC<{
 
 /** 取得中の表示 */
 export const WidgetSkeleton: FC = () => <Skeleton className='h-full min-h-14 w-full rounded-xl' />
+
+/** Widget 内の行一覧。0 件なら message を出す */
+export const WidgetRowList: FC<{ isEmpty: boolean; message: string; children: ReactNode }> = ({
+  isEmpty,
+  message,
+  children,
+}) => {
+  if (isEmpty) {
+    return <div className='min-h-14 px-2 py-1 text-sm text-gray-500'>{message}</div>
+  }
+  return <div className='flex max-h-96 min-h-14 flex-col overflow-y-auto'>{children}</div>
+}

@@ -8,6 +8,7 @@ import { useLocale } from '@/locale/client'
 import Link from 'next/link'
 import { FC, ReactNode } from 'react'
 import { tv } from 'tailwind-variants'
+import { WidgetRowList } from './widget-card'
 
 export type WidgetTicket = {
   id: string
@@ -49,7 +50,7 @@ export const TicketDueDate: FC<{ dueDate: Date | null; tz: string }> = ({ dueDat
 }
 
 /** 編集モード中はドラッグ操作と衝突しないよう遷移させない */
-const RowLink: FC<{ href: string; editable: boolean; children: ReactNode }> = ({ href, editable, children }) => {
+export const RowLink: FC<{ href: string; editable: boolean; children: ReactNode }> = ({ href, editable, children }) => {
   const className = 'flex flex-col gap-1 rounded-lg px-2 py-1.5 hover:bg-default/40'
   if (editable) {
     return <div className={className}>{children}</div>
@@ -81,15 +82,10 @@ export const TicketRowList: FC<{ tickets: WidgetTicket[]; tz: string; editable: 
   tz,
   editable,
   message,
-}) => {
-  if (tickets.length === 0) {
-    return <div className='min-h-14 px-2 py-1 text-sm text-gray-500'>{message}</div>
-  }
-  return (
-    <div className='flex max-h-96 min-h-14 flex-col overflow-y-auto'>
-      {tickets.map((ticket) => (
-        <TicketRow key={ticket.id} ticket={ticket} tz={tz} editable={editable} />
-      ))}
-    </div>
-  )
-}
+}) => (
+  <WidgetRowList isEmpty={tickets.length === 0} message={message}>
+    {tickets.map((ticket) => (
+      <TicketRow key={ticket.id} ticket={ticket} tz={tz} editable={editable} />
+    ))}
+  </WidgetRowList>
+)

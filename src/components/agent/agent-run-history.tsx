@@ -2,6 +2,7 @@
 
 import { PagingList } from '@/components/general/paging'
 import { MultiTable, TruncatedCell } from '@/components/general/table'
+import type { AgentRunStatus } from '@/generated/prisma/enums'
 import { AGENT_RUN_ACTION_LOCALE, AGENT_RUN_STATUS_LOCALE, agentRunDuration } from '@/lib/agent/agent'
 import type { AgentRunSummary } from '@/lib/agent/agent-runner-config'
 import { dayformat } from '@/lib/day'
@@ -17,7 +18,16 @@ const STATUS_COLOR = {
   succeeded: 'success',
   failed: 'danger',
   skipped: 'warning',
-} as const
+} as const satisfies Record<AgentRunStatus, string>
+
+export const AgentRunStatusChip: FC<{ status: AgentRunStatus }> = ({ status }) => {
+  const { t } = useLocale()
+  return (
+    <Chip color={STATUS_COLOR[status]} variant='soft' className='whitespace-nowrap'>
+      {t(AGENT_RUN_STATUS_LOCALE[status])}
+    </Chip>
+  )
+}
 
 /**
  * 自動運用の実行履歴。
@@ -60,9 +70,7 @@ export const AgentRunHistory: FC<{ pagingList: PagingList<AgentRunSummary> }> = 
           </Table.Cell>
           <Table.Cell className='whitespace-nowrap'>{t(AGENT_RUN_ACTION_LOCALE[item.action])}</Table.Cell>
           <Table.Cell>
-            <Chip color={STATUS_COLOR[item.status]} variant='soft' className='whitespace-nowrap'>
-              {t(AGENT_RUN_STATUS_LOCALE[item.status])}
-            </Chip>
+            <AgentRunStatusChip status={item.status} />
           </Table.Cell>
           <Table.Cell className='font-mono text-xs'>{dayformat(item.startedAt, 'tz-simple', tz)}</Table.Cell>
           <Table.Cell className='font-mono text-xs'>{agentRunDuration(item.startedAt, item.finishedAt)}</Table.Cell>

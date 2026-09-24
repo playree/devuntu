@@ -1,7 +1,10 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action/action-server'
+import { canUseAgentWidgets, listPendingApprovalTickets, listRecentAgentRuns } from '@/lib/agent/agent-widget'
 import { countMyTicketsByStatus, listDueSoonTickets, listMyTickets } from '@/lib/board/ticket-widget'
+import { canUseAnyCommand } from '@/lib/command/command-access'
+import { listMyRecentCommandRuns } from '@/lib/command/command-widget'
 import { DEFAULT_TZ } from '@/lib/day'
 import { envu } from '@/lib/env-util'
 import { errCommunication } from '@/lib/error'
@@ -15,15 +18,22 @@ import pkg from '../../../package.json'
  */
 export const getOtherWidgets = safeAuthAction
   .metadata({ actionName: 'getOtherWidgets', role: 'user' })
-  .action(async () => {
-    return {
-      linkWidgets: await prisma.linkWidget.findMany({
+  .action(async ({ ctx: { user } }) => {
+    const [linkWidgets, enabledAgentWidgets, enabledCommandRuns] = await Promise.all([
+      prisma.linkWidget.findMany({
         select: { id: true, name: true, url: true, description: true, iconPath: true },
       }),
+      canUseAgentWidgets(user.id),
+      canUseAnyCommand(user),
+    ])
+    return {
+      linkWidgets,
       enabledLinodeTransferInfo: !!(
         (envu.server.LINODE_ID && envu.server.LINODE_PERSONAL_ACCESS_TOKEN) ||
         envu.server.DEBUG_LINODE_DUMMY
       ),
+      enabledAgentWidgets,
+      enabledCommandRuns,
     }
   })
 export type GetOtherWidgetsReturnType = Awaited<ReturnType<typeof getOtherWidgets>>['data']
@@ -157,3 +167,27 @@ export const getTicketSummary = safeAuthAction
   .metadata({ actionName: 'getTicketSummary', role: 'user' })
   .action(async ({ ctx: { user } }) => ({ counts: await countMyTicketsByStatus(user.id), selfUserId: user.id }))
 export type GetTicketSummaryReturnType = Awaited<ReturnType<typeof getTicketSummary>>['data']
+
+/**
+ * 承認者になっているエージェントの承認待ちチケット取得
+ */
+export const getAgentApprovals = safeAuthAction
+  .metadata({ actionName: 'getAgentApprovals', role: 'user' })
+  .action(async ({ ctx: { user } }) => listPendingApprovalTickets(user.id))
+export type GetAgentApprovalsReturnType = Awaited<ReturnType<typeof getAgentApprovals>>['data']
+
+/**
+ * 承認者になっているエージェントの最近の実行取得
+ */
+export const getRecentAgentRuns = safeAuthAction
+  .metadata({ actionName: 'getRecentAgentRuns', role: 'user' })
+  .action(async ({ ctx: { user } }) => listRecentAgentRuns(user.id))
+export type GetRecentAgentRunsReturnType = Awaited<ReturnType<typeof getRecentAgentRuns>>['data']
+
+/**
+ * 自分が実行した最近のリモート実行取得
+ */
+export const getRecentCommandRuns = safeAuthAction
+  .metadata({ actionName: 'getRecentCommandRuns', role: 'user' })
+  .action(async ({ ctx: { user } }) => listMyRecentCommandRuns(user))
+export type GetRecentCommandRunsReturnType = Awaited<ReturnType<typeof getRecentCommandRuns>>['data']
