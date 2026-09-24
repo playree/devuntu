@@ -1079,13 +1079,14 @@ export const TruckIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth
   </svg>
 )
 
-export const GithubIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 24, ...props }) => (
+export const GithubIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
   <svg
     fill='currentColor'
     viewBox='0 0 24 24'
     xmlns='http://www.w3.org/2000/svg'
     aria-hidden='true'
     width={width}
+    strokeWidth={strokeWidth}
     {...props}
   >
     <path
