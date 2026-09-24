@@ -40,7 +40,7 @@ export const en: LocaleItems = {
   agent_last_polled: 'Last Poll',
   agent_manage: 'Agents',
   agent_approvals: 'Agent Approvals',
-  agent_approvals_total: '${count} tickets',
+  agent_approvals_total: '${count} pending',
   agent_mode: 'Agent Mode',
   agent_mode_auto: 'Auto',
   agent_mode_none: 'Pending',
