@@ -12,28 +12,11 @@ import {
   TableColumnProps,
   type TableContentProps,
 } from '@heroui/react'
-import { FC, ReactNode, SVGProps, useMemo } from 'react'
+import { FC, ReactNode, useMemo } from 'react'
+import { ChevronUpIcon } from './icons'
 import { type PagingList, ROWS_PER_PAGE_OPTIONS } from './paging'
 import { SingleSelectField } from './select'
 import { useGeneralUiText } from './ui-text'
-
-const ChevronUpIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
-  <svg
-    fill='currentColor'
-    viewBox='0 0 24 24'
-    xmlns='http://www.w3.org/2000/svg'
-    aria-hidden='true'
-    width={width}
-    strokeWidth={strokeWidth}
-    {...props}
-  >
-    <path
-      clipRule='evenodd'
-      fillRule='evenodd'
-      d='M11.47 7.72a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 1 1-1.06 1.06L12 9.31l-6.97 6.97a.75.75 0 0 1-1.06-1.06l7.5-7.5Z'
-    />
-  </svg>
-)
 
 const SortableColumnHeader: FC<{
   children: React.ReactNode

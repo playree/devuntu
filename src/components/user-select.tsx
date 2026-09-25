@@ -2,8 +2,8 @@
 
 import { UserAvatar } from '@/components/general/avatar'
 import { MultiButton } from '@/components/general/button'
-import { XCircleIcon } from '@/components/general/select'
 import { useSmart } from '@/components/general/smart'
+import { XCircleIcon } from '@/components/icon'
 import { useSelfUserId } from '@/lib/use-user'
 import { useLocale } from '@/locale/client'
 import { ComboBox, EmptyState, ErrorMessage, Input, Label, ListBox, cn } from '@heroui/react'

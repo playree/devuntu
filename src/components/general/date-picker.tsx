@@ -4,7 +4,7 @@ import { Calendar, cn, DateField, DatePicker, DateRangePicker, ErrorMessage, Lab
 import { CalendarDate, parseDate } from '@internationalized/date'
 import { ComponentProps } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
-import { XCircleIcon } from './select'
+import { XCircleIcon } from './icons'
 import { useSmart } from './smart'
 
 /** DateField.Input の children が受け取るセグメント(型を直接 import できないため props から導出する) */

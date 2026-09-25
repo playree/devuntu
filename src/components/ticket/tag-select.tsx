@@ -1,9 +1,8 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
-import { XCircleIcon } from '@/components/general/select'
 import { useSmart } from '@/components/general/smart'
-import { PlusIcon, XMarkIcon } from '@/components/icon'
+import { PlusIcon, XCircleIcon, XMarkIcon } from '@/components/icon'
 import type { TagColor } from '@/generated/prisma/enums'
 import { MAX_TAG_NAME, MAX_TICKET_TAGS } from '@/lib/board/task'
 import { useLocale } from '@/locale/client'
