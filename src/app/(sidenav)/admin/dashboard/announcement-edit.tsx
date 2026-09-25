@@ -34,13 +34,14 @@ export const AnnouncementEditModal: FC<ModalBaseProps> = ({ state, reload }) => 
 
   return (
     <DialogModal
+      isPending={isSaving}
       state={state}
       size='3xl'
       title={{ text: t('announcement_edit'), icon: <PencilSquareIcon /> }}
       footer={
         initialBody !== undefined && (
           <>
-            <MultiButton slot='close' variant='ghost'>
+            <MultiButton slot='close' variant='ghost' isDisabled={isSaving}>
               {t('cancel')}
             </MultiButton>
             <MultiButton

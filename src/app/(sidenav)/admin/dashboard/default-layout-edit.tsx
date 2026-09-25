@@ -30,6 +30,7 @@ export const DefaultLayoutEditModal: FC<ModalBaseProps> = ({ state }) => {
 
   return (
     <DialogModal
+      isPending={isSaving}
       state={state}
       size='3xl'
       title={{ text: t('default_layout_manage'), icon: <Squares2X2Icon /> }}
@@ -37,7 +38,7 @@ export const DefaultLayoutEditModal: FC<ModalBaseProps> = ({ state }) => {
       footer={
         isLoaded && (
           <>
-            <MultiButton slot='close' variant='ghost'>
+            <MultiButton slot='close' variant='ghost' isDisabled={isSaving}>
               {t('cancel')}
             </MultiButton>
             <MultiButton

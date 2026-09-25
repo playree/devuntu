@@ -103,6 +103,8 @@ export const CheckboxGroupField = <T extends string>({
     <CheckboxGroup
       className={cn('gap-2', className)}
       isInvalid={!!errorMessage}
+      // validationBehavior の事情は InputField と同じ
+      validationBehavior='aria'
       isDisabled={isDisabled}
       isReadOnly={isReadOnly}
       // isRequired は渡さない(ネイティブ required 検証で submit が握り潰されるため)。必須はラベルの表記で伝える

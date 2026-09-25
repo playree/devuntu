@@ -12,12 +12,12 @@ export const OnOffChip: FC<{ isState: boolean | undefined; variant?: ChipProps['
   return isState ? (
     <Chip color='success' variant={variant}>
       <CheckBadgeIcon />
-      {!isIconOnly && <Chip.Label>{uiText.on}</Chip.Label>}
+      <Chip.Label className={isIconOnly ? 'sr-only' : undefined}>{uiText.on}</Chip.Label>
     </Chip>
   ) : (
     <Chip color='default' variant={variant} className='opacity-30'>
       <XCircleIcon />
-      {!isIconOnly && <Chip.Label>{uiText.off}</Chip.Label>}
+      <Chip.Label className={isIconOnly ? 'sr-only' : undefined}>{uiText.off}</Chip.Label>
     </Chip>
   )
 }
