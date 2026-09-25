@@ -11,10 +11,9 @@
 
 import type { Prisma } from '@/generated/prisma/client'
 import { errInvalidOperation } from '../error'
-import { prisma } from '../prisma'
+import { listGroupOptions, mergeMemberUsers } from '../group'
+import { prisma, type Db } from '../prisma'
 import { type CommandTargetRole } from './command'
-
-type Db = Prisma.TransactionClient | typeof prisma
 
 /** アサインされたユーザー1人ぶんの表示用の形 */
 export type CommandTargetUser = {
@@ -45,19 +44,10 @@ export const getCommandTargetUsers = async (targetKey: string, tx: Db = prisma):
     }),
   ])
 
-  const users = new Map<string, CommandTargetUser>()
-  for (const { role, user } of members) {
-    users.set(user.id, { ...user, role, via: 'member' })
-  }
-  for (const { group } of groups) {
-    for (const { user } of group.userGroups) {
-      if (!users.has(user.id)) {
-        users.set(user.id, { ...user, role: null, via: 'group' })
-      }
-    }
-  }
-
-  return [...users.values()].sort((a, b) => a.name.localeCompare(b.name))
+  return mergeMemberUsers<CommandTargetUser>(
+    members.map(({ role, user }) => ({ ...user, role, via: 'member' })),
+    groups.flatMap(({ group }) => group.userGroups.map(({ user }) => ({ ...user, role: null, via: 'group' }))),
+  )
 }
 
 /** アサイン編集フォームの初期値と選択肢 */
@@ -66,7 +56,7 @@ export const getCommandTargetAssignments = async (targetKey: string) => {
     prisma.commandTargetMember.findMany({ where: { targetKey }, select: { userId: true, role: true } }),
     prisma.commandTargetGroup.findMany({ where: { targetKey }, select: { groupId: true } }),
     prisma.user.findMany({ select: userSelect, orderBy: { name: 'asc' } }),
-    prisma.group.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }),
+    listGroupOptions(),
   ])
 
   return {
@@ -74,7 +64,7 @@ export const getCommandTargetAssignments = async (targetKey: string) => {
     groupIds: targetGroups.map((group) => group.groupId),
     // 構造は `components/user-select.tsx` の UserSelectOption と一致させること
     userOptions: users,
-    groupOptions: Object.fromEntries(groups.map((group) => [group.id, group.name])) as Record<string, string>,
+    groupOptions: groups,
   }
 }
 

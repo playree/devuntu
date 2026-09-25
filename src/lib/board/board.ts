@@ -8,7 +8,7 @@ import type { BoardKind, TicketStatus } from '@/generated/prisma/enums'
 import { isUniqueViolation, prisma } from '../prisma'
 import { nextPrivateBoardKey } from './board-key'
 import { PRIVATE_BOARD_NAME } from './ticket-id'
-import { resolveBoardRole, type BoardRole } from './ticket-permission'
+import { boardVisibleWhere, resolveBoardRole, type BoardRole } from './ticket-permission'
 
 /** ensurePrivateBoard のキー競合によるリトライ回数。キーの取り合いは同時実行数ぶんしか起きない */
 const PRIVATE_BOARD_CREATE_RETRY = 3
@@ -91,7 +91,7 @@ export const listAccessibleBoards = async (
   const boards = await prisma.board.findMany({
     where: {
       ...(opts?.includeArchived ? {} : { archived: false }),
-      OR: [{ members: { some: { userId } } }, { groups: { some: { group: { userGroups: { some: { userId } } } } } }],
+      ...boardVisibleWhere(userId),
     },
     select: {
       id: true,

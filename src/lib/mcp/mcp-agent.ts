@@ -20,14 +20,11 @@ import { findAgentTicket, pickAgentTasks, resolveAgentTask } from '../agent/agen
 import { assertTicketAccess } from '../board/board-access'
 import { errInvalidOperation } from '../error'
 import type { ResourceAuth } from '../oauth/oauth-resource'
+import { jsonResult } from './mcp'
 import { resolveTicketId } from './mcp-ticket'
 
 /** 稼働条件を満たさないときに Claude へ返す指示。判断の余地を残さない文にする */
 const INACTIVE_NOTE = '稼働条件を満たしていないため、チケットの処理は行わずに終了すること。コメントの投稿も行わない。'
-
-const jsonResult = (value: unknown) => ({
-  content: [{ type: 'text' as const, text: JSON.stringify(value, null, 2) }],
-})
 
 /** 自動運用の設定と稼働条件をまとめて引く。3ツールとも入口はこれ */
 const loadContext = async (auth: ResourceAuth) => {

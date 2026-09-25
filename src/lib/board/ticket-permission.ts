@@ -4,6 +4,8 @@
  * DB アクセスを伴う認可判定は `board-access.ts` を参照。
  */
 
+import type { BoardWhereInput } from '@/generated/prisma/models'
+
 export type BoardRole = 'owner' | 'member'
 
 /**
@@ -17,6 +19,11 @@ export type BoardRole = 'owner' | 'member'
  */
 export const resolveBoardRole = (directRole: BoardRole | null, hasGroupAccess: boolean): BoardRole | null =>
   directRole ?? (hasGroupAccess ? 'member' : null)
+
+/** `userId` がメンバー(直接 / グループ経由)であるボードの条件。可視判定の where で共通に使う */
+export const boardVisibleWhere = (userId: string): BoardWhereInput => ({
+  OR: [{ members: { some: { userId } } }, { groups: { some: { group: { userGroups: { some: { userId } } } } } }],
+})
 
 export type TicketAccessInput = {
   userId: string

@@ -16,6 +16,7 @@ import { MAX_TAGS_PER_SCOPE, nextOrder } from '@/lib/board/tag-rule'
 import { TICKET_STATUSES } from '@/lib/board/ticket-enum'
 import { canApplyAssignments, type BoardRole } from '@/lib/board/ticket-permission'
 import { errInvalidOperation, errValidation } from '@/lib/error'
+import { listGroupOptions } from '@/lib/group'
 import { logger } from '@/lib/logger'
 import { getBoardNotifySetting, setBoardNotifySetting } from '@/lib/notify/notify-board-setting'
 import { prisma } from '@/lib/prisma'
@@ -276,7 +277,7 @@ export const getBoardAssignments = safeAuthAction
         select: BOARD_USER_SELECT,
         orderBy: { name: 'asc' },
       }),
-      prisma.group.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }),
+      listGroupOptions(),
     ])
     if (!board) {
       throw errInvalidOperation()
@@ -287,7 +288,7 @@ export const getBoardAssignments = safeAuthAction
       memberIds: board.members.filter((m) => m.role === 'member').map((m) => m.userId),
       groupIds: board.groups.map((g) => g.groupId),
       userOptions: users, // 構造は `components/user-select.tsx` の UserSelectOption と一致させること
-      groupOptions: Object.fromEntries(groups.map((g) => [g.id, g.name])) as Record<string, string>,
+      groupOptions: groups,
     }
   })
 export type GetBoardAssignmentsReturnType = Awaited<ReturnType<typeof getBoardAssignments>>['data']

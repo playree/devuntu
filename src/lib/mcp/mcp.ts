@@ -66,3 +66,8 @@ export const mcpCodexAddCommand = (baseUrl: string, serverName: string, tokenEnv
  * トークンは発行時にしか見せられないため、利用者が組み立てずに済むよう画面から丸ごと渡す。
  */
 export const mcpTokenExportCommand = (tokenEnv: string, token: string): string => `export ${tokenEnv}='${token}'`
+
+/** ツールの戻り値を JSON のテキスト 1 件で返す形にする */
+export const jsonResult = (value: unknown) => ({
+  content: [{ type: 'text' as const, text: JSON.stringify(value, null, 2) }],
+})

@@ -15,7 +15,13 @@ import { errInvalidOperation } from '../error'
 import { prisma, type Db } from '../prisma'
 import { toUploadUrl } from '../storage/upload'
 import { parseTicketDisplayId } from './ticket-id'
-import { evaluateTicketAccess, resolveBoardRole, type BoardRole, type TicketPermission } from './ticket-permission'
+import {
+  boardVisibleWhere,
+  evaluateTicketAccess,
+  resolveBoardRole,
+  type BoardRole,
+  type TicketPermission,
+} from './ticket-permission'
 
 /** Server Action の `ctx.user` をそのまま渡せる最小形 */
 export type Actor = { id: string; role?: string | null }
@@ -118,7 +124,7 @@ export const getAccessibleBoardIds = async (
   const boards = await tx.board.findMany({
     where: {
       ...(opts?.includeArchived ? {} : { archived: false }),
-      OR: [{ members: { some: { userId } } }, { groups: { some: { group: { userGroups: { some: { userId } } } } } }],
+      ...boardVisibleWhere(userId),
     },
     select: { id: true },
   })

@@ -12,10 +12,7 @@
  * 接頭辞だけが違う。共通部分は `../bearer-token.ts` にある。
  */
 
-import { MCP_SCOPE } from '../auth/mcp-scope'
-import { generateBearerToken, hashBearerToken, shouldRefreshLastUsed } from '../bearer-token'
-import { nowDate } from '../day'
-import { logger } from '../logger'
+import { BEARER_TOKEN_ROW_SELECT, generateBearerToken, hashBearerToken, verifyBearerTokenRow } from '../bearer-token'
 import type { ResourceAuthResult } from '../oauth/oauth-resource'
 import { prisma } from '../prisma'
 import { MCP_TOKEN_PREFIX } from './mcp'
@@ -32,51 +29,15 @@ export const hashMcpToken = (token: string): string => hashBearerToken(token)
  * ユーザー用 MCP トークンを検証し、対応するユーザーを返す。
  *
  * OAuth 側(`verifyMcpAccessToken`)と同じ形を返すので、`/api/mcp` から先の処理は共通にできる。
+ * 人間の経路なので、エージェントユーザーの行があっても使わせない(`verifyAgentToken` と逆向き)。
  */
-export const verifyMcpToken = async (token: string): Promise<ResourceAuthResult> => {
-  const row = await prisma.mcpToken.findUnique({
-    where: { tokenHash: hashMcpToken(token) },
-    select: {
-      id: true,
-      expiresAt: true,
-      lastUsedAt: true,
-      user: { select: { id: true, name: true, email: true, role: true, banned: true, isAgent: true } },
-    },
-  })
-  if (!row) {
-    return { ok: false, error: 'invalid_token' }
-  }
-
-  const now = nowDate()
-  if (row.expiresAt && row.expiresAt <= now) {
-    logger.info({ mcpTokenId: row.id }, 'mcp token expired')
-    return { ok: false, error: 'invalid_token' }
-  }
-
-  const { user } = row
-  /**
-   * エージェント判定が `verifyAgentToken` と逆向きになっている。
-   * こちらは人間の経路なので、エージェントユーザーの行があっても使わせない。
-   */
-  if (user.isAgent || user.banned) {
-    logger.info({ mcpTokenId: row.id, userId: user.id }, 'mcp token user unavailable')
-    return { ok: false, error: 'invalid_token' }
-  }
-
-  // 利用記録の失敗で認証まで落とさない
-  if (shouldRefreshLastUsed(row.lastUsedAt)) {
-    await prisma.mcpToken
-      .update({ where: { id: row.id }, data: { lastUsedAt: now } })
-      .catch((error: unknown) => logger.warn({ error, mcpTokenId: row.id }, 'mcp token lastUsedAt update failed'))
-  }
-
-  return {
-    ok: true,
-    auth: {
-      user: { id: user.id, name: user.name, email: user.email, role: user.role },
-      scopes: [MCP_SCOPE],
+export const verifyMcpToken = async (token: string): Promise<ResourceAuthResult> =>
+  verifyBearerTokenRow(
+    await prisma.mcpToken.findUnique({ where: { tokenHash: hashMcpToken(token) }, select: BEARER_TOKEN_ROW_SELECT }),
+    {
       kind: 'pat',
-      clientId: row.id,
+      agentUser: false,
+      log: { idKey: 'mcpTokenId', label: 'mcp token' },
+      touch: (id, now) => prisma.mcpToken.update({ where: { id }, data: { lastUsedAt: now } }),
     },
-  }
-}
+  )

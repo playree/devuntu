@@ -2,34 +2,15 @@
 
 import { safeAuthAction } from '@/lib/action/action-server'
 import { ADVISORY_LOCK_KEYS, withAdvisoryLock } from '@/lib/advisory-lock'
+import { assertNotAgent } from '@/lib/agent/agent-user'
 import { auth } from '@/lib/auth/auth'
 import { errCannotDeleteLastAdmin, errInvalidOperation, errSystemError } from '@/lib/error'
+import { assertGroupsExist, listGroupOptions, syncUserGroups } from '@/lib/group'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { scUUID } from '@/lib/schema/schema'
 import { scCreateUser, scUpdateUser } from '@/lib/schema/schema-admin'
 import { headers } from 'next/headers'
-
-/**
- * グループ存在確認（渡された全 groupId が存在しなければ INVALID_OPERATION）
- */
-const assertGroupsExist = async (groupIds: string[]) => {
-  if (groupIds.length === 0) {
-    return
-  }
-  const count = await prisma.group.count({ where: { id: { in: groupIds } } })
-  if (count !== groupIds.length) {
-    throw errInvalidOperation()
-  }
-}
-
-/** AIエージェントは /admin/agents で扱うので、この画面の操作対象から外す */
-const assertNotAgent = async (id: string) => {
-  const user = await prisma.user.findUnique({ where: { id }, select: { isAgent: true } })
-  if (user?.isAgent) {
-    throw errInvalidOperation()
-  }
-}
 
 /**
  * ユーザー一覧取得(AIエージェントは除く)
@@ -62,11 +43,7 @@ export const getUsers = safeAuthAction.metadata({ actionName: 'getUsers', role: 
 export const getGroupOptions = safeAuthAction
   .metadata({ actionName: 'getGroupOptions', role: 'admin' })
   .action(async () => {
-    const groups = await prisma.group.findMany({
-      select: { id: true, name: true },
-      orderBy: { name: 'asc' },
-    })
-    return Object.fromEntries(groups.map((g) => [g.id, g.name])) as Record<string, string>
+    return await listGroupOptions()
   })
 export type GetGroupOptionsReturnType = Awaited<ReturnType<typeof getGroupOptions>>['data']
 
@@ -192,13 +169,7 @@ export const updateUser = safeAuthAction
       })
     })
 
-    // グループ再構築（この2操作のみ原子的に）
-    await prisma.$transaction([
-      prisma.userGroup.deleteMany({ where: { userId: id } }),
-      ...(groupIds.length > 0
-        ? [prisma.userGroup.createMany({ data: groupIds.map((groupId) => ({ userId: id, groupId })) })]
-        : []),
-    ])
+    await syncUserGroups(id, groupIds)
 
     logger.info({ id, groups: groupIds }, 'user updated')
     return { id }

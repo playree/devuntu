@@ -5,9 +5,7 @@
  * Server Action ではなくここに置く。
  */
 
-import type { Prisma } from '@/generated/prisma/client'
-import { prisma } from './prisma'
+import { prisma, type Db } from './prisma'
 
 /** ユーザーが1人でも居れば初回セットアップは済んでいる */
-export const hasCompletedInitialSetup = async (db: Prisma.TransactionClient | typeof prisma = prisma) =>
-  (await db.user.count()) > 0
+export const hasCompletedInitialSetup = async (db: Db = prisma) => (await db.user.count()) > 0

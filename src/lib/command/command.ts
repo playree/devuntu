@@ -6,6 +6,8 @@
  * 引数の組み立ては `command-args.ts` に置く。
  */
 
+import type { BoardRole } from '../board/ticket-permission'
+
 /** 定義ファイルの形式バージョン。互換性を壊す変更を入れるときに上げる */
 export const COMMAND_DEF_VERSION = 1
 
@@ -249,22 +251,13 @@ export const COMMAND_DEF_INVALID = 'COMMAND_DEF_INVALID'
  * ターゲットの権限
  * -----------------------------------------------------------------------------------------------*/
 
-/** ターゲット内でのロール。Prisma の CommandTargetMemberRole と一致させる */
-export type CommandTargetRole = 'owner' | 'member'
-
 /**
- * ターゲットの実効ロールを解決する。
- * - 直接メンバー(CommandTargetMember)のロールが最優先
- * - グループ経由(CommandTargetGroup)は常に member 相当
- * - どちらも無ければ null(アクセス不可)
- *
- * 管理者特権はここに含めない。管理者にできるのはアサインの操作だけで、
+ * ターゲット内でのロール。Prisma の CommandTargetMemberRole と一致させる。
+ * 実効ロールの解決はボードと同じ規則なので `resolveBoardRole` を使う。
+ * ただし管理者特権は含めない。管理者にできるのはアサインの操作だけで、
  * アサインされていないターゲットのコマンドは管理者でも実行できない。
  */
-export const resolveCommandTargetRole = (
-  directRole: CommandTargetRole | null,
-  hasGroupAccess: boolean,
-): CommandTargetRole | null => directRole ?? (hasGroupAccess ? 'member' : null)
+export type CommandTargetRole = BoardRole
 
 /** ターゲットの定義。identityFile などの秘密は画面にも API 応答にも出さない */
 export type CommandTarget = {
