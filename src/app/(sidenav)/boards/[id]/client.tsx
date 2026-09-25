@@ -18,6 +18,7 @@ import { ReloadButton } from '@/components/reload-button'
 import { useBoardName } from '@/components/ticket/ticket-chip'
 import type { TicketStatus } from '@/generated/prisma/enums'
 import { parseAction, useActionData } from '@/lib/action/action-client'
+import { useUserTimezone } from '@/lib/auth/use-timezone'
 import {
   applyLaneMove,
   countLaneMap,
@@ -31,7 +32,6 @@ import {
 } from '@/lib/board/kanban'
 import { dedupeTagOptionsByName } from '@/lib/board/tag-rule'
 import { nowDate } from '@/lib/day'
-import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { DragDropProvider } from '@dnd-kit/react'
 import { Accordion, ButtonGroup, Chip } from '@heroui/react'

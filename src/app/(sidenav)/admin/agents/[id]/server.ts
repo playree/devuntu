@@ -8,30 +8,24 @@ import {
   removeAgentApprover,
   syncAgentApproverGroups,
 } from '@/lib/agent/agent-approver'
-import {
-  findAgentRunnerConfig,
-  listAgentRuns,
-  saveAgentRunnerConfig,
-  saveAgentRunnerRuleValue,
-} from '@/lib/agent/agent-runner-config'
+import { createAgentRunnerActions } from '@/lib/agent/agent-runner-action'
 import { generateAgentToken, hashAgentToken } from '@/lib/agent/agent-token'
+import { assertAgent } from '@/lib/agent/agent-user'
 import { auth } from '@/lib/auth/auth'
 import { nowDate } from '@/lib/day'
 import { errInvalidOperation } from '@/lib/error'
+import { assertGroupsExist, syncUserGroups } from '@/lib/group'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { scUUID } from '@/lib/schema/schema'
 import {
   scAgentApproverUser,
   scIssueAgentToken,
-  scSaveAgentRunner,
-  scSaveAgentRunnerRule,
   scSetAgentApproverGroups,
   scUpdateAgent,
 } from '@/lib/schema/schema-agent'
 import { tokenExpiresAt } from '@/lib/token-expires'
 import { headers } from 'next/headers'
-import { assertAgent } from '../agent-util'
 
 /** エージェント単票取得。詳細ページの Profile セクションで使う */
 export const getAgent = safeAuthAction
@@ -72,7 +66,7 @@ export const updateAgent = safeAuthAction
       headers: await headers(),
       body: { userId: id, data: { name } },
     })
-    await syncGroups(id, groupIds)
+    await syncUserGroups(id, groupIds)
 
     logger.info({ id, groups: groupIds }, 'agent updated')
     return { id }
@@ -216,48 +210,15 @@ export const issueAgentToken = safeAuthAction
  * 設定行が無い状態は「自動運用を使わない」を表す。保存すると行が作られ、以降は
  * `enabled` の切り替えで止める(行を消す操作は用意しない。履歴が一緒に消えてしまうため)。
  */
-
-/** 設定取得。行が無ければ null(= 未設定) */
-export const getAgentRunner = safeAuthAction
-  .metadata({ actionName: 'getAgentRunner', role: 'admin' })
-  .inputSchema(scUUID)
-  .action(async ({ parsedInput: { id } }) => {
-    await assertAgent(id)
-
-    return await findAgentRunnerConfig(id)
-  })
-
-/** 設定保存(無ければ作成)。ランナーの自己申告(ホスト名・版)はここでは触らない */
-export const saveAgentRunner = safeAuthAction
-  .metadata({ actionName: 'saveAgentRunner', role: 'admin' })
-  .inputSchema(scSaveAgentRunner)
-  .action(async ({ parsedInput }) => {
-    await assertAgent(parsedInput.userId)
-
-    await saveAgentRunnerConfig(parsedInput)
-    return { userId: parsedInput.userId }
-  })
-
-/** カスタム指示(ルール)単体の保存 */
-export const saveAgentRunnerRule = safeAuthAction
-  .metadata({ actionName: 'saveAgentRunnerRule', role: 'admin' })
-  .inputSchema(scSaveAgentRunnerRule)
-  .action(async ({ parsedInput: { userId, rule } }) => {
-    await assertAgent(userId)
-
-    await saveAgentRunnerRuleValue(userId, rule)
-    return { userId }
-  })
-
-/** 実行履歴。件数が増え続けるので新しい順に上限まで返す */
-export const getAgentRuns = safeAuthAction
-  .metadata({ actionName: 'getAgentRuns', role: 'admin' })
-  .inputSchema(scUUID)
-  .action(async ({ parsedInput: { id } }) => {
-    await assertAgent(id)
-
-    return await listAgentRuns(id)
-  })
+const runnerActions = createAgentRunnerActions({
+  role: 'admin',
+  names: { get: 'getAgentRunner', save: 'saveAgentRunner', saveRule: 'saveAgentRunnerRule', runs: 'getAgentRuns' },
+  authorize: async (_user, agentId) => await assertAgent(agentId),
+})
+export const getAgentRunner = runnerActions.getAgentRunner
+export const saveAgentRunner = runnerActions.saveAgentRunner
+export const saveAgentRunnerRule = runnerActions.saveAgentRunnerRule
+export const getAgentRuns = runnerActions.getAgentRuns
 
 /** 承認者に指定されたユーザーの存在確認。エージェント同士は承認者にできない */
 const assertApproverUsersExist = async (userIds: string[]) => {
@@ -268,25 +229,4 @@ const assertApproverUsersExist = async (userIds: string[]) => {
   if (count !== userIds.length) {
     throw errInvalidOperation()
   }
-}
-
-/** グループ存在確認(渡された全 groupId が存在しなければ INVALID_OPERATION) */
-const assertGroupsExist = async (groupIds: string[]) => {
-  if (groupIds.length === 0) {
-    return
-  }
-  const count = await prisma.group.count({ where: { id: { in: groupIds } } })
-  if (count !== groupIds.length) {
-    throw errInvalidOperation()
-  }
-}
-
-/** グループの総入れ替え。ユーザー管理と同じく 2 操作だけを原子的に行う */
-const syncGroups = async (userId: string, groupIds: string[]) => {
-  await prisma.$transaction([
-    prisma.userGroup.deleteMany({ where: { userId } }),
-    ...(groupIds.length > 0
-      ? [prisma.userGroup.createMany({ data: groupIds.map((groupId) => ({ userId, groupId })) })]
-      : []),
-  ])
 }

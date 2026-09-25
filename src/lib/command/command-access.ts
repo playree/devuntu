@@ -14,16 +14,11 @@
  */
 
 import { type Actor } from '../board/board-access'
+import { resolveBoardRole } from '../board/ticket-permission'
 import { envu } from '../env-util'
 import { errInvalidOperation } from '../error'
 import { prisma } from '../prisma'
-import {
-  type CommandDef,
-  type CommandTarget,
-  type CommandTargetRole,
-  compareCommandDefs,
-  resolveCommandTargetRole,
-} from './command'
+import { type CommandDef, type CommandTarget, type CommandTargetRole, compareCommandDefs } from './command'
 import {
   buildCommandTargetStatus,
   type CommandTargetStatus,
@@ -69,7 +64,7 @@ const resolveAccessMap = async (actor: Actor, targetKeys: string[]): Promise<Map
 
   for (const targetKey of targetKeys) {
     const directRole = directRoles.get(targetKey) ?? null
-    const role = resolveCommandTargetRole(directRole, groupKeys.has(targetKey))
+    const role = resolveBoardRole(directRole, groupKeys.has(targetKey))
     if (role) {
       access.set(targetKey, { targetKey, role, via: directRole ? 'member' : 'group' })
     }

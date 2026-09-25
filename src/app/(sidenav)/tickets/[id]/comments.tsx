@@ -12,8 +12,9 @@ import { parseAction } from '@/lib/action/action-client'
 import { TICKET_COMMENT_TYPE_LOCALE, TICKET_COMMENT_TYPES } from '@/lib/board/ticket-enum'
 import { commentAnchorId, decodeSegment } from '@/lib/board/ticket-id'
 import { scCreateTicketComment } from '@/lib/schema/schema-ticket'
+import { useLocationHash } from '@/lib/use-location-hash'
 import { useLocale } from '@/locale/client'
-import { FC, useEffect, useState, useSyncExternalStore } from 'react'
+import { FC, useEffect, useState } from 'react'
 import { CommentItem, CommentReplyAction, type Comment } from './comment-item'
 import { addTicketComment, GetTicketReturnType } from './server'
 
@@ -27,18 +28,6 @@ type CommentTypeOption = 'none' | (typeof TICKET_COMMENT_TYPES)[number]
 
 /** 位置の追い直しを打ち切るまでの時間 */
 const ANCHOR_FOLLOW_MS = 3000
-
-/** 現在のハッシュ。SSR では空文字を返し、ハイドレーション後にクライアントの値へ切り替わる */
-const subscribeHash = (onChange: () => void) => {
-  window.addEventListener('hashchange', onChange)
-  return () => window.removeEventListener('hashchange', onChange)
-}
-const useLocationHash = () =>
-  useSyncExternalStore(
-    subscribeHash,
-    () => window.location.hash,
-    () => '',
-  )
 
 /**
  * 通知のリンク(`#comment-<id>`)で指されたコメントまで移動する。

@@ -7,9 +7,8 @@
  */
 
 import type { Prisma } from '@/generated/prisma/client'
-import { prisma } from '../prisma'
-
-type Db = Prisma.TransactionClient | typeof prisma
+import { mergeMemberUsers } from '../group'
+import { prisma, type Db } from '../prisma'
 
 /** 承認者の判定条件。直接指定(AgentApprover)とグループ経由(AgentApproverGroup)の OR */
 const approverWhere = (userId: string): Prisma.UserWhereInput['OR'] => [
@@ -74,19 +73,10 @@ export const listAgentApproverUsers = async (agentId: string, tx: Db = prisma): 
     return []
   }
 
-  const users = new Map<string, AgentApproverUser>()
-  for (const { user } of agent.agentApprovers) {
-    users.set(user.id, { ...user, via: 'user' })
-  }
-  for (const { group } of agent.agentApproverGroups) {
-    for (const { user } of group.userGroups) {
-      if (!users.has(user.id)) {
-        users.set(user.id, { ...user, via: 'group' })
-      }
-    }
-  }
-
-  return [...users.values()].sort((a, b) => a.name.localeCompare(b.name))
+  return mergeMemberUsers<AgentApproverUser>(
+    agent.agentApprovers.map(({ user }) => ({ ...user, via: 'user' })),
+    agent.agentApproverGroups.flatMap(({ group }) => group.userGroups.map(({ user }) => ({ ...user, via: 'group' }))),
+  )
 }
 
 /** 承認ユーザーを1人追加する。既に承認者なら何もしない */

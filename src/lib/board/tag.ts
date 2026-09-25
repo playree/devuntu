@@ -11,10 +11,8 @@
 import type { Prisma } from '@/generated/prisma/client'
 import type { TagColor } from '@/generated/prisma/enums'
 import { errClient, errInvalidOperation } from '../error'
-import { isUniqueViolation, prisma } from '../prisma'
+import { isUniqueViolation, prisma, type Db } from '../prisma'
 import { diffTagIds, DUPLICATED_TAG_NAME } from './tag-rule'
-
-type Db = Prisma.TransactionClient | typeof prisma
 
 /** タグの選択肢。フォーム / 検索パネル / チップ表示で共有する */
 export type TagOption = {

@@ -1,4 +1,3 @@
-import { AGENT_RUN_HISTORY_LIMIT } from './agent/agent'
 import { isValidTimezone } from './day'
 import { errSystemError } from './error'
 
@@ -89,6 +88,12 @@ const client = {
  * Prisma は無効な DateTime フィルタを受け付けず、掃除が丸ごと止まるので入口で弾く。
  */
 const MAX_RETENTION_DAYS = 100_000_000
+
+/**
+ * エージェントの実行履歴として画面に出す最大件数。これより古い実行は一覧に現れない。
+ * `AGENT_RUN_KEEP` の下限を兼ねるため、環境変数の定義と同じここに置く。
+ */
+export const AGENT_RUN_HISTORY_LIMIT = 100
 
 const server = {
   ...client,

@@ -29,8 +29,6 @@ export const getTickets = safeAuthAction
   .metadata({ actionName: 'getTickets', role: 'user' })
   .inputSchema(scTicketListQuery)
   .action(async ({ ctx: { user }, parsedInput: { page, rowsPerPage, sortColumn, sortDirection, ...search } }) => {
-    // プライベートチケットもボード経由で可視化するため、先にプライベートボードを用意する
-    await ensurePrivateBoard(user)
     const accessibleBoardIds = await getAccessibleBoardIds(user.id)
 
     // 総件数とページ内容で同じ条件を使う(ページャの総ページ数と表示行がずれないようにする)
@@ -88,6 +86,7 @@ export type GetTicketsReturnType = Awaited<ReturnType<typeof getTickets>>['data'
 export const getTicketFormOptions = safeAuthAction
   .metadata({ actionName: 'getTicketFormOptions', role: 'user' })
   .action(async ({ ctx: { user } }) => {
+    // 作成フォームの既定値になるので、一覧画面を経由せずに開かれた場合もここで用意する
     const privateBoardId = await ensurePrivateBoard(user)
     const accessibleBoardIds = await getAccessibleBoardIds(user.id)
 

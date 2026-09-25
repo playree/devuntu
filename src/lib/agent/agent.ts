@@ -123,9 +123,6 @@ export const DEFAULT_POLL_INTERVAL_SEC = 300
 export const MIN_POLL_INTERVAL_SEC = 60
 export const MAX_POLL_INTERVAL_SEC = 3600
 
-/** 実行履歴として画面に出す最大件数。これより古い実行は一覧に現れない */
-export const AGENT_RUN_HISTORY_LIMIT = 100
-
 /**
  * 実行の所要時間。分と秒だけで足りるので `mm:ss` で出す。
  * 履歴の一覧と Slack 通知で同じ見え方に揃えるため、ここで共有する。

@@ -2,8 +2,8 @@
 
 import { ChatBubbleIcon } from '@/components/icon'
 import { useActionData } from '@/lib/action/action-client'
+import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { dayformat } from '@/lib/day'
-import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { getMentions } from '../server'
 import { RowLink, TicketTitleLine } from './ticket-row'

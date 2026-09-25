@@ -4,6 +4,7 @@
 
 import { Prisma } from '@/generated/prisma/client'
 import { errInvalidOperation } from '../error'
+import { mergeMemberUsers } from '../group'
 import { prisma, type Db } from '../prisma'
 import type { TicketAccess } from './board-access'
 import { type BoardRole } from './ticket-permission'
@@ -54,19 +55,10 @@ export const getBoardMemberUsers = async (boardId: string, tx: Db = prisma): Pro
     return []
   }
 
-  const users = new Map<string, BoardUser>()
-  for (const { role, user } of board.members) {
-    users.set(user.id, { ...user, role, via: 'member' })
-  }
-  for (const { group } of board.groups) {
-    for (const { user } of group.userGroups) {
-      if (!users.has(user.id)) {
-        users.set(user.id, { ...user, role: null, via: 'group' })
-      }
-    }
-  }
-
-  return [...users.values()].sort((a, b) => a.name.localeCompare(b.name))
+  return mergeMemberUsers<BoardUser>(
+    board.members.map(({ role, user }) => ({ ...user, role, via: 'member' })),
+    board.groups.flatMap(({ group }) => group.userGroups.map(({ user }) => ({ ...user, role: null, via: 'group' }))),
+  )
 }
 
 /** 担当者の候補。所属ボードを持たせて、呼び出し側で対象ボードの絞り込みに使えるようにする */

@@ -2,7 +2,7 @@
 
 import { safeAuthAction } from '@/lib/action/action-server'
 import { getGoogleAccountSettings, setGoogleAccountSettings } from '@/lib/google/google-account'
-import { prisma } from '@/lib/prisma'
+import { listGroupOptions } from '@/lib/group'
 import { scUpdateIntegrationSettings } from '@/lib/schema/schema-admin'
 import { getSlackSettings, setSlackSettings } from '@/lib/slack/slack-account'
 import { getSlackBotInfo } from '@/lib/slack/slack-server'
@@ -19,11 +19,11 @@ export const getIntegrationSettingsAction = safeAuthAction
     const [google, slack, groups, botInfo] = await Promise.all([
       getGoogleAccountSettings(),
       getSlackSettings(),
-      prisma.group.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }),
+      listGroupOptions(),
       getSlackBotInfo(),
     ])
     return {
-      groupOptions: Object.fromEntries(groups.map((g) => [g.id, g.name])) as Record<string, string>,
+      groupOptions: groups,
       google,
       slack: {
         ...slack,

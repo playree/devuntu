@@ -27,6 +27,7 @@ import { resizeWebp, WEBP_MIME } from '../storage/image'
 import { getObject } from '../storage/storage'
 import { isValidUploadKey, toUploadKey, UPLOAD_URL_PREFIX } from '../storage/upload'
 import { signUploadToken, UPLOAD_TOKEN_TTL_SECONDS } from '../storage/upload-token'
+import { jsonResult } from './mcp'
 import { resolveBoardId } from './mcp-board'
 import { resolveTicketId } from './mcp-ticket'
 
@@ -50,10 +51,6 @@ const READ_FALLBACK_SIZE = 512
 const UPLOAD_TOKEN_RATE_LIMIT = { limit: 20, windowMs: 10 * 60 * 1000 }
 /** sharp の変換で CPU を使うため、読み取りは書き込みより短い窓で絞る */
 const READ_RATE_LIMIT = { limit: 30, windowMs: 60 * 1000 }
-
-const jsonResult = (value: unknown) => ({
-  content: [{ type: 'text' as const, text: JSON.stringify(value, null, 2) }],
-})
 
 /** 添付先ボードの指定。新規作成前は ticketId が無いので boardId も受ける */
 const targetSchema = {

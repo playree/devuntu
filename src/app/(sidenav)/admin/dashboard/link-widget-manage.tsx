@@ -14,6 +14,7 @@ import { PencilSquareIcon, PlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { ReloadButton } from '@/components/reload-button'
 import { parseAction } from '@/lib/action/action-client'
+import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { dayformat } from '@/lib/day'
 import {
   CreateLinkWidget,
@@ -21,7 +22,6 @@ import {
   scUpdateLinkWidget,
   UpdateLinkWidget,
 } from '@/lib/schema/schema-dashboard'
-import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { Table } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'

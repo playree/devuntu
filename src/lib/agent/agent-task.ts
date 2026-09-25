@@ -6,6 +6,7 @@ import { Prisma } from '@/generated/prisma/client'
 import type { AgentRunAction, AgentTaskMode, AgentTaskState } from '@/generated/prisma/enums'
 import { OPEN_TICKET_STATUSES } from '../board/ticket-enum'
 import { ticketDisplayId } from '../board/ticket-id'
+import { boardVisibleWhere } from '../board/ticket-permission'
 import { prisma } from '../prisma'
 import type { AgentRunnerRow } from './agent-runner'
 
@@ -110,7 +111,7 @@ const agentWorkableTicketWhere = (userId: string): Prisma.TicketWhereInput => ({
   status: { in: [...OPEN_TICKET_STATUSES] },
   board: {
     archived: false,
-    OR: [{ members: { some: { userId } } }, { groups: { some: { group: { userGroups: { some: { userId } } } } } }],
+    ...boardVisibleWhere(userId),
   },
 })
 

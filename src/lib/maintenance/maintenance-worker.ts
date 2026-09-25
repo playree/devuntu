@@ -9,53 +9,21 @@
  */
 
 import { envu } from '../env-util'
-import { logger } from '../logger'
+import { createWorkerLoop } from '../worker-loop'
 import { MAINTENANCE_START_DELAY_MS, MAINTENANCE_TICK_MS } from './maintenance'
-import { isMaintenanceMode, registerMaintenanceDrainSource } from './maintenance-mode'
 import { runMaintenanceSweep } from './maintenance-sweep'
 
-let started = false
-let running = false
-
-const tick = async (): Promise<void> => {
-  // メンテナンス中は DB を触らない。残ったアイドル接続がリストアを妨げる
-  if (isMaintenanceMode()) {
-    return
-  }
-  // 前回が長引いているだけなので、次の間隔で拾い直す
-  if (running) {
-    return
-  }
-  running = true
-  try {
-    await runMaintenanceSweep()
-  } catch (error) {
-    // ワーカーを止めない。次の tick でやり直す
-    logger.error({ error }, 'maintenance sweep failed')
-  } finally {
-    running = false
-  }
-}
+const loop = createWorkerLoop({
+  name: 'maintenance',
+  run: runMaintenanceSweep,
+  failedMessage: 'maintenance sweep failed',
+  intervalMs: MAINTENANCE_TICK_MS,
+  startDelayMs: MAINTENANCE_START_DELAY_MS,
+  intervalFromFirstRun: true,
+  // 前回が長引いているだけなので、重ねずに次の間隔で拾い直す
+  rerunPending: false,
+  isEnabled: () => envu.server.MAINTENANCE_WORKER_ENABLED,
+})
 
 /** 定期実行を開始する。サーバーインスタンスの起動時に1度だけ呼ぶ */
-export const startMaintenanceWorker = (): void => {
-  if (started) {
-    return
-  }
-  if (!envu.server.MAINTENANCE_WORKER_ENABLED) {
-    logger.info('maintenance worker disabled')
-    return
-  }
-  started = true
-
-  // プロセスの終了を妨げないようにする
-  setTimeout(() => {
-    void tick()
-    setInterval(() => void tick(), MAINTENANCE_TICK_MS).unref()
-  }, MAINTENANCE_START_DELAY_MS).unref()
-
-  // 掃除は件数に応じて長引くので、途中で接続を切らずに1周の終わりを待つ
-  registerMaintenanceDrainSource('maintenance', () => running)
-
-  logger.info({ intervalMs: MAINTENANCE_TICK_MS }, 'maintenance worker started')
-}
+export const startMaintenanceWorker = loop.start

@@ -25,6 +25,7 @@ import {
 } from '@/lib/schema/schema-ticket'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
+import { jsonResult } from './mcp'
 
 /**
  * devuntu の MCP サーバー本体。
@@ -102,11 +103,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
         includeArchived: z.boolean().optional().describe('アーカイブ済みのボードも含める。既定は含めない'),
       },
     },
-    async ({ includeArchived }) => ({
-      content: [
-        { type: 'text' as const, text: JSON.stringify(await listBoardsForMcp(auth, { includeArchived }), null, 2) },
-      ],
-    }),
+    async ({ includeArchived }) => jsonResult(await listBoardsForMcp(auth, { includeArchived })),
   )
 
   server.registerTool(
@@ -118,9 +115,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
         'create_ticket / update_ticket の assigneeId と tagIds には、ここで得た ID を使う',
       inputSchema: { boardId: z.string().min(1).describe('ボードIDまたはボードキー(例: ABC)') },
     },
-    async ({ boardId }) => ({
-      content: [{ type: 'text' as const, text: JSON.stringify(await getBoardForMcp(auth, boardId), null, 2) }],
-    }),
+    async ({ boardId }) => jsonResult(await getBoardForMcp(auth, boardId)),
   )
 
   server.registerTool(
@@ -131,9 +126,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
         '表示ID(例: ABC-42)またはチケットIDを指定して、本文・ステータス・担当者・タグ・コメントを含む詳細を取得する',
       inputSchema: { ticketId: z.string().min(1) },
     },
-    async ({ ticketId }) => ({
-      content: [{ type: 'text' as const, text: JSON.stringify(await getTicketForMcp(auth, ticketId), null, 2) }],
-    }),
+    async ({ ticketId }) => jsonResult(await getTicketForMcp(auth, ticketId)),
   )
 
   server.registerTool(
@@ -143,9 +136,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       description: 'キーワード・ステータス・優先度・タグ・ボード・担当者で、アクセス可能なチケットを検索する',
       inputSchema: mcpTicketSearchSchema.shape,
     },
-    async (input) => ({
-      content: [{ type: 'text' as const, text: JSON.stringify(await searchTicketsForMcp(auth, input), null, 2) }],
-    }),
+    async (input) => jsonResult(await searchTicketsForMcp(auth, input)),
   )
 
   server.registerTool(
@@ -155,9 +146,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       description: 'ボードにチケットを新規作成する',
       inputSchema: mcpCreateTicketSchema.shape,
     },
-    async (input) => ({
-      content: [{ type: 'text' as const, text: JSON.stringify(await createTicketForMcp(auth, input), null, 2) }],
-    }),
+    async (input) => jsonResult(await createTicketForMcp(auth, input)),
   )
 
   server.registerTool(
@@ -169,11 +158,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
         'メンバーは他人が担当のチケットを更新できない(未割り当てなら可能。オーナーは制限なし)',
       inputSchema: mcpUpdateTicketSchema.shape,
     },
-    async ({ ticketId, ...input }) => ({
-      content: [
-        { type: 'text' as const, text: JSON.stringify(await updateTicketForMcp(auth, ticketId, input), null, 2) },
-      ],
-    }),
+    async ({ ticketId, ...input }) => jsonResult(await updateTicketForMcp(auth, ticketId, input)),
   )
 
   server.registerTool(
@@ -183,9 +168,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       description: 'チケットを削除する。オーナー・メンバーともに、自分が作成したチケットのみ削除できる',
       inputSchema: { ticketId: z.string().min(1) },
     },
-    async ({ ticketId }) => ({
-      content: [{ type: 'text' as const, text: JSON.stringify(await deleteTicketForMcp(auth, ticketId), null, 2) }],
-    }),
+    async ({ ticketId }) => jsonResult(await deleteTicketForMcp(auth, ticketId)),
   )
 
   server.registerTool(
@@ -202,14 +185,8 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
         parentId: z.uuidv7().nullish().describe('返信先の親コメントID。親自体が返信の場合は指定できない(1階層のみ)'),
       },
     },
-    async ({ ticketId, content, type, parentId }) => ({
-      content: [
-        {
-          type: 'text' as const,
-          text: JSON.stringify(await addTicketCommentForMcp(auth, ticketId, content, type, parentId), null, 2),
-        },
-      ],
-    }),
+    async ({ ticketId, content, type, parentId }) =>
+      jsonResult(await addTicketCommentForMcp(auth, ticketId, content, type, parentId)),
   )
 
   server.registerTool(
@@ -219,14 +196,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       description: '自分が投稿したコメントを編集する',
       inputSchema: { commentId: z.uuidv7(), content: zCommentContent },
     },
-    async ({ commentId, content }) => ({
-      content: [
-        {
-          type: 'text' as const,
-          text: JSON.stringify(await updateTicketCommentForMcp(auth, commentId, content), null, 2),
-        },
-      ],
-    }),
+    async ({ commentId, content }) => jsonResult(await updateTicketCommentForMcp(auth, commentId, content)),
   )
 
   server.registerTool(
@@ -236,11 +206,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       description: '自分が投稿したコメント、またはチケットを削除できる権限を持つ場合にコメントを削除する',
       inputSchema: { commentId: z.uuidv7() },
     },
-    async ({ commentId }) => ({
-      content: [
-        { type: 'text' as const, text: JSON.stringify(await deleteTicketCommentForMcp(auth, commentId), null, 2) },
-      ],
-    }),
+    async ({ commentId }) => jsonResult(await deleteTicketCommentForMcp(auth, commentId)),
   )
 
   // 画像の添付・取得は人間の利用者もエージェントも使う

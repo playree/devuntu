@@ -4,8 +4,7 @@
  * 値の綴り違いが不可逆な操作へ落ちないことを確認する。
  */
 
-import { AGENT_RUN_HISTORY_LIMIT } from '@/lib/agent/agent'
-import { envu } from '@/lib/env-util'
+import { AGENT_RUN_HISTORY_LIMIT, envu } from '@/lib/env-util'
 import { afterEach, describe, expect, it } from 'vitest'
 
 const original = process.env.MAINTENANCE_ATTACHMENT_MODE

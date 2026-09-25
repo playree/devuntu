@@ -5,23 +5,13 @@ import { agentEmail, agentRunnerStatus, DUPLICATED_AGENT_HANDLE } from '@/lib/ag
 import { addAgentApprover } from '@/lib/agent/agent-approver'
 import { auth } from '@/lib/auth/auth'
 import { nowDate } from '@/lib/day'
-import { errClient, errInvalidOperation, errSystemError } from '@/lib/error'
+import { errClient, errSystemError } from '@/lib/error'
+import { assertGroupsExist, listGroupOptions } from '@/lib/group'
 import { logger } from '@/lib/logger'
 import { isUniqueViolation, prisma } from '@/lib/prisma'
 import { scCreateAgent } from '@/lib/schema/schema-agent'
 import { isAPIError } from 'better-auth/api'
 import { headers } from 'next/headers'
-
-/** グループ存在確認(渡された全 groupId が存在しなければ INVALID_OPERATION) */
-const assertGroupsExist = async (groupIds: string[]) => {
-  if (groupIds.length === 0) {
-    return
-  }
-  const count = await prisma.group.count({ where: { id: { in: groupIds } } })
-  if (count !== groupIds.length) {
-    throw errInvalidOperation()
-  }
-}
 
 /** 一覧に出すトークンの状態。エージェントは1本しか持たないので件数ではなく状態で表す */
 export type AgentTokenStatus = 'none' | 'active' | 'expired'
@@ -63,8 +53,7 @@ export type GetAgentsReturnType = Awaited<ReturnType<typeof getAgents>>['data']
 export const getGroupOptions = safeAuthAction
   .metadata({ actionName: 'getAgentGroupOptions', role: 'admin' })
   .action(async () => {
-    const groups = await prisma.group.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } })
-    return Object.fromEntries(groups.map((g) => [g.id, g.name])) as Record<string, string>
+    return await listGroupOptions()
   })
 
 /** 承認者候補のユーザー選択肢。エージェント同士は承認者にできない */

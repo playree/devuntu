@@ -12,93 +12,43 @@
  * その時間ぶん graceful shutdown が止まる。
  */
 
-import { after } from 'next/server'
 import { envu } from '../env-util'
-import { logger } from '../logger'
-import { isMaintenanceMode, registerMaintenanceDrainSource } from '../maintenance/maintenance-mode'
+import { createWorkerLoop } from '../worker-loop'
 import { COMMAND_START_DELAY_MS, COMMAND_TICK_MS } from './command'
 import { runCommandDispatch } from './command-dispatch'
 import { abortAllRuns, runningCount } from './command-registry'
 
-let timer: NodeJS.Timeout | null = null
-let running = false
-/** 実行中に来た駆動要求。取りこぼさないよう終わってからもう1周する */
-let pending = false
-
-const tick = async (): Promise<void> => {
-  // メンテナンス中は DB を触らない。残ったアイドル接続がリストアを妨げる
-  if (isMaintenanceMode()) {
-    return
-  }
-  if (running) {
-    pending = true
-    return
-  }
-  running = true
-  try {
-    do {
-      pending = false
-      await runCommandDispatch()
-    } while (pending)
-  } catch (error) {
-    // ワーカーを止めない。次の tick で拾い直す
-    logger.error({ error }, 'command dispatch failed')
-  } finally {
-    running = false
-  }
-}
-
-/**
- * 定期実行を開始する。サーバーインスタンスの起動時に1度だけ呼ぶ。
- *
- * 起動直後に走らせないのは、前回の実行が stale と判定されるまでの間に
- * 掴み直しを試みても意味が無いため。
- */
-export const startCommandWorker = (): void => {
-  if (timer) {
-    return
-  }
-  if (!envu.server.COMMAND_EXEC_ENABLED || !envu.server.COMMAND_WORKER_ENABLED) {
-    logger.info('command worker disabled')
-    return
-  }
-
-  setTimeout(() => void tick(), COMMAND_START_DELAY_MS).unref()
-  timer = setInterval(() => void tick(), COMMAND_TICK_MS)
-  // プロセスの終了を妨げないようにする
-  timer.unref()
-
+const loop = createWorkerLoop({
+  name: 'command',
+  run: runCommandDispatch,
+  failedMessage: 'command dispatch failed',
+  intervalMs: COMMAND_TICK_MS,
   /**
-   * 終了時は**同期的にできることだけ**行う。
-   * Next 自身が SIGTERM で `process.exit(143)` するため DB の更新は間に合わない前提で、
-   * 子プロセスを道連れにするに留める。running のまま残った行は stale 回収が閉じる。
+   * 起動直後に走らせないのは、前回の実行が stale と判定されるまでの間に
+   * 掴み直しを試みても意味が無いため。
    */
-  process.once('SIGTERM', () => abortAllRuns('interrupted'))
-  process.once('SIGINT', () => abortAllRuns('interrupted'))
-
+  startDelayMs: COMMAND_START_DELAY_MS,
+  rerunPending: true,
+  isEnabled: () => envu.server.COMMAND_EXEC_ENABLED && envu.server.COMMAND_WORKER_ENABLED,
   /**
    * `runCommandDispatch()` は実行の完走を待たずに返るので、dispatch 中かどうかだけでは足りない。
    * レジストリから外れるのは `command-exec.ts` の finally、つまり終了状態を書き終えた後なので、
    * `runningCount()` が 0 なら DB への書き込みも終わっている。
    */
-  registerMaintenanceDrainSource('command', () => running || runningCount() > 0)
+  isBusy: () => runningCount() > 0,
+  /**
+   * 終了時は**同期的にできることだけ**行う。
+   * Next 自身が SIGTERM で `process.exit(143)` するため DB の更新は間に合わない前提で、
+   * 子プロセスを道連れにするに留める。running のまま残った行は stale 回収が閉じる。
+   */
+  onStart: () => {
+    process.once('SIGTERM', () => abortAllRuns('interrupted'))
+    process.once('SIGINT', () => abortAllRuns('interrupted'))
+  },
+})
 
-  logger.info({ intervalMs: COMMAND_TICK_MS }, 'command worker started')
-}
+/** 定期実行を開始する。サーバーインスタンスの起動時に1度だけ呼ぶ */
+export const startCommandWorker = loop.start
 
-/**
- * レスポンス後に1周だけ回す。
- *
- * `after()` はリクエスト文脈の外では使えないので、その場合は握り潰して interval に任せる
- * (実行の開始が最大 `COMMAND_TICK_MS` 遅れるだけ)。
- */
-export const kickCommandDispatch = (): void => {
-  if (!envu.server.COMMAND_EXEC_ENABLED || !envu.server.COMMAND_WORKER_ENABLED) {
-    return
-  }
-  try {
-    after(() => tick())
-  } catch {
-    // リクエスト文脈の外。次の tick が拾う
-  }
-}
+/** レスポンス後に1周だけ回す。実行の開始が最大 `COMMAND_TICK_MS` 遅れるだけで落ちない */
+export const kickCommandDispatch = loop.kick

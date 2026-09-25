@@ -8,17 +8,23 @@ import { prisma } from '@/lib/prisma'
 import { scCalendarShareOptions } from '@/lib/schema/schema-calendar'
 import { type Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { cache } from 'react'
 import { PublicCalClient } from './client'
 
 /** 公開カレンダーの空き時間をキャッシュする時間。表示の鮮度と API 呼び出し回数の折り合い */
 const PUBLIC_CAL_TTL_MS = 5 * 60 * 1000
 
+/** メタデータとページ本体で同じ共有を引くので、リクエスト内では 1 回だけ問い合わせる */
+const findShare = cache(async (publicId: string) =>
+  prisma.calendarShare.findUnique({
+    where: { publicId },
+    select: { userId: true, options: true, user: { select: { timezone: true } } },
+  }),
+)
+
 export const generateMetadata = async ({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> => {
   const { id } = await params
-  const share = await prisma.calendarShare.findUnique({
-    where: { publicId: id },
-    select: { options: true },
-  })
+  const share = await findShare(id)
   const title = scCalendarShareOptions.safeParse(share?.options).data?.title ?? ''
   return {
     title: { absolute: title || 'Calendar' },
@@ -36,10 +42,7 @@ const PublicCalPage = async ({
   const { id } = await params
   const { date } = await searchParams
 
-  const share = await prisma.calendarShare.findUnique({
-    where: { publicId: id },
-    select: { userId: true, options: true, user: { select: { timezone: true } } },
-  })
+  const share = await findShare(id)
   if (!share) {
     // 無効化済み or 不正なURL
     notFound()

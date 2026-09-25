@@ -3,7 +3,7 @@
  * 辞書が実際に効いていることを検証する
  */
 
-import { getPasswordScore } from '@/lib/password-score'
+import { getPasswordScore } from '@/lib/auth/password-score'
 import { describe, expect, it, vi } from 'vitest'
 
 describe('getPasswordScore', () => {
@@ -48,7 +48,7 @@ describe('getPasswordScore', () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
     try {
-      const { getPasswordScore: get } = await import('@/lib/password-score')
+      const { getPasswordScore: get } = await import('@/lib/auth/password-score')
       expect(await get('7Kq-vZm2Tb!xR9wd')).toBe(0)
       expect(errorSpy).toHaveBeenCalled()
       // 失敗した Promise がキャッシュされていれば、ここも 0 のままになる
