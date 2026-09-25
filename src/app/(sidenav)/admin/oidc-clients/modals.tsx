@@ -1,7 +1,7 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
-import { CheckBoxCtrl, CheckBoxField } from '@/components/general/checkbox'
+import { CheckboxCtrl, CheckboxField } from '@/components/general/checkbox'
 import { CopyableField } from '@/components/general/copyable-field'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
@@ -102,10 +102,10 @@ export const AddModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, relo
                   />
                 </div>
                 <div className='col-span-12'>
-                  <CheckBoxCtrl control={control} name='skipConsent' id='skipConsent' label={t('skip_consent')} />
+                  <CheckboxCtrl control={control} name='skipConsent' id='skipConsent' label={t('skip_consent')} />
                 </div>
                 <div className='col-span-12'>
-                  <CheckBoxCtrl control={control} name='requirePkce' id='requirePkce' label={t('require_pkce')} />
+                  <CheckboxCtrl control={control} name='requirePkce' id='requirePkce' label={t('require_pkce')} />
                 </div>
                 <div className='col-span-12'>
                   <SingleSelectCtrl
@@ -215,10 +215,10 @@ export const UpdateModal: FC<
           />
         </div>
         <div className='col-span-12'>
-          <CheckBoxCtrl control={control} name='skipConsent' id='skipConsent' label={t('skip_consent')} />
+          <CheckboxCtrl control={control} name='skipConsent' id='skipConsent' label={t('skip_consent')} />
         </div>
         <div className='col-span-12'>
-          <CheckBoxField
+          <CheckboxField
             id='requirePkce'
             label={`${t('require_pkce')} (${t('immutable')})`}
             isSelected={target.requirePkce}

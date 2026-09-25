@@ -4,7 +4,7 @@ import { MultiButton } from '@/components/general/button'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
 import { CheckIcon, Cog6ToothIcon } from '@/components/icon'
-import { InputCtrlPassword } from '@/components/input-ctrl-pw'
+import { InputPasswordCtrl } from '@/components/input-ctrl-pw'
 import { SingleLayout } from '@/components/single-layout'
 import { parseAction } from '@/lib/action/action-client'
 import { navigateAfterAuth } from '@/lib/client-utils'
@@ -64,7 +64,7 @@ export const StartClient: FC<{ enabledPassword: boolean }> = ({ enabledPassword 
           </div>
           {enabledPassword && (
             <div className='col-span-12'>
-              <InputCtrlPassword
+              <InputPasswordCtrl
                 control={control}
                 variant='secondary'
                 name='password'

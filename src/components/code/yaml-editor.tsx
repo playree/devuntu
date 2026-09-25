@@ -19,7 +19,7 @@ const YamlEditorCore = dynamic(() => import('./yaml-editor-core'), {
   loading: () => <Skeleton className='w-full rounded-xl' style={{ minHeight: MIN_HEIGHT }} />,
 })
 
-/** ラベルとエラーの体裁。MarkdownEditor の EditorField と同じ枠組みに揃える */
+/** ラベルとエラーの体裁。markdown-editor.tsx の EditorField と同じ枠組みに揃える */
 const EditorField: FC<{
   label: string
   isRequired?: boolean
@@ -71,7 +71,7 @@ export const YamlInput: FC<{
 }
 
 /** YAML エディタ(react-hook-form 対応) */
-export const YamlEditor = <
+export const YamlCtrl = <
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 >({

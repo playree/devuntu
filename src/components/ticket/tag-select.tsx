@@ -276,7 +276,7 @@ export const TagIdSelectField = ({
  * react-hook-form 対応のタグ選択。描画は TagIdSelectField に委譲する。
  * フォームの値は tagId の配列。
  */
-export const TagSelect = <
+export const TagSelectCtrl = <
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 >({
@@ -307,7 +307,7 @@ export const TagSelect = <
 /**
  * タグ名で複数選択する Select(絞り込み条件用)。react-hook-form には依存しない。
  *
- * 同じファイルの `TagSelect` との違い:
+ * 同じファイルの `TagIdSelectField` との違い:
  * - 値が **タグ名の配列**(tagId ではない)。ボード横断でも同名タグを 1 条件に畳むため
  * - 検索入力 / 新規作成を持たないので Autocomplete ではなく Select で構成する
  *

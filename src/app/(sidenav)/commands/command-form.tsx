@@ -1,7 +1,7 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
-import { CheckBoxCtrl } from '@/components/general/checkbox'
+import { CheckboxCtrl } from '@/components/general/checkbox'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
 import { FormModal, ModalBaseProps, useConfirmModal } from '@/components/general/modal'
@@ -61,7 +61,7 @@ const InputControl: FC<{ input: CommandInput; control: Control<CommandInputValue
         />
       )
     case 'checkbox':
-      return <CheckBoxCtrl control={control} name={input.key} id={`command-input-${input.key}`} label={input.label} />
+      return <CheckboxCtrl control={control} name={input.key} id={`command-input-${input.key}`} label={input.label} />
     case 'input':
       return (
         <InputCtrl

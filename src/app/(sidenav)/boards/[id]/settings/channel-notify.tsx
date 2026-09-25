@@ -1,19 +1,17 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
-import { CheckBoxField } from '@/components/general/checkbox'
+import { CheckboxGroupField } from '@/components/general/checkbox'
 import { FlexCol } from '@/components/general/flex'
 import { GridBox } from '@/components/general/grid'
 import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { SingleSelectCtrl } from '@/components/general/select'
-import { useSmart } from '@/components/general/smart'
 import { ArrowPathIcon, CheckIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { CHANNEL_NOTIFY_EVENTS } from '@/lib/notify/notify'
 import { scSetBoardNotifySetting, SetBoardNotifySetting } from '@/lib/schema/schema'
 import { useLocale } from '@/locale/client'
-import { CheckboxGroup, Label } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ComponentProps, FC, useMemo, useRef, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
@@ -33,37 +31,6 @@ import {
  * チャンネルIDは `SLACK_CHANNEL_ID_PATTERN` により大文字始まりなので衝突しない。
  */
 const NONE_KEY = 'none'
-
-/**
- * 通知するイベントの選択。
- * ラベルの体裁を他のフィールドへ揃えるため、`GridBox` 配下で isSmart を解決したいので部品を分ける。
- */
-const EventsField: FC<{
-  value: SetBoardNotifySetting['events']
-  onChange: (events: SetBoardNotifySetting['events']) => void
-}> = ({ value, onChange }) => {
-  const { t } = useLocale()
-  const { isCompact } = useSmart()
-
-  return (
-    <CheckboxGroup // checkbox-group の既定は子に mt-4 が入るため、gap で詰められるよう打ち消す
-      className='col-span-12 gap-2 **:data-[slot=checkbox]:mt-0'
-      value={value}
-      // 保存の並びを画面の並びに揃える(サーバー側で並べ直さずに済む)
-      onChange={(keys) => onChange(CHANNEL_NOTIFY_EVENTS.filter((event) => keys.includes(event)))}
-    >
-      <Label className={isCompact ? 'text-xs font-light' : ''}>{t('slack_notify_events')}</Label>
-      {CHANNEL_NOTIFY_EVENTS.map((event) => (
-        <CheckBoxField
-          key={event}
-          id={`board_notify_${event}`}
-          value={event}
-          label={t(`board_notify_event_${event}`)}
-        />
-      ))}
-    </CheckboxGroup>
-  )
-}
 
 const NotifyForm: FC<{
   boardId: string
@@ -146,7 +113,19 @@ const NotifyForm: FC<{
         <Controller
           control={control}
           name='events'
-          render={({ field: { value, onChange } }) => <EventsField value={value} onChange={onChange} />}
+          render={({ field: { value, onChange } }) => (
+            <CheckboxGroupField
+              className='col-span-12'
+              label={t('slack_notify_events')}
+              // 保存の並びを画面の並びに揃える(options の順で返るので、サーバー側で並べ直さずに済む)
+              options={CHANNEL_NOTIFY_EVENTS.map((event) => ({
+                value: event,
+                label: t(`board_notify_event_${event}`),
+              }))}
+              value={value}
+              onChange={onChange}
+            />
+          )}
         />
         <div className='col-span-12 flex items-center gap-2'>
           <MultiButton className='ml-auto' type='submit' size='sm' icon={<CheckIcon />} isPending={isSubmitting}>

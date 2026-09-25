@@ -1,6 +1,6 @@
 'use client'
 
-import { Checkbox, Modal, ModalContainerProps, useOverlayState, UseOverlayStateReturn } from '@heroui/react'
+import { Checkbox, cn, Modal, ModalContainerProps, useOverlayState, UseOverlayStateReturn } from '@heroui/react'
 import { nanoid } from 'nanoid'
 import { usePathname } from 'next/navigation'
 import {
@@ -67,50 +67,106 @@ export type FormModalSize = NonNullable<ModalContainerProps['size']> | ExtraModa
 
 const isExtraModalSize = (size: FormModalSize): size is ExtraModalSize => size in EXTRA_MODAL_SIZES
 
-export const FormModal: FC<{
-  children: ReactNode
-  state: UseOverlayStateReturn
-  onSubmit: (e?: BaseSyntheticEvent) => Promise<void>
+type ModalFrameProps = {
+  state: Pick<UseOverlayStateReturn, 'isOpen' | 'setOpen'>
   title: { text: string; icon?: ReactNode }
-  footer: ReactNode
-  hiddenCloseButton?: boolean
   size?: FormModalSize
-}> = ({ children, state, onSubmit, title, footer, hiddenCloseButton, size }) => {
+  hiddenCloseButton?: boolean
+  /** 閉じられない処理中。閉じるボタンと Esc を無効にする */
+  isPending?: boolean
+  /** 背景のクリックで閉じられるようにする */
+  isDismissable?: boolean
+  /** 描画先。既定は body 直下 */
+  portalContainer?: Element
+}
+
+/** FormModal / DialogModal 共通の外枠(背景・サイズ・閉じるボタン・見出し) */
+const ModalFrame: FC<ModalFrameProps & { children: ReactNode }> = ({
+  state,
+  title,
+  size,
+  hiddenCloseButton,
+  isPending,
+  isDismissable = false,
+  portalContainer,
+  children,
+}) => {
   // 拡張サイズの場合はHeroUIのsizeを使わず、Modal.Dialogにmax-w-*を当てて上書きする
   const extraSizeClass = size && isExtraModalSize(size) ? EXTRA_MODAL_SIZES[size] : undefined
 
   return (
-    <Modal.Backdrop variant='blur' isOpen={state.isOpen} onOpenChange={state.setOpen} isDismissable={false}>
+    <Modal.Backdrop
+      variant='blur'
+      isOpen={state.isOpen}
+      onOpenChange={state.setOpen}
+      isDismissable={isDismissable && !isPending}
+      isKeyboardDismissDisabled={isPending}
+      UNSTABLE_portalContainer={portalContainer}
+    >
       <Modal.Container placement='top' size={extraSizeClass ? undefined : (size as ModalContainerProps['size'])}>
         <Modal.Dialog className={extraSizeClass}>
-          <form
-            /**
-             * Modal.Dialog(flex flex-col / max-h-full)と Modal.Body(min-h-0 flex-1 + overflow-y-auto)の間に
-             * 素のformが入るとBodyのflex-1が解決されず、背の高い内容がoverflow-clipで切れてしまう。
-             * form自体を縮むflexコンテナにしてHeroUIのscroll='inside'を機能させる
-             */
-            onSubmit={onSubmit}
-            className='flex min-h-0 flex-col'
-          >
-            {!hiddenCloseButton && <Modal.CloseTrigger />}
-            <Modal.Header>
-              <Modal.Heading className='flex items-center gap-2'>
-                {title.icon}
-                {title.text}
-              </Modal.Heading>
-            </Modal.Header>
-            <Modal.Body className='pt-2'>
-              <SmartProvider isSmartForm>{children}</SmartProvider>
-            </Modal.Body>
-            <Modal.Footer>
-              <SmartProvider isSmart>{footer}</SmartProvider>
-            </Modal.Footer>
-          </form>
+          {!hiddenCloseButton && <Modal.CloseTrigger isDisabled={isPending} />}
+          <Modal.Header>
+            <Modal.Heading className='flex items-center gap-2'>
+              {title.icon}
+              {title.text}
+            </Modal.Heading>
+          </Modal.Header>
+          {children}
         </Modal.Dialog>
       </Modal.Container>
     </Modal.Backdrop>
   )
 }
+
+export const FormModal: FC<
+  Omit<ModalFrameProps, 'portalContainer'> & {
+    children: ReactNode
+    onSubmit: (e?: BaseSyntheticEvent) => Promise<void>
+    footer: ReactNode
+  }
+> = ({ children, onSubmit, footer, ...frameProps }) => (
+  <ModalFrame {...frameProps}>
+    <form
+      /**
+       * Modal.Dialog(flex flex-col / max-h-full)と Modal.Body(min-h-0 flex-1 + overflow-y-auto)の間に
+       * 素のformが入るとBodyのflex-1が解決されず、背の高い内容がoverflow-clipで切れてしまう。
+       * form自体を縮むflexコンテナにしてHeroUIのscroll='inside'を機能させる
+       */
+      onSubmit={onSubmit}
+      className='flex min-h-0 flex-col'
+    >
+      <Modal.Body className='pt-2'>
+        <SmartProvider isSmartForm>{children}</SmartProvider>
+      </Modal.Body>
+      <Modal.Footer>
+        <SmartProvider isSmart>{footer}</SmartProvider>
+      </Modal.Footer>
+    </form>
+  </ModalFrame>
+)
+
+/**
+ * form を持たないモーダル。保存を onPress で行う画面や、別の form の中から開くダイアログ
+ * (submit が外側の form へ伝播してしまう)で使う。
+ */
+export const DialogModal: FC<
+  ModalFrameProps & {
+    children: ReactNode
+    /** 未指定(読み込み中など)のときはフッタを出さない */
+    footer?: ReactNode
+    bodyClassName?: string
+  }
+> = ({ children, footer, bodyClassName, ...frameProps }) => (
+  <ModalFrame {...frameProps}>
+    <Modal.Body className={cn('pt-2', bodyClassName)}>{children}</Modal.Body>
+    {footer && (
+      <Modal.Footer>
+        <SmartProvider isSmart>{footer}</SmartProvider>
+      </Modal.Footer>
+    )}
+  </ModalFrame>
+)
 
 export type ConfirmParam = {
   title: string

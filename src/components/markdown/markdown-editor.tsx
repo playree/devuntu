@@ -273,7 +273,7 @@ export const MarkdownField: FC<{
  * Markdown エディタ(react-hook-form 対応)。
  * `constraintSchema` を渡すと必須マークと文字数上限をスキーマから反映する。
  */
-export const MarkdownEditor = <
+export const MarkdownCtrl = <
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 >({

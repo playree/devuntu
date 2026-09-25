@@ -2,7 +2,7 @@
 
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
-import { ModalBaseProps, useModalState } from '@/components/general/modal'
+import { DialogModal, ModalBaseProps, useModalState } from '@/components/general/modal'
 import { ContentHeader } from '@/components/header'
 import { CheckIcon, PencilSquareIcon } from '@/components/icon'
 import { MarkdownInput } from '@/components/markdown/markdown-editor'
@@ -10,87 +10,69 @@ import { MarkdownView } from '@/components/markdown/markdown-view'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'
-import { Modal, Skeleton } from '@heroui/react'
+import { Skeleton } from '@heroui/react'
 import { FC, useCallback, useEffect, useState } from 'react'
 import { getAnnouncement, updateAnnouncement } from './server'
-
-/**
- * お知らせ編集モーダルの本体(内容取得後にマウントされる)
- */
-const AnnouncementEditBody: FC<{ initialBody: string; onSaved: () => void }> = ({ initialBody, onSaved }) => {
-  const { t } = useLocale()
-  const [body, setBody] = useState(initialBody)
-  const [isSaving, setSaving] = useState(false)
-
-  return (
-    <>
-      <Modal.Body className='pt-2'>
-        <MarkdownInput // WYSIWYG なので別途プレビューは持たない
-          label={t('announcement')}
-          defaultValue={initialBody}
-          onChange={setBody}
-          length={body.length}
-        />
-      </Modal.Body>
-      <Modal.Footer>
-        <MultiButton slot='close' variant='ghost'>
-          {t('cancel')}
-        </MultiButton>
-        <MultiButton
-          icon={<CheckIcon />}
-          isPending={isSaving}
-          onPress={async () => {
-            setSaving(true)
-            try {
-              await parseAction(updateAnnouncement({ body }))
-              onSaved()
-            } finally {
-              setSaving(false)
-            }
-          }}
-        >
-          {t('save')}
-        </MultiButton>
-      </Modal.Footer>
-    </>
-  )
-}
 
 /**
  * お知らせ編集ポップアップ
  */
 export const AnnouncementEditModal: FC<ModalBaseProps> = ({ state, reload }) => {
   const { t } = useLocale()
-  const [body, setBody] = useState<string>()
+  // 読み込み前は undefined。エディタは初回マウント時の値しか見ないので、読み込み後にマウントする
+  const [initialBody, setInitialBody] = useState<string>()
+  const [body, setBody] = useState('')
+  const [isSaving, setSaving] = useState(false)
 
   useEffect(() => {
-    parseAction(getAnnouncement()).then((res) => setBody(res?.body ?? ''))
+    parseAction(getAnnouncement()).then((res) => {
+      const loaded = res?.body ?? ''
+      setInitialBody(loaded)
+      setBody(loaded)
+    })
   }, [])
 
   return (
-    <Modal.Backdrop variant='blur' isOpen={state.isOpen} onOpenChange={state.setOpen} isDismissable={false}>
-      <Modal.Container placement='top'>
-        <Modal.Dialog className='max-w-3xl'>
-          <Modal.CloseTrigger />
-          <Modal.Header>
-            <Modal.Heading className='flex items-center gap-2'>
-              <PencilSquareIcon />
-              {t('announcement_edit')}
-            </Modal.Heading>
-          </Modal.Header>
-          {body !== undefined && (
-            <AnnouncementEditBody
-              initialBody={body}
-              onSaved={() => {
-                notify.success(t('msg_saved'))
-                reload()
-                state.close()
+    <DialogModal
+      state={state}
+      size='3xl'
+      title={{ text: t('announcement_edit'), icon: <PencilSquareIcon /> }}
+      footer={
+        initialBody !== undefined && (
+          <>
+            <MultiButton slot='close' variant='ghost'>
+              {t('cancel')}
+            </MultiButton>
+            <MultiButton
+              icon={<CheckIcon />}
+              isPending={isSaving}
+              onPress={async () => {
+                setSaving(true)
+                try {
+                  await parseAction(updateAnnouncement({ body }))
+                  notify.success(t('msg_saved'))
+                  reload()
+                  state.close()
+                } finally {
+                  setSaving(false)
+                }
               }}
-            />
-          )}
-        </Modal.Dialog>
-      </Modal.Container>
-    </Modal.Backdrop>
+            >
+              {t('save')}
+            </MultiButton>
+          </>
+        )
+      }
+    >
+      {initialBody !== undefined && (
+        <MarkdownInput // WYSIWYG なので別途プレビューは持たない
+          label={t('announcement')}
+          defaultValue={initialBody}
+          onChange={setBody}
+          length={body.length}
+        />
+      )}
+    </DialogModal>
   )
 }
 

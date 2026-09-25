@@ -41,7 +41,7 @@ export const PasswordScore: FC<{
   )
 }
 
-export const InputCtrlPassword = <
+export const InputPasswordCtrl = <
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 >({
