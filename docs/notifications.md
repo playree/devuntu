@@ -142,7 +142,7 @@ advisory lock を保持できないため、そもそも採れない)。
 | `enqueueTicketCreated()`    | `createTicket` / `createTicketForMcp`                    | `mention` / `ticket_assigned` |
 | `enqueueTicketUpdated()`    | `patchTicket` / `updateTicketForMcp`                     | `mention` / `ticket_assigned` |
 | `enqueueTicketCommented()`  | `addTicketComment` / `updateTicketComment` とその MCP 版 | `mention`                     |
-| `enqueueAgentRunFinished()` | `agent-runner.ts` の実行を閉じる 3 経路                  | `agent_run`                   |
+| `enqueueAgentRunFinished()` | `agent-run.ts` の実行を閉じる 3 経路                     | `agent_run`                   |
 
 呼び出し元は「何が起きたか」(前後の状態・増えたメンション)を渡すだけで、発火の判断はしない。
 
@@ -329,7 +329,7 @@ DM は `ticketRequesterIds()`(エージェント用ユーザーは DM を読ま�
 
 - **チャンネル未設定でも DM は送る**(宛先ごとに独立している)
 - **通知するのは実行が終了したときだけ**(成功 / 失敗 / スキップ)。開始時は通知しない
-- 呼ぶのは実行が閉じる 3 経路すべて(`src/lib/agent/agent-runner.ts`)。いずれも実行を閉じるトランザクションの中で呼ぶ
+- 呼ぶのは実行が閉じる 3 経路すべて(`src/lib/agent/agent-run.ts`)。いずれも実行を閉じるトランザクションの中で呼ぶ
 
 | 経路                           | 関数                 | 通知する条件                                                                                        |
 | ------------------------------ | -------------------- | --------------------------------------------------------------------------------------------------- |

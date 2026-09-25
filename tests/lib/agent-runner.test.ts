@@ -10,15 +10,11 @@ import {
   dailyRunWindow,
   evaluateRunner,
   evaluateRunnerActivity,
-  failStaleAgentRuns,
-  finishAgentRunById,
-  finishAgentTask,
   isWithinActiveWindow,
-  pickAgentTasks,
-  resolveAgentTask,
-  startAgentRun,
-  type AgentRunnerRow,
-} from '@/lib/agent/agent-runner'
+} from '@/lib/agent/agent-activity'
+import { failStaleAgentRuns, finishAgentRunById, finishAgentTask, startAgentRun } from '@/lib/agent/agent-run'
+import { type AgentRunnerRow } from '@/lib/agent/agent-runner'
+import { pickAgentTasks, resolveAgentTask } from '@/lib/agent/agent-task'
 import { enqueueAgentRunFinished } from '@/lib/notify/notify-trigger'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'

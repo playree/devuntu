@@ -6,15 +6,10 @@
  * 「エージェント接続でしか登録されないこと」と「稼働条件・対象外チケットの扱い」を確かめる。
  */
 
-import {
-  activeWindowLabel,
-  evaluateRunnerActivity,
-  findAgentRunner,
-  findAgentTicket,
-  finishAgentTask,
-  pickAgentTasks,
-  resolveAgentTask,
-} from '@/lib/agent/agent-runner'
+import { activeWindowLabel, evaluateRunnerActivity } from '@/lib/agent/agent-activity'
+import { finishAgentTask } from '@/lib/agent/agent-run'
+import { findAgentRunner } from '@/lib/agent/agent-runner'
+import { findAgentTicket, pickAgentTasks, resolveAgentTask } from '@/lib/agent/agent-task'
 import { assertTicketAccess } from '@/lib/board/board-access'
 import { createDevuntuMcpServer } from '@/lib/mcp/mcp-server'
 import { resolveTicketId } from '@/lib/mcp/mcp-ticket'
@@ -26,12 +21,24 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('@/lib/agent/agent-runner', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/agent/agent-runner')>()),
   findAgentRunner: vi.fn(),
+}))
+
+vi.mock('@/lib/agent/agent-activity', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/agent/agent-activity')>()),
   evaluateRunnerActivity: vi.fn(),
-  pickAgentTasks: vi.fn(),
   activeWindowLabel: vi.fn(),
+}))
+
+vi.mock('@/lib/agent/agent-task', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/agent/agent-task')>()),
+  pickAgentTasks: vi.fn(),
   findAgentTicket: vi.fn(),
-  finishAgentTask: vi.fn(),
   resolveAgentTask: vi.fn(),
+}))
+
+vi.mock('@/lib/agent/agent-run', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/agent/agent-run')>()),
+  finishAgentTask: vi.fn(),
 }))
 
 vi.mock('@/lib/board/board-access', () => ({

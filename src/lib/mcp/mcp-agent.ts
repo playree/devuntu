@@ -12,17 +12,11 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 import { AGENT_CLI_KINDS } from '../agent/agent'
-import {
-  activeWindowLabel,
-  AGENT_OUTCOMES,
-  evaluateRunnerActivity,
-  findAgentRunner,
-  findAgentTicket,
-  finishAgentTask,
-  pickAgentTasks,
-  resolveAgentTask,
-} from '../agent/agent-runner'
+import { activeWindowLabel, evaluateRunnerActivity } from '../agent/agent-activity'
+import { AGENT_OUTCOMES, finishAgentTask } from '../agent/agent-run'
+import { findAgentRunner } from '../agent/agent-runner'
 import { agentSetupCliPrompt, agentSetupGuide } from '../agent/agent-setup'
+import { findAgentTicket, pickAgentTasks, resolveAgentTask } from '../agent/agent-task'
 import { assertTicketAccess } from '../board/board-access'
 import { errInvalidOperation } from '../error'
 import type { ResourceAuth } from '../oauth/oauth-resource'
