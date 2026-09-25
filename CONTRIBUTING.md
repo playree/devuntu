@@ -52,6 +52,7 @@ pnpm build
 - 列挙値の Chip と選択肢は`createEnumChip`(`src/components/enum-chip.tsx`)で同じ map から作る
 - ContentHeader のリロードは`ReloadButton`、取得できなかった詳細画面は`NoAccessView`を使う
 - 補助テキストの色は`text-muted`、日時の表示は`dayformat(..., 'tz-minute', tz)`、値が空のときは`-`に揃える
+  - 秒が意味を持つもの(ランナーの最終ポーリングなど、生存確認に使う日時)だけは`tz-simple`にする
 - 外部ライブラリを追加する場合は事前に確認する
 - if文は必ず{}を利用する
 - Util系は`src/lib`配下に配置し、まずは既存のUtilを利用できないか検討する
