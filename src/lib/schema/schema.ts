@@ -44,7 +44,7 @@ export const zPagingFields = <const T extends readonly [string, ...string[]]>(
   defaultColumn: T[number],
 ) => ({
   page: z.number().int().min(1).default(1),
-  // 上限は ROWS_PER_PAGE_OPTIONS(components/general/paging.ts)の最大値に合わせる
+  // 上限は ROWS_PER_PAGE_OPTIONS(components/general/use-rows-per-page.ts)の最大値に合わせる
   rowsPerPage: z.number().int().min(1).max(100).default(10),
   sortColumn: z.string().default(defaultColumn).pipe(z.enum(columns).catch(defaultColumn)),
   sortDirection: z.string().default('descending').pipe(zSortDirection.catch('descending')),

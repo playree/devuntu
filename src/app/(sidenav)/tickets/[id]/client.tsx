@@ -15,17 +15,9 @@ import { MarkdownField } from '@/components/markdown/markdown-editor'
 import { NoAccessView } from '@/components/no-access-view'
 import { notify } from '@/components/notify'
 import { MentionChips } from '@/components/ticket/mention-chips'
-import { TagIdSelectField } from '@/components/ticket/tag-select'
-import {
-  AGENT_MODE_NONE,
-  AgentStateChip,
-  PriorityChip,
-  StatusChip,
-  TagChips,
-  useAgentModeOptions,
-  useBoardName,
-  useTicketOptions,
-} from '@/components/ticket/ticket-chip'
+import { TagIdSelectField } from '@/components/ticket/tag-id-select'
+import { AGENT_MODE_NONE, useAgentModeOptions, useBoardName, useTicketOptions } from '@/components/ticket/ticket-options'
+import { AgentStateChip, PriorityChip, StatusChip, TagChips } from '@/components/ticket/ticket-chip'
 import { UserSelectField } from '@/components/user-select'
 import type { AgentTaskMode, TicketStatus } from '@/generated/prisma/enums'
 import { parseAction, useActionData } from '@/lib/action/action-client'

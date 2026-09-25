@@ -1,7 +1,7 @@
 'use client'
 
 import { TableCellsIcon } from '@/components/icon'
-import { statusBgClass } from '@/components/ticket/ticket-chip'
+import { statusBgClass } from '@/components/ticket/ticket-style'
 import type { TicketStatus } from '@/generated/prisma/enums'
 import { useActionData } from '@/lib/action/action-client'
 import { TICKET_STATUS_LOCALE, TICKET_STATUSES } from '@/lib/board/ticket-enum'

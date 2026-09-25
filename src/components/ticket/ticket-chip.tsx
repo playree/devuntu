@@ -1,123 +1,16 @@
 'use client'
 
-import { createEnumChip, type EnumChipMap } from '@/components/enum-chip'
-import type { AgentTaskState, BoardKind, TagColor, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
-import { AGENT_TASK_MODE_LOCALE, AGENT_TASK_MODES, AGENT_TASK_STATE_LOCALE } from '@/lib/agent/agent'
-import { TICKET_PRIORITY_LOCALE, TICKET_STATUS_LOCALE } from '@/lib/board/ticket-enum'
-import { useLocale } from '@/locale/client'
+import type { TagColor, TicketPriority } from '@/generated/prisma/enums'
 import { Chip, ChipProps, cn } from '@heroui/react'
-import { FC, ReactNode, useCallback } from 'react'
-import { tv } from 'tailwind-variants'
+import { FC, ReactNode } from 'react'
+import { agentStateChip, priorityChip, statusChip } from './ticket-options'
+import { priorityBarClass, tagColorClass } from './ticket-style'
 
-/**
- * ステータスのロケールキーと Chip の表示色。
- * color は Chip 用の HeroUI セマンティック名なので bg-* には使えない(配色は statusStyles を参照)。
- */
-const STATUS_STYLE: EnumChipMap<TicketStatus> = {
-  backlog: { item: TICKET_STATUS_LOCALE.backlog, color: 'default' },
-  todo: { item: TICKET_STATUS_LOCALE.todo, color: 'accent' },
-  doing: { item: TICKET_STATUS_LOCALE.doing, color: 'warning' },
-  done: { item: TICKET_STATUS_LOCALE.done, color: 'success' },
-}
-
-/**
- * ステータスの背景色。StatusChip(STATUS_STYLE)と同じ色を 10% で敷き、下地を透かして淡く色を付ける。
- *
- * HeroUI のセマンティック名そのままでは bg-* に使えないが、色トークン(--color-accent など)は
- * @theme に登録されているので bg-accent/10 の形で同じ色を参照できる
- * (Tailwind v4 が color-mix(in oklab, var(--color-accent) 10%, transparent) に展開する)。
- * 実体の CSS 変数がテーマごとに切り替わるため dark: は要らない(priorityStyles との違い)。
- * 半透明なので単色の背景クラスとは併用できない(priorityBgClass と同じ制約)。
- * クラス名は purge 対策で必ず完全なリテラルで書くこと(tagStyles と同じ規約)。
- */
-const statusStyles = tv({
-  variants: {
-    status: {
-      backlog: 'bg-default/20',
-      todo: 'bg-accent/5',
-      doing: 'bg-warning/5',
-      done: 'bg-success/5',
-    } satisfies Record<TicketStatus, string>,
-  },
-})
-
-/** ステータス色を 10% で敷いた背景クラス。className を渡すと tailwind-merge でマージされる */
-export const statusBgClass = (status: TicketStatus, className?: string) => statusStyles({ status, className })
-
-/**
- * 優先度のロケールキーと Chip の表示色。
- * color は Chip 用の HeroUI セマンティック名なので bg-* には使えない(配色は priorityStyles を参照)。
- * キーの並びは選択肢(useTicketOptions)の表示順になるので、優先度の高い順に保つこと。
- */
-const PRIORITY_META: EnumChipMap<TicketPriority> = {
-  urgent: { item: TICKET_PRIORITY_LOCALE.urgent, color: 'danger' },
-  high: { item: TICKET_PRIORITY_LOCALE.high, color: 'warning' },
-  medium: { item: TICKET_PRIORITY_LOCALE.medium, color: 'accent' },
-  low: { item: TICKET_PRIORITY_LOCALE.low, color: 'default' },
-}
-
-/**
- * 優先度の配色。水平線(bar)・カード枠線(border)・カード背景(bg)を 1 箇所に集約する。
- * bar は 1px の線で面積が小さいため透過させず、bg は同系色を 10% で敷いて下地を透かす。
- * クラス名は purge 対策で必ず完全なリテラルで書くこと(tagStyles と同じ規約)。
- */
-const priorityStyles = tv({
-  slots: {
-    /**
-     * 塗りは持たず、上下のボーダーだけで 1px の水平線 2 本を作る。
-     * box-border なので h-1(4px)の内訳が 線 1px / 余白 2px / 線 1px になる。
-     * flex 行に置いて ID の右の残り幅を埋める前提なので、左右の余白は呼び出し側が持つ。
-     * border スロットと同じ規約で、幅は常に確保して色だけ variants で変える。
-     */
-    bar: 'h-1 min-w-0 flex-1 border-y border-transparent',
-    // テーマ切り替えでレイアウトが動かないよう、枠の幅は常に確保しておく
-    border: 'border-x border-b-3 border-transparent',
-    bg: '',
-  },
-  variants: {
-    priority: {
-      urgent: {
-        bar: 'border-red-300/30 dark:border-red-800/30',
-        border: 'border-red-300/30 dark:border-red-800/30',
-        bg: 'bg-red-300/15 dark:bg-red-800/10',
-      },
-      high: {
-        bar: 'border-amber-400/30 dark:border-amber-500/20',
-        border: 'border-amber-400/30 dark:border-amber-500/20',
-        bg: 'bg-amber-400/15 dark:bg-amber-500/10',
-      },
-      medium: {
-        bar: 'border-blue-300/30 dark:border-blue-800/30',
-        border: 'border-blue-300/30 dark:border-blue-800/30',
-        bg: 'bg-blue-300/15 dark:bg-blue-800/10',
-      },
-      low: {
-        bar: 'border-gray-300/30 dark:border-gray-600/30',
-        border: 'border-gray-300/30 dark:border-gray-600/30',
-        bg: 'bg-gray-300/15 dark:bg-gray-600/10',
-      },
-    } satisfies Record<TicketPriority, unknown>,
-  },
-})
-
-const statusChip = createEnumChip(STATUS_STYLE)
 export const StatusChip = statusChip.EnumChip
 
-/** `planned`(返信待ち)は利用者の操作を促す状態なので、完了 / 失敗とは別の色にする */
-const AGENT_STATE_STYLE: EnumChipMap<AgentTaskState> = {
-  queued: { item: AGENT_TASK_STATE_LOCALE.queued, color: 'default' },
-  running: { item: AGENT_TASK_STATE_LOCALE.running, color: 'accent' },
-  planned: { item: AGENT_TASK_STATE_LOCALE.planned, color: 'warning' },
-  done: { item: AGENT_TASK_STATE_LOCALE.done, color: 'success' },
-  failed: { item: AGENT_TASK_STATE_LOCALE.failed, color: 'danger' },
-  skipped: { item: AGENT_TASK_STATE_LOCALE.skipped, color: 'default' },
-}
-
-const agentStateChip = createEnumChip(AGENT_STATE_STYLE)
 /** 処理状態の Chip。state が null のチケットは queued 扱い(agent.ts の agentStateWhere と同じ規約)なので、呼び出し側で寄せる */
 export const AgentStateChip = agentStateChip.EnumChip
 
-const priorityChip = createEnumChip(PRIORITY_META)
 export const PriorityChip = priorityChip.EnumChip
 
 /**
@@ -125,54 +18,8 @@ export const PriorityChip = priorityChip.EnumChip
  * 同じ情報を PriorityChip がテキストで持つため、支援技術からは隠す。
  */
 export const PriorityBar: FC<{ priority: TicketPriority; className?: string }> = ({ priority, className }) => (
-  <div aria-hidden className={priorityStyles({ priority }).bar({ className })} />
+  <div aria-hidden className={priorityBarClass(priority, className)} />
 )
-
-/**
- * PriorityBar を載せる箱の枠線。ダークは背景と周囲のコントラストが弱いので、
- * バーと同じ色で全周に枠を出して輪郭を作る(ライトは影で十分に浮くため透明のまま)。
- */
-export const priorityBorderClass = (priority: TicketPriority) => priorityStyles({ priority }).border()
-
-/**
- * PriorityBar を載せる箱の背景色。バー / 枠と同じ色を 10% で敷き、下地を透かして淡く色を付ける。
- * 半透明なので単色の背景クラス(bg-sky-50 など)とは併用できない(後勝ちで打ち消し合う)。
- */
-export const priorityBgClass = (priority: TicketPriority) => priorityStyles({ priority }).bg()
-
-/**
- * カードの最背面に敷く不透明な下地。
- * priorityBgClass / statusBgClass はどちらも半透明なので、下地が無いとカードの色が
- * レーン(ステータス色)と混色されてしまう。
- * 背景色の指定同士が打ち消し合わないよう、priorityBgClass とは別の要素に当てること。
- */
-export const CARD_BACKDROP_CLASS = 'bg-white dark:bg-black'
-
-/**
- * タグの表示色。HeroUI Chip は色を 5 種しか持たないため Tailwind の utility で上書きする。
- *
- * ビルド出力でレイヤーの初出順が properties < theme < base < components < utilities であることを
- * 確認済み。HeroUI の .chip は @layer components にあるので `!` なしで後勝ちする
- * (崩れた場合は bg-red-200! のように `!` を付ける。globals.css に前例あり)。
- *
- * クラス名は purge 対策で必ず完全なリテラルで書くこと(bg-${color}-200 のような合成は不可)。
- */
-const tagStyles = tv({
-  variants: {
-    color: {
-      gray: 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100',
-      red: 'bg-red-200 text-red-900 dark:bg-red-900 dark:text-red-100',
-      orange: 'bg-orange-200 text-orange-900 dark:bg-orange-900 dark:text-orange-100',
-      amber: 'bg-amber-200 text-amber-900 dark:bg-amber-900 dark:text-amber-100',
-      green: 'bg-green-200 text-green-900 dark:bg-green-900 dark:text-green-100',
-      teal: 'bg-teal-200 text-teal-900 dark:bg-teal-900 dark:text-teal-100',
-      blue: 'bg-blue-200 text-blue-900 dark:bg-blue-900 dark:text-blue-100',
-      indigo: 'bg-indigo-200 text-indigo-900 dark:bg-indigo-900 dark:text-indigo-100',
-      violet: 'bg-violet-200 text-violet-900 dark:bg-violet-900 dark:text-violet-100',
-      pink: 'bg-pink-200 text-pink-900 dark:bg-pink-900 dark:text-pink-100',
-    } satisfies Record<TagColor, string>,
-  },
-})
 
 /**
  * チケットの表示ID(`KEY-番号`)。値はサーバー側で組み立てたものをそのまま出す。
@@ -181,9 +28,6 @@ const tagStyles = tv({
 export const TicketIdText: FC<{ displayId: string; className?: string }> = ({ displayId, className }) => (
   <span className={cn('text-muted font-mono text-xs', className)}>{displayId}</span>
 )
-
-/** タグ色のクラス。className を渡すと tailwind-merge でマージされる */
-export const tagColorClass = (color: TagColor, className?: string) => tagStyles({ color, className })
 
 /** タグ 1 件ぶんの Chip。色は tagStyles で当てる */
 export const TagChip: FC<{
@@ -221,37 +65,3 @@ export const TagChips: FC<{ tags: { id: string; name: string; color: TagColor }[
     </div>
   )
 }
-
-/**
- * ボードの表示名を解決する。
- * プライベートボードは DB 上の name が固定値(PRIVATE_BOARD_NAME)なので、
- * ユーザーの言語設定に追従させるためロケールへ差し替える。
- */
-export const useBoardName = () => {
-  const { t } = useLocale()
-  return useCallback(
-    (board: { name: string; kind: BoardKind }) => (board.kind === 'private' ? t('private') : board.name),
-    [t],
-  )
-}
-
-/** ステータス / 優先度の選択肢(Record<id, label>)。SingleSelectCtrl へ渡す */
-export const useTicketOptions = () => ({
-  statusOptions: statusChip.useOptions(),
-  priorityOptions: priorityChip.useOptions(),
-})
-
-/** 「エージェントに任せない」を表すセンチネル。Select は null を選択肢に持てないので値で表す */
-export const AGENT_MODE_NONE = 'none'
-
-/** エージェントの処理方式の選択肢。先頭は「任せない」(= agentMode を null に戻す) */
-export const useAgentModeOptions = (): Record<string, string> => {
-  const { t } = useLocale()
-  return {
-    [AGENT_MODE_NONE]: t('agent_mode_none'),
-    ...Object.fromEntries(AGENT_TASK_MODES.map((mode) => [mode, t(AGENT_TASK_MODE_LOCALE[mode])])),
-  }
-}
-
-/** 処理状態の選択肢(Record<id, label>)。AgentStateChip と同じ文言を絞り込みへ渡す */
-export const useAgentStateOptions = agentStateChip.useOptions

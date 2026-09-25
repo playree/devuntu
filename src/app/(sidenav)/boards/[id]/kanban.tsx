@@ -3,17 +3,8 @@
 import { UserAvatar } from '@/components/general/avatar'
 import { MultiButton } from '@/components/general/button'
 import { ChatBubbleIcon, CheckBadgeIcon, ClockIcon, FireIcon, PlusIcon } from '@/components/icon'
-import {
-  CARD_BACKDROP_CLASS,
-  PriorityBar,
-  priorityBgClass,
-  priorityBorderClass,
-  PriorityChip,
-  statusBgClass,
-  StatusChip,
-  TagChips,
-  TicketIdText,
-} from '@/components/ticket/ticket-chip'
+import { CARD_BACKDROP_CLASS, priorityBgClass, priorityBorderClass, statusBgClass } from '@/components/ticket/ticket-style'
+import { PriorityBar, PriorityChip, StatusChip, TagChips, TicketIdText } from '@/components/ticket/ticket-chip'
 import type { TicketStatus } from '@/generated/prisma/enums'
 import { cardDropId, KANBAN_LANES, laneDropId } from '@/lib/board/kanban'
 import { preventParentSelection } from '@/lib/client-utils'
