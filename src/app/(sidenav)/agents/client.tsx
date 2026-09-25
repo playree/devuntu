@@ -1,7 +1,5 @@
 'use client'
 
-import { SideDrawer } from '@/components/general/drawer'
-import { FlexCol } from '@/components/general/flex'
 import { GridBox } from '@/components/general/grid'
 import { useServerPagingList } from '@/components/general/paging'
 import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
@@ -29,11 +27,11 @@ import { preventParentSelection } from '@/lib/client-utils'
 import { dayformat } from '@/lib/day'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
-import { cn, Table } from '@heroui/react'
+import { Table } from '@heroui/react'
 import Link from 'next/link'
 import { FC, useEffect, useRef, useState } from 'react'
-import { TicketDetailClient } from '../tickets/[id]/client'
 import { updateTicketAgentMode } from '../tickets/[id]/server'
+import { TicketDrawerLayout } from '../tickets/ticket-drawer-layout'
 import { AgentSectionKeys, AgentSections } from './agent-sections'
 import { getAgentTickets, getApprovableAgents } from './server'
 
@@ -130,11 +128,10 @@ export const AgentsClient: FC = () => {
   const agentOptions = Object.fromEntries((agents ?? []).map((agent) => [agent.id, agent.name]))
 
   return (
-    // 詳細パネルを開いている間は data-nav-hidden でサイドメニューを隠し、横幅を稼ぐ
-    <FlexCol
-      data-wide
-      data-nav-hidden={selectedId ? '' : undefined}
-      className={cn('max-w-6xl', !selectedId && 'mx-auto')}
+    <TicketDrawerLayout
+      selectedId={selectedId}
+      onClose={() => setSelectedId(undefined)}
+      onChanged={() => list.reload()}
     >
       <ContentHeader icon={<RocketLaunchIcon />} title={t('agent')}>
         <ReloadButton onReload={reloadAll} hasSeparator={false} />
@@ -257,23 +254,6 @@ export const AgentsClient: FC = () => {
           )}
         </>
       )}
-
-      <SideDrawer
-        isOpen={!!selectedId}
-        aria-label={t('ticket')}
-        onClose={() => setSelectedId(undefined)}
-        className='bg-background border-l p-4 shadow-2xl'
-      >
-        {selectedId && (
-          <TicketDetailClient
-            // id が変わっても useActionData は再取得しないため、選択のたびに作り直す
-            key={selectedId}
-            id={selectedId}
-            onClose={() => setSelectedId(undefined)}
-            onChanged={() => list.reload()}
-          />
-        )}
-      </SideDrawer>
-    </FlexCol>
+    </TicketDrawerLayout>
   )
 }

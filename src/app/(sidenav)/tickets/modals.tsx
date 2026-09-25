@@ -7,7 +7,6 @@ import { FormModal, ModalBaseProps } from '@/components/general/modal'
 import { SingleSelectCtrl } from '@/components/general/select'
 import { PlusIcon } from '@/components/icon'
 import { MarkdownCtrl } from '@/components/markdown/markdown-editor'
-import { MentionCandidate } from '@/components/markdown/mention-menu'
 import { notify } from '@/components/notify'
 import { TagSelectCtrl } from '@/components/ticket/tag-select'
 import { useBoardName, useTicketOptions } from '@/components/ticket/ticket-chip'
@@ -17,11 +16,10 @@ import { parseAction } from '@/lib/action/action-client'
 import { CreateTicketIn, CreateTicketOut, scCreateTicket } from '@/lib/schema/schema'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { FC, useEffect, useState } from 'react'
+import { FC, useEffect } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
-import { createTicket, createTicketTag, getAssigneeOptions, GetTicketFormOptionsReturnType } from './server'
-
-type FormOptions = NonNullable<GetTicketFormOptionsReturnType>
+import { createTicket, createTicketTag } from './server'
+import { type TicketFormOptions, useBoardAssignees } from './use-ticket-form'
 
 /**
  * チケット作成モーダル。
@@ -31,7 +29,7 @@ type FormOptions = NonNullable<GetTicketFormOptionsReturnType>
  */
 export const AddModal: FC<
   ModalBaseProps & {
-    options: FormOptions
+    options: TicketFormOptions
     defaultBoardId?: string | null
     /** レーン別の追加ボタンから開いた場合の初期ステータス */
     defaultStatus?: TicketStatus
@@ -69,20 +67,9 @@ export const AddModal: FC<
   })
 
   const boardId = useWatch({ control, name: 'boardId' })
-  const [boardAssignees, setBoardAssignees] = useState<MentionCandidate[]>([])
+  const { assignees: boardAssignees } = useBoardAssignees(boardId)
   // タグは選択中のボードのものだけを候補にする(他ボードのタグはサーバー側で弾かれる)
   const boardTags = options.tags.filter((tag) => tag.boardId === boardId)
-
-  useEffect(() => {
-    // ボードを続けて切り替えると古い要求が後着しうるので、対象が変わった結果は捨てる
-    let isCurrent = true
-    parseAction(getAssigneeOptions({ id: boardId }), { handled: 'all' })
-      .then((res) => isCurrent && setBoardAssignees(res ?? []))
-      .catch(() => isCurrent && setBoardAssignees([]))
-    return () => {
-      isCurrent = false
-    }
-  }, [boardId])
 
   // ボードが変わったら前のボードの担当者・タグの ID が残らないよう既定値へ戻す
   // (初回マウントでも走るが defaultValues と同じ値を書くだけなので実害はない)

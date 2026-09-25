@@ -2,8 +2,6 @@
 
 import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
-import { SideDrawer } from '@/components/general/drawer'
-import { FlexCol } from '@/components/general/flex'
 import { Grid } from '@/components/general/grid'
 import { useModalState } from '@/components/general/modal'
 import { PanelSkeleton } from '@/components/general/panel'
@@ -18,7 +16,6 @@ import {
 import { NoAccessView } from '@/components/no-access-view'
 import { ReloadButton } from '@/components/reload-button'
 import { useBoardName } from '@/components/ticket/ticket-chip'
-import { UserSelectOption } from '@/components/user-select'
 import type { TicketStatus } from '@/generated/prisma/enums'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import {
@@ -37,13 +34,13 @@ import { nowDate } from '@/lib/day'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { DragDropProvider } from '@dnd-kit/react'
-import { Accordion, ButtonGroup, Chip, cn } from '@heroui/react'
+import { Accordion, ButtonGroup, Chip } from '@heroui/react'
 import { useRouter } from 'next/navigation'
-import { FC, useEffect, useMemo, useState } from 'react'
+import { FC, useMemo, useState } from 'react'
 // チケット詳細・作成フォームは /tickets と共通のものを使う(重複定義を避ける)
-import { TicketDetailClient } from '../../tickets/[id]/client'
 import { AddModal } from '../../tickets/modals'
-import { getAssigneeOptions, getTicketFormOptions, GetTicketFormOptionsReturnType } from '../../tickets/server'
+import { TicketDrawerLayout } from '../../tickets/ticket-drawer-layout'
+import { useBoardAssignees, useTicketFormOptions } from '../../tickets/use-ticket-form'
 import { KanbanFilterPanel } from './filter-panel'
 import { useKanbanFilter } from './filter-state'
 import { KanbanCard, KanbanLane, LANE_ORDER } from './kanban'
@@ -57,8 +54,8 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
   const addModalState = useModalState<TicketStatus>()
 
   const { data, reload, refresh, isLoading } = useActionData(() => getBoardKanban({ id: boardId }))
-  const [options, setOptions] = useState<GetTicketFormOptionsReturnType>()
-  const [assigneeOptions, setAssigneeOptions] = useState<UserSelectOption[]>([])
+  const { options } = useTicketFormOptions()
+  const { assignees: assigneeOptions, isLoaded: isAssigneesLoaded } = useBoardAssignees(boardId)
   const [filter, setFilter] = useKanbanFilter()
   // 詳細パネルに表示中のチケット。未選択なら undefined
   const [selectedId, setSelectedId] = useState<string>()
@@ -71,23 +68,6 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
   // (index はレーンの実際の位置で送る必要があるため、絞り込み後の配列を渡すと並び順が壊れる)
   // 完了の表示期間の基準時刻は、盤面の取得か絞り込みの変更でこれが再評価されるたびに取り直す
   const visibleLanes = useMemo(() => filterLaneMap(lanes, filter, nowDate()), [lanes, filter])
-
-  useEffect(() => {
-    parseAction(getTicketFormOptions(), { handled: 'all' })
-      .then(setOptions)
-      .catch(() => setOptions(undefined))
-  }, [])
-
-  useEffect(() => {
-    // ボードを続けて切り替えると古い要求が後着しうるので、対象が変わった結果は捨てる
-    let isCurrent = true
-    parseAction(getAssigneeOptions({ id: boardId }), { handled: 'all' })
-      .then((res) => isCurrent && setAssigneeOptions(res ?? []))
-      .catch(() => isCurrent && setAssigneeOptions([]))
-    return () => {
-      isCurrent = false
-    }
-  }, [boardId])
 
   /** DnD でのレーン移動 / 並べ替え。楽観更新し、失敗したらサーバー値を取り直す */
   const move = async (ticketId: string, target: DropTarget) => {
@@ -126,20 +106,25 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
   const isFiltered = isKanbanFilterActive(filter)
 
   return (
-    <FlexCol
+    <TicketDrawerLayout
       /**
-       * 詳細パネルを開いている間は data-nav-hidden でサイドメニューを隠し、盤面の横幅を稼ぐ。
-       * あわせて中央寄せ(mx-auto)をやめて左に寄せ、右のパネルと重なりにくくする。
-       *
-       * md 以上では盤面を 1 画面に収めてレーン内スクロールにする。高さの基準(画面高と padding)は
-       * data-fit-screen を見た SideNavbar の #side-main 側が持つので、ここは親に追従させるだけにする。
+       * md 以上では盤面を 1 画面に収めてレーン内スクロールにする。
        * 固定高(h-)ではなく max-h- なのは、カードが少ないときにレーンを画面下端まで伸ばさず内容ぶんの高さで収めるため。
        * md 未満はレーンが縦積みになり 1 画面に 4 レーンは詰め込めないので、従来どおりページ全体のスクロールにする。
        */
-      data-wide
-      data-fit-screen
-      data-nav-hidden={selectedId ? '' : undefined}
-      className={cn('max-w-7xl md:max-h-full', !selectedId && 'mx-auto')}
+      isFitScreen
+      className='max-w-7xl md:max-h-full'
+      selectedId={selectedId}
+      onClose={() => setSelectedId(undefined)}
+      /**
+       * 詳細側の変更(ステータス変更によるレーン移動を含む)を盤面へ反映する。
+       * reload だと isLoading で盤面ごとスケルトンに差し替わり、この詳細パネル自身が
+       * アンマウントされてしまうため silent な refresh を使う
+       */
+      onChanged={refresh}
+      formOptions={options}
+      // 取得できていないときは詳細パネル側で取り直させる
+      boardAssignees={isAssigneesLoaded ? assigneeOptions : undefined}
     >
       <ContentHeader icon={<ViewColumnsIcon />} title={boardName(board)}>
         <MultiButton
@@ -242,28 +227,6 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
         </Grid>
       </DragDropProvider>
 
-      <SideDrawer
-        isOpen={!!selectedId}
-        aria-label={t('ticket')}
-        onClose={() => setSelectedId(undefined)}
-        className='bg-background border-l p-4 shadow-2xl'
-      >
-        {selectedId && (
-          <TicketDetailClient
-            // id が変わっても useActionData は再取得しないため、選択のたびに作り直す
-            key={selectedId}
-            id={selectedId}
-            onClose={() => setSelectedId(undefined)}
-            /**
-             * 詳細側の変更(ステータス変更によるレーン移動を含む)を盤面へ反映する。
-             * reload だと isLoading で盤面ごとスケルトンに差し替わり、この詳細パネル自身が
-             * アンマウントされてしまうため silent な refresh を使う
-             */
-            onChanged={refresh}
-          />
-        )}
-      </SideDrawer>
-
       {options && (
         <AddModal
           key={addModalState.key}
@@ -276,6 +239,6 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
           isBoardLocked
         />
       )}
-    </FlexCol>
+    </TicketDrawerLayout>
   )
 }

@@ -12,7 +12,6 @@ import { SingleSelectField } from '@/components/general/select'
 import { ContentHeader } from '@/components/header'
 import { CheckIcon, PencilSquareIcon, TicketIcon, TrashIcon, ViewColumnsIcon, XMarkIcon } from '@/components/icon'
 import { MarkdownField } from '@/components/markdown/markdown-editor'
-import { MentionCandidate } from '@/components/markdown/mention-menu'
 import { NoAccessView } from '@/components/no-access-view'
 import { notify } from '@/components/notify'
 import { MentionChips } from '@/components/ticket/mention-chips'
@@ -37,14 +36,9 @@ import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { Breadcrumbs } from '@heroui/react'
 import { useRouter } from 'next/navigation'
-import { FC, useEffect, useState } from 'react'
-import {
-  createTicketTag,
-  deleteTicket,
-  getAssigneeOptions,
-  getTicketFormOptions,
-  GetTicketFormOptionsReturnType,
-} from '../server'
+import { FC, useState } from 'react'
+import { createTicketTag, deleteTicket } from '../server'
+import { type BoardAssignee, type TicketFormOptions, useBoardAssignees, useTicketFormOptions } from '../use-ticket-form'
 import { TicketComments } from './comments'
 import { getTicket, patchTicket, updateTicketAgentMode, updateTicketStatus } from './server'
 
@@ -113,7 +107,11 @@ export const TicketDetailClient: FC<{
   onClose?: () => void
   /** 一覧に埋め込んだときの変更通知。一覧の再読込に使う */
   onChanged?: () => void
-}> = ({ id, onClose, onChanged }) => {
+  /** 一覧側で取得済みの選択肢。渡すと取り直さない */
+  formOptions?: TicketFormOptions
+  /** 一覧側で取得済みの担当者候補(同じボードのもの)。渡すと取り直さない */
+  boardAssignees?: BoardAssignee[]
+}> = ({ id, onClose, onChanged, formOptions, boardAssignees: initialAssignees }) => {
   const { t, fet } = useLocale()
   const tz = useUserTimezone()
   const router = useRouter()
@@ -123,8 +121,9 @@ export const TicketDetailClient: FC<{
   const boardName = useBoardName()
 
   const { data: ticket, refresh, isLoading } = useActionData(() => getTicket({ id }))
-  const [options, setOptions] = useState<GetTicketFormOptionsReturnType>()
-  const [boardAssignees, setBoardAssignees] = useState<MentionCandidate[]>([])
+  const { options } = useTicketFormOptions(formOptions)
+  // 担当者候補はそのボードのメンバー(プライベートボードなら本人のみ)
+  const { assignees: boardAssignees } = useBoardAssignees(ticket?.boardId, initialAssignees)
   const [savingField, setSavingField] = useState<EditField>()
   const [draft, setDraft] = useState<Draft>({})
   // 件名は入力途中の値を保持する必要があるため state で持つ
@@ -134,28 +133,6 @@ export const TicketDetailClient: FC<{
   const [isEditingContent, setEditingContent] = useState(false)
   const [contentDraft, setContentDraft] = useState('')
   const [isSavingContent, setSavingContent] = useState(false)
-
-  useEffect(() => {
-    parseAction(getTicketFormOptions(), { handled: 'all' })
-      .then(setOptions)
-      .catch(() => setOptions(undefined))
-  }, [])
-
-  // 担当者候補はそのボードのメンバー(プライベートボードなら本人のみ)
-  const boardId = ticket?.boardId
-  useEffect(() => {
-    if (!boardId) {
-      return
-    }
-    // ボードが変わったときに古い要求が後着しうるので、対象が変わった結果は捨てる
-    let isCurrent = true
-    parseAction(getAssigneeOptions({ id: boardId }), { handled: 'all' })
-      .then((res) => isCurrent && setBoardAssignees(res ?? []))
-      .catch(() => isCurrent && setBoardAssignees([]))
-    return () => {
-      isCurrent = false
-    }
-  }, [boardId])
 
   // 再取得でサーバー値が変わったら楽観値を捨て、件名の入力欄を同期する(レンダー中に調整)
   if (ticket && ticket !== syncedTicket) {
