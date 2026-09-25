@@ -13,6 +13,7 @@ import { ContentHeader } from '@/components/header'
 import { CheckIcon, PencilSquareIcon, TicketIcon, TrashIcon, ViewColumnsIcon, XMarkIcon } from '@/components/icon'
 import { MarkdownField } from '@/components/markdown/markdown-editor'
 import { MentionCandidate } from '@/components/markdown/mention-menu'
+import { NoAccessView } from '@/components/no-access-view'
 import { notify } from '@/components/notify'
 import { MentionChips } from '@/components/ticket/mention-chips'
 import { TagIdSelectField } from '@/components/ticket/tag-select'
@@ -265,18 +266,15 @@ export const TicketDetailClient: FC<{
   // useActionData は ClientError を通知しないため、取得できなかったことをここで表示する
   if (!ticket) {
     return (
-      <FlexCol>
-        <ContentHeader
-          title={
-            <>
-              {onClose && <CloseButton onClose={onClose} />}
-              <TicketIcon />
-              {t('ticket')}
-            </>
-          }
-        />
-        <NoticePanel>{t('msg_no_access')}</NoticePanel>
-      </FlexCol>
+      <NoAccessView
+        title={
+          <>
+            {onClose && <CloseButton onClose={onClose} />}
+            <TicketIcon />
+            {t('ticket')}
+          </>
+        }
+      />
     )
   }
 

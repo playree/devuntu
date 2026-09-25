@@ -7,7 +7,7 @@ import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
 import { usePagingList } from '@/components/general/paging'
-import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
+import { PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
 import {
   ArrowLeftCircleIcon,
@@ -20,6 +20,7 @@ import {
   RocketLaunchIcon,
   ShieldCheckIcon,
 } from '@/components/icon'
+import { NoAccessView } from '@/components/no-access-view'
 import { ReloadButton } from '@/components/reload-button'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'
@@ -80,19 +81,7 @@ export const AdminAgentDetailClient: FC<{ agentId: string; baseUrl: string }> = 
 
   // useActionData は ClientError を通知しないため、取得できなかったことをここで表示する
   if (!agent) {
-    return (
-      <FlexCol>
-        <ContentHeader icon={<Cog6ToothIcon />} title={t('agent_settings')}>
-          <MultiButton
-            isIconOnly
-            tooltip={t('back')}
-            icon={<ArrowLeftCircleIcon />}
-            onPress={() => router.push('/admin/agents')}
-          />
-        </ContentHeader>
-        <NoticePanel>{t('msg_no_access')}</NoticePanel>
-      </FlexCol>
-    )
+    return <NoAccessView icon={<Cog6ToothIcon />} title={t('agent_settings')} backHref='/admin/agents' />
   }
 
   return (

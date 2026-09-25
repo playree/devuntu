@@ -20,6 +20,7 @@ import {
   UsersIcon,
   ViewColumnsIcon,
 } from '@/components/icon'
+import { NoAccessView } from '@/components/no-access-view'
 import { notify } from '@/components/notify'
 import { TagEditor } from '@/components/ticket/tag-editor'
 import { useBoardName } from '@/components/ticket/ticket-chip'
@@ -69,19 +70,7 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
 
   // useActionData は ClientError を通知しないため、取得できなかったことをここで表示する
   if (!board) {
-    return (
-      <FlexCol>
-        <ContentHeader icon={<Cog6ToothIcon />} title={t('board_settings')}>
-          <MultiButton
-            isIconOnly
-            tooltip={t('back')}
-            icon={<ArrowLeftCircleIcon />}
-            onPress={() => router.push('/boards')}
-          />
-        </ContentHeader>
-        <NoticePanel>{t('msg_no_access')}</NoticePanel>
-      </FlexCol>
-    )
+    return <NoAccessView icon={<Cog6ToothIcon />} title={t('board_settings')} backHref='/boards' />
   }
 
   const isPrivate = board.kind === 'private'

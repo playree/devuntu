@@ -6,7 +6,7 @@ import { SideDrawer } from '@/components/general/drawer'
 import { FlexCol } from '@/components/general/flex'
 import { Grid } from '@/components/general/grid'
 import { useModalState } from '@/components/general/modal'
-import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
+import { PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
 import {
   ArrowLeftCircleIcon,
@@ -15,6 +15,7 @@ import {
   FunnelIcon,
   ViewColumnsIcon,
 } from '@/components/icon'
+import { NoAccessView } from '@/components/no-access-view'
 import { ReloadButton } from '@/components/reload-button'
 import { useBoardName } from '@/components/ticket/ticket-chip'
 import { UserSelectOption } from '@/components/user-select'
@@ -116,19 +117,7 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
   }
 
   if (!data) {
-    return (
-      <FlexCol>
-        <ContentHeader icon={<ViewColumnsIcon />} title={t('board')}>
-          <MultiButton
-            isIconOnly
-            tooltip={t('back')}
-            icon={<ArrowLeftCircleIcon />}
-            onPress={() => router.push('/boards')}
-          />
-        </ContentHeader>
-        <NoticePanel>{t('msg_no_access')}</NoticePanel>
-      </FlexCol>
-    )
+    return <NoAccessView icon={<ViewColumnsIcon />} title={t('board')} backHref='/boards' />
   }
 
   const { board } = data
