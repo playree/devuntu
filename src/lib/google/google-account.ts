@@ -7,6 +7,7 @@
  */
 
 import type { AccountOrderByWithRelationInput, AccountWhereInput } from '@/generated/prisma/models'
+import { cache } from 'react'
 import { envu } from '../env-util'
 import { createIntegrationSettings } from '../integration-settings'
 import { GOOGLE_ACCOUNT_PROVIDER_ID } from './google-calendar'
@@ -38,4 +39,5 @@ const googleAccount = createIntegrationSettings({
 
 export const getGoogleAccountSettings = googleAccount.get
 export const setGoogleAccountSettings = googleAccount.set
-export const canUseGoogleAccount = googleAccount.canUse
+/** レイアウトとページが同じリクエストで判定するので、リクエスト内では 1 回だけ問い合わせる */
+export const canUseGoogleAccount = cache(googleAccount.canUse)

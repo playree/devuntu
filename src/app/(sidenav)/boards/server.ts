@@ -1,7 +1,7 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action/action-server'
-import { countTicketsByBoard, ensurePrivateBoard, listAccessibleBoards } from '@/lib/board/board'
+import { countTicketsByBoard, listAccessibleBoards } from '@/lib/board/board'
 import { reserveBoardKey, rethrowDuplicatedBoardKey } from '@/lib/board/board-key'
 import { TICKET_STATUSES } from '@/lib/board/ticket-enum'
 import { logger } from '@/lib/logger'
@@ -11,13 +11,11 @@ import { scCreateBoard } from '@/lib/schema/schema-board'
 /**
  * ボード一覧取得(自分がアサインされているボードのみ)
  *
- * プライベートボードもここに含まれるため、先に自動作成しておく。
+ * プライベートボードも含まれる((sidenav) のレイアウトで用意済み)。
  */
 export const getBoards = safeAuthAction
   .metadata({ actionName: 'getBoards', role: 'user' })
   .action(async ({ ctx: { user } }) => {
-    await ensurePrivateBoard(user)
-
     // 表示の出し入れは一覧側のスイッチ(クライアントフィルタ)で行うため、アーカイブ済みも含めて返す
     const boards = await listAccessibleBoards(user.id, { includeArchived: true })
     const counts = await countTicketsByBoard(boards.map((board) => board.id))

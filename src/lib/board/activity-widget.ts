@@ -1,15 +1,15 @@
 /**
  * ダッシュボードの「自分宛てのメンション」「最近更新されたチケット」Widget 用の取得処理。
  *
- * どちらも可視スコープは必ず resolveAccessibleBoardIds の結果で付ける
+ * どちらも可視スコープは必ず getAccessibleBoardIds の結果で付ける
  * (メンションはボードから外れた後も残るので、見えないボードのものは出さない)。
  */
 
 import type { TicketStatus } from '@/generated/prisma/enums'
 import { prisma } from '../prisma'
+import { getAccessibleBoardIds } from './board-access'
 import { commentAnchorId, ticketDisplayId, ticketShortPath } from './ticket-id'
 import { ticketScopeWhere } from './ticket-search'
-import { resolveAccessibleBoardIds } from './ticket-widget'
 
 /** 自分宛てのメンションの表示件数 */
 export const MENTIONS_LIMIT = 10
@@ -57,7 +57,7 @@ export type MentionItem = {
  * 自分のコメント中の自分宛てメンションは通知と同じく自分への知らせとしない。
  */
 export const listMentions = async (userId: string): Promise<MentionItem[]> => {
-  const scope = ticketScopeWhere(await resolveAccessibleBoardIds(userId))
+  const scope = ticketScopeWhere(await getAccessibleBoardIds(userId))
   const mentioned = { mentionedUserIds: { has: userId } }
 
   const [tickets, comments] = await Promise.all([
@@ -112,7 +112,7 @@ export const listMentions = async (userId: string): Promise<MentionItem[]> => {
 /** 可視ボードのチケットを更新日時の新しい順に RECENT_ACTIVITY_LIMIT 件(完了も含む) */
 export const listRecentActivity = async (userId: string) => {
   const tickets = await prisma.ticket.findMany({
-    where: ticketScopeWhere(await resolveAccessibleBoardIds(userId)),
+    where: ticketScopeWhere(await getAccessibleBoardIds(userId)),
     select: { ...TICKET_SELECT, updatedAt: true },
     orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
     take: RECENT_ACTIVITY_LIMIT,
