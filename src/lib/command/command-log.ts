@@ -13,7 +13,13 @@ import { type LocaleValues } from '@/lib/locale-util'
 import { type LocaleItem } from '@/locale'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
-import { COMMAND_FLUSH_BYTES, COMMAND_MAX_CHUNKS, COMMAND_MAX_OUTPUT_BYTES, COMMAND_RUNAWAY_BYTES } from './command'
+import {
+  COMMAND_FLUSH_BYTES,
+  COMMAND_HEARTBEAT_MS,
+  COMMAND_MAX_CHUNKS,
+  COMMAND_MAX_OUTPUT_BYTES,
+  COMMAND_RUNAWAY_BYTES,
+} from './command'
 import { encodeSystemMessage } from './command-log-message'
 
 /**
@@ -65,6 +71,8 @@ export const createLogBuffer = (runId: string, workerId: string): LogBuffer => {
   let isTruncated = false
   /** 打ち切りの説明を1度だけ入れるためのフラグ */
   let truncationNoticeQueued = false
+  /** 最後に生存申告(`heartbeatAt` の更新)が通った時刻。書き出しの成功も生存申告を兼ねる */
+  let lastBeatAt = 0
 
   const enqueue = (stream: CommandStream, text: string) => {
     queue.push({ stream, text })
@@ -99,8 +107,16 @@ export const createLogBuffer = (runId: string, workerId: string): LogBuffer => {
 
   const runFlush = async (): Promise<boolean> => {
     if (queue.length === 0) {
-      // 書くものが無くても生存申告は必要なので、所有権の確認だけは行う
-      return touchRun(runId, workerId)
+      // 書くものが無くても生存申告は必要。ただし flush は短い間隔で呼ばれるので、
+      // 毎回 UPDATE せず生存申告の間隔まで間引く(所有権の喪失に気づくのもその分だけ遅れる)
+      if (Date.now() - lastBeatAt < COMMAND_HEARTBEAT_MS) {
+        return true
+      }
+      const owned = await touchRun(runId, workerId)
+      if (owned) {
+        lastBeatAt = Date.now()
+      }
+      return owned
     }
 
     const batch = queue
@@ -151,6 +167,7 @@ export const createLogBuffer = (runId: string, workerId: string): LogBuffer => {
 
     savedBytes += batchBytes
     savedChunks += batch.length
+    lastBeatAt = Date.now()
     return true
   }
 

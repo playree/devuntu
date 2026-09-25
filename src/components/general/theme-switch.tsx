@@ -49,7 +49,6 @@ export const ThemeSwitchList: FC<{
 }> = ({ className, size = 'md', variant = 'outline' }) => {
   const iconSize = iconSizes[size]
   const { theme, setTheme, systemTheme } = useTheme()
-  const [selectedKeys, setSelectedKeys] = useState(new Set([theme || 'system']))
 
   /**
    * next-themes は保存済みのテーマをクライアントの初回描画時点で返す(SSR では返さない)ため、
@@ -89,13 +88,9 @@ export const ThemeSwitchList: FC<{
         <Dropdown.Menu
           disallowEmptySelection
           selectionMode='single'
-          selectedKeys={selectedKeys}
-          onAction={(key) => {
-            const keyString = key.toString()
-            const keys = new Set([keyString])
-            setSelectedKeys(keys)
-            setTheme(keyString)
-          }}
+          // 初回描画時の値(未確定の undefined を含む)に固定されないよう、state に写さず現在値から導出する
+          selectedKeys={new Set([theme])}
+          onAction={(key) => setTheme(key.toString())}
         >
           <Dropdown.Item key='system' id='system' textValue='auto'>
             <Dropdown.ItemIndicator />

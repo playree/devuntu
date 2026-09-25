@@ -58,6 +58,7 @@ type MultiSelectFieldProps = SelectFieldBaseProps & {
 export const MultiSelectField = ({
   groupOptions,
   label,
+  isLabelHidden,
   isRequired,
   variant,
   isSmart: isSmartProp,
@@ -80,7 +81,10 @@ export const MultiSelectField = ({
         onBlur={onBlur}
         ref={ref}
       >
-        <Label className={isCompact ? 'text-xs font-light' : ''} isRequired={isRequired}>
+        <Label
+          className={cn(isCompact ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}
+          isRequired={isRequired}
+        >
           {label}
         </Label>
         <Select.Trigger className={isCompact ? 'min-h-7 py-1' : undefined}>

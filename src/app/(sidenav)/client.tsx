@@ -27,8 +27,14 @@ const DragDropArea: FC<{ initialLayout: DashboardLayout }> = ({ initialLayout })
               size='sm'
               icon={<CheckIcon />}
               onPress={async () => {
+                try {
+                  await parseAction(updateDashboard({ layout }))
+                } catch {
+                  // 失敗の通知は parseAction が済ませている。保存済みに見えないよう編集中のまま残す
+                  // (キャンセルで保存前のレイアウトへ戻せる)
+                  return
+                }
                 setEditable(false)
-                await parseAction(updateDashboard({ layout }))
                 notify.success(t('msg_saved'))
               }}
             >

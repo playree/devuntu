@@ -1,4 +1,5 @@
 import { AGENT_RUN_HISTORY_LIMIT } from './agent/agent'
+import { isValidTimezone } from './day'
 import { errSystemError } from './error'
 
 function getEnv<T extends string = string>(key: string, opts: { required: true }): T
@@ -35,12 +36,19 @@ function getEnvBoolean(key: string, opts?: { default?: boolean }): boolean {
   return lower === 'true'
 }
 
-function getEnvNumber(key: string, opts: { required: true }): number
-function getEnvNumber(key: string, opts: { default: number }): number
-function getEnvNumber(key: string): number | undefined
-function getEnvNumber(key: string, opts?: { required?: boolean; default?: number }): number | undefined {
-  const value = process.env[key]
-  if (!value) {
+type EnvIntRange = { min?: number; max?: number }
+
+/**
+ * 整数の環境変数。整数でない値(`abc` / `1.5` など)や範囲外の値は起動時に弾く。
+ *
+ * `Number()` の結果をそのまま返すと、綴り違いが NaN のまま下流へ流れ、
+ * 比較が常に false になって上限や期限が黙って効かなくなる。
+ */
+function getEnvInt(key: string, opts: EnvIntRange & { required: true }): number
+function getEnvInt(key: string, opts: EnvIntRange & { default: number }): number
+function getEnvInt(key: string, opts?: EnvIntRange & { required?: boolean; default?: number }): number | undefined {
+  const raw = process.env[key]?.trim()
+  if (!raw) {
     if (opts?.default !== undefined) {
       return opts.default
     }
@@ -49,7 +57,21 @@ function getEnvNumber(key: string, opts?: { required?: boolean; default?: number
     }
     return undefined
   }
-  return Number(value)
+
+  const value = Number(raw)
+  const { min, max } = opts ?? {}
+  if (!Number.isSafeInteger(value) || (min !== undefined && value < min) || (max !== undefined && value > max)) {
+    const range =
+      min !== undefined && max !== undefined
+        ? ` between ${min} and ${max}`
+        : min !== undefined
+          ? ` of at least ${min}`
+          : max !== undefined
+            ? ` of at most ${max}`
+            : ''
+    throw errSystemError(`${key} must be an integer${range}`)
+  }
+  return value
 }
 
 const client = {
@@ -91,8 +113,16 @@ const server = {
   get DEFAULT_LOCALE() {
     return getEnv('DEFAULT_LOCALE')
   },
+  /**
+   * サーバー側の判定(エージェントの稼働時間帯・処理上限のリセット、期限間近の判定など)で、
+   * 利用者やランナーにタイムゾーンが設定されていないときに使う
+   */
   get DEFAULT_TIMEZONE() {
-    return getEnv('DEFAULT_TIMEZONE', { default: 'Asia/Tokyo' })
+    const value = getEnv('DEFAULT_TIMEZONE', { default: 'Asia/Tokyo' }).trim()
+    if (!isValidTimezone(value)) {
+      throw errSystemError('DEFAULT_TIMEZONE must be an IANA time zone name')
+    }
+    return value
   },
   /**
    * 検索エンジンにインデックスさせるか。既定の false では meta robots / X-Robots-Tag が
@@ -125,11 +155,7 @@ const server = {
    * GitHub API の per_page は100が上限で、超えた値は黙って100に丸められる。
    */
   get RELEASE_NOTES_LIMIT() {
-    const value = getEnvNumber('RELEASE_NOTES_LIMIT', { default: 20 })
-    if (!Number.isInteger(value) || value < 1 || value > 100) {
-      throw errSystemError('RELEASE_NOTES_LIMIT must be an integer between 1 and 100')
-    }
-    return value
+    return getEnvInt('RELEASE_NOTES_LIMIT', { default: 20, min: 1, max: 100 })
   },
 
   // 認証
@@ -140,18 +166,14 @@ const server = {
     return getEnv('BETTER_AUTH_URL', { required: true })
   },
   get SESSION_EXPIRES_IN() {
-    return getEnvNumber('SESSION_EXPIRES_IN', { default: 60 * 60 * 24 * 5 })
+    return getEnvInt('SESSION_EXPIRES_IN', { default: 60 * 60 * 24 * 5, min: 1 })
   },
   get SESSION_FRESH_AGE() {
-    return getEnvNumber('SESSION_FRESH_AGE', { default: 60 * 60 * 24 })
+    return getEnvInt('SESSION_FRESH_AGE', { default: 60 * 60 * 24, min: 0 })
   },
   /** MCP用リフレッシュトークンの有効期限(秒)。Webログインセッションとは独立 */
   get MCP_REFRESH_TOKEN_EXPIRES_IN() {
-    const value = getEnvNumber('MCP_REFRESH_TOKEN_EXPIRES_IN', { default: 60 * 60 * 24 * 180 })
-    if (!Number.isFinite(value) || value <= 0) {
-      throw errSystemError('MCP_REFRESH_TOKEN_EXPIRES_IN must be a positive finite number')
-    }
-    return value
+    return getEnvInt('MCP_REFRESH_TOKEN_EXPIRES_IN', { default: 60 * 60 * 24 * 180, min: 1 })
   },
   get TWO_FA_REQUIRED() {
     return getEnvBoolean('TWO_FA_REQUIRED', { default: true })
@@ -272,20 +294,12 @@ const server = {
    * まだどこからも参照されていない。その間に消さないための幅。
    */
   get MAINTENANCE_ATTACHMENT_GRACE_HOURS() {
-    const value = getEnvNumber('MAINTENANCE_ATTACHMENT_GRACE_HOURS', { default: 24 })
-    if (!Number.isFinite(value) || value < 1) {
-      throw errSystemError('MAINTENANCE_ATTACHMENT_GRACE_HOURS must be at least 1')
-    }
-    return value
+    return getEnvInt('MAINTENANCE_ATTACHMENT_GRACE_HOURS', { default: 24, min: 1 })
   },
 
   /** エージェントの実行履歴を残す期間(日) */
   get AGENT_RUN_RETENTION_DAYS() {
-    const value = getEnvNumber('AGENT_RUN_RETENTION_DAYS', { default: 90 })
-    if (!Number.isInteger(value) || value < 1 || value > MAX_RETENTION_DAYS) {
-      throw errSystemError(`AGENT_RUN_RETENTION_DAYS must be an integer between 1 and ${MAX_RETENTION_DAYS}`)
-    }
-    return value
+    return getEnvInt('AGENT_RUN_RETENTION_DAYS', { default: 90, min: 1, max: MAX_RETENTION_DAYS })
   },
 
   /**
@@ -295,11 +309,7 @@ const server = {
    * 履歴が生まれるため、そこを下限にする。
    */
   get AGENT_RUN_KEEP() {
-    const value = getEnvNumber('AGENT_RUN_KEEP', { default: 500 })
-    if (!Number.isInteger(value) || value < AGENT_RUN_HISTORY_LIMIT) {
-      throw errSystemError(`AGENT_RUN_KEEP must be an integer of at least ${AGENT_RUN_HISTORY_LIMIT}`)
-    }
-    return value
+    return getEnvInt('AGENT_RUN_KEEP', { default: 500, min: AGENT_RUN_HISTORY_LIMIT })
   },
 
   // リモート実行
@@ -358,29 +368,17 @@ const server = {
    * サーバーから対象ホストへ SSH を張る数がそのままこの値になるので、控えめな既定にしてある。
    */
   get COMMAND_MAX_CONCURRENT() {
-    const value = getEnvNumber('COMMAND_MAX_CONCURRENT', { default: 2 })
-    if (!Number.isInteger(value) || value < 1) {
-      throw errSystemError('COMMAND_MAX_CONCURRENT must be an integer of at least 1')
-    }
-    return value
+    return getEnvInt('COMMAND_MAX_CONCURRENT', { default: 2, min: 1 })
   },
 
   /** 順番待ちに積める実行の上限。これを超える投入は拒否する */
   get COMMAND_MAX_QUEUED() {
-    const value = getEnvNumber('COMMAND_MAX_QUEUED', { default: 20 })
-    if (!Number.isInteger(value) || value < 1) {
-      throw errSystemError('COMMAND_MAX_QUEUED must be an integer of at least 1')
-    }
-    return value
+    return getEnvInt('COMMAND_MAX_QUEUED', { default: 20, min: 1 })
   },
 
   /** コマンドの実行履歴を残す期間(日) */
   get COMMAND_RUN_RETENTION_DAYS() {
-    const value = getEnvNumber('COMMAND_RUN_RETENTION_DAYS', { default: 90 })
-    if (!Number.isInteger(value) || value < 1 || value > MAX_RETENTION_DAYS) {
-      throw errSystemError(`COMMAND_RUN_RETENTION_DAYS must be an integer between 1 and ${MAX_RETENTION_DAYS}`)
-    }
-    return value
+    return getEnvInt('COMMAND_RUN_RETENTION_DAYS', { default: 90, min: 1, max: MAX_RETENTION_DAYS })
   },
 
   /**
@@ -390,11 +388,7 @@ const server = {
    * エージェントの実行履歴(`AGENT_RUN_KEEP`)より絞った既定にしてある。
    */
   get COMMAND_RUN_KEEP() {
-    const value = getEnvNumber('COMMAND_RUN_KEEP', { default: 300 })
-    if (!Number.isInteger(value) || value < 1) {
-      throw errSystemError('COMMAND_RUN_KEEP must be an integer of at least 1')
-    }
-    return value
+    return getEnvInt('COMMAND_RUN_KEEP', { default: 300, min: 1 })
   },
 
   // メール
@@ -414,7 +408,7 @@ const server = {
     return getEnv('SMTP_HOST', { required: true })
   },
   get SMTP_PORT() {
-    return getEnvNumber('SMTP_PORT', { required: true })
+    return getEnvInt('SMTP_PORT', { required: true, min: 1, max: 65535 })
   },
   get SMTP_IGNORE_TLS() {
     return getEnvBoolean('SMTP_IGNORE_TLS')

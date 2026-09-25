@@ -305,3 +305,48 @@ describe('RELEASE_NOTES_LIMIT', () => {
     expect(() => envu.server.RELEASE_NOTES_LIMIT).toThrow()
   })
 })
+
+describe('整数の環境変数(getEnvInt)', () => {
+  restoreEnv('SMTP_PORT')
+  restoreEnv('COMMAND_MAX_CONCURRENT')
+
+  it.each(['abc', '25.5', ''])('必須の値が整数でなければ弾く (%s)', (value) => {
+    // NaN のまま返すと接続先ポートが不正なまま実行時まで気づけない
+    process.env.SMTP_PORT = value
+    expect(() => envu.server.SMTP_PORT).toThrow()
+  })
+
+  it('前後の空白は無視する', () => {
+    process.env.SMTP_PORT = ' 587 '
+    expect(envu.server.SMTP_PORT).toBe(587)
+  })
+
+  it('空文字は未設定と同じく既定値になる', () => {
+    process.env.COMMAND_MAX_CONCURRENT = ''
+    expect(envu.server.COMMAND_MAX_CONCURRENT).toBe(2)
+  })
+})
+
+describe('DEFAULT_TIMEZONE', () => {
+  restoreEnv('DEFAULT_TIMEZONE')
+
+  it('未設定なら Asia/Tokyo', () => {
+    delete process.env.DEFAULT_TIMEZONE
+    expect(envu.server.DEFAULT_TIMEZONE).toBe('Asia/Tokyo')
+  })
+
+  it('設定したタイムゾーンを返す', () => {
+    process.env.DEFAULT_TIMEZONE = 'America/New_York'
+    expect(envu.server.DEFAULT_TIMEZONE).toBe('America/New_York')
+  })
+
+  it('タイムゾーンとして解釈できない値は弾く', () => {
+    process.env.DEFAULT_TIMEZONE = 'Asia/Tokio'
+    expect(() => envu.server.DEFAULT_TIMEZONE).toThrow()
+  })
+
+  it('固定オフセットは IANA 名ではないので弾く', () => {
+    process.env.DEFAULT_TIMEZONE = '-05:00'
+    expect(() => envu.server.DEFAULT_TIMEZONE).toThrow()
+  })
+})

@@ -17,10 +17,16 @@ const approverWhere = (userId: string): Prisma.UserWhereInput['OR'] => [
   { agentApproverGroups: { some: { group: { userGroups: { some: { userId } } } } } },
 ]
 
+/** `userId` が承認者になっているエージェントの条件 */
+export const approvableAgentWhere = (userId: string): Prisma.UserWhereInput => ({
+  isAgent: true,
+  OR: approverWhere(userId),
+})
+
 /** `userId` が `agentId` の承認者かどうか。エージェント以外のユーザーは常に false */
 export const isAgentApprover = async (userId: string, agentId: string, tx: Db = prisma): Promise<boolean> => {
   const count = await tx.user.count({
-    where: { id: agentId, isAgent: true, OR: approverWhere(userId) },
+    where: { id: agentId, ...approvableAgentWhere(userId) },
   })
   return count > 0
 }
@@ -30,7 +36,7 @@ export type ApprovableAgent = { id: string; name: string }
 /** `userId` が承認者になっているエージェントの一覧。承認画面のエージェント選択に使う */
 export const listApprovableAgents = async (userId: string, tx: Db = prisma): Promise<ApprovableAgent[]> =>
   await tx.user.findMany({
-    where: { isAgent: true, OR: approverWhere(userId) },
+    where: approvableAgentWhere(userId),
     select: { id: true, name: true },
     orderBy: { name: 'asc' },
   })

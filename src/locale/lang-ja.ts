@@ -450,6 +450,7 @@ export const ja: DefaultLocaleItems = {
 ※シークレットは後から再確認できません。`,
   msg_added_passkey: 'パスキーを登録しました。',
   msg_added_passkey_description: '必要に応じて名前を編集してください。',
+  msg_passkey_failed: 'パスキーの操作に失敗しました。もう一度お試しください。',
   msg_added_target: '${target} を追加しました。',
   msg_agent_approver_desc:
     '承認者だけがチケットのエージェントモードを変更できます。\n承認者が1人もいないエージェントは、誰もエージェントモードを変更できません。',

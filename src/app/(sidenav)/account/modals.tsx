@@ -56,11 +56,13 @@ export const UpdatePasskeyModal: FC<ModalBaseProps & { target: UpdatePasskey }> 
           id: req.id,
           name: req.name,
         })
-        if (data?.passkey) {
-          notify.success(t('msg_updated_target', { target: req.name }))
-          reload()
-          state.close()
+        if (!data?.passkey) {
+          notify.warn(t('msg_passkey_failed'))
+          return
         }
+        notify.success(t('msg_updated_target', { target: req.name }))
+        reload()
+        state.close()
       })}
       title={{ text: t('update_passkey'), icon: <PencilSquareIcon /> }}
       footer={

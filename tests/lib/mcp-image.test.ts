@@ -5,7 +5,7 @@
  * ストレージとDBはモックし、添付先ボードの決め方・入力の正規化・認可の落とし方を検証する。
  */
 
-import { assertBoardAccess, assertTicketAccess, getBoardAccess } from '@/lib/board/board'
+import { assertBoardAccess, assertTicketAccess, canViewAttachment } from '@/lib/board/board'
 import { errInvalidOperation } from '@/lib/error'
 import { registerImageTools } from '@/lib/mcp/mcp-image'
 import { resolveTicketId } from '@/lib/mcp/mcp-ticket'
@@ -36,7 +36,7 @@ vi.mock('@/lib/prisma', async (importOriginal) => ({
 vi.mock('@/lib/board/board', () => ({
   assertBoardAccess: vi.fn(),
   assertTicketAccess: vi.fn(),
-  getBoardAccess: vi.fn(),
+  canViewAttachment: vi.fn(),
 }))
 
 vi.mock('@/lib/mcp/mcp-ticket', () => ({ resolveTicketId: vi.fn() }))
@@ -78,7 +78,7 @@ beforeEach(() => {
   vi.mocked(assertBoardAccess).mockResolvedValue({ boardId: BOARD_ID, archived: false } as never)
   vi.mocked(assertTicketAccess).mockResolvedValue({ boardId: TICKET_BOARD_ID } as never)
   vi.mocked(resolveTicketId).mockResolvedValue('ticket-1')
-  vi.mocked(getBoardAccess).mockResolvedValue({ boardId: BOARD_ID } as never)
+  vi.mocked(canViewAttachment).mockResolvedValue(true)
   vi.mocked(saveContentImage).mockResolvedValue({ url: `/api/upload/${KEY}`, key: KEY, size: 100 })
   vi.mocked(resizeWebp).mockResolvedValue(Buffer.from('resized'))
   mocks.findAttachment.mockResolvedValue({ boardId: BOARD_ID, originalName: 'shot.png', size: 100 })
@@ -234,9 +234,9 @@ describe('get_image', () => {
     expect(getObject).not.toHaveBeenCalled()
   })
 
-  it('ボードのアクセス権が無い場合は未存在と同じエラーにする', async () => {
+  it('閲覧できない添付は未存在と同じエラーにする', async () => {
     const client = await connectClient()
-    vi.mocked(getBoardAccess).mockResolvedValue(null)
+    vi.mocked(canViewAttachment).mockResolvedValue(false)
     const denied = await client.callTool({ name: 'get_image', arguments: { image: KEY } })
 
     mocks.findAttachment.mockResolvedValue(null)
@@ -246,12 +246,15 @@ describe('get_image', () => {
     expect(denied.content).toEqual(missing.content)
   })
 
-  it('ボードに属さない添付は誰でも読める', async () => {
+  it('閲覧の可否は配信APIと同じ判定(キーと添付先ボード)に委ねる', async () => {
     mocks.findAttachment.mockResolvedValue({ boardId: null, originalName: 'icon.png', size: 10 })
 
     const result = await (await connectClient()).callTool({ name: 'get_image', arguments: { image: KEY } })
 
-    expect(getBoardAccess).not.toHaveBeenCalled()
+    expect(canViewAttachment).toHaveBeenCalledWith(expect.objectContaining({ id: expect.any(String) }), {
+      key: KEY,
+      boardId: null,
+    })
     expect(result.isError).toBeFalsy()
   })
 })

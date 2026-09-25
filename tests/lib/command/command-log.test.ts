@@ -5,7 +5,7 @@
  * 「所有権を失ったら書き込みをやめること」の2点。
  */
 
-import { COMMAND_MAX_OUTPUT_BYTES } from '@/lib/command/command'
+import { COMMAND_HEARTBEAT_MS, COMMAND_MAX_OUTPUT_BYTES } from '@/lib/command/command'
 import { decodeSystemMessage } from '@/lib/command/command-log-message'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -77,6 +77,32 @@ describe('createLogBuffer', () => {
     expect(await buffer.flush()).toBe(true)
     expect(prisma.commandRun.updateMany).toHaveBeenCalled()
     expect(prisma.commandRunChunk.createMany).not.toHaveBeenCalled()
+  })
+
+  it('書くものが無い間の生存申告は間隔まで間引く', async () => {
+    // flush は 250ms ごとに呼ばれるので、毎回 UPDATE すると出力の無い実行でも DB を叩き続ける
+    vi.useFakeTimers()
+    try {
+      const buffer = createLogBuffer('run-1', 'worker-1')
+      await buffer.flush()
+      await buffer.flush()
+      expect(prisma.commandRun.updateMany).toHaveBeenCalledTimes(1)
+
+      vi.advanceTimersByTime(COMMAND_HEARTBEAT_MS)
+      await buffer.flush()
+      expect(prisma.commandRun.updateMany).toHaveBeenCalledTimes(2)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('書き出しの直後は空の flush で生存申告しない', async () => {
+    const buffer = createLogBuffer('run-1', 'worker-1')
+    buffer.push('stdout', 'a\n')
+    await buffer.flush()
+    await buffer.flush()
+    // 書き出しのトランザクション内の1回だけ
+    expect(prisma.commandRun.updateMany).toHaveBeenCalledTimes(1)
   })
 
   it('所有権を失っていたら false を返す', async () => {

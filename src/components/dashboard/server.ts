@@ -6,7 +6,6 @@ import { listMentions, listRecentActivity } from '@/lib/board/activity-widget'
 import { countMyTicketsByStatus, listDueSoonTickets, listMyTickets } from '@/lib/board/ticket-widget'
 import { canUseAnyCommand } from '@/lib/command/command-access'
 import { listMyRecentCommandRuns } from '@/lib/command/command-widget'
-import { DEFAULT_TZ } from '@/lib/day'
 import { envu } from '@/lib/env-util'
 import { errCommunication } from '@/lib/error'
 import { getString } from '@/lib/kvs'
@@ -158,7 +157,7 @@ export type GetMyTicketsReturnType = Awaited<ReturnType<typeof getMyTickets>>['d
  */
 export const getDueSoonTickets = safeAuthAction
   .metadata({ actionName: 'getDueSoonTickets', role: 'user' })
-  .action(async ({ ctx: { user } }) => listDueSoonTickets(user.id, user.timezone ?? DEFAULT_TZ))
+  .action(async ({ ctx: { user } }) => listDueSoonTickets(user.id, user.timezone ?? envu.server.DEFAULT_TIMEZONE))
 export type GetDueSoonTicketsReturnType = Awaited<ReturnType<typeof getDueSoonTickets>>['data']
 
 /**

@@ -61,7 +61,7 @@ export const BoardsClient: FC = () => {
         </MultiButton>
       </ContentHeader>
 
-      {list.total === 0 && <div className='px-1 text-sm text-gray-500'>{t('msg_no_boards')}</div>}
+      {!list.isLoading && list.total === 0 && <div className='px-1 text-sm text-gray-500'>{t('msg_no_boards')}</div>}
 
       <MultiTable
         ariaLabel='board list'

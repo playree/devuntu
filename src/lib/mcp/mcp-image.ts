@@ -14,7 +14,7 @@ import { LocaleItem } from '@/locale'
 import { t } from '@/locale/server'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { assertBoardAccess, assertTicketAccess, getBoardAccess } from '../board/board'
+import { assertBoardAccess, assertTicketAccess, canViewAttachment } from '../board/board'
 import { errInvalidOperation, errValidation } from '../error'
 import { logger } from '../logger'
 import type { ResourceAuth } from '../oauth/oauth-resource'
@@ -152,7 +152,7 @@ const getImageForMcp = async (auth: ResourceAuth, input: { image: string; maxSiz
     select: { boardId: true, originalName: true, size: true },
   })
   // アクセス不可は未存在と区別せず、キーの当たり判定を返さない(配信APIと同じ扱い)
-  if (!attachment || (attachment.boardId && !(await getBoardAccess(auth.user, attachment.boardId)))) {
+  if (!attachment || !(await canViewAttachment(auth.user, { key, boardId: attachment.boardId }))) {
     throw errInvalidOperation()
   }
 

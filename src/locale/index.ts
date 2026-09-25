@@ -441,6 +441,7 @@ export type LocaleItemBase =
   | 'msg_added_oidc_client'
   | 'msg_added_passkey'
   | 'msg_added_passkey_description'
+  | 'msg_passkey_failed'
   | 'msg_added_target'
   | 'msg_agent_approver_desc'
   | 'msg_agent_email_desc'

@@ -1,6 +1,7 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action/action-server'
+import { ADVISORY_LOCK_KEYS, withAdvisoryLock } from '@/lib/advisory-lock'
 import { auth } from '@/lib/auth/auth'
 import { errCannotDeleteLastAdmin, errInvalidOperation, errSystemError } from '@/lib/error'
 import { logger } from '@/lib/logger'
@@ -116,7 +117,9 @@ export const deleteUser = safeAuthAction
   .action(async ({ parsedInput: { id } }) => {
     await assertNotAgent(id)
 
-    await prisma.$transaction(async (tx) => {
+    // better-auth は別の接続で書き込むので、$transaction だけでは判定と削除の間に割り込まれる。
+    // 降格(updateUser)と同じロックで直列化し、2人の管理者を同時に消して0人になるのを防ぐ
+    await withAdvisoryLock(ADVISORY_LOCK_KEYS.adminRole, async (tx) => {
       // 対象の存在確認
       const user = await tx.user.findUnique({ where: { id }, select: { id: true, role: true } })
       if (!user) {
@@ -153,35 +156,39 @@ export const updateUser = safeAuthAction
 
     await assertNotAgent(id)
 
-    // 対象の存在確認
-    const user = await prisma.user.findUnique({ where: { id }, select: { id: true, role: true } })
-    if (!user) {
-      throw errInvalidOperation()
-    }
-
-    // 管理者権限を消す場合
-    if (user.role === 'admin' && !isAdmin) {
-      if ((await prisma.user.count({ where: { role: 'admin', id: { not: id } } })) === 0) {
-        // 最後の管理者ユーザーは不可
-        throw errCannotDeleteLastAdmin()
-      }
-    }
-
     // グループ存在確認（auth 更新前に検証してFK例外/部分更新を防ぐ）
     await assertGroupsExist(groupIds)
 
-    // プロフィール/権限更新（auth は別クライアントのためトランザクション対象外）
-    await auth.api.adminUpdateUser({
-      headers: await headers(),
-      body: {
-        userId: id,
-        data: {
-          name,
-          email,
-          role: isAdmin ? 'admin' : 'user',
-          nameLocked,
+    // 最後の管理者の判定と権限更新の間に、他の削除・降格が割り込まないよう直列化する
+    // (auth は別クライアントなので、ロックを持ったトランザクションの外から書き込まれる)
+    await withAdvisoryLock(ADVISORY_LOCK_KEYS.adminRole, async (tx) => {
+      // 対象の存在確認
+      const user = await tx.user.findUnique({ where: { id }, select: { id: true, role: true } })
+      if (!user) {
+        throw errInvalidOperation()
+      }
+
+      // 管理者権限を消す場合
+      if (user.role === 'admin' && !isAdmin) {
+        if ((await tx.user.count({ where: { role: 'admin', id: { not: id } } })) === 0) {
+          // 最後の管理者ユーザーは不可
+          throw errCannotDeleteLastAdmin()
+        }
+      }
+
+      // プロフィール/権限更新
+      await auth.api.adminUpdateUser({
+        headers: await headers(),
+        body: {
+          userId: id,
+          data: {
+            name,
+            email,
+            role: isAdmin ? 'admin' : 'user',
+            nameLocked,
+          },
         },
-      },
+      })
     })
 
     // グループ再構築（この2操作のみ原子的に）

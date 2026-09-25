@@ -5,7 +5,7 @@ import { getServerSession } from '@/lib/auth/auth'
 import { canUseAnyCommand } from '@/lib/command/command-access'
 import { canUseGoogleAccount } from '@/lib/google/google-account'
 import { CommandAvailableProvider, createMenu, GoogleAvailableProvider } from './menu'
-import { getPendding } from './pendding'
+import { SessionPending } from './pending'
 
 const SideNavLayout: FC<{ children: ReactNode }> = async ({ children }) => {
   // メニューのカレンダー表示制御。クライアントから問い合わせずここで解決して渡す
@@ -17,13 +17,15 @@ const SideNavLayout: FC<{ children: ReactNode }> = async ({ children }) => {
   return (
     <GoogleAvailableProvider value={googleAvailable}>
       <CommandAvailableProvider value={commandAvailable}>
-        <SideNavbar menu={createMenu} pendding={getPendding}>
-          <div // 子が data-wide のときだけ幅制限を外し、data-fit-screen のときは #side-main の高さも子へ通す
-            className='mx-auto max-w-4xl px-2 has-data-wide:max-w-none md:has-data-fit-screen:h-full lg:px-0'
-          >
-            {children}
-          </div>
-        </SideNavbar>
+        <SessionPending>
+          <SideNavbar menu={createMenu}>
+            <div // 子が data-wide のときだけ幅制限を外し、data-fit-screen のときは #side-main の高さも子へ通す
+              className='mx-auto max-w-4xl px-2 has-data-wide:max-w-none md:has-data-fit-screen:h-full lg:px-0'
+            >
+              {children}
+            </div>
+          </SideNavbar>
+        </SessionPending>
       </CommandAvailableProvider>
     </GoogleAvailableProvider>
   )

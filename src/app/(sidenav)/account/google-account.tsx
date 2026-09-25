@@ -21,7 +21,10 @@ export const GoogleAccountLink: FC = () => {
   const [status, setStatus] = useState<GetGoogleAccountStatusReturnType>()
 
   const reload = () => {
-    parseAction(getGoogleAccountStatus()).then((res) => setStatus(res))
+    parseAction(getGoogleAccountStatus())
+      .then((res) => setStatus(res))
+      // 失敗の通知は parseAction が済ませている。未連携の表示のまま残す
+      .catch(() => {})
   }
 
   useEffect(() => {

@@ -16,11 +16,13 @@ import type { DeliveryOutcome } from './notify-outcome'
 /**
  * 宛先の Slack ユーザーID を引く。
  * 連携が外れていれば送る先が無いので、その配信だけを諦めさせる。
+ * 複数連携している場合は、配信ごとに宛先が変わらないよう最後に連携(更新)したものに固定する。
  */
 const slackAccountId = async (userId: string): Promise<string | null> => {
   const account = await prisma.account.findFirst({
     where: { userId, providerId: SLACK_PROVIDER_ID },
     select: { accountId: true },
+    orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
   })
   return account?.accountId ?? null
 }

@@ -1,14 +1,13 @@
 'use server'
 
-import { WidgetDefaultLayout } from '@/components/dashboard/widget-define'
 import { LinkWidgetUpdateInput } from '@/generated/prisma/models'
 import { safeAuthAction } from '@/lib/action/action-server'
+import { resolveDefaultDashboardLayout } from '@/lib/dashboard-layout'
 import { getString, setString } from '@/lib/kvs'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import {
   scCreateLinkWidget,
-  scDashboardLayout,
   scUpdateAnnouncement,
   scUpdateDashboard,
   scUpdateLinkWidget,
@@ -23,21 +22,7 @@ import { uuidv7 } from 'uuidv7'
  */
 export const getDefaultDashboard = safeAuthAction
   .metadata({ actionName: 'getDefaultDashboard', role: 'admin' })
-  .action(async () => {
-    const record = await getString('DASHBOARD_DEFAULT_LAYOUT')
-    if (record?.value) {
-      try {
-        const parsed = scDashboardLayout.safeParse(JSON.parse(record.value))
-        if (parsed.success) {
-          return parsed.data
-        }
-      } catch {
-        // JSON.parseで例外が発生した場合は無視して既定値を返す
-      }
-      logger.warn({ value: record.value }, 'invalid default dashboard layout, fallback to default')
-    }
-    return WidgetDefaultLayout
-  })
+  .action(async () => resolveDefaultDashboardLayout())
 
 /**
  * デフォルトダッシュボードレイアウト更新
