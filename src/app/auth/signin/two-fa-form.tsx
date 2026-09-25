@@ -90,7 +90,10 @@ export const TwoFaForm: FC<{
             <ResendOtpButton
               send={async () => {
                 const res = await authClient.twoFactor.sendOtp()
-                return !!res.data?.status
+                if (res.error?.code === 'INVALID_TWO_FACTOR_COOKIE') {
+                  return 'expired'
+                }
+                return res.data?.status ? 'sent' : 'failed'
               }}
             />
             <MultiButton type='submit' icon={<ShieldCheckIcon />} isPending={isSubmitting}>

@@ -15,7 +15,9 @@ export const formatByte = (bytesize: number) => {
   return `${size}${unit}`
 }
 
-export const calcPercent = (s: number, m: number) => Math.trunc((s / m) * 10000) / 100
+/** 割合(%、小数第2位で切り捨て)。進捗バーに渡すので 0〜100 に収め、分母が 0 以下なら 0 */
+export const calcPercent = (s: number, m: number) =>
+  m > 0 ? Math.min(100, Math.max(0, Math.trunc((s / m) * 10000) / 100)) : 0
 
 export const formatTime = (sec: number) => {
   let nextSec = Math.trunc(sec)

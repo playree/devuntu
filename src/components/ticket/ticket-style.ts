@@ -8,7 +8,7 @@ import type { TagColor, TicketPriority, TicketStatus } from '@/generated/prisma/
 import { tv } from 'tailwind-variants'
 
 /**
- * ステータスの背景色。StatusChip(STATUS_STYLE)と同じ色を 10% で敷き、下地を透かして淡く色を付ける。
+ * ステータスの背景色。StatusChip(STATUS_STYLE)と同じ色を薄く敷き(backlog は 20%、それ以外は 5%)、下地を透かして淡く色を付ける。
  *
  * HeroUI のセマンティック名そのままでは bg-* に使えないが、色トークン(--color-accent など)は
  * @theme に登録されているので bg-accent/10 の形で同じ色を参照できる
@@ -28,7 +28,7 @@ const statusStyles = tv({
   },
 })
 
-/** ステータス色を 10% で敷いた背景クラス。className を渡すと tailwind-merge でマージされる */
+/** ステータス色を薄く敷いた背景クラス。className を渡すと tailwind-merge でマージされる */
 export const statusBgClass = (status: TicketStatus, className?: string) => statusStyles({ status, className })
 
 /**

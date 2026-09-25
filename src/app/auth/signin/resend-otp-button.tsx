@@ -7,11 +7,15 @@ import { useLocale } from '@/locale/client'
 import { FC } from 'react'
 
 /**
- * OTP の再送ボタン。
- * `send` が false を返したら一時的な認証状態が有効期限切れなので、サインインを最初からやり直す。
- * null は送る前提が揃っていない(何もしない)。
+ * 再送の結果。
+ * - `expired`: 一時的な認証状態が有効期限切れ。サインインを最初からやり直す
+ * - `failed` : それ以外の失敗(レート制限など)。通知だけ出して画面は維持する
+ * - `null`   : 送る前提が揃っていない(何もしない)
  */
-export const ResendOtpButton: FC<{ send: () => Promise<boolean | null> }> = ({ send }) => {
+export type ResendOtpResult = 'sent' | 'expired' | 'failed' | null
+
+/** OTP の再送ボタン */
+export const ResendOtpButton: FC<{ send: () => Promise<ResendOtpResult> }> = ({ send }) => {
   const { t } = useLocale()
   return (
     <MultiButton
@@ -19,15 +23,18 @@ export const ResendOtpButton: FC<{ send: () => Promise<boolean | null> }> = ({ s
       icon={<ArrowPathIcon />}
       coolTime={30}
       onPress={async () => {
-        const sent = await send()
-        if (sent === null) {
-          return
-        }
-        if (!sent) {
+        const result = await send()
+        if (result === 'expired') {
           window.location.reload()
           return
         }
-        notify.success(t('msg_otp_sent'))
+        if (result === 'failed') {
+          notify.warn(t('auth_ng'))
+          return
+        }
+        if (result === 'sent') {
+          notify.success(t('msg_otp_sent'))
+        }
       }}
     >
       {t('resend')}

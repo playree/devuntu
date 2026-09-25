@@ -57,8 +57,12 @@ export const PasswordForm: FC<{
                 if (ctx.data) {
                   const { user, twoFactorRedirect } = ctx.data
                   if (twoFactorRedirect) {
-                    // 2FA
-                    await authClient.twoFactor.sendOtp()
+                    // 2FA。コードが届いていないのに入力画面へ進ませない
+                    const { error } = await authClient.twoFactor.sendOtp()
+                    if (error) {
+                      notify.warn(t('auth_ng'))
+                      return
+                    }
                     notify.success(t('msg_otp_sent'))
                     next(password)
                     return
@@ -72,8 +76,12 @@ export const PasswordForm: FC<{
 
                   // 2FA有効化の確認(運用として不要なら有効化もしない)
                   if (twoFaRequired && !user.twoFactorEnabled) {
-                    await authClient.twoFactor.enable({ password })
-                    await authClient.twoFactor.sendOtp()
+                    const enabled = await authClient.twoFactor.enable({ password })
+                    const sent = enabled.error ? undefined : await authClient.twoFactor.sendOtp()
+                    if (!sent || sent.error) {
+                      notify.warn(t('auth_ng'))
+                      return
+                    }
                     notify.success(t('msg_otp_sent'))
                     next(password)
                     return

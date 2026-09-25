@@ -91,7 +91,8 @@ export const OtpForm: FC<{
                   return null
                 }
                 const res = await authClient.emailOtp.sendVerificationOtp({ email, type: 'sign-in' })
-                return !!res.data?.success
+                // メールアドレスは画面側で持っているので、失敗しても最初からやり直す必要は無い
+                return res.data?.success ? 'sent' : 'failed'
               }}
             />
             <MultiButton type='submit' icon={<ShieldCheckIcon />} isPending={isSubmitting}>
