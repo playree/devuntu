@@ -2,12 +2,12 @@
 
 import { AccordionSection } from '@/components/general/accordion'
 import { FlexCol } from '@/components/general/flex'
-import { NoticePanel } from '@/components/general/panel'
+import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
 import { Cog6ToothIcon, GoogleIcon, SlackIcon } from '@/components/icon'
 import { useActionData } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'
-import { Accordion, Skeleton } from '@heroui/react'
+import { Accordion } from '@heroui/react'
 import { FC } from 'react'
 import { GoogleAccountSettings } from './google-account'
 import { getIntegrationSettingsAction } from './server'
@@ -20,11 +20,7 @@ export const AdminSettingsClient: FC = () => {
   const { data, isLoading } = useActionData(getIntegrationSettingsAction)
 
   // 取得失敗をスケルトンのままにすると読み込み中と見分けが付かないので、終わったら理由を出す
-  const fallback = isLoading ? (
-    <Skeleton className='min-h-24 w-full rounded-xl' />
-  ) : (
-    <NoticePanel>{t('error')}</NoticePanel>
-  )
+  const fallback = isLoading ? <PanelSkeleton className='min-h-24' /> : <NoticePanel>{t('error')}</NoticePanel>
 
   return (
     <FlexCol>

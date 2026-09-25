@@ -3,6 +3,7 @@
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
 import { DialogModal, ModalBaseProps, useModalState } from '@/components/general/modal'
+import { PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
 import { PencilSquareIcon } from '@/components/icon'
 import { MarkdownInput } from '@/components/markdown/markdown-editor'
@@ -10,7 +11,6 @@ import { MarkdownView } from '@/components/markdown/markdown-view'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'
-import { Skeleton } from '@heroui/react'
 import { FC, useCallback, useEffect, useState } from 'react'
 import { getAnnouncement, updateAnnouncement } from './server'
 
@@ -98,7 +98,7 @@ export const AnnouncementManage: FC = () => {
           <MarkdownView body={body} />
         </fieldset>
       ) : (
-        <Skeleton className='min-h-24 w-full rounded-xl' />
+        <PanelSkeleton className='min-h-24' />
       )}
 
       <AnnouncementEditModal state={modalState} key={modalState.key} reload={load} />

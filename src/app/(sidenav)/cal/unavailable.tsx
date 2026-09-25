@@ -1,10 +1,10 @@
 'use client'
 
 import { FlexCol } from '@/components/general/flex'
+import { NoticePanel } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
 import { CalendarDaysIcon } from '@/components/icon'
 import { useLocale } from '@/locale/client'
-import { Card } from '@heroui/react'
 import { FC } from 'react'
 
 /**
@@ -15,11 +15,7 @@ export const CalUnavailable: FC = () => {
   return (
     <FlexCol>
       <ContentHeader icon={<CalendarDaysIcon />} title={t('calendar_share')} />
-      <Card>
-        <Card.Content className='p-4'>
-          <p className='text-sm text-neutral-500'>{t('msg_feature_unavailable')}</p>
-        </Card.Content>
-      </Card>
+      <NoticePanel>{t('msg_feature_unavailable')}</NoticePanel>
     </FlexCol>
   )
 }
