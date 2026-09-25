@@ -11,7 +11,7 @@ import { scCreateBoard } from '@/lib/schema/schema-board'
 /**
  * ボード一覧取得(自分がアサインされているボードのみ)
  *
- * プライベートボードも含まれる((sidenav) のレイアウトで用意済み)。
+ * プライベートボードも含まれる(ページ(page.tsx)の描画時に用意済み)。
  */
 export const getBoards = safeAuthAction
   .metadata({ actionName: 'getBoards', role: 'user' })

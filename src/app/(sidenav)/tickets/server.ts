@@ -1,6 +1,7 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action/action-server'
+import { ensurePrivateBoard } from '@/lib/board/board'
 import { assertBoardAccess, getAccessibleBoardIds } from '@/lib/board/board-access'
 import { getBoardMemberUsers, getBoardsMemberUsers } from '@/lib/board/board-member'
 import { listVisibleTags, rethrowDuplicatedTagName, TAG_SELECT } from '@/lib/board/tag'
@@ -85,6 +86,8 @@ export type GetTicketsReturnType = Awaited<ReturnType<typeof getTickets>>['data'
 export const getTicketFormOptions = safeAuthAction
   .metadata({ actionName: 'getTicketFormOptions', role: 'user' })
   .action(async ({ ctx: { user } }) => {
+    // 作成フォームの既定値になるので、一覧画面を経由せずに開かれた場合もここで用意する
+    const privateBoardId = await ensurePrivateBoard(user)
     const accessibleBoardIds = await getAccessibleBoardIds(user.id)
 
     const [boards, tags, assignees] = await Promise.all([
@@ -99,14 +102,8 @@ export const getTicketFormOptions = safeAuthAction
       getBoardsMemberUsers(accessibleBoardIds),
     ])
 
-    // プライベートボードは (sidenav) のレイアウトで用意済みなので、可視ボードに必ず含まれる
-    const privateBoard = boards.find((board) => board.kind === 'private')
-    if (!privateBoard) {
-      throw errInvalidOperation()
-    }
-
     // selfUserId はプライベートボードでの担当者の既定値(本人)を決めるために返す
-    return { boards, tags, assignees, privateBoardId: privateBoard.id, selfUserId: user.id }
+    return { boards, tags, assignees, privateBoardId, selfUserId: user.id }
   })
 export type GetTicketFormOptionsReturnType = Awaited<ReturnType<typeof getTicketFormOptions>>['data']
 

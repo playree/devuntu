@@ -32,7 +32,7 @@ export type TicketSearchParams = {
 /**
  * 可視チケットの where 断片。
  * プライベートチケットもプライベートボードに属するため、accessibleBoardIds へ含まれる。
- * 空配列なら 0 件になる(プライベートボードは (sidenav) のレイアウトの `ensurePrivateBoard` で用意する)。
+ * 空配列なら 0 件になる(プライベートボードは /tickets・/boards のページ描画時に `ensurePrivateBoard` で用意する)。
  */
 export const ticketScopeWhere = (accessibleBoardIds: string[]): TicketWhereInput => ({
   boardId: { in: accessibleBoardIds },
