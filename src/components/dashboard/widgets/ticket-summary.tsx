@@ -9,7 +9,7 @@ import { useLocale } from '@/locale/client'
 import Link from 'next/link'
 import { FC, ReactNode } from 'react'
 import { getTicketSummary } from '../server'
-import { WidgetCard, WidgetFC, WidgetLoadError, WidgetSkeleton } from './widget-card'
+import { WidgetDataCard, WidgetFC } from './widget-card'
 
 /** 編集モード中はドラッグ操作と衝突しないよう遷移させない */
 const Tile: FC<{ status: TicketStatus; href: string; editable: boolean; children: ReactNode }> = ({
@@ -37,8 +37,15 @@ export const TicketSummaryWidget: WidgetFC = ({ id, editable }) => {
   const { data, isLoading } = useActionData(getTicketSummary)
 
   return (
-    <WidgetCard id={id} editable={editable} icon={<TableCellsIcon />} title={t('ticket_summary')}>
-      {data ? (
+    <WidgetDataCard
+      id={id}
+      editable={editable}
+      icon={<TableCellsIcon />}
+      title={t('ticket_summary')}
+      data={data}
+      isLoading={isLoading}
+    >
+      {(data) => (
         <div className='grid grid-cols-2 gap-2 sm:grid-cols-4'>
           {TICKET_STATUSES.map((status) => (
             <Tile
@@ -54,15 +61,7 @@ export const TicketSummaryWidget: WidgetFC = ({ id, editable }) => {
             </Tile>
           ))}
         </div>
-      ) : isLoading ? (
-        <WidgetSkeleton />
-      ) : (
-        <WidgetLoadError />
       )}
-    </WidgetCard>
+    </WidgetDataCard>
   )
-}
-export const TicketSummaryWidgetName: FC = () => {
-  const { t } = useLocale()
-  return <>{t('ticket_summary')}</>
 }

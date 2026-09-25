@@ -24,17 +24,16 @@ const DropArea: FC<{ children?: ReactNode; id: string; editable: boolean }> = ({
   )
 }
 
-const DragItem: FC<{ id: string; editable: boolean; name: FC }> = ({ id, editable, name: Name }) => {
+const DragItem: FC<{ widget: WidgetSet; editable: boolean }> = ({ widget, editable }) => {
+  const { t } = useLocale()
   const { ref } = useDraggable({
-    id,
+    id: widget.id,
     disabled: !editable,
   })
 
   return (
     <Chip ref={ref} variant='soft' color='accent' size='lg' className='cursor-pointer'>
-      <Chip.Label>
-        <Name />
-      </Chip.Label>
+      <Chip.Label>{'nameKey' in widget ? t(widget.nameKey) : widget.name}</Chip.Label>
     </Chip>
   )
 }
@@ -48,12 +47,35 @@ const AvailableArea: FC<{ editable: boolean; availableWidgets: WidgetSet[] }> = 
       <legend className='px-2 text-sm text-gray-500'>{t('widget_list')}</legend>
       <div className='flex min-h-7 flex-wrap gap-2'>
         {availableWidgets.map((widget) => (
-          <DragItem key={widget.id} id={widget.id} name={widget.name} editable={editable} />
+          <DragItem key={widget.id} widget={widget} editable={editable} />
         ))}
       </div>
     </fieldset>
   )
 }
+
+/** 左右どちらかの列。ドロップ先の id は `l-0` / `r-3` のように列と位置を表す */
+const WidgetColumn: FC<{
+  side: 'l' | 'r'
+  widgetIds: DashboardLayout['left']
+  widgetMap: ReturnType<typeof useWidgetMap>
+  editable: boolean
+}> = ({ side, widgetIds, widgetMap, editable }) => (
+  <FlexCol className='col-span-12 md:col-span-6'>
+    {widgetIds.map((widgetId, index) => {
+      const ariaId = `${side}-${index}`
+      const Widget = widgetId ? widgetMap[widgetId]?.widget : null
+      if (!editable && !widgetId) {
+        return null
+      }
+      return (
+        <DropArea key={ariaId} id={ariaId} editable={editable}>
+          {widgetId && Widget && <Widget id={widgetId} editable={editable} />}
+        </DropArea>
+      )
+    })}
+  </FlexCol>
+)
 
 /**
  * ドラッグ&ドロップでウィジェット配置を編集する共有エディタ。
@@ -125,34 +147,8 @@ export const DashboardLayoutEditor: FC<{
       )}
 
       <GridBox>
-        <FlexCol className='col-span-12 md:col-span-6'>
-          {layout.left.map((widgetId, index) => {
-            const ariaId = `l-${index}`
-            const Widget = widgetId ? widgetMap[widgetId]?.widget : null
-            if (!editable && !widgetId) {
-              return null
-            }
-            return (
-              <DropArea key={ariaId} id={ariaId} editable={editable}>
-                {widgetId && Widget && <Widget id={widgetId} editable={editable} />}
-              </DropArea>
-            )
-          })}
-        </FlexCol>
-        <FlexCol className='col-span-12 md:col-span-6'>
-          {layout.right.map((widgetId, index) => {
-            const ariaId = `r-${index}`
-            const Widget = widgetId ? widgetMap[widgetId]?.widget : null
-            if (!editable && !widgetId) {
-              return null
-            }
-            return (
-              <DropArea key={ariaId} id={ariaId} editable={editable}>
-                {widgetId && Widget && <Widget id={widgetId} editable={editable} />}
-              </DropArea>
-            )
-          })}
-        </FlexCol>
+        <WidgetColumn side='l' widgetIds={layout.left} widgetMap={widgetMap} editable={editable} />
+        <WidgetColumn side='r' widgetIds={layout.right} widgetMap={widgetMap} editable={editable} />
       </GridBox>
     </DragDropProvider>
   )
