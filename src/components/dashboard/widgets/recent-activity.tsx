@@ -1,13 +1,13 @@
 'use client'
 
 import { ClockIcon } from '@/components/icon'
-import { StatusChip, TicketIdText } from '@/components/ticket/ticket-chip'
+import { StatusChip } from '@/components/ticket/ticket-chip'
 import { useActionData } from '@/lib/action/action-client'
 import { dayformat } from '@/lib/day'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { getRecentActivity } from '../server'
-import { RowLink } from './ticket-row'
+import { RowLink, TicketTitleLine } from './ticket-row'
 import { WidgetDataCard, WidgetFC, WidgetRowList } from './widget-card'
 
 /**
@@ -31,10 +31,7 @@ export const RecentActivityWidget: WidgetFC = ({ id, editable }) => {
         <WidgetRowList isEmpty={data.length === 0} message={t('msg_no_recent_activity')}>
           {data.map((ticket) => (
             <RowLink key={ticket.id} href={`/t/${ticket.displayId}`} editable={editable}>
-              <div className='flex min-w-0 items-center gap-2'>
-                <TicketIdText displayId={ticket.displayId} className='shrink-0' />
-                <span className='truncate text-sm'>{ticket.title}</span>
-              </div>
+              <TicketTitleLine ticket={ticket} />
               <div className='flex items-center gap-2'>
                 <StatusChip value={ticket.status} />
                 <span className='font-mono text-xs text-gray-500'>{dayformat(ticket.updatedAt, 'tz-minute', tz)}</span>

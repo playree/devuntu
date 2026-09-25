@@ -3,6 +3,7 @@
 import { MultiButton } from '@/components/general/button'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
+import { MetaRow } from '@/components/general/meta-row'
 import { CheckIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { RoleChip } from '@/components/role-chip'
@@ -15,20 +16,13 @@ import { scUpdateBoard, UpdateBoard } from '@/lib/schema/schema'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { FC, ReactNode } from 'react'
+import { FC } from 'react'
 import { useForm } from 'react-hook-form'
 import { GetBoardDetailReturnType, updateBoard } from './server'
 
 type Board = NonNullable<GetBoardDetailReturnType>
 
 /** 見出し + 値の 1 行 */
-const MetaRow: FC<{ label: string; children: ReactNode }> = ({ label, children }) => (
-  <div className='flex items-baseline gap-2'>
-    <span className='w-24 shrink-0 text-xs text-gray-500'>{label}</span>
-    <div className='min-w-0 text-sm'>{children}</div>
-  </div>
-)
-
 /** 名前 / ボードキー / 説明の編集フォーム。team ボードの owner(または管理者)だけに出す */
 const EditForm: FC<{ board: Board; reload: () => void }> = ({ board, reload }) => {
   const { t, fet } = useLocale()
