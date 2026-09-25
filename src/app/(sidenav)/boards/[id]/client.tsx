@@ -15,7 +15,7 @@ import {
 } from '@/components/icon'
 import { NoAccessView } from '@/components/no-access-view'
 import { ReloadButton } from '@/components/reload-button'
-import { useBoardName } from '@/components/ticket/ticket-chip'
+import { useBoardName } from '@/components/ticket/ticket-options'
 import type { TicketStatus } from '@/generated/prisma/enums'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { useUserTimezone } from '@/lib/auth/use-timezone'

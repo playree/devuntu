@@ -3,7 +3,7 @@
 import { MultiButton } from '@/components/general/button'
 import { ArchiveBoxIcon, TrashIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
-import { useBoardName } from '@/components/ticket/ticket-chip'
+import { useBoardName } from '@/components/ticket/ticket-options'
 import { parseAction } from '@/lib/action/action-client'
 import { useConfirmAction } from '@/lib/use-confirm-action'
 import { useLocale } from '@/locale/client'

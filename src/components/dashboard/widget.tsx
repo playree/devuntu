@@ -1,194 +1,32 @@
 'use client'
 
-import { Grid } from '@/components/general/grid'
-import { ProgressBar } from '@/components/general/progress'
-import { ArrowTopRightOnSquareIcon, InformationCircleIcon } from '@/components/icon'
-import { MarkdownView } from '@/components/markdown/markdown-view'
-import { parseAction, useActionData } from '@/lib/action/action-client'
-import { calcPercent, formatByte, formatTime } from '@/lib/math'
+import { ArrowTopRightOnSquareIcon } from '@/components/icon'
+import { parseAction } from '@/lib/action/action-client'
 import { type LocaleItem } from '@/locale'
-import { useLocale } from '@/locale/client'
 import { useDraggable } from '@dnd-kit/react'
-import { Card, cn, Description, Separator } from '@heroui/react'
+import { Card, cn, Description } from '@heroui/react'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
-import {
-  getAnnouncement,
-  getAppInfo,
-  getLinodeTransferInfo,
-  getOtherWidgets,
-  GetOtherWidgetsReturnType,
-  getReleaseNotes,
-  getServerInfo,
-} from './server'
+import { getOtherWidgets, GetOtherWidgetsReturnType } from './server'
 import { AgentApprovalsWidget } from './widgets/agent-approvals'
 import { AgentRunsWidget } from './widgets/agent-runs'
+import { AnnouncementWidget } from './widgets/announcement'
+import { AppInfoWidget } from './widgets/app-info'
 import { CommandRunsWidget } from './widgets/command-runs'
 import { DueSoonWidget } from './widgets/due-soon'
+import { LinodeTransferInfoWidget } from './widgets/linode-transfer-info'
 import { MentionsWidget } from './widgets/mentions'
 import { MyTicketsWidget } from './widgets/my-tickets'
 import { RecentActivityWidget } from './widgets/recent-activity'
+import { ReleaseNoteWidget } from './widgets/release-note'
+import { ServerInfoWidget } from './widgets/server-info'
 import { TicketSummaryWidget } from './widgets/ticket-summary'
-import { EditableLink, WidgetDataCard, WidgetFC } from './widgets/widget-card'
+import { EditableLink, WidgetFC } from './widgets/widget-card'
 
 /** 一覧に出す名前。組み込みはロケールキー、LinkWidget は登録された名前をそのまま出す */
 type WidgetDef = { widget: WidgetFC } & ({ nameKey: LocaleItem } | { name: string })
 
 export type WidgetSet = WidgetDef & { id: string }
-
-/**
- * アプリのバージョン・ビルド番号を表示する Widget。
- */
-export const AppInfoWidget: WidgetFC = ({ id, editable }) => {
-  const { t } = useLocale()
-  const { data, isLoading } = useActionData(getAppInfo)
-
-  return (
-    <WidgetDataCard
-      id={id}
-      editable={editable}
-      icon={<InformationCircleIcon />}
-      title={t('app_info')}
-      className='h-full'
-      data={data}
-      isLoading={isLoading}
-    >
-      {(data) => (
-        <Grid>
-          <div className='col-span-4 text-sm'>{t('version')} :</div>
-          <div className='col-span-8'>{data.version}</div>
-          <div className='col-span-4 text-sm'>{t('buildno')} :</div>
-          <div className='col-span-8'>{data.buildno}</div>
-        </Grid>
-      )}
-    </WidgetDataCard>
-  )
-}
-
-/**
- * サーバーの空きメモリ・稼働時間を表示する Widget。
- */
-export const ServerInfoWidget: WidgetFC = ({ id, editable }) => {
-  const { t } = useLocale()
-  const { data, isLoading } = useActionData(getServerInfo)
-
-  return (
-    <WidgetDataCard
-      id={id}
-      editable={editable}
-      icon={<InformationCircleIcon />}
-      title={t('server_info')}
-      className='h-full'
-      data={data}
-      isLoading={isLoading}
-    >
-      {(data) => (
-        <Grid>
-          <div className='col-span-4 text-sm'>{t('free_memory')} :</div>
-          <div className='col-span-8'>
-            <ProgressBar progress={calcPercent(data.memory.free, data.memory.total)} aria-label={t('free_memory')}>
-              {formatByte(data.memory.free)} / {formatByte(data.memory.total)}
-            </ProgressBar>
-          </div>
-          <div className='col-span-4 text-sm'>{t('uptime')} :</div>
-          <div className='col-span-8'>{formatTime(data.uptime)}</div>
-        </Grid>
-      )}
-    </WidgetDataCard>
-  )
-}
-
-/**
- * Linode Transfer情報を表示する Widget。
- * `LINODE_*` が未設定で Action が null を返した場合も、取得完了後は失敗として扱う。
- */
-export const LinodeTransferInfoWidget: WidgetFC = ({ id, editable }) => {
-  const { t } = useLocale()
-  const { data, isLoading } = useActionData(getLinodeTransferInfo)
-
-  return (
-    <WidgetDataCard
-      id={id}
-      editable={editable}
-      icon={<InformationCircleIcon />}
-      title={t('linode_transfer_info')}
-      className='h-full'
-      data={data}
-      isLoading={isLoading}
-    >
-      {(data) => (
-        <Grid>
-          <div className='col-span-4 text-sm'>{t('transfer_pool_usage')} :</div>
-          <div className='col-span-8'>
-            <ProgressBar progress={calcPercent(data.used, data.total)} aria-label={t('transfer_pool_usage')}>
-              {formatByte(data.used)} / {data.quota}GiB
-            </ProgressBar>
-          </div>
-          <div className='col-span-4 text-sm'>{t('transfer_billable')} :</div>
-          <div className='col-span-8'>{data.billable}GiB</div>
-        </Grid>
-      )}
-    </WidgetDataCard>
-  )
-}
-
-/**
- * リリースノート Widget。
- */
-export const ReleaseNoteWidget: WidgetFC = ({ id, editable }) => {
-  const { t } = useLocale()
-  const { data, isLoading } = useActionData(getReleaseNotes)
-
-  return (
-    <WidgetDataCard
-      id={id}
-      editable={editable}
-      icon={<InformationCircleIcon />}
-      title={t('release_note')}
-      data={data}
-      isLoading={isLoading}
-    >
-      {(data) => (
-        <div className='max-h-80 min-h-14 flex-1 overflow-y-auto'>
-          {data.map((note) => {
-            return (
-              <div key={note.id}>
-                <div className='text-base font-bold'>{note.name}</div>
-                <MarkdownView body={note.body} />
-                <Separator className='my-2' />
-              </div>
-            )
-          })}
-        </div>
-      )}
-    </WidgetDataCard>
-  )
-}
-
-/**
- * お知らせ Widget。管理ページで編集された Markdown を表示する。
- */
-export const AnnouncementWidget: WidgetFC = ({ id, editable }) => {
-  const { t } = useLocale()
-  const { data, isLoading } = useActionData(getAnnouncement)
-
-  return (
-    <WidgetDataCard
-      id={id}
-      editable={editable}
-      icon={<InformationCircleIcon />}
-      title={t('announcement')}
-      data={data}
-      isLoading={isLoading}
-    >
-      {(data) => (
-        <div className='max-h-80 min-h-14 flex-1 overflow-y-auto'>
-          <MarkdownView body={data.body} />
-        </div>
-      )}
-    </WidgetDataCard>
-  )
-}
 
 /**
  * LinkWidget。サーバー登録されたリンク情報を表示する Widget を生成するファクトリ。

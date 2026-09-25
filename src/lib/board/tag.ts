@@ -11,8 +11,10 @@
 import type { Prisma } from '@/generated/prisma/client'
 import type { TagColor } from '@/generated/prisma/enums'
 import { errClient, errInvalidOperation } from '../error'
+import { logger } from '../logger'
 import { isUniqueViolation, prisma, type Db } from '../prisma'
-import { diffTagIds, DUPLICATED_TAG_NAME } from './tag-rule'
+import { assertBoardAccess, type Actor } from './board-access'
+import { diffTagIds, DUPLICATED_TAG_NAME, MAX_TAGS_PER_SCOPE, nextOrder } from './tag-rule'
 
 /** タグの選択肢。フォーム / 検索パネル / チップ表示で共有する */
 export type TagOption = {
@@ -111,4 +113,61 @@ export const syncTicketTags = async (
     // 同時に入ることがある。@@unique([ticketId, tagId]) 違反で中断しないよう読み飛ばす
     await tx.ticketTag.createMany({ data: toAdd.map((tagId) => ({ ticketId, tagId })), skipDuplicates: true })
   }
+}
+
+/** タグ作成(メンバーなら可能)。件数チェックと採番を create と同じトランザクションに入れ、同時作成で上限を超えないようにする */
+export const createBoardTag = async (
+  actor: Actor,
+  { boardId, name, color, order }: { boardId: string; name: string; color: TagColor; order?: number },
+): Promise<TagOption> => {
+  await assertBoardAccess(actor, boardId, 'view')
+
+  const tag = await prisma
+    .$transaction(async (tx) => {
+      const tags = await tx.tag.findMany({ where: { boardId }, select: { order: true } })
+      if (tags.length >= MAX_TAGS_PER_SCOPE) {
+        throw errInvalidOperation()
+      }
+      return tx.tag.create({
+        data: { boardId, name, color, order: order ?? nextOrder(tags.map((row) => row.order)) },
+        select: TAG_SELECT,
+      })
+    })
+    .catch(rethrowDuplicatedTagName)
+
+  logger.info({ userId: actor.id, tag }, 'tag created')
+  return tag
+}
+
+/** タグ更新(リネーム / 色 / 表示順)。owner または管理者 */
+export const updateBoardTag = async (
+  actor: Actor,
+  { id, name, color, order }: { id: string; name: string; color: TagColor; order: number },
+): Promise<TagOption> => {
+  const target = await prisma.tag.findUnique({ where: { id }, select: { boardId: true } })
+  if (!target) {
+    throw errInvalidOperation()
+  }
+  await assertBoardAccess(actor, target.boardId, 'manage')
+
+  const tag = await prisma.tag
+    .update({ where: { id }, data: { name, color, order }, select: TAG_SELECT })
+    .catch(rethrowDuplicatedTagName)
+
+  logger.info({ userId: actor.id, id }, 'tag updated')
+  return tag
+}
+
+/** タグ削除(owner または管理者)。TicketTag は Cascade で消える */
+export const deleteBoardTag = async (actor: Actor, id: string): Promise<void> => {
+  await prisma.$transaction(async (tx) => {
+    const target = await tx.tag.findUnique({ where: { id }, select: { boardId: true } })
+    if (!target) {
+      throw errInvalidOperation()
+    }
+    await assertBoardAccess(actor, target.boardId, 'manage', tx)
+    await tx.tag.delete({ where: { id } })
+  })
+
+  logger.info({ userId: actor.id, id }, 'tag deleted')
 }
