@@ -1,7 +1,7 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
-import { CheckBoxCtrl } from '@/components/general/checkbox'
+import { CheckboxCtrl } from '@/components/general/checkbox'
 import { FlexCol, FlexRow } from '@/components/general/flex'
 import { NoticePanel } from '@/components/general/panel'
 import { CheckIcon } from '@/components/icon'
@@ -23,13 +23,13 @@ type FormValues = Record<DmNotifyEvent, NotifySetting>
  * 利用できないチャネルは隠さずに `isDisabled` で出し、`tooltip` でその理由を伝える。
  */
 const ChannelCheckBox: FC<
-  Omit<ComponentProps<typeof CheckBoxCtrl<FormValues>>, 'control' | 'className'> & {
+  Omit<ComponentProps<typeof CheckboxCtrl<FormValues>>, 'control' | 'className'> & {
     control: Control<FormValues>
     /** 指定すると理由として表示する(未指定なら Tooltip を付けない) */
     tooltip?: string
   }
 > = ({ tooltip, ...props }) => {
-  const checkbox = <CheckBoxCtrl className='shrink-0' {...props} />
+  const checkbox = <CheckboxCtrl className='shrink-0' {...props} />
   return tooltip ? (
     <Tooltip delay={300}>
       {/* isDisabled な Checkbox はホバー系のイベントを自ら拾わなくなるため、Trigger 側でホバーを検知させる */}

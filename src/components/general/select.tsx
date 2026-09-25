@@ -1,33 +1,16 @@
 'use client'
 
-import { Chip, cn, ErrorMessage, Label, ListBox, Select } from '@heroui/react'
-import { FC, ReactNode, Ref, SVGProps } from 'react'
+import { Chip, ListBox, Select } from '@heroui/react'
+import { ReactNode, Ref } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
+import { FieldBaseProps, FieldError, FieldLabel, TriggerClearButton } from './field'
 import { useSmart } from './smart'
+import { useGeneralUiText } from './ui-text'
 
-export const XCircleIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
-  <svg
-    fill='currentColor'
-    viewBox='0 0 24 24'
-    xmlns='http://www.w3.org/2000/svg'
-    aria-hidden='true'
-    width={width}
-    strokeWidth={strokeWidth}
-    {...props}
-  >
-    <path
-      clipRule='evenodd'
-      fillRule='evenodd'
-      d='M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm-1.72 6.97a.75.75 0 1 0-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 1 0 1.06 1.06L12 13.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L13.06 12l1.72-1.72a.75.75 0 1 0-1.06-1.06L12 10.94l-1.72-1.72Z'
-    />
-  </svg>
-)
-
-type SelectFieldBaseProps = {
+/** Select は読み取り専用を持たないので isReadOnly は受け取らない */
+type SelectFieldBaseProps = Omit<FieldBaseProps, 'isReadOnly'> & {
   groupOptions: Record<string, string>
   label: string
-  /** ラベルを読み上げ用にだけ残す(見出しを呼び出し側で出す場合) */
-  isLabelHidden?: boolean
   /**
    * ラベルに必須(*)を出す。
    * Select 本体には渡さない。react-aria が form 内に <select required> を出し、
@@ -37,9 +20,6 @@ type SelectFieldBaseProps = {
    */
   isRequired?: boolean
   variant?: 'primary' | 'secondary'
-  isSmart?: boolean
-  isSmartForm?: boolean
-  errorMessage?: string
   onBlur?: () => void
   ref?: Ref<HTMLDivElement>
 }
@@ -47,7 +27,7 @@ type SelectFieldBaseProps = {
 type MultiSelectFieldProps = SelectFieldBaseProps & {
   value: string[]
   onChange: (value: string[]) => void
-  /** 未選択時の表示。共通部品なのでロケールが要る場合は呼び出し側から渡す */
+  /** 未選択時の表示。未指定なら GeneralUiText の notSelected */
   placeholder?: ReactNode
 }
 
@@ -60,6 +40,7 @@ export const MultiSelectField = ({
   label,
   isLabelHidden,
   isRequired,
+  isDisabled,
   variant,
   isSmart: isSmartProp,
   isSmartForm: isSmartFormProp,
@@ -71,22 +52,21 @@ export const MultiSelectField = ({
   ref,
 }: MultiSelectFieldProps) => {
   const { isCompact, hasErrorArea } = useSmart(isSmartProp, isSmartFormProp)
+  const uiText = useGeneralUiText()
   return (
     <div className='space-y-4'>
       <Select
         selectionMode='multiple'
         value={value}
         variant={variant}
+        isDisabled={isDisabled}
         onChange={(keys) => onChange(keys.map(String))}
         onBlur={onBlur}
         ref={ref}
       >
-        <Label
-          className={cn(isCompact ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}
-          isRequired={isRequired}
-        >
+        <FieldLabel isCompact={isCompact} isHidden={isLabelHidden} isRequired={isRequired}>
           {label}
-        </Label>
+        </FieldLabel>
         <Select.Trigger className={isCompact ? 'min-h-7 py-1' : undefined}>
           <Select.Value>
             {() => {
@@ -97,34 +77,14 @@ export const MultiSelectField = ({
                   </Chip>
                 ))
               ) : (
-                // 既定値は共通部品なのでローカライズ不要とする(必要なら placeholder で差し替える)
-                <Chip variant='tertiary'>{placeholder ?? 'Not selected'}</Chip>
+                <Chip variant='tertiary'>{placeholder ?? uiText.notSelected}</Chip>
               )
             }}
           </Select.Value>
-          {value.length > 0 && (
-            <span
-              /**
-               * Select.Trigger は内部が button なので、ここを button にすると入れ子になる。
-               * キーボードからは ListBox で選択を外せるため span + role='button' のままにする
-               */
-              role='button'
-              // 共通部品なのでローカライズ不要とする
-              aria-label='clear'
-              tabIndex={-1}
-              className='ml-auto inline-flex cursor-pointer items-center opacity-60 hover:opacity-100'
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.stopPropagation()
-                onChange([])
-              }}
-            >
-              <XCircleIcon width={16} />
-            </span>
-          )}
+          {value.length > 0 && !isDisabled && <TriggerClearButton className='ml-auto' onClear={() => onChange([])} />}
           <Select.Indicator />
         </Select.Trigger>
-        <ErrorMessage className={hasErrorArea ? 'min-h-4' : ''}>{errorMessage}</ErrorMessage>
+        <FieldError hasErrorArea={hasErrorArea}>{errorMessage}</FieldError>
         <Select.Popover>
           <ListBox selectionMode='multiple'>
             {Object.entries(groupOptions).map(([id, name]) => (
@@ -169,7 +129,6 @@ export type SingleSelectFieldProps = SelectFieldBaseProps & {
   value: string | null
   onChange: (value: string | null) => void
   isClearable?: boolean
-  isDisabled?: boolean
   /**
    * トリガーに現在値ではなく固定の表示を出す。
    * 値が別の手段(かんばんのレーンなど)で既に自明で、トリガーは操作の入口としてだけ使う場合に指定する。
@@ -212,12 +171,9 @@ export const SingleSelectField = ({
         onBlur={onBlur}
         ref={ref}
       >
-        <Label
-          className={cn(isCompact ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}
-          isRequired={isRequired}
-        >
+        <FieldLabel isCompact={isCompact} isHidden={isLabelHidden} isRequired={isRequired}>
           {label}
-        </Label>
+        </FieldLabel>
         <Select.Trigger // isCompact: 既定 36px を 28px に詰める
           className={isCompact ? 'min-h-7 py-1' : undefined}
         >
@@ -229,29 +185,12 @@ export const SingleSelectField = ({
               return value && groupOptions[value] ? <>{groupOptions[value]}</> : <></>
             }}
           </Select.Value>
-          {isClearable && value && (
-            <span
-              /**
-               * Select.Trigger は内部が button なので、ここを button にすると入れ子になる。
-               * キーボードからは ListBox で選択を外せるため span + role='button' のままにする
-               */
-              role='button'
-              // 共通部品なのでローカライズ不要とする
-              aria-label='clear'
-              tabIndex={-1}
-              className='ml-auto inline-flex cursor-pointer items-center opacity-60 hover:opacity-100'
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.stopPropagation()
-                onChange(null)
-              }}
-            >
-              <XCircleIcon width={16} />
-            </span>
+          {isClearable && value && !isDisabled && (
+            <TriggerClearButton className='ml-auto' onClear={() => onChange(null)} />
           )}
           <Select.Indicator />
         </Select.Trigger>
-        <ErrorMessage className={hasErrorArea ? 'min-h-4' : ''}>{errorMessage}</ErrorMessage>
+        <FieldError hasErrorArea={hasErrorArea}>{errorMessage}</FieldError>
         <Select.Popover>
           <ListBox selectionMode='single'>
             {Object.entries(groupOptions).map(([id, name]) => (

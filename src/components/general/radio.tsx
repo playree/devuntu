@@ -1,11 +1,19 @@
 'use client'
 
-import { cn, ErrorMessage, Label, Radio, RadioGroup, RadioGroupProps } from '@heroui/react'
+import { cn, Radio, RadioGroup, RadioGroupProps } from '@heroui/react'
 import { FC } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
+import { FieldBaseProps, FieldError, FieldLabel } from './field'
 import { useSmart } from './smart'
 
 export type RadioOption = { value: string; label: string }
+
+type RadioFieldProps = Omit<RadioGroupProps, 'children' | 'onChange'> &
+  FieldBaseProps & {
+    label: string
+    options: RadioOption[]
+    onChange?: (value: string) => void
+  }
 
 /**
  * react-hook-form に依存しない RadioGroup 本体。
@@ -13,17 +21,18 @@ export type RadioOption = { value: string; label: string }
  *
  * 選択肢が2〜4個で全部を並べて見せたいときに使う。それ以上は `SingleSelectField` の方が収まる。
  */
-export const RadioField: FC<
-  Omit<RadioGroupProps, 'children' | 'onChange'> & {
-    label: string
-    options: RadioOption[]
-    errorMessage?: string
-    isRequired?: boolean
-    isSmart?: boolean
-    isSmartForm?: boolean
-    onChange?: (value: string) => void
-  }
-> = ({ label, options, errorMessage, isRequired, isSmart, isSmartForm, className, onChange, ...props }) => {
+export const RadioField: FC<RadioFieldProps> = ({
+  label,
+  isLabelHidden,
+  options,
+  errorMessage,
+  isRequired,
+  isSmart,
+  isSmartForm,
+  className,
+  onChange,
+  ...props
+}) => {
   const { isCompact, hasErrorArea } = useSmart(isSmart, isSmartForm)
 
   return (
@@ -35,9 +44,9 @@ export const RadioField: FC<
       className={cn('gap-2 **:data-[slot=radio]:mt-0', className)}
       onChange={onChange}
     >
-      <Label className={isCompact ? 'text-xs font-light' : ''} isRequired={isRequired}>
+      <FieldLabel isCompact={isCompact} isHidden={isLabelHidden} isRequired={isRequired}>
         {label}
-      </Label>
+      </FieldLabel>
       {options.map((option) => (
         <Radio key={option.value} value={option.value}>
           <Radio.Content className={isCompact ? 'gap-2 text-sm font-normal' : ''}>
@@ -48,7 +57,7 @@ export const RadioField: FC<
           </Radio.Content>
         </Radio>
       ))}
-      <ErrorMessage className={hasErrorArea ? 'min-h-4' : ''}>{errorMessage}</ErrorMessage>
+      <FieldError hasErrorArea={hasErrorArea}>{errorMessage}</FieldError>
     </RadioGroup>
   )
 }
@@ -63,15 +72,9 @@ export const RadioCtrl = <
   control,
   name,
   ...props
-}: Omit<RadioGroupProps, 'children' | 'onChange' | 'value'> & {
+}: Omit<RadioFieldProps, 'value'> & {
   control: Control<TFieldValues>
   name: TName
-  label: string
-  options: RadioOption[]
-  errorMessage?: string
-  isRequired?: boolean
-  isSmart?: boolean
-  isSmartForm?: boolean
 }) => (
   <Controller
     control={control}

@@ -257,7 +257,7 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
 
       <SideDrawer
         isOpen={!!selectedId}
-        ariaLabel={t('ticket')}
+        aria-label={t('ticket')}
         onClose={() => setSelectedId(undefined)}
         className='bg-background border-l p-4 shadow-2xl'
       >

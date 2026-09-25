@@ -62,7 +62,7 @@ export const TargetMembers: FC<{
       </ContentHeader>
 
       <MultiTable
-        ariaLabel='command target member list'
+        aria-label='command target member list'
         pagingList={pagingList}
         isSmart
         columns={[

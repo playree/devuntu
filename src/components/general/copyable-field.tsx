@@ -1,88 +1,12 @@
 'use client'
 
-import { Button, Chip, cn, InputGroup, InputGroupProps, Label, TextField } from '@heroui/react'
-import { FC, SVGProps, useEffect, useRef, useState } from 'react'
+import { Button, Chip, cn, InputGroup, InputGroupProps, TextField } from '@heroui/react'
+import { FC, useState } from 'react'
+import { FieldLabel } from './field'
+import { ClipboardDocumentCheckIcon, ClipboardDocumentIcon, EyeIcon, EyeSlashIcon } from './icons'
 import { useIsSmart } from './smart'
-
-const EyeIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
-  <svg
-    fill='currentColor'
-    viewBox='0 0 16 16'
-    xmlns='http://www.w3.org/2000/svg'
-    aria-hidden='true'
-    width={width}
-    strokeWidth={strokeWidth}
-    {...props}
-  >
-    <path d='M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z' />
-    <path
-      clipRule='evenodd'
-      fillRule='evenodd'
-      d='M1.38 8.28a.87.87 0 0 1 0-.566 7.003 7.003 0 0 1 13.238.006.87.87 0 0 1 0 .566A7.003 7.003 0 0 1 1.379 8.28ZM11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z'
-    />
-  </svg>
-)
-
-const EyeSlashIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
-  <svg
-    fill='currentColor'
-    viewBox='0 0 16 16'
-    xmlns='http://www.w3.org/2000/svg'
-    aria-hidden='true'
-    width={width}
-    strokeWidth={strokeWidth}
-    {...props}
-  >
-    <path
-      clipRule='evenodd'
-      fillRule='evenodd'
-      d='M3.28 2.22a.75.75 0 0 0-1.06 1.06l10.5 10.5a.75.75 0 1 0 1.06-1.06l-1.322-1.323a7.012 7.012 0 0 0 2.16-3.11.87.87 0 0 0 0-.567A7.003 7.003 0 0 0 4.82 3.76l-1.54-1.54Zm3.196 3.195 1.135 1.136A1.502 1.502 0 0 1 9.45 8.389l1.136 1.135a3 3 0 0 0-4.109-4.109Z'
-    />
-    <path d='m7.812 10.994 1.816 1.816A7.003 7.003 0 0 1 1.38 8.28a.87.87 0 0 1 0-.566 6.985 6.985 0 0 1 1.113-2.039l2.513 2.513a3 3 0 0 0 2.806 2.806Z' />
-  </svg>
-)
-
-const ClipboardDocumentIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
-  <svg
-    fill='currentColor'
-    viewBox='0 0 16 16'
-    xmlns='http://www.w3.org/2000/svg'
-    aria-hidden='true'
-    width={width}
-    strokeWidth={strokeWidth}
-    {...props}
-  >
-    <path
-      clipRule='evenodd'
-      fillRule='evenodd'
-      d='M11.986 3H12a2 2 0 0 1 2 2v6a2 2 0 0 1-1.5 1.937v-2.523a2.5 2.5 0 0 0-.732-1.768L8.354 5.232A2.5 2.5 0 0 0 6.586 4.5H4.063A2 2 0 0 1 6 3h.014A2.25 2.25 0 0 1 8.25 1h1.5a2.25 2.25 0 0 1 2.236 2ZM10.5 4v-.75a.75.75 0 0 0-.75-.75h-1.5a.75.75 0 0 0-.75.75V4h3Z'
-    />
-    <path d='M3 6a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1v-3.586a1 1 0 0 0-.293-.707L7.293 6.293A1 1 0 0 0 6.586 6H3Z' />
-  </svg>
-)
-
-const ClipboardDocumentCheckIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
-  <svg
-    fill='currentColor'
-    viewBox='0 0 16 16'
-    xmlns='http://www.w3.org/2000/svg'
-    aria-hidden='true'
-    width={width}
-    strokeWidth={strokeWidth}
-    {...props}
-  >
-    <path
-      clipRule='evenodd'
-      fillRule='evenodd'
-      d='M11.986 3H12a2 2 0 0 1 2 2v6a2 2 0 0 1-1.5 1.937V7A2.5 2.5 0 0 0 10 4.5H4.063A2 2 0 0 1 6 3h.014A2.25 2.25 0 0 1 8.25 1h1.5a2.25 2.25 0 0 1 2.236 2ZM10.5 4v-.75a.75.75 0 0 0-.75-.75h-1.5a.75.75 0 0 0-.75.75V4h3Z'
-    />
-    <path
-      clipRule='evenodd'
-      fillRule='evenodd'
-      d='M2 7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7Zm6.585 1.08a.75.75 0 0 1 .336 1.005l-1.75 3.5a.75.75 0 0 1-1.16.234l-1.75-1.5a.75.75 0 0 1 .977-1.139l1.02.875 1.321-2.64a.75.75 0 0 1 1.006-.336Z'
-    />
-  </svg>
-)
+import { useGeneralUiText } from './ui-text'
+import { useCopyToClipboard } from './use-copy-to-clipboard'
 
 export const CopyableField: FC<
   {
@@ -93,37 +17,31 @@ export const CopyableField: FC<
     variant?: InputGroupProps['variant']
     isSmart?: boolean
     className?: string
-    /** 各ボタンの aria-label。表示ラベルは持たないアイコンボタンなので読み上げ名になる */
+    /** コピーボタンの読み上げ名。未指定なら GeneralUiText の copy */
     copyLabel?: string
-    showLabel?: string
-    hideLabel?: string
     onCopied?: () => void
   } & (
-    | { label: string; ariaLabel?: never }
+    | { label: string; 'aria-label'?: never }
     /** ラベルを出さずに使うときは読み上げ名を必須にする(無いと react-aria が警告を出す) */
-    | { label?: never; ariaLabel: string }
+    | { label?: never; 'aria-label': string }
   )
 > = ({
   text,
   copyText,
   label,
-  ariaLabel,
+  'aria-label': ariaLabel,
   isMask,
   variant,
   isSmart: isSmartProp,
   className,
-  copyLabel = 'Copy',
-  showLabel = 'Show',
-  hideLabel = 'Hide',
+  copyLabel,
   onCopied,
 }) => {
   const isSmart = useIsSmart(isSmartProp)
+  const uiText = useGeneralUiText()
   const [isVisible, setIsVisible] = useState(false)
   const toggleVisibility = () => setIsVisible(!isVisible)
-  const [isCopied, setIsCopied] = useState(false)
-  // 「コピーしました」を戻すタイマー。表示中に閉じられたモーダルなどでアンマウント後に setState しないよう片付ける
-  const copiedTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
-  useEffect(() => () => clearTimeout(copiedTimer.current), [])
+  const { isCopied, copy } = useCopyToClipboard()
 
   return (
     <TextField
@@ -136,7 +54,7 @@ export const CopyableField: FC<
       aria-label={label ? undefined : ariaLabel}
       className={className}
     >
-      {label && <Label className={isSmart ? 'text-xs font-light' : ''}>{label}</Label>}
+      {label && <FieldLabel isCompact={isSmart}>{label}</FieldLabel>}
       <div className='relative'>
         <InputGroup // isSmart: 既定 36px を 28px に詰める
           variant={variant}
@@ -158,7 +76,7 @@ export const CopyableField: FC<
                 // isSmart: size='sm' の 32px は 28px の枠に収まらない
                 className={isSmart ? 'size-6' : ''}
                 // アイコンは aria-hidden なので、読み上げ名はボタン側で与える
-                aria-label={isVisible ? hideLabel : showLabel}
+                aria-label={isVisible ? uiText.hide : uiText.show}
                 onPress={toggleVisibility}
               >
                 {isVisible ? <EyeSlashIcon /> : <EyeIcon />}
@@ -169,23 +87,13 @@ export const CopyableField: FC<
               size='sm'
               variant='ghost'
               className={isSmart ? 'size-6' : ''}
-              aria-label={copyLabel}
+              aria-label={copyLabel ?? uiText.copy}
               onPress={async () => {
-                try {
-                  // 安全なコンテキスト(https / localhost)の外では navigator.clipboard 自体が無く、参照だけで例外になる
-                  await navigator.clipboard.writeText(copyText ?? text)
-                } catch {
-                  /**
-                   * コピーできていないので、成功の表示はしない。
-                   * このフォルダはロケールや通知(`@/components/notify`)へ依存させない方針なので、
-                   * 失敗の通知は出さず、成功表示が出ないことで伝える。
-                   */
-                  return
-                }
-                setIsCopied(true)
-                clearTimeout(copiedTimer.current)
-                copiedTimer.current = setTimeout(() => setIsCopied(false), 2000)
-                if (onCopied) {
+                /**
+                 * このフォルダはロケールや通知(`@/components/notify`)へ依存させない方針なので、
+                 * 失敗の通知は出さず、成功表示が出ないことで伝える。
+                 */
+                if ((await copy(copyText ?? text)) && onCopied) {
                   onCopied()
                 }
               }}
@@ -197,7 +105,7 @@ export const CopyableField: FC<
         </InputGroup>
         {isCopied && (
           <Chip className='absolute right-0 bottom-full mb-0.5 py-0' color='success' variant='soft'>
-            Copied!
+            {uiText.copied}
           </Chip>
         )}
       </div>

@@ -169,7 +169,7 @@ export const AgentsClient: FC = () => {
           </GridBox>
 
           <MultiTable
-            ariaLabel='agent ticket list'
+            aria-label='agent ticket list'
             isSmart
             pagingList={list}
             selectionMode='single'
@@ -260,7 +260,7 @@ export const AgentsClient: FC = () => {
 
       <SideDrawer
         isOpen={!!selectedId}
-        ariaLabel={t('ticket')}
+        aria-label={t('ticket')}
         onClose={() => setSelectedId(undefined)}
         className='bg-background border-l p-4 shadow-2xl'
       >

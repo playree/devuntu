@@ -1,44 +1,17 @@
 'use client'
 
-import { getFieldConstraints } from '@/lib/schema/schema-util'
-import { cn, ErrorMessage, Input, InputProps, Label, SearchField, SearchFieldProps, TextField } from '@heroui/react'
-import { ChangeEvent, FC, SVGProps } from 'react'
+import { cn, Input, InputProps, SearchField, SearchFieldProps, TextField } from '@heroui/react'
+import { ChangeEvent } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 import { z } from 'zod'
 import { MultiButton } from './button'
+import { FieldBaseProps, FieldError, FieldLabel } from './field'
+import { getFieldConstraints } from './field-constraints'
+import { MagnifyingGlassIcon } from './icons'
 import { useIsSmart, useSmart } from './smart'
+import { useGeneralUiText } from './ui-text'
 
-/** 検索実行ボタン用のアイコン(共通部品なのでこのフォルダ内で完結させる) */
-const MagnifyingGlassIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 16, strokeWidth = 2, ...props }) => (
-  <svg
-    fill='none'
-    stroke='currentColor'
-    viewBox='0 0 24 24'
-    xmlns='http://www.w3.org/2000/svg'
-    aria-hidden='true'
-    width={width}
-    strokeWidth={strokeWidth}
-    {...props}
-  >
-    <path
-      strokeLinecap='round'
-      strokeLinejoin='round'
-      d='m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z'
-    />
-  </svg>
-)
-
-type InputFieldProps = InputProps & {
-  label?: string
-  /** ラベルを読み上げ用にだけ残す(見出しを呼び出し側で出す場合) */
-  isLabelHidden?: boolean
-  isRequired?: boolean
-  isReadOnly?: boolean
-  errorMessage?: string
-  isSmart?: boolean
-  isSmartForm?: boolean
-  className?: string
-}
+type InputFieldProps = InputProps & FieldBaseProps & { className?: string }
 
 /**
  * react-hook-form に依存しない Input 本体。
@@ -50,6 +23,7 @@ export const InputField = ({
   label,
   isLabelHidden,
   isRequired,
+  isDisabled,
   isReadOnly,
   errorMessage,
   isSmart: isSmartProp,
@@ -61,6 +35,7 @@ export const InputField = ({
   return (
     <TextField
       isInvalid={!!errorMessage}
+      isDisabled={isDisabled}
       isReadOnly={isReadOnly}
       isRequired={isRequired}
       /**
@@ -70,19 +45,16 @@ export const InputField = ({
        */
       validationBehavior='aria'
     >
-      <Label
-        className={cn(isCompact ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}
-        isRequired={isRequired}
-      >
+      <FieldLabel isCompact={isCompact} isHidden={isLabelHidden} isRequired={isRequired}>
         {label}
-      </Label>
+      </FieldLabel>
       <Input
         {...props}
         // isCompact: 既定 36px を 28px に詰める
         className={cn(isCompact ? 'py-1' : '', className)}
         type={type}
       />
-      <ErrorMessage className={hasErrorArea ? 'min-h-4' : ''}>{errorMessage}</ErrorMessage>
+      <FieldError hasErrorArea={hasErrorArea}>{errorMessage}</FieldError>
     </TextField>
   )
 }
@@ -151,10 +123,10 @@ export const InputSearchField = ({
   isRequired,
   isSmart: isSmartProp,
   className,
-  placeholder = 'Search...',
+  placeholder,
   maxLength,
   onSubmit,
-  searchLabel = 'Search',
+  searchLabel,
   ...props
 }: SearchFieldProps & {
   label?: string
@@ -162,10 +134,12 @@ export const InputSearchField = ({
   isSmart?: boolean
   placeholder?: string
   maxLength?: number
-  /** 検索ボタンの aria-label / tooltip */
+  /** 検索ボタンの aria-label / tooltip。未指定なら GeneralUiText の search */
   searchLabel?: string
 }) => {
   const isSmart = useIsSmart(isSmartProp)
+  const uiText = useGeneralUiText()
+  const searchButtonLabel = searchLabel ?? uiText.search
   return (
     <SearchField
       {...props}
@@ -175,14 +149,14 @@ export const InputSearchField = ({
     >
       {({ state }) => (
         <>
-          <Label className={isSmart ? 'text-xs font-light' : ''} isRequired={isRequired}>
+          <FieldLabel isCompact={isSmart} isRequired={isRequired}>
             {label}
-          </Label>
+          </FieldLabel>
           <SearchField.Group className={isSmart ? 'h-min' : ''}>
             <SearchField.SearchIcon />
             <SearchField.Input
               className={cn(isSmart ? 'py-1' : '', className)}
-              placeholder={placeholder}
+              placeholder={placeholder ?? uiText.search}
               maxLength={maxLength}
               // 変換確定の Enter は検索として扱わない
               onKeyDown={(e) => {
@@ -204,8 +178,8 @@ export const InputSearchField = ({
                 size='sm'
                 variant='ghost'
                 className='mr-1 shrink-0'
-                aria-label={searchLabel}
-                tooltip={searchLabel}
+                aria-label={searchButtonLabel}
+                tooltip={searchButtonLabel}
                 icon={<MagnifyingGlassIcon />}
                 onPress={() => onSubmit(state.value)}
               />

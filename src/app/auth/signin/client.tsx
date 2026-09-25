@@ -1,7 +1,7 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
-import { CheckBoxCtrl } from '@/components/general/checkbox'
+import { CheckboxCtrl } from '@/components/general/checkbox'
 import { Grid } from '@/components/general/grid'
 import { GrowMotion } from '@/components/general/grow-motion'
 import { InputCtrl } from '@/components/general/input'
@@ -17,7 +17,7 @@ import {
   KeyIcon,
   ShieldCheckIcon,
 } from '@/components/icon'
-import { InputCtrlPassword } from '@/components/input-ctrl-pw'
+import { InputPasswordCtrl } from '@/components/input-ctrl-pw'
 import { notify } from '@/components/notify'
 import { SingleLayout } from '@/components/single-layout'
 import { parseAction } from '@/lib/action/action-client'
@@ -185,7 +185,7 @@ const PasswordForm: FC<{
           }
         })}
       >
-        <InputCtrlPassword
+        <InputPasswordCtrl
           control={control}
           variant='secondary'
           name='password'
@@ -378,7 +378,7 @@ const TwoFaForm: FC<{
         </div>
         <div className='mt-2 flex items-center justify-between'>
           <div>
-            <CheckBoxCtrl
+            <CheckboxCtrl
               id='trustDevice'
               name='trustDevice'
               control={control}

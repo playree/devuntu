@@ -85,7 +85,7 @@ export const MyPasskey: FC = () => {
 
       <MultiTable
         isSmart
-        ariaLabel='passkey list'
+        aria-label='passkey list'
         pagingList={list}
         columns={[
           { id: 'name', name: t('name'), isRowHeader: true, allowsSorting: true, minWidth: 200, defaultWidth: '1fr' },

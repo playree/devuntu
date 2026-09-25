@@ -1,7 +1,8 @@
 'use client'
 
+import { FieldError, FieldLabel } from '@/components/general/field'
 import { useLocale } from '@/locale/client'
-import { ErrorMessage, Label, Skeleton, TextField } from '@heroui/react'
+import { Skeleton, TextField } from '@heroui/react'
 import dynamic from 'next/dynamic'
 import { FC, ReactNode, useState } from 'react'
 import { Control, FieldPath, FieldValues, useController } from 'react-hook-form'
@@ -18,7 +19,7 @@ const YamlEditorCore = dynamic(() => import('./yaml-editor-core'), {
   loading: () => <Skeleton className='w-full rounded-xl' style={{ minHeight: MIN_HEIGHT }} />,
 })
 
-/** ラベルとエラーの体裁。MarkdownEditor の EditorField と同じ枠組みに揃える */
+/** ラベルとエラーの体裁。markdown-editor.tsx の EditorField と同じ枠組みに揃える */
 const EditorField: FC<{
   label: string
   isRequired?: boolean
@@ -29,11 +30,11 @@ const EditorField: FC<{
 }> = ({ label, isRequired, errorMessage, action, children }) => (
   <TextField isInvalid={!!errorMessage} className='mb-0.5'>
     <div className='flex items-center justify-between'>
-      <Label isRequired={isRequired}>{label}</Label>
+      <FieldLabel isRequired={isRequired}>{label}</FieldLabel>
       {action}
     </div>
     <div className='border-default-200 focus-within:border-primary overflow-hidden rounded-xl border'>{children}</div>
-    <ErrorMessage className='min-h-4'>{errorMessage}</ErrorMessage>
+    <FieldError hasErrorArea>{errorMessage}</FieldError>
   </TextField>
 )
 
@@ -70,7 +71,7 @@ export const YamlInput: FC<{
 }
 
 /** YAML エディタ(react-hook-form 対応) */
-export const YamlEditor = <
+export const YamlCtrl = <
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 >({

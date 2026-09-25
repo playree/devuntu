@@ -3,6 +3,7 @@
 import { MultiButton } from '@/components/general/button'
 import { CopyableField } from '@/components/general/copyable-field'
 import { DatePickerField } from '@/components/general/date-picker'
+import { getFieldConstraints } from '@/components/general/field-constraints'
 import { FlexCol } from '@/components/general/flex'
 import { Grid } from '@/components/general/grid'
 import { InputField } from '@/components/general/input'
@@ -30,7 +31,6 @@ import type { AgentTaskMode, TicketStatus } from '@/generated/prisma/enums'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { dayformat, utcToDateOnly } from '@/lib/day'
 import { PatchTicketIn, scPatchTicket, zTicketTitle } from '@/lib/schema/schema'
-import { getFieldConstraints } from '@/lib/schema/schema-util'
 import { useConfirmAction } from '@/lib/use-confirm-action'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
@@ -321,7 +321,7 @@ export const TicketDetailClient: FC<{
               isSmart
               text={ticket.displayId}
               copyText={ticket.shortUrl}
-              ariaLabel={t('id')}
+              aria-label={t('id')}
               copyLabel={t('copy_url')}
             />
           </>
@@ -340,7 +340,7 @@ export const TicketDetailClient: FC<{
                 maxLength={getFieldConstraints(scPatchTicket, 'title').maxLength}
                 errorMessage={titleError}
                 // 保存中の入力は reload で上書きされてしまうため受け付けない
-                disabled={savingField === 'title'}
+                isDisabled={savingField === 'title'}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 // 入力ごとに保存しないよう、フォーカスを外したときに変更を確定する

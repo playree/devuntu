@@ -2,6 +2,7 @@
 
 import { MultiButton } from '@/components/general/button'
 import { InputField } from '@/components/general/input'
+import { useCopyToClipboard } from '@/components/general/use-copy-to-clipboard'
 import {
   ArrowTopRightOnSquareIcon,
   ClipboardDocumentCheckIcon,
@@ -144,7 +145,7 @@ export const MdxLinkDialog: FC = () => {
 
   const panelRef = useRef<HTMLDivElement>(null)
   const [position, setPosition] = useState<{ top: number; left: number }>()
-  const [isCopied, setCopied] = useState(false)
+  const { isCopied, copy } = useCopyToClipboard(1000)
 
   const { type, rectangle } = linkDialogState
   const isPreview = type === 'preview'
@@ -191,14 +192,6 @@ export const MdxLinkDialog: FC = () => {
       left: Math.max(GAP, Math.min(rectLeft, window.innerWidth - width - GAP)),
     })
   }, [rectTop, rectLeft, rectHeight, type])
-
-  useEffect(() => {
-    if (!isCopied) {
-      return
-    }
-    const id = setTimeout(() => setCopied(false), 1000)
-    return () => clearTimeout(id)
-  }, [isCopied])
 
   if (linkDialogState.type === 'inactive' || !popupContainer) {
     return null
@@ -252,16 +245,7 @@ export const MdxLinkDialog: FC = () => {
                 <ClipboardDocumentIcon width={16} />
               )
             }
-            onPress={async () => {
-              try {
-                // 安全なコンテキスト(https / localhost)の外では navigator.clipboard 自体が無く、参照だけで例外になる
-                await window.navigator.clipboard.writeText(linkDialogState.url)
-              } catch {
-                // コピーできていないので成功表示を出さないことで伝える
-                return
-              }
-              setCopied(true)
-            }}
+            onPress={() => void copy(linkDialogState.url)}
           />
           <MultiButton
             size='sm'

@@ -112,7 +112,7 @@ export const CalClient: FC<{ origin: string }> = ({ origin }) => {
                       {t('save')}
                     </MultiButton>
                   </div>
-                  <CopyableField label={t('share_url')} text={shareUrl} copyLabel={t('copy')} />
+                  <CopyableField label={t('share_url')} text={shareUrl} />
                   <div className='flex flex-wrap gap-2'>
                     <MultiButton icon={<ArrowPathIcon />} variant='outline' onPress={rotate}>
                       {t('regenerate_url')}

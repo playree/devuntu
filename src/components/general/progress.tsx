@@ -5,9 +5,9 @@ export const ProgressBar: FC<{
   children?: ReactNode
   progress: number
   /** 何の進捗かを示す読み上げ名。バー内の文字は値の表示なので名前にはならない */
-  ariaLabel: string
+  'aria-label': string
   className?: string
-}> = ({ children, progress, ariaLabel, className }) => {
+}> = ({ children, progress, 'aria-label': ariaLabel, className }) => {
   return (
     <div
       className='relative w-full rounded-sm bg-neutral-200 dark:bg-neutral-600'

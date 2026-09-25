@@ -1,13 +1,13 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
-import { CheckBoxCtrl } from '@/components/general/checkbox'
+import { CheckboxCtrl } from '@/components/general/checkbox'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
 import { FormModal, ModalBaseProps } from '@/components/general/modal'
 import { MultiSelectCtrl } from '@/components/general/select'
 import { CheckIcon, PencilSquareIcon, UserPlusIcon } from '@/components/icon'
-import { InputCtrlPassword } from '@/components/input-ctrl-pw'
+import { InputPasswordCtrl } from '@/components/input-ctrl-pw'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action/action-client'
 import { ClientError } from '@/lib/error'
@@ -85,7 +85,7 @@ export const AddModal: FC<ModalBaseProps & { enabledPassword: boolean; groupOpti
         </div>
         {enabledPassword && (
           <div className='col-span-12'>
-            <InputCtrlPassword
+            <InputPasswordCtrl
               control={control}
               name='password'
               label={t('password')}
@@ -97,7 +97,7 @@ export const AddModal: FC<ModalBaseProps & { enabledPassword: boolean; groupOpti
           </div>
         )}
         <div className='col-span-12 pb-4'>
-          <CheckBoxCtrl control={control} name='isAdmin' id='isAdmin' label={t('is_admin')} />
+          <CheckboxCtrl control={control} name='isAdmin' id='isAdmin' label={t('is_admin')} />
         </div>
         <div className='col-span-12'>
           <MultiSelectCtrl control={control} name='groups' groupOptions={groupOptions} label={t('group')} />
@@ -181,10 +181,10 @@ export const UpdateModal: FC<ModalBaseProps & { target: UpdateUser; groupOptions
           />
         </div>
         <div className='col-span-12 pb-4'>
-          <CheckBoxCtrl control={control} name='isAdmin' id='isAdmin' label={t('is_admin')} />
+          <CheckboxCtrl control={control} name='isAdmin' id='isAdmin' label={t('is_admin')} />
         </div>
         <div className='col-span-12 pb-4'>
-          <CheckBoxCtrl control={control} name='nameLocked' id='nameLocked' label={t('name_locked')} />
+          <CheckboxCtrl control={control} name='nameLocked' id='nameLocked' label={t('name_locked')} />
         </div>
         <div className='col-span-12'>
           <MultiSelectCtrl control={control} name='groups' groupOptions={groupOptions} label={t('group')} />

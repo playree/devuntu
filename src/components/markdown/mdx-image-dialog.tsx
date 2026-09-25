@@ -2,10 +2,10 @@
 
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
+import { DialogModal } from '@/components/general/modal'
 import { PhotoIcon } from '@/components/icon'
 import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_SIZE } from '@/lib/schema/schema'
 import { useLocale } from '@/locale/client'
-import { Modal } from '@heroui/react'
 import {
   activeEditor$,
   closeImageDialog$,
@@ -152,90 +152,81 @@ export const MdxImageDialog: FC = () => {
   const isEditing = dialogState.type === 'editing'
   const styles = dialogStyles()
   return (
-    <Modal.Backdrop
-      variant='blur'
-      isOpen={isOpen}
-      onOpenChange={(open) => {
-        if (!open && !isPending) {
-          closeImageDialog()
-        }
+    <DialogModal
+      state={{
+        isOpen,
+        setOpen: (open) => {
+          if (!open && !isPending) {
+            closeImageDialog()
+          }
+        },
       }}
+      title={{ text: t(isEditing ? 'replace_image' : 'insert_image'), icon: <PhotoIcon /> }}
       // アップロード中に閉じると、完了時の反映先が失われて新規挿入として扱われてしまう
-      isDismissable={!isPending}
-      isKeyboardDismissDisabled={isPending}
+      isPending={isPending}
+      isDismissable
       /**
        * 既定の描画先(body 直下)にすると、外側の HeroUI Modal(チケット追加など)が
        * react-aria の ariaHideOutside で「後から body 直下に増えた要素」に inert を付けるため、
        * ダイアログが見えているのに操作できなくなる
        */
-      UNSTABLE_portalContainer={popupContainer ?? undefined}
+      portalContainer={popupContainer ?? undefined}
+      footer={
+        <>
+          <MultiButton variant='ghost' isDisabled={isPending} onPress={() => closeImageDialog()}>
+            {t('cancel')}
+          </MultiButton>
+          <MultiButton icon={<PhotoIcon />} isDisabled={!file} isPending={isPending} onPress={submit}>
+            {t(isEditing ? 'replace_image' : 'insert_image')}
+          </MultiButton>
+        </>
+      }
     >
-      <Modal.Container placement='top'>
-        <Modal.Dialog>
-          <Modal.CloseTrigger isDisabled={isPending} />
-          <Modal.Header>
-            <Modal.Heading className='flex items-center gap-2'>
-              <PhotoIcon />
-              {t(isEditing ? 'replace_image' : 'insert_image')}
-            </Modal.Heading>
-          </Modal.Header>
-          {/* チケット編集モーダル内でも使うため form は置かない(submit が外側の form へ伝播する) */}
-          <Modal.Body className='pt-2'>
-            <FlexCol>
-              <button
-                type='button'
-                aria-label={t('select_file')} // プレビュー表示中は中の文言が消えるので明示する
-                onClick={() => inputRef.current?.click()}
-                // preventDefault を忘れるとブラウザが既定動作でドロップした画像を開いてしまう
-                onDragOver={(e) => {
-                  e.preventDefault()
-                  setDragOver(true)
-                }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={(e) => {
-                  e.preventDefault()
-                  setDragOver(false)
-                  select(e.dataTransfer.files[0])
-                }}
-                className={styles.dropzone({ isDragOver })}
-              >
-                {preview ? (
-                  <Image
-                    src={preview}
-                    alt=''
-                    width={640}
-                    height={360}
-                    unoptimized // blob URL なので Next.js の最適化は通せない
-                    className={styles.preview()}
-                  />
-                ) : (
-                  <>
-                    <PhotoIcon width={40} className='text-default-500' />
-                    <span className={styles.hint()}>{t('msg_drop_image')}</span>
-                  </>
-                )}
-              </button>
-              <input
-                ref={inputRef}
-                type='file'
-                accept={ACCEPTED_IMAGE_TYPES.join(',')}
-                className='hidden'
-                onChange={(e) => select(e.target.files?.[0])}
-              />
-              <div className={styles.fileName()}>{file?.name ?? t('no_file_selected')}</div>
-              {error && <div className={styles.error()}>{error}</div>}
-            </FlexCol>
-          </Modal.Body>
-          <Modal.Footer>
-            <MultiButton variant='ghost' isDisabled={isPending} onPress={() => closeImageDialog()}>
-              {t('cancel')}
-            </MultiButton>
-            <MultiButton icon={<PhotoIcon />} isDisabled={!file} isPending={isPending} onPress={submit}>
-              {t(isEditing ? 'replace_image' : 'insert_image')}
-            </MultiButton>
-          </Modal.Footer>
-        </Modal.Dialog>
-      </Modal.Container>
-    </Modal.Backdrop>
+      {/* チケット編集モーダル内でも使うため DialogModal にする(form を置くと submit が外側の form へ伝播する) */}
+      <FlexCol>
+        <button
+          type='button'
+          aria-label={t('select_file')} // プレビュー表示中は中の文言が消えるので明示する
+          onClick={() => inputRef.current?.click()}
+          // preventDefault を忘れるとブラウザが既定動作でドロップした画像を開いてしまう
+          onDragOver={(e) => {
+            e.preventDefault()
+            setDragOver(true)
+          }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => {
+            e.preventDefault()
+            setDragOver(false)
+            select(e.dataTransfer.files[0])
+          }}
+          className={styles.dropzone({ isDragOver })}
+        >
+          {preview ? (
+            <Image
+              src={preview}
+              alt=''
+              width={640}
+              height={360}
+              unoptimized // blob URL なので Next.js の最適化は通せない
+              className={styles.preview()}
+            />
+          ) : (
+            <>
+              <PhotoIcon width={40} className='text-default-500' />
+              <span className={styles.hint()}>{t('msg_drop_image')}</span>
+            </>
+          )}
+        </button>
+        <input
+          ref={inputRef}
+          type='file'
+          accept={ACCEPTED_IMAGE_TYPES.join(',')}
+          className='hidden'
+          onChange={(e) => select(e.target.files?.[0])}
+        />
+        <div className={styles.fileName()}>{file?.name ?? t('no_file_selected')}</div>
+        {error && <div className={styles.error()}>{error}</div>}
+      </FlexCol>
+    </DialogModal>
   )
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
-import { CheckBoxField } from '@/components/general/checkbox'
+import { CheckboxGroupField } from '@/components/general/checkbox'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
 import { FormModal, ModalBaseProps } from '@/components/general/modal'
@@ -12,7 +12,6 @@ import { parseAction } from '@/lib/action/action-client'
 import { minToHHmm, WEEKDAY_LABELS, WEEKDAY_ORDER } from '@/lib/day'
 import { CreateBusyTime, scBusyTimeBase, scCreateBusyTime, UpdateBusyTime } from '@/lib/schema/schema'
 import { useLocale } from '@/locale/client'
-import { CheckboxGroup, ErrorMessage, Label } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FC } from 'react'
 import { Controller, useForm } from 'react-hook-form'
@@ -97,35 +96,26 @@ export const BusyTimeModal: FC<ModalBaseProps & { target?: UpdateBusyTime }> = (
           control={control}
           name='weekdays'
           render={({ field: { value, onChange } }) => (
-            <CheckboxGroup
-              /**
-               * ErrorMessage は react-aria のフィールドが提供する errorMessage slot が要るため
-               * 素の div ではなく CheckboxGroup で囲む。
-               * isRequired は渡さない(ネイティブ required 検証で submit が握り潰されるため)
-               */
-              className='col-span-12 gap-2'
-              isInvalid={!!errors.weekdays}
+            <CheckboxGroupField
+              className='col-span-12'
+              label={t('weekday')}
+              isRequired
+              orientation='horizontal'
+              labelAction={
+                <>
+                  <MultiButton size='sm' variant='outline' onPress={() => onChange(EVERYDAY)}>
+                    {t('everyday')}
+                  </MultiButton>
+                  <MultiButton size='sm' variant='outline' onPress={() => onChange(WEEKDAYS_ONLY)}>
+                    {t('weekdays_only')}
+                  </MultiButton>
+                </>
+              }
+              options={WEEKDAY_ORDER.map((d) => ({ value: String(d), label: labels[d] }))}
               value={value.map(String)}
               onChange={(keys) => onChange(keys.map(Number))}
-            >
-              <div className='flex items-center gap-2'>
-                <Label isRequired>{t('weekday')}</Label>
-                <MultiButton size='sm' variant='outline' onPress={() => onChange(EVERYDAY)}>
-                  {t('everyday')}
-                </MultiButton>
-                <MultiButton size='sm' variant='outline' onPress={() => onChange(WEEKDAYS_ONLY)}>
-                  {t('weekdays_only')}
-                </MultiButton>
-              </div>
-              <div // checkbox-group の既定は縦並び前提で子に mt-4 が入るため、横並び用に打ち消す
-                className='flex flex-wrap gap-3 **:data-[slot=checkbox]:mt-0'
-              >
-                {WEEKDAY_ORDER.map((d) => (
-                  <CheckBoxField key={d} id={`weekday-${d}`} value={String(d)} label={labels[d]} />
-                ))}
-              </div>
-              <ErrorMessage className='min-h-4'>{fet(errors.weekdays)}</ErrorMessage>
-            </CheckboxGroup>
+              errorMessage={fet(errors.weekdays)}
+            />
           )}
         />
 

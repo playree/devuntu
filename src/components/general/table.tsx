@@ -12,27 +12,11 @@ import {
   TableColumnProps,
   type TableContentProps,
 } from '@heroui/react'
-import { FC, ReactNode, SVGProps } from 'react'
+import { FC, ReactNode, useMemo } from 'react'
+import { ChevronUpIcon } from './icons'
 import { type PagingList, ROWS_PER_PAGE_OPTIONS } from './paging'
 import { SingleSelectField } from './select'
-
-const ChevronUpIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
-  <svg
-    fill='currentColor'
-    viewBox='0 0 24 24'
-    xmlns='http://www.w3.org/2000/svg'
-    aria-hidden='true'
-    width={width}
-    strokeWidth={strokeWidth}
-    {...props}
-  >
-    <path
-      clipRule='evenodd'
-      fillRule='evenodd'
-      d='M11.47 7.72a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 1 1-1.06 1.06L12 9.31l-6.97 6.97a.75.75 0 0 1-1.06-1.06l7.5-7.5Z'
-    />
-  </svg>
-)
+import { useGeneralUiText } from './ui-text'
 
 const SortableColumnHeader: FC<{
   children: React.ReactNode
@@ -161,36 +145,40 @@ const buildPageItems = (page: number, totalPages: number): (number | null)[] => 
   return sorted.flatMap((p, i) => (i > 0 && p - sorted[i - 1] > 1 ? [null, p] : [p]))
 }
 
-/** 表示件数 Select の選択肢。Record<string, string> なので描画ごとに作らず定数にする */
-const ROWS_PER_PAGE_GROUP = Object.fromEntries(ROWS_PER_PAGE_OPTIONS.map((rows) => [String(rows), `${rows} / page`]))
-
 /** 1ページあたりの表示件数を選ぶ。ページャの件数表示の隣に並べる */
 const RowsPerPageSelect: FC<Pick<PagingParam, 'rowsPerPage' | 'onRowsPerPageChange'>> = ({
   rowsPerPage,
   onRowsPerPageChange,
-}) => (
-  <div // Select.Trigger は横幅いっぱいに広がるので、フッタでは幅を固定する
-    className='w-28'
-  >
-    <SingleSelectField
-      isSmart
-      isLabelHidden
-      variant='secondary'
-      // 共通部品なのでローカライズ不要とする
-      label='rows per page'
-      groupOptions={ROWS_PER_PAGE_GROUP}
-      value={String(rowsPerPage)}
-      onChange={(value) => {
-        // isClearable を付けていないので null は来ないが、型の都合で除外する
-        if (value) {
-          onRowsPerPageChange(Number(value))
-        }
-      }}
-    />
-  </div>
-)
+}) => {
+  const uiText = useGeneralUiText()
+  const groupOptions = useMemo(
+    () => Object.fromEntries(ROWS_PER_PAGE_OPTIONS.map((rows) => [String(rows), uiText.perPage(rows)])),
+    [uiText],
+  )
+  return (
+    <div // Select.Trigger は横幅いっぱいに広がるので、フッタでは幅を固定する
+      className='w-28'
+    >
+      <SingleSelectField
+        isSmart
+        isLabelHidden
+        variant='secondary'
+        label={uiText.rowsPerPage}
+        groupOptions={groupOptions}
+        value={String(rowsPerPage)}
+        onChange={(value) => {
+          // isClearable を付けていないので null は来ないが、型の都合で除外する
+          if (value) {
+            onRowsPerPageChange(Number(value))
+          }
+        }}
+      />
+    </div>
+  )
+}
 
 const TablePaging: FC<PagingParam> = ({ rowsPerPage, page, total, totalPages, onPageChange, onRowsPerPageChange }) => {
+  const uiText = useGeneralUiText()
   const start = (page - 1) * rowsPerPage + 1
   const end = Math.min(page * rowsPerPage, total)
 
@@ -198,7 +186,7 @@ const TablePaging: FC<PagingParam> = ({ rowsPerPage, page, total, totalPages, on
     return (
       <Pagination size='sm'>
         <Pagination.Summary>
-          <span>0 results</span>
+          <span>{uiText.noResults}</span>
           <RowsPerPageSelect rowsPerPage={rowsPerPage} onRowsPerPageChange={onRowsPerPageChange} />
         </Pagination.Summary>
       </Pagination>
@@ -208,16 +196,14 @@ const TablePaging: FC<PagingParam> = ({ rowsPerPage, page, total, totalPages, on
   return (
     <Pagination size='sm'>
       <Pagination.Summary /* .pagination__summary が flex items-center gap-2 なので、子を並べるだけでよい */>
-        <span>
-          {start} to {end} of {total} results
-        </span>
+        <span>{uiText.resultRange(start, end, total)}</span>
         <RowsPerPageSelect rowsPerPage={rowsPerPage} onRowsPerPageChange={onRowsPerPageChange} />
       </Pagination.Summary>
       <Pagination.Content>
         <Pagination.Item>
           <Pagination.Previous isDisabled={page === 1} onPress={() => onPageChange((p) => Math.max(1, p - 1))}>
             <Pagination.PreviousIcon />
-            Prev
+            {uiText.prev}
           </Pagination.Previous>
         </Pagination.Item>
         {buildPageItems(page, totalPages).map((p, i) => (
@@ -236,7 +222,7 @@ const TablePaging: FC<PagingParam> = ({ rowsPerPage, page, total, totalPages, on
             isDisabled={page === totalPages}
             onPress={() => onPageChange((p) => Math.min(totalPages, p + 1))}
           >
-            Next
+            {uiText.next}
             <Pagination.NextIcon />
           </Pagination.Next>
         </Pagination.Item>
@@ -246,7 +232,7 @@ const TablePaging: FC<PagingParam> = ({ rowsPerPage, page, total, totalPages, on
 }
 
 export const MultiTable = <T extends object>({
-  ariaLabel,
+  'aria-label': ariaLabel,
   sortDescriptor,
   onSortChange,
   selectionMode,
@@ -260,7 +246,7 @@ export const MultiTable = <T extends object>({
   ...props
 }: TableBodyProps<T> &
   TableActivityProps<T> & {
-    ariaLabel: string
+    'aria-label': string
     columns: {
       id: string
       name: string

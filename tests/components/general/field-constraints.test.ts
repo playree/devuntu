@@ -6,8 +6,8 @@
  * 入力欄の maxLength / minLength / required が失われたことを検知するのが目的。
  */
 
+import { getFieldConstraints } from '@/components/general/field-constraints'
 import { scBusyTimeBase, zDescription, zName } from '@/lib/schema/schema'
-import { getFieldConstraints } from '@/lib/schema/schema-util'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 

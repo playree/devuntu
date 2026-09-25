@@ -20,7 +20,7 @@ export const MultiTagField = <T extends string>({
   variant,
   isRequired,
   isSmart: isSmartProp,
-  ariaLabel,
+  'aria-label': ariaLabel,
 }: {
   label: string
   items: readonly MultiTagItem<T>[]
@@ -30,7 +30,7 @@ export const MultiTagField = <T extends string>({
   variant?: 'default' | 'surface'
   isRequired?: boolean
   isSmart?: boolean
-  ariaLabel?: string
+  'aria-label'?: string
 }) => {
   const isSmart = useIsSmart(isSmartProp)
   // react-aria へ毎回新しい Set を渡さないよう value 参照で memo 化する

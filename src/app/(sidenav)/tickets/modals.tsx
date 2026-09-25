@@ -7,10 +7,10 @@ import { InputCtrl } from '@/components/general/input'
 import { FormModal, ModalBaseProps } from '@/components/general/modal'
 import { SingleSelectCtrl } from '@/components/general/select'
 import { CheckIcon, PlusIcon } from '@/components/icon'
-import { MarkdownEditor } from '@/components/markdown/markdown-editor'
+import { MarkdownCtrl } from '@/components/markdown/markdown-editor'
 import { MentionCandidate } from '@/components/markdown/mention-menu'
 import { notify } from '@/components/notify'
-import { TagSelect } from '@/components/ticket/tag-select'
+import { TagSelectCtrl } from '@/components/ticket/tag-select'
 import { useBoardName, useTicketOptions } from '@/components/ticket/ticket-chip'
 import { UserSelectCtrl } from '@/components/user-select'
 import type { TicketStatus } from '@/generated/prisma/enums'
@@ -149,7 +149,7 @@ export const AddModal: FC<
         </div>
 
         <div className='col-span-12 md:col-span-4'>
-          <TagSelect
+          <TagSelectCtrl
             control={control}
             name='tagIds'
             options={boardTags}
@@ -159,7 +159,7 @@ export const AddModal: FC<
         </div>
 
         <div className='col-span-12'>
-          <MarkdownEditor
+          <MarkdownCtrl
             control={control}
             name='content'
             constraintSchema={scCreateTicket}

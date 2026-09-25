@@ -56,6 +56,10 @@ pnpm build
 - 環境変数の参照は`src/lib/env-util.ts`を利用する
 - Server Actionsは基本的に利用するClientファイルと同じ階層の`server.ts`に配置する
 - `src/components/general`配下は共通部品として独立させたいので、このフォルダ内で完結するようにする
+  - 部品が内部で表示する文言はロケールを直接参照せず、`general/ui-text.tsx`の`GeneralUiTextProvider`経由で受け取る
+- フォーム部品は、react-hook-form に依存しないものを`〇〇Field`、react-hook-form 対応のものを`〇〇Ctrl`と命名する
+- 読み上げ名を受け取る props は`aria-label`で統一する
+- アイコンは`createIcon`(`general/icons.tsx`)で定義する。general 配下で使うものは`general/icons.tsx`、それ以外は`src/components/icon.tsx`に置く
 - テストソースは`tests`配下に配置する
 - better-authをバージョンアップする場合には、ライブラリが要求するテーブル定義に変更が無いかをチェックする
 - コンパイル、ビルド確認は`pnpm build`

@@ -1,10 +1,10 @@
 'use client'
 
-import { Calendar, cn, DateField, DatePicker, DateRangePicker, ErrorMessage, Label, RangeCalendar } from '@heroui/react'
+import { Calendar, DateField, DatePicker, DateRangePicker, RangeCalendar } from '@heroui/react'
 import { CalendarDate, parseDate } from '@internationalized/date'
 import { ComponentProps } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
-import { XCircleIcon } from './select'
+import { FieldBaseProps, FieldError, FieldLabel, TriggerClearButton } from './field'
 import { useSmart } from './smart'
 
 /** DateField.Input の children が受け取るセグメント(型を直接 import できないため props から導出する) */
@@ -25,41 +25,10 @@ const toCalendarDate = (value: unknown): CalendarDate | null => {
   }
 }
 
-/**
- * DateField.Suffix 内に置くクリアボタン。
- *
- * DateField.Suffix はボタンではないので、ここは本物の button にできる
- * (Select のトリガー内にあるクリアは button の入れ子になるため span のまま)。
- */
-const ClearButton = ({ onClear }: { onClear: () => void }) => (
-  <button
-    type='button'
-    // 共通部品なのでローカライズ不要とする
-    aria-label='clear'
-    className='mr-1 inline-flex cursor-pointer items-center opacity-60 hover:opacity-100'
-    onPointerDown={(e) => e.stopPropagation()}
-    onClick={(e) => {
-      e.stopPropagation()
-      onClear()
-    }}
-  >
-    <XCircleIcon width={16} />
-  </button>
-)
-
-type DatePickerFieldProps = {
-  label?: string
-  /** ラベルを読み上げ用にだけ残す(見出しを呼び出し側で出す場合) */
-  isLabelHidden?: boolean
-  errorMessage?: string
-  isRequired?: boolean
-  isReadOnly?: boolean
-  isDisabled?: boolean
+type DatePickerFieldProps = FieldBaseProps & {
   /** クリアボタンを表示する(任意入力の日付向け) */
   isClearable?: boolean
   variant?: 'primary' | 'secondary'
-  isSmart?: boolean
-  isSmartForm?: boolean
 }
 
 /**
@@ -106,12 +75,9 @@ export const DatePickerField = ({
       className='flex w-full'
     >
       {label && (
-        <Label
-          className={cn(isCompact ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}
-          isRequired={isRequired}
-        >
+        <FieldLabel isCompact={isCompact} isHidden={isLabelHidden} isRequired={isRequired}>
           {label}
-        </Label>
+        </FieldLabel>
       )}
       <DateField.Group
         /**
@@ -126,13 +92,16 @@ export const DatePickerField = ({
           {(segment: DateSegmentValue) => <DateField.Segment segment={segment} />}
         </DateField.Input>
         <DateField.Suffix>
-          {isClearable && selected && !isReadOnly && <ClearButton onClear={() => onChange(null)} />}
+          {isClearable && selected && !isReadOnly && !isDisabled && (
+            // DateField.Suffix はボタンではないので、ここは本物の button にできる
+            <TriggerClearButton elementType='button' className='mr-1' onClear={() => onChange(null)} />
+          )}
           <DatePicker.Trigger>
             <DatePicker.TriggerIndicator />
           </DatePicker.Trigger>
         </DateField.Suffix>
       </DateField.Group>
-      <ErrorMessage className={hasErrorArea ? 'min-h-4' : ''}>{errorMessage}</ErrorMessage>
+      <FieldError hasErrorArea={hasErrorArea}>{errorMessage}</FieldError>
       <DatePicker.Popover>
         <Calendar>
           <Calendar.Header>
@@ -229,12 +198,9 @@ export const DateRangePickerField = ({
       className='flex w-full'
     >
       {label && (
-        <Label
-          className={cn(isCompact ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}
-          isRequired={isRequired}
-        >
+        <FieldLabel isCompact={isCompact} isHidden={isLabelHidden} isRequired={isRequired}>
           {label}
-        </Label>
+        </FieldLabel>
       )}
       <DateField.Group // isCompact の高さ調整は DatePickerField と同じ
         fullWidth
@@ -252,13 +218,16 @@ export const DateRangePickerField = ({
           {(segment: DateSegmentValue) => <DateField.Segment segment={segment} />}
         </DateField.Input>
         <DateField.Suffix>
-          {isClearable && selected && !isReadOnly && <ClearButton onClear={() => onChange(null)} />}
+          {isClearable && selected && !isReadOnly && !isDisabled && (
+            // DateField.Suffix はボタンではないので、ここは本物の button にできる
+            <TriggerClearButton elementType='button' className='mr-1' onClear={() => onChange(null)} />
+          )}
           <DateRangePicker.Trigger>
             <DateRangePicker.TriggerIndicator />
           </DateRangePicker.Trigger>
         </DateField.Suffix>
       </DateField.Group>
-      <ErrorMessage className={hasErrorArea ? 'min-h-4' : ''}>{errorMessage}</ErrorMessage>
+      <FieldError hasErrorArea={hasErrorArea}>{errorMessage}</FieldError>
       <DateRangePicker.Popover>
         <RangeCalendar>
           <RangeCalendar.Header>

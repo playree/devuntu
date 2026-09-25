@@ -119,7 +119,7 @@ export const TicketsClient: FC<{
       </Accordion>
 
       <MultiTable
-        ariaLabel='ticket list'
+        aria-label='ticket list'
         isSmart
         pagingList={list}
         selectionMode='single'
@@ -191,7 +191,7 @@ export const TicketsClient: FC<{
 
       <SideDrawer
         isOpen={!!selectedId}
-        ariaLabel={t('ticket')}
+        aria-label={t('ticket')}
         onClose={() => setSelectedId(undefined)}
         className='bg-background border-l p-4 shadow-2xl'
       >

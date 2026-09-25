@@ -1,7 +1,7 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
-import { CheckBoxCtrl, CheckBoxField } from '@/components/general/checkbox'
+import { CheckboxCtrl, CheckboxField } from '@/components/general/checkbox'
 import { CopyableField } from '@/components/general/copyable-field'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
@@ -102,10 +102,10 @@ export const AddModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, relo
                   />
                 </div>
                 <div className='col-span-12'>
-                  <CheckBoxCtrl control={control} name='skipConsent' id='skipConsent' label={t('skip_consent')} />
+                  <CheckboxCtrl control={control} name='skipConsent' id='skipConsent' label={t('skip_consent')} />
                 </div>
                 <div className='col-span-12'>
-                  <CheckBoxCtrl control={control} name='requirePkce' id='requirePkce' label={t('require_pkce')} />
+                  <CheckboxCtrl control={control} name='requirePkce' id='requirePkce' label={t('require_pkce')} />
                 </div>
                 <div className='col-span-12'>
                   <SingleSelectCtrl
@@ -128,24 +128,13 @@ export const AddModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, relo
             <StepMotion direction={step.direction} key='step_output'>
               <GridBox>
                 <div className='col-span-12'>
-                  <CopyableField text={output.clientId} label={t('client_id')} copyLabel={t('copy')} />
+                  <CopyableField text={output.clientId} label={t('client_id')} />
                 </div>
                 <div className='col-span-12'>
-                  <CopyableField
-                    text={output.clientSecret}
-                    label={t('client_secret')}
-                    isMask
-                    copyLabel={t('copy')}
-                    showLabel={t('show')}
-                    hideLabel={t('hide')}
-                  />
+                  <CopyableField text={output.clientSecret} label={t('client_secret')} isMask />
                 </div>
                 <div className='col-span-12'>
-                  <CopyableField
-                    text={new URL('api/auth', baseUrl).toString()}
-                    label={t('issuer_url')}
-                    copyLabel={t('copy')}
-                  />
+                  <CopyableField text={new URL('api/auth', baseUrl).toString()} label={t('issuer_url')} />
                 </div>
                 <Typography type='body-sm' className='col-span-12 pt-2 whitespace-pre-wrap'>
                   {t('msg_added_oidc_client')}
@@ -226,10 +215,10 @@ export const UpdateModal: FC<
           />
         </div>
         <div className='col-span-12'>
-          <CheckBoxCtrl control={control} name='skipConsent' id='skipConsent' label={t('skip_consent')} />
+          <CheckboxCtrl control={control} name='skipConsent' id='skipConsent' label={t('skip_consent')} />
         </div>
         <div className='col-span-12'>
-          <CheckBoxField
+          <CheckboxField
             id='requirePkce'
             label={`${t('require_pkce')} (${t('immutable')})`}
             isSelected={target.requirePkce}

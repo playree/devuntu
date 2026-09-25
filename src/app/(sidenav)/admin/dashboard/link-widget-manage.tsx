@@ -222,7 +222,7 @@ export const LinkWidgetManage: FC = () => {
 
       <MultiTable
         isSmart
-        ariaLabel='link widget list'
+        aria-label='link widget list'
         pagingList={list}
         columns={[
           { id: 'name', name: t('name'), isRowHeader: true, allowsSorting: true, minWidth: 80 },

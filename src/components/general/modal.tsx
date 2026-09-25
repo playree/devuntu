@@ -1,6 +1,6 @@
 'use client'
 
-import { Checkbox, Modal, ModalContainerProps, useOverlayState, UseOverlayStateReturn } from '@heroui/react'
+import { Checkbox, cn, Modal, ModalContainerProps, useOverlayState, UseOverlayStateReturn } from '@heroui/react'
 import { nanoid } from 'nanoid'
 import { usePathname } from 'next/navigation'
 import {
@@ -9,7 +9,6 @@ import {
   FC,
   forwardRef,
   ReactNode,
-  SVGProps,
   useContext,
   useEffect,
   useImperativeHandle,
@@ -18,25 +17,9 @@ import {
 } from 'react'
 import { MultiButton } from './button'
 import { FlexCol } from './flex'
+import { CheckIcon } from './icons'
 import { SmartProvider } from './smart'
-
-const CheckIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
-  <svg
-    fill='currentColor'
-    viewBox='0 0 24 24'
-    xmlns='http://www.w3.org/2000/svg'
-    aria-hidden='true'
-    width={width}
-    strokeWidth={strokeWidth}
-    {...props}
-  >
-    <path
-      clipRule='evenodd'
-      fillRule='evenodd'
-      d='M19.916 4.626a.75.75 0 0 1 .208 1.04l-9 13.5a.75.75 0 0 1-1.154.114l-6-6a.75.75 0 0 1 1.06-1.06l5.353 5.353 8.493-12.74a.75.75 0 0 1 1.04-.207Z'
-    />
-  </svg>
-)
+import { useGeneralUiText } from './ui-text'
 
 export const useModalState = <T = string,>() => {
   const id = nanoid()
@@ -84,50 +67,106 @@ export type FormModalSize = NonNullable<ModalContainerProps['size']> | ExtraModa
 
 const isExtraModalSize = (size: FormModalSize): size is ExtraModalSize => size in EXTRA_MODAL_SIZES
 
-export const FormModal: FC<{
-  children: ReactNode
-  state: UseOverlayStateReturn
-  onSubmit: (e?: BaseSyntheticEvent) => Promise<void>
+type ModalFrameProps = {
+  state: Pick<UseOverlayStateReturn, 'isOpen' | 'setOpen'>
   title: { text: string; icon?: ReactNode }
-  footer: ReactNode
-  hiddenCloseButton?: boolean
   size?: FormModalSize
-}> = ({ children, state, onSubmit, title, footer, hiddenCloseButton, size }) => {
+  hiddenCloseButton?: boolean
+  /** 閉じられない処理中。閉じるボタンと Esc を無効にする */
+  isPending?: boolean
+  /** 背景のクリックで閉じられるようにする */
+  isDismissable?: boolean
+  /** 描画先。既定は body 直下 */
+  portalContainer?: Element
+}
+
+/** FormModal / DialogModal 共通の外枠(背景・サイズ・閉じるボタン・見出し) */
+const ModalFrame: FC<ModalFrameProps & { children: ReactNode }> = ({
+  state,
+  title,
+  size,
+  hiddenCloseButton,
+  isPending,
+  isDismissable = false,
+  portalContainer,
+  children,
+}) => {
   // 拡張サイズの場合はHeroUIのsizeを使わず、Modal.Dialogにmax-w-*を当てて上書きする
   const extraSizeClass = size && isExtraModalSize(size) ? EXTRA_MODAL_SIZES[size] : undefined
 
   return (
-    <Modal.Backdrop variant='blur' isOpen={state.isOpen} onOpenChange={state.setOpen} isDismissable={false}>
+    <Modal.Backdrop
+      variant='blur'
+      isOpen={state.isOpen}
+      onOpenChange={state.setOpen}
+      isDismissable={isDismissable && !isPending}
+      isKeyboardDismissDisabled={isPending}
+      UNSTABLE_portalContainer={portalContainer}
+    >
       <Modal.Container placement='top' size={extraSizeClass ? undefined : (size as ModalContainerProps['size'])}>
         <Modal.Dialog className={extraSizeClass}>
-          <form
-            /**
-             * Modal.Dialog(flex flex-col / max-h-full)と Modal.Body(min-h-0 flex-1 + overflow-y-auto)の間に
-             * 素のformが入るとBodyのflex-1が解決されず、背の高い内容がoverflow-clipで切れてしまう。
-             * form自体を縮むflexコンテナにしてHeroUIのscroll='inside'を機能させる
-             */
-            onSubmit={onSubmit}
-            className='flex min-h-0 flex-col'
-          >
-            {!hiddenCloseButton && <Modal.CloseTrigger />}
-            <Modal.Header>
-              <Modal.Heading className='flex items-center gap-2'>
-                {title.icon}
-                {title.text}
-              </Modal.Heading>
-            </Modal.Header>
-            <Modal.Body className='pt-2'>
-              <SmartProvider isSmartForm>{children}</SmartProvider>
-            </Modal.Body>
-            <Modal.Footer>
-              <SmartProvider isSmart>{footer}</SmartProvider>
-            </Modal.Footer>
-          </form>
+          {!hiddenCloseButton && <Modal.CloseTrigger isDisabled={isPending} />}
+          <Modal.Header>
+            <Modal.Heading className='flex items-center gap-2'>
+              {title.icon}
+              {title.text}
+            </Modal.Heading>
+          </Modal.Header>
+          {children}
         </Modal.Dialog>
       </Modal.Container>
     </Modal.Backdrop>
   )
 }
+
+export const FormModal: FC<
+  Omit<ModalFrameProps, 'portalContainer'> & {
+    children: ReactNode
+    onSubmit: (e?: BaseSyntheticEvent) => Promise<void>
+    footer: ReactNode
+  }
+> = ({ children, onSubmit, footer, ...frameProps }) => (
+  <ModalFrame {...frameProps}>
+    <form
+      /**
+       * Modal.Dialog(flex flex-col / max-h-full)と Modal.Body(min-h-0 flex-1 + overflow-y-auto)の間に
+       * 素のformが入るとBodyのflex-1が解決されず、背の高い内容がoverflow-clipで切れてしまう。
+       * form自体を縮むflexコンテナにしてHeroUIのscroll='inside'を機能させる
+       */
+      onSubmit={onSubmit}
+      className='flex min-h-0 flex-col'
+    >
+      <Modal.Body className='pt-2'>
+        <SmartProvider isSmartForm>{children}</SmartProvider>
+      </Modal.Body>
+      <Modal.Footer>
+        <SmartProvider isSmart>{footer}</SmartProvider>
+      </Modal.Footer>
+    </form>
+  </ModalFrame>
+)
+
+/**
+ * form を持たないモーダル。保存を onPress で行う画面や、別の form の中から開くダイアログ
+ * (submit が外側の form へ伝播してしまう)で使う。
+ */
+export const DialogModal: FC<
+  ModalFrameProps & {
+    children: ReactNode
+    /** 未指定(読み込み中など)のときはフッタを出さない */
+    footer?: ReactNode
+    bodyClassName?: string
+  }
+> = ({ children, footer, bodyClassName, ...frameProps }) => (
+  <ModalFrame {...frameProps}>
+    <Modal.Body className={cn('pt-2', bodyClassName)}>{children}</Modal.Body>
+    {footer && (
+      <Modal.Footer>
+        <SmartProvider isSmart>{footer}</SmartProvider>
+      </Modal.Footer>
+    )}
+  </ModalFrame>
+)
 
 export type ConfirmParam = {
   title: string
@@ -136,12 +175,12 @@ export type ConfirmParam = {
   autoClose?: boolean
   onlyOk?: boolean
 }
-type ConfirmModalParam = { uiText?: { ok?: string; cancel?: string; confirmed?: string } }
 export type ConfirmModalRef = {
   confirm: (param: ConfirmParam) => Promise<boolean>
   close: () => void
 }
-export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ uiText }, ref) => {
+export const ConfirmModal = forwardRef<ConfirmModalRef>((_, ref) => {
+  const uiText = useGeneralUiText()
   const [confirmParam, setConfirmParam] = useState<ConfirmParam>()
   const state = useOverlayState()
   const response = useRef<(value: boolean | PromiseLike<boolean>) => void>(undefined)
@@ -218,7 +257,7 @@ export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ ui
                     <Checkbox.Control className='size-5'>
                       <Checkbox.Indicator />
                     </Checkbox.Control>
-                    {uiText?.confirmed || 'Confirmed'}
+                    {uiText.confirmed}
                   </Checkbox.Content>
                 </Checkbox>
               )}
@@ -235,7 +274,7 @@ export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ ui
                   state.close()
                 }}
               >
-                {uiText?.cancel || 'Cancel'}
+                {uiText.cancel}
               </MultiButton>
             )}
             <MultiButton
@@ -252,7 +291,7 @@ export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ ui
                 }
               }}
             >
-              {uiText?.ok || 'OK'}
+              {uiText.ok}
             </MultiButton>
           </Modal.Footer>
         </Modal.Dialog>
@@ -274,11 +313,11 @@ const ConfirmModalContext = createContext<{
 export const useConfirmModal = () => {
   return useContext(ConfirmModalContext)
 }
-export const ConfirmModalProvider: FC<{ children: ReactNode } & ConfirmModalParam> = ({ children, uiText }) => {
+export const ConfirmModalProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const refModal = useRef<ConfirmModalRef>(defaultConfirmModalRef)
   return (
     <>
-      <ConfirmModal ref={refModal} uiText={uiText} />
+      <ConfirmModal ref={refModal} />
       <ConfirmModalContext.Provider
         value={{
           confirmModal: () => refModal.current,

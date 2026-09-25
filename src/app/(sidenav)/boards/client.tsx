@@ -64,7 +64,7 @@ export const BoardsClient: FC = () => {
       {!list.isLoading && list.total === 0 && <div className='px-1 text-sm text-gray-500'>{t('msg_no_boards')}</div>}
 
       <MultiTable
-        ariaLabel='board list'
+        aria-label='board list'
         pagingList={list}
         columns={[
           { id: 'name', name: t('name'), isRowHeader: true, allowsSorting: true, minWidth: 140, defaultWidth: '2fr' },
