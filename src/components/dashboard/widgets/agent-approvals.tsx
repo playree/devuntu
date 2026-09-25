@@ -43,7 +43,7 @@ export const AgentApprovalsWidget: WidgetFC = ({ id, editable }) => {
                 <span className='truncate text-sm'>{ticket.title}</span>
               </div>
               <div className='flex min-w-0 items-center gap-2'>
-                <PriorityChip priority={ticket.priority} />
+                <PriorityChip value={ticket.priority} />
                 <span className='truncate text-xs text-gray-500'>{ticket.agentName}</span>
               </div>
             </RowLink>

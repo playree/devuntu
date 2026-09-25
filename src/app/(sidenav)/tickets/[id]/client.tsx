@@ -389,7 +389,7 @@ export const TicketDetailClient: FC<{
               />
             ) : (
               <MetaText label={t('status')}>
-                <StatusChip status={status} />
+                <StatusChip value={status} />
               </MetaText>
             )}
           </div>
@@ -409,7 +409,7 @@ export const TicketDetailClient: FC<{
               />
             ) : (
               <MetaText label={t('priority')}>
-                <PriorityChip priority={priority} />
+                <PriorityChip value={priority} />
               </MetaText>
             )}
           </div>
@@ -475,7 +475,7 @@ export const TicketDetailClient: FC<{
               </div>
               <div className='col-span-6 md:col-span-3'>
                 <MetaText label={t('agent_state')}>
-                  <AgentStateChip state={ticket.agentState} />
+                  <AgentStateChip value={ticket.agentState ?? 'queued'} />
                 </MetaText>
               </div>
               <div className='col-span-12 md:col-span-6'>

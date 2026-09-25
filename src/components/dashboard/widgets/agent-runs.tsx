@@ -32,7 +32,7 @@ export const AgentRunsWidget: WidgetFC = ({ id, editable }) => {
                 <span className='shrink-0 text-xs text-gray-500'>{t(AGENT_RUN_ACTION_LOCALE[run.action])}</span>
               </div>
               <div className='flex items-center gap-2'>
-                <AgentRunStatusChip status={run.status} />
+                <AgentRunStatusChip value={run.status} />
                 <span className='font-mono text-xs text-gray-500'>{dayformat(run.startedAt, 'tz-minute', tz)}</span>
               </div>
             </RowLink>

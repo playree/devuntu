@@ -30,7 +30,7 @@ export const CommandRunsWidget: WidgetFC = ({ id, editable }) => {
                 <span className='shrink-0 text-xs text-gray-500'>{run.targetLabel}</span>
               </div>
               <div className='flex items-center gap-2'>
-                <CommandStatusChip status={run.status} />
+                <CommandStatusChip value={run.status} />
                 <span className='font-mono text-xs text-gray-500'>
                   {dayformat(run.finishedAt ?? run.queuedAt, 'tz-minute', tz)}
                 </span>

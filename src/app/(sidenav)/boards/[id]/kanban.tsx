@@ -200,7 +200,7 @@ const KanbanCardView: FC<{
           </p>
 
           <div className='flex flex-wrap items-center gap-1'>
-            <PriorityChip priority={card.priority} />
+            <PriorityChip value={card.priority} />
             {card.assigneeName && (
               <span className='flex min-w-0 items-center gap-0.5 text-xs text-gray-500'>
                 <UserAvatar
@@ -277,7 +277,7 @@ export const KanbanLane: FC<{
       )}
     >
       <legend className='flex items-center gap-1 px-2'>
-        <StatusChip status={status} />
+        <StatusChip value={status} />
         <span className='font-mono text-xs text-gray-500'>{cards.length}</span>
         {status !== 'done' && (
           <MultiButton // 完了レーンは新規チケットの起点にならないため追加ボタンを出さない

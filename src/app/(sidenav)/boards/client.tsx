@@ -97,7 +97,7 @@ export const BoardsClient: FC = () => {
             </Table.Cell>
             <Table.Cell className='truncate'>{item.description}</Table.Cell>
             <Table.Cell>
-              <RoleChip role={item.role} />
+              <RoleChip value={item.role} />
             </Table.Cell>
             <Table.Cell className='font-mono text-xs'>
               {item.openCount} / {item.ticketCount}

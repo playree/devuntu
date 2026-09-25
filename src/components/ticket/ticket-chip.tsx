@@ -1,21 +1,19 @@
 'use client'
 
+import { createEnumChip, type EnumChipMap } from '@/components/enum-chip'
 import type { AgentTaskState, BoardKind, TagColor, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
-import { AGENT_TASK_MODE_LOCALE, AGENT_TASK_MODES, AGENT_TASK_STATE_LOCALE, AGENT_TASK_STATES } from '@/lib/agent/agent'
+import { AGENT_TASK_MODE_LOCALE, AGENT_TASK_MODES, AGENT_TASK_STATE_LOCALE } from '@/lib/agent/agent'
 import { TICKET_PRIORITY_LOCALE, TICKET_STATUS_LOCALE } from '@/lib/board/task'
-import { LocaleItemBase } from '@/locale'
 import { useLocale } from '@/locale/client'
 import { Chip, ChipProps, cn } from '@heroui/react'
 import { FC, ReactNode, useCallback } from 'react'
 import { tv } from 'tailwind-variants'
 
-type ChipColor = ChipProps['color']
-
 /**
  * ステータスのロケールキーと Chip の表示色。
  * color は Chip 用の HeroUI セマンティック名なので bg-* には使えない(配色は statusStyles を参照)。
  */
-const STATUS_STYLE: Record<TicketStatus, { item: LocaleItemBase; color: ChipColor }> = {
+const STATUS_STYLE: EnumChipMap<TicketStatus> = {
   backlog: { item: TICKET_STATUS_LOCALE.backlog, color: 'default' },
   todo: { item: TICKET_STATUS_LOCALE.todo, color: 'accent' },
   doing: { item: TICKET_STATUS_LOCALE.doing, color: 'warning' },
@@ -51,7 +49,7 @@ export const statusBgClass = (status: TicketStatus, className?: string) => statu
  * color は Chip 用の HeroUI セマンティック名なので bg-* には使えない(配色は priorityStyles を参照)。
  * キーの並びは選択肢(useTicketOptions)の表示順になるので、優先度の高い順に保つこと。
  */
-const PRIORITY_META: Record<TicketPriority, { item: LocaleItemBase; color: ChipColor }> = {
+const PRIORITY_META: EnumChipMap<TicketPriority> = {
   urgent: { item: TICKET_PRIORITY_LOCALE.urgent, color: 'danger' },
   high: { item: TICKET_PRIORITY_LOCALE.high, color: 'warning' },
   medium: { item: TICKET_PRIORITY_LOCALE.medium, color: 'accent' },
@@ -102,23 +100,11 @@ const priorityStyles = tv({
   },
 })
 
-export const StatusChip: FC<{ status: TicketStatus; size?: ChipProps['size'] }> = ({ status, size = 'sm' }) => {
-  const { t } = useLocale()
-  const { item, color } = STATUS_STYLE[status]
-  return (
-    <Chip // 幅の狭いセルに置かれてもラベルが途中で改行されないようにする
-      variant='soft'
-      color={color}
-      size={size}
-      className='whitespace-nowrap'
-    >
-      <Chip.Label>{t(item)}</Chip.Label>
-    </Chip>
-  )
-}
+const statusChip = createEnumChip(STATUS_STYLE)
+export const StatusChip = statusChip.EnumChip
 
 /** `planned`(返信待ち)は利用者の操作を促す状態なので、完了 / 失敗とは別の色にする */
-const AGENT_STATE_STYLE: Record<AgentTaskState, { item: LocaleItemBase; color: ChipColor }> = {
+const AGENT_STATE_STYLE: EnumChipMap<AgentTaskState> = {
   queued: { item: AGENT_TASK_STATE_LOCALE.queued, color: 'default' },
   running: { item: AGENT_TASK_STATE_LOCALE.running, color: 'accent' },
   planned: { item: AGENT_TASK_STATE_LOCALE.planned, color: 'warning' },
@@ -127,29 +113,12 @@ const AGENT_STATE_STYLE: Record<AgentTaskState, { item: LocaleItemBase; color: C
   skipped: { item: AGENT_TASK_STATE_LOCALE.skipped, color: 'default' },
 }
 
-/** state が null のチケットは queued 扱い(agent.ts の agentStateWhere と同じ規約) */
-export const AgentStateChip: FC<{ state: AgentTaskState | null; size?: ChipProps['size'] }> = ({
-  state,
-  size = 'sm',
-}) => {
-  const { t } = useLocale()
-  const { item, color } = AGENT_STATE_STYLE[state ?? 'queued']
-  return (
-    <Chip variant='soft' color={color} size={size} className='whitespace-nowrap'>
-      <Chip.Label>{t(item)}</Chip.Label>
-    </Chip>
-  )
-}
+const agentStateChip = createEnumChip(AGENT_STATE_STYLE)
+/** 処理状態の Chip。state が null のチケットは queued 扱い(agent.ts の agentStateWhere と同じ規約)なので、呼び出し側で寄せる */
+export const AgentStateChip = agentStateChip.EnumChip
 
-export const PriorityChip: FC<{ priority: TicketPriority; size?: ChipProps['size'] }> = ({ priority, size = 'sm' }) => {
-  const { t } = useLocale()
-  const { item, color } = PRIORITY_META[priority]
-  return (
-    <Chip variant='soft' color={color} size={size}>
-      <Chip.Label>{t(item)}</Chip.Label>
-    </Chip>
-  )
-}
+const priorityChip = createEnumChip(PRIORITY_META)
+export const PriorityChip = priorityChip.EnumChip
 
 /**
  * 優先度を色だけで示す 1px の水平線 2 本。カード上端の行で ID の右に並べ、残り幅に敷く想定。
@@ -267,17 +236,10 @@ export const useBoardName = () => {
 }
 
 /** ステータス / 優先度の選択肢(Record<id, label>)。SingleSelectCtrl へ渡す */
-export const useTicketOptions = () => {
-  const { t } = useLocale()
-  return {
-    statusOptions: Object.fromEntries(
-      (Object.keys(STATUS_STYLE) as TicketStatus[]).map((status) => [status, t(STATUS_STYLE[status].item)]),
-    ),
-    priorityOptions: Object.fromEntries(
-      (Object.keys(PRIORITY_META) as TicketPriority[]).map((priority) => [priority, t(PRIORITY_META[priority].item)]),
-    ),
-  }
-}
+export const useTicketOptions = () => ({
+  statusOptions: statusChip.useOptions(),
+  priorityOptions: priorityChip.useOptions(),
+})
 
 /** 「エージェントに任せない」を表すセンチネル。Select は null を選択肢に持てないので値で表す */
 export const AGENT_MODE_NONE = 'none'
@@ -292,10 +254,4 @@ export const useAgentModeOptions = (): Record<string, string> => {
 }
 
 /** 処理状態の選択肢(Record<id, label>)。AgentStateChip と同じ文言を絞り込みへ渡す */
-export const useAgentStateOptions = (): Record<AgentTaskState, string> => {
-  const { t } = useLocale()
-  return Object.fromEntries(AGENT_TASK_STATES.map((state) => [state, t(AGENT_STATE_STYLE[state].item)])) as Record<
-    AgentTaskState,
-    string
-  >
-}
+export const useAgentStateOptions = agentStateChip.useOptions

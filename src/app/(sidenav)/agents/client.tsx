@@ -218,13 +218,13 @@ export const AgentsClient: FC = () => {
                   </div>
                 </Table.Cell>
                 <Table.Cell>
-                  <StatusChip status={item.status} />
+                  <StatusChip value={item.status} />
                 </Table.Cell>
                 <Table.Cell>
-                  <PriorityChip priority={item.priority} />
+                  <PriorityChip value={item.priority} />
                 </Table.Cell>
                 <Table.Cell>
-                  <AgentStateChip state={item.agentState} />
+                  <AgentStateChip value={item.agentState ?? 'queued'} />
                 </Table.Cell>
                 <Table.Cell {...preventParentSelection}>
                   <SingleSelectField

@@ -78,7 +78,7 @@ export const TargetMembers: FC<{
             <Table.Cell className='truncate'>{item.name}</Table.Cell>
             <Table.Cell className='truncate font-mono text-xs'>{item.email}</Table.Cell>
             <Table.Cell /* グループ経由のみのメンバーは直接ロールを持たない */>
-              {item.role ? <RoleChip role={item.role} /> : '-'}
+              {item.role ? <RoleChip value={item.role} /> : '-'}
             </Table.Cell>
             <Table.Cell>{item.via === 'group' ? t('group') : t('direct')}</Table.Cell>
             <ActionCell

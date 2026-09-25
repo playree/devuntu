@@ -1,5 +1,6 @@
 'use client'
 
+import { createEnumChip } from '@/components/enum-chip'
 import { PagingList } from '@/components/general/paging'
 import { MultiTable, TruncatedCell } from '@/components/general/table'
 import type { AgentRunStatus } from '@/generated/prisma/enums'
@@ -8,26 +9,17 @@ import type { AgentRunSummary } from '@/lib/agent/agent-runner-config'
 import { dayformat } from '@/lib/day'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
-import { Chip, Table } from '@heroui/react'
+import { Table } from '@heroui/react'
 import Link from 'next/link'
 import { FC } from 'react'
 
 /** 結果の配色。実行中は結果が確定していないので既定色のまま出す */
-const STATUS_COLOR = {
-  running: 'default',
-  succeeded: 'success',
-  failed: 'danger',
-  skipped: 'warning',
-} as const satisfies Record<AgentRunStatus, string>
-
-export const AgentRunStatusChip: FC<{ status: AgentRunStatus }> = ({ status }) => {
-  const { t } = useLocale()
-  return (
-    <Chip color={STATUS_COLOR[status]} variant='soft' className='whitespace-nowrap'>
-      {t(AGENT_RUN_STATUS_LOCALE[status])}
-    </Chip>
-  )
-}
+export const AgentRunStatusChip = createEnumChip<AgentRunStatus>({
+  running: { item: AGENT_RUN_STATUS_LOCALE.running, color: 'default' },
+  succeeded: { item: AGENT_RUN_STATUS_LOCALE.succeeded, color: 'success' },
+  failed: { item: AGENT_RUN_STATUS_LOCALE.failed, color: 'danger' },
+  skipped: { item: AGENT_RUN_STATUS_LOCALE.skipped, color: 'warning' },
+}).EnumChip
 
 /**
  * 自動運用の実行履歴。
@@ -70,7 +62,7 @@ export const AgentRunHistory: FC<{ pagingList: PagingList<AgentRunSummary> }> = 
           </Table.Cell>
           <Table.Cell className='whitespace-nowrap'>{t(AGENT_RUN_ACTION_LOCALE[item.action])}</Table.Cell>
           <Table.Cell>
-            <AgentRunStatusChip status={item.status} />
+            <AgentRunStatusChip value={item.status} />
           </Table.Cell>
           <Table.Cell className='font-mono text-xs'>{dayformat(item.startedAt, 'tz-simple', tz)}</Table.Cell>
           <Table.Cell className='font-mono text-xs'>{agentRunDuration(item.startedAt, item.finishedAt)}</Table.Cell>

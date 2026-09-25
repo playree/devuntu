@@ -1,6 +1,7 @@
 'use client'
 
 import { ActionCell } from '@/components/action-cell'
+import { createEnumChip } from '@/components/enum-chip'
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
 import { useModalState } from '@/components/general/modal'
@@ -20,41 +21,19 @@ import { AddModal } from './modals'
 import { type AgentTokenStatus, getAgents, getGroupOptions } from './server'
 
 /** エージェントは1本しかトークンを持たないので、件数ではなく状態を出す */
-const TokenStatusChip: FC<{ status: AgentTokenStatus }> = ({ status }) => {
-  const { t } = useLocale()
-  const { color, label } = {
-    none: { color: 'default', label: t('not_issued') },
-    active: { color: 'success', label: t('token_active') },
-    expired: { color: 'warning', label: t('token_expired') },
-  }[status] as { color: 'default' | 'success' | 'warning'; label: string }
-
-  return (
-    <Chip color={color} variant='soft'>
-      {label}
-    </Chip>
-  )
-}
+const TokenStatusChip = createEnumChip<AgentTokenStatus>({
+  none: { color: 'default', item: 'not_issued' },
+  active: { color: 'success', item: 'token_active' },
+  expired: { color: 'warning', item: 'token_expired' },
+}).EnumChip
 
 /** ランナーの稼働状況。未設定 / 停止中 は設定の問題、オフラインはランナー側の問題を表す */
-const RunnerStatusChip: FC<{ status: AgentRunnerStatus }> = ({ status }) => {
-  const { t } = useLocale()
-  const { color, label } = {
-    none: { color: 'default', label: t('agent_runner_none') },
-    disabled: { color: 'default', label: t('agent_runner_disabled') },
-    online: { color: 'success', label: t('agent_runner_online') },
-    offline: { color: 'warning', label: t('agent_runner_offline') },
-  }[status] as { color: 'default' | 'success' | 'warning'; label: string }
-
-  return (
-    <Chip // 「オフライン」が列幅で折り返さないようにする
-      color={color}
-      variant='soft'
-      className='whitespace-nowrap'
-    >
-      {label}
-    </Chip>
-  )
-}
+const RunnerStatusChip = createEnumChip<AgentRunnerStatus>({
+  none: { color: 'default', item: 'agent_runner_none' },
+  disabled: { color: 'default', item: 'agent_runner_disabled' },
+  online: { color: 'success', item: 'agent_runner_online' },
+  offline: { color: 'warning', item: 'agent_runner_offline' },
+}).EnumChip
 
 export const AdminAgentsClient: FC = () => {
   const { t } = useLocale()
@@ -109,10 +88,10 @@ export const AdminAgentsClient: FC = () => {
               </span>
             </Table.Cell>
             <Table.Cell>
-              <TokenStatusChip status={item.tokenStatus} />
+              <TokenStatusChip value={item.tokenStatus} />
             </Table.Cell>
             <Table.Cell>
-              <RunnerStatusChip status={item.runnerStatus} />
+              <RunnerStatusChip value={item.runnerStatus} />
             </Table.Cell>
             <Table.Cell className='font-mono text-xs'>
               {item.lastUsedAt ? dayformat(item.lastUsedAt, 'tz-minute', tz) : ''}

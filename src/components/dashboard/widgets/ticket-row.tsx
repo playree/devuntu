@@ -70,7 +70,7 @@ export const TicketRow: FC<{ ticket: WidgetTicket; tz: string; editable: boolean
       <span className='truncate text-sm'>{ticket.title}</span>
     </div>
     <div className='flex items-center gap-2'>
-      <StatusChip status={ticket.status} />
+      <StatusChip value={ticket.status} />
       <TicketDueDate dueDate={ticket.dueDate} tz={tz} />
     </div>
   </RowLink>

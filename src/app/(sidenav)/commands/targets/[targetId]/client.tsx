@@ -138,7 +138,7 @@ export const CommandTargetClient: FC<{ targetKey: string }> = ({ targetKey }) =>
         <FlexRow className='flex-wrap items-center'>
           <span className='text-foreground-500 font-mono text-xs'>{data.target.id}</span>
           <span className='grow' />
-          <RoleChip role={data.role} />
+          <RoleChip value={data.role} />
           {/* 編集の導線が出ない理由(editable か書き込み可否)が画面から分かるようにする */}
           {data.target.editable && (
             <Chip variant='soft' className='whitespace-nowrap'>
