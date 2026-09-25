@@ -1,4 +1,4 @@
-import { ASSIGNEE_NONE } from '@/lib/board/task'
+import { ASSIGNEE_NONE } from '@/lib/board/ticket-search'
 import { AGENT_MCP_SERVER_NAME, MCP_SERVER_NAME } from '@/lib/mcp/mcp'
 import { registerAgentSetupTool, registerAgentTools } from '@/lib/mcp/mcp-agent'
 import { getBoardForMcp, listBoardsForMcp } from '@/lib/mcp/mcp-board'

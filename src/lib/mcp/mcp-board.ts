@@ -8,9 +8,11 @@
  * 権限判定は画面と同じ関数(assertBoardAccess / listAccessibleBoards)へそのまま委ねること。
  */
 
-import { assertBoardAccess, countTicketsByBoard, getBoardMemberUsers, listAccessibleBoards } from '@/lib/board/board'
+import { countTicketsByBoard, listAccessibleBoards } from '@/lib/board/board'
+import { assertBoardAccess } from '@/lib/board/board-access'
+import { getBoardMemberUsers } from '@/lib/board/board-member'
 import { listBoardTags } from '@/lib/board/tag'
-import { BOARD_KEY_PATTERN } from '@/lib/board/task'
+import { BOARD_KEY_PATTERN } from '@/lib/board/ticket-id'
 import { errInvalidOperation } from '@/lib/error'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import { prisma } from '@/lib/prisma'

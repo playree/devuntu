@@ -6,7 +6,7 @@
  */
 
 import { isAgentApprover } from '@/lib/agent/agent-approver'
-import { canViewAttachment, findTicketIdByDisplayId } from '@/lib/board/board'
+import { canViewAttachment, findTicketIdByDisplayId } from '@/lib/board/board-access'
 import { prisma } from '@/lib/prisma'
 import { toUploadUrl } from '@/lib/storage/upload'
 import { beforeEach, describe, expect, it, vi } from 'vitest'

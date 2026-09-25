@@ -8,7 +8,8 @@
 
 import { Prisma } from '@/generated/prisma/client'
 import type { AgentRunAction, AgentRunStatus, AgentTaskMode, AgentTaskState } from '@/generated/prisma/enums'
-import { OPEN_TICKET_STATUSES, ticketDisplayId } from '../board/task'
+import { OPEN_TICKET_STATUSES } from '../board/ticket-enum'
+import { ticketDisplayId } from '../board/ticket-id'
 import { addDaysDateOnly, minToHHmm, nowDate, toZone, zonedMinutes } from '../day'
 import { envu } from '../env-util'
 import { logger } from '../logger'

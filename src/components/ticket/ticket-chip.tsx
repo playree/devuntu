@@ -3,7 +3,7 @@
 import { createEnumChip, type EnumChipMap } from '@/components/enum-chip'
 import type { AgentTaskState, BoardKind, TagColor, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
 import { AGENT_TASK_MODE_LOCALE, AGENT_TASK_MODES, AGENT_TASK_STATE_LOCALE } from '@/lib/agent/agent'
-import { TICKET_PRIORITY_LOCALE, TICKET_STATUS_LOCALE } from '@/lib/board/task'
+import { TICKET_PRIORITY_LOCALE, TICKET_STATUS_LOCALE } from '@/lib/board/ticket-enum'
 import { useLocale } from '@/locale/client'
 import { Chip, ChipProps, cn } from '@heroui/react'
 import { FC, ReactNode, useCallback } from 'react'

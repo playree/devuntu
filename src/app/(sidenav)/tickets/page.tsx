@@ -1,4 +1,4 @@
-import { isTicketStatus } from '@/lib/board/task'
+import { isTicketStatus } from '@/lib/board/ticket-enum'
 import { scTicketSearch } from '@/lib/schema/schema'
 import { en } from '@/locale/lang-en'
 import { type Metadata } from 'next'

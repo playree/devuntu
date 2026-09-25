@@ -2,7 +2,7 @@
  * タグの参照・更新(サーバー専用)
  *
  * prisma に依存するため、クライアントからは import しないこと。
- * (クライアントからも使える純粋関数は `task.ts` を参照)
+ * (クライアントからも使える純粋関数は `tag-rule.ts` を参照)
  *
  * タグは常にボードに属する(プライベートもプライベートボードに属する)ため、
  * スコープの分岐は無い。ボードの認可は呼び出し側が `assertBoardAccess` で通すこと。
@@ -12,7 +12,7 @@ import type { Prisma } from '@/generated/prisma/client'
 import type { TagColor } from '@/generated/prisma/enums'
 import { errClient, errInvalidOperation } from '../error'
 import { isUniqueViolation, prisma } from '../prisma'
-import { diffTagIds, DUPLICATED_TAG_NAME } from './task'
+import { diffTagIds, DUPLICATED_TAG_NAME } from './tag-rule'
 
 type Db = Prisma.TransactionClient | typeof prisma
 

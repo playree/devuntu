@@ -7,14 +7,10 @@ import { MultiTagField } from '@/components/general/tag-group'
 import { TagNameSelectField, TagSelectOption } from '@/components/ticket/tag-select'
 import { useTicketOptions } from '@/components/ticket/ticket-chip'
 import { UserSelectField, UserSelectOption } from '@/components/user-select'
-import {
-  ASSIGNEE_NONE,
-  KANBAN_DONE_DAYS_OPTIONS,
-  KANBAN_DONE_VISIBLE_DAYS,
-  KanbanFilter,
-  MAX_TICKET_TAGS,
-  TICKET_PRIORITIES,
-} from '@/lib/board/task'
+import { KANBAN_DONE_DAYS_OPTIONS, KANBAN_DONE_VISIBLE_DAYS, KanbanFilter } from '@/lib/board/kanban'
+import { MAX_TICKET_TAGS } from '@/lib/board/tag-rule'
+import { TICKET_PRIORITIES } from '@/lib/board/ticket-enum'
+import { ASSIGNEE_NONE } from '@/lib/board/ticket-search'
 import { useLocale } from '@/locale/client'
 import { FC } from 'react'
 

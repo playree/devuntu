@@ -5,13 +5,15 @@
  * 今はチケットを閲覧できない作成者へは送らない。
  */
 
-import { getTicketAccess } from '@/lib/board/board'
+import { getTicketAccess } from '@/lib/board/board-access'
 import type { NotifyPayload } from '@/lib/notify/notify-payload'
 import { resolveNotifyTargets } from '@/lib/notify/notify-recipient'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/board/board', () => ({ getTicketAccess: vi.fn() }))
+vi.mock('@/lib/board/board-access', () => ({
+  getTicketAccess: vi.fn(),
+}))
 vi.mock('@/lib/notify/notify-board-setting', () => ({ getBoardNotifyChannels: vi.fn(async () => []) }))
 vi.mock('@/lib/prisma', () => ({ prisma: { ticket: { findUnique: vi.fn() } } }))
 

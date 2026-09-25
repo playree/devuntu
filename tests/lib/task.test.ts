@@ -8,26 +8,14 @@
 import type { TicketStatus } from '@/generated/prisma/enums'
 import {
   applyLaneMove,
-  ASSIGNEE_NONE,
-  buildTicketWhere,
-  canApplyAssignments,
-  canMcpDeleteTicket,
-  canMcpUpdateTicket,
   cardDropId,
-  commentAnchorId,
   countLaneMap,
   defaultKanbanFilter,
   emptyLaneMap,
-  evaluateTicketAccess,
-  extractMentionEmails,
   filterLaneMap,
-  filterMentionCandidates,
-  findMentions,
-  formatMentionSource,
   groupByLane,
   insertAt,
   isKanbanFilterActive,
-  isReservedBoardKey,
   KANBAN_DONE_DAYS_OPTIONS,
   KANBAN_DONE_VISIBLE_DAYS,
   kanbanDoneSince,
@@ -35,33 +23,53 @@ import {
   kanbanTicketWhere,
   laneDropId,
   matchesKanbanFilter,
+  parseDropTarget,
+  reindexLane,
+  type KanbanFilterCard,
+  type LaneMap,
+} from '@/lib/board/kanban'
+import {
+  extractMentionEmails,
+  filterMentionCandidates,
+  findMentions,
+  formatMentionSource,
   matchMentionTrigger,
   MENTION_CANDIDATE_LIMIT,
   MENTION_EMAIL_MAX,
-  nextOrder,
-  nextSequentialKey,
   normalizeMentionText,
-  parseDropTarget,
+  resolveMentionUserIds,
+  stripCodeSpans,
+} from '@/lib/board/mention'
+import { nextOrder } from '@/lib/board/tag-rule'
+import { TICKET_STATUSES } from '@/lib/board/ticket-enum'
+import {
+  commentAnchorId,
+  isReservedBoardKey,
+  nextSequentialKey,
   parseTicketDisplayId,
   parseTicketNumber,
   parseTicketUrl,
-  reindexLane,
+  ticketDisplayId,
+  ticketShortPath,
+} from '@/lib/board/ticket-id'
+import {
+  canApplyAssignments,
+  canMcpDeleteTicket,
+  canMcpUpdateTicket,
+  evaluateTicketAccess,
   resolveBoardRole,
-  resolveMentionUserIds,
+  type BoardRole,
+} from '@/lib/board/ticket-permission'
+import {
+  ASSIGNEE_NONE,
+  buildTicketWhere,
   splitKeywords,
-  stripCodeSpans,
   tagNamesWhere,
   TICKET_SORT_COLUMNS,
-  TICKET_STATUSES,
-  ticketDisplayId,
   ticketListOrderBy,
   ticketScopeWhere,
-  ticketShortPath,
-  type BoardRole,
-  type KanbanFilterCard,
-  type LaneMap,
   type TicketSearchParams,
-} from '@/lib/board/task'
+} from '@/lib/board/ticket-search'
 import { describe, expect, it } from 'vitest'
 
 /* -------------------------------------------------------------------------------------------------

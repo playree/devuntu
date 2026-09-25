@@ -4,7 +4,7 @@
  * `src/proxy.ts` の matcher は Server Action(next-action ヘッダ)と `/api/**` を除外しているため、
  * パス単位の制御ではこの機能を守れない。実行にも一覧にも定義の編集にも、必ずここを通す。
  *
- * 判定は `assertBoardAccess`(`src/lib/board/board.ts`)と同じ形にしてある。違いは 2 点:
+ * 判定は `assertBoardAccess`(`src/lib/board/board-access.ts`)と同じ形にしてある。違いは 2 点:
  * - **管理者特権が無い。** アサインされていないターゲットは管理者でも実行も編集もできない
  *   (管理者の特権はアサインの操作だけで、それは Server Action 側が `isAdminActor` で見る)
  * - ターゲットの実体は YAML にあり DB に親行が無いので、1 クエリでは解決できない
@@ -13,7 +13,7 @@
  * 残っていても、この経路に載らない限り権限を持てない(fail closed)。
  */
 
-import { type Actor } from '../board/board'
+import { type Actor } from '../board/board-access'
 import { envu } from '../env-util'
 import { errInvalidOperation } from '../error'
 import { prisma } from '../prisma'

@@ -5,7 +5,7 @@
  * ストレージとDBはモックし、添付先ボードの決め方・入力の正規化・認可の落とし方を検証する。
  */
 
-import { assertBoardAccess, assertTicketAccess, canViewAttachment } from '@/lib/board/board'
+import { assertBoardAccess, assertTicketAccess, canViewAttachment } from '@/lib/board/board-access'
 import { errInvalidOperation } from '@/lib/error'
 import { registerImageTools } from '@/lib/mcp/mcp-image'
 import { resolveTicketId } from '@/lib/mcp/mcp-ticket'
@@ -33,7 +33,7 @@ vi.mock('@/lib/prisma', async (importOriginal) => ({
   ),
 }))
 
-vi.mock('@/lib/board/board', () => ({
+vi.mock('@/lib/board/board-access', () => ({
   assertBoardAccess: vi.fn(),
   assertTicketAccess: vi.fn(),
   canViewAttachment: vi.fn(),

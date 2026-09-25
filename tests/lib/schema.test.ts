@@ -4,7 +4,7 @@
  * 既定値・必須の境界だけを対象にする(項目ごとの文字数制限は UI の constraintSchema が担う)。
  */
 
-import { ASSIGNEE_NONE } from '@/lib/board/task'
+import { ASSIGNEE_NONE } from '@/lib/board/ticket-search'
 import { DM_NOTIFY_EVENTS } from '@/lib/notify/notify'
 import {
   scCreateTag,

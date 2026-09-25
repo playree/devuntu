@@ -10,15 +10,9 @@
  */
 
 import { t } from '@/locale/server'
-import { findTicketIdByDisplayId, getTicketAccess } from '../board/board'
-import {
-  parseTicketUrl,
-  TICKET_PRIORITY_LOCALE,
-  TICKET_STATUS_LOCALE,
-  ticketDisplayId,
-  ticketShortPath,
-  type TicketUrlRef,
-} from '../board/task'
+import { findTicketIdByDisplayId, getTicketAccess } from '../board/board-access'
+import { TICKET_PRIORITY_LOCALE, TICKET_STATUS_LOCALE } from '../board/ticket-enum'
+import { parseTicketUrl, ticketDisplayId, ticketShortPath, type TicketUrlRef } from '../board/ticket-id'
 import { dayformat } from '../day'
 import { envu } from '../env-util'
 import { logger } from '../logger'

@@ -1,5 +1,5 @@
 import { getServerSession } from '@/lib/auth/auth'
-import { assertBoardAccess, type Actor } from '@/lib/board/board'
+import { assertBoardAccess, type Actor } from '@/lib/board/board-access'
 import { ClientError } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { consumeRateLimit } from '@/lib/rate-limit'

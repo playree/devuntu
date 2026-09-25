@@ -6,14 +6,9 @@
  * Server Action はセッションが要るため、Web 側は Action と同じ引数で共通関数を呼んで代用する。
  */
 
-import {
-  assertBoardAccess,
-  assertTicketAccess,
-  moveTicketToLane,
-  reassignContentAttachments,
-  type TicketAccess,
-} from '@/lib/board/board'
+import { assertBoardAccess, assertTicketAccess, type TicketAccess } from '@/lib/board/board-access'
 import { createTicket, deleteTicket, updateTicket, type UpdateTicketInput } from '@/lib/board/ticket-mutation'
+import { moveTicketToLane, reassignContentAttachments } from '@/lib/board/ticket-write'
 import { ClientError, errInvalidOperation } from '@/lib/error'
 import { createTicketForMcp, deleteTicketForMcp, updateTicketForMcp } from '@/lib/mcp/mcp-ticket'
 import { enqueueTicketUpdated } from '@/lib/notify/notify-trigger'
@@ -34,15 +29,21 @@ vi.mock('@/lib/prisma', () => ({
   prisma: { $transaction: vi.fn((cb: (tx: unknown) => unknown) => cb(fakeTx)) },
 }))
 
-vi.mock('@/lib/board/board', () => ({
+vi.mock('@/lib/board/board-access', () => ({
   assertBoardAccess: vi.fn(),
-  assertBoardAssignee: vi.fn(),
-  assertReplyTarget: vi.fn(),
   assertTicketAccess: vi.fn(),
   findTicketIdByDisplayId: vi.fn(),
   getAccessibleBoardIds: vi.fn(),
+}))
+
+vi.mock('@/lib/board/board-member', () => ({
+  assertBoardAssignee: vi.fn(),
   getBoardMentionCandidates: vi.fn(async () => []),
   getTicketMentionCandidates: vi.fn(async () => []),
+}))
+
+vi.mock('@/lib/board/ticket-write', () => ({
+  assertReplyTarget: vi.fn(),
   moveTicketToLane: vi.fn(),
   nextTicketNumber: vi.fn(async () => 7),
   reassignContentAttachments: vi.fn(),

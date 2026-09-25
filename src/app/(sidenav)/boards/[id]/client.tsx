@@ -21,7 +21,6 @@ import { parseAction, useActionData } from '@/lib/action/action-client'
 import {
   applyLaneMove,
   countLaneMap,
-  dedupeTagOptionsByName,
   DropTarget,
   emptyLaneMap,
   filterLaneMap,
@@ -29,7 +28,8 @@ import {
   LaneMap,
   MAX_KANBAN_CARDS,
   parseDropTarget,
-} from '@/lib/board/task'
+} from '@/lib/board/kanban'
+import { dedupeTagOptionsByName } from '@/lib/board/tag-rule'
 import { nowDate } from '@/lib/day'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'

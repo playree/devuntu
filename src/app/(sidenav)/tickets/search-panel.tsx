@@ -8,15 +8,10 @@ import { TagNameSelectField } from '@/components/ticket/tag-select'
 import { useTicketOptions } from '@/components/ticket/ticket-chip'
 import { UserSelectField, UserSelectOption } from '@/components/user-select'
 import type { BoardKind, TagColor } from '@/generated/prisma/enums'
-import type { AssigneeCandidate } from '@/lib/board/board'
-import {
-  ASSIGNEE_NONE,
-  dedupeTagOptionsByName,
-  MAX_TICKET_TAGS,
-  OPEN_TICKET_STATUSES,
-  TICKET_PRIORITIES,
-  TICKET_STATUSES,
-} from '@/lib/board/task'
+import type { AssigneeCandidate } from '@/lib/board/board-member'
+import { dedupeTagOptionsByName, MAX_TICKET_TAGS } from '@/lib/board/tag-rule'
+import { OPEN_TICKET_STATUSES, TICKET_PRIORITIES, TICKET_STATUSES } from '@/lib/board/ticket-enum'
+import { ASSIGNEE_NONE } from '@/lib/board/ticket-search'
 import { TicketSearch } from '@/lib/schema/schema'
 import { useLocale } from '@/locale/client'
 import { FC, useState } from 'react'

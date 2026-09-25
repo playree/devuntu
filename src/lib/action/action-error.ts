@@ -6,7 +6,8 @@
 import type { LocaleItemBase } from '@/locale'
 import { DUPLICATED_AGENT_HANDLE } from '../agent/agent'
 import { SESSION_NOT_FRESH } from '../auth/auth-config'
-import { DUPLICATED_BOARD_KEY, DUPLICATED_TAG_NAME } from '../board/task'
+import { DUPLICATED_TAG_NAME } from '../board/tag-rule'
+import { DUPLICATED_BOARD_KEY } from '../board/ticket-id'
 import {
   COMMAND_ALREADY_RUNNING,
   COMMAND_DEF_CONFLICT,

@@ -2,21 +2,19 @@
 
 import type { Prisma } from '@/generated/prisma/client'
 import { safeAuthAction } from '@/lib/action/action-server'
+import { countTicketsByBoard } from '@/lib/board/board'
+import { assertBoardAccess, assertTeamBoard, isAdminActor, type Actor } from '@/lib/board/board-access'
+import { reserveBoardKey, rethrowDuplicatedBoardKey } from '@/lib/board/board-key'
 import {
-  assertBoardAccess,
   assertBoardAssignmentTargets,
-  assertTeamBoard,
   BOARD_USER_SELECT,
-  countTicketsByBoard,
   getBoardMemberUsers,
-  isAdminActor,
-  reserveBoardKey,
-  rethrowDuplicatedBoardKey,
   syncBoardGroups,
-  type Actor,
-} from '@/lib/board/board'
+} from '@/lib/board/board-member'
 import { listBoardTagsForManage, rethrowDuplicatedTagName, TAG_SELECT } from '@/lib/board/tag'
-import { canApplyAssignments, MAX_TAGS_PER_SCOPE, nextOrder, TICKET_STATUSES, type BoardRole } from '@/lib/board/task'
+import { MAX_TAGS_PER_SCOPE, nextOrder } from '@/lib/board/tag-rule'
+import { TICKET_STATUSES } from '@/lib/board/ticket-enum'
+import { canApplyAssignments, type BoardRole } from '@/lib/board/ticket-permission'
 import { errInvalidOperation, errValidation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { getBoardNotifySetting, setBoardNotifySetting } from '@/lib/notify/notify-board-setting'

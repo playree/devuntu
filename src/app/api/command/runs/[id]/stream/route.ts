@@ -1,5 +1,5 @@
 import { getServerSession } from '@/lib/auth/auth'
-import { isAdminActor } from '@/lib/board/board'
+import { isAdminActor } from '@/lib/board/board-access'
 import { parseCursor, sseHeaders } from '@/lib/command/command-api'
 import { getCommandRun } from '@/lib/command/command-run'
 import { buildLogStream } from '@/lib/command/command-stream'

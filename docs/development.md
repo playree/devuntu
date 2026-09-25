@@ -41,7 +41,7 @@
 この前提のうえで、本文に貼った画像の可視範囲は `Attachment.boardId` **1つ**で決めている
 (配信の `/api/upload/<キー>` と MCP の `get_image` が同じ判定を通る)。チケットが動かないので、
 保存済みの本文と添付のボードがずれるのは「別のボードの画像URLを貼り回したとき」だけになる。
-`reassignContentAttachments`(`src/lib/board/board.ts`)がその場合に付け替えを行わないのはこのため。
+`reassignContentAttachments`(`src/lib/board/ticket-write.ts`)がその場合に付け替えを行わないのはこのため。
 動かしてしまうと、元のボードの本文からその画像が読めなくなる。
 
 **ボード移動を入れる場合は、移動処理と同時に本文・コメントに貼られた添付の扱い(移動先ボードへの

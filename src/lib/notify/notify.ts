@@ -7,7 +7,7 @@
  */
 
 import type { NotifyEvent, NotifyChannel as PrismaNotifyChannel } from '@/generated/prisma/enums'
-import { findMentions, stripCodeSpans } from '../board/task'
+import { findMentions, stripCodeSpans } from '../board/mention'
 import { truncate } from '../text-util'
 
 /** 通知イベントの種別。Prisma の enum と同じ並びで持つ(tests/lib/notify/notify.test.ts で一致を固定する) */

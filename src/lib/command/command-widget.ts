@@ -4,7 +4,7 @@
  * 表示条件はサイドメニューと同じ `canUseAnyCommand`。満たさなければ履歴を引かずに空を返す。
  */
 
-import { type Actor } from '../board/board'
+import { type Actor } from '../board/board-access'
 import { prisma } from '../prisma'
 import { canUseAnyCommand } from './command-access'
 

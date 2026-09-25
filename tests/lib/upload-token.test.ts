@@ -5,7 +5,7 @@
  * 「他のトークンと取り違えない」「使い回せない」「発行後の権限変化に追従する」ことを確かめる。
  */
 
-import { getBoardAccess } from '@/lib/board/board'
+import { getBoardAccess } from '@/lib/board/board-access'
 import { signUploadToken, UPLOAD_TOKEN_TTL_SECONDS, verifyUploadToken } from '@/lib/storage/upload-token'
 import { generateKeyPair, SignJWT } from 'jose'
 import { uuidv7 } from 'uuidv7'
@@ -35,7 +35,7 @@ vi.mock('@/lib/prisma', async (importOriginal) => ({
   ),
 }))
 
-vi.mock('@/lib/board/board', () => ({
+vi.mock('@/lib/board/board-access', () => ({
   getBoardAccess: vi.fn(),
 }))
 

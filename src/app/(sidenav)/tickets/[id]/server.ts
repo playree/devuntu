@@ -1,9 +1,9 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action/action-server'
-import { assertTicketAccess } from '@/lib/board/board'
+import { assertTicketAccess } from '@/lib/board/board-access'
 import { TAG_SELECT } from '@/lib/board/tag'
-import { ticketDisplayId, ticketShortPath } from '@/lib/board/task'
+import { ticketDisplayId, ticketShortPath } from '@/lib/board/ticket-id'
 import { addComment, changeTicketStatus, deleteComment, updateComment, updateTicket } from '@/lib/board/ticket-mutation'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
