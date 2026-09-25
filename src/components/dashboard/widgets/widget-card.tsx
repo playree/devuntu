@@ -62,7 +62,9 @@ export const WidgetDataCard = <T,>({
   isLoading: boolean
   children: (data: T) => ReactNode
 }) => (
-  <WidgetCard {...cardProps}>{data ? children(data) : isLoading ? <WidgetSkeleton /> : <WidgetLoadError />}</WidgetCard>
+  <WidgetCard {...cardProps}>
+    {data !== null && data !== undefined ? children(data) : isLoading ? <WidgetSkeleton /> : <WidgetLoadError />}
+  </WidgetCard>
 )
 
 /** Widget 内の行一覧。0 件なら message を出す */

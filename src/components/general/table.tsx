@@ -249,6 +249,7 @@ export const MultiTable = <T extends object>({
   isSmart,
   emptyContent,
   isLoading,
+  renderEmptyState,
   ...props
 }: TableBodyProps<T> &
   TableActivityProps<T> & {
@@ -310,10 +311,13 @@ export const MultiTable = <T extends object>({
             ))}
           </Table.Header>
           <Table.Body
-            renderEmptyState={() =>
-              isLoadingItems ? null : (
-                <div className='text-muted py-4 text-center text-sm'>{emptyContent ?? uiText.tableEmpty}</div>
-              )
+            renderEmptyState={(renderProps) =>
+              // 呼び出し側の renderEmptyState よりも、読み込み中の抑止を優先する
+              isLoadingItems
+                ? null
+                : (renderEmptyState?.(renderProps) ?? (
+                    <div className='text-muted py-4 text-center text-sm'>{emptyContent ?? uiText.tableEmpty}</div>
+                  ))
             }
             {...props}
             items={items ?? pagingList?.items}
