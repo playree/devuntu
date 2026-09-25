@@ -200,9 +200,17 @@ docker compose up -d
 DB マイグレーションは `docker/docker-entrypoint.sh` が起動時に `prisma migrate deploy` を実行するため、
 **手動でのマイグレーションは不要**(アップデート時も同じ)。
 
-起動を確認する。
+`devuntu` にも `/api/health` を叩く healthcheck を設定しているため、起動完了まで待ちたい場合は
+`--wait` を付ける(全サービスが healthy になるまで戻らない)。
 
 ```sh
+docker compose up -d --wait
+```
+
+起動を確認する。`docker compose ps` の STATUS が `(healthy)` になっていれば起動完了。
+
+```sh
+docker compose ps
 docker compose logs -f devuntu
 curl -s http://localhost:3000/api/health
 # => {"status":"ok","timestamp":"..."}

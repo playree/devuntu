@@ -84,6 +84,9 @@ RUN chmod +x docker-entrypoint.sh
 
 EXPOSE 3000
 ENV PORT=3000
+# Docker はコンテナ内の HOSTNAME にコンテナIDを入れ、standalone の server.js はそれを listen 先に使う。
+# そのままだとコンテナのIPでしか listen せず、healthcheck の localhost から届かないため全アドレスで待ち受ける
+ENV HOSTNAME=0.0.0.0
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["node", "server.js"]
