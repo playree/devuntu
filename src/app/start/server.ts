@@ -12,6 +12,11 @@ export const createAdmin = safeAction
   .metadata({ actionName: 'createAdmin' })
   .inputSchema(scCreateAdmin)
   .action(async ({ parsedInput: { name, email, password } }) => {
+    // 未認証で呼べるので、セットアップ済みならロックの順番待ちに並ばせず即座に断る
+    if (await hasCompletedInitialSetup()) {
+      throw errInvalidOperation()
+    }
+
     // 同時に送られると両方が「未セットアップ」と判定して管理者が複数作られるので、判定と作成を直列化する
     const { user } = await withAdvisoryLock(ADVISORY_LOCK_KEYS.initialSetup, async (tx) => {
       if (await hasCompletedInitialSetup(tx)) {

@@ -8,6 +8,12 @@
  *
  * 別接続の書き込みはロックの解放より先にコミットされるので、後続は READ COMMITTED の
  * 読み取りでその結果を見てから判定できる。
+ *
+ * ロックの保持者は、トランザクションの接続に加えて better-auth の書き込み用にもう1本、同じ
+ * プールから接続を取る。ロック待ちがそれぞれ接続を握ったままだとプールを使い切り、保持者が
+ * 接続を取れずタイムアウトまで止まる。そこで DB のロックを取りに行く前にプロセス内でも
+ * キーごとに順番待ちさせ、1プロセスがロック待ちで握る接続を常に1本に抑える
+ * (複数プロセス間の排他は DB のロックが受け持つ)。
  */
 
 import type { Prisma } from '@/generated/prisma/client'
@@ -26,14 +32,35 @@ type AdvisoryLockKey = (typeof ADVISORY_LOCK_KEYS)[keyof typeof ADVISORY_LOCK_KE
 const LOCK_TX_TIMEOUT_MS = 30_000
 const LOCK_TX_MAX_WAIT_MS = 10_000
 
+/** キーごとのプロセス内の待ち行列。末尾の処理が終わる(成否は問わない)と解決する */
+const localQueues = new Map<AdvisoryLockKey, Promise<unknown>>()
+
 export const withAdvisoryLock = async <T>(
   key: AdvisoryLockKey,
   fn: (tx: Prisma.TransactionClient) => Promise<T>,
-): Promise<T> =>
-  prisma.$transaction(
-    async (tx) => {
-      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${key}))`
-      return fn(tx)
-    },
-    { timeout: LOCK_TX_TIMEOUT_MS, maxWait: LOCK_TX_MAX_WAIT_MS },
+): Promise<T> => {
+  const previous = localQueues.get(key) ?? Promise.resolve()
+  const run = previous.then(() =>
+    prisma.$transaction(
+      async (tx) => {
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${key}))`
+        return fn(tx)
+      },
+      { timeout: LOCK_TX_TIMEOUT_MS, maxWait: LOCK_TX_MAX_WAIT_MS },
+    ),
   )
+  // 失敗しても後続は進める。例外は呼び出し元へ返す run の側が受け取る
+  const settled = run.then(
+    () => {},
+    () => {},
+  )
+  localQueues.set(key, settled)
+  try {
+    return await run
+  } finally {
+    // 後ろに誰も並んでいなければ片付ける(キーは固定なので残しても増えないが、参照を切る)
+    if (localQueues.get(key) === settled) {
+      localQueues.delete(key)
+    }
+  }
+}
