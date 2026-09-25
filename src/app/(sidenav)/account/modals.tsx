@@ -117,6 +117,8 @@ export const IssueMcpTokenModal: FC<ModalBaseProps & { baseUrl: string }> = ({ s
   return (
     <FormModal
       state={state}
+      // 発行中に閉じると、応答でしか受け取れない値を表示できなくなる
+      isPending={isSubmitting}
       onSubmit={handleSubmit(async (req) => {
         try {
           const res = await parseAction(issueMcpToken(req), {

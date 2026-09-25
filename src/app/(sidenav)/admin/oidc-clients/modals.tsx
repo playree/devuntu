@@ -44,6 +44,8 @@ export const AddModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, relo
   return (
     <FormModal
       state={state}
+      // 発行中に閉じると、応答でしか受け取れない値を表示できなくなる
+      isPending={isSubmitting}
       onSubmit={handleSubmit(async (req) => {
         const res = await parseAction(addOidcClient(req))
         setOutput(res)
