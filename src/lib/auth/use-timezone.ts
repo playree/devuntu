@@ -1,7 +1,7 @@
 'use client'
 
-import { authClient } from './auth/auth-client'
-import { DEFAULT_TZ } from './day'
+import { DEFAULT_TZ } from '../day'
+import { authClient } from './auth-client'
 
 /**
  * ログイン中ユーザーのタイムゾーンを返すフック。

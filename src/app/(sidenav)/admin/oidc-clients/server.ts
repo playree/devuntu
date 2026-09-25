@@ -1,7 +1,8 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action/action-server'
-import { auth, OIDC_PROVIDER_SCOPES } from '@/lib/auth/auth'
+import { auth } from '@/lib/auth/auth'
+import { OIDC_PROVIDER_SCOPES } from '@/lib/auth/mcp-scope'
 import { errSystemError } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'

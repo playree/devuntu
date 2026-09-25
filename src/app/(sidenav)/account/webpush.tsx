@@ -6,8 +6,8 @@ import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { BellIcon, BellSlashIcon, TrashIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction, useActionData } from '@/lib/action/action-client'
+import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { dayformat } from '@/lib/day'
-import { useUserTimezone } from '@/lib/use-timezone'
 import { resolveThisDeviceStatus } from '@/lib/webpush/webpush'
 import {
   LocalSubscriptionPayload,

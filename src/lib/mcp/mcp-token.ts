@@ -12,7 +12,7 @@
  * 接頭辞だけが違う。共通部分は `../bearer-token.ts` にある。
  */
 
-import { MCP_SCOPE } from '../auth/auth'
+import { MCP_SCOPE } from '../auth/mcp-scope'
 import { generateBearerToken, hashBearerToken, shouldRefreshLastUsed } from '../bearer-token'
 import { nowDate } from '../day'
 import { logger } from '../logger'

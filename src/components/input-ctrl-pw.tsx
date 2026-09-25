@@ -1,6 +1,6 @@
 'use client'
 
-import { getPasswordScore, preloadPasswordScore } from '@/lib/password-score'
+import { getPasswordScore, preloadPasswordScore } from '@/lib/auth/password-score'
 import { useLocale } from '@/locale/client'
 import { Button, cn, InputGroup, InputProps, Label, ProgressBar, TextField } from '@heroui/react'
 import { ChangeEvent, FC, useEffect, useRef, useState } from 'react'

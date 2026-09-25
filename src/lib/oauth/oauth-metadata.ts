@@ -1,4 +1,5 @@
-import { auth, MCP_RESOURCE, MCP_SCOPE } from '@/lib/auth/auth'
+import { auth } from '@/lib/auth/auth'
+import { MCP_RESOURCE, MCP_SCOPE } from '@/lib/auth/mcp-scope'
 import { makeUrl } from '@/lib/server-utils'
 import {
   metadataResponse,

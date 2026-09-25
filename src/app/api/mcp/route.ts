@@ -1,5 +1,5 @@
 import { isAgentToken, verifyAgentToken } from '@/lib/agent/agent-token'
-import { MCP_SCOPE } from '@/lib/auth/auth'
+import { MCP_SCOPE } from '@/lib/auth/mcp-scope'
 import { logger } from '@/lib/logger'
 import { createDevuntuMcpServer } from '@/lib/mcp/mcp-server'
 import { isMcpToken, verifyMcpToken } from '@/lib/mcp/mcp-token'

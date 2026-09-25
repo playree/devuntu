@@ -10,11 +10,11 @@
 
 import type { AgentRunAction, AgentRunStatus } from '@/generated/prisma/enums'
 import { isValidTimezone } from '../day'
+import { AGENT_RUN_HISTORY_LIMIT } from '../env-util'
 import { errValidation } from '../error'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
 import type { SaveAgentRunner } from '../schema/schema-agent'
-import { AGENT_RUN_HISTORY_LIMIT } from './agent'
 import { countAgentRunsSince, dailyRunWindow } from './agent-activity'
 
 /** 画面に出す自動運用の設定。ランナーの自己申告(ホスト名・版)と消化状況を含む */

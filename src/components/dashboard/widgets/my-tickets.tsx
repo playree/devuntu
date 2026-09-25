@@ -2,7 +2,7 @@
 
 import { TicketIcon } from '@/components/icon'
 import { useActionData } from '@/lib/action/action-client'
-import { useUserTimezone } from '@/lib/use-timezone'
+import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { useLocale } from '@/locale/client'
 import { getMyTickets } from '../server'
 import { TicketRowList } from './ticket-row'
