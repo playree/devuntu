@@ -54,7 +54,8 @@ export const tzOffsetLabel = (tz: string): string => `(UTC${dayjs().tz(tz).forma
 
 /** IANA タイムゾーン名として妥当かを判定する */
 export const isValidTimezone = (tz: string): boolean => {
-  if (!tz) {
+  // Intl は `-05:00` のような固定オフセットも受け付けるが、夏時間に追従しないので弾く
+  if (!tz || /^[+-]/.test(tz)) {
     return false
   }
   try {

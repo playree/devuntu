@@ -22,10 +22,11 @@ import { FC } from 'react'
 import { UpdatePasskeyModal } from './modals'
 
 /**
- * 認証器のダイアログを閉じたときに返るコード。ブラウザの NotAllowedError(キャンセル・時間切れ)は
- * `@simplewebauthn/browser` が ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY として素通しする
+ * 本人の中断と断定できるコード。ブラウザの NotAllowedError は `@simplewebauthn/browser` が
+ * ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY に変換するが、キャンセル以外(時間切れ・拒否など)も含み
+ * 原因を区別できないので、ここには含めず通知する
  */
-const PASSKEY_CANCEL_CODES = ['ERROR_CEREMONY_ABORTED', 'ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY']
+const PASSKEY_CANCEL_CODES = ['ERROR_CEREMONY_ABORTED']
 
 export const MyPasskey: FC = () => {
   const { t } = useLocale()

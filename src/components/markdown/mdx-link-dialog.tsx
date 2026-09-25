@@ -252,13 +252,16 @@ export const MdxLinkDialog: FC = () => {
                 <ClipboardDocumentIcon width={16} />
               )
             }
-            onPress={() =>
-              void window.navigator.clipboard
-                .writeText(linkDialogState.url)
-                .then(() => setCopied(true))
-                // 安全なコンテキスト外や権限拒否ではコピーできない。成功表示を出さないことで伝える
-                .catch(() => {})
-            }
+            onPress={async () => {
+              try {
+                // 安全なコンテキスト(https / localhost)の外では navigator.clipboard 自体が無く、参照だけで例外になる
+                await window.navigator.clipboard.writeText(linkDialogState.url)
+              } catch {
+                // コピーできていないので成功表示を出さないことで伝える
+                return
+              }
+              setCopied(true)
+            }}
           />
           <MultiButton
             size='sm'

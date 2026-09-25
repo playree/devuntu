@@ -1,4 +1,4 @@
-import { isDateOnlyOverdue, startOfWeek, weekRange, zonedMinutes } from '@/lib/day'
+import { isDateOnlyOverdue, isValidTimezone, startOfWeek, weekRange, zonedMinutes } from '@/lib/day'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 afterEach(() => {
@@ -86,5 +86,20 @@ describe('isDateOnlyOverdue', () => {
     vi.setSystemTime(new Date('2026-03-04T02:00:00Z'))
     expect(isDateOnlyOverdue(dueDate('2026-03-03'), 'Asia/Tokyo')).toBe(true)
     expect(isDateOnlyOverdue(dueDate('2026-03-03'), 'America/New_York')).toBe(false)
+  })
+})
+
+describe('isValidTimezone', () => {
+  it.each(['Asia/Tokyo', 'America/New_York', 'UTC', 'Etc/GMT+5'])('IANA 名は通す (%s)', (tz) => {
+    expect(isValidTimezone(tz)).toBe(true)
+  })
+
+  it.each(['-05:00', '+0900', '+09'])('固定オフセットは夏時間に追従しないので弾く (%s)', (tz) => {
+    // Intl.DateTimeFormat はこれらを受け付けるので、自前で弾いている
+    expect(isValidTimezone(tz)).toBe(false)
+  })
+
+  it.each(['', 'Asia/Tokio'])('空文字や存在しない名前は弾く (%s)', (tz) => {
+    expect(isValidTimezone(tz)).toBe(false)
   })
 })

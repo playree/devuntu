@@ -344,4 +344,9 @@ describe('DEFAULT_TIMEZONE', () => {
     process.env.DEFAULT_TIMEZONE = 'Asia/Tokio'
     expect(() => envu.server.DEFAULT_TIMEZONE).toThrow()
   })
+
+  it('固定オフセットは IANA 名ではないので弾く', () => {
+    process.env.DEFAULT_TIMEZONE = '-05:00'
+    expect(() => envu.server.DEFAULT_TIMEZONE).toThrow()
+  })
 })
