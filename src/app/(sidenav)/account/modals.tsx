@@ -6,9 +6,9 @@ import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
 import { FormModal, ModalBaseProps } from '@/components/general/modal'
 import { NoticePanel } from '@/components/general/panel'
-import { StepMotion } from '@/components/general/step-motion'
-import { TabsBox } from '@/components/general/tabs'
+import { StepMotion, useStep } from '@/components/general/step-motion'
 import { CheckIcon, KeyIcon, PencilSquareIcon } from '@/components/icon'
+import { IssuedTokenView } from '@/components/issued-token-view'
 import { notify } from '@/components/notify'
 import { TokenExpiresSelect } from '@/components/token-expires-select'
 import { parseAction } from '@/lib/action/action-client'
@@ -83,11 +83,6 @@ export const UpdatePasskeyModal: FC<ModalBaseProps & { target: UpdatePasskey }> 
   )
 }
 
-type Step = {
-  id: 'INPUT' | 'OUTPUT'
-  direction: number
-}
-
 /**
  * ユーザー用 MCP トークンの発行。
  *
@@ -96,7 +91,7 @@ type Step = {
  */
 export const IssueMcpTokenModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, reload, baseUrl }) => {
   const { t, fet } = useLocale()
-  const [step, setStep] = useState<Step>({ id: 'INPUT', direction: 0 })
+  const { step, forward } = useStep<'INPUT' | 'OUTPUT'>('INPUT')
   const [issued, setIssued] = useState<string>()
 
   const {
@@ -128,7 +123,7 @@ export const IssueMcpTokenModal: FC<ModalBaseProps & { baseUrl: string }> = ({ s
             handled: [DUPLICATED_MCP_TOKEN_NAME, MCP_TOKEN_LIMIT_REACHED],
           })
           setIssued(res.token)
-          setStep({ id: 'OUTPUT', direction: 1 })
+          forward('OUTPUT')
         } catch (e) {
           if (!(e instanceof ClientError)) {
             throw e
@@ -187,59 +182,39 @@ export const IssueMcpTokenModal: FC<ModalBaseProps & { baseUrl: string }> = ({ s
 
           {step.id === 'OUTPUT' && issued && (
             <StepMotion direction={step.direction} key='step_output'>
-              <GridBox>
-                <div className='col-span-12'>
-                  <CopyableField text={issued} label={t('mcp_token')} isMask />
-                </div>
-                <div className='col-span-12'>
-                  <NoticePanel className='text-xs'>{t('msg_token_once')}</NoticePanel>
-                </div>
-                <div className='col-span-12'>
-                  <TabsBox
-                    variant='secondary'
-                    aria-label={t('mcp_add_command')}
-                    // タブを切り替えてもモーダルの高さが跳ねないよう、内容の多い Codex 側に合わせる
-                    panelClassName='min-h-53 sm:min-h-47'
-                    items={[
-                      {
-                        id: 'claude',
-                        label: t('claude_code'),
-                        content: (
-                          <CopyableField
-                            text={mcpAddCommand(baseUrl, issued, MCP_SERVER_NAME, 'user')}
-                            label={t('mcp_add_command')}
-                            isMask
-                          />
-                        ),
-                      },
-                      {
-                        id: 'codex',
-                        label: t('codex_cli'),
-                        content: (
-                          <GridBox>
-                            <div className='col-span-12'>
-                              <CopyableField // 環境変数の名前しか入らないので伏せ字にしない
-                                text={mcpCodexAddCommand(baseUrl, MCP_SERVER_NAME, MCP_TOKEN_ENV)}
-                                label={t('mcp_add_command')}
-                              />
-                            </div>
-                            <div className='col-span-12'>
-                              <CopyableField
-                                text={mcpTokenExportCommand(MCP_TOKEN_ENV, issued)}
-                                label={t('mcp_token_env_command')}
-                                isMask
-                              />
-                            </div>
-                            <div className='col-span-12'>
-                              <NoticePanel className='text-xs'>{t('msg_mcp_token_env')}</NoticePanel>
-                            </div>
-                          </GridBox>
-                        ),
-                      },
-                    ]}
+              <IssuedTokenView
+                token={issued}
+                tokenLabel={t('mcp_token')}
+                // タブを切り替えてもモーダルの高さが跳ねないよう、内容の多い Codex 側に合わせる
+                panelClassName='min-h-53 sm:min-h-47'
+                claudeCommand={
+                  <CopyableField
+                    text={mcpAddCommand(baseUrl, issued, MCP_SERVER_NAME, 'user')}
+                    label={t('mcp_add_command')}
+                    isMask
                   />
-                </div>
-              </GridBox>
+                }
+                codexCommand={
+                  <GridBox>
+                    <div className='col-span-12'>
+                      <CopyableField // 環境変数の名前しか入らないので伏せ字にしない
+                        text={mcpCodexAddCommand(baseUrl, MCP_SERVER_NAME, MCP_TOKEN_ENV)}
+                        label={t('mcp_add_command')}
+                      />
+                    </div>
+                    <div className='col-span-12'>
+                      <CopyableField
+                        text={mcpTokenExportCommand(MCP_TOKEN_ENV, issued)}
+                        label={t('mcp_token_env_command')}
+                        isMask
+                      />
+                    </div>
+                    <div className='col-span-12'>
+                      <NoticePanel className='text-xs'>{t('msg_mcp_token_env')}</NoticePanel>
+                    </div>
+                  </GridBox>
+                }
+              />
             </StepMotion>
           )}
         </AnimatePresence>
