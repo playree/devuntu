@@ -209,7 +209,7 @@ export const AgentsClient: FC = () => {
                     >
                       {item.title}
                     </Link>
-                    <span className='text-xs text-gray-500'>
+                    <span className='text-muted text-xs'>
                       {boardName({ name: item.boardName, kind: item.boardKind })}
                     </span>
                   </div>
@@ -239,7 +239,7 @@ export const AgentsClient: FC = () => {
                     }}
                   />
                 </Table.Cell>
-                <Table.Cell className='font-mono text-xs'>{dayformat(item.updatedAt, 'tz-simple', tz)}</Table.Cell>
+                <Table.Cell className='font-mono text-xs'>{dayformat(item.updatedAt, 'tz-minute', tz)}</Table.Cell>
               </Table.Row>
             )}
           </MultiTable>

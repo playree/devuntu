@@ -4,6 +4,7 @@ import { NoticePanel } from '@/components/general/panel'
 import { useLocale } from '@/locale/client'
 import { useDraggable } from '@dnd-kit/react'
 import { Card, cn, Separator, Skeleton } from '@heroui/react'
+import Link from 'next/link'
 import { ComponentProps, FC, ReactNode } from 'react'
 
 export type WidgetFC = FC<{ id: string; editable: boolean }>
@@ -73,7 +74,28 @@ export const WidgetRowList: FC<{ isEmpty: boolean; message: string; children: Re
   children,
 }) => {
   if (isEmpty) {
-    return <div className='min-h-14 px-2 py-1 text-sm text-gray-500'>{message}</div>
+    return <div className='text-muted min-h-14 px-2 py-1 text-sm'>{message}</div>
   }
   return <div className='flex max-h-64 min-h-14 flex-col overflow-y-auto'>{children}</div>
+}
+
+/**
+ * Widget 内のリンク。編集モード中はドラッグ操作と衝突しないよう遷移させず、同じ見た目の div にする
+ */
+export const EditableLink: FC<{
+  href: string
+  editable: boolean
+  className?: string
+  /** 外部リンクは新しいタブで開く */
+  isExternal?: boolean
+  children: ReactNode
+}> = ({ href, editable, className, isExternal, children }) => {
+  if (editable) {
+    return <div className={className}>{children}</div>
+  }
+  return (
+    <Link href={href} className={className} {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
+      {children}
+    </Link>
+  )
 }

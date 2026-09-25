@@ -71,7 +71,7 @@ export const DynamicOidcClients: FC = () => {
             <Table.Cell>
               <OnOffChip isState={item.enabled} />
             </Table.Cell>
-            <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'tz-simple', tz)}</Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'tz-minute', tz)}</Table.Cell>
             <ActionCell
               items={[
                 {

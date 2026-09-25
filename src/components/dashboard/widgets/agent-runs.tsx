@@ -35,11 +35,11 @@ export const AgentRunsWidget: WidgetFC = ({ id, editable }) => {
               <div className='flex min-w-0 items-center gap-2 text-sm'>
                 <span className='shrink-0 font-mono text-xs'>{run.ticketRef ?? '-'}</span>
                 <span className='truncate'>{run.agentName}</span>
-                <span className='shrink-0 text-xs text-gray-500'>{t(AGENT_RUN_ACTION_LOCALE[run.action])}</span>
+                <span className='text-muted shrink-0 text-xs'>{t(AGENT_RUN_ACTION_LOCALE[run.action])}</span>
               </div>
               <div className='flex items-center gap-2'>
                 <AgentRunStatusChip value={run.status} />
-                <span className='font-mono text-xs text-gray-500'>{dayformat(run.startedAt, 'tz-minute', tz)}</span>
+                <span className='text-muted font-mono text-xs'>{dayformat(run.startedAt, 'tz-minute', tz)}</span>
               </div>
             </RowLink>
           ))}

@@ -38,7 +38,7 @@ export const AvatarSetting: FC = () => {
 
   return (
     <FlexCol>
-      <p className='text-default-500 max-w-sm px-1 text-sm'>{t('msg_avatar_desc')}</p>
+      <p className='text-muted max-w-sm px-1 text-sm'>{t('msg_avatar_desc')}</p>
       <form
         className='flex items-end gap-3 px-1'
         onSubmit={handleSubmit(async (req) => {

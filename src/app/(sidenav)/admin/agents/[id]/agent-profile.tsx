@@ -4,6 +4,7 @@ import { MultiButton } from '@/components/general/button'
 import { CopyableField } from '@/components/general/copyable-field'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
+import { MetaRow } from '@/components/general/meta-row'
 import { NoticePanel } from '@/components/general/panel'
 import { MultiSelectCtrl } from '@/components/general/select'
 import { CheckIcon } from '@/components/icon'
@@ -14,20 +15,13 @@ import { scUpdateAgent, UpdateAgent } from '@/lib/schema/schema'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { FC, ReactNode } from 'react'
+import { FC } from 'react'
 import { useForm } from 'react-hook-form'
 import { GetAgentReturnType, updateAgent } from './server'
 
 type Agent = NonNullable<GetAgentReturnType>
 
 /** 見出し + 値の 1 行 */
-const MetaRow: FC<{ label: string; children: ReactNode }> = ({ label, children }) => (
-  <div className='flex items-baseline gap-2'>
-    <span className='w-24 shrink-0 text-xs text-gray-500'>{label}</span>
-    <div className='min-w-0 text-sm'>{children}</div>
-  </div>
-)
-
 /** エージェントの概要 + 編集フォーム。識別子(メール)は保存済みメンションが解決できなくなるため編集させない */
 export const AgentProfile: FC<{ agent: Agent; groupOptions: Record<string, string>; refresh: () => void }> = ({
   agent,
@@ -64,7 +58,7 @@ export const AgentProfile: FC<{ agent: Agent; groupOptions: Record<string, strin
       <GridBox isSmart>
         <div className='col-span-12'>
           <MetaRow label={t('created_at')}>
-            <span className='font-mono text-xs'>{dayformat(agent.createdAt, 'tz-simple', tz)}</span>
+            <span className='font-mono text-xs'>{dayformat(agent.createdAt, 'tz-minute', tz)}</span>
           </MetaRow>
         </div>
         <div className='col-span-12 md:col-span-6'>

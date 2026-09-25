@@ -6,26 +6,25 @@ import type { TicketStatus } from '@/generated/prisma/enums'
 import { useActionData } from '@/lib/action/action-client'
 import { TICKET_STATUS_LOCALE, TICKET_STATUSES } from '@/lib/board/task'
 import { useLocale } from '@/locale/client'
-import Link from 'next/link'
 import { FC, ReactNode } from 'react'
 import { getTicketSummary } from '../server'
-import { WidgetDataCard, WidgetFC } from './widget-card'
+import { EditableLink, WidgetDataCard, WidgetFC } from './widget-card'
 
-/** 編集モード中はドラッグ操作と衝突しないよう遷移させない */
+/** ステータス別件数のタイル */
 const Tile: FC<{ status: TicketStatus; href: string; editable: boolean; children: ReactNode }> = ({
   status,
   href,
   editable,
   children,
 }) => {
-  const className = statusBgClass(status, 'flex flex-col items-center gap-1 rounded-xl px-2 py-3 hover:opacity-80')
-  if (editable) {
-    return <div className={className}>{children}</div>
-  }
   return (
-    <Link href={href} className={className}>
+    <EditableLink
+      href={href}
+      editable={editable}
+      className={statusBgClass(status, 'flex flex-col items-center gap-1 rounded-xl px-2 py-3 hover:opacity-80')}
+    >
       {children}
-    </Link>
+    </EditableLink>
   )
 }
 
@@ -55,7 +54,7 @@ export const TicketSummaryWidget: WidgetFC = ({ id, editable }) => {
               editable={editable}
             >
               <span className='text-2xl font-bold'>{data.counts[status]}</span>
-              <span className='text-center text-xs text-gray-500'>
+              <span className='text-muted text-center text-xs'>
                 {status === 'done' ? t('status_done_recent') : t(TICKET_STATUS_LOCALE[status])}
               </span>
             </Tile>

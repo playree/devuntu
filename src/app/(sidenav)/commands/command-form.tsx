@@ -142,7 +142,7 @@ export const CommandForm: FC<ModalBaseProps & { target: AvailableCommandView }> 
       submit={{ isPending: isSubmitting, label: t('command_run'), icon: <CommandLineIcon /> }}
     >
       <GridBox>
-        {target.description && <div className='text-foreground-500 col-span-12 text-xs'>{target.description}</div>}
+        {target.description && <div className='text-muted col-span-12 text-xs'>{target.description}</div>}
         {target.inputs.length === 0 && <div className='col-span-12 text-sm'>{t('command_no_input')}</div>}
         {target.inputs.map((input) => (
           <div key={input.key} className='col-span-12'>

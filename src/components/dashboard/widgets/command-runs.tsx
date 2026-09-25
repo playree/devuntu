@@ -33,11 +33,11 @@ export const CommandRunsWidget: WidgetFC = ({ id, editable }) => {
             <RowLink key={run.id} href={`/commands/runs/${run.id}`} editable={editable}>
               <div className='flex min-w-0 items-center gap-2 text-sm'>
                 <span className='truncate'>{run.commandLabel}</span>
-                <span className='shrink-0 text-xs text-gray-500'>{run.targetLabel}</span>
+                <span className='text-muted shrink-0 text-xs'>{run.targetLabel}</span>
               </div>
               <div className='flex items-center gap-2'>
                 <CommandStatusChip value={run.status} />
-                <span className='font-mono text-xs text-gray-500'>
+                <span className='text-muted font-mono text-xs'>
                   {dayformat(run.finishedAt ?? run.queuedAt, 'tz-minute', tz)}
                 </span>
               </div>

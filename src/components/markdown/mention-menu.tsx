@@ -27,7 +27,7 @@ const menuStyles = tv({
   slots: {
     base: 'absolute top-0 left-0 z-9999 max-h-64 w-max min-w-40 overflow-y-auto rounded-xl bg-stone-100 p-1 shadow-md dark:border-t-2 dark:border-mist-900 dark:bg-mist-950',
     item: 'flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-sm',
-    email: 'truncate font-mono text-xs text-gray-500',
+    email: 'text-muted truncate font-mono text-xs',
   },
   variants: {
     isSelected: {

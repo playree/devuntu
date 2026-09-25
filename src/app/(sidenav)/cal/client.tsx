@@ -100,7 +100,7 @@ export const CalClient: FC<{ origin: string }> = ({ origin }) => {
 
           {status?.googleConnected && (
             <FlexCol>
-              <p className='text-sm text-neutral-500'>{t('msg_calendar_share_desc')}</p>
+              <p className='text-muted text-sm'>{t('msg_calendar_share_desc')}</p>
 
               {status.shared ? (
                 <FlexCol>

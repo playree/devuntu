@@ -104,7 +104,7 @@ const dueDateStyles = tv({
   variants: {
     overdue: {
       true: 'text-danger',
-      false: 'text-gray-500',
+      false: 'text-muted',
     },
   },
 })
@@ -202,7 +202,7 @@ const KanbanCardView: FC<{
           <div className='flex flex-wrap items-center gap-1'>
             <PriorityChip value={card.priority} />
             {card.assigneeName && (
-              <span className='flex min-w-0 items-center gap-0.5 text-xs text-gray-500'>
+              <span className='text-muted flex min-w-0 items-center gap-0.5 text-xs'>
                 <UserAvatar
                   name={card.assigneeName}
                   image={card.assigneeImage}
@@ -214,7 +214,7 @@ const KanbanCardView: FC<{
             )}
             {card.completedAt ? (
               <span // 完了したカードで見たいのは期日ではなく完了日時なので、両方は出さず置き換える
-                className='flex items-center gap-0.5 text-xs text-gray-500'
+                className='text-muted flex items-center gap-0.5 text-xs'
               >
                 <CheckBadgeIcon width={12} />
                 <span className='sr-only'>{t('completed_at')}</span>
@@ -234,7 +234,7 @@ const KanbanCardView: FC<{
               )
             )}
             {card.commentCount > 0 && (
-              <span className='flex items-center gap-0.5 text-xs text-gray-500'>
+              <span className='text-muted flex items-center gap-0.5 text-xs'>
                 <ChatBubbleIcon width={12} />
                 <span className='sr-only'>{t('comment')}</span>
                 {card.commentCount}
@@ -278,7 +278,7 @@ export const KanbanLane: FC<{
     >
       <legend className='flex items-center gap-1 px-2'>
         <StatusChip value={status} />
-        <span className='font-mono text-xs text-gray-500'>{cards.length}</span>
+        <span className='text-muted font-mono text-xs'>{cards.length}</span>
         {status !== 'done' && (
           <MultiButton // 完了レーンは新規チケットの起点にならないため追加ボタンを出さない
             isIconOnly
@@ -307,7 +307,7 @@ export const KanbanLane: FC<{
             onSelect={(selected) => onSelect(card.id, selected)}
           />
         ))}
-        {cards.length === 0 && <p className='p-2 text-xs text-gray-500'>{t('msg_no_tickets')}</p>}
+        {cards.length === 0 && <p className='text-muted p-2 text-xs'>{t('msg_no_tickets')}</p>}
       </div>
     </fieldset>
   )

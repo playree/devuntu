@@ -193,7 +193,7 @@ const RunnerForm: FC<{
         {current && (
           <div className='col-span-12 space-y-1 border-t pt-2 text-xs'>
             <StatusField label={t('agent_last_polled')}>
-              {current.lastPolledAt ? dayformat(current.lastPolledAt, 'tz-simple', tz) : '-'}
+              {dayformat(current.lastPolledAt, 'tz-simple', tz) || '-'}
             </StatusField>
             <StatusField label={t('agent_daily_usage')}>
               {`${current.todayRuns} / ${

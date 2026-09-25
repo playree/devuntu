@@ -88,14 +88,14 @@ export const CommandRunClient: FC<{ runId: string }> = ({ runId }) => {
         <FlexCol>
           <FlexRow className='flex-wrap items-center'>
             <CommandStatusChip value={run.status} />
-            <span className='text-foreground-500 text-xs'>{run.targetLabel}</span>
+            <span className='text-muted text-xs'>{run.targetLabel}</span>
             {reconnecting && (
               <Chip color='warning' variant='soft' className='whitespace-nowrap'>
                 {t('command_reconnecting')}
               </Chip>
             )}
             <span className='grow' />
-            <span className='text-foreground-500 text-xs'>
+            <span className='text-muted text-xs'>
               {t('command_executed_by')}: {run.userName}
             </span>
           </FlexRow>
@@ -104,7 +104,7 @@ export const CommandRunClient: FC<{ runId: string }> = ({ runId }) => {
             <pre className='font-mono text-xs whitespace-pre'>{run.argsPreview}</pre>
           </div>
 
-          <FlexRow className='text-foreground-500 flex-wrap items-center text-xs'>
+          <FlexRow className='text-muted flex-wrap items-center text-xs'>
             <span>{dayformat(run.queuedAt, 'tz-minute', tz)}</span>
             {run.finishedAt && <span>→ {dayformat(run.finishedAt, 'tz-minute', tz)}</span>}
             {run.exitCode !== null && (

@@ -8,6 +8,7 @@ import { FlexCol } from '@/components/general/flex'
 import { useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
+import { GroupChips } from '@/components/group-chips'
 import { ContentHeader } from '@/components/header'
 import { PencilSquareIcon, UserPlusIcon, UsersIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
@@ -17,7 +18,7 @@ import { dayformat } from '@/lib/day'
 import { UpdateUser } from '@/lib/schema/schema'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
-import { Chip, Table } from '@heroui/react'
+import { Table } from '@heroui/react'
 import { FC } from 'react'
 import { AddModal, UpdateModal } from './modals'
 import { deleteUser, getGroupOptions, getUsers } from './server'
@@ -73,16 +74,10 @@ export const AdminUsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPass
               <OnOffChip isState={item.isAdmin} isIconOnly />
             </Table.Cell>
             <Table.Cell>
-              <div className='flex flex-wrap gap-1'>
-                {item.groups.map((group) => (
-                  <Chip key={group.id} variant='soft' color='accent'>
-                    {group.name}
-                  </Chip>
-                ))}
-              </div>
+              <GroupChips groups={item.groups} />
             </Table.Cell>
-            <Table.Cell className='font-mono text-xs'>{dayformat(item.lastLoginAt, 'tz-simple', tz)}</Table.Cell>
-            <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'tz-simple', tz)}</Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.lastLoginAt, 'tz-minute', tz) || '-'}</Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'tz-minute', tz)}</Table.Cell>
             <ActionCell
               items={[
                 {

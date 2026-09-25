@@ -35,7 +35,7 @@ export const EditorField: FC<{
         </FieldLabel>
         <div className='flex items-center gap-2'>
           {length !== undefined && maxLength !== undefined && (
-            <span className={cn('font-mono text-xs', length > maxLength ? 'text-danger' : 'text-gray-500')}>
+            <span className={cn('font-mono text-xs', length > maxLength ? 'text-danger' : 'text-muted')}>
               {length} / {maxLength}
             </span>
           )}

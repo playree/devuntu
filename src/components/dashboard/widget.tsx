@@ -9,9 +9,8 @@ import { calcPercent, formatByte, formatTime } from '@/lib/math'
 import { type LocaleItem } from '@/locale'
 import { useLocale } from '@/locale/client'
 import { useDraggable } from '@dnd-kit/react'
-import { Card, Description, Separator } from '@heroui/react'
+import { Card, cn, Description, Separator } from '@heroui/react'
 import Image from 'next/image'
-import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import {
   getAnnouncement,
@@ -30,7 +29,7 @@ import { MentionsWidget } from './widgets/mentions'
 import { MyTicketsWidget } from './widgets/my-tickets'
 import { RecentActivityWidget } from './widgets/recent-activity'
 import { TicketSummaryWidget } from './widgets/ticket-summary'
-import { WidgetDataCard, WidgetFC } from './widgets/widget-card'
+import { EditableLink, WidgetDataCard, WidgetFC } from './widgets/widget-card'
 
 /** 一覧に出す名前。組み込みはロケールキー、LinkWidget は登録された名前をそのまま出す */
 type WidgetDef = { widget: WidgetFC } & ({ nameKey: LocaleItem } | { name: string })
@@ -203,41 +202,33 @@ const createLinkWidgetSet = (link: LinkWidgetData): WidgetDef => {
       disabled: !editable,
     })
 
-    const Content = (
-      <>
-        {link.iconPath ? (
-          <Image src={link.iconPath} width={24} height={24} alt={link.name} unoptimized className='rounded' />
-        ) : (
-          <ArrowTopRightOnSquareIcon />
-        )}
-        {link.name}
-        {link.description && <Description>- {link.description}</Description>}
-      </>
-    )
-
-    // チケット系ウィジェットの行(RowLink)と同じくマウスオーバーで背景を付ける。
-    // 負の margin で打ち消し、見た目の位置と高さは従来どおりに保つ
-    const className = '-mx-2 flex items-center gap-2 rounded-lg px-2 py-1.5 font-bold'
-
     return (
       <Card ref={ref} className='w-full gap-1 py-2.5'>
-        {editable ? (
-          <div className={className}>{Content}</div>
-        ) : (
-          <Link
-            href={link.url}
-            target='_blank'
-            rel='noopener noreferrer'
-            className={`${className} hover:bg-default/40`}
-          >
-            {Content}
-          </Link>
-        )}
+        <EditableLink
+          href={link.url}
+          editable={editable}
+          isExternal
+          /**
+           * チケット系ウィジェットの行(RowLink)と同じくマウスオーバーで背景を付ける。
+           * 負の margin で打ち消し、見た目の位置と高さは従来どおりに保つ
+           */
+          className={cn(
+            '-mx-2 flex items-center gap-2 rounded-lg px-2 py-1.5 font-bold',
+            !editable && 'hover:bg-default/40',
+          )}
+        >
+          {link.iconPath ? (
+            <Image src={link.iconPath} width={24} height={24} alt={link.name} unoptimized className='rounded' />
+          ) : (
+            <ArrowTopRightOnSquareIcon />
+          )}
+          {link.name}
+          {link.description && <Description>- {link.description}</Description>}
+        </EditableLink>
       </Card>
     )
   }
 
-  // Link:はローカライズ不要
   return { name: `Link: ${link.name}`, widget: LinkWidget }
 }
 

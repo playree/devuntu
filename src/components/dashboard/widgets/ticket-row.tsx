@@ -5,10 +5,9 @@ import { StatusChip, TicketIdText } from '@/components/ticket/ticket-chip'
 import type { TicketStatus } from '@/generated/prisma/enums'
 import { dayformat, isDateOnlyOverdue } from '@/lib/day'
 import { useLocale } from '@/locale/client'
-import Link from 'next/link'
 import { FC, ReactNode } from 'react'
 import { tv } from 'tailwind-variants'
-import { WidgetRowList } from './widget-card'
+import { EditableLink, WidgetRowList } from './widget-card'
 
 export type WidgetTicket = {
   id: string
@@ -24,7 +23,7 @@ const dueDateStyles = tv({
   variants: {
     overdue: {
       true: 'text-danger',
-      false: 'text-gray-500',
+      false: 'text-muted',
     },
   },
 })
@@ -49,26 +48,29 @@ export const TicketDueDate: FC<{ dueDate: Date | null; tz: string }> = ({ dueDat
   )
 }
 
-/** 編集モード中はドラッグ操作と衝突しないよう遷移させない */
-export const RowLink: FC<{ href: string; editable: boolean; children: ReactNode }> = ({ href, editable, children }) => {
-  const className = 'flex flex-col gap-1 rounded-lg px-2 py-1.5 hover:bg-default/40'
-  if (editable) {
-    return <div className={className}>{children}</div>
-  }
-  return (
-    <Link href={href} className={className}>
-      {children}
-    </Link>
-  )
-}
+/** Widget 内の 1 行。編集モード中はドラッグ操作と衝突しないよう遷移させない */
+export const RowLink: FC<{ href: string; editable: boolean; children: ReactNode }> = ({ href, editable, children }) => (
+  <EditableLink
+    href={href}
+    editable={editable}
+    className='hover:bg-default/40 flex flex-col gap-1 rounded-lg px-2 py-1.5'
+  >
+    {children}
+  </EditableLink>
+)
+
+/** 行の上段。表示IDと件名を 1 行に並べ、狭い幅では件名を省略する */
+export const TicketTitleLine: FC<{ ticket: { displayId: string; title: string } }> = ({ ticket }) => (
+  <div className='flex min-w-0 items-center gap-2'>
+    <TicketIdText displayId={ticket.displayId} className='shrink-0' />
+    <span className='truncate text-sm'>{ticket.title}</span>
+  </div>
+)
 
 /** チケット 1 件ぶんの行。狭い幅では件名を 1 行で省略し、ステータスと期日を下段に置く */
 export const TicketRow: FC<{ ticket: WidgetTicket; tz: string; editable: boolean }> = ({ ticket, tz, editable }) => (
   <RowLink href={`/t/${ticket.displayId}`} editable={editable}>
-    <div className='flex min-w-0 items-center gap-2'>
-      <TicketIdText displayId={ticket.displayId} className='shrink-0' />
-      <span className='truncate text-sm'>{ticket.title}</span>
-    </div>
+    <TicketTitleLine ticket={ticket} />
     <div className='flex items-center gap-2'>
       <StatusChip value={ticket.status} />
       <TicketDueDate dueDate={ticket.dueDate} tz={tz} />

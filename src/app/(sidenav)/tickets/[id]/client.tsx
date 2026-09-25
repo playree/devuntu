@@ -461,18 +461,18 @@ export const TicketDetailClient: FC<{
         </Grid>
 
         <div // 作成 / 更新はチケットの属性ではないので、項目のグリッドから外して注記にする
-          className='mt-2 flex flex-wrap items-center gap-x-3 border-t pt-2 text-xs text-gray-500'
+          className='text-muted mt-2 flex flex-wrap items-center gap-x-3 border-t pt-2 text-xs'
         >
           <span>
-            {t('created_at')} <span className='font-mono'>{dayformat(ticket.createdAt, 'tz-simple', tz)}</span>
+            {t('created_at')} <span className='font-mono'>{dayformat(ticket.createdAt, 'tz-minute', tz)}</span>
             {ticket.createdByName && <span className='ml-1'>{ticket.createdByName}</span>}
           </span>
           <span>
-            {t('updated_at')} <span className='font-mono'>{dayformat(ticket.updatedAt, 'tz-simple', tz)}</span>
+            {t('updated_at')} <span className='font-mono'>{dayformat(ticket.updatedAt, 'tz-minute', tz)}</span>
           </span>
           {ticket.completedAt && (
             <span>
-              {t('completed_at')} <span className='font-mono'>{dayformat(ticket.completedAt, 'tz-simple', tz)}</span>
+              {t('completed_at')} <span className='font-mono'>{dayformat(ticket.completedAt, 'tz-minute', tz)}</span>
             </span>
           )}
           {ticket.canDelete && (

@@ -149,7 +149,7 @@ export const TicketsClient: FC<{
                 >
                   {item.title}
                 </Link>
-                <span className='flex items-center gap-2 text-xs text-gray-500'>
+                <span className='text-muted flex items-center gap-2 text-xs'>
                   {boardName({ name: item.boardName, kind: item.boardKind })}
                   {item.commentCount > 0 && (
                     <span className='flex items-center gap-0.5'>
@@ -167,11 +167,11 @@ export const TicketsClient: FC<{
               <PriorityChip value={item.priority} />
             </Table.Cell>
             <Table.Cell className='truncate'>{item.assigneeName}</Table.Cell>
-            <Table.Cell className='font-mono text-xs'>{dayformat(item.dueDate, 'date')}</Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.dueDate, 'date') || '-'}</Table.Cell>
             <Table.Cell>
               <TagChips tags={item.tags} />
             </Table.Cell>
-            <Table.Cell className='font-mono text-xs'>{dayformat(item.updatedAt, 'tz-simple', tz)}</Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.updatedAt, 'tz-minute', tz)}</Table.Cell>
           </Table.Row>
         )}
       </MultiTable>

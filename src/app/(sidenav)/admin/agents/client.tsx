@@ -7,6 +7,7 @@ import { FlexCol } from '@/components/general/flex'
 import { useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
+import { GroupChips } from '@/components/group-chips'
 import { ContentHeader } from '@/components/header'
 import { Cog6ToothIcon, PlusIcon, RocketLaunchIcon } from '@/components/icon'
 import { ReloadButton } from '@/components/reload-button'
@@ -15,7 +16,7 @@ import { type AgentRunnerStatus } from '@/lib/agent/agent'
 import { dayformat } from '@/lib/day'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
-import { Chip, Table } from '@heroui/react'
+import { Table } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
 import { AddModal } from './modals'
@@ -78,13 +79,7 @@ export const AdminAgentsClient: FC = () => {
           <Table.Row key={item.id} id={item.id}>
             <Table.Cell className='truncate'>{item.name}</Table.Cell>
             <Table.Cell>
-              <span className='flex flex-wrap gap-1'>
-                {item.groups.map((group) => (
-                  <Chip key={group.id} variant='soft'>
-                    {group.name}
-                  </Chip>
-                ))}
-              </span>
+              <GroupChips groups={item.groups} />
             </Table.Cell>
             <Table.Cell>
               <TokenStatusChip value={item.tokenStatus} />
@@ -92,9 +87,7 @@ export const AdminAgentsClient: FC = () => {
             <Table.Cell>
               <RunnerStatusChip value={item.runnerStatus} />
             </Table.Cell>
-            <Table.Cell className='font-mono text-xs'>
-              {item.lastUsedAt ? dayformat(item.lastUsedAt, 'tz-minute', tz) : ''}
-            </Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.lastUsedAt, 'tz-minute', tz) || '-'}</Table.Cell>
             <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'tz-minute', tz)}</Table.Cell>
             <ActionCell
               items={[

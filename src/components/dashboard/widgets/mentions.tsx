@@ -1,13 +1,12 @@
 'use client'
 
 import { ChatBubbleIcon } from '@/components/icon'
-import { TicketIdText } from '@/components/ticket/ticket-chip'
 import { useActionData } from '@/lib/action/action-client'
 import { dayformat } from '@/lib/day'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { getMentions } from '../server'
-import { RowLink } from './ticket-row'
+import { RowLink, TicketTitleLine } from './ticket-row'
 import { WidgetDataCard, WidgetFC, WidgetRowList } from './widget-card'
 
 /**
@@ -31,11 +30,8 @@ export const MentionsWidget: WidgetFC = ({ id, editable }) => {
         <WidgetRowList isEmpty={data.length === 0} message={t('msg_no_mentions')}>
           {data.map((item) => (
             <RowLink key={item.key} href={item.href} editable={editable}>
-              <div className='flex min-w-0 items-center gap-2'>
-                <TicketIdText displayId={item.ticket.displayId} className='shrink-0' />
-                <span className='truncate text-sm'>{item.ticket.title}</span>
-              </div>
-              <div className='flex min-w-0 items-center gap-2 text-xs text-gray-500'>
+              <TicketTitleLine ticket={item.ticket} />
+              <div className='text-muted flex min-w-0 items-center gap-2 text-xs'>
                 <span className='min-w-0 truncate'>
                   {item.kind === 'comment'
                     ? `${t('comment')} - ${item.authorName ?? t('no_name')}`

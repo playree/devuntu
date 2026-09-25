@@ -94,7 +94,7 @@ export const AnnouncementManage: FC = () => {
 
       {body !== undefined ? (
         <fieldset className='min-h-24 rounded-xl border-2 p-2'>
-          <legend className='px-2 text-sm text-gray-500'>{t('announcement')}</legend>
+          <legend className='text-muted px-2 text-sm'>{t('announcement')}</legend>
           <MarkdownView body={body} />
         </fieldset>
       ) : (

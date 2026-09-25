@@ -58,11 +58,11 @@ export const IntegrationSettingsForm: FC<{
       <GridBox isSmart>
         <div className='col-span-12 pb-2'>
           <SwitchCtrl control={control} name='enabled' id={id} label={enableLabel} />
-          <p className='mt-1 text-sm text-neutral-500'>{enableDescription}</p>
+          <p className='text-muted mt-1 text-sm'>{enableDescription}</p>
         </div>
         <div className='col-span-12'>
           <MultiSelectCtrl control={control} name='allowedGroupIds' groupOptions={groupOptions} label={groupsLabel} />
-          <p className='mt-1 text-sm text-neutral-500'>{groupsDescription}</p>
+          <p className='text-muted mt-1 text-sm'>{groupsDescription}</p>
         </div>
         <div className='col-span-12 pt-2'>
           <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>

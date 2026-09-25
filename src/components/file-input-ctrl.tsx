@@ -176,7 +176,7 @@ const FileField = ({
             <TrashIcon width={16} />
           </Button>
         )}
-        <span className={cn('text-default-500 truncate', isCompact ? 'text-xs' : 'text-sm')}>
+        <span className={cn('text-muted truncate', isCompact ? 'text-xs' : 'text-sm')}>
           {file?.name ?? t('no_file_selected')}
         </span>
       </div>

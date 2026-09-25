@@ -1,12 +1,12 @@
 'use client'
 
 import { RocketLaunchIcon } from '@/components/icon'
-import { PriorityChip, TicketIdText } from '@/components/ticket/ticket-chip'
+import { PriorityChip } from '@/components/ticket/ticket-chip'
 import { useActionData } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'
 import { Chip } from '@heroui/react'
 import { getAgentApprovals } from '../server'
-import { RowLink } from './ticket-row'
+import { RowLink, TicketTitleLine } from './ticket-row'
 import { WidgetDataCard, WidgetFC, WidgetRowList } from './widget-card'
 
 /**
@@ -39,13 +39,10 @@ export const AgentApprovalsWidget: WidgetFC = ({ id, editable }) => {
         <WidgetRowList isEmpty={data.items.length === 0} message={t('msg_no_agent_approvals')}>
           {data.items.map((ticket) => (
             <RowLink key={ticket.id} href='/agents' editable={editable}>
-              <div className='flex min-w-0 items-center gap-2'>
-                <TicketIdText displayId={ticket.displayId} className='shrink-0' />
-                <span className='truncate text-sm'>{ticket.title}</span>
-              </div>
+              <TicketTitleLine ticket={ticket} />
               <div className='flex min-w-0 items-center gap-2'>
                 <PriorityChip value={ticket.priority} />
-                <span className='truncate text-xs text-gray-500'>{ticket.agentName}</span>
+                <span className='text-muted truncate text-xs'>{ticket.agentName}</span>
               </div>
             </RowLink>
           ))}
