@@ -13,9 +13,13 @@
  */
 
 import { BEARER_TOKEN_ROW_SELECT, generateBearerToken, hashBearerToken, verifyBearerTokenRow } from '../bearer-token'
+import { nowDate } from '../day'
+import { errClient, errNotFound } from '../error'
+import { logger } from '../logger'
 import type { ResourceAuthResult } from '../oauth/oauth-resource'
-import { prisma } from '../prisma'
-import { MCP_TOKEN_PREFIX } from './mcp'
+import { isUniqueViolation, prisma } from '../prisma'
+import { tokenExpiresAt, type TokenExpires } from '../token-expires'
+import { DUPLICATED_MCP_TOKEN_NAME, MAX_MCP_TOKENS_PER_USER, MCP_TOKEN_LIMIT_REACHED, MCP_TOKEN_PREFIX } from './mcp'
 
 export const isMcpToken = (token: string): boolean => token.startsWith(MCP_TOKEN_PREFIX)
 
@@ -41,3 +45,54 @@ export const verifyMcpToken = async (token: string): Promise<ResourceAuthResult>
       touch: (id, now) => prisma.mcpToken.update({ where: { id }, data: { lastUsedAt: now } }),
     },
   )
+
+/** 本人のトークン一覧。平文は保持していないので、見分け用の末尾数文字だけを返す */
+export const listUserMcpTokens = async (userId: string) =>
+  prisma.mcpToken.findMany({
+    where: { userId },
+    select: { id: true, name: true, hint: true, expiresAt: true, lastUsedAt: true, createdAt: true },
+  })
+
+/**
+ * トークン発行。平文を返せるのはこの応答だけで、DB にはハッシュしか残らない。
+ *
+ * 本数の上限は UI のボタン無効化と合わせた二重の歯止め。件数の確認から作成までの間に
+ * 別のタブから発行されると上限を超えうるが、実害が無いので楽観で許容する。
+ */
+export const issueUserMcpToken = async (
+  userId: string,
+  { name, expires }: { name: string; expires: TokenExpires },
+): Promise<string> => {
+  if ((await prisma.mcpToken.count({ where: { userId } })) >= MAX_MCP_TOKENS_PER_USER) {
+    throw errClient(MCP_TOKEN_LIMIT_REACHED)
+  }
+
+  const { token, hint } = generateMcpToken()
+  const issued = await prisma.mcpToken
+    .create({
+      data: { userId, name, tokenHash: hashMcpToken(token), hint, expiresAt: tokenExpiresAt(expires, nowDate()) },
+      select: { id: true },
+    })
+    .catch((e: unknown) => {
+      if (isUniqueViolation(e)) {
+        throw errClient(DUPLICATED_MCP_TOKEN_NAME)
+      }
+      throw e
+    })
+
+  logger.info({ mcpTokenId: issued.id, userId }, 'mcp token issued')
+  return token
+}
+
+/** トークン削除。行を消すので、このトークンを使っている接続はその場で切れる */
+export const deleteUserMcpToken = async (userId: string, id: string): Promise<void> => {
+  const token = await prisma.mcpToken.findUnique({ where: { id }, select: { userId: true } })
+  // 他人の行は存在自体を伏せる
+  if (!token || token.userId !== userId) {
+    throw errNotFound()
+  }
+
+  await prisma.mcpToken.delete({ where: { id } })
+
+  logger.info({ mcpTokenId: id, userId }, 'mcp token deleted')
+}

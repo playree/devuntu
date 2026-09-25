@@ -10,6 +10,7 @@
 
 import webpush, { WebPushError } from 'web-push'
 import { envu } from '../env-util'
+import { errNotFound } from '../error'
 import { logger } from '../logger'
 import type { DeliveryOutcome } from '../notify/notify-outcome'
 import { prisma } from '../prisma'
@@ -188,4 +189,26 @@ const pruneWebPushSubscriptions = async (userId: string): Promise<void> => {
   }
   await prisma.webPushSubscription.deleteMany({ where: { id: { in: stale.map(({ id }) => id) } } })
   logger.info({ userId, removed: stale.length }, 'web push subscriptions pruned')
+}
+
+/** この利用者が登録している端末の一覧(解除の対象) */
+export const listWebPushDevices = async (userId: string) =>
+  prisma.webPushSubscription.findMany({
+    where: { userId },
+    select: { id: true, endpoint: true, label: true, createdAt: true, lastUsedAt: true },
+    orderBy: { createdAt: 'desc' },
+  })
+
+/**
+ * 端末の購読を解除する。
+ *
+ * 自分の購読だけを消せるよう、`deleteMany` の条件に `userId` を含める
+ * (id を推測されても他人の端末は消せない)。
+ */
+export const removeWebPushDevice = async (userId: string, id: string): Promise<void> => {
+  const { count } = await prisma.webPushSubscription.deleteMany({ where: { id, userId } })
+  if (count === 0) {
+    throw errNotFound()
+  }
+  logger.info({ userId, subscriptionId: id }, 'web push device removed')
 }
