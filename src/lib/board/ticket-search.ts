@@ -9,7 +9,7 @@ import { parseTicketDisplayId, parseTicketNumber } from './ticket-id'
 
 /**
  * 一覧で並べ替えできる列。MultiTable に渡す columns の id と一致させる(tags は並べ替え不可)。
- * `zTicketSortColumn`(schema.ts) と `ticketListOrderBy` の単一ソース。
+ * `scTicketListQuery`(schema-ticket.ts) と `ticketListOrderBy` の単一ソース。
  */
 export const TICKET_SORT_COLUMNS = ['title', 'status', 'priority', 'assigneeName', 'dueDate', 'updatedAt'] as const
 export type TicketSortColumn = (typeof TICKET_SORT_COLUMNS)[number]
@@ -17,7 +17,7 @@ export type TicketSortColumn = (typeof TICKET_SORT_COLUMNS)[number]
 /** 未割り当てを表す assignee の値。チケット一覧・かんばんの絞り込みで共通に使う */
 export const ASSIGNEE_NONE = 'none'
 
-/** 検索条件。`scTicketSearch`(schema.ts) の出力型と構造的に一致させる */
+/** 検索条件。`scTicketSearch`(schema-ticket.ts) の出力型と構造的に一致させる */
 export type TicketSearchParams = {
   keyword: string
   status: TicketStatus[]

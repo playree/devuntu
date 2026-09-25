@@ -34,7 +34,7 @@
 
 `Ticket.boardId` は**作成時にだけ決まり、以後変更しない**。今後もボード移動を許容する予定は無い。
 
-- 作成は `scCreateTicket`(`src/lib/schema/schema.ts`)と MCP の `create_ticket` が `boardId` を受け取る
+- 作成は `scCreateTicket`(`src/lib/schema/schema-ticket.ts`)と MCP の `create_ticket` が `boardId` を受け取る
 - 更新側の `scPatchTicket` と MCP の `update_ticket` には `boardId` が無く、画面にもボードを変える導線は無い
 - かんばんの DnD(`moveTicket` → `moveTicketToLane`)は同一ボード内のレーン移動と並び替えだけ
 

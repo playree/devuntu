@@ -204,7 +204,7 @@ AIエージェントは `devuntu-agent` を名乗るので、`claude mcp list` �
   他ボードのタグは付けられず、メンバー以外は担当者にできない
 - `search_tickets` の `assignee` は ユーザーID / `me`(自分) / `none`(未割り当て)。`limit` は既定20・最大50
 - `dueDate` は `YYYY-MM-DD`。`null` を渡すと解除、省略すると変更しない。`assigneeId` と `tagIds` も同じ扱い
-- 文字数は画面と共通(`src/lib/schema/schema.ts`)。タイトル120文字、本文・コメント40000文字、タグは10個まで
+- 文字数は画面と共通(`src/lib/schema/schema-ticket.ts`)。タイトル120文字、本文・コメント40000文字、タグは10個まで
 - `add_ticket_comment` の `type` は `plan`(対応プラン) / `report`(対応報告)。指定すると詳細画面で
   折りたたみ表示され、通常コメントと区別できる。`parentId` での返信は**1階層のみ**
 

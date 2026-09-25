@@ -13,7 +13,7 @@ import {
   saveAgentRunnerRuleValue,
 } from '@/lib/agent/agent-runner-config'
 import { prisma } from '@/lib/prisma'
-import { SaveAgentRunner } from '@/lib/schema/schema'
+import { SaveAgentRunner } from '@/lib/schema/schema-agent'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/prisma', () => ({

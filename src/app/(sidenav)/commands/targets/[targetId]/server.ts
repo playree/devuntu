@@ -16,7 +16,7 @@ import { type CommandDefEntry, CommandDefWriteError, editCommandFileCommands } f
 import { errInvalidOperation, errTooManyRequests } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { consumeRateLimit } from '@/lib/rate-limit'
-import { scCommandTargetKey } from '@/lib/schema/schema'
+import { scCommandTargetKey } from '@/lib/schema/schema-command'
 
 /** 定義ファイルの書き換えは I/O とディレクトリの全走査を伴うので、連打で叩けないようにする */
 const EDIT_RATE_LIMIT = { limit: 20, windowMs: 60_000 }

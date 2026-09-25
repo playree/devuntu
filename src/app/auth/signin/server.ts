@@ -4,7 +4,7 @@ import { safeAction } from '@/lib/action/action-server'
 import { auth } from '@/lib/auth/auth'
 import { prisma } from '@/lib/prisma'
 import { assertRateLimit } from '@/lib/rate-limit'
-import { scSignInUsername } from '@/lib/schema/schema'
+import { scSignInUsername } from '@/lib/schema/schema-auth'
 import { getClientIp } from '@/lib/server-utils'
 
 /**

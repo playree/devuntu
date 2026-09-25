@@ -6,7 +6,7 @@ import { reserveBoardKey, rethrowDuplicatedBoardKey } from '@/lib/board/board-ke
 import { TICKET_STATUSES } from '@/lib/board/ticket-enum'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
-import { scCreateBoard } from '@/lib/schema/schema'
+import { scCreateBoard } from '@/lib/schema/schema-board'
 
 /**
  * ボード一覧取得(自分がアサインされているボードのみ)

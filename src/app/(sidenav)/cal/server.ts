@@ -5,13 +5,13 @@ import { errInvalidOperation, errPermissionDenied } from '@/lib/error'
 import { canUseGoogleAccount, googleAccountQuery } from '@/lib/google/google-account'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
+import { scUUID } from '@/lib/schema/schema'
 import {
   scCalendarShareOptions,
   scCreateBusyTime,
   scUpdateBusyTime,
   scUpdateCalendarShareTitle,
-  scUUID,
-} from '@/lib/schema/schema'
+} from '@/lib/schema/schema-calendar'
 import { requestLocale } from '@/locale/request'
 import { t } from '@/locale/server'
 import { nanoid } from 'nanoid'

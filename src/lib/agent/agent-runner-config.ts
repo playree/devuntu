@@ -13,7 +13,7 @@ import { isValidTimezone } from '../day'
 import { errValidation } from '../error'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
-import type { SaveAgentRunner } from '../schema/schema'
+import type { SaveAgentRunner } from '../schema/schema-agent'
 import { AGENT_RUN_HISTORY_LIMIT } from './agent'
 import { countAgentRunsSince, dailyRunWindow } from './agent-runner'
 

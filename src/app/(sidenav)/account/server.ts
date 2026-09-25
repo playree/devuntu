@@ -15,14 +15,9 @@ import { getUserNotifySettings, setUserNotifySettings } from '@/lib/notify/notif
 import { dedupeScopes } from '@/lib/oauth/oauth-consent'
 import { isUniqueViolation, prisma } from '@/lib/prisma'
 import { assertRateLimit } from '@/lib/rate-limit'
-import {
-  scIssueMcpToken,
-  scRevokeConsent,
-  scSetUserAvatar,
-  scUpdateNotifySettings,
-  scUUID,
-  scWebPushSubscription,
-} from '@/lib/schema/schema'
+import { scUUID } from '@/lib/schema/schema'
+import { scIssueMcpToken, scSetUserAvatar } from '@/lib/schema/schema-auth'
+import { scUpdateNotifySettings, scWebPushSubscription } from '@/lib/schema/schema-notify'
 import { SLACK_PROVIDER_ID } from '@/lib/slack/slack'
 import { canUseSlackAccount } from '@/lib/slack/slack-account'
 import { removeImageAttachment, saveImageAttachment } from '@/lib/storage/attachment'
@@ -132,7 +127,7 @@ export type GetMyOAuthConsentsReturnType = Awaited<ReturnType<typeof getMyOAuthC
  */
 export const revokeOAuthConsent = safeAuthAction
   .metadata({ actionName: 'revokeOAuthConsent', role: 'user' })
-  .inputSchema(scRevokeConsent)
+  .inputSchema(scUUID)
   .action(async ({ parsedInput: { id }, ctx: { user } }) => {
     const consent = await prisma.oauthConsent.findUnique({ where: { id }, select: { userId: true, clientId: true } })
     if (!consent || consent.userId !== user.id) {

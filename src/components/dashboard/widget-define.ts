@@ -1,4 +1,4 @@
-import { DashboardLayout } from '@/lib/schema/schema'
+import { DashboardLayout } from '@/lib/schema/schema-dashboard'
 
 export const WidgetDefaultLayout: DashboardLayout = {
   left: ['my_tickets', 'app_info', 'server_info', null, null, null, null, null, null, null],

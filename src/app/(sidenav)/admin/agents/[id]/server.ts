@@ -20,6 +20,7 @@ import { nowDate } from '@/lib/day'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
+import { scUUID } from '@/lib/schema/schema'
 import {
   scAgentApproverUser,
   scIssueAgentToken,
@@ -27,8 +28,7 @@ import {
   scSaveAgentRunnerRule,
   scSetAgentApproverGroups,
   scUpdateAgent,
-  scUUID,
-} from '@/lib/schema/schema'
+} from '@/lib/schema/schema-agent'
 import { tokenExpiresAt } from '@/lib/token-expires'
 import { headers } from 'next/headers'
 import { assertAgent } from '../agent-util'

@@ -8,7 +8,7 @@ import { MarkdownField } from '@/components/markdown/markdown-editor'
 import { notify } from '@/components/notify'
 import { ActionResult, parseAction } from '@/lib/action/action-client'
 import type { AgentRunnerConfig } from '@/lib/agent/agent-runner-config'
-import { SaveAgentRunnerRule, scSaveAgentRunnerRule } from '@/lib/schema/schema'
+import { SaveAgentRunnerRule, scSaveAgentRunnerRule } from '@/lib/schema/schema-agent'
 import { useLocale } from '@/locale/client'
 import { FC, useState } from 'react'
 

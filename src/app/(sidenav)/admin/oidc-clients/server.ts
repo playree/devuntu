@@ -5,7 +5,12 @@ import { auth, OIDC_PROVIDER_SCOPES } from '@/lib/auth/auth'
 import { errSystemError } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
-import { scAddOidcClient, scDeleteOidcClient, scSetOidcClientDisabled, scUpdateOidcClient } from '@/lib/schema/schema'
+import {
+  scAddOidcClient,
+  scDeleteOidcClient,
+  scSetOidcClientDisabled,
+  scUpdateOidcClient,
+} from '@/lib/schema/schema-auth'
 import { headers } from 'next/headers'
 
 /** better-auth 側は未設定を client_secret_basic として扱うため表示上もそれに合わせる。それ以外の未対応値は明示的に区別する */

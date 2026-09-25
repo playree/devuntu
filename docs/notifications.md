@@ -463,7 +463,7 @@ Slack の署名(`src/lib/slack/slack-signature.ts`)だけが門番になるの�
    並びの一致は `tests/lib/notify/notify.test.ts` で固定しているので、**値の追加は末尾のみ**
 2. DM 通知なら `DM_NOTIFY_EVENTS`、チャネル通知なら `CHANNEL_NOTIFY_EVENTS` へ追加する
    (両方に出るイベントは両方へ)。前者は `/account` の通知設定と `scUpdateNotifySetting`、
-   後者はボード設定と `scSetBoardNotifySetting`(`src/lib/schema/schema.ts`)の入力範囲を兼ねるので、
+   後者はボード設定と `scSetBoardNotifySetting`(`src/lib/schema/schema-board.ts`)の入力範囲を兼ねるので、
    **画面と入力検証は追加するだけで追従する**
 3. `NOTIFY_PAYLOAD_SCHEMA`(`notify-payload.ts`)・文面(`notify-content.ts`)・宛先の決め方
    (`notify-recipient.ts`)へ追加する。いずれも `satisfies Record<NotifyEvent, …>` なので、

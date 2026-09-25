@@ -34,7 +34,7 @@ import {
   SignInPassword,
   SignInUsername,
   TwoFaCode,
-} from '@/lib/schema/schema'
+} from '@/lib/schema/schema-auth'
 import { intervalOperation } from '@/lib/sleep'
 import { textStyles } from '@/lib/style'
 import { useLocale } from '@/locale/client'

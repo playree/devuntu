@@ -6,7 +6,7 @@ import { auth } from '@/lib/auth/auth'
 import { errInvalidOperation, errSystemError } from '@/lib/error'
 import { hasCompletedInitialSetup } from '@/lib/initial-setup'
 import { logger } from '@/lib/logger'
-import { scCreateAdmin } from '@/lib/schema/schema'
+import { scCreateAdmin } from '@/lib/schema/schema-auth'
 
 export const createAdmin = safeAction
   .metadata({ actionName: 'createAdmin' })

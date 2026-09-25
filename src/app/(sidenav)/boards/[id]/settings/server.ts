@@ -20,18 +20,17 @@ import { logger } from '@/lib/logger'
 import { getBoardNotifySetting, setBoardNotifySetting } from '@/lib/notify/notify-board-setting'
 import { prisma } from '@/lib/prisma'
 import { assertRateLimit } from '@/lib/rate-limit'
+import { scUUID } from '@/lib/schema/schema'
 import {
-  scCreateTag,
   scGetBoardSlackChannels,
   scRemoveBoardMember,
   scSetBoardArchived,
   scSetBoardGroups,
   scSetBoardNotifySetting,
   scUpdateBoard,
-  scUpdateTag,
   scUpsertBoardMember,
-  scUUID,
-} from '@/lib/schema/schema'
+} from '@/lib/schema/schema-board'
+import { scCreateTag, scUpdateTag } from '@/lib/schema/schema-ticket'
 import { getSlackSettings, hasSlackCredentials } from '@/lib/slack/slack-account'
 import { listSlackChannels } from '@/lib/slack/slack-server'
 import { detachBoardAttachments, listBoardAttachmentKeys, removeAttachmentByKey } from '@/lib/storage/attachment'

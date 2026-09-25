@@ -9,7 +9,8 @@ import { nowDate } from '@/lib/day'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
-import { scMoveTicket, scUUID } from '@/lib/schema/schema'
+import { scUUID } from '@/lib/schema/schema'
+import { scMoveTicket } from '@/lib/schema/schema-ticket'
 
 /**
  * かんばん表示用のボード + レーン別カード

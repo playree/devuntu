@@ -1,4 +1,4 @@
-import { scCommandRunListQuery } from '@/lib/schema/schema'
+import { scCommandRunListQuery } from '@/lib/schema/schema-command'
 import { en } from '@/locale/lang-en'
 import { type Metadata } from 'next'
 import { FC } from 'react'
