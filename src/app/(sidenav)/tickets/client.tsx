@@ -8,7 +8,8 @@ import { useModalState } from '@/components/general/modal'
 import { useServerPagingList } from '@/components/general/paging'
 import { MultiTable, SelectionCell } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, ChatBubbleIcon, FunnelIcon, PlusIcon, TicketIcon } from '@/components/icon'
+import { ChatBubbleIcon, FunnelIcon, PlusIcon, TicketIcon } from '@/components/icon'
+import { ReloadButton } from '@/components/reload-button'
 import { PriorityChip, StatusChip, TagChips, TicketIdText, useBoardName } from '@/components/ticket/ticket-chip'
 import { parseAction } from '@/lib/action/action-client'
 import { preventParentSelection } from '@/lib/client-utils'
@@ -16,7 +17,7 @@ import { dayformat } from '@/lib/day'
 import { TicketSearch } from '@/lib/schema/schema'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
-import { Accordion, ButtonGroup, cn, Table } from '@heroui/react'
+import { Accordion, cn, Table } from '@heroui/react'
 import Link from 'next/link'
 import { FC, useEffect, useRef, useState } from 'react'
 import { TicketDetailClient } from './[id]/client'
@@ -101,9 +102,7 @@ export const TicketsClient: FC<{
           icon={<PlusIcon />}
           onPress={() => addModalState.open()}
         />
-        <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={reloadAll}>
-          <ButtonGroup.Separator />
-        </MultiButton>
+        <ReloadButton onReload={reloadAll} />
       </ContentHeader>
 
       <Accordion allowsMultipleExpanded hideSeparator defaultExpandedKeys={defaultExpandedKeys}>

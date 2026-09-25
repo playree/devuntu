@@ -10,12 +10,12 @@ import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
 import {
   ArrowLeftCircleIcon,
-  ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
   Cog6ToothIcon,
   FunnelIcon,
   ViewColumnsIcon,
 } from '@/components/icon'
+import { ReloadButton } from '@/components/reload-button'
 import { useBoardName } from '@/components/ticket/ticket-chip'
 import { UserSelectOption } from '@/components/user-select'
 import type { TicketStatus } from '@/generated/prisma/enums'
@@ -175,9 +175,7 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
         >
           <ButtonGroup.Separator />
         </MultiButton>
-        <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={reload}>
-          <ButtonGroup.Separator />
-        </MultiButton>
+        <ReloadButton onReload={reload} />
       </ContentHeader>
 
       {board.archived && (

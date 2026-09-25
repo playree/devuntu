@@ -11,7 +11,6 @@ import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
 import {
   ArrowLeftCircleIcon,
-  ArrowPathIcon,
   ClipboardDocumentIcon,
   ClockIcon,
   Cog6ToothIcon,
@@ -21,9 +20,10 @@ import {
   RocketLaunchIcon,
   ShieldCheckIcon,
 } from '@/components/icon'
+import { ReloadButton } from '@/components/reload-button'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'
-import { Accordion, ButtonGroup } from '@heroui/react'
+import { Accordion } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
 import { getApproverUserOptions, getGroupOptions } from '../server'
@@ -104,20 +104,15 @@ export const AdminAgentDetailClient: FC<{ agentId: string; baseUrl: string }> = 
           icon={<ArrowLeftCircleIcon />}
           onPress={() => router.push('/admin/agents')}
         />
-        <MultiButton
-          isIconOnly
-          tooltip={t('reload')}
-          icon={<ArrowPathIcon />}
-          onPress={() => {
+        <ReloadButton
+          onReload={() => {
             reload()
             reloadApprovers()
             reloadRunner()
             reloadToken()
             runHistoryList.reload()
           }}
-        >
-          <ButtonGroup.Separator />
-        </MultiButton>
+        />
       </ContentHeader>
 
       <Accordion allowsMultipleExpanded defaultExpandedKeys={defaultExpandedKeys}>

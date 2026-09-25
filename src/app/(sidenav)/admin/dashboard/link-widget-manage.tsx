@@ -10,14 +10,15 @@ import { FormModal, ModalBaseProps, useModalState } from '@/components/general/m
 import { usePagingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, PencilSquareIcon, PlusIcon } from '@/components/icon'
+import { PencilSquareIcon, PlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
+import { ReloadButton } from '@/components/reload-button'
 import { parseAction } from '@/lib/action/action-client'
 import { dayformat } from '@/lib/day'
 import { CreateLinkWidget, scCreateLinkWidget, scUpdateLinkWidget, UpdateLinkWidget } from '@/lib/schema/schema'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
-import { ButtonGroup, Table } from '@heroui/react'
+import { Table } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Image from 'next/image'
 import { FC } from 'react'
@@ -197,9 +198,7 @@ export const LinkWidgetManage: FC = () => {
     <FlexCol>
       <ContentHeader>
         <MultiButton isIconOnly tooltip={t('add_link')} icon={<PlusIcon />} onPress={() => addModalState.open()} />
-        <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={() => list.reload()}>
-          <ButtonGroup.Separator />
-        </MultiButton>
+        <ReloadButton onReload={list.reload} />
       </ContentHeader>
 
       <MultiTable

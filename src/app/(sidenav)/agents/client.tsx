@@ -1,6 +1,5 @@
 'use client'
 
-import { MultiButton } from '@/components/general/button'
 import { SideDrawer } from '@/components/general/drawer'
 import { FlexCol } from '@/components/general/flex'
 import { GridBox } from '@/components/general/grid'
@@ -10,8 +9,9 @@ import { SingleSelectField } from '@/components/general/select'
 import { MultiTable, SelectionCell } from '@/components/general/table'
 import { MultiTagField } from '@/components/general/tag-group'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, RocketLaunchIcon } from '@/components/icon'
+import { RocketLaunchIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
+import { ReloadButton } from '@/components/reload-button'
 import {
   AGENT_MODE_NONE,
   AgentStateChip,
@@ -137,7 +137,7 @@ export const AgentsClient: FC = () => {
       className={cn('max-w-6xl', !selectedId && 'mx-auto')}
     >
       <ContentHeader icon={<RocketLaunchIcon />} title={t('agent')}>
-        <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={reloadAll} />
+        <ReloadButton onReload={reloadAll} hasSeparator={false} />
       </ContentHeader>
 
       {(agents ?? []).length === 0 ? (

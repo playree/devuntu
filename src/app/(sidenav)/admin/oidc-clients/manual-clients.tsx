@@ -8,12 +8,13 @@ import { useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, PencilSquareIcon, PlusIcon } from '@/components/icon'
+import { PencilSquareIcon, PlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
+import { ReloadButton } from '@/components/reload-button'
 import { parseAction } from '@/lib/action/action-client'
 import { UpdateOidcClient } from '@/lib/schema/schema'
 import { useLocale } from '@/locale/client'
-import { ButtonGroup, Table } from '@heroui/react'
+import { Table } from '@heroui/react'
 import { FC } from 'react'
 import { AddModal, UpdateModal } from './modals'
 import { deleteOidcClient, getOidcClients } from './server'
@@ -43,9 +44,7 @@ export const ManualOidcClients: FC<{ baseUrl: string }> = ({ baseUrl }) => {
     <FlexCol>
       <ContentHeader className='text-foreground'>
         <MultiButton isIconOnly tooltip={t('add_client')} icon={<PlusIcon />} onPress={() => addModalState.open()} />
-        <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={() => list.reload()}>
-          <ButtonGroup.Separator />
-        </MultiButton>
+        <ReloadButton onReload={list.reload} />
       </ContentHeader>
 
       <MultiTable

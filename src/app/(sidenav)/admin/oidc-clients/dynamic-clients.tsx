@@ -1,15 +1,15 @@
 'use client'
 
 import { ActionCell } from '@/components/action-cell'
-import { MultiButton } from '@/components/general/button'
 import { OnOffChip } from '@/components/general/chip'
 import { FlexCol } from '@/components/general/flex'
 import { usePagingList } from '@/components/general/paging'
 import { NoticePanel } from '@/components/general/panel'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, BoltSlashIcon, CheckIcon } from '@/components/icon'
+import { BoltSlashIcon, CheckIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
+import { ReloadButton } from '@/components/reload-button'
 import { parseAction } from '@/lib/action/action-client'
 import { dayformat } from '@/lib/day'
 import { useUserTimezone } from '@/lib/use-timezone'
@@ -40,7 +40,7 @@ export const DynamicOidcClients: FC = () => {
   return (
     <FlexCol>
       <ContentHeader className='text-foreground'>
-        <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={() => list.reload()} />
+        <ReloadButton onReload={list.reload} hasSeparator={false} />
       </ContentHeader>
 
       <MultiTable

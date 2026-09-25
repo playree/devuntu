@@ -9,12 +9,13 @@ import { usePagingList } from '@/components/general/paging'
 import { SwitchField } from '@/components/general/switch'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, Cog6ToothIcon, PlusIcon, ViewColumnsIcon } from '@/components/icon'
+import { Cog6ToothIcon, PlusIcon, ViewColumnsIcon } from '@/components/icon'
+import { ReloadButton } from '@/components/reload-button'
 import { RoleChip } from '@/components/role-chip'
 import { useBoardName } from '@/components/ticket/ticket-chip'
 import { parseAction } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'
-import { ButtonGroup, Table } from '@heroui/react'
+import { Table } from '@heroui/react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
@@ -56,9 +57,7 @@ export const BoardsClient: FC = () => {
         }
       >
         <MultiButton isIconOnly tooltip={t('add_board')} icon={<PlusIcon />} onPress={() => addModalState.open()} />
-        <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={() => list.reload()}>
-          <ButtonGroup.Separator />
-        </MultiButton>
+        <ReloadButton onReload={list.reload} />
       </ContentHeader>
 
       <MultiTable
