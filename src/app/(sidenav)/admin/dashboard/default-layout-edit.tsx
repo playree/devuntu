@@ -2,9 +2,8 @@
 
 import { DashboardLayoutEditor } from '@/components/dashboard/layout-editor'
 import { WidgetDefaultLayout } from '@/components/dashboard/widget-define'
-import { MultiButton } from '@/components/general/button'
 import { DialogModal, ModalBaseProps } from '@/components/general/modal'
-import { CheckIcon, Squares2X2Icon } from '@/components/icon'
+import { Squares2X2Icon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action/action-client'
 import { DashboardLayout } from '@/lib/schema/schema'
@@ -35,16 +34,12 @@ export const DefaultLayoutEditModal: FC<ModalBaseProps> = ({ state }) => {
       size='3xl'
       title={{ text: t('default_layout_manage'), icon: <Squares2X2Icon /> }}
       bodyClassName='bg-background rounded-2xl'
-      footer={
-        isLoaded && (
-          <>
-            <MultiButton slot='close' variant='ghost' isDisabled={isSaving}>
-              {t('cancel')}
-            </MultiButton>
-            <MultiButton
-              icon={<CheckIcon />}
-              isPending={isSaving}
-              onPress={async () => {
+      submit={
+        isLoaded
+          ? {
+              label: t('save'),
+              isPending: isSaving,
+              onPress: async () => {
                 setSaving(true)
                 try {
                   await parseAction(updateDefaultDashboard({ layout }))
@@ -53,12 +48,9 @@ export const DefaultLayoutEditModal: FC<ModalBaseProps> = ({ state }) => {
                 } finally {
                   setSaving(false)
                 }
-              }}
-            >
-              {t('save')}
-            </MultiButton>
-          </>
-        )
+              },
+            }
+          : undefined
       }
     >
       {isLoaded && <DashboardLayoutEditor layout={layout} setLayout={setLayout} editable />}

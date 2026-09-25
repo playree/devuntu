@@ -1,6 +1,5 @@
 'use client'
 
-import { MultiButton } from '@/components/general/button'
 import { CheckboxCtrl } from '@/components/general/checkbox'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
@@ -140,16 +139,7 @@ export const CommandForm: FC<ModalBaseProps & { target: AvailableCommandView }> 
         }
       })}
       title={{ text: target.label, icon: <CommandLineIcon /> }}
-      footer={
-        <>
-          <MultiButton slot='close' variant='ghost'>
-            {t('cancel')}
-          </MultiButton>
-          <MultiButton type='submit' icon={<CommandLineIcon />} isPending={isSubmitting}>
-            {t('command_run')}
-          </MultiButton>
-        </>
-      }
+      submit={{ isPending: isSubmitting, label: t('command_run'), icon: <CommandLineIcon /> }}
     >
       <GridBox>
         {target.description && <div className='text-foreground-500 col-span-12 text-xs'>{target.description}</div>}

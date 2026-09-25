@@ -1,12 +1,11 @@
 'use client'
 
-import { MultiButton } from '@/components/general/button'
 import { DatePickerCtrl } from '@/components/general/date-picker'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
 import { FormModal, ModalBaseProps } from '@/components/general/modal'
 import { SingleSelectCtrl } from '@/components/general/select'
-import { CheckIcon, PlusIcon } from '@/components/icon'
+import { PlusIcon } from '@/components/icon'
 import { MarkdownCtrl } from '@/components/markdown/markdown-editor'
 import { MentionCandidate } from '@/components/markdown/mention-menu'
 import { notify } from '@/components/notify'
@@ -103,16 +102,7 @@ export const AddModal: FC<
         state.close()
       })}
       title={{ text: t('add_ticket'), icon: <PlusIcon /> }}
-      footer={
-        <>
-          <MultiButton slot='close' variant='ghost'>
-            {t('cancel')}
-          </MultiButton>
-          <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
-            {t('ok')}
-          </MultiButton>
-        </>
-      }
+      submit={{ isPending: isSubmitting }}
     >
       <GridBox isSmart>
         <div className='col-span-12 md:col-span-8'>

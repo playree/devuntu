@@ -1,6 +1,6 @@
 'use client'
 
-import { MultiButton } from '@/components/general/button'
+import { MultiButton, SubmitButtons } from '@/components/general/button'
 import { CopyableField } from '@/components/general/copyable-field'
 import { DatePickerField } from '@/components/general/date-picker'
 import { getFieldConstraints } from '@/components/general/field-constraints'
@@ -547,25 +547,15 @@ export const TicketDetailClient: FC<{
           }
           footer={
             isEditingContent && (
-              <>
-                <MultiButton
-                  variant='ghost'
-                  size='sm'
-                  isDisabled={isSavingContent}
-                  onPress={() => setEditingContent(false)}
-                >
-                  {t('cancel')}
-                </MultiButton>
-                <MultiButton
-                  size='sm'
-                  icon={<CheckIcon width={16} />}
-                  isPending={isSavingContent}
-                  isDisabled={!isContentSubmittable}
-                  onPress={saveContent}
-                >
-                  {t('save')}
-                </MultiButton>
-              </>
+              <SubmitButtons
+                size='sm'
+                label={t('save')}
+                icon={<CheckIcon width={16} />}
+                isPending={isSavingContent}
+                isDisabled={!isContentSubmittable}
+                onPress={saveContent}
+                onCancel={() => setEditingContent(false)}
+              />
             )
           }
         />

@@ -4,7 +4,7 @@ import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
 import { DialogModal, ModalBaseProps, useModalState } from '@/components/general/modal'
 import { ContentHeader } from '@/components/header'
-import { CheckIcon, PencilSquareIcon } from '@/components/icon'
+import { PencilSquareIcon } from '@/components/icon'
 import { MarkdownInput } from '@/components/markdown/markdown-editor'
 import { MarkdownView } from '@/components/markdown/markdown-view'
 import { notify } from '@/components/notify'
@@ -38,16 +38,12 @@ export const AnnouncementEditModal: FC<ModalBaseProps> = ({ state, reload }) => 
       state={state}
       size='3xl'
       title={{ text: t('announcement_edit'), icon: <PencilSquareIcon /> }}
-      footer={
-        initialBody !== undefined && (
-          <>
-            <MultiButton slot='close' variant='ghost' isDisabled={isSaving}>
-              {t('cancel')}
-            </MultiButton>
-            <MultiButton
-              icon={<CheckIcon />}
-              isPending={isSaving}
-              onPress={async () => {
+      submit={
+        initialBody !== undefined
+          ? {
+              label: t('save'),
+              isPending: isSaving,
+              onPress: async () => {
                 setSaving(true)
                 try {
                   await parseAction(updateAnnouncement({ body }))
@@ -57,12 +53,9 @@ export const AnnouncementEditModal: FC<ModalBaseProps> = ({ state, reload }) => 
                 } finally {
                   setSaving(false)
                 }
-              }}
-            >
-              {t('save')}
-            </MultiButton>
-          </>
-        )
+              },
+            }
+          : undefined
       }
     >
       {initialBody !== undefined && (

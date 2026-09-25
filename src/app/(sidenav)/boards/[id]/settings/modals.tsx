@@ -1,10 +1,9 @@
 'use client'
 
-import { MultiButton } from '@/components/general/button'
 import { GridBox } from '@/components/general/grid'
 import { FormModal, ModalBaseProps } from '@/components/general/modal'
 import { SingleSelectCtrl } from '@/components/general/select'
-import { CheckIcon, PencilSquareIcon, UserPlusIcon } from '@/components/icon'
+import { PencilSquareIcon, UserPlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { useRoleOptions } from '@/components/role-chip'
 import { UserSelectCtrl } from '@/components/user-select'
@@ -62,16 +61,7 @@ export const AddMemberModal: FC<ModalBaseProps & { boardId: string; assignments:
         state.close()
       })}
       title={{ text: t('add_member'), icon: <UserPlusIcon /> }}
-      footer={
-        <>
-          <MultiButton slot='close' variant='ghost'>
-            {t('cancel')}
-          </MultiButton>
-          <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
-            {t('ok')}
-          </MultiButton>
-        </>
-      }
+      submit={{ isPending: isSubmitting }}
     >
       <GridBox>
         <div className='col-span-12'>
@@ -135,16 +125,7 @@ export const UpdateMemberRoleModal: FC<
         state.close()
       })}
       title={{ text: t('update_member'), icon: <PencilSquareIcon /> }}
-      footer={
-        <>
-          <MultiButton slot='close' variant='ghost'>
-            {t('cancel')}
-          </MultiButton>
-          <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
-            {t('ok')}
-          </MultiButton>
-        </>
-      }
+      submit={{ isPending: isSubmitting }}
     >
       <GridBox>
         <div className='col-span-12'>

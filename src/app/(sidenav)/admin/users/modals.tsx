@@ -1,12 +1,11 @@
 'use client'
 
-import { MultiButton } from '@/components/general/button'
 import { CheckboxCtrl } from '@/components/general/checkbox'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
 import { FormModal, ModalBaseProps } from '@/components/general/modal'
 import { MultiSelectCtrl } from '@/components/general/select'
-import { CheckIcon, PencilSquareIcon, UserPlusIcon } from '@/components/icon'
+import { PencilSquareIcon, UserPlusIcon } from '@/components/icon'
 import { InputPasswordCtrl } from '@/components/input-ctrl-pw'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action/action-client'
@@ -52,16 +51,7 @@ export const AddModal: FC<ModalBaseProps & { enabledPassword: boolean; groupOpti
         state.close()
       })}
       title={{ text: t('add_user'), icon: <UserPlusIcon /> }}
-      footer={
-        <>
-          <MultiButton slot='close' variant='ghost'>
-            {t('cancel')}
-          </MultiButton>
-          <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
-            {t('ok')}
-          </MultiButton>
-        </>
-      }
+      submit={{ isPending: isSubmitting }}
     >
       <GridBox>
         <div className='col-span-12'>
@@ -149,16 +139,7 @@ export const UpdateModal: FC<ModalBaseProps & { target: UpdateUser; groupOptions
         }
       })}
       title={{ text: t('update_user'), icon: <PencilSquareIcon /> }}
-      footer={
-        <>
-          <MultiButton slot='close' variant='ghost'>
-            {t('cancel')}
-          </MultiButton>
-          <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
-            {t('ok')}
-          </MultiButton>
-        </>
-      }
+      submit={{ isPending: isSubmitting }}
     >
       <GridBox>
         <div className='col-span-12'>

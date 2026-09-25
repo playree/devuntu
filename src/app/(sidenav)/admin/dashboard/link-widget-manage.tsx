@@ -10,7 +10,7 @@ import { FormModal, ModalBaseProps, useModalState } from '@/components/general/m
 import { usePagingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, CheckIcon, PencilSquareIcon, PlusIcon } from '@/components/icon'
+import { ArrowPathIcon, PencilSquareIcon, PlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action/action-client'
 import { dayformat } from '@/lib/day'
@@ -57,16 +57,7 @@ const LinkWidgetAddModal: FC<ModalBaseProps> = ({ state, reload }) => {
         state.close()
       })}
       title={{ text: t('add_link'), icon: <PlusIcon /> }}
-      footer={
-        <>
-          <MultiButton slot='close' variant='ghost'>
-            {t('cancel')}
-          </MultiButton>
-          <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
-            {t('ok')}
-          </MultiButton>
-        </>
-      }
+      submit={{ isPending: isSubmitting }}
     >
       <GridBox>
         <div className='col-span-12'>
@@ -140,16 +131,7 @@ const LinkWidgetUpdateModal: FC<ModalBaseProps & { target: LinkWidgetTarget }> =
         state.close()
       })}
       title={{ text: t('update_link'), icon: <PencilSquareIcon /> }}
-      footer={
-        <>
-          <MultiButton slot='close' variant='ghost'>
-            {t('cancel')}
-          </MultiButton>
-          <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
-            {t('ok')}
-          </MultiButton>
-        </>
-      }
+      submit={{ isPending: isSubmitting }}
     >
       <GridBox>
         <div className='col-span-12'>

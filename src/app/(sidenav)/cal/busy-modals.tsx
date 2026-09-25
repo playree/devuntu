@@ -6,7 +6,7 @@ import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
 import { FormModal, ModalBaseProps } from '@/components/general/modal'
 import { SingleSelectField } from '@/components/general/select'
-import { CheckIcon, PencilSquareIcon, PlusIcon } from '@/components/icon'
+import { PencilSquareIcon, PlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action/action-client'
 import { minToHHmm, WEEKDAY_LABELS, WEEKDAY_ORDER } from '@/lib/day'
@@ -67,16 +67,7 @@ export const BusyTimeModal: FC<ModalBaseProps & { target?: UpdateBusyTime }> = (
         text: isEdit ? t('update_busy_time') : t('add_busy_time'),
         icon: isEdit ? <PencilSquareIcon /> : <PlusIcon />,
       }}
-      footer={
-        <>
-          <MultiButton slot='close' variant='ghost'>
-            {t('cancel')}
-          </MultiButton>
-          <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
-            {t('ok')}
-          </MultiButton>
-        </>
-      }
+      submit={{ isPending: isSubmitting }}
     >
       <GridBox>
         {/* 件名 */}

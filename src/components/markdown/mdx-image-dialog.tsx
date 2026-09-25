@@ -1,6 +1,5 @@
 'use client'
 
-import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
 import { DialogModal } from '@/components/general/modal'
 import { PhotoIcon } from '@/components/icon'
@@ -171,16 +170,14 @@ export const MdxImageDialog: FC = () => {
        * ダイアログが見えているのに操作できなくなる
        */
       portalContainer={popupContainer ?? undefined}
-      footer={
-        <>
-          <MultiButton variant='ghost' isDisabled={isPending} onPress={() => closeImageDialog()}>
-            {t('cancel')}
-          </MultiButton>
-          <MultiButton icon={<PhotoIcon />} isDisabled={!file} isPending={isPending} onPress={submit}>
-            {t(isEditing ? 'replace_image' : 'insert_image')}
-          </MultiButton>
-        </>
-      }
+      submit={{
+        label: t(isEditing ? 'replace_image' : 'insert_image'),
+        icon: <PhotoIcon />,
+        isPending,
+        isDisabled: !file,
+        onPress: submit,
+        onCancel: () => closeImageDialog(),
+      }}
     >
       {/* チケット編集モーダル内でも使うため DialogModal にする(form を置くと submit が外側の form へ伝播する) */}
       <FlexCol>

@@ -2,6 +2,7 @@
 
 import { Button, ButtonProps, cn, Spinner, Tooltip } from '@heroui/react'
 import { FC, ReactNode, useEffect, useState } from 'react'
+import { CheckIcon } from './icons'
 import { useIsSmart } from './smart'
 import { useGeneralUiText } from './ui-text'
 
@@ -82,5 +83,54 @@ export const MultiButton: FC<
     </Tooltip>
   ) : (
     button
+  )
+}
+
+export type SubmitButtonsProps = {
+  /** 省略時は OK */
+  label?: string
+  /** 省略時は CheckIcon */
+  icon?: ReactNode
+  isPending?: boolean
+  isDisabled?: boolean
+  size?: ButtonProps['size']
+  /** 省略時は form の submit になる */
+  onPress?: () => void
+  /** 省略時はモーダルを閉じる(slot='close') */
+  onCancel?: () => void
+}
+
+/** キャンセルと確定のボタンの組。処理中はキャンセルも押させない */
+export const SubmitButtons: FC<SubmitButtonsProps> = ({
+  label,
+  icon,
+  isPending,
+  isDisabled,
+  size,
+  onPress,
+  onCancel,
+}) => {
+  const uiText = useGeneralUiText()
+  return (
+    <>
+      <MultiButton
+        variant='ghost'
+        size={size}
+        isDisabled={isPending}
+        {...(onCancel ? { onPress: onCancel } : { slot: 'close' })}
+      >
+        {uiText.cancel}
+      </MultiButton>
+      <MultiButton
+        type={onPress ? 'button' : 'submit'}
+        size={size}
+        icon={icon ?? <CheckIcon />}
+        isPending={isPending}
+        isDisabled={isDisabled}
+        onPress={onPress}
+      >
+        {label ?? uiText.ok}
+      </MultiButton>
+    </>
   )
 }

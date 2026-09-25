@@ -1,9 +1,8 @@
 'use client'
 
-import { MultiButton } from '@/components/general/button'
 import { GridBox } from '@/components/general/grid'
 import { FormModal, ModalBaseProps } from '@/components/general/modal'
-import { CheckIcon, UserPlusIcon } from '@/components/icon'
+import { UserPlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import type { UserSelectOption } from '@/components/user-select'
 import { UserSelectCtrl } from '@/components/user-select'
@@ -48,16 +47,7 @@ export const AddAgentApproverModal: FC<
         state.close()
       })}
       title={{ text: t('add_agent_approver_user'), icon: <UserPlusIcon /> }}
-      footer={
-        <>
-          <MultiButton slot='close' variant='ghost'>
-            {t('cancel')}
-          </MultiButton>
-          <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
-            {t('ok')}
-          </MultiButton>
-        </>
-      }
+      submit={{ isPending: isSubmitting }}
     >
       <GridBox>
         <div className='col-span-12'>
