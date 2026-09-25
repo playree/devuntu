@@ -7,10 +7,11 @@ import { Grid } from '@/components/general/grid'
 import { useModalState } from '@/components/general/modal'
 import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, ClockIcon, Cog6ToothIcon, CommandLineIcon, PlayIcon, ServerStackIcon } from '@/components/icon'
+import { ClockIcon, Cog6ToothIcon, CommandLineIcon, PlayIcon, ServerStackIcon } from '@/components/icon'
+import { ReloadButton } from '@/components/reload-button'
 import { useActionData } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'
-import { Accordion, ButtonGroup, Card } from '@heroui/react'
+import { Accordion, Card } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC, useMemo } from 'react'
 import { CommandForm } from './command-form'
@@ -44,9 +45,7 @@ export const CommandsClient: FC = () => {
           icon={<ClockIcon />}
           onPress={() => router.push('/commands/runs')}
         />
-        <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={() => reload()}>
-          <ButtonGroup.Separator />
-        </MultiButton>
+        <ReloadButton onReload={reload} />
       </ContentHeader>
 
       {isLoading && !data ? (

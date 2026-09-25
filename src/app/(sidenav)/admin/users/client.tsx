@@ -9,14 +9,15 @@ import { useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, PencilSquareIcon, UserPlusIcon, UsersIcon } from '@/components/icon'
+import { PencilSquareIcon, UserPlusIcon, UsersIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
+import { ReloadButton } from '@/components/reload-button'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { dayformat } from '@/lib/day'
 import { UpdateUser } from '@/lib/schema/schema'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
-import { ButtonGroup, Chip, Table } from '@heroui/react'
+import { Chip, Table } from '@heroui/react'
 import { FC } from 'react'
 import { AddModal, UpdateModal } from './modals'
 import { deleteUser, getGroupOptions, getUsers } from './server'
@@ -42,9 +43,7 @@ export const AdminUsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPass
     <FlexCol>
       <ContentHeader icon={<UsersIcon />} title={t('user_manage')}>
         <MultiButton isIconOnly tooltip={t('add_user')} icon={<UserPlusIcon />} onPress={() => addModalState.open()} />
-        <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={() => list.reload()}>
-          <ButtonGroup.Separator />
-        </MultiButton>
+        <ReloadButton onReload={list.reload} />
       </ContentHeader>
 
       <MultiTable

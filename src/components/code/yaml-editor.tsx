@@ -1,8 +1,8 @@
 'use client'
 
-import { FieldError, FieldLabel } from '@/components/general/field'
+import { EditorField } from '@/components/general/editor-field'
 import { useLocale } from '@/locale/client'
-import { Skeleton, TextField } from '@heroui/react'
+import { Skeleton } from '@heroui/react'
 import dynamic from 'next/dynamic'
 import { FC, ReactNode, useState } from 'react'
 import { Control, FieldPath, FieldValues, useController } from 'react-hook-form'
@@ -18,25 +18,6 @@ const YamlEditorCore = dynamic(() => import('./yaml-editor-core'), {
   ssr: false,
   loading: () => <Skeleton className='w-full rounded-xl' style={{ minHeight: MIN_HEIGHT }} />,
 })
-
-/** ラベルとエラーの体裁。markdown-editor.tsx の EditorField と同じ枠組みに揃える */
-const EditorField: FC<{
-  label: string
-  isRequired?: boolean
-  errorMessage?: string
-  /** ラベル行の右端に置く操作 */
-  action?: ReactNode
-  children: ReactNode
-}> = ({ label, isRequired, errorMessage, action, children }) => (
-  <TextField isInvalid={!!errorMessage} className='mb-0.5'>
-    <div className='flex items-center justify-between'>
-      <FieldLabel isRequired={isRequired}>{label}</FieldLabel>
-      {action}
-    </div>
-    <div className='border-default-200 focus-within:border-primary overflow-hidden rounded-xl border'>{children}</div>
-    <FieldError hasErrorArea>{errorMessage}</FieldError>
-  </TextField>
-)
 
 /**
  * YAML エディタ(非制御)。`defaultValue` は初回マウント時の値としてのみ使われる。
@@ -58,7 +39,7 @@ export const YamlInput: FC<{
   const [initialValue] = useState(defaultValue)
 
   return (
-    <EditorField label={label ?? t('command_def_yaml')} errorMessage={errorMessage} action={action}>
+    <EditorField label={label ?? t('command_def_yaml')} errorMessage={errorMessage} action={action} isBordered>
       <YamlEditorCore
         initialValue={initialValue}
         onChange={onChange}
@@ -100,7 +81,7 @@ export const YamlCtrl = <
   const [initialValue] = useState(current)
 
   return (
-    <EditorField label={label ?? t('command_def_yaml')} errorMessage={errorMessage} action={action}>
+    <EditorField label={label ?? t('command_def_yaml')} errorMessage={errorMessage} action={action} isBordered>
       <YamlEditorCore // useController の onChange / onBlur は安定参照なのでそのまま渡せる
         initialValue={initialValue}
         onChange={field.onChange}

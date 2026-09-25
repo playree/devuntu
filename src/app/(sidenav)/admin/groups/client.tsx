@@ -7,14 +7,15 @@ import { useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, PencilSquareIcon, PlusIcon, UserGroupIcon } from '@/components/icon'
+import { PencilSquareIcon, PlusIcon, UserGroupIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
+import { ReloadButton } from '@/components/reload-button'
 import { parseAction } from '@/lib/action/action-client'
 import { dayformat } from '@/lib/day'
 import { UpdateGroup } from '@/lib/schema/schema'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
-import { ButtonGroup, Table } from '@heroui/react'
+import { Table } from '@heroui/react'
 import { FC } from 'react'
 import { AddModal, UpdateModal } from './modals'
 import { deleteGroup, getGroups } from './server'
@@ -39,9 +40,7 @@ export const AdminGroupsClient: FC = () => {
     <FlexCol>
       <ContentHeader icon={<UserGroupIcon />} title={t('group_manage')}>
         <MultiButton isIconOnly tooltip={t('add_group')} icon={<PlusIcon />} onPress={() => addModalState.open()} />
-        <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={() => list.reload()}>
-          <ButtonGroup.Separator />
-        </MultiButton>
+        <ReloadButton onReload={list.reload} />
       </ContentHeader>
 
       <MultiTable

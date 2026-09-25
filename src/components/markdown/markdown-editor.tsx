@@ -1,14 +1,13 @@
 'use client'
 
-import { FieldError, FieldLabel } from '@/components/general/field'
+import { EditorField } from '@/components/general/editor-field'
 import { getFieldConstraints } from '@/components/general/field-constraints'
 import { useLocale } from '@/locale/client'
-import { cn, Skeleton, TextField } from '@heroui/react'
+import { Skeleton } from '@heroui/react'
 import dynamic from 'next/dynamic'
 import { CSSProperties, FC, memo, ReactNode, useCallback, useState } from 'react'
 import { Control, FieldPath, FieldValues, useController } from 'react-hook-form'
 import { z } from 'zod'
-import { useSmart } from '../general/smart'
 import { MarkdownView } from './markdown-view'
 // 型のみの参照。実体(lexical / MDXEditor)は mdx-editor-core 側の動的 import に閉じたままになる
 import type { MentionCandidate } from './mention-menu'
@@ -98,43 +97,6 @@ const MdxEditorHost = memo<{
     </div>
   )
 })
-
-/** ラベル・文字数・エラーの体裁(TagInput と同じ TextField ベース) */
-const EditorField: FC<{
-  label: string
-  isRequired?: boolean
-  length: number
-  maxLength?: number
-  errorMessage?: string
-  /** ラベル行の右端に置く操作(文字数カウンタの後ろ) */
-  action?: ReactNode
-  /** 枠なし表示。エラー用の高さを常時確保しない */
-  isFlat?: boolean
-  children: ReactNode
-}> = ({ label, isRequired, length, maxLength, errorMessage, action, isFlat, children }) => {
-  const { isCompact, hasErrorArea } = useSmart()
-  return (
-    <TextField isInvalid={!!errorMessage} className='mb-0.5'>
-      <div // action にはボタンが入るため、そのときだけ中央揃えにしてラベルと高さを合わせる
-        className={cn('flex justify-between', action ? 'items-center' : 'items-baseline')}
-      >
-        <FieldLabel isCompact={isCompact} isRequired={isRequired}>
-          {label}
-        </FieldLabel>
-        <div className='flex items-center gap-2'>
-          {maxLength !== undefined && (
-            <span className={`font-mono text-xs ${length > maxLength ? 'text-danger' : 'text-gray-500'}`}>
-              {length} / {maxLength}
-            </span>
-          )}
-          {action}
-        </div>
-      </div>
-      {children}
-      <FieldError hasErrorArea={!isFlat && hasErrorArea}>{errorMessage}</FieldError>
-    </TextField>
-  )
-}
 
 /**
  * Markdown エディタ(非制御)。`defaultValue` は初回マウント時の値としてのみ使われる。

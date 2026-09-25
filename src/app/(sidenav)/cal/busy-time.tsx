@@ -6,13 +6,15 @@ import { FlexCol } from '@/components/general/flex'
 import { useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
 import { MultiTable } from '@/components/general/table'
-import { ArrowPathIcon, PencilSquareIcon, PlusIcon } from '@/components/icon'
+import { ContentHeader } from '@/components/header'
+import { PencilSquareIcon, PlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
+import { ReloadButton } from '@/components/reload-button'
 import { parseAction } from '@/lib/action/action-client'
 import { minToHHmm, WEEKDAY_LABELS, WEEKDAY_ORDER } from '@/lib/day'
 import { UpdateBusyTime } from '@/lib/schema/schema'
 import { useLocale } from '@/locale/client'
-import { ButtonGroup, Chip, Table } from '@heroui/react'
+import { Chip, Table } from '@heroui/react'
 import { FC } from 'react'
 import { BusyTimeModal } from './busy-modals'
 import { deleteBusyTime, getBusyTimes } from './server'
@@ -36,26 +38,10 @@ export const BusyTimeManage: FC = () => {
 
   return (
     <FlexCol>
-      <div className='flex justify-end'>
-        <ButtonGroup variant='outline'>
-          <MultiButton
-            isIconOnly
-            size='sm'
-            tooltip={t('add_busy_time')}
-            icon={<PlusIcon />}
-            onPress={() => modalState.open()}
-          />
-          <MultiButton
-            isIconOnly
-            size='sm'
-            tooltip={t('reload')}
-            icon={<ArrowPathIcon />}
-            onPress={() => list.reload()}
-          >
-            <ButtonGroup.Separator />
-          </MultiButton>
-        </ButtonGroup>
-      </div>
+      <ContentHeader>
+        <MultiButton isIconOnly tooltip={t('add_busy_time')} icon={<PlusIcon />} onPress={() => modalState.open()} />
+        <ReloadButton onReload={list.reload} />
+      </ContentHeader>
 
       <MultiTable
         isSmart

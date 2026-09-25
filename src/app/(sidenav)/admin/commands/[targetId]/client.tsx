@@ -9,6 +9,7 @@ import { usePagingList } from '@/components/general/paging'
 import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
 import { ArrowLeftCircleIcon, Cog6ToothIcon, UserGroupIcon, UsersIcon } from '@/components/icon'
+import { NoAccessView } from '@/components/no-access-view'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'
 import { Accordion } from '@heroui/react'
@@ -52,19 +53,7 @@ export const AdminCommandTargetClient: FC<{ targetKey: string }> = ({ targetKey 
 
   // useActionData は ClientError を通知しないため、取得できなかったことをここで表示する
   if (!assignments) {
-    return (
-      <FlexCol>
-        <ContentHeader icon={<Cog6ToothIcon />} title={t('command_target_assign')}>
-          <MultiButton
-            isIconOnly
-            tooltip={t('back')}
-            icon={<ArrowLeftCircleIcon />}
-            onPress={() => router.push('/admin/commands')}
-          />
-        </ContentHeader>
-        <NoticePanel>{t('msg_no_access')}</NoticePanel>
-      </FlexCol>
-    )
+    return <NoAccessView icon={<Cog6ToothIcon />} title={t('command_target_assign')} backHref='/admin/commands' />
   }
 
   return (

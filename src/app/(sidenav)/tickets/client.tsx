@@ -2,13 +2,12 @@
 
 import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
-import { SideDrawer } from '@/components/general/drawer'
-import { FlexCol } from '@/components/general/flex'
 import { useModalState } from '@/components/general/modal'
 import { useServerPagingList } from '@/components/general/paging'
 import { MultiTable, SelectionCell } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, ChatBubbleIcon, FunnelIcon, PlusIcon, TicketIcon } from '@/components/icon'
+import { ChatBubbleIcon, FunnelIcon, PlusIcon, TicketIcon } from '@/components/icon'
+import { ReloadButton } from '@/components/reload-button'
 import { PriorityChip, StatusChip, TagChips, TicketIdText, useBoardName } from '@/components/ticket/ticket-chip'
 import { parseAction } from '@/lib/action/action-client'
 import { preventParentSelection } from '@/lib/client-utils'
@@ -16,13 +15,14 @@ import { dayformat } from '@/lib/day'
 import { TicketSearch } from '@/lib/schema/schema'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
-import { Accordion, ButtonGroup, cn, Table } from '@heroui/react'
+import { Accordion, Table } from '@heroui/react'
 import Link from 'next/link'
 import { FC, useEffect, useRef, useState } from 'react'
-import { TicketDetailClient } from './[id]/client'
 import { AddModal } from './modals'
 import { defaultTicketFilter, TicketSearchPanel } from './search-panel'
-import { getTicketFormOptions, GetTicketFormOptionsReturnType, getTickets } from './server'
+import { getTickets } from './server'
+import { TicketDrawerLayout } from './ticket-drawer-layout'
+import { useTicketFormOptions } from './use-ticket-form'
 
 const defaultExpandedKeys = new Set(['search'])
 
@@ -45,7 +45,7 @@ export const TicketsClient: FC<{
   })
   // usePagingList の load は再生成されるため、最新の検索条件は ref から読む
   const filterRef = useRef(filter)
-  const [options, setOptions] = useState<GetTicketFormOptionsReturnType>()
+  const { options, reload: reloadOptions } = useTicketFormOptions()
 
   // ページ切り出し・並び替えはサーバー側。検索条件と合わせて 1 ページ分だけを取得する
   const list = useServerPagingList({
@@ -55,16 +55,6 @@ export const TicketsClient: FC<{
     },
     sort: { init: { column: 'updatedAt', direction: 'descending' } },
   })
-
-  const loadOptions = () => {
-    parseAction(getTicketFormOptions())
-      .then(setOptions)
-      .catch(() => setOptions(undefined))
-  }
-
-  useEffect(() => {
-    loadOptions()
-  }, [])
 
   // applyFilter 以外から setFilter された場合でも ref がずれないようにする
   // (applyFilter は reload と同じターンで必要なので、そちらでも直接代入している)
@@ -82,16 +72,15 @@ export const TicketsClient: FC<{
 
   const reloadAll = () => {
     list.reload()
-    loadOptions()
+    reloadOptions()
   }
 
   return (
-    // 詳細パネルを開いている間は data-nav-hidden でサイドメニューを隠し、横幅を稼ぐ。
-    // あわせて中央寄せ(mx-auto)をやめて左に寄せ、右のパネルと重なりにくくする
-    <FlexCol
-      data-wide
-      data-nav-hidden={selectedId ? '' : undefined}
-      className={cn('max-w-6xl', !selectedId && 'mx-auto')}
+    <TicketDrawerLayout
+      selectedId={selectedId}
+      onClose={() => setSelectedId(undefined)}
+      onChanged={reloadAll}
+      formOptions={options}
     >
       <ContentHeader icon={<TicketIcon />} title={t('ticket')}>
         <MultiButton
@@ -101,9 +90,7 @@ export const TicketsClient: FC<{
           icon={<PlusIcon />}
           onPress={() => addModalState.open()}
         />
-        <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={reloadAll}>
-          <ButtonGroup.Separator />
-        </MultiButton>
+        <ReloadButton onReload={reloadAll} />
       </ContentHeader>
 
       <Accordion allowsMultipleExpanded hideSeparator defaultExpandedKeys={defaultExpandedKeys}>
@@ -189,23 +176,6 @@ export const TicketsClient: FC<{
         )}
       </MultiTable>
 
-      <SideDrawer
-        isOpen={!!selectedId}
-        aria-label={t('ticket')}
-        onClose={() => setSelectedId(undefined)}
-        className='bg-background border-l p-4 shadow-2xl'
-      >
-        {selectedId && (
-          <TicketDetailClient
-            // id が変わっても useActionData は再取得しないため、選択のたびに作り直す
-            key={selectedId}
-            id={selectedId}
-            onClose={() => setSelectedId(undefined)}
-            onChanged={reloadAll}
-          />
-        )}
-      </SideDrawer>
-
       {options && (
         <AddModal
           state={addModalState}
@@ -215,6 +185,6 @@ export const TicketsClient: FC<{
           defaultBoardId={filter.boardId}
         />
       )}
-    </FlexCol>
+    </TicketDrawerLayout>
   )
 }

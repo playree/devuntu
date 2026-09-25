@@ -7,7 +7,8 @@ import { useServerPagingList } from '@/components/general/paging'
 import { SwitchField } from '@/components/general/switch'
 import { MultiTable, TruncatedCell } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
-import { ArrowPathIcon, ClockIcon, XMarkIcon } from '@/components/icon'
+import { ClockIcon, XMarkIcon } from '@/components/icon'
+import { ReloadButton } from '@/components/reload-button'
 import { parseAction } from '@/lib/action/action-client'
 import { authClient } from '@/lib/auth/auth-client'
 import { COMMAND_RUN_ROWS_PER_PAGE } from '@/lib/command/command'
@@ -106,7 +107,7 @@ export const CommandRunsClient: FC<{ initialCommandKey: string | null }> = ({ in
           </>
         }
       >
-        <MultiButton isIconOnly tooltip={t('reload')} icon={<ArrowPathIcon />} onPress={() => list.reload()} />
+        <ReloadButton onReload={list.reload} hasSeparator={false} />
       </ContentHeader>
 
       <MultiTable

@@ -4,13 +4,14 @@ import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
 import { CopyableField } from '@/components/general/copyable-field'
 import { FlexCol } from '@/components/general/flex'
+import { InputField } from '@/components/general/input'
 import { useConfirmModal } from '@/components/general/modal'
 import { ContentHeader } from '@/components/header'
 import { ArrowPathIcon, CalendarDaysIcon, ClockIcon, DocumentPlusIcon, GoogleIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'
-import { Accordion, Input, Label, TextField } from '@heroui/react'
+import { Accordion } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC, useState } from 'react'
 import { BusyTimeManage } from './busy-time'
@@ -104,11 +105,16 @@ export const CalClient: FC<{ origin: string }> = ({ origin }) => {
               {status.shared ? (
                 <FlexCol>
                   <div className='flex flex-wrap items-end gap-2'>
-                    <TextField className='flex-auto' value={title} onChange={setTitle} maxLength={50}>
-                      <Label>{t('share_title')}</Label>
-                      <Input />
-                    </TextField>
-                    <MultiButton variant='outline' onPress={saveTitle}>
+                    <div className='flex-auto'>
+                      <InputField // ボタンと下端を揃えるため、エラー用の余白を持たない isSmart にする
+                        isSmart
+                        label={t('share_title')}
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        maxLength={50}
+                      />
+                    </div>
+                    <MultiButton variant='outline' isSmart onPress={saveTitle}>
                       {t('save')}
                     </MultiButton>
                   </div>

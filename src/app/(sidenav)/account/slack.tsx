@@ -3,6 +3,7 @@
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
 import { useConfirmModal } from '@/components/general/modal'
+import { PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
 import { BoltSlashIcon, SlackIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
@@ -10,7 +11,7 @@ import { parseAction, useActionData } from '@/lib/action/action-client'
 import { authClient } from '@/lib/auth/auth-client'
 import { SLACK_PROVIDER_ID } from '@/lib/slack/slack'
 import { useLocale } from '@/locale/client'
-import { ButtonGroup, Skeleton } from '@heroui/react'
+import { ButtonGroup } from '@heroui/react'
 import { FC } from 'react'
 import { disconnectSlack, getSlackStatus } from './server'
 
@@ -25,7 +26,7 @@ export const SlackAccountLink: FC = () => {
 
   // 取得前は未連携と区別できないため、連携済みでも一瞬「未連携」が出てしまう
   if (isLoading) {
-    return <Skeleton className='min-h-16 w-full rounded-xl' />
+    return <PanelSkeleton className='min-h-16' />
   }
 
   const connected = status?.connected

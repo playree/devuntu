@@ -6,7 +6,7 @@ import { Grid } from '@/components/general/grid'
 import { GrowMotion } from '@/components/general/grow-motion'
 import { InputCtrl } from '@/components/general/input'
 import { InputOtpCtrl } from '@/components/general/input-otp'
-import { StepMotion } from '@/components/general/step-motion'
+import { StepMotion, useStep } from '@/components/general/step-motion'
 import {
   ArrowLeftCircleIcon,
   ArrowLeftEndOnRectangleIcon,
@@ -47,11 +47,6 @@ import { useForm } from 'react-hook-form'
 import { getUserByEmail } from './server'
 
 type Mode = '2FA' | null
-
-type Step = {
-  id: 'EMAIL' | 'PASSWORD' | 'OTP' | '2FA'
-  direction: number
-}
 
 const UsernameForm: FC<{
   direction: number
@@ -419,9 +414,7 @@ export const SignInClient: FC<{ sessionEmail?: string; twoFaRequired: boolean }>
 }) => {
   const searchParams = useSearchParams()
   const { t } = useLocale()
-  const [step, setStep] = useState<Step>(
-    sessionEmail ? { id: 'PASSWORD', direction: 0 } : { id: 'EMAIL', direction: 0 },
-  )
+  const { step, forward, back } = useStep<'EMAIL' | 'PASSWORD' | 'OTP' | '2FA'>(sessionEmail ? 'PASSWORD' : 'EMAIL')
   const [email, setEmail] = useState(sessionEmail)
   const [password, setPassword] = useState<string>()
 
@@ -488,7 +481,7 @@ export const SignInClient: FC<{ sessionEmail?: string; twoFaRequired: boolean }>
               key='step_email'
               direction={step.direction}
               next={(email, nextStep) => {
-                setStep({ id: nextStep, direction: 1 })
+                forward(nextStep)
                 setEmail(email)
               }}
             />
@@ -504,10 +497,10 @@ export const SignInClient: FC<{ sessionEmail?: string; twoFaRequired: boolean }>
               callbackURL={callbackURL}
               next={(password) => {
                 setPassword(password)
-                setStep({ id: '2FA', direction: 1 })
+                forward('2FA')
               }}
               back={() => {
-                setStep({ id: 'EMAIL', direction: -1 })
+                back('EMAIL')
                 setEmail(undefined)
               }}
             />
@@ -520,7 +513,7 @@ export const SignInClient: FC<{ sessionEmail?: string; twoFaRequired: boolean }>
               email={email}
               callbackURL={callbackURL}
               back={() => {
-                setStep({ id: 'EMAIL', direction: -1 })
+                back('EMAIL')
                 setEmail(undefined)
               }}
             />

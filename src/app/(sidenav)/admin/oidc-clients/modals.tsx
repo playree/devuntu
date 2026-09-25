@@ -7,7 +7,7 @@ import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
 import { FormModal, ModalBaseProps } from '@/components/general/modal'
 import { SingleSelectCtrl, SingleSelectField } from '@/components/general/select'
-import { StepMotion } from '@/components/general/step-motion'
+import { StepMotion, useStep } from '@/components/general/step-motion'
 import { CheckIcon, PencilSquareIcon, PlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action/action-client'
@@ -20,14 +20,9 @@ import { FC, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { addOidcClient, updateOidcClient } from './server'
 
-type Step = {
-  id: 'INPUT' | 'OUTPUT'
-  direction: number
-}
-
 export const AddModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, reload, baseUrl }) => {
   const { t, fet } = useLocale()
-  const [step, setStep] = useState<Step>({ id: 'INPUT', direction: 0 })
+  const { step, forward } = useStep<'INPUT' | 'OUTPUT'>('INPUT')
   const [output, setOutput] = useState<{ clientId: string; clientSecret: string }>()
 
   const {
@@ -54,7 +49,7 @@ export const AddModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, relo
       onSubmit={handleSubmit(async (req) => {
         const res = await parseAction(addOidcClient(req))
         setOutput(res)
-        setStep({ id: 'OUTPUT', direction: 1 })
+        forward('OUTPUT')
         // notify.success(t('msg_added_target', { target: req.clientName }))
         reload()
       })}

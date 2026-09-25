@@ -6,9 +6,9 @@ import { FlexCol } from '@/components/general/flex'
 import { GridBox } from '@/components/general/grid'
 import { useConfirmModal } from '@/components/general/modal'
 import { NoticePanel, Panel, PanelSkeleton } from '@/components/general/panel'
-import { StepMotion } from '@/components/general/step-motion'
-import { TabsBox } from '@/components/general/tabs'
+import { StepMotion, useStep } from '@/components/general/step-motion'
 import { ArrowPathIcon, CheckIcon } from '@/components/icon'
+import { IssuedTokenView } from '@/components/issued-token-view'
 import { TokenExpiresSelect } from '@/components/token-expires-select'
 import { parseAction } from '@/lib/action/action-client'
 import { AGENT_TOKEN_ENV, AGENT_TOKEN_PREFIX, AGENT_TOKEN_REF } from '@/lib/agent/agent'
@@ -22,11 +22,6 @@ import { AnimatePresence } from 'framer-motion'
 import { FC, ReactNode, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { GetAgentTokenReturnType, issueAgentToken } from './server'
-
-type Step = {
-  id: 'INPUT' | 'OUTPUT'
-  direction: number
-}
 
 const TokenField: FC<{ label: string; children: ReactNode }> = ({ label, children }) => (
   <div className='flex items-center justify-between gap-2'>
@@ -51,7 +46,7 @@ export const AgentToken: FC<{
   const { t } = useLocale()
   const tz = useUserTimezone()
   const { confirmModal } = useConfirmModal()
-  const [step, setStep] = useState<Step>({ id: 'INPUT', direction: 0 })
+  const { step, forward } = useStep<'INPUT' | 'OUTPUT'>('INPUT')
   const [issued, setIssued] = useState<string>()
 
   const {
@@ -86,7 +81,7 @@ export const AgentToken: FC<{
         }
         const res = await parseAction(issueAgentToken(req))
         setIssued(res.token)
-        setStep({ id: 'OUTPUT', direction: 1 })
+        forward('OUTPUT')
         refresh()
       })}
     >
@@ -141,45 +136,23 @@ export const AgentToken: FC<{
 
           {step.id === 'OUTPUT' && issued && (
             <StepMotion direction={step.direction} key='step_output'>
-              <GridBox>
-                <div className='col-span-12'>
-                  <CopyableField text={issued} label={t('agent_token')} isMask />
-                </div>
-                <div className='col-span-12'>
-                  <NoticePanel className='text-xs'>{t('msg_token_once')}</NoticePanel>
-                </div>
-                <div className='col-span-12'>
-                  <TabsBox
-                    variant='secondary'
-                    aria-label={t('mcp_add_command')}
-                    items={[
-                      {
-                        id: 'claude',
-                        label: t('claude_code'),
-                        content: (
-                          <CopyableField // トークンではなく環境変数の参照が入るので伏せ字にしない
-                            text={mcpAddCommand(baseUrl, AGENT_TOKEN_REF, AGENT_MCP_SERVER_NAME, 'project')}
-                            label={t('mcp_add_command')}
-                          />
-                        ),
-                      },
-                      {
-                        id: 'codex',
-                        label: t('codex_cli'),
-                        content: (
-                          <CopyableField
-                            text={mcpCodexAddCommand(baseUrl, AGENT_MCP_SERVER_NAME, AGENT_TOKEN_ENV)}
-                            label={t('mcp_add_command')}
-                          />
-                        ),
-                      },
-                    ]}
+              <IssuedTokenView
+                token={issued}
+                tokenLabel={t('agent_token')}
+                claudeCommand={
+                  <CopyableField // トークンではなく環境変数の参照が入るので伏せ字にしない
+                    text={mcpAddCommand(baseUrl, AGENT_TOKEN_REF, AGENT_MCP_SERVER_NAME, 'project')}
+                    label={t('mcp_add_command')}
                   />
-                </div>
-                <div className='col-span-12'>
-                  <NoticePanel className='text-xs'>{t('msg_agent_token_env')}</NoticePanel>
-                </div>
-              </GridBox>
+                }
+                codexCommand={
+                  <CopyableField
+                    text={mcpCodexAddCommand(baseUrl, AGENT_MCP_SERVER_NAME, AGENT_TOKEN_ENV)}
+                    label={t('mcp_add_command')}
+                  />
+                }
+                notice={t('msg_agent_token_env')}
+              />
             </StepMotion>
           )}
         </AnimatePresence>
