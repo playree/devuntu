@@ -2,6 +2,7 @@
 
 import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
+import { getFieldConstraints } from '@/components/general/field-constraints'
 import { Panel } from '@/components/general/panel'
 import {
   CheckIcon,
@@ -20,7 +21,6 @@ import { parseAction } from '@/lib/action/action-client'
 import { commentAnchorId, TICKET_COMMENT_TYPE_LOCALE } from '@/lib/board/task'
 import { dayformat } from '@/lib/day'
 import { scCreateTicketComment } from '@/lib/schema/schema'
-import { getFieldConstraints } from '@/lib/schema/schema-util'
 import { useConfirmAction } from '@/lib/use-confirm-action'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'

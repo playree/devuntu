@@ -1,11 +1,11 @@
 'use client'
 
-import { getFieldConstraints } from '@/lib/schema/schema-util'
 import { cn, ErrorMessage, Input, InputProps, Label, SearchField, SearchFieldProps, TextField } from '@heroui/react'
 import { ChangeEvent, FC, SVGProps } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 import { z } from 'zod'
 import { MultiButton } from './button'
+import { getFieldConstraints } from './field-constraints'
 import { useIsSmart, useSmart } from './smart'
 import { useGeneralUiText } from './ui-text'
 

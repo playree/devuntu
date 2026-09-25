@@ -1,9 +1,9 @@
 'use client'
 
-import { getFieldConstraints } from '@/lib/schema/schema-util'
 import { cn, ErrorMessage, Label, TextArea, TextAreaProps, TextField } from '@heroui/react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 import { z } from 'zod'
+import { getFieldConstraints } from './field-constraints'
 import { useSmart } from './smart'
 
 type TextAreaFieldProps = TextAreaProps & {
