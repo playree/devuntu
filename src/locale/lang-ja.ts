@@ -328,7 +328,7 @@ export const ja: DefaultLocaleItems = {
   password_reset: 'パスワード再設定',
   password_score: 'パスワードスコア',
   password_score_required: '${score}以上が必要',
-  per_page: '${rows}件 / ページ',
+  per_page: '${rows}件',
   prev: '前へ',
   prev_week: '前週',
   preview: 'プレビュー',
