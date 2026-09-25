@@ -71,7 +71,7 @@ export const MyMcpTokens: FC<{ baseUrl: string }> = ({ baseUrl }) => {
 
       <MultiTable
         isSmart
-        ariaLabel='mcp token list'
+        aria-label='mcp token list'
         pagingList={list}
         columns={[
           { id: 'name', name: t('name'), isRowHeader: true, allowsSorting: true, minWidth: 160, defaultWidth: '1fr' },

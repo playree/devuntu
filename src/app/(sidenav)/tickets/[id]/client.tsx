@@ -321,7 +321,7 @@ export const TicketDetailClient: FC<{
               isSmart
               text={ticket.displayId}
               copyText={ticket.shortUrl}
-              ariaLabel={t('id')}
+              aria-label={t('id')}
               copyLabel={t('copy_url')}
             />
           </>
@@ -340,7 +340,7 @@ export const TicketDetailClient: FC<{
                 maxLength={getFieldConstraints(scPatchTicket, 'title').maxLength}
                 errorMessage={titleError}
                 // 保存中の入力は reload で上書きされてしまうため受け付けない
-                disabled={savingField === 'title'}
+                isDisabled={savingField === 'title'}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 // 入力ごとに保存しないよう、フォーカスを外したときに変更を確定する

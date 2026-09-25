@@ -59,7 +59,7 @@ export const BusyTimeManage: FC = () => {
 
       <MultiTable
         isSmart
-        ariaLabel='busy time list'
+        aria-label='busy time list'
         pagingList={list}
         columns={[
           { id: 'title', name: t('title'), isRowHeader: true, minWidth: 120, defaultWidth: '1fr' },

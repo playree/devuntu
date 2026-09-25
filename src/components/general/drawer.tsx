@@ -17,11 +17,11 @@ export const SideDrawer: FC<{
   isOpen: boolean
   children: ReactNode
   /** 読み上げ用のパネル名。共通部品なのでロケールは呼び出し側で解決する */
-  ariaLabel?: string
+  'aria-label'?: string
   /** 指定すると開いている間だけ Escape で閉じられるようになる */
   onClose?: () => void
   className?: string
-}> = ({ isOpen, children, ariaLabel, onClose, className }) => {
+}> = ({ isOpen, children, 'aria-label': ariaLabel, onClose, className }) => {
   const panelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {

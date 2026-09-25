@@ -63,7 +63,7 @@ export const BoardMembers: FC<{
       </ContentHeader>
 
       <MultiTable
-        ariaLabel='board member list'
+        aria-label='board member list'
         pagingList={pagingList}
         isSmart
         columns={[

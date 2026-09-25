@@ -1,10 +1,12 @@
 'use client'
 
-import { Button, Chip, cn, InputGroup, InputGroupProps, Label, TextField } from '@heroui/react'
-import { FC, useEffect, useRef, useState } from 'react'
+import { Button, Chip, cn, InputGroup, InputGroupProps, TextField } from '@heroui/react'
+import { FC, useState } from 'react'
+import { FieldLabel } from './field'
 import { ClipboardDocumentCheckIcon, ClipboardDocumentIcon, EyeIcon, EyeSlashIcon } from './icons'
 import { useIsSmart } from './smart'
 import { useGeneralUiText } from './ui-text'
+import { useCopyToClipboard } from './use-copy-to-clipboard'
 
 export const CopyableField: FC<
   {
@@ -19,19 +21,27 @@ export const CopyableField: FC<
     copyLabel?: string
     onCopied?: () => void
   } & (
-    | { label: string; ariaLabel?: never }
+    | { label: string; 'aria-label'?: never }
     /** ラベルを出さずに使うときは読み上げ名を必須にする(無いと react-aria が警告を出す) */
-    | { label?: never; ariaLabel: string }
+    | { label?: never; 'aria-label': string }
   )
-> = ({ text, copyText, label, ariaLabel, isMask, variant, isSmart: isSmartProp, className, copyLabel, onCopied }) => {
+> = ({
+  text,
+  copyText,
+  label,
+  'aria-label': ariaLabel,
+  isMask,
+  variant,
+  isSmart: isSmartProp,
+  className,
+  copyLabel,
+  onCopied,
+}) => {
   const isSmart = useIsSmart(isSmartProp)
   const uiText = useGeneralUiText()
   const [isVisible, setIsVisible] = useState(false)
   const toggleVisibility = () => setIsVisible(!isVisible)
-  const [isCopied, setIsCopied] = useState(false)
-  // 「コピーしました」を戻すタイマー。表示中に閉じられたモーダルなどでアンマウント後に setState しないよう片付ける
-  const copiedTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
-  useEffect(() => () => clearTimeout(copiedTimer.current), [])
+  const { isCopied, copy } = useCopyToClipboard()
 
   return (
     <TextField
@@ -44,7 +54,7 @@ export const CopyableField: FC<
       aria-label={label ? undefined : ariaLabel}
       className={className}
     >
-      {label && <Label className={isSmart ? 'text-xs font-light' : ''}>{label}</Label>}
+      {label && <FieldLabel isCompact={isSmart}>{label}</FieldLabel>}
       <div className='relative'>
         <InputGroup // isSmart: 既定 36px を 28px に詰める
           variant={variant}
@@ -79,21 +89,11 @@ export const CopyableField: FC<
               className={isSmart ? 'size-6' : ''}
               aria-label={copyLabel ?? uiText.copy}
               onPress={async () => {
-                try {
-                  // 安全なコンテキスト(https / localhost)の外では navigator.clipboard 自体が無く、参照だけで例外になる
-                  await navigator.clipboard.writeText(copyText ?? text)
-                } catch {
-                  /**
-                   * コピーできていないので、成功の表示はしない。
-                   * このフォルダはロケールや通知(`@/components/notify`)へ依存させない方針なので、
-                   * 失敗の通知は出さず、成功表示が出ないことで伝える。
-                   */
-                  return
-                }
-                setIsCopied(true)
-                clearTimeout(copiedTimer.current)
-                copiedTimer.current = setTimeout(() => setIsCopied(false), 2000)
-                if (onCopied) {
+                /**
+                 * このフォルダはロケールや通知(`@/components/notify`)へ依存させない方針なので、
+                 * 失敗の通知は出さず、成功表示が出ないことで伝える。
+                 */
+                if ((await copy(copyText ?? text)) && onCopied) {
                   onCopied()
                 }
               }}

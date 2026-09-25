@@ -111,7 +111,7 @@ export const CommandRunsClient: FC<{ initialCommandKey: string | null }> = ({ in
 
       <MultiTable
         isSmart
-        ariaLabel='command run list'
+        aria-label='command run list'
         pagingList={list}
         columns={[
           {

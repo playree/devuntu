@@ -46,7 +46,7 @@ export const AdminGroupsClient: FC = () => {
 
       <MultiTable
         isSmart
-        ariaLabel='group list'
+        aria-label='group list'
         pagingList={list}
         columns={[
           { id: 'name', name: t('name'), isRowHeader: true, allowsSorting: true, minWidth: 80 },

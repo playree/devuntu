@@ -45,7 +45,7 @@ export const DynamicOidcClients: FC = () => {
 
       <MultiTable
         isSmart
-        ariaLabel='dynamic oidc client list'
+        aria-label='dynamic oidc client list'
         pagingList={list}
         columns={[
           {

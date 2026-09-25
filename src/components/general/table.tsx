@@ -232,7 +232,7 @@ const TablePaging: FC<PagingParam> = ({ rowsPerPage, page, total, totalPages, on
 }
 
 export const MultiTable = <T extends object>({
-  ariaLabel,
+  'aria-label': ariaLabel,
   sortDescriptor,
   onSortChange,
   selectionMode,
@@ -246,7 +246,7 @@ export const MultiTable = <T extends object>({
   ...props
 }: TableBodyProps<T> &
   TableActivityProps<T> & {
-    ariaLabel: string
+    'aria-label': string
     columns: {
       id: string
       name: string

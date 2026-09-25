@@ -1,23 +1,13 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
+import { FieldBaseProps, FieldError, FieldLabel, TriggerClearButton } from '@/components/general/field'
 import { useSmart } from '@/components/general/smart'
-import { PlusIcon, XCircleIcon, XMarkIcon } from '@/components/icon'
+import { PlusIcon, XMarkIcon } from '@/components/icon'
 import type { TagColor } from '@/generated/prisma/enums'
 import { MAX_TAG_NAME, MAX_TICKET_TAGS } from '@/lib/board/task'
 import { useLocale } from '@/locale/client'
-import {
-  Autocomplete,
-  cn,
-  EmptyState,
-  ErrorMessage,
-  Label,
-  ListBox,
-  SearchField,
-  Select,
-  Tooltip,
-  useFilter,
-} from '@heroui/react'
+import { Autocomplete, EmptyState, ListBox, SearchField, Select, Tooltip, useFilter } from '@heroui/react'
 import { FC, Ref, useState } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 import { TagChip } from './ticket-chip'
@@ -28,18 +18,14 @@ export type TagSelectOption = { id: string; name: string; color: TagColor }
 /** react-aria へ毎回新しい配列を渡さないよう空配列は使い回す */
 const NO_KEYS: string[] = []
 
-type TagIdSelectFieldProps = {
+/** 必須や読み取り専用は表示に反映していないので受け取らない */
+type TagFieldBaseProps = Omit<FieldBaseProps, 'isRequired' | 'isReadOnly'>
+
+type TagIdSelectFieldProps = TagFieldBaseProps & {
   options: TagSelectOption[]
   /** 作成したタグを返す。同名が既にある場合は既存を返してもよい */
   onCreate?: (name: string) => Promise<TagSelectOption | undefined>
-  label?: string
-  /** ラベルを読み上げ用にだけ残す(見出しを呼び出し側で出す場合) */
-  isLabelHidden?: boolean
-  errorMessage?: string
-  isDisabled?: boolean
   variant?: 'primary' | 'secondary'
-  isSmart?: boolean
-  isSmartForm?: boolean
 }
 
 /**
@@ -174,10 +160,10 @@ export const TagIdSelectField = ({
       onBlur={onBlur}
       ref={ref}
     >
-      <Label className={cn(isCompact ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}>
+      <FieldLabel isCompact={isCompact} isHidden={isLabelHidden}>
         {label ?? t('tags')}
         <span className='ml-1 text-xs opacity-60'>{`${selectedIds.length}/${MAX_TICKET_TAGS}`}</span>
-      </Label>
+      </FieldLabel>
       <Autocomplete.Trigger // isCompact: 既定 36px を 28px に詰める
         className={isCompact ? 'min-h-7 py-1' : undefined}
       >
@@ -216,7 +202,7 @@ export const TagIdSelectField = ({
         <Autocomplete.ClearButton /* 全解除。未選択(data-empty)のときは CSS 側で非表示になる */ />
         <Autocomplete.Indicator /* children を渡すと Button ラップが消えてキーボードで開けなくなるので空のまま */ />
       </Autocomplete.Trigger>
-      <ErrorMessage className={hasErrorArea ? 'min-h-4' : ''}>{errorMessage}</ErrorMessage>
+      <FieldError hasErrorArea={hasErrorArea}>{errorMessage}</FieldError>
       <Autocomplete.Popover>
         <Autocomplete.Filter
           inputValue={draft}
@@ -328,26 +314,24 @@ export const TagSelect = <
  * collection のキーもタグ名にするため、`options` は呼び出し側で
  * `dedupeTagOptionsByName`(lib/task.ts) を通して同名を畳んでおくこと。
  */
-export const TagNameSelectField: FC<{
-  options: TagSelectOption[]
-  /** 選択中のタグ名 */
-  value: string[]
-  onChange: (value: string[]) => void
-  label?: string
-  /** 選択できる最大件数。到達したら未選択のタグを選べなくする */
-  max?: number
-  variant?: 'primary' | 'secondary'
-  errorMessage?: string
-  isSmart?: boolean
-  isSmartForm?: boolean
-  isDisabled?: boolean
-  /** 指定時、非活性でもマウスオーバーで理由を表示する */
-  tooltip?: string
-}> = ({
+export const TagNameSelectField: FC<
+  TagFieldBaseProps & {
+    options: TagSelectOption[]
+    /** 選択中のタグ名 */
+    value: string[]
+    onChange: (value: string[]) => void
+    /** 選択できる最大件数。到達したら未選択のタグを選べなくする */
+    max?: number
+    variant?: 'primary' | 'secondary'
+    /** 指定時、非活性でもマウスオーバーで理由を表示する */
+    tooltip?: string
+  }
+> = ({
   options,
   value,
   onChange,
   label,
+  isLabelHidden,
   max,
   variant,
   errorMessage,
@@ -378,10 +362,10 @@ export const TagNameSelectField: FC<{
       allowsEmptyCollection
       onChange={(keys) => onChange(keys.map(String))}
     >
-      <Label className={isCompact ? 'text-xs font-light' : ''}>
+      <FieldLabel isCompact={isCompact} isHidden={isLabelHidden}>
         {label ?? t('tags')}
         {max !== undefined && <span className='ml-1 text-xs opacity-60'>{`${value.length}/${max}`}</span>}
-      </Label>
+      </FieldLabel>
       <Select.Trigger // isCompact: 既定 36px を 28px に詰める
         className={isCompact ? 'min-h-7 py-1' : undefined}
       >
@@ -398,29 +382,13 @@ export const TagNameSelectField: FC<{
             )
           }
         </Select.Value>
-        {value.length > 0 && (
-          <span
-            /**
-             * Select には Autocomplete.ClearButton 相当が無いので手書きする。
-             * Select.Trigger は内部が button なので、ここを button にすると入れ子になる
-             */
-            role='button'
-            aria-label={t('clear')}
-            tabIndex={-1}
-            className='ml-auto inline-flex cursor-pointer items-center opacity-60 hover:opacity-100'
-            // トリガーの onClick は開閉なので × では伝播を止める
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => {
-              e.stopPropagation()
-              onChange([])
-            }}
-          >
-            <XCircleIcon width={16} />
-          </span>
+        {value.length > 0 && !isDisabled && (
+          // Select には Autocomplete.ClearButton 相当が無い
+          <TriggerClearButton className='ml-auto' onClear={() => onChange([])} />
         )}
         <Select.Indicator />
       </Select.Trigger>
-      <ErrorMessage className={hasErrorArea ? 'min-h-4' : ''}>{errorMessage}</ErrorMessage>
+      <FieldError hasErrorArea={hasErrorArea}>{errorMessage}</FieldError>
       <Select.Popover>
         <ListBox selectionMode='multiple' renderEmptyState={() => <EmptyState>{t('msg_no_tags')}</EmptyState>}>
           {options.map((tag) => (

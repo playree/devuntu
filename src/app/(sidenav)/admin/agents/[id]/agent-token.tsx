@@ -151,7 +151,7 @@ export const AgentToken: FC<{
                 <div className='col-span-12'>
                   <TabsBox
                     variant='secondary'
-                    ariaLabel={t('mcp_add_command')}
+                    aria-label={t('mcp_add_command')}
                     items={[
                       {
                         id: 'claude',

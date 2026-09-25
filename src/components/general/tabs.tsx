@@ -22,13 +22,13 @@ export type TabBoxItem = {
 export const TabsBox: FC<{
   items: readonly TabBoxItem[]
   /** タブリストの読み上げ名 */
-  ariaLabel: string
+  'aria-label': string
   /** secondary はピルではなくアンダーライン表示になる */
   variant?: 'primary' | 'secondary'
   className?: string
   /** 中身の className(パディングやレイアウトの調整用) */
   panelClassName?: string
-}> = ({ items, ariaLabel, variant, className, panelClassName }) => (
+}> = ({ items, 'aria-label': ariaLabel, variant, className, panelClassName }) => (
   <Tabs variant={variant} className={className}>
     <Tabs.ListContainer // variant のスタイルはこのコンテナに当たるので、省くと下線もインジケータも出ない
     >

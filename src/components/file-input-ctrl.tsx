@@ -1,8 +1,9 @@
 'use client'
 
+import { FieldError, FieldLabel } from '@/components/general/field'
 import { TrashIcon } from '@/components/icon'
 import { useLocale } from '@/locale/client'
-import { Button, ButtonProps, cn, ErrorMessage, Label, TextField } from '@heroui/react'
+import { Button, ButtonProps, cn, TextField } from '@heroui/react'
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
@@ -117,9 +118,9 @@ const FileField = ({
 
   return (
     <TextField isInvalid={!!errorMessage}>
-      <Label className={isCompact ? 'text-xs font-light' : ''} isRequired={isRequired}>
+      <FieldLabel isCompact={isCompact} isRequired={isRequired}>
         {label}
-      </Label>
+      </FieldLabel>
       <div className={cn('flex items-center', isCompact ? 'gap-2' : 'gap-3')}>
         <div className={cn('flex items-center', isCompact ? 'size-8' : 'size-12')}>
           {displayUrl && (
@@ -179,7 +180,7 @@ const FileField = ({
           {file?.name ?? t('no_file_selected')}
         </span>
       </div>
-      <ErrorMessage className={hasErrorArea ? 'min-h-4' : ''}>{errorMessage}</ErrorMessage>
+      <FieldError hasErrorArea={hasErrorArea}>{errorMessage}</FieldError>
     </TextField>
   )
 }

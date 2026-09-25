@@ -56,7 +56,7 @@ export const AgentApproverUsers: FC<{
       </ContentHeader>
 
       <MultiTable
-        ariaLabel='agent approver user list'
+        aria-label='agent approver user list'
         pagingList={pagingList}
         isSmart
         columns={[

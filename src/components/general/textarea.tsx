@@ -1,20 +1,13 @@
 'use client'
 
-import { cn, ErrorMessage, Label, TextArea, TextAreaProps, TextField } from '@heroui/react'
+import { cn, TextArea, TextAreaProps, TextField } from '@heroui/react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 import { z } from 'zod'
+import { FieldBaseProps, FieldError, FieldLabel } from './field'
 import { getFieldConstraints } from './field-constraints'
 import { useSmart } from './smart'
 
-type TextAreaFieldProps = TextAreaProps & {
-  label?: string
-  isRequired?: boolean
-  isReadOnly?: boolean
-  errorMessage?: string
-  isSmart?: boolean
-  isSmartForm?: boolean
-  className?: string
-}
+type TextAreaFieldProps = TextAreaProps & FieldBaseProps & { className?: string }
 
 /**
  * react-hook-form に依存しない TextArea 本体。
@@ -23,7 +16,9 @@ type TextAreaFieldProps = TextAreaProps & {
  */
 export const TextAreaField = ({
   label,
+  isLabelHidden,
   isRequired,
+  isDisabled,
   isReadOnly,
   errorMessage,
   rows = 6,
@@ -36,6 +31,7 @@ export const TextAreaField = ({
   return (
     <TextField
       isInvalid={!!errorMessage}
+      isDisabled={isDisabled}
       isReadOnly={isReadOnly}
       isRequired={isRequired}
       /**
@@ -46,12 +42,12 @@ export const TextAreaField = ({
       validationBehavior='aria'
     >
       {label && (
-        <Label className={isCompact ? 'text-xs font-light' : ''} isRequired={isRequired}>
+        <FieldLabel isCompact={isCompact} isHidden={isLabelHidden} isRequired={isRequired}>
           {label}
-        </Label>
+        </FieldLabel>
       )}
       <TextArea fullWidth rows={rows} {...props} className={cn(isCompact ? 'py-1' : '', className)} />
-      <ErrorMessage className={hasErrorArea ? 'min-h-4' : ''}>{errorMessage}</ErrorMessage>
+      <FieldError hasErrorArea={hasErrorArea}>{errorMessage}</FieldError>
     </TextField>
   )
 }

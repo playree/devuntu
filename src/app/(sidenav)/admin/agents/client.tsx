@@ -84,7 +84,7 @@ export const AdminAgentsClient: FC = () => {
 
       <MultiTable
         isSmart
-        ariaLabel='agent list'
+        aria-label='agent list'
         pagingList={list}
         columns={[
           { id: 'name', name: t('name'), isRowHeader: true, allowsSorting: true, minWidth: 100, defaultWidth: '2fr' },

@@ -1,17 +1,16 @@
 'use client'
 
-import { Chip, cn, ErrorMessage, Label, ListBox, Select } from '@heroui/react'
+import { Chip, ListBox, Select } from '@heroui/react'
 import { ReactNode, Ref } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
-import { XCircleIcon } from './icons'
+import { FieldBaseProps, FieldError, FieldLabel, TriggerClearButton } from './field'
 import { useSmart } from './smart'
 import { useGeneralUiText } from './ui-text'
 
-type SelectFieldBaseProps = {
+/** Select は読み取り専用を持たないので isReadOnly は受け取らない */
+type SelectFieldBaseProps = Omit<FieldBaseProps, 'isReadOnly'> & {
   groupOptions: Record<string, string>
   label: string
-  /** ラベルを読み上げ用にだけ残す(見出しを呼び出し側で出す場合) */
-  isLabelHidden?: boolean
   /**
    * ラベルに必須(*)を出す。
    * Select 本体には渡さない。react-aria が form 内に <select required> を出し、
@@ -21,9 +20,6 @@ type SelectFieldBaseProps = {
    */
   isRequired?: boolean
   variant?: 'primary' | 'secondary'
-  isSmart?: boolean
-  isSmartForm?: boolean
-  errorMessage?: string
   onBlur?: () => void
   ref?: Ref<HTMLDivElement>
 }
@@ -44,6 +40,7 @@ export const MultiSelectField = ({
   label,
   isLabelHidden,
   isRequired,
+  isDisabled,
   variant,
   isSmart: isSmartProp,
   isSmartForm: isSmartFormProp,
@@ -62,16 +59,14 @@ export const MultiSelectField = ({
         selectionMode='multiple'
         value={value}
         variant={variant}
+        isDisabled={isDisabled}
         onChange={(keys) => onChange(keys.map(String))}
         onBlur={onBlur}
         ref={ref}
       >
-        <Label
-          className={cn(isCompact ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}
-          isRequired={isRequired}
-        >
+        <FieldLabel isCompact={isCompact} isHidden={isLabelHidden} isRequired={isRequired}>
           {label}
-        </Label>
+        </FieldLabel>
         <Select.Trigger className={isCompact ? 'min-h-7 py-1' : undefined}>
           <Select.Value>
             {() => {
@@ -86,29 +81,10 @@ export const MultiSelectField = ({
               )
             }}
           </Select.Value>
-          {value.length > 0 && (
-            <span
-              /**
-               * Select.Trigger は内部が button なので、ここを button にすると入れ子になる。
-               * キーボードからは ListBox で選択を外せるため span + role='button' のままにする
-               */
-              role='button'
-              // 共通部品なのでローカライズ不要とする
-              aria-label='clear'
-              tabIndex={-1}
-              className='ml-auto inline-flex cursor-pointer items-center opacity-60 hover:opacity-100'
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.stopPropagation()
-                onChange([])
-              }}
-            >
-              <XCircleIcon width={16} />
-            </span>
-          )}
+          {value.length > 0 && !isDisabled && <TriggerClearButton className='ml-auto' onClear={() => onChange([])} />}
           <Select.Indicator />
         </Select.Trigger>
-        <ErrorMessage className={hasErrorArea ? 'min-h-4' : ''}>{errorMessage}</ErrorMessage>
+        <FieldError hasErrorArea={hasErrorArea}>{errorMessage}</FieldError>
         <Select.Popover>
           <ListBox selectionMode='multiple'>
             {Object.entries(groupOptions).map(([id, name]) => (
@@ -153,7 +129,6 @@ export type SingleSelectFieldProps = SelectFieldBaseProps & {
   value: string | null
   onChange: (value: string | null) => void
   isClearable?: boolean
-  isDisabled?: boolean
   /**
    * トリガーに現在値ではなく固定の表示を出す。
    * 値が別の手段(かんばんのレーンなど)で既に自明で、トリガーは操作の入口としてだけ使う場合に指定する。
@@ -196,12 +171,9 @@ export const SingleSelectField = ({
         onBlur={onBlur}
         ref={ref}
       >
-        <Label
-          className={cn(isCompact ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}
-          isRequired={isRequired}
-        >
+        <FieldLabel isCompact={isCompact} isHidden={isLabelHidden} isRequired={isRequired}>
           {label}
-        </Label>
+        </FieldLabel>
         <Select.Trigger // isCompact: 既定 36px を 28px に詰める
           className={isCompact ? 'min-h-7 py-1' : undefined}
         >
@@ -213,29 +185,12 @@ export const SingleSelectField = ({
               return value && groupOptions[value] ? <>{groupOptions[value]}</> : <></>
             }}
           </Select.Value>
-          {isClearable && value && (
-            <span
-              /**
-               * Select.Trigger は内部が button なので、ここを button にすると入れ子になる。
-               * キーボードからは ListBox で選択を外せるため span + role='button' のままにする
-               */
-              role='button'
-              // 共通部品なのでローカライズ不要とする
-              aria-label='clear'
-              tabIndex={-1}
-              className='ml-auto inline-flex cursor-pointer items-center opacity-60 hover:opacity-100'
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.stopPropagation()
-                onChange(null)
-              }}
-            >
-              <XCircleIcon width={16} />
-            </span>
+          {isClearable && value && !isDisabled && (
+            <TriggerClearButton className='ml-auto' onClear={() => onChange(null)} />
           )}
           <Select.Indicator />
         </Select.Trigger>
-        <ErrorMessage className={hasErrorArea ? 'min-h-4' : ''}>{errorMessage}</ErrorMessage>
+        <FieldError hasErrorArea={hasErrorArea}>{errorMessage}</FieldError>
         <Select.Popover>
           <ListBox selectionMode='single'>
             {Object.entries(groupOptions).map(([id, name]) => (

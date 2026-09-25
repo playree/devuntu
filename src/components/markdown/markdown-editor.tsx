@@ -1,8 +1,9 @@
 'use client'
 
+import { FieldError, FieldLabel } from '@/components/general/field'
 import { getFieldConstraints } from '@/components/general/field-constraints'
 import { useLocale } from '@/locale/client'
-import { cn, ErrorMessage, Label, Skeleton, TextField } from '@heroui/react'
+import { cn, Skeleton, TextField } from '@heroui/react'
 import dynamic from 'next/dynamic'
 import { CSSProperties, FC, memo, ReactNode, useCallback, useState } from 'react'
 import { Control, FieldPath, FieldValues, useController } from 'react-hook-form'
@@ -117,9 +118,9 @@ const EditorField: FC<{
       <div // action にはボタンが入るため、そのときだけ中央揃えにしてラベルと高さを合わせる
         className={cn('flex justify-between', action ? 'items-center' : 'items-baseline')}
       >
-        <Label className={isCompact ? 'text-xs font-light' : ''} isRequired={isRequired}>
+        <FieldLabel isCompact={isCompact} isRequired={isRequired}>
           {label}
-        </Label>
+        </FieldLabel>
         <div className='flex items-center gap-2'>
           {maxLength !== undefined && (
             <span className={`font-mono text-xs ${length > maxLength ? 'text-danger' : 'text-gray-500'}`}>
@@ -130,7 +131,7 @@ const EditorField: FC<{
         </div>
       </div>
       {children}
-      <ErrorMessage className={isFlat || !hasErrorArea ? undefined : 'min-h-4'}>{errorMessage}</ErrorMessage>
+      <FieldError hasErrorArea={!isFlat && hasErrorArea}>{errorMessage}</FieldError>
     </TextField>
   )
 }

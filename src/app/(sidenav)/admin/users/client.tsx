@@ -49,7 +49,7 @@ export const AdminUsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPass
 
       <MultiTable
         isSmart
-        ariaLabel='user list'
+        aria-label='user list'
         pagingList={list}
         columns={[
           { id: 'name', name: t('username'), isRowHeader: true, allowsSorting: true, minWidth: 110 },

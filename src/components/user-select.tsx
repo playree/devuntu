@@ -2,11 +2,11 @@
 
 import { UserAvatar } from '@/components/general/avatar'
 import { MultiButton } from '@/components/general/button'
+import { FieldBaseProps, FieldError, FieldLabel, TriggerClearButton } from '@/components/general/field'
 import { useSmart } from '@/components/general/smart'
-import { XCircleIcon } from '@/components/icon'
 import { useSelfUserId } from '@/lib/use-user'
 import { useLocale } from '@/locale/client'
-import { ComboBox, EmptyState, ErrorMessage, Input, Label, ListBox, cn } from '@heroui/react'
+import { ComboBox, EmptyState, Input, ListBox, cn } from '@heroui/react'
 import { FC, Ref } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 
@@ -54,7 +54,8 @@ const SelfSelectAction: FC<{
   )
 }
 
-type UserSelectFieldProps = {
+/** 必須や読み取り専用は ComboBox の表示に反映していないので受け取らない */
+type UserSelectFieldProps = Omit<FieldBaseProps, 'isRequired' | 'isReadOnly'> & {
   /**
    * 選択肢となるユーザー(`getAssigneeOptions` が返すボードメンバーなど)。
    * 絞り込みでは all / none のセンチネルを `hideAvatar` 付きで混ぜてもよい。
@@ -64,8 +65,6 @@ type UserSelectFieldProps = {
   onChange: (value: string | null) => void
   /** ラベルは `assignee` 固定だが、絞り込み等で変えたい場合のみ上書きする */
   label?: string
-  /** ラベルを読み上げ用にだけ残す(見出しを呼び出し側で出す場合) */
-  isLabelHidden?: boolean
   /**
    * 未選択時の表示。既定は「未割り当て」。
    * 絞り込みでは未選択が「すべて」を意味し、「未割り当て」は実在の選択肢なので上書きすること
@@ -79,11 +78,7 @@ type UserSelectFieldProps = {
   /** 候補が 0 件のときの文言。既定は担当者向けの文言 */
   emptyMessage?: string
   isClearable?: boolean
-  isDisabled?: boolean
-  errorMessage?: string
   variant?: 'primary' | 'secondary'
-  isSmart?: boolean
-  isSmartForm?: boolean
   onBlur?: () => void
   ref?: Ref<HTMLDivElement>
 }
@@ -145,9 +140,9 @@ export const UserSelectField = ({
       <div // ラベル行を横並びにする。react-aria は Context で Label を解決するので div で包んでも紐付けは保たれる
         className='flex items-center justify-between gap-2'
       >
-        <Label className={cn(isCompact ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}>
+        <FieldLabel isCompact={isCompact} isHidden={isLabelHidden}>
           {label ?? t('assignee')}
-        </Label>
+        </FieldLabel>
         {canSelectSelf && <SelfSelectAction onPress={() => onChange(selfUserId)} />}
       </div>
       <ComboBox.InputGroup>
@@ -163,24 +158,10 @@ export const UserSelectField = ({
           </span>
         )}
         {hasClear && (
-          <span
-            /**
-             * Trigger は button なので、その中に入れると入れ子になる。ここは Trigger の兄弟だが、
-             * キーボードからは入力を消せば未選択に戻せるため span + role='button' に揃える
-             */
-            role='button'
-            // 共通部品と同じくローカライズ不要とする
-            aria-label='clear'
-            tabIndex={-1}
-            className='absolute inset-y-0 inset-e-6 z-10 inline-flex cursor-pointer items-center opacity-60 hover:opacity-100'
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => {
-              e.stopPropagation()
-              onChange(null)
-            }}
-          >
-            <XCircleIcon width={16} />
-          </span>
+          <TriggerClearButton // Trigger の兄弟だが、キーボードからは入力を消せば未選択に戻せるため span のままにする
+            className='absolute inset-y-0 inset-e-6 z-10'
+            onClear={() => onChange(null)}
+          />
         )}
         <Input // isCompact: 既定 36px を 28px に詰める
           className={cn(
@@ -193,7 +174,7 @@ export const UserSelectField = ({
         />
         <ComboBox.Trigger /* 必ず最後の子にすること(InputGroup が最後の子を Trigger として扱う) */ />
       </ComboBox.InputGroup>
-      <ErrorMessage className={hasErrorArea ? 'min-h-4' : ''}>{errorMessage}</ErrorMessage>
+      <FieldError hasErrorArea={hasErrorArea}>{errorMessage}</FieldError>
       <ComboBox.Popover>
         <ListBox renderEmptyState={() => <EmptyState>{emptyMessage ?? t('msg_no_matching_assignees')}</EmptyState>}>
           {options.map((option) => (

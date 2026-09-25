@@ -213,7 +213,7 @@ export const IssueMcpTokenModal: FC<ModalBaseProps & { baseUrl: string }> = ({ s
                 <div className='col-span-12'>
                   <TabsBox
                     variant='secondary'
-                    ariaLabel={t('mcp_add_command')}
+                    aria-label={t('mcp_add_command')}
                     // タブを切り替えてもモーダルの高さが跳ねないよう、内容の多い Codex 側に合わせる
                     panelClassName='min-h-53 sm:min-h-47'
                     items={[

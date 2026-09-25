@@ -2,9 +2,10 @@
 
 import { getPasswordScore, preloadPasswordScore } from '@/lib/password-score'
 import { useLocale } from '@/locale/client'
-import { Button, cn, ErrorMessage, InputGroup, InputProps, Label, ProgressBar, TextField } from '@heroui/react'
+import { Button, cn, InputGroup, InputProps, Label, ProgressBar, TextField } from '@heroui/react'
 import { ChangeEvent, FC, useEffect, useRef, useState } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
+import { FieldBaseProps, FieldError, FieldLabel } from './general/field'
 import { EyeIcon, EyeSlashIcon } from './general/icons'
 import { useSmart } from './general/smart'
 
@@ -49,7 +50,9 @@ export const InputCtrlPassword = <
   type = 'text',
   onChanged,
   label,
+  isLabelHidden,
   isRequired,
+  isDisabled,
   isReadOnly,
   errorMessage,
   requiredPasswordScore,
@@ -57,18 +60,13 @@ export const InputCtrlPassword = <
   isSmart: isSmartProp,
   isSmartForm: isSmartFormProp,
   ...props
-}: InputProps & {
-  control?: Control<TFieldValues>
-  name: TName
-  onChanged?: (e: ChangeEvent<HTMLInputElement>) => void
-  label?: string
-  isRequired?: boolean
-  isReadOnly?: boolean
-  errorMessage?: string
-  requiredPasswordScore?: number
-  isSmart?: boolean
-  isSmartForm?: boolean
-}) => {
+}: InputProps &
+  FieldBaseProps & {
+    control?: Control<TFieldValues>
+    name: TName
+    onChanged?: (e: ChangeEvent<HTMLInputElement>) => void
+    requiredPasswordScore?: number
+  }) => {
   const { t } = useLocale()
   const { isCompact, hasErrorArea } = useSmart(isSmartProp, isSmartFormProp)
   const [isVisible, setIsVisible] = useState(false)
@@ -93,14 +91,15 @@ export const InputCtrlPassword = <
             type={isVisible ? 'text' : 'password'}
             className='relative'
             isInvalid={!!errorMessage}
+            isDisabled={isDisabled}
             isReadOnly={isReadOnly}
             isRequired={isRequired}
             // validationBehavior の事情は general/input.tsx の InputField と同じ
             validationBehavior='aria'
           >
-            <Label className={isCompact ? 'text-xs font-light' : ''} isRequired={isRequired}>
+            <FieldLabel isCompact={isCompact} isHidden={isLabelHidden} isRequired={isRequired}>
               {label}
-            </Label>
+            </FieldLabel>
             <InputGroup // isCompact: 既定 36px を 28px に詰める
               variant={variant}
               className={isCompact ? 'min-h-7' : ''}
@@ -140,7 +139,7 @@ export const InputCtrlPassword = <
                 </Button>
               </InputGroup.Suffix>
             </InputGroup>
-            <ErrorMessage className={hasErrorArea ? 'min-h-4' : ''}>{errorMessage}</ErrorMessage>
+            <FieldError hasErrorArea={hasErrorArea}>{errorMessage}</FieldError>
           </TextField>
         )}
       />

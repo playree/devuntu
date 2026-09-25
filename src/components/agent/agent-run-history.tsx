@@ -43,7 +43,7 @@ export const AgentRunHistory: FC<{ pagingList: PagingList<AgentRunSummary> }> = 
   return (
     <MultiTable
       isSmart
-      ariaLabel='agent run list'
+      aria-label='agent run list'
       pagingList={pagingList}
       columns={[
         { id: 'ticketRef', name: t('ticket'), isRowHeader: true, allowsSorting: true, minWidth: 90, defaultWidth: 100 },

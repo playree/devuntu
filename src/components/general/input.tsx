@@ -1,26 +1,17 @@
 'use client'
 
-import { cn, ErrorMessage, Input, InputProps, Label, SearchField, SearchFieldProps, TextField } from '@heroui/react'
+import { cn, Input, InputProps, SearchField, SearchFieldProps, TextField } from '@heroui/react'
 import { ChangeEvent } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 import { z } from 'zod'
 import { MultiButton } from './button'
+import { FieldBaseProps, FieldError, FieldLabel } from './field'
 import { getFieldConstraints } from './field-constraints'
 import { MagnifyingGlassIcon } from './icons'
 import { useIsSmart, useSmart } from './smart'
 import { useGeneralUiText } from './ui-text'
 
-type InputFieldProps = InputProps & {
-  label?: string
-  /** ラベルを読み上げ用にだけ残す(見出しを呼び出し側で出す場合) */
-  isLabelHidden?: boolean
-  isRequired?: boolean
-  isReadOnly?: boolean
-  errorMessage?: string
-  isSmart?: boolean
-  isSmartForm?: boolean
-  className?: string
-}
+type InputFieldProps = InputProps & FieldBaseProps & { className?: string }
 
 /**
  * react-hook-form に依存しない Input 本体。
@@ -32,6 +23,7 @@ export const InputField = ({
   label,
   isLabelHidden,
   isRequired,
+  isDisabled,
   isReadOnly,
   errorMessage,
   isSmart: isSmartProp,
@@ -43,6 +35,7 @@ export const InputField = ({
   return (
     <TextField
       isInvalid={!!errorMessage}
+      isDisabled={isDisabled}
       isReadOnly={isReadOnly}
       isRequired={isRequired}
       /**
@@ -52,19 +45,16 @@ export const InputField = ({
        */
       validationBehavior='aria'
     >
-      <Label
-        className={cn(isCompact ? 'text-xs font-light' : '', isLabelHidden ? 'sr-only' : '')}
-        isRequired={isRequired}
-      >
+      <FieldLabel isCompact={isCompact} isHidden={isLabelHidden} isRequired={isRequired}>
         {label}
-      </Label>
+      </FieldLabel>
       <Input
         {...props}
         // isCompact: 既定 36px を 28px に詰める
         className={cn(isCompact ? 'py-1' : '', className)}
         type={type}
       />
-      <ErrorMessage className={hasErrorArea ? 'min-h-4' : ''}>{errorMessage}</ErrorMessage>
+      <FieldError hasErrorArea={hasErrorArea}>{errorMessage}</FieldError>
     </TextField>
   )
 }
@@ -159,9 +149,9 @@ export const InputSearchField = ({
     >
       {({ state }) => (
         <>
-          <Label className={isSmart ? 'text-xs font-light' : ''} isRequired={isRequired}>
+          <FieldLabel isCompact={isSmart} isRequired={isRequired}>
             {label}
-          </Label>
+          </FieldLabel>
           <SearchField.Group className={isSmart ? 'h-min' : ''}>
             <SearchField.SearchIcon />
             <SearchField.Input
