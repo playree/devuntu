@@ -14,7 +14,7 @@
  */
 
 import type { NotifyEvent } from '@/generated/prisma/enums'
-import { getTicketAccess } from '../board/board'
+import { getTicketAccess } from '../board/board-access'
 import { prisma } from '../prisma'
 import { getBoardNotifyChannels } from './notify-board-setting'
 import type { NotifyPayload } from './notify-payload'

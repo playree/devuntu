@@ -12,7 +12,7 @@
 import type { NotifyEvent } from '@/generated/prisma/enums'
 import { t } from '@/locale/server'
 import { AGENT_RUN_ACTION_LOCALE, AGENT_RUN_STATUS_LOCALE, agentRunDuration } from '../agent/agent'
-import { commentAnchorId, ticketShortPath } from '../board/task'
+import { commentAnchorId, ticketShortPath } from '../board/ticket-id'
 import { makeUrl } from '../server-utils'
 import type { NotifyPayload } from './notify-payload'
 

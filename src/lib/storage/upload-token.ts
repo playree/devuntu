@@ -13,7 +13,7 @@
 
 import { jwtVerify, SignJWT } from 'jose'
 import { uuidv7 } from 'uuidv7'
-import { getBoardAccess } from '../board/board'
+import { getBoardAccess } from '../board/board-access'
 import { nowDate, withinMinutes } from '../day'
 import { envu } from '../env-util'
 import { logger } from '../logger'

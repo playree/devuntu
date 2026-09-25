@@ -2,7 +2,7 @@
 
 import { safeAuthAction } from '@/lib/action/action-server'
 import { assertFreshSession } from '@/lib/auth/session-fresh'
-import { isAdminActor } from '@/lib/board/board'
+import { isAdminActor } from '@/lib/board/board-access'
 import { type CommandDef, type CommandInput, type CommandTargetRole } from '@/lib/command/command'
 import { assertCommandAccess, listAvailableCommands, listCommandTargetsForActor } from '@/lib/command/command-access'
 import { buildArgsPreview, buildCommandInputDefaults, resolveCommandArgs } from '@/lib/command/command-args'

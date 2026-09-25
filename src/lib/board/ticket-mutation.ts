@@ -15,21 +15,13 @@ import {
   enqueueTicketUpdated,
 } from '../notify/notify-trigger'
 import { prisma } from '../prisma'
-import {
-  type Actor,
-  assertBoardAccess,
-  assertBoardAssignee,
-  assertReplyTarget,
-  assertTicketAccess,
-  getBoardMentionCandidates,
-  getTicketMentionCandidates,
-  moveTicketToLane,
-  nextTicketNumber,
-  reassignContentAttachments,
-  type TicketAccess,
-} from './board'
+import { type Actor, assertBoardAccess, assertTicketAccess, type TicketAccess } from './board-access'
+import { assertBoardAssignee, getBoardMentionCandidates, getTicketMentionCandidates } from './board-member'
+import { extractMentionEmails, resolveMentionUserIds } from './mention'
 import { assertTagIdsInBoard, syncTicketTags } from './tag'
-import { extractMentionEmails, nextOrder, resolveMentionUserIds, ticketDisplayId } from './task'
+import { nextOrder } from './tag-rule'
+import { ticketDisplayId } from './ticket-id'
+import { assertReplyTarget, moveTicketToLane, nextTicketNumber, reassignContentAttachments } from './ticket-write'
 
 /** 経路固有の追加制限。`assertTicketAccess` を通った直後に同じトランザクション内で呼ぶ。NG なら throw する */
 export type TicketAuthorize = (access: TicketAccess) => void

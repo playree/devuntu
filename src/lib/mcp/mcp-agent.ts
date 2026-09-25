@@ -23,7 +23,7 @@ import {
   resolveAgentTask,
 } from '../agent/agent-runner'
 import { agentSetupCliPrompt, agentSetupGuide } from '../agent/agent-setup'
-import { assertTicketAccess } from '../board/board'
+import { assertTicketAccess } from '../board/board-access'
 import { errInvalidOperation } from '../error'
 import type { ResourceAuth } from '../oauth/oauth-resource'
 import { resolveTicketId } from './mcp-ticket'

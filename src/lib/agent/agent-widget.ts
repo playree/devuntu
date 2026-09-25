@@ -5,7 +5,8 @@
  * 承認者でなければ DB のチケット・実行履歴を引かずに空を返す。
  */
 
-import { OPEN_TICKET_STATUSES, ticketDisplayId } from '../board/task'
+import { OPEN_TICKET_STATUSES } from '../board/ticket-enum'
+import { ticketDisplayId } from '../board/ticket-id'
 import { prisma } from '../prisma'
 import { listApprovableAgents } from './agent-approver'
 

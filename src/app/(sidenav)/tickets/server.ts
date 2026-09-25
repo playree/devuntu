@@ -1,16 +1,14 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action/action-server'
-import {
-  assertBoardAccess,
-  ensurePrivateBoard,
-  getAccessibleBoardIds,
-  getBoardMemberUsers,
-  getBoardsMemberUsers,
-} from '@/lib/board/board'
+import { ensurePrivateBoard } from '@/lib/board/board'
+import { assertBoardAccess, getAccessibleBoardIds } from '@/lib/board/board-access'
+import { getBoardMemberUsers, getBoardsMemberUsers } from '@/lib/board/board-member'
 import { listVisibleTags, rethrowDuplicatedTagName, TAG_SELECT } from '@/lib/board/tag'
-import { buildTicketWhere, MAX_TAGS_PER_SCOPE, nextOrder, ticketDisplayId, ticketListOrderBy } from '@/lib/board/task'
+import { MAX_TAGS_PER_SCOPE, nextOrder } from '@/lib/board/tag-rule'
+import { ticketDisplayId } from '@/lib/board/ticket-id'
 import { createTicket as createTicketCore, deleteTicket as deleteTicketCore } from '@/lib/board/ticket-mutation'
+import { buildTicketWhere, ticketListOrderBy } from '@/lib/board/ticket-search'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'

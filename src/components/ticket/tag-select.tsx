@@ -5,7 +5,7 @@ import { FieldBaseProps, FieldError, FieldLabel, TriggerClearButton } from '@/co
 import { useSmart } from '@/components/general/smart'
 import { PlusIcon, XMarkIcon } from '@/components/icon'
 import type { TagColor } from '@/generated/prisma/enums'
-import { MAX_TAG_NAME, MAX_TICKET_TAGS } from '@/lib/board/task'
+import { MAX_TAG_NAME, MAX_TICKET_TAGS } from '@/lib/board/tag-rule'
 import { useLocale } from '@/locale/client'
 import { Autocomplete, EmptyState, ListBox, SearchField, Select, Tooltip, useFilter } from '@heroui/react'
 import { FC, Ref, useState } from 'react'
@@ -312,7 +312,7 @@ export const TagSelectCtrl = <
  * - 検索入力 / 新規作成を持たないので Autocomplete ではなく Select で構成する
  *
  * collection のキーもタグ名にするため、`options` は呼び出し側で
- * `dedupeTagOptionsByName`(lib/task.ts) を通して同名を畳んでおくこと。
+ * `dedupeTagOptionsByName`(lib/board/tag-rule.ts) を通して同名を畳んでおくこと。
  */
 export const TagNameSelectField: FC<
   TagFieldBaseProps & {

@@ -8,8 +8,11 @@
 import type { TicketPriority, TicketStatus } from '@/generated/prisma/enums'
 import { addDaysDateOnly, dateOnlyToUtc, DEFAULT_TZ, now, todayDateOnly } from '../day'
 import { prisma } from '../prisma'
-import { ensurePrivateBoard, getAccessibleBoardIds } from './board'
-import { buildTicketWhere, OPEN_TICKET_STATUSES, ticketDisplayId } from './task'
+import { ensurePrivateBoard } from './board'
+import { getAccessibleBoardIds } from './board-access'
+import { OPEN_TICKET_STATUSES } from './ticket-enum'
+import { ticketDisplayId } from './ticket-id'
+import { buildTicketWhere } from './ticket-search'
 
 /** 自分の担当チケットの表示件数 */
 export const MY_TICKETS_LIMIT = 10

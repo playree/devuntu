@@ -7,7 +7,8 @@
 
 import type { TicketStatus } from '@/generated/prisma/enums'
 import { prisma } from '../prisma'
-import { commentAnchorId, ticketDisplayId, ticketScopeWhere, ticketShortPath } from './task'
+import { commentAnchorId, ticketDisplayId, ticketShortPath } from './ticket-id'
+import { ticketScopeWhere } from './ticket-search'
 import { resolveAccessibleBoardIds } from './ticket-widget'
 
 /** 自分宛てのメンションの表示件数 */

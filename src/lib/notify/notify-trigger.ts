@@ -18,7 +18,8 @@
 
 import type { Prisma } from '@/generated/prisma/client'
 import type { AgentRunAction, AgentRunStatus, TicketStatus } from '@/generated/prisma/enums'
-import { extractMentionEmails, normalizeMentionText, ticketDisplayId } from '../board/task'
+import { extractMentionEmails, normalizeMentionText } from '../board/mention'
+import { ticketDisplayId } from '../board/ticket-id'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
 import { commentExcerpt } from './notify'

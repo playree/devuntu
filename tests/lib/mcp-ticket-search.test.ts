@@ -13,7 +13,7 @@ vi.mock('@/lib/prisma', () => ({
   prisma: { board: { findUnique: vi.fn() }, ticket: { findMany: vi.fn() } },
 }))
 
-vi.mock('@/lib/board/board', () => ({
+vi.mock('@/lib/board/board-access', () => ({
   getAccessibleBoardIds: vi.fn(),
 }))
 
@@ -23,7 +23,7 @@ vi.mock('@/lib/notify/notify-trigger', () => ({
   enqueueTicketUpdated: vi.fn(),
 }))
 
-const { getAccessibleBoardIds } = await import('@/lib/board/board')
+const { getAccessibleBoardIds } = await import('@/lib/board/board-access')
 
 const auth: ResourceAuth = {
   user: { id: 'u1', name: 'tester', email: 'test@example.com', role: null },

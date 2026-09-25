@@ -7,7 +7,8 @@ import {
   resolveActionErrorMessage,
 } from '@/lib/action/action-error'
 import { SESSION_NOT_FRESH } from '@/lib/auth/auth-config'
-import { DUPLICATED_BOARD_KEY, DUPLICATED_TAG_NAME } from '@/lib/board/task'
+import { DUPLICATED_TAG_NAME } from '@/lib/board/tag-rule'
+import { DUPLICATED_BOARD_KEY } from '@/lib/board/ticket-id'
 import { COMMAND_ALREADY_RUNNING } from '@/lib/command/command'
 import { INVALID_OPERATION, SYSTEM_ERROR, TOO_MANY_REQUESTS } from '@/lib/error'
 import { en } from '@/locale/lang-en'

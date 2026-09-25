@@ -1,4 +1,5 @@
-import { assertBoardAccess, assertReplyTarget, reassignContentAttachments } from '@/lib/board/board'
+import { assertBoardAccess } from '@/lib/board/board-access'
+import { assertReplyTarget, reassignContentAttachments } from '@/lib/board/ticket-write'
 import { ClientError } from '@/lib/error'
 import { toUploadUrl } from '@/lib/storage/upload'
 import { describe, expect, it, vi } from 'vitest'

@@ -1,14 +1,6 @@
 import type { TicketCommentType, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
-import { assertTicketAccess, findTicketIdByDisplayId, getAccessibleBoardIds } from '@/lib/board/board'
-import {
-  buildTicketWhere,
-  canMcpDeleteTicket,
-  canMcpUpdateTicket,
-  parseTicketDisplayId,
-  ticketDisplayId,
-  ticketListOrderBy,
-  ticketShortPath,
-} from '@/lib/board/task'
+import { assertTicketAccess, findTicketIdByDisplayId, getAccessibleBoardIds } from '@/lib/board/board-access'
+import { parseTicketDisplayId, ticketDisplayId, ticketShortPath } from '@/lib/board/ticket-id'
 import {
   addComment,
   createTicket,
@@ -19,6 +11,8 @@ import {
   updateTicket,
   type UpdateTicketInput,
 } from '@/lib/board/ticket-mutation'
+import { canMcpDeleteTicket, canMcpUpdateTicket } from '@/lib/board/ticket-permission'
+import { buildTicketWhere, ticketListOrderBy } from '@/lib/board/ticket-search'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { resolveBoardId } from '@/lib/mcp/mcp-board'

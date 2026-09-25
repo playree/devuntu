@@ -1,7 +1,7 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action/action-server'
-import { isAdminActor } from '@/lib/board/board'
+import { isAdminActor } from '@/lib/board/board-access'
 import {
   assertCommandAssignmentTargets,
   countCommandTargetAssignments,

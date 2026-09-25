@@ -14,10 +14,14 @@ vi.mock('@/lib/prisma', () => ({
 
 vi.mock('@/lib/board/board', () => ({
   ensurePrivateBoard: vi.fn(),
+}))
+
+vi.mock('@/lib/board/board-access', () => ({
   getAccessibleBoardIds: vi.fn(),
 }))
 
-const { ensurePrivateBoard, getAccessibleBoardIds } = await import('@/lib/board/board')
+const { ensurePrivateBoard } = await import('@/lib/board/board')
+const { getAccessibleBoardIds } = await import('@/lib/board/board-access')
 
 const userId = '019e0000-0000-7000-8000-00000000000a'
 const accessibleBoardId = '019e0000-0000-7000-8000-000000000001'

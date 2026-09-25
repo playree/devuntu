@@ -12,19 +12,26 @@ vi.mock('@/lib/prisma', () => ({
   prisma: { board: { findUnique: vi.fn() } },
 }))
 
-vi.mock('@/lib/board/board', () => ({
+vi.mock('@/lib/board/board-access', () => ({
   assertBoardAccess: vi.fn(),
+}))
+
+vi.mock('@/lib/board/board', () => ({
   countTicketsByBoard: vi.fn(),
-  getBoardMemberUsers: vi.fn(),
   listAccessibleBoards: vi.fn(),
+}))
+
+vi.mock('@/lib/board/board-member', () => ({
+  getBoardMemberUsers: vi.fn(),
 }))
 
 vi.mock('@/lib/board/tag', () => ({
   listBoardTags: vi.fn(),
 }))
 
-const { assertBoardAccess, countTicketsByBoard, getBoardMemberUsers, listAccessibleBoards } =
-  await import('@/lib/board/board')
+const { assertBoardAccess } = await import('@/lib/board/board-access')
+const { countTicketsByBoard, listAccessibleBoards } = await import('@/lib/board/board')
+const { getBoardMemberUsers } = await import('@/lib/board/board-member')
 const { listBoardTags } = await import('@/lib/board/tag')
 
 const auth: ResourceAuth = {

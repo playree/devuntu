@@ -15,7 +15,7 @@ import {
   pickAgentTasks,
   resolveAgentTask,
 } from '@/lib/agent/agent-runner'
-import { assertTicketAccess } from '@/lib/board/board'
+import { assertTicketAccess } from '@/lib/board/board-access'
 import { createDevuntuMcpServer } from '@/lib/mcp/mcp-server'
 import { resolveTicketId } from '@/lib/mcp/mcp-ticket'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
@@ -34,7 +34,9 @@ vi.mock('@/lib/agent/agent-runner', async (importOriginal) => ({
   resolveAgentTask: vi.fn(),
 }))
 
-vi.mock('@/lib/board/board', () => ({ assertTicketAccess: vi.fn() }))
+vi.mock('@/lib/board/board-access', () => ({
+  assertTicketAccess: vi.fn(),
+}))
 
 vi.mock('@/lib/mcp/mcp-ticket', () => ({
   MCP_ASSIGNEE_ME: 'me',

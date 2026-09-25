@@ -11,19 +11,10 @@ import {
   MAX_POLL_INTERVAL_SEC,
   MIN_POLL_INTERVAL_SEC,
 } from '../agent/agent'
-import {
-  ASSIGNEE_NONE,
-  BOARD_KEY_PATTERN,
-  isReservedBoardKey,
-  MAX_BOARD_KEY,
-  MAX_TAG_NAME,
-  MAX_TICKET_TAGS,
-  TAG_COLORS,
-  TICKET_COMMENT_TYPES,
-  TICKET_PRIORITIES,
-  TICKET_SORT_COLUMNS,
-  TICKET_STATUSES,
-} from '../board/task'
+import { MAX_TAG_NAME, MAX_TICKET_TAGS, TAG_COLORS } from '../board/tag-rule'
+import { TICKET_COMMENT_TYPES, TICKET_PRIORITIES, TICKET_STATUSES } from '../board/ticket-enum'
+import { BOARD_KEY_PATTERN, isReservedBoardKey, MAX_BOARD_KEY } from '../board/ticket-id'
+import { ASSIGNEE_NONE, TICKET_SORT_COLUMNS } from '../board/ticket-search'
 import { COMMAND_ID_PATTERN, COMMAND_RUN_SORT_COLUMNS, COMMAND_RUN_STATUSES } from '../command/command'
 import { CHANNEL_NOTIFY_EVENTS, DM_NOTIFY_EVENTS } from '../notify/notify'
 import { SLACK_CHANNEL_ID_PATTERN } from '../slack/slack'
@@ -457,18 +448,18 @@ export const zTicketContent = z.string().max(40000, el('@invalid_content'))
 
 /** タグ名。表示用の文字列。検索条件でも使う */
 export const zTagName = z.string().trim().min(1, el('@invalid_tag')).max(MAX_TAG_NAME, el('@invalid_tag'))
-/** タグの色。TAG_COLORS(task.ts) を単一ソースにする */
+/** タグの色。TAG_COLORS(tag-rule.ts) を単一ソースにする */
 export const zTagColor = z.enum(TAG_COLORS)
 /** タグの表示順 */
 export const zTagOrder = z.number().int().min(0).max(999)
 /** チケットへ付けるタグ。名前配列との取り違えを型で防ぐためフィールド名も tagIds にする */
 export const zTagIds = z.array(z.uuidv7()).max(MAX_TICKET_TAGS, el('@invalid_tag'))
 
-/** ステータス / 優先度 / ロールは task.ts を単一ソースにする(Prisma の enum とはそちらで突き合わせる) */
+/** ステータス / 優先度は ticket-enum.ts を単一ソースにする(Prisma の enum とはそちらで突き合わせる) */
 export const zTicketStatus = z.enum(TICKET_STATUSES)
 export const zTicketPriority = z.enum(TICKET_PRIORITIES)
 export const zCommentContent = z.string().trim().min(1, el('@required_field')).max(40000, el('@invalid_content'))
-/** コメントの種別。task.ts の TICKET_COMMENT_TYPES を単一ソースにする。null/未指定は通常コメント */
+/** コメントの種別。ticket-enum.ts の TICKET_COMMENT_TYPES を単一ソースにする。null/未指定は通常コメント */
 export const zCommentType = z.enum(TICKET_COMMENT_TYPES).nullish()
 export const zBoardDescription = z.string().max(200, el('@invalid_description')).optional()
 /**
@@ -483,7 +474,7 @@ export const zBoardKey = z
   .max(MAX_BOARD_KEY, el('@invalid_board_key'))
   .regex(BOARD_KEY_PATTERN, el('@invalid_board_key'))
   .refine((key) => !isReservedBoardKey(key), el('@reserved_board_key'))
-/** ボードのロール。Prisma の BoardMemberRole / task.ts の BoardRole と一致させる */
+/** ボードのロール。Prisma の BoardMemberRole / ticket-permission.ts の BoardRole と一致させる */
 export const zBoardRole = z.enum(['owner', 'member'])
 
 /** 期日は日付のみ(YYYY-MM-DD)。DatePickerCtrl が CalendarDate との変換を担う */
@@ -563,7 +554,7 @@ export const scTicketSearch = z.object({
 export type TicketSearch = z.infer<typeof scTicketSearch>
 export type TicketSearchIn = z.input<typeof scTicketSearch>
 
-/** 一覧のソート対象列。TICKET_SORT_COLUMNS(task.ts) を単一ソースにする */
+/** 一覧のソート対象列。TICKET_SORT_COLUMNS(ticket-search.ts) を単一ソースにする */
 export const zTicketSortColumn = z.enum(TICKET_SORT_COLUMNS)
 
 export const zSortDirection = z.enum(['ascending', 'descending'])

@@ -1,8 +1,9 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action/action-server'
-import { assertBoardAccess, isAdminActor } from '@/lib/board/board'
-import { groupByLane, kanbanDoneSince, kanbanTicketWhere, MAX_KANBAN_CARDS, ticketDisplayId } from '@/lib/board/task'
+import { assertBoardAccess, isAdminActor } from '@/lib/board/board-access'
+import { groupByLane, kanbanDoneSince, kanbanTicketWhere, MAX_KANBAN_CARDS } from '@/lib/board/kanban'
+import { ticketDisplayId } from '@/lib/board/ticket-id'
 import { changeTicketStatus } from '@/lib/board/ticket-mutation'
 import { nowDate } from '@/lib/day'
 import { errInvalidOperation } from '@/lib/error'

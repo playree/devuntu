@@ -1,14 +1,9 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action/action-server'
-import {
-  countTicketsByBoard,
-  ensurePrivateBoard,
-  listAccessibleBoards,
-  reserveBoardKey,
-  rethrowDuplicatedBoardKey,
-} from '@/lib/board/board'
-import { TICKET_STATUSES } from '@/lib/board/task'
+import { countTicketsByBoard, ensurePrivateBoard, listAccessibleBoards } from '@/lib/board/board'
+import { reserveBoardKey, rethrowDuplicatedBoardKey } from '@/lib/board/board-key'
+import { TICKET_STATUSES } from '@/lib/board/ticket-enum'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { scCreateBoard } from '@/lib/schema/schema'

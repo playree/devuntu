@@ -377,7 +377,7 @@ Slack に貼られたチケットURLを、Slack Events API の `link_shared` を
 サイト側は認証必須のままなので、未認証の Slack クローラに OGP を読ませる方式は採れない。
 代わりに **リンクを貼った本人の閲覧権限をサーバー側で検証してから展開する**。
 
-対応する URL は 2 形式(`parseTicketUrl()` / `src/lib/board/task.ts`)。オリジンが `BETTER_AUTH_URL` と一致するものだけ受ける。
+対応する URL は 2 形式(`parseTicketUrl()` / `src/lib/board/ticket-id.ts`)。オリジンが `BETTER_AUTH_URL` と一致するものだけ受ける。
 
 | 形式                    | 引き方                                              |
 | ----------------------- | --------------------------------------------------- |

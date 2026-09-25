@@ -15,7 +15,7 @@ import {
   TicketIdText,
 } from '@/components/ticket/ticket-chip'
 import type { TicketStatus } from '@/generated/prisma/enums'
-import { cardDropId, KANBAN_LANES, laneDropId } from '@/lib/board/task'
+import { cardDropId, KANBAN_LANES, laneDropId } from '@/lib/board/kanban'
 import { preventParentSelection } from '@/lib/client-utils'
 import { dayformat, isDateOnlyOverdue } from '@/lib/day'
 import { useLocale } from '@/locale/client'
