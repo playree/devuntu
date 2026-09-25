@@ -393,6 +393,7 @@ export type LocaleItemBase =
   | 'status_done'
   | 'status_done_recent'
   | 'status_todo'
+  | 'table_empty'
   | 'tag_color'
   | 'tag_manage'
   | 'tags'

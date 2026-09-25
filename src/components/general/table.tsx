@@ -124,6 +124,10 @@ type TableActivityProps<T> = {
   pagingList?: PagingList & { items: T[] }
   /** 行の上下パディングを詰めて、1 画面に表示できる行数を増やす */
   isSmart?: boolean
+  /** 0 件のときの表示。省略時は既定の文言 */
+  emptyContent?: ReactNode
+  /** 読み込み中は 0 件の表示を出さない。省略時は pagingList.isLoading */
+  isLoading?: boolean
 }
 
 /** 現在ページの前後に出すページ番号の数 */
@@ -243,6 +247,8 @@ export const MultiTable = <T extends object>({
   pagingList,
   items,
   isSmart,
+  emptyContent,
+  isLoading,
   ...props
 }: TableBodyProps<T> &
   TableActivityProps<T> & {
@@ -256,7 +262,9 @@ export const MultiTable = <T extends object>({
       defaultWidth?: TableColumnProps['defaultWidth']
     }[]
   }) => {
+  const uiText = useGeneralUiText()
   const behavior = selectionMode ? (selectionBehavior ?? 'replace') : undefined
+  const isLoadingItems = isLoading ?? pagingList?.isLoading ?? false
   return (
     <Table className={cn(isSmart && COMPACT_ROW_CLASS)}>
       <Table.ResizableContainer>
@@ -301,7 +309,15 @@ export const MultiTable = <T extends object>({
               </Table.Column>
             ))}
           </Table.Header>
-          <Table.Body {...props} items={items ?? pagingList?.items} />
+          <Table.Body
+            renderEmptyState={() =>
+              isLoadingItems ? null : (
+                <div className='text-muted py-4 text-center text-sm'>{emptyContent ?? uiText.tableEmpty}</div>
+              )
+            }
+            {...props}
+            items={items ?? pagingList?.items}
+          />
         </Table.Content>
       </Table.ResizableContainer>
       <Table.Footer className='relative'>

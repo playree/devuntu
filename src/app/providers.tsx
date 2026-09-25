@@ -55,6 +55,7 @@ const MyGeneralUiTextProvider: FC<{ children: ReactNode }> = ({ children }) => {
       rowsPerPage: t('rows_per_page'),
       perPage: (rows) => t('per_page', { rows }),
       noResults: t('results_none'),
+      tableEmpty: t('table_empty'),
       resultRange: (start, end, total) => t('results_range', { start, end, total }),
       waitSeconds: (sec) => t('wait_seconds', { sec }),
     }),
