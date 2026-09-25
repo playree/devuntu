@@ -91,7 +91,7 @@ const CommandTargetsBody: FC<{
     <FlexCol>
       {!data.enabled && <NoticePanel status='warning'>{t('command_disabled')}</NoticePanel>}
 
-      <div className='text-foreground-500 text-xs'>
+      <div className='text-muted text-xs'>
         <div>
           {t('command_def_dir')}: <span className='font-mono break-all'>{data.dir}</span>
         </div>

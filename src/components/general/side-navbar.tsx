@@ -22,7 +22,7 @@ export const SideNavbar: FC<{
     <div className='group/sidenav'>
       <button
         className={cn(
-          'fixed z-40 mt-2 ml-3 rounded-lg bg-gray-200 p-2 text-sm text-gray-500',
+          'text-muted fixed z-40 mt-2 ml-3 rounded-lg bg-gray-200 p-2 text-sm',
           'opacity-50 hover:bg-gray-300 focus:ring-2 focus:ring-gray-200 focus:outline-hidden',
           'lg:hidden dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600',
         )}

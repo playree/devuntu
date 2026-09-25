@@ -98,7 +98,7 @@ export const AssignMemberModal: FC<
               label={t('role')}
               errorMessage={fet(errors.role)}
             />
-            {roleNote && <p className='mt-1 text-xs text-gray-500'>{roleNote}</p>}
+            {roleNote && <p className='text-muted mt-1 text-xs'>{roleNote}</p>}
           </div>
         )}
       </GridBox>

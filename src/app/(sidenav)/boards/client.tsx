@@ -83,7 +83,7 @@ export const BoardsClient: FC = () => {
                 >
                   {boardName(item)}
                 </Link>
-                <span className='flex items-center gap-2 text-xs text-gray-500'>
+                <span className='text-muted flex items-center gap-2 text-xs'>
                   {item.kind === 'private' ? t('private') : t('team')}
                   <span // このボードのチケット表示IDの接頭辞
                     className='font-mono'

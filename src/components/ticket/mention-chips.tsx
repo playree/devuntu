@@ -19,7 +19,7 @@ export const MentionChips: FC<{ names: string[]; className?: string }> = ({ name
 
   return (
     <div className={cn('flex flex-wrap items-center gap-1', className)}>
-      <span className='text-xs text-gray-500'>{t('mentioned')}</span>
+      <span className='text-muted text-xs'>{t('mentioned')}</span>
       {names.map((name) => (
         <Chip key={name} variant='soft' color='accent' size='sm'>
           <Chip.Label>{name}</Chip.Label>

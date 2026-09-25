@@ -136,7 +136,7 @@ export const CommandTargetClient: FC<{ targetKey: string }> = ({ targetKey }) =>
 
       <Panel>
         <FlexRow className='flex-wrap items-center'>
-          <span className='text-foreground-500 font-mono text-xs'>{data.target.id}</span>
+          <span className='text-muted font-mono text-xs'>{data.target.id}</span>
           <span className='grow' />
           <RoleChip value={data.role} />
           {/* 編集の導線が出ない理由(editable か書き込み可否)が画面から分かるようにする */}

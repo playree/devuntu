@@ -189,7 +189,7 @@ export const UserSelectField = ({
                 {showEmail && option.email ? (
                   <span className='flex flex-col'>
                     {option.name}
-                    <span className='text-xs font-light text-gray-500'>{option.email}</span>
+                    <span className='text-muted text-xs font-light'>{option.email}</span>
                   </span>
                 ) : (
                   option.name

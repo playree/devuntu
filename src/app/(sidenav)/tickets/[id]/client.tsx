@@ -461,7 +461,7 @@ export const TicketDetailClient: FC<{
         </Grid>
 
         <div // 作成 / 更新はチケットの属性ではないので、項目のグリッドから外して注記にする
-          className='mt-2 flex flex-wrap items-center gap-x-3 border-t pt-2 text-xs text-gray-500'
+          className='text-muted mt-2 flex flex-wrap items-center gap-x-3 border-t pt-2 text-xs'
         >
           <span>
             {t('created_at')} <span className='font-mono'>{dayformat(ticket.createdAt, 'tz-simple', tz)}</span>

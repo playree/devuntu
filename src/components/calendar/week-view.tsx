@@ -126,7 +126,7 @@ export const WeekView: FC<{ weekStartISO: string; busy: BusySlot[]; timezone: st
                     'text-xs font-semibold',
                     isSunday && 'text-red-500',
                     isSaturday && 'text-blue-500',
-                    !isSunday && !isSaturday && 'text-neutral-500',
+                    !isSunday && !isSaturday && 'text-muted',
                   )}
                 >
                   {weekdays[d.weekdayIndex]}
@@ -146,7 +146,7 @@ export const WeekView: FC<{ weekStartISO: string; busy: BusySlot[]; timezone: st
             {HOURS.map((h) => (
               <div
                 key={h}
-                className='absolute right-1 -translate-y-1/2 font-mono text-xs text-neutral-500'
+                className='text-muted absolute right-1 -translate-y-1/2 font-mono text-xs'
                 style={{ top: h * HOUR_HEIGHT }}
               >
                 {h > 0 ? `${h}:00` : ''}

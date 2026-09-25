@@ -183,7 +183,7 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
       </Accordion>
 
       {data.total >= MAX_KANBAN_CARDS && (
-        <div className='px-1 text-xs text-gray-500'>{t('msg_ticket_list_limit', { max: `${MAX_KANBAN_CARDS}` })}</div>
+        <div className='text-muted px-1 text-xs'>{t('msg_ticket_list_limit', { max: `${MAX_KANBAN_CARDS}` })}</div>
       )}
 
       <DragDropProvider

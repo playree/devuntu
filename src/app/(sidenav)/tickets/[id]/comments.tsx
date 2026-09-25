@@ -227,7 +227,7 @@ export const TicketComments: FC<{
             mentionCandidates={mentionCandidates}
           />
           <div className='flex items-center gap-2'>
-            <span className='text-xs text-gray-500'>{t('msg_mention_hint')}</span>
+            <span className='text-muted text-xs'>{t('msg_mention_hint')}</span>
             <SplitButton
               className='ml-auto shrink-0'
               size='sm'

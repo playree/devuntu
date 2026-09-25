@@ -22,7 +22,7 @@ const DangerRow: FC<{ title: string; description: string; children: ReactNode }>
   <div className='flex flex-wrap items-center gap-2 py-3'>
     <div className='min-w-0 flex-1'>
       <div className='text-sm font-semibold'>{title}</div>
-      <div className='text-xs text-gray-500'>{description}</div>
+      <div className='text-muted text-xs'>{description}</div>
     </div>
     {children}
   </div>

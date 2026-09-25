@@ -16,7 +16,7 @@ const lineStyles = tv({
     stream: {
       stdout: '',
       stderr: 'text-danger',
-      system: 'text-foreground-500 italic',
+      system: 'text-muted italic',
     },
   },
 })

@@ -44,7 +44,7 @@ const AvailableArea: FC<{ editable: boolean; availableWidgets: WidgetSet[] }> = 
 
   return (
     <fieldset ref={ref} className={cn('mx-2 rounded-xl border-2 p-2', isDropTarget ? 'border-blue-300' : '')}>
-      <legend className='px-2 text-sm text-gray-500'>{t('widget_list')}</legend>
+      <legend className='text-muted px-2 text-sm'>{t('widget_list')}</legend>
       <div className='flex min-h-7 flex-wrap gap-2'>
         {availableWidgets.map((widget) => (
           <DragItem key={widget.id} widget={widget} editable={editable} />

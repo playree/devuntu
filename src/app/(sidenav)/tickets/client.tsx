@@ -149,7 +149,7 @@ export const TicketsClient: FC<{
                 >
                   {item.title}
                 </Link>
-                <span className='flex items-center gap-2 text-xs text-gray-500'>
+                <span className='text-muted flex items-center gap-2 text-xs'>
                   {boardName({ name: item.boardName, kind: item.boardKind })}
                   {item.commentCount > 0 && (
                     <span className='flex items-center gap-0.5'>

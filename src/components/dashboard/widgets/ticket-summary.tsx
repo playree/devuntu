@@ -54,7 +54,7 @@ export const TicketSummaryWidget: WidgetFC = ({ id, editable }) => {
               editable={editable}
             >
               <span className='text-2xl font-bold'>{data.counts[status]}</span>
-              <span className='text-center text-xs text-gray-500'>
+              <span className='text-muted text-center text-xs'>
                 {status === 'done' ? t('status_done_recent') : t(TICKET_STATUS_LOCALE[status])}
               </span>
             </Tile>

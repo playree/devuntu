@@ -64,7 +64,7 @@ export const SlackAccountLink: FC = () => {
         </ContentHeader>
       )}
 
-      {!connected && <p className='px-1 text-sm text-neutral-500'>{t('msg_slack_email_must_match')}</p>}
+      {!connected && <p className='text-muted px-1 text-sm'>{t('msg_slack_email_must_match')}</p>}
     </FlexCol>
   )
 }

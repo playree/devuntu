@@ -64,11 +64,11 @@ export const PublicCalClient: FC<{
           <MultiButton isSmart variant='outline' icon={<ArrowRightCircleIcon />} onPress={() => go(7)}>
             {t('next_week')}
           </MultiButton>
-          <div className='text-sm font-medium text-neutral-500'>{weekLabel}</div>
+          <div className='text-muted text-sm font-medium'>{weekLabel}</div>
         </div>
 
         {busy === null ? (
-          <div className='rounded-xl border border-neutral-200 p-8 text-center text-sm text-neutral-500 dark:border-neutral-800'>
+          <div className='text-muted rounded-xl border border-neutral-200 p-8 text-center text-sm dark:border-neutral-800'>
             {t('msg_calendar_share_unavailable')}
           </div>
         ) : (

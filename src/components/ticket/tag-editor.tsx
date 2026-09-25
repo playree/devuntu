@@ -33,7 +33,7 @@ const ColorPicker: FC<{ value: TagColor; onChange: (color: TagColor) => void }> 
   const { t } = useLocale()
   return (
     <div className='flex flex-wrap items-center gap-1'>
-      <span className='text-xs text-gray-500'>{t('tag_color')}</span>
+      <span className='text-muted text-xs'>{t('tag_color')}</span>
       {TAG_COLORS.map((color) => (
         <span
           key={color}
@@ -168,7 +168,7 @@ export const TagEditor: FC<{
       )}
 
       {tags.length === 0 ? (
-        <div className='px-1 text-sm text-gray-500'>{t('msg_no_tags')}</div>
+        <div className='text-muted px-1 text-sm'>{t('msg_no_tags')}</div>
       ) : (
         <div className='space-y-1'>
           {tags.map((tag) =>
@@ -187,8 +187,8 @@ export const TagEditor: FC<{
             ) : (
               <div key={tag.id} className='flex items-center gap-2 rounded-xl border-2 px-2 py-1'>
                 <TagChip tag={tag} />
-                <span className='font-mono text-xs text-gray-500'>#{tag.order}</span>
-                <span className='text-xs text-gray-500'>
+                <span className='text-muted font-mono text-xs'>#{tag.order}</span>
+                <span className='text-muted text-xs'>
                   {t('usage_count')}: {tag.ticketCount}
                 </span>
                 {canManage && (

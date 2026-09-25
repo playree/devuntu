@@ -34,7 +34,7 @@ export const RecentActivityWidget: WidgetFC = ({ id, editable }) => {
               <TicketTitleLine ticket={ticket} />
               <div className='flex items-center gap-2'>
                 <StatusChip value={ticket.status} />
-                <span className='font-mono text-xs text-gray-500'>{dayformat(ticket.updatedAt, 'tz-minute', tz)}</span>
+                <span className='text-muted font-mono text-xs'>{dayformat(ticket.updatedAt, 'tz-minute', tz)}</span>
               </div>
             </RowLink>
           ))}

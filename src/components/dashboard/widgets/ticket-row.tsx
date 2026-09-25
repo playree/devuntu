@@ -23,7 +23,7 @@ const dueDateStyles = tv({
   variants: {
     overdue: {
       true: 'text-danger',
-      false: 'text-gray-500',
+      false: 'text-muted',
     },
   },
 })

@@ -67,7 +67,7 @@ export const AdminCommandTargetClient: FC<{ targetKey: string }> = ({ targetKey 
         />
       </ContentHeader>
 
-      <div className='text-foreground-500 font-mono text-xs break-all'>{targetKey}</div>
+      <div className='text-muted font-mono text-xs break-all'>{targetKey}</div>
 
       <Accordion allowsMultipleExpanded defaultExpandedKeys={defaultExpandedKeys}>
         <AccordionSection id='command_target_members' icon={<UsersIcon />} title={t('command_target_members')}>

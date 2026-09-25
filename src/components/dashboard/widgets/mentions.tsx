@@ -31,7 +31,7 @@ export const MentionsWidget: WidgetFC = ({ id, editable }) => {
           {data.map((item) => (
             <RowLink key={item.key} href={item.href} editable={editable}>
               <TicketTitleLine ticket={item.ticket} />
-              <div className='flex min-w-0 items-center gap-2 text-xs text-gray-500'>
+              <div className='text-muted flex min-w-0 items-center gap-2 text-xs'>
                 <span className='min-w-0 truncate'>
                   {item.kind === 'comment'
                     ? `${t('comment')} - ${item.authorName ?? t('no_name')}`

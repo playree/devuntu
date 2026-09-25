@@ -80,7 +80,7 @@ const EditForm: FC<{ board: Board; reload: () => void }> = ({ board, reload }) =
             // 入力は小文字でも zBoardKey が大文字へ寄せるので、見た目も大文字に揃えておく
             className='font-mono uppercase'
           />
-          <p className='text-xs text-gray-500'>{t('msg_board_key_change')}</p>
+          <p className='text-muted text-xs'>{t('msg_board_key_change')}</p>
         </div>
         <div className='col-span-12'>
           <InputCtrl

@@ -44,9 +44,9 @@ export const CommandTargetTable: FC<{
           <FlexCol>
             <FlexRow className='flex-wrap items-center'>
               <span className='font-semibold'>{target.label}</span>
-              <span className='text-foreground-500 font-mono text-xs'>{target.id}</span>
+              <span className='text-muted font-mono text-xs'>{target.id}</span>
               {/* 読み込めなかったファイルの一覧と突き合わせられるようにする */}
-              <span className='text-foreground-500 font-mono text-xs break-all'>{target.fileName}</span>
+              <span className='text-muted font-mono text-xs break-all'>{target.fileName}</span>
               <span className='grow' />
               <MultiButton
                 isIconOnly

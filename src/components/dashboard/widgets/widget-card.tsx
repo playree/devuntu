@@ -72,7 +72,7 @@ export const WidgetRowList: FC<{ isEmpty: boolean; message: string; children: Re
   children,
 }) => {
   if (isEmpty) {
-    return <div className='min-h-14 px-2 py-1 text-sm text-gray-500'>{message}</div>
+    return <div className='text-muted min-h-14 px-2 py-1 text-sm'>{message}</div>
   }
   return <div className='flex max-h-64 min-h-14 flex-col overflow-y-auto'>{children}</div>
 }

@@ -121,7 +121,7 @@ export const CommandDefModal: FC<ModalBaseProps & { target: CommandDefTarget }> 
       submit={{ isPending: isSubmitting }}
     >
       <FlexCol>
-        <div className='text-foreground-500 text-xs'>{target.targetLabel}</div>
+        <div className='text-muted text-xs'>{target.targetLabel}</div>
         <YamlInput
           defaultValue={text}
           onChange={setText}

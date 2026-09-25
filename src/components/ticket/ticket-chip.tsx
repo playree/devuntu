@@ -179,7 +179,7 @@ const tagStyles = tv({
  * 桁の違いで揃わなくならないよう等幅で、本文より一段弱い色にして件名を主役に保つ。
  */
 export const TicketIdText: FC<{ displayId: string; className?: string }> = ({ displayId, className }) => (
-  <span className={cn('font-mono text-xs text-gray-500', className)}>{displayId}</span>
+  <span className={cn('text-muted font-mono text-xs', className)}>{displayId}</span>
 )
 
 /** タグ色のクラス。className を渡すと tailwind-merge でマージされる */

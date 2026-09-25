@@ -95,7 +95,7 @@ export const CommentItem: FC<{
       id={commentAnchorId(comment.id)}
       className={commentStyles({ isTarget })}
     >
-      <div className='flex items-center gap-2 text-xs text-gray-500'>
+      <div className='text-muted flex items-center gap-2 text-xs'>
         <span className='font-medium'>{comment.authorName || t('no_name')}</span>
         <span className='font-mono'>{dayformat(comment.createdAt, 'tz-simple', tz)}</span>
         <div className='ml-auto flex gap-0.5'>

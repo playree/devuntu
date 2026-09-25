@@ -60,7 +60,7 @@ export const CommandDefs: FC<{
             <FlexCol>
               <FlexRow className='flex-wrap items-center'>
                 <span className='font-semibold'>{command.label}</span>
-                <span className='text-foreground-500 font-mono text-xs'>{command.id}</span>
+                <span className='text-muted font-mono text-xs'>{command.id}</span>
                 <span className='grow' />
                 {canEdit && (
                   <>
@@ -87,7 +87,7 @@ export const CommandDefs: FC<{
                 )}
               </FlexRow>
 
-              {command.description && <div className='text-foreground-500 text-xs'>{command.description}</div>}
+              {command.description && <div className='text-muted text-xs'>{command.description}</div>}
 
               <div className='overflow-x-auto'>
                 <pre className='font-mono text-xs whitespace-pre'>
@@ -97,7 +97,7 @@ export const CommandDefs: FC<{
 
               {command.inputs.length > 0 && (
                 <FlexRow className='flex-wrap items-center'>
-                  <span className='text-foreground-500 text-xs'>{t('command_inputs')}</span>
+                  <span className='text-muted text-xs'>{t('command_inputs')}</span>
                   {command.inputs.map((input) => (
                     <Chip key={input.key} variant='soft' className='whitespace-nowrap'>
                       {input.label} / {t(INPUT_TYPE_LABEL[input.type])}
@@ -107,7 +107,7 @@ export const CommandDefs: FC<{
                 </FlexRow>
               )}
 
-              <FlexRow className='text-foreground-500 flex-wrap items-center text-xs'>
+              <FlexRow className='text-muted flex-wrap items-center text-xs'>
                 <span>
                   {t('command_timeout')}: {command.timeoutSec}s
                 </span>
