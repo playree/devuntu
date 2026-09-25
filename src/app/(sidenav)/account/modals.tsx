@@ -205,14 +205,7 @@ export const IssueMcpTokenModal: FC<ModalBaseProps & { baseUrl: string }> = ({ s
             <StepMotion direction={step.direction} key='step_output'>
               <GridBox>
                 <div className='col-span-12'>
-                  <CopyableField
-                    text={issued}
-                    label={t('mcp_token')}
-                    isMask
-                    copyLabel={t('copy')}
-                    showLabel={t('show')}
-                    hideLabel={t('hide')}
-                  />
+                  <CopyableField text={issued} label={t('mcp_token')} isMask />
                 </div>
                 <div className='col-span-12'>
                   <NoticePanel className='text-xs'>{t('msg_token_once')}</NoticePanel>
@@ -232,9 +225,6 @@ export const IssueMcpTokenModal: FC<ModalBaseProps & { baseUrl: string }> = ({ s
                             text={mcpAddCommand(baseUrl, issued, MCP_SERVER_NAME, 'user')}
                             label={t('mcp_add_command')}
                             isMask
-                            copyLabel={t('copy')}
-                            showLabel={t('show')}
-                            hideLabel={t('hide')}
                           />
                         ),
                       },
@@ -247,7 +237,6 @@ export const IssueMcpTokenModal: FC<ModalBaseProps & { baseUrl: string }> = ({ s
                               <CopyableField // 環境変数の名前しか入らないので伏せ字にしない
                                 text={mcpCodexAddCommand(baseUrl, MCP_SERVER_NAME, MCP_TOKEN_ENV)}
                                 label={t('mcp_add_command')}
-                                copyLabel={t('copy')}
                               />
                             </div>
                             <div className='col-span-12'>
@@ -255,9 +244,6 @@ export const IssueMcpTokenModal: FC<ModalBaseProps & { baseUrl: string }> = ({ s
                                 text={mcpTokenExportCommand(MCP_TOKEN_ENV, issued)}
                                 label={t('mcp_token_env_command')}
                                 isMask
-                                copyLabel={t('copy')}
-                                showLabel={t('show')}
-                                hideLabel={t('hide')}
                               />
                             </div>
                             <div className='col-span-12'>

@@ -143,14 +143,7 @@ export const AgentToken: FC<{
             <StepMotion direction={step.direction} key='step_output'>
               <GridBox>
                 <div className='col-span-12'>
-                  <CopyableField
-                    text={issued}
-                    label={t('agent_token')}
-                    isMask
-                    copyLabel={t('copy')}
-                    showLabel={t('show')}
-                    hideLabel={t('hide')}
-                  />
+                  <CopyableField text={issued} label={t('agent_token')} isMask />
                 </div>
                 <div className='col-span-12'>
                   <NoticePanel className='text-xs'>{t('msg_token_once')}</NoticePanel>
@@ -167,7 +160,6 @@ export const AgentToken: FC<{
                           <CopyableField // トークンではなく環境変数の参照が入るので伏せ字にしない
                             text={mcpAddCommand(baseUrl, AGENT_TOKEN_REF, AGENT_MCP_SERVER_NAME, 'project')}
                             label={t('mcp_add_command')}
-                            copyLabel={t('copy')}
                           />
                         ),
                       },
@@ -178,7 +170,6 @@ export const AgentToken: FC<{
                           <CopyableField
                             text={mcpCodexAddCommand(baseUrl, AGENT_MCP_SERVER_NAME, AGENT_TOKEN_ENV)}
                             label={t('mcp_add_command')}
-                            copyLabel={t('copy')}
                           />
                         ),
                       },

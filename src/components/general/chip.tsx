@@ -1,5 +1,6 @@
 import { Chip, ChipProps } from '@heroui/react'
 import { FC, SVGProps } from 'react'
+import { useGeneralUiText } from './ui-text'
 
 const CheckBadgeIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
   <svg
@@ -42,15 +43,16 @@ export const OnOffChip: FC<{ isState: boolean | undefined; variant?: ChipProps['
   variant = 'tertiary',
   isIconOnly = false,
 }) => {
+  const uiText = useGeneralUiText()
   return isState ? (
     <Chip color='success' variant={variant}>
       <CheckBadgeIcon />
-      {!isIconOnly && <Chip.Label>ON</Chip.Label>}
+      {!isIconOnly && <Chip.Label>{uiText.on}</Chip.Label>}
     </Chip>
   ) : (
     <Chip color='default' variant={variant} className='opacity-30'>
       <XCircleIcon />
-      {!isIconOnly && <Chip.Label>OFF</Chip.Label>}
+      {!isIconOnly && <Chip.Label>{uiText.off}</Chip.Label>}
     </Chip>
   )
 }

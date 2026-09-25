@@ -7,6 +7,7 @@ import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 import { z } from 'zod'
 import { MultiButton } from './button'
 import { useIsSmart, useSmart } from './smart'
+import { useGeneralUiText } from './ui-text'
 
 /** 検索実行ボタン用のアイコン(共通部品なのでこのフォルダ内で完結させる) */
 const MagnifyingGlassIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 16, strokeWidth = 2, ...props }) => (
@@ -151,10 +152,10 @@ export const InputSearchField = ({
   isRequired,
   isSmart: isSmartProp,
   className,
-  placeholder = 'Search...',
+  placeholder,
   maxLength,
   onSubmit,
-  searchLabel = 'Search',
+  searchLabel,
   ...props
 }: SearchFieldProps & {
   label?: string
@@ -162,10 +163,12 @@ export const InputSearchField = ({
   isSmart?: boolean
   placeholder?: string
   maxLength?: number
-  /** 検索ボタンの aria-label / tooltip */
+  /** 検索ボタンの aria-label / tooltip。未指定なら GeneralUiText の search */
   searchLabel?: string
 }) => {
   const isSmart = useIsSmart(isSmartProp)
+  const uiText = useGeneralUiText()
+  const searchButtonLabel = searchLabel ?? uiText.search
   return (
     <SearchField
       {...props}
@@ -182,7 +185,7 @@ export const InputSearchField = ({
             <SearchField.SearchIcon />
             <SearchField.Input
               className={cn(isSmart ? 'py-1' : '', className)}
-              placeholder={placeholder}
+              placeholder={placeholder ?? uiText.search}
               maxLength={maxLength}
               // 変換確定の Enter は検索として扱わない
               onKeyDown={(e) => {
@@ -204,8 +207,8 @@ export const InputSearchField = ({
                 size='sm'
                 variant='ghost'
                 className='mr-1 shrink-0'
-                aria-label={searchLabel}
-                tooltip={searchLabel}
+                aria-label={searchButtonLabel}
+                tooltip={searchButtonLabel}
                 icon={<MagnifyingGlassIcon />}
                 onPress={() => onSubmit(state.value)}
               />

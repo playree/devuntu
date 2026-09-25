@@ -83,7 +83,6 @@ export const TicketSearchPanel: FC<{
           label={t('keyword')}
           placeholder={t('keyword')}
           maxLength={100}
-          searchLabel={t('search')}
           value={keyword}
           onChange={setKeyword}
           onSubmit={applyKeyword}

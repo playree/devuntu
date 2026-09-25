@@ -2,6 +2,7 @@
 
 import { ActionErrorNotifier } from '@/components/action-error-notifier'
 import { ConfirmModalProvider } from '@/components/general/modal'
+import { GeneralUiText, GeneralUiTextProvider } from '@/components/general/ui-text'
 import { LocaleProvider } from '@/components/locale/client'
 import { NotifyProvider } from '@/components/notify'
 import { useLocale } from '@/locale/client'
@@ -9,7 +10,7 @@ import { localeConfig } from '@/locale/config'
 import { RouterProvider } from '@heroui/react'
 import { ThemeProvider, type ThemeProviderProps } from 'next-themes'
 import { useRouter } from 'next/navigation'
-import { FC, ReactNode } from 'react'
+import { FC, ReactNode, useMemo } from 'react'
 
 export interface ProvidersProps {
   children: ReactNode
@@ -28,14 +29,39 @@ const MyRouterProvider: FC<{ children: ReactNode }> = ({ children }) => {
   )
 }
 
-const MyConfirmModalProvider: FC<{ children: ReactNode }> = ({ children }) => {
+/** general 配下の部品が内部で出す文言をロケールから注入する */
+const MyGeneralUiTextProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const { t } = useLocale()
-
-  return (
-    <ConfirmModalProvider uiText={{ ok: t('ok'), cancel: t('cancel'), confirmed: t('confirmed') }}>
-      {children}
-    </ConfirmModalProvider>
+  const uiText = useMemo<GeneralUiText>(
+    () => ({
+      ok: t('ok'),
+      cancel: t('cancel'),
+      confirmed: t('confirmed'),
+      copy: t('copy'),
+      copied: t('copied'),
+      show: t('show'),
+      hide: t('hide'),
+      clear: t('clear'),
+      search: t('search'),
+      notSelected: t('not_selected'),
+      on: t('state_on'),
+      off: t('state_off'),
+      themeSelect: t('theme_select'),
+      themeSystem: t('theme_system'),
+      themeLight: t('theme_light'),
+      themeDark: t('theme_dark'),
+      prev: t('prev'),
+      next: t('next'),
+      rowsPerPage: t('rows_per_page'),
+      perPage: (rows) => t('per_page', { rows }),
+      noResults: t('results_none'),
+      resultRange: (start, end, total) => t('results_range', { start, end, total }),
+      waitSeconds: (sec) => t('wait_seconds', { sec }),
+    }),
+    [t],
   )
+
+  return <GeneralUiTextProvider uiText={uiText}>{children}</GeneralUiTextProvider>
 }
 
 export const Providers: FC<ProvidersProps> = ({
@@ -54,10 +80,12 @@ export const Providers: FC<ProvidersProps> = ({
         acceptLanguage={acceptLanguage}
         cookieLocale={cookieLocale}
       >
-        <MyConfirmModalProvider>
-          <ActionErrorNotifier />
-          <MyRouterProvider>{children}</MyRouterProvider>
-        </MyConfirmModalProvider>
+        <MyGeneralUiTextProvider>
+          <ConfirmModalProvider>
+            <ActionErrorNotifier />
+            <MyRouterProvider>{children}</MyRouterProvider>
+          </ConfirmModalProvider>
+        </MyGeneralUiTextProvider>
       </LocaleProvider>
     </ThemeProvider>
   )

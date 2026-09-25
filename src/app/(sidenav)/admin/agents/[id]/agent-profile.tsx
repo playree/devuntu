@@ -77,7 +77,7 @@ export const AgentProfile: FC<{ agent: Agent; groupOptions: Record<string, strin
           />
         </div>
         <div className='col-span-12 md:col-span-6'>
-          <CopyableField text={agent.email} label={t('email')} copyLabel={t('copy')} />
+          <CopyableField text={agent.email} label={t('email')} />
         </div>
         <div className='col-span-12'>
           <NoticePanel className='text-xs'>{t('msg_agent_email_desc')}</NoticePanel>

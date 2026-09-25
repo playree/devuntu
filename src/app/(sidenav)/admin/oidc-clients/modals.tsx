@@ -128,24 +128,13 @@ export const AddModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, relo
             <StepMotion direction={step.direction} key='step_output'>
               <GridBox>
                 <div className='col-span-12'>
-                  <CopyableField text={output.clientId} label={t('client_id')} copyLabel={t('copy')} />
+                  <CopyableField text={output.clientId} label={t('client_id')} />
                 </div>
                 <div className='col-span-12'>
-                  <CopyableField
-                    text={output.clientSecret}
-                    label={t('client_secret')}
-                    isMask
-                    copyLabel={t('copy')}
-                    showLabel={t('show')}
-                    hideLabel={t('hide')}
-                  />
+                  <CopyableField text={output.clientSecret} label={t('client_secret')} isMask />
                 </div>
                 <div className='col-span-12'>
-                  <CopyableField
-                    text={new URL('api/auth', baseUrl).toString()}
-                    label={t('issuer_url')}
-                    copyLabel={t('copy')}
-                  />
+                  <CopyableField text={new URL('api/auth', baseUrl).toString()} label={t('issuer_url')} />
                 </div>
                 <Typography type='body-sm' className='col-span-12 pt-2 whitespace-pre-wrap'>
                   {t('msg_added_oidc_client')}

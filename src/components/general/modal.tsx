@@ -19,6 +19,7 @@ import {
 import { MultiButton } from './button'
 import { FlexCol } from './flex'
 import { SmartProvider } from './smart'
+import { useGeneralUiText } from './ui-text'
 
 const CheckIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
   <svg
@@ -136,12 +137,12 @@ export type ConfirmParam = {
   autoClose?: boolean
   onlyOk?: boolean
 }
-type ConfirmModalParam = { uiText?: { ok?: string; cancel?: string; confirmed?: string } }
 export type ConfirmModalRef = {
   confirm: (param: ConfirmParam) => Promise<boolean>
   close: () => void
 }
-export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ uiText }, ref) => {
+export const ConfirmModal = forwardRef<ConfirmModalRef>((_, ref) => {
+  const uiText = useGeneralUiText()
   const [confirmParam, setConfirmParam] = useState<ConfirmParam>()
   const state = useOverlayState()
   const response = useRef<(value: boolean | PromiseLike<boolean>) => void>(undefined)
@@ -218,7 +219,7 @@ export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ ui
                     <Checkbox.Control className='size-5'>
                       <Checkbox.Indicator />
                     </Checkbox.Control>
-                    {uiText?.confirmed || 'Confirmed'}
+                    {uiText.confirmed}
                   </Checkbox.Content>
                 </Checkbox>
               )}
@@ -235,7 +236,7 @@ export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ ui
                   state.close()
                 }}
               >
-                {uiText?.cancel || 'Cancel'}
+                {uiText.cancel}
               </MultiButton>
             )}
             <MultiButton
@@ -252,7 +253,7 @@ export const ConfirmModal = forwardRef<ConfirmModalRef, ConfirmModalParam>(({ ui
                 }
               }}
             >
-              {uiText?.ok || 'OK'}
+              {uiText.ok}
             </MultiButton>
           </Modal.Footer>
         </Modal.Dialog>
@@ -274,11 +275,11 @@ const ConfirmModalContext = createContext<{
 export const useConfirmModal = () => {
   return useContext(ConfirmModalContext)
 }
-export const ConfirmModalProvider: FC<{ children: ReactNode } & ConfirmModalParam> = ({ children, uiText }) => {
+export const ConfirmModalProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const refModal = useRef<ConfirmModalRef>(defaultConfirmModalRef)
   return (
     <>
-      <ConfirmModal ref={refModal} uiText={uiText} />
+      <ConfirmModal ref={refModal} />
       <ConfirmModalContext.Provider
         value={{
           confirmModal: () => refModal.current,

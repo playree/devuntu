@@ -3,6 +3,7 @@
 import { Button, Chip, cn, InputGroup, InputGroupProps, Label, TextField } from '@heroui/react'
 import { FC, SVGProps, useEffect, useRef, useState } from 'react'
 import { useIsSmart } from './smart'
+import { useGeneralUiText } from './ui-text'
 
 const EyeIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
   <svg
@@ -93,31 +94,17 @@ export const CopyableField: FC<
     variant?: InputGroupProps['variant']
     isSmart?: boolean
     className?: string
-    /** 各ボタンの aria-label。表示ラベルは持たないアイコンボタンなので読み上げ名になる */
+    /** コピーボタンの読み上げ名。未指定なら GeneralUiText の copy */
     copyLabel?: string
-    showLabel?: string
-    hideLabel?: string
     onCopied?: () => void
   } & (
     | { label: string; ariaLabel?: never }
     /** ラベルを出さずに使うときは読み上げ名を必須にする(無いと react-aria が警告を出す) */
     | { label?: never; ariaLabel: string }
   )
-> = ({
-  text,
-  copyText,
-  label,
-  ariaLabel,
-  isMask,
-  variant,
-  isSmart: isSmartProp,
-  className,
-  copyLabel = 'Copy',
-  showLabel = 'Show',
-  hideLabel = 'Hide',
-  onCopied,
-}) => {
+> = ({ text, copyText, label, ariaLabel, isMask, variant, isSmart: isSmartProp, className, copyLabel, onCopied }) => {
   const isSmart = useIsSmart(isSmartProp)
+  const uiText = useGeneralUiText()
   const [isVisible, setIsVisible] = useState(false)
   const toggleVisibility = () => setIsVisible(!isVisible)
   const [isCopied, setIsCopied] = useState(false)
@@ -158,7 +145,7 @@ export const CopyableField: FC<
                 // isSmart: size='sm' の 32px は 28px の枠に収まらない
                 className={isSmart ? 'size-6' : ''}
                 // アイコンは aria-hidden なので、読み上げ名はボタン側で与える
-                aria-label={isVisible ? hideLabel : showLabel}
+                aria-label={isVisible ? uiText.hide : uiText.show}
                 onPress={toggleVisibility}
               >
                 {isVisible ? <EyeSlashIcon /> : <EyeIcon />}
@@ -169,7 +156,7 @@ export const CopyableField: FC<
               size='sm'
               variant='ghost'
               className={isSmart ? 'size-6' : ''}
-              aria-label={copyLabel}
+              aria-label={copyLabel ?? uiText.copy}
               onPress={async () => {
                 try {
                   // 安全なコンテキスト(https / localhost)の外では navigator.clipboard 自体が無く、参照だけで例外になる
@@ -197,7 +184,7 @@ export const CopyableField: FC<
         </InputGroup>
         {isCopied && (
           <Chip className='absolute right-0 bottom-full mb-0.5 py-0' color='success' variant='soft'>
-            Copied!
+            {uiText.copied}
           </Chip>
         )}
       </div>

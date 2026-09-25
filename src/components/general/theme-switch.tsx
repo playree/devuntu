@@ -3,6 +3,7 @@
 import { Button, ButtonProps, cn, Dropdown, Label, Skeleton } from '@heroui/react'
 import { useTheme } from 'next-themes'
 import { FC, SVGProps, useEffect, useMemo, useState } from 'react'
+import { useGeneralUiText } from './ui-text'
 
 const iconSizes = {
   sm: 16,
@@ -49,6 +50,12 @@ export const ThemeSwitchList: FC<{
 }> = ({ className, size = 'md', variant = 'outline' }) => {
   const iconSize = iconSizes[size]
   const { theme, setTheme, systemTheme } = useTheme()
+  const uiText = useGeneralUiText()
+  const themeLabels: Record<string, string> = {
+    system: uiText.themeSystem,
+    light: uiText.themeLight,
+    dark: uiText.themeDark,
+  }
 
   /**
    * next-themes は保存済みのテーマをクライアントの初回描画時点で返す(SSR では返さない)ため、
@@ -80,9 +87,9 @@ export const ThemeSwitchList: FC<{
 
   return (
     <Dropdown className={className}>
-      <Button aria-label='Select Theme' size={size} variant={variant} className={cn('min-w-20', className)}>
+      <Button aria-label={uiText.themeSelect} size={size} variant={variant} className={cn('min-w-20', className)}>
         {selectIcon}
-        {theme === 'system' ? 'auto' : theme}
+        {themeLabels[theme] ?? theme}
       </Button>
       <Dropdown.Popover>
         <Dropdown.Menu
@@ -92,20 +99,20 @@ export const ThemeSwitchList: FC<{
           selectedKeys={new Set([theme])}
           onAction={(key) => setTheme(key.toString())}
         >
-          <Dropdown.Item key='system' id='system' textValue='auto'>
+          <Dropdown.Item key='system' id='system' textValue={uiText.themeSystem}>
             <Dropdown.ItemIndicator />
             {systemIcon}
-            <Label>auto</Label>
+            <Label>{uiText.themeSystem}</Label>
           </Dropdown.Item>
-          <Dropdown.Item key='light' id='light' textValue='light'>
+          <Dropdown.Item key='light' id='light' textValue={uiText.themeLight}>
             <Dropdown.ItemIndicator />
             {lightIcon}
-            <Label>light</Label>
+            <Label>{uiText.themeLight}</Label>
           </Dropdown.Item>
-          <Dropdown.Item key='dark' id='dark' textValue='dark'>
+          <Dropdown.Item key='dark' id='dark' textValue={uiText.themeDark}>
             <Dropdown.ItemIndicator />
             {darkIcon}
-            <Label>dark</Label>
+            <Label>{uiText.themeDark}</Label>
           </Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown.Popover>

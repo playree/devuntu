@@ -92,7 +92,7 @@ export const AddModal: FC<ModalBaseProps & { groupOptions: Record<string, string
           />
         </div>
         <div className='col-span-12'>
-          <CopyableField text={handle ? agentEmail(handle) : ''} label={t('email')} copyLabel={t('copy')} />
+          <CopyableField text={handle ? agentEmail(handle) : ''} label={t('email')} />
         </div>
         <div className='col-span-12'>
           <NoticePanel className='text-xs'>{t('msg_agent_email_desc')}</NoticePanel>

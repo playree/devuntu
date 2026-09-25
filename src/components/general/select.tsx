@@ -4,6 +4,7 @@ import { Chip, cn, ErrorMessage, Label, ListBox, Select } from '@heroui/react'
 import { FC, ReactNode, Ref, SVGProps } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 import { useSmart } from './smart'
+import { useGeneralUiText } from './ui-text'
 
 export const XCircleIcon: FC<SVGProps<SVGSVGElement>> = ({ width = 20, strokeWidth = 2, ...props }) => (
   <svg
@@ -47,7 +48,7 @@ type SelectFieldBaseProps = {
 type MultiSelectFieldProps = SelectFieldBaseProps & {
   value: string[]
   onChange: (value: string[]) => void
-  /** 未選択時の表示。共通部品なのでロケールが要る場合は呼び出し側から渡す */
+  /** 未選択時の表示。未指定なら GeneralUiText の notSelected */
   placeholder?: ReactNode
 }
 
@@ -71,6 +72,7 @@ export const MultiSelectField = ({
   ref,
 }: MultiSelectFieldProps) => {
   const { isCompact, hasErrorArea } = useSmart(isSmartProp, isSmartFormProp)
+  const uiText = useGeneralUiText()
   return (
     <div className='space-y-4'>
       <Select
@@ -97,8 +99,7 @@ export const MultiSelectField = ({
                   </Chip>
                 ))
               ) : (
-                // 既定値は共通部品なのでローカライズ不要とする(必要なら placeholder で差し替える)
-                <Chip variant='tertiary'>{placeholder ?? 'Not selected'}</Chip>
+                <Chip variant='tertiary'>{placeholder ?? uiText.notSelected}</Chip>
               )
             }}
           </Select.Value>
