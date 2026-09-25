@@ -100,7 +100,7 @@ export const MyPasskey: FC = () => {
             <Table.Cell>
               <div className='flex items-center gap-2'>{item.authenticator}</div>
             </Table.Cell>
-            <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'tz-simple', tz)}</Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'tz-minute', tz)}</Table.Cell>
             <ActionCell
               items={[
                 {

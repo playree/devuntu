@@ -239,7 +239,7 @@ export const AgentsClient: FC = () => {
                     }}
                   />
                 </Table.Cell>
-                <Table.Cell className='font-mono text-xs'>{dayformat(item.updatedAt, 'tz-simple', tz)}</Table.Cell>
+                <Table.Cell className='font-mono text-xs'>{dayformat(item.updatedAt, 'tz-minute', tz)}</Table.Cell>
               </Table.Row>
             )}
           </MultiTable>

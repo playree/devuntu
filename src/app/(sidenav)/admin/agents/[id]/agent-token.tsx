@@ -104,12 +104,12 @@ export const AgentToken: FC<{
                         <TokenField label={t('agent_token')}>
                           {AGENT_TOKEN_PREFIX}…{current.hint}
                         </TokenField>
-                        <TokenField label={t('issued_at')}>{dayformat(current.createdAt, 'tz-simple', tz)}</TokenField>
+                        <TokenField label={t('issued_at')}>{dayformat(current.createdAt, 'tz-minute', tz)}</TokenField>
                         <TokenField label={t('token_expiration')}>
-                          {current.expiresAt ? dayformat(current.expiresAt, 'tz-simple', tz) : t('no_expiration')}
+                          {current.expiresAt ? dayformat(current.expiresAt, 'tz-minute', tz) : t('no_expiration')}
                         </TokenField>
                         <TokenField label={t('last_used')}>
-                          {current.lastUsedAt ? dayformat(current.lastUsedAt, 'tz-simple', tz) : '-'}
+                          {dayformat(current.lastUsedAt, 'tz-minute', tz) || '-'}
                         </TokenField>
                       </Panel>
                     ) : (

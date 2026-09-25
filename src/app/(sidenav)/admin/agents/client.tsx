@@ -87,9 +87,7 @@ export const AdminAgentsClient: FC = () => {
             <Table.Cell>
               <RunnerStatusChip value={item.runnerStatus} />
             </Table.Cell>
-            <Table.Cell className='font-mono text-xs'>
-              {item.lastUsedAt ? dayformat(item.lastUsedAt, 'tz-minute', tz) : ''}
-            </Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.lastUsedAt, 'tz-minute', tz) || '-'}</Table.Cell>
             <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'tz-minute', tz)}</Table.Cell>
             <ActionCell
               items={[

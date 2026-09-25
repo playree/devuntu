@@ -139,7 +139,7 @@ export const BoardProfile: FC<{ board: Board; reload: () => void }> = ({ board, 
         </div>
       </MetaRow>
       <MetaRow label={t('created_at')}>
-        <span className='font-mono text-xs'>{dayformat(board.createdAt, 'tz-simple', tz)}</span>
+        <span className='font-mono text-xs'>{dayformat(board.createdAt, 'tz-minute', tz)}</span>
       </MetaRow>
       <MetaRow // アーカイブの切り替えはデンジャーゾーン側なので、ここでは編集権限に関わらず状態だけ見せる
         label={t('archived')}

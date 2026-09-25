@@ -58,7 +58,7 @@ export const AdminGroupsClient: FC = () => {
           <Table.Row key={item.id} id={item.id}>
             <Table.Cell>{item.name}</Table.Cell>
             <Table.Cell className='truncate'>{item.description}</Table.Cell>
-            <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'tz-simple', tz)}</Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'tz-minute', tz)}</Table.Cell>
             <ActionCell
               items={[
                 {

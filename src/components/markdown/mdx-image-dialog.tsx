@@ -24,8 +24,8 @@ const dialogStyles = tv({
     dropzone:
       'flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-6 transition-colors',
     preview: 'max-h-56 w-auto object-contain',
-    hint: 'text-default-500 text-sm',
-    fileName: 'text-default-500 truncate text-sm',
+    hint: 'text-muted text-sm',
+    fileName: 'text-muted truncate text-sm',
     error: 'text-danger text-sm',
   },
   variants: {
@@ -209,7 +209,7 @@ export const MdxImageDialog: FC = () => {
             />
           ) : (
             <>
-              <PhotoIcon width={40} className='text-default-500' />
+              <PhotoIcon width={40} className='text-muted' />
               <span className={styles.hint()}>{t('msg_drop_image')}</span>
             </>
           )}

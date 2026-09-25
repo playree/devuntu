@@ -35,7 +35,7 @@ const lightboxStyles = tv({
   slots: {
     dialog: 'bg-transparent p-0 shadow-none',
     toolbar: 'absolute top-2 right-2 z-10 flex items-center gap-1 rounded-xl bg-stone-100/90 p-1 dark:bg-mist-950/90',
-    size: 'text-default-500 px-1 font-mono text-xs',
+    size: 'text-muted px-1 font-mono text-xs',
     // 溢れた側が切れないよう、中央寄せは justify/items ではなく画像側の m-auto で行う
     canvas: 'flex min-h-0 flex-1 overscroll-contain outline-none',
     image: 'm-auto',

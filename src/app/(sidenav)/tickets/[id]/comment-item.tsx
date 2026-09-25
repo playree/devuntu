@@ -97,7 +97,7 @@ export const CommentItem: FC<{
     >
       <div className='text-muted flex items-center gap-2 text-xs'>
         <span className='font-medium'>{comment.authorName || t('no_name')}</span>
-        <span className='font-mono'>{dayformat(comment.createdAt, 'tz-simple', tz)}</span>
+        <span className='font-mono'>{dayformat(comment.createdAt, 'tz-minute', tz)}</span>
         <div className='ml-auto flex gap-0.5'>
           {comment.isMine && !isEditing && (
             <MultiButton

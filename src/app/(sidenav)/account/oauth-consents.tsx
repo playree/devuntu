@@ -61,7 +61,7 @@ export const MyOAuthConsents: FC = () => {
           <Table.Row key={item.id} id={item.id}>
             <Table.Cell>{item.clientName}</Table.Cell>
             <Table.Cell className='text-xs'>{item.scopes.join(' / ')}</Table.Cell>
-            <Table.Cell className='font-mono text-xs'>{dayformat(item.updatedAt, 'tz-simple', tz)}</Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.updatedAt, 'tz-minute', tz)}</Table.Cell>
             <ActionCell
               items={[
                 {

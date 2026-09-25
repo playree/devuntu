@@ -167,11 +167,11 @@ export const TicketsClient: FC<{
               <PriorityChip value={item.priority} />
             </Table.Cell>
             <Table.Cell className='truncate'>{item.assigneeName}</Table.Cell>
-            <Table.Cell className='font-mono text-xs'>{dayformat(item.dueDate, 'date')}</Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.dueDate, 'date') || '-'}</Table.Cell>
             <Table.Cell>
               <TagChips tags={item.tags} />
             </Table.Cell>
-            <Table.Cell className='font-mono text-xs'>{dayformat(item.updatedAt, 'tz-simple', tz)}</Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.updatedAt, 'tz-minute', tz)}</Table.Cell>
           </Table.Row>
         )}
       </MultiTable>

@@ -58,7 +58,7 @@ export const AgentProfile: FC<{ agent: Agent; groupOptions: Record<string, strin
       <GridBox isSmart>
         <div className='col-span-12'>
           <MetaRow label={t('created_at')}>
-            <span className='font-mono text-xs'>{dayformat(agent.createdAt, 'tz-simple', tz)}</span>
+            <span className='font-mono text-xs'>{dayformat(agent.createdAt, 'tz-minute', tz)}</span>
           </MetaRow>
         </div>
         <div className='col-span-12 md:col-span-6'>

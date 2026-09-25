@@ -76,8 +76,8 @@ export const AdminUsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPass
             <Table.Cell>
               <GroupChips groups={item.groups} />
             </Table.Cell>
-            <Table.Cell className='font-mono text-xs'>{dayformat(item.lastLoginAt, 'tz-simple', tz)}</Table.Cell>
-            <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'tz-simple', tz)}</Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.lastLoginAt, 'tz-minute', tz) || '-'}</Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'tz-minute', tz)}</Table.Cell>
             <ActionCell
               items={[
                 {

@@ -31,7 +31,7 @@ const ExpiryChip: FC<{ expiresAt: Date | null }> = ({ expiresAt }) => {
   const isExpired = expiresAt <= nowDate()
   return (
     <div className='flex items-center gap-2'>
-      <span className='font-mono text-xs'>{dayformat(expiresAt, 'tz-simple', tz)}</span>
+      <span className='font-mono text-xs'>{dayformat(expiresAt, 'tz-minute', tz)}</span>
       {isExpired && (
         <Chip color='warning' variant='soft'>
           {t('token_expired')}
@@ -91,10 +91,8 @@ export const MyMcpTokens: FC<{ baseUrl: string }> = ({ baseUrl }) => {
             <Table.Cell>
               <ExpiryChip expiresAt={item.expiresAt} />
             </Table.Cell>
-            <Table.Cell className='font-mono text-xs'>
-              {item.lastUsedAt ? dayformat(item.lastUsedAt, 'tz-simple', tz) : '-'}
-            </Table.Cell>
-            <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'tz-simple', tz)}</Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.lastUsedAt, 'tz-minute', tz) || '-'}</Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.createdAt, 'tz-minute', tz)}</Table.Cell>
             <ActionCell
               items={[
                 {

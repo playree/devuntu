@@ -64,7 +64,7 @@ export const AgentRunHistory: FC<{ pagingList: PagingList<AgentRunSummary> }> = 
           <Table.Cell>
             <AgentRunStatusChip value={item.status} />
           </Table.Cell>
-          <Table.Cell className='font-mono text-xs'>{dayformat(item.startedAt, 'tz-simple', tz)}</Table.Cell>
+          <Table.Cell className='font-mono text-xs'>{dayformat(item.startedAt, 'tz-minute', tz)}</Table.Cell>
           <Table.Cell className='font-mono text-xs'>{agentRunDuration(item.startedAt, item.finishedAt)}</Table.Cell>
           <TruncatedCell value={item.summary ?? ''} />
         </Table.Row>

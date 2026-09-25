@@ -7,6 +7,7 @@ import { BellIcon, BellSlashIcon, TrashIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { dayformat } from '@/lib/day'
+import { useUserTimezone } from '@/lib/use-timezone'
 import { resolveThisDeviceStatus } from '@/lib/webpush/webpush'
 import {
   LocalSubscriptionPayload,
@@ -85,6 +86,7 @@ export const WebPushSettings: FC<{
   refreshDevices: () => Promise<void>
 }> = ({ devices, isDevicesLoading, refreshDevices }) => {
   const { t } = useLocale()
+  const tz = useUserTimezone()
   const { data: publicKey, isLoading: isKeyLoading } = useActionData(getWebPushPublicKey)
   const { localState, reloadLocalState } = useLocalWebPushState(publicKey)
   const [isPending, setIsPending] = useState(false)
@@ -198,7 +200,7 @@ export const WebPushSettings: FC<{
       <FlexCol className='gap-2'>
         <div className='text-sm font-bold'>{t('notify_webpush_devices')}</div>
         {!devices || devices.length === 0 ? (
-          <div className='text-default-500 text-sm'>{t('msg_webpush_no_device')}</div>
+          <div className='text-muted text-sm'>{t('msg_webpush_no_device')}</div>
         ) : (
           devices.map(({ id, endpoint, label, createdAt, lastUsedAt }) => (
             // スマホでは端末名と操作が縦積みになるよう折り返す
@@ -212,9 +214,9 @@ export const WebPushSettings: FC<{
                     </Chip>
                   )}
                 </FlexRow>
-                <div className='text-default-500 text-xs'>
-                  {t('registered_at')}: {dayformat(createdAt)}
-                  {lastUsedAt ? ` / ${t('last_sent')}: ${dayformat(lastUsedAt)}` : ''}
+                <div className='text-muted text-xs'>
+                  {t('registered_at')}: {dayformat(createdAt, 'tz-minute', tz)}
+                  {lastUsedAt ? ` / ${t('last_sent')}: ${dayformat(lastUsedAt, 'tz-minute', tz)}` : ''}
                 </div>
               </FlexCol>
               <MultiButton

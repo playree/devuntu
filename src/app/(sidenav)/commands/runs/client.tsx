@@ -144,9 +144,7 @@ export const CommandRunsClient: FC<{ initialCommandKey: string | null }> = ({ in
             </Table.Cell>
             <Table.Cell className='truncate'>{item.userName}</Table.Cell>
             <Table.Cell className='font-mono text-xs'>{dayformat(item.queuedAt, 'tz-minute', tz)}</Table.Cell>
-            <Table.Cell className='font-mono text-xs'>
-              {item.finishedAt ? dayformat(item.finishedAt, 'tz-minute', tz) : ''}
-            </Table.Cell>
+            <Table.Cell className='font-mono text-xs'>{dayformat(item.finishedAt, 'tz-minute', tz) || '-'}</Table.Cell>
           </Table.Row>
         )}
       </MultiTable>
