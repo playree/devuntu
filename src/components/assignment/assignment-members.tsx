@@ -91,7 +91,7 @@ export const AssignmentMembers = <T extends AssignmentMember>({
             onPress={() => addModalState.open()}
           />
         )}
-        <ReloadButton onReload={pagingList.reload} hasSeparator={!!manage} />
+        <ReloadButton onReload={reload} hasSeparator={!!manage} />
       </ContentHeader>
 
       <MultiTable
