@@ -399,6 +399,7 @@ export const en: LocaleItems = {
   status_done: 'Done',
   status_done_recent: 'Done (Last 7 Days)',
   status_todo: 'To Do',
+  table_empty: 'No data',
   tag_color: 'Color',
   tag_manage: 'Tag Management',
   tags: 'Tags',

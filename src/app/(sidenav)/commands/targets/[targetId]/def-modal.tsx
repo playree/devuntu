@@ -1,11 +1,10 @@
 'use client'
 
 import { YamlInput } from '@/components/code/yaml-editor'
-import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
 import { FormModal, ModalBaseProps } from '@/components/general/modal'
 import { NoticePanel } from '@/components/general/panel'
-import { CheckIcon, PencilSquareIcon } from '@/components/icon'
+import { PencilSquareIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action/action-client'
 import { COMMAND_DEF_CONFLICT, COMMAND_DEF_NOT_EDITABLE, COMMAND_DEF_READ_ONLY } from '@/lib/command/command'
@@ -119,16 +118,7 @@ export const CommandDefModal: FC<ModalBaseProps & { target: CommandDefTarget }> 
         }
       }}
       title={{ text: target.command ? t('command_def_edit') : t('command_def_add'), icon: <PencilSquareIcon /> }}
-      footer={
-        <>
-          <MultiButton slot='close' variant='ghost'>
-            {t('cancel')}
-          </MultiButton>
-          <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
-            {t('ok')}
-          </MultiButton>
-        </>
-      }
+      submit={{ isPending: isSubmitting }}
     >
       <FlexCol>
         <div className='text-foreground-500 text-xs'>{target.targetLabel}</div>

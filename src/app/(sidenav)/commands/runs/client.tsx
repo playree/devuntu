@@ -139,7 +139,7 @@ export const CommandRunsClient: FC<{ initialCommandKey: string | null }> = ({ in
             <Table.Cell className='truncate'>{item.commandLabel}</Table.Cell>
             <TruncatedCell className='font-mono text-xs' value={item.argsPreview} />
             <Table.Cell>
-              <CommandStatusChip status={item.status} />
+              <CommandStatusChip value={item.status} />
             </Table.Cell>
             <Table.Cell className='truncate'>{item.userName}</Table.Cell>
             <Table.Cell className='font-mono text-xs'>{dayformat(item.queuedAt, 'tz-minute', tz)}</Table.Cell>

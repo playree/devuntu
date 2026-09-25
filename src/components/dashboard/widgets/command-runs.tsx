@@ -6,10 +6,9 @@ import { useActionData } from '@/lib/action/action-client'
 import { dayformat } from '@/lib/day'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
-import { FC } from 'react'
 import { getRecentCommandRuns } from '../server'
 import { RowLink } from './ticket-row'
-import { WidgetCard, WidgetFC, WidgetLoadError, WidgetRowList, WidgetSkeleton } from './widget-card'
+import { WidgetDataCard, WidgetFC, WidgetRowList } from './widget-card'
 
 /**
  * 自分が実行したリモート実行の最近の結果を表示する Widget。
@@ -20,8 +19,15 @@ export const CommandRunsWidget: WidgetFC = ({ id, editable }) => {
   const { data, isLoading } = useActionData(getRecentCommandRuns)
 
   return (
-    <WidgetCard id={id} editable={editable} icon={<CommandLineIcon />} title={t('command_runs_recent')}>
-      {data ? (
+    <WidgetDataCard
+      id={id}
+      editable={editable}
+      icon={<CommandLineIcon />}
+      title={t('command_runs_recent')}
+      data={data}
+      isLoading={isLoading}
+    >
+      {(data) => (
         <WidgetRowList isEmpty={data.length === 0} message={t('msg_no_command_runs')}>
           {data.map((run) => (
             <RowLink key={run.id} href={`/commands/runs/${run.id}`} editable={editable}>
@@ -30,7 +36,7 @@ export const CommandRunsWidget: WidgetFC = ({ id, editable }) => {
                 <span className='shrink-0 text-xs text-gray-500'>{run.targetLabel}</span>
               </div>
               <div className='flex items-center gap-2'>
-                <CommandStatusChip status={run.status} />
+                <CommandStatusChip value={run.status} />
                 <span className='font-mono text-xs text-gray-500'>
                   {dayformat(run.finishedAt ?? run.queuedAt, 'tz-minute', tz)}
                 </span>
@@ -38,15 +44,7 @@ export const CommandRunsWidget: WidgetFC = ({ id, editable }) => {
             </RowLink>
           ))}
         </WidgetRowList>
-      ) : isLoading ? (
-        <WidgetSkeleton />
-      ) : (
-        <WidgetLoadError />
       )}
-    </WidgetCard>
+    </WidgetDataCard>
   )
-}
-export const CommandRunsWidgetName: FC = () => {
-  const { t } = useLocale()
-  return <>{t('command_runs_recent')}</>
 }

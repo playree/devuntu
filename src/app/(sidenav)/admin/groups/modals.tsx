@@ -1,10 +1,9 @@
 'use client'
 
-import { MultiButton } from '@/components/general/button'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
 import { FormModal, ModalBaseProps } from '@/components/general/modal'
-import { CheckIcon, PencilSquareIcon, PlusIcon } from '@/components/icon'
+import { PencilSquareIcon, PlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action/action-client'
 import { CreateGroup, scCreateGroup, scUpdateGroup, UpdateGroup } from '@/lib/schema/schema'
@@ -40,16 +39,7 @@ export const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
         state.close()
       })}
       title={{ text: t('add_group'), icon: <PlusIcon /> }}
-      footer={
-        <>
-          <MultiButton slot='close' variant='ghost'>
-            {t('cancel')}
-          </MultiButton>
-          <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
-            {t('ok')}
-          </MultiButton>
-        </>
-      }
+      submit={{ isPending: isSubmitting }}
     >
       <GridBox>
         <div className='col-span-12'>
@@ -103,16 +93,7 @@ export const UpdateModal: FC<ModalBaseProps & { target: UpdateGroup }> = ({ stat
         state.close()
       })}
       title={{ text: t('update_group'), icon: <PencilSquareIcon /> }}
-      footer={
-        <>
-          <MultiButton slot='close' variant='ghost'>
-            {t('cancel')}
-          </MultiButton>
-          <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
-            {t('ok')}
-          </MultiButton>
-        </>
-      }
+      submit={{ isPending: isSubmitting }}
     >
       <GridBox>
         <div className='col-span-12'>

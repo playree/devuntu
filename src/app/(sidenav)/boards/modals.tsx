@@ -1,10 +1,9 @@
 'use client'
 
-import { MultiButton } from '@/components/general/button'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
 import { FormModal, ModalBaseProps } from '@/components/general/modal'
-import { CheckIcon, PlusIcon } from '@/components/icon'
+import { PlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action/action-client'
 import { ClientError } from '@/lib/error'
@@ -45,16 +44,7 @@ export const AddModal: FC<ModalBaseProps> = ({ state, reload }) => {
         }
       })}
       title={{ text: t('add_board'), icon: <PlusIcon /> }}
-      footer={
-        <>
-          <MultiButton slot='close' variant='ghost'>
-            {t('cancel')}
-          </MultiButton>
-          <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
-            {t('ok')}
-          </MultiButton>
-        </>
-      }
+      submit={{ isPending: isSubmitting }}
     >
       <GridBox>
         <div className='col-span-12'>

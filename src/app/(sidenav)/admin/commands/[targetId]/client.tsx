@@ -1,5 +1,7 @@
 'use client'
 
+import { AssignmentMembers } from '@/components/assignment/assignment-members'
+import { GroupAssignForm } from '@/components/assignment/group-assign-form'
 import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
@@ -12,9 +14,14 @@ import { useLocale } from '@/locale/client'
 import { Accordion } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
-import { getCommandTargetAssignmentsAction, getCommandTargetMembersAction } from '../server'
-import { GroupManage } from './group-manage'
-import { TargetMembers } from './target-members'
+import {
+  addCommandTargetMemberAction,
+  getCommandTargetAssignmentsAction,
+  getCommandTargetMembersAction,
+  removeCommandTargetMemberAction,
+  setCommandTargetGroupsAction,
+  updateCommandTargetMemberRoleAction,
+} from '../server'
 
 const defaultExpandedKeys = new Set(['command_target_members', 'command_target_groups'])
 
@@ -33,7 +40,7 @@ export const AdminCommandTargetClient: FC<{ targetKey: string }> = ({ targetKey 
     isLoading,
   } = useActionData(() => getCommandTargetAssignmentsAction({ targetKey }))
 
-  // グループの保存と合わせてリロードできるよう、ここで生成して TargetMembers へ渡す
+  // グループの保存と合わせてリロードできるよう、ここで生成して AssignmentMembers へ渡す
   const memberList = usePagingList({
     load: async () => (await parseAction(getCommandTargetMembersAction({ targetKey }), { handled: 'all' })) ?? [],
     sort: { init: { column: 'name', direction: 'ascending' } },
@@ -75,23 +82,31 @@ export const AdminCommandTargetClient: FC<{ targetKey: string }> = ({ targetKey 
 
       <Accordion allowsMultipleExpanded defaultExpandedKeys={defaultExpandedKeys}>
         <AccordionSection id='command_target_members' icon={<UsersIcon />} title={t('command_target_members')}>
-          <TargetMembers
-            targetKey={targetKey}
-            assignments={assignments}
+          <AssignmentMembers
+            aria-label='command target member list'
+            hasRole
             reloadAssignments={reloadAssignments}
             pagingList={memberList}
+            manage={{
+              addLabel: t('add_member'),
+              userOptions: assignments.userOptions,
+              assignedUserIds: assignments.memberUserIds,
+              add: (req) => addCommandTargetMemberAction({ targetKey, ...req }),
+              updateRole: (req) => updateCommandTargetMemberRoleAction({ targetKey, ...req }),
+              remove: (userId) => removeCommandTargetMemberAction({ targetKey, userId }),
+              roleNote: t('msg_command_owner_can_edit'),
+            }}
           />
         </AccordionSection>
 
         <AccordionSection id='command_target_groups' icon={<UserGroupIcon />} title={t('command_target_groups')}>
-          <GroupManage
-            /**
-             * 再取得しても useForm の defaultValues は追従しないので、
-             * アサインが変わったら作り直して古い groupIds で保存されないようにする
-             */
+          <GroupAssignForm
             key={assignments.groupIds.join(',')}
-            targetKey={targetKey}
-            assignments={assignments}
+            label={t('command_target_groups')}
+            groupOptions={assignments.groupOptions}
+            groupIds={assignments.groupIds}
+            notice={<NoticePanel className='text-xs'>{t('msg_command_group_is_member')}</NoticePanel>}
+            onSave={(groupIds) => setCommandTargetGroupsAction({ targetKey, groupIds })}
             reload={() => {
               reloadAssignments()
               memberList.reload()

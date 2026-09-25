@@ -1,6 +1,6 @@
 'use client'
 
-import { MultiButton } from '@/components/general/button'
+import { MultiButton, SubmitButtons } from '@/components/general/button'
 import { getFieldConstraints } from '@/components/general/field-constraints'
 import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { CheckIcon, PencilSquareIcon } from '@/components/icon'
@@ -81,20 +81,15 @@ const CustomInstructionForm: FC<{
         }
         footer={
           isEditing && (
-            <>
-              <MultiButton variant='ghost' size='sm' isDisabled={isSaving} onPress={() => setEditing(false)}>
-                {t('cancel')}
-              </MultiButton>
-              <MultiButton
-                size='sm'
-                icon={<CheckIcon width={16} />}
-                isPending={isSaving}
-                isDisabled={!isSubmittable}
-                onPress={save}
-              >
-                {t('save')}
-              </MultiButton>
-            </>
+            <SubmitButtons
+              size='sm'
+              label={t('save')}
+              icon={<CheckIcon width={16} />}
+              isPending={isSaving}
+              isDisabled={!isSubmittable}
+              onPress={save}
+              onCancel={() => setEditing(false)}
+            />
           )
         }
       />

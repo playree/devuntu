@@ -28,6 +28,7 @@ export type GeneralUiText = {
   rowsPerPage: string
   perPage: (rows: number) => string
   noResults: string
+  tableEmpty: string
   resultRange: (start: number, end: number, total: number) => string
   waitSeconds: (sec: number) => string
 }
@@ -55,6 +56,7 @@ const DEFAULT_UI_TEXT: GeneralUiText = {
   rowsPerPage: 'Rows per page',
   perPage: (rows) => `${rows} / page`,
   noResults: '0 results',
+  tableEmpty: 'No data',
   resultRange: (start, end, total) => `${start} to ${end} of ${total} results`,
   waitSeconds: (sec) => `wait ${sec}s`,
 }

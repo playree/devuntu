@@ -1,6 +1,6 @@
 'use client'
 
-import { MultiButton } from '@/components/general/button'
+import { MultiButton, SubmitButtons } from '@/components/general/button'
 import { CopyableField } from '@/components/general/copyable-field'
 import { DatePickerField } from '@/components/general/date-picker'
 import { getFieldConstraints } from '@/components/general/field-constraints'
@@ -389,7 +389,7 @@ export const TicketDetailClient: FC<{
               />
             ) : (
               <MetaText label={t('status')}>
-                <StatusChip status={status} />
+                <StatusChip value={status} />
               </MetaText>
             )}
           </div>
@@ -409,7 +409,7 @@ export const TicketDetailClient: FC<{
               />
             ) : (
               <MetaText label={t('priority')}>
-                <PriorityChip priority={priority} />
+                <PriorityChip value={priority} />
               </MetaText>
             )}
           </div>
@@ -475,7 +475,7 @@ export const TicketDetailClient: FC<{
               </div>
               <div className='col-span-6 md:col-span-3'>
                 <MetaText label={t('agent_state')}>
-                  <AgentStateChip state={ticket.agentState} />
+                  <AgentStateChip value={ticket.agentState ?? 'queued'} />
                 </MetaText>
               </div>
               <div className='col-span-12 md:col-span-6'>
@@ -547,25 +547,15 @@ export const TicketDetailClient: FC<{
           }
           footer={
             isEditingContent && (
-              <>
-                <MultiButton
-                  variant='ghost'
-                  size='sm'
-                  isDisabled={isSavingContent}
-                  onPress={() => setEditingContent(false)}
-                >
-                  {t('cancel')}
-                </MultiButton>
-                <MultiButton
-                  size='sm'
-                  icon={<CheckIcon width={16} />}
-                  isPending={isSavingContent}
-                  isDisabled={!isContentSubmittable}
-                  onPress={saveContent}
-                >
-                  {t('save')}
-                </MultiButton>
-              </>
+              <SubmitButtons
+                size='sm'
+                label={t('save')}
+                icon={<CheckIcon width={16} />}
+                isPending={isSavingContent}
+                isDisabled={!isContentSubmittable}
+                onPress={saveContent}
+                onCancel={() => setEditingContent(false)}
+              />
             )
           }
         />

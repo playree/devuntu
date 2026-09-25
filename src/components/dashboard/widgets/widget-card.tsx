@@ -4,7 +4,7 @@ import { NoticePanel } from '@/components/general/panel'
 import { useLocale } from '@/locale/client'
 import { useDraggable } from '@dnd-kit/react'
 import { Card, cn, Separator, Skeleton } from '@heroui/react'
-import { FC, ReactNode } from 'react'
+import { ComponentProps, FC, ReactNode } from 'react'
 
 export type WidgetFC = FC<{ id: string; editable: boolean }>
 
@@ -39,13 +39,32 @@ export const WidgetCard: FC<{
 }
 
 /** 取得中の表示 */
-export const WidgetSkeleton: FC = () => <Skeleton className='h-full min-h-14 w-full rounded-xl' />
+const WidgetSkeleton: FC = () => <Skeleton className='h-full min-h-14 w-full rounded-xl' />
 
 /** 取得に失敗したときの表示 */
-export const WidgetLoadError: FC = () => {
+const WidgetLoadError: FC = () => {
   const { t } = useLocale()
   return <NoticePanel status='danger'>{t('msg_widget_load_failed')}</NoticePanel>
 }
+
+/**
+ * 取得したデータを表示する WidgetCard。取得中はスケルトン、取得後もデータが無ければ失敗の表示にする
+ * (Action が null を返した場合も失敗として扱う)
+ */
+export const WidgetDataCard = <T,>({
+  data,
+  isLoading,
+  children,
+  ...cardProps
+}: Omit<ComponentProps<typeof WidgetCard>, 'children'> & {
+  data: T | null | undefined
+  isLoading: boolean
+  children: (data: T) => ReactNode
+}) => (
+  <WidgetCard {...cardProps}>
+    {data !== null && data !== undefined ? children(data) : isLoading ? <WidgetSkeleton /> : <WidgetLoadError />}
+  </WidgetCard>
+)
 
 /** Widget 内の行一覧。0 件なら message を出す */
 export const WidgetRowList: FC<{ isEmpty: boolean; message: string; children: ReactNode }> = ({

@@ -1,13 +1,12 @@
 'use client'
 
-import { MultiButton } from '@/components/general/button'
 import { CopyableField } from '@/components/general/copyable-field'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
 import { FormModal, ModalBaseProps } from '@/components/general/modal'
 import { NoticePanel } from '@/components/general/panel'
 import { MultiSelectCtrl } from '@/components/general/select'
-import { CheckIcon, PlusIcon } from '@/components/icon'
+import { PlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action/action-client'
 import { agentEmail } from '@/lib/agent/agent'
@@ -60,16 +59,7 @@ export const AddModal: FC<ModalBaseProps & { groupOptions: Record<string, string
         }
       })}
       title={{ text: t('add_agent'), icon: <PlusIcon /> }}
-      footer={
-        <>
-          <MultiButton slot='close' variant='ghost'>
-            {t('cancel')}
-          </MultiButton>
-          <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
-            {t('ok')}
-          </MultiButton>
-        </>
-      }
+      submit={{ isPending: isSubmitting }}
     >
       <GridBox>
         <div className='col-span-12'>

@@ -185,7 +185,6 @@ export const scSetAgentApproverGroups = z.object({
   groupIds: z.array(z.uuidv7()),
 })
 export type SetAgentApproverGroups = z.infer<typeof scSetAgentApproverGroups>
-export type SetAgentApproverGroupsIn = z.input<typeof scSetAgentApproverGroups>
 
 export const scIssueAgentToken = z.object({
   userId: z.uuidv7(),
@@ -360,7 +359,6 @@ export const scUpsertCommandTargetMember = z.object({
   role: zCommandTargetRole,
 })
 export type UpsertCommandTargetMember = z.infer<typeof scUpsertCommandTargetMember>
-export type UpsertCommandTargetMemberIn = z.input<typeof scUpsertCommandTargetMember>
 
 /** 直接メンバー1行の解除。グループ経由メンバーには使えない */
 export const scRemoveCommandTargetMember = z.object({
@@ -373,7 +371,6 @@ export const scSetCommandTargetGroups = z.object({
   targetKey: zCommandTargetKey,
   groupIds: z.array(z.uuidv7()).default([]),
 })
-export type SetCommandTargetGroupsIn = z.input<typeof scSetCommandTargetGroups>
 
 /**
  * コマンドの実行要求。
@@ -700,6 +697,22 @@ export type SetBoardNotifySetting = z.infer<typeof scSetBoardNotifySetting>
  * グループ経由ユーザーへの直接ロール付与も同じ入力で表せる。
  * `id` はボード ID、`userId` が対象ユーザー。
  */
+/**
+ * メンバー管理 UI(components/assignment)の入力。ボード / コマンドのターゲット / エージェントの承認者で共有し、
+ * 送信先の Server Action が各ドメインのスキーマで改めて検証する
+ */
+export const scAssignMember = z.object({
+  // 未選択(空文字)のままの送信をフォーム側でも弾けるようメッセージを付ける
+  userId: z.uuidv7(el('@required_field')),
+  role: z.enum(['owner', 'member']),
+})
+export type AssignMember = z.infer<typeof scAssignMember>
+
+export const scAssignGroups = z.object({
+  groupIds: z.array(z.uuidv7()),
+})
+export type AssignGroups = z.infer<typeof scAssignGroups>
+
 export const scUpsertBoardMember = z.object({
   id: z.uuidv7(),
   // 未選択(空文字)のままの送信をフォーム側でも弾けるようメッセージを付ける
@@ -707,7 +720,6 @@ export const scUpsertBoardMember = z.object({
   role: zBoardRole,
 })
 export type UpsertBoardMember = z.infer<typeof scUpsertBoardMember>
-export type UpsertBoardMemberIn = z.input<typeof scUpsertBoardMember>
 
 /** 直接メンバー(BoardMember 行)の解除。グループ経由メンバーには使えない */
 export const scRemoveBoardMember = z.object({
@@ -722,7 +734,6 @@ export const scSetBoardGroups = z.object({
   groupIds: z.array(z.uuidv7()).default([]),
 })
 export type SetBoardGroups = z.infer<typeof scSetBoardGroups>
-export type SetBoardGroupsIn = z.input<typeof scSetBoardGroups>
 
 /* -------------------------------------------------------------------------------------------------
  * タグ

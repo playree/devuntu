@@ -1,6 +1,6 @@
 'use client'
 
-import { MultiButton } from '@/components/general/button'
+import { MultiButton, SubmitButtons } from '@/components/general/button'
 import { CopyableField } from '@/components/general/copyable-field'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
@@ -65,16 +65,7 @@ export const UpdatePasskeyModal: FC<ModalBaseProps & { target: UpdatePasskey }> 
         state.close()
       })}
       title={{ text: t('update_passkey'), icon: <PencilSquareIcon /> }}
-      footer={
-        <>
-          <MultiButton slot='close' variant='ghost'>
-            {t('cancel')}
-          </MultiButton>
-          <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
-            {t('ok')}
-          </MultiButton>
-        </>
-      }
+      submit={{ isPending: isSubmitting }}
     >
       <GridBox>
         <div className='col-span-12'>
@@ -131,6 +122,8 @@ export const IssueMcpTokenModal: FC<ModalBaseProps & { baseUrl: string }> = ({ s
   return (
     <FormModal
       state={state}
+      // 発行中に閉じると、応答でしか受け取れない値を表示できなくなる
+      isPending={isSubmitting}
       onSubmit={handleSubmit(async (req) => {
         try {
           const res = await parseAction(issueMcpToken(req), {
@@ -166,14 +159,7 @@ export const IssueMcpTokenModal: FC<ModalBaseProps & { baseUrl: string }> = ({ s
             {t('ok')}
           </MultiButton>
         ) : (
-          <>
-            <MultiButton slot='close' variant='ghost'>
-              {t('cancel')}
-            </MultiButton>
-            <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
-              {t('issue_token')}
-            </MultiButton>
-          </>
+          <SubmitButtons isPending={isSubmitting} label={t('issue_token')} />
         )
       }
     >

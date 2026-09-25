@@ -131,14 +131,14 @@ export const BoardProfile: FC<{ board: Board; reload: () => void }> = ({ board, 
         </MetaRow>
       )}
       <MetaRow label={t('owner')}>
-        <RoleChip role={board.role} />
+        <RoleChip value={board.role} />
       </MetaRow>
       <MetaRow label={t('ticket_count')}>
         <div className='flex flex-wrap items-center gap-1'>
           <span className='font-mono text-xs'>{totalTickets}</span>
           {TICKET_STATUSES.filter((status) => board.ticketCounts[status] > 0).map((status) => (
             <span key={status} className='flex items-center gap-0.5'>
-              <StatusChip status={status} />
+              <StatusChip value={status} />
               <span className='font-mono text-xs'>{board.ticketCounts[status]}</span>
             </span>
           ))}

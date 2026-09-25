@@ -87,7 +87,7 @@ export const CommandRunClient: FC<{ runId: string }> = ({ runId }) => {
       <Panel>
         <FlexCol>
           <FlexRow className='flex-wrap items-center'>
-            <CommandStatusChip status={run.status} />
+            <CommandStatusChip value={run.status} />
             <span className='text-foreground-500 text-xs'>{run.targetLabel}</span>
             {reconnecting && (
               <Chip color='warning' variant='soft' className='whitespace-nowrap'>

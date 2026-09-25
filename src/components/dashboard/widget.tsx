@@ -6,12 +6,13 @@ import { ArrowTopRightOnSquareIcon, InformationCircleIcon } from '@/components/i
 import { MarkdownView } from '@/components/markdown/markdown-view'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { calcPercent, formatByte, formatTime } from '@/lib/math'
+import { type LocaleItem } from '@/locale'
 import { useLocale } from '@/locale/client'
 import { useDraggable } from '@dnd-kit/react'
 import { Card, Description, Separator } from '@heroui/react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { FC, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   getAnnouncement,
   getAppInfo,
@@ -21,21 +22,20 @@ import {
   getReleaseNotes,
   getServerInfo,
 } from './server'
-import { AgentApprovalsWidget, AgentApprovalsWidgetName } from './widgets/agent-approvals'
-import { AgentRunsWidget, AgentRunsWidgetName } from './widgets/agent-runs'
-import { CommandRunsWidget, CommandRunsWidgetName } from './widgets/command-runs'
-import { DueSoonWidget, DueSoonWidgetName } from './widgets/due-soon'
-import { MentionsWidget, MentionsWidgetName } from './widgets/mentions'
-import { MyTicketsWidget, MyTicketsWidgetName } from './widgets/my-tickets'
-import { RecentActivityWidget, RecentActivityWidgetName } from './widgets/recent-activity'
-import { TicketSummaryWidget, TicketSummaryWidgetName } from './widgets/ticket-summary'
-import { WidgetCard, WidgetFC, WidgetLoadError, WidgetSkeleton } from './widgets/widget-card'
+import { AgentApprovalsWidget } from './widgets/agent-approvals'
+import { AgentRunsWidget } from './widgets/agent-runs'
+import { CommandRunsWidget } from './widgets/command-runs'
+import { DueSoonWidget } from './widgets/due-soon'
+import { MentionsWidget } from './widgets/mentions'
+import { MyTicketsWidget } from './widgets/my-tickets'
+import { RecentActivityWidget } from './widgets/recent-activity'
+import { TicketSummaryWidget } from './widgets/ticket-summary'
+import { WidgetDataCard, WidgetFC } from './widgets/widget-card'
 
-export type WidgetSet = {
-  id: string
-  name: FC
-  widget: WidgetFC
-}
+/** 一覧に出す名前。組み込みはロケールキー、LinkWidget は登録された名前をそのまま出す */
+type WidgetDef = { widget: WidgetFC } & ({ nameKey: LocaleItem } | { name: string })
+
+export type WidgetSet = WidgetDef & { id: string }
 
 /**
  * アプリのバージョン・ビルド番号を表示する Widget。
@@ -45,25 +45,25 @@ export const AppInfoWidget: WidgetFC = ({ id, editable }) => {
   const { data, isLoading } = useActionData(getAppInfo)
 
   return (
-    <WidgetCard id={id} editable={editable} icon={<InformationCircleIcon />} title={t('app_info')} className='h-full'>
-      {data ? (
+    <WidgetDataCard
+      id={id}
+      editable={editable}
+      icon={<InformationCircleIcon />}
+      title={t('app_info')}
+      className='h-full'
+      data={data}
+      isLoading={isLoading}
+    >
+      {(data) => (
         <Grid>
           <div className='col-span-4 text-sm'>{t('version')} :</div>
           <div className='col-span-8'>{data.version}</div>
           <div className='col-span-4 text-sm'>{t('buildno')} :</div>
           <div className='col-span-8'>{data.buildno}</div>
         </Grid>
-      ) : isLoading ? (
-        <WidgetSkeleton />
-      ) : (
-        <WidgetLoadError />
       )}
-    </WidgetCard>
+    </WidgetDataCard>
   )
-}
-export const AppInfoWidgetName: FC = () => {
-  const { t } = useLocale()
-  return <>{t('app_info')}</>
 }
 
 /**
@@ -74,14 +74,16 @@ export const ServerInfoWidget: WidgetFC = ({ id, editable }) => {
   const { data, isLoading } = useActionData(getServerInfo)
 
   return (
-    <WidgetCard
+    <WidgetDataCard
       id={id}
       editable={editable}
       icon={<InformationCircleIcon />}
       title={t('server_info')}
       className='h-full'
+      data={data}
+      isLoading={isLoading}
     >
-      {data ? (
+      {(data) => (
         <Grid>
           <div className='col-span-4 text-sm'>{t('free_memory')} :</div>
           <div className='col-span-8'>
@@ -92,17 +94,9 @@ export const ServerInfoWidget: WidgetFC = ({ id, editable }) => {
           <div className='col-span-4 text-sm'>{t('uptime')} :</div>
           <div className='col-span-8'>{formatTime(data.uptime)}</div>
         </Grid>
-      ) : isLoading ? (
-        <WidgetSkeleton />
-      ) : (
-        <WidgetLoadError />
       )}
-    </WidgetCard>
+    </WidgetDataCard>
   )
-}
-export const ServerInfoWidgetName: FC = () => {
-  const { t } = useLocale()
-  return <>{t('server_info')}</>
 }
 
 /**
@@ -114,14 +108,16 @@ export const LinodeTransferInfoWidget: WidgetFC = ({ id, editable }) => {
   const { data, isLoading } = useActionData(getLinodeTransferInfo)
 
   return (
-    <WidgetCard
+    <WidgetDataCard
       id={id}
       editable={editable}
       icon={<InformationCircleIcon />}
       title={t('linode_transfer_info')}
       className='h-full'
+      data={data}
+      isLoading={isLoading}
     >
-      {data ? (
+      {(data) => (
         <Grid>
           <div className='col-span-4 text-sm'>{t('transfer_pool_usage')} :</div>
           <div className='col-span-8'>
@@ -132,17 +128,9 @@ export const LinodeTransferInfoWidget: WidgetFC = ({ id, editable }) => {
           <div className='col-span-4 text-sm'>{t('transfer_billable')} :</div>
           <div className='col-span-8'>{data.billable}GiB</div>
         </Grid>
-      ) : isLoading ? (
-        <WidgetSkeleton />
-      ) : (
-        <WidgetLoadError />
       )}
-    </WidgetCard>
+    </WidgetDataCard>
   )
-}
-export const LinodeTransferInfoWidgetName: FC = () => {
-  const { t } = useLocale()
-  return <>{t('linode_transfer_info')}</>
 }
 
 /**
@@ -153,8 +141,15 @@ export const ReleaseNoteWidget: WidgetFC = ({ id, editable }) => {
   const { data, isLoading } = useActionData(getReleaseNotes)
 
   return (
-    <WidgetCard id={id} editable={editable} icon={<InformationCircleIcon />} title={t('release_note')}>
-      {data ? (
+    <WidgetDataCard
+      id={id}
+      editable={editable}
+      icon={<InformationCircleIcon />}
+      title={t('release_note')}
+      data={data}
+      isLoading={isLoading}
+    >
+      {(data) => (
         <div className='max-h-80 min-h-14 flex-1 overflow-y-auto'>
           {data.map((note) => {
             return (
@@ -166,17 +161,9 @@ export const ReleaseNoteWidget: WidgetFC = ({ id, editable }) => {
             )
           })}
         </div>
-      ) : isLoading ? (
-        <WidgetSkeleton />
-      ) : (
-        <WidgetLoadError />
       )}
-    </WidgetCard>
+    </WidgetDataCard>
   )
-}
-export const ReleaseNoteWidgetName: FC = () => {
-  const { t } = useLocale()
-  return <>{t('release_note')}</>
 }
 
 /**
@@ -187,22 +174,21 @@ export const AnnouncementWidget: WidgetFC = ({ id, editable }) => {
   const { data, isLoading } = useActionData(getAnnouncement)
 
   return (
-    <WidgetCard id={id} editable={editable} icon={<InformationCircleIcon />} title={t('announcement')}>
-      {data ? (
+    <WidgetDataCard
+      id={id}
+      editable={editable}
+      icon={<InformationCircleIcon />}
+      title={t('announcement')}
+      data={data}
+      isLoading={isLoading}
+    >
+      {(data) => (
         <div className='max-h-80 min-h-14 flex-1 overflow-y-auto'>
           <MarkdownView body={data.body} />
         </div>
-      ) : isLoading ? (
-        <WidgetSkeleton />
-      ) : (
-        <WidgetLoadError />
       )}
-    </WidgetCard>
+    </WidgetDataCard>
   )
-}
-export const AnnouncementWidgetName: FC = () => {
-  const { t } = useLocale()
-  return <>{t('announcement')}</>
 }
 
 /**
@@ -210,10 +196,7 @@ export const AnnouncementWidgetName: FC = () => {
  */
 type LinkWidgetData = NonNullable<GetOtherWidgetsReturnType>['linkWidgets'][number]
 
-const createLinkWidgetSet = (link: LinkWidgetData): Omit<WidgetSet, 'id'> => {
-  // Link:はローカライズ不要
-  const LinkWidgetName: FC = () => <>Link: {link.name}</>
-
+const createLinkWidgetSet = (link: LinkWidgetData): WidgetDef => {
   const LinkWidget: WidgetFC = ({ id, editable }) => {
     const { ref } = useDraggable({
       id,
@@ -254,44 +237,45 @@ const createLinkWidgetSet = (link: LinkWidgetData): Omit<WidgetSet, 'id'> => {
     )
   }
 
-  return { name: LinkWidgetName, widget: LinkWidget }
+  // Link:はローカライズ不要
+  return { name: `Link: ${link.name}`, widget: LinkWidget }
 }
 
-const BaseWidgetMap: Record<string, Omit<WidgetSet, 'id'>> = {
+const BaseWidgetMap: Record<string, WidgetDef> = {
   app_info: {
-    name: AppInfoWidgetName,
+    nameKey: 'app_info',
     widget: AppInfoWidget,
   },
   server_info: {
-    name: ServerInfoWidgetName,
+    nameKey: 'server_info',
     widget: ServerInfoWidget,
   },
   release_Note: {
-    name: ReleaseNoteWidgetName,
+    nameKey: 'release_note',
     widget: ReleaseNoteWidget,
   },
   announcement: {
-    name: AnnouncementWidgetName,
+    nameKey: 'announcement',
     widget: AnnouncementWidget,
   },
   my_tickets: {
-    name: MyTicketsWidgetName,
+    nameKey: 'my_tickets',
     widget: MyTicketsWidget,
   },
   due_soon: {
-    name: DueSoonWidgetName,
+    nameKey: 'due_soon',
     widget: DueSoonWidget,
   },
   ticket_summary: {
-    name: TicketSummaryWidgetName,
+    nameKey: 'ticket_summary',
     widget: TicketSummaryWidget,
   },
   mentions: {
-    name: MentionsWidgetName,
+    nameKey: 'my_mentions',
     widget: MentionsWidget,
   },
   recent_activity: {
-    name: RecentActivityWidgetName,
+    nameKey: 'recent_activity',
     widget: RecentActivityWidget,
   },
 } as const
@@ -300,7 +284,7 @@ const BaseWidgetMap: Record<string, Omit<WidgetSet, 'id'>> = {
  * 組み込み Widget に、サーバー登録された LinkWidget と条件付きの Widget をマージして返すフック。
  */
 export const useWidgetMap = () => {
-  const [widgetMap, setWidgetMap] = useState<Record<string, Omit<WidgetSet, 'id'>>>(BaseWidgetMap)
+  const [widgetMap, setWidgetMap] = useState<Record<string, WidgetDef>>(BaseWidgetMap)
 
   useEffect(() => {
     parseAction(getOtherWidgets())
@@ -310,16 +294,16 @@ export const useWidgetMap = () => {
         )
         if (otherWidgets.enabledLinodeTransferInfo) {
           otherWidgetMap['linode_transfer_info'] = {
-            name: LinodeTransferInfoWidgetName,
+            nameKey: 'linode_transfer_info',
             widget: LinodeTransferInfoWidget,
           }
         }
         if (otherWidgets.enabledAgentWidgets) {
-          otherWidgetMap['agent_approvals'] = { name: AgentApprovalsWidgetName, widget: AgentApprovalsWidget }
-          otherWidgetMap['agent_runs'] = { name: AgentRunsWidgetName, widget: AgentRunsWidget }
+          otherWidgetMap['agent_approvals'] = { nameKey: 'agent_approvals', widget: AgentApprovalsWidget }
+          otherWidgetMap['agent_runs'] = { nameKey: 'agent_runs_recent', widget: AgentRunsWidget }
         }
         if (otherWidgets.enabledCommandRuns) {
-          otherWidgetMap['command_runs'] = { name: CommandRunsWidgetName, widget: CommandRunsWidget }
+          otherWidgetMap['command_runs'] = { nameKey: 'command_runs_recent', widget: CommandRunsWidget }
         }
         setWidgetMap({ ...BaseWidgetMap, ...otherWidgetMap })
       })

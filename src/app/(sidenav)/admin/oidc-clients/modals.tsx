@@ -1,6 +1,6 @@
 'use client'
 
-import { MultiButton } from '@/components/general/button'
+import { MultiButton, SubmitButtons } from '@/components/general/button'
 import { CheckboxCtrl, CheckboxField } from '@/components/general/checkbox'
 import { CopyableField } from '@/components/general/copyable-field'
 import { GridBox } from '@/components/general/grid'
@@ -49,6 +49,8 @@ export const AddModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, relo
   return (
     <FormModal
       state={state}
+      // 発行中に閉じると、応答でしか受け取れない値を表示できなくなる
+      isPending={isSubmitting}
       onSubmit={handleSubmit(async (req) => {
         const res = await parseAction(addOidcClient(req))
         setOutput(res)
@@ -59,16 +61,7 @@ export const AddModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, relo
       title={{ text: t('add_client'), icon: <PlusIcon /> }}
       footer={
         <>
-          {step.id === 'INPUT' && (
-            <>
-              <MultiButton slot='close' variant='ghost'>
-                {t('cancel')}
-              </MultiButton>
-              <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
-                {t('ok')}
-              </MultiButton>
-            </>
-          )}
+          {step.id === 'INPUT' && <SubmitButtons isPending={isSubmitting} />}
           {step.id === 'OUTPUT' && (
             <MultiButton icon={<CheckIcon />} isPending={isSubmitting} onPress={() => state.close()}>
               {t('ok')}
@@ -183,16 +176,7 @@ export const UpdateModal: FC<
         state.close()
       })}
       title={{ text: t('update_client'), icon: <PencilSquareIcon /> }}
-      footer={
-        <>
-          <MultiButton slot='close' variant='ghost'>
-            {t('cancel')}
-          </MultiButton>
-          <MultiButton type='submit' icon={<CheckIcon />} isPending={isSubmitting}>
-            {t('ok')}
-          </MultiButton>
-        </>
-      }
+      submit={{ isPending: isSubmitting }}
     >
       <GridBox>
         <div className='col-span-12'>

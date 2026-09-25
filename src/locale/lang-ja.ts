@@ -400,6 +400,7 @@ export const ja: DefaultLocaleItems = {
   status_done: '完了',
   status_done_recent: '完了(直近7日)',
   status_todo: '対応予定',
+  table_empty: 'データがありません',
   tag_color: '色',
   tag_manage: 'タグ管理',
   tags: 'タグ',

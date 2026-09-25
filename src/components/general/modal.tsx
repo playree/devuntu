@@ -15,7 +15,7 @@ import {
   useRef,
   useState,
 } from 'react'
-import { MultiButton } from './button'
+import { MultiButton, SubmitButtons, SubmitButtonsProps } from './button'
 import { FlexCol } from './flex'
 import { CheckIcon } from './icons'
 import { SmartProvider } from './smart'
@@ -119,14 +119,23 @@ const ModalFrame: FC<ModalFrameProps & { children: ReactNode }> = ({
   )
 }
 
+/**
+ * フッターの指定。定型のキャンセル+確定なら submit、それ以外は footer に中身を渡す。
+ * submit の isPending の間は閉じるボタンと Esc も無効になる
+ */
+type ModalFooterProps = { footer: ReactNode; submit?: never } | { submit: SubmitButtonsProps; footer?: never }
+
+const resolveFooter = ({ footer, submit }: { footer?: ReactNode; submit?: SubmitButtonsProps }) =>
+  submit ? <SubmitButtons {...submit} /> : footer
+
 export const FormModal: FC<
-  Omit<ModalFrameProps, 'portalContainer'> & {
-    children: ReactNode
-    onSubmit: (e?: BaseSyntheticEvent) => Promise<void>
-    footer: ReactNode
-  }
-> = ({ children, onSubmit, footer, ...frameProps }) => (
-  <ModalFrame {...frameProps}>
+  Omit<ModalFrameProps, 'portalContainer'> &
+    ModalFooterProps & {
+      children: ReactNode
+      onSubmit: (e?: BaseSyntheticEvent) => Promise<void>
+    }
+> = ({ children, onSubmit, footer, submit, ...frameProps }) => (
+  <ModalFrame {...frameProps} isPending={frameProps.isPending || submit?.isPending}>
     <form
       /**
        * Modal.Dialog(flex flex-col / max-h-full)と Modal.Body(min-h-0 flex-1 + overflow-y-auto)の間に
@@ -140,7 +149,7 @@ export const FormModal: FC<
         <SmartProvider isSmartForm>{children}</SmartProvider>
       </Modal.Body>
       <Modal.Footer>
-        <SmartProvider isSmart>{footer}</SmartProvider>
+        <SmartProvider isSmart>{resolveFooter({ footer, submit })}</SmartProvider>
       </Modal.Footer>
     </form>
   </ModalFrame>
@@ -151,22 +160,25 @@ export const FormModal: FC<
  * (submit が外側の form へ伝播してしまう)で使う。
  */
 export const DialogModal: FC<
-  ModalFrameProps & {
-    children: ReactNode
-    /** 未指定(読み込み中など)のときはフッタを出さない */
-    footer?: ReactNode
-    bodyClassName?: string
-  }
-> = ({ children, footer, bodyClassName, ...frameProps }) => (
-  <ModalFrame {...frameProps}>
-    <Modal.Body className={cn('pt-2', bodyClassName)}>{children}</Modal.Body>
-    {footer && (
-      <Modal.Footer>
-        <SmartProvider isSmart>{footer}</SmartProvider>
-      </Modal.Footer>
-    )}
-  </ModalFrame>
-)
+  ModalFrameProps &
+    Partial<ModalFooterProps> & {
+      children: ReactNode
+      bodyClassName?: string
+    }
+> = ({ children, footer, submit, bodyClassName, ...frameProps }) => {
+  // 未指定(読み込み中など)のときはフッタを出さない
+  const content = resolveFooter({ footer, submit })
+  return (
+    <ModalFrame {...frameProps} isPending={frameProps.isPending || submit?.isPending}>
+      <Modal.Body className={cn('pt-2', bodyClassName)}>{children}</Modal.Body>
+      {content && (
+        <Modal.Footer>
+          <SmartProvider isSmart>{content}</SmartProvider>
+        </Modal.Footer>
+      )}
+    </ModalFrame>
+  )
+}
 
 export type ConfirmParam = {
   title: string

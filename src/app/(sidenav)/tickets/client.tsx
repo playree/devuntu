@@ -174,10 +174,10 @@ export const TicketsClient: FC<{
               </div>
             </Table.Cell>
             <Table.Cell>
-              <StatusChip status={item.status} />
+              <StatusChip value={item.status} />
             </Table.Cell>
             <Table.Cell>
-              <PriorityChip priority={item.priority} />
+              <PriorityChip value={item.priority} />
             </Table.Cell>
             <Table.Cell className='truncate'>{item.assigneeName}</Table.Cell>
             <Table.Cell className='font-mono text-xs'>{dayformat(item.dueDate, 'date')}</Table.Cell>

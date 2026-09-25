@@ -1,5 +1,7 @@
 'use client'
 
+import { AssignmentMembers } from '@/components/assignment/assignment-members'
+import { GroupAssignForm } from '@/components/assignment/group-assign-form'
 import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
@@ -26,18 +28,20 @@ import { useLocale } from '@/locale/client'
 import { Accordion, ButtonGroup } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
-import { BoardMembers } from './board-members'
 import { BoardProfile } from './board-profile'
 import { BoardChannelNotify } from './channel-notify'
 import { DangerZone } from './danger-zone'
-import { GroupManage } from './group-manage'
 import {
+  addBoardMember,
   createBoardTag,
   deleteBoardTag,
   getBoardAssignments,
   getBoardDetail,
   getBoardMembers,
   getBoardTags,
+  removeBoardMember,
+  setBoardGroups,
+  updateBoardMemberRole,
   updateBoardTag,
 } from './server'
 
@@ -53,7 +57,7 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
   const { data: tags, reload: reloadTags } = useActionData(() => getBoardTags({ id: boardId }))
   // アサイン編集は manage 権限が要るため、取得できない場合は undefined のまま(フォームを出さない)
   const { data: assignments, reload: reloadAssignments } = useActionData(() => getBoardAssignments({ id: boardId }))
-  // ボードグループの保存と合わせてリロードできるよう、ここで生成して BoardMembers に渡す
+  // ボードグループの保存と合わせてリロードできるよう、ここで生成して AssignmentMembers に渡す
   const memberList = usePagingList({
     load: async () => (await parseAction(getBoardMembers({ id: boardId }), { handled: 'all' })) ?? [],
     sort: { init: { column: 'name', direction: 'ascending' } },
@@ -141,11 +145,25 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
             icon={<UsersIcon />}
             title={t('board_members')}
           >
-            <BoardMembers // manage 権限が無いメンバーには一覧だけ見せる(assignments を渡さないと編集 UI が出ない)
-              boardId={board.id}
-              assignments={canManageBoard ? assignments : undefined}
+            <AssignmentMembers
+              aria-label='board member list'
+              hasRole
               reloadAssignments={reloadAssignments}
               pagingList={memberList}
+              manage={
+                // manage 権限が無いメンバーには一覧だけ見せる
+                canManageBoard && assignments
+                  ? {
+                      addLabel: t('add_member'),
+                      userOptions: assignments.userOptions,
+                      assignedUserIds: [...assignments.ownerIds, ...assignments.memberIds],
+                      add: (req) => addBoardMember({ id: board.id, ...req }),
+                      updateRole: (req) => updateBoardMemberRole({ id: board.id, ...req }),
+                      remove: (userId) => removeBoardMember({ id: board.id, userId }),
+                      roleNote: t('msg_owner_required'),
+                    }
+                  : undefined
+              }
             />
           </AccordionSection>
         )}
@@ -160,14 +178,17 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
             icon={<UserGroupIcon />}
             title={t('board_groups')}
           >
-            <GroupManage
-              /**
-               * 再取得しても useForm の defaultValues は追従しないので、
-               * アサインが変わったら作り直して古い groupIds で保存されないようにする
-               */
+            <GroupAssignForm
               key={assignments.groupIds.join(',')}
-              boardId={board.id}
-              assignments={assignments}
+              label={t('board_groups')}
+              groupOptions={assignments.groupOptions}
+              groupIds={assignments.groupIds}
+              notice={
+                <NoticePanel className='text-xs' status='warning'>
+                  {t('msg_group_assign_admin_only')}
+                </NoticePanel>
+              }
+              onSave={(groupIds) => setBoardGroups({ id: board.id, groupIds })}
               reload={() => {
                 reloadAssignments()
                 memberList.reload()

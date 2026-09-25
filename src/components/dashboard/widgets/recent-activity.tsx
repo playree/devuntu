@@ -6,10 +6,9 @@ import { useActionData } from '@/lib/action/action-client'
 import { dayformat } from '@/lib/day'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
-import { FC } from 'react'
 import { getRecentActivity } from '../server'
 import { RowLink } from './ticket-row'
-import { WidgetCard, WidgetFC, WidgetLoadError, WidgetRowList, WidgetSkeleton } from './widget-card'
+import { WidgetDataCard, WidgetFC, WidgetRowList } from './widget-card'
 
 /**
  * アクセスできるボードのチケットを更新日時の新しい順に表示する Widget。
@@ -20,8 +19,15 @@ export const RecentActivityWidget: WidgetFC = ({ id, editable }) => {
   const { data, isLoading } = useActionData(getRecentActivity)
 
   return (
-    <WidgetCard id={id} editable={editable} icon={<ClockIcon />} title={t('recent_activity')}>
-      {data ? (
+    <WidgetDataCard
+      id={id}
+      editable={editable}
+      icon={<ClockIcon />}
+      title={t('recent_activity')}
+      data={data}
+      isLoading={isLoading}
+    >
+      {(data) => (
         <WidgetRowList isEmpty={data.length === 0} message={t('msg_no_recent_activity')}>
           {data.map((ticket) => (
             <RowLink key={ticket.id} href={`/t/${ticket.displayId}`} editable={editable}>
@@ -30,21 +36,13 @@ export const RecentActivityWidget: WidgetFC = ({ id, editable }) => {
                 <span className='truncate text-sm'>{ticket.title}</span>
               </div>
               <div className='flex items-center gap-2'>
-                <StatusChip status={ticket.status} />
+                <StatusChip value={ticket.status} />
                 <span className='font-mono text-xs text-gray-500'>{dayformat(ticket.updatedAt, 'tz-minute', tz)}</span>
               </div>
             </RowLink>
           ))}
         </WidgetRowList>
-      ) : isLoading ? (
-        <WidgetSkeleton />
-      ) : (
-        <WidgetLoadError />
       )}
-    </WidgetCard>
+    </WidgetDataCard>
   )
-}
-export const RecentActivityWidgetName: FC = () => {
-  const { t } = useLocale()
-  return <>{t('recent_activity')}</>
 }
