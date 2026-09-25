@@ -75,7 +75,7 @@ devuntu_agent.py
 
 ## チケットの状態
 
-`Ticket.agentState`。遷移させるのは `src/lib/agent/agent-runner.ts` だけ。
+`Ticket.agentState`。遷移させるのは `src/lib/agent/` の `agent-task.ts` / `agent-run.ts` だけ。
 
 | 状態                          | 意味                     | 次                                           |
 | ----------------------------- | ------------------------ | -------------------------------------------- |
@@ -88,7 +88,7 @@ devuntu_agent.py
 
 1. エージェントの `finish_agent_task`(正常系)
 2. ランナーの `PATCH /api/agent/runs/:id`(エージェントが報告せずに終了した場合)
-3. `failStaleAgentRuns`(ランナーごと落ちた場合。`src/lib/agent/agent-runner.ts` の定数 `AGENT_RUN_TIMEOUT_MIN` = 60分)
+3. `failStaleAgentRuns`(ランナーごと落ちた場合。`src/lib/agent/agent-run.ts` の定数 `AGENT_RUN_TIMEOUT_MIN` = 60分)
 
 2 で「成功」と伝えられても失敗として閉じる。ランナーが知っているのは CLI の終了コードだけで、
 終了コード 0 でも何をしたかは分からないため。

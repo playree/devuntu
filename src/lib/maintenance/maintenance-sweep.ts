@@ -101,7 +101,7 @@ export const sweepUploadNonces = async (now: Date): Promise<number> =>
  * エージェントの実行履歴。保持期間(`AGENT_RUN_RETENTION_DAYS`)とランナーごとの件数
  * (`AGENT_RUN_KEEP`)の2本で抑える。
  *
- * `running` は時間切れの回収(`agent-runner.ts` の `failStaleAgentRuns`)が持ち主なので触らない。
+ * `running` は時間切れの回収(`agent-run.ts` の `failStaleAgentRuns`)が持ち主なので触らない。
  */
 export const sweepAgentRuns = async (now: Date): Promise<number> => {
   const keep = envu.server.AGENT_RUN_KEEP

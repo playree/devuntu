@@ -8,7 +8,7 @@
 import { WidgetDefaultLayout } from '@/components/dashboard/widget-define'
 import { getString } from './kvs'
 import { logger } from './logger'
-import { type DashboardLayout, scDashboardLayout } from './schema/schema'
+import { type DashboardLayout, scDashboardLayout } from './schema/schema-dashboard'
 
 const parseLayout = (value: string): DashboardLayout | null => {
   try {

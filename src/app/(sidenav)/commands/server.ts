@@ -12,7 +12,8 @@ import { kickCommandDispatch } from '@/lib/command/command-worker'
 import { envu } from '@/lib/env-util'
 import { errInvalidOperation, errNotFound, errTooManyRequests } from '@/lib/error'
 import { consumeRateLimit } from '@/lib/rate-limit'
-import { scCommandRunListQuery, scStartCommandRun, scUUID } from '@/lib/schema/schema'
+import { scUUID } from '@/lib/schema/schema'
+import { scCommandRunListQuery, scStartCommandRun } from '@/lib/schema/schema-command'
 
 /** 起動の連打を抑える。1人が短時間に大量のジョブを積めないようにする */
 const START_RATE_LIMIT = { limit: 10, windowMs: 60_000 }

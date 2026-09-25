@@ -4,7 +4,8 @@ import { safeAuthAction } from '@/lib/action/action-server'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
-import { scCreateGroup, scUpdateGroup, scUUID } from '@/lib/schema/schema'
+import { scUUID } from '@/lib/schema/schema'
+import { scCreateGroup, scUpdateGroup } from '@/lib/schema/schema-admin'
 
 /**
  * グループ一覧取得

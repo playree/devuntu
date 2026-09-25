@@ -22,7 +22,7 @@ import {
   zCommentContent,
   zCommentType,
   zTicketStatus,
-} from '@/lib/schema/schema'
+} from '@/lib/schema/schema-ticket'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 

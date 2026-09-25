@@ -7,7 +7,8 @@
  */
 
 import { getFieldConstraints } from '@/components/general/field-constraints'
-import { scBusyTimeBase, zDescription, zName } from '@/lib/schema/schema'
+import { zDescription, zName } from '@/lib/schema/schema'
+import { scBusyTimeBase } from '@/lib/schema/schema-calendar'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 

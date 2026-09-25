@@ -6,23 +6,18 @@
 
 import { ASSIGNEE_NONE } from '@/lib/board/ticket-search'
 import { DM_NOTIFY_EVENTS } from '@/lib/notify/notify'
+import { zPassword } from '@/lib/schema/schema'
+import { scCreateUser, scUpdateIntegrationSettings, scUpdateUser } from '@/lib/schema/schema-admin'
+import { scSetBoardNotifySetting, zBoardKey } from '@/lib/schema/schema-board'
+import { scUpdateNotifySetting, scUpdateNotifySettings, scWebPushSubscription } from '@/lib/schema/schema-notify'
 import {
   scCreateTag,
   scCreateTicket,
-  scCreateUser,
   scMoveTicket,
   scPatchTicket,
-  scSetBoardNotifySetting,
   scTicketSearch,
-  scUpdateIntegrationSettings,
-  scUpdateNotifySetting,
-  scUpdateNotifySettings,
   scUpdateTicketAgentMode,
-  scUpdateUser,
-  scWebPushSubscription,
-  zBoardKey,
-  zPassword,
-} from '@/lib/schema/schema'
+} from '@/lib/schema/schema-ticket'
 import { describe, expect, it } from 'vitest'
 
 const boardId = '01920000-0000-7000-8000-000000000001'

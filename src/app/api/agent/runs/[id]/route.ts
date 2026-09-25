@@ -1,5 +1,5 @@
 import { agentError, agentJson, authenticateRunner, readJsonBody } from '@/lib/agent/agent-api'
-import { finishAgentRunById } from '@/lib/agent/agent-runner'
+import { finishAgentRunById } from '@/lib/agent/agent-run'
 import { z } from 'zod'
 
 /**

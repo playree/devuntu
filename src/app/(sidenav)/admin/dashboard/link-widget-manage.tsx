@@ -15,7 +15,12 @@ import { notify } from '@/components/notify'
 import { ReloadButton } from '@/components/reload-button'
 import { parseAction } from '@/lib/action/action-client'
 import { dayformat } from '@/lib/day'
-import { CreateLinkWidget, scCreateLinkWidget, scUpdateLinkWidget, UpdateLinkWidget } from '@/lib/schema/schema'
+import {
+  CreateLinkWidget,
+  scCreateLinkWidget,
+  scUpdateLinkWidget,
+  UpdateLinkWidget,
+} from '@/lib/schema/schema-dashboard'
 import { useUserTimezone } from '@/lib/use-timezone'
 import { useLocale } from '@/locale/client'
 import { Table } from '@heroui/react'

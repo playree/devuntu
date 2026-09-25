@@ -11,7 +11,7 @@
 
 import { getServerSession } from '@/lib/auth/auth'
 import { logger } from '@/lib/logger'
-import { scWebPushSubscription } from '@/lib/schema/schema'
+import { scWebPushSubscription } from '@/lib/schema/schema-notify'
 import { isWebPushConfigured, saveWebPushSubscription } from '@/lib/webpush/webpush-server'
 import { NextResponse } from 'next/server'
 

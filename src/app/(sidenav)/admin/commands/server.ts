@@ -29,7 +29,7 @@ import {
   scRemoveCommandTargetMember,
   scSetCommandTargetGroups,
   scUpsertCommandTargetMember,
-} from '@/lib/schema/schema'
+} from '@/lib/schema/schema-command'
 
 /** 定義の再読み込みは I/O を伴うので、連打で叩き続けられないようにする */
 const RELOAD_RATE_LIMIT = { limit: 10, windowMs: 60_000 }

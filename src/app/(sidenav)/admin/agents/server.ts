@@ -8,7 +8,7 @@ import { nowDate } from '@/lib/day'
 import { errClient, errInvalidOperation, errSystemError } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { isUniqueViolation, prisma } from '@/lib/prisma'
-import { scCreateAgent } from '@/lib/schema/schema'
+import { scCreateAgent } from '@/lib/schema/schema-agent'
 import { isAPIError } from 'better-auth/api'
 import { headers } from 'next/headers'
 

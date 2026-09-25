@@ -6,13 +6,13 @@ import { resolveDefaultDashboardLayout } from '@/lib/dashboard-layout'
 import { getString, setString } from '@/lib/kvs'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
+import { scUUID } from '@/lib/schema/schema'
 import {
   scCreateLinkWidget,
   scUpdateAnnouncement,
   scUpdateDashboard,
   scUpdateLinkWidget,
-  scUUID,
-} from '@/lib/schema/schema'
+} from '@/lib/schema/schema-dashboard'
 import { removeImageAttachment, saveImageAttachment } from '@/lib/storage/attachment'
 import { uuidv7 } from 'uuidv7'
 

@@ -8,14 +8,14 @@ import { addComment, changeTicketStatus, deleteComment, updateComment, updateTic
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
+import { scUUID } from '@/lib/schema/schema'
 import {
   scCreateTicketComment,
   scPatchTicket,
   scUpdateTicketAgentMode,
   scUpdateTicketComment,
   scUpdateTicketStatus,
-  scUUID,
-} from '@/lib/schema/schema'
+} from '@/lib/schema/schema-ticket'
 import { makeUrl } from '@/lib/server-utils'
 
 /**

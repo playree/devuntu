@@ -5,7 +5,7 @@
  * DB 操作だけをここへ集約する。「誰が触ってよいか」は呼び出し元の Server Action の責務なので、
  * このファイルには認可を持ち込まない(`agent-approver.ts` と同じ切り分け)。
  *
- * ランナー本体や MCP が使う稼働判定・実行記録は `agent-runner.ts` 側にある。
+ * ランナー本体や MCP が使う稼働判定・実行記録は `agent-activity.ts` / `agent-run.ts` 側にある。
  */
 
 import type { AgentRunAction, AgentRunStatus } from '@/generated/prisma/enums'
@@ -13,9 +13,9 @@ import { isValidTimezone } from '../day'
 import { errValidation } from '../error'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
-import type { SaveAgentRunner } from '../schema/schema'
+import type { SaveAgentRunner } from '../schema/schema-agent'
 import { AGENT_RUN_HISTORY_LIMIT } from './agent'
-import { countAgentRunsSince, dailyRunWindow } from './agent-runner'
+import { countAgentRunsSince, dailyRunWindow } from './agent-activity'
 
 /** 画面に出す自動運用の設定。ランナーの自己申告(ホスト名・版)と消化状況を含む */
 export type AgentRunnerConfig = {

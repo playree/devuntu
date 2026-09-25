@@ -3,7 +3,7 @@
 import { safeAuthAction } from '@/lib/action/action-server'
 import { getGoogleAccountSettings, setGoogleAccountSettings } from '@/lib/google/google-account'
 import { prisma } from '@/lib/prisma'
-import { scUpdateIntegrationSettings } from '@/lib/schema/schema'
+import { scUpdateIntegrationSettings } from '@/lib/schema/schema-admin'
 import { getSlackSettings, setSlackSettings } from '@/lib/slack/slack-account'
 import { getSlackBotInfo } from '@/lib/slack/slack-server'
 

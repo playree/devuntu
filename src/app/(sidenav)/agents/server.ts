@@ -15,7 +15,8 @@ import { ticketDisplayId } from '@/lib/board/ticket-id'
 import { ticketListOrderBy } from '@/lib/board/ticket-search'
 import { errInvalidOperation } from '@/lib/error'
 import { prisma } from '@/lib/prisma'
-import { scAgentTicketListQuery, scSaveAgentRunner, scSaveAgentRunnerRule, scUUID } from '@/lib/schema/schema'
+import { scUUID } from '@/lib/schema/schema'
+import { scAgentTicketListQuery, scSaveAgentRunner, scSaveAgentRunnerRule } from '@/lib/schema/schema-agent'
 
 /**
  * 承認者以外を弾く。

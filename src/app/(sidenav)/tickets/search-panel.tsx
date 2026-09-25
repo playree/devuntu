@@ -12,7 +12,7 @@ import type { AssigneeCandidate } from '@/lib/board/board-member'
 import { dedupeTagOptionsByName, MAX_TICKET_TAGS } from '@/lib/board/tag-rule'
 import { OPEN_TICKET_STATUSES, TICKET_PRIORITIES, TICKET_STATUSES } from '@/lib/board/ticket-enum'
 import { ASSIGNEE_NONE } from '@/lib/board/ticket-search'
-import { TicketSearch } from '@/lib/schema/schema'
+import { TicketSearch } from '@/lib/schema/schema-ticket'
 import { useLocale } from '@/locale/client'
 import { FC, useState } from 'react'
 

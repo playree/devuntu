@@ -4,7 +4,7 @@
  * トークンの生成・検証は prisma と `node:crypto` に依存するため `agent-token.ts` に分けてある。
  * 接頭辞は一覧表示からも読むのでここに置く。
  * 有効期限の選択肢はユーザー用の MCP トークンと共通なので `../token-expires.ts` にある。
- * 自動運用(Devuntu Agent)の判定ロジックも DB を引くので `agent-runner.ts` に分けてある。
+ * 自動運用(Devuntu Agent)の判定ロジックも DB を引くので `agent-activity.ts` / `agent-task.ts` / `agent-run.ts` に分けてある。
  * ここはフォームのバリデーションや一覧表示からも読むので、純粋な値と関数だけを置くこと。
  */
 
@@ -85,7 +85,7 @@ export const OPEN_AGENT_TASK_STATES = AGENT_TASK_STATES.filter((state) => state 
 /**
  * 処理状態による絞り込み条件。空配列は絞り込みなし。
  *
- * `agentState` が null のチケットは未着手(queued)として扱う(`agent-runner.ts` のポーリング条件と同じ規約)。
+ * `agentState` が null のチケットは未着手(queued)として扱う(`agent-task.ts` のポーリング条件と同じ規約)。
  */
 export const agentStateWhere = (states: readonly AgentTaskState[]): TicketWhereInput => {
   if (states.length === 0) {

@@ -1,5 +1,7 @@
+import { activeWindowLabel, evaluateRunnerActivity } from '@/lib/agent/agent-activity'
 import { agentError, agentJson, authenticateRunner, readJsonBody } from '@/lib/agent/agent-api'
-import { activeWindowLabel, evaluateRunnerActivity, failStaleAgentRuns, pickAgentTasks } from '@/lib/agent/agent-runner'
+import { failStaleAgentRuns } from '@/lib/agent/agent-run'
+import { pickAgentTasks } from '@/lib/agent/agent-task'
 import { nowDate } from '@/lib/day'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'

@@ -1,5 +1,5 @@
 import { isTicketStatus } from '@/lib/board/ticket-enum'
-import { scTicketSearch } from '@/lib/schema/schema'
+import { scTicketSearch } from '@/lib/schema/schema-ticket'
 import { en } from '@/locale/lang-en'
 import { type Metadata } from 'next'
 import { TicketsClient } from './client'

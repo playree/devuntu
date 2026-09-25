@@ -12,7 +12,8 @@ import { buildTicketWhere, ticketListOrderBy } from '@/lib/board/ticket-search'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
-import { scCreateTag, scCreateTicket, scTicketListQuery, scUUID } from '@/lib/schema/schema'
+import { scUUID } from '@/lib/schema/schema'
+import { scCreateTag, scCreateTicket, scTicketListQuery } from '@/lib/schema/schema-ticket'
 
 /** チケット一覧・詳細で共有する select。TicketTag を平坦化するために使う */
 const TICKET_TAGS_SELECT = { select: { tag: { select: TAG_SELECT } }, orderBy: { tag: { order: 'asc' } } } as const

@@ -6,7 +6,8 @@ import { auth } from '@/lib/auth/auth'
 import { errCannotDeleteLastAdmin, errInvalidOperation, errSystemError } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
-import { scCreateUser, scUpdateUser, scUUID } from '@/lib/schema/schema'
+import { scUUID } from '@/lib/schema/schema'
+import { scCreateUser, scUpdateUser } from '@/lib/schema/schema-admin'
 import { headers } from 'next/headers'
 
 /**

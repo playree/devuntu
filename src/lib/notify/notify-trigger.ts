@@ -303,7 +303,7 @@ export const enqueueTicketCommented = async (
 /**
  * エージェントの実行終了。
  *
- * 呼び出し元は実行を閉じる 3 経路(`agent-runner.ts`)。宛先(依頼者への DM とボードの
+ * 呼び出し元は実行を閉じる 3 経路(`agent-run.ts`)。宛先(依頼者への DM とボードの
  * 通知先チャンネル)はどちらも規則で導けるので、`notify-recipient.ts` が配信直前に解決する。
  */
 export type AgentRunNotification = {

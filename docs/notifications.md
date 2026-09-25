@@ -142,7 +142,7 @@ advisory lock を保持できないため、そもそも採れない)。
 | `enqueueTicketCreated()`    | `createTicket` / `createTicketForMcp`                    | `mention` / `ticket_assigned` |
 | `enqueueTicketUpdated()`    | `patchTicket` / `updateTicketForMcp`                     | `mention` / `ticket_assigned` |
 | `enqueueTicketCommented()`  | `addTicketComment` / `updateTicketComment` とその MCP 版 | `mention`                     |
-| `enqueueAgentRunFinished()` | `agent-runner.ts` の実行を閉じる 3 経路                  | `agent_run`                   |
+| `enqueueAgentRunFinished()` | `agent-run.ts` の実行を閉じる 3 経路                     | `agent_run`                   |
 
 呼び出し元は「何が起きたか」(前後の状態・増えたメンション)を渡すだけで、発火の判断はしない。
 
@@ -329,7 +329,7 @@ DM は `ticketRequesterIds()`(エージェント用ユーザーは DM を読ま�
 
 - **チャンネル未設定でも DM は送る**(宛先ごとに独立している)
 - **通知するのは実行が終了したときだけ**(成功 / 失敗 / スキップ)。開始時は通知しない
-- 呼ぶのは実行が閉じる 3 経路すべて(`src/lib/agent/agent-runner.ts`)。いずれも実行を閉じるトランザクションの中で呼ぶ
+- 呼ぶのは実行が閉じる 3 経路すべて(`src/lib/agent/agent-run.ts`)。いずれも実行を閉じるトランザクションの中で呼ぶ
 
 | 経路                           | 関数                 | 通知する条件                                                                                        |
 | ------------------------------ | -------------------- | --------------------------------------------------------------------------------------------------- |
@@ -463,7 +463,7 @@ Slack の署名(`src/lib/slack/slack-signature.ts`)だけが門番になるの�
    並びの一致は `tests/lib/notify/notify.test.ts` で固定しているので、**値の追加は末尾のみ**
 2. DM 通知なら `DM_NOTIFY_EVENTS`、チャネル通知なら `CHANNEL_NOTIFY_EVENTS` へ追加する
    (両方に出るイベントは両方へ)。前者は `/account` の通知設定と `scUpdateNotifySetting`、
-   後者はボード設定と `scSetBoardNotifySetting`(`src/lib/schema/schema.ts`)の入力範囲を兼ねるので、
+   後者はボード設定と `scSetBoardNotifySetting`(`src/lib/schema/schema-board.ts`)の入力範囲を兼ねるので、
    **画面と入力検証は追加するだけで追従する**
 3. `NOTIFY_PAYLOAD_SCHEMA`(`notify-payload.ts`)・文面(`notify-content.ts`)・宛先の決め方
    (`notify-recipient.ts`)へ追加する。いずれも `satisfies Record<NotifyEvent, …>` なので、
