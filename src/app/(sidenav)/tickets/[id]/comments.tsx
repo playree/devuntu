@@ -16,6 +16,7 @@ import { useLocationHash } from '@/lib/use-location-hash'
 import { useLocale } from '@/locale/client'
 import { FC, useEffect, useState } from 'react'
 import { CommentItem, CommentReplyAction, type Comment } from './comment-item'
+import { AgentDecisionButtons } from './decision-buttons'
 import { addTicketComment, GetTicketReturnType } from './server'
 
 type Ticket = NonNullable<GetTicketReturnType>
@@ -107,6 +108,19 @@ export const TicketComments: FC<{
   )
   const visibleCommentCount = visibleComments.flatMap((comment) => [comment, ...comment.replies]).length
 
+  const { pendingDecision } = ticket
+  /** 返答待ちの plan / report にだけ承認/差し戻しボタンを付ける */
+  const decisionFooter = (comment: Comment) =>
+    pendingDecision?.commentId === comment.id && (
+      <AgentDecisionButtons
+        commentId={comment.id}
+        type={pendingDecision.type}
+        boardId={ticket.boardId}
+        mentionCandidates={mentionCandidates}
+        onDecided={refresh}
+      />
+    )
+
   const commentTypeFilterItems: MultiTagItem<CommentTypeOption>[] = [
     { id: 'none', label: t('comment_type_none') },
     { id: 'plan', label: t(TICKET_COMMENT_TYPE_LOCALE.plan) },
@@ -170,6 +184,7 @@ export const TicketComments: FC<{
             canDelete={ticket.canDelete}
             isTarget={commentAnchorId(comment.id) === targetId}
             refresh={refresh}
+            footer={decisionFooter(comment)}
           />
           {(comment.replies.length > 0 || ticket.canEdit) && (
             <div
@@ -188,6 +203,7 @@ export const TicketComments: FC<{
                   canDelete={ticket.canDelete}
                   isTarget={commentAnchorId(reply.id) === targetId}
                   refresh={refresh}
+                  footer={decisionFooter(reply)}
                 />
               ))}
               {ticket.canEdit && (

@@ -108,6 +108,14 @@ export const TicketCommentType = {
 export type TicketCommentType = (typeof TicketCommentType)[keyof typeof TicketCommentType]
 
 
+export const TicketCommentDecision = {
+  approved: 'approved',
+  rejected: 'rejected'
+} as const
+
+export type TicketCommentDecision = (typeof TicketCommentDecision)[keyof typeof TicketCommentDecision]
+
+
 export const GitProvider = {
   github: 'github'
 } as const

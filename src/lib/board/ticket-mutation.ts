@@ -5,7 +5,8 @@
  * 経路固有の追加制限(`authorize`)だけにして、権限判定・メンション・添付・通知の扱いを揃える。
  */
 
-import type { TicketCommentType, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
+import type { Prisma } from '@/generated/prisma/client'
+import type { TicketCommentDecision, TicketCommentType, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
 import { dateOnlyToUtc, nowDate } from '../day'
 import { errInvalidOperation } from '../error'
 import {
@@ -16,11 +17,13 @@ import {
   enqueueTicketUpdated,
 } from '../notify/notify-trigger'
 import { prisma } from '../prisma'
+import type { CriterionItem } from '../schema/schema-ticket'
 import { type Actor, assertBoardAccess, assertTicketAccess, type TicketAccess } from './board-access'
 import { assertBoardAssignee, getBoardMentionCandidates, getTicketMentionCandidates } from './board-member'
 import { extractMentionEmails, resolveMentionUserIds } from './mention'
 import { assertTagIdsInBoard, syncTicketTags } from './tag'
 import { nextOrder } from './tag-rule'
+import { syncTicketCriteria } from './ticket-criterion'
 import { ticketDisplayId } from './ticket-id'
 import { assertReplyTarget, moveTicketToLane, nextTicketNumber, reassignContentAttachments } from './ticket-write'
 
@@ -36,6 +39,8 @@ export type CreateTicketInput = {
   dueDate?: string | null
   assigneeId?: string | null
   tagIds: string[]
+  /** 受け入れ条件の文言。作成時は新規の項目だけなので id は持たない */
+  criteria?: string[]
 }
 
 /**
@@ -43,7 +48,7 @@ export type CreateTicketInput = {
  * 担当者・タグがそのボードに属することは DB 制約では防げないのでここで検証する。
  */
 export const createTicket = async (actor: Actor, input: CreateTicketInput) => {
-  const { boardId, status, assigneeId, tagIds, dueDate, ...rest } = input
+  const { boardId, status, assigneeId, tagIds, dueDate, criteria, ...rest } = input
 
   return prisma.$transaction(async (tx) => {
     await assertBoardAccess(actor, boardId, 'write', tx)
@@ -72,6 +77,7 @@ export const createTicket = async (actor: Actor, input: CreateTicketInput) => {
         assigneeId: assigneeId ?? null,
         mentionedUserIds,
         tags: { create: ids.map((tagId) => ({ tagId })) },
+        criteria: { create: (criteria ?? []).map((text, order) => ({ text, order })) },
         order: nextOrder(lane._max.order === null ? [] : [lane._max.order]),
       },
       select: { id: true, title: true, number: true, board: { select: { key: true } } },
@@ -113,6 +119,8 @@ export type UpdateTicketInput = {
   tagIds?: string[]
   /** 指定するとレーンの末尾へ移す。Web の詳細画面は changeTicketStatus を別に呼ぶので渡さない */
   status?: TicketStatus
+  /** 受け入れ条件の全件置き換え(syncTicketCriteria) */
+  criteria?: CriterionItem[]
 }
 
 /**
@@ -125,7 +133,7 @@ export const updateTicket = async (
   input: UpdateTicketInput,
   opts?: { authorize?: TicketAuthorize },
 ) => {
-  const { assigneeId, tagIds, dueDate, status, ...rest } = input
+  const { assigneeId, tagIds, dueDate, status, criteria, ...rest } = input
 
   return prisma.$transaction(async (tx) => {
     const access = await assertTicketAccess(actor, id, 'edit', tx)
@@ -168,6 +176,9 @@ export const updateTicket = async (
     })
     if (ids) {
       await syncTicketTags(tx, id, ids)
+    }
+    if (criteria) {
+      await syncTicketCriteria(tx, id, criteria)
     }
 
     const moved =
@@ -245,52 +256,64 @@ export type AddCommentInput = {
   parentId?: string | null
 }
 
-/** コメント投稿(メンションの解決を含む) */
-export const addComment = async (actor: Actor, input: AddCommentInput) => {
-  const { ticketId, content, type, parentId } = input
+/**
+ * コメントの書き込み本体(メンション・添付・通知を含む)。
+ * 権限判定(`assertTicketAccess` の 'edit')を済ませた後に同じトランザクション内で呼ぶ。
+ * `decision` は承認/差し戻しの返信だけが付ける(`agent-decision.ts`)。
+ */
+export const insertComment = async (
+  tx: Prisma.TransactionClient,
+  actor: Actor,
+  access: TicketAccess,
+  input: AddCommentInput & { decision?: TicketCommentDecision },
+) => {
+  const { ticketId, content, type, parentId, decision } = input
+  if (parentId) {
+    await assertReplyTarget(tx, ticketId, parentId)
+  }
 
-  return prisma.$transaction(async (tx) => {
-    const access = await assertTicketAccess(actor, ticketId, 'edit', tx)
-    if (parentId) {
-      await assertReplyTarget(tx, ticketId, parentId)
-    }
+  const candidates = await getTicketMentionCandidates(access, tx)
+  const mentionedUserIds = resolveMentionUserIds(extractMentionEmails(content), candidates)
+  await reassignContentAttachments(tx, content, access.boardId, actor, ticketId)
 
-    const candidates = await getTicketMentionCandidates(access, tx)
-    const mentionedUserIds = resolveMentionUserIds(extractMentionEmails(content), candidates)
-    await reassignContentAttachments(tx, content, access.boardId, actor, ticketId)
-
-    const comment = await tx.ticketComment.create({
-      data: { ticketId, authorId: actor.id, content, type, parentId, mentionedUserIds },
-      select: { id: true },
-    })
-
-    // 検索(更新日時順)の観点でチケット側の updatedAt も更新する
-    // 通知の見出しに使う表示ID / 件名はこの update の戻りから取る(追加の SELECT を増やさない)
-    const ticket = await tx.ticket.update({
-      where: { id: ticketId },
-      data: { updatedAt: nowDate() },
-      select: { number: true, title: true, board: { select: { key: true } } },
-    })
-
-    // 投稿と同じトランザクションで投入する(コミット後に落ちると通知だけが消える)
-    await enqueueTicketCommented(
-      {
-        actorId: actor.id,
-        ticket: {
-          id: ticketId,
-          boardId: access.boardId,
-          displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
-          title: ticket.title,
-        },
-        comment: { id: comment.id, content },
-        addedMentionUserIds: mentionedUserIds,
-      },
-      tx,
-    )
-
-    return { id: comment.id, mentionedUserIds }
+  const comment = await tx.ticketComment.create({
+    data: { ticketId, authorId: actor.id, content, type, parentId, decision, mentionedUserIds },
+    select: { id: true },
   })
+
+  // 検索(更新日時順)の観点でチケット側の updatedAt も更新する
+  // 通知の見出しに使う表示ID / 件名はこの update の戻りから取る(追加の SELECT を増やさない)
+  const ticket = await tx.ticket.update({
+    where: { id: ticketId },
+    data: { updatedAt: nowDate() },
+    select: { number: true, title: true, board: { select: { key: true } } },
+  })
+
+  // 投稿と同じトランザクションで投入する(コミット後に落ちると通知だけが消える)
+  await enqueueTicketCommented(
+    {
+      actorId: actor.id,
+      ticket: {
+        id: ticketId,
+        boardId: access.boardId,
+        displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
+        title: ticket.title,
+      },
+      comment: { id: comment.id, content },
+      addedMentionUserIds: mentionedUserIds,
+    },
+    tx,
+  )
+
+  return { id: comment.id, mentionedUserIds }
 }
+
+/** コメント投稿(メンションの解決を含む) */
+export const addComment = async (actor: Actor, input: AddCommentInput) =>
+  prisma.$transaction(async (tx) => {
+    const access = await assertTicketAccess(actor, input.ticketId, 'edit', tx)
+    return insertComment(tx, actor, access, input)
+  })
 
 /** コメント更新(投稿者本人のみ) */
 export const updateComment = async (actor: Actor, id: string, content: string) =>

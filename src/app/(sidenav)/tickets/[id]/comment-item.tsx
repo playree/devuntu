@@ -17,6 +17,7 @@ import { MarkdownView } from '@/components/markdown/markdown-view'
 import type { MentionCandidate } from '@/components/markdown/mention-menu'
 import { notify } from '@/components/notify'
 import { MentionChips } from '@/components/ticket/mention-chips'
+import { DecisionChip } from '@/components/ticket/ticket-chip'
 import { parseAction } from '@/lib/action/action-client'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { TICKET_COMMENT_TYPE_LOCALE } from '@/lib/board/ticket-enum'
@@ -26,7 +27,7 @@ import { scCreateTicketComment } from '@/lib/schema/schema-ticket'
 import { useConfirmAction } from '@/lib/use-confirm-action'
 import { useLocale } from '@/locale/client'
 import { Accordion } from '@heroui/react'
-import { FC, useState } from 'react'
+import { FC, ReactNode, useState } from 'react'
 import { tv } from 'tailwind-variants'
 import { addTicketComment, deleteTicketComment, GetTicketReturnType, updateTicketComment } from './server'
 
@@ -57,7 +58,9 @@ export const CommentItem: FC<{
   /** 通知のリンク(`#comment-<id>`)で指されている 1 件 */
   isTarget: boolean
   refresh: () => Promise<void>
-}> = ({ comment, boardId, mentionCandidates, canDelete, isTarget, refresh }) => {
+  /** 本文の下に置く操作(承認/差し戻しボタン) */
+  footer?: ReactNode
+}> = ({ comment, boardId, mentionCandidates, canDelete, isTarget, refresh, footer }) => {
   const { t } = useLocale()
   const tz = useUserTimezone()
   const confirmAction = useConfirmAction()
@@ -99,6 +102,7 @@ export const CommentItem: FC<{
       <div className='text-muted flex items-center gap-2 text-xs'>
         <span className='font-medium'>{comment.authorName || t('no_name')}</span>
         <span className='font-mono'>{dayformat(comment.createdAt, 'tz-minute', tz)}</span>
+        {comment.decision && <DecisionChip value={comment.decision} />}
         <div className='ml-auto flex gap-0.5'>
           {comment.isMine && !isEditing && (
             <MultiButton
@@ -173,6 +177,7 @@ export const CommentItem: FC<{
       )}
 
       <MentionChips names={comment.mentionedNames} className='mt-2' />
+      {footer && !isEditing && <div className='mt-2'>{footer}</div>}
     </Panel>
   )
 }

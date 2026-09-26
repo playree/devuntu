@@ -14,7 +14,6 @@ import {
   agentRunDuration,
   agentRunnerStatus,
   agentStateWhere,
-  OPEN_AGENT_TASK_STATES,
 } from '@/lib/agent/agent'
 import { zEmail } from '@/lib/schema/schema'
 import { describe, expect, it } from 'vitest'
@@ -112,8 +111,8 @@ describe('agentStateWhere', () => {
     expect(agentStateWhere(['done'])).toEqual({ agentState: { in: ['done'] } })
   })
 
-  it('初期値(完了以外)は null 行を含み done を含まない', () => {
-    expect(agentStateWhere(OPEN_AGENT_TASK_STATES)).toEqual({
+  it('queued を含めば null 行も引く', () => {
+    expect(agentStateWhere(['queued', 'running', 'planned', 'failed', 'skipped'])).toEqual({
       OR: [{ agentState: null }, { agentState: { in: ['queued', 'running', 'planned', 'failed', 'skipped'] } }],
     })
   })

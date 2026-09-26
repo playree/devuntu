@@ -1,6 +1,7 @@
 'use client'
 
-import type { TagColor, TicketPriority } from '@/generated/prisma/enums'
+import { createEnumChip } from '@/components/enum-chip'
+import type { TagColor, TicketCommentDecision, TicketPriority } from '@/generated/prisma/enums'
 import { Chip, ChipProps, cn } from '@heroui/react'
 import { FC, ReactNode } from 'react'
 import { agentStateChip, priorityChip, statusChip } from './ticket-options'
@@ -12,6 +13,21 @@ export const StatusChip = statusChip.EnumChip
 export const AgentStateChip = agentStateChip.EnumChip
 
 export const PriorityChip = priorityChip.EnumChip
+
+/** plan / report への返答(承認 / 差し戻し)。返信コメントの見出しに添える */
+export const DecisionChip = createEnumChip<TicketCommentDecision>({
+  approved: { color: 'success', item: 'decision_approved' },
+  rejected: { color: 'warning', item: 'decision_rejected' },
+}).EnumChip
+
+/** 受け入れ条件へのエージェントの自己申告。null(未報告)は呼び出し側で unreported に寄せる */
+export type CriterionAgentResult = 'met' | 'unmet' | 'unreported'
+
+export const CriterionAgentChip = createEnumChip<CriterionAgentResult>({
+  met: { color: 'success', item: 'criterion_agent_met' },
+  unmet: { color: 'danger', item: 'criterion_agent_unmet' },
+  unreported: { color: 'default', item: 'criterion_agent_unreported' },
+}).EnumChip
 
 /**
  * 優先度を色だけで示す 1px の水平線 2 本。カード上端の行で ID の右に並べ、残り幅に敷く想定。

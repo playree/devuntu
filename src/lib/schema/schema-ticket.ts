@@ -5,7 +5,12 @@
 import { el } from '@/locale'
 import { z } from 'zod'
 import { MAX_TAG_NAME, MAX_TICKET_TAGS, TAG_COLORS } from '../board/tag-rule'
-import { TICKET_COMMENT_TYPES, TICKET_PRIORITIES, TICKET_STATUSES } from '../board/ticket-enum'
+import {
+  TICKET_COMMENT_DECISIONS,
+  TICKET_COMMENT_TYPES,
+  TICKET_PRIORITIES,
+  TICKET_STATUSES,
+} from '../board/ticket-enum'
 import { ASSIGNEE_NONE, TICKET_SORT_COLUMNS } from '../board/ticket-search'
 import { parseGithubUrl } from '../github/github'
 import { zPagingFields } from './schema'
@@ -147,6 +152,54 @@ export const scUpdateTicketComment = z.object({
   content: zCommentContent,
 })
 export type UpdateTicketComment = z.infer<typeof scUpdateTicketComment>
+
+/**
+ * plan / report への承認・差し戻し。本文は画面側で組み立てる(承認は定型文 + 補足、差し戻しは理由)。
+ * 返信先は対象コメントから決まるので parentId は受け取らない
+ */
+export const scDecideAgentComment = z.object({
+  commentId: z.uuidv7(),
+  decision: z.enum(TICKET_COMMENT_DECISIONS),
+  content: zCommentContent,
+})
+export type DecideAgentComment = z.infer<typeof scDecideAgentComment>
+
+/** 1チケットに登録できる受け入れ条件の数 */
+export const MAX_TICKET_CRITERIA = 20
+
+/** 受け入れ条件1項目の文字数上限 */
+export const MAX_CRITERION_TEXT = 500
+
+export const zCriterionText = z
+  .string()
+  .trim()
+  .min(1, el('@required_field'))
+  .max(MAX_CRITERION_TEXT, el('@invalid_content'))
+
+/** エージェントが自己申告に添える根拠 */
+export const zCriterionEvidence = z.string().trim().min(1).max(1000)
+
+/**
+ * 受け入れ条件の一覧(全件の置き換え)。既存の項目は id を付けて渡すと確認状態を引き継ぐ。
+ * id の無い項目は新規として作る
+ */
+export const zCriterionItems = z
+  .array(z.object({ id: z.uuidv7().optional(), text: zCriterionText }))
+  .max(MAX_TICKET_CRITERIA, el('@too_many_criteria'))
+export type CriterionItem = z.infer<typeof zCriterionItems>[number]
+
+export const scSaveTicketCriteria = z.object({
+  ticketId: z.uuidv7(),
+  items: zCriterionItems,
+})
+export type SaveTicketCriteria = z.infer<typeof scSaveTicketCriteria>
+
+/** 受け入れ条件の人による確認(チェック)の切り替え */
+export const scCheckTicketCriterion = z.object({
+  id: z.uuidv7(),
+  checked: z.boolean(),
+})
+export type CheckTicketCriterion = z.infer<typeof scCheckTicketCriterion>
 
 /** タグはボードに属する。プライベートタグもプライベートボードの boardId を指定する */
 export const scCreateTag = z.object({

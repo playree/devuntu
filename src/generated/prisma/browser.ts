@@ -226,6 +226,11 @@ export type Ticket = Prisma.TicketModel
  */
 export type TicketComment = Prisma.TicketCommentModel
 /**
+ * Model TicketCriterion
+ * チケットの受け入れ条件。1行1項目で、人の確認とエージェントの自己申告を別々に持つ
+ */
+export type TicketCriterion = Prisma.TicketCriterionModel
+/**
  * Model TicketLink
  * チケットに紐付けたブランチ / プルリクエスト / コミット。
  * 状態(prState / headSha)は対応付け済みリポジトリ(BoardRepository)の Webhook で更新する。

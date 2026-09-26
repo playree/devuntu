@@ -7,10 +7,13 @@
  */
 
 import { activeWindowLabel, evaluateRunnerActivity } from '@/lib/agent/agent-activity'
+import { findLatestAgentDecision } from '@/lib/agent/agent-decision'
 import { finishAgentTask } from '@/lib/agent/agent-run'
 import { findAgentRunner } from '@/lib/agent/agent-runner'
 import { findAgentTicket, pickAgentTasks, resolveAgentTask } from '@/lib/agent/agent-task'
 import { assertTicketAccess } from '@/lib/board/board-access'
+import { listTicketCriteria } from '@/lib/board/ticket-criterion'
+import { errInvalidOperation } from '@/lib/error'
 import { createDevuntuMcpServer } from '@/lib/mcp/mcp-server'
 import { resolveTicketId } from '@/lib/mcp/mcp-ticket'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
@@ -43,6 +46,14 @@ vi.mock('@/lib/agent/agent-run', async (importOriginal) => ({
 
 vi.mock('@/lib/board/board-access', () => ({
   assertTicketAccess: vi.fn(),
+}))
+
+vi.mock('@/lib/board/ticket-criterion', () => ({
+  listTicketCriteria: vi.fn(),
+}))
+
+vi.mock('@/lib/agent/agent-decision', () => ({
+  findLatestAgentDecision: vi.fn(),
 }))
 
 vi.mock('@/lib/mcp/mcp-ticket', () => ({
@@ -89,6 +100,8 @@ beforeEach(() => {
   vi.mocked(evaluateRunnerActivity).mockResolvedValue({ active: true, reason: null })
   vi.mocked(activeWindowLabel).mockReturnValue(null)
   vi.mocked(pickAgentTasks).mockResolvedValue([])
+  vi.mocked(listTicketCriteria).mockResolvedValue([])
+  vi.mocked(findLatestAgentDecision).mockResolvedValue(null)
 })
 
 describe('自動運用ツールの登録', () => {
@@ -180,7 +193,39 @@ describe('get_agent_task', () => {
 
     expect(resolveAgentTask).toHaveBeenCalledWith(runnerRow, 't1')
     expect(pickAgentTasks).not.toHaveBeenCalled()
-    expect(parseResult(result.content)).toMatchObject({ task, note: null })
+    expect(parseResult(result.content)).toMatchObject({
+      task: { ...task, acceptanceCriteria: [], decision: null },
+      note: null,
+    })
+    // revise 以外では返答を引かない
+    expect(findLatestAgentDecision).not.toHaveBeenCalled()
+  })
+
+  it('受け入れ条件と、revise のきっかけになった承認/差し戻しを渡す', async () => {
+    const task = {
+      ticketId: 't1',
+      displayId: 'ABC-42',
+      title: 'テスト',
+      mode: 'plan',
+      action: 'revise',
+      state: 'running',
+    }
+    vi.mocked(resolveAgentTask).mockResolvedValue(task as never)
+    vi.mocked(resolveTicketId).mockResolvedValue('t1')
+    vi.mocked(listTicketCriteria).mockResolvedValue([
+      { id: 'c1', text: '条件1', agentMet: true, agentEvidence: '根拠' } as never,
+    ])
+    vi.mocked(findLatestAgentDecision).mockResolvedValue({ id: 'm1', decision: 'rejected', content: '理由' })
+
+    const result = await (
+      await connectClient(agentAuth)
+    ).callTool({ name: 'get_agent_task', arguments: { ticketId: 'ABC-42' } })
+
+    expect(findLatestAgentDecision).toHaveBeenCalledWith('t1', 'a1')
+    expect(parseResult(result.content).task).toMatchObject({
+      acceptanceCriteria: [{ id: 'c1', text: '条件1' }],
+      decision: { kind: 'rejected', commentId: 'm1', content: '理由' },
+    })
   })
 
   it('処理対象でないチケットを指定した場合は task が null になる', async () => {
@@ -208,8 +253,58 @@ describe('finish_agent_task', () => {
     ).callTool({ name: 'finish_agent_task', arguments: { ticketId: 'ABC-42', outcome: 'planned', summary: '要約' } })
 
     expect(assertTicketAccess).toHaveBeenCalledWith(agentAuth.user, 't1', 'edit')
-    expect(finishAgentTask).toHaveBeenCalledWith(runnerRow, 't1', 'planned', '要約')
+    expect(finishAgentTask).toHaveBeenCalledWith(runnerRow, 't1', 'planned', '要約', undefined)
     expect(parseResult(result.content)).toEqual({ displayId: 'ABC-42', outcome: 'planned', state: 'planned' })
+  })
+
+  const CRITERION_ID = '01a0dd3b-e65b-71aa-bec7-3412abca25f7'
+
+  it('受け入れ条件の自己チェックを、実行を閉じる処理へ渡す', async () => {
+    vi.mocked(resolveTicketId).mockResolvedValue('t1')
+    vi.mocked(findAgentTicket).mockResolvedValue({ id: 't1', displayId: 'ABC-42', mode: 'auto', state: 'running' })
+    vi.mocked(finishAgentTask).mockResolvedValue({ state: 'done' })
+    const criteria = [{ id: CRITERION_ID, met: true, evidence: 'テストが通った' }]
+
+    await (
+      await connectClient(agentAuth)
+    ).callTool({ name: 'finish_agent_task', arguments: { ticketId: 'ABC-42', outcome: 'completed', criteria } })
+
+    expect(finishAgentTask).toHaveBeenCalledWith(runnerRow, 't1', 'completed', undefined, criteria)
+  })
+
+  it('自己チェックの対象が誤っていればエラーを返す(エージェントが直して呼び直せる)', async () => {
+    vi.mocked(resolveTicketId).mockResolvedValue('t1')
+    vi.mocked(findAgentTicket).mockResolvedValue({ id: 't1', displayId: 'ABC-42', mode: 'auto', state: 'running' })
+    vi.mocked(finishAgentTask).mockRejectedValue(errInvalidOperation())
+
+    const result = await (
+      await connectClient(agentAuth)
+    ).callTool({
+      name: 'finish_agent_task',
+      arguments: {
+        ticketId: 'ABC-42',
+        outcome: 'completed',
+        criteria: [{ id: CRITERION_ID, met: false, evidence: '未対応' }],
+      },
+    })
+
+    expect(result.isError).toBe(true)
+  })
+
+  it('根拠の無い自己チェックは受け付けない', async () => {
+    const result = await (
+      await connectClient(agentAuth)
+    ).callTool({
+      name: 'finish_agent_task',
+      arguments: {
+        ticketId: 'ABC-42',
+        outcome: 'completed',
+        criteria: [{ id: CRITERION_ID, met: true, evidence: '' }],
+      },
+    })
+
+    expect(result.isError).toBe(true)
+    expect(finishAgentTask).not.toHaveBeenCalled()
   })
 
   it('担当・オプトインから外れたチケットは報告できない', async () => {

@@ -19,11 +19,14 @@ import {
 } from '@/lib/mcp/mcp-ticket'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import {
+  MAX_TICKET_CRITERIA,
   scCreateTicket,
   scPatchTicket,
   scTicketSearch,
   zCommentContent,
   zCommentType,
+  zCriterionItems,
+  zCriterionText,
   zGithubUrl,
   zTicketStatus,
 } from '@/lib/schema/schema-ticket'
@@ -62,12 +65,23 @@ const zBoardIdOrKey = z.string().min(1)
 
 const mcpCreateTicketSchema = scCreateTicket.extend({
   boardId: zBoardIdOrKey.describe('ボードIDまたはボードキー(例: ABC)。list_boards で特定する'),
+  acceptanceCriteria: z
+    .array(zCriterionText)
+    .max(MAX_TICKET_CRITERIA)
+    .optional()
+    .describe('受け入れ条件(完了の基準)。1項目1文で指定する'),
 })
 
-/** Web の詳細画面と違い、ステータスの変更も同じツールで受ける */
+/** Web の詳細画面と違い、ステータスと受け入れ条件の変更も同じツールで受ける */
 const mcpUpdateTicketSchema = scPatchTicket.omit({ id: true }).extend({
   ticketId: z.string().min(1),
   status: zTicketStatus.optional(),
+  acceptanceCriteria: zCriterionItems
+    .optional()
+    .describe(
+      '受け入れ条件の全件置き換え。既存の項目は get_ticket の acceptanceCriteria の id を付けて渡すと確認状態を引き継ぐ' +
+        '(文言を変えた項目は未確認に戻る)。一覧に含めなかった項目は削除される',
+    ),
 })
 
 const mcpTicketSearchSchema = scTicketSearch.extend({
@@ -154,7 +168,8 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       description: 'ボードにチケットを新規作成する',
       inputSchema: mcpCreateTicketSchema.shape,
     },
-    async (input) => jsonResult(await createTicketForMcp(auth, input)),
+    async ({ acceptanceCriteria, ...input }) =>
+      jsonResult(await createTicketForMcp(auth, { ...input, criteria: acceptanceCriteria })),
   )
 
   server.registerTool(
@@ -162,11 +177,12 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     {
       title: 'チケット更新',
       description:
-        'チケットの内容(タイトル/本文/優先度/期限/担当者/タグ)やステータスを更新する。対応に着手したら status を doing にする。' +
+        'チケットの内容(タイトル/本文/優先度/期限/担当者/タグ/受け入れ条件)やステータスを更新する。対応に着手したら status を doing にする。' +
         'メンバーは他人が担当のチケットを更新できない(未割り当てなら可能。オーナーは制限なし)',
       inputSchema: mcpUpdateTicketSchema.shape,
     },
-    async ({ ticketId, ...input }) => jsonResult(await updateTicketForMcp(auth, ticketId, input)),
+    async ({ ticketId, acceptanceCriteria, ...input }) =>
+      jsonResult(await updateTicketForMcp(auth, ticketId, { ...input, criteria: acceptanceCriteria })),
   )
 
   server.registerTool(

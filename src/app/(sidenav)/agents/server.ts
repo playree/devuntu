@@ -4,7 +4,9 @@ import type { TicketWhereInput } from '@/generated/prisma/models'
 import { safeAuthAction } from '@/lib/action/action-server'
 import { agentStateWhere } from '@/lib/agent/agent'
 import { isAgentApprover, listApprovableAgents } from '@/lib/agent/agent-approver'
+import { findPendingAgentDecision } from '@/lib/agent/agent-decision'
 import { createAgentRunnerActions } from '@/lib/agent/agent-runner-action'
+import { getAccessibleBoardIds } from '@/lib/board/board-access'
 import { OPEN_TICKET_STATUSES } from '@/lib/board/ticket-enum'
 import { ticketDisplayId } from '@/lib/board/ticket-id'
 import { ticketListOrderBy } from '@/lib/board/ticket-search'
@@ -52,7 +54,7 @@ export const getAgentTickets = safeAuthAction
         status: { in: OPEN_TICKET_STATUSES },
         ...agentStateWhere(agentState),
       }
-      const [total, tickets] = await Promise.all([
+      const [total, tickets, writableBoardIds] = await Promise.all([
         prisma.ticket.count({ where }),
         prisma.ticket.findMany({
           where,
@@ -63,6 +65,7 @@ export const getAgentTickets = safeAuthAction
             status: true,
             priority: true,
             dueDate: true,
+            boardId: true,
             board: { select: { name: true, kind: true, key: true, archived: true } },
             agentMode: true,
             agentState: true,
@@ -72,19 +75,37 @@ export const getAgentTickets = safeAuthAction
           skip: (page - 1) * rowsPerPage,
           take: rowsPerPage,
         }),
+        // 未アーカイブかつメンバーのボード = チケットを編集できる(evaluateTicketAccess の canEdit と同じ判定)
+        getAccessibleBoardIds(user.id),
       ])
 
-      return {
-        items: tickets.map(({ board, ...ticket }) => ({
-          ...ticket,
-          displayId: ticketDisplayId({ key: board.key, number: ticket.number }),
-          boardName: board.name,
-          boardKind: board.kind,
-          // アーカイブ済みボードのチケットは承認者でも変更できない(canEditAgentMode と同じ判定)
-          canEditAgentMode: !board.archived,
-        })),
-        total,
-      }
+      const items = await Promise.all(
+        tickets.map(async ({ board, boardId, ...ticket }) => {
+          // plan / report への返答はボードのメンバーだけの操作。承認者であっても非メンバーには出さない
+          const canEdit = writableBoardIds.includes(boardId)
+          const pendingDecision = canEdit
+            ? await findPendingAgentDecision({
+                id: ticket.id,
+                assigneeId: agentId,
+                assigneeIsAgent: true,
+                agentState: ticket.agentState,
+                status: ticket.status,
+              })
+            : null
+          return {
+            ...ticket,
+            boardId,
+            displayId: ticketDisplayId({ key: board.key, number: ticket.number }),
+            boardName: board.name,
+            boardKind: board.kind,
+            // アーカイブ済みボードのチケットは承認者でも変更できない(canEditAgentMode と同じ判定)
+            canEditAgentMode: !board.archived,
+            pendingDecision,
+          }
+        }),
+      )
+
+      return { items, total }
     },
   )
 export type GetAgentTicketsReturnType = Awaited<ReturnType<typeof getAgentTickets>>['data']

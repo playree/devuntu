@@ -477,6 +477,13 @@ export type EnumTicketCommentTypeNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumTicketCommentTypeNullableFilter<$PrismaModel> | $Enums.TicketCommentType | null
 }
 
+export type EnumTicketCommentDecisionNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketCommentDecision | Prisma.EnumTicketCommentDecisionFieldRefInput<$PrismaModel> | null
+  in?: $Enums.TicketCommentDecision[] | Prisma.ListEnumTicketCommentDecisionFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.TicketCommentDecision[] | Prisma.ListEnumTicketCommentDecisionFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumTicketCommentDecisionNullableFilter<$PrismaModel> | $Enums.TicketCommentDecision | null
+}
+
 export type EnumTicketCommentTypeNullableWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.TicketCommentType | Prisma.EnumTicketCommentTypeFieldRefInput<$PrismaModel> | null
   in?: $Enums.TicketCommentType[] | Prisma.ListEnumTicketCommentTypeFieldRefInput<$PrismaModel> | null
@@ -485,6 +492,16 @@ export type EnumTicketCommentTypeNullableWithAggregatesFilter<$PrismaModel = nev
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedEnumTicketCommentTypeNullableFilter<$PrismaModel>
   _max?: Prisma.NestedEnumTicketCommentTypeNullableFilter<$PrismaModel>
+}
+
+export type EnumTicketCommentDecisionNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketCommentDecision | Prisma.EnumTicketCommentDecisionFieldRefInput<$PrismaModel> | null
+  in?: $Enums.TicketCommentDecision[] | Prisma.ListEnumTicketCommentDecisionFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.TicketCommentDecision[] | Prisma.ListEnumTicketCommentDecisionFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumTicketCommentDecisionNullableWithAggregatesFilter<$PrismaModel> | $Enums.TicketCommentDecision | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTicketCommentDecisionNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTicketCommentDecisionNullableFilter<$PrismaModel>
 }
 
 export type EnumGitProviderFilter<$PrismaModel = never> = {
@@ -1079,6 +1096,13 @@ export type NestedEnumTicketCommentTypeNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumTicketCommentTypeNullableFilter<$PrismaModel> | $Enums.TicketCommentType | null
 }
 
+export type NestedEnumTicketCommentDecisionNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketCommentDecision | Prisma.EnumTicketCommentDecisionFieldRefInput<$PrismaModel> | null
+  in?: $Enums.TicketCommentDecision[] | Prisma.ListEnumTicketCommentDecisionFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.TicketCommentDecision[] | Prisma.ListEnumTicketCommentDecisionFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumTicketCommentDecisionNullableFilter<$PrismaModel> | $Enums.TicketCommentDecision | null
+}
+
 export type NestedEnumTicketCommentTypeNullableWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.TicketCommentType | Prisma.EnumTicketCommentTypeFieldRefInput<$PrismaModel> | null
   in?: $Enums.TicketCommentType[] | Prisma.ListEnumTicketCommentTypeFieldRefInput<$PrismaModel> | null
@@ -1087,6 +1111,16 @@ export type NestedEnumTicketCommentTypeNullableWithAggregatesFilter<$PrismaModel
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedEnumTicketCommentTypeNullableFilter<$PrismaModel>
   _max?: Prisma.NestedEnumTicketCommentTypeNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumTicketCommentDecisionNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketCommentDecision | Prisma.EnumTicketCommentDecisionFieldRefInput<$PrismaModel> | null
+  in?: $Enums.TicketCommentDecision[] | Prisma.ListEnumTicketCommentDecisionFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.TicketCommentDecision[] | Prisma.ListEnumTicketCommentDecisionFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumTicketCommentDecisionNullableWithAggregatesFilter<$PrismaModel> | $Enums.TicketCommentDecision | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTicketCommentDecisionNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTicketCommentDecisionNullableFilter<$PrismaModel>
 }
 
 export type NestedEnumGitProviderFilter<$PrismaModel = never> = {

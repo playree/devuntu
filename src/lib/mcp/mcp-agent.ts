@@ -13,13 +13,16 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 import { AGENT_CLI_KINDS } from '../agent/agent'
 import { activeWindowLabel, evaluateRunnerActivity } from '../agent/agent-activity'
+import { findLatestAgentDecision } from '../agent/agent-decision'
 import { AGENT_OUTCOMES, finishAgentTask } from '../agent/agent-run'
 import { findAgentRunner } from '../agent/agent-runner'
 import { agentSetupCliPrompt, agentSetupGuide } from '../agent/agent-setup'
 import { findAgentTicket, pickAgentTasks, resolveAgentTask } from '../agent/agent-task'
 import { assertTicketAccess } from '../board/board-access'
+import { listTicketCriteria } from '../board/ticket-criterion'
 import { errInvalidOperation } from '../error'
 import type { ResourceAuth } from '../oauth/oauth-resource'
+import { MAX_TICKET_CRITERIA, zCriterionEvidence } from '../schema/schema-ticket'
 import { jsonResult } from './mcp'
 import { resolveTicketId } from './mcp-ticket'
 
@@ -96,11 +99,30 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
       // ランナーは起動前に実行を開始するので、名指しのチケットは待ち行列には載っていない
       const id = await resolveTicketId(auth, ticketId)
       const task = await resolveAgentTask(runner, id)
+      if (!task) {
+        return jsonResult({
+          ...base,
+          rule,
+          task,
+          note: 'このチケットは現在の処理対象ではない。処理せずに終了すること',
+        })
+      }
+
+      const [criteria, decision] = await Promise.all([
+        listTicketCriteria(id),
+        task.action === 'revise' ? findLatestAgentDecision(id, auth.user.id) : null,
+      ])
       return jsonResult({
         ...base,
         rule,
-        task,
-        note: task ? null : 'このチケットは現在の処理対象ではない。処理せずに終了すること',
+        task: {
+          ...task,
+          /** 完了の基準。completed で終えるときは finish_agent_task の criteria で各項目の充足を報告する */
+          acceptanceCriteria: criteria.map(({ id: criterionId, text }) => ({ id: criterionId, text })),
+          /** revise のきっかけになった承認 / 差し戻し。ボタンを使わない返信だけなら null */
+          decision: decision ? { kind: decision.decision, commentId: decision.id, content: decision.content } : null,
+        },
+        note: null,
       })
     },
   )
@@ -111,14 +133,26 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
       title: '処理結果の報告',
       description:
         'チケットの処理結果を報告して1回の実行を閉じる。' +
-        'planned=プランを投稿して返信待ち、completed=対応完了、skipped=見送り、failed=失敗',
+        'planned=プランを投稿して返信待ち、completed=対応完了、skipped=見送り、failed=失敗。' +
+        'チケットに受け入れ条件がある場合、completed では criteria で全項目の充足を根拠つきで報告する',
       inputSchema: {
         ticketId: z.string().min(1),
         outcome: z.enum(AGENT_OUTCOMES),
         summary: z.string().max(2000).optional().describe('実行履歴に残す結果の要約'),
+        criteria: z
+          .array(
+            z.object({
+              id: z.uuidv7().describe('get_agent_task の acceptanceCriteria の id'),
+              met: z.boolean().describe('条件を満たしたか'),
+              evidence: zCriterionEvidence.describe('そう判断した根拠(確認した内容・テスト結果・該当箇所など)'),
+            }),
+          )
+          .max(MAX_TICKET_CRITERIA)
+          .optional()
+          .describe('受け入れ条件ごとの自己チェック結果'),
       },
     },
-    async ({ ticketId, outcome, summary }) => {
+    async ({ ticketId, outcome, summary, criteria }) => {
       const { runner } = await loadContext(auth)
       const id = await resolveTicketId(auth, ticketId)
       await assertTicketAccess(auth.user, id, 'edit')
@@ -129,7 +163,7 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
         throw errInvalidOperation()
       }
 
-      const { state } = await finishAgentTask(runner, id, outcome, summary)
+      const { state } = await finishAgentTask(runner, id, outcome, summary, criteria)
       return jsonResult({ displayId: ticket.displayId, outcome, state })
     },
   )

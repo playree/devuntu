@@ -89,6 +89,7 @@ export const ModelName = {
   BoardGroup: 'BoardGroup',
   Ticket: 'Ticket',
   TicketComment: 'TicketComment',
+  TicketCriterion: 'TicketCriterion',
   TicketLink: 'TicketLink',
   BoardRepository: 'BoardRepository',
   GitCheckSuite: 'GitCheckSuite',
@@ -673,6 +674,7 @@ export const TicketCommentScalarFieldEnum = {
   authorId: 'authorId',
   content: 'content',
   type: 'type',
+  decision: 'decision',
   parentId: 'parentId',
   mentionedUserIds: 'mentionedUserIds',
   createdAt: 'createdAt',
@@ -680,6 +682,23 @@ export const TicketCommentScalarFieldEnum = {
 } as const
 
 export type TicketCommentScalarFieldEnum = (typeof TicketCommentScalarFieldEnum)[keyof typeof TicketCommentScalarFieldEnum]
+
+
+export const TicketCriterionScalarFieldEnum = {
+  id: 'id',
+  ticketId: 'ticketId',
+  order: 'order',
+  text: 'text',
+  checkedById: 'checkedById',
+  checkedAt: 'checkedAt',
+  agentMet: 'agentMet',
+  agentEvidence: 'agentEvidence',
+  agentReportedAt: 'agentReportedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TicketCriterionScalarFieldEnum = (typeof TicketCriterionScalarFieldEnum)[keyof typeof TicketCriterionScalarFieldEnum]
 
 
 export const TicketLinkScalarFieldEnum = {

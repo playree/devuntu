@@ -79,9 +79,6 @@ export const AGENT_TASK_STATES = [
   'skipped',
 ] as const satisfies readonly AgentTaskState[]
 
-/** 完了(done)以外の処理状態。承認画面の絞り込み初期値に使う */
-export const OPEN_AGENT_TASK_STATES = AGENT_TASK_STATES.filter((state) => state !== 'done')
-
 /**
  * 処理状態による絞り込み条件。空配列は絞り込みなし。
  *

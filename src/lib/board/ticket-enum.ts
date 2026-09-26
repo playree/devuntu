@@ -4,7 +4,7 @@
  * サーバー / クライアントの双方から import する純粋な定義のみを置く。
  */
 
-import type { TicketCommentType, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
+import type { TicketCommentDecision, TicketCommentType, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
 import type { LocaleItemBase } from '@/locale'
 
 /** チケットのステータス(定義順は enum と同じ) */
@@ -46,3 +46,6 @@ export const TICKET_COMMENT_TYPE_LOCALE = {
   plan: 'comment_type_plan',
   report: 'comment_type_report',
 } as const satisfies Record<TicketCommentType, LocaleItemBase>
+
+/** plan / report への返答(承認 / 差し戻し)。承認/差し戻しボタンから投稿した返信にだけ付く */
+export const TICKET_COMMENT_DECISIONS = ['approved', 'rejected'] as const satisfies readonly TicketCommentDecision[]

@@ -1,8 +1,10 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action/action-server'
+import { decideAgentComment as decideAgentCommentCore, findPendingAgentDecision } from '@/lib/agent/agent-decision'
 import { assertTicketAccess } from '@/lib/board/board-access'
 import { TAG_SELECT } from '@/lib/board/tag'
+import { checkTicketCriterion as checkTicketCriterionCore, listTicketCriteria } from '@/lib/board/ticket-criterion'
 import { ticketDisplayId, ticketShortPath } from '@/lib/board/ticket-id'
 import {
   addTicketLink as addTicketLinkCore,
@@ -16,8 +18,11 @@ import { prisma } from '@/lib/prisma'
 import { scUUID } from '@/lib/schema/schema'
 import {
   scAddTicketLink,
+  scCheckTicketCriterion,
   scCreateTicketComment,
+  scDecideAgentComment,
   scPatchTicket,
+  scSaveTicketCriteria,
   scUpdateTicketAgentMode,
   scUpdateTicketComment,
   scUpdateTicketStatus,
@@ -65,6 +70,7 @@ export const getTicket = safeAuthAction
             id: true,
             content: true,
             type: true,
+            decision: true,
             parentId: true,
             authorId: true,
             author: { select: { name: true } },
@@ -95,7 +101,17 @@ export const getTicket = safeAuthAction
         return name ? [name] : []
       })
 
-    const links = await listTicketLinks(id)
+    const [links, criteria, pendingDecision] = await Promise.all([
+      listTicketLinks(id),
+      listTicketCriteria(id),
+      findPendingAgentDecision({
+        id,
+        assigneeId: ticket.assigneeId,
+        assigneeIsAgent: ticket.assignee?.isAgent ?? false,
+        agentState: ticket.agentState,
+        status: ticket.status,
+      }),
+    ])
 
     const { board, assignee, createdBy, comments, tags, mentionedUserIds, ...rest } = ticket
     const displayId = ticketDisplayId({ key: board.key, number: rest.number })
@@ -132,6 +148,9 @@ export const getTicket = safeAuthAction
           }))
       })(),
       links,
+      criteria,
+      /** 承認/差し戻しボタンを出す plan / report。返答できるのはチケットを編集できる人だけ */
+      pendingDecision: access.canEdit ? pendingDecision : null,
       boardRole: access.boardRole,
       canEdit: access.canEdit,
       canDelete: access.canDelete,
@@ -214,6 +233,19 @@ export const addTicketComment = safeAuthAction
   })
 
 /**
+ * エージェントの plan / report への承認・差し戻し(チケットを編集できる人)
+ */
+export const decideAgentComment = safeAuthAction
+  .metadata({ actionName: 'decideAgentComment', role: 'user' })
+  .inputSchema(scDecideAgentComment)
+  .action(async ({ ctx: { user }, parsedInput }) => {
+    const result = await decideAgentCommentCore(user, parsedInput)
+
+    logger.info({ userId: user.id, ...result }, 'agent comment decided')
+    return result
+  })
+
+/**
  * コメント更新(投稿者本人のみ)
  */
 export const updateTicketComment = safeAuthAction
@@ -263,4 +295,30 @@ export const removeTicketLink = safeAuthAction
 
     logger.info({ userId: user.id, ticketId, linkId: id }, 'ticket link removed')
     return { id }
+  })
+
+/**
+ * 受け入れ条件の全件置き換え(チケットを編集できる人)
+ */
+export const saveTicketCriteria = safeAuthAction
+  .metadata({ actionName: 'saveTicketCriteria', role: 'user' })
+  .inputSchema(scSaveTicketCriteria)
+  .action(async ({ ctx: { user }, parsedInput: { ticketId, items } }) => {
+    await updateTicket(user, ticketId, { criteria: items })
+
+    logger.info({ userId: user.id, ticketId, count: items.length }, 'ticket criteria saved')
+    return { ticketId }
+  })
+
+/**
+ * 受け入れ条件の人による確認の切り替え(チケットを編集できる人)
+ */
+export const checkTicketCriterion = safeAuthAction
+  .metadata({ actionName: 'checkTicketCriterion', role: 'user' })
+  .inputSchema(scCheckTicketCriterion)
+  .action(async ({ ctx: { user }, parsedInput: { id, checked } }) => {
+    const result = await checkTicketCriterionCore(user, id, checked)
+
+    logger.info({ userId: user.id, ...result, checked }, 'ticket criterion checked')
+    return result
   })
