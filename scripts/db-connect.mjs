@@ -1,5 +1,5 @@
 /**
- * `backup-db.mjs` / `restore-db.mjs` が共有する、PostgreSQL への接続解決とコマンド組み立て。
+ * `backup-db.mjs` / `restore-db.mjs` / `backup-all.mjs` が共有する、PostgreSQL への接続解決とコマンド組み立て。
  *
  * S3 のスクリプト対は単体でも動くようあえて共通化していないが、DB はリストアが
  * 「バックアップと同じ接続先・同じ解決規則」であることに依存するうえ、
@@ -9,6 +9,7 @@
  * 外部の PostgreSQL を使う構成でも同じスクリプトで動かすため。
  */
 import { spawnSync } from 'node:child_process'
+import { setTimeout as sleep } from 'node:timers/promises'
 
 /**
  * `DATABASE_URL` を libpq 用の `PG*` 環境変数へ分解する。
@@ -140,6 +141,43 @@ export const runPg = (bin, args, { pgEnv, database, stdio = 'inherit', capture =
     throw new Error(`${bin} が失敗しました (exit ${res.status})`)
   }
   return res
+}
+
+/**
+ * 接続中のDBは DROP できないため、DROP/CREATE と接続数の確認は対象とは別のDB経由で行う。
+ * 対象が `postgres` 自身の場合は、同じく既定で接続できる `template1` へ逃がす
+ */
+export const maintenanceDb = (pgEnv) => (pgEnv.PGDATABASE === 'postgres' ? 'template1' : 'postgres')
+
+/** SQLリテラルの埋め込み。DB名は `DATABASE_URL` 由来だが、引用符を含む名前でも壊れないようにする */
+export const sqlLiteral = (value) => `'${value.replaceAll("'", "''")}'`
+
+/** 対象DBへの他の接続の数 */
+const countOtherConnections = (pgEnv) => {
+  const sql = `SELECT count(*) FROM pg_stat_activity WHERE datname = ${sqlLiteral(pgEnv.PGDATABASE)} AND pid <> pg_backend_pid()`
+  const res = runPg('psql', ['-Atc', sql], { pgEnv, database: maintenanceDb(pgEnv), capture: true })
+  const count = Number.parseInt(res.stdout.trim(), 10)
+  return Number.isNaN(count) ? 0 : count
+}
+
+/**
+ * 対象DBへの他の接続が解放されるまで最大 `waitSec` 秒待ち、残った接続数を返す(0 なら解放済み)。
+ *
+ * メンテナンスモードにしても、アプリが遮断に気づくまでの遅れと、実行中のワーカーが処理を終えるまでの
+ * 時間がある。固定時間の見切り発車ではなく**接続数が 0 になったこと**を確かめるためのもの
+ * (アプリは実行中のワーカーが終わってから接続を手放すので、0 ならワーカーも完了済み)。
+ */
+export const waitForNoOtherConnections = async (pgEnv, waitSec) => {
+  const deadline = Date.now() + waitSec * 1000
+  let count = countOtherConnections(pgEnv)
+  if (count > 0 && waitSec > 0) {
+    console.log(`${pgEnv.PGDATABASE} の接続が解放されるまで待ちます(最大 ${waitSec} 秒)...`)
+    while (count > 0 && Date.now() < deadline) {
+      await sleep(1000)
+      count = countOtherConnections(pgEnv)
+    }
+  }
+  return count
 }
 
 /** `backup-s3.mjs` と揃えた `YYYYMMDD_HHMMSS`(ローカル時刻) */

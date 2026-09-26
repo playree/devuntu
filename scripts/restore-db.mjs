@@ -13,8 +13,14 @@
  * 接続先は `DATABASE_URL`、実行経路の切り替えは `db-connect.mjs` を参照。
  */
 import { closeSync, existsSync, openSync } from 'node:fs'
-import { setTimeout as sleep } from 'node:timers/promises'
-import { hasLocalPgClient, resolveDbEnv, runPg, showTransport } from './db-connect.mjs'
+import {
+  hasLocalPgClient,
+  maintenanceDb,
+  resolveDbEnv,
+  runPg,
+  showTransport,
+  waitForNoOtherConnections,
+} from './db-connect.mjs'
 
 /**
  * ローカル実行では `.env` を読む。
@@ -23,27 +29,12 @@ import { hasLocalPgClient, resolveDbEnv, runPg, showTransport } from './db-conne
  */
 await import('dotenv/config').catch(() => {})
 
-/**
- * 接続中のDBは DROP できないため、DROP/CREATE と接続数の確認は対象とは別のDB経由で行う。
- * 対象が `postgres` 自身の場合は、同じく既定で接続できる `template1` へ逃がす
- */
-const maintenanceDb = (pgEnv) => (pgEnv.PGDATABASE === 'postgres' ? 'template1' : 'postgres')
-
-/** SQLリテラル・識別子の埋め込み。DB名は `DATABASE_URL` 由来だが、引用符を含む名前でも壊れないようにする */
-const sqlLiteral = (value) => `'${value.replaceAll("'", "''")}'`
+/** SQL識別子の埋め込み。DB名は `DATABASE_URL` 由来だが、引用符を含む名前でも壊れないようにする */
 const sqlIdent = (value) => `"${value.replaceAll('"', '""')}"`
 
 const usage = () => {
   console.error('Usage: node ./scripts/restore-db.mjs <dump-file> [--force] [--wait <秒>]')
   console.error('Example: node ./scripts/restore-db.mjs backup/devuntu_20260719_120000.dump')
-}
-
-/** 対象DBへの他の接続の数 */
-const countOtherConnections = (pgEnv) => {
-  const sql = `SELECT count(*) FROM pg_stat_activity WHERE datname = ${sqlLiteral(pgEnv.PGDATABASE)} AND pid <> pg_backend_pid()`
-  const res = runPg('psql', ['-Atc', sql], { pgEnv, database: maintenanceDb(pgEnv), capture: true })
-  const count = Number.parseInt(res.stdout.trim(), 10)
-  return Number.isNaN(count) ? 0 : count
 }
 
 /**
@@ -54,21 +45,11 @@ const countOtherConnections = (pgEnv) => {
  * tools サービスのコンテナ内からは `docker compose stop` ができないので、
  * 警告ではなく中断して利用者に止めてもらう。
  *
- * メンテナンスモード(`maintenance.mjs`)でも接続は解放されるが、アプリが遮断に気づくまでの
- * 遅れと、実行中のワーカーが処理を終えるまでの時間がある。`--wait` はその間を待つためのもので、
- * 固定時間の見切り発車ではなく**接続数が 0 になったこと**を確かめてから進む。
+ * メンテナンスモード(`maintenance.mjs`)にした直後は `--wait` で解放を待つ。
  * 上限まで残っていれば中断するので、長い処理を抱えたまま復元を始めてしまうことはない。
  */
 const assertNoOtherConnections = async (pgEnv, waitSec) => {
-  const deadline = Date.now() + waitSec * 1000
-  let count = countOtherConnections(pgEnv)
-  if (count > 0 && waitSec > 0) {
-    console.log(`${pgEnv.PGDATABASE} の接続が解放されるまで待ちます(最大 ${waitSec} 秒)...`)
-    while (count > 0 && Date.now() < deadline) {
-      await sleep(1000)
-      count = countOtherConnections(pgEnv)
-    }
-  }
+  const count = await waitForNoOtherConnections(pgEnv, waitSec)
   if (count === 0) {
     return
   }
