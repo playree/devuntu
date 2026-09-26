@@ -57,7 +57,14 @@ export const CommandRunClient: FC<{ runId: string }> = ({ runId }) => {
   const live = !isTerminal(run.status)
 
   return (
-    <FlexCol>
+    <FlexCol
+      /**
+       * md 以上ではログ枠を画面下端まで伸ばし、ログ枠内のスクロールにする。
+       * ログが短くても枠を下端まで広げたいので max-h- ではなく h- にしている
+       */
+      data-fit-screen
+      className='md:h-full'
+    >
       <ContentHeader icon={<CommandLineIcon />} title={run.commandLabel}>
         {live && (
           <MultiButton
