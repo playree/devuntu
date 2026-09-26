@@ -33,8 +33,7 @@ export const PublicCalClient: FC<{
 
   return (
     <div className='relative min-h-screen w-full'>
-      {/* サインインページ(SingleLayout)と同じグリッド背景 */}
-      <div
+      <div // サインインページ(SingleLayout)と同じグリッド背景
         className={cn(
           'absolute inset-0 bg-size-[20px_20px]',
           'bg-[linear-gradient(to_right,#80808030_1px,transparent_1px),linear-gradient(to_bottom,#80808030_1px,transparent_1px)]',

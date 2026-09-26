@@ -98,11 +98,16 @@ export const WeekView: FC<{ weekStartISO: string; busy: BusySlot[]; timezone: st
         className,
       )}
     >
-      {/* ヘッダと本文を同一スクロールコンテナに入れ、ヘッダを sticky にすることで
-          スクロールバー幅を両者で共有し、縦罫線のズレを防ぐ */}
-      <div ref={scrollRef} className='relative overflow-y-auto' style={{ maxHeight: 640 }}>
-        {/* ヘッダ(曜日・日付) */}
-        <div
+      <div
+        /**
+         * ヘッダと本文を同一スクロールコンテナに入れ、ヘッダを sticky にすることで
+         * スクロールバー幅を両者で共有し、縦罫線のズレを防ぐ
+         */
+        ref={scrollRef}
+        className='relative overflow-y-auto'
+        style={{ maxHeight: 640 }}
+      >
+        <div // ヘッダ(曜日・日付)
           className={cn(
             'sticky top-0 z-20 flex border-b border-neutral-200 dark:border-neutral-800',
             'bg-cyan-50 dark:bg-gray-950',
@@ -139,10 +144,14 @@ export const WeekView: FC<{ weekStartISO: string; busy: BusySlot[]; timezone: st
           })}
         </div>
 
-        {/* 本文 */}
-        <div ref={bodyRef} className='flex bg-cyan-50 dark:bg-gray-950' style={{ height: TOTAL_HEIGHT }}>
-          {/* 時刻ラベル */}
-          <div className='relative w-12 shrink-0'>
+        <div // 本文
+          ref={bodyRef}
+          className='flex bg-cyan-50 dark:bg-gray-950'
+          style={{ height: TOTAL_HEIGHT }}
+        >
+          <div // 時刻ラベル
+            className='relative w-12 shrink-0'
+          >
             {HOURS.map((h) => (
               <div
                 key={h}
@@ -154,23 +163,23 @@ export const WeekView: FC<{ weekStartISO: string; busy: BusySlot[]; timezone: st
             ))}
           </div>
 
-          {/* 日ごとの列 */}
           {days.map((d) => {
             const isToday = !!todayStr && d.key === todayStr
             return (
-              <div key={d.key} className='relative flex-1 border-l border-neutral-200 dark:border-neutral-800'>
-                {/* 時間の区切り線 */}
+              <div // 日ごとの列
+                key={d.key}
+                className='relative flex-1 border-l border-neutral-200 dark:border-neutral-800'
+              >
                 {HOURS.map((h) => (
-                  <div
+                  <div // 時間の区切り線
                     key={h}
                     className='absolute inset-x-0 border-t border-neutral-200 dark:border-neutral-900'
                     style={{ top: h * HOUR_HEIGHT }}
                   />
                 ))}
 
-                {/* 予定ありブロック */}
                 {d.blocks.map((b, i) => (
-                  <div
+                  <div // 予定ありブロック
                     key={i}
                     className='absolute inset-x-0.5 rounded-md border border-blue-500/30 bg-blue-500/20'
                     style={{
@@ -182,9 +191,11 @@ export const WeekView: FC<{ weekStartISO: string; busy: BusySlot[]; timezone: st
                   />
                 ))}
 
-                {/* 現在時刻ライン(当日のみ) */}
                 {isToday && nowY !== null && (
-                  <div className='absolute inset-x-0 z-10' style={{ top: nowY }}>
+                  <div // 現在時刻ライン(当日のみ)
+                    className='absolute inset-x-0 z-10'
+                    style={{ top: nowY }}
+                  >
                     <div className='relative border-t border-red-500'>
                       <div className='absolute -top-1 -left-1 h-2 w-2 rounded-full bg-red-500' />
                     </div>

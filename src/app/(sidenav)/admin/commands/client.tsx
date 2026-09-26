@@ -102,9 +102,11 @@ const CommandTargetsBody: FC<{
         </div>
       </div>
 
-      {/* 読み込めなかったファイルがあっても、読み込めた分は使えるので一覧は常に出す */}
       {data.issues.length > 0 && (
-        <NoticePanel status='danger' title={t('command_invalid_def')}>
+        <NoticePanel // 読み込めなかったファイルがあっても、読み込めた分は使えるので一覧は常に出す
+          status='danger'
+          title={t('command_invalid_def')}
+        >
           <FlexCol className='gap-1'>
             {data.issues.map((issue) => (
               <div key={issue.fileName ?? ''}>

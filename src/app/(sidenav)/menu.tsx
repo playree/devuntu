@@ -126,7 +126,6 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
       <Card>
         <Card.Content>
           <div className='flex items-center gap-2'>
-            {/* <UserCircleIcon className='mr-2' /> */}
             <UserAvatar name={session?.user?.name ?? ''} image={session?.user.image} />
             <div>{session?.user?.name}</div>
           </div>

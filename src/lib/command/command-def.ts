@@ -32,7 +32,7 @@ import {
   MAX_COMMAND_OPTIONS,
 } from './command'
 
-const zCommandId = z
+export const zCommandId = z
   .string()
   .regex(COMMAND_ID_PATTERN, '識別子は英数字で始まる 2〜64 文字(英小文字・数字・_・-)で指定する')
 const zLabel = z.string().min(1).max(120)
@@ -359,30 +359,6 @@ export const formatCommandIssues = (error: z.ZodError): string[] =>
 
 /** 画面から送る 1 コマンドぶんの定義 */
 export const scCommandDefInput = scCommandDef
-
-/**
- * 編集の宛先。
- *
- * **ファイル名ではなくターゲットIDで受け取る。** 書き込みの許可はターゲットへのアサインで決まるので、
- * 宛先もそこから引き直さないと、権限のあるターゲットの名で別ファイルを指せてしまう。
- * ファイル名への変換はサーバー側でカタログを引いて行う。
- */
-const scCommandDefFileRef = z.object({
-  targetKey: zCommandId,
-  /** 画面が見た時点の指紋。読んでから書くまでに変わっていれば保存を断る */
-  revision: z.string().regex(/^[0-9a-f]{16}$/),
-})
-
-/** 追加と更新。`replaceId` が null なら追加、値があればその ID の 1 件を置き換える */
-export const scUpsertCommandDef = scCommandDefFileRef.extend({
-  replaceId: zCommandId.nullable(),
-  command: scCommandDefInput,
-})
-export type UpsertCommandDef = z.infer<typeof scUpsertCommandDef>
-
-/** 削除 */
-export const scDeleteCommandDef = scCommandDefFileRef.extend({ commandId: zCommandId })
-export type DeleteCommandDef = z.infer<typeof scDeleteCommandDef>
 
 /**
  * 検証済みの定義ファイル。

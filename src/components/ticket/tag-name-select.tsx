@@ -111,8 +111,11 @@ export const TagNameSelectField: FC<
 
   return tooltip ? (
     <Tooltip delay={300}>
-      {/* isDisabled な Select はホバー系のイベントを自ら拾わなくなるため、Trigger 側でホバーを検知させる */}
-      <Tooltip.Trigger className='block'>{select}</Tooltip.Trigger>
+      <Tooltip.Trigger // isDisabled な Select はホバー系のイベントを自ら拾わなくなるため、Trigger 側でホバーを検知させる
+        className='block'
+      >
+        {select}
+      </Tooltip.Trigger>
       <Tooltip.Content showArrow>{tooltip}</Tooltip.Content>
     </Tooltip>
   ) : (

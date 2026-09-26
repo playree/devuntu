@@ -16,7 +16,7 @@ import { getUserNotifySettings, setUserNotifySettings } from '@/lib/notify/notif
 import { listUserOAuthConsents, revokeUserOAuthConsent } from '@/lib/oauth/oauth-consent-store'
 import { assertRateLimit } from '@/lib/rate-limit'
 import { scUUID } from '@/lib/schema/schema'
-import { scIssueMcpToken, scSetUserAvatar } from '@/lib/schema/schema-auth'
+import { scIssueMcpToken, scSetUserAvatar, scSetUserTimezone } from '@/lib/schema/schema-auth'
 import { scUpdateNotifySettings, scWebPushSubscription } from '@/lib/schema/schema-notify'
 import {
   isWebPushConfigured,
@@ -24,7 +24,6 @@ import {
   removeWebPushDevice,
   saveWebPushSubscription,
 } from '@/lib/webpush/webpush-server'
-import { z } from 'zod'
 
 /**
  * アカウント画面の Server Action。
@@ -162,7 +161,7 @@ export const deleteWebPushDevice = safeAuthAction
 
 export const setUserTimezone = safeAuthAction
   .metadata({ actionName: 'setUserTimezone', role: 'user' })
-  .inputSchema(z.object({ timezone: z.string() }))
+  .inputSchema(scSetUserTimezone)
   .action(async ({ parsedInput: { timezone }, ctx: { user } }) => {
     await updateUserTimezone(user.id, timezone)
     return { timezone }

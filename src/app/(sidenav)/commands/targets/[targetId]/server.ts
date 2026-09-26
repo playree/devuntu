@@ -11,12 +11,11 @@ import {
 } from '@/lib/command/command'
 import { assertCommandTargetAccess } from '@/lib/command/command-access'
 import { buildCommandTargetStatus, type CommandTargetStatus, getCommandCatalog } from '@/lib/command/command-catalog'
-import { scDeleteCommandDef, scUpsertCommandDef } from '@/lib/command/command-def'
 import { type CommandDefEntry, CommandDefWriteError, editCommandFileCommands } from '@/lib/command/command-writer'
 import { errInvalidOperation, errTooManyRequests } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { consumeRateLimit } from '@/lib/rate-limit'
-import { scCommandTargetKey } from '@/lib/schema/schema-command'
+import { scCommandTargetKey, scDeleteCommandDef, scUpsertCommandDef } from '@/lib/schema/schema-command'
 
 /** 定義ファイルの書き換えは I/O とディレクトリの全走査を伴うので、連打で叩けないようにする */
 const EDIT_RATE_LIMIT = { limit: 20, windowMs: 60_000 }

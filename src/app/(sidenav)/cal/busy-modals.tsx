@@ -70,8 +70,9 @@ export const BusyTimeModal: FC<ModalBaseProps & { target?: UpdateBusyTime }> = (
       submit={{ isPending: isSubmitting }}
     >
       <GridBox>
-        {/* 件名 */}
-        <div className='col-span-12'>
+        <div // 件名
+          className='col-span-12'
+        >
           <InputCtrl
             control={control}
             name='title'
@@ -82,8 +83,7 @@ export const BusyTimeModal: FC<ModalBaseProps & { target?: UpdateBusyTime }> = (
           />
         </div>
 
-        {/* 曜日(チェックボックス + 一括ボタン) */}
-        <Controller
+        <Controller // 曜日(チェックボックス + 一括ボタン)
           control={control}
           name='weekdays'
           render={({ field: { value, onChange } }) => (
@@ -110,8 +110,9 @@ export const BusyTimeModal: FC<ModalBaseProps & { target?: UpdateBusyTime }> = (
           )}
         />
 
-        {/* 開始時刻 */}
-        <div className='col-span-6'>
+        <div // 開始時刻
+          className='col-span-6'
+        >
           <Controller
             control={control}
             name='startMin'
@@ -134,8 +135,9 @@ export const BusyTimeModal: FC<ModalBaseProps & { target?: UpdateBusyTime }> = (
           />
         </div>
 
-        {/* 終了時刻 */}
-        <div className='col-span-6'>
+        <div // 終了時刻
+          className='col-span-6'
+        >
           <Controller
             control={control}
             name='endMin'

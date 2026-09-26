@@ -5,6 +5,7 @@
 import { el } from '@/locale'
 import { z } from 'zod'
 import { COMMAND_ID_PATTERN, COMMAND_RUN_SORT_COLUMNS, COMMAND_RUN_STATUSES } from '../command/command'
+import { scCommandDefInput, zCommandId } from '../command/command-def'
 import { zPagingFields } from './schema'
 import { zBoardRole } from './schema-board'
 
@@ -69,3 +70,27 @@ export const scCommandRunListQuery = z.object({
 })
 export type CommandRunListQuery = z.infer<typeof scCommandRunListQuery>
 export type CommandRunListQueryIn = z.input<typeof scCommandRunListQuery>
+
+/**
+ * 編集の宛先。
+ *
+ * **ファイル名ではなくターゲットIDで受け取る。** 書き込みの許可はターゲットへのアサインで決まるので、
+ * 宛先もそこから引き直さないと、権限のあるターゲットの名で別ファイルを指せてしまう。
+ * ファイル名への変換はサーバー側でカタログを引いて行う。
+ */
+const scCommandDefFileRef = z.object({
+  targetKey: zCommandId,
+  /** 画面が見た時点の指紋。読んでから書くまでに変わっていれば保存を断る */
+  revision: z.string().regex(/^[0-9a-f]{16}$/),
+})
+
+/** 追加と更新。`replaceId` が null なら追加、値があればその ID の 1 件を置き換える */
+export const scUpsertCommandDef = scCommandDefFileRef.extend({
+  replaceId: zCommandId.nullable(),
+  command: scCommandDefInput,
+})
+export type UpsertCommandDef = z.infer<typeof scUpsertCommandDef>
+
+/** 削除 */
+export const scDeleteCommandDef = scCommandDefFileRef.extend({ commandId: zCommandId })
+export type DeleteCommandDef = z.infer<typeof scDeleteCommandDef>
