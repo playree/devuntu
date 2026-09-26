@@ -5,7 +5,6 @@ import { useLocale } from '@/locale/client'
 import { Skeleton } from '@heroui/react'
 import dynamic from 'next/dynamic'
 import { FC, ReactNode, useState } from 'react'
-import { Control, FieldPath, FieldValues, useController } from 'react-hook-form'
 import type { EditorIssue } from './yaml-lint'
 
 /** 編集面の既定の最小行数 */
@@ -43,49 +42,6 @@ export const YamlInput: FC<{
       <YamlEditorCore
         initialValue={initialValue}
         onChange={onChange}
-        placeholder={placeholder}
-        minRows={minRows ?? DEFAULT_MIN_ROWS}
-        lint={lint}
-      />
-    </EditorField>
-  )
-}
-
-/** YAML エディタ(react-hook-form 対応) */
-export const YamlCtrl = <
-  TFieldValues extends FieldValues = FieldValues,
-  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
->({
-  control,
-  name,
-  label,
-  errorMessage,
-  placeholder,
-  minRows,
-  action,
-  lint,
-}: {
-  control: Control<TFieldValues>
-  name: TName
-  label?: string
-  errorMessage?: string
-  placeholder?: string
-  minRows?: number
-  action?: ReactNode
-  /** 内容から指摘を作る。渡すと該当箇所へ印が付く */
-  lint?: (value: string) => EditorIssue[]
-}) => {
-  const { t } = useLocale()
-  const { field } = useController({ control, name })
-  const current = typeof field.value === 'string' ? field.value : ''
-  const [initialValue] = useState(current)
-
-  return (
-    <EditorField label={label ?? t('command_def_yaml')} errorMessage={errorMessage} action={action} isBordered>
-      <YamlEditorCore // useController の onChange / onBlur は安定参照なのでそのまま渡せる
-        initialValue={initialValue}
-        onChange={field.onChange}
-        onBlur={field.onBlur}
         placeholder={placeholder}
         minRows={minRows ?? DEFAULT_MIN_ROWS}
         lint={lint}

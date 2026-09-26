@@ -46,8 +46,7 @@ export const AdminAgentsClient: FC = () => {
 
   const list = usePagingList({
     load: async () => {
-      const res = await parseAction(getAgents())
-      return res ?? []
+      return await parseAction(getAgents())
     },
     sort: {
       init: { column: 'createdAt', direction: 'descending' },

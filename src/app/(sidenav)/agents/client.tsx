@@ -10,8 +10,13 @@ import { ContentHeader } from '@/components/header'
 import { RocketLaunchIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { ReloadButton } from '@/components/reload-button'
-import { AGENT_MODE_NONE, useAgentModeOptions, useAgentStateOptions, useBoardName } from '@/components/ticket/ticket-options'
 import { AgentStateChip, PriorityChip, StatusChip, TicketIdText } from '@/components/ticket/ticket-chip'
+import {
+  AGENT_MODE_NONE,
+  useAgentModeOptions,
+  useAgentStateOptions,
+  useBoardName,
+} from '@/components/ticket/ticket-options'
 import type { AgentTaskMode, AgentTaskState } from '@/generated/prisma/enums'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { AGENT_TASK_STATES, OPEN_AGENT_TASK_STATES } from '@/lib/agent/agent'
@@ -67,8 +72,7 @@ export const AgentsClient: FC = () => {
       if (!id) {
         return { items: [], total: 0 }
       }
-      const res = await parseAction(getAgentTickets({ agentId: id, agentState: agentStatesRef.current, ...query }))
-      return res ?? { items: [], total: 0 }
+      return await parseAction(getAgentTickets({ agentId: id, agentState: agentStatesRef.current, ...query }))
     },
     sort: { init: { column: 'updatedAt', direction: 'descending' } },
   })

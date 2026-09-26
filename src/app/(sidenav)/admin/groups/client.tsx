@@ -28,8 +28,7 @@ export const AdminGroupsClient: FC = () => {
 
   const list = usePagingList({
     load: async () => {
-      const res = await parseAction(getGroups())
-      return res ?? []
+      return await parseAction(getGroups())
     },
     sort: {
       init: { column: 'createdAt', direction: 'descending' },

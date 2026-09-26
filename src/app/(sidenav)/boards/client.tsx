@@ -30,8 +30,7 @@ export const BoardsClient: FC = () => {
 
   const list = usePagingList({
     load: async () => {
-      const res = await parseAction(getBoards())
-      return res ?? []
+      return await parseAction(getBoards())
     },
     filter: {
       // usePagingList のフィルタ値は文字列のみなので '1' / '' で ON/OFF を表す

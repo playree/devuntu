@@ -1,7 +1,6 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action/action-server'
-import { errSystemError } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { scUpdateDashboard } from '@/lib/schema/schema-dashboard'
@@ -19,15 +18,11 @@ export const updateDashboard = safeAuthAction
         user: { id: userId },
       },
     }) => {
-      const res = await prisma.dashboard.upsert({
+      await prisma.dashboard.upsert({
         where: { userId },
         create: { userId, layout },
         update: { layout },
       })
-
-      if (!res) {
-        throw errSystemError('dashboard update failed')
-      }
       logger.info({ userId, layout }, 'dashboard updated')
 
       return { userId }

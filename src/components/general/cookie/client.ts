@@ -2,7 +2,7 @@
 
 import { SerializeOptions, stringifySetCookie } from 'cookie'
 
-export const getCookies = () => {
+const getCookies = () => {
   const cookies: Record<string, string> = {}
   if (typeof window === 'undefined') {
     return cookies

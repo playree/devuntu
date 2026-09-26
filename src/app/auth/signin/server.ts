@@ -29,11 +29,9 @@ export const getUserByEmail = safeAction
     // ユーザー検索(AIエージェントは Web ログインできないので未存在として扱う)
     const found = await prisma.user.findUnique({ where: { email: username } })
     const user = found?.isAgent ? null : found
-    // 認証方法
     const next: 'PASSWORD' | 'OTP' = auth.options.emailAndPassword.enabled ? 'PASSWORD' : 'OTP'
 
     if (next === 'OTP' && user?.email) {
-      // OTPの場合
       assertRateLimit(`signin:otp:${user.email.toLowerCase()}`, EMAIL_RATE_LIMIT)
       await auth.api.sendVerificationOTP({
         body: {

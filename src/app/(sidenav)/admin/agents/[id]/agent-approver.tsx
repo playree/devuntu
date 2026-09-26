@@ -33,7 +33,7 @@ export const AgentApprover: FC<{
 
   // 承認グループの保存と合わせてリロードできるよう、ここで生成して AssignmentMembers に渡す
   const list = usePagingList({
-    load: async () => (await parseAction(getAgentApproverUsers({ id: agentId }), { handled: 'all' })) ?? [],
+    load: () => parseAction(getAgentApproverUsers({ id: agentId }), { handled: 'all' }),
     sort: { init: { column: 'name', direction: 'ascending' } },
   })
 

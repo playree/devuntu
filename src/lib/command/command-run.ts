@@ -297,6 +297,3 @@ export const listCommandRuns = async (input: {
 }
 
 export type CommandRunListItem = Awaited<ReturnType<typeof listCommandRuns>>['items'][number]
-
-/** 実行中の件数。同時実行数の枠を数えるのに使う */
-export const countRunningRuns = async (): Promise<number> => prisma.commandRun.count({ where: { status: 'running' } })

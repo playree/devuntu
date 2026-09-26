@@ -18,7 +18,6 @@ import { isValidUploadKey } from '@/lib/storage/upload'
  * 全ログインユーザーへ配信してよい。
  */
 export const GET = async (_req: Request, { params }: { params: Promise<{ filename: string }> }) => {
-  // ログイン認証チェック
   const session = await getServerSession()
   if (!session?.user) {
     return new Response(null, { status: 401 })

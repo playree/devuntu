@@ -50,7 +50,6 @@ export const AddModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, relo
         const res = await parseAction(addOidcClient(req))
         setOutput(res)
         forward('OUTPUT')
-        // notify.success(t('msg_added_target', { target: req.clientName }))
         reload()
       })}
       title={{ text: t('add_client'), icon: <PlusIcon /> }}

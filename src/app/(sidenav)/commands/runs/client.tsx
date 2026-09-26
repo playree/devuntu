@@ -42,14 +42,13 @@ export const CommandRunsClient: FC<{ initialCommandKey: string | null }> = ({ in
 
   const list = useServerPagingList({
     loadPage: async (query) => {
-      const res = await parseAction(
+      return await parseAction(
         getCommandRuns({
           scope: showAllRef.current && isAdmin ? 'all' : 'mine',
           commandKey: commandKeyRef.current,
           ...query,
         }),
       )
-      return res ?? { items: [], total: 0 }
     },
     sort: { init: { column: 'queuedAt', direction: 'descending' } },
     rowsPerPage: COMMAND_RUN_ROWS_PER_PAGE,

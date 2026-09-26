@@ -51,8 +51,7 @@ export const TicketsClient: FC<{
   // ページ切り出し・並び替えはサーバー側。検索条件と合わせて 1 ページ分だけを取得する
   const list = useServerPagingList({
     loadPage: async (query) => {
-      const res = await parseAction(getTickets({ ...filterRef.current, ...query }))
-      return res ?? { items: [], total: 0 }
+      return await parseAction(getTickets({ ...filterRef.current, ...query }))
     },
     sort: { init: { column: 'updatedAt', direction: 'descending' } },
   })

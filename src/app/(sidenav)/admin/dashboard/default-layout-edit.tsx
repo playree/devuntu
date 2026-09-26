@@ -22,7 +22,7 @@ export const DefaultLayoutEditModal: FC<ModalBaseProps> = ({ state }) => {
 
   useEffect(() => {
     parseAction(getDefaultDashboard()).then((res) => {
-      setLayout(res ?? WidgetDefaultLayout)
+      setLayout(res)
       setLoaded(true)
     })
   }, [])

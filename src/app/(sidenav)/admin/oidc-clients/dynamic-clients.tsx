@@ -29,8 +29,7 @@ export const DynamicOidcClients: FC = () => {
 
   const list = usePagingList({
     load: async () => {
-      const res = await parseAction(getDynamicOidcClients())
-      return res ?? []
+      return await parseAction(getDynamicOidcClients())
     },
     sort: {
       init: { column: 'createdAt', direction: 'descending' },

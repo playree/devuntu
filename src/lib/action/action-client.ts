@@ -5,10 +5,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { errClient, SYSTEM_ERROR, VALIDATION_ERROR } from '../error'
 import { intervalOperation } from '../sleep'
 
-type MarkDataResolved<T> = T & {
-  data: NonNullable<T extends { data?: infer U } ? U : never>
-}
-
 /**
  * Server Action の戻りのうち、`parseAction` / `useActionData` が解釈できる最小形。
  * next-safe-action の `SafeActionFn` は型引数が多く補助型も export されていないため、
@@ -18,14 +14,6 @@ export type ActionResult<T> = {
   data?: T
   serverError?: { name?: string; errorType: string }
   validationErrors?: unknown
-}
-
-export function checkError<T extends { data?: unknown; serverError?: unknown; validationErrors?: unknown }>(
-  res: T,
-): asserts res is MarkDataResolved<T> {
-  if (res.serverError || res.validationErrors) {
-    throw new Error()
-  }
 }
 
 /**
@@ -99,7 +87,7 @@ export const parseAction = async <
     await intervalOperation(wait - execTime)
   }
 
-  const data = result.data as T['data']
+  const data = result.data as Exclude<T['data'], undefined>
   if (data === undefined) {
     throw new Error()
   }
