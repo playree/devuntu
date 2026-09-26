@@ -1,6 +1,6 @@
 {
   "name": "devuntu",
-  "version": "0.8.4",
+  "version": "0.8.5",
   "description": "Self-hosted project management tool centered on Kanban boards and tickets, with calendar, notifications, MCP server and AI agent integration.",
   "private": true,
   "license": "MIT",
