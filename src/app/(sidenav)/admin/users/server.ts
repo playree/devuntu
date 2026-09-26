@@ -59,7 +59,6 @@ export const createUser = safeAuthAction
     // グループ存在確認（作成前に検証してFK例外/孤立ユーザーを防ぐ）
     await assertGroupsExist(groupIds)
 
-    // ユーザー作成
     const { user } = await auth.api.createUser({
       headers: await headers(),
       body: {
@@ -74,7 +73,6 @@ export const createUser = safeAuthAction
       throw errSystemError('user create failed')
     }
 
-    // グループ紐付け
     if (groupIds.length > 0) {
       await prisma.userGroup.createMany({
         data: groupIds.map((groupId) => ({ userId: user.id, groupId })),
@@ -98,7 +96,6 @@ export const deleteUser = safeAuthAction
     // better-auth は別の接続で書き込むので、$transaction だけでは判定と削除の間に割り込まれる。
     // 降格(updateUser)と同じロックで直列化し、2人の管理者を同時に消して0人になるのを防ぐ
     await withAdvisoryLock(ADVISORY_LOCK_KEYS.adminRole, async (tx) => {
-      // 対象の存在確認
       const user = await tx.user.findUnique({ where: { id }, select: { id: true, role: true } })
       if (!user) {
         throw errInvalidOperation()
@@ -140,13 +137,11 @@ export const updateUser = safeAuthAction
     // 最後の管理者の判定と権限更新の間に、他の削除・降格が割り込まないよう直列化する
     // (auth は別クライアントなので、ロックを持ったトランザクションの外から書き込まれる)
     await withAdvisoryLock(ADVISORY_LOCK_KEYS.adminRole, async (tx) => {
-      // 対象の存在確認
       const user = await tx.user.findUnique({ where: { id }, select: { id: true, role: true } })
       if (!user) {
         throw errInvalidOperation()
       }
 
-      // 管理者権限を消す場合
       if (user.role === 'admin' && !isAdmin) {
         if ((await tx.user.count({ where: { role: 'admin', id: { not: id } } })) === 0) {
           // 最後の管理者ユーザーは不可
@@ -154,7 +149,6 @@ export const updateUser = safeAuthAction
         }
       }
 
-      // プロフィール/権限更新
       await auth.api.adminUpdateUser({
         headers: await headers(),
         body: {
