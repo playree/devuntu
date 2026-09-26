@@ -1,13 +1,13 @@
 import { getServerSession } from '@/lib/auth/auth'
-import { envu } from '@/lib/env-util'
 import { canUseGoogleAccount } from '@/lib/google/google-account'
+import { en } from '@/locale/lang-en'
 import { type Metadata } from 'next'
 import { FC } from 'react'
 import { CalClient } from './client'
 import { CalUnavailable } from './unavailable'
 
 export const metadata: Metadata = {
-  title: 'Calendar',
+  title: en.calendar,
 }
 
 const CalPage: FC = async () => {
@@ -18,7 +18,6 @@ const CalPage: FC = async () => {
     return <CalUnavailable />
   }
 
-  // 共有URLのベースはアプリの公開URL(BETTER_AUTH_URL)を利用する
-  return <CalClient origin={envu.server.BETTER_AUTH_URL} />
+  return <CalClient />
 }
 export default CalPage

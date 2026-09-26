@@ -5,9 +5,9 @@
  * prisma を差し替えて `deleteMany` へ渡る `where` の形を検証する。
  */
 
+import { DAY_MS, msBefore } from '@/lib/day'
 import {
   OAUTH_TOKEN_RETENTION_MS,
-  retentionBefore,
   SESSION_RETENTION_MS,
   VERIFICATION_RETENTION_MS,
 } from '@/lib/maintenance/maintenance'
@@ -30,7 +30,6 @@ const AGENT_RETENTION_DAYS = 30
 const AGENT_KEEP = 200
 const COMMAND_RETENTION_DAYS = 10
 const COMMAND_KEEP = 50
-const DAY_MS = 24 * 60 * 60 * 1000
 
 vi.mock('@/lib/env-util', () => ({
   envu: {
@@ -95,7 +94,7 @@ describe('sweepSessions', () => {
   it('保持期間を過ぎた期限切れだけを消す', async () => {
     await sweepSessions(now)
     expect(vi.mocked(prisma.session.deleteMany).mock.calls[0][0]).toEqual({
-      where: { expiresAt: { lt: retentionBefore(now, SESSION_RETENTION_MS) } },
+      where: { expiresAt: { lt: msBefore(now, SESSION_RETENTION_MS) } },
     })
   })
 
@@ -112,7 +111,7 @@ describe('sweepVerifications', () => {
   it('expiresAt だけで判断する(用途で絞らない)', async () => {
     await sweepVerifications(now)
     expect(vi.mocked(prisma.verification.deleteMany).mock.calls[0][0]).toEqual({
-      where: { expiresAt: { lt: retentionBefore(now, VERIFICATION_RETENTION_MS) } },
+      where: { expiresAt: { lt: msBefore(now, VERIFICATION_RETENTION_MS) } },
     })
   })
 })
@@ -137,7 +136,7 @@ describe('sweepOauthRefreshTokens', () => {
 
   it('期限切れか失効済みのどちらかを対象にする', async () => {
     await sweepOauthRefreshTokens(now)
-    const before = retentionBefore(now, OAUTH_TOKEN_RETENTION_MS)
+    const before = msBefore(now, OAUTH_TOKEN_RETENTION_MS)
     expect(whereOf().AND[0].OR).toEqual([{ expiresAt: { lt: before } }, { revoked: { lt: before } }])
   })
 })
@@ -145,7 +144,7 @@ describe('sweepOauthRefreshTokens', () => {
 describe('sweepOauthAccessTokens', () => {
   it('期限切れか失効済みを消す', async () => {
     await sweepOauthAccessTokens(now)
-    const before = retentionBefore(now, OAUTH_TOKEN_RETENTION_MS)
+    const before = msBefore(now, OAUTH_TOKEN_RETENTION_MS)
     expect(vi.mocked(prisma.oauthAccessToken.deleteMany).mock.calls[0][0]).toEqual({
       where: { OR: [{ expiresAt: { lt: before } }, { revoked: { lt: before } }] },
     })
@@ -175,7 +174,7 @@ describe('sweepAgentRuns', () => {
   it('保持期間は環境変数の日数から算出する', async () => {
     await sweepAgentRuns(now)
     const where = vi.mocked(prisma.agentRun.deleteMany).mock.calls[0][0]?.where as { startedAt: { lt: Date } }
-    expect(where.startedAt.lt).toEqual(retentionBefore(now, AGENT_RETENTION_DAYS * DAY_MS))
+    expect(where.startedAt.lt).toEqual(msBefore(now, AGENT_RETENTION_DAYS * DAY_MS))
   })
 
   it('ランナーごとに上限を超えた古い分を消す', async () => {
@@ -206,7 +205,7 @@ describe('sweepCommandRuns', () => {
     await sweepCommandRuns(now)
     expect(vi.mocked(prisma.commandRun.deleteMany).mock.calls[0][0]).toEqual({
       where: {
-        queuedAt: { lt: retentionBefore(now, COMMAND_RETENTION_DAYS * DAY_MS) },
+        queuedAt: { lt: msBefore(now, COMMAND_RETENTION_DAYS * DAY_MS) },
         status: { in: ['succeeded', 'failed', 'canceled'] },
       },
     })

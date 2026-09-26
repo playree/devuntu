@@ -1,12 +1,12 @@
-import { auth } from '@/lib/auth/auth'
+import { getServerSession } from '@/lib/auth/auth'
 import { envu } from '@/lib/env-util'
+import { en } from '@/locale/lang-en'
 import { type Metadata } from 'next'
-import { headers } from 'next/headers'
 import { FC } from 'react'
 import { SignInClient } from './client'
 
 export const metadata: Metadata = {
-  title: 'SignIn',
+  title: en.signin,
 }
 
 const SignInPage: FC<{
@@ -18,7 +18,7 @@ const SignInPage: FC<{
 
   // 2FA不要運用では有効化を促す画面自体が意味を持たないため通常のサインイン画面にする
   if (mode === '2FA' && twoFaRequired) {
-    const session = await auth.api.getSession({ headers: await headers() })
+    const session = await getServerSession()
     const email = session?.user.email
     return <SignInClient sessionEmail={email} twoFaRequired={twoFaRequired} />
   }

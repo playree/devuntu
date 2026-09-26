@@ -8,7 +8,7 @@
 import { Prisma } from '@/generated/prisma/client'
 import type { AgentRunAction, AgentRunStatus, AgentTaskState } from '@/generated/prisma/enums'
 import { ticketDisplayId } from '../board/ticket-id'
-import { nowDate } from '../day'
+import { MINUTE_MS, msBefore, nowDate } from '../day'
 import { logger } from '../logger'
 import { MAX_NOTIFY_RECIPIENTS } from '../notify/notify'
 import { type AgentRunNotification, enqueueAgentRunFinished } from '../notify/notify-trigger'
@@ -78,7 +78,7 @@ const buildAgentRunNotification = (param: {
  * チケットが `running` のまま残ると二度と拾えなくなるので、ポーリングのたびに掃除する。
  */
 export const failStaleAgentRuns = async (runnerId: string, now: Date = nowDate()): Promise<number> => {
-  const deadline = new Date(now.getTime() - AGENT_RUN_TIMEOUT_MIN * 60 * 1000)
+  const deadline = msBefore(now, AGENT_RUN_TIMEOUT_MIN * MINUTE_MS)
   const stale = await prisma.agentRun.findMany({
     where: { runnerId, status: 'running', startedAt: { lt: deadline } },
     select: {

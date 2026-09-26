@@ -5,25 +5,27 @@
  * ここには prisma も envu も持ち込まず、値と計算だけを置く。
  */
 
+import { DAY_MS, HOUR_MS, MINUTE_MS } from '../day'
+
 /** 掃除を回す間隔 */
-export const MAINTENANCE_TICK_MS = 60 * 60 * 1000
+export const MAINTENANCE_TICK_MS = HOUR_MS
 
 /** 起動から最初の1周までの待ち。起動直後の負荷と重ねない */
-export const MAINTENANCE_START_DELAY_MS = 60 * 1000
+export const MAINTENANCE_START_DELAY_MS = MINUTE_MS
 
 /**
  * 期限切れから実際に消すまでの猶予。
  *
  * 期限の判定と削除がずれても、処理中のリクエストが握っている行を消さないだけの幅を取る。
  */
-export const SESSION_RETENTION_MS = 24 * 60 * 60 * 1000
-export const VERIFICATION_RETENTION_MS = 24 * 60 * 60 * 1000
-export const OAUTH_TOKEN_RETENTION_MS = 24 * 60 * 60 * 1000
+export const SESSION_RETENTION_MS = DAY_MS
+export const VERIFICATION_RETENTION_MS = DAY_MS
+export const OAUTH_TOKEN_RETENTION_MS = DAY_MS
 
 // 実行履歴の保持(期間と件数)は運用者が変えられるようにしてあるので `envu.server` 側にある
 
 /** 添付の掃除を回す間隔。本文の全走査を伴うので tick ごとには行わない */
-export const ATTACHMENT_SWEEP_INTERVAL_MS = 24 * 60 * 60 * 1000
+export const ATTACHMENT_SWEEP_INTERVAL_MS = DAY_MS
 
 /** 本文・添付を引くときの1ページの件数 */
 export const ATTACHMENT_SCAN_BATCH = 500
@@ -44,6 +46,3 @@ export const MAINTENANCE_MODE_WATCH_MS = 5 * 1000
 
 /** 遮断時に返す `Retry-After`(秒)。リストアが数分で終わる想定の目安 */
 export const MAINTENANCE_MODE_RETRY_AFTER_SEC = 120
-
-/** 保持期間を過ぎた境界時刻。これより古いものが削除対象になる */
-export const retentionBefore = (now: Date, ms: number): Date => new Date(now.getTime() - ms)

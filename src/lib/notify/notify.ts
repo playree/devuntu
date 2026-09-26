@@ -7,6 +7,7 @@
  */
 
 import type { NotifyEvent, NotifyChannel as PrismaNotifyChannel } from '@/generated/prisma/enums'
+import { DAY_MS } from '@/lib/day'
 import { findMentions, stripCodeSpans } from '../board/mention'
 import { truncate } from '../text-util'
 
@@ -81,7 +82,7 @@ export const NOTIFY_RETRY_BASE_MS = 60_000
 export const NOTIFY_CLAIM_TIMEOUT_MS = 300_000
 
 /** 試行回数を使い切った配信を残しておく期間 */
-export const NOTIFY_FAILED_RETENTION_MS = 7 * 24 * 60 * 60 * 1000
+export const NOTIFY_FAILED_RETENTION_MS = 7 * DAY_MS
 
 /** チャネル単位の全体スロットル。ワーカーは実質1プロセスなのでプロセス内カウンタで足りる */
 export const NOTIFY_CHANNEL_RATE_LIMIT: Record<NotifyChannel, { limit: number; windowMs: number }> = {

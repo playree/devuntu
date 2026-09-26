@@ -244,7 +244,7 @@ export const addComment = async (actor: Actor, input: AddCommentInput) => {
     // 通知の見出しに使う表示ID / 件名はこの update の戻りから取る(追加の SELECT を増やさない)
     const ticket = await tx.ticket.update({
       where: { id: ticketId },
-      data: { updatedAt: new Date() },
+      data: { updatedAt: nowDate() },
       select: { number: true, title: true, board: { select: { key: true } } },
     })
 
@@ -292,7 +292,7 @@ export const updateComment = async (actor: Actor, id: string, content: string) =
 
     await tx.ticketComment.update({ where: { id }, data: { content, mentionedUserIds } })
     // 検索(更新日時順)の観点でチケット側の updatedAt も更新する
-    await tx.ticket.update({ where: { id: target.ticketId }, data: { updatedAt: new Date() } })
+    await tx.ticket.update({ where: { id: target.ticketId }, data: { updatedAt: nowDate() } })
 
     // 更新と同じトランザクションで投入する(コミット後に落ちると通知だけが消える)
     await enqueueTicketCommented(

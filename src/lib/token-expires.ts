@@ -5,10 +5,12 @@
  * フォームのバリデーションからも読むので、純粋な値と関数だけを置くこと。
  */
 
+import { DAY_MS } from './day'
+
 /** トークンの有効期限の選択肢。`none` は無期限、それ以外は発行日からの日数 */
 export const TOKEN_EXPIRES = ['none', '30', '90', '180', '365'] as const
 export type TokenExpires = (typeof TOKEN_EXPIRES)[number]
 
 /** 選択肢を実際の有効期限へ変換する。無期限は null */
 export const tokenExpiresAt = (value: TokenExpires, from: Date): Date | null =>
-  value === 'none' ? null : new Date(from.getTime() + Number(value) * 24 * 60 * 60 * 1000)
+  value === 'none' ? null : new Date(from.getTime() + Number(value) * DAY_MS)

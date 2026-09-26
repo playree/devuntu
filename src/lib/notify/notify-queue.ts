@@ -12,11 +12,12 @@
  */
 
 import type { NotifyEvent } from '@/generated/prisma/enums'
+import { msBefore } from '@/lib/day'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
 import { NOTIFY_CLAIM_TIMEOUT_MS, NOTIFY_FAILED_RETENTION_MS, type NotifyChannel } from './notify'
 import { isDeliveryAborting, isDeliverySettled, type DeliveryOutcome } from './notify-outcome'
-import { isRetryExhausted, retryScheduledAt, staleClaimBefore } from './notify-schedule'
+import { isRetryExhausted, retryScheduledAt } from './notify-schedule'
 
 export type ClaimedOutbox = {
   id: string
@@ -43,7 +44,7 @@ export type ClaimedDelivery = {
  * コンテナの再起動やクラッシュで掴んだまま終わった行は、誰も面倒を見ないと残り続ける。
  */
 export const reclaimStale = async (now: Date): Promise<void> => {
-  const before = staleClaimBefore(now, NOTIFY_CLAIM_TIMEOUT_MS)
+  const before = msBefore(now, NOTIFY_CLAIM_TIMEOUT_MS)
 
   const [outbox, delivery] = await Promise.all([
     prisma.notifyOutbox.updateMany({
@@ -221,7 +222,7 @@ export const releaseDeliveries = async (ids: string[], reason: DeliveryOutcome):
  * 原因を追う前に消えてしまう。
  */
 export const purge = async (now: Date): Promise<void> => {
-  const failedBefore = new Date(now.getTime() - NOTIFY_FAILED_RETENTION_MS)
+  const failedBefore = msBefore(now, NOTIFY_FAILED_RETENTION_MS)
 
   await prisma.notifyOutbox.deleteMany({ where: { status: 'done', deliveries: { none: {} } } })
   await prisma.notifyDelivery.deleteMany({ where: { status: 'failed', failedAt: { lt: failedBefore } } })

@@ -16,6 +16,7 @@
  * ただし 1 ファイルの書き損じで全ターゲットのコマンドが止まるのも困るので、巻き込む範囲はファイル単位に留める。
  */
 
+import { nowDate } from '@/lib/day'
 import { createHash } from 'node:crypto'
 import { accessSync, constants, readdirSync, readFileSync, statSync } from 'node:fs'
 import { extname, isAbsolute, join, resolve, sep } from 'node:path'
@@ -280,7 +281,7 @@ export const mergeCommandFiles = (
 
 /** 定義ディレクトリを読み直し、検証する。キャッシュには触らない */
 const loadCatalog = (dir: string, fileNames: string[], scanIssues: CommandCatalogIssue[]): CommandCatalogResult => {
-  const loadedAt = new Date()
+  const loadedAt = nowDate()
   const issues: CommandCatalogIssue[] = [...scanIssues]
   const parsed: ParsedCommandFileEntry[] = []
 
@@ -349,7 +350,7 @@ export const getCommandCatalog = (opts?: { force?: boolean }): CommandCatalogRes
   }
 
   const result = scanned.issue
-    ? { catalog: emptyCatalog(), issues: [scanned.issue], dir, writable: false, loadedAt: new Date() }
+    ? { catalog: emptyCatalog(), issues: [scanned.issue], dir, writable: false, loadedAt: nowDate() }
     : loadCatalog(dir, scanned.fileNames, scanned.overflowIssues)
   cache = { dir, fingerprint: scanned.fingerprint, checkedAt: now, result }
 

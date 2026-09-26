@@ -25,7 +25,7 @@ import {
 
 const defaultExpandedKeys = new Set(['share', 'busy_time'])
 
-export const CalClient: FC<{ origin: string }> = ({ origin }) => {
+export const CalClient: FC = () => {
   const { t } = useLocale()
   const router = useRouter()
   const { confirmModal } = useConfirmModal()
@@ -75,8 +75,6 @@ export const CalClient: FC<{ origin: string }> = ({ origin }) => {
     }
   }
 
-  const shareUrl = status?.publicId ? `${origin.replace(/\/$/, '')}/cal/${status.publicId}` : ''
-
   return (
     <FlexCol>
       <ContentHeader icon={<CalendarDaysIcon />} title={t('calendar')} />
@@ -118,7 +116,7 @@ export const CalClient: FC<{ origin: string }> = ({ origin }) => {
                       {t('save')}
                     </MultiButton>
                   </div>
-                  <CopyableField label={t('share_url')} text={shareUrl} />
+                  <CopyableField label={t('share_url')} text={status.shareUrl ?? ''} />
                   <div className='flex flex-wrap gap-2'>
                     <MultiButton icon={<ArrowPathIcon />} variant='outline' onPress={rotate}>
                       {t('regenerate_url')}

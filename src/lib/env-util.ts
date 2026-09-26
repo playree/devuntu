@@ -348,6 +348,14 @@ const server = {
     return getEnv('COMMAND_SSH_DIR', { default: '/app/config/ssh' })
   },
 
+  /** ssh の子プロセスへ引き継ぐ PATH / HOME。アプリの環境変数は丸ごとは渡さない */
+  get COMMAND_SSH_PATH() {
+    return getEnv('PATH', { default: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' })
+  },
+  get COMMAND_SSH_HOME() {
+    return getEnv('HOME', { default: '/tmp' })
+  },
+
   /**
    * known_hosts のパス(ホストごとの指定が無い場合の既定)。
    *

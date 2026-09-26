@@ -13,7 +13,7 @@
  */
 
 import { type CommandRunStatus } from '@/generated/prisma/enums'
-import { nowDate } from '../day'
+import { msBefore, nowDate } from '../day'
 import { errClient } from '../error'
 import { logger } from '../logger'
 import { isUniqueViolation, prisma } from '../prisma'
@@ -192,7 +192,7 @@ export const listCancelRequestedRuns = async (workerId: string): Promise<string[
  * 通知キューの `reclaimStale()`(未処理へ戻す)とは方針を変えている。
  */
 export const reclaimStaleRuns = async (now: Date = nowDate()): Promise<number> => {
-  const before = new Date(now.getTime() - COMMAND_STALE_MS)
+  const before = msBefore(now, COMMAND_STALE_MS)
 
   /**
    * 対象の特定と更新を1文にまとめる(`claimQueuedRuns` と同じ形)。

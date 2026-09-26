@@ -9,6 +9,7 @@
  */
 
 import { type CommandStream } from '@/generated/prisma/enums'
+import { nowDate } from '@/lib/day'
 import { type LocaleValues } from '@/lib/locale-util'
 import { type LocaleItem } from '@/locale'
 import { logger } from '../logger'
@@ -134,7 +135,7 @@ export const createLogBuffer = (runId: string, workerId: string): LogBuffer => {
             lastSeq: { increment: batch.length },
             bytes: { increment: batchBytes },
             truncated: isTruncated,
-            heartbeatAt: new Date(),
+            heartbeatAt: nowDate(),
           },
         })
         if (updated.count === 0) {
@@ -212,7 +213,7 @@ export const createLogBuffer = (runId: string, workerId: string): LogBuffer => {
 export const touchRun = async (runId: string, workerId: string): Promise<boolean> => {
   const updated = await prisma.commandRun.updateMany({
     where: { id: runId, status: 'running', workerId },
-    data: { heartbeatAt: new Date() },
+    data: { heartbeatAt: nowDate() },
   })
   return updated.count > 0
 }
