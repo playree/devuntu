@@ -121,7 +121,8 @@ Docker Compose で3つのサービスを起動します(`compose.yaml`)。
 DB とアップロード画像は別々に保存されるため、バックアップは**必ず対で取得**します。
 `docker compose run --rm tools full-backup` で両方を1つのディレクトリへまとめて取得でき、
 `full-restore` で対のまま復元できます(リポジトリを clone せずに実行できます)。
-`full-backup --maintenance` にすると、取得の間だけメンテナンスモードにして DB と画像のずれを無くせます。
+`full-backup --maintenance` にすると、取得の間だけメンテナンスモードにして DB と画像のずれを無くせます
+(開始前から ON の場合は、取得後も ON のままにします)。
 
 リストア中は**メンテナンスモード**で全アクセスを遮断できます
 (`docker compose run --rm tools maintenance on|off`)。アプリを止めずに、利用者へは案内画面を返します。

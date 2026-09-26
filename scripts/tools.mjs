@@ -13,7 +13,7 @@
  * compose.yaml の使い捨てコンテナを tools 1本にまとめるための入口。
  * 呼び出し先の起動は `run-script.mjs` に集約している。
  */
-import { runScript } from './run-script.mjs'
+import { spawnScript } from './run-script.mjs'
 
 const COMMANDS = {
   'setup-env': 'setup-env/index.mjs',
@@ -34,7 +34,8 @@ const USAGE = `使い方: node scripts/tools.mjs <サブコマンド> [引数...
   s3-backup     オブジェクトストレージの中身を backup/ へバックアップする
   s3-restore    バックアップディレクトリの内容をオブジェクトストレージへ復元する
   full-backup   DB と S3 を backup/full_<stamp>/ へまとめてバックアップする
-                (--maintenance で取得の間だけメンテナンスモードにする)
+                (--maintenance で取得の間だけメンテナンスモードにする。
+                 開始前から ON の場合は取得後も ON のまま)
   full-restore  full-backup の出力から DB と S3 をまとめて復元する
   maintenance   メンテナンスモードを切り替える(on / off / status)
   help          この使い方を表示する
@@ -60,4 +61,12 @@ if (!Object.hasOwn(COMMANDS, command)) {
   process.exit(1)
 }
 
-process.exit(runScript(COMMANDS[command], rest))
+const { child, exited } = spawnScript(COMMANDS[command], rest)
+
+// tini が転送するシグナルはこのプロセスにしか届かないため、子へ渡す。
+// 渡さないと `docker compose stop` などで入口だけが先に終わり、子が後始末(full-backup --maintenance の解除など)をできない
+for (const signal of ['SIGINT', 'SIGTERM']) {
+  process.on(signal, () => child.kill(signal))
+}
+
+process.exit(await exited)

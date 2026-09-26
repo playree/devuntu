@@ -19,11 +19,10 @@
  * 終われば成否に関わらず OFF に戻す。ただし開始前から ON だった場合は、運用者が入れた遮断なので触らない。
  */
 import { existsSync, mkdirSync, renameSync, rmSync } from 'node:fs'
-import { constants } from 'node:os'
 import path from 'node:path'
 import { resolveDbEnv, stamp, waitForNoOtherConnections } from './db-connect.mjs'
 import { parseMaintenanceFile } from './maintenance-flag.mjs'
-import { runScript } from './run-script.mjs'
+import { runScript, signalExitCode, spawnScript } from './run-script.mjs'
 
 /**
  * ローカル実行では `.env` を読む。
@@ -40,8 +39,11 @@ const BACKUP_DIR = path.join(process.cwd(), 'backup')
  */
 const DRAIN_WAIT_SEC = 60
 
+/** 実行中の子プロセス。`--maintenance` で受けたシグナルの転送先 */
+let activeChild = null
+
 /** DB → S3 を取得し、終了コードを返す */
-const backup = (pgEnv) => {
+const backup = async (pgEnv) => {
   const name = `full_${stamp()}`
   const outDir = path.join(BACKUP_DIR, name)
   const tmpDir = `${outDir}.tmp`
@@ -55,7 +57,10 @@ const backup = (pgEnv) => {
   ]
 
   for (const [script, args] of steps) {
-    const code = runScript(script, args)
+    const { child, exited } = spawnScript(script, args)
+    activeChild = child
+    const code = await exited
+    activeChild = null
     if (code !== 0) {
       rmSync(tmpDir, { recursive: true, force: true })
       console.error(`${script} が失敗したため中断しました (exit ${code})`)
@@ -102,11 +107,16 @@ const backupInMaintenance = async (pgEnv, file) => {
     return code
   }
 
-  // 接続解放を待っている間の Ctrl+C / 停止でも、遮断したまま終わらないようにする。
-  // 子プロセスの実行中に届いた場合は、子が落ちて runScript が失敗を返すので通常の経路で解除される
+  // Ctrl+C / 停止でも遮断したまま終わらないようにする。
+  // 取得中なら子へ転送し、子が落ちて取得が失敗を返したあと通常の経路で解除する
+  // (`docker compose stop` の SIGTERM は子まで届かないため、転送しないと猶予切れの SIGKILL で解除し損ねる)
   const onSignal = (signal) => {
+    if (activeChild) {
+      activeChild.kill(signal)
+      return
+    }
     turnOff()
-    process.exit(128 + (constants.signals[signal] ?? 0))
+    process.exit(signalExitCode(signal))
   }
   process.on('SIGINT', onSignal)
   process.on('SIGTERM', onSignal)
