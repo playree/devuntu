@@ -4,7 +4,7 @@
  * ボタンを出す条件(返答待ちの判定)と、返答ごとのチケットの状態遷移を確かめる。
  */
 
-import { decideAgentComment, findPendingAgentDecision } from '@/lib/agent/agent-decision'
+import { decideAgentComment, findLatestAgentDecision, findPendingAgentDecision } from '@/lib/agent/agent-decision'
 import { assertTicketAccess, type TicketAccess } from '@/lib/board/board-access'
 import { insertComment } from '@/lib/board/ticket-mutation'
 import { moveTicketToLane } from '@/lib/board/ticket-write'
@@ -170,5 +170,29 @@ describe('decideAgentComment', () => {
       decideAgentComment({ id: 'u1' }, { commentId: 'c1', decision: 'approved', content: '承認' }),
     ).rejects.toBeInstanceOf(ClientError)
     expect(insertComment).not.toHaveBeenCalled()
+  })
+})
+
+describe('findLatestAgentDecision', () => {
+  it('エージェントの最新コメントより後の返答だけを探す', async () => {
+    fakeTx.ticketComment.findFirst
+      .mockResolvedValueOnce({ createdAt: PLAN_AT })
+      .mockResolvedValueOnce({ id: 'd1', decision: 'approved', content: '承認' })
+
+    expect(await findLatestAgentDecision('t1', AGENT, fakeTx as never)).toEqual({
+      id: 'd1',
+      decision: 'approved',
+      content: '承認',
+    })
+    expect(fakeTx.ticketComment.findFirst).toHaveBeenLastCalledWith(
+      expect.objectContaining({ where: { ticketId: 't1', decision: { not: null }, createdAt: { gt: PLAN_AT } } }),
+    )
+  })
+
+  it('エージェント自身のコメントが無ければ、残っている返答を渡さない', async () => {
+    fakeTx.ticketComment.findFirst.mockResolvedValueOnce(null)
+
+    expect(await findLatestAgentDecision('t1', AGENT, fakeTx as never)).toBeNull()
+    expect(fakeTx.ticketComment.findFirst).toHaveBeenCalledTimes(1)
   })
 })

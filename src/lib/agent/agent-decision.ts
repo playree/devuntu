@@ -150,8 +150,12 @@ export const findLatestAgentDecision = async (ticketId: string, agentUserId: str
     orderBy: { createdAt: 'desc' },
     select: { createdAt: true },
   })
+  // 担当が替わった直後などでエージェント自身のコメントが無ければ、残っている返答は別の相手へのもの
+  if (!last) {
+    return null
+  }
   return await tx.ticketComment.findFirst({
-    where: { ticketId, decision: { not: null }, ...(last && { createdAt: { gt: last.createdAt } }) },
+    where: { ticketId, decision: { not: null }, createdAt: { gt: last.createdAt } },
     orderBy: { createdAt: 'desc' },
     select: { id: true, decision: true, content: true },
   })
