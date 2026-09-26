@@ -283,6 +283,25 @@ describe('createDevuntuMcpServer', () => {
     expect(result.content).toEqual([{ type: 'text', text: JSON.stringify({ id: 't1', title: '更新後' }, null, 2) }])
   })
 
+  it('受け入れ条件は acceptanceCriteria で受け、criteria として渡す', async () => {
+    vi.mocked(createTicketForMcp).mockResolvedValueOnce({ id: 't1' } as never)
+    vi.mocked(updateTicketForMcp).mockResolvedValueOnce({ id: 't1' } as never)
+    const client = await connectClient()
+
+    await client.callTool({
+      name: 'create_ticket',
+      arguments: { boardId: 'b1', title: '新規', acceptanceCriteria: ['条件1', '条件2'] },
+    })
+    await client.callTool({
+      name: 'update_ticket',
+      arguments: { ticketId: 'ABC-1', acceptanceCriteria: [{ text: '条件3' }] },
+    })
+
+    expect(createTicketForMcp).toHaveBeenCalledWith(auth, expect.objectContaining({ criteria: ['条件1', '条件2'] }))
+    expect(vi.mocked(createTicketForMcp).mock.calls[0][1]).not.toHaveProperty('acceptanceCriteria')
+    expect(updateTicketForMcp).toHaveBeenCalledWith(auth, 'ABC-1', { criteria: [{ text: '条件3' }] })
+  })
+
   it('delete_ticket は ticketId を渡し、結果をJSONテキストとして返す', async () => {
     vi.mocked(deleteTicketForMcp).mockResolvedValueOnce({ id: 't1' } as never)
 

@@ -7,6 +7,7 @@
 
 import { Prisma } from '@/generated/prisma/client'
 import type { AgentRunAction, AgentRunStatus, AgentTaskState } from '@/generated/prisma/enums'
+import { type AgentCriterionReport, assertAgentCriteria, writeAgentCriteria } from '../board/ticket-criterion'
 import { ticketDisplayId } from '../board/ticket-id'
 import { MINUTE_MS, msBefore, nowDate } from '../day'
 import { logger } from '../logger'
@@ -294,17 +295,24 @@ const settleAction = (action: AgentRunAction, outcome: AgentOutcome): AgentRunAc
  * 実行を閉じるのは `status: 'running'` の条件付き更新で、掴めたときだけチケットの状態を進める。
  * 時間切れ(`failStaleAgentRuns`)などが先に閉じていた場合は、向こうが確定させた状態を尊重して
  * 報告どおりの状態へ巻き戻さず、通知も送らない(向こうが既に送っている)。
+ *
+ * 受け入れ条件の自己申告(`criteria`)も、状態を進めたときだけ同じトランザクションで記録する。
+ * 失敗として閉じられた実行の申告が「充足」として残ると、画面上は満たしたように見えてしまうため。
+ * そのチケットに無い項目が混ざっていたら、何も閉じずに throw する(エージェントが直して呼び直せる)。
  */
 export const finishAgentTask = async (
   runner: AgentRunnerRow | null,
   ticketId: string,
   outcome: AgentOutcome,
   summary?: string | null,
+  criteria: AgentCriterionReport[] = [],
 ): Promise<{ state: AgentTaskState }> => {
   const { state, run } = OUTCOME_MAP[outcome]
   const now = nowDate()
 
   const result = await prisma.$transaction(async (tx) => {
+    await assertAgentCriteria(tx, ticketId, criteria)
+
     // 自動運用の設定が無い(ランナーを介さず MCP だけで動かした)場合は閉じる実行が無い
     const open = runner
       ? await tx.agentRun.findFirst({
@@ -316,6 +324,7 @@ export const finishAgentTask = async (
     if (!open || !runner) {
       // 実行履歴が無いので通知もしない。チケットが無ければここで例外になる
       await tx.ticket.update({ where: { id: ticketId }, data: { agentState: state }, select: { id: true } })
+      await writeAgentCriteria(tx, criteria)
       return { state }
     }
 
@@ -339,6 +348,7 @@ export const finishAgentTask = async (
       data: { agentState: state },
       select: agentRunNotifySelect,
     })
+    await writeAgentCriteria(tx, criteria)
 
     const notification = buildAgentRunNotification({
       runId: open.id,

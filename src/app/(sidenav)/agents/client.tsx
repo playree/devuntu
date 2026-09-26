@@ -19,7 +19,7 @@ import {
 } from '@/components/ticket/ticket-options'
 import type { AgentTaskMode, AgentTaskState } from '@/generated/prisma/enums'
 import { parseAction, useActionData } from '@/lib/action/action-client'
-import { AGENT_TASK_STATES, OPEN_AGENT_TASK_STATES } from '@/lib/agent/agent'
+import { AGENT_TASK_STATES } from '@/lib/agent/agent'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { preventParentSelection } from '@/lib/client-utils'
 import { dayformat } from '@/lib/day'
@@ -27,6 +27,7 @@ import { useLocale } from '@/locale/client'
 import { Table } from '@heroui/react'
 import Link from 'next/link'
 import { FC, useEffect, useRef, useState } from 'react'
+import { AgentDecisionButtons } from '../tickets/[id]/decision-buttons'
 import { updateTicketAgentMode } from '../tickets/[id]/server'
 import { TicketDrawerLayout } from '../tickets/ticket-drawer-layout'
 import { AgentSectionKeys, AgentSections } from './agent-sections'
@@ -53,8 +54,8 @@ export const AgentsClient: FC = () => {
   // 保存中のチケット。二重操作を防ぐために行単位で持つ
   const [savingId, setSavingId] = useState<string>()
 
-  // 処理状態の絞り込み。完了済みは承認する余地が無いので初期表示から外す
-  const [agentStates, setAgentStates] = useState<AgentTaskState[]>([...OPEN_AGENT_TASK_STATES])
+  // 処理状態の絞り込み。処理を終えた(done)チケットも報告への返答待ちがあるので、初期表示はすべての状態
+  const [agentStates, setAgentStates] = useState<AgentTaskState[]>([...AGENT_TASK_STATES])
 
   // 設定セクションの開閉。初期値は空(= すべて閉じた状態)
   const [expandedKeys, setExpandedKeys] = useState<AgentSectionKeys>(new Set())
@@ -187,6 +188,13 @@ export const AgentsClient: FC = () => {
               { id: 'priority', name: t('priority'), allowsSorting: true, minWidth: 70, defaultWidth: 70 },
               { id: 'agentState', name: t('agent_state'), allowsSorting: false, minWidth: 100, defaultWidth: 110 },
               { id: 'agentMode', name: t('agent_mode'), allowsSorting: false, minWidth: 150, defaultWidth: 170 },
+              {
+                id: 'decision',
+                name: t('agent_decision'),
+                allowsSorting: false,
+                minWidth: 230,
+                defaultWidth: 230,
+              },
               { id: 'updatedAt', name: t('updated_at'), allowsSorting: true, minWidth: 110, defaultWidth: 110 },
             ]}
           >
@@ -234,6 +242,18 @@ export const AgentsClient: FC = () => {
                       }
                     }}
                   />
+                </Table.Cell>
+                <Table.Cell {...preventParentSelection}>
+                  {item.pendingDecision ? (
+                    <AgentDecisionButtons
+                      commentId={item.pendingDecision.commentId}
+                      type={item.pendingDecision.type}
+                      boardId={item.boardId}
+                      onDecided={() => list.reload()}
+                    />
+                  ) : (
+                    '-'
+                  )}
                 </Table.Cell>
                 <Table.Cell className='font-mono text-xs'>{dayformat(item.updatedAt, 'tz-minute', tz)}</Table.Cell>
               </Table.Row>

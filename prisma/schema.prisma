@@ -86,10 +86,11 @@ model User {
   // Board / Ticket
   boardMembers    BoardMember[]
   privateBoard    Board?
-  createdTickets  Ticket[]        @relation("TicketCreator")
-  assignedTickets Ticket[]        @relation("TicketAssignee")
+  createdTickets  Ticket[]          @relation("TicketCreator")
+  assignedTickets Ticket[]          @relation("TicketAssignee")
   ticketComments  TicketComment[]
   ticketLinks     TicketLink[]
+  checkedCriteria TicketCriterion[]
 
   // MCP
   mcpTokens McpToken[]
@@ -1065,10 +1066,10 @@ model Group {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  userGroups           UserGroup[]
-  boardGroups          BoardGroup[]
-  agentApproverGroups  AgentApproverGroup[]
-  commandTargetGroups  CommandTargetGroup[]
+  userGroups          UserGroup[]
+  boardGroups         BoardGroup[]
+  agentApproverGroups AgentApproverGroup[]
+  commandTargetGroups CommandTargetGroup[]
 
   @@map("group")
 }
@@ -1422,6 +1423,7 @@ model Ticket {
   comments  TicketComment[]
   agentRuns AgentRun[]
   links     TicketLink[]
+  criteria  TicketCriterion[]
 
   // @@unique が (boardId, ...) の先頭索引を兼ねるので表示IDからの検索はこれで賄える
   @@unique([boardId, number])
@@ -1455,6 +1457,9 @@ model TicketComment {
   /// null = 通常コメント。plan/report は詳細画面でデフォルト折りたたみ表示する
   type TicketCommentType?
 
+  /// plan / report への承認・差し戻しの返信。承認/差し戻しボタンから投稿したときだけ入る
+  decision TicketCommentDecision?
+
   /// 返信先コメント。1階層のみ許容(親自体が返信の場合は指定できない。制約はアプリ層で検証)
   parentId String?
   parent   TicketComment?  @relation("TicketCommentThread", fields: [parentId], references: [id], onDelete: Cascade)
@@ -1480,6 +1485,46 @@ enum TicketCommentType {
   plan
   /// エージェントが投稿した対応報告
   report
+}
+
+/// plan / report への返答の種別
+enum TicketCommentDecision {
+  /// 承認(プランどおり進めてよい / 報告を受け入れた)
+  approved
+  /// 差し戻し(理由は本文)
+  rejected
+}
+
+/// チケットの受け入れ条件。1行1項目で、人の確認とエージェントの自己申告を別々に持つ
+model TicketCriterion {
+  id String @id @default(uuid(7))
+
+  ticketId String
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  /// チケット内の表示順(0始まりの連番)
+  order Int
+
+  /// 条件の文言
+  text String
+
+  /// 人が最終確認した相手と時刻。未確認は null。退会しても確認済みの事実は残すので SetNull
+  checkedById String?
+  checkedBy   User?     @relation(fields: [checkedById], references: [id], onDelete: SetNull)
+  checkedAt   DateTime?
+
+  /// エージェントの自己申告(最新のみ)。null は未報告
+  agentMet        Boolean?
+  /// 充足 / 未充足と判断した根拠
+  agentEvidence   String?
+  agentReportedAt DateTime?
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ticketId, order])
+  @@map("ticket_criterion")
 }
 
 /// 連携する Git ホスティング。GitLab などを足すときはここへ追加する

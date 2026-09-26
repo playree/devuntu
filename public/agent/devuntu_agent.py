@@ -40,7 +40,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-__version__ = "0.7.3"
+__version__ = "0.7.4"
 
 # 1 Agent の構成を作業ディレクトリだけで完結させるため、config・ログ・ロックは本体と同じ
 # <作業ディレクトリ>/.devuntu-agent へ置く。作業ディレクトリを分ければ同一ホストに複数の Agent を並べられる
@@ -398,8 +398,10 @@ def build_prompt(task: dict) -> str:
         "2. devuntu-agent MCP の get_ticket でチケットの本文とコメントを読み、action に従って処理する。\n"
         "   - plan: 対応プランを作り、add_ticket_comment に type='plan' で投稿する。実装は行わない。\n"
         "   - execute: プランを作らずに対応を実行する。\n"
-        "   - revise: 前回投稿(プランまたは確認事項)への返信を読み、その指示に従って\n"
-        "     プランを直すか実装に進む。\n"
+        "   - revise: 前回投稿(プラン・報告・確認事項)への返信を読み、その指示に従って\n"
+        "     プランを直すか実装に進む。task.decision があれば、それが返信の種別になる\n"
+        "     (approved=承認なのでプランどおり実装する / rejected=差し戻しなので content の理由に従って\n"
+        "     プランを直す。報告への差し戻しなら指摘された点を追加で対応する)。\n"
         "   action によらず、ユーザーに確認したいこと(選択肢やインプットが必要な内容)が\n"
         "   生じた場合は、devuntu-agent MCP の add_ticket_comment に type を指定せず通常コメントとして質問を投稿し、\n"
         "   その回は finish_agent_task を outcome='planned' で報告して終える\n"
@@ -411,6 +413,9 @@ def build_prompt(task: dict) -> str:
         "4. devuntu-agent MCP の finish_agent_task で結果を報告する。\n"
         "   outcome は planned(プランや確認事項を投稿して返信待ち) / completed(対応完了) /\n"
         "   skipped(見送り) / failed(失敗) から選ぶ。\n"
+        "   task.acceptanceCriteria(受け入れ条件)がある場合、completed で終えるときは各項目を自分で確認し、\n"
+        "   criteria に id・met(満たしたか)・evidence(判断の根拠)を全項目分指定する。\n"
+        "   満たせなかった項目は met=false とし、理由を evidence と報告コメントに書く。\n"
         "\n"
         "devuntu-agent MCP の finish_agent_task を必ず呼ぶこと。呼ばずに終わるとチケットは失敗として扱われる。"
     )

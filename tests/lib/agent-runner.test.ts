@@ -15,6 +15,7 @@ import {
 import { failStaleAgentRuns, finishAgentRunById, finishAgentTask, startAgentRun } from '@/lib/agent/agent-run'
 import { type AgentRunnerRow } from '@/lib/agent/agent-runner'
 import { pickAgentTasks, resolveAgentTask } from '@/lib/agent/agent-task'
+import { ClientError } from '@/lib/error'
 import { enqueueAgentRunFinished } from '@/lib/notify/notify-trigger'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -35,8 +36,9 @@ vi.mock('@/lib/prisma', () => {
     updateMany: vi.fn(),
   }
   const agentRunner = { findUnique: vi.fn(), update: vi.fn() }
+  const ticketCriterion = { count: vi.fn(), update: vi.fn() }
   const $queryRaw = vi.fn()
-  const models = { ticket, ticketComment, agentRun, agentRunner, $queryRaw }
+  const models = { ticket, ticketComment, agentRun, agentRunner, ticketCriterion, $queryRaw }
   const $transaction = vi.fn(async (arg: unknown) =>
     typeof arg === 'function' ? await (arg as (tx: unknown) => unknown)(models) : await Promise.all(arg as unknown[]),
   )
@@ -46,6 +48,7 @@ vi.mock('@/lib/prisma', () => {
 const ticket = vi.mocked(prisma.ticket)
 const ticketComment = vi.mocked(prisma.ticketComment)
 const agentRun = vi.mocked(prisma.agentRun)
+const ticketCriterion = vi.mocked(prisma.ticketCriterion)
 
 const notifyMock = vi.mocked(enqueueAgentRunFinished)
 
@@ -584,5 +587,52 @@ describe('finishAgentTask', () => {
     })
     expect(ticket.update, '報告どおりの done へ巻き戻さない').not.toHaveBeenCalled()
     expect(notifyMock, '通知は閉じた側が出している').not.toHaveBeenCalled()
+  })
+
+  const criteria = [{ id: 'c1', met: true, evidence: 'テストが通った' }]
+
+  it('受け入れ条件の自己申告を、実行を閉じるのと同じトランザクションで記録する', async () => {
+    ticket.update.mockResolvedValueOnce(notifyTicket() as never)
+    agentRun.findFirst.mockResolvedValueOnce({ id: 'run1', action: 'execute' } as never)
+    ticketCriterion.count.mockResolvedValueOnce(1)
+
+    await finishAgentTask(runner(), 't1', 'completed', null, criteria)
+
+    expect(ticketCriterion.count).toHaveBeenCalledWith({ where: { ticketId: 't1', id: { in: ['c1'] } } })
+    expect(ticketCriterion.update).toHaveBeenCalledWith({
+      where: { id: 'c1' },
+      data: { agentMet: true, agentEvidence: 'テストが通った', agentReportedAt: expect.any(Date) },
+    })
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1)
+  })
+
+  it('自動運用の設定が無い場合も自己申告は記録する', async () => {
+    ticketCriterion.count.mockResolvedValueOnce(1)
+
+    await finishAgentTask(null, 't1', 'completed', null, criteria)
+
+    expect(ticketCriterion.update).toHaveBeenCalledTimes(1)
+  })
+
+  it('先に閉じられた実行の自己申告は記録しない(失敗した実行が充足に見えないように)', async () => {
+    agentRun.findFirst.mockResolvedValueOnce({ id: 'run1', action: 'execute' } as never)
+    agentRun.updateMany.mockResolvedValueOnce({ count: 0 } as never)
+    ticket.findUnique.mockResolvedValueOnce({ agentState: 'failed' } as never)
+    ticketCriterion.count.mockResolvedValueOnce(1)
+
+    await finishAgentTask(runner(), 't1', 'completed', null, criteria)
+
+    expect(ticketCriterion.update).not.toHaveBeenCalled()
+  })
+
+  it('そのチケットに無い項目が混ざっていたら、実行を閉じずにエラーにする', async () => {
+    ticketCriterion.count.mockResolvedValueOnce(1)
+
+    await expect(
+      finishAgentTask(runner(), 't1', 'completed', null, [...criteria, { id: 'other', met: true, evidence: 'x' }]),
+    ).rejects.toBeInstanceOf(ClientError)
+    expect(agentRun.updateMany).not.toHaveBeenCalled()
+    expect(ticket.update).not.toHaveBeenCalled()
+    expect(ticketCriterion.update).not.toHaveBeenCalled()
   })
 })

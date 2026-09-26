@@ -1,5 +1,6 @@
 import type { TicketCommentType, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
 import { assertTicketAccess, findTicketIdByDisplayId, getAccessibleBoardIds } from '@/lib/board/board-access'
+import { listTicketCriteria } from '@/lib/board/ticket-criterion'
 import { parseTicketDisplayId, ticketDisplayId, ticketShortPath } from '@/lib/board/ticket-id'
 import { addTicketLink, listTicketLinks, removeTicketLink } from '@/lib/board/ticket-link'
 import {
@@ -56,7 +57,15 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
       createdAt: true,
       updatedAt: true,
       comments: {
-        select: { id: true, content: true, author: { select: { name: true } }, createdAt: true },
+        select: {
+          id: true,
+          content: true,
+          type: true,
+          decision: true,
+          parentId: true,
+          author: { select: { name: true } },
+          createdAt: true,
+        },
         orderBy: { createdAt: 'asc' },
       },
     },
@@ -66,7 +75,7 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
   }
 
   const displayId = ticketDisplayId({ key: ticket.board.key, number: ticket.number })
-  const links = await listTicketLinks(id)
+  const [links, criteria] = await Promise.all([listTicketLinks(id), listTicketCriteria(id)])
   return {
     displayId,
     /** 本文・コメントに貼られた画像のキー。`get_image` で中身を見られることに気づけるよう返す */
@@ -86,10 +95,23 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
     createdAt: ticket.createdAt,
     updatedAt: ticket.updatedAt,
     shortUrl: makeUrl(ticketShortPath(displayId)).toString(),
+    /** 受け入れ条件。checked は人の最終確認、agentMet はエージェントの自己申告(null は未報告) */
+    acceptanceCriteria: criteria.map((criterion) => ({
+      id: criterion.id,
+      text: criterion.text,
+      checked: criterion.checkedAt !== null,
+      agentMet: criterion.agentMet,
+      agentEvidence: criterion.agentEvidence,
+    })),
     comments: ticket.comments.map((comment) => ({
       id: comment.id,
       authorName: comment.author?.name ?? '',
       content: comment.content,
+      /** plan=対応プラン / report=対応報告 / null=通常コメント */
+      type: comment.type,
+      /** plan / report への返答。approved=承認 / rejected=差し戻し / null=通常の返信 */
+      decision: comment.decision,
+      parentId: comment.parentId,
       createdAt: comment.createdAt,
     })),
     /** このチケットに対応するときの手順。instructions を読まないクライアントにも届くよう、応答にも載せる */
