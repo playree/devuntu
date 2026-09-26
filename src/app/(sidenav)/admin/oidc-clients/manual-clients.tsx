@@ -32,8 +32,7 @@ export const ManualOidcClients: FC<{ baseUrl: string }> = ({ baseUrl }) => {
 
   const list = usePagingList({
     load: async () => {
-      const res = await parseAction(getOidcClients())
-      return res ?? []
+      return await parseAction(getOidcClients())
     },
     sort: {
       init: { column: 'clientName', direction: 'ascending' },

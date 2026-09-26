@@ -34,16 +34,6 @@ export const scCreateAdmin = z.object({
 })
 export type CreateAdmin = z.infer<typeof scCreateAdmin>
 
-export const scInputEmail = z.object({
-  email: zEmail,
-})
-export type InputEmail = z.infer<typeof scInputEmail>
-
-export const scSetPassword = z.object({
-  password: zPassword,
-})
-export type SetPassword = z.infer<typeof scSetPassword>
-
 export const scAddOidcClient = z.object({
   clientName: z.string(),
   redirectUri: z.url(),

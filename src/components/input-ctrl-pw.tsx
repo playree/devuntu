@@ -23,15 +23,7 @@ export const PasswordScore: FC<{
   isDisabled?: boolean
 }> = ({ label, score, isDisabled }) => {
   return (
-    <ProgressBar
-      size='md'
-      maxValue={4}
-      value={score}
-      className='my-1 px-1'
-      color={COLOR[score]}
-      valueLabel=' '
-      // isDisabled={isDisabled}
-    >
+    <ProgressBar size='md' maxValue={4} value={score} className='my-1 px-1' color={COLOR[score]} valueLabel=' '>
       <Label className={isDisabled ? 'text-xs text-gray-600 dark:text-gray-400' : 'text-xs'}>{label}</Label>
       <ProgressBar.Output />
       <ProgressBar.Track>
@@ -47,7 +39,6 @@ export const InputPasswordCtrl = <
 >({
   control,
   name,
-  type = 'text',
   onChanged,
   label,
   isLabelHidden,
@@ -60,7 +51,7 @@ export const InputPasswordCtrl = <
   isSmart: isSmartProp,
   isSmartForm: isSmartFormProp,
   ...props
-}: InputProps &
+}: Omit<InputProps, 'type'> &
   FieldBaseProps & {
     control?: Control<TFieldValues>
     name: TName
@@ -122,7 +113,7 @@ export const InputPasswordCtrl = <
                   }
                   onChange(event)
                 }}
-                value={value || (type === 'number' ? '0' : '')}
+                value={value || ''}
               />
               <InputGroup.Suffix className='pr-0'>
                 <Button

@@ -26,8 +26,7 @@ export const BusyTimeManage: FC = () => {
 
   const list = usePagingList({
     load: async () => {
-      const res = await parseAction(getBusyTimes())
-      return res ?? []
+      return await parseAction(getBusyTimes())
     },
     sort: {
       init: { column: 'createdAt', direction: 'descending' },

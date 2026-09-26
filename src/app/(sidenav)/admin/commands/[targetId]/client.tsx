@@ -43,7 +43,7 @@ export const AdminCommandTargetClient: FC<{ targetKey: string }> = ({ targetKey 
 
   // グループの保存と合わせてリロードできるよう、ここで生成して AssignmentMembers へ渡す
   const memberList = usePagingList({
-    load: async () => (await parseAction(getCommandTargetMembersForAdmin({ targetKey }), { handled: 'all' })) ?? [],
+    load: () => parseAction(getCommandTargetMembersForAdmin({ targetKey }), { handled: 'all' }),
     sort: { init: { column: 'name', direction: 'ascending' } },
   })
 

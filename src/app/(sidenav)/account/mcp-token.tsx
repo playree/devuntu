@@ -53,7 +53,7 @@ export const MyMcpTokens: FC<{ baseUrl: string }> = ({ baseUrl }) => {
   const issueModalState = useModalState()
 
   const list = usePagingList({
-    load: async () => await parseAction(getMyMcpTokens()),
+    load: () => parseAction(getMyMcpTokens()),
     sort: {
       init: { column: 'createdAt', direction: 'descending' },
     },

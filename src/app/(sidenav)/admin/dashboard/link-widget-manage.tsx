@@ -191,8 +191,7 @@ export const LinkWidgetManage: FC = () => {
 
   const list = usePagingList({
     load: async () => {
-      const res = await parseAction(getLinkWidgets())
-      return res ?? []
+      return await parseAction(getLinkWidgets())
     },
     sort: {
       init: { column: 'updatedAt', direction: 'descending' },

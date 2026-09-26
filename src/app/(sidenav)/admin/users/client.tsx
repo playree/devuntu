@@ -32,8 +32,7 @@ export const AdminUsersClient: FC<{ enabledPassword: boolean }> = ({ enabledPass
 
   const list = usePagingList({
     load: async () => {
-      const res = await parseAction(getUsers())
-      return res ?? []
+      return await parseAction(getUsers())
     },
     sort: {
       init: { column: 'createdAt', direction: 'descending' },

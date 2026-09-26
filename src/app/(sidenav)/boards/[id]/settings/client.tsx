@@ -60,7 +60,7 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
   const { data: assignments, reload: reloadAssignments } = useActionData(() => getBoardAssignments({ id: boardId }))
   // ボードグループの保存と合わせてリロードできるよう、ここで生成して AssignmentMembers に渡す
   const memberList = usePagingList({
-    load: async () => (await parseAction(getBoardMembers({ id: boardId }), { handled: 'all' })) ?? [],
+    load: () => parseAction(getBoardMembers({ id: boardId }), { handled: 'all' }),
     sort: { init: { column: 'name', direction: 'ascending' } },
   })
 

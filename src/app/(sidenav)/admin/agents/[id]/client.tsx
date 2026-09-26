@@ -71,7 +71,7 @@ export const AdminAgentDetailClient: FC<{ agentId: string; baseUrl: string }> = 
   const { data: groupOptions } = useActionData(getAgentGroupOptions)
   const { data: approverUserOptions } = useActionData(getApproverUserOptions)
   const runHistoryList = usePagingList({
-    load: async () => (await parseAction(getAgentRuns({ id: agentId }), { handled: 'all' })) ?? [],
+    load: () => parseAction(getAgentRuns({ id: agentId }), { handled: 'all' }),
     sort: { init: { column: 'startedAt', direction: 'descending' } },
   })
 

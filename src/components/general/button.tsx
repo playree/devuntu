@@ -12,7 +12,6 @@ export const MultiButton: FC<
     icon?: ReactNode
     tooltip?: string
     isSmart?: boolean
-    isLink?: boolean
     coolTime?: number
   }
 > = ({
