@@ -22,6 +22,20 @@ const lineStyles = tv({
 })
 
 /**
+ * md 以上は親(data-fit-screen)の残り高さを埋めてログ枠を画面下端まで伸ばす。
+ * md 未満はページ全体のスクロールに任せるので、従来どおり最大高で頭打ちにする。
+ * min-h-0 は、flex 子の最小高が内容高に張り付いて枠が縮まず溢れるのを防ぐため
+ */
+const frameStyles = tv({
+  slots: {
+    root: 'relative md:flex md:min-h-0 md:flex-1 md:flex-col',
+    panel: 'px-2 py-1 md:flex md:min-h-0 md:flex-1 md:flex-col',
+    scroller: 'max-h-[32rem] overflow-y-auto md:max-h-none md:min-h-0 md:flex-1',
+  },
+})
+const frame = frameStyles()
+
+/**
  * 実行ログの表示。
  *
  * 末尾へ自動追従するが、利用者が自分でスクロールしたら止める。追いかけている最中に
@@ -59,14 +73,9 @@ export const CommandLogView: FC<{ lines: CommandLogLine[]; isLive: boolean }> = 
   }, [lines, following])
 
   return (
-    <div className='relative'>
-      <Panel className='px-2 py-1'>
-        <div
-          ref={containerRef}
-          tabIndex={0}
-          className='max-h-[32rem] overflow-y-auto'
-          aria-label={t('command_run_log')}
-        >
+    <div className={frame.root()}>
+      <Panel className={frame.panel()}>
+        <div ref={containerRef} tabIndex={0} className={frame.scroller()} aria-label={t('command_run_log')}>
           {lines.map((line) => {
             // システム行はロケールキーで保存されている。この仕組みより前の行は平文なのでそのまま出す
             const message = line.stream === 'system' ? decodeSystemMessage(line.text) : null
