@@ -21,6 +21,14 @@ services:
       - type: bind
         source: ./config/commands
         target: /app/config/commands
+    healthcheck:
+      test: ['CMD', 'curl', '-fsS', 'http://localhost:3000/api/health']
+      interval: 30s
+      timeout: 20s
+      retries: 3
+      # 起動時に entrypoint が prisma migrate deploy を実行する分の猶予
+      start_period: 120s
+      start_interval: 5s
 
   db:
     image: postgres:18

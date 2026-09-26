@@ -24,7 +24,8 @@ Docker Compose で Devuntu を立ち上げるまでの手順。運用開始後�
 ## 前提
 
 - Docker / Docker Compose が動くホスト。`compose.yaml` が `env_file` の `required: false` を使うため
-  **Docker Compose は v2.24 以降**が必要
+  **Docker Compose は v2.24 以降**が必要。また `devuntu` の healthcheck が `start_interval` を使うため
+  **Docker Engine は 25.0 以降**が必要
 - **メモリは最低 2GB、推奨 4GB**。内訳の目安はアプリ本体 250〜600MB(画像変換とワーカーを含む)、
   `db` 150〜300MB、`s3` 150〜400MB で、これにホストOSと Docker デーモンの 300〜500MB が乗る。
   公開済みイメージを pull する前提の値で、ホスト上で自前ビルドする場合は別途 4GB 以上必要
@@ -200,9 +201,17 @@ docker compose up -d
 DB マイグレーションは `docker/docker-entrypoint.sh` が起動時に `prisma migrate deploy` を実行するため、
 **手動でのマイグレーションは不要**(アップデート時も同じ)。
 
-起動を確認する。
+`devuntu` にも `/api/health` を叩く healthcheck を設定しているため、起動完了まで待ちたい場合は
+`--wait` を付ける(全サービスが healthy になるまで戻らない)。
 
 ```sh
+docker compose up -d --wait
+```
+
+起動を確認する。`docker compose ps` の STATUS が `(healthy)` になっていれば起動完了。
+
+```sh
+docker compose ps
 docker compose logs -f devuntu
 curl -s http://localhost:3000/api/health
 # => {"status":"ok","timestamp":"..."}
