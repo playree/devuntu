@@ -91,7 +91,7 @@ docker compose run --rm tools maintenance off
 - `entrypoint` を `node /app/scripts/tools.mjs` にしているので `docker-entrypoint.sh` が動かず、`prisma migrate deploy` は走らない
 - 環境変数は `env_file`(`.env.docker`)から渡るので、コンテナ内の `S3_ENDPOINT` は `http://s3:8333`、`DATABASE_URL` の接続先は `db:5432` になる。`setup-env` は `.env.docker` を作る側なので、`required: false` を付けて「あれば読む」にしてある(Docker Compose v2.24 以降が必要)
 - `compose.yaml` のあるディレクトリを `/work` へマウントして作業ディレクトリにしているため、設定ファイルの生成先も `backup/` の入出力先も `compose.yaml` と同じ階層になる。引数のパスはホストで見えるパス(`backup/...`)をそのまま書ける
-- コンテナは root で動くため、`backup/` 配下の出力は root 所有になる(`setup-env` が生成する設定ファイルは、実行ユーザーが扱えるよう所有者を合わせている)
+- コンテナは root で動くが、`backup/` 配下の出力と `setup-env` が生成する設定ファイルは、実行ユーザーが扱えるよう `compose.yaml` のあるディレクトリの所有者に合わせている。以前のバージョンで作られた root 所有のバックアップは `sudo chown -R <ユーザー>: backup/` で直せる
 - `db` / `s3` への `depends_on` は持たない(`setup-env` は `db` / `s3` が必要とする設定ファイルを作る側のため)。止めている状態からバックアップ/リストアするときは、先に `docker compose up -d --wait db s3` で healthy まで待つ
 - `db-backup` / `db-restore` が使う `pg_dump` / `pg_restore` / `psql` はイメージに同梱している。バージョンは `compose.yaml` の `postgres:18` と揃えているので、`db` サービスのメジャーバージョンを上げるときは `docker/Dockerfile` の `postgresql-client-18` も合わせる
 

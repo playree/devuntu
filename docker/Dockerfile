@@ -68,6 +68,7 @@ RUN mkdir /app/db && ln -s /app/db /app/migrate/db
 COPY --from=builder /app/scripts/tools.mjs \
                     /app/scripts/run-script.mjs \
                     /app/scripts/db-connect.mjs \
+                    /app/scripts/file-owner.mjs \
                     /app/scripts/backup-db.mjs \
                     /app/scripts/restore-db.mjs \
                     /app/scripts/backup-s3.mjs \

@@ -12,10 +12,11 @@
  * `src/lib/env-util.ts` と同名の環境変数として揃えている。
  * 既存ファイルがあれば現在値を各質問の既定値として提示し、Enter で現状維持できる。
  */
-import { chown, mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
+import { chown, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { createInterface } from 'node:readline/promises'
 import { parseArgs, styleText } from 'node:util'
+import { ownerOf } from '../file-owner.mjs'
 import { diffEnv, isSecretKey, maskSecret, parseEnvFile, quoteEnvValue, serializeEnv } from './env-file.mjs'
 import {
   BUNDLED_S3_ENDPOINT,
@@ -838,21 +839,12 @@ const stamp = () => {
   return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`
 }
 
-/** 生成物の所有者を出力先ディレクトリに合わせる(root のコンテナから書いてもホスト側で扱えるように) */
-const ownerOf = async (dir) => {
-  try {
-    const s = await stat(dir)
-    return { uid: s.uid, gid: s.gid }
-  } catch {
-    return undefined
-  }
-}
-
 /** 生成物はいずれも資格情報を含む。s3 コンテナは root で動くので 0600 でも読める */
 const MODE = 0o600
 
 await mkdir(outDir, { recursive: true })
-const owner = await ownerOf(outDir)
+// 生成物の所有者を出力先ディレクトリに合わせる(root のコンテナから書いてもホスト側で扱えるように)
+const owner = ownerOf(outDir)
 const suffix = stamp()
 
 const targets = [
