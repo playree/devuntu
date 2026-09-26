@@ -84,24 +84,25 @@
 
 Proxy は認証処理を通さず素通しするため、各ルートハンドラ内で個別に認証する(メンテナンスモード中の遮断だけは Proxy が行う)。
 
-| パス                                               | アクセス制御                                                          |
-| -------------------------------------------------- | --------------------------------------------------------------------- |
-| `/api/auth/[...all]`                               | Better Auth のハンドラ(認証処理自体)                                  |
-| `/api/auth/.well-known/openid-configuration`       | 認証不要(OIDC ディスカバリ)                                           |
-| `/api/auth/.well-known/oauth-authorization-server` | 認証不要(RFC 8414 認可サーバーメタデータ)                             |
-| `/.well-known/oauth-authorization-server/api/auth` | 認証不要(RFC 8414 のパス挿入形式。同じ内容を返す)                     |
-| `/.well-known/oauth-protected-resource/api/mcp`    | 認証不要(RFC 9728 保護リソースメタデータ)                             |
-| `/api/auth/oauth2/register`                        | 認証不要(RFC 7591 動的クライアント登録)。`OIDC_DCR_ENABLED` 時のみ    |
-| `/api/mcp`                                         | アクセストークン必須(未提示は401 + `WWW-Authenticate`)                |
-| `/api/health`                                      | 認証不要(ヘルスチェック)                                              |
-| `/api/agent/status`                                | エージェント用トークン必須(POST)。稼働条件と処理対象チケットを返す    |
-| `/api/agent/runs`                                  | エージェント用トークン必須(POST)。実行の開始を記録                    |
-| `/api/agent/runs/[id]`                             | エージェント用トークン必須(PATCH)。実行の終了を記録                   |
-| `/agent/devuntu_agent.py`                          | 認証不要(`public/` の静的配布)。ランナー本体。秘密情報は含まない      |
-| `/api/upload`                                      | 認証必須(セッション、またはMCPの短命トークン)。画像アップロード(POST) |
-| `/api/upload/[filename]`                           | 認証必須(未ログインは401)。画像配信(GET)                              |
-| `/api/avatar/[filename]`                           | **認証不要**。`user.image` から参照中のキーだけを配信(GET)            |
-| `/api/slack/events`                                | 認証不要。Slack の署名検証だけが門番(POST)                            |
-| `/api/webpush/key`                                 | 認証必須。VAPID 公開鍵を返す(GET)。Service Worker の再購読用          |
-| `/api/webpush/subscribe`                           | 認証必須。`pushsubscriptionchange` の再購読報告(POST)                 |
-| `/api/command/runs/[id]/stream`                    | 認証必須 + 実行者本人または管理者。実行ログのSSE配信(GET)             |
+| パス                                               | アクセス制御                                                                       |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `/api/auth/[...all]`                               | Better Auth のハンドラ(認証処理自体)                                               |
+| `/api/auth/.well-known/openid-configuration`       | 認証不要(OIDC ディスカバリ)                                                        |
+| `/api/auth/.well-known/oauth-authorization-server` | 認証不要(RFC 8414 認可サーバーメタデータ)                                          |
+| `/.well-known/oauth-authorization-server/api/auth` | 認証不要(RFC 8414 のパス挿入形式。同じ内容を返す)                                  |
+| `/.well-known/oauth-protected-resource/api/mcp`    | 認証不要(RFC 9728 保護リソースメタデータ)                                          |
+| `/api/auth/oauth2/register`                        | 認証不要(RFC 7591 動的クライアント登録)。`OIDC_DCR_ENABLED` 時のみ                 |
+| `/api/mcp`                                         | アクセストークン必須(未提示は401 + `WWW-Authenticate`)                             |
+| `/api/health`                                      | 認証不要(ヘルスチェック)                                                           |
+| `/api/agent/status`                                | エージェント用トークン必須(POST)。稼働条件と処理対象チケットを返す                 |
+| `/api/agent/runs`                                  | エージェント用トークン必須(POST)。実行の開始を記録                                 |
+| `/api/agent/runs/[id]`                             | エージェント用トークン必須(PATCH)。実行の終了を記録                                |
+| `/agent/devuntu_agent.py`                          | 認証不要(`public/` の静的配布)。ランナー本体。秘密情報は含まない                   |
+| `/api/upload`                                      | 認証必須(セッション、またはMCPの短命トークン)。画像アップロード(POST)              |
+| `/api/upload/[filename]`                           | 認証必須(未ログインは401)。画像配信(GET)                                           |
+| `/api/avatar/[filename]`                           | **認証不要**。`user.image` から参照中のキーだけを配信(GET)                         |
+| `/api/slack/events`                                | 認証不要。Slack の署名検証だけが門番(POST)                                         |
+| `/api/github/webhook`                              | 認証不要。GitHub の署名検証だけが門番(POST)。`GITHUB_WEBHOOK_SECRET` 未設定なら404 |
+| `/api/webpush/key`                                 | 認証必須。VAPID 公開鍵を返す(GET)。Service Worker の再購読用                       |
+| `/api/webpush/subscribe`                           | 認証必須。`pushsubscriptionchange` の再購読報告(POST)                              |
+| `/api/command/runs/[id]/stream`                    | 認証必須 + 実行者本人または管理者。実行ログのSSE配信(GET)                          |

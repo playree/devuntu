@@ -89,6 +89,7 @@ model User {
   createdTickets  Ticket[]        @relation("TicketCreator")
   assignedTickets Ticket[]        @relation("TicketAssignee")
   ticketComments  TicketComment[]
+  ticketLinks     TicketLink[]
 
   // MCP
   mcpTokens McpToken[]
@@ -1231,6 +1232,9 @@ model Board {
   /// アーカイブ済み。一覧の既定の表示からは外れる
   archived Boolean @default(false)
 
+  /// 紐付いた PR がすべてマージ / クローズされたらチケットを完了にする(GitHub 連携のオプトイン)
+  completeOnPrMerge Boolean @default(false)
+
   /// エージェントの実行結果を通知する Slack チャンネル(`C...`)。null なら通知しない。
 
   // メタデータ
@@ -1244,6 +1248,7 @@ model Board {
   attachments    Attachment[]
   keyHistories   BoardKeyHistory[]
   notifySettings BoardNotifySetting[]
+  repositories   BoardRepository[]
 
   @@map("board")
 }
@@ -1416,6 +1421,7 @@ model Ticket {
   tags      TicketTag[]
   comments  TicketComment[]
   agentRuns AgentRun[]
+  links     TicketLink[]
 
   // @@unique が (boardId, ...) の先頭索引を兼ねるので表示IDからの検索はこれで賄える
   @@unique([boardId, number])
@@ -1474,6 +1480,144 @@ enum TicketCommentType {
   plan
   /// エージェントが投稿した対応報告
   report
+}
+
+/// 連携する Git ホスティング。GitLab などを足すときはここへ追加する
+enum GitProvider {
+  github
+}
+
+/// チケットに紐付けた成果物の種別
+enum TicketLinkKind {
+  branch
+  pull_request
+  commit
+}
+
+/// プルリクエストの状態。branch / commit のリンクでは null
+enum PullRequestState {
+  open
+  draft
+  merged
+  closed
+}
+
+/// 紐付けの経路
+enum TicketLinkSource {
+  /// MCP / 画面から明示的に登録した
+  manual
+  /// Webhook がブランチ名の表示IDから登録した
+  auto
+}
+
+/// チケットに紐付けたブランチ / プルリクエスト / コミット。
+/// 状態(prState / headSha)は対応付け済みリポジトリ(BoardRepository)の Webhook で更新する。
+model TicketLink {
+  id String @id @default(uuid(7))
+
+  ticketId String
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  provider GitProvider    @default(github)
+  kind     TicketLinkKind
+
+  /// `owner/name`。GitHub は大文字小文字を区別しないため小文字で保存する
+  repo String
+
+  /// branch: ブランチ名 / pull_request: PR 番号 / commit: SHA
+  ref String
+
+  /// 画面から開く GitHub の URL
+  url String
+
+  /// PR のタイトル。Webhook で届くまでは null
+  title String?
+
+  prState PullRequestState?
+
+  /// CI 結果(GitCheckSuite)と突き合わせるコミット。PR は head、コミットは ref と同じ値
+  headSha String?
+
+  /// 反映済みの PR の updated_at。遅れて届いた古いイベントで状態を巻き戻さないために比べる
+  syncedAt DateTime?
+
+  source TicketLinkSource @default(manual)
+
+  /// 自動で付いたリンクを利用者が外した。行を残しておき、次の Webhook で付け直さない
+  dismissed Boolean @default(false)
+
+  /// 登録した人。自動リンク・退会では null
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // @@unique が ticketId 先頭の索引を兼ねる
+  @@unique([ticketId, provider, repo, kind, ref])
+  // Webhook から PR / ブランチのリンクを引く
+  @@index([provider, repo, kind, ref])
+  @@map("ticket_link")
+}
+
+/// ボードとリポジトリの対応付け。Webhook はここにあるリポジトリのイベントだけを扱う。
+model BoardRepository {
+  id String @id @default(uuid(7))
+
+  boardId String
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  provider GitProvider @default(github)
+
+  /// `owner/name`(小文字)
+  repo String
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([boardId, provider, repo])
+  @@index([provider, repo])
+  @@map("board_repository")
+}
+
+/// GitHub の Check Suite(CI を実行するアプリごとのまとまり)の最新状態。
+/// リンクとは独立に持ち、表示時に headSha で集計する(リンクの登録より先に CI が終わることがあるため)。
+model GitCheckSuite {
+  id String @id @default(uuid(7))
+
+  provider GitProvider @default(github)
+
+  /// `owner/name`(小文字)
+  repo String
+
+  /// GitHub の check_suite.id
+  suiteId String
+
+  headSha String
+
+  /// 実行したアプリの名前(GitHub Actions など)
+  appName String
+
+  /// GitHub の status(queued / in_progress / completed など)をそのまま持つ
+  status String
+
+  /// GitHub の conclusion(success / failure など)。完了前は null
+  conclusion String?
+
+  /// 反映済みの check_suite.updated_at。古いイベントで巻き戻さないために比べる
+  syncedAt DateTime
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([provider, repo, suiteId])
+  @@index([provider, repo, headSha])
+  // 古い行の掃除(maintenance-sweep.ts)
+  @@index([updatedAt])
+  @@map("git_check_suite")
 }
 
 /// 通知の対象となるイベント。

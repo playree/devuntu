@@ -10,6 +10,7 @@ import { dateOnlyToUtc, nowDate } from '../day'
 import { errInvalidOperation } from '../error'
 import {
   enqueueTicketCommented,
+  enqueueTicketCompletedByMerge,
   enqueueTicketCreated,
   enqueueTicketMoved,
   enqueueTicketUpdated,
@@ -212,6 +213,29 @@ export const changeTicketStatus = async (actor: Actor, id: string, status: Ticke
     // 移動と同じトランザクションで投入する(コミット後に落ちると通知だけが消える)
     await enqueueTicketMoved({ actorId: actor.id, ticketId: id, before: access.status, after: lane.status }, tx)
     return lane
+  })
+
+/**
+ * PR のマージによる自動完了(GitHub 連携)。操作した人はいないのでシステムの操作として扱い、権限の判定は挟まない。
+ * 対象を絞るのは呼び出し元(Webhook)の責務で、ここではアーカイブ済みのボードと完了済みのチケットだけを除く。
+ * 完了へ動かしたら true。
+ */
+export const completeTicketByMerge = async (ticketId: string, pullRequest: string): Promise<boolean> =>
+  prisma.$transaction(async (tx) => {
+    const ticket = await tx.ticket.findUnique({
+      where: { id: ticketId },
+      select: { id: true, boardId: true, status: true, board: { select: { archived: true } } },
+    })
+    if (!ticket || ticket.board.archived || ticket.status === 'done') {
+      return false
+    }
+
+    await moveTicketToLane(tx, {
+      access: { ticketId: ticket.id, boardId: ticket.boardId, status: ticket.status },
+      status: 'done',
+    })
+    await enqueueTicketCompletedByMerge({ ticketId, pullRequest }, tx)
+    return true
   })
 
 export type AddCommentInput = {

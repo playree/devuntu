@@ -7,6 +7,7 @@
 
 import { DAY_MS, msBefore } from '@/lib/day'
 import {
+  GIT_CHECK_SUITE_RETENTION_MS,
   OAUTH_TOKEN_RETENTION_MS,
   SESSION_RETENTION_MS,
   VERIFICATION_RETENTION_MS,
@@ -15,6 +16,7 @@ import {
   runMaintenanceSweep,
   sweepAgentRuns,
   sweepCommandRuns,
+  sweepGitCheckSuites,
   sweepOauthAccessTokens,
   sweepOauthClientAssertions,
   sweepOauthRefreshTokens,
@@ -61,6 +63,7 @@ vi.mock('@/lib/prisma', () => ({
     agentRun: { deleteMany: vi.fn(), findMany: vi.fn() },
     agentRunner: { findMany: vi.fn() },
     commandRun: { deleteMany: vi.fn(), findMany: vi.fn() },
+    gitCheckSuite: { deleteMany: vi.fn() },
   },
 }))
 
@@ -82,12 +85,22 @@ beforeEach(() => {
     prisma.uploadNonce,
     prisma.agentRun,
     prisma.commandRun,
+    prisma.gitCheckSuite,
   ]) {
     vi.mocked(model.deleteMany).mockResolvedValue({ count: 0 })
   }
   vi.mocked(prisma.agentRunner.findMany).mockResolvedValue([] as never)
   vi.mocked(prisma.agentRun.findMany).mockResolvedValue([] as never)
   vi.mocked(prisma.commandRun.findMany).mockResolvedValue([] as never)
+})
+
+describe('sweepGitCheckSuites', () => {
+  it('保持期間より前から更新の無いものだけを消す', async () => {
+    await sweepGitCheckSuites(now)
+    expect(vi.mocked(prisma.gitCheckSuite.deleteMany).mock.calls[0][0]).toEqual({
+      where: { updatedAt: { lt: msBefore(now, GIT_CHECK_SUITE_RETENTION_MS) } },
+    })
+  })
 })
 
 describe('sweepSessions', () => {

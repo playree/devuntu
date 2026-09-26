@@ -108,6 +108,40 @@ export const TicketCommentType = {
 export type TicketCommentType = (typeof TicketCommentType)[keyof typeof TicketCommentType]
 
 
+export const GitProvider = {
+  github: 'github'
+} as const
+
+export type GitProvider = (typeof GitProvider)[keyof typeof GitProvider]
+
+
+export const TicketLinkKind = {
+  branch: 'branch',
+  pull_request: 'pull_request',
+  commit: 'commit'
+} as const
+
+export type TicketLinkKind = (typeof TicketLinkKind)[keyof typeof TicketLinkKind]
+
+
+export const PullRequestState = {
+  open: 'open',
+  draft: 'draft',
+  merged: 'merged',
+  closed: 'closed'
+} as const
+
+export type PullRequestState = (typeof PullRequestState)[keyof typeof PullRequestState]
+
+
+export const TicketLinkSource = {
+  manual: 'manual',
+  auto: 'auto'
+} as const
+
+export type TicketLinkSource = (typeof TicketLinkSource)[keyof typeof TicketLinkSource]
+
+
 export const NotifyEvent = {
   mention: 'mention',
   agent_run: 'agent_run',

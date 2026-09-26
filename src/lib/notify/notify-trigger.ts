@@ -269,6 +269,31 @@ export const enqueueTicketMoved = async (
   await enqueueTicketChanged('ticket_completed', { actorId, ticket }, tx)
 }
 
+/**
+ * PR のマージによる自動完了(GitHub 連携)。操作した人はいないので、システム由来(actorId なし)として投入する。
+ * 呼び出し元が完了へ動かしたことを確かめてから呼ぶ。
+ */
+export const enqueueTicketCompletedByMerge = async (
+  param: { ticketId: string; pullRequest: string },
+  tx: Prisma.TransactionClient = prisma,
+): Promise<void> => {
+  const { ticketId, pullRequest } = param
+  const ticket = await loadTicketNotifyRef(ticketId, tx)
+  if (!ticket) {
+    return
+  }
+
+  logger.info({ ticketId, pullRequest }, 'ticket completed by merge notify')
+
+  await enqueueNotify(
+    {
+      event: 'ticket_completed',
+      payload: { ...ticketPayload(ticket), fromName: '', pullRequest },
+    },
+    tx,
+  )
+}
+
 /** 通知に載せるチケットの識別を引く。削除済みなら通知しないので null */
 const loadTicketNotifyRef = async (ticketId: string, tx: Prisma.TransactionClient): Promise<TicketNotifyRef | null> => {
   const ticket = await tx.ticket.findUnique({

@@ -20,7 +20,7 @@ export const SwitchField: FC<SwitchProps & { id: string; label: string; isSmart?
       size={size ?? (isSmart ? 'md' : 'lg')}
       id={id}
     >
-      <Switch.Content className={isSmart ? 'gap-2 text-sm' : 'text-md'}>
+      <Switch.Content className={isSmart ? 'gap-2 text-sm font-normal' : 'text-md font-normal'}>
         <Switch.Control>
           <Switch.Thumb />
         </Switch.Control>

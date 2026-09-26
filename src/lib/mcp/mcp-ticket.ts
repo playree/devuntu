@@ -1,6 +1,7 @@
 import type { TicketCommentType, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
 import { assertTicketAccess, findTicketIdByDisplayId, getAccessibleBoardIds } from '@/lib/board/board-access'
 import { parseTicketDisplayId, ticketDisplayId, ticketShortPath } from '@/lib/board/ticket-id'
+import { addTicketLink, listTicketLinks, removeTicketLink } from '@/lib/board/ticket-link'
 import {
   addComment,
   createTicket,
@@ -16,6 +17,7 @@ import { buildTicketWhere, ticketListOrderBy } from '@/lib/board/ticket-search'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { resolveBoardId } from '@/lib/mcp/mcp-board'
+import { ticketWorkflowFor } from '@/lib/mcp/mcp-instructions'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import { prisma } from '@/lib/prisma'
 import { makeUrl } from '@/lib/server-utils'
@@ -64,6 +66,7 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
   }
 
   const displayId = ticketDisplayId({ key: ticket.board.key, number: ticket.number })
+  const links = await listTicketLinks(id)
   return {
     displayId,
     /** 本文・コメントに貼られた画像のキー。`get_image` で中身を見られることに気づけるよう返す */
@@ -88,6 +91,19 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
       authorName: comment.author?.name ?? '',
       content: comment.content,
       createdAt: comment.createdAt,
+    })),
+    /** このチケットに対応するときの手順。instructions を読まないクライアントにも届くよう、応答にも載せる */
+    workflow: ticketWorkflowFor(auth.kind, access.canEdit),
+    /** 紐付けたブランチ / PR / コミット。prState と ci は GitHub の Webhook で更新される */
+    links: links.map(({ id: linkId, kind, repo, ref, url, title, prState, ci }) => ({
+      id: linkId,
+      kind,
+      repo,
+      ref,
+      url,
+      title,
+      prState,
+      ci,
     })),
   }
 }
@@ -252,4 +268,23 @@ export const deleteTicketCommentForMcp = async (auth: ResourceAuth, commentId: s
 
   logger.info({ userId: auth.user.id, commentId }, 'mcp ticket comment deleted')
   return { id: commentId }
+}
+
+/**
+ * ブランチ / PR / コミットの URL をチケットに紐付ける。コメントの投稿と同じく、チケットを編集できれば登録できる。
+ */
+export const linkTicketArtifactForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: string, url: string) => {
+  const ticketId = await resolveTicketId(auth, ticketIdOrDisplayId)
+  const link = await addTicketLink(auth.user, ticketId, url)
+
+  logger.info({ userId: auth.user.id, ticketId, linkId: link.id }, 'mcp ticket link added')
+  return { id: link.id }
+}
+
+/** 紐付けを外す。linkId は get_ticket の links から得る */
+export const unlinkTicketArtifactForMcp = async (auth: ResourceAuth, linkId: string) => {
+  const { ticketId } = await removeTicketLink(auth.user, linkId)
+
+  logger.info({ userId: auth.user.id, ticketId, linkId }, 'mcp ticket link removed')
+  return { id: linkId }
 }

@@ -63,6 +63,7 @@ DevuntuのAIエージェント向けの機能も、この(人による確認を�
 - メンションや担当者変更のメール / Slack DM / Webプッシュ通知
 - MCPサーバーとして、AIエージェントから自分の権限でチケットを操作できる
 - AIエージェントを担当者として登録でき、担当チケットをAIエージェントが自動的に処理する仕組みを構築できる(現状は`Claude`と`Codex`に対応)
+- GitHub のブランチ / プルリクエスト / コミットをチケットに紐付け、PR の状態と CI の結果を表示。マージでチケットを自動で完了にできる
 - 定義済みの処理をリモートのサーバーで実行し、出力をリアルタイムで確認できる
 - パスキー認証、Googleログイン
 - OAuthプロバイダとして利用できる
@@ -112,6 +113,7 @@ Docker Compose で3つのサービスを起動します(`compose.yaml`)。
 | Google         | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                      | Googleサインインとカレンダー機能               |
 | Slack          | `SLACK_*` 一式                                                   | Slack DM 通知とチケットURLの展開               |
 | Webプッシュ    | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`                         | ブラウザ / スマートフォンへのプッシュ通知      |
+| GitHub         | `GITHUB_WEBHOOK_SECRET`                                          | PR の状態・CI の反映とマージでの自動完了       |
 | MCP            | `OIDC_DCR_ENABLED=true`                                          | MCPクライアントからの接続                      |
 | AIエージェント | `/admin/agents` でのエージェント作成とトークン発行               | エージェントによるチケットの自動処理           |
 | リモート実行   | `COMMAND_EXEC_ENABLED=true` と定義ファイル / SSH鍵 / known_hosts | 画面からリモートサーバーでの定義済み処理の実行 |

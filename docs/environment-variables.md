@@ -80,27 +80,28 @@ Server Action(`next-action` ヘッダ)は matcher の対象外で、認証リダ
 
 ## 認証
 
-| 変数名                         | 説明                                       | 必須 | デフォルト        |
-| ------------------------------ | ------------------------------------------ | ---- | ----------------- |
-| `BETTER_AUTH_URL`              | 運用するベースの URL                       | 〇   | -                 |
-| `BETTER_AUTH_SECRET`           | Better Auth 用シークレット                 | 〇   | -                 |
-| `SESSION_EXPIRES_IN`           | セッション有効期間(秒)                     |      | `432000`(5日)     |
-| `SESSION_FRESH_AGE`            | セッション fresh 期間(秒)。`0` で無効      |      | `86400`(1日)      |
-| `TWO_FA_REQUIRED`              | 2要素認証を必須にするか                    |      | `true`            |
-| `DISABLE_PASSWORD_AUTH`        | パスワード認証を無効化                     |      | `false`           |
-| `OIDC_DCR_ENABLED`             | 動的クライアント登録を有効化               |      | `false`           |
-| `MCP_REFRESH_TOKEN_EXPIRES_IN` | MCP リフレッシュトークンの有効期間(秒)     |      | `15552000`(180日) |
-| `MAIN_DEVUNTU_URL`             | 連携元 Devuntu の URL                      |      | -                 |
-| `MAIN_DEVUNTU_CLIENT_ID`       | 連携元クライアントID                       |      | -                 |
-| `MAIN_DEVUNTU_CLIENT_SECRET`   | 連携元クライアントシークレット             |      | -                 |
-| `GOOGLE_CLIENT_ID`             | Google OAuth クライアントID                |      | -                 |
-| `GOOGLE_CLIENT_SECRET`         | Google OAuth クライアントシークレット      |      | -                 |
-| `GOOGLE_ALLOWED_DOMAINS`       | サインインを許可するドメイン(カンマ区切り) |      | -                 |
-| `SLACK_CLIENT_ID`              | Slack OAuth クライアントID                 |      | -                 |
-| `SLACK_CLIENT_SECRET`          | Slack OAuth クライアントシークレット       |      | -                 |
-| `SLACK_BOT_TOKEN`              | Slack Bot トークン(`xoxb-`)                |      | -                 |
-| `SLACK_TEAM_ID`                | Slack ワークスペースID(`T...`)             |      | -                 |
-| `SLACK_SIGNING_SECRET`         | Slack リクエスト署名シークレット           |      | -                 |
+| 変数名                         | 説明                                                            | 必須 | デフォルト        |
+| ------------------------------ | --------------------------------------------------------------- | ---- | ----------------- |
+| `BETTER_AUTH_URL`              | 運用するベースの URL                                            | 〇   | -                 |
+| `BETTER_AUTH_SECRET`           | Better Auth 用シークレット                                      | 〇   | -                 |
+| `SESSION_EXPIRES_IN`           | セッション有効期間(秒)                                          |      | `432000`(5日)     |
+| `SESSION_FRESH_AGE`            | セッション fresh 期間(秒)。`0` で無効                           |      | `86400`(1日)      |
+| `TWO_FA_REQUIRED`              | 2要素認証を必須にするか                                         |      | `true`            |
+| `DISABLE_PASSWORD_AUTH`        | パスワード認証を無効化                                          |      | `false`           |
+| `OIDC_DCR_ENABLED`             | 動的クライアント登録を有効化                                    |      | `false`           |
+| `MCP_REFRESH_TOKEN_EXPIRES_IN` | MCP リフレッシュトークンの有効期間(秒)                          |      | `15552000`(180日) |
+| `MAIN_DEVUNTU_URL`             | 連携元 Devuntu の URL                                           |      | -                 |
+| `MAIN_DEVUNTU_CLIENT_ID`       | 連携元クライアントID                                            |      | -                 |
+| `MAIN_DEVUNTU_CLIENT_SECRET`   | 連携元クライアントシークレット                                  |      | -                 |
+| `GOOGLE_CLIENT_ID`             | Google OAuth クライアントID                                     |      | -                 |
+| `GOOGLE_CLIENT_SECRET`         | Google OAuth クライアントシークレット                           |      | -                 |
+| `GOOGLE_ALLOWED_DOMAINS`       | サインインを許可するドメイン(カンマ区切り)                      |      | -                 |
+| `SLACK_CLIENT_ID`              | Slack OAuth クライアントID                                      |      | -                 |
+| `SLACK_CLIENT_SECRET`          | Slack OAuth クライアントシークレット                            |      | -                 |
+| `SLACK_BOT_TOKEN`              | Slack Bot トークン(`xoxb-`)                                     |      | -                 |
+| `SLACK_TEAM_ID`                | Slack ワークスペースID(`T...`)                                  |      | -                 |
+| `SLACK_SIGNING_SECRET`         | Slack リクエスト署名シークレット                                |      | -                 |
+| `GITHUB_WEBHOOK_SECRET`        | GitHub Webhook の署名シークレット。未設定なら GitHub 連携は無効 |      | -                 |
 
 `TWO_FA_REQUIRED=false` にすると 2要素認証を行わない。パスワード認証時に OTP 入力へ遷移せず、
 過去に 2FA を有効化した利用者もパスワードのみでサインインする(サインイン時の 2FA チャレンジ自体を

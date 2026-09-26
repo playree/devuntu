@@ -134,7 +134,11 @@ export const assertReplyTarget = async (tx: Db, ticketId: string, parentId: stri
  */
 export const moveTicketToLane = async (
   tx: Prisma.TransactionClient,
-  { access, status, index }: { access: TicketAccess; status: TicketStatus; index?: number },
+  {
+    access,
+    status,
+    index,
+  }: { access: Pick<TicketAccess, 'ticketId' | 'boardId' | 'status'>; status: TicketStatus; index?: number },
 ): Promise<{ id: string; status: TicketStatus; order: number }> => {
   // レーンは「同一ボード + 同一ステータス」で決まる
   const lane = await tx.ticket.findMany({

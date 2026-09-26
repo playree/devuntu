@@ -5,6 +5,7 @@
 import { el } from '@/locale'
 import { z } from 'zod'
 import { BOARD_KEY_PATTERN, isReservedBoardKey, MAX_BOARD_KEY } from '../board/ticket-id'
+import { normalizeGithubRepo } from '../github/github'
 import { CHANNEL_NOTIFY_EVENTS } from '../notify/notify'
 import { SLACK_CHANNEL_ID_PATTERN } from '../slack/slack'
 import { zName } from './schema'
@@ -119,3 +120,24 @@ export const scSetBoardGroups = z.object({
   groupIds: z.array(z.uuidv7()).default([]),
 })
 export type SetBoardGroups = z.infer<typeof scSetBoardGroups>
+
+/** GitHub 連携で対応付けるリポジトリ(`owner/name` または URL) */
+export const scAddBoardRepository = z.object({
+  id: z.uuidv7(),
+  repo: z
+    .string()
+    .trim()
+    .min(1, el('@required_field'))
+    .refine((repo) => normalizeGithubRepo(repo) !== null, el('@invalid_github_repo')),
+})
+export type AddBoardRepository = z.infer<typeof scAddBoardRepository>
+
+export const scRemoveBoardRepository = z.object({
+  id: z.uuidv7(),
+  repositoryId: z.uuidv7(),
+})
+
+export const scSetBoardCompleteOnPrMerge = z.object({
+  id: z.uuidv7(),
+  completeOnPrMerge: z.boolean(),
+})

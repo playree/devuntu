@@ -13,6 +13,7 @@ import {
   ArrowTopRightOnSquareIcon,
   Cog6ToothIcon,
   ExclamationTriangleIcon,
+  GithubIcon,
   InformationCircleIcon,
   SlackIcon,
   TagIcon,
@@ -29,6 +30,7 @@ import { useLocale } from '@/locale/client'
 import { Accordion, ButtonGroup } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
+import { BoardGithub } from './board-github'
 import { BoardProfile } from './board-profile'
 import { BoardChannelNotify } from './channel-notify'
 import { DangerZone } from './danger-zone'
@@ -226,6 +228,20 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
             title={t('board_slack_notify')}
           >
             <BoardChannelNotify boardId={board.id} />
+          </AccordionSection>
+        )}
+
+        {board.canManage && board.githubEnabled && (
+          <AccordionSection
+            /**
+             * GitHub 連携: 対応付けるリポジトリとマージで完了の設定。設定できるのは owner と管理者で、
+             * Webhook の署名シークレットが無い環境ではセクションごと出さない
+             */
+            id='board_github'
+            icon={<GithubIcon />}
+            title={t('board_github')}
+          >
+            <BoardGithub boardId={board.id} />
           </AccordionSection>
         )}
 

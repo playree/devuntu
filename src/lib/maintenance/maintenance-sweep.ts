@@ -14,6 +14,7 @@ import { envu } from '../env-util'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
 import {
+  GIT_CHECK_SUITE_RETENTION_MS,
   MAINTENANCE_DELETE_BATCH,
   OAUTH_TOKEN_RETENTION_MS,
   SESSION_RETENTION_MS,
@@ -166,6 +167,11 @@ export const sweepCommandRuns = async (now: Date): Promise<number> => {
   return count + capped
 }
 
+/** 更新が止まった GitHub の Check Suite。消えた後に表示される CI の結果は「無し」になる */
+export const sweepGitCheckSuites = async (now: Date): Promise<number> =>
+  (await prisma.gitCheckSuite.deleteMany({ where: { updatedAt: { lt: msBefore(now, GIT_CHECK_SUITE_RETENTION_MS) } } }))
+    .count
+
 /** 1手順ぶん。1つ失敗しても残りの手順は続ける */
 const runStep = async (counts: SweepCounts, step: string, fn: () => Promise<number>): Promise<void> => {
   try {
@@ -189,6 +195,7 @@ export const runMaintenanceSweep = async (now: Date = nowDate()): Promise<SweepC
   await runStep(counts, 'uploadNonce', () => sweepUploadNonces(now))
   await runStep(counts, 'agentRun', () => sweepAgentRuns(now))
   await runStep(counts, 'commandRun', () => sweepCommandRuns(now))
+  await runStep(counts, 'gitCheckSuite', () => sweepGitCheckSuites(now))
   await runStep(counts, 'attachment', () => sweepOrphanAttachments(now))
 
   logger.info(counts, 'maintenance sweep finished')

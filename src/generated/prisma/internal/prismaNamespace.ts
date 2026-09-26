@@ -435,6 +435,9 @@ export const ModelName = {
   BoardGroup: 'BoardGroup',
   Ticket: 'Ticket',
   TicketComment: 'TicketComment',
+  TicketLink: 'TicketLink',
+  BoardRepository: 'BoardRepository',
+  GitCheckSuite: 'GitCheckSuite',
   UserNotifySetting: 'UserNotifySetting',
   WebPushSubscription: 'WebPushSubscription',
   BoardNotifySetting: 'BoardNotifySetting',
@@ -459,7 +462,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "group" | "userGroup" | "calendarShare" | "calendarBusyTime" | "board" | "boardKeyHistory" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "ticket" | "ticketComment" | "userNotifySetting" | "webPushSubscription" | "boardNotifySetting" | "notifyOutbox" | "notifyDelivery" | "commandTargetMember" | "commandTargetGroup" | "commandRun" | "commandRunChunk"
+    modelProps: "user" | "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "group" | "userGroup" | "calendarShare" | "calendarBusyTime" | "board" | "boardKeyHistory" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "ticket" | "ticketComment" | "ticketLink" | "boardRepository" | "gitCheckSuite" | "userNotifySetting" | "webPushSubscription" | "boardNotifySetting" | "notifyOutbox" | "notifyDelivery" | "commandTargetMember" | "commandTargetGroup" | "commandRun" | "commandRunChunk"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -3275,6 +3278,228 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    TicketLink: {
+      payload: Prisma.$TicketLinkPayload<ExtArgs>
+      fields: Prisma.TicketLinkFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TicketLinkFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketLinkPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TicketLinkFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketLinkPayload>
+        }
+        findFirst: {
+          args: Prisma.TicketLinkFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketLinkPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TicketLinkFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketLinkPayload>
+        }
+        findMany: {
+          args: Prisma.TicketLinkFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketLinkPayload>[]
+        }
+        create: {
+          args: Prisma.TicketLinkCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketLinkPayload>
+        }
+        createMany: {
+          args: Prisma.TicketLinkCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TicketLinkCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketLinkPayload>[]
+        }
+        delete: {
+          args: Prisma.TicketLinkDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketLinkPayload>
+        }
+        update: {
+          args: Prisma.TicketLinkUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketLinkPayload>
+        }
+        deleteMany: {
+          args: Prisma.TicketLinkDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TicketLinkUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TicketLinkUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketLinkPayload>[]
+        }
+        upsert: {
+          args: Prisma.TicketLinkUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketLinkPayload>
+        }
+        aggregate: {
+          args: Prisma.TicketLinkAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTicketLink>
+        }
+        groupBy: {
+          args: Prisma.TicketLinkGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TicketLinkGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TicketLinkCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TicketLinkCountAggregateOutputType> | number
+        }
+      }
+    }
+    BoardRepository: {
+      payload: Prisma.$BoardRepositoryPayload<ExtArgs>
+      fields: Prisma.BoardRepositoryFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BoardRepositoryFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardRepositoryPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BoardRepositoryFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardRepositoryPayload>
+        }
+        findFirst: {
+          args: Prisma.BoardRepositoryFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardRepositoryPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BoardRepositoryFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardRepositoryPayload>
+        }
+        findMany: {
+          args: Prisma.BoardRepositoryFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardRepositoryPayload>[]
+        }
+        create: {
+          args: Prisma.BoardRepositoryCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardRepositoryPayload>
+        }
+        createMany: {
+          args: Prisma.BoardRepositoryCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BoardRepositoryCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardRepositoryPayload>[]
+        }
+        delete: {
+          args: Prisma.BoardRepositoryDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardRepositoryPayload>
+        }
+        update: {
+          args: Prisma.BoardRepositoryUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardRepositoryPayload>
+        }
+        deleteMany: {
+          args: Prisma.BoardRepositoryDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BoardRepositoryUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BoardRepositoryUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardRepositoryPayload>[]
+        }
+        upsert: {
+          args: Prisma.BoardRepositoryUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardRepositoryPayload>
+        }
+        aggregate: {
+          args: Prisma.BoardRepositoryAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBoardRepository>
+        }
+        groupBy: {
+          args: Prisma.BoardRepositoryGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BoardRepositoryGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BoardRepositoryCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BoardRepositoryCountAggregateOutputType> | number
+        }
+      }
+    }
+    GitCheckSuite: {
+      payload: Prisma.$GitCheckSuitePayload<ExtArgs>
+      fields: Prisma.GitCheckSuiteFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.GitCheckSuiteFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GitCheckSuitePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.GitCheckSuiteFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GitCheckSuitePayload>
+        }
+        findFirst: {
+          args: Prisma.GitCheckSuiteFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GitCheckSuitePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.GitCheckSuiteFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GitCheckSuitePayload>
+        }
+        findMany: {
+          args: Prisma.GitCheckSuiteFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GitCheckSuitePayload>[]
+        }
+        create: {
+          args: Prisma.GitCheckSuiteCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GitCheckSuitePayload>
+        }
+        createMany: {
+          args: Prisma.GitCheckSuiteCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.GitCheckSuiteCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GitCheckSuitePayload>[]
+        }
+        delete: {
+          args: Prisma.GitCheckSuiteDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GitCheckSuitePayload>
+        }
+        update: {
+          args: Prisma.GitCheckSuiteUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GitCheckSuitePayload>
+        }
+        deleteMany: {
+          args: Prisma.GitCheckSuiteDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.GitCheckSuiteUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.GitCheckSuiteUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GitCheckSuitePayload>[]
+        }
+        upsert: {
+          args: Prisma.GitCheckSuiteUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GitCheckSuitePayload>
+        }
+        aggregate: {
+          args: Prisma.GitCheckSuiteAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateGitCheckSuite>
+        }
+        groupBy: {
+          args: Prisma.GitCheckSuiteGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.GitCheckSuiteGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.GitCheckSuiteCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.GitCheckSuiteCountAggregateOutputType> | number
+        }
+      }
+    }
     UserNotifySetting: {
       payload: Prisma.$UserNotifySettingPayload<ExtArgs>
       fields: Prisma.UserNotifySettingFieldRefs
@@ -4444,6 +4669,7 @@ export const BoardScalarFieldEnum = {
   name: 'name',
   description: 'description',
   archived: 'archived',
+  completeOnPrMerge: 'completeOnPrMerge',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -4540,6 +4766,57 @@ export const TicketCommentScalarFieldEnum = {
 } as const
 
 export type TicketCommentScalarFieldEnum = (typeof TicketCommentScalarFieldEnum)[keyof typeof TicketCommentScalarFieldEnum]
+
+
+export const TicketLinkScalarFieldEnum = {
+  id: 'id',
+  ticketId: 'ticketId',
+  provider: 'provider',
+  kind: 'kind',
+  repo: 'repo',
+  ref: 'ref',
+  url: 'url',
+  title: 'title',
+  prState: 'prState',
+  headSha: 'headSha',
+  syncedAt: 'syncedAt',
+  source: 'source',
+  dismissed: 'dismissed',
+  createdById: 'createdById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TicketLinkScalarFieldEnum = (typeof TicketLinkScalarFieldEnum)[keyof typeof TicketLinkScalarFieldEnum]
+
+
+export const BoardRepositoryScalarFieldEnum = {
+  id: 'id',
+  boardId: 'boardId',
+  provider: 'provider',
+  repo: 'repo',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BoardRepositoryScalarFieldEnum = (typeof BoardRepositoryScalarFieldEnum)[keyof typeof BoardRepositoryScalarFieldEnum]
+
+
+export const GitCheckSuiteScalarFieldEnum = {
+  id: 'id',
+  provider: 'provider',
+  repo: 'repo',
+  suiteId: 'suiteId',
+  headSha: 'headSha',
+  appName: 'appName',
+  status: 'status',
+  conclusion: 'conclusion',
+  syncedAt: 'syncedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type GitCheckSuiteScalarFieldEnum = (typeof GitCheckSuiteScalarFieldEnum)[keyof typeof GitCheckSuiteScalarFieldEnum]
 
 
 export const UserNotifySettingScalarFieldEnum = {
@@ -4938,6 +5215,62 @@ export type ListEnumTicketCommentTypeFieldRefInput<$PrismaModel> = FieldRefInput
 
 
 /**
+ * Reference to a field of type 'GitProvider'
+ */
+export type EnumGitProviderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'GitProvider'>
+    
+
+
+/**
+ * Reference to a field of type 'GitProvider[]'
+ */
+export type ListEnumGitProviderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'GitProvider[]'>
+    
+
+
+/**
+ * Reference to a field of type 'TicketLinkKind'
+ */
+export type EnumTicketLinkKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TicketLinkKind'>
+    
+
+
+/**
+ * Reference to a field of type 'TicketLinkKind[]'
+ */
+export type ListEnumTicketLinkKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TicketLinkKind[]'>
+    
+
+
+/**
+ * Reference to a field of type 'PullRequestState'
+ */
+export type EnumPullRequestStateFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PullRequestState'>
+    
+
+
+/**
+ * Reference to a field of type 'PullRequestState[]'
+ */
+export type ListEnumPullRequestStateFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PullRequestState[]'>
+    
+
+
+/**
+ * Reference to a field of type 'TicketLinkSource'
+ */
+export type EnumTicketLinkSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TicketLinkSource'>
+    
+
+
+/**
+ * Reference to a field of type 'TicketLinkSource[]'
+ */
+export type ListEnumTicketLinkSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TicketLinkSource[]'>
+    
+
+
+/**
  * Reference to a field of type 'NotifyEvent'
  */
 export type EnumNotifyEventFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'NotifyEvent'>
@@ -5223,6 +5556,9 @@ export type GlobalOmitConfig = {
   boardGroup?: Prisma.BoardGroupOmit
   ticket?: Prisma.TicketOmit
   ticketComment?: Prisma.TicketCommentOmit
+  ticketLink?: Prisma.TicketLinkOmit
+  boardRepository?: Prisma.BoardRepositoryOmit
+  gitCheckSuite?: Prisma.GitCheckSuiteOmit
   userNotifySetting?: Prisma.UserNotifySettingOmit
   webPushSubscription?: Prisma.WebPushSubscriptionOmit
   boardNotifySetting?: Prisma.BoardNotifySettingOmit

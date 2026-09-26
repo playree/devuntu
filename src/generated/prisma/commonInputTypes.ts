@@ -487,6 +487,74 @@ export type EnumTicketCommentTypeNullableWithAggregatesFilter<$PrismaModel = nev
   _max?: Prisma.NestedEnumTicketCommentTypeNullableFilter<$PrismaModel>
 }
 
+export type EnumGitProviderFilter<$PrismaModel = never> = {
+  equals?: $Enums.GitProvider | Prisma.EnumGitProviderFieldRefInput<$PrismaModel>
+  in?: $Enums.GitProvider[] | Prisma.ListEnumGitProviderFieldRefInput<$PrismaModel>
+  notIn?: $Enums.GitProvider[] | Prisma.ListEnumGitProviderFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumGitProviderFilter<$PrismaModel> | $Enums.GitProvider
+}
+
+export type EnumTicketLinkKindFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketLinkKind | Prisma.EnumTicketLinkKindFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketLinkKind[] | Prisma.ListEnumTicketLinkKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TicketLinkKind[] | Prisma.ListEnumTicketLinkKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTicketLinkKindFilter<$PrismaModel> | $Enums.TicketLinkKind
+}
+
+export type EnumPullRequestStateNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.PullRequestState | Prisma.EnumPullRequestStateFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PullRequestState[] | Prisma.ListEnumPullRequestStateFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PullRequestState[] | Prisma.ListEnumPullRequestStateFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPullRequestStateNullableFilter<$PrismaModel> | $Enums.PullRequestState | null
+}
+
+export type EnumTicketLinkSourceFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketLinkSource | Prisma.EnumTicketLinkSourceFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketLinkSource[] | Prisma.ListEnumTicketLinkSourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TicketLinkSource[] | Prisma.ListEnumTicketLinkSourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTicketLinkSourceFilter<$PrismaModel> | $Enums.TicketLinkSource
+}
+
+export type EnumGitProviderWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.GitProvider | Prisma.EnumGitProviderFieldRefInput<$PrismaModel>
+  in?: $Enums.GitProvider[] | Prisma.ListEnumGitProviderFieldRefInput<$PrismaModel>
+  notIn?: $Enums.GitProvider[] | Prisma.ListEnumGitProviderFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumGitProviderWithAggregatesFilter<$PrismaModel> | $Enums.GitProvider
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumGitProviderFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumGitProviderFilter<$PrismaModel>
+}
+
+export type EnumTicketLinkKindWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketLinkKind | Prisma.EnumTicketLinkKindFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketLinkKind[] | Prisma.ListEnumTicketLinkKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TicketLinkKind[] | Prisma.ListEnumTicketLinkKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTicketLinkKindWithAggregatesFilter<$PrismaModel> | $Enums.TicketLinkKind
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTicketLinkKindFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTicketLinkKindFilter<$PrismaModel>
+}
+
+export type EnumPullRequestStateNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PullRequestState | Prisma.EnumPullRequestStateFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PullRequestState[] | Prisma.ListEnumPullRequestStateFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PullRequestState[] | Prisma.ListEnumPullRequestStateFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPullRequestStateNullableWithAggregatesFilter<$PrismaModel> | $Enums.PullRequestState | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPullRequestStateNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPullRequestStateNullableFilter<$PrismaModel>
+}
+
+export type EnumTicketLinkSourceWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketLinkSource | Prisma.EnumTicketLinkSourceFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketLinkSource[] | Prisma.ListEnumTicketLinkSourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TicketLinkSource[] | Prisma.ListEnumTicketLinkSourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTicketLinkSourceWithAggregatesFilter<$PrismaModel> | $Enums.TicketLinkSource
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTicketLinkSourceFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTicketLinkSourceFilter<$PrismaModel>
+}
+
 export type EnumNotifyEventFilter<$PrismaModel = never> = {
   equals?: $Enums.NotifyEvent | Prisma.EnumNotifyEventFieldRefInput<$PrismaModel>
   in?: $Enums.NotifyEvent[] | Prisma.ListEnumNotifyEventFieldRefInput<$PrismaModel>
@@ -1019,6 +1087,74 @@ export type NestedEnumTicketCommentTypeNullableWithAggregatesFilter<$PrismaModel
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedEnumTicketCommentTypeNullableFilter<$PrismaModel>
   _max?: Prisma.NestedEnumTicketCommentTypeNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumGitProviderFilter<$PrismaModel = never> = {
+  equals?: $Enums.GitProvider | Prisma.EnumGitProviderFieldRefInput<$PrismaModel>
+  in?: $Enums.GitProvider[] | Prisma.ListEnumGitProviderFieldRefInput<$PrismaModel>
+  notIn?: $Enums.GitProvider[] | Prisma.ListEnumGitProviderFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumGitProviderFilter<$PrismaModel> | $Enums.GitProvider
+}
+
+export type NestedEnumTicketLinkKindFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketLinkKind | Prisma.EnumTicketLinkKindFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketLinkKind[] | Prisma.ListEnumTicketLinkKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TicketLinkKind[] | Prisma.ListEnumTicketLinkKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTicketLinkKindFilter<$PrismaModel> | $Enums.TicketLinkKind
+}
+
+export type NestedEnumPullRequestStateNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.PullRequestState | Prisma.EnumPullRequestStateFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PullRequestState[] | Prisma.ListEnumPullRequestStateFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PullRequestState[] | Prisma.ListEnumPullRequestStateFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPullRequestStateNullableFilter<$PrismaModel> | $Enums.PullRequestState | null
+}
+
+export type NestedEnumTicketLinkSourceFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketLinkSource | Prisma.EnumTicketLinkSourceFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketLinkSource[] | Prisma.ListEnumTicketLinkSourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TicketLinkSource[] | Prisma.ListEnumTicketLinkSourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTicketLinkSourceFilter<$PrismaModel> | $Enums.TicketLinkSource
+}
+
+export type NestedEnumGitProviderWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.GitProvider | Prisma.EnumGitProviderFieldRefInput<$PrismaModel>
+  in?: $Enums.GitProvider[] | Prisma.ListEnumGitProviderFieldRefInput<$PrismaModel>
+  notIn?: $Enums.GitProvider[] | Prisma.ListEnumGitProviderFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumGitProviderWithAggregatesFilter<$PrismaModel> | $Enums.GitProvider
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumGitProviderFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumGitProviderFilter<$PrismaModel>
+}
+
+export type NestedEnumTicketLinkKindWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketLinkKind | Prisma.EnumTicketLinkKindFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketLinkKind[] | Prisma.ListEnumTicketLinkKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TicketLinkKind[] | Prisma.ListEnumTicketLinkKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTicketLinkKindWithAggregatesFilter<$PrismaModel> | $Enums.TicketLinkKind
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTicketLinkKindFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTicketLinkKindFilter<$PrismaModel>
+}
+
+export type NestedEnumPullRequestStateNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PullRequestState | Prisma.EnumPullRequestStateFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PullRequestState[] | Prisma.ListEnumPullRequestStateFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PullRequestState[] | Prisma.ListEnumPullRequestStateFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPullRequestStateNullableWithAggregatesFilter<$PrismaModel> | $Enums.PullRequestState | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPullRequestStateNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPullRequestStateNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumTicketLinkSourceWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketLinkSource | Prisma.EnumTicketLinkSourceFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketLinkSource[] | Prisma.ListEnumTicketLinkSourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TicketLinkSource[] | Prisma.ListEnumTicketLinkSourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTicketLinkSourceWithAggregatesFilter<$PrismaModel> | $Enums.TicketLinkSource
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTicketLinkSourceFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTicketLinkSourceFilter<$PrismaModel>
 }
 
 export type NestedEnumNotifyEventFilter<$PrismaModel = never> = {

@@ -10,6 +10,12 @@ import {
 } from '@/lib/board/board-assignment'
 import { getBoardMemberUsers } from '@/lib/board/board-member'
 import {
+  addBoardRepository as addBoardRepositoryCore,
+  getBoardGithub as getBoardGithubCore,
+  removeBoardRepository as removeBoardRepositoryCore,
+  setBoardCompleteOnPrMerge as setBoardCompleteOnPrMergeCore,
+} from '@/lib/board/board-repository'
+import {
   assertBoardNotifyManageable,
   deleteBoard as deleteBoardCore,
   getBoardDetail as getBoardDetailCore,
@@ -29,9 +35,12 @@ import { prisma } from '@/lib/prisma'
 import { assertRateLimit } from '@/lib/rate-limit'
 import { scUUID } from '@/lib/schema/schema'
 import {
+  scAddBoardRepository,
   scGetBoardSlackChannels,
   scRemoveBoardMember,
+  scRemoveBoardRepository,
   scSetBoardArchived,
+  scSetBoardCompleteOnPrMerge,
   scSetBoardGroups,
   scSetBoardNotifySetting,
   scUpdateBoard,
@@ -126,6 +135,41 @@ export const deleteBoard = safeAuthAction
   .inputSchema(scUUID)
   .action(async ({ ctx: { user }, parsedInput: { id } }) => {
     await deleteBoardCore(user, id)
+    return { id }
+  })
+
+/* -------------------------------------------------------------------------------------------------
+ * GitHub 連携
+ * -----------------------------------------------------------------------------------------------*/
+
+/** 対応付けたリポジトリ・マージで完了の設定と、Webhook の登録先(owner または管理者) */
+export const getBoardGithub = safeAuthAction
+  .metadata({ actionName: 'getBoardGithub', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => await getBoardGithubCore(user, id))
+export type GetBoardGithubReturnType = Awaited<ReturnType<typeof getBoardGithub>>['data']
+
+/** リポジトリの対応付け(owner または管理者) */
+export const addBoardRepository = safeAuthAction
+  .metadata({ actionName: 'addBoardRepository', role: 'user' })
+  .inputSchema(scAddBoardRepository)
+  .action(async ({ ctx: { user }, parsedInput: { id, repo } }) => await addBoardRepositoryCore(user, id, repo))
+
+/** リポジトリの対応付けの解除(owner または管理者) */
+export const removeBoardRepository = safeAuthAction
+  .metadata({ actionName: 'removeBoardRepository', role: 'user' })
+  .inputSchema(scRemoveBoardRepository)
+  .action(async ({ ctx: { user }, parsedInput: { id, repositoryId } }) => {
+    await removeBoardRepositoryCore(user, id, repositoryId)
+    return { id }
+  })
+
+/** PR のマージでチケットを完了にするかの切り替え(owner または管理者) */
+export const setBoardCompleteOnPrMerge = safeAuthAction
+  .metadata({ actionName: 'setBoardCompleteOnPrMerge', role: 'user' })
+  .inputSchema(scSetBoardCompleteOnPrMerge)
+  .action(async ({ ctx: { user }, parsedInput: { id, completeOnPrMerge } }) => {
+    await setBoardCompleteOnPrMergeCore(user, id, completeOnPrMerge)
     return { id }
   })
 

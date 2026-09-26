@@ -3,14 +3,17 @@ import { AGENT_MCP_SERVER_NAME, MCP_SERVER_NAME } from '@/lib/mcp/mcp'
 import { registerAgentSetupTool, registerAgentTools } from '@/lib/mcp/mcp-agent'
 import { getBoardForMcp, listBoardsForMcp } from '@/lib/mcp/mcp-board'
 import { registerImageTools } from '@/lib/mcp/mcp-image'
+import { mcpInstructions } from '@/lib/mcp/mcp-instructions'
 import {
   addTicketCommentForMcp,
   createTicketForMcp,
   deleteTicketCommentForMcp,
   deleteTicketForMcp,
   getTicketForMcp,
+  linkTicketArtifactForMcp,
   MCP_ASSIGNEE_ME,
   searchTicketsForMcp,
+  unlinkTicketArtifactForMcp,
   updateTicketCommentForMcp,
   updateTicketForMcp,
 } from '@/lib/mcp/mcp-ticket'
@@ -21,6 +24,7 @@ import {
   scTicketSearch,
   zCommentContent,
   zCommentType,
+  zGithubUrl,
   zTicketStatus,
 } from '@/lib/schema/schema-ticket'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
@@ -76,7 +80,10 @@ const mcpTicketSearchSchema = scTicketSearch.extend({
 })
 
 export const createDevuntuMcpServer = (auth: ResourceAuth) => {
-  const server = new McpServer({ name: SERVER_NAME[auth.kind], version: '1.0.0' })
+  const server = new McpServer(
+    { name: SERVER_NAME[auth.kind], version: '1.0.0' },
+    { instructions: mcpInstructions(auth.kind) },
+  )
 
   server.registerTool('ping', { title: 'Ping', description: '接続確認用。認可済みユーザーの情報を返す' }, async () => ({
     content: [{ type: 'text' as const, text: `pong: ${auth.user.email}` }],
@@ -123,7 +130,8 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     {
       title: 'チケット取得',
       description:
-        '表示ID(例: ABC-42)またはチケットIDを指定して、本文・ステータス・担当者・タグ・コメントを含む詳細を取得する',
+        '表示ID(例: ABC-42)またはチケットIDを指定して、本文・ステータス・担当者・タグ・コメント・紐付けたリンクを含む詳細を取得する。' +
+        'チケットに対応する場合は、応答の workflow の手順(着手時の doing、plan / report の投稿、成果物の紐付け)に従う',
       inputSchema: { ticketId: z.string().min(1) },
     },
     async ({ ticketId }) => jsonResult(await getTicketForMcp(auth, ticketId)),
@@ -154,7 +162,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     {
       title: 'チケット更新',
       description:
-        'チケットの内容(タイトル/本文/優先度/期限/担当者/タグ)やステータスを更新する。' +
+        'チケットの内容(タイトル/本文/優先度/期限/担当者/タグ)やステータスを更新する。対応に着手したら status を doing にする。' +
         'メンバーは他人が担当のチケットを更新できない(未割り当てなら可能。オーナーは制限なし)',
       inputSchema: mcpUpdateTicketSchema.shape,
     },
@@ -176,7 +184,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     {
       title: 'コメント追加',
       description:
-        'チケットにコメントを追加する。対応プランは type=plan、対応完了の報告は type=report として残すと' +
+        'チケットにコメントを追加する。方針を立てたら type=plan、対応を終えたら type=report で投稿すると' +
         '詳細画面で折りたたみ表示され、通常コメントと区別できる。既存コメントへの返信は parentId で指定できる(1階層のみ)',
       inputSchema: {
         ticketId: z.string().min(1),
@@ -207,6 +215,32 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       inputSchema: { commentId: z.uuidv7() },
     },
     async ({ commentId }) => jsonResult(await deleteTicketCommentForMcp(auth, commentId)),
+  )
+
+  server.registerTool(
+    'link_ticket_artifact',
+    {
+      title: '成果物の紐付け',
+      description:
+        'GitHub のブランチ / プルリクエスト / コミットの URL をチケットに紐付ける。種別は URL から判定する。' +
+        'プルリクエストを作ったら紐付けておくと、状態と CI の結果がチケット詳細に表示される',
+      inputSchema: {
+        ticketId: z.string().min(1),
+        url: zGithubUrl.describe('例: https://github.com/owner/repo/pull/123'),
+      },
+    },
+    async ({ ticketId, url }) => jsonResult(await linkTicketArtifactForMcp(auth, ticketId, url)),
+  )
+
+  server.registerTool(
+    'unlink_ticket_artifact',
+    {
+      title: '成果物の紐付け解除',
+      description:
+        'チケットに紐付けたブランチ / プルリクエスト / コミットを外す。linkId は get_ticket の links から得る',
+      inputSchema: { linkId: z.uuidv7() },
+    },
+    async ({ linkId }) => jsonResult(await unlinkTicketArtifactForMcp(auth, linkId)),
   )
 
   // 画像の添付・取得は人間の利用者もエージェントも使う

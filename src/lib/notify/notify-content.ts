@@ -111,7 +111,9 @@ const BUILDERS = {
 
   ticket_completed: (payload, locale) => ({
     subject: subjectOf(payload),
-    body: t(locale, 'notify_msg_ticket_completed', { from: payload.fromName }),
+    body: payload.pullRequest
+      ? t(locale, 'notify_msg_ticket_completed_by_pr', { pr: payload.pullRequest })
+      : t(locale, 'notify_msg_ticket_completed', { from: payload.fromName }),
     url: shortUrl(payload.displayId).toString(),
   }),
 } as const satisfies { [E in NotifyEvent]: ContentBuilder<E> }

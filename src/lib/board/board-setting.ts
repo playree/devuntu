@@ -16,6 +16,7 @@ import { detachBoardAttachments, listBoardAttachmentKeys, removeAttachmentByKey 
 import { countTicketsByBoard } from './board'
 import { assertBoardAccess, assertTeamBoard, isAdminActor, type Actor } from './board-access'
 import { reserveBoardKey, rethrowDuplicatedBoardKey } from './board-key'
+import { isGithubEnabled } from './board-repository'
 import { TICKET_STATUSES } from './ticket-enum'
 
 /**
@@ -55,6 +56,8 @@ export const getBoardDetail = async (actor: Actor, id: string) => {
     isAdmin: isAdminActor(actor),
     // チャネル通知セクションの表示可否。連携が使えない環境では設定させても届かない
     slackEnabled: hasSlackCredentials() && (await getSlackSettings()).enabled,
+    // GitHub 連携セクションの表示可否。署名シークレットが無ければ Webhook を受けられない
+    githubEnabled: isGithubEnabled(),
     ticketCounts: Object.fromEntries(TICKET_STATUSES.map((status) => [status, byStatus[status] ?? 0])),
   }
 }

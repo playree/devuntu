@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { MAX_TAG_NAME, MAX_TICKET_TAGS, TAG_COLORS } from '../board/tag-rule'
 import { TICKET_COMMENT_TYPES, TICKET_PRIORITIES, TICKET_STATUSES } from '../board/ticket-enum'
 import { ASSIGNEE_NONE, TICKET_SORT_COLUMNS } from '../board/ticket-search'
+import { parseGithubUrl } from '../github/github'
 import { zPagingFields } from './schema'
 import { zAgentMode } from './schema-agent'
 
@@ -37,6 +38,13 @@ export const zCommentContent = z.string().trim().min(1, el('@required_field')).m
 
 /** コメントの種別。ticket-enum.ts の TICKET_COMMENT_TYPES を単一ソースにする。null/未指定は通常コメント */
 export const zCommentType = z.enum(TICKET_COMMENT_TYPES).nullish()
+
+/** チケットに紐付ける GitHub のブランチ / PR / コミットの URL。種別の判定は parseGithubUrl が行う */
+export const zGithubUrl = z
+  .string()
+  .trim()
+  .max(2000, el('@invalid_github_url'))
+  .refine((url) => parseGithubUrl(url) !== null, el('@invalid_github_url'))
 
 /** 期日は日付のみ(YYYY-MM-DD)。DatePickerCtrl が CalendarDate との変換を担う */
 export const zDueDate = z.iso.date().nullish()
@@ -161,3 +169,10 @@ export const scUpdateTag = z.object({
 export type UpdateTag = z.infer<typeof scUpdateTag>
 export type UpdateTagIn = z.input<typeof scUpdateTag>
 export type UpdateTagOut = z.output<typeof scUpdateTag>
+
+/** ブランチ / PR / コミットの紐付け */
+export const scAddTicketLink = z.object({
+  ticketId: z.uuidv7(),
+  url: zGithubUrl,
+})
+export type AddTicketLink = z.infer<typeof scAddTicketLink>
