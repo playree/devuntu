@@ -119,7 +119,6 @@ const main = async () => {
         lastModified: item.LastModified?.toISOString(),
       })
       totalBytes += res.ContentLength ?? item.Size ?? 0
-      console.log(`saved: ${key} (${res.ContentLength ?? item.Size} bytes)`)
     }
 
     /**
