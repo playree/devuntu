@@ -37,7 +37,6 @@ const MCP_TOKEN_ISSUE_RATE_LIMIT = { limit: 5, windowMs: 60 * 60 * 1000 }
 export const getGoogleAccountStatus = safeAuthAction
   .metadata({ actionName: 'getGoogleAccountStatus', role: 'user' })
   .action(async ({ ctx: { user } }) => await getGoogleStatus(user.id))
-export type GetGoogleAccountStatusReturnType = Awaited<ReturnType<typeof getGoogleAccountStatus>>['data']
 
 export const disconnectGoogleAccount = safeAuthAction
   .metadata({ actionName: 'disconnectGoogleAccount', role: 'user' })
