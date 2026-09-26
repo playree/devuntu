@@ -613,6 +613,17 @@ if (await askYesNo('Slack連携を設定しますか?', has('SLACK_CLIENT_ID')))
   })
 }
 
+if (await askYesNo('GitHub連携(PRの状態・CIの反映)を設定しますか?', has('GITHUB_WEBHOOK_SECRET'))) {
+  if (has('GITHUB_WEBHOOK_SECRET')) {
+    env.GITHUB_WEBHOOK_SECRET = prev.GITHUB_WEBHOOK_SECRET
+  } else {
+    env.GITHUB_WEBHOOK_SECRET = generateSecret()
+    note('GITHUB_WEBHOOK_SECRET を自動生成しました(GitHub の Webhook の Secret に同じ値を登録します)')
+  }
+  note('GitHub 側に登録する Payload URL:')
+  note(`  ${env.BETTER_AUTH_URL}/api/github/webhook`)
+}
+
 section('通知(任意)')
 if (await askYesNo('Webプッシュ通知を有効にしますか?', has('VAPID_PUBLIC_KEY'))) {
   if (has('VAPID_PUBLIC_KEY') && has('VAPID_PRIVATE_KEY')) {

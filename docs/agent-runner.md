@@ -73,6 +73,11 @@ devuntu_agent.py
 `get_agent_task` の応答に載せて渡すので、チケットごとに書かなくてよい前提
 (対象リポジトリ、コミットやPRの作法など)はここへ置く。
 
+ランナーが渡す指示には「GitHub にブランチやプルリクエストを作ったら `link_ticket_artifact` でチケットに紐付ける」が
+含まれる。紐付けた PR の状態と CI の結果はチケット詳細に表示され、ボードの設定次第でマージ時にチケットが完了になる
+([user-guide.md](user-guide.md#関連リンクブランチprコミット))。ブランチ名の先頭に表示IDを入れる作法
+(例: `feature/ABC-12`)をルールに書いておけば、登録し忘れても Webhook が自動で紐付ける。
+
 ## チケットの状態
 
 `Ticket.agentState`。遷移させるのは `src/lib/agent/` の `agent-task.ts` / `agent-run.ts` だけ。

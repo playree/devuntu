@@ -89,6 +89,9 @@ export const ModelName = {
   BoardGroup: 'BoardGroup',
   Ticket: 'Ticket',
   TicketComment: 'TicketComment',
+  TicketLink: 'TicketLink',
+  BoardRepository: 'BoardRepository',
+  GitCheckSuite: 'GitCheckSuite',
   UserNotifySetting: 'UserNotifySetting',
   WebPushSubscription: 'WebPushSubscription',
   BoardNotifySetting: 'BoardNotifySetting',
@@ -580,6 +583,7 @@ export const BoardScalarFieldEnum = {
   name: 'name',
   description: 'description',
   archived: 'archived',
+  completeOnPrMerge: 'completeOnPrMerge',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -676,6 +680,57 @@ export const TicketCommentScalarFieldEnum = {
 } as const
 
 export type TicketCommentScalarFieldEnum = (typeof TicketCommentScalarFieldEnum)[keyof typeof TicketCommentScalarFieldEnum]
+
+
+export const TicketLinkScalarFieldEnum = {
+  id: 'id',
+  ticketId: 'ticketId',
+  provider: 'provider',
+  kind: 'kind',
+  repo: 'repo',
+  ref: 'ref',
+  url: 'url',
+  title: 'title',
+  prState: 'prState',
+  headSha: 'headSha',
+  syncedAt: 'syncedAt',
+  source: 'source',
+  dismissed: 'dismissed',
+  createdById: 'createdById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TicketLinkScalarFieldEnum = (typeof TicketLinkScalarFieldEnum)[keyof typeof TicketLinkScalarFieldEnum]
+
+
+export const BoardRepositoryScalarFieldEnum = {
+  id: 'id',
+  boardId: 'boardId',
+  provider: 'provider',
+  repo: 'repo',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BoardRepositoryScalarFieldEnum = (typeof BoardRepositoryScalarFieldEnum)[keyof typeof BoardRepositoryScalarFieldEnum]
+
+
+export const GitCheckSuiteScalarFieldEnum = {
+  id: 'id',
+  provider: 'provider',
+  repo: 'repo',
+  suiteId: 'suiteId',
+  headSha: 'headSha',
+  appName: 'appName',
+  status: 'status',
+  conclusion: 'conclusion',
+  syncedAt: 'syncedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type GitCheckSuiteScalarFieldEnum = (typeof GitCheckSuiteScalarFieldEnum)[keyof typeof GitCheckSuiteScalarFieldEnum]
 
 
 export const UserNotifySettingScalarFieldEnum = {

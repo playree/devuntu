@@ -220,6 +220,10 @@ const server = {
   get SLACK_SIGNING_SECRET() {
     return getEnv('SLACK_SIGNING_SECRET')
   },
+  /** GitHub Webhook の署名シークレット。未設定なら GitHub 連携ごと無効 */
+  get GITHUB_WEBHOOK_SECRET() {
+    return getEnv('GITHUB_WEBHOOK_SECRET')
+  },
   get GOOGLE_ALLOWED_DOMAINS() {
     const domains = getEnv('GOOGLE_ALLOWED_DOMAINS')
     return domains ? domains.split(',') : []

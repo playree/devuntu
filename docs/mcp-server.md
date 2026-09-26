@@ -154,21 +154,23 @@ AIエージェントは `devuntu-agent` を名乗るので、`claude mcp list` �
 
 ### 共通のツール
 
-| ツール                  | 用途                                                                          | 入力                                                                                           |
-| ----------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `ping`                  | 接続確認。認可済みユーザーのメールアドレスを返す                              | なし                                                                                           |
-| `echo`                  | 入力した文字列をそのまま返す                                                  | `message`                                                                                      |
-| `list_boards`           | アクセスできるボードの一覧。チケットを作る前に対象ボードを特定する            | `includeArchived`(任意)                                                                        |
-| `get_board`             | ボードの詳細(メンバー・タグ・ステータス別のチケット件数)                      | `boardId`                                                                                      |
-| `get_ticket`            | チケットの詳細(本文・ステータス・担当者・タグ・コメント・短縮URL)を取得       | `ticketId`                                                                                     |
-| `search_tickets`        | アクセスできるチケットを検索(更新日時の降順)                                  | `keyword` / `status` / `priority` / `tags` / `boardId` / `assignee` / `limit`                  |
-| `create_ticket`         | ボードにチケットを新規作成                                                    | `boardId` / `title` / `content` / `status` / `priority` / `dueDate` / `assigneeId` / `tagIds`  |
-| `update_ticket`         | チケットの内容とステータスを更新                                              | `ticketId` / `title` / `content` / `priority` / `dueDate` / `assigneeId` / `tagIds` / `status` |
-| `delete_ticket`         | チケットを削除                                                                | `ticketId`                                                                                     |
-| `add_ticket_comment`    | コメントを追加(対応プラン・対応報告・返信もここから)                          | `ticketId` / `content` / `type` / `parentId`                                                   |
-| `update_ticket_comment` | 自分が投稿したコメントを編集                                                  | `commentId` / `content`                                                                        |
-| `delete_ticket_comment` | コメントを削除                                                                | `commentId`                                                                                    |
-| `get_agent_setup_guide` | 自動運用(Devuntu Agent)を自分のマシンへ用意する手順を返す。人が読むためのもの | `cli`(任意。未指定なら手順ではなく CLI の選択を促す)                                           |
+| ツール                   | 用途                                                                          | 入力                                                                                           |
+| ------------------------ | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `ping`                   | 接続確認。認可済みユーザーのメールアドレスを返す                              | なし                                                                                           |
+| `echo`                   | 入力した文字列をそのまま返す                                                  | `message`                                                                                      |
+| `list_boards`            | アクセスできるボードの一覧。チケットを作る前に対象ボードを特定する            | `includeArchived`(任意)                                                                        |
+| `get_board`              | ボードの詳細(メンバー・タグ・ステータス別のチケット件数)                      | `boardId`                                                                                      |
+| `get_ticket`             | チケットの詳細(本文・ステータス・担当者・タグ・コメント・短縮URL)を取得       | `ticketId`                                                                                     |
+| `search_tickets`         | アクセスできるチケットを検索(更新日時の降順)                                  | `keyword` / `status` / `priority` / `tags` / `boardId` / `assignee` / `limit`                  |
+| `create_ticket`          | ボードにチケットを新規作成                                                    | `boardId` / `title` / `content` / `status` / `priority` / `dueDate` / `assigneeId` / `tagIds`  |
+| `update_ticket`          | チケットの内容とステータスを更新                                              | `ticketId` / `title` / `content` / `priority` / `dueDate` / `assigneeId` / `tagIds` / `status` |
+| `delete_ticket`          | チケットを削除                                                                | `ticketId`                                                                                     |
+| `add_ticket_comment`     | コメントを追加(対応プラン・対応報告・返信もここから)                          | `ticketId` / `content` / `type` / `parentId`                                                   |
+| `update_ticket_comment`  | 自分が投稿したコメントを編集                                                  | `commentId` / `content`                                                                        |
+| `delete_ticket_comment`  | コメントを削除                                                                | `commentId`                                                                                    |
+| `link_ticket_artifact`   | GitHub のブランチ / プルリクエスト / コミットの URL をチケットに紐付ける      | `ticketId` / `url`                                                                             |
+| `unlink_ticket_artifact` | 紐付けを外す                                                                  | `linkId`                                                                                       |
+| `get_agent_setup_guide`  | 自動運用(Devuntu Agent)を自分のマシンへ用意する手順を返す。人が読むためのもの | `cli`(任意。未指定なら手順ではなく CLI の選択を促す)                                           |
 
 権限はボードのロールで決まり、基本は画面と同じ。ただしチケットの更新・削除だけは MCP 経由に
 追加の制限がある(`src/lib/board/ticket-permission.ts` の `canMcpUpdateTicket` / `canMcpDeleteTicket`)。
@@ -177,6 +179,7 @@ AIエージェントは `devuntu-agent` を名乗るので、`claude mcp list` �
 - `delete_ticket` — オーナー・メンバーともに**自分が作成したチケットのみ**削除できる(画面より厳しい)
 - `delete_ticket_comment` — 自分が投稿したコメント、またはチケットを削除できる権限を持つ場合
 - 本文やコメントのメンション(`@[アドレス]`)は画面から書いた場合と同じように解決され、通知も飛ぶ
+- `link_ticket_artifact` / `unlink_ticket_artifact` — コメントの投稿と同じく、チケットを編集できれば使える
 
 ### エージェント専用のツール
 
@@ -207,6 +210,10 @@ AIエージェントは `devuntu-agent` を名乗るので、`claude mcp list` �
 - 文字数は画面と共通(`src/lib/schema/schema-ticket.ts`)。タイトル120文字、本文・コメント40000文字、タグは10個まで
 - `add_ticket_comment` の `type` は `plan`(対応プラン) / `report`(対応報告)。指定すると詳細画面で
   折りたたみ表示され、通常コメントと区別できる。`parentId` での返信は**1階層のみ**
+- `link_ticket_artifact` の `url` は `https://github.com/<owner>/<repo>/` に続く `pull/<番号>` /
+  `tree/<ブランチ名>` / `commit/<SHA>` のいずれか。種別は URL から判定し、同じものを2回登録しても1件にまとまる。
+  `get_ticket` の `links` に、紐付けた一覧が PR の状態(`prState`)と CI の結果(`ci`)付きで返る。
+  状態と CI はボードに対応付けたリポジトリの Webhook で更新される([user-guide.md](user-guide.md) の「GitHub連携」)
 
 ## ユーザーの MCP トークン
 

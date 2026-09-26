@@ -14,7 +14,9 @@ import {
   deleteTicketCommentForMcp,
   deleteTicketForMcp,
   getTicketForMcp,
+  linkTicketArtifactForMcp,
   searchTicketsForMcp,
+  unlinkTicketArtifactForMcp,
   updateTicketCommentForMcp,
   updateTicketForMcp,
 } from '@/lib/mcp/mcp-ticket'
@@ -38,6 +40,8 @@ vi.mock('@/lib/mcp/mcp-ticket', () => ({
   addTicketCommentForMcp: vi.fn(),
   updateTicketCommentForMcp: vi.fn(),
   deleteTicketCommentForMcp: vi.fn(),
+  linkTicketArtifactForMcp: vi.fn(),
+  unlinkTicketArtifactForMcp: vi.fn(),
 }))
 
 const auth: ResourceAuth = {
@@ -88,6 +92,8 @@ describe('createDevuntuMcpServer', () => {
         'add_ticket_comment',
         'update_ticket_comment',
         'delete_ticket_comment',
+        'link_ticket_artifact',
+        'unlink_ticket_artifact',
         'create_image_upload_token',
         'upload_image',
         'get_image',
@@ -111,6 +117,7 @@ describe('createDevuntuMcpServer', () => {
         'search_tickets',
         'get_image',
         'get_agent_setup_guide',
+        'link_ticket_artifact',
       ]),
     )
   })
@@ -344,5 +351,44 @@ describe('createDevuntuMcpServer', () => {
 
     expect(deleteTicketCommentForMcp).toHaveBeenCalledWith(auth, '0195c1e0-0000-7000-8000-000000000001')
     expect(result.content).toEqual([{ type: 'text', text: JSON.stringify({ id: 'c1' }, null, 2) }])
+  })
+
+  it('link_ticket_artifact は ticketId と url を渡す', async () => {
+    vi.mocked(linkTicketArtifactForMcp).mockResolvedValueOnce({ id: 'l1' })
+
+    const result = await (
+      await connectClient(agentAuth)
+    ).callTool({
+      name: 'link_ticket_artifact',
+      arguments: { ticketId: 'ABC-1', url: 'https://github.com/owner/repo/pull/12' },
+    })
+
+    expect(linkTicketArtifactForMcp).toHaveBeenCalledWith(agentAuth, 'ABC-1', 'https://github.com/owner/repo/pull/12')
+    expect(result.content).toEqual([{ type: 'text', text: JSON.stringify({ id: 'l1' }, null, 2) }])
+  })
+
+  it('link_ticket_artifact は GitHub 以外の URL を受け付けない', async () => {
+    const result = await (
+      await connectClient()
+    ).callTool({
+      name: 'link_ticket_artifact',
+      arguments: { ticketId: 'ABC-1', url: 'https://example.com/owner/repo/pull/12' },
+    })
+
+    expect(result.isError).toBe(true)
+    expect(linkTicketArtifactForMcp).not.toHaveBeenCalled()
+  })
+
+  it('unlink_ticket_artifact は linkId を渡す', async () => {
+    vi.mocked(unlinkTicketArtifactForMcp).mockResolvedValueOnce({ id: 'l1' })
+
+    await (
+      await connectClient()
+    ).callTool({
+      name: 'unlink_ticket_artifact',
+      arguments: { linkId: '0195c1e0-0000-7000-8000-000000000001' },
+    })
+
+    expect(unlinkTicketArtifactForMcp).toHaveBeenCalledWith(auth, '0195c1e0-0000-7000-8000-000000000001')
   })
 })

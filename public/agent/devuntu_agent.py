@@ -40,7 +40,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-__version__ = "0.7.2"
+__version__ = "0.7.3"
 
 # 1 Agent の構成を作業ディレクトリだけで完結させるため、config・ログ・ロックは本体と同じ
 # <作業ディレクトリ>/.devuntu-agent へ置く。作業ディレクトリを分ければ同一ホストに複数の Agent を並べられる
@@ -406,6 +406,8 @@ def build_prompt(task: dict) -> str:
         "   (返信は次回 revise として渡される)。\n"
         "3. 対応の結果を devuntu-agent MCP の add_ticket_comment に type='report' で投稿する"
         "(plan や確認事項の投稿で終えた場合は不要)。\n"
+        "   GitHub にブランチやプルリクエストを作った場合は、devuntu-agent MCP の link_ticket_artifact で\n"
+        "   その URL をチケットに紐付ける。\n"
         "4. devuntu-agent MCP の finish_agent_task で結果を報告する。\n"
         "   outcome は planned(プランや確認事項を投稿して返信待ち) / completed(対応完了) /\n"
         "   skipped(見送り) / failed(失敗) から選ぶ。\n"

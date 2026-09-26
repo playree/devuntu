@@ -226,6 +226,23 @@ export type Ticket = Prisma.TicketModel
  */
 export type TicketComment = Prisma.TicketCommentModel
 /**
+ * Model TicketLink
+ * チケットに紐付けたブランチ / プルリクエスト / コミット。
+ * 状態(prState / headSha)は対応付け済みリポジトリ(BoardRepository)の Webhook で更新する。
+ */
+export type TicketLink = Prisma.TicketLinkModel
+/**
+ * Model BoardRepository
+ * ボードとリポジトリの対応付け。Webhook はここにあるリポジトリのイベントだけを扱う。
+ */
+export type BoardRepository = Prisma.BoardRepositoryModel
+/**
+ * Model GitCheckSuite
+ * GitHub の Check Suite(CI を実行するアプリごとのまとまり)の最新状態。
+ * リンクとは独立に持ち、表示時に headSha で集計する(リンクの登録より先に CI が終わることがあるため)。
+ */
+export type GitCheckSuite = Prisma.GitCheckSuiteModel
+/**
  * Model UserNotifySetting
  * ユーザーごとの通知設定。
  * 行が無い場合は全チャネル OFF として扱う。通知チャネルを増やすときは列を足す。

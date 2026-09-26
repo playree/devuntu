@@ -64,13 +64,18 @@ const scTicketChanged = scTicketRef.extend({
   fromName: z.string(),
 })
 
+const scTicketCompleted = scTicketChanged.extend({
+  /** PR のマージで自動完了したときの、最後に閉じた PR(`owner/name#123`)。このときは操作した人がいない(fromName は空) */
+  pullRequest: z.string().min(1).optional(),
+})
+
 /** イベントごとのペイロード定義。イベントを足すとここが型エラーになる */
 export const NOTIFY_PAYLOAD_SCHEMA = {
   mention: scMention,
   agent_run: scAgentRun,
   ticket_assigned: scTicketAssigned,
   ticket_created: scTicketChanged,
-  ticket_completed: scTicketChanged,
+  ticket_completed: scTicketCompleted,
 } as const satisfies Record<NotifyEvent, z.ZodType>
 
 export type NotifyPayloadMap = { [E in NotifyEvent]: z.infer<(typeof NOTIFY_PAYLOAD_SCHEMA)[E]> }

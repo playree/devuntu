@@ -9,8 +9,10 @@ import {
   deleteTicketCommentForMcp,
   deleteTicketForMcp,
   getTicketForMcp,
+  linkTicketArtifactForMcp,
   MCP_ASSIGNEE_ME,
   searchTicketsForMcp,
+  unlinkTicketArtifactForMcp,
   updateTicketCommentForMcp,
   updateTicketForMcp,
 } from '@/lib/mcp/mcp-ticket'
@@ -21,6 +23,7 @@ import {
   scTicketSearch,
   zCommentContent,
   zCommentType,
+  zGithubUrl,
   zTicketStatus,
 } from '@/lib/schema/schema-ticket'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
@@ -207,6 +210,32 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       inputSchema: { commentId: z.uuidv7() },
     },
     async ({ commentId }) => jsonResult(await deleteTicketCommentForMcp(auth, commentId)),
+  )
+
+  server.registerTool(
+    'link_ticket_artifact',
+    {
+      title: '成果物の紐付け',
+      description:
+        'GitHub のブランチ / プルリクエスト / コミットの URL をチケットに紐付ける。種別は URL から判定する。' +
+        'プルリクエストを作ったら紐付けておくと、状態と CI の結果がチケット詳細に表示される',
+      inputSchema: {
+        ticketId: z.string().min(1),
+        url: zGithubUrl.describe('例: https://github.com/owner/repo/pull/123'),
+      },
+    },
+    async ({ ticketId, url }) => jsonResult(await linkTicketArtifactForMcp(auth, ticketId, url)),
+  )
+
+  server.registerTool(
+    'unlink_ticket_artifact',
+    {
+      title: '成果物の紐付け解除',
+      description:
+        'チケットに紐付けたブランチ / プルリクエスト / コミットを外す。linkId は get_ticket の links から得る',
+      inputSchema: { linkId: z.uuidv7() },
+    },
+    async ({ linkId }) => jsonResult(await unlinkTicketArtifactForMcp(auth, linkId)),
   )
 
   // 画像の添付・取得は人間の利用者もエージェントも使う

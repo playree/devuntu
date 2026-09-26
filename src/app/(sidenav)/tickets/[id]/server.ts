@@ -4,12 +4,18 @@ import { safeAuthAction } from '@/lib/action/action-server'
 import { assertTicketAccess } from '@/lib/board/board-access'
 import { TAG_SELECT } from '@/lib/board/tag'
 import { ticketDisplayId, ticketShortPath } from '@/lib/board/ticket-id'
+import {
+  addTicketLink as addTicketLinkCore,
+  listTicketLinks,
+  removeTicketLink as removeTicketLinkCore,
+} from '@/lib/board/ticket-link'
 import { addComment, changeTicketStatus, deleteComment, updateComment, updateTicket } from '@/lib/board/ticket-mutation'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { scUUID } from '@/lib/schema/schema'
 import {
+  scAddTicketLink,
   scCreateTicketComment,
   scPatchTicket,
   scUpdateTicketAgentMode,
@@ -89,6 +95,8 @@ export const getTicket = safeAuthAction
         return name ? [name] : []
       })
 
+    const links = await listTicketLinks(id)
+
     const { board, assignee, createdBy, comments, tags, mentionedUserIds, ...rest } = ticket
     const displayId = ticketDisplayId({ key: board.key, number: rest.number })
     return {
@@ -123,6 +131,7 @@ export const getTicket = safeAuthAction
             replies: flat.filter((reply) => reply.parentId === comment.id),
           }))
       })(),
+      links,
       boardRole: access.boardRole,
       canEdit: access.canEdit,
       canDelete: access.canDelete,
@@ -227,5 +236,31 @@ export const deleteTicketComment = safeAuthAction
     await deleteComment(user, id)
 
     logger.info({ userId: user.id, id }, 'ticket comment deleted')
+    return { id }
+  })
+
+/**
+ * ブランチ / PR / コミットの紐付け(チケットを編集できる人)
+ */
+export const addTicketLink = safeAuthAction
+  .metadata({ actionName: 'addTicketLink', role: 'user' })
+  .inputSchema(scAddTicketLink)
+  .action(async ({ ctx: { user }, parsedInput: { ticketId, url } }) => {
+    const link = await addTicketLinkCore(user, ticketId, url)
+
+    logger.info({ userId: user.id, ticketId, linkId: link.id }, 'ticket link added')
+    return link
+  })
+
+/**
+ * 紐付けの解除(チケットを編集できる人)
+ */
+export const removeTicketLink = safeAuthAction
+  .metadata({ actionName: 'removeTicketLink', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => {
+    const { ticketId } = await removeTicketLinkCore(user, id)
+
+    logger.info({ userId: user.id, ticketId, linkId: id }, 'ticket link removed')
     return { id }
   })

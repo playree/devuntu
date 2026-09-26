@@ -22,6 +22,12 @@ export const SESSION_RETENTION_MS = DAY_MS
 export const VERIFICATION_RETENTION_MS = DAY_MS
 export const OAUTH_TOKEN_RETENTION_MS = DAY_MS
 
+/**
+ * GitHub の Check Suite の保持期間。表示に使うのは紐付いた PR / コミットの最新の結果だけで、
+ * 更新が止まって久しいもの(マージ済み・放置された PR)は見返されないので消す
+ */
+export const GIT_CHECK_SUITE_RETENTION_MS = 90 * DAY_MS
+
 // 実行履歴の保持(期間と件数)は運用者が変えられるようにしてあるので `envu.server` 側にある
 
 /** 添付の掃除を回す間隔。本文の全走査を伴うので tick ごとには行わない */
