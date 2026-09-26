@@ -75,6 +75,7 @@ COPY --from=builder /app/scripts/tools.mjs \
                     /app/scripts/backup-all.mjs \
                     /app/scripts/restore-all.mjs \
                     /app/scripts/maintenance.mjs \
+                    /app/scripts/maintenance-flag.mjs \
                     ./scripts/
 COPY --from=builder /app/scripts/setup-env ./scripts/setup-env
 

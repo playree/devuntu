@@ -6,7 +6,7 @@
  *   docker compose run --rm tools db-restore backup/devuntu_YYYYMMDD_HHMMSS.dump
  *   docker compose run --rm tools s3-backup
  *   docker compose run --rm tools s3-restore backup/s3_YYYYMMDD_HHMMSS
- *   docker compose run --rm tools full-backup
+ *   docker compose run --rm tools full-backup [--maintenance]
  *   docker compose run --rm tools full-restore backup/full_YYYYMMDD_HHMMSS
  *   docker compose run --rm tools maintenance on
  *
@@ -34,6 +34,7 @@ const USAGE = `使い方: node scripts/tools.mjs <サブコマンド> [引数...
   s3-backup     オブジェクトストレージの中身を backup/ へバックアップする
   s3-restore    バックアップディレクトリの内容をオブジェクトストレージへ復元する
   full-backup   DB と S3 を backup/full_<stamp>/ へまとめてバックアップする
+                (--maintenance で取得の間だけメンテナンスモードにする)
   full-restore  full-backup の出力から DB と S3 をまとめて復元する
   maintenance   メンテナンスモードを切り替える(on / off / status)
   help          この使い方を表示する
