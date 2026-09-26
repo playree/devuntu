@@ -30,7 +30,7 @@ const frameStyles = tv({
   slots: {
     root: 'relative md:flex md:min-h-0 md:flex-1 md:flex-col',
     panel: 'px-2 py-1 md:flex md:min-h-0 md:flex-1 md:flex-col',
-    scroller: 'max-h-[32rem] overflow-y-auto md:max-h-none md:min-h-0 md:flex-1',
+    scroller: 'max-h-128 overflow-y-auto md:max-h-none md:min-h-0 md:flex-1',
   },
 })
 const frame = frameStyles()
