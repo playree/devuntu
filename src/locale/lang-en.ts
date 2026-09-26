@@ -1,7 +1,7 @@
-import { LocaleItems } from '.'
+import { DefaultLocaleItems } from '.'
 
 // アルファベット順
-export const en: LocaleItems = {
+export const en: DefaultLocaleItems = {
   account: 'Account',
   account_connect_google: 'Connect Google Account',
   account_connect_slack: 'Connect Slack Account',
@@ -25,11 +25,8 @@ export const en: LocaleItems = {
   agent_action_execute: 'Execute',
   agent_action_plan: 'Plan',
   agent_action_revise: 'Revise',
-  agent_active_hours: 'Active Hours',
-  agent_all_day: 'All day',
   agent_approver: 'Approvers',
   agent_approver_group: 'Approver Groups',
-  agent_approver_user: 'Approver Users',
   agent_custom_instruction: 'Custom Instruction',
   agent_daily_limit: 'Daily Run Limit',
   agent_daily_reset: 'Limit Reset Time',
@@ -141,7 +138,6 @@ export const en: LocaleItems = {
   command_inputs: 'Inputs',
   command_invalid_def: 'The files below could not be loaded. Their commands cannot run until they are fixed.',
   command_manage: 'Remote management',
-  command_no_available: 'No commands are available to you.',
   command_no_def: 'No commands are defined.',
   command_no_input: 'No inputs.',
   command_no_target: 'No targets are assigned to you.',
@@ -182,7 +178,6 @@ export const en: LocaleItems = {
   command_target_identity: 'Private key',
   command_target_known_hosts: 'known_hosts',
   command_target_members: 'User assignment',
-  command_target_no_member: 'No users are assigned to this target.',
   command_target_orphan: 'Targets missing from the definitions',
   command_target_orphan_description:
     'These assignments point at targets that no longer exist in the definition files. They grant no permissions. Delete them before the same ID is reused.',
@@ -217,7 +212,6 @@ export const en: LocaleItems = {
   delete: 'Delete',
   delete_board: 'Delete Board',
   delete_image: 'Delete image',
-  delete_user: 'Delete User',
   description: 'Description',
   direct: 'Direct',
   disable: 'Disable',
@@ -245,7 +239,6 @@ export const en: LocaleItems = {
   granted_at: 'Granted At',
   granted_scopes: 'Granted Scopes',
   group: 'Group',
-  group_count: 'Groups',
   group_manage: 'Group Management',
   groups: 'Groups',
   hide: 'Hide',
@@ -268,7 +261,6 @@ export const en: LocaleItems = {
   link_text: 'Link text',
   link_widget_manage: 'Link Widget Management',
   linode_transfer_info: 'Linode Transfer Info',
-  list: 'List',
   maintenance_mode: 'Under Maintenance',
   member: 'Member',
   mcp_add_command: 'MCP Registration Command',
@@ -285,7 +277,6 @@ export const en: LocaleItems = {
   msg_command_group_is_member: 'Users added via a group become members. Assign owners individually.',
   msg_command_owner_can_edit: 'Owners can edit commands on targets where definition editing is allowed.',
   msg_command_queue_full: 'The queue is full. Please try again later.',
-  msg_command_started: 'The run has started.',
   my_tickets: 'My Tickets',
   recent_activity: 'Recently Updated',
   name: 'Name',
@@ -324,7 +315,6 @@ export const en: LocaleItems = {
   passkey: 'Passkey',
   passkey_signin: 'Sign in with Passkey',
   password: 'Password',
-  password_reset: 'Password Reset',
   password_score: 'Password Score',
   password_score_required: '${score} or more required',
   per_page: '${rows} / page',
@@ -433,7 +423,6 @@ export const en: LocaleItems = {
   unarchive: 'Unarchive',
   unassigned: 'Unassigned',
   update: 'Update',
-  update_agent: 'Update Agent',
   update_busy_time: 'Update Busy Time',
   update_client: 'Update Client',
   update_group: 'Update Group',
@@ -564,7 +553,6 @@ Please copy and use the connection information above.
   msg_notify_slack_unavailable: 'Slack integration is not available in this environment.',
   msg_otp_sent: 'Verification code sent.',
   msg_owner_required: 'At least one owner is required.',
-  msg_private_board_immutable: 'The private board cannot be reconfigured.',
   msg_re_auth: 'Re-authentication is required to perform the operation.\nPlease try again after re-authentication.',
   msg_saved: 'Saved.',
   msg_slack_allowed_groups_desc: 'If not specified, all users can use the Slack integration.',
