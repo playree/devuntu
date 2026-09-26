@@ -3,7 +3,7 @@
 import { useLocale } from '@/locale/client'
 import { FC } from 'react'
 import { IntegrationSettingsForm } from './integration-form'
-import { GetIntegrationSettingsReturnType, updateGoogleAccountSettingsAction } from './server'
+import { GetIntegrationSettingsReturnType, updateGoogleAccountSettings } from './server'
 
 export const GoogleAccountSettings: FC<{
   data: NonNullable<GetIntegrationSettingsReturnType>
@@ -19,7 +19,7 @@ export const GoogleAccountSettings: FC<{
       enableDescription={t('msg_google_account_enable_desc')}
       groupsLabel={t('google_account_allowed_groups')}
       groupsDescription={t('msg_google_account_allowed_groups_desc')}
-      onSave={updateGoogleAccountSettingsAction}
+      onSave={updateGoogleAccountSettings}
     />
   )
 }

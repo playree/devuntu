@@ -16,12 +16,12 @@ import { Accordion } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
 import {
-  addCommandTargetMemberAction,
-  getCommandTargetAssignmentsAction,
-  getCommandTargetMembersAction,
-  removeCommandTargetMemberAction,
-  setCommandTargetGroupsAction,
-  updateCommandTargetMemberRoleAction,
+  addCommandTargetMember,
+  getCommandTargetAssignments,
+  getCommandTargetMembersForAdmin,
+  removeCommandTargetMember,
+  setCommandTargetGroups,
+  updateCommandTargetMemberRole,
 } from '../server'
 
 const defaultExpandedKeys = new Set(['command_target_members', 'command_target_groups'])
@@ -39,11 +39,11 @@ export const AdminCommandTargetClient: FC<{ targetKey: string }> = ({ targetKey 
     data: assignments,
     reload: reloadAssignments,
     isLoading,
-  } = useActionData(() => getCommandTargetAssignmentsAction({ targetKey }))
+  } = useActionData(() => getCommandTargetAssignments({ targetKey }))
 
   // グループの保存と合わせてリロードできるよう、ここで生成して AssignmentMembers へ渡す
   const memberList = usePagingList({
-    load: async () => (await parseAction(getCommandTargetMembersAction({ targetKey }), { handled: 'all' })) ?? [],
+    load: async () => (await parseAction(getCommandTargetMembersForAdmin({ targetKey }), { handled: 'all' })) ?? [],
     sort: { init: { column: 'name', direction: 'ascending' } },
   })
 
@@ -80,9 +80,9 @@ export const AdminCommandTargetClient: FC<{ targetKey: string }> = ({ targetKey 
               addLabel: t('add_member'),
               userOptions: assignments.userOptions,
               assignedUserIds: assignments.memberUserIds,
-              add: (req) => addCommandTargetMemberAction({ targetKey, ...req }),
-              updateRole: (req) => updateCommandTargetMemberRoleAction({ targetKey, ...req }),
-              remove: (userId) => removeCommandTargetMemberAction({ targetKey, userId }),
+              add: (req) => addCommandTargetMember({ targetKey, ...req }),
+              updateRole: (req) => updateCommandTargetMemberRole({ targetKey, ...req }),
+              remove: (userId) => removeCommandTargetMember({ targetKey, userId }),
               roleNote: t('msg_command_owner_can_edit'),
             }}
           />
@@ -95,7 +95,7 @@ export const AdminCommandTargetClient: FC<{ targetKey: string }> = ({ targetKey 
             groupOptions={assignments.groupOptions}
             groupIds={assignments.groupIds}
             notice={<NoticePanel className='text-xs'>{t('msg_command_group_is_member')}</NoticePanel>}
-            onSave={(groupIds) => setCommandTargetGroupsAction({ targetKey, groupIds })}
+            onSave={(groupIds) => setCommandTargetGroups({ targetKey, groupIds })}
             reload={() => {
               reloadAssignments()
               memberList.reload()

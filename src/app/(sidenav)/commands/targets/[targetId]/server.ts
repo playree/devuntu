@@ -86,7 +86,7 @@ export type CommandTargetDetail = {
  * 認可は `assertCommandTargetAccess` に集約する(`src/proxy.ts` は Server Action を通らないため、
  * パス単位の制御ではこの画面を守れない)。
  */
-export const getCommandTargetDetailAction = safeAuthAction
+export const getCommandTargetDetail = safeAuthAction
   .metadata({ actionName: 'getCommandTargetDetail', role: 'user' })
   .inputSchema(scCommandTargetKey)
   .action(async ({ parsedInput: { targetKey }, ctx: { user } }): Promise<CommandTargetDetail> => {
@@ -110,7 +110,7 @@ export const getCommandTargetDetailAction = safeAuthAction
     }
   })
 
-export type GetCommandTargetDetailReturnType = Awaited<ReturnType<typeof getCommandTargetDetailAction>>['data']
+export type GetCommandTargetDetailReturnType = Awaited<ReturnType<typeof getCommandTargetDetail>>['data']
 
 /**
  * 書き込み系アクションの戻り値。
@@ -166,7 +166,7 @@ const assertCommandDefEditable = async (
  * 保存時に再認証で弾かれると、画面を離れることになって書いた内容が失われる。書き始める前に確かめる。
  * 書き込みはしないので編集のレート制限は消費しない(モーダルを開くたびに保存できる回数を削らない)。
  */
-export const checkCommandDefEditableAction = safeAuthAction
+export const checkCommandDefEditable = safeAuthAction
   .metadata({ actionName: 'checkCommandDefEditable', role: 'user' })
   .inputSchema(scCommandTargetKey)
   .action(async ({ parsedInput: { targetKey }, ctx: { user, session } }) => {
@@ -200,7 +200,7 @@ const resolveEditTarget = async (
  * どのファイルでも画面から触れない。接続先を増やせない = 画面から到達できるターゲットが増えないので、
  * この経路で広がる範囲は「既に鍵が通っているターゲット」に閉じる。
  */
-export const upsertCommandDefAction = safeAuthAction
+export const upsertCommandDef = safeAuthAction
   .metadata({ actionName: 'upsertCommandDef', role: 'user' })
   .inputSchema(scUpsertCommandDef)
   .action(async ({ parsedInput: { targetKey, revision, replaceId, command }, ctx: { user, session } }) => {
@@ -237,7 +237,7 @@ export const upsertCommandDefAction = safeAuthAction
   })
 
 /** コマンド定義の削除 */
-export const deleteCommandDefAction = safeAuthAction
+export const deleteCommandDef = safeAuthAction
   .metadata({ actionName: 'deleteCommandDef', role: 'user' })
   .inputSchema(scDeleteCommandDef)
   .action(async ({ parsedInput: { targetKey, revision, commandId }, ctx: { user, session } }) => {

@@ -4,7 +4,7 @@ import { NoticePanel } from '@/components/general/panel'
 import { useLocale } from '@/locale/client'
 import { FC } from 'react'
 import { IntegrationSettingsForm } from './integration-form'
-import { GetIntegrationSettingsReturnType, updateSlackSettingsAction } from './server'
+import { GetIntegrationSettingsReturnType, updateSlackSettings } from './server'
 
 type SlackData = NonNullable<GetIntegrationSettingsReturnType>['slack']
 
@@ -39,7 +39,7 @@ export const SlackSettings: FC<{
         enableDescription={t('msg_slack_enable_desc')}
         groupsLabel={t('slack_allowed_groups')}
         groupsDescription={t('msg_slack_allowed_groups_desc')}
-        onSave={updateSlackSettingsAction}
+        onSave={updateSlackSettings}
       />
     </div>
   )

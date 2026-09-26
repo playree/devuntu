@@ -50,7 +50,7 @@ export const getAgents = safeAuthAction.metadata({ actionName: 'getAgents', role
 export type GetAgentsReturnType = Awaited<ReturnType<typeof getAgents>>['data']
 
 /** グループ選択肢取得(id: name のマップ) */
-export const getGroupOptions = safeAuthAction
+export const getAgentGroupOptions = safeAuthAction
   .metadata({ actionName: 'getAgentGroupOptions', role: 'admin' })
   .action(async () => {
     return await listGroupOptions()

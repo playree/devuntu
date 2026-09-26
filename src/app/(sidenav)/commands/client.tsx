@@ -15,7 +15,7 @@ import { Accordion, Card } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC, useMemo } from 'react'
 import { CommandForm } from './command-form'
-import { type AvailableCommandView, type AvailableTargetView, getAvailableCommandsAction } from './server'
+import { type AvailableCommandView, type AvailableTargetView, getAvailableCommands } from './server'
 
 /**
  * 実行できるコマンドの一覧。
@@ -27,7 +27,7 @@ import { type AvailableCommandView, type AvailableTargetView, getAvailableComman
 export const CommandsClient: FC = () => {
   const { t } = useLocale()
   const router = useRouter()
-  const { data, isLoading, reload } = useActionData(getAvailableCommandsAction)
+  const { data, isLoading, reload } = useActionData(getAvailableCommands)
   const formState = useModalState<AvailableCommandView>()
   /**
    * 既定は全ターゲット展開。

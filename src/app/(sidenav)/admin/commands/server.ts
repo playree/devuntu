@@ -6,10 +6,10 @@ import {
   assertCommandAssignmentTargets,
   countCommandTargetAssignments,
   deleteCommandTargetAssignments,
-  getCommandTargetAssignments,
+  removeCommandTargetMember as deleteCommandTargetMember,
   getCommandTargetUsers,
   listAssignedTargetKeys,
-  removeCommandTargetMember,
+  getCommandTargetAssignments as loadCommandTargetAssignments,
   syncCommandTargetGroups,
   upsertCommandTargetMember,
 } from '@/lib/command/command-assign'
@@ -111,11 +111,11 @@ const buildView = async (opts?: { force?: boolean }) => {
  * 読み込めなかったファイルがあっても画面は開けるようにし、原因をそのまま表示する。
  * 除外されたファイルのコマンドは、直せるまで一覧にも出ず実行もできない。
  */
-export const getCommandTargetsAction = safeAuthAction
+export const getCommandTargets = safeAuthAction
   .metadata({ actionName: 'getCommandTargets', role: 'admin' })
   .action(async () => buildView())
 
-export type GetCommandTargetsReturnType = Awaited<ReturnType<typeof getCommandTargetsAction>>['data']
+export type GetCommandTargetsReturnType = Awaited<ReturnType<typeof getCommandTargets>>['data']
 
 /**
  * 定義ファイルの再読み込み。
@@ -123,7 +123,7 @@ export type GetCommandTargetsReturnType = Awaited<ReturnType<typeof getCommandTa
  * 通常は stat の変化で自動追随するので、ここは「今すぐ反映したい」ときの近道。
  * 押したプロセスにだけ即時反映され、他プロセスは通常どおり次の stat で追いつく。
  */
-export const reloadCommandDefsAction = safeAuthAction
+export const reloadCommandDefs = safeAuthAction
   .metadata({ actionName: 'reloadCommandDefs', role: 'admin' })
   .action(async ({ ctx: { user } }) => {
     if (!consumeRateLimit(`command-reload:${user.id}`, RELOAD_RATE_LIMIT)) {
@@ -133,20 +133,18 @@ export const reloadCommandDefsAction = safeAuthAction
   })
 
 /** アサイン編集フォームの初期値と選択肢 */
-export const getCommandTargetAssignmentsAction = safeAuthAction
+export const getCommandTargetAssignments = safeAuthAction
   .metadata({ actionName: 'getCommandTargetAssignments', role: 'admin' })
   .inputSchema(scCommandTargetKey)
   .action(async ({ parsedInput: { targetKey }, ctx: { user } }) => {
     const file = assertManageableTarget(user, targetKey)
-    return { ...(await getCommandTargetAssignments(targetKey)), targetLabel: file.target.label }
+    return { ...(await loadCommandTargetAssignments(targetKey)), targetLabel: file.target.label }
   })
 
-export type GetCommandTargetAssignmentsReturnType = Awaited<
-  ReturnType<typeof getCommandTargetAssignmentsAction>
->['data']
+export type GetCommandTargetAssignmentsReturnType = Awaited<ReturnType<typeof getCommandTargetAssignments>>['data']
 
 /** ターゲットのメンバー一覧(直接 ∪ グループ経由) */
-export const getCommandTargetMembersAction = safeAuthAction
+export const getCommandTargetMembersForAdmin = safeAuthAction
   .metadata({ actionName: 'getCommandTargetMembersForAdmin', role: 'admin' })
   .inputSchema(scCommandTargetKey)
   .action(async ({ parsedInput: { targetKey }, ctx: { user } }) => {
@@ -154,10 +152,10 @@ export const getCommandTargetMembersAction = safeAuthAction
     return getCommandTargetUsers(targetKey)
   })
 
-export type GetCommandTargetMembersReturnType = Awaited<ReturnType<typeof getCommandTargetMembersAction>>['data']
+export type GetCommandTargetMembersReturnType = Awaited<ReturnType<typeof getCommandTargetMembersForAdmin>>['data']
 
 /** 直接メンバーの追加。追加と更新で処理が同じなので実体は `upsertCommandTargetMember` を共有する */
-export const addCommandTargetMemberAction = safeAuthAction
+export const addCommandTargetMember = safeAuthAction
   .metadata({ actionName: 'addCommandTargetMember', role: 'admin' })
   .inputSchema(scUpsertCommandTargetMember)
   .action(async ({ parsedInput: { targetKey, userId, role }, ctx: { user } }) => {
@@ -172,7 +170,7 @@ export const addCommandTargetMemberAction = safeAuthAction
   })
 
 /** 直接メンバーのロール変更。グループ経由メンバーへの付与もここを通る(行が無ければ作られる) */
-export const updateCommandTargetMemberRoleAction = safeAuthAction
+export const updateCommandTargetMemberRole = safeAuthAction
   .metadata({ actionName: 'updateCommandTargetMemberRole', role: 'admin' })
   .inputSchema(scUpsertCommandTargetMember)
   .action(async ({ parsedInput: { targetKey, userId, role }, ctx: { user } }) => {
@@ -187,19 +185,19 @@ export const updateCommandTargetMemberRoleAction = safeAuthAction
   })
 
 /** 直接メンバーを外す。グループ経由メンバーは行を持たないため対象外(グループ設定で外す) */
-export const removeCommandTargetMemberAction = safeAuthAction
+export const removeCommandTargetMember = safeAuthAction
   .metadata({ actionName: 'removeCommandTargetMember', role: 'admin' })
   .inputSchema(scRemoveCommandTargetMember)
   .action(async ({ parsedInput: { targetKey, userId }, ctx: { user } }) => {
     assertManageableTarget(user, targetKey)
-    await prisma.$transaction((tx) => removeCommandTargetMember(tx, { targetKey, userId }))
+    await prisma.$transaction((tx) => deleteCommandTargetMember(tx, { targetKey, userId }))
 
     logger.info({ userId: user.id, targetKey, targetId: userId }, 'command target member removed')
     return { targetKey }
   })
 
 /** グループ単位のアサインを更新する */
-export const setCommandTargetGroupsAction = safeAuthAction
+export const setCommandTargetGroups = safeAuthAction
   .metadata({ actionName: 'setCommandTargetGroups', role: 'admin' })
   .inputSchema(scSetCommandTargetGroups)
   .action(async ({ parsedInput: { targetKey, groupIds }, ctx: { user } }) => {
@@ -219,7 +217,7 @@ export const setCommandTargetGroupsAction = safeAuthAction
  * 自動では消さない。カタログはファイルシステム依存なので、マウント漏れの一時障害でも
  * 「全ターゲットが消えた」ように見えてしまう。消す対象は管理者が名指しで指定する。
  */
-export const purgeOrphanCommandAssignsAction = safeAuthAction
+export const purgeOrphanCommandAssigns = safeAuthAction
   .metadata({ actionName: 'purgeOrphanCommandAssigns', role: 'admin' })
   .inputSchema(scCommandTargetKey)
   .action(async ({ parsedInput: { targetKey }, ctx: { user } }) => {

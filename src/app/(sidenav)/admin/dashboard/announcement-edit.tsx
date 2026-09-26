@@ -12,7 +12,7 @@ import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'
 import { FC, useCallback, useEffect, useState } from 'react'
-import { getAnnouncement, updateAnnouncement } from './server'
+import { getAdminAnnouncement, updateAnnouncement } from './server'
 
 /**
  * お知らせ編集ポップアップ
@@ -25,7 +25,7 @@ export const AnnouncementEditModal: FC<ModalBaseProps> = ({ state, reload }) => 
   const [isSaving, setSaving] = useState(false)
 
   useEffect(() => {
-    parseAction(getAnnouncement()).then((res) => {
+    parseAction(getAdminAnnouncement()).then((res) => {
       const loaded = res?.body ?? ''
       setInitialBody(loaded)
       setBody(loaded)
@@ -79,7 +79,7 @@ export const AnnouncementManage: FC = () => {
   const [body, setBody] = useState<string>()
 
   const load = useCallback(() => {
-    parseAction(getAnnouncement()).then((res) => setBody(res?.body ?? ''))
+    parseAction(getAdminAnnouncement()).then((res) => setBody(res?.body ?? ''))
   }, [])
 
   useEffect(() => {

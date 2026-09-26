@@ -10,7 +10,12 @@ import { parseAction, useActionData } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'
 import { Accordion } from '@heroui/react'
 import { ComponentProps, FC } from 'react'
-import { getAgentRunner, getAgentRuns, saveAgentRunner, saveAgentRunnerRule } from './server'
+import {
+  getApprovableAgentRunner,
+  getApprovableAgentRuns,
+  saveApprovableAgentRunner,
+  saveApprovableAgentRunnerRule,
+} from './server'
 
 /** 開閉状態はエージェントの切り替え(= リマウント)を跨いで保つため、呼び出し側の state で持つ */
 export type AgentSectionKeys = NonNullable<ComponentProps<typeof Accordion>['expandedKeys']>
@@ -32,9 +37,9 @@ export const AgentSections: FC<{
     data: runner,
     refresh: refreshRunner,
     isLoading: isRunnerLoading,
-  } = useActionData(() => getAgentRunner({ id: agentId }))
+  } = useActionData(() => getApprovableAgentRunner({ id: agentId }))
   const runHistoryList = usePagingList({
-    load: async () => (await parseAction(getAgentRuns({ id: agentId }), { handled: 'all' })) ?? [],
+    load: async () => (await parseAction(getApprovableAgentRuns({ id: agentId }), { handled: 'all' })) ?? [],
     sort: { init: { column: 'startedAt', direction: 'descending' } },
   })
 
@@ -46,7 +51,7 @@ export const AgentSections: FC<{
           current={runner}
           isLoading={isRunnerLoading}
           refresh={refreshRunner}
-          save={saveAgentRunner}
+          save={saveApprovableAgentRunner}
         />
       </AccordionSection>
 
@@ -60,7 +65,7 @@ export const AgentSections: FC<{
           current={runner}
           isLoading={isRunnerLoading}
           refresh={refreshRunner}
-          saveRule={saveAgentRunnerRule}
+          saveRule={saveApprovableAgentRunnerRule}
         />
       </AccordionSection>
 

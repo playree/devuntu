@@ -10,14 +10,14 @@ import { useLocale } from '@/locale/client'
 import { Accordion } from '@heroui/react'
 import { FC } from 'react'
 import { GoogleAccountSettings } from './google-account'
-import { getIntegrationSettingsAction } from './server'
+import { getIntegrationSettings } from './server'
 import { SlackSettings } from './slack'
 
 const defaultExpandedKeys = new Set(['google_account', 'slack'])
 export const AdminSettingsClient: FC = () => {
   const { t } = useLocale()
   // グループ一覧は連携をまたいで共通なので、取得はこの 1 箇所にまとめる
-  const { data, isLoading } = useActionData(getIntegrationSettingsAction)
+  const { data, isLoading } = useActionData(getIntegrationSettings)
 
   // 取得失敗をスケルトンのままにすると読み込み中と見分けが付かないので、終わったら理由を出す
   const fallback = isLoading ? <PanelSkeleton className='min-h-24' /> : <NoticePanel>{t('error')}</NoticePanel>

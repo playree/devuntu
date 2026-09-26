@@ -39,7 +39,7 @@ export const updateDefaultDashboard = safeAuthAction
 /**
  * お知らせ取得(管理ページ編集用)
  */
-export const getAnnouncement = safeAuthAction
+export const getAdminAnnouncement = safeAuthAction
   .metadata({ actionName: 'getAdminAnnouncement', role: 'admin' })
   .action(async () => {
     const record = await getString('DASHBOARD_ANNOUNCEMENT')

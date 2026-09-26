@@ -15,10 +15,10 @@ import { useRouter } from 'next/navigation'
 import { FC } from 'react'
 import { CommandTargetTable, OrphanTargetTable } from './command-tables'
 import {
-  getCommandTargetsAction,
+  getCommandTargets,
   type GetCommandTargetsReturnType,
-  purgeOrphanCommandAssignsAction,
-  reloadCommandDefsAction,
+  purgeOrphanCommandAssigns,
+  reloadCommandDefs,
 } from './server'
 
 /**
@@ -32,14 +32,14 @@ export const AdminCommandsClient: FC = () => {
   const { t } = useLocale()
   const tz = useUserTimezone()
   const router = useRouter()
-  const { data, isLoading, refresh } = useActionData(getCommandTargetsAction)
+  const { data, isLoading, refresh } = useActionData(getCommandTargets)
   const confirmAction = useConfirmAction()
 
   const purge = (targetKey: string) =>
     confirmAction(
       { title: t('command_target_purge'), text: t('msg_confirm_deletion', { target: targetKey }) },
       async () => {
-        await parseAction(purgeOrphanCommandAssignsAction({ targetKey }))
+        await parseAction(purgeOrphanCommandAssigns({ targetKey }))
         notify.success(t('msg_deleted_target', { target: targetKey }))
         await refresh()
       },
@@ -55,7 +55,7 @@ export const AdminCommandsClient: FC = () => {
           icon={<ArrowPathIcon />}
           onPress={async () => {
             // 押したプロセスに即時反映させ、表示はいつもの取得経路で描き直す
-            await parseAction(reloadCommandDefsAction())
+            await parseAction(reloadCommandDefs())
             await refresh()
           }}
         />
