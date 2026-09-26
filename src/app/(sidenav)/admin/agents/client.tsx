@@ -20,7 +20,7 @@ import { Table } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
 import { AddModal } from './modals'
-import { type AgentTokenStatus, getAgents, getGroupOptions } from './server'
+import { type AgentTokenStatus, getAgentGroupOptions, getAgents } from './server'
 
 /** エージェントは1本しかトークンを持たないので、件数ではなく状態を出す */
 const TokenStatusChip = createEnumChip<AgentTokenStatus>({
@@ -42,7 +42,7 @@ export const AdminAgentsClient: FC = () => {
   const tz = useUserTimezone()
   const router = useRouter()
   const addModalState = useModalState()
-  const { data: groupOptions } = useActionData(getGroupOptions)
+  const { data: groupOptions } = useActionData(getAgentGroupOptions)
 
   const list = usePagingList({
     load: async () => {

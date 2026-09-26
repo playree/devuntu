@@ -17,7 +17,7 @@ import { dayformat } from '@/lib/day'
 import { useLocale } from '@/locale/client'
 import { Chip } from '@heroui/react'
 import { useEffect, type FC } from 'react'
-import { cancelCommandRunAction, getCommandRunAction, type GetCommandRunReturnType } from '../../server'
+import { cancelCommandRun, getCommandRun, type GetCommandRunReturnType } from '../../server'
 
 type RunDetail = NonNullable<GetCommandRunReturnType>
 
@@ -36,7 +36,7 @@ export const CommandRunClient: FC<{ runId: string }> = ({ runId }) => {
   const tz = useUserTimezone()
   const { confirmModal } = useConfirmModal()
 
-  const { data: run, isLoading, refresh } = useActionData(() => getCommandRunAction({ id: runId }))
+  const { data: run, isLoading, refresh } = useActionData(() => getCommandRun({ id: runId }))
   const { lines, ended, reconnecting } = useCommandStream(runId, true)
 
   // 終了を受け取ったら、状態(終了コード・失敗理由)を取り直す
@@ -79,7 +79,7 @@ export const CommandRunClient: FC<{ runId: string }> = ({ runId }) => {
                 return
               }
               // 確認している間に実行が終わっていると status は null。中断できていないので通知しない
-              const { status } = await parseAction(cancelCommandRunAction({ id: runId }))
+              const { status } = await parseAction(cancelCommandRun({ id: runId }))
               if (status) {
                 notify.info(t('msg_command_cancel_requested'))
               }

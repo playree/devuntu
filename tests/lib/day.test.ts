@@ -1,4 +1,4 @@
-import { isDateOnlyOverdue, isValidTimezone, startOfWeek, weekRange, zonedMinutes } from '@/lib/day'
+import { DAY_MS, isDateOnlyOverdue, isValidTimezone, msBefore, startOfWeek, weekRange, zonedMinutes } from '@/lib/day'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 afterEach(() => {
@@ -101,5 +101,22 @@ describe('isValidTimezone', () => {
 
   it.each(['', 'Asia/Tokio'])('空文字や存在しない名前は弾く (%s)', (tz) => {
     expect(isValidTimezone(tz)).toBe(false)
+  })
+})
+
+describe('msBefore', () => {
+  const base = new Date('2026-09-08T10:00:00.000Z')
+
+  it('指定した時間だけ過去の時刻を返す', () => {
+    expect(msBefore(base, DAY_MS).toISOString()).toBe('2026-09-07T10:00:00.000Z')
+  })
+
+  it('0 なら基準時刻のまま(猶予なしの手順で使う)', () => {
+    expect(msBefore(base, 0).getTime()).toBe(base.getTime())
+  })
+
+  it('元の Date を書き換えない', () => {
+    msBefore(base, 1000)
+    expect(base.toISOString()).toBe('2026-09-08T10:00:00.000Z')
   })
 })

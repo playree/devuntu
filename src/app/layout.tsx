@@ -46,7 +46,7 @@ export default async function RootLayout({
   const locale = pickLocale(localeConfig, defaultLocale, acceptLanguage, cookieLocale)
 
   return (
-    <html lang={locale} className={`${NotoSansJp.variable} ${RobotoMono.variable}`} suppressHydrationWarning>
+    <html lang={locale} className={cn(NotoSansJp.variable, RobotoMono.variable)} suppressHydrationWarning>
       <head />
       <body className={cn('bg-background text-foreground font-noto min-h-screen antialiased')}>
         <Providers

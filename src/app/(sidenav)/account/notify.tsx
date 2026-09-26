@@ -32,8 +32,11 @@ const ChannelCheckBox: FC<
   const checkbox = <CheckboxCtrl className='shrink-0' {...props} />
   return tooltip ? (
     <Tooltip delay={300}>
-      {/* isDisabled な Checkbox はホバー系のイベントを自ら拾わなくなるため、Trigger 側でホバーを検知させる */}
-      <Tooltip.Trigger className='block'>{checkbox}</Tooltip.Trigger>
+      <Tooltip.Trigger // isDisabled な Checkbox はホバー系のイベントを自ら拾わなくなるため、Trigger 側でホバーを検知させる
+        className='block'
+      >
+        {checkbox}
+      </Tooltip.Trigger>
       <Tooltip.Content showArrow>{tooltip}</Tooltip.Content>
     </Tooltip>
   ) : (
@@ -80,8 +83,9 @@ const NotifyForm: FC<{
         {DM_NOTIFY_EVENTS.map((event) => (
           <FlexCol key={event} className='gap-2'>
             <div className='text-foreground text-sm'>{t(`notify_event_${event}`)}</div>
-            {/* チャネルが増えるとスマホ幅では収まらないので、縮めずに折り返す */}
-            <FlexRow className='flex-wrap items-center gap-x-6 gap-y-2 px-2'>
+            <FlexRow // チャネルが増えるとスマホ幅では収まらないので、縮めずに折り返す
+              className='flex-wrap items-center gap-x-6 gap-y-2 px-2'
+            >
               <ChannelCheckBox
                 control={control}
                 name={`${event}.email`}

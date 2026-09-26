@@ -3,12 +3,13 @@ import { resolveDefaultDashboardLayout } from '@/lib/dashboard-layout'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { DashboardLayout } from '@/lib/schema/schema-dashboard'
+import { en } from '@/locale/lang-en'
 import { type Metadata } from 'next'
 import { FC } from 'react'
 import { HomeClient } from './client'
 
 export const metadata: Metadata = {
-  title: 'Home',
+  title: en.dashboard,
 }
 
 const Home: FC = async () => {

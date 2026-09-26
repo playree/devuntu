@@ -94,8 +94,11 @@ export const MentionMenu: FC<{
           <UserAvatar name={name} image={image} isAgent={isAgent} size='xs' />
           <div className='min-w-0'>
             <div className='truncate'>{name}</div>
-            {/* 同名のメンバーを見分けられるようにする(絞り込みにも使える) */}
-            <div className={styles.email()}>{email}</div>
+            <div // 同名のメンバーを見分けられるようにする(絞り込みにも使える)
+              className={styles.email()}
+            >
+              {email}
+            </div>
           </div>
         </li>
       ))}

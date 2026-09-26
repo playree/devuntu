@@ -93,3 +93,7 @@ export const scSetUserAvatar = z.object({
   image: zImageFile.nullable(), // File = 新規アップロード / null = 削除してOIDC同期を再開
 })
 export type SetUserAvatar = z.infer<typeof scSetUserAvatar>
+
+export const scSetUserTimezone = z.object({ timezone: z.string() })
+
+export const scSetUserLocale = z.object({ locale: z.string() })

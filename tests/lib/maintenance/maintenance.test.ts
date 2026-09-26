@@ -11,28 +11,10 @@ import {
   ATTACHMENT_SWEEP_INTERVAL_MS,
   MAINTENANCE_TICK_MS,
   OAUTH_TOKEN_RETENTION_MS,
-  retentionBefore,
   SESSION_RETENTION_MS,
   VERIFICATION_RETENTION_MS,
 } from '@/lib/maintenance/maintenance'
 import { describe, expect, it } from 'vitest'
-
-const now = new Date('2026-09-08T10:00:00.000Z')
-
-describe('retentionBefore: 保持期間の境界', () => {
-  it('保持期間ぶん過去の時刻を返す', () => {
-    expect(retentionBefore(now, 24 * 60 * 60 * 1000).toISOString()).toBe('2026-09-07T10:00:00.000Z')
-  })
-
-  it('0 なら現在時刻のまま(猶予なしの手順で使う)', () => {
-    expect(retentionBefore(now, 0).getTime()).toBe(now.getTime())
-  })
-
-  it('元の Date を書き換えない', () => {
-    retentionBefore(now, 1000)
-    expect(now.toISOString()).toBe('2026-09-08T10:00:00.000Z')
-  })
-})
 
 describe('定数の関係', () => {
   it('添付の掃除間隔は tick 以上(tick ごとに全走査しない)', () => {

@@ -12,6 +12,7 @@ import {
   scUpdateBusyTime,
   scUpdateCalendarShareTitle,
 } from '@/lib/schema/schema-calendar'
+import { makeUrl } from '@/lib/server-utils'
 import { requestLocale } from '@/locale/request'
 import { t } from '@/locale/server'
 import { nanoid } from 'nanoid'
@@ -37,7 +38,7 @@ export const getCalendarShare = safeAuthAction
   .action(async ({ ctx: { user } }) => {
     // 連携が利用不可なら未連携・未共有として返す
     if (!(await canUseGoogleAccount(user.id))) {
-      return { googleConnected: false, shared: false, publicId: null, title: '' }
+      return { googleConnected: false, shared: false, shareUrl: null, title: '' }
     }
     const [account, share] = await Promise.all([
       prisma.account.findFirst({
@@ -52,7 +53,7 @@ export const getCalendarShare = safeAuthAction
     return {
       googleConnected: !!account,
       shared: !!share,
-      publicId: share?.publicId ?? null,
+      shareUrl: share ? makeUrl(`/cal/${share.publicId}`).toString() : null,
       title: parseOptions(share?.options).title ?? '',
     }
   })

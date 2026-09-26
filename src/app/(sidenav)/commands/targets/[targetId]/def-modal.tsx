@@ -14,7 +14,7 @@ import { ClientError } from '@/lib/error'
 import { useLocale } from '@/locale/client'
 import { FC, useState } from 'react'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
-import { type CommandDefView, upsertCommandDefAction } from './server'
+import { type CommandDefView, upsertCommandDef } from './server'
 
 /** 追加のときに出す雛形。最低限の必須項目だけを置き、あとは書き足してもらう */
 const templateOf = (label: string) =>
@@ -77,7 +77,7 @@ export const CommandDefModal: FC<ModalBaseProps & { target: CommandDefTarget }> 
         setSubmitting(true)
         try {
           const result = await parseAction(
-            upsertCommandDefAction({
+            upsertCommandDef({
               targetKey: target.targetKey,
               revision: target.revision,
               replaceId,

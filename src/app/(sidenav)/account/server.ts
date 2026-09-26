@@ -8,6 +8,7 @@ import {
 } from '@/lib/auth/account-link'
 import { assertFreshSession } from '@/lib/auth/session-fresh'
 import { updateUserAvatar, updateUserTimezone } from '@/lib/auth/user-profile'
+import { HOUR_MS } from '@/lib/day'
 import { envu } from '@/lib/env-util'
 import { errValidation } from '@/lib/error'
 import { deleteUserMcpToken, issueUserMcpToken, listUserMcpTokens } from '@/lib/mcp/mcp-token'
@@ -15,7 +16,7 @@ import { getUserNotifySettings, setUserNotifySettings } from '@/lib/notify/notif
 import { listUserOAuthConsents, revokeUserOAuthConsent } from '@/lib/oauth/oauth-consent-store'
 import { assertRateLimit } from '@/lib/rate-limit'
 import { scUUID } from '@/lib/schema/schema'
-import { scIssueMcpToken, scSetUserAvatar } from '@/lib/schema/schema-auth'
+import { scIssueMcpToken, scSetUserAvatar, scSetUserTimezone } from '@/lib/schema/schema-auth'
 import { scUpdateNotifySettings, scWebPushSubscription } from '@/lib/schema/schema-notify'
 import {
   isWebPushConfigured,
@@ -23,7 +24,6 @@ import {
   removeWebPushDevice,
   saveWebPushSubscription,
 } from '@/lib/webpush/webpush-server'
-import { z } from 'zod'
 
 /**
  * アカウント画面の Server Action。
@@ -32,12 +32,11 @@ import { z } from 'zod'
  */
 
 /** MCP トークン発行の連打防止。誤操作で使い捨てのトークンを量産させない */
-const MCP_TOKEN_ISSUE_RATE_LIMIT = { limit: 5, windowMs: 60 * 60 * 1000 }
+const MCP_TOKEN_ISSUE_RATE_LIMIT = { limit: 5, windowMs: HOUR_MS }
 
 export const getGoogleAccountStatus = safeAuthAction
   .metadata({ actionName: 'getGoogleAccountStatus', role: 'user' })
   .action(async ({ ctx: { user } }) => await getGoogleStatus(user.id))
-export type GetGoogleAccountStatusReturnType = Awaited<ReturnType<typeof getGoogleAccountStatus>>['data']
 
 export const disconnectGoogleAccount = safeAuthAction
   .metadata({ actionName: 'disconnectGoogleAccount', role: 'user' })
@@ -162,7 +161,7 @@ export const deleteWebPushDevice = safeAuthAction
 
 export const setUserTimezone = safeAuthAction
   .metadata({ actionName: 'setUserTimezone', role: 'user' })
-  .inputSchema(z.object({ timezone: z.string() }))
+  .inputSchema(scSetUserTimezone)
   .action(async ({ parsedInput: { timezone }, ctx: { user } }) => {
     await updateUserTimezone(user.id, timezone)
     return { timezone }

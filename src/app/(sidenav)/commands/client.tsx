@@ -15,7 +15,7 @@ import { Accordion, Card } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC, useMemo } from 'react'
 import { CommandForm } from './command-form'
-import { type AvailableCommandView, type AvailableTargetView, getAvailableCommandsAction } from './server'
+import { type AvailableCommandView, type AvailableTargetView, getAvailableCommands } from './server'
 
 /**
  * 実行できるコマンドの一覧。
@@ -27,7 +27,7 @@ import { type AvailableCommandView, type AvailableTargetView, getAvailableComman
 export const CommandsClient: FC = () => {
   const { t } = useLocale()
   const router = useRouter()
-  const { data, isLoading, reload } = useActionData(getAvailableCommandsAction)
+  const { data, isLoading, reload } = useActionData(getAvailableCommands)
   const formState = useModalState<AvailableCommandView>()
   /**
    * 既定は全ターゲット展開。
@@ -86,9 +86,10 @@ const TargetSection: FC<{
   return (
     <AccordionSection id={target.key} icon={<ServerStackIcon />} title={target.label}>
       <Grid>
-        {/* 定義を編集できるのはオーナーだけなので、導線もオーナーにだけ出す。見出しはトリガーなのでボタンを置けない */}
         {target.role === 'owner' && (
-          <FlexRow className='col-span-12 justify-end'>
+          <FlexRow // 定義を編集できるのはオーナーだけなので、導線もオーナーにだけ出す。見出しはトリガーなのでボタンを置けない
+            className='col-span-12 justify-end'
+          >
             <MultiButton
               isIconOnly
               variant='outline'
@@ -108,8 +109,9 @@ const TargetSection: FC<{
                 <Card.Title>{command.label}</Card.Title>
                 <Card.Description>{command.description}</Card.Description>
               </Card.Header>
-              {/* 説明の行数がカードごとに違うので、ボタンは下端に寄せて揃える */}
-              <Card.Footer className='mt-auto justify-between'>
+              <Card.Footer // 説明の行数がカードごとに違うので、ボタンは下端に寄せて揃える
+                className='mt-auto justify-between'
+              >
                 <MultiButton icon={<PlayIcon />} variant='primary' size='sm' onPress={() => onRun(command)}>
                   {t('command_run')}
                 </MultiButton>

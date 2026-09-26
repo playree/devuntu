@@ -7,7 +7,12 @@ import { type CommandDef, type CommandInput, type CommandTargetRole } from '@/li
 import { assertCommandAccess, listAvailableCommands, listCommandTargetsForActor } from '@/lib/command/command-access'
 import { buildArgsPreview, buildCommandInputDefaults, resolveCommandArgs } from '@/lib/command/command-args'
 import { findCommandTarget } from '@/lib/command/command-catalog'
-import { enqueueCommandRun, getCommandRun, listCommandRuns, requestCancelCommandRun } from '@/lib/command/command-run'
+import {
+  enqueueCommandRun,
+  getCommandRun as findCommandRun,
+  listCommandRuns,
+  requestCancelCommandRun,
+} from '@/lib/command/command-run'
 import { kickCommandDispatch } from '@/lib/command/command-worker'
 import { envu } from '@/lib/env-util'
 import { errInvalidOperation, errNotFound, errTooManyRequests } from '@/lib/error'
@@ -67,7 +72,7 @@ export type AvailableTargetView = {
  * 認可は `command-access.ts` に集約する(`src/proxy.ts` は Server Action を通らないため、
  * パス単位の制御ではこの機能を守れない)。
  */
-export const getAvailableCommandsAction = safeAuthAction
+export const getAvailableCommands = safeAuthAction
   .metadata({ actionName: 'getAvailableCommands', role: 'user' })
   .action(async ({ ctx: { user } }) => {
     const [targets, available] = await Promise.all([listCommandTargetsForActor(user), listAvailableCommands(user)])
@@ -82,7 +87,7 @@ export const getAvailableCommandsAction = safeAuthAction
     }
   })
 
-export type GetAvailableCommandsReturnType = Awaited<ReturnType<typeof getAvailableCommandsAction>>['data']
+export type GetAvailableCommandsReturnType = Awaited<ReturnType<typeof getAvailableCommands>>['data']
 
 /**
  * 実行を待ち行列へ積み、runId を即座に返す。
@@ -90,7 +95,7 @@ export type GetAvailableCommandsReturnType = Awaited<ReturnType<typeof getAvaila
  * 実行そのものをここで完走させないのは、レスポンスの寿命と実行の寿命を一致させられないため
  * (`after()` に入れると長時間のジョブが graceful shutdown をブロックする)。
  */
-export const startCommandRunAction = safeAuthAction
+export const startCommandRun = safeAuthAction
   .metadata({ actionName: 'startCommandRun', role: 'user' })
   .inputSchema(scStartCommandRun)
   .action(async ({ parsedInput: { commandKey, params }, ctx: { user, session } }) => {
@@ -132,18 +137,18 @@ export const startCommandRunAction = safeAuthAction
  *
  * 実行者本人と管理者だけが見られる。存在を漏らさないため、権限が無い場合も 404 相当にする。
  */
-export const getCommandRunAction = safeAuthAction
+export const getCommandRun = safeAuthAction
   .metadata({ actionName: 'getCommandRun', role: 'user' })
   .inputSchema(scUUID)
   .action(async ({ parsedInput: { id }, ctx: { user } }) => {
-    const run = await getCommandRun(id)
+    const run = await findCommandRun(id)
     if (!run || (run.userId !== user.id && !isAdminActor(user))) {
       throw errNotFound()
     }
     return run
   })
 
-export type GetCommandRunReturnType = Awaited<ReturnType<typeof getCommandRunAction>>['data']
+export type GetCommandRunReturnType = Awaited<ReturnType<typeof getCommandRun>>['data']
 
 /**
  * 実行の中断を要求する。
@@ -151,11 +156,11 @@ export type GetCommandRunReturnType = Awaited<ReturnType<typeof getCommandRunAct
  * `queued` はその場で確定する。`running` はフラグを立てるだけで、実際に止めるのは
  * 実行を掴んでいるワーカー(別プロセスの子プロセスは kill できないため)。
  */
-export const cancelCommandRunAction = safeAuthAction
+export const cancelCommandRun = safeAuthAction
   .metadata({ actionName: 'cancelCommandRun', role: 'user' })
   .inputSchema(scUUID)
   .action(async ({ parsedInput: { id }, ctx: { user } }) => {
-    const run = await getCommandRun(id)
+    const run = await findCommandRun(id)
     if (!run || (run.userId !== user.id && !isAdminActor(user))) {
       throw errNotFound()
     }
@@ -173,7 +178,7 @@ export const cancelCommandRunAction = safeAuthAction
  * `commandKey` はコマンド単位に絞るだけで、見える範囲は広がらない。実行の許可は確かめない
  * (ターゲットのアサインを外されても、自分が実行した履歴は見られるようにする)。
  */
-export const getCommandRunsAction = safeAuthAction
+export const getCommandRuns = safeAuthAction
   .metadata({ actionName: 'getCommandRuns', role: 'user' })
   .inputSchema(scCommandRunListQuery)
   .action(
@@ -195,4 +200,4 @@ export const getCommandRunsAction = safeAuthAction
     },
   )
 
-export type GetCommandRunsReturnType = Awaited<ReturnType<typeof getCommandRunsAction>>['data']
+export type GetCommandRunsReturnType = Awaited<ReturnType<typeof getCommandRuns>>['data']

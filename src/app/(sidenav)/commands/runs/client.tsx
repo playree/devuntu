@@ -18,7 +18,7 @@ import { useLocale } from '@/locale/client'
 import { Chip, Table } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC, useRef, useState } from 'react'
-import { getCommandRunsAction } from '../server'
+import { getCommandRuns } from '../server'
 
 /**
  * コマンドの実行履歴。
@@ -43,7 +43,7 @@ export const CommandRunsClient: FC<{ initialCommandKey: string | null }> = ({ in
   const list = useServerPagingList({
     loadPage: async (query) => {
       const res = await parseAction(
-        getCommandRunsAction({
+        getCommandRuns({
           scope: showAllRef.current && isAdmin ? 'all' : 'mine',
           commandKey: commandKeyRef.current,
           ...query,

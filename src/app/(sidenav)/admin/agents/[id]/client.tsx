@@ -27,7 +27,7 @@ import { useLocale } from '@/locale/client'
 import { Accordion } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
-import { getApproverUserOptions, getGroupOptions } from '../server'
+import { getAgentGroupOptions, getApproverUserOptions } from '../server'
 import { AgentApprover } from './agent-approver'
 import { AgentProfile } from './agent-profile'
 import { AgentToken } from './agent-token'
@@ -68,7 +68,7 @@ export const AdminAgentDetailClient: FC<{ agentId: string; baseUrl: string }> = 
     refresh: refreshApprovers,
     isLoading: isApproversLoading,
   } = useActionData(() => getAgentApprovers({ id: agentId }))
-  const { data: groupOptions } = useActionData(getGroupOptions)
+  const { data: groupOptions } = useActionData(getAgentGroupOptions)
   const { data: approverUserOptions } = useActionData(getApproverUserOptions)
   const runHistoryList = usePagingList({
     load: async () => (await parseAction(getAgentRuns({ id: agentId }), { handled: 'all' })) ?? [],

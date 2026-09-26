@@ -146,14 +146,16 @@ export const UserSelectField = ({
         {canSelectSelf && <SelfSelectAction onPress={() => onChange(selfUserId)} />}
       </div>
       <ComboBox.InputGroup>
-        {/**
-         * アバターとクリアは Input より前に置くこと。ComboBox.InputGroup は最後の子を Trigger として扱い、
-         * それ以外を Trigger の前に並べる。加えて combo-box.css が Input と Trigger の隣接
-         * (input:has(+ .combo-box__trigger))で右余白を当てているため、間に挟むとその指定が外れる。
-         * トリガー自身と同じく、入力欄には絶対配置で重ねる(input-group が relative)
-         */}
         {hasAvatar && (
-          <span className='pointer-events-none absolute inset-y-0 inset-s-2 z-10 flex items-center'>
+          <span
+            /**
+             * アバターとクリアは Input より前に置くこと。ComboBox.InputGroup は最後の子を Trigger として扱い、
+             * それ以外を Trigger の前に並べる。加えて combo-box.css が Input と Trigger の隣接
+             * (input:has(+ .combo-box__trigger))で右余白を当てているため、間に挟むとその指定が外れる。
+             * トリガー自身と同じく、入力欄には絶対配置で重ねる(input-group が relative)
+             */
+            className='pointer-events-none absolute inset-y-0 inset-s-2 z-10 flex items-center'
+          >
             <UserAvatar name={selected.name} image={selected.image} isAgent={selected.isAgent} size='xs' />
           </span>
         )}

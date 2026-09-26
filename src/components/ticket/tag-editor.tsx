@@ -159,9 +159,8 @@ export const TagEditor: FC<{
 
   return (
     <FlexCol>
-      {/* 作成は canManage を問わない(member もチケット編集中に新しいタグが必要になる) */}
       {tags.length < MAX_TAGS_PER_SCOPE && (
-        <TagRowForm
+        <TagRowForm // 作成は canManage を問わない(member もチケット編集中に新しいタグが必要になる)
           submitLabel={t('add_tag')}
           isPending={isPending}
           onSubmit={(req) => withPending(() => onCreate(req))}

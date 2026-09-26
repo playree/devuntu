@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server'
+import { nowDate } from '@/lib/day'
 
 export const GET = async () => {
-  return NextResponse.json({ status: 'ok', timestamp: new Date().toISOString() }, { status: 200 })
+  return Response.json({ status: 'ok', timestamp: nowDate().toISOString() })
 }

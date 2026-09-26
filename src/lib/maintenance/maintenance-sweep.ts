@@ -9,21 +9,17 @@
  */
 
 import { type CommandRunStatus } from '@/generated/prisma/enums'
-import { nowDate } from '../day'
+import { DAY_MS, msBefore, nowDate } from '../day'
 import { envu } from '../env-util'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
 import {
   MAINTENANCE_DELETE_BATCH,
   OAUTH_TOKEN_RETENTION_MS,
-  retentionBefore,
   SESSION_RETENTION_MS,
   VERIFICATION_RETENTION_MS,
 } from './maintenance'
 import { sweepOrphanAttachments } from './maintenance-attachment'
-
-/** 実行履歴の保持期間は日で受け取るので、境界の計算前に ms へ直す */
-const DAY_MS = 24 * 60 * 60 * 1000
 
 /** 手順ごとの削除件数。失敗した手順は `-1` */
 export type SweepCounts = Record<string, number>
@@ -35,7 +31,7 @@ export type SweepCounts = Record<string, number>
  * ここで消してもMCPのトークンは失効しない(Webの5日とMCPの180日は独立している)。
  */
 export const sweepSessions = async (now: Date): Promise<number> =>
-  (await prisma.session.deleteMany({ where: { expiresAt: { lt: retentionBefore(now, SESSION_RETENTION_MS) } } })).count
+  (await prisma.session.deleteMany({ where: { expiresAt: { lt: msBefore(now, SESSION_RETENTION_MS) } } })).count
 
 /**
  * 使われないまま期限が切れた検証値(メールOTPなど)。
@@ -47,7 +43,7 @@ export const sweepSessions = async (now: Date): Promise<number> =>
 export const sweepVerifications = async (now: Date): Promise<number> =>
   (
     await prisma.verification.deleteMany({
-      where: { expiresAt: { lt: retentionBefore(now, VERIFICATION_RETENTION_MS) } },
+      where: { expiresAt: { lt: msBefore(now, VERIFICATION_RETENTION_MS) } },
     })
   ).count
 
@@ -59,7 +55,7 @@ export const sweepVerifications = async (now: Date): Promise<number> =>
  * ローテーション済みトークンの再提示を検出する期間(`rotationReplayExpiresAt`)も待つ。
  */
 export const sweepOauthRefreshTokens = async (now: Date): Promise<number> => {
-  const before = retentionBefore(now, OAUTH_TOKEN_RETENTION_MS)
+  const before = msBefore(now, OAUTH_TOKEN_RETENTION_MS)
   const { count } = await prisma.oauthRefreshToken.deleteMany({
     where: {
       AND: [
@@ -74,7 +70,7 @@ export const sweepOauthRefreshTokens = async (now: Date): Promise<number> => {
 
 /** 期限切れ・失効済みのアクセストークン(リフレッシュトークンの Cascade で消えた分は含まない) */
 export const sweepOauthAccessTokens = async (now: Date): Promise<number> => {
-  const before = retentionBefore(now, OAUTH_TOKEN_RETENTION_MS)
+  const before = msBefore(now, OAUTH_TOKEN_RETENTION_MS)
   const { count } = await prisma.oauthAccessToken.deleteMany({
     where: { OR: [{ expiresAt: { lt: before } }, { revoked: { lt: before } }] },
   })
@@ -108,7 +104,7 @@ export const sweepAgentRuns = async (now: Date): Promise<number> => {
 
   const { count } = await prisma.agentRun.deleteMany({
     where: {
-      startedAt: { lt: retentionBefore(now, envu.server.AGENT_RUN_RETENTION_DAYS * DAY_MS) },
+      startedAt: { lt: msBefore(now, envu.server.AGENT_RUN_RETENTION_DAYS * DAY_MS) },
       status: { not: 'running' },
     },
   })
@@ -145,7 +141,7 @@ export const sweepCommandRuns = async (now: Date): Promise<number> => {
   const keep = envu.server.COMMAND_RUN_KEEP
 
   const { count } = await prisma.commandRun.deleteMany({
-    where: { queuedAt: { lt: retentionBefore(now, envu.server.COMMAND_RUN_RETENTION_DAYS * DAY_MS) }, ...settled },
+    where: { queuedAt: { lt: msBefore(now, envu.server.COMMAND_RUN_RETENTION_DAYS * DAY_MS) }, ...settled },
   })
 
   let capped = 0

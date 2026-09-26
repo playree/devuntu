@@ -28,6 +28,3 @@ export const retryScheduledAt = (now: Date, attempts: number): Date =>
 
 /** 試行回数を使い切ったか。使い切った配信は failed にして原因追跡用に残す */
 export const isRetryExhausted = (attempts: number): boolean => attempts >= NOTIFY_MAX_ATTEMPTS
-
-/** `processing` のまま放置された行を取りこぼしとみなす境界 */
-export const staleClaimBefore = (now: Date, timeoutMs: number): Date => new Date(now.getTime() - timeoutMs)

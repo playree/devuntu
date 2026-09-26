@@ -13,11 +13,15 @@ extend(customParseFormat)
 export const now = () => dayjs()
 export const nowDate = () => now().toDate()
 
+export const MINUTE_MS = 60 * 1000
+export const HOUR_MS = 60 * MINUTE_MS
+export const DAY_MS = 24 * HOUR_MS
+
+/** 基準時刻から ms だけ前の時刻。保持期間や時間切れの境界に使う */
+export const msBefore = (base: Date, ms: number): Date => new Date(base.getTime() - ms)
+
 /** タイムゾーン(既定のフォールバック)。env の DEFAULT_TIMEZONE 未設定時などに使用 */
 export const DEFAULT_TZ = 'Asia/Tokyo'
-
-/** 後方互換のためのエイリアス */
-export const TOKYO_TZ = DEFAULT_TZ
 
 /** 選択候補として表示する世界の主要都市のタイムゾーン(IANA名) */
 export const COMMON_TIMEZONES = [
@@ -140,9 +144,6 @@ export const startOfWeek = (date?: string | null, tz: string = DEFAULT_TZ) => {
   return zonedMinutes(valid.startOf('isoWeek').format('YYYY-MM-DD'), 0, tz)
 }
 
-/** 週の起点から7日分の Dayjs 配列(月曜〜日曜) */
-export const weekDays = (weekStart: Dayjs) => Array.from({ length: 7 }, (_, i) => weekStart.add(i, 'day'))
-
 /**
  * 週の取得レンジ(ISO文字列。timeMin: 週初日0:00, timeMax: 翌週初日0:00)
  *
@@ -175,8 +176,6 @@ export const minToHHmm = (min: number): string => {
 /** 暦日(YYYY-MM-DD)を日数分ずらす。UTC の暦日計算なので DST の影響を受けない */
 export const addDaysDateOnly = (date: string, days: number): string =>
   dayjs.utc(date, 'YYYY-MM-DD', true).add(days, 'day').format('YYYY-MM-DD')
-
-const DAY_MS = 24 * 60 * 60 * 1000
 
 /** 指定した瞬間のタイムゾーンの UTC オフセット(分) */
 const offsetAt = (ts: number, tz: string): number => dayjs(ts).tz(tz).utcOffset()

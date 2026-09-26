@@ -94,8 +94,12 @@ export const TicketBody: FC<{
           )
         }
       />
-      {/* 誰へ届いたのかは本文の外に出す(本文中の @名前 は素のテキストのまま) */}
-      {!isEditingContent && <MentionChips names={ticket.mentionedNames} className='mt-1' />}
+      {!isEditingContent && (
+        <MentionChips // 誰へ届いたのかは本文の外に出す(本文中の @名前 は素のテキストのまま)
+          names={ticket.mentionedNames}
+          className='mt-1'
+        />
+      )}
     </div>
   )
 }

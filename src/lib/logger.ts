@@ -22,7 +22,7 @@ export const logger = pino({
 
   // 開発環境のときだけ pretty-print を有効にする
   transport:
-    process.env.NODE_ENV !== 'production'
+    envu.server.NODE_ENV !== 'production'
       ? {
           target: 'pino-pretty',
           options: {

@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth/auth'
 import { logger } from '@/lib/logger'
 import { parseConsentScopes, parseRequestedUserInfoClaims } from '@/lib/oauth/oauth-consent'
 import { prisma } from '@/lib/prisma'
+import { en } from '@/locale/lang-en'
 import { isAPIError } from 'better-auth/api'
 import { type Metadata } from 'next'
 import { headers } from 'next/headers'
@@ -9,7 +10,7 @@ import { FC } from 'react'
 import { ConsentClient } from './client'
 
 export const metadata: Metadata = {
-  title: 'Consent',
+  title: en.consent,
 }
 
 /**

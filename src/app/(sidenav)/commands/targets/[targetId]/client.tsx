@@ -17,12 +17,7 @@ import { useRouter } from 'next/navigation'
 import { FC, useState } from 'react'
 import { CommandDefs } from './command-defs'
 import { CommandDefModal, type CommandDefTarget } from './def-modal'
-import {
-  checkCommandDefEditableAction,
-  type CommandDefView,
-  deleteCommandDefAction,
-  getCommandTargetDetailAction,
-} from './server'
+import { checkCommandDefEditable, type CommandDefView, deleteCommandDef, getCommandTargetDetail } from './server'
 
 /**
  * ターゲット設定。
@@ -32,7 +27,7 @@ import {
 export const CommandTargetClient: FC<{ targetKey: string }> = ({ targetKey }) => {
   const { t } = useLocale()
   const router = useRouter()
-  const { data, isLoading, reload } = useActionData(() => getCommandTargetDetailAction({ targetKey }))
+  const { data, isLoading, reload } = useActionData(() => getCommandTargetDetail({ targetKey }))
   const defModalState = useModalState<CommandDefTarget>()
   const { confirmModal } = useConfirmModal()
   const [checking, setChecking] = useState<{ commandId: string | null } | null>(null)
@@ -49,7 +44,7 @@ export const CommandTargetClient: FC<{ targetKey: string }> = ({ targetKey }) =>
     }
     setChecking({ commandId: command?.id ?? null })
     try {
-      await parseAction(checkCommandDefEditableAction({ targetKey }), { wait: 0 })
+      await parseAction(checkCommandDefEditable({ targetKey }), { wait: 0 })
     } catch (e) {
       if (!(e instanceof ClientError)) {
         throw e
@@ -84,7 +79,7 @@ export const CommandTargetClient: FC<{ targetKey: string }> = ({ targetKey }) =>
     }
     try {
       const result = await parseAction(
-        deleteCommandDefAction({ targetKey, revision: data.target.revision, commandId: command.id }),
+        deleteCommandDef({ targetKey, revision: data.target.revision, commandId: command.id }),
       )
       if (!result?.ok) {
         notify.error(t('error'), { description: result?.messages.join(' / ') })
@@ -139,9 +134,11 @@ export const CommandTargetClient: FC<{ targetKey: string }> = ({ targetKey }) =>
           <span className='text-muted font-mono text-xs'>{data.target.id}</span>
           <span className='grow' />
           <RoleChip value={data.role} />
-          {/* 編集の導線が出ない理由(editable か書き込み可否)が画面から分かるようにする */}
           {data.target.editable && (
-            <Chip variant='soft' className='whitespace-nowrap'>
+            <Chip // 編集の導線が出ない理由(editable か書き込み可否)が画面から分かるようにする
+              variant='soft'
+              className='whitespace-nowrap'
+            >
               {t('command_target_editable')}
             </Chip>
           )}

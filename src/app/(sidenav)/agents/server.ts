@@ -105,7 +105,7 @@ const runnerActions = createAgentRunnerActions({
   },
   authorize: async (user, agentId) => await assertApprover(user.id, agentId),
 })
-export const getAgentRunner = runnerActions.getAgentRunner
-export const saveAgentRunner = runnerActions.saveAgentRunner
-export const saveAgentRunnerRule = runnerActions.saveAgentRunnerRule
-export const getAgentRuns = runnerActions.getAgentRuns
+export const getApprovableAgentRunner = runnerActions.getAgentRunner
+export const saveApprovableAgentRunner = runnerActions.saveAgentRunner
+export const saveApprovableAgentRunnerRule = runnerActions.saveAgentRunnerRule
+export const getApprovableAgentRuns = runnerActions.getAgentRuns

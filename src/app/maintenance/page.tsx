@@ -1,9 +1,10 @@
+import { en } from '@/locale/lang-en'
 import { type Metadata } from 'next'
 import { FC } from 'react'
 import { MaintenanceClient } from './client'
 
 export const metadata: Metadata = {
-  title: 'Maintenance',
+  title: en.maintenance_mode,
   robots: { index: false, follow: false },
 }
 

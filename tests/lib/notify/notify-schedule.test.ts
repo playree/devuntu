@@ -3,7 +3,7 @@
  */
 
 import { NOTIFY_EMAIL_WINDOW_MS, NOTIFY_MAX_ATTEMPTS, NOTIFY_RETRY_BASE_MS } from '@/lib/notify/notify'
-import { isRetryExhausted, nextEmailWindowAt, retryScheduledAt, staleClaimBefore } from '@/lib/notify/notify-schedule'
+import { isRetryExhausted, nextEmailWindowAt, retryScheduledAt } from '@/lib/notify/notify-schedule'
 import { describe, expect, it } from 'vitest'
 
 const now = new Date('2026-08-25T10:03:20.000Z')
@@ -53,11 +53,5 @@ describe('isRetryExhausted: 諦める境界', () => {
   it('上限に達したら諦める', () => {
     expect(isRetryExhausted(NOTIFY_MAX_ATTEMPTS - 1)).toBe(false)
     expect(isRetryExhausted(NOTIFY_MAX_ATTEMPTS)).toBe(true)
-  })
-})
-
-describe('staleClaimBefore: 取りこぼしの境界', () => {
-  it('指定した時間だけ過去へ戻す', () => {
-    expect(staleClaimBefore(now, 300_000).toISOString()).toBe('2026-08-25T09:58:20.000Z')
   })
 })

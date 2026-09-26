@@ -12,17 +12,13 @@
  * 3. 上限 : 1周で消す件数を頭打ちにする
  */
 
+import { HOUR_MS, msBefore } from '@/lib/day'
 import { envu } from '../env-util'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
 import { removeAttachmentByKey } from '../storage/attachment'
 import { collectReferencedUploadKeys, findAttachmentReference } from '../storage/attachment-ref'
-import {
-  ATTACHMENT_DELETE_MAX,
-  ATTACHMENT_SCAN_BATCH,
-  ATTACHMENT_SWEEP_INTERVAL_MS,
-  retentionBefore,
-} from './maintenance'
+import { ATTACHMENT_DELETE_MAX, ATTACHMENT_SCAN_BATCH, ATTACHMENT_SWEEP_INTERVAL_MS } from './maintenance'
 
 /** 本文の全走査を伴うので、tick ごとではなくこの間隔で回す。走り切った周の時刻だけを記録する */
 let lastSweptAt: Date | null = null
@@ -41,7 +37,7 @@ export const sweepOrphanAttachments = async (now: Date): Promise<number> => {
     return 0
   }
 
-  const cutoff = retentionBefore(now, envu.server.MAINTENANCE_ATTACHMENT_GRACE_HOURS * 60 * 60 * 1000)
+  const cutoff = msBefore(now, envu.server.MAINTENANCE_ATTACHMENT_GRACE_HOURS * HOUR_MS)
   const referenced = await collectReferencedUploadKeys()
 
   let deleted = 0

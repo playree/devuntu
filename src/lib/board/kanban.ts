@@ -6,7 +6,7 @@
 
 import type { TicketPriority, TicketStatus } from '@/generated/prisma/enums'
 import type { TicketWhereInput } from '@/generated/prisma/models'
-import { nowDate, utcToDateOnly } from '../day'
+import { DAY_MS, msBefore, nowDate, utcToDateOnly } from '../day'
 import { isTicketStatus, TICKET_STATUSES } from './ticket-enum'
 import { ASSIGNEE_NONE } from './ticket-search'
 
@@ -30,7 +30,7 @@ export const KANBAN_DONE_DAYS_OPTIONS = [1, 3, 7, 14, 30]
 
 /** 完了チケットの表示期限。かんばんに出すのは `since` 以降に完了したものだけ */
 export const kanbanDoneSince = (now: Date, days: number = KANBAN_DONE_VISIBLE_DAYS): Date =>
-  new Date(now.getTime() - days * 24 * 60 * 60 * 1000)
+  msBefore(now, days * DAY_MS)
 
 /**
  * 盤面に残す done の条件。

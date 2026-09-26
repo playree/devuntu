@@ -179,8 +179,8 @@ export const MdxImageDialog: FC = () => {
         onCancel: () => closeImageDialog(),
       }}
     >
-      {/* チケット編集モーダル内でも使うため DialogModal にする(form を置くと submit が外側の form へ伝播する) */}
-      <FlexCol>
+      <FlexCol // チケット編集モーダル内でも使うため DialogModal にする(form を置くと submit が外側の form へ伝播する)
+      >
         <button
           type='button'
           aria-label={t('select_file')} // プレビュー表示中は中の文言が消えるので明示する

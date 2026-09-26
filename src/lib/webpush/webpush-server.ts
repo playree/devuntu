@@ -8,6 +8,7 @@
  * (クライアント安全な定数・型は `webpush.ts` を参照)。
  */
 
+import { nowDate } from '@/lib/day'
 import webpush, { WebPushError } from 'web-push'
 import { envu } from '../env-util'
 import { errNotFound } from '../error'
@@ -110,7 +111,7 @@ export const sendWebPush = async (
       { TTL: 60 * 60 * 24, timeout: SEND_TIMEOUT_MS },
     )
     await prisma.webPushSubscription
-      .update({ where: { id: subscription.id }, data: { lastUsedAt: new Date() } })
+      .update({ where: { id: subscription.id }, data: { lastUsedAt: nowDate() } })
       // 送信の後始末で通知そのものを失敗させない(購読が同時に解除された場合など)
       .catch(() => undefined)
     return 'ok'

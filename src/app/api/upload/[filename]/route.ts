@@ -3,7 +3,6 @@ import { canViewAttachment } from '@/lib/board/board-access'
 import { prisma } from '@/lib/prisma'
 import { getObject } from '@/lib/storage/storage'
 import { isValidUploadKey } from '@/lib/storage/upload'
-import { NextResponse } from 'next/server'
 
 /**
  * アップロードファイルを配信する。
@@ -22,12 +21,12 @@ export const GET = async (_req: Request, { params }: { params: Promise<{ filenam
   // ログイン認証チェック
   const session = await getServerSession()
   if (!session?.user) {
-    return new NextResponse(null, { status: 401 })
+    return new Response(null, { status: 401 })
   }
 
   const { filename } = await params
   if (!isValidUploadKey(filename)) {
-    return new NextResponse(null, { status: 400 })
+    return new Response(null, { status: 400 })
   }
 
   // 存在しないキーはストレージを叩かずに返す
@@ -36,20 +35,20 @@ export const GET = async (_req: Request, { params }: { params: Promise<{ filenam
     select: { mimeType: true, boardId: true },
   })
   if (!attachment) {
-    return new NextResponse(null, { status: 404 })
+    return new Response(null, { status: 404 })
   }
 
   // アクセス不可は未存在と区別せず 404 にして、キーの当たり判定を返さない
   if (!(await canViewAttachment(session.user, { key: filename, boardId: attachment.boardId }))) {
-    return new NextResponse(null, { status: 404 })
+    return new Response(null, { status: 404 })
   }
 
   const object = await getObject(filename)
   if (!object) {
-    return new NextResponse(null, { status: 404 })
+    return new Response(null, { status: 404 })
   }
 
-  return new NextResponse(object.body, {
+  return new Response(object.body, {
     headers: {
       'Content-Type': attachment.mimeType,
       ...(object.contentLength ? { 'Content-Length': String(object.contentLength) } : {}),

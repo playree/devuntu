@@ -45,8 +45,11 @@ export const CommandTargetTable: FC<{
             <FlexRow className='flex-wrap items-center'>
               <span className='font-semibold'>{target.label}</span>
               <span className='text-muted font-mono text-xs'>{target.id}</span>
-              {/* 読み込めなかったファイルの一覧と突き合わせられるようにする */}
-              <span className='text-muted font-mono text-xs break-all'>{target.fileName}</span>
+              <span // 読み込めなかったファイルの一覧と突き合わせられるようにする
+                className='text-muted font-mono text-xs break-all'
+              >
+                {target.fileName}
+              </span>
               <span className='grow' />
               <MultiButton
                 isIconOnly
@@ -59,8 +62,7 @@ export const CommandTargetTable: FC<{
               />
             </FlexRow>
             <FlexRow className='flex-wrap items-center'>
-              {/* 0 件は「誰も実行できない」を意味するので目立たせる */}
-              <Chip
+              <Chip // 0 件は「誰も実行できない」を意味するので目立たせる
                 color={target.memberCount + target.groupCount > 0 ? 'default' : 'warning'}
                 variant='soft'
                 className='whitespace-nowrap'

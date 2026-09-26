@@ -10,7 +10,6 @@ import { resolveUploadToken, type UploadActor } from '@/lib/storage/upload-token
 import { LocaleItem } from '@/locale'
 import { requestLocale } from '@/locale/request'
 import { t } from '@/locale/server'
-import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
 /**
@@ -19,7 +18,7 @@ import { z } from 'zod'
  * Server Action ではなく Route Handler にしているのは、MDXEditor の
  * `imageUploadHandler` が fetch 前提であること、および Server Action の
  * `bodySizeLimit`(既定1MB)の制約を受けないため。
- * `src/proxy.ts` の matcher は `api/` を除外しているのでここで自前認証する。
+ * `src/proxy.ts` は `api/` の認証を素通しにしているのでここで自前認証する。
  *
  * 認証は2経路ある。ブラウザはログインセッション、MCPクライアントは
  * `create_image_upload_token` が発行した短命トークンの Bearer で入る。
@@ -34,7 +33,7 @@ const UPLOAD_RATE_LIMIT = { limit: 60, windowMs: 10 * 60 * 1000 }
 
 /** ロケールキーのまま返しても呼び元(`uploadImage`)が解決できないので、ここで文言にする */
 const badRequest = async (message: LocaleItem) =>
-  NextResponse.json({ message: t(await requestLocale(), message) }, { status: 400 })
+  Response.json({ message: t(await requestLocale(), message) }, { status: 400 })
 
 type UploadAuth = { kind: 'token'; actor: UploadActor } | { kind: 'session'; user: Actor }
 
@@ -100,23 +99,23 @@ export const POST = async (req: Request) => {
   // 正直な申告の巨大リクエストは、ストリームを流す前にここで落とす
   const contentLength = Number(req.headers.get('content-length'))
   if (Number.isFinite(contentLength) && contentLength > MAX_BODY_SIZE) {
-    return new NextResponse(null, { status: 413 })
+    return new Response(null, { status: 413 })
   }
 
   const auth = await authenticate(req)
   if (!auth) {
-    return new NextResponse(null, { status: 401 })
+    return new Response(null, { status: 401 })
   }
 
   const userId = auth.kind === 'token' ? auth.actor.userId : auth.user.id
   if (!consumeRateLimit(`upload:${userId}`, UPLOAD_RATE_LIMIT)) {
-    return new NextResponse(null, { status: 429 })
+    return new Response(null, { status: 429 })
   }
 
   const limited = limitBody(req, MAX_BODY_SIZE)
   const form = await limited.request.formData().catch(() => null)
   if (!form) {
-    return new NextResponse(null, { status: limited.isExceeded() ? 413 : 400 })
+    return new Response(null, { status: limited.isExceeded() ? 413 : 400 })
   }
 
   let actor: UploadActor
@@ -132,10 +131,10 @@ export const POST = async (req: Request) => {
     const boardIdInput = form.get(UPLOAD_BOARD_ID_FIELD)
     const boardId = typeof boardIdInput === 'string' ? (z.uuidv7().safeParse(boardIdInput).data ?? false) : null
     if (boardId === false) {
-      return new NextResponse(null, { status: 400 })
+      return new Response(null, { status: 400 })
     }
     if (boardId && !(await canWriteBoard(auth.user, boardId))) {
-      return new NextResponse(null, { status: 403 })
+      return new Response(null, { status: 403 })
     }
     actor = { userId, boardId }
   }
@@ -147,7 +146,7 @@ export const POST = async (req: Request) => {
 
   try {
     const { url } = await saveContentImage(parsed.data, actor)
-    return NextResponse.json({ url })
+    return Response.json({ url })
   } catch (err) {
     // 申告と中身が違う画像(SVG など)は変換前に弾かれる。想定内なので 500 にはしない
     if (err instanceof ClientError) {

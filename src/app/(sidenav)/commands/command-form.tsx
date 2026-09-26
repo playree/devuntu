@@ -16,7 +16,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { FC, useMemo } from 'react'
 import { Control, type Resolver, useForm } from 'react-hook-form'
-import { type AvailableCommandView, startCommandRunAction } from './server'
+import { type AvailableCommandView, startCommandRun } from './server'
 
 /** 入力の種別ごとの描画。種別が増えたらここがコンパイルエラーになる */
 const InputControl: FC<{ input: CommandInput; control: Control<CommandInputValues>; errorMessage?: string }> = ({
@@ -126,7 +126,7 @@ export const CommandForm: FC<ModalBaseProps & { target: AvailableCommandView }> 
         }
 
         try {
-          const run = await parseAction(startCommandRunAction({ commandKey: target.id, params }))
+          const run = await parseAction(startCommandRun({ commandKey: target.id, params }))
           state.close()
           reload()
           // 実行中の表示と履歴詳細は同じ画面。開始直後もそこへ送る

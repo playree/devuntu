@@ -12,6 +12,7 @@
 
 import { spawn } from 'node:child_process'
 import { type Readable } from 'node:stream'
+import { envu } from '../env-util'
 import { logger } from '../logger'
 import { type CommandTarget } from './command'
 import { resolveKnownHostsPath, resolveSshFilePath } from './command-catalog'
@@ -124,8 +125,8 @@ export const spawnSshCommand = (target: SshTarget, remoteCommand: string): SshPr
    * ここだけ明示的に絞り込んだ辞書として渡す。
    */
   const env = {
-    PATH: process.env.PATH ?? '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
-    HOME: process.env.HOME ?? '/tmp',
+    PATH: envu.server.COMMAND_SSH_PATH,
+    HOME: envu.server.COMMAND_SSH_HOME,
     LANG: 'C.UTF-8',
   } as unknown as NodeJS.ProcessEnv
 

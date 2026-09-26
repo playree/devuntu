@@ -158,9 +158,13 @@ export const IssueMcpTokenModal: FC<ModalBaseProps & { baseUrl: string }> = ({ s
         )
       }
     >
-      {/* 発行の前後でモーダルの高さが変わらないよう、内容の多い OUTPUT 側に高さを合わせる。
-          スマホ幅では折り返しが増えて OUTPUT が高くなるので、その分だけ広く取る */}
-      <div className='min-h-92 overflow-hidden sm:min-h-85'>
+      <div
+        /**
+         * 発行の前後でモーダルの高さが変わらないよう、内容の多い OUTPUT 側に高さを合わせる。
+         * スマホ幅では折り返しが増えて OUTPUT が高くなるので、その分だけ広く取る
+         */
+        className='min-h-92 overflow-hidden sm:min-h-85'
+      >
         <AnimatePresence mode='wait' custom={step.direction}>
           {step.id === 'INPUT' && (
             <StepMotion direction={step.direction} key='step_input'>

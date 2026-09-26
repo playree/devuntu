@@ -7,29 +7,19 @@ import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
 import { BoltSlashIcon, GoogleIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
-import { parseAction } from '@/lib/action/action-client'
+import { parseAction, useActionData } from '@/lib/action/action-client'
 import { authClient } from '@/lib/auth/auth-client'
 import { formatScopeLabel, GOOGLE_ACCOUNT_PROVIDER_ID } from '@/lib/google/google-calendar'
 import { useLocale } from '@/locale/client'
 import { ButtonGroup, Table } from '@heroui/react'
-import { FC, useEffect, useState } from 'react'
-import { disconnectGoogleAccount, getGoogleAccountStatus, GetGoogleAccountStatusReturnType } from './server'
+import { FC } from 'react'
+import { disconnectGoogleAccount, getGoogleAccountStatus } from './server'
 
 export const GoogleAccountLink: FC = () => {
   const { t } = useLocale()
   const { confirmModal } = useConfirmModal()
-  const [status, setStatus] = useState<GetGoogleAccountStatusReturnType>()
-
-  const reload = () => {
-    parseAction(getGoogleAccountStatus())
-      .then((res) => setStatus(res))
-      // 失敗の通知は parseAction が済ませている。未連携の表示のまま残す
-      .catch(() => {})
-  }
-
-  useEffect(() => {
-    reload()
-  }, [])
+  // 取得に失敗した場合は未連携の表示のまま残す
+  const { data: status, refresh } = useActionData(getGoogleAccountStatus)
 
   const link = async () => {
     // カレンダー連携専用プロバイダ(google-account)にリンク
@@ -59,7 +49,7 @@ export const GoogleAccountLink: FC = () => {
               if (ok) {
                 await parseAction(disconnectGoogleAccount())
                 notify.success(t('account_disconnect'))
-                reload()
+                refresh()
               }
             }}
           >

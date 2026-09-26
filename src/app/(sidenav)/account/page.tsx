@@ -2,12 +2,13 @@ import { getServerSession } from '@/lib/auth/auth'
 import { envu } from '@/lib/env-util'
 import { canUseGoogleAccount } from '@/lib/google/google-account'
 import { canUseSlackAccount } from '@/lib/slack/slack-account'
+import { en } from '@/locale/lang-en'
 import { type Metadata } from 'next'
 import { FC } from 'react'
 import { AccountClient } from './client'
 
 export const metadata: Metadata = {
-  title: 'Account',
+  title: en.account,
 }
 
 const AccountPage: FC = async () => {
