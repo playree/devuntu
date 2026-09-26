@@ -2,12 +2,12 @@ import { envu } from '@/lib/env-util'
 import { logger } from '@/lib/logger'
 import { verifySlackSignature } from '@/lib/slack/slack-signature'
 import { handleSlackLinkShared, type SlackLinkSharedEvent } from '@/lib/slack/slack-unfurl'
-import { after, NextResponse } from 'next/server'
+import { after } from 'next/server'
 
 /**
  * Slack Events API の受け口(チケットURLのプレビュー展開)。
  *
- * `src/proxy.ts` の matcher は `api/` を除外しているため未認証で叩ける。
+ * `src/proxy.ts` は `api/` の認証を素通しにしているため未認証で叩ける。
  * Slack が付ける署名だけが門番なので、検証を通す前に本文を解釈しないこと。
  */
 
@@ -65,7 +65,7 @@ export const POST = async (request: Request) => {
   const signingSecret = envu.server.SLACK_SIGNING_SECRET
   if (!signingSecret) {
     // 未設定ならこの機能ごと無効。エンドポイントの存在も伏せる
-    return new NextResponse(null, { status: 404 })
+    return new Response(null, { status: 404 })
   }
 
   /**
@@ -75,7 +75,7 @@ export const POST = async (request: Request) => {
   const rawBody = await readBody(request)
   if (rawBody === null) {
     logger.warn('slack event body too large')
-    return new NextResponse(null, { status: 413 })
+    return new Response(null, { status: 413 })
   }
 
   const valid = verifySlackSignature({
@@ -87,14 +87,14 @@ export const POST = async (request: Request) => {
   })
   if (!valid) {
     logger.warn('slack event signature mismatch')
-    return new NextResponse(null, { status: 401 })
+    return new Response(null, { status: 401 })
   }
 
   let payload: SlackEventPayload
   try {
     payload = JSON.parse(rawBody) as SlackEventPayload
   } catch {
-    return new NextResponse(null, { status: 400 })
+    return new Response(null, { status: 400 })
   }
 
   const event = payload.event
@@ -102,7 +102,7 @@ export const POST = async (request: Request) => {
   logger.debug({ type: payload.type, eventType: event?.type }, 'slack event')
 
   if (payload.type === 'url_verification') {
-    return NextResponse.json({ challenge: payload.challenge })
+    return Response.json({ challenge: payload.challenge })
   }
 
   if (payload.type === 'event_callback' && event?.type === 'link_shared') {
@@ -120,5 +120,5 @@ export const POST = async (request: Request) => {
   }
 
   // 想定外の type も 200 で受け切る(再送させない)
-  return new NextResponse(null, { status: 200 })
+  return new Response(null, { status: 200 })
 }

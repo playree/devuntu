@@ -10,7 +10,7 @@ import { consumeRateLimit } from '@/lib/rate-limit'
  *
  * ここは薄く保ち、認可とヘッダだけを持つ。ストリームの組み立ては `command-stream.ts`。
  *
- * `src/proxy.ts` の matcher は `api/` を除外しているため、認証も認可もレート制限も自前で行う。
+ * `src/proxy.ts` は `api/` の認証を素通しにしているため、認証も認可もレート制限も自前で行う。
  * 実行しているプロセスは一切見ず DB だけを読むので、実行と配信が別プロセスでも成立する。
  */
 

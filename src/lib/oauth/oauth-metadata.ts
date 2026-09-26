@@ -25,12 +25,9 @@ const withoutEndSession = (handler: (request: Request) => Promise<Response>) => 
   const metadata = (await res.json()) as Record<string, unknown>
   delete metadata.end_session_endpoint
   const cacheControl = res.headers.get('Cache-Control')
-  return new Response(JSON.stringify(metadata), {
+  return Response.json(metadata, {
     status: res.status,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(cacheControl ? { 'Cache-Control': cacheControl } : {}),
-    },
+    headers: cacheControl ? { 'Cache-Control': cacheControl } : {},
   })
 }
 

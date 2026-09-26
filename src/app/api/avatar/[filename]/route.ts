@@ -5,7 +5,6 @@ import { getClientIp } from '@/lib/server-utils'
 import { WEBP_MIME } from '@/lib/storage/image'
 import { getObject } from '@/lib/storage/storage'
 import { isValidUploadKey, toUploadUrl } from '@/lib/storage/upload'
-import { NextResponse } from 'next/server'
 
 /**
  * アバター画像を認証なしで配信する。
@@ -19,7 +18,7 @@ import { NextResponse } from 'next/server'
  * (それらは従来どおりログイン必須の `/api/upload` からしか読めない)。
  *
  * キーは保存ごとに変わる uuidv7 なので推測はできないが、キーを知る第三者は誰でも読める。
- * `src/proxy.ts` の matcher は `api/` を除外しているため、自前でレート制限を掛ける。
+ * `src/proxy.ts` は `api/` の認証を素通しにしているため、自前でレート制限を掛ける。
  */
 
 /** 未認証で開くため、画像の埋め込み用途として無理のない範囲に抑える */
@@ -29,26 +28,26 @@ export const GET = async (_req: Request, { params }: { params: Promise<{ filenam
   const { filename } = await params
   // 形式が違うものはDBに触る前に落とす
   if (!isValidUploadKey(filename)) {
-    return new NextResponse(null, { status: 400 })
+    return new Response(null, { status: 400 })
   }
 
   if (!consumeRateLimit(`avatar:${await getClientIp()}`, AVATAR_RATE_LIMIT)) {
     logger.warn({ scope: 'avatar' }, 'rate limit exceeded')
-    return new NextResponse(null, { status: 429 })
+    return new Response(null, { status: 429 })
   }
 
   // アバターとして参照されていないキーは、添付として存在していても未存在と同じ扱いにする
   const user = await prisma.user.findFirst({ where: { image: toUploadUrl(filename) }, select: { id: true } })
   if (!user) {
-    return new NextResponse(null, { status: 404 })
+    return new Response(null, { status: 404 })
   }
 
   const object = await getObject(filename)
   if (!object) {
-    return new NextResponse(null, { status: 404 })
+    return new Response(null, { status: 404 })
   }
 
-  return new NextResponse(object.body, {
+  return new Response(object.body, {
     headers: {
       // アバターは saveImageAttachment 経由でしか作られず、必ずwebpに正規化されている
       'Content-Type': WEBP_MIME,
