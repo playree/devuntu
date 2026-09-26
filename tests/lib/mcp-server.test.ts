@@ -107,6 +107,20 @@ describe('createDevuntuMcpServer', () => {
     expect((await connectClient(agentAuth)).getServerVersion()?.name).toBe('devuntu-agent')
   })
 
+  it('初期化応答の instructions で対応の作法を伝える(エージェントには自動運用の手順を優先させる)', async () => {
+    for (const humanAuth of [auth, patAuth]) {
+      const instructions = (await connectClient(humanAuth)).getInstructions() ?? ''
+      expect(instructions).toContain('type=plan')
+      expect(instructions).toContain('type=report')
+      expect(instructions).toContain('link_ticket_artifact')
+      expect(instructions).toContain('status を doing')
+    }
+
+    const agentInstructions = (await connectClient(agentAuth)).getInstructions() ?? ''
+    expect(agentInstructions).toContain('get_agent_task')
+    expect(agentInstructions).not.toContain('status を doing')
+  })
+
   it('ユーザートークンの接続でも共通ツールは登録される', async () => {
     const { tools } = await (await connectClient(patAuth)).listTools()
     expect(tools.map((tool) => tool.name)).toEqual(

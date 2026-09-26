@@ -195,6 +195,26 @@ AIエージェントは `devuntu-agent` を名乗るので、`claude mcp list` �
 - `outcome` は `planned`(プランを投稿して返信待ち) / `completed`(対応完了) / `skipped`(見送り) / `failed`(失敗)
 - 仕組みの詳細は [docs/agent-runner.md](agent-runner.md) を参照
 
+### クライアントへの案内
+
+利用者がルールを書かなくても、チケットに対応するときに plan / report のコメントと成果物の紐付けを
+使ってもらえるよう、サーバーから手順を伝える(文言は `src/lib/mcp/mcp-instructions.ts` の1か所)。
+クライアントによって届く経路が違うので、同じ手順を3か所に載せている。
+
+| 経路                             | 内容                                                                  | 効くクライアント                      |
+| -------------------------------- | --------------------------------------------------------------------- | ------------------------------------- |
+| 初期化応答の `instructions`      | 手順の全文                                                            | Claude Code(システムプロンプトに入る) |
+| ツールの description             | `get_ticket` / `update_ticket` / `add_ticket_comment` に要点を1文ずつ | どのクライアントでも                  |
+| `get_ticket` の応答の `workflow` | 手順の全文。チケットを編集できる人の経路のときだけ返す                | どのクライアントでも(Codex など)      |
+
+手順は、着手時に status を `doing` にする → 方針を `type=plan` で投稿 → 確認事項は通常コメント →
+ブランチ / PR / コミットを `link_ticket_artifact` で紐付け → 完了時に `type=report` で報告、の順。
+あくまで既定値で、利用者の指示やプロジェクトのルール(CLAUDE.md / AGENTS.md など)があればそちらを優先させる。
+読むだけ・質問に答えるだけの依頼ではコメントもステータス変更もしない。
+
+エージェント用トークンの接続では、ステータス変更の手順を載せず `workflow` も返さない。
+自動運用の流れはランナーの指示と `get_agent_task` の rule が持つため([agent-runner.md](agent-runner.md))。
+
 ### 入力の約束ごと
 
 - `ticketId` は**表示ID(例: ABC-42)でもチケットIDでも**受け取れる(`resolveTicketId`)。

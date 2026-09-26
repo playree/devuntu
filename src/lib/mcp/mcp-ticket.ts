@@ -17,6 +17,7 @@ import { buildTicketWhere, ticketListOrderBy } from '@/lib/board/ticket-search'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { resolveBoardId } from '@/lib/mcp/mcp-board'
+import { ticketWorkflowFor } from '@/lib/mcp/mcp-instructions'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import { prisma } from '@/lib/prisma'
 import { makeUrl } from '@/lib/server-utils'
@@ -91,6 +92,8 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
       content: comment.content,
       createdAt: comment.createdAt,
     })),
+    /** このチケットに対応するときの手順。instructions を読まないクライアントにも届くよう、応答にも載せる */
+    workflow: ticketWorkflowFor(auth.kind, access.canEdit),
     /** 紐付けたブランチ / PR / コミット。prState と ci は GitHub の Webhook で更新される */
     links: links.map(({ id: linkId, kind, repo, ref, url, title, prState, ci }) => ({
       id: linkId,
