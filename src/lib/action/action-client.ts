@@ -122,6 +122,14 @@ export const useActionData = <T>(
 ) => {
   const [result, setResult] = useState<{ key?: string; data?: T }>({ key })
   const [isLoading, setIsLoading] = useState(!skip)
+  // skip が外れた時点で取得が始まるので、同じ key のままでも取得中にする(レンダー中に調整)
+  const [prevSkip, setPrevSkip] = useState(skip)
+  if (skip !== prevSkip) {
+    setPrevSkip(skip)
+    if (!skip) {
+      setIsLoading(true)
+    }
+  }
   // reload 連打時に古いレスポンスが後着で state を上書きしないよう世代トークンで管理
   const genRef = useRef(0)
   // isLoading を立てたまま未解決かどうか。倒す責務を「最新世代の完了」へ集約するために持つ
