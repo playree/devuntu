@@ -98,6 +98,10 @@ export const parseGithubUrl = (raw: string): GithubArtifact | null => {
     } catch {
       return null
     }
+    // `%20` や `%2F` を渡されると、デコード後に空白だけ・`/` で始まるか終わる実在しない名前になる
+    if (!branch.trim() || branch.startsWith('/') || branch.endsWith('/')) {
+      return null
+    }
     return { kind: 'branch', repo, ref: branch, url: githubBranchUrl(repo, branch) }
   }
   return null

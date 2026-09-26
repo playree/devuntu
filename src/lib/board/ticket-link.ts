@@ -8,7 +8,7 @@
 import type { GitProvider } from '@/generated/prisma/enums'
 import { errInvalidOperation, errValidation } from '../error'
 import { type CiStatus, parseGithubUrl, summarizeCheckSuites } from '../github/github'
-import { type Db, prisma } from '../prisma'
+import { type Db, isUniqueViolation, prisma } from '../prisma'
 import { type Actor, assertTicketAccess } from './board-access'
 
 /** 1チケットに紐付けられる上限。Webhook の自動紐付けとは別に、手での登録の暴走を止める */
@@ -71,33 +71,55 @@ export const addTicketLink = async (actor: Actor, ticketId: string, rawUrl: stri
   }
   const { kind, repo, ref, url } = artifact
 
-  return prisma.$transaction(async (tx) => {
-    await assertTicketAccess(actor, ticketId, 'edit', tx)
-
-    const key = { ticketId, provider: 'github' as const, repo, kind, ref }
-    const existing = await tx.ticketLink.findUnique({
+  const key = { ticketId, provider: 'github' as const, repo, kind, ref }
+  /** 既にある行を表示に戻す。外していたものも含む */
+  const restore = (tx: Db) =>
+    tx.ticketLink.update({
       where: { ticketId_provider_repo_kind_ref: key },
+      data: { dismissed: false },
       select: { id: true },
     })
-    if (existing) {
-      return tx.ticketLink.update({ where: { id: existing.id }, data: { dismissed: false }, select: { id: true } })
-    }
 
-    if ((await tx.ticketLink.count({ where: { ticketId } })) >= MAX_TICKET_LINKS) {
-      throw errInvalidOperation()
-    }
-    return tx.ticketLink.create({
-      data: {
-        ...key,
-        url,
-        // コミットは ref 自体が CI の突き合わせ先。PR は Webhook で head が届くまで空
-        headSha: kind === 'commit' ? ref : null,
-        source: 'manual',
-        createdById: actor.id,
-      },
-      select: { id: true },
+  try {
+    return await prisma.$transaction(async (tx) => {
+      await assertTicketAccess(actor, ticketId, 'edit', tx)
+
+      const existing = await tx.ticketLink.findUnique({
+        where: { ticketId_provider_repo_kind_ref: key },
+        select: { id: true },
+      })
+      if (existing) {
+        return restore(tx)
+      }
+
+      if ((await tx.ticketLink.count({ where: { ticketId } })) >= MAX_TICKET_LINKS) {
+        throw errInvalidOperation()
+      }
+      return tx.ticketLink.create({
+        data: {
+          ...key,
+          url,
+          // コミットは ref 自体が CI の突き合わせ先。PR は Webhook で head が届くまで空
+          headSha: kind === 'commit' ? ref : null,
+          source: 'manual',
+          createdById: actor.id,
+        },
+        select: { id: true },
+      })
     })
-  })
+  } catch (error) {
+    /**
+     * 同じものの登録が同時に届くと、確認から作成までの間に先を越されて一意制約に当たる。
+     * 失敗したトランザクションは使えないので、別のトランザクションで権限を確かめ直してから既存の行を戻す。
+     */
+    if (!isUniqueViolation(error)) {
+      throw error
+    }
+    return prisma.$transaction(async (tx) => {
+      await assertTicketAccess(actor, ticketId, 'edit', tx)
+      return restore(tx)
+    })
+  }
 }
 
 /**

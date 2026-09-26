@@ -60,6 +60,13 @@ describe('parseGithubUrl', () => {
     expect(parseGithubUrl('https://github.com/owner/repo/commit/xyz')).toBeNull()
     expect(parseGithubUrl('not a url')).toBeNull()
   })
+
+  it('デコードすると空白だけ・区切りで始まるか終わるブランチ名は受け付けない', () => {
+    expect(parseGithubUrl('https://github.com/owner/repo/tree/%20')).toBeNull()
+    expect(parseGithubUrl('https://github.com/owner/repo/tree/%2F')).toBeNull()
+    expect(parseGithubUrl('https://github.com/owner/repo/tree/%2Ffeature')).toBeNull()
+    expect(parseGithubUrl('https://github.com/owner/repo/tree/feature%2F')).toBeNull()
+  })
 })
 
 describe('extractDisplayIdFromBranch', () => {
