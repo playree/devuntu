@@ -21,6 +21,7 @@
 import { existsSync, mkdirSync, renameSync, rmSync } from 'node:fs'
 import path from 'node:path'
 import { resolveDbEnv, stamp, waitForNoOtherConnections } from './db-connect.mjs'
+import { matchOwner } from './file-owner.mjs'
 import { parseMaintenanceFile } from './maintenance-flag.mjs'
 import { runScript, signalExitCode, spawnScript } from './run-script.mjs'
 
@@ -70,6 +71,8 @@ const backup = async (pgEnv) => {
 
   rmSync(outDir, { recursive: true, force: true })
   renameSync(tmpDir, outDir)
+  matchOwner([BACKUP_DIR])
+  matchOwner([outDir], { recursive: true })
 
   console.log(`Backup created: backup/${name}`)
   console.log(`復元は: pnpm full:restore backup/${name}`)

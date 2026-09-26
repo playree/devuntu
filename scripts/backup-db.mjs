@@ -15,6 +15,7 @@
 import { closeSync, mkdirSync, openSync, renameSync, rmSync } from 'node:fs'
 import path from 'node:path'
 import { hasLocalPgClient, resolveDbEnv, runPg, showTransport, stamp } from './db-connect.mjs'
+import { matchOwner } from './file-owner.mjs'
 
 /**
  * ローカル実行では `.env` を読む。
@@ -66,6 +67,7 @@ const main = () => {
       }
     }
     renameSync(tmpFile, outFile)
+    matchOwner([path.dirname(outFile), outFile])
   } catch (err) {
     rmSync(tmpFile, { force: true })
     throw err

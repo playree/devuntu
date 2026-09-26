@@ -21,6 +21,7 @@ import { createWriteStream } from 'node:fs'
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { pipeline } from 'node:stream/promises'
+import { matchOwner } from './file-owner.mjs'
 
 /**
  * ローカル実行では `.env` を読む。
@@ -135,6 +136,8 @@ const main = async () => {
 
     await rm(outDir, { recursive: true, force: true })
     await rename(tmpDir, outDir)
+    matchOwner([path.dirname(outDir)])
+    matchOwner([outDir], { recursive: true })
 
     const shown = path.relative(process.cwd(), outDir) || outDir
     console.log(`Backup created: ${shown} (${objects.length} objects, ${totalBytes} bytes, skipped=${skipped})`)
