@@ -154,7 +154,6 @@ const main = async () => {
           ContentLength: body.byteLength,
         }),
       )
-      console.log(`restored: ${obj.key} (${body.byteLength} bytes)`)
       restored++
     } catch (err) {
       console.error(`failed: ${obj.key} (${err?.message})`)
