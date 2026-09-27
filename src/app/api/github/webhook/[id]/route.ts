@@ -31,7 +31,7 @@ export const POST = async (request: Request, { params }: { params: Promise<{ id:
     select: {
       repo: true,
       webhookSecret: true,
-      board: { select: { id: true, key: true, completeOnPrMerge: true } },
+      board: { select: { id: true, key: true, completeOnGithubMerge: true } },
     },
   })
   if (!repository) {
@@ -71,7 +71,12 @@ export const POST = async (request: Request, { params }: { params: Promise<{ id:
    * 失敗を 500 で返せば、GitHub の配送履歴から再送できる。
    */
   try {
-    await handleGithubEvent(event, body, { id, repo: repository.repo, board: repository.board })
+    const { completeOnGithubMerge, ...board } = repository.board
+    await handleGithubEvent(event, body, {
+      id,
+      repo: repository.repo,
+      board: { ...board, completeOnPrMerge: completeOnGithubMerge },
+    })
   } catch (error) {
     logger.error({ error, event, delivery, repositoryId: id }, 'github webhook failed')
     return new Response(null, { status: 500 })

@@ -38,21 +38,18 @@ export const gitlabBaseUrls = (): string[] => {
   }
 }
 
-/**
- * 現在の設定と、GitHub / GitLab 側へ登録する Webhook の URL。シークレットそのものは画面へ返さない(設定済みかどうかだけ)。
- * GitLab は使えない環境なら null。ただし対応付けが残っていれば、外せるよう一覧だけは返す(enabled=false)
- */
-export const getBoardGit = async (actor: Actor, boardId: string) => {
+const findBoardRepositories = async (actor: Actor, boardId: string, provider: GitProvider) => {
   await assertBoardAccess(actor, boardId, 'manage')
 
   const board = await prisma.board.findUnique({
     where: { id: boardId },
     select: {
-      completeOnPrMerge: true,
+      completeOnGithubMerge: true,
+      completeOnGitlabMerge: true,
       repositories: {
+        where: { provider },
         select: {
           id: true,
-          provider: true,
           baseUrl: true,
           repo: true,
           webhookAuth: true,
@@ -66,13 +63,18 @@ export const getBoardGit = async (actor: Actor, boardId: string) => {
   if (!board) {
     throw errInvalidOperation()
   }
+  return board
+}
 
-  const githubRepositories = board.repositories.filter(({ provider }) => provider === 'github')
-  const gitlabRepositories = board.repositories.filter(({ provider }) => provider === 'gitlab')
-  const instances = gitlabBaseUrls()
+/**
+ * GitHub 連携の現在の設定と、GitHub 側へ登録する Webhook の URL。シークレットそのものは画面へ返さない(設定済みかどうかだけ)
+ */
+export const getBoardGithub = async (actor: Actor, boardId: string) => {
+  const board = await findBoardRepositories(actor, boardId, 'github')
 
-  const github = {
-    repositories: githubRepositories.map(({ id, repo, webhookSecret, lastReceivedAt }) => ({
+  return {
+    completeOnMerge: board.completeOnGithubMerge,
+    repositories: board.repositories.map(({ id, repo, webhookSecret, lastReceivedAt }) => ({
       id,
       repo,
       webhookUrl: makeUrl(githubWebhookPath(id)).toString(),
@@ -80,25 +82,35 @@ export const getBoardGit = async (actor: Actor, boardId: string) => {
       lastReceivedAt,
     })),
   }
-  const gitlab =
-    instances.length > 0 || gitlabRepositories.length > 0
-      ? {
-          enabled: instances.length > 0,
-          instances,
-          repositories: gitlabRepositories.map(({ id, baseUrl, repo, webhookAuth, webhookSecret, lastReceivedAt }) => ({
-            id,
-            baseUrl,
-            repo,
-            webhookUrl: makeUrl(gitlabWebhookPath(id)).toString(),
-            webhookAuth: webhookAuth ?? 'signing',
-            hasSecret: !!webhookSecret,
-            lastReceivedAt,
-          })),
-        }
-      : null
-
-  return { completeOnPrMerge: board.completeOnPrMerge, github, gitlab }
 }
+
+/**
+ * GitLab 連携の現在の設定と、GitLab 側へ登録する Webhook の URL。シークレットそのものは画面へ返さない(設定済みかどうかだけ)。
+ * 使えない環境なら enabled=false で、残った対応付けを外せるよう一覧だけは返す
+ */
+export const getBoardGitlab = async (actor: Actor, boardId: string) => {
+  const board = await findBoardRepositories(actor, boardId, 'gitlab')
+  const instances = gitlabBaseUrls()
+
+  return {
+    completeOnMerge: board.completeOnGitlabMerge,
+    enabled: instances.length > 0,
+    instances,
+    repositories: board.repositories.map(({ id, baseUrl, repo, webhookAuth, webhookSecret, lastReceivedAt }) => ({
+      id,
+      baseUrl,
+      repo,
+      webhookUrl: makeUrl(gitlabWebhookPath(id)).toString(),
+      webhookAuth: webhookAuth ?? 'signing',
+      hasSecret: !!webhookSecret,
+      lastReceivedAt,
+    })),
+  }
+}
+
+/** GitLab 連携の設定を出すか。使える環境か、使えなくなった環境でも外せるよう対応付けが残っていれば出す */
+export const isGitlabVisible = async (boardId: string): Promise<boolean> =>
+  gitlabBaseUrls().length > 0 || (await prisma.boardRepository.count({ where: { boardId, provider: 'gitlab' } })) > 0
 
 const assertRepositoryLimit = async (tx: Db, boardId: string) => {
   if ((await tx.boardRepository.count({ where: { boardId } })) >= MAX_BOARD_REPOSITORIES) {
@@ -266,11 +278,18 @@ export const removeBoardRepository = async (actor: Actor, boardId: string, repos
   logger.info({ userId: actor.id, boardId, repositoryId }, 'board repository removed')
 }
 
-export const setBoardCompleteOnPrMerge = async (actor: Actor, boardId: string, completeOnPrMerge: boolean) => {
+export const setBoardCompleteOnPrMerge = async (
+  actor: Actor,
+  boardId: string,
+  provider: GitProvider,
+  completeOnMerge: boolean,
+) => {
+  const data =
+    provider === 'github' ? { completeOnGithubMerge: completeOnMerge } : { completeOnGitlabMerge: completeOnMerge }
   await prisma.$transaction(async (tx) => {
     await assertBoardAccess(actor, boardId, 'manage', tx)
-    await tx.board.update({ where: { id: boardId }, data: { completeOnPrMerge }, select: { id: true } })
+    await tx.board.update({ where: { id: boardId }, data, select: { id: true } })
   })
 
-  logger.info({ userId: actor.id, boardId, completeOnPrMerge }, 'board complete on pr merge updated')
+  logger.info({ userId: actor.id, boardId, provider, completeOnMerge }, 'board complete on pr merge updated')
 }

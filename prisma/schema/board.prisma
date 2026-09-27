@@ -62,8 +62,11 @@ model Board {
   /// アーカイブ済み。一覧の既定の表示からは外れる
   archived Boolean @default(false)
 
-  /// 紐付いた PR がすべてマージ / クローズされたらチケットを完了にする(GitHub 連携のオプトイン)
-  completeOnPrMerge Boolean @default(false)
+  /// GitHub の PR のマージで、紐付いた PR / MR がすべてマージ / クローズされたチケットを完了にする(オプトイン)
+  completeOnGithubMerge Boolean @default(false)
+
+  /// GitLab の MR のマージで、紐付いた PR / MR がすべてマージ / クローズされたチケットを完了にする(オプトイン)
+  completeOnGitlabMerge Boolean @default(false)
 
   /// エージェントの実行結果を通知する Slack チャンネル(`C...`)。null なら通知しない。
 

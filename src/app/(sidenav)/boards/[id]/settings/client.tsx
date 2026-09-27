@@ -11,9 +11,10 @@ import { ContentHeader } from '@/components/header'
 import {
   ArrowLeftCircleIcon,
   ArrowTopRightOnSquareIcon,
-  CodeBracketIcon,
   Cog6ToothIcon,
   ExclamationTriangleIcon,
+  GithubIcon,
+  GitlabIcon,
   InformationCircleIcon,
   SlackIcon,
   TagIcon,
@@ -30,7 +31,8 @@ import { useLocale } from '@/locale/client'
 import { Accordion, ButtonGroup } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
-import { BoardGit } from './board-git'
+import { BoardGithub } from './board-github'
+import { BoardGitlab } from './board-gitlab'
 import { BoardProfile } from './board-profile'
 import { BoardChannelNotify } from './channel-notify'
 import { DangerZone } from './danger-zone'
@@ -234,13 +236,27 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
         {board.canManage && (
           <AccordionSection
             /**
-             * Git 連携: GitHub / GitLab の対応付けるリポジトリとマージで完了の設定。設定できるのは owner と管理者
+             * GitHub 連携: 対応付けるリポジトリとマージで完了の設定。設定できるのは owner と管理者
              */
-            id='board_git'
-            icon={<CodeBracketIcon />}
-            title={t('board_git')}
+            id='board_github'
+            icon={<GithubIcon />}
+            title={t('board_github')}
           >
-            <BoardGit boardId={board.id} />
+            <BoardGithub boardId={board.id} />
+          </AccordionSection>
+        )}
+
+        {board.canManage && board.gitlabVisible && (
+          <AccordionSection
+            /**
+             * GitLab 連携: 対応付けるプロジェクトとマージで完了の設定。設定できるのは owner と管理者。
+             * GITLAB_URLS が未設定の環境では、対応付けが残っている(外すため)ときだけ出す
+             */
+            id='board_gitlab'
+            icon={<GitlabIcon />}
+            title={t('board_gitlab')}
+          >
+            <BoardGitlab boardId={board.id} />
           </AccordionSection>
         )}
 

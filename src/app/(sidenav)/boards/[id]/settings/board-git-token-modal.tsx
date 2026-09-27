@@ -26,11 +26,12 @@ export const IssuedTokenModal: FC<{
   return (
     <DialogModal
       state={state}
+      size='lg'
       title={{ text: label, icon: <KeyIcon /> }}
       footer={<MultiButton onPress={state.close}>{t('ok')}</MultiButton>}
     >
       {target && (
-        <FlexCol>
+        <FlexCol isSmart>
           <span className='font-mono text-sm break-all'>{target.repo}</span>
           <CopyableField label={t('git_webhook_url')} text={target.webhookUrl} />
           <CopyableField label={label} text={target.token} isMask />
