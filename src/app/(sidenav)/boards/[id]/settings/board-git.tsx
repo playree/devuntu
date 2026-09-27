@@ -12,7 +12,7 @@ import { BoardGitlab } from './board-gitlab'
 import { getBoardGit, setBoardCompleteOnPrMerge } from './server'
 
 /**
- * ボードの Git 連携。使える provider(GitHub / GitLab)ごとの対応付けと、共通の「マージで完了」の設定。
+ * ボードの Git 連携。provider(GitHub / GitLab)ごとの対応付けと、共通の「マージで完了」の設定。
  */
 export const BoardGit: FC<{ boardId: string }> = ({ boardId }) => {
   const { t } = useLocale()
@@ -42,7 +42,7 @@ export const BoardGit: FC<{ boardId: string }> = ({ boardId }) => {
   return (
     <FlexCol>
       <span className='text-muted text-xs'>{t('msg_board_git_desc')}</span>
-      {git.github && <BoardGithub boardId={boardId} github={git.github} refresh={refresh} />}
+      <BoardGithub boardId={boardId} github={git.github} refresh={refresh} />
       {git.gitlab && <BoardGitlab boardId={boardId} gitlab={git.gitlab} refresh={refresh} />}
 
       <SwitchField

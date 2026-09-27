@@ -9,8 +9,10 @@ import type { PullRequestState, TicketLinkKind } from '@/generated/prisma/enums'
 
 export const GITHUB_ORIGIN = 'https://github.com'
 
-/** Webhook の受け口。ボード設定で登録先として案内する */
+/** Webhook の受け口。末尾に対応付け(BoardRepository)の ID を付ける */
 export const GITHUB_WEBHOOK_PATH = '/api/github/webhook'
+
+export const githubWebhookPath = (repositoryId: string): string => `${GITHUB_WEBHOOK_PATH}/${repositoryId}`
 
 /** `owner/name` の形。GitHub のユーザー名・リポジトリ名に使える文字だけを許す */
 const REPO_PATTERN = /^([A-Za-z0-9-]{1,39})\/([A-Za-z0-9_.-]{1,100})$/

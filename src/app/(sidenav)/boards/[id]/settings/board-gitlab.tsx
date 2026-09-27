@@ -4,7 +4,7 @@ import { MultiButton } from '@/components/general/button'
 import { CopyableField } from '@/components/general/copyable-field'
 import { FlexCol } from '@/components/general/flex'
 import { InputField } from '@/components/general/input'
-import { DialogModal, FormModal, useConfirmModal, useModalState } from '@/components/general/modal'
+import { FormModal, useConfirmModal, useModalState } from '@/components/general/modal'
 import { NoticePanel } from '@/components/general/panel'
 import { RadioField } from '@/components/general/radio'
 import { SingleSelectField } from '@/components/general/select'
@@ -18,6 +18,7 @@ import { dayformat } from '@/lib/day'
 import { GITLAB_SIGNING_TOKEN_PATTERN, gitlabInstanceLabel, normalizeGitlabProjectPath } from '@/lib/gitlab/gitlab'
 import { useLocale } from '@/locale/client'
 import { FC, useState } from 'react'
+import { IssuedTarget, IssuedTokenModal, WebhookTarget } from './board-git-token-modal'
 import {
   addBoardGitlabRepository,
   GetBoardGitReturnType,
@@ -30,10 +31,7 @@ type Gitlab = NonNullable<NonNullable<GetBoardGitReturnType>['gitlab']>
 type Repository = Gitlab['repositories'][number]
 
 /** 署名トークンの入力先。対応付けの直後にも、一覧の「署名トークンを設定」からも開く */
-type SigningTarget = { id: string; repo: string; webhookUrl: string }
-
-/** 作ったシークレットトークンの表示。平文は作った応答でしか受け取れないので一度だけ見せる */
-type IssuedTarget = SigningTarget & { token: string }
+type SigningTarget = WebhookTarget
 
 const SigningTokenModal: FC<{
   boardId: string
@@ -98,31 +96,6 @@ const SigningTokenModal: FC<{
         </FlexCol>
       )}
     </FormModal>
-  )
-}
-
-const IssuedTokenModal: FC<{ state: ReturnType<typeof useModalState<IssuedTarget>> }> = ({ state }) => {
-  const { t } = useLocale()
-  const target = state.target
-  return (
-    <DialogModal
-      state={state}
-      title={{ text: t('gitlab_secret_token'), icon: <KeyIcon /> }}
-      footer={<MultiButton onPress={state.close}>{t('ok')}</MultiButton>}
-    >
-      {target && (
-        <FlexCol>
-          <span className='font-mono text-sm break-all'>{target.repo}</span>
-          <CopyableField label={t('git_webhook_url')} text={target.webhookUrl} />
-          <CopyableField label={t('gitlab_secret_token')} text={target.token} isMask />
-          <NoticePanel className='text-xs'>
-            {t('msg_token_once')}
-            {'\n'}
-            {t('msg_gitlab_secret_token_desc')}
-          </NoticePanel>
-        </FlexCol>
-      )}
-    </DialogModal>
   )
 }
 
@@ -196,7 +169,7 @@ const RepositoryItem: FC<{
       <div className='flex flex-wrap items-center gap-2 text-xs'>
         {repository.hasSecret ? (
           <span className='text-muted'>
-            {t('gitlab_last_received')}:{' '}
+            {t('git_last_received')}:{' '}
             {repository.lastReceivedAt ? dayformat(repository.lastReceivedAt, 'tz-minute', tz) : '-'}
           </span>
         ) : (
@@ -377,7 +350,12 @@ export const BoardGitlab: FC<{ boardId: string; gitlab: Gitlab; refresh: () => P
       </FlexCol>
 
       <SigningTokenModal key={signingModal.key} boardId={boardId} state={signingModal} refresh={refresh} />
-      <IssuedTokenModal key={issuedModal.key} state={issuedModal} />
+      <IssuedTokenModal
+        key={issuedModal.key}
+        state={issuedModal}
+        label={t('gitlab_secret_token')}
+        description={t('msg_gitlab_secret_token_desc')}
+      />
     </FlexCol>
   )
 }

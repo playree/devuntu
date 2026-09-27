@@ -6,7 +6,7 @@
  */
 
 import type { GitProvider, PullRequestState } from '@/generated/prisma/enums'
-import { gitlabBaseUrls, isGithubEnabled } from '../board/board-repository'
+import { gitlabBaseUrls } from '../board/board-repository'
 import { completeTicketByMerge } from '../board/ticket-mutation'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
@@ -16,11 +16,11 @@ import { extractDisplayIdFromBranch, isAllPullRequestsDone, pullRequestLabel } f
 export type GitRepoKey = { provider: GitProvider; baseUrl: string; repo: string }
 
 /**
- * Webhook を受けられる対応付けか。GITHUB_WEBHOOK_SECRET を外した GitHub や、GITLAB_URLS から外したインスタンスの
+ * Webhook を受けられる対応付けか。GITLAB_URLS から外したインスタンスの
  * リポジトリは状態が更新されなくなるので、マージで完了の判定から外す(残ったリンクが判定を塞がないように)。
  */
 const isReceivable = ({ provider, baseUrl }: GitRepoKey, baseUrls: string[]): boolean =>
-  provider === 'github' ? isGithubEnabled() : baseUrls.includes(baseUrl)
+  provider === 'github' || baseUrls.includes(baseUrl)
 
 /** イベントの対象にするボード */
 export type GitLinkedBoard = { id: string; key: string; completeOnPrMerge: boolean }
@@ -161,7 +161,7 @@ export type CheckSuiteData = {
 export const saveCheckSuite = async (
   key: GitRepoKey & {
     suiteId: string
-    /** 受け取った対応付け(GitLab のみ。GitHub は空文字) */
+    /** 受け取った対応付け(BoardRepository.id) */
     repositoryId: string
   },
   data: CheckSuiteData,

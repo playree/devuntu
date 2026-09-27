@@ -1633,13 +1633,13 @@ model BoardRepository {
   /// GitHub は `owner/name`、GitLab はプロジェクトのパス(小文字)
   repo String
 
-  /// GitLab の Webhook の検証方式。GitHub は環境変数の共通シークレットを使うので null
+  /// GitLab の Webhook の検証方式。GitHub は署名方式が1つだけなので null
   webhookAuth GitWebhookAuth?
 
-  /// GitLab の Webhook のトークン(暗号化して保存する)。未設定の間は Webhook を受けない
+  /// Webhook のシークレット(GitHub)/ トークン(GitLab)。暗号化して保存する。未設定の間は Webhook を受けない
   webhookSecret String?
 
-  /// 検証を通った Webhook が最後に届いた日時(GitLab のみ)。登録できているかの目安として画面に出す
+  /// 検証を通った Webhook が最後に届いた日時。登録できているかの目安として画面に出す
   lastReceivedAt DateTime?
 
   // メタデータ
@@ -1667,8 +1667,8 @@ model GitCheckSuite {
   /// GitHub の check_suite.id / GitLab の pipeline.id
   suiteId String
 
-  /// 受け取った対応付け(BoardRepository.id)。GitLab のみで、GitHub は空文字。
-  /// GitLab のトークンは対応付けごとにボードの管理者が持つため、別のボードの対応付けを経由して
+  /// 受け取った対応付け(BoardRepository.id)。空文字は対応付けごとのシークレットにする前の GitHub の行。
+  /// シークレットは対応付けごとにボードの管理者が持つため、別のボードの対応付けを経由して
   /// 届いた CI の状態を混ぜないよう、表示時にこのボードの対応付けのものだけを使う
   repositoryId String @default("")
 

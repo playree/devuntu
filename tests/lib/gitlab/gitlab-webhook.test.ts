@@ -20,7 +20,6 @@ vi.mock('@/lib/prisma', () => ({
 }))
 
 vi.mock('@/lib/board/board-repository', () => ({
-  isGithubEnabled: () => false,
   gitlabBaseUrls: () => ['https://example.com/gitlab'],
 }))
 
@@ -140,14 +139,16 @@ describe('Merge Request Hook', () => {
       .mockResolvedValueOnce([{ prState: 'merged' }] as never)
     vi.mocked(prisma.boardRepository.findMany).mockResolvedValue([
       KEY,
-      // GITHUB_WEBHOOK_SECRET を外した GitHub と、GITLAB_URLS から外したインスタンス
       { provider: 'github', baseUrl: '', repo: 'owner/repo' },
+      // GITLAB_URLS から外したインスタンス
       { provider: 'gitlab', baseUrl: 'https://old.example.com', repo: 'group/proj' },
     ] as never)
 
     await handleGitlabEvent('Merge Request Hook', mergeRequestEvent({ action: 'merge', state: 'merged' }), TARGET)
 
-    expect(vi.mocked(prisma.ticketLink.findMany).mock.calls[1][0]?.where).toMatchObject({ OR: [KEY] })
+    expect(vi.mocked(prisma.ticketLink.findMany).mock.calls[1][0]?.where).toMatchObject({
+      OR: [KEY, { provider: 'github', baseUrl: '', repo: 'owner/repo' }],
+    })
     expect(completeTicketByMerge).toHaveBeenCalled()
   })
 

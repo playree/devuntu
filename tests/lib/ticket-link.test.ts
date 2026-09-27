@@ -101,7 +101,7 @@ describe('addTicketLink', () => {
 })
 
 describe('listTicketLinks', () => {
-  it('GitLab の CI は、このボードの対応付けを経由して届いたものだけを引く', async () => {
+  it('CI は、このボードの対応付けを経由して届いたものだけを引く', async () => {
     const db = {
       ticketLink: {
         findMany: vi.fn(async () => [
@@ -116,26 +116,26 @@ describe('listTicketLinks', () => {
           },
         ]),
       },
-      boardRepository: { findMany: vi.fn(async () => [{ id: 'r1' }]) },
+      boardRepository: { findMany: vi.fn(async () => [{ id: 'r1' }, { id: 'r2' }]) },
       gitCheckSuite: { findMany: vi.fn(async () => []) },
     }
 
     await listTicketLinks('t1', db as never)
 
     expect(db.boardRepository.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { provider: 'gitlab', board: { tickets: { some: { id: 't1' } } } } }),
+      expect.objectContaining({ where: { board: { tickets: { some: { id: 't1' } } } } }),
     )
     expect(db.gitCheckSuite.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
           OR: [
-            { provider: 'github', baseUrl: '', repo: 'o/r', headSha: 'aaa', repositoryId: '' },
+            { provider: 'github', baseUrl: '', repo: 'o/r', headSha: 'aaa', repositoryId: { in: ['r1', 'r2'] } },
             {
               provider: 'gitlab',
               baseUrl: 'https://gitlab.com',
               repo: 'g/p',
               headSha: 'bbb',
-              repositoryId: { in: ['r1'] },
+              repositoryId: { in: ['r1', 'r2'] },
             },
           ],
         },

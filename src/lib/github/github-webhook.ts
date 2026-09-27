@@ -1,8 +1,9 @@
 /**
  * GitHub Webhook のイベント処理(サーバー専用)
  *
- * 署名の検証は受け口(`/api/github/webhook`)で済ませてから呼ぶ。扱うのはボードに対応付けた
- * リポジトリ(BoardRepository)のイベントだけで、対応付けの無いリポジトリのイベントは何もせず捨てる。
+ * GitHub の Webhook は対応付け(BoardRepository)ごとに登録してもらい、受け口の URL で対応付けを決める
+ * (シークレットが対応付けごとに違うため)。署名の検証は受け口で済ませてから呼ぶ。扱うのはその対応付けの
+ * ボードとリポジトリだけで、別のリポジトリのイベント(登録先の取り違えや Organization の Webhook)は何もせず捨てる。
  *
  * GitHub は配送の順序を保証せず、再送もある。PR / Check Suite の状態は GitHub 側の updated_at を
  * 保存しておき、それより古いイベントでは更新しない(同じイベントが何度届いても結果が変わらない)。
@@ -10,9 +11,14 @@
 
 import { z } from 'zod'
 import { nowDate } from '../day'
-import { autoLinkPullRequest, type GitRepoKey, saveCheckSuite, syncPullRequest } from '../git/git-webhook'
+import {
+  autoLinkPullRequest,
+  type GitLinkedBoard,
+  type GitRepoKey,
+  saveCheckSuite,
+  syncPullRequest,
+} from '../git/git-webhook'
 import { logger } from '../logger'
-import { prisma } from '../prisma'
 import { githubPullRequestUrl, pullRequestStateOf } from './github'
 
 const scRepository = z.object({ full_name: z.string().min(1) })
@@ -51,31 +57,35 @@ const scCheckRunEvent = z.object({
   }),
 })
 
-/** 対応付けたボード。対応付けが無ければ空で、そのリポジトリのイベントは扱わない */
-const findLinkedBoards = async (repo: string) =>
-  (
-    await prisma.boardRepository.findMany({
-      where: { provider: 'github', baseUrl: '', repo },
-      select: { board: { select: { id: true, key: true, completeOnPrMerge: true } } },
-    })
-  ).map(({ board }) => board)
+/** Webhook の対象(受け口の URL が指す対応付け) */
+export type GithubWebhookTarget = {
+  /** 対応付け(BoardRepository)の ID */
+  id: string
+  /** `owner/name`(小文字) */
+  repo: string
+  board: GitLinkedBoard
+}
+
+/** 対応付けたリポジトリのイベントか。GitHub は大文字小文字を区別しないので小文字で比べる */
+const isTargetRepo = (repository: { full_name: string }, target: GithubWebhookTarget): boolean =>
+  repository.full_name.toLowerCase() === target.repo
 
 /** GitHub のリポジトリの指定。インスタンスは github.com だけなので baseUrl は空 */
 const repoKey = (repo: string): GitRepoKey => ({ provider: 'github', baseUrl: '', repo })
 
-const handlePullRequest = async (body: unknown) => {
+const handlePullRequest = async (body: unknown, target: GithubWebhookTarget) => {
   const parsed = scPullRequestEvent.safeParse(body)
   if (!parsed.success) {
     logger.warn({ issues: parsed.error.issues }, 'github pull_request payload invalid')
     return
   }
   const { action, repository, pull_request: pr } = parsed.data
-  const repo = repository.full_name.toLowerCase()
-  const boards = await findLinkedBoards(repo)
-  if (boards.length === 0) {
+  if (!isTargetRepo(repository, target)) {
     return
   }
 
+  const { repo } = target
+  const boards = [target.board]
   const key = repoKey(repo)
   await autoLinkPullRequest({ key, number: pr.number, url: githubPullRequestUrl(repo, pr.number) }, pr.head.ref, boards)
 
@@ -91,12 +101,12 @@ const handlePullRequest = async (body: unknown) => {
 
 /** Check Suite の状態を保存する。check_suite / check_run のどちらのイベントも同じ形の suite を持つ */
 const saveGithubCheckSuite = async (
-  repo: string,
+  target: GithubWebhookTarget,
   suite: z.infer<typeof scCheckSuite>,
   fallback: { status: string; app?: string },
 ) =>
   saveCheckSuite(
-    { ...repoKey(repo), suiteId: String(suite.id), repositoryId: '' },
+    { ...repoKey(target.repo), suiteId: String(suite.id), repositoryId: target.id },
     {
       headSha: suite.head_sha,
       appName: suite.app?.name ?? fallback.app ?? '',
@@ -106,17 +116,16 @@ const saveGithubCheckSuite = async (
     },
   )
 
-const handleCheckSuite = async (body: unknown) => {
+const handleCheckSuite = async (body: unknown, target: GithubWebhookTarget) => {
   const parsed = scCheckSuiteEvent.safeParse(body)
   if (!parsed.success) {
     logger.warn({ issues: parsed.error.issues }, 'github check_suite payload invalid')
     return
   }
-  const repo = parsed.data.repository.full_name.toLowerCase()
-  if ((await findLinkedBoards(repo)).length === 0) {
+  if (!isTargetRepo(parsed.data.repository, target)) {
     return
   }
-  await saveGithubCheckSuite(repo, parsed.data.check_suite, { status: 'completed' })
+  await saveGithubCheckSuite(target, parsed.data.check_suite, { status: 'completed' })
 }
 
 /**
@@ -124,32 +133,31 @@ const handleCheckSuite = async (body: unknown) => {
  * 実行のないアプリの suite は queued のまま完了しないので、check_suite の requested では作らず、
  * 実際に走った check_run を起点に作る(永遠に「実行中」と表示されるのを避ける)。
  */
-const handleCheckRun = async (body: unknown) => {
+const handleCheckRun = async (body: unknown, target: GithubWebhookTarget) => {
   const parsed = scCheckRunEvent.safeParse(body)
   if (!parsed.success) {
     logger.warn({ issues: parsed.error.issues }, 'github check_run payload invalid')
     return
   }
   const { repository, check_run: run } = parsed.data
-  const repo = repository.full_name.toLowerCase()
-  if ((await findLinkedBoards(repo)).length === 0) {
+  if (!isTargetRepo(repository, target)) {
     return
   }
   // suite 側の status が無いペイロードでは、run が終わっていても suite の完了は check_suite で受ける
-  await saveGithubCheckSuite(repo, run.check_suite, { status: 'in_progress', app: run.app?.name })
+  await saveGithubCheckSuite(target, run.check_suite, { status: 'in_progress', app: run.app?.name })
 }
 
 /** イベントごとの処理。ここに無いイベント(ping など)は受け取っても何もしない */
-const HANDLERS = new Map<string, (body: unknown) => Promise<void>>([
+const HANDLERS = new Map<string, (body: unknown, target: GithubWebhookTarget) => Promise<void>>([
   ['pull_request', handlePullRequest],
   ['check_suite', handleCheckSuite],
   ['check_run', handleCheckRun],
 ])
 
-export const handleGithubEvent = async (event: string, body: unknown): Promise<void> => {
+export const handleGithubEvent = async (event: string, body: unknown, target: GithubWebhookTarget): Promise<void> => {
   const handler = HANDLERS.get(event)
   if (!handler) {
     return
   }
-  await handler(body)
+  await handler(body, target)
 }

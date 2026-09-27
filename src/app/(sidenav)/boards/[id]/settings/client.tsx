@@ -231,11 +231,10 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
           </AccordionSection>
         )}
 
-        {board.canManage && board.gitEnabled && (
+        {board.canManage && (
           <AccordionSection
             /**
-             * Git 連携: GitHub / GitLab の対応付けるリポジトリとマージで完了の設定。設定できるのは owner と管理者で、
-             * どちらも使えない環境(GITHUB_WEBHOOK_SECRET / GITLAB_URLS が無い)ではセクションごと出さない
+             * Git 連携: GitHub / GitLab の対応付けるリポジトリとマージで完了の設定。設定できるのは owner と管理者
              */
             id='board_git'
             icon={<CodeBracketIcon />}

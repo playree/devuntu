@@ -4,15 +4,16 @@
  * `/boards/[id]/settings` の Server Action から呼ぶ。設定できるのは owner と管理者。
  * Webhook は対応付けたリポジトリのイベントだけを扱うので、ここがボードごとの受け入れ範囲になる。
  *
- * GitLab の Webhook のトークンは Webhook ごとに違うので、対応付けごとに暗号化して保存し、
- * 受け口の URL に対応付けの ID を含めて、どのトークンで検証するかを決める。
+ * Webhook のシークレット(GitHub)/ トークン(GitLab)は対応付けごとに暗号化して保存し、
+ * 受け口の URL に対応付けの ID を含めて、どのシークレットで検証するかを決める。
+ * 対応付けごとに別のシークレットにするので、作り直しても他のボード・リポジトリの Webhook に影響しない。
  */
 
-import type { GitWebhookAuth } from '@/generated/prisma/enums'
+import type { GitProvider, GitWebhookAuth } from '@/generated/prisma/enums'
 import { randomBytes } from 'node:crypto'
 import { envu } from '../env-util'
 import { errInvalidOperation, errValidation } from '../error'
-import { GITHUB_WEBHOOK_PATH, normalizeGithubRepo } from '../github/github'
+import { githubWebhookPath, normalizeGithubRepo } from '../github/github'
 import { gitlabWebhookPath, normalizeGitlabProjectPath } from '../gitlab/gitlab'
 import { isValidGitlabSigningToken } from '../gitlab/gitlab-signature'
 import { logger } from '../logger'
@@ -23,9 +24,6 @@ import { type Actor, assertBoardAccess } from './board-access'
 
 /** 1ボードに対応付けられるリポジトリの上限(GitHub / GitLab の合計) */
 export const MAX_BOARD_REPOSITORIES = 20
-
-/** GitHub 連携が使える環境か。署名シークレットが無ければ Webhook を受けられない */
-export const isGithubEnabled = (): boolean => !!envu.server.GITHUB_WEBHOOK_SECRET
 
 /**
  * GitLab 連携で使ってよいインスタンスの URL。空なら GitLab 連携ごと無効。
@@ -40,14 +38,9 @@ export const gitlabBaseUrls = (): string[] => {
   }
 }
 
-export const isGitlabEnabled = (): boolean => gitlabBaseUrls().length > 0
-
-/** Git 連携(GitHub / GitLab のどちらか)が使える環境か。ボード設定のセクションを出すかに使う */
-export const isGitEnabled = (): boolean => isGithubEnabled() || isGitlabEnabled()
-
 /**
- * 現在の設定と、GitHub / GitLab 側へ登録する Webhook の URL。
- * 使えない provider は null。ただし対応付けが残っていれば、外せるよう一覧だけは返す(enabled=false)
+ * 現在の設定と、GitHub / GitLab 側へ登録する Webhook の URL。シークレットそのものは画面へ返さない(設定済みかどうかだけ)。
+ * GitLab は使えない環境なら null。ただし対応付けが残っていれば、外せるよう一覧だけは返す(enabled=false)
  */
 export const getBoardGit = async (actor: Actor, boardId: string) => {
   await assertBoardAccess(actor, boardId, 'manage')
@@ -76,17 +69,17 @@ export const getBoardGit = async (actor: Actor, boardId: string) => {
 
   const githubRepositories = board.repositories.filter(({ provider }) => provider === 'github')
   const gitlabRepositories = board.repositories.filter(({ provider }) => provider === 'gitlab')
-  const githubEnabled = isGithubEnabled()
   const instances = gitlabBaseUrls()
 
-  const github =
-    githubEnabled || githubRepositories.length > 0
-      ? {
-          enabled: githubEnabled,
-          webhookUrl: makeUrl(GITHUB_WEBHOOK_PATH).toString(),
-          repositories: githubRepositories.map(({ id, repo }) => ({ id, repo })),
-        }
-      : null
+  const github = {
+    repositories: githubRepositories.map(({ id, repo, webhookSecret, lastReceivedAt }) => ({
+      id,
+      repo,
+      webhookUrl: makeUrl(githubWebhookPath(id)).toString(),
+      hasSecret: !!webhookSecret,
+      lastReceivedAt,
+    })),
+  }
   const gitlab =
     instances.length > 0 || gitlabRepositories.length > 0
       ? {
@@ -98,7 +91,6 @@ export const getBoardGit = async (actor: Actor, boardId: string) => {
             repo,
             webhookUrl: makeUrl(gitlabWebhookPath(id)).toString(),
             webhookAuth: webhookAuth ?? 'signing',
-            // トークンそのものは画面へ返さない(設定済みかどうかだけ)
             hasSecret: !!webhookSecret,
             lastReceivedAt,
           })),
@@ -114,32 +106,41 @@ const assertRepositoryLimit = async (tx: Db, boardId: string) => {
   }
 }
 
+/** Webhook のシークレット(GitHub)/ シークレットトークン(GitLab)。推測されないよう十分な長さの乱数にする */
+const generateWebhookToken = (): string => randomBytes(32).toString('base64url')
+
+/**
+ * GitHub のリポジトリを対応付け、Webhook のシークレットを作って1回だけ返す(平文はこの応答でしか受け取れない)。
+ * 登録済みなら何もしない(二度押しで失敗させず、シークレットも作り直さない)。
+ */
 export const addBoardGithubRepository = async (actor: Actor, boardId: string, rawRepo: string) => {
-  if (!isGithubEnabled()) {
-    throw errInvalidOperation()
-  }
   const repo = normalizeGithubRepo(rawRepo)
   if (!repo) {
     throw errValidation('repo')
   }
+  const token = generateWebhookToken()
+  const webhookSecret = await encryptSecret(token)
 
-  await prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     await assertBoardAccess(actor, boardId, 'manage', tx)
     const key = { boardId, provider: 'github' as const, baseUrl: '', repo }
-    // 登録済みなら何もしない(二度押しで失敗させない)
-    if (await tx.boardRepository.findUnique({ where: { boardId_provider_baseUrl_repo: key }, select: { id: true } })) {
-      return
+    const existing = await tx.boardRepository.findUnique({
+      where: { boardId_provider_baseUrl_repo: key },
+      select: { id: true },
+    })
+    if (existing) {
+      return { id: existing.id, token: null, isExisting: true }
     }
     await assertRepositoryLimit(tx, boardId)
-    await tx.boardRepository.create({ data: key })
+    const created = await tx.boardRepository.create({ data: { ...key, webhookSecret }, select: { id: true } })
+    return { id: created.id, token, isExisting: false }
   })
 
-  logger.info({ userId: actor.id, boardId, repo }, 'board repository added')
-  return { repo }
+  if (!result.isExisting) {
+    logger.info({ userId: actor.id, boardId, repo }, 'board repository added')
+  }
+  return { ...result, repo, webhookUrl: makeUrl(githubWebhookPath(result.id)).toString() }
 }
-
-/** シークレットトークン方式で GitLab に登録してもらう値。推測されないよう十分な長さの乱数にする */
-const generateGitlabToken = (): string => randomBytes(32).toString('base64url')
 
 /**
  * GitLab のプロジェクトを対応付ける。
@@ -162,7 +163,7 @@ export const addBoardGitlabRepository = async (
   if (!repo) {
     throw errValidation('project')
   }
-  const token = webhookAuth === 'token' ? generateGitlabToken() : null
+  const token = webhookAuth === 'token' ? generateWebhookToken() : null
   const webhookSecret = token && (await encryptSecret(token))
 
   const result = await prisma.$transaction(async (tx) => {
@@ -189,24 +190,37 @@ export const addBoardGitlabRepository = async (
   return { ...result, repo, webhookUrl: makeUrl(gitlabWebhookPath(result.id)).toString() }
 }
 
-/** GitLab の対応付けのトークンを保存する(別のボードの行を触れないよう boardId も条件に含める) */
-const saveGitlabSecret = async (
+/** 対応付けの Webhook のシークレットを保存する(別のボードの行を触れないよう boardId も条件に含める) */
+const saveWebhookSecret = async (
   actor: Actor,
-  boardId: string,
-  repositoryId: string,
-  data: { webhookAuth: GitWebhookAuth; webhookSecret: string },
+  { boardId, repositoryId, provider }: { boardId: string; repositoryId: string; provider: GitProvider },
+  data: { webhookAuth?: GitWebhookAuth; webhookSecret: string },
 ) => {
   await prisma.$transaction(async (tx) => {
     await assertBoardAccess(actor, boardId, 'manage', tx)
-    const { count } = await tx.boardRepository.updateMany({
-      where: { id: repositoryId, boardId, provider: 'gitlab' },
-      data,
-    })
+    const { count } = await tx.boardRepository.updateMany({ where: { id: repositoryId, boardId, provider }, data })
     if (count === 0) {
       throw errInvalidOperation()
     }
   })
-  logger.info({ userId: actor.id, boardId, repositoryId, webhookAuth: data.webhookAuth }, 'gitlab webhook secret saved')
+  logger.info(
+    { userId: actor.id, boardId, repositoryId, provider, webhookAuth: data.webhookAuth },
+    'webhook secret saved',
+  )
+}
+
+/**
+ * GitHub の Webhook のシークレットを作り直して1回だけ返す。
+ * 作り直すと古いシークレットは使えなくなるので、GitHub 側の設定も入れ直してもらう。
+ */
+export const regenerateGithubSecret = async (actor: Actor, boardId: string, repositoryId: string) => {
+  const token = generateWebhookToken()
+  await saveWebhookSecret(
+    actor,
+    { boardId, repositoryId, provider: 'github' },
+    { webhookSecret: await encryptSecret(token) },
+  )
+  return { token }
 }
 
 /** GitLab が作った署名トークン(`whsec_...`)を保存する。シークレットトークン方式からの切り替えにも使う */
@@ -215,10 +229,14 @@ export const setGitlabSigningToken = async (actor: Actor, boardId: string, repos
   if (!isValidGitlabSigningToken(value)) {
     throw errValidation('secret')
   }
-  await saveGitlabSecret(actor, boardId, repositoryId, {
-    webhookAuth: 'signing',
-    webhookSecret: await encryptSecret(value),
-  })
+  await saveWebhookSecret(
+    actor,
+    { boardId, repositoryId, provider: 'gitlab' },
+    {
+      webhookAuth: 'signing',
+      webhookSecret: await encryptSecret(value),
+    },
+  )
 }
 
 /**
@@ -226,11 +244,15 @@ export const setGitlabSigningToken = async (actor: Actor, boardId: string, repos
  * 作り直すと古いトークンは使えなくなるので、GitLab 側の設定も入れ直してもらう。
  */
 export const regenerateGitlabToken = async (actor: Actor, boardId: string, repositoryId: string) => {
-  const token = generateGitlabToken()
-  await saveGitlabSecret(actor, boardId, repositoryId, {
-    webhookAuth: 'token',
-    webhookSecret: await encryptSecret(token),
-  })
+  const token = generateWebhookToken()
+  await saveWebhookSecret(
+    actor,
+    { boardId, repositoryId, provider: 'gitlab' },
+    {
+      webhookAuth: 'token',
+      webhookSecret: await encryptSecret(token),
+    },
+  )
   return { token }
 }
 

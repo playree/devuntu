@@ -103,7 +103,7 @@ Proxy は認証処理を通さず素通しするため、各ルートハンド�
 | `/api/upload/[filename]`                           | 認証必須(未ログインは401)。画像配信(GET)                                                                                 |
 | `/api/avatar/[filename]`                           | **認証不要**。`user.image` から参照中のキーだけを配信(GET)                                                               |
 | `/api/slack/events`                                | 認証不要。Slack の署名検証だけが門番(POST)                                                                               |
-| `/api/github/webhook`                              | 認証不要。GitHub の署名検証だけが門番(POST)。`GITHUB_WEBHOOK_SECRET` 未設定なら404                                       |
+| `/api/github/webhook/[id]`                         | 認証不要。対応付けごとのシークレットによる GitHub の署名検証だけが門番(POST)。対応付けが無ければ404                      |
 | `/api/gitlab/webhook/[id]`                         | 認証不要。対応付けごとのトークン(署名 / シークレット)の検証だけが門番(POST)。`GITLAB_URLS` 未設定・対応付けが無ければ404 |
 | `/api/webpush/key`                                 | 認証必須。VAPID 公開鍵を返す(GET)。Service Worker の再購読用                                                             |
 | `/api/webpush/subscribe`                           | 認証必須。`pushsubscriptionchange` の再購読報告(POST)                                                                    |
