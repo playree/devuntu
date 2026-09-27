@@ -3,8 +3,20 @@
 import { UserAvatar } from '@/components/general/avatar'
 import { MultiButton } from '@/components/general/button'
 import { ChatBubbleIcon, CheckBadgeIcon, ClockIcon, FireIcon, PlusIcon } from '@/components/icon'
-import { CARD_BACKDROP_CLASS, priorityBgClass, priorityBorderClass, statusBgClass } from '@/components/ticket/ticket-style'
-import { PriorityBar, PriorityChip, StatusChip, TagChips, TicketIdText } from '@/components/ticket/ticket-chip'
+import {
+  AgentStateChip,
+  PriorityBar,
+  PriorityChip,
+  StatusChip,
+  TagChips,
+  TicketIdText,
+} from '@/components/ticket/ticket-chip'
+import {
+  CARD_BACKDROP_CLASS,
+  priorityBgClass,
+  priorityBorderClass,
+  statusBgClass,
+} from '@/components/ticket/ticket-style'
 import type { TicketStatus } from '@/generated/prisma/enums'
 import { cardDropId, KANBAN_LANES, laneDropId } from '@/lib/board/kanban'
 import { preventParentSelection } from '@/lib/client-utils'
@@ -202,6 +214,11 @@ const KanbanCardView: FC<{
                 />
                 <span className='truncate'>{card.assigneeName}</span>
               </span>
+            )}
+            {card.assigneeIsAgent && card.agentMode && card.status !== 'done' && (
+              <AgentStateChip // 任せていないチケットと完了レーンでは処理状態が意味を持たないので出さない
+                value={card.agentState ?? 'queued'}
+              />
             )}
             {card.completedAt ? (
               <span // 完了したカードで見たいのは期日ではなく完了日時なので、両方は出さず置き換える

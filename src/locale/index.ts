@@ -630,7 +630,11 @@ export type LocaleItemBase =
   | 'mail_otp_body'
   | 'mail_otp_subject'
   // for Notify(メール / Slack で共用する文面)
+  | 'notify_msg_agent_run_done'
+  | 'notify_msg_agent_run_failed'
   | 'notify_msg_agent_run_finished'
+  | 'notify_msg_agent_run_planned'
+  | 'notify_msg_agent_run_skipped'
   | 'notify_msg_mentioned'
   | 'notify_msg_mentioned_comment'
   | 'notify_msg_ticket_assigned'

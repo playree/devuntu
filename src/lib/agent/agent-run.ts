@@ -12,6 +12,7 @@ import { ticketDisplayId } from '../board/ticket-id'
 import { MINUTE_MS, msBefore, nowDate } from '../day'
 import { logger } from '../logger'
 import { MAX_NOTIFY_RECIPIENTS } from '../notify/notify'
+import type { AgentRunNotifyState } from '../notify/notify-payload'
 import { type AgentRunNotification, enqueueAgentRunFinished } from '../notify/notify-trigger'
 import { prisma } from '../prisma'
 import { AGENT_UNLIMITED_DAILY_RUNS } from './agent'
@@ -55,6 +56,7 @@ const buildAgentRunNotification = (param: {
   ticket: AgentRunNotifyTicket | null
   action: AgentRunAction
   status: Exclude<AgentRunStatus, 'running'>
+  state: AgentRunNotifyState
   summary: string | null
   startedAt: Date
   finishedAt: Date
@@ -130,6 +132,7 @@ export const failStaleAgentRuns = async (runnerId: string, now: Date = nowDate()
         ticket: run.ticket,
         action: run.action,
         status: 'failed',
+        state: 'failed',
         summary: TIMEOUT_SUMMARY,
         startedAt: run.startedAt,
         finishedAt: now,
@@ -251,6 +254,8 @@ export const finishAgentRunById = async (
             ticket: run.ticket,
             action: run.action,
             status: finalStatus,
+            // 報告が無いまま閉じたチケットは上で failed にしている
+            state: 'failed',
             summary: summary ?? null,
             startedAt: run.startedAt,
             finishedAt: now,
@@ -272,7 +277,7 @@ export const finishAgentRunById = async (
 export const AGENT_OUTCOMES = ['planned', 'completed', 'skipped', 'failed'] as const
 export type AgentOutcome = (typeof AGENT_OUTCOMES)[number]
 
-const OUTCOME_MAP: Record<AgentOutcome, { state: AgentTaskState; run: Exclude<AgentRunStatus, 'running'> }> = {
+const OUTCOME_MAP: Record<AgentOutcome, { state: AgentRunNotifyState; run: Exclude<AgentRunStatus, 'running'> }> = {
   planned: { state: 'planned', run: 'succeeded' },
   completed: { state: 'done', run: 'succeeded' },
   skipped: { state: 'skipped', run: 'skipped' },
@@ -357,6 +362,7 @@ export const finishAgentTask = async (
       // 実際に記録した処理へ寄せる(revise のまま通知すると履歴と食い違う)
       action: settled ?? open.action,
       status: run,
+      state,
       summary: summary ?? null,
       startedAt: open.startedAt,
       finishedAt: now,

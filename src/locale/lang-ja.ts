@@ -703,6 +703,10 @@ export const ja: DefaultLocaleItems = {
 `,
   mail_otp_subject: '[${appname}] Eメール認証OTP : ${otp}',
 
+  notify_msg_agent_run_done: '${agent}が対応を報告しました。内容を確認して承認・差し戻しをしてください(${duration})',
+  notify_msg_agent_run_failed: '${agent}の${action}が失敗しました。実行履歴とチケットを確認してください(${duration})',
+  notify_msg_agent_run_planned: '${agent}がプランを投稿しました。返信で承認・差し戻しをしてください(${duration})',
+  notify_msg_agent_run_skipped: '${agent}が${action}を見送りました。チケットのコメントを確認してください(${duration})',
   notify_msg_agent_run_finished: '${agent}の${action}が完了(${result} / ${duration})',
   notify_msg_mentioned: '${from}さんがあなたをメンションしました',
   notify_msg_mentioned_comment: '${from}さんがコメントであなたをメンションしました',

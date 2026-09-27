@@ -704,6 +704,10 @@ Expiration time: 5 minutes
 `,
   mail_otp_subject: '[${appname}] Email OTP : ${otp}',
 
+  notify_msg_agent_run_done: '${agent} reported the work. Review it and approve or reject (${duration})',
+  notify_msg_agent_run_failed: '${agent} failed ${action}. Check the run history and the ticket (${duration})',
+  notify_msg_agent_run_planned: '${agent} posted a plan. Reply to approve or reject it (${duration})',
+  notify_msg_agent_run_skipped: '${agent} skipped ${action}. Check the ticket comments (${duration})',
   notify_msg_agent_run_finished: '${agent} finished ${action} (${result} / ${duration})',
   notify_msg_mentioned: '${from} mentioned you',
   notify_msg_mentioned_comment: '${from} mentioned you in a comment',

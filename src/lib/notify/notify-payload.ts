@@ -9,7 +9,7 @@
  * 定義漏れがコンパイルエラーになる。
  */
 
-import { AgentRunAction, type NotifyEvent } from '@/generated/prisma/enums'
+import { AgentRunAction, type AgentTaskState, type NotifyEvent } from '@/generated/prisma/enums'
 import { z } from 'zod'
 import { errValidation } from '../error'
 
@@ -39,6 +39,10 @@ const scMention = scTicketRef.extend({
   fromName: z.string(),
 })
 
+/** 実行後のチケットの処理状態。終了時のみ通知するので未着手 / 処理中は受け取らない */
+export const AGENT_RUN_NOTIFY_STATES = ['planned', 'done', 'failed', 'skipped'] as const satisfies AgentTaskState[]
+export type AgentRunNotifyState = (typeof AGENT_RUN_NOTIFY_STATES)[number]
+
 const scAgentRun = scTicketRef.extend({
   runId: z.string().min(1),
   /** 実行したエージェントの表示名 */
@@ -46,6 +50,8 @@ const scAgentRun = scTicketRef.extend({
   action: z.enum(AgentRunAction),
   /** 終了時のみ通知するので running は受け取らない */
   status: z.enum(['succeeded', 'failed', 'skipped']),
+  /** 次に利用者が何をすればよいかを文面に出すために使う。旧バージョンで投入された行には無い */
+  state: z.enum(AGENT_RUN_NOTIFY_STATES).optional(),
   excerpt: scExcerpt,
   /** Json を経由すると文字列になるので、読み出し側で Date へ戻す */
   startedAt: z.coerce.date(),

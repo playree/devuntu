@@ -6,7 +6,7 @@
  */
 
 import { buildNotifyContent } from '@/lib/notify/notify-content'
-import type { NotifyPayload } from '@/lib/notify/notify-payload'
+import { AGENT_RUN_NOTIFY_STATES, type NotifyPayload } from '@/lib/notify/notify-payload'
 import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/server-utils', () => ({
@@ -151,6 +151,19 @@ describe('buildNotifyContent: agent_run', () => {
     expect(body).toContain('テストエージェント')
     expect(body, '所要時間は実行履歴と同じ mm:ss').toContain('01:30')
   })
+
+  it('実行後の状態から次にすることを示す', () => {
+    const body = (state: NotifyPayload<'agent_run'>['state']) =>
+      buildNotifyContent('agent_run', agentRun({ state }), 'ja', 'dm').body
+    expect(body('planned')).toContain('プランを投稿')
+    expect(body('done')).toContain('承認・差し戻し')
+    expect(body('failed')).toContain('失敗')
+    expect(body('skipped')).toContain('見送り')
+  })
+
+  it('状態を持たない旧形式の行は結果だけを伝える', () => {
+    expect(buildNotifyContent('agent_run', agentRun(), 'ja', 'dm').body).toContain('成功')
+  })
 })
 
 describe('buildNotifyContent: ロケール', () => {
@@ -159,6 +172,7 @@ describe('buildNotifyContent: ロケール', () => {
       for (const content of [
         buildNotifyContent('mention', mention({ commentId: 'comment-1' }), locale, 'dm'),
         buildNotifyContent('agent_run', agentRun(), locale, 'channel'),
+        ...AGENT_RUN_NOTIFY_STATES.map((state) => buildNotifyContent('agent_run', agentRun({ state }), locale, 'dm')),
         buildNotifyContent('ticket_assigned', assigned(), locale, 'dm'),
         buildNotifyContent('ticket_assigned', assigned(), locale, 'channel'),
         buildNotifyContent('ticket_created', changed(), locale, 'channel'),

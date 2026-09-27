@@ -47,6 +47,8 @@ export const getBoardKanban = safeAuthAction
         completedAt: true,
         assigneeId: true,
         assignee: { select: { name: true, image: true, isAgent: true } },
+        agentMode: true,
+        agentState: true,
         tags: {
           select: { tag: { select: { id: true, name: true, color: true } } },
           orderBy: { tag: { order: 'asc' } },
