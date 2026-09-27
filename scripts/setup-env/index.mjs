@@ -316,6 +316,8 @@ if (chosenLocale) {
     validate: validateChoice(LOCALES),
     help: t('q_default_locale_help', LOCALES.join(' / ')),
   })
+  // 以降の質問と書き出す見出しを、保存する DEFAULT_LOCALE の言語に揃える
+  setLocale(env.DEFAULT_LOCALE)
 }
 env.DEFAULT_TIMEZONE = await ask({
   label: t('q_default_timezone'),
