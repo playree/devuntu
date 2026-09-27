@@ -5,29 +5,31 @@ import { CopyableField } from '@/components/general/copyable-field'
 import { FlexCol } from '@/components/general/flex'
 import { InputField } from '@/components/general/input'
 import { FormModal, useConfirmModal, useModalState } from '@/components/general/modal'
-import { NoticePanel } from '@/components/general/panel'
+import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { RadioField } from '@/components/general/radio'
 import { SingleSelectField } from '@/components/general/select'
-import { ArrowPathIcon, GitlabIcon, KeyIcon, PlusIcon, XMarkIcon } from '@/components/icon'
+import { ArrowPathIcon, KeyIcon, PlusIcon, XMarkIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { GitWebhookAuthChip, useGitWebhookAuthOptions } from '@/components/ticket/ticket-link-chip'
 import { type GitWebhookAuth } from '@/generated/prisma/enums'
-import { parseAction } from '@/lib/action/action-client'
+import { parseAction, useActionData } from '@/lib/action/action-client'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { dayformat } from '@/lib/day'
 import { GITLAB_SIGNING_TOKEN_PATTERN, gitlabInstanceLabel, normalizeGitlabProjectPath } from '@/lib/gitlab/gitlab'
 import { useLocale } from '@/locale/client'
 import { FC, useState } from 'react'
+import { CompleteOnMergeSwitch } from './board-git'
 import { IssuedTarget, IssuedTokenModal, WebhookTarget } from './board-git-token-modal'
 import {
   addBoardGitlabRepository,
-  GetBoardGitReturnType,
+  getBoardGitlab,
+  GetBoardGitlabReturnType,
   regenerateGitlabToken,
   removeBoardRepository,
   setGitlabSigningToken,
 } from './server'
 
-type Gitlab = NonNullable<NonNullable<GetBoardGitReturnType>['gitlab']>
+type Gitlab = NonNullable<GetBoardGitlabReturnType>
 type Repository = Gitlab['repositories'][number]
 
 /** 署名トークンの入力先。対応付けの直後にも、一覧の「署名トークンを設定」からも開く */
@@ -202,10 +204,10 @@ const RepositoryItem: FC<{
 }
 
 /**
- * ボードの GitLab 連携(対応付けるプロジェクト)。
+ * 対応付けるプロジェクト。
  * トークンは Webhook ごとに違うので、プロジェクトごとに Webhook URL を出し、トークンもプロジェクトごとに持つ。
  */
-export const BoardGitlab: FC<{ boardId: string; gitlab: Gitlab; refresh: () => Promise<void> }> = ({
+const GitlabRepositories: FC<{ boardId: string; gitlab: Gitlab; refresh: () => Promise<void> }> = ({
   boardId,
   gitlab,
   refresh,
@@ -258,10 +260,6 @@ export const BoardGitlab: FC<{ boardId: string; gitlab: Gitlab; refresh: () => P
 
   return (
     <FlexCol>
-      <div className='flex items-center gap-2 text-sm font-medium'>
-        <GitlabIcon width={16} />
-        GitLab
-      </div>
       {gitlab.enabled ? (
         <NoticePanel className='text-xs'>{t('msg_board_gitlab_desc')}</NoticePanel>
       ) : (
@@ -355,6 +353,34 @@ export const BoardGitlab: FC<{ boardId: string; gitlab: Gitlab; refresh: () => P
         state={issuedModal}
         label={t('gitlab_secret_token')}
         description={t('msg_gitlab_secret_token_desc')}
+      />
+    </FlexCol>
+  )
+}
+
+/**
+ * ボードの GitLab 連携(対応付けるプロジェクトとマージで完了の設定)。
+ */
+export const BoardGitlab: FC<{ boardId: string }> = ({ boardId }) => {
+  const { t } = useLocale()
+  const { data: gitlab, isLoading, refresh } = useActionData(() => getBoardGitlab({ id: boardId }))
+
+  if (isLoading) {
+    return <PanelSkeleton />
+  }
+  if (!gitlab) {
+    return null
+  }
+
+  return (
+    <FlexCol>
+      <span className='text-muted text-xs'>{t('msg_board_git_desc')}</span>
+      <GitlabRepositories boardId={boardId} gitlab={gitlab} refresh={refresh} />
+      <CompleteOnMergeSwitch
+        boardId={boardId}
+        provider='gitlab'
+        isSelected={gitlab.completeOnMerge}
+        refresh={refresh}
       />
     </FlexCol>
   )

@@ -38,7 +38,7 @@ export const POST = async (request: Request, { params }: { params: Promise<{ id:
       repo: true,
       webhookAuth: true,
       webhookSecret: true,
-      board: { select: { id: true, key: true, completeOnPrMerge: true } },
+      board: { select: { id: true, key: true, completeOnGitlabMerge: true } },
     },
   })
   // GITLAB_URLS から外したインスタンスの対応付けは、行が残っていても受けない
@@ -90,11 +90,12 @@ export const POST = async (request: Request, { params }: { params: Promise<{ id:
    * 失敗を 500 で返せば、GitLab の Webhook の履歴(Recent events)から再送できる。
    */
   try {
+    const { completeOnGitlabMerge, ...board } = repository.board
     await handleGitlabEvent(event, body, {
       id,
       baseUrl: repository.baseUrl,
       repo: repository.repo,
-      board: repository.board,
+      board: { ...board, completeOnPrMerge: completeOnGitlabMerge },
     })
   } catch (error) {
     logger.error({ error, event, delivery, repositoryId: id }, 'gitlab webhook failed')

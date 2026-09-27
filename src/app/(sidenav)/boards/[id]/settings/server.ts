@@ -12,7 +12,8 @@ import { getBoardMemberUsers } from '@/lib/board/board-member'
 import {
   addBoardGithubRepository as addBoardGithubRepositoryCore,
   addBoardGitlabRepository as addBoardGitlabRepositoryCore,
-  getBoardGit as getBoardGitCore,
+  getBoardGithub as getBoardGithubCore,
+  getBoardGitlab as getBoardGitlabCore,
   regenerateGithubSecret as regenerateGithubSecretCore,
   regenerateGitlabToken as regenerateGitlabTokenCore,
   removeBoardRepository as removeBoardRepositoryCore,
@@ -148,12 +149,19 @@ export const deleteBoard = safeAuthAction
  * Git 連携(GitHub / GitLab)
  * -----------------------------------------------------------------------------------------------*/
 
-/** 対応付けたリポジトリ・マージで完了の設定と、Webhook の登録先(owner または管理者) */
-export const getBoardGit = safeAuthAction
-  .metadata({ actionName: 'getBoardGit', role: 'user' })
+/** GitHub の対応付けたリポジトリ・マージで完了の設定と、Webhook の登録先(owner または管理者) */
+export const getBoardGithub = safeAuthAction
+  .metadata({ actionName: 'getBoardGithub', role: 'user' })
   .inputSchema(scUUID)
-  .action(async ({ ctx: { user }, parsedInput: { id } }) => await getBoardGitCore(user, id))
-export type GetBoardGitReturnType = Awaited<ReturnType<typeof getBoardGit>>['data']
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => await getBoardGithubCore(user, id))
+export type GetBoardGithubReturnType = Awaited<ReturnType<typeof getBoardGithub>>['data']
+
+/** GitLab の対応付けたプロジェクト・マージで完了の設定と、Webhook の登録先(owner または管理者) */
+export const getBoardGitlab = safeAuthAction
+  .metadata({ actionName: 'getBoardGitlab', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => await getBoardGitlabCore(user, id))
+export type GetBoardGitlabReturnType = Awaited<ReturnType<typeof getBoardGitlab>>['data']
 
 /** GitHub のリポジトリの対応付け(owner または管理者)。作ったシークレットを1回だけ返す */
 export const addBoardGithubRepository = safeAuthAction
@@ -206,12 +214,12 @@ export const removeBoardRepository = safeAuthAction
     return { id }
   })
 
-/** PR のマージでチケットを完了にするかの切り替え(owner または管理者) */
+/** PR / MR のマージでチケットを完了にするかの切り替え(provider ごと。owner または管理者) */
 export const setBoardCompleteOnPrMerge = safeAuthAction
   .metadata({ actionName: 'setBoardCompleteOnPrMerge', role: 'user' })
   .inputSchema(scSetBoardCompleteOnPrMerge)
-  .action(async ({ ctx: { user }, parsedInput: { id, completeOnPrMerge } }) => {
-    await setBoardCompleteOnPrMergeCore(user, id, completeOnPrMerge)
+  .action(async ({ ctx: { user }, parsedInput: { id, provider, completeOnMerge } }) => {
+    await setBoardCompleteOnPrMergeCore(user, id, provider, completeOnMerge)
     return { id }
   })
 

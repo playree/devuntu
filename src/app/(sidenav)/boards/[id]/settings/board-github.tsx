@@ -5,24 +5,26 @@ import { CopyableField } from '@/components/general/copyable-field'
 import { FlexCol } from '@/components/general/flex'
 import { InputField } from '@/components/general/input'
 import { useConfirmModal, useModalState } from '@/components/general/modal'
-import { NoticePanel } from '@/components/general/panel'
-import { ArrowPathIcon, GithubIcon, PlusIcon, XMarkIcon } from '@/components/icon'
+import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
+import { ArrowPathIcon, PlusIcon, XMarkIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
-import { parseAction } from '@/lib/action/action-client'
+import { parseAction, useActionData } from '@/lib/action/action-client'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { dayformat } from '@/lib/day'
 import { normalizeGithubRepo } from '@/lib/github/github'
 import { useLocale } from '@/locale/client'
 import { FC, useState } from 'react'
+import { CompleteOnMergeSwitch } from './board-git'
 import { IssuedTarget, IssuedTokenModal } from './board-git-token-modal'
 import {
   addBoardGithubRepository,
-  GetBoardGitReturnType,
+  getBoardGithub,
+  GetBoardGithubReturnType,
   regenerateGithubSecret,
   removeBoardRepository,
 } from './server'
 
-type Github = NonNullable<GetBoardGitReturnType>['github']
+type Github = NonNullable<GetBoardGithubReturnType>
 type Repository = Github['repositories'][number]
 
 const RepositoryItem: FC<{
@@ -115,10 +117,10 @@ const RepositoryItem: FC<{
 }
 
 /**
- * ボードの GitHub 連携(対応付けるリポジトリ)。
+ * 対応付けるリポジトリ。
  * シークレットはリポジトリごとに違うので、リポジトリごとに Webhook URL を出し、シークレットもリポジトリごとに持つ。
  */
-export const BoardGithub: FC<{ boardId: string; github: Github; refresh: () => Promise<void> }> = ({
+const GithubRepositories: FC<{ boardId: string; github: Github; refresh: () => Promise<void> }> = ({
   boardId,
   github,
   refresh,
@@ -156,10 +158,6 @@ export const BoardGithub: FC<{ boardId: string; github: Github; refresh: () => P
 
   return (
     <FlexCol>
-      <div className='flex items-center gap-2 text-sm font-medium'>
-        <GithubIcon width={16} />
-        GitHub
-      </div>
       <NoticePanel className='text-xs'>{t('msg_board_github_desc')}</NoticePanel>
 
       <FlexCol isSmart>
@@ -219,6 +217,34 @@ export const BoardGithub: FC<{ boardId: string; github: Github; refresh: () => P
         state={issuedModal}
         label={t('github_webhook_secret')}
         description={t('msg_github_secret_desc')}
+      />
+    </FlexCol>
+  )
+}
+
+/**
+ * ボードの GitHub 連携(対応付けるリポジトリとマージで完了の設定)。
+ */
+export const BoardGithub: FC<{ boardId: string }> = ({ boardId }) => {
+  const { t } = useLocale()
+  const { data: github, isLoading, refresh } = useActionData(() => getBoardGithub({ id: boardId }))
+
+  if (isLoading) {
+    return <PanelSkeleton />
+  }
+  if (!github) {
+    return null
+  }
+
+  return (
+    <FlexCol>
+      <span className='text-muted text-xs'>{t('msg_board_git_desc')}</span>
+      <GithubRepositories boardId={boardId} github={github} refresh={refresh} />
+      <CompleteOnMergeSwitch
+        boardId={boardId}
+        provider='github'
+        isSelected={github.completeOnMerge}
+        refresh={refresh}
       />
     </FlexCol>
   )

@@ -4462,7 +4462,8 @@ export const BoardScalarFieldEnum = {
   name: 'name',
   description: 'description',
   archived: 'archived',
-  completeOnPrMerge: 'completeOnPrMerge',
+  completeOnGithubMerge: 'completeOnGithubMerge',
+  completeOnGitlabMerge: 'completeOnGitlabMerge',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

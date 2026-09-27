@@ -168,5 +168,6 @@ export const scBoardRepositoryTarget = z.object({
 
 export const scSetBoardCompleteOnPrMerge = z.object({
   id: z.uuidv7(),
-  completeOnPrMerge: z.boolean(),
+  provider: z.enum(['github', 'gitlab']),
+  completeOnMerge: z.boolean(),
 })
