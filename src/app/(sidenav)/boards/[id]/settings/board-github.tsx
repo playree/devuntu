@@ -40,6 +40,14 @@ const RepositoryItem: FC<{
   const [isRegenerating, setRegenerating] = useState(false)
 
   const remove = async () => {
+    if (
+      !(await confirmModal().confirm({
+        title: t('confirm_deletion'),
+        text: t('msg_confirm_deletion', { target: repository.repo }),
+      }))
+    ) {
+      return
+    }
     setRemoving(true)
     try {
       await parseAction(removeBoardRepository({ id: boardId, repositoryId: repository.id }))
