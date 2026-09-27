@@ -541,6 +541,7 @@ export const ja: DefaultLocaleItems = {
     '既に対応付けているプロジェクトです。検証方式の切り替えやトークンの作り直しは一覧から行えます。',
   msg_board_github_desc:
     'GitHub のリポジトリの Settings → Webhooks で、リポジトリごとに表示される Webhook URL を Payload URL に登録します。\nContent type は application/json、Secret は対応付けたときに表示されるシークレットにし、イベントは Pull requests / Check suites / Check runs を選びます。',
+  msg_github_already_added: '既に対応付けているリポジトリです。シークレットの作り直しは一覧から行えます。',
   msg_github_regenerate_confirm:
     'シークレットを作り直すと、今のシークレットは使えなくなります。GitHub 側の Webhook の Secret も入れ直してください。',
   msg_github_secret_desc: 'このシークレットを GitHub の Webhook の Secret に貼り付けます。',

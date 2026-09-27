@@ -305,6 +305,7 @@ export type LocaleItemBase =
   | 'move_up'
   | 'msg_board_git_desc'
   | 'msg_board_github_desc'
+  | 'msg_github_already_added'
   | 'msg_github_regenerate_confirm'
   | 'msg_github_secret_desc'
   | 'msg_github_secret_unset'

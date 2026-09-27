@@ -540,6 +540,7 @@ Please copy and use the connection information above.
     'This project is already linked. Switch the verification or regenerate the token from the list.',
   msg_board_github_desc:
     'In the repository Settings → Webhooks on GitHub, register the webhook URL shown for each repository as the Payload URL.\nSet Content type to application/json, Secret to the secret shown when the repository is linked, and select the Pull requests / Check suites / Check runs events.',
+  msg_github_already_added: 'This repository is already linked. You can regenerate the secret from the list.',
   msg_github_regenerate_confirm:
     'Regenerating the secret invalidates the current one. Update the Secret of the GitHub webhook as well.',
   msg_github_secret_desc: 'Paste this secret into the Secret of the GitHub webhook.',

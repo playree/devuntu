@@ -139,11 +139,12 @@ export const BoardGithub: FC<{ boardId: string; github: Github; refresh: () => P
       const added = await parseAction(addBoardGithubRepository({ id: boardId, repo }))
       setRepo('')
       await refresh()
-      notify.success(t('msg_added_target', { target: added.repo }))
-      if (!added.token) {
+      if (added.isExisting || !added.token) {
         // 登録済みならシークレットは作り直さない。作り直しは一覧から行ってもらう
+        notify.warn(t('msg_github_already_added'))
         return
       }
+      notify.success(t('msg_added_target', { target: added.repo }))
       // 続けて GitHub 側で Webhook を作ってもらうので、URL とシークレットをそのまま見せる
       issuedModal.open({ id: added.id, repo: added.repo, webhookUrl: added.webhookUrl, token: added.token })
     } catch {
