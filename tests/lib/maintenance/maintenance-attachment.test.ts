@@ -11,11 +11,9 @@ import { prisma } from '@/lib/prisma'
 import { deleteObject } from '@/lib/storage/storage'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/prisma', () => ({
-  prisma: {
-    attachment: { findMany: vi.fn(), deleteMany: vi.fn() },
-  },
-}))
+vi.mock('@/lib/prisma', async () =>
+  (await import('../../helpers/prisma')).mockPrisma({ attachment: ['findMany', 'deleteMany'] }),
+)
 
 vi.mock('@/lib/storage/storage', () => ({ deleteObject: vi.fn() }))
 

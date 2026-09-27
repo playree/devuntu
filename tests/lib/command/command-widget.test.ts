@@ -7,9 +7,7 @@ import { COMMAND_RUNS_WIDGET_LIMIT, listMyRecentCommandRuns } from '@/lib/comman
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/prisma', () => ({
-  prisma: { commandRun: { findMany: vi.fn() } },
-}))
+vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({ commandRun: ['findMany'] }))
 
 vi.mock('@/lib/command/command-access', () => ({
   canUseAnyCommand: vi.fn(),

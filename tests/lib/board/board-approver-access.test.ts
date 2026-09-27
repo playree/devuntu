@@ -16,13 +16,9 @@ vi.mock('@/lib/agent/agent-approver', () => ({
   isAgentApprover: vi.fn(),
 }))
 
-vi.mock('@/lib/prisma', () => ({
-  isUniqueViolation: () => false,
-  prisma: {
-    board: { findUnique: vi.fn() },
-    ticket: { findUnique: vi.fn(), count: vi.fn() },
-  },
-}))
+vi.mock('@/lib/prisma', async () =>
+  (await import('../../helpers/prisma')).mockPrisma({ board: ['findUnique'], ticket: ['findUnique', 'count'] }),
+)
 
 const KEY = '019eef64-6cc1-78f1-8f50-1ef86986289a.webp'
 const actor = { id: 'u1', role: 'user' }

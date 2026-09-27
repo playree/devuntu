@@ -16,12 +16,12 @@ import { prisma } from '@/lib/prisma'
 import { SaveAgentRunner } from '@/lib/schema/schema-agent'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/prisma', () => ({
-  prisma: {
-    agentRunner: { findUnique: vi.fn(), upsert: vi.fn() },
-    agentRun: { count: vi.fn(), findMany: vi.fn() },
-  },
-}))
+vi.mock('@/lib/prisma', async () =>
+  (await import('../../helpers/prisma')).mockPrisma({
+    agentRunner: ['findUnique', 'upsert'],
+    agentRun: ['count', 'findMany'],
+  }),
+)
 
 const agentRunner = vi.mocked(prisma.agentRunner)
 const agentRun = vi.mocked(prisma.agentRun)

@@ -10,14 +10,14 @@ import { handleGitlabEvent, parseGitlabTime } from '@/lib/gitlab/gitlab-webhook'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/prisma', () => ({
-  prisma: {
-    boardRepository: { findMany: vi.fn() },
-    ticket: { findUnique: vi.fn() },
-    ticketLink: { createMany: vi.fn(), updateMany: vi.fn(), findMany: vi.fn() },
-    gitCheckSuite: { updateMany: vi.fn(), createMany: vi.fn() },
-  },
-}))
+vi.mock('@/lib/prisma', async () =>
+  (await import('../../helpers/prisma')).mockPrisma({
+    boardRepository: ['findMany'],
+    ticket: ['findUnique'],
+    ticketLink: ['createMany', 'updateMany', 'findMany'],
+    gitCheckSuite: ['updateMany', 'createMany'],
+  }),
+)
 
 vi.mock('@/lib/board/board-repository', () => ({
   gitlabBaseUrls: () => ['https://example.com/gitlab'],

@@ -9,13 +9,11 @@ import { type TicketAccess } from '@/lib/board/board-access'
 import { reassignContentAttachments } from '@/lib/board/ticket-write'
 import { updateTicketCommentForMcp } from '@/lib/mcp/mcp-ticket'
 import { enqueueTicketCommented } from '@/lib/notify/notify-trigger'
-import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { oauthAuth } from '../../helpers/resource-auth'
 
-vi.mock('@/lib/prisma', () => ({
-  prisma: { $transaction: vi.fn((cb: (tx: unknown) => unknown) => cb(fakeTx)) },
-}))
+vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({}, { tx: fakeTx }))
 
 vi.mock('@/lib/board/board-access', () => ({
   assertTicketAccess: vi.fn(),
@@ -52,7 +50,7 @@ const ticketAccess: TicketAccess = {
 
 const fakeTicket = { number: 1, title: 'テストチケット', board: { key: 'TST' } }
 
-const fakeTx = {
+const fakeTx = vi.hoisted(() => ({
   ticketComment: {
     findUnique: vi.fn(),
     update: vi.fn(),
@@ -60,14 +58,9 @@ const fakeTx = {
   ticket: {
     update: vi.fn(),
   },
-}
+}))
 
-const auth: ResourceAuth = {
-  user: { id: 'u1', name: 'tester', email: 'test@example.com', role: null },
-  scopes: ['mcp'],
-  kind: 'oauth',
-  clientId: 'test-client',
-}
+const auth = oauthAuth()
 
 beforeEach(async () => {
   vi.clearAllMocks()

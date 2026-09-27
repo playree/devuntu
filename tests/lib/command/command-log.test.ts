@@ -14,19 +14,12 @@ vi.mock('@/lib/logger', () => ({
   logger: { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} },
 }))
 
-vi.mock('@/lib/prisma', () => {
-  const commandRun = { updateMany: vi.fn(), findUniqueOrThrow: vi.fn(), update: vi.fn() }
-  const commandRunChunk = { createMany: vi.fn(), create: vi.fn(), findMany: vi.fn() }
-  const models = { commandRun, commandRunChunk }
-  return {
-    prisma: {
-      ...models,
-      $transaction: vi.fn(async (arg: unknown) =>
-        typeof arg === 'function' ? await (arg as (tx: unknown) => unknown)(models) : Promise.all(arg as unknown[]),
-      ),
-    },
-  }
-})
+vi.mock('@/lib/prisma', async () =>
+  (await import('../../helpers/prisma')).mockPrisma({
+    commandRun: ['updateMany', 'findUniqueOrThrow', 'update'],
+    commandRunChunk: ['createMany', 'create', 'findMany'],
+  }),
+)
 
 const { createLogBuffer, sanitizeLogText, touchRun } = await import('@/lib/command/command-log')
 

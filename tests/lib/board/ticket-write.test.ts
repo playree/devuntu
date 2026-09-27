@@ -1,8 +1,9 @@
 import { assertBoardAccess } from '@/lib/board/board-access'
-import { assertReplyTarget, reassignContentAttachments } from '@/lib/board/ticket-write'
+import { kanbanDoneSince, kanbanLaneWhere } from '@/lib/board/kanban'
+import { assertReplyTarget, moveTicketToLane, reassignContentAttachments } from '@/lib/board/ticket-write'
 import { ClientError } from '@/lib/error'
 import { toUploadUrl } from '@/lib/storage/upload'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const fakeTx = (parent: { ticketId: string; parentId: string | null } | null) =>
   ({
@@ -153,5 +154,166 @@ describe('assertBoardAccess', () => {
 
   it('write はメンバーでなければ拒否する', async () => {
     await expect(assertBoardAccess(actor, 'board-1', 'write', boardTx(null))).rejects.toThrow(ClientError)
+  })
+})
+
+/**
+ * レーンは盤面に見えているカードだけで数え、order は 0 から詰め直す。
+ * 並びが変わった行だけを 1 文の生 SQL で更新する。
+ */
+describe('moveTicketToLane', () => {
+  const NOW = new Date('2026-09-01T00:00:00.000Z')
+  const BOARD_ID = 'board-1'
+
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(NOW)
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  const laneTx = (lane: { id: string; order: number }[]) => ({
+    ticket: {
+      findMany: vi.fn().mockResolvedValue(lane),
+      update: vi.fn().mockResolvedValue({}),
+    },
+    $executeRaw: vi.fn().mockResolvedValue(0),
+  })
+
+  /** 生 SQL に渡した (id, order) の組。Prisma.join の値は平坦に並ぶ */
+  const shiftedRows = (tx: ReturnType<typeof laneTx>) => {
+    const values = (tx.$executeRaw.mock.calls[0][1] as { values: unknown[] }).values
+    const rows: [unknown, unknown][] = []
+    for (let i = 0; i < values.length; i += 2) {
+      rows.push([values[i], values[i + 1]])
+    }
+    return rows
+  }
+
+  const access = (status: 'todo' | 'doing' | 'done') => ({ ticketId: 't', boardId: BOARD_ID, status })
+
+  it('移動先レーンは同じボード・同じステータスの盤面に見えるカードで引く', async () => {
+    const tx = laneTx([])
+    await moveTicketToLane(tx as never, { access: access('todo'), status: 'done' })
+
+    expect(tx.ticket.findMany).toHaveBeenCalledWith({
+      where: kanbanLaneWhere(BOARD_ID, 'done', kanbanDoneSince(NOW)),
+      select: { id: true, order: true },
+      orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
+    })
+  })
+
+  it('index を省けば末尾に入れ、他のカードは更新しない', async () => {
+    const tx = laneTx([
+      { id: 'a', order: 0 },
+      { id: 'b', order: 1 },
+    ])
+    expect(await moveTicketToLane(tx as never, { access: access('todo'), status: 'doing' })).toEqual({
+      id: 't',
+      status: 'doing',
+      order: 2,
+    })
+    expect(tx.ticket.update).toHaveBeenCalledWith({
+      where: { id: 't' },
+      data: { status: 'doing', order: 2, completedAt: null },
+    })
+    expect(tx.$executeRaw).not.toHaveBeenCalled()
+  })
+
+  it('先頭に入れれば後ろのカードを 1 文でずらす', async () => {
+    const tx = laneTx([
+      { id: 'a', order: 0 },
+      { id: 'b', order: 1 },
+    ])
+    expect(await moveTicketToLane(tx as never, { access: access('todo'), status: 'doing', index: 0 })).toMatchObject({
+      order: 0,
+    })
+    expect(tx.$executeRaw).toHaveBeenCalledTimes(1)
+    expect(shiftedRows(tx)).toEqual([
+      ['a', 1],
+      ['b', 2],
+    ])
+  })
+
+  it('done へ移せば完了日時を入れる', async () => {
+    const tx = laneTx([])
+    await moveTicketToLane(tx as never, { access: access('doing'), status: 'done' })
+    expect(tx.ticket.update).toHaveBeenCalledWith({
+      where: { id: 't' },
+      data: { status: 'done', order: 0, completedAt: NOW },
+    })
+  })
+
+  it('done から戻せば完了日時を消す', async () => {
+    const tx = laneTx([])
+    await moveTicketToLane(tx as never, { access: access('done'), status: 'todo' })
+    expect(tx.ticket.update).toHaveBeenCalledWith({
+      where: { id: 't' },
+      data: { status: 'todo', order: 0, completedAt: null },
+    })
+  })
+
+  it('同一レーン内の並べ替えでは完了日時に触れず、order が変わる行だけ更新する', async () => {
+    const tx = laneTx([
+      { id: 'a', order: 0 },
+      { id: 't', order: 1 },
+      { id: 'b', order: 2 },
+    ])
+    await moveTicketToLane(tx as never, { access: access('done'), status: 'done', index: 0 })
+
+    expect(tx.ticket.update).toHaveBeenCalledWith({ where: { id: 't' }, data: { status: 'done', order: 0 } })
+    expect(shiftedRows(tx)).toEqual([['a', 1]])
+  })
+
+  it('同じ位置へ落としたなら自分の update だけで済ませる', async () => {
+    const tx = laneTx([
+      { id: 'a', order: 0 },
+      { id: 't', order: 1 },
+    ])
+    await moveTicketToLane(tx as never, { access: access('todo'), status: 'todo', index: 1 })
+
+    expect(tx.ticket.update).toHaveBeenCalledWith({ where: { id: 't' }, data: { status: 'todo', order: 1 } })
+    expect(tx.$executeRaw).not.toHaveBeenCalled()
+  })
+
+  it('範囲外の index は両端にクランプする', async () => {
+    const lane = [
+      { id: 'a', order: 0 },
+      { id: 'b', order: 1 },
+    ]
+    const tail = laneTx(lane)
+    expect(await moveTicketToLane(tail as never, { access: access('todo'), status: 'doing', index: 99 })).toMatchObject(
+      { order: 2 },
+    )
+    expect(tail.$executeRaw).not.toHaveBeenCalled()
+
+    const head = laneTx(lane)
+    expect(await moveTicketToLane(head as never, { access: access('todo'), status: 'doing', index: -1 })).toMatchObject(
+      { order: 0 },
+    )
+    expect(shiftedRows(head)).toEqual([
+      ['a', 1],
+      ['b', 2],
+    ])
+  })
+
+  it('order に隙間や重複があれば 0 から詰め直す', async () => {
+    const tx = laneTx([
+      { id: 'a', order: 5 },
+      { id: 'b', order: 5 },
+      { id: 'c', order: 2 },
+    ])
+    await moveTicketToLane(tx as never, { access: access('todo'), status: 'doing' })
+
+    expect(tx.ticket.update).toHaveBeenCalledWith({
+      where: { id: 't' },
+      data: { status: 'doing', order: 3, completedAt: null },
+    })
+    expect(shiftedRows(tx)).toEqual([
+      ['a', 0],
+      ['b', 1],
+    ])
   })
 })

@@ -7,7 +7,6 @@
  */
 
 import { getBoardForMcp, listBoardsForMcp } from '@/lib/mcp/mcp-board'
-import { createDevuntuMcpServer } from '@/lib/mcp/mcp-server'
 import {
   addTicketCommentForMcp,
   createTicketForMcp,
@@ -20,10 +19,9 @@ import {
   updateTicketCommentForMcp,
   updateTicketForMcp,
 } from '@/lib/mcp/mcp-ticket'
-import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
-import { Client } from '@modelcontextprotocol/sdk/client/index.js'
-import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
 import { describe, expect, it, vi } from 'vitest'
+import { connectDevuntuMcp } from '../../helpers/mcp-client'
+import * as fakeAuth from '../../helpers/resource-auth'
 
 vi.mock('@/lib/mcp/mcp-board', () => ({
   listBoardsForMcp: vi.fn(),
@@ -44,40 +42,13 @@ vi.mock('@/lib/mcp/mcp-ticket', () => ({
   unlinkTicketArtifactForMcp: vi.fn(),
 }))
 
-const auth: ResourceAuth = {
-  user: { id: 'u1', name: 'tester', email: 'test@example.com', role: null },
-  scopes: ['mcp'],
-  kind: 'oauth',
-  clientId: 'test-client',
-}
-
-/** エージェント用の長期トークンで認可された場合。`clientId` は AgentToken の id */
-const agentAuth: ResourceAuth = {
-  user: { id: 'a1', name: 'agent', email: 'agent@agents.invalid', role: null },
-  scopes: ['mcp'],
-  kind: 'agent',
-  clientId: 'token-1',
-}
-
-/** ユーザーが自分で発行した MCP トークンで認可された場合。`clientId` は McpToken の id */
-const patAuth: ResourceAuth = {
-  user: { id: 'u2', name: 'tester', email: 'test2@example.com', role: null },
-  scopes: ['mcp'],
-  kind: 'pat',
-  clientId: 'mcp-token-1',
-}
-
-const connectClient = async (resourceAuth: ResourceAuth = auth) => {
-  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
-  await createDevuntuMcpServer(resourceAuth).connect(serverTransport)
-  const client = new Client({ name: 'test-client', version: '1.0.0' })
-  await client.connect(clientTransport)
-  return client
-}
+const auth = fakeAuth.oauthAuth()
+const agentAuth = fakeAuth.agentAuth()
+const patAuth = fakeAuth.patAuth()
 
 describe('createDevuntuMcpServer', () => {
   it('全ツールが tools/list に現れる', async () => {
-    const { tools } = await (await connectClient()).listTools()
+    const { tools } = await (await connectDevuntuMcp()).listTools()
     expect(tools.map((tool) => tool.name)).toEqual(
       expect.arrayContaining([
         'ping',
@@ -102,27 +73,27 @@ describe('createDevuntuMcpServer', () => {
   })
 
   it('サーバー名は人間の経路(OAuth / ユーザートークン)では devuntu、エージェントだけ devuntu-agent', async () => {
-    expect((await connectClient()).getServerVersion()?.name).toBe('devuntu')
-    expect((await connectClient(patAuth)).getServerVersion()?.name).toBe('devuntu')
-    expect((await connectClient(agentAuth)).getServerVersion()?.name).toBe('devuntu-agent')
+    expect((await connectDevuntuMcp()).getServerVersion()?.name).toBe('devuntu')
+    expect((await connectDevuntuMcp(patAuth)).getServerVersion()?.name).toBe('devuntu')
+    expect((await connectDevuntuMcp(agentAuth)).getServerVersion()?.name).toBe('devuntu-agent')
   })
 
   it('初期化応答の instructions で対応の作法を伝える(エージェントには自動運用の手順を優先させる)', async () => {
     for (const humanAuth of [auth, patAuth]) {
-      const instructions = (await connectClient(humanAuth)).getInstructions() ?? ''
+      const instructions = (await connectDevuntuMcp(humanAuth)).getInstructions() ?? ''
       expect(instructions).toContain('type=plan')
       expect(instructions).toContain('type=report')
       expect(instructions).toContain('link_ticket_artifact')
       expect(instructions).toContain('status を doing')
     }
 
-    const agentInstructions = (await connectClient(agentAuth)).getInstructions() ?? ''
+    const agentInstructions = (await connectDevuntuMcp(agentAuth)).getInstructions() ?? ''
     expect(agentInstructions).toContain('get_agent_task')
     expect(agentInstructions).not.toContain('status を doing')
   })
 
   it('ユーザートークンの接続でも共通ツールは登録される', async () => {
-    const { tools } = await (await connectClient(patAuth)).listTools()
+    const { tools } = await (await connectDevuntuMcp(patAuth)).listTools()
     expect(tools.map((tool) => tool.name)).toEqual(
       expect.arrayContaining([
         'ping',
@@ -137,19 +108,19 @@ describe('createDevuntuMcpServer', () => {
   })
 
   it('ping は認可済みユーザーの情報を返す', async () => {
-    const result = await (await connectClient()).callTool({ name: 'ping', arguments: {} })
+    const result = await (await connectDevuntuMcp()).callTool({ name: 'ping', arguments: {} })
     expect(result.content).toEqual([{ type: 'text', text: `pong: ${auth.user.email}` }])
   })
 
   it('echo は入力をそのまま返す', async () => {
-    const result = await (await connectClient()).callTool({ name: 'echo', arguments: { message: 'hello' } })
+    const result = await (await connectDevuntuMcp()).callTool({ name: 'echo', arguments: { message: 'hello' } })
     expect(result.content).toEqual([{ type: 'text', text: 'hello' }])
   })
 
   it('list_boards は auth を渡し、結果をJSONテキストとして返す', async () => {
     vi.mocked(listBoardsForMcp).mockResolvedValueOnce([{ key: 'ABC', name: 'テストボード' } as never])
 
-    const result = await (await connectClient()).callTool({ name: 'list_boards', arguments: {} })
+    const result = await (await connectDevuntuMcp()).callTool({ name: 'list_boards', arguments: {} })
 
     expect(listBoardsForMcp).toHaveBeenCalledWith(auth, { includeArchived: undefined })
     expect(result.content).toEqual([
@@ -160,7 +131,7 @@ describe('createDevuntuMcpServer', () => {
   it('list_boards は includeArchived を渡す', async () => {
     vi.mocked(listBoardsForMcp).mockResolvedValueOnce([])
 
-    await (await connectClient()).callTool({ name: 'list_boards', arguments: { includeArchived: true } })
+    await (await connectDevuntuMcp()).callTool({ name: 'list_boards', arguments: { includeArchived: true } })
 
     expect(listBoardsForMcp).toHaveBeenCalledWith(auth, { includeArchived: true })
   })
@@ -168,7 +139,7 @@ describe('createDevuntuMcpServer', () => {
   it('get_board は boardId をそのまま渡す(ボードキーの解決はMCPロジック側)', async () => {
     vi.mocked(getBoardForMcp).mockResolvedValueOnce({ key: 'ABC', members: [], tags: [] } as never)
 
-    const result = await (await connectClient()).callTool({ name: 'get_board', arguments: { boardId: 'ABC' } })
+    const result = await (await connectDevuntuMcp()).callTool({ name: 'get_board', arguments: { boardId: 'ABC' } })
 
     expect(getBoardForMcp).toHaveBeenCalledWith(auth, 'ABC')
     expect(result.content).toEqual([
@@ -180,7 +151,7 @@ describe('createDevuntuMcpServer', () => {
     vi.mocked(getTicketForMcp).mockResolvedValueOnce({ title: 'テストチケット' } as never)
 
     const result = await (
-      await connectClient()
+      await connectDevuntuMcp()
     ).callTool({
       name: 'get_ticket',
       arguments: { ticketId: 'ABC-1' },
@@ -194,7 +165,7 @@ describe('createDevuntuMcpServer', () => {
     vi.mocked(searchTicketsForMcp).mockResolvedValueOnce([{ title: 'テストチケット' } as never])
 
     const result = await (
-      await connectClient()
+      await connectDevuntuMcp()
     ).callTool({
       name: 'search_tickets',
       arguments: { keyword: 'テスト', status: ['todo'] },
@@ -214,7 +185,7 @@ describe('createDevuntuMcpServer', () => {
     vi.mocked(searchTicketsForMcp).mockResolvedValueOnce([])
 
     await (
-      await connectClient(agentAuth)
+      await connectDevuntuMcp(agentAuth)
     ).callTool({
       name: 'search_tickets',
       arguments: { assignee: 'me' },
@@ -233,7 +204,7 @@ describe('createDevuntuMcpServer', () => {
     vi.mocked(searchTicketsForMcp).mockClear()
 
     const result = await (
-      await connectClient(agentAuth)
+      await connectDevuntuMcp(agentAuth)
     ).callTool({
       name: 'search_tickets',
       arguments: { assignee: 'anyone' },
@@ -251,7 +222,7 @@ describe('createDevuntuMcpServer', () => {
     } as never)
 
     const result = await (
-      await connectClient()
+      await connectDevuntuMcp()
     ).callTool({
       name: 'create_ticket',
       arguments: { boardId: 'b1', title: '新規チケット' },
@@ -273,7 +244,7 @@ describe('createDevuntuMcpServer', () => {
     vi.mocked(updateTicketForMcp).mockResolvedValueOnce({ id: 't1', title: '更新後' } as never)
 
     const result = await (
-      await connectClient()
+      await connectDevuntuMcp()
     ).callTool({
       name: 'update_ticket',
       arguments: { ticketId: 'ABC-1', title: '更新後' },
@@ -286,7 +257,7 @@ describe('createDevuntuMcpServer', () => {
   it('受け入れ条件は acceptanceCriteria で受け、criteria として渡す', async () => {
     vi.mocked(createTicketForMcp).mockResolvedValueOnce({ id: 't1' } as never)
     vi.mocked(updateTicketForMcp).mockResolvedValueOnce({ id: 't1' } as never)
-    const client = await connectClient()
+    const client = await connectDevuntuMcp()
 
     await client.callTool({
       name: 'create_ticket',
@@ -306,7 +277,7 @@ describe('createDevuntuMcpServer', () => {
     vi.mocked(deleteTicketForMcp).mockResolvedValueOnce({ id: 't1' } as never)
 
     const result = await (
-      await connectClient()
+      await connectDevuntuMcp()
     ).callTool({
       name: 'delete_ticket',
       arguments: { ticketId: 'ABC-1' },
@@ -320,7 +291,7 @@ describe('createDevuntuMcpServer', () => {
     vi.mocked(addTicketCommentForMcp).mockResolvedValueOnce({ id: 'c1' } as never)
 
     const result = await (
-      await connectClient()
+      await connectDevuntuMcp()
     ).callTool({
       name: 'add_ticket_comment',
       arguments: { ticketId: 'ABC-1', content: 'コメント' },
@@ -334,7 +305,7 @@ describe('createDevuntuMcpServer', () => {
     vi.mocked(addTicketCommentForMcp).mockResolvedValueOnce({ id: 'c1' } as never)
 
     await (
-      await connectClient()
+      await connectDevuntuMcp()
     ).callTool({
       name: 'add_ticket_comment',
       arguments: {
@@ -358,7 +329,7 @@ describe('createDevuntuMcpServer', () => {
     vi.mocked(updateTicketCommentForMcp).mockResolvedValueOnce({ id: 'c1' } as never)
 
     const result = await (
-      await connectClient()
+      await connectDevuntuMcp()
     ).callTool({
       name: 'update_ticket_comment',
       arguments: { commentId: '0195c1e0-0000-7000-8000-000000000001', content: 'コメント編集後' },
@@ -376,7 +347,7 @@ describe('createDevuntuMcpServer', () => {
     vi.mocked(deleteTicketCommentForMcp).mockResolvedValueOnce({ id: 'c1' } as never)
 
     const result = await (
-      await connectClient()
+      await connectDevuntuMcp()
     ).callTool({
       name: 'delete_ticket_comment',
       arguments: { commentId: '0195c1e0-0000-7000-8000-000000000001' },
@@ -390,7 +361,7 @@ describe('createDevuntuMcpServer', () => {
     vi.mocked(linkTicketArtifactForMcp).mockResolvedValueOnce({ id: 'l1' })
 
     const result = await (
-      await connectClient(agentAuth)
+      await connectDevuntuMcp(agentAuth)
     ).callTool({
       name: 'link_ticket_artifact',
       arguments: { ticketId: 'ABC-1', url: 'https://github.com/owner/repo/pull/12' },
@@ -402,7 +373,7 @@ describe('createDevuntuMcpServer', () => {
 
   it('link_ticket_artifact は GitHub / GitLab 以外の URL を受け付けない', async () => {
     const result = await (
-      await connectClient()
+      await connectDevuntuMcp()
     ).callTool({
       name: 'link_ticket_artifact',
       arguments: { ticketId: 'ABC-1', url: 'https://example.com/owner/repo/pull/12' },
@@ -416,7 +387,7 @@ describe('createDevuntuMcpServer', () => {
     vi.mocked(unlinkTicketArtifactForMcp).mockResolvedValueOnce({ id: 'l1' })
 
     await (
-      await connectClient()
+      await connectDevuntuMcp()
     ).callTool({
       name: 'unlink_ticket_artifact',
       arguments: { linkId: '0195c1e0-0000-7000-8000-000000000001' },

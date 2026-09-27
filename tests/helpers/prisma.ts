@@ -41,7 +41,7 @@ export const stubModel = () => ({
 /** 何も指定しなければ全モデルが `stubModel` になる(vitest.setup.ts の既定) */
 export const stubPrismaClient = () => new Proxy({}, { get: () => stubModel() })
 
-/** models に並べたモデルのメソッドを vi.fn で生やした `@/lib/prisma` モジュール */
+/** models に並べたモデルのメソッドと `$queryRaw` / `$executeRaw` / `$transaction` を vi.fn で生やした `@/lib/prisma` モジュール */
 export const mockPrisma = (models: Models = {}, options: MockPrismaOptions = {}) => {
   const client: Record<string, unknown> = Object.fromEntries(
     Object.entries(models).map(([model, methods]) => [
@@ -49,6 +49,8 @@ export const mockPrisma = (models: Models = {}, options: MockPrismaOptions = {})
       Object.fromEntries(methods.map((method) => [method, vi.fn()])),
     ]),
   )
+  client.$queryRaw = vi.fn()
+  client.$executeRaw = vi.fn()
   const tx = 'tx' in options ? options.tx : client
   client.$transaction = vi.fn(async (arg: unknown) =>
     typeof arg === 'function' ? await (arg as (tx: unknown) => unknown)(tx) : await Promise.all(arg as unknown[]),

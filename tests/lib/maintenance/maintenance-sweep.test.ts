@@ -52,20 +52,20 @@ vi.mock('@/lib/env-util', () => ({
   },
 }))
 
-vi.mock('@/lib/prisma', () => ({
-  prisma: {
-    session: { deleteMany: vi.fn() },
-    verification: { deleteMany: vi.fn() },
-    oauthRefreshToken: { deleteMany: vi.fn() },
-    oauthAccessToken: { deleteMany: vi.fn() },
-    oauthClientAssertion: { deleteMany: vi.fn() },
-    uploadNonce: { deleteMany: vi.fn() },
-    agentRun: { deleteMany: vi.fn(), findMany: vi.fn() },
-    agentRunner: { findMany: vi.fn() },
-    commandRun: { deleteMany: vi.fn(), findMany: vi.fn() },
-    gitCheckSuite: { deleteMany: vi.fn() },
-  },
-}))
+vi.mock('@/lib/prisma', async () =>
+  (await import('../../helpers/prisma')).mockPrisma({
+    session: ['deleteMany'],
+    verification: ['deleteMany'],
+    oauthRefreshToken: ['deleteMany'],
+    oauthAccessToken: ['deleteMany'],
+    oauthClientAssertion: ['deleteMany'],
+    uploadNonce: ['deleteMany'],
+    agentRun: ['deleteMany', 'findMany'],
+    agentRunner: ['findMany'],
+    commandRun: ['deleteMany', 'findMany'],
+    gitCheckSuite: ['deleteMany'],
+  }),
+)
 
 // 添付の掃除はストレージを触るので、条件の検証では止めておく
 vi.mock('@/lib/maintenance/maintenance-attachment', () => ({

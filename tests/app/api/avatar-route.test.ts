@@ -14,7 +14,7 @@ import { getObject } from '@/lib/storage/storage'
 import { toUploadUrl } from '@/lib/storage/upload'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/prisma', () => ({ prisma: { user: { findFirst: vi.fn() } } }))
+vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({ user: ['findFirst'] }))
 vi.mock('@/lib/storage/storage', () => ({ getObject: vi.fn() }))
 vi.mock('@/lib/rate-limit', () => ({ consumeRateLimit: vi.fn() }))
 vi.mock('@/lib/server-utils', () => ({ getClientIp: async () => '203.0.113.1' }))

@@ -9,29 +9,18 @@ import { assertBoardAccess, assertTicketAccess, canViewAttachment } from '@/lib/
 import { errInvalidOperation } from '@/lib/error'
 import { registerImageTools } from '@/lib/mcp/mcp-image'
 import { resolveTicketId } from '@/lib/mcp/mcp-ticket'
-import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
+import { prisma } from '@/lib/prisma'
 import { saveContentImage } from '@/lib/storage/attachment'
 import { resizeWebp } from '@/lib/storage/image'
 import { getObject } from '@/lib/storage/storage'
-import { Client } from '@modelcontextprotocol/sdk/client/index.js'
-import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { connectMcpServer, jsonOf } from '../../helpers/mcp-client'
+import { oauthAuth } from '../../helpers/resource-auth'
 
-const mocks = vi.hoisted(() => ({ findAttachment: vi.fn() }))
-
-vi.mock('@/lib/prisma', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/lib/prisma')>()),
-  prisma: new Proxy(
-    {},
-    {
-      get: (_target, model) =>
-        model === 'attachment'
-          ? { findUnique: mocks.findAttachment }
-          : { findFirst: async () => ({}), findUnique: async () => ({}) },
-    },
-  ),
-}))
+vi.mock('@/lib/prisma', async () =>
+  (await import('../../helpers/prisma')).mockPrisma({ attachment: ['findUnique'] }, { stubOthers: true }),
+)
 
 vi.mock('@/lib/board/board-access', () => ({
   assertBoardAccess: vi.fn(),
@@ -48,28 +37,15 @@ const BOARD_ID = '019eef64-6cc1-78f1-8f50-1ef869860002'
 const TICKET_BOARD_ID = '019eef64-6cc1-78f1-8f50-1ef869860003'
 const KEY = '019eef64-6cc1-78f1-8f50-1ef86986289a.webp'
 
-const auth: ResourceAuth = {
-  user: { id: 'u1', name: 'tester', email: 'test@example.com', role: null },
-  scopes: ['mcp'],
-  kind: 'oauth',
-  clientId: 'test-client',
-}
+const auth = oauthAuth()
 
-const connectClient = async () => {
+const connectClient = () => {
   const server = new McpServer({ name: 'devuntu', version: '1.0.0' })
   registerImageTools(server, auth)
-  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
-  await server.connect(serverTransport)
-  const client = new Client({ name: 'test-client', version: '1.0.0' })
-  await client.connect(clientTransport)
-  return client
+  return connectMcpServer(server)
 }
 
-/** ツールの返り値のうち text ブロックを JSON として読む */
-const jsonOf = (result: unknown) => {
-  const content = (result as { content: { type: string; text?: string }[] }).content
-  return JSON.parse(content.find((block) => block.type === 'text')?.text ?? '{}')
-}
+const findAttachment = vi.mocked(prisma.attachment.findUnique)
 
 const pngBase64 = Buffer.from('dummy-png-bytes').toString('base64')
 
@@ -81,7 +57,7 @@ beforeEach(() => {
   vi.mocked(canViewAttachment).mockResolvedValue(true)
   vi.mocked(saveContentImage).mockResolvedValue({ url: `/api/upload/${KEY}`, key: KEY, size: 100 })
   vi.mocked(resizeWebp).mockResolvedValue(Buffer.from('resized'))
-  mocks.findAttachment.mockResolvedValue({ boardId: BOARD_ID, originalName: 'shot.png', size: 100 })
+  findAttachment.mockResolvedValue({ boardId: BOARD_ID, originalName: 'shot.png', size: 100 } as never)
   // ストリームは一度しか読めないので呼び出しごとに作り直す
   vi.mocked(getObject).mockImplementation(async () => ({
     body: new Blob([new Uint8Array([1, 2, 3])]).stream(),
@@ -198,8 +174,8 @@ describe('get_image', () => {
     const byUrl = await client.callTool({ name: 'get_image', arguments: { image: `/api/upload/${KEY}` } })
     const byKey = await client.callTool({ name: 'get_image', arguments: { image: KEY } })
 
-    expect(mocks.findAttachment).toHaveBeenNthCalledWith(1, expect.objectContaining({ where: { key: KEY } }))
-    expect(mocks.findAttachment).toHaveBeenNthCalledWith(2, expect.objectContaining({ where: { key: KEY } }))
+    expect(findAttachment).toHaveBeenNthCalledWith(1, expect.objectContaining({ where: { key: KEY } }))
+    expect(findAttachment).toHaveBeenNthCalledWith(2, expect.objectContaining({ where: { key: KEY } }))
     expect(byUrl.content).toEqual(byKey.content)
   })
 
@@ -239,7 +215,7 @@ describe('get_image', () => {
     vi.mocked(canViewAttachment).mockResolvedValue(false)
     const denied = await client.callTool({ name: 'get_image', arguments: { image: KEY } })
 
-    mocks.findAttachment.mockResolvedValue(null)
+    findAttachment.mockResolvedValue(null)
     const missing = await client.callTool({ name: 'get_image', arguments: { image: KEY } })
 
     expect(denied.isError).toBe(true)
@@ -247,7 +223,7 @@ describe('get_image', () => {
   })
 
   it('閲覧の可否は配信APIと同じ判定(キーと添付先ボード)に委ねる', async () => {
-    mocks.findAttachment.mockResolvedValue({ boardId: null, originalName: 'icon.png', size: 10 })
+    findAttachment.mockResolvedValue({ boardId: null, originalName: 'icon.png', size: 10 } as never)
 
     const result = await (await connectClient()).callTool({ name: 'get_image', arguments: { image: KEY } })
 

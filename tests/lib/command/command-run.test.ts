@@ -19,19 +19,12 @@ const { appendSystemMessage } = await import('@/lib/command/command-log')
 
 const prismaMock = vi.hoisted(() => ({ uniqueViolation: false }))
 
-vi.mock('@/lib/prisma', () => {
-  const commandRun = {
-    create: vi.fn(),
-    count: vi.fn(),
-    findMany: vi.fn(),
-    findUnique: vi.fn(),
-    updateMany: vi.fn(),
-  }
-  return {
-    prisma: { commandRun, $queryRaw: vi.fn() },
-    isUniqueViolation: () => prismaMock.uniqueViolation,
-  }
-})
+vi.mock('@/lib/prisma', async () =>
+  (await import('../../helpers/prisma')).mockPrisma(
+    { commandRun: ['create', 'count', 'findMany', 'findUnique', 'updateMany'] },
+    { exports: { isUniqueViolation: () => prismaMock.uniqueViolation } },
+  ),
+)
 
 const { enqueueCommandRun, finishCommandRun, listCommandRuns, reclaimStaleRuns, requestCancelCommandRun } =
   await import('@/lib/command/command-run')

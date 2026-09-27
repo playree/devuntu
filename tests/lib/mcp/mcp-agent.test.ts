@@ -14,12 +14,10 @@ import { findAgentTicket, pickAgentTasks, resolveAgentTask } from '@/lib/agent/a
 import { assertTicketAccess } from '@/lib/board/board-access'
 import { listTicketCriteria } from '@/lib/board/ticket-criterion'
 import { errInvalidOperation } from '@/lib/error'
-import { createDevuntuMcpServer } from '@/lib/mcp/mcp-server'
 import { resolveTicketId } from '@/lib/mcp/mcp-ticket'
-import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
-import { Client } from '@modelcontextprotocol/sdk/client/index.js'
-import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { connectDevuntuMcp } from '../../helpers/mcp-client'
+import * as fakeAuth from '../../helpers/resource-auth'
 
 vi.mock('@/lib/agent/agent-runner', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/agent/agent-runner')>()),
@@ -69,27 +67,14 @@ vi.mock('@/lib/mcp/mcp-ticket', () => ({
   deleteTicketCommentForMcp: vi.fn(),
 }))
 
-const agentAuth: ResourceAuth = {
-  user: { id: 'a1', name: 'agent', email: 'agent@agents.invalid', role: null },
-  scopes: ['mcp'],
-  kind: 'agent',
-  clientId: 'token-1',
-}
+const agentAuth = fakeAuth.agentAuth()
 
-const humanAuth: ResourceAuth = { ...agentAuth, kind: 'oauth', clientId: 'client-1' }
+const humanAuth = fakeAuth.agentAuth({ kind: 'oauth', clientId: 'client-1' })
 
 /** ユーザーが自分で発行した MCP トークンでの接続。`clientId` は McpToken の id */
-const patAuth: ResourceAuth = { ...agentAuth, kind: 'pat', clientId: 'mcp-token-1' }
+const patAuth = fakeAuth.agentAuth({ kind: 'pat', clientId: 'mcp-token-1' })
 
 const runnerRow = { id: 'r1', userId: 'a1', rule: 'ルール' }
-
-const connectClient = async (auth: ResourceAuth) => {
-  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
-  await createDevuntuMcpServer(auth).connect(serverTransport)
-  const client = new Client({ name: 'test-client', version: '1.0.0' })
-  await client.connect(clientTransport)
-  return client
-}
 
 /** ツールの返り値はJSONテキスト1件なので、そのままオブジェクトへ戻す */
 const parseResult = (content: unknown) => JSON.parse((content as { text: string }[])[0].text)
@@ -108,18 +93,18 @@ describe('自動運用ツールの登録', () => {
   const AGENT_TOOLS = ['get_agent_task', 'finish_agent_task']
 
   it('エージェント用トークンの接続では登録される', async () => {
-    const { tools } = await (await connectClient(agentAuth)).listTools()
+    const { tools } = await (await connectDevuntuMcp(agentAuth)).listTools()
     expect(tools.map((tool) => tool.name)).toEqual(expect.arrayContaining(AGENT_TOOLS))
   })
 
   it('人間の OAuth 接続では登録されない', async () => {
-    const { tools } = await (await connectClient(humanAuth)).listTools()
+    const { tools } = await (await connectDevuntuMcp(humanAuth)).listTools()
     const names = tools.map((tool) => tool.name)
     AGENT_TOOLS.forEach((name) => expect(names).not.toContain(name))
   })
 
   it('ユーザーが自分で発行した MCP トークンの接続でも登録されない', async () => {
-    const { tools } = await (await connectClient(patAuth)).listTools()
+    const { tools } = await (await connectDevuntuMcp(patAuth)).listTools()
     const names = tools.map((tool) => tool.name)
     AGENT_TOOLS.forEach((name) => expect(names).not.toContain(name))
   })
@@ -127,13 +112,13 @@ describe('自動運用ツールの登録', () => {
 
 describe('get_agent_setup_guide', () => {
   it('人間の OAuth 接続でも使える(ランナーを仕込むのは人の作業)', async () => {
-    const { tools } = await (await connectClient(humanAuth)).listTools()
+    const { tools } = await (await connectDevuntuMcp(humanAuth)).listTools()
     expect(tools.map((tool) => tool.name)).toContain('get_agent_setup_guide')
   })
 
   it('指定した CLI の手順を返す', async () => {
     const result = await (
-      await connectClient(agentAuth)
+      await connectDevuntuMcp(agentAuth)
     ).callTool({
       name: 'get_agent_setup_guide',
       arguments: { cli: 'codex' },
@@ -146,7 +131,7 @@ describe('get_agent_setup_guide', () => {
   })
 
   it('CLI 未指定では手順を返さず、利用者に選ばせる', async () => {
-    const result = await (await connectClient(agentAuth)).callTool({ name: 'get_agent_setup_guide', arguments: {} })
+    const result = await (await connectDevuntuMcp(agentAuth)).callTool({ name: 'get_agent_setup_guide', arguments: {} })
     const text = (result.content as { text: string }[])[0].text
 
     expect(text).not.toContain('# Devuntu Agent のセットアップ')
@@ -158,7 +143,7 @@ describe('get_agent_task', () => {
   it('稼働条件を満たさない場合は作業を返さず、処理しないよう指示する', async () => {
     vi.mocked(evaluateRunnerActivity).mockResolvedValue({ active: false, reason: 'outside_hours' })
 
-    const result = await (await connectClient(agentAuth)).callTool({ name: 'get_agent_task', arguments: {} })
+    const result = await (await connectDevuntuMcp(agentAuth)).callTool({ name: 'get_agent_task', arguments: {} })
     const body = parseResult(result.content)
 
     expect(body).toMatchObject({ active: false, reason: 'outside_hours', task: null, tasks: [] })
@@ -170,7 +155,7 @@ describe('get_agent_task', () => {
     const task = { ticketId: 't1', displayId: 'ABC-42', title: 'テスト', mode: 'plan', action: 'plan', state: null }
     vi.mocked(pickAgentTasks).mockResolvedValue([task] as never)
 
-    const result = await (await connectClient(agentAuth)).callTool({ name: 'get_agent_task', arguments: {} })
+    const result = await (await connectDevuntuMcp(agentAuth)).callTool({ name: 'get_agent_task', arguments: {} })
 
     expect(parseResult(result.content)).toMatchObject({ active: true, rule: 'ルール', tasks: [task] })
   })
@@ -188,7 +173,7 @@ describe('get_agent_task', () => {
     vi.mocked(resolveTicketId).mockResolvedValue('t1')
 
     const result = await (
-      await connectClient(agentAuth)
+      await connectDevuntuMcp(agentAuth)
     ).callTool({ name: 'get_agent_task', arguments: { ticketId: 'ABC-42' } })
 
     expect(resolveAgentTask).toHaveBeenCalledWith(runnerRow, 't1')
@@ -218,7 +203,7 @@ describe('get_agent_task', () => {
     vi.mocked(findLatestAgentDecision).mockResolvedValue({ id: 'm1', decision: 'rejected', content: '理由' })
 
     const result = await (
-      await connectClient(agentAuth)
+      await connectDevuntuMcp(agentAuth)
     ).callTool({ name: 'get_agent_task', arguments: { ticketId: 'ABC-42' } })
 
     expect(findLatestAgentDecision).toHaveBeenCalledWith('t1', 'a1')
@@ -233,7 +218,7 @@ describe('get_agent_task', () => {
     vi.mocked(resolveTicketId).mockResolvedValue('t9')
 
     const result = await (
-      await connectClient(agentAuth)
+      await connectDevuntuMcp(agentAuth)
     ).callTool({ name: 'get_agent_task', arguments: { ticketId: 'ABC-99' } })
     const body = parseResult(result.content)
 
@@ -249,7 +234,7 @@ describe('finish_agent_task', () => {
     vi.mocked(finishAgentTask).mockResolvedValue({ state: 'planned' })
 
     const result = await (
-      await connectClient(agentAuth)
+      await connectDevuntuMcp(agentAuth)
     ).callTool({ name: 'finish_agent_task', arguments: { ticketId: 'ABC-42', outcome: 'planned', summary: '要約' } })
 
     expect(assertTicketAccess).toHaveBeenCalledWith(agentAuth.user, 't1', 'edit')
@@ -266,7 +251,7 @@ describe('finish_agent_task', () => {
     const criteria = [{ id: CRITERION_ID, met: true, evidence: 'テストが通った' }]
 
     await (
-      await connectClient(agentAuth)
+      await connectDevuntuMcp(agentAuth)
     ).callTool({ name: 'finish_agent_task', arguments: { ticketId: 'ABC-42', outcome: 'completed', criteria } })
 
     expect(finishAgentTask).toHaveBeenCalledWith(runnerRow, 't1', 'completed', undefined, criteria)
@@ -278,7 +263,7 @@ describe('finish_agent_task', () => {
     vi.mocked(finishAgentTask).mockRejectedValue(errInvalidOperation())
 
     const result = await (
-      await connectClient(agentAuth)
+      await connectDevuntuMcp(agentAuth)
     ).callTool({
       name: 'finish_agent_task',
       arguments: {
@@ -293,7 +278,7 @@ describe('finish_agent_task', () => {
 
   it('根拠の無い自己チェックは受け付けない', async () => {
     const result = await (
-      await connectClient(agentAuth)
+      await connectDevuntuMcp(agentAuth)
     ).callTool({
       name: 'finish_agent_task',
       arguments: {
@@ -312,7 +297,7 @@ describe('finish_agent_task', () => {
     vi.mocked(findAgentTicket).mockResolvedValue(null)
 
     const result = await (
-      await connectClient(agentAuth)
+      await connectDevuntuMcp(agentAuth)
     ).callTool({ name: 'finish_agent_task', arguments: { ticketId: 'ABC-42', outcome: 'completed' } })
 
     expect(result.isError).toBe(true)
@@ -321,7 +306,7 @@ describe('finish_agent_task', () => {
 
   it('未知の結果は受け付けない', async () => {
     const result = await (
-      await connectClient(agentAuth)
+      await connectDevuntuMcp(agentAuth)
     ).callTool({ name: 'finish_agent_task', arguments: { ticketId: 'ABC-42', outcome: 'unknown' } })
 
     expect(result.isError).toBe(true)

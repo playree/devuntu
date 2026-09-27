@@ -23,27 +23,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 // 通知は実行を閉じたことの副作用。ここでは「どう呼ばれたか」だけを見る
 vi.mock('@/lib/notify/notify-trigger', () => ({ enqueueAgentRunFinished: vi.fn() }))
 
-vi.mock('@/lib/prisma', () => {
-  const ticket = { findMany: vi.fn(), findFirst: vi.fn(), findUnique: vi.fn(), update: vi.fn(), updateMany: vi.fn() }
-  const ticketComment = { findFirst: vi.fn() }
-  const agentRun = {
-    count: vi.fn(),
-    findMany: vi.fn(),
-    findFirst: vi.fn(),
-    findUnique: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-    updateMany: vi.fn(),
-  }
-  const agentRunner = { findUnique: vi.fn(), update: vi.fn() }
-  const ticketCriterion = { count: vi.fn(), update: vi.fn() }
-  const $queryRaw = vi.fn()
-  const models = { ticket, ticketComment, agentRun, agentRunner, ticketCriterion, $queryRaw }
-  const $transaction = vi.fn(async (arg: unknown) =>
-    typeof arg === 'function' ? await (arg as (tx: unknown) => unknown)(models) : await Promise.all(arg as unknown[]),
-  )
-  return { prisma: { ...models, $transaction } }
-})
+vi.mock('@/lib/prisma', async () =>
+  (await import('../../helpers/prisma')).mockPrisma({
+    ticket: ['findMany', 'findFirst', 'findUnique', 'update', 'updateMany'],
+    ticketComment: ['findFirst'],
+    agentRun: ['count', 'findMany', 'findFirst', 'findUnique', 'create', 'update', 'updateMany'],
+    agentRunner: ['findUnique', 'update'],
+    ticketCriterion: ['count', 'update'],
+  }),
+)
 
 const ticket = vi.mocked(prisma.ticket)
 const ticketComment = vi.mocked(prisma.ticketComment)

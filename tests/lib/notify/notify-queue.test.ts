@@ -10,12 +10,9 @@ import { purge } from '@/lib/notify/notify-queue'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/prisma', () => ({
-  prisma: {
-    notifyOutbox: { deleteMany: vi.fn() },
-    notifyDelivery: { deleteMany: vi.fn() },
-  },
-}))
+vi.mock('@/lib/prisma', async () =>
+  (await import('../../helpers/prisma')).mockPrisma({ notifyOutbox: ['deleteMany'], notifyDelivery: ['deleteMany'] }),
+)
 
 const now = new Date('2026-09-08T10:00:00.000Z')
 const failedBefore = new Date(now.getTime() - NOTIFY_FAILED_RETENTION_MS)

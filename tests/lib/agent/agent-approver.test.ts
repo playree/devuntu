@@ -9,11 +9,9 @@ import {
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/prisma', () => {
-  const agentApproverGroup = { deleteMany: vi.fn(), createMany: vi.fn() }
-  const $transaction = vi.fn(async (arg: unknown) => await Promise.all(arg as Promise<unknown>[]))
-  return { prisma: { agentApproverGroup, $transaction } }
-})
+vi.mock('@/lib/prisma', async () =>
+  (await import('../../helpers/prisma')).mockPrisma({ agentApproverGroup: ['deleteMany', 'createMany'] }),
+)
 
 beforeEach(() => {
   vi.clearAllMocks()

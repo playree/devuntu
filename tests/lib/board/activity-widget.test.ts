@@ -8,9 +8,9 @@ import { listMentions, listRecentActivity, MENTIONS_LIMIT, RECENT_ACTIVITY_LIMIT
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/prisma', () => ({
-  prisma: { ticket: { findMany: vi.fn() }, ticketComment: { findMany: vi.fn() } },
-}))
+vi.mock('@/lib/prisma', async () =>
+  (await import('../../helpers/prisma')).mockPrisma({ ticket: ['findMany'], ticketComment: ['findMany'] }),
+)
 
 vi.mock('@/lib/board/board', () => ({
   ensurePrivateBoard: vi.fn(),

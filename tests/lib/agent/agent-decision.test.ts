@@ -12,15 +12,13 @@ import { ClientError, errInvalidOperation } from '@/lib/error'
 import { enqueueTicketMoved } from '@/lib/notify/notify-trigger'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const fakeTx = {
+const fakeTx = vi.hoisted(() => ({
   $queryRaw: vi.fn(),
   ticket: { findUniqueOrThrow: vi.fn(), update: vi.fn() },
   ticketComment: { findFirst: vi.fn(), findUnique: vi.fn() },
-}
-
-vi.mock('@/lib/prisma', () => ({
-  prisma: { $transaction: vi.fn((cb: (tx: unknown) => unknown) => cb(fakeTx)) },
 }))
+
+vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({}, { tx: fakeTx }))
 
 vi.mock('@/lib/board/board-access', () => ({ assertTicketAccess: vi.fn() }))
 vi.mock('@/lib/board/ticket-mutation', () => ({ insertComment: vi.fn(async () => ({ id: 'reply-1' })) }))

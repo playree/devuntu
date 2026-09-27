@@ -13,9 +13,9 @@ import {
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/prisma', () => ({
-  prisma: { ticket: { findMany: vi.fn(), count: vi.fn() }, agentRun: { findMany: vi.fn() } },
-}))
+vi.mock('@/lib/prisma', async () =>
+  (await import('../../helpers/prisma')).mockPrisma({ ticket: ['findMany', 'count'], agentRun: ['findMany'] }),
+)
 
 vi.mock('@/lib/agent/agent-approver', () => ({
   listApprovableAgents: vi.fn(),

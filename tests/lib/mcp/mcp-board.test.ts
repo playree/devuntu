@@ -4,13 +4,11 @@
  */
 
 import { getBoardForMcp, listBoardsForMcp, resolveBoardId } from '@/lib/mcp/mcp-board'
-import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { oauthAuth } from '../../helpers/resource-auth'
 
-vi.mock('@/lib/prisma', () => ({
-  prisma: { board: { findUnique: vi.fn() } },
-}))
+vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({ board: ['findUnique'] }))
 
 vi.mock('@/lib/board/board-access', () => ({
   assertBoardAccess: vi.fn(),
@@ -34,12 +32,7 @@ const { countTicketsByBoard, listAccessibleBoards } = await import('@/lib/board/
 const { getBoardMemberUsers } = await import('@/lib/board/board-member')
 const { listBoardTags } = await import('@/lib/board/tag')
 
-const auth: ResourceAuth = {
-  user: { id: 'u1', name: 'tester', email: 'test@example.com', role: null },
-  scopes: ['mcp'],
-  kind: 'oauth',
-  clientId: 'test-client',
-}
+const auth = oauthAuth()
 
 const boardId = '019e0000-0000-7000-8000-000000000001'
 

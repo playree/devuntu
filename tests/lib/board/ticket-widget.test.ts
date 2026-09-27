@@ -8,9 +8,9 @@ import { countMyTicketsByStatus, listDueSoonTickets, listMyTickets, MY_TICKETS_L
 import { prisma } from '@/lib/prisma'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/prisma', () => ({
-  prisma: { ticket: { findMany: vi.fn(), groupBy: vi.fn(), count: vi.fn() } },
-}))
+vi.mock('@/lib/prisma', async () =>
+  (await import('../../helpers/prisma')).mockPrisma({ ticket: ['findMany', 'groupBy', 'count'] }),
+)
 
 vi.mock('@/lib/board/board', () => ({
   ensurePrivateBoard: vi.fn(),

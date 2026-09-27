@@ -9,10 +9,7 @@ const tx = {
   ticketLink: { findUnique: vi.fn(), count: vi.fn(), create: vi.fn(), update: vi.fn() },
 }
 
-vi.mock('@/lib/prisma', () => ({
-  prisma: { $transaction: vi.fn() },
-  isUniqueViolation: (e: unknown) => (e as { code?: string })?.code === 'P2002',
-}))
+vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma())
 
 vi.mock('@/lib/board/board-access', () => ({
   assertTicketAccess: vi.fn(async () => ({})),

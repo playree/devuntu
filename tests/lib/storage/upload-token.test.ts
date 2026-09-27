@@ -6,38 +6,30 @@
  */
 
 import { getBoardAccess } from '@/lib/board/board-access'
+import { prisma } from '@/lib/prisma'
 import { signUploadToken, UPLOAD_TOKEN_TTL_SECONDS, verifyUploadToken } from '@/lib/storage/upload-token'
 import { generateKeyPair, SignJWT } from 'jose'
 import { uuidv7 } from 'uuidv7'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const mocks = vi.hoisted(() => ({ findUser: vi.fn(), createNonce: vi.fn(), deleteNonces: vi.fn() }))
-
 /**
  * `user` と `uploadNonce` だけ差し替え、それ以外は vitest.setup.ts のスタブと同じ振る舞いにする
  * (better-auth の初期化が oauthResource を引くため、丸ごと差し替えると初期化が落ちる)。
  */
-vi.mock('@/lib/prisma', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/lib/prisma')>()),
-  prisma: new Proxy(
-    {},
-    {
-      get: (_target, model) => {
-        if (model === 'user') {
-          return { findUnique: mocks.findUser }
-        }
-        if (model === 'uploadNonce') {
-          return { create: mocks.createNonce, deleteMany: mocks.deleteNonces }
-        }
-        return { findFirst: async () => ({}), findUnique: async () => ({}) }
-      },
-    },
+vi.mock('@/lib/prisma', async () =>
+  (await import('../../helpers/prisma')).mockPrisma(
+    { user: ['findUnique'], uploadNonce: ['create', 'deleteMany'] },
+    { stubOthers: true },
   ),
-}))
+)
 
 vi.mock('@/lib/board/board-access', () => ({
   getBoardAccess: vi.fn(),
 }))
+
+const findUser = vi.mocked(prisma.user.findUnique)
+const createNonce = vi.mocked(prisma.uploadNonce.create)
+const deleteNonces = vi.mocked(prisma.uploadNonce.deleteMany)
 
 const USER_ID = '019eef64-6cc1-78f1-8f50-1ef869860001'
 const BOARD_ID = '019eef64-6cc1-78f1-8f50-1ef869860002'
@@ -60,9 +52,9 @@ const forgeToken = async (override: { secret?: Uint8Array; audience?: string; is
 
 beforeEach(() => {
   vi.clearAllMocks()
-  mocks.findUser.mockResolvedValue({ id: USER_ID, role: null, banned: false })
-  mocks.createNonce.mockResolvedValue({ jti: 'x' })
-  mocks.deleteNonces.mockResolvedValue({ count: 0 })
+  findUser.mockResolvedValue({ id: USER_ID, role: null, banned: false } as never)
+  createNonce.mockResolvedValue({ jti: 'x' } as never)
+  deleteNonces.mockResolvedValue({ count: 0 })
   vi.mocked(getBoardAccess).mockResolvedValue({ boardId: BOARD_ID, archived: false } as never)
 })
 
@@ -78,7 +70,7 @@ describe('signUploadToken / verifyUploadToken', () => {
   })
 
   it('同じトークンは2回目以降を拒否する(jti の一意制約違反)', async () => {
-    mocks.createNonce.mockResolvedValueOnce({ jti: 'x' }).mockRejectedValue({ code: 'P2002' })
+    createNonce.mockResolvedValueOnce({ jti: 'x' } as never).mockRejectedValue({ code: 'P2002' })
     const token = await signUploadToken({ userId: USER_ID, boardId: BOARD_ID })
 
     expect(await verifyUploadToken(token)).not.toBeNull()
@@ -86,7 +78,7 @@ describe('signUploadToken / verifyUploadToken', () => {
   })
 
   it('使用済み記録に失敗した場合は拒否する(fail-closed)', async () => {
-    mocks.createNonce.mockRejectedValue(new Error('db down'))
+    createNonce.mockRejectedValue(new Error('db down'))
     const token = await signUploadToken({ userId: USER_ID, boardId: BOARD_ID })
 
     expect(await verifyUploadToken(token)).toBeNull()
@@ -144,7 +136,7 @@ describe('signUploadToken / verifyUploadToken', () => {
   })
 
   it('発行後にBANされた利用者を拒否する', async () => {
-    mocks.findUser.mockResolvedValue({ id: USER_ID, role: null, banned: true })
+    findUser.mockResolvedValue({ id: USER_ID, role: null, banned: true } as never)
     const token = await signUploadToken({ userId: USER_ID, boardId: BOARD_ID })
 
     expect(await verifyUploadToken(token)).toBeNull()

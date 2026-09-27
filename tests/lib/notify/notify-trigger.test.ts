@@ -16,11 +16,9 @@ import {
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/notify/notify-enqueue', () => ({ enqueueNotify: vi.fn(async () => undefined) }))
-vi.mock('@/lib/prisma', () => ({
-  prisma: {
-    user: { findUnique: vi.fn(), findMany: vi.fn(async () => []) },
-  },
-}))
+vi.mock('@/lib/prisma', async () =>
+  (await import('../../helpers/prisma')).mockPrisma({ user: ['findUnique', 'findMany'] }),
+)
 
 const { enqueueNotify } = await import('@/lib/notify/notify-enqueue')
 const { prisma } = await import('@/lib/prisma')
@@ -48,6 +46,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   // 表示名の解決 / 担当者の isAgent 判定はどちらも user.findUnique を使う
   findUser.mockResolvedValue({ name: '操作した人', isAgent: false } as never)
+  vi.mocked(prisma.user.findMany).mockResolvedValue([])
 })
 
 describe('メンション: 発火しない条件', () => {

@@ -9,7 +9,7 @@ import { assertAgentCriteria, checkTicketCriterion, syncTicketCriteria } from '@
 import { ClientError } from '@/lib/error'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const fakeTx = {
+const fakeTx = vi.hoisted(() => ({
   ticketCriterion: {
     findMany: vi.fn(),
     findUnique: vi.fn(),
@@ -18,11 +18,9 @@ const fakeTx = {
     update: vi.fn(),
     deleteMany: vi.fn(),
   },
-}
-
-vi.mock('@/lib/prisma', () => ({
-  prisma: { $transaction: vi.fn((cb: (tx: unknown) => unknown) => cb(fakeTx)) },
 }))
+
+vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({}, { tx: fakeTx }))
 
 vi.mock('@/lib/board/board-access', () => ({
   assertTicketAccess: vi.fn(),

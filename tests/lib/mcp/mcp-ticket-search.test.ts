@@ -5,13 +5,13 @@
  */
 
 import { searchTicketsForMcp } from '@/lib/mcp/mcp-ticket'
-import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { oauthAuth } from '../../helpers/resource-auth'
 
-vi.mock('@/lib/prisma', () => ({
-  prisma: { board: { findUnique: vi.fn() }, ticket: { findMany: vi.fn() } },
-}))
+vi.mock('@/lib/prisma', async () =>
+  (await import('../../helpers/prisma')).mockPrisma({ board: ['findUnique'], ticket: ['findMany'] }),
+)
 
 vi.mock('@/lib/board/board-access', () => ({
   getAccessibleBoardIds: vi.fn(),
@@ -25,12 +25,7 @@ vi.mock('@/lib/notify/notify-trigger', () => ({
 
 const { getAccessibleBoardIds } = await import('@/lib/board/board-access')
 
-const auth: ResourceAuth = {
-  user: { id: 'u1', name: 'tester', email: 'test@example.com', role: null },
-  scopes: ['mcp'],
-  kind: 'oauth',
-  clientId: 'test-client',
-}
+const auth = oauthAuth()
 
 const accessibleBoardId = '019e0000-0000-7000-8000-000000000001'
 const hiddenBoardId = '019e0000-0000-7000-8000-000000000002'
