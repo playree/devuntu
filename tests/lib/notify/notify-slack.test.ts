@@ -9,9 +9,7 @@ import type { NotifyContent } from '@/lib/notify/notify-content'
 import { deliverSlack } from '@/lib/notify/notify-slack'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/prisma', () => ({
-  prisma: { account: { findFirst: vi.fn() } },
-}))
+vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({ account: ['findFirst'] }))
 vi.mock('@/lib/slack/slack-server', () => ({ postSlackMessage: vi.fn(async () => 'ok') }))
 
 const { prisma } = await import('@/lib/prisma')

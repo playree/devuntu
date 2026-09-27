@@ -11,14 +11,14 @@ import { collectReferencedUploadKeys, findAttachmentReference } from '@/lib/stor
 import { toUploadUrl } from '@/lib/storage/upload'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/prisma', () => ({
-  prisma: {
-    ticket: { findMany: vi.fn(), findFirst: vi.fn() },
-    ticketComment: { findMany: vi.fn(), findFirst: vi.fn() },
-    user: { findMany: vi.fn(), findFirst: vi.fn() },
-    linkWidget: { findMany: vi.fn(), findFirst: vi.fn() },
-  },
-}))
+vi.mock('@/lib/prisma', async () =>
+  (await import('../../helpers/prisma')).mockPrisma({
+    ticket: ['findMany', 'findFirst'],
+    ticketComment: ['findMany', 'findFirst'],
+    user: ['findMany', 'findFirst'],
+    linkWidget: ['findMany', 'findFirst'],
+  }),
+)
 
 const getString = vi.fn()
 vi.mock('@/lib/kvs', () => ({ getString: (...args: unknown[]) => getString(...args) }))

@@ -1,0 +1,315 @@
+/**
+ * 自動運用の MCP ツール。
+ *
+ * mcp-server.test.ts と同じく InMemoryTransport でツールの入出力だけを見る。
+ * 稼働条件やチケットの状態遷移そのものは agent-runner.test.ts の担当なので、ここでは
+ * 「エージェント接続でしか登録されないこと」と「稼働条件・対象外チケットの扱い」を確かめる。
+ */
+
+import { activeWindowLabel, evaluateRunnerActivity } from '@/lib/agent/agent-activity'
+import { findLatestAgentDecision } from '@/lib/agent/agent-decision'
+import { finishAgentTask } from '@/lib/agent/agent-run'
+import { findAgentRunner } from '@/lib/agent/agent-runner'
+import { findAgentTicket, pickAgentTasks, resolveAgentTask } from '@/lib/agent/agent-task'
+import { assertTicketAccess } from '@/lib/board/board-access'
+import { listTicketCriteria } from '@/lib/board/ticket-criterion'
+import { errInvalidOperation } from '@/lib/error'
+import { resolveTicketId } from '@/lib/mcp/mcp-ticket'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { connectDevuntuMcp } from '../../helpers/mcp-client'
+import * as fakeAuth from '../../helpers/resource-auth'
+
+vi.mock('@/lib/agent/agent-runner', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/agent/agent-runner')>()),
+  findAgentRunner: vi.fn(),
+}))
+
+vi.mock('@/lib/agent/agent-activity', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/agent/agent-activity')>()),
+  evaluateRunnerActivity: vi.fn(),
+  activeWindowLabel: vi.fn(),
+}))
+
+vi.mock('@/lib/agent/agent-task', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/agent/agent-task')>()),
+  pickAgentTasks: vi.fn(),
+  findAgentTicket: vi.fn(),
+  resolveAgentTask: vi.fn(),
+}))
+
+vi.mock('@/lib/agent/agent-run', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/agent/agent-run')>()),
+  finishAgentTask: vi.fn(),
+}))
+
+vi.mock('@/lib/board/board-access', () => ({
+  assertTicketAccess: vi.fn(),
+}))
+
+vi.mock('@/lib/board/ticket-criterion', () => ({
+  listTicketCriteria: vi.fn(),
+}))
+
+vi.mock('@/lib/agent/agent-decision', () => ({
+  findLatestAgentDecision: vi.fn(),
+}))
+
+vi.mock('@/lib/mcp/mcp-ticket', () => ({
+  MCP_ASSIGNEE_ME: 'me',
+  resolveTicketId: vi.fn(),
+  getTicketForMcp: vi.fn(),
+  searchTicketsForMcp: vi.fn(),
+  createTicketForMcp: vi.fn(),
+  updateTicketForMcp: vi.fn(),
+  deleteTicketForMcp: vi.fn(),
+  addTicketCommentForMcp: vi.fn(),
+  updateTicketCommentForMcp: vi.fn(),
+  deleteTicketCommentForMcp: vi.fn(),
+}))
+
+const agentAuth = fakeAuth.agentAuth()
+
+const humanAuth = fakeAuth.agentAuth({ kind: 'oauth', clientId: 'client-1' })
+
+/** ユーザーが自分で発行した MCP トークンでの接続。`clientId` は McpToken の id */
+const patAuth = fakeAuth.agentAuth({ kind: 'pat', clientId: 'mcp-token-1' })
+
+const runnerRow = { id: 'r1', userId: 'a1', rule: 'ルール' }
+
+/** ツールの返り値はJSONテキスト1件なので、そのままオブジェクトへ戻す */
+const parseResult = (content: unknown) => JSON.parse((content as { text: string }[])[0].text)
+
+beforeEach(() => {
+  vi.clearAllMocks()
+  vi.mocked(findAgentRunner).mockResolvedValue(runnerRow as never)
+  vi.mocked(evaluateRunnerActivity).mockResolvedValue({ active: true, reason: null })
+  vi.mocked(activeWindowLabel).mockReturnValue(null)
+  vi.mocked(pickAgentTasks).mockResolvedValue([])
+  vi.mocked(listTicketCriteria).mockResolvedValue([])
+  vi.mocked(findLatestAgentDecision).mockResolvedValue(null)
+})
+
+describe('自動運用ツールの登録', () => {
+  const AGENT_TOOLS = ['get_agent_task', 'finish_agent_task']
+
+  it('エージェント用トークンの接続では登録される', async () => {
+    const { tools } = await (await connectDevuntuMcp(agentAuth)).listTools()
+    expect(tools.map((tool) => tool.name)).toEqual(expect.arrayContaining(AGENT_TOOLS))
+  })
+
+  it('人間の OAuth 接続では登録されない', async () => {
+    const { tools } = await (await connectDevuntuMcp(humanAuth)).listTools()
+    const names = tools.map((tool) => tool.name)
+    AGENT_TOOLS.forEach((name) => expect(names).not.toContain(name))
+  })
+
+  it('ユーザーが自分で発行した MCP トークンの接続でも登録されない', async () => {
+    const { tools } = await (await connectDevuntuMcp(patAuth)).listTools()
+    const names = tools.map((tool) => tool.name)
+    AGENT_TOOLS.forEach((name) => expect(names).not.toContain(name))
+  })
+})
+
+describe('get_agent_setup_guide', () => {
+  it('人間の OAuth 接続でも使える(ランナーを仕込むのは人の作業)', async () => {
+    const { tools } = await (await connectDevuntuMcp(humanAuth)).listTools()
+    expect(tools.map((tool) => tool.name)).toContain('get_agent_setup_guide')
+  })
+
+  it('指定した CLI の手順を返す', async () => {
+    const result = await (
+      await connectDevuntuMcp(agentAuth)
+    ).callTool({
+      name: 'get_agent_setup_guide',
+      arguments: { cli: 'codex' },
+    })
+    const text = (result.content as { text: string }[])[0].text
+
+    expect(text).toContain('http://localhost:3000/agent/devuntu_agent.py')
+    expect(text).toContain('http://localhost:3000/api/mcp')
+    expect(text).not.toContain('claude')
+  })
+
+  it('CLI 未指定では手順を返さず、利用者に選ばせる', async () => {
+    const result = await (await connectDevuntuMcp(agentAuth)).callTool({ name: 'get_agent_setup_guide', arguments: {} })
+    const text = (result.content as { text: string }[])[0].text
+
+    expect(text).not.toContain('# Devuntu Agent のセットアップ')
+    expect(text).toContain('利用者に確認')
+  })
+})
+
+describe('get_agent_task', () => {
+  it('稼働条件を満たさない場合は作業を返さず、処理しないよう指示する', async () => {
+    vi.mocked(evaluateRunnerActivity).mockResolvedValue({ active: false, reason: 'outside_hours' })
+
+    const result = await (await connectDevuntuMcp(agentAuth)).callTool({ name: 'get_agent_task', arguments: {} })
+    const body = parseResult(result.content)
+
+    expect(body).toMatchObject({ active: false, reason: 'outside_hours', task: null, tasks: [] })
+    expect(body.note).toContain('処理は行わずに終了')
+    expect(pickAgentTasks).not.toHaveBeenCalled()
+  })
+
+  it('チケット未指定なら処理待ちの一覧とルールを返す', async () => {
+    const task = { ticketId: 't1', displayId: 'ABC-42', title: 'テスト', mode: 'plan', action: 'plan', state: null }
+    vi.mocked(pickAgentTasks).mockResolvedValue([task] as never)
+
+    const result = await (await connectDevuntuMcp(agentAuth)).callTool({ name: 'get_agent_task', arguments: {} })
+
+    expect(parseResult(result.content)).toMatchObject({ active: true, rule: 'ルール', tasks: [task] })
+  })
+
+  it('チケット指定なら待ち行列ではなくそのチケットを解決する(処理中でも見失わない)', async () => {
+    const task = {
+      ticketId: 't1',
+      displayId: 'ABC-42',
+      title: 'テスト',
+      mode: 'plan',
+      action: 'plan',
+      state: 'running',
+    }
+    vi.mocked(resolveAgentTask).mockResolvedValue(task as never)
+    vi.mocked(resolveTicketId).mockResolvedValue('t1')
+
+    const result = await (
+      await connectDevuntuMcp(agentAuth)
+    ).callTool({ name: 'get_agent_task', arguments: { ticketId: 'ABC-42' } })
+
+    expect(resolveAgentTask).toHaveBeenCalledWith(runnerRow, 't1')
+    expect(pickAgentTasks).not.toHaveBeenCalled()
+    expect(parseResult(result.content)).toMatchObject({
+      task: { ...task, acceptanceCriteria: [], decision: null },
+      note: null,
+    })
+    // revise 以外では返答を引かない
+    expect(findLatestAgentDecision).not.toHaveBeenCalled()
+  })
+
+  it('受け入れ条件と、revise のきっかけになった承認/差し戻しを渡す', async () => {
+    const task = {
+      ticketId: 't1',
+      displayId: 'ABC-42',
+      title: 'テスト',
+      mode: 'plan',
+      action: 'revise',
+      state: 'running',
+    }
+    vi.mocked(resolveAgentTask).mockResolvedValue(task as never)
+    vi.mocked(resolveTicketId).mockResolvedValue('t1')
+    vi.mocked(listTicketCriteria).mockResolvedValue([
+      { id: 'c1', text: '条件1', agentMet: true, agentEvidence: '根拠' } as never,
+    ])
+    vi.mocked(findLatestAgentDecision).mockResolvedValue({ id: 'm1', decision: 'rejected', content: '理由' })
+
+    const result = await (
+      await connectDevuntuMcp(agentAuth)
+    ).callTool({ name: 'get_agent_task', arguments: { ticketId: 'ABC-42' } })
+
+    expect(findLatestAgentDecision).toHaveBeenCalledWith('t1', 'a1')
+    expect(parseResult(result.content).task).toMatchObject({
+      acceptanceCriteria: [{ id: 'c1', text: '条件1' }],
+      decision: { kind: 'rejected', commentId: 'm1', content: '理由' },
+    })
+  })
+
+  it('処理対象でないチケットを指定した場合は task が null になる', async () => {
+    vi.mocked(resolveAgentTask).mockResolvedValue(null)
+    vi.mocked(resolveTicketId).mockResolvedValue('t9')
+
+    const result = await (
+      await connectDevuntuMcp(agentAuth)
+    ).callTool({ name: 'get_agent_task', arguments: { ticketId: 'ABC-99' } })
+    const body = parseResult(result.content)
+
+    expect(body.task).toBeNull()
+    expect(body.note).toContain('処理対象ではない')
+  })
+})
+
+describe('finish_agent_task', () => {
+  it('チケットの参照権限と担当を確かめてから結果を記録する', async () => {
+    vi.mocked(resolveTicketId).mockResolvedValue('t1')
+    vi.mocked(findAgentTicket).mockResolvedValue({ id: 't1', displayId: 'ABC-42', mode: 'plan', state: 'running' })
+    vi.mocked(finishAgentTask).mockResolvedValue({ state: 'planned' })
+
+    const result = await (
+      await connectDevuntuMcp(agentAuth)
+    ).callTool({ name: 'finish_agent_task', arguments: { ticketId: 'ABC-42', outcome: 'planned', summary: '要約' } })
+
+    expect(assertTicketAccess).toHaveBeenCalledWith(agentAuth.user, 't1', 'edit')
+    expect(finishAgentTask).toHaveBeenCalledWith(runnerRow, 't1', 'planned', '要約', undefined)
+    expect(parseResult(result.content)).toEqual({ displayId: 'ABC-42', outcome: 'planned', state: 'planned' })
+  })
+
+  const CRITERION_ID = '01a0dd3b-e65b-71aa-bec7-3412abca25f7'
+
+  it('受け入れ条件の自己チェックを、実行を閉じる処理へ渡す', async () => {
+    vi.mocked(resolveTicketId).mockResolvedValue('t1')
+    vi.mocked(findAgentTicket).mockResolvedValue({ id: 't1', displayId: 'ABC-42', mode: 'auto', state: 'running' })
+    vi.mocked(finishAgentTask).mockResolvedValue({ state: 'done' })
+    const criteria = [{ id: CRITERION_ID, met: true, evidence: 'テストが通った' }]
+
+    await (
+      await connectDevuntuMcp(agentAuth)
+    ).callTool({ name: 'finish_agent_task', arguments: { ticketId: 'ABC-42', outcome: 'completed', criteria } })
+
+    expect(finishAgentTask).toHaveBeenCalledWith(runnerRow, 't1', 'completed', undefined, criteria)
+  })
+
+  it('自己チェックの対象が誤っていればエラーを返す(エージェントが直して呼び直せる)', async () => {
+    vi.mocked(resolveTicketId).mockResolvedValue('t1')
+    vi.mocked(findAgentTicket).mockResolvedValue({ id: 't1', displayId: 'ABC-42', mode: 'auto', state: 'running' })
+    vi.mocked(finishAgentTask).mockRejectedValue(errInvalidOperation())
+
+    const result = await (
+      await connectDevuntuMcp(agentAuth)
+    ).callTool({
+      name: 'finish_agent_task',
+      arguments: {
+        ticketId: 'ABC-42',
+        outcome: 'completed',
+        criteria: [{ id: CRITERION_ID, met: false, evidence: '未対応' }],
+      },
+    })
+
+    expect(result.isError).toBe(true)
+  })
+
+  it('根拠の無い自己チェックは受け付けない', async () => {
+    const result = await (
+      await connectDevuntuMcp(agentAuth)
+    ).callTool({
+      name: 'finish_agent_task',
+      arguments: {
+        ticketId: 'ABC-42',
+        outcome: 'completed',
+        criteria: [{ id: CRITERION_ID, met: true, evidence: '' }],
+      },
+    })
+
+    expect(result.isError).toBe(true)
+    expect(finishAgentTask).not.toHaveBeenCalled()
+  })
+
+  it('担当・オプトインから外れたチケットは報告できない', async () => {
+    vi.mocked(resolveTicketId).mockResolvedValue('t1')
+    vi.mocked(findAgentTicket).mockResolvedValue(null)
+
+    const result = await (
+      await connectDevuntuMcp(agentAuth)
+    ).callTool({ name: 'finish_agent_task', arguments: { ticketId: 'ABC-42', outcome: 'completed' } })
+
+    expect(result.isError).toBe(true)
+    expect(finishAgentTask).not.toHaveBeenCalled()
+  })
+
+  it('未知の結果は受け付けない', async () => {
+    const result = await (
+      await connectDevuntuMcp(agentAuth)
+    ).callTool({ name: 'finish_agent_task', arguments: { ticketId: 'ABC-42', outcome: 'unknown' } })
+
+    expect(result.isError).toBe(true)
+    expect(finishAgentTask).not.toHaveBeenCalled()
+  })
+})

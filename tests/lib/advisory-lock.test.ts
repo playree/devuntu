@@ -9,7 +9,7 @@ import { ADVISORY_LOCK_KEYS, withAdvisoryLock } from '@/lib/advisory-lock'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/prisma', () => ({ prisma: { $transaction: vi.fn() } }))
+vi.mock('@/lib/prisma', async () => (await import('../helpers/prisma')).mockPrisma())
 
 let open = 0
 let maxOpen = 0

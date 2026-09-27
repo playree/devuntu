@@ -8,11 +8,12 @@
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/prisma', () => {
-  const commandTargetMember = { findMany: vi.fn(), deleteMany: vi.fn() }
-  const commandTargetGroup = { findMany: vi.fn(), deleteMany: vi.fn(), createMany: vi.fn() }
-  return { prisma: { commandTargetMember, commandTargetGroup, $transaction: vi.fn() } }
-})
+vi.mock('@/lib/prisma', async () =>
+  (await import('../../helpers/prisma')).mockPrisma({
+    commandTargetMember: ['findMany', 'deleteMany'],
+    commandTargetGroup: ['findMany', 'deleteMany', 'createMany'],
+  }),
+)
 
 const { getCommandTargetUsers, listAssignedTargetKeys, syncCommandTargetGroups } =
   await import('@/lib/command/command-assign')

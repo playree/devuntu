@@ -10,11 +10,12 @@ import { type CommandDef, type CommandTarget } from '@/lib/command/command'
 import { prisma } from '@/lib/prisma'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/prisma', () => {
-  const commandTargetMember = { findMany: vi.fn() }
-  const commandTargetGroup = { findMany: vi.fn() }
-  return { prisma: { commandTargetMember, commandTargetGroup } }
-})
+vi.mock('@/lib/prisma', async () =>
+  (await import('../../helpers/prisma')).mockPrisma({
+    commandTargetMember: ['findMany'],
+    commandTargetGroup: ['findMany'],
+  }),
+)
 
 const catalogMock = vi.hoisted(() => ({
   getCommandCatalog: vi.fn(),

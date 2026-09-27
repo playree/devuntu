@@ -10,14 +10,14 @@ import { handleGithubEvent } from '@/lib/github/github-webhook'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/prisma', () => ({
-  prisma: {
-    boardRepository: { findMany: vi.fn() },
-    ticket: { findUnique: vi.fn() },
-    ticketLink: { createMany: vi.fn(), updateMany: vi.fn(), findMany: vi.fn() },
-    gitCheckSuite: { updateMany: vi.fn(), createMany: vi.fn() },
-  },
-}))
+vi.mock('@/lib/prisma', async () =>
+  (await import('../../helpers/prisma')).mockPrisma({
+    boardRepository: ['findMany'],
+    ticket: ['findUnique'],
+    ticketLink: ['createMany', 'updateMany', 'findMany'],
+    gitCheckSuite: ['updateMany', 'createMany'],
+  }),
+)
 
 // GitLab(gitlab.com)も Webhook を受けられる環境として扱う
 vi.mock('@/lib/board/board-repository', () => ({

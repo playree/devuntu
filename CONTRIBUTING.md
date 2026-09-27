@@ -65,7 +65,7 @@ pnpm build
 - フォーム部品は、react-hook-form に依存しないものを`〇〇Field`、react-hook-form 対応のものを`〇〇Ctrl`と命名する
 - 読み上げ名を受け取る props は`aria-label`で統一する
 - アイコンは`createIcon`(`general/icons.tsx`)で定義する。general 配下で使うものは`general/icons.tsx`、それ以外は`src/components/icon.tsx`に置く
-- テストソースは`tests`配下に配置する
+- テストソースは`tests`配下に配置する。`tests/lib`は`src/lib`と同じサブフォルダ構成にし、共通のモックは`tests/helpers`を使う
 - better-authをバージョンアップする場合には、ライブラリが要求するテーブル定義に変更が無いかをチェックする
 - コンパイル、ビルド確認は`pnpm build`
 - ソース修正後には`pnpm lint`と`pnpm typecheck`を実施する

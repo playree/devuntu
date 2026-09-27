@@ -11,7 +11,7 @@ import { saveImageAttachmentFromUrl } from '@/lib/storage/attachment'
 import { toUploadUrl } from '@/lib/storage/upload'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/prisma', () => ({ prisma: { user: { findUnique: vi.fn() } } }))
+vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({ user: ['findUnique'] }))
 vi.mock('@/lib/storage/attachment', () => ({ saveImageAttachmentFromUrl: vi.fn() }))
 
 const email = 'user@example.com'
