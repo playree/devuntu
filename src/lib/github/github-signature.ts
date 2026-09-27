@@ -1,7 +1,7 @@
 /**
  * GitHub Webhook の署名検証(サーバー専用)
  *
- * `/api/github/webhook` は未認証で叩けるエンドポイントなので、GitHub が付ける署名だけが
+ * `/api/github/webhook/[repositoryId]` は未認証で叩けるエンドポイントなので、GitHub が付ける署名だけが
  * 唯一の門番になる。判定は引数だけで決まる純粋関数にしてテストの対象にする。
  *
  * `node:crypto` を使うためクライアントからは import しないこと。

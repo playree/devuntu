@@ -1,7 +1,7 @@
 /**
  * GitHub Webhook 署名検証の単体テスト
  *
- * `/api/github/webhook` は未認証で叩けるため、ここが唯一の門番になる。
+ * `/api/github/webhook/[repositoryId]` は未認証で叩けるため、ここが唯一の門番になる。
  */
 
 import { verifyGithubSignature } from '@/lib/github/github-signature'

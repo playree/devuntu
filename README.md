@@ -119,7 +119,7 @@ Docker Compose で3つのサービスを起動します(`compose.yaml`)。
 | Google         | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                      | Googleサインインとカレンダー機能               |
 | Slack          | `SLACK_*` 一式                                                   | Slack DM 通知とチケットURLの展開               |
 | Webプッシュ    | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`                         | ブラウザ / スマートフォンへのプッシュ通知      |
-| GitHub         | `GITHUB_WEBHOOK_SECRET`                                          | PR の状態・CI の反映とマージでの自動完了       |
+| GitHub         | 不要(ボード設定で対応付けごとにシークレットを発行)               | PR の状態・CI の反映とマージでの自動完了       |
 | GitLab         | `GITLAB_URLS`                                                    | MR の状態・CI の反映とマージでの自動完了       |
 | MCP            | `OIDC_DCR_ENABLED=true`                                          | MCPクライアントからの接続                      |
 | AIエージェント | `/admin/agents` でのエージェント作成とトークン発行               | エージェントによるチケットの自動処理           |

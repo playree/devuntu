@@ -13,6 +13,7 @@ import {
   addBoardGithubRepository as addBoardGithubRepositoryCore,
   addBoardGitlabRepository as addBoardGitlabRepositoryCore,
   getBoardGit as getBoardGitCore,
+  regenerateGithubSecret as regenerateGithubSecretCore,
   regenerateGitlabToken as regenerateGitlabTokenCore,
   removeBoardRepository as removeBoardRepositoryCore,
   setBoardCompleteOnPrMerge as setBoardCompleteOnPrMergeCore,
@@ -154,11 +155,20 @@ export const getBoardGit = safeAuthAction
   .action(async ({ ctx: { user }, parsedInput: { id } }) => await getBoardGitCore(user, id))
 export type GetBoardGitReturnType = Awaited<ReturnType<typeof getBoardGit>>['data']
 
-/** GitHub のリポジトリの対応付け(owner または管理者) */
+/** GitHub のリポジトリの対応付け(owner または管理者)。作ったシークレットを1回だけ返す */
 export const addBoardGithubRepository = safeAuthAction
   .metadata({ actionName: 'addBoardGithubRepository', role: 'user' })
   .inputSchema(scAddBoardRepository)
   .action(async ({ ctx: { user }, parsedInput: { id, repo } }) => await addBoardGithubRepositoryCore(user, id, repo))
+
+/** GitHub の Webhook のシークレットの作り直し(owner または管理者)。作ったシークレットを1回だけ返す */
+export const regenerateGithubSecret = safeAuthAction
+  .metadata({ actionName: 'regenerateGithubSecret', role: 'user' })
+  .inputSchema(scBoardRepositoryTarget)
+  .action(
+    async ({ ctx: { user }, parsedInput: { id, repositoryId } }) =>
+      await regenerateGithubSecretCore(user, id, repositoryId),
+  )
 
 /** GitLab のプロジェクトの対応付け(owner または管理者)。シークレットトークン方式なら作ったトークンを1回だけ返す */
 export const addBoardGitlabRepository = safeAuthAction

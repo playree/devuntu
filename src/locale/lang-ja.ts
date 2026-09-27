@@ -258,8 +258,11 @@ export const ja: DefaultLocaleItems = {
   git_complete_on_pr_merge: 'プルリクエスト / マージリクエストのマージでチケットを完了にする',
   git_repositories: '対応付けたリポジトリ',
   github_repository: 'リポジトリ(owner/repo)',
+  github_regenerate_secret: 'シークレットを再発行',
+  github_secret_unset: 'シークレット未設定',
+  github_webhook_secret: 'Webhook シークレット',
   gitlab_instance: 'インスタンス',
-  gitlab_last_received: '最終受信',
+  git_last_received: '最終受信',
   gitlab_project: 'プロジェクト(group/project)',
   gitlab_regenerate_token: 'トークンを再発行',
   gitlab_secret_token: 'シークレットトークン',
@@ -537,7 +540,12 @@ export const ja: DefaultLocaleItems = {
   msg_gitlab_already_added:
     '既に対応付けているプロジェクトです。検証方式の切り替えやトークンの作り直しは一覧から行えます。',
   msg_board_github_desc:
-    'GitHubのリポジトリの Settings → Webhooks で、下記の URL を Payload URL に登録します。\nContent type は application/json、Secret はサーバーの GITHUB_WEBHOOK_SECRET と同じ値にし、イベントは Pull requests / Check suites / Check runs を選びます。',
+    'GitHub のリポジトリの Settings → Webhooks で、リポジトリごとに表示される Webhook URL を Payload URL に登録します。\nContent type は application/json、Secret は対応付けたときに表示されるシークレットにし、イベントは Pull requests / Check suites / Check runs を選びます。',
+  msg_github_regenerate_confirm:
+    'シークレットを作り直すと、今のシークレットは使えなくなります。GitHub 側の Webhook の Secret も入れ直してください。',
+  msg_github_secret_desc: 'このシークレットを GitHub の Webhook の Secret に貼り付けます。',
+  msg_github_secret_unset:
+    'シークレットを発行するまで、このリポジトリの Webhook は受け付けません。「シークレットを再発行」で発行し、GitHub 側の Webhook の URL と Secret を登録し直してください。',
   msg_git_complete_on_pr_merge:
     '紐付いたプルリクエスト / マージリクエストがすべてマージまたはクローズされ、1件以上マージされたときに完了にします。',
   msg_calendar_share_desc:

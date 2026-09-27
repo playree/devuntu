@@ -106,7 +106,7 @@ Devuntu の使い方。画面ごとのアクセス制御の詳細は [screens.md
 - **グループアサイン** — グループ単位の割り当て(変更できるのは管理者のみ)
 - **タグ管理** — タグの追加・名前と色の変更・削除
 - **チャネル通知** — このボードの出来事(チケットの作成 / 完了 / 担当変更、AIエージェントの実行結果)を投稿する Slack チャンネルと、通知するイベント(設定できるのは `owner` と管理者)
-- **Git連携** — 対応付ける GitHub のリポジトリ / GitLab のプロジェクトと、プルリクエスト(マージリクエスト)のマージでチケットを完了にするか(設定できるのは `owner` と管理者。サーバーに `GITHUB_WEBHOOK_SECRET` か `GITLAB_URLS` が設定されている場合だけ表示され、設定のある方だけが出る)
+- **Git連携** — 対応付ける GitHub のリポジトリ / GitLab のプロジェクトと、プルリクエスト(マージリクエスト)のマージでチケットを完了にするか(設定できるのは `owner` と管理者。GitLab はサーバーに `GITLAB_URLS` が設定されている場合だけ出る)
 - **デンジャーゾーン** — アーカイブ、ボードの削除(チケットとコメントもすべて消える)
 
 ## チケット
@@ -175,19 +175,32 @@ GitLab はサーバーの `GITLAB_URLS` に書いたインスタンスの URL �
 - 「プルリクエスト / マージリクエストのマージでチケットを完了にする」をオンにしたボードでは、紐付いたプルリクエストがすべてマージかクローズになり、
   1件以上マージされた時点でチケットを完了にする(システムの操作として扱い、チャネル通知の完了イベントも飛ぶ)。
   判定に使うのは対応付けたリポジトリ(GitHub / GitLab を問わない)のプルリクエストだけで、それ以外のリポジトリのものは状態が届かないので含めない
-- `GITHUB_WEBHOOK_SECRET` を外した GitHub や、`GITLAB_URLS` から外したインスタンスの対応付けは、一覧に残って外せる。
+- `GITLAB_URLS` から外したインスタンスの対応付けは、一覧に残って外せる。
   状態が届かなくなるので、マージで完了の判定には含めない
 
 #### GitHub の Webhook
 
-リポジトリ(または Organization)の Settings → Webhooks で登録する。
+シークレットはリポジトリごとに違うので、リポジトリごとに対応付けて、それぞれに Webhook を登録する。
 
-| 項目         | 値                                                                              |
-| ------------ | ------------------------------------------------------------------------------- |
-| Payload URL  | ボード設定の「Git連携」に表示される URL(`<BETTER_AUTH_URL>/api/github/webhook`) |
-| Content type | `application/json`                                                              |
-| Secret       | サーバーの `GITHUB_WEBHOOK_SECRET` と同じ値                                     |
-| イベント     | Pull requests / Check suites / Check runs                                       |
+1. ボード設定の「Git連携」でリポジトリ(`owner/name`。リポジトリの URL を貼ってもよい)を追加する。
+   Webhook URL と Webhook シークレットが表示される(シークレットはこのときだけ表示される)
+2. リポジトリの Settings → Webhooks で、次のとおり登録する
+
+| 項目         | 値                                                                  |
+| ------------ | ------------------------------------------------------------------- |
+| Payload URL  | 表示された Webhook URL(`<BETTER_AUTH_URL>/api/github/webhook/<ID>`) |
+| Content type | `application/json`                                                  |
+| Secret       | 表示された Webhook シークレット                                     |
+| イベント     | Pull requests / Check suites / Check runs                           |
+
+- シークレットを控え忘れた・漏れた場合は「シークレットを再発行」で作り直し、GitHub 側の Secret も入れ直す。
+  作り直しの影響はそのリポジトリの対応付けだけで、他のボード・リポジトリの Webhook はそのまま使える
+- 検証を通った Webhook が最後に届いた日時が一覧に出る。登録直後に GitHub が送る ping でも更新されるので、届いているか確認できる
+- シークレットはサーバーの `BETTER_AUTH_SECRET` で暗号化して保存する。`BETTER_AUTH_SECRET` を変えた場合はシークレットを再発行する
+- Organization の Webhook には対応していない(対応付けたリポジトリ以外のイベントは受け取っても捨てる)
+- 以前の `GITHUB_WEBHOOK_SECRET`(全リポジトリ共通のシークレット)と共通の URL(`/api/github/webhook`)は廃止した。
+  それ以前に対応付けたリポジトリは「シークレット未設定」と表示されるので、「シークレットを再発行」で発行し、
+  GitHub 側の Webhook の Payload URL と Secret を登録し直す。`GITHUB_WEBHOOK_SECRET` は環境変数から消してよい
 
 #### GitLab の Webhook
 

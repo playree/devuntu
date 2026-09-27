@@ -116,10 +116,6 @@ export const en = {
   q_slack_team_id: 'Workspace ID (SLACK_TEAM_ID)',
   slack_team_id_prefix: 'Workspace IDs usually start with T',
   q_slack_signing_secret: 'Signing secret (SLACK_SIGNING_SECRET)',
-  q_github: 'Configure GitHub integration (PR status and CI results)?',
-  github_secret_generated:
-    'Generated GITHUB_WEBHOOK_SECRET (register the same value as the Secret of the GitHub webhook)',
-  github_payload_url: 'Payload URL to register in GitHub:',
   q_gitlab: 'Configure GitLab integration (MR status and CI results)?',
   q_gitlab_urls: 'GitLab instance URLs (GITLAB_URLS)',
   q_gitlab_urls_help: 'Comma-separated for multiple (e.g. https://gitlab.com,https://git.example.com/gitlab)',

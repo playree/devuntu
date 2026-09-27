@@ -33,8 +33,8 @@ const LINK_SELECT = {
 /**
  * 表示するリンク(外したものを除く)と CI の結果。
  * CI はリンクとは別に Check Suite として持っているので、headSha でまとめて引いて集計する。
- * GitLab の CI は、このチケットのボードの対応付けを経由して届いたものだけを使う
- * (トークンを持つ別のボードの管理者が、同じプロジェクトの CI の状態を送り込めるため)。
+ * CI は、このチケットのボードの対応付けを経由して届いたものだけを使う
+ * (シークレットを持つ別のボードの管理者が、同じリポジトリの CI の状態を送り込めるため)。
  * 閲覧権限は呼び出し元(チケット詳細の取得)で確認済みであること。
  */
 export const listTicketLinks = async (ticketId: string, db: Db = prisma) => {
@@ -44,10 +44,10 @@ export const listTicketLinks = async (ticketId: string, db: Db = prisma) => {
     orderBy: { createdAt: 'asc' },
   })
 
-  const gitlabRepositoryIds = links.some(({ provider, headSha }) => provider === 'gitlab' && headSha)
+  const repositoryIds = links.some(({ headSha }) => headSha)
     ? (
         await db.boardRepository.findMany({
-          where: { provider: 'gitlab', board: { tickets: { some: { id: ticketId } } } },
+          where: { board: { tickets: { some: { id: ticketId } } } },
           select: { id: true },
         })
       ).map(({ id }) => id)
@@ -60,7 +60,7 @@ export const listTicketLinks = async (ticketId: string, db: Db = prisma) => {
             baseUrl,
             repo,
             headSha,
-            repositoryId: provider === 'gitlab' ? { in: gitlabRepositoryIds } : '',
+            repositoryId: { in: repositoryIds },
           },
         ]
       : [],

@@ -221,10 +221,6 @@ const server = {
   get SLACK_SIGNING_SECRET() {
     return getEnv('SLACK_SIGNING_SECRET')
   },
-  /** GitHub Webhook の署名シークレット。未設定なら GitHub 連携ごと無効 */
-  get GITHUB_WEBHOOK_SECRET() {
-    return getEnv('GITHUB_WEBHOOK_SECRET')
-  },
   /**
    * GitLab 連携で使ってよいインスタンスの URL(カンマ区切り)。未設定なら GitLab 連携ごと無効。
    * Webhook のトークンは Webhook ごとに違うので環境変数では持たず、対応付けたリポジトリごとに DB に保存する。

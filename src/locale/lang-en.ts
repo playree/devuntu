@@ -258,8 +258,11 @@ export const en: DefaultLocaleItems = {
   git_complete_on_pr_merge: 'Complete tickets when pull requests / merge requests are merged',
   git_repositories: 'Linked Repositories',
   github_repository: 'Repository (owner/repo)',
+  github_regenerate_secret: 'Regenerate Secret',
+  github_secret_unset: 'Secret not set',
+  github_webhook_secret: 'Webhook secret',
   gitlab_instance: 'Instance',
-  gitlab_last_received: 'Last received',
+  git_last_received: 'Last received',
   gitlab_project: 'Project (group/project)',
   gitlab_regenerate_token: 'Regenerate Token',
   gitlab_secret_token: 'Secret token',
@@ -536,7 +539,12 @@ Please copy and use the connection information above.
   msg_gitlab_already_added:
     'This project is already linked. Switch the verification or regenerate the token from the list.',
   msg_board_github_desc:
-    'In the repository Settings → Webhooks on GitHub, register the URL below as the Payload URL.\nSet Content type to application/json, Secret to the same value as GITHUB_WEBHOOK_SECRET on the server, and select the Pull requests / Check suites / Check runs events.',
+    'In the repository Settings → Webhooks on GitHub, register the webhook URL shown for each repository as the Payload URL.\nSet Content type to application/json, Secret to the secret shown when the repository is linked, and select the Pull requests / Check suites / Check runs events.',
+  msg_github_regenerate_confirm:
+    'Regenerating the secret invalidates the current one. Update the Secret of the GitHub webhook as well.',
+  msg_github_secret_desc: 'Paste this secret into the Secret of the GitHub webhook.',
+  msg_github_secret_unset:
+    'Webhooks for this repository are rejected until a secret is issued. Use "Regenerate Secret" and register the webhook URL and Secret on GitHub again.',
   msg_git_complete_on_pr_merge:
     'A ticket is completed when all linked pull requests / merge requests are merged or closed and at least one of them is merged.',
   msg_calendar_share_desc:

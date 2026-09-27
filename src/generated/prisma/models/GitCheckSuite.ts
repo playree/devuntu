@@ -578,8 +578,8 @@ export type $GitCheckSuitePayload<ExtArgs extends runtime.Types.Extensions.Inter
      */
     suiteId: string
     /**
-     * 受け取った対応付け(BoardRepository.id)。GitLab のみで、GitHub は空文字。
-     * GitLab のトークンは対応付けごとにボードの管理者が持つため、別のボードの対応付けを経由して
+     * 受け取った対応付け(BoardRepository.id)。空文字は対応付けごとのシークレットにする前の GitHub の行。
+     * シークレットは対応付けごとにボードの管理者が持つため、別のボードの対応付けを経由して
      * 届いた CI の状態を混ぜないよう、表示時にこのボードの対応付けのものだけを使う
      */
     repositoryId: string

@@ -681,15 +681,15 @@ export type $BoardRepositoryPayload<ExtArgs extends runtime.Types.Extensions.Int
      */
     repo: string
     /**
-     * GitLab の Webhook の検証方式。GitHub は環境変数の共通シークレットを使うので null
+     * GitLab の Webhook の検証方式。GitHub は署名方式が1つだけなので null
      */
     webhookAuth: $Enums.GitWebhookAuth | null
     /**
-     * GitLab の Webhook のトークン(暗号化して保存する)。未設定の間は Webhook を受けない
+     * Webhook のシークレット(GitHub)/ トークン(GitLab)。暗号化して保存する。未設定の間は Webhook を受けない
      */
     webhookSecret: string | null
     /**
-     * 検証を通った Webhook が最後に届いた日時(GitLab のみ)。登録できているかの目安として画面に出す
+     * 検証を通った Webhook が最後に届いた日時。登録できているかの目安として画面に出す
      */
     lastReceivedAt: Date | null
     createdAt: Date

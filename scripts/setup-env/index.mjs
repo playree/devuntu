@@ -620,17 +620,6 @@ if (await askYesNo(t('q_slack'), has('SLACK_CLIENT_ID'))) {
   })
 }
 
-if (await askYesNo(t('q_github'), has('GITHUB_WEBHOOK_SECRET'))) {
-  if (has('GITHUB_WEBHOOK_SECRET')) {
-    env.GITHUB_WEBHOOK_SECRET = prev.GITHUB_WEBHOOK_SECRET
-  } else {
-    env.GITHUB_WEBHOOK_SECRET = generateSecret()
-    note(t('github_secret_generated'))
-  }
-  note(t('github_payload_url'))
-  note(`  ${env.BETTER_AUTH_URL}/api/github/webhook`)
-}
-
 if (await askYesNo(t('q_gitlab'), has('GITLAB_URLS'))) {
   env.GITLAB_URLS = await ask({
     label: t('q_gitlab_urls'),
