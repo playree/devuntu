@@ -3,12 +3,12 @@
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
 import { InputField } from '@/components/general/input'
-import { GithubIcon, PlusIcon, XMarkIcon } from '@/components/icon'
+import { CodeBracketIcon, GithubIcon, GitlabIcon, PlusIcon, XMarkIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { CiStatusChip, PullRequestStateChip } from '@/components/ticket/ticket-link-chip'
 import { parseAction } from '@/lib/action/action-client'
-import { ticketLinkLabel } from '@/lib/github/github'
-import { zGithubUrl } from '@/lib/schema/schema-ticket'
+import { ticketLinkLabel } from '@/lib/git/git'
+import { zGitUrl } from '@/lib/schema/schema-ticket'
 import { useLocale } from '@/locale/client'
 import { FC, useState } from 'react'
 import { addTicketLink, GetTicketReturnType, removeTicketLink } from './server'
@@ -34,6 +34,11 @@ const LinkItem: FC<{ link: Link; canEdit: boolean; refresh: () => Promise<void> 
 
   return (
     <li className='flex flex-wrap items-center gap-x-2 gap-y-1'>
+      {link.provider === 'gitlab' ? (
+        <GitlabIcon width={14} className='text-muted shrink-0' />
+      ) : (
+        <GithubIcon width={14} className='text-muted shrink-0' />
+      )}
       <a href={link.url} target='_blank' rel='noopener noreferrer' className='min-w-0 truncate text-sm hover:underline'>
         <span className='font-mono'>{ticketLinkLabel(link)}</span>
         {link.title && <span className='text-muted ml-2'>{link.title}</span>}
@@ -70,7 +75,7 @@ export const TicketLinks: FC<{ ticket: Ticket; refresh: () => Promise<void> }> =
   }
 
   const add = async () => {
-    if (!zGithubUrl.safeParse(url).success) {
+    if (!zGitUrl.safeParse(url).success) {
       setInvalid(true)
       return
     }
@@ -90,7 +95,7 @@ export const TicketLinks: FC<{ ticket: Ticket; refresh: () => Promise<void> }> =
   return (
     <FlexCol isSmart className='pb-4'>
       <div className='flex items-center gap-2'>
-        <GithubIcon />
+        <CodeBracketIcon />
         <span>
           {t('ticket_links')} ({links.length})
         </span>
@@ -124,7 +129,7 @@ export const TicketLinks: FC<{ ticket: Ticket; refresh: () => Promise<void> }> =
                 setUrl(e.target.value)
                 setInvalid(false)
               }}
-              errorMessage={isInvalid ? t('@invalid_github_url') : undefined}
+              errorMessage={isInvalid ? t('@invalid_git_url') : undefined}
             />
           </div>
           <MultiButton

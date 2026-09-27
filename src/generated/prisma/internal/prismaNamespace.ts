@@ -4866,6 +4866,7 @@ export const TicketLinkScalarFieldEnum = {
   ticketId: 'ticketId',
   provider: 'provider',
   kind: 'kind',
+  baseUrl: 'baseUrl',
   repo: 'repo',
   ref: 'ref',
   url: 'url',
@@ -4887,7 +4888,11 @@ export const BoardRepositoryScalarFieldEnum = {
   id: 'id',
   boardId: 'boardId',
   provider: 'provider',
+  baseUrl: 'baseUrl',
   repo: 'repo',
+  webhookAuth: 'webhookAuth',
+  webhookSecret: 'webhookSecret',
+  lastReceivedAt: 'lastReceivedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -4898,8 +4903,10 @@ export type BoardRepositoryScalarFieldEnum = (typeof BoardRepositoryScalarFieldE
 export const GitCheckSuiteScalarFieldEnum = {
   id: 'id',
   provider: 'provider',
+  baseUrl: 'baseUrl',
   repo: 'repo',
   suiteId: 'suiteId',
+  repositoryId: 'repositoryId',
   headSha: 'headSha',
   appName: 'appName',
   status: 'status',
@@ -5374,6 +5381,20 @@ export type EnumTicketLinkSourceFieldRefInput<$PrismaModel> = FieldRefInputType<
  * Reference to a field of type 'TicketLinkSource[]'
  */
 export type ListEnumTicketLinkSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TicketLinkSource[]'>
+    
+
+
+/**
+ * Reference to a field of type 'GitWebhookAuth'
+ */
+export type EnumGitWebhookAuthFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'GitWebhookAuth'>
+    
+
+
+/**
+ * Reference to a field of type 'GitWebhookAuth[]'
+ */
+export type ListEnumGitWebhookAuthFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'GitWebhookAuth[]'>
     
 
 

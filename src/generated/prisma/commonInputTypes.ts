@@ -572,6 +572,23 @@ export type EnumTicketLinkSourceWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumTicketLinkSourceFilter<$PrismaModel>
 }
 
+export type EnumGitWebhookAuthNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.GitWebhookAuth | Prisma.EnumGitWebhookAuthFieldRefInput<$PrismaModel> | null
+  in?: $Enums.GitWebhookAuth[] | Prisma.ListEnumGitWebhookAuthFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.GitWebhookAuth[] | Prisma.ListEnumGitWebhookAuthFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumGitWebhookAuthNullableFilter<$PrismaModel> | $Enums.GitWebhookAuth | null
+}
+
+export type EnumGitWebhookAuthNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.GitWebhookAuth | Prisma.EnumGitWebhookAuthFieldRefInput<$PrismaModel> | null
+  in?: $Enums.GitWebhookAuth[] | Prisma.ListEnumGitWebhookAuthFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.GitWebhookAuth[] | Prisma.ListEnumGitWebhookAuthFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumGitWebhookAuthNullableWithAggregatesFilter<$PrismaModel> | $Enums.GitWebhookAuth | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumGitWebhookAuthNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumGitWebhookAuthNullableFilter<$PrismaModel>
+}
+
 export type EnumNotifyEventFilter<$PrismaModel = never> = {
   equals?: $Enums.NotifyEvent | Prisma.EnumNotifyEventFieldRefInput<$PrismaModel>
   in?: $Enums.NotifyEvent[] | Prisma.ListEnumNotifyEventFieldRefInput<$PrismaModel>
@@ -1189,6 +1206,23 @@ export type NestedEnumTicketLinkSourceWithAggregatesFilter<$PrismaModel = never>
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumTicketLinkSourceFilter<$PrismaModel>
   _max?: Prisma.NestedEnumTicketLinkSourceFilter<$PrismaModel>
+}
+
+export type NestedEnumGitWebhookAuthNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.GitWebhookAuth | Prisma.EnumGitWebhookAuthFieldRefInput<$PrismaModel> | null
+  in?: $Enums.GitWebhookAuth[] | Prisma.ListEnumGitWebhookAuthFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.GitWebhookAuth[] | Prisma.ListEnumGitWebhookAuthFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumGitWebhookAuthNullableFilter<$PrismaModel> | $Enums.GitWebhookAuth | null
+}
+
+export type NestedEnumGitWebhookAuthNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.GitWebhookAuth | Prisma.EnumGitWebhookAuthFieldRefInput<$PrismaModel> | null
+  in?: $Enums.GitWebhookAuth[] | Prisma.ListEnumGitWebhookAuthFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.GitWebhookAuth[] | Prisma.ListEnumGitWebhookAuthFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumGitWebhookAuthNullableWithAggregatesFilter<$PrismaModel> | $Enums.GitWebhookAuth | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumGitWebhookAuthNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumGitWebhookAuthNullableFilter<$PrismaModel>
 }
 
 export type NestedEnumNotifyEventFilter<$PrismaModel = never> = {

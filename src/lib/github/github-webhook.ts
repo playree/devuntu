@@ -9,11 +9,11 @@
  */
 
 import { z } from 'zod'
-import { completeTicketByMerge } from '../board/ticket-mutation'
 import { nowDate } from '../day'
+import { autoLinkPullRequest, type GitRepoKey, saveCheckSuite, syncPullRequest } from '../git/git-webhook'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
-import { extractDisplayIdFromBranch, githubPullRequestUrl, isAllPullRequestsDone, pullRequestStateOf } from './github'
+import { githubPullRequestUrl, pullRequestStateOf } from './github'
 
 const scRepository = z.object({ full_name: z.string().min(1) })
 
@@ -55,79 +55,13 @@ const scCheckRunEvent = z.object({
 const findLinkedBoards = async (repo: string) =>
   (
     await prisma.boardRepository.findMany({
-      where: { provider: 'github', repo },
+      where: { provider: 'github', baseUrl: '', repo },
       select: { board: { select: { id: true, key: true, completeOnPrMerge: true } } },
     })
   ).map(({ board }) => board)
 
-type LinkedBoard = Awaited<ReturnType<typeof findLinkedBoards>>[number]
-
-/**
- * ブランチ名の表示IDからチケットを引き、PR のリンクが無ければ作る。
- * 表示IDのキーが対応付けたボードのキーと一致するときだけ紐付ける(他のボードのチケットへは付けない)。
- * 外された(dismissed)リンクも行が残っているので、ここでは作り直さない。
- */
-const autoLinkPullRequest = async (repo: string, number: number, branch: string, boards: LinkedBoard[]) => {
-  const parsed = extractDisplayIdFromBranch(branch)
-  const board = parsed && boards.find(({ key }) => key === parsed.key)
-  if (!parsed || !board) {
-    return
-  }
-  const ticket = await prisma.ticket.findUnique({
-    where: { boardId_number: { boardId: board.id, number: parsed.number } },
-    select: { id: true },
-  })
-  if (!ticket) {
-    return
-  }
-
-  const created = await prisma.ticketLink.createMany({
-    data: {
-      ticketId: ticket.id,
-      provider: 'github',
-      kind: 'pull_request',
-      repo,
-      ref: String(number),
-      url: githubPullRequestUrl(repo, number),
-      source: 'auto',
-    },
-    skipDuplicates: true,
-  })
-  if (created.count > 0) {
-    logger.info({ ticketId: ticket.id, repo, number }, 'github pull request auto linked')
-  }
-}
-
-/**
- * マージで完了にするボードのチケットのうち、紐付いた PR がすべて片付いた(1件以上マージされた)ものを完了にする。
- *
- * 判定に使うのは、そのボードに対応付けたリポジトリの PR だけ。対応付けていないリポジトリの PR には
- * Webhook が届かず状態が空のままなので、含めるといつまでも完了にならない。外したリンクも含めない。
- */
-const completeMergedTickets = async (targets: { ticketId: string; boardId: string }[], pullRequest: string) => {
-  for (const { ticketId, boardId } of targets) {
-    const repositories = await prisma.boardRepository.findMany({
-      where: { boardId, provider: 'github' },
-      select: { repo: true },
-    })
-    const links = await prisma.ticketLink.findMany({
-      where: {
-        ticketId,
-        provider: 'github',
-        kind: 'pull_request',
-        dismissed: false,
-        repo: { in: repositories.map(({ repo }) => repo) },
-      },
-      select: { prState: true },
-    })
-    if (!isAllPullRequestsDone(links.map(({ prState }) => prState))) {
-      continue
-    }
-    if (await completeTicketByMerge(ticketId, pullRequest)) {
-      logger.info({ ticketId, pullRequest }, 'ticket completed by merge')
-    }
-  }
-}
+/** GitHub のリポジトリの指定。インスタンスは github.com だけなので baseUrl は空 */
+const repoKey = (repo: string): GitRepoKey => ({ provider: 'github', baseUrl: '', repo })
 
 const handlePullRequest = async (body: unknown) => {
   const parsed = scPullRequestEvent.safeParse(body)
@@ -142,83 +76,35 @@ const handlePullRequest = async (body: unknown) => {
     return
   }
 
-  await autoLinkPullRequest(repo, pr.number, pr.head.ref, boards)
+  const key = repoKey(repo)
+  await autoLinkPullRequest({ key, number: pr.number, url: githubPullRequestUrl(repo, pr.number) }, pr.head.ref, boards)
 
-  const where = {
-    provider: 'github' as const,
-    repo,
-    kind: 'pull_request' as const,
-    ref: String(pr.number),
-    ticket: { boardId: { in: boards.map(({ id }) => id) } },
-  }
-  const prState = pullRequestStateOf(pr)
-  // updated_at は秒単位。同じ時刻ならマージが勝つ(マージの後に届いた同時刻の古い状態で戻さない)
-  const newer =
-    prState === 'merged'
-      ? [{ syncedAt: null }, { syncedAt: { lte: pr.updated_at } }]
-      : [
-          { syncedAt: null },
-          { syncedAt: { lt: pr.updated_at } },
-          { syncedAt: pr.updated_at, prState: { not: 'merged' as const } },
-        ]
-  await prisma.ticketLink.updateMany({
-    where: { ...where, OR: newer },
-    data: { title: pr.title, prState, headSha: pr.head.sha, syncedAt: pr.updated_at },
+  await syncPullRequest({
+    key,
+    boards,
+    number: pr.number,
+    state: { title: pr.title, prState: pullRequestStateOf(pr), headSha: pr.head.sha, syncedAt: pr.updated_at },
+    // マージせずに閉じた場合も、残りの PR がマージ済みなら完了の条件を満たすので判定する
+    isClosed: action === 'closed',
   })
-
-  // マージせずに閉じた場合も、残りの PR がマージ済みなら完了の条件を満たすので判定する
-  if (action !== 'closed') {
-    return
-  }
-  const completeBoardIds = boards.filter(({ completeOnPrMerge }) => completeOnPrMerge).map(({ id }) => id)
-  if (completeBoardIds.length === 0) {
-    return
-  }
-  const targets = await prisma.ticketLink.findMany({
-    where: { ...where, dismissed: false, ticket: { boardId: { in: completeBoardIds }, status: { not: 'done' } } },
-    select: { ticketId: true, ticket: { select: { boardId: true } } },
-  })
-  await completeMergedTickets(
-    targets.map(({ ticketId, ticket }) => ({ ticketId, boardId: ticket.boardId })),
-    `${repo}#${pr.number}`,
-  )
 }
 
 /** Check Suite の状態を保存する。check_suite / check_run のどちらのイベントも同じ形の suite を持つ */
-const saveCheckSuite = async (
+const saveGithubCheckSuite = async (
   repo: string,
   suite: z.infer<typeof scCheckSuite>,
   fallback: { status: string; app?: string },
-) => {
-  const syncedAt = suite.updated_at ?? nowDate()
-  const data = {
-    headSha: suite.head_sha,
-    appName: suite.app?.name ?? fallback.app ?? '',
-    status: suite.status ?? fallback.status,
-    conclusion: suite.conclusion ?? null,
-    syncedAt,
-  }
-  const key = { provider: 'github' as const, repo, suiteId: String(suite.id) }
-
-  /**
-   * GitHub の updated_at は秒単位なので、同じ時刻のイベントが前後して届くことがある。
-   * 同じ時刻なら完了が勝つ(完了の後に届いた同時刻の途中経過で、実行中へ戻さない)。
-   */
-  const newer =
-    data.status === 'completed'
-      ? { syncedAt: { lte: syncedAt } }
-      : { OR: [{ syncedAt: { lt: syncedAt } }, { syncedAt, status: { not: 'completed' } }] }
-  const update = () => prisma.gitCheckSuite.updateMany({ where: { ...key, ...newer }, data })
-
-  if ((await update()).count > 0) {
-    return
-  }
-  // 無ければ作る。同時に届いたイベントに先を越された(重複で作れなかった)ら、その行と比べて更新し直す
-  const created = await prisma.gitCheckSuite.createMany({ data: { ...key, ...data }, skipDuplicates: true })
-  if (created.count === 0) {
-    await update()
-  }
-}
+) =>
+  saveCheckSuite(
+    { ...repoKey(repo), suiteId: String(suite.id), repositoryId: '' },
+    {
+      headSha: suite.head_sha,
+      appName: suite.app?.name ?? fallback.app ?? '',
+      status: suite.status ?? fallback.status,
+      conclusion: suite.conclusion ?? null,
+      syncedAt: suite.updated_at ?? nowDate(),
+    },
+  )
 
 const handleCheckSuite = async (body: unknown) => {
   const parsed = scCheckSuiteEvent.safeParse(body)
@@ -230,7 +116,7 @@ const handleCheckSuite = async (body: unknown) => {
   if ((await findLinkedBoards(repo)).length === 0) {
     return
   }
-  await saveCheckSuite(repo, parsed.data.check_suite, { status: 'completed' })
+  await saveGithubCheckSuite(repo, parsed.data.check_suite, { status: 'completed' })
 }
 
 /**
@@ -250,7 +136,7 @@ const handleCheckRun = async (body: unknown) => {
     return
   }
   // suite 側の status が無いペイロードでは、run が終わっていても suite の完了は check_suite で受ける
-  await saveCheckSuite(repo, run.check_suite, { status: 'in_progress', app: run.app?.name })
+  await saveGithubCheckSuite(repo, run.check_suite, { status: 'in_progress', app: run.app?.name })
 }
 
 /** イベントごとの処理。ここに無いイベント(ping など)は受け取っても何もしない */

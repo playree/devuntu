@@ -23,7 +23,7 @@ export const VERIFICATION_RETENTION_MS = DAY_MS
 export const OAUTH_TOKEN_RETENTION_MS = DAY_MS
 
 /**
- * GitHub の Check Suite の保持期間。表示に使うのは紐付いた PR / コミットの最新の結果だけで、
+ * CI の状態(GitHub の Check Suite / GitLab のパイプライン)の保持期間。表示に使うのは紐付いた PR / コミットの最新の結果だけで、
  * 更新が止まって久しいもの(マージ済み・放置された PR)は見返されないので消す
  */
 export const GIT_CHECK_SUITE_RETENTION_MS = 90 * DAY_MS

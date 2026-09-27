@@ -7,9 +7,10 @@
 
 import type { GitProvider } from '@/generated/prisma/enums'
 import { errInvalidOperation, errValidation } from '../error'
-import { type CiStatus, parseGithubUrl, summarizeCheckSuites } from '../github/github'
+import { parseGitUrl, summarizeCheckSuites } from '../git/git'
 import { type Db, isUniqueViolation, prisma } from '../prisma'
 import { type Actor, assertTicketAccess } from './board-access'
+import { gitlabBaseUrls } from './board-repository'
 
 /** 1チケットに紐付けられる上限。Webhook の自動紐付けとは別に、手での登録の暴走を止める */
 export const MAX_TICKET_LINKS = 50
@@ -17,6 +18,7 @@ export const MAX_TICKET_LINKS = 50
 const LINK_SELECT = {
   id: true,
   provider: true,
+  baseUrl: true,
   kind: true,
   repo: true,
   ref: true,
@@ -31,6 +33,8 @@ const LINK_SELECT = {
 /**
  * 表示するリンク(外したものを除く)と CI の結果。
  * CI はリンクとは別に Check Suite として持っているので、headSha でまとめて引いて集計する。
+ * GitLab の CI は、このチケットのボードの対応付けを経由して届いたものだけを使う
+ * (トークンを持つ別のボードの管理者が、同じプロジェクトの CI の状態を送り込めるため)。
  * 閲覧権限は呼び出し元(チケット詳細の取得)で確認済みであること。
  */
 export const listTicketLinks = async (ticketId: string, db: Db = prisma) => {
@@ -40,23 +44,49 @@ export const listTicketLinks = async (ticketId: string, db: Db = prisma) => {
     orderBy: { createdAt: 'asc' },
   })
 
-  const targets = links.flatMap(({ provider, repo, headSha }) => (headSha ? [{ provider, repo, headSha }] : []))
+  const gitlabRepositoryIds = links.some(({ provider, headSha }) => provider === 'gitlab' && headSha)
+    ? (
+        await db.boardRepository.findMany({
+          where: { provider: 'gitlab', board: { tickets: { some: { id: ticketId } } } },
+          select: { id: true },
+        })
+      ).map(({ id }) => id)
+    : []
+  const targets = links.flatMap(({ provider, baseUrl, repo, headSha }) =>
+    headSha
+      ? [
+          {
+            provider,
+            baseUrl,
+            repo,
+            headSha,
+            repositoryId: provider === 'gitlab' ? { in: gitlabRepositoryIds } : '',
+          },
+        ]
+      : [],
+  )
   const suites =
     targets.length > 0
       ? await db.gitCheckSuite.findMany({
           where: { OR: targets },
-          select: { provider: true, repo: true, headSha: true, status: true, conclusion: true },
+          select: { provider: true, baseUrl: true, repo: true, headSha: true, status: true, conclusion: true },
         })
       : []
 
-  const ciOf = (provider: GitProvider, repo: string, headSha: string | null): CiStatus | null =>
-    headSha
+  const ciOf = (link: { provider: GitProvider; baseUrl: string; repo: string; headSha: string | null }) =>
+    link.headSha
       ? summarizeCheckSuites(
-          suites.filter((suite) => suite.provider === provider && suite.repo === repo && suite.headSha === headSha),
+          suites.filter(
+            (suite) =>
+              suite.provider === link.provider &&
+              suite.baseUrl === link.baseUrl &&
+              suite.repo === link.repo &&
+              suite.headSha === link.headSha,
+          ),
         )
       : null
 
-  return links.map(({ headSha, ...link }) => ({ ...link, ci: ciOf(link.provider, link.repo, headSha) }))
+  return links.map(({ headSha, ...link }) => ({ ...link, ci: ciOf({ ...link, headSha }) }))
 }
 export type TicketLinkView = Awaited<ReturnType<typeof listTicketLinks>>[number]
 
@@ -65,17 +95,17 @@ export type TicketLinkView = Awaited<ReturnType<typeof listTicketLinks>>[number]
  * 種別(ブランチ / PR / コミット)は URL から判定する。
  */
 export const addTicketLink = async (actor: Actor, ticketId: string, rawUrl: string) => {
-  const artifact = parseGithubUrl(rawUrl)
+  const artifact = parseGitUrl(rawUrl, gitlabBaseUrls())
   if (!artifact) {
     throw errValidation('url')
   }
-  const { kind, repo, ref, url } = artifact
+  const { provider, baseUrl, kind, repo, ref, url } = artifact
 
-  const key = { ticketId, provider: 'github' as const, repo, kind, ref }
+  const key = { ticketId, provider, baseUrl, repo, kind, ref }
   /** 既にある行を表示に戻す。外していたものも含む */
   const restore = (tx: Db) =>
     tx.ticketLink.update({
-      where: { ticketId_provider_repo_kind_ref: key },
+      where: { ticketId_provider_baseUrl_repo_kind_ref: key },
       data: { dismissed: false },
       select: { id: true },
     })
@@ -85,7 +115,7 @@ export const addTicketLink = async (actor: Actor, ticketId: string, rawUrl: stri
       await assertTicketAccess(actor, ticketId, 'edit', tx)
 
       const existing = await tx.ticketLink.findUnique({
-        where: { ticketId_provider_repo_kind_ref: key },
+        where: { ticketId_provider_baseUrl_repo_kind_ref: key },
         select: { id: true },
       })
       if (existing) {

@@ -400,7 +400,7 @@ describe('createDevuntuMcpServer', () => {
     expect(result.content).toEqual([{ type: 'text', text: JSON.stringify({ id: 'l1' }, null, 2) }])
   })
 
-  it('link_ticket_artifact は GitHub 以外の URL を受け付けない', async () => {
+  it('link_ticket_artifact は GitHub / GitLab 以外の URL を受け付けない', async () => {
     const result = await (
       await connectClient()
     ).callTool({

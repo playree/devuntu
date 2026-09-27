@@ -275,10 +275,17 @@ Slack に貼られたチケットURLの展開が使えるようになる。
 
 ### GitHub連携
 
-`GITHUB_WEBHOOK_SECRET` を設定すると、ボード設定に「GitHub連携」が現れ、チケットに紐付けたプルリクエストの
+`GITHUB_WEBHOOK_SECRET` を設定すると、ボード設定の「Git連携」に GitHub が現れ、チケットに紐付けたプルリクエストの
 状態と CI の結果を Webhook で受け取れるようになる(`docker compose run --rm tools setup-env` で自動生成できる)。
 値は任意の十分に長いランダム文字列で、GitHub 側の Webhook の Secret にも同じ値を登録する。
 GitHub の API は呼ばないので、トークンや GitHub App は要らない。登録の手順は [user-guide.md](user-guide.md#関連リンクブランチprコミット) を参照。
+
+### GitLab連携
+
+`GITLAB_URLS` に使う GitLab のインスタンスの URL をカンマ区切りで書くと、ボード設定の「Git連携」に GitLab が現れる
+(例: `GITLAB_URLS=https://gitlab.com,https://git.example.com/gitlab`)。セルフホスト版はサブパスに置いたものも書ける。
+Webhook のトークンはプロジェクトごとに画面から設定するので、環境変数での共通のシークレットは無い。
+`docker compose run --rm tools setup-env` でも設定できる。GitLab の API は呼ばないので、アクセストークンは要らない。登録の手順は [user-guide.md](user-guide.md#gitlab-の-webhook) を参照。
 
 ### Webプッシュ通知
 

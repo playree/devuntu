@@ -4,23 +4,17 @@ import { MultiButton } from '@/components/general/button'
 import { CopyableField } from '@/components/general/copyable-field'
 import { FlexCol } from '@/components/general/flex'
 import { InputField } from '@/components/general/input'
-import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
-import { SwitchField } from '@/components/general/switch'
-import { PlusIcon, XMarkIcon } from '@/components/icon'
+import { NoticePanel } from '@/components/general/panel'
+import { GithubIcon, PlusIcon, XMarkIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
-import { parseAction, useActionData } from '@/lib/action/action-client'
+import { parseAction } from '@/lib/action/action-client'
 import { normalizeGithubRepo } from '@/lib/github/github'
 import { useLocale } from '@/locale/client'
 import { FC, useState } from 'react'
-import {
-  addBoardRepository,
-  getBoardGithub,
-  GetBoardGithubReturnType,
-  removeBoardRepository,
-  setBoardCompleteOnPrMerge,
-} from './server'
+import { addBoardGithubRepository, GetBoardGitReturnType, removeBoardRepository } from './server'
 
-type Repository = NonNullable<GetBoardGithubReturnType>['repositories'][number]
+type Github = NonNullable<NonNullable<GetBoardGitReturnType>['github']>
+type Repository = Github['repositories'][number]
 
 const RepositoryItem: FC<{ boardId: string; repository: Repository; refresh: () => Promise<void> }> = ({
   boardId,
@@ -61,23 +55,18 @@ const RepositoryItem: FC<{ boardId: string; repository: Repository; refresh: () 
 }
 
 /**
- * ボードの GitHub 連携(対応付けるリポジトリ・マージで完了)。
+ * ボードの GitHub 連携(対応付けるリポジトリ)。
  * Webhook は GitHub 側で登録するので、登録先の URL と手順もここで案内する。
  */
-export const BoardGithub: FC<{ boardId: string }> = ({ boardId }) => {
+export const BoardGithub: FC<{ boardId: string; github: Github; refresh: () => Promise<void> }> = ({
+  boardId,
+  github,
+  refresh,
+}) => {
   const { t } = useLocale()
-  const { data: github, isLoading, refresh } = useActionData(() => getBoardGithub({ id: boardId }))
   const [repo, setRepo] = useState('')
   const [isInvalid, setInvalid] = useState(false)
   const [isAdding, setAdding] = useState(false)
-  const [isSwitching, setSwitching] = useState(false)
-
-  if (isLoading) {
-    return <PanelSkeleton />
-  }
-  if (!github) {
-    return null
-  }
 
   const add = async () => {
     if (!normalizeGithubRepo(repo)) {
@@ -86,7 +75,7 @@ export const BoardGithub: FC<{ boardId: string }> = ({ boardId }) => {
     }
     setAdding(true)
     try {
-      const { repo: added } = await parseAction(addBoardRepository({ id: boardId, repo }))
+      const { repo: added } = await parseAction(addBoardGithubRepository({ id: boardId, repo }))
       notify.success(t('msg_added_target', { target: added }))
       setRepo('')
       await refresh()
@@ -97,26 +86,23 @@ export const BoardGithub: FC<{ boardId: string }> = ({ boardId }) => {
     }
   }
 
-  const switchCompleteOnPrMerge = async (completeOnPrMerge: boolean) => {
-    setSwitching(true)
-    try {
-      await parseAction(setBoardCompleteOnPrMerge({ id: boardId, completeOnPrMerge }))
-      notify.success(t('msg_saved'))
-      await refresh()
-    } catch {
-      // エラー表示は parseAction 側で済んでいる
-    } finally {
-      setSwitching(false)
-    }
-  }
-
   return (
     <FlexCol>
-      <NoticePanel className='text-xs'>{t('msg_board_github_desc')}</NoticePanel>
-      <CopyableField isSmart label={t('github_webhook_url')} text={github.webhookUrl} />
+      <div className='flex items-center gap-2 text-sm font-medium'>
+        <GithubIcon width={16} />
+        GitHub
+      </div>
+      {github.enabled ? (
+        <>
+          <NoticePanel className='text-xs'>{t('msg_board_github_desc')}</NoticePanel>
+          <CopyableField isSmart label={t('git_webhook_url')} text={github.webhookUrl} />
+        </>
+      ) : (
+        <span className='text-warning text-xs'>{t('msg_git_provider_disabled')}</span>
+      )}
 
       <FlexCol isSmart>
-        <span className='text-sm'>{t('github_repositories')}</span>
+        <span className='text-sm'>{t('git_repositories')}</span>
         {github.repositories.length > 0 ? (
           <ul className='space-y-1'>
             {github.repositories.map((repository) => (
@@ -126,50 +112,42 @@ export const BoardGithub: FC<{ boardId: string }> = ({ boardId }) => {
         ) : (
           <span className='text-muted text-sm'>-</span>
         )}
-        <form
-          className='flex items-start gap-2'
-          onSubmit={(e) => {
-            e.preventDefault()
-            void add()
-          }}
-        >
-          <div className='grow'>
-            <InputField
-              isSmart
-              isLabelHidden
-              label={t('github_repository')}
-              aria-label={t('github_repository')}
-              placeholder='owner/repo'
-              value={repo}
-              onChange={(e) => {
-                setRepo(e.target.value)
-                setInvalid(false)
-              }}
-              errorMessage={isInvalid ? t('@invalid_github_repo') : undefined}
-            />
-          </div>
-          <MultiButton
-            type='submit'
-            size='sm'
-            variant='outline'
-            icon={<PlusIcon width={16} />}
-            isPending={isAdding}
-            isDisabled={!repo.trim()}
+        {github.enabled && (
+          <form
+            className='flex items-start gap-2'
+            onSubmit={(e) => {
+              e.preventDefault()
+              void add()
+            }}
           >
-            {t('add_repository')}
-          </MultiButton>
-        </form>
+            <div className='grow'>
+              <InputField
+                isSmart
+                isLabelHidden
+                label={t('github_repository')}
+                aria-label={t('github_repository')}
+                placeholder='owner/repo'
+                value={repo}
+                onChange={(e) => {
+                  setRepo(e.target.value)
+                  setInvalid(false)
+                }}
+                errorMessage={isInvalid ? t('@invalid_github_repo') : undefined}
+              />
+            </div>
+            <MultiButton
+              type='submit'
+              size='sm'
+              variant='outline'
+              icon={<PlusIcon width={16} />}
+              isPending={isAdding}
+              isDisabled={!repo.trim()}
+            >
+              {t('add_repository')}
+            </MultiButton>
+          </form>
+        )}
       </FlexCol>
-
-      <SwitchField
-        id='complete-on-pr-merge'
-        isSmart
-        label={t('github_complete_on_pr_merge')}
-        isSelected={github.completeOnPrMerge}
-        isDisabled={isSwitching}
-        onChange={switchCompleteOnPrMerge}
-      />
-      <span className='text-muted text-xs'>{t('msg_github_complete_on_pr_merge')}</span>
     </FlexCol>
   )
 }

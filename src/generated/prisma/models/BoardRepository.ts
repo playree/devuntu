@@ -28,7 +28,11 @@ export type BoardRepositoryMinAggregateOutputType = {
   id: string | null
   boardId: string | null
   provider: $Enums.GitProvider | null
+  baseUrl: string | null
   repo: string | null
+  webhookAuth: $Enums.GitWebhookAuth | null
+  webhookSecret: string | null
+  lastReceivedAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -37,7 +41,11 @@ export type BoardRepositoryMaxAggregateOutputType = {
   id: string | null
   boardId: string | null
   provider: $Enums.GitProvider | null
+  baseUrl: string | null
   repo: string | null
+  webhookAuth: $Enums.GitWebhookAuth | null
+  webhookSecret: string | null
+  lastReceivedAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -46,7 +54,11 @@ export type BoardRepositoryCountAggregateOutputType = {
   id: number
   boardId: number
   provider: number
+  baseUrl: number
   repo: number
+  webhookAuth: number
+  webhookSecret: number
+  lastReceivedAt: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -57,7 +69,11 @@ export type BoardRepositoryMinAggregateInputType = {
   id?: true
   boardId?: true
   provider?: true
+  baseUrl?: true
   repo?: true
+  webhookAuth?: true
+  webhookSecret?: true
+  lastReceivedAt?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -66,7 +82,11 @@ export type BoardRepositoryMaxAggregateInputType = {
   id?: true
   boardId?: true
   provider?: true
+  baseUrl?: true
   repo?: true
+  webhookAuth?: true
+  webhookSecret?: true
+  lastReceivedAt?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -75,7 +95,11 @@ export type BoardRepositoryCountAggregateInputType = {
   id?: true
   boardId?: true
   provider?: true
+  baseUrl?: true
   repo?: true
+  webhookAuth?: true
+  webhookSecret?: true
+  lastReceivedAt?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -157,7 +181,11 @@ export type BoardRepositoryGroupByOutputType = {
   id: string
   boardId: string
   provider: $Enums.GitProvider
+  baseUrl: string
   repo: string
+  webhookAuth: $Enums.GitWebhookAuth | null
+  webhookSecret: string | null
+  lastReceivedAt: Date | null
   createdAt: Date
   updatedAt: Date
   _count: BoardRepositoryCountAggregateOutputType | null
@@ -187,7 +215,11 @@ export type BoardRepositoryWhereInput = {
   id?: Prisma.StringFilter<"BoardRepository"> | string
   boardId?: Prisma.StringFilter<"BoardRepository"> | string
   provider?: Prisma.EnumGitProviderFilter<"BoardRepository"> | $Enums.GitProvider
+  baseUrl?: Prisma.StringFilter<"BoardRepository"> | string
   repo?: Prisma.StringFilter<"BoardRepository"> | string
+  webhookAuth?: Prisma.EnumGitWebhookAuthNullableFilter<"BoardRepository"> | $Enums.GitWebhookAuth | null
+  webhookSecret?: Prisma.StringNullableFilter<"BoardRepository"> | string | null
+  lastReceivedAt?: Prisma.DateTimeNullableFilter<"BoardRepository"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"BoardRepository"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"BoardRepository"> | Date | string
   board?: Prisma.XOR<Prisma.BoardScalarRelationFilter, Prisma.BoardWhereInput>
@@ -197,7 +229,11 @@ export type BoardRepositoryOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   boardId?: Prisma.SortOrder
   provider?: Prisma.SortOrder
+  baseUrl?: Prisma.SortOrder
   repo?: Prisma.SortOrder
+  webhookAuth?: Prisma.SortOrderInput | Prisma.SortOrder
+  webhookSecret?: Prisma.SortOrderInput | Prisma.SortOrder
+  lastReceivedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   board?: Prisma.BoardOrderByWithRelationInput
@@ -205,23 +241,31 @@ export type BoardRepositoryOrderByWithRelationInput = {
 
 export type BoardRepositoryWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  boardId_provider_repo?: Prisma.BoardRepositoryBoardIdProviderRepoCompoundUniqueInput
+  boardId_provider_baseUrl_repo?: Prisma.BoardRepositoryBoardIdProviderBaseUrlRepoCompoundUniqueInput
   AND?: Prisma.BoardRepositoryWhereInput | Prisma.BoardRepositoryWhereInput[]
   OR?: Prisma.BoardRepositoryWhereInput[]
   NOT?: Prisma.BoardRepositoryWhereInput | Prisma.BoardRepositoryWhereInput[]
   boardId?: Prisma.StringFilter<"BoardRepository"> | string
   provider?: Prisma.EnumGitProviderFilter<"BoardRepository"> | $Enums.GitProvider
+  baseUrl?: Prisma.StringFilter<"BoardRepository"> | string
   repo?: Prisma.StringFilter<"BoardRepository"> | string
+  webhookAuth?: Prisma.EnumGitWebhookAuthNullableFilter<"BoardRepository"> | $Enums.GitWebhookAuth | null
+  webhookSecret?: Prisma.StringNullableFilter<"BoardRepository"> | string | null
+  lastReceivedAt?: Prisma.DateTimeNullableFilter<"BoardRepository"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"BoardRepository"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"BoardRepository"> | Date | string
   board?: Prisma.XOR<Prisma.BoardScalarRelationFilter, Prisma.BoardWhereInput>
-}, "id" | "boardId_provider_repo">
+}, "id" | "boardId_provider_baseUrl_repo">
 
 export type BoardRepositoryOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   boardId?: Prisma.SortOrder
   provider?: Prisma.SortOrder
+  baseUrl?: Prisma.SortOrder
   repo?: Prisma.SortOrder
+  webhookAuth?: Prisma.SortOrderInput | Prisma.SortOrder
+  webhookSecret?: Prisma.SortOrderInput | Prisma.SortOrder
+  lastReceivedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.BoardRepositoryCountOrderByAggregateInput
@@ -236,7 +280,11 @@ export type BoardRepositoryScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"BoardRepository"> | string
   boardId?: Prisma.StringWithAggregatesFilter<"BoardRepository"> | string
   provider?: Prisma.EnumGitProviderWithAggregatesFilter<"BoardRepository"> | $Enums.GitProvider
+  baseUrl?: Prisma.StringWithAggregatesFilter<"BoardRepository"> | string
   repo?: Prisma.StringWithAggregatesFilter<"BoardRepository"> | string
+  webhookAuth?: Prisma.EnumGitWebhookAuthNullableWithAggregatesFilter<"BoardRepository"> | $Enums.GitWebhookAuth | null
+  webhookSecret?: Prisma.StringNullableWithAggregatesFilter<"BoardRepository"> | string | null
+  lastReceivedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"BoardRepository"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"BoardRepository"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"BoardRepository"> | Date | string
 }
@@ -244,7 +292,11 @@ export type BoardRepositoryScalarWhereWithAggregatesInput = {
 export type BoardRepositoryCreateInput = {
   id?: string
   provider?: $Enums.GitProvider
+  baseUrl?: string
   repo: string
+  webhookAuth?: $Enums.GitWebhookAuth | null
+  webhookSecret?: string | null
+  lastReceivedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   board: Prisma.BoardCreateNestedOneWithoutRepositoriesInput
@@ -254,7 +306,11 @@ export type BoardRepositoryUncheckedCreateInput = {
   id?: string
   boardId: string
   provider?: $Enums.GitProvider
+  baseUrl?: string
   repo: string
+  webhookAuth?: $Enums.GitWebhookAuth | null
+  webhookSecret?: string | null
+  lastReceivedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -262,7 +318,11 @@ export type BoardRepositoryUncheckedCreateInput = {
 export type BoardRepositoryUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
   repo?: Prisma.StringFieldUpdateOperationsInput | string
+  webhookAuth?: Prisma.NullableEnumGitWebhookAuthFieldUpdateOperationsInput | $Enums.GitWebhookAuth | null
+  webhookSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastReceivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   board?: Prisma.BoardUpdateOneRequiredWithoutRepositoriesNestedInput
@@ -272,7 +332,11 @@ export type BoardRepositoryUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   boardId?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
   repo?: Prisma.StringFieldUpdateOperationsInput | string
+  webhookAuth?: Prisma.NullableEnumGitWebhookAuthFieldUpdateOperationsInput | $Enums.GitWebhookAuth | null
+  webhookSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastReceivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -281,7 +345,11 @@ export type BoardRepositoryCreateManyInput = {
   id?: string
   boardId: string
   provider?: $Enums.GitProvider
+  baseUrl?: string
   repo: string
+  webhookAuth?: $Enums.GitWebhookAuth | null
+  webhookSecret?: string | null
+  lastReceivedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -289,7 +357,11 @@ export type BoardRepositoryCreateManyInput = {
 export type BoardRepositoryUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
   repo?: Prisma.StringFieldUpdateOperationsInput | string
+  webhookAuth?: Prisma.NullableEnumGitWebhookAuthFieldUpdateOperationsInput | $Enums.GitWebhookAuth | null
+  webhookSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastReceivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -298,7 +370,11 @@ export type BoardRepositoryUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   boardId?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
   repo?: Prisma.StringFieldUpdateOperationsInput | string
+  webhookAuth?: Prisma.NullableEnumGitWebhookAuthFieldUpdateOperationsInput | $Enums.GitWebhookAuth | null
+  webhookSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastReceivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -313,9 +389,10 @@ export type BoardRepositoryOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
-export type BoardRepositoryBoardIdProviderRepoCompoundUniqueInput = {
+export type BoardRepositoryBoardIdProviderBaseUrlRepoCompoundUniqueInput = {
   boardId: string
   provider: $Enums.GitProvider
+  baseUrl: string
   repo: string
 }
 
@@ -323,7 +400,11 @@ export type BoardRepositoryCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   boardId?: Prisma.SortOrder
   provider?: Prisma.SortOrder
+  baseUrl?: Prisma.SortOrder
   repo?: Prisma.SortOrder
+  webhookAuth?: Prisma.SortOrder
+  webhookSecret?: Prisma.SortOrder
+  lastReceivedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -332,7 +413,11 @@ export type BoardRepositoryMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   boardId?: Prisma.SortOrder
   provider?: Prisma.SortOrder
+  baseUrl?: Prisma.SortOrder
   repo?: Prisma.SortOrder
+  webhookAuth?: Prisma.SortOrder
+  webhookSecret?: Prisma.SortOrder
+  lastReceivedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -341,7 +426,11 @@ export type BoardRepositoryMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   boardId?: Prisma.SortOrder
   provider?: Prisma.SortOrder
+  baseUrl?: Prisma.SortOrder
   repo?: Prisma.SortOrder
+  webhookAuth?: Prisma.SortOrder
+  webhookSecret?: Prisma.SortOrder
+  lastReceivedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -388,10 +477,18 @@ export type BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput = {
   deleteMany?: Prisma.BoardRepositoryScalarWhereInput | Prisma.BoardRepositoryScalarWhereInput[]
 }
 
+export type NullableEnumGitWebhookAuthFieldUpdateOperationsInput = {
+  set?: $Enums.GitWebhookAuth | null
+}
+
 export type BoardRepositoryCreateWithoutBoardInput = {
   id?: string
   provider?: $Enums.GitProvider
+  baseUrl?: string
   repo: string
+  webhookAuth?: $Enums.GitWebhookAuth | null
+  webhookSecret?: string | null
+  lastReceivedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -399,7 +496,11 @@ export type BoardRepositoryCreateWithoutBoardInput = {
 export type BoardRepositoryUncheckedCreateWithoutBoardInput = {
   id?: string
   provider?: $Enums.GitProvider
+  baseUrl?: string
   repo: string
+  webhookAuth?: $Enums.GitWebhookAuth | null
+  webhookSecret?: string | null
+  lastReceivedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -437,7 +538,11 @@ export type BoardRepositoryScalarWhereInput = {
   id?: Prisma.StringFilter<"BoardRepository"> | string
   boardId?: Prisma.StringFilter<"BoardRepository"> | string
   provider?: Prisma.EnumGitProviderFilter<"BoardRepository"> | $Enums.GitProvider
+  baseUrl?: Prisma.StringFilter<"BoardRepository"> | string
   repo?: Prisma.StringFilter<"BoardRepository"> | string
+  webhookAuth?: Prisma.EnumGitWebhookAuthNullableFilter<"BoardRepository"> | $Enums.GitWebhookAuth | null
+  webhookSecret?: Prisma.StringNullableFilter<"BoardRepository"> | string | null
+  lastReceivedAt?: Prisma.DateTimeNullableFilter<"BoardRepository"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"BoardRepository"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"BoardRepository"> | Date | string
 }
@@ -445,7 +550,11 @@ export type BoardRepositoryScalarWhereInput = {
 export type BoardRepositoryCreateManyBoardInput = {
   id?: string
   provider?: $Enums.GitProvider
+  baseUrl?: string
   repo: string
+  webhookAuth?: $Enums.GitWebhookAuth | null
+  webhookSecret?: string | null
+  lastReceivedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -453,7 +562,11 @@ export type BoardRepositoryCreateManyBoardInput = {
 export type BoardRepositoryUpdateWithoutBoardInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
   repo?: Prisma.StringFieldUpdateOperationsInput | string
+  webhookAuth?: Prisma.NullableEnumGitWebhookAuthFieldUpdateOperationsInput | $Enums.GitWebhookAuth | null
+  webhookSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastReceivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -461,7 +574,11 @@ export type BoardRepositoryUpdateWithoutBoardInput = {
 export type BoardRepositoryUncheckedUpdateWithoutBoardInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
   repo?: Prisma.StringFieldUpdateOperationsInput | string
+  webhookAuth?: Prisma.NullableEnumGitWebhookAuthFieldUpdateOperationsInput | $Enums.GitWebhookAuth | null
+  webhookSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastReceivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -469,7 +586,11 @@ export type BoardRepositoryUncheckedUpdateWithoutBoardInput = {
 export type BoardRepositoryUncheckedUpdateManyWithoutBoardInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
   repo?: Prisma.StringFieldUpdateOperationsInput | string
+  webhookAuth?: Prisma.NullableEnumGitWebhookAuthFieldUpdateOperationsInput | $Enums.GitWebhookAuth | null
+  webhookSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastReceivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -480,7 +601,11 @@ export type BoardRepositorySelect<ExtArgs extends runtime.Types.Extensions.Inter
   id?: boolean
   boardId?: boolean
   provider?: boolean
+  baseUrl?: boolean
   repo?: boolean
+  webhookAuth?: boolean
+  webhookSecret?: boolean
+  lastReceivedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   board?: boolean | Prisma.BoardDefaultArgs<ExtArgs>
@@ -490,7 +615,11 @@ export type BoardRepositorySelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   id?: boolean
   boardId?: boolean
   provider?: boolean
+  baseUrl?: boolean
   repo?: boolean
+  webhookAuth?: boolean
+  webhookSecret?: boolean
+  lastReceivedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   board?: boolean | Prisma.BoardDefaultArgs<ExtArgs>
@@ -500,7 +629,11 @@ export type BoardRepositorySelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
   id?: boolean
   boardId?: boolean
   provider?: boolean
+  baseUrl?: boolean
   repo?: boolean
+  webhookAuth?: boolean
+  webhookSecret?: boolean
+  lastReceivedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   board?: boolean | Prisma.BoardDefaultArgs<ExtArgs>
@@ -510,12 +643,16 @@ export type BoardRepositorySelectScalar = {
   id?: boolean
   boardId?: boolean
   provider?: boolean
+  baseUrl?: boolean
   repo?: boolean
+  webhookAuth?: boolean
+  webhookSecret?: boolean
+  lastReceivedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type BoardRepositoryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "boardId" | "provider" | "repo" | "createdAt" | "updatedAt", ExtArgs["result"]["boardRepository"]>
+export type BoardRepositoryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "boardId" | "provider" | "baseUrl" | "repo" | "webhookAuth" | "webhookSecret" | "lastReceivedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["boardRepository"]>
 export type BoardRepositoryInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   board?: boolean | Prisma.BoardDefaultArgs<ExtArgs>
 }
@@ -536,9 +673,25 @@ export type $BoardRepositoryPayload<ExtArgs extends runtime.Types.Extensions.Int
     boardId: string
     provider: $Enums.GitProvider
     /**
-     * `owner/name`(小文字)
+     * GitLab のインスタンスの URL。GitHub は空文字
+     */
+    baseUrl: string
+    /**
+     * GitHub は `owner/name`、GitLab はプロジェクトのパス(小文字)
      */
     repo: string
+    /**
+     * GitLab の Webhook の検証方式。GitHub は環境変数の共通シークレットを使うので null
+     */
+    webhookAuth: $Enums.GitWebhookAuth | null
+    /**
+     * GitLab の Webhook のトークン(暗号化して保存する)。未設定の間は Webhook を受けない
+     */
+    webhookSecret: string | null
+    /**
+     * 検証を通った Webhook が最後に届いた日時(GitLab のみ)。登録できているかの目安として画面に出す
+     */
+    lastReceivedAt: Date | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["boardRepository"]>
@@ -968,7 +1121,11 @@ export interface BoardRepositoryFieldRefs {
   readonly id: Prisma.FieldRef<"BoardRepository", 'String'>
   readonly boardId: Prisma.FieldRef<"BoardRepository", 'String'>
   readonly provider: Prisma.FieldRef<"BoardRepository", 'GitProvider'>
+  readonly baseUrl: Prisma.FieldRef<"BoardRepository", 'String'>
   readonly repo: Prisma.FieldRef<"BoardRepository", 'String'>
+  readonly webhookAuth: Prisma.FieldRef<"BoardRepository", 'GitWebhookAuth'>
+  readonly webhookSecret: Prisma.FieldRef<"BoardRepository", 'String'>
+  readonly lastReceivedAt: Prisma.FieldRef<"BoardRepository", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"BoardRepository", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"BoardRepository", 'DateTime'>
 }

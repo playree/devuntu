@@ -12,7 +12,7 @@ import {
   TICKET_STATUSES,
 } from '../board/ticket-enum'
 import { ASSIGNEE_NONE, TICKET_SORT_COLUMNS } from '../board/ticket-search'
-import { parseGithubUrl } from '../github/github'
+import { looksLikeGitUrl } from '../git/git'
 import { zPagingFields } from './schema'
 import { zAgentMode } from './schema-agent'
 
@@ -44,12 +44,15 @@ export const zCommentContent = z.string().trim().min(1, el('@required_field')).m
 /** コメントの種別。ticket-enum.ts の TICKET_COMMENT_TYPES を単一ソースにする。null/未指定は通常コメント */
 export const zCommentType = z.enum(TICKET_COMMENT_TYPES).nullish()
 
-/** チケットに紐付ける GitHub のブランチ / PR / コミットの URL。種別の判定は parseGithubUrl が行う */
-export const zGithubUrl = z
+/**
+ * チケットに紐付ける GitHub / GitLab のブランチ / PR(MR) / コミットの URL。種別の判定は parseGitUrl が行う。
+ * GitLab は許可したインスタンス(サーバーの環境変数)かどうかをここでは見ず、登録時にサーバー側で判定する
+ */
+export const zGitUrl = z
   .string()
   .trim()
-  .max(2000, el('@invalid_github_url'))
-  .refine((url) => parseGithubUrl(url) !== null, el('@invalid_github_url'))
+  .max(2000, el('@invalid_git_url'))
+  .refine((url) => looksLikeGitUrl(url), el('@invalid_git_url'))
 
 /** 期日は日付のみ(YYYY-MM-DD)。DatePickerCtrl が CalendarDate との変換を担う */
 export const zDueDate = z.iso.date().nullish()
@@ -226,6 +229,6 @@ export type UpdateTagOut = z.output<typeof scUpdateTag>
 /** ブランチ / PR / コミットの紐付け */
 export const scAddTicketLink = z.object({
   ticketId: z.uuidv7(),
-  url: zGithubUrl,
+  url: zGitUrl,
 })
 export type AddTicketLink = z.infer<typeof scAddTicketLink>

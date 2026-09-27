@@ -27,7 +27,7 @@ import {
   zCommentType,
   zCriterionItems,
   zCriterionText,
-  zGithubUrl,
+  zGitUrl,
   zTicketStatus,
 } from '@/lib/schema/schema-ticket'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
@@ -238,11 +238,14 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     {
       title: '成果物の紐付け',
       description:
-        'GitHub のブランチ / プルリクエスト / コミットの URL をチケットに紐付ける。種別は URL から判定する。' +
-        'プルリクエストを作ったら紐付けておくと、状態と CI の結果がチケット詳細に表示される',
+        'GitHub / GitLab のブランチ / プルリクエスト(マージリクエスト) / コミットの URL をチケットに紐付ける。' +
+        '種別は URL から判定する。プルリクエストを作ったら紐付けておくと、状態と CI の結果がチケット詳細に表示される。' +
+        'GitLab はサーバーで許可したインスタンスの URL だけを受け付ける',
       inputSchema: {
         ticketId: z.string().min(1),
-        url: zGithubUrl.describe('例: https://github.com/owner/repo/pull/123'),
+        url: zGitUrl.describe(
+          '例: https://github.com/owner/repo/pull/123 / https://gitlab.com/group/project/-/merge_requests/12',
+        ),
       },
     },
     async ({ ticketId, url }) => jsonResult(await linkTicketArtifactForMcp(auth, ticketId, url)),
@@ -253,7 +256,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     {
       title: '成果物の紐付け解除',
       description:
-        'チケットに紐付けたブランチ / プルリクエスト / コミットを外す。linkId は get_ticket の links から得る',
+        'チケットに紐付けたブランチ / プルリクエスト(マージリクエスト) / コミットを外す。linkId は get_ticket の links から得る',
       inputSchema: { linkId: z.uuidv7() },
     },
     async ({ linkId }) => jsonResult(await unlinkTicketArtifactForMcp(auth, linkId)),

@@ -39,6 +39,7 @@ import {
   validateBetterAuthUrl,
   validateChoice,
   validateDatabaseUrl,
+  validateGitlabUrls,
   validateMailFrom,
   validatePort,
   validateRequired,
@@ -622,6 +623,16 @@ if (await askYesNo('GitHub連携(PRの状態・CIの反映)を設定しますか
   }
   note('GitHub 側に登録する Payload URL:')
   note(`  ${env.BETTER_AUTH_URL}/api/github/webhook`)
+}
+
+if (await askYesNo('GitLab連携(MRの状態・CIの反映)を設定しますか?', has('GITLAB_URLS'))) {
+  env.GITLAB_URLS = await ask({
+    label: 'GitLab のインスタンスの URL (GITLAB_URLS)',
+    help: 'カンマ区切りで複数指定できます(例: https://gitlab.com,https://git.example.com/gitlab)',
+    def: prev.GITLAB_URLS ?? 'https://gitlab.com',
+    validate: validateGitlabUrls,
+  })
+  note('Webhook の URL とトークンは、ボード設定の「Git連携」でプロジェクトごとに表示・設定します')
 }
 
 section('通知(任意)')

@@ -10,10 +10,13 @@ import {
 } from '@/lib/board/board-assignment'
 import { getBoardMemberUsers } from '@/lib/board/board-member'
 import {
-  addBoardRepository as addBoardRepositoryCore,
-  getBoardGithub as getBoardGithubCore,
+  addBoardGithubRepository as addBoardGithubRepositoryCore,
+  addBoardGitlabRepository as addBoardGitlabRepositoryCore,
+  getBoardGit as getBoardGitCore,
+  regenerateGitlabToken as regenerateGitlabTokenCore,
   removeBoardRepository as removeBoardRepositoryCore,
   setBoardCompleteOnPrMerge as setBoardCompleteOnPrMergeCore,
+  setGitlabSigningToken as setGitlabSigningTokenCore,
 } from '@/lib/board/board-repository'
 import {
   assertBoardNotifyManageable,
@@ -35,14 +38,16 @@ import { prisma } from '@/lib/prisma'
 import { assertRateLimit } from '@/lib/rate-limit'
 import { scUUID } from '@/lib/schema/schema'
 import {
+  scAddBoardGitlabRepository,
   scAddBoardRepository,
+  scBoardRepositoryTarget,
   scGetBoardSlackChannels,
   scRemoveBoardMember,
-  scRemoveBoardRepository,
   scSetBoardArchived,
   scSetBoardCompleteOnPrMerge,
   scSetBoardGroups,
   scSetBoardNotifySetting,
+  scSetGitlabSigningToken,
   scUpdateBoard,
   scUpsertBoardMember,
 } from '@/lib/schema/schema-board'
@@ -139,26 +144,53 @@ export const deleteBoard = safeAuthAction
   })
 
 /* -------------------------------------------------------------------------------------------------
- * GitHub 連携
+ * Git 連携(GitHub / GitLab)
  * -----------------------------------------------------------------------------------------------*/
 
 /** 対応付けたリポジトリ・マージで完了の設定と、Webhook の登録先(owner または管理者) */
-export const getBoardGithub = safeAuthAction
-  .metadata({ actionName: 'getBoardGithub', role: 'user' })
+export const getBoardGit = safeAuthAction
+  .metadata({ actionName: 'getBoardGit', role: 'user' })
   .inputSchema(scUUID)
-  .action(async ({ ctx: { user }, parsedInput: { id } }) => await getBoardGithubCore(user, id))
-export type GetBoardGithubReturnType = Awaited<ReturnType<typeof getBoardGithub>>['data']
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => await getBoardGitCore(user, id))
+export type GetBoardGitReturnType = Awaited<ReturnType<typeof getBoardGit>>['data']
 
-/** リポジトリの対応付け(owner または管理者) */
-export const addBoardRepository = safeAuthAction
-  .metadata({ actionName: 'addBoardRepository', role: 'user' })
+/** GitHub のリポジトリの対応付け(owner または管理者) */
+export const addBoardGithubRepository = safeAuthAction
+  .metadata({ actionName: 'addBoardGithubRepository', role: 'user' })
   .inputSchema(scAddBoardRepository)
-  .action(async ({ ctx: { user }, parsedInput: { id, repo } }) => await addBoardRepositoryCore(user, id, repo))
+  .action(async ({ ctx: { user }, parsedInput: { id, repo } }) => await addBoardGithubRepositoryCore(user, id, repo))
+
+/** GitLab のプロジェクトの対応付け(owner または管理者)。シークレットトークン方式なら作ったトークンを1回だけ返す */
+export const addBoardGitlabRepository = safeAuthAction
+  .metadata({ actionName: 'addBoardGitlabRepository', role: 'user' })
+  .inputSchema(scAddBoardGitlabRepository)
+  .action(
+    async ({ ctx: { user }, parsedInput: { id, baseUrl, project, webhookAuth } }) =>
+      await addBoardGitlabRepositoryCore(user, id, { baseUrl, project, webhookAuth }),
+  )
+
+/** GitLab が作った署名トークンの保存(owner または管理者) */
+export const setGitlabSigningToken = safeAuthAction
+  .metadata({ actionName: 'setGitlabSigningToken', role: 'user' })
+  .inputSchema(scSetGitlabSigningToken)
+  .action(async ({ ctx: { user }, parsedInput: { id, repositoryId, secret } }) => {
+    await setGitlabSigningTokenCore(user, id, repositoryId, secret)
+    return { id }
+  })
+
+/** GitLab のシークレットトークンの作り直し(owner または管理者)。作ったトークンを1回だけ返す */
+export const regenerateGitlabToken = safeAuthAction
+  .metadata({ actionName: 'regenerateGitlabToken', role: 'user' })
+  .inputSchema(scBoardRepositoryTarget)
+  .action(
+    async ({ ctx: { user }, parsedInput: { id, repositoryId } }) =>
+      await regenerateGitlabTokenCore(user, id, repositoryId),
+  )
 
 /** リポジトリの対応付けの解除(owner または管理者) */
 export const removeBoardRepository = safeAuthAction
   .metadata({ actionName: 'removeBoardRepository', role: 'user' })
-  .inputSchema(scRemoveBoardRepository)
+  .inputSchema(scBoardRepositoryTarget)
   .action(async ({ ctx: { user }, parsedInput: { id, repositoryId } }) => {
     await removeBoardRepositoryCore(user, id, repositoryId)
     return { id }

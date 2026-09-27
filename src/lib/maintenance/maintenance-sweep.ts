@@ -167,7 +167,7 @@ export const sweepCommandRuns = async (now: Date): Promise<number> => {
   return count + capped
 }
 
-/** 更新が止まった GitHub の Check Suite。消えた後に表示される CI の結果は「無し」になる */
+/** 更新が止まった CI の状態(GitHub の Check Suite / GitLab のパイプライン)。消えた後に表示される CI の結果は「無し」になる */
 export const sweepGitCheckSuites = async (now: Date): Promise<number> =>
   (await prisma.gitCheckSuite.deleteMany({ where: { updatedAt: { lt: msBefore(now, GIT_CHECK_SUITE_RETENTION_MS) } } }))
     .count

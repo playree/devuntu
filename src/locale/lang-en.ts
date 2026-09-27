@@ -16,6 +16,7 @@ export const en: DefaultLocaleItems = {
   add_criterion: 'Add Criterion',
   add_group: 'Add Group',
   add_link: 'Add Link',
+  add_project: 'Add Project',
   add_member: 'Add Member',
   add_repository: 'Add Repository',
   add_tag: 'Add Tag',
@@ -87,7 +88,7 @@ export const en: DefaultLocaleItems = {
   avatar: 'Avatar',
   back: 'Back',
   board: 'Board',
-  board_github: 'GitHub Integration',
+  board_git: 'Git Integration',
   board_groups: 'Group Assignment',
   board_key: 'Board Key',
   board_members: 'User Assignment',
@@ -254,10 +255,19 @@ export const en: DefaultLocaleItems = {
   expires_in_days: 'In ${days} days',
   filter: 'Filter',
   free_memory: 'Free Memory',
-  github_complete_on_pr_merge: 'Complete tickets when pull requests are merged',
-  github_repositories: 'Linked Repositories',
+  git_complete_on_pr_merge: 'Complete tickets when pull requests / merge requests are merged',
+  git_repositories: 'Linked Repositories',
   github_repository: 'Repository (owner/repo)',
-  github_webhook_url: 'Webhook URL',
+  gitlab_instance: 'Instance',
+  gitlab_last_received: 'Last received',
+  gitlab_project: 'Project (group/project)',
+  gitlab_regenerate_token: 'Regenerate Token',
+  gitlab_secret_token: 'Secret token',
+  gitlab_secret_unset: 'Token not set',
+  gitlab_set_signing_token: 'Set Signing Token',
+  gitlab_signing_token: 'Signing token',
+  gitlab_webhook_auth: 'Verification',
+  git_webhook_url: 'Webhook URL',
   google_account: 'Google Account',
   google_account_allowed_groups: 'Allowed groups',
   google_account_enable: 'Enable Google account linking',
@@ -510,10 +520,25 @@ Please copy and use the connection information above.
   msg_board_key_change: 'Changing the key means ticket IDs already shared will no longer point to their tickets.',
   msg_board_slack_notify_desc:
     'Posts the selected events on this board to a Slack channel. Choose both a channel and the events.',
+  msg_board_git_desc:
+    'For linked repositories, pull requests and merge requests are linked to tickets automatically by the display ID at the start of the branch name (e.g. feature/KEY-12).',
+  msg_board_gitlab_desc:
+    'In the project Settings → Webhooks on GitLab, register the Webhook URL shown for each project.\nSelect the Merge request events / Pipeline events triggers. GitLab 19.0 or later is verified with a signing token, earlier versions with a secret token.',
+  msg_gitlab_signing_token_desc:
+    'On the GitLab webhook page, press Generate signing token and paste the token starting with whsec_. GitLab also shows the token only once.',
+  msg_gitlab_secret_token_desc:
+    'Paste this token into the Secret token of the GitLab webhook. On GitLab 19.0 or later, the more secure signing token is recommended.',
+  msg_gitlab_regenerate_confirm:
+    'Regenerating the token invalidates the current one. Update the Secret token on GitLab as well.',
+  msg_gitlab_secret_unset: 'Webhooks for this project are rejected until a token is set.',
+  msg_git_provider_disabled:
+    'The integration is disabled in this environment (webhooks are not accepted). You can remove the remaining links.',
+  msg_gitlab_already_added:
+    'This project is already linked. Switch the verification or regenerate the token from the list.',
   msg_board_github_desc:
-    'In the repository Settings → Webhooks on GitHub, register the URL below as the Payload URL.\nSet Content type to application/json, Secret to the same value as GITHUB_WEBHOOK_SECRET on the server, and select the Pull requests / Check suites / Check runs events.\nFor linked repositories, pull requests are linked to tickets automatically by the display ID at the start of the branch name (e.g. feature/KEY-12).',
-  msg_github_complete_on_pr_merge:
-    'A ticket is completed when all linked pull requests are merged or closed and at least one of them is merged.',
+    'In the repository Settings → Webhooks on GitHub, register the URL below as the Payload URL.\nSet Content type to application/json, Secret to the same value as GITHUB_WEBHOOK_SECRET on the server, and select the Pull requests / Check suites / Check runs events.',
+  msg_git_complete_on_pr_merge:
+    'A ticket is completed when all linked pull requests / merge requests are merged or closed and at least one of them is merged.',
   msg_calendar_share_desc:
     'When enabled, you can share your availability with external people via a share URL. Event titles and details are not shown; only busy time slots are made public.',
   msg_calendar_share_disabled: 'Sharing disabled. The share URL is no longer valid.',
@@ -700,7 +725,9 @@ Expiration time: 5 minutes
   '@invalid_notify_setting': 'Invalid notification settings.',
   '@invalid_command_input': 'Invalid selection.',
   '@invalid_command_value': "Only letters, digits and . _ : @ = / + , - are allowed (not '-' as the first character).",
-  '@invalid_github_url': 'Enter a GitHub branch, pull request or commit URL',
+  '@invalid_git_url': 'Enter a GitHub / GitLab branch, pull request or commit URL',
   '@invalid_github_repo': 'Use the owner/repo format',
+  '@invalid_gitlab_project': 'Use the group/project format',
+  '@invalid_gitlab_signing_token': 'Enter a signing token starting with whsec_',
   '@too_many_criteria': 'Too many acceptance criteria',
 }

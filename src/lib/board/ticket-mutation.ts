@@ -227,7 +227,7 @@ export const changeTicketStatus = async (actor: Actor, id: string, status: Ticke
   })
 
 /**
- * PR のマージによる自動完了(GitHub 連携)。操作した人はいないのでシステムの操作として扱い、権限の判定は挟まない。
+ * PR / MR のマージによる自動完了(Git 連携)。操作した人はいないのでシステムの操作として扱い、権限の判定は挟まない。
  * 対象を絞るのは呼び出し元(Webhook)の責務で、ここではアーカイブ済みのボードと完了済みのチケットだけを除く。
  * 完了へ動かしたら true。
  */

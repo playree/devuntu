@@ -30,6 +30,7 @@ export type TicketLinkMinAggregateOutputType = {
   ticketId: string | null
   provider: $Enums.GitProvider | null
   kind: $Enums.TicketLinkKind | null
+  baseUrl: string | null
   repo: string | null
   ref: string | null
   url: string | null
@@ -49,6 +50,7 @@ export type TicketLinkMaxAggregateOutputType = {
   ticketId: string | null
   provider: $Enums.GitProvider | null
   kind: $Enums.TicketLinkKind | null
+  baseUrl: string | null
   repo: string | null
   ref: string | null
   url: string | null
@@ -68,6 +70,7 @@ export type TicketLinkCountAggregateOutputType = {
   ticketId: number
   provider: number
   kind: number
+  baseUrl: number
   repo: number
   ref: number
   url: number
@@ -89,6 +92,7 @@ export type TicketLinkMinAggregateInputType = {
   ticketId?: true
   provider?: true
   kind?: true
+  baseUrl?: true
   repo?: true
   ref?: true
   url?: true
@@ -108,6 +112,7 @@ export type TicketLinkMaxAggregateInputType = {
   ticketId?: true
   provider?: true
   kind?: true
+  baseUrl?: true
   repo?: true
   ref?: true
   url?: true
@@ -127,6 +132,7 @@ export type TicketLinkCountAggregateInputType = {
   ticketId?: true
   provider?: true
   kind?: true
+  baseUrl?: true
   repo?: true
   ref?: true
   url?: true
@@ -219,6 +225,7 @@ export type TicketLinkGroupByOutputType = {
   ticketId: string
   provider: $Enums.GitProvider
   kind: $Enums.TicketLinkKind
+  baseUrl: string
   repo: string
   ref: string
   url: string
@@ -259,6 +266,7 @@ export type TicketLinkWhereInput = {
   ticketId?: Prisma.StringFilter<"TicketLink"> | string
   provider?: Prisma.EnumGitProviderFilter<"TicketLink"> | $Enums.GitProvider
   kind?: Prisma.EnumTicketLinkKindFilter<"TicketLink"> | $Enums.TicketLinkKind
+  baseUrl?: Prisma.StringFilter<"TicketLink"> | string
   repo?: Prisma.StringFilter<"TicketLink"> | string
   ref?: Prisma.StringFilter<"TicketLink"> | string
   url?: Prisma.StringFilter<"TicketLink"> | string
@@ -280,6 +288,7 @@ export type TicketLinkOrderByWithRelationInput = {
   ticketId?: Prisma.SortOrder
   provider?: Prisma.SortOrder
   kind?: Prisma.SortOrder
+  baseUrl?: Prisma.SortOrder
   repo?: Prisma.SortOrder
   ref?: Prisma.SortOrder
   url?: Prisma.SortOrder
@@ -298,13 +307,14 @@ export type TicketLinkOrderByWithRelationInput = {
 
 export type TicketLinkWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  ticketId_provider_repo_kind_ref?: Prisma.TicketLinkTicketIdProviderRepoKindRefCompoundUniqueInput
+  ticketId_provider_baseUrl_repo_kind_ref?: Prisma.TicketLinkTicketIdProviderBaseUrlRepoKindRefCompoundUniqueInput
   AND?: Prisma.TicketLinkWhereInput | Prisma.TicketLinkWhereInput[]
   OR?: Prisma.TicketLinkWhereInput[]
   NOT?: Prisma.TicketLinkWhereInput | Prisma.TicketLinkWhereInput[]
   ticketId?: Prisma.StringFilter<"TicketLink"> | string
   provider?: Prisma.EnumGitProviderFilter<"TicketLink"> | $Enums.GitProvider
   kind?: Prisma.EnumTicketLinkKindFilter<"TicketLink"> | $Enums.TicketLinkKind
+  baseUrl?: Prisma.StringFilter<"TicketLink"> | string
   repo?: Prisma.StringFilter<"TicketLink"> | string
   ref?: Prisma.StringFilter<"TicketLink"> | string
   url?: Prisma.StringFilter<"TicketLink"> | string
@@ -319,13 +329,14 @@ export type TicketLinkWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"TicketLink"> | Date | string
   ticket?: Prisma.XOR<Prisma.TicketScalarRelationFilter, Prisma.TicketWhereInput>
   createdBy?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
-}, "id" | "ticketId_provider_repo_kind_ref">
+}, "id" | "ticketId_provider_baseUrl_repo_kind_ref">
 
 export type TicketLinkOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   ticketId?: Prisma.SortOrder
   provider?: Prisma.SortOrder
   kind?: Prisma.SortOrder
+  baseUrl?: Prisma.SortOrder
   repo?: Prisma.SortOrder
   ref?: Prisma.SortOrder
   url?: Prisma.SortOrder
@@ -351,6 +362,7 @@ export type TicketLinkScalarWhereWithAggregatesInput = {
   ticketId?: Prisma.StringWithAggregatesFilter<"TicketLink"> | string
   provider?: Prisma.EnumGitProviderWithAggregatesFilter<"TicketLink"> | $Enums.GitProvider
   kind?: Prisma.EnumTicketLinkKindWithAggregatesFilter<"TicketLink"> | $Enums.TicketLinkKind
+  baseUrl?: Prisma.StringWithAggregatesFilter<"TicketLink"> | string
   repo?: Prisma.StringWithAggregatesFilter<"TicketLink"> | string
   ref?: Prisma.StringWithAggregatesFilter<"TicketLink"> | string
   url?: Prisma.StringWithAggregatesFilter<"TicketLink"> | string
@@ -369,6 +381,7 @@ export type TicketLinkCreateInput = {
   id?: string
   provider?: $Enums.GitProvider
   kind: $Enums.TicketLinkKind
+  baseUrl?: string
   repo: string
   ref: string
   url: string
@@ -389,6 +402,7 @@ export type TicketLinkUncheckedCreateInput = {
   ticketId: string
   provider?: $Enums.GitProvider
   kind: $Enums.TicketLinkKind
+  baseUrl?: string
   repo: string
   ref: string
   url: string
@@ -407,6 +421,7 @@ export type TicketLinkUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
   kind?: Prisma.EnumTicketLinkKindFieldUpdateOperationsInput | $Enums.TicketLinkKind
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
   repo?: Prisma.StringFieldUpdateOperationsInput | string
   ref?: Prisma.StringFieldUpdateOperationsInput | string
   url?: Prisma.StringFieldUpdateOperationsInput | string
@@ -427,6 +442,7 @@ export type TicketLinkUncheckedUpdateInput = {
   ticketId?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
   kind?: Prisma.EnumTicketLinkKindFieldUpdateOperationsInput | $Enums.TicketLinkKind
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
   repo?: Prisma.StringFieldUpdateOperationsInput | string
   ref?: Prisma.StringFieldUpdateOperationsInput | string
   url?: Prisma.StringFieldUpdateOperationsInput | string
@@ -446,6 +462,7 @@ export type TicketLinkCreateManyInput = {
   ticketId: string
   provider?: $Enums.GitProvider
   kind: $Enums.TicketLinkKind
+  baseUrl?: string
   repo: string
   ref: string
   url: string
@@ -464,6 +481,7 @@ export type TicketLinkUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
   kind?: Prisma.EnumTicketLinkKindFieldUpdateOperationsInput | $Enums.TicketLinkKind
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
   repo?: Prisma.StringFieldUpdateOperationsInput | string
   ref?: Prisma.StringFieldUpdateOperationsInput | string
   url?: Prisma.StringFieldUpdateOperationsInput | string
@@ -482,6 +500,7 @@ export type TicketLinkUncheckedUpdateManyInput = {
   ticketId?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
   kind?: Prisma.EnumTicketLinkKindFieldUpdateOperationsInput | $Enums.TicketLinkKind
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
   repo?: Prisma.StringFieldUpdateOperationsInput | string
   ref?: Prisma.StringFieldUpdateOperationsInput | string
   url?: Prisma.StringFieldUpdateOperationsInput | string
@@ -506,9 +525,10 @@ export type TicketLinkOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
-export type TicketLinkTicketIdProviderRepoKindRefCompoundUniqueInput = {
+export type TicketLinkTicketIdProviderBaseUrlRepoKindRefCompoundUniqueInput = {
   ticketId: string
   provider: $Enums.GitProvider
+  baseUrl: string
   repo: string
   kind: $Enums.TicketLinkKind
   ref: string
@@ -519,6 +539,7 @@ export type TicketLinkCountOrderByAggregateInput = {
   ticketId?: Prisma.SortOrder
   provider?: Prisma.SortOrder
   kind?: Prisma.SortOrder
+  baseUrl?: Prisma.SortOrder
   repo?: Prisma.SortOrder
   ref?: Prisma.SortOrder
   url?: Prisma.SortOrder
@@ -538,6 +559,7 @@ export type TicketLinkMaxOrderByAggregateInput = {
   ticketId?: Prisma.SortOrder
   provider?: Prisma.SortOrder
   kind?: Prisma.SortOrder
+  baseUrl?: Prisma.SortOrder
   repo?: Prisma.SortOrder
   ref?: Prisma.SortOrder
   url?: Prisma.SortOrder
@@ -557,6 +579,7 @@ export type TicketLinkMinOrderByAggregateInput = {
   ticketId?: Prisma.SortOrder
   provider?: Prisma.SortOrder
   kind?: Prisma.SortOrder
+  baseUrl?: Prisma.SortOrder
   repo?: Prisma.SortOrder
   ref?: Prisma.SortOrder
   url?: Prisma.SortOrder
@@ -675,6 +698,7 @@ export type TicketLinkCreateWithoutCreatedByInput = {
   id?: string
   provider?: $Enums.GitProvider
   kind: $Enums.TicketLinkKind
+  baseUrl?: string
   repo: string
   ref: string
   url: string
@@ -694,6 +718,7 @@ export type TicketLinkUncheckedCreateWithoutCreatedByInput = {
   ticketId: string
   provider?: $Enums.GitProvider
   kind: $Enums.TicketLinkKind
+  baseUrl?: string
   repo: string
   ref: string
   url: string
@@ -741,6 +766,7 @@ export type TicketLinkScalarWhereInput = {
   ticketId?: Prisma.StringFilter<"TicketLink"> | string
   provider?: Prisma.EnumGitProviderFilter<"TicketLink"> | $Enums.GitProvider
   kind?: Prisma.EnumTicketLinkKindFilter<"TicketLink"> | $Enums.TicketLinkKind
+  baseUrl?: Prisma.StringFilter<"TicketLink"> | string
   repo?: Prisma.StringFilter<"TicketLink"> | string
   ref?: Prisma.StringFilter<"TicketLink"> | string
   url?: Prisma.StringFilter<"TicketLink"> | string
@@ -759,6 +785,7 @@ export type TicketLinkCreateWithoutTicketInput = {
   id?: string
   provider?: $Enums.GitProvider
   kind: $Enums.TicketLinkKind
+  baseUrl?: string
   repo: string
   ref: string
   url: string
@@ -777,6 +804,7 @@ export type TicketLinkUncheckedCreateWithoutTicketInput = {
   id?: string
   provider?: $Enums.GitProvider
   kind: $Enums.TicketLinkKind
+  baseUrl?: string
   repo: string
   ref: string
   url: string
@@ -822,6 +850,7 @@ export type TicketLinkCreateManyCreatedByInput = {
   ticketId: string
   provider?: $Enums.GitProvider
   kind: $Enums.TicketLinkKind
+  baseUrl?: string
   repo: string
   ref: string
   url: string
@@ -839,6 +868,7 @@ export type TicketLinkUpdateWithoutCreatedByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
   kind?: Prisma.EnumTicketLinkKindFieldUpdateOperationsInput | $Enums.TicketLinkKind
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
   repo?: Prisma.StringFieldUpdateOperationsInput | string
   ref?: Prisma.StringFieldUpdateOperationsInput | string
   url?: Prisma.StringFieldUpdateOperationsInput | string
@@ -858,6 +888,7 @@ export type TicketLinkUncheckedUpdateWithoutCreatedByInput = {
   ticketId?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
   kind?: Prisma.EnumTicketLinkKindFieldUpdateOperationsInput | $Enums.TicketLinkKind
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
   repo?: Prisma.StringFieldUpdateOperationsInput | string
   ref?: Prisma.StringFieldUpdateOperationsInput | string
   url?: Prisma.StringFieldUpdateOperationsInput | string
@@ -876,6 +907,7 @@ export type TicketLinkUncheckedUpdateManyWithoutCreatedByInput = {
   ticketId?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
   kind?: Prisma.EnumTicketLinkKindFieldUpdateOperationsInput | $Enums.TicketLinkKind
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
   repo?: Prisma.StringFieldUpdateOperationsInput | string
   ref?: Prisma.StringFieldUpdateOperationsInput | string
   url?: Prisma.StringFieldUpdateOperationsInput | string
@@ -893,6 +925,7 @@ export type TicketLinkCreateManyTicketInput = {
   id?: string
   provider?: $Enums.GitProvider
   kind: $Enums.TicketLinkKind
+  baseUrl?: string
   repo: string
   ref: string
   url: string
@@ -911,6 +944,7 @@ export type TicketLinkUpdateWithoutTicketInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
   kind?: Prisma.EnumTicketLinkKindFieldUpdateOperationsInput | $Enums.TicketLinkKind
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
   repo?: Prisma.StringFieldUpdateOperationsInput | string
   ref?: Prisma.StringFieldUpdateOperationsInput | string
   url?: Prisma.StringFieldUpdateOperationsInput | string
@@ -929,6 +963,7 @@ export type TicketLinkUncheckedUpdateWithoutTicketInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
   kind?: Prisma.EnumTicketLinkKindFieldUpdateOperationsInput | $Enums.TicketLinkKind
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
   repo?: Prisma.StringFieldUpdateOperationsInput | string
   ref?: Prisma.StringFieldUpdateOperationsInput | string
   url?: Prisma.StringFieldUpdateOperationsInput | string
@@ -947,6 +982,7 @@ export type TicketLinkUncheckedUpdateManyWithoutTicketInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
   kind?: Prisma.EnumTicketLinkKindFieldUpdateOperationsInput | $Enums.TicketLinkKind
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
   repo?: Prisma.StringFieldUpdateOperationsInput | string
   ref?: Prisma.StringFieldUpdateOperationsInput | string
   url?: Prisma.StringFieldUpdateOperationsInput | string
@@ -968,6 +1004,7 @@ export type TicketLinkSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   ticketId?: boolean
   provider?: boolean
   kind?: boolean
+  baseUrl?: boolean
   repo?: boolean
   ref?: boolean
   url?: boolean
@@ -989,6 +1026,7 @@ export type TicketLinkSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   ticketId?: boolean
   provider?: boolean
   kind?: boolean
+  baseUrl?: boolean
   repo?: boolean
   ref?: boolean
   url?: boolean
@@ -1010,6 +1048,7 @@ export type TicketLinkSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   ticketId?: boolean
   provider?: boolean
   kind?: boolean
+  baseUrl?: boolean
   repo?: boolean
   ref?: boolean
   url?: boolean
@@ -1031,6 +1070,7 @@ export type TicketLinkSelectScalar = {
   ticketId?: boolean
   provider?: boolean
   kind?: boolean
+  baseUrl?: boolean
   repo?: boolean
   ref?: boolean
   url?: boolean
@@ -1045,7 +1085,7 @@ export type TicketLinkSelectScalar = {
   updatedAt?: boolean
 }
 
-export type TicketLinkOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "ticketId" | "provider" | "kind" | "repo" | "ref" | "url" | "title" | "prState" | "headSha" | "syncedAt" | "source" | "dismissed" | "createdById" | "createdAt" | "updatedAt", ExtArgs["result"]["ticketLink"]>
+export type TicketLinkOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "ticketId" | "provider" | "kind" | "baseUrl" | "repo" | "ref" | "url" | "title" | "prState" | "headSha" | "syncedAt" | "source" | "dismissed" | "createdById" | "createdAt" | "updatedAt", ExtArgs["result"]["ticketLink"]>
 export type TicketLinkInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   ticket?: boolean | Prisma.TicketDefaultArgs<ExtArgs>
   createdBy?: boolean | Prisma.TicketLink$createdByArgs<ExtArgs>
@@ -1071,7 +1111,11 @@ export type $TicketLinkPayload<ExtArgs extends runtime.Types.Extensions.Internal
     provider: $Enums.GitProvider
     kind: $Enums.TicketLinkKind
     /**
-     * `owner/name`。GitHub は大文字小文字を区別しないため小文字で保存する
+     * GitLab のインスタンスの URL(`https://gitlab.example.com` など)。GitHub は空文字
+     */
+    baseUrl: string
+    /**
+     * GitHub は `owner/name`、GitLab はプロジェクトのパス。大文字小文字を区別しないため小文字で保存する
      */
     repo: string
     /**
@@ -1079,7 +1123,7 @@ export type $TicketLinkPayload<ExtArgs extends runtime.Types.Extensions.Internal
      */
     ref: string
     /**
-     * 画面から開く GitHub の URL
+     * 画面から開く URL
      */
     url: string
     /**
@@ -1535,6 +1579,7 @@ export interface TicketLinkFieldRefs {
   readonly ticketId: Prisma.FieldRef<"TicketLink", 'String'>
   readonly provider: Prisma.FieldRef<"TicketLink", 'GitProvider'>
   readonly kind: Prisma.FieldRef<"TicketLink", 'TicketLinkKind'>
+  readonly baseUrl: Prisma.FieldRef<"TicketLink", 'String'>
   readonly repo: Prisma.FieldRef<"TicketLink", 'String'>
   readonly ref: Prisma.FieldRef<"TicketLink", 'String'>
   readonly url: Prisma.FieldRef<"TicketLink", 'String'>

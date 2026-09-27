@@ -11,9 +11,9 @@ import { ContentHeader } from '@/components/header'
 import {
   ArrowLeftCircleIcon,
   ArrowTopRightOnSquareIcon,
+  CodeBracketIcon,
   Cog6ToothIcon,
   ExclamationTriangleIcon,
-  GithubIcon,
   InformationCircleIcon,
   SlackIcon,
   TagIcon,
@@ -30,7 +30,7 @@ import { useLocale } from '@/locale/client'
 import { Accordion, ButtonGroup } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
-import { BoardGithub } from './board-github'
+import { BoardGit } from './board-git'
 import { BoardProfile } from './board-profile'
 import { BoardChannelNotify } from './channel-notify'
 import { DangerZone } from './danger-zone'
@@ -231,17 +231,17 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
           </AccordionSection>
         )}
 
-        {board.canManage && board.githubEnabled && (
+        {board.canManage && board.gitEnabled && (
           <AccordionSection
             /**
-             * GitHub 連携: 対応付けるリポジトリとマージで完了の設定。設定できるのは owner と管理者で、
-             * Webhook の署名シークレットが無い環境ではセクションごと出さない
+             * Git 連携: GitHub / GitLab の対応付けるリポジトリとマージで完了の設定。設定できるのは owner と管理者で、
+             * どちらも使えない環境(GITHUB_WEBHOOK_SECRET / GITLAB_URLS が無い)ではセクションごと出さない
              */
-            id='board_github'
-            icon={<GithubIcon />}
-            title={t('board_github')}
+            id='board_git'
+            icon={<CodeBracketIcon />}
+            title={t('board_git')}
           >
-            <BoardGithub boardId={board.id} />
+            <BoardGit boardId={board.id} />
           </AccordionSection>
         )}
 

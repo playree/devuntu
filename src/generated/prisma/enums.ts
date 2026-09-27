@@ -117,10 +117,19 @@ export type TicketCommentDecision = (typeof TicketCommentDecision)[keyof typeof 
 
 
 export const GitProvider = {
-  github: 'github'
+  github: 'github',
+  gitlab: 'gitlab'
 } as const
 
 export type GitProvider = (typeof GitProvider)[keyof typeof GitProvider]
+
+
+export const GitWebhookAuth = {
+  signing: 'signing',
+  token: 'token'
+} as const
+
+export type GitWebhookAuth = (typeof GitWebhookAuth)[keyof typeof GitWebhookAuth]
 
 
 export const TicketLinkKind = {

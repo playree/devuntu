@@ -1,8 +1,8 @@
 /**
- * GitHub 連携ユーティリティ(URL の解析・ブランチ名からの表示ID抽出・CI 結果の集計)
+ * GitHub 連携ユーティリティ(URL の解析・PR の状態)
  *
  * NOTE: このファイルはクライアントからも import されるため、サーバー専用の処理(prisma / 署名検証など)は
- * `github-webhook.ts` / `github-signature.ts` に配置する。
+ * `github-webhook.ts` / `github-signature.ts` に配置する。GitLab と共通の処理は `../git/git.ts` に置く。
  */
 
 import type { PullRequestState, TicketLinkKind } from '@/generated/prisma/enums'
@@ -107,50 +107,6 @@ export const parseGithubUrl = (raw: string): GithubArtifact | null => {
   return null
 }
 
-/**
- * ブランチ名の先頭から表示ID(`KEY-番号`)を読み取る。無ければ null。
- *
- * 誤った紐付けを避けるため、見るのは先頭の区切り(`feature/KEY-1` の `/` の直後)か
- * ブランチ名の先頭にある最初の1件だけ。`feature/KEY-1-2` のような派生ブランチは KEY-1 を指す。
- * キーは大文字へ寄せる(`parseTicketDisplayId` と同じ扱い)。
- */
-export const extractDisplayIdFromBranch = (branch: string): { key: string; number: number } | null => {
-  const matched = /^(?:[^/]+\/)?([A-Za-z][A-Za-z0-9]{1,7})-(\d{1,9})(?=$|[-_./])/.exec(branch)
-  if (!matched) {
-    return null
-  }
-  return { key: matched[1].toUpperCase(), number: Number(matched[2]) }
-}
-
-/** 画面に出す CI の結果。GitHub の status / conclusion をまとめたもの */
-export const CI_STATUSES = ['pending', 'success', 'failure', 'cancelled'] as const
-export type CiStatus = (typeof CI_STATUSES)[number]
-
-/** 失敗として扱う conclusion。対処が要るものをまとめる */
-const FAILURE_CONCLUSIONS = new Set(['failure', 'timed_out', 'action_required', 'startup_failure', 'stale'])
-
-/**
- * Check Suite の一覧から CI の結果をまとめる。1件も無ければ null(CI が無い / まだ始まっていない)。
- *
- * 失敗 > 実行中 > キャンセル > 成功 の順に強い。実行中のものがあっても、既に失敗が確定していれば失敗を出す。
- * neutral / skipped は成功と同じ扱い(結果の足を引っ張らない)。
- */
-export const summarizeCheckSuites = (suites: { status: string; conclusion: string | null }[]): CiStatus | null => {
-  if (suites.length === 0) {
-    return null
-  }
-  if (suites.some(({ conclusion }) => conclusion && FAILURE_CONCLUSIONS.has(conclusion))) {
-    return 'failure'
-  }
-  if (suites.some(({ status }) => status !== 'completed')) {
-    return 'pending'
-  }
-  if (suites.some(({ conclusion }) => conclusion === 'cancelled')) {
-    return 'cancelled'
-  }
-  return 'success'
-}
-
 /** PR の状態。Webhook の pull_request から決める */
 export const pullRequestStateOf = (pr: {
   state: string
@@ -164,22 +120,4 @@ export const pullRequestStateOf = (pr: {
     return 'closed'
   }
   return pr.draft ? 'draft' : 'open'
-}
-
-/**
- * マージで完了にしてよいか。紐付いた PR がすべてマージかクローズで、少なくとも1件がマージされていること。
- * クローズだけ(マージせず閉じた)では完了にしない。
- */
-export const isAllPullRequestsDone = (states: (PullRequestState | null)[]): boolean =>
-  states.length > 0 && states.every((state) => state === 'merged' || state === 'closed') && states.includes('merged')
-
-/** リンクの表示名。PR は `owner/name#123`、コミットは短い SHA、ブランチは名前 */
-export const ticketLinkLabel = ({ kind, repo, ref }: { kind: TicketLinkKind; repo: string; ref: string }): string => {
-  if (kind === 'pull_request') {
-    return `${repo}#${ref}`
-  }
-  if (kind === 'commit') {
-    return `${repo}@${ref.slice(0, 7)}`
-  }
-  return `${repo}:${ref}`
 }
