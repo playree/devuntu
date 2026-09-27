@@ -12,7 +12,15 @@
  */
 import { existsSync, readdirSync } from 'node:fs'
 import path from 'node:path'
+import { t } from './messages.mjs'
 import { runScript } from './run-script.mjs'
+
+/**
+ * ローカル実行では `.env` を読む(表示言語の `DEFAULT_LOCALE` を子のスクリプトと揃えるため)。
+ * Dockerコンテナでは env_file で環境変数が渡され、standaloneビルドに dotenv が
+ * 同梱されないため、解決できなくても続行する。
+ */
+await import('dotenv/config').catch(() => {})
 
 /**
  * メンテナンスON後、アプリが接続を解放するまで待つ上限(秒)。
@@ -26,8 +34,7 @@ import { runScript } from './run-script.mjs'
 const DRAIN_WAIT_SEC = 60
 
 const usage = () => {
-  console.error('Usage: node ./scripts/restore-all.mjs <backup-dir> [--force] [--file <maintenance-flag>]')
-  console.error('Example: node ./scripts/restore-all.mjs backup/full_20260921_120000')
+  console.error(t('restore_all_usage'))
 }
 
 /**
@@ -38,20 +45,20 @@ const usage = () => {
  */
 const resolveBackup = (backupDir) => {
   if (!existsSync(backupDir)) {
-    console.error(`Directory not found: ${backupDir}`)
+    console.error(t('dir_not_found', backupDir))
     process.exit(1)
   }
 
   const dumps = readdirSync(backupDir).filter((name) => name.endsWith('.dump'))
   if (dumps.length !== 1) {
-    console.error(`Invalid backup (直下の *.dump が ${dumps.length} 件): ${backupDir}`)
+    console.error(t('invalid_backup_dumps', dumps.length, backupDir))
     usage()
     process.exit(1)
   }
 
   const s3Dir = path.join(backupDir, 's3')
   if (!existsSync(path.join(s3Dir, 'manifest.json'))) {
-    console.error(`Invalid backup (s3/manifest.json がありません): ${backupDir}`)
+    console.error(t('invalid_backup_no_manifest', backupDir))
     usage()
     process.exit(1)
   }
@@ -79,13 +86,13 @@ const main = () => {
   // S3 側は実体まで確かめる。`restore-db.mjs` は DROP DATABASE から始まるので、この後では遅い
   const checkCode = runScript('restore-s3.mjs', [s3Dir, '--check'])
   if (checkCode !== 0) {
-    console.error('S3 バックアップの検証に失敗したため中断しました(DB には触れていません)')
+    console.error(t('s3_check_failed'))
     process.exit(checkCode)
   }
 
   const onCode = runScript('maintenance.mjs', ['on', ...fileArgs])
   if (onCode !== 0) {
-    console.error(`メンテナンスモードにできなかったため中断しました (exit ${onCode})`)
+    console.error(t('maintenance_on_failed', onCode))
     process.exit(onCode)
   }
 
@@ -97,16 +104,14 @@ const main = () => {
   for (const [script, stepArgs] of steps) {
     const code = runScript(script, stepArgs)
     if (code !== 0) {
-      console.error(`${script} が失敗したため中断しました (exit ${code})`)
-      console.error('メンテナンスモードは ON のままです。原因を直してからやり直してください。')
+      console.error(t('step_failed', script, code))
+      console.error(t('maintenance_still_on_retry'))
       process.exit(code)
     }
   }
 
-  console.log('Restore completed.')
-  console.log('メンテナンスモードは ON のままです。表示を確認してから解除してください:')
-  console.log('  pnpm maintenance off')
-  console.log('  docker compose run --rm tools maintenance off')
+  console.log(t('restore_completed'))
+  console.log(t('maintenance_still_on_done'))
 }
 
 main()

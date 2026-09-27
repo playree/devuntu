@@ -85,6 +85,7 @@ docker compose run --rm tools maintenance off
 ```
 
 サブコマンドより後ろの引数はそのまま渡る(`tools setup-env --dry-run` など)。サブコマンド無しで実行すると一覧が出る。
+表示言語は `DEFAULT_LOCALE` に従う(`ja` なら日本語、それ以外は英語)。`tools` には `.env.docker` の値が渡るので、アプリと同じ言語になる。
 `setup-env` は導入時と設定変更時のどちらでも使う。尋ねられる項目や既存ファイルの扱いは [installation.md](installation.md#2-設定ファイルの作成) を参照。
 
 - `profiles: ['tools']` を付けているので `docker compose up` では起動しない

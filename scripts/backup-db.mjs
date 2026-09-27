@@ -16,6 +16,7 @@ import { closeSync, mkdirSync, openSync, renameSync, rmSync } from 'node:fs'
 import path from 'node:path'
 import { hasLocalPgClient, resolveDbEnv, runPg, showTransport, stamp } from './db-connect.mjs'
 import { matchOwner } from './file-owner.mjs'
+import { t } from './messages.mjs'
 
 /**
  * ローカル実行では `.env` を読む。
@@ -34,7 +35,7 @@ const parseOut = (args) => {
   }
   const value = args[index + 1]
   if (!value || value.startsWith('--')) {
-    console.error('--out には出力先のファイルパスを指定してください')
+    console.error(t('out_file_required'))
     process.exit(1)
   }
   return value
@@ -73,7 +74,7 @@ const main = () => {
     throw err
   }
 
-  console.log(`Backup created: ${path.relative(process.cwd(), outFile) || outFile}`)
+  console.log(t('backup_created', path.relative(process.cwd(), outFile) || outFile))
 }
 
 main()

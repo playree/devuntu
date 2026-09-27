@@ -103,6 +103,9 @@ docker compose run --rm tools setup-env
 現在値を既定値として提示するので、Enter を押し続ければ内容は変わらない(設定変更や項目追加にも使える)。
 上書き前の内容は `<ファイル名>.<日時>.bak` へ退避される。
 
+表示言語は `DEFAULT_LOCALE` に従う(`ja` なら日本語、それ以外は英語)。環境変数にも既存の `.env.docker` にも
+`DEFAULT_LOCALE` が無い初回は、最初に言語(English / 日本語)を尋ね、その答えを `DEFAULT_LOCALE` として書き出す。
+
 次の設定は対話では尋ねない。変更する場合は `.env.docker` を直接編集する(変数名と既定値は
 [environment-variables.md](environment-variables.md) を参照)。既存の設定ファイルに値があれば、
 再実行しても現在値を引き継ぐ。

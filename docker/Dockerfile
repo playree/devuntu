@@ -77,6 +77,8 @@ COPY --from=builder /app/scripts/tools.mjs \
                     /app/scripts/restore-all.mjs \
                     /app/scripts/maintenance.mjs \
                     /app/scripts/maintenance-flag.mjs \
+                    /app/scripts/i18n.mjs \
+                    /app/scripts/messages.mjs \
                     ./scripts/
 COPY --from=builder /app/scripts/setup-env ./scripts/setup-env
 

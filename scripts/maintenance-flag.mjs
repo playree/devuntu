@@ -7,6 +7,7 @@
  * この2つは同じファイルを指す(別構成にした場合は `--file` で合わせる)。
  */
 import path from 'node:path'
+import { t } from './messages.mjs'
 
 export const DEFAULT_MAINTENANCE_FILE = path.join(process.cwd(), 'config', 'maintenance')
 
@@ -18,7 +19,7 @@ export const parseMaintenanceFile = (args) => {
   }
   const value = args[index + 1]
   if (!value || value.startsWith('--')) {
-    throw new Error('--file にはフラグファイルのパスを指定してください')
+    throw new Error(t('file_required'))
   }
   return path.resolve(value)
 }

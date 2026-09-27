@@ -15,13 +15,13 @@
  *
  * アプリのモジュール(`@/` エイリアス)を読めないため、S3クライアントはここで組み立てる。
  * 設定値は `src/lib/env-util.ts` の同名の環境変数と揃えている。
- * このファイル単体をマウントするだけでも実行できるよう、
- * `backup-s3.mjs` と共通処理を切り出さず、それぞれ自己完結させている。
+ * S3 の処理は `backup-s3.mjs` と共通化せず、それぞれ自己完結させている。
  */
 import { CreateBucketCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
+import { t } from './messages.mjs'
 
 /**
  * ローカル実行では `.env` を読む。
@@ -54,7 +54,7 @@ const client = new S3Client({
 const ensureBucket = async () => {
   try {
     await client.send(new CreateBucketCommand({ Bucket: BUCKET }))
-    console.log(`bucket created: ${BUCKET}`)
+    console.log(t('s3_bucket_created', BUCKET))
   } catch (err) {
     if (err?.name === 'BucketAlreadyOwnedByYou' || err?.name === 'BucketAlreadyExists') {
       return
@@ -64,8 +64,7 @@ const ensureBucket = async () => {
 }
 
 const usage = () => {
-  console.error('Usage: node ./scripts/restore-s3.mjs <backup-dir> [--check]')
-  console.error('Example: node ./scripts/restore-s3.mjs backup/s3_20260807_120000')
+  console.error(t('restore_s3_usage'))
 }
 
 /** manifest の Content-Type、無ければ拡張子からの補完。復元時に使うものと同じ解決 */
@@ -81,26 +80,26 @@ const checkBackup = (backupDir, manifest) => {
   const issues = []
   for (const obj of manifest.objects) {
     if (!obj?.key || typeof obj.key !== 'string') {
-      issues.push(`key を持たない要素があります: ${JSON.stringify(obj)}`)
+      issues.push(t('s3_issue_no_key', JSON.stringify(obj)))
       continue
     }
     if (!existsSync(path.join(backupDir, 'objects', obj.key))) {
-      issues.push(`objects/${obj.key} がありません`)
+      issues.push(t('s3_issue_missing_object', obj.key))
       continue
     }
     if (!resolveContentType(obj)) {
-      issues.push(`${obj.key} の Content-Type を決められません`)
+      issues.push(t('s3_issue_no_content_type', obj.key))
     }
   }
 
   if (issues.length > 0) {
-    console.error(`Invalid backup (${issues.length} 件): ${backupDir}`)
+    console.error(t('s3_invalid_backup_issues', issues.length, backupDir))
     for (const issue of issues) {
       console.error(`  - ${issue}`)
     }
     process.exit(1)
   }
-  console.log(`Backup looks valid: ${backupDir} (${manifest.objects.length} objects)`)
+  console.log(t('s3_backup_valid', backupDir, manifest.objects.length))
 }
 
 const main = async () => {
@@ -113,7 +112,7 @@ const main = async () => {
   }
   // --check はストレージへ触らないので、S3 の設定が無くても実行できる
   if (!check && !process.env.S3_ENDPOINT) {
-    throw new Error('S3_ENDPOINT is not set')
+    throw new Error(t('s3_endpoint_missing'))
   }
 
   const manifestPath = path.join(backupDir, 'manifest.json')
@@ -121,7 +120,7 @@ const main = async () => {
     .then(JSON.parse)
     .catch(() => undefined)
   if (!Array.isArray(manifest?.objects)) {
-    console.error(`Invalid backup (manifest.json not found or broken): ${manifestPath}`)
+    console.error(t('s3_invalid_manifest', manifestPath))
     usage()
     process.exit(1)
   }
@@ -131,7 +130,7 @@ const main = async () => {
     return
   }
 
-  console.log(`Restoring ${manifest.objects.length} objects from ${backupDir} into ${BUCKET}...`)
+  console.log(t('s3_restoring', manifest.objects.length, backupDir, BUCKET))
   await ensureBucket()
 
   let restored = 0
@@ -139,7 +138,7 @@ const main = async () => {
   for (const obj of manifest.objects) {
     const contentType = resolveContentType(obj)
     if (!contentType) {
-      console.warn(`skip (unknown content type): ${obj.key}`)
+      console.warn(t('s3_skip_unknown_type', obj.key))
       failed++
       continue
     }
@@ -156,12 +155,12 @@ const main = async () => {
       )
       restored++
     } catch (err) {
-      console.error(`failed: ${obj.key} (${err?.message})`)
+      console.error(t('s3_object_failed', obj.key, err?.message))
       failed++
     }
   }
 
-  console.log(`done. restored=${restored} failed=${failed}`)
+  console.log(t('s3_restore_done', restored, failed))
   if (failed > 0) {
     process.exit(1)
   }

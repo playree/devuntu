@@ -12,10 +12,17 @@
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { parseMaintenanceFile } from './maintenance-flag.mjs'
+import { t } from './messages.mjs'
+
+/**
+ * ローカル実行では `.env` を読む(表示言語の `DEFAULT_LOCALE` を他のスクリプトと揃えるため)。
+ * Dockerコンテナでは env_file で環境変数が渡され、standaloneビルドに dotenv が
+ * 同梱されないため、解決できなくても続行する。
+ */
+await import('dotenv/config').catch(() => {})
 
 const usage = () => {
-  console.error('Usage: node ./scripts/maintenance.mjs <on|off|status> [--file <path>]')
-  console.error('Example: node ./scripts/maintenance.mjs on')
+  console.error(t('maintenance_usage'))
 }
 
 const main = () => {
@@ -34,16 +41,16 @@ const main = () => {
       mkdirSync(path.dirname(file), { recursive: true })
       // 中身は使わないが、いつ入れたのか分からないと解除の判断ができないので時刻を書いておく
       writeFileSync(file, `${new Date().toISOString()}\n`)
-      console.log(`maintenance mode: on (${file})`)
+      console.log(t('maintenance_state', 'on', file))
       break
     }
     case 'off': {
       rmSync(file, { force: true })
-      console.log(`maintenance mode: off (${file})`)
+      console.log(t('maintenance_state', 'off', file))
       break
     }
     case 'status': {
-      console.log(`maintenance mode: ${existsSync(file) ? 'on' : 'off'} (${file})`)
+      console.log(t('maintenance_state', existsSync(file) ? 'on' : 'off', file))
       break
     }
     default: {
