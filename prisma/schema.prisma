@@ -1530,6 +1530,15 @@ model TicketCriterion {
 /// 連携する Git ホスティング。GitLab などを足すときはここへ追加する
 enum GitProvider {
   github
+  gitlab
+}
+
+/// GitLab の Webhook の検証方式
+enum GitWebhookAuth {
+  /// 署名トークン(GitLab 19.0 以降、推奨)。`webhook-signature` の HMAC を検証する
+  signing
+  /// シークレットトークン(19.0 未満向け)。`X-Gitlab-Token` の値を比べる
+  token
 }
 
 /// チケットに紐付けた成果物の種別
@@ -1566,13 +1575,16 @@ model TicketLink {
   provider GitProvider    @default(github)
   kind     TicketLinkKind
 
-  /// `owner/name`。GitHub は大文字小文字を区別しないため小文字で保存する
+  /// GitLab のインスタンスの URL(`https://gitlab.example.com` など)。GitHub は空文字
+  baseUrl String @default("")
+
+  /// GitHub は `owner/name`、GitLab はプロジェクトのパス。大文字小文字を区別しないため小文字で保存する
   repo String
 
   /// branch: ブランチ名 / pull_request: PR 番号 / commit: SHA
   ref String
 
-  /// 画面から開く GitHub の URL
+  /// 画面から開く URL
   url String
 
   /// PR のタイトル。Webhook で届くまでは null
@@ -1600,9 +1612,9 @@ model TicketLink {
   updatedAt DateTime @updatedAt
 
   // @@unique が ticketId 先頭の索引を兼ねる
-  @@unique([ticketId, provider, repo, kind, ref])
+  @@unique([ticketId, provider, baseUrl, repo, kind, ref])
   // Webhook から PR / ブランチのリンクを引く
-  @@index([provider, repo, kind, ref])
+  @@index([provider, baseUrl, repo, kind, ref])
   @@map("ticket_link")
 }
 
@@ -1615,15 +1627,27 @@ model BoardRepository {
 
   provider GitProvider @default(github)
 
-  /// `owner/name`(小文字)
+  /// GitLab のインスタンスの URL。GitHub は空文字
+  baseUrl String @default("")
+
+  /// GitHub は `owner/name`、GitLab はプロジェクトのパス(小文字)
   repo String
+
+  /// GitLab の Webhook の検証方式。GitHub は環境変数の共通シークレットを使うので null
+  webhookAuth GitWebhookAuth?
+
+  /// GitLab の Webhook のトークン(暗号化して保存する)。未設定の間は Webhook を受けない
+  webhookSecret String?
+
+  /// 検証を通った Webhook が最後に届いた日時(GitLab のみ)。登録できているかの目安として画面に出す
+  lastReceivedAt DateTime?
 
   // メタデータ
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([boardId, provider, repo])
-  @@index([provider, repo])
+  @@unique([boardId, provider, baseUrl, repo])
+  @@index([provider, baseUrl, repo])
   @@map("board_repository")
 }
 
@@ -1634,32 +1658,41 @@ model GitCheckSuite {
 
   provider GitProvider @default(github)
 
-  /// `owner/name`(小文字)
+  /// GitLab のインスタンスの URL。GitHub は空文字
+  baseUrl String @default("")
+
+  /// GitHub は `owner/name`、GitLab はプロジェクトのパス(小文字)
   repo String
 
-  /// GitHub の check_suite.id
+  /// GitHub の check_suite.id / GitLab の pipeline.id
   suiteId String
+
+  /// 受け取った対応付け(BoardRepository.id)。GitLab のみで、GitHub は空文字。
+  /// GitLab のトークンは対応付けごとにボードの管理者が持つため、別のボードの対応付けを経由して
+  /// 届いた CI の状態を混ぜないよう、表示時にこのボードの対応付けのものだけを使う
+  repositoryId String @default("")
 
   headSha String
 
   /// 実行したアプリの名前(GitHub Actions など)
   appName String
 
-  /// GitHub の status(queued / in_progress / completed など)をそのまま持つ
+  /// GitHub の status(queued / in_progress / completed など)。GitLab の pipeline もこの形へ寄せて持つ
   status String
 
   /// GitHub の conclusion(success / failure など)。完了前は null
   conclusion String?
 
-  /// 反映済みの check_suite.updated_at。古いイベントで巻き戻さないために比べる
+  /// 反映済みの更新時刻(GitHub は check_suite.updated_at、GitLab はジョブの最後の開始 / 終了時刻)。
+  /// 古いイベントで巻き戻さないために比べる
   syncedAt DateTime
 
   // メタデータ
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([provider, repo, suiteId])
-  @@index([provider, repo, headSha])
+  @@unique([provider, baseUrl, repo, suiteId, repositoryId])
+  @@index([provider, baseUrl, repo, headSha])
   // 古い行の掃除(maintenance-sweep.ts)
   @@index([updatedAt])
   @@map("git_check_suite")

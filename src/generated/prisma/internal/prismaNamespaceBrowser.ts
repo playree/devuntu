@@ -706,6 +706,7 @@ export const TicketLinkScalarFieldEnum = {
   ticketId: 'ticketId',
   provider: 'provider',
   kind: 'kind',
+  baseUrl: 'baseUrl',
   repo: 'repo',
   ref: 'ref',
   url: 'url',
@@ -727,7 +728,11 @@ export const BoardRepositoryScalarFieldEnum = {
   id: 'id',
   boardId: 'boardId',
   provider: 'provider',
+  baseUrl: 'baseUrl',
   repo: 'repo',
+  webhookAuth: 'webhookAuth',
+  webhookSecret: 'webhookSecret',
+  lastReceivedAt: 'lastReceivedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -738,8 +743,10 @@ export type BoardRepositoryScalarFieldEnum = (typeof BoardRepositoryScalarFieldE
 export const GitCheckSuiteScalarFieldEnum = {
   id: 'id',
   provider: 'provider',
+  baseUrl: 'baseUrl',
   repo: 'repo',
   suiteId: 'suiteId',
+  repositoryId: 'repositoryId',
   headSha: 'headSha',
   appName: 'appName',
   status: 'status',

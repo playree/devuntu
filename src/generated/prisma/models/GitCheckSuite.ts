@@ -28,8 +28,10 @@ export type AggregateGitCheckSuite = {
 export type GitCheckSuiteMinAggregateOutputType = {
   id: string | null
   provider: $Enums.GitProvider | null
+  baseUrl: string | null
   repo: string | null
   suiteId: string | null
+  repositoryId: string | null
   headSha: string | null
   appName: string | null
   status: string | null
@@ -42,8 +44,10 @@ export type GitCheckSuiteMinAggregateOutputType = {
 export type GitCheckSuiteMaxAggregateOutputType = {
   id: string | null
   provider: $Enums.GitProvider | null
+  baseUrl: string | null
   repo: string | null
   suiteId: string | null
+  repositoryId: string | null
   headSha: string | null
   appName: string | null
   status: string | null
@@ -56,8 +60,10 @@ export type GitCheckSuiteMaxAggregateOutputType = {
 export type GitCheckSuiteCountAggregateOutputType = {
   id: number
   provider: number
+  baseUrl: number
   repo: number
   suiteId: number
+  repositoryId: number
   headSha: number
   appName: number
   status: number
@@ -72,8 +78,10 @@ export type GitCheckSuiteCountAggregateOutputType = {
 export type GitCheckSuiteMinAggregateInputType = {
   id?: true
   provider?: true
+  baseUrl?: true
   repo?: true
   suiteId?: true
+  repositoryId?: true
   headSha?: true
   appName?: true
   status?: true
@@ -86,8 +94,10 @@ export type GitCheckSuiteMinAggregateInputType = {
 export type GitCheckSuiteMaxAggregateInputType = {
   id?: true
   provider?: true
+  baseUrl?: true
   repo?: true
   suiteId?: true
+  repositoryId?: true
   headSha?: true
   appName?: true
   status?: true
@@ -100,8 +110,10 @@ export type GitCheckSuiteMaxAggregateInputType = {
 export type GitCheckSuiteCountAggregateInputType = {
   id?: true
   provider?: true
+  baseUrl?: true
   repo?: true
   suiteId?: true
+  repositoryId?: true
   headSha?: true
   appName?: true
   status?: true
@@ -187,8 +199,10 @@ export type GitCheckSuiteGroupByArgs<ExtArgs extends runtime.Types.Extensions.In
 export type GitCheckSuiteGroupByOutputType = {
   id: string
   provider: $Enums.GitProvider
+  baseUrl: string
   repo: string
   suiteId: string
+  repositoryId: string
   headSha: string
   appName: string
   status: string
@@ -222,8 +236,10 @@ export type GitCheckSuiteWhereInput = {
   NOT?: Prisma.GitCheckSuiteWhereInput | Prisma.GitCheckSuiteWhereInput[]
   id?: Prisma.StringFilter<"GitCheckSuite"> | string
   provider?: Prisma.EnumGitProviderFilter<"GitCheckSuite"> | $Enums.GitProvider
+  baseUrl?: Prisma.StringFilter<"GitCheckSuite"> | string
   repo?: Prisma.StringFilter<"GitCheckSuite"> | string
   suiteId?: Prisma.StringFilter<"GitCheckSuite"> | string
+  repositoryId?: Prisma.StringFilter<"GitCheckSuite"> | string
   headSha?: Prisma.StringFilter<"GitCheckSuite"> | string
   appName?: Prisma.StringFilter<"GitCheckSuite"> | string
   status?: Prisma.StringFilter<"GitCheckSuite"> | string
@@ -236,8 +252,10 @@ export type GitCheckSuiteWhereInput = {
 export type GitCheckSuiteOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   provider?: Prisma.SortOrder
+  baseUrl?: Prisma.SortOrder
   repo?: Prisma.SortOrder
   suiteId?: Prisma.SortOrder
+  repositoryId?: Prisma.SortOrder
   headSha?: Prisma.SortOrder
   appName?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -249,13 +267,15 @@ export type GitCheckSuiteOrderByWithRelationInput = {
 
 export type GitCheckSuiteWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  provider_repo_suiteId?: Prisma.GitCheckSuiteProviderRepoSuiteIdCompoundUniqueInput
+  provider_baseUrl_repo_suiteId_repositoryId?: Prisma.GitCheckSuiteProviderBaseUrlRepoSuiteIdRepositoryIdCompoundUniqueInput
   AND?: Prisma.GitCheckSuiteWhereInput | Prisma.GitCheckSuiteWhereInput[]
   OR?: Prisma.GitCheckSuiteWhereInput[]
   NOT?: Prisma.GitCheckSuiteWhereInput | Prisma.GitCheckSuiteWhereInput[]
   provider?: Prisma.EnumGitProviderFilter<"GitCheckSuite"> | $Enums.GitProvider
+  baseUrl?: Prisma.StringFilter<"GitCheckSuite"> | string
   repo?: Prisma.StringFilter<"GitCheckSuite"> | string
   suiteId?: Prisma.StringFilter<"GitCheckSuite"> | string
+  repositoryId?: Prisma.StringFilter<"GitCheckSuite"> | string
   headSha?: Prisma.StringFilter<"GitCheckSuite"> | string
   appName?: Prisma.StringFilter<"GitCheckSuite"> | string
   status?: Prisma.StringFilter<"GitCheckSuite"> | string
@@ -263,13 +283,15 @@ export type GitCheckSuiteWhereUniqueInput = Prisma.AtLeast<{
   syncedAt?: Prisma.DateTimeFilter<"GitCheckSuite"> | Date | string
   createdAt?: Prisma.DateTimeFilter<"GitCheckSuite"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"GitCheckSuite"> | Date | string
-}, "id" | "provider_repo_suiteId">
+}, "id" | "provider_baseUrl_repo_suiteId_repositoryId">
 
 export type GitCheckSuiteOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   provider?: Prisma.SortOrder
+  baseUrl?: Prisma.SortOrder
   repo?: Prisma.SortOrder
   suiteId?: Prisma.SortOrder
+  repositoryId?: Prisma.SortOrder
   headSha?: Prisma.SortOrder
   appName?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -288,8 +310,10 @@ export type GitCheckSuiteScalarWhereWithAggregatesInput = {
   NOT?: Prisma.GitCheckSuiteScalarWhereWithAggregatesInput | Prisma.GitCheckSuiteScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"GitCheckSuite"> | string
   provider?: Prisma.EnumGitProviderWithAggregatesFilter<"GitCheckSuite"> | $Enums.GitProvider
+  baseUrl?: Prisma.StringWithAggregatesFilter<"GitCheckSuite"> | string
   repo?: Prisma.StringWithAggregatesFilter<"GitCheckSuite"> | string
   suiteId?: Prisma.StringWithAggregatesFilter<"GitCheckSuite"> | string
+  repositoryId?: Prisma.StringWithAggregatesFilter<"GitCheckSuite"> | string
   headSha?: Prisma.StringWithAggregatesFilter<"GitCheckSuite"> | string
   appName?: Prisma.StringWithAggregatesFilter<"GitCheckSuite"> | string
   status?: Prisma.StringWithAggregatesFilter<"GitCheckSuite"> | string
@@ -302,8 +326,10 @@ export type GitCheckSuiteScalarWhereWithAggregatesInput = {
 export type GitCheckSuiteCreateInput = {
   id?: string
   provider?: $Enums.GitProvider
+  baseUrl?: string
   repo: string
   suiteId: string
+  repositoryId?: string
   headSha: string
   appName: string
   status: string
@@ -316,8 +342,10 @@ export type GitCheckSuiteCreateInput = {
 export type GitCheckSuiteUncheckedCreateInput = {
   id?: string
   provider?: $Enums.GitProvider
+  baseUrl?: string
   repo: string
   suiteId: string
+  repositoryId?: string
   headSha: string
   appName: string
   status: string
@@ -330,8 +358,10 @@ export type GitCheckSuiteUncheckedCreateInput = {
 export type GitCheckSuiteUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
   repo?: Prisma.StringFieldUpdateOperationsInput | string
   suiteId?: Prisma.StringFieldUpdateOperationsInput | string
+  repositoryId?: Prisma.StringFieldUpdateOperationsInput | string
   headSha?: Prisma.StringFieldUpdateOperationsInput | string
   appName?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -344,8 +374,10 @@ export type GitCheckSuiteUpdateInput = {
 export type GitCheckSuiteUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
   repo?: Prisma.StringFieldUpdateOperationsInput | string
   suiteId?: Prisma.StringFieldUpdateOperationsInput | string
+  repositoryId?: Prisma.StringFieldUpdateOperationsInput | string
   headSha?: Prisma.StringFieldUpdateOperationsInput | string
   appName?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -358,8 +390,10 @@ export type GitCheckSuiteUncheckedUpdateInput = {
 export type GitCheckSuiteCreateManyInput = {
   id?: string
   provider?: $Enums.GitProvider
+  baseUrl?: string
   repo: string
   suiteId: string
+  repositoryId?: string
   headSha: string
   appName: string
   status: string
@@ -372,8 +406,10 @@ export type GitCheckSuiteCreateManyInput = {
 export type GitCheckSuiteUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
   repo?: Prisma.StringFieldUpdateOperationsInput | string
   suiteId?: Prisma.StringFieldUpdateOperationsInput | string
+  repositoryId?: Prisma.StringFieldUpdateOperationsInput | string
   headSha?: Prisma.StringFieldUpdateOperationsInput | string
   appName?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -386,8 +422,10 @@ export type GitCheckSuiteUpdateManyMutationInput = {
 export type GitCheckSuiteUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
   repo?: Prisma.StringFieldUpdateOperationsInput | string
   suiteId?: Prisma.StringFieldUpdateOperationsInput | string
+  repositoryId?: Prisma.StringFieldUpdateOperationsInput | string
   headSha?: Prisma.StringFieldUpdateOperationsInput | string
   appName?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -397,17 +435,21 @@ export type GitCheckSuiteUncheckedUpdateManyInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type GitCheckSuiteProviderRepoSuiteIdCompoundUniqueInput = {
+export type GitCheckSuiteProviderBaseUrlRepoSuiteIdRepositoryIdCompoundUniqueInput = {
   provider: $Enums.GitProvider
+  baseUrl: string
   repo: string
   suiteId: string
+  repositoryId: string
 }
 
 export type GitCheckSuiteCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   provider?: Prisma.SortOrder
+  baseUrl?: Prisma.SortOrder
   repo?: Prisma.SortOrder
   suiteId?: Prisma.SortOrder
+  repositoryId?: Prisma.SortOrder
   headSha?: Prisma.SortOrder
   appName?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -420,8 +462,10 @@ export type GitCheckSuiteCountOrderByAggregateInput = {
 export type GitCheckSuiteMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   provider?: Prisma.SortOrder
+  baseUrl?: Prisma.SortOrder
   repo?: Prisma.SortOrder
   suiteId?: Prisma.SortOrder
+  repositoryId?: Prisma.SortOrder
   headSha?: Prisma.SortOrder
   appName?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -434,8 +478,10 @@ export type GitCheckSuiteMaxOrderByAggregateInput = {
 export type GitCheckSuiteMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   provider?: Prisma.SortOrder
+  baseUrl?: Prisma.SortOrder
   repo?: Prisma.SortOrder
   suiteId?: Prisma.SortOrder
+  repositoryId?: Prisma.SortOrder
   headSha?: Prisma.SortOrder
   appName?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -450,8 +496,10 @@ export type GitCheckSuiteMinOrderByAggregateInput = {
 export type GitCheckSuiteSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   provider?: boolean
+  baseUrl?: boolean
   repo?: boolean
   suiteId?: boolean
+  repositoryId?: boolean
   headSha?: boolean
   appName?: boolean
   status?: boolean
@@ -464,8 +512,10 @@ export type GitCheckSuiteSelect<ExtArgs extends runtime.Types.Extensions.Interna
 export type GitCheckSuiteSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   provider?: boolean
+  baseUrl?: boolean
   repo?: boolean
   suiteId?: boolean
+  repositoryId?: boolean
   headSha?: boolean
   appName?: boolean
   status?: boolean
@@ -478,8 +528,10 @@ export type GitCheckSuiteSelectCreateManyAndReturn<ExtArgs extends runtime.Types
 export type GitCheckSuiteSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   provider?: boolean
+  baseUrl?: boolean
   repo?: boolean
   suiteId?: boolean
+  repositoryId?: boolean
   headSha?: boolean
   appName?: boolean
   status?: boolean
@@ -492,8 +544,10 @@ export type GitCheckSuiteSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
 export type GitCheckSuiteSelectScalar = {
   id?: boolean
   provider?: boolean
+  baseUrl?: boolean
   repo?: boolean
   suiteId?: boolean
+  repositoryId?: boolean
   headSha?: boolean
   appName?: boolean
   status?: boolean
@@ -503,7 +557,7 @@ export type GitCheckSuiteSelectScalar = {
   updatedAt?: boolean
 }
 
-export type GitCheckSuiteOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "provider" | "repo" | "suiteId" | "headSha" | "appName" | "status" | "conclusion" | "syncedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["gitCheckSuite"]>
+export type GitCheckSuiteOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "provider" | "baseUrl" | "repo" | "suiteId" | "repositoryId" | "headSha" | "appName" | "status" | "conclusion" | "syncedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["gitCheckSuite"]>
 
 export type $GitCheckSuitePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "GitCheckSuite"
@@ -512,20 +566,30 @@ export type $GitCheckSuitePayload<ExtArgs extends runtime.Types.Extensions.Inter
     id: string
     provider: $Enums.GitProvider
     /**
-     * `owner/name`(小文字)
+     * GitLab のインスタンスの URL。GitHub は空文字
+     */
+    baseUrl: string
+    /**
+     * GitHub は `owner/name`、GitLab はプロジェクトのパス(小文字)
      */
     repo: string
     /**
-     * GitHub の check_suite.id
+     * GitHub の check_suite.id / GitLab の pipeline.id
      */
     suiteId: string
+    /**
+     * 受け取った対応付け(BoardRepository.id)。GitLab のみで、GitHub は空文字。
+     * GitLab のトークンは対応付けごとにボードの管理者が持つため、別のボードの対応付けを経由して
+     * 届いた CI の状態を混ぜないよう、表示時にこのボードの対応付けのものだけを使う
+     */
+    repositoryId: string
     headSha: string
     /**
      * 実行したアプリの名前(GitHub Actions など)
      */
     appName: string
     /**
-     * GitHub の status(queued / in_progress / completed など)をそのまま持つ
+     * GitHub の status(queued / in_progress / completed など)。GitLab の pipeline もこの形へ寄せて持つ
      */
     status: string
     /**
@@ -533,7 +597,8 @@ export type $GitCheckSuitePayload<ExtArgs extends runtime.Types.Extensions.Inter
      */
     conclusion: string | null
     /**
-     * 反映済みの check_suite.updated_at。古いイベントで巻き戻さないために比べる
+     * 反映済みの更新時刻(GitHub は check_suite.updated_at、GitLab はジョブの最後の開始 / 終了時刻)。
+     * 古いイベントで巻き戻さないために比べる
      */
     syncedAt: Date
     createdAt: Date
@@ -963,8 +1028,10 @@ export interface Prisma__GitCheckSuiteClient<T, Null = never, ExtArgs extends ru
 export interface GitCheckSuiteFieldRefs {
   readonly id: Prisma.FieldRef<"GitCheckSuite", 'String'>
   readonly provider: Prisma.FieldRef<"GitCheckSuite", 'GitProvider'>
+  readonly baseUrl: Prisma.FieldRef<"GitCheckSuite", 'String'>
   readonly repo: Prisma.FieldRef<"GitCheckSuite", 'String'>
   readonly suiteId: Prisma.FieldRef<"GitCheckSuite", 'String'>
+  readonly repositoryId: Prisma.FieldRef<"GitCheckSuite", 'String'>
   readonly headSha: Prisma.FieldRef<"GitCheckSuite", 'String'>
   readonly appName: Prisma.FieldRef<"GitCheckSuite", 'String'>
   readonly status: Prisma.FieldRef<"GitCheckSuite", 'String'>

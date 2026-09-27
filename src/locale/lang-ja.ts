@@ -16,6 +16,7 @@ export const ja: DefaultLocaleItems = {
   add_criterion: '条件を追加',
   add_group: 'グループ追加',
   add_link: 'リンク追加',
+  add_project: 'プロジェクト追加',
   add_member: 'メンバー追加',
   add_repository: 'リポジトリ追加',
   add_tag: 'タグ追加',
@@ -87,7 +88,7 @@ export const ja: DefaultLocaleItems = {
   avatar: 'アバター',
   back: '戻る',
   board: 'ボード',
-  board_github: 'GitHub連携',
+  board_git: 'Git連携',
   board_groups: 'グループアサイン',
   board_key: 'ボードキー',
   board_members: 'ユーザーアサイン',
@@ -254,10 +255,19 @@ export const ja: DefaultLocaleItems = {
   expires_in_days: '${days}日後',
   filter: 'フィルタ',
   free_memory: '空きメモリ',
-  github_complete_on_pr_merge: 'プルリクエストのマージでチケットを完了にする',
-  github_repositories: '対応付けたリポジトリ',
+  git_complete_on_pr_merge: 'プルリクエスト / マージリクエストのマージでチケットを完了にする',
+  git_repositories: '対応付けたリポジトリ',
   github_repository: 'リポジトリ(owner/repo)',
-  github_webhook_url: 'Webhook URL',
+  gitlab_instance: 'インスタンス',
+  gitlab_last_received: '最終受信',
+  gitlab_project: 'プロジェクト(group/project)',
+  gitlab_regenerate_token: 'トークンを再発行',
+  gitlab_secret_token: 'シークレットトークン',
+  gitlab_secret_unset: 'トークン未設定',
+  gitlab_set_signing_token: '署名トークンを設定',
+  gitlab_signing_token: '署名トークン',
+  gitlab_webhook_auth: '検証方式',
+  git_webhook_url: 'Webhook URL',
   google_account: 'Googleアカウント',
   google_account_allowed_groups: '利用を許可するグループ',
   google_account_enable: 'Googleアカウント連携を有効化',
@@ -511,10 +521,25 @@ export const ja: DefaultLocaleItems = {
   msg_board_key_change: 'キーを変更すると、共有済みのチケットIDは元のチケットを指さなくなります。',
   msg_board_slack_notify_desc:
     'このボードで選んだ出来事をSlackチャンネルへ投稿します。通知先とイベントの両方を選んでください。',
+  msg_board_git_desc:
+    '対応付けたリポジトリでは、ブランチ名の先頭の表示ID(例: feature/KEY-12)からプルリクエスト / マージリクエストをチケットに自動で紐付けます。',
+  msg_board_gitlab_desc:
+    'GitLabのプロジェクトの Settings → Webhooks で、プロジェクトごとに表示される Webhook URL を登録します。\nTrigger は Merge request events / Pipeline events を選びます。GitLab 19.0 以降は署名トークン、それより前のバージョンはシークレットトークンで検証します。',
+  msg_gitlab_signing_token_desc:
+    'GitLab の Webhook の画面で「Generate signing token」を押し、表示された whsec_ で始まるトークンを貼り付けます。トークンは GitLab でも一度しか表示されません。',
+  msg_gitlab_secret_token_desc:
+    'このトークンを GitLab の Webhook の Secret token に貼り付けます。GitLab 19.0 以降なら、より安全な署名トークンの利用をおすすめします。',
+  msg_gitlab_regenerate_confirm:
+    'トークンを作り直すと、今のトークンは使えなくなります。GitLab 側の Secret token も入れ直してください。',
+  msg_gitlab_secret_unset: 'トークンを設定するまで、このプロジェクトの Webhook は受け付けません。',
+  msg_git_provider_disabled:
+    'この環境では連携が無効になっています(Webhook を受け付けません)。残っている対応付けは外せます。',
+  msg_gitlab_already_added:
+    '既に対応付けているプロジェクトです。検証方式の切り替えやトークンの作り直しは一覧から行えます。',
   msg_board_github_desc:
-    'GitHubのリポジトリの Settings → Webhooks で、下記の URL を Payload URL に登録します。\nContent type は application/json、Secret はサーバーの GITHUB_WEBHOOK_SECRET と同じ値にし、イベントは Pull requests / Check suites / Check runs を選びます。\n対応付けたリポジトリでは、ブランチ名の先頭の表示ID(例: feature/KEY-12)からプルリクエストをチケットに自動で紐付けます。',
-  msg_github_complete_on_pr_merge:
-    '紐付いたプルリクエストがすべてマージまたはクローズされ、1件以上マージされたときに完了にします。',
+    'GitHubのリポジトリの Settings → Webhooks で、下記の URL を Payload URL に登録します。\nContent type は application/json、Secret はサーバーの GITHUB_WEBHOOK_SECRET と同じ値にし、イベントは Pull requests / Check suites / Check runs を選びます。',
+  msg_git_complete_on_pr_merge:
+    '紐付いたプルリクエスト / マージリクエストがすべてマージまたはクローズされ、1件以上マージされたときに完了にします。',
   msg_calendar_share_desc:
     '有効にすると、あなたのカレンダーの空き時間を共有URLで外部の人に見せられます。予定のタイトルや詳細は表示されず、「予定あり」の時間帯だけが公開されます。',
   msg_calendar_share_disabled: '共有を無効にしました。共有URLは無効になりました。',
@@ -699,7 +724,9 @@ export const ja: DefaultLocaleItems = {
   '@invalid_notify_setting': '通知設定の指定が正しくありません。',
   '@invalid_command_input': '選択内容が正しくありません。',
   '@invalid_command_value': '使えるのは英数字と . _ : @ = / + , - だけです(先頭の - は使えません)。',
-  '@invalid_github_url': 'GitHubのブランチ / プルリクエスト / コミットのURLを指定してください',
+  '@invalid_git_url': 'GitHub / GitLab のブランチ / プルリクエスト / コミットのURLを指定してください',
   '@invalid_github_repo': 'owner/repo の形式で指定してください',
+  '@invalid_gitlab_project': 'group/project の形式で指定してください',
+  '@invalid_gitlab_signing_token': 'whsec_ で始まる署名トークンを指定してください',
   '@too_many_criteria': '受け入れ条件の数が上限を超えています',
 }

@@ -23,6 +23,7 @@ import {
   validateBetterAuthUrl,
   validateChoice,
   validateDatabaseUrl,
+  validateGitlabUrls,
   validateMailFrom,
   validatePort,
   validatePositiveInt,
@@ -253,4 +254,22 @@ describe('自動生成', () => {
     expect(Buffer.from(privateKey, 'base64url')).toHaveLength(32)
     expect(() => webpush.setVapidDetails('mailto:devuntu@example.com', publicKey, privateKey)).not.toThrow()
   })
+})
+
+describe('validateGitlabUrls', () => {
+  it('末尾の / を落とし、重複を除いてカンマ区切りへ戻す', () => {
+    expect(
+      validateGitlabUrls(' https://gitlab.com/ , https://git.example.com/gitlab/,https://gitlab.com'),
+    ).toMatchObject({
+      ok: true,
+      value: 'https://gitlab.com,https://git.example.com/gitlab',
+    })
+  })
+
+  it.each(['', 'gitlab.com', 'ftp://gitlab.com', 'https://user:pass@gitlab.com', 'https://gitlab.com?x=1'])(
+    'URL として使えない値は弾く (%s)',
+    (value) => {
+      expect(validateGitlabUrls(value).ok).toBe(false)
+    },
+  )
 })

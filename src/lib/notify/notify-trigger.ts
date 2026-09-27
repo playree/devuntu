@@ -270,7 +270,7 @@ export const enqueueTicketMoved = async (
 }
 
 /**
- * PR のマージによる自動完了(GitHub 連携)。操作した人はいないので、システム由来(actorId なし)として投入する。
+ * PR / MR のマージによる自動完了(Git 連携)。操作した人はいないので、システム由来(actorId なし)として投入する。
  * 呼び出し元が完了へ動かしたことを確かめてから呼ぶ。
  */
 export const enqueueTicketCompletedByMerge = async (

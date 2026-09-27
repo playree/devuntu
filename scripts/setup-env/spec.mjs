@@ -91,6 +91,7 @@ export const ENV_DOCKER_SECTIONS = [
       'SLACK_TEAM_ID',
       'SLACK_SIGNING_SECRET',
       'GITHUB_WEBHOOK_SECRET',
+      'GITLAB_URLS',
       'MAIN_DEVUNTU_URL',
       'MAIN_DEVUNTU_CLIENT_ID',
       'MAIN_DEVUNTU_CLIENT_SECRET',
@@ -413,6 +414,37 @@ export const validateAllowedDomains = (input) => {
     return err(`ドメイン名として解釈できません: ${invalid}`)
   }
   return ok(domains.join(','))
+}
+
+/** GitLab 連携で使うインスタンスの URL(カンマ区切り)。末尾の / は落とす。アプリ側の読み取り(env-util.ts)と同じ条件で弾く */
+export const validateGitlabUrls = (input) => {
+  const values = String(input ?? '')
+    .split(',')
+    .map((v) => v.trim())
+    .filter((v) => v !== '')
+  if (values.length === 0) {
+    return err('最低1件必要です')
+  }
+  const normalized = []
+  for (const value of values) {
+    let url
+    try {
+      url = new URL(value)
+    } catch {
+      return err(`URLとして解釈できません: ${value}`)
+    }
+    if (
+      (url.protocol !== 'http:' && url.protocol !== 'https:') ||
+      url.username ||
+      url.password ||
+      url.search ||
+      url.hash
+    ) {
+      return err(`http(s):// で始まる、認証情報やクエリの無い URL で指定してください: ${value}`)
+    }
+    normalized.push(`${url.origin}${url.pathname.replace(/\/+$/, '')}`)
+  }
+  return ok([...new Set(normalized)].join(','))
 }
 
 export const validateVapidSubject = (input) => {

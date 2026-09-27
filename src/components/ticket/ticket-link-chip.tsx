@@ -1,8 +1,8 @@
 'use client'
 
 import { createEnumChip } from '@/components/enum-chip'
-import { type PullRequestState } from '@/generated/prisma/enums'
-import { type CiStatus } from '@/lib/github/github'
+import { type GitWebhookAuth, type PullRequestState } from '@/generated/prisma/enums'
+import { type CiStatus } from '@/lib/git/git'
 
 /** Prisma の enum が増えたらここがコンパイルエラーになる */
 export const PullRequestStateChip = createEnumChip<PullRequestState>({
@@ -18,3 +18,11 @@ export const CiStatusChip = createEnumChip<CiStatus>({
   failure: { color: 'danger', item: 'ci_status_failure' },
   cancelled: { color: 'default', item: 'ci_status_cancelled' },
 }).EnumChip
+
+/** GitLab の Webhook の検証方式。推奨の署名トークン以外は注意の色にする */
+const gitWebhookAuthChip = createEnumChip<GitWebhookAuth>({
+  signing: { color: 'success', item: 'gitlab_signing_token' },
+  token: { color: 'warning', item: 'gitlab_secret_token' },
+})
+export const GitWebhookAuthChip = gitWebhookAuthChip.EnumChip
+export const useGitWebhookAuthOptions = gitWebhookAuthChip.useOptions

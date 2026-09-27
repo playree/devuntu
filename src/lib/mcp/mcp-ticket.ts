@@ -116,9 +116,10 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
     })),
     /** このチケットに対応するときの手順。instructions を読まないクライアントにも届くよう、応答にも載せる */
     workflow: ticketWorkflowFor(auth.kind, access.canEdit),
-    /** 紐付けたブランチ / PR / コミット。prState と ci は GitHub の Webhook で更新される */
-    links: links.map(({ id: linkId, kind, repo, ref, url, title, prState, ci }) => ({
+    /** 紐付けたブランチ / PR(MR) / コミット。prState と ci は GitHub / GitLab の Webhook で更新される */
+    links: links.map(({ id: linkId, provider, kind, repo, ref, url, title, prState, ci }) => ({
       id: linkId,
+      provider,
       kind,
       repo,
       ref,

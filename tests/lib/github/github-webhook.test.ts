@@ -19,6 +19,12 @@ vi.mock('@/lib/prisma', () => ({
   },
 }))
 
+// GitHub も GitLab(gitlab.com)も Webhook を受けられる環境として扱う
+vi.mock('@/lib/board/board-repository', () => ({
+  isGithubEnabled: () => true,
+  gitlabBaseUrls: () => ['https://gitlab.com'],
+}))
+
 vi.mock('@/lib/board/ticket-mutation', () => ({
   completeTicketByMerge: vi.fn(async () => true),
 }))
@@ -58,7 +64,7 @@ describe('pull_request', () => {
     await handleGithubEvent('pull_request', pullRequestEvent())
 
     expect(prisma.boardRepository.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { provider: 'github', repo: 'owner/repo' } }),
+      expect.objectContaining({ where: { provider: 'github', baseUrl: '', repo: 'owner/repo' } }),
     )
     expect(prisma.ticketLink.createMany).not.toHaveBeenCalled()
     expect(prisma.ticketLink.updateMany).not.toHaveBeenCalled()
@@ -119,7 +125,10 @@ describe('pull_request', () => {
     vi
       .mocked(prisma.boardRepository.findMany)
       .mockResolvedValueOnce([{ board: BOARD }] as never)
-      .mockResolvedValueOnce([{ repo: 'owner/repo' }, { repo: 'owner/other' }] as never)
+      .mockResolvedValueOnce([
+        { provider: 'github', baseUrl: '', repo: 'owner/repo' },
+        { provider: 'gitlab', baseUrl: 'https://gitlab.com', repo: 'group/other' },
+      ] as never)
 
   it('マージで紐付いた PR がすべて片付けば完了にする', async () => {
     mockBoardRepositories()
@@ -140,11 +149,14 @@ describe('pull_request', () => {
 
     await handleGithubEvent('pull_request', pullRequestEvent({ action: 'closed', state: 'closed', merged: true }))
 
-    // Webhook の届かないリポジトリの PR(状態が空のまま)が判定を塞がないよう、対応付け済みに絞る
+    // Webhook の届かないリポジトリの PR(状態が空のまま)が判定を塞がないよう、対応付け済み(provider を問わない)に絞る
     expect(vi.mocked(prisma.ticketLink.findMany).mock.calls[1][0]?.where).toMatchObject({
       ticketId: 't1',
       dismissed: false,
-      repo: { in: ['owner/repo', 'owner/other'] },
+      OR: [
+        { provider: 'github', baseUrl: '', repo: 'owner/repo' },
+        { provider: 'gitlab', baseUrl: 'https://gitlab.com', repo: 'group/other' },
+      ],
     })
     expect(completeTicketByMerge).toHaveBeenCalled()
   })
@@ -192,7 +204,14 @@ describe('check_suite / check_run', () => {
     await handleGithubEvent('check_suite', { repository: { full_name: 'owner/repo' }, check_suite: suite })
 
     expect(prisma.gitCheckSuite.updateMany).toHaveBeenCalledWith({
-      where: { provider: 'github', repo: 'owner/repo', suiteId: '99', syncedAt: { lte: new Date(UPDATED_AT) } },
+      where: {
+        provider: 'github',
+        baseUrl: '',
+        repo: 'owner/repo',
+        suiteId: '99',
+        repositoryId: '',
+        syncedAt: { lte: new Date(UPDATED_AT) },
+      },
       data: expect.objectContaining({ status: 'completed', conclusion: 'success', appName: 'GitHub Actions' }),
     })
     expect(prisma.gitCheckSuite.createMany).toHaveBeenCalledWith(expect.objectContaining({ skipDuplicates: true }))
@@ -206,8 +225,10 @@ describe('check_suite / check_run', () => {
 
     expect(vi.mocked(prisma.gitCheckSuite.updateMany).mock.calls[0][0].where).toEqual({
       provider: 'github',
+      baseUrl: '',
       repo: 'owner/repo',
       suiteId: '99',
+      repositoryId: '',
       OR: [
         { syncedAt: { lt: new Date(UPDATED_AT) } },
         { syncedAt: new Date(UPDATED_AT), status: { not: 'completed' } },

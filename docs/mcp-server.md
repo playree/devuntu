@@ -168,7 +168,7 @@ AIエージェントは `devuntu-agent` を名乗るので、`claude mcp list` �
 | `add_ticket_comment`     | コメントを追加(対応プラン・対応報告・返信もここから)                                  | `ticketId` / `content` / `type` / `parentId`                                                                          |
 | `update_ticket_comment`  | 自分が投稿したコメントを編集                                                          | `commentId` / `content`                                                                                               |
 | `delete_ticket_comment`  | コメントを削除                                                                        | `commentId`                                                                                                           |
-| `link_ticket_artifact`   | GitHub のブランチ / プルリクエスト / コミットの URL をチケットに紐付ける              | `ticketId` / `url`                                                                                                    |
+| `link_ticket_artifact`   | GitHub / GitLab のブランチ / プルリクエスト / コミットの URL をチケットに紐付ける     | `ticketId` / `url`                                                                                                    |
 | `unlink_ticket_artifact` | 紐付けを外す                                                                          | `linkId`                                                                                                              |
 | `get_agent_setup_guide`  | 自動運用(Devuntu Agent)を自分のマシンへ用意する手順を返す。人が読むためのもの         | `cli`(任意。未指定なら手順ではなく CLI の選択を促す)                                                                  |
 
@@ -238,10 +238,12 @@ AIエージェントは `devuntu-agent` を名乗るので、`claude mcp list` �
 - 文字数は画面と共通(`src/lib/schema/schema-ticket.ts`)。タイトル120文字、本文・コメント40000文字、タグは10個まで
 - `add_ticket_comment` の `type` は `plan`(対応プラン) / `report`(対応報告)。指定すると詳細画面で
   折りたたみ表示され、通常コメントと区別できる。`parentId` での返信は**1階層のみ**
-- `link_ticket_artifact` の `url` は `https://github.com/<owner>/<repo>/` に続く `pull/<番号>` /
-  `tree/<ブランチ名>` / `commit/<SHA>` のいずれか。種別は URL から判定し、同じものを2回登録しても1件にまとまる。
-  `get_ticket` の `links` に、紐付けた一覧が PR の状態(`prState`)と CI の結果(`ci`)付きで返る。
-  状態と CI はボードに対応付けたリポジトリの Webhook で更新される([user-guide.md](user-guide.md) の「GitHub連携」)
+- `link_ticket_artifact` の `url` は次のいずれか。種別は URL から判定し、同じものを2回登録しても1件にまとまる
+  - GitHub: `https://github.com/<owner>/<repo>/` に続く `pull/<番号>` / `tree/<ブランチ名>` / `commit/<SHA>`
+  - GitLab: `<インスタンスの URL>/<プロジェクトのパス>/-/` に続く `merge_requests/<番号>` / `tree/<ブランチ名>` / `commit/<SHA>`。
+    インスタンスはサーバーの `GITLAB_URLS` に書いたものだけ
+- `get_ticket` の `links` に、紐付けた一覧が `provider`(`github` / `gitlab`)、PR の状態(`prState`)、CI の結果(`ci`)付きで返る。
+  状態と CI はボードに対応付けたリポジトリの Webhook で更新される([user-guide.md](user-guide.md) の「関連リンク」)
 
 ## ユーザーの MCP トークン
 

@@ -277,6 +277,37 @@ describe('RELEASE_NOTES_REPO', () => {
   })
 })
 
+describe('GITLAB_URLS', () => {
+  const originalUrls = process.env.GITLAB_URLS
+
+  afterEach(() => {
+    if (originalUrls === undefined) {
+      delete process.env.GITLAB_URLS
+    } else {
+      process.env.GITLAB_URLS = originalUrls
+    }
+  })
+
+  it('未設定なら空(GitLab 連携は無効)', () => {
+    delete process.env.GITLAB_URLS
+    expect(envu.server.GITLAB_URLS).toEqual([])
+  })
+
+  it('カンマ区切りを正規化し、重複を除く', () => {
+    process.env.GITLAB_URLS = ' https://GitLab.com/ ,https://example.com/gitlab/,, https://gitlab.com'
+    expect(envu.server.GITLAB_URLS).toEqual(['https://gitlab.com', 'https://example.com/gitlab'])
+  })
+
+  it.each(['gitlab.com', 'ftp://gitlab.com', 'https://user:pass@gitlab.com'])(
+    'URL として読めない値は起動時に弾く (%s)',
+    (value) => {
+      // 黙って捨てると、GitLab の URL が登録できない理由に気づけない
+      process.env.GITLAB_URLS = `https://gitlab.com,${value}`
+      expect(() => envu.server.GITLAB_URLS).toThrow()
+    },
+  )
+})
+
 describe('RELEASE_NOTES_LIMIT', () => {
   const originalLimit = process.env.RELEASE_NOTES_LIMIT
 

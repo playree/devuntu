@@ -1,5 +1,6 @@
 import { isValidTimezone } from './day'
 import { errSystemError } from './error'
+import { normalizeGitlabBaseUrl } from './gitlab/gitlab'
 
 function getEnv<T extends string = string>(key: string, opts: { required: true }): T
 function getEnv<T extends string = string>(key: string, opts: { default: T }): T
@@ -223,6 +224,31 @@ const server = {
   /** GitHub Webhook の署名シークレット。未設定なら GitHub 連携ごと無効 */
   get GITHUB_WEBHOOK_SECRET() {
     return getEnv('GITHUB_WEBHOOK_SECRET')
+  },
+  /**
+   * GitLab 連携で使ってよいインスタンスの URL(カンマ区切り)。未設定なら GitLab 連携ごと無効。
+   * Webhook のトークンは Webhook ごとに違うので環境変数では持たず、対応付けたリポジトリごとに DB に保存する。
+   */
+  get GITLAB_URLS(): string[] {
+    const raw = getEnv('GITLAB_URLS')
+    if (!raw) {
+      return []
+    }
+    return [
+      ...new Set(
+        raw
+          .split(',')
+          .map((value) => value.trim())
+          .filter(Boolean)
+          .map((value) => {
+            const baseUrl = normalizeGitlabBaseUrl(value)
+            if (!baseUrl) {
+              throw errSystemError(`GITLAB_URLS has an invalid URL: ${value}`)
+            }
+            return baseUrl
+          }),
+      ),
+    ]
   },
   get GOOGLE_ALLOWED_DOMAINS() {
     const domains = getEnv('GOOGLE_ALLOWED_DOMAINS')

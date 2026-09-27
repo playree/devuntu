@@ -36,7 +36,7 @@ export const mcpInstructions = (kind: ResourceAuth['kind']): string => {
   const common = [
     'devuntu はかんばん形式のチケット管理ツール。ticketId には表示ID(例: ABC-42)を使える。',
     'コメントの種別: type=plan は対応方針、type=report は対応報告で、詳細画面で通常コメントと区別して表示される。',
-    'GitHub のブランチ / プルリクエスト / コミットは link_ticket_artifact でチケットに紐付けると、状態と CI の結果がチケットに表示される。',
+    'GitHub / GitLab のブランチ / プルリクエスト(マージリクエスト) / コミットは link_ticket_artifact でチケットに紐付けると、状態と CI の結果がチケットに表示される。',
   ]
   if (kind === 'agent') {
     return [

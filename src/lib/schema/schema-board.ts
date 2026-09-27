@@ -5,7 +5,9 @@
 import { el } from '@/locale'
 import { z } from 'zod'
 import { BOARD_KEY_PATTERN, isReservedBoardKey, MAX_BOARD_KEY } from '../board/ticket-id'
+import { GIT_WEBHOOK_AUTHS } from '../git/git'
 import { normalizeGithubRepo } from '../github/github'
+import { GITLAB_SIGNING_TOKEN_PATTERN, normalizeGitlabProjectPath } from '../gitlab/gitlab'
 import { CHANNEL_NOTIFY_EVENTS } from '../notify/notify'
 import { SLACK_CHANNEL_ID_PATTERN } from '../slack/slack'
 import { zName } from './schema'
@@ -132,7 +134,34 @@ export const scAddBoardRepository = z.object({
 })
 export type AddBoardRepository = z.infer<typeof scAddBoardRepository>
 
-export const scRemoveBoardRepository = z.object({
+/** GitLab 連携で対応付けるプロジェクト。インスタンスが許可したものかはサーバー側で判定する */
+export const scAddBoardGitlabRepository = z
+  .object({
+    id: z.uuidv7(),
+    baseUrl: z.string().min(1),
+    project: z.string().trim().min(1, el('@required_field')).max(1000, el('@invalid_gitlab_project')),
+    webhookAuth: z.enum(GIT_WEBHOOK_AUTHS),
+  })
+  .refine(({ baseUrl, project }) => normalizeGitlabProjectPath(project, baseUrl) !== null, {
+    path: ['project'],
+    error: el('@invalid_gitlab_project'),
+  })
+export type AddBoardGitlabRepository = z.infer<typeof scAddBoardGitlabRepository>
+
+/** GitLab が作った署名トークン(`whsec_...`) */
+export const scSetGitlabSigningToken = z.object({
+  id: z.uuidv7(),
+  repositoryId: z.uuidv7(),
+  secret: z
+    .string()
+    .trim()
+    .min(1, el('@required_field'))
+    .max(1000, el('@invalid_gitlab_signing_token'))
+    .regex(GITLAB_SIGNING_TOKEN_PATTERN, el('@invalid_gitlab_signing_token')),
+})
+
+/** 対応付けたリポジトリ1件への操作(解除・トークンの作り直し) */
+export const scBoardRepositoryTarget = z.object({
   id: z.uuidv7(),
   repositoryId: z.uuidv7(),
 })
