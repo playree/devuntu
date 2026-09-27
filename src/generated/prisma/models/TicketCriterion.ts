@@ -495,48 +495,6 @@ export type TicketCriterionSumOrderByAggregateInput = {
   order?: Prisma.SortOrder
 }
 
-export type TicketCriterionCreateNestedManyWithoutCheckedByInput = {
-  create?: Prisma.XOR<Prisma.TicketCriterionCreateWithoutCheckedByInput, Prisma.TicketCriterionUncheckedCreateWithoutCheckedByInput> | Prisma.TicketCriterionCreateWithoutCheckedByInput[] | Prisma.TicketCriterionUncheckedCreateWithoutCheckedByInput[]
-  connectOrCreate?: Prisma.TicketCriterionCreateOrConnectWithoutCheckedByInput | Prisma.TicketCriterionCreateOrConnectWithoutCheckedByInput[]
-  createMany?: Prisma.TicketCriterionCreateManyCheckedByInputEnvelope
-  connect?: Prisma.TicketCriterionWhereUniqueInput | Prisma.TicketCriterionWhereUniqueInput[]
-}
-
-export type TicketCriterionUncheckedCreateNestedManyWithoutCheckedByInput = {
-  create?: Prisma.XOR<Prisma.TicketCriterionCreateWithoutCheckedByInput, Prisma.TicketCriterionUncheckedCreateWithoutCheckedByInput> | Prisma.TicketCriterionCreateWithoutCheckedByInput[] | Prisma.TicketCriterionUncheckedCreateWithoutCheckedByInput[]
-  connectOrCreate?: Prisma.TicketCriterionCreateOrConnectWithoutCheckedByInput | Prisma.TicketCriterionCreateOrConnectWithoutCheckedByInput[]
-  createMany?: Prisma.TicketCriterionCreateManyCheckedByInputEnvelope
-  connect?: Prisma.TicketCriterionWhereUniqueInput | Prisma.TicketCriterionWhereUniqueInput[]
-}
-
-export type TicketCriterionUpdateManyWithoutCheckedByNestedInput = {
-  create?: Prisma.XOR<Prisma.TicketCriterionCreateWithoutCheckedByInput, Prisma.TicketCriterionUncheckedCreateWithoutCheckedByInput> | Prisma.TicketCriterionCreateWithoutCheckedByInput[] | Prisma.TicketCriterionUncheckedCreateWithoutCheckedByInput[]
-  connectOrCreate?: Prisma.TicketCriterionCreateOrConnectWithoutCheckedByInput | Prisma.TicketCriterionCreateOrConnectWithoutCheckedByInput[]
-  upsert?: Prisma.TicketCriterionUpsertWithWhereUniqueWithoutCheckedByInput | Prisma.TicketCriterionUpsertWithWhereUniqueWithoutCheckedByInput[]
-  createMany?: Prisma.TicketCriterionCreateManyCheckedByInputEnvelope
-  set?: Prisma.TicketCriterionWhereUniqueInput | Prisma.TicketCriterionWhereUniqueInput[]
-  disconnect?: Prisma.TicketCriterionWhereUniqueInput | Prisma.TicketCriterionWhereUniqueInput[]
-  delete?: Prisma.TicketCriterionWhereUniqueInput | Prisma.TicketCriterionWhereUniqueInput[]
-  connect?: Prisma.TicketCriterionWhereUniqueInput | Prisma.TicketCriterionWhereUniqueInput[]
-  update?: Prisma.TicketCriterionUpdateWithWhereUniqueWithoutCheckedByInput | Prisma.TicketCriterionUpdateWithWhereUniqueWithoutCheckedByInput[]
-  updateMany?: Prisma.TicketCriterionUpdateManyWithWhereWithoutCheckedByInput | Prisma.TicketCriterionUpdateManyWithWhereWithoutCheckedByInput[]
-  deleteMany?: Prisma.TicketCriterionScalarWhereInput | Prisma.TicketCriterionScalarWhereInput[]
-}
-
-export type TicketCriterionUncheckedUpdateManyWithoutCheckedByNestedInput = {
-  create?: Prisma.XOR<Prisma.TicketCriterionCreateWithoutCheckedByInput, Prisma.TicketCriterionUncheckedCreateWithoutCheckedByInput> | Prisma.TicketCriterionCreateWithoutCheckedByInput[] | Prisma.TicketCriterionUncheckedCreateWithoutCheckedByInput[]
-  connectOrCreate?: Prisma.TicketCriterionCreateOrConnectWithoutCheckedByInput | Prisma.TicketCriterionCreateOrConnectWithoutCheckedByInput[]
-  upsert?: Prisma.TicketCriterionUpsertWithWhereUniqueWithoutCheckedByInput | Prisma.TicketCriterionUpsertWithWhereUniqueWithoutCheckedByInput[]
-  createMany?: Prisma.TicketCriterionCreateManyCheckedByInputEnvelope
-  set?: Prisma.TicketCriterionWhereUniqueInput | Prisma.TicketCriterionWhereUniqueInput[]
-  disconnect?: Prisma.TicketCriterionWhereUniqueInput | Prisma.TicketCriterionWhereUniqueInput[]
-  delete?: Prisma.TicketCriterionWhereUniqueInput | Prisma.TicketCriterionWhereUniqueInput[]
-  connect?: Prisma.TicketCriterionWhereUniqueInput | Prisma.TicketCriterionWhereUniqueInput[]
-  update?: Prisma.TicketCriterionUpdateWithWhereUniqueWithoutCheckedByInput | Prisma.TicketCriterionUpdateWithWhereUniqueWithoutCheckedByInput[]
-  updateMany?: Prisma.TicketCriterionUpdateManyWithWhereWithoutCheckedByInput | Prisma.TicketCriterionUpdateManyWithWhereWithoutCheckedByInput[]
-  deleteMany?: Prisma.TicketCriterionScalarWhereInput | Prisma.TicketCriterionScalarWhereInput[]
-}
-
 export type TicketCriterionCreateNestedManyWithoutTicketInput = {
   create?: Prisma.XOR<Prisma.TicketCriterionCreateWithoutTicketInput, Prisma.TicketCriterionUncheckedCreateWithoutTicketInput> | Prisma.TicketCriterionCreateWithoutTicketInput[] | Prisma.TicketCriterionUncheckedCreateWithoutTicketInput[]
   connectOrCreate?: Prisma.TicketCriterionCreateOrConnectWithoutTicketInput | Prisma.TicketCriterionCreateOrConnectWithoutTicketInput[]
@@ -579,73 +537,46 @@ export type TicketCriterionUncheckedUpdateManyWithoutTicketNestedInput = {
   deleteMany?: Prisma.TicketCriterionScalarWhereInput | Prisma.TicketCriterionScalarWhereInput[]
 }
 
-export type TicketCriterionCreateWithoutCheckedByInput = {
-  id?: string
-  order: number
-  text: string
-  checkedAt?: Date | string | null
-  agentMet?: boolean | null
-  agentEvidence?: string | null
-  agentReportedAt?: Date | string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  ticket: Prisma.TicketCreateNestedOneWithoutCriteriaInput
+export type TicketCriterionCreateNestedManyWithoutCheckedByInput = {
+  create?: Prisma.XOR<Prisma.TicketCriterionCreateWithoutCheckedByInput, Prisma.TicketCriterionUncheckedCreateWithoutCheckedByInput> | Prisma.TicketCriterionCreateWithoutCheckedByInput[] | Prisma.TicketCriterionUncheckedCreateWithoutCheckedByInput[]
+  connectOrCreate?: Prisma.TicketCriterionCreateOrConnectWithoutCheckedByInput | Prisma.TicketCriterionCreateOrConnectWithoutCheckedByInput[]
+  createMany?: Prisma.TicketCriterionCreateManyCheckedByInputEnvelope
+  connect?: Prisma.TicketCriterionWhereUniqueInput | Prisma.TicketCriterionWhereUniqueInput[]
 }
 
-export type TicketCriterionUncheckedCreateWithoutCheckedByInput = {
-  id?: string
-  ticketId: string
-  order: number
-  text: string
-  checkedAt?: Date | string | null
-  agentMet?: boolean | null
-  agentEvidence?: string | null
-  agentReportedAt?: Date | string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
+export type TicketCriterionUncheckedCreateNestedManyWithoutCheckedByInput = {
+  create?: Prisma.XOR<Prisma.TicketCriterionCreateWithoutCheckedByInput, Prisma.TicketCriterionUncheckedCreateWithoutCheckedByInput> | Prisma.TicketCriterionCreateWithoutCheckedByInput[] | Prisma.TicketCriterionUncheckedCreateWithoutCheckedByInput[]
+  connectOrCreate?: Prisma.TicketCriterionCreateOrConnectWithoutCheckedByInput | Prisma.TicketCriterionCreateOrConnectWithoutCheckedByInput[]
+  createMany?: Prisma.TicketCriterionCreateManyCheckedByInputEnvelope
+  connect?: Prisma.TicketCriterionWhereUniqueInput | Prisma.TicketCriterionWhereUniqueInput[]
 }
 
-export type TicketCriterionCreateOrConnectWithoutCheckedByInput = {
-  where: Prisma.TicketCriterionWhereUniqueInput
-  create: Prisma.XOR<Prisma.TicketCriterionCreateWithoutCheckedByInput, Prisma.TicketCriterionUncheckedCreateWithoutCheckedByInput>
+export type TicketCriterionUpdateManyWithoutCheckedByNestedInput = {
+  create?: Prisma.XOR<Prisma.TicketCriterionCreateWithoutCheckedByInput, Prisma.TicketCriterionUncheckedCreateWithoutCheckedByInput> | Prisma.TicketCriterionCreateWithoutCheckedByInput[] | Prisma.TicketCriterionUncheckedCreateWithoutCheckedByInput[]
+  connectOrCreate?: Prisma.TicketCriterionCreateOrConnectWithoutCheckedByInput | Prisma.TicketCriterionCreateOrConnectWithoutCheckedByInput[]
+  upsert?: Prisma.TicketCriterionUpsertWithWhereUniqueWithoutCheckedByInput | Prisma.TicketCriterionUpsertWithWhereUniqueWithoutCheckedByInput[]
+  createMany?: Prisma.TicketCriterionCreateManyCheckedByInputEnvelope
+  set?: Prisma.TicketCriterionWhereUniqueInput | Prisma.TicketCriterionWhereUniqueInput[]
+  disconnect?: Prisma.TicketCriterionWhereUniqueInput | Prisma.TicketCriterionWhereUniqueInput[]
+  delete?: Prisma.TicketCriterionWhereUniqueInput | Prisma.TicketCriterionWhereUniqueInput[]
+  connect?: Prisma.TicketCriterionWhereUniqueInput | Prisma.TicketCriterionWhereUniqueInput[]
+  update?: Prisma.TicketCriterionUpdateWithWhereUniqueWithoutCheckedByInput | Prisma.TicketCriterionUpdateWithWhereUniqueWithoutCheckedByInput[]
+  updateMany?: Prisma.TicketCriterionUpdateManyWithWhereWithoutCheckedByInput | Prisma.TicketCriterionUpdateManyWithWhereWithoutCheckedByInput[]
+  deleteMany?: Prisma.TicketCriterionScalarWhereInput | Prisma.TicketCriterionScalarWhereInput[]
 }
 
-export type TicketCriterionCreateManyCheckedByInputEnvelope = {
-  data: Prisma.TicketCriterionCreateManyCheckedByInput | Prisma.TicketCriterionCreateManyCheckedByInput[]
-  skipDuplicates?: boolean
-}
-
-export type TicketCriterionUpsertWithWhereUniqueWithoutCheckedByInput = {
-  where: Prisma.TicketCriterionWhereUniqueInput
-  update: Prisma.XOR<Prisma.TicketCriterionUpdateWithoutCheckedByInput, Prisma.TicketCriterionUncheckedUpdateWithoutCheckedByInput>
-  create: Prisma.XOR<Prisma.TicketCriterionCreateWithoutCheckedByInput, Prisma.TicketCriterionUncheckedCreateWithoutCheckedByInput>
-}
-
-export type TicketCriterionUpdateWithWhereUniqueWithoutCheckedByInput = {
-  where: Prisma.TicketCriterionWhereUniqueInput
-  data: Prisma.XOR<Prisma.TicketCriterionUpdateWithoutCheckedByInput, Prisma.TicketCriterionUncheckedUpdateWithoutCheckedByInput>
-}
-
-export type TicketCriterionUpdateManyWithWhereWithoutCheckedByInput = {
-  where: Prisma.TicketCriterionScalarWhereInput
-  data: Prisma.XOR<Prisma.TicketCriterionUpdateManyMutationInput, Prisma.TicketCriterionUncheckedUpdateManyWithoutCheckedByInput>
-}
-
-export type TicketCriterionScalarWhereInput = {
-  AND?: Prisma.TicketCriterionScalarWhereInput | Prisma.TicketCriterionScalarWhereInput[]
-  OR?: Prisma.TicketCriterionScalarWhereInput[]
-  NOT?: Prisma.TicketCriterionScalarWhereInput | Prisma.TicketCriterionScalarWhereInput[]
-  id?: Prisma.StringFilter<"TicketCriterion"> | string
-  ticketId?: Prisma.StringFilter<"TicketCriterion"> | string
-  order?: Prisma.IntFilter<"TicketCriterion"> | number
-  text?: Prisma.StringFilter<"TicketCriterion"> | string
-  checkedById?: Prisma.StringNullableFilter<"TicketCriterion"> | string | null
-  checkedAt?: Prisma.DateTimeNullableFilter<"TicketCriterion"> | Date | string | null
-  agentMet?: Prisma.BoolNullableFilter<"TicketCriterion"> | boolean | null
-  agentEvidence?: Prisma.StringNullableFilter<"TicketCriterion"> | string | null
-  agentReportedAt?: Prisma.DateTimeNullableFilter<"TicketCriterion"> | Date | string | null
-  createdAt?: Prisma.DateTimeFilter<"TicketCriterion"> | Date | string
-  updatedAt?: Prisma.DateTimeFilter<"TicketCriterion"> | Date | string
+export type TicketCriterionUncheckedUpdateManyWithoutCheckedByNestedInput = {
+  create?: Prisma.XOR<Prisma.TicketCriterionCreateWithoutCheckedByInput, Prisma.TicketCriterionUncheckedCreateWithoutCheckedByInput> | Prisma.TicketCriterionCreateWithoutCheckedByInput[] | Prisma.TicketCriterionUncheckedCreateWithoutCheckedByInput[]
+  connectOrCreate?: Prisma.TicketCriterionCreateOrConnectWithoutCheckedByInput | Prisma.TicketCriterionCreateOrConnectWithoutCheckedByInput[]
+  upsert?: Prisma.TicketCriterionUpsertWithWhereUniqueWithoutCheckedByInput | Prisma.TicketCriterionUpsertWithWhereUniqueWithoutCheckedByInput[]
+  createMany?: Prisma.TicketCriterionCreateManyCheckedByInputEnvelope
+  set?: Prisma.TicketCriterionWhereUniqueInput | Prisma.TicketCriterionWhereUniqueInput[]
+  disconnect?: Prisma.TicketCriterionWhereUniqueInput | Prisma.TicketCriterionWhereUniqueInput[]
+  delete?: Prisma.TicketCriterionWhereUniqueInput | Prisma.TicketCriterionWhereUniqueInput[]
+  connect?: Prisma.TicketCriterionWhereUniqueInput | Prisma.TicketCriterionWhereUniqueInput[]
+  update?: Prisma.TicketCriterionUpdateWithWhereUniqueWithoutCheckedByInput | Prisma.TicketCriterionUpdateWithWhereUniqueWithoutCheckedByInput[]
+  updateMany?: Prisma.TicketCriterionUpdateManyWithWhereWithoutCheckedByInput | Prisma.TicketCriterionUpdateManyWithWhereWithoutCheckedByInput[]
+  deleteMany?: Prisma.TicketCriterionScalarWhereInput | Prisma.TicketCriterionScalarWhereInput[]
 }
 
 export type TicketCriterionCreateWithoutTicketInput = {
@@ -700,7 +631,37 @@ export type TicketCriterionUpdateManyWithWhereWithoutTicketInput = {
   data: Prisma.XOR<Prisma.TicketCriterionUpdateManyMutationInput, Prisma.TicketCriterionUncheckedUpdateManyWithoutTicketInput>
 }
 
-export type TicketCriterionCreateManyCheckedByInput = {
+export type TicketCriterionScalarWhereInput = {
+  AND?: Prisma.TicketCriterionScalarWhereInput | Prisma.TicketCriterionScalarWhereInput[]
+  OR?: Prisma.TicketCriterionScalarWhereInput[]
+  NOT?: Prisma.TicketCriterionScalarWhereInput | Prisma.TicketCriterionScalarWhereInput[]
+  id?: Prisma.StringFilter<"TicketCriterion"> | string
+  ticketId?: Prisma.StringFilter<"TicketCriterion"> | string
+  order?: Prisma.IntFilter<"TicketCriterion"> | number
+  text?: Prisma.StringFilter<"TicketCriterion"> | string
+  checkedById?: Prisma.StringNullableFilter<"TicketCriterion"> | string | null
+  checkedAt?: Prisma.DateTimeNullableFilter<"TicketCriterion"> | Date | string | null
+  agentMet?: Prisma.BoolNullableFilter<"TicketCriterion"> | boolean | null
+  agentEvidence?: Prisma.StringNullableFilter<"TicketCriterion"> | string | null
+  agentReportedAt?: Prisma.DateTimeNullableFilter<"TicketCriterion"> | Date | string | null
+  createdAt?: Prisma.DateTimeFilter<"TicketCriterion"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"TicketCriterion"> | Date | string
+}
+
+export type TicketCriterionCreateWithoutCheckedByInput = {
+  id?: string
+  order: number
+  text: string
+  checkedAt?: Date | string | null
+  agentMet?: boolean | null
+  agentEvidence?: string | null
+  agentReportedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  ticket: Prisma.TicketCreateNestedOneWithoutCriteriaInput
+}
+
+export type TicketCriterionUncheckedCreateWithoutCheckedByInput = {
   id?: string
   ticketId: string
   order: number
@@ -713,43 +674,30 @@ export type TicketCriterionCreateManyCheckedByInput = {
   updatedAt?: Date | string
 }
 
-export type TicketCriterionUpdateWithoutCheckedByInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  order?: Prisma.IntFieldUpdateOperationsInput | number
-  text?: Prisma.StringFieldUpdateOperationsInput | string
-  checkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  agentMet?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  agentEvidence?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  agentReportedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  ticket?: Prisma.TicketUpdateOneRequiredWithoutCriteriaNestedInput
+export type TicketCriterionCreateOrConnectWithoutCheckedByInput = {
+  where: Prisma.TicketCriterionWhereUniqueInput
+  create: Prisma.XOR<Prisma.TicketCriterionCreateWithoutCheckedByInput, Prisma.TicketCriterionUncheckedCreateWithoutCheckedByInput>
 }
 
-export type TicketCriterionUncheckedUpdateWithoutCheckedByInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  ticketId?: Prisma.StringFieldUpdateOperationsInput | string
-  order?: Prisma.IntFieldUpdateOperationsInput | number
-  text?: Prisma.StringFieldUpdateOperationsInput | string
-  checkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  agentMet?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  agentEvidence?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  agentReportedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+export type TicketCriterionCreateManyCheckedByInputEnvelope = {
+  data: Prisma.TicketCriterionCreateManyCheckedByInput | Prisma.TicketCriterionCreateManyCheckedByInput[]
+  skipDuplicates?: boolean
 }
 
-export type TicketCriterionUncheckedUpdateManyWithoutCheckedByInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  ticketId?: Prisma.StringFieldUpdateOperationsInput | string
-  order?: Prisma.IntFieldUpdateOperationsInput | number
-  text?: Prisma.StringFieldUpdateOperationsInput | string
-  checkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  agentMet?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  agentEvidence?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  agentReportedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+export type TicketCriterionUpsertWithWhereUniqueWithoutCheckedByInput = {
+  where: Prisma.TicketCriterionWhereUniqueInput
+  update: Prisma.XOR<Prisma.TicketCriterionUpdateWithoutCheckedByInput, Prisma.TicketCriterionUncheckedUpdateWithoutCheckedByInput>
+  create: Prisma.XOR<Prisma.TicketCriterionCreateWithoutCheckedByInput, Prisma.TicketCriterionUncheckedCreateWithoutCheckedByInput>
+}
+
+export type TicketCriterionUpdateWithWhereUniqueWithoutCheckedByInput = {
+  where: Prisma.TicketCriterionWhereUniqueInput
+  data: Prisma.XOR<Prisma.TicketCriterionUpdateWithoutCheckedByInput, Prisma.TicketCriterionUncheckedUpdateWithoutCheckedByInput>
+}
+
+export type TicketCriterionUpdateManyWithWhereWithoutCheckedByInput = {
+  where: Prisma.TicketCriterionScalarWhereInput
+  data: Prisma.XOR<Prisma.TicketCriterionUpdateManyMutationInput, Prisma.TicketCriterionUncheckedUpdateManyWithoutCheckedByInput>
 }
 
 export type TicketCriterionCreateManyTicketInput = {
@@ -796,6 +744,58 @@ export type TicketCriterionUncheckedUpdateManyWithoutTicketInput = {
   order?: Prisma.IntFieldUpdateOperationsInput | number
   text?: Prisma.StringFieldUpdateOperationsInput | string
   checkedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  checkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  agentMet?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  agentEvidence?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  agentReportedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type TicketCriterionCreateManyCheckedByInput = {
+  id?: string
+  ticketId: string
+  order: number
+  text: string
+  checkedAt?: Date | string | null
+  agentMet?: boolean | null
+  agentEvidence?: string | null
+  agentReportedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type TicketCriterionUpdateWithoutCheckedByInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  order?: Prisma.IntFieldUpdateOperationsInput | number
+  text?: Prisma.StringFieldUpdateOperationsInput | string
+  checkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  agentMet?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  agentEvidence?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  agentReportedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ticket?: Prisma.TicketUpdateOneRequiredWithoutCriteriaNestedInput
+}
+
+export type TicketCriterionUncheckedUpdateWithoutCheckedByInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketId?: Prisma.StringFieldUpdateOperationsInput | string
+  order?: Prisma.IntFieldUpdateOperationsInput | number
+  text?: Prisma.StringFieldUpdateOperationsInput | string
+  checkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  agentMet?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  agentEvidence?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  agentReportedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type TicketCriterionUncheckedUpdateManyWithoutCheckedByInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketId?: Prisma.StringFieldUpdateOperationsInput | string
+  order?: Prisma.IntFieldUpdateOperationsInput | number
+  text?: Prisma.StringFieldUpdateOperationsInput | string
   checkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   agentMet?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   agentEvidence?: Prisma.NullableStringFieldUpdateOperationsInput | string | null

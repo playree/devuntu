@@ -303,48 +303,6 @@ export type BoardGroupMinOrderByAggregateInput = {
   createdAt?: Prisma.SortOrder
 }
 
-export type BoardGroupCreateNestedManyWithoutGroupInput = {
-  create?: Prisma.XOR<Prisma.BoardGroupCreateWithoutGroupInput, Prisma.BoardGroupUncheckedCreateWithoutGroupInput> | Prisma.BoardGroupCreateWithoutGroupInput[] | Prisma.BoardGroupUncheckedCreateWithoutGroupInput[]
-  connectOrCreate?: Prisma.BoardGroupCreateOrConnectWithoutGroupInput | Prisma.BoardGroupCreateOrConnectWithoutGroupInput[]
-  createMany?: Prisma.BoardGroupCreateManyGroupInputEnvelope
-  connect?: Prisma.BoardGroupWhereUniqueInput | Prisma.BoardGroupWhereUniqueInput[]
-}
-
-export type BoardGroupUncheckedCreateNestedManyWithoutGroupInput = {
-  create?: Prisma.XOR<Prisma.BoardGroupCreateWithoutGroupInput, Prisma.BoardGroupUncheckedCreateWithoutGroupInput> | Prisma.BoardGroupCreateWithoutGroupInput[] | Prisma.BoardGroupUncheckedCreateWithoutGroupInput[]
-  connectOrCreate?: Prisma.BoardGroupCreateOrConnectWithoutGroupInput | Prisma.BoardGroupCreateOrConnectWithoutGroupInput[]
-  createMany?: Prisma.BoardGroupCreateManyGroupInputEnvelope
-  connect?: Prisma.BoardGroupWhereUniqueInput | Prisma.BoardGroupWhereUniqueInput[]
-}
-
-export type BoardGroupUpdateManyWithoutGroupNestedInput = {
-  create?: Prisma.XOR<Prisma.BoardGroupCreateWithoutGroupInput, Prisma.BoardGroupUncheckedCreateWithoutGroupInput> | Prisma.BoardGroupCreateWithoutGroupInput[] | Prisma.BoardGroupUncheckedCreateWithoutGroupInput[]
-  connectOrCreate?: Prisma.BoardGroupCreateOrConnectWithoutGroupInput | Prisma.BoardGroupCreateOrConnectWithoutGroupInput[]
-  upsert?: Prisma.BoardGroupUpsertWithWhereUniqueWithoutGroupInput | Prisma.BoardGroupUpsertWithWhereUniqueWithoutGroupInput[]
-  createMany?: Prisma.BoardGroupCreateManyGroupInputEnvelope
-  set?: Prisma.BoardGroupWhereUniqueInput | Prisma.BoardGroupWhereUniqueInput[]
-  disconnect?: Prisma.BoardGroupWhereUniqueInput | Prisma.BoardGroupWhereUniqueInput[]
-  delete?: Prisma.BoardGroupWhereUniqueInput | Prisma.BoardGroupWhereUniqueInput[]
-  connect?: Prisma.BoardGroupWhereUniqueInput | Prisma.BoardGroupWhereUniqueInput[]
-  update?: Prisma.BoardGroupUpdateWithWhereUniqueWithoutGroupInput | Prisma.BoardGroupUpdateWithWhereUniqueWithoutGroupInput[]
-  updateMany?: Prisma.BoardGroupUpdateManyWithWhereWithoutGroupInput | Prisma.BoardGroupUpdateManyWithWhereWithoutGroupInput[]
-  deleteMany?: Prisma.BoardGroupScalarWhereInput | Prisma.BoardGroupScalarWhereInput[]
-}
-
-export type BoardGroupUncheckedUpdateManyWithoutGroupNestedInput = {
-  create?: Prisma.XOR<Prisma.BoardGroupCreateWithoutGroupInput, Prisma.BoardGroupUncheckedCreateWithoutGroupInput> | Prisma.BoardGroupCreateWithoutGroupInput[] | Prisma.BoardGroupUncheckedCreateWithoutGroupInput[]
-  connectOrCreate?: Prisma.BoardGroupCreateOrConnectWithoutGroupInput | Prisma.BoardGroupCreateOrConnectWithoutGroupInput[]
-  upsert?: Prisma.BoardGroupUpsertWithWhereUniqueWithoutGroupInput | Prisma.BoardGroupUpsertWithWhereUniqueWithoutGroupInput[]
-  createMany?: Prisma.BoardGroupCreateManyGroupInputEnvelope
-  set?: Prisma.BoardGroupWhereUniqueInput | Prisma.BoardGroupWhereUniqueInput[]
-  disconnect?: Prisma.BoardGroupWhereUniqueInput | Prisma.BoardGroupWhereUniqueInput[]
-  delete?: Prisma.BoardGroupWhereUniqueInput | Prisma.BoardGroupWhereUniqueInput[]
-  connect?: Prisma.BoardGroupWhereUniqueInput | Prisma.BoardGroupWhereUniqueInput[]
-  update?: Prisma.BoardGroupUpdateWithWhereUniqueWithoutGroupInput | Prisma.BoardGroupUpdateWithWhereUniqueWithoutGroupInput[]
-  updateMany?: Prisma.BoardGroupUpdateManyWithWhereWithoutGroupInput | Prisma.BoardGroupUpdateManyWithWhereWithoutGroupInput[]
-  deleteMany?: Prisma.BoardGroupScalarWhereInput | Prisma.BoardGroupScalarWhereInput[]
-}
-
 export type BoardGroupCreateNestedManyWithoutBoardInput = {
   create?: Prisma.XOR<Prisma.BoardGroupCreateWithoutBoardInput, Prisma.BoardGroupUncheckedCreateWithoutBoardInput> | Prisma.BoardGroupCreateWithoutBoardInput[] | Prisma.BoardGroupUncheckedCreateWithoutBoardInput[]
   connectOrCreate?: Prisma.BoardGroupCreateOrConnectWithoutBoardInput | Prisma.BoardGroupCreateOrConnectWithoutBoardInput[]
@@ -387,52 +345,46 @@ export type BoardGroupUncheckedUpdateManyWithoutBoardNestedInput = {
   deleteMany?: Prisma.BoardGroupScalarWhereInput | Prisma.BoardGroupScalarWhereInput[]
 }
 
-export type BoardGroupCreateWithoutGroupInput = {
-  id?: string
-  createdAt?: Date | string
-  board: Prisma.BoardCreateNestedOneWithoutGroupsInput
+export type BoardGroupCreateNestedManyWithoutGroupInput = {
+  create?: Prisma.XOR<Prisma.BoardGroupCreateWithoutGroupInput, Prisma.BoardGroupUncheckedCreateWithoutGroupInput> | Prisma.BoardGroupCreateWithoutGroupInput[] | Prisma.BoardGroupUncheckedCreateWithoutGroupInput[]
+  connectOrCreate?: Prisma.BoardGroupCreateOrConnectWithoutGroupInput | Prisma.BoardGroupCreateOrConnectWithoutGroupInput[]
+  createMany?: Prisma.BoardGroupCreateManyGroupInputEnvelope
+  connect?: Prisma.BoardGroupWhereUniqueInput | Prisma.BoardGroupWhereUniqueInput[]
 }
 
-export type BoardGroupUncheckedCreateWithoutGroupInput = {
-  id?: string
-  boardId: string
-  createdAt?: Date | string
+export type BoardGroupUncheckedCreateNestedManyWithoutGroupInput = {
+  create?: Prisma.XOR<Prisma.BoardGroupCreateWithoutGroupInput, Prisma.BoardGroupUncheckedCreateWithoutGroupInput> | Prisma.BoardGroupCreateWithoutGroupInput[] | Prisma.BoardGroupUncheckedCreateWithoutGroupInput[]
+  connectOrCreate?: Prisma.BoardGroupCreateOrConnectWithoutGroupInput | Prisma.BoardGroupCreateOrConnectWithoutGroupInput[]
+  createMany?: Prisma.BoardGroupCreateManyGroupInputEnvelope
+  connect?: Prisma.BoardGroupWhereUniqueInput | Prisma.BoardGroupWhereUniqueInput[]
 }
 
-export type BoardGroupCreateOrConnectWithoutGroupInput = {
-  where: Prisma.BoardGroupWhereUniqueInput
-  create: Prisma.XOR<Prisma.BoardGroupCreateWithoutGroupInput, Prisma.BoardGroupUncheckedCreateWithoutGroupInput>
+export type BoardGroupUpdateManyWithoutGroupNestedInput = {
+  create?: Prisma.XOR<Prisma.BoardGroupCreateWithoutGroupInput, Prisma.BoardGroupUncheckedCreateWithoutGroupInput> | Prisma.BoardGroupCreateWithoutGroupInput[] | Prisma.BoardGroupUncheckedCreateWithoutGroupInput[]
+  connectOrCreate?: Prisma.BoardGroupCreateOrConnectWithoutGroupInput | Prisma.BoardGroupCreateOrConnectWithoutGroupInput[]
+  upsert?: Prisma.BoardGroupUpsertWithWhereUniqueWithoutGroupInput | Prisma.BoardGroupUpsertWithWhereUniqueWithoutGroupInput[]
+  createMany?: Prisma.BoardGroupCreateManyGroupInputEnvelope
+  set?: Prisma.BoardGroupWhereUniqueInput | Prisma.BoardGroupWhereUniqueInput[]
+  disconnect?: Prisma.BoardGroupWhereUniqueInput | Prisma.BoardGroupWhereUniqueInput[]
+  delete?: Prisma.BoardGroupWhereUniqueInput | Prisma.BoardGroupWhereUniqueInput[]
+  connect?: Prisma.BoardGroupWhereUniqueInput | Prisma.BoardGroupWhereUniqueInput[]
+  update?: Prisma.BoardGroupUpdateWithWhereUniqueWithoutGroupInput | Prisma.BoardGroupUpdateWithWhereUniqueWithoutGroupInput[]
+  updateMany?: Prisma.BoardGroupUpdateManyWithWhereWithoutGroupInput | Prisma.BoardGroupUpdateManyWithWhereWithoutGroupInput[]
+  deleteMany?: Prisma.BoardGroupScalarWhereInput | Prisma.BoardGroupScalarWhereInput[]
 }
 
-export type BoardGroupCreateManyGroupInputEnvelope = {
-  data: Prisma.BoardGroupCreateManyGroupInput | Prisma.BoardGroupCreateManyGroupInput[]
-  skipDuplicates?: boolean
-}
-
-export type BoardGroupUpsertWithWhereUniqueWithoutGroupInput = {
-  where: Prisma.BoardGroupWhereUniqueInput
-  update: Prisma.XOR<Prisma.BoardGroupUpdateWithoutGroupInput, Prisma.BoardGroupUncheckedUpdateWithoutGroupInput>
-  create: Prisma.XOR<Prisma.BoardGroupCreateWithoutGroupInput, Prisma.BoardGroupUncheckedCreateWithoutGroupInput>
-}
-
-export type BoardGroupUpdateWithWhereUniqueWithoutGroupInput = {
-  where: Prisma.BoardGroupWhereUniqueInput
-  data: Prisma.XOR<Prisma.BoardGroupUpdateWithoutGroupInput, Prisma.BoardGroupUncheckedUpdateWithoutGroupInput>
-}
-
-export type BoardGroupUpdateManyWithWhereWithoutGroupInput = {
-  where: Prisma.BoardGroupScalarWhereInput
-  data: Prisma.XOR<Prisma.BoardGroupUpdateManyMutationInput, Prisma.BoardGroupUncheckedUpdateManyWithoutGroupInput>
-}
-
-export type BoardGroupScalarWhereInput = {
-  AND?: Prisma.BoardGroupScalarWhereInput | Prisma.BoardGroupScalarWhereInput[]
-  OR?: Prisma.BoardGroupScalarWhereInput[]
-  NOT?: Prisma.BoardGroupScalarWhereInput | Prisma.BoardGroupScalarWhereInput[]
-  id?: Prisma.StringFilter<"BoardGroup"> | string
-  boardId?: Prisma.StringFilter<"BoardGroup"> | string
-  groupId?: Prisma.StringFilter<"BoardGroup"> | string
-  createdAt?: Prisma.DateTimeFilter<"BoardGroup"> | Date | string
+export type BoardGroupUncheckedUpdateManyWithoutGroupNestedInput = {
+  create?: Prisma.XOR<Prisma.BoardGroupCreateWithoutGroupInput, Prisma.BoardGroupUncheckedCreateWithoutGroupInput> | Prisma.BoardGroupCreateWithoutGroupInput[] | Prisma.BoardGroupUncheckedCreateWithoutGroupInput[]
+  connectOrCreate?: Prisma.BoardGroupCreateOrConnectWithoutGroupInput | Prisma.BoardGroupCreateOrConnectWithoutGroupInput[]
+  upsert?: Prisma.BoardGroupUpsertWithWhereUniqueWithoutGroupInput | Prisma.BoardGroupUpsertWithWhereUniqueWithoutGroupInput[]
+  createMany?: Prisma.BoardGroupCreateManyGroupInputEnvelope
+  set?: Prisma.BoardGroupWhereUniqueInput | Prisma.BoardGroupWhereUniqueInput[]
+  disconnect?: Prisma.BoardGroupWhereUniqueInput | Prisma.BoardGroupWhereUniqueInput[]
+  delete?: Prisma.BoardGroupWhereUniqueInput | Prisma.BoardGroupWhereUniqueInput[]
+  connect?: Prisma.BoardGroupWhereUniqueInput | Prisma.BoardGroupWhereUniqueInput[]
+  update?: Prisma.BoardGroupUpdateWithWhereUniqueWithoutGroupInput | Prisma.BoardGroupUpdateWithWhereUniqueWithoutGroupInput[]
+  updateMany?: Prisma.BoardGroupUpdateManyWithWhereWithoutGroupInput | Prisma.BoardGroupUpdateManyWithWhereWithoutGroupInput[]
+  deleteMany?: Prisma.BoardGroupScalarWhereInput | Prisma.BoardGroupScalarWhereInput[]
 }
 
 export type BoardGroupCreateWithoutBoardInput = {
@@ -473,28 +425,52 @@ export type BoardGroupUpdateManyWithWhereWithoutBoardInput = {
   data: Prisma.XOR<Prisma.BoardGroupUpdateManyMutationInput, Prisma.BoardGroupUncheckedUpdateManyWithoutBoardInput>
 }
 
-export type BoardGroupCreateManyGroupInput = {
+export type BoardGroupScalarWhereInput = {
+  AND?: Prisma.BoardGroupScalarWhereInput | Prisma.BoardGroupScalarWhereInput[]
+  OR?: Prisma.BoardGroupScalarWhereInput[]
+  NOT?: Prisma.BoardGroupScalarWhereInput | Prisma.BoardGroupScalarWhereInput[]
+  id?: Prisma.StringFilter<"BoardGroup"> | string
+  boardId?: Prisma.StringFilter<"BoardGroup"> | string
+  groupId?: Prisma.StringFilter<"BoardGroup"> | string
+  createdAt?: Prisma.DateTimeFilter<"BoardGroup"> | Date | string
+}
+
+export type BoardGroupCreateWithoutGroupInput = {
+  id?: string
+  createdAt?: Date | string
+  board: Prisma.BoardCreateNestedOneWithoutGroupsInput
+}
+
+export type BoardGroupUncheckedCreateWithoutGroupInput = {
   id?: string
   boardId: string
   createdAt?: Date | string
 }
 
-export type BoardGroupUpdateWithoutGroupInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  board?: Prisma.BoardUpdateOneRequiredWithoutGroupsNestedInput
+export type BoardGroupCreateOrConnectWithoutGroupInput = {
+  where: Prisma.BoardGroupWhereUniqueInput
+  create: Prisma.XOR<Prisma.BoardGroupCreateWithoutGroupInput, Prisma.BoardGroupUncheckedCreateWithoutGroupInput>
 }
 
-export type BoardGroupUncheckedUpdateWithoutGroupInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  boardId?: Prisma.StringFieldUpdateOperationsInput | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+export type BoardGroupCreateManyGroupInputEnvelope = {
+  data: Prisma.BoardGroupCreateManyGroupInput | Prisma.BoardGroupCreateManyGroupInput[]
+  skipDuplicates?: boolean
 }
 
-export type BoardGroupUncheckedUpdateManyWithoutGroupInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  boardId?: Prisma.StringFieldUpdateOperationsInput | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+export type BoardGroupUpsertWithWhereUniqueWithoutGroupInput = {
+  where: Prisma.BoardGroupWhereUniqueInput
+  update: Prisma.XOR<Prisma.BoardGroupUpdateWithoutGroupInput, Prisma.BoardGroupUncheckedUpdateWithoutGroupInput>
+  create: Prisma.XOR<Prisma.BoardGroupCreateWithoutGroupInput, Prisma.BoardGroupUncheckedCreateWithoutGroupInput>
+}
+
+export type BoardGroupUpdateWithWhereUniqueWithoutGroupInput = {
+  where: Prisma.BoardGroupWhereUniqueInput
+  data: Prisma.XOR<Prisma.BoardGroupUpdateWithoutGroupInput, Prisma.BoardGroupUncheckedUpdateWithoutGroupInput>
+}
+
+export type BoardGroupUpdateManyWithWhereWithoutGroupInput = {
+  where: Prisma.BoardGroupScalarWhereInput
+  data: Prisma.XOR<Prisma.BoardGroupUpdateManyMutationInput, Prisma.BoardGroupUncheckedUpdateManyWithoutGroupInput>
 }
 
 export type BoardGroupCreateManyBoardInput = {
@@ -518,6 +494,30 @@ export type BoardGroupUncheckedUpdateWithoutBoardInput = {
 export type BoardGroupUncheckedUpdateManyWithoutBoardInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   groupId?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type BoardGroupCreateManyGroupInput = {
+  id?: string
+  boardId: string
+  createdAt?: Date | string
+}
+
+export type BoardGroupUpdateWithoutGroupInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  board?: Prisma.BoardUpdateOneRequiredWithoutGroupsNestedInput
+}
+
+export type BoardGroupUncheckedUpdateWithoutGroupInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  boardId?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type BoardGroupUncheckedUpdateManyWithoutGroupInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  boardId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 

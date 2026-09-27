@@ -515,16 +515,6 @@ export type TicketLinkUncheckedUpdateManyInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type TicketLinkListRelationFilter = {
-  every?: Prisma.TicketLinkWhereInput
-  some?: Prisma.TicketLinkWhereInput
-  none?: Prisma.TicketLinkWhereInput
-}
-
-export type TicketLinkOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
-}
-
 export type TicketLinkTicketIdProviderBaseUrlRepoKindRefCompoundUniqueInput = {
   ticketId: string
   provider: $Enums.GitProvider
@@ -594,46 +584,30 @@ export type TicketLinkMinOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
 }
 
-export type TicketLinkCreateNestedManyWithoutCreatedByInput = {
-  create?: Prisma.XOR<Prisma.TicketLinkCreateWithoutCreatedByInput, Prisma.TicketLinkUncheckedCreateWithoutCreatedByInput> | Prisma.TicketLinkCreateWithoutCreatedByInput[] | Prisma.TicketLinkUncheckedCreateWithoutCreatedByInput[]
-  connectOrCreate?: Prisma.TicketLinkCreateOrConnectWithoutCreatedByInput | Prisma.TicketLinkCreateOrConnectWithoutCreatedByInput[]
-  createMany?: Prisma.TicketLinkCreateManyCreatedByInputEnvelope
-  connect?: Prisma.TicketLinkWhereUniqueInput | Prisma.TicketLinkWhereUniqueInput[]
+export type TicketLinkListRelationFilter = {
+  every?: Prisma.TicketLinkWhereInput
+  some?: Prisma.TicketLinkWhereInput
+  none?: Prisma.TicketLinkWhereInput
 }
 
-export type TicketLinkUncheckedCreateNestedManyWithoutCreatedByInput = {
-  create?: Prisma.XOR<Prisma.TicketLinkCreateWithoutCreatedByInput, Prisma.TicketLinkUncheckedCreateWithoutCreatedByInput> | Prisma.TicketLinkCreateWithoutCreatedByInput[] | Prisma.TicketLinkUncheckedCreateWithoutCreatedByInput[]
-  connectOrCreate?: Prisma.TicketLinkCreateOrConnectWithoutCreatedByInput | Prisma.TicketLinkCreateOrConnectWithoutCreatedByInput[]
-  createMany?: Prisma.TicketLinkCreateManyCreatedByInputEnvelope
-  connect?: Prisma.TicketLinkWhereUniqueInput | Prisma.TicketLinkWhereUniqueInput[]
+export type TicketLinkOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
 }
 
-export type TicketLinkUpdateManyWithoutCreatedByNestedInput = {
-  create?: Prisma.XOR<Prisma.TicketLinkCreateWithoutCreatedByInput, Prisma.TicketLinkUncheckedCreateWithoutCreatedByInput> | Prisma.TicketLinkCreateWithoutCreatedByInput[] | Prisma.TicketLinkUncheckedCreateWithoutCreatedByInput[]
-  connectOrCreate?: Prisma.TicketLinkCreateOrConnectWithoutCreatedByInput | Prisma.TicketLinkCreateOrConnectWithoutCreatedByInput[]
-  upsert?: Prisma.TicketLinkUpsertWithWhereUniqueWithoutCreatedByInput | Prisma.TicketLinkUpsertWithWhereUniqueWithoutCreatedByInput[]
-  createMany?: Prisma.TicketLinkCreateManyCreatedByInputEnvelope
-  set?: Prisma.TicketLinkWhereUniqueInput | Prisma.TicketLinkWhereUniqueInput[]
-  disconnect?: Prisma.TicketLinkWhereUniqueInput | Prisma.TicketLinkWhereUniqueInput[]
-  delete?: Prisma.TicketLinkWhereUniqueInput | Prisma.TicketLinkWhereUniqueInput[]
-  connect?: Prisma.TicketLinkWhereUniqueInput | Prisma.TicketLinkWhereUniqueInput[]
-  update?: Prisma.TicketLinkUpdateWithWhereUniqueWithoutCreatedByInput | Prisma.TicketLinkUpdateWithWhereUniqueWithoutCreatedByInput[]
-  updateMany?: Prisma.TicketLinkUpdateManyWithWhereWithoutCreatedByInput | Prisma.TicketLinkUpdateManyWithWhereWithoutCreatedByInput[]
-  deleteMany?: Prisma.TicketLinkScalarWhereInput | Prisma.TicketLinkScalarWhereInput[]
+export type EnumGitProviderFieldUpdateOperationsInput = {
+  set?: $Enums.GitProvider
 }
 
-export type TicketLinkUncheckedUpdateManyWithoutCreatedByNestedInput = {
-  create?: Prisma.XOR<Prisma.TicketLinkCreateWithoutCreatedByInput, Prisma.TicketLinkUncheckedCreateWithoutCreatedByInput> | Prisma.TicketLinkCreateWithoutCreatedByInput[] | Prisma.TicketLinkUncheckedCreateWithoutCreatedByInput[]
-  connectOrCreate?: Prisma.TicketLinkCreateOrConnectWithoutCreatedByInput | Prisma.TicketLinkCreateOrConnectWithoutCreatedByInput[]
-  upsert?: Prisma.TicketLinkUpsertWithWhereUniqueWithoutCreatedByInput | Prisma.TicketLinkUpsertWithWhereUniqueWithoutCreatedByInput[]
-  createMany?: Prisma.TicketLinkCreateManyCreatedByInputEnvelope
-  set?: Prisma.TicketLinkWhereUniqueInput | Prisma.TicketLinkWhereUniqueInput[]
-  disconnect?: Prisma.TicketLinkWhereUniqueInput | Prisma.TicketLinkWhereUniqueInput[]
-  delete?: Prisma.TicketLinkWhereUniqueInput | Prisma.TicketLinkWhereUniqueInput[]
-  connect?: Prisma.TicketLinkWhereUniqueInput | Prisma.TicketLinkWhereUniqueInput[]
-  update?: Prisma.TicketLinkUpdateWithWhereUniqueWithoutCreatedByInput | Prisma.TicketLinkUpdateWithWhereUniqueWithoutCreatedByInput[]
-  updateMany?: Prisma.TicketLinkUpdateManyWithWhereWithoutCreatedByInput | Prisma.TicketLinkUpdateManyWithWhereWithoutCreatedByInput[]
-  deleteMany?: Prisma.TicketLinkScalarWhereInput | Prisma.TicketLinkScalarWhereInput[]
+export type EnumTicketLinkKindFieldUpdateOperationsInput = {
+  set?: $Enums.TicketLinkKind
+}
+
+export type NullableEnumPullRequestStateFieldUpdateOperationsInput = {
+  set?: $Enums.PullRequestState | null
+}
+
+export type EnumTicketLinkSourceFieldUpdateOperationsInput = {
+  set?: $Enums.TicketLinkSource
 }
 
 export type TicketLinkCreateNestedManyWithoutTicketInput = {
@@ -678,107 +652,46 @@ export type TicketLinkUncheckedUpdateManyWithoutTicketNestedInput = {
   deleteMany?: Prisma.TicketLinkScalarWhereInput | Prisma.TicketLinkScalarWhereInput[]
 }
 
-export type EnumGitProviderFieldUpdateOperationsInput = {
-  set?: $Enums.GitProvider
+export type TicketLinkCreateNestedManyWithoutCreatedByInput = {
+  create?: Prisma.XOR<Prisma.TicketLinkCreateWithoutCreatedByInput, Prisma.TicketLinkUncheckedCreateWithoutCreatedByInput> | Prisma.TicketLinkCreateWithoutCreatedByInput[] | Prisma.TicketLinkUncheckedCreateWithoutCreatedByInput[]
+  connectOrCreate?: Prisma.TicketLinkCreateOrConnectWithoutCreatedByInput | Prisma.TicketLinkCreateOrConnectWithoutCreatedByInput[]
+  createMany?: Prisma.TicketLinkCreateManyCreatedByInputEnvelope
+  connect?: Prisma.TicketLinkWhereUniqueInput | Prisma.TicketLinkWhereUniqueInput[]
 }
 
-export type EnumTicketLinkKindFieldUpdateOperationsInput = {
-  set?: $Enums.TicketLinkKind
+export type TicketLinkUncheckedCreateNestedManyWithoutCreatedByInput = {
+  create?: Prisma.XOR<Prisma.TicketLinkCreateWithoutCreatedByInput, Prisma.TicketLinkUncheckedCreateWithoutCreatedByInput> | Prisma.TicketLinkCreateWithoutCreatedByInput[] | Prisma.TicketLinkUncheckedCreateWithoutCreatedByInput[]
+  connectOrCreate?: Prisma.TicketLinkCreateOrConnectWithoutCreatedByInput | Prisma.TicketLinkCreateOrConnectWithoutCreatedByInput[]
+  createMany?: Prisma.TicketLinkCreateManyCreatedByInputEnvelope
+  connect?: Prisma.TicketLinkWhereUniqueInput | Prisma.TicketLinkWhereUniqueInput[]
 }
 
-export type NullableEnumPullRequestStateFieldUpdateOperationsInput = {
-  set?: $Enums.PullRequestState | null
+export type TicketLinkUpdateManyWithoutCreatedByNestedInput = {
+  create?: Prisma.XOR<Prisma.TicketLinkCreateWithoutCreatedByInput, Prisma.TicketLinkUncheckedCreateWithoutCreatedByInput> | Prisma.TicketLinkCreateWithoutCreatedByInput[] | Prisma.TicketLinkUncheckedCreateWithoutCreatedByInput[]
+  connectOrCreate?: Prisma.TicketLinkCreateOrConnectWithoutCreatedByInput | Prisma.TicketLinkCreateOrConnectWithoutCreatedByInput[]
+  upsert?: Prisma.TicketLinkUpsertWithWhereUniqueWithoutCreatedByInput | Prisma.TicketLinkUpsertWithWhereUniqueWithoutCreatedByInput[]
+  createMany?: Prisma.TicketLinkCreateManyCreatedByInputEnvelope
+  set?: Prisma.TicketLinkWhereUniqueInput | Prisma.TicketLinkWhereUniqueInput[]
+  disconnect?: Prisma.TicketLinkWhereUniqueInput | Prisma.TicketLinkWhereUniqueInput[]
+  delete?: Prisma.TicketLinkWhereUniqueInput | Prisma.TicketLinkWhereUniqueInput[]
+  connect?: Prisma.TicketLinkWhereUniqueInput | Prisma.TicketLinkWhereUniqueInput[]
+  update?: Prisma.TicketLinkUpdateWithWhereUniqueWithoutCreatedByInput | Prisma.TicketLinkUpdateWithWhereUniqueWithoutCreatedByInput[]
+  updateMany?: Prisma.TicketLinkUpdateManyWithWhereWithoutCreatedByInput | Prisma.TicketLinkUpdateManyWithWhereWithoutCreatedByInput[]
+  deleteMany?: Prisma.TicketLinkScalarWhereInput | Prisma.TicketLinkScalarWhereInput[]
 }
 
-export type EnumTicketLinkSourceFieldUpdateOperationsInput = {
-  set?: $Enums.TicketLinkSource
-}
-
-export type TicketLinkCreateWithoutCreatedByInput = {
-  id?: string
-  provider?: $Enums.GitProvider
-  kind: $Enums.TicketLinkKind
-  baseUrl?: string
-  repo: string
-  ref: string
-  url: string
-  title?: string | null
-  prState?: $Enums.PullRequestState | null
-  headSha?: string | null
-  syncedAt?: Date | string | null
-  source?: $Enums.TicketLinkSource
-  dismissed?: boolean
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  ticket: Prisma.TicketCreateNestedOneWithoutLinksInput
-}
-
-export type TicketLinkUncheckedCreateWithoutCreatedByInput = {
-  id?: string
-  ticketId: string
-  provider?: $Enums.GitProvider
-  kind: $Enums.TicketLinkKind
-  baseUrl?: string
-  repo: string
-  ref: string
-  url: string
-  title?: string | null
-  prState?: $Enums.PullRequestState | null
-  headSha?: string | null
-  syncedAt?: Date | string | null
-  source?: $Enums.TicketLinkSource
-  dismissed?: boolean
-  createdAt?: Date | string
-  updatedAt?: Date | string
-}
-
-export type TicketLinkCreateOrConnectWithoutCreatedByInput = {
-  where: Prisma.TicketLinkWhereUniqueInput
-  create: Prisma.XOR<Prisma.TicketLinkCreateWithoutCreatedByInput, Prisma.TicketLinkUncheckedCreateWithoutCreatedByInput>
-}
-
-export type TicketLinkCreateManyCreatedByInputEnvelope = {
-  data: Prisma.TicketLinkCreateManyCreatedByInput | Prisma.TicketLinkCreateManyCreatedByInput[]
-  skipDuplicates?: boolean
-}
-
-export type TicketLinkUpsertWithWhereUniqueWithoutCreatedByInput = {
-  where: Prisma.TicketLinkWhereUniqueInput
-  update: Prisma.XOR<Prisma.TicketLinkUpdateWithoutCreatedByInput, Prisma.TicketLinkUncheckedUpdateWithoutCreatedByInput>
-  create: Prisma.XOR<Prisma.TicketLinkCreateWithoutCreatedByInput, Prisma.TicketLinkUncheckedCreateWithoutCreatedByInput>
-}
-
-export type TicketLinkUpdateWithWhereUniqueWithoutCreatedByInput = {
-  where: Prisma.TicketLinkWhereUniqueInput
-  data: Prisma.XOR<Prisma.TicketLinkUpdateWithoutCreatedByInput, Prisma.TicketLinkUncheckedUpdateWithoutCreatedByInput>
-}
-
-export type TicketLinkUpdateManyWithWhereWithoutCreatedByInput = {
-  where: Prisma.TicketLinkScalarWhereInput
-  data: Prisma.XOR<Prisma.TicketLinkUpdateManyMutationInput, Prisma.TicketLinkUncheckedUpdateManyWithoutCreatedByInput>
-}
-
-export type TicketLinkScalarWhereInput = {
-  AND?: Prisma.TicketLinkScalarWhereInput | Prisma.TicketLinkScalarWhereInput[]
-  OR?: Prisma.TicketLinkScalarWhereInput[]
-  NOT?: Prisma.TicketLinkScalarWhereInput | Prisma.TicketLinkScalarWhereInput[]
-  id?: Prisma.StringFilter<"TicketLink"> | string
-  ticketId?: Prisma.StringFilter<"TicketLink"> | string
-  provider?: Prisma.EnumGitProviderFilter<"TicketLink"> | $Enums.GitProvider
-  kind?: Prisma.EnumTicketLinkKindFilter<"TicketLink"> | $Enums.TicketLinkKind
-  baseUrl?: Prisma.StringFilter<"TicketLink"> | string
-  repo?: Prisma.StringFilter<"TicketLink"> | string
-  ref?: Prisma.StringFilter<"TicketLink"> | string
-  url?: Prisma.StringFilter<"TicketLink"> | string
-  title?: Prisma.StringNullableFilter<"TicketLink"> | string | null
-  prState?: Prisma.EnumPullRequestStateNullableFilter<"TicketLink"> | $Enums.PullRequestState | null
-  headSha?: Prisma.StringNullableFilter<"TicketLink"> | string | null
-  syncedAt?: Prisma.DateTimeNullableFilter<"TicketLink"> | Date | string | null
-  source?: Prisma.EnumTicketLinkSourceFilter<"TicketLink"> | $Enums.TicketLinkSource
-  dismissed?: Prisma.BoolFilter<"TicketLink"> | boolean
-  createdById?: Prisma.StringNullableFilter<"TicketLink"> | string | null
-  createdAt?: Prisma.DateTimeFilter<"TicketLink"> | Date | string
-  updatedAt?: Prisma.DateTimeFilter<"TicketLink"> | Date | string
+export type TicketLinkUncheckedUpdateManyWithoutCreatedByNestedInput = {
+  create?: Prisma.XOR<Prisma.TicketLinkCreateWithoutCreatedByInput, Prisma.TicketLinkUncheckedCreateWithoutCreatedByInput> | Prisma.TicketLinkCreateWithoutCreatedByInput[] | Prisma.TicketLinkUncheckedCreateWithoutCreatedByInput[]
+  connectOrCreate?: Prisma.TicketLinkCreateOrConnectWithoutCreatedByInput | Prisma.TicketLinkCreateOrConnectWithoutCreatedByInput[]
+  upsert?: Prisma.TicketLinkUpsertWithWhereUniqueWithoutCreatedByInput | Prisma.TicketLinkUpsertWithWhereUniqueWithoutCreatedByInput[]
+  createMany?: Prisma.TicketLinkCreateManyCreatedByInputEnvelope
+  set?: Prisma.TicketLinkWhereUniqueInput | Prisma.TicketLinkWhereUniqueInput[]
+  disconnect?: Prisma.TicketLinkWhereUniqueInput | Prisma.TicketLinkWhereUniqueInput[]
+  delete?: Prisma.TicketLinkWhereUniqueInput | Prisma.TicketLinkWhereUniqueInput[]
+  connect?: Prisma.TicketLinkWhereUniqueInput | Prisma.TicketLinkWhereUniqueInput[]
+  update?: Prisma.TicketLinkUpdateWithWhereUniqueWithoutCreatedByInput | Prisma.TicketLinkUpdateWithWhereUniqueWithoutCreatedByInput[]
+  updateMany?: Prisma.TicketLinkUpdateManyWithWhereWithoutCreatedByInput | Prisma.TicketLinkUpdateManyWithWhereWithoutCreatedByInput[]
+  deleteMany?: Prisma.TicketLinkScalarWhereInput | Prisma.TicketLinkScalarWhereInput[]
 }
 
 export type TicketLinkCreateWithoutTicketInput = {
@@ -845,7 +758,49 @@ export type TicketLinkUpdateManyWithWhereWithoutTicketInput = {
   data: Prisma.XOR<Prisma.TicketLinkUpdateManyMutationInput, Prisma.TicketLinkUncheckedUpdateManyWithoutTicketInput>
 }
 
-export type TicketLinkCreateManyCreatedByInput = {
+export type TicketLinkScalarWhereInput = {
+  AND?: Prisma.TicketLinkScalarWhereInput | Prisma.TicketLinkScalarWhereInput[]
+  OR?: Prisma.TicketLinkScalarWhereInput[]
+  NOT?: Prisma.TicketLinkScalarWhereInput | Prisma.TicketLinkScalarWhereInput[]
+  id?: Prisma.StringFilter<"TicketLink"> | string
+  ticketId?: Prisma.StringFilter<"TicketLink"> | string
+  provider?: Prisma.EnumGitProviderFilter<"TicketLink"> | $Enums.GitProvider
+  kind?: Prisma.EnumTicketLinkKindFilter<"TicketLink"> | $Enums.TicketLinkKind
+  baseUrl?: Prisma.StringFilter<"TicketLink"> | string
+  repo?: Prisma.StringFilter<"TicketLink"> | string
+  ref?: Prisma.StringFilter<"TicketLink"> | string
+  url?: Prisma.StringFilter<"TicketLink"> | string
+  title?: Prisma.StringNullableFilter<"TicketLink"> | string | null
+  prState?: Prisma.EnumPullRequestStateNullableFilter<"TicketLink"> | $Enums.PullRequestState | null
+  headSha?: Prisma.StringNullableFilter<"TicketLink"> | string | null
+  syncedAt?: Prisma.DateTimeNullableFilter<"TicketLink"> | Date | string | null
+  source?: Prisma.EnumTicketLinkSourceFilter<"TicketLink"> | $Enums.TicketLinkSource
+  dismissed?: Prisma.BoolFilter<"TicketLink"> | boolean
+  createdById?: Prisma.StringNullableFilter<"TicketLink"> | string | null
+  createdAt?: Prisma.DateTimeFilter<"TicketLink"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"TicketLink"> | Date | string
+}
+
+export type TicketLinkCreateWithoutCreatedByInput = {
+  id?: string
+  provider?: $Enums.GitProvider
+  kind: $Enums.TicketLinkKind
+  baseUrl?: string
+  repo: string
+  ref: string
+  url: string
+  title?: string | null
+  prState?: $Enums.PullRequestState | null
+  headSha?: string | null
+  syncedAt?: Date | string | null
+  source?: $Enums.TicketLinkSource
+  dismissed?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  ticket: Prisma.TicketCreateNestedOneWithoutLinksInput
+}
+
+export type TicketLinkUncheckedCreateWithoutCreatedByInput = {
   id?: string
   ticketId: string
   provider?: $Enums.GitProvider
@@ -864,61 +819,30 @@ export type TicketLinkCreateManyCreatedByInput = {
   updatedAt?: Date | string
 }
 
-export type TicketLinkUpdateWithoutCreatedByInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
-  kind?: Prisma.EnumTicketLinkKindFieldUpdateOperationsInput | $Enums.TicketLinkKind
-  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  repo?: Prisma.StringFieldUpdateOperationsInput | string
-  ref?: Prisma.StringFieldUpdateOperationsInput | string
-  url?: Prisma.StringFieldUpdateOperationsInput | string
-  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  prState?: Prisma.NullableEnumPullRequestStateFieldUpdateOperationsInput | $Enums.PullRequestState | null
-  headSha?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  syncedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  source?: Prisma.EnumTicketLinkSourceFieldUpdateOperationsInput | $Enums.TicketLinkSource
-  dismissed?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  ticket?: Prisma.TicketUpdateOneRequiredWithoutLinksNestedInput
+export type TicketLinkCreateOrConnectWithoutCreatedByInput = {
+  where: Prisma.TicketLinkWhereUniqueInput
+  create: Prisma.XOR<Prisma.TicketLinkCreateWithoutCreatedByInput, Prisma.TicketLinkUncheckedCreateWithoutCreatedByInput>
 }
 
-export type TicketLinkUncheckedUpdateWithoutCreatedByInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  ticketId?: Prisma.StringFieldUpdateOperationsInput | string
-  provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
-  kind?: Prisma.EnumTicketLinkKindFieldUpdateOperationsInput | $Enums.TicketLinkKind
-  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  repo?: Prisma.StringFieldUpdateOperationsInput | string
-  ref?: Prisma.StringFieldUpdateOperationsInput | string
-  url?: Prisma.StringFieldUpdateOperationsInput | string
-  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  prState?: Prisma.NullableEnumPullRequestStateFieldUpdateOperationsInput | $Enums.PullRequestState | null
-  headSha?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  syncedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  source?: Prisma.EnumTicketLinkSourceFieldUpdateOperationsInput | $Enums.TicketLinkSource
-  dismissed?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+export type TicketLinkCreateManyCreatedByInputEnvelope = {
+  data: Prisma.TicketLinkCreateManyCreatedByInput | Prisma.TicketLinkCreateManyCreatedByInput[]
+  skipDuplicates?: boolean
 }
 
-export type TicketLinkUncheckedUpdateManyWithoutCreatedByInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  ticketId?: Prisma.StringFieldUpdateOperationsInput | string
-  provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
-  kind?: Prisma.EnumTicketLinkKindFieldUpdateOperationsInput | $Enums.TicketLinkKind
-  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  repo?: Prisma.StringFieldUpdateOperationsInput | string
-  ref?: Prisma.StringFieldUpdateOperationsInput | string
-  url?: Prisma.StringFieldUpdateOperationsInput | string
-  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  prState?: Prisma.NullableEnumPullRequestStateFieldUpdateOperationsInput | $Enums.PullRequestState | null
-  headSha?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  syncedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  source?: Prisma.EnumTicketLinkSourceFieldUpdateOperationsInput | $Enums.TicketLinkSource
-  dismissed?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+export type TicketLinkUpsertWithWhereUniqueWithoutCreatedByInput = {
+  where: Prisma.TicketLinkWhereUniqueInput
+  update: Prisma.XOR<Prisma.TicketLinkUpdateWithoutCreatedByInput, Prisma.TicketLinkUncheckedUpdateWithoutCreatedByInput>
+  create: Prisma.XOR<Prisma.TicketLinkCreateWithoutCreatedByInput, Prisma.TicketLinkUncheckedCreateWithoutCreatedByInput>
+}
+
+export type TicketLinkUpdateWithWhereUniqueWithoutCreatedByInput = {
+  where: Prisma.TicketLinkWhereUniqueInput
+  data: Prisma.XOR<Prisma.TicketLinkUpdateWithoutCreatedByInput, Prisma.TicketLinkUncheckedUpdateWithoutCreatedByInput>
+}
+
+export type TicketLinkUpdateManyWithWhereWithoutCreatedByInput = {
+  where: Prisma.TicketLinkScalarWhereInput
+  data: Prisma.XOR<Prisma.TicketLinkUpdateManyMutationInput, Prisma.TicketLinkUncheckedUpdateManyWithoutCreatedByInput>
 }
 
 export type TicketLinkCreateManyTicketInput = {
@@ -993,6 +917,82 @@ export type TicketLinkUncheckedUpdateManyWithoutTicketInput = {
   source?: Prisma.EnumTicketLinkSourceFieldUpdateOperationsInput | $Enums.TicketLinkSource
   dismissed?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type TicketLinkCreateManyCreatedByInput = {
+  id?: string
+  ticketId: string
+  provider?: $Enums.GitProvider
+  kind: $Enums.TicketLinkKind
+  baseUrl?: string
+  repo: string
+  ref: string
+  url: string
+  title?: string | null
+  prState?: $Enums.PullRequestState | null
+  headSha?: string | null
+  syncedAt?: Date | string | null
+  source?: $Enums.TicketLinkSource
+  dismissed?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type TicketLinkUpdateWithoutCreatedByInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
+  kind?: Prisma.EnumTicketLinkKindFieldUpdateOperationsInput | $Enums.TicketLinkKind
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  repo?: Prisma.StringFieldUpdateOperationsInput | string
+  ref?: Prisma.StringFieldUpdateOperationsInput | string
+  url?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  prState?: Prisma.NullableEnumPullRequestStateFieldUpdateOperationsInput | $Enums.PullRequestState | null
+  headSha?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  syncedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  source?: Prisma.EnumTicketLinkSourceFieldUpdateOperationsInput | $Enums.TicketLinkSource
+  dismissed?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ticket?: Prisma.TicketUpdateOneRequiredWithoutLinksNestedInput
+}
+
+export type TicketLinkUncheckedUpdateWithoutCreatedByInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketId?: Prisma.StringFieldUpdateOperationsInput | string
+  provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
+  kind?: Prisma.EnumTicketLinkKindFieldUpdateOperationsInput | $Enums.TicketLinkKind
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  repo?: Prisma.StringFieldUpdateOperationsInput | string
+  ref?: Prisma.StringFieldUpdateOperationsInput | string
+  url?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  prState?: Prisma.NullableEnumPullRequestStateFieldUpdateOperationsInput | $Enums.PullRequestState | null
+  headSha?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  syncedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  source?: Prisma.EnumTicketLinkSourceFieldUpdateOperationsInput | $Enums.TicketLinkSource
+  dismissed?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type TicketLinkUncheckedUpdateManyWithoutCreatedByInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketId?: Prisma.StringFieldUpdateOperationsInput | string
+  provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
+  kind?: Prisma.EnumTicketLinkKindFieldUpdateOperationsInput | $Enums.TicketLinkKind
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  repo?: Prisma.StringFieldUpdateOperationsInput | string
+  ref?: Prisma.StringFieldUpdateOperationsInput | string
+  url?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  prState?: Prisma.NullableEnumPullRequestStateFieldUpdateOperationsInput | $Enums.PullRequestState | null
+  headSha?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  syncedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  source?: Prisma.EnumTicketLinkSourceFieldUpdateOperationsInput | $Enums.TicketLinkSource
+  dismissed?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }

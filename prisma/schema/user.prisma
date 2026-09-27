@@ -1,0 +1,148 @@
+/// アプリの利用者。Webにログインする人のほか、MCP からのみ利用するAIエージェント用ユーザー
+/// (isAgent = true)も同じテーブルで持つ。
+model User {
+  id String @id @default(uuid(7))
+
+  /// 表示名
+  name String
+
+  /// ログインIDと通知の宛先を兼ねる。全ユーザーで一意
+  email String
+
+  /// メールアドレスの確認済みフラグ。2FA の完了時にも true にする
+  emailVerified Boolean @default(false)
+
+  /// アバター画像のURL。常に `/api/upload/<key>`(ソーシャルログインで得た画像もコピーして保存する)
+  image String?
+
+  /// 管理者は `admin`。null は一般ユーザー
+  role String?
+
+  /// 利用停止中
+  banned Boolean? @default(false)
+
+  /// 利用停止の理由
+  banReason String?
+
+  /// 利用停止の解除時刻。null は無期限
+  banExpires DateTime?
+
+  /// 2要素認証の有効/無効
+  twoFactorEnabled Boolean? @default(false)
+
+  /// 表示名を本人が設定済み。ソーシャルログインで取得した名前で上書きしない
+  nameLocked Boolean? @default(false)
+
+  /// 表示言語。ログイン時にクッキーへ反映する。null はブラウザ設定に従う
+  locale String?
+
+  /// 最終ログイン時刻。セッションの生成時に更新する
+  lastLoginAt DateTime?
+
+  /// 日時の表示に使うタイムゾーン。null は DEFAULT_TZ
+  timezone String?
+
+  /// AIエージェント用ユーザー。Webログインを行わず MCP からのみ利用する
+  isAgent Boolean @default(false)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // relation
+
+  sessions           Session[]
+  accounts           Account[]
+  twofactors         TwoFactor[]
+  passkeys           Passkey[]
+  oauthclients       OauthClient[]
+  oauthrefreshtokens OauthRefreshToken[]
+  oauthaccesstokens  OauthAccessToken[]
+  oauthconsents      OauthConsent[]
+
+  userGroups     UserGroup[]
+  dashboard      Dashboard?
+  attachments    Attachment[]
+  notifySettings UserNotifySetting[]
+
+  // Notify
+  notifyOutboxes       NotifyOutbox[]        @relation("NotifyOutboxActor")
+  notifyDeliveries     NotifyDelivery[]
+  webPushSubscriptions WebPushSubscription[]
+
+  // CalendarShare
+  calendarShare     CalendarShare?
+  calendarBusyTimes CalendarBusyTime[]
+
+  // Board / Ticket
+  boardMembers    BoardMember[]
+  privateBoard    Board?
+  createdTickets  Ticket[]          @relation("TicketCreator")
+  assignedTickets Ticket[]          @relation("TicketAssignee")
+  ticketComments  TicketComment[]
+  ticketLinks     TicketLink[]
+  checkedCriteria TicketCriterion[]
+
+  // MCP
+  mcpTokens McpToken[]
+
+  // Agent
+  agentToken          AgentToken?          @relation("AgentTokenOwner")
+  createdAgentTokens  AgentToken[]         @relation("AgentTokenCreator")
+  agentRunner         AgentRunner?
+  agentApprovers      AgentApprover[]      @relation("AgentApproverAgent")
+  agentApproverGroups AgentApproverGroup[]
+  approverOf          AgentApprover[]      @relation("AgentApproverUser")
+
+  // Command
+  commandRuns          CommandRun[]
+  commandTargetMembers CommandTargetMember[]
+
+  @@unique([email])
+  /// 未認証で開く `/api/avatar` がキーからアバターの持ち主を引くため
+  @@index([image])
+  @@map("user")
+}
+
+/// ユーザーをまとめる単位。ボードの共有先や、エージェントの承認者の指定に使う。
+model Group {
+  id String @id @default(uuid(7))
+
+  /// グループ名
+  name String
+
+  /// グループの説明
+  description String?
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userGroups          UserGroup[]
+  boardGroups         BoardGroup[]
+  agentApproverGroups AgentApproverGroup[]
+  commandTargetGroups CommandTargetGroup[]
+
+  @@map("group")
+}
+
+/// ユーザーとグループの所属を表す中間テーブル。
+model UserGroup {
+  id String @id @default(uuid(7))
+
+  /// 所属するユーザー
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// 所属先のグループ
+  groupId String
+  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+
+  @@unique([userId, groupId])
+  @@index([userId])
+  @@index([groupId])
+  @@map("user_group")
+}

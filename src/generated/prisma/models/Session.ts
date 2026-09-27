@@ -373,16 +373,6 @@ export type SessionUncheckedUpdateManyInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type SessionListRelationFilter = {
-  every?: Prisma.SessionWhereInput
-  some?: Prisma.SessionWhereInput
-  none?: Prisma.SessionWhereInput
-}
-
-export type SessionOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
-}
-
 export type SessionCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrder
@@ -422,6 +412,48 @@ export type SessionMinOrderByAggregateInput = {
 export type SessionNullableScalarRelationFilter = {
   is?: Prisma.SessionWhereInput | null
   isNot?: Prisma.SessionWhereInput | null
+}
+
+export type SessionListRelationFilter = {
+  every?: Prisma.SessionWhereInput
+  some?: Prisma.SessionWhereInput
+  none?: Prisma.SessionWhereInput
+}
+
+export type SessionOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
+}
+
+export type SessionCreateNestedOneWithoutOauthrefreshtokensInput = {
+  create?: Prisma.XOR<Prisma.SessionCreateWithoutOauthrefreshtokensInput, Prisma.SessionUncheckedCreateWithoutOauthrefreshtokensInput>
+  connectOrCreate?: Prisma.SessionCreateOrConnectWithoutOauthrefreshtokensInput
+  connect?: Prisma.SessionWhereUniqueInput
+}
+
+export type SessionUpdateOneWithoutOauthrefreshtokensNestedInput = {
+  create?: Prisma.XOR<Prisma.SessionCreateWithoutOauthrefreshtokensInput, Prisma.SessionUncheckedCreateWithoutOauthrefreshtokensInput>
+  connectOrCreate?: Prisma.SessionCreateOrConnectWithoutOauthrefreshtokensInput
+  upsert?: Prisma.SessionUpsertWithoutOauthrefreshtokensInput
+  disconnect?: Prisma.SessionWhereInput | boolean
+  delete?: Prisma.SessionWhereInput | boolean
+  connect?: Prisma.SessionWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.SessionUpdateToOneWithWhereWithoutOauthrefreshtokensInput, Prisma.SessionUpdateWithoutOauthrefreshtokensInput>, Prisma.SessionUncheckedUpdateWithoutOauthrefreshtokensInput>
+}
+
+export type SessionCreateNestedOneWithoutOauthaccesstokensInput = {
+  create?: Prisma.XOR<Prisma.SessionCreateWithoutOauthaccesstokensInput, Prisma.SessionUncheckedCreateWithoutOauthaccesstokensInput>
+  connectOrCreate?: Prisma.SessionCreateOrConnectWithoutOauthaccesstokensInput
+  connect?: Prisma.SessionWhereUniqueInput
+}
+
+export type SessionUpdateOneWithoutOauthaccesstokensNestedInput = {
+  create?: Prisma.XOR<Prisma.SessionCreateWithoutOauthaccesstokensInput, Prisma.SessionUncheckedCreateWithoutOauthaccesstokensInput>
+  connectOrCreate?: Prisma.SessionCreateOrConnectWithoutOauthaccesstokensInput
+  upsert?: Prisma.SessionUpsertWithoutOauthaccesstokensInput
+  disconnect?: Prisma.SessionWhereInput | boolean
+  delete?: Prisma.SessionWhereInput | boolean
+  connect?: Prisma.SessionWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.SessionUpdateToOneWithWhereWithoutOauthaccesstokensInput, Prisma.SessionUpdateWithoutOauthaccesstokensInput>, Prisma.SessionUncheckedUpdateWithoutOauthaccesstokensInput>
 }
 
 export type SessionCreateNestedManyWithoutUserInput = {
@@ -464,105 +496,6 @@ export type SessionUncheckedUpdateManyWithoutUserNestedInput = {
   update?: Prisma.SessionUpdateWithWhereUniqueWithoutUserInput | Prisma.SessionUpdateWithWhereUniqueWithoutUserInput[]
   updateMany?: Prisma.SessionUpdateManyWithWhereWithoutUserInput | Prisma.SessionUpdateManyWithWhereWithoutUserInput[]
   deleteMany?: Prisma.SessionScalarWhereInput | Prisma.SessionScalarWhereInput[]
-}
-
-export type SessionCreateNestedOneWithoutOauthrefreshtokensInput = {
-  create?: Prisma.XOR<Prisma.SessionCreateWithoutOauthrefreshtokensInput, Prisma.SessionUncheckedCreateWithoutOauthrefreshtokensInput>
-  connectOrCreate?: Prisma.SessionCreateOrConnectWithoutOauthrefreshtokensInput
-  connect?: Prisma.SessionWhereUniqueInput
-}
-
-export type SessionUpdateOneWithoutOauthrefreshtokensNestedInput = {
-  create?: Prisma.XOR<Prisma.SessionCreateWithoutOauthrefreshtokensInput, Prisma.SessionUncheckedCreateWithoutOauthrefreshtokensInput>
-  connectOrCreate?: Prisma.SessionCreateOrConnectWithoutOauthrefreshtokensInput
-  upsert?: Prisma.SessionUpsertWithoutOauthrefreshtokensInput
-  disconnect?: Prisma.SessionWhereInput | boolean
-  delete?: Prisma.SessionWhereInput | boolean
-  connect?: Prisma.SessionWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.SessionUpdateToOneWithWhereWithoutOauthrefreshtokensInput, Prisma.SessionUpdateWithoutOauthrefreshtokensInput>, Prisma.SessionUncheckedUpdateWithoutOauthrefreshtokensInput>
-}
-
-export type SessionCreateNestedOneWithoutOauthaccesstokensInput = {
-  create?: Prisma.XOR<Prisma.SessionCreateWithoutOauthaccesstokensInput, Prisma.SessionUncheckedCreateWithoutOauthaccesstokensInput>
-  connectOrCreate?: Prisma.SessionCreateOrConnectWithoutOauthaccesstokensInput
-  connect?: Prisma.SessionWhereUniqueInput
-}
-
-export type SessionUpdateOneWithoutOauthaccesstokensNestedInput = {
-  create?: Prisma.XOR<Prisma.SessionCreateWithoutOauthaccesstokensInput, Prisma.SessionUncheckedCreateWithoutOauthaccesstokensInput>
-  connectOrCreate?: Prisma.SessionCreateOrConnectWithoutOauthaccesstokensInput
-  upsert?: Prisma.SessionUpsertWithoutOauthaccesstokensInput
-  disconnect?: Prisma.SessionWhereInput | boolean
-  delete?: Prisma.SessionWhereInput | boolean
-  connect?: Prisma.SessionWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.SessionUpdateToOneWithWhereWithoutOauthaccesstokensInput, Prisma.SessionUpdateWithoutOauthaccesstokensInput>, Prisma.SessionUncheckedUpdateWithoutOauthaccesstokensInput>
-}
-
-export type SessionCreateWithoutUserInput = {
-  id?: string
-  expiresAt: Date | string
-  token: string
-  ipAddress?: string | null
-  userAgent?: string | null
-  impersonatedBy?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  oauthrefreshtokens?: Prisma.OauthRefreshTokenCreateNestedManyWithoutSessionInput
-  oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutSessionInput
-}
-
-export type SessionUncheckedCreateWithoutUserInput = {
-  id?: string
-  expiresAt: Date | string
-  token: string
-  ipAddress?: string | null
-  userAgent?: string | null
-  impersonatedBy?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedCreateNestedManyWithoutSessionInput
-  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutSessionInput
-}
-
-export type SessionCreateOrConnectWithoutUserInput = {
-  where: Prisma.SessionWhereUniqueInput
-  create: Prisma.XOR<Prisma.SessionCreateWithoutUserInput, Prisma.SessionUncheckedCreateWithoutUserInput>
-}
-
-export type SessionCreateManyUserInputEnvelope = {
-  data: Prisma.SessionCreateManyUserInput | Prisma.SessionCreateManyUserInput[]
-  skipDuplicates?: boolean
-}
-
-export type SessionUpsertWithWhereUniqueWithoutUserInput = {
-  where: Prisma.SessionWhereUniqueInput
-  update: Prisma.XOR<Prisma.SessionUpdateWithoutUserInput, Prisma.SessionUncheckedUpdateWithoutUserInput>
-  create: Prisma.XOR<Prisma.SessionCreateWithoutUserInput, Prisma.SessionUncheckedCreateWithoutUserInput>
-}
-
-export type SessionUpdateWithWhereUniqueWithoutUserInput = {
-  where: Prisma.SessionWhereUniqueInput
-  data: Prisma.XOR<Prisma.SessionUpdateWithoutUserInput, Prisma.SessionUncheckedUpdateWithoutUserInput>
-}
-
-export type SessionUpdateManyWithWhereWithoutUserInput = {
-  where: Prisma.SessionScalarWhereInput
-  data: Prisma.XOR<Prisma.SessionUpdateManyMutationInput, Prisma.SessionUncheckedUpdateManyWithoutUserInput>
-}
-
-export type SessionScalarWhereInput = {
-  AND?: Prisma.SessionScalarWhereInput | Prisma.SessionScalarWhereInput[]
-  OR?: Prisma.SessionScalarWhereInput[]
-  NOT?: Prisma.SessionScalarWhereInput | Prisma.SessionScalarWhereInput[]
-  id?: Prisma.StringFilter<"Session"> | string
-  expiresAt?: Prisma.DateTimeFilter<"Session"> | Date | string
-  token?: Prisma.StringFilter<"Session"> | string
-  ipAddress?: Prisma.StringNullableFilter<"Session"> | string | null
-  userAgent?: Prisma.StringNullableFilter<"Session"> | string | null
-  userId?: Prisma.StringFilter<"Session"> | string
-  impersonatedBy?: Prisma.StringNullableFilter<"Session"> | string | null
-  createdAt?: Prisma.DateTimeFilter<"Session"> | Date | string
-  updatedAt?: Prisma.DateTimeFilter<"Session"> | Date | string
 }
 
 export type SessionCreateWithoutOauthrefreshtokensInput = {
@@ -699,6 +632,73 @@ export type SessionUncheckedUpdateWithoutOauthaccesstokensInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedUpdateManyWithoutSessionNestedInput
+}
+
+export type SessionCreateWithoutUserInput = {
+  id?: string
+  expiresAt: Date | string
+  token: string
+  ipAddress?: string | null
+  userAgent?: string | null
+  impersonatedBy?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenCreateNestedManyWithoutSessionInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutSessionInput
+}
+
+export type SessionUncheckedCreateWithoutUserInput = {
+  id?: string
+  expiresAt: Date | string
+  token: string
+  ipAddress?: string | null
+  userAgent?: string | null
+  impersonatedBy?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedCreateNestedManyWithoutSessionInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutSessionInput
+}
+
+export type SessionCreateOrConnectWithoutUserInput = {
+  where: Prisma.SessionWhereUniqueInput
+  create: Prisma.XOR<Prisma.SessionCreateWithoutUserInput, Prisma.SessionUncheckedCreateWithoutUserInput>
+}
+
+export type SessionCreateManyUserInputEnvelope = {
+  data: Prisma.SessionCreateManyUserInput | Prisma.SessionCreateManyUserInput[]
+  skipDuplicates?: boolean
+}
+
+export type SessionUpsertWithWhereUniqueWithoutUserInput = {
+  where: Prisma.SessionWhereUniqueInput
+  update: Prisma.XOR<Prisma.SessionUpdateWithoutUserInput, Prisma.SessionUncheckedUpdateWithoutUserInput>
+  create: Prisma.XOR<Prisma.SessionCreateWithoutUserInput, Prisma.SessionUncheckedCreateWithoutUserInput>
+}
+
+export type SessionUpdateWithWhereUniqueWithoutUserInput = {
+  where: Prisma.SessionWhereUniqueInput
+  data: Prisma.XOR<Prisma.SessionUpdateWithoutUserInput, Prisma.SessionUncheckedUpdateWithoutUserInput>
+}
+
+export type SessionUpdateManyWithWhereWithoutUserInput = {
+  where: Prisma.SessionScalarWhereInput
+  data: Prisma.XOR<Prisma.SessionUpdateManyMutationInput, Prisma.SessionUncheckedUpdateManyWithoutUserInput>
+}
+
+export type SessionScalarWhereInput = {
+  AND?: Prisma.SessionScalarWhereInput | Prisma.SessionScalarWhereInput[]
+  OR?: Prisma.SessionScalarWhereInput[]
+  NOT?: Prisma.SessionScalarWhereInput | Prisma.SessionScalarWhereInput[]
+  id?: Prisma.StringFilter<"Session"> | string
+  expiresAt?: Prisma.DateTimeFilter<"Session"> | Date | string
+  token?: Prisma.StringFilter<"Session"> | string
+  ipAddress?: Prisma.StringNullableFilter<"Session"> | string | null
+  userAgent?: Prisma.StringNullableFilter<"Session"> | string | null
+  userId?: Prisma.StringFilter<"Session"> | string
+  impersonatedBy?: Prisma.StringNullableFilter<"Session"> | string | null
+  createdAt?: Prisma.DateTimeFilter<"Session"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"Session"> | Date | string
 }
 
 export type SessionCreateManyUserInput = {

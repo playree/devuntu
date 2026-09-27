@@ -430,48 +430,6 @@ export type AttachmentSumOrderByAggregateInput = {
   size?: Prisma.SortOrder
 }
 
-export type AttachmentCreateNestedManyWithoutCreatedByInput = {
-  create?: Prisma.XOR<Prisma.AttachmentCreateWithoutCreatedByInput, Prisma.AttachmentUncheckedCreateWithoutCreatedByInput> | Prisma.AttachmentCreateWithoutCreatedByInput[] | Prisma.AttachmentUncheckedCreateWithoutCreatedByInput[]
-  connectOrCreate?: Prisma.AttachmentCreateOrConnectWithoutCreatedByInput | Prisma.AttachmentCreateOrConnectWithoutCreatedByInput[]
-  createMany?: Prisma.AttachmentCreateManyCreatedByInputEnvelope
-  connect?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
-}
-
-export type AttachmentUncheckedCreateNestedManyWithoutCreatedByInput = {
-  create?: Prisma.XOR<Prisma.AttachmentCreateWithoutCreatedByInput, Prisma.AttachmentUncheckedCreateWithoutCreatedByInput> | Prisma.AttachmentCreateWithoutCreatedByInput[] | Prisma.AttachmentUncheckedCreateWithoutCreatedByInput[]
-  connectOrCreate?: Prisma.AttachmentCreateOrConnectWithoutCreatedByInput | Prisma.AttachmentCreateOrConnectWithoutCreatedByInput[]
-  createMany?: Prisma.AttachmentCreateManyCreatedByInputEnvelope
-  connect?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
-}
-
-export type AttachmentUpdateManyWithoutCreatedByNestedInput = {
-  create?: Prisma.XOR<Prisma.AttachmentCreateWithoutCreatedByInput, Prisma.AttachmentUncheckedCreateWithoutCreatedByInput> | Prisma.AttachmentCreateWithoutCreatedByInput[] | Prisma.AttachmentUncheckedCreateWithoutCreatedByInput[]
-  connectOrCreate?: Prisma.AttachmentCreateOrConnectWithoutCreatedByInput | Prisma.AttachmentCreateOrConnectWithoutCreatedByInput[]
-  upsert?: Prisma.AttachmentUpsertWithWhereUniqueWithoutCreatedByInput | Prisma.AttachmentUpsertWithWhereUniqueWithoutCreatedByInput[]
-  createMany?: Prisma.AttachmentCreateManyCreatedByInputEnvelope
-  set?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
-  disconnect?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
-  delete?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
-  connect?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
-  update?: Prisma.AttachmentUpdateWithWhereUniqueWithoutCreatedByInput | Prisma.AttachmentUpdateWithWhereUniqueWithoutCreatedByInput[]
-  updateMany?: Prisma.AttachmentUpdateManyWithWhereWithoutCreatedByInput | Prisma.AttachmentUpdateManyWithWhereWithoutCreatedByInput[]
-  deleteMany?: Prisma.AttachmentScalarWhereInput | Prisma.AttachmentScalarWhereInput[]
-}
-
-export type AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput = {
-  create?: Prisma.XOR<Prisma.AttachmentCreateWithoutCreatedByInput, Prisma.AttachmentUncheckedCreateWithoutCreatedByInput> | Prisma.AttachmentCreateWithoutCreatedByInput[] | Prisma.AttachmentUncheckedCreateWithoutCreatedByInput[]
-  connectOrCreate?: Prisma.AttachmentCreateOrConnectWithoutCreatedByInput | Prisma.AttachmentCreateOrConnectWithoutCreatedByInput[]
-  upsert?: Prisma.AttachmentUpsertWithWhereUniqueWithoutCreatedByInput | Prisma.AttachmentUpsertWithWhereUniqueWithoutCreatedByInput[]
-  createMany?: Prisma.AttachmentCreateManyCreatedByInputEnvelope
-  set?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
-  disconnect?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
-  delete?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
-  connect?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
-  update?: Prisma.AttachmentUpdateWithWhereUniqueWithoutCreatedByInput | Prisma.AttachmentUpdateWithWhereUniqueWithoutCreatedByInput[]
-  updateMany?: Prisma.AttachmentUpdateManyWithWhereWithoutCreatedByInput | Prisma.AttachmentUpdateManyWithWhereWithoutCreatedByInput[]
-  deleteMany?: Prisma.AttachmentScalarWhereInput | Prisma.AttachmentScalarWhereInput[]
-}
-
 export type AttachmentCreateNestedManyWithoutBoardInput = {
   create?: Prisma.XOR<Prisma.AttachmentCreateWithoutBoardInput, Prisma.AttachmentUncheckedCreateWithoutBoardInput> | Prisma.AttachmentCreateWithoutBoardInput[] | Prisma.AttachmentUncheckedCreateWithoutBoardInput[]
   connectOrCreate?: Prisma.AttachmentCreateOrConnectWithoutBoardInput | Prisma.AttachmentCreateOrConnectWithoutBoardInput[]
@@ -514,64 +472,46 @@ export type AttachmentUncheckedUpdateManyWithoutBoardNestedInput = {
   deleteMany?: Prisma.AttachmentScalarWhereInput | Prisma.AttachmentScalarWhereInput[]
 }
 
-export type AttachmentCreateWithoutCreatedByInput = {
-  id?: string
-  key: string
-  mimeType: string
-  size: number
-  originalName: string
-  createdAt?: Date | string
-  board?: Prisma.BoardCreateNestedOneWithoutAttachmentsInput
+export type AttachmentCreateNestedManyWithoutCreatedByInput = {
+  create?: Prisma.XOR<Prisma.AttachmentCreateWithoutCreatedByInput, Prisma.AttachmentUncheckedCreateWithoutCreatedByInput> | Prisma.AttachmentCreateWithoutCreatedByInput[] | Prisma.AttachmentUncheckedCreateWithoutCreatedByInput[]
+  connectOrCreate?: Prisma.AttachmentCreateOrConnectWithoutCreatedByInput | Prisma.AttachmentCreateOrConnectWithoutCreatedByInput[]
+  createMany?: Prisma.AttachmentCreateManyCreatedByInputEnvelope
+  connect?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
 }
 
-export type AttachmentUncheckedCreateWithoutCreatedByInput = {
-  id?: string
-  key: string
-  mimeType: string
-  size: number
-  originalName: string
-  boardId?: string | null
-  createdAt?: Date | string
+export type AttachmentUncheckedCreateNestedManyWithoutCreatedByInput = {
+  create?: Prisma.XOR<Prisma.AttachmentCreateWithoutCreatedByInput, Prisma.AttachmentUncheckedCreateWithoutCreatedByInput> | Prisma.AttachmentCreateWithoutCreatedByInput[] | Prisma.AttachmentUncheckedCreateWithoutCreatedByInput[]
+  connectOrCreate?: Prisma.AttachmentCreateOrConnectWithoutCreatedByInput | Prisma.AttachmentCreateOrConnectWithoutCreatedByInput[]
+  createMany?: Prisma.AttachmentCreateManyCreatedByInputEnvelope
+  connect?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
 }
 
-export type AttachmentCreateOrConnectWithoutCreatedByInput = {
-  where: Prisma.AttachmentWhereUniqueInput
-  create: Prisma.XOR<Prisma.AttachmentCreateWithoutCreatedByInput, Prisma.AttachmentUncheckedCreateWithoutCreatedByInput>
+export type AttachmentUpdateManyWithoutCreatedByNestedInput = {
+  create?: Prisma.XOR<Prisma.AttachmentCreateWithoutCreatedByInput, Prisma.AttachmentUncheckedCreateWithoutCreatedByInput> | Prisma.AttachmentCreateWithoutCreatedByInput[] | Prisma.AttachmentUncheckedCreateWithoutCreatedByInput[]
+  connectOrCreate?: Prisma.AttachmentCreateOrConnectWithoutCreatedByInput | Prisma.AttachmentCreateOrConnectWithoutCreatedByInput[]
+  upsert?: Prisma.AttachmentUpsertWithWhereUniqueWithoutCreatedByInput | Prisma.AttachmentUpsertWithWhereUniqueWithoutCreatedByInput[]
+  createMany?: Prisma.AttachmentCreateManyCreatedByInputEnvelope
+  set?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
+  disconnect?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
+  delete?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
+  connect?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
+  update?: Prisma.AttachmentUpdateWithWhereUniqueWithoutCreatedByInput | Prisma.AttachmentUpdateWithWhereUniqueWithoutCreatedByInput[]
+  updateMany?: Prisma.AttachmentUpdateManyWithWhereWithoutCreatedByInput | Prisma.AttachmentUpdateManyWithWhereWithoutCreatedByInput[]
+  deleteMany?: Prisma.AttachmentScalarWhereInput | Prisma.AttachmentScalarWhereInput[]
 }
 
-export type AttachmentCreateManyCreatedByInputEnvelope = {
-  data: Prisma.AttachmentCreateManyCreatedByInput | Prisma.AttachmentCreateManyCreatedByInput[]
-  skipDuplicates?: boolean
-}
-
-export type AttachmentUpsertWithWhereUniqueWithoutCreatedByInput = {
-  where: Prisma.AttachmentWhereUniqueInput
-  update: Prisma.XOR<Prisma.AttachmentUpdateWithoutCreatedByInput, Prisma.AttachmentUncheckedUpdateWithoutCreatedByInput>
-  create: Prisma.XOR<Prisma.AttachmentCreateWithoutCreatedByInput, Prisma.AttachmentUncheckedCreateWithoutCreatedByInput>
-}
-
-export type AttachmentUpdateWithWhereUniqueWithoutCreatedByInput = {
-  where: Prisma.AttachmentWhereUniqueInput
-  data: Prisma.XOR<Prisma.AttachmentUpdateWithoutCreatedByInput, Prisma.AttachmentUncheckedUpdateWithoutCreatedByInput>
-}
-
-export type AttachmentUpdateManyWithWhereWithoutCreatedByInput = {
-  where: Prisma.AttachmentScalarWhereInput
-  data: Prisma.XOR<Prisma.AttachmentUpdateManyMutationInput, Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByInput>
-}
-
-export type AttachmentScalarWhereInput = {
-  AND?: Prisma.AttachmentScalarWhereInput | Prisma.AttachmentScalarWhereInput[]
-  OR?: Prisma.AttachmentScalarWhereInput[]
-  NOT?: Prisma.AttachmentScalarWhereInput | Prisma.AttachmentScalarWhereInput[]
-  id?: Prisma.StringFilter<"Attachment"> | string
-  key?: Prisma.StringFilter<"Attachment"> | string
-  mimeType?: Prisma.StringFilter<"Attachment"> | string
-  size?: Prisma.IntFilter<"Attachment"> | number
-  originalName?: Prisma.StringFilter<"Attachment"> | string
-  boardId?: Prisma.StringNullableFilter<"Attachment"> | string | null
-  createdById?: Prisma.StringNullableFilter<"Attachment"> | string | null
-  createdAt?: Prisma.DateTimeFilter<"Attachment"> | Date | string
+export type AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput = {
+  create?: Prisma.XOR<Prisma.AttachmentCreateWithoutCreatedByInput, Prisma.AttachmentUncheckedCreateWithoutCreatedByInput> | Prisma.AttachmentCreateWithoutCreatedByInput[] | Prisma.AttachmentUncheckedCreateWithoutCreatedByInput[]
+  connectOrCreate?: Prisma.AttachmentCreateOrConnectWithoutCreatedByInput | Prisma.AttachmentCreateOrConnectWithoutCreatedByInput[]
+  upsert?: Prisma.AttachmentUpsertWithWhereUniqueWithoutCreatedByInput | Prisma.AttachmentUpsertWithWhereUniqueWithoutCreatedByInput[]
+  createMany?: Prisma.AttachmentCreateManyCreatedByInputEnvelope
+  set?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
+  disconnect?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
+  delete?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
+  connect?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
+  update?: Prisma.AttachmentUpdateWithWhereUniqueWithoutCreatedByInput | Prisma.AttachmentUpdateWithWhereUniqueWithoutCreatedByInput[]
+  updateMany?: Prisma.AttachmentUpdateManyWithWhereWithoutCreatedByInput | Prisma.AttachmentUpdateManyWithWhereWithoutCreatedByInput[]
+  deleteMany?: Prisma.AttachmentScalarWhereInput | Prisma.AttachmentScalarWhereInput[]
 }
 
 export type AttachmentCreateWithoutBoardInput = {
@@ -620,7 +560,31 @@ export type AttachmentUpdateManyWithWhereWithoutBoardInput = {
   data: Prisma.XOR<Prisma.AttachmentUpdateManyMutationInput, Prisma.AttachmentUncheckedUpdateManyWithoutBoardInput>
 }
 
-export type AttachmentCreateManyCreatedByInput = {
+export type AttachmentScalarWhereInput = {
+  AND?: Prisma.AttachmentScalarWhereInput | Prisma.AttachmentScalarWhereInput[]
+  OR?: Prisma.AttachmentScalarWhereInput[]
+  NOT?: Prisma.AttachmentScalarWhereInput | Prisma.AttachmentScalarWhereInput[]
+  id?: Prisma.StringFilter<"Attachment"> | string
+  key?: Prisma.StringFilter<"Attachment"> | string
+  mimeType?: Prisma.StringFilter<"Attachment"> | string
+  size?: Prisma.IntFilter<"Attachment"> | number
+  originalName?: Prisma.StringFilter<"Attachment"> | string
+  boardId?: Prisma.StringNullableFilter<"Attachment"> | string | null
+  createdById?: Prisma.StringNullableFilter<"Attachment"> | string | null
+  createdAt?: Prisma.DateTimeFilter<"Attachment"> | Date | string
+}
+
+export type AttachmentCreateWithoutCreatedByInput = {
+  id?: string
+  key: string
+  mimeType: string
+  size: number
+  originalName: string
+  createdAt?: Date | string
+  board?: Prisma.BoardCreateNestedOneWithoutAttachmentsInput
+}
+
+export type AttachmentUncheckedCreateWithoutCreatedByInput = {
   id?: string
   key: string
   mimeType: string
@@ -630,34 +594,30 @@ export type AttachmentCreateManyCreatedByInput = {
   createdAt?: Date | string
 }
 
-export type AttachmentUpdateWithoutCreatedByInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  key?: Prisma.StringFieldUpdateOperationsInput | string
-  mimeType?: Prisma.StringFieldUpdateOperationsInput | string
-  size?: Prisma.IntFieldUpdateOperationsInput | number
-  originalName?: Prisma.StringFieldUpdateOperationsInput | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  board?: Prisma.BoardUpdateOneWithoutAttachmentsNestedInput
+export type AttachmentCreateOrConnectWithoutCreatedByInput = {
+  where: Prisma.AttachmentWhereUniqueInput
+  create: Prisma.XOR<Prisma.AttachmentCreateWithoutCreatedByInput, Prisma.AttachmentUncheckedCreateWithoutCreatedByInput>
 }
 
-export type AttachmentUncheckedUpdateWithoutCreatedByInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  key?: Prisma.StringFieldUpdateOperationsInput | string
-  mimeType?: Prisma.StringFieldUpdateOperationsInput | string
-  size?: Prisma.IntFieldUpdateOperationsInput | number
-  originalName?: Prisma.StringFieldUpdateOperationsInput | string
-  boardId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+export type AttachmentCreateManyCreatedByInputEnvelope = {
+  data: Prisma.AttachmentCreateManyCreatedByInput | Prisma.AttachmentCreateManyCreatedByInput[]
+  skipDuplicates?: boolean
 }
 
-export type AttachmentUncheckedUpdateManyWithoutCreatedByInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  key?: Prisma.StringFieldUpdateOperationsInput | string
-  mimeType?: Prisma.StringFieldUpdateOperationsInput | string
-  size?: Prisma.IntFieldUpdateOperationsInput | number
-  originalName?: Prisma.StringFieldUpdateOperationsInput | string
-  boardId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+export type AttachmentUpsertWithWhereUniqueWithoutCreatedByInput = {
+  where: Prisma.AttachmentWhereUniqueInput
+  update: Prisma.XOR<Prisma.AttachmentUpdateWithoutCreatedByInput, Prisma.AttachmentUncheckedUpdateWithoutCreatedByInput>
+  create: Prisma.XOR<Prisma.AttachmentCreateWithoutCreatedByInput, Prisma.AttachmentUncheckedCreateWithoutCreatedByInput>
+}
+
+export type AttachmentUpdateWithWhereUniqueWithoutCreatedByInput = {
+  where: Prisma.AttachmentWhereUniqueInput
+  data: Prisma.XOR<Prisma.AttachmentUpdateWithoutCreatedByInput, Prisma.AttachmentUncheckedUpdateWithoutCreatedByInput>
+}
+
+export type AttachmentUpdateManyWithWhereWithoutCreatedByInput = {
+  where: Prisma.AttachmentScalarWhereInput
+  data: Prisma.XOR<Prisma.AttachmentUpdateManyMutationInput, Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByInput>
 }
 
 export type AttachmentCreateManyBoardInput = {
@@ -697,6 +657,46 @@ export type AttachmentUncheckedUpdateManyWithoutBoardInput = {
   size?: Prisma.IntFieldUpdateOperationsInput | number
   originalName?: Prisma.StringFieldUpdateOperationsInput | string
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type AttachmentCreateManyCreatedByInput = {
+  id?: string
+  key: string
+  mimeType: string
+  size: number
+  originalName: string
+  boardId?: string | null
+  createdAt?: Date | string
+}
+
+export type AttachmentUpdateWithoutCreatedByInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  mimeType?: Prisma.StringFieldUpdateOperationsInput | string
+  size?: Prisma.IntFieldUpdateOperationsInput | number
+  originalName?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  board?: Prisma.BoardUpdateOneWithoutAttachmentsNestedInput
+}
+
+export type AttachmentUncheckedUpdateWithoutCreatedByInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  mimeType?: Prisma.StringFieldUpdateOperationsInput | string
+  size?: Prisma.IntFieldUpdateOperationsInput | number
+  originalName?: Prisma.StringFieldUpdateOperationsInput | string
+  boardId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type AttachmentUncheckedUpdateManyWithoutCreatedByInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  mimeType?: Prisma.StringFieldUpdateOperationsInput | string
+  size?: Prisma.IntFieldUpdateOperationsInput | number
+  originalName?: Prisma.StringFieldUpdateOperationsInput | string
+  boardId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 

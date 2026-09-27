@@ -310,16 +310,6 @@ export type CommandTargetMemberUncheckedUpdateManyInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type CommandTargetMemberListRelationFilter = {
-  every?: Prisma.CommandTargetMemberWhereInput
-  some?: Prisma.CommandTargetMemberWhereInput
-  none?: Prisma.CommandTargetMemberWhereInput
-}
-
-export type CommandTargetMemberOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
-}
-
 export type CommandTargetMemberTargetKeyUserIdCompoundUniqueInput = {
   targetKey: string
   userId: string
@@ -350,6 +340,20 @@ export type CommandTargetMemberMinOrderByAggregateInput = {
   role?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type CommandTargetMemberListRelationFilter = {
+  every?: Prisma.CommandTargetMemberWhereInput
+  some?: Prisma.CommandTargetMemberWhereInput
+  none?: Prisma.CommandTargetMemberWhereInput
+}
+
+export type CommandTargetMemberOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
+}
+
+export type EnumCommandTargetMemberRoleFieldUpdateOperationsInput = {
+  set?: $Enums.CommandTargetMemberRole
 }
 
 export type CommandTargetMemberCreateNestedManyWithoutUserInput = {
@@ -392,10 +396,6 @@ export type CommandTargetMemberUncheckedUpdateManyWithoutUserNestedInput = {
   update?: Prisma.CommandTargetMemberUpdateWithWhereUniqueWithoutUserInput | Prisma.CommandTargetMemberUpdateWithWhereUniqueWithoutUserInput[]
   updateMany?: Prisma.CommandTargetMemberUpdateManyWithWhereWithoutUserInput | Prisma.CommandTargetMemberUpdateManyWithWhereWithoutUserInput[]
   deleteMany?: Prisma.CommandTargetMemberScalarWhereInput | Prisma.CommandTargetMemberScalarWhereInput[]
-}
-
-export type EnumCommandTargetMemberRoleFieldUpdateOperationsInput = {
-  set?: $Enums.CommandTargetMemberRole
 }
 
 export type CommandTargetMemberCreateWithoutUserInput = {

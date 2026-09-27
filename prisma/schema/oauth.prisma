@@ -1,0 +1,364 @@
+/// OIDC プロバイダとして受け付けるクライアントの登録情報。
+/// better-auth の oauth-provider プラグインが要求するテーブルで、列の増減はライブラリ側の要求に従う。
+model OauthClient {
+  id String @id @default(uuid(7))
+
+  /// クライアント識別子(RFC 6749 の client_id)
+  clientId String
+
+  /// クライアントシークレット。パブリッククライアントでは null
+  clientSecret String?
+
+  /// このクライアントを登録したディスカバリの識別子。null は手動登録 / 動的登録
+  clientDiscoveryId String?
+
+  /// 無効化されたクライアントは認可を受け付けない
+  disabled Boolean? @default(false)
+
+  /// 同意画面を省略する
+  skipConsent Boolean?
+
+  /// `/oauth2/end-session` でのログアウトを許可する
+  enableEndSession Boolean?
+
+  /// sub の払い出し方(public / pairwise)
+  subjectType String?
+
+  /// 要求を許可するスコープ。空は制限なし
+  scopes String[] @default([])
+
+  /// client_credentials グラントで許可するスコープ。空は発行を許可しない
+  clientCredentialsScopes String[] @default([])
+
+  /// クライアントの登録者
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// 同意画面に表示するクライアント名
+  name String?
+
+  /// クライアントのWebサイトURL
+  uri String?
+
+  /// 同意画面に表示するアイコンのURL
+  icon String?
+
+  /// 連絡先(メールアドレス等)
+  contacts String[] @default([])
+
+  /// 利用規約のURL
+  tos String?
+
+  /// プライバシーポリシーのURL
+  policy String?
+
+  /// クライアントソフトウェアの識別子
+  softwareId String?
+
+  /// クライアントソフトウェアのバージョン
+  softwareVersion String?
+
+  /// 動的登録で提示されたソフトウェアステートメント(JWT)
+  softwareStatement String?
+
+  /// 許可するリダイレクト先。プロトコル・ポート・パスまで含めた完全一致で照合する
+  redirectUris String[] @default([])
+
+  /// ログアウト後のリダイレクト先として許可するURL
+  postLogoutRedirectUris String[] @default([])
+
+  /// バックチャネルログアウトの通知先URL。登録がこの機能のオプトインになる
+  backchannelLogoutUri String?
+
+  /// ログアウトトークンに sid クレームを必須とするか
+  backchannelLogoutSessionRequired Boolean?
+
+  /// トークンエンドポイントのクライアント認証方式
+  tokenEndpointAuthMethod String?
+
+  /// リダイレクトURIの検証方針を決めるアプリ種別(web / native)
+  applicationType String?
+
+  /// クライアントの公開鍵(JWK Set)。jwksUri とは排他
+  jwks String?
+
+  /// クライアントの公開鍵の取得先URI。jwks とは排他
+  jwksUri String?
+
+  /// 許可する認可グラント種別
+  grantTypes String[] @default([])
+
+  /// 許可するレスポンス種別
+  responseTypes String[] @default([])
+
+  /// 認可コードフローで PKCE を必須にする
+  requirePKCE Boolean?
+
+  /// DPoP による送信者制約付きトークンを必須にする
+  dpopBoundAccessTokens Boolean? @default(false)
+
+  /// クライアントの所有者を表す外部の識別子(組織やチームなど)
+  referenceId String?
+
+  /// 追加情報
+  metadata Json?
+
+  // メタデータ
+  createdAt DateTime?
+  updatedAt DateTime?
+
+  oauthrefreshtokens   OauthRefreshToken[]
+  oauthaccesstokens    OauthAccessToken[]
+  oauthconsents        OauthConsent[]
+  oauthclientresources OauthClientResource[]
+
+  @@unique([clientId])
+  @@index([userId])
+  @@map("oauth_client")
+}
+
+/// 発行済みのリフレッシュトークン。better-auth の oauth-provider プラグインが要求するテーブル。
+model OauthRefreshToken {
+  id String @id @default(uuid(7))
+
+  /// リフレッシュトークンの値
+  token String
+
+  /// 発行先クライアント
+  clientId    String
+  oauthclient OauthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+
+  /// 発行の元になったログインセッション。セッション削除時は SetNull
+  sessionId String?
+  session   Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  /// トークンの対象ユーザー
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// クライアントの所有者を表す外部の識別子
+  referenceId String?
+
+  /// 発行の元になった認可コードの識別子
+  authorizationCodeId String?
+
+  /// アクセストークンの発行先として認可された保護リソース(RFC 8707)
+  resources String[]
+
+  /// UserInfo で返すよう要求されたクレーム
+  requestedUserInfoClaims String[]
+
+  /// トークンの有効期限
+  expiresAt DateTime
+
+  /// 失効させた時刻。null は有効
+  revoked DateTime?
+
+  /// ローテーション(再発行)した時刻
+  rotatedAt DateTime?
+
+  /// ローテーション済みトークンが再提示された場合に返す応答。リプレイの検出に使う
+  rotationReplayResponse String?
+
+  /// 上記の応答を保持する期限
+  rotationReplayExpiresAt DateTime?
+
+  /// 元になったユーザー認証の時刻(auth_time クレーム)
+  authTime DateTime?
+
+  /// 送信者制約(DPoP の cnf クレーム)
+  confirmation Json?
+
+  /// 認可されたスコープ
+  scopes String[]
+
+  // メタデータ
+  createdAt DateTime @default(now())
+
+  oauthaccesstokens OauthAccessToken[]
+
+  @@unique([token])
+  @@index([clientId])
+  @@index([sessionId])
+  @@index([userId])
+  @@index([authorizationCodeId])
+  @@map("oauth_refresh_token")
+}
+
+/// 発行済みのアクセストークン。better-auth の oauth-provider プラグインが要求するテーブル。
+model OauthAccessToken {
+  id String @id @default(uuid(7))
+
+  /// アクセストークンの値
+  token String
+
+  /// 発行先クライアント
+  clientId    String
+  oauthclient OauthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+
+  /// 発行の元になったログインセッション。セッション削除時は SetNull
+  sessionId String?
+  session   Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  /// トークンの対象ユーザー。client_credentials では null
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// クライアントの所有者を表す外部の識別子
+  referenceId String?
+
+  /// 発行の元になった認可コードの識別子
+  authorizationCodeId String?
+
+  /// トークンの発行先となる保護リソース(RFC 8707)
+  resources String[]
+
+  /// UserInfo で返すよう要求されたクレーム
+  requestedUserInfoClaims String[]
+
+  /// 発行の元になったリフレッシュトークン
+  refreshId         String?
+  oauthrefreshtoken OauthRefreshToken? @relation(fields: [refreshId], references: [id], onDelete: Cascade)
+
+  /// トークンの有効期限
+  expiresAt DateTime
+
+  /// 失効させた時刻。null は有効
+  revoked DateTime?
+
+  /// 送信者制約(DPoP の cnf クレーム)
+  confirmation Json?
+
+  /// 認可されたスコープ
+  scopes String[]
+
+  // メタデータ
+  createdAt DateTime @default(now())
+
+  @@unique([token])
+  @@index([clientId])
+  @@index([sessionId])
+  @@index([userId])
+  @@index([refreshId])
+  @@index([authorizationCodeId])
+  @@map("oauth_access_token")
+}
+
+/// ユーザーがクライアントへ与えた同意の記録。同意画面の省略判定に使う。
+model OauthConsent {
+  id String @id @default(uuid(7))
+
+  /// 同意の対象クライアント
+  clientId    String
+  oauthclient OauthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+
+  /// 同意したユーザー
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// クライアントの所有者を表す外部の識別子
+  referenceId String?
+
+  /// 同意した保護リソース(RFC 8707)
+  resources String[]
+
+  /// 同意した UserInfo のクレーム
+  requestedUserInfoClaims String[]
+
+  /// 同意したスコープ
+  scopes String[]
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId])
+  @@index([userId])
+  @@map("oauth_consent")
+}
+
+/// アクセストークンの発行先となる保護リソース(RFC 8707 の `resource`)。
+/// TTL・スコープ・クレームを null にしておくとプラグイン既定値を継承する。
+model OauthResource {
+  id String @id @default(uuid(7))
+
+  /// リソース識別子。トークン要求の `resource` パラメータと一致させる
+  identifier String
+
+  /// 管理画面に表示する名称
+  name String
+
+  /// アクセストークンの有効期間(秒)
+  accessTokenTtl Int?
+
+  /// リフレッシュトークンの有効期間(秒)
+  refreshTokenTtl Int?
+
+  /// アクセストークンの署名アルゴリズム
+  signingAlgorithm String?
+
+  /// 署名に使う鍵(Jwks)のID
+  signingKeyId String?
+
+  /// このリソース向けに許可するスコープ
+  allowedScopes String[]
+
+  /// アクセストークンへ追加するクレーム
+  customClaims Json?
+
+  /// DPoP による送信者制約付きトークンを必須にする
+  dpopBoundAccessTokensRequired Boolean? @default(false)
+
+  /// 無効化されたリソースはトークンの発行先にできない
+  disabled Boolean? @default(false)
+
+  /// 設定を変更した際に上げる版数
+  policyVersion Int? @default(1)
+
+  /// 追加情報
+  metadata Json?
+
+  // メタデータ
+  createdAt DateTime?
+  updatedAt DateTime?
+
+  oauthclientresources OauthClientResource[]
+
+  @@unique([identifier])
+  @@map("oauth_resource")
+}
+
+/// どのクライアントがどのリソースを要求できるかの中間テーブル。
+model OauthClientResource {
+  id String @id @default(uuid(7))
+
+  /// 要求元のクライアント
+  clientId    String
+  oauthclient OauthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+
+  /// 要求先の保護リソース
+  resourceId    String
+  oauthresource OauthResource @relation(fields: [resourceId], references: [identifier], onDelete: Cascade)
+
+  /// 追加情報
+  metadata Json?
+
+  // メタデータ
+  createdAt DateTime?
+
+  @@unique([clientId, resourceId])
+  @@index([clientId])
+  @@index([resourceId])
+  @@map("oauth_client_resource")
+}
+
+/// private_key_jwt のクライアントアサーション `jti` の使い捨て記録。
+model OauthClientAssertion {
+  /// アサーション由来のダイジェスト。better-auth が入れるため既定値は持たない
+  id String @id
+
+  /// この記録を掃除してよくなる時刻(アサーションの有効期限)
+  expiresAt DateTime
+
+  @@map("oauth_client_assertion")
+}

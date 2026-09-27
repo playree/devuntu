@@ -267,16 +267,6 @@ export type AgentApproverGroupUncheckedUpdateManyInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type AgentApproverGroupListRelationFilter = {
-  every?: Prisma.AgentApproverGroupWhereInput
-  some?: Prisma.AgentApproverGroupWhereInput
-  none?: Prisma.AgentApproverGroupWhereInput
-}
-
-export type AgentApproverGroupOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
-}
-
 export type AgentApproverGroupAgentIdGroupIdCompoundUniqueInput = {
   agentId: string
   groupId: string
@@ -301,6 +291,16 @@ export type AgentApproverGroupMinOrderByAggregateInput = {
   agentId?: Prisma.SortOrder
   groupId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+}
+
+export type AgentApproverGroupListRelationFilter = {
+  every?: Prisma.AgentApproverGroupWhereInput
+  some?: Prisma.AgentApproverGroupWhereInput
+  none?: Prisma.AgentApproverGroupWhereInput
+}
+
+export type AgentApproverGroupOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
 }
 
 export type AgentApproverGroupCreateNestedManyWithoutAgentInput = {

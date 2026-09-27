@@ -1,0 +1,49 @@
+/// 予定表の公開設定。publicId を知っている人だけが公開ページを開ける。
+model CalendarShare {
+  id String @id @default(uuid(7))
+
+  /// 予定表を公開するユーザー。1ユーザー1行
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// 公開URLに使うランダムID。作り直すと以前のURLは無効になる
+  publicId String @unique
+
+  /// 公開設定。`title` に公開ページの表示タイトルを持つ
+  options Json?
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([publicId])
+  @@map("calendar_share")
+}
+
+/// 予定表に固定で埋める予定(定例など)。曜日と時間帯で繰り返す。
+model CalendarBusyTime {
+  id String @id @default(uuid(7))
+
+  /// 設定の持ち主
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// 件名(管理画面での識別ラベル。公開カレンダーには非表示)
+  title String
+
+  /// 対象の曜日。dayjs .day() と同じ 0=日 .. 6=土。1件で複数曜日を保持
+  weekdays Int[]
+
+  /// 開始時刻。0:00 からの分。0..1410、30分刻み
+  startMin Int
+
+  /// 終了時刻。0:00 からの分。30..1440(24:00=1440)、30分刻み。startMin < endMin
+  endMin Int
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("calendar_busy_time")
+}

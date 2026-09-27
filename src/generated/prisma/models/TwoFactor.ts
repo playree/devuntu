@@ -357,16 +357,6 @@ export type TwoFactorUncheckedUpdateManyInput = {
   lockedUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
-export type TwoFactorListRelationFilter = {
-  every?: Prisma.TwoFactorWhereInput
-  some?: Prisma.TwoFactorWhereInput
-  none?: Prisma.TwoFactorWhereInput
-}
-
-export type TwoFactorOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
-}
-
 export type TwoFactorCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   secret?: Prisma.SortOrder
@@ -403,6 +393,20 @@ export type TwoFactorMinOrderByAggregateInput = {
 
 export type TwoFactorSumOrderByAggregateInput = {
   failedVerificationCount?: Prisma.SortOrder
+}
+
+export type TwoFactorListRelationFilter = {
+  every?: Prisma.TwoFactorWhereInput
+  some?: Prisma.TwoFactorWhereInput
+  none?: Prisma.TwoFactorWhereInput
+}
+
+export type TwoFactorOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
+}
+
+export type NullableBoolFieldUpdateOperationsInput = {
+  set?: boolean | null
 }
 
 export type TwoFactorCreateNestedManyWithoutUserInput = {

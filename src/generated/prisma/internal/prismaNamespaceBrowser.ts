@@ -51,7 +51,6 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
-  User: 'User',
   AgentToken: 'AgentToken',
   McpToken: 'McpToken',
   AgentRunner: 'AgentRunner',
@@ -64,6 +63,26 @@ export const ModelName = {
   TwoFactor: 'TwoFactor',
   Passkey: 'Passkey',
   Jwks: 'Jwks',
+  Board: 'Board',
+  BoardKeyHistory: 'BoardKeyHistory',
+  Tag: 'Tag',
+  TicketTag: 'TicketTag',
+  BoardMember: 'BoardMember',
+  BoardGroup: 'BoardGroup',
+  CalendarShare: 'CalendarShare',
+  CalendarBusyTime: 'CalendarBusyTime',
+  CommandTargetMember: 'CommandTargetMember',
+  CommandTargetGroup: 'CommandTargetGroup',
+  CommandRun: 'CommandRun',
+  CommandRunChunk: 'CommandRunChunk',
+  TicketLink: 'TicketLink',
+  BoardRepository: 'BoardRepository',
+  GitCheckSuite: 'GitCheckSuite',
+  UserNotifySetting: 'UserNotifySetting',
+  WebPushSubscription: 'WebPushSubscription',
+  BoardNotifySetting: 'BoardNotifySetting',
+  NotifyOutbox: 'NotifyOutbox',
+  NotifyDelivery: 'NotifyDelivery',
   OauthClient: 'OauthClient',
   OauthRefreshToken: 'OauthRefreshToken',
   OauthAccessToken: 'OauthAccessToken',
@@ -77,31 +96,12 @@ export const ModelName = {
   UploadNonce: 'UploadNonce',
   KeyValueStore: 'KeyValueStore',
   AppVersion: 'AppVersion',
-  Group: 'Group',
-  UserGroup: 'UserGroup',
-  CalendarShare: 'CalendarShare',
-  CalendarBusyTime: 'CalendarBusyTime',
-  Board: 'Board',
-  BoardKeyHistory: 'BoardKeyHistory',
-  Tag: 'Tag',
-  TicketTag: 'TicketTag',
-  BoardMember: 'BoardMember',
-  BoardGroup: 'BoardGroup',
   Ticket: 'Ticket',
   TicketComment: 'TicketComment',
   TicketCriterion: 'TicketCriterion',
-  TicketLink: 'TicketLink',
-  BoardRepository: 'BoardRepository',
-  GitCheckSuite: 'GitCheckSuite',
-  UserNotifySetting: 'UserNotifySetting',
-  WebPushSubscription: 'WebPushSubscription',
-  BoardNotifySetting: 'BoardNotifySetting',
-  NotifyOutbox: 'NotifyOutbox',
-  NotifyDelivery: 'NotifyDelivery',
-  CommandTargetMember: 'CommandTargetMember',
-  CommandTargetGroup: 'CommandTargetGroup',
-  CommandRun: 'CommandRun',
-  CommandRunChunk: 'CommandRunChunk'
+  User: 'User',
+  Group: 'Group',
+  UserGroup: 'UserGroup'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -118,29 +118,6 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 } as const)
 
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
-
-
-export const UserScalarFieldEnum = {
-  id: 'id',
-  name: 'name',
-  email: 'email',
-  emailVerified: 'emailVerified',
-  image: 'image',
-  role: 'role',
-  banned: 'banned',
-  banReason: 'banReason',
-  banExpires: 'banExpires',
-  twoFactorEnabled: 'twoFactorEnabled',
-  nameLocked: 'nameLocked',
-  locale: 'locale',
-  lastLoginAt: 'lastLoginAt',
-  timezone: 'timezone',
-  isAgent: 'isAgent',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
 
 
 export const AgentTokenScalarFieldEnum = {
@@ -314,6 +291,298 @@ export const JwksScalarFieldEnum = {
 } as const
 
 export type JwksScalarFieldEnum = (typeof JwksScalarFieldEnum)[keyof typeof JwksScalarFieldEnum]
+
+
+export const BoardScalarFieldEnum = {
+  id: 'id',
+  kind: 'kind',
+  privateOwnerId: 'privateOwnerId',
+  key: 'key',
+  ticketSeq: 'ticketSeq',
+  name: 'name',
+  description: 'description',
+  archived: 'archived',
+  completeOnPrMerge: 'completeOnPrMerge',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BoardScalarFieldEnum = (typeof BoardScalarFieldEnum)[keyof typeof BoardScalarFieldEnum]
+
+
+export const BoardKeyHistoryScalarFieldEnum = {
+  key: 'key',
+  boardId: 'boardId',
+  createdAt: 'createdAt'
+} as const
+
+export type BoardKeyHistoryScalarFieldEnum = (typeof BoardKeyHistoryScalarFieldEnum)[keyof typeof BoardKeyHistoryScalarFieldEnum]
+
+
+export const TagScalarFieldEnum = {
+  id: 'id',
+  boardId: 'boardId',
+  name: 'name',
+  color: 'color',
+  order: 'order',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TagScalarFieldEnum = (typeof TagScalarFieldEnum)[keyof typeof TagScalarFieldEnum]
+
+
+export const TicketTagScalarFieldEnum = {
+  id: 'id',
+  ticketId: 'ticketId',
+  tagId: 'tagId',
+  createdAt: 'createdAt'
+} as const
+
+export type TicketTagScalarFieldEnum = (typeof TicketTagScalarFieldEnum)[keyof typeof TicketTagScalarFieldEnum]
+
+
+export const BoardMemberScalarFieldEnum = {
+  id: 'id',
+  boardId: 'boardId',
+  userId: 'userId',
+  role: 'role',
+  createdAt: 'createdAt'
+} as const
+
+export type BoardMemberScalarFieldEnum = (typeof BoardMemberScalarFieldEnum)[keyof typeof BoardMemberScalarFieldEnum]
+
+
+export const BoardGroupScalarFieldEnum = {
+  id: 'id',
+  boardId: 'boardId',
+  groupId: 'groupId',
+  createdAt: 'createdAt'
+} as const
+
+export type BoardGroupScalarFieldEnum = (typeof BoardGroupScalarFieldEnum)[keyof typeof BoardGroupScalarFieldEnum]
+
+
+export const CalendarShareScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  publicId: 'publicId',
+  options: 'options',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CalendarShareScalarFieldEnum = (typeof CalendarShareScalarFieldEnum)[keyof typeof CalendarShareScalarFieldEnum]
+
+
+export const CalendarBusyTimeScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  title: 'title',
+  weekdays: 'weekdays',
+  startMin: 'startMin',
+  endMin: 'endMin',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CalendarBusyTimeScalarFieldEnum = (typeof CalendarBusyTimeScalarFieldEnum)[keyof typeof CalendarBusyTimeScalarFieldEnum]
+
+
+export const CommandTargetMemberScalarFieldEnum = {
+  id: 'id',
+  targetKey: 'targetKey',
+  userId: 'userId',
+  role: 'role',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CommandTargetMemberScalarFieldEnum = (typeof CommandTargetMemberScalarFieldEnum)[keyof typeof CommandTargetMemberScalarFieldEnum]
+
+
+export const CommandTargetGroupScalarFieldEnum = {
+  id: 'id',
+  targetKey: 'targetKey',
+  groupId: 'groupId',
+  createdAt: 'createdAt'
+} as const
+
+export type CommandTargetGroupScalarFieldEnum = (typeof CommandTargetGroupScalarFieldEnum)[keyof typeof CommandTargetGroupScalarFieldEnum]
+
+
+export const CommandRunScalarFieldEnum = {
+  id: 'id',
+  commandKey: 'commandKey',
+  commandLabel: 'commandLabel',
+  targetLabel: 'targetLabel',
+  userId: 'userId',
+  userName: 'userName',
+  params: 'params',
+  argsPreview: 'argsPreview',
+  status: 'status',
+  activeKey: 'activeKey',
+  workerId: 'workerId',
+  claimedAt: 'claimedAt',
+  heartbeatAt: 'heartbeatAt',
+  cancelRequestedAt: 'cancelRequestedAt',
+  cancelRequestedBy: 'cancelRequestedBy',
+  exitCode: 'exitCode',
+  failureKind: 'failureKind',
+  lastSeq: 'lastSeq',
+  bytes: 'bytes',
+  truncated: 'truncated',
+  queuedAt: 'queuedAt',
+  startedAt: 'startedAt',
+  finishedAt: 'finishedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CommandRunScalarFieldEnum = (typeof CommandRunScalarFieldEnum)[keyof typeof CommandRunScalarFieldEnum]
+
+
+export const CommandRunChunkScalarFieldEnum = {
+  runId: 'runId',
+  seq: 'seq',
+  stream: 'stream',
+  text: 'text',
+  at: 'at'
+} as const
+
+export type CommandRunChunkScalarFieldEnum = (typeof CommandRunChunkScalarFieldEnum)[keyof typeof CommandRunChunkScalarFieldEnum]
+
+
+export const TicketLinkScalarFieldEnum = {
+  id: 'id',
+  ticketId: 'ticketId',
+  provider: 'provider',
+  kind: 'kind',
+  baseUrl: 'baseUrl',
+  repo: 'repo',
+  ref: 'ref',
+  url: 'url',
+  title: 'title',
+  prState: 'prState',
+  headSha: 'headSha',
+  syncedAt: 'syncedAt',
+  source: 'source',
+  dismissed: 'dismissed',
+  createdById: 'createdById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TicketLinkScalarFieldEnum = (typeof TicketLinkScalarFieldEnum)[keyof typeof TicketLinkScalarFieldEnum]
+
+
+export const BoardRepositoryScalarFieldEnum = {
+  id: 'id',
+  boardId: 'boardId',
+  provider: 'provider',
+  baseUrl: 'baseUrl',
+  repo: 'repo',
+  webhookAuth: 'webhookAuth',
+  webhookSecret: 'webhookSecret',
+  lastReceivedAt: 'lastReceivedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BoardRepositoryScalarFieldEnum = (typeof BoardRepositoryScalarFieldEnum)[keyof typeof BoardRepositoryScalarFieldEnum]
+
+
+export const GitCheckSuiteScalarFieldEnum = {
+  id: 'id',
+  provider: 'provider',
+  baseUrl: 'baseUrl',
+  repo: 'repo',
+  suiteId: 'suiteId',
+  repositoryId: 'repositoryId',
+  headSha: 'headSha',
+  appName: 'appName',
+  status: 'status',
+  conclusion: 'conclusion',
+  syncedAt: 'syncedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type GitCheckSuiteScalarFieldEnum = (typeof GitCheckSuiteScalarFieldEnum)[keyof typeof GitCheckSuiteScalarFieldEnum]
+
+
+export const UserNotifySettingScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  event: 'event',
+  email: 'email',
+  slack: 'slack',
+  webpush: 'webpush',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UserNotifySettingScalarFieldEnum = (typeof UserNotifySettingScalarFieldEnum)[keyof typeof UserNotifySettingScalarFieldEnum]
+
+
+export const WebPushSubscriptionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  endpoint: 'endpoint',
+  p256dh: 'p256dh',
+  auth: 'auth',
+  label: 'label',
+  lastUsedAt: 'lastUsedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type WebPushSubscriptionScalarFieldEnum = (typeof WebPushSubscriptionScalarFieldEnum)[keyof typeof WebPushSubscriptionScalarFieldEnum]
+
+
+export const BoardNotifySettingScalarFieldEnum = {
+  id: 'id',
+  boardId: 'boardId',
+  event: 'event',
+  slackChannelId: 'slackChannelId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BoardNotifySettingScalarFieldEnum = (typeof BoardNotifySettingScalarFieldEnum)[keyof typeof BoardNotifySettingScalarFieldEnum]
+
+
+export const NotifyOutboxScalarFieldEnum = {
+  id: 'id',
+  event: 'event',
+  actorId: 'actorId',
+  targetUserIds: 'targetUserIds',
+  payload: 'payload',
+  status: 'status',
+  attempts: 'attempts',
+  claimedAt: 'claimedAt',
+  failedAt: 'failedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type NotifyOutboxScalarFieldEnum = (typeof NotifyOutboxScalarFieldEnum)[keyof typeof NotifyOutboxScalarFieldEnum]
+
+
+export const NotifyDeliveryScalarFieldEnum = {
+  id: 'id',
+  outboxId: 'outboxId',
+  channel: 'channel',
+  userId: 'userId',
+  slackChannelId: 'slackChannelId',
+  status: 'status',
+  scheduledAt: 'scheduledAt',
+  attempts: 'attempts',
+  claimedAt: 'claimedAt',
+  lastError: 'lastError',
+  failedAt: 'failedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type NotifyDeliveryScalarFieldEnum = (typeof NotifyDeliveryScalarFieldEnum)[keyof typeof NotifyDeliveryScalarFieldEnum]
 
 
 export const OauthClientScalarFieldEnum = {
@@ -528,123 +797,6 @@ export const AppVersionScalarFieldEnum = {
 export type AppVersionScalarFieldEnum = (typeof AppVersionScalarFieldEnum)[keyof typeof AppVersionScalarFieldEnum]
 
 
-export const GroupScalarFieldEnum = {
-  id: 'id',
-  name: 'name',
-  description: 'description',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type GroupScalarFieldEnum = (typeof GroupScalarFieldEnum)[keyof typeof GroupScalarFieldEnum]
-
-
-export const UserGroupScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  groupId: 'groupId',
-  createdAt: 'createdAt'
-} as const
-
-export type UserGroupScalarFieldEnum = (typeof UserGroupScalarFieldEnum)[keyof typeof UserGroupScalarFieldEnum]
-
-
-export const CalendarShareScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  publicId: 'publicId',
-  options: 'options',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type CalendarShareScalarFieldEnum = (typeof CalendarShareScalarFieldEnum)[keyof typeof CalendarShareScalarFieldEnum]
-
-
-export const CalendarBusyTimeScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  title: 'title',
-  weekdays: 'weekdays',
-  startMin: 'startMin',
-  endMin: 'endMin',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type CalendarBusyTimeScalarFieldEnum = (typeof CalendarBusyTimeScalarFieldEnum)[keyof typeof CalendarBusyTimeScalarFieldEnum]
-
-
-export const BoardScalarFieldEnum = {
-  id: 'id',
-  kind: 'kind',
-  privateOwnerId: 'privateOwnerId',
-  key: 'key',
-  ticketSeq: 'ticketSeq',
-  name: 'name',
-  description: 'description',
-  archived: 'archived',
-  completeOnPrMerge: 'completeOnPrMerge',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type BoardScalarFieldEnum = (typeof BoardScalarFieldEnum)[keyof typeof BoardScalarFieldEnum]
-
-
-export const BoardKeyHistoryScalarFieldEnum = {
-  key: 'key',
-  boardId: 'boardId',
-  createdAt: 'createdAt'
-} as const
-
-export type BoardKeyHistoryScalarFieldEnum = (typeof BoardKeyHistoryScalarFieldEnum)[keyof typeof BoardKeyHistoryScalarFieldEnum]
-
-
-export const TagScalarFieldEnum = {
-  id: 'id',
-  boardId: 'boardId',
-  name: 'name',
-  color: 'color',
-  order: 'order',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type TagScalarFieldEnum = (typeof TagScalarFieldEnum)[keyof typeof TagScalarFieldEnum]
-
-
-export const TicketTagScalarFieldEnum = {
-  id: 'id',
-  ticketId: 'ticketId',
-  tagId: 'tagId',
-  createdAt: 'createdAt'
-} as const
-
-export type TicketTagScalarFieldEnum = (typeof TicketTagScalarFieldEnum)[keyof typeof TicketTagScalarFieldEnum]
-
-
-export const BoardMemberScalarFieldEnum = {
-  id: 'id',
-  boardId: 'boardId',
-  userId: 'userId',
-  role: 'role',
-  createdAt: 'createdAt'
-} as const
-
-export type BoardMemberScalarFieldEnum = (typeof BoardMemberScalarFieldEnum)[keyof typeof BoardMemberScalarFieldEnum]
-
-
-export const BoardGroupScalarFieldEnum = {
-  id: 'id',
-  boardId: 'boardId',
-  groupId: 'groupId',
-  createdAt: 'createdAt'
-} as const
-
-export type BoardGroupScalarFieldEnum = (typeof BoardGroupScalarFieldEnum)[keyof typeof BoardGroupScalarFieldEnum]
-
-
 export const TicketScalarFieldEnum = {
   id: 'id',
   boardId: 'boardId',
@@ -701,200 +853,48 @@ export const TicketCriterionScalarFieldEnum = {
 export type TicketCriterionScalarFieldEnum = (typeof TicketCriterionScalarFieldEnum)[keyof typeof TicketCriterionScalarFieldEnum]
 
 
-export const TicketLinkScalarFieldEnum = {
+export const UserScalarFieldEnum = {
   id: 'id',
-  ticketId: 'ticketId',
-  provider: 'provider',
-  kind: 'kind',
-  baseUrl: 'baseUrl',
-  repo: 'repo',
-  ref: 'ref',
-  url: 'url',
-  title: 'title',
-  prState: 'prState',
-  headSha: 'headSha',
-  syncedAt: 'syncedAt',
-  source: 'source',
-  dismissed: 'dismissed',
-  createdById: 'createdById',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type TicketLinkScalarFieldEnum = (typeof TicketLinkScalarFieldEnum)[keyof typeof TicketLinkScalarFieldEnum]
-
-
-export const BoardRepositoryScalarFieldEnum = {
-  id: 'id',
-  boardId: 'boardId',
-  provider: 'provider',
-  baseUrl: 'baseUrl',
-  repo: 'repo',
-  webhookAuth: 'webhookAuth',
-  webhookSecret: 'webhookSecret',
-  lastReceivedAt: 'lastReceivedAt',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type BoardRepositoryScalarFieldEnum = (typeof BoardRepositoryScalarFieldEnum)[keyof typeof BoardRepositoryScalarFieldEnum]
-
-
-export const GitCheckSuiteScalarFieldEnum = {
-  id: 'id',
-  provider: 'provider',
-  baseUrl: 'baseUrl',
-  repo: 'repo',
-  suiteId: 'suiteId',
-  repositoryId: 'repositoryId',
-  headSha: 'headSha',
-  appName: 'appName',
-  status: 'status',
-  conclusion: 'conclusion',
-  syncedAt: 'syncedAt',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type GitCheckSuiteScalarFieldEnum = (typeof GitCheckSuiteScalarFieldEnum)[keyof typeof GitCheckSuiteScalarFieldEnum]
-
-
-export const UserNotifySettingScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  event: 'event',
+  name: 'name',
   email: 'email',
-  slack: 'slack',
-  webpush: 'webpush',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type UserNotifySettingScalarFieldEnum = (typeof UserNotifySettingScalarFieldEnum)[keyof typeof UserNotifySettingScalarFieldEnum]
-
-
-export const WebPushSubscriptionScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  endpoint: 'endpoint',
-  p256dh: 'p256dh',
-  auth: 'auth',
-  label: 'label',
-  lastUsedAt: 'lastUsedAt',
-  createdAt: 'createdAt'
-} as const
-
-export type WebPushSubscriptionScalarFieldEnum = (typeof WebPushSubscriptionScalarFieldEnum)[keyof typeof WebPushSubscriptionScalarFieldEnum]
-
-
-export const BoardNotifySettingScalarFieldEnum = {
-  id: 'id',
-  boardId: 'boardId',
-  event: 'event',
-  slackChannelId: 'slackChannelId',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type BoardNotifySettingScalarFieldEnum = (typeof BoardNotifySettingScalarFieldEnum)[keyof typeof BoardNotifySettingScalarFieldEnum]
-
-
-export const NotifyOutboxScalarFieldEnum = {
-  id: 'id',
-  event: 'event',
-  actorId: 'actorId',
-  targetUserIds: 'targetUserIds',
-  payload: 'payload',
-  status: 'status',
-  attempts: 'attempts',
-  claimedAt: 'claimedAt',
-  failedAt: 'failedAt',
-  createdAt: 'createdAt'
-} as const
-
-export type NotifyOutboxScalarFieldEnum = (typeof NotifyOutboxScalarFieldEnum)[keyof typeof NotifyOutboxScalarFieldEnum]
-
-
-export const NotifyDeliveryScalarFieldEnum = {
-  id: 'id',
-  outboxId: 'outboxId',
-  channel: 'channel',
-  userId: 'userId',
-  slackChannelId: 'slackChannelId',
-  status: 'status',
-  scheduledAt: 'scheduledAt',
-  attempts: 'attempts',
-  claimedAt: 'claimedAt',
-  lastError: 'lastError',
-  failedAt: 'failedAt',
-  createdAt: 'createdAt'
-} as const
-
-export type NotifyDeliveryScalarFieldEnum = (typeof NotifyDeliveryScalarFieldEnum)[keyof typeof NotifyDeliveryScalarFieldEnum]
-
-
-export const CommandTargetMemberScalarFieldEnum = {
-  id: 'id',
-  targetKey: 'targetKey',
-  userId: 'userId',
+  emailVerified: 'emailVerified',
+  image: 'image',
   role: 'role',
+  banned: 'banned',
+  banReason: 'banReason',
+  banExpires: 'banExpires',
+  twoFactorEnabled: 'twoFactorEnabled',
+  nameLocked: 'nameLocked',
+  locale: 'locale',
+  lastLoginAt: 'lastLoginAt',
+  timezone: 'timezone',
+  isAgent: 'isAgent',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
-export type CommandTargetMemberScalarFieldEnum = (typeof CommandTargetMemberScalarFieldEnum)[keyof typeof CommandTargetMemberScalarFieldEnum]
+export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
 
 
-export const CommandTargetGroupScalarFieldEnum = {
+export const GroupScalarFieldEnum = {
   id: 'id',
-  targetKey: 'targetKey',
+  name: 'name',
+  description: 'description',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type GroupScalarFieldEnum = (typeof GroupScalarFieldEnum)[keyof typeof GroupScalarFieldEnum]
+
+
+export const UserGroupScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
   groupId: 'groupId',
   createdAt: 'createdAt'
 } as const
 
-export type CommandTargetGroupScalarFieldEnum = (typeof CommandTargetGroupScalarFieldEnum)[keyof typeof CommandTargetGroupScalarFieldEnum]
-
-
-export const CommandRunScalarFieldEnum = {
-  id: 'id',
-  commandKey: 'commandKey',
-  commandLabel: 'commandLabel',
-  targetLabel: 'targetLabel',
-  userId: 'userId',
-  userName: 'userName',
-  params: 'params',
-  argsPreview: 'argsPreview',
-  status: 'status',
-  activeKey: 'activeKey',
-  workerId: 'workerId',
-  claimedAt: 'claimedAt',
-  heartbeatAt: 'heartbeatAt',
-  cancelRequestedAt: 'cancelRequestedAt',
-  cancelRequestedBy: 'cancelRequestedBy',
-  exitCode: 'exitCode',
-  failureKind: 'failureKind',
-  lastSeq: 'lastSeq',
-  bytes: 'bytes',
-  truncated: 'truncated',
-  queuedAt: 'queuedAt',
-  startedAt: 'startedAt',
-  finishedAt: 'finishedAt',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type CommandRunScalarFieldEnum = (typeof CommandRunScalarFieldEnum)[keyof typeof CommandRunScalarFieldEnum]
-
-
-export const CommandRunChunkScalarFieldEnum = {
-  runId: 'runId',
-  seq: 'seq',
-  stream: 'stream',
-  text: 'text',
-  at: 'at'
-} as const
-
-export type CommandRunChunkScalarFieldEnum = (typeof CommandRunChunkScalarFieldEnum)[keyof typeof CommandRunChunkScalarFieldEnum]
+export type UserGroupScalarFieldEnum = (typeof UserGroupScalarFieldEnum)[keyof typeof UserGroupScalarFieldEnum]
 
 
 export const SortOrder = {

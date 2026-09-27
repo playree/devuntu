@@ -343,16 +343,6 @@ export type McpTokenUncheckedUpdateManyInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type McpTokenListRelationFilter = {
-  every?: Prisma.McpTokenWhereInput
-  some?: Prisma.McpTokenWhereInput
-  none?: Prisma.McpTokenWhereInput
-}
-
-export type McpTokenOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
-}
-
 export type McpTokenUserIdNameCompoundUniqueInput = {
   userId: string
   name: string
@@ -389,6 +379,16 @@ export type McpTokenMinOrderByAggregateInput = {
   expiresAt?: Prisma.SortOrder
   lastUsedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+}
+
+export type McpTokenListRelationFilter = {
+  every?: Prisma.McpTokenWhereInput
+  some?: Prisma.McpTokenWhereInput
+  none?: Prisma.McpTokenWhereInput
+}
+
+export type McpTokenOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
 }
 
 export type McpTokenCreateNestedManyWithoutUserInput = {

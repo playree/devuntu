@@ -260,11 +260,6 @@ export type DashboardUncheckedUpdateManyInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type DashboardNullableScalarRelationFilter = {
-  is?: Prisma.DashboardWhereInput | null
-  isNot?: Prisma.DashboardWhereInput | null
-}
-
 export type DashboardCountOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   layout?: Prisma.SortOrder
@@ -282,6 +277,11 @@ export type DashboardMinOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+}
+
+export type DashboardNullableScalarRelationFilter = {
+  is?: Prisma.DashboardWhereInput | null
+  isNot?: Prisma.DashboardWhereInput | null
 }
 
 export type DashboardCreateNestedOneWithoutUserInput = {

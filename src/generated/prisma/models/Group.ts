@@ -352,20 +352,6 @@ export type GroupUpdateOneRequiredWithoutAgentApproverGroupsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.GroupUpdateToOneWithWhereWithoutAgentApproverGroupsInput, Prisma.GroupUpdateWithoutAgentApproverGroupsInput>, Prisma.GroupUncheckedUpdateWithoutAgentApproverGroupsInput>
 }
 
-export type GroupCreateNestedOneWithoutUserGroupsInput = {
-  create?: Prisma.XOR<Prisma.GroupCreateWithoutUserGroupsInput, Prisma.GroupUncheckedCreateWithoutUserGroupsInput>
-  connectOrCreate?: Prisma.GroupCreateOrConnectWithoutUserGroupsInput
-  connect?: Prisma.GroupWhereUniqueInput
-}
-
-export type GroupUpdateOneRequiredWithoutUserGroupsNestedInput = {
-  create?: Prisma.XOR<Prisma.GroupCreateWithoutUserGroupsInput, Prisma.GroupUncheckedCreateWithoutUserGroupsInput>
-  connectOrCreate?: Prisma.GroupCreateOrConnectWithoutUserGroupsInput
-  upsert?: Prisma.GroupUpsertWithoutUserGroupsInput
-  connect?: Prisma.GroupWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.GroupUpdateToOneWithWhereWithoutUserGroupsInput, Prisma.GroupUpdateWithoutUserGroupsInput>, Prisma.GroupUncheckedUpdateWithoutUserGroupsInput>
-}
-
 export type GroupCreateNestedOneWithoutBoardGroupsInput = {
   create?: Prisma.XOR<Prisma.GroupCreateWithoutBoardGroupsInput, Prisma.GroupUncheckedCreateWithoutBoardGroupsInput>
   connectOrCreate?: Prisma.GroupCreateOrConnectWithoutBoardGroupsInput
@@ -392,6 +378,20 @@ export type GroupUpdateOneRequiredWithoutCommandTargetGroupsNestedInput = {
   upsert?: Prisma.GroupUpsertWithoutCommandTargetGroupsInput
   connect?: Prisma.GroupWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.GroupUpdateToOneWithWhereWithoutCommandTargetGroupsInput, Prisma.GroupUpdateWithoutCommandTargetGroupsInput>, Prisma.GroupUncheckedUpdateWithoutCommandTargetGroupsInput>
+}
+
+export type GroupCreateNestedOneWithoutUserGroupsInput = {
+  create?: Prisma.XOR<Prisma.GroupCreateWithoutUserGroupsInput, Prisma.GroupUncheckedCreateWithoutUserGroupsInput>
+  connectOrCreate?: Prisma.GroupCreateOrConnectWithoutUserGroupsInput
+  connect?: Prisma.GroupWhereUniqueInput
+}
+
+export type GroupUpdateOneRequiredWithoutUserGroupsNestedInput = {
+  create?: Prisma.XOR<Prisma.GroupCreateWithoutUserGroupsInput, Prisma.GroupUncheckedCreateWithoutUserGroupsInput>
+  connectOrCreate?: Prisma.GroupCreateOrConnectWithoutUserGroupsInput
+  upsert?: Prisma.GroupUpsertWithoutUserGroupsInput
+  connect?: Prisma.GroupWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.GroupUpdateToOneWithWhereWithoutUserGroupsInput, Prisma.GroupUpdateWithoutUserGroupsInput>, Prisma.GroupUncheckedUpdateWithoutUserGroupsInput>
 }
 
 export type GroupCreateWithoutAgentApproverGroupsInput = {
@@ -451,66 +451,6 @@ export type GroupUncheckedUpdateWithoutAgentApproverGroupsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutGroupNestedInput
   boardGroups?: Prisma.BoardGroupUncheckedUpdateManyWithoutGroupNestedInput
-  commandTargetGroups?: Prisma.CommandTargetGroupUncheckedUpdateManyWithoutGroupNestedInput
-}
-
-export type GroupCreateWithoutUserGroupsInput = {
-  id?: string
-  name: string
-  description?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  boardGroups?: Prisma.BoardGroupCreateNestedManyWithoutGroupInput
-  agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutGroupInput
-  commandTargetGroups?: Prisma.CommandTargetGroupCreateNestedManyWithoutGroupInput
-}
-
-export type GroupUncheckedCreateWithoutUserGroupsInput = {
-  id?: string
-  name: string
-  description?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  boardGroups?: Prisma.BoardGroupUncheckedCreateNestedManyWithoutGroupInput
-  agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutGroupInput
-  commandTargetGroups?: Prisma.CommandTargetGroupUncheckedCreateNestedManyWithoutGroupInput
-}
-
-export type GroupCreateOrConnectWithoutUserGroupsInput = {
-  where: Prisma.GroupWhereUniqueInput
-  create: Prisma.XOR<Prisma.GroupCreateWithoutUserGroupsInput, Prisma.GroupUncheckedCreateWithoutUserGroupsInput>
-}
-
-export type GroupUpsertWithoutUserGroupsInput = {
-  update: Prisma.XOR<Prisma.GroupUpdateWithoutUserGroupsInput, Prisma.GroupUncheckedUpdateWithoutUserGroupsInput>
-  create: Prisma.XOR<Prisma.GroupCreateWithoutUserGroupsInput, Prisma.GroupUncheckedCreateWithoutUserGroupsInput>
-  where?: Prisma.GroupWhereInput
-}
-
-export type GroupUpdateToOneWithWhereWithoutUserGroupsInput = {
-  where?: Prisma.GroupWhereInput
-  data: Prisma.XOR<Prisma.GroupUpdateWithoutUserGroupsInput, Prisma.GroupUncheckedUpdateWithoutUserGroupsInput>
-}
-
-export type GroupUpdateWithoutUserGroupsInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  boardGroups?: Prisma.BoardGroupUpdateManyWithoutGroupNestedInput
-  agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutGroupNestedInput
-  commandTargetGroups?: Prisma.CommandTargetGroupUpdateManyWithoutGroupNestedInput
-}
-
-export type GroupUncheckedUpdateWithoutUserGroupsInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  boardGroups?: Prisma.BoardGroupUncheckedUpdateManyWithoutGroupNestedInput
-  agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutGroupNestedInput
   commandTargetGroups?: Prisma.CommandTargetGroupUncheckedUpdateManyWithoutGroupNestedInput
 }
 
@@ -632,6 +572,66 @@ export type GroupUncheckedUpdateWithoutCommandTargetGroupsInput = {
   userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutGroupNestedInput
   boardGroups?: Prisma.BoardGroupUncheckedUpdateManyWithoutGroupNestedInput
   agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutGroupNestedInput
+}
+
+export type GroupCreateWithoutUserGroupsInput = {
+  id?: string
+  name: string
+  description?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  boardGroups?: Prisma.BoardGroupCreateNestedManyWithoutGroupInput
+  agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutGroupInput
+  commandTargetGroups?: Prisma.CommandTargetGroupCreateNestedManyWithoutGroupInput
+}
+
+export type GroupUncheckedCreateWithoutUserGroupsInput = {
+  id?: string
+  name: string
+  description?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  boardGroups?: Prisma.BoardGroupUncheckedCreateNestedManyWithoutGroupInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutGroupInput
+  commandTargetGroups?: Prisma.CommandTargetGroupUncheckedCreateNestedManyWithoutGroupInput
+}
+
+export type GroupCreateOrConnectWithoutUserGroupsInput = {
+  where: Prisma.GroupWhereUniqueInput
+  create: Prisma.XOR<Prisma.GroupCreateWithoutUserGroupsInput, Prisma.GroupUncheckedCreateWithoutUserGroupsInput>
+}
+
+export type GroupUpsertWithoutUserGroupsInput = {
+  update: Prisma.XOR<Prisma.GroupUpdateWithoutUserGroupsInput, Prisma.GroupUncheckedUpdateWithoutUserGroupsInput>
+  create: Prisma.XOR<Prisma.GroupCreateWithoutUserGroupsInput, Prisma.GroupUncheckedCreateWithoutUserGroupsInput>
+  where?: Prisma.GroupWhereInput
+}
+
+export type GroupUpdateToOneWithWhereWithoutUserGroupsInput = {
+  where?: Prisma.GroupWhereInput
+  data: Prisma.XOR<Prisma.GroupUpdateWithoutUserGroupsInput, Prisma.GroupUncheckedUpdateWithoutUserGroupsInput>
+}
+
+export type GroupUpdateWithoutUserGroupsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  boardGroups?: Prisma.BoardGroupUpdateManyWithoutGroupNestedInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutGroupNestedInput
+  commandTargetGroups?: Prisma.CommandTargetGroupUpdateManyWithoutGroupNestedInput
+}
+
+export type GroupUncheckedUpdateWithoutUserGroupsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  boardGroups?: Prisma.BoardGroupUncheckedUpdateManyWithoutGroupNestedInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutGroupNestedInput
+  commandTargetGroups?: Prisma.CommandTargetGroupUncheckedUpdateManyWithoutGroupNestedInput
 }
 
 

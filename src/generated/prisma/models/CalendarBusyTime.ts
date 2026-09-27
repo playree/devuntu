@@ -380,16 +380,6 @@ export type CalendarBusyTimeUncheckedUpdateManyInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type CalendarBusyTimeListRelationFilter = {
-  every?: Prisma.CalendarBusyTimeWhereInput
-  some?: Prisma.CalendarBusyTimeWhereInput
-  none?: Prisma.CalendarBusyTimeWhereInput
-}
-
-export type CalendarBusyTimeOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
-}
-
 export type IntNullableListFilter<$PrismaModel = never> = {
   equals?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel> | null
   has?: number | Prisma.IntFieldRefInput<$PrismaModel> | null
@@ -441,6 +431,25 @@ export type CalendarBusyTimeSumOrderByAggregateInput = {
   endMin?: Prisma.SortOrder
 }
 
+export type CalendarBusyTimeListRelationFilter = {
+  every?: Prisma.CalendarBusyTimeWhereInput
+  some?: Prisma.CalendarBusyTimeWhereInput
+  none?: Prisma.CalendarBusyTimeWhereInput
+}
+
+export type CalendarBusyTimeOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
+}
+
+export type CalendarBusyTimeCreateweekdaysInput = {
+  set: number[]
+}
+
+export type CalendarBusyTimeUpdateweekdaysInput = {
+  set?: number[]
+  push?: number | number[]
+}
+
 export type CalendarBusyTimeCreateNestedManyWithoutUserInput = {
   create?: Prisma.XOR<Prisma.CalendarBusyTimeCreateWithoutUserInput, Prisma.CalendarBusyTimeUncheckedCreateWithoutUserInput> | Prisma.CalendarBusyTimeCreateWithoutUserInput[] | Prisma.CalendarBusyTimeUncheckedCreateWithoutUserInput[]
   connectOrCreate?: Prisma.CalendarBusyTimeCreateOrConnectWithoutUserInput | Prisma.CalendarBusyTimeCreateOrConnectWithoutUserInput[]
@@ -481,15 +490,6 @@ export type CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput = {
   update?: Prisma.CalendarBusyTimeUpdateWithWhereUniqueWithoutUserInput | Prisma.CalendarBusyTimeUpdateWithWhereUniqueWithoutUserInput[]
   updateMany?: Prisma.CalendarBusyTimeUpdateManyWithWhereWithoutUserInput | Prisma.CalendarBusyTimeUpdateManyWithWhereWithoutUserInput[]
   deleteMany?: Prisma.CalendarBusyTimeScalarWhereInput | Prisma.CalendarBusyTimeScalarWhereInput[]
-}
-
-export type CalendarBusyTimeCreateweekdaysInput = {
-  set: number[]
-}
-
-export type CalendarBusyTimeUpdateweekdaysInput = {
-  set?: number[]
-  push?: number | number[]
 }
 
 export type CalendarBusyTimeCreateWithoutUserInput = {

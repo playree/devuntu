@@ -433,16 +433,6 @@ export type PasskeyUncheckedUpdateManyInput = {
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
-export type PasskeyListRelationFilter = {
-  every?: Prisma.PasskeyWhereInput
-  some?: Prisma.PasskeyWhereInput
-  none?: Prisma.PasskeyWhereInput
-}
-
-export type PasskeyOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
-}
-
 export type PasskeyCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
@@ -491,6 +481,16 @@ export type PasskeyMinOrderByAggregateInput = {
 
 export type PasskeySumOrderByAggregateInput = {
   counter?: Prisma.SortOrder
+}
+
+export type PasskeyListRelationFilter = {
+  every?: Prisma.PasskeyWhereInput
+  some?: Prisma.PasskeyWhereInput
+  none?: Prisma.PasskeyWhereInput
+}
+
+export type PasskeyOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
 }
 
 export type PasskeyCreateNestedManyWithoutUserInput = {
