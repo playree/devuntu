@@ -40,7 +40,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-__version__ = "0.8.0"
+__version__ = "0.8.1"
 
 # 1 Agent の構成を作業ディレクトリだけで完結させるため、config・ログ・ロックは本体と同じ
 # <作業ディレクトリ>/.devuntu-agent へ置く。作業ディレクトリを分ければ同一ホストに複数の Agent を並べられる
@@ -470,7 +470,14 @@ def parse_claude_output(stdout: str) -> tuple[str | None, dict]:
     if not isinstance(data, dict):
         return None, {}
 
-    message = data.get("result") if isinstance(data.get("result"), str) else None
+    # エラーで終わった結果(subtype が error_max_turns 等)には result が無い。JSON をそのまま要約にしないよう、
+    # 形式を解釈できた以上は errors か subtype を要約にする(空なら呼び出し側が標準エラーの末尾で補う)
+    if isinstance(data.get("result"), str):
+        message = data["result"]
+    elif isinstance(data.get("errors"), list) and data["errors"]:
+        message = "; ".join(str(error) for error in data["errors"])
+    else:
+        message = str(data.get("subtype") or "")
     metrics: dict = {"costUsd": to_cost(data.get("total_cost_usd"))}
 
     # modelUsage はモデルごとの内訳(サブエージェントが別モデルを使うことがある)。無い版では usage を使う
@@ -502,6 +509,7 @@ def parse_codex_output(stdout: str, model: str) -> tuple[str | None, dict]:
     codex は金額を返さないのでコストは持たない。モデル名も出力に無いため cli.model が分かる場合だけ入れる"""
     message: str | None = None
     error: str | None = None
+    recognized = False
     inputs: list[int | None] = []
     cached: list[int | None] = []
     outputs: list[int | None] = []
@@ -510,8 +518,9 @@ def parse_codex_output(stdout: str, model: str) -> tuple[str | None, dict]:
             event = json.loads(line)
         except ValueError:
             continue
-        if not isinstance(event, dict):
+        if not isinstance(event, dict) or not isinstance(event.get("type"), str):
             continue
+        recognized = True
         kind = event.get("type")
         item = event.get("item")
         if kind == "item.completed" and isinstance(item, dict) and item.get("type") == "agent_message":
@@ -537,7 +546,11 @@ def parse_codex_output(stdout: str, model: str) -> tuple[str | None, dict]:
     if metrics["inputTokens"] is None and metrics["outputTokens"] is None:
         # 1 行も解釈できなかった(出力形式が違う)なら、モデル名だけ送っても意味が無い
         metrics = {}
-    return message if message is not None else error, {key: value for key, value in metrics.items() if value is not None}
+    if not recognized:
+        return None, {}
+    # イベント列を解釈できた以上は JSONL をそのまま要約にしない(空なら呼び出し側が標準エラーの末尾で補う)
+    summary = message if message is not None else (error or "")
+    return summary, {key: value for key, value in metrics.items() if value is not None}
 
 
 def parse_cli_output(config: Config, stdout: str) -> tuple[str, dict]:
