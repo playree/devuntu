@@ -1,14 +1,15 @@
-- [基本](#基本)
-- [認証](#認証)
-- [通知](#通知)
-- [メンテナンス](#メンテナンス)
-- [メンテナンスモード](#メンテナンスモード)
-- [リモート実行](#リモート実行)
-- [メール](#メール)
-- [オブジェクトストレージ](#オブジェクトストレージ)
-- [Linode](#linode)
-- [Debug](#debug)
-- [補足](#補足)
+- [環境変数](#環境変数)
+  - [基本](#基本)
+  - [認証](#認証)
+  - [通知](#通知)
+  - [メンテナンス](#メンテナンス)
+  - [メンテナンスモード](#メンテナンスモード)
+  - [リモート実行](#リモート実行)
+  - [メール](#メール)
+  - [オブジェクトストレージ](#オブジェクトストレージ)
+  - [Linode](#linode)
+  - [Debug](#debug)
+  - [補足](#補足)
 
 # 環境変数
 
@@ -21,18 +22,18 @@
 
 ## 基本
 
-| 変数名                       | 説明                                                            | 必須 | デフォルト        |
-| ---------------------------- | --------------------------------------------------------------- | ---- | ----------------- |
-| `NEXT_PUBLIC_APP_NAME`       | アプリ名(クライアント公開)                                      |      | `Devuntu`         |
-| `DATABASE_URL`               | DB(PostgreSQL) の接続パス                                       | 〇   | -                 |
-| `DEFAULT_LOCALE`             | デフォルトロケール                                              |      | -                 |
-| `DEFAULT_TIMEZONE`           | サーバー側の判定に使う既定のタイムゾーン(IANA 名)               |      | `Asia/Tokyo`      |
-| `LOG_LEVEL`                  | ログレベル                                                      |      | `info`            |
-| `DEV_ALLOWED_ORIGINS`        | `next dev` で許可する追加オリジン(カンマ区切り)。開発時のみ有効 |      | -                 |
-| `SEARCH_ENGINE_INDEXING`     | 検索エンジンにインデックスさせるか                              |      | `false`           |
-| `SEARCH_ENGINE_ROBOTS_ALLOW` | `robots.txt` でクロールを許可するか                             |      | `false`           |
-| `RELEASE_NOTES_REPO`         | ダッシュボードのリリースノートの取得元(GitHub の `owner/repo`)  |      | `playree/devuntu` |
-| `RELEASE_NOTES_LIMIT`        | リリースノートの最大取得件数(1〜100)                            |      | `20`              |
+| 変数名                       | 説明                                                                            | 必須 | デフォルト        |
+| ---------------------------- | ------------------------------------------------------------------------------- | ---- | ----------------- |
+| `NEXT_PUBLIC_APP_NAME`       | アプリ名(クライアント公開)                                                      |      | `Devuntu`         |
+| `DATABASE_URL`               | DB(PostgreSQL) の接続パス                                                       | 〇   | -                 |
+| `DEFAULT_LOCALE`             | デフォルトロケール。`tools` の運用スクリプトの表示言語にも使う(`ja` 以外は英語) |      | -                 |
+| `DEFAULT_TIMEZONE`           | サーバー側の判定に使う既定のタイムゾーン(IANA 名)                               |      | `Asia/Tokyo`      |
+| `LOG_LEVEL`                  | ログレベル                                                                      |      | `info`            |
+| `DEV_ALLOWED_ORIGINS`        | `next dev` で許可する追加オリジン(カンマ区切り)。開発時のみ有効                 |      | -                 |
+| `SEARCH_ENGINE_INDEXING`     | 検索エンジンにインデックスさせるか                                              |      | `false`           |
+| `SEARCH_ENGINE_ROBOTS_ALLOW` | `robots.txt` でクロールを許可するか                                             |      | `false`           |
+| `RELEASE_NOTES_REPO`         | ダッシュボードのリリースノートの取得元(GitHub の `owner/repo`)                  |      | `playree/devuntu` |
+| `RELEASE_NOTES_LIMIT`        | リリースノートの最大取得件数(1〜100)                                            |      | `20`              |
 
 `DEV_ALLOWED_ORIGINS` だけは例外で、`src/lib/env-util.ts` には定義していない。参照元の `next.config.ts` は
 Next の起動前に評価されるため `envu` を解決できず、`process.env` を直接読んでいる。

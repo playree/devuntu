@@ -17,7 +17,9 @@ import path from 'node:path'
 import { createInterface } from 'node:readline/promises'
 import { parseArgs, styleText } from 'node:util'
 import { ownerOf } from '../file-owner.mjs'
+import { currentLocale, setLocale } from '../i18n.mjs'
 import { diffEnv, isSecretKey, maskSecret, parseEnvFile, quoteEnvValue, serializeEnv } from './env-file.mjs'
+import { t } from './messages.mjs'
 import {
   BUNDLED_S3_ENDPOINT,
   DEFAULTS,
@@ -48,15 +50,6 @@ import {
   validateVapidSubject,
 } from './spec.mjs'
 
-const USAGE = `使い方: node scripts/setup-env/index.mjs [オプション]
-
-  --dir <path>   生成先ディレクトリ(既定: カレントディレクトリ)
-  --dry-run      ファイルへ書かず、生成内容を表示するだけ
-  --force        上書きの確認を省略する
-  --no-backup    既存ファイルの .bak を作らない
-  --help         この使い方を表示する
-`
-
 const { values: opts } = parseArgs({
   options: {
     dir: { type: 'string' },
@@ -70,7 +63,7 @@ const { values: opts } = parseArgs({
 })
 
 if (opts.help) {
-  process.stdout.write(USAGE)
+  process.stdout.write(t('usage'))
   process.exit(0)
 }
 
@@ -87,8 +80,8 @@ const note = (text) => say(color('dim', `  ${text}`))
  * 入力が EOF のままプロンプトを回すと、全項目が既定値のまま書き出されて気づけない。
  */
 if (process.stdin.isTTY !== true) {
-  say(color('red', '対話的な入力ができません(TTY が割り当てられていません)。'))
-  say('次のいずれかで実行してください。')
+  say(color('red', t('no_tty')))
+  say(t('no_tty_hint'))
   say('  docker compose run --rm tools setup-env')
   say('  pnpm setup:env')
   process.exit(1)
@@ -96,7 +89,7 @@ if (process.stdin.isTTY !== true) {
 
 const rl = createInterface({ input: process.stdin, output: process.stderr })
 rl.on('SIGINT', () => {
-  say(color('yellow', '\n中断しました(ファイルは作成していません)'))
+  say(color('yellow', `\n${t('aborted')}`))
   process.exit(130)
 })
 
@@ -113,7 +106,7 @@ const question = async (prompt) => {
     return await rl.question(prompt)
   } catch (e) {
     if (e?.code === 'ABORT_ERR') {
-      say(color('yellow', '\n中断しました(ファイルは作成していません)'))
+      say(color('yellow', `\n${t('aborted')}`))
       process.exit(130)
     }
     throw e
@@ -153,7 +146,7 @@ const ask = async ({ label, help, def, validate, secret = false }) => {
     const answer = (await question(`${color('cyan', '?')} ${label}${shown}: `)).trim()
     const input = answer === '' ? def : answer
     if (input === undefined || input === '') {
-      warn('必須です')
+      warn(t('required'))
       continue
     }
     if (!validate) {
@@ -174,7 +167,7 @@ const ask = async ({ label, help, def, validate, secret = false }) => {
       warn(result.warn)
     }
     if (result.normalized) {
-      note(`${result.value} として扱います`)
+      note(t('treated_as', result.value))
     }
     return result.value
   }
@@ -194,7 +187,7 @@ const askYesNo = async (label, defaultYes) => {
     if (answer === 'n' || answer === 'no') {
       return false
     }
-    warn('y または n で答えてください')
+    warn(t('answer_yes_no'))
   }
 }
 
@@ -205,7 +198,7 @@ const askChoice = async (label, choices, def) => {
   const values = choices.map((choice) => choice.value ?? choice)
   const defIndex = values.indexOf(def)
   for (;;) {
-    const answer = (await question(`  番号${defIndex >= 0 ? ` [${defIndex + 1}]` : ''}: `)).trim()
+    const answer = (await question(`  ${t('choice_number')}${defIndex >= 0 ? ` [${defIndex + 1}]` : ''}: `)).trim()
     if (answer === '' && defIndex >= 0) {
       return values[defIndex]
     }
@@ -213,7 +206,7 @@ const askChoice = async (label, choices, def) => {
     if (Number.isInteger(index) && index >= 1 && index <= values.length) {
       return values[index - 1]
     }
-    warn(`1〜${values.length} の番号で選んでください`)
+    warn(t('choose_number', values.length))
   }
 }
 
@@ -239,13 +232,13 @@ const readTextIfExists = async (file) => {
      * 何を消せばよいかを伝える。
      */
     if (e.code === 'EISDIR') {
-      say(color('red', `${file} がディレクトリになっています。`))
-      say('Docker が設定ファイルの代わりに作ったディレクトリです。削除してから実行し直してください。')
+      say(color('red', t('path_is_directory', file)))
+      say(t('path_is_directory_hint'))
       say(`  sudo rm -rf ${file}`)
       process.exit(1)
     }
     if (e.code === 'EACCES' || e.code === 'EPERM') {
-      say(color('red', `${file} を読めません。ファイルの所有者を確認してください`))
+      say(color('red', t('cannot_read', file)))
       process.exit(1)
     }
     throw e
@@ -267,7 +260,7 @@ if (prevS3Text) {
   try {
     prevS3Config = JSON.parse(prevS3Text)
   } catch {
-    warn(`${s3ConfigPath} が JSON として読めないため、内容を作り直します`)
+    warn(t('s3_config_broken', s3ConfigPath))
   }
 }
 const prevS3Credentials = prevS3Config?.identities?.find((i) => i?.name === S3_IDENTITY_NAME)?.credentials?.[0]
@@ -276,11 +269,34 @@ const has = (key) => prev[key] !== undefined && prev[key] !== ''
 const prevOr = (key, fallback) => (has(key) ? prev[key] : fallback)
 const prevBool = (key, fallback) => (has(key) ? prev[key].trim().toLowerCase() === 'true' : fallback)
 
-say(color(['bold'], 'Devuntu セルフホストの設定ファイルを作成します'))
-note(`生成先: ${outDir}`)
-note('Enter だけを押すと [] 内の既定値を使います。秘密の値は既定値をマスクして表示します')
+/**
+ * 表示言語は、環境変数(docker では既存の .env.docker から env_file で渡る)→ 既存ファイル → 質問の順で決める。
+ * ここまでの出力は環境変数だけで決まる(未設定なら英語)。
+ * 質問で決めた場合は、その答えを DEFAULT_LOCALE にも使う(同じことを2度尋ねない)
+ */
+let chosenLocale
+if (!process.env.DEFAULT_LOCALE) {
+  if (has('DEFAULT_LOCALE')) {
+    setLocale(prev.DEFAULT_LOCALE)
+  } else {
+    chosenLocale = await askChoice(
+      'Language / 言語 (DEFAULT_LOCALE)',
+      [
+        { value: 'en', label: 'English' },
+        { value: 'ja', label: '日本語' },
+      ],
+      'en',
+    )
+    setLocale(chosenLocale)
+    say()
+  }
+}
+
+say(color(['bold'], t('intro_title')))
+note(t('intro_out_dir', outDir))
+note(t('intro_enter_default'))
 if (prevEnvText) {
-  note('既存の .env.docker を読み込み、現在値を既定値にしています')
+  note(t('intro_loaded_existing'))
 }
 
 const env = {}
@@ -289,15 +305,22 @@ const db = {}
 // ---
 // A. 基本
 // ---
-section('基本')
-env.DEFAULT_LOCALE = await ask({
-  label: 'デフォルトロケール (DEFAULT_LOCALE)',
-  def: prevOr('DEFAULT_LOCALE', DEFAULTS.DEFAULT_LOCALE),
-  validate: validateChoice(LOCALES),
-  help: `${LOCALES.join(' / ')} から選びます`,
-})
+section(t('section_basic'))
+if (chosenLocale) {
+  env.DEFAULT_LOCALE = chosenLocale
+  note(`DEFAULT_LOCALE = ${chosenLocale}`)
+} else {
+  env.DEFAULT_LOCALE = await ask({
+    label: t('q_default_locale'),
+    def: prevOr('DEFAULT_LOCALE', currentLocale()),
+    validate: validateChoice(LOCALES),
+    help: t('q_default_locale_help', LOCALES.join(' / ')),
+  })
+  // 以降の質問と書き出す見出しを、保存する DEFAULT_LOCALE の言語に揃える
+  setLocale(env.DEFAULT_LOCALE)
+}
 env.DEFAULT_TIMEZONE = await ask({
-  label: 'デフォルトタイムゾーン (DEFAULT_TIMEZONE)',
+  label: t('q_default_timezone'),
   def: prevOr('DEFAULT_TIMEZONE', DEFAULTS.DEFAULT_TIMEZONE),
   validate: validateTimezone,
 })
@@ -305,7 +328,7 @@ env.DEFAULT_TIMEZONE = await ask({
 // ---
 // B. データベース
 // ---
-section('データベース')
+section(t('section_database'))
 /**
  * 既定値の引き元。旧構成からの移行では `.env.db` がまだ無いため、
  * `.env.docker` の `DATABASE_URL` を分解して既存のボリュームと同じ値を引き継ぐ。
@@ -316,24 +339,21 @@ const existingDbCreds =
     : undefined) ?? parseDatabaseUrl(prev.DATABASE_URL)
 
 // 既存が外部DBを指している場合に Enter で同梱DBへ書き換わらないよう、現状を既定にする
-const useBundledDb = await askYesNo(
-  'compose.yaml に同梱の db サービスを使いますか?',
-  isBundledDbUrl(prev.DATABASE_URL) ?? true,
-)
+const useBundledDb = await askYesNo(t('q_use_bundled_db'), isBundledDbUrl(prev.DATABASE_URL) ?? true)
 const dbUser = await ask({
-  label: 'DBユーザー (POSTGRES_USER)',
+  label: t('q_db_user'),
   def: existingDbCreds?.user || DEFAULTS.POSTGRES_USER,
   validate: validateRequired,
 })
 const dbPassword = await ask({
-  label: 'DBパスワード (POSTGRES_PASSWORD)',
+  label: t('q_db_password'),
   def: existingDbCreds?.password || generatePassword(),
   validate: validateRequired,
   secret: true,
-  help: existingDbCreds?.password ? undefined : '自動生成した値を既定にしています',
+  help: existingDbCreds?.password ? undefined : t('generated_default'),
 })
 const dbName = await ask({
-  label: 'DB名 (POSTGRES_DB)',
+  label: t('q_db_name'),
   def: existingDbCreds?.db || DEFAULTS.POSTGRES_DB,
   validate: validateRequired,
 })
@@ -342,9 +362,9 @@ db.POSTGRES_PASSWORD = dbPassword
 db.POSTGRES_DB = dbName
 
 if (existingDbCreds?.password && existingDbCreds.password !== dbPassword) {
-  warn('postgres は初回起動時にボリュームを初期化するため、既に docker compose up 済みの環境では')
-  warn('パスワードを変えても DB 側の実際のパスワードは変わらず、認証エラーになります。')
-  warn('変更する場合はボリューム(pgdata)を作り直すか、DB 側で ALTER USER してください。')
+  for (const line of t('db_password_changed')) {
+    warn(line)
+  }
 }
 
 if (useBundledDb) {
@@ -352,70 +372,62 @@ if (useBundledDb) {
   note(`DATABASE_URL = ${buildDatabaseUrl({ user: dbUser, password: '********', db: dbName })}`)
 } else {
   env.DATABASE_URL = await ask({
-    label: '接続URL (DATABASE_URL)',
+    label: t('q_database_url'),
     def: prev.DATABASE_URL,
     validate: validateDatabaseUrl,
     secret: true,
-    help: '外部のPostgreSQLへ接続します',
+    help: t('q_database_url_help'),
   })
-  note('同梱の db サービスを使わない場合、compose.yaml の db サービスは削除してかまいません')
+  note(t('bundled_db_removable'))
 }
 
 // ---
 // C. 認証
 // ---
-section('認証')
+section(t('section_auth'))
 env.BETTER_AUTH_URL = await ask({
-  label: '公開するベースURL (BETTER_AUTH_URL)',
+  label: t('q_better_auth_url'),
   def: prev.BETTER_AUTH_URL,
   validate: validateBetterAuthUrl,
-  help: '実際に配信するオリジンと完全に一致させます(不一致だとサインインのPOSTが拒否されます)',
+  help: t('q_better_auth_url_help'),
 })
 
 if (has('BETTER_AUTH_SECRET')) {
-  env.BETTER_AUTH_SECRET = (await askYesNo(
-    'BETTER_AUTH_SECRET を再生成しますか?(既存の全セッションが無効になります)',
-    false,
-  ))
+  env.BETTER_AUTH_SECRET = (await askYesNo(t('q_regenerate_auth_secret'), false))
     ? generateSecret()
     : prev.BETTER_AUTH_SECRET
 } else {
   env.BETTER_AUTH_SECRET = generateSecret()
-  note('BETTER_AUTH_SECRET を自動生成しました')
+  note(t('auth_secret_generated'))
 }
 
-const disablePasswordAuth = await askYesNo(
-  'パスワード認証を無効にし、メールOTPのみでサインインしますか? (DISABLE_PASSWORD_AUTH)',
-  prevBool('DISABLE_PASSWORD_AUTH', true),
-)
+const disablePasswordAuth = await askYesNo(t('q_disable_password_auth'), prevBool('DISABLE_PASSWORD_AUTH', true))
 env.DISABLE_PASSWORD_AUTH = String(disablePasswordAuth)
 if (!disablePasswordAuth) {
-  const twoFa = await askYesNo('2要素認証を必須にしますか? (TWO_FA_REQUIRED)', prevBool('TWO_FA_REQUIRED', true))
+  const twoFa = await askYesNo(t('q_two_fa_required'), prevBool('TWO_FA_REQUIRED', true))
   env.TWO_FA_REQUIRED = String(twoFa)
   if (twoFa) {
-    note('利用者は初回サインイン後に2要素認証の設定が必須になります')
+    note(t('two_fa_note'))
   }
 }
 
-env.OIDC_DCR_ENABLED = String(
-  await askYesNo('MCPサーバーを公開しますか? (OIDC_DCR_ENABLED)', prevBool('OIDC_DCR_ENABLED', true)),
-)
+env.OIDC_DCR_ENABLED = String(await askYesNo(t('q_oidc_dcr'), prevBool('OIDC_DCR_ENABLED', true)))
 
 // ---
 // D. メール
 // ---
-section('メール')
+section(t('section_mail'))
 if (disablePasswordAuth) {
-  note('パスワード認証を無効にしたため、メールOTPが唯一のサインイン手段になります')
+  note(t('otp_only_note'))
 }
 let mailSend = await askChoice(
-  '送信方式 (MAIL_SEND)',
+  t('q_mail_send'),
   [
     { value: 'smtp', label: 'smtp' },
     { value: 'sendgrid', label: 'sendgrid' },
     { value: 'sendmail', label: 'sendmail' },
-    { value: 'debug', label: 'debug(送信せずサーバーログへ出力)' },
-    { value: '', label: '設定しない(メールを送信しない)' },
+    { value: 'debug', label: t('mail_debug_label') },
+    { value: '', label: t('mail_none_label') },
   ],
   // 既存ファイルに MAIL_SEND が無いのは「メールを送信しない」構成。
   // ここで smtp を既定にすると、Enter だけで MAIL_FROM や SMTP_HOST の入力を強制してしまう
@@ -423,10 +435,10 @@ let mailSend = await askChoice(
 )
 
 if (mailSend === '' && disablePasswordAuth) {
-  warn('メールを送信しないと誰もサインインできません。試用であれば debug を選んでください')
-  if (!(await askYesNo('それでもメールを設定しませんか?', false))) {
+  warn(t('mail_none_warn'))
+  if (!(await askYesNo(t('q_mail_none_confirm'), false))) {
     mailSend = await askChoice(
-      '送信方式 (MAIL_SEND)',
+      t('q_mail_send'),
       MAIL_SEND_MODES.map((m) => ({ value: m, label: m })),
       'smtp',
     )
@@ -436,121 +448,115 @@ if (mailSend === '' && disablePasswordAuth) {
 if (mailSend !== '') {
   env.MAIL_SEND = mailSend
   env.MAIL_FROM = await ask({
-    label: '送信元アドレス (MAIL_FROM)',
+    label: t('q_mail_from'),
     def: prev.MAIL_FROM,
     validate: validateMailFrom,
   })
   if (mailSend === 'sendgrid') {
     env.SENDGRID_API_KEY = await ask({
-      label: 'SendGrid APIキー (SENDGRID_API_KEY)',
+      label: t('q_sendgrid_api_key'),
       def: prev.SENDGRID_API_KEY,
       validate: validateRequired,
       secret: true,
     })
     if (!env.SENDGRID_API_KEY.startsWith('SG.')) {
-      warn('SendGrid のAPIキーは通常 SG. で始まります')
+      warn(t('sendgrid_key_prefix'))
     }
   } else if (mailSend === 'sendmail') {
     env.SENDMAIL_PATH = await ask({
-      label: 'sendmail のパス (SENDMAIL_PATH)',
+      label: t('q_sendmail_path'),
       def: prevOr('SENDMAIL_PATH', DEFAULTS.SENDMAIL_PATH),
       validate: validateRequired,
     })
-    warn('アプリのコンテナ(node:24-slim ベース)に sendmail は入っていません。')
-    warn('コンテナ内で解決できる場合のみ動きます。通常は smtp / sendgrid を選んでください')
+    for (const line of t('sendmail_warn')) {
+      warn(line)
+    }
   } else if (mailSend === 'smtp') {
-    env.SMTP_HOST = await ask({ label: 'SMTPホスト (SMTP_HOST)', def: prev.SMTP_HOST, validate: validateRequired })
+    env.SMTP_HOST = await ask({ label: t('q_smtp_host'), def: prev.SMTP_HOST, validate: validateRequired })
     env.SMTP_PORT = await ask({
-      label: 'SMTPポート (SMTP_PORT)',
+      label: t('q_smtp_port'),
       def: prevOr('SMTP_PORT', DEFAULTS.SMTP_PORT),
       validate: validatePort,
     })
     const port = Number(env.SMTP_PORT)
-    env.SMTP_SECURE = String(
-      await askYesNo('SSL/TLSで接続しますか? (SMTP_SECURE)', prevBool('SMTP_SECURE', port === 465)),
-    )
-    env.SMTP_IGNORE_TLS = String(
-      await askYesNo('TLSを使わずに接続しますか? (SMTP_IGNORE_TLS)', prevBool('SMTP_IGNORE_TLS', port === 25)),
-    )
+    env.SMTP_SECURE = String(await askYesNo(t('q_smtp_secure'), prevBool('SMTP_SECURE', port === 465)))
+    env.SMTP_IGNORE_TLS = String(await askYesNo(t('q_smtp_ignore_tls'), prevBool('SMTP_IGNORE_TLS', port === 25)))
     /**
      * 片方だけでは認証できないので、2項目をまとめてゲートで囲む。
      * 空入力は既定値(既存の値)へ戻るため、ゲートが無いと既存の認証情報を
      * 空へ戻す手段が無くなる。
      */
-    if (await askYesNo('SMTP認証(ユーザー・パスワード)を設定しますか?', has('SMTP_USER') || has('SMTP_PASS'))) {
+    if (await askYesNo(t('q_smtp_auth'), has('SMTP_USER') || has('SMTP_PASS'))) {
       env.SMTP_USER = await ask({
-        label: 'SMTP認証ユーザー (SMTP_USER)',
+        label: t('q_smtp_user'),
         def: prev.SMTP_USER,
         validate: validateRequired,
       })
       env.SMTP_PASS = await ask({
-        label: 'SMTP認証パスワード (SMTP_PASS)',
+        label: t('q_smtp_pass'),
         def: prev.SMTP_PASS,
         validate: validateRequired,
         secret: true,
       })
     }
   } else {
-    note('OTP は送信されず、サーバーログ(docker compose logs devuntu)に出力されます')
+    note(t('mail_debug_note'))
   }
 }
 
 // ---
 // E. オブジェクトストレージ
 // ---
-section('オブジェクトストレージ')
-const useBundledS3 = await askYesNo(
-  'compose.yaml に同梱の SeaweedFS を使いますか?',
-  isBundledS3Endpoint(prev.S3_ENDPOINT) ?? true,
-)
+section(t('section_storage'))
+const useBundledS3 = await askYesNo(t('q_use_bundled_s3'), isBundledS3Endpoint(prev.S3_ENDPOINT) ?? true)
 if (useBundledS3) {
   env.S3_ENDPOINT = BUNDLED_S3_ENDPOINT
   note(`S3_ENDPOINT = ${BUNDLED_S3_ENDPOINT}`)
 } else {
   env.S3_ENDPOINT = await ask({
-    label: 'S3 APIのエンドポイント (S3_ENDPOINT)',
+    label: t('q_s3_endpoint'),
     def: prev.S3_ENDPOINT,
     validate: validateUrl,
   })
   env.S3_REGION = await ask({
-    label: 'リージョン (S3_REGION)',
+    label: t('q_s3_region'),
     def: prevOr('S3_REGION', DEFAULTS.S3_REGION),
     validate: validateRequired,
   })
 }
 env.S3_BUCKET = await ask({
-  label: 'バケット名 (S3_BUCKET)',
+  label: t('q_s3_bucket'),
   def: prevOr('S3_BUCKET', DEFAULTS.S3_BUCKET),
   validate: validateRequired,
-  help: '存在しない場合は初回アップロード時に自動作成されます',
+  help: t('q_s3_bucket_help'),
 })
 env.S3_ACCESS_KEY_ID = await ask({
-  label: 'アクセスキー (S3_ACCESS_KEY_ID)',
+  label: t('q_s3_access_key'),
   def: prevOr('S3_ACCESS_KEY_ID', DEFAULTS.S3_ACCESS_KEY_ID),
   validate: validateRequired,
 })
 env.S3_SECRET_ACCESS_KEY = await ask({
-  label: 'シークレットキー (S3_SECRET_ACCESS_KEY)',
+  label: t('q_s3_secret_key'),
   def: prevOr('S3_SECRET_ACCESS_KEY', generatePassword()),
   validate: validateRequired,
   secret: true,
 })
 if (useBundledS3) {
-  note('同じ値で seaweedfs-s3.json も生成します')
+  note(t('s3_config_same_values'))
 }
 
 // ---
 // F. 任意項目
 // ---
-section('外部サービス連携(任意)')
-if (await askYesNo('Googleアカウント連携を設定しますか?', has('GOOGLE_CLIENT_ID'))) {
+section(t('section_integrations_optional'))
+if (await askYesNo(t('q_google'), has('GOOGLE_CLIENT_ID'))) {
   env.GOOGLE_CLIENT_ID = await ask({
-    label: 'クライアントID (GOOGLE_CLIENT_ID)',
+    label: t('q_client_id', 'GOOGLE_CLIENT_ID'),
     def: prev.GOOGLE_CLIENT_ID,
     validate: validateRequired,
   })
   env.GOOGLE_CLIENT_SECRET = await ask({
-    label: 'クライアントシークレット (GOOGLE_CLIENT_SECRET)',
+    label: t('q_client_secret', 'GOOGLE_CLIENT_SECRET'),
     def: prev.GOOGLE_CLIENT_SECRET,
     validate: validateRequired,
     secret: true,
@@ -561,88 +567,88 @@ if (await askYesNo('Googleアカウント連携を設定しますか?', has('GOO
    * 固定で有効にすると、その構成では既定値の無い許可ドメインを入力するまで終われない。
    */
   const useGoogleSignIn = has('GOOGLE_ALLOWED_DOMAINS') || !has('GOOGLE_CLIENT_ID')
-  if (await askYesNo('Googleサインイン(アカウントでのログイン)に使いますか?', useGoogleSignIn)) {
+  if (await askYesNo(t('q_google_sign_in'), useGoogleSignIn)) {
     env.GOOGLE_ALLOWED_DOMAINS = await ask({
-      label: 'サインインを許可するドメイン (GOOGLE_ALLOWED_DOMAINS)',
+      label: t('q_google_allowed_domains'),
       def: prev.GOOGLE_ALLOWED_DOMAINS,
       validate: validateAllowedDomains,
-      help: 'カンマ区切り。未設定だと全ドメインのサインインが拒否されます',
+      help: t('q_google_allowed_domains_help'),
     })
   } else {
-    note('カレンダー連携のみ有効です(Googleサインインは全ドメイン拒否になります)')
+    note(t('google_calendar_only'))
   }
   say()
-  note('Google Cloud 側に登録するリダイレクトURI:')
+  note(t('google_redirect_uris'))
   note(`  ${env.BETTER_AUTH_URL}/api/auth/callback/google`)
   note(`  ${env.BETTER_AUTH_URL}/api/auth/oauth2/callback/google-account`)
 }
 
-if (await askYesNo('Slack連携を設定しますか?', has('SLACK_CLIENT_ID'))) {
+if (await askYesNo(t('q_slack'), has('SLACK_CLIENT_ID'))) {
   env.SLACK_CLIENT_ID = await ask({
-    label: 'クライアントID (SLACK_CLIENT_ID)',
+    label: t('q_client_id', 'SLACK_CLIENT_ID'),
     def: prev.SLACK_CLIENT_ID,
     validate: validateRequired,
   })
   env.SLACK_CLIENT_SECRET = await ask({
-    label: 'クライアントシークレット (SLACK_CLIENT_SECRET)',
+    label: t('q_client_secret', 'SLACK_CLIENT_SECRET'),
     def: prev.SLACK_CLIENT_SECRET,
     validate: validateRequired,
     secret: true,
   })
   env.SLACK_BOT_TOKEN = await ask({
-    label: 'Botトークン (SLACK_BOT_TOKEN)',
+    label: t('q_slack_bot_token'),
     def: prev.SLACK_BOT_TOKEN,
     validate: validateRequired,
     secret: true,
   })
   if (!env.SLACK_BOT_TOKEN.startsWith('xoxb-')) {
-    warn('Botトークンは通常 xoxb- で始まります')
+    warn(t('slack_bot_token_prefix'))
   }
   env.SLACK_TEAM_ID = await ask({
-    label: 'ワークスペースID (SLACK_TEAM_ID)',
+    label: t('q_slack_team_id'),
     def: prev.SLACK_TEAM_ID,
     validate: validateRequired,
   })
   if (!env.SLACK_TEAM_ID.startsWith('T')) {
-    warn('ワークスペースIDは通常 T で始まります')
+    warn(t('slack_team_id_prefix'))
   }
   env.SLACK_SIGNING_SECRET = await ask({
-    label: '署名シークレット (SLACK_SIGNING_SECRET)',
+    label: t('q_slack_signing_secret'),
     def: prev.SLACK_SIGNING_SECRET,
     validate: validateRequired,
     secret: true,
   })
 }
 
-if (await askYesNo('GitHub連携(PRの状態・CIの反映)を設定しますか?', has('GITHUB_WEBHOOK_SECRET'))) {
+if (await askYesNo(t('q_github'), has('GITHUB_WEBHOOK_SECRET'))) {
   if (has('GITHUB_WEBHOOK_SECRET')) {
     env.GITHUB_WEBHOOK_SECRET = prev.GITHUB_WEBHOOK_SECRET
   } else {
     env.GITHUB_WEBHOOK_SECRET = generateSecret()
-    note('GITHUB_WEBHOOK_SECRET を自動生成しました(GitHub の Webhook の Secret に同じ値を登録します)')
+    note(t('github_secret_generated'))
   }
-  note('GitHub 側に登録する Payload URL:')
+  note(t('github_payload_url'))
   note(`  ${env.BETTER_AUTH_URL}/api/github/webhook`)
 }
 
-if (await askYesNo('GitLab連携(MRの状態・CIの反映)を設定しますか?', has('GITLAB_URLS'))) {
+if (await askYesNo(t('q_gitlab'), has('GITLAB_URLS'))) {
   env.GITLAB_URLS = await ask({
-    label: 'GitLab のインスタンスの URL (GITLAB_URLS)',
-    help: 'カンマ区切りで複数指定できます(例: https://gitlab.com,https://git.example.com/gitlab)',
+    label: t('q_gitlab_urls'),
+    help: t('q_gitlab_urls_help'),
     def: prev.GITLAB_URLS ?? 'https://gitlab.com',
     validate: validateGitlabUrls,
   })
-  note('Webhook の URL とトークンは、ボード設定の「Git連携」でプロジェクトごとに表示・設定します')
+  note(t('gitlab_webhook_note'))
 }
 
-section('通知(任意)')
-if (await askYesNo('Webプッシュ通知を有効にしますか?', has('VAPID_PUBLIC_KEY'))) {
+section(t('section_notify_optional'))
+if (await askYesNo(t('q_web_push'), has('VAPID_PUBLIC_KEY'))) {
   if (has('VAPID_PUBLIC_KEY') && has('VAPID_PRIVATE_KEY')) {
-    if (await askYesNo('VAPID鍵を再生成しますか?(既存の購読がすべて無効になります)', false)) {
+    if (await askYesNo(t('q_regenerate_vapid'), false)) {
       const keys = generateVapidKeys()
       env.VAPID_PUBLIC_KEY = keys.publicKey
       env.VAPID_PRIVATE_KEY = keys.privateKey
-      note('VAPID鍵を再生成しました')
+      note(t('vapid_regenerated'))
     } else {
       env.VAPID_PUBLIC_KEY = prev.VAPID_PUBLIC_KEY
       env.VAPID_PRIVATE_KEY = prev.VAPID_PRIVATE_KEY
@@ -651,18 +657,18 @@ if (await askYesNo('Webプッシュ通知を有効にしますか?', has('VAPID_
     const keys = generateVapidKeys()
     env.VAPID_PUBLIC_KEY = keys.publicKey
     env.VAPID_PRIVATE_KEY = keys.privateKey
-    note('VAPID鍵を自動生成しました')
+    note(t('vapid_generated'))
   }
-  if (has('VAPID_SUBJECT') || (await askYesNo('プッシュサービスからの連絡先を既定から変更しますか?', false))) {
+  if (has('VAPID_SUBJECT') || (await askYesNo(t('q_change_vapid_subject'), false))) {
     env.VAPID_SUBJECT = await ask({
-      label: '連絡先 (VAPID_SUBJECT)',
+      label: t('q_vapid_subject'),
       def: prevOr('VAPID_SUBJECT', env.MAIL_FROM ? `mailto:${env.MAIL_FROM}` : undefined),
       validate: validateVapidSubject,
-      help: 'mailto: または https: で始めます',
+      help: t('q_vapid_subject_help'),
     })
   }
   if (env.BETTER_AUTH_URL.startsWith('http://') && !/^http:\/\/(localhost|127\.0\.0\.1)/.test(env.BETTER_AUTH_URL)) {
-    warn('HTTPSでないとブラウザがプッシュ通知の購読を許可しません')
+    warn(t('web_push_needs_https'))
   }
 }
 
@@ -683,12 +689,12 @@ for (const key of MANUAL_KEYS) {
     env[key] = prev[key]
     carried.push(key)
   } catch (e) {
-    warn(`${key} は${e.message}。このキーは残せません(元の値は退避ファイルに残ります)`)
+    warn(t('key_not_writable', key, e.message))
   }
 }
 if (carried.length > 0) {
   say()
-  note(`次の設定は尋ねずに現在値を引き継ぎます: ${carried.join(', ')}`)
+  note(t('carried_keys', carried.join(', ')))
 }
 
 // ---
@@ -698,8 +704,8 @@ const knownKeys = new Set(ENV_DOCKER_SECTIONS.flatMap((s) => s.keys))
 const unknownKeys = Object.keys(prev).filter((key) => !knownKeys.has(key))
 if (unknownKeys.length > 0) {
   say()
-  warn(`このスクリプトが管理していないキーが既存の .env.docker にあります: ${unknownKeys.join(', ')}`)
-  if (await askYesNo('そのまま残しますか?', true)) {
+  warn(t('unknown_keys', unknownKeys.join(', ')))
+  if (await askYesNo(t('q_keep_unknown_keys'), true)) {
     const undroppable = []
     for (const key of unknownKeys) {
       try {
@@ -717,15 +723,15 @@ if (unknownKeys.length > 0) {
     if (undroppable.length > 0 && !opts.backup) {
       say()
       for (const { key, reason } of undroppable) {
-        say(color('red', `${key} は${reason}。`))
+        say(color('red', t('key_reason', key, reason)))
       }
-      say(color('red', '--no-backup では上書きと同時にこの値が失われるため中断しました。'))
-      say('--no-backup を外して実行するか、該当キーを先に手で退避してください。')
+      say(color('red', t('no_backup_would_lose')))
+      say(t('no_backup_would_lose_hint'))
       rl.close()
       process.exit(1)
     }
     for (const { key, reason } of undroppable) {
-      warn(`${key} は${reason}。このキーは残せません(元の値は退避ファイルに残ります)`)
+      warn(t('key_not_writable', key, reason))
     }
   }
 }
@@ -743,25 +749,19 @@ const build = (params) => {
     return serializeEnv(params)
   } catch (e) {
     say()
-    say(color('red', `設定を組み立てられませんでした: ${e.message}`))
+    say(color('red', t('build_failed', e.message)))
     process.exit(1)
   }
 }
 
 const envDockerBody = build({
-  header: [
-    'Devuntu セルフホスト用の環境変数(docker compose run --rm tools setup-env で再生成できる)',
-    '全変数の一覧は docs/environment-variables.md を参照',
-  ],
+  header: t('env_docker_header'),
   sections: ENV_DOCKER_SECTIONS,
   values: env,
-  extrasTitle: 'その他(このスクリプトが管理していない設定)',
+  extrasTitle: t('env_docker_extras'),
 })
 const envDbBody = build({
-  header: [
-    'compose.yaml の db サービス(postgres)が読む変数',
-    '外部のPostgreSQLを使う場合、このファイルと db サービスは不要',
-  ],
+  header: t('env_db_header'),
   sections: ENV_DB_SECTIONS,
   values: db,
 })
@@ -794,7 +794,7 @@ const maskBody = (body) =>
     })
     .join('\n')
 
-section('生成内容')
+section(t('section_output'))
 say(color('bold', `${envDockerPath}`))
 say(maskBody(envDockerBody))
 say(color('bold', `${envDbPath}`))
@@ -805,22 +805,22 @@ say(s3ConfigBody.replace(/("secretKey":\s*)"([^"]*)"/g, (_, head, value) => `${h
 
 if (prevEnvText) {
   const { added, changed, removed } = diffEnv(prev, env)
-  say(color('bold', '.env.docker の差分'))
-  note(`追加 ${added.length} / 変更 ${changed.length} / 削除 ${removed.length}`)
+  say(color('bold', t('diff_title')))
+  note(t('diff_summary', added.length, changed.length, removed.length))
   if (added.length > 0) {
-    note(`追加: ${added.join(', ')}`)
+    note(t('diff_added', added.join(', ')))
   }
   if (changed.length > 0) {
-    note(`変更: ${changed.join(', ')}`)
+    note(t('diff_changed', changed.join(', ')))
   }
   if (removed.length > 0) {
-    note(`削除: ${removed.join(', ')}`)
+    note(t('diff_removed', removed.join(', ')))
   }
 }
 
 if (opts['dry-run']) {
   say()
-  say(color('yellow', '--dry-run のためファイルは作成していません'))
+  say(color('yellow', t('dry_run_done')))
   rl.close()
   process.exit(0)
 }
@@ -833,16 +833,16 @@ const existing = [envDockerPath, envDbPath, s3ConfigPath].filter(
 )
 if (existing.length > 0 && !opts.force) {
   say()
-  warn(`次のファイルを上書きします: ${existing.map((f) => path.basename(f)).join(', ')}`)
-  if (!(await askYesNo('書き出しますか?', true))) {
-    say(color('yellow', '中断しました(ファイルは作成していません)'))
+  warn(t('overwrite_files', existing.map((f) => path.basename(f)).join(', ')))
+  if (!(await askYesNo(t('q_write'), true))) {
+    say(color('yellow', t('aborted')))
     rl.close()
     process.exit(0)
   }
 } else if (!opts.force) {
   say()
-  if (!(await askYesNo('書き出しますか?', true))) {
-    say(color('yellow', '中断しました(ファイルは作成していません)'))
+  if (!(await askYesNo(t('q_write'), true))) {
+    say(color('yellow', t('aborted')))
     rl.close()
     process.exit(0)
   }
@@ -922,9 +922,9 @@ try {
 } catch (e) {
   say()
   if (e.code === 'EACCES' || e.code === 'EPERM') {
-    say(color('red', `${outDir} へ書き込めません。ディレクトリの所有者を確認するか、sudo を付けて実行してください`))
+    say(color('red', t('cannot_write_dir', outDir)))
   } else {
-    say(color('red', `書き出しに失敗しました: ${e.message}`))
+    say(color('red', t('write_failed', e.message)))
   }
   // 作り終えていない一時ファイルを残さない
   for (const target of targets) {
@@ -934,14 +934,14 @@ try {
 }
 
 say()
-say(color('green', '作成しました:'))
+say(color('green', t('created')))
 note(`${envDockerPath}`)
 note(`${envDbPath}`)
 note(`${s3ConfigPath}`)
 if (existing.length > 0 && opts.backup) {
-  note(`上書き前の内容は *.${suffix}.bak に退避しました`)
+  note(t('backed_up', suffix))
 }
 say()
-say(color('bold', '次の手順:'))
+say(color('bold', t('next_steps')))
 say('  docker compose up -d')
-say(`  ${env.BETTER_AUTH_URL}/start  を開いて最初の管理者を登録する`)
+say(t('next_open_start', env.BETTER_AUTH_URL))

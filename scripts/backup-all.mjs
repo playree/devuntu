@@ -23,6 +23,7 @@ import path from 'node:path'
 import { resolveDbEnv, stamp, waitForNoOtherConnections } from './db-connect.mjs'
 import { matchOwner } from './file-owner.mjs'
 import { parseMaintenanceFile } from './maintenance-flag.mjs'
+import { t } from './messages.mjs'
 import { runScript, signalExitCode, spawnScript } from './run-script.mjs'
 
 /**
@@ -64,7 +65,7 @@ const backup = async (pgEnv) => {
     activeChild = null
     if (code !== 0) {
       rmSync(tmpDir, { recursive: true, force: true })
-      console.error(`${script} が失敗したため中断しました (exit ${code})`)
+      console.error(t('step_failed', script, code))
       return code
     }
   }
@@ -74,8 +75,7 @@ const backup = async (pgEnv) => {
   matchOwner([BACKUP_DIR])
   matchOwner([outDir], { recursive: true })
 
-  console.log(`Backup created: backup/${name}`)
-  console.log(`復元は: pnpm full:restore backup/${name}`)
+  console.log(t('full_backup_created', name))
   return 0
 }
 
@@ -83,7 +83,7 @@ const backup = async (pgEnv) => {
 const drainThenBackup = async (pgEnv) => {
   const remaining = await waitForNoOtherConnections(pgEnv, DRAIN_WAIT_SEC)
   if (remaining > 0) {
-    console.error(`${pgEnv.PGDATABASE} に他の接続が ${remaining} 件残っているため中断しました`)
+    console.error(t('backup_connections_remaining', pgEnv.PGDATABASE, remaining))
     return 1
   }
   return backup(pgEnv)
@@ -92,7 +92,7 @@ const drainThenBackup = async (pgEnv) => {
 /** メンテナンスモードにしてから取得し、OFF に戻す。終了コードを返す */
 const backupInMaintenance = async (pgEnv, file) => {
   if (existsSync(file)) {
-    console.log('メンテナンスモードは既に ON です。取得後も ON のままにします')
+    console.log(t('maintenance_already_on'))
     return drainThenBackup(pgEnv)
   }
 
@@ -104,8 +104,7 @@ const backupInMaintenance = async (pgEnv, file) => {
     off = true
     const code = runScript('maintenance.mjs', ['off', '--file', file])
     if (code !== 0) {
-      console.error(`メンテナンスモードを解除できませんでした (exit ${code})。手で解除してください:`)
-      console.error('  docker compose run --rm tools maintenance off')
+      console.error(t('maintenance_off_failed', code))
     }
     return code
   }
@@ -128,7 +127,7 @@ const backupInMaintenance = async (pgEnv, file) => {
   try {
     code = runScript('maintenance.mjs', ['on', '--file', file])
     if (code !== 0) {
-      console.error(`メンテナンスモードにできなかったため中断しました (exit ${code})`)
+      console.error(t('maintenance_on_failed', code))
     } else {
       code = await drainThenBackup(pgEnv)
     }

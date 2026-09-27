@@ -5,6 +5,7 @@
  * そのまま検証できる。副作用は `index.mjs` 側へ寄せている。
  */
 import { parseEnv } from 'node:util'
+import { t } from './messages.mjs'
 
 /**
  * env ファイルの内容をキーと値の組へ分解する。
@@ -44,13 +45,13 @@ const isBareValue = (value) => !/[\s#$'"]/.test(value)
 export const quoteEnvValue = (value) => {
   const text = String(value)
   if (text.includes('\n') || text.includes('\r')) {
-    throw new Error('改行を含む値は env ファイルへ書けません')
+    throw new Error(t('value_has_newline'))
   }
   if (text.includes("'")) {
-    throw new Error("シングルクォート(')を含む値は env ファイルへ書けません")
+    throw new Error(t('value_has_single_quote'))
   }
   if (text.endsWith('\\')) {
-    throw new Error('バックスラッシュで終わる値は env ファイルへ書けません')
+    throw new Error(t('value_ends_with_backslash'))
   }
   if (text === '' || isBareValue(text)) {
     return text
@@ -80,7 +81,7 @@ const normalize = (value) => {
  * @param {string} [params.extrasTitle] sections に無いキーをまとめる見出し
  * @returns {string}
  */
-export const serializeEnv = ({ header = [], sections, values, extrasTitle = 'その他' }) => {
+export const serializeEnv = ({ header = [], sections, values, extrasTitle = t('section_extras') }) => {
   const lines = header.map((line) => `# ${line}`)
   const known = new Set()
 

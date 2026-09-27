@@ -13,6 +13,7 @@
  * compose.yaml の使い捨てコンテナを tools 1本にまとめるための入口。
  * 呼び出し先の起動は `run-script.mjs` に集約している。
  */
+import { t } from './messages.mjs'
 import { spawnScript } from './run-script.mjs'
 
 const COMMANDS = {
@@ -26,38 +27,21 @@ const COMMANDS = {
   maintenance: 'maintenance.mjs',
 }
 
-const USAGE = `使い方: node scripts/tools.mjs <サブコマンド> [引数...]
-
-  setup-env     設定ファイル(.env.docker / .env.db / seaweedfs-s3.json)を対話生成する
-  db-backup     データベースの中身を backup/ へバックアップする
-  db-restore    ダンプファイルの内容をデータベースへ復元する
-  s3-backup     オブジェクトストレージの中身を backup/ へバックアップする
-  s3-restore    バックアップディレクトリの内容をオブジェクトストレージへ復元する
-  full-backup   DB と S3 を backup/full_<stamp>/ へまとめてバックアップする
-                (--maintenance で取得の間だけメンテナンスモードにする。
-                 開始前から ON の場合は取得後も ON のまま)
-  full-restore  full-backup の出力から DB と S3 をまとめて復元する
-  maintenance   メンテナンスモードを切り替える(on / off / status)
-  help          この使い方を表示する
-
-サブコマンドより後ろの引数はそのまま渡される(例: setup-env --dry-run)。
-`
-
 const [command, ...rest] = process.argv.slice(2)
 
 if (command === undefined) {
-  process.stderr.write(USAGE)
+  process.stderr.write(t('tools_usage'))
   process.exit(1)
 }
 
 if (command === 'help' || command === '--help' || command === '-h') {
-  process.stdout.write(USAGE)
+  process.stdout.write(t('tools_usage'))
   process.exit(0)
 }
 
 // プロトタイプ由来のプロパティ(toString など)を拾わないよう、自身のキーだけを見る
 if (!Object.hasOwn(COMMANDS, command)) {
-  process.stderr.write(`不明なサブコマンドです: ${command}\n\n${USAGE}`)
+  process.stderr.write(`${t('tools_unknown_command', command)}\n\n${t('tools_usage')}`)
   process.exit(1)
 }
 

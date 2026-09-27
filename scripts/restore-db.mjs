@@ -21,6 +21,7 @@ import {
   showTransport,
   waitForNoOtherConnections,
 } from './db-connect.mjs'
+import { t } from './messages.mjs'
 
 /**
  * ローカル実行では `.env` を読む。
@@ -33,8 +34,7 @@ await import('dotenv/config').catch(() => {})
 const sqlIdent = (value) => `"${value.replaceAll('"', '""')}"`
 
 const usage = () => {
-  console.error('Usage: node ./scripts/restore-db.mjs <dump-file> [--force] [--wait <秒>]')
-  console.error('Example: node ./scripts/restore-db.mjs backup/devuntu_20260719_120000.dump')
+  console.error(t('restore_db_usage'))
 }
 
 /**
@@ -53,9 +53,7 @@ const assertNoOtherConnections = async (pgEnv, waitSec) => {
   if (count === 0) {
     return
   }
-  console.error(`${pgEnv.PGDATABASE} に他の接続が ${count} 件残っています。`)
-  console.error('先に `pnpm maintenance on` で遮断するか、`docker compose stop devuntu` で止めてから')
-  console.error('実行してください(--force で無視できます)。')
+  console.error(t('db_connections_remaining', pgEnv.PGDATABASE, count))
   process.exit(1)
 }
 
@@ -67,7 +65,7 @@ const parseWait = (args) => {
   }
   const value = Number(args[index + 1])
   if (!Number.isFinite(value) || value < 0) {
-    console.error('--wait には待つ秒数を指定してください')
+    console.error(t('wait_required'))
     process.exit(1)
   }
   return value
@@ -87,7 +85,7 @@ const main = async () => {
     process.exit(1)
   }
   if (!existsSync(dumpFile)) {
-    console.error(`File not found: ${dumpFile}`)
+    console.error(t('file_not_found', dumpFile))
     process.exit(1)
   }
 
@@ -98,7 +96,7 @@ const main = async () => {
     await assertNoOtherConnections(pgEnv, waitSec)
   }
 
-  console.log(`Restoring ${dumpFile} into ${pgEnv.PGDATABASE} (database will be recreated)...`)
+  console.log(t('restoring_db', dumpFile, pgEnv.PGDATABASE))
 
   // DBを一度作り直してから空のDBへ復元する。
   // --clean 方式だと「ダンプに含まれるオブジェクト」しか DROP されず、
@@ -133,7 +131,7 @@ const main = async () => {
     }
   }
 
-  console.log('Restore completed.')
+  console.log(t('restore_completed'))
 }
 
 await main()

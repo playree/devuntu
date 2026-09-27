@@ -13,8 +13,7 @@
  *
  * アプリのモジュール(`@/` エイリアス)を読めないため、S3クライアントはここで組み立てる。
  * 設定値は `src/lib/env-util.ts` の同名の環境変数と揃えている。
- * このファイル単体をマウントするだけでも実行できるよう、
- * `restore-s3.mjs` と共通処理を切り出さず、それぞれ自己完結させている。
+ * S3 の処理は `restore-s3.mjs` と共通化せず、それぞれ自己完結させている。
  */
 import { GetObjectCommand, ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3'
 import { createWriteStream } from 'node:fs'
@@ -22,6 +21,7 @@ import { mkdir, rename, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { pipeline } from 'node:stream/promises'
 import { matchOwner } from './file-owner.mjs'
+import { t } from './messages.mjs'
 
 /**
  * ローカル実行では `.env` を読む。
@@ -77,7 +77,7 @@ const parseOut = (args) => {
   }
   const value = args[index + 1]
   if (!value || value.startsWith('--')) {
-    console.error('--out には出力先のディレクトリパスを指定してください')
+    console.error(t('out_dir_required'))
     process.exit(1)
   }
   return value
@@ -87,7 +87,7 @@ const main = async () => {
   const out = parseOut(process.argv.slice(2))
 
   if (!process.env.S3_ENDPOINT) {
-    throw new Error('S3_ENDPOINT is not set')
+    throw new Error(t('s3_endpoint_missing'))
   }
 
   const outDir = out ? path.resolve(out) : path.join(BACKUP_DIR, `s3_${stamp()}`)
@@ -106,7 +106,7 @@ const main = async () => {
     for (const item of contents) {
       const key = item.Key
       if (!isSafeKey(key)) {
-        console.warn(`skip (unsafe key): ${key}`)
+        console.warn(t('s3_skip_unsafe_key', key))
         skipped++
         continue
       }
@@ -140,7 +140,7 @@ const main = async () => {
     matchOwner([outDir], { recursive: true })
 
     const shown = path.relative(process.cwd(), outDir) || outDir
-    console.log(`Backup created: ${shown} (${objects.length} objects, ${totalBytes} bytes, skipped=${skipped})`)
+    console.log(t('s3_backup_created', shown, objects.length, totalBytes, skipped))
   } catch (err) {
     await rm(tmpDir, { recursive: true, force: true })
     throw err

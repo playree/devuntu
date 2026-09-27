@@ -7,13 +7,13 @@
  * fs も process も触らないので、そのままテストできる。
  */
 import { generateKeyPairSync, randomBytes, randomInt } from 'node:crypto'
+import { t } from './messages.mjs'
 
 /** 同梱の db / s3 サービスへは Compose のネットワーク内で到達する */
 export const BUNDLED_DB_HOST = 'db:5432'
 export const BUNDLED_S3_ENDPOINT = 'http://s3:8333'
 
 export const DEFAULTS = {
-  DEFAULT_LOCALE: 'ja',
   DEFAULT_TIMEZONE: 'Asia/Tokyo',
   POSTGRES_USER: 'devuser',
   POSTGRES_DB: 'devuntu',
@@ -32,77 +32,83 @@ export const LOG_LEVELS = ['trace', 'debug', 'info', 'warn', 'error', 'fatal']
 export const MAIL_SEND_MODES = ['smtp', 'sendgrid', 'sendmail', 'debug']
 export const ATTACHMENT_MODES = ['off', 'dry-run', 'delete']
 
+/** 見出しは書き出す時点の言語で出す(言語は setup-env の実行中に決まるため、定義時には決められない) */
+const localizedSection = (titleKey, keys) => ({
+  get title() {
+    return t(titleKey)
+  },
+  keys,
+})
+
 /** `.env.docker` のセクション構成。`docs/environment-variables.md` の見出しと揃えている */
 export const ENV_DOCKER_SECTIONS = [
-  {
-    title: '基本',
-    keys: [
-      'DEFAULT_LOCALE',
-      'DEFAULT_TIMEZONE',
-      'LOG_LEVEL',
-      'SEARCH_ENGINE_INDEXING',
-      'SEARCH_ENGINE_ROBOTS_ALLOW',
-      'RELEASE_NOTES_REPO',
-      'RELEASE_NOTES_LIMIT',
-    ],
-  },
-  {
-    title: '認証',
-    keys: [
-      'DATABASE_URL',
-      'BETTER_AUTH_URL',
-      'BETTER_AUTH_SECRET',
-      'DISABLE_PASSWORD_AUTH',
-      'TWO_FA_REQUIRED',
-      'SESSION_EXPIRES_IN',
-      'SESSION_FRESH_AGE',
-      'MCP_REFRESH_TOKEN_EXPIRES_IN',
-      'OIDC_DCR_ENABLED',
-    ],
-  },
-  {
-    title: 'メール',
-    keys: [
-      'MAIL_SEND',
-      'MAIL_FROM',
-      'SENDGRID_API_KEY',
-      'SENDMAIL_PATH',
-      'SMTP_HOST',
-      'SMTP_PORT',
-      'SMTP_SECURE',
-      'SMTP_IGNORE_TLS',
-      'SMTP_USER',
-      'SMTP_PASS',
-    ],
-  },
-  {
-    title: 'オブジェクトストレージ',
-    keys: ['S3_ENDPOINT', 'S3_BUCKET', 'S3_REGION', 'S3_ACCESS_KEY_ID', 'S3_SECRET_ACCESS_KEY', 'S3_FORCE_PATH_STYLE'],
-  },
-  {
-    title: '外部サービス連携',
-    keys: [
-      'GOOGLE_CLIENT_ID',
-      'GOOGLE_CLIENT_SECRET',
-      'GOOGLE_ALLOWED_DOMAINS',
-      'SLACK_CLIENT_ID',
-      'SLACK_CLIENT_SECRET',
-      'SLACK_BOT_TOKEN',
-      'SLACK_TEAM_ID',
-      'SLACK_SIGNING_SECRET',
-      'GITHUB_WEBHOOK_SECRET',
-      'GITLAB_URLS',
-      'MAIN_DEVUNTU_URL',
-      'MAIN_DEVUNTU_CLIENT_ID',
-      'MAIN_DEVUNTU_CLIENT_SECRET',
-    ],
-  },
-  { title: '通知', keys: ['VAPID_PUBLIC_KEY', 'VAPID_PRIVATE_KEY', 'VAPID_SUBJECT', 'NOTIFY_WORKER_ENABLED'] },
-  {
-    title: 'メンテナンス',
-    keys: ['MAINTENANCE_WORKER_ENABLED', 'MAINTENANCE_ATTACHMENT_MODE', 'MAINTENANCE_ATTACHMENT_GRACE_HOURS'],
-  },
-  { title: 'ホスト情報の表示', keys: ['LINODE_ID', 'LINODE_PERSONAL_ACCESS_TOKEN'] },
+  localizedSection('section_basic', [
+    'DEFAULT_LOCALE',
+    'DEFAULT_TIMEZONE',
+    'LOG_LEVEL',
+    'SEARCH_ENGINE_INDEXING',
+    'SEARCH_ENGINE_ROBOTS_ALLOW',
+    'RELEASE_NOTES_REPO',
+    'RELEASE_NOTES_LIMIT',
+  ]),
+  localizedSection('section_auth', [
+    'DATABASE_URL',
+    'BETTER_AUTH_URL',
+    'BETTER_AUTH_SECRET',
+    'DISABLE_PASSWORD_AUTH',
+    'TWO_FA_REQUIRED',
+    'SESSION_EXPIRES_IN',
+    'SESSION_FRESH_AGE',
+    'MCP_REFRESH_TOKEN_EXPIRES_IN',
+    'OIDC_DCR_ENABLED',
+  ]),
+  localizedSection('section_mail', [
+    'MAIL_SEND',
+    'MAIL_FROM',
+    'SENDGRID_API_KEY',
+    'SENDMAIL_PATH',
+    'SMTP_HOST',
+    'SMTP_PORT',
+    'SMTP_SECURE',
+    'SMTP_IGNORE_TLS',
+    'SMTP_USER',
+    'SMTP_PASS',
+  ]),
+  localizedSection('section_storage', [
+    'S3_ENDPOINT',
+    'S3_BUCKET',
+    'S3_REGION',
+    'S3_ACCESS_KEY_ID',
+    'S3_SECRET_ACCESS_KEY',
+    'S3_FORCE_PATH_STYLE',
+  ]),
+  localizedSection('section_integrations', [
+    'GOOGLE_CLIENT_ID',
+    'GOOGLE_CLIENT_SECRET',
+    'GOOGLE_ALLOWED_DOMAINS',
+    'SLACK_CLIENT_ID',
+    'SLACK_CLIENT_SECRET',
+    'SLACK_BOT_TOKEN',
+    'SLACK_TEAM_ID',
+    'SLACK_SIGNING_SECRET',
+    'GITHUB_WEBHOOK_SECRET',
+    'GITLAB_URLS',
+    'MAIN_DEVUNTU_URL',
+    'MAIN_DEVUNTU_CLIENT_ID',
+    'MAIN_DEVUNTU_CLIENT_SECRET',
+  ]),
+  localizedSection('section_notify', [
+    'VAPID_PUBLIC_KEY',
+    'VAPID_PRIVATE_KEY',
+    'VAPID_SUBJECT',
+    'NOTIFY_WORKER_ENABLED',
+  ]),
+  localizedSection('section_maintenance', [
+    'MAINTENANCE_WORKER_ENABLED',
+    'MAINTENANCE_ATTACHMENT_MODE',
+    'MAINTENANCE_ATTACHMENT_GRACE_HOURS',
+  ]),
+  localizedSection('section_host_info', ['LINODE_ID', 'LINODE_PERSONAL_ACCESS_TOKEN']),
 ]
 
 /**
@@ -167,7 +173,7 @@ export const generateVapidKeys = () => {
   const { privateKey } = generateKeyPairSync('ec', { namedCurve: 'prime256v1' })
   const jwk = privateKey.export({ format: 'jwk' })
   if (!jwk.x || !jwk.y || !jwk.d) {
-    throw new Error('VAPID鍵の生成に失敗しました(P-256のJWKに x / y / d が揃っていません)')
+    throw new Error(t('vapid_generate_failed'))
   }
   const x = Buffer.from(jwk.x, 'base64url')
   const y = Buffer.from(jwk.y, 'base64url')
@@ -290,26 +296,26 @@ const err = (message) => ({ ok: false, value: '', error: message, warn: undefine
 export const validateBetterAuthUrl = (input) => {
   const text = String(input ?? '').trim()
   if (text === '') {
-    return err('必須です')
+    return err(t('required'))
   }
   let url
   try {
     url = new URL(text)
   } catch {
-    return err('URLとして解釈できません(例: https://devuntu.example.com)')
+    return err(t('invalid_url_example'))
   }
   if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-    return err('http:// または https:// で指定してください')
+    return err(t('http_or_https'))
   }
   if (url.search || url.hash) {
-    return err('クエリやフラグメントは含められません')
+    return err(t('no_query_or_fragment'))
   }
   if (url.pathname !== '/') {
-    return err(`パスは含められません(オリジンのみ指定してください: ${url.origin})`)
+    return err(t('origin_only', url.origin))
   }
   const warn =
     url.protocol === 'http:' && url.hostname !== 'localhost' && url.hostname !== '127.0.0.1'
-      ? 'http:// のため Cookie に Secure が付かず、Webプッシュ通知もブラウザに拒否されます'
+      ? t('http_insecure')
       : undefined
   return ok(url.origin, { warn, normalized: url.origin !== text })
 }
@@ -317,15 +323,15 @@ export const validateBetterAuthUrl = (input) => {
 export const validateDatabaseUrl = (input) => {
   const text = String(input ?? '').trim()
   if (text === '') {
-    return err('必須です')
+    return err(t('required'))
   }
   const parsed = parseDatabaseUrl(text)
   if (!parsed) {
-    return err('接続URLとして解釈できません(例: postgresql://user:pass@host:5432/dbname?schema=public)')
+    return err(t('invalid_database_url'))
   }
   const protocol = new URL(text).protocol
   if (protocol !== 'postgresql:' && protocol !== 'postgres:') {
-    return err('postgresql:// で指定してください')
+    return err(t('postgresql_scheme'))
   }
   return ok(text)
 }
@@ -333,55 +339,55 @@ export const validateDatabaseUrl = (input) => {
 export const validateUrl = (input) => {
   const text = String(input ?? '').trim()
   if (text === '') {
-    return err('必須です')
+    return err(t('required'))
   }
   try {
     const url = new URL(text)
     if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-      return err('http:// または https:// で指定してください')
+      return err(t('http_or_https'))
     }
   } catch {
-    return err('URLとして解釈できません')
+    return err(t('invalid_url'))
   }
   return ok(text)
 }
 
 export const validateRequired = (input) => {
   const text = String(input ?? '').trim()
-  return text === '' ? err('必須です') : ok(text)
+  return text === '' ? err(t('required')) : ok(text)
 }
 
 export const validateTimezone = (input) => {
   const text = String(input ?? '').trim()
   if (text === '') {
-    return err('必須です')
+    return err(t('required'))
   }
   try {
     new Intl.DateTimeFormat(undefined, { timeZone: text })
   } catch {
-    return err('タイムゾーン名として解釈できません(例: Asia/Tokyo)')
+    return err(t('invalid_timezone'))
   }
   return ok(text)
 }
 
 export const validateChoice = (choices) => (input) => {
   const text = String(input ?? '').trim()
-  return choices.includes(text) ? ok(text) : err(`${choices.join(' / ')} のいずれかを指定してください`)
+  return choices.includes(text) ? ok(text) : err(t('one_of', choices.join(' / ')))
 }
 
 export const validateMailFrom = (input) => {
   const text = String(input ?? '').trim()
   if (text === '') {
-    return err('必須です')
+    return err(t('required'))
   }
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text) ? ok(text) : err('メールアドレスの形式で指定してください')
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text) ? ok(text) : err(t('invalid_email'))
 }
 
 export const validatePort = (input) => {
   const text = String(input ?? '').trim()
   const port = Number(text)
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
-    return err('1〜65535 の整数で指定してください')
+    return err(t('invalid_port'))
   }
   return ok(String(port))
 }
@@ -390,7 +396,7 @@ export const validatePositiveInt = (min) => (input) => {
   const text = String(input ?? '').trim()
   const value = Number(text)
   if (!Number.isInteger(value) || value < min) {
-    return err(`${min} 以上の整数で指定してください`)
+    return err(t('min_integer', min))
   }
   return ok(String(value))
 }
@@ -407,11 +413,11 @@ export const validateAllowedDomains = (input) => {
     .map((d) => d.trim().replace(/^@/, ''))
     .filter((d) => d !== '')
   if (domains.length === 0) {
-    return err('最低1件必要です(未設定だと全ドメインのサインインが拒否されます)')
+    return err(t('allowed_domains_required'))
   }
   const invalid = domains.find((d) => !/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(d))
   if (invalid) {
-    return err(`ドメイン名として解釈できません: ${invalid}`)
+    return err(t('invalid_domain', invalid))
   }
   return ok(domains.join(','))
 }
@@ -423,7 +429,7 @@ export const validateGitlabUrls = (input) => {
     .map((v) => v.trim())
     .filter((v) => v !== '')
   if (values.length === 0) {
-    return err('最低1件必要です')
+    return err(t('at_least_one'))
   }
   const normalized = []
   for (const value of values) {
@@ -431,7 +437,7 @@ export const validateGitlabUrls = (input) => {
     try {
       url = new URL(value)
     } catch {
-      return err(`URLとして解釈できません: ${value}`)
+      return err(t('invalid_url_value', value))
     }
     if (
       (url.protocol !== 'http:' && url.protocol !== 'https:') ||
@@ -440,7 +446,7 @@ export const validateGitlabUrls = (input) => {
       url.search ||
       url.hash
     ) {
-      return err(`http(s):// で始まる、認証情報やクエリの無い URL で指定してください: ${value}`)
+      return err(t('invalid_gitlab_url', value))
     }
     normalized.push(`${url.origin}${url.pathname.replace(/\/+$/, '')}`)
   }
@@ -450,9 +456,9 @@ export const validateGitlabUrls = (input) => {
 export const validateVapidSubject = (input) => {
   const text = String(input ?? '').trim()
   if (text === '') {
-    return err('必須です')
+    return err(t('required'))
   }
-  return /^(mailto:|https:)/.test(text) ? ok(text) : err('mailto: または https: で始めてください')
+  return /^(mailto:|https:)/.test(text) ? ok(text) : err(t('vapid_subject_scheme'))
 }
 
 /** `MAIL_SEND` ごとに追加で必須になるキー */

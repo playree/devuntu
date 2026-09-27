@@ -10,6 +10,7 @@
  */
 import { spawnSync } from 'node:child_process'
 import { setTimeout as sleep } from 'node:timers/promises'
+import { t } from './messages.mjs'
 
 /**
  * `DATABASE_URL` を libpq 用の `PG*` 環境変数へ分解する。
@@ -23,14 +24,14 @@ import { setTimeout as sleep } from 'node:timers/promises'
  */
 export const resolveDbEnv = (databaseUrl) => {
   if (!databaseUrl) {
-    throw new Error('DATABASE_URL が設定されていません')
+    throw new Error(t('db_url_missing'))
   }
 
   let url
   try {
     url = new URL(databaseUrl)
   } catch {
-    throw new Error('DATABASE_URL を接続URLとして解釈できません')
+    throw new Error(t('db_url_invalid'))
   }
 
   const database = decodeURIComponent(url.pathname.replace(/^\//, ''))
@@ -38,7 +39,7 @@ export const resolveDbEnv = (databaseUrl) => {
   // IPv6 リテラルは URL 側が `[::1]` の形で返すが、libpq は角括弧を含まない形を取る
   const host = url.hostname.replace(/^\[(.*)\]$/, '$1')
   if (!host || !database || !user) {
-    throw new Error('DATABASE_URL にホスト・ユーザー・DB名のいずれかが含まれていません')
+    throw new Error(t('db_url_incomplete'))
   }
 
   /** @type {Record<string, string>} */
@@ -91,7 +92,7 @@ export const showTransport = () => {
     return
   }
   transportShown = true
-  console.log(hasLocalPgClient() ? 'using local postgres client' : 'using docker compose exec -T db')
+  console.log(t(hasLocalPgClient() ? 'db_transport_local' : 'db_transport_docker'))
 }
 
 /**
@@ -106,10 +107,7 @@ export const buildPgCommand = (bin, args, { pgEnv, database }) => {
     return { command: bin, args: ['-d', db, ...args], env: { ...process.env, ...pgEnv, PGDATABASE: db } }
   }
   if (!isBundledDbHost(pgEnv)) {
-    throw new Error(
-      `DATABASE_URL の接続先 (${pgEnv.PGHOST}) は同梱の db サービスではないため、docker compose exec では扱えません。` +
-        '実行するホストに postgresql-client を入れてください',
-    )
+    throw new Error(t('db_not_bundled', pgEnv.PGHOST))
   }
   return {
     command: 'docker',
@@ -128,17 +126,13 @@ export const runPg = (bin, args, { pgEnv, database, stdio = 'inherit', capture =
   })
 
   if (res.error?.code === 'ENOENT') {
-    throw new Error(
-      hasLocalPgClient()
-        ? `${bin} を実行できませんでした: ${res.error.message}`
-        : `${bin} が見つからず、docker も使えませんでした。postgresql-client を入れるか、compose.yaml のあるディレクトリで実行してください`,
-    )
+    throw new Error(hasLocalPgClient() ? t('pg_exec_failed', bin, res.error.message) : t('pg_not_found', bin))
   }
   if (res.error) {
-    throw new Error(`${bin} を起動できませんでした: ${res.error.message}`)
+    throw new Error(t('spawn_failed', bin, res.error.message))
   }
   if (res.status !== 0) {
-    throw new Error(`${bin} が失敗しました (exit ${res.status})`)
+    throw new Error(t('pg_failed', bin, res.status))
   }
   return res
 }
@@ -171,7 +165,7 @@ export const waitForNoOtherConnections = async (pgEnv, waitSec) => {
   const deadline = Date.now() + waitSec * 1000
   let count = countOtherConnections(pgEnv)
   if (count > 0 && waitSec > 0) {
-    console.log(`${pgEnv.PGDATABASE} の接続が解放されるまで待ちます(最大 ${waitSec} 秒)...`)
+    console.log(t('db_wait_release', pgEnv.PGDATABASE, waitSec))
     while (count > 0 && Date.now() < deadline) {
       await sleep(1000)
       count = countOtherConnections(pgEnv)

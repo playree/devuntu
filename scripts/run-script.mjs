@@ -10,6 +10,7 @@ import { spawn, spawnSync } from 'node:child_process'
 import { constants } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { t } from './messages.mjs'
 
 // コンテナ内のパスを決め打ちにせず、このファイルの位置から解決する
 const scriptsDir = path.dirname(fileURLToPath(import.meta.url))
@@ -27,7 +28,7 @@ export const runScript = (script, args = []) => {
   })
 
   if (error) {
-    process.stderr.write(`${script} を起動できませんでした: ${error.message}\n`)
+    process.stderr.write(`${t('spawn_failed', script, error.message)}\n`)
     return 1
   }
   return exitCode(status, signal)
@@ -45,7 +46,7 @@ export const spawnScript = (script, args = []) => {
   const child = spawn(process.execPath, [path.join(scriptsDir, script), ...args], { stdio: 'inherit' })
   const exited = new Promise((resolve) => {
     child.once('error', (error) => {
-      process.stderr.write(`${script} を起動できませんでした: ${error.message}\n`)
+      process.stderr.write(`${t('spawn_failed', script, error.message)}\n`)
       resolve(1)
     })
     child.once('exit', (status, signal) => resolve(exitCode(status, signal)))
