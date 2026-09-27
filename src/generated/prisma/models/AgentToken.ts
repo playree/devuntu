@@ -344,21 +344,6 @@ export type AgentTokenUncheckedUpdateManyInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type AgentTokenNullableScalarRelationFilter = {
-  is?: Prisma.AgentTokenWhereInput | null
-  isNot?: Prisma.AgentTokenWhereInput | null
-}
-
-export type AgentTokenListRelationFilter = {
-  every?: Prisma.AgentTokenWhereInput
-  some?: Prisma.AgentTokenWhereInput
-  none?: Prisma.AgentTokenWhereInput
-}
-
-export type AgentTokenOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
-}
-
 export type AgentTokenCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
@@ -390,6 +375,37 @@ export type AgentTokenMinOrderByAggregateInput = {
   lastUsedAt?: Prisma.SortOrder
   createdById?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+}
+
+export type AgentTokenNullableScalarRelationFilter = {
+  is?: Prisma.AgentTokenWhereInput | null
+  isNot?: Prisma.AgentTokenWhereInput | null
+}
+
+export type AgentTokenListRelationFilter = {
+  every?: Prisma.AgentTokenWhereInput
+  some?: Prisma.AgentTokenWhereInput
+  none?: Prisma.AgentTokenWhereInput
+}
+
+export type AgentTokenOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
+}
+
+export type StringFieldUpdateOperationsInput = {
+  set?: string
+}
+
+export type NullableDateTimeFieldUpdateOperationsInput = {
+  set?: Date | string | null
+}
+
+export type DateTimeFieldUpdateOperationsInput = {
+  set?: Date | string
+}
+
+export type NullableStringFieldUpdateOperationsInput = {
+  set?: string | null
 }
 
 export type AgentTokenCreateNestedOneWithoutUserInput = {

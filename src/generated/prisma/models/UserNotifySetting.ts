@@ -342,16 +342,6 @@ export type UserNotifySettingUncheckedUpdateManyInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type UserNotifySettingListRelationFilter = {
-  every?: Prisma.UserNotifySettingWhereInput
-  some?: Prisma.UserNotifySettingWhereInput
-  none?: Prisma.UserNotifySettingWhereInput
-}
-
-export type UserNotifySettingOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
-}
-
 export type UserNotifySettingUserIdEventCompoundUniqueInput = {
   userId: string
   event: $Enums.NotifyEvent
@@ -388,6 +378,20 @@ export type UserNotifySettingMinOrderByAggregateInput = {
   webpush?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type UserNotifySettingListRelationFilter = {
+  every?: Prisma.UserNotifySettingWhereInput
+  some?: Prisma.UserNotifySettingWhereInput
+  none?: Prisma.UserNotifySettingWhereInput
+}
+
+export type UserNotifySettingOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
+}
+
+export type EnumNotifyEventFieldUpdateOperationsInput = {
+  set?: $Enums.NotifyEvent
 }
 
 export type UserNotifySettingCreateNestedManyWithoutUserInput = {
@@ -430,10 +434,6 @@ export type UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput = {
   update?: Prisma.UserNotifySettingUpdateWithWhereUniqueWithoutUserInput | Prisma.UserNotifySettingUpdateWithWhereUniqueWithoutUserInput[]
   updateMany?: Prisma.UserNotifySettingUpdateManyWithWhereWithoutUserInput | Prisma.UserNotifySettingUpdateManyWithWhereWithoutUserInput[]
   deleteMany?: Prisma.UserNotifySettingScalarWhereInput | Prisma.UserNotifySettingScalarWhereInput[]
-}
-
-export type EnumNotifyEventFieldUpdateOperationsInput = {
-  set?: $Enums.NotifyEvent
 }
 
 export type UserNotifySettingCreateWithoutUserInput = {

@@ -1,0 +1,184 @@
+/// チケットの状態。かんばんのレーンに対応する
+enum TicketStatus {
+  /// バックログ
+  backlog
+  /// 対応予定
+  todo
+  /// 対応中
+  doing
+  /// 完了
+  done
+}
+
+/// チケットの優先度
+enum TicketPriority {
+  /// 緊急
+  urgent
+  /// 高
+  high
+  /// 中
+  medium
+  /// 低
+  low
+}
+
+/// かんばんに並べるチケット。
+model Ticket {
+  id String @id @default(uuid(7))
+
+  /// プライベートも必ずボード(kind=private)に属する。所有者による別スコープは持たない。
+  /// 作成時に決まり以後変更しない(ボード移動は無い)。本文に貼った添付の可視範囲がこの前提に依存する
+  /// (docs/development.md「チケットはボードを移動しない」)
+  boardId String
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  /// 作成者。ユーザー削除時は SetNull でチケットは残す
+  createdById String?
+  createdBy   User?   @relation("TicketCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  /// 担当者。AIエージェント用ユーザーを指定すると自動処理の対象になる
+  assigneeId String?
+  assignee   User?   @relation("TicketAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  /// ボード内の連番(1始まり)。利用者へ見せる表示IDは `Board.key`-`number`(ticketDisplayId)
+  number Int
+
+  /// 件名
+  title String
+
+  /// 本文(Markdown)
+  content String?
+
+  /// 状態。かんばんのレーンに対応する
+  status TicketStatus @default(todo)
+
+  /// 優先度
+  priority TicketPriority @default(medium)
+
+  /// 期限。日付のみの概念。UTC 0:00 で保存する
+  dueDate DateTime?
+
+  /// status を done にした時刻。done から他のステータスへ戻すと null に戻す
+  completedAt DateTime?
+
+  /// 同一レーン(boardId + status)内の表示順。昇順・0始まりの連番で保持する。
+  /// done レーンは盤面に表示されるカードのみを連番の対象とし、表示期限を過ぎた完了の order は据え置く
+  order Int @default(0)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// 本文中のメンションを解決した結果。保存時点のスナップショット(TicketComment と同じ扱い)
+  mentionedUserIds String[] @default([])
+
+  agentMode  AgentTaskMode?
+  agentState AgentTaskState?
+
+  tags      TicketTag[]
+  comments  TicketComment[]
+  agentRuns AgentRun[]
+  links     TicketLink[]
+  criteria  TicketCriterion[]
+
+  // @@unique が (boardId, ...) の先頭索引を兼ねるので表示IDからの検索はこれで賄える
+  @@unique([boardId, number])
+  @@index([boardId, status, order])
+  @@index([assigneeId])
+  // ランナーのポーリングは「担当がエージェント」かつ「オプトイン済み」で絞る
+  @@index([assigneeId, agentMode])
+  @@index([createdById])
+  // チケット一覧の既定の並び順(更新日時の新しい順 + LIMIT)を索引スキャンにする
+  @@index([updatedAt])
+  // ダッシュボードの「自分宛てのメンション」を配列の包含検索(@>)で引く
+  @@index([mentionedUserIds], type: Gin)
+  @@map("ticket")
+}
+
+/// チケットへのコメント。1階層の返信を持てる。
+model TicketComment {
+  id String @id @default(uuid(7))
+
+  /// コメント先のチケット
+  ticketId String
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  /// 投稿者。退会ユーザーのコメントも議論履歴として残すため SetNull(表示は no_name)
+  authorId String?
+  author   User?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  /// 本文(Markdown)
+  content String
+
+  /// null = 通常コメント。plan/report は詳細画面でデフォルト折りたたみ表示する
+  type TicketCommentType?
+
+  /// plan / report への承認・差し戻しの返信。承認/差し戻しボタンから投稿したときだけ入る
+  decision TicketCommentDecision?
+
+  /// 返信先コメント。1階層のみ許容(親自体が返信の場合は指定できない。制約はアプリ層で検証)
+  parentId String?
+  parent   TicketComment?  @relation("TicketCommentThread", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  TicketComment[] @relation("TicketCommentThread")
+
+  /// 本文中のメンションを解決した結果。保存時点のスナップショット
+  mentionedUserIds String[] @default([])
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ticketId, createdAt])
+  @@index([parentId])
+  // ダッシュボードの「自分宛てのメンション」を配列の包含検索(@>)で引く
+  @@index([mentionedUserIds], type: Gin)
+  @@map("ticket_comment")
+}
+
+/// コメントの種別。null(通常コメント)以外はエージェントの投稿を表す
+enum TicketCommentType {
+  /// エージェントが投稿した作業プラン
+  plan
+  /// エージェントが投稿した対応報告
+  report
+}
+
+/// plan / report への返答の種別
+enum TicketCommentDecision {
+  /// 承認(プランどおり進めてよい / 報告を受け入れた)
+  approved
+  /// 差し戻し(理由は本文)
+  rejected
+}
+
+/// チケットの受け入れ条件。1行1項目で、人の確認とエージェントの自己申告を別々に持つ
+model TicketCriterion {
+  id String @id @default(uuid(7))
+
+  ticketId String
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  /// チケット内の表示順(0始まりの連番)
+  order Int
+
+  /// 条件の文言
+  text String
+
+  /// 人が最終確認した相手と時刻。未確認は null。退会しても確認済みの事実は残すので SetNull
+  checkedById String?
+  checkedBy   User?     @relation(fields: [checkedById], references: [id], onDelete: SetNull)
+  checkedAt   DateTime?
+
+  /// エージェントの自己申告(最新のみ)。null は未報告
+  agentMet        Boolean?
+  /// 充足 / 未充足と判断した根拠
+  agentEvidence   String?
+  agentReportedAt DateTime?
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ticketId, order])
+  @@map("ticket_criterion")
+}

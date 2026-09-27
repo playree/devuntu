@@ -417,14 +417,12 @@ export type NotifyOutboxUncheckedUpdateManyInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type NotifyOutboxListRelationFilter = {
-  every?: Prisma.NotifyOutboxWhereInput
-  some?: Prisma.NotifyOutboxWhereInput
-  none?: Prisma.NotifyOutboxWhereInput
-}
-
-export type NotifyOutboxOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
+export type StringNullableListFilter<$PrismaModel = never> = {
+  equals?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel> | null
+  has?: string | Prisma.StringFieldRefInput<$PrismaModel> | null
+  hasEvery?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
+  hasSome?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
+  isEmpty?: boolean
 }
 
 export type NotifyOutboxCountOrderByAggregateInput = {
@@ -475,6 +473,43 @@ export type NotifyOutboxScalarRelationFilter = {
   isNot?: Prisma.NotifyOutboxWhereInput
 }
 
+export type NotifyOutboxListRelationFilter = {
+  every?: Prisma.NotifyOutboxWhereInput
+  some?: Prisma.NotifyOutboxWhereInput
+  none?: Prisma.NotifyOutboxWhereInput
+}
+
+export type NotifyOutboxOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
+}
+
+export type NotifyOutboxCreatetargetUserIdsInput = {
+  set: string[]
+}
+
+export type NotifyOutboxUpdatetargetUserIdsInput = {
+  set?: string[]
+  push?: string | string[]
+}
+
+export type EnumNotifyJobStatusFieldUpdateOperationsInput = {
+  set?: $Enums.NotifyJobStatus
+}
+
+export type NotifyOutboxCreateNestedOneWithoutDeliveriesInput = {
+  create?: Prisma.XOR<Prisma.NotifyOutboxCreateWithoutDeliveriesInput, Prisma.NotifyOutboxUncheckedCreateWithoutDeliveriesInput>
+  connectOrCreate?: Prisma.NotifyOutboxCreateOrConnectWithoutDeliveriesInput
+  connect?: Prisma.NotifyOutboxWhereUniqueInput
+}
+
+export type NotifyOutboxUpdateOneRequiredWithoutDeliveriesNestedInput = {
+  create?: Prisma.XOR<Prisma.NotifyOutboxCreateWithoutDeliveriesInput, Prisma.NotifyOutboxUncheckedCreateWithoutDeliveriesInput>
+  connectOrCreate?: Prisma.NotifyOutboxCreateOrConnectWithoutDeliveriesInput
+  upsert?: Prisma.NotifyOutboxUpsertWithoutDeliveriesInput
+  connect?: Prisma.NotifyOutboxWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.NotifyOutboxUpdateToOneWithWhereWithoutDeliveriesInput, Prisma.NotifyOutboxUpdateWithoutDeliveriesInput>, Prisma.NotifyOutboxUncheckedUpdateWithoutDeliveriesInput>
+}
+
 export type NotifyOutboxCreateNestedManyWithoutActorInput = {
   create?: Prisma.XOR<Prisma.NotifyOutboxCreateWithoutActorInput, Prisma.NotifyOutboxUncheckedCreateWithoutActorInput> | Prisma.NotifyOutboxCreateWithoutActorInput[] | Prisma.NotifyOutboxUncheckedCreateWithoutActorInput[]
   connectOrCreate?: Prisma.NotifyOutboxCreateOrConnectWithoutActorInput | Prisma.NotifyOutboxCreateOrConnectWithoutActorInput[]
@@ -515,101 +550,6 @@ export type NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput = {
   update?: Prisma.NotifyOutboxUpdateWithWhereUniqueWithoutActorInput | Prisma.NotifyOutboxUpdateWithWhereUniqueWithoutActorInput[]
   updateMany?: Prisma.NotifyOutboxUpdateManyWithWhereWithoutActorInput | Prisma.NotifyOutboxUpdateManyWithWhereWithoutActorInput[]
   deleteMany?: Prisma.NotifyOutboxScalarWhereInput | Prisma.NotifyOutboxScalarWhereInput[]
-}
-
-export type NotifyOutboxCreatetargetUserIdsInput = {
-  set: string[]
-}
-
-export type NotifyOutboxUpdatetargetUserIdsInput = {
-  set?: string[]
-  push?: string | string[]
-}
-
-export type EnumNotifyJobStatusFieldUpdateOperationsInput = {
-  set?: $Enums.NotifyJobStatus
-}
-
-export type NotifyOutboxCreateNestedOneWithoutDeliveriesInput = {
-  create?: Prisma.XOR<Prisma.NotifyOutboxCreateWithoutDeliveriesInput, Prisma.NotifyOutboxUncheckedCreateWithoutDeliveriesInput>
-  connectOrCreate?: Prisma.NotifyOutboxCreateOrConnectWithoutDeliveriesInput
-  connect?: Prisma.NotifyOutboxWhereUniqueInput
-}
-
-export type NotifyOutboxUpdateOneRequiredWithoutDeliveriesNestedInput = {
-  create?: Prisma.XOR<Prisma.NotifyOutboxCreateWithoutDeliveriesInput, Prisma.NotifyOutboxUncheckedCreateWithoutDeliveriesInput>
-  connectOrCreate?: Prisma.NotifyOutboxCreateOrConnectWithoutDeliveriesInput
-  upsert?: Prisma.NotifyOutboxUpsertWithoutDeliveriesInput
-  connect?: Prisma.NotifyOutboxWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.NotifyOutboxUpdateToOneWithWhereWithoutDeliveriesInput, Prisma.NotifyOutboxUpdateWithoutDeliveriesInput>, Prisma.NotifyOutboxUncheckedUpdateWithoutDeliveriesInput>
-}
-
-export type NotifyOutboxCreateWithoutActorInput = {
-  id?: string
-  event: $Enums.NotifyEvent
-  targetUserIds?: Prisma.NotifyOutboxCreatetargetUserIdsInput | string[]
-  payload: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  status?: $Enums.NotifyJobStatus
-  attempts?: number
-  claimedAt?: Date | string | null
-  failedAt?: Date | string | null
-  createdAt?: Date | string
-  deliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutOutboxInput
-}
-
-export type NotifyOutboxUncheckedCreateWithoutActorInput = {
-  id?: string
-  event: $Enums.NotifyEvent
-  targetUserIds?: Prisma.NotifyOutboxCreatetargetUserIdsInput | string[]
-  payload: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  status?: $Enums.NotifyJobStatus
-  attempts?: number
-  claimedAt?: Date | string | null
-  failedAt?: Date | string | null
-  createdAt?: Date | string
-  deliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutOutboxInput
-}
-
-export type NotifyOutboxCreateOrConnectWithoutActorInput = {
-  where: Prisma.NotifyOutboxWhereUniqueInput
-  create: Prisma.XOR<Prisma.NotifyOutboxCreateWithoutActorInput, Prisma.NotifyOutboxUncheckedCreateWithoutActorInput>
-}
-
-export type NotifyOutboxCreateManyActorInputEnvelope = {
-  data: Prisma.NotifyOutboxCreateManyActorInput | Prisma.NotifyOutboxCreateManyActorInput[]
-  skipDuplicates?: boolean
-}
-
-export type NotifyOutboxUpsertWithWhereUniqueWithoutActorInput = {
-  where: Prisma.NotifyOutboxWhereUniqueInput
-  update: Prisma.XOR<Prisma.NotifyOutboxUpdateWithoutActorInput, Prisma.NotifyOutboxUncheckedUpdateWithoutActorInput>
-  create: Prisma.XOR<Prisma.NotifyOutboxCreateWithoutActorInput, Prisma.NotifyOutboxUncheckedCreateWithoutActorInput>
-}
-
-export type NotifyOutboxUpdateWithWhereUniqueWithoutActorInput = {
-  where: Prisma.NotifyOutboxWhereUniqueInput
-  data: Prisma.XOR<Prisma.NotifyOutboxUpdateWithoutActorInput, Prisma.NotifyOutboxUncheckedUpdateWithoutActorInput>
-}
-
-export type NotifyOutboxUpdateManyWithWhereWithoutActorInput = {
-  where: Prisma.NotifyOutboxScalarWhereInput
-  data: Prisma.XOR<Prisma.NotifyOutboxUpdateManyMutationInput, Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorInput>
-}
-
-export type NotifyOutboxScalarWhereInput = {
-  AND?: Prisma.NotifyOutboxScalarWhereInput | Prisma.NotifyOutboxScalarWhereInput[]
-  OR?: Prisma.NotifyOutboxScalarWhereInput[]
-  NOT?: Prisma.NotifyOutboxScalarWhereInput | Prisma.NotifyOutboxScalarWhereInput[]
-  id?: Prisma.StringFilter<"NotifyOutbox"> | string
-  event?: Prisma.EnumNotifyEventFilter<"NotifyOutbox"> | $Enums.NotifyEvent
-  actorId?: Prisma.StringNullableFilter<"NotifyOutbox"> | string | null
-  targetUserIds?: Prisma.StringNullableListFilter<"NotifyOutbox">
-  payload?: Prisma.JsonFilter<"NotifyOutbox">
-  status?: Prisma.EnumNotifyJobStatusFilter<"NotifyOutbox"> | $Enums.NotifyJobStatus
-  attempts?: Prisma.IntFilter<"NotifyOutbox"> | number
-  claimedAt?: Prisma.DateTimeNullableFilter<"NotifyOutbox"> | Date | string | null
-  failedAt?: Prisma.DateTimeNullableFilter<"NotifyOutbox"> | Date | string | null
-  createdAt?: Prisma.DateTimeFilter<"NotifyOutbox"> | Date | string
 }
 
 export type NotifyOutboxCreateWithoutDeliveriesInput = {
@@ -678,6 +618,74 @@ export type NotifyOutboxUncheckedUpdateWithoutDeliveriesInput = {
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   failedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type NotifyOutboxCreateWithoutActorInput = {
+  id?: string
+  event: $Enums.NotifyEvent
+  targetUserIds?: Prisma.NotifyOutboxCreatetargetUserIdsInput | string[]
+  payload: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  status?: $Enums.NotifyJobStatus
+  attempts?: number
+  claimedAt?: Date | string | null
+  failedAt?: Date | string | null
+  createdAt?: Date | string
+  deliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutOutboxInput
+}
+
+export type NotifyOutboxUncheckedCreateWithoutActorInput = {
+  id?: string
+  event: $Enums.NotifyEvent
+  targetUserIds?: Prisma.NotifyOutboxCreatetargetUserIdsInput | string[]
+  payload: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  status?: $Enums.NotifyJobStatus
+  attempts?: number
+  claimedAt?: Date | string | null
+  failedAt?: Date | string | null
+  createdAt?: Date | string
+  deliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutOutboxInput
+}
+
+export type NotifyOutboxCreateOrConnectWithoutActorInput = {
+  where: Prisma.NotifyOutboxWhereUniqueInput
+  create: Prisma.XOR<Prisma.NotifyOutboxCreateWithoutActorInput, Prisma.NotifyOutboxUncheckedCreateWithoutActorInput>
+}
+
+export type NotifyOutboxCreateManyActorInputEnvelope = {
+  data: Prisma.NotifyOutboxCreateManyActorInput | Prisma.NotifyOutboxCreateManyActorInput[]
+  skipDuplicates?: boolean
+}
+
+export type NotifyOutboxUpsertWithWhereUniqueWithoutActorInput = {
+  where: Prisma.NotifyOutboxWhereUniqueInput
+  update: Prisma.XOR<Prisma.NotifyOutboxUpdateWithoutActorInput, Prisma.NotifyOutboxUncheckedUpdateWithoutActorInput>
+  create: Prisma.XOR<Prisma.NotifyOutboxCreateWithoutActorInput, Prisma.NotifyOutboxUncheckedCreateWithoutActorInput>
+}
+
+export type NotifyOutboxUpdateWithWhereUniqueWithoutActorInput = {
+  where: Prisma.NotifyOutboxWhereUniqueInput
+  data: Prisma.XOR<Prisma.NotifyOutboxUpdateWithoutActorInput, Prisma.NotifyOutboxUncheckedUpdateWithoutActorInput>
+}
+
+export type NotifyOutboxUpdateManyWithWhereWithoutActorInput = {
+  where: Prisma.NotifyOutboxScalarWhereInput
+  data: Prisma.XOR<Prisma.NotifyOutboxUpdateManyMutationInput, Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorInput>
+}
+
+export type NotifyOutboxScalarWhereInput = {
+  AND?: Prisma.NotifyOutboxScalarWhereInput | Prisma.NotifyOutboxScalarWhereInput[]
+  OR?: Prisma.NotifyOutboxScalarWhereInput[]
+  NOT?: Prisma.NotifyOutboxScalarWhereInput | Prisma.NotifyOutboxScalarWhereInput[]
+  id?: Prisma.StringFilter<"NotifyOutbox"> | string
+  event?: Prisma.EnumNotifyEventFilter<"NotifyOutbox"> | $Enums.NotifyEvent
+  actorId?: Prisma.StringNullableFilter<"NotifyOutbox"> | string | null
+  targetUserIds?: Prisma.StringNullableListFilter<"NotifyOutbox">
+  payload?: Prisma.JsonFilter<"NotifyOutbox">
+  status?: Prisma.EnumNotifyJobStatusFilter<"NotifyOutbox"> | $Enums.NotifyJobStatus
+  attempts?: Prisma.IntFilter<"NotifyOutbox"> | number
+  claimedAt?: Prisma.DateTimeNullableFilter<"NotifyOutbox"> | Date | string | null
+  failedAt?: Prisma.DateTimeNullableFilter<"NotifyOutbox"> | Date | string | null
+  createdAt?: Prisma.DateTimeFilter<"NotifyOutbox"> | Date | string
 }
 
 export type NotifyOutboxCreateManyActorInput = {

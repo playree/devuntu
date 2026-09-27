@@ -1,12 +1,12 @@
 import { auth } from '@/lib/auth/auth'
 import { getSchema } from 'better-auth/db'
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
 /**
  * Better Auth（有効化されたプラグイン）が要求するDBスキーマと、
- * prisma/schema.prisma の定義が一致しているかを検証する。
+ * prisma/schema/*.prisma の定義が一致しているかを検証する。
  *
  * 背景: @better-auth/oauth-provider 1.6.23 で redirectUris 等が
  *   `string` -> `string[]` に変わったが Prisma スキーマが `String` のままで、
@@ -29,7 +29,7 @@ type PrismaField = { base: string; isArray: boolean; optional: boolean }
 type PrismaIndex = { columns: string[]; unique: boolean }
 type PrismaModel = { fields: Record<string, PrismaField>; indexes: PrismaIndex[] }
 
-/** prisma/schema.prisma を軽量パースし、モデル毎のフィールド型と複合インデックスを得る。 */
+/** Prisma スキーマを軽量パースし、モデル毎のフィールド型と複合インデックスを得る。 */
 function parsePrismaModels(src: string): Record<string, PrismaModel> {
   const models: Record<string, PrismaModel> = {}
   const modelRe = /model\s+(\w+)\s*\{\n([\s\S]*?)\n\}/g
@@ -86,8 +86,12 @@ function hasIndex(model: PrismaModel, columns: readonly string[], unique: boolea
   return model.indexes.some((actual) => actual.columns.join(',') === columns.join(',') && (!unique || actual.unique))
 }
 
-const schemaPath = fileURLToPath(new URL('../../prisma/schema.prisma', import.meta.url))
-const prismaModels = parsePrismaModels(readFileSync(schemaPath, 'utf8'))
+const schemaDir = fileURLToPath(new URL('../../prisma/schema/', import.meta.url))
+const schemaSource = readdirSync(schemaDir)
+  .filter((file) => file.endsWith('.prisma'))
+  .map((file) => readFileSync(`${schemaDir}${file}`, 'utf8'))
+  .join('\n')
+const prismaModels = parsePrismaModels(schemaSource)
 const expectedSchema = getSchema(auth.options)
 
 describe('Better Auth スキーマと Prisma スキーマの整合性', () => {

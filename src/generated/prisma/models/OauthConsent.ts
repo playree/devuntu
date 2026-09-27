@@ -389,48 +389,6 @@ export type OauthConsentMinOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
 }
 
-export type OauthConsentCreateNestedManyWithoutUserInput = {
-  create?: Prisma.XOR<Prisma.OauthConsentCreateWithoutUserInput, Prisma.OauthConsentUncheckedCreateWithoutUserInput> | Prisma.OauthConsentCreateWithoutUserInput[] | Prisma.OauthConsentUncheckedCreateWithoutUserInput[]
-  connectOrCreate?: Prisma.OauthConsentCreateOrConnectWithoutUserInput | Prisma.OauthConsentCreateOrConnectWithoutUserInput[]
-  createMany?: Prisma.OauthConsentCreateManyUserInputEnvelope
-  connect?: Prisma.OauthConsentWhereUniqueInput | Prisma.OauthConsentWhereUniqueInput[]
-}
-
-export type OauthConsentUncheckedCreateNestedManyWithoutUserInput = {
-  create?: Prisma.XOR<Prisma.OauthConsentCreateWithoutUserInput, Prisma.OauthConsentUncheckedCreateWithoutUserInput> | Prisma.OauthConsentCreateWithoutUserInput[] | Prisma.OauthConsentUncheckedCreateWithoutUserInput[]
-  connectOrCreate?: Prisma.OauthConsentCreateOrConnectWithoutUserInput | Prisma.OauthConsentCreateOrConnectWithoutUserInput[]
-  createMany?: Prisma.OauthConsentCreateManyUserInputEnvelope
-  connect?: Prisma.OauthConsentWhereUniqueInput | Prisma.OauthConsentWhereUniqueInput[]
-}
-
-export type OauthConsentUpdateManyWithoutUserNestedInput = {
-  create?: Prisma.XOR<Prisma.OauthConsentCreateWithoutUserInput, Prisma.OauthConsentUncheckedCreateWithoutUserInput> | Prisma.OauthConsentCreateWithoutUserInput[] | Prisma.OauthConsentUncheckedCreateWithoutUserInput[]
-  connectOrCreate?: Prisma.OauthConsentCreateOrConnectWithoutUserInput | Prisma.OauthConsentCreateOrConnectWithoutUserInput[]
-  upsert?: Prisma.OauthConsentUpsertWithWhereUniqueWithoutUserInput | Prisma.OauthConsentUpsertWithWhereUniqueWithoutUserInput[]
-  createMany?: Prisma.OauthConsentCreateManyUserInputEnvelope
-  set?: Prisma.OauthConsentWhereUniqueInput | Prisma.OauthConsentWhereUniqueInput[]
-  disconnect?: Prisma.OauthConsentWhereUniqueInput | Prisma.OauthConsentWhereUniqueInput[]
-  delete?: Prisma.OauthConsentWhereUniqueInput | Prisma.OauthConsentWhereUniqueInput[]
-  connect?: Prisma.OauthConsentWhereUniqueInput | Prisma.OauthConsentWhereUniqueInput[]
-  update?: Prisma.OauthConsentUpdateWithWhereUniqueWithoutUserInput | Prisma.OauthConsentUpdateWithWhereUniqueWithoutUserInput[]
-  updateMany?: Prisma.OauthConsentUpdateManyWithWhereWithoutUserInput | Prisma.OauthConsentUpdateManyWithWhereWithoutUserInput[]
-  deleteMany?: Prisma.OauthConsentScalarWhereInput | Prisma.OauthConsentScalarWhereInput[]
-}
-
-export type OauthConsentUncheckedUpdateManyWithoutUserNestedInput = {
-  create?: Prisma.XOR<Prisma.OauthConsentCreateWithoutUserInput, Prisma.OauthConsentUncheckedCreateWithoutUserInput> | Prisma.OauthConsentCreateWithoutUserInput[] | Prisma.OauthConsentUncheckedCreateWithoutUserInput[]
-  connectOrCreate?: Prisma.OauthConsentCreateOrConnectWithoutUserInput | Prisma.OauthConsentCreateOrConnectWithoutUserInput[]
-  upsert?: Prisma.OauthConsentUpsertWithWhereUniqueWithoutUserInput | Prisma.OauthConsentUpsertWithWhereUniqueWithoutUserInput[]
-  createMany?: Prisma.OauthConsentCreateManyUserInputEnvelope
-  set?: Prisma.OauthConsentWhereUniqueInput | Prisma.OauthConsentWhereUniqueInput[]
-  disconnect?: Prisma.OauthConsentWhereUniqueInput | Prisma.OauthConsentWhereUniqueInput[]
-  delete?: Prisma.OauthConsentWhereUniqueInput | Prisma.OauthConsentWhereUniqueInput[]
-  connect?: Prisma.OauthConsentWhereUniqueInput | Prisma.OauthConsentWhereUniqueInput[]
-  update?: Prisma.OauthConsentUpdateWithWhereUniqueWithoutUserInput | Prisma.OauthConsentUpdateWithWhereUniqueWithoutUserInput[]
-  updateMany?: Prisma.OauthConsentUpdateManyWithWhereWithoutUserInput | Prisma.OauthConsentUpdateManyWithWhereWithoutUserInput[]
-  deleteMany?: Prisma.OauthConsentScalarWhereInput | Prisma.OauthConsentScalarWhereInput[]
-}
-
 export type OauthConsentCreateNestedManyWithoutOauthclientInput = {
   create?: Prisma.XOR<Prisma.OauthConsentCreateWithoutOauthclientInput, Prisma.OauthConsentUncheckedCreateWithoutOauthclientInput> | Prisma.OauthConsentCreateWithoutOauthclientInput[] | Prisma.OauthConsentUncheckedCreateWithoutOauthclientInput[]
   connectOrCreate?: Prisma.OauthConsentCreateOrConnectWithoutOauthclientInput | Prisma.OauthConsentCreateOrConnectWithoutOauthclientInput[]
@@ -500,67 +458,46 @@ export type OauthConsentUpdatescopesInput = {
   push?: string | string[]
 }
 
-export type OauthConsentCreateWithoutUserInput = {
-  id?: string
-  referenceId?: string | null
-  resources?: Prisma.OauthConsentCreateresourcesInput | string[]
-  requestedUserInfoClaims?: Prisma.OauthConsentCreaterequestedUserInfoClaimsInput | string[]
-  scopes?: Prisma.OauthConsentCreatescopesInput | string[]
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  oauthclient: Prisma.OauthClientCreateNestedOneWithoutOauthconsentsInput
+export type OauthConsentCreateNestedManyWithoutUserInput = {
+  create?: Prisma.XOR<Prisma.OauthConsentCreateWithoutUserInput, Prisma.OauthConsentUncheckedCreateWithoutUserInput> | Prisma.OauthConsentCreateWithoutUserInput[] | Prisma.OauthConsentUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.OauthConsentCreateOrConnectWithoutUserInput | Prisma.OauthConsentCreateOrConnectWithoutUserInput[]
+  createMany?: Prisma.OauthConsentCreateManyUserInputEnvelope
+  connect?: Prisma.OauthConsentWhereUniqueInput | Prisma.OauthConsentWhereUniqueInput[]
 }
 
-export type OauthConsentUncheckedCreateWithoutUserInput = {
-  id?: string
-  clientId: string
-  referenceId?: string | null
-  resources?: Prisma.OauthConsentCreateresourcesInput | string[]
-  requestedUserInfoClaims?: Prisma.OauthConsentCreaterequestedUserInfoClaimsInput | string[]
-  scopes?: Prisma.OauthConsentCreatescopesInput | string[]
-  createdAt?: Date | string
-  updatedAt?: Date | string
+export type OauthConsentUncheckedCreateNestedManyWithoutUserInput = {
+  create?: Prisma.XOR<Prisma.OauthConsentCreateWithoutUserInput, Prisma.OauthConsentUncheckedCreateWithoutUserInput> | Prisma.OauthConsentCreateWithoutUserInput[] | Prisma.OauthConsentUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.OauthConsentCreateOrConnectWithoutUserInput | Prisma.OauthConsentCreateOrConnectWithoutUserInput[]
+  createMany?: Prisma.OauthConsentCreateManyUserInputEnvelope
+  connect?: Prisma.OauthConsentWhereUniqueInput | Prisma.OauthConsentWhereUniqueInput[]
 }
 
-export type OauthConsentCreateOrConnectWithoutUserInput = {
-  where: Prisma.OauthConsentWhereUniqueInput
-  create: Prisma.XOR<Prisma.OauthConsentCreateWithoutUserInput, Prisma.OauthConsentUncheckedCreateWithoutUserInput>
+export type OauthConsentUpdateManyWithoutUserNestedInput = {
+  create?: Prisma.XOR<Prisma.OauthConsentCreateWithoutUserInput, Prisma.OauthConsentUncheckedCreateWithoutUserInput> | Prisma.OauthConsentCreateWithoutUserInput[] | Prisma.OauthConsentUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.OauthConsentCreateOrConnectWithoutUserInput | Prisma.OauthConsentCreateOrConnectWithoutUserInput[]
+  upsert?: Prisma.OauthConsentUpsertWithWhereUniqueWithoutUserInput | Prisma.OauthConsentUpsertWithWhereUniqueWithoutUserInput[]
+  createMany?: Prisma.OauthConsentCreateManyUserInputEnvelope
+  set?: Prisma.OauthConsentWhereUniqueInput | Prisma.OauthConsentWhereUniqueInput[]
+  disconnect?: Prisma.OauthConsentWhereUniqueInput | Prisma.OauthConsentWhereUniqueInput[]
+  delete?: Prisma.OauthConsentWhereUniqueInput | Prisma.OauthConsentWhereUniqueInput[]
+  connect?: Prisma.OauthConsentWhereUniqueInput | Prisma.OauthConsentWhereUniqueInput[]
+  update?: Prisma.OauthConsentUpdateWithWhereUniqueWithoutUserInput | Prisma.OauthConsentUpdateWithWhereUniqueWithoutUserInput[]
+  updateMany?: Prisma.OauthConsentUpdateManyWithWhereWithoutUserInput | Prisma.OauthConsentUpdateManyWithWhereWithoutUserInput[]
+  deleteMany?: Prisma.OauthConsentScalarWhereInput | Prisma.OauthConsentScalarWhereInput[]
 }
 
-export type OauthConsentCreateManyUserInputEnvelope = {
-  data: Prisma.OauthConsentCreateManyUserInput | Prisma.OauthConsentCreateManyUserInput[]
-  skipDuplicates?: boolean
-}
-
-export type OauthConsentUpsertWithWhereUniqueWithoutUserInput = {
-  where: Prisma.OauthConsentWhereUniqueInput
-  update: Prisma.XOR<Prisma.OauthConsentUpdateWithoutUserInput, Prisma.OauthConsentUncheckedUpdateWithoutUserInput>
-  create: Prisma.XOR<Prisma.OauthConsentCreateWithoutUserInput, Prisma.OauthConsentUncheckedCreateWithoutUserInput>
-}
-
-export type OauthConsentUpdateWithWhereUniqueWithoutUserInput = {
-  where: Prisma.OauthConsentWhereUniqueInput
-  data: Prisma.XOR<Prisma.OauthConsentUpdateWithoutUserInput, Prisma.OauthConsentUncheckedUpdateWithoutUserInput>
-}
-
-export type OauthConsentUpdateManyWithWhereWithoutUserInput = {
-  where: Prisma.OauthConsentScalarWhereInput
-  data: Prisma.XOR<Prisma.OauthConsentUpdateManyMutationInput, Prisma.OauthConsentUncheckedUpdateManyWithoutUserInput>
-}
-
-export type OauthConsentScalarWhereInput = {
-  AND?: Prisma.OauthConsentScalarWhereInput | Prisma.OauthConsentScalarWhereInput[]
-  OR?: Prisma.OauthConsentScalarWhereInput[]
-  NOT?: Prisma.OauthConsentScalarWhereInput | Prisma.OauthConsentScalarWhereInput[]
-  id?: Prisma.StringFilter<"OauthConsent"> | string
-  clientId?: Prisma.StringFilter<"OauthConsent"> | string
-  userId?: Prisma.StringNullableFilter<"OauthConsent"> | string | null
-  referenceId?: Prisma.StringNullableFilter<"OauthConsent"> | string | null
-  resources?: Prisma.StringNullableListFilter<"OauthConsent">
-  requestedUserInfoClaims?: Prisma.StringNullableListFilter<"OauthConsent">
-  scopes?: Prisma.StringNullableListFilter<"OauthConsent">
-  createdAt?: Prisma.DateTimeFilter<"OauthConsent"> | Date | string
-  updatedAt?: Prisma.DateTimeFilter<"OauthConsent"> | Date | string
+export type OauthConsentUncheckedUpdateManyWithoutUserNestedInput = {
+  create?: Prisma.XOR<Prisma.OauthConsentCreateWithoutUserInput, Prisma.OauthConsentUncheckedCreateWithoutUserInput> | Prisma.OauthConsentCreateWithoutUserInput[] | Prisma.OauthConsentUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.OauthConsentCreateOrConnectWithoutUserInput | Prisma.OauthConsentCreateOrConnectWithoutUserInput[]
+  upsert?: Prisma.OauthConsentUpsertWithWhereUniqueWithoutUserInput | Prisma.OauthConsentUpsertWithWhereUniqueWithoutUserInput[]
+  createMany?: Prisma.OauthConsentCreateManyUserInputEnvelope
+  set?: Prisma.OauthConsentWhereUniqueInput | Prisma.OauthConsentWhereUniqueInput[]
+  disconnect?: Prisma.OauthConsentWhereUniqueInput | Prisma.OauthConsentWhereUniqueInput[]
+  delete?: Prisma.OauthConsentWhereUniqueInput | Prisma.OauthConsentWhereUniqueInput[]
+  connect?: Prisma.OauthConsentWhereUniqueInput | Prisma.OauthConsentWhereUniqueInput[]
+  update?: Prisma.OauthConsentUpdateWithWhereUniqueWithoutUserInput | Prisma.OauthConsentUpdateWithWhereUniqueWithoutUserInput[]
+  updateMany?: Prisma.OauthConsentUpdateManyWithWhereWithoutUserInput | Prisma.OauthConsentUpdateManyWithWhereWithoutUserInput[]
+  deleteMany?: Prisma.OauthConsentScalarWhereInput | Prisma.OauthConsentScalarWhereInput[]
 }
 
 export type OauthConsentCreateWithoutOauthclientInput = {
@@ -611,7 +548,33 @@ export type OauthConsentUpdateManyWithWhereWithoutOauthclientInput = {
   data: Prisma.XOR<Prisma.OauthConsentUpdateManyMutationInput, Prisma.OauthConsentUncheckedUpdateManyWithoutOauthclientInput>
 }
 
-export type OauthConsentCreateManyUserInput = {
+export type OauthConsentScalarWhereInput = {
+  AND?: Prisma.OauthConsentScalarWhereInput | Prisma.OauthConsentScalarWhereInput[]
+  OR?: Prisma.OauthConsentScalarWhereInput[]
+  NOT?: Prisma.OauthConsentScalarWhereInput | Prisma.OauthConsentScalarWhereInput[]
+  id?: Prisma.StringFilter<"OauthConsent"> | string
+  clientId?: Prisma.StringFilter<"OauthConsent"> | string
+  userId?: Prisma.StringNullableFilter<"OauthConsent"> | string | null
+  referenceId?: Prisma.StringNullableFilter<"OauthConsent"> | string | null
+  resources?: Prisma.StringNullableListFilter<"OauthConsent">
+  requestedUserInfoClaims?: Prisma.StringNullableListFilter<"OauthConsent">
+  scopes?: Prisma.StringNullableListFilter<"OauthConsent">
+  createdAt?: Prisma.DateTimeFilter<"OauthConsent"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"OauthConsent"> | Date | string
+}
+
+export type OauthConsentCreateWithoutUserInput = {
+  id?: string
+  referenceId?: string | null
+  resources?: Prisma.OauthConsentCreateresourcesInput | string[]
+  requestedUserInfoClaims?: Prisma.OauthConsentCreaterequestedUserInfoClaimsInput | string[]
+  scopes?: Prisma.OauthConsentCreatescopesInput | string[]
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  oauthclient: Prisma.OauthClientCreateNestedOneWithoutOauthconsentsInput
+}
+
+export type OauthConsentUncheckedCreateWithoutUserInput = {
   id?: string
   clientId: string
   referenceId?: string | null
@@ -622,37 +585,30 @@ export type OauthConsentCreateManyUserInput = {
   updatedAt?: Date | string
 }
 
-export type OauthConsentUpdateWithoutUserInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  referenceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  resources?: Prisma.OauthConsentUpdateresourcesInput | string[]
-  requestedUserInfoClaims?: Prisma.OauthConsentUpdaterequestedUserInfoClaimsInput | string[]
-  scopes?: Prisma.OauthConsentUpdatescopesInput | string[]
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  oauthclient?: Prisma.OauthClientUpdateOneRequiredWithoutOauthconsentsNestedInput
+export type OauthConsentCreateOrConnectWithoutUserInput = {
+  where: Prisma.OauthConsentWhereUniqueInput
+  create: Prisma.XOR<Prisma.OauthConsentCreateWithoutUserInput, Prisma.OauthConsentUncheckedCreateWithoutUserInput>
 }
 
-export type OauthConsentUncheckedUpdateWithoutUserInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  clientId?: Prisma.StringFieldUpdateOperationsInput | string
-  referenceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  resources?: Prisma.OauthConsentUpdateresourcesInput | string[]
-  requestedUserInfoClaims?: Prisma.OauthConsentUpdaterequestedUserInfoClaimsInput | string[]
-  scopes?: Prisma.OauthConsentUpdatescopesInput | string[]
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+export type OauthConsentCreateManyUserInputEnvelope = {
+  data: Prisma.OauthConsentCreateManyUserInput | Prisma.OauthConsentCreateManyUserInput[]
+  skipDuplicates?: boolean
 }
 
-export type OauthConsentUncheckedUpdateManyWithoutUserInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  clientId?: Prisma.StringFieldUpdateOperationsInput | string
-  referenceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  resources?: Prisma.OauthConsentUpdateresourcesInput | string[]
-  requestedUserInfoClaims?: Prisma.OauthConsentUpdaterequestedUserInfoClaimsInput | string[]
-  scopes?: Prisma.OauthConsentUpdatescopesInput | string[]
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+export type OauthConsentUpsertWithWhereUniqueWithoutUserInput = {
+  where: Prisma.OauthConsentWhereUniqueInput
+  update: Prisma.XOR<Prisma.OauthConsentUpdateWithoutUserInput, Prisma.OauthConsentUncheckedUpdateWithoutUserInput>
+  create: Prisma.XOR<Prisma.OauthConsentCreateWithoutUserInput, Prisma.OauthConsentUncheckedCreateWithoutUserInput>
+}
+
+export type OauthConsentUpdateWithWhereUniqueWithoutUserInput = {
+  where: Prisma.OauthConsentWhereUniqueInput
+  data: Prisma.XOR<Prisma.OauthConsentUpdateWithoutUserInput, Prisma.OauthConsentUncheckedUpdateWithoutUserInput>
+}
+
+export type OauthConsentUpdateManyWithWhereWithoutUserInput = {
+  where: Prisma.OauthConsentScalarWhereInput
+  data: Prisma.XOR<Prisma.OauthConsentUpdateManyMutationInput, Prisma.OauthConsentUncheckedUpdateManyWithoutUserInput>
 }
 
 export type OauthConsentCreateManyOauthclientInput = {
@@ -691,6 +647,50 @@ export type OauthConsentUncheckedUpdateWithoutOauthclientInput = {
 export type OauthConsentUncheckedUpdateManyWithoutOauthclientInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referenceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resources?: Prisma.OauthConsentUpdateresourcesInput | string[]
+  requestedUserInfoClaims?: Prisma.OauthConsentUpdaterequestedUserInfoClaimsInput | string[]
+  scopes?: Prisma.OauthConsentUpdatescopesInput | string[]
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type OauthConsentCreateManyUserInput = {
+  id?: string
+  clientId: string
+  referenceId?: string | null
+  resources?: Prisma.OauthConsentCreateresourcesInput | string[]
+  requestedUserInfoClaims?: Prisma.OauthConsentCreaterequestedUserInfoClaimsInput | string[]
+  scopes?: Prisma.OauthConsentCreatescopesInput | string[]
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type OauthConsentUpdateWithoutUserInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  referenceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resources?: Prisma.OauthConsentUpdateresourcesInput | string[]
+  requestedUserInfoClaims?: Prisma.OauthConsentUpdaterequestedUserInfoClaimsInput | string[]
+  scopes?: Prisma.OauthConsentUpdatescopesInput | string[]
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  oauthclient?: Prisma.OauthClientUpdateOneRequiredWithoutOauthconsentsNestedInput
+}
+
+export type OauthConsentUncheckedUpdateWithoutUserInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clientId?: Prisma.StringFieldUpdateOperationsInput | string
+  referenceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resources?: Prisma.OauthConsentUpdateresourcesInput | string[]
+  requestedUserInfoClaims?: Prisma.OauthConsentUpdaterequestedUserInfoClaimsInput | string[]
+  scopes?: Prisma.OauthConsentUpdatescopesInput | string[]
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type OauthConsentUncheckedUpdateManyWithoutUserInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clientId?: Prisma.StringFieldUpdateOperationsInput | string
   referenceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resources?: Prisma.OauthConsentUpdateresourcesInput | string[]
   requestedUserInfoClaims?: Prisma.OauthConsentUpdaterequestedUserInfoClaimsInput | string[]

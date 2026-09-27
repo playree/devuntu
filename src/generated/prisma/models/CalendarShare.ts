@@ -298,11 +298,6 @@ export type CalendarShareUncheckedUpdateManyInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type CalendarShareNullableScalarRelationFilter = {
-  is?: Prisma.CalendarShareWhereInput | null
-  isNot?: Prisma.CalendarShareWhereInput | null
-}
-
 export type CalendarShareCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
@@ -326,6 +321,11 @@ export type CalendarShareMinOrderByAggregateInput = {
   publicId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type CalendarShareNullableScalarRelationFilter = {
+  is?: Prisma.CalendarShareWhereInput | null
+  isNot?: Prisma.CalendarShareWhereInput | null
 }
 
 export type CalendarShareCreateNestedOneWithoutUserInput = {

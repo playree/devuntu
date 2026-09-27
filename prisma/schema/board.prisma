@@ -1,0 +1,196 @@
+/// ボード参加者の権限
+enum BoardMemberRole {
+  /// ボードの権限周りの操作が可能
+  owner
+  /// 参加者。チケットの操作ができる
+  member
+}
+
+/// ボードの種別。
+/// PostgreSQL の enum は宣言順で比較されるため、一覧を `orderBy: { kind: 'asc' }` に
+/// したときプライベートが先頭へ来るよう private を先に宣言する。
+enum BoardKind {
+  /// 1ユーザー1つの個人用ボード。privateOwnerId が所有者
+  private
+  /// 複数人で共有するボード
+  team
+}
+
+/// タグの表示色。HeroUI Chip は5色しか持たないため Tailwind パレットへ自前でマップする
+enum TagColor {
+  gray
+  red
+  orange
+  amber
+  green
+  teal
+  blue
+  indigo
+  violet
+  pink
+}
+
+/// チケットを載せるかんばんボード。個人用(private)と共有(team)の2種類がある。
+model Board {
+  id String @id @default(uuid(7))
+
+  /// ボードの種別
+  kind BoardKind @default(team)
+
+  /// プライベートボードの所有者。team では常に null。
+  /// PostgreSQL の UNIQUE は NULL を互いに異なる値として扱うため、これ1本で
+  /// 「1ユーザー1プライベートボード」を担保でき、部分索引が不要になる。
+  /// kind='private' <=> privateOwnerId IS NOT NULL の整合はアプリ側で保証する
+  /// (作成経路を ensurePrivateBoard と createBoard の2つに限定している)
+  privateOwnerId String? @unique
+  privateOwner   User?   @relation(fields: [privateOwnerId], references: [id], onDelete: Cascade)
+
+  /// チケット表示ID(`key-number`)の接頭辞。大文字英数(BOARD_KEY_PATTERN)で全ボード一意。
+  /// 変更すると共有済みの表示IDが解決できなくなるため、変更できるのは owner と管理者に限る
+  key String @unique
+
+  /// 採番済みチケット番号の最大値。UPDATE の行ロックで採番を直列化する。
+  /// 連番の欠けを避けるためシーケンスではなくこの列で持つ(ロールバック時は番号も戻る)
+  ticketSeq Int @default(0)
+
+  /// ボード名
+  name String
+
+  /// ボードの説明
+  description String?
+
+  /// アーカイブ済み。一覧の既定の表示からは外れる
+  archived Boolean @default(false)
+
+  /// 紐付いた PR がすべてマージ / クローズされたらチケットを完了にする(GitHub 連携のオプトイン)
+  completeOnPrMerge Boolean @default(false)
+
+  /// エージェントの実行結果を通知する Slack チャンネル(`C...`)。null なら通知しない。
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members        BoardMember[]
+  groups         BoardGroup[]
+  tickets        Ticket[]
+  tags           Tag[]
+  attachments    Attachment[]
+  keyHistories   BoardKeyHistory[]
+  notifySettings BoardNotifySetting[]
+  repositories   BoardRepository[]
+
+  @@map("board")
+}
+
+/// 過去に使われたボードキーの記録。改名 / 削除でキーを解放しても再利用させないことで、
+/// 共有済みの表示ID(`KEY-番号`)が別ボードの同番号チケットへ解決されるのを防ぐ。
+/// 行はボードを消しても残す(消すと再利用できてしまうため)。
+model BoardKeyHistory {
+  /// 過去に使われたボードキー
+  key String @id
+
+  /// このキーを使った(使っている)ボード。削除時は SetNull で行だけ残す。
+  /// 同じボードがキー変更を戻すのは表示IDの指す先が変わらないので安全で、その判定に使う
+  boardId String?
+  board   Board?  @relation(fields: [boardId], references: [id], onDelete: SetNull)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+
+  @@index([boardId])
+  @@map("board_key_history")
+}
+
+/// ボード内で使うチケットのタグ。
+model Tag {
+  id String @id @default(uuid(7))
+
+  /// タグを持つボード。タグはボードをまたがない
+  boardId String
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  /// タグ名。ボード内で一意
+  name String
+
+  /// 表示色
+  color TagColor @default(gray)
+
+  /// ボード内の表示順。昇順。同値は name 昇順で安定させる
+  order Int @default(0)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tickets TicketTag[]
+
+  // @@unique が (boardId, ...) の先頭索引を兼ねるため @@index([boardId]) は不要
+  @@unique([boardId, name])
+  @@map("tag")
+}
+
+/// チケットとタグの紐づけを表す中間テーブル。
+model TicketTag {
+  id String @id @default(uuid(7))
+
+  /// タグを付けたチケット
+  ticketId String
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  /// 付けたタグ
+  tagId String
+  tag   Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+
+  // チケット内のタグの並びは Tag.order を単一ソースにするため order は持たせない
+  @@unique([ticketId, tagId])
+  @@index([tagId])
+  @@map("ticket_tag")
+}
+
+/// ボードの参加者。ユーザー単位の指定。
+model BoardMember {
+  id String @id @default(uuid(7))
+
+  /// 参加先のボード
+  boardId String
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  /// 参加するユーザー
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// ボード内での権限
+  role BoardMemberRole @default(member)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+
+  // @@unique が (boardId, ...) の先頭索引を兼ねるため @@index([boardId]) は不要
+  @@unique([boardId, userId])
+  @@index([userId])
+  @@map("board_member")
+}
+
+/// {@link BoardMember} のグループ指定版。グループの所属ユーザーがボードの参加者になる。
+model BoardGroup {
+  id String @id @default(uuid(7))
+
+  /// 参加先のボード
+  boardId String
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  /// 参加するグループ。所属ユーザー全員がボードの参加者になる
+  groupId String
+  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  /// ボード内での権限
+  createdAt DateTime @default(now())
+
+  @@unique([boardId, groupId])
+  @@index([groupId])
+  @@map("board_group")
+}

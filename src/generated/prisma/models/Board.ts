@@ -489,11 +489,6 @@ export type BoardUncheckedUpdateManyInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type BoardNullableScalarRelationFilter = {
-  is?: Prisma.BoardWhereInput | null
-  isNot?: Prisma.BoardWhereInput | null
-}
-
 export type BoardCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   kind?: Prisma.SortOrder
@@ -544,57 +539,14 @@ export type BoardSumOrderByAggregateInput = {
   ticketSeq?: Prisma.SortOrder
 }
 
+export type BoardNullableScalarRelationFilter = {
+  is?: Prisma.BoardWhereInput | null
+  isNot?: Prisma.BoardWhereInput | null
+}
+
 export type BoardScalarRelationFilter = {
   is?: Prisma.BoardWhereInput
   isNot?: Prisma.BoardWhereInput
-}
-
-export type BoardCreateNestedOneWithoutPrivateOwnerInput = {
-  create?: Prisma.XOR<Prisma.BoardCreateWithoutPrivateOwnerInput, Prisma.BoardUncheckedCreateWithoutPrivateOwnerInput>
-  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutPrivateOwnerInput
-  connect?: Prisma.BoardWhereUniqueInput
-}
-
-export type BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput = {
-  create?: Prisma.XOR<Prisma.BoardCreateWithoutPrivateOwnerInput, Prisma.BoardUncheckedCreateWithoutPrivateOwnerInput>
-  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutPrivateOwnerInput
-  connect?: Prisma.BoardWhereUniqueInput
-}
-
-export type BoardUpdateOneWithoutPrivateOwnerNestedInput = {
-  create?: Prisma.XOR<Prisma.BoardCreateWithoutPrivateOwnerInput, Prisma.BoardUncheckedCreateWithoutPrivateOwnerInput>
-  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutPrivateOwnerInput
-  upsert?: Prisma.BoardUpsertWithoutPrivateOwnerInput
-  disconnect?: Prisma.BoardWhereInput | boolean
-  delete?: Prisma.BoardWhereInput | boolean
-  connect?: Prisma.BoardWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.BoardUpdateToOneWithWhereWithoutPrivateOwnerInput, Prisma.BoardUpdateWithoutPrivateOwnerInput>, Prisma.BoardUncheckedUpdateWithoutPrivateOwnerInput>
-}
-
-export type BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput = {
-  create?: Prisma.XOR<Prisma.BoardCreateWithoutPrivateOwnerInput, Prisma.BoardUncheckedCreateWithoutPrivateOwnerInput>
-  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutPrivateOwnerInput
-  upsert?: Prisma.BoardUpsertWithoutPrivateOwnerInput
-  disconnect?: Prisma.BoardWhereInput | boolean
-  delete?: Prisma.BoardWhereInput | boolean
-  connect?: Prisma.BoardWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.BoardUpdateToOneWithWhereWithoutPrivateOwnerInput, Prisma.BoardUpdateWithoutPrivateOwnerInput>, Prisma.BoardUncheckedUpdateWithoutPrivateOwnerInput>
-}
-
-export type BoardCreateNestedOneWithoutAttachmentsInput = {
-  create?: Prisma.XOR<Prisma.BoardCreateWithoutAttachmentsInput, Prisma.BoardUncheckedCreateWithoutAttachmentsInput>
-  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutAttachmentsInput
-  connect?: Prisma.BoardWhereUniqueInput
-}
-
-export type BoardUpdateOneWithoutAttachmentsNestedInput = {
-  create?: Prisma.XOR<Prisma.BoardCreateWithoutAttachmentsInput, Prisma.BoardUncheckedCreateWithoutAttachmentsInput>
-  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutAttachmentsInput
-  upsert?: Prisma.BoardUpsertWithoutAttachmentsInput
-  disconnect?: Prisma.BoardWhereInput | boolean
-  delete?: Prisma.BoardWhereInput | boolean
-  connect?: Prisma.BoardWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.BoardUpdateToOneWithWhereWithoutAttachmentsInput, Prisma.BoardUpdateWithoutAttachmentsInput>, Prisma.BoardUncheckedUpdateWithoutAttachmentsInput>
 }
 
 export type EnumBoardKindFieldUpdateOperationsInput = {
@@ -659,20 +611,6 @@ export type BoardUpdateOneRequiredWithoutGroupsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.BoardUpdateToOneWithWhereWithoutGroupsInput, Prisma.BoardUpdateWithoutGroupsInput>, Prisma.BoardUncheckedUpdateWithoutGroupsInput>
 }
 
-export type BoardCreateNestedOneWithoutTicketsInput = {
-  create?: Prisma.XOR<Prisma.BoardCreateWithoutTicketsInput, Prisma.BoardUncheckedCreateWithoutTicketsInput>
-  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutTicketsInput
-  connect?: Prisma.BoardWhereUniqueInput
-}
-
-export type BoardUpdateOneRequiredWithoutTicketsNestedInput = {
-  create?: Prisma.XOR<Prisma.BoardCreateWithoutTicketsInput, Prisma.BoardUncheckedCreateWithoutTicketsInput>
-  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutTicketsInput
-  upsert?: Prisma.BoardUpsertWithoutTicketsInput
-  connect?: Prisma.BoardWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.BoardUpdateToOneWithWhereWithoutTicketsInput, Prisma.BoardUpdateWithoutTicketsInput>, Prisma.BoardUncheckedUpdateWithoutTicketsInput>
-}
-
 export type BoardCreateNestedOneWithoutRepositoriesInput = {
   create?: Prisma.XOR<Prisma.BoardCreateWithoutRepositoriesInput, Prisma.BoardUncheckedCreateWithoutRepositoriesInput>
   connectOrCreate?: Prisma.BoardCreateOrConnectWithoutRepositoriesInput
@@ -701,204 +639,66 @@ export type BoardUpdateOneRequiredWithoutNotifySettingsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.BoardUpdateToOneWithWhereWithoutNotifySettingsInput, Prisma.BoardUpdateWithoutNotifySettingsInput>, Prisma.BoardUncheckedUpdateWithoutNotifySettingsInput>
 }
 
-export type BoardCreateWithoutPrivateOwnerInput = {
-  id?: string
-  kind?: $Enums.BoardKind
-  key: string
-  ticketSeq?: number
-  name: string
-  description?: string | null
-  archived?: boolean
-  completeOnPrMerge?: boolean
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  members?: Prisma.BoardMemberCreateNestedManyWithoutBoardInput
-  groups?: Prisma.BoardGroupCreateNestedManyWithoutBoardInput
-  tickets?: Prisma.TicketCreateNestedManyWithoutBoardInput
-  tags?: Prisma.TagCreateNestedManyWithoutBoardInput
-  attachments?: Prisma.AttachmentCreateNestedManyWithoutBoardInput
-  keyHistories?: Prisma.BoardKeyHistoryCreateNestedManyWithoutBoardInput
-  notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
-  repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
+export type BoardCreateNestedOneWithoutAttachmentsInput = {
+  create?: Prisma.XOR<Prisma.BoardCreateWithoutAttachmentsInput, Prisma.BoardUncheckedCreateWithoutAttachmentsInput>
+  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutAttachmentsInput
+  connect?: Prisma.BoardWhereUniqueInput
 }
 
-export type BoardUncheckedCreateWithoutPrivateOwnerInput = {
-  id?: string
-  kind?: $Enums.BoardKind
-  key: string
-  ticketSeq?: number
-  name: string
-  description?: string | null
-  archived?: boolean
-  completeOnPrMerge?: boolean
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
-  groups?: Prisma.BoardGroupUncheckedCreateNestedManyWithoutBoardInput
-  tickets?: Prisma.TicketUncheckedCreateNestedManyWithoutBoardInput
-  tags?: Prisma.TagUncheckedCreateNestedManyWithoutBoardInput
-  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutBoardInput
-  keyHistories?: Prisma.BoardKeyHistoryUncheckedCreateNestedManyWithoutBoardInput
-  notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
-  repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
+export type BoardUpdateOneWithoutAttachmentsNestedInput = {
+  create?: Prisma.XOR<Prisma.BoardCreateWithoutAttachmentsInput, Prisma.BoardUncheckedCreateWithoutAttachmentsInput>
+  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutAttachmentsInput
+  upsert?: Prisma.BoardUpsertWithoutAttachmentsInput
+  disconnect?: Prisma.BoardWhereInput | boolean
+  delete?: Prisma.BoardWhereInput | boolean
+  connect?: Prisma.BoardWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.BoardUpdateToOneWithWhereWithoutAttachmentsInput, Prisma.BoardUpdateWithoutAttachmentsInput>, Prisma.BoardUncheckedUpdateWithoutAttachmentsInput>
 }
 
-export type BoardCreateOrConnectWithoutPrivateOwnerInput = {
-  where: Prisma.BoardWhereUniqueInput
-  create: Prisma.XOR<Prisma.BoardCreateWithoutPrivateOwnerInput, Prisma.BoardUncheckedCreateWithoutPrivateOwnerInput>
+export type BoardCreateNestedOneWithoutTicketsInput = {
+  create?: Prisma.XOR<Prisma.BoardCreateWithoutTicketsInput, Prisma.BoardUncheckedCreateWithoutTicketsInput>
+  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutTicketsInput
+  connect?: Prisma.BoardWhereUniqueInput
 }
 
-export type BoardUpsertWithoutPrivateOwnerInput = {
-  update: Prisma.XOR<Prisma.BoardUpdateWithoutPrivateOwnerInput, Prisma.BoardUncheckedUpdateWithoutPrivateOwnerInput>
-  create: Prisma.XOR<Prisma.BoardCreateWithoutPrivateOwnerInput, Prisma.BoardUncheckedCreateWithoutPrivateOwnerInput>
-  where?: Prisma.BoardWhereInput
+export type BoardUpdateOneRequiredWithoutTicketsNestedInput = {
+  create?: Prisma.XOR<Prisma.BoardCreateWithoutTicketsInput, Prisma.BoardUncheckedCreateWithoutTicketsInput>
+  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutTicketsInput
+  upsert?: Prisma.BoardUpsertWithoutTicketsInput
+  connect?: Prisma.BoardWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.BoardUpdateToOneWithWhereWithoutTicketsInput, Prisma.BoardUpdateWithoutTicketsInput>, Prisma.BoardUncheckedUpdateWithoutTicketsInput>
 }
 
-export type BoardUpdateToOneWithWhereWithoutPrivateOwnerInput = {
-  where?: Prisma.BoardWhereInput
-  data: Prisma.XOR<Prisma.BoardUpdateWithoutPrivateOwnerInput, Prisma.BoardUncheckedUpdateWithoutPrivateOwnerInput>
+export type BoardCreateNestedOneWithoutPrivateOwnerInput = {
+  create?: Prisma.XOR<Prisma.BoardCreateWithoutPrivateOwnerInput, Prisma.BoardUncheckedCreateWithoutPrivateOwnerInput>
+  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutPrivateOwnerInput
+  connect?: Prisma.BoardWhereUniqueInput
 }
 
-export type BoardUpdateWithoutPrivateOwnerInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
-  key?: Prisma.StringFieldUpdateOperationsInput | string
-  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnPrMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  members?: Prisma.BoardMemberUpdateManyWithoutBoardNestedInput
-  groups?: Prisma.BoardGroupUpdateManyWithoutBoardNestedInput
-  tickets?: Prisma.TicketUpdateManyWithoutBoardNestedInput
-  tags?: Prisma.TagUpdateManyWithoutBoardNestedInput
-  attachments?: Prisma.AttachmentUpdateManyWithoutBoardNestedInput
-  keyHistories?: Prisma.BoardKeyHistoryUpdateManyWithoutBoardNestedInput
-  notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
-  repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
+export type BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput = {
+  create?: Prisma.XOR<Prisma.BoardCreateWithoutPrivateOwnerInput, Prisma.BoardUncheckedCreateWithoutPrivateOwnerInput>
+  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutPrivateOwnerInput
+  connect?: Prisma.BoardWhereUniqueInput
 }
 
-export type BoardUncheckedUpdateWithoutPrivateOwnerInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
-  key?: Prisma.StringFieldUpdateOperationsInput | string
-  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnPrMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
-  groups?: Prisma.BoardGroupUncheckedUpdateManyWithoutBoardNestedInput
-  tickets?: Prisma.TicketUncheckedUpdateManyWithoutBoardNestedInput
-  tags?: Prisma.TagUncheckedUpdateManyWithoutBoardNestedInput
-  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutBoardNestedInput
-  keyHistories?: Prisma.BoardKeyHistoryUncheckedUpdateManyWithoutBoardNestedInput
-  notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
-  repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
+export type BoardUpdateOneWithoutPrivateOwnerNestedInput = {
+  create?: Prisma.XOR<Prisma.BoardCreateWithoutPrivateOwnerInput, Prisma.BoardUncheckedCreateWithoutPrivateOwnerInput>
+  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutPrivateOwnerInput
+  upsert?: Prisma.BoardUpsertWithoutPrivateOwnerInput
+  disconnect?: Prisma.BoardWhereInput | boolean
+  delete?: Prisma.BoardWhereInput | boolean
+  connect?: Prisma.BoardWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.BoardUpdateToOneWithWhereWithoutPrivateOwnerInput, Prisma.BoardUpdateWithoutPrivateOwnerInput>, Prisma.BoardUncheckedUpdateWithoutPrivateOwnerInput>
 }
 
-export type BoardCreateWithoutAttachmentsInput = {
-  id?: string
-  kind?: $Enums.BoardKind
-  key: string
-  ticketSeq?: number
-  name: string
-  description?: string | null
-  archived?: boolean
-  completeOnPrMerge?: boolean
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
-  members?: Prisma.BoardMemberCreateNestedManyWithoutBoardInput
-  groups?: Prisma.BoardGroupCreateNestedManyWithoutBoardInput
-  tickets?: Prisma.TicketCreateNestedManyWithoutBoardInput
-  tags?: Prisma.TagCreateNestedManyWithoutBoardInput
-  keyHistories?: Prisma.BoardKeyHistoryCreateNestedManyWithoutBoardInput
-  notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
-  repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
-}
-
-export type BoardUncheckedCreateWithoutAttachmentsInput = {
-  id?: string
-  kind?: $Enums.BoardKind
-  privateOwnerId?: string | null
-  key: string
-  ticketSeq?: number
-  name: string
-  description?: string | null
-  archived?: boolean
-  completeOnPrMerge?: boolean
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
-  groups?: Prisma.BoardGroupUncheckedCreateNestedManyWithoutBoardInput
-  tickets?: Prisma.TicketUncheckedCreateNestedManyWithoutBoardInput
-  tags?: Prisma.TagUncheckedCreateNestedManyWithoutBoardInput
-  keyHistories?: Prisma.BoardKeyHistoryUncheckedCreateNestedManyWithoutBoardInput
-  notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
-  repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
-}
-
-export type BoardCreateOrConnectWithoutAttachmentsInput = {
-  where: Prisma.BoardWhereUniqueInput
-  create: Prisma.XOR<Prisma.BoardCreateWithoutAttachmentsInput, Prisma.BoardUncheckedCreateWithoutAttachmentsInput>
-}
-
-export type BoardUpsertWithoutAttachmentsInput = {
-  update: Prisma.XOR<Prisma.BoardUpdateWithoutAttachmentsInput, Prisma.BoardUncheckedUpdateWithoutAttachmentsInput>
-  create: Prisma.XOR<Prisma.BoardCreateWithoutAttachmentsInput, Prisma.BoardUncheckedCreateWithoutAttachmentsInput>
-  where?: Prisma.BoardWhereInput
-}
-
-export type BoardUpdateToOneWithWhereWithoutAttachmentsInput = {
-  where?: Prisma.BoardWhereInput
-  data: Prisma.XOR<Prisma.BoardUpdateWithoutAttachmentsInput, Prisma.BoardUncheckedUpdateWithoutAttachmentsInput>
-}
-
-export type BoardUpdateWithoutAttachmentsInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
-  key?: Prisma.StringFieldUpdateOperationsInput | string
-  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnPrMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
-  members?: Prisma.BoardMemberUpdateManyWithoutBoardNestedInput
-  groups?: Prisma.BoardGroupUpdateManyWithoutBoardNestedInput
-  tickets?: Prisma.TicketUpdateManyWithoutBoardNestedInput
-  tags?: Prisma.TagUpdateManyWithoutBoardNestedInput
-  keyHistories?: Prisma.BoardKeyHistoryUpdateManyWithoutBoardNestedInput
-  notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
-  repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
-}
-
-export type BoardUncheckedUpdateWithoutAttachmentsInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
-  privateOwnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  key?: Prisma.StringFieldUpdateOperationsInput | string
-  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnPrMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
-  groups?: Prisma.BoardGroupUncheckedUpdateManyWithoutBoardNestedInput
-  tickets?: Prisma.TicketUncheckedUpdateManyWithoutBoardNestedInput
-  tags?: Prisma.TagUncheckedUpdateManyWithoutBoardNestedInput
-  keyHistories?: Prisma.BoardKeyHistoryUncheckedUpdateManyWithoutBoardNestedInput
-  notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
-  repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
+export type BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput = {
+  create?: Prisma.XOR<Prisma.BoardCreateWithoutPrivateOwnerInput, Prisma.BoardUncheckedCreateWithoutPrivateOwnerInput>
+  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutPrivateOwnerInput
+  upsert?: Prisma.BoardUpsertWithoutPrivateOwnerInput
+  disconnect?: Prisma.BoardWhereInput | boolean
+  delete?: Prisma.BoardWhereInput | boolean
+  connect?: Prisma.BoardWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.BoardUpdateToOneWithWhereWithoutPrivateOwnerInput, Prisma.BoardUpdateWithoutPrivateOwnerInput>, Prisma.BoardUncheckedUpdateWithoutPrivateOwnerInput>
 }
 
 export type BoardCreateWithoutKeyHistoriesInput = {
@@ -1301,106 +1101,6 @@ export type BoardUncheckedUpdateWithoutGroupsInput = {
   repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
 }
 
-export type BoardCreateWithoutTicketsInput = {
-  id?: string
-  kind?: $Enums.BoardKind
-  key: string
-  ticketSeq?: number
-  name: string
-  description?: string | null
-  archived?: boolean
-  completeOnPrMerge?: boolean
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
-  members?: Prisma.BoardMemberCreateNestedManyWithoutBoardInput
-  groups?: Prisma.BoardGroupCreateNestedManyWithoutBoardInput
-  tags?: Prisma.TagCreateNestedManyWithoutBoardInput
-  attachments?: Prisma.AttachmentCreateNestedManyWithoutBoardInput
-  keyHistories?: Prisma.BoardKeyHistoryCreateNestedManyWithoutBoardInput
-  notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
-  repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
-}
-
-export type BoardUncheckedCreateWithoutTicketsInput = {
-  id?: string
-  kind?: $Enums.BoardKind
-  privateOwnerId?: string | null
-  key: string
-  ticketSeq?: number
-  name: string
-  description?: string | null
-  archived?: boolean
-  completeOnPrMerge?: boolean
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
-  groups?: Prisma.BoardGroupUncheckedCreateNestedManyWithoutBoardInput
-  tags?: Prisma.TagUncheckedCreateNestedManyWithoutBoardInput
-  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutBoardInput
-  keyHistories?: Prisma.BoardKeyHistoryUncheckedCreateNestedManyWithoutBoardInput
-  notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
-  repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
-}
-
-export type BoardCreateOrConnectWithoutTicketsInput = {
-  where: Prisma.BoardWhereUniqueInput
-  create: Prisma.XOR<Prisma.BoardCreateWithoutTicketsInput, Prisma.BoardUncheckedCreateWithoutTicketsInput>
-}
-
-export type BoardUpsertWithoutTicketsInput = {
-  update: Prisma.XOR<Prisma.BoardUpdateWithoutTicketsInput, Prisma.BoardUncheckedUpdateWithoutTicketsInput>
-  create: Prisma.XOR<Prisma.BoardCreateWithoutTicketsInput, Prisma.BoardUncheckedCreateWithoutTicketsInput>
-  where?: Prisma.BoardWhereInput
-}
-
-export type BoardUpdateToOneWithWhereWithoutTicketsInput = {
-  where?: Prisma.BoardWhereInput
-  data: Prisma.XOR<Prisma.BoardUpdateWithoutTicketsInput, Prisma.BoardUncheckedUpdateWithoutTicketsInput>
-}
-
-export type BoardUpdateWithoutTicketsInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
-  key?: Prisma.StringFieldUpdateOperationsInput | string
-  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnPrMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
-  members?: Prisma.BoardMemberUpdateManyWithoutBoardNestedInput
-  groups?: Prisma.BoardGroupUpdateManyWithoutBoardNestedInput
-  tags?: Prisma.TagUpdateManyWithoutBoardNestedInput
-  attachments?: Prisma.AttachmentUpdateManyWithoutBoardNestedInput
-  keyHistories?: Prisma.BoardKeyHistoryUpdateManyWithoutBoardNestedInput
-  notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
-  repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
-}
-
-export type BoardUncheckedUpdateWithoutTicketsInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
-  privateOwnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  key?: Prisma.StringFieldUpdateOperationsInput | string
-  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnPrMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
-  groups?: Prisma.BoardGroupUncheckedUpdateManyWithoutBoardNestedInput
-  tags?: Prisma.TagUncheckedUpdateManyWithoutBoardNestedInput
-  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutBoardNestedInput
-  keyHistories?: Prisma.BoardKeyHistoryUncheckedUpdateManyWithoutBoardNestedInput
-  notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
-  repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
-}
-
 export type BoardCreateWithoutRepositoriesInput = {
   id?: string
   kind?: $Enums.BoardKind
@@ -1598,6 +1298,306 @@ export type BoardUncheckedUpdateWithoutNotifySettingsInput = {
   tags?: Prisma.TagUncheckedUpdateManyWithoutBoardNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutBoardNestedInput
   keyHistories?: Prisma.BoardKeyHistoryUncheckedUpdateManyWithoutBoardNestedInput
+  repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
+}
+
+export type BoardCreateWithoutAttachmentsInput = {
+  id?: string
+  kind?: $Enums.BoardKind
+  key: string
+  ticketSeq?: number
+  name: string
+  description?: string | null
+  archived?: boolean
+  completeOnPrMerge?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
+  members?: Prisma.BoardMemberCreateNestedManyWithoutBoardInput
+  groups?: Prisma.BoardGroupCreateNestedManyWithoutBoardInput
+  tickets?: Prisma.TicketCreateNestedManyWithoutBoardInput
+  tags?: Prisma.TagCreateNestedManyWithoutBoardInput
+  keyHistories?: Prisma.BoardKeyHistoryCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
+  repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
+}
+
+export type BoardUncheckedCreateWithoutAttachmentsInput = {
+  id?: string
+  kind?: $Enums.BoardKind
+  privateOwnerId?: string | null
+  key: string
+  ticketSeq?: number
+  name: string
+  description?: string | null
+  archived?: boolean
+  completeOnPrMerge?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
+  groups?: Prisma.BoardGroupUncheckedCreateNestedManyWithoutBoardInput
+  tickets?: Prisma.TicketUncheckedCreateNestedManyWithoutBoardInput
+  tags?: Prisma.TagUncheckedCreateNestedManyWithoutBoardInput
+  keyHistories?: Prisma.BoardKeyHistoryUncheckedCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
+  repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
+}
+
+export type BoardCreateOrConnectWithoutAttachmentsInput = {
+  where: Prisma.BoardWhereUniqueInput
+  create: Prisma.XOR<Prisma.BoardCreateWithoutAttachmentsInput, Prisma.BoardUncheckedCreateWithoutAttachmentsInput>
+}
+
+export type BoardUpsertWithoutAttachmentsInput = {
+  update: Prisma.XOR<Prisma.BoardUpdateWithoutAttachmentsInput, Prisma.BoardUncheckedUpdateWithoutAttachmentsInput>
+  create: Prisma.XOR<Prisma.BoardCreateWithoutAttachmentsInput, Prisma.BoardUncheckedCreateWithoutAttachmentsInput>
+  where?: Prisma.BoardWhereInput
+}
+
+export type BoardUpdateToOneWithWhereWithoutAttachmentsInput = {
+  where?: Prisma.BoardWhereInput
+  data: Prisma.XOR<Prisma.BoardUpdateWithoutAttachmentsInput, Prisma.BoardUncheckedUpdateWithoutAttachmentsInput>
+}
+
+export type BoardUpdateWithoutAttachmentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completeOnPrMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
+  members?: Prisma.BoardMemberUpdateManyWithoutBoardNestedInput
+  groups?: Prisma.BoardGroupUpdateManyWithoutBoardNestedInput
+  tickets?: Prisma.TicketUpdateManyWithoutBoardNestedInput
+  tags?: Prisma.TagUpdateManyWithoutBoardNestedInput
+  keyHistories?: Prisma.BoardKeyHistoryUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
+  repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
+}
+
+export type BoardUncheckedUpdateWithoutAttachmentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  privateOwnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completeOnPrMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
+  groups?: Prisma.BoardGroupUncheckedUpdateManyWithoutBoardNestedInput
+  tickets?: Prisma.TicketUncheckedUpdateManyWithoutBoardNestedInput
+  tags?: Prisma.TagUncheckedUpdateManyWithoutBoardNestedInput
+  keyHistories?: Prisma.BoardKeyHistoryUncheckedUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
+  repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
+}
+
+export type BoardCreateWithoutTicketsInput = {
+  id?: string
+  kind?: $Enums.BoardKind
+  key: string
+  ticketSeq?: number
+  name: string
+  description?: string | null
+  archived?: boolean
+  completeOnPrMerge?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
+  members?: Prisma.BoardMemberCreateNestedManyWithoutBoardInput
+  groups?: Prisma.BoardGroupCreateNestedManyWithoutBoardInput
+  tags?: Prisma.TagCreateNestedManyWithoutBoardInput
+  attachments?: Prisma.AttachmentCreateNestedManyWithoutBoardInput
+  keyHistories?: Prisma.BoardKeyHistoryCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
+  repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
+}
+
+export type BoardUncheckedCreateWithoutTicketsInput = {
+  id?: string
+  kind?: $Enums.BoardKind
+  privateOwnerId?: string | null
+  key: string
+  ticketSeq?: number
+  name: string
+  description?: string | null
+  archived?: boolean
+  completeOnPrMerge?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
+  groups?: Prisma.BoardGroupUncheckedCreateNestedManyWithoutBoardInput
+  tags?: Prisma.TagUncheckedCreateNestedManyWithoutBoardInput
+  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutBoardInput
+  keyHistories?: Prisma.BoardKeyHistoryUncheckedCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
+  repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
+}
+
+export type BoardCreateOrConnectWithoutTicketsInput = {
+  where: Prisma.BoardWhereUniqueInput
+  create: Prisma.XOR<Prisma.BoardCreateWithoutTicketsInput, Prisma.BoardUncheckedCreateWithoutTicketsInput>
+}
+
+export type BoardUpsertWithoutTicketsInput = {
+  update: Prisma.XOR<Prisma.BoardUpdateWithoutTicketsInput, Prisma.BoardUncheckedUpdateWithoutTicketsInput>
+  create: Prisma.XOR<Prisma.BoardCreateWithoutTicketsInput, Prisma.BoardUncheckedCreateWithoutTicketsInput>
+  where?: Prisma.BoardWhereInput
+}
+
+export type BoardUpdateToOneWithWhereWithoutTicketsInput = {
+  where?: Prisma.BoardWhereInput
+  data: Prisma.XOR<Prisma.BoardUpdateWithoutTicketsInput, Prisma.BoardUncheckedUpdateWithoutTicketsInput>
+}
+
+export type BoardUpdateWithoutTicketsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completeOnPrMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
+  members?: Prisma.BoardMemberUpdateManyWithoutBoardNestedInput
+  groups?: Prisma.BoardGroupUpdateManyWithoutBoardNestedInput
+  tags?: Prisma.TagUpdateManyWithoutBoardNestedInput
+  attachments?: Prisma.AttachmentUpdateManyWithoutBoardNestedInput
+  keyHistories?: Prisma.BoardKeyHistoryUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
+  repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
+}
+
+export type BoardUncheckedUpdateWithoutTicketsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  privateOwnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completeOnPrMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
+  groups?: Prisma.BoardGroupUncheckedUpdateManyWithoutBoardNestedInput
+  tags?: Prisma.TagUncheckedUpdateManyWithoutBoardNestedInput
+  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutBoardNestedInput
+  keyHistories?: Prisma.BoardKeyHistoryUncheckedUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
+  repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
+}
+
+export type BoardCreateWithoutPrivateOwnerInput = {
+  id?: string
+  kind?: $Enums.BoardKind
+  key: string
+  ticketSeq?: number
+  name: string
+  description?: string | null
+  archived?: boolean
+  completeOnPrMerge?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.BoardMemberCreateNestedManyWithoutBoardInput
+  groups?: Prisma.BoardGroupCreateNestedManyWithoutBoardInput
+  tickets?: Prisma.TicketCreateNestedManyWithoutBoardInput
+  tags?: Prisma.TagCreateNestedManyWithoutBoardInput
+  attachments?: Prisma.AttachmentCreateNestedManyWithoutBoardInput
+  keyHistories?: Prisma.BoardKeyHistoryCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
+  repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
+}
+
+export type BoardUncheckedCreateWithoutPrivateOwnerInput = {
+  id?: string
+  kind?: $Enums.BoardKind
+  key: string
+  ticketSeq?: number
+  name: string
+  description?: string | null
+  archived?: boolean
+  completeOnPrMerge?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
+  groups?: Prisma.BoardGroupUncheckedCreateNestedManyWithoutBoardInput
+  tickets?: Prisma.TicketUncheckedCreateNestedManyWithoutBoardInput
+  tags?: Prisma.TagUncheckedCreateNestedManyWithoutBoardInput
+  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutBoardInput
+  keyHistories?: Prisma.BoardKeyHistoryUncheckedCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
+  repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
+}
+
+export type BoardCreateOrConnectWithoutPrivateOwnerInput = {
+  where: Prisma.BoardWhereUniqueInput
+  create: Prisma.XOR<Prisma.BoardCreateWithoutPrivateOwnerInput, Prisma.BoardUncheckedCreateWithoutPrivateOwnerInput>
+}
+
+export type BoardUpsertWithoutPrivateOwnerInput = {
+  update: Prisma.XOR<Prisma.BoardUpdateWithoutPrivateOwnerInput, Prisma.BoardUncheckedUpdateWithoutPrivateOwnerInput>
+  create: Prisma.XOR<Prisma.BoardCreateWithoutPrivateOwnerInput, Prisma.BoardUncheckedCreateWithoutPrivateOwnerInput>
+  where?: Prisma.BoardWhereInput
+}
+
+export type BoardUpdateToOneWithWhereWithoutPrivateOwnerInput = {
+  where?: Prisma.BoardWhereInput
+  data: Prisma.XOR<Prisma.BoardUpdateWithoutPrivateOwnerInput, Prisma.BoardUncheckedUpdateWithoutPrivateOwnerInput>
+}
+
+export type BoardUpdateWithoutPrivateOwnerInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completeOnPrMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.BoardMemberUpdateManyWithoutBoardNestedInput
+  groups?: Prisma.BoardGroupUpdateManyWithoutBoardNestedInput
+  tickets?: Prisma.TicketUpdateManyWithoutBoardNestedInput
+  tags?: Prisma.TagUpdateManyWithoutBoardNestedInput
+  attachments?: Prisma.AttachmentUpdateManyWithoutBoardNestedInput
+  keyHistories?: Prisma.BoardKeyHistoryUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
+  repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
+}
+
+export type BoardUncheckedUpdateWithoutPrivateOwnerInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completeOnPrMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
+  groups?: Prisma.BoardGroupUncheckedUpdateManyWithoutBoardNestedInput
+  tickets?: Prisma.TicketUncheckedUpdateManyWithoutBoardNestedInput
+  tags?: Prisma.TagUncheckedUpdateManyWithoutBoardNestedInput
+  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutBoardNestedInput
+  keyHistories?: Prisma.BoardKeyHistoryUncheckedUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
   repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
 }
 

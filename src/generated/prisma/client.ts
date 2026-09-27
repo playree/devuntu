@@ -31,8 +31,8 @@ export * from "./enums"
  * const prisma = new PrismaClient({
  *   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL })
  * })
- * // Fetch zero or more Users
- * const users = await prisma.user.findMany()
+ * // Fetch zero or more AgentTokens
+ * const agentTokens = await prisma.agentToken.findMany()
  * ```
  * 
  * Read more in our [docs](https://pris.ly/d/client).
@@ -41,12 +41,6 @@ export const PrismaClient = $Class.getPrismaClientClass()
 export type PrismaClient<LogOpts extends Prisma.LogLevel = never, OmitOpts extends Prisma.PrismaClientOptions["omit"] = Prisma.PrismaClientOptions["omit"], ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = $Class.PrismaClient<LogOpts, OmitOpts, ExtArgs>
 export { Prisma }
 
-/**
- * Model User
- * アプリの利用者。Webにログインする人のほか、MCP からのみ利用するAIエージェント用ユーザー
- * (isAgent = true)も同じテーブルで持つ。
- */
-export type User = Prisma.UserModel
 /**
  * Model AgentToken
  * AIエージェント用ユーザーが MCP サーバーへ接続するための長期トークン。
@@ -114,6 +108,140 @@ export type Passkey = Prisma.PasskeyModel
  * IDトークンの署名に使う鍵ペア。better-auth が要求するテーブルで、列の増減はライブラリ側の要求に従う。
  */
 export type Jwks = Prisma.JwksModel
+/**
+ * Model Board
+ * チケットを載せるかんばんボード。個人用(private)と共有(team)の2種類がある。
+ */
+export type Board = Prisma.BoardModel
+/**
+ * Model BoardKeyHistory
+ * 過去に使われたボードキーの記録。改名 / 削除でキーを解放しても再利用させないことで、
+ * 共有済みの表示ID(`KEY-番号`)が別ボードの同番号チケットへ解決されるのを防ぐ。
+ * 行はボードを消しても残す(消すと再利用できてしまうため)。
+ */
+export type BoardKeyHistory = Prisma.BoardKeyHistoryModel
+/**
+ * Model Tag
+ * ボード内で使うチケットのタグ。
+ */
+export type Tag = Prisma.TagModel
+/**
+ * Model TicketTag
+ * チケットとタグの紐づけを表す中間テーブル。
+ */
+export type TicketTag = Prisma.TicketTagModel
+/**
+ * Model BoardMember
+ * ボードの参加者。ユーザー単位の指定。
+ */
+export type BoardMember = Prisma.BoardMemberModel
+/**
+ * Model BoardGroup
+ * {@link BoardMember} のグループ指定版。グループの所属ユーザーがボードの参加者になる。
+ */
+export type BoardGroup = Prisma.BoardGroupModel
+/**
+ * Model CalendarShare
+ * 予定表の公開設定。publicId を知っている人だけが公開ページを開ける。
+ */
+export type CalendarShare = Prisma.CalendarShareModel
+/**
+ * Model CalendarBusyTime
+ * 予定表に固定で埋める予定(定例など)。曜日と時間帯で繰り返す。
+ */
+export type CalendarBusyTime = Prisma.CalendarBusyTimeModel
+/**
+ * Model CommandTargetMember
+ * リモート実行のターゲットの参加者。ユーザー単位の指定。
+ * 
+ * ターゲットの実体はサーバー上の YAML にあり DB に行を持たないため、`targetKey` に FK を張れない。
+ * 参照側は必ず読み込み済みのカタログに載っているキーの集合でのみこのテーブルを引くこと
+ * (`command-access.ts`)。定義から消えたターゲットの行が残っても、権限を与える経路が無くなる。
+ * 
+ * **管理者もアサインされていなければ実行できない。** 管理者の特権はアサインの操作だけで、
+ * ボード(`assertBoardAccess`)が manage に管理者を含めるのとは切り分けてある。
+ */
+export type CommandTargetMember = Prisma.CommandTargetMemberModel
+/**
+ * Model CommandTargetGroup
+ * {@link CommandTargetMember} のグループ指定版。グループの所属ユーザーがターゲットの参加者になる。
+ * ロールは持たず、常に member 相当(BoardGroup と同じ形)。
+ */
+export type CommandTargetGroup = Prisma.CommandTargetGroupModel
+/**
+ * Model CommandRun
+ * コマンドの1回の実行。
+ * 
+ * 監査記録も兼ねるので、定義ファイルからコマンドが消えても実行者が削除されても行は残す。
+ * そのため表示に使う値(コマンド名・接続先名・実行者名)は実行時点のものを複写する。
+ */
+export type CommandRun = Prisma.CommandRunModel
+/**
+ * Model CommandRunChunk
+ * 出力の1チャンク。
+ * 
+ * 行単位ではなく一定間隔/サイズでまとめた塊にしてある。冗長な出力で INSERT が
+ * 実行を律速しないようにするためで、SSE の追いつきと履歴の表示は同じテーブルで賄う。
+ */
+export type CommandRunChunk = Prisma.CommandRunChunkModel
+/**
+ * Model TicketLink
+ * チケットに紐付けたブランチ / プルリクエスト / コミット。
+ * 状態(prState / headSha)は対応付け済みリポジトリ(BoardRepository)の Webhook で更新する。
+ */
+export type TicketLink = Prisma.TicketLinkModel
+/**
+ * Model BoardRepository
+ * ボードとリポジトリの対応付け。Webhook はここにあるリポジトリのイベントだけを扱う。
+ */
+export type BoardRepository = Prisma.BoardRepositoryModel
+/**
+ * Model GitCheckSuite
+ * GitHub の Check Suite(CI を実行するアプリごとのまとまり)の最新状態。
+ * リンクとは独立に持ち、表示時に headSha で集計する(リンクの登録より先に CI が終わることがあるため)。
+ */
+export type GitCheckSuite = Prisma.GitCheckSuiteModel
+/**
+ * Model UserNotifySetting
+ * ユーザーごとの通知設定。
+ * 行が無い場合は全チャネル OFF として扱う。通知チャネルを増やすときは列を足す。
+ */
+export type UserNotifySetting = Prisma.UserNotifySettingModel
+/**
+ * Model WebPushSubscription
+ * Web プッシュの購読。1ユーザーが複数の端末を登録できる。
+ * 
+ * 通知の ON/OFF は UserNotifySetting 側で持ち、ここは「どの端末へ送れるか」だけを表す。
+ * プッシュサービスが失効(404 / 410)を返した購読は行ごと削除する。
+ */
+export type WebPushSubscription = Prisma.WebPushSubscriptionModel
+/**
+ * Model BoardNotifySetting
+ * ボードごとのチャネル通知設定。
+ * 
+ * 行が無いイベントは通知しない(UserNotifySetting と同じオプトイン方式)。
+ * 宛先がユーザーではないので、ユーザーごとの通知設定とは独立している。
+ * イベントごとに別のチャンネルを指定できる形にしてあるが、画面では「通知先1つ + イベントの ON/OFF」
+ * として扱う(イベント別チャンネルが必要になってもマイグレーションが要らない)。
+ */
+export type BoardNotifySetting = Prisma.BoardNotifySettingModel
+/**
+ * Model NotifyOutbox
+ * 通知の発生記録(アウトボックス)。
+ * 
+ * トリガー側はチケット操作と同じトランザクションでここへ1行書くだけで済み、
+ * 宛先の解決とチャネル別の配信はワーカー(`notify-dispatch.ts`)が行う。
+ * トリガーを増やしても呼び出し元は「何が起きたか」だけを書けばよい。
+ */
+export type NotifyOutbox = Prisma.NotifyOutboxModel
+/**
+ * Model NotifyDelivery
+ * 1宛先 × 1チャネルぶんの配信。ワーカーがアウトボックスを展開して作る。
+ * 
+ * 送信できた行は削除する(送信の記録はログに残る)ので、残っているのは
+ * 未送信・再試行待ち・試行回数を使い切ったものだけ。
+ */
+export type NotifyDelivery = Prisma.NotifyDeliveryModel
 /**
  * Model OauthClient
  * OIDC プロバイダとして受け付けるクライアントの登録情報。
@@ -188,58 +316,6 @@ export type KeyValueStore = Prisma.KeyValueStoreModel
  */
 export type AppVersion = Prisma.AppVersionModel
 /**
- * Model Group
- * ユーザーをまとめる単位。ボードの共有先や、エージェントの承認者の指定に使う。
- */
-export type Group = Prisma.GroupModel
-/**
- * Model UserGroup
- * ユーザーとグループの所属を表す中間テーブル。
- */
-export type UserGroup = Prisma.UserGroupModel
-/**
- * Model CalendarShare
- * 予定表の公開設定。publicId を知っている人だけが公開ページを開ける。
- */
-export type CalendarShare = Prisma.CalendarShareModel
-/**
- * Model CalendarBusyTime
- * 予定表に固定で埋める予定(定例など)。曜日と時間帯で繰り返す。
- */
-export type CalendarBusyTime = Prisma.CalendarBusyTimeModel
-/**
- * Model Board
- * チケットを載せるかんばんボード。個人用(private)と共有(team)の2種類がある。
- */
-export type Board = Prisma.BoardModel
-/**
- * Model BoardKeyHistory
- * 過去に使われたボードキーの記録。改名 / 削除でキーを解放しても再利用させないことで、
- * 共有済みの表示ID(`KEY-番号`)が別ボードの同番号チケットへ解決されるのを防ぐ。
- * 行はボードを消しても残す(消すと再利用できてしまうため)。
- */
-export type BoardKeyHistory = Prisma.BoardKeyHistoryModel
-/**
- * Model Tag
- * ボード内で使うチケットのタグ。
- */
-export type Tag = Prisma.TagModel
-/**
- * Model TicketTag
- * チケットとタグの紐づけを表す中間テーブル。
- */
-export type TicketTag = Prisma.TicketTagModel
-/**
- * Model BoardMember
- * ボードの参加者。ユーザー単位の指定。
- */
-export type BoardMember = Prisma.BoardMemberModel
-/**
- * Model BoardGroup
- * {@link BoardMember} のグループ指定版。グループの所属ユーザーがボードの参加者になる。
- */
-export type BoardGroup = Prisma.BoardGroupModel
-/**
  * Model Ticket
  * かんばんに並べるチケット。
  */
@@ -255,94 +331,18 @@ export type TicketComment = Prisma.TicketCommentModel
  */
 export type TicketCriterion = Prisma.TicketCriterionModel
 /**
- * Model TicketLink
- * チケットに紐付けたブランチ / プルリクエスト / コミット。
- * 状態(prState / headSha)は対応付け済みリポジトリ(BoardRepository)の Webhook で更新する。
+ * Model User
+ * アプリの利用者。Webにログインする人のほか、MCP からのみ利用するAIエージェント用ユーザー
+ * (isAgent = true)も同じテーブルで持つ。
  */
-export type TicketLink = Prisma.TicketLinkModel
+export type User = Prisma.UserModel
 /**
- * Model BoardRepository
- * ボードとリポジトリの対応付け。Webhook はここにあるリポジトリのイベントだけを扱う。
+ * Model Group
+ * ユーザーをまとめる単位。ボードの共有先や、エージェントの承認者の指定に使う。
  */
-export type BoardRepository = Prisma.BoardRepositoryModel
+export type Group = Prisma.GroupModel
 /**
- * Model GitCheckSuite
- * GitHub の Check Suite(CI を実行するアプリごとのまとまり)の最新状態。
- * リンクとは独立に持ち、表示時に headSha で集計する(リンクの登録より先に CI が終わることがあるため)。
+ * Model UserGroup
+ * ユーザーとグループの所属を表す中間テーブル。
  */
-export type GitCheckSuite = Prisma.GitCheckSuiteModel
-/**
- * Model UserNotifySetting
- * ユーザーごとの通知設定。
- * 行が無い場合は全チャネル OFF として扱う。通知チャネルを増やすときは列を足す。
- */
-export type UserNotifySetting = Prisma.UserNotifySettingModel
-/**
- * Model WebPushSubscription
- * Web プッシュの購読。1ユーザーが複数の端末を登録できる。
- * 
- * 通知の ON/OFF は UserNotifySetting 側で持ち、ここは「どの端末へ送れるか」だけを表す。
- * プッシュサービスが失効(404 / 410)を返した購読は行ごと削除する。
- */
-export type WebPushSubscription = Prisma.WebPushSubscriptionModel
-/**
- * Model BoardNotifySetting
- * ボードごとのチャネル通知設定。
- * 
- * 行が無いイベントは通知しない(UserNotifySetting と同じオプトイン方式)。
- * 宛先がユーザーではないので、ユーザーごとの通知設定とは独立している。
- * イベントごとに別のチャンネルを指定できる形にしてあるが、画面では「通知先1つ + イベントの ON/OFF」
- * として扱う(イベント別チャンネルが必要になってもマイグレーションが要らない)。
- */
-export type BoardNotifySetting = Prisma.BoardNotifySettingModel
-/**
- * Model NotifyOutbox
- * 通知の発生記録(アウトボックス)。
- * 
- * トリガー側はチケット操作と同じトランザクションでここへ1行書くだけで済み、
- * 宛先の解決とチャネル別の配信はワーカー(`notify-dispatch.ts`)が行う。
- * トリガーを増やしても呼び出し元は「何が起きたか」だけを書けばよい。
- */
-export type NotifyOutbox = Prisma.NotifyOutboxModel
-/**
- * Model NotifyDelivery
- * 1宛先 × 1チャネルぶんの配信。ワーカーがアウトボックスを展開して作る。
- * 
- * 送信できた行は削除する(送信の記録はログに残る)ので、残っているのは
- * 未送信・再試行待ち・試行回数を使い切ったものだけ。
- */
-export type NotifyDelivery = Prisma.NotifyDeliveryModel
-/**
- * Model CommandTargetMember
- * リモート実行のターゲットの参加者。ユーザー単位の指定。
- * 
- * ターゲットの実体はサーバー上の YAML にあり DB に行を持たないため、`targetKey` に FK を張れない。
- * 参照側は必ず読み込み済みのカタログに載っているキーの集合でのみこのテーブルを引くこと
- * (`command-access.ts`)。定義から消えたターゲットの行が残っても、権限を与える経路が無くなる。
- * 
- * **管理者もアサインされていなければ実行できない。** 管理者の特権はアサインの操作だけで、
- * ボード(`assertBoardAccess`)が manage に管理者を含めるのとは切り分けてある。
- */
-export type CommandTargetMember = Prisma.CommandTargetMemberModel
-/**
- * Model CommandTargetGroup
- * {@link CommandTargetMember} のグループ指定版。グループの所属ユーザーがターゲットの参加者になる。
- * ロールは持たず、常に member 相当(BoardGroup と同じ形)。
- */
-export type CommandTargetGroup = Prisma.CommandTargetGroupModel
-/**
- * Model CommandRun
- * コマンドの1回の実行。
- * 
- * 監査記録も兼ねるので、定義ファイルからコマンドが消えても実行者が削除されても行は残す。
- * そのため表示に使う値(コマンド名・接続先名・実行者名)は実行時点のものを複写する。
- */
-export type CommandRun = Prisma.CommandRunModel
-/**
- * Model CommandRunChunk
- * 出力の1チャンク。
- * 
- * 行単位ではなく一定間隔/サイズでまとめた塊にしてある。冗長な出力で INSERT が
- * 実行を律速しないようにするためで、SSE の追いつきと履歴の表示は同じテーブルで賄う。
- */
-export type CommandRunChunk = Prisma.CommandRunChunkModel
+export type UserGroup = Prisma.UserGroupModel

@@ -437,48 +437,6 @@ export type TicketCommentMinOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
 }
 
-export type TicketCommentCreateNestedManyWithoutAuthorInput = {
-  create?: Prisma.XOR<Prisma.TicketCommentCreateWithoutAuthorInput, Prisma.TicketCommentUncheckedCreateWithoutAuthorInput> | Prisma.TicketCommentCreateWithoutAuthorInput[] | Prisma.TicketCommentUncheckedCreateWithoutAuthorInput[]
-  connectOrCreate?: Prisma.TicketCommentCreateOrConnectWithoutAuthorInput | Prisma.TicketCommentCreateOrConnectWithoutAuthorInput[]
-  createMany?: Prisma.TicketCommentCreateManyAuthorInputEnvelope
-  connect?: Prisma.TicketCommentWhereUniqueInput | Prisma.TicketCommentWhereUniqueInput[]
-}
-
-export type TicketCommentUncheckedCreateNestedManyWithoutAuthorInput = {
-  create?: Prisma.XOR<Prisma.TicketCommentCreateWithoutAuthorInput, Prisma.TicketCommentUncheckedCreateWithoutAuthorInput> | Prisma.TicketCommentCreateWithoutAuthorInput[] | Prisma.TicketCommentUncheckedCreateWithoutAuthorInput[]
-  connectOrCreate?: Prisma.TicketCommentCreateOrConnectWithoutAuthorInput | Prisma.TicketCommentCreateOrConnectWithoutAuthorInput[]
-  createMany?: Prisma.TicketCommentCreateManyAuthorInputEnvelope
-  connect?: Prisma.TicketCommentWhereUniqueInput | Prisma.TicketCommentWhereUniqueInput[]
-}
-
-export type TicketCommentUpdateManyWithoutAuthorNestedInput = {
-  create?: Prisma.XOR<Prisma.TicketCommentCreateWithoutAuthorInput, Prisma.TicketCommentUncheckedCreateWithoutAuthorInput> | Prisma.TicketCommentCreateWithoutAuthorInput[] | Prisma.TicketCommentUncheckedCreateWithoutAuthorInput[]
-  connectOrCreate?: Prisma.TicketCommentCreateOrConnectWithoutAuthorInput | Prisma.TicketCommentCreateOrConnectWithoutAuthorInput[]
-  upsert?: Prisma.TicketCommentUpsertWithWhereUniqueWithoutAuthorInput | Prisma.TicketCommentUpsertWithWhereUniqueWithoutAuthorInput[]
-  createMany?: Prisma.TicketCommentCreateManyAuthorInputEnvelope
-  set?: Prisma.TicketCommentWhereUniqueInput | Prisma.TicketCommentWhereUniqueInput[]
-  disconnect?: Prisma.TicketCommentWhereUniqueInput | Prisma.TicketCommentWhereUniqueInput[]
-  delete?: Prisma.TicketCommentWhereUniqueInput | Prisma.TicketCommentWhereUniqueInput[]
-  connect?: Prisma.TicketCommentWhereUniqueInput | Prisma.TicketCommentWhereUniqueInput[]
-  update?: Prisma.TicketCommentUpdateWithWhereUniqueWithoutAuthorInput | Prisma.TicketCommentUpdateWithWhereUniqueWithoutAuthorInput[]
-  updateMany?: Prisma.TicketCommentUpdateManyWithWhereWithoutAuthorInput | Prisma.TicketCommentUpdateManyWithWhereWithoutAuthorInput[]
-  deleteMany?: Prisma.TicketCommentScalarWhereInput | Prisma.TicketCommentScalarWhereInput[]
-}
-
-export type TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput = {
-  create?: Prisma.XOR<Prisma.TicketCommentCreateWithoutAuthorInput, Prisma.TicketCommentUncheckedCreateWithoutAuthorInput> | Prisma.TicketCommentCreateWithoutAuthorInput[] | Prisma.TicketCommentUncheckedCreateWithoutAuthorInput[]
-  connectOrCreate?: Prisma.TicketCommentCreateOrConnectWithoutAuthorInput | Prisma.TicketCommentCreateOrConnectWithoutAuthorInput[]
-  upsert?: Prisma.TicketCommentUpsertWithWhereUniqueWithoutAuthorInput | Prisma.TicketCommentUpsertWithWhereUniqueWithoutAuthorInput[]
-  createMany?: Prisma.TicketCommentCreateManyAuthorInputEnvelope
-  set?: Prisma.TicketCommentWhereUniqueInput | Prisma.TicketCommentWhereUniqueInput[]
-  disconnect?: Prisma.TicketCommentWhereUniqueInput | Prisma.TicketCommentWhereUniqueInput[]
-  delete?: Prisma.TicketCommentWhereUniqueInput | Prisma.TicketCommentWhereUniqueInput[]
-  connect?: Prisma.TicketCommentWhereUniqueInput | Prisma.TicketCommentWhereUniqueInput[]
-  update?: Prisma.TicketCommentUpdateWithWhereUniqueWithoutAuthorInput | Prisma.TicketCommentUpdateWithWhereUniqueWithoutAuthorInput[]
-  updateMany?: Prisma.TicketCommentUpdateManyWithWhereWithoutAuthorInput | Prisma.TicketCommentUpdateManyWithWhereWithoutAuthorInput[]
-  deleteMany?: Prisma.TicketCommentScalarWhereInput | Prisma.TicketCommentScalarWhereInput[]
-}
-
 export type TicketCommentCreateNestedManyWithoutTicketInput = {
   create?: Prisma.XOR<Prisma.TicketCommentCreateWithoutTicketInput, Prisma.TicketCommentUncheckedCreateWithoutTicketInput> | Prisma.TicketCommentCreateWithoutTicketInput[] | Prisma.TicketCommentUncheckedCreateWithoutTicketInput[]
   connectOrCreate?: Prisma.TicketCommentCreateOrConnectWithoutTicketInput | Prisma.TicketCommentCreateOrConnectWithoutTicketInput[]
@@ -596,72 +554,46 @@ export type TicketCommentUncheckedUpdateManyWithoutParentNestedInput = {
   deleteMany?: Prisma.TicketCommentScalarWhereInput | Prisma.TicketCommentScalarWhereInput[]
 }
 
-export type TicketCommentCreateWithoutAuthorInput = {
-  id?: string
-  content: string
-  type?: $Enums.TicketCommentType | null
-  decision?: $Enums.TicketCommentDecision | null
-  mentionedUserIds?: Prisma.TicketCommentCreatementionedUserIdsInput | string[]
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  ticket: Prisma.TicketCreateNestedOneWithoutCommentsInput
-  parent?: Prisma.TicketCommentCreateNestedOneWithoutRepliesInput
-  replies?: Prisma.TicketCommentCreateNestedManyWithoutParentInput
+export type TicketCommentCreateNestedManyWithoutAuthorInput = {
+  create?: Prisma.XOR<Prisma.TicketCommentCreateWithoutAuthorInput, Prisma.TicketCommentUncheckedCreateWithoutAuthorInput> | Prisma.TicketCommentCreateWithoutAuthorInput[] | Prisma.TicketCommentUncheckedCreateWithoutAuthorInput[]
+  connectOrCreate?: Prisma.TicketCommentCreateOrConnectWithoutAuthorInput | Prisma.TicketCommentCreateOrConnectWithoutAuthorInput[]
+  createMany?: Prisma.TicketCommentCreateManyAuthorInputEnvelope
+  connect?: Prisma.TicketCommentWhereUniqueInput | Prisma.TicketCommentWhereUniqueInput[]
 }
 
-export type TicketCommentUncheckedCreateWithoutAuthorInput = {
-  id?: string
-  ticketId: string
-  content: string
-  type?: $Enums.TicketCommentType | null
-  decision?: $Enums.TicketCommentDecision | null
-  parentId?: string | null
-  mentionedUserIds?: Prisma.TicketCommentCreatementionedUserIdsInput | string[]
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  replies?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutParentInput
+export type TicketCommentUncheckedCreateNestedManyWithoutAuthorInput = {
+  create?: Prisma.XOR<Prisma.TicketCommentCreateWithoutAuthorInput, Prisma.TicketCommentUncheckedCreateWithoutAuthorInput> | Prisma.TicketCommentCreateWithoutAuthorInput[] | Prisma.TicketCommentUncheckedCreateWithoutAuthorInput[]
+  connectOrCreate?: Prisma.TicketCommentCreateOrConnectWithoutAuthorInput | Prisma.TicketCommentCreateOrConnectWithoutAuthorInput[]
+  createMany?: Prisma.TicketCommentCreateManyAuthorInputEnvelope
+  connect?: Prisma.TicketCommentWhereUniqueInput | Prisma.TicketCommentWhereUniqueInput[]
 }
 
-export type TicketCommentCreateOrConnectWithoutAuthorInput = {
-  where: Prisma.TicketCommentWhereUniqueInput
-  create: Prisma.XOR<Prisma.TicketCommentCreateWithoutAuthorInput, Prisma.TicketCommentUncheckedCreateWithoutAuthorInput>
+export type TicketCommentUpdateManyWithoutAuthorNestedInput = {
+  create?: Prisma.XOR<Prisma.TicketCommentCreateWithoutAuthorInput, Prisma.TicketCommentUncheckedCreateWithoutAuthorInput> | Prisma.TicketCommentCreateWithoutAuthorInput[] | Prisma.TicketCommentUncheckedCreateWithoutAuthorInput[]
+  connectOrCreate?: Prisma.TicketCommentCreateOrConnectWithoutAuthorInput | Prisma.TicketCommentCreateOrConnectWithoutAuthorInput[]
+  upsert?: Prisma.TicketCommentUpsertWithWhereUniqueWithoutAuthorInput | Prisma.TicketCommentUpsertWithWhereUniqueWithoutAuthorInput[]
+  createMany?: Prisma.TicketCommentCreateManyAuthorInputEnvelope
+  set?: Prisma.TicketCommentWhereUniqueInput | Prisma.TicketCommentWhereUniqueInput[]
+  disconnect?: Prisma.TicketCommentWhereUniqueInput | Prisma.TicketCommentWhereUniqueInput[]
+  delete?: Prisma.TicketCommentWhereUniqueInput | Prisma.TicketCommentWhereUniqueInput[]
+  connect?: Prisma.TicketCommentWhereUniqueInput | Prisma.TicketCommentWhereUniqueInput[]
+  update?: Prisma.TicketCommentUpdateWithWhereUniqueWithoutAuthorInput | Prisma.TicketCommentUpdateWithWhereUniqueWithoutAuthorInput[]
+  updateMany?: Prisma.TicketCommentUpdateManyWithWhereWithoutAuthorInput | Prisma.TicketCommentUpdateManyWithWhereWithoutAuthorInput[]
+  deleteMany?: Prisma.TicketCommentScalarWhereInput | Prisma.TicketCommentScalarWhereInput[]
 }
 
-export type TicketCommentCreateManyAuthorInputEnvelope = {
-  data: Prisma.TicketCommentCreateManyAuthorInput | Prisma.TicketCommentCreateManyAuthorInput[]
-  skipDuplicates?: boolean
-}
-
-export type TicketCommentUpsertWithWhereUniqueWithoutAuthorInput = {
-  where: Prisma.TicketCommentWhereUniqueInput
-  update: Prisma.XOR<Prisma.TicketCommentUpdateWithoutAuthorInput, Prisma.TicketCommentUncheckedUpdateWithoutAuthorInput>
-  create: Prisma.XOR<Prisma.TicketCommentCreateWithoutAuthorInput, Prisma.TicketCommentUncheckedCreateWithoutAuthorInput>
-}
-
-export type TicketCommentUpdateWithWhereUniqueWithoutAuthorInput = {
-  where: Prisma.TicketCommentWhereUniqueInput
-  data: Prisma.XOR<Prisma.TicketCommentUpdateWithoutAuthorInput, Prisma.TicketCommentUncheckedUpdateWithoutAuthorInput>
-}
-
-export type TicketCommentUpdateManyWithWhereWithoutAuthorInput = {
-  where: Prisma.TicketCommentScalarWhereInput
-  data: Prisma.XOR<Prisma.TicketCommentUpdateManyMutationInput, Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorInput>
-}
-
-export type TicketCommentScalarWhereInput = {
-  AND?: Prisma.TicketCommentScalarWhereInput | Prisma.TicketCommentScalarWhereInput[]
-  OR?: Prisma.TicketCommentScalarWhereInput[]
-  NOT?: Prisma.TicketCommentScalarWhereInput | Prisma.TicketCommentScalarWhereInput[]
-  id?: Prisma.StringFilter<"TicketComment"> | string
-  ticketId?: Prisma.StringFilter<"TicketComment"> | string
-  authorId?: Prisma.StringNullableFilter<"TicketComment"> | string | null
-  content?: Prisma.StringFilter<"TicketComment"> | string
-  type?: Prisma.EnumTicketCommentTypeNullableFilter<"TicketComment"> | $Enums.TicketCommentType | null
-  decision?: Prisma.EnumTicketCommentDecisionNullableFilter<"TicketComment"> | $Enums.TicketCommentDecision | null
-  parentId?: Prisma.StringNullableFilter<"TicketComment"> | string | null
-  mentionedUserIds?: Prisma.StringNullableListFilter<"TicketComment">
-  createdAt?: Prisma.DateTimeFilter<"TicketComment"> | Date | string
-  updatedAt?: Prisma.DateTimeFilter<"TicketComment"> | Date | string
+export type TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput = {
+  create?: Prisma.XOR<Prisma.TicketCommentCreateWithoutAuthorInput, Prisma.TicketCommentUncheckedCreateWithoutAuthorInput> | Prisma.TicketCommentCreateWithoutAuthorInput[] | Prisma.TicketCommentUncheckedCreateWithoutAuthorInput[]
+  connectOrCreate?: Prisma.TicketCommentCreateOrConnectWithoutAuthorInput | Prisma.TicketCommentCreateOrConnectWithoutAuthorInput[]
+  upsert?: Prisma.TicketCommentUpsertWithWhereUniqueWithoutAuthorInput | Prisma.TicketCommentUpsertWithWhereUniqueWithoutAuthorInput[]
+  createMany?: Prisma.TicketCommentCreateManyAuthorInputEnvelope
+  set?: Prisma.TicketCommentWhereUniqueInput | Prisma.TicketCommentWhereUniqueInput[]
+  disconnect?: Prisma.TicketCommentWhereUniqueInput | Prisma.TicketCommentWhereUniqueInput[]
+  delete?: Prisma.TicketCommentWhereUniqueInput | Prisma.TicketCommentWhereUniqueInput[]
+  connect?: Prisma.TicketCommentWhereUniqueInput | Prisma.TicketCommentWhereUniqueInput[]
+  update?: Prisma.TicketCommentUpdateWithWhereUniqueWithoutAuthorInput | Prisma.TicketCommentUpdateWithWhereUniqueWithoutAuthorInput[]
+  updateMany?: Prisma.TicketCommentUpdateManyWithWhereWithoutAuthorInput | Prisma.TicketCommentUpdateManyWithWhereWithoutAuthorInput[]
+  deleteMany?: Prisma.TicketCommentScalarWhereInput | Prisma.TicketCommentScalarWhereInput[]
 }
 
 export type TicketCommentCreateWithoutTicketInput = {
@@ -714,6 +646,22 @@ export type TicketCommentUpdateWithWhereUniqueWithoutTicketInput = {
 export type TicketCommentUpdateManyWithWhereWithoutTicketInput = {
   where: Prisma.TicketCommentScalarWhereInput
   data: Prisma.XOR<Prisma.TicketCommentUpdateManyMutationInput, Prisma.TicketCommentUncheckedUpdateManyWithoutTicketInput>
+}
+
+export type TicketCommentScalarWhereInput = {
+  AND?: Prisma.TicketCommentScalarWhereInput | Prisma.TicketCommentScalarWhereInput[]
+  OR?: Prisma.TicketCommentScalarWhereInput[]
+  NOT?: Prisma.TicketCommentScalarWhereInput | Prisma.TicketCommentScalarWhereInput[]
+  id?: Prisma.StringFilter<"TicketComment"> | string
+  ticketId?: Prisma.StringFilter<"TicketComment"> | string
+  authorId?: Prisma.StringNullableFilter<"TicketComment"> | string | null
+  content?: Prisma.StringFilter<"TicketComment"> | string
+  type?: Prisma.EnumTicketCommentTypeNullableFilter<"TicketComment"> | $Enums.TicketCommentType | null
+  decision?: Prisma.EnumTicketCommentDecisionNullableFilter<"TicketComment"> | $Enums.TicketCommentDecision | null
+  parentId?: Prisma.StringNullableFilter<"TicketComment"> | string | null
+  mentionedUserIds?: Prisma.StringNullableListFilter<"TicketComment">
+  createdAt?: Prisma.DateTimeFilter<"TicketComment"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"TicketComment"> | Date | string
 }
 
 export type TicketCommentCreateWithoutRepliesInput = {
@@ -836,7 +784,20 @@ export type TicketCommentUpdateManyWithWhereWithoutParentInput = {
   data: Prisma.XOR<Prisma.TicketCommentUpdateManyMutationInput, Prisma.TicketCommentUncheckedUpdateManyWithoutParentInput>
 }
 
-export type TicketCommentCreateManyAuthorInput = {
+export type TicketCommentCreateWithoutAuthorInput = {
+  id?: string
+  content: string
+  type?: $Enums.TicketCommentType | null
+  decision?: $Enums.TicketCommentDecision | null
+  mentionedUserIds?: Prisma.TicketCommentCreatementionedUserIdsInput | string[]
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  ticket: Prisma.TicketCreateNestedOneWithoutCommentsInput
+  parent?: Prisma.TicketCommentCreateNestedOneWithoutRepliesInput
+  replies?: Prisma.TicketCommentCreateNestedManyWithoutParentInput
+}
+
+export type TicketCommentUncheckedCreateWithoutAuthorInput = {
   id?: string
   ticketId: string
   content: string
@@ -846,44 +807,33 @@ export type TicketCommentCreateManyAuthorInput = {
   mentionedUserIds?: Prisma.TicketCommentCreatementionedUserIdsInput | string[]
   createdAt?: Date | string
   updatedAt?: Date | string
+  replies?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutParentInput
 }
 
-export type TicketCommentUpdateWithoutAuthorInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  content?: Prisma.StringFieldUpdateOperationsInput | string
-  type?: Prisma.NullableEnumTicketCommentTypeFieldUpdateOperationsInput | $Enums.TicketCommentType | null
-  decision?: Prisma.NullableEnumTicketCommentDecisionFieldUpdateOperationsInput | $Enums.TicketCommentDecision | null
-  mentionedUserIds?: Prisma.TicketCommentUpdatementionedUserIdsInput | string[]
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  ticket?: Prisma.TicketUpdateOneRequiredWithoutCommentsNestedInput
-  parent?: Prisma.TicketCommentUpdateOneWithoutRepliesNestedInput
-  replies?: Prisma.TicketCommentUpdateManyWithoutParentNestedInput
+export type TicketCommentCreateOrConnectWithoutAuthorInput = {
+  where: Prisma.TicketCommentWhereUniqueInput
+  create: Prisma.XOR<Prisma.TicketCommentCreateWithoutAuthorInput, Prisma.TicketCommentUncheckedCreateWithoutAuthorInput>
 }
 
-export type TicketCommentUncheckedUpdateWithoutAuthorInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  ticketId?: Prisma.StringFieldUpdateOperationsInput | string
-  content?: Prisma.StringFieldUpdateOperationsInput | string
-  type?: Prisma.NullableEnumTicketCommentTypeFieldUpdateOperationsInput | $Enums.TicketCommentType | null
-  decision?: Prisma.NullableEnumTicketCommentDecisionFieldUpdateOperationsInput | $Enums.TicketCommentDecision | null
-  parentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  mentionedUserIds?: Prisma.TicketCommentUpdatementionedUserIdsInput | string[]
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  replies?: Prisma.TicketCommentUncheckedUpdateManyWithoutParentNestedInput
+export type TicketCommentCreateManyAuthorInputEnvelope = {
+  data: Prisma.TicketCommentCreateManyAuthorInput | Prisma.TicketCommentCreateManyAuthorInput[]
+  skipDuplicates?: boolean
 }
 
-export type TicketCommentUncheckedUpdateManyWithoutAuthorInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  ticketId?: Prisma.StringFieldUpdateOperationsInput | string
-  content?: Prisma.StringFieldUpdateOperationsInput | string
-  type?: Prisma.NullableEnumTicketCommentTypeFieldUpdateOperationsInput | $Enums.TicketCommentType | null
-  decision?: Prisma.NullableEnumTicketCommentDecisionFieldUpdateOperationsInput | $Enums.TicketCommentDecision | null
-  parentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  mentionedUserIds?: Prisma.TicketCommentUpdatementionedUserIdsInput | string[]
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+export type TicketCommentUpsertWithWhereUniqueWithoutAuthorInput = {
+  where: Prisma.TicketCommentWhereUniqueInput
+  update: Prisma.XOR<Prisma.TicketCommentUpdateWithoutAuthorInput, Prisma.TicketCommentUncheckedUpdateWithoutAuthorInput>
+  create: Prisma.XOR<Prisma.TicketCommentCreateWithoutAuthorInput, Prisma.TicketCommentUncheckedCreateWithoutAuthorInput>
+}
+
+export type TicketCommentUpdateWithWhereUniqueWithoutAuthorInput = {
+  where: Prisma.TicketCommentWhereUniqueInput
+  data: Prisma.XOR<Prisma.TicketCommentUpdateWithoutAuthorInput, Prisma.TicketCommentUncheckedUpdateWithoutAuthorInput>
+}
+
+export type TicketCommentUpdateManyWithWhereWithoutAuthorInput = {
+  where: Prisma.TicketCommentScalarWhereInput
+  data: Prisma.XOR<Prisma.TicketCommentUpdateManyMutationInput, Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorInput>
 }
 
 export type TicketCommentCreateManyTicketInput = {
@@ -981,6 +931,56 @@ export type TicketCommentUncheckedUpdateManyWithoutParentInput = {
   content?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.NullableEnumTicketCommentTypeFieldUpdateOperationsInput | $Enums.TicketCommentType | null
   decision?: Prisma.NullableEnumTicketCommentDecisionFieldUpdateOperationsInput | $Enums.TicketCommentDecision | null
+  mentionedUserIds?: Prisma.TicketCommentUpdatementionedUserIdsInput | string[]
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type TicketCommentCreateManyAuthorInput = {
+  id?: string
+  ticketId: string
+  content: string
+  type?: $Enums.TicketCommentType | null
+  decision?: $Enums.TicketCommentDecision | null
+  parentId?: string | null
+  mentionedUserIds?: Prisma.TicketCommentCreatementionedUserIdsInput | string[]
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type TicketCommentUpdateWithoutAuthorInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.NullableEnumTicketCommentTypeFieldUpdateOperationsInput | $Enums.TicketCommentType | null
+  decision?: Prisma.NullableEnumTicketCommentDecisionFieldUpdateOperationsInput | $Enums.TicketCommentDecision | null
+  mentionedUserIds?: Prisma.TicketCommentUpdatementionedUserIdsInput | string[]
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ticket?: Prisma.TicketUpdateOneRequiredWithoutCommentsNestedInput
+  parent?: Prisma.TicketCommentUpdateOneWithoutRepliesNestedInput
+  replies?: Prisma.TicketCommentUpdateManyWithoutParentNestedInput
+}
+
+export type TicketCommentUncheckedUpdateWithoutAuthorInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketId?: Prisma.StringFieldUpdateOperationsInput | string
+  content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.NullableEnumTicketCommentTypeFieldUpdateOperationsInput | $Enums.TicketCommentType | null
+  decision?: Prisma.NullableEnumTicketCommentDecisionFieldUpdateOperationsInput | $Enums.TicketCommentDecision | null
+  parentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mentionedUserIds?: Prisma.TicketCommentUpdatementionedUserIdsInput | string[]
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  replies?: Prisma.TicketCommentUncheckedUpdateManyWithoutParentNestedInput
+}
+
+export type TicketCommentUncheckedUpdateManyWithoutAuthorInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketId?: Prisma.StringFieldUpdateOperationsInput | string
+  content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.NullableEnumTicketCommentTypeFieldUpdateOperationsInput | $Enums.TicketCommentType | null
+  decision?: Prisma.NullableEnumTicketCommentDecisionFieldUpdateOperationsInput | $Enums.TicketCommentDecision | null
+  parentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mentionedUserIds?: Prisma.TicketCommentUpdatementionedUserIdsInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string

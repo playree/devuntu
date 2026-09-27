@@ -520,48 +520,6 @@ export type NotifyDeliverySumOrderByAggregateInput = {
   attempts?: Prisma.SortOrder
 }
 
-export type NotifyDeliveryCreateNestedManyWithoutUserInput = {
-  create?: Prisma.XOR<Prisma.NotifyDeliveryCreateWithoutUserInput, Prisma.NotifyDeliveryUncheckedCreateWithoutUserInput> | Prisma.NotifyDeliveryCreateWithoutUserInput[] | Prisma.NotifyDeliveryUncheckedCreateWithoutUserInput[]
-  connectOrCreate?: Prisma.NotifyDeliveryCreateOrConnectWithoutUserInput | Prisma.NotifyDeliveryCreateOrConnectWithoutUserInput[]
-  createMany?: Prisma.NotifyDeliveryCreateManyUserInputEnvelope
-  connect?: Prisma.NotifyDeliveryWhereUniqueInput | Prisma.NotifyDeliveryWhereUniqueInput[]
-}
-
-export type NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput = {
-  create?: Prisma.XOR<Prisma.NotifyDeliveryCreateWithoutUserInput, Prisma.NotifyDeliveryUncheckedCreateWithoutUserInput> | Prisma.NotifyDeliveryCreateWithoutUserInput[] | Prisma.NotifyDeliveryUncheckedCreateWithoutUserInput[]
-  connectOrCreate?: Prisma.NotifyDeliveryCreateOrConnectWithoutUserInput | Prisma.NotifyDeliveryCreateOrConnectWithoutUserInput[]
-  createMany?: Prisma.NotifyDeliveryCreateManyUserInputEnvelope
-  connect?: Prisma.NotifyDeliveryWhereUniqueInput | Prisma.NotifyDeliveryWhereUniqueInput[]
-}
-
-export type NotifyDeliveryUpdateManyWithoutUserNestedInput = {
-  create?: Prisma.XOR<Prisma.NotifyDeliveryCreateWithoutUserInput, Prisma.NotifyDeliveryUncheckedCreateWithoutUserInput> | Prisma.NotifyDeliveryCreateWithoutUserInput[] | Prisma.NotifyDeliveryUncheckedCreateWithoutUserInput[]
-  connectOrCreate?: Prisma.NotifyDeliveryCreateOrConnectWithoutUserInput | Prisma.NotifyDeliveryCreateOrConnectWithoutUserInput[]
-  upsert?: Prisma.NotifyDeliveryUpsertWithWhereUniqueWithoutUserInput | Prisma.NotifyDeliveryUpsertWithWhereUniqueWithoutUserInput[]
-  createMany?: Prisma.NotifyDeliveryCreateManyUserInputEnvelope
-  set?: Prisma.NotifyDeliveryWhereUniqueInput | Prisma.NotifyDeliveryWhereUniqueInput[]
-  disconnect?: Prisma.NotifyDeliveryWhereUniqueInput | Prisma.NotifyDeliveryWhereUniqueInput[]
-  delete?: Prisma.NotifyDeliveryWhereUniqueInput | Prisma.NotifyDeliveryWhereUniqueInput[]
-  connect?: Prisma.NotifyDeliveryWhereUniqueInput | Prisma.NotifyDeliveryWhereUniqueInput[]
-  update?: Prisma.NotifyDeliveryUpdateWithWhereUniqueWithoutUserInput | Prisma.NotifyDeliveryUpdateWithWhereUniqueWithoutUserInput[]
-  updateMany?: Prisma.NotifyDeliveryUpdateManyWithWhereWithoutUserInput | Prisma.NotifyDeliveryUpdateManyWithWhereWithoutUserInput[]
-  deleteMany?: Prisma.NotifyDeliveryScalarWhereInput | Prisma.NotifyDeliveryScalarWhereInput[]
-}
-
-export type NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput = {
-  create?: Prisma.XOR<Prisma.NotifyDeliveryCreateWithoutUserInput, Prisma.NotifyDeliveryUncheckedCreateWithoutUserInput> | Prisma.NotifyDeliveryCreateWithoutUserInput[] | Prisma.NotifyDeliveryUncheckedCreateWithoutUserInput[]
-  connectOrCreate?: Prisma.NotifyDeliveryCreateOrConnectWithoutUserInput | Prisma.NotifyDeliveryCreateOrConnectWithoutUserInput[]
-  upsert?: Prisma.NotifyDeliveryUpsertWithWhereUniqueWithoutUserInput | Prisma.NotifyDeliveryUpsertWithWhereUniqueWithoutUserInput[]
-  createMany?: Prisma.NotifyDeliveryCreateManyUserInputEnvelope
-  set?: Prisma.NotifyDeliveryWhereUniqueInput | Prisma.NotifyDeliveryWhereUniqueInput[]
-  disconnect?: Prisma.NotifyDeliveryWhereUniqueInput | Prisma.NotifyDeliveryWhereUniqueInput[]
-  delete?: Prisma.NotifyDeliveryWhereUniqueInput | Prisma.NotifyDeliveryWhereUniqueInput[]
-  connect?: Prisma.NotifyDeliveryWhereUniqueInput | Prisma.NotifyDeliveryWhereUniqueInput[]
-  update?: Prisma.NotifyDeliveryUpdateWithWhereUniqueWithoutUserInput | Prisma.NotifyDeliveryUpdateWithWhereUniqueWithoutUserInput[]
-  updateMany?: Prisma.NotifyDeliveryUpdateManyWithWhereWithoutUserInput | Prisma.NotifyDeliveryUpdateManyWithWhereWithoutUserInput[]
-  deleteMany?: Prisma.NotifyDeliveryScalarWhereInput | Prisma.NotifyDeliveryScalarWhereInput[]
-}
-
 export type NotifyDeliveryCreateNestedManyWithoutOutboxInput = {
   create?: Prisma.XOR<Prisma.NotifyDeliveryCreateWithoutOutboxInput, Prisma.NotifyDeliveryUncheckedCreateWithoutOutboxInput> | Prisma.NotifyDeliveryCreateWithoutOutboxInput[] | Prisma.NotifyDeliveryUncheckedCreateWithoutOutboxInput[]
   connectOrCreate?: Prisma.NotifyDeliveryCreateOrConnectWithoutOutboxInput | Prisma.NotifyDeliveryCreateOrConnectWithoutOutboxInput[]
@@ -608,76 +566,46 @@ export type EnumNotifyChannelFieldUpdateOperationsInput = {
   set?: $Enums.NotifyChannel
 }
 
-export type NotifyDeliveryCreateWithoutUserInput = {
-  id?: string
-  channel: $Enums.NotifyChannel
-  slackChannelId?: string | null
-  status?: $Enums.NotifyJobStatus
-  scheduledAt: Date | string
-  attempts?: number
-  claimedAt?: Date | string | null
-  lastError?: string | null
-  failedAt?: Date | string | null
-  createdAt?: Date | string
-  outbox: Prisma.NotifyOutboxCreateNestedOneWithoutDeliveriesInput
+export type NotifyDeliveryCreateNestedManyWithoutUserInput = {
+  create?: Prisma.XOR<Prisma.NotifyDeliveryCreateWithoutUserInput, Prisma.NotifyDeliveryUncheckedCreateWithoutUserInput> | Prisma.NotifyDeliveryCreateWithoutUserInput[] | Prisma.NotifyDeliveryUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.NotifyDeliveryCreateOrConnectWithoutUserInput | Prisma.NotifyDeliveryCreateOrConnectWithoutUserInput[]
+  createMany?: Prisma.NotifyDeliveryCreateManyUserInputEnvelope
+  connect?: Prisma.NotifyDeliveryWhereUniqueInput | Prisma.NotifyDeliveryWhereUniqueInput[]
 }
 
-export type NotifyDeliveryUncheckedCreateWithoutUserInput = {
-  id?: string
-  outboxId: string
-  channel: $Enums.NotifyChannel
-  slackChannelId?: string | null
-  status?: $Enums.NotifyJobStatus
-  scheduledAt: Date | string
-  attempts?: number
-  claimedAt?: Date | string | null
-  lastError?: string | null
-  failedAt?: Date | string | null
-  createdAt?: Date | string
+export type NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput = {
+  create?: Prisma.XOR<Prisma.NotifyDeliveryCreateWithoutUserInput, Prisma.NotifyDeliveryUncheckedCreateWithoutUserInput> | Prisma.NotifyDeliveryCreateWithoutUserInput[] | Prisma.NotifyDeliveryUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.NotifyDeliveryCreateOrConnectWithoutUserInput | Prisma.NotifyDeliveryCreateOrConnectWithoutUserInput[]
+  createMany?: Prisma.NotifyDeliveryCreateManyUserInputEnvelope
+  connect?: Prisma.NotifyDeliveryWhereUniqueInput | Prisma.NotifyDeliveryWhereUniqueInput[]
 }
 
-export type NotifyDeliveryCreateOrConnectWithoutUserInput = {
-  where: Prisma.NotifyDeliveryWhereUniqueInput
-  create: Prisma.XOR<Prisma.NotifyDeliveryCreateWithoutUserInput, Prisma.NotifyDeliveryUncheckedCreateWithoutUserInput>
+export type NotifyDeliveryUpdateManyWithoutUserNestedInput = {
+  create?: Prisma.XOR<Prisma.NotifyDeliveryCreateWithoutUserInput, Prisma.NotifyDeliveryUncheckedCreateWithoutUserInput> | Prisma.NotifyDeliveryCreateWithoutUserInput[] | Prisma.NotifyDeliveryUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.NotifyDeliveryCreateOrConnectWithoutUserInput | Prisma.NotifyDeliveryCreateOrConnectWithoutUserInput[]
+  upsert?: Prisma.NotifyDeliveryUpsertWithWhereUniqueWithoutUserInput | Prisma.NotifyDeliveryUpsertWithWhereUniqueWithoutUserInput[]
+  createMany?: Prisma.NotifyDeliveryCreateManyUserInputEnvelope
+  set?: Prisma.NotifyDeliveryWhereUniqueInput | Prisma.NotifyDeliveryWhereUniqueInput[]
+  disconnect?: Prisma.NotifyDeliveryWhereUniqueInput | Prisma.NotifyDeliveryWhereUniqueInput[]
+  delete?: Prisma.NotifyDeliveryWhereUniqueInput | Prisma.NotifyDeliveryWhereUniqueInput[]
+  connect?: Prisma.NotifyDeliveryWhereUniqueInput | Prisma.NotifyDeliveryWhereUniqueInput[]
+  update?: Prisma.NotifyDeliveryUpdateWithWhereUniqueWithoutUserInput | Prisma.NotifyDeliveryUpdateWithWhereUniqueWithoutUserInput[]
+  updateMany?: Prisma.NotifyDeliveryUpdateManyWithWhereWithoutUserInput | Prisma.NotifyDeliveryUpdateManyWithWhereWithoutUserInput[]
+  deleteMany?: Prisma.NotifyDeliveryScalarWhereInput | Prisma.NotifyDeliveryScalarWhereInput[]
 }
 
-export type NotifyDeliveryCreateManyUserInputEnvelope = {
-  data: Prisma.NotifyDeliveryCreateManyUserInput | Prisma.NotifyDeliveryCreateManyUserInput[]
-  skipDuplicates?: boolean
-}
-
-export type NotifyDeliveryUpsertWithWhereUniqueWithoutUserInput = {
-  where: Prisma.NotifyDeliveryWhereUniqueInput
-  update: Prisma.XOR<Prisma.NotifyDeliveryUpdateWithoutUserInput, Prisma.NotifyDeliveryUncheckedUpdateWithoutUserInput>
-  create: Prisma.XOR<Prisma.NotifyDeliveryCreateWithoutUserInput, Prisma.NotifyDeliveryUncheckedCreateWithoutUserInput>
-}
-
-export type NotifyDeliveryUpdateWithWhereUniqueWithoutUserInput = {
-  where: Prisma.NotifyDeliveryWhereUniqueInput
-  data: Prisma.XOR<Prisma.NotifyDeliveryUpdateWithoutUserInput, Prisma.NotifyDeliveryUncheckedUpdateWithoutUserInput>
-}
-
-export type NotifyDeliveryUpdateManyWithWhereWithoutUserInput = {
-  where: Prisma.NotifyDeliveryScalarWhereInput
-  data: Prisma.XOR<Prisma.NotifyDeliveryUpdateManyMutationInput, Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserInput>
-}
-
-export type NotifyDeliveryScalarWhereInput = {
-  AND?: Prisma.NotifyDeliveryScalarWhereInput | Prisma.NotifyDeliveryScalarWhereInput[]
-  OR?: Prisma.NotifyDeliveryScalarWhereInput[]
-  NOT?: Prisma.NotifyDeliveryScalarWhereInput | Prisma.NotifyDeliveryScalarWhereInput[]
-  id?: Prisma.StringFilter<"NotifyDelivery"> | string
-  outboxId?: Prisma.StringFilter<"NotifyDelivery"> | string
-  channel?: Prisma.EnumNotifyChannelFilter<"NotifyDelivery"> | $Enums.NotifyChannel
-  userId?: Prisma.StringNullableFilter<"NotifyDelivery"> | string | null
-  slackChannelId?: Prisma.StringNullableFilter<"NotifyDelivery"> | string | null
-  status?: Prisma.EnumNotifyJobStatusFilter<"NotifyDelivery"> | $Enums.NotifyJobStatus
-  scheduledAt?: Prisma.DateTimeFilter<"NotifyDelivery"> | Date | string
-  attempts?: Prisma.IntFilter<"NotifyDelivery"> | number
-  claimedAt?: Prisma.DateTimeNullableFilter<"NotifyDelivery"> | Date | string | null
-  lastError?: Prisma.StringNullableFilter<"NotifyDelivery"> | string | null
-  failedAt?: Prisma.DateTimeNullableFilter<"NotifyDelivery"> | Date | string | null
-  createdAt?: Prisma.DateTimeFilter<"NotifyDelivery"> | Date | string
+export type NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput = {
+  create?: Prisma.XOR<Prisma.NotifyDeliveryCreateWithoutUserInput, Prisma.NotifyDeliveryUncheckedCreateWithoutUserInput> | Prisma.NotifyDeliveryCreateWithoutUserInput[] | Prisma.NotifyDeliveryUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.NotifyDeliveryCreateOrConnectWithoutUserInput | Prisma.NotifyDeliveryCreateOrConnectWithoutUserInput[]
+  upsert?: Prisma.NotifyDeliveryUpsertWithWhereUniqueWithoutUserInput | Prisma.NotifyDeliveryUpsertWithWhereUniqueWithoutUserInput[]
+  createMany?: Prisma.NotifyDeliveryCreateManyUserInputEnvelope
+  set?: Prisma.NotifyDeliveryWhereUniqueInput | Prisma.NotifyDeliveryWhereUniqueInput[]
+  disconnect?: Prisma.NotifyDeliveryWhereUniqueInput | Prisma.NotifyDeliveryWhereUniqueInput[]
+  delete?: Prisma.NotifyDeliveryWhereUniqueInput | Prisma.NotifyDeliveryWhereUniqueInput[]
+  connect?: Prisma.NotifyDeliveryWhereUniqueInput | Prisma.NotifyDeliveryWhereUniqueInput[]
+  update?: Prisma.NotifyDeliveryUpdateWithWhereUniqueWithoutUserInput | Prisma.NotifyDeliveryUpdateWithWhereUniqueWithoutUserInput[]
+  updateMany?: Prisma.NotifyDeliveryUpdateManyWithWhereWithoutUserInput | Prisma.NotifyDeliveryUpdateManyWithWhereWithoutUserInput[]
+  deleteMany?: Prisma.NotifyDeliveryScalarWhereInput | Prisma.NotifyDeliveryScalarWhereInput[]
 }
 
 export type NotifyDeliveryCreateWithoutOutboxInput = {
@@ -734,7 +662,39 @@ export type NotifyDeliveryUpdateManyWithWhereWithoutOutboxInput = {
   data: Prisma.XOR<Prisma.NotifyDeliveryUpdateManyMutationInput, Prisma.NotifyDeliveryUncheckedUpdateManyWithoutOutboxInput>
 }
 
-export type NotifyDeliveryCreateManyUserInput = {
+export type NotifyDeliveryScalarWhereInput = {
+  AND?: Prisma.NotifyDeliveryScalarWhereInput | Prisma.NotifyDeliveryScalarWhereInput[]
+  OR?: Prisma.NotifyDeliveryScalarWhereInput[]
+  NOT?: Prisma.NotifyDeliveryScalarWhereInput | Prisma.NotifyDeliveryScalarWhereInput[]
+  id?: Prisma.StringFilter<"NotifyDelivery"> | string
+  outboxId?: Prisma.StringFilter<"NotifyDelivery"> | string
+  channel?: Prisma.EnumNotifyChannelFilter<"NotifyDelivery"> | $Enums.NotifyChannel
+  userId?: Prisma.StringNullableFilter<"NotifyDelivery"> | string | null
+  slackChannelId?: Prisma.StringNullableFilter<"NotifyDelivery"> | string | null
+  status?: Prisma.EnumNotifyJobStatusFilter<"NotifyDelivery"> | $Enums.NotifyJobStatus
+  scheduledAt?: Prisma.DateTimeFilter<"NotifyDelivery"> | Date | string
+  attempts?: Prisma.IntFilter<"NotifyDelivery"> | number
+  claimedAt?: Prisma.DateTimeNullableFilter<"NotifyDelivery"> | Date | string | null
+  lastError?: Prisma.StringNullableFilter<"NotifyDelivery"> | string | null
+  failedAt?: Prisma.DateTimeNullableFilter<"NotifyDelivery"> | Date | string | null
+  createdAt?: Prisma.DateTimeFilter<"NotifyDelivery"> | Date | string
+}
+
+export type NotifyDeliveryCreateWithoutUserInput = {
+  id?: string
+  channel: $Enums.NotifyChannel
+  slackChannelId?: string | null
+  status?: $Enums.NotifyJobStatus
+  scheduledAt: Date | string
+  attempts?: number
+  claimedAt?: Date | string | null
+  lastError?: string | null
+  failedAt?: Date | string | null
+  createdAt?: Date | string
+  outbox: Prisma.NotifyOutboxCreateNestedOneWithoutDeliveriesInput
+}
+
+export type NotifyDeliveryUncheckedCreateWithoutUserInput = {
   id?: string
   outboxId: string
   channel: $Enums.NotifyChannel
@@ -748,46 +708,30 @@ export type NotifyDeliveryCreateManyUserInput = {
   createdAt?: Date | string
 }
 
-export type NotifyDeliveryUpdateWithoutUserInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  channel?: Prisma.EnumNotifyChannelFieldUpdateOperationsInput | $Enums.NotifyChannel
-  slackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  status?: Prisma.EnumNotifyJobStatusFieldUpdateOperationsInput | $Enums.NotifyJobStatus
-  scheduledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  attempts?: Prisma.IntFieldUpdateOperationsInput | number
-  claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  failedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  outbox?: Prisma.NotifyOutboxUpdateOneRequiredWithoutDeliveriesNestedInput
+export type NotifyDeliveryCreateOrConnectWithoutUserInput = {
+  where: Prisma.NotifyDeliveryWhereUniqueInput
+  create: Prisma.XOR<Prisma.NotifyDeliveryCreateWithoutUserInput, Prisma.NotifyDeliveryUncheckedCreateWithoutUserInput>
 }
 
-export type NotifyDeliveryUncheckedUpdateWithoutUserInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  outboxId?: Prisma.StringFieldUpdateOperationsInput | string
-  channel?: Prisma.EnumNotifyChannelFieldUpdateOperationsInput | $Enums.NotifyChannel
-  slackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  status?: Prisma.EnumNotifyJobStatusFieldUpdateOperationsInput | $Enums.NotifyJobStatus
-  scheduledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  attempts?: Prisma.IntFieldUpdateOperationsInput | number
-  claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  failedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+export type NotifyDeliveryCreateManyUserInputEnvelope = {
+  data: Prisma.NotifyDeliveryCreateManyUserInput | Prisma.NotifyDeliveryCreateManyUserInput[]
+  skipDuplicates?: boolean
 }
 
-export type NotifyDeliveryUncheckedUpdateManyWithoutUserInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  outboxId?: Prisma.StringFieldUpdateOperationsInput | string
-  channel?: Prisma.EnumNotifyChannelFieldUpdateOperationsInput | $Enums.NotifyChannel
-  slackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  status?: Prisma.EnumNotifyJobStatusFieldUpdateOperationsInput | $Enums.NotifyJobStatus
-  scheduledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  attempts?: Prisma.IntFieldUpdateOperationsInput | number
-  claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  failedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+export type NotifyDeliveryUpsertWithWhereUniqueWithoutUserInput = {
+  where: Prisma.NotifyDeliveryWhereUniqueInput
+  update: Prisma.XOR<Prisma.NotifyDeliveryUpdateWithoutUserInput, Prisma.NotifyDeliveryUncheckedUpdateWithoutUserInput>
+  create: Prisma.XOR<Prisma.NotifyDeliveryCreateWithoutUserInput, Prisma.NotifyDeliveryUncheckedCreateWithoutUserInput>
+}
+
+export type NotifyDeliveryUpdateWithWhereUniqueWithoutUserInput = {
+  where: Prisma.NotifyDeliveryWhereUniqueInput
+  data: Prisma.XOR<Prisma.NotifyDeliveryUpdateWithoutUserInput, Prisma.NotifyDeliveryUncheckedUpdateWithoutUserInput>
+}
+
+export type NotifyDeliveryUpdateManyWithWhereWithoutUserInput = {
+  where: Prisma.NotifyDeliveryScalarWhereInput
+  data: Prisma.XOR<Prisma.NotifyDeliveryUpdateManyMutationInput, Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserInput>
 }
 
 export type NotifyDeliveryCreateManyOutboxInput = {
@@ -836,6 +780,62 @@ export type NotifyDeliveryUncheckedUpdateManyWithoutOutboxInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   channel?: Prisma.EnumNotifyChannelFieldUpdateOperationsInput | $Enums.NotifyChannel
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  slackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumNotifyJobStatusFieldUpdateOperationsInput | $Enums.NotifyJobStatus
+  scheduledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  attempts?: Prisma.IntFieldUpdateOperationsInput | number
+  claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  failedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type NotifyDeliveryCreateManyUserInput = {
+  id?: string
+  outboxId: string
+  channel: $Enums.NotifyChannel
+  slackChannelId?: string | null
+  status?: $Enums.NotifyJobStatus
+  scheduledAt: Date | string
+  attempts?: number
+  claimedAt?: Date | string | null
+  lastError?: string | null
+  failedAt?: Date | string | null
+  createdAt?: Date | string
+}
+
+export type NotifyDeliveryUpdateWithoutUserInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  channel?: Prisma.EnumNotifyChannelFieldUpdateOperationsInput | $Enums.NotifyChannel
+  slackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumNotifyJobStatusFieldUpdateOperationsInput | $Enums.NotifyJobStatus
+  scheduledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  attempts?: Prisma.IntFieldUpdateOperationsInput | number
+  claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  failedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  outbox?: Prisma.NotifyOutboxUpdateOneRequiredWithoutDeliveriesNestedInput
+}
+
+export type NotifyDeliveryUncheckedUpdateWithoutUserInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  outboxId?: Prisma.StringFieldUpdateOperationsInput | string
+  channel?: Prisma.EnumNotifyChannelFieldUpdateOperationsInput | $Enums.NotifyChannel
+  slackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumNotifyJobStatusFieldUpdateOperationsInput | $Enums.NotifyJobStatus
+  scheduledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  attempts?: Prisma.IntFieldUpdateOperationsInput | number
+  claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  failedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type NotifyDeliveryUncheckedUpdateManyWithoutUserInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  outboxId?: Prisma.StringFieldUpdateOperationsInput | string
+  channel?: Prisma.EnumNotifyChannelFieldUpdateOperationsInput | $Enums.NotifyChannel
   slackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumNotifyJobStatusFieldUpdateOperationsInput | $Enums.NotifyJobStatus
   scheduledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string

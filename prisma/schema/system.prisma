@@ -1,0 +1,137 @@
+/// ユーザーごとのダッシュボードのウィジェット配置。
+model Dashboard {
+  /// ダッシュボードの持ち主。1ユーザー1行
+  userId String @id
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// ウィジェットの配置。`{ left: ウィジェットID[], right: ウィジェットID[] }` の2カラム構成
+  layout Json
+
+  // メタデータ
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@map("dashboard")
+}
+
+/// ダッシュボードのリンクウィジェットに並べる共通リンク。管理者が登録する。
+model LinkWidget {
+  id String @id @default(uuid(7))
+
+  /// リンクの表示名
+  name String
+
+  /// リンク先のURL
+  url String
+
+  /// 補足説明
+  description String?
+
+  /// アイコン画像のURL(`/api/upload/<key>`)
+  iconPath String?
+
+  // メタデータ
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@map("link_widget")
+}
+
+/// オブジェクトストレージに保存したアップロードファイルのメタデータ。
+/// 公開URLは `/api/upload/<key>` で、配信時はここから mimeType を引いて存在確認も兼ねる。
+model Attachment {
+  id String @id @default(uuid(7))
+
+  /// オブジェクトストレージ上のキー。公開URL `/api/upload/<key>` の一部になる
+  key String @unique
+
+  /// 配信時に返す Content-Type
+  mimeType String
+
+  /// ファイルサイズ(バイト)
+  size Int
+
+  /// アップロード時のファイル名
+  originalName String
+
+  /// 添付先のボード。値がある場合は配信時にそのボードの可視判定を通す。
+  /// null は全ログインユーザーへ配信してよいもの(お知らせ / リンクウィジェットのアイコン)。
+  /// ボード削除で紐付けを外した添付も、掃除が回収するまでの間だけこの状態を通る
+  boardId String?
+  board   Board?  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  /// アップロードしたユーザー。ユーザー削除時は SetNull でファイルの記録だけ残す
+  createdById String?
+
+  // NOTE: 本文からの参照は外部キーではなく Markdown 中のURLなので、参照が外れても行は残る。
+  // どこからも参照されない行は猶予を置いて `maintenance-attachment.ts` が実体ごと消す
+
+  // メタデータ
+  createdBy User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+
+  @@index([boardId])
+  @@map("attachment")
+}
+
+/// 使い捨てアップロードトークン(`/api/upload` の Bearer)の使用済み記録。
+/// jti の一意制約により2回目の INSERT が必ず失敗することを、リプレイ防止に使う。
+/// 期限切れの行はアップロードのついでにまとめて消し、アップロードが無い期間ぶんは
+/// 定期メンテナンス(`maintenance-sweep.ts`)が拾う。
+model UploadNonce {
+  id String @id @default(uuid(7))
+
+  /// 使用済みトークンの識別子。この一意制約が2回目の利用を弾く
+  jti String @unique
+
+  /// 元になったトークンの有効期限。これを過ぎた行は掃除の対象
+  expiresAt DateTime
+
+  // メタデータ
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
+  @@map("upload_nonce")
+}
+
+/// アプリ全体の設定値を key/value で持つ汎用ストア。参照は `src/lib/kvs.ts` を通す。
+model KeyValueStore {
+  id String @id @default(uuid(7))
+
+  /// 設定のキー(`src/lib/kvs.ts` の KeyString)
+  key String @unique
+
+  /// キーをまとめて引くための名前空間(同 KvsGroup)
+  group String?
+
+  /// 設定値。構造を持つ場合は JSON 文字列で保存する
+  value String
+
+  // メタデータ
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@index([group])
+  @@map("key_value_store")
+}
+
+/// アプリバージョンの利用履歴。サーバー起動時(`src/instrumentation.ts`)に upsert で記録し、
+/// このDBがどのバージョンでいつ利用されていたかを追跡できるようにする。
+/// createdAt が初回起動日時、updatedAt が最終起動日時になる。
+model AppVersion {
+  id String @id @default(uuid(7))
+
+  /// package.json の version(例: 0.2.2)。同一バージョンは1行に集約するので upsert のキーになる
+  version String @unique
+
+  /// 最終起動時のビルド番号(next.config.ts で生成する BUILD_NO)。同一バージョンの再デプロイを識別する
+  buildNo String
+
+  /// このバージョンでの最終起動日時
+  updatedAt DateTime @updatedAt
+
+  /// このバージョンでの初回起動日時
+  createdAt DateTime @default(now())
+
+  @@map("app_version")
+}

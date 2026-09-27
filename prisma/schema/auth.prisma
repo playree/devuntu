@@ -1,0 +1,192 @@
+/// ログインセッション。better-auth が要求するテーブルで、列の増減はライブラリ側の要求に従う。
+model Session {
+  id String @id @default(uuid(7))
+
+  /// セッションの有効期限
+  expiresAt DateTime
+
+  /// セッションクッキーに入るトークン
+  token String
+
+  /// ログイン時の接続元IPアドレス
+  ipAddress String?
+
+  /// ログイン時の User-Agent
+  userAgent String?
+
+  /// セッションの持ち主
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// 管理者による成り代わり中の場合、その管理者のユーザーID
+  impersonatedBy String?
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  oauthrefreshtokens OauthRefreshToken[]
+  oauthaccesstokens  OauthAccessToken[]
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+/// ユーザーと認証プロバイダのアカウントの紐づけ。パスワード認証のハッシュもここに持つ。
+/// better-auth が要求するテーブルで、列の増減はライブラリ側の要求に従う。
+model Account {
+  id String @id @default(uuid(7))
+
+  /// 発行元でのアカウントID。パスワード認証の場合はユーザーID
+  accountId String
+
+  /// 認証プロバイダの識別子(credential / google など)
+  providerId String
+
+  /// 紐づくユーザー
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// プロバイダから受け取ったアクセストークン
+  accessToken String?
+
+  /// プロバイダから受け取ったリフレッシュトークン
+  refreshToken String?
+
+  /// プロバイダから受け取ったIDトークン
+  idToken String?
+
+  /// アクセストークンの有効期限
+  accessTokenExpiresAt DateTime?
+
+  /// リフレッシュトークンの有効期限
+  refreshTokenExpiresAt DateTime?
+
+  /// プロバイダへ要求したスコープ
+  scope String?
+
+  /// パスワード認証のハッシュ値。パスワード認証以外では null
+  password String?
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+/// メールOTP等の使い捨ての検証値。better-auth が要求するテーブルで、列の増減はライブラリ側の要求に従う。
+model Verification {
+  id String @id @default(uuid(7))
+
+  /// 検証対象を表すキー(メールOTPなら `sign-in-otp-<メールアドレス>` など)
+  identifier String
+
+  /// 検証に使う値(OTP やトークン)
+  value String
+
+  /// 値の有効期限
+  expiresAt DateTime
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+/// 2要素認証(TOTP)の設定。better-auth の twoFactor プラグインが要求するテーブル。
+model TwoFactor {
+  id String @id @default(uuid(7))
+
+  /// TOTP の共有シークレット
+  secret String
+
+  /// バックアップコード
+  backupCodes String
+
+  /// 設定の持ち主
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// 初回検証が済んで有効化された状態か
+  verified Boolean? @default(true)
+
+  /// 連続で失敗した検証の回数。ロックの判定に使う
+  failedVerificationCount Int? @default(0)
+
+  /// ロックの解除時刻。この時刻まで検証を受け付けない
+  lockedUntil DateTime?
+
+  @@index([secret])
+  @@index([userId])
+  @@map("two_factor")
+}
+
+/// 登録済みのパスキー(WebAuthn 資格情報)。better-auth の passkey プラグインが要求するテーブル。
+model Passkey {
+  id String @id @default(uuid(7))
+
+  /// 利用者が付けたパスキーの表示名
+  name String?
+
+  /// 認証に使う公開鍵
+  publicKey String
+
+  /// パスキーの持ち主
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// 認証器が発行した資格情報のID
+  credentialID String
+
+  /// 署名カウンタ。複製された認証器の検出に使う
+  counter Int
+
+  /// 認証器の種別(singleDevice / multiDevice)
+  deviceType String
+
+  /// 認証器のバックアップ(同期)が有効か
+  backedUp Boolean
+
+  /// 認証器が対応する通信方式(usb / nfc / ble / internal など)
+  transports String?
+
+  /// 認証器のモデルを表すID
+  aaguid String?
+
+  /// 登録日時
+  createdAt DateTime?
+
+  @@index([userId])
+  @@index([credentialID])
+  @@map("passkey")
+}
+
+/// IDトークンの署名に使う鍵ペア。better-auth が要求するテーブルで、列の増減はライブラリ側の要求に従う。
+model Jwks {
+  id String @id @default(uuid(7))
+
+  /// JWK 形式の公開鍵。JWKS エンドポイントで配信する
+  publicKey String
+
+  /// 署名に使う秘密鍵(暗号化して保存される)
+  privateKey String
+
+  /// 鍵の作成日時
+  createdAt DateTime
+
+  /// 鍵の有効期限。null は無期限
+  expiresAt DateTime?
+
+  /// 署名アルゴリズム(EdDSA / RS256 など)
+  alg String?
+
+  /// 楕円曲線の種別(Ed25519 など)
+  crv String?
+
+  @@map("jwks")
+}

@@ -266,16 +266,6 @@ export type CommandTargetGroupUncheckedUpdateManyInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type CommandTargetGroupListRelationFilter = {
-  every?: Prisma.CommandTargetGroupWhereInput
-  some?: Prisma.CommandTargetGroupWhereInput
-  none?: Prisma.CommandTargetGroupWhereInput
-}
-
-export type CommandTargetGroupOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
-}
-
 export type CommandTargetGroupTargetKeyGroupIdCompoundUniqueInput = {
   targetKey: string
   groupId: string
@@ -300,6 +290,16 @@ export type CommandTargetGroupMinOrderByAggregateInput = {
   targetKey?: Prisma.SortOrder
   groupId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+}
+
+export type CommandTargetGroupListRelationFilter = {
+  every?: Prisma.CommandTargetGroupWhereInput
+  some?: Prisma.CommandTargetGroupWhereInput
+  none?: Prisma.CommandTargetGroupWhereInput
+}
+
+export type CommandTargetGroupOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
 }
 
 export type CommandTargetGroupCreateNestedManyWithoutGroupInput = {

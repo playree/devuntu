@@ -713,16 +713,6 @@ export type CommandRunUncheckedUpdateManyInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type CommandRunListRelationFilter = {
-  every?: Prisma.CommandRunWhereInput
-  some?: Prisma.CommandRunWhereInput
-  none?: Prisma.CommandRunWhereInput
-}
-
-export type CommandRunOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
-}
-
 export type CommandRunCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   commandKey?: Prisma.SortOrder
@@ -822,6 +812,34 @@ export type CommandRunScalarRelationFilter = {
   isNot?: Prisma.CommandRunWhereInput
 }
 
+export type CommandRunListRelationFilter = {
+  every?: Prisma.CommandRunWhereInput
+  some?: Prisma.CommandRunWhereInput
+  none?: Prisma.CommandRunWhereInput
+}
+
+export type CommandRunOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
+}
+
+export type EnumCommandRunStatusFieldUpdateOperationsInput = {
+  set?: $Enums.CommandRunStatus
+}
+
+export type CommandRunCreateNestedOneWithoutChunksInput = {
+  create?: Prisma.XOR<Prisma.CommandRunCreateWithoutChunksInput, Prisma.CommandRunUncheckedCreateWithoutChunksInput>
+  connectOrCreate?: Prisma.CommandRunCreateOrConnectWithoutChunksInput
+  connect?: Prisma.CommandRunWhereUniqueInput
+}
+
+export type CommandRunUpdateOneRequiredWithoutChunksNestedInput = {
+  create?: Prisma.XOR<Prisma.CommandRunCreateWithoutChunksInput, Prisma.CommandRunUncheckedCreateWithoutChunksInput>
+  connectOrCreate?: Prisma.CommandRunCreateOrConnectWithoutChunksInput
+  upsert?: Prisma.CommandRunUpsertWithoutChunksInput
+  connect?: Prisma.CommandRunWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.CommandRunUpdateToOneWithWhereWithoutChunksInput, Prisma.CommandRunUpdateWithoutChunksInput>, Prisma.CommandRunUncheckedUpdateWithoutChunksInput>
+}
+
 export type CommandRunCreateNestedManyWithoutUserInput = {
   create?: Prisma.XOR<Prisma.CommandRunCreateWithoutUserInput, Prisma.CommandRunUncheckedCreateWithoutUserInput> | Prisma.CommandRunCreateWithoutUserInput[] | Prisma.CommandRunUncheckedCreateWithoutUserInput[]
   connectOrCreate?: Prisma.CommandRunCreateOrConnectWithoutUserInput | Prisma.CommandRunCreateOrConnectWithoutUserInput[]
@@ -862,137 +880,6 @@ export type CommandRunUncheckedUpdateManyWithoutUserNestedInput = {
   update?: Prisma.CommandRunUpdateWithWhereUniqueWithoutUserInput | Prisma.CommandRunUpdateWithWhereUniqueWithoutUserInput[]
   updateMany?: Prisma.CommandRunUpdateManyWithWhereWithoutUserInput | Prisma.CommandRunUpdateManyWithWhereWithoutUserInput[]
   deleteMany?: Prisma.CommandRunScalarWhereInput | Prisma.CommandRunScalarWhereInput[]
-}
-
-export type EnumCommandRunStatusFieldUpdateOperationsInput = {
-  set?: $Enums.CommandRunStatus
-}
-
-export type CommandRunCreateNestedOneWithoutChunksInput = {
-  create?: Prisma.XOR<Prisma.CommandRunCreateWithoutChunksInput, Prisma.CommandRunUncheckedCreateWithoutChunksInput>
-  connectOrCreate?: Prisma.CommandRunCreateOrConnectWithoutChunksInput
-  connect?: Prisma.CommandRunWhereUniqueInput
-}
-
-export type CommandRunUpdateOneRequiredWithoutChunksNestedInput = {
-  create?: Prisma.XOR<Prisma.CommandRunCreateWithoutChunksInput, Prisma.CommandRunUncheckedCreateWithoutChunksInput>
-  connectOrCreate?: Prisma.CommandRunCreateOrConnectWithoutChunksInput
-  upsert?: Prisma.CommandRunUpsertWithoutChunksInput
-  connect?: Prisma.CommandRunWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.CommandRunUpdateToOneWithWhereWithoutChunksInput, Prisma.CommandRunUpdateWithoutChunksInput>, Prisma.CommandRunUncheckedUpdateWithoutChunksInput>
-}
-
-export type CommandRunCreateWithoutUserInput = {
-  id?: string
-  commandKey: string
-  commandLabel: string
-  targetLabel: string
-  userName: string
-  params: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  argsPreview: string
-  status?: $Enums.CommandRunStatus
-  activeKey?: string | null
-  workerId?: string | null
-  claimedAt?: Date | string | null
-  heartbeatAt?: Date | string | null
-  cancelRequestedAt?: Date | string | null
-  cancelRequestedBy?: string | null
-  exitCode?: number | null
-  failureKind?: string | null
-  lastSeq?: number
-  bytes?: number
-  truncated?: boolean
-  queuedAt?: Date | string
-  startedAt?: Date | string | null
-  finishedAt?: Date | string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  chunks?: Prisma.CommandRunChunkCreateNestedManyWithoutRunInput
-}
-
-export type CommandRunUncheckedCreateWithoutUserInput = {
-  id?: string
-  commandKey: string
-  commandLabel: string
-  targetLabel: string
-  userName: string
-  params: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  argsPreview: string
-  status?: $Enums.CommandRunStatus
-  activeKey?: string | null
-  workerId?: string | null
-  claimedAt?: Date | string | null
-  heartbeatAt?: Date | string | null
-  cancelRequestedAt?: Date | string | null
-  cancelRequestedBy?: string | null
-  exitCode?: number | null
-  failureKind?: string | null
-  lastSeq?: number
-  bytes?: number
-  truncated?: boolean
-  queuedAt?: Date | string
-  startedAt?: Date | string | null
-  finishedAt?: Date | string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  chunks?: Prisma.CommandRunChunkUncheckedCreateNestedManyWithoutRunInput
-}
-
-export type CommandRunCreateOrConnectWithoutUserInput = {
-  where: Prisma.CommandRunWhereUniqueInput
-  create: Prisma.XOR<Prisma.CommandRunCreateWithoutUserInput, Prisma.CommandRunUncheckedCreateWithoutUserInput>
-}
-
-export type CommandRunCreateManyUserInputEnvelope = {
-  data: Prisma.CommandRunCreateManyUserInput | Prisma.CommandRunCreateManyUserInput[]
-  skipDuplicates?: boolean
-}
-
-export type CommandRunUpsertWithWhereUniqueWithoutUserInput = {
-  where: Prisma.CommandRunWhereUniqueInput
-  update: Prisma.XOR<Prisma.CommandRunUpdateWithoutUserInput, Prisma.CommandRunUncheckedUpdateWithoutUserInput>
-  create: Prisma.XOR<Prisma.CommandRunCreateWithoutUserInput, Prisma.CommandRunUncheckedCreateWithoutUserInput>
-}
-
-export type CommandRunUpdateWithWhereUniqueWithoutUserInput = {
-  where: Prisma.CommandRunWhereUniqueInput
-  data: Prisma.XOR<Prisma.CommandRunUpdateWithoutUserInput, Prisma.CommandRunUncheckedUpdateWithoutUserInput>
-}
-
-export type CommandRunUpdateManyWithWhereWithoutUserInput = {
-  where: Prisma.CommandRunScalarWhereInput
-  data: Prisma.XOR<Prisma.CommandRunUpdateManyMutationInput, Prisma.CommandRunUncheckedUpdateManyWithoutUserInput>
-}
-
-export type CommandRunScalarWhereInput = {
-  AND?: Prisma.CommandRunScalarWhereInput | Prisma.CommandRunScalarWhereInput[]
-  OR?: Prisma.CommandRunScalarWhereInput[]
-  NOT?: Prisma.CommandRunScalarWhereInput | Prisma.CommandRunScalarWhereInput[]
-  id?: Prisma.StringFilter<"CommandRun"> | string
-  commandKey?: Prisma.StringFilter<"CommandRun"> | string
-  commandLabel?: Prisma.StringFilter<"CommandRun"> | string
-  targetLabel?: Prisma.StringFilter<"CommandRun"> | string
-  userId?: Prisma.StringNullableFilter<"CommandRun"> | string | null
-  userName?: Prisma.StringFilter<"CommandRun"> | string
-  params?: Prisma.JsonFilter<"CommandRun">
-  argsPreview?: Prisma.StringFilter<"CommandRun"> | string
-  status?: Prisma.EnumCommandRunStatusFilter<"CommandRun"> | $Enums.CommandRunStatus
-  activeKey?: Prisma.StringNullableFilter<"CommandRun"> | string | null
-  workerId?: Prisma.StringNullableFilter<"CommandRun"> | string | null
-  claimedAt?: Prisma.DateTimeNullableFilter<"CommandRun"> | Date | string | null
-  heartbeatAt?: Prisma.DateTimeNullableFilter<"CommandRun"> | Date | string | null
-  cancelRequestedAt?: Prisma.DateTimeNullableFilter<"CommandRun"> | Date | string | null
-  cancelRequestedBy?: Prisma.StringNullableFilter<"CommandRun"> | string | null
-  exitCode?: Prisma.IntNullableFilter<"CommandRun"> | number | null
-  failureKind?: Prisma.StringNullableFilter<"CommandRun"> | string | null
-  lastSeq?: Prisma.IntFilter<"CommandRun"> | number
-  bytes?: Prisma.IntFilter<"CommandRun"> | number
-  truncated?: Prisma.BoolFilter<"CommandRun"> | boolean
-  queuedAt?: Prisma.DateTimeFilter<"CommandRun"> | Date | string
-  startedAt?: Prisma.DateTimeNullableFilter<"CommandRun"> | Date | string | null
-  finishedAt?: Prisma.DateTimeNullableFilter<"CommandRun"> | Date | string | null
-  createdAt?: Prisma.DateTimeFilter<"CommandRun"> | Date | string
-  updatedAt?: Prisma.DateTimeFilter<"CommandRun"> | Date | string
 }
 
 export type CommandRunCreateWithoutChunksInput = {
@@ -1121,6 +1008,119 @@ export type CommandRunUncheckedUpdateWithoutChunksInput = {
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type CommandRunCreateWithoutUserInput = {
+  id?: string
+  commandKey: string
+  commandLabel: string
+  targetLabel: string
+  userName: string
+  params: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  argsPreview: string
+  status?: $Enums.CommandRunStatus
+  activeKey?: string | null
+  workerId?: string | null
+  claimedAt?: Date | string | null
+  heartbeatAt?: Date | string | null
+  cancelRequestedAt?: Date | string | null
+  cancelRequestedBy?: string | null
+  exitCode?: number | null
+  failureKind?: string | null
+  lastSeq?: number
+  bytes?: number
+  truncated?: boolean
+  queuedAt?: Date | string
+  startedAt?: Date | string | null
+  finishedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  chunks?: Prisma.CommandRunChunkCreateNestedManyWithoutRunInput
+}
+
+export type CommandRunUncheckedCreateWithoutUserInput = {
+  id?: string
+  commandKey: string
+  commandLabel: string
+  targetLabel: string
+  userName: string
+  params: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  argsPreview: string
+  status?: $Enums.CommandRunStatus
+  activeKey?: string | null
+  workerId?: string | null
+  claimedAt?: Date | string | null
+  heartbeatAt?: Date | string | null
+  cancelRequestedAt?: Date | string | null
+  cancelRequestedBy?: string | null
+  exitCode?: number | null
+  failureKind?: string | null
+  lastSeq?: number
+  bytes?: number
+  truncated?: boolean
+  queuedAt?: Date | string
+  startedAt?: Date | string | null
+  finishedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  chunks?: Prisma.CommandRunChunkUncheckedCreateNestedManyWithoutRunInput
+}
+
+export type CommandRunCreateOrConnectWithoutUserInput = {
+  where: Prisma.CommandRunWhereUniqueInput
+  create: Prisma.XOR<Prisma.CommandRunCreateWithoutUserInput, Prisma.CommandRunUncheckedCreateWithoutUserInput>
+}
+
+export type CommandRunCreateManyUserInputEnvelope = {
+  data: Prisma.CommandRunCreateManyUserInput | Prisma.CommandRunCreateManyUserInput[]
+  skipDuplicates?: boolean
+}
+
+export type CommandRunUpsertWithWhereUniqueWithoutUserInput = {
+  where: Prisma.CommandRunWhereUniqueInput
+  update: Prisma.XOR<Prisma.CommandRunUpdateWithoutUserInput, Prisma.CommandRunUncheckedUpdateWithoutUserInput>
+  create: Prisma.XOR<Prisma.CommandRunCreateWithoutUserInput, Prisma.CommandRunUncheckedCreateWithoutUserInput>
+}
+
+export type CommandRunUpdateWithWhereUniqueWithoutUserInput = {
+  where: Prisma.CommandRunWhereUniqueInput
+  data: Prisma.XOR<Prisma.CommandRunUpdateWithoutUserInput, Prisma.CommandRunUncheckedUpdateWithoutUserInput>
+}
+
+export type CommandRunUpdateManyWithWhereWithoutUserInput = {
+  where: Prisma.CommandRunScalarWhereInput
+  data: Prisma.XOR<Prisma.CommandRunUpdateManyMutationInput, Prisma.CommandRunUncheckedUpdateManyWithoutUserInput>
+}
+
+export type CommandRunScalarWhereInput = {
+  AND?: Prisma.CommandRunScalarWhereInput | Prisma.CommandRunScalarWhereInput[]
+  OR?: Prisma.CommandRunScalarWhereInput[]
+  NOT?: Prisma.CommandRunScalarWhereInput | Prisma.CommandRunScalarWhereInput[]
+  id?: Prisma.StringFilter<"CommandRun"> | string
+  commandKey?: Prisma.StringFilter<"CommandRun"> | string
+  commandLabel?: Prisma.StringFilter<"CommandRun"> | string
+  targetLabel?: Prisma.StringFilter<"CommandRun"> | string
+  userId?: Prisma.StringNullableFilter<"CommandRun"> | string | null
+  userName?: Prisma.StringFilter<"CommandRun"> | string
+  params?: Prisma.JsonFilter<"CommandRun">
+  argsPreview?: Prisma.StringFilter<"CommandRun"> | string
+  status?: Prisma.EnumCommandRunStatusFilter<"CommandRun"> | $Enums.CommandRunStatus
+  activeKey?: Prisma.StringNullableFilter<"CommandRun"> | string | null
+  workerId?: Prisma.StringNullableFilter<"CommandRun"> | string | null
+  claimedAt?: Prisma.DateTimeNullableFilter<"CommandRun"> | Date | string | null
+  heartbeatAt?: Prisma.DateTimeNullableFilter<"CommandRun"> | Date | string | null
+  cancelRequestedAt?: Prisma.DateTimeNullableFilter<"CommandRun"> | Date | string | null
+  cancelRequestedBy?: Prisma.StringNullableFilter<"CommandRun"> | string | null
+  exitCode?: Prisma.IntNullableFilter<"CommandRun"> | number | null
+  failureKind?: Prisma.StringNullableFilter<"CommandRun"> | string | null
+  lastSeq?: Prisma.IntFilter<"CommandRun"> | number
+  bytes?: Prisma.IntFilter<"CommandRun"> | number
+  truncated?: Prisma.BoolFilter<"CommandRun"> | boolean
+  queuedAt?: Prisma.DateTimeFilter<"CommandRun"> | Date | string
+  startedAt?: Prisma.DateTimeNullableFilter<"CommandRun"> | Date | string | null
+  finishedAt?: Prisma.DateTimeNullableFilter<"CommandRun"> | Date | string | null
+  createdAt?: Prisma.DateTimeFilter<"CommandRun"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"CommandRun"> | Date | string
 }
 
 export type CommandRunCreateManyUserInput = {

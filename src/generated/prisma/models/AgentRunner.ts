@@ -533,11 +533,6 @@ export type AgentRunnerUncheckedUpdateManyInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type AgentRunnerNullableScalarRelationFilter = {
-  is?: Prisma.AgentRunnerWhereInput | null
-  isNot?: Prisma.AgentRunnerWhereInput | null
-}
-
 export type AgentRunnerCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
@@ -613,36 +608,13 @@ export type AgentRunnerScalarRelationFilter = {
   isNot?: Prisma.AgentRunnerWhereInput
 }
 
-export type AgentRunnerCreateNestedOneWithoutUserInput = {
-  create?: Prisma.XOR<Prisma.AgentRunnerCreateWithoutUserInput, Prisma.AgentRunnerUncheckedCreateWithoutUserInput>
-  connectOrCreate?: Prisma.AgentRunnerCreateOrConnectWithoutUserInput
-  connect?: Prisma.AgentRunnerWhereUniqueInput
+export type AgentRunnerNullableScalarRelationFilter = {
+  is?: Prisma.AgentRunnerWhereInput | null
+  isNot?: Prisma.AgentRunnerWhereInput | null
 }
 
-export type AgentRunnerUncheckedCreateNestedOneWithoutUserInput = {
-  create?: Prisma.XOR<Prisma.AgentRunnerCreateWithoutUserInput, Prisma.AgentRunnerUncheckedCreateWithoutUserInput>
-  connectOrCreate?: Prisma.AgentRunnerCreateOrConnectWithoutUserInput
-  connect?: Prisma.AgentRunnerWhereUniqueInput
-}
-
-export type AgentRunnerUpdateOneWithoutUserNestedInput = {
-  create?: Prisma.XOR<Prisma.AgentRunnerCreateWithoutUserInput, Prisma.AgentRunnerUncheckedCreateWithoutUserInput>
-  connectOrCreate?: Prisma.AgentRunnerCreateOrConnectWithoutUserInput
-  upsert?: Prisma.AgentRunnerUpsertWithoutUserInput
-  disconnect?: Prisma.AgentRunnerWhereInput | boolean
-  delete?: Prisma.AgentRunnerWhereInput | boolean
-  connect?: Prisma.AgentRunnerWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.AgentRunnerUpdateToOneWithWhereWithoutUserInput, Prisma.AgentRunnerUpdateWithoutUserInput>, Prisma.AgentRunnerUncheckedUpdateWithoutUserInput>
-}
-
-export type AgentRunnerUncheckedUpdateOneWithoutUserNestedInput = {
-  create?: Prisma.XOR<Prisma.AgentRunnerCreateWithoutUserInput, Prisma.AgentRunnerUncheckedCreateWithoutUserInput>
-  connectOrCreate?: Prisma.AgentRunnerCreateOrConnectWithoutUserInput
-  upsert?: Prisma.AgentRunnerUpsertWithoutUserInput
-  disconnect?: Prisma.AgentRunnerWhereInput | boolean
-  delete?: Prisma.AgentRunnerWhereInput | boolean
-  connect?: Prisma.AgentRunnerWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.AgentRunnerUpdateToOneWithWhereWithoutUserInput, Prisma.AgentRunnerUpdateWithoutUserInput>, Prisma.AgentRunnerUncheckedUpdateWithoutUserInput>
+export type BoolFieldUpdateOperationsInput = {
+  set?: boolean
 }
 
 export type NullableIntFieldUpdateOperationsInput = {
@@ -675,92 +647,36 @@ export type AgentRunnerUpdateOneRequiredWithoutRunsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.AgentRunnerUpdateToOneWithWhereWithoutRunsInput, Prisma.AgentRunnerUpdateWithoutRunsInput>, Prisma.AgentRunnerUncheckedUpdateWithoutRunsInput>
 }
 
-export type AgentRunnerCreateWithoutUserInput = {
-  id?: string
-  enabled?: boolean
-  activeFromMin?: number | null
-  activeToMin?: number | null
-  timezone?: string | null
-  pollIntervalSec?: number
-  rule?: string | null
-  dailyRunLimit?: number
-  dailyResetMin?: number
-  lastPolledAt?: Date | string | null
-  hostname?: string | null
-  version?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  runs?: Prisma.AgentRunCreateNestedManyWithoutRunnerInput
+export type AgentRunnerCreateNestedOneWithoutUserInput = {
+  create?: Prisma.XOR<Prisma.AgentRunnerCreateWithoutUserInput, Prisma.AgentRunnerUncheckedCreateWithoutUserInput>
+  connectOrCreate?: Prisma.AgentRunnerCreateOrConnectWithoutUserInput
+  connect?: Prisma.AgentRunnerWhereUniqueInput
 }
 
-export type AgentRunnerUncheckedCreateWithoutUserInput = {
-  id?: string
-  enabled?: boolean
-  activeFromMin?: number | null
-  activeToMin?: number | null
-  timezone?: string | null
-  pollIntervalSec?: number
-  rule?: string | null
-  dailyRunLimit?: number
-  dailyResetMin?: number
-  lastPolledAt?: Date | string | null
-  hostname?: string | null
-  version?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  runs?: Prisma.AgentRunUncheckedCreateNestedManyWithoutRunnerInput
+export type AgentRunnerUncheckedCreateNestedOneWithoutUserInput = {
+  create?: Prisma.XOR<Prisma.AgentRunnerCreateWithoutUserInput, Prisma.AgentRunnerUncheckedCreateWithoutUserInput>
+  connectOrCreate?: Prisma.AgentRunnerCreateOrConnectWithoutUserInput
+  connect?: Prisma.AgentRunnerWhereUniqueInput
 }
 
-export type AgentRunnerCreateOrConnectWithoutUserInput = {
-  where: Prisma.AgentRunnerWhereUniqueInput
-  create: Prisma.XOR<Prisma.AgentRunnerCreateWithoutUserInput, Prisma.AgentRunnerUncheckedCreateWithoutUserInput>
+export type AgentRunnerUpdateOneWithoutUserNestedInput = {
+  create?: Prisma.XOR<Prisma.AgentRunnerCreateWithoutUserInput, Prisma.AgentRunnerUncheckedCreateWithoutUserInput>
+  connectOrCreate?: Prisma.AgentRunnerCreateOrConnectWithoutUserInput
+  upsert?: Prisma.AgentRunnerUpsertWithoutUserInput
+  disconnect?: Prisma.AgentRunnerWhereInput | boolean
+  delete?: Prisma.AgentRunnerWhereInput | boolean
+  connect?: Prisma.AgentRunnerWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.AgentRunnerUpdateToOneWithWhereWithoutUserInput, Prisma.AgentRunnerUpdateWithoutUserInput>, Prisma.AgentRunnerUncheckedUpdateWithoutUserInput>
 }
 
-export type AgentRunnerUpsertWithoutUserInput = {
-  update: Prisma.XOR<Prisma.AgentRunnerUpdateWithoutUserInput, Prisma.AgentRunnerUncheckedUpdateWithoutUserInput>
-  create: Prisma.XOR<Prisma.AgentRunnerCreateWithoutUserInput, Prisma.AgentRunnerUncheckedCreateWithoutUserInput>
-  where?: Prisma.AgentRunnerWhereInput
-}
-
-export type AgentRunnerUpdateToOneWithWhereWithoutUserInput = {
-  where?: Prisma.AgentRunnerWhereInput
-  data: Prisma.XOR<Prisma.AgentRunnerUpdateWithoutUserInput, Prisma.AgentRunnerUncheckedUpdateWithoutUserInput>
-}
-
-export type AgentRunnerUpdateWithoutUserInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  activeFromMin?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  activeToMin?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  pollIntervalSec?: Prisma.IntFieldUpdateOperationsInput | number
-  rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  dailyRunLimit?: Prisma.IntFieldUpdateOperationsInput | number
-  dailyResetMin?: Prisma.IntFieldUpdateOperationsInput | number
-  lastPolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  hostname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  runs?: Prisma.AgentRunUpdateManyWithoutRunnerNestedInput
-}
-
-export type AgentRunnerUncheckedUpdateWithoutUserInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  activeFromMin?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  activeToMin?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  pollIntervalSec?: Prisma.IntFieldUpdateOperationsInput | number
-  rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  dailyRunLimit?: Prisma.IntFieldUpdateOperationsInput | number
-  dailyResetMin?: Prisma.IntFieldUpdateOperationsInput | number
-  lastPolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  hostname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  runs?: Prisma.AgentRunUncheckedUpdateManyWithoutRunnerNestedInput
+export type AgentRunnerUncheckedUpdateOneWithoutUserNestedInput = {
+  create?: Prisma.XOR<Prisma.AgentRunnerCreateWithoutUserInput, Prisma.AgentRunnerUncheckedCreateWithoutUserInput>
+  connectOrCreate?: Prisma.AgentRunnerCreateOrConnectWithoutUserInput
+  upsert?: Prisma.AgentRunnerUpsertWithoutUserInput
+  disconnect?: Prisma.AgentRunnerWhereInput | boolean
+  delete?: Prisma.AgentRunnerWhereInput | boolean
+  connect?: Prisma.AgentRunnerWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.AgentRunnerUpdateToOneWithWhereWithoutUserInput, Prisma.AgentRunnerUpdateWithoutUserInput>, Prisma.AgentRunnerUncheckedUpdateWithoutUserInput>
 }
 
 export type AgentRunnerCreateWithoutRunsInput = {
@@ -849,6 +765,94 @@ export type AgentRunnerUncheckedUpdateWithoutRunsInput = {
   version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type AgentRunnerCreateWithoutUserInput = {
+  id?: string
+  enabled?: boolean
+  activeFromMin?: number | null
+  activeToMin?: number | null
+  timezone?: string | null
+  pollIntervalSec?: number
+  rule?: string | null
+  dailyRunLimit?: number
+  dailyResetMin?: number
+  lastPolledAt?: Date | string | null
+  hostname?: string | null
+  version?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  runs?: Prisma.AgentRunCreateNestedManyWithoutRunnerInput
+}
+
+export type AgentRunnerUncheckedCreateWithoutUserInput = {
+  id?: string
+  enabled?: boolean
+  activeFromMin?: number | null
+  activeToMin?: number | null
+  timezone?: string | null
+  pollIntervalSec?: number
+  rule?: string | null
+  dailyRunLimit?: number
+  dailyResetMin?: number
+  lastPolledAt?: Date | string | null
+  hostname?: string | null
+  version?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  runs?: Prisma.AgentRunUncheckedCreateNestedManyWithoutRunnerInput
+}
+
+export type AgentRunnerCreateOrConnectWithoutUserInput = {
+  where: Prisma.AgentRunnerWhereUniqueInput
+  create: Prisma.XOR<Prisma.AgentRunnerCreateWithoutUserInput, Prisma.AgentRunnerUncheckedCreateWithoutUserInput>
+}
+
+export type AgentRunnerUpsertWithoutUserInput = {
+  update: Prisma.XOR<Prisma.AgentRunnerUpdateWithoutUserInput, Prisma.AgentRunnerUncheckedUpdateWithoutUserInput>
+  create: Prisma.XOR<Prisma.AgentRunnerCreateWithoutUserInput, Prisma.AgentRunnerUncheckedCreateWithoutUserInput>
+  where?: Prisma.AgentRunnerWhereInput
+}
+
+export type AgentRunnerUpdateToOneWithWhereWithoutUserInput = {
+  where?: Prisma.AgentRunnerWhereInput
+  data: Prisma.XOR<Prisma.AgentRunnerUpdateWithoutUserInput, Prisma.AgentRunnerUncheckedUpdateWithoutUserInput>
+}
+
+export type AgentRunnerUpdateWithoutUserInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  activeFromMin?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  activeToMin?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pollIntervalSec?: Prisma.IntFieldUpdateOperationsInput | number
+  rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dailyRunLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  dailyResetMin?: Prisma.IntFieldUpdateOperationsInput | number
+  lastPolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hostname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  runs?: Prisma.AgentRunUpdateManyWithoutRunnerNestedInput
+}
+
+export type AgentRunnerUncheckedUpdateWithoutUserInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  activeFromMin?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  activeToMin?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pollIntervalSec?: Prisma.IntFieldUpdateOperationsInput | number
+  rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dailyRunLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  dailyResetMin?: Prisma.IntFieldUpdateOperationsInput | number
+  lastPolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hostname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  runs?: Prisma.AgentRunUncheckedUpdateManyWithoutRunnerNestedInput
 }
 
 

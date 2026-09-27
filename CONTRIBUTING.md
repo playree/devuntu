@@ -76,7 +76,8 @@ pnpm build
 - ソースやテストに個人情報(氏名やメアド)を利用しない
 - `public/agent/devuntu_agent.py`を更新したら、中に定義されている`__version__`のバージョン情報をインクリメントすること
 - UIはスマホレイアウトも考慮する
-- `schema.prisma`を更新したら、`pnpm generate`を行うこと。
+- Prismaスキーマ(`prisma/schema/*.prisma`)を更新したら、`pnpm generate`を行うこと。
+- Prismaスキーマはドメインごとにファイルを分けている。新しいモデル・enumは関連するファイルに追加し、該当が無ければファイルを新設する
 
 ### tsxでのコメント
 

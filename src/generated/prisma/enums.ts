@@ -80,40 +80,32 @@ export const TagColor = {
 export type TagColor = (typeof TagColor)[keyof typeof TagColor]
 
 
-export const TicketStatus = {
-  backlog: 'backlog',
-  todo: 'todo',
-  doing: 'doing',
-  done: 'done'
+export const CommandTargetMemberRole = {
+  owner: 'owner',
+  member: 'member'
 } as const
 
-export type TicketStatus = (typeof TicketStatus)[keyof typeof TicketStatus]
+export type CommandTargetMemberRole = (typeof CommandTargetMemberRole)[keyof typeof CommandTargetMemberRole]
 
 
-export const TicketPriority = {
-  urgent: 'urgent',
-  high: 'high',
-  medium: 'medium',
-  low: 'low'
+export const CommandRunStatus = {
+  queued: 'queued',
+  running: 'running',
+  succeeded: 'succeeded',
+  failed: 'failed',
+  canceled: 'canceled'
 } as const
 
-export type TicketPriority = (typeof TicketPriority)[keyof typeof TicketPriority]
+export type CommandRunStatus = (typeof CommandRunStatus)[keyof typeof CommandRunStatus]
 
 
-export const TicketCommentType = {
-  plan: 'plan',
-  report: 'report'
+export const CommandStream = {
+  stdout: 'stdout',
+  stderr: 'stderr',
+  system: 'system'
 } as const
 
-export type TicketCommentType = (typeof TicketCommentType)[keyof typeof TicketCommentType]
-
-
-export const TicketCommentDecision = {
-  approved: 'approved',
-  rejected: 'rejected'
-} as const
-
-export type TicketCommentDecision = (typeof TicketCommentDecision)[keyof typeof TicketCommentDecision]
+export type CommandStream = (typeof CommandStream)[keyof typeof CommandStream]
 
 
 export const GitProvider = {
@@ -189,29 +181,37 @@ export const NotifyJobStatus = {
 export type NotifyJobStatus = (typeof NotifyJobStatus)[keyof typeof NotifyJobStatus]
 
 
-export const CommandTargetMemberRole = {
-  owner: 'owner',
-  member: 'member'
+export const TicketStatus = {
+  backlog: 'backlog',
+  todo: 'todo',
+  doing: 'doing',
+  done: 'done'
 } as const
 
-export type CommandTargetMemberRole = (typeof CommandTargetMemberRole)[keyof typeof CommandTargetMemberRole]
+export type TicketStatus = (typeof TicketStatus)[keyof typeof TicketStatus]
 
 
-export const CommandRunStatus = {
-  queued: 'queued',
-  running: 'running',
-  succeeded: 'succeeded',
-  failed: 'failed',
-  canceled: 'canceled'
+export const TicketPriority = {
+  urgent: 'urgent',
+  high: 'high',
+  medium: 'medium',
+  low: 'low'
 } as const
 
-export type CommandRunStatus = (typeof CommandRunStatus)[keyof typeof CommandRunStatus]
+export type TicketPriority = (typeof TicketPriority)[keyof typeof TicketPriority]
 
 
-export const CommandStream = {
-  stdout: 'stdout',
-  stderr: 'stderr',
-  system: 'system'
+export const TicketCommentType = {
+  plan: 'plan',
+  report: 'report'
 } as const
 
-export type CommandStream = (typeof CommandStream)[keyof typeof CommandStream]
+export type TicketCommentType = (typeof TicketCommentType)[keyof typeof TicketCommentType]
+
+
+export const TicketCommentDecision = {
+  approved: 'approved',
+  rejected: 'rejected'
+} as const
+
+export type TicketCommentDecision = (typeof TicketCommentDecision)[keyof typeof TicketCommentDecision]
