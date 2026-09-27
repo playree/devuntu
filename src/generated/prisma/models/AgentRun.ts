@@ -20,8 +20,26 @@ export type AgentRunModel = runtime.Types.Result.DefaultSelection<Prisma.$AgentR
 
 export type AggregateAgentRun = {
   _count: AgentRunCountAggregateOutputType | null
+  _avg: AgentRunAvgAggregateOutputType | null
+  _sum: AgentRunSumAggregateOutputType | null
   _min: AgentRunMinAggregateOutputType | null
   _max: AgentRunMaxAggregateOutputType | null
+}
+
+export type AgentRunAvgAggregateOutputType = {
+  inputTokens: number | null
+  cachedInputTokens: number | null
+  outputTokens: number | null
+  costUsd: runtime.Decimal | null
+  exitCode: number | null
+}
+
+export type AgentRunSumAggregateOutputType = {
+  inputTokens: number | null
+  cachedInputTokens: number | null
+  outputTokens: number | null
+  costUsd: runtime.Decimal | null
+  exitCode: number | null
 }
 
 export type AgentRunMinAggregateOutputType = {
@@ -34,6 +52,13 @@ export type AgentRunMinAggregateOutputType = {
   summary: string | null
   startedAt: Date | null
   finishedAt: Date | null
+  model: string | null
+  inputTokens: number | null
+  cachedInputTokens: number | null
+  outputTokens: number | null
+  costUsd: runtime.Decimal | null
+  exitCode: number | null
+  measuredAt: Date | null
 }
 
 export type AgentRunMaxAggregateOutputType = {
@@ -46,6 +71,13 @@ export type AgentRunMaxAggregateOutputType = {
   summary: string | null
   startedAt: Date | null
   finishedAt: Date | null
+  model: string | null
+  inputTokens: number | null
+  cachedInputTokens: number | null
+  outputTokens: number | null
+  costUsd: runtime.Decimal | null
+  exitCode: number | null
+  measuredAt: Date | null
 }
 
 export type AgentRunCountAggregateOutputType = {
@@ -58,9 +90,32 @@ export type AgentRunCountAggregateOutputType = {
   summary: number
   startedAt: number
   finishedAt: number
+  model: number
+  inputTokens: number
+  cachedInputTokens: number
+  outputTokens: number
+  costUsd: number
+  exitCode: number
+  measuredAt: number
   _all: number
 }
 
+
+export type AgentRunAvgAggregateInputType = {
+  inputTokens?: true
+  cachedInputTokens?: true
+  outputTokens?: true
+  costUsd?: true
+  exitCode?: true
+}
+
+export type AgentRunSumAggregateInputType = {
+  inputTokens?: true
+  cachedInputTokens?: true
+  outputTokens?: true
+  costUsd?: true
+  exitCode?: true
+}
 
 export type AgentRunMinAggregateInputType = {
   id?: true
@@ -72,6 +127,13 @@ export type AgentRunMinAggregateInputType = {
   summary?: true
   startedAt?: true
   finishedAt?: true
+  model?: true
+  inputTokens?: true
+  cachedInputTokens?: true
+  outputTokens?: true
+  costUsd?: true
+  exitCode?: true
+  measuredAt?: true
 }
 
 export type AgentRunMaxAggregateInputType = {
@@ -84,6 +146,13 @@ export type AgentRunMaxAggregateInputType = {
   summary?: true
   startedAt?: true
   finishedAt?: true
+  model?: true
+  inputTokens?: true
+  cachedInputTokens?: true
+  outputTokens?: true
+  costUsd?: true
+  exitCode?: true
+  measuredAt?: true
 }
 
 export type AgentRunCountAggregateInputType = {
@@ -96,6 +165,13 @@ export type AgentRunCountAggregateInputType = {
   summary?: true
   startedAt?: true
   finishedAt?: true
+  model?: true
+  inputTokens?: true
+  cachedInputTokens?: true
+  outputTokens?: true
+  costUsd?: true
+  exitCode?: true
+  measuredAt?: true
   _all?: true
 }
 
@@ -137,6 +213,18 @@ export type AgentRunAggregateArgs<ExtArgs extends runtime.Types.Extensions.Inter
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: AgentRunAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: AgentRunSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: AgentRunMinAggregateInputType
@@ -167,6 +255,8 @@ export type AgentRunGroupByArgs<ExtArgs extends runtime.Types.Extensions.Interna
   take?: number
   skip?: number
   _count?: AgentRunCountAggregateInputType | true
+  _avg?: AgentRunAvgAggregateInputType
+  _sum?: AgentRunSumAggregateInputType
   _min?: AgentRunMinAggregateInputType
   _max?: AgentRunMaxAggregateInputType
 }
@@ -181,7 +271,16 @@ export type AgentRunGroupByOutputType = {
   summary: string | null
   startedAt: Date
   finishedAt: Date | null
+  model: string | null
+  inputTokens: number | null
+  cachedInputTokens: number | null
+  outputTokens: number | null
+  costUsd: runtime.Decimal | null
+  exitCode: number | null
+  measuredAt: Date | null
   _count: AgentRunCountAggregateOutputType | null
+  _avg: AgentRunAvgAggregateOutputType | null
+  _sum: AgentRunSumAggregateOutputType | null
   _min: AgentRunMinAggregateOutputType | null
   _max: AgentRunMaxAggregateOutputType | null
 }
@@ -214,6 +313,13 @@ export type AgentRunWhereInput = {
   summary?: Prisma.StringNullableFilter<"AgentRun"> | string | null
   startedAt?: Prisma.DateTimeFilter<"AgentRun"> | Date | string
   finishedAt?: Prisma.DateTimeNullableFilter<"AgentRun"> | Date | string | null
+  model?: Prisma.StringNullableFilter<"AgentRun"> | string | null
+  inputTokens?: Prisma.IntNullableFilter<"AgentRun"> | number | null
+  cachedInputTokens?: Prisma.IntNullableFilter<"AgentRun"> | number | null
+  outputTokens?: Prisma.IntNullableFilter<"AgentRun"> | number | null
+  costUsd?: Prisma.DecimalNullableFilter<"AgentRun"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  exitCode?: Prisma.IntNullableFilter<"AgentRun"> | number | null
+  measuredAt?: Prisma.DateTimeNullableFilter<"AgentRun"> | Date | string | null
   runner?: Prisma.XOR<Prisma.AgentRunnerScalarRelationFilter, Prisma.AgentRunnerWhereInput>
   ticket?: Prisma.XOR<Prisma.TicketNullableScalarRelationFilter, Prisma.TicketWhereInput> | null
 }
@@ -228,6 +334,13 @@ export type AgentRunOrderByWithRelationInput = {
   summary?: Prisma.SortOrderInput | Prisma.SortOrder
   startedAt?: Prisma.SortOrder
   finishedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  model?: Prisma.SortOrderInput | Prisma.SortOrder
+  inputTokens?: Prisma.SortOrderInput | Prisma.SortOrder
+  cachedInputTokens?: Prisma.SortOrderInput | Prisma.SortOrder
+  outputTokens?: Prisma.SortOrderInput | Prisma.SortOrder
+  costUsd?: Prisma.SortOrderInput | Prisma.SortOrder
+  exitCode?: Prisma.SortOrderInput | Prisma.SortOrder
+  measuredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   runner?: Prisma.AgentRunnerOrderByWithRelationInput
   ticket?: Prisma.TicketOrderByWithRelationInput
 }
@@ -245,6 +358,13 @@ export type AgentRunWhereUniqueInput = Prisma.AtLeast<{
   summary?: Prisma.StringNullableFilter<"AgentRun"> | string | null
   startedAt?: Prisma.DateTimeFilter<"AgentRun"> | Date | string
   finishedAt?: Prisma.DateTimeNullableFilter<"AgentRun"> | Date | string | null
+  model?: Prisma.StringNullableFilter<"AgentRun"> | string | null
+  inputTokens?: Prisma.IntNullableFilter<"AgentRun"> | number | null
+  cachedInputTokens?: Prisma.IntNullableFilter<"AgentRun"> | number | null
+  outputTokens?: Prisma.IntNullableFilter<"AgentRun"> | number | null
+  costUsd?: Prisma.DecimalNullableFilter<"AgentRun"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  exitCode?: Prisma.IntNullableFilter<"AgentRun"> | number | null
+  measuredAt?: Prisma.DateTimeNullableFilter<"AgentRun"> | Date | string | null
   runner?: Prisma.XOR<Prisma.AgentRunnerScalarRelationFilter, Prisma.AgentRunnerWhereInput>
   ticket?: Prisma.XOR<Prisma.TicketNullableScalarRelationFilter, Prisma.TicketWhereInput> | null
 }, "id">
@@ -259,9 +379,18 @@ export type AgentRunOrderByWithAggregationInput = {
   summary?: Prisma.SortOrderInput | Prisma.SortOrder
   startedAt?: Prisma.SortOrder
   finishedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  model?: Prisma.SortOrderInput | Prisma.SortOrder
+  inputTokens?: Prisma.SortOrderInput | Prisma.SortOrder
+  cachedInputTokens?: Prisma.SortOrderInput | Prisma.SortOrder
+  outputTokens?: Prisma.SortOrderInput | Prisma.SortOrder
+  costUsd?: Prisma.SortOrderInput | Prisma.SortOrder
+  exitCode?: Prisma.SortOrderInput | Prisma.SortOrder
+  measuredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.AgentRunCountOrderByAggregateInput
+  _avg?: Prisma.AgentRunAvgOrderByAggregateInput
   _max?: Prisma.AgentRunMaxOrderByAggregateInput
   _min?: Prisma.AgentRunMinOrderByAggregateInput
+  _sum?: Prisma.AgentRunSumOrderByAggregateInput
 }
 
 export type AgentRunScalarWhereWithAggregatesInput = {
@@ -277,6 +406,13 @@ export type AgentRunScalarWhereWithAggregatesInput = {
   summary?: Prisma.StringNullableWithAggregatesFilter<"AgentRun"> | string | null
   startedAt?: Prisma.DateTimeWithAggregatesFilter<"AgentRun"> | Date | string
   finishedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"AgentRun"> | Date | string | null
+  model?: Prisma.StringNullableWithAggregatesFilter<"AgentRun"> | string | null
+  inputTokens?: Prisma.IntNullableWithAggregatesFilter<"AgentRun"> | number | null
+  cachedInputTokens?: Prisma.IntNullableWithAggregatesFilter<"AgentRun"> | number | null
+  outputTokens?: Prisma.IntNullableWithAggregatesFilter<"AgentRun"> | number | null
+  costUsd?: Prisma.DecimalNullableWithAggregatesFilter<"AgentRun"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  exitCode?: Prisma.IntNullableWithAggregatesFilter<"AgentRun"> | number | null
+  measuredAt?: Prisma.DateTimeNullableWithAggregatesFilter<"AgentRun"> | Date | string | null
 }
 
 export type AgentRunCreateInput = {
@@ -287,6 +423,13 @@ export type AgentRunCreateInput = {
   summary?: string | null
   startedAt?: Date | string
   finishedAt?: Date | string | null
+  model?: string | null
+  inputTokens?: number | null
+  cachedInputTokens?: number | null
+  outputTokens?: number | null
+  costUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  exitCode?: number | null
+  measuredAt?: Date | string | null
   runner: Prisma.AgentRunnerCreateNestedOneWithoutRunsInput
   ticket?: Prisma.TicketCreateNestedOneWithoutAgentRunsInput
 }
@@ -301,6 +444,13 @@ export type AgentRunUncheckedCreateInput = {
   summary?: string | null
   startedAt?: Date | string
   finishedAt?: Date | string | null
+  model?: string | null
+  inputTokens?: number | null
+  cachedInputTokens?: number | null
+  outputTokens?: number | null
+  costUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  exitCode?: number | null
+  measuredAt?: Date | string | null
 }
 
 export type AgentRunUpdateInput = {
@@ -311,6 +461,13 @@ export type AgentRunUpdateInput = {
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  inputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  cachedInputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  outputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  costUsd?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  exitCode?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  measuredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   runner?: Prisma.AgentRunnerUpdateOneRequiredWithoutRunsNestedInput
   ticket?: Prisma.TicketUpdateOneWithoutAgentRunsNestedInput
 }
@@ -325,6 +482,13 @@ export type AgentRunUncheckedUpdateInput = {
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  inputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  cachedInputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  outputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  costUsd?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  exitCode?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  measuredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type AgentRunCreateManyInput = {
@@ -337,6 +501,13 @@ export type AgentRunCreateManyInput = {
   summary?: string | null
   startedAt?: Date | string
   finishedAt?: Date | string | null
+  model?: string | null
+  inputTokens?: number | null
+  cachedInputTokens?: number | null
+  outputTokens?: number | null
+  costUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  exitCode?: number | null
+  measuredAt?: Date | string | null
 }
 
 export type AgentRunUpdateManyMutationInput = {
@@ -347,6 +518,13 @@ export type AgentRunUpdateManyMutationInput = {
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  inputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  cachedInputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  outputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  costUsd?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  exitCode?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  measuredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type AgentRunUncheckedUpdateManyInput = {
@@ -359,6 +537,13 @@ export type AgentRunUncheckedUpdateManyInput = {
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  inputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  cachedInputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  outputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  costUsd?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  exitCode?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  measuredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type AgentRunListRelationFilter = {
@@ -381,6 +566,21 @@ export type AgentRunCountOrderByAggregateInput = {
   summary?: Prisma.SortOrder
   startedAt?: Prisma.SortOrder
   finishedAt?: Prisma.SortOrder
+  model?: Prisma.SortOrder
+  inputTokens?: Prisma.SortOrder
+  cachedInputTokens?: Prisma.SortOrder
+  outputTokens?: Prisma.SortOrder
+  costUsd?: Prisma.SortOrder
+  exitCode?: Prisma.SortOrder
+  measuredAt?: Prisma.SortOrder
+}
+
+export type AgentRunAvgOrderByAggregateInput = {
+  inputTokens?: Prisma.SortOrder
+  cachedInputTokens?: Prisma.SortOrder
+  outputTokens?: Prisma.SortOrder
+  costUsd?: Prisma.SortOrder
+  exitCode?: Prisma.SortOrder
 }
 
 export type AgentRunMaxOrderByAggregateInput = {
@@ -393,6 +593,13 @@ export type AgentRunMaxOrderByAggregateInput = {
   summary?: Prisma.SortOrder
   startedAt?: Prisma.SortOrder
   finishedAt?: Prisma.SortOrder
+  model?: Prisma.SortOrder
+  inputTokens?: Prisma.SortOrder
+  cachedInputTokens?: Prisma.SortOrder
+  outputTokens?: Prisma.SortOrder
+  costUsd?: Prisma.SortOrder
+  exitCode?: Prisma.SortOrder
+  measuredAt?: Prisma.SortOrder
 }
 
 export type AgentRunMinOrderByAggregateInput = {
@@ -405,6 +612,21 @@ export type AgentRunMinOrderByAggregateInput = {
   summary?: Prisma.SortOrder
   startedAt?: Prisma.SortOrder
   finishedAt?: Prisma.SortOrder
+  model?: Prisma.SortOrder
+  inputTokens?: Prisma.SortOrder
+  cachedInputTokens?: Prisma.SortOrder
+  outputTokens?: Prisma.SortOrder
+  costUsd?: Prisma.SortOrder
+  exitCode?: Prisma.SortOrder
+  measuredAt?: Prisma.SortOrder
+}
+
+export type AgentRunSumOrderByAggregateInput = {
+  inputTokens?: Prisma.SortOrder
+  cachedInputTokens?: Prisma.SortOrder
+  outputTokens?: Prisma.SortOrder
+  costUsd?: Prisma.SortOrder
+  exitCode?: Prisma.SortOrder
 }
 
 export type AgentRunCreateNestedManyWithoutRunnerInput = {
@@ -457,6 +679,14 @@ export type EnumAgentRunStatusFieldUpdateOperationsInput = {
   set?: $Enums.AgentRunStatus
 }
 
+export type NullableDecimalFieldUpdateOperationsInput = {
+  set?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  increment?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  decrement?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  multiply?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  divide?: runtime.Decimal | runtime.DecimalJsLike | number | string
+}
+
 export type AgentRunCreateNestedManyWithoutTicketInput = {
   create?: Prisma.XOR<Prisma.AgentRunCreateWithoutTicketInput, Prisma.AgentRunUncheckedCreateWithoutTicketInput> | Prisma.AgentRunCreateWithoutTicketInput[] | Prisma.AgentRunUncheckedCreateWithoutTicketInput[]
   connectOrCreate?: Prisma.AgentRunCreateOrConnectWithoutTicketInput | Prisma.AgentRunCreateOrConnectWithoutTicketInput[]
@@ -507,6 +737,13 @@ export type AgentRunCreateWithoutRunnerInput = {
   summary?: string | null
   startedAt?: Date | string
   finishedAt?: Date | string | null
+  model?: string | null
+  inputTokens?: number | null
+  cachedInputTokens?: number | null
+  outputTokens?: number | null
+  costUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  exitCode?: number | null
+  measuredAt?: Date | string | null
   ticket?: Prisma.TicketCreateNestedOneWithoutAgentRunsInput
 }
 
@@ -519,6 +756,13 @@ export type AgentRunUncheckedCreateWithoutRunnerInput = {
   summary?: string | null
   startedAt?: Date | string
   finishedAt?: Date | string | null
+  model?: string | null
+  inputTokens?: number | null
+  cachedInputTokens?: number | null
+  outputTokens?: number | null
+  costUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  exitCode?: number | null
+  measuredAt?: Date | string | null
 }
 
 export type AgentRunCreateOrConnectWithoutRunnerInput = {
@@ -560,6 +804,13 @@ export type AgentRunScalarWhereInput = {
   summary?: Prisma.StringNullableFilter<"AgentRun"> | string | null
   startedAt?: Prisma.DateTimeFilter<"AgentRun"> | Date | string
   finishedAt?: Prisma.DateTimeNullableFilter<"AgentRun"> | Date | string | null
+  model?: Prisma.StringNullableFilter<"AgentRun"> | string | null
+  inputTokens?: Prisma.IntNullableFilter<"AgentRun"> | number | null
+  cachedInputTokens?: Prisma.IntNullableFilter<"AgentRun"> | number | null
+  outputTokens?: Prisma.IntNullableFilter<"AgentRun"> | number | null
+  costUsd?: Prisma.DecimalNullableFilter<"AgentRun"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  exitCode?: Prisma.IntNullableFilter<"AgentRun"> | number | null
+  measuredAt?: Prisma.DateTimeNullableFilter<"AgentRun"> | Date | string | null
 }
 
 export type AgentRunCreateWithoutTicketInput = {
@@ -570,6 +821,13 @@ export type AgentRunCreateWithoutTicketInput = {
   summary?: string | null
   startedAt?: Date | string
   finishedAt?: Date | string | null
+  model?: string | null
+  inputTokens?: number | null
+  cachedInputTokens?: number | null
+  outputTokens?: number | null
+  costUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  exitCode?: number | null
+  measuredAt?: Date | string | null
   runner: Prisma.AgentRunnerCreateNestedOneWithoutRunsInput
 }
 
@@ -582,6 +840,13 @@ export type AgentRunUncheckedCreateWithoutTicketInput = {
   summary?: string | null
   startedAt?: Date | string
   finishedAt?: Date | string | null
+  model?: string | null
+  inputTokens?: number | null
+  cachedInputTokens?: number | null
+  outputTokens?: number | null
+  costUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  exitCode?: number | null
+  measuredAt?: Date | string | null
 }
 
 export type AgentRunCreateOrConnectWithoutTicketInput = {
@@ -619,6 +884,13 @@ export type AgentRunCreateManyRunnerInput = {
   summary?: string | null
   startedAt?: Date | string
   finishedAt?: Date | string | null
+  model?: string | null
+  inputTokens?: number | null
+  cachedInputTokens?: number | null
+  outputTokens?: number | null
+  costUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  exitCode?: number | null
+  measuredAt?: Date | string | null
 }
 
 export type AgentRunUpdateWithoutRunnerInput = {
@@ -629,6 +901,13 @@ export type AgentRunUpdateWithoutRunnerInput = {
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  inputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  cachedInputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  outputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  costUsd?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  exitCode?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  measuredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   ticket?: Prisma.TicketUpdateOneWithoutAgentRunsNestedInput
 }
 
@@ -641,6 +920,13 @@ export type AgentRunUncheckedUpdateWithoutRunnerInput = {
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  inputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  cachedInputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  outputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  costUsd?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  exitCode?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  measuredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type AgentRunUncheckedUpdateManyWithoutRunnerInput = {
@@ -652,6 +938,13 @@ export type AgentRunUncheckedUpdateManyWithoutRunnerInput = {
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  inputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  cachedInputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  outputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  costUsd?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  exitCode?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  measuredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type AgentRunCreateManyTicketInput = {
@@ -663,6 +956,13 @@ export type AgentRunCreateManyTicketInput = {
   summary?: string | null
   startedAt?: Date | string
   finishedAt?: Date | string | null
+  model?: string | null
+  inputTokens?: number | null
+  cachedInputTokens?: number | null
+  outputTokens?: number | null
+  costUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  exitCode?: number | null
+  measuredAt?: Date | string | null
 }
 
 export type AgentRunUpdateWithoutTicketInput = {
@@ -673,6 +973,13 @@ export type AgentRunUpdateWithoutTicketInput = {
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  inputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  cachedInputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  outputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  costUsd?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  exitCode?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  measuredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   runner?: Prisma.AgentRunnerUpdateOneRequiredWithoutRunsNestedInput
 }
 
@@ -685,6 +992,13 @@ export type AgentRunUncheckedUpdateWithoutTicketInput = {
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  inputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  cachedInputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  outputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  costUsd?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  exitCode?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  measuredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type AgentRunUncheckedUpdateManyWithoutTicketInput = {
@@ -696,6 +1010,13 @@ export type AgentRunUncheckedUpdateManyWithoutTicketInput = {
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  inputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  cachedInputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  outputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  costUsd?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  exitCode?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  measuredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 
@@ -710,6 +1031,13 @@ export type AgentRunSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   summary?: boolean
   startedAt?: boolean
   finishedAt?: boolean
+  model?: boolean
+  inputTokens?: boolean
+  cachedInputTokens?: boolean
+  outputTokens?: boolean
+  costUsd?: boolean
+  exitCode?: boolean
+  measuredAt?: boolean
   runner?: boolean | Prisma.AgentRunnerDefaultArgs<ExtArgs>
   ticket?: boolean | Prisma.AgentRun$ticketArgs<ExtArgs>
 }, ExtArgs["result"]["agentRun"]>
@@ -724,6 +1052,13 @@ export type AgentRunSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   summary?: boolean
   startedAt?: boolean
   finishedAt?: boolean
+  model?: boolean
+  inputTokens?: boolean
+  cachedInputTokens?: boolean
+  outputTokens?: boolean
+  costUsd?: boolean
+  exitCode?: boolean
+  measuredAt?: boolean
   runner?: boolean | Prisma.AgentRunnerDefaultArgs<ExtArgs>
   ticket?: boolean | Prisma.AgentRun$ticketArgs<ExtArgs>
 }, ExtArgs["result"]["agentRun"]>
@@ -738,6 +1073,13 @@ export type AgentRunSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   summary?: boolean
   startedAt?: boolean
   finishedAt?: boolean
+  model?: boolean
+  inputTokens?: boolean
+  cachedInputTokens?: boolean
+  outputTokens?: boolean
+  costUsd?: boolean
+  exitCode?: boolean
+  measuredAt?: boolean
   runner?: boolean | Prisma.AgentRunnerDefaultArgs<ExtArgs>
   ticket?: boolean | Prisma.AgentRun$ticketArgs<ExtArgs>
 }, ExtArgs["result"]["agentRun"]>
@@ -752,9 +1094,16 @@ export type AgentRunSelectScalar = {
   summary?: boolean
   startedAt?: boolean
   finishedAt?: boolean
+  model?: boolean
+  inputTokens?: boolean
+  cachedInputTokens?: boolean
+  outputTokens?: boolean
+  costUsd?: boolean
+  exitCode?: boolean
+  measuredAt?: boolean
 }
 
-export type AgentRunOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "runnerId" | "ticketId" | "ticketRef" | "action" | "status" | "summary" | "startedAt" | "finishedAt", ExtArgs["result"]["agentRun"]>
+export type AgentRunOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "runnerId" | "ticketId" | "ticketRef" | "action" | "status" | "summary" | "startedAt" | "finishedAt" | "model" | "inputTokens" | "cachedInputTokens" | "outputTokens" | "costUsd" | "exitCode" | "measuredAt", ExtArgs["result"]["agentRun"]>
 export type AgentRunInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   runner?: boolean | Prisma.AgentRunnerDefaultArgs<ExtArgs>
   ticket?: boolean | Prisma.AgentRun$ticketArgs<ExtArgs>
@@ -808,6 +1157,34 @@ export type $AgentRunPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
      * 実行の終了時刻。null は実行中、または応答が返らないまま落ちた実行
      */
     finishedAt: Date | null
+    /**
+     * 使用したモデル。複数使った場合はコストが最も大きいもの
+     */
+    model: string | null
+    /**
+     * 入力トークン数。キャッシュから読んだぶんを含む
+     */
+    inputTokens: number | null
+    /**
+     * 入力トークンのうちキャッシュから読んだぶん
+     */
+    cachedInputTokens: number | null
+    /**
+     * 出力トークン数
+     */
+    outputTokens: number | null
+    /**
+     * コスト(USD)。CLI が金額を返さない場合(codex)は null
+     */
+    costUsd: runtime.Decimal | null
+    /**
+     * CLI の終了コード。起動できなかった・時間切れで打ち切った場合は null
+     */
+    exitCode: number | null
+    /**
+     * 計測値を受け取った時刻。月次の集計(AgentUsage)へ二重に加算しないための印
+     */
+    measuredAt: Date | null
   }, ExtArgs["result"]["agentRun"]>
   composites: {}
 }
@@ -1242,6 +1619,13 @@ export interface AgentRunFieldRefs {
   readonly summary: Prisma.FieldRef<"AgentRun", 'String'>
   readonly startedAt: Prisma.FieldRef<"AgentRun", 'DateTime'>
   readonly finishedAt: Prisma.FieldRef<"AgentRun", 'DateTime'>
+  readonly model: Prisma.FieldRef<"AgentRun", 'String'>
+  readonly inputTokens: Prisma.FieldRef<"AgentRun", 'Int'>
+  readonly cachedInputTokens: Prisma.FieldRef<"AgentRun", 'Int'>
+  readonly outputTokens: Prisma.FieldRef<"AgentRun", 'Int'>
+  readonly costUsd: Prisma.FieldRef<"AgentRun", 'Decimal'>
+  readonly exitCode: Prisma.FieldRef<"AgentRun", 'Int'>
+  readonly measuredAt: Prisma.FieldRef<"AgentRun", 'DateTime'>
 }
     
 

@@ -12,6 +12,7 @@ import { ActionResult, parseAction } from '@/lib/action/action-client'
 import {
   AGENT_POLL_INTERVAL_OPTIONS,
   AGENT_UNLIMITED_DAILY_RUNS,
+  AGENT_UNLIMITED_MONTHLY_BUDGET,
   AGENT_WINDOW_MAX_MIN,
   AGENT_WINDOW_STEP_MIN,
   DEFAULT_AGENT_DAILY_RESET_MIN,
@@ -109,6 +110,7 @@ const RunnerForm: FC<{
       pollIntervalSec: current?.pollIntervalSec ?? DEFAULT_POLL_INTERVAL_SEC,
       dailyRunLimit: current?.dailyRunLimit ?? AGENT_UNLIMITED_DAILY_RUNS,
       dailyResetMin: current?.dailyResetMin ?? DEFAULT_AGENT_DAILY_RESET_MIN,
+      monthlyBudgetUsd: current?.monthlyBudgetUsd ?? AGENT_UNLIMITED_MONTHLY_BUDGET,
     },
   })
 
@@ -188,6 +190,18 @@ const RunnerForm: FC<{
         </div>
         <div className='col-span-6 md:col-span-3'>
           <TimeSelect control={control} name='dailyResetMin' label={t('agent_daily_reset')} />
+        </div>
+        <div className='col-span-6 md:col-span-3'>
+          <InputCtrl
+            control={control}
+            name='monthlyBudgetUsd'
+            constraintSchema={scSaveAgentRunner}
+            isRequired={false} // 既定値(無制限)が必ず入るため、必須の印は出さない
+            type='number'
+            step='0.01'
+            label={t('agent_monthly_budget')}
+            errorMessage={fet(errors.monthlyBudgetUsd)}
+          />
         </div>
 
         {current && (

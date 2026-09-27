@@ -6,6 +6,7 @@
  * (vitest.setup.ts のグローバルモックは agentRun / agentRunner を持たない)。
  */
 
+import { Prisma } from '@/generated/prisma/client'
 import {
   findAgentRunnerConfig,
   listAgentRuns,
@@ -40,6 +41,7 @@ const savedRunner = {
   rule: null,
   dailyRunLimit: 0,
   dailyResetMin: 0,
+  monthlyBudgetUsd: new Prisma.Decimal(0),
   lastPolledAt: null,
   hostname: null,
   version: null,
@@ -54,6 +56,7 @@ const saveInput = (override: Partial<SaveAgentRunner> = {}): SaveAgentRunner => 
   pollIntervalSec: 300,
   dailyRunLimit: 0,
   dailyResetMin: 0,
+  monthlyBudgetUsd: 0,
   ...override,
 })
 

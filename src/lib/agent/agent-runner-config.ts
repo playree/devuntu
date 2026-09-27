@@ -28,6 +28,7 @@ export type AgentRunnerConfig = {
   rule: string | null
   dailyRunLimit: number
   dailyResetMin: number
+  monthlyBudgetUsd: number
   lastPolledAt: Date | null
   hostname: string | null
   version: string | null
@@ -48,6 +49,7 @@ export const findAgentRunnerConfig = async (userId: string): Promise<AgentRunner
       rule: true,
       dailyRunLimit: true,
       dailyResetMin: true,
+      monthlyBudgetUsd: true,
       lastPolledAt: true,
       hostname: true,
       version: true,
@@ -59,7 +61,12 @@ export const findAgentRunnerConfig = async (userId: string): Promise<AgentRunner
 
   // 上限の判定と同じ期間で数える。上限が無制限でも消化状況としては見せる
   const { since } = dailyRunWindow(runner)
-  return { ...runner, todayRuns: await countAgentRunsSince(prisma, runner.id, since) }
+  return {
+    ...runner,
+    // Decimal はクライアントへそのまま渡せない
+    monthlyBudgetUsd: runner.monthlyBudgetUsd.toNumber(),
+    todayRuns: await countAgentRunsSince(prisma, runner.id, since),
+  }
 }
 
 /** 設定保存(無ければ作成)。ランナーの自己申告(ホスト名・版)はここでは触らない */
@@ -107,6 +114,12 @@ export type AgentRunSummary = {
   summary: string | null
   startedAt: Date
   finishedAt: Date | null
+  model: string | null
+  inputTokens: number | null
+  cachedInputTokens: number | null
+  outputTokens: number | null
+  costUsd: number | null
+  exitCode: number | null
 }
 
 /** 実行履歴。件数が増え続けるので新しい順に上限まで返す */
@@ -116,7 +129,7 @@ export const listAgentRuns = async (userId: string): Promise<AgentRunSummary[]> 
     return []
   }
 
-  return await prisma.agentRun.findMany({
+  const runs = await prisma.agentRun.findMany({
     where: { runnerId: runner.id },
     select: {
       id: true,
@@ -127,8 +140,15 @@ export const listAgentRuns = async (userId: string): Promise<AgentRunSummary[]> 
       summary: true,
       startedAt: true,
       finishedAt: true,
+      model: true,
+      inputTokens: true,
+      cachedInputTokens: true,
+      outputTokens: true,
+      costUsd: true,
+      exitCode: true,
     },
     orderBy: { startedAt: 'desc' },
     take: AGENT_RUN_HISTORY_LIMIT,
   })
+  return runs.map(({ costUsd, ...run }) => ({ ...run, costUsd: costUsd?.toNumber() ?? null }))
 }

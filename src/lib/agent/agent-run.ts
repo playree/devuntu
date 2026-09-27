@@ -16,9 +16,16 @@ import type { AgentRunNotifyState } from '../notify/notify-payload'
 import { type AgentRunNotification, enqueueAgentRunFinished } from '../notify/notify-trigger'
 import { prisma } from '../prisma'
 import { AGENT_UNLIMITED_DAILY_RUNS } from './agent'
-import { type AgentRunUsage, computeAgentRunUsage } from './agent-activity'
+import {
+  type AgentBudgetUsage,
+  type AgentRunUsage,
+  computeAgentBudgetUsage,
+  computeAgentRunUsage,
+  hasMonthlyBudget,
+} from './agent-activity'
 import type { AgentRunnerRow } from './agent-runner'
 import { findAgentTicket } from './agent-task'
+import { type AgentRunMetrics, lockAgentRunner, recordAgentRunMetrics } from './agent-usage'
 
 /**
  * 応答が返らないまま放置された実行を失敗として回収するまでの時間(分)。
@@ -156,6 +163,7 @@ export type StartAgentRunResult =
   | { ok: true; run: { id: string; displayId: string } }
   | { ok: false; reason: 'ticket_not_available' }
   | { ok: false; reason: 'daily_limit'; usage: AgentRunUsage }
+  | { ok: false; reason: 'monthly_budget'; budget: AgentBudgetUsage }
 
 /**
  * 実行の開始を記録し、チケットを処理中にする。
@@ -163,6 +171,7 @@ export type StartAgentRunResult =
  *
  * 上限チェックと実行作成を同一トランザクション内で行い、対象ランナーの行をロックすることで、
  * 並行リクエストが上限チェックを両方すり抜けて `dailyRunLimit` を超過するのを防ぐ。
+ * 予算(`monthlyBudgetUsd`)も同じロックの中で見る。
  */
 export const startAgentRun = async (
   runner: AgentRunnerRow,
@@ -176,11 +185,21 @@ export const startAgentRun = async (
   }
 
   return prisma.$transaction(async (tx) => {
-    if (runner.dailyRunLimit > AGENT_UNLIMITED_DAILY_RUNS) {
-      await tx.$queryRaw`SELECT "id" FROM "agent_runner" WHERE "id" = ${runner.id} FOR UPDATE`
+    const limitedDaily = runner.dailyRunLimit > AGENT_UNLIMITED_DAILY_RUNS
+    const limitedBudget = hasMonthlyBudget(runner)
+    if (limitedDaily || limitedBudget) {
+      await lockAgentRunner(tx, runner.id)
+    }
+    if (limitedDaily) {
       const usage = await computeAgentRunUsage(tx, runner, now)
       if (usage.used >= usage.limit) {
         return { ok: false, reason: 'daily_limit', usage }
+      }
+    }
+    if (limitedBudget) {
+      const budget = await computeAgentBudgetUsage(tx, runner, now)
+      if (budget.usedUsd >= budget.limitUsd) {
+        return { ok: false, reason: 'monthly_budget', budget }
       }
     }
 
@@ -204,13 +223,17 @@ export const startAgentRun = async (
  *
  * 報告とプロセス終了は数百ms差で連続するため、読み出した時点の status では判断できない。
  * `status: 'running'` の条件付き更新で閉じられたときだけ、こちらが閉じた実行として扱う。
+ *
+ * 計測値(トークン数・コスト)は CLI の終了後にしか分からないので、報告済みの実行にも書き込む。
  */
 export const finishAgentRunById = async (
-  runnerId: string,
+  runner: AgentRunnerRow,
   runId: string,
   status: Exclude<AgentRunStatus, 'running'>,
   summary?: string | null,
+  metrics?: AgentRunMetrics,
 ): Promise<boolean> => {
+  const runnerId = runner.id
   const run = await prisma.agentRun.findUnique({
     where: { id: runId },
     select: {
@@ -243,6 +266,16 @@ export const finishAgentRunById = async (
         where: { id: run.ticketId, agentState: 'running' },
         data: { agentState: 'failed' },
       })
+    }
+
+    if (metrics) {
+      await recordAgentRunMetrics(
+        tx,
+        runner,
+        { id: run.id, startedAt: run.startedAt, boardId: run.ticket?.boardId ?? null },
+        metrics,
+        now,
+      )
     }
 
     // 報告済みの実行はここでは閉じていない(finishAgentTask が既に通知している)ので二重に送らない

@@ -5,6 +5,7 @@
  * 差し替える(vitest.setup.ts のグローバルモックは agentRun / agentRunner を持たない)。
  */
 
+import { Prisma } from '@/generated/prisma/client'
 import {
   activeWindowLabel,
   dailyRunWindow,
@@ -29,6 +30,7 @@ vi.mock('@/lib/prisma', async () =>
     ticketComment: ['findFirst'],
     agentRun: ['count', 'findMany', 'findFirst', 'findUnique', 'create', 'update', 'updateMany'],
     agentRunner: ['findUnique', 'update'],
+    agentUsage: ['aggregate', 'findFirst', 'create', 'update'],
     ticketCriterion: ['count', 'update'],
   }),
 )
@@ -37,6 +39,11 @@ const ticket = vi.mocked(prisma.ticket)
 const ticketComment = vi.mocked(prisma.ticketComment)
 const agentRun = vi.mocked(prisma.agentRun)
 const ticketCriterion = vi.mocked(prisma.ticketCriterion)
+const agentUsage = vi.mocked(prisma.agentUsage)
+
+/** 今月のコストの合計として aggregate が返す値 */
+const monthCost = (usd: number) =>
+  agentUsage.aggregate.mockResolvedValue({ _sum: { costUsd: new Prisma.Decimal(usd) } } as never)
 
 const notifyMock = vi.mocked(enqueueAgentRunFinished)
 
@@ -60,6 +67,7 @@ const runner = (override: Partial<AgentRunnerRow> = {}): AgentRunnerRow => ({
   rule: null,
   dailyRunLimit: 0,
   dailyResetMin: 5 * 60,
+  monthlyBudgetUsd: new Prisma.Decimal(0),
   user: { name: 'テストエージェント' },
   ...override,
 })
@@ -195,6 +203,38 @@ describe('evaluateRunnerActivity', () => {
     expect(activity.active).toBe(false)
     expect(activity.reason).toBe('daily_limit')
     expect(activity.usage?.used).toBe(5)
+  })
+
+  it('予算が無制限ならコストを集計しない', async () => {
+    await evaluateRunnerActivity(runner(), jst('14:00'))
+    expect(agentUsage.aggregate).not.toHaveBeenCalled()
+  })
+
+  it('予算に達していなければ稼働でき、消化状況を返す', async () => {
+    monthCost(9.99)
+    const activity = await evaluateRunnerActivity(runner({ monthlyBudgetUsd: new Prisma.Decimal(10) }), jst('14:00'))
+    expect(activity).toEqual({
+      active: true,
+      reason: null,
+      budget: { usedUsd: 9.99, limitUsd: 10, resetAt: new Date('2026-09-01T05:00:00+09:00') },
+    })
+    expect(agentUsage.aggregate).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { runnerId: 'r1', month: '2026-08' } }),
+    )
+  })
+
+  it('予算に達していれば稼働できない', async () => {
+    monthCost(10)
+    const activity = await evaluateRunnerActivity(runner({ monthlyBudgetUsd: new Prisma.Decimal(10) }), jst('14:00'))
+    expect(activity.active).toBe(false)
+    expect(activity.reason).toBe('monthly_budget')
+  })
+
+  it('1日の上限で止まる場合は予算を集計しない', async () => {
+    agentRun.count.mockResolvedValue(5)
+    const target = runner({ dailyRunLimit: 5, monthlyBudgetUsd: new Prisma.Decimal(10) })
+    expect((await evaluateRunnerActivity(target, jst('14:00'))).reason).toBe('daily_limit')
+    expect(agentUsage.aggregate).not.toHaveBeenCalled()
   })
 })
 
@@ -395,13 +435,13 @@ describe('finishAgentRunById', () => {
   it('他のランナーの実行は閉じられない', async () => {
     agentRun.findUnique.mockResolvedValueOnce({ id: 'run1', runnerId: 'other', status: 'running' } as never)
 
-    expect(await finishAgentRunById('r1', 'run1', 'failed')).toBe(false)
+    expect(await finishAgentRunById(runner(), 'run1', 'failed')).toBe(false)
   })
 
   it('報告が無いまま成功と伝えられた実行は失敗として閉じる', async () => {
     agentRun.findUnique.mockResolvedValueOnce(openRun() as never)
 
-    expect(await finishAgentRunById('r1', 'run1', 'succeeded', 'exit 0')).toBe(true)
+    expect(await finishAgentRunById(runner(), 'run1', 'succeeded', 'exit 0')).toBe(true)
     expect(agentRun.updateMany).toHaveBeenCalledWith({
       where: { id: 'run1', status: 'running' },
       data: { status: 'failed', summary: 'exit 0', finishedAt: expect.any(Date) },
@@ -420,7 +460,7 @@ describe('finishAgentRunById', () => {
     agentRun.findUnique.mockResolvedValueOnce({ ...openRun(), status: 'succeeded' } as never)
     agentRun.updateMany.mockResolvedValueOnce({ count: 0 } as never)
 
-    expect(await finishAgentRunById('r1', 'run1', 'failed')).toBe(true)
+    expect(await finishAgentRunById(runner(), 'run1', 'failed')).toBe(true)
     expect(agentRun.updateMany, '条件に status: running が入るので確定済みの行には当たらない').toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: 'run1', status: 'running' } }),
     )
@@ -433,7 +473,26 @@ describe('finishAgentRunById', () => {
     agentRun.findUnique.mockResolvedValueOnce(openRun() as never)
     agentRun.updateMany.mockResolvedValueOnce({ count: 0 } as never)
 
-    expect(await finishAgentRunById('r1', 'run1', 'succeeded', 'exit 0')).toBe(true)
+    expect(await finishAgentRunById(runner(), 'run1', 'succeeded', 'exit 0')).toBe(true)
+    expect(notifyMock).not.toHaveBeenCalled()
+  })
+
+  it('報告済みの実行にも計測値は書き込み、月の集計へ加算する', async () => {
+    agentRun.findUnique.mockResolvedValueOnce({ ...openRun(), status: 'succeeded' } as never)
+    // 1回目は実行を閉じる更新(報告済みなので当たらない)、2回目は計測値の書き込み
+    agentRun.updateMany.mockResolvedValueOnce({ count: 0 } as never).mockResolvedValueOnce({ count: 1 } as never)
+    agentUsage.findFirst.mockResolvedValueOnce(null as never)
+
+    const metrics = { model: 'opus', inputTokens: 100, outputTokens: 10, costUsd: 0.1, exitCode: 0 }
+    expect(await finishAgentRunById(runner(), 'run1', 'succeeded', 'done', metrics)).toBe(true)
+
+    expect(agentRun.updateMany).toHaveBeenCalledWith({
+      where: { id: 'run1', measuredAt: null },
+      data: { ...metrics, measuredAt: expect.any(Date) },
+    })
+    expect(agentUsage.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ runnerId: 'r1', boardId: 'b1', costUsd: 0.1 }) }),
+    )
     expect(notifyMock).not.toHaveBeenCalled()
   })
 })
@@ -499,6 +558,21 @@ describe('startAgentRun', () => {
     expect(prisma.$transaction).toHaveBeenCalledTimes(1)
     expect(agentRun.create).not.toHaveBeenCalled()
     expect(ticket.update).not.toHaveBeenCalled()
+  })
+
+  it('予算に達していれば実行を作成しない', async () => {
+    ticket.findFirst.mockResolvedValueOnce(openTicket() as never)
+    monthCost(10)
+
+    const result = await startAgentRun(runner({ monthlyBudgetUsd: new Prisma.Decimal(10) }), 't1', 'plan', jst('14:00'))
+
+    expect(result).toEqual({
+      ok: false,
+      reason: 'monthly_budget',
+      budget: { usedUsd: 10, limitUsd: 10, resetAt: new Date('2026-09-01T05:00:00+09:00') },
+    })
+    expect(prisma.$queryRaw, '並行した開始が揃ってすり抜けないようランナーをロックする').toHaveBeenCalled()
+    expect(agentRun.create).not.toHaveBeenCalled()
   })
 
   it('上限未達なら件数を数えたうえで実行を作成する', async () => {

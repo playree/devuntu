@@ -212,13 +212,20 @@ export const issueAgentToken = safeAuthAction
  */
 const runnerActions = createAgentRunnerActions({
   role: 'admin',
-  names: { get: 'getAgentRunner', save: 'saveAgentRunner', saveRule: 'saveAgentRunnerRule', runs: 'getAgentRuns' },
+  names: {
+    get: 'getAgentRunner',
+    save: 'saveAgentRunner',
+    saveRule: 'saveAgentRunnerRule',
+    runs: 'getAgentRuns',
+    usage: 'getAgentUsage',
+  },
   authorize: async (_user, agentId) => await assertAgent(agentId),
 })
 export const getAgentRunner = runnerActions.getAgentRunner
 export const saveAgentRunner = runnerActions.saveAgentRunner
 export const saveAgentRunnerRule = runnerActions.saveAgentRunnerRule
 export const getAgentRuns = runnerActions.getAgentRuns
+export const getAgentUsage = runnerActions.getAgentUsage
 
 /** 承認者に指定されたユーザーの存在確認。エージェント同士は承認者にできない */
 const assertApproverUsersExist = async (userIds: string[]) => {

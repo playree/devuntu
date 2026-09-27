@@ -401,6 +401,7 @@ export const ModelName = {
   McpToken: 'McpToken',
   AgentRunner: 'AgentRunner',
   AgentRun: 'AgentRun',
+  AgentUsage: 'AgentUsage',
   AgentApprover: 'AgentApprover',
   AgentApproverGroup: 'AgentApproverGroup',
   Session: 'Session',
@@ -463,7 +464,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "board" | "boardKeyHistory" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "calendarShare" | "calendarBusyTime" | "commandTargetMember" | "commandTargetGroup" | "commandRun" | "commandRunChunk" | "ticketLink" | "boardRepository" | "gitCheckSuite" | "userNotifySetting" | "webPushSubscription" | "boardNotifySetting" | "notifyOutbox" | "notifyDelivery" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "ticket" | "ticketComment" | "ticketCriterion" | "user" | "group" | "userGroup"
+    modelProps: "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentUsage" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "board" | "boardKeyHistory" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "calendarShare" | "calendarBusyTime" | "commandTargetMember" | "commandTargetGroup" | "commandRun" | "commandRunChunk" | "ticketLink" | "boardRepository" | "gitCheckSuite" | "userNotifySetting" | "webPushSubscription" | "boardNotifySetting" | "notifyOutbox" | "notifyDelivery" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "ticket" | "ticketComment" | "ticketCriterion" | "user" | "group" | "userGroup"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -760,6 +761,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.AgentRunCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.AgentRunCountAggregateOutputType> | number
+        }
+      }
+    }
+    AgentUsage: {
+      payload: Prisma.$AgentUsagePayload<ExtArgs>
+      fields: Prisma.AgentUsageFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AgentUsageFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentUsagePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AgentUsageFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentUsagePayload>
+        }
+        findFirst: {
+          args: Prisma.AgentUsageFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentUsagePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AgentUsageFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentUsagePayload>
+        }
+        findMany: {
+          args: Prisma.AgentUsageFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentUsagePayload>[]
+        }
+        create: {
+          args: Prisma.AgentUsageCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentUsagePayload>
+        }
+        createMany: {
+          args: Prisma.AgentUsageCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AgentUsageCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentUsagePayload>[]
+        }
+        delete: {
+          args: Prisma.AgentUsageDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentUsagePayload>
+        }
+        update: {
+          args: Prisma.AgentUsageUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentUsagePayload>
+        }
+        deleteMany: {
+          args: Prisma.AgentUsageDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AgentUsageUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AgentUsageUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentUsagePayload>[]
+        }
+        upsert: {
+          args: Prisma.AgentUsageUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentUsagePayload>
+        }
+        aggregate: {
+          args: Prisma.AgentUsageAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAgentUsage>
+        }
+        groupBy: {
+          args: Prisma.AgentUsageGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AgentUsageGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AgentUsageCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AgentUsageCountAggregateOutputType> | number
         }
       }
     }
@@ -4319,6 +4394,7 @@ export const AgentRunnerScalarFieldEnum = {
   rule: 'rule',
   dailyRunLimit: 'dailyRunLimit',
   dailyResetMin: 'dailyResetMin',
+  monthlyBudgetUsd: 'monthlyBudgetUsd',
   lastPolledAt: 'lastPolledAt',
   hostname: 'hostname',
   version: 'version',
@@ -4338,10 +4414,33 @@ export const AgentRunScalarFieldEnum = {
   status: 'status',
   summary: 'summary',
   startedAt: 'startedAt',
-  finishedAt: 'finishedAt'
+  finishedAt: 'finishedAt',
+  model: 'model',
+  inputTokens: 'inputTokens',
+  cachedInputTokens: 'cachedInputTokens',
+  outputTokens: 'outputTokens',
+  costUsd: 'costUsd',
+  exitCode: 'exitCode',
+  measuredAt: 'measuredAt'
 } as const
 
 export type AgentRunScalarFieldEnum = (typeof AgentRunScalarFieldEnum)[keyof typeof AgentRunScalarFieldEnum]
+
+
+export const AgentUsageScalarFieldEnum = {
+  id: 'id',
+  runnerId: 'runnerId',
+  month: 'month',
+  boardId: 'boardId',
+  runs: 'runs',
+  inputTokens: 'inputTokens',
+  cachedInputTokens: 'cachedInputTokens',
+  outputTokens: 'outputTokens',
+  costUsd: 'costUsd',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AgentUsageScalarFieldEnum = (typeof AgentUsageScalarFieldEnum)[keyof typeof AgentUsageScalarFieldEnum]
 
 
 export const AgentApproverScalarFieldEnum = {
@@ -5162,6 +5261,20 @@ export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel,
 
 
 /**
+ * Reference to a field of type 'Decimal'
+ */
+export type DecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal'>
+    
+
+
+/**
+ * Reference to a field of type 'Decimal[]'
+ */
+export type ListDecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal[]'>
+    
+
+
+/**
  * Reference to a field of type 'AgentRunAction'
  */
 export type EnumAgentRunActionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AgentRunAction'>
@@ -5186,6 +5299,20 @@ export type EnumAgentRunStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$P
  * Reference to a field of type 'AgentRunStatus[]'
  */
 export type ListEnumAgentRunStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AgentRunStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'BigInt'
+ */
+export type BigIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BigInt'>
+    
+
+
+/**
+ * Reference to a field of type 'BigInt[]'
+ */
+export type ListBigIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BigInt[]'>
     
 
 
@@ -5651,6 +5778,7 @@ export type GlobalOmitConfig = {
   mcpToken?: Prisma.McpTokenOmit
   agentRunner?: Prisma.AgentRunnerOmit
   agentRun?: Prisma.AgentRunOmit
+  agentUsage?: Prisma.AgentUsageOmit
   agentApprover?: Prisma.AgentApproverOmit
   agentApproverGroup?: Prisma.AgentApproverGroupOmit
   session?: Prisma.SessionOmit

@@ -4,7 +4,13 @@ import { createEnumChip } from '@/components/enum-chip'
 import { PagingList } from '@/components/general/paging'
 import { MultiTable, TruncatedCell } from '@/components/general/table'
 import type { AgentRunStatus } from '@/generated/prisma/enums'
-import { AGENT_RUN_ACTION_LOCALE, AGENT_RUN_STATUS_LOCALE, agentRunDuration } from '@/lib/agent/agent'
+import {
+  AGENT_RUN_ACTION_LOCALE,
+  AGENT_RUN_STATUS_LOCALE,
+  agentRunDuration,
+  formatTokens,
+  formatUsd,
+} from '@/lib/agent/agent'
 import type { AgentRunSummary } from '@/lib/agent/agent-runner-config'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { dayformat } from '@/lib/day'
@@ -43,6 +49,9 @@ export const AgentRunHistory: FC<{ pagingList: PagingList<AgentRunSummary> }> = 
         { id: 'status', name: t('status'), allowsSorting: true, minWidth: 90, defaultWidth: 100 },
         { id: 'startedAt', name: t('agent_started_at'), allowsSorting: true, minWidth: 120, defaultWidth: 130 },
         { id: 'duration', name: t('agent_duration'), minWidth: 80, defaultWidth: 90 },
+        { id: 'model', name: t('agent_model'), minWidth: 100, defaultWidth: 130 },
+        { id: 'tokens', name: t('agent_tokens'), minWidth: 110, defaultWidth: 130 },
+        { id: 'costUsd', name: t('agent_cost'), minWidth: 80, defaultWidth: 90 },
         { id: 'summary', name: t('content'), minWidth: 140, defaultWidth: '2fr' },
       ]}
     >
@@ -66,6 +75,13 @@ export const AgentRunHistory: FC<{ pagingList: PagingList<AgentRunSummary> }> = 
           </Table.Cell>
           <Table.Cell className='font-mono text-xs'>{dayformat(item.startedAt, 'tz-minute', tz)}</Table.Cell>
           <Table.Cell className='font-mono text-xs'>{agentRunDuration(item.startedAt, item.finishedAt)}</Table.Cell>
+          <Table.Cell className='truncate font-mono text-xs'>{item.model ?? '-'}</Table.Cell>
+          <Table.Cell className='font-mono text-xs whitespace-nowrap'>
+            {item.inputTokens === null && item.outputTokens === null
+              ? '-'
+              : `${formatTokens(item.inputTokens)} / ${formatTokens(item.outputTokens)}`}
+          </Table.Cell>
+          <Table.Cell className='font-mono text-xs'>{formatUsd(item.costUsd)}</Table.Cell>
           <TruncatedCell value={item.summary ?? ''} />
         </Table.Row>
       )}

@@ -177,6 +177,10 @@ export const minToHHmm = (min: number): string => {
 export const addDaysDateOnly = (date: string, days: number): string =>
   dayjs.utc(date, 'YYYY-MM-DD', true).add(days, 'day').format('YYYY-MM-DD')
 
+/** 暦日(YYYY-MM-DD)を月数分ずらす。月末は移動先の月末に丸める */
+export const addMonthsDateOnly = (date: string, months: number): string =>
+  dayjs.utc(date, 'YYYY-MM-DD', true).add(months, 'month').format('YYYY-MM-DD')
+
 /** 指定した瞬間のタイムゾーンの UTC オフセット(分) */
 const offsetAt = (ts: number, tz: string): number => dayjs(ts).tz(tz).utcOffset()
 

@@ -132,6 +132,28 @@ export const agentRunDuration = (startedAt: Date, finishedAt: Date | null): stri
   return `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`
 }
 
+/** コスト(USD)の表示。1ドル未満は桁が消えないよう小数4桁まで出す。値が無ければ `-` */
+export const formatUsd = (value: number | null | undefined): string => {
+  if (value === null || value === undefined) {
+    return '-'
+  }
+  return `$${value.toFixed(value === 0 || value >= 1 ? 2 : 4)}`
+}
+
+/** トークン数の表示。桁の大きい値は k / M に丸める。値が無ければ `-` */
+export const formatTokens = (value: number | null | undefined): string => {
+  if (value === null || value === undefined) {
+    return '-'
+  }
+  if (value >= 1_000_000) {
+    return `${(value / 1_000_000).toFixed(1)}M`
+  }
+  if (value >= 1_000) {
+    return `${(value / 1_000).toFixed(1)}k`
+  }
+  return String(value)
+}
+
 /** ポーリング間隔(秒)の選択肢 */
 export const AGENT_POLL_INTERVAL_OPTIONS = [60, 180, 300, 600, 900, 1800, 3600]
 
@@ -149,6 +171,12 @@ export const AGENT_UNLIMITED_DAILY_RUNS = 0
  * ポーリング間隔が最短(60秒)でも1日で到達できない回数を上限にし、入力ミスの歯止めだけを掛ける。
  */
 export const MAX_AGENT_DAILY_LIMIT = 999
+
+/** 月の予算上限として無制限を表す値 */
+export const AGENT_UNLIMITED_MONTHLY_BUDGET = 0
+
+/** 月の予算上限(USD)の最大値。`AgentRunner.monthlyBudgetUsd` の桁(Decimal(10, 2))に収まる範囲 */
+export const MAX_AGENT_MONTHLY_BUDGET_USD = 100_000
 
 /** 処理上限のカウントをリセットする時刻の既定値(5:00) */
 export const DEFAULT_AGENT_DAILY_RESET_MIN = 5 * 60

@@ -96,6 +96,9 @@ model AgentRunner {
   /// 上限のカウントをリセットする時刻。0:00 からの分。判定は timezone に従う
   dailyResetMin Int @default(300)
 
+  /// 月の予算上限(USD)。0 は無制限。月の区切りは毎月1日の dailyResetMin
+  monthlyBudgetUsd Decimal @default(0) @db.Decimal(10, 2)
+
   /// 最終ポーリング時刻。ランナーの自己申告で、稼働状況の表示にだけ使い認可には使わない
   lastPolledAt DateTime?
 
@@ -111,7 +114,8 @@ model AgentRunner {
 
   // relation
 
-  runs AgentRun[]
+  runs   AgentRun[]
+  usages AgentUsage[]
 
   @@map("agent_runner")
 }
@@ -146,11 +150,67 @@ model AgentRun {
   /// 実行の終了時刻。null は実行中、または応答が返らないまま落ちた実行
   finishedAt DateTime?
 
+  // 以降は CLI の出力からランナーが取得して送る計測値。取れない CLI・版では null のまま
+
+  /// 使用したモデル。複数使った場合はコストが最も大きいもの
+  model String?
+
+  /// 入力トークン数。キャッシュから読んだぶんを含む
+  inputTokens Int?
+
+  /// 入力トークンのうちキャッシュから読んだぶん
+  cachedInputTokens Int?
+
+  /// 出力トークン数
+  outputTokens Int?
+
+  /// コスト(USD)。CLI が金額を返さない場合(codex)は null
+  costUsd Decimal? @db.Decimal(12, 6)
+
+  /// CLI の終了コード。起動できなかった・時間切れで打ち切った場合は null
+  exitCode Int?
+
+  /// 計測値を受け取った時刻。月次の集計(AgentUsage)へ二重に加算しないための印
+  measuredAt DateTime?
+
   // 保持期間とランナーごとの件数で `maintenance-sweep.ts` が打ち切る
 
   @@index([runnerId, startedAt])
   @@index([ticketId])
   @@map("agent_run")
+}
+
+/// エージェントの月ごとの利用量(ボード別)。予算上限の判定と、コストの集計表示に使う。
+/// 実行履歴(AgentRun)は保持期間と件数で消えるので、月の集計はここへ積み上げて自動メンテナンスの対象にしない。
+/// 計測値を受け取るたびに、ランナーの行をロックしたうえで該当する行へ加算する(無ければ作る)。
+model AgentUsage {
+  id String @id @default(uuid(7))
+
+  runnerId String
+  runner   AgentRunner @relation(fields: [runnerId], references: [id], onDelete: Cascade)
+
+  /// 集計する月(YYYY-MM)。ランナーのタイムゾーンで、毎月1日の dailyResetMin を境にする
+  month String
+
+  /// 対象チケットのボード。ボードが消えても月の合計(予算の判定)からは外さないので SetNull
+  boardId String?
+  board   Board?  @relation(fields: [boardId], references: [id], onDelete: SetNull)
+
+  /// 計測値を受け取った実行の数
+  runs Int @default(0)
+
+  inputTokens       BigInt @default(0)
+  cachedInputTokens BigInt @default(0)
+  outputTokens      BigInt @default(0)
+
+  /// コスト(USD)。金額の取れない実行は加算しない
+  costUsd Decimal @default(0) @db.Decimal(14, 6)
+
+  updatedAt DateTime @updatedAt
+
+  @@index([runnerId, month])
+  @@index([boardId])
+  @@map("agent_usage")
 }
 
 /// エージェントモードの変更(= 自動実行の承認)を許可する相手。ユーザー指定。

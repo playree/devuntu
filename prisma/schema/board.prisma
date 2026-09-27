@@ -82,6 +82,7 @@ model Board {
   keyHistories   BoardKeyHistory[]
   notifySettings BoardNotifySetting[]
   repositories   BoardRepository[]
+  agentUsages    AgentUsage[]
 
   @@map("board")
 }
