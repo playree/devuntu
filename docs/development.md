@@ -171,6 +171,20 @@ pnpm build
 
 テストソースは `tests/` 配下、設定は `vitest.config.ts` と `vitest.setup.ts`。
 
+| 場所             | 内容                                                                             |
+| ---------------- | -------------------------------------------------------------------------------- |
+| `tests/lib/`     | `src/lib/` のテスト。サブフォルダ構成とファイル名は `src/lib/` に揃える          |
+| `tests/app/`     | Route Handler など `src/app/` のテスト                                           |
+| `tests/scripts/` | `scripts/` の運用ツールのテスト                                                  |
+| `tests/helpers/` | 共通ヘルパー(Prisma のモック、MCP クライアントの接続、`ResourceAuth` の偽データ) |
+
+`@/lib/prisma` の差し替えは `tests/helpers/prisma.ts` の `mockPrisma` を使う。`vi.mock` の factory は
+import より先に評価されるため、factory の中で動的 import する。
+
+```ts
+vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({ user: ['findUnique'] }))
+```
+
 ```sh
 pnpm test        # vitest run
 pnpm test:watch  # vitest(ウォッチ)
