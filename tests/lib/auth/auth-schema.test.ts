@@ -86,7 +86,7 @@ function hasIndex(model: PrismaModel, columns: readonly string[], unique: boolea
   return model.indexes.some((actual) => actual.columns.join(',') === columns.join(',') && (!unique || actual.unique))
 }
 
-const schemaDir = fileURLToPath(new URL('../../prisma/schema/', import.meta.url))
+const schemaDir = fileURLToPath(new URL('../../../prisma/schema/', import.meta.url))
 const schemaSource = readdirSync(schemaDir)
   .filter((file) => file.endsWith('.prisma'))
   .map((file) => readFileSync(`${schemaDir}${file}`, 'utf8'))
