@@ -68,7 +68,7 @@ export const ja: DefaultLocaleItems = {
   agent_settings: 'エージェント設定',
   agent_started_at: '開始',
   agent_state: '処理状態',
-  agent_state_done: '完了',
+  agent_state_done: '報告済み',
   agent_state_failed: '失敗',
   agent_state_planned: '返信待ち',
   agent_state_queued: '処理待ち',

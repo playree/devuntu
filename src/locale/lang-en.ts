@@ -68,7 +68,7 @@ export const en: DefaultLocaleItems = {
   agent_settings: 'Agent Settings',
   agent_started_at: 'Started',
   agent_state: 'Task State',
-  agent_state_done: 'Done',
+  agent_state_done: 'Reported',
   agent_state_failed: 'Failed',
   agent_state_planned: 'Awaiting reply',
   agent_state_queued: 'Queued',

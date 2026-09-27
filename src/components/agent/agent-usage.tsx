@@ -64,12 +64,14 @@ export const AgentUsage: FC<{
             >
               {usage.boards.map((row) => (
                 <li key={row.board?.id ?? ''} className='flex flex-wrap items-center gap-x-3 gap-y-0.5 px-3 py-1.5'>
-                  <span className='min-w-0 flex-1 truncate'>
+                  <span // 狭い画面ではボード名を1行使い、数値は次の行へ回す
+                    className='w-full min-w-0 truncate sm:w-auto sm:flex-1'
+                  >
                     {row.board ? boardName(row.board) : <span className='text-muted'>{t('board_deleted')}</span>}
                   </span>
                   <span className='text-muted font-mono text-xs'>{`${t('agent_usage_runs')} ${row.runs}`}</span>
                   <span className='text-muted font-mono text-xs'>{tokensLabel(row)}</span>
-                  <span className='w-20 text-right font-mono'>{formatUsd(row.costUsd)}</span>
+                  <span className='ml-auto w-20 text-right font-mono'>{formatUsd(row.costUsd)}</span>
                 </li>
               ))}
             </ul>
