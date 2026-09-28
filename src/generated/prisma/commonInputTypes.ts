@@ -772,6 +772,23 @@ export type EnumTicketCommentDecisionNullableWithAggregatesFilter<$PrismaModel =
   _max?: Prisma.NestedEnumTicketCommentDecisionNullableFilter<$PrismaModel>
 }
 
+export type EnumTicketRelationTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketRelationType | Prisma.EnumTicketRelationTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketRelationType[] | Prisma.ListEnumTicketRelationTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TicketRelationType[] | Prisma.ListEnumTicketRelationTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTicketRelationTypeFilter<$PrismaModel> | $Enums.TicketRelationType
+}
+
+export type EnumTicketRelationTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketRelationType | Prisma.EnumTicketRelationTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketRelationType[] | Prisma.ListEnumTicketRelationTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TicketRelationType[] | Prisma.ListEnumTicketRelationTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTicketRelationTypeWithAggregatesFilter<$PrismaModel> | $Enums.TicketRelationType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTicketRelationTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTicketRelationTypeFilter<$PrismaModel>
+}
+
 export type NestedStringFilter<$PrismaModel = never> = {
   equals?: string | Prisma.StringFieldRefInput<$PrismaModel>
   in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
@@ -1487,6 +1504,23 @@ export type NestedEnumTicketCommentDecisionNullableWithAggregatesFilter<$PrismaM
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedEnumTicketCommentDecisionNullableFilter<$PrismaModel>
   _max?: Prisma.NestedEnumTicketCommentDecisionNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumTicketRelationTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketRelationType | Prisma.EnumTicketRelationTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketRelationType[] | Prisma.ListEnumTicketRelationTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TicketRelationType[] | Prisma.ListEnumTicketRelationTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTicketRelationTypeFilter<$PrismaModel> | $Enums.TicketRelationType
+}
+
+export type NestedEnumTicketRelationTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketRelationType | Prisma.EnumTicketRelationTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketRelationType[] | Prisma.ListEnumTicketRelationTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TicketRelationType[] | Prisma.ListEnumTicketRelationTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTicketRelationTypeWithAggregatesFilter<$PrismaModel> | $Enums.TicketRelationType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTicketRelationTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTicketRelationTypeFilter<$PrismaModel>
 }
 
 

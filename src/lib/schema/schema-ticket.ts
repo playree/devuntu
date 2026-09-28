@@ -11,6 +11,8 @@ import {
   TICKET_PRIORITIES,
   TICKET_STATUSES,
 } from '../board/ticket-enum'
+import { parseTicketDisplayId } from '../board/ticket-id'
+import { MAX_CHILD_ORDER, TICKET_RELATION_FILTERS, TICKET_RELATION_KINDS } from '../board/ticket-relation-rule'
 import { ASSIGNEE_NONE, TICKET_SORT_COLUMNS } from '../board/ticket-search'
 import { looksLikeGitUrl } from '../git/git'
 import { zPagingFields } from './schema'
@@ -117,6 +119,13 @@ export const scMoveTicket = z.object({
 })
 export type MoveTicket = z.infer<typeof scMoveTicket>
 
+/** 検索の「関係するチケット」。表示IDだけを受ける(ボードを跨いだ番号だけの指定は意味を持たない) */
+export const zRelatedTo = z
+  .string()
+  .trim()
+  .max(20, el('@invalid_display_id'))
+  .refine((value) => value === '' || parseTicketDisplayId(value) !== null, el('@invalid_display_id'))
+
 export const scTicketSearch = z.object({
   keyword: z.string().trim().max(100).default(''),
   status: z.array(zTicketStatus).default([]),
@@ -127,6 +136,10 @@ export const scTicketSearch = z.object({
   boardId: z.uuidv7().nullish(),
   /** null = すべて / 'none' = 未割り当て / それ以外は userId(KanbanFilter.assignee と同じ規約) */
   assignee: z.union([z.literal(ASSIGNEE_NONE), z.uuidv7()]).nullish(),
+  /** 関係するチケットの表示ID。空文字は絞り込まない */
+  relatedTo: zRelatedTo.default(''),
+  /** relatedTo のチケットから見た関係。child = 直下の子 / related = 関連 / all = 両方 */
+  relation: z.enum(TICKET_RELATION_FILTERS).default('all'),
 })
 export type TicketSearch = z.infer<typeof scTicketSearch>
 export type TicketSearchIn = z.input<typeof scTicketSearch>
@@ -203,6 +216,27 @@ export const scCheckTicketCriterion = z.object({
   checked: z.boolean(),
 })
 export type CheckTicketCriterion = z.infer<typeof scCheckTicketCriterion>
+
+/** 親の下での子の順番。同じ値の子は並行してよい扱い */
+export const zChildOrder = z.number().int().min(1).max(MAX_CHILD_ORDER)
+
+/** 関係の相手。チケットID / 表示ID / 番号(`12` / `#12`)を受け、同じボードの中から引く */
+export const zRelationTarget = z.string().trim().min(1, el('@required_field')).max(50, el('@invalid_display_id'))
+
+/** 関係の追加。kind は操作するチケットから見た相手の立場(相手を親にする / 子にする / 関連付ける) */
+export const scAddTicketRelation = z.object({
+  ticketId: z.uuidv7(),
+  target: zRelationTarget,
+  kind: z.enum(TICKET_RELATION_KINDS),
+})
+export type AddTicketRelation = z.infer<typeof scAddTicketRelation>
+
+/** 子の順番の変更。id は親子の関係の ID */
+export const scUpdateTicketChildOrder = z.object({
+  id: z.uuidv7(),
+  order: zChildOrder,
+})
+export type UpdateTicketChildOrder = z.infer<typeof scUpdateTicketChildOrder>
 
 /** タグはボードに属する。プライベートタグもプライベートボードの boardId を指定する */
 export const scCreateTag = z.object({

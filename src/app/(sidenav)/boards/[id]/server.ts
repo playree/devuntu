@@ -5,6 +5,7 @@ import { assertBoardAccess, isAdminActor } from '@/lib/board/board-access'
 import { groupByLane, kanbanDoneSince, kanbanTicketWhere, MAX_KANBAN_CARDS } from '@/lib/board/kanban'
 import { ticketDisplayId } from '@/lib/board/ticket-id'
 import { changeTicketStatus } from '@/lib/board/ticket-mutation'
+import { childProgress } from '@/lib/board/ticket-relation-rule'
 import { nowDate } from '@/lib/day'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
@@ -54,13 +55,16 @@ export const getBoardKanban = safeAuthAction
           orderBy: { tag: { order: 'asc' } },
         },
         _count: { select: { comments: true } },
+        // 子の進み具合と、子であれば親の表示ID(参照は 1 階層だけ)
+        relationsFrom: { where: { type: 'parent' }, select: { to: { select: { status: true } } } },
+        relationsTo: { where: { type: 'parent' }, select: { from: { select: { number: true } } }, take: 1 },
       },
       // status は enum の宣言順(backlog,todo,doing,done)。上限で切れるのが done の末尾になるようにする
       orderBy: [{ status: 'asc' }, { order: 'asc' }, { createdAt: 'asc' }],
       take: MAX_KANBAN_CARDS,
     })
 
-    const cards = tickets.map(({ assignee, _count, tags, ...ticket }) => ({
+    const cards = tickets.map(({ assignee, _count, tags, relationsFrom, relationsTo, ...ticket }) => ({
       ...ticket,
       // 中間テーブルは表示側で扱わないので平坦化する
       tags: tags.map(({ tag }) => tag),
@@ -71,6 +75,9 @@ export const getBoardKanban = safeAuthAction
       assigneeImage: assignee?.image ?? '',
       assigneeIsAgent: assignee?.isAgent ?? false,
       commentCount: _count.comments,
+      childProgress: childProgress(relationsFrom.map(({ to }) => to.status)),
+      // 親子は同じボードの中だけなので、接頭辞はこのボードのキーで組み立てられる
+      parentDisplayId: relationsTo[0] ? ticketDisplayId({ key: board.key, number: relationsTo[0].from.number }) : '',
     }))
 
     return {

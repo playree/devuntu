@@ -6,6 +6,7 @@ import type { TicketPriority, TicketStatus } from '@/generated/prisma/enums'
 import type { TicketOrderByWithRelationInput, TicketWhereInput } from '@/generated/prisma/models'
 import { dedupeTagNames } from './tag-rule'
 import { parseTicketDisplayId, parseTicketNumber } from './ticket-id'
+import type { TicketRelationFilter } from './ticket-relation-rule'
 
 /**
  * 一覧で並べ替えできる列。MultiTable に渡す columns の id と一致させる(tags は並べ替え不可)。
@@ -27,6 +28,10 @@ export type TicketSearchParams = {
   boardId?: string | null
   /** null / undefined = すべて / 'none' = 未割り当て / それ以外は userId */
   assignee?: string | null
+  /** 関係するチケットの表示ID。空文字 / undefined は絞り込まない */
+  relatedTo?: string
+  /** relatedTo のチケットから見た関係。未指定は all */
+  relation?: TicketRelationFilter
 }
 
 /**
@@ -86,6 +91,33 @@ const keywordOr = (word: string): TicketWhereInput => {
 }
 
 /**
+ * 関係するチケットの条件。child = 指定したチケットの直下の子 / related = 関連 / all = 両方。
+ * 関係は同じボードの中だけなので、可視スコープの AND で他ボードは自然に落ちる。
+ * 表示IDとして読めない値は 0 件にする(スキーマで弾くので通常は到達しない)
+ */
+export const relationWhere = (relatedTo: string, relation: TicketRelationFilter): TicketWhereInput => {
+  const displayId = parseTicketDisplayId(relatedTo)
+  if (!displayId) {
+    return { id: { in: [] } }
+  }
+  const target: TicketWhereInput = { number: displayId.number, board: { key: displayId.key } }
+  const child: TicketWhereInput = { relationsTo: { some: { type: 'parent', from: target } } }
+  const related: TicketWhereInput = {
+    OR: [
+      { relationsFrom: { some: { type: 'related', to: target } } },
+      { relationsTo: { some: { type: 'related', from: target } } },
+    ],
+  }
+  if (relation === 'child') {
+    return child
+  }
+  if (relation === 'related') {
+    return related
+  }
+  return { OR: [child, related] }
+}
+
+/**
  * 検索条件を Prisma の where へ変換する。
  * 可視スコープ(認可)を必ず AND の先頭に入れることで、権限チェックを where に落とし込む。
  *
@@ -126,6 +158,9 @@ export const buildTicketWhere = (
     and.push({ assigneeId: null })
   } else if (params.assignee) {
     and.push({ assigneeId: params.assignee })
+  }
+  if (params.relatedTo) {
+    and.push(relationWhere(params.relatedTo, params.relation ?? 'all'))
   }
 
   return { AND: and }

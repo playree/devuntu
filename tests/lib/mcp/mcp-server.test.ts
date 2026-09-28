@@ -13,9 +13,11 @@ import {
   deleteTicketCommentForMcp,
   deleteTicketForMcp,
   getTicketForMcp,
+  linkRelatedTicketForMcp,
   linkTicketArtifactForMcp,
   searchTicketsForMcp,
   unlinkTicketArtifactForMcp,
+  unlinkTicketRelationForMcp,
   updateTicketCommentForMcp,
   updateTicketForMcp,
 } from '@/lib/mcp/mcp-ticket'
@@ -40,6 +42,8 @@ vi.mock('@/lib/mcp/mcp-ticket', () => ({
   deleteTicketCommentForMcp: vi.fn(),
   linkTicketArtifactForMcp: vi.fn(),
   unlinkTicketArtifactForMcp: vi.fn(),
+  linkRelatedTicketForMcp: vi.fn(),
+  unlinkTicketRelationForMcp: vi.fn(),
 }))
 
 const auth = fakeAuth.oauthAuth()
@@ -65,6 +69,8 @@ describe('createDevuntuMcpServer', () => {
         'delete_ticket_comment',
         'link_ticket_artifact',
         'unlink_ticket_artifact',
+        'link_related_ticket',
+        'unlink_ticket_relation',
         'create_image_upload_token',
         'upload_image',
         'get_image',
@@ -394,5 +400,54 @@ describe('createDevuntuMcpServer', () => {
     })
 
     expect(unlinkTicketArtifactForMcp).toHaveBeenCalledWith(auth, '0195c1e0-0000-7000-8000-000000000001')
+  })
+
+  it('search_tickets は関係するチケットの絞り込みを渡し、表示IDでない指定は受け付けない', async () => {
+    vi.mocked(searchTicketsForMcp).mockResolvedValueOnce([])
+    const client = await connectDevuntuMcp()
+
+    await client.callTool({ name: 'search_tickets', arguments: { relatedTo: 'ABC-1', relation: 'child' } })
+    expect(searchTicketsForMcp).toHaveBeenLastCalledWith(
+      auth,
+      expect.objectContaining({ relatedTo: 'ABC-1', relation: 'child' }),
+    )
+
+    vi.mocked(searchTicketsForMcp).mockClear()
+    const result = await client.callTool({ name: 'search_tickets', arguments: { relatedTo: '12' } })
+    expect(result.isError).toBe(true)
+    expect(searchTicketsForMcp).not.toHaveBeenCalled()
+  })
+
+  it('create_ticket / update_ticket は親チケットと順番を渡す(update は null で親を外せる)', async () => {
+    vi.mocked(createTicketForMcp).mockResolvedValueOnce({ id: 't1' } as never)
+    vi.mocked(updateTicketForMcp).mockResolvedValueOnce({ id: 't1' } as never)
+    const client = await connectDevuntuMcp()
+
+    await client.callTool({
+      name: 'create_ticket',
+      arguments: { boardId: 'b1', title: '子', parentId: 'ABC-1', childOrder: 2 },
+    })
+    expect(createTicketForMcp).toHaveBeenLastCalledWith(
+      auth,
+      expect.objectContaining({ parentId: 'ABC-1', childOrder: 2 }),
+    )
+
+    await client.callTool({ name: 'update_ticket', arguments: { ticketId: 'ABC-2', parentId: null } })
+    expect(updateTicketForMcp).toHaveBeenLastCalledWith(auth, 'ABC-2', { parentId: null })
+  })
+
+  it('link_related_ticket / unlink_ticket_relation は相手と relationId を渡す', async () => {
+    vi.mocked(linkRelatedTicketForMcp).mockResolvedValueOnce({ ticketId: 't1', relatedTicketId: 't2' })
+    vi.mocked(unlinkTicketRelationForMcp).mockResolvedValueOnce({ id: 'r1' })
+    const client = await connectDevuntuMcp()
+
+    await client.callTool({ name: 'link_related_ticket', arguments: { ticketId: 'ABC-1', relatedTicketId: 'ABC-2' } })
+    expect(linkRelatedTicketForMcp).toHaveBeenCalledWith(auth, 'ABC-1', 'ABC-2')
+
+    await client.callTool({
+      name: 'unlink_ticket_relation',
+      arguments: { relationId: '0195c1e0-0000-7000-8000-000000000001' },
+    })
+    expect(unlinkTicketRelationForMcp).toHaveBeenCalledWith(auth, '0195c1e0-0000-7000-8000-000000000001')
   })
 })

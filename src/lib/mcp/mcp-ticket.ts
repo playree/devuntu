@@ -9,11 +9,19 @@ import {
   type CreateTicketInput,
   deleteComment,
   deleteTicket,
+  type TicketAuthorize,
   updateComment,
   updateTicket,
   type UpdateTicketInput,
 } from '@/lib/board/ticket-mutation'
 import { canMcpDeleteTicket, canMcpUpdateTicket } from '@/lib/board/ticket-permission'
+import {
+  addTicketRelation,
+  EMPTY_TICKET_RELATIONS,
+  listTicketRelations,
+  removeTicketRelation,
+} from '@/lib/board/ticket-relation'
+import type { TicketRelationFilter } from '@/lib/board/ticket-relation-rule'
 import { buildTicketWhere, ticketListOrderBy } from '@/lib/board/ticket-search'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
@@ -75,7 +83,13 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
   }
 
   const displayId = ticketDisplayId({ key: ticket.board.key, number: ticket.number })
-  const [links, criteria] = await Promise.all([listTicketLinks(id), listTicketCriteria(id)])
+  const [links, criteria, relations] = await Promise.all([
+    listTicketLinks(id),
+    listTicketCriteria(id),
+    // 関係の相手は同じボードのチケットなので、ボードのメンバーでない承認者には見せない
+    access.boardRole ? listTicketRelations(id) : EMPTY_TICKET_RELATIONS,
+  ])
+
   return {
     displayId,
     /** 本文・コメントに貼られた画像のキー。`get_image` で中身を見られることに気づけるよう返す */
@@ -116,6 +130,14 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
     })),
     /** このチケットに対応するときの手順。instructions を読まないクライアントにも届くよう、応答にも載せる */
     workflow: ticketWorkflowFor(auth.kind, access.canEdit),
+    /** 親チケット。参照は 1 階層だけ(親の親は返さない) */
+    parent: relations.parent,
+    /** 直下の子チケット。order は親の下での順番で、同じ値の子は並行してよい扱い */
+    children: relations.children,
+    /** 子の進み具合(完了した子の数 / 子の数) */
+    childProgress: relations.childProgress,
+    /** 関連チケット。向きは無い */
+    related: relations.related,
     /** 紐付けたブランチ / PR(MR) / コミット。prState と ci は GitHub / GitLab の Webhook で更新される */
     links: links.map(({ id: linkId, provider, kind, repo, ref, url, title, prState, ci }) => ({
       id: linkId,
@@ -143,6 +165,9 @@ export type McpTicketSearchInput = {
   boardId?: string
   /** ユーザーID / `me`(自分) / `none`(未割り当て) */
   assignee?: string
+  /** 関係するチケットの表示ID */
+  relatedTo?: string
+  relation?: TicketRelationFilter
   limit?: number
 }
 
@@ -165,6 +190,8 @@ export const searchTicketsForMcp = async (auth: ResourceAuth, input: McpTicketSe
       tags: input.tags ?? [],
       boardId,
       assignee: resolveAssignee(input.assignee, auth.user.id),
+      relatedTo: input.relatedTo,
+      relation: input.relation,
     },
     { accessibleBoardIds },
   )
@@ -215,6 +242,15 @@ export const createTicketForMcp = async (auth: ResourceAuth, input: McpCreateTic
 
 export type McpUpdateTicketInput = UpdateTicketInput
 
+/** MCP限定の追加制限: メンバーは他人が担当のチケットを更新できない(canMcpUpdateTicket)。親子・関連の変更にも掛ける */
+const mcpUpdateAuthorize =
+  (auth: ResourceAuth): TicketAuthorize =>
+  (access) => {
+    if (!canMcpUpdateTicket({ userId: auth.user.id, boardRole: access.boardRole, assigneeId: access.assigneeId })) {
+      throw errInvalidOperation()
+    }
+  }
+
 /**
  * MCP経由のチケット更新(フィールド編集 + ステータス変更)。
  * メンバーは他人が担当のチケットを更新できない(canMcpUpdateTicket)という追加制限を挟む。
@@ -225,13 +261,7 @@ export const updateTicketForMcp = async (
   input: McpUpdateTicketInput,
 ) => {
   const id = await resolveTicketId(auth, ticketIdOrDisplayId)
-  const ticket = await updateTicket(auth.user, id, input, {
-    authorize: (access) => {
-      if (!canMcpUpdateTicket({ userId: auth.user.id, boardRole: access.boardRole, assigneeId: access.assigneeId })) {
-        throw errInvalidOperation()
-      }
-    },
-  })
+  const ticket = await updateTicket(auth.user, id, input, { authorize: mcpUpdateAuthorize(auth) })
 
   logger.info({ userId: auth.user.id, id }, 'mcp ticket updated')
   return ticket
@@ -310,4 +340,31 @@ export const unlinkTicketArtifactForMcp = async (auth: ResourceAuth, linkId: str
 
   logger.info({ userId: auth.user.id, ticketId, linkId }, 'mcp ticket link removed')
   return { id: linkId }
+}
+
+/**
+ * 関連チケットを付ける。相手は同じボードのチケットだけ。親子は update_ticket の parentId で扱う
+ */
+export const linkRelatedTicketForMcp = async (
+  auth: ResourceAuth,
+  ticketIdOrDisplayId: string,
+  relatedTicketIdOrDisplayId: string,
+) => {
+  const ticketId = await resolveTicketId(auth, ticketIdOrDisplayId)
+  const result = await addTicketRelation(
+    auth.user,
+    { ticketId, target: relatedTicketIdOrDisplayId, kind: 'related' },
+    { authorize: mcpUpdateAuthorize(auth) },
+  )
+
+  logger.info({ userId: auth.user.id, ...result }, 'mcp related ticket linked')
+  return { ticketId, relatedTicketId: result.targetId }
+}
+
+/** 親子・関連を外す。relationId は get_ticket の parent / children / related から得る */
+export const unlinkTicketRelationForMcp = async (auth: ResourceAuth, relationId: string) => {
+  const result = await removeTicketRelation(auth.user, relationId, { authorize: mcpUpdateAuthorize(auth) })
+
+  logger.info({ userId: auth.user.id, ...result }, 'mcp ticket relation removed')
+  return { id: relationId }
 }

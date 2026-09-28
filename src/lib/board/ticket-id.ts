@@ -67,6 +67,9 @@ const DETAIL_PATH_PATTERN = /^\/tickets\/([^/]+)\/?$/
  */
 const UUID_V7_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
+/** チケットID(uuid v7)の形か。表示IDと両方を受ける入力の振り分けに使う */
+export const isTicketUuid = (raw: string): boolean => UUID_V7_PATTERN.test(raw.trim())
+
 /** 貼られた URL が指すチケット。引き方が変わるので参照の種類を持たせる */
 export type TicketUrlRef = { kind: 'displayId'; value: string } | { kind: 'ticketId'; value: string }
 

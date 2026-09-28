@@ -7,6 +7,7 @@
 import {
   ASSIGNEE_NONE,
   buildTicketWhere,
+  relationWhere,
   splitKeywords,
   tagNamesWhere,
   TICKET_SORT_COLUMNS,
@@ -167,6 +168,46 @@ describe('buildTicketWhere: 検索条件から Prisma where を組む', () => {
   it('assignee 未指定(すべて)では担当者の条件を付けない', () => {
     expect(buildTicketWhere(emptyParams, ctx).AND).toHaveLength(1)
     expect(buildTicketWhere({ ...emptyParams, assignee: undefined }, ctx).AND).toHaveLength(1)
+  })
+
+  it('relatedTo を指定すると関係の条件を付け、空文字なら付けない', () => {
+    expect(buildTicketWhere({ ...emptyParams, relatedTo: 'ABC-1', relation: 'child' }, ctx).AND).toContainEqual(
+      relationWhere('ABC-1', 'child'),
+    )
+    expect(buildTicketWhere({ ...emptyParams, relatedTo: '' }, ctx).AND).toHaveLength(1)
+  })
+
+  it('relation 未指定は子と関連の両方で絞る', () => {
+    expect(buildTicketWhere({ ...emptyParams, relatedTo: 'ABC-1' }, ctx).AND).toContainEqual(
+      relationWhere('ABC-1', 'all'),
+    )
+  })
+})
+
+describe('relationWhere: 関係するチケットの条件', () => {
+  const target = { number: 1, board: { key: 'ABC' } }
+
+  it('child は指定したチケットを親に持つもの', () => {
+    expect(relationWhere('abc-1', 'child')).toEqual({ relationsTo: { some: { type: 'parent', from: target } } })
+  })
+
+  it('related は向きを問わず関連付いたもの', () => {
+    expect(relationWhere('ABC-1', 'related')).toEqual({
+      OR: [
+        { relationsFrom: { some: { type: 'related', to: target } } },
+        { relationsTo: { some: { type: 'related', from: target } } },
+      ],
+    })
+  })
+
+  it('all は子と関連の OR', () => {
+    expect(relationWhere('ABC-1', 'all')).toEqual({
+      OR: [relationWhere('ABC-1', 'child'), relationWhere('ABC-1', 'related')],
+    })
+  })
+
+  it('表示IDとして読めない値は 0 件にする', () => {
+    expect(relationWhere('12', 'all')).toEqual({ id: { in: [] } })
   })
 })
 
