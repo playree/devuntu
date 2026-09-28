@@ -106,8 +106,12 @@ export const TicketSelectField: FC<{
       items={options}
       inputValue={inputValue}
       onInputChange={onInputChange}
-      // 選んだ候補は呼び出し側が入力欄へ反映するので、選択状態は持たない
-      value={null}
+      /**
+       * 選択値は入力値から導く(入力が表示IDと一致する候補を選択中とみなす)。
+       * null 固定だと選んでも選択値が変わらず閉じる処理が働かないうえ、呼び出し側が入力欄へ表示IDを入れた変化で
+       * 候補の一覧が開き直る
+       */
+      value={options.find((option) => option.displayId === inputValue)?.id ?? null}
       onChange={(key) => {
         const option = options.find((item) => item.id === key)
         if (option) {
