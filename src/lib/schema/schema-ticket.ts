@@ -238,6 +238,13 @@ export const scSearchRelationCandidates = z.object({
 })
 export type SearchRelationCandidates = z.infer<typeof scSearchRelationCandidates>
 
+/** 一覧の「関係するチケット」の候補検索。boardId が null なら可視ボード全体 */
+export const scSearchTicketCandidates = z.object({
+  keyword: z.string().trim().max(100).default(''),
+  boardId: z.uuidv7().nullish(),
+})
+export type SearchTicketCandidates = z.infer<typeof scSearchTicketCandidates>
+
 /** 子の順番の変更。id は親子の関係の ID */
 export const scUpdateTicketChildOrder = z.object({
   id: z.uuidv7(),

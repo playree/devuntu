@@ -19,7 +19,7 @@ import {
   removeTicketRelation as removeTicketRelationCore,
   updateTicketChildOrder as updateTicketChildOrderCore,
 } from '@/lib/board/ticket-relation'
-import { splitKeywords, ticketIdOrTitleWhere } from '@/lib/board/ticket-search'
+import { MAX_TICKET_CANDIDATES, TICKET_CANDIDATE_ORDER_BY, ticketCandidateWhere } from '@/lib/board/ticket-search'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
@@ -376,9 +376,6 @@ export const updateTicketChildOrder = safeAuthAction
     return result
   })
 
-/** 関係の相手の候補として返す件数 */
-const MAX_RELATION_CANDIDATES = 10
-
 /**
  * 関係の相手の候補(チケットを編集できる人)。同じボードの自分以外を、表示ID / 番号 / 件名で探す。
  * キーワードが空なら、完了以外で最近更新されたチケットを返す(検索したときは完了も候補に含める)
@@ -388,19 +385,12 @@ export const searchRelationCandidates = safeAuthAction
   .inputSchema(scSearchRelationCandidates)
   .action(async ({ ctx: { user }, parsedInput: { ticketId, keyword } }) => {
     const access = await assertTicketAccess(user, ticketId, 'edit')
-    const words = splitKeywords(keyword)
 
     const tickets = await prisma.ticket.findMany({
-      where: {
-        AND: [
-          { boardId: access.boardId },
-          { id: { not: ticketId } },
-          ...(words.length > 0 ? words.map(ticketIdOrTitleWhere) : [{ status: { not: 'done' as const } }]),
-        ],
-      },
+      where: { AND: [{ boardId: access.boardId }, { id: { not: ticketId } }, ...ticketCandidateWhere(keyword)] },
       select: { id: true, number: true, title: true, status: true, board: { select: { key: true } } },
-      orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
-      take: MAX_RELATION_CANDIDATES,
+      orderBy: TICKET_CANDIDATE_ORDER_BY,
+      take: MAX_TICKET_CANDIDATES,
     })
     return tickets.map(({ board, number, ...ticket }) => ({
       ...ticket,

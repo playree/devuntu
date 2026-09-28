@@ -89,6 +89,21 @@ export const ticketIdOrTitleWhere = (word: string): TicketWhereInput => ({
   OR: [...ticketIdConditions(word), { title: { contains: word, mode: 'insensitive' as const } }],
 })
 
+/** チケットの候補(関係の相手・関係するチケットの絞り込み)として返す件数 */
+export const MAX_TICKET_CANDIDATES = 10
+
+/** チケットの候補の並び順。最近触ったものを上に出す */
+export const TICKET_CANDIDATE_ORDER_BY: TicketOrderByWithRelationInput[] = [{ updatedAt: 'desc' }, { id: 'desc' }]
+
+/**
+ * チケットの候補の条件。表示ID / 番号 / 件名で探す。
+ * キーワードが空なら完了以外に絞る(検索したときは完了も候補に含める)
+ */
+export const ticketCandidateWhere = (keyword: string): TicketWhereInput[] => {
+  const words = splitKeywords(keyword)
+  return words.length > 0 ? words.map(ticketIdOrTitleWhere) : [{ status: { not: 'done' } }]
+}
+
 /** 1語ぶんの横断 OR 条件(表示ID / タイトル / 本文 / タグ / コメント) */
 const keywordOr = (word: string): TicketWhereInput => ({
   OR: [

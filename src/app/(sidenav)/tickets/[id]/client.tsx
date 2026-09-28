@@ -10,6 +10,7 @@ import { parseAction, useActionData } from '@/lib/action/action-client'
 import { PatchTicketIn } from '@/lib/schema/schema-ticket'
 import { useConfirmAction } from '@/lib/use-confirm-action'
 import { useLocale } from '@/locale/client'
+import { Accordion } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC, useState } from 'react'
 import { deleteTicket } from '../server'
@@ -175,11 +176,16 @@ export const TicketDetailClient: FC<{
 
       <TicketBody ticket={ticket} boardAssignees={boardAssignees} refresh={refreshAll} />
 
-      <TicketCriteria ticket={ticket} refresh={refreshAll} />
-
-      <TicketRelations ticket={ticket} refresh={refreshAll} />
-
-      <TicketLinks ticket={ticket} refresh={refreshAll} />
+      <Accordion // 本文とコメント以外は必要なときに開けばよいので、既定で閉じておく
+        allowsMultipleExpanded
+        hideSeparator
+        defaultExpandedKeys={[]}
+        className='pb-4'
+      >
+        <TicketCriteria ticket={ticket} refresh={refreshAll} />
+        <TicketRelations ticket={ticket} refresh={refreshAll} />
+        <TicketLinks ticket={ticket} refresh={refreshAll} />
+      </Accordion>
 
       <TicketComments ticket={ticket} mentionCandidates={boardAssignees} refresh={refreshAll} />
     </FlexCol>

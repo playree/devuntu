@@ -6,8 +6,10 @@ import { SingleSelectField } from '@/components/general/select'
 import { MultiTagField } from '@/components/general/tag-group'
 import { TagNameSelectField } from '@/components/ticket/tag-name-select'
 import { useTicketOptions } from '@/components/ticket/ticket-options'
+import { TicketSelectField, useTicketCandidates } from '@/components/ticket/ticket-select'
 import { UserSelectField, UserSelectOption } from '@/components/user-select'
 import type { BoardKind, TagColor } from '@/generated/prisma/enums'
+import { parseAction } from '@/lib/action/action-client'
 import type { AssigneeCandidate } from '@/lib/board/board-member'
 import { dedupeTagOptionsByName, MAX_TICKET_TAGS } from '@/lib/board/tag-rule'
 import { OPEN_TICKET_STATUSES, TICKET_PRIORITIES, TICKET_STATUSES } from '@/lib/board/ticket-enum'
@@ -15,7 +17,8 @@ import { TICKET_RELATION_FILTER_LOCALE, TICKET_RELATION_FILTERS } from '@/lib/bo
 import { ASSIGNEE_NONE } from '@/lib/board/ticket-search'
 import { TicketSearch, zRelatedTo } from '@/lib/schema/schema-ticket'
 import { useLocale } from '@/locale/client'
-import { FC, useState } from 'react'
+import { FC, useCallback, useState } from 'react'
+import { searchTicketCandidates } from './server'
 
 /** 検索条件の初期値(ステータスは完了以外を選択済み) */
 export const defaultTicketFilter: TicketSearch = {
@@ -64,8 +67,16 @@ export const TicketSearchPanel: FC<{
   // 同名(別ボード)は 1 チップに畳む
   const tagChoices = filter.boardId ? dedupeTagOptionsByName(tags.filter((tag) => tag.boardId === filter.boardId)) : []
 
-  // 絞り込み対象のボードのメンバーだけを候補にする(タグと同じ方針)。「すべて」は選択肢ではなく未選択で表す
   const boardId = filter.boardId ?? null
+
+  // 関係するチケットの候補も絞り込み対象のボードに合わせる
+  const fetchCandidates = useCallback(
+    (keyword: string) => parseAction(searchTicketCandidates({ keyword, boardId }), { handled: 'all' }),
+    [boardId],
+  )
+  const { candidates, isSearching, activate } = useTicketCandidates(fetchCandidates, relatedTo)
+
+  // 絞り込み対象のボードのメンバーだけを候補にする(タグと同じ方針)。「すべて」は選択肢ではなく未選択で表す
   const assigneeChoices: UserSelectOption[] = [
     { id: ASSIGNEE_NONE, name: t('unassigned'), hideAvatar: true },
     ...(boardId ? assignees.filter((user) => user.boardIds.includes(boardId)) : assignees),
@@ -166,17 +177,33 @@ export const TicketSearchPanel: FC<{
       </div>
 
       <div className='col-span-7 md:col-span-5'>
-        <InputSearchField
+        <TicketSelectField
           label={t('related_to_ticket')}
-          placeholder='ABC-12'
-          maxLength={20}
-          value={relatedTo}
-          onChange={(value) => {
+          aria-label={t('related_to_ticket')}
+          placeholder={t('search_ticket')}
+          options={candidates}
+          isLoading={isSearching}
+          inputValue={relatedTo}
+          onInputChange={(value) => {
             setRelatedTo(value)
             setRelatedToInvalid(false)
+            // 入力を消したら絞り込みも解除する
+            if (!value.trim() && filter.relatedTo) {
+              onChange({ ...filter, relatedTo: '' })
+            }
           }}
-          onSubmit={applyRelatedTo}
-          onClear={() => onChange({ ...filter, relatedTo: '' })}
+          onSelect={(option) => {
+            setRelatedTo(option.displayId)
+            setRelatedToInvalid(false)
+            onChange({ ...filter, relatedTo: option.displayId })
+          }}
+          onSubmit={() => applyRelatedTo(relatedTo)}
+          onClear={() => {
+            setRelatedTo('')
+            setRelatedToInvalid(false)
+            onChange({ ...filter, relatedTo: '' })
+          }}
+          onFocus={activate}
           errorMessage={isRelatedToInvalid ? t('@invalid_display_id') : undefined}
         />
       </div>

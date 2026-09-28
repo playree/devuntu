@@ -1,5 +1,6 @@
 'use client'
 
+import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton, SubmitButtons } from '@/components/general/button'
 import { CheckboxField } from '@/components/general/checkbox'
 import { FlexCol } from '@/components/general/flex'
@@ -212,37 +213,44 @@ export const TicketCriteria: FC<{ ticket: Ticket; refresh: () => Promise<void> }
   }
 
   return (
-    <FlexCol isSmart className='pb-4'>
-      <div className='flex flex-wrap items-center gap-x-2 gap-y-1'>
-        <ClipboardDocumentCheckIcon />
-        <span>
-          {t('acceptance_criteria')} ({criteria.length})
+    <AccordionSection
+      id='criteria'
+      icon={<ClipboardDocumentCheckIcon />}
+      title={
+        <span className='flex flex-wrap items-center gap-x-2 gap-y-1'>
+          <span>
+            {t('acceptance_criteria')} ({criteria.length})
+          </span>
+          {criteria.length > 0 && <span className='text-muted text-xs'>{t('criteria_summary', summary)}</span>}
         </span>
-        {criteria.length > 0 && <span className='text-muted text-xs'>{t('criteria_summary', summary)}</span>}
+      }
+      bodyClassName='px-0'
+    >
+      <FlexCol isSmart>
         {canEdit && !isEditing && (
-          <MultiButton
+          <MultiButton // 見出しは開閉のボタンなので、編集ボタンは中身の側に置く
             isIconOnly
             size='sm'
             variant='outline'
-            className='ml-auto'
+            className='self-end'
             tooltip={t('update')}
             icon={<PencilSquareIcon width={16} />}
             onPress={() => setEditing(true)}
           />
         )}
-      </div>
 
-      {isEditing ? (
-        <CriteriaEditor ticket={ticket} onClose={() => setEditing(false)} refresh={refresh} />
-      ) : criteria.length > 0 ? (
-        <ul className='space-y-2'>
-          {criteria.map((criterion) => (
-            <CriterionRow key={criterion.id} criterion={criterion} canEdit={canEdit} refresh={refresh} />
-          ))}
-        </ul>
-      ) : (
-        <span className='text-muted text-sm'>{t('msg_no_criteria')}</span>
-      )}
-    </FlexCol>
+        {isEditing ? (
+          <CriteriaEditor ticket={ticket} onClose={() => setEditing(false)} refresh={refresh} />
+        ) : criteria.length > 0 ? (
+          <ul className='space-y-2'>
+            {criteria.map((criterion) => (
+              <CriterionRow key={criterion.id} criterion={criterion} canEdit={canEdit} refresh={refresh} />
+            ))}
+          </ul>
+        ) : (
+          <span className='text-muted text-sm'>{t('msg_no_criteria')}</span>
+        )}
+      </FlexCol>
+    </AccordionSection>
   )
 }

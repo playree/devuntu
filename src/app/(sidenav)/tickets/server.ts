@@ -8,12 +8,19 @@ import { listVisibleTags, rethrowDuplicatedTagName, TAG_SELECT } from '@/lib/boa
 import { MAX_TAGS_PER_SCOPE, nextOrder } from '@/lib/board/tag-rule'
 import { ticketDisplayId } from '@/lib/board/ticket-id'
 import { createTicket as createTicketCore, deleteTicket as deleteTicketCore } from '@/lib/board/ticket-mutation'
-import { buildTicketWhere, ticketListOrderBy } from '@/lib/board/ticket-search'
+import {
+  buildTicketWhere,
+  MAX_TICKET_CANDIDATES,
+  TICKET_CANDIDATE_ORDER_BY,
+  ticketCandidateWhere,
+  ticketListOrderBy,
+  ticketScopeWhere,
+} from '@/lib/board/ticket-search'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { scUUID } from '@/lib/schema/schema'
-import { scCreateTag, scCreateTicket, scTicketListQuery } from '@/lib/schema/schema-ticket'
+import { scCreateTag, scCreateTicket, scSearchTicketCandidates, scTicketListQuery } from '@/lib/schema/schema-ticket'
 
 /** チケット一覧・詳細で共有する select。TicketTag を平坦化するために使う */
 const TICKET_TAGS_SELECT = { select: { tag: { select: TAG_SELECT } }, orderBy: { tag: { order: 'asc' } } } as const
@@ -76,6 +83,34 @@ export const getTickets = safeAuthAction
     }
   })
 export type GetTicketsReturnType = Awaited<ReturnType<typeof getTickets>>['data']
+
+/**
+ * 「関係するチケット」の絞り込みの候補。可視ボード(boardId 指定時はそのボード)のチケットを表示ID / 番号 / 件名で探す。
+ * キーワードが空なら、完了以外で最近更新されたチケットを返す
+ */
+export const searchTicketCandidates = safeAuthAction
+  .metadata({ actionName: 'searchTicketCandidates', role: 'user' })
+  .inputSchema(scSearchTicketCandidates)
+  .action(async ({ ctx: { user }, parsedInput: { keyword, boardId } }) => {
+    const accessibleBoardIds = await getAccessibleBoardIds(user.id)
+
+    const tickets = await prisma.ticket.findMany({
+      where: {
+        AND: [
+          ticketScopeWhere(accessibleBoardIds),
+          ...(boardId ? [{ boardId }] : []),
+          ...ticketCandidateWhere(keyword),
+        ],
+      },
+      select: { id: true, number: true, title: true, status: true, board: { select: { key: true } } },
+      orderBy: TICKET_CANDIDATE_ORDER_BY,
+      take: MAX_TICKET_CANDIDATES,
+    })
+    return tickets.map(({ board, number, ...ticket }) => ({
+      ...ticket,
+      displayId: ticketDisplayId({ key: board.key, number }),
+    }))
+  })
 
 /**
  * チケットのフォーム / 検索パネル用の選択肢
