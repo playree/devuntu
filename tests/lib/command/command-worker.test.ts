@@ -84,18 +84,21 @@ describe('startCommandWorker', () => {
     expect(processOnce).not.toHaveBeenCalled()
   })
 
-  it('初回の遅延とは別に、起動時から間隔ごとに回る', async () => {
+  it('初回の遅延までは回らず、その後から間隔ごとに回る', async () => {
     const { startCommandWorker } = await loadWorker()
 
     startCommandWorker()
+    await vi.advanceTimersByTimeAsync(COMMAND_START_DELAY_MS - 1)
     expect(mocks.runCommandDispatch).not.toHaveBeenCalled()
 
-    await vi.advanceTimersByTimeAsync(COMMAND_TICK_MS)
+    await vi.advanceTimersByTimeAsync(1)
     expect(mocks.runCommandDispatch).toHaveBeenCalledTimes(1)
 
-    const intervalRuns = Math.floor(COMMAND_START_DELAY_MS / COMMAND_TICK_MS)
-    await vi.advanceTimersByTimeAsync(COMMAND_START_DELAY_MS - COMMAND_TICK_MS)
-    expect(mocks.runCommandDispatch, '遅延後の初回の分が 1 回足される').toHaveBeenCalledTimes(intervalRuns + 1)
+    await vi.advanceTimersByTimeAsync(COMMAND_TICK_MS - 1)
+    expect(mocks.runCommandDispatch).toHaveBeenCalledTimes(1)
+
+    await vi.advanceTimersByTimeAsync(1)
+    expect(mocks.runCommandDispatch).toHaveBeenCalledTimes(2)
   })
 
   it('1 tick が失敗しても次の周は動く', async () => {
@@ -103,7 +106,7 @@ describe('startCommandWorker', () => {
     const { startCommandWorker } = await loadWorker()
 
     startCommandWorker()
-    await vi.advanceTimersByTimeAsync(COMMAND_TICK_MS * 2)
+    await vi.advanceTimersByTimeAsync(COMMAND_START_DELAY_MS + COMMAND_TICK_MS)
 
     expect(mocks.runCommandDispatch).toHaveBeenCalledTimes(2)
   })
