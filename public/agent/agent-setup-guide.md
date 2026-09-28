@@ -1,27 +1,27 @@
-# Devuntu Agent のセットアップ
+# Devuntu Agent Setup
 
-担当チケットが積まれたら自動で AI エージェントの CLI が起動するようにする。
-この手順は**エージェントを動かすマシン**で実行する(devuntu のサーバー側では何もしない)。
+Set things up so that an AI agent CLI starts automatically when tickets are assigned to the agent.
+Run these steps on **the machine that runs the agent** (nothing is done on the devuntu server).
 
-常駐プロセスは作らない。cron が {{intervalMinutes}} 分おきに単発のスクリプトを起動し、
-そのスクリプトが devuntu へ「処理すべきチケットがあるか」を聞く。あれば CLI を起動する。
+There is no resident process. cron starts a one-shot script every {{intervalMinutes}} minutes,
+and the script asks devuntu whether there are tickets to process. If there are, it starts the CLI.
 
-## 事前に用意するもの
+## Prerequisites
 
-- **使う CLI**: この手順は **{{cliLabel}}**(`{{cliKind}}`)で動かす前提で書いてある。
-  チケットの処理内容そのものは devuntu 側(MCP)から読ませるため、どちらの CLI でも動きは変わらない
-- **エージェント用のトークン**: devuntu の管理者が `{{baseUrl}}/admin/agents` で発行する
-  (`devuntu_agent_` で始まる文字列。発行時に一度しか表示されない)
-- **作業ディレクトリ**: リポジトリを clone して作業させるための基点ディレクトリ。
-  ランナー本体・設定・ログもこの配下に置くので、1 エージェントの構成はこのディレクトリだけで完結する
+- **CLI**: these steps assume the agent runs on **{{cliLabel}}** (`{{cliKind}}`).
+  What to do with each ticket is read from devuntu (MCP), so the behavior is the same with either CLI
+- **Agent token**: issued by a devuntu administrator at `{{baseUrl}}/admin/agents`
+  (a string starting with `devuntu_agent_`, shown only once when issued)
+- **Working directory**: the base directory where the agent clones repositories to work on.
+  The runner, its configuration, and its logs also live under it, so one agent is fully contained in this directory
 
-トークンを書くのは設定ファイル(`.devuntu-agent/config.json`)の 1 箇所だけで、MCP の設定ファイルには
-環境変数 `DEVUNTU_AGENT_TOKEN` の参照だけを書く。ランナーが CLI を起動するときにこの環境変数を渡す。
+The token is written in only one place, the configuration file (`.devuntu-agent/config.json`). The MCP
+configuration only references the environment variable `DEVUNTU_AGENT_TOKEN`, which the runner passes when it starts the CLI.
 
-## 1. 前提コマンドの確認
+## 1. Check the required commands
 
 ```sh
-python3 --version   # 3.9 以上
+python3 --version   # 3.9 or later
 git --version
 ```
 
@@ -29,7 +29,7 @@ git --version
 
 ```sh
 claude --version
-command -v claude   # 実体の場所。cron で見つからないときに使う
+command -v claude   # Actual location. Use it when cron cannot find the command
 ```
 
 <!-- /cli -->
@@ -37,31 +37,31 @@ command -v claude   # 実体の場所。cron で見つからないときに使�
 
 ```sh
 codex --version
-command -v codex    # 実体の場所。cron で見つからないときに使う
+command -v codex    # Actual location. Use it when cron cannot find the command
 ```
 
 <!-- /cli -->
 
-足りないものがあれば先に入れる。
+Install anything that is missing first.
 
-cron はシェルの設定ファイル(`.bashrc` など)を読まないため、ここで見えている PATH は cron には
-引き継がれない。この差は手順 5 の `save-path` で埋める。
+cron does not read shell configuration files (such as `.bashrc`), so the PATH you see here is not
+inherited by cron. Step 5 (`save-path`) closes this gap.
 
-`gh`(GitHub CLI)は必須ではない。事後作業で `gh pr create` により PR を自動作成させたい場合のみ、
-別途インストールする。
+`gh` (GitHub CLI) is not required. Install it separately only if you want post-work instructions to create
+PRs automatically with `gh pr create`.
 
-## 2. 作業ディレクトリを用意する
+## 2. Prepare the working directory
 
-対応するリポジトリは 1 つとは限らないので、`~/devuntu-agent-work` は特定のリポジトリを
-クローンする場所ではなく、必要なリポジトリをその配下にクローンして使う**基点ディレクトリ**にする。
-どのリポジトリを対象にするかは、チケットの内容や事前作業(手順7)の指示からエージェントが判断する。
+The agent may work on more than one repository, so `~/devuntu-agent-work` is not a clone of a specific
+repository but a **base directory** under which the needed repositories are cloned.
+The agent decides which repository to work on from the ticket content and the pre-work instructions (step 7).
 
-人が作業しているディレクトリとは共有しない。未コミットの変更を巻き込んだり、
-ブランチを取り合ったりする。
+Do not share it with a directory a person works in. The agent could pick up uncommitted changes
+or fight over branches.
 
-ランナー本体・設定ファイル・ログ・ロックファイルは、この直下の `.devuntu-agent` にまとめて置く。
-同じマシンで複数のエージェントを動かす場合は、作業ディレクトリごとにこの一式を持たせる
-(「同じマシンに複数のエージェントを置く」を参照)。
+The runner, configuration file, logs, and lock file are kept together in `.devuntu-agent` directly under it.
+To run multiple agents on the same machine, give each working directory its own set
+(see "Running multiple agents on the same machine").
 
 ```sh
 mkdir -p ~/devuntu-agent-work/.devuntu-agent
@@ -69,24 +69,24 @@ cd ~/devuntu-agent-work
 grep -qxF '.devuntu-agent' .gitignore 2>/dev/null || echo '.devuntu-agent' >> .gitignore
 ```
 
-`.devuntu-agent` にはトークンを平文で持つ設定ファイルが入る。作業ディレクトリ自体を git で
-管理する場合にコミットしてしまわないよう、`.gitignore` に入れておく(ファイルが無ければ作られる)。
+`.devuntu-agent` contains a configuration file holding the token in plain text. Add it to `.gitignore` so it
+is not committed if the working directory itself is managed with git (the file is created if missing).
 
-## 3. MCP を登録する
+## 3. Register the MCP server
 
-エージェントのトークンで devuntu の MCP を登録する。この経路ではブラウザでのログインと同意は起きない。
-設定は**作業ディレクトリ直下**に置く。cron からは常にこのディレクトリを作業起点にして CLI を起動するため、
-ここに置けばどのリポジトリを処理する際にも読み込まれる。
+Register the devuntu MCP server with the agent token. This path does not involve browser login or consent.
+Put the configuration **directly under the working directory**. cron always starts the CLI from this directory,
+so the configuration is loaded no matter which repository is being processed.
 
-トークンそのものは書かず、ランナーが渡す環境変数 `DEVUNTU_AGENT_TOKEN` を参照させる。
-トークンの在処が手順5の `config.json` だけになるので、再発行のときに直す場所も 1 箇所で済む。
+Do not write the token itself; reference the environment variable `DEVUNTU_AGENT_TOKEN` passed by the runner.
+The token then lives only in `config.json` from step 5, so there is only one place to update when it is reissued.
 
-**設定ファイルは上書きせず追記する。** 他の MCP サーバーの設定が同居していることがあるため。
+**Append to the configuration file instead of overwriting it.** It may contain settings for other MCP servers.
 
 <!-- cli:claude -->
 
-`.mcp.json` に保存する(`--scope project`)。`${DEVUNTU_AGENT_TOKEN}` という文字列のまま保存したいので、
-シェルに展開させないようシングルクォートで囲む。
+Save it to `.mcp.json` (`--scope project`). The literal string `${DEVUNTU_AGENT_TOKEN}` must be saved,
+so wrap it in single quotes to keep the shell from expanding it.
 
 ```sh
 cd ~/devuntu-agent-work
@@ -95,17 +95,17 @@ claude mcp add --transport http devuntu-agent {{mcpUrl}} \
   --header 'Authorization: Bearer ${DEVUNTU_AGENT_TOKEN}'
 ```
 
-Claude Code は読み込み時にこの記法を環境変数へ展開するため、`.mcp.json` に秘密情報は残らない。
-`cat .mcp.json` で `${DEVUNTU_AGENT_TOKEN}` が展開されずに入っていることを確認する
-(展開された値が入っていた場合は、その部分を `${DEVUNTU_AGENT_TOKEN}` に書き換える)。
+Claude Code expands this notation to the environment variable when loading, so no secret remains in `.mcp.json`.
+Check with `cat .mcp.json` that `${DEVUNTU_AGENT_TOKEN}` is stored unexpanded
+(if the expanded value was stored, replace it with `${DEVUNTU_AGENT_TOKEN}`).
 
-作業ディレクトリの中で `claude mcp list` を実行し、`devuntu-agent` が出ることを確認する
-(project スコープの設定はカレントディレクトリに紐づくため、別の場所で実行すると出てこない)。
-この時点ではシェルに `DEVUNTU_AGENT_TOKEN` が無いため接続は失敗する。それでよい(手順6で確認する)。
+Run `claude mcp list` inside the working directory and confirm that `devuntu-agent` appears
+(project-scoped settings are tied to the current directory, so they do not appear when run elsewhere).
+At this point the shell has no `DEVUNTU_AGENT_TOKEN`, so the connection fails. That is expected (it is verified in step 6).
 <!-- /cli -->
 <!-- cli:codex -->
 
-`.codex/config.toml` に次のブロックを足す(ファイルが無ければ作られる)。
+Add the following block to `.codex/config.toml` (the file is created if missing).
 
 ```sh
 cd ~/devuntu-agent-work
@@ -118,12 +118,12 @@ bearer_token_env_var = "DEVUNTU_AGENT_TOKEN"
 TOML
 ```
 
-TOML は同じテーブルを 2 回定義できず、重複すると codex が設定ファイルを読めなくなる。
-そのため既にブロックがある場合は追記しないようにしてある。URL やトークンの環境変数名を変えたいときは、
-このコマンドではなく既存のブロックを直接書き換える。
+TOML does not allow defining the same table twice, and a duplicate makes codex unable to read the configuration file.
+That is why the command does not append when the block already exists. To change the URL or the token
+environment variable name, edit the existing block directly instead of using this command.
 
-Codex はプロジェクト側の設定を**信頼済みのディレクトリでしか読まない**ので、ユーザー設定
-(`~/.codex/config.toml`)にも作業ディレクトリを信頼する 1 行を足す。
+Codex **reads project configuration only in trusted directories**, so also add a line to the user configuration
+(`~/.codex/config.toml`) that trusts the working directory.
 
 ```sh
 mkdir -p ~/.codex
@@ -134,15 +134,15 @@ trust_level = "trusted"
 TOML
 ```
 
-作業ディレクトリの中で `codex mcp list` を実行し、`devuntu-agent` が出ることを確認する。
+Run `codex mcp list` inside the working directory and confirm that `devuntu-agent` appears.
 
-そのマシンで人が Codex を使わない(エージェント専用機)なら、プロジェクト側には置かず
-`codex mcp add --url {{mcpUrl}} --bearer-token-env-var DEVUNTU_AGENT_TOKEN devuntu-agent` の
-1 コマンドでユーザー設定へ登録してもよい。この場合は信頼の設定も要らないが、
-人が普段使う Codex のセッションにも `devuntu-agent` が出続ける。
+If no person uses Codex on that machine (a dedicated agent machine), you may instead register it in the user
+configuration with the single command
+`codex mcp add --url {{mcpUrl}} --bearer-token-env-var DEVUNTU_AGENT_TOKEN devuntu-agent`.
+No trust setting is needed in that case, but `devuntu-agent` will also show up in Codex sessions a person uses.
 <!-- /cli -->
 
-## 4. ランナーを取得する
+## 4. Fetch the runner
 
 ```sh
 cd ~/devuntu-agent-work
@@ -151,23 +151,23 @@ chmod +x .devuntu-agent/devuntu_agent.py
 python3 .devuntu-agent/devuntu_agent.py --version
 ```
 
-ランナーは起動のたびにこの URL から最新版を取得し、差分があれば自分自身を書き換える。
-書き換えた回は旧バージョンのままチケットを処理してしまわないよう、処理を行わずにそのまま終了する。
-常駐プロセスではないため再起動や cron の再登録は不要で、次回の cron 起動から新しいバージョンで処理される。
-無効化したい場合は `config.json` に `"self_update": false` を設定する。
+Each time the runner starts, it fetches the latest version from this URL and rewrites itself if there is a difference.
+On a run where it rewrites itself, it exits without processing so that the old version does not process tickets.
+Since it is not a resident process, no restart or cron re-registration is needed; the next cron run uses the new version.
+To disable this, set `"self_update": false` in `config.json`.
 
-## 5. 設定ファイルを作る
+## 5. Create the configuration file
 
-トークンを平文で持つので、パーミッションは必ず 600 にする。
+It holds the token in plain text, so always set the permissions to 600.
 
-設定ファイルはランナー本体と同じ `.devuntu-agent` に置く。ランナーは自分の隣にある
-`config.json` を読むので、cron 行にパスを書き足す必要はない。
+Put the configuration file in `.devuntu-agent`, next to the runner. The runner reads the `config.json`
+next to itself, so there is no need to add a path to the cron line.
 
 ```sh
 cat > ~/devuntu-agent-work/.devuntu-agent/config.json <<'JSON'
 {
   "base_url": "{{baseUrl}}",
-  "token": "<発行したトークン>",
+  "token": "<issued token>",
   "cli": {
     "kind": "{{cliKind}}",
     "path": [],
@@ -179,111 +179,111 @@ JSON
 chmod 600 ~/devuntu-agent-work/.devuntu-agent/config.json
 ```
 
-`bin` / `args` / `model` は CLI ごとの既定値があるので、変えたいときだけ書く。
+`bin` / `args` / `model` have per-CLI defaults, so write them only when you want to change them.
 
-- `workdir`: 作業ディレクトリ。省略すると `.devuntu-agent` の 1 つ上(手順2で作ったディレクトリ)を
-  使うので、通常は書かない。別の場所を作業起点にしたいときだけ絶対パスで指定する
-- `cli.kind`: 起動する CLI の種類。この手順では `{{cliKind}}`({{cliLabel}})
-- `cli.bin`: 実行コマンド。省略すると `cli.kind` と同じ値(`{{cliKind}}`)を使う
-- `cli.args`: cron からは権限確認に誰も答えられないので、既定は自動承認にしてある。
+- `workdir`: working directory. When omitted, the parent of `.devuntu-agent` (the directory created in step 2)
+  is used, so normally leave it out. Specify an absolute path only to start from a different location
+- `cli.kind`: kind of CLI to start. In these steps, `{{cliKind}}` ({{cliLabel}})
+- `cli.bin`: command to run. When omitted, the same value as `cli.kind` (`{{cliKind}}`) is used
+- `cli.args`: no one can answer permission prompts under cron, so the default auto-approves.
 
 <!-- cli:claude -->
 
-- 既定は `--permission-mode auto`(ファイル編集に限らず Bash 含むツール利用全般を自動承認)
+- The default is `--permission-mode auto` (auto-approves all tool use including Bash, not just file edits)
 
 <!-- /cli -->
 <!-- cli:codex -->
 
-- 既定は `--sandbox danger-full-access --skip-git-repo-check`。作業ディレクトリは clone の基点で
-  git リポジトリではないため、`--skip-git-repo-check` を外すと codex は起動を拒否する
+- The default is `--sandbox danger-full-access --skip-git-repo-check`. The working directory is the base for
+  clones and not a git repository, so codex refuses to start without `--skip-git-repo-check`
 
 <!-- /cli -->
 
-- **注意**: この既定値は**エージェント専用ホストで動かすことを前提**にしている。エージェントが読む
-  チケット本文・コメントの内容がそのままエージェントへの指示になり得るため、既定のままだと
-  悪意ある(または誤った)チケット内容から、作業ディレクトリの外のファイル操作や外部通信まで
-  無条件に実行され得る。人が普段使うマシンや、エージェントに触らせたくない鍵・認証情報がある
-  ホストでは動かさないこと。エージェントに割り当てるチケットを作成・コメントできる範囲を
-  信頼できる人に限定するなど、リスクは運用側で判断する。より制限したい場合は、
+- **Caution**: these defaults **assume the agent runs on a dedicated host**. The ticket content and comments
+  the agent reads can act directly as instructions to the agent, so with the defaults, malicious (or mistaken)
+  ticket content can make it perform file operations outside the working directory and external communication
+  without restriction. Do not run it on a machine people use daily, or on a host with keys or credentials
+  the agent should not touch. Judge the risk operationally, for example by limiting who can create or comment on
+  tickets assigned to the agent to trusted people. To restrict it further,
 
 <!-- cli:claude -->
 
-    `--permission-mode acceptEdits`(編集のみ自動承認)や `--disallowedTools` に変える
+    switch to `--permission-mode acceptEdits` (auto-approve edits only) or `--disallowedTools`
 
 <!-- /cli -->
 <!-- cli:codex -->
 
-    `--sandbox workspace-write -c sandbox_workspace_write.network_access=true` に変える
-    (`--skip-git-repo-check` は残す)。`workspace-write` は既定でネットワークを遮断するため
-    `network_access=true` を併せて指定しないと `git clone` や依存関係のインストールが失敗する。
-    `~/.npm` や `~/.cache` などワークスペース外への書き込みも弾かれるので、エージェントに
-    ビルドまでさせる場合はそこで詰まらないかを確認してから使う
+    switch to `--sandbox workspace-write -c sandbox_workspace_write.network_access=true`
+    (keep `--skip-git-repo-check`). `workspace-write` blocks the network by default, so without
+    `network_access=true`, `git clone` and dependency installation fail.
+    Writes outside the workspace such as `~/.npm` or `~/.cache` are also rejected, so if the agent builds
+    the project, check that it does not get stuck there before using it
 
-- ここに `-c <キー>=<値>` を足すと codex の設定を上書きできる(繰り返し可)。よく使うのは
-  推論の強さで、`-c model_reasoning_effort="high"`(`minimal` / `low` / `medium` / `high` / `xhigh`)。
-  モデルと推論設定をまとめて切り替えたい場合は `--profile <名前>`
-  (`~/.codex/<名前>.config.toml` が基本設定に重なる)
+- Add `-c <key>=<value>` here to override codex settings (repeatable). A common one is
+  reasoning effort, `-c model_reasoning_effort="high"` (`minimal` / `low` / `medium` / `high` / `xhigh`).
+  To switch model and reasoning settings together, use `--profile <name>`
+  (`~/.codex/<name>.config.toml` is layered over the base settings)
 
 <!-- /cli -->
 <!-- cli:claude -->
 
-- `cli.model`: 使用するモデル。既定は `opus`。`sonnet` / `fable` など `--model` が受け付ける
-  エイリアスを指定できる
+- `cli.model`: model to use. Defaults to `opus`. Any alias accepted by `--model`, such as `sonnet` / `fable`,
+  can be specified
 
 <!-- /cli -->
 <!-- cli:codex -->
 
-- `cli.model`: 使用するモデル。既定は持たない。指定する場合は `"model": "gpt-5.5"` のように
-  モデル名をそのまま書く(`codex exec --model <値>` として渡る)。省略した場合は
-  `~/.codex/config.toml` の `model`、それも無ければ codex の既定モデルが使われる
+- `cli.model`: model to use. No default. To specify one, write the model name as is, like `"model": "gpt-5.5"`
+  (passed as `codex exec --model <value>`). When omitted, `model` in `~/.codex/config.toml` is used,
+  or the codex default model if that is not set either
 
 <!-- /cli -->
 
-- `cli.path`: CLI を起動するときに PATH の先頭へ足すディレクトリ。空のままにしておき、
-  次の `save-path` で入れる(手で書くのは特殊な配置のときだけ)。この PATH は CLI 自身にも
-  渡るので、エージェントが叩く `git` / `node` / `pnpm` / `gh` の解決にも効く
-- `cli.env`: CLI へ渡す追加の環境変数(例: `{"GH_TOKEN": "..."}`)。cron 実行では
-  シェルで export している変数が引き継がれないため、必要なものはここに書く。
-  MCP の設定が参照する `DEVUNTU_AGENT_TOKEN` はランナーが `token` から自動で渡すので、書かなくてよい
-- `timeout_sec`: これを超えた CLI は打ち切り、実行は失敗として記録される
+- `cli.path`: directories prepended to PATH when starting the CLI. Leave it empty and fill it with
+  `save-path` below (write it by hand only for unusual setups). This PATH is also passed to the CLI itself,
+  so it also resolves `git` / `node` / `pnpm` / `gh` that the agent runs
+- `cli.env`: extra environment variables passed to the CLI (e.g. `{"GH_TOKEN": "..."}`). Under cron,
+  variables exported in the shell are not inherited, so write the ones you need here.
+  `DEVUNTU_AGENT_TOKEN`, referenced by the MCP configuration, is passed automatically by the runner from `token`, so you do not need to write it
+- `timeout_sec`: a CLI running longer than this is stopped and the run is recorded as failed
 
-設定を作ったら、いま使っているシェルの PATH をそのまま設定に取り込む。
+After creating the configuration, import the PATH of your current shell into it as is.
 
 ```sh
 python3 ~/devuntu-agent-work/.devuntu-agent/devuntu_agent.py save-path
 ```
 
-cron はシェルの設定ファイルを読まないので、cron の PATH は `/usr/bin:/bin` 程度しかない。
-このコマンドは、CLI も `git` も見つかっている**いまのシェルの PATH**(実在するディレクトリのみ)を
-`cli.path` に保存する。ランナーはこれを PATH の先頭に置いてから CLI を起動するため、
-cron からでもこのシェルと同じようにコマンドを解決できる。
+cron does not read shell configuration files, so cron's PATH is only about `/usr/bin:/bin`.
+This command saves **the PATH of the current shell**, where the CLI and `git` are found (existing directories only),
+to `cli.path`. The runner prepends it to PATH before starting the CLI,
+so commands resolve under cron the same way as in this shell.
 
-保存したディレクトリと CLI の見つかった場所が表示される。
-`... not found` と出た場合は、そのシェルでその CLI が使えていない。
+The saved directories and the location where the CLI was found are shown.
+If you see `... not found`, that CLI is not available in the shell.
 
-node のバージョンを上げた、CLI を入れ直したなど PATH が変わったときは、もう一度実行する。
-(`save-path` を実行しなくても、ランナーは `~/.local/bin` や nvm の node など主なインストール先を
-自分で探しにいく。`save-path` はそれを確実にするためのもの)
+Run it again whenever PATH changes, for example after upgrading node or reinstalling the CLI.
+(Even without `save-path`, the runner looks in common install locations such as `~/.local/bin` and nvm's node
+by itself. `save-path` makes it reliable.)
 
-## 6. 疎通を確認する
+## 6. Check connectivity
 
 ```sh
 python3 ~/devuntu-agent-work/.devuntu-agent/devuntu_agent.py poll --dry-run
 ```
 
-出力の読み方:
+How to read the output:
 
-- `run conditions not met: reason=no_runner` → 管理画面で自動運用がまだ設定されていない(次の手順へ)
-- `run conditions not met: reason=disabled` → 設定はあるが無効。管理画面で有効にする
-- `run conditions not met: reason=outside_hours` → 稼働許可時間帯の外。設定どおりの動き
-- `run conditions not met: reason=daily_limit` / `reason=monthly_budget` → 1日の処理上限 / 月の予算上限に達した。設定どおりの動き
-- `no tickets to process` → 疎通も稼働条件も問題なし
-- `dry-run: would process ... with /path/to/{{cliKind}}` → 起動する CLI の場所まで確認できている
-- `{{cliKind}} not found (PATH=...)` → CLI を見つけられない。`cli.path` か `cli.bin` を設定する
-- `401` が返る → トークンが違う(または再発行されて古くなった)
+- `run conditions not met: reason=no_runner` → automation is not configured yet in the admin screen (see the next step)
+- `run conditions not met: reason=disabled` → configured but disabled. Enable it in the admin screen
+- `run conditions not met: reason=outside_hours` → outside the allowed hours. Working as configured
+- `run conditions not met: reason=daily_limit` / `reason=monthly_budget` → the daily run limit / monthly budget has been reached. Working as configured
+- `no tickets to process` → connectivity and run conditions are fine
+- `dry-run: would process ... with /path/to/{{cliKind}}` → confirmed down to the location of the CLI to start
+- `{{cliKind}} not found (PATH=...)` → the CLI cannot be found. Set `cli.path` or `cli.bin`
+- `401` is returned → the token is wrong (or it was reissued and is outdated)
 
-MCP 側の疎通(トークンが CLI へ渡り、devuntu へ接続できるか)は、環境変数を読み込んでから
-CLI の一覧コマンドで確認する。
+To check the MCP side (whether the token reaches the CLI and it can connect to devuntu), load the environment
+variables and then run the CLI's list command.
 
 ```sh
 cd ~/devuntu-agent-work
@@ -291,28 +291,28 @@ eval "$(python3 .devuntu-agent/devuntu_agent.py env)"
 {{cliKind}} mcp list
 ```
 
-`env` サブコマンドは、ランナーが CLI へ渡しているのと同じ環境変数(`DEVUNTU_AGENT_TOKEN` と PATH)を
-`export` 形式で出す。手でエージェントを動かして確かめるときも、先にこれを実行しておく。
+The `env` subcommand prints the same environment variables the runner passes to the CLI (`DEVUNTU_AGENT_TOKEN` and PATH)
+in `export` form. Run it first whenever you run the agent by hand to check things.
 
-## 7. 管理画面で自動運用を設定する
+## 7. Configure automation in the admin screen
 
-`{{baseUrl}}/admin/agents` でエージェントの行の「自動運用」を開き、次を設定する。
+At `{{baseUrl}}/admin/agents`, open automation for the agent's row and set the following.
 
-- **有効**: オンにする
-- **稼働許可時間帯**: 夜間だけ動かすなど。未指定なら終日
-- **ポーリング間隔**: cron の間隔と揃える(選べる値: {{pollIntervalOptions}})
-- **既定の処理方式**: チケット側で指定が無いときの方式
-- **事前作業 / 事後作業**: エージェントがチケットの処理前後に読む指示。例:
-  - 事前作業: `チケット本文からリポジトリを判断し、~/devuntu-agent-work 配下に無ければ clone、
-あれば git pull してチケットの表示IDでブランチを作る`
-  - 事後作業: `lint とビルドを通し、gh pr create で PR を作る`
+- **Enabled**: turn it on
+- **Allowed hours**: e.g. run only at night. Unset means all day
+- **Poll interval**: match the cron interval (available values: {{pollIntervalOptions}})
+- **Default mode**: the mode used when the ticket does not specify one
+- **Pre-work / post-work**: instructions the agent reads before and after processing a ticket. Examples:
+  - Pre-work: `Determine the repository from the ticket content; clone it under ~/devuntu-agent-work if missing,
+otherwise git pull, then create a branch named after the ticket display ID`
+  - Post-work: `Make lint and the build pass, then create a PR with gh pr create`
 
-## 8. cron に登録する
+## 8. Register with cron
 
-多重起動の防止はランナー自身が `.devuntu-agent/agent.lock` で行う。前回の CLI がまだ動いていれば、
-その回は何もせず終わる。ロックは作業ディレクトリごとに分かれるので、同じマシンの別のエージェントとは
-干渉しない。cron 行はランナーを実行するだけにし、排他の仕組みを cron 側に足さない
-(ランナー側のロックと二重になり、ランナー側の取得が毎回失敗して常にスキップされてしまうため)。
+The runner itself prevents concurrent runs with `.devuntu-agent/agent.lock`. If the previous CLI is still running,
+that run does nothing and exits. The lock is per working directory, so it does not interfere with other agents on
+the same machine. Keep the cron line to just running the runner and do not add a locking mechanism on the cron side
+(it would double up with the runner's lock, the runner would fail to acquire it every time, and every run would be skipped).
 
 ```sh
 ( crontab -l 2>/dev/null; \
@@ -321,81 +321,81 @@ eval "$(python3 .devuntu-agent/devuntu_agent.py env)"
 crontab -l
 ```
 
-cron 行に PATH を書き足す必要は無い。手順 5 の `save-path` で保存した PATH を
-ランナーが CLI に渡す。それでも `not found` になる場合は、`config.json` の
-`cli.bin` に `command -v {{cliKind}}` で確認した絶対パスを書く。
+There is no need to add PATH to the cron line. The runner passes the PATH saved by `save-path` in step 5
+to the CLI. If you still get `not found`, write the absolute path found with `command -v {{cliKind}}`
+to `cli.bin` in `config.json`.
 
-ログは `~/devuntu-agent-work/.devuntu-agent/agent.log`(1MB で 3 世代までローテート)。
+The log is `~/devuntu-agent-work/.devuntu-agent/agent.log` (rotated at 1MB, up to 3 generations).
 
-## 9. 動かしてみる
+## 9. Try it
 
-1. devuntu でチケットを作り、担当をエージェントにする
-2. チケット詳細の「エージェント」で処理方式を選ぶ
-   - **プラン先行**: プランを投稿して一旦終了し、返信を待つ。返信すると続きを処理する
-   - **自動実行**: プランを作らずに対応して報告する
-3. 次の cron を待つ(すぐ試すなら `python3 ~/devuntu-agent-work/.devuntu-agent/devuntu_agent.py poll` を手で実行)
-4. 結果は チケットのコメントと、管理画面の「実行履歴」で確認する
+1. Create a ticket in devuntu and assign it to the agent
+2. Choose the mode under the agent section of the ticket detail
+   - **Plan first**: posts a plan, stops, and waits for a reply. Replying continues the processing
+   - **Auto**: works on it without a plan and reports
+3. Wait for the next cron run (to try it right away, run `python3 ~/devuntu-agent-work/.devuntu-agent/devuntu_agent.py poll` by hand)
+4. Check the result in the ticket comments and the run history in the admin screen
 
-## 10. この手順をスキルとして残す
+## 10. Keep these steps as a skill
 
-同じ環境で作り直せるよう、このガイドの内容を作業ディレクトリに書き出しておく。
+Write the content of this guide into the working directory so the same environment can be rebuilt.
 
 <!-- cli:claude -->
 
-`.claude/skills/devuntu-agent/SKILL.md` に置き、先頭に次の frontmatter を付ける。
+Put it in `.claude/skills/devuntu-agent/SKILL.md` with the following frontmatter at the top.
 
 ```yaml
 ---
 name: devuntu-agent
-description: devuntu の自動運用(Devuntu Agent)をこのマシンにセットアップし、動作を確認する。
+description: Set up devuntu automated operation (Devuntu Agent) on this machine and verify that it works.
 ---
 ```
 
 <!-- /cli -->
 <!-- cli:codex -->
 
-`AGENTS.md` に書き出す(frontmatter は要らない)。
+Write it to `AGENTS.md` (no frontmatter needed).
 <!-- /cli -->
 
-トークンは書かない(設定ファイルにだけ置く)。
+Do not write the token (keep it only in the configuration file).
 
-## 同じマシンに複数のエージェントを置く
+## Running multiple agents on the same machine
 
-1 エージェントの構成は作業ディレクトリだけで完結するので、エージェントごとに作業ディレクトリを
-用意して手順2から8を繰り返すだけでよい。
+One agent is fully contained in its working directory, so just prepare a working directory per agent
+and repeat steps 2 to 8.
 
 ```text
 ~/devuntu-agent-work-a/.devuntu-agent/{devuntu_agent.py,config.json,agent.log,agent.lock}
 ~/devuntu-agent-work-b/.devuntu-agent/{devuntu_agent.py,config.json,agent.log,agent.lock}
 ```
 
-- トークンはエージェントごとに発行し、それぞれの作業ディレクトリで MCP を登録する(手順3)。
-  MCP の設定に入るのは環境変数の参照だけで、実際のトークンは作業ディレクトリごとの `config.json` から渡る
+- Issue a token per agent and register MCP in each working directory (step 3).
+  The MCP configuration only holds the environment variable reference; the actual token comes from each working directory's `config.json`
 
 <!-- cli:codex -->
 
-- 信頼の設定(`projects.<path>.trust_level`)はユーザー設定にあるので、作業ディレクトリごとに 1 行ずつ足す
+- The trust setting (`projects.<path>.trust_level`) is in the user configuration, so add one line per working directory
 
 <!-- /cli -->
 
-- cron 行も作業ディレクトリごとに登録する
-- ロックとログは作業ディレクトリごとに分かれるため、互いにスキップさせたりログを混ぜたりしない
+- Register a cron line per working directory as well
+- Locks and logs are separate per working directory, so agents do not skip each other or mix logs
 
-## うまく動かないとき
+## Troubleshooting
 
-| 症状                                     | 見るところ                                                                                                       |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| 管理画面の自動運用が「オフライン」のまま | cron が動いているか(`crontab -l`)、`.devuntu-agent/agent.log`                                                    |
-| 実行履歴に「失敗」が並ぶ                 | 履歴の「内容」に終了コードと標準エラーの末尾が入っている                                                         |
-| 実行が「実行中」のまま止まる             | エージェントが `finish_agent_task` を呼べていない。60 分で自動的に失敗へ落ちる                                   |
-| チケットが拾われない                     | 担当がエージェントか、チケットの「エージェント」が「任せない」になっていないか                                   |
-| `... not found` で失敗する               | その CLI が使えるシェルで `devuntu_agent.py save-path` を実行し直す。それでも駄目なら `cli.bin` に絶対パスを書く |
+| Symptom                                        | Where to look                                                                                                                      |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Automation stays "Offline" in the admin screen | Whether cron is running (`crontab -l`), `.devuntu-agent/agent.log`                                                                 |
+| The run history is full of "Failed"            | The run's content contains the exit code and the tail of stderr                                                                    |
+| A run stays "Running"                          | The agent could not call `finish_agent_task`. It automatically becomes failed after 60 minutes                                     |
+| Tickets are not picked up                      | Whether the ticket is assigned to the agent, and whether the ticket's agent mode is still pending selection                        |
+| Fails with `... not found`                     | Run `devuntu_agent.py save-path` again in a shell where that CLI works. If that does not help, write an absolute path to `cli.bin` |
 
 <!-- cli:claude -->
 
-| エージェントが MCP に繋がらない | `.mcp.json` の `${DEVUNTU_AGENT_TOKEN}` が展開済みの値になっていないか(手順3) |
+| The agent cannot connect to MCP | Whether `${DEVUNTU_AGENT_TOKEN}` in `.mcp.json` has been replaced by the expanded value (step 3) |
 <!-- /cli -->
 <!-- cli:codex -->
 
-| エージェントが MCP に繋がらない | `.codex/config.toml` の `bearer_token_env_var` と、作業ディレクトリの信頼の設定(手順3) |
+| The agent cannot connect to MCP | `bearer_token_env_var` in `.codex/config.toml`, and the trust setting for the working directory (step 3) |
 <!-- /cli -->

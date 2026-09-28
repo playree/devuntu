@@ -134,8 +134,8 @@ describe('get_agent_setup_guide', () => {
     const result = await (await connectDevuntuMcp(agentAuth)).callTool({ name: 'get_agent_setup_guide', arguments: {} })
     const text = (result.content as { text: string }[])[0].text
 
-    expect(text).not.toContain('# Devuntu Agent のセットアップ')
-    expect(text).toContain('利用者に確認')
+    expect(text).not.toContain('# Devuntu Agent Setup')
+    expect(text).toContain('Ask the user')
   })
 })
 
@@ -147,7 +147,7 @@ describe('get_agent_task', () => {
     const body = parseResult(result.content)
 
     expect(body).toMatchObject({ active: false, reason: 'outside_hours', task: null, tasks: [] })
-    expect(body.note).toContain('処理は行わずに終了')
+    expect(body.note).toContain('Exit without processing')
     expect(pickAgentTasks).not.toHaveBeenCalled()
   })
 
@@ -223,7 +223,7 @@ describe('get_agent_task', () => {
     const body = parseResult(result.content)
 
     expect(body.task).toBeNull()
-    expect(body.note).toContain('処理対象ではない')
+    expect(body.note).toContain('not a current processing target')
   })
 })
 

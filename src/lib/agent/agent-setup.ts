@@ -45,17 +45,17 @@ const pickCliBlocks = (markdown: string, cli: AgentCliKind): string => {
     const started = CLI_BLOCK_START.exec(line)
     if (started) {
       if (current) {
-        throw new Error(`CLI ブロックが入れ子になっている(${index + 1}行目)`)
+        throw new Error(`Nested CLI block (line ${index + 1})`)
       }
       if (!kinds.includes(started[1])) {
-        throw new Error(`未知の CLI 種別 ${started[1]}(${index + 1}行目)`)
+        throw new Error(`Unknown CLI kind ${started[1]} (line ${index + 1})`)
       }
       current = started[1]
       return
     }
     if (line === CLI_BLOCK_END) {
       if (!current) {
-        throw new Error(`対応する開始マーカーが無い(${index + 1}行目)`)
+        throw new Error(`No matching start marker (line ${index + 1})`)
       }
       current = null
       return
@@ -66,7 +66,7 @@ const pickCliBlocks = (markdown: string, cli: AgentCliKind): string => {
   })
 
   if (current) {
-    throw new Error(`CLI ブロックが閉じられていない(cli:${current})`)
+    throw new Error(`Unclosed CLI block (cli:${current})`)
   }
   // ブロックが落ちた箇所で空行が続くことがあるため、段落の区切りに揃え直す
   return picked.join('\n').replaceAll(/\n{3,}/g, '\n\n')
@@ -77,7 +77,7 @@ export const agentSetupGuide = (cli: AgentCliKind): string => {
   const scriptUrl = makeUrl(AGENT_SCRIPT_PATH).toString()
   const mcpUrl = makeUrl('/api/mcp').toString()
   const intervalMinutes = String(DEFAULT_POLL_INTERVAL_SEC / 60)
-  const pollIntervalOptions = AGENT_POLL_INTERVAL_OPTIONS.map((sec) => `${sec / 60}分`).join(' / ')
+  const pollIntervalOptions = AGENT_POLL_INTERVAL_OPTIONS.map((sec) => `${sec / 60} min`).join(' / ')
 
   return pickCliBlocks(readFileSync(GUIDE_TEMPLATE_PATH, 'utf-8'), cli)
     .replaceAll('{{baseUrl}}', baseUrl)
@@ -97,10 +97,10 @@ export const agentSetupGuide = (cli: AgentCliKind): string => {
  */
 export const agentSetupCliPrompt = (): string =>
   [
-    'どちらの CLI でエージェントを動かすかを利用者に確認し、`cli` を指定してこのツールを呼び直すこと。',
+    'Ask the user which CLI should run the agent, then call this tool again with `cli`.',
     '',
-    ...AGENT_CLI_KINDS.map((kind) => `- \`${kind}\`: ${AGENT_CLI_LABEL[kind]}(\`${kind}\` コマンド)`),
+    ...AGENT_CLI_KINDS.map((kind) => `- \`${kind}\`: ${AGENT_CLI_LABEL[kind]} (the \`${kind}\` command)`),
     '',
-    'この応答に手順は含まれていない。利用者に代わって選ばないこと',
-    '(いま使っている CLI と、エージェントに使わせたい CLI は別のことがある)。',
+    'This response does not contain the steps. Do not choose on behalf of the user',
+    '(the CLI you are running in may differ from the CLI the user wants the agent to use).',
   ].join('\n')
