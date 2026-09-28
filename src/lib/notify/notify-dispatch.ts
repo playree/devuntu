@@ -91,7 +91,7 @@ const fanoutOutbox = async (now: Date): Promise<void> => {
     try {
       await fanoutOne(outbox, now)
     } catch (error) {
-      logger.error({ error, outboxId: outbox.id, event: outbox.event }, 'notify fanout settle failed')
+      logger.error({ error, outboxId: outbox.id, event: outbox.event }, 'notify fanout record failed')
     }
   }
 }
