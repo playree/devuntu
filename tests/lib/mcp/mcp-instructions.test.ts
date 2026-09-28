@@ -1,6 +1,11 @@
 /** MCP クライアントへ伝える対応の作法 */
 
-import { mcpInstructions, TICKET_WORKFLOW, ticketWorkflowFor } from '@/lib/mcp/mcp-instructions'
+import {
+  ACCEPTANCE_CRITERIA_GUIDE,
+  mcpInstructions,
+  TICKET_WORKFLOW,
+  ticketWorkflowFor,
+} from '@/lib/mcp/mcp-instructions'
 import { describe, expect, it } from 'vitest'
 
 describe('ticketWorkflowFor', () => {
@@ -26,6 +31,11 @@ describe('mcpInstructions', () => {
   it('人の経路は手順を番号付きで含む', () => {
     const text = mcpInstructions('oauth')
     TICKET_WORKFLOW.forEach((step, i) => expect(text).toContain(`${i + 1}. ${step}`))
+  })
+
+  it('完了条件の置き場所(acceptanceCriteria)をどの経路にも伝える', () => {
+    expect(mcpInstructions('oauth')).toContain(ACCEPTANCE_CRITERIA_GUIDE)
+    expect(mcpInstructions('agent')).toContain(ACCEPTANCE_CRITERIA_GUIDE)
   })
 
   it('クライアントに切り詰められないよう短く保つ', () => {
