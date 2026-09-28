@@ -117,7 +117,6 @@ export const ja: DefaultLocaleItems = {
   calendar_share: '空き時間の共有',
   calendar_share_default_title: '${name} の予定表',
   cancel: 'キャンセル',
-  child_order: '順番',
   child_progress: '${done}/${total} 完了',
   child_tickets: '子チケット',
   ci_status_cancelled: 'CIキャンセル',

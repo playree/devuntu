@@ -3,15 +3,20 @@
 import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
-import { InputField } from '@/components/general/input'
 import { SingleSelectField } from '@/components/general/select'
-import { LinkIcon, PlusIcon, XMarkIcon } from '@/components/icon'
+import {
+  ArrowTopRightOnSquareIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  LinkIcon,
+  PlusIcon,
+  XMarkIcon,
+} from '@/components/icon'
 import { notify } from '@/components/notify'
 import { StatusChip, TicketIdText } from '@/components/ticket/ticket-chip'
 import { TicketSelectField, useTicketCandidates } from '@/components/ticket/ticket-select'
 import { parseAction } from '@/lib/action/action-client'
 import {
-  MAX_CHILD_ORDER,
   relatedTicketListPath,
   RELATION_ALREADY_EXISTS,
   RELATION_TARGET_INVALID,
@@ -21,16 +26,17 @@ import {
   type TicketRelationKind,
 } from '@/lib/board/ticket-relation-rule'
 import { ClientError } from '@/lib/error'
-import { zChildOrder, zRelationTarget } from '@/lib/schema/schema-ticket'
+import { zRelationTarget } from '@/lib/schema/schema-ticket'
 import { useLocale } from '@/locale/client'
 import Link from 'next/link'
 import { FC, ReactNode, useCallback, useState } from 'react'
+import { tv } from 'tailwind-variants'
 import {
   addTicketRelation,
   GetTicketReturnType,
+  moveTicketChild,
   removeTicketRelation,
   searchRelationCandidates,
-  updateTicketChildOrder,
 } from './server'
 
 type Ticket = NonNullable<GetTicketReturnType>
@@ -38,61 +44,61 @@ type Relations = Ticket['relations']
 type RelatedTicket = Relations['related'][number]
 type ChildTicket = Relations['children'][number]
 
-/** 子の順番の入力欄。確定(Enter / フォーカスを外す)したときだけ保存する */
-const ChildOrderInput: FC<{ child: ChildTicket; refresh: () => Promise<void> }> = ({ child, refresh }) => {
+/** 子を兄弟の中で前後に動かすボタン。押すたびに保存する */
+const ChildMoveButtons: FC<{
+  child: ChildTicket
+  isFirst: boolean
+  isLast: boolean
+  refresh: () => Promise<void>
+}> = ({ child, isFirst, isLast, refresh }) => {
   const { t } = useLocale()
-  const [value, setValue] = useState(String(child.order))
-  const [isSaving, setSaving] = useState(false)
+  const [moving, setMoving] = useState<-1 | 1>()
 
-  const save = async () => {
-    const parsed = zChildOrder.safeParse(Number(value))
-    if (!parsed.success || parsed.data === child.order) {
-      setValue(String(child.order))
-      return
-    }
-    setSaving(true)
+  const move = async (offset: -1 | 1) => {
+    setMoving(offset)
     try {
-      await parseAction(updateTicketChildOrder({ id: child.relationId, order: parsed.data }))
+      await parseAction(moveTicketChild({ id: child.relationId, offset }))
       await refresh()
     } catch {
-      setValue(String(child.order))
+      // エラー表示は parseAction 側で済んでいる
     } finally {
-      setSaving(false)
+      setMoving(undefined)
     }
   }
 
   return (
-    <div className='w-16 shrink-0'>
-      <InputField
-        isSmart
-        isLabelHidden
-        type='number'
-        label={t('child_order')}
-        aria-label={t('child_order')}
-        min={1}
-        max={MAX_CHILD_ORDER}
-        value={value}
-        isDisabled={isSaving}
-        onChange={(e) => setValue(e.target.value)}
-        onBlur={() => void save()}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
-            e.preventDefault()
-            e.currentTarget.blur()
-          }
-        }}
+    <div className='flex shrink-0'>
+      <MultiButton
+        isIconOnly
+        size='sm'
+        variant='ghost'
+        tooltip={t('move_up')}
+        icon={<ChevronUpIcon width={16} />}
+        isPending={moving === -1}
+        isDisabled={isFirst || moving !== undefined}
+        onPress={() => move(-1)}
+      />
+      <MultiButton
+        isIconOnly
+        size='sm'
+        variant='ghost'
+        tooltip={t('move_down')}
+        icon={<ChevronDownIcon width={16} />}
+        isPending={moving === 1}
+        isDisabled={isLast || moving !== undefined}
+        onPress={() => move(1)}
       />
     </div>
   )
 }
 
-/** 関係の相手 1 件。左端(prefix)には子の順番を置ける */
+/** 関係の相手 1 件。子は削除の前に並べ替えを置く */
 const RelationItem: FC<{
   item: RelatedTicket
   canEdit: boolean
   refresh: () => Promise<void>
-  prefix?: ReactNode
-}> = ({ item, canEdit, refresh, prefix }) => {
+  actions?: ReactNode
+}> = ({ item, canEdit, refresh, actions }) => {
   const { t } = useLocale()
   const [isRemoving, setRemoving] = useState(false)
 
@@ -109,55 +115,71 @@ const RelationItem: FC<{
   }
 
   return (
-    <li className='flex items-center gap-2'>
-      {prefix}
-      <div className='flex min-w-0 grow flex-wrap items-center gap-x-2 gap-y-0.5'>
-        <TicketIdText displayId={item.displayId} className='shrink-0' />
-        <Link href={`/tickets/${item.id}`} className='min-w-0 truncate text-sm hover:underline'>
-          {item.title}
-        </Link>
-        <StatusChip value={item.status} />
-        {item.assigneeName && <span className='text-muted truncate text-xs'>{item.assigneeName}</span>}
+    <li // マーカーを出すため li 自体は flex にしない
+    >
+      <div className='dark:bg-default/40 flex items-center gap-2 rounded-lg bg-white pr-1 pl-2'>
+        <div className='flex min-w-0 grow flex-wrap items-center gap-x-2 gap-y-0.5'>
+          <Link href={`/tickets/${item.id}`} className='flex min-w-0 items-center gap-2 text-sm hover:underline'>
+            <TicketIdText displayId={item.displayId} className='shrink-0' />
+            <span className='min-w-0 truncate'>{item.title}</span>
+          </Link>
+          <StatusChip value={item.status} />
+          {item.assigneeName && <span className='text-muted truncate text-xs'>{item.assigneeName}</span>}
+        </div>
+        {canEdit && actions}
+        {canEdit && (
+          <MultiButton
+            isIconOnly
+            size='sm'
+            variant='ghost'
+            className='shrink-0'
+            tooltip={t('relation_remove')}
+            icon={<XMarkIcon width={16} />}
+            isPending={isRemoving}
+            onPress={remove}
+          />
+        )}
       </div>
-      {canEdit && (
-        <MultiButton
-          isIconOnly
-          size='sm'
-          variant='ghost'
-          className='shrink-0'
-          tooltip={t('relation_remove')}
-          icon={<XMarkIcon width={16} />}
-          isPending={isRemoving}
-          onPress={remove}
-        />
-      )}
     </li>
   )
 }
 
-/** 親 / 子 / 関連の見出し付きの一覧。空なら `-` を出す */
+const relationList = tv({
+  base: 'space-y-1',
+  variants: {
+    // 複数件並ぶ子と関連だけ行頭にマーカーを付ける
+    isBullet: { true: 'marker:text-muted list-disc pl-6', false: 'pl-2' },
+  },
+})
+
+/** 親 / 子 / 関連の見出し付きの一覧。空なら見出しごと出さない */
 const RelationGroup: FC<{
   title: ReactNode
   /** チケット一覧で開くときの絞り込み。親は 1 件だけなので渡さない */
   listFilter?: { displayId: string; relation: TicketRelationFilter }
   isEmpty: boolean
+  isBullet?: boolean
   children: ReactNode
-}> = ({ title, listFilter, isEmpty, children }) => {
+}> = ({ title, listFilter, isEmpty, isBullet = false, children }) => {
   const { t } = useLocale()
+  if (isEmpty) {
+    return null
+  }
   return (
     <div className='space-y-1'>
       <div className='flex items-center gap-2 text-sm'>
         <span className='text-muted'>{title}</span>
-        {listFilter && !isEmpty && (
+        {listFilter && (
           <Link
             href={relatedTicketListPath(listFilter.displayId, listFilter.relation)}
-            className='text-muted text-xs underline-offset-2 hover:underline'
+            className='text-accent inline-flex items-center gap-0.5 text-xs underline-offset-2 hover:underline'
           >
+            <ArrowTopRightOnSquareIcon width={14} />
             {t('show_in_ticket_list')}
           </Link>
         )}
       </div>
-      {isEmpty ? <div className='text-muted pl-2 text-sm'>-</div> : <ul className='space-y-1 pl-2'>{children}</ul>}
+      <ul className={relationList({ isBullet })}>{children}</ul>
     </div>
   )
 }
@@ -297,19 +319,21 @@ export const TicketRelations: FC<{ ticket: Ticket; refresh: () => Promise<void> 
           }
           listFilter={{ displayId, relation: 'child' }}
           isEmpty={children.length === 0}
+          isBullet
         >
-          {children.map((child) => (
+          {children.map((child, index) => (
             <RelationItem
               key={child.relationId}
               item={child}
               canEdit={canEdit}
               refresh={refresh}
-              prefix={
-                canEdit ? (
-                  <ChildOrderInput key={child.order} child={child} refresh={refresh} />
-                ) : (
-                  <span className='text-muted w-6 shrink-0 text-right font-mono text-xs'>{child.order}</span>
-                )
+              actions={
+                <ChildMoveButtons
+                  child={child}
+                  isFirst={index === 0}
+                  isLast={index === children.length - 1}
+                  refresh={refresh}
+                />
               }
             />
           ))}
@@ -319,6 +343,7 @@ export const TicketRelations: FC<{ ticket: Ticket; refresh: () => Promise<void> 
           title={`${t('related_tickets')} (${related.length})`}
           listFilter={{ displayId, relation: 'related' }}
           isEmpty={related.length === 0}
+          isBullet
         >
           {related.map((item) => (
             <RelationItem key={item.relationId} item={item} canEdit={canEdit} refresh={refresh} />

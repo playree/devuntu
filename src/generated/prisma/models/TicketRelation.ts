@@ -711,7 +711,7 @@ export type $TicketRelationPayload<ExtArgs extends runtime.Types.Extensions.Inte
     fromId: string
     toId: string
     /**
-     * 親の下での子の順番(1始まり)。同じ値の子は並行してよい扱い。related では使わない(0 のまま)
+     * 親の下での子の順番(1始まり)。同じ値の子は番号順に並ぶ。related では使わない(0 のまま)
      */
     order: number
     createdAt: Date

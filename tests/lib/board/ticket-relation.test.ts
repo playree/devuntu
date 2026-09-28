@@ -9,9 +9,9 @@ import {
   addTicketRelation,
   assignTicketParent,
   listTicketRelations,
+  moveTicketChild,
   removeTicketRelation,
   resolveRelationTarget,
-  updateTicketChildOrder,
   writeTicketParent,
 } from '@/lib/board/ticket-relation'
 import { RELATION_ALREADY_EXISTS, RELATION_TARGET_INVALID } from '@/lib/board/ticket-relation-rule'
@@ -235,7 +235,7 @@ describe('addTicketRelation', () => {
   })
 })
 
-describe('removeTicketRelation / updateTicketChildOrder', () => {
+describe('removeTicketRelation / moveTicketChild', () => {
   it('関係の from 側のチケットで編集権限を確かめてから消す', async () => {
     fakeTx.ticketRelation.findUnique.mockResolvedValue({ type: 'related', fromId: OTHER_ID, toId: TICKET_ID })
 
@@ -245,13 +245,49 @@ describe('removeTicketRelation / updateTicketChildOrder', () => {
     expect(fakeTx.ticketRelation.delete).toHaveBeenCalledWith({ where: { id: 'r1' } })
   })
 
-  it('順番を変えられるのは親子の関係だけ', async () => {
-    fakeTx.ticketRelation.findUnique.mockResolvedValue({ type: 'related', fromId: OTHER_ID })
-    await expect(updateTicketChildOrder(actor, 'r1', 2)).rejects.toThrow()
+  const sibling = (id: string, order: number, number: number) => ({ id, order, to: { number } })
 
+  it('並べ替えられるのは親子の関係だけ', async () => {
+    fakeTx.ticketRelation.findUnique.mockResolvedValue({ type: 'related', fromId: OTHER_ID })
+    await expect(moveTicketChild(actor, 'r1', -1)).rejects.toThrow()
+    expect(fakeTx.ticketRelation.update).not.toHaveBeenCalled()
+  })
+
+  it('前の兄弟と入れ替えて、兄弟全体を 1 からの連番に振り直す(同じ順番は番号順とみなす)', async () => {
     fakeTx.ticketRelation.findUnique.mockResolvedValue({ type: 'parent', fromId: OTHER_ID })
-    await updateTicketChildOrder(actor, 'r1', 2)
-    expect(fakeTx.ticketRelation.update).toHaveBeenCalledWith({ where: { id: 'r1' }, data: { order: 2 } })
+    fakeTx.ticketRelation.findMany.mockResolvedValue([sibling('c', 5, 3), sibling('a', 2, 1), sibling('b', 2, 2)])
+
+    await moveTicketChild(actor, 'c', -1)
+
+    expect(assertTicketAccess).toHaveBeenCalledWith(actor, OTHER_ID, 'edit', tx)
+    // 並びは a(2) → b(2) → c(5)。c を前へ動かして a → c → b
+    expect(fakeTx.ticketRelation.update.mock.calls).toEqual([
+      [{ where: { id: 'a' }, data: { order: 1 } }],
+      [{ where: { id: 'c' }, data: { order: 2 } }],
+      [{ where: { id: 'b' }, data: { order: 3 } }],
+    ])
+  })
+
+  it('値が変わらない兄弟は更新しない', async () => {
+    fakeTx.ticketRelation.findUnique.mockResolvedValue({ type: 'parent', fromId: OTHER_ID })
+    fakeTx.ticketRelation.findMany.mockResolvedValue([sibling('a', 1, 1), sibling('b', 2, 2), sibling('c', 3, 3)])
+
+    await moveTicketChild(actor, 'b', 1)
+
+    expect(fakeTx.ticketRelation.update.mock.calls).toEqual([
+      [{ where: { id: 'c' }, data: { order: 2 } }],
+      [{ where: { id: 'b' }, data: { order: 3 } }],
+    ])
+  })
+
+  it('端からさらに外へは動かさない', async () => {
+    fakeTx.ticketRelation.findUnique.mockResolvedValue({ type: 'parent', fromId: OTHER_ID })
+    fakeTx.ticketRelation.findMany.mockResolvedValue([sibling('a', 1, 1), sibling('b', 2, 2)])
+
+    await moveTicketChild(actor, 'a', -1)
+    await moveTicketChild(actor, 'b', 1)
+
+    expect(fakeTx.ticketRelation.update).not.toHaveBeenCalled()
   })
 })
 

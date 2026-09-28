@@ -16,8 +16,8 @@ import {
   addTicketRelation as addTicketRelationCore,
   EMPTY_TICKET_RELATIONS,
   listTicketRelations,
+  moveTicketChild as moveTicketChildCore,
   removeTicketRelation as removeTicketRelationCore,
-  updateTicketChildOrder as updateTicketChildOrderCore,
 } from '@/lib/board/ticket-relation'
 import { MAX_TICKET_CANDIDATES, TICKET_CANDIDATE_ORDER_BY, ticketCandidateWhere } from '@/lib/board/ticket-search'
 import { errInvalidOperation } from '@/lib/error'
@@ -30,11 +30,11 @@ import {
   scCheckTicketCriterion,
   scCreateTicketComment,
   scDecideAgentComment,
+  scMoveTicketChild,
   scPatchTicket,
   scSaveTicketCriteria,
   scSearchRelationCandidates,
   scUpdateTicketAgentMode,
-  scUpdateTicketChildOrder,
   scUpdateTicketComment,
   scUpdateTicketStatus,
 } from '@/lib/schema/schema-ticket'
@@ -364,15 +364,15 @@ export const removeTicketRelation = safeAuthAction
   })
 
 /**
- * 子の順番の変更(チケットを編集できる人)
+ * 子を兄弟の中で前後に動かす(チケットを編集できる人)
  */
-export const updateTicketChildOrder = safeAuthAction
-  .metadata({ actionName: 'updateTicketChildOrder', role: 'user' })
-  .inputSchema(scUpdateTicketChildOrder)
-  .action(async ({ ctx: { user }, parsedInput: { id, order } }) => {
-    const result = await updateTicketChildOrderCore(user, id, order)
+export const moveTicketChild = safeAuthAction
+  .metadata({ actionName: 'moveTicketChild', role: 'user' })
+  .inputSchema(scMoveTicketChild)
+  .action(async ({ ctx: { user }, parsedInput: { id, offset } }) => {
+    const result = await moveTicketChildCore(user, id, offset)
 
-    logger.info({ userId: user.id, ...result, order }, 'ticket child order updated')
+    logger.info({ userId: user.id, ...result, offset }, 'ticket child moved')
     return result
   })
 

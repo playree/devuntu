@@ -243,7 +243,8 @@ AIエージェントは `devuntu-agent` を名乗るので、`claude mcp list` �
 - 親子・関連は**同じボードのチケット同士だけ**。`parentId` / `relatedTicketId` は表示ID・チケットID・番号だけ(`12`)のいずれでも受け、
   別ボードや存在しないチケット、自分自身は `RELATION_TARGET_INVALID`、既にある関連は `RELATION_ALREADY_EXISTS` になる
 - `update_ticket` の `parentId` は `null` で親を外す。親は1つだけで、別の親を指定すると置き換わる。
-  `childOrder` は親の下での順番(1〜999)で、同じ値の子は並行してよい扱い。省略すると兄弟の末尾に入る。
+  `childOrder` は親の下での順番(1〜999)で、同じ値の子は番号順に並ぶ。省略すると兄弟の末尾に入る。
+  画面で子を並べ替えると、兄弟全体が1からの連番に振り直される。
   親が無い(外す)のに `childOrder` だけを渡すとエラーになる
 - `get_ticket` の `parent` / `children` / `related` は直下の1階層だけを返す(親の親や孫は含めない)。
   `children` は順番(`order`)の昇順で、`childProgress` に完了した子の数と子の数が入る。外すときは各要素の `relationId` を使う

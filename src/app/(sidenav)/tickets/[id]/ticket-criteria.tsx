@@ -141,24 +141,26 @@ const CriteriaEditor: FC<{
               onChange={(e) => update(row.key, e.target.value)}
             />
           </div>
-          <MultiButton
-            isIconOnly
-            size='sm'
-            variant='ghost'
-            tooltip={t('move_up')}
-            icon={<ChevronUpIcon width={16} />}
-            isDisabled={index === 0}
-            onPress={() => move(index, -1)}
-          />
-          <MultiButton
-            isIconOnly
-            size='sm'
-            variant='ghost'
-            tooltip={t('move_down')}
-            icon={<ChevronDownIcon width={16} />}
-            isDisabled={index === rows.length - 1}
-            onPress={() => move(index, 1)}
-          />
+          <div className='flex shrink-0'>
+            <MultiButton
+              isIconOnly
+              size='sm'
+              variant='ghost'
+              tooltip={t('move_up')}
+              icon={<ChevronUpIcon width={16} />}
+              isDisabled={index === 0}
+              onPress={() => move(index, -1)}
+            />
+            <MultiButton
+              isIconOnly
+              size='sm'
+              variant='ghost'
+              tooltip={t('move_down')}
+              icon={<ChevronDownIcon width={16} />}
+              isDisabled={index === rows.length - 1}
+              onPress={() => move(index, 1)}
+            />
+          </div>
           <MultiButton
             isIconOnly
             size='sm'

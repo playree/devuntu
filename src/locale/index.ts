@@ -115,7 +115,6 @@ export type LocaleItemBase =
   | 'calendar_share'
   | 'calendar_share_default_title'
   | 'cancel'
-  | 'child_order'
   | 'child_progress'
   | 'child_tickets'
   | 'ci_status_cancelled'
