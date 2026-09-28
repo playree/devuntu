@@ -1,6 +1,5 @@
 'use client'
 
-import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton, SubmitButtons } from '@/components/general/button'
 import { CheckboxField } from '@/components/general/checkbox'
 import { FlexCol } from '@/components/general/flex'
@@ -215,31 +214,29 @@ export const TicketCriteria: FC<{ ticket: Ticket; refresh: () => Promise<void> }
   }
 
   return (
-    <AccordionSection
-      id='criteria'
-      icon={<ClipboardDocumentCheckIcon />}
-      title={
-        <span className='flex flex-wrap items-center gap-x-2 gap-y-1'>
-          <span>
+    <section className='pb-4'>
+      <div className='flex min-h-8 items-center justify-between gap-2'>
+        <h3 className='flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium'>
+          <span className='flex items-center gap-1'>
+            <ClipboardDocumentCheckIcon width={18} />
             {t('acceptance_criteria')} ({criteria.length})
           </span>
-          {criteria.length > 0 && <span className='text-muted text-xs'>{t('criteria_summary', summary)}</span>}
-        </span>
-      }
-    >
-      <FlexCol isSmart>
+          {criteria.length > 0 && (
+            <span className='text-muted text-xs font-normal'>{t('criteria_summary', summary)}</span>
+          )}
+        </h3>
         {canEdit && !isEditing && (
-          <MultiButton // 見出しは開閉のボタンなので、編集ボタンは中身の側に置く
+          <MultiButton
             isIconOnly
             size='sm'
             variant='outline'
-            className='self-end'
             tooltip={t('update')}
             icon={<PencilSquareIcon width={16} />}
             onPress={() => setEditing(true)}
           />
         )}
-
+      </div>
+      <FlexCol isSmart className='px-3 pt-2'>
         {isEditing ? (
           <CriteriaEditor ticket={ticket} onClose={() => setEditing(false)} refresh={refresh} />
         ) : criteria.length > 0 ? (
@@ -252,6 +249,6 @@ export const TicketCriteria: FC<{ ticket: Ticket; refresh: () => Promise<void> }
           <span className='text-muted text-sm'>{t('msg_no_criteria')}</span>
         )}
       </FlexCol>
-    </AccordionSection>
+    </section>
   )
 }

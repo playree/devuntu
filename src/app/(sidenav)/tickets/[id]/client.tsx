@@ -176,13 +176,17 @@ export const TicketDetailClient: FC<{
 
       <TicketBody ticket={ticket} boardAssignees={boardAssignees} refresh={refreshAll} />
 
-      <Accordion // 本文とコメント以外は必要なときに開けばよいので、既定で閉じておく
+      <TicketCriteria // 完了の基準は本文とセットで読むものなので、折りたたまずに本文の直下へ置く
+        ticket={ticket}
+        refresh={refreshAll}
+      />
+
+      <Accordion // 親子・関連やリンクは必要なときに開けばよいので、既定で閉じておく
         allowsMultipleExpanded
         hideSeparator
         defaultExpandedKeys={[]}
         className='pb-4'
       >
-        <TicketCriteria ticket={ticket} refresh={refreshAll} />
         <TicketRelations ticket={ticket} refresh={refreshAll} />
         <TicketLinks ticket={ticket} refresh={refreshAll} />
       </Accordion>
