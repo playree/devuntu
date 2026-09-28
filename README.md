@@ -4,15 +4,13 @@
 [![License: MIT](https://img.shields.io/github/license/playree/devuntu)](LICENSE)
 [![Docker Pulls](https://img.shields.io/docker/pulls/playree/devuntu)](https://hub.docker.com/r/playree/devuntu)
 
+[English](README.en.md) | 日本語
+
 Website: https://playree.github.io/devuntu/
 
-Devuntu is a self-hosted development server setup tool centered around Kanban-style board/ticket management, featuring calendar integration, email/Slack/web push notifications, MCP/AI agent integration, and remote execution.
-
 > [!NOTE]
-> **The documentation is available in Japanese only.**
-> Translation tools and AI have become accurate enough that we keep Japanese as
-> the single source of truth, rather than maintaining versions in several languages.
-> If you do not read Japanese, please use a translation tool or an AI assistant.
+> **English README: [README.en.md](README.en.md)** (overview and quick start).
+> The detailed documentation is available in Japanese only.
 
 Devuntu は、かんばん形式のボード/チケット管理を中心に、
 カレンダー連携、メール/Slack/Webプッシュ通知、MCP/AIエージェント連携、リモート実行などを備えた

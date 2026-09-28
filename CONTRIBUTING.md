@@ -42,7 +42,7 @@ pnpm build
 ```
 
 - 修正したファイルには `pnpm exec prettier --write <ファイル>` をかけてください
-- 機能や仕様を変えた場合は、対応するドキュメント(`README.md` / `docs/*.md`)も更新してください
+- 機能や仕様を変えた場合は、対応するドキュメント(`README.md` / `README.en.md` / `docs/*.md`)も更新してください
 
 ## コーディングルール
 

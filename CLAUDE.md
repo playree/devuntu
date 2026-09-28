@@ -25,6 +25,7 @@ MCPサーバー・AIエージェント連携を備えたセルフホスト型の
 | ファイル                                                       | 内容                                                 |
 | -------------------------------------------------------------- | ---------------------------------------------------- |
 | [README.md](README.md)                                         | 全体の入口。各ドキュメントへの索引                   |
+| [README.en.md](README.en.md)                                   | 英語の README(概要・クイックスタート)                |
 | [docs/user-guide.md](docs/user-guide.md)                       | 画面ごとの使い方(利用者向け)                         |
 | [docs/screens.md](docs/screens.md)                             | 画面・APIの一覧とアクセス制御                        |
 | [docs/installation.md](docs/installation.md)                   | セルフホストの導入手順                               |
