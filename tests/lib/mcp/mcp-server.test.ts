@@ -100,6 +100,17 @@ describe('createDevuntuMcpServer', () => {
     expect(agentInstructions).not.toContain('status to doing')
   })
 
+  it('create_ticket / update_ticket で完了条件を content ではなく acceptanceCriteria へ誘導する', async () => {
+    const { tools } = await (await connectDevuntuMcp()).listTools()
+    for (const name of ['create_ticket', 'update_ticket']) {
+      const tool = tools.find((t) => t.name === name)
+      const properties = tool?.inputSchema.properties as Record<string, { description?: string }>
+      expect(tool?.description).toContain('acceptanceCriteria')
+      expect(properties.content.description).toContain('acceptanceCriteria')
+      expect(properties.acceptanceCriteria.description).toContain('completion conditions')
+    }
+  })
+
   it('ツールの定義と instructions に日本語を含めない(英語に統一する)', async () => {
     for (const authKind of [auth, agentAuth]) {
       const client = await connectDevuntuMcp(authKind)

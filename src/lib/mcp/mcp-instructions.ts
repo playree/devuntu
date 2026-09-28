@@ -16,8 +16,12 @@ export const TICKET_WORKFLOW = [
   'Once you have a plan: post it with add_ticket_comment using type=plan',
   'Questions for the user: post them as a regular comment without type',
   'After creating a branch / pull request / commit: link the URL with link_ticket_artifact (naming the branch feature/<display ID> links it automatically for repositories connected to the board)',
-  'When done: post a report with add_ticket_comment using type=report covering what you did, how you verified it, and any remaining issues (attach screenshots via create_image_upload_token)',
+  'When done: post a report with add_ticket_comment using type=report covering what you did, how you verified it, whether each acceptance criterion is met, and any remaining issues (attach screenshots via create_image_upload_token)',
 ] as const
+
+/** 完了条件を本文に書かれると受け入れ条件が使われないため、置き場所を伝える(ツールの description にも載せる) */
+export const ACCEPTANCE_CRITERIA_GUIDE =
+  'Put completion conditions (acceptance criteria / definition of done / checklist) in acceptanceCriteria as one verifiable sentence per item, not in content.'
 
 /** 手順より優先するもの。既定値であることを必ず添える */
 const PRECEDENCE =
@@ -37,6 +41,7 @@ export const mcpInstructions = (kind: ResourceAuth['kind']): string => {
     'devuntu is a kanban-style ticket management tool. ticketId accepts a display ID (e.g. ABC-42).',
     'Comment types: type=plan is a work plan and type=report is a work report; both are shown separately from regular comments on the detail screen.',
     'Link GitHub / GitLab branches / pull requests (merge requests) / commits to a ticket with link_ticket_artifact to show their state and CI results on the ticket.',
+    `When creating or updating a ticket: ${ACCEPTANCE_CRITERIA_GUIDE}`,
   ]
   if (kind === 'agent') {
     return [

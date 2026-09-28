@@ -4,7 +4,7 @@ import { AGENT_MCP_SERVER_NAME, MCP_SERVER_NAME } from '@/lib/mcp/mcp'
 import { registerAgentSetupTool, registerAgentTools } from '@/lib/mcp/mcp-agent'
 import { getBoardForMcp, listBoardsForMcp } from '@/lib/mcp/mcp-board'
 import { registerImageTools } from '@/lib/mcp/mcp-image'
-import { mcpInstructions } from '@/lib/mcp/mcp-instructions'
+import { ACCEPTANCE_CRITERIA_GUIDE, mcpInstructions } from '@/lib/mcp/mcp-instructions'
 import {
   addTicketCommentForMcp,
   createTicketForMcp,
@@ -34,6 +34,7 @@ import {
   zGitUrl,
   zRelatedTo,
   zRelationTarget,
+  zTicketContent,
   zTicketStatus,
 } from '@/lib/schema/schema-ticket'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
@@ -75,13 +76,21 @@ const zMcpChildOrder = zChildOrder.describe(
   'Position under the parent (1-based). Children with the same value are ordered by number. Defaults to the end of the siblings',
 )
 
+const zMcpTicketContent = zTicketContent
+  .optional()
+  .describe('Ticket description (Markdown). Do not write completion conditions here; use acceptanceCriteria')
+
+const ACCEPTANCE_CRITERIA_DESCRIPTION =
+  'Acceptance criteria: where completion conditions / definition of done go. One verifiable sentence per item. Do not duplicate them in content'
+
 const mcpCreateTicketSchema = scCreateTicket.extend({
   boardId: zBoardIdOrKey.describe('Board ID or board key (e.g. ABC). Find it with list_boards'),
+  content: zMcpTicketContent,
   acceptanceCriteria: z
     .array(zCriterionText)
     .max(MAX_TICKET_CRITERIA)
     .optional()
-    .describe('Acceptance criteria (definition of done). One sentence per item'),
+    .describe(ACCEPTANCE_CRITERIA_DESCRIPTION),
   parentId: zRelationTarget.optional().describe(PARENT_ID_DESCRIPTION),
   childOrder: zMcpChildOrder.optional(),
 })
@@ -90,10 +99,12 @@ const mcpCreateTicketSchema = scCreateTicket.extend({
 const mcpUpdateTicketSchema = scPatchTicket.omit({ id: true }).extend({
   ticketId: z.string().min(1),
   status: zTicketStatus.optional(),
+  content: zMcpTicketContent,
   acceptanceCriteria: zCriterionItems
     .optional()
     .describe(
-      'Replaces all acceptance criteria. Pass existing items with their id from get_ticket acceptanceCriteria to keep their checked state ' +
+      `${ACCEPTANCE_CRITERIA_DESCRIPTION}. Replaces all acceptance criteria. ` +
+        'Pass existing items with their id from get_ticket acceptanceCriteria to keep their checked state ' +
         '(items whose text changes are reset to unchecked). Items not included in the list are deleted',
     ),
   parentId: zRelationTarget.nullish().describe(`${PARENT_ID_DESCRIPTION}. Pass null to remove the parent`),
@@ -193,7 +204,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     'create_ticket',
     {
       title: 'Create ticket',
-      description: 'Creates a new ticket on a board. Specify parentId to create it as a child ticket',
+      description: `Creates a new ticket on a board. Specify parentId to create it as a child ticket. ${ACCEPTANCE_CRITERIA_GUIDE}`,
       inputSchema: mcpCreateTicketSchema.shape,
     },
     async ({ acceptanceCriteria, ...input }) =>
@@ -206,7 +217,8 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       title: 'Update ticket',
       description:
         'Updates ticket fields (title / content / priority / due date / assignee / tags / acceptance criteria / parent) and status. Set status to doing when you start working on it. ' +
-        'Members cannot update tickets assigned to someone else (unassigned tickets are allowed; owners have no restriction)',
+        'Members cannot update tickets assigned to someone else (unassigned tickets are allowed; owners have no restriction). ' +
+        ACCEPTANCE_CRITERIA_GUIDE,
       inputSchema: mcpUpdateTicketSchema.shape,
     },
     async ({ ticketId, acceptanceCriteria, ...input }) =>
