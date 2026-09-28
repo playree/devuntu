@@ -165,7 +165,7 @@ pnpm dev
 pnpm build
 ```
 
-`next build`(`output: 'standalone'`)の後に`scripts/patch-standalone.mjs`が走り、`@swc/helpers`の`esm/`を`.next/standalone`へ補完する。Turbopack のファイルトレースが`cjs/`しか同梱しないのに対し、Node は`module-sync`条件で`esm/`を解決するため、補完しないと`node server.js`が`MODULE_NOT_FOUND`で起動しない。`scripts/test-standalone.sh`と Docker イメージはどちらもこの成果物を使う。
+`next build`(`output: 'standalone'`)の後に`scripts/patch-standalone.mjs`が走り、`@swc/helpers`の`esm/`を`.next/standalone`へ補完する。Turbopack のファイルトレースが`cjs/`しか同梱しないのに対し、Node は`module-sync`条件で`esm/`を解決するため、補完しないと`node server.js`が`MODULE_NOT_FOUND`で起動しない。また、`src/lib/command/command-catalog.ts`の環境変数由来のパスを使う fs 呼び出しをトレースが解決できず`src/lib/command`の .ts を同梱してしまうため、実行時に不要な`.next/standalone/src`を削除する(instrumentation のトレースには`outputFileTracingExcludes`が効かない)。`scripts/test-standalone.sh`と Docker イメージはどちらもこの成果物を使う。
 
 ## テスト・Lint
 

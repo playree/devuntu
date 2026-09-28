@@ -1,5 +1,7 @@
 /**
- * standalone 出力に不足する `@swc/helpers` の ESM 実装を補う。`pnpm build`(next build の後)で自動実行される。
+ * standalone 出力の過不足を直す。`pnpm build`(next build の後)で自動実行される。
+ *
+ * ## 不足する `@swc/helpers` の ESM 実装を補う
  *
  * next の dist(CJS)は `require('@swc/helpers/_/_interop_require_default')` を使う。
  * `@swc/helpers` 0.5.23 の exports は `module-sync` 条件を先頭に持つため、require(esm) が有効な Node では
@@ -7,8 +9,15 @@
  * standalone には `cjs/*.cjs` しか同梱されず、`node server.js` が MODULE_NOT_FOUND で起動できない。
  *
  * next 側で解決されたら(トレースが esm を含む、または `@swc/helpers` から `module-sync` が消える)この処理ごと削除する。
+ *
+ * ## 同梱された `src/` を取り除く
+ *
+ * `src/lib/command/command-catalog.ts` は環境変数から作ったパス(`resolve` / `join` の結果)を fs 関数へ渡すため、
+ * Turbopack のファイルトレースがビルド時にパスを決められず、`src/lib/command` の .ts を丸ごと
+ * instrumentation のトレースへ含める。実行時に使うのはバンドル済みの `.next/server` だけなので不要。
+ * instrumentation のトレースには `outputFileTracingExcludes` が効かず、`turbopackIgnore` コメントも効かないためここで消す。
  */
-import { cp, readdir, stat } from 'node:fs/promises'
+import { cp, readdir, rm, stat } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -51,3 +60,9 @@ const files = await readdir(esmDest)
 console.log(
   `[patch-standalone] @swc/helpers/esm を ${files.length} ファイルコピーした: ${path.relative(projectRoot, esmDest)}`,
 )
+
+const srcDest = path.join(standaloneDir, 'src')
+if (await exists(srcDest)) {
+  await rm(srcDest, { recursive: true, force: true })
+  console.log(`[patch-standalone] トレースで同梱された ${path.relative(projectRoot, srcDest)} を削除した`)
+}
