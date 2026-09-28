@@ -176,7 +176,7 @@ export const TicketSearchPanel: FC<{
         />
       </div>
 
-      <div className='col-span-7 md:col-span-5'>
+      <div className='col-span-7 md:col-span-4'>
         <TicketSelectField
           label={t('related_to_ticket')}
           aria-label={t('related_to_ticket')}
@@ -208,7 +208,7 @@ export const TicketSearchPanel: FC<{
         />
       </div>
 
-      <div className='col-span-5 md:col-span-3'>
+      <div className='col-span-5 md:col-span-2'>
         <SingleSelectField
           label={t('relation_filter')}
           groupOptions={relationOptions}
