@@ -1,5 +1,6 @@
 'use client'
 
+import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
 import { InputField } from '@/components/general/input'
@@ -93,57 +94,52 @@ export const TicketLinks: FC<{ ticket: Ticket; refresh: () => Promise<void> }> =
   }
 
   return (
-    <FlexCol isSmart className='pb-4'>
-      <div className='flex items-center gap-2'>
-        <CodeBracketIcon />
-        <span>
-          {t('ticket_links')} ({links.length})
-        </span>
-      </div>
+    <AccordionSection id='links' icon={<CodeBracketIcon />} title={`${t('ticket_links')} (${links.length})`}>
+      <FlexCol isSmart>
+        {links.length > 0 && (
+          <ul className='space-y-1'>
+            {links.map((link) => (
+              <LinkItem key={link.id} link={link} canEdit={canEdit} refresh={refresh} />
+            ))}
+          </ul>
+        )}
 
-      {links.length > 0 && (
-        <ul className='space-y-1'>
-          {links.map((link) => (
-            <LinkItem key={link.id} link={link} canEdit={canEdit} refresh={refresh} />
-          ))}
-        </ul>
-      )}
-
-      {canEdit && (
-        <form
-          className='flex items-start gap-2'
-          onSubmit={(e) => {
-            e.preventDefault()
-            void add()
-          }}
-        >
-          <div className='grow'>
-            <InputField
-              isSmart
-              isLabelHidden
-              label={t('ticket_link_url')}
-              aria-label={t('ticket_link_url')}
-              placeholder='https://github.com/owner/repo/pull/123'
-              value={url}
-              onChange={(e) => {
-                setUrl(e.target.value)
-                setInvalid(false)
-              }}
-              errorMessage={isInvalid ? t('@invalid_git_url') : undefined}
-            />
-          </div>
-          <MultiButton
-            type='submit'
-            size='sm'
-            variant='outline'
-            icon={<PlusIcon width={16} />}
-            isPending={isAdding}
-            isDisabled={!url.trim()}
+        {canEdit && (
+          <form
+            className='flex items-start gap-2'
+            onSubmit={(e) => {
+              e.preventDefault()
+              void add()
+            }}
           >
-            {t('add_link')}
-          </MultiButton>
-        </form>
-      )}
-    </FlexCol>
+            <div className='grow'>
+              <InputField
+                isSmart
+                isLabelHidden
+                label={t('ticket_link_url')}
+                aria-label={t('ticket_link_url')}
+                placeholder='https://github.com/owner/repo/pull/123'
+                value={url}
+                onChange={(e) => {
+                  setUrl(e.target.value)
+                  setInvalid(false)
+                }}
+                errorMessage={isInvalid ? t('@invalid_git_url') : undefined}
+              />
+            </div>
+            <MultiButton
+              type='submit'
+              size='sm'
+              variant='outline'
+              icon={<PlusIcon width={16} />}
+              isPending={isAdding}
+              isDisabled={!url.trim()}
+            >
+              {t('add_link')}
+            </MultiButton>
+          </form>
+        )}
+      </FlexCol>
+    </AccordionSection>
   )
 }

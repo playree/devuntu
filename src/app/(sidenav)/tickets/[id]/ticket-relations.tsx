@@ -1,5 +1,6 @@
 'use client'
 
+import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
 import { InputField } from '@/components/general/input'
@@ -7,7 +8,7 @@ import { SingleSelectField } from '@/components/general/select'
 import { LinkIcon, PlusIcon, XMarkIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { StatusChip, TicketIdText } from '@/components/ticket/ticket-chip'
-import { TicketSelectField } from '@/components/ticket/ticket-select'
+import { TicketSelectField, useTicketCandidates } from '@/components/ticket/ticket-select'
 import { parseAction } from '@/lib/action/action-client'
 import {
   MAX_CHILD_ORDER,
@@ -23,18 +24,14 @@ import { ClientError } from '@/lib/error'
 import { zChildOrder, zRelationTarget } from '@/lib/schema/schema-ticket'
 import { useLocale } from '@/locale/client'
 import Link from 'next/link'
-import { FC, ReactNode, useEffect, useState } from 'react'
+import { FC, ReactNode, useCallback, useState } from 'react'
 import {
   addTicketRelation,
   GetTicketReturnType,
-  type RelationCandidate,
   removeTicketRelation,
   searchRelationCandidates,
   updateTicketChildOrder,
 } from './server'
-
-/** 候補検索を始めるまでの入力待ち */
-const SEARCH_DEBOUNCE_MS = 300
 
 type Ticket = NonNullable<GetTicketReturnType>
 type Relations = Ticket['relations']
@@ -172,41 +169,14 @@ const AddRelationForm: FC<{ ticket: Ticket; refresh: () => Promise<void> }> = ({
   const [target, setTarget] = useState('')
   const [error, setError] = useState<string>()
   const [isAdding, setAdding] = useState(false)
-  const [candidates, setCandidates] = useState<RelationCandidate[]>([])
-  const [isSearching, setSearching] = useState(false)
-  // 詳細を開いただけで候補を検索しないよう、入力欄に触れてから読み込む
-  const [isActivated, setActivated] = useState(false)
-
-  // 入力が落ち着いてから候補を引き直す。後から届いた古い応答で候補を上書きしないよう、打ち切った検索の結果は捨てる
-  useEffect(() => {
-    if (!isActivated) {
-      return
-    }
-    let isCurrent = true
-    const timer = setTimeout(async () => {
-      setSearching(true)
-      try {
-        const result = await parseAction(searchRelationCandidates({ ticketId: ticket.id, keyword: target }), {
-          handled: 'all',
-        })
-        if (isCurrent) {
-          setCandidates(result)
-        }
-      } catch {
-        if (isCurrent) {
-          setCandidates([])
-        }
-      } finally {
-        if (isCurrent) {
-          setSearching(false)
-        }
-      }
-    }, SEARCH_DEBOUNCE_MS)
-    return () => {
-      isCurrent = false
-      clearTimeout(timer)
-    }
-  }, [ticket.id, target, isActivated])
+  const fetchCandidates = useCallback(
+    (keyword: string) =>
+      parseAction(searchRelationCandidates({ ticketId: ticket.id, keyword }), {
+        handled: 'all',
+      }),
+    [ticket.id],
+  )
+  const { candidates, isSearching, activate } = useTicketCandidates(fetchCandidates, target)
 
   const kindOptions = Object.fromEntries(
     TICKET_RELATION_KINDS.map((item) => [item, t(TICKET_RELATION_KIND_LOCALE[item])]),
@@ -274,7 +244,7 @@ const AddRelationForm: FC<{ ticket: Ticket; refresh: () => Promise<void> }> = ({
             setError(undefined)
           }}
           onSubmit={() => void add()}
-          onFocus={() => setActivated(true)}
+          onFocus={activate}
           errorMessage={error}
         />
       </div>
@@ -304,58 +274,59 @@ export const TicketRelations: FC<{ ticket: Ticket; refresh: () => Promise<void> 
   }
 
   return (
-    <FlexCol isSmart className='pb-4'>
-      <div className='flex items-center gap-2'>
-        <LinkIcon />
-        <span>{t('ticket_relations')}</span>
-      </div>
+    <AccordionSection
+      id='relations'
+      icon={<LinkIcon />}
+      title={`${t('ticket_relations')} (${(parent ? 1 : 0) + children.length + related.length})`}
+    >
+      <FlexCol isSmart>
+        <RelationGroup title={t('parent_ticket')} isEmpty={!parent}>
+          {parent && <RelationItem item={parent} canEdit={canEdit} refresh={refresh} />}
+        </RelationGroup>
 
-      <RelationGroup title={t('parent_ticket')} isEmpty={!parent}>
-        {parent && <RelationItem item={parent} canEdit={canEdit} refresh={refresh} />}
-      </RelationGroup>
+        <RelationGroup
+          title={
+            <>
+              {t('child_tickets')}
+              {childProgress.total > 0 && (
+                <span className='ml-2 font-mono text-xs'>
+                  {t('child_progress', { done: childProgress.done, total: childProgress.total })}
+                </span>
+              )}
+            </>
+          }
+          listFilter={{ displayId, relation: 'child' }}
+          isEmpty={children.length === 0}
+        >
+          {children.map((child) => (
+            <RelationItem
+              key={child.relationId}
+              item={child}
+              canEdit={canEdit}
+              refresh={refresh}
+              prefix={
+                canEdit ? (
+                  <ChildOrderInput key={child.order} child={child} refresh={refresh} />
+                ) : (
+                  <span className='text-muted w-6 shrink-0 text-right font-mono text-xs'>{child.order}</span>
+                )
+              }
+            />
+          ))}
+        </RelationGroup>
 
-      <RelationGroup
-        title={
-          <>
-            {t('child_tickets')}
-            {childProgress.total > 0 && (
-              <span className='ml-2 font-mono text-xs'>
-                {t('child_progress', { done: childProgress.done, total: childProgress.total })}
-              </span>
-            )}
-          </>
-        }
-        listFilter={{ displayId, relation: 'child' }}
-        isEmpty={children.length === 0}
-      >
-        {children.map((child) => (
-          <RelationItem
-            key={child.relationId}
-            item={child}
-            canEdit={canEdit}
-            refresh={refresh}
-            prefix={
-              canEdit ? (
-                <ChildOrderInput key={child.order} child={child} refresh={refresh} />
-              ) : (
-                <span className='text-muted w-6 shrink-0 text-right font-mono text-xs'>{child.order}</span>
-              )
-            }
-          />
-        ))}
-      </RelationGroup>
+        <RelationGroup
+          title={`${t('related_tickets')} (${related.length})`}
+          listFilter={{ displayId, relation: 'related' }}
+          isEmpty={related.length === 0}
+        >
+          {related.map((item) => (
+            <RelationItem key={item.relationId} item={item} canEdit={canEdit} refresh={refresh} />
+          ))}
+        </RelationGroup>
 
-      <RelationGroup
-        title={`${t('related_tickets')} (${related.length})`}
-        listFilter={{ displayId, relation: 'related' }}
-        isEmpty={related.length === 0}
-      >
-        {related.map((item) => (
-          <RelationItem key={item.relationId} item={item} canEdit={canEdit} refresh={refresh} />
-        ))}
-      </RelationGroup>
-
-      {canEdit && <AddRelationForm ticket={ticket} refresh={refresh} />}
-    </FlexCol>
+        {canEdit && <AddRelationForm ticket={ticket} refresh={refresh} />}
+      </FlexCol>
+    </AccordionSection>
   )
 }

@@ -1,15 +1,62 @@
 'use client'
 
-import { FieldError } from '@/components/general/field'
+import { FieldError, FieldLabel, TriggerClearButton } from '@/components/general/field'
 import { useSmart } from '@/components/general/smart'
 import { StatusChip, TicketIdText } from '@/components/ticket/ticket-chip'
 import type { TicketStatus } from '@/generated/prisma/enums'
 import { useLocale } from '@/locale/client'
 import { ComboBox, EmptyState, Input, ListBox, cn } from '@heroui/react'
-import { FC } from 'react'
+import { FC, useEffect, useState } from 'react'
 
 /** 候補のチケット。表示ID は呼び出し側(サーバー)で組み立てたものを渡す */
 export type TicketSelectOption = { id: string; displayId: string; title: string; status: TicketStatus }
+
+/** 候補検索を始めるまでの入力待ち */
+const SEARCH_DEBOUNCE_MS = 300
+
+/**
+ * TicketSelectField の候補をサーバーから引く。入力が落ち着いてから検索し、後から届いた古い応答は捨てる。
+ * 画面を開いただけで検索しないよう、`activate`(入力欄のフォーカス)まで読み込まない。
+ * fetcher が変わると引き直すので、呼び出し側は useCallback で固定する
+ */
+export const useTicketCandidates = <T extends TicketSelectOption>(
+  fetcher: (keyword: string) => Promise<T[]>,
+  keyword: string,
+) => {
+  const [candidates, setCandidates] = useState<T[]>([])
+  const [isSearching, setSearching] = useState(false)
+  const [isActivated, setActivated] = useState(false)
+
+  useEffect(() => {
+    if (!isActivated) {
+      return
+    }
+    let isCurrent = true
+    const timer = setTimeout(async () => {
+      setSearching(true)
+      try {
+        const result = await fetcher(keyword)
+        if (isCurrent) {
+          setCandidates(result)
+        }
+      } catch {
+        if (isCurrent) {
+          setCandidates([])
+        }
+      } finally {
+        if (isCurrent) {
+          setSearching(false)
+        }
+      }
+    }, SEARCH_DEBOUNCE_MS)
+    return () => {
+      isCurrent = false
+      clearTimeout(timer)
+    }
+  }, [fetcher, keyword, isActivated])
+
+  return { candidates, isSearching, activate: () => setActivated(true) }
+}
 
 /**
  * チケットを表示ID / 件名で探して選ぶ入力欄。候補の絞り込みは呼び出し側(サーバー検索)で済ませる前提で、
@@ -24,7 +71,11 @@ export const TicketSelectField: FC<{
   onSubmit?: () => void
   /** 入力欄にフォーカスしたとき。候補の読み込みを触るまで遅らせるのに使う */
   onFocus?: () => void
+  /** 入力欄の中のクリアボタンを押したとき。未指定ならボタンを出さない */
+  onClear?: () => void
   isLoading?: boolean
+  /** 見出し。未指定なら aria-label だけで読み上げる */
+  label?: string
   placeholder?: string
   errorMessage?: string
   isSmart?: boolean
@@ -36,7 +87,9 @@ export const TicketSelectField: FC<{
   onSelect,
   onSubmit,
   onFocus,
+  onClear,
   isLoading = false,
+  label,
   placeholder,
   errorMessage,
   isSmart: isSmartProp,
@@ -44,15 +97,21 @@ export const TicketSelectField: FC<{
 }) => {
   const { t } = useLocale()
   const { isCompact, hasErrorArea } = useSmart(isSmartProp)
+  const hasClear = !!onClear && !!inputValue
 
   return (
     <ComboBox
-      aria-label={ariaLabel}
+      // 見出しを出すときは Label が名前になる
+      aria-label={label ? undefined : ariaLabel}
       items={options}
       inputValue={inputValue}
       onInputChange={onInputChange}
-      // 選んだ候補は呼び出し側が入力欄へ反映するので、選択状態は持たない
-      value={null}
+      /**
+       * 選択値は入力値から導く(入力が表示IDと一致する候補を選択中とみなす)。
+       * null 固定だと選んでも選択値が変わらず閉じる処理が働かないうえ、呼び出し側が入力欄へ表示IDを入れた変化で
+       * 候補の一覧が開き直る
+       */
+      value={options.find((option) => option.displayId === inputValue)?.id ?? null}
       onChange={(key) => {
         const option = options.find((item) => item.id === key)
         if (option) {
@@ -68,9 +127,16 @@ export const TicketSelectField: FC<{
       fullWidth
       onFocus={onFocus}
     >
+      {label && <FieldLabel isCompact={isCompact}>{label}</FieldLabel>}
       <ComboBox.InputGroup>
+        {onClear && hasClear && (
+          <TriggerClearButton // 配置の制約は UserSelectField と同じ(Input より前に置き、絶対配置で重ねる)。キーボードからは入力を消せば解除できる
+            className='absolute inset-y-0 inset-e-6 z-10'
+            onClear={onClear}
+          />
+        )}
         <Input
-          className={cn(isCompact ? 'min-h-7 py-1' : undefined)}
+          className={cn(isCompact ? 'min-h-7 py-1' : undefined, hasClear ? 'pe-11' : undefined)}
           placeholder={placeholder}
           /**
            * 候補の一覧が開いていると、react-aria は Enter を一覧を閉じる操作として握り、フォームの送信まで届かない。

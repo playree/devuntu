@@ -11,6 +11,7 @@ import {
   splitKeywords,
   tagNamesWhere,
   TICKET_SORT_COLUMNS,
+  ticketCandidateWhere,
   ticketIdOrTitleWhere,
   ticketListOrderBy,
   ticketScopeWhere,
@@ -197,6 +198,17 @@ describe('ticketIdOrTitleWhere: 表示ID / 番号 / 件名の条件', () => {
       OR: [{ number: 7 }, { title: { contains: '#7', mode: 'insensitive' } }],
     })
     expect(JSON.stringify(ticketIdOrTitleWhere('foo'))).not.toMatch(/content|comments/)
+  })
+})
+
+describe('ticketCandidateWhere: チケットの候補の条件', () => {
+  it('キーワードが空なら完了以外に絞る', () => {
+    expect(ticketCandidateWhere('')).toEqual([{ status: { not: 'done' } }])
+    expect(ticketCandidateWhere('   ')).toEqual([{ status: { not: 'done' } }])
+  })
+
+  it('キーワードがあれば語ごとの表示ID / 件名の条件にし、完了も含める', () => {
+    expect(ticketCandidateWhere('abc-12 foo')).toEqual([ticketIdOrTitleWhere('abc-12'), ticketIdOrTitleWhere('foo')])
   })
 })
 
