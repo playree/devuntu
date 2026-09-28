@@ -117,7 +117,6 @@ export const en: DefaultLocaleItems = {
   calendar_share: 'Availability Sharing',
   calendar_share_default_title: "${name}'s calendar",
   cancel: 'Cancel',
-  child_order: 'Order',
   child_progress: '${done}/${total} done',
   child_tickets: 'Child Tickets',
   ci_status_cancelled: 'CI Cancelled',

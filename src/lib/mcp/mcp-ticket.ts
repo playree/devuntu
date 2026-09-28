@@ -132,7 +132,7 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
     workflow: ticketWorkflowFor(auth.kind, access.canEdit),
     /** 親チケット。参照は 1 階層だけ(親の親は返さない) */
     parent: relations.parent,
-    /** 直下の子チケット。order は親の下での順番で、同じ値の子は並行してよい扱い */
+    /** 直下の子チケット。order は親の下での順番で、同じ値の子は番号順に並ぶ */
     children: relations.children,
     /** 子の進み具合(完了した子の数 / 子の数) */
     childProgress: relations.childProgress,

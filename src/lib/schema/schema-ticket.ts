@@ -217,7 +217,7 @@ export const scCheckTicketCriterion = z.object({
 })
 export type CheckTicketCriterion = z.infer<typeof scCheckTicketCriterion>
 
-/** 親の下での子の順番。同じ値の子は並行してよい扱い */
+/** 親の下での子の順番。同じ値の子は番号順に並ぶ */
 export const zChildOrder = z.number().int().min(1).max(MAX_CHILD_ORDER)
 
 /** 関係の相手。チケットID / 表示ID / 番号(`12` / `#12`)を受け、同じボードの中から引く */
@@ -245,12 +245,12 @@ export const scSearchTicketCandidates = z.object({
 })
 export type SearchTicketCandidates = z.infer<typeof scSearchTicketCandidates>
 
-/** 子の順番の変更。id は親子の関係の ID */
-export const scUpdateTicketChildOrder = z.object({
+/** 子を兄弟の中で 1 つ前(-1) / 後(1)へ動かす。id は親子の関係の ID */
+export const scMoveTicketChild = z.object({
   id: z.uuidv7(),
-  order: zChildOrder,
+  offset: z.union([z.literal(-1), z.literal(1)]),
 })
-export type UpdateTicketChildOrder = z.infer<typeof scUpdateTicketChildOrder>
+export type MoveTicketChild = z.infer<typeof scMoveTicketChild>
 
 /** タグはボードに属する。プライベートタグもプライベートボードの boardId を指定する */
 export const scCreateTag = z.object({

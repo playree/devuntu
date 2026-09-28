@@ -203,8 +203,11 @@ export const removeTicketRelation = async (actor: Actor, relationId: string, opt
     return { id: relationId, ticketId: relation.fromId }
   })
 
-/** 子の順番の変更(チケットを編集できる人)。同じ値の兄弟は並行してよい扱いなので重複は許す */
-export const updateTicketChildOrder = async (actor: Actor, relationId: string, order: number) =>
+/**
+ * 子を兄弟の中で 1 つ前(-1) / 後(1)へ動かす(チケットを編集できる人)。
+ * 並びは `listTicketRelations` と同じ(順番 → 番号)で、動かした後は兄弟全体を 1 からの連番に振り直す
+ */
+export const moveTicketChild = async (actor: Actor, relationId: string, offset: -1 | 1) =>
   prisma.$transaction(async (tx) => {
     const relation = await tx.ticketRelation.findUnique({
       where: { id: relationId },
@@ -214,8 +217,28 @@ export const updateTicketChildOrder = async (actor: Actor, relationId: string, o
       throw errInvalidOperation()
     }
     await assertTicketAccess(actor, relation.fromId, 'edit', tx)
+    await lockTicket(tx, relation.fromId)
 
-    await tx.ticketRelation.update({ where: { id: relationId }, data: { order } })
+    const siblings = (
+      await tx.ticketRelation.findMany({
+        where: { type: 'parent', fromId: relation.fromId },
+        select: { id: true, order: true, to: { select: { number: true } } },
+      })
+    ).sort((a, b) => a.order - b.order || a.to.number - b.to.number)
+    const index = siblings.findIndex((sibling) => sibling.id === relationId)
+    const target = index + offset
+    if (index < 0 || target < 0 || target >= siblings.length) {
+      return { id: relationId, ticketId: relation.fromId }
+    }
+
+    const [moved] = siblings.splice(index, 1)
+    siblings.splice(target, 0, moved)
+    for (const [i, sibling] of siblings.entries()) {
+      const order = Math.min(i + 1, MAX_CHILD_ORDER)
+      if (sibling.order !== order) {
+        await tx.ticketRelation.update({ where: { id: sibling.id }, data: { order } })
+      }
+    }
     return { id: relationId, ticketId: relation.fromId }
   })
 

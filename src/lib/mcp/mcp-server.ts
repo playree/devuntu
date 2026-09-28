@@ -70,9 +70,7 @@ const SERVER_NAME = {
 const zBoardIdOrKey = z.string().min(1)
 
 const PARENT_ID_DESCRIPTION = '親チケットの表示ID(例: ABC-42)またはチケットID。同じボードのチケットだけ指定できる'
-const zMcpChildOrder = zChildOrder.describe(
-  '親の下での順番(1始まり)。同じ値の子は並行してよい扱い。未指定なら兄弟の末尾',
-)
+const zMcpChildOrder = zChildOrder.describe('親の下での順番(1始まり)。同じ値の子は番号順に並ぶ。未指定なら兄弟の末尾')
 
 const mcpCreateTicketSchema = scCreateTicket.extend({
   boardId: zBoardIdOrKey.describe('ボードIDまたはボードキー(例: ABC)。list_boards で特定する'),
