@@ -224,7 +224,6 @@ export const TicketCriteria: FC<{ ticket: Ticket; refresh: () => Promise<void> }
           {criteria.length > 0 && <span className='text-muted text-xs'>{t('criteria_summary', summary)}</span>}
         </span>
       }
-      bodyClassName='px-0'
     >
       <FlexCol isSmart>
         {canEdit && !isEditing && (

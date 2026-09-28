@@ -278,7 +278,6 @@ export const TicketRelations: FC<{ ticket: Ticket; refresh: () => Promise<void> 
       id='relations'
       icon={<LinkIcon />}
       title={`${t('ticket_relations')} (${(parent ? 1 : 0) + children.length + related.length})`}
-      bodyClassName='px-0'
     >
       <FlexCol isSmart>
         <RelationGroup title={t('parent_ticket')} isEmpty={!parent}>

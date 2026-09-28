@@ -94,12 +94,7 @@ export const TicketLinks: FC<{ ticket: Ticket; refresh: () => Promise<void> }> =
   }
 
   return (
-    <AccordionSection
-      id='links'
-      icon={<CodeBracketIcon />}
-      title={`${t('ticket_links')} (${links.length})`}
-      bodyClassName='px-0'
-    >
+    <AccordionSection id='links' icon={<CodeBracketIcon />} title={`${t('ticket_links')} (${links.length})`}>
       <FlexCol isSmart>
         {links.length > 0 && (
           <ul className='space-y-1'>
