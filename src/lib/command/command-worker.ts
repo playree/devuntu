@@ -28,6 +28,7 @@ const loop = createWorkerLoop({
    * 掴み直しを試みても意味が無いため。
    */
   startDelayMs: COMMAND_START_DELAY_MS,
+  intervalFromFirstRun: true,
   rerunPending: true,
   isEnabled: () => envu.server.COMMAND_EXEC_ENABLED && envu.server.COMMAND_WORKER_ENABLED,
   /**
