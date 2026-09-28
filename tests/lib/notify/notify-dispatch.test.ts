@@ -140,6 +140,44 @@ describe('runNotifyDispatch: 1 tick の流れ', () => {
     expect(deliverEmail).toHaveBeenCalledTimes(1)
     expect(purge).toHaveBeenCalled()
   })
+
+  it('アウトボックスの取り出しで落ちても、できている配信行は送り、パージまで進む', async () => {
+    vi.mocked(claimOutbox).mockRejectedValue(new Error('db down'))
+    claimed.slack = [delivery({ id: 'd1' })]
+    claimed.email = [delivery({ id: 'e1', channel: 'email' })]
+
+    await expect(runNotifyDispatch(now)).resolves.toBeUndefined()
+
+    expect(deliverSlack).toHaveBeenCalledTimes(1)
+    expect(deliverEmail).toHaveBeenCalledTimes(1)
+    expect(purge).toHaveBeenCalledWith(now)
+  })
+
+  it('展開の失敗を戻す処理(settleOutbox)で落ちても、配信とパージまで進む', async () => {
+    vi.mocked(claimOutbox).mockResolvedValue([outbox()])
+    vi.mocked(resolveNotifyTargets).mockRejectedValue(new Error('db down'))
+    vi.mocked(settleOutbox).mockRejectedValueOnce(new Error('db down'))
+    claimed.slack = [delivery({ id: 'd1' })]
+
+    await expect(runNotifyDispatch(now)).resolves.toBeUndefined()
+
+    expect(deliverSlack).toHaveBeenCalledTimes(1)
+    expect(purge).toHaveBeenCalledWith(now)
+  })
+
+  it('壊れたペイロードを failed にする処理(failOutbox)で落ちても、配信とパージまで進む', async () => {
+    vi.mocked(claimOutbox).mockResolvedValue([outbox()])
+    vi.mocked(parseNotifyPayload).mockImplementationOnce(() => {
+      throw new Error('invalid')
+    })
+    vi.mocked(failOutbox).mockRejectedValueOnce(new Error('db down'))
+    claimed.slack = [delivery({ id: 'd1' })]
+
+    await expect(runNotifyDispatch(now)).resolves.toBeUndefined()
+
+    expect(deliverSlack).toHaveBeenCalledTimes(1)
+    expect(purge).toHaveBeenCalledWith(now)
+  })
 })
 
 describe('runNotifyDispatch: アウトボックスの展開', () => {
@@ -200,6 +238,17 @@ describe('runNotifyDispatch: アウトボックスの展開', () => {
     expect(settleOutbox).toHaveBeenCalledWith(expect.objectContaining({ id: 'outbox-1' }), now)
     expect(failOutbox).not.toHaveBeenCalled()
     expect(prisma.$transaction).not.toHaveBeenCalled()
+  })
+
+  it('失敗の記録で落ちた行は回収に任せ、掴んだ残りの行は展開を続ける', async () => {
+    vi.mocked(claimOutbox).mockResolvedValue([outbox({ id: 'outbox-1' }), outbox({ id: 'outbox-2' })])
+    vi.mocked(resolveNotifyTargets).mockRejectedValueOnce(new Error('db down'))
+    vi.mocked(settleOutbox).mockRejectedValueOnce(new Error('db down'))
+
+    await runNotifyDispatch(now)
+
+    expect(resolveNotifyTargets).toHaveBeenCalledTimes(2)
+    expect(prisma.notifyOutbox.update).toHaveBeenCalledWith(expect.objectContaining({ where: { id: 'outbox-2' } }))
   })
 
   it('配信行の作成で落ちたら done にせず再試行へ回す', async () => {

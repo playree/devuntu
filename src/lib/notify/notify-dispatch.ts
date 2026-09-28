@@ -35,6 +35,7 @@ import {
   settleDelivery,
   settleOutbox,
   type ClaimedDelivery,
+  type ClaimedOutbox,
 } from './notify-queue'
 import { resolveNotifyTargets } from './notify-recipient'
 import { deliverSlack } from './notify-slack'
@@ -49,34 +50,48 @@ import { deliverWebPush } from './notify-webpush'
  * 宛先の解決や配信行の作成(どちらも DB に触る)で落ちた分は一時障害の可能性があるので
  * 試行回数を使い切るまで未処理へ戻す。
  */
+const fanoutOne = async (outbox: ClaimedOutbox, now: Date): Promise<void> => {
+  const { id, event, targetUserIds } = outbox
+
+  // 文面を組み立てられない行は再試行しても同じ結果になる
+  let payload: NotifyPayload
+  try {
+    payload = parseNotifyPayload(event, outbox.payload)
+  } catch (error) {
+    logger.error({ error, outboxId: id, event }, 'notify payload invalid')
+    await failOutbox(outbox, now)
+    return
+  }
+
+  try {
+    const targets = await resolveNotifyTargets(event, payload, { userIds: targetUserIds })
+    const deliveries = await buildDeliveries({ outboxId: id, event, actorId: outbox.actorId, targets, now })
+
+    await prisma.$transaction(async (tx) => {
+      await createDeliveries(deliveries, tx)
+      await tx.notifyOutbox.update({ where: { id }, data: { status: 'done', claimedAt: null } })
+    })
+    logger.info({ outboxId: id, event, deliveries: deliveries.length }, 'notify fanned out')
+  } catch (error) {
+    logger.error({ error, outboxId: id, event }, 'notify fanout failed')
+    await settleOutbox(outbox, now)
+  }
+}
+
+/**
+ * 掴んだ分を 1 行ずつ展開する。
+ *
+ * 失敗の記録(`failOutbox` / `settleOutbox`)自体が落ちた行は `processing` のまま残し、
+ * 回収に任せて次の行へ進む(掴んだ残りの行を展開せずに放置しない)。
+ */
 const fanoutOutbox = async (now: Date): Promise<void> => {
   const claimed = await claimOutbox(NOTIFY_FANOUT_BATCH)
 
   for (const outbox of claimed) {
-    const { id, event, targetUserIds } = outbox
-
-    // 文面を組み立てられない行は再試行しても同じ結果になる
-    let payload: NotifyPayload
     try {
-      payload = parseNotifyPayload(event, outbox.payload)
+      await fanoutOne(outbox, now)
     } catch (error) {
-      logger.error({ error, outboxId: id, event }, 'notify payload invalid')
-      await failOutbox(outbox, now)
-      continue
-    }
-
-    try {
-      const targets = await resolveNotifyTargets(event, payload, { userIds: targetUserIds })
-      const deliveries = await buildDeliveries({ outboxId: id, event, actorId: outbox.actorId, targets, now })
-
-      await prisma.$transaction(async (tx) => {
-        await createDeliveries(deliveries, tx)
-        await tx.notifyOutbox.update({ where: { id }, data: { status: 'done', claimedAt: null } })
-      })
-      logger.info({ outboxId: id, event, deliveries: deliveries.length }, 'notify fanned out')
-    } catch (error) {
-      logger.error({ error, outboxId: id, event }, 'notify fanout failed')
-      await settleOutbox(outbox, now)
+      logger.error({ error, outboxId: outbox.id, event: outbox.event }, 'notify fanout record failed')
     }
   }
 }
@@ -266,11 +281,16 @@ const deliverChannel = async (channel: NotifyChannel, now: Date): Promise<void> 
  * 1 tick ぶんの処理。
  *
  * チャネル間は `Promise.allSettled` で並行に送り、片方のチャネルの失敗で
- * もう片方を止めない。
+ * もう片方を止めない。展開段の失敗も同じ扱いで、既にできている配信行は送る。
+ * 掴んだまま残ったアウトボックスは次周以降の回収で未処理へ戻る。
  */
 export const runNotifyDispatch = async (now: Date = nowDate()): Promise<void> => {
   await reclaimStale(now)
-  await fanoutOutbox(now)
+  try {
+    await fanoutOutbox(now)
+  } catch (error) {
+    logger.error({ error }, 'notify fanout aborted')
+  }
 
   const results = await Promise.allSettled(NOTIFY_CHANNELS.map((channel) => deliverChannel(channel, now)))
   for (const [index, result] of results.entries()) {
