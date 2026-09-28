@@ -10,11 +10,12 @@
  */
 
 import type { NotifyEvent } from '@/generated/prisma/enums'
+import type { LocaleItemBase } from '@/locale'
 import { t } from '@/locale/server'
 import { AGENT_RUN_ACTION_LOCALE, AGENT_RUN_STATUS_LOCALE, agentRunDuration } from '../agent/agent'
 import { commentAnchorId, ticketShortPath } from '../board/ticket-id'
 import { makeUrl } from '../server-utils'
-import type { NotifyPayload } from './notify-payload'
+import type { AgentRunNotifyState, NotifyPayload } from './notify-payload'
 
 /**
  * 宛先の種別。
@@ -52,6 +53,17 @@ type ContentBuilder<E extends NotifyEvent> = (
   audience: NotifyAudience,
 ) => NotifyContent
 
+/**
+ * エージェント実行の文面。通知を受けた人がそれを合図に動けるよう、実行後の状態から次にすることを示す。
+ * 状態を持たない旧形式の行は `notify_msg_agent_run_finished` で送る。
+ */
+const AGENT_RUN_NOTIFY_MSG = {
+  planned: 'notify_msg_agent_run_planned',
+  done: 'notify_msg_agent_run_done',
+  failed: 'notify_msg_agent_run_failed',
+  skipped: 'notify_msg_agent_run_skipped',
+} as const satisfies Record<AgentRunNotifyState, LocaleItemBase>
+
 const BUILDERS = {
   /**
    * メンションのリンク先は短縮URL。
@@ -73,15 +85,17 @@ const BUILDERS = {
    * (`agent-run-history.tsx`)と同じ判断に揃えている。
    */
   agent_run: (payload, locale) => {
-    const { ticketId, agentName, action, status, excerpt, startedAt, finishedAt } = payload
+    const { ticketId, agentName, action, status, state, excerpt, startedAt, finishedAt } = payload
+    const param = {
+      agent: agentName,
+      action: t(locale, AGENT_RUN_ACTION_LOCALE[action]),
+      duration: agentRunDuration(startedAt, finishedAt),
+    }
     return {
       subject: subjectOf(payload),
-      body: t(locale, 'notify_msg_agent_run_finished', {
-        agent: agentName,
-        action: t(locale, AGENT_RUN_ACTION_LOCALE[action]),
-        result: t(locale, AGENT_RUN_STATUS_LOCALE[status]),
-        duration: agentRunDuration(startedAt, finishedAt),
-      }),
+      body: state
+        ? t(locale, AGENT_RUN_NOTIFY_MSG[state], param)
+        : t(locale, 'notify_msg_agent_run_finished', { ...param, result: t(locale, AGENT_RUN_STATUS_LOCALE[status]) }),
       url: makeUrl(`/tickets/${ticketId}`).toString(),
       ...(excerpt && { excerpt }),
     }

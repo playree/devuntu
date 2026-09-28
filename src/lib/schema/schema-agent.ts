@@ -11,6 +11,7 @@ import {
   AGENT_WINDOW_MAX_MIN,
   AGENT_WINDOW_STEP_MIN,
   MAX_AGENT_DAILY_LIMIT,
+  MAX_AGENT_MONTHLY_BUDGET_USD,
   MAX_POLL_INTERVAL_SEC,
   MIN_POLL_INTERVAL_SEC,
 } from '../agent/agent'
@@ -98,6 +99,12 @@ export const scSaveAgentRunner = z.object({
     .min(0, el('@invalid_daily_limit'))
     .max(MAX_AGENT_DAILY_LIMIT, el('@invalid_daily_limit')),
   dailyResetMin: zDayMin,
+  /** 月の予算上限(USD)。0 は無制限。DB は小数2桁までしか持たない */
+  monthlyBudgetUsd: z
+    .number(el('@invalid_monthly_budget'))
+    .min(0, el('@invalid_monthly_budget'))
+    .max(MAX_AGENT_MONTHLY_BUDGET_USD, el('@invalid_monthly_budget'))
+    .multipleOf(0.01, el('@invalid_monthly_budget')),
 })
 export type SaveAgentRunner = z.infer<typeof scSaveAgentRunner>
 

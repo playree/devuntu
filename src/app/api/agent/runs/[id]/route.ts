@@ -8,11 +8,25 @@ import { z } from 'zod'
  * Claude が `finish_agent_task` を呼ばずに落ちた場合の保険も兼ねており、チケットが処理中のまま
  * 残っていれば失敗として閉じる(`finishAgentRunById`)。ランナーは Claude の終了コードしか
  * 知らないので、チケットの状態そのものはエージェントの報告を優先する。
+ *
+ * `metrics` は CLI の出力から取れた計測値。古いランナーは送らないので省略できる。
  */
+
+const scCount = z.number().int().min(0).max(2_000_000_000).nullish()
 
 const scBody = z.object({
   status: z.enum(['succeeded', 'failed', 'skipped']),
   summary: z.string().max(2000).optional(),
+  metrics: z
+    .object({
+      model: z.string().max(100).nullish(),
+      inputTokens: scCount,
+      cachedInputTokens: scCount,
+      outputTokens: scCount,
+      costUsd: z.number().min(0).max(100_000).nullish(),
+      exitCode: z.number().int().min(-1000).max(1000).nullish(),
+    })
+    .optional(),
 })
 
 export const PATCH = async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
@@ -31,7 +45,8 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
   }
 
   const { id } = await params
-  const updated = await finishAgentRunById(runner.id, id, parsed.data.status, parsed.data.summary)
+  const { status, summary, metrics } = parsed.data
+  const updated = await finishAgentRunById(runner, id, status, summary, metrics)
   if (!updated) {
     return agentError(404, 'run_not_found')
   }

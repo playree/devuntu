@@ -21,6 +21,7 @@ export const agentRunnerSelect = {
   rule: true,
   dailyRunLimit: true,
   dailyResetMin: true,
+  monthlyBudgetUsd: true,
   /** エージェントユーザー。実行結果の通知に表示名を載せる */
   user: { select: { name: true } },
 } as const satisfies Prisma.AgentRunnerSelect

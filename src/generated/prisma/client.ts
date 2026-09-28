@@ -67,6 +67,13 @@ export type AgentRunner = Prisma.AgentRunnerModel
  */
 export type AgentRun = Prisma.AgentRunModel
 /**
+ * Model AgentUsage
+ * エージェントの月ごとの利用量(ボード別)。予算上限の判定と、コストの集計表示に使う。
+ * 実行履歴(AgentRun)は保持期間と件数で消えるので、月の集計はここへ積み上げて自動メンテナンスの対象にしない。
+ * 計測値を受け取るたびに、ランナーの行をロックしたうえで該当する行へ加算する(無ければ作る)。
+ */
+export type AgentUsage = Prisma.AgentUsageModel
+/**
  * Model AgentApprover
  * エージェントモードの変更(= 自動実行の承認)を許可する相手。ユーザー指定。
  * 1人も居ないエージェントは誰もエージェントモードを変更できない

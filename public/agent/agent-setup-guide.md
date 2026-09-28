@@ -276,6 +276,7 @@ python3 ~/devuntu-agent-work/.devuntu-agent/devuntu_agent.py poll --dry-run
 - `run conditions not met: reason=no_runner` → 管理画面で自動運用がまだ設定されていない(次の手順へ)
 - `run conditions not met: reason=disabled` → 設定はあるが無効。管理画面で有効にする
 - `run conditions not met: reason=outside_hours` → 稼働許可時間帯の外。設定どおりの動き
+- `run conditions not met: reason=daily_limit` / `reason=monthly_budget` → 1日の処理上限 / 月の予算上限に達した。設定どおりの動き
 - `no tickets to process` → 疎通も稼働条件も問題なし
 - `dry-run: would process ... with /path/to/{{cliKind}}` → 起動する CLI の場所まで確認できている
 - `{{cliKind}} not found (PATH=...)` → CLI を見つけられない。`cli.path` か `cli.bin` を設定する

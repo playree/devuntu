@@ -24,6 +24,7 @@ import { logger } from '../logger'
 import { prisma } from '../prisma'
 import { commentExcerpt } from './notify'
 import { enqueueNotify } from './notify-enqueue'
+import type { AgentRunNotifyState } from './notify-payload'
 
 /**
  * 通知に載せるチケットの識別。表示IDは呼び出し元で組み立てて渡す。
@@ -340,6 +341,8 @@ export type AgentRunNotification = {
   action: AgentRunAction
   /** 終了時のみ通知するので、実行中は受け取らない */
   status: Exclude<AgentRunStatus, 'running'>
+  /** 実行後のチケットの処理状態 */
+  state: AgentRunNotifyState
   /** エージェントが報告した結果の要約 */
   summary: string | null
   startedAt: Date
@@ -350,7 +353,7 @@ export const enqueueAgentRunFinished = async (
   param: AgentRunNotification,
   tx: Prisma.TransactionClient = prisma,
 ): Promise<void> => {
-  const { runId, agentName, ticket, action, status, summary, startedAt, finishedAt } = param
+  const { runId, agentName, ticket, action, status, state, summary, startedAt, finishedAt } = param
   const excerpt = summary ? commentExcerpt(summary) : ''
 
   logger.info({ runId, ticketId: ticket.id, status }, 'agent run notify')
@@ -365,6 +368,7 @@ export const enqueueAgentRunFinished = async (
         agentName,
         action,
         status,
+        state,
         startedAt,
         finishedAt,
         // 記法を落とした結果が空になることもあるので、その場合は無かったことにする

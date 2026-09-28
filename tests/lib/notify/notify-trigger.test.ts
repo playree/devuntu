@@ -250,6 +250,7 @@ describe('エージェントの実行終了', () => {
     ticket,
     action: 'execute',
     status: 'succeeded',
+    state: 'done',
     summary: '原因を特定して修正した',
     startedAt,
     finishedAt: new Date(startedAt.getTime() + 90_000),
@@ -280,6 +281,7 @@ describe('エージェントの実行終了', () => {
       agentName: 'テストエージェント',
       action: 'execute',
       status: 'succeeded',
+      state: 'done',
       startedAt,
       excerpt: '原因を特定して修正した',
     })

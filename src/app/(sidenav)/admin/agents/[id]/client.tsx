@@ -3,6 +3,7 @@
 import { AgentCustomInstruction } from '@/components/agent/agent-custom-instruction'
 import { AgentRunHistory } from '@/components/agent/agent-run-history'
 import { AgentRunner } from '@/components/agent/agent-runner'
+import { AgentUsage } from '@/components/agent/agent-usage'
 import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
@@ -11,6 +12,7 @@ import { PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
 import {
   ArrowLeftCircleIcon,
+  ChartBarIcon,
   ClipboardDocumentIcon,
   ClockIcon,
   Cog6ToothIcon,
@@ -38,6 +40,7 @@ import {
   getAgentRunner,
   getAgentRuns,
   getAgentToken,
+  getAgentUsage,
   saveAgentRunner,
   saveAgentRunnerRule,
 } from './server'
@@ -70,6 +73,11 @@ export const AdminAgentDetailClient: FC<{ agentId: string; baseUrl: string }> = 
   } = useActionData(() => getAgentApprovers({ id: agentId }))
   const { data: groupOptions } = useActionData(getAgentGroupOptions)
   const { data: approverUserOptions } = useActionData(getApproverUserOptions)
+  const {
+    data: usage,
+    reload: reloadUsage,
+    isLoading: isUsageLoading,
+  } = useActionData(() => getAgentUsage({ id: agentId }))
   const runHistoryList = usePagingList({
     load: () => parseAction(getAgentRuns({ id: agentId }), { handled: 'all' }),
     sort: { init: { column: 'startedAt', direction: 'descending' } },
@@ -99,6 +107,7 @@ export const AdminAgentDetailClient: FC<{ agentId: string; baseUrl: string }> = 
             reloadApprovers()
             reloadRunner()
             reloadToken()
+            reloadUsage()
             runHistoryList.reload()
           }}
         />
@@ -145,6 +154,10 @@ export const AdminAgentDetailClient: FC<{ agentId: string; baseUrl: string }> = 
             refresh={refreshRunner}
             saveRule={saveAgentRunnerRule}
           />
+        </AccordionSection>
+
+        <AccordionSection id='agent_usage' icon={<ChartBarIcon />} title={t('agent_usage')}>
+          <AgentUsage usage={usage} budgetUsd={runner?.monthlyBudgetUsd} isLoading={isUsageLoading} />
         </AccordionSection>
 
         <AccordionSection // 履歴表は行数が多く、Popover を含むので開くまで作らない

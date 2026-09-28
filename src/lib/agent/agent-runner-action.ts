@@ -15,11 +15,12 @@ import {
   saveAgentRunnerConfig,
   saveAgentRunnerRuleValue,
 } from './agent-runner-config'
+import { findAgentMonthlyUsage } from './agent-usage'
 
 type AgentRunnerActionOptions = {
   role: 'user' | 'admin'
   /** 各 Action の actionName */
-  names: { get: string; save: string; saveRule: string; runs: string }
+  names: { get: string; save: string; saveRule: string; runs: string; usage: string }
   /** 操作者がそのエージェントの設定を触ってよいか。NG なら throw する */
   authorize: (user: { id: string }, agentId: string) => Promise<void>
 }
@@ -65,5 +66,15 @@ export const createAgentRunnerActions = ({ role, names, authorize }: AgentRunner
       await authorize(user, id)
 
       return await listAgentRuns(id)
+    }),
+
+  /** 今月の利用量(合計とボード別の内訳)。未設定なら null */
+  getAgentUsage: safeAuthAction
+    .metadata({ actionName: names.usage, role })
+    .inputSchema(scUUID)
+    .action(async ({ ctx: { user }, parsedInput: { id } }) => {
+      await authorize(user, id)
+
+      return await findAgentMonthlyUsage(id)
     }),
 })

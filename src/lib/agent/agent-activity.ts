@@ -1,15 +1,15 @@
 /**
- * ランナーの稼働判定(稼働許可時間帯 / 1日の処理上限)(サーバー専用)
+ * ランナーの稼働判定(稼働許可時間帯 / 1日の処理上限 / 月の予算上限)(サーバー専用)
  */
 
-import { addDaysDateOnly, minToHHmm, nowDate, toZone, zonedMinutes } from '../day'
+import { addDaysDateOnly, addMonthsDateOnly, minToHHmm, nowDate, toZone, zonedMinutes } from '../day'
 import { envu } from '../env-util'
 import { type Db, prisma } from '../prisma'
 import { AGENT_UNLIMITED_DAILY_RUNS } from './agent'
 import type { AgentRunnerRow } from './agent-runner'
 
 /** 稼働できない理由。ランナーとエージェントの双方へそのまま返す */
-export type AgentInactiveReason = 'no_runner' | 'disabled' | 'outside_hours' | 'daily_limit'
+export type AgentInactiveReason = 'no_runner' | 'disabled' | 'outside_hours' | 'daily_limit' | 'monthly_budget'
 
 type ActiveWindow = Pick<AgentRunnerRow, 'activeFromMin' | 'activeToMin' | 'timezone'>
 
@@ -45,10 +45,14 @@ export const activeWindowLabel = (window: ActiveWindow): { from: string; to: str
 /** 処理上限の消化状況。上限が無制限のときは持たない */
 export type AgentRunUsage = { used: number; limit: number; resetAt: Date }
 
+/** 予算の消化状況(USD)。予算が無制限のときは持たない */
+export type AgentBudgetUsage = { usedUsd: number; limitUsd: number; resetAt: Date }
+
 export type AgentActivity = {
   active: boolean
   reason: AgentInactiveReason | null
   usage?: AgentRunUsage | null
+  budget?: AgentBudgetUsage | null
 }
 
 /** 稼働条件の判定。設定が無い(= 自動運用を使わない)場合も稼働不可として扱う */
@@ -96,21 +100,67 @@ export const computeAgentRunUsage = async (db: Db, runner: AgentRunnerRow, now: 
 }
 
 /**
- * 稼働条件の判定に1日の処理上限を加えたもの。DB を引くので非同期。
+ * 予算の集計期間。暦月ではなく、毎月1日のリセット時刻(`dailyResetMin`)を境にする。
  *
- * 上限が無制限、または他の理由で既に稼働不可なら件数は数えない(ポーリングのたびに引かせない)。
+ * 1日の処理上限と同じ時刻で切り替わるので、利用者が覚える境目は1つで済む。
+ * `month` は `AgentUsage.month` のキー、`resetAt` は次に集計が 0 に戻る時刻。
+ */
+export const monthlyUsageWindow = (window: DailyWindow, now: Date = nowDate()): { month: string; resetAt: Date } => {
+  const tz = runnerTimezone(window)
+  const first = toZone(now, tz).format('YYYY-MM-01')
+  const start =
+    zonedMinutes(first, window.dailyResetMin, tz).valueOf() <= now.getTime() ? first : addMonthsDateOnly(first, -1)
+  return {
+    month: start.slice(0, 7),
+    resetAt: zonedMinutes(addMonthsDateOnly(start, 1), window.dailyResetMin, tz).toDate(),
+  }
+}
+
+/** その月のコストの合計(USD)。ボードが消えた行(boardId が null)も含める */
+export const sumAgentCost = async (db: Db, runnerId: string, month: string): Promise<number> => {
+  const { _sum } = await db.agentUsage.aggregate({ where: { runnerId, month }, _sum: { costUsd: true } })
+  return _sum.costUsd?.toNumber() ?? 0
+}
+
+/** 予算の消化状況を算出する。上限チェックと実行作成の両方から使うので共通化している */
+export const computeAgentBudgetUsage = async (db: Db, runner: AgentRunnerRow, now: Date): Promise<AgentBudgetUsage> => {
+  const { month, resetAt } = monthlyUsageWindow(runner, now)
+  return { usedUsd: await sumAgentCost(db, runner.id, month), limitUsd: runner.monthlyBudgetUsd.toNumber(), resetAt }
+}
+
+/** 月の予算上限を設けているか。0 は無制限 */
+export const hasMonthlyBudget = (runner: Pick<AgentRunnerRow, 'monthlyBudgetUsd'>): boolean =>
+  runner.monthlyBudgetUsd.gt(0)
+
+/**
+ * 稼働条件の判定に1日の処理上限と月の予算上限を加えたもの。DB を引くので非同期。
+ *
+ * 上限が無制限、または他の理由で既に稼働不可なら数えない(ポーリングのたびに引かせない)。
+ * 予算は開始前にしか見ないので、実行中の1回ぶんは超過し得る(ソフトリミット)。
  */
 export const evaluateRunnerActivity = async (
   runner: AgentRunnerRow | null,
   now: Date = nowDate(),
 ): Promise<AgentActivity> => {
   const activity = evaluateRunner(runner, now)
-  if (!runner || !activity.active || runner.dailyRunLimit <= AGENT_UNLIMITED_DAILY_RUNS) {
+  if (!runner || !activity.active) {
     return activity
   }
 
-  const usage = await computeAgentRunUsage(prisma, runner, now)
-  return usage.used >= usage.limit
-    ? { active: false, reason: 'daily_limit', usage }
-    : { active: true, reason: null, usage }
+  const limits: Pick<AgentActivity, 'usage' | 'budget'> = {}
+  if (runner.dailyRunLimit > AGENT_UNLIMITED_DAILY_RUNS) {
+    const usage = await computeAgentRunUsage(prisma, runner, now)
+    if (usage.used >= usage.limit) {
+      return { active: false, reason: 'daily_limit', usage }
+    }
+    limits.usage = usage
+  }
+  if (hasMonthlyBudget(runner)) {
+    const budget = await computeAgentBudgetUsage(prisma, runner, now)
+    if (budget.usedUsd >= budget.limitUsd) {
+      return { active: false, reason: 'monthly_budget', ...limits, budget }
+    }
+    limits.budget = budget
+  }
+  return { active: true, reason: null, ...limits }
 }

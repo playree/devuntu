@@ -3,9 +3,10 @@
 import { AgentCustomInstruction } from '@/components/agent/agent-custom-instruction'
 import { AgentRunHistory } from '@/components/agent/agent-run-history'
 import { AgentRunner } from '@/components/agent/agent-runner'
+import { AgentUsage } from '@/components/agent/agent-usage'
 import { AccordionSection } from '@/components/general/accordion'
 import { usePagingList } from '@/components/general/paging'
-import { ClipboardDocumentIcon, ClockIcon, TruckIcon } from '@/components/icon'
+import { ChartBarIcon, ClipboardDocumentIcon, ClockIcon, TruckIcon } from '@/components/icon'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'
 import { Accordion } from '@heroui/react'
@@ -13,6 +14,7 @@ import { ComponentProps, FC } from 'react'
 import {
   getApprovableAgentRunner,
   getApprovableAgentRuns,
+  getApprovableAgentUsage,
   saveApprovableAgentRunner,
   saveApprovableAgentRunnerRule,
 } from './server'
@@ -38,6 +40,7 @@ export const AgentSections: FC<{
     refresh: refreshRunner,
     isLoading: isRunnerLoading,
   } = useActionData(() => getApprovableAgentRunner({ id: agentId }))
+  const { data: usage, isLoading: isUsageLoading } = useActionData(() => getApprovableAgentUsage({ id: agentId }))
   const runHistoryList = usePagingList({
     load: () => parseAction(getApprovableAgentRuns({ id: agentId }), { handled: 'all' }),
     sort: { init: { column: 'startedAt', direction: 'descending' } },
@@ -67,6 +70,10 @@ export const AgentSections: FC<{
           refresh={refreshRunner}
           saveRule={saveApprovableAgentRunnerRule}
         />
+      </AccordionSection>
+
+      <AccordionSection id='agent_usage' icon={<ChartBarIcon />} title={t('agent_usage')}>
+        <AgentUsage usage={usage} budgetUsd={runner?.monthlyBudgetUsd} isLoading={isUsageLoading} />
       </AccordionSection>
 
       <AccordionSection // 履歴表は行数が多く、Popover を含むので開くまで作らない

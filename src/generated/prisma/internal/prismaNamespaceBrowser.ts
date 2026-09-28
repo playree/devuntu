@@ -55,6 +55,7 @@ export const ModelName = {
   McpToken: 'McpToken',
   AgentRunner: 'AgentRunner',
   AgentRun: 'AgentRun',
+  AgentUsage: 'AgentUsage',
   AgentApprover: 'AgentApprover',
   AgentApproverGroup: 'AgentApproverGroup',
   Session: 'Session',
@@ -159,6 +160,7 @@ export const AgentRunnerScalarFieldEnum = {
   rule: 'rule',
   dailyRunLimit: 'dailyRunLimit',
   dailyResetMin: 'dailyResetMin',
+  monthlyBudgetUsd: 'monthlyBudgetUsd',
   lastPolledAt: 'lastPolledAt',
   hostname: 'hostname',
   version: 'version',
@@ -178,10 +180,33 @@ export const AgentRunScalarFieldEnum = {
   status: 'status',
   summary: 'summary',
   startedAt: 'startedAt',
-  finishedAt: 'finishedAt'
+  finishedAt: 'finishedAt',
+  model: 'model',
+  inputTokens: 'inputTokens',
+  cachedInputTokens: 'cachedInputTokens',
+  outputTokens: 'outputTokens',
+  costUsd: 'costUsd',
+  exitCode: 'exitCode',
+  measuredAt: 'measuredAt'
 } as const
 
 export type AgentRunScalarFieldEnum = (typeof AgentRunScalarFieldEnum)[keyof typeof AgentRunScalarFieldEnum]
+
+
+export const AgentUsageScalarFieldEnum = {
+  id: 'id',
+  runnerId: 'runnerId',
+  month: 'month',
+  boardId: 'boardId',
+  runs: 'runs',
+  inputTokens: 'inputTokens',
+  cachedInputTokens: 'cachedInputTokens',
+  outputTokens: 'outputTokens',
+  costUsd: 'costUsd',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AgentUsageScalarFieldEnum = (typeof AgentUsageScalarFieldEnum)[keyof typeof AgentUsageScalarFieldEnum]
 
 
 export const AgentApproverScalarFieldEnum = {

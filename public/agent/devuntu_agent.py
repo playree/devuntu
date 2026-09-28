@@ -10,7 +10,7 @@
     1. POST /api/agent/status  ... 稼働条件と処理すべきチケットを聞く
     2. POST /api/agent/runs    ... 実行の開始を記録する(チケットが処理中になる)
     3. claude -p "..." / codex exec "..." ... CLI を起動してチケットを処理させる
-    4. PATCH /api/agent/runs/<id> ... 実行の終了を記録する
+    4. PATCH /api/agent/runs/<id> ... 実行の終了と、CLI の出力から取れた計測値(トークン数・コスト)を記録する
 
 チケットの状態そのものは CLI 側のエージェントが devuntu-agent MCP の finish_agent_task で報告する。
 このスクリプトは CLI の終了コードしか知らないので、4 は保険として扱われる
@@ -40,7 +40,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-__version__ = "0.7.5"
+__version__ = "0.8.2"
 
 # 1 Agent の構成を作業ディレクトリだけで完結させるため、config・ログ・ロックは本体と同じ
 # <作業ディレクトリ>/.devuntu-agent へ置く。作業ディレクトリを分ければ同一ホストに複数の Agent を並べられる
@@ -68,6 +68,13 @@ CLI_DEFAULTS: dict[str, dict[str, object]] = {
     "codex": {"args": ["--sandbox", "danger-full-access", "--skip-git-repo-check"], "model": ""},
 }
 SUPPORTED_CLI_KINDS = tuple(CLI_DEFAULTS)
+
+# 計測値(トークン数・コスト)を取るために、CLI の出力を機械可読にするフラグ。
+# cli.args で利用者が出力形式を指定している場合は足さない(解析できなければ計測値を送らないだけ)
+CLI_OUTPUT_FLAGS: dict[str, dict[str, object]] = {
+    "claude": {"flag": "--output-format", "args": ["--output-format", "json"]},
+    "codex": {"flag": "--json", "args": ["--json"]},
+}
 
 # MCP の設定ファイル(.mcp.json / .codex/config.toml)がトークンを参照するための環境変数名。
 # 設定ファイルへ平文で書かせず、トークンの在処を config.json だけに保つために CLI へ渡す
@@ -426,21 +433,147 @@ def build_command(config: Config, task: dict, cli_bin: str | None = None) -> lis
     prompt = build_prompt(task)
     model = ["--model", config.cli_model] if config.cli_model else []
     command = [cli_bin or config.cli_bin]
+    output_flags = CLI_OUTPUT_FLAGS[config.cli_kind]
+    flag = str(output_flags["flag"])
+    # `--output-format=stream-json` のような = 形式の指定も利用者の指定として扱う(二重に付けない)
+    specified = any(arg == flag or arg.startswith(f"{flag}=") for arg in config.cli_args)
+    output = [] if specified else list(output_flags["args"])
 
     if config.cli_kind == "codex":
         # codex の非対話モードはサブコマンド exec で、指示は位置引数として最後に置く
-        return [*command, "exec", *model, *config.cli_args, prompt]
-    return [*command, "-p", prompt, *model, *config.cli_args]
+        return [*command, "exec", *output, *model, *config.cli_args, prompt]
+    return [*command, "-p", prompt, *output, *model, *config.cli_args]
 
 
-def run_cli(config: Config, task: dict) -> tuple[str, str]:
-    """CLI を起動する。戻り値は (実行の結果, 実行履歴に残す要約)"""
+def to_count(value: object) -> int | None:
+    """トークン数として扱える値だけを int にする。bool は int の派生なので弾く"""
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
+        return None
+    return int(value)
+
+
+def to_cost(value: object) -> float | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
+        return None
+    return float(value)
+
+
+def sum_counts(*values: int | None) -> int | None:
+    """どれか 1 つでも取れていれば合計を返す。全部取れなければ None(0 と区別する)"""
+    present = [value for value in values if value is not None]
+    return sum(present) if present else None
+
+
+def parse_claude_output(stdout: str) -> tuple[str | None, dict]:
+    """claude -p --output-format json の出力から (最終メッセージ, 計測値) を取り出す"""
+    try:
+        data = json.loads(stdout)
+    except ValueError:
+        return None, {}
+    if not isinstance(data, dict):
+        return None, {}
+
+    # エラーで終わった結果(subtype が error_max_turns 等)には result が無い。JSON をそのまま要約にしないよう、
+    # 形式を解釈できた以上は errors か subtype を要約にする(空なら呼び出し側が標準エラーの末尾で補う)
+    if isinstance(data.get("result"), str):
+        message = data["result"]
+    elif isinstance(data.get("errors"), list) and data["errors"]:
+        message = "; ".join(str(error) for error in data["errors"])
+    else:
+        message = str(data.get("subtype") or "")
+    metrics: dict = {"costUsd": to_cost(data.get("total_cost_usd"))}
+
+    # modelUsage はモデルごとの内訳(サブエージェントが別モデルを使うことがある)。無い版では usage を使う
+    model_usage = data.get("modelUsage")
+    if isinstance(model_usage, dict) and model_usage:
+        rows = [(name, row) for name, row in model_usage.items() if isinstance(row, dict)]
+        cached = [to_count(row.get("cacheReadInputTokens")) for _, row in rows]
+        created = [to_count(row.get("cacheCreationInputTokens")) for _, row in rows]
+        inputs = [to_count(row.get("inputTokens")) for _, row in rows]
+        metrics["inputTokens"] = sum_counts(*inputs, *cached, *created)
+        metrics["cachedInputTokens"] = sum_counts(*cached)
+        metrics["outputTokens"] = sum_counts(*[to_count(row.get("outputTokens")) for _, row in rows])
+        if rows:
+            metrics["model"] = max(rows, key=lambda item: to_cost(item[1].get("costUSD")) or 0)[0]
+    elif isinstance(data.get("usage"), dict):
+        usage = data["usage"]
+        cached = to_count(usage.get("cache_read_input_tokens"))
+        metrics["inputTokens"] = sum_counts(
+            to_count(usage.get("input_tokens")), cached, to_count(usage.get("cache_creation_input_tokens"))
+        )
+        metrics["cachedInputTokens"] = cached
+        metrics["outputTokens"] = to_count(usage.get("output_tokens"))
+
+    return message, {key: value for key, value in metrics.items() if value is not None}
+
+
+def parse_codex_output(stdout: str, model: str) -> tuple[str | None, dict]:
+    """codex exec --json の出力(1 行 1 イベントの JSON)から (最終メッセージ, 計測値) を取り出す。
+    codex は金額を返さないのでコストは持たない。モデル名も出力に無いため cli.model が分かる場合だけ入れる"""
+    message: str | None = None
+    error: str | None = None
+    recognized = False
+    inputs: list[int | None] = []
+    cached: list[int | None] = []
+    outputs: list[int | None] = []
+    for line in stdout.splitlines():
+        try:
+            event = json.loads(line)
+        except ValueError:
+            continue
+        if not isinstance(event, dict) or not isinstance(event.get("type"), str):
+            continue
+        recognized = True
+        kind = event.get("type")
+        item = event.get("item")
+        if kind == "item.completed" and isinstance(item, dict) and item.get("type") == "agent_message":
+            if isinstance(item.get("text"), str):
+                message = item["text"]
+        elif kind == "turn.completed" and isinstance(event.get("usage"), dict):
+            usage = event["usage"]
+            # OpenAI の input_tokens はキャッシュ分を含むので、そのまま入力トークン数として扱える
+            inputs.append(to_count(usage.get("input_tokens")))
+            cached.append(to_count(usage.get("cached_input_tokens")))
+            outputs.append(to_count(usage.get("output_tokens")))
+        elif kind == "turn.failed" and isinstance(event.get("error"), dict):
+            error = str(event["error"].get("message") or "") or error
+        elif kind == "error" and isinstance(event.get("message"), str):
+            error = event["message"]
+
+    metrics = {
+        "inputTokens": sum_counts(*inputs),
+        "cachedInputTokens": sum_counts(*cached),
+        "outputTokens": sum_counts(*outputs),
+        "model": model or None,
+    }
+    if metrics["inputTokens"] is None and metrics["outputTokens"] is None:
+        # 1 行も解釈できなかった(出力形式が違う)なら、モデル名だけ送っても意味が無い
+        metrics = {}
+    if not recognized:
+        return None, {}
+    # イベント列を解釈できた以上は JSONL をそのまま要約にしない(空なら呼び出し側が標準エラーの末尾で補う)
+    summary = message if message is not None else (error or "")
+    return summary, {key: value for key, value in metrics.items() if value is not None}
+
+
+def parse_cli_output(config: Config, stdout: str) -> tuple[str, dict]:
+    """CLI の標準出力から (実行履歴に残す最終メッセージ, 計測値) を取り出す。
+    解析できない出力(cli.args で出力形式を変えた場合など)は、従来どおり標準出力をそのまま要約にする"""
+    if config.cli_kind == "codex":
+        message, metrics = parse_codex_output(stdout, config.cli_model)
+    else:
+        message, metrics = parse_claude_output(stdout)
+    return (message if message is not None else stdout).strip(), metrics
+
+
+def run_cli(config: Config, task: dict) -> tuple[str, str, dict]:
+    """CLI を起動する。戻り値は (実行の結果, 実行履歴に残す要約, 計測値)"""
     env = build_env(config)
     cli_bin = resolve_cli_bin(config, env)
     if not cli_bin:
         message = cli_not_found_message(config, env)
         log.error("%s", message)
-        return "failed", message
+        return "failed", message, {}
 
     command = build_command(config, task, cli_bin)
     log.info(
@@ -463,26 +596,27 @@ def run_cli(config: Config, task: dict) -> tuple[str, str]:
             env=env,
         )
     except OSError as e:
-        return "failed", f"failed to start {cli_bin}: {e}"
+        return "failed", f"failed to start {cli_bin}: {e}", {}
     except subprocess.TimeoutExpired:
         log.error("%s did not finish within %d seconds", config.cli_kind, config.timeout_sec)
-        return "failed", f"timeout ({config.timeout_sec}s)"
+        return "failed", f"timeout ({config.timeout_sec}s)", {}
 
-    # summary には CLI が標準出力した最終応答(ユーザー向けの結果メッセージ)を使う。
-    # 実行履歴で内容が分かるようにするため。claude -p も codex exec も、途中経過は標準エラーへ流し
-    # 標準出力には最終メッセージだけを出すので、この扱いは CLI によらず共通でよい
-    output = (completed.stdout or "").strip()
+    # summary には CLI の最終応答(ユーザー向けの結果メッセージ)を使う。実行履歴で内容が分かるようにするため。
+    # 標準出力は計測値を取るために JSON にしているので、そこから最終メッセージを取り出す
+    output, metrics = parse_cli_output(config, completed.stdout or "")
+    metrics["exitCode"] = completed.returncode
+    log.info("%s metrics: %s", config.cli_kind, json.dumps(metrics, ensure_ascii=False))
 
     if completed.returncode != 0:
         if output:
             log.error("%s exited with code %d: %s", config.cli_kind, completed.returncode, output[:SUMMARY_LIMIT])
-            return "failed", output[:SUMMARY_LIMIT]
+            return "failed", output[:SUMMARY_LIMIT], metrics
         tail = (completed.stderr or "").strip()[-SUMMARY_LIMIT:]
         log.error("%s exited with code %d: %s", config.cli_kind, completed.returncode, tail)
-        return "failed", f"exit {completed.returncode}: {tail}"
+        return "failed", f"exit {completed.returncode}: {tail}", metrics
 
     log.info("%s exited successfully: ticket=%s", config.cli_kind, task["displayId"])
-    return "succeeded", output[:SUMMARY_LIMIT] if output else f"{config.cli_kind} exited 0 (no output)"
+    return "succeeded", output[:SUMMARY_LIMIT] if output else f"{config.cli_kind} exited 0 (no output)", metrics
 
 
 # ---------------------------------------------------------------------------
@@ -545,15 +679,19 @@ def poll(config: Config, dry_run: bool, debug: bool = False) -> int:
     if not run_id:
         raise ApiError(f"POST /api/agent/runs response is missing runId: {run}")
 
+    metrics: dict = {}
     try:
-        result, summary = run_cli(config, task)
+        result, summary, metrics = run_cli(config, task)
     except Exception as e:  # noqa: BLE001 (実行の記録を必ず閉じるため、想定外の例外も拾う)
         log.exception("unexpected exception while launching %s", config.cli_kind)
         result, summary = "failed", f"unexpected error: {e}"[:SUMMARY_LIMIT]
 
     # 実行の記録だけは必ず閉じる。開いたままだとこのチケットを二度と拾えなくなる
+    body: dict = {"status": result, "summary": summary}
+    if metrics:
+        body["metrics"] = metrics
     try:
-        call_api(config, "PATCH", f"/api/agent/runs/{run_id}", {"status": result, "summary": summary})
+        call_api(config, "PATCH", f"/api/agent/runs/{run_id}", body)
     except ApiError as e:
         log.error("failed to record the end of the run: %s", e)
         return 1

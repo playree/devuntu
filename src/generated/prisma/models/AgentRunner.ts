@@ -33,6 +33,7 @@ export type AgentRunnerAvgAggregateOutputType = {
   pollIntervalSec: number | null
   dailyRunLimit: number | null
   dailyResetMin: number | null
+  monthlyBudgetUsd: runtime.Decimal | null
 }
 
 export type AgentRunnerSumAggregateOutputType = {
@@ -41,6 +42,7 @@ export type AgentRunnerSumAggregateOutputType = {
   pollIntervalSec: number | null
   dailyRunLimit: number | null
   dailyResetMin: number | null
+  monthlyBudgetUsd: runtime.Decimal | null
 }
 
 export type AgentRunnerMinAggregateOutputType = {
@@ -54,6 +56,7 @@ export type AgentRunnerMinAggregateOutputType = {
   rule: string | null
   dailyRunLimit: number | null
   dailyResetMin: number | null
+  monthlyBudgetUsd: runtime.Decimal | null
   lastPolledAt: Date | null
   hostname: string | null
   version: string | null
@@ -72,6 +75,7 @@ export type AgentRunnerMaxAggregateOutputType = {
   rule: string | null
   dailyRunLimit: number | null
   dailyResetMin: number | null
+  monthlyBudgetUsd: runtime.Decimal | null
   lastPolledAt: Date | null
   hostname: string | null
   version: string | null
@@ -90,6 +94,7 @@ export type AgentRunnerCountAggregateOutputType = {
   rule: number
   dailyRunLimit: number
   dailyResetMin: number
+  monthlyBudgetUsd: number
   lastPolledAt: number
   hostname: number
   version: number
@@ -105,6 +110,7 @@ export type AgentRunnerAvgAggregateInputType = {
   pollIntervalSec?: true
   dailyRunLimit?: true
   dailyResetMin?: true
+  monthlyBudgetUsd?: true
 }
 
 export type AgentRunnerSumAggregateInputType = {
@@ -113,6 +119,7 @@ export type AgentRunnerSumAggregateInputType = {
   pollIntervalSec?: true
   dailyRunLimit?: true
   dailyResetMin?: true
+  monthlyBudgetUsd?: true
 }
 
 export type AgentRunnerMinAggregateInputType = {
@@ -126,6 +133,7 @@ export type AgentRunnerMinAggregateInputType = {
   rule?: true
   dailyRunLimit?: true
   dailyResetMin?: true
+  monthlyBudgetUsd?: true
   lastPolledAt?: true
   hostname?: true
   version?: true
@@ -144,6 +152,7 @@ export type AgentRunnerMaxAggregateInputType = {
   rule?: true
   dailyRunLimit?: true
   dailyResetMin?: true
+  monthlyBudgetUsd?: true
   lastPolledAt?: true
   hostname?: true
   version?: true
@@ -162,6 +171,7 @@ export type AgentRunnerCountAggregateInputType = {
   rule?: true
   dailyRunLimit?: true
   dailyResetMin?: true
+  monthlyBudgetUsd?: true
   lastPolledAt?: true
   hostname?: true
   version?: true
@@ -267,6 +277,7 @@ export type AgentRunnerGroupByOutputType = {
   rule: string | null
   dailyRunLimit: number
   dailyResetMin: number
+  monthlyBudgetUsd: runtime.Decimal
   lastPolledAt: Date | null
   hostname: string | null
   version: string | null
@@ -308,6 +319,7 @@ export type AgentRunnerWhereInput = {
   rule?: Prisma.StringNullableFilter<"AgentRunner"> | string | null
   dailyRunLimit?: Prisma.IntFilter<"AgentRunner"> | number
   dailyResetMin?: Prisma.IntFilter<"AgentRunner"> | number
+  monthlyBudgetUsd?: Prisma.DecimalFilter<"AgentRunner"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   lastPolledAt?: Prisma.DateTimeNullableFilter<"AgentRunner"> | Date | string | null
   hostname?: Prisma.StringNullableFilter<"AgentRunner"> | string | null
   version?: Prisma.StringNullableFilter<"AgentRunner"> | string | null
@@ -315,6 +327,7 @@ export type AgentRunnerWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"AgentRunner"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   runs?: Prisma.AgentRunListRelationFilter
+  usages?: Prisma.AgentUsageListRelationFilter
 }
 
 export type AgentRunnerOrderByWithRelationInput = {
@@ -328,6 +341,7 @@ export type AgentRunnerOrderByWithRelationInput = {
   rule?: Prisma.SortOrderInput | Prisma.SortOrder
   dailyRunLimit?: Prisma.SortOrder
   dailyResetMin?: Prisma.SortOrder
+  monthlyBudgetUsd?: Prisma.SortOrder
   lastPolledAt?: Prisma.SortOrderInput | Prisma.SortOrder
   hostname?: Prisma.SortOrderInput | Prisma.SortOrder
   version?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -335,6 +349,7 @@ export type AgentRunnerOrderByWithRelationInput = {
   updatedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
   runs?: Prisma.AgentRunOrderByRelationAggregateInput
+  usages?: Prisma.AgentUsageOrderByRelationAggregateInput
 }
 
 export type AgentRunnerWhereUniqueInput = Prisma.AtLeast<{
@@ -351,6 +366,7 @@ export type AgentRunnerWhereUniqueInput = Prisma.AtLeast<{
   rule?: Prisma.StringNullableFilter<"AgentRunner"> | string | null
   dailyRunLimit?: Prisma.IntFilter<"AgentRunner"> | number
   dailyResetMin?: Prisma.IntFilter<"AgentRunner"> | number
+  monthlyBudgetUsd?: Prisma.DecimalFilter<"AgentRunner"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   lastPolledAt?: Prisma.DateTimeNullableFilter<"AgentRunner"> | Date | string | null
   hostname?: Prisma.StringNullableFilter<"AgentRunner"> | string | null
   version?: Prisma.StringNullableFilter<"AgentRunner"> | string | null
@@ -358,6 +374,7 @@ export type AgentRunnerWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"AgentRunner"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   runs?: Prisma.AgentRunListRelationFilter
+  usages?: Prisma.AgentUsageListRelationFilter
 }, "id" | "userId">
 
 export type AgentRunnerOrderByWithAggregationInput = {
@@ -371,6 +388,7 @@ export type AgentRunnerOrderByWithAggregationInput = {
   rule?: Prisma.SortOrderInput | Prisma.SortOrder
   dailyRunLimit?: Prisma.SortOrder
   dailyResetMin?: Prisma.SortOrder
+  monthlyBudgetUsd?: Prisma.SortOrder
   lastPolledAt?: Prisma.SortOrderInput | Prisma.SortOrder
   hostname?: Prisma.SortOrderInput | Prisma.SortOrder
   version?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -397,6 +415,7 @@ export type AgentRunnerScalarWhereWithAggregatesInput = {
   rule?: Prisma.StringNullableWithAggregatesFilter<"AgentRunner"> | string | null
   dailyRunLimit?: Prisma.IntWithAggregatesFilter<"AgentRunner"> | number
   dailyResetMin?: Prisma.IntWithAggregatesFilter<"AgentRunner"> | number
+  monthlyBudgetUsd?: Prisma.DecimalWithAggregatesFilter<"AgentRunner"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   lastPolledAt?: Prisma.DateTimeNullableWithAggregatesFilter<"AgentRunner"> | Date | string | null
   hostname?: Prisma.StringNullableWithAggregatesFilter<"AgentRunner"> | string | null
   version?: Prisma.StringNullableWithAggregatesFilter<"AgentRunner"> | string | null
@@ -414,6 +433,7 @@ export type AgentRunnerCreateInput = {
   rule?: string | null
   dailyRunLimit?: number
   dailyResetMin?: number
+  monthlyBudgetUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string
   lastPolledAt?: Date | string | null
   hostname?: string | null
   version?: string | null
@@ -421,6 +441,7 @@ export type AgentRunnerCreateInput = {
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutAgentRunnerInput
   runs?: Prisma.AgentRunCreateNestedManyWithoutRunnerInput
+  usages?: Prisma.AgentUsageCreateNestedManyWithoutRunnerInput
 }
 
 export type AgentRunnerUncheckedCreateInput = {
@@ -434,12 +455,14 @@ export type AgentRunnerUncheckedCreateInput = {
   rule?: string | null
   dailyRunLimit?: number
   dailyResetMin?: number
+  monthlyBudgetUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string
   lastPolledAt?: Date | string | null
   hostname?: string | null
   version?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   runs?: Prisma.AgentRunUncheckedCreateNestedManyWithoutRunnerInput
+  usages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutRunnerInput
 }
 
 export type AgentRunnerUpdateInput = {
@@ -452,6 +475,7 @@ export type AgentRunnerUpdateInput = {
   rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dailyRunLimit?: Prisma.IntFieldUpdateOperationsInput | number
   dailyResetMin?: Prisma.IntFieldUpdateOperationsInput | number
+  monthlyBudgetUsd?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   lastPolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hostname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -459,6 +483,7 @@ export type AgentRunnerUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutAgentRunnerNestedInput
   runs?: Prisma.AgentRunUpdateManyWithoutRunnerNestedInput
+  usages?: Prisma.AgentUsageUpdateManyWithoutRunnerNestedInput
 }
 
 export type AgentRunnerUncheckedUpdateInput = {
@@ -472,12 +497,14 @@ export type AgentRunnerUncheckedUpdateInput = {
   rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dailyRunLimit?: Prisma.IntFieldUpdateOperationsInput | number
   dailyResetMin?: Prisma.IntFieldUpdateOperationsInput | number
+  monthlyBudgetUsd?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   lastPolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hostname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   runs?: Prisma.AgentRunUncheckedUpdateManyWithoutRunnerNestedInput
+  usages?: Prisma.AgentUsageUncheckedUpdateManyWithoutRunnerNestedInput
 }
 
 export type AgentRunnerCreateManyInput = {
@@ -491,6 +518,7 @@ export type AgentRunnerCreateManyInput = {
   rule?: string | null
   dailyRunLimit?: number
   dailyResetMin?: number
+  monthlyBudgetUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string
   lastPolledAt?: Date | string | null
   hostname?: string | null
   version?: string | null
@@ -508,6 +536,7 @@ export type AgentRunnerUpdateManyMutationInput = {
   rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dailyRunLimit?: Prisma.IntFieldUpdateOperationsInput | number
   dailyResetMin?: Prisma.IntFieldUpdateOperationsInput | number
+  monthlyBudgetUsd?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   lastPolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hostname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -526,6 +555,7 @@ export type AgentRunnerUncheckedUpdateManyInput = {
   rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dailyRunLimit?: Prisma.IntFieldUpdateOperationsInput | number
   dailyResetMin?: Prisma.IntFieldUpdateOperationsInput | number
+  monthlyBudgetUsd?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   lastPolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hostname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -544,6 +574,7 @@ export type AgentRunnerCountOrderByAggregateInput = {
   rule?: Prisma.SortOrder
   dailyRunLimit?: Prisma.SortOrder
   dailyResetMin?: Prisma.SortOrder
+  monthlyBudgetUsd?: Prisma.SortOrder
   lastPolledAt?: Prisma.SortOrder
   hostname?: Prisma.SortOrder
   version?: Prisma.SortOrder
@@ -557,6 +588,7 @@ export type AgentRunnerAvgOrderByAggregateInput = {
   pollIntervalSec?: Prisma.SortOrder
   dailyRunLimit?: Prisma.SortOrder
   dailyResetMin?: Prisma.SortOrder
+  monthlyBudgetUsd?: Prisma.SortOrder
 }
 
 export type AgentRunnerMaxOrderByAggregateInput = {
@@ -570,6 +602,7 @@ export type AgentRunnerMaxOrderByAggregateInput = {
   rule?: Prisma.SortOrder
   dailyRunLimit?: Prisma.SortOrder
   dailyResetMin?: Prisma.SortOrder
+  monthlyBudgetUsd?: Prisma.SortOrder
   lastPolledAt?: Prisma.SortOrder
   hostname?: Prisma.SortOrder
   version?: Prisma.SortOrder
@@ -588,6 +621,7 @@ export type AgentRunnerMinOrderByAggregateInput = {
   rule?: Prisma.SortOrder
   dailyRunLimit?: Prisma.SortOrder
   dailyResetMin?: Prisma.SortOrder
+  monthlyBudgetUsd?: Prisma.SortOrder
   lastPolledAt?: Prisma.SortOrder
   hostname?: Prisma.SortOrder
   version?: Prisma.SortOrder
@@ -601,6 +635,7 @@ export type AgentRunnerSumOrderByAggregateInput = {
   pollIntervalSec?: Prisma.SortOrder
   dailyRunLimit?: Prisma.SortOrder
   dailyResetMin?: Prisma.SortOrder
+  monthlyBudgetUsd?: Prisma.SortOrder
 }
 
 export type AgentRunnerScalarRelationFilter = {
@@ -633,6 +668,14 @@ export type IntFieldUpdateOperationsInput = {
   divide?: number
 }
 
+export type DecimalFieldUpdateOperationsInput = {
+  set?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  increment?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  decrement?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  multiply?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  divide?: runtime.Decimal | runtime.DecimalJsLike | number | string
+}
+
 export type AgentRunnerCreateNestedOneWithoutRunsInput = {
   create?: Prisma.XOR<Prisma.AgentRunnerCreateWithoutRunsInput, Prisma.AgentRunnerUncheckedCreateWithoutRunsInput>
   connectOrCreate?: Prisma.AgentRunnerCreateOrConnectWithoutRunsInput
@@ -645,6 +688,20 @@ export type AgentRunnerUpdateOneRequiredWithoutRunsNestedInput = {
   upsert?: Prisma.AgentRunnerUpsertWithoutRunsInput
   connect?: Prisma.AgentRunnerWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.AgentRunnerUpdateToOneWithWhereWithoutRunsInput, Prisma.AgentRunnerUpdateWithoutRunsInput>, Prisma.AgentRunnerUncheckedUpdateWithoutRunsInput>
+}
+
+export type AgentRunnerCreateNestedOneWithoutUsagesInput = {
+  create?: Prisma.XOR<Prisma.AgentRunnerCreateWithoutUsagesInput, Prisma.AgentRunnerUncheckedCreateWithoutUsagesInput>
+  connectOrCreate?: Prisma.AgentRunnerCreateOrConnectWithoutUsagesInput
+  connect?: Prisma.AgentRunnerWhereUniqueInput
+}
+
+export type AgentRunnerUpdateOneRequiredWithoutUsagesNestedInput = {
+  create?: Prisma.XOR<Prisma.AgentRunnerCreateWithoutUsagesInput, Prisma.AgentRunnerUncheckedCreateWithoutUsagesInput>
+  connectOrCreate?: Prisma.AgentRunnerCreateOrConnectWithoutUsagesInput
+  upsert?: Prisma.AgentRunnerUpsertWithoutUsagesInput
+  connect?: Prisma.AgentRunnerWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.AgentRunnerUpdateToOneWithWhereWithoutUsagesInput, Prisma.AgentRunnerUpdateWithoutUsagesInput>, Prisma.AgentRunnerUncheckedUpdateWithoutUsagesInput>
 }
 
 export type AgentRunnerCreateNestedOneWithoutUserInput = {
@@ -689,12 +746,14 @@ export type AgentRunnerCreateWithoutRunsInput = {
   rule?: string | null
   dailyRunLimit?: number
   dailyResetMin?: number
+  monthlyBudgetUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string
   lastPolledAt?: Date | string | null
   hostname?: string | null
   version?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutAgentRunnerInput
+  usages?: Prisma.AgentUsageCreateNestedManyWithoutRunnerInput
 }
 
 export type AgentRunnerUncheckedCreateWithoutRunsInput = {
@@ -708,11 +767,13 @@ export type AgentRunnerUncheckedCreateWithoutRunsInput = {
   rule?: string | null
   dailyRunLimit?: number
   dailyResetMin?: number
+  monthlyBudgetUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string
   lastPolledAt?: Date | string | null
   hostname?: string | null
   version?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  usages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutRunnerInput
 }
 
 export type AgentRunnerCreateOrConnectWithoutRunsInput = {
@@ -741,12 +802,14 @@ export type AgentRunnerUpdateWithoutRunsInput = {
   rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dailyRunLimit?: Prisma.IntFieldUpdateOperationsInput | number
   dailyResetMin?: Prisma.IntFieldUpdateOperationsInput | number
+  monthlyBudgetUsd?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   lastPolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hostname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutAgentRunnerNestedInput
+  usages?: Prisma.AgentUsageUpdateManyWithoutRunnerNestedInput
 }
 
 export type AgentRunnerUncheckedUpdateWithoutRunsInput = {
@@ -760,11 +823,109 @@ export type AgentRunnerUncheckedUpdateWithoutRunsInput = {
   rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dailyRunLimit?: Prisma.IntFieldUpdateOperationsInput | number
   dailyResetMin?: Prisma.IntFieldUpdateOperationsInput | number
+  monthlyBudgetUsd?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   lastPolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hostname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  usages?: Prisma.AgentUsageUncheckedUpdateManyWithoutRunnerNestedInput
+}
+
+export type AgentRunnerCreateWithoutUsagesInput = {
+  id?: string
+  enabled?: boolean
+  activeFromMin?: number | null
+  activeToMin?: number | null
+  timezone?: string | null
+  pollIntervalSec?: number
+  rule?: string | null
+  dailyRunLimit?: number
+  dailyResetMin?: number
+  monthlyBudgetUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  lastPolledAt?: Date | string | null
+  hostname?: string | null
+  version?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutAgentRunnerInput
+  runs?: Prisma.AgentRunCreateNestedManyWithoutRunnerInput
+}
+
+export type AgentRunnerUncheckedCreateWithoutUsagesInput = {
+  id?: string
+  userId: string
+  enabled?: boolean
+  activeFromMin?: number | null
+  activeToMin?: number | null
+  timezone?: string | null
+  pollIntervalSec?: number
+  rule?: string | null
+  dailyRunLimit?: number
+  dailyResetMin?: number
+  monthlyBudgetUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  lastPolledAt?: Date | string | null
+  hostname?: string | null
+  version?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  runs?: Prisma.AgentRunUncheckedCreateNestedManyWithoutRunnerInput
+}
+
+export type AgentRunnerCreateOrConnectWithoutUsagesInput = {
+  where: Prisma.AgentRunnerWhereUniqueInput
+  create: Prisma.XOR<Prisma.AgentRunnerCreateWithoutUsagesInput, Prisma.AgentRunnerUncheckedCreateWithoutUsagesInput>
+}
+
+export type AgentRunnerUpsertWithoutUsagesInput = {
+  update: Prisma.XOR<Prisma.AgentRunnerUpdateWithoutUsagesInput, Prisma.AgentRunnerUncheckedUpdateWithoutUsagesInput>
+  create: Prisma.XOR<Prisma.AgentRunnerCreateWithoutUsagesInput, Prisma.AgentRunnerUncheckedCreateWithoutUsagesInput>
+  where?: Prisma.AgentRunnerWhereInput
+}
+
+export type AgentRunnerUpdateToOneWithWhereWithoutUsagesInput = {
+  where?: Prisma.AgentRunnerWhereInput
+  data: Prisma.XOR<Prisma.AgentRunnerUpdateWithoutUsagesInput, Prisma.AgentRunnerUncheckedUpdateWithoutUsagesInput>
+}
+
+export type AgentRunnerUpdateWithoutUsagesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  activeFromMin?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  activeToMin?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pollIntervalSec?: Prisma.IntFieldUpdateOperationsInput | number
+  rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dailyRunLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  dailyResetMin?: Prisma.IntFieldUpdateOperationsInput | number
+  monthlyBudgetUsd?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  lastPolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hostname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutAgentRunnerNestedInput
+  runs?: Prisma.AgentRunUpdateManyWithoutRunnerNestedInput
+}
+
+export type AgentRunnerUncheckedUpdateWithoutUsagesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  activeFromMin?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  activeToMin?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pollIntervalSec?: Prisma.IntFieldUpdateOperationsInput | number
+  rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dailyRunLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  dailyResetMin?: Prisma.IntFieldUpdateOperationsInput | number
+  monthlyBudgetUsd?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  lastPolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hostname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  runs?: Prisma.AgentRunUncheckedUpdateManyWithoutRunnerNestedInput
 }
 
 export type AgentRunnerCreateWithoutUserInput = {
@@ -777,12 +938,14 @@ export type AgentRunnerCreateWithoutUserInput = {
   rule?: string | null
   dailyRunLimit?: number
   dailyResetMin?: number
+  monthlyBudgetUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string
   lastPolledAt?: Date | string | null
   hostname?: string | null
   version?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   runs?: Prisma.AgentRunCreateNestedManyWithoutRunnerInput
+  usages?: Prisma.AgentUsageCreateNestedManyWithoutRunnerInput
 }
 
 export type AgentRunnerUncheckedCreateWithoutUserInput = {
@@ -795,12 +958,14 @@ export type AgentRunnerUncheckedCreateWithoutUserInput = {
   rule?: string | null
   dailyRunLimit?: number
   dailyResetMin?: number
+  monthlyBudgetUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string
   lastPolledAt?: Date | string | null
   hostname?: string | null
   version?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   runs?: Prisma.AgentRunUncheckedCreateNestedManyWithoutRunnerInput
+  usages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutRunnerInput
 }
 
 export type AgentRunnerCreateOrConnectWithoutUserInput = {
@@ -829,12 +994,14 @@ export type AgentRunnerUpdateWithoutUserInput = {
   rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dailyRunLimit?: Prisma.IntFieldUpdateOperationsInput | number
   dailyResetMin?: Prisma.IntFieldUpdateOperationsInput | number
+  monthlyBudgetUsd?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   lastPolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hostname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   runs?: Prisma.AgentRunUpdateManyWithoutRunnerNestedInput
+  usages?: Prisma.AgentUsageUpdateManyWithoutRunnerNestedInput
 }
 
 export type AgentRunnerUncheckedUpdateWithoutUserInput = {
@@ -847,12 +1014,14 @@ export type AgentRunnerUncheckedUpdateWithoutUserInput = {
   rule?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dailyRunLimit?: Prisma.IntFieldUpdateOperationsInput | number
   dailyResetMin?: Prisma.IntFieldUpdateOperationsInput | number
+  monthlyBudgetUsd?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   lastPolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hostname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   runs?: Prisma.AgentRunUncheckedUpdateManyWithoutRunnerNestedInput
+  usages?: Prisma.AgentUsageUncheckedUpdateManyWithoutRunnerNestedInput
 }
 
 
@@ -862,10 +1031,12 @@ export type AgentRunnerUncheckedUpdateWithoutUserInput = {
 
 export type AgentRunnerCountOutputType = {
   runs: number
+  usages: number
 }
 
 export type AgentRunnerCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   runs?: boolean | AgentRunnerCountOutputTypeCountRunsArgs
+  usages?: boolean | AgentRunnerCountOutputTypeCountUsagesArgs
 }
 
 /**
@@ -885,6 +1056,13 @@ export type AgentRunnerCountOutputTypeCountRunsArgs<ExtArgs extends runtime.Type
   where?: Prisma.AgentRunWhereInput
 }
 
+/**
+ * AgentRunnerCountOutputType without action
+ */
+export type AgentRunnerCountOutputTypeCountUsagesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AgentUsageWhereInput
+}
+
 
 export type AgentRunnerSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -897,6 +1075,7 @@ export type AgentRunnerSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   rule?: boolean
   dailyRunLimit?: boolean
   dailyResetMin?: boolean
+  monthlyBudgetUsd?: boolean
   lastPolledAt?: boolean
   hostname?: boolean
   version?: boolean
@@ -904,6 +1083,7 @@ export type AgentRunnerSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   runs?: boolean | Prisma.AgentRunner$runsArgs<ExtArgs>
+  usages?: boolean | Prisma.AgentRunner$usagesArgs<ExtArgs>
   _count?: boolean | Prisma.AgentRunnerCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["agentRunner"]>
 
@@ -918,6 +1098,7 @@ export type AgentRunnerSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   rule?: boolean
   dailyRunLimit?: boolean
   dailyResetMin?: boolean
+  monthlyBudgetUsd?: boolean
   lastPolledAt?: boolean
   hostname?: boolean
   version?: boolean
@@ -937,6 +1118,7 @@ export type AgentRunnerSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   rule?: boolean
   dailyRunLimit?: boolean
   dailyResetMin?: boolean
+  monthlyBudgetUsd?: boolean
   lastPolledAt?: boolean
   hostname?: boolean
   version?: boolean
@@ -956,6 +1138,7 @@ export type AgentRunnerSelectScalar = {
   rule?: boolean
   dailyRunLimit?: boolean
   dailyResetMin?: boolean
+  monthlyBudgetUsd?: boolean
   lastPolledAt?: boolean
   hostname?: boolean
   version?: boolean
@@ -963,10 +1146,11 @@ export type AgentRunnerSelectScalar = {
   updatedAt?: boolean
 }
 
-export type AgentRunnerOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "enabled" | "activeFromMin" | "activeToMin" | "timezone" | "pollIntervalSec" | "rule" | "dailyRunLimit" | "dailyResetMin" | "lastPolledAt" | "hostname" | "version" | "createdAt" | "updatedAt", ExtArgs["result"]["agentRunner"]>
+export type AgentRunnerOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "enabled" | "activeFromMin" | "activeToMin" | "timezone" | "pollIntervalSec" | "rule" | "dailyRunLimit" | "dailyResetMin" | "monthlyBudgetUsd" | "lastPolledAt" | "hostname" | "version" | "createdAt" | "updatedAt", ExtArgs["result"]["agentRunner"]>
 export type AgentRunnerInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   runs?: boolean | Prisma.AgentRunner$runsArgs<ExtArgs>
+  usages?: boolean | Prisma.AgentRunner$usagesArgs<ExtArgs>
   _count?: boolean | Prisma.AgentRunnerCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type AgentRunnerIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -981,6 +1165,7 @@ export type $AgentRunnerPayload<ExtArgs extends runtime.Types.Extensions.Interna
   objects: {
     user: Prisma.$UserPayload<ExtArgs>
     runs: Prisma.$AgentRunPayload<ExtArgs>[]
+    usages: Prisma.$AgentUsagePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1020,6 +1205,10 @@ export type $AgentRunnerPayload<ExtArgs extends runtime.Types.Extensions.Interna
      * 上限のカウントをリセットする時刻。0:00 からの分。判定は timezone に従う
      */
     dailyResetMin: number
+    /**
+     * 月の予算上限(USD)。0 は無制限。月の区切りは毎月1日の dailyResetMin
+     */
+    monthlyBudgetUsd: runtime.Decimal
     /**
      * 最終ポーリング時刻。ランナーの自己申告で、稼働状況の表示にだけ使い認可には使わない
      */
@@ -1430,6 +1619,7 @@ export interface Prisma__AgentRunnerClient<T, Null = never, ExtArgs extends runt
   readonly [Symbol.toStringTag]: "PrismaPromise"
   user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   runs<T extends Prisma.AgentRunner$runsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.AgentRunner$runsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AgentRunPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  usages<T extends Prisma.AgentRunner$usagesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.AgentRunner$usagesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AgentUsagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1469,6 +1659,7 @@ export interface AgentRunnerFieldRefs {
   readonly rule: Prisma.FieldRef<"AgentRunner", 'String'>
   readonly dailyRunLimit: Prisma.FieldRef<"AgentRunner", 'Int'>
   readonly dailyResetMin: Prisma.FieldRef<"AgentRunner", 'Int'>
+  readonly monthlyBudgetUsd: Prisma.FieldRef<"AgentRunner", 'Decimal'>
   readonly lastPolledAt: Prisma.FieldRef<"AgentRunner", 'DateTime'>
   readonly hostname: Prisma.FieldRef<"AgentRunner", 'String'>
   readonly version: Prisma.FieldRef<"AgentRunner", 'String'>
@@ -1896,6 +2087,30 @@ export type AgentRunner$runsArgs<ExtArgs extends runtime.Types.Extensions.Intern
   take?: number
   skip?: number
   distinct?: Prisma.AgentRunScalarFieldEnum | Prisma.AgentRunScalarFieldEnum[]
+}
+
+/**
+ * AgentRunner.usages
+ */
+export type AgentRunner$usagesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AgentUsage
+   */
+  select?: Prisma.AgentUsageSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AgentUsage
+   */
+  omit?: Prisma.AgentUsageOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AgentUsageInclude<ExtArgs> | null
+  where?: Prisma.AgentUsageWhereInput
+  orderBy?: Prisma.AgentUsageOrderByWithRelationInput | Prisma.AgentUsageOrderByWithRelationInput[]
+  cursor?: Prisma.AgentUsageWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AgentUsageScalarFieldEnum | Prisma.AgentUsageScalarFieldEnum[]
 }
 
 /**
