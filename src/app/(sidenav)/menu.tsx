@@ -275,7 +275,7 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
           aria-label='GitHub'
           className='text-foreground/70 hover:text-foreground'
         >
-          <GithubIcon width={32} />
+          <GithubIcon width={24} />
         </Link>
       </div>
     </div>
