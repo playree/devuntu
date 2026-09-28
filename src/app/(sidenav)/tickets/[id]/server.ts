@@ -19,6 +19,7 @@ import {
   removeTicketRelation as removeTicketRelationCore,
   updateTicketChildOrder as updateTicketChildOrderCore,
 } from '@/lib/board/ticket-relation'
+import { splitKeywords, ticketIdOrTitleWhere } from '@/lib/board/ticket-search'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
@@ -31,6 +32,7 @@ import {
   scDecideAgentComment,
   scPatchTicket,
   scSaveTicketCriteria,
+  scSearchRelationCandidates,
   scUpdateTicketAgentMode,
   scUpdateTicketChildOrder,
   scUpdateTicketComment,
@@ -373,3 +375,35 @@ export const updateTicketChildOrder = safeAuthAction
     logger.info({ userId: user.id, ...result, order }, 'ticket child order updated')
     return result
   })
+
+/** 関係の相手の候補として返す件数 */
+const MAX_RELATION_CANDIDATES = 20
+
+/**
+ * 関係の相手の候補(チケットを編集できる人)。同じボードの自分以外を、表示ID / 番号 / 件名で探す。
+ * キーワードが空なら最近更新されたチケットを返す
+ */
+export const searchRelationCandidates = safeAuthAction
+  .metadata({ actionName: 'searchRelationCandidates', role: 'user' })
+  .inputSchema(scSearchRelationCandidates)
+  .action(async ({ ctx: { user }, parsedInput: { ticketId, keyword } }) => {
+    const access = await assertTicketAccess(user, ticketId, 'edit')
+
+    const tickets = await prisma.ticket.findMany({
+      where: {
+        AND: [
+          { boardId: access.boardId },
+          { id: { not: ticketId } },
+          ...splitKeywords(keyword).map(ticketIdOrTitleWhere),
+        ],
+      },
+      select: { id: true, number: true, title: true, status: true, board: { select: { key: true } } },
+      orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
+      take: MAX_RELATION_CANDIDATES,
+    })
+    return tickets.map(({ board, number, ...ticket }) => ({
+      ...ticket,
+      displayId: ticketDisplayId({ key: board.key, number }),
+    }))
+  })
+export type RelationCandidate = NonNullable<Awaited<ReturnType<typeof searchRelationCandidates>>['data']>[number]

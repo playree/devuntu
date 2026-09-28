@@ -69,26 +69,36 @@ export const tagNamesWhere = (names: string[]): TicketWhereInput => ({
 })
 
 /**
- * 1語ぶんの横断 OR 条件(表示ID / タイトル / 本文 / タグ / コメント)。
- *
- * 表示ID(`DEV-12`)と番号(`#12`)は完全一致で足し、貼り付けた表示IDがそのまま 1 件に絞れるようにする。
+ * 表示ID / 番号(完全一致)の条件。貼り付けた表示IDがそのまま 1 件に絞れるようにする。
  * 表示IDそのものはどの列にも保持していないので、キーと番号へ分解して条件にする。
  */
-const keywordOr = (word: string): TicketWhereInput => {
+const ticketIdConditions = (word: string): TicketWhereInput[] => {
   const displayId = parseTicketDisplayId(word)
   const number = displayId ? null : parseTicketNumber(word)
-
-  return {
-    OR: [
-      ...(displayId ? [{ number: displayId.number, board: { key: displayId.key } }] : []),
-      ...(number === null ? [] : [{ number }]),
-      { title: { contains: word, mode: 'insensitive' as const } },
-      { content: { contains: word, mode: 'insensitive' as const } },
-      { tags: { some: { tag: { name: { equals: word, mode: 'insensitive' as const } } } } },
-      { comments: { some: { content: { contains: word, mode: 'insensitive' as const } } } },
-    ],
-  }
+  return [
+    ...(displayId ? [{ number: displayId.number, board: { key: displayId.key } }] : []),
+    ...(number === null ? [] : [{ number }]),
+  ]
 }
+
+/**
+ * 1語ぶんの表示ID / 番号 / 件名の OR 条件。関係の相手の候補のように、本文やコメントまで広げると
+ * 候補がぶれる場面で使う
+ */
+export const ticketIdOrTitleWhere = (word: string): TicketWhereInput => ({
+  OR: [...ticketIdConditions(word), { title: { contains: word, mode: 'insensitive' as const } }],
+})
+
+/** 1語ぶんの横断 OR 条件(表示ID / タイトル / 本文 / タグ / コメント) */
+const keywordOr = (word: string): TicketWhereInput => ({
+  OR: [
+    ...ticketIdConditions(word),
+    { title: { contains: word, mode: 'insensitive' as const } },
+    { content: { contains: word, mode: 'insensitive' as const } },
+    { tags: { some: { tag: { name: { equals: word, mode: 'insensitive' as const } } } } },
+    { comments: { some: { content: { contains: word, mode: 'insensitive' as const } } } },
+  ],
+})
 
 /**
  * 関係するチケットの条件。child = 指定したチケットの直下の子 / related = 関連 / all = 両方。

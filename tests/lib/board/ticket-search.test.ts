@@ -11,6 +11,7 @@ import {
   splitKeywords,
   tagNamesWhere,
   TICKET_SORT_COLUMNS,
+  ticketIdOrTitleWhere,
   ticketListOrderBy,
   ticketScopeWhere,
   type TicketSearchParams,
@@ -181,6 +182,21 @@ describe('buildTicketWhere: 検索条件から Prisma where を組む', () => {
     expect(buildTicketWhere({ ...emptyParams, relatedTo: 'ABC-1' }, ctx).AND).toContainEqual(
       relationWhere('ABC-1', 'all'),
     )
+  })
+})
+
+describe('ticketIdOrTitleWhere: 表示ID / 番号 / 件名の条件', () => {
+  it('表示IDはキーと番号、件名は部分一致で OR にする', () => {
+    expect(ticketIdOrTitleWhere('abc-12')).toEqual({
+      OR: [{ number: 12, board: { key: 'ABC' } }, { title: { contains: 'abc-12', mode: 'insensitive' } }],
+    })
+  })
+
+  it('番号だけなら番号で引き、本文やコメントは見ない', () => {
+    expect(ticketIdOrTitleWhere('#7')).toEqual({
+      OR: [{ number: 7 }, { title: { contains: '#7', mode: 'insensitive' } }],
+    })
+    expect(JSON.stringify(ticketIdOrTitleWhere('foo'))).not.toMatch(/content|comments/)
   })
 })
 

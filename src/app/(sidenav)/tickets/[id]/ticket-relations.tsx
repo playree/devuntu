@@ -7,6 +7,7 @@ import { SingleSelectField } from '@/components/general/select'
 import { LinkIcon, PlusIcon, XMarkIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { StatusChip, TicketIdText } from '@/components/ticket/ticket-chip'
+import { TicketSelectField } from '@/components/ticket/ticket-select'
 import { parseAction } from '@/lib/action/action-client'
 import {
   MAX_CHILD_ORDER,
@@ -22,8 +23,18 @@ import { ClientError } from '@/lib/error'
 import { zChildOrder, zRelationTarget } from '@/lib/schema/schema-ticket'
 import { useLocale } from '@/locale/client'
 import Link from 'next/link'
-import { FC, ReactNode, useState } from 'react'
-import { addTicketRelation, GetTicketReturnType, removeTicketRelation, updateTicketChildOrder } from './server'
+import { FC, ReactNode, useEffect, useState } from 'react'
+import {
+  addTicketRelation,
+  GetTicketReturnType,
+  type RelationCandidate,
+  removeTicketRelation,
+  searchRelationCandidates,
+  updateTicketChildOrder,
+} from './server'
+
+/** 候補検索を始めるまでの入力待ち */
+const SEARCH_DEBOUNCE_MS = 300
 
 type Ticket = NonNullable<GetTicketReturnType>
 type Relations = Ticket['relations']
@@ -161,6 +172,36 @@ const AddRelationForm: FC<{ ticket: Ticket; refresh: () => Promise<void> }> = ({
   const [target, setTarget] = useState('')
   const [error, setError] = useState<string>()
   const [isAdding, setAdding] = useState(false)
+  const [candidates, setCandidates] = useState<RelationCandidate[]>([])
+  const [isSearching, setSearching] = useState(false)
+
+  // 入力が落ち着いてから候補を引き直す。後から届いた古い応答で候補を上書きしないよう、打ち切った検索の結果は捨てる
+  useEffect(() => {
+    let isCurrent = true
+    const timer = setTimeout(async () => {
+      setSearching(true)
+      try {
+        const result = await parseAction(searchRelationCandidates({ ticketId: ticket.id, keyword: target }), {
+          handled: 'all',
+        })
+        if (isCurrent) {
+          setCandidates(result)
+        }
+      } catch {
+        if (isCurrent) {
+          setCandidates([])
+        }
+      } finally {
+        if (isCurrent) {
+          setSearching(false)
+        }
+      }
+    }, SEARCH_DEBOUNCE_MS)
+    return () => {
+      isCurrent = false
+      clearTimeout(timer)
+    }
+  }, [ticket.id, target])
 
   const kindOptions = Object.fromEntries(
     TICKET_RELATION_KINDS.map((item) => [item, t(TICKET_RELATION_KIND_LOCALE[item])]),
@@ -212,16 +253,19 @@ const AddRelationForm: FC<{ ticket: Ticket; refresh: () => Promise<void> }> = ({
         />
       </div>
       <div className='min-w-40 grow'>
-        <InputField
+        <TicketSelectField
           isSmart
-          isLabelHidden
-          label={t('relation_target')}
-          aria-label={t('relation_target')}
-          placeholder='ABC-12'
-          maxLength={50}
-          value={target}
-          onChange={(e) => {
-            setTarget(e.target.value)
+          aria-label={t('search_ticket')}
+          placeholder={t('search_ticket')}
+          options={candidates}
+          isLoading={isSearching}
+          inputValue={target}
+          onInputChange={(value) => {
+            setTarget(value)
+            setError(undefined)
+          }}
+          onSelect={(option) => {
+            setTarget(option.displayId)
             setError(undefined)
           }}
           errorMessage={error}

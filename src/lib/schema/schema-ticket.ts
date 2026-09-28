@@ -231,6 +231,13 @@ export const scAddTicketRelation = z.object({
 })
 export type AddTicketRelation = z.infer<typeof scAddTicketRelation>
 
+/** 関係の相手の候補検索。keyword は表示ID / 番号 / 件名。空文字なら最近更新されたチケット */
+export const scSearchRelationCandidates = z.object({
+  ticketId: z.uuidv7(),
+  keyword: z.string().trim().max(100).default(''),
+})
+export type SearchRelationCandidates = z.infer<typeof scSearchRelationCandidates>
+
 /** 子の順番の変更。id は親子の関係の ID */
 export const scUpdateTicketChildOrder = z.object({
   id: z.uuidv7(),
