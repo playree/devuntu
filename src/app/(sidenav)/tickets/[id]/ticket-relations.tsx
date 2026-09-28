@@ -44,27 +44,21 @@ type Relations = Ticket['relations']
 type RelatedTicket = Relations['related'][number]
 type ChildTicket = Relations['children'][number]
 
-/** 子を兄弟の中で前後に動かすボタン。押すたびに保存する */
+type MoveOffset = -1 | 1
+
+/**
+ * 子を兄弟の中で前後に動かすボタン。移動中の状態は一覧側で持ち、
+ * どれかの子が移動中の間は全ての子のボタンを止める(古い並びを前提にした移動を重ねない)
+ */
 const ChildMoveButtons: FC<{
-  child: ChildTicket
   isFirst: boolean
   isLast: boolean
-  refresh: () => Promise<void>
-}> = ({ child, isFirst, isLast, refresh }) => {
+  /** この子が移動中なら、その向き */
+  moving?: MoveOffset
+  isLocked: boolean
+  onMove: (offset: MoveOffset) => void
+}> = ({ isFirst, isLast, moving, isLocked, onMove }) => {
   const { t } = useLocale()
-  const [moving, setMoving] = useState<-1 | 1>()
-
-  const move = async (offset: -1 | 1) => {
-    setMoving(offset)
-    try {
-      await parseAction(moveTicketChild({ id: child.relationId, offset }))
-      await refresh()
-    } catch {
-      // エラー表示は parseAction 側で済んでいる
-    } finally {
-      setMoving(undefined)
-    }
-  }
 
   return (
     <div className='flex shrink-0'>
@@ -75,8 +69,8 @@ const ChildMoveButtons: FC<{
         tooltip={t('move_up')}
         icon={<ChevronUpIcon width={16} />}
         isPending={moving === -1}
-        isDisabled={isFirst || moving !== undefined}
-        onPress={() => move(-1)}
+        isDisabled={isFirst || isLocked}
+        onPress={() => onMove(-1)}
       />
       <MultiButton
         isIconOnly
@@ -85,8 +79,8 @@ const ChildMoveButtons: FC<{
         tooltip={t('move_down')}
         icon={<ChevronDownIcon width={16} />}
         isPending={moving === 1}
-        isDisabled={isLast || moving !== undefined}
-        onPress={() => move(1)}
+        isDisabled={isLast || isLocked}
+        onPress={() => onMove(1)}
       />
     </div>
   )
@@ -289,6 +283,19 @@ export const TicketRelations: FC<{ ticket: Ticket; refresh: () => Promise<void> 
   const { t } = useLocale()
   const { relations, canEdit, displayId } = ticket
   const { parent, children, childProgress, related } = relations
+  const [moving, setMoving] = useState<{ relationId: string; offset: MoveOffset }>()
+
+  const moveChild = async (child: ChildTicket, offset: MoveOffset) => {
+    setMoving({ relationId: child.relationId, offset })
+    try {
+      await parseAction(moveTicketChild({ id: child.relationId, offset }))
+      await refresh()
+    } catch {
+      // エラー表示は parseAction 側で済んでいる
+    } finally {
+      setMoving(undefined)
+    }
+  }
 
   // 編集できない人に空の見出しだけを見せても意味が無い
   if (!parent && children.length === 0 && related.length === 0 && !canEdit) {
@@ -329,10 +336,11 @@ export const TicketRelations: FC<{ ticket: Ticket; refresh: () => Promise<void> 
               refresh={refresh}
               actions={
                 <ChildMoveButtons
-                  child={child}
                   isFirst={index === 0}
                   isLast={index === children.length - 1}
-                  refresh={refresh}
+                  moving={moving?.relationId === child.relationId ? moving.offset : undefined}
+                  isLocked={moving !== undefined}
+                  onMove={(offset) => void moveChild(child, offset)}
                 />
               }
             />
