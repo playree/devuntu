@@ -40,7 +40,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-__version__ = "0.8.1"
+__version__ = "0.8.2"
 
 # 1 Agent の構成を作業ディレクトリだけで完結させるため、config・ログ・ロックは本体と同じ
 # <作業ディレクトリ>/.devuntu-agent へ置く。作業ディレクトリを分ければ同一ホストに複数の Agent を並べられる
@@ -434,7 +434,10 @@ def build_command(config: Config, task: dict, cli_bin: str | None = None) -> lis
     model = ["--model", config.cli_model] if config.cli_model else []
     command = [cli_bin or config.cli_bin]
     output_flags = CLI_OUTPUT_FLAGS[config.cli_kind]
-    output = [] if output_flags["flag"] in config.cli_args else list(output_flags["args"])
+    flag = str(output_flags["flag"])
+    # `--output-format=stream-json` のような = 形式の指定も利用者の指定として扱う(二重に付けない)
+    specified = any(arg == flag or arg.startswith(f"{flag}=") for arg in config.cli_args)
+    output = [] if specified else list(output_flags["args"])
 
     if config.cli_kind == "codex":
         # codex の非対話モードはサブコマンド exec で、指示は位置引数として最後に置く
