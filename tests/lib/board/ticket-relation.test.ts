@@ -46,7 +46,9 @@ const OTHER_ID = '0195c1e0-0000-7000-8000-000000000001'
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.mocked(assertTicketAccess).mockResolvedValue({ boardId: BOARD_ID } as never)
+  vi.mocked(assertTicketAccess).mockImplementation(
+    async (_actor, ticketId) => ({ ticketId, boardId: BOARD_ID }) as never,
+  )
   fakeTx.ticket.findFirst.mockResolvedValue({ id: OTHER_ID })
   fakeTx.ticketRelation.findFirst.mockResolvedValue(null)
   fakeTx.ticketRelation.findUnique.mockResolvedValue(null)
@@ -99,6 +101,18 @@ describe('writeTicketParent', () => {
     expect(fakeTx.ticketRelation.deleteMany).toHaveBeenCalledWith({ where: { type: 'parent', toId: TICKET_ID } })
     expect(fakeTx.ticketRelation.create).toHaveBeenCalledWith({
       data: { type: 'parent', fromId: OTHER_ID, toId: TICKET_ID, order: 4 },
+    })
+  })
+
+  it('末尾の順番は親もロックしてから採り、上限を超えない', async () => {
+    fakeTx.ticketRelation.aggregate.mockResolvedValue({ _max: { order: 999 } })
+
+    await writeTicketParent(tx, TICKET_ID, OTHER_ID)
+
+    // 子と親の 2 行をロックする
+    expect(fakeTx.$queryRaw).toHaveBeenCalledTimes(2)
+    expect(fakeTx.ticketRelation.create).toHaveBeenCalledWith({
+      data: { type: 'parent', fromId: OTHER_ID, toId: TICKET_ID, order: 999 },
     })
   })
 
@@ -181,8 +195,9 @@ describe('addTicketRelation', () => {
     const authorize = vi.fn()
 
     await addTicketRelation(actor, { ticketId: TICKET_ID, target: 'ABC-1', kind: 'related' }, { authorize })
-    expect(assertTicketAccess).toHaveBeenCalledWith(actor, OTHER_ID, 'edit', tx)
     expect(authorize).toHaveBeenCalledTimes(2)
+    // 操作するチケットは冒頭で判定済みなので、問い合わせ直すのは相手だけ
+    expect(vi.mocked(assertTicketAccess).mock.calls.map((call) => call[1])).toEqual([TICKET_ID, OTHER_ID])
 
     authorize.mockClear()
     vi.mocked(assertTicketAccess).mockClear()

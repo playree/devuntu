@@ -177,8 +177,8 @@ export const TicketSearchPanel: FC<{
           }}
           onSubmit={applyRelatedTo}
           onClear={() => onChange({ ...filter, relatedTo: '' })}
+          errorMessage={isRelatedToInvalid ? t('@invalid_display_id') : undefined}
         />
-        {isRelatedToInvalid && <p className='text-danger text-xs'>{t('@invalid_display_id')}</p>}
       </div>
 
       <div className='col-span-5 md:col-span-3'>

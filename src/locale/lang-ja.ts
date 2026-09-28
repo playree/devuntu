@@ -405,7 +405,6 @@ export const ja: DefaultLocaleItems = {
   relation_kind_parent: '親にする',
   relation_kind_related: '関連付ける',
   relation_remove: '関係を解除',
-  relation_target: 'チケットの表示ID(番号だけでも可)',
   release_note: 'リリースノート',
   register_passkey: 'パスキーを登録する',
   registered_at: '登録',

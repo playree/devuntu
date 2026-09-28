@@ -9,11 +9,12 @@ import type { Prisma } from '@/generated/prisma/client'
 import type { TicketRelationType } from '@/generated/prisma/enums'
 import { errClient, errInvalidOperation } from '../error'
 import { isUniqueViolation, prisma, type Db } from '../prisma'
-import { assertTicketAccess, type Actor } from './board-access'
+import { assertTicketAccess, type Actor, type TicketAccess } from './board-access'
 import { isTicketUuid, parseTicketDisplayId, parseTicketNumber, ticketDisplayId } from './ticket-id'
 import type { TicketAuthorize } from './ticket-mutation'
 import {
   childProgress,
+  MAX_CHILD_ORDER,
   normalizeRelatedPair,
   RELATION_ALREADY_EXISTS,
   RELATION_TARGET_INVALID,
@@ -41,18 +42,22 @@ export const resolveRelationTarget = async (tx: Db, boardId: string, raw: string
   return ticket.id
 }
 
-/** 子の親の付け替えを直列にする。子のチケット行をロックしてから読むので、親が 2 つに増えない */
+/**
+ * チケット行のロック。子をロックして親の付け替えを直列にし(親が 2 つに増えない)、
+ * 末尾の順番を採るときは親もロックして兄弟の同時追加で同じ順番が付かないようにする
+ */
 const lockTicket = async (tx: Prisma.TransactionClient, ticketId: string) => {
   await tx.$queryRaw`SELECT "id" FROM "ticket" WHERE "id" = ${ticketId} FOR UPDATE`
 }
 
-/** 親の下の末尾の順番(兄弟の最大 + 1)。子が居なければ 1 */
+/** 親の下の末尾の順番(兄弟の最大 + 1)。子が居なければ 1。上限を超える場合は上限に揃える */
 const nextChildOrder = async (tx: Prisma.TransactionClient, parentId: string): Promise<number> => {
+  await lockTicket(tx, parentId)
   const max = await tx.ticketRelation.aggregate({
     where: { type: 'parent', fromId: parentId },
     _max: { order: true },
   })
-  return (max._max.order ?? 0) + 1
+  return Math.min((max._max.order ?? 0) + 1, MAX_CHILD_ORDER)
 }
 
 /**
@@ -131,13 +136,15 @@ const authorizeRelation = async (
   actor: Actor,
   relation: { type: TicketRelationType; fromId: string; toId: string },
   authorize: TicketAuthorize | undefined,
+  /** 呼び出し側で判定済みのチケット。同じチケットを問い合わせ直さない */
+  checked: TicketAccess,
 ) => {
   if (!authorize) {
     return
   }
   const ticketIds = relation.type === 'parent' ? [relation.toId] : [relation.fromId, relation.toId]
   for (const ticketId of ticketIds) {
-    authorize(await assertTicketAccess(actor, ticketId, 'edit', tx))
+    authorize(ticketId === checked.ticketId ? checked : await assertTicketAccess(actor, ticketId, 'edit', tx))
   }
 }
 
@@ -160,7 +167,7 @@ export const addTicketRelation = async (
         : kind === 'child'
           ? { type: 'parent' as const, fromId: ticketId, toId: targetId }
           : { type: 'related' as const, ...normalizeRelatedPair(ticketId, targetId) }
-    await authorizeRelation(tx, actor, pair, opts?.authorize)
+    await authorizeRelation(tx, actor, pair, opts?.authorize, access)
     const exists = await tx.ticketRelation.findUnique({ where: { type_fromId_toId: pair }, select: { id: true } })
     if (exists) {
       throw errClient(RELATION_ALREADY_EXISTS)
@@ -189,8 +196,8 @@ export const removeTicketRelation = async (actor: Actor, relationId: string, opt
     if (!relation) {
       throw errInvalidOperation()
     }
-    await assertTicketAccess(actor, relation.fromId, 'edit', tx)
-    await authorizeRelation(tx, actor, relation, opts?.authorize)
+    const access = await assertTicketAccess(actor, relation.fromId, 'edit', tx)
+    await authorizeRelation(tx, actor, relation, opts?.authorize, access)
 
     await tx.ticketRelation.delete({ where: { id: relationId } })
     return { id: relationId, ticketId: relation.fromId }

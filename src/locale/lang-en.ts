@@ -404,7 +404,6 @@ export const en: DefaultLocaleItems = {
   relation_kind_parent: 'Set as parent',
   relation_kind_related: 'Relate',
   relation_remove: 'Remove relation',
-  relation_target: 'Ticket display ID (or number)',
   release_note: 'Release Note',
   register_passkey: 'Register Passkey',
   registered_at: 'Registered',

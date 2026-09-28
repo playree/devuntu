@@ -75,7 +75,7 @@ const ChildOrderInput: FC<{ child: ChildTicket; refresh: () => Promise<void> }> 
         min={1}
         max={MAX_CHILD_ORDER}
         value={value}
-        disabled={isSaving}
+        isDisabled={isSaving}
         onChange={(e) => setValue(e.target.value)}
         onBlur={() => void save()}
         onKeyDown={(e) => {
@@ -174,9 +174,14 @@ const AddRelationForm: FC<{ ticket: Ticket; refresh: () => Promise<void> }> = ({
   const [isAdding, setAdding] = useState(false)
   const [candidates, setCandidates] = useState<RelationCandidate[]>([])
   const [isSearching, setSearching] = useState(false)
+  // 詳細を開いただけで候補を検索しないよう、入力欄に触れてから読み込む
+  const [isActivated, setActivated] = useState(false)
 
   // 入力が落ち着いてから候補を引き直す。後から届いた古い応答で候補を上書きしないよう、打ち切った検索の結果は捨てる
   useEffect(() => {
+    if (!isActivated) {
+      return
+    }
     let isCurrent = true
     const timer = setTimeout(async () => {
       setSearching(true)
@@ -201,7 +206,7 @@ const AddRelationForm: FC<{ ticket: Ticket; refresh: () => Promise<void> }> = ({
       isCurrent = false
       clearTimeout(timer)
     }
-  }, [ticket.id, target])
+  }, [ticket.id, target, isActivated])
 
   const kindOptions = Object.fromEntries(
     TICKET_RELATION_KINDS.map((item) => [item, t(TICKET_RELATION_KIND_LOCALE[item])]),
@@ -268,6 +273,8 @@ const AddRelationForm: FC<{ ticket: Ticket; refresh: () => Promise<void> }> = ({
             setTarget(option.displayId)
             setError(undefined)
           }}
+          onSubmit={() => void add()}
+          onFocus={() => setActivated(true)}
           errorMessage={error}
         />
       </div>

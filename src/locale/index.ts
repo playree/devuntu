@@ -415,7 +415,6 @@ export type LocaleItemBase =
   | 'relation_kind_parent'
   | 'relation_kind_related'
   | 'relation_remove'
-  | 'relation_target'
   | 'release_note'
   | 'reload'
   | 'remove_link'

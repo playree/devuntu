@@ -20,6 +20,10 @@ export const TicketSelectField: FC<{
   inputValue: string
   onInputChange: (value: string) => void
   onSelect: (option: TicketSelectOption) => void
+  /** 候補を選ばずに Enter を押したとき(入力した表示ID / 番号で確定する) */
+  onSubmit?: () => void
+  /** 入力欄にフォーカスしたとき。候補の読み込みを触るまで遅らせるのに使う */
+  onFocus?: () => void
   isLoading?: boolean
   placeholder?: string
   errorMessage?: string
@@ -30,6 +34,8 @@ export const TicketSelectField: FC<{
   inputValue,
   onInputChange,
   onSelect,
+  onSubmit,
+  onFocus,
   isLoading = false,
   placeholder,
   errorMessage,
@@ -60,9 +66,28 @@ export const TicketSelectField: FC<{
       allowsEmptyCollection
       isInvalid={!!errorMessage}
       fullWidth
+      onFocus={onFocus}
     >
       <ComboBox.InputGroup>
-        <Input className={cn(isCompact ? 'min-h-7 py-1' : undefined)} placeholder={placeholder} />
+        <Input
+          className={cn(isCompact ? 'min-h-7 py-1' : undefined)}
+          placeholder={placeholder}
+          /**
+           * 候補の一覧が開いていると、react-aria は Enter を一覧を閉じる操作として握り、フォームの送信まで届かない。
+           * 候補にフォーカスが無い(aria-activedescendant が無い)Enter は、入力した値での確定として扱う。
+           * 送信を二重にしないよう、ここで既定動作(フォームの submit)を止める
+           */
+          onKeyDownCapture={(e) => {
+            if (!onSubmit || e.key !== 'Enter' || e.nativeEvent.isComposing) {
+              return
+            }
+            if (e.currentTarget.getAttribute('aria-activedescendant')) {
+              return
+            }
+            e.preventDefault()
+            onSubmit()
+          }}
+        />
         <ComboBox.Trigger /* 必ず最後の子にすること(InputGroup が最後の子を Trigger として扱う) */ />
       </ComboBox.InputGroup>
       <FieldError hasErrorArea={hasErrorArea}>{errorMessage}</FieldError>
