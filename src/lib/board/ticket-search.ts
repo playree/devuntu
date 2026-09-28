@@ -6,6 +6,7 @@ import type { TicketPriority, TicketStatus } from '@/generated/prisma/enums'
 import type { TicketOrderByWithRelationInput, TicketWhereInput } from '@/generated/prisma/models'
 import { dedupeTagNames } from './tag-rule'
 import { parseTicketDisplayId, parseTicketNumber } from './ticket-id'
+import type { TicketRelationFilter } from './ticket-relation-rule'
 
 /**
  * 一覧で並べ替えできる列。MultiTable に渡す columns の id と一致させる(tags は並べ替え不可)。
@@ -27,6 +28,10 @@ export type TicketSearchParams = {
   boardId?: string | null
   /** null / undefined = すべて / 'none' = 未割り当て / それ以外は userId */
   assignee?: string | null
+  /** 関係するチケットの表示ID。空文字 / undefined は絞り込まない */
+  relatedTo?: string
+  /** relatedTo のチケットから見た関係。未指定は all */
+  relation?: TicketRelationFilter
 }
 
 /**
@@ -64,25 +69,62 @@ export const tagNamesWhere = (names: string[]): TicketWhereInput => ({
 })
 
 /**
- * 1語ぶんの横断 OR 条件(表示ID / タイトル / 本文 / タグ / コメント)。
- *
- * 表示ID(`DEV-12`)と番号(`#12`)は完全一致で足し、貼り付けた表示IDがそのまま 1 件に絞れるようにする。
+ * 表示ID / 番号(完全一致)の条件。貼り付けた表示IDがそのまま 1 件に絞れるようにする。
  * 表示IDそのものはどの列にも保持していないので、キーと番号へ分解して条件にする。
  */
-const keywordOr = (word: string): TicketWhereInput => {
+const ticketIdConditions = (word: string): TicketWhereInput[] => {
   const displayId = parseTicketDisplayId(word)
   const number = displayId ? null : parseTicketNumber(word)
+  return [
+    ...(displayId ? [{ number: displayId.number, board: { key: displayId.key } }] : []),
+    ...(number === null ? [] : [{ number }]),
+  ]
+}
 
-  return {
+/**
+ * 1語ぶんの表示ID / 番号 / 件名の OR 条件。関係の相手の候補のように、本文やコメントまで広げると
+ * 候補がぶれる場面で使う
+ */
+export const ticketIdOrTitleWhere = (word: string): TicketWhereInput => ({
+  OR: [...ticketIdConditions(word), { title: { contains: word, mode: 'insensitive' as const } }],
+})
+
+/** 1語ぶんの横断 OR 条件(表示ID / タイトル / 本文 / タグ / コメント) */
+const keywordOr = (word: string): TicketWhereInput => ({
+  OR: [
+    ...ticketIdConditions(word),
+    { title: { contains: word, mode: 'insensitive' as const } },
+    { content: { contains: word, mode: 'insensitive' as const } },
+    { tags: { some: { tag: { name: { equals: word, mode: 'insensitive' as const } } } } },
+    { comments: { some: { content: { contains: word, mode: 'insensitive' as const } } } },
+  ],
+})
+
+/**
+ * 関係するチケットの条件。child = 指定したチケットの直下の子 / related = 関連 / all = 両方。
+ * 関係は同じボードの中だけなので、可視スコープの AND で他ボードは自然に落ちる。
+ * 表示IDとして読めない値は 0 件にする(スキーマで弾くので通常は到達しない)
+ */
+export const relationWhere = (relatedTo: string, relation: TicketRelationFilter): TicketWhereInput => {
+  const displayId = parseTicketDisplayId(relatedTo)
+  if (!displayId) {
+    return { id: { in: [] } }
+  }
+  const target: TicketWhereInput = { number: displayId.number, board: { key: displayId.key } }
+  const child: TicketWhereInput = { relationsTo: { some: { type: 'parent', from: target } } }
+  const related: TicketWhereInput = {
     OR: [
-      ...(displayId ? [{ number: displayId.number, board: { key: displayId.key } }] : []),
-      ...(number === null ? [] : [{ number }]),
-      { title: { contains: word, mode: 'insensitive' as const } },
-      { content: { contains: word, mode: 'insensitive' as const } },
-      { tags: { some: { tag: { name: { equals: word, mode: 'insensitive' as const } } } } },
-      { comments: { some: { content: { contains: word, mode: 'insensitive' as const } } } },
+      { relationsFrom: { some: { type: 'related', to: target } } },
+      { relationsTo: { some: { type: 'related', from: target } } },
     ],
   }
+  if (relation === 'child') {
+    return child
+  }
+  if (relation === 'related') {
+    return related
+  }
+  return { OR: [child, related] }
 }
 
 /**
@@ -126,6 +168,9 @@ export const buildTicketWhere = (
     and.push({ assigneeId: null })
   } else if (params.assignee) {
     and.push({ assigneeId: params.assignee })
+  }
+  if (params.relatedTo) {
+    and.push(relationWhere(params.relatedTo, params.relation ?? 'all'))
   }
 
   return { AND: and }

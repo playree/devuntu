@@ -12,18 +12,29 @@ import {
   removeTicketLink as removeTicketLinkCore,
 } from '@/lib/board/ticket-link'
 import { addComment, changeTicketStatus, deleteComment, updateComment, updateTicket } from '@/lib/board/ticket-mutation'
+import {
+  addTicketRelation as addTicketRelationCore,
+  EMPTY_TICKET_RELATIONS,
+  listTicketRelations,
+  removeTicketRelation as removeTicketRelationCore,
+  updateTicketChildOrder as updateTicketChildOrderCore,
+} from '@/lib/board/ticket-relation'
+import { splitKeywords, ticketIdOrTitleWhere } from '@/lib/board/ticket-search'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { scUUID } from '@/lib/schema/schema'
 import {
   scAddTicketLink,
+  scAddTicketRelation,
   scCheckTicketCriterion,
   scCreateTicketComment,
   scDecideAgentComment,
   scPatchTicket,
   scSaveTicketCriteria,
+  scSearchRelationCandidates,
   scUpdateTicketAgentMode,
+  scUpdateTicketChildOrder,
   scUpdateTicketComment,
   scUpdateTicketStatus,
 } from '@/lib/schema/schema-ticket'
@@ -101,9 +112,11 @@ export const getTicket = safeAuthAction
         return name ? [name] : []
       })
 
-    const [links, criteria, pendingDecision] = await Promise.all([
+    const [links, criteria, relations, pendingDecision] = await Promise.all([
       listTicketLinks(id),
       listTicketCriteria(id),
+      // 関係の相手は同じボードのチケットなので、ボードのメンバーでない承認者には見せない
+      access.boardRole ? listTicketRelations(id) : EMPTY_TICKET_RELATIONS,
       findPendingAgentDecision({
         id,
         assigneeId: ticket.assigneeId,
@@ -149,6 +162,7 @@ export const getTicket = safeAuthAction
       })(),
       links,
       criteria,
+      relations,
       /** 承認/差し戻しボタンを出す plan / report。返答できるのはチケットを編集できる人だけ */
       pendingDecision: access.canEdit ? pendingDecision : null,
       boardRole: access.boardRole,
@@ -322,3 +336,75 @@ export const checkTicketCriterion = safeAuthAction
     logger.info({ userId: user.id, ...result, checked }, 'ticket criterion checked')
     return result
   })
+
+/**
+ * 親子・関連の追加(チケットを編集できる人)。相手は同じボードのチケットだけ
+ */
+export const addTicketRelation = safeAuthAction
+  .metadata({ actionName: 'addTicketRelation', role: 'user' })
+  .inputSchema(scAddTicketRelation)
+  .action(async ({ ctx: { user }, parsedInput }) => {
+    const result = await addTicketRelationCore(user, parsedInput)
+
+    logger.info({ userId: user.id, ...result, kind: parsedInput.kind }, 'ticket relation added')
+    return result
+  })
+
+/**
+ * 親子・関連の解除(チケットを編集できる人)
+ */
+export const removeTicketRelation = safeAuthAction
+  .metadata({ actionName: 'removeTicketRelation', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => {
+    const result = await removeTicketRelationCore(user, id)
+
+    logger.info({ userId: user.id, ...result }, 'ticket relation removed')
+    return result
+  })
+
+/**
+ * 子の順番の変更(チケットを編集できる人)
+ */
+export const updateTicketChildOrder = safeAuthAction
+  .metadata({ actionName: 'updateTicketChildOrder', role: 'user' })
+  .inputSchema(scUpdateTicketChildOrder)
+  .action(async ({ ctx: { user }, parsedInput: { id, order } }) => {
+    const result = await updateTicketChildOrderCore(user, id, order)
+
+    logger.info({ userId: user.id, ...result, order }, 'ticket child order updated')
+    return result
+  })
+
+/** 関係の相手の候補として返す件数 */
+const MAX_RELATION_CANDIDATES = 10
+
+/**
+ * 関係の相手の候補(チケットを編集できる人)。同じボードの自分以外を、表示ID / 番号 / 件名で探す。
+ * キーワードが空なら、完了以外で最近更新されたチケットを返す(検索したときは完了も候補に含める)
+ */
+export const searchRelationCandidates = safeAuthAction
+  .metadata({ actionName: 'searchRelationCandidates', role: 'user' })
+  .inputSchema(scSearchRelationCandidates)
+  .action(async ({ ctx: { user }, parsedInput: { ticketId, keyword } }) => {
+    const access = await assertTicketAccess(user, ticketId, 'edit')
+    const words = splitKeywords(keyword)
+
+    const tickets = await prisma.ticket.findMany({
+      where: {
+        AND: [
+          { boardId: access.boardId },
+          { id: { not: ticketId } },
+          ...(words.length > 0 ? words.map(ticketIdOrTitleWhere) : [{ status: { not: 'done' as const } }]),
+        ],
+      },
+      select: { id: true, number: true, title: true, status: true, board: { select: { key: true } } },
+      orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
+      take: MAX_RELATION_CANDIDATES,
+    })
+    return tickets.map(({ board, number, ...ticket }) => ({
+      ...ticket,
+      displayId: ticketDisplayId({ key: board.key, number }),
+    }))
+  })
+export type RelationCandidate = NonNullable<Awaited<ReturnType<typeof searchRelationCandidates>>['data']>[number]

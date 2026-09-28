@@ -100,6 +100,7 @@ export const ModelName = {
   Ticket: 'Ticket',
   TicketComment: 'TicketComment',
   TicketCriterion: 'TicketCriterion',
+  TicketRelation: 'TicketRelation',
   User: 'User',
   Group: 'Group',
   UserGroup: 'UserGroup'
@@ -877,6 +878,18 @@ export const TicketCriterionScalarFieldEnum = {
 } as const
 
 export type TicketCriterionScalarFieldEnum = (typeof TicketCriterionScalarFieldEnum)[keyof typeof TicketCriterionScalarFieldEnum]
+
+
+export const TicketRelationScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  fromId: 'fromId',
+  toId: 'toId',
+  order: 'order',
+  createdAt: 'createdAt'
+} as const
+
+export type TicketRelationScalarFieldEnum = (typeof TicketRelationScalarFieldEnum)[keyof typeof TicketRelationScalarFieldEnum]
 
 
 export const UserScalarFieldEnum = {

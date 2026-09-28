@@ -28,8 +28,8 @@ import { useTicketFormOptions } from './use-ticket-form'
 const defaultExpandedKeys = new Set(['search'])
 
 export const TicketsClient: FC<{
-  /** URL の ?boardId= / ?status= / ?assignee= 由来の初期絞り込み。未指定の項目は既定の条件になる */
-  initialFilter?: Partial<Pick<TicketSearch, 'boardId' | 'status' | 'assignee'>>
+  /** URL の ?boardId= / ?status= / ?assignee= / ?relatedTo= / ?relation= 由来の初期絞り込み。未指定の項目は既定の条件になる */
+  initialFilter?: Partial<Pick<TicketSearch, 'boardId' | 'status' | 'assignee' | 'relatedTo' | 'relation'>>
 }> = ({ initialFilter }) => {
   const { t } = useLocale()
   const tz = useUserTimezone()
@@ -43,6 +43,8 @@ export const TicketsClient: FC<{
     boardId: initialFilter?.boardId ?? null,
     status: initialFilter?.status ?? defaultTicketFilter.status,
     assignee: initialFilter?.assignee ?? null,
+    relatedTo: initialFilter?.relatedTo ?? defaultTicketFilter.relatedTo,
+    relation: initialFilter?.relation ?? defaultTicketFilter.relation,
   })
   // usePagingList の load は再生成されるため、最新の検索条件は ref から読む
   const filterRef = useRef(filter)

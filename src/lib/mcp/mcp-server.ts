@@ -1,3 +1,4 @@
+import { TICKET_RELATION_FILTERS } from '@/lib/board/ticket-relation-rule'
 import { ASSIGNEE_NONE } from '@/lib/board/ticket-search'
 import { AGENT_MCP_SERVER_NAME, MCP_SERVER_NAME } from '@/lib/mcp/mcp'
 import { registerAgentSetupTool, registerAgentTools } from '@/lib/mcp/mcp-agent'
@@ -10,10 +11,12 @@ import {
   deleteTicketCommentForMcp,
   deleteTicketForMcp,
   getTicketForMcp,
+  linkRelatedTicketForMcp,
   linkTicketArtifactForMcp,
   MCP_ASSIGNEE_ME,
   searchTicketsForMcp,
   unlinkTicketArtifactForMcp,
+  unlinkTicketRelationForMcp,
   updateTicketCommentForMcp,
   updateTicketForMcp,
 } from '@/lib/mcp/mcp-ticket'
@@ -23,11 +26,14 @@ import {
   scCreateTicket,
   scPatchTicket,
   scTicketSearch,
+  zChildOrder,
   zCommentContent,
   zCommentType,
   zCriterionItems,
   zCriterionText,
   zGitUrl,
+  zRelatedTo,
+  zRelationTarget,
   zTicketStatus,
 } from '@/lib/schema/schema-ticket'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
@@ -63,6 +69,11 @@ const SERVER_NAME = {
  */
 const zBoardIdOrKey = z.string().min(1)
 
+const PARENT_ID_DESCRIPTION = '親チケットの表示ID(例: ABC-42)またはチケットID。同じボードのチケットだけ指定できる'
+const zMcpChildOrder = zChildOrder.describe(
+  '親の下での順番(1始まり)。同じ値の子は並行してよい扱い。未指定なら兄弟の末尾',
+)
+
 const mcpCreateTicketSchema = scCreateTicket.extend({
   boardId: zBoardIdOrKey.describe('ボードIDまたはボードキー(例: ABC)。list_boards で特定する'),
   acceptanceCriteria: z
@@ -70,6 +81,8 @@ const mcpCreateTicketSchema = scCreateTicket.extend({
     .max(MAX_TICKET_CRITERIA)
     .optional()
     .describe('受け入れ条件(完了の基準)。1項目1文で指定する'),
+  parentId: zRelationTarget.optional().describe(PARENT_ID_DESCRIPTION),
+  childOrder: zMcpChildOrder.optional(),
 })
 
 /** Web の詳細画面と違い、ステータスと受け入れ条件の変更も同じツールで受ける */
@@ -82,6 +95,8 @@ const mcpUpdateTicketSchema = scPatchTicket.omit({ id: true }).extend({
       '受け入れ条件の全件置き換え。既存の項目は get_ticket の acceptanceCriteria の id を付けて渡すと確認状態を引き継ぐ' +
         '(文言を変えた項目は未確認に戻る)。一覧に含めなかった項目は削除される',
     ),
+  parentId: zRelationTarget.nullish().describe(`${PARENT_ID_DESCRIPTION}。null で親を外す`),
+  childOrder: zMcpChildOrder.optional(),
 })
 
 const mcpTicketSearchSchema = scTicketSearch.extend({
@@ -90,6 +105,11 @@ const mcpTicketSearchSchema = scTicketSearch.extend({
     .union([z.uuidv7(), z.literal(MCP_ASSIGNEE_ME), z.literal(ASSIGNEE_NONE)])
     .optional()
     .describe(`担当者。ユーザーID / '${MCP_ASSIGNEE_ME}'(自分) / '${ASSIGNEE_NONE}'(未割り当て)`),
+  relatedTo: zRelatedTo.optional().describe('関係するチケットの表示ID(例: ABC-42)で絞り込む'),
+  relation: z
+    .enum(TICKET_RELATION_FILTERS)
+    .optional()
+    .describe('relatedTo のチケットから見た関係。child=直下の子 / related=関連 / all=両方(既定)'),
   limit: z.number().int().min(1).max(50).optional(),
 })
 
@@ -144,7 +164,8 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     {
       title: 'チケット取得',
       description:
-        '表示ID(例: ABC-42)またはチケットIDを指定して、本文・ステータス・担当者・タグ・コメント・紐付けたリンクを含む詳細を取得する。' +
+        '表示ID(例: ABC-42)またはチケットIDを指定して、本文・ステータス・担当者・タグ・コメント・紐付けたリンク・' +
+        '親子と関連チケットを含む詳細を取得する。' +
         'チケットに対応する場合は、応答の workflow の手順(着手時の doing、plan / report の投稿、成果物の紐付け)に従う',
       inputSchema: { ticketId: z.string().min(1) },
     },
@@ -155,7 +176,8 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     'search_tickets',
     {
       title: 'チケット検索',
-      description: 'キーワード・ステータス・優先度・タグ・ボード・担当者で、アクセス可能なチケットを検索する',
+      description:
+        'キーワード・ステータス・優先度・タグ・ボード・担当者・関係するチケットで、アクセス可能なチケットを検索する',
       inputSchema: mcpTicketSearchSchema.shape,
     },
     async (input) => jsonResult(await searchTicketsForMcp(auth, input)),
@@ -165,7 +187,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     'create_ticket',
     {
       title: 'チケット作成',
-      description: 'ボードにチケットを新規作成する',
+      description: 'ボードにチケットを新規作成する。parentId を指定すると子チケットとして作る',
       inputSchema: mcpCreateTicketSchema.shape,
     },
     async ({ acceptanceCriteria, ...input }) =>
@@ -177,7 +199,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     {
       title: 'チケット更新',
       description:
-        'チケットの内容(タイトル/本文/優先度/期限/担当者/タグ/受け入れ条件)やステータスを更新する。対応に着手したら status を doing にする。' +
+        'チケットの内容(タイトル/本文/優先度/期限/担当者/タグ/受け入れ条件/親チケット)やステータスを更新する。対応に着手したら status を doing にする。' +
         'メンバーは他人が担当のチケットを更新できない(未割り当てなら可能。オーナーは制限なし)',
       inputSchema: mcpUpdateTicketSchema.shape,
     },
@@ -260,6 +282,31 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       inputSchema: { linkId: z.uuidv7() },
     },
     async ({ linkId }) => jsonResult(await unlinkTicketArtifactForMcp(auth, linkId)),
+  )
+
+  server.registerTool(
+    'link_related_ticket',
+    {
+      title: '関連チケットの紐付け',
+      description:
+        '同じボードのチケット同士を関連付ける(向きは無く、どちらのチケットからも見える)。' +
+        '親子は update_ticket / create_ticket の parentId で設定する',
+      inputSchema: {
+        ticketId: z.string().min(1),
+        relatedTicketId: zRelationTarget.describe('関連付ける相手の表示ID(例: ABC-42)またはチケットID'),
+      },
+    },
+    async ({ ticketId, relatedTicketId }) => jsonResult(await linkRelatedTicketForMcp(auth, ticketId, relatedTicketId)),
+  )
+
+  server.registerTool(
+    'unlink_ticket_relation',
+    {
+      title: '親子・関連の解除',
+      description: '親子・関連を外す。relationId は get_ticket の parent / children / related から得る',
+      inputSchema: { relationId: z.uuidv7() },
+    },
+    async ({ relationId }) => jsonResult(await unlinkTicketRelationForMcp(auth, relationId)),
   )
 
   // 画像の添付・取得は人間の利用者もエージェントも使う

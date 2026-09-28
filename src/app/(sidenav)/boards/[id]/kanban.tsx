@@ -2,7 +2,15 @@
 
 import { UserAvatar } from '@/components/general/avatar'
 import { MultiButton } from '@/components/general/button'
-import { ChatBubbleIcon, CheckBadgeIcon, ClockIcon, FireIcon, PlusIcon } from '@/components/icon'
+import {
+  Bars3BottomLeftIcon,
+  ChatBubbleIcon,
+  CheckBadgeIcon,
+  ClockIcon,
+  FireIcon,
+  LinkIcon,
+  PlusIcon,
+} from '@/components/icon'
 import {
   AgentStateChip,
   PriorityBar,
@@ -246,6 +254,22 @@ const KanbanCardView: FC<{
                 <ChatBubbleIcon width={12} />
                 <span className='sr-only'>{t('comment')}</span>
                 {card.commentCount}
+              </span>
+            )}
+            {card.childProgress.total > 0 && (
+              <span className='text-muted flex items-center gap-0.5 text-xs' title={t('child_tickets')}>
+                <Bars3BottomLeftIcon width={12} />
+                <span className='sr-only'>{t('child_tickets')}</span>
+                <span className='font-mono'>
+                  {card.childProgress.done}/{card.childProgress.total}
+                </span>
+              </span>
+            )}
+            {card.parentDisplayId && (
+              <span className='text-muted flex items-center gap-0.5 text-xs' title={t('parent_ticket')}>
+                <LinkIcon width={12} />
+                <span className='sr-only'>{t('parent_ticket')}</span>
+                <span className='font-mono'>{card.parentDisplayId}</span>
               </span>
             )}
           </div>

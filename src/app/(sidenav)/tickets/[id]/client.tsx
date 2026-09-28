@@ -21,6 +21,7 @@ import { TicketCriteria } from './ticket-criteria'
 import { type Draft, type EditField, TicketFieldPanel } from './ticket-fields'
 import { CloseButton, TicketHeader } from './ticket-header'
 import { TicketLinks } from './ticket-links'
+import { TicketRelations } from './ticket-relations'
 
 export const TicketDetailClient: FC<{
   id: string
@@ -175,6 +176,8 @@ export const TicketDetailClient: FC<{
       <TicketBody ticket={ticket} boardAssignees={boardAssignees} refresh={refreshAll} />
 
       <TicketCriteria ticket={ticket} refresh={refreshAll} />
+
+      <TicketRelations ticket={ticket} refresh={refreshAll} />
 
       <TicketLinks ticket={ticket} refresh={refreshAll} />
 

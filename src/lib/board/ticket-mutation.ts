@@ -25,6 +25,7 @@ import { assertTagIdsInBoard, syncTicketTags } from './tag'
 import { nextOrder } from './tag-rule'
 import { syncTicketCriteria } from './ticket-criterion'
 import { ticketDisplayId } from './ticket-id'
+import { assignTicketParent, writeOwnChildOrder } from './ticket-relation'
 import { assertReplyTarget, moveTicketToLane, nextTicketNumber, reassignContentAttachments } from './ticket-write'
 
 /** 経路固有の追加制限。`assertTicketAccess` を通った直後に同じトランザクション内で呼ぶ。NG なら throw する */
@@ -41,6 +42,10 @@ export type CreateTicketInput = {
   tagIds: string[]
   /** 受け入れ条件の文言。作成時は新規の項目だけなので id は持たない */
   criteria?: string[]
+  /** 親チケット(チケットID / 表示ID / 番号)。同じボードのチケットだけ */
+  parentId?: string | null
+  /** 親の下での順番。未指定なら兄弟の末尾 */
+  childOrder?: number
 }
 
 /**
@@ -48,7 +53,7 @@ export type CreateTicketInput = {
  * 担当者・タグがそのボードに属することは DB 制約では防げないのでここで検証する。
  */
 export const createTicket = async (actor: Actor, input: CreateTicketInput) => {
-  const { boardId, status, assigneeId, tagIds, dueDate, criteria, ...rest } = input
+  const { boardId, status, assigneeId, tagIds, dueDate, criteria, parentId, childOrder, ...rest } = input
 
   return prisma.$transaction(async (tx) => {
     await assertBoardAccess(actor, boardId, 'write', tx)
@@ -86,6 +91,12 @@ export const createTicket = async (actor: Actor, input: CreateTicketInput) => {
     // 本文の画像はボードを選び直す前にアップロードされている場合があるので、作成先へ付け替える。
     // 作成直後に呼ぶので、いま作ったチケット自身は「使用中」から除く
     await reassignContentAttachments(tx, rest.content, boardId, actor, created.id)
+    if (parentId) {
+      await assignTicketParent(tx, { id: created.id, boardId }, parentId, childOrder)
+    } else if (childOrder !== undefined) {
+      // 親が無いのに順番だけを渡されても置き場が無いので、黙って捨てずに弾く
+      throw errInvalidOperation()
+    }
 
     const ticket = {
       id: created.id,
@@ -121,6 +132,10 @@ export type UpdateTicketInput = {
   status?: TicketStatus
   /** 受け入れ条件の全件置き換え(syncTicketCriteria) */
   criteria?: CriterionItem[]
+  /** 親チケット(チケットID / 表示ID / 番号)。同じボードのチケットだけ */
+  parentId?: string | null
+  /** 親の下での順番。parentId と一緒に渡さない場合は今の親の下での順番を変える */
+  childOrder?: number
 }
 
 /**
@@ -133,7 +148,7 @@ export const updateTicket = async (
   input: UpdateTicketInput,
   opts?: { authorize?: TicketAuthorize },
 ) => {
-  const { assigneeId, tagIds, dueDate, status, criteria, ...rest } = input
+  const { assigneeId, tagIds, dueDate, status, criteria, parentId, childOrder, ...rest } = input
 
   return prisma.$transaction(async (tx) => {
     const access = await assertTicketAccess(actor, id, 'edit', tx)
@@ -179,6 +194,11 @@ export const updateTicket = async (
     }
     if (criteria) {
       await syncTicketCriteria(tx, id, criteria)
+    }
+    if (parentId !== undefined) {
+      await assignTicketParent(tx, { id, boardId: access.boardId }, parentId, childOrder)
+    } else if (childOrder !== undefined) {
+      await writeOwnChildOrder(tx, id, childOrder)
     }
 
     const moved =

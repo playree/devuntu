@@ -446,6 +446,7 @@ export const ModelName = {
   Ticket: 'Ticket',
   TicketComment: 'TicketComment',
   TicketCriterion: 'TicketCriterion',
+  TicketRelation: 'TicketRelation',
   User: 'User',
   Group: 'Group',
   UserGroup: 'UserGroup'
@@ -464,7 +465,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentUsage" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "board" | "boardKeyHistory" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "calendarShare" | "calendarBusyTime" | "commandTargetMember" | "commandTargetGroup" | "commandRun" | "commandRunChunk" | "ticketLink" | "boardRepository" | "gitCheckSuite" | "userNotifySetting" | "webPushSubscription" | "boardNotifySetting" | "notifyOutbox" | "notifyDelivery" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "ticket" | "ticketComment" | "ticketCriterion" | "user" | "group" | "userGroup"
+    modelProps: "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentUsage" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "board" | "boardKeyHistory" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "calendarShare" | "calendarBusyTime" | "commandTargetMember" | "commandTargetGroup" | "commandRun" | "commandRunChunk" | "ticketLink" | "boardRepository" | "gitCheckSuite" | "userNotifySetting" | "webPushSubscription" | "boardNotifySetting" | "notifyOutbox" | "notifyDelivery" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "ticket" | "ticketComment" | "ticketCriterion" | "ticketRelation" | "user" | "group" | "userGroup"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -4094,6 +4095,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    TicketRelation: {
+      payload: Prisma.$TicketRelationPayload<ExtArgs>
+      fields: Prisma.TicketRelationFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TicketRelationFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketRelationPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TicketRelationFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketRelationPayload>
+        }
+        findFirst: {
+          args: Prisma.TicketRelationFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketRelationPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TicketRelationFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketRelationPayload>
+        }
+        findMany: {
+          args: Prisma.TicketRelationFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketRelationPayload>[]
+        }
+        create: {
+          args: Prisma.TicketRelationCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketRelationPayload>
+        }
+        createMany: {
+          args: Prisma.TicketRelationCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TicketRelationCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketRelationPayload>[]
+        }
+        delete: {
+          args: Prisma.TicketRelationDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketRelationPayload>
+        }
+        update: {
+          args: Prisma.TicketRelationUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketRelationPayload>
+        }
+        deleteMany: {
+          args: Prisma.TicketRelationDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TicketRelationUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TicketRelationUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketRelationPayload>[]
+        }
+        upsert: {
+          args: Prisma.TicketRelationUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketRelationPayload>
+        }
+        aggregate: {
+          args: Prisma.TicketRelationAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTicketRelation>
+        }
+        groupBy: {
+          args: Prisma.TicketRelationGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TicketRelationGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TicketRelationCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TicketRelationCountAggregateOutputType> | number
+        }
+      }
+    }
     User: {
       payload: Prisma.$UserPayload<ExtArgs>
       fields: Prisma.UserFieldRefs
@@ -5113,6 +5188,18 @@ export const TicketCriterionScalarFieldEnum = {
 export type TicketCriterionScalarFieldEnum = (typeof TicketCriterionScalarFieldEnum)[keyof typeof TicketCriterionScalarFieldEnum]
 
 
+export const TicketRelationScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  fromId: 'fromId',
+  toId: 'toId',
+  order: 'order',
+  createdAt: 'createdAt'
+} as const
+
+export type TicketRelationScalarFieldEnum = (typeof TicketRelationScalarFieldEnum)[keyof typeof TicketRelationScalarFieldEnum]
+
+
 export const UserScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -5611,6 +5698,20 @@ export type ListEnumTicketCommentDecisionFieldRefInput<$PrismaModel> = FieldRefI
 
 
 /**
+ * Reference to a field of type 'TicketRelationType'
+ */
+export type EnumTicketRelationTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TicketRelationType'>
+    
+
+
+/**
+ * Reference to a field of type 'TicketRelationType[]'
+ */
+export type ListEnumTicketRelationTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TicketRelationType[]'>
+    
+
+
+/**
  * Reference to a field of type 'Float'
  */
 export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
@@ -5823,6 +5924,7 @@ export type GlobalOmitConfig = {
   ticket?: Prisma.TicketOmit
   ticketComment?: Prisma.TicketCommentOmit
   ticketCriterion?: Prisma.TicketCriterionOmit
+  ticketRelation?: Prisma.TicketRelationOmit
   user?: Prisma.UserOmit
   group?: Prisma.GroupOmit
   userGroup?: Prisma.UserGroupOmit

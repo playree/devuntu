@@ -11,8 +11,9 @@ import type { BoardKind, TagColor } from '@/generated/prisma/enums'
 import type { AssigneeCandidate } from '@/lib/board/board-member'
 import { dedupeTagOptionsByName, MAX_TICKET_TAGS } from '@/lib/board/tag-rule'
 import { OPEN_TICKET_STATUSES, TICKET_PRIORITIES, TICKET_STATUSES } from '@/lib/board/ticket-enum'
+import { TICKET_RELATION_FILTER_LOCALE, TICKET_RELATION_FILTERS } from '@/lib/board/ticket-relation-rule'
 import { ASSIGNEE_NONE } from '@/lib/board/ticket-search'
-import { TicketSearch } from '@/lib/schema/schema-ticket'
+import { TicketSearch, zRelatedTo } from '@/lib/schema/schema-ticket'
 import { useLocale } from '@/locale/client'
 import { FC, useState } from 'react'
 
@@ -24,6 +25,8 @@ export const defaultTicketFilter: TicketSearch = {
   tags: [],
   boardId: null,
   assignee: null,
+  relatedTo: '',
+  relation: 'all',
 }
 
 /** 対象の Select で「すべてのボード」を表す値(boardId = null に対応) */
@@ -45,6 +48,12 @@ export const TicketSearchPanel: FC<{
   const { t } = useLocale()
   const { statusOptions, priorityOptions } = useTicketOptions()
   const [keyword, setKeyword] = useState(filter.keyword)
+  const [relatedTo, setRelatedTo] = useState(filter.relatedTo)
+  const [isRelatedToInvalid, setRelatedToInvalid] = useState(false)
+
+  const relationOptions = Object.fromEntries(
+    TICKET_RELATION_FILTERS.map((relation) => [relation, t(TICKET_RELATION_FILTER_LOCALE[relation])]),
+  )
 
   const boardOptions: Record<string, string> = {
     [BOARD_ALL]: t('all'),
@@ -70,6 +79,16 @@ export const TicketSearchPanel: FC<{
     assignees.some((user) => user.id === filter.assignee && user.boardIds.includes(nextBoardId))
 
   const applyKeyword = (value: string) => onChange({ ...filter, keyword: value.trim() })
+
+  /** 表示IDとして読めない値は検索に投げず、入力欄にエラーを出す */
+  const applyRelatedTo = (value: string) => {
+    const parsed = zRelatedTo.safeParse(value)
+    if (!parsed.success) {
+      setRelatedToInvalid(true)
+      return
+    }
+    onChange({ ...filter, relatedTo: parsed.data.toUpperCase() })
+  }
 
   return (
     <GridBox isSmart>
@@ -143,6 +162,34 @@ export const TicketSearchPanel: FC<{
           isDisabled={!boardId}
           tooltip={boardId ? undefined : t('select_target_board_first')}
           onChange={(tags) => onChange({ ...filter, tags })}
+        />
+      </div>
+
+      <div className='col-span-7 md:col-span-5'>
+        <InputSearchField
+          label={t('related_to_ticket')}
+          placeholder='ABC-12'
+          maxLength={20}
+          value={relatedTo}
+          onChange={(value) => {
+            setRelatedTo(value)
+            setRelatedToInvalid(false)
+          }}
+          onSubmit={applyRelatedTo}
+          onClear={() => onChange({ ...filter, relatedTo: '' })}
+          errorMessage={isRelatedToInvalid ? t('@invalid_display_id') : undefined}
+        />
+      </div>
+
+      <div className='col-span-5 md:col-span-3'>
+        <SingleSelectField
+          label={t('relation_filter')}
+          groupOptions={relationOptions}
+          value={filter.relation}
+          onChange={(value) => {
+            const relation = TICKET_RELATION_FILTERS.find((item) => item === value) ?? defaultTicketFilter.relation
+            onChange({ ...filter, relation })
+          }}
         />
       </div>
     </GridBox>

@@ -81,6 +81,11 @@ model Ticket {
   links     TicketLink[]
   criteria  TicketCriterion[]
 
+  /// 自分が from 側の関係(親子なら自分が親)
+  relationsFrom TicketRelation[] @relation("TicketRelationFrom")
+  /// 自分が to 側の関係(親子なら自分が子)
+  relationsTo   TicketRelation[] @relation("TicketRelationTo")
+
   // @@unique が (boardId, ...) の先頭索引を兼ねるので表示IDからの検索はこれで賄える
   @@unique([boardId, number])
   @@index([boardId, status, order])
@@ -181,4 +186,37 @@ model TicketCriterion {
 
   @@index([ticketId, order])
   @@map("ticket_criterion")
+}
+
+/// チケット間の関係の種別
+enum TicketRelationType {
+  /// 親子。from が親、to が子。子の親は1つだけ(アプリ層で置き換える)
+  parent
+  /// 関連。向きは無く、ID の小さい方を from に正規化して保存する
+  related
+}
+
+/// チケット間の関係。同じボードのチケット同士だけを結ぶ(アプリ層で検証する)。
+/// 参照は1階層のみ(親が見るのは直下の子だけ)なので、循環は許容する
+model TicketRelation {
+  id String @id @default(uuid(7))
+
+  type TicketRelationType
+
+  fromId String
+  from   Ticket @relation("TicketRelationFrom", fields: [fromId], references: [id], onDelete: Cascade)
+
+  toId String
+  to   Ticket @relation("TicketRelationTo", fields: [toId], references: [id], onDelete: Cascade)
+
+  /// 親の下での子の順番(1始まり)。同じ値の子は並行してよい扱い。related では使わない(0 のまま)
+  order Int @default(0)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+
+  // (type, fromId) の先頭索引を兼ねるので、親から子の一覧を引くのはこれで賄える
+  @@unique([type, fromId, toId])
+  @@index([toId, type])
+  @@map("ticket_relation")
 }

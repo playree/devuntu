@@ -127,6 +127,7 @@ export const InputSearchField = ({
   maxLength,
   onSubmit,
   searchLabel,
+  errorMessage,
   ...props
 }: SearchFieldProps & {
   label?: string
@@ -136,6 +137,8 @@ export const InputSearchField = ({
   maxLength?: number
   /** 検索ボタンの aria-label / tooltip。未指定なら GeneralUiText の search */
   searchLabel?: string
+  /** 入力の誤り。指定すると入力欄を invalid にして下に表示する(検索欄は既定でエラー領域を確保しない) */
+  errorMessage?: string
 }) => {
   const isSmart = useIsSmart(isSmartProp)
   const uiText = useGeneralUiText()
@@ -144,6 +147,7 @@ export const InputSearchField = ({
     <SearchField
       {...props}
       isRequired={isRequired}
+      isInvalid={!!errorMessage}
       // validationBehavior の事情は InputField と同じ
       validationBehavior='aria'
     >
@@ -185,6 +189,7 @@ export const InputSearchField = ({
               />
             )}
           </SearchField.Group>
+          <FieldError>{errorMessage}</FieldError>
         </>
       )}
     </SearchField>

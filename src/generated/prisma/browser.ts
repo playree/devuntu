@@ -314,6 +314,12 @@ export type TicketComment = Prisma.TicketCommentModel
  */
 export type TicketCriterion = Prisma.TicketCriterionModel
 /**
+ * Model TicketRelation
+ * チケット間の関係。同じボードのチケット同士だけを結ぶ(アプリ層で検証する)。
+ * 参照は1階層のみ(親が見るのは直下の子だけ)なので、循環は許容する
+ */
+export type TicketRelation = Prisma.TicketRelationModel
+/**
  * Model User
  * アプリの利用者。Webにログインする人のほか、MCP からのみ利用するAIエージェント用ユーザー
  * (isAgent = true)も同じテーブルで持つ。

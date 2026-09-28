@@ -252,6 +252,11 @@ describe.each(routes)('createTicket: %s', (_label, route) => {
     expect(fakeTx.ticket.create).not.toHaveBeenCalled()
   })
 
+  it('親を指定せずに子の順番だけを渡すと作成しない', async () => {
+    await expect(route.create(createInput({ childOrder: 2 }))).rejects.toThrow(ClientError)
+    expect(enqueueTicketCreated).not.toHaveBeenCalled()
+  })
+
   it('ボードに属さないタグは作成しない', async () => {
     vi.mocked(assertTagIdsInBoard).mockRejectedValueOnce(errInvalidOperation())
 
