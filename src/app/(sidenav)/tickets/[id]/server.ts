@@ -377,24 +377,25 @@ export const updateTicketChildOrder = safeAuthAction
   })
 
 /** 関係の相手の候補として返す件数 */
-const MAX_RELATION_CANDIDATES = 20
+const MAX_RELATION_CANDIDATES = 10
 
 /**
  * 関係の相手の候補(チケットを編集できる人)。同じボードの自分以外を、表示ID / 番号 / 件名で探す。
- * キーワードが空なら最近更新されたチケットを返す
+ * キーワードが空なら、完了以外で最近更新されたチケットを返す(検索したときは完了も候補に含める)
  */
 export const searchRelationCandidates = safeAuthAction
   .metadata({ actionName: 'searchRelationCandidates', role: 'user' })
   .inputSchema(scSearchRelationCandidates)
   .action(async ({ ctx: { user }, parsedInput: { ticketId, keyword } }) => {
     const access = await assertTicketAccess(user, ticketId, 'edit')
+    const words = splitKeywords(keyword)
 
     const tickets = await prisma.ticket.findMany({
       where: {
         AND: [
           { boardId: access.boardId },
           { id: { not: ticketId } },
-          ...splitKeywords(keyword).map(ticketIdOrTitleWhere),
+          ...(words.length > 0 ? words.map(ticketIdOrTitleWhere) : [{ status: { not: 'done' as const } }]),
         ],
       },
       select: { id: true, number: true, title: true, status: true, board: { select: { key: true } } },
