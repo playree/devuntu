@@ -27,7 +27,7 @@ import { jsonResult } from './mcp'
 import { resolveTicketId } from './mcp-ticket'
 
 /** 稼働条件を満たさないときに Claude へ返す指示。判断の余地を残さない文にする */
-const INACTIVE_NOTE = '稼働条件を満たしていないため、チケットの処理は行わずに終了すること。コメントの投稿も行わない。'
+const INACTIVE_NOTE = 'Run conditions are not met. Exit without processing any ticket. Do not post any comments either.'
 
 /** 自動運用の設定と稼働条件をまとめて引く。3ツールとも入口はこれ */
 const loadContext = async (auth: ResourceAuth) => {
@@ -45,16 +45,16 @@ export const registerAgentSetupTool = (server: McpServer) => {
   server.registerTool(
     'get_agent_setup_guide',
     {
-      title: '自動運用のセットアップ手順',
+      title: 'Agent setup guide',
       description:
-        'AIエージェントの自動運用(Devuntu Agent)を自分のマシンへ用意する手順を返す。' +
-        '作業ディレクトリの準備からランナーの取得・設定・cron 登録・動作確認までを含む。' +
-        'どの CLI で動かすかは利用者が選ぶため、cli を指定せずに呼んだ場合は手順ではなく確認の指示を返す',
+        'Returns the steps to set up automated AI agent operation (Devuntu Agent) on your machine, ' +
+        'from preparing the working directory to fetching and configuring the runner, registering cron, and verifying it works. ' +
+        'The user chooses which CLI to run it with, so when called without cli it returns an instruction to ask the user instead of the steps',
       inputSchema: {
         cli: z
           .enum(AGENT_CLI_KINDS)
           .optional()
-          .describe('セットアップに使う CLI。claude=Claude Code / codex=Codex CLI。利用者に確認して指定する'),
+          .describe('CLI to set up. claude=Claude Code / codex=Codex CLI. Ask the user before specifying'),
       },
     },
     async ({ cli }) => ({
@@ -67,17 +67,17 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
   server.registerTool(
     'get_agent_task',
     {
-      title: 'ルールとタスクの取得',
+      title: 'Get rule and tasks',
       description:
-        'チケットを処理する前に必ず呼ぶ。稼働条件(稼働可否と許可時間帯)、処理すべきチケット、' +
-        '実行すべきアクション、ルールの指示を返す。ルールは処理全体を通じて従うこと。' +
-        'active が false の場合は何もせず終了する',
+        'Always call this before processing a ticket. Returns the run conditions (whether active and the allowed hours), the tickets to process, ' +
+        'the action to perform, and the rule instructions. Follow the rule throughout the whole run. ' +
+        'If active is false, exit without doing anything',
       inputSchema: {
         ticketId: z
           .string()
           .min(1)
           .optional()
-          .describe('対象チケット(表示ID可)。省略すると処理待ちのチケット一覧を返す'),
+          .describe('Target ticket (display ID allowed). Omit to get the list of tickets waiting to be processed'),
       },
     },
     async ({ ticketId }) => {
@@ -104,7 +104,7 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
           ...base,
           rule,
           task,
-          note: 'このチケットは現在の処理対象ではない。処理せずに終了すること',
+          note: 'This ticket is not a current processing target. Exit without processing it',
         })
       }
 
@@ -130,26 +130,28 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
   server.registerTool(
     'finish_agent_task',
     {
-      title: '処理結果の報告',
+      title: 'Report task result',
       description:
-        'チケットの処理結果を報告して1回の実行を閉じる。' +
-        'planned=プランを投稿して返信待ち、completed=対応完了、skipped=見送り、failed=失敗。' +
-        'チケットに受け入れ条件がある場合、completed では criteria で全項目の充足を根拠つきで報告する',
+        'Reports the result of processing a ticket and closes the run. ' +
+        'planned=plan posted and waiting for a reply, completed=done, skipped=skipped, failed=failed. ' +
+        'If the ticket has acceptance criteria, completed must report every item as met with evidence in criteria',
       inputSchema: {
         ticketId: z.string().min(1),
         outcome: z.enum(AGENT_OUTCOMES),
-        summary: z.string().max(2000).optional().describe('実行履歴に残す結果の要約'),
+        summary: z.string().max(2000).optional().describe('Summary of the result recorded in the run history'),
         criteria: z
           .array(
             z.object({
-              id: z.uuidv7().describe('get_agent_task の acceptanceCriteria の id'),
-              met: z.boolean().describe('条件を満たしたか'),
-              evidence: zCriterionEvidence.describe('そう判断した根拠(確認した内容・テスト結果・該当箇所など)'),
+              id: z.uuidv7().describe('id from acceptanceCriteria in get_agent_task'),
+              met: z.boolean().describe('Whether the criterion is met'),
+              evidence: zCriterionEvidence.describe(
+                'Evidence for the judgment (what was checked, test results, relevant code, etc.)',
+              ),
             }),
           )
           .max(MAX_TICKET_CRITERIA)
           .optional()
-          .describe('受け入れ条件ごとの自己チェック結果'),
+          .describe('Self-check result for each acceptance criterion'),
       },
     },
     async ({ ticketId, outcome, summary, criteria }) => {

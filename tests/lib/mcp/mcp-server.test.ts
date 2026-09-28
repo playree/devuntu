@@ -50,6 +50,8 @@ const auth = fakeAuth.oauthAuth()
 const agentAuth = fakeAuth.agentAuth()
 const patAuth = fakeAuth.patAuth()
 
+const JAPANESE = /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u
+
 describe('createDevuntuMcpServer', () => {
   it('全ツールが tools/list に現れる', async () => {
     const { tools } = await (await connectDevuntuMcp()).listTools()
@@ -90,12 +92,21 @@ describe('createDevuntuMcpServer', () => {
       expect(instructions).toContain('type=plan')
       expect(instructions).toContain('type=report')
       expect(instructions).toContain('link_ticket_artifact')
-      expect(instructions).toContain('status を doing')
+      expect(instructions).toContain('status to doing')
     }
 
     const agentInstructions = (await connectDevuntuMcp(agentAuth)).getInstructions() ?? ''
     expect(agentInstructions).toContain('get_agent_task')
-    expect(agentInstructions).not.toContain('status を doing')
+    expect(agentInstructions).not.toContain('status to doing')
+  })
+
+  it('ツールの定義と instructions に日本語を含めない(英語に統一する)', async () => {
+    for (const authKind of [auth, agentAuth]) {
+      const client = await connectDevuntuMcp(authKind)
+      const { tools } = await client.listTools()
+      expect(JSON.stringify(tools)).not.toMatch(JAPANESE)
+      expect(client.getInstructions() ?? '').not.toMatch(JAPANESE)
+    }
   })
 
   it('ユーザートークンの接続でも共通ツールは登録される', async () => {

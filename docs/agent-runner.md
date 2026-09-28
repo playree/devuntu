@@ -303,7 +303,7 @@ Claude Code や Codex CLI から「devuntu のエージェントをセットア�
 手順を返さず、利用者に確認するよう促す**。頼んだ CLI とエージェントに使わせたい CLI は別のことがあるので、
 呼び出し側に選ばせない(未指定のまま手順を返すと、本文で先に出てくる方で進めてしまう)。
 
-手順の本文は [public/agent/agent-setup-guide.md](../public/agent/agent-setup-guide.md)。
+手順の本文は [public/agent/agent-setup-guide.md](../public/agent/agent-setup-guide.md)(MCP 経由で返すため英語)。
 CLI 別の記述は `<!-- cli:claude -->` … `<!-- /cli -->` で囲んであり、プレースホルダーの置換と
 ブロックの絞り込みは [src/lib/agent/agent-setup.ts](../src/lib/agent/agent-setup.ts) で行う。
 URL はサーバー自身のものが埋め込まれる。

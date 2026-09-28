@@ -58,12 +58,14 @@ const targetSchema = {
     .string()
     .min(1)
     .optional()
-    .describe('添付先チケットの表示ID(例: ABC-42)またはチケットID。boardId とはどちらか一方を指定する'),
+    .describe('Display ID (e.g. ABC-42) or ticket ID of the ticket to attach to. Specify either this or boardId'),
   boardId: z
     .string()
     .min(1)
     .optional()
-    .describe('添付先ボードのIDまたはボードキー(例: ABC)。これから作成するチケット向け。ticketId とは排他'),
+    .describe(
+      'Board ID or board key (e.g. ABC) to attach to. For tickets not created yet. Mutually exclusive with ticketId',
+    ),
 }
 
 /**
@@ -77,7 +79,7 @@ const resolveUploadTarget = async (
   { ticketId, boardId }: { ticketId?: string; boardId?: string },
 ): Promise<string> => {
   if ((ticketId ? 1 : 0) + (boardId ? 1 : 0) !== 1) {
-    throw errValidation('ticketId と boardId はどちらか一方を指定してください')
+    throw errValidation('Specify exactly one of ticketId or boardId')
   }
   if (ticketId) {
     // 'edit' は canEdit(= メンバー かつ 未アーカイブ)なので、アーカイブ済みボードはここで弾かれる
@@ -111,7 +113,7 @@ const uploadImageForMcp = async (
   const file = new File([new Uint8Array(bytes)], input.filename, { type: input.mimeType })
   const parsed = zImageFile.safeParse(file)
   if (!parsed.success) {
-    throw errValidation(t(null, (parsed.error.issues[0]?.message ?? '@invalid_image_type') as LocaleItem))
+    throw errValidation(t('en', (parsed.error.issues[0]?.message ?? '@invalid_image_type') as LocaleItem))
   }
 
   const { url } = await saveContentImage(parsed.data, { boardId, userId: auth.user.id })
@@ -132,11 +134,11 @@ const createImageUploadTokenForMcp = async (auth: ResourceAuth, input: { ticketI
     token,
     expiresIn: UPLOAD_TOKEN_TTL_SECONDS,
     boardId,
-    curl: `curl -sS -X POST ${uploadUrl} -H "Authorization: Bearer ${token}" -F "file=@<画像ファイルのパス>"`,
+    curl: `curl -sS -X POST ${uploadUrl} -H "Authorization: Bearer ${token}" -F "file=@<path to image file>"`,
     note:
-      `上記のコマンドを実行すると {"url":"${UPLOAD_URL_PREFIX}/<キー>.webp"} が返る。` +
-      'その url を `![説明](url)` の形で本文(content)に書くと画像として表示される。' +
-      'トークンは1回限りの使い捨てで、添付先ボードは発行時に固定されている。',
+      `Running the command above returns {"url":"${UPLOAD_URL_PREFIX}/<key>.webp"}. ` +
+      'Write that url as `![description](url)` in the content to display it as an image. ' +
+      'The token is single-use, and the target board is fixed when it is issued.',
   }
 }
 
@@ -178,13 +180,13 @@ export const registerImageTools = (server: McpServer, auth: ResourceAuth) => {
   server.registerTool(
     'create_image_upload_token',
     {
-      title: '画像アップロード用トークン発行',
+      title: 'Create image upload token',
       description:
-        'チケット本文やコメントへ画像を貼るための、使い捨てのアップロードURLとトークンを発行する。' +
-        `返された curl コマンドで画像ファイルを直接POSTすると \`${UPLOAD_URL_PREFIX}/<キー>.webp\` が返るので、` +
-        'その URL を `![説明](URL)` の Markdown 記法で本文(content)に埋め込む(生の <img> タグは表示時に除去される)。' +
-        'ローカルにファイルがある場合は必ずこちらを使うこと(upload_image は大量のトークンを消費する)。' +
-        `有効期限は${UPLOAD_TOKEN_TTL_SECONDS / 60}分で1回だけ使える`,
+        'Issues a single-use upload URL and token for embedding images in ticket content or comments. ' +
+        `POST the image file directly with the returned curl command to get \`${UPLOAD_URL_PREFIX}/<key>.webp\`, ` +
+        'then embed that URL in the content with Markdown `![description](URL)` (raw <img> tags are stripped when displayed). ' +
+        'Always use this when the file is available locally (upload_image consumes a large number of tokens). ' +
+        `Expires in ${UPLOAD_TOKEN_TTL_SECONDS / 60} minutes and can be used only once`,
       inputSchema: targetSchema,
     },
     async (input) => jsonResult(await createImageUploadTokenForMcp(auth, input)),
@@ -193,21 +195,21 @@ export const registerImageTools = (server: McpServer, auth: ResourceAuth) => {
   server.registerTool(
     'upload_image',
     {
-      title: '画像アップロード(base64)',
+      title: 'Upload image (base64)',
       description:
-        '画像の base64 を直接渡してアップロードし、本文へ貼るための URL を返す。' +
-        'シェルを実行できないクライアント専用の退避手段で、base64 はコンテキストを大量に消費するため、' +
-        'ファイルのパスが分かる場合は create_image_upload_token を使うこと。' +
-        `data は ${Math.floor(MAX_BASE64_LENGTH / 1024)}KB(目安として100KB以下の画像)まで`,
+        'Uploads an image passed directly as base64 and returns a URL for embedding it in content. ' +
+        'This is a fallback only for clients that cannot run a shell; base64 consumes a lot of context, ' +
+        'so use create_image_upload_token when the file path is known. ' +
+        `data is limited to ${Math.floor(MAX_BASE64_LENGTH / 1024)}KB (roughly an image of 100KB or less)`,
       inputSchema: {
         ...targetSchema,
-        filename: z.string().min(1).max(255).describe('元のファイル名。画像の alt にも使う'),
+        filename: z.string().min(1).max(255).describe('Original file name. Also used as the image alt text'),
         mimeType: z.enum(ACCEPTED_IMAGE_TYPES),
         data: z
           .string()
           .min(1)
           .max(MAX_BASE64_LENGTH)
-          .describe('画像の base64。`data:image/png;base64,` の接頭辞は付いていてもよい'),
+          .describe('Base64 of the image. A `data:image/png;base64,` prefix is allowed'),
       },
     },
     async (input) => jsonResult(await uploadImageForMcp(auth, input)),
@@ -216,19 +218,19 @@ export const registerImageTools = (server: McpServer, auth: ResourceAuth) => {
   server.registerTool(
     'get_image',
     {
-      title: '画像取得',
+      title: 'Get image',
       description:
-        `チケット本文やコメントに貼られた画像(\`${UPLOAD_URL_PREFIX}/<キー>\` の URL、またはキー)を取得して画像として返す。` +
-        '本文のスクリーンショットや図を実際に見たいときに使う',
+        `Fetches an image embedded in ticket content or a comment (a \`${UPLOAD_URL_PREFIX}/<key>\` URL, or the key) and returns it as an image. ` +
+        'Use it when you need to actually see a screenshot or diagram in the content',
       inputSchema: {
-        image: z.string().min(1).describe(`\`${UPLOAD_URL_PREFIX}/<キー>.webp\` の URL、またはキーそのもの`),
+        image: z.string().min(1).describe(`A \`${UPLOAD_URL_PREFIX}/<key>.webp\` URL, or the key itself`),
         maxSize: z
           .number()
           .int()
           .min(MIN_READ_SIZE)
           .max(MAX_READ_SIZE)
           .optional()
-          .describe(`返す画像の長辺(px)。既定 ${DEFAULT_READ_SIZE}`),
+          .describe(`Long side of the returned image (px). Defaults to ${DEFAULT_READ_SIZE}`),
       },
     },
     async (input) => {

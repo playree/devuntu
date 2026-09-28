@@ -26,6 +26,12 @@ describe('agentSetupGuide', () => {
     })
   })
 
+  it('手順と CLI 未指定時の応答は英語で返す', () => {
+    ;[claude, codex, agentSetupCliPrompt()].forEach((text) => {
+      expect(text).not.toMatch(/[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u)
+    })
+  })
+
   it('claude を選ぶと codex のコマンドが残らない', () => {
     expect(claude).toContain('claude mcp add --transport http devuntu-agent')
     expect(claude).toContain('"kind": "claude"')
@@ -45,8 +51,8 @@ describe('agentSetupCliPrompt', () => {
   it('手順ではなく、CLI を利用者に確認するよう促す', () => {
     const prompt = agentSetupCliPrompt()
 
-    expect(prompt).not.toContain('# Devuntu Agent のセットアップ')
-    expect(prompt).toContain('利用者に確認')
+    expect(prompt).not.toContain('# Devuntu Agent Setup')
+    expect(prompt).toContain('Ask the user')
     expect(prompt).toContain('Claude Code')
     expect(prompt).toContain('Codex CLI')
   })

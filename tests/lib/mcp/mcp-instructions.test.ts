@@ -18,7 +18,7 @@ describe('ticketWorkflowFor', () => {
   })
 
   it('利用者の指示が優先であることを添える', () => {
-    expect(ticketWorkflowFor('oauth', true)?.at(-1)).toContain('利用者の指示')
+    expect(ticketWorkflowFor('oauth', true)?.at(-1)).toContain('user instructions')
   })
 })
 

@@ -154,6 +154,10 @@ AIエージェントは `devuntu-agent` を名乗るので、`claude mcp list` �
 `get_agent_task` と `finish_agent_task` だけはエージェント用トークンで接続した場合のみ登録される
 (`src/lib/mcp/mcp-server.ts`)。
 
+ツールの title / description・入力の説明・サーバーの instructions・エラーメッセージなど、MCP 経由で返す文字列は
+英語に統一している(読むのは主に AI エージェントで、接続時に一度だけ渡すものなのでロケールでは切り替えない)。
+下の表の「用途」は日本語での要約。
+
 ### 共通のツール
 
 | ツール                   | 用途                                                                                              | 入力                                                                                                                                              |

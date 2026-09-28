@@ -12,17 +12,17 @@ import type { ResourceAuth } from '../oauth/oauth-resource'
 
 /** チケットに対応するときの手順(人の経路の既定) */
 export const TICKET_WORKFLOW = [
-  '着手時: update_ticket で status を doing にする(既に doing / done なら変えない)',
-  '方針を立てたら: add_ticket_comment に type=plan で投稿する',
-  '利用者への確認事項: type を付けない通常コメントで投稿する',
-  'ブランチ / プルリクエスト / コミットを作ったら: link_ticket_artifact で URL を紐付ける(ブランチ名を feature/<表示ID> にすると、ボードに対応付けたリポジトリでは自動で紐付く)',
-  '完了時: add_ticket_comment に type=report で、何をしたか・確認結果・残課題を報告する(スクリーンショットは create_image_upload_token で添付する)',
+  'When starting: set status to doing with update_ticket (leave it unchanged if already doing / done)',
+  'Once you have a plan: post it with add_ticket_comment using type=plan',
+  'Questions for the user: post them as a regular comment without type',
+  'After creating a branch / pull request / commit: link the URL with link_ticket_artifact (naming the branch feature/<display ID> links it automatically for repositories connected to the board)',
+  'When done: post a report with add_ticket_comment using type=report covering what you did, how you verified it, and any remaining issues (attach screenshots via create_image_upload_token)',
 ] as const
 
 /** 手順より優先するもの。既定値であることを必ず添える */
 const PRECEDENCE =
-  '利用者の指示やプロジェクトのルール(CLAUDE.md / AGENTS.md など)に別の定めがあれば、そちらに従う。' +
-  'チケットを読むだけ・質問に答えるだけの依頼では、コメントの投稿もステータスの変更もしない。'
+  'If the user instructions or project rules (CLAUDE.md / AGENTS.md, etc.) say otherwise, follow them. ' +
+  'When you are only asked to read a ticket or answer a question, do not post comments or change the status.'
 
 /**
  * `get_ticket` の応答に載せる手順。実行できる人(チケットを編集できる人の経路)にだけ返す。
@@ -34,20 +34,20 @@ export const ticketWorkflowFor = (kind: ResourceAuth['kind'], canEdit: boolean):
 /** 初期化応答に載せる instructions */
 export const mcpInstructions = (kind: ResourceAuth['kind']): string => {
   const common = [
-    'devuntu はかんばん形式のチケット管理ツール。ticketId には表示ID(例: ABC-42)を使える。',
-    'コメントの種別: type=plan は対応方針、type=report は対応報告で、詳細画面で通常コメントと区別して表示される。',
-    'GitHub / GitLab のブランチ / プルリクエスト(マージリクエスト) / コミットは link_ticket_artifact でチケットに紐付けると、状態と CI の結果がチケットに表示される。',
+    'devuntu is a kanban-style ticket management tool. ticketId accepts a display ID (e.g. ABC-42).',
+    'Comment types: type=plan is a work plan and type=report is a work report; both are shown separately from regular comments on the detail screen.',
+    'Link GitHub / GitLab branches / pull requests (merge requests) / commits to a ticket with link_ticket_artifact to show their state and CI results on the ticket.',
   ]
   if (kind === 'agent') {
     return [
       ...common,
-      '自動運用では、get_agent_task が返す rule とランナーの指示に従い、最後に finish_agent_task で結果を報告する。',
+      'In automated operation, follow the rule returned by get_agent_task and the runner instructions, and finally report the result with finish_agent_task.',
     ].join('\n')
   }
   return [
     ...common,
     '',
-    'チケットを入力に作業するときは、次の手順を既定とする(都度の確認は不要)。',
+    'When working from a ticket, follow these steps by default (no need to ask for confirmation each time).',
     ...TICKET_WORKFLOW.map((step, i) => `${i + 1}. ${step}`),
     '',
     PRECEDENCE,
