@@ -5,6 +5,7 @@ import { ConfirmModalProvider } from '@/components/general/modal'
 import { GeneralUiText, GeneralUiTextProvider } from '@/components/general/ui-text'
 import { LocaleProvider } from '@/components/locale/client'
 import { NotifyProvider } from '@/components/notify'
+import { DefaultTimezoneContext } from '@/lib/auth/use-timezone'
 import { useLocale } from '@/locale/client'
 import { localeConfig } from '@/locale/config'
 import { RouterProvider } from '@heroui/react'
@@ -18,6 +19,7 @@ export interface ProvidersProps {
   defaultLocale: string
   acceptLanguage: string | null
   cookieLocale: string | null
+  defaultTimezone: string
 }
 
 /** HeroUI(react-aria)の href を Next.js のクライアント遷移に繋ぐ */
@@ -71,6 +73,7 @@ export const Providers: FC<ProvidersProps> = ({
   defaultLocale,
   acceptLanguage,
   cookieLocale,
+  defaultTimezone,
 }) => {
   return (
     <ThemeProvider {...themeProps}>
@@ -81,12 +84,14 @@ export const Providers: FC<ProvidersProps> = ({
         acceptLanguage={acceptLanguage}
         cookieLocale={cookieLocale}
       >
-        <MyGeneralUiTextProvider>
-          <ConfirmModalProvider>
-            <ActionErrorNotifier />
-            <MyRouterProvider>{children}</MyRouterProvider>
-          </ConfirmModalProvider>
-        </MyGeneralUiTextProvider>
+        <DefaultTimezoneContext value={defaultTimezone}>
+          <MyGeneralUiTextProvider>
+            <ConfirmModalProvider>
+              <ActionErrorNotifier />
+              <MyRouterProvider>{children}</MyRouterProvider>
+            </ConfirmModalProvider>
+          </MyGeneralUiTextProvider>
+        </DefaultTimezoneContext>
       </LocaleProvider>
     </ThemeProvider>
   )

@@ -54,6 +54,7 @@ export default async function RootLayout({
           defaultLocale={defaultLocale}
           acceptLanguage={acceptLanguage}
           cookieLocale={cookieLocale}
+          defaultTimezone={envu.server.DEFAULT_TIMEZONE}
         >
           <div className='relative flex h-screen flex-col'>{children}</div>
         </Providers>

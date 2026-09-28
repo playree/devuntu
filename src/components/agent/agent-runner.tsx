@@ -19,8 +19,8 @@ import {
   DEFAULT_POLL_INTERVAL_SEC,
 } from '@/lib/agent/agent'
 import type { AgentRunnerConfig } from '@/lib/agent/agent-runner-config'
-import { useUserTimezone } from '@/lib/auth/use-timezone'
-import { COMMON_TIMEZONES, dayformat, DEFAULT_TZ, minToHHmm, tzOffsetLabel, tzOffsetMinutes } from '@/lib/day'
+import { useDefaultTimezone, useUserTimezone } from '@/lib/auth/use-timezone'
+import { COMMON_TIMEZONES, dayformat, minToHHmm, tzOffsetLabel, tzOffsetMinutes } from '@/lib/day'
 import { SaveAgentRunner, scSaveAgentRunner } from '@/lib/schema/schema-agent'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -83,15 +83,16 @@ const RunnerForm: FC<{
 }> = ({ agentId, current, refresh, save }) => {
   const { t, fet } = useLocale()
   const tz = useUserTimezone()
+  const defaultTz = useDefaultTimezone()
 
   // 主要都市をオフセット順に並べる。設定済みの値が候補外なら先頭へ足して必ず選べるようにする
   const timezoneOptions = useMemo(() => {
-    const value = current?.timezone ?? DEFAULT_TZ
+    const value = current?.timezone ?? defaultTz
     const base = COMMON_TIMEZONES.includes(value) ? COMMON_TIMEZONES : [value, ...COMMON_TIMEZONES]
     return Object.fromEntries(
       [...base].sort((a, b) => tzOffsetMinutes(a) - tzOffsetMinutes(b)).map((zone) => [zone, tzOffsetLabel(zone)]),
     )
-  }, [current?.timezone])
+  }, [current?.timezone, defaultTz])
 
   const {
     control,
@@ -106,7 +107,7 @@ const RunnerForm: FC<{
       enabled: current?.enabled ?? false,
       activeFromMin: current?.activeFromMin ?? null,
       activeToMin: current?.activeToMin ?? null,
-      timezone: current?.timezone ?? DEFAULT_TZ,
+      timezone: current?.timezone ?? defaultTz,
       pollIntervalSec: current?.pollIntervalSec ?? DEFAULT_POLL_INTERVAL_SEC,
       dailyRunLimit: current?.dailyRunLimit ?? AGENT_UNLIMITED_DAILY_RUNS,
       dailyResetMin: current?.dailyResetMin ?? DEFAULT_AGENT_DAILY_RESET_MIN,
@@ -161,7 +162,7 @@ const RunnerForm: FC<{
                 groupOptions={timezoneOptions}
                 label={t('timezone')}
                 errorMessage={fet(errors.timezone)}
-                value={value ?? DEFAULT_TZ}
+                value={value ?? defaultTz}
                 onChange={onChange}
                 onBlur={onBlur}
                 ref={ref}
