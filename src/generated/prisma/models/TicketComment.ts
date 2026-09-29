@@ -1173,7 +1173,7 @@ export type $TicketCommentPayload<ExtArgs extends runtime.Types.Extensions.Inter
      */
     decision: $Enums.TicketCommentDecision | null
     /**
-     * エージェントの plan に付く子チケットの起票案。承認すると起票される(形は `ticket-proposal.ts` で検証)
+     * エージェントの plan に付く子チケットの起票案。承認すると起票される(形は `schema-ticket.ts` の `zChildProposal` で検証)
      */
     proposal: runtime.JsonValue | null
     /**

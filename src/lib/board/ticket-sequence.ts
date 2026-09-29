@@ -17,25 +17,38 @@ export const findWaitingTicketIds = async (ticketIds: readonly string[], tx: Db 
 
   const relations = await tx.ticketRelation.findMany({
     where: { type: 'parent', toId: { in: [...ticketIds] } },
+    select: { toId: true, fromId: true, order: true },
+  })
+  if (relations.length === 0) {
+    return new Set()
+  }
+
+  // 同じ親の子が並んでいても、兄弟の一覧は親ごとに 1 回だけ引く
+  const parents = await tx.ticket.findMany({
+    where: { id: { in: [...new Set(relations.map((relation) => relation.fromId))] } },
     select: {
-      toId: true,
-      order: true,
-      from: {
-        select: {
-          childAdvance: true,
-          relationsFrom: {
-            where: { type: 'parent' },
-            select: { order: true, to: { select: { id: true, status: true, agentState: true } } },
-          },
-        },
+      id: true,
+      childAdvance: true,
+      relationsFrom: {
+        where: { type: 'parent' },
+        select: { order: true, to: { select: { id: true, status: true, agentState: true } } },
       },
     },
   })
+  const parentById = new Map(
+    parents.map((parent) => [
+      parent.id,
+      {
+        advance: parent.childAdvance,
+        siblings: parent.relationsFrom.map((sibling) => ({ ...sibling.to, order: sibling.order })),
+      },
+    ]),
+  )
 
   const waiting = new Set<string>()
-  for (const { toId, order, from } of relations) {
-    const siblings = from.relationsFrom.map((sibling) => ({ ...sibling.to, order: sibling.order }))
-    if (isWaitingForSiblings({ id: toId, order }, siblings, from.childAdvance)) {
+  for (const { toId, fromId, order } of relations) {
+    const parent = parentById.get(fromId)
+    if (parent && isWaitingForSiblings({ id: toId, order }, parent.siblings, parent.advance)) {
       waiting.add(toId)
     }
   }

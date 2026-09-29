@@ -7,9 +7,12 @@ import { findWaitingTicketIds } from '@/lib/board/ticket-sequence'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({ ticketRelation: ['findMany'] }))
+vi.mock('@/lib/prisma', async () =>
+  (await import('../../helpers/prisma')).mockPrisma({ ticketRelation: ['findMany'], ticket: ['findMany'] }),
+)
 
 const ticketRelation = vi.mocked(prisma.ticketRelation)
+const ticket = vi.mocked(prisma.ticket)
 
 const sibling = (id: string, order: number, override: Partial<SequenceSibling> = {}): SequenceSibling => ({
   id,
@@ -82,34 +85,44 @@ describe('isWaitingForSiblings', () => {
 describe('findWaitingTicketIds', () => {
   it('親の条件と兄弟から順番待ちの子を返す', async () => {
     ticketRelation.findMany.mockResolvedValueOnce([
+      { toId: 'b', fromId: 'p1', order: 2 },
+      { toId: 'c', fromId: 'p1', order: 2 },
+      { toId: 'y', fromId: 'p2', order: 2 },
+    ] as never)
+    ticket.findMany.mockResolvedValueOnce([
       {
-        toId: 'b',
-        order: 2,
-        from: {
-          childAdvance: 'done',
-          relationsFrom: [
-            { order: 1, to: { id: 'a', status: 'doing', agentState: 'done' } },
-            { order: 2, to: { id: 'b', status: 'todo', agentState: null } },
-          ],
-        },
+        id: 'p1',
+        childAdvance: 'done',
+        relationsFrom: [
+          { order: 1, to: { id: 'a', status: 'doing', agentState: 'done' } },
+          { order: 2, to: { id: 'b', status: 'todo', agentState: null } },
+          { order: 2, to: { id: 'c', status: 'todo', agentState: null } },
+        ],
       },
       {
-        toId: 'y',
-        order: 2,
-        from: {
-          childAdvance: 'reported',
-          relationsFrom: [
-            { order: 1, to: { id: 'x', status: 'doing', agentState: 'done' } },
-            { order: 2, to: { id: 'y', status: 'todo', agentState: null } },
-          ],
-        },
+        id: 'p2',
+        childAdvance: 'reported',
+        relationsFrom: [
+          { order: 1, to: { id: 'x', status: 'doing', agentState: 'done' } },
+          { order: 2, to: { id: 'y', status: 'todo', agentState: null } },
+        ],
       },
     ] as never)
 
-    expect(await findWaitingTicketIds(['b', 'y', 'orphan'])).toEqual(new Set(['b']))
+    expect(await findWaitingTicketIds(['b', 'c', 'y', 'orphan'])).toEqual(new Set(['b', 'c']))
     expect(ticketRelation.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { type: 'parent', toId: { in: ['b', 'y', 'orphan'] } } }),
+      expect.objectContaining({ where: { type: 'parent', toId: { in: ['b', 'c', 'y', 'orphan'] } } }),
     )
+    // 同じ親の子が複数あっても、親(と兄弟の一覧)は 1 回ずつだけ引く
+    expect(ticket.findMany).toHaveBeenCalledTimes(1)
+    expect(ticket.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { id: { in: ['p1', 'p2'] } } }))
+  })
+
+  it('親の無いチケットだけなら親を引かない', async () => {
+    ticketRelation.findMany.mockResolvedValueOnce([] as never)
+
+    expect(await findWaitingTicketIds(['orphan'])).toEqual(new Set())
+    expect(ticket.findMany).not.toHaveBeenCalled()
   })
 
   it('対象が無ければ問い合わせない', async () => {

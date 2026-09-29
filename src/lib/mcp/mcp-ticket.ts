@@ -97,7 +97,8 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
     listTicketCriteria(id),
     // 関係の相手は同じボードのチケットなので、ボードのメンバーでない承認者には見せない
     access.boardRole ? listTicketRelations(id) : EMPTY_TICKET_RELATIONS,
-    findWaitingTicketIds([id]),
+    // 順番待ちは兄弟の状態から出すので、関係と同じくボードのメンバーでない承認者には見せない
+    findWaitingTicketIds(access.boardRole ? [id] : []),
   ])
 
   return {
