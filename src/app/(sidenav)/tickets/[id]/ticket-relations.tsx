@@ -115,7 +115,7 @@ const RelationItem: FC<{
         <div className='flex min-w-0 grow flex-wrap items-center gap-x-2 gap-y-0.5'>
           <Link href={`/tickets/${item.id}`} className='flex min-w-0 items-center gap-2 text-sm hover:underline'>
             <TicketIdText displayId={item.displayId} className='shrink-0' />
-            <span className='min-w-0 truncate'>{item.title}</span>
+            <span className='min-w-0 truncate text-xs'>{item.title}</span>
           </Link>
           <StatusChip value={item.status} />
           {item.assigneeName && <span className='text-muted truncate text-xs'>{item.assigneeName}</span>}
@@ -162,7 +162,7 @@ const RelationGroup: FC<{
   return (
     <div className='space-y-1'>
       <div className='flex items-center gap-2 text-sm'>
-        <span className='text-muted'>{title}</span>
+        <span className='text-foreground text-xs'>{title}</span>
         {listFilter && (
           <Link
             href={relatedTicketListPath(listFilter.displayId, listFilter.relation)}
