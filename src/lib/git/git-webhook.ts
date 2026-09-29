@@ -6,6 +6,7 @@
  */
 
 import type { GitProvider, PullRequestState } from '@/generated/prisma/enums'
+import { isFailedConclusion, requestAutoRevise } from '../agent/agent-auto-revise'
 import { gitlabBaseUrls } from '../board/board-repository'
 import { completeTicketByMerge } from '../board/ticket-mutation'
 import { logger } from '../logger'
@@ -23,7 +24,14 @@ const isReceivable = ({ provider, baseUrl }: GitRepoKey, baseUrls: string[]): bo
   provider === 'github' || baseUrls.includes(baseUrl)
 
 /** イベントの対象にするボード */
-export type GitLinkedBoard = { id: string; key: string; completeOnPrMerge: boolean }
+export type GitLinkedBoard = {
+  id: string
+  key: string
+  completeOnPrMerge: boolean
+  /** CI の失敗・レビュー指摘でエージェントへ自動差し戻しするか */
+  autoRevise: boolean
+  autoReviseLimit: number
+}
 
 /**
  * ブランチ名の表示IDからチケットを引き、PR / MR のリンクが無ければ作る。
@@ -181,4 +189,32 @@ export const saveCheckSuite = async (
   if (created.count === 0) {
     await update()
   }
+}
+
+/**
+ * CI が失敗したら、その head を持つ PR / MR に紐付いたエージェントのチケットを差し戻す。
+ * 同じ suite / パイプラインの失敗は1つのきっかけにまとめ、失敗したチェック名だけを足していく。
+ */
+export const reviseOnCheckFailure = async ({
+  key,
+  boards,
+  suiteId,
+  headSha,
+  conclusion,
+  checks,
+}: {
+  key: GitRepoKey
+  boards: GitLinkedBoard[]
+  suiteId: string
+  headSha: string
+  conclusion: string | null
+  checks: string[]
+}) => {
+  if (!isFailedConclusion(conclusion)) {
+    return
+  }
+  await requestAutoRevise(
+    { key, boards, pullRequest: { headSha } },
+    { source: 'ci', dedupeKey: `ci:${suiteId}`, checks },
+  )
 }

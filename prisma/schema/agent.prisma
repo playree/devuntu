@@ -173,11 +173,78 @@ model AgentRun {
   /// 計測値を受け取った時刻。月次の集計(AgentUsage)へ二重に加算しないための印
   measuredAt DateTime?
 
+  /// この実行の開始時に引き受けた自動差し戻しのきっかけ
+  autoReviseTriggers AgentAutoReviseTrigger[]
+
   // 保持期間とランナーごとの件数で `maintenance-sweep.ts` が打ち切る
 
   @@index([runnerId, startedAt])
   @@index([ticketId])
   @@map("agent_run")
+}
+
+/// 自動差し戻しのきっかけの種別
+enum AgentAutoReviseSource {
+  /// CI(GitHub の Check Suite / GitLab のパイプライン)の失敗
+  ci
+  /// PR / MR のレビュー・コメント
+  review
+}
+
+/// Webhook で受けた、エージェントへの自動差し戻しのきっかけ(src/lib/agent/agent-auto-revise.ts)。
+/// 実行の開始時に runId を埋めて引き受け、その実行の get_agent_task で task.autoRevise として渡す。
+model AgentAutoReviseTrigger {
+  id String @id @default(uuid(7))
+
+  ticketId String
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  source AgentAutoReviseSource
+
+  provider GitProvider
+
+  /// GitLab のインスタンスの URL。GitHub は空文字
+  baseUrl String @default("")
+
+  /// GitHub は `owner/name`、GitLab はプロジェクトのパス(小文字)
+  repo String
+
+  /// PR / MR の番号
+  number Int
+
+  /// PR / MR の URL(レビューはそのレビュー / コメントの URL)
+  url String
+
+  /// 失敗したチェック(GitHub の check run / GitLab のジョブ)の名前
+  checks String[] @default([])
+
+  /// レビュー・コメントの本文
+  body String?
+
+  /// レビュー・コメントの投稿者
+  author String?
+
+  /// GitHub のレビューの状態(changes_requested / commented)。GitLab のコメントは null
+  reviewState String?
+
+  /// 再送やイベントの重複で同じきっかけを二重に作らないためのキー(CI は suite / パイプライン、レビューはその ID)
+  dedupeKey String
+
+  /// 引き受けた実行。null は未消化。実行履歴が消えたら SetNull で未消化に戻らないよう consumed も持つ
+  runId String?
+  run   AgentRun? @relation(fields: [runId], references: [id], onDelete: SetNull)
+
+  consumed Boolean @default(false)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  /// 同じきっかけへ失敗したチェックを足したときも進む。最後の指摘からの待ち時間はこれで測る
+  updatedAt DateTime @updatedAt
+
+  @@unique([ticketId, dedupeKey])
+  @@index([ticketId, consumed])
+  @@index([runId])
+  @@map("agent_auto_revise_trigger")
 }
 
 /// エージェントの月ごとの利用量(ボード別)。予算上限の判定と、コストの集計表示に使う。

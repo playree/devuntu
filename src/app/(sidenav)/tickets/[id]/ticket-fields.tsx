@@ -257,6 +257,14 @@ export const TicketFieldPanel: FC<{
             <div className='col-span-6 md:col-span-3'>
               <MetaText label={t('agent_state')}>
                 <AgentProgressChip state={ticket.agentState} isWaiting={ticket.isWaiting && !!agentMode} />
+                {ticket.autoRevise && (
+                  <span className='text-muted text-xs'>
+                    {t('agent_auto_revise_count')}{' '}
+                    <span className='font-mono'>
+                      {ticket.autoRevise.count} / {ticket.autoRevise.limit}
+                    </span>
+                  </span>
+                )}
               </MetaText>
             </div>
             <div className='col-span-12 md:col-span-6'>

@@ -111,6 +111,7 @@ Devuntu の使い方。画面ごとのアクセス制御の詳細は [screens.md
 - **チャネル通知** — このボードの出来事(チケットの作成 / 完了 / 担当変更、AIエージェントの実行結果)を投稿する Slack チャンネルと、通知するイベント(設定できるのは `owner` と管理者)
 - **GitHub連携** — 対応付ける GitHub のリポジトリと、プルリクエストのマージでチケットを完了にするか(設定できるのは `owner` と管理者)
 - **GitLab連携** — 対応付ける GitLab のプロジェクトと、マージリクエストのマージでチケットを完了にするか(設定できるのは `owner` と管理者。サーバーに `GITLAB_URLS` が設定されている場合に出る。未設定でも GitLab の対応付けが残っていれば、外せるよう表示する)
+- **エージェントの自動差し戻し** — 紐付いたプルリクエスト(マージリクエスト)の CI の失敗・レビュー指摘で、AIエージェントが報告済みのチケットを処理し直させるかと、1チケットあたりの上限回数(設定できるのは `owner` と管理者。「関連リンク」の GitHub / GitLab の Webhook が必要)
 - **デンジャーゾーン** — アーカイブ、ボードの削除(チケットとコメントもすべて消える)
 
 ## チケット
@@ -210,6 +211,12 @@ GitLab はサーバーの `GITLAB_URLS` に書いたインスタンスの URL �
   判定に使うのは対応付けたリポジトリ(GitHub / GitLab を問わない)のプルリクエストだけで、それ以外のリポジトリのものは状態が届かないので含めない
 - `GITLAB_URLS` から外したインスタンスの対応付けは、一覧に残って外せる。
   状態が届かなくなるので、マージで完了の判定には含めない
+- ボード設定の「エージェントの自動差し戻し」をオンにすると、紐付いたプルリクエスト(マージリクエスト)の CI が失敗したときや、
+  レビュー・コメント(CodeRabbit などのボットを含む)が付いたときに、AIエージェントが報告済みのチケットを revise として処理し直させる(GitHub / GitLab 共通)
+  - 対象は、担当が AIエージェントで処理方式が指定済みの、未完了のチケット。承認(Approve)や、プルリクエストの作成者自身のコメントは対象にしない
+  - 続けて届いた指摘は、最後の指摘から2分待ってまとめて1回の差し戻しとして渡す。エージェントの処理中や、人の返信待ちのときに届いた指摘は捨てる
+  - 1チケットあたりの上限回数(1〜20、既定3)に達したら、それ以上は自動で差し戻さない。回数はチケット詳細の処理状態の横に出る(担当を替えると 0 に戻る)
+  - Webhook のイベントに、GitHub は Pull request reviews、GitLab は Comments(Note events)を追加する
 
 #### GitHub の Webhook
 
@@ -219,12 +226,12 @@ GitLab はサーバーの `GITLAB_URLS` に書いたインスタンスの URL �
    Webhook URL と Webhook シークレットが表示される(シークレットはこのときだけ表示される)
 2. リポジトリの Settings → Webhooks で、次のとおり登録する
 
-| 項目         | 値                                                                  |
-| ------------ | ------------------------------------------------------------------- |
-| Payload URL  | 表示された Webhook URL(`<BETTER_AUTH_URL>/api/github/webhook/<ID>`) |
-| Content type | `application/json`                                                  |
-| Secret       | 表示された Webhook シークレット                                     |
-| イベント     | Pull requests / Check suites / Check runs                           |
+| 項目         | 値                                                                                        |
+| ------------ | ----------------------------------------------------------------------------------------- |
+| Payload URL  | 表示された Webhook URL(`<BETTER_AUTH_URL>/api/github/webhook/<ID>`)                       |
+| Content type | `application/json`                                                                        |
+| Secret       | 表示された Webhook シークレット                                                           |
+| イベント     | Pull requests / Check suites / Check runs(自動差し戻しを使うなら Pull request reviews も) |
 
 - シークレットを控え忘れた・漏れた場合は「シークレットを再発行」で作り直し、GitHub 側の Secret も入れ直す。
   作り直しの影響はそのリポジトリの対応付けだけで、他のボード・リポジトリの Webhook はそのまま使える
@@ -242,7 +249,7 @@ GitLab のトークンは Webhook ごとに違うので、プロジェクトご�
 1. ボード設定の「GitLab連携」でインスタンス(`GITLAB_URLS` が複数のとき)と検証方式を選び、プロジェクトのパス
    (`group/subgroup/project`。プロジェクトの URL を貼ってもよい)を追加する
 2. プロジェクトの Settings → Webhooks で、表示された Webhook URL(`<BETTER_AUTH_URL>/api/gitlab/webhook/<ID>`)を登録する。
-   Trigger は Merge request events / Pipeline events を選ぶ
+   Trigger は Merge request events / Pipeline events を選ぶ(自動差し戻しを使うなら Comments も)
 3. 検証方式に合わせてトークンを設定する
 
 | 検証方式             | 対象               | 設定                                                                                                                |

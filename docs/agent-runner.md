@@ -125,6 +125,64 @@ revise で再開したエージェントには、`get_agent_task` の `task.deci
 ボタンは出ない。承認者は「そのエージェントに任せてよいか」を判断する役割で、プランの妥当性の判断とは分けている
 (必要ならボードのメンバーに加える)。
 
+## 自動差し戻し(CI の失敗・レビュー指摘)
+
+ボード設定の「エージェントの自動差し戻し」を有効にすると、紐付いた PR / MR の CI の失敗やレビュー指摘を
+GitHub / GitLab の Webhook で受けたときに、報告済み(`agentState=done`)のエージェント担当チケットを `planned` へ戻し、
+revise で拾わせる。人が report を差し戻すのと同じ流れを、Webhook のきっかけで行う。実装は `src/lib/agent/agent-auto-revise.ts`。
+
+**きっかけ。** 受けたイベントを `AgentAutoReviseTrigger` に1件ずつ記録する。
+
+| provider | CI の失敗                                                                                | レビュー指摘                                                                             |
+| -------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| GitHub   | `check_run` / `check_suite` の conclusion が `failure` / `timed_out` / `startup_failure` | `pull_request_review` の submitted(`changes_requested` / `commented`。`approved` は除く) |
+| GitLab   | Pipeline Hook の `failed`(失敗したジョブ名を `checks` に入れる)                          | Note Hook の MR へのコメント(システムノートは除く)                                       |
+
+- CI は head のコミットが一致する PR / MR、レビューは番号の PR / MR のリンクから対象のチケットを引く
+- 対象は、外していない(dismissed でない)開いている PR / MR のリンクを持ち、担当がエージェントでオプトイン済み(`agentMode` あり)かつ未完了のチケット
+- PR / MR の作成者自身のレビュー・コメント(エージェントがスレッドへ返信したときに作られるもの)は除く
+- 同じ suite / パイプラインの失敗は1つのきっかけにまとめ、失敗したチェック名だけを足していく。再送されたイベントは `dedupeKey` で重複させない
+
+**状態ごとの扱い。** チケットの行ロックを取って、ランナーの実行開始と直列にする。
+
+| チケットの状態                           | 届いたきっかけ                                                          |
+| ---------------------------------------- | ----------------------------------------------------------------------- |
+| `done` かつ回数が上限未満                | 記録し、`agentState` を `planned` へ戻して `agentAutoReviseCount` を +1 |
+| `planned` で未消化のきっかけあり         | 同じ差し戻しにまとめて記録する(回数は増やさない)                        |
+| それ以外(処理中・人の返信待ち・上限到達) | 捨てる                                                                  |
+
+**まとめて渡す。** 未消化のきっかけは、最後のきっかけから 2分(`AUTO_REVISE_SETTLE_MS`)経つまで待ち行列に載せない。
+CodeRabbit のように数回に分けて投稿されるレビューを、1回の実行にまとめるため(人の返信があればそちらの条件で先に拾う)。
+ランナーが実行を開始したときに、未消化のきっかけをその実行(`AgentRun`)で引き受ける。待ち行列を作ってから開始するまでの間に
+新しいきっかけが届いていた場合は、チケットの行ロックを取った後で確かめ直し、開始せずに次のポーリングへ回す(`ticket_not_available`)。
+
+**エージェントへの渡し方。** revise の `get_agent_task` の `task.autoRevise` に、その実行が引き受けたきっかけが入る(無ければ空配列)。
+
+```json
+[
+  {
+    "source": "ci",
+    "pullRequest": { "provider": "github", "repo": "owner/repo", "number": 12 },
+    "url": "https://github.com/owner/repo/pull/12",
+    "checks": ["test"],
+    "review": null
+  },
+  {
+    "source": "review",
+    "pullRequest": { "provider": "github", "repo": "owner/repo", "number": 12 },
+    "url": "https://github.com/owner/repo/pull/12#pullrequestreview-1",
+    "checks": [],
+    "review": { "author": "coderabbitai[bot]", "state": "commented", "body": "..." }
+  }
+]
+```
+
+レビュー本文は先頭 4000 文字まで保存する。インラインの指摘などの詳細は、エージェントが PR / MR から読む。
+
+**上限。** 1チケットあたりの回数はボードで 1〜20 回(既定 3 回)に設定する。上限に達したチケットはそれ以上差し戻さない。
+回数はチケット詳細の処理状態の横に「自動差し戻し n / 上限」と出る。担当を替えると 0 に戻り、未消化のきっかけも捨てる。
+CodeRabbit は push のたびに再レビューするので、指摘が続くと上限まで差し戻しが続く。
+
 ## タスク分割(子チケットの起票と順番)
 
 大きな作業は、エージェントが plan で子チケットに分割できる。実装は `src/lib/agent/agent-proposal.ts`。
@@ -165,15 +223,15 @@ revise で再開したエージェントには、`get_agent_task` の `task.deci
 
 ## チケットの状態
 
-`Ticket.agentState`。遷移させるのは `src/lib/agent/` の `agent-task.ts` / `agent-run.ts` / `agent-decision.ts` / `agent-proposal.ts` だけ。
+`Ticket.agentState`。遷移させるのは `src/lib/agent/` の `agent-task.ts` / `agent-run.ts` / `agent-decision.ts` / `agent-proposal.ts` / `agent-auto-revise.ts` だけ。
 
-| 状態                 | 意味                     | 次                                           |
-| -------------------- | ------------------------ | -------------------------------------------- |
-| (null) / `queued`    | 未着手                   | ランナーが拾うと `running`                   |
-| `running`            | エージェントが処理中     | エージェントの報告か、60分の時間切れで抜ける |
-| `planned`            | プラン投稿済み・返信待ち | 返信が付くと `revise` として拾われる         |
-| `done`               | 終了(分割した親も含む)   | 拾われない。report の差し戻しで `planned` へ |
-| `failed` / `skipped` | 終了                     | 拾われない                                   |
+| 状態                 | 意味                     | 次                                                         |
+| -------------------- | ------------------------ | ---------------------------------------------------------- |
+| (null) / `queued`    | 未着手                   | ランナーが拾うと `running`                                 |
+| `running`            | エージェントが処理中     | エージェントの報告か、60分の時間切れで抜ける               |
+| `planned`            | プラン投稿済み・返信待ち | 返信か自動差し戻しのきっかけで `revise` として拾われる     |
+| `done`               | 終了(分割した親も含む)   | 拾われない。report の差し戻し・自動差し戻しで `planned` へ |
+| `failed` / `skipped` | 終了                     | 拾われない                                                 |
 
 `running` のまま残ると二度と拾えなくなるため、抜け道を 3 つ用意してある。
 

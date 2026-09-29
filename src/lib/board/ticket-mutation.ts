@@ -13,6 +13,7 @@ import type {
   TicketPriority,
   TicketStatus,
 } from '@/generated/prisma/enums'
+import { discardAutoReviseTriggers } from '../agent/agent-auto-revise'
 import { dateOnlyToUtc, nowDate } from '../day'
 import { errInvalidOperation } from '../error'
 import {
@@ -197,11 +198,14 @@ export const updateTicket = async (
          * 承認は「そのエージェントに任せる」判断なので、担当が変わったら付け替え先が何であっても消す。
          * 残すとランナーが別のエージェントで、前の承認のまま自動実行してしまう
          */
-        ...(nextAssigneeId !== before.assigneeId && { agentMode: null, agentState: null }),
+        ...(nextAssigneeId !== before.assigneeId && { agentMode: null, agentState: null, agentAutoReviseCount: 0 }),
         mentionedUserIds,
       },
       select: { id: true, title: true, number: true, status: true, board: { select: { key: true } } },
     })
+    if (nextAssigneeId !== before.assigneeId) {
+      await discardAutoReviseTriggers(tx, id)
+    }
     if (ids) {
       await syncTicketTags(tx, id, ids)
     }

@@ -12,11 +12,13 @@ import { getBoardMemberUsers } from '@/lib/board/board-member'
 import {
   addBoardGithubRepository as addBoardGithubRepositoryCore,
   addBoardGitlabRepository as addBoardGitlabRepositoryCore,
+  getBoardAgentAutoRevise as getBoardAgentAutoReviseCore,
   getBoardGithub as getBoardGithubCore,
   getBoardGitlab as getBoardGitlabCore,
   regenerateGithubSecret as regenerateGithubSecretCore,
   regenerateGitlabToken as regenerateGitlabTokenCore,
   removeBoardRepository as removeBoardRepositoryCore,
+  setBoardAgentAutoRevise as setBoardAgentAutoReviseCore,
   setBoardCompleteOnPrMerge as setBoardCompleteOnPrMergeCore,
   setGitlabSigningToken as setGitlabSigningTokenCore,
 } from '@/lib/board/board-repository'
@@ -45,6 +47,7 @@ import {
   scBoardRepositoryTarget,
   scGetBoardSlackChannels,
   scRemoveBoardMember,
+  scSetBoardAgentAutoRevise,
   scSetBoardArchived,
   scSetBoardCompleteOnPrMerge,
   scSetBoardGroups,
@@ -220,6 +223,20 @@ export const setBoardCompleteOnPrMerge = safeAuthAction
   .inputSchema(scSetBoardCompleteOnPrMerge)
   .action(async ({ ctx: { user }, parsedInput: { id, provider, completeOnMerge } }) => {
     await setBoardCompleteOnPrMergeCore(user, id, provider, completeOnMerge)
+    return { id }
+  })
+
+/** エージェントへの自動差し戻し(CI の失敗・レビュー指摘)の設定(owner または管理者) */
+export const getBoardAgentAutoRevise = safeAuthAction
+  .metadata({ actionName: 'getBoardAgentAutoRevise', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => await getBoardAgentAutoReviseCore(user, id))
+
+export const setBoardAgentAutoRevise = safeAuthAction
+  .metadata({ actionName: 'setBoardAgentAutoRevise', role: 'user' })
+  .inputSchema(scSetBoardAgentAutoRevise)
+  .action(async ({ ctx: { user }, parsedInput: { id, enabled, limit } }) => {
+    await setBoardAgentAutoReviseCore(user, id, { enabled, limit })
     return { id }
   })
 

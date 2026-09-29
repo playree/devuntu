@@ -5,6 +5,7 @@
  * 「マージで完了にする条件」を検証する。
  */
 
+import { requestAutoRevise } from '@/lib/agent/agent-auto-revise'
 import { completeTicketByMerge } from '@/lib/board/ticket-mutation'
 import { handleGithubEvent } from '@/lib/github/github-webhook'
 import { prisma } from '@/lib/prisma'
@@ -28,7 +29,12 @@ vi.mock('@/lib/board/ticket-mutation', () => ({
   completeTicketByMerge: vi.fn(async () => true),
 }))
 
-const BOARD = { id: 'b1', key: 'ABC', completeOnPrMerge: true }
+vi.mock('@/lib/agent/agent-auto-revise', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/agent/agent-auto-revise')>()),
+  requestAutoRevise: vi.fn(async () => undefined),
+}))
+
+const BOARD = { id: 'b1', key: 'ABC', completeOnPrMerge: true, autoRevise: true, autoReviseLimit: 3 }
 /** 受け口の URL が指す対応付け */
 const TARGET = { id: 'r1', repo: 'owner/repo', board: BOARD }
 const UPDATED_AT = '2026-09-26T10:00:00Z'
@@ -282,6 +288,107 @@ describe('check_suite / check_run', () => {
     await handleGithubEvent('check_suite', { repository: { full_name: 'owner/other' }, check_suite: suite }, TARGET)
 
     expect(prisma.gitCheckSuite.updateMany).not.toHaveBeenCalled()
+    expect(requestAutoRevise).not.toHaveBeenCalled()
+  })
+
+  it('成功した suite では差し戻さない', async () => {
+    await handleGithubEvent('check_suite', { repository: { full_name: 'owner/repo' }, check_suite: suite }, TARGET)
+
+    expect(requestAutoRevise).not.toHaveBeenCalled()
+  })
+
+  it('失敗した suite は head の PR へ差し戻す(suite 単位で1つのきっかけ)', async () => {
+    await handleGithubEvent(
+      'check_suite',
+      { repository: { full_name: 'owner/repo' }, check_suite: { ...suite, conclusion: 'failure' } },
+      TARGET,
+    )
+
+    expect(requestAutoRevise).toHaveBeenCalledWith(
+      {
+        key: { provider: 'github', baseUrl: '', repo: 'owner/repo' },
+        boards: [BOARD],
+        pullRequest: { headSha: 'abc123' },
+      },
+      { source: 'ci', dedupeKey: 'ci:99', checks: [] },
+    )
+  })
+
+  it('失敗した check_run は、チェック名を付けて同じ suite のきっかけへ足す', async () => {
+    await handleGithubEvent(
+      'check_run',
+      {
+        repository: { full_name: 'owner/repo' },
+        check_run: {
+          name: 'lint',
+          status: 'completed',
+          conclusion: 'timed_out',
+          check_suite: { ...suite, status: 'in_progress', conclusion: null },
+        },
+      },
+      TARGET,
+    )
+
+    expect(requestAutoRevise).toHaveBeenCalledWith(expect.objectContaining({ pullRequest: { headSha: 'abc123' } }), {
+      source: 'ci',
+      dedupeKey: 'ci:99',
+      checks: ['lint'],
+    })
+  })
+
+  it('実行中や成功の check_run では差し戻さない', async () => {
+    for (const check_run of [
+      { name: 'lint', status: 'in_progress', check_suite: suite },
+      { name: 'lint', status: 'completed', conclusion: 'success', check_suite: suite },
+      { name: 'lint', status: 'completed', conclusion: 'cancelled', check_suite: suite },
+    ]) {
+      await handleGithubEvent('check_run', { repository: { full_name: 'owner/repo' }, check_run }, TARGET)
+    }
+
+    expect(requestAutoRevise).not.toHaveBeenCalled()
+  })
+})
+
+describe('pull_request_review', () => {
+  const reviewEvent = (override: { action?: string; state?: string; login?: string } = {}) => ({
+    action: override.action ?? 'submitted',
+    repository: { full_name: 'owner/repo' },
+    review: {
+      id: 501,
+      state: override.state ?? 'commented',
+      body: '指摘です',
+      html_url: 'https://github.com/owner/repo/pull/12#pullrequestreview-501',
+      user: { login: override.login ?? 'coderabbitai[bot]' },
+    },
+    pull_request: { number: 12, user: { login: 'devuntu-agent' } },
+  })
+
+  it('コメントのレビュー(CodeRabbit など)と修正依頼を差し戻しのきっかけにする', async () => {
+    await handleGithubEvent('pull_request_review', reviewEvent(), TARGET)
+    await handleGithubEvent('pull_request_review', reviewEvent({ state: 'CHANGES_REQUESTED' }), TARGET)
+
+    expect(requestAutoRevise).toHaveBeenNthCalledWith(
+      1,
+      { key: { provider: 'github', baseUrl: '', repo: 'owner/repo' }, boards: [BOARD], pullRequest: { number: 12 } },
+      {
+        source: 'review',
+        dedupeKey: 'review:501',
+        body: '指摘です',
+        author: 'coderabbitai[bot]',
+        reviewState: 'commented',
+        url: 'https://github.com/owner/repo/pull/12#pullrequestreview-501',
+      },
+    )
+    expect(vi.mocked(requestAutoRevise).mock.calls[1][1]).toMatchObject({ reviewState: 'changes_requested' })
+  })
+
+  it('承認・投稿以外の操作・PR 作成者自身のレビュー・別リポジトリは対象にしない', async () => {
+    await handleGithubEvent('pull_request_review', reviewEvent({ state: 'approved' }), TARGET)
+    await handleGithubEvent('pull_request_review', reviewEvent({ action: 'edited' }), TARGET)
+    await handleGithubEvent('pull_request_review', reviewEvent({ login: 'devuntu-agent' }), TARGET)
+    await handleGithubEvent('pull_request_review', reviewEvent(), { ...TARGET, repo: 'owner/other' })
+
+    expect(requestAutoRevise).not.toHaveBeenCalled()
   })
 })
 

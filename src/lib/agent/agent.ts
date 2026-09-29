@@ -166,6 +166,10 @@ export const AGENT_WINDOW_MAX_MIN = 24 * 60 - AGENT_WINDOW_STEP_MIN
 /** 1日の処理上限として無制限を表す値 */
 export const AGENT_UNLIMITED_DAILY_RUNS = 0
 
+/** ボードで設定できる、1チケットあたりの自動差し戻し(CI の失敗・レビュー指摘)回数の上限 */
+export const AUTO_REVISE_LIMIT_MIN = 1
+export const AUTO_REVISE_LIMIT_MAX = 20
+
 /**
  * 1日の処理上限に指定できる最大値。
  * ポーリング間隔が最短(60秒)でも1日で到達できない回数を上限にし、入力ミスの歯止めだけを掛ける。

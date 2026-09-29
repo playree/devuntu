@@ -23,6 +23,7 @@ import {
   computeAgentRunUsage,
   hasMonthlyBudget,
 } from './agent-activity'
+import { consumeAutoReviseTriggers, hasUnsettledAutoRevise } from './agent-auto-revise'
 import type { AgentRunnerRow } from './agent-runner'
 import { findAgentTicket } from './agent-task'
 import { type AgentRunMetrics, lockAgentRunner, recordAgentRunMetrics } from './agent-usage'
@@ -168,6 +169,7 @@ export type StartAgentRunResult =
 /**
  * 実行の開始を記録し、チケットを処理中にする。
  * 対象がエージェントの担当でない、またはオプトインされていない場合は `ticket_not_available` を返す。
+ * 待ち時間の過ぎていない自動差し戻しのきっかけがある場合も、次の回で拾い直すよう `ticket_not_available` を返す。
  *
  * 上限チェックと実行作成を同一トランザクション内で行い、対象ランナーの行をロックすることで、
  * 並行リクエストが上限チェックを両方すり抜けて `dailyRunLimit` を超過するのを防ぐ。
@@ -203,11 +205,18 @@ export const startAgentRun = async (
       }
     }
 
+    // Webhook からのきっかけの追加と直列にし、待ち行列を作った後に届いたきっかけは次の回へ回す
+    await tx.$queryRaw`SELECT "id" FROM "ticket" WHERE "id" = ${target.id} FOR UPDATE`
+    if (await hasUnsettledAutoRevise(tx, target.id, now)) {
+      return { ok: false, reason: 'ticket_not_available' }
+    }
+
     const created = await tx.agentRun.create({
       data: { runnerId: runner.id, ticketId: target.id, ticketRef: target.displayId, action },
       select: { id: true },
     })
     await tx.ticket.update({ where: { id: target.id }, data: { agentState: 'running' } })
+    await consumeAutoReviseTriggers(tx, target.id, created.id)
 
     logger.info({ runnerId: runner.id, runId: created.id, ticketRef: target.displayId, action }, 'agent run started')
     return { ok: true, run: { id: created.id, displayId: target.displayId } }

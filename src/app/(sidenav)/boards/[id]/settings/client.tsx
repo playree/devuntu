@@ -10,6 +10,7 @@ import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
 import {
   ArrowLeftCircleIcon,
+  ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
   Cog6ToothIcon,
   ExclamationTriangleIcon,
@@ -31,6 +32,7 @@ import { useLocale } from '@/locale/client'
 import { Accordion, ButtonGroup } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
+import { BoardAutoRevise } from './board-auto-revise'
 import { BoardGithub } from './board-github'
 import { BoardGitlab } from './board-gitlab'
 import { BoardProfile } from './board-profile'
@@ -257,6 +259,20 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
             title={t('board_gitlab')}
           >
             <BoardGitlab boardId={board.id} />
+          </AccordionSection>
+        )}
+
+        {board.canManage && (
+          <AccordionSection
+            /**
+             * エージェントの自動差し戻し: 紐付いた PR / MR の CI 失敗・レビュー指摘で、報告済みのエージェント担当チケットを
+             * revise へ戻す。GitHub / GitLab の Webhook で受けるので、Git 連携と同じく owner と管理者が設定する
+             */
+            id='board_agent_auto_revise'
+            icon={<ArrowPathIcon />}
+            title={t('board_agent_auto_revise')}
+          >
+            <BoardAutoRevise boardId={board.id} />
           </AccordionSection>
         )}
 

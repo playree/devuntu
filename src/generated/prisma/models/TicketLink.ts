@@ -594,10 +594,6 @@ export type TicketLinkOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
-export type EnumGitProviderFieldUpdateOperationsInput = {
-  set?: $Enums.GitProvider
-}
-
 export type EnumTicketLinkKindFieldUpdateOperationsInput = {
   set?: $Enums.TicketLinkKind
 }

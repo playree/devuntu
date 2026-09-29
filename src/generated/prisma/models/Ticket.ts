@@ -29,11 +29,13 @@ export type AggregateTicket = {
 export type TicketAvgAggregateOutputType = {
   number: number | null
   order: number | null
+  agentAutoReviseCount: number | null
 }
 
 export type TicketSumAggregateOutputType = {
   number: number | null
   order: number | null
+  agentAutoReviseCount: number | null
 }
 
 export type TicketMinAggregateOutputType = {
@@ -53,6 +55,7 @@ export type TicketMinAggregateOutputType = {
   updatedAt: Date | null
   agentMode: $Enums.AgentTaskMode | null
   agentState: $Enums.AgentTaskState | null
+  agentAutoReviseCount: number | null
   childAdvance: $Enums.TicketChildAdvance | null
 }
 
@@ -73,6 +76,7 @@ export type TicketMaxAggregateOutputType = {
   updatedAt: Date | null
   agentMode: $Enums.AgentTaskMode | null
   agentState: $Enums.AgentTaskState | null
+  agentAutoReviseCount: number | null
   childAdvance: $Enums.TicketChildAdvance | null
 }
 
@@ -94,6 +98,7 @@ export type TicketCountAggregateOutputType = {
   mentionedUserIds: number
   agentMode: number
   agentState: number
+  agentAutoReviseCount: number
   childAdvance: number
   _all: number
 }
@@ -102,11 +107,13 @@ export type TicketCountAggregateOutputType = {
 export type TicketAvgAggregateInputType = {
   number?: true
   order?: true
+  agentAutoReviseCount?: true
 }
 
 export type TicketSumAggregateInputType = {
   number?: true
   order?: true
+  agentAutoReviseCount?: true
 }
 
 export type TicketMinAggregateInputType = {
@@ -126,6 +133,7 @@ export type TicketMinAggregateInputType = {
   updatedAt?: true
   agentMode?: true
   agentState?: true
+  agentAutoReviseCount?: true
   childAdvance?: true
 }
 
@@ -146,6 +154,7 @@ export type TicketMaxAggregateInputType = {
   updatedAt?: true
   agentMode?: true
   agentState?: true
+  agentAutoReviseCount?: true
   childAdvance?: true
 }
 
@@ -167,6 +176,7 @@ export type TicketCountAggregateInputType = {
   mentionedUserIds?: true
   agentMode?: true
   agentState?: true
+  agentAutoReviseCount?: true
   childAdvance?: true
   _all?: true
 }
@@ -275,6 +285,7 @@ export type TicketGroupByOutputType = {
   mentionedUserIds: string[]
   agentMode: $Enums.AgentTaskMode | null
   agentState: $Enums.AgentTaskState | null
+  agentAutoReviseCount: number
   childAdvance: $Enums.TicketChildAdvance
   _count: TicketCountAggregateOutputType | null
   _avg: TicketAvgAggregateOutputType | null
@@ -319,6 +330,7 @@ export type TicketWhereInput = {
   mentionedUserIds?: Prisma.StringNullableListFilter<"Ticket">
   agentMode?: Prisma.EnumAgentTaskModeNullableFilter<"Ticket"> | $Enums.AgentTaskMode | null
   agentState?: Prisma.EnumAgentTaskStateNullableFilter<"Ticket"> | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFilter<"Ticket"> | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFilter<"Ticket"> | $Enums.TicketChildAdvance
   board?: Prisma.XOR<Prisma.BoardScalarRelationFilter, Prisma.BoardWhereInput>
   createdBy?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
@@ -328,6 +340,7 @@ export type TicketWhereInput = {
   agentRuns?: Prisma.AgentRunListRelationFilter
   links?: Prisma.TicketLinkListRelationFilter
   criteria?: Prisma.TicketCriterionListRelationFilter
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerListRelationFilter
   relationsFrom?: Prisma.TicketRelationListRelationFilter
   relationsTo?: Prisma.TicketRelationListRelationFilter
 }
@@ -350,6 +363,7 @@ export type TicketOrderByWithRelationInput = {
   mentionedUserIds?: Prisma.SortOrder
   agentMode?: Prisma.SortOrderInput | Prisma.SortOrder
   agentState?: Prisma.SortOrderInput | Prisma.SortOrder
+  agentAutoReviseCount?: Prisma.SortOrder
   childAdvance?: Prisma.SortOrder
   board?: Prisma.BoardOrderByWithRelationInput
   createdBy?: Prisma.UserOrderByWithRelationInput
@@ -359,6 +373,7 @@ export type TicketOrderByWithRelationInput = {
   agentRuns?: Prisma.AgentRunOrderByRelationAggregateInput
   links?: Prisma.TicketLinkOrderByRelationAggregateInput
   criteria?: Prisma.TicketCriterionOrderByRelationAggregateInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerOrderByRelationAggregateInput
   relationsFrom?: Prisma.TicketRelationOrderByRelationAggregateInput
   relationsTo?: Prisma.TicketRelationOrderByRelationAggregateInput
 }
@@ -385,6 +400,7 @@ export type TicketWhereUniqueInput = Prisma.AtLeast<{
   mentionedUserIds?: Prisma.StringNullableListFilter<"Ticket">
   agentMode?: Prisma.EnumAgentTaskModeNullableFilter<"Ticket"> | $Enums.AgentTaskMode | null
   agentState?: Prisma.EnumAgentTaskStateNullableFilter<"Ticket"> | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFilter<"Ticket"> | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFilter<"Ticket"> | $Enums.TicketChildAdvance
   board?: Prisma.XOR<Prisma.BoardScalarRelationFilter, Prisma.BoardWhereInput>
   createdBy?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
@@ -394,6 +410,7 @@ export type TicketWhereUniqueInput = Prisma.AtLeast<{
   agentRuns?: Prisma.AgentRunListRelationFilter
   links?: Prisma.TicketLinkListRelationFilter
   criteria?: Prisma.TicketCriterionListRelationFilter
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerListRelationFilter
   relationsFrom?: Prisma.TicketRelationListRelationFilter
   relationsTo?: Prisma.TicketRelationListRelationFilter
 }, "id" | "boardId_number">
@@ -416,6 +433,7 @@ export type TicketOrderByWithAggregationInput = {
   mentionedUserIds?: Prisma.SortOrder
   agentMode?: Prisma.SortOrderInput | Prisma.SortOrder
   agentState?: Prisma.SortOrderInput | Prisma.SortOrder
+  agentAutoReviseCount?: Prisma.SortOrder
   childAdvance?: Prisma.SortOrder
   _count?: Prisma.TicketCountOrderByAggregateInput
   _avg?: Prisma.TicketAvgOrderByAggregateInput
@@ -445,6 +463,7 @@ export type TicketScalarWhereWithAggregatesInput = {
   mentionedUserIds?: Prisma.StringNullableListFilter<"Ticket">
   agentMode?: Prisma.EnumAgentTaskModeNullableWithAggregatesFilter<"Ticket"> | $Enums.AgentTaskMode | null
   agentState?: Prisma.EnumAgentTaskStateNullableWithAggregatesFilter<"Ticket"> | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntWithAggregatesFilter<"Ticket"> | number
   childAdvance?: Prisma.EnumTicketChildAdvanceWithAggregatesFilter<"Ticket"> | $Enums.TicketChildAdvance
 }
 
@@ -463,6 +482,7 @@ export type TicketCreateInput = {
   mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
   agentMode?: $Enums.AgentTaskMode | null
   agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
   childAdvance?: $Enums.TicketChildAdvance
   board: Prisma.BoardCreateNestedOneWithoutTicketsInput
   createdBy?: Prisma.UserCreateNestedOneWithoutCreatedTicketsInput
@@ -472,6 +492,7 @@ export type TicketCreateInput = {
   agentRuns?: Prisma.AgentRunCreateNestedManyWithoutTicketInput
   links?: Prisma.TicketLinkCreateNestedManyWithoutTicketInput
   criteria?: Prisma.TicketCriterionCreateNestedManyWithoutTicketInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerCreateNestedManyWithoutTicketInput
   relationsFrom?: Prisma.TicketRelationCreateNestedManyWithoutFromInput
   relationsTo?: Prisma.TicketRelationCreateNestedManyWithoutToInput
 }
@@ -494,12 +515,14 @@ export type TicketUncheckedCreateInput = {
   mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
   agentMode?: $Enums.AgentTaskMode | null
   agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
   childAdvance?: $Enums.TicketChildAdvance
   tags?: Prisma.TicketTagUncheckedCreateNestedManyWithoutTicketInput
   comments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutTicketInput
   agentRuns?: Prisma.AgentRunUncheckedCreateNestedManyWithoutTicketInput
   links?: Prisma.TicketLinkUncheckedCreateNestedManyWithoutTicketInput
   criteria?: Prisma.TicketCriterionUncheckedCreateNestedManyWithoutTicketInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedCreateNestedManyWithoutTicketInput
   relationsFrom?: Prisma.TicketRelationUncheckedCreateNestedManyWithoutFromInput
   relationsTo?: Prisma.TicketRelationUncheckedCreateNestedManyWithoutToInput
 }
@@ -519,6 +542,7 @@ export type TicketUpdateInput = {
   mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
   agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
   agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
   board?: Prisma.BoardUpdateOneRequiredWithoutTicketsNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutCreatedTicketsNestedInput
@@ -528,6 +552,7 @@ export type TicketUpdateInput = {
   agentRuns?: Prisma.AgentRunUpdateManyWithoutTicketNestedInput
   links?: Prisma.TicketLinkUpdateManyWithoutTicketNestedInput
   criteria?: Prisma.TicketCriterionUpdateManyWithoutTicketNestedInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUpdateManyWithoutTicketNestedInput
   relationsFrom?: Prisma.TicketRelationUpdateManyWithoutFromNestedInput
   relationsTo?: Prisma.TicketRelationUpdateManyWithoutToNestedInput
 }
@@ -550,12 +575,14 @@ export type TicketUncheckedUpdateInput = {
   mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
   agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
   agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
   tags?: Prisma.TicketTagUncheckedUpdateManyWithoutTicketNestedInput
   comments?: Prisma.TicketCommentUncheckedUpdateManyWithoutTicketNestedInput
   agentRuns?: Prisma.AgentRunUncheckedUpdateManyWithoutTicketNestedInput
   links?: Prisma.TicketLinkUncheckedUpdateManyWithoutTicketNestedInput
   criteria?: Prisma.TicketCriterionUncheckedUpdateManyWithoutTicketNestedInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedUpdateManyWithoutTicketNestedInput
   relationsFrom?: Prisma.TicketRelationUncheckedUpdateManyWithoutFromNestedInput
   relationsTo?: Prisma.TicketRelationUncheckedUpdateManyWithoutToNestedInput
 }
@@ -578,6 +605,7 @@ export type TicketCreateManyInput = {
   mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
   agentMode?: $Enums.AgentTaskMode | null
   agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
   childAdvance?: $Enums.TicketChildAdvance
 }
 
@@ -596,6 +624,7 @@ export type TicketUpdateManyMutationInput = {
   mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
   agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
   agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
 }
 
@@ -617,12 +646,18 @@ export type TicketUncheckedUpdateManyInput = {
   mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
   agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
   agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
 }
 
 export type TicketNullableScalarRelationFilter = {
   is?: Prisma.TicketWhereInput | null
   isNot?: Prisma.TicketWhereInput | null
+}
+
+export type TicketScalarRelationFilter = {
+  is?: Prisma.TicketWhereInput
+  isNot?: Prisma.TicketWhereInput
 }
 
 export type TicketListRelationFilter = {
@@ -633,11 +668,6 @@ export type TicketListRelationFilter = {
 
 export type TicketOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
-}
-
-export type TicketScalarRelationFilter = {
-  is?: Prisma.TicketWhereInput
-  isNot?: Prisma.TicketWhereInput
 }
 
 export type TicketBoardIdNumberCompoundUniqueInput = {
@@ -663,12 +693,14 @@ export type TicketCountOrderByAggregateInput = {
   mentionedUserIds?: Prisma.SortOrder
   agentMode?: Prisma.SortOrder
   agentState?: Prisma.SortOrder
+  agentAutoReviseCount?: Prisma.SortOrder
   childAdvance?: Prisma.SortOrder
 }
 
 export type TicketAvgOrderByAggregateInput = {
   number?: Prisma.SortOrder
   order?: Prisma.SortOrder
+  agentAutoReviseCount?: Prisma.SortOrder
 }
 
 export type TicketMaxOrderByAggregateInput = {
@@ -688,6 +720,7 @@ export type TicketMaxOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
   agentMode?: Prisma.SortOrder
   agentState?: Prisma.SortOrder
+  agentAutoReviseCount?: Prisma.SortOrder
   childAdvance?: Prisma.SortOrder
 }
 
@@ -708,12 +741,14 @@ export type TicketMinOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
   agentMode?: Prisma.SortOrder
   agentState?: Prisma.SortOrder
+  agentAutoReviseCount?: Prisma.SortOrder
   childAdvance?: Prisma.SortOrder
 }
 
 export type TicketSumOrderByAggregateInput = {
   number?: Prisma.SortOrder
   order?: Prisma.SortOrder
+  agentAutoReviseCount?: Prisma.SortOrder
 }
 
 export type TicketCreateNestedOneWithoutAgentRunsInput = {
@@ -730,6 +765,20 @@ export type TicketUpdateOneWithoutAgentRunsNestedInput = {
   delete?: Prisma.TicketWhereInput | boolean
   connect?: Prisma.TicketWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.TicketUpdateToOneWithWhereWithoutAgentRunsInput, Prisma.TicketUpdateWithoutAgentRunsInput>, Prisma.TicketUncheckedUpdateWithoutAgentRunsInput>
+}
+
+export type TicketCreateNestedOneWithoutAutoReviseTriggersInput = {
+  create?: Prisma.XOR<Prisma.TicketCreateWithoutAutoReviseTriggersInput, Prisma.TicketUncheckedCreateWithoutAutoReviseTriggersInput>
+  connectOrCreate?: Prisma.TicketCreateOrConnectWithoutAutoReviseTriggersInput
+  connect?: Prisma.TicketWhereUniqueInput
+}
+
+export type TicketUpdateOneRequiredWithoutAutoReviseTriggersNestedInput = {
+  create?: Prisma.XOR<Prisma.TicketCreateWithoutAutoReviseTriggersInput, Prisma.TicketUncheckedCreateWithoutAutoReviseTriggersInput>
+  connectOrCreate?: Prisma.TicketCreateOrConnectWithoutAutoReviseTriggersInput
+  upsert?: Prisma.TicketUpsertWithoutAutoReviseTriggersInput
+  connect?: Prisma.TicketWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TicketUpdateToOneWithWhereWithoutAutoReviseTriggersInput, Prisma.TicketUpdateWithoutAutoReviseTriggersInput>, Prisma.TicketUncheckedUpdateWithoutAutoReviseTriggersInput>
 }
 
 export type TicketCreateNestedManyWithoutBoardInput = {
@@ -986,6 +1035,7 @@ export type TicketCreateWithoutAgentRunsInput = {
   mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
   agentMode?: $Enums.AgentTaskMode | null
   agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
   childAdvance?: $Enums.TicketChildAdvance
   board: Prisma.BoardCreateNestedOneWithoutTicketsInput
   createdBy?: Prisma.UserCreateNestedOneWithoutCreatedTicketsInput
@@ -994,6 +1044,7 @@ export type TicketCreateWithoutAgentRunsInput = {
   comments?: Prisma.TicketCommentCreateNestedManyWithoutTicketInput
   links?: Prisma.TicketLinkCreateNestedManyWithoutTicketInput
   criteria?: Prisma.TicketCriterionCreateNestedManyWithoutTicketInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerCreateNestedManyWithoutTicketInput
   relationsFrom?: Prisma.TicketRelationCreateNestedManyWithoutFromInput
   relationsTo?: Prisma.TicketRelationCreateNestedManyWithoutToInput
 }
@@ -1016,11 +1067,13 @@ export type TicketUncheckedCreateWithoutAgentRunsInput = {
   mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
   agentMode?: $Enums.AgentTaskMode | null
   agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
   childAdvance?: $Enums.TicketChildAdvance
   tags?: Prisma.TicketTagUncheckedCreateNestedManyWithoutTicketInput
   comments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutTicketInput
   links?: Prisma.TicketLinkUncheckedCreateNestedManyWithoutTicketInput
   criteria?: Prisma.TicketCriterionUncheckedCreateNestedManyWithoutTicketInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedCreateNestedManyWithoutTicketInput
   relationsFrom?: Prisma.TicketRelationUncheckedCreateNestedManyWithoutFromInput
   relationsTo?: Prisma.TicketRelationUncheckedCreateNestedManyWithoutToInput
 }
@@ -1056,6 +1109,7 @@ export type TicketUpdateWithoutAgentRunsInput = {
   mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
   agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
   agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
   board?: Prisma.BoardUpdateOneRequiredWithoutTicketsNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutCreatedTicketsNestedInput
@@ -1064,6 +1118,7 @@ export type TicketUpdateWithoutAgentRunsInput = {
   comments?: Prisma.TicketCommentUpdateManyWithoutTicketNestedInput
   links?: Prisma.TicketLinkUpdateManyWithoutTicketNestedInput
   criteria?: Prisma.TicketCriterionUpdateManyWithoutTicketNestedInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUpdateManyWithoutTicketNestedInput
   relationsFrom?: Prisma.TicketRelationUpdateManyWithoutFromNestedInput
   relationsTo?: Prisma.TicketRelationUpdateManyWithoutToNestedInput
 }
@@ -1086,9 +1141,143 @@ export type TicketUncheckedUpdateWithoutAgentRunsInput = {
   mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
   agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
   agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
   tags?: Prisma.TicketTagUncheckedUpdateManyWithoutTicketNestedInput
   comments?: Prisma.TicketCommentUncheckedUpdateManyWithoutTicketNestedInput
+  links?: Prisma.TicketLinkUncheckedUpdateManyWithoutTicketNestedInput
+  criteria?: Prisma.TicketCriterionUncheckedUpdateManyWithoutTicketNestedInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedUpdateManyWithoutTicketNestedInput
+  relationsFrom?: Prisma.TicketRelationUncheckedUpdateManyWithoutFromNestedInput
+  relationsTo?: Prisma.TicketRelationUncheckedUpdateManyWithoutToNestedInput
+}
+
+export type TicketCreateWithoutAutoReviseTriggersInput = {
+  id?: string
+  number: number
+  title: string
+  content?: string | null
+  status?: $Enums.TicketStatus
+  priority?: $Enums.TicketPriority
+  dueDate?: Date | string | null
+  completedAt?: Date | string | null
+  order?: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
+  agentMode?: $Enums.AgentTaskMode | null
+  agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
+  childAdvance?: $Enums.TicketChildAdvance
+  board: Prisma.BoardCreateNestedOneWithoutTicketsInput
+  createdBy?: Prisma.UserCreateNestedOneWithoutCreatedTicketsInput
+  assignee?: Prisma.UserCreateNestedOneWithoutAssignedTicketsInput
+  tags?: Prisma.TicketTagCreateNestedManyWithoutTicketInput
+  comments?: Prisma.TicketCommentCreateNestedManyWithoutTicketInput
+  agentRuns?: Prisma.AgentRunCreateNestedManyWithoutTicketInput
+  links?: Prisma.TicketLinkCreateNestedManyWithoutTicketInput
+  criteria?: Prisma.TicketCriterionCreateNestedManyWithoutTicketInput
+  relationsFrom?: Prisma.TicketRelationCreateNestedManyWithoutFromInput
+  relationsTo?: Prisma.TicketRelationCreateNestedManyWithoutToInput
+}
+
+export type TicketUncheckedCreateWithoutAutoReviseTriggersInput = {
+  id?: string
+  boardId: string
+  createdById?: string | null
+  assigneeId?: string | null
+  number: number
+  title: string
+  content?: string | null
+  status?: $Enums.TicketStatus
+  priority?: $Enums.TicketPriority
+  dueDate?: Date | string | null
+  completedAt?: Date | string | null
+  order?: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
+  agentMode?: $Enums.AgentTaskMode | null
+  agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
+  childAdvance?: $Enums.TicketChildAdvance
+  tags?: Prisma.TicketTagUncheckedCreateNestedManyWithoutTicketInput
+  comments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutTicketInput
+  agentRuns?: Prisma.AgentRunUncheckedCreateNestedManyWithoutTicketInput
+  links?: Prisma.TicketLinkUncheckedCreateNestedManyWithoutTicketInput
+  criteria?: Prisma.TicketCriterionUncheckedCreateNestedManyWithoutTicketInput
+  relationsFrom?: Prisma.TicketRelationUncheckedCreateNestedManyWithoutFromInput
+  relationsTo?: Prisma.TicketRelationUncheckedCreateNestedManyWithoutToInput
+}
+
+export type TicketCreateOrConnectWithoutAutoReviseTriggersInput = {
+  where: Prisma.TicketWhereUniqueInput
+  create: Prisma.XOR<Prisma.TicketCreateWithoutAutoReviseTriggersInput, Prisma.TicketUncheckedCreateWithoutAutoReviseTriggersInput>
+}
+
+export type TicketUpsertWithoutAutoReviseTriggersInput = {
+  update: Prisma.XOR<Prisma.TicketUpdateWithoutAutoReviseTriggersInput, Prisma.TicketUncheckedUpdateWithoutAutoReviseTriggersInput>
+  create: Prisma.XOR<Prisma.TicketCreateWithoutAutoReviseTriggersInput, Prisma.TicketUncheckedCreateWithoutAutoReviseTriggersInput>
+  where?: Prisma.TicketWhereInput
+}
+
+export type TicketUpdateToOneWithWhereWithoutAutoReviseTriggersInput = {
+  where?: Prisma.TicketWhereInput
+  data: Prisma.XOR<Prisma.TicketUpdateWithoutAutoReviseTriggersInput, Prisma.TicketUncheckedUpdateWithoutAutoReviseTriggersInput>
+}
+
+export type TicketUpdateWithoutAutoReviseTriggersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  number?: Prisma.IntFieldUpdateOperationsInput | number
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  content?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
+  priority?: Prisma.EnumTicketPriorityFieldUpdateOperationsInput | $Enums.TicketPriority
+  dueDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  order?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
+  agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
+  agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
+  childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
+  board?: Prisma.BoardUpdateOneRequiredWithoutTicketsNestedInput
+  createdBy?: Prisma.UserUpdateOneWithoutCreatedTicketsNestedInput
+  assignee?: Prisma.UserUpdateOneWithoutAssignedTicketsNestedInput
+  tags?: Prisma.TicketTagUpdateManyWithoutTicketNestedInput
+  comments?: Prisma.TicketCommentUpdateManyWithoutTicketNestedInput
+  agentRuns?: Prisma.AgentRunUpdateManyWithoutTicketNestedInput
+  links?: Prisma.TicketLinkUpdateManyWithoutTicketNestedInput
+  criteria?: Prisma.TicketCriterionUpdateManyWithoutTicketNestedInput
+  relationsFrom?: Prisma.TicketRelationUpdateManyWithoutFromNestedInput
+  relationsTo?: Prisma.TicketRelationUpdateManyWithoutToNestedInput
+}
+
+export type TicketUncheckedUpdateWithoutAutoReviseTriggersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  boardId?: Prisma.StringFieldUpdateOperationsInput | string
+  createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  assigneeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  number?: Prisma.IntFieldUpdateOperationsInput | number
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  content?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
+  priority?: Prisma.EnumTicketPriorityFieldUpdateOperationsInput | $Enums.TicketPriority
+  dueDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  order?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
+  agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
+  agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
+  childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
+  tags?: Prisma.TicketTagUncheckedUpdateManyWithoutTicketNestedInput
+  comments?: Prisma.TicketCommentUncheckedUpdateManyWithoutTicketNestedInput
+  agentRuns?: Prisma.AgentRunUncheckedUpdateManyWithoutTicketNestedInput
   links?: Prisma.TicketLinkUncheckedUpdateManyWithoutTicketNestedInput
   criteria?: Prisma.TicketCriterionUncheckedUpdateManyWithoutTicketNestedInput
   relationsFrom?: Prisma.TicketRelationUncheckedUpdateManyWithoutFromNestedInput
@@ -1110,6 +1299,7 @@ export type TicketCreateWithoutBoardInput = {
   mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
   agentMode?: $Enums.AgentTaskMode | null
   agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
   childAdvance?: $Enums.TicketChildAdvance
   createdBy?: Prisma.UserCreateNestedOneWithoutCreatedTicketsInput
   assignee?: Prisma.UserCreateNestedOneWithoutAssignedTicketsInput
@@ -1118,6 +1308,7 @@ export type TicketCreateWithoutBoardInput = {
   agentRuns?: Prisma.AgentRunCreateNestedManyWithoutTicketInput
   links?: Prisma.TicketLinkCreateNestedManyWithoutTicketInput
   criteria?: Prisma.TicketCriterionCreateNestedManyWithoutTicketInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerCreateNestedManyWithoutTicketInput
   relationsFrom?: Prisma.TicketRelationCreateNestedManyWithoutFromInput
   relationsTo?: Prisma.TicketRelationCreateNestedManyWithoutToInput
 }
@@ -1139,12 +1330,14 @@ export type TicketUncheckedCreateWithoutBoardInput = {
   mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
   agentMode?: $Enums.AgentTaskMode | null
   agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
   childAdvance?: $Enums.TicketChildAdvance
   tags?: Prisma.TicketTagUncheckedCreateNestedManyWithoutTicketInput
   comments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutTicketInput
   agentRuns?: Prisma.AgentRunUncheckedCreateNestedManyWithoutTicketInput
   links?: Prisma.TicketLinkUncheckedCreateNestedManyWithoutTicketInput
   criteria?: Prisma.TicketCriterionUncheckedCreateNestedManyWithoutTicketInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedCreateNestedManyWithoutTicketInput
   relationsFrom?: Prisma.TicketRelationUncheckedCreateNestedManyWithoutFromInput
   relationsTo?: Prisma.TicketRelationUncheckedCreateNestedManyWithoutToInput
 }
@@ -1196,6 +1389,7 @@ export type TicketScalarWhereInput = {
   mentionedUserIds?: Prisma.StringNullableListFilter<"Ticket">
   agentMode?: Prisma.EnumAgentTaskModeNullableFilter<"Ticket"> | $Enums.AgentTaskMode | null
   agentState?: Prisma.EnumAgentTaskStateNullableFilter<"Ticket"> | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFilter<"Ticket"> | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFilter<"Ticket"> | $Enums.TicketChildAdvance
 }
 
@@ -1214,6 +1408,7 @@ export type TicketCreateWithoutTagsInput = {
   mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
   agentMode?: $Enums.AgentTaskMode | null
   agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
   childAdvance?: $Enums.TicketChildAdvance
   board: Prisma.BoardCreateNestedOneWithoutTicketsInput
   createdBy?: Prisma.UserCreateNestedOneWithoutCreatedTicketsInput
@@ -1222,6 +1417,7 @@ export type TicketCreateWithoutTagsInput = {
   agentRuns?: Prisma.AgentRunCreateNestedManyWithoutTicketInput
   links?: Prisma.TicketLinkCreateNestedManyWithoutTicketInput
   criteria?: Prisma.TicketCriterionCreateNestedManyWithoutTicketInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerCreateNestedManyWithoutTicketInput
   relationsFrom?: Prisma.TicketRelationCreateNestedManyWithoutFromInput
   relationsTo?: Prisma.TicketRelationCreateNestedManyWithoutToInput
 }
@@ -1244,11 +1440,13 @@ export type TicketUncheckedCreateWithoutTagsInput = {
   mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
   agentMode?: $Enums.AgentTaskMode | null
   agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
   childAdvance?: $Enums.TicketChildAdvance
   comments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutTicketInput
   agentRuns?: Prisma.AgentRunUncheckedCreateNestedManyWithoutTicketInput
   links?: Prisma.TicketLinkUncheckedCreateNestedManyWithoutTicketInput
   criteria?: Prisma.TicketCriterionUncheckedCreateNestedManyWithoutTicketInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedCreateNestedManyWithoutTicketInput
   relationsFrom?: Prisma.TicketRelationUncheckedCreateNestedManyWithoutFromInput
   relationsTo?: Prisma.TicketRelationUncheckedCreateNestedManyWithoutToInput
 }
@@ -1284,6 +1482,7 @@ export type TicketUpdateWithoutTagsInput = {
   mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
   agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
   agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
   board?: Prisma.BoardUpdateOneRequiredWithoutTicketsNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutCreatedTicketsNestedInput
@@ -1292,6 +1491,7 @@ export type TicketUpdateWithoutTagsInput = {
   agentRuns?: Prisma.AgentRunUpdateManyWithoutTicketNestedInput
   links?: Prisma.TicketLinkUpdateManyWithoutTicketNestedInput
   criteria?: Prisma.TicketCriterionUpdateManyWithoutTicketNestedInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUpdateManyWithoutTicketNestedInput
   relationsFrom?: Prisma.TicketRelationUpdateManyWithoutFromNestedInput
   relationsTo?: Prisma.TicketRelationUpdateManyWithoutToNestedInput
 }
@@ -1314,11 +1514,13 @@ export type TicketUncheckedUpdateWithoutTagsInput = {
   mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
   agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
   agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
   comments?: Prisma.TicketCommentUncheckedUpdateManyWithoutTicketNestedInput
   agentRuns?: Prisma.AgentRunUncheckedUpdateManyWithoutTicketNestedInput
   links?: Prisma.TicketLinkUncheckedUpdateManyWithoutTicketNestedInput
   criteria?: Prisma.TicketCriterionUncheckedUpdateManyWithoutTicketNestedInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedUpdateManyWithoutTicketNestedInput
   relationsFrom?: Prisma.TicketRelationUncheckedUpdateManyWithoutFromNestedInput
   relationsTo?: Prisma.TicketRelationUncheckedUpdateManyWithoutToNestedInput
 }
@@ -1338,6 +1540,7 @@ export type TicketCreateWithoutLinksInput = {
   mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
   agentMode?: $Enums.AgentTaskMode | null
   agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
   childAdvance?: $Enums.TicketChildAdvance
   board: Prisma.BoardCreateNestedOneWithoutTicketsInput
   createdBy?: Prisma.UserCreateNestedOneWithoutCreatedTicketsInput
@@ -1346,6 +1549,7 @@ export type TicketCreateWithoutLinksInput = {
   comments?: Prisma.TicketCommentCreateNestedManyWithoutTicketInput
   agentRuns?: Prisma.AgentRunCreateNestedManyWithoutTicketInput
   criteria?: Prisma.TicketCriterionCreateNestedManyWithoutTicketInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerCreateNestedManyWithoutTicketInput
   relationsFrom?: Prisma.TicketRelationCreateNestedManyWithoutFromInput
   relationsTo?: Prisma.TicketRelationCreateNestedManyWithoutToInput
 }
@@ -1368,11 +1572,13 @@ export type TicketUncheckedCreateWithoutLinksInput = {
   mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
   agentMode?: $Enums.AgentTaskMode | null
   agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
   childAdvance?: $Enums.TicketChildAdvance
   tags?: Prisma.TicketTagUncheckedCreateNestedManyWithoutTicketInput
   comments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutTicketInput
   agentRuns?: Prisma.AgentRunUncheckedCreateNestedManyWithoutTicketInput
   criteria?: Prisma.TicketCriterionUncheckedCreateNestedManyWithoutTicketInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedCreateNestedManyWithoutTicketInput
   relationsFrom?: Prisma.TicketRelationUncheckedCreateNestedManyWithoutFromInput
   relationsTo?: Prisma.TicketRelationUncheckedCreateNestedManyWithoutToInput
 }
@@ -1408,6 +1614,7 @@ export type TicketUpdateWithoutLinksInput = {
   mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
   agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
   agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
   board?: Prisma.BoardUpdateOneRequiredWithoutTicketsNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutCreatedTicketsNestedInput
@@ -1416,6 +1623,7 @@ export type TicketUpdateWithoutLinksInput = {
   comments?: Prisma.TicketCommentUpdateManyWithoutTicketNestedInput
   agentRuns?: Prisma.AgentRunUpdateManyWithoutTicketNestedInput
   criteria?: Prisma.TicketCriterionUpdateManyWithoutTicketNestedInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUpdateManyWithoutTicketNestedInput
   relationsFrom?: Prisma.TicketRelationUpdateManyWithoutFromNestedInput
   relationsTo?: Prisma.TicketRelationUpdateManyWithoutToNestedInput
 }
@@ -1438,11 +1646,13 @@ export type TicketUncheckedUpdateWithoutLinksInput = {
   mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
   agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
   agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
   tags?: Prisma.TicketTagUncheckedUpdateManyWithoutTicketNestedInput
   comments?: Prisma.TicketCommentUncheckedUpdateManyWithoutTicketNestedInput
   agentRuns?: Prisma.AgentRunUncheckedUpdateManyWithoutTicketNestedInput
   criteria?: Prisma.TicketCriterionUncheckedUpdateManyWithoutTicketNestedInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedUpdateManyWithoutTicketNestedInput
   relationsFrom?: Prisma.TicketRelationUncheckedUpdateManyWithoutFromNestedInput
   relationsTo?: Prisma.TicketRelationUncheckedUpdateManyWithoutToNestedInput
 }
@@ -1462,6 +1672,7 @@ export type TicketCreateWithoutCommentsInput = {
   mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
   agentMode?: $Enums.AgentTaskMode | null
   agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
   childAdvance?: $Enums.TicketChildAdvance
   board: Prisma.BoardCreateNestedOneWithoutTicketsInput
   createdBy?: Prisma.UserCreateNestedOneWithoutCreatedTicketsInput
@@ -1470,6 +1681,7 @@ export type TicketCreateWithoutCommentsInput = {
   agentRuns?: Prisma.AgentRunCreateNestedManyWithoutTicketInput
   links?: Prisma.TicketLinkCreateNestedManyWithoutTicketInput
   criteria?: Prisma.TicketCriterionCreateNestedManyWithoutTicketInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerCreateNestedManyWithoutTicketInput
   relationsFrom?: Prisma.TicketRelationCreateNestedManyWithoutFromInput
   relationsTo?: Prisma.TicketRelationCreateNestedManyWithoutToInput
 }
@@ -1492,11 +1704,13 @@ export type TicketUncheckedCreateWithoutCommentsInput = {
   mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
   agentMode?: $Enums.AgentTaskMode | null
   agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
   childAdvance?: $Enums.TicketChildAdvance
   tags?: Prisma.TicketTagUncheckedCreateNestedManyWithoutTicketInput
   agentRuns?: Prisma.AgentRunUncheckedCreateNestedManyWithoutTicketInput
   links?: Prisma.TicketLinkUncheckedCreateNestedManyWithoutTicketInput
   criteria?: Prisma.TicketCriterionUncheckedCreateNestedManyWithoutTicketInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedCreateNestedManyWithoutTicketInput
   relationsFrom?: Prisma.TicketRelationUncheckedCreateNestedManyWithoutFromInput
   relationsTo?: Prisma.TicketRelationUncheckedCreateNestedManyWithoutToInput
 }
@@ -1532,6 +1746,7 @@ export type TicketUpdateWithoutCommentsInput = {
   mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
   agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
   agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
   board?: Prisma.BoardUpdateOneRequiredWithoutTicketsNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutCreatedTicketsNestedInput
@@ -1540,6 +1755,7 @@ export type TicketUpdateWithoutCommentsInput = {
   agentRuns?: Prisma.AgentRunUpdateManyWithoutTicketNestedInput
   links?: Prisma.TicketLinkUpdateManyWithoutTicketNestedInput
   criteria?: Prisma.TicketCriterionUpdateManyWithoutTicketNestedInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUpdateManyWithoutTicketNestedInput
   relationsFrom?: Prisma.TicketRelationUpdateManyWithoutFromNestedInput
   relationsTo?: Prisma.TicketRelationUpdateManyWithoutToNestedInput
 }
@@ -1562,11 +1778,13 @@ export type TicketUncheckedUpdateWithoutCommentsInput = {
   mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
   agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
   agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
   tags?: Prisma.TicketTagUncheckedUpdateManyWithoutTicketNestedInput
   agentRuns?: Prisma.AgentRunUncheckedUpdateManyWithoutTicketNestedInput
   links?: Prisma.TicketLinkUncheckedUpdateManyWithoutTicketNestedInput
   criteria?: Prisma.TicketCriterionUncheckedUpdateManyWithoutTicketNestedInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedUpdateManyWithoutTicketNestedInput
   relationsFrom?: Prisma.TicketRelationUncheckedUpdateManyWithoutFromNestedInput
   relationsTo?: Prisma.TicketRelationUncheckedUpdateManyWithoutToNestedInput
 }
@@ -1586,6 +1804,7 @@ export type TicketCreateWithoutCriteriaInput = {
   mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
   agentMode?: $Enums.AgentTaskMode | null
   agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
   childAdvance?: $Enums.TicketChildAdvance
   board: Prisma.BoardCreateNestedOneWithoutTicketsInput
   createdBy?: Prisma.UserCreateNestedOneWithoutCreatedTicketsInput
@@ -1594,6 +1813,7 @@ export type TicketCreateWithoutCriteriaInput = {
   comments?: Prisma.TicketCommentCreateNestedManyWithoutTicketInput
   agentRuns?: Prisma.AgentRunCreateNestedManyWithoutTicketInput
   links?: Prisma.TicketLinkCreateNestedManyWithoutTicketInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerCreateNestedManyWithoutTicketInput
   relationsFrom?: Prisma.TicketRelationCreateNestedManyWithoutFromInput
   relationsTo?: Prisma.TicketRelationCreateNestedManyWithoutToInput
 }
@@ -1616,11 +1836,13 @@ export type TicketUncheckedCreateWithoutCriteriaInput = {
   mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
   agentMode?: $Enums.AgentTaskMode | null
   agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
   childAdvance?: $Enums.TicketChildAdvance
   tags?: Prisma.TicketTagUncheckedCreateNestedManyWithoutTicketInput
   comments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutTicketInput
   agentRuns?: Prisma.AgentRunUncheckedCreateNestedManyWithoutTicketInput
   links?: Prisma.TicketLinkUncheckedCreateNestedManyWithoutTicketInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedCreateNestedManyWithoutTicketInput
   relationsFrom?: Prisma.TicketRelationUncheckedCreateNestedManyWithoutFromInput
   relationsTo?: Prisma.TicketRelationUncheckedCreateNestedManyWithoutToInput
 }
@@ -1656,6 +1878,7 @@ export type TicketUpdateWithoutCriteriaInput = {
   mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
   agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
   agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
   board?: Prisma.BoardUpdateOneRequiredWithoutTicketsNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutCreatedTicketsNestedInput
@@ -1664,6 +1887,7 @@ export type TicketUpdateWithoutCriteriaInput = {
   comments?: Prisma.TicketCommentUpdateManyWithoutTicketNestedInput
   agentRuns?: Prisma.AgentRunUpdateManyWithoutTicketNestedInput
   links?: Prisma.TicketLinkUpdateManyWithoutTicketNestedInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUpdateManyWithoutTicketNestedInput
   relationsFrom?: Prisma.TicketRelationUpdateManyWithoutFromNestedInput
   relationsTo?: Prisma.TicketRelationUpdateManyWithoutToNestedInput
 }
@@ -1686,11 +1910,13 @@ export type TicketUncheckedUpdateWithoutCriteriaInput = {
   mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
   agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
   agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
   tags?: Prisma.TicketTagUncheckedUpdateManyWithoutTicketNestedInput
   comments?: Prisma.TicketCommentUncheckedUpdateManyWithoutTicketNestedInput
   agentRuns?: Prisma.AgentRunUncheckedUpdateManyWithoutTicketNestedInput
   links?: Prisma.TicketLinkUncheckedUpdateManyWithoutTicketNestedInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedUpdateManyWithoutTicketNestedInput
   relationsFrom?: Prisma.TicketRelationUncheckedUpdateManyWithoutFromNestedInput
   relationsTo?: Prisma.TicketRelationUncheckedUpdateManyWithoutToNestedInput
 }
@@ -1710,6 +1936,7 @@ export type TicketCreateWithoutRelationsFromInput = {
   mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
   agentMode?: $Enums.AgentTaskMode | null
   agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
   childAdvance?: $Enums.TicketChildAdvance
   board: Prisma.BoardCreateNestedOneWithoutTicketsInput
   createdBy?: Prisma.UserCreateNestedOneWithoutCreatedTicketsInput
@@ -1719,6 +1946,7 @@ export type TicketCreateWithoutRelationsFromInput = {
   agentRuns?: Prisma.AgentRunCreateNestedManyWithoutTicketInput
   links?: Prisma.TicketLinkCreateNestedManyWithoutTicketInput
   criteria?: Prisma.TicketCriterionCreateNestedManyWithoutTicketInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerCreateNestedManyWithoutTicketInput
   relationsTo?: Prisma.TicketRelationCreateNestedManyWithoutToInput
 }
 
@@ -1740,12 +1968,14 @@ export type TicketUncheckedCreateWithoutRelationsFromInput = {
   mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
   agentMode?: $Enums.AgentTaskMode | null
   agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
   childAdvance?: $Enums.TicketChildAdvance
   tags?: Prisma.TicketTagUncheckedCreateNestedManyWithoutTicketInput
   comments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutTicketInput
   agentRuns?: Prisma.AgentRunUncheckedCreateNestedManyWithoutTicketInput
   links?: Prisma.TicketLinkUncheckedCreateNestedManyWithoutTicketInput
   criteria?: Prisma.TicketCriterionUncheckedCreateNestedManyWithoutTicketInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedCreateNestedManyWithoutTicketInput
   relationsTo?: Prisma.TicketRelationUncheckedCreateNestedManyWithoutToInput
 }
 
@@ -1769,6 +1999,7 @@ export type TicketCreateWithoutRelationsToInput = {
   mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
   agentMode?: $Enums.AgentTaskMode | null
   agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
   childAdvance?: $Enums.TicketChildAdvance
   board: Prisma.BoardCreateNestedOneWithoutTicketsInput
   createdBy?: Prisma.UserCreateNestedOneWithoutCreatedTicketsInput
@@ -1778,6 +2009,7 @@ export type TicketCreateWithoutRelationsToInput = {
   agentRuns?: Prisma.AgentRunCreateNestedManyWithoutTicketInput
   links?: Prisma.TicketLinkCreateNestedManyWithoutTicketInput
   criteria?: Prisma.TicketCriterionCreateNestedManyWithoutTicketInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerCreateNestedManyWithoutTicketInput
   relationsFrom?: Prisma.TicketRelationCreateNestedManyWithoutFromInput
 }
 
@@ -1799,12 +2031,14 @@ export type TicketUncheckedCreateWithoutRelationsToInput = {
   mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
   agentMode?: $Enums.AgentTaskMode | null
   agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
   childAdvance?: $Enums.TicketChildAdvance
   tags?: Prisma.TicketTagUncheckedCreateNestedManyWithoutTicketInput
   comments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutTicketInput
   agentRuns?: Prisma.AgentRunUncheckedCreateNestedManyWithoutTicketInput
   links?: Prisma.TicketLinkUncheckedCreateNestedManyWithoutTicketInput
   criteria?: Prisma.TicketCriterionUncheckedCreateNestedManyWithoutTicketInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedCreateNestedManyWithoutTicketInput
   relationsFrom?: Prisma.TicketRelationUncheckedCreateNestedManyWithoutFromInput
 }
 
@@ -1839,6 +2073,7 @@ export type TicketUpdateWithoutRelationsFromInput = {
   mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
   agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
   agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
   board?: Prisma.BoardUpdateOneRequiredWithoutTicketsNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutCreatedTicketsNestedInput
@@ -1848,6 +2083,7 @@ export type TicketUpdateWithoutRelationsFromInput = {
   agentRuns?: Prisma.AgentRunUpdateManyWithoutTicketNestedInput
   links?: Prisma.TicketLinkUpdateManyWithoutTicketNestedInput
   criteria?: Prisma.TicketCriterionUpdateManyWithoutTicketNestedInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUpdateManyWithoutTicketNestedInput
   relationsTo?: Prisma.TicketRelationUpdateManyWithoutToNestedInput
 }
 
@@ -1869,12 +2105,14 @@ export type TicketUncheckedUpdateWithoutRelationsFromInput = {
   mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
   agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
   agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
   tags?: Prisma.TicketTagUncheckedUpdateManyWithoutTicketNestedInput
   comments?: Prisma.TicketCommentUncheckedUpdateManyWithoutTicketNestedInput
   agentRuns?: Prisma.AgentRunUncheckedUpdateManyWithoutTicketNestedInput
   links?: Prisma.TicketLinkUncheckedUpdateManyWithoutTicketNestedInput
   criteria?: Prisma.TicketCriterionUncheckedUpdateManyWithoutTicketNestedInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedUpdateManyWithoutTicketNestedInput
   relationsTo?: Prisma.TicketRelationUncheckedUpdateManyWithoutToNestedInput
 }
 
@@ -1904,6 +2142,7 @@ export type TicketUpdateWithoutRelationsToInput = {
   mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
   agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
   agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
   board?: Prisma.BoardUpdateOneRequiredWithoutTicketsNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutCreatedTicketsNestedInput
@@ -1913,6 +2152,7 @@ export type TicketUpdateWithoutRelationsToInput = {
   agentRuns?: Prisma.AgentRunUpdateManyWithoutTicketNestedInput
   links?: Prisma.TicketLinkUpdateManyWithoutTicketNestedInput
   criteria?: Prisma.TicketCriterionUpdateManyWithoutTicketNestedInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUpdateManyWithoutTicketNestedInput
   relationsFrom?: Prisma.TicketRelationUpdateManyWithoutFromNestedInput
 }
 
@@ -1934,12 +2174,14 @@ export type TicketUncheckedUpdateWithoutRelationsToInput = {
   mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
   agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
   agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
   tags?: Prisma.TicketTagUncheckedUpdateManyWithoutTicketNestedInput
   comments?: Prisma.TicketCommentUncheckedUpdateManyWithoutTicketNestedInput
   agentRuns?: Prisma.AgentRunUncheckedUpdateManyWithoutTicketNestedInput
   links?: Prisma.TicketLinkUncheckedUpdateManyWithoutTicketNestedInput
   criteria?: Prisma.TicketCriterionUncheckedUpdateManyWithoutTicketNestedInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedUpdateManyWithoutTicketNestedInput
   relationsFrom?: Prisma.TicketRelationUncheckedUpdateManyWithoutFromNestedInput
 }
 
@@ -1958,6 +2200,7 @@ export type TicketCreateWithoutCreatedByInput = {
   mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
   agentMode?: $Enums.AgentTaskMode | null
   agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
   childAdvance?: $Enums.TicketChildAdvance
   board: Prisma.BoardCreateNestedOneWithoutTicketsInput
   assignee?: Prisma.UserCreateNestedOneWithoutAssignedTicketsInput
@@ -1966,6 +2209,7 @@ export type TicketCreateWithoutCreatedByInput = {
   agentRuns?: Prisma.AgentRunCreateNestedManyWithoutTicketInput
   links?: Prisma.TicketLinkCreateNestedManyWithoutTicketInput
   criteria?: Prisma.TicketCriterionCreateNestedManyWithoutTicketInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerCreateNestedManyWithoutTicketInput
   relationsFrom?: Prisma.TicketRelationCreateNestedManyWithoutFromInput
   relationsTo?: Prisma.TicketRelationCreateNestedManyWithoutToInput
 }
@@ -1987,12 +2231,14 @@ export type TicketUncheckedCreateWithoutCreatedByInput = {
   mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
   agentMode?: $Enums.AgentTaskMode | null
   agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
   childAdvance?: $Enums.TicketChildAdvance
   tags?: Prisma.TicketTagUncheckedCreateNestedManyWithoutTicketInput
   comments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutTicketInput
   agentRuns?: Prisma.AgentRunUncheckedCreateNestedManyWithoutTicketInput
   links?: Prisma.TicketLinkUncheckedCreateNestedManyWithoutTicketInput
   criteria?: Prisma.TicketCriterionUncheckedCreateNestedManyWithoutTicketInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedCreateNestedManyWithoutTicketInput
   relationsFrom?: Prisma.TicketRelationUncheckedCreateNestedManyWithoutFromInput
   relationsTo?: Prisma.TicketRelationUncheckedCreateNestedManyWithoutToInput
 }
@@ -2022,6 +2268,7 @@ export type TicketCreateWithoutAssigneeInput = {
   mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
   agentMode?: $Enums.AgentTaskMode | null
   agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
   childAdvance?: $Enums.TicketChildAdvance
   board: Prisma.BoardCreateNestedOneWithoutTicketsInput
   createdBy?: Prisma.UserCreateNestedOneWithoutCreatedTicketsInput
@@ -2030,6 +2277,7 @@ export type TicketCreateWithoutAssigneeInput = {
   agentRuns?: Prisma.AgentRunCreateNestedManyWithoutTicketInput
   links?: Prisma.TicketLinkCreateNestedManyWithoutTicketInput
   criteria?: Prisma.TicketCriterionCreateNestedManyWithoutTicketInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerCreateNestedManyWithoutTicketInput
   relationsFrom?: Prisma.TicketRelationCreateNestedManyWithoutFromInput
   relationsTo?: Prisma.TicketRelationCreateNestedManyWithoutToInput
 }
@@ -2051,12 +2299,14 @@ export type TicketUncheckedCreateWithoutAssigneeInput = {
   mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
   agentMode?: $Enums.AgentTaskMode | null
   agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
   childAdvance?: $Enums.TicketChildAdvance
   tags?: Prisma.TicketTagUncheckedCreateNestedManyWithoutTicketInput
   comments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutTicketInput
   agentRuns?: Prisma.AgentRunUncheckedCreateNestedManyWithoutTicketInput
   links?: Prisma.TicketLinkUncheckedCreateNestedManyWithoutTicketInput
   criteria?: Prisma.TicketCriterionUncheckedCreateNestedManyWithoutTicketInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedCreateNestedManyWithoutTicketInput
   relationsFrom?: Prisma.TicketRelationUncheckedCreateNestedManyWithoutFromInput
   relationsTo?: Prisma.TicketRelationUncheckedCreateNestedManyWithoutToInput
 }
@@ -2120,6 +2370,7 @@ export type TicketCreateManyBoardInput = {
   mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
   agentMode?: $Enums.AgentTaskMode | null
   agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
   childAdvance?: $Enums.TicketChildAdvance
 }
 
@@ -2138,6 +2389,7 @@ export type TicketUpdateWithoutBoardInput = {
   mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
   agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
   agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
   createdBy?: Prisma.UserUpdateOneWithoutCreatedTicketsNestedInput
   assignee?: Prisma.UserUpdateOneWithoutAssignedTicketsNestedInput
@@ -2146,6 +2398,7 @@ export type TicketUpdateWithoutBoardInput = {
   agentRuns?: Prisma.AgentRunUpdateManyWithoutTicketNestedInput
   links?: Prisma.TicketLinkUpdateManyWithoutTicketNestedInput
   criteria?: Prisma.TicketCriterionUpdateManyWithoutTicketNestedInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUpdateManyWithoutTicketNestedInput
   relationsFrom?: Prisma.TicketRelationUpdateManyWithoutFromNestedInput
   relationsTo?: Prisma.TicketRelationUpdateManyWithoutToNestedInput
 }
@@ -2167,12 +2420,14 @@ export type TicketUncheckedUpdateWithoutBoardInput = {
   mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
   agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
   agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
   tags?: Prisma.TicketTagUncheckedUpdateManyWithoutTicketNestedInput
   comments?: Prisma.TicketCommentUncheckedUpdateManyWithoutTicketNestedInput
   agentRuns?: Prisma.AgentRunUncheckedUpdateManyWithoutTicketNestedInput
   links?: Prisma.TicketLinkUncheckedUpdateManyWithoutTicketNestedInput
   criteria?: Prisma.TicketCriterionUncheckedUpdateManyWithoutTicketNestedInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedUpdateManyWithoutTicketNestedInput
   relationsFrom?: Prisma.TicketRelationUncheckedUpdateManyWithoutFromNestedInput
   relationsTo?: Prisma.TicketRelationUncheckedUpdateManyWithoutToNestedInput
 }
@@ -2194,6 +2449,7 @@ export type TicketUncheckedUpdateManyWithoutBoardInput = {
   mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
   agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
   agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
 }
 
@@ -2214,6 +2470,7 @@ export type TicketCreateManyCreatedByInput = {
   mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
   agentMode?: $Enums.AgentTaskMode | null
   agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
   childAdvance?: $Enums.TicketChildAdvance
 }
 
@@ -2234,6 +2491,7 @@ export type TicketCreateManyAssigneeInput = {
   mentionedUserIds?: Prisma.TicketCreatementionedUserIdsInput | string[]
   agentMode?: $Enums.AgentTaskMode | null
   agentState?: $Enums.AgentTaskState | null
+  agentAutoReviseCount?: number
   childAdvance?: $Enums.TicketChildAdvance
 }
 
@@ -2252,6 +2510,7 @@ export type TicketUpdateWithoutCreatedByInput = {
   mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
   agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
   agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
   board?: Prisma.BoardUpdateOneRequiredWithoutTicketsNestedInput
   assignee?: Prisma.UserUpdateOneWithoutAssignedTicketsNestedInput
@@ -2260,6 +2519,7 @@ export type TicketUpdateWithoutCreatedByInput = {
   agentRuns?: Prisma.AgentRunUpdateManyWithoutTicketNestedInput
   links?: Prisma.TicketLinkUpdateManyWithoutTicketNestedInput
   criteria?: Prisma.TicketCriterionUpdateManyWithoutTicketNestedInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUpdateManyWithoutTicketNestedInput
   relationsFrom?: Prisma.TicketRelationUpdateManyWithoutFromNestedInput
   relationsTo?: Prisma.TicketRelationUpdateManyWithoutToNestedInput
 }
@@ -2281,12 +2541,14 @@ export type TicketUncheckedUpdateWithoutCreatedByInput = {
   mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
   agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
   agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
   tags?: Prisma.TicketTagUncheckedUpdateManyWithoutTicketNestedInput
   comments?: Prisma.TicketCommentUncheckedUpdateManyWithoutTicketNestedInput
   agentRuns?: Prisma.AgentRunUncheckedUpdateManyWithoutTicketNestedInput
   links?: Prisma.TicketLinkUncheckedUpdateManyWithoutTicketNestedInput
   criteria?: Prisma.TicketCriterionUncheckedUpdateManyWithoutTicketNestedInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedUpdateManyWithoutTicketNestedInput
   relationsFrom?: Prisma.TicketRelationUncheckedUpdateManyWithoutFromNestedInput
   relationsTo?: Prisma.TicketRelationUncheckedUpdateManyWithoutToNestedInput
 }
@@ -2308,6 +2570,7 @@ export type TicketUncheckedUpdateManyWithoutCreatedByInput = {
   mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
   agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
   agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
 }
 
@@ -2326,6 +2589,7 @@ export type TicketUpdateWithoutAssigneeInput = {
   mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
   agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
   agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
   board?: Prisma.BoardUpdateOneRequiredWithoutTicketsNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutCreatedTicketsNestedInput
@@ -2334,6 +2598,7 @@ export type TicketUpdateWithoutAssigneeInput = {
   agentRuns?: Prisma.AgentRunUpdateManyWithoutTicketNestedInput
   links?: Prisma.TicketLinkUpdateManyWithoutTicketNestedInput
   criteria?: Prisma.TicketCriterionUpdateManyWithoutTicketNestedInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUpdateManyWithoutTicketNestedInput
   relationsFrom?: Prisma.TicketRelationUpdateManyWithoutFromNestedInput
   relationsTo?: Prisma.TicketRelationUpdateManyWithoutToNestedInput
 }
@@ -2355,12 +2620,14 @@ export type TicketUncheckedUpdateWithoutAssigneeInput = {
   mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
   agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
   agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
   tags?: Prisma.TicketTagUncheckedUpdateManyWithoutTicketNestedInput
   comments?: Prisma.TicketCommentUncheckedUpdateManyWithoutTicketNestedInput
   agentRuns?: Prisma.AgentRunUncheckedUpdateManyWithoutTicketNestedInput
   links?: Prisma.TicketLinkUncheckedUpdateManyWithoutTicketNestedInput
   criteria?: Prisma.TicketCriterionUncheckedUpdateManyWithoutTicketNestedInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedUpdateManyWithoutTicketNestedInput
   relationsFrom?: Prisma.TicketRelationUncheckedUpdateManyWithoutFromNestedInput
   relationsTo?: Prisma.TicketRelationUncheckedUpdateManyWithoutToNestedInput
 }
@@ -2382,6 +2649,7 @@ export type TicketUncheckedUpdateManyWithoutAssigneeInput = {
   mentionedUserIds?: Prisma.TicketUpdatementionedUserIdsInput | string[]
   agentMode?: Prisma.NullableEnumAgentTaskModeFieldUpdateOperationsInput | $Enums.AgentTaskMode | null
   agentState?: Prisma.NullableEnumAgentTaskStateFieldUpdateOperationsInput | $Enums.AgentTaskState | null
+  agentAutoReviseCount?: Prisma.IntFieldUpdateOperationsInput | number
   childAdvance?: Prisma.EnumTicketChildAdvanceFieldUpdateOperationsInput | $Enums.TicketChildAdvance
 }
 
@@ -2396,6 +2664,7 @@ export type TicketCountOutputType = {
   agentRuns: number
   links: number
   criteria: number
+  autoReviseTriggers: number
   relationsFrom: number
   relationsTo: number
 }
@@ -2406,6 +2675,7 @@ export type TicketCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions
   agentRuns?: boolean | TicketCountOutputTypeCountAgentRunsArgs
   links?: boolean | TicketCountOutputTypeCountLinksArgs
   criteria?: boolean | TicketCountOutputTypeCountCriteriaArgs
+  autoReviseTriggers?: boolean | TicketCountOutputTypeCountAutoReviseTriggersArgs
   relationsFrom?: boolean | TicketCountOutputTypeCountRelationsFromArgs
   relationsTo?: boolean | TicketCountOutputTypeCountRelationsToArgs
 }
@@ -2458,6 +2728,13 @@ export type TicketCountOutputTypeCountCriteriaArgs<ExtArgs extends runtime.Types
 /**
  * TicketCountOutputType without action
  */
+export type TicketCountOutputTypeCountAutoReviseTriggersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AgentAutoReviseTriggerWhereInput
+}
+
+/**
+ * TicketCountOutputType without action
+ */
 export type TicketCountOutputTypeCountRelationsFromArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.TicketRelationWhereInput
 }
@@ -2488,6 +2765,7 @@ export type TicketSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   mentionedUserIds?: boolean
   agentMode?: boolean
   agentState?: boolean
+  agentAutoReviseCount?: boolean
   childAdvance?: boolean
   board?: boolean | Prisma.BoardDefaultArgs<ExtArgs>
   createdBy?: boolean | Prisma.Ticket$createdByArgs<ExtArgs>
@@ -2497,6 +2775,7 @@ export type TicketSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   agentRuns?: boolean | Prisma.Ticket$agentRunsArgs<ExtArgs>
   links?: boolean | Prisma.Ticket$linksArgs<ExtArgs>
   criteria?: boolean | Prisma.Ticket$criteriaArgs<ExtArgs>
+  autoReviseTriggers?: boolean | Prisma.Ticket$autoReviseTriggersArgs<ExtArgs>
   relationsFrom?: boolean | Prisma.Ticket$relationsFromArgs<ExtArgs>
   relationsTo?: boolean | Prisma.Ticket$relationsToArgs<ExtArgs>
   _count?: boolean | Prisma.TicketCountOutputTypeDefaultArgs<ExtArgs>
@@ -2520,6 +2799,7 @@ export type TicketSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   mentionedUserIds?: boolean
   agentMode?: boolean
   agentState?: boolean
+  agentAutoReviseCount?: boolean
   childAdvance?: boolean
   board?: boolean | Prisma.BoardDefaultArgs<ExtArgs>
   createdBy?: boolean | Prisma.Ticket$createdByArgs<ExtArgs>
@@ -2544,6 +2824,7 @@ export type TicketSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
   mentionedUserIds?: boolean
   agentMode?: boolean
   agentState?: boolean
+  agentAutoReviseCount?: boolean
   childAdvance?: boolean
   board?: boolean | Prisma.BoardDefaultArgs<ExtArgs>
   createdBy?: boolean | Prisma.Ticket$createdByArgs<ExtArgs>
@@ -2568,10 +2849,11 @@ export type TicketSelectScalar = {
   mentionedUserIds?: boolean
   agentMode?: boolean
   agentState?: boolean
+  agentAutoReviseCount?: boolean
   childAdvance?: boolean
 }
 
-export type TicketOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "boardId" | "createdById" | "assigneeId" | "number" | "title" | "content" | "status" | "priority" | "dueDate" | "completedAt" | "order" | "createdAt" | "updatedAt" | "mentionedUserIds" | "agentMode" | "agentState" | "childAdvance", ExtArgs["result"]["ticket"]>
+export type TicketOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "boardId" | "createdById" | "assigneeId" | "number" | "title" | "content" | "status" | "priority" | "dueDate" | "completedAt" | "order" | "createdAt" | "updatedAt" | "mentionedUserIds" | "agentMode" | "agentState" | "agentAutoReviseCount" | "childAdvance", ExtArgs["result"]["ticket"]>
 export type TicketInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   board?: boolean | Prisma.BoardDefaultArgs<ExtArgs>
   createdBy?: boolean | Prisma.Ticket$createdByArgs<ExtArgs>
@@ -2581,6 +2863,7 @@ export type TicketInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   agentRuns?: boolean | Prisma.Ticket$agentRunsArgs<ExtArgs>
   links?: boolean | Prisma.Ticket$linksArgs<ExtArgs>
   criteria?: boolean | Prisma.Ticket$criteriaArgs<ExtArgs>
+  autoReviseTriggers?: boolean | Prisma.Ticket$autoReviseTriggersArgs<ExtArgs>
   relationsFrom?: boolean | Prisma.Ticket$relationsFromArgs<ExtArgs>
   relationsTo?: boolean | Prisma.Ticket$relationsToArgs<ExtArgs>
   _count?: boolean | Prisma.TicketCountOutputTypeDefaultArgs<ExtArgs>
@@ -2607,6 +2890,7 @@ export type $TicketPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     agentRuns: Prisma.$AgentRunPayload<ExtArgs>[]
     links: Prisma.$TicketLinkPayload<ExtArgs>[]
     criteria: Prisma.$TicketCriterionPayload<ExtArgs>[]
+    autoReviseTriggers: Prisma.$AgentAutoReviseTriggerPayload<ExtArgs>[]
     /**
      * 自分が from 側の関係(親子なら自分が親)
      */
@@ -2673,6 +2957,10 @@ export type $TicketPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     mentionedUserIds: string[]
     agentMode: $Enums.AgentTaskMode | null
     agentState: $Enums.AgentTaskState | null
+    /**
+     * CI 失敗・レビュー指摘による自動差し戻しの回数。ボードの上限(agentAutoReviseLimit)と比べる。担当が替わったら 0 に戻す
+     */
+    agentAutoReviseCount: number
     /**
      * 子チケットが次の順番へ進む条件(親として持つ)。エージェントの待ち判定に使う
      */
@@ -3079,6 +3367,7 @@ export interface Prisma__TicketClient<T, Null = never, ExtArgs extends runtime.T
   agentRuns<T extends Prisma.Ticket$agentRunsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Ticket$agentRunsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AgentRunPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   links<T extends Prisma.Ticket$linksArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Ticket$linksArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TicketLinkPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   criteria<T extends Prisma.Ticket$criteriaArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Ticket$criteriaArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TicketCriterionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  autoReviseTriggers<T extends Prisma.Ticket$autoReviseTriggersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Ticket$autoReviseTriggersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AgentAutoReviseTriggerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   relationsFrom<T extends Prisma.Ticket$relationsFromArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Ticket$relationsFromArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TicketRelationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   relationsTo<T extends Prisma.Ticket$relationsToArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Ticket$relationsToArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TicketRelationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
@@ -3127,6 +3416,7 @@ export interface TicketFieldRefs {
   readonly mentionedUserIds: Prisma.FieldRef<"Ticket", 'String[]'>
   readonly agentMode: Prisma.FieldRef<"Ticket", 'AgentTaskMode'>
   readonly agentState: Prisma.FieldRef<"Ticket", 'AgentTaskState'>
+  readonly agentAutoReviseCount: Prisma.FieldRef<"Ticket", 'Int'>
   readonly childAdvance: Prisma.FieldRef<"Ticket", 'TicketChildAdvance'>
 }
     
@@ -3684,6 +3974,30 @@ export type Ticket$criteriaArgs<ExtArgs extends runtime.Types.Extensions.Interna
   take?: number
   skip?: number
   distinct?: Prisma.TicketCriterionScalarFieldEnum | Prisma.TicketCriterionScalarFieldEnum[]
+}
+
+/**
+ * Ticket.autoReviseTriggers
+ */
+export type Ticket$autoReviseTriggersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AgentAutoReviseTrigger
+   */
+  select?: Prisma.AgentAutoReviseTriggerSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AgentAutoReviseTrigger
+   */
+  omit?: Prisma.AgentAutoReviseTriggerOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AgentAutoReviseTriggerInclude<ExtArgs> | null
+  where?: Prisma.AgentAutoReviseTriggerWhereInput
+  orderBy?: Prisma.AgentAutoReviseTriggerOrderByWithRelationInput | Prisma.AgentAutoReviseTriggerOrderByWithRelationInput[]
+  cursor?: Prisma.AgentAutoReviseTriggerWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AgentAutoReviseTriggerScalarFieldEnum | Prisma.AgentAutoReviseTriggerScalarFieldEnum[]
 }
 
 /**

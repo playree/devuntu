@@ -55,6 +55,7 @@ export const ModelName = {
   McpToken: 'McpToken',
   AgentRunner: 'AgentRunner',
   AgentRun: 'AgentRun',
+  AgentAutoReviseTrigger: 'AgentAutoReviseTrigger',
   AgentUsage: 'AgentUsage',
   AgentApprover: 'AgentApprover',
   AgentApproverGroup: 'AgentApproverGroup',
@@ -194,6 +195,29 @@ export const AgentRunScalarFieldEnum = {
 export type AgentRunScalarFieldEnum = (typeof AgentRunScalarFieldEnum)[keyof typeof AgentRunScalarFieldEnum]
 
 
+export const AgentAutoReviseTriggerScalarFieldEnum = {
+  id: 'id',
+  ticketId: 'ticketId',
+  source: 'source',
+  provider: 'provider',
+  baseUrl: 'baseUrl',
+  repo: 'repo',
+  number: 'number',
+  url: 'url',
+  checks: 'checks',
+  body: 'body',
+  author: 'author',
+  reviewState: 'reviewState',
+  dedupeKey: 'dedupeKey',
+  runId: 'runId',
+  consumed: 'consumed',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AgentAutoReviseTriggerScalarFieldEnum = (typeof AgentAutoReviseTriggerScalarFieldEnum)[keyof typeof AgentAutoReviseTriggerScalarFieldEnum]
+
+
 export const AgentUsageScalarFieldEnum = {
   id: 'id',
   runnerId: 'runnerId',
@@ -330,6 +354,8 @@ export const BoardScalarFieldEnum = {
   archived: 'archived',
   completeOnGithubMerge: 'completeOnGithubMerge',
   completeOnGitlabMerge: 'completeOnGitlabMerge',
+  agentAutoRevise: 'agentAutoRevise',
+  agentAutoReviseLimit: 'agentAutoReviseLimit',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -842,6 +868,7 @@ export const TicketScalarFieldEnum = {
   mentionedUserIds: 'mentionedUserIds',
   agentMode: 'agentMode',
   agentState: 'agentState',
+  agentAutoReviseCount: 'agentAutoReviseCount',
   childAdvance: 'childAdvance'
 } as const
 

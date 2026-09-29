@@ -7,6 +7,7 @@
  */
 
 import { activeWindowLabel, evaluateRunnerActivity } from '@/lib/agent/agent-activity'
+import { listRunAutoRevise } from '@/lib/agent/agent-auto-revise'
 import { findLatestAgentDecision } from '@/lib/agent/agent-decision'
 import { postChildProposal } from '@/lib/agent/agent-proposal'
 import { finishAgentTask } from '@/lib/agent/agent-run'
@@ -53,6 +54,10 @@ vi.mock('@/lib/board/ticket-criterion', () => ({
 
 vi.mock('@/lib/agent/agent-decision', () => ({
   findLatestAgentDecision: vi.fn(),
+}))
+
+vi.mock('@/lib/agent/agent-auto-revise', () => ({
+  listRunAutoRevise: vi.fn(async () => []),
 }))
 
 vi.mock('@/lib/agent/agent-proposal', () => ({
@@ -216,6 +221,36 @@ describe('get_agent_task', () => {
       acceptanceCriteria: [{ id: 'c1', text: '条件1' }],
       decision: { kind: 'rejected', commentId: 'm1', content: '理由' },
     })
+  })
+
+  it('revise では、この実行が引き受けた自動差し戻しのきっかけを渡す', async () => {
+    const task = {
+      ticketId: 't1',
+      displayId: 'ABC-42',
+      title: 'テスト',
+      mode: 'auto',
+      action: 'revise',
+      state: 'running',
+    }
+    vi.mocked(resolveAgentTask).mockResolvedValue(task as never)
+    vi.mocked(resolveTicketId).mockResolvedValue('t1')
+    const autoRevise = [
+      {
+        source: 'ci' as const,
+        pullRequest: { provider: 'github' as const, repo: 'owner/repo', number: 12 },
+        url: 'https://github.com/owner/repo/pull/12',
+        checks: ['test'],
+        review: null,
+      },
+    ]
+    vi.mocked(listRunAutoRevise).mockResolvedValue(autoRevise)
+
+    const result = await (
+      await connectDevuntuMcp(agentAuth)
+    ).callTool({ name: 'get_agent_task', arguments: { ticketId: 'ABC-42' } })
+
+    expect(listRunAutoRevise).toHaveBeenCalledWith(runnerRow.id, 't1')
+    expect(parseResult(result.content).task).toMatchObject({ autoRevise })
   })
 
   it('処理対象でないチケットを指定した場合は task が null になる', async () => {

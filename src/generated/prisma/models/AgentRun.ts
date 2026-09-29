@@ -322,6 +322,7 @@ export type AgentRunWhereInput = {
   measuredAt?: Prisma.DateTimeNullableFilter<"AgentRun"> | Date | string | null
   runner?: Prisma.XOR<Prisma.AgentRunnerScalarRelationFilter, Prisma.AgentRunnerWhereInput>
   ticket?: Prisma.XOR<Prisma.TicketNullableScalarRelationFilter, Prisma.TicketWhereInput> | null
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerListRelationFilter
 }
 
 export type AgentRunOrderByWithRelationInput = {
@@ -343,6 +344,7 @@ export type AgentRunOrderByWithRelationInput = {
   measuredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   runner?: Prisma.AgentRunnerOrderByWithRelationInput
   ticket?: Prisma.TicketOrderByWithRelationInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerOrderByRelationAggregateInput
 }
 
 export type AgentRunWhereUniqueInput = Prisma.AtLeast<{
@@ -367,6 +369,7 @@ export type AgentRunWhereUniqueInput = Prisma.AtLeast<{
   measuredAt?: Prisma.DateTimeNullableFilter<"AgentRun"> | Date | string | null
   runner?: Prisma.XOR<Prisma.AgentRunnerScalarRelationFilter, Prisma.AgentRunnerWhereInput>
   ticket?: Prisma.XOR<Prisma.TicketNullableScalarRelationFilter, Prisma.TicketWhereInput> | null
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerListRelationFilter
 }, "id">
 
 export type AgentRunOrderByWithAggregationInput = {
@@ -432,6 +435,7 @@ export type AgentRunCreateInput = {
   measuredAt?: Date | string | null
   runner: Prisma.AgentRunnerCreateNestedOneWithoutRunsInput
   ticket?: Prisma.TicketCreateNestedOneWithoutAgentRunsInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerCreateNestedManyWithoutRunInput
 }
 
 export type AgentRunUncheckedCreateInput = {
@@ -451,6 +455,7 @@ export type AgentRunUncheckedCreateInput = {
   costUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   exitCode?: number | null
   measuredAt?: Date | string | null
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedCreateNestedManyWithoutRunInput
 }
 
 export type AgentRunUpdateInput = {
@@ -470,6 +475,7 @@ export type AgentRunUpdateInput = {
   measuredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   runner?: Prisma.AgentRunnerUpdateOneRequiredWithoutRunsNestedInput
   ticket?: Prisma.TicketUpdateOneWithoutAgentRunsNestedInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUpdateManyWithoutRunNestedInput
 }
 
 export type AgentRunUncheckedUpdateInput = {
@@ -489,6 +495,7 @@ export type AgentRunUncheckedUpdateInput = {
   costUsd?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   exitCode?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   measuredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedUpdateManyWithoutRunNestedInput
 }
 
 export type AgentRunCreateManyInput = {
@@ -629,6 +636,11 @@ export type AgentRunSumOrderByAggregateInput = {
   exitCode?: Prisma.SortOrder
 }
 
+export type AgentRunNullableScalarRelationFilter = {
+  is?: Prisma.AgentRunWhereInput | null
+  isNot?: Prisma.AgentRunWhereInput | null
+}
+
 export type AgentRunCreateNestedManyWithoutRunnerInput = {
   create?: Prisma.XOR<Prisma.AgentRunCreateWithoutRunnerInput, Prisma.AgentRunUncheckedCreateWithoutRunnerInput> | Prisma.AgentRunCreateWithoutRunnerInput[] | Prisma.AgentRunUncheckedCreateWithoutRunnerInput[]
   connectOrCreate?: Prisma.AgentRunCreateOrConnectWithoutRunnerInput | Prisma.AgentRunCreateOrConnectWithoutRunnerInput[]
@@ -685,6 +697,22 @@ export type NullableDecimalFieldUpdateOperationsInput = {
   decrement?: runtime.Decimal | runtime.DecimalJsLike | number | string
   multiply?: runtime.Decimal | runtime.DecimalJsLike | number | string
   divide?: runtime.Decimal | runtime.DecimalJsLike | number | string
+}
+
+export type AgentRunCreateNestedOneWithoutAutoReviseTriggersInput = {
+  create?: Prisma.XOR<Prisma.AgentRunCreateWithoutAutoReviseTriggersInput, Prisma.AgentRunUncheckedCreateWithoutAutoReviseTriggersInput>
+  connectOrCreate?: Prisma.AgentRunCreateOrConnectWithoutAutoReviseTriggersInput
+  connect?: Prisma.AgentRunWhereUniqueInput
+}
+
+export type AgentRunUpdateOneWithoutAutoReviseTriggersNestedInput = {
+  create?: Prisma.XOR<Prisma.AgentRunCreateWithoutAutoReviseTriggersInput, Prisma.AgentRunUncheckedCreateWithoutAutoReviseTriggersInput>
+  connectOrCreate?: Prisma.AgentRunCreateOrConnectWithoutAutoReviseTriggersInput
+  upsert?: Prisma.AgentRunUpsertWithoutAutoReviseTriggersInput
+  disconnect?: Prisma.AgentRunWhereInput | boolean
+  delete?: Prisma.AgentRunWhereInput | boolean
+  connect?: Prisma.AgentRunWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.AgentRunUpdateToOneWithWhereWithoutAutoReviseTriggersInput, Prisma.AgentRunUpdateWithoutAutoReviseTriggersInput>, Prisma.AgentRunUncheckedUpdateWithoutAutoReviseTriggersInput>
 }
 
 export type AgentRunCreateNestedManyWithoutTicketInput = {
@@ -745,6 +773,7 @@ export type AgentRunCreateWithoutRunnerInput = {
   exitCode?: number | null
   measuredAt?: Date | string | null
   ticket?: Prisma.TicketCreateNestedOneWithoutAgentRunsInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerCreateNestedManyWithoutRunInput
 }
 
 export type AgentRunUncheckedCreateWithoutRunnerInput = {
@@ -763,6 +792,7 @@ export type AgentRunUncheckedCreateWithoutRunnerInput = {
   costUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   exitCode?: number | null
   measuredAt?: Date | string | null
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedCreateNestedManyWithoutRunInput
 }
 
 export type AgentRunCreateOrConnectWithoutRunnerInput = {
@@ -813,6 +843,98 @@ export type AgentRunScalarWhereInput = {
   measuredAt?: Prisma.DateTimeNullableFilter<"AgentRun"> | Date | string | null
 }
 
+export type AgentRunCreateWithoutAutoReviseTriggersInput = {
+  id?: string
+  ticketRef?: string | null
+  action: $Enums.AgentRunAction
+  status?: $Enums.AgentRunStatus
+  summary?: string | null
+  startedAt?: Date | string
+  finishedAt?: Date | string | null
+  model?: string | null
+  inputTokens?: number | null
+  cachedInputTokens?: number | null
+  outputTokens?: number | null
+  costUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  exitCode?: number | null
+  measuredAt?: Date | string | null
+  runner: Prisma.AgentRunnerCreateNestedOneWithoutRunsInput
+  ticket?: Prisma.TicketCreateNestedOneWithoutAgentRunsInput
+}
+
+export type AgentRunUncheckedCreateWithoutAutoReviseTriggersInput = {
+  id?: string
+  runnerId: string
+  ticketId?: string | null
+  ticketRef?: string | null
+  action: $Enums.AgentRunAction
+  status?: $Enums.AgentRunStatus
+  summary?: string | null
+  startedAt?: Date | string
+  finishedAt?: Date | string | null
+  model?: string | null
+  inputTokens?: number | null
+  cachedInputTokens?: number | null
+  outputTokens?: number | null
+  costUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  exitCode?: number | null
+  measuredAt?: Date | string | null
+}
+
+export type AgentRunCreateOrConnectWithoutAutoReviseTriggersInput = {
+  where: Prisma.AgentRunWhereUniqueInput
+  create: Prisma.XOR<Prisma.AgentRunCreateWithoutAutoReviseTriggersInput, Prisma.AgentRunUncheckedCreateWithoutAutoReviseTriggersInput>
+}
+
+export type AgentRunUpsertWithoutAutoReviseTriggersInput = {
+  update: Prisma.XOR<Prisma.AgentRunUpdateWithoutAutoReviseTriggersInput, Prisma.AgentRunUncheckedUpdateWithoutAutoReviseTriggersInput>
+  create: Prisma.XOR<Prisma.AgentRunCreateWithoutAutoReviseTriggersInput, Prisma.AgentRunUncheckedCreateWithoutAutoReviseTriggersInput>
+  where?: Prisma.AgentRunWhereInput
+}
+
+export type AgentRunUpdateToOneWithWhereWithoutAutoReviseTriggersInput = {
+  where?: Prisma.AgentRunWhereInput
+  data: Prisma.XOR<Prisma.AgentRunUpdateWithoutAutoReviseTriggersInput, Prisma.AgentRunUncheckedUpdateWithoutAutoReviseTriggersInput>
+}
+
+export type AgentRunUpdateWithoutAutoReviseTriggersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketRef?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  action?: Prisma.EnumAgentRunActionFieldUpdateOperationsInput | $Enums.AgentRunAction
+  status?: Prisma.EnumAgentRunStatusFieldUpdateOperationsInput | $Enums.AgentRunStatus
+  summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  inputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  cachedInputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  outputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  costUsd?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  exitCode?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  measuredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  runner?: Prisma.AgentRunnerUpdateOneRequiredWithoutRunsNestedInput
+  ticket?: Prisma.TicketUpdateOneWithoutAgentRunsNestedInput
+}
+
+export type AgentRunUncheckedUpdateWithoutAutoReviseTriggersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  runnerId?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ticketRef?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  action?: Prisma.EnumAgentRunActionFieldUpdateOperationsInput | $Enums.AgentRunAction
+  status?: Prisma.EnumAgentRunStatusFieldUpdateOperationsInput | $Enums.AgentRunStatus
+  summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  inputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  cachedInputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  outputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  costUsd?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  exitCode?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  measuredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+}
+
 export type AgentRunCreateWithoutTicketInput = {
   id?: string
   ticketRef?: string | null
@@ -829,6 +951,7 @@ export type AgentRunCreateWithoutTicketInput = {
   exitCode?: number | null
   measuredAt?: Date | string | null
   runner: Prisma.AgentRunnerCreateNestedOneWithoutRunsInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerCreateNestedManyWithoutRunInput
 }
 
 export type AgentRunUncheckedCreateWithoutTicketInput = {
@@ -847,6 +970,7 @@ export type AgentRunUncheckedCreateWithoutTicketInput = {
   costUsd?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   exitCode?: number | null
   measuredAt?: Date | string | null
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedCreateNestedManyWithoutRunInput
 }
 
 export type AgentRunCreateOrConnectWithoutTicketInput = {
@@ -909,6 +1033,7 @@ export type AgentRunUpdateWithoutRunnerInput = {
   exitCode?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   measuredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   ticket?: Prisma.TicketUpdateOneWithoutAgentRunsNestedInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUpdateManyWithoutRunNestedInput
 }
 
 export type AgentRunUncheckedUpdateWithoutRunnerInput = {
@@ -927,6 +1052,7 @@ export type AgentRunUncheckedUpdateWithoutRunnerInput = {
   costUsd?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   exitCode?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   measuredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedUpdateManyWithoutRunNestedInput
 }
 
 export type AgentRunUncheckedUpdateManyWithoutRunnerInput = {
@@ -981,6 +1107,7 @@ export type AgentRunUpdateWithoutTicketInput = {
   exitCode?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   measuredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   runner?: Prisma.AgentRunnerUpdateOneRequiredWithoutRunsNestedInput
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUpdateManyWithoutRunNestedInput
 }
 
 export type AgentRunUncheckedUpdateWithoutTicketInput = {
@@ -999,6 +1126,7 @@ export type AgentRunUncheckedUpdateWithoutTicketInput = {
   costUsd?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   exitCode?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   measuredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  autoReviseTriggers?: Prisma.AgentAutoReviseTriggerUncheckedUpdateManyWithoutRunNestedInput
 }
 
 export type AgentRunUncheckedUpdateManyWithoutTicketInput = {
@@ -1020,6 +1148,35 @@ export type AgentRunUncheckedUpdateManyWithoutTicketInput = {
 }
 
 
+/**
+ * Count Type AgentRunCountOutputType
+ */
+
+export type AgentRunCountOutputType = {
+  autoReviseTriggers: number
+}
+
+export type AgentRunCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  autoReviseTriggers?: boolean | AgentRunCountOutputTypeCountAutoReviseTriggersArgs
+}
+
+/**
+ * AgentRunCountOutputType without action
+ */
+export type AgentRunCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AgentRunCountOutputType
+   */
+  select?: Prisma.AgentRunCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * AgentRunCountOutputType without action
+ */
+export type AgentRunCountOutputTypeCountAutoReviseTriggersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AgentAutoReviseTriggerWhereInput
+}
+
 
 export type AgentRunSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1040,6 +1197,8 @@ export type AgentRunSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   measuredAt?: boolean
   runner?: boolean | Prisma.AgentRunnerDefaultArgs<ExtArgs>
   ticket?: boolean | Prisma.AgentRun$ticketArgs<ExtArgs>
+  autoReviseTriggers?: boolean | Prisma.AgentRun$autoReviseTriggersArgs<ExtArgs>
+  _count?: boolean | Prisma.AgentRunCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["agentRun"]>
 
 export type AgentRunSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1107,6 +1266,8 @@ export type AgentRunOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs =
 export type AgentRunInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   runner?: boolean | Prisma.AgentRunnerDefaultArgs<ExtArgs>
   ticket?: boolean | Prisma.AgentRun$ticketArgs<ExtArgs>
+  autoReviseTriggers?: boolean | Prisma.AgentRun$autoReviseTriggersArgs<ExtArgs>
+  _count?: boolean | Prisma.AgentRunCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type AgentRunIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   runner?: boolean | Prisma.AgentRunnerDefaultArgs<ExtArgs>
@@ -1122,6 +1283,10 @@ export type $AgentRunPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
   objects: {
     runner: Prisma.$AgentRunnerPayload<ExtArgs>
     ticket: Prisma.$TicketPayload<ExtArgs> | null
+    /**
+     * この実行の開始時に引き受けた自動差し戻しのきっかけ
+     */
+    autoReviseTriggers: Prisma.$AgentAutoReviseTriggerPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1581,6 +1746,7 @@ export interface Prisma__AgentRunClient<T, Null = never, ExtArgs extends runtime
   readonly [Symbol.toStringTag]: "PrismaPromise"
   runner<T extends Prisma.AgentRunnerDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.AgentRunnerDefaultArgs<ExtArgs>>): Prisma.Prisma__AgentRunnerClient<runtime.Types.Result.GetResult<Prisma.$AgentRunnerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   ticket<T extends Prisma.AgentRun$ticketArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.AgentRun$ticketArgs<ExtArgs>>): Prisma.Prisma__TicketClient<runtime.Types.Result.GetResult<Prisma.$TicketPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  autoReviseTriggers<T extends Prisma.AgentRun$autoReviseTriggersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.AgentRun$autoReviseTriggersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AgentAutoReviseTriggerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2043,6 +2209,30 @@ export type AgentRun$ticketArgs<ExtArgs extends runtime.Types.Extensions.Interna
    */
   include?: Prisma.TicketInclude<ExtArgs> | null
   where?: Prisma.TicketWhereInput
+}
+
+/**
+ * AgentRun.autoReviseTriggers
+ */
+export type AgentRun$autoReviseTriggersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AgentAutoReviseTrigger
+   */
+  select?: Prisma.AgentAutoReviseTriggerSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AgentAutoReviseTrigger
+   */
+  omit?: Prisma.AgentAutoReviseTriggerOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AgentAutoReviseTriggerInclude<ExtArgs> | null
+  where?: Prisma.AgentAutoReviseTriggerWhereInput
+  orderBy?: Prisma.AgentAutoReviseTriggerOrderByWithRelationInput | Prisma.AgentAutoReviseTriggerOrderByWithRelationInput[]
+  cursor?: Prisma.AgentAutoReviseTriggerWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AgentAutoReviseTriggerScalarFieldEnum | Prisma.AgentAutoReviseTriggerScalarFieldEnum[]
 }
 
 /**

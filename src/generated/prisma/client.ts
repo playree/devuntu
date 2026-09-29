@@ -67,6 +67,12 @@ export type AgentRunner = Prisma.AgentRunnerModel
  */
 export type AgentRun = Prisma.AgentRunModel
 /**
+ * Model AgentAutoReviseTrigger
+ * Webhook で受けた、エージェントへの自動差し戻しのきっかけ(src/lib/agent/agent-auto-revise.ts)。
+ * 実行の開始時に runId を埋めて引き受け、その実行の get_agent_task で task.autoRevise として渡す。
+ */
+export type AgentAutoReviseTrigger = Prisma.AgentAutoReviseTriggerModel
+/**
  * Model AgentUsage
  * エージェントの月ごとの利用量(ボード別)。予算上限の判定と、コストの集計表示に使う。
  * 実行履歴(AgentRun)は保持期間と件数で消えるので、月の集計はここへ積み上げて自動メンテナンスの対象にしない。

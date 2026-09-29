@@ -7,6 +7,7 @@
  * Server Action はセッションが要るため、Web 側は Action と同じ引数で共通関数を呼んで代用する。
  */
 
+import { discardAutoReviseTriggers } from '@/lib/agent/agent-auto-revise'
 import {
   assertBoardAccess,
   assertTicketAccess,
@@ -97,6 +98,8 @@ vi.mock('@/lib/board/ticket-criterion', () => ({
   listTicketCriteria: vi.fn(),
   syncTicketCriteria: vi.fn(),
 }))
+
+vi.mock('@/lib/agent/agent-auto-revise', () => ({ discardAutoReviseTriggers: vi.fn() }))
 
 vi.mock('@/lib/mcp/mcp-board', () => ({ resolveBoardId: vi.fn(async (id: string) => id) }))
 
@@ -377,7 +380,9 @@ describe.each(routes)('updateTicket: %s', (_label, route) => {
   ])('担当をエージェントから%sへ付け替えると agentMode / agentState を消す', async (_to, assigneeId) => {
     await route.update(TICKET_ID, { assigneeId })
 
-    expect(ticketUpdateData()).toMatchObject({ assigneeId, agentMode: null, agentState: null })
+    expect(ticketUpdateData()).toMatchObject({ assigneeId, agentMode: null, agentState: null, agentAutoReviseCount: 0 })
+    // 前の担当へ届いていた自動差し戻しのきっかけは捨てる
+    expect(discardAutoReviseTriggers).toHaveBeenCalledWith(fakeTx, TICKET_ID)
   })
 
   it('同じ担当を指定し直しただけなら agentMode / agentState は触らない', async () => {

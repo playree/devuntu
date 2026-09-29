@@ -10,11 +10,13 @@
  */
 
 import { z } from 'zod'
+import { requestAutoRevise } from '../agent/agent-auto-revise'
 import { nowDate } from '../day'
 import {
   autoLinkPullRequest,
   type GitLinkedBoard,
   type GitRepoKey,
+  reviseOnCheckFailure,
   saveCheckSuite,
   syncPullRequest,
 } from '../git/git-webhook'
@@ -75,9 +77,31 @@ const scPipelineEvent = z.object({
     finished_at: zTime,
   }),
   builds: z
-    .array(z.object({ created_at: zTime, started_at: zTime, finished_at: zTime }))
+    .array(
+      z.object({
+        name: z.string().nullish(),
+        status: z.string().nullish(),
+        created_at: zTime,
+        started_at: zTime,
+        finished_at: zTime,
+      }),
+    )
     .nullish()
     .transform((builds) => builds ?? []),
+})
+
+const scNoteEvent = z.object({
+  project: scProject,
+  user: z.object({ username: z.string() }).nullish(),
+  object_attributes: z.object({
+    id: z.number().int(),
+    note: z.string(),
+    noteable_type: z.string(),
+    system: z.boolean().nullish(),
+    author_id: z.number().int().nullish(),
+    url: z.string().nullish(),
+  }),
+  merge_request: z.object({ iid: z.number().int().positive(), author_id: z.number().int().nullish() }).nullish(),
 })
 
 /** 対応付けたプロジェクトのイベントか。違えば Webhook の登録先を取り違えている */
@@ -151,9 +175,48 @@ const handlePipeline = async (body: unknown, target: GitlabWebhookTarget) => {
     .filter((time): time is Date => time !== null)
   const syncedAt = times.length > 0 ? new Date(Math.max(...times.map((time) => time.getTime()))) : nowDate()
 
+  const headSha = pipeline.sha.toLowerCase()
+  const checkStatus = pipelineCheckStatusOf(pipeline.status)
   await saveCheckSuite(
     { ...repoKey(target), suiteId: String(pipeline.id), repositoryId: target.id },
-    { headSha: pipeline.sha.toLowerCase(), appName: 'GitLab CI', ...pipelineCheckStatusOf(pipeline.status), syncedAt },
+    { headSha, appName: 'GitLab CI', ...checkStatus, syncedAt },
+  )
+  await reviseOnCheckFailure({
+    key: repoKey(target),
+    boards: [target.board],
+    suiteId: String(pipeline.id),
+    headSha,
+    conclusion: checkStatus.conclusion,
+    checks: builds.flatMap(({ name, status }) => (status === 'failed' && name ? [name] : [])),
+  })
+}
+
+/**
+ * MR へのコメント(レビューのスレッドを含む)を差し戻しのきっかけにする。
+ * システムノート(push やラベル変更の記録)と、MR の作成者自身のコメントは除く。
+ */
+const handleNote = async (body: unknown, target: GitlabWebhookTarget) => {
+  const parsed = scNoteEvent.safeParse(body)
+  if (!parsed.success) {
+    logger.warn({ issues: parsed.error.issues }, 'gitlab note payload invalid')
+    return
+  }
+  const { project, user, object_attributes: note, merge_request: mr } = parsed.data
+  if (note.noteable_type !== 'MergeRequest' || !mr || note.system || !isTargetProject(target, project)) {
+    return
+  }
+  if (note.author_id != null && note.author_id === mr.author_id) {
+    return
+  }
+  await requestAutoRevise(
+    { key: repoKey(target), boards: [target.board], pullRequest: { number: mr.iid } },
+    {
+      source: 'review',
+      dedupeKey: `review:${note.id}`,
+      body: note.note,
+      author: user?.username ?? null,
+      url: note.url,
+    },
   )
 }
 
@@ -161,6 +224,7 @@ const handlePipeline = async (body: unknown, target: GitlabWebhookTarget) => {
 const HANDLERS = new Map<string, (body: unknown, target: GitlabWebhookTarget) => Promise<void>>([
   ['Merge Request Hook', handleMergeRequest],
   ['Pipeline Hook', handlePipeline],
+  ['Note Hook', handleNote],
 ])
 
 export const handleGitlabEvent = async (event: string, body: unknown, target: GitlabWebhookTarget): Promise<void> => {

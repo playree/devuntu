@@ -32,6 +32,9 @@ export const ja: DefaultLocaleItems = {
   agent_action_revise: 'プラン修正',
   agent_approver: '承認者',
   agent_approver_group: '承認グループ',
+  agent_auto_revise: 'CI失敗・レビュー指摘でエージェントへ自動差し戻しする',
+  agent_auto_revise_count: '自動差し戻し',
+  agent_auto_revise_limit: '1チケットあたりの上限回数',
   agent_cost: 'コスト',
   agent_custom_instruction: 'カスタム指示',
   agent_daily_limit: '1日の処理上限',
@@ -98,6 +101,7 @@ export const ja: DefaultLocaleItems = {
   avatar: 'アバター',
   back: '戻る',
   board: 'ボード',
+  board_agent_auto_revise: 'エージェントの自動差し戻し',
   board_deleted: '削除済みのボード',
   board_github: 'GitHub連携',
   board_gitlab: 'GitLab連携',
@@ -575,6 +579,10 @@ export const ja: DefaultLocaleItems = {
     'メールアドレスは識別子から自動生成され、後から変更できません。このアドレスにメールは届きません。',
   msg_agent_mode_desc:
     'エージェントに任せる方式を選びます。プラン先行はプランを投稿して返信を待ち、自動実行はそのまま対応して報告します。変更できるのはこのエージェントの承認者だけです。',
+  msg_agent_auto_revise_desc:
+    '紐付いたPR / MRのCIが失敗したとき、またはレビュー・コメント(CodeRabbitなどを含む)が付いたときに、報告済みのエージェント担当チケットを revise として処理し直させます。最後の指摘から2分待ってまとめて渡し、上限回数に達したらそれ以上は差し戻しません。GitHub / GitLab連携のWebhookが必要です。',
+  msg_agent_auto_revise_webhook:
+    'Webhookのイベントに、GitHubは Pull request reviews、GitLabは Comments も追加してください。',
   msg_agent_custom_instruction_desc:
     'エージェントが作業前に読み、処理全体を通じて従う指示(Markdown)です。空欄は指示なしとして扱われます。',
   msg_agent_no_approver: '承認者が未設定です。このエージェントのチケットは誰もエージェントモードを変更できません。',

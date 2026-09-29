@@ -4,6 +4,7 @@
 
 import { el } from '@/locale'
 import { z } from 'zod'
+import { AUTO_REVISE_LIMIT_MAX, AUTO_REVISE_LIMIT_MIN } from '../agent/agent'
 import { BOARD_KEY_PATTERN, isReservedBoardKey, MAX_BOARD_KEY } from '../board/ticket-id'
 import { GIT_WEBHOOK_AUTHS } from '../git/git'
 import { normalizeGithubRepo } from '../github/github'
@@ -170,4 +171,10 @@ export const scSetBoardCompleteOnPrMerge = z.object({
   id: z.uuidv7(),
   provider: z.enum(['github', 'gitlab']),
   completeOnMerge: z.boolean(),
+})
+
+export const scSetBoardAgentAutoRevise = z.object({
+  id: z.uuidv7(),
+  enabled: z.boolean(),
+  limit: z.number().int().min(AUTO_REVISE_LIMIT_MIN).max(AUTO_REVISE_LIMIT_MAX),
 })

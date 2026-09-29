@@ -59,7 +59,7 @@ export const getTicket = safeAuthAction
         id: true,
         number: true,
         boardId: true,
-        board: { select: { name: true, kind: true, key: true } },
+        board: { select: { name: true, kind: true, key: true, agentAutoRevise: true, agentAutoReviseLimit: true } },
         title: true,
         content: true,
         mentionedUserIds: true,
@@ -76,6 +76,7 @@ export const getTicket = safeAuthAction
         createdBy: { select: { name: true } },
         agentMode: true,
         agentState: true,
+        agentAutoReviseCount: true,
         childAdvance: true,
         createdAt: true,
         updatedAt: true,
@@ -132,7 +133,7 @@ export const getTicket = safeAuthAction
       findWaitingTicketIds(access.boardRole ? [id] : []),
     ])
 
-    const { board, assignee, createdBy, comments, tags, mentionedUserIds, ...rest } = ticket
+    const { board, assignee, createdBy, comments, tags, mentionedUserIds, agentAutoReviseCount, ...rest } = ticket
     const displayId = ticketDisplayId({ key: board.key, number: rest.number })
     return {
       ...rest,
@@ -150,6 +151,8 @@ export const getTicket = safeAuthAction
       assigneeName: assignee?.name ?? '',
       /** 担当がエージェントのときだけ、処理方式(`agentMode`)を選べるようにする */
       assigneeIsAgent: assignee?.isAgent ?? false,
+      /** CI の失敗・レビュー指摘による自動差し戻しの回数と上限。ボードで無効なら null */
+      autoRevise: board.agentAutoRevise ? { count: agentAutoReviseCount, limit: board.agentAutoReviseLimit } : null,
       createdByName: createdBy?.name ?? '',
       // スレッドは 1 階層のみなので、親コメントに自分宛の返信だけをぶら下げれば表示側は再帰不要
       comments: (() => {
