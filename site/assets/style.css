@@ -49,10 +49,26 @@ a {
 }
 
 .hero {
+  position: relative;
   padding: 64px 0 48px;
   text-align: center;
   background: var(--bg-muted);
   border-bottom: 1px solid var(--border);
+}
+
+.lang-switch {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 8px;
+  color: var(--fg-muted);
+  font-size: 0.9rem;
+}
+
+.lang-switch [aria-current='page'] {
+  color: var(--fg);
+  font-weight: 600;
 }
 
 /* ロゴの文字色は紺なので、ダークモードでも読めるよう白地に載せる */
@@ -76,14 +92,9 @@ a {
   font-size: 1.05rem;
 }
 
-.lead-en,
 .note {
   color: var(--fg-muted);
   font-size: 0.9rem;
-}
-
-.lead-en {
-  margin: 0 auto;
 }
 
 .actions {

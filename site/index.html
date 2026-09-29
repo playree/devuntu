@@ -9,6 +9,9 @@
       content="Devuntu は、かんばん形式のボード/チケット管理を中心に、カレンダー連携、メール/Slack/Webプッシュ通知、MCP/AIエージェント連携、リモート実行などを備えたセルフホスト型の開発サーバー構築ツールです。"
     />
     <link rel="canonical" href="https://playree.github.io/devuntu/" />
+    <link rel="alternate" hreflang="ja" href="https://playree.github.io/devuntu/" />
+    <link rel="alternate" hreflang="en" href="https://playree.github.io/devuntu/en/" />
+    <link rel="alternate" hreflang="x-default" href="https://playree.github.io/devuntu/" />
     <link rel="icon" type="image/png" href="assets/icon-192.png" />
     <link rel="apple-touch-icon" href="assets/icon-192.png" />
     <meta property="og:type" content="website" />
@@ -24,15 +27,17 @@
   </head>
   <body>
     <header class="hero">
+      <nav class="lang-switch" aria-label="Language">
+        <a href="en/" hreflang="en" lang="en">English</a>
+        <span aria-hidden="true">|</span>
+        <span aria-current="page">日本語</span>
+      </nav>
       <div class="container">
         <h1 class="logo">
           <img src="assets/logo.png" alt="Devuntu" width="340" height="128" />
         </h1>
         <p class="lead">
           かんばん形式のボード/チケット管理を中心に、カレンダー連携、メール/Slack/Webプッシュ通知、MCP/AIエージェント連携、リモート実行などを備えたセルフホスト型の開発サーバー構築ツール
-        </p>
-        <p class="lead-en" lang="en">
-          A self-hosted development server setup tool centered around Kanban-style board/ticket management.
         </p>
         <div class="actions">
           <a class="button primary" href="https://github.com/playree/devuntu">GitHub でソースを見る</a>
