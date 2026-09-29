@@ -14,6 +14,7 @@ import {
   linkRelatedTicketForMcp,
   linkTicketArtifactForMcp,
   MCP_ASSIGNEE_ME,
+  reportTicketCriteriaForMcp,
   searchTicketsForMcp,
   unlinkTicketArtifactForMcp,
   unlinkTicketRelationForMcp,
@@ -30,6 +31,7 @@ import {
   zCommentContent,
   zCommentType,
   zCriterionItems,
+  zCriterionReports,
   zCriterionText,
   zGitUrl,
   zRelatedTo,
@@ -240,7 +242,8 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     {
       title: 'Add comment',
       description:
-        'Adds a comment to a ticket. Post with type=plan once you have a plan and type=report when you finish; ' +
+        'Adds a comment to a ticket. Post with type=plan once you have a plan and type=report when you finish ' +
+        '(record acceptance criteria results with report_acceptance_criteria, not in the report); ' +
         'these are shown collapsed on the detail screen, distinct from regular comments. Reply to an existing comment with parentId (one level only)',
       inputSchema: {
         ticketId: z.string().min(1),
@@ -341,6 +344,25 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
 
   if (auth.kind === 'agent') {
     registerAgentTools(server, auth)
+  } else {
+    // エージェントは finish_agent_task の criteria で申告するので、人の経路にだけ出す
+    server.registerTool(
+      'report_acceptance_criteria',
+      {
+        title: 'Report acceptance criteria',
+        description:
+          'Records whether each acceptance criterion is met, with evidence, as a self-check shown on the ticket detail. ' +
+          'Call it when you finish working on a ticket that has acceptance criteria, instead of listing the results in the type=report comment. ' +
+          'Items not included keep their previous result',
+        inputSchema: {
+          ticketId: z.string().min(1),
+          criteria: zCriterionReports('id from acceptanceCriteria in get_ticket')
+            .min(1)
+            .describe('Self-check result for each acceptance criterion'),
+        },
+      },
+      async ({ ticketId, criteria }) => jsonResult(await reportTicketCriteriaForMcp(auth, ticketId, criteria)),
+    )
   }
 
   return server

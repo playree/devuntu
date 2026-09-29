@@ -151,8 +151,8 @@ AIエージェントは `devuntu-agent` を名乗るので、`claude mcp list` �
 
 `ping` から `get_agent_setup_guide` までは接続の種類(人間 / AIエージェント)を問わず登録される。
 人間の2経路(認可コードフロー / ユーザーの MCP トークン)は登録されるツールも権限も同じ。
-`get_agent_task` と `finish_agent_task` だけはエージェント用トークンで接続した場合のみ登録される
-(`src/lib/mcp/mcp-server.ts`)。
+`report_acceptance_criteria` は人間の経路でだけ、`get_agent_task` と `finish_agent_task` はエージェント用トークンで
+接続した場合だけ登録される(`src/lib/mcp/mcp-server.ts`)。
 
 ツールの title / description・入力の説明・サーバーの instructions・エラーメッセージなど、MCP 経由で返す文字列は
 英語に統一している(読むのは主に AI エージェントで、接続時に一度だけ渡すものなのでロケールでは切り替えない)。
@@ -190,6 +190,19 @@ AIエージェントは `devuntu-agent` を名乗るので、`claude mcp list` �
 - `link_ticket_artifact` / `unlink_ticket_artifact` — コメントの投稿と同じく、チケットを編集できれば使える
 - `link_related_ticket` / `unlink_ticket_relation` — `update_ticket` と同じ制限を受ける(関連は両端のチケット、親子は子のチケットで判定する)
 
+### 人間の経路専用のツール
+
+OAuth / ユーザーの MCP トークンで接続した場合だけ登録する。エージェントは受け入れ条件の結果を
+`finish_agent_task` の `criteria` で申告するので、一覧に出すと誤用のもとになる。
+
+| ツール                       | 用途                                                 | 入力                    |
+| ---------------------------- | ---------------------------------------------------- | ----------------------- |
+| `report_acceptance_criteria` | 受け入れ条件ごとの充足と根拠を自己申告として記録する | `ticketId` / `criteria` |
+
+- `update_ticket` と同じ制限を受ける。`criteria` の `id` は `get_ticket` の `acceptanceCriteria` から取り、
+  各項目の充足(`met`)と根拠(`evidence`)がチケット詳細に自己申告として表示される。報告しなかった項目は前回の申告のまま残り、
+  そのチケットに無い id を含む場合は何も記録せずエラーになる
+
 ### エージェント専用のツール
 
 自動運用(Devuntu Agent)で AIエージェント自身が「処理してよいか」「何をするか」を確かめ、結果を書き戻すための口
@@ -221,14 +234,16 @@ AIエージェントは `devuntu-agent` を名乗るので、`claude mcp list` �
 | `get_ticket` の応答の `workflow` | 手順の全文。チケットを編集できる人の経路のときだけ返す                                  | どのクライアントでも(Codex など)      |
 
 手順は、着手時に status を `doing` にする → 方針を `type=plan` で投稿 → 確認事項は通常コメント →
-ブランチ / PR / コミットを `link_ticket_artifact` で紐付け → 完了時に `type=report` で報告、の順。
+ブランチ / PR / コミットを `link_ticket_artifact` で紐付け → 完了時に受け入れ条件の結果を `report_acceptance_criteria` で記録 →
+`type=report` で報告、の順。
 あくまで既定値で、利用者の指示やプロジェクトのルール(CLAUDE.md / AGENTS.md など)があればそちらを優先させる。
 読むだけ・質問に答えるだけの依頼ではコメントもステータス変更もしない。
 
 チケットを作成・更新するときは、完了条件(Done の定義・確認項目)を本文(`content`)に書かず、
 検証できる1文ずつ受け入れ条件(`acceptanceCriteria`)に入れるよう伝える。これは人・エージェントの両方の経路の
 `instructions` と、`create_ticket` / `update_ticket` の description・`content` / `acceptanceCriteria` の入力説明に載せる。
-完了時の `type=report` には、各受け入れ条件を満たしたかも含めさせる。
+各受け入れ条件を満たしたかは `type=report` の本文に並べさせず、`report_acceptance_criteria` でチケットの自己申告として記録させる
+(`add_ticket_comment` の description にも添える)。
 
 エージェント用トークンの接続では、ステータス変更の手順を載せず `workflow` も返さない。
 自動運用の流れはランナーの指示と `get_agent_task` の rule が持つため([agent-runner.md](agent-runner.md))。

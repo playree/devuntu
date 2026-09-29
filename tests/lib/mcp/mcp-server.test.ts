@@ -15,6 +15,7 @@ import {
   getTicketForMcp,
   linkRelatedTicketForMcp,
   linkTicketArtifactForMcp,
+  reportTicketCriteriaForMcp,
   searchTicketsForMcp,
   unlinkTicketArtifactForMcp,
   unlinkTicketRelationForMcp,
@@ -44,6 +45,7 @@ vi.mock('@/lib/mcp/mcp-ticket', () => ({
   unlinkTicketArtifactForMcp: vi.fn(),
   linkRelatedTicketForMcp: vi.fn(),
   unlinkTicketRelationForMcp: vi.fn(),
+  reportTicketCriteriaForMcp: vi.fn(),
 }))
 
 const auth = fakeAuth.oauthAuth()
@@ -133,6 +135,15 @@ describe('createDevuntuMcpServer', () => {
         'link_ticket_artifact',
       ]),
     )
+  })
+
+  it('report_acceptance_criteria は人の経路にだけ出す(エージェントは finish_agent_task で申告する)', async () => {
+    for (const humanAuth of [auth, patAuth]) {
+      const { tools } = await (await connectDevuntuMcp(humanAuth)).listTools()
+      expect(tools.map((tool) => tool.name)).toContain('report_acceptance_criteria')
+    }
+    const { tools } = await (await connectDevuntuMcp(agentAuth)).listTools()
+    expect(tools.map((tool) => tool.name)).not.toContain('report_acceptance_criteria')
   })
 
   it('ping は認可済みユーザーの情報を返す', async () => {
@@ -471,5 +482,18 @@ describe('createDevuntuMcpServer', () => {
       arguments: { relationId: '0195c1e0-0000-7000-8000-000000000001' },
     })
     expect(unlinkTicketRelationForMcp).toHaveBeenCalledWith(auth, '0195c1e0-0000-7000-8000-000000000001')
+  })
+
+  it('report_acceptance_criteria は条件ごとの申告をそのまま渡す', async () => {
+    vi.mocked(reportTicketCriteriaForMcp).mockResolvedValueOnce({ acceptanceCriteria: [] })
+    const criteria = [{ id: '0195c1e0-0000-7000-8000-0000000000c1', met: true, evidence: 'checked by tests' }]
+
+    await (
+      await connectDevuntuMcp()
+    ).callTool({
+      name: 'report_acceptance_criteria',
+      arguments: { ticketId: 'ABC-1', criteria },
+    })
+    expect(reportTicketCriteriaForMcp).toHaveBeenCalledWith(auth, 'ABC-1', criteria)
   })
 })

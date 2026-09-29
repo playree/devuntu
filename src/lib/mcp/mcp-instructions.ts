@@ -16,7 +16,8 @@ export const TICKET_WORKFLOW = [
   'Once you have a plan: post it with add_ticket_comment using type=plan',
   'Questions for the user: post them as a regular comment without type',
   'After creating a branch / pull request / commit: link the URL with link_ticket_artifact (naming the branch feature/<display ID> links it automatically for repositories connected to the board)',
-  'When done: post a report with add_ticket_comment using type=report covering what you did, how you verified it, whether each acceptance criterion is met, and any remaining issues (attach screenshots via create_image_upload_token)',
+  'When done: if the ticket has acceptance criteria, record whether each one is met with evidence using report_acceptance_criteria (not in the report comment)',
+  'Then post a report with add_ticket_comment using type=report covering what you did, how you verified it, and any remaining issues (attach screenshots via create_image_upload_token)',
 ] as const
 
 /** 完了条件を本文に書かれると受け入れ条件が使われないため、置き場所を伝える(ツールの description にも載せる) */
