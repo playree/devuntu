@@ -56,11 +56,12 @@ const CriterionRow: FC<{ criterion: Criterion; canEdit: boolean; refresh: () => 
   }
 
   return (
-    <li className='space-y-1'>
+    <li className='dark:bg-default/40 space-y-1 rounded-lg bg-white px-2 py-1.5'>
       <div className='flex items-start gap-2'>
         <div className='min-w-0 grow'>
           <CheckboxField
             id={`criterion-${criterion.id}`}
+            variant='secondary' // 行の背景が白いので、同じ白の枠にならないようにする
             label={criterion.text}
             isSelected={criterion.checkedAt !== null}
             isDisabled={!canEdit || isSaving}
@@ -240,7 +241,7 @@ export const TicketCriteria: FC<{ ticket: Ticket; refresh: () => Promise<void> }
         {isEditing ? (
           <CriteriaEditor ticket={ticket} onClose={() => setEditing(false)} refresh={refresh} />
         ) : criteria.length > 0 ? (
-          <ul className='space-y-2'>
+          <ul className='space-y-1'>
             {criteria.map((criterion) => (
               <CriterionRow key={criterion.id} criterion={criterion} canEdit={canEdit} refresh={refresh} />
             ))}
