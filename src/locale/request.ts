@@ -8,10 +8,10 @@
 import { pickLocale } from '@/lib/locale-util'
 import { cookies, headers } from 'next/headers'
 import { localeConfig } from './config'
-import { defaultLocale } from './server'
+import { fallbackLocale } from './server'
 
 export const requestLocale = async (): Promise<string> => {
   const acceptLanguage = (await headers()).get('accept-language')
   const cookieLocale = (await cookies()).get(localeConfig.cookie.name)?.value ?? null
-  return pickLocale(localeConfig, defaultLocale, acceptLanguage, cookieLocale)
+  return pickLocale(localeConfig, fallbackLocale, acceptLanguage, cookieLocale)
 }

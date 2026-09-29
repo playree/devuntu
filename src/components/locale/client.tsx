@@ -18,20 +18,21 @@ const LocaleContext = createContext<LocaleContextType>({} as LocaleContextType)
 const useLocaleContext = (
   localeConfig: LocaleConfig,
   defaultLocale: string,
+  fallbackLocale: string,
   acceptLanguage: string | null,
   cookieLocale: string | null,
 ): LocaleContextType => {
-  const [locale, setLocale] = useState(() => pickLocale(localeConfig, defaultLocale, acceptLanguage, cookieLocale))
+  const [locale, setLocale] = useState(() => pickLocale(localeConfig, fallbackLocale, acceptLanguage, cookieLocale))
   const lcConfig = useMemo(() => localeConfig, [localeConfig])
 
   useEffect(() => {
     // proxy が同一レスポンスで発行した Cookie など、サーバー側で読めなかった指定を描画後に反映する
-    const current = pickLocale(lcConfig, defaultLocale, acceptLanguage, getCookie(lcConfig.cookie.name) ?? null)
+    const current = pickLocale(lcConfig, fallbackLocale, acceptLanguage, getCookie(lcConfig.cookie.name) ?? null)
     if (current !== locale) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setLocale(current)
     }
-  }, [acceptLanguage, defaultLocale, lcConfig, locale])
+  }, [acceptLanguage, fallbackLocale, lcConfig, locale])
 
   return {
     locale,
@@ -57,11 +58,13 @@ export const LocaleProvider: FC<{
   children: React.ReactNode
   config: LocaleConfig
   defaultLocale: string
+  /** ブラウザの言語がどのロケールにも一致しないときの表示ロケール */
+  fallbackLocale: string
   acceptLanguage: string | null
   /** サーバー側で読み取ったロケール Cookie。SSR の出力をクライアントの初期描画と揃えるために受け取る */
   cookieLocale: string | null
-}> = ({ children, config, defaultLocale, acceptLanguage, cookieLocale }) => {
-  const ctx = useLocaleContext(config, defaultLocale, acceptLanguage, cookieLocale)
+}> = ({ children, config, defaultLocale, fallbackLocale, acceptLanguage, cookieLocale }) => {
+  const ctx = useLocaleContext(config, defaultLocale, fallbackLocale, acceptLanguage, cookieLocale)
 
   return <LocaleContext.Provider value={ctx}>{children}</LocaleContext.Provider>
 }

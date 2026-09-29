@@ -1,5 +1,5 @@
 import { envu } from '@/lib/env-util'
-import { pickLocale } from '@/lib/locale-util'
+import { pickFallbackLocale, pickLocale } from '@/lib/locale-util'
 import { localeConfig } from '@/locale/config'
 import { cn } from '@heroui/react'
 import type { Metadata } from 'next'
@@ -40,10 +40,11 @@ export default async function RootLayout({
 }>) {
   const acceptLanguage = (await headers()).get('accept-language')
   const defaultLocale = envu.server.DEFAULT_LOCALE || localeConfig.locales[0]
+  const fallbackLocale = pickFallbackLocale(localeConfig, envu.server.DEFAULT_LOCALE)
   // LocaleProvider が SSR でもクライアントと同じロケールを選べるようにサーバー側で読んで渡す
   const cookieLocale = (await cookies()).get(localeConfig.cookie.name)?.value ?? null
   // <html lang> は LocaleProvider と同じ判定を通して、文書言語と表示ロケールを食い違わせない
-  const locale = pickLocale(localeConfig, defaultLocale, acceptLanguage, cookieLocale)
+  const locale = pickLocale(localeConfig, fallbackLocale, acceptLanguage, cookieLocale)
 
   return (
     <html lang={locale} className={cn(NotoSansJp.variable, RobotoMono.variable)} suppressHydrationWarning>
@@ -52,6 +53,7 @@ export default async function RootLayout({
         <Providers
           themeProps={{ attribute: 'class' }}
           defaultLocale={defaultLocale}
+          fallbackLocale={fallbackLocale}
           acceptLanguage={acceptLanguage}
           cookieLocale={cookieLocale}
           defaultTimezone={envu.server.DEFAULT_TIMEZONE}

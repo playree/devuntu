@@ -13,6 +13,8 @@ type LocaleLang = Record<string, LocaleKV>
 export type LocaleConfig = {
   locales: string[]
   resources: LocaleLang
+  /** ブラウザの言語がどのロケールにも一致しないときの表示ロケール(`DEFAULT_LOCALE` 未設定時) */
+  fallbackLocale: string
   cookie: {
     name: string
     maxAge: number
@@ -42,12 +44,13 @@ export const expandTemplate = (template: string, values?: LocaleValues): string 
 
 /**
  * 表示するロケールを決める。Cookie の指定が最優先で、無ければ Accept-Language から選ぶ。
+ * どちらにも一致しなければ fallbackLocale(`pickFallbackLocale` で決めたもの)を返す。
  *
  * 同じ入力ならサーバーとクライアントで同じ結果になるので、SSR の出力を初期描画と一致させられる。
  */
 export const pickLocale = (
   localeConfig: LocaleConfig,
-  defaultLocale: string,
+  fallbackLocale: string,
   acceptLanguage: string | null,
   cookieLocale: string | null,
 ) => {
@@ -55,7 +58,14 @@ export const pickLocale = (
     return cookieLocale
   }
 
-  return (
-    acceptLanguageParser.pick(localeConfig.locales, acceptLanguage ?? defaultLocale, { loose: true }) || defaultLocale
-  )
+  return acceptLanguageParser.pick(localeConfig.locales, acceptLanguage ?? '', { loose: true }) || fallbackLocale
 }
+
+/**
+ * `pickLocale` でブラウザの言語が一致しなかったときのロケール。
+ *
+ * `DEFAULT_LOCALE` を明示していればそれ(運用者が表示言語を固定できるように)、無ければ `fallbackLocale`。
+ * 翻訳の欠落やリクエスト外の通知に使う既定ロケール(未設定時は `locales[0]`)とは別に決める。
+ */
+export const pickFallbackLocale = (localeConfig: LocaleConfig, envDefaultLocale: string | undefined) =>
+  envDefaultLocale || localeConfig.fallbackLocale

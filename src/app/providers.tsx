@@ -17,6 +17,7 @@ export interface ProvidersProps {
   children: ReactNode
   themeProps?: ThemeProviderProps
   defaultLocale: string
+  fallbackLocale: string
   acceptLanguage: string | null
   cookieLocale: string | null
   defaultTimezone: string
@@ -71,6 +72,7 @@ export const Providers: FC<ProvidersProps> = ({
   children,
   themeProps,
   defaultLocale,
+  fallbackLocale,
   acceptLanguage,
   cookieLocale,
   defaultTimezone,
@@ -81,6 +83,7 @@ export const Providers: FC<ProvidersProps> = ({
       <LocaleProvider
         config={localeConfig}
         defaultLocale={defaultLocale}
+        fallbackLocale={fallbackLocale}
         acceptLanguage={acceptLanguage}
         cookieLocale={cookieLocale}
       >
