@@ -33,15 +33,6 @@ export const DecisionChip = createEnumChip<TicketCommentDecision>({
   rejected: { color: 'warning', item: 'decision_rejected' },
 }).EnumChip
 
-/** 受け入れ条件へのエージェントの自己申告。null(未報告)は呼び出し側で unreported に寄せる */
-export type CriterionAgentResult = 'met' | 'unmet' | 'unreported'
-
-export const CriterionAgentChip = createEnumChip<CriterionAgentResult>({
-  met: { color: 'success', item: 'criterion_agent_met' },
-  unmet: { color: 'danger', item: 'criterion_agent_unmet' },
-  unreported: { color: 'default', item: 'criterion_agent_unreported' },
-}).EnumChip
-
 /**
  * 優先度を色だけで示す 1px の水平線 2 本。カード上端の行で ID の右に並べ、残り幅に敷く想定。
  * 同じ情報を PriorityChip がテキストで持つため、支援技術からは隠す。
