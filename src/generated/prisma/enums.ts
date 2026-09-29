@@ -217,6 +217,14 @@ export const TicketCommentDecision = {
 export type TicketCommentDecision = (typeof TicketCommentDecision)[keyof typeof TicketCommentDecision]
 
 
+export const TicketChildAdvance = {
+  done: 'done',
+  reported: 'reported'
+} as const
+
+export type TicketChildAdvance = (typeof TicketChildAdvance)[keyof typeof TicketChildAdvance]
+
+
 export const TicketRelationType = {
   parent: 'parent',
   related: 'related'

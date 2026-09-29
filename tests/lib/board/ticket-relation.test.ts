@@ -268,6 +268,44 @@ describe('removeTicketRelation / moveTicketChild', () => {
     ])
   })
 
+  it('同じ順番のまとまり(並行して進める兄弟)は振り直しても保つ', async () => {
+    fakeTx.ticketRelation.findUnique.mockResolvedValue({ type: 'parent', fromId: OTHER_ID })
+    fakeTx.ticketRelation.findMany.mockResolvedValue([
+      sibling('a', 1, 1),
+      sibling('b', 2, 2),
+      sibling('c', 2, 3),
+      sibling('d', 3, 4),
+    ])
+
+    await moveTicketChild(actor, 'a', 1)
+
+    // b → a → c → d。a は単独の順番になり、間に a が入った b と c は別の順番に分かれる
+    expect(fakeTx.ticketRelation.update.mock.calls).toEqual([
+      [{ where: { id: 'b' }, data: { order: 1 } }],
+      [{ where: { id: 'a' }, data: { order: 2 } }],
+      [{ where: { id: 'c' }, data: { order: 3 } }],
+      [{ where: { id: 'd' }, data: { order: 4 } }],
+    ])
+  })
+
+  it('動かした子の前後にないまとまりは同じ順番のまま残す', async () => {
+    fakeTx.ticketRelation.findUnique.mockResolvedValue({ type: 'parent', fromId: OTHER_ID })
+    fakeTx.ticketRelation.findMany.mockResolvedValue([
+      sibling('a', 1, 1),
+      sibling('b', 2, 2),
+      sibling('c', 3, 3),
+      sibling('d', 3, 4),
+    ])
+
+    await moveTicketChild(actor, 'b', -1)
+
+    // b → a → c(3) → d(3)。c と d は同じ順番のまま
+    expect(fakeTx.ticketRelation.update.mock.calls).toEqual([
+      [{ where: { id: 'b' }, data: { order: 1 } }],
+      [{ where: { id: 'a' }, data: { order: 2 } }],
+    ])
+  })
+
   it('値が変わらない兄弟は更新しない', async () => {
     fakeTx.ticketRelation.findUnique.mockResolvedValue({ type: 'parent', fromId: OTHER_ID })
     fakeTx.ticketRelation.findMany.mockResolvedValue([sibling('a', 1, 1), sibling('b', 2, 2), sibling('c', 3, 3)])

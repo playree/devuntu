@@ -40,7 +40,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-__version__ = "0.8.2"
+__version__ = "0.8.3"
 
 # 1 Agent の構成を作業ディレクトリだけで完結させるため、config・ログ・ロックは本体と同じ
 # <作業ディレクトリ>/.devuntu-agent へ置く。作業ディレクトリを分ければ同一ホストに複数の Agent を並べられる
@@ -404,11 +404,17 @@ def build_prompt(task: dict) -> str:
         "   返ってきたルール(rule)の指示は、これ以降の作業全体を通じて従うこと。\n"
         "2. devuntu-agent MCP の get_ticket でチケットの本文とコメントを読み、action に従って処理する。\n"
         "   - plan: 対応プランを作り、add_ticket_comment に type='plan' で投稿する。実装は行わない。\n"
+        "     子チケットへの分割は任意で、基本はこの通常のプランでよい。分割するのは、チケット本文や会話で\n"
+        "     分割を指示された場合か、独立して確認できる成果物が複数に分かれ1回の実行に収まらない規模の場合だけ。\n"
+        "     その場合は代わりに devuntu-agent MCP の propose_child_tickets で\n"
+        "     子チケットの起票案(件名・本文・順番・処理方式)をプランとして投稿する。\n"
+        "     チケットや会話に次へ進むタイミングの指示(例: 報告済みになったら次へ)があれば advance に反映する。\n"
         "   - execute: プランを作らずに対応を実行する。\n"
         "   - revise: 前回投稿(プラン・報告・確認事項)への返信を読み、その指示に従って\n"
         "     プランを直すか実装に進む。task.decision があれば、それが返信の種別になる\n"
         "     (approved=承認なのでプランどおり実装する / rejected=差し戻しなので content の理由に従って\n"
         "     プランを直す。報告への差し戻しなら指摘された点を追加で対応する)。\n"
+        "     起票案への差し戻し・返信なら、propose_child_tickets で起票案を直して投稿し直す。\n"
         "   action によらず、ユーザーに確認したいこと(選択肢やインプットが必要な内容)が\n"
         "   生じた場合は、devuntu-agent MCP の add_ticket_comment に type を指定せず通常コメントとして質問を投稿し、\n"
         "   その回は finish_agent_task を outcome='planned' で報告して終える\n"

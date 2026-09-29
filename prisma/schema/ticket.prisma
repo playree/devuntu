@@ -75,6 +75,9 @@ model Ticket {
   agentMode  AgentTaskMode?
   agentState AgentTaskState?
 
+  /// 子チケットが次の順番へ進む条件(親として持つ)。エージェントの待ち判定に使う
+  childAdvance TicketChildAdvance @default(done)
+
   tags      TicketTag[]
   comments  TicketComment[]
   agentRuns AgentRun[]
@@ -120,6 +123,9 @@ model TicketComment {
 
   /// plan / report への承認・差し戻しの返信。承認/差し戻しボタンから投稿したときだけ入る
   decision TicketCommentDecision?
+
+  /// エージェントの plan に付く子チケットの起票案。承認すると起票される(形は `schema-ticket.ts` の `zChildProposal` で検証)
+  proposal Json?
 
   /// 返信先コメント。1階層のみ許容(親自体が返信の場合は指定できない。制約はアプリ層で検証)
   parentId String?
@@ -186,6 +192,14 @@ model TicketCriterion {
 
   @@index([ticketId, order])
   @@map("ticket_criterion")
+}
+
+/// 子チケットが次の順番へ進む条件。前の順番の兄弟がこの条件を満たすまで、エージェントは子を拾わない
+enum TicketChildAdvance {
+  /// 兄弟のステータスが完了になったら
+  done
+  /// 兄弟のステータスが完了、またはエージェントが報告済み(agentState=done)になったら
+  reported
 }
 
 /// チケット間の関係の種別

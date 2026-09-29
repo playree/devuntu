@@ -205,7 +205,9 @@ export const removeTicketRelation = async (actor: Actor, relationId: string, opt
 
 /**
  * 子を兄弟の中で 1 つ前(-1) / 後(1)へ動かす(チケットを編集できる人)。
- * 並びは `listTicketRelations` と同じ(順番 → 番号)で、動かした後は兄弟全体を 1 からの連番に振り直す
+ * 並びは `listTicketRelations` と同じ(順番 → 番号)で、動かした後は兄弟全体を 1 から振り直す。
+ * 同じ順番の兄弟は並行して進める印なので、振り直しても同じ順番のまとまりは保つ。
+ * 動かした子だけは単独の順番にする(まとまりの中へ入れた場合は、そのまとまりが前後に分かれる)
  */
 export const moveTicketChild = async (actor: Actor, relationId: string, offset: -1 | 1) =>
   prisma.$transaction(async (tx) => {
@@ -231,12 +233,23 @@ export const moveTicketChild = async (actor: Actor, relationId: string, offset: 
       return { id: relationId, ticketId: relation.fromId }
     }
 
+    // 振り直す前の順番でまとまりを判定するので、新しい値は別に持ってから書き込む
+    const nextOrders = new Map<string, number>()
     const [moved] = siblings.splice(index, 1)
     siblings.splice(target, 0, moved)
+    let order = 0
     for (const [i, sibling] of siblings.entries()) {
-      const order = Math.min(i + 1, MAX_CHILD_ORDER)
-      if (sibling.order !== order) {
-        await tx.ticketRelation.update({ where: { id: sibling.id }, data: { order } })
+      const prev = siblings[i - 1]
+      const isGroupStart = !prev || sibling === moved || prev === moved || sibling.order !== prev.order
+      if (isGroupStart) {
+        order = Math.min(order + 1, MAX_CHILD_ORDER)
+      }
+      nextOrders.set(sibling.id, order)
+    }
+    for (const sibling of siblings) {
+      const next = nextOrders.get(sibling.id)
+      if (next !== undefined && sibling.order !== next) {
+        await tx.ticketRelation.update({ where: { id: sibling.id }, data: { order: next } })
       }
     }
     return { id: relationId, ticketId: relation.fromId }

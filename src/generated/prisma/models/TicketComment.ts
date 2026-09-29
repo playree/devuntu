@@ -55,6 +55,7 @@ export type TicketCommentCountAggregateOutputType = {
   content: number
   type: number
   decision: number
+  proposal: number
   parentId: number
   mentionedUserIds: number
   createdAt: number
@@ -94,6 +95,7 @@ export type TicketCommentCountAggregateInputType = {
   content?: true
   type?: true
   decision?: true
+  proposal?: true
   parentId?: true
   mentionedUserIds?: true
   createdAt?: true
@@ -180,6 +182,7 @@ export type TicketCommentGroupByOutputType = {
   content: string
   type: $Enums.TicketCommentType | null
   decision: $Enums.TicketCommentDecision | null
+  proposal: runtime.JsonValue | null
   parentId: string | null
   mentionedUserIds: string[]
   createdAt: Date
@@ -214,6 +217,7 @@ export type TicketCommentWhereInput = {
   content?: Prisma.StringFilter<"TicketComment"> | string
   type?: Prisma.EnumTicketCommentTypeNullableFilter<"TicketComment"> | $Enums.TicketCommentType | null
   decision?: Prisma.EnumTicketCommentDecisionNullableFilter<"TicketComment"> | $Enums.TicketCommentDecision | null
+  proposal?: Prisma.JsonNullableFilter<"TicketComment">
   parentId?: Prisma.StringNullableFilter<"TicketComment"> | string | null
   mentionedUserIds?: Prisma.StringNullableListFilter<"TicketComment">
   createdAt?: Prisma.DateTimeFilter<"TicketComment"> | Date | string
@@ -231,6 +235,7 @@ export type TicketCommentOrderByWithRelationInput = {
   content?: Prisma.SortOrder
   type?: Prisma.SortOrderInput | Prisma.SortOrder
   decision?: Prisma.SortOrderInput | Prisma.SortOrder
+  proposal?: Prisma.SortOrderInput | Prisma.SortOrder
   parentId?: Prisma.SortOrderInput | Prisma.SortOrder
   mentionedUserIds?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -251,6 +256,7 @@ export type TicketCommentWhereUniqueInput = Prisma.AtLeast<{
   content?: Prisma.StringFilter<"TicketComment"> | string
   type?: Prisma.EnumTicketCommentTypeNullableFilter<"TicketComment"> | $Enums.TicketCommentType | null
   decision?: Prisma.EnumTicketCommentDecisionNullableFilter<"TicketComment"> | $Enums.TicketCommentDecision | null
+  proposal?: Prisma.JsonNullableFilter<"TicketComment">
   parentId?: Prisma.StringNullableFilter<"TicketComment"> | string | null
   mentionedUserIds?: Prisma.StringNullableListFilter<"TicketComment">
   createdAt?: Prisma.DateTimeFilter<"TicketComment"> | Date | string
@@ -268,6 +274,7 @@ export type TicketCommentOrderByWithAggregationInput = {
   content?: Prisma.SortOrder
   type?: Prisma.SortOrderInput | Prisma.SortOrder
   decision?: Prisma.SortOrderInput | Prisma.SortOrder
+  proposal?: Prisma.SortOrderInput | Prisma.SortOrder
   parentId?: Prisma.SortOrderInput | Prisma.SortOrder
   mentionedUserIds?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -287,6 +294,7 @@ export type TicketCommentScalarWhereWithAggregatesInput = {
   content?: Prisma.StringWithAggregatesFilter<"TicketComment"> | string
   type?: Prisma.EnumTicketCommentTypeNullableWithAggregatesFilter<"TicketComment"> | $Enums.TicketCommentType | null
   decision?: Prisma.EnumTicketCommentDecisionNullableWithAggregatesFilter<"TicketComment"> | $Enums.TicketCommentDecision | null
+  proposal?: Prisma.JsonNullableWithAggregatesFilter<"TicketComment">
   parentId?: Prisma.StringNullableWithAggregatesFilter<"TicketComment"> | string | null
   mentionedUserIds?: Prisma.StringNullableListFilter<"TicketComment">
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"TicketComment"> | Date | string
@@ -298,6 +306,7 @@ export type TicketCommentCreateInput = {
   content: string
   type?: $Enums.TicketCommentType | null
   decision?: $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   mentionedUserIds?: Prisma.TicketCommentCreatementionedUserIdsInput | string[]
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -314,6 +323,7 @@ export type TicketCommentUncheckedCreateInput = {
   content: string
   type?: $Enums.TicketCommentType | null
   decision?: $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentId?: string | null
   mentionedUserIds?: Prisma.TicketCommentCreatementionedUserIdsInput | string[]
   createdAt?: Date | string
@@ -326,6 +336,7 @@ export type TicketCommentUpdateInput = {
   content?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.NullableEnumTicketCommentTypeFieldUpdateOperationsInput | $Enums.TicketCommentType | null
   decision?: Prisma.NullableEnumTicketCommentDecisionFieldUpdateOperationsInput | $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   mentionedUserIds?: Prisma.TicketCommentUpdatementionedUserIdsInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -342,6 +353,7 @@ export type TicketCommentUncheckedUpdateInput = {
   content?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.NullableEnumTicketCommentTypeFieldUpdateOperationsInput | $Enums.TicketCommentType | null
   decision?: Prisma.NullableEnumTicketCommentDecisionFieldUpdateOperationsInput | $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mentionedUserIds?: Prisma.TicketCommentUpdatementionedUserIdsInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -356,6 +368,7 @@ export type TicketCommentCreateManyInput = {
   content: string
   type?: $Enums.TicketCommentType | null
   decision?: $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentId?: string | null
   mentionedUserIds?: Prisma.TicketCommentCreatementionedUserIdsInput | string[]
   createdAt?: Date | string
@@ -367,6 +380,7 @@ export type TicketCommentUpdateManyMutationInput = {
   content?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.NullableEnumTicketCommentTypeFieldUpdateOperationsInput | $Enums.TicketCommentType | null
   decision?: Prisma.NullableEnumTicketCommentDecisionFieldUpdateOperationsInput | $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   mentionedUserIds?: Prisma.TicketCommentUpdatementionedUserIdsInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -379,6 +393,7 @@ export type TicketCommentUncheckedUpdateManyInput = {
   content?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.NullableEnumTicketCommentTypeFieldUpdateOperationsInput | $Enums.TicketCommentType | null
   decision?: Prisma.NullableEnumTicketCommentDecisionFieldUpdateOperationsInput | $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mentionedUserIds?: Prisma.TicketCommentUpdatementionedUserIdsInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -407,6 +422,7 @@ export type TicketCommentCountOrderByAggregateInput = {
   content?: Prisma.SortOrder
   type?: Prisma.SortOrder
   decision?: Prisma.SortOrder
+  proposal?: Prisma.SortOrder
   parentId?: Prisma.SortOrder
   mentionedUserIds?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -601,6 +617,7 @@ export type TicketCommentCreateWithoutTicketInput = {
   content: string
   type?: $Enums.TicketCommentType | null
   decision?: $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   mentionedUserIds?: Prisma.TicketCommentCreatementionedUserIdsInput | string[]
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -615,6 +632,7 @@ export type TicketCommentUncheckedCreateWithoutTicketInput = {
   content: string
   type?: $Enums.TicketCommentType | null
   decision?: $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentId?: string | null
   mentionedUserIds?: Prisma.TicketCommentCreatementionedUserIdsInput | string[]
   createdAt?: Date | string
@@ -658,6 +676,7 @@ export type TicketCommentScalarWhereInput = {
   content?: Prisma.StringFilter<"TicketComment"> | string
   type?: Prisma.EnumTicketCommentTypeNullableFilter<"TicketComment"> | $Enums.TicketCommentType | null
   decision?: Prisma.EnumTicketCommentDecisionNullableFilter<"TicketComment"> | $Enums.TicketCommentDecision | null
+  proposal?: Prisma.JsonNullableFilter<"TicketComment">
   parentId?: Prisma.StringNullableFilter<"TicketComment"> | string | null
   mentionedUserIds?: Prisma.StringNullableListFilter<"TicketComment">
   createdAt?: Prisma.DateTimeFilter<"TicketComment"> | Date | string
@@ -669,6 +688,7 @@ export type TicketCommentCreateWithoutRepliesInput = {
   content: string
   type?: $Enums.TicketCommentType | null
   decision?: $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   mentionedUserIds?: Prisma.TicketCommentCreatementionedUserIdsInput | string[]
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -684,6 +704,7 @@ export type TicketCommentUncheckedCreateWithoutRepliesInput = {
   content: string
   type?: $Enums.TicketCommentType | null
   decision?: $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentId?: string | null
   mentionedUserIds?: Prisma.TicketCommentCreatementionedUserIdsInput | string[]
   createdAt?: Date | string
@@ -700,6 +721,7 @@ export type TicketCommentCreateWithoutParentInput = {
   content: string
   type?: $Enums.TicketCommentType | null
   decision?: $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   mentionedUserIds?: Prisma.TicketCommentCreatementionedUserIdsInput | string[]
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -715,6 +737,7 @@ export type TicketCommentUncheckedCreateWithoutParentInput = {
   content: string
   type?: $Enums.TicketCommentType | null
   decision?: $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   mentionedUserIds?: Prisma.TicketCommentCreatementionedUserIdsInput | string[]
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -747,6 +770,7 @@ export type TicketCommentUpdateWithoutRepliesInput = {
   content?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.NullableEnumTicketCommentTypeFieldUpdateOperationsInput | $Enums.TicketCommentType | null
   decision?: Prisma.NullableEnumTicketCommentDecisionFieldUpdateOperationsInput | $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   mentionedUserIds?: Prisma.TicketCommentUpdatementionedUserIdsInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -762,6 +786,7 @@ export type TicketCommentUncheckedUpdateWithoutRepliesInput = {
   content?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.NullableEnumTicketCommentTypeFieldUpdateOperationsInput | $Enums.TicketCommentType | null
   decision?: Prisma.NullableEnumTicketCommentDecisionFieldUpdateOperationsInput | $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mentionedUserIds?: Prisma.TicketCommentUpdatementionedUserIdsInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -789,6 +814,7 @@ export type TicketCommentCreateWithoutAuthorInput = {
   content: string
   type?: $Enums.TicketCommentType | null
   decision?: $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   mentionedUserIds?: Prisma.TicketCommentCreatementionedUserIdsInput | string[]
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -803,6 +829,7 @@ export type TicketCommentUncheckedCreateWithoutAuthorInput = {
   content: string
   type?: $Enums.TicketCommentType | null
   decision?: $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentId?: string | null
   mentionedUserIds?: Prisma.TicketCommentCreatementionedUserIdsInput | string[]
   createdAt?: Date | string
@@ -842,6 +869,7 @@ export type TicketCommentCreateManyTicketInput = {
   content: string
   type?: $Enums.TicketCommentType | null
   decision?: $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentId?: string | null
   mentionedUserIds?: Prisma.TicketCommentCreatementionedUserIdsInput | string[]
   createdAt?: Date | string
@@ -853,6 +881,7 @@ export type TicketCommentUpdateWithoutTicketInput = {
   content?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.NullableEnumTicketCommentTypeFieldUpdateOperationsInput | $Enums.TicketCommentType | null
   decision?: Prisma.NullableEnumTicketCommentDecisionFieldUpdateOperationsInput | $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   mentionedUserIds?: Prisma.TicketCommentUpdatementionedUserIdsInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -867,6 +896,7 @@ export type TicketCommentUncheckedUpdateWithoutTicketInput = {
   content?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.NullableEnumTicketCommentTypeFieldUpdateOperationsInput | $Enums.TicketCommentType | null
   decision?: Prisma.NullableEnumTicketCommentDecisionFieldUpdateOperationsInput | $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mentionedUserIds?: Prisma.TicketCommentUpdatementionedUserIdsInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -880,6 +910,7 @@ export type TicketCommentUncheckedUpdateManyWithoutTicketInput = {
   content?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.NullableEnumTicketCommentTypeFieldUpdateOperationsInput | $Enums.TicketCommentType | null
   decision?: Prisma.NullableEnumTicketCommentDecisionFieldUpdateOperationsInput | $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mentionedUserIds?: Prisma.TicketCommentUpdatementionedUserIdsInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -893,6 +924,7 @@ export type TicketCommentCreateManyParentInput = {
   content: string
   type?: $Enums.TicketCommentType | null
   decision?: $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   mentionedUserIds?: Prisma.TicketCommentCreatementionedUserIdsInput | string[]
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -903,6 +935,7 @@ export type TicketCommentUpdateWithoutParentInput = {
   content?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.NullableEnumTicketCommentTypeFieldUpdateOperationsInput | $Enums.TicketCommentType | null
   decision?: Prisma.NullableEnumTicketCommentDecisionFieldUpdateOperationsInput | $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   mentionedUserIds?: Prisma.TicketCommentUpdatementionedUserIdsInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -918,6 +951,7 @@ export type TicketCommentUncheckedUpdateWithoutParentInput = {
   content?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.NullableEnumTicketCommentTypeFieldUpdateOperationsInput | $Enums.TicketCommentType | null
   decision?: Prisma.NullableEnumTicketCommentDecisionFieldUpdateOperationsInput | $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   mentionedUserIds?: Prisma.TicketCommentUpdatementionedUserIdsInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -931,6 +965,7 @@ export type TicketCommentUncheckedUpdateManyWithoutParentInput = {
   content?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.NullableEnumTicketCommentTypeFieldUpdateOperationsInput | $Enums.TicketCommentType | null
   decision?: Prisma.NullableEnumTicketCommentDecisionFieldUpdateOperationsInput | $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   mentionedUserIds?: Prisma.TicketCommentUpdatementionedUserIdsInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -942,6 +977,7 @@ export type TicketCommentCreateManyAuthorInput = {
   content: string
   type?: $Enums.TicketCommentType | null
   decision?: $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentId?: string | null
   mentionedUserIds?: Prisma.TicketCommentCreatementionedUserIdsInput | string[]
   createdAt?: Date | string
@@ -953,6 +989,7 @@ export type TicketCommentUpdateWithoutAuthorInput = {
   content?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.NullableEnumTicketCommentTypeFieldUpdateOperationsInput | $Enums.TicketCommentType | null
   decision?: Prisma.NullableEnumTicketCommentDecisionFieldUpdateOperationsInput | $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   mentionedUserIds?: Prisma.TicketCommentUpdatementionedUserIdsInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -967,6 +1004,7 @@ export type TicketCommentUncheckedUpdateWithoutAuthorInput = {
   content?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.NullableEnumTicketCommentTypeFieldUpdateOperationsInput | $Enums.TicketCommentType | null
   decision?: Prisma.NullableEnumTicketCommentDecisionFieldUpdateOperationsInput | $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mentionedUserIds?: Prisma.TicketCommentUpdatementionedUserIdsInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -980,6 +1018,7 @@ export type TicketCommentUncheckedUpdateManyWithoutAuthorInput = {
   content?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.NullableEnumTicketCommentTypeFieldUpdateOperationsInput | $Enums.TicketCommentType | null
   decision?: Prisma.NullableEnumTicketCommentDecisionFieldUpdateOperationsInput | $Enums.TicketCommentDecision | null
+  proposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mentionedUserIds?: Prisma.TicketCommentUpdatementionedUserIdsInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1024,6 +1063,7 @@ export type TicketCommentSelect<ExtArgs extends runtime.Types.Extensions.Interna
   content?: boolean
   type?: boolean
   decision?: boolean
+  proposal?: boolean
   parentId?: boolean
   mentionedUserIds?: boolean
   createdAt?: boolean
@@ -1042,6 +1082,7 @@ export type TicketCommentSelectCreateManyAndReturn<ExtArgs extends runtime.Types
   content?: boolean
   type?: boolean
   decision?: boolean
+  proposal?: boolean
   parentId?: boolean
   mentionedUserIds?: boolean
   createdAt?: boolean
@@ -1058,6 +1099,7 @@ export type TicketCommentSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
   content?: boolean
   type?: boolean
   decision?: boolean
+  proposal?: boolean
   parentId?: boolean
   mentionedUserIds?: boolean
   createdAt?: boolean
@@ -1074,13 +1116,14 @@ export type TicketCommentSelectScalar = {
   content?: boolean
   type?: boolean
   decision?: boolean
+  proposal?: boolean
   parentId?: boolean
   mentionedUserIds?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type TicketCommentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "ticketId" | "authorId" | "content" | "type" | "decision" | "parentId" | "mentionedUserIds" | "createdAt" | "updatedAt", ExtArgs["result"]["ticketComment"]>
+export type TicketCommentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "ticketId" | "authorId" | "content" | "type" | "decision" | "proposal" | "parentId" | "mentionedUserIds" | "createdAt" | "updatedAt", ExtArgs["result"]["ticketComment"]>
 export type TicketCommentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   ticket?: boolean | Prisma.TicketDefaultArgs<ExtArgs>
   author?: boolean | Prisma.TicketComment$authorArgs<ExtArgs>
@@ -1129,6 +1172,10 @@ export type $TicketCommentPayload<ExtArgs extends runtime.Types.Extensions.Inter
      * plan / report への承認・差し戻しの返信。承認/差し戻しボタンから投稿したときだけ入る
      */
     decision: $Enums.TicketCommentDecision | null
+    /**
+     * エージェントの plan に付く子チケットの起票案。承認すると起票される(形は `schema-ticket.ts` の `zChildProposal` で検証)
+     */
+    proposal: runtime.JsonValue | null
     /**
      * 返信先コメント。1階層のみ許容(親自体が返信の場合は指定できない。制約はアプリ層で検証)
      */
@@ -1572,6 +1619,7 @@ export interface TicketCommentFieldRefs {
   readonly content: Prisma.FieldRef<"TicketComment", 'String'>
   readonly type: Prisma.FieldRef<"TicketComment", 'TicketCommentType'>
   readonly decision: Prisma.FieldRef<"TicketComment", 'TicketCommentDecision'>
+  readonly proposal: Prisma.FieldRef<"TicketComment", 'Json'>
   readonly parentId: Prisma.FieldRef<"TicketComment", 'String'>
   readonly mentionedUserIds: Prisma.FieldRef<"TicketComment", 'String[]'>
   readonly createdAt: Prisma.FieldRef<"TicketComment", 'DateTime'>

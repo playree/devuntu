@@ -21,17 +21,20 @@ const MAX_REASON_LENGTH = getFieldConstraints(scDecideAgentComment, 'content').m
  * エージェントの plan / report への承認・差し戻しボタン。
  *
  * - plan の承認はワンクリックで定型文の返信を投稿する(エージェントは revise で実装へ進む)
+ * - 起票案付きの plan の承認は子チケットを起票するので確認を挟む
  * - report の承認はチケットを完了にするので確認を挟む
  * - 差し戻しは理由を入力して返信する
  */
 export const AgentDecisionButtons: FC<{
   commentId: string
   type: TicketCommentType
+  /** plan に付いた起票案の子チケット数。0 なら起票案は無い */
+  proposedChildren: number
   /** 差し戻し理由に貼った画像の添付先 */
   boardId: string
   mentionCandidates?: MentionCandidate[]
   onDecided: () => Promise<void> | void
-}> = ({ commentId, type, boardId, mentionCandidates, onDecided }) => {
+}> = ({ commentId, type, proposedChildren, boardId, mentionCandidates, onDecided }) => {
   const { t } = useLocale()
   const confirmAction = useConfirmAction()
   const rejectModal = useModalState()
@@ -54,6 +57,15 @@ export const AgentDecisionButtons: FC<{
   }
 
   const approve = async () => {
+    if (type === 'plan' && proposedChildren > 0) {
+      await confirmAction(
+        { title: t('decision_approve'), text: t('msg_confirm_approve_proposal', { count: proposedChildren }) },
+        async () => {
+          await decide('approved', t('decision_approve_proposal_text'))
+        },
+      )
+      return
+    }
     if (type === 'plan') {
       await decide('approved', t('decision_approve_plan_text'))
       return

@@ -12,7 +12,7 @@ import {
   PlusIcon,
 } from '@/components/icon'
 import {
-  AgentStateChip,
+  AgentProgressChip,
   PriorityBar,
   PriorityChip,
   StatusChip,
@@ -224,8 +224,9 @@ const KanbanCardView: FC<{
               </span>
             )}
             {card.assigneeIsAgent && card.agentMode && card.status !== 'done' && (
-              <AgentStateChip // 任せていないチケットと完了レーンでは処理状態が意味を持たないので出さない
-                value={card.agentState ?? 'queued'}
+              <AgentProgressChip // 任せていないチケットと完了レーンでは処理状態が意味を持たないので出さない
+                state={card.agentState}
+                isWaiting={card.isWaiting}
               />
             )}
             {card.completedAt ? (

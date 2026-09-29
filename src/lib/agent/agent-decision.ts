@@ -14,9 +14,11 @@ import { moveTicketToLane } from '../board/ticket-write'
 import { errInvalidOperation } from '../error'
 import { enqueueTicketMoved } from '../notify/notify-trigger'
 import { prisma, type Db } from '../prisma'
+import { parseChildProposal } from '../schema/schema-ticket'
+import { applyChildProposal } from './agent-proposal'
 
-/** 返答待ちの plan / report */
-export type PendingAgentDecision = { commentId: string; type: TicketCommentType }
+/** 返答待ちの plan / report。`proposedChildren` は plan に付いた起票案の子チケット数(無ければ 0) */
+export type PendingAgentDecision = { commentId: string; type: TicketCommentType; proposedChildren: number }
 
 type DecisionTicket = {
   id: string
@@ -50,7 +52,7 @@ export const findPendingAgentDecision = async (
   const last = await tx.ticketComment.findFirst({
     where: { ticketId: ticket.id, authorId: ticket.assigneeId },
     orderBy: { createdAt: 'desc' },
-    select: { id: true, type: true, createdAt: true },
+    select: { id: true, type: true, createdAt: true, proposal: true },
   })
   if (!last || last.type !== expected) {
     return null
@@ -64,7 +66,11 @@ export const findPendingAgentDecision = async (
     },
     select: { id: true },
   })
-  return reply ? null : { commentId: last.id, type: expected }
+  if (reply) {
+    return null
+  }
+  const proposal = expected === 'plan' ? parseChildProposal(last.proposal) : null
+  return { commentId: last.id, type: expected, proposedChildren: proposal?.children.length ?? 0 }
 }
 
 /** 判定に要るチケットの項目 */
@@ -96,6 +102,7 @@ export type DecideAgentCommentInput = { commentId: string; decision: TicketComme
  * エージェントの承認者であってもメンバーでなければ返答できない(承認者は「任せてよいか」だけを判断する)。
  *
  * - 返信は対象コメントのスレッドへ付ける(対象が返信なら、その親のスレッド)
+ * - 起票案付きの plan の承認: 子チケットを起票し、親の処理を終える(`applyChildProposal`)
  * - report の承認: チケットを完了にする
  * - report の差し戻し: `agentState` を `planned` へ戻し、次のポーリングで revise として拾わせる
  */
@@ -103,13 +110,20 @@ export const decideAgentComment = async (actor: Actor, input: DecideAgentComment
   prisma.$transaction(async (tx) => {
     const target = await tx.ticketComment.findUnique({
       where: { id: input.commentId },
-      select: { id: true, ticketId: true, parentId: true },
+      select: { id: true, ticketId: true, parentId: true, proposal: true },
     })
     if (!target) {
       throw errInvalidOperation()
     }
     const access = await assertTicketAccess(actor, target.ticketId, 'edit', tx)
 
+    /**
+     * 起票案の承認は子チケットの採番でボード行をロックする。通常のチケット作成は「ボード → 親」の順に
+     * ロックするので、こちらも親より先にボードを取って順番をそろえる(逆順だと同じ親への作成とデッドロックする)
+     */
+    if (input.decision === 'approved' && target.proposal !== null) {
+      await tx.$queryRaw`SELECT "id" FROM "board" WHERE "id" = ${access.boardId} FOR UPDATE`
+    }
     // 同じ plan / report へ同時に返答されても、返答待ちの判定と投稿を直列にする
     await tx.$queryRaw`SELECT "id" FROM "ticket" WHERE "id" = ${target.ticketId} FOR UPDATE`
     const ticket = await tx.ticket.findUniqueOrThrow({ where: { id: target.ticketId }, select: decisionTicketSelect })
@@ -125,6 +139,10 @@ export const decideAgentComment = async (actor: Actor, input: DecideAgentComment
       decision: input.decision,
     })
 
+    const proposal = pending.type === 'plan' ? parseChildProposal(target.proposal) : null
+    const children =
+      proposal && input.decision === 'approved' ? await applyChildProposal(tx, actor, access, proposal) : []
+
     if (pending.type === 'report') {
       if (input.decision === 'approved') {
         const lane = await moveTicketToLane(tx, { access, status: 'done' })
@@ -137,7 +155,13 @@ export const decideAgentComment = async (actor: Actor, input: DecideAgentComment
       }
     }
 
-    return { id: comment.id, ticketId: target.ticketId, type: pending.type, decision: input.decision }
+    return {
+      id: comment.id,
+      ticketId: target.ticketId,
+      type: pending.type,
+      decision: input.decision,
+      childTicketIds: children.map((child) => child.id),
+    }
   })
 
 /**

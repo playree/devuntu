@@ -5,6 +5,7 @@
  */
 
 import { decideAgentComment, findLatestAgentDecision, findPendingAgentDecision } from '@/lib/agent/agent-decision'
+import { applyChildProposal } from '@/lib/agent/agent-proposal'
 import { assertTicketAccess, type TicketAccess } from '@/lib/board/board-access'
 import { insertComment } from '@/lib/board/ticket-mutation'
 import { moveTicketToLane } from '@/lib/board/ticket-write'
@@ -24,6 +25,7 @@ vi.mock('@/lib/board/board-access', () => ({ assertTicketAccess: vi.fn() }))
 vi.mock('@/lib/board/ticket-mutation', () => ({ insertComment: vi.fn(async () => ({ id: 'reply-1' })) }))
 vi.mock('@/lib/board/ticket-write', () => ({ moveTicketToLane: vi.fn(async () => ({ status: 'done' })) }))
 vi.mock('@/lib/notify/notify-trigger', () => ({ enqueueTicketMoved: vi.fn() }))
+vi.mock('@/lib/agent/agent-proposal', () => ({ applyChildProposal: vi.fn(async () => [{ id: 'child-1' }]) }))
 
 const AGENT = 'agent-1'
 const PLAN_AT = new Date('2026-09-26T00:00:00Z')
@@ -38,8 +40,20 @@ const ticket = {
 
 const access = { ticketId: 't1', boardId: 'b1', status: 'doing', canEdit: true } as TicketAccess
 
+/** 子チケット 2 件の起票案 */
+const PROPOSAL = {
+  children: [
+    { title: '設計', order: 1, mode: 'plan', acceptanceCriteria: [] },
+    { title: '実装', order: 2, mode: 'auto', acceptanceCriteria: ['テストが通る'] },
+  ],
+  advance: 'reported',
+}
+
 /** エージェントの最新コメントと、その後の返信の有無を順に返す */
-const mockComments = (last: { id: string; type: 'plan' | 'report' | null } | null, hasReply = false) => {
+const mockComments = (
+  last: { id: string; type: 'plan' | 'report' | null; proposal?: unknown } | null,
+  hasReply = false,
+) => {
   fakeTx.ticketComment.findFirst
     .mockResolvedValueOnce(last && { ...last, createdAt: PLAN_AT })
     .mockResolvedValueOnce(hasReply ? { id: 'reply' } : null)
@@ -54,7 +68,11 @@ beforeEach(() => {
 describe('findPendingAgentDecision', () => {
   it('返信待ちのプランが対象になる', async () => {
     mockComments({ id: 'plan-1', type: 'plan' })
-    expect(await findPendingAgentDecision(ticket, fakeTx as never)).toEqual({ commentId: 'plan-1', type: 'plan' })
+    expect(await findPendingAgentDecision(ticket, fakeTx as never)).toEqual({
+      commentId: 'plan-1',
+      type: 'plan',
+      proposedChildren: 0,
+    })
   })
 
   it('完了報告の後は report が対象になる', async () => {
@@ -62,7 +80,13 @@ describe('findPendingAgentDecision', () => {
     expect(await findPendingAgentDecision({ ...ticket, agentState: 'done' }, fakeTx as never)).toEqual({
       commentId: 'report-1',
       type: 'report',
+      proposedChildren: 0,
     })
+  })
+
+  it('起票案付きのプランは子チケットの数を添える', async () => {
+    mockComments({ id: 'plan-1', type: 'plan', proposal: PROPOSAL })
+    expect(await findPendingAgentDecision(ticket, fakeTx as never)).toMatchObject({ proposedChildren: 2 })
   })
 
   it('既に誰かが返信していれば対象にしない', async () => {
@@ -88,8 +112,9 @@ describe('decideAgentComment', () => {
     agentState: 'planned' | 'done',
     type: 'plan' | 'report',
     target: { id: string; parentId: string | null } = { id: 'c1', parentId: null },
+    proposal: unknown = null,
   ) => {
-    fakeTx.ticketComment.findUnique.mockResolvedValue({ ...target, ticketId: 't1' })
+    fakeTx.ticketComment.findUnique.mockResolvedValue({ ...target, ticketId: 't1', proposal })
     fakeTx.ticket.findUniqueOrThrow.mockResolvedValue({
       id: 't1',
       assigneeId: AGENT,
@@ -97,7 +122,7 @@ describe('decideAgentComment', () => {
       status: 'doing',
       assignee: { isAgent: true },
     })
-    mockComments({ id: 'c1', type })
+    mockComments({ id: 'c1', type, proposal })
   }
 
   it('プランの承認は返信を投稿するだけ(状態は revise の再開条件に任せる)', async () => {
@@ -114,6 +139,37 @@ describe('decideAgentComment', () => {
     })
     expect(fakeTx.ticket.update).not.toHaveBeenCalled()
     expect(moveTicketToLane).not.toHaveBeenCalled()
+  })
+
+  it('起票案付きのプランの承認で子チケットを起票する', async () => {
+    setup('planned', 'plan', undefined, PROPOSAL)
+
+    const result = await decideAgentComment({ id: 'u1' }, { commentId: 'c1', decision: 'approved', content: '承認' })
+
+    expect(applyChildProposal).toHaveBeenCalledWith(
+      fakeTx,
+      { id: 'u1' },
+      access,
+      expect.objectContaining({ advance: 'reported', children: expect.any(Array) }),
+    )
+    expect(result.childTicketIds).toEqual(['child-1'])
+    // 通常のチケット作成と同じく、親より先にボードをロックする
+    const locks = fakeTx.$queryRaw.mock.calls.map(([sql]) => (sql as string[]).join('?'))
+    expect(locks).toEqual([
+      'SELECT "id" FROM "board" WHERE "id" = ? FOR UPDATE',
+      'SELECT "id" FROM "ticket" WHERE "id" = ? FOR UPDATE',
+    ])
+  })
+
+  it('起票案付きのプランでも、差し戻しでは起票しない', async () => {
+    setup('planned', 'plan', undefined, PROPOSAL)
+
+    await decideAgentComment({ id: 'u1' }, { commentId: 'c1', decision: 'rejected', content: '理由' })
+
+    expect(applyChildProposal).not.toHaveBeenCalled()
+    // 起票しない返答ではボードをロックしない
+    const locks = fakeTx.$queryRaw.mock.calls.map(([sql]) => (sql as string[]).join('?'))
+    expect(locks).toEqual(['SELECT "id" FROM "ticket" WHERE "id" = ? FOR UPDATE'])
   })
 
   it('対象が返信なら、その親のスレッドへ返信する', async () => {

@@ -28,12 +28,14 @@ import {
 } from '@/lib/board/ticket-relation'
 import type { TicketRelationFilter } from '@/lib/board/ticket-relation-rule'
 import { buildTicketWhere, ticketListOrderBy } from '@/lib/board/ticket-search'
+import { findWaitingTicketIds } from '@/lib/board/ticket-sequence'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { resolveBoardId } from '@/lib/mcp/mcp-board'
 import { ticketWorkflowFor } from '@/lib/mcp/mcp-instructions'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import { prisma } from '@/lib/prisma'
+import { parseChildProposal } from '@/lib/schema/schema-ticket'
 import { makeUrl } from '@/lib/server-utils'
 import { extractUploadKeys } from '@/lib/storage/upload'
 
@@ -67,6 +69,7 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
       tags: { select: { tag: { select: { name: true } } }, orderBy: { tag: { order: 'asc' } } },
       assignee: { select: { name: true } },
       createdBy: { select: { name: true } },
+      childAdvance: true,
       createdAt: true,
       updatedAt: true,
       comments: {
@@ -75,6 +78,7 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
           content: true,
           type: true,
           decision: true,
+          proposal: true,
           parentId: true,
           author: { select: { name: true } },
           createdAt: true,
@@ -88,11 +92,13 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
   }
 
   const displayId = ticketDisplayId({ key: ticket.board.key, number: ticket.number })
-  const [links, criteria, relations] = await Promise.all([
+  const [links, criteria, relations, waiting] = await Promise.all([
     listTicketLinks(id),
     listTicketCriteria(id),
     // 関係の相手は同じボードのチケットなので、ボードのメンバーでない承認者には見せない
     access.boardRole ? listTicketRelations(id) : EMPTY_TICKET_RELATIONS,
+    // 順番待ちは兄弟の状態から出すので、関係と同じくボードのメンバーでない承認者には見せない
+    findWaitingTicketIds(access.boardRole ? [id] : []),
   ])
 
   return {
@@ -130,6 +136,8 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
       type: comment.type,
       /** plan / report への返答。approved=承認 / rejected=差し戻し / null=通常の返信 */
       decision: comment.decision,
+      /** plan に付いた子チケットの起票案。承認すると子チケットとして起票される */
+      proposal: parseChildProposal(comment.proposal),
       parentId: comment.parentId,
       createdAt: comment.createdAt,
     })),
@@ -141,6 +149,10 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
     children: relations.children,
     /** 子の進み具合(完了した子の数 / 子の数) */
     childProgress: relations.childProgress,
+    /** 子が次の順番へ進む条件。done=前の兄弟が完了したら / reported=エージェントの報告済みでも進む */
+    childAdvance: ticket.childAdvance,
+    /** 前の順番の兄弟が済んでおらず、順番待ちか(エージェントはこの間このチケットを拾わない) */
+    waitingForSiblings: waiting.has(id),
     /** 関連チケット。向きは無い */
     related: relations.related,
     /** 紐付けたブランチ / PR(MR) / コミット。prState と ci は GitHub / GitLab の Webhook で更新される */

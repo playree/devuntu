@@ -14,6 +14,7 @@ import { z } from 'zod'
 import { AGENT_CLI_KINDS } from '../agent/agent'
 import { activeWindowLabel, evaluateRunnerActivity } from '../agent/agent-activity'
 import { findLatestAgentDecision } from '../agent/agent-decision'
+import { postChildProposal } from '../agent/agent-proposal'
 import { AGENT_OUTCOMES, finishAgentTask } from '../agent/agent-run'
 import { findAgentRunner } from '../agent/agent-runner'
 import { agentSetupCliPrompt, agentSetupGuide } from '../agent/agent-setup'
@@ -22,7 +23,7 @@ import { assertTicketAccess } from '../board/board-access'
 import { listTicketCriteria } from '../board/ticket-criterion'
 import { errInvalidOperation } from '../error'
 import type { ResourceAuth } from '../oauth/oauth-resource'
-import { zCriterionReports } from '../schema/schema-ticket'
+import { zChildProposal, zCommentContent, zCriterionReports } from '../schema/schema-ticket'
 import { jsonResult } from './mcp'
 import { resolveTicketId } from './mcp-ticket'
 
@@ -157,6 +158,37 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
 
       const { state } = await finishAgentTask(runner, id, outcome, summary, criteria)
       return jsonResult({ displayId: ticket.displayId, outcome, state })
+    },
+  )
+  server.registerTool(
+    'propose_child_tickets',
+    {
+      title: 'Propose child tickets',
+      description:
+        'Posts a plan (type=plan comment) that splits the ticket into child tickets. ' +
+        'When a human approves it, the children are created under this ticket with the given order, ' +
+        'and this ticket is considered processed (do not implement it yourself). ' +
+        'The orders share one sequence with the existing children of this ticket (see children in get_ticket), ' +
+        'so a child waits for any existing sibling with a smaller order. ' +
+        'Splitting is optional: post a normal plan with add_ticket_comment unless the ticket or the conversation asks for a split, ' +
+        'or the work clearly consists of several independently reviewable deliverables that do not fit in one run. ' +
+        'When you do split, use this instead of add_ticket_comment and finish with outcome=planned. ' +
+        'If it is rejected, revise the proposal and post it again with this tool',
+      inputSchema: {
+        ticketId: z.string().min(1),
+        content: zCommentContent.describe('Plan body (Markdown): why and how the work is split'),
+        ...zChildProposal.shape,
+      },
+    },
+    async ({ ticketId, content, children, advance }) => {
+      const id = await resolveTicketId(auth, ticketId)
+      const ticket = await findAgentTicket(auth.user.id, id)
+      if (!ticket) {
+        throw errInvalidOperation()
+      }
+
+      const comment = await postChildProposal(auth.user, id, content, { children, advance })
+      return jsonResult({ displayId: ticket.displayId, commentId: comment.id, children: children.length })
     },
   )
 }

@@ -4,7 +4,7 @@
  * サーバー / クライアントの双方から import する純粋な定義のみを置く。
  */
 
-import type { TicketStatus } from '@/generated/prisma/enums'
+import type { AgentTaskState, TicketChildAdvance, TicketStatus } from '@/generated/prisma/enums'
 import type { LocaleItemBase } from '@/locale'
 import { TICKET_STATUSES } from './ticket-enum'
 
@@ -51,6 +51,39 @@ export const childProgress = (statuses: TicketStatus[]): ChildProgress => ({
   done: statuses.filter((status) => status === 'done').length,
   total: statuses.length,
 })
+
+/** 子が次の順番へ進む条件(親に持つ)。定義順は選択肢の表示順になる */
+export const TICKET_CHILD_ADVANCES = ['done', 'reported'] as const satisfies readonly TicketChildAdvance[]
+
+export const TICKET_CHILD_ADVANCE_LOCALE = {
+  done: 'child_advance_done',
+  reported: 'child_advance_reported',
+} as const satisfies Record<TicketChildAdvance, LocaleItemBase>
+
+/** 順番待ちの判定に使う兄弟の状態 */
+export type SequenceSibling = { id: string; order: number; status: TicketStatus; agentState: AgentTaskState | null }
+
+/**
+ * 兄弟が「済んだ」とみなせるか。ステータスの完了は常に済み。
+ * `reported` ではエージェントの報告済み(`agentState=done`)も済みとする(人が担当する兄弟は完了だけ)
+ */
+export const isSiblingSettled = (
+  sibling: Pick<SequenceSibling, 'status' | 'agentState'>,
+  advance: TicketChildAdvance,
+): boolean => sibling.status === 'done' || (advance === 'reported' && sibling.agentState === 'done')
+
+/**
+ * 子が順番待ちか。同じ親の下で自分より順番が小さい兄弟に、済んでいないものが残っていれば待つ。
+ * 同じ順番の兄弟は待たない(並行して進めてよい)
+ */
+export const isWaitingForSiblings = (
+  self: { id: string; order: number },
+  siblings: readonly SequenceSibling[],
+  advance: TicketChildAdvance,
+): boolean =>
+  siblings.some(
+    (sibling) => sibling.id !== self.id && sibling.order < self.order && !isSiblingSettled(sibling, advance),
+  )
 
 /** 関係するチケットをチケット一覧で開くパス。完了も含めて見たいのでステータスは全部選ぶ */
 export const relatedTicketListPath = (displayId: string, relation: TicketRelationFilter): string => {

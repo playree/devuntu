@@ -115,6 +115,7 @@ export const TicketComments: FC<{
       <AgentDecisionButtons
         commentId={comment.id}
         type={pendingDecision.type}
+        proposedChildren={pendingDecision.proposedChildren}
         boardId={ticket.boardId}
         mentionCandidates={mentionCandidates}
         onDecided={refresh}

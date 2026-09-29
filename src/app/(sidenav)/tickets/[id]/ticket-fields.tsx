@@ -9,7 +9,7 @@ import { NoticePanel, Panel } from '@/components/general/panel'
 import { SingleSelectField } from '@/components/general/select'
 import { TrashIcon } from '@/components/icon'
 import { TagIdSelectField } from '@/components/ticket/tag-id-select'
-import { AgentStateChip, PriorityChip, StatusChip, TagChips } from '@/components/ticket/ticket-chip'
+import { AgentProgressChip, PriorityChip, StatusChip, TagChips } from '@/components/ticket/ticket-chip'
 import {
   AGENT_MODE_NONE,
   useAgentModeOptions,
@@ -256,7 +256,7 @@ export const TicketFieldPanel: FC<{
             </div>
             <div className='col-span-6 md:col-span-3'>
               <MetaText label={t('agent_state')}>
-                <AgentStateChip value={ticket.agentState ?? 'queued'} />
+                <AgentProgressChip state={ticket.agentState} isWaiting={ticket.isWaiting && !!agentMode} />
               </MetaText>
             </div>
             <div className='col-span-12 md:col-span-6'>

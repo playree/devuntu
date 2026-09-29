@@ -16,6 +16,7 @@ import {
 import { failStaleAgentRuns, finishAgentRunById, finishAgentTask, startAgentRun } from '@/lib/agent/agent-run'
 import { type AgentRunnerRow } from '@/lib/agent/agent-runner'
 import { pickAgentTasks, resolveAgentTask } from '@/lib/agent/agent-task'
+import { findWaitingTicketIds } from '@/lib/board/ticket-sequence'
 import { ClientError } from '@/lib/error'
 import { enqueueAgentRunFinished } from '@/lib/notify/notify-trigger'
 import { prisma } from '@/lib/prisma'
@@ -23,6 +24,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // 通知は実行を閉じたことの副作用。ここでは「どう呼ばれたか」だけを見る
 vi.mock('@/lib/notify/notify-trigger', () => ({ enqueueAgentRunFinished: vi.fn() }))
+
+// 順番待ちの判定は ticket-sequence.test.ts で見る。ここでは結果を待ち行列から外すことだけを確かめる
+vi.mock('@/lib/board/ticket-sequence', () => ({ findWaitingTicketIds: vi.fn(async () => new Set()) }))
 
 vi.mock('@/lib/prisma', async () =>
   (await import('../../helpers/prisma')).mockPrisma({
@@ -256,6 +260,15 @@ describe('pickAgentTasks', () => {
       { ticketId: 't1', displayId: 'ABC-42', title: 'テストチケット', mode: 'plan', action: 'plan', state: null },
       { ticketId: 't2', displayId: 'ABC-43', title: 'テストチケット', mode: 'auto', action: 'execute', state: null },
     ])
+  })
+
+  it('前の順番の兄弟を待っている子は拾わない', async () => {
+    ticket.findMany.mockResolvedValueOnce([row(), row({ id: 't2', number: 43 })] as never)
+    vi.mocked(findWaitingTicketIds).mockResolvedValueOnce(new Set(['t2']))
+
+    const tasks = await pickAgentTasks(runner())
+    expect(findWaitingTicketIds).toHaveBeenCalledWith(['t1', 't2'])
+    expect(tasks.map((task) => task.ticketId)).toEqual(['t1'])
   })
 
   it('プラン投稿後に返信が来ていれば revise として拾う', async () => {
