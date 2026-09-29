@@ -56,9 +56,15 @@ export const getBoardKanban = safeAuthAction
           orderBy: { tag: { order: 'asc' } },
         },
         _count: { select: { comments: true } },
-        // 子の進み具合と、子であれば親の表示ID(参照は 1 階層だけ)
-        relationsFrom: { where: { type: 'parent' }, select: { to: { select: { status: true } } } },
-        relationsTo: { where: { type: 'parent' }, select: { from: { select: { number: true } } }, take: 1 },
+        // 子の進み具合・親の表示ID(参照は 1 階層だけ)・関連の表示ID。同じリレーションは 2 回 select できないので型で振り分ける
+        relationsFrom: {
+          where: { type: { in: ['parent', 'related'] } },
+          select: { type: true, to: { select: { number: true, status: true } } },
+        },
+        relationsTo: {
+          where: { type: { in: ['parent', 'related'] } },
+          select: { type: true, from: { select: { number: true } } },
+        },
       },
       // status は enum の宣言順(backlog,todo,doing,done)。上限で切れるのが done の末尾になるようにする
       orderBy: [{ status: 'asc' }, { order: 'asc' }, { createdAt: 'asc' }],
@@ -72,22 +78,29 @@ export const getBoardKanban = safeAuthAction
         .map((ticket) => ticket.id),
     )
 
-    const cards = tickets.map(({ assignee, _count, tags, relationsFrom, relationsTo, ...ticket }) => ({
-      ...ticket,
-      // 中間テーブルは表示側で扱わないので平坦化する
-      tags: tags.map(({ tag }) => tag),
-      // 同一ボードのカードなので接頭辞は共通だが、表示側で組み立てを持たせないよう揃えて返す
-      displayId: ticketDisplayId({ key: board.key, number: ticket.number }),
-      assigneeName: assignee?.name ?? '',
-      // 未設定は空文字にして、表示側は assigneeName と同じ falsy 判定で扱えるようにする
-      assigneeImage: assignee?.image ?? '',
-      assigneeIsAgent: assignee?.isAgent ?? false,
-      commentCount: _count.comments,
-      childProgress: childProgress(relationsFrom.map(({ to }) => to.status)),
-      // 親子は同じボードの中だけなので、接頭辞はこのボードのキーで組み立てられる
-      parentDisplayId: relationsTo[0] ? ticketDisplayId({ key: board.key, number: relationsTo[0].from.number }) : '',
-      isWaiting: waiting.has(ticket.id),
-    }))
+    const cards = tickets.map(({ assignee, _count, tags, relationsFrom, relationsTo, ...ticket }) => {
+      const parent = relationsTo.find(({ type }) => type === 'parent')
+      return {
+        ...ticket,
+        // 中間テーブルは表示側で扱わないので平坦化する
+        tags: tags.map(({ tag }) => tag),
+        // 同一ボードのカードなので接頭辞は共通だが、表示側で組み立てを持たせないよう揃えて返す
+        displayId: ticketDisplayId({ key: board.key, number: ticket.number }),
+        assigneeName: assignee?.name ?? '',
+        // 未設定は空文字にして、表示側は assigneeName と同じ falsy 判定で扱えるようにする
+        assigneeImage: assignee?.image ?? '',
+        assigneeIsAgent: assignee?.isAgent ?? false,
+        commentCount: _count.comments,
+        childProgress: childProgress(relationsFrom.filter(({ type }) => type === 'parent').map(({ to }) => to.status)),
+        // 親子・関連は同じボードの中だけなので、接頭辞はこのボードのキーで組み立てられる
+        parentDisplayId: parent ? ticketDisplayId({ key: board.key, number: parent.from.number }) : '',
+        relatedDisplayIds: [
+          ...relationsFrom.filter(({ type }) => type === 'related').map(({ to }) => to.number),
+          ...relationsTo.filter(({ type }) => type === 'related').map(({ from }) => from.number),
+        ].map((number) => ticketDisplayId({ key: board.key, number })),
+        isWaiting: waiting.has(ticket.id),
+      }
+    })
 
     return {
       board: { ...board, description: board.description ?? '' },

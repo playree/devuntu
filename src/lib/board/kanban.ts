@@ -8,6 +8,7 @@ import type { TicketPriority, TicketStatus } from '@/generated/prisma/enums'
 import type { TicketWhereInput } from '@/generated/prisma/models'
 import { DAY_MS, msBefore, nowDate, utcToDateOnly } from '../day'
 import { isTicketStatus, TICKET_STATUSES } from './ticket-enum'
+import type { TicketRelationFilter } from './ticket-relation-rule'
 import { ASSIGNEE_NONE } from './ticket-search'
 
 /**
@@ -193,6 +194,10 @@ export type KanbanFilter = {
    * KANBAN_DONE_VISIBLE_DAYS はサーバーの取得上限と同じなので絞り込みなしと同義
    */
   doneDays: number
+  /** 関係するチケットの表示ID(ticketDisplayId で正規化済み)。空文字 = 絞り込まない */
+  relatedTo: string
+  /** relatedTo から見た関係 */
+  relation: TicketRelationFilter
 }
 
 /** 絞り込みの初期値(すべて未指定) */
@@ -202,6 +207,8 @@ export const defaultKanbanFilter: KanbanFilter = {
   tags: [],
   due: null,
   doneDays: KANBAN_DONE_VISIBLE_DAYS,
+  relatedTo: '',
+  relation: 'all',
 }
 
 /** 絞り込み対象のカードに最低限必要な形。LaneMap の要素型はこれを満たすこと */
@@ -211,6 +218,10 @@ export type KanbanFilterCard = KanbanCardLite & {
   tags: { name: string }[]
   dueDate: Date | null
   completedAt: Date | null
+  /** 親の表示ID。親なしは空文字 */
+  parentDisplayId: string
+  /** 関連チケットの表示ID(向きは問わない) */
+  relatedDisplayIds: string[]
 }
 
 /** 1 つでも条件が指定されているか(見出しの件数表示と絞り込みのスキップ判定に使う) */
@@ -219,7 +230,8 @@ export const isKanbanFilterActive = (filter: KanbanFilter): boolean =>
   filter.priority.length > 0 ||
   filter.tags.length > 0 ||
   filter.due !== null ||
-  filter.doneDays < KANBAN_DONE_VISIBLE_DAYS
+  filter.doneDays < KANBAN_DONE_VISIBLE_DAYS ||
+  filter.relatedTo !== ''
 
 /**
  * カード 1 枚が条件に一致するか。判定は buildTicketWhere と同じセマンティクス。
@@ -243,6 +255,10 @@ export const matchesKanbanFilter = (card: KanbanFilterCard, filter: KanbanFilter
     return false
   }
 
+  if (filter.relatedTo && !matchesRelation(card, filter.relatedTo, filter.relation)) {
+    return false
+  }
+
   if (filter.due) {
     // 保存値は UTC 0:00 の日付なので YYYY-MM-DD へ戻して比べる(この書式は辞書順 = 日付順)
     const due = utcToDateOnly(card.dueDate)
@@ -259,6 +275,19 @@ export const matchesKanbanFilter = (card: KanbanFilterCard, filter: KanbanFilter
   }
 
   return true
+}
+
+/** 関係するチケットの判定。relationWhere と同じく、指定したチケット自身は含めない */
+const matchesRelation = (card: KanbanFilterCard, relatedTo: string, relation: TicketRelationFilter): boolean => {
+  const isChild = card.parentDisplayId === relatedTo
+  const isRelated = card.relatedDisplayIds.includes(relatedTo)
+  if (relation === 'child') {
+    return isChild
+  }
+  if (relation === 'related') {
+    return isRelated
+  }
+  return isChild || isRelated
 }
 
 /**

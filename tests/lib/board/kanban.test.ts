@@ -246,6 +246,8 @@ const makeCard = (id: string, over: Partial<KanbanFilterCard> = {}): KanbanFilte
   tags: [],
   dueDate: null,
   completedAt: null,
+  parentDisplayId: '',
+  relatedDisplayIds: [],
   ...over,
 })
 
@@ -267,6 +269,7 @@ describe('isKanbanFilterActive: 絞り込みが指定されているか', () => 
     expect(isKanbanFilterActive({ ...defaultKanbanFilter, tags: ['bug'] })).toBe(true)
     expect(isKanbanFilterActive({ ...defaultKanbanFilter, due: { start: '2026-08-01', end: '2026-08-31' } })).toBe(true)
     expect(isKanbanFilterActive({ ...defaultKanbanFilter, doneDays: 7 })).toBe(true)
+    expect(isKanbanFilterActive({ ...defaultKanbanFilter, relatedTo: 'ABC-1' })).toBe(true)
   })
 
   it('完了の表示期間が取得上限と同じならアクティブにしない', () => {
@@ -296,6 +299,29 @@ describe('matchesKanbanFilter: カード 1 枚の一致判定', () => {
     const filter = { ...defaultKanbanFilter, assignee: 'none' }
     expect(matchesKanbanFilter(makeCard('a', { assigneeId: null }), filter)).toBe(true)
     expect(matchesKanbanFilter(makeCard('b', { assigneeId: 'u1' }), filter)).toBe(false)
+  })
+
+  it('関係するチケット: child は直下の子、related は関連(向き不問)、all は両方', () => {
+    const child = makeCard('c', { parentDisplayId: 'ABC-1' })
+    const related = makeCard('r', { relatedDisplayIds: ['ABC-9', 'ABC-1'] })
+    const other = makeCard('o', { parentDisplayId: 'ABC-2', relatedDisplayIds: ['ABC-3'] })
+    const filter = (relation: 'child' | 'related' | 'all') => ({ ...defaultKanbanFilter, relatedTo: 'ABC-1', relation })
+
+    expect([child, related, other].map((card) => matchesKanbanFilter(card, filter('child')))).toEqual([
+      true,
+      false,
+      false,
+    ])
+    expect([child, related, other].map((card) => matchesKanbanFilter(card, filter('related')))).toEqual([
+      false,
+      true,
+      false,
+    ])
+    expect([child, related, other].map((card) => matchesKanbanFilter(card, filter('all')))).toEqual([true, true, false])
+  })
+
+  it('関係するチケット: 空文字は絞り込まない', () => {
+    expect(matchesKanbanFilter(makeCard('a'), { ...defaultKanbanFilter, relation: 'child' })).toBe(true)
   })
 
   it('優先度: 空配列は無条件、非空は in 判定', () => {

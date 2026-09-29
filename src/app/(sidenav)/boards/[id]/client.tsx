@@ -178,7 +178,13 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
             </span>
           }
         >
-          <KanbanFilterPanel filter={filter} onChange={setFilter} assigneeOptions={assigneeOptions} tags={tagChoices} />
+          <KanbanFilterPanel
+            boardId={board.id}
+            filter={filter}
+            onChange={setFilter}
+            assigneeOptions={assigneeOptions}
+            tags={tagChoices}
+          />
         </AccordionSection>
       </Accordion>
 
