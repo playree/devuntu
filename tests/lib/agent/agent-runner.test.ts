@@ -13,6 +13,7 @@ import {
   evaluateRunnerActivity,
   isWithinActiveWindow,
 } from '@/lib/agent/agent-activity'
+import { consumeAutoReviseTriggers, hasSettledAutoRevise } from '@/lib/agent/agent-auto-revise'
 import { failStaleAgentRuns, finishAgentRunById, finishAgentTask, startAgentRun } from '@/lib/agent/agent-run'
 import { type AgentRunnerRow } from '@/lib/agent/agent-runner'
 import { pickAgentTasks, resolveAgentTask } from '@/lib/agent/agent-task'
@@ -27,6 +28,12 @@ vi.mock('@/lib/notify/notify-trigger', () => ({ enqueueAgentRunFinished: vi.fn()
 
 // 順番待ちの判定は ticket-sequence.test.ts で見る。ここでは結果を待ち行列から外すことだけを確かめる
 vi.mock('@/lib/board/ticket-sequence', () => ({ findWaitingTicketIds: vi.fn(async () => new Set()) }))
+
+// 自動差し戻しの判定は agent-auto-revise.test.ts で見る。ここでは結果の使われ方だけを確かめる
+vi.mock('@/lib/agent/agent-auto-revise', () => ({
+  hasSettledAutoRevise: vi.fn(async () => false),
+  consumeAutoReviseTriggers: vi.fn(),
+}))
 
 vi.mock('@/lib/prisma', async () =>
   (await import('../../helpers/prisma')).mockPrisma({
@@ -291,6 +298,17 @@ describe('pickAgentTasks', () => {
     expect(await pickAgentTasks(runner())).toEqual([])
   })
 
+  it('返信が無くても、自動差し戻しのきっかけがそろっていれば revise として拾う', async () => {
+    ticket.findMany.mockResolvedValueOnce([row({ agentState: 'planned' })] as never)
+    ticketComment.findFirst
+      .mockResolvedValueOnce({ createdAt: new Date('2026-08-25T00:00:00Z') } as never)
+      .mockResolvedValueOnce(null as never)
+    vi.mocked(hasSettledAutoRevise).mockResolvedValueOnce(true)
+
+    expect(await pickAgentTasks(runner())).toMatchObject([{ ticketId: 't1', action: 'revise' }])
+    expect(hasSettledAutoRevise).toHaveBeenCalledWith('t1')
+  })
+
   it('担当とオプトインで絞り込む', async () => {
     ticket.findMany.mockResolvedValueOnce([] as never)
     await pickAgentTasks(runner())
@@ -544,6 +562,8 @@ describe('startAgentRun', () => {
       }),
     )
     expect(ticket.update).toHaveBeenCalledWith({ where: { id: 't1' }, data: { agentState: 'running' } })
+    // 未消化の自動差し戻しのきっかけは、この実行で引き受ける
+    expect(consumeAutoReviseTriggers).toHaveBeenCalledWith(expect.anything(), 't1', 'run1')
   })
 
   it('上限が無制限なら件数を数えずに開始する', async () => {

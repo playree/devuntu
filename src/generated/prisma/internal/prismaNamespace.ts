@@ -401,6 +401,7 @@ export const ModelName = {
   McpToken: 'McpToken',
   AgentRunner: 'AgentRunner',
   AgentRun: 'AgentRun',
+  AgentAutoReviseTrigger: 'AgentAutoReviseTrigger',
   AgentUsage: 'AgentUsage',
   AgentApprover: 'AgentApprover',
   AgentApproverGroup: 'AgentApproverGroup',
@@ -465,7 +466,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentUsage" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "board" | "boardKeyHistory" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "calendarShare" | "calendarBusyTime" | "commandTargetMember" | "commandTargetGroup" | "commandRun" | "commandRunChunk" | "ticketLink" | "boardRepository" | "gitCheckSuite" | "userNotifySetting" | "webPushSubscription" | "boardNotifySetting" | "notifyOutbox" | "notifyDelivery" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "ticket" | "ticketComment" | "ticketCriterion" | "ticketRelation" | "user" | "group" | "userGroup"
+    modelProps: "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentAutoReviseTrigger" | "agentUsage" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "board" | "boardKeyHistory" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "calendarShare" | "calendarBusyTime" | "commandTargetMember" | "commandTargetGroup" | "commandRun" | "commandRunChunk" | "ticketLink" | "boardRepository" | "gitCheckSuite" | "userNotifySetting" | "webPushSubscription" | "boardNotifySetting" | "notifyOutbox" | "notifyDelivery" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "ticket" | "ticketComment" | "ticketCriterion" | "ticketRelation" | "user" | "group" | "userGroup"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -762,6 +763,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.AgentRunCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.AgentRunCountAggregateOutputType> | number
+        }
+      }
+    }
+    AgentAutoReviseTrigger: {
+      payload: Prisma.$AgentAutoReviseTriggerPayload<ExtArgs>
+      fields: Prisma.AgentAutoReviseTriggerFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AgentAutoReviseTriggerFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentAutoReviseTriggerPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AgentAutoReviseTriggerFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentAutoReviseTriggerPayload>
+        }
+        findFirst: {
+          args: Prisma.AgentAutoReviseTriggerFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentAutoReviseTriggerPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AgentAutoReviseTriggerFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentAutoReviseTriggerPayload>
+        }
+        findMany: {
+          args: Prisma.AgentAutoReviseTriggerFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentAutoReviseTriggerPayload>[]
+        }
+        create: {
+          args: Prisma.AgentAutoReviseTriggerCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentAutoReviseTriggerPayload>
+        }
+        createMany: {
+          args: Prisma.AgentAutoReviseTriggerCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AgentAutoReviseTriggerCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentAutoReviseTriggerPayload>[]
+        }
+        delete: {
+          args: Prisma.AgentAutoReviseTriggerDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentAutoReviseTriggerPayload>
+        }
+        update: {
+          args: Prisma.AgentAutoReviseTriggerUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentAutoReviseTriggerPayload>
+        }
+        deleteMany: {
+          args: Prisma.AgentAutoReviseTriggerDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AgentAutoReviseTriggerUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AgentAutoReviseTriggerUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentAutoReviseTriggerPayload>[]
+        }
+        upsert: {
+          args: Prisma.AgentAutoReviseTriggerUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentAutoReviseTriggerPayload>
+        }
+        aggregate: {
+          args: Prisma.AgentAutoReviseTriggerAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAgentAutoReviseTrigger>
+        }
+        groupBy: {
+          args: Prisma.AgentAutoReviseTriggerGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AgentAutoReviseTriggerGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AgentAutoReviseTriggerCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AgentAutoReviseTriggerCountAggregateOutputType> | number
         }
       }
     }
@@ -4502,6 +4577,29 @@ export const AgentRunScalarFieldEnum = {
 export type AgentRunScalarFieldEnum = (typeof AgentRunScalarFieldEnum)[keyof typeof AgentRunScalarFieldEnum]
 
 
+export const AgentAutoReviseTriggerScalarFieldEnum = {
+  id: 'id',
+  ticketId: 'ticketId',
+  source: 'source',
+  provider: 'provider',
+  baseUrl: 'baseUrl',
+  repo: 'repo',
+  number: 'number',
+  url: 'url',
+  checks: 'checks',
+  body: 'body',
+  author: 'author',
+  reviewState: 'reviewState',
+  dedupeKey: 'dedupeKey',
+  runId: 'runId',
+  consumed: 'consumed',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AgentAutoReviseTriggerScalarFieldEnum = (typeof AgentAutoReviseTriggerScalarFieldEnum)[keyof typeof AgentAutoReviseTriggerScalarFieldEnum]
+
+
 export const AgentUsageScalarFieldEnum = {
   id: 'id',
   runnerId: 'runnerId',
@@ -4638,6 +4736,8 @@ export const BoardScalarFieldEnum = {
   archived: 'archived',
   completeOnGithubMerge: 'completeOnGithubMerge',
   completeOnGitlabMerge: 'completeOnGitlabMerge',
+  agentAutoRevise: 'agentAutoRevise',
+  agentAutoReviseLimit: 'agentAutoReviseLimit',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -5150,6 +5250,7 @@ export const TicketScalarFieldEnum = {
   mentionedUserIds: 'mentionedUserIds',
   agentMode: 'agentMode',
   agentState: 'agentState',
+  agentAutoReviseCount: 'agentAutoReviseCount',
   childAdvance: 'childAdvance'
 } as const
 
@@ -5392,6 +5493,34 @@ export type ListEnumAgentRunStatusFieldRefInput<$PrismaModel> = FieldRefInputTyp
 
 
 /**
+ * Reference to a field of type 'AgentAutoReviseSource'
+ */
+export type EnumAgentAutoReviseSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AgentAutoReviseSource'>
+    
+
+
+/**
+ * Reference to a field of type 'AgentAutoReviseSource[]'
+ */
+export type ListEnumAgentAutoReviseSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AgentAutoReviseSource[]'>
+    
+
+
+/**
+ * Reference to a field of type 'GitProvider'
+ */
+export type EnumGitProviderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'GitProvider'>
+    
+
+
+/**
+ * Reference to a field of type 'GitProvider[]'
+ */
+export type ListEnumGitProviderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'GitProvider[]'>
+    
+
+
+/**
  * Reference to a field of type 'BigInt'
  */
 export type BigIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BigInt'>
@@ -5500,20 +5629,6 @@ export type EnumCommandStreamFieldRefInput<$PrismaModel> = FieldRefInputType<$Pr
  * Reference to a field of type 'CommandStream[]'
  */
 export type ListEnumCommandStreamFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CommandStream[]'>
-    
-
-
-/**
- * Reference to a field of type 'GitProvider'
- */
-export type EnumGitProviderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'GitProvider'>
-    
-
-
-/**
- * Reference to a field of type 'GitProvider[]'
- */
-export type ListEnumGitProviderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'GitProvider[]'>
     
 
 
@@ -5895,6 +6010,7 @@ export type GlobalOmitConfig = {
   mcpToken?: Prisma.McpTokenOmit
   agentRunner?: Prisma.AgentRunnerOmit
   agentRun?: Prisma.AgentRunOmit
+  agentAutoReviseTrigger?: Prisma.AgentAutoReviseTriggerOmit
   agentUsage?: Prisma.AgentUsageOmit
   agentApprover?: Prisma.AgentApproverOmit
   agentApproverGroup?: Prisma.AgentApproverGroupOmit

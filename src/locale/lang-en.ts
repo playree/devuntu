@@ -32,6 +32,9 @@ export const en: DefaultLocaleItems = {
   agent_action_revise: 'Revise',
   agent_approver: 'Approvers',
   agent_approver_group: 'Approver Groups',
+  agent_auto_revise: 'Send agent tickets back on CI failures and review comments',
+  agent_auto_revise_count: 'Auto Revise',
+  agent_auto_revise_limit: 'Limit per ticket',
   agent_cost: 'Cost',
   agent_custom_instruction: 'Custom Instruction',
   agent_daily_limit: 'Daily Run Limit',
@@ -98,6 +101,7 @@ export const en: DefaultLocaleItems = {
   avatar: 'Avatar',
   back: 'Back',
   board: 'Board',
+  board_agent_auto_revise: 'Agent Auto Revise',
   board_deleted: 'Deleted board',
   board_github: 'GitHub Integration',
   board_gitlab: 'GitLab Integration',
@@ -575,6 +579,10 @@ Please copy and use the connection information above.
     'The email address is generated from the handle and cannot be changed later. Mail is never delivered to it.',
   msg_agent_mode_desc:
     'Choose how the agent handles this ticket. Plan first posts a plan and waits for your reply; Auto carries out the work and reports back. Only approvers of this agent can change it.',
+  msg_agent_auto_revise_desc:
+    'When CI fails or a review / comment (including bots such as CodeRabbit) is posted on a linked pull / merge request, tickets the agent has already reported on are sent back for revision. Comments are collected for 2 minutes after the last one, and nothing is sent back once the limit is reached. Requires the GitHub / GitLab webhook.',
+  msg_agent_auto_revise_webhook:
+    'Also enable Pull request reviews (GitHub) or Comments (GitLab) in the webhook events.',
   msg_agent_custom_instruction_desc:
     'The instructions (Markdown) the agent reads before starting work and follows throughout. Leaving it blank means no instructions.',
   msg_agent_no_approver: 'No approver is set. Nobody can change the agent mode of tickets assigned to this agent.',

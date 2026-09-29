@@ -28,10 +28,12 @@ export type AggregateBoard = {
 
 export type BoardAvgAggregateOutputType = {
   ticketSeq: number | null
+  agentAutoReviseLimit: number | null
 }
 
 export type BoardSumAggregateOutputType = {
   ticketSeq: number | null
+  agentAutoReviseLimit: number | null
 }
 
 export type BoardMinAggregateOutputType = {
@@ -45,6 +47,8 @@ export type BoardMinAggregateOutputType = {
   archived: boolean | null
   completeOnGithubMerge: boolean | null
   completeOnGitlabMerge: boolean | null
+  agentAutoRevise: boolean | null
+  agentAutoReviseLimit: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -60,6 +64,8 @@ export type BoardMaxAggregateOutputType = {
   archived: boolean | null
   completeOnGithubMerge: boolean | null
   completeOnGitlabMerge: boolean | null
+  agentAutoRevise: boolean | null
+  agentAutoReviseLimit: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -75,6 +81,8 @@ export type BoardCountAggregateOutputType = {
   archived: number
   completeOnGithubMerge: number
   completeOnGitlabMerge: number
+  agentAutoRevise: number
+  agentAutoReviseLimit: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -83,10 +91,12 @@ export type BoardCountAggregateOutputType = {
 
 export type BoardAvgAggregateInputType = {
   ticketSeq?: true
+  agentAutoReviseLimit?: true
 }
 
 export type BoardSumAggregateInputType = {
   ticketSeq?: true
+  agentAutoReviseLimit?: true
 }
 
 export type BoardMinAggregateInputType = {
@@ -100,6 +110,8 @@ export type BoardMinAggregateInputType = {
   archived?: true
   completeOnGithubMerge?: true
   completeOnGitlabMerge?: true
+  agentAutoRevise?: true
+  agentAutoReviseLimit?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -115,6 +127,8 @@ export type BoardMaxAggregateInputType = {
   archived?: true
   completeOnGithubMerge?: true
   completeOnGitlabMerge?: true
+  agentAutoRevise?: true
+  agentAutoReviseLimit?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -130,6 +144,8 @@ export type BoardCountAggregateInputType = {
   archived?: true
   completeOnGithubMerge?: true
   completeOnGitlabMerge?: true
+  agentAutoRevise?: true
+  agentAutoReviseLimit?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -232,6 +248,8 @@ export type BoardGroupByOutputType = {
   archived: boolean
   completeOnGithubMerge: boolean
   completeOnGitlabMerge: boolean
+  agentAutoRevise: boolean
+  agentAutoReviseLimit: number
   createdAt: Date
   updatedAt: Date
   _count: BoardCountAggregateOutputType | null
@@ -270,6 +288,8 @@ export type BoardWhereInput = {
   archived?: Prisma.BoolFilter<"Board"> | boolean
   completeOnGithubMerge?: Prisma.BoolFilter<"Board"> | boolean
   completeOnGitlabMerge?: Prisma.BoolFilter<"Board"> | boolean
+  agentAutoRevise?: Prisma.BoolFilter<"Board"> | boolean
+  agentAutoReviseLimit?: Prisma.IntFilter<"Board"> | number
   createdAt?: Prisma.DateTimeFilter<"Board"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Board"> | Date | string
   privateOwner?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
@@ -295,6 +315,8 @@ export type BoardOrderByWithRelationInput = {
   archived?: Prisma.SortOrder
   completeOnGithubMerge?: Prisma.SortOrder
   completeOnGitlabMerge?: Prisma.SortOrder
+  agentAutoRevise?: Prisma.SortOrder
+  agentAutoReviseLimit?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   privateOwner?: Prisma.UserOrderByWithRelationInput
@@ -323,6 +345,8 @@ export type BoardWhereUniqueInput = Prisma.AtLeast<{
   archived?: Prisma.BoolFilter<"Board"> | boolean
   completeOnGithubMerge?: Prisma.BoolFilter<"Board"> | boolean
   completeOnGitlabMerge?: Prisma.BoolFilter<"Board"> | boolean
+  agentAutoRevise?: Prisma.BoolFilter<"Board"> | boolean
+  agentAutoReviseLimit?: Prisma.IntFilter<"Board"> | number
   createdAt?: Prisma.DateTimeFilter<"Board"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Board"> | Date | string
   privateOwner?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
@@ -348,6 +372,8 @@ export type BoardOrderByWithAggregationInput = {
   archived?: Prisma.SortOrder
   completeOnGithubMerge?: Prisma.SortOrder
   completeOnGitlabMerge?: Prisma.SortOrder
+  agentAutoRevise?: Prisma.SortOrder
+  agentAutoReviseLimit?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.BoardCountOrderByAggregateInput
@@ -371,6 +397,8 @@ export type BoardScalarWhereWithAggregatesInput = {
   archived?: Prisma.BoolWithAggregatesFilter<"Board"> | boolean
   completeOnGithubMerge?: Prisma.BoolWithAggregatesFilter<"Board"> | boolean
   completeOnGitlabMerge?: Prisma.BoolWithAggregatesFilter<"Board"> | boolean
+  agentAutoRevise?: Prisma.BoolWithAggregatesFilter<"Board"> | boolean
+  agentAutoReviseLimit?: Prisma.IntWithAggregatesFilter<"Board"> | number
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Board"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Board"> | Date | string
 }
@@ -385,6 +413,8 @@ export type BoardCreateInput = {
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -410,6 +440,8 @@ export type BoardUncheckedCreateInput = {
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -433,6 +465,8 @@ export type BoardUpdateInput = {
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -458,6 +492,8 @@ export type BoardUncheckedUpdateInput = {
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
@@ -482,6 +518,8 @@ export type BoardCreateManyInput = {
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -496,6 +534,8 @@ export type BoardUpdateManyMutationInput = {
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -511,6 +551,8 @@ export type BoardUncheckedUpdateManyInput = {
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -531,12 +573,15 @@ export type BoardCountOrderByAggregateInput = {
   archived?: Prisma.SortOrder
   completeOnGithubMerge?: Prisma.SortOrder
   completeOnGitlabMerge?: Prisma.SortOrder
+  agentAutoRevise?: Prisma.SortOrder
+  agentAutoReviseLimit?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
 export type BoardAvgOrderByAggregateInput = {
   ticketSeq?: Prisma.SortOrder
+  agentAutoReviseLimit?: Prisma.SortOrder
 }
 
 export type BoardMaxOrderByAggregateInput = {
@@ -550,6 +595,8 @@ export type BoardMaxOrderByAggregateInput = {
   archived?: Prisma.SortOrder
   completeOnGithubMerge?: Prisma.SortOrder
   completeOnGitlabMerge?: Prisma.SortOrder
+  agentAutoRevise?: Prisma.SortOrder
+  agentAutoReviseLimit?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -565,12 +612,15 @@ export type BoardMinOrderByAggregateInput = {
   archived?: Prisma.SortOrder
   completeOnGithubMerge?: Prisma.SortOrder
   completeOnGitlabMerge?: Prisma.SortOrder
+  agentAutoRevise?: Prisma.SortOrder
+  agentAutoReviseLimit?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
 export type BoardSumOrderByAggregateInput = {
   ticketSeq?: Prisma.SortOrder
+  agentAutoReviseLimit?: Prisma.SortOrder
 }
 
 export type BoardScalarRelationFilter = {
@@ -756,6 +806,8 @@ export type BoardCreateWithoutAgentUsagesInput = {
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -780,6 +832,8 @@ export type BoardUncheckedCreateWithoutAgentUsagesInput = {
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -818,6 +872,8 @@ export type BoardUpdateWithoutAgentUsagesInput = {
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -842,6 +898,8 @@ export type BoardUncheckedUpdateWithoutAgentUsagesInput = {
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
@@ -864,6 +922,8 @@ export type BoardCreateWithoutKeyHistoriesInput = {
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -888,6 +948,8 @@ export type BoardUncheckedCreateWithoutKeyHistoriesInput = {
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -926,6 +988,8 @@ export type BoardUpdateWithoutKeyHistoriesInput = {
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -950,6 +1014,8 @@ export type BoardUncheckedUpdateWithoutKeyHistoriesInput = {
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
@@ -972,6 +1038,8 @@ export type BoardCreateWithoutTagsInput = {
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -996,6 +1064,8 @@ export type BoardUncheckedCreateWithoutTagsInput = {
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -1034,6 +1104,8 @@ export type BoardUpdateWithoutTagsInput = {
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -1058,6 +1130,8 @@ export type BoardUncheckedUpdateWithoutTagsInput = {
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
@@ -1080,6 +1154,8 @@ export type BoardCreateWithoutMembersInput = {
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -1104,6 +1180,8 @@ export type BoardUncheckedCreateWithoutMembersInput = {
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   groups?: Prisma.BoardGroupUncheckedCreateNestedManyWithoutBoardInput
@@ -1142,6 +1220,8 @@ export type BoardUpdateWithoutMembersInput = {
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -1166,6 +1246,8 @@ export type BoardUncheckedUpdateWithoutMembersInput = {
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   groups?: Prisma.BoardGroupUncheckedUpdateManyWithoutBoardNestedInput
@@ -1188,6 +1270,8 @@ export type BoardCreateWithoutGroupsInput = {
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -1212,6 +1296,8 @@ export type BoardUncheckedCreateWithoutGroupsInput = {
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -1250,6 +1336,8 @@ export type BoardUpdateWithoutGroupsInput = {
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -1274,6 +1362,8 @@ export type BoardUncheckedUpdateWithoutGroupsInput = {
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
@@ -1296,6 +1386,8 @@ export type BoardCreateWithoutRepositoriesInput = {
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -1320,6 +1412,8 @@ export type BoardUncheckedCreateWithoutRepositoriesInput = {
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -1358,6 +1452,8 @@ export type BoardUpdateWithoutRepositoriesInput = {
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -1382,6 +1478,8 @@ export type BoardUncheckedUpdateWithoutRepositoriesInput = {
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
@@ -1404,6 +1502,8 @@ export type BoardCreateWithoutNotifySettingsInput = {
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -1428,6 +1528,8 @@ export type BoardUncheckedCreateWithoutNotifySettingsInput = {
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -1466,6 +1568,8 @@ export type BoardUpdateWithoutNotifySettingsInput = {
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -1490,6 +1594,8 @@ export type BoardUncheckedUpdateWithoutNotifySettingsInput = {
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
@@ -1512,6 +1618,8 @@ export type BoardCreateWithoutAttachmentsInput = {
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -1536,6 +1644,8 @@ export type BoardUncheckedCreateWithoutAttachmentsInput = {
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -1574,6 +1684,8 @@ export type BoardUpdateWithoutAttachmentsInput = {
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -1598,6 +1710,8 @@ export type BoardUncheckedUpdateWithoutAttachmentsInput = {
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
@@ -1620,6 +1734,8 @@ export type BoardCreateWithoutTicketsInput = {
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -1644,6 +1760,8 @@ export type BoardUncheckedCreateWithoutTicketsInput = {
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -1682,6 +1800,8 @@ export type BoardUpdateWithoutTicketsInput = {
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -1706,6 +1826,8 @@ export type BoardUncheckedUpdateWithoutTicketsInput = {
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
@@ -1728,6 +1850,8 @@ export type BoardCreateWithoutPrivateOwnerInput = {
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberCreateNestedManyWithoutBoardInput
@@ -1751,6 +1875,8 @@ export type BoardUncheckedCreateWithoutPrivateOwnerInput = {
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -1790,6 +1916,8 @@ export type BoardUpdateWithoutPrivateOwnerInput = {
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUpdateManyWithoutBoardNestedInput
@@ -1813,6 +1941,8 @@ export type BoardUncheckedUpdateWithoutPrivateOwnerInput = {
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
@@ -1940,6 +2070,8 @@ export type BoardSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   privateOwner?: boolean | Prisma.Board$privateOwnerArgs<ExtArgs>
@@ -1966,6 +2098,8 @@ export type BoardSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   privateOwner?: boolean | Prisma.Board$privateOwnerArgs<ExtArgs>
@@ -1982,6 +2116,8 @@ export type BoardSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   privateOwner?: boolean | Prisma.Board$privateOwnerArgs<ExtArgs>
@@ -1998,11 +2134,13 @@ export type BoardSelectScalar = {
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type BoardOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "kind" | "privateOwnerId" | "key" | "ticketSeq" | "name" | "description" | "archived" | "completeOnGithubMerge" | "completeOnGitlabMerge" | "createdAt" | "updatedAt", ExtArgs["result"]["board"]>
+export type BoardOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "kind" | "privateOwnerId" | "key" | "ticketSeq" | "name" | "description" | "archived" | "completeOnGithubMerge" | "completeOnGitlabMerge" | "agentAutoRevise" | "agentAutoReviseLimit" | "createdAt" | "updatedAt", ExtArgs["result"]["board"]>
 export type BoardInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   privateOwner?: boolean | Prisma.Board$privateOwnerArgs<ExtArgs>
   members?: boolean | Prisma.Board$membersArgs<ExtArgs>
@@ -2081,6 +2219,14 @@ export type $BoardPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
      * GitLab の MR のマージで、紐付いた PR / MR がすべてマージ / クローズされたチケットを完了にする(オプトイン)
      */
     completeOnGitlabMerge: boolean
+    /**
+     * 紐付いた PR / MR の CI 失敗・レビュー指摘で、報告済みのエージェント担当チケットを revise へ戻す(オプトイン)
+     */
+    agentAutoRevise: boolean
+    /**
+     * 1チケットあたりの自動差し戻し回数の上限(Ticket.agentAutoReviseCount と比べる)
+     */
+    agentAutoReviseLimit: number
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["board"]>
@@ -2526,6 +2672,8 @@ export interface BoardFieldRefs {
   readonly archived: Prisma.FieldRef<"Board", 'Boolean'>
   readonly completeOnGithubMerge: Prisma.FieldRef<"Board", 'Boolean'>
   readonly completeOnGitlabMerge: Prisma.FieldRef<"Board", 'Boolean'>
+  readonly agentAutoRevise: Prisma.FieldRef<"Board", 'Boolean'>
+  readonly agentAutoReviseLimit: Prisma.FieldRef<"Board", 'Int'>
   readonly createdAt: Prisma.FieldRef<"Board", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Board", 'DateTime'>
 }

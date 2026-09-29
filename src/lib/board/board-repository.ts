@@ -1,5 +1,5 @@
 /**
- * ボードの Git 連携(GitHub / GitLab のリポジトリの対応付け・マージで完了)の設定(サーバー専用)
+ * ボードの Git 連携(GitHub / GitLab のリポジトリの対応付け・マージで完了・エージェントへの自動差し戻し)の設定(サーバー専用)
  *
  * `/boards/[id]/settings` の Server Action から呼ぶ。設定できるのは owner と管理者。
  * Webhook は対応付けたリポジトリのイベントだけを扱うので、ここがボードごとの受け入れ範囲になる。
@@ -292,4 +292,34 @@ export const setBoardCompleteOnPrMerge = async (
   })
 
   logger.info({ userId: actor.id, boardId, provider, completeOnMerge }, 'board complete on pr merge updated')
+}
+
+/** エージェントへの自動差し戻し(CI の失敗・レビュー指摘)の設定 */
+export const getBoardAgentAutoRevise = async (actor: Actor, boardId: string) => {
+  await assertBoardAccess(actor, boardId, 'manage')
+  const board = await prisma.board.findUnique({
+    where: { id: boardId },
+    select: { agentAutoRevise: true, agentAutoReviseLimit: true },
+  })
+  if (!board) {
+    throw errInvalidOperation()
+  }
+  return { enabled: board.agentAutoRevise, limit: board.agentAutoReviseLimit }
+}
+
+export const setBoardAgentAutoRevise = async (
+  actor: Actor,
+  boardId: string,
+  { enabled, limit }: { enabled: boolean; limit: number },
+) => {
+  await prisma.$transaction(async (tx) => {
+    await assertBoardAccess(actor, boardId, 'manage', tx)
+    await tx.board.update({
+      where: { id: boardId },
+      data: { agentAutoRevise: enabled, agentAutoReviseLimit: limit },
+      select: { id: true },
+    })
+  })
+
+  logger.info({ userId: actor.id, boardId, enabled, limit }, 'board agent auto revise updated')
 }

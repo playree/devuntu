@@ -9,6 +9,14 @@
 * 🟢 You can import this file directly.
 */
 
+export const AgentAutoReviseSource = {
+  ci: 'ci',
+  review: 'review'
+} as const
+
+export type AgentAutoReviseSource = (typeof AgentAutoReviseSource)[keyof typeof AgentAutoReviseSource]
+
+
 export const AgentTaskMode = {
   plan: 'plan',
   auto: 'auto'

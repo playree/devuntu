@@ -23,6 +23,7 @@ import {
   computeAgentRunUsage,
   hasMonthlyBudget,
 } from './agent-activity'
+import { consumeAutoReviseTriggers } from './agent-auto-revise'
 import type { AgentRunnerRow } from './agent-runner'
 import { findAgentTicket } from './agent-task'
 import { type AgentRunMetrics, lockAgentRunner, recordAgentRunMetrics } from './agent-usage'
@@ -208,6 +209,8 @@ export const startAgentRun = async (
       select: { id: true },
     })
     await tx.ticket.update({ where: { id: target.id }, data: { agentState: 'running' } })
+    // チケットの行ロックを取った後に引き受ける(Webhook からのきっかけの追加と直列にする)
+    await consumeAutoReviseTriggers(tx, target.id, created.id)
 
     logger.info({ runnerId: runner.id, runId: created.id, ticketRef: target.displayId, action }, 'agent run started')
     return { ok: true, run: { id: created.id, displayId: target.displayId } }

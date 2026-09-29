@@ -10,11 +10,13 @@
  */
 
 import { z } from 'zod'
+import { requestAutoRevise } from '../agent/agent-auto-revise'
 import { nowDate } from '../day'
 import {
   autoLinkPullRequest,
   type GitLinkedBoard,
   type GitRepoKey,
+  reviseOnCheckFailure,
   saveCheckSuite,
   syncPullRequest,
 } from '../git/git-webhook'
@@ -51,11 +53,32 @@ const scCheckSuiteEvent = z.object({ repository: scRepository, check_suite: scCh
 const scCheckRunEvent = z.object({
   repository: scRepository,
   check_run: z.object({
+    name: z.string().nullish(),
     status: z.string(),
+    conclusion: z.string().nullish(),
     app: z.object({ name: z.string() }).nullish(),
     check_suite: scCheckSuite,
   }),
 })
+
+const scPullRequestReviewEvent = z.object({
+  action: z.string(),
+  repository: scRepository,
+  review: z.object({
+    id: z.number().int(),
+    state: z.string(),
+    body: z.string().nullish(),
+    html_url: z.string(),
+    user: z.object({ login: z.string() }).nullish(),
+  }),
+  pull_request: z.object({
+    number: z.number().int().positive(),
+    user: z.object({ login: z.string() }).nullish(),
+  }),
+})
+
+/** 差し戻しのきっかけにするレビューの状態。承認(approved)は含めない */
+const REVISE_REVIEW_STATES = new Set(['changes_requested', 'commented'])
 
 /** Webhook の対象(受け口の URL が指す対応付け) */
 export type GithubWebhookTarget = {
@@ -125,7 +148,17 @@ const handleCheckSuite = async (body: unknown, target: GithubWebhookTarget) => {
   if (!isTargetRepo(parsed.data.repository, target)) {
     return
   }
-  await saveGithubCheckSuite(target, parsed.data.check_suite, { status: 'completed' })
+  const suite = parsed.data.check_suite
+  await saveGithubCheckSuite(target, suite, { status: 'completed' })
+  // check_run を購読していない Webhook でも差し戻せるよう、suite の失敗でもきっかけを作る(チェック名は無し)
+  await reviseOnCheckFailure({
+    key: repoKey(target.repo),
+    boards: [target.board],
+    suiteId: String(suite.id),
+    headSha: suite.head_sha,
+    conclusion: suite.conclusion ?? null,
+    checks: [],
+  })
 }
 
 /**
@@ -145,6 +178,48 @@ const handleCheckRun = async (body: unknown, target: GithubWebhookTarget) => {
   }
   // suite 側の status が無いペイロードでは、run が終わっていても suite の完了は check_suite で受ける
   await saveGithubCheckSuite(target, run.check_suite, { status: 'in_progress', app: run.app?.name })
+  if (run.status === 'completed') {
+    await reviseOnCheckFailure({
+      key: repoKey(target.repo),
+      boards: [target.board],
+      suiteId: String(run.check_suite.id),
+      headSha: run.check_suite.head_sha,
+      conclusion: run.conclusion ?? null,
+      checks: run.name ? [run.name] : [],
+    })
+  }
+}
+
+/**
+ * レビューの投稿。修正依頼と、CodeRabbit などのコメントのレビューを差し戻しのきっかけにする。
+ * PR の作成者自身のレビュー(エージェントがスレッドへ返信したときに作られるもの)は除く。
+ */
+const handlePullRequestReview = async (body: unknown, target: GithubWebhookTarget) => {
+  const parsed = scPullRequestReviewEvent.safeParse(body)
+  if (!parsed.success) {
+    logger.warn({ issues: parsed.error.issues }, 'github pull_request_review payload invalid')
+    return
+  }
+  const { action, repository, review, pull_request: pr } = parsed.data
+  const state = review.state.toLowerCase()
+  if (action !== 'submitted' || !isTargetRepo(repository, target) || !REVISE_REVIEW_STATES.has(state)) {
+    return
+  }
+  const author = review.user?.login ?? null
+  if (author && author === pr.user?.login) {
+    return
+  }
+  await requestAutoRevise(
+    { key: repoKey(target.repo), boards: [target.board], pullRequest: { number: pr.number } },
+    {
+      source: 'review',
+      dedupeKey: `review:${review.id}`,
+      body: review.body,
+      author,
+      reviewState: state,
+      url: review.html_url,
+    },
+  )
 }
 
 /** イベントごとの処理。ここに無いイベント(ping など)は受け取っても何もしない */
@@ -152,6 +227,7 @@ const HANDLERS = new Map<string, (body: unknown, target: GithubWebhookTarget) =>
   ['pull_request', handlePullRequest],
   ['check_suite', handleCheckSuite],
   ['check_run', handleCheckRun],
+  ['pull_request_review', handlePullRequestReview],
 ])
 
 export const handleGithubEvent = async (event: string, body: unknown, target: GithubWebhookTarget): Promise<void> => {

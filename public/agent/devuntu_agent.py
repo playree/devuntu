@@ -40,7 +40,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-__version__ = "0.8.3"
+__version__ = "0.8.4"
 
 # 1 Agent の構成を作業ディレクトリだけで完結させるため、config・ログ・ロックは本体と同じ
 # <作業ディレクトリ>/.devuntu-agent へ置く。作業ディレクトリを分ければ同一ホストに複数の Agent を並べられる
@@ -415,6 +415,9 @@ def build_prompt(task: dict) -> str:
         "     (approved=承認なのでプランどおり実装する / rejected=差し戻しなので content の理由に従って\n"
         "     プランを直す。報告への差し戻しなら指摘された点を追加で対応する)。\n"
         "     起票案への差し戻し・返信なら、propose_child_tickets で起票案を直して投稿し直す。\n"
+        "     task.autoRevise があれば、紐付いたプルリクエスト(マージリクエスト)の CI の失敗やレビュー指摘による\n"
+        "     自動の差し戻しなので、失敗したチェック(checks)やレビュー(review)の詳細を PR から読んで対応し、\n"
+        "     同じ PR へ push する。対応が不要な指摘は、その理由を報告コメントに書く。\n"
         "   action によらず、ユーザーに確認したいこと(選択肢やインプットが必要な内容)が\n"
         "   生じた場合は、devuntu-agent MCP の add_ticket_comment に type を指定せず通常コメントとして質問を投稿し、\n"
         "   その回は finish_agent_task を outcome='planned' で報告して終える\n"

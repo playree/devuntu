@@ -13,6 +13,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 import { AGENT_CLI_KINDS } from '../agent/agent'
 import { activeWindowLabel, evaluateRunnerActivity } from '../agent/agent-activity'
+import { listRunAutoRevise } from '../agent/agent-auto-revise'
 import { findLatestAgentDecision } from '../agent/agent-decision'
 import { postChildProposal } from '../agent/agent-proposal'
 import { AGENT_OUTCOMES, finishAgentTask } from '../agent/agent-run'
@@ -72,6 +73,8 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
       description:
         'Always call this before processing a ticket. Returns the run conditions (whether active and the allowed hours), the tickets to process, ' +
         'the action to perform, and the rule instructions. Follow the rule throughout the whole run. ' +
+        'On revise, task.autoRevise lists CI failures and pull request reviews that sent the ticket back automatically: ' +
+        'read the details from the pull request, address them, and report what you changed (or why no change is needed). ' +
         'If active is false, exit without doing anything',
       inputSchema: {
         ticketId: z
@@ -109,9 +112,10 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
         })
       }
 
-      const [criteria, decision] = await Promise.all([
+      const [criteria, decision, autoRevise] = await Promise.all([
         listTicketCriteria(id),
         task.action === 'revise' ? findLatestAgentDecision(id, auth.user.id) : null,
+        task.action === 'revise' ? listRunAutoRevise(runner.id, id) : [],
       ])
       return jsonResult({
         ...base,
@@ -122,6 +126,8 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
           acceptanceCriteria: criteria.map(({ id: criterionId, text }) => ({ id: criterionId, text })),
           /** revise のきっかけになった承認 / 差し戻し。ボタンを使わない返信だけなら null */
           decision: decision ? { kind: decision.decision, commentId: decision.id, content: decision.content } : null,
+          /** revise のきっかけになった CI の失敗・PR / MR のレビュー指摘(自動差し戻し)。無ければ空 */
+          autoRevise,
         },
         note: null,
       })

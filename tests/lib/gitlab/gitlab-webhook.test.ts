@@ -5,6 +5,7 @@
  * 「古いイベントで巻き戻さない更新時刻の決め方」「マージで完了にする条件」を検証する。
  */
 
+import { requestAutoRevise } from '@/lib/agent/agent-auto-revise'
 import { completeTicketByMerge } from '@/lib/board/ticket-mutation'
 import { handleGitlabEvent, parseGitlabTime } from '@/lib/gitlab/gitlab-webhook'
 import { prisma } from '@/lib/prisma'
@@ -27,12 +28,17 @@ vi.mock('@/lib/board/ticket-mutation', () => ({
   completeTicketByMerge: vi.fn(async () => true),
 }))
 
+vi.mock('@/lib/agent/agent-auto-revise', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/agent/agent-auto-revise')>()),
+  requestAutoRevise: vi.fn(async () => undefined),
+}))
+
 const BASE_URL = 'https://example.com/gitlab'
 const TARGET = {
   id: 'r1',
   baseUrl: BASE_URL,
   repo: 'group/proj',
-  board: { id: 'b1', key: 'ABC', completeOnPrMerge: true },
+  board: { id: 'b1', key: 'ABC', completeOnPrMerge: true, autoRevise: true, autoReviseLimit: 3 },
 }
 const KEY = { provider: 'gitlab', baseUrl: BASE_URL, repo: 'group/proj' }
 
@@ -232,6 +238,74 @@ describe('Pipeline Hook', () => {
     )
 
     expect(prisma.gitCheckSuite.updateMany).not.toHaveBeenCalled()
+  })
+
+  it('失敗したパイプラインは、失敗したジョブ名を付けて head の MR へ差し戻す', async () => {
+    const event = pipelineEvent('failed')
+    await handleGitlabEvent(
+      'Pipeline Hook',
+      {
+        ...event,
+        builds: [
+          { ...event.builds[0], name: 'test', status: 'failed' },
+          { ...event.builds[1], name: 'lint', status: 'success' },
+        ],
+      },
+      TARGET,
+    )
+
+    expect(requestAutoRevise).toHaveBeenCalledWith(
+      { key: KEY, boards: [TARGET.board], pullRequest: { headSha: 'def456' } },
+      { source: 'ci', dedupeKey: 'ci:55', checks: ['test'] },
+    )
+  })
+
+  it('成功・キャンセルでは差し戻さない', async () => {
+    await handleGitlabEvent('Pipeline Hook', pipelineEvent('success'), TARGET)
+    await handleGitlabEvent('Pipeline Hook', pipelineEvent('canceled'), TARGET)
+
+    expect(requestAutoRevise).not.toHaveBeenCalled()
+  })
+})
+
+describe('Note Hook', () => {
+  const noteEvent = (override: { noteableType?: string; system?: boolean; authorId?: number; path?: string } = {}) => ({
+    object_kind: 'note',
+    project: { id: 1, path_with_namespace: override.path ?? 'group/proj' },
+    user: { username: 'reviewer' },
+    object_attributes: {
+      id: 900,
+      note: '直してください',
+      noteable_type: override.noteableType ?? 'MergeRequest',
+      system: override.system ?? false,
+      author_id: override.authorId ?? 2,
+      url: 'https://example.com/gitlab/group/proj/-/merge_requests/7#note_900',
+    },
+    merge_request: { iid: 7, author_id: 1 },
+  })
+
+  it('MR へのコメントを差し戻しのきっかけにする', async () => {
+    await handleGitlabEvent('Note Hook', noteEvent(), TARGET)
+
+    expect(requestAutoRevise).toHaveBeenCalledWith(
+      { key: KEY, boards: [TARGET.board], pullRequest: { number: 7 } },
+      {
+        source: 'review',
+        dedupeKey: 'review:900',
+        body: '直してください',
+        author: 'reviewer',
+        url: 'https://example.com/gitlab/group/proj/-/merge_requests/7#note_900',
+      },
+    )
+  })
+
+  it('MR 以外・システムノート・MR 作成者自身・別プロジェクトのコメントは対象にしない', async () => {
+    await handleGitlabEvent('Note Hook', noteEvent({ noteableType: 'Issue' }), TARGET)
+    await handleGitlabEvent('Note Hook', noteEvent({ system: true }), TARGET)
+    await handleGitlabEvent('Note Hook', noteEvent({ authorId: 1 }), TARGET)
+    await handleGitlabEvent('Note Hook', noteEvent({ path: 'group/other' }), TARGET)
+
+    expect(requestAutoRevise).not.toHaveBeenCalled()
   })
 })
 

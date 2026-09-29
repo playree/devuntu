@@ -9,6 +9,7 @@ import { ticketDisplayId } from '../board/ticket-id'
 import { boardVisibleWhere } from '../board/ticket-permission'
 import { findWaitingTicketIds } from '../board/ticket-sequence'
 import { prisma } from '../prisma'
+import { hasSettledAutoRevise } from './agent-auto-revise'
 import type { AgentRunnerRow } from './agent-runner'
 
 export type AgentTask = {
@@ -83,8 +84,9 @@ const deriveAction = async (
   }
 
   if (ticket.agentState === 'planned') {
-    // 返信が来るまでは待つ。返信の内容にどう従うかは Claude 側の判断
-    return (await hasReplyAfterPlan(ticket.id, runner.userId)) ? 'revise' : null
+    // 返信か、CI 失敗・レビュー指摘による自動差し戻しが来るまでは待つ。どう従うかは Claude 側の判断
+    const revise = (await hasReplyAfterPlan(ticket.id, runner.userId)) || (await hasSettledAutoRevise(ticket.id))
+    return revise ? 'revise' : null
   }
 
   return initial
