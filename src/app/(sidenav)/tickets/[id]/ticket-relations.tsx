@@ -20,6 +20,8 @@ import {
   relatedTicketListPath,
   RELATION_ALREADY_EXISTS,
   RELATION_TARGET_INVALID,
+  TICKET_CHILD_ADVANCE_LOCALE,
+  TICKET_CHILD_ADVANCES,
   TICKET_RELATION_KIND_LOCALE,
   TICKET_RELATION_KINDS,
   type TicketRelationFilter,
@@ -35,6 +37,7 @@ import {
   addTicketRelation,
   GetTicketReturnType,
   moveTicketChild,
+  patchTicket,
   removeTicketRelation,
   searchRelationCandidates,
 } from './server'
@@ -86,13 +89,15 @@ const ChildMoveButtons: FC<{
   )
 }
 
-/** 関係の相手 1 件。子は削除の前に並べ替えを置く */
+/** 関係の相手 1 件。子は先頭に順番、削除の前に並べ替えを置く */
 const RelationItem: FC<{
   item: RelatedTicket
   canEdit: boolean
   refresh: () => Promise<void>
+  /** 子の順番。同じ値の子は並行して進められるので、並び位置とは別に値を見せる */
+  order?: number
   actions?: ReactNode
-}> = ({ item, canEdit, refresh, actions }) => {
+}> = ({ item, canEdit, refresh, order, actions }) => {
   const { t } = useLocale()
   const [isRemoving, setRemoving] = useState(false)
 
@@ -113,6 +118,11 @@ const RelationItem: FC<{
     >
       <div className='dark:bg-default/40 flex items-center gap-2 rounded-lg bg-white pr-1 pl-2'>
         <div className='flex min-w-0 grow flex-wrap items-center gap-x-2 gap-y-0.5'>
+          {order !== undefined && (
+            <span className='text-muted font-mono text-xs' title={t('child_order')}>
+              #{order}
+            </span>
+          )}
           <Link href={`/tickets/${item.id}`} className='flex min-w-0 items-center gap-2 text-sm hover:underline'>
             <TicketIdText displayId={item.displayId} className='shrink-0' />
             <span className='min-w-0 truncate text-xs'>{item.title}</span>
@@ -278,6 +288,52 @@ const AddRelationForm: FC<{ ticket: Ticket; refresh: () => Promise<void> }> = ({
   )
 }
 
+/** 子が次の順番へ進む条件。エージェントは前の順番の兄弟がこの条件を満たすまで子を拾わない */
+const ChildAdvanceField: FC<{ ticket: Ticket; refresh: () => Promise<void> }> = ({ ticket, refresh }) => {
+  const { t } = useLocale()
+  const [isSaving, setSaving] = useState(false)
+  const options = Object.fromEntries(TICKET_CHILD_ADVANCES.map((item) => [item, t(TICKET_CHILD_ADVANCE_LOCALE[item])]))
+
+  if (!ticket.canEdit) {
+    return (
+      <div className='text-xs'>
+        <span className='text-muted'>{t('child_advance')}: </span>
+        {options[ticket.childAdvance]}
+      </div>
+    )
+  }
+
+  const change = async (next: string | null) => {
+    const childAdvance = TICKET_CHILD_ADVANCES.find((item) => item === next)
+    if (!childAdvance || childAdvance === ticket.childAdvance) {
+      return
+    }
+    setSaving(true)
+    try {
+      await parseAction(patchTicket({ id: ticket.id, childAdvance }))
+      notify.success(t('msg_saved'))
+      await refresh()
+    } catch {
+      // エラー表示は parseAction 側で済んでいる
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className='max-w-72'>
+      <SingleSelectField
+        isSmart
+        label={t('child_advance')}
+        groupOptions={options}
+        value={ticket.childAdvance}
+        isDisabled={isSaving}
+        onChange={(next) => void change(next)}
+      />
+    </div>
+  )
+}
+
 /** 親チケット・直下の子・関連チケット。参照は 1 階層だけ */
 export const TicketRelations: FC<{ ticket: Ticket; refresh: () => Promise<void> }> = ({ ticket, refresh }) => {
   const { t } = useLocale()
@@ -334,6 +390,7 @@ export const TicketRelations: FC<{ ticket: Ticket; refresh: () => Promise<void> 
               item={child}
               canEdit={canEdit}
               refresh={refresh}
+              order={child.order}
               actions={
                 <ChildMoveButtons
                   isFirst={index === 0}
@@ -346,6 +403,8 @@ export const TicketRelations: FC<{ ticket: Ticket; refresh: () => Promise<void> 
             />
           ))}
         </RelationGroup>
+
+        {children.length > 0 && <ChildAdvanceField ticket={ticket} refresh={refresh} />}
 
         <RelationGroup
           title={`${t('related_tickets')} (${related.length})`}

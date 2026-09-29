@@ -8,6 +8,7 @@
 
 import { activeWindowLabel, evaluateRunnerActivity } from '@/lib/agent/agent-activity'
 import { findLatestAgentDecision } from '@/lib/agent/agent-decision'
+import { postChildProposal } from '@/lib/agent/agent-proposal'
 import { finishAgentTask } from '@/lib/agent/agent-run'
 import { findAgentRunner } from '@/lib/agent/agent-runner'
 import { findAgentTicket, pickAgentTasks, resolveAgentTask } from '@/lib/agent/agent-task'
@@ -54,6 +55,10 @@ vi.mock('@/lib/agent/agent-decision', () => ({
   findLatestAgentDecision: vi.fn(),
 }))
 
+vi.mock('@/lib/agent/agent-proposal', () => ({
+  postChildProposal: vi.fn(),
+}))
+
 vi.mock('@/lib/mcp/mcp-ticket', () => ({
   MCP_ASSIGNEE_ME: 'me',
   resolveTicketId: vi.fn(),
@@ -90,7 +95,7 @@ beforeEach(() => {
 })
 
 describe('自動運用ツールの登録', () => {
-  const AGENT_TOOLS = ['get_agent_task', 'finish_agent_task']
+  const AGENT_TOOLS = ['get_agent_task', 'finish_agent_task', 'propose_child_tickets']
 
   it('エージェント用トークンの接続では登録される', async () => {
     const { tools } = await (await connectDevuntuMcp(agentAuth)).listTools()
@@ -311,5 +316,55 @@ describe('finish_agent_task', () => {
 
     expect(result.isError).toBe(true)
     expect(finishAgentTask).not.toHaveBeenCalled()
+  })
+})
+
+describe('propose_child_tickets', () => {
+  const children = [
+    { title: '設計', order: 1, mode: 'plan' },
+    { title: '実装', order: 2, mode: null, acceptanceCriteria: ['テストが通る'] },
+  ]
+
+  it('担当を確かめてから、起票案付きの plan を投稿する', async () => {
+    vi.mocked(resolveTicketId).mockResolvedValue('t1')
+    vi.mocked(findAgentTicket).mockResolvedValue({ id: 't1', displayId: 'ABC-42', mode: 'plan', state: 'running' })
+    vi.mocked(postChildProposal).mockResolvedValue({ id: 'c1', mentionedUserIds: [] })
+
+    const result = await (
+      await connectDevuntuMcp(agentAuth)
+    ).callTool({
+      name: 'propose_child_tickets',
+      arguments: { ticketId: 'ABC-42', content: '2 段階に分ける', children, advance: 'reported' },
+    })
+
+    expect(postChildProposal).toHaveBeenCalledWith(agentAuth.user, 't1', '2 段階に分ける', {
+      children: [
+        { title: '設計', order: 1, mode: 'plan', acceptanceCriteria: [] },
+        { title: '実装', order: 2, mode: null, acceptanceCriteria: ['テストが通る'] },
+      ],
+      advance: 'reported',
+    })
+    expect(parseResult(result.content)).toEqual({ displayId: 'ABC-42', commentId: 'c1', children: 2 })
+  })
+
+  it('担当・オプトインから外れたチケットには投稿できない', async () => {
+    vi.mocked(resolveTicketId).mockResolvedValue('t1')
+    vi.mocked(findAgentTicket).mockResolvedValue(null)
+
+    const result = await (
+      await connectDevuntuMcp(agentAuth)
+    ).callTool({ name: 'propose_child_tickets', arguments: { ticketId: 'ABC-42', content: '案', children } })
+
+    expect(result.isError).toBe(true)
+    expect(postChildProposal).not.toHaveBeenCalled()
+  })
+
+  it('子の無い起票案は受け付けない', async () => {
+    const result = await (
+      await connectDevuntuMcp(agentAuth)
+    ).callTool({ name: 'propose_child_tickets', arguments: { ticketId: 'ABC-42', content: '案', children: [] } })
+
+    expect(result.isError).toBe(true)
+    expect(postChildProposal).not.toHaveBeenCalled()
   })
 })

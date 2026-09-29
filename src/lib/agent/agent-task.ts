@@ -7,6 +7,7 @@ import type { AgentRunAction, AgentTaskMode, AgentTaskState } from '@/generated/
 import { OPEN_TICKET_STATUSES } from '../board/ticket-enum'
 import { ticketDisplayId } from '../board/ticket-id'
 import { boardVisibleWhere } from '../board/ticket-permission'
+import { findWaitingTicketIds } from '../board/ticket-sequence'
 import { prisma } from '../prisma'
 import type { AgentRunnerRow } from './agent-runner'
 
@@ -119,6 +120,7 @@ const agentWorkableTicketWhere = (userId: string): Prisma.TicketWhereInput => ({
  * 処理すべきチケットの一覧。
  *
  * `running` は処理中なので拾わない(時間切れ分は `failStaleAgentRuns` が先に解除している)。
+ * 子チケットは、前の順番の兄弟が済むまで拾わない(`findWaitingTicketIds`)。
  */
 export const pickAgentTasks = async (runner: AgentRunnerRow): Promise<AgentTask[]> => {
   const tickets = await prisma.ticket.findMany({
@@ -129,10 +131,11 @@ export const pickAgentTasks = async (runner: AgentRunnerRow): Promise<AgentTask[
     select: agentTicketSelect,
     orderBy: [{ priority: 'asc' }, { updatedAt: 'asc' }],
   })
+  const waiting = await findWaitingTicketIds(tickets.map((ticket) => ticket.id))
 
   const tasks: AgentTask[] = []
   for (const ticket of tickets) {
-    if (ticket.agentMode === null) {
+    if (ticket.agentMode === null || waiting.has(ticket.id)) {
       continue
     }
     const action = await deriveAction(runner, ticket, ticket.agentMode)

@@ -12,7 +12,12 @@ import {
   TICKET_STATUSES,
 } from '../board/ticket-enum'
 import { parseTicketDisplayId } from '../board/ticket-id'
-import { MAX_CHILD_ORDER, TICKET_RELATION_FILTERS, TICKET_RELATION_KINDS } from '../board/ticket-relation-rule'
+import {
+  MAX_CHILD_ORDER,
+  TICKET_CHILD_ADVANCES,
+  TICKET_RELATION_FILTERS,
+  TICKET_RELATION_KINDS,
+} from '../board/ticket-relation-rule'
 import { ASSIGNEE_NONE, TICKET_SORT_COLUMNS } from '../board/ticket-search'
 import { looksLikeGitUrl } from '../git/git'
 import { zPagingFields } from './schema'
@@ -91,6 +96,8 @@ export const scPatchTicket = z.object({
   tagIds: zTagIds.optional(),
   /** undefined = 変更しない / null = 未割り当てへ */
   assigneeId: z.uuidv7().nullish(),
+  /** 子が次の順番へ進む条件(親として持つ) */
+  childAdvance: z.enum(TICKET_CHILD_ADVANCES).optional(),
 })
 export type PatchTicket = z.infer<typeof scPatchTicket>
 export type PatchTicketIn = z.input<typeof scPatchTicket>
@@ -294,3 +301,52 @@ export const scAddTicketLink = z.object({
   url: zGitUrl,
 })
 export type AddTicketLink = z.infer<typeof scAddTicketLink>
+
+/** 1つの起票案に含められる子チケットの数 */
+export const MAX_PROPOSED_CHILDREN = 20
+
+/**
+ * エージェントの plan に付ける子チケットの起票案。承認すると子チケットとして起票される。
+ * `TicketComment.proposal`(Json)に保存し、読むときもこのスキーマで検証する
+ */
+export const zChildProposal = z.object({
+  children: z
+    .array(
+      z.object({
+        title: zTicketTitle.describe('Title of the child ticket'),
+        content: zTicketContent.optional().describe('Description of the child ticket (Markdown)'),
+        order: zChildOrder.describe(
+          'Order under the parent (1-based). A child waits until every sibling with a smaller order is settled; siblings with the same order run in parallel',
+        ),
+        mode: zAgentMode
+          .nullable()
+          .describe(
+            'How the agent processes the child. plan=post a plan first / auto=execute directly / null=leave it to a human (unassigned)',
+          ),
+        acceptanceCriteria: z
+          .array(zCriterionText)
+          .max(MAX_TICKET_CRITERIA)
+          .default([])
+          .describe('Acceptance criteria of the child, one verifiable sentence per item'),
+      }),
+    )
+    .min(1)
+    .max(MAX_PROPOSED_CHILDREN),
+  advance: z
+    .enum(TICKET_CHILD_ADVANCES)
+    .optional()
+    .describe(
+      'When a child may move on to the next order. done=when the previous siblings are done / reported=also when the agent has reported them. ' +
+        "Follow the instructions in the ticket or the conversation. Omit to keep the parent's current setting (childAdvance in get_ticket)",
+    ),
+})
+export type ChildProposal = z.infer<typeof zChildProposal>
+
+/** 保存済みの起票案を読む。形が崩れていれば null(起票の対象にしない) */
+export const parseChildProposal = (value: unknown): ChildProposal | null => {
+  if (value === null || value === undefined) {
+    return null
+  }
+  const parsed = zChildProposal.safeParse(value)
+  return parsed.success ? parsed.data : null
+}

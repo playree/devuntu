@@ -20,11 +20,13 @@ import {
   removeTicketRelation as removeTicketRelationCore,
 } from '@/lib/board/ticket-relation'
 import { MAX_TICKET_CANDIDATES, TICKET_CANDIDATE_ORDER_BY, ticketCandidateWhere } from '@/lib/board/ticket-search'
+import { findWaitingTicketIds } from '@/lib/board/ticket-sequence'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { scUUID } from '@/lib/schema/schema'
 import {
+  parseChildProposal,
   scAddTicketLink,
   scAddTicketRelation,
   scCheckTicketCriterion,
@@ -74,6 +76,7 @@ export const getTicket = safeAuthAction
         createdBy: { select: { name: true } },
         agentMode: true,
         agentState: true,
+        childAdvance: true,
         createdAt: true,
         updatedAt: true,
         comments: {
@@ -82,6 +85,7 @@ export const getTicket = safeAuthAction
             content: true,
             type: true,
             decision: true,
+            proposal: true,
             parentId: true,
             authorId: true,
             author: { select: { name: true } },
@@ -112,7 +116,7 @@ export const getTicket = safeAuthAction
         return name ? [name] : []
       })
 
-    const [links, criteria, relations, pendingDecision] = await Promise.all([
+    const [links, criteria, relations, pendingDecision, waiting] = await Promise.all([
       listTicketLinks(id),
       listTicketCriteria(id),
       // 関係の相手は同じボードのチケットなので、ボードのメンバーでない承認者には見せない
@@ -124,6 +128,7 @@ export const getTicket = safeAuthAction
         agentState: ticket.agentState,
         status: ticket.status,
       }),
+      findWaitingTicketIds([id]),
     ])
 
     const { board, assignee, createdBy, comments, tags, mentionedUserIds, ...rest } = ticket
@@ -147,8 +152,9 @@ export const getTicket = safeAuthAction
       createdByName: createdBy?.name ?? '',
       // スレッドは 1 階層のみなので、親コメントに自分宛の返信だけをぶら下げれば表示側は再帰不要
       comments: (() => {
-        const flat = comments.map(({ author, mentionedUserIds: commentMentions, ...comment }) => ({
+        const flat = comments.map(({ author, mentionedUserIds: commentMentions, proposal, ...comment }) => ({
           ...comment,
+          proposal: parseChildProposal(proposal),
           authorName: author?.name ?? '',
           mentionedNames: toMentionedNames(commentMentions),
           isMine: comment.authorId === user.id,
@@ -163,6 +169,8 @@ export const getTicket = safeAuthAction
       links,
       criteria,
       relations,
+      /** 前の順番の兄弟が済んでおらず、エージェントが拾わない状態か */
+      isWaiting: waiting.has(id),
       /** 承認/差し戻しボタンを出す plan / report。返答できるのはチケットを編集できる人だけ */
       pendingDecision: access.canEdit ? pendingDecision : null,
       boardRole: access.boardRole,

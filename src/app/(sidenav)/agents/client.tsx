@@ -248,6 +248,7 @@ export const AgentsClient: FC = () => {
                     <AgentDecisionButtons
                       commentId={item.pendingDecision.commentId}
                       type={item.pendingDecision.type}
+                      proposedChildren={item.pendingDecision.proposedChildren}
                       boardId={item.boardId}
                       onDecided={() => list.reload()}
                     />

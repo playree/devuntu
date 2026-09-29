@@ -6,6 +6,7 @@ import { groupByLane, kanbanDoneSince, kanbanTicketWhere, MAX_KANBAN_CARDS } fro
 import { ticketDisplayId } from '@/lib/board/ticket-id'
 import { changeTicketStatus } from '@/lib/board/ticket-mutation'
 import { childProgress } from '@/lib/board/ticket-relation-rule'
+import { findWaitingTicketIds } from '@/lib/board/ticket-sequence'
 import { nowDate } from '@/lib/day'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
@@ -64,6 +65,13 @@ export const getBoardKanban = safeAuthAction
       take: MAX_KANBAN_CARDS,
     })
 
+    // 順番待ちを出すのは、エージェントに任せた未完了の子だけ(それ以外では処理状態を出さない)
+    const waiting = await findWaitingTicketIds(
+      tickets
+        .filter((ticket) => ticket.assignee?.isAgent && ticket.agentMode && ticket.status !== 'done')
+        .map((ticket) => ticket.id),
+    )
+
     const cards = tickets.map(({ assignee, _count, tags, relationsFrom, relationsTo, ...ticket }) => ({
       ...ticket,
       // 中間テーブルは表示側で扱わないので平坦化する
@@ -78,6 +86,7 @@ export const getBoardKanban = safeAuthAction
       childProgress: childProgress(relationsFrom.map(({ to }) => to.status)),
       // 親子は同じボードの中だけなので、接頭辞はこのボードのキーで組み立てられる
       parentDisplayId: relationsTo[0] ? ticketDisplayId({ key: board.key, number: relationsTo[0].from.number }) : '',
+      isWaiting: waiting.has(ticket.id),
     }))
 
     return {

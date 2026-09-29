@@ -6,7 +6,13 @@
  */
 
 import type { Prisma } from '@/generated/prisma/client'
-import type { TicketCommentDecision, TicketCommentType, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
+import type {
+  TicketChildAdvance,
+  TicketCommentDecision,
+  TicketCommentType,
+  TicketPriority,
+  TicketStatus,
+} from '@/generated/prisma/enums'
 import { dateOnlyToUtc, nowDate } from '../day'
 import { errInvalidOperation } from '../error'
 import {
@@ -17,7 +23,7 @@ import {
   enqueueTicketUpdated,
 } from '../notify/notify-trigger'
 import { prisma } from '../prisma'
-import type { CriterionItem } from '../schema/schema-ticket'
+import type { ChildProposal, CriterionItem } from '../schema/schema-ticket'
 import { type Actor, assertBoardAccess, assertTicketAccess, type TicketAccess } from './board-access'
 import { assertBoardAssignee, getBoardMentionCandidates, getTicketMentionCandidates } from './board-member'
 import { extractMentionEmails, resolveMentionUserIds } from './mention'
@@ -52,72 +58,77 @@ export type CreateTicketInput = {
  * チケット作成。
  * 担当者・タグがそのボードに属することは DB 制約では防げないのでここで検証する。
  */
-export const createTicket = async (actor: Actor, input: CreateTicketInput) => {
+export const createTicket = async (actor: Actor, input: CreateTicketInput) =>
+  prisma.$transaction(async (tx) => insertTicket(tx, actor, input))
+
+/**
+ * チケット作成の本体。ボードの 'write' の判定も含むので、他の書き込み(承認による子チケットの起票など)と
+ * 同じトランザクションで作りたい場合はこちらを呼ぶ
+ */
+export const insertTicket = async (tx: Prisma.TransactionClient, actor: Actor, input: CreateTicketInput) => {
   const { boardId, status, assigneeId, tagIds, dueDate, criteria, parentId, childOrder, ...rest } = input
 
-  return prisma.$transaction(async (tx) => {
-    await assertBoardAccess(actor, boardId, 'write', tx)
-    await assertBoardAssignee(tx, boardId, assigneeId)
-    const ids = await assertTagIdsInBoard(tx, boardId, tagIds)
+  await assertBoardAccess(actor, boardId, 'write', tx)
+  await assertBoardAssignee(tx, boardId, assigneeId)
+  const ids = await assertTagIdsInBoard(tx, boardId, tagIds)
 
-    // 採番はボード行をロックする。レーンの読み取りより先に取ることで、同一ボードへの同時作成は
-    // 先行トランザクションのコミット後にレーンを読み直すことになり、order の重複も防げる
-    const number = await nextTicketNumber(tx, boardId)
-    // 対象レーンの末尾へ追加する。必要なのは最大値だけなので全行は読まない
-    const lane = await tx.ticket.aggregate({ where: { boardId, status }, _max: { order: true } })
+  // 採番はボード行をロックする。レーンの読み取りより先に取ることで、同一ボードへの同時作成は
+  // 先行トランザクションのコミット後にレーンを読み直すことになり、order の重複も防げる
+  const number = await nextTicketNumber(tx, boardId)
+  // 対象レーンの末尾へ追加する。必要なのは最大値だけなので全行は読まない
+  const lane = await tx.ticket.aggregate({ where: { boardId, status }, _max: { order: true } })
 
-    const candidates = await getBoardMentionCandidates(boardId, tx)
-    const mentionedUserIds = resolveMentionUserIds(extractMentionEmails(rest.content ?? ''), candidates)
+  const candidates = await getBoardMentionCandidates(boardId, tx)
+  const mentionedUserIds = resolveMentionUserIds(extractMentionEmails(rest.content ?? ''), candidates)
 
-    const created = await tx.ticket.create({
-      data: {
-        ...rest,
-        number,
-        status,
-        boardId,
-        dueDate: dateOnlyToUtc(dueDate),
-        // 最初から完了で作ることもできるので、その場合はここで完了日時を入れる
-        completedAt: status === 'done' ? nowDate() : null,
-        createdById: actor.id,
-        assigneeId: assigneeId ?? null,
-        mentionedUserIds,
-        tags: { create: ids.map((tagId) => ({ tagId })) },
-        criteria: { create: (criteria ?? []).map((text, order) => ({ text, order })) },
-        order: nextOrder(lane._max.order === null ? [] : [lane._max.order]),
-      },
-      select: { id: true, title: true, number: true, board: { select: { key: true } } },
-    })
-
-    // 本文の画像はボードを選び直す前にアップロードされている場合があるので、作成先へ付け替える。
-    // 作成直後に呼ぶので、いま作ったチケット自身は「使用中」から除く
-    await reassignContentAttachments(tx, rest.content, boardId, actor, created.id)
-    if (parentId) {
-      await assignTicketParent(tx, { id: created.id, boardId }, parentId, childOrder)
-    } else if (childOrder !== undefined) {
-      // 親が無いのに順番だけを渡されても置き場が無いので、黙って捨てずに弾く
-      throw errInvalidOperation()
-    }
-
-    const ticket = {
-      id: created.id,
-      title: created.title,
-      displayId: ticketDisplayId({ key: created.board.key, number: created.number }),
-    }
-
-    // 作成と同じトランザクションで投入する(コミット後に落ちると通知だけが消える)
-    await enqueueTicketCreated(
-      {
-        actorId: actor.id,
-        ticket: { id: ticket.id, boardId, displayId: ticket.displayId, title: ticket.title },
-        assigneeId: assigneeId ?? null,
-        status,
-        mentionedUserIds,
-      },
-      tx,
-    )
-
-    return ticket
+  const created = await tx.ticket.create({
+    data: {
+      ...rest,
+      number,
+      status,
+      boardId,
+      dueDate: dateOnlyToUtc(dueDate),
+      // 最初から完了で作ることもできるので、その場合はここで完了日時を入れる
+      completedAt: status === 'done' ? nowDate() : null,
+      createdById: actor.id,
+      assigneeId: assigneeId ?? null,
+      mentionedUserIds,
+      tags: { create: ids.map((tagId) => ({ tagId })) },
+      criteria: { create: (criteria ?? []).map((text, order) => ({ text, order })) },
+      order: nextOrder(lane._max.order === null ? [] : [lane._max.order]),
+    },
+    select: { id: true, title: true, number: true, board: { select: { key: true } } },
   })
+
+  // 本文の画像はボードを選び直す前にアップロードされている場合があるので、作成先へ付け替える。
+  // 作成直後に呼ぶので、いま作ったチケット自身は「使用中」から除く
+  await reassignContentAttachments(tx, rest.content, boardId, actor, created.id)
+  if (parentId) {
+    await assignTicketParent(tx, { id: created.id, boardId }, parentId, childOrder)
+  } else if (childOrder !== undefined) {
+    // 親が無いのに順番だけを渡されても置き場が無いので、黙って捨てずに弾く
+    throw errInvalidOperation()
+  }
+
+  const ticket = {
+    id: created.id,
+    title: created.title,
+    displayId: ticketDisplayId({ key: created.board.key, number: created.number }),
+  }
+
+  // 作成と同じトランザクションで投入する(コミット後に落ちると通知だけが消える)
+  await enqueueTicketCreated(
+    {
+      actorId: actor.id,
+      ticket: { id: ticket.id, boardId, displayId: ticket.displayId, title: ticket.title },
+      assigneeId: assigneeId ?? null,
+      status,
+      mentionedUserIds,
+    },
+    tx,
+  )
+
+  return ticket
 }
 
 /** undefined = 変更しない / null = クリア */
@@ -136,6 +147,8 @@ export type UpdateTicketInput = {
   parentId?: string | null
   /** 親の下での順番。parentId と一緒に渡さない場合は今の親の下での順番を変える */
   childOrder?: number
+  /** 子が次の順番へ進む条件(親として持つ) */
+  childAdvance?: TicketChildAdvance
 }
 
 /**
@@ -280,14 +293,15 @@ export type AddCommentInput = {
  * コメントの書き込み本体(メンション・添付・通知を含む)。
  * 権限判定(`assertTicketAccess` の 'edit')を済ませた後に同じトランザクション内で呼ぶ。
  * `decision` は承認/差し戻しの返信だけが付ける(`agent-decision.ts`)。
+ * `proposal` は子チケットの起票案で、エージェントの plan だけが付ける(`agent-proposal.ts`)。
  */
 export const insertComment = async (
   tx: Prisma.TransactionClient,
   actor: Actor,
   access: TicketAccess,
-  input: AddCommentInput & { decision?: TicketCommentDecision },
+  input: AddCommentInput & { decision?: TicketCommentDecision; proposal?: ChildProposal },
 ) => {
-  const { ticketId, content, type, parentId, decision } = input
+  const { ticketId, content, type, parentId, decision, proposal } = input
   if (parentId) {
     await assertReplyTarget(tx, ticketId, parentId)
   }
@@ -297,7 +311,7 @@ export const insertComment = async (
   await reassignContentAttachments(tx, content, access.boardId, actor, ticketId)
 
   const comment = await tx.ticketComment.create({
-    data: { ticketId, authorId: actor.id, content, type, parentId, decision, mentionedUserIds },
+    data: { ticketId, authorId: actor.id, content, type, parentId, decision, proposal, mentionedUserIds },
     select: { id: true },
   })
 

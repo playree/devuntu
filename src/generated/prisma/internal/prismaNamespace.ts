@@ -5149,7 +5149,8 @@ export const TicketScalarFieldEnum = {
   updatedAt: 'updatedAt',
   mentionedUserIds: 'mentionedUserIds',
   agentMode: 'agentMode',
-  agentState: 'agentState'
+  agentState: 'agentState',
+  childAdvance: 'childAdvance'
 } as const
 
 export type TicketScalarFieldEnum = (typeof TicketScalarFieldEnum)[keyof typeof TicketScalarFieldEnum]
@@ -5162,6 +5163,7 @@ export const TicketCommentScalarFieldEnum = {
   content: 'content',
   type: 'type',
   decision: 'decision',
+  proposal: 'proposal',
   parentId: 'parentId',
   mentionedUserIds: 'mentionedUserIds',
   createdAt: 'createdAt',
@@ -5666,6 +5668,20 @@ export type EnumAgentTaskStateFieldRefInput<$PrismaModel> = FieldRefInputType<$P
  * Reference to a field of type 'AgentTaskState[]'
  */
 export type ListEnumAgentTaskStateFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AgentTaskState[]'>
+    
+
+
+/**
+ * Reference to a field of type 'TicketChildAdvance'
+ */
+export type EnumTicketChildAdvanceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TicketChildAdvance'>
+    
+
+
+/**
+ * Reference to a field of type 'TicketChildAdvance[]'
+ */
+export type ListEnumTicketChildAdvanceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TicketChildAdvance[]'>
     
 
 

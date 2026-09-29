@@ -29,6 +29,7 @@ import { useLocale } from '@/locale/client'
 import { Accordion } from '@heroui/react'
 import { FC, ReactNode, useState } from 'react'
 import { tv } from 'tailwind-variants'
+import { ChildProposalView } from './child-proposal'
 import { addTicketComment, deleteTicketComment, GetTicketReturnType, updateTicketComment } from './server'
 
 type Ticket = NonNullable<GetTicketReturnType>
@@ -176,6 +177,7 @@ export const CommentItem: FC<{
         <MarkdownView body={comment.content} className='mt-1' mentionUsers={mentionCandidates} />
       )}
 
+      {comment.proposal && !isEditing && <ChildProposalView proposal={comment.proposal} />}
       <MentionChips names={comment.mentionedNames} className='mt-2' />
       {footer && !isEditing && <div className='mt-2'>{footer}</div>}
     </Panel>

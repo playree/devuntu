@@ -698,6 +698,13 @@ export type EnumAgentTaskStateNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumAgentTaskStateNullableFilter<$PrismaModel> | $Enums.AgentTaskState | null
 }
 
+export type EnumTicketChildAdvanceFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketChildAdvance | Prisma.EnumTicketChildAdvanceFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketChildAdvance[] | Prisma.ListEnumTicketChildAdvanceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TicketChildAdvance[] | Prisma.ListEnumTicketChildAdvanceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTicketChildAdvanceFilter<$PrismaModel> | $Enums.TicketChildAdvance
+}
+
 export type EnumTicketStatusWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.TicketStatus | Prisma.EnumTicketStatusFieldRefInput<$PrismaModel>
   in?: $Enums.TicketStatus[] | Prisma.ListEnumTicketStatusFieldRefInput<$PrismaModel>
@@ -736,6 +743,16 @@ export type EnumAgentTaskStateNullableWithAggregatesFilter<$PrismaModel = never>
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedEnumAgentTaskStateNullableFilter<$PrismaModel>
   _max?: Prisma.NestedEnumAgentTaskStateNullableFilter<$PrismaModel>
+}
+
+export type EnumTicketChildAdvanceWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketChildAdvance | Prisma.EnumTicketChildAdvanceFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketChildAdvance[] | Prisma.ListEnumTicketChildAdvanceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TicketChildAdvance[] | Prisma.ListEnumTicketChildAdvanceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTicketChildAdvanceWithAggregatesFilter<$PrismaModel> | $Enums.TicketChildAdvance
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTicketChildAdvanceFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTicketChildAdvanceFilter<$PrismaModel>
 }
 
 export type EnumTicketCommentTypeNullableFilter<$PrismaModel = never> = {
@@ -1432,6 +1449,13 @@ export type NestedEnumAgentTaskStateNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumAgentTaskStateNullableFilter<$PrismaModel> | $Enums.AgentTaskState | null
 }
 
+export type NestedEnumTicketChildAdvanceFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketChildAdvance | Prisma.EnumTicketChildAdvanceFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketChildAdvance[] | Prisma.ListEnumTicketChildAdvanceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TicketChildAdvance[] | Prisma.ListEnumTicketChildAdvanceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTicketChildAdvanceFilter<$PrismaModel> | $Enums.TicketChildAdvance
+}
+
 export type NestedEnumTicketStatusWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.TicketStatus | Prisma.EnumTicketStatusFieldRefInput<$PrismaModel>
   in?: $Enums.TicketStatus[] | Prisma.ListEnumTicketStatusFieldRefInput<$PrismaModel>
@@ -1470,6 +1494,16 @@ export type NestedEnumAgentTaskStateNullableWithAggregatesFilter<$PrismaModel = 
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedEnumAgentTaskStateNullableFilter<$PrismaModel>
   _max?: Prisma.NestedEnumAgentTaskStateNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumTicketChildAdvanceWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketChildAdvance | Prisma.EnumTicketChildAdvanceFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketChildAdvance[] | Prisma.ListEnumTicketChildAdvanceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TicketChildAdvance[] | Prisma.ListEnumTicketChildAdvanceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTicketChildAdvanceWithAggregatesFilter<$PrismaModel> | $Enums.TicketChildAdvance
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTicketChildAdvanceFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTicketChildAdvanceFilter<$PrismaModel>
 }
 
 export type NestedEnumTicketCommentTypeNullableFilter<$PrismaModel = never> = {

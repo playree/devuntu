@@ -1,7 +1,7 @@
 'use client'
 
 import { createEnumChip } from '@/components/enum-chip'
-import type { TagColor, TicketCommentDecision, TicketPriority } from '@/generated/prisma/enums'
+import type { AgentTaskState, TagColor, TicketCommentDecision, TicketPriority } from '@/generated/prisma/enums'
 import { Chip, ChipProps, cn } from '@heroui/react'
 import { FC, ReactNode } from 'react'
 import { agentStateChip, priorityChip, statusChip } from './ticket-options'
@@ -11,6 +11,19 @@ export const StatusChip = statusChip.EnumChip
 
 /** 処理状態の Chip。state が null のチケットは queued 扱い(agent.ts の agentStateWhere と同じ規約)なので、呼び出し側で寄せる */
 export const AgentStateChip = agentStateChip.EnumChip
+
+const WaitingChip = createEnumChip<'waiting'>({ waiting: { color: 'default', item: 'agent_state_waiting' } }).EnumChip
+
+/**
+ * かんばん・詳細画面に出す処理状態。未着手の子チケットが前の順番の兄弟を待っている間は「順番待ち」を出す
+ * (`agentState` の値ではなく、`ticket-sequence.ts` の判定から出す表示だけの状態)
+ */
+export const AgentProgressChip: FC<{ state: AgentTaskState | null; isWaiting: boolean }> = ({ state, isWaiting }) =>
+  isWaiting && (state === null || state === 'queued') ? (
+    <WaitingChip value='waiting' />
+  ) : (
+    <AgentStateChip value={state ?? 'queued'} />
+  )
 
 export const PriorityChip = priorityChip.EnumChip
 

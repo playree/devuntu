@@ -1,4 +1,4 @@
-import { TICKET_RELATION_FILTERS } from '@/lib/board/ticket-relation-rule'
+import { TICKET_CHILD_ADVANCES, TICKET_RELATION_FILTERS } from '@/lib/board/ticket-relation-rule'
 import { ASSIGNEE_NONE } from '@/lib/board/ticket-search'
 import { AGENT_MCP_SERVER_NAME, MCP_SERVER_NAME } from '@/lib/mcp/mcp'
 import { registerAgentSetupTool, registerAgentTools } from '@/lib/mcp/mcp-agent'
@@ -111,6 +111,12 @@ const mcpUpdateTicketSchema = scPatchTicket.omit({ id: true }).extend({
     ),
   parentId: zRelationTarget.nullish().describe(`${PARENT_ID_DESCRIPTION}. Pass null to remove the parent`),
   childOrder: zMcpChildOrder.optional(),
+  childAdvance: z
+    .enum(TICKET_CHILD_ADVANCES)
+    .optional()
+    .describe(
+      'As a parent: when its children move on to the next order. done=when the previous siblings are done / reported=also when the agent has reported them',
+    ),
 })
 
 const mcpTicketSearchSchema = scTicketSearch.extend({
@@ -218,7 +224,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     {
       title: 'Update ticket',
       description:
-        'Updates ticket fields (title / content / priority / due date / assignee / tags / acceptance criteria / parent) and status. Set status to doing when you start working on it. ' +
+        'Updates ticket fields (title / content / priority / due date / assignee / tags / acceptance criteria / parent / child advance rule) and status. Set status to doing when you start working on it. ' +
         'Members cannot update tickets assigned to someone else (unassigned tickets are allowed; owners have no restriction). ' +
         ACCEPTANCE_CRITERIA_GUIDE,
       inputSchema: mcpUpdateTicketSchema.shape,
