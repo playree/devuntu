@@ -12,6 +12,7 @@ import { mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from 'node:
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { formatJa } from '../../helpers/command-message'
 
 // logger はテスト出力を汚すだけなので黙らせる
 vi.mock('@/lib/logger', () => ({
@@ -143,7 +144,7 @@ describe('対象ファイルの選別', () => {
 
     const result = getCommandCatalog({ force: true })
     const overflow = result.issues.find((issue) => issue.fileName === null)
-    expect(overflow?.messages[0]).toContain(`走査の上限 ${MAX_COMMAND_DEF_ENTRIES} 件`)
+    expect(formatJa(overflow!.messages[0])).toContain(`走査の上限 ${MAX_COMMAND_DEF_ENTRIES} 件`)
     // 名前順の先頭は拾えている
     expect(result.catalog.commands.map((command) => command.id)).toEqual(['deploy-web'])
   })
@@ -188,7 +189,7 @@ describe('読み込み', () => {
     expect(result.catalog.commands.map((command) => command.id)).toEqual(['deploy-web'])
     expect(result.issues).toHaveLength(1)
     expect(result.issues[0].fileName).toBe('broken.yaml')
-    expect(result.issues[0].messages[0]).toContain('YAML として読めない')
+    expect(formatJa(result.issues[0].messages[0])).toContain('YAML として読めない')
   })
 
   it('スキーマ違反はどこが悪いかを返す', () => {
@@ -197,7 +198,7 @@ describe('読み込み', () => {
     const result = getCommandCatalog({ force: true })
     expect(result.catalog.commands).toEqual([])
     expect(result.issues[0].fileName).toBe('web01.yaml')
-    expect(result.issues[0].messages.some((message) => message.startsWith('target.'))).toBe(true)
+    expect(result.issues[0].messages.some((message) => formatJa(message).startsWith('target.'))).toBe(true)
   })
 
   it('対象ファイルが無ければ空になるが、それ自体は問題として扱わない', () => {
@@ -212,7 +213,7 @@ describe('読み込み', () => {
     const result = getCommandCatalog({ force: true })
     expect(result.issues).toHaveLength(1)
     expect(result.issues[0].fileName).toBeNull()
-    expect(result.issues[0].messages[0]).toContain('定義ディレクトリを読み込めない')
+    expect(formatJa(result.issues[0].messages[0])).toContain('定義ディレクトリを読み込めない')
   })
 
   it('ファイルを指していれば専用の文言を返す', () => {
@@ -221,7 +222,7 @@ describe('読み込み', () => {
 
     const result = getCommandCatalog({ force: true })
     expect(result.catalog.commands).toEqual([])
-    expect(result.issues[0].messages[0]).toContain('ディレクトリを指定する')
+    expect(formatJa(result.issues[0].messages[0])).toContain('ディレクトリを指定する')
   })
 })
 
@@ -233,7 +234,7 @@ describe('ファイルをまたぐ重複', () => {
     const result = getCommandCatalog({ force: true })
     expect(result.catalog.commands).toEqual([])
     expect(result.issues.map((issue) => issue.fileName)).toEqual(['app-web.yaml', 'web01.yaml'])
-    expect(result.issues[0].messages[0]).toContain('ターゲットID web01')
+    expect(formatJa(result.issues[0].messages[0])).toContain('ターゲットID web01')
   })
 
   it('コマンドIDが重複していればどちらのファイルも読まない', () => {
@@ -244,7 +245,7 @@ describe('ファイルをまたぐ重複', () => {
     const result = getCommandCatalog({ force: true })
     expect(result.catalog.commands).toEqual([])
     expect(result.issues.map((issue) => issue.fileName)).toEqual(['db01.yaml', 'web01.yaml'])
-    expect(result.issues[0].messages[0]).toContain('コマンドID restart')
+    expect(formatJa(result.issues[0].messages[0])).toContain('コマンドID restart')
   })
 
   it('重複していないファイルは巻き込まない', () => {
@@ -322,7 +323,7 @@ describe('上限', () => {
     const result = getCommandCatalog({ force: true })
     expect(result.catalog.commands).toHaveLength(160)
     expect(result.issues.map((issue) => issue.fileName)).toEqual(['c.yaml'])
-    expect(result.issues[0].messages[0]).toContain('合計が上限')
+    expect(formatJa(result.issues[0].messages[0])).toContain('合計が上限')
   })
 })
 

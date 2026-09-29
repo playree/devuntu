@@ -33,6 +33,7 @@ import {
   resolveCommandDefPath,
 } from './command-catalog'
 import { formatCommandIssues, type ParsedCommandFile, scCommandFile } from './command-def'
+import { type CommandMessage, commandMessage, commandText } from './command-message'
 
 /**
  * 書き込みを断った理由。
@@ -43,8 +44,8 @@ import { formatCommandIssues, type ParsedCommandFile, scCommandFile } from './co
 export class CommandDefWriteError extends ClientError {
   // `name` は 'ClientError' のまま継承する。画面側(`parseAction`)がこの名前で
   // 「利用者に見せてよいエラー」を見分けており、変えると想定外エラーの扱いに落ちる
-  messages: string[]
-  constructor(errorType: string, messages: string[] = []) {
+  messages: CommandMessage[]
+  constructor(errorType: string, messages: CommandMessage[] = []) {
     super(errorType)
     this.messages = messages
   }
@@ -215,7 +216,7 @@ export const editCommandFileCommands = async (
 ): Promise<{ revision: string; commands: CommandDefEntry[] }> => {
   const path = resolveCommandDefPath(params.fileName)
   if (!path) {
-    throw new CommandDefWriteError(COMMAND_DEF_INVALID, ['定義ディレクトリ直下のファイル名ではない'])
+    throw new CommandDefWriteError(COMMAND_DEF_INVALID, [commandMessage('command_err_not_def_file')])
   }
 
   return withFileLock(path, async () => {
@@ -232,7 +233,7 @@ export const editCommandFileCommands = async (
     if (doc.errors.length > 0) {
       throw new CommandDefWriteError(
         COMMAND_DEF_INVALID,
-        doc.errors.map((error) => error.message),
+        doc.errors.map((error) => commandText(error.message)),
       )
     }
 

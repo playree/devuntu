@@ -35,6 +35,7 @@ import {
   MAX_COMMAND_DEFS,
 } from './command'
 import { formatCommandIssues, type ParsedCommandFile, scCommandFile } from './command-def'
+import { type CommandMessage, commandMessage, errorText } from './command-message'
 
 /** 読み込めた定義ファイル 1 件 */
 export type CommandCatalogFile = {
@@ -57,7 +58,7 @@ export const commandFileRevision = (text: string): string =>
 /** 読み込めなかった理由。ディレクトリ自体の問題なら `fileName` は null */
 export type CommandCatalogIssue = {
   fileName: string | null
-  messages: string[]
+  messages: CommandMessage[]
 }
 
 export type CommandCatalog = {
@@ -144,17 +145,19 @@ const scanDir = (dir: string): ScanResult => {
       return {
         fileNames: [],
         fingerprint: 'not-a-directory',
-        issue: { fileName: null, messages: ['COMMAND_DEF_DIR にはディレクトリを指定する(ファイルは指定できない)'] },
+        issue: { fileName: null, messages: [commandMessage('command_err_def_dir_not_directory')] },
         overflowIssues: [],
       }
     }
     entries = readdirSync(dir)
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
     return {
       fileNames: [],
       fingerprint: 'unreadable',
-      issue: { fileName: null, messages: [`定義ディレクトリを読み込めない: ${message}`] },
+      issue: {
+        fileName: null,
+        messages: [commandMessage('command_err_def_dir_unreadable', { error: errorText(error) })],
+      },
       overflowIssues: [],
     }
   }
@@ -168,7 +171,7 @@ const scanDir = (dir: string): ScanResult => {
           {
             fileName: null,
             messages: [
-              `定義ファイルが ${targets.length} 件あり、走査の上限 ${MAX_COMMAND_DEF_ENTRIES} 件を超えるため名前順で先頭からしか見ていない`,
+              commandMessage('command_err_def_scan_limit', { count: targets.length, max: MAX_COMMAND_DEF_ENTRIES }),
             ],
           },
         ]
@@ -209,8 +212,8 @@ export const mergeCommandFiles = (
   parsed: ParsedCommandFileEntry[],
 ): { catalog: CommandCatalog; issues: CommandCatalogIssue[] } => {
   const issues: CommandCatalogIssue[] = []
-  const excluded = new Map<string, string[]>()
-  const exclude = (fileName: string, message: string) => {
+  const excluded = new Map<string, CommandMessage[]>()
+  const exclude = (fileName: string, message: CommandMessage) => {
     const messages = excluded.get(fileName)
     if (messages) {
       messages.push(message)
@@ -230,19 +233,22 @@ export const mergeCommandFiles = (
     })
   })
 
-  const reportDuplicates = (owners: Map<string, string[]>, what: string) => {
+  const reportDuplicates = (
+    owners: Map<string, string[]>,
+    item: 'command_err_duplicate_target_id' | 'command_err_duplicate_command_id',
+  ) => {
     owners.forEach((fileNames, id) => {
       if (fileNames.length < 2) {
         return
       }
       fileNames.forEach((fileName) => {
         const others = fileNames.filter((other) => other !== fileName)
-        exclude(fileName, `${what} ${id} が ${others.join(' / ')} と重複している`)
+        exclude(fileName, commandMessage(item, { id, others: others.join(' / ') }))
       })
     })
   }
-  reportDuplicates(targetOwners, 'ターゲットID')
-  reportDuplicates(commandOwners, 'コマンドID')
+  reportDuplicates(targetOwners, 'command_err_duplicate_target_id')
+  reportDuplicates(commandOwners, 'command_err_duplicate_command_id')
 
   const files: CommandCatalogFile[] = []
   let total = 0
@@ -252,7 +258,7 @@ export const mergeCommandFiles = (
     }
     // 全体の上限。ファイルの途中で切ると「一部のコマンドだけ消える」になるのでファイル単位で落とす
     if (total + file.commands.length > MAX_COMMAND_DEFS) {
-      exclude(fileName, `コマンドの合計が上限 ${MAX_COMMAND_DEFS} 件を超えるため読み込まない`)
+      exclude(fileName, commandMessage('command_err_total_commands_limit', { max: MAX_COMMAND_DEFS }))
       return
     }
     total += file.commands.length
@@ -287,7 +293,7 @@ const loadCatalog = (dir: string, fileNames: string[], scanIssues: CommandCatalo
 
   const loadFileNames = fileNames.slice(0, MAX_COMMAND_DEF_FILES)
   fileNames.slice(MAX_COMMAND_DEF_FILES).forEach((fileName) => {
-    issues.push({ fileName, messages: [`定義ファイルが上限 ${MAX_COMMAND_DEF_FILES} 件を超えるため読み込まない`] })
+    issues.push({ fileName, messages: [commandMessage('command_err_def_files_limit', { max: MAX_COMMAND_DEF_FILES })] })
   })
 
   loadFileNames.forEach((fileName) => {
@@ -295,8 +301,10 @@ const loadCatalog = (dir: string, fileNames: string[], scanIssues: CommandCatalo
     try {
       text = readFileSync(join(dir, fileName), 'utf-8')
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      issues.push({ fileName, messages: [`定義ファイルを読み込めない: ${message}`] })
+      issues.push({
+        fileName,
+        messages: [commandMessage('command_err_def_file_unreadable', { error: errorText(error) })],
+      })
       return
     }
 
@@ -304,8 +312,7 @@ const loadCatalog = (dir: string, fileNames: string[], scanIssues: CommandCatalo
     try {
       raw = parseYaml(text)
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      issues.push({ fileName, messages: [`YAML として読めない: ${message}`] })
+      issues.push({ fileName, messages: [commandMessage('command_err_yaml_unreadable', { error: errorText(error) })] })
       return
     }
 

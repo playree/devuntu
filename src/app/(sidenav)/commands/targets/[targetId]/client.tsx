@@ -10,6 +10,7 @@ import { notify } from '@/components/notify'
 import { RoleChip } from '@/components/role-chip'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { SESSION_NOT_FRESH } from '@/lib/auth/auth-config'
+import { formatCommandMessage } from '@/lib/command/command-message'
 import { ClientError } from '@/lib/error'
 import { useLocale } from '@/locale/client'
 import { Chip } from '@heroui/react'
@@ -82,7 +83,9 @@ export const CommandTargetClient: FC<{ targetKey: string }> = ({ targetKey }) =>
         deleteCommandDef({ targetKey, revision: data.target.revision, commandId: command.id }),
       )
       if (!result?.ok) {
-        notify.error(t('error'), { description: result?.messages.join(' / ') })
+        notify.error(t('error'), {
+          description: result?.messages.map((message) => formatCommandMessage(message, t)).join(' / '),
+        })
         return
       }
       notify.success(t('msg_saved'))

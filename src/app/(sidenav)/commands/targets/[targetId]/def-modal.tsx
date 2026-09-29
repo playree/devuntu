@@ -10,6 +10,7 @@ import { parseAction } from '@/lib/action/action-client'
 import { COMMAND_DEF_CONFLICT, COMMAND_DEF_NOT_EDITABLE, COMMAND_DEF_READ_ONLY } from '@/lib/command/command'
 import { formatCommandIssues, scCommandDefInput } from '@/lib/command/command-def'
 import { lintCommandDefYaml } from '@/lib/command/command-def-lint'
+import { formatCommandMessage } from '@/lib/command/command-message'
 import { ClientError } from '@/lib/error'
 import { useLocale } from '@/locale/client'
 import { FC, useState } from 'react'
@@ -70,7 +71,7 @@ export const CommandDefModal: FC<ModalBaseProps & { target: CommandDefTarget }> 
         // 画面でも定義ファイルと同じスキーマで見る。往復せずに直せる分をここで返す
         const parsed = scCommandDefInput.safeParse(raw)
         if (!parsed.success) {
-          setMessages(formatCommandIssues(parsed.error))
+          setMessages(formatCommandIssues(parsed.error).map((message) => formatCommandMessage(message, t)))
           return
         }
 
@@ -86,7 +87,7 @@ export const CommandDefModal: FC<ModalBaseProps & { target: CommandDefTarget }> 
             { handled: [COMMAND_DEF_CONFLICT, COMMAND_DEF_NOT_EDITABLE, COMMAND_DEF_READ_ONLY] },
           )
           if (!result?.ok) {
-            setMessages(result?.messages ?? [])
+            setMessages((result?.messages ?? []).map((message) => formatCommandMessage(message, t)))
             return
           }
           notify.success(t('msg_saved'))
@@ -127,7 +128,12 @@ export const CommandDefModal: FC<ModalBaseProps & { target: CommandDefTarget }> 
           onChange={setText}
           minRows={16}
           // 許可はターゲット側にあり、コマンド 1 件の YAML からは読めないので渡す
-          lint={(value) => lintCommandDefYaml(value, { allowFreeInput: target.allowFreeInput })}
+          lint={(value) =>
+            lintCommandDefYaml(value, { allowFreeInput: target.allowFreeInput }).map((issue) => ({
+              ...issue,
+              message: formatCommandMessage(issue.message, t),
+            }))
+          }
         />
         {messages.length > 0 && (
           <NoticePanel status='danger'>

@@ -11,6 +11,7 @@ import {
 } from '@/lib/command/command'
 import { assertCommandTargetAccess } from '@/lib/command/command-access'
 import { buildCommandTargetStatus, type CommandTargetStatus, getCommandCatalog } from '@/lib/command/command-catalog'
+import { type CommandMessage } from '@/lib/command/command-message'
 import { type CommandDefEntry, CommandDefWriteError, editCommandFileCommands } from '@/lib/command/command-writer'
 import { errInvalidOperation, errTooManyRequests } from '@/lib/error'
 import { logger } from '@/lib/logger'
@@ -117,7 +118,7 @@ export type GetCommandTargetDetailReturnType = Awaited<ReturnType<typeof getComm
  * 検証エラーの明細は `errorType` に載せられないので、**明細付きのものだけ成功応答で返す**。
  * 状態の問題(競合・編集不可・読み取り専用)は `errorType` で分岐できるよう throw する。
  */
-export type EditCommandDefResult = { ok: true } | { ok: false; messages: string[] }
+export type EditCommandDefResult = { ok: true } | { ok: false; messages: CommandMessage[] }
 
 /** 検証で落ちたものだけ画面向けの形へ詰め替え、それ以外はそのまま投げる */
 const toEditResult = async (error: unknown): Promise<EditCommandDefResult> => {

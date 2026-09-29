@@ -8,6 +8,7 @@ import { ArrowPathIcon, CommandLineIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
+import { formatCommandMessage } from '@/lib/command/command-message'
 import { dayformat } from '@/lib/day'
 import { useConfirmAction } from '@/lib/use-confirm-action'
 import { useLocale } from '@/locale/client'
@@ -112,11 +113,14 @@ const CommandTargetsBody: FC<{
               <div key={issue.fileName ?? ''}>
                 <span className='font-mono font-semibold break-all'>{issue.fileName ?? t('command_def_dir')}</span>
                 <ul className='list-disc pl-5'>
-                  {issue.messages.map((message) => (
-                    <li key={message} className='break-all'>
-                      {message}
-                    </li>
-                  ))}
+                  {issue.messages.map((message) => {
+                    const text = formatCommandMessage(message, t)
+                    return (
+                      <li key={text} className='break-all'>
+                        {text}
+                      </li>
+                    )
+                  })}
                 </ul>
               </div>
             ))}
