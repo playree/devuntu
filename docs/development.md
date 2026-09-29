@@ -340,6 +340,9 @@ pnpm why sharp
 
 - `site/` 直下がそのまま公開ルートになる。ページを増やすときは `site/<名前>/index.html` を追加し、
   共通のスタイル・画像は `site/assets/` に置く
+- 英語ページは `site/en/index.html`。内容を変えたら日英両方を更新し、`hreflang` の相互リンクも揃える
+- ページを増やしたら `site/sitemap.xml` にも追加する。robots.txt はドメイン直下(`playree.github.io/robots.txt`)
+  しか読まれずプロジェクトサイトでは効かないため、サイトマップは Search Console から送信する
 - Google Search Console などの所有権確認ファイル(`google<ID>.html` 等)は `site/` 直下に置く。
   Jekyll を通さないので、ファイルは加工されずに配信される
 - デプロイは GitHub Actions の `Pages`([.github/workflows/pages.yml](../.github/workflows/pages.yml))。
