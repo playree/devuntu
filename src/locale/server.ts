@@ -1,9 +1,10 @@
 import { envu } from '@/lib/env-util'
-import { expandTemplate, type LocaleValues } from '@/lib/locale-util'
+import { expandTemplate, pickFallbackLocale, type LocaleValues } from '@/lib/locale-util'
 import { LocaleItem } from '.'
 import { localeConfig } from './config'
 
 export const defaultLocale = envu.server.DEFAULT_LOCALE || localeConfig.locales[0]
+export const fallbackLocale = pickFallbackLocale(localeConfig, envu.server.DEFAULT_LOCALE)
 
 export const t = (locale: string | null, item: LocaleItem, values?: LocaleValues) => {
   const { resources, locales } = localeConfig

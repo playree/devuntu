@@ -5,6 +5,7 @@ import { ja } from './lang-ja'
 export const localeConfig: LocaleConfig = {
   locales: ['ja', 'en'],
   resources: { ja, en },
+  fallbackLocale: 'en',
   cookie: {
     name: 'locale',
     maxAge: 86400 * 365,
