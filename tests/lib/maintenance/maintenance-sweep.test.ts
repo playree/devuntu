@@ -21,6 +21,7 @@ import {
   sweepOauthClientAssertions,
   sweepOauthRefreshTokens,
   sweepSessions,
+  sweepTicketActivities,
   sweepUploadNonces,
   sweepVerifications,
 } from '@/lib/maintenance/maintenance-sweep'
@@ -32,6 +33,7 @@ const AGENT_RETENTION_DAYS = 30
 const AGENT_KEEP = 200
 const COMMAND_RETENTION_DAYS = 10
 const COMMAND_KEEP = 50
+const TICKET_ACTIVITY_DAYS = 60
 
 vi.mock('@/lib/env-util', () => ({
   envu: {
@@ -47,6 +49,9 @@ vi.mock('@/lib/env-util', () => ({
       },
       get COMMAND_RUN_KEEP() {
         return COMMAND_KEEP
+      },
+      get TICKET_ACTIVITY_RETENTION_DAYS() {
+        return TICKET_ACTIVITY_DAYS
       },
     },
   },
@@ -64,6 +69,7 @@ vi.mock('@/lib/prisma', async () =>
     agentRunner: ['findMany'],
     commandRun: ['deleteMany', 'findMany'],
     gitCheckSuite: ['deleteMany'],
+    ticketActivity: ['deleteMany'],
   }),
 )
 
@@ -86,6 +92,7 @@ beforeEach(() => {
     prisma.agentRun,
     prisma.commandRun,
     prisma.gitCheckSuite,
+    prisma.ticketActivity,
   ]) {
     vi.mocked(model.deleteMany).mockResolvedValue({ count: 0 })
   }
@@ -99,6 +106,15 @@ describe('sweepGitCheckSuites', () => {
     await sweepGitCheckSuites(now)
     expect(vi.mocked(prisma.gitCheckSuite.deleteMany).mock.calls[0][0]).toEqual({
       where: { updatedAt: { lt: msBefore(now, GIT_CHECK_SUITE_RETENTION_MS) } },
+    })
+  })
+})
+
+describe('sweepTicketActivities', () => {
+  it('保持期間より前に記録された履歴だけを消す', async () => {
+    await sweepTicketActivities(now)
+    expect(vi.mocked(prisma.ticketActivity.deleteMany).mock.calls[0][0]).toEqual({
+      where: { createdAt: { lt: msBefore(now, TICKET_ACTIVITY_DAYS * DAY_MS) } },
     })
   })
 })

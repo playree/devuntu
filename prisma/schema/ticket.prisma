@@ -81,11 +81,12 @@ model Ticket {
   /// 子チケットが次の順番へ進む条件(親として持つ)。エージェントの待ち判定に使う
   childAdvance TicketChildAdvance @default(done)
 
-  tags      TicketTag[]
-  comments  TicketComment[]
-  agentRuns AgentRun[]
-  links     TicketLink[]
-  criteria  TicketCriterion[]
+  tags       TicketTag[]
+  comments   TicketComment[]
+  agentRuns  AgentRun[]
+  links      TicketLink[]
+  criteria   TicketCriterion[]
+  activities TicketActivity[]
 
   autoReviseTriggers AgentAutoReviseTrigger[]
 
@@ -238,4 +239,63 @@ model TicketRelation {
   @@unique([type, fromId, toId])
   @@index([toId, type])
   @@map("ticket_relation")
+}
+
+/// 変更履歴の対象項目
+enum TicketActivityField {
+  /// 作成
+  created
+  /// 件名
+  title
+  /// 本文
+  content
+  /// ステータス
+  status
+  /// 優先度
+  priority
+  /// 期限
+  dueDate
+  /// 担当
+  assignee
+  /// タグ
+  tags
+  /// 受け入れ条件
+  criteria
+}
+
+/// 変更の経路。人・エージェントの操作は user、変更者のいない自動の変更はそれぞれの値
+enum TicketActivitySource {
+  /// 人・エージェントの操作(画面 / MCP)
+  user
+  /// PR / MR のマージによる自動完了
+  merge
+}
+
+/// チケットの変更履歴。変更の経路に関わらず `ticket-mutation.ts` / `ticket-write.ts` の共通経路で記録する。
+/// 保持期間(TICKET_ACTIVITY_RETENTION_DAYS)を過ぎたものは自動メンテナンスで消す
+model TicketActivity {
+  id String @id @default(uuid(7))
+
+  ticketId String
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  /// 変更者。source が user 以外のときは null。退会しても変更の事実は残すので SetNull
+  actorId String?
+  actor   User?   @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  source TicketActivitySource @default(user)
+
+  field TicketActivityField
+
+  /// 変更前後の要約(表示用のスナップショット)。担当・タグは名前、本文は先頭の抜粋、
+  /// 受け入れ条件は before に消した文言、after に足した文言を改行区切りで持つ。値が無ければ null
+  before String?
+  after  String?
+
+  createdAt DateTime @default(now())
+
+  @@index([ticketId, createdAt])
+  // 保持期間の掃除で古い順に引く
+  @@index([createdAt])
+  @@map("ticket_activity")
 }

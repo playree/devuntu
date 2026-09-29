@@ -13,6 +13,7 @@ import { type Db } from '../prisma'
 import { extractUploadKeys, toUploadUrl } from '../storage/upload'
 import type { Actor, TicketAccess } from './board-access'
 import { insertAt, kanbanDoneSince, kanbanLaneWhere, reindexLane } from './kanban'
+import { type ActivityBy, recordTicketActivities } from './ticket-activity'
 
 /**
  * ボード内のチケット番号を 1 つ払い出す。
@@ -131,6 +132,8 @@ export const assertReplyTarget = async (tx: Db, ticketId: string, parentId: stri
  *
  * 採番の対象は盤面に表示されるカードだけ。かんばんに出ない古い完了カードは読まず order も触らないので、
  * クライアントが送る index(盤面に見えているカードだけを数えた位置)とそのまま基準が揃う。
+ *
+ * ステータスが変わる移動は経路に関わらずここを通るので、変更履歴もここで残す(`by` が変更した主体)。
  */
 export const moveTicketToLane = async (
   tx: Prisma.TransactionClient,
@@ -138,7 +141,13 @@ export const moveTicketToLane = async (
     access,
     status,
     index,
-  }: { access: Pick<TicketAccess, 'ticketId' | 'boardId' | 'status'>; status: TicketStatus; index?: number },
+    by,
+  }: {
+    access: Pick<TicketAccess, 'ticketId' | 'boardId' | 'status'>
+    status: TicketStatus
+    index?: number
+    by: ActivityBy
+  },
 ): Promise<{ id: string; status: TicketStatus; order: number }> => {
   // レーンは「同一ボード + 同一ステータス」で決まる
   const lane = await tx.ticket.findMany({
@@ -164,6 +173,9 @@ export const moveTicketToLane = async (
       ...(access.status !== status && { completedAt: status === 'done' ? nowDate() : null }),
     },
   })
+  if (access.status !== status) {
+    await recordTicketActivities(tx, access.ticketId, by, [{ field: 'status', before: access.status, after: status }])
+  }
 
   // MAX_KANBAN_CARDS(500)まで入りうるレーンで毎回全行を UPDATE しないよう、order が変わる行だけ触る
   const shifted = ordered.filter(({ id, order }) => id !== access.ticketId && currentOrder.get(id) !== order)

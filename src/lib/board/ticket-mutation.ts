@@ -14,7 +14,7 @@ import type {
   TicketStatus,
 } from '@/generated/prisma/enums'
 import { discardAutoReviseTriggers } from '../agent/agent-auto-revise'
-import { dateOnlyToUtc, nowDate } from '../day'
+import { dateOnlyToUtc, nowDate, utcToDateOnly } from '../day'
 import { errInvalidOperation } from '../error'
 import {
   enqueueTicketCommented,
@@ -30,6 +30,8 @@ import { assertBoardAssignee, getBoardMentionCandidates, getTicketMentionCandida
 import { extractMentionEmails, resolveMentionUserIds } from './mention'
 import { assertTagIdsInBoard, syncTicketTags } from './tag'
 import { nextOrder } from './tag-rule'
+import { recordTicketActivities } from './ticket-activity'
+import { criteriaActivity, diffTicketSnapshot } from './ticket-activity-rule'
 import { syncTicketCriteria } from './ticket-criterion'
 import { ticketDisplayId } from './ticket-id'
 import { assignTicketParent, writeOwnChildOrder } from './ticket-relation'
@@ -111,6 +113,10 @@ export const insertTicket = async (tx: Prisma.TransactionClient, actor: Actor, i
     throw errInvalidOperation()
   }
 
+  await recordTicketActivities(tx, created.id, { actorId: actor.id }, [
+    { field: 'created', before: null, after: created.title },
+  ])
+
   const ticket = {
     id: created.id,
     title: created.title,
@@ -131,6 +137,18 @@ export const insertTicket = async (tx: Prisma.TransactionClient, actor: Actor, i
 
   return ticket
 }
+
+/** 変更履歴に残す担当者名。担当を外したときは null */
+const findUserName = async (tx: Prisma.TransactionClient, userId: string | null): Promise<string | null> =>
+  userId ? ((await tx.user.findUnique({ where: { id: userId }, select: { name: true } }))?.name ?? null) : null
+
+/** 変更履歴に残すタグ名(タグの表示順) */
+const findTagNames = async (tx: Prisma.TransactionClient, tagIds: string[]): Promise<string[]> =>
+  tagIds.length > 0
+    ? (await tx.tag.findMany({ where: { id: { in: tagIds } }, select: { name: true }, orderBy: { order: 'asc' } })).map(
+        ({ name }) => name,
+      )
+    : []
 
 /** undefined = 変更しない / null = クリア */
 export type UpdateTicketInput = {
@@ -176,11 +194,24 @@ export const updateTicket = async (
     const ids = tagIds !== undefined ? await assertTagIdsInBoard(tx, access.boardId, tagIds) : undefined
     const nextAssigneeId = assigneeId !== undefined ? (assigneeId ?? null) : before.assigneeId
 
+    // 変更履歴とメンションの差分に使う変更前の値
+    const current = await tx.ticket.findUniqueOrThrow({
+      where: { id },
+      select: {
+        title: true,
+        content: true,
+        priority: true,
+        dueDate: true,
+        mentionedUserIds: true,
+        assignee: { select: { name: true } },
+        tags: { select: { tag: { select: { name: true } } }, orderBy: { tag: { order: 'asc' } } },
+      },
+    })
+
     // 本文を書き換えるときだけメンションを解き直す
     let mentionedUserIds: string[] | undefined
     let addedMentionUserIds: string[] = []
     if (rest.content !== undefined) {
-      const current = await tx.ticket.findUniqueOrThrow({ where: { id }, select: { mentionedUserIds: true } })
       const candidates = await getTicketMentionCandidates(access, tx)
       mentionedUserIds = resolveMentionUserIds(extractMentionEmails(rest.content), candidates)
       // 本文を編集し直すたびに同じ相手へ通知しないよう、増えた分だけを通知対象にする
@@ -209,9 +240,31 @@ export const updateTicket = async (
     if (ids) {
       await syncTicketTags(tx, id, ids)
     }
-    if (criteria) {
-      await syncTicketCriteria(tx, id, criteria)
-    }
+    const criteriaDiff = criteria ? criteriaActivity(await syncTicketCriteria(tx, id, criteria)) : null
+    await recordTicketActivities(tx, id, { actorId: actor.id }, [
+      ...diffTicketSnapshot(
+        {
+          title: current.title,
+          content: current.content,
+          priority: current.priority,
+          dueDate: utcToDateOnly(current.dueDate),
+          assignee: { id: before.assigneeId, name: current.assignee?.name ?? null },
+          tagNames: current.tags.map(({ tag }) => tag.name),
+        },
+        {
+          title: rest.title,
+          content: rest.content,
+          priority: rest.priority,
+          dueDate: dueDate !== undefined ? utcToDateOnly(dateOnlyToUtc(dueDate)) : undefined,
+          assignee:
+            nextAssigneeId !== before.assigneeId
+              ? { id: nextAssigneeId, name: await findUserName(tx, nextAssigneeId) }
+              : undefined,
+          tagNames: ids ? await findTagNames(tx, ids) : undefined,
+        },
+      ),
+      ...(criteriaDiff ? [criteriaDiff] : []),
+    ])
     if (parentId !== undefined) {
       await assignTicketParent(tx, { id, boardId: access.boardId }, parentId, childOrder)
     } else if (childOrder !== undefined) {
@@ -219,7 +272,9 @@ export const updateTicket = async (
     }
 
     const moved =
-      status !== undefined && status !== access.status ? await moveTicketToLane(tx, { access, status }) : null
+      status !== undefined && status !== access.status
+        ? await moveTicketToLane(tx, { access, status, by: { actorId: actor.id } })
+        : null
     const displayId = ticketDisplayId({ key: updated.board.key, number: updated.number })
     const ticket = { id: updated.id, title: updated.title, displayId, status: moved?.status ?? updated.status }
 
@@ -256,7 +311,7 @@ export const deleteTicket = async (actor: Actor, id: string, opts?: { authorize?
 export const changeTicketStatus = async (actor: Actor, id: string, status: TicketStatus, index?: number) =>
   prisma.$transaction(async (tx) => {
     const access = await assertTicketAccess(actor, id, 'edit', tx)
-    const lane = await moveTicketToLane(tx, { access, status, index })
+    const lane = await moveTicketToLane(tx, { access, status, index, by: { actorId: actor.id } })
 
     // 移動と同じトランザクションで投入する(コミット後に落ちると通知だけが消える)
     await enqueueTicketMoved({ actorId: actor.id, ticketId: id, before: access.status, after: lane.status }, tx)
@@ -281,6 +336,7 @@ export const completeTicketByMerge = async (ticketId: string, pullRequest: strin
     await moveTicketToLane(tx, {
       access: { ticketId: ticket.id, boardId: ticket.boardId, status: ticket.status },
       status: 'done',
+      by: { actorId: null, source: 'merge' },
     })
     await enqueueTicketCompletedByMerge({ ticketId, pullRequest }, tx)
     return true

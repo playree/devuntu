@@ -145,7 +145,7 @@ export const decideAgentComment = async (actor: Actor, input: DecideAgentComment
 
     if (pending.type === 'report') {
       if (input.decision === 'approved') {
-        const lane = await moveTicketToLane(tx, { access, status: 'done' })
+        const lane = await moveTicketToLane(tx, { access, status: 'done', by: { actorId: actor.id } })
         await enqueueTicketMoved(
           { actorId: actor.id, ticketId: target.ticketId, before: access.status, after: lane.status },
           tx,

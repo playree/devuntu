@@ -70,6 +70,16 @@ describe('syncTicketCriteria', () => {
     })
   })
 
+  it('消した文言と足した文言を返す(文言の変更は両方に入り、並べ替えだけの項目は入らない)', async () => {
+    const diff = await syncTicketCriteria(tx, TICKET_ID, [
+      { id: 'c2', text: '条件2' },
+      { id: 'c1', text: '条件1(修正)' },
+      { text: '新しい条件' },
+    ])
+
+    expect(diff).toEqual({ removed: ['条件3', '条件1'], added: ['条件1(修正)', '新しい条件'] })
+  })
+
   it('他のチケットの項目の id は受け付けない', async () => {
     await expect(syncTicketCriteria(tx, TICKET_ID, [{ id: 'other', text: 'x' }])).rejects.toBeInstanceOf(ClientError)
     expect(fakeTx.ticketCriterion.deleteMany).not.toHaveBeenCalled()

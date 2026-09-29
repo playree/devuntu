@@ -190,7 +190,7 @@ describe('decideAgentComment', () => {
 
     await decideAgentComment({ id: 'u1' }, { commentId: 'c1', decision: 'approved', content: '完了' })
 
-    expect(moveTicketToLane).toHaveBeenCalledWith(fakeTx, { access, status: 'done' })
+    expect(moveTicketToLane).toHaveBeenCalledWith(fakeTx, { access, status: 'done', by: { actorId: 'u1' } })
     expect(enqueueTicketMoved).toHaveBeenCalledWith(
       { actorId: 'u1', ticketId: 't1', before: 'doing', after: 'done' },
       fakeTx,

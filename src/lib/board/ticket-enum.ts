@@ -39,6 +39,9 @@ export const TICKET_PRIORITY_LOCALE = {
 export const isTicketStatus = (value: string): value is TicketStatus =>
   (TICKET_STATUSES as readonly string[]).includes(value)
 
+export const isTicketPriority = (value: string): value is TicketPriority =>
+  (TICKET_PRIORITIES as readonly string[]).includes(value)
+
 /** コメントの種別。plan/report は詳細画面でデフォルト折りたたみ表示する。未指定(null)は通常コメント */
 export const TICKET_COMMENT_TYPES = ['plan', 'report'] as const satisfies readonly TicketCommentType[]
 
