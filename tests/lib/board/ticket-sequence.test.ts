@@ -118,6 +118,22 @@ describe('findWaitingTicketIds', () => {
     expect(ticket.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { id: { in: ['p1', 'p2'] } } }))
   })
 
+  it('完了済みの子は、前の兄弟が済んでいなくても順番待ちにしない', async () => {
+    ticketRelation.findMany.mockResolvedValueOnce([{ toId: 'b', fromId: 'p1', order: 2 }] as never)
+    ticket.findMany.mockResolvedValueOnce([
+      {
+        id: 'p1',
+        childAdvance: 'done',
+        relationsFrom: [
+          { order: 1, to: { id: 'a', status: 'doing', agentState: null } },
+          { order: 2, to: { id: 'b', status: 'done', agentState: null } },
+        ],
+      },
+    ] as never)
+
+    expect(await findWaitingTicketIds(['b'])).toEqual(new Set())
+  })
+
   it('親の無いチケットだけなら親を引かない', async () => {
     ticketRelation.findMany.mockResolvedValueOnce([] as never)
 

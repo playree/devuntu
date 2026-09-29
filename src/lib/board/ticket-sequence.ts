@@ -9,7 +9,7 @@
 import { prisma, type Db } from '../prisma'
 import { isWaitingForSiblings } from './ticket-relation-rule'
 
-/** 渡したチケットのうち、順番待ちのものの ID。親の無いチケットは待たない */
+/** 渡したチケットのうち、順番待ちのものの ID。親の無いチケットと、自分が完了済みのチケットは待たない */
 export const findWaitingTicketIds = async (ticketIds: readonly string[], tx: Db = prisma): Promise<Set<string>> => {
   if (ticketIds.length === 0) {
     return new Set()
@@ -48,7 +48,9 @@ export const findWaitingTicketIds = async (ticketIds: readonly string[], tx: Db 
   const waiting = new Set<string>()
   for (const { toId, fromId, order } of relations) {
     const parent = parentById.get(fromId)
-    if (parent && isWaitingForSiblings({ id: toId, order }, parent.siblings, parent.advance)) {
+    // 手動で完了にした子は、前の兄弟が残っていても待っているわけではない
+    const isDone = parent?.siblings.some((sibling) => sibling.id === toId && sibling.status === 'done')
+    if (parent && !isDone && isWaitingForSiblings({ id: toId, order }, parent.siblings, parent.advance)) {
       waiting.add(toId)
     }
   }
