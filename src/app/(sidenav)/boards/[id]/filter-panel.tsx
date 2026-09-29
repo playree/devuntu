@@ -4,16 +4,19 @@ import { DateRangePickerField } from '@/components/general/date-picker'
 import { GridBox } from '@/components/general/grid'
 import { SingleSelectField } from '@/components/general/select'
 import { MultiTagField } from '@/components/general/tag-group'
-import { TagNameSelectField } from '@/components/ticket/tag-name-select'
+import { RelatedTicketFilter } from '@/components/ticket/related-ticket-filter'
 import { TagSelectOption } from '@/components/ticket/tag-id-select'
+import { TagNameSelectField } from '@/components/ticket/tag-name-select'
 import { useTicketOptions } from '@/components/ticket/ticket-options'
 import { UserSelectField, UserSelectOption } from '@/components/user-select'
+import { parseAction } from '@/lib/action/action-client'
 import { KANBAN_DONE_DAYS_OPTIONS, KANBAN_DONE_VISIBLE_DAYS, KanbanFilter } from '@/lib/board/kanban'
 import { MAX_TICKET_TAGS } from '@/lib/board/tag-rule'
 import { TICKET_PRIORITIES } from '@/lib/board/ticket-enum'
 import { ASSIGNEE_NONE } from '@/lib/board/ticket-search'
 import { useLocale } from '@/locale/client'
-import { FC } from 'react'
+import { FC, useCallback } from 'react'
+import { searchTicketCandidates } from '../../tickets/server'
 
 /**
  * かんばんの絞り込みパネル。
@@ -24,13 +27,14 @@ import { FC } from 'react'
  * 完了の表示期間だけは Cookie に残る(`useKanbanFilter`)。
  */
 export const KanbanFilterPanel: FC<{
+  boardId: string
   filter: KanbanFilter
   onChange: (filter: KanbanFilter) => void
   /** ボードメンバー */
   assigneeOptions: UserSelectOption[]
   /** そのボードのタグ(呼び出し側で絞り込み済み) */
   tags: TagSelectOption[]
-}> = ({ filter, onChange, assigneeOptions, tags }) => {
+}> = ({ boardId, filter, onChange, assigneeOptions, tags }) => {
   const { t } = useLocale()
   const { priorityOptions } = useTicketOptions()
 
@@ -39,6 +43,12 @@ export const KanbanFilterPanel: FC<{
     { id: ASSIGNEE_NONE, name: t('unassigned'), hideAvatar: true },
     ...assigneeOptions,
   ]
+
+  // 関係はボードを跨がないので、候補もこのボードのチケットに限る
+  const fetchCandidates = useCallback(
+    (keyword: string) => parseAction(searchTicketCandidates({ keyword, boardId }), { handled: 'all' }),
+    [boardId],
+  )
 
   // 英語の単複を正しく出すため 1 日だけ別のロケールキーを使う
   const doneDaysOptions: Record<string, string> = Object.fromEntries(
@@ -90,6 +100,13 @@ export const KanbanFilterPanel: FC<{
           onChange={(value) => onChange({ ...filter, doneDays: Number(value) || KANBAN_DONE_VISIBLE_DAYS })}
         />
       </div>
+
+      <RelatedTicketFilter
+        value={{ relatedTo: filter.relatedTo, relation: filter.relation }}
+        onChange={(value) => onChange({ ...filter, ...value })}
+        fetchCandidates={fetchCandidates}
+        className={{ ticket: 'col-span-7 md:col-span-4', relation: 'col-span-5 md:col-span-2' }}
+      />
 
       {tags.length > 0 && (
         <div className='col-span-12 md:col-span-6'>
