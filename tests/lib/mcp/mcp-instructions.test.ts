@@ -38,6 +38,11 @@ describe('mcpInstructions', () => {
     expect(mcpInstructions('agent')).toContain(ACCEPTANCE_CRITERIA_GUIDE)
   })
 
+  it('受け入れ条件の結果は report ではなく自己申告として記録させる', () => {
+    expect(mcpInstructions('oauth')).toContain('report_acceptance_criteria')
+    expect(mcpInstructions('agent')).not.toContain('report_acceptance_criteria')
+  })
+
   it('クライアントに切り詰められないよう短く保つ', () => {
     expect(mcpInstructions('oauth').length).toBeLessThan(2000)
   })

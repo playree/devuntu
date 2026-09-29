@@ -22,7 +22,7 @@ import { assertTicketAccess } from '../board/board-access'
 import { listTicketCriteria } from '../board/ticket-criterion'
 import { errInvalidOperation } from '../error'
 import type { ResourceAuth } from '../oauth/oauth-resource'
-import { MAX_TICKET_CRITERIA, zCriterionEvidence } from '../schema/schema-ticket'
+import { zCriterionReports } from '../schema/schema-ticket'
 import { jsonResult } from './mcp'
 import { resolveTicketId } from './mcp-ticket'
 
@@ -139,17 +139,7 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
         ticketId: z.string().min(1),
         outcome: z.enum(AGENT_OUTCOMES),
         summary: z.string().max(2000).optional().describe('Summary of the result recorded in the run history'),
-        criteria: z
-          .array(
-            z.object({
-              id: z.uuidv7().describe('id from acceptanceCriteria in get_agent_task'),
-              met: z.boolean().describe('Whether the criterion is met'),
-              evidence: zCriterionEvidence.describe(
-                'Evidence for the judgment (what was checked, test results, relevant code, etc.)',
-              ),
-            }),
-          )
-          .max(MAX_TICKET_CRITERIA)
+        criteria: zCriterionReports('id from acceptanceCriteria in get_agent_task')
           .optional()
           .describe('Self-check result for each acceptance criterion'),
       },

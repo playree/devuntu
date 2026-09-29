@@ -195,6 +195,20 @@ export const zCriterionText = z
 /** エージェントが自己申告に添える根拠 */
 export const zCriterionEvidence = z.string().trim().min(1).max(1000)
 
+/** 受け入れ条件ごとの自己申告(MCP の finish_agent_task / report_acceptance_criteria で共通) */
+export const zCriterionReports = (idDescription: string) =>
+  z
+    .array(
+      z.object({
+        id: z.uuidv7().describe(idDescription),
+        met: z.boolean().describe('Whether the criterion is met'),
+        evidence: zCriterionEvidence.describe(
+          'Evidence for the judgment (what was checked, test results, relevant code, etc.)',
+        ),
+      }),
+    )
+    .max(MAX_TICKET_CRITERIA)
+
 /**
  * 受け入れ条件の一覧(全件の置き換え)。既存の項目は id を付けて渡すと確認状態を引き継ぐ。
  * id の無い項目は新規として作る

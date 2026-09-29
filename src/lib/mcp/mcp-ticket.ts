@@ -1,6 +1,11 @@
 import type { TicketCommentType, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
 import { assertTicketAccess, findTicketIdByDisplayId, getAccessibleBoardIds } from '@/lib/board/board-access'
-import { listTicketCriteria } from '@/lib/board/ticket-criterion'
+import {
+  type AgentCriterionReport,
+  assertAgentCriteria,
+  listTicketCriteria,
+  writeAgentCriteria,
+} from '@/lib/board/ticket-criterion'
 import { parseTicketDisplayId, ticketDisplayId, ticketShortPath } from '@/lib/board/ticket-id'
 import { addTicketLink, listTicketLinks, removeTicketLink } from '@/lib/board/ticket-link'
 import {
@@ -367,4 +372,32 @@ export const unlinkTicketRelationForMcp = async (auth: ResourceAuth, relationId:
 
   logger.info({ userId: auth.user.id, ...result }, 'mcp ticket relation removed')
   return { id: relationId }
+}
+
+/**
+ * 受け入れ条件ごとの充足と根拠を自己申告として記録する(人の経路の MCP クライアント向け)。
+ * `update_ticket` と同じ制限を掛ける。他のチケットの項目が混ざっていたら何も記録しない
+ */
+export const reportTicketCriteriaForMcp = async (
+  auth: ResourceAuth,
+  ticketIdOrDisplayId: string,
+  reports: AgentCriterionReport[],
+) => {
+  const ticketId = await resolveTicketId(auth, ticketIdOrDisplayId)
+  await prisma.$transaction(async (tx) => {
+    mcpUpdateAuthorize(auth)(await assertTicketAccess(auth.user, ticketId, 'edit', tx))
+    await assertAgentCriteria(tx, ticketId, reports)
+    await writeAgentCriteria(tx, reports)
+  })
+
+  logger.info({ userId: auth.user.id, ticketId, count: reports.length }, 'mcp ticket criteria reported')
+  const criteria = await listTicketCriteria(ticketId)
+  return {
+    acceptanceCriteria: criteria.map(({ id, text, agentMet, agentEvidence }) => ({
+      id,
+      text,
+      agentMet,
+      agentEvidence,
+    })),
+  }
 }
