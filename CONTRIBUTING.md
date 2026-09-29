@@ -2,6 +2,9 @@
 
 > [!NOTE]
 > Contributions are welcome in English as well. The documentation is maintained in Japanese only.
+>
+> The UI ships in Japanese and English. Pull requests adding other languages are welcome —
+> see [Adding a language](#言語の追加) (a new `src/locale/lang-xx.ts` plus a couple of registrations).
 
 Devuntu への Issue・Pull Request を歓迎します。
 
@@ -43,6 +46,45 @@ pnpm build
 
 - 修正したファイルには `pnpm exec prettier --write <ファイル>` をかけてください
 - 機能や仕様を変えた場合は、対応するドキュメント(`README.md` / `README.en.md` / `docs/*.md`)も更新してください
+
+## 言語の追加
+
+画面の対応言語は日本語(`ja`)と英語(`en`)です。ほかの言語は、翻訳の Pull Request を歓迎します。
+ここでは例として、ロケール `xx` を追加する手順を示します(`xx` は `fr` / `zh-TW` など、Accept-Language で使われる言語タグ)。
+
+1. `src/locale/lang-en.ts` をコピーして `src/locale/lang-xx.ts` を作り、エクスポート名を変えて値を翻訳します
+   - `${name}` の形のプレースホルダーは、そのまま残してください(表示時に値が入ります)
+
+   ```ts
+   import { DefaultLocaleItems } from '.'
+
+   // アルファベット順
+   export const xx: DefaultLocaleItems = {
+     acceptance_criteria: '...',
+     // ...
+   }
+   ```
+
+2. `src/locale/config.ts` の `locales` と `resources` に登録します(`locales` の並びが言語切替の表示順です)
+
+   ```ts
+   import { xx } from './lang-xx'
+
+   export const localeConfig: LocaleConfig = {
+     locales: ['ja', 'en', 'xx'],
+     resources: { ja, en, xx },
+     // ...
+   }
+   ```
+
+3. `src/lib/day.ts` の `WEEKDAY_LABELS` に、日曜始まりの曜日ラベルを追加します(未登録だとカレンダーの曜日が日本語になります)
+4. `pnpm typecheck` を実行します。型 `DefaultLocaleItems` により、キーの不足や余分なキーがエラーになります
+   - 翻訳できていないキーを暫定で `''` にしておくと、そのキーだけ既定ロケールの文言で表示されます
+5. `pnpm dev` で起動し、サイドバー(サインイン画面などではカードの右上)の `lang` に `xx` が出ること、選ぶと表示が切り替わることを確認します
+   - ログイン中に選んだ言語はアカウントに保存され、通知(メール / Slack / Webプッシュ)の文面にも使われます
+   - 既定の言語にしたい場合は、環境変数 `DEFAULT_LOCALE` に `xx` を指定します
+
+あわせて [README.md](README.md) の「表示言語」と [README.en.md](README.en.md) の対応言語の記載も更新してください。
 
 ## コーディングルール
 

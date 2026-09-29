@@ -206,6 +206,7 @@ The following documents are in Japanese.
 ## Contributing
 
 Issues and pull requests are welcome, in English as well. See [CONTRIBUTING.md](CONTRIBUTING.md).
+Translations into other UI languages are welcome too; the steps are in [Adding a language](CONTRIBUTING.md#言語の追加).
 Please do not report vulnerabilities in public issues; follow [SECURITY.md](SECURITY.md) instead.
 
 ## License
