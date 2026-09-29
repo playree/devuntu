@@ -56,7 +56,7 @@ const CriterionRow: FC<{ criterion: Criterion; canEdit: boolean; refresh: () => 
   }
 
   return (
-    <li className='dark:bg-default/40 space-y-1 rounded-lg bg-white px-2 py-1.5'>
+    <li className='dark:bg-default/40 space-y-1 rounded-lg bg-white px-2 py-0.5'>
       <div className='flex items-start gap-2'>
         <div className='min-w-0 grow'>
           <CheckboxField
@@ -78,7 +78,9 @@ const CriterionRow: FC<{ criterion: Criterion; canEdit: boolean; refresh: () => 
               <span className='ml-2 font-mono'>{dayformat(criterion.checkedAt, 'tz-minute', tz)}</span>
             </div>
           )}
-          {criterion.agentEvidence && <div className='break-words whitespace-pre-wrap'>{criterion.agentEvidence}</div>}
+          {criterion.agentEvidence && (
+            <div className='wrap-break-word whitespace-pre-wrap'>{criterion.agentEvidence}</div>
+          )}
         </div>
       )}
     </li>
