@@ -117,6 +117,13 @@ export const decideAgentComment = async (actor: Actor, input: DecideAgentComment
     }
     const access = await assertTicketAccess(actor, target.ticketId, 'edit', tx)
 
+    /**
+     * 起票案の承認は子チケットの採番でボード行をロックする。通常のチケット作成は「ボード → 親」の順に
+     * ロックするので、こちらも親より先にボードを取って順番をそろえる(逆順だと同じ親への作成とデッドロックする)
+     */
+    if (input.decision === 'approved' && target.proposal !== null) {
+      await tx.$queryRaw`SELECT "id" FROM "board" WHERE "id" = ${access.boardId} FOR UPDATE`
+    }
     // 同じ plan / report へ同時に返答されても、返答待ちの判定と投稿を直列にする
     await tx.$queryRaw`SELECT "id" FROM "ticket" WHERE "id" = ${target.ticketId} FOR UPDATE`
     const ticket = await tx.ticket.findUniqueOrThrow({ where: { id: target.ticketId }, select: decisionTicketSelect })

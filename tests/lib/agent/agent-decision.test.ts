@@ -153,6 +153,12 @@ describe('decideAgentComment', () => {
       expect.objectContaining({ advance: 'reported', children: expect.any(Array) }),
     )
     expect(result.childTicketIds).toEqual(['child-1'])
+    // 通常のチケット作成と同じく、親より先にボードをロックする
+    const locks = fakeTx.$queryRaw.mock.calls.map(([sql]) => (sql as string[]).join('?'))
+    expect(locks).toEqual([
+      'SELECT "id" FROM "board" WHERE "id" = ? FOR UPDATE',
+      'SELECT "id" FROM "ticket" WHERE "id" = ? FOR UPDATE',
+    ])
   })
 
   it('起票案付きのプランでも、差し戻しでは起票しない', async () => {
@@ -161,6 +167,9 @@ describe('decideAgentComment', () => {
     await decideAgentComment({ id: 'u1' }, { commentId: 'c1', decision: 'rejected', content: '理由' })
 
     expect(applyChildProposal).not.toHaveBeenCalled()
+    // 起票しない返答ではボードをロックしない
+    const locks = fakeTx.$queryRaw.mock.calls.map(([sql]) => (sql as string[]).join('?'))
+    expect(locks).toEqual(['SELECT "id" FROM "ticket" WHERE "id" = ? FOR UPDATE'])
   })
 
   it('対象が返信なら、その親のスレッドへ返信する', async () => {
