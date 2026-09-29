@@ -7,6 +7,7 @@
 
 import { formatCommandIssues, scCommandDefInput, scCommandFile } from '@/lib/command/command-def'
 import { describe, expect, it } from 'vitest'
+import { formatJa } from '../../helpers/command-message'
 
 const target = {
   id: 'web01',
@@ -31,7 +32,7 @@ const file = (overrides: Record<string, unknown>) => ({
 
 const issuesOf = (input: unknown): string[] => {
   const parsed = scCommandFile.safeParse(input)
-  return parsed.success ? [] : formatCommandIssues(parsed.error)
+  return parsed.success ? [] : formatCommandIssues(parsed.error).map(formatJa)
 }
 
 describe('既定値の補完', () => {
@@ -277,7 +278,7 @@ describe('コマンド1件だけでの検証', () => {
 
   const defIssuesOf = (input: unknown): string[] => {
     const parsed = scCommandDefInput.safeParse(input)
-    return parsed.success ? [] : formatCommandIssues(parsed.error)
+    return parsed.success ? [] : formatCommandIssues(parsed.error).map(formatJa)
   }
 
   it('未定義の入力項目への参照を弾く', () => {

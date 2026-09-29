@@ -13,7 +13,8 @@
  * の3つを担当する。リモート側 `authorized_keys` の `command=` 制限が4つ目の層になる。
  */
 
-import { el } from '@/locale'
+import { type LocaleValues } from '@/lib/locale-util'
+import { el, type LocaleItem } from '@/locale'
 import { z } from 'zod'
 import {
   COMMAND_FREE_VALUE_PATTERN,
@@ -25,6 +26,7 @@ import {
   type CommandInput,
   type CommandInputValues,
 } from './command'
+import { type CommandMessage, commandMessage } from './command-message'
 
 /**
  * POSIX シェルの単一引用符クォート。
@@ -126,10 +128,19 @@ export const buildCommandInputDefaults = (def: CommandDef): CommandInputValues =
   return values
 }
 
-/** 引数の組み立てに失敗した理由。呼び出し側が `errClient` へ載せる */
+/**
+ * 引数の組み立てに失敗した理由。
+ *
+ * 実行時にはワーカーからも投げられるので、文言ではなくロケールキーを持たせる。`message` はログ用にキーを入れる。
+ */
 export class CommandArgsError extends Error {
   static {
     this.prototype.name = 'CommandArgsError'
+  }
+  detail: CommandMessage
+  constructor(item: LocaleItem, values?: LocaleValues) {
+    super(item)
+    this.detail = commandMessage(item, values)
   }
 }
 
@@ -145,29 +156,29 @@ const expandInput = (input: CommandInput, raw: unknown): string[] => {
     case 'radio': {
       if (raw === undefined || raw === null || raw === '') {
         if (input.required) {
-          throw new CommandArgsError(`${input.key} は必須`)
+          throw new CommandArgsError('command_err_arg_required', { key: input.key })
         }
         return []
       }
       if (typeof raw !== 'string' || !optionValues(input).has(raw)) {
-        throw new CommandArgsError(`${input.key} に選択肢の外の値が指定された`)
+        throw new CommandArgsError('command_err_arg_out_of_options', { key: input.key })
       }
       return [raw]
     }
     case 'multiselect': {
       if (!Array.isArray(raw) || raw.some((value) => typeof value !== 'string')) {
-        throw new CommandArgsError(`${input.key} は文字列の配列で指定する`)
+        throw new CommandArgsError('command_err_arg_not_string_array', { key: input.key })
       }
       const values = optionValues(input)
       const selected = new Set<string>()
       raw.forEach((value: string) => {
         if (!values.has(value)) {
-          throw new CommandArgsError(`${input.key} に選択肢の外の値が指定された`)
+          throw new CommandArgsError('command_err_arg_out_of_options', { key: input.key })
         }
         selected.add(value)
       })
       if (selected.size < input.minSelected || selected.size > input.maxSelected) {
-        throw new CommandArgsError(`${input.key} の選択数が範囲外`)
+        throw new CommandArgsError('command_err_arg_count_out_of_range', { key: input.key })
       }
       /**
        * 選択順ではなく**定義の options 順**で並べる。
@@ -177,26 +188,26 @@ const expandInput = (input: CommandInput, raw: unknown): string[] => {
     }
     case 'checkbox': {
       if (typeof raw !== 'boolean') {
-        throw new CommandArgsError(`${input.key} は真偽値で指定する`)
+        throw new CommandArgsError('command_err_arg_not_boolean', { key: input.key })
       }
       return raw ? [...input.whenTrue] : [...input.whenFalse]
     }
     case 'input': {
       if (raw === undefined || raw === null || raw === '') {
         if (input.required) {
-          throw new CommandArgsError(`${input.key} は必須`)
+          throw new CommandArgsError('command_err_arg_required', { key: input.key })
         }
         return []
       }
       if (typeof raw !== 'string') {
-        throw new CommandArgsError(`${input.key} は文字列で指定する`)
+        throw new CommandArgsError('command_err_arg_not_string', { key: input.key })
       }
       // 前後の空白は落とさない。見えない差で渡る値が変わるより、使えない文字として弾く
       if (!COMMAND_FREE_VALUE_PATTERN.test(raw)) {
-        throw new CommandArgsError(`${input.key} に使えない文字が含まれている`)
+        throw new CommandArgsError('command_err_arg_invalid_chars', { key: input.key })
       }
       if (raw.length > input.maxLength) {
-        throw new CommandArgsError(`${input.key} が ${input.maxLength} 文字を超えている`)
+        throw new CommandArgsError('command_err_arg_too_long', { key: input.key, max: input.maxLength })
       }
       return [raw]
     }
@@ -213,7 +224,7 @@ export const resolveCommandArgs = (def: CommandDef, input: CommandInputValues): 
   const known = new Set(def.inputs.map((item) => item.key))
   Object.keys(input).forEach((key) => {
     if (!known.has(key)) {
-      throw new CommandArgsError(`未定義の入力項目 ${key} が指定された`)
+      throw new CommandArgsError('command_err_arg_unknown_input', { key })
     }
   })
 
@@ -228,7 +239,7 @@ export const resolveCommandArgs = (def: CommandDef, input: CommandInputValues): 
     if (matched) {
       const values = expanded.get(matched[1])
       if (!values) {
-        throw new CommandArgsError(`未定義の入力項目 ${matched[1]} を参照している`)
+        throw new CommandArgsError('@command_def_undefined_input', { key: matched[1] })
       }
       args.push(...values)
       return
@@ -238,7 +249,7 @@ export const resolveCommandArgs = (def: CommandDef, input: CommandInputValues): 
 
   args.forEach((arg) => {
     if (!COMMAND_VALUE_PATTERN.test(arg)) {
-      throw new CommandArgsError(`引数に使えない文字が含まれている: ${arg}`)
+      throw new CommandArgsError('@command_def_invalid_arg', { token: arg })
     }
   })
 

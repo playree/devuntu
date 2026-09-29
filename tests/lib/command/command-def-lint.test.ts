@@ -7,6 +7,7 @@
 
 import { lintCommandDefYaml } from '@/lib/command/command-def-lint'
 import { describe, expect, it } from 'vitest'
+import { formatJa } from '../../helpers/command-message'
 
 const HEAD = ['id: my-command', 'label: デプロイ', 'executable: /opt/bin/deploy.sh'].join('\n')
 
@@ -15,7 +16,7 @@ const lint = (text: string, context?: { allowFreeInput: boolean }) =>
   lintCommandDefYaml(text, context).map((issue) => ({
     slice: text.slice(issue.from, issue.to),
     severity: issue.severity,
-    message: issue.message,
+    message: formatJa(issue.message),
   }))
 
 describe('指摘が出ない場合', () => {

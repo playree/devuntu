@@ -1,14 +1,15 @@
 /**
  * コマンド定義ファイル(YAML)のスキーマ(クライアント / サーバー共用)
  *
- * ここで検証するのは運用者が書く定義ファイルであって、利用者の入力ではない。
- * そのためエラーメッセージにロケールキー(`el()`)は使わず、原因がそのまま読める文言を入れる。
+ * エラーメッセージは `@` 始まりのロケールキー(`el()`)で持ち、差し込む値は custom issue の `params` に入れる。
+ * 文字列にするのは表示側(`formatCommandMessage`)で、ここでは `CommandMessage` へ詰め替えるまでを受け持つ。
  * 利用者の入力に対するスキーマは `command-args.ts` が定義から動的に組み立てる。
  *
  * 検証の目的は「壊れた定義を読み込まないこと」に加えて、
  * **実行時に選択肢の外の値が引数へ入る余地を、定義の段階で潰しておくこと**にある。
  */
 
+import { el } from '@/locale'
 import { z } from 'zod'
 import {
   COMMAND_DEF_VERSION,
@@ -31,18 +32,13 @@ import {
   MAX_COMMAND_INPUTS,
   MAX_COMMAND_OPTIONS,
 } from './command'
+import { type CommandMessage, commandMessage, commandText } from './command-message'
 
-export const zCommandId = z
-  .string()
-  .regex(COMMAND_ID_PATTERN, '識別子は英数字で始まる 2〜64 文字(英小文字・数字・_・-)で指定する')
+export const zCommandId = z.string().regex(COMMAND_ID_PATTERN, el('@command_def_invalid_id'))
 const zLabel = z.string().min(1).max(120)
-const zOptionValue = z.string().regex(COMMAND_VALUE_PATTERN, '選択肢の値に使えない文字が含まれている')
-const zFreeValue = z
-  .string()
-  .regex(COMMAND_FREE_VALUE_PATTERN, 'フリー入力の値に使えない文字が含まれている(先頭の - も使えない)')
-const zFileName = z
-  .string()
-  .regex(COMMAND_FILE_NAME_PATTERN, 'ファイル名は英数字で始まる 1〜64 文字で指定する(ディレクトリ区切りは不可)')
+const zOptionValue = z.string().regex(COMMAND_VALUE_PATTERN, el('@command_def_invalid_option_value'))
+const zFreeValue = z.string().regex(COMMAND_FREE_VALUE_PATTERN, el('@command_def_invalid_free_value'))
+const zFileName = z.string().regex(COMMAND_FILE_NAME_PATTERN, el('@command_def_invalid_file_name'))
 
 /** 引数テンプレートの1要素。丸ごとプレースホルダか、固定文字列のどちらか */
 const zArgToken = z.string().min(1).max(500)
@@ -105,7 +101,7 @@ const scCommandTarget = z.strictObject({
   kind: z.enum(COMMAND_TARGET_KINDS).default('ssh'),
   host: z.string().min(1).max(255),
   port: z.number().int().min(1).max(65535).default(22),
-  user: z.string().regex(/^[a-z_][a-z0-9_-]{0,31}$/, 'ユーザー名の書式が不正'),
+  user: z.string().regex(/^[a-z_][a-z0-9_-]{0,31}$/, el('@command_def_invalid_user')),
   /** COMMAND_SSH_DIR 配下のファイル名のみ。パスは書かせない */
   identityFile: zFileName,
   /** 省略時は COMMAND_SSH_KNOWN_HOSTS を使う */
@@ -134,7 +130,7 @@ const scCommandDef = z
     label: zLabel,
     description: z.string().max(500).optional(),
     /** 絶対パス推奨。リモート側のシェルに解釈させる余地を減らすため文字集合を絞る */
-    executable: z.string().regex(/^[A-Za-z0-9._/-]{1,200}$/, '実行ファイルのパスに使えない文字が含まれている'),
+    executable: z.string().regex(/^[A-Za-z0-9._/-]{1,200}$/, el('@command_def_invalid_executable')),
     args: z.array(zArgToken).max(MAX_COMMAND_ARGS).default([]),
     inputs: z.array(scCommandInput).max(MAX_COMMAND_INPUTS).default([]),
     timeoutSec: z
@@ -164,7 +160,8 @@ const scCommandDef = z
         ctx.addIssue({
           code: 'custom',
           path: ['inputs', index, 'key'],
-          message: `入力項目のキー ${input.key} が重複している`,
+          message: el('@command_def_duplicate_input_key'),
+          params: { key: input.key },
         })
       }
       inputKeys.add(input.key)
@@ -205,7 +202,8 @@ export const scCommandFile = z
         ctx.addIssue({
           code: 'custom',
           path: ['commands', index, 'id'],
-          message: `コマンドID ${command.id} が重複している`,
+          message: el('@command_def_duplicate_command_id'),
+          params: { id: command.id },
         })
       }
       commandIds.add(command.id)
@@ -220,7 +218,7 @@ export const scCommandFile = z
             ctx.addIssue({
               code: 'custom',
               path: ['commands', index, 'inputs', inputIndex, 'type'],
-              message: 'フリー入力を使うには target.allowFreeInput: true が要る',
+              message: el('@command_def_free_input_not_allowed'),
             })
           }
         })
@@ -235,7 +233,8 @@ const checkInputDefaults = (input: CommandInput, ctx: z.RefinementCtx, path: (st
       ctx.addIssue({
         code: 'custom',
         path: [...path, 'defaultValue'],
-        message: `既定値 ${input.defaultValue} が選択肢に無い`,
+        message: el('@command_def_default_not_in_options'),
+        params: { value: input.defaultValue },
       })
     }
     return
@@ -247,7 +246,8 @@ const checkInputDefaults = (input: CommandInput, ctx: z.RefinementCtx, path: (st
         ctx.addIssue({
           code: 'custom',
           path: [...path, 'defaultValues', index],
-          message: `既定値 ${value} が選択肢に無い`,
+          message: el('@command_def_default_not_in_options'),
+          params: { value },
         })
       }
     })
@@ -255,7 +255,7 @@ const checkInputDefaults = (input: CommandInput, ctx: z.RefinementCtx, path: (st
       ctx.addIssue({
         code: 'custom',
         path: [...path, 'minSelected'],
-        message: 'minSelected が maxSelected を超えている',
+        message: el('@command_def_min_over_max'),
       })
     }
     // 満たせる選択が存在しない定義。読み込めてしまうと実行できないコマンドが一覧に出る
@@ -263,7 +263,7 @@ const checkInputDefaults = (input: CommandInput, ctx: z.RefinementCtx, path: (st
       ctx.addIssue({
         code: 'custom',
         path: [...path, 'minSelected'],
-        message: 'minSelected が選択肢の数を超えている',
+        message: el('@command_def_min_over_options'),
       })
     }
     return
@@ -273,7 +273,7 @@ const checkInputDefaults = (input: CommandInput, ctx: z.RefinementCtx, path: (st
       ctx.addIssue({
         code: 'custom',
         path: [...path, 'defaultValue'],
-        message: '既定値が maxLength を超えている',
+        message: el('@command_def_default_too_long'),
       })
     }
   }
@@ -299,7 +299,8 @@ const checkArgTokens = (
         ctx.addIssue({
           code: 'custom',
           path: [...path, index],
-          message: `未定義の入力項目 ${matched[1]} を参照している`,
+          message: el('@command_def_undefined_input'),
+          params: { key: matched[1] },
         })
       }
       return
@@ -308,12 +309,18 @@ const checkArgTokens = (
       ctx.addIssue({
         code: 'custom',
         path: [...path, index],
-        message: `プレースホルダは要素全体でのみ使える(${token})。値と結合したい場合は選択肢側に完成形を持たせる`,
+        message: el('@command_def_partial_placeholder'),
+        params: { token },
       })
       return
     }
     if (!COMMAND_VALUE_PATTERN.test(token)) {
-      ctx.addIssue({ code: 'custom', path: [...path, index], message: `引数に使えない文字が含まれている(${token})` })
+      ctx.addIssue({
+        code: 'custom',
+        path: [...path, index],
+        message: el('@command_def_invalid_arg'),
+        params: { token },
+      })
     }
   })
 }
@@ -323,31 +330,39 @@ const checkArgTokens = (
  *
  * 未知キーは黙って捨てず弾くが、廃止した項目は「書けない」だけだと直し方が分からないので理由まで出す。
  */
-const UNKNOWN_KEY_REASONS: Record<string, string> = {
-  host: '接続先は target へ書く(第一階層の host は target へ改名した)',
-  hostId: 'ターゲットは定義ファイル単位で決まるため commands[].hostId は書けない',
-  targetId: 'ターゲットは定義ファイル単位で決まるため commands[].targetId は書けない',
-  hosts: 'hosts の配列は書けない。1 ファイルに 1 ターゲットを target へ書く',
+const UNKNOWN_KEY_REASONS: Record<string, CommandMessage> = {
+  host: commandMessage('command_err_unknown_key_host'),
+  hostId: commandMessage('command_err_unknown_key_target_ref', { key: 'hostId' }),
+  targetId: commandMessage('command_err_unknown_key_target_ref', { key: 'targetId' }),
+  hosts: commandMessage('command_err_unknown_key_hosts'),
 }
 
 /** 未知キー1件ぶんの説明。位置を自前で示せる側(エディタの lint)はキーごとに引ける */
-export const unknownKeyMessage = (key: string): string => UNKNOWN_KEY_REASONS[key] ?? `書けない項目 ${key} がある`
+export const unknownKeyMessage = (key: string): CommandMessage =>
+  (Object.hasOwn(UNKNOWN_KEY_REASONS, key) ? UNKNOWN_KEY_REASONS[key] : undefined) ??
+  commandMessage('command_err_unknown_key', { key })
 
 /**
  * issue の「なぜ」の部分。
  *
  * 未知キーの issue は path がオブジェクトの位置までしか無く、キー名は `keys` にしか入らないので、
- * ここで本文へ混ぜ直す。
+ * キーごとに 1 件へ分ける。`@` 始まりはこのモジュールが入れたロケールキーで、それ以外は zod の既定文。
  */
-export const commandIssueMessage = (issue: z.core.$ZodIssue): string =>
-  issue.code === 'unrecognized_keys' ? issue.keys.map(unknownKeyMessage).join(' / ') : issue.message
+export const commandIssueMessages = (issue: z.core.$ZodIssue): CommandMessage[] => {
+  if (issue.code === 'unrecognized_keys') {
+    return issue.keys.map(unknownKeyMessage)
+  }
+  if (issue.message.startsWith('@')) {
+    return [commandMessage(issue.message as ReturnType<typeof el>, issue.code === 'custom' ? issue.params : undefined)]
+  }
+  return [commandText(issue.message)]
+}
 
-/** zod の issue を「どこが」「なぜ」だけの1行にする。管理画面へそのまま出す */
-export const formatCommandIssues = (error: z.ZodError): string[] =>
-  error.issues.map((issue) => {
+/** zod の issue を「どこが」「なぜ」だけの形にする。管理画面へそのまま出す */
+export const formatCommandIssues = (error: z.ZodError): CommandMessage[] =>
+  error.issues.flatMap((issue) => {
     const path = issue.path.join('.')
-    const message = commandIssueMessage(issue)
-    return path ? `${path}: ${message}` : message
+    return commandIssueMessages(issue).map((message) => (path ? { ...message, path } : message))
   })
 
 /* -------------------------------------------------------------------------------------------------

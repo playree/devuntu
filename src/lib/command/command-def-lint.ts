@@ -9,7 +9,8 @@
 
 import { isMap, isNode, isScalar, isSeq, parseDocument, type Document, type Node, type Pair, type YAMLMap } from 'yaml'
 import type { z } from 'zod'
-import { commandIssueMessage, scCommandDefInput, unknownKeyMessage } from './command-def'
+import { commandIssueMessages, scCommandDefInput, unknownKeyMessage } from './command-def'
+import { commandMessage, commandText, errorText, type CommandMessage } from './command-message'
 
 /** 位置つきの指摘。オフセットはドキュメント先頭からの文字数 */
 export type CommandDefIssue = {
@@ -17,7 +18,8 @@ export type CommandDefIssue = {
   to: number
   /** warning は「まだ書かれていない」もの。書いた内容が間違っているものは error */
   severity: 'error' | 'warning'
-  message: string
+  /** 文字列にするのは表示側。エディタへ渡す前に `formatCommandMessage` を通す */
+  message: CommandMessage
 }
 
 type Located = Pick<CommandDefIssue, 'from' | 'to' | 'severity'> & {
@@ -54,13 +56,13 @@ export const lintCommandDefYaml = (text: string, context?: CommandDefLintContext
       from: error.pos[0],
       to: error.pos[1],
       severity: 'error' as const,
-      message: error.message,
+      message: commandText(error.message),
     })),
     ...doc.warnings.map((error) => ({
       from: error.pos[0],
       to: error.pos[1],
       severity: 'warning' as const,
-      message: error.message,
+      message: commandText(error.message),
     })),
   ]
 
@@ -77,8 +79,10 @@ export const lintCommandDefYaml = (text: string, context?: CommandDefLintContext
     value = doc.toJS()
   } catch (error) {
     // エイリアスの展開上限など、読めても JS へ起こせない場合
-    const message = error instanceof Error ? error.message : String(error)
-    return normalize([...syntax, { ...firstLine(text), severity: 'error', message }], text)
+    return normalize(
+      [...syntax, { ...firstLine(text), severity: 'error', message: commandText(errorText(error)) }],
+      text,
+    )
   }
 
   const free = context?.allowFreeInput === false ? locateFreeInputs(doc, text, value) : []
@@ -114,7 +118,7 @@ const locateFreeInputs = (doc: Document, text: string, value: unknown): CommandD
       {
         ...located,
         severity: 'error' as const,
-        message: 'フリー入力を使うには、定義ファイルの target に allowFreeInput: true が要る',
+        message: commandMessage('command_err_free_input_needs_target'),
       },
     ]
   })
@@ -131,7 +135,10 @@ const locateIssue = (doc: Document, text: string, issue: z.core.$ZodIssue): Comm
     })
   }
   const located = locatePath(doc, text, path)
-  return [{ ...located, message: located.exact ? commandIssueMessage(issue) : describe(issue, path) }]
+  if (located.exact) {
+    return commandIssueMessages(issue).map((message) => ({ ...located, message }))
+  }
+  return describe(issue, path).map((message) => ({ ...located, message }))
 }
 
 /**
@@ -141,17 +148,20 @@ const locateIssue = (doc: Document, text: string, issue: z.core.$ZodIssue): Comm
  * 書かれていない項目は zod の既定文(英語で「undefined を受け取った」)だけでは何が足りないのか読めないため、
  * このモジュールで言い直す。
  */
-const describe = (issue: z.core.$ZodIssue, path: PathSegment[]): string => {
+const describe = (issue: z.core.$ZodIssue, path: PathSegment[]): CommandMessage[] => {
   if (path.length === 0) {
-    return commandIssueMessage(issue)
+    return commandIssueMessages(issue)
   }
   if (issue.code === 'invalid_type') {
-    return `必須の項目 ${path.join('.')} が書かれていない`
+    return [commandMessage('command_err_missing_field', { path: path.join('.') })]
   }
-  return withPath(path, commandIssueMessage(issue))
+  return commandIssueMessages(issue).map((message) => withPath(path, message))
 }
 
-const withPath = (path: PathSegment[], message: string): string => `${path.join('.')}: ${message}`
+const withPath = (path: PathSegment[], message: CommandMessage): CommandMessage => ({
+  ...message,
+  path: path.join('.'),
+})
 
 /**
  * 未知キーの位置。
