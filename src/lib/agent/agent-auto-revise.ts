@@ -177,6 +177,15 @@ export const hasSettledAutoRevise = async (ticketId: string, now: Date = nowDate
   return _count._all > 0 && !!_max.updatedAt && _max.updatedAt <= msBefore(now, AUTO_REVISE_SETTLE_MS)
 }
 
+/**
+ * 待ち時間の過ぎていないきっかけがあるか。待ち行列を作った後、実行を開始するまでの間に届いたものを
+ * 待たずに引き受けないよう、実行の開始時にチケットの行ロックを取った後で確かめ直す。
+ */
+export const hasUnsettledAutoRevise = async (tx: Db, ticketId: string, now: Date = nowDate()): Promise<boolean> =>
+  (await tx.agentAutoReviseTrigger.count({
+    where: { ticketId, consumed: false, updatedAt: { gt: msBefore(now, AUTO_REVISE_SETTLE_MS) } },
+  })) > 0
+
 /** 実行の開始時に、未消化のきっかけをその実行で引き受ける。チケットの行ロックを取った後に呼ぶ */
 export const consumeAutoReviseTriggers = async (tx: Db, ticketId: string, runId: string) =>
   tx.agentAutoReviseTrigger.updateMany({ where: { ticketId, consumed: false }, data: { runId, consumed: true } })

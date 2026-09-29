@@ -13,7 +13,7 @@ import {
   evaluateRunnerActivity,
   isWithinActiveWindow,
 } from '@/lib/agent/agent-activity'
-import { consumeAutoReviseTriggers, hasSettledAutoRevise } from '@/lib/agent/agent-auto-revise'
+import { consumeAutoReviseTriggers, hasSettledAutoRevise, hasUnsettledAutoRevise } from '@/lib/agent/agent-auto-revise'
 import { failStaleAgentRuns, finishAgentRunById, finishAgentTask, startAgentRun } from '@/lib/agent/agent-run'
 import { type AgentRunnerRow } from '@/lib/agent/agent-runner'
 import { pickAgentTasks, resolveAgentTask } from '@/lib/agent/agent-task'
@@ -32,6 +32,7 @@ vi.mock('@/lib/board/ticket-sequence', () => ({ findWaitingTicketIds: vi.fn(asyn
 // 自動差し戻しの判定は agent-auto-revise.test.ts で見る。ここでは結果の使われ方だけを確かめる
 vi.mock('@/lib/agent/agent-auto-revise', () => ({
   hasSettledAutoRevise: vi.fn(async () => false),
+  hasUnsettledAutoRevise: vi.fn(async () => false),
   consumeAutoReviseTriggers: vi.fn(),
 }))
 
@@ -564,6 +565,15 @@ describe('startAgentRun', () => {
     expect(ticket.update).toHaveBeenCalledWith({ where: { id: 't1' }, data: { agentState: 'running' } })
     // 未消化の自動差し戻しのきっかけは、この実行で引き受ける
     expect(consumeAutoReviseTriggers).toHaveBeenCalledWith(expect.anything(), 't1', 'run1')
+  })
+
+  it('待ち行列を作った後に自動差し戻しのきっかけが届いていたら、開始せず次の回へ回す', async () => {
+    ticket.findFirst.mockResolvedValueOnce(openTicket() as never)
+    vi.mocked(hasUnsettledAutoRevise).mockResolvedValueOnce(true)
+
+    expect(await startAgentRun(runner(), 't1', 'revise')).toEqual({ ok: false, reason: 'ticket_not_available' })
+    expect(agentRun.create).not.toHaveBeenCalled()
+    expect(consumeAutoReviseTriggers).not.toHaveBeenCalled()
   })
 
   it('上限が無制限なら件数を数えずに開始する', async () => {

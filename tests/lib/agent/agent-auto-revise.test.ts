@@ -8,6 +8,7 @@
 import {
   AUTO_REVISE_SETTLE_MS,
   hasSettledAutoRevise,
+  hasUnsettledAutoRevise,
   listRunAutoRevise,
   requestAutoRevise,
 } from '@/lib/agent/agent-auto-revise'
@@ -20,7 +21,7 @@ vi.mock('@/lib/prisma', async () =>
     ticket: ['findUnique', 'update'],
     ticketLink: ['findMany'],
     agentRun: ['findFirst'],
-    agentAutoReviseTrigger: ['findUnique', 'findFirst', 'findMany', 'create', 'update', 'aggregate'],
+    agentAutoReviseTrigger: ['findUnique', 'findFirst', 'findMany', 'create', 'update', 'aggregate', 'count'],
   }),
 )
 
@@ -184,6 +185,20 @@ describe('hasSettledAutoRevise', () => {
   it('未消化のきっかけが無ければ拾わない', async () => {
     aggregate(0, null)
     expect(await hasSettledAutoRevise('t1', NOW)).toBe(false)
+  })
+})
+
+describe('hasUnsettledAutoRevise', () => {
+  it('待ち時間の過ぎていない未消化のきっかけを数える', async () => {
+    const now = new Date('2026-09-29T10:00:00Z')
+    vi.mocked(prisma.agentAutoReviseTrigger.count).mockResolvedValue(1)
+
+    expect(await hasUnsettledAutoRevise(prisma, 't1', now)).toBe(true)
+    expect(vi.mocked(prisma.agentAutoReviseTrigger.count).mock.calls[0][0]?.where).toEqual({
+      ticketId: 't1',
+      consumed: false,
+      updatedAt: { gt: new Date(now.getTime() - AUTO_REVISE_SETTLE_MS) },
+    })
   })
 })
 
