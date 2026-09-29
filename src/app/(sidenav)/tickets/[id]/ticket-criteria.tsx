@@ -21,9 +21,9 @@ import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { dayformat } from '@/lib/day'
 import { MAX_CRITERION_TEXT, MAX_TICKET_CRITERIA, zCriterionText } from '@/lib/schema/schema-ticket'
 import { useLocale } from '@/locale/client'
-import { Tooltip } from '@heroui/react'
+import { Popover } from '@heroui/react'
 import { nanoid } from 'nanoid'
-import { FC, useState } from 'react'
+import { FC, PointerEvent, useEffect, useRef, useState } from 'react'
 import { checkTicketCriterion, GetTicketReturnType, saveTicketCriteria } from './server'
 
 type Ticket = NonNullable<GetTicketReturnType>
@@ -32,16 +32,56 @@ type Criterion = Ticket['criteria'][number]
 /** 編集中の 1 行。key は並べ替えても入力欄を取り違えないための描画用 */
 type DraftRow = { key: string; id?: string; text: string }
 
-/** エージェントの自己申告。根拠は行を圧迫しないよう Tooltip に回す */
+/** 閉じた状態 / マウスを乗せて開いた状態 / 押して開いた状態 */
+type SelfReportOpenMode = 'closed' | 'hover' | 'press'
+
+const HOVER_OPEN_DELAY = 300
+const HOVER_CLOSE_DELAY = 150
+
+/**
+ * エージェントの自己申告。根拠は行を圧迫しないようポップオーバーに回す。
+ * Tooltip はタップで開けずスマホで根拠を見られないため、マウスを乗せても押しても開く Popover にしている。
+ * マウスで開いたときは外へ出れば閉じるよう非モーダルにし、押して開いたときは外側のタップで閉じられるようモーダルにする。
+ */
 const CriterionSelfReport: FC<{ met: boolean; evidence: string | null }> = ({ met, evidence }) => {
   const { t } = useLocale()
+  const [mode, setMode] = useState<SelfReportOpenMode>('closed')
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const isPressing = useRef(false)
+  useEffect(() => () => clearTimeout(timer.current), [])
+
+  const schedule = (next: (current: SelfReportOpenMode) => SelfReportOpenMode, delay: number) => {
+    clearTimeout(timer.current)
+    timer.current = setTimeout(() => setMode(next), delay)
+  }
+  const hoverHandlers = {
+    onPointerEnter: (e: PointerEvent) => {
+      if (e.pointerType === 'mouse') {
+        schedule((current) => (current === 'closed' ? 'hover' : current), HOVER_OPEN_DELAY)
+      }
+    },
+    onPointerLeave: (e: PointerEvent) => {
+      if (e.pointerType === 'mouse') {
+        schedule((current) => (current === 'hover' ? 'closed' : current), HOVER_CLOSE_DELAY)
+      }
+    },
+  }
+
+  const onOpenChange = (isOpen: boolean) => {
+    clearTimeout(timer.current)
+    // マウスで開いている最中のクリックは閉じずに押して開いた状態へ切り替える
+    setMode(isOpen || (mode === 'hover' && isPressing.current) ? 'press' : 'closed')
+    isPressing.current = false
+  }
+
   const result = t(met ? 'criterion_agent_met' : 'criterion_agent_unmet')
   return (
-    <Tooltip delay={300}>
-      <Tooltip.Trigger // キーボード操作でも根拠を開けるようにする
-        tabIndex={0}
+    <Popover isOpen={mode !== 'closed'} onOpenChange={onOpenChange}>
+      <Popover.Trigger
         aria-label={`${t('criterion_self_report')}: ${result}`}
-        className='flex cursor-default items-center gap-0.5'
+        className='flex cursor-pointer items-center gap-0.5'
+        onPointerDown={() => (isPressing.current = true)}
+        {...hoverHandlers}
       >
         {met ? (
           <CheckBadgeIcon width={14} className='text-success' />
@@ -49,12 +89,17 @@ const CriterionSelfReport: FC<{ met: boolean; evidence: string | null }> = ({ me
           <XCircleIcon width={14} className='text-danger' />
         )}
         {t('criterion_self_report')}
-      </Tooltip.Trigger>
-      <Tooltip.Content showArrow className='max-w-sm'>
-        <div className='font-medium'>{result}</div>
-        {evidence && <div className='wrap-break-word whitespace-pre-wrap'>{evidence}</div>}
-      </Tooltip.Content>
-    </Tooltip>
+      </Popover.Trigger>
+      <Popover.Content isNonModal={mode === 'hover'} placement='bottom start' className='max-w-sm' {...hoverHandlers}>
+        <Popover.Dialog
+          aria-label={t('criterion_self_report')}
+          className='max-h-64 overflow-y-auto text-sm wrap-break-word whitespace-pre-wrap'
+        >
+          <div className='font-medium'>{result}</div>
+          {evidence && <div>{evidence}</div>}
+        </Popover.Dialog>
+      </Popover.Content>
+    </Popover>
   )
 }
 
