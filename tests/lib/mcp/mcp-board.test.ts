@@ -27,10 +27,15 @@ vi.mock('@/lib/board/tag', () => ({
   listBoardTags: vi.fn(),
 }))
 
+vi.mock('@/lib/board/ticket-template', () => ({
+  listTicketTemplates: vi.fn().mockResolvedValue([]),
+}))
+
 const { assertBoardAccess } = await import('@/lib/board/board-access')
 const { countTicketsByBoard, listAccessibleBoards } = await import('@/lib/board/board')
 const { getBoardMemberUsers } = await import('@/lib/board/board-member')
 const { listBoardTags } = await import('@/lib/board/tag')
+const { listTicketTemplates } = await import('@/lib/board/ticket-template')
 
 const auth = oauthAuth()
 
@@ -169,5 +174,69 @@ describe('getBoardForMcp', () => {
     vi.mocked(countTicketsByBoard).mockResolvedValueOnce({})
 
     expect(await getBoardForMcp(auth, boardId)).toMatchObject({ boardContext: '## 前提' })
+  })
+
+  it('テンプレートがあれば templates として返し、受け入れ条件は acceptanceCriteria の名前にする', async () => {
+    vi.mocked(prisma.board.findUnique).mockResolvedValueOnce({
+      key: 'ABC',
+      name: 'テストボード',
+      description: null,
+      aiContext: null,
+    } as never)
+    vi.mocked(assertBoardAccess).mockResolvedValueOnce({
+      boardId,
+      kind: 'team',
+      role: 'member',
+      via: 'member',
+      archived: false,
+    })
+    vi.mocked(getBoardMemberUsers).mockResolvedValueOnce([])
+    vi.mocked(listBoardTags).mockResolvedValueOnce([])
+    vi.mocked(countTicketsByBoard).mockResolvedValueOnce({})
+    vi.mocked(listTicketTemplates).mockResolvedValueOnce([
+      {
+        id: 'tpl-1',
+        name: '不具合',
+        content: '## 再現手順',
+        criteria: ['再現しない'],
+        tagIds: ['tag-1'],
+        priority: 'high',
+      },
+    ])
+
+    expect(await getBoardForMcp(auth, boardId)).toMatchObject({
+      templates: [
+        {
+          id: 'tpl-1',
+          name: '不具合',
+          content: '## 再現手順',
+          acceptanceCriteria: ['再現しない'],
+          tagIds: ['tag-1'],
+          priority: 'high',
+        },
+      ],
+    })
+    expect(listTicketTemplates).toHaveBeenCalledWith(boardId)
+  })
+
+  it('テンプレートが無いボードでは templates を載せない', async () => {
+    vi.mocked(prisma.board.findUnique).mockResolvedValueOnce({
+      key: 'ABC',
+      name: 'テストボード',
+      description: null,
+      aiContext: null,
+    } as never)
+    vi.mocked(assertBoardAccess).mockResolvedValueOnce({
+      boardId,
+      kind: 'team',
+      role: 'member',
+      via: 'member',
+      archived: false,
+    })
+    vi.mocked(getBoardMemberUsers).mockResolvedValueOnce([])
+    vi.mocked(listBoardTags).mockResolvedValueOnce([])
+    vi.mocked(countTicketsByBoard).mockResolvedValueOnce({})
+
+    expect(await getBoardForMcp(auth, boardId)).not.toHaveProperty('templates')
   })
 })

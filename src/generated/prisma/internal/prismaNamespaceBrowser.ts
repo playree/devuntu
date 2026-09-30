@@ -67,6 +67,7 @@ export const ModelName = {
   Jwks: 'Jwks',
   Board: 'Board',
   BoardKeyHistory: 'BoardKeyHistory',
+  TicketTemplate: 'TicketTemplate',
   Tag: 'Tag',
   TicketTag: 'TicketTag',
   BoardMember: 'BoardMember',
@@ -372,6 +373,21 @@ export const BoardKeyHistoryScalarFieldEnum = {
 } as const
 
 export type BoardKeyHistoryScalarFieldEnum = (typeof BoardKeyHistoryScalarFieldEnum)[keyof typeof BoardKeyHistoryScalarFieldEnum]
+
+
+export const TicketTemplateScalarFieldEnum = {
+  id: 'id',
+  boardId: 'boardId',
+  name: 'name',
+  content: 'content',
+  criteria: 'criteria',
+  tagIds: 'tagIds',
+  priority: 'priority',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TicketTemplateScalarFieldEnum = (typeof TicketTemplateScalarFieldEnum)[keyof typeof TicketTemplateScalarFieldEnum]
 
 
 export const TagScalarFieldEnum = {

@@ -92,19 +92,27 @@ export const updateBoardProfile = async (
 }
 
 /**
+ * ボードの運用設定(AI 向けコンテキスト / チケットテンプレート)を変更できるかの検証。owner または管理者。
+ * プライベートボードでも所有者が使えるようチームボードに限定しないが、内容は所有者の作成画面や AI クライアントへ
+ * そのまま届くので、プライベートボードは管理者でも所有者以外に書かせない
+ */
+export const assertBoardContentManageable = async (actor: Actor, id: string, tx: Db) => {
+  const access = await assertBoardAccess(actor, id, 'manage', tx)
+  if (access.kind === 'private') {
+    const board = await tx.board.findUnique({ where: { id }, select: { privateOwnerId: true } })
+    if (board?.privateOwnerId !== actor.id) {
+      throw errInvalidOperation()
+    }
+  }
+}
+
+/**
  * AI 向けコンテキストの更新(owner または管理者)。空白だけなら未設定(null)とし、それ以外は Markdown の字下げを崩さないよう手を加えずに保存する。
- * プライベートボードでも所有者が使えるよう、チームボードに限定しない。
- * ただし内容は所有者の AI クライアントへ指示として届くので、プライベートボードは管理者でも所有者以外に書かせない
+ * 権限は assertBoardContentManageable(プライベートボードは所有者のみ)
  */
 export const setBoardAiContext = async (actor: Actor, id: string, aiContext: string) => {
   await prisma.$transaction(async (tx) => {
-    const access = await assertBoardAccess(actor, id, 'manage', tx)
-    if (access.kind === 'private') {
-      const board = await tx.board.findUnique({ where: { id }, select: { privateOwnerId: true } })
-      if (board?.privateOwnerId !== actor.id) {
-        throw errInvalidOperation()
-      }
-    }
+    await assertBoardContentManageable(actor, id, tx)
     await tx.board.update({
       where: { id },
       data: { aiContext: aiContext.trim() ? aiContext : null },

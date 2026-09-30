@@ -110,6 +110,12 @@ export type Board = Prisma.BoardModel
  */
 export type BoardKeyHistory = Prisma.BoardKeyHistoryModel
 /**
+ * Model TicketTemplate
+ * チケット作成時に本文・受け入れ条件・タグ・優先度を埋めるボードごとの雛形。
+ * 作成画面では選んだ時点でフォームへ写すだけで、作成したチケットとの紐付けは持たない。
+ */
+export type TicketTemplate = Prisma.TicketTemplateModel
+/**
  * Model Tag
  * ボード内で使うチケットのタグ。
  */

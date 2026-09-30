@@ -14,6 +14,7 @@ import {
   ArrowTopRightOnSquareIcon,
   Cog6ToothIcon,
   CpuChipIcon,
+  DocumentDuplicateIcon,
   ExclamationTriangleIcon,
   GithubIcon,
   GitlabIcon,
@@ -38,6 +39,7 @@ import { BoardAutoRevise } from './board-auto-revise'
 import { BoardGithub } from './board-github'
 import { BoardGitlab } from './board-gitlab'
 import { BoardProfile } from './board-profile'
+import { BoardTicketTemplates } from './board-ticket-templates'
 import { BoardChannelNotify } from './channel-notify'
 import { DangerZone } from './danger-zone'
 import {
@@ -221,6 +223,18 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
               reloadTags()
             }}
           />
+        </AccordionSection>
+
+        <AccordionSection
+          /**
+           * チケットテンプレート: 作成画面で選ぶと本文・受け入れ条件・タグ・優先度を埋める雛形。
+           * AI 向けコンテキストと同じく、閲覧はメンバー、編集は owner と管理者(プライベートボードは所有者)
+           */
+          id='ticket_templates'
+          icon={<DocumentDuplicateIcon />}
+          title={t('ticket_templates')}
+        >
+          <BoardTicketTemplates boardId={board.id} tags={tags ?? []} canManage={board.canManage} />
         </AccordionSection>
 
         <AccordionSection

@@ -8,6 +8,7 @@ import { DUPLICATED_AGENT_HANDLE } from '../agent/agent'
 import { SESSION_NOT_FRESH } from '../auth/auth-config'
 import { DUPLICATED_TAG_NAME } from '../board/tag-rule'
 import { DUPLICATED_BOARD_KEY } from '../board/ticket-id'
+import { DUPLICATED_TEMPLATE_NAME } from '../board/ticket-template-rule'
 import {
   COMMAND_ALREADY_RUNNING,
   COMMAND_DEF_CONFLICT,
@@ -49,6 +50,7 @@ export const ACTION_ERROR_MESSAGES: Record<string, ActionErrorMessage> = {
   [CANNOT_DELETE_LAST_ADMIN]: { item: 'msg_cannot_delete_last_admin', level: 'warn' },
   [DUPLICATED_BOARD_KEY]: { item: 'msg_duplicated_board_key', level: 'warn' },
   [DUPLICATED_TAG_NAME]: { item: 'msg_duplicated_tag_name', level: 'warn' },
+  [DUPLICATED_TEMPLATE_NAME]: { item: 'msg_duplicated_template_name', level: 'warn' },
   [DUPLICATED_AGENT_HANDLE]: { item: 'msg_duplicated_agent_handle', level: 'warn' },
   [DUPLICATED_MCP_TOKEN_NAME]: { item: 'msg_duplicated_token_name', level: 'warn' },
   [COMMAND_ALREADY_RUNNING]: { item: 'msg_command_already_running', level: 'warn' },

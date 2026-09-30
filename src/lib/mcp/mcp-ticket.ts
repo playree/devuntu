@@ -1,5 +1,10 @@
 import type { TicketCommentType, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
-import { assertTicketAccess, findTicketIdByDisplayId, getAccessibleBoardIds } from '@/lib/board/board-access'
+import {
+  assertBoardAccess,
+  assertTicketAccess,
+  findTicketIdByDisplayId,
+  getAccessibleBoardIds,
+} from '@/lib/board/board-access'
 import { listTicketActivities } from '@/lib/board/ticket-activity'
 import { TICKET_ACTIVITY_MCP_LIMIT } from '@/lib/board/ticket-activity-rule'
 import {
@@ -31,6 +36,8 @@ import {
 import type { TicketRelationFilter } from '@/lib/board/ticket-relation-rule'
 import { buildTicketWhere, ticketListOrderBy } from '@/lib/board/ticket-search'
 import { findWaitingTicketIds } from '@/lib/board/ticket-sequence'
+import { findTicketTemplate } from '@/lib/board/ticket-template'
+import { applyTicketTemplate } from '@/lib/board/ticket-template-rule'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { resolveBoardId } from '@/lib/mcp/mcp-board'
@@ -261,17 +268,25 @@ export const searchTicketsForMcp = async (auth: ResourceAuth, input: McpTicketSe
   }))
 }
 
-export type McpCreateTicketInput = Omit<CreateTicketInput, 'boardId'> & {
-  /** ボードID またはボードキー(例: ABC) */
-  boardId: string
-}
+export type McpCreateTicketInput = Omit<CreateTicketInput, 'boardId' | 'priority' | 'tagIds'> &
+  Partial<Pick<CreateTicketInput, 'priority' | 'tagIds'>> & {
+    /** ボードID またはボードキー(例: ABC) */
+    boardId: string
+    /** テンプレートの ID または名前。明示した項目を優先し、指定の無い項目だけをテンプレートで埋める */
+    templateId?: string
+  }
 
 /**
  * MCP経由のチケット作成。追加制限は無く、Web版の createTicket アクションと同じ権限判定を使う。
+ * テンプレートはボードの閲覧権限で引けるものなので、書き込み権限の判定は createTicket に任せる
  */
-export const createTicketForMcp = async (auth: ResourceAuth, input: McpCreateTicketInput) => {
+export const createTicketForMcp = async (auth: ResourceAuth, { templateId, ...input }: McpCreateTicketInput) => {
   const boardId = await resolveBoardId(input.boardId)
-  const ticket = await createTicket(auth.user, { ...input, boardId })
+  if (templateId) {
+    await assertBoardAccess(auth.user, boardId, 'view')
+  }
+  const template = templateId ? await findTicketTemplate(boardId, templateId) : null
+  const ticket = await createTicket(auth.user, { ...applyTicketTemplate(input, template), boardId })
 
   logger.info({ userId: auth.user.id, ticket }, 'mcp ticket created')
   return ticket

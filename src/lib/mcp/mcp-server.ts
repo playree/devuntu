@@ -36,7 +36,9 @@ import {
   zGitUrl,
   zRelatedTo,
   zRelationTarget,
+  zTagIds,
   zTicketContent,
+  zTicketPriority,
   zTicketStatus,
 } from '@/lib/schema/schema-ticket'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
@@ -85,9 +87,22 @@ const zMcpTicketContent = zTicketContent
 const ACCEPTANCE_CRITERIA_DESCRIPTION =
   'Acceptance criteria: where completion conditions / definition of done go. One verifiable sentence per item. Do not duplicate them in content'
 
-const mcpCreateTicketSchema = scCreateTicket.extend({
+/** priority / tagIds はテンプレートで埋めるかを決めるため、既定値を外して未指定を区別する */
+const mcpCreateTicketSchema = scCreateTicket.omit({ criteria: true }).extend({
   boardId: zBoardIdOrKey.describe('Board ID or board key (e.g. ABC). Find it with list_boards'),
+  templateId: z
+    .string()
+    .trim()
+    .min(1)
+    .max(100)
+    .optional()
+    .describe(
+      'ID or name of a ticket template from get_board templates. Fields you pass explicitly take precedence; ' +
+        'content / acceptanceCriteria / tagIds / priority you omit are filled from the template',
+    ),
   content: zMcpTicketContent,
+  priority: zTicketPriority.optional().describe('Defaults to the template priority, or medium'),
+  tagIds: zTagIds.optional(),
   acceptanceCriteria: z
     .array(zCriterionText)
     .max(MAX_TICKET_CRITERIA)
@@ -178,8 +193,9 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     {
       title: 'Get board',
       description:
-        'Returns board details (members, tags, ticket counts per status, and boardContext if set). ' +
-        'Use the IDs returned here for assigneeId and tagIds in create_ticket / update_ticket',
+        'Returns board details (members, tags, ticket counts per status, and boardContext / templates if set). ' +
+        'Use the IDs returned here for assigneeId and tagIds in create_ticket / update_ticket. ' +
+        'When a template fits the ticket, pass it as templateId in create_ticket',
       inputSchema: { boardId: z.string().min(1).describe('Board ID or board key (e.g. ABC)') },
     },
     async ({ boardId }) => jsonResult(await getBoardForMcp(auth, boardId)),

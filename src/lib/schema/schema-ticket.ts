@@ -64,6 +64,18 @@ export const zGitUrl = z
 /** 期日は日付のみ(YYYY-MM-DD)。DatePickerCtrl が CalendarDate との変換を担う */
 export const zDueDate = z.iso.date().nullish()
 
+/** 1チケットに登録できる受け入れ条件の数 */
+export const MAX_TICKET_CRITERIA = 20
+
+/** 受け入れ条件1項目の文字数上限 */
+export const MAX_CRITERION_TEXT = 500
+
+export const zCriterionText = z
+  .string()
+  .trim()
+  .min(1, el('@required_field'))
+  .max(MAX_CRITERION_TEXT, el('@invalid_content'))
+
 export const scCreateTicket = z.object({
   // プライベートも必ずボードに属するため必須。既定値はプライベートボード
   boardId: z.uuidv7(),
@@ -75,6 +87,8 @@ export const scCreateTicket = z.object({
   dueDate: zDueDate,
   tagIds: zTagIds.default([]),
   assigneeId: z.uuidv7().nullish(),
+  /** 受け入れ条件の文言(空行は画面側で捨てる)。MCP は acceptanceCriteria で受ける */
+  criteria: z.array(zCriterionText).max(MAX_TICKET_CRITERIA, el('@too_many_criteria')).optional(),
 })
 export type CreateTicket = z.infer<typeof scCreateTicket>
 export type CreateTicketIn = z.input<typeof scCreateTicket>
@@ -186,18 +200,6 @@ export const scDecideAgentComment = z.object({
   content: zCommentContent,
 })
 export type DecideAgentComment = z.infer<typeof scDecideAgentComment>
-
-/** 1チケットに登録できる受け入れ条件の数 */
-export const MAX_TICKET_CRITERIA = 20
-
-/** 受け入れ条件1項目の文字数上限 */
-export const MAX_CRITERION_TEXT = 500
-
-export const zCriterionText = z
-  .string()
-  .trim()
-  .min(1, el('@required_field'))
-  .max(MAX_CRITERION_TEXT, el('@invalid_content'))
 
 /** エージェントが自己申告に添える根拠 */
 export const zCriterionEvidence = z.string().trim().min(1).max(1000)

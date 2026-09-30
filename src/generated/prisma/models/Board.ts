@@ -310,6 +310,7 @@ export type BoardWhereInput = {
   notifySettings?: Prisma.BoardNotifySettingListRelationFilter
   repositories?: Prisma.BoardRepositoryListRelationFilter
   agentUsages?: Prisma.AgentUsageListRelationFilter
+  templates?: Prisma.TicketTemplateListRelationFilter
 }
 
 export type BoardOrderByWithRelationInput = {
@@ -338,6 +339,7 @@ export type BoardOrderByWithRelationInput = {
   notifySettings?: Prisma.BoardNotifySettingOrderByRelationAggregateInput
   repositories?: Prisma.BoardRepositoryOrderByRelationAggregateInput
   agentUsages?: Prisma.AgentUsageOrderByRelationAggregateInput
+  templates?: Prisma.TicketTemplateOrderByRelationAggregateInput
 }
 
 export type BoardWhereUniqueInput = Prisma.AtLeast<{
@@ -369,6 +371,7 @@ export type BoardWhereUniqueInput = Prisma.AtLeast<{
   notifySettings?: Prisma.BoardNotifySettingListRelationFilter
   repositories?: Prisma.BoardRepositoryListRelationFilter
   agentUsages?: Prisma.AgentUsageListRelationFilter
+  templates?: Prisma.TicketTemplateListRelationFilter
 }, "id" | "privateOwnerId" | "key">
 
 export type BoardOrderByWithAggregationInput = {
@@ -440,6 +443,7 @@ export type BoardCreateInput = {
   notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
   repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateInput = {
@@ -467,6 +471,7 @@ export type BoardUncheckedCreateInput = {
   notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
   repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUpdateInput = {
@@ -494,6 +499,7 @@ export type BoardUpdateInput = {
   notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
   repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateInput = {
@@ -521,6 +527,7 @@ export type BoardUncheckedUpdateInput = {
   notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
   repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateManyInput = {
@@ -686,6 +693,20 @@ export type BoardUpdateOneWithoutKeyHistoriesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.BoardUpdateToOneWithWhereWithoutKeyHistoriesInput, Prisma.BoardUpdateWithoutKeyHistoriesInput>, Prisma.BoardUncheckedUpdateWithoutKeyHistoriesInput>
 }
 
+export type BoardCreateNestedOneWithoutTemplatesInput = {
+  create?: Prisma.XOR<Prisma.BoardCreateWithoutTemplatesInput, Prisma.BoardUncheckedCreateWithoutTemplatesInput>
+  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutTemplatesInput
+  connect?: Prisma.BoardWhereUniqueInput
+}
+
+export type BoardUpdateOneRequiredWithoutTemplatesNestedInput = {
+  create?: Prisma.XOR<Prisma.BoardCreateWithoutTemplatesInput, Prisma.BoardUncheckedCreateWithoutTemplatesInput>
+  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutTemplatesInput
+  upsert?: Prisma.BoardUpsertWithoutTemplatesInput
+  connect?: Prisma.BoardWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.BoardUpdateToOneWithWhereWithoutTemplatesInput, Prisma.BoardUpdateWithoutTemplatesInput>, Prisma.BoardUncheckedUpdateWithoutTemplatesInput>
+}
+
 export type BoardCreateNestedOneWithoutTagsInput = {
   create?: Prisma.XOR<Prisma.BoardCreateWithoutTagsInput, Prisma.BoardUncheckedCreateWithoutTagsInput>
   connectOrCreate?: Prisma.BoardCreateOrConnectWithoutTagsInput
@@ -842,6 +863,7 @@ export type BoardCreateWithoutAgentUsagesInput = {
   keyHistories?: Prisma.BoardKeyHistoryCreateNestedManyWithoutBoardInput
   notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
   repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutAgentUsagesInput = {
@@ -868,6 +890,7 @@ export type BoardUncheckedCreateWithoutAgentUsagesInput = {
   keyHistories?: Prisma.BoardKeyHistoryUncheckedCreateNestedManyWithoutBoardInput
   notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
   repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutAgentUsagesInput = {
@@ -910,6 +933,7 @@ export type BoardUpdateWithoutAgentUsagesInput = {
   keyHistories?: Prisma.BoardKeyHistoryUpdateManyWithoutBoardNestedInput
   notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
   repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutAgentUsagesInput = {
@@ -936,6 +960,7 @@ export type BoardUncheckedUpdateWithoutAgentUsagesInput = {
   keyHistories?: Prisma.BoardKeyHistoryUncheckedUpdateManyWithoutBoardNestedInput
   notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
   repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutKeyHistoriesInput = {
@@ -962,6 +987,7 @@ export type BoardCreateWithoutKeyHistoriesInput = {
   notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
   repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutKeyHistoriesInput = {
@@ -988,6 +1014,7 @@ export type BoardUncheckedCreateWithoutKeyHistoriesInput = {
   notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
   repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutKeyHistoriesInput = {
@@ -1030,6 +1057,7 @@ export type BoardUpdateWithoutKeyHistoriesInput = {
   notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
   repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutKeyHistoriesInput = {
@@ -1053,6 +1081,131 @@ export type BoardUncheckedUpdateWithoutKeyHistoriesInput = {
   tickets?: Prisma.TicketUncheckedUpdateManyWithoutBoardNestedInput
   tags?: Prisma.TagUncheckedUpdateManyWithoutBoardNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
+  repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
+  agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
+}
+
+export type BoardCreateWithoutTemplatesInput = {
+  id?: string
+  kind?: $Enums.BoardKind
+  key: string
+  ticketSeq?: number
+  name: string
+  description?: string | null
+  aiContext?: string | null
+  archived?: boolean
+  completeOnGithubMerge?: boolean
+  completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
+  members?: Prisma.BoardMemberCreateNestedManyWithoutBoardInput
+  groups?: Prisma.BoardGroupCreateNestedManyWithoutBoardInput
+  tickets?: Prisma.TicketCreateNestedManyWithoutBoardInput
+  tags?: Prisma.TagCreateNestedManyWithoutBoardInput
+  attachments?: Prisma.AttachmentCreateNestedManyWithoutBoardInput
+  keyHistories?: Prisma.BoardKeyHistoryCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
+  repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
+  agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
+}
+
+export type BoardUncheckedCreateWithoutTemplatesInput = {
+  id?: string
+  kind?: $Enums.BoardKind
+  privateOwnerId?: string | null
+  key: string
+  ticketSeq?: number
+  name: string
+  description?: string | null
+  aiContext?: string | null
+  archived?: boolean
+  completeOnGithubMerge?: boolean
+  completeOnGitlabMerge?: boolean
+  agentAutoRevise?: boolean
+  agentAutoReviseLimit?: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
+  groups?: Prisma.BoardGroupUncheckedCreateNestedManyWithoutBoardInput
+  tickets?: Prisma.TicketUncheckedCreateNestedManyWithoutBoardInput
+  tags?: Prisma.TagUncheckedCreateNestedManyWithoutBoardInput
+  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutBoardInput
+  keyHistories?: Prisma.BoardKeyHistoryUncheckedCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
+  repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
+  agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
+}
+
+export type BoardCreateOrConnectWithoutTemplatesInput = {
+  where: Prisma.BoardWhereUniqueInput
+  create: Prisma.XOR<Prisma.BoardCreateWithoutTemplatesInput, Prisma.BoardUncheckedCreateWithoutTemplatesInput>
+}
+
+export type BoardUpsertWithoutTemplatesInput = {
+  update: Prisma.XOR<Prisma.BoardUpdateWithoutTemplatesInput, Prisma.BoardUncheckedUpdateWithoutTemplatesInput>
+  create: Prisma.XOR<Prisma.BoardCreateWithoutTemplatesInput, Prisma.BoardUncheckedCreateWithoutTemplatesInput>
+  where?: Prisma.BoardWhereInput
+}
+
+export type BoardUpdateToOneWithWhereWithoutTemplatesInput = {
+  where?: Prisma.BoardWhereInput
+  data: Prisma.XOR<Prisma.BoardUpdateWithoutTemplatesInput, Prisma.BoardUncheckedUpdateWithoutTemplatesInput>
+}
+
+export type BoardUpdateWithoutTemplatesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
+  members?: Prisma.BoardMemberUpdateManyWithoutBoardNestedInput
+  groups?: Prisma.BoardGroupUpdateManyWithoutBoardNestedInput
+  tickets?: Prisma.TicketUpdateManyWithoutBoardNestedInput
+  tags?: Prisma.TagUpdateManyWithoutBoardNestedInput
+  attachments?: Prisma.AttachmentUpdateManyWithoutBoardNestedInput
+  keyHistories?: Prisma.BoardKeyHistoryUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
+  repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
+  agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
+}
+
+export type BoardUncheckedUpdateWithoutTemplatesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  privateOwnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
+  groups?: Prisma.BoardGroupUncheckedUpdateManyWithoutBoardNestedInput
+  tickets?: Prisma.TicketUncheckedUpdateManyWithoutBoardNestedInput
+  tags?: Prisma.TagUncheckedUpdateManyWithoutBoardNestedInput
+  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutBoardNestedInput
+  keyHistories?: Prisma.BoardKeyHistoryUncheckedUpdateManyWithoutBoardNestedInput
   notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
   repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
@@ -1082,6 +1235,7 @@ export type BoardCreateWithoutTagsInput = {
   notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
   repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutTagsInput = {
@@ -1108,6 +1262,7 @@ export type BoardUncheckedCreateWithoutTagsInput = {
   notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
   repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutTagsInput = {
@@ -1150,6 +1305,7 @@ export type BoardUpdateWithoutTagsInput = {
   notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
   repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutTagsInput = {
@@ -1176,6 +1332,7 @@ export type BoardUncheckedUpdateWithoutTagsInput = {
   notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
   repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutMembersInput = {
@@ -1202,6 +1359,7 @@ export type BoardCreateWithoutMembersInput = {
   notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
   repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutMembersInput = {
@@ -1228,6 +1386,7 @@ export type BoardUncheckedCreateWithoutMembersInput = {
   notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
   repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutMembersInput = {
@@ -1270,6 +1429,7 @@ export type BoardUpdateWithoutMembersInput = {
   notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
   repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutMembersInput = {
@@ -1296,6 +1456,7 @@ export type BoardUncheckedUpdateWithoutMembersInput = {
   notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
   repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutGroupsInput = {
@@ -1322,6 +1483,7 @@ export type BoardCreateWithoutGroupsInput = {
   notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
   repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutGroupsInput = {
@@ -1348,6 +1510,7 @@ export type BoardUncheckedCreateWithoutGroupsInput = {
   notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
   repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutGroupsInput = {
@@ -1390,6 +1553,7 @@ export type BoardUpdateWithoutGroupsInput = {
   notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
   repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutGroupsInput = {
@@ -1416,6 +1580,7 @@ export type BoardUncheckedUpdateWithoutGroupsInput = {
   notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
   repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutRepositoriesInput = {
@@ -1442,6 +1607,7 @@ export type BoardCreateWithoutRepositoriesInput = {
   keyHistories?: Prisma.BoardKeyHistoryCreateNestedManyWithoutBoardInput
   notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutRepositoriesInput = {
@@ -1468,6 +1634,7 @@ export type BoardUncheckedCreateWithoutRepositoriesInput = {
   keyHistories?: Prisma.BoardKeyHistoryUncheckedCreateNestedManyWithoutBoardInput
   notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutRepositoriesInput = {
@@ -1510,6 +1677,7 @@ export type BoardUpdateWithoutRepositoriesInput = {
   keyHistories?: Prisma.BoardKeyHistoryUpdateManyWithoutBoardNestedInput
   notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutRepositoriesInput = {
@@ -1536,6 +1704,7 @@ export type BoardUncheckedUpdateWithoutRepositoriesInput = {
   keyHistories?: Prisma.BoardKeyHistoryUncheckedUpdateManyWithoutBoardNestedInput
   notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutNotifySettingsInput = {
@@ -1562,6 +1731,7 @@ export type BoardCreateWithoutNotifySettingsInput = {
   keyHistories?: Prisma.BoardKeyHistoryCreateNestedManyWithoutBoardInput
   repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutNotifySettingsInput = {
@@ -1588,6 +1758,7 @@ export type BoardUncheckedCreateWithoutNotifySettingsInput = {
   keyHistories?: Prisma.BoardKeyHistoryUncheckedCreateNestedManyWithoutBoardInput
   repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutNotifySettingsInput = {
@@ -1630,6 +1801,7 @@ export type BoardUpdateWithoutNotifySettingsInput = {
   keyHistories?: Prisma.BoardKeyHistoryUpdateManyWithoutBoardNestedInput
   repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutNotifySettingsInput = {
@@ -1656,6 +1828,7 @@ export type BoardUncheckedUpdateWithoutNotifySettingsInput = {
   keyHistories?: Prisma.BoardKeyHistoryUncheckedUpdateManyWithoutBoardNestedInput
   repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutAttachmentsInput = {
@@ -1682,6 +1855,7 @@ export type BoardCreateWithoutAttachmentsInput = {
   notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
   repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutAttachmentsInput = {
@@ -1708,6 +1882,7 @@ export type BoardUncheckedCreateWithoutAttachmentsInput = {
   notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
   repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutAttachmentsInput = {
@@ -1750,6 +1925,7 @@ export type BoardUpdateWithoutAttachmentsInput = {
   notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
   repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutAttachmentsInput = {
@@ -1776,6 +1952,7 @@ export type BoardUncheckedUpdateWithoutAttachmentsInput = {
   notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
   repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutTicketsInput = {
@@ -1802,6 +1979,7 @@ export type BoardCreateWithoutTicketsInput = {
   notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
   repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutTicketsInput = {
@@ -1828,6 +2006,7 @@ export type BoardUncheckedCreateWithoutTicketsInput = {
   notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
   repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutTicketsInput = {
@@ -1870,6 +2049,7 @@ export type BoardUpdateWithoutTicketsInput = {
   notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
   repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutTicketsInput = {
@@ -1896,6 +2076,7 @@ export type BoardUncheckedUpdateWithoutTicketsInput = {
   notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
   repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutPrivateOwnerInput = {
@@ -1922,6 +2103,7 @@ export type BoardCreateWithoutPrivateOwnerInput = {
   notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
   repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutPrivateOwnerInput = {
@@ -1948,6 +2130,7 @@ export type BoardUncheckedCreateWithoutPrivateOwnerInput = {
   notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
   repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutPrivateOwnerInput = {
@@ -1990,6 +2173,7 @@ export type BoardUpdateWithoutPrivateOwnerInput = {
   notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
   repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutPrivateOwnerInput = {
@@ -2016,6 +2200,7 @@ export type BoardUncheckedUpdateWithoutPrivateOwnerInput = {
   notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
   repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 
@@ -2033,6 +2218,7 @@ export type BoardCountOutputType = {
   notifySettings: number
   repositories: number
   agentUsages: number
+  templates: number
 }
 
 export type BoardCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2045,6 +2231,7 @@ export type BoardCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.
   notifySettings?: boolean | BoardCountOutputTypeCountNotifySettingsArgs
   repositories?: boolean | BoardCountOutputTypeCountRepositoriesArgs
   agentUsages?: boolean | BoardCountOutputTypeCountAgentUsagesArgs
+  templates?: boolean | BoardCountOutputTypeCountTemplatesArgs
 }
 
 /**
@@ -2120,6 +2307,13 @@ export type BoardCountOutputTypeCountAgentUsagesArgs<ExtArgs extends runtime.Typ
   where?: Prisma.AgentUsageWhereInput
 }
 
+/**
+ * BoardCountOutputType without action
+ */
+export type BoardCountOutputTypeCountTemplatesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.TicketTemplateWhereInput
+}
+
 
 export type BoardSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -2147,6 +2341,7 @@ export type BoardSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   notifySettings?: boolean | Prisma.Board$notifySettingsArgs<ExtArgs>
   repositories?: boolean | Prisma.Board$repositoriesArgs<ExtArgs>
   agentUsages?: boolean | Prisma.Board$agentUsagesArgs<ExtArgs>
+  templates?: boolean | Prisma.Board$templatesArgs<ExtArgs>
   _count?: boolean | Prisma.BoardCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["board"]>
 
@@ -2218,6 +2413,7 @@ export type BoardInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   notifySettings?: boolean | Prisma.Board$notifySettingsArgs<ExtArgs>
   repositories?: boolean | Prisma.Board$repositoriesArgs<ExtArgs>
   agentUsages?: boolean | Prisma.Board$agentUsagesArgs<ExtArgs>
+  templates?: boolean | Prisma.Board$templatesArgs<ExtArgs>
   _count?: boolean | Prisma.BoardCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type BoardIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2240,6 +2436,7 @@ export type $BoardPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     notifySettings: Prisma.$BoardNotifySettingPayload<ExtArgs>[]
     repositories: Prisma.$BoardRepositoryPayload<ExtArgs>[]
     agentUsages: Prisma.$AgentUsagePayload<ExtArgs>[]
+    templates: Prisma.$TicketTemplatePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2704,6 +2901,7 @@ export interface Prisma__BoardClient<T, Null = never, ExtArgs extends runtime.Ty
   notifySettings<T extends Prisma.Board$notifySettingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Board$notifySettingsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BoardNotifySettingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   repositories<T extends Prisma.Board$repositoriesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Board$repositoriesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BoardRepositoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   agentUsages<T extends Prisma.Board$agentUsagesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Board$agentUsagesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AgentUsagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  templates<T extends Prisma.Board$templatesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Board$templatesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TicketTemplatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3381,6 +3579,30 @@ export type Board$agentUsagesArgs<ExtArgs extends runtime.Types.Extensions.Inter
   take?: number
   skip?: number
   distinct?: Prisma.AgentUsageScalarFieldEnum | Prisma.AgentUsageScalarFieldEnum[]
+}
+
+/**
+ * Board.templates
+ */
+export type Board$templatesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the TicketTemplate
+   */
+  select?: Prisma.TicketTemplateSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the TicketTemplate
+   */
+  omit?: Prisma.TicketTemplateOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TicketTemplateInclude<ExtArgs> | null
+  where?: Prisma.TicketTemplateWhereInput
+  orderBy?: Prisma.TicketTemplateOrderByWithRelationInput | Prisma.TicketTemplateOrderByWithRelationInput[]
+  cursor?: Prisma.TicketTemplateWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.TicketTemplateScalarFieldEnum | Prisma.TicketTemplateScalarFieldEnum[]
 }
 
 /**

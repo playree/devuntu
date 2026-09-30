@@ -381,6 +381,23 @@ export type EnumBoardKindWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumBoardKindFilter<$PrismaModel>
 }
 
+export type EnumTicketPriorityNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketPriority | Prisma.EnumTicketPriorityFieldRefInput<$PrismaModel> | null
+  in?: $Enums.TicketPriority[] | Prisma.ListEnumTicketPriorityFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.TicketPriority[] | Prisma.ListEnumTicketPriorityFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumTicketPriorityNullableFilter<$PrismaModel> | $Enums.TicketPriority | null
+}
+
+export type EnumTicketPriorityNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketPriority | Prisma.EnumTicketPriorityFieldRefInput<$PrismaModel> | null
+  in?: $Enums.TicketPriority[] | Prisma.ListEnumTicketPriorityFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.TicketPriority[] | Prisma.ListEnumTicketPriorityFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumTicketPriorityNullableWithAggregatesFilter<$PrismaModel> | $Enums.TicketPriority | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTicketPriorityNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTicketPriorityNullableFilter<$PrismaModel>
+}
+
 export type EnumTagColorFilter<$PrismaModel = never> = {
   equals?: $Enums.TagColor | Prisma.EnumTagColorFieldRefInput<$PrismaModel>
   in?: $Enums.TagColor[] | Prisma.ListEnumTagColorFieldRefInput<$PrismaModel>
@@ -1235,6 +1252,23 @@ export type NestedEnumBoardKindWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumBoardKindFilter<$PrismaModel>
   _max?: Prisma.NestedEnumBoardKindFilter<$PrismaModel>
+}
+
+export type NestedEnumTicketPriorityNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketPriority | Prisma.EnumTicketPriorityFieldRefInput<$PrismaModel> | null
+  in?: $Enums.TicketPriority[] | Prisma.ListEnumTicketPriorityFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.TicketPriority[] | Prisma.ListEnumTicketPriorityFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumTicketPriorityNullableFilter<$PrismaModel> | $Enums.TicketPriority | null
+}
+
+export type NestedEnumTicketPriorityNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketPriority | Prisma.EnumTicketPriorityFieldRefInput<$PrismaModel> | null
+  in?: $Enums.TicketPriority[] | Prisma.ListEnumTicketPriorityFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.TicketPriority[] | Prisma.ListEnumTicketPriorityFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumTicketPriorityNullableWithAggregatesFilter<$PrismaModel> | $Enums.TicketPriority | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTicketPriorityNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTicketPriorityNullableFilter<$PrismaModel>
 }
 
 export type NestedEnumTagColorFilter<$PrismaModel = never> = {

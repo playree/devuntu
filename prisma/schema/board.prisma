@@ -93,6 +93,7 @@ model Board {
   notifySettings BoardNotifySetting[]
   repositories   BoardRepository[]
   agentUsages    AgentUsage[]
+  templates      TicketTemplate[]
 
   @@map("board")
 }
@@ -114,6 +115,39 @@ model BoardKeyHistory {
 
   @@index([boardId])
   @@map("board_key_history")
+}
+
+/// チケット作成時に本文・受け入れ条件・タグ・優先度を埋めるボードごとの雛形。
+/// 作成画面では選んだ時点でフォームへ写すだけで、作成したチケットとの紐付けは持たない。
+model TicketTemplate {
+  id String @id @default(uuid(7))
+
+  /// テンプレートを持つボード
+  boardId String
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  /// テンプレート名。ボード内で一意(MCP の create_ticket でも名前で指定できる)
+  name String
+
+  /// 本文の雛形(Markdown)
+  content String @default("")
+
+  /// 既定の受け入れ条件(表示順)
+  criteria String[] @default([])
+
+  /// 既定のタグ。タグは後から削除されうるため外部キーを張らず、読み出し時にボードのタグへ絞る
+  tagIds String[] @default([])
+
+  /// 既定の優先度。null なら作成側の既定値のまま
+  priority TicketPriority?
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // @@unique が (boardId, ...) の先頭索引を兼ねるため @@index([boardId]) は不要
+  @@unique([boardId, name])
+  @@map("ticket_template")
 }
 
 /// ボード内で使うチケットのタグ。

@@ -16,6 +16,7 @@ import {
   ticketListOrderBy,
   ticketScopeWhere,
 } from '@/lib/board/ticket-search'
+import { listBoardTicketTemplates } from '@/lib/board/ticket-template'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
@@ -199,6 +200,13 @@ export const getAssigneeOptions = safeAuthAction
     return users.map(({ id, name, email, image, isAgent }) => ({ id, name, email, image, isAgent }))
   })
 export type GetAssigneeOptionsReturnType = Awaited<ReturnType<typeof getAssigneeOptions>>['data']
+
+/** 作成フォームで選べるチケットテンプレート(選択中のボードのもの) */
+export const getTicketTemplateOptions = safeAuthAction
+  .metadata({ actionName: 'getTicketTemplateOptions', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id: boardId } }) => listBoardTicketTemplates(user, boardId))
+export type GetTicketTemplateOptionsReturnType = Awaited<ReturnType<typeof getTicketTemplateOptions>>['data']
 
 /**
  * チケット作成

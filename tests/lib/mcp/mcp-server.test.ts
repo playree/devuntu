@@ -267,16 +267,35 @@ describe('createDevuntuMcpServer', () => {
       arguments: { boardId: 'b1', title: '新規チケット' },
     })
 
+    // priority / tagIds はテンプレートで埋めるかを決めるため、未指定のまま渡す
     expect(createTicketForMcp).toHaveBeenCalledWith(auth, {
       boardId: 'b1',
       title: '新規チケット',
       status: 'todo',
-      priority: 'medium',
-      tagIds: [],
     })
+    expect(vi.mocked(createTicketForMcp).mock.calls[0][1]).not.toHaveProperty('priority')
     expect(result.content).toEqual([
       { type: 'text', text: JSON.stringify({ id: 't1', displayId: 'ABC-1', title: '新規チケット' }, null, 2) },
     ])
+  })
+
+  it('create_ticket は templateId をMCPロジックへ渡す', async () => {
+    vi.mocked(createTicketForMcp).mockResolvedValueOnce({ id: 't1' } as never)
+
+    await (
+      await connectDevuntuMcp()
+    ).callTool({
+      name: 'create_ticket',
+      arguments: { boardId: 'b1', title: '新規チケット', templateId: '不具合', priority: 'low' },
+    })
+
+    expect(createTicketForMcp).toHaveBeenCalledWith(auth, {
+      boardId: 'b1',
+      title: '新規チケット',
+      status: 'todo',
+      templateId: '不具合',
+      priority: 'low',
+    })
   })
 
   it('update_ticket は ticketId を分離して残りをMCPロジックへ渡す', async () => {
