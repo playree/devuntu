@@ -28,12 +28,10 @@ export type AggregateBoard = {
 
 export type BoardAvgAggregateOutputType = {
   ticketSeq: number | null
-  agentAutoReviseLimit: number | null
 }
 
 export type BoardSumAggregateOutputType = {
   ticketSeq: number | null
-  agentAutoReviseLimit: number | null
 }
 
 export type BoardMinAggregateOutputType = {
@@ -46,10 +44,6 @@ export type BoardMinAggregateOutputType = {
   description: string | null
   aiContext: string | null
   archived: boolean | null
-  completeOnGithubMerge: boolean | null
-  completeOnGitlabMerge: boolean | null
-  agentAutoRevise: boolean | null
-  agentAutoReviseLimit: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -64,10 +58,6 @@ export type BoardMaxAggregateOutputType = {
   description: string | null
   aiContext: string | null
   archived: boolean | null
-  completeOnGithubMerge: boolean | null
-  completeOnGitlabMerge: boolean | null
-  agentAutoRevise: boolean | null
-  agentAutoReviseLimit: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -82,10 +72,6 @@ export type BoardCountAggregateOutputType = {
   description: number
   aiContext: number
   archived: number
-  completeOnGithubMerge: number
-  completeOnGitlabMerge: number
-  agentAutoRevise: number
-  agentAutoReviseLimit: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -94,12 +80,10 @@ export type BoardCountAggregateOutputType = {
 
 export type BoardAvgAggregateInputType = {
   ticketSeq?: true
-  agentAutoReviseLimit?: true
 }
 
 export type BoardSumAggregateInputType = {
   ticketSeq?: true
-  agentAutoReviseLimit?: true
 }
 
 export type BoardMinAggregateInputType = {
@@ -112,10 +96,6 @@ export type BoardMinAggregateInputType = {
   description?: true
   aiContext?: true
   archived?: true
-  completeOnGithubMerge?: true
-  completeOnGitlabMerge?: true
-  agentAutoRevise?: true
-  agentAutoReviseLimit?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -130,10 +110,6 @@ export type BoardMaxAggregateInputType = {
   description?: true
   aiContext?: true
   archived?: true
-  completeOnGithubMerge?: true
-  completeOnGitlabMerge?: true
-  agentAutoRevise?: true
-  agentAutoReviseLimit?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -148,10 +124,6 @@ export type BoardCountAggregateInputType = {
   description?: true
   aiContext?: true
   archived?: true
-  completeOnGithubMerge?: true
-  completeOnGitlabMerge?: true
-  agentAutoRevise?: true
-  agentAutoReviseLimit?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -253,10 +225,6 @@ export type BoardGroupByOutputType = {
   description: string | null
   aiContext: string | null
   archived: boolean
-  completeOnGithubMerge: boolean
-  completeOnGitlabMerge: boolean
-  agentAutoRevise: boolean
-  agentAutoReviseLimit: number
   createdAt: Date
   updatedAt: Date
   _count: BoardCountAggregateOutputType | null
@@ -294,10 +262,6 @@ export type BoardWhereInput = {
   description?: Prisma.StringNullableFilter<"Board"> | string | null
   aiContext?: Prisma.StringNullableFilter<"Board"> | string | null
   archived?: Prisma.BoolFilter<"Board"> | boolean
-  completeOnGithubMerge?: Prisma.BoolFilter<"Board"> | boolean
-  completeOnGitlabMerge?: Prisma.BoolFilter<"Board"> | boolean
-  agentAutoRevise?: Prisma.BoolFilter<"Board"> | boolean
-  agentAutoReviseLimit?: Prisma.IntFilter<"Board"> | number
   createdAt?: Prisma.DateTimeFilter<"Board"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Board"> | Date | string
   privateOwner?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
@@ -311,6 +275,7 @@ export type BoardWhereInput = {
   repositories?: Prisma.BoardRepositoryListRelationFilter
   agentUsages?: Prisma.AgentUsageListRelationFilter
   templates?: Prisma.TicketTemplateListRelationFilter
+  gitSettings?: Prisma.BoardGitSettingListRelationFilter
 }
 
 export type BoardOrderByWithRelationInput = {
@@ -323,10 +288,6 @@ export type BoardOrderByWithRelationInput = {
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   aiContext?: Prisma.SortOrderInput | Prisma.SortOrder
   archived?: Prisma.SortOrder
-  completeOnGithubMerge?: Prisma.SortOrder
-  completeOnGitlabMerge?: Prisma.SortOrder
-  agentAutoRevise?: Prisma.SortOrder
-  agentAutoReviseLimit?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   privateOwner?: Prisma.UserOrderByWithRelationInput
@@ -340,6 +301,7 @@ export type BoardOrderByWithRelationInput = {
   repositories?: Prisma.BoardRepositoryOrderByRelationAggregateInput
   agentUsages?: Prisma.AgentUsageOrderByRelationAggregateInput
   templates?: Prisma.TicketTemplateOrderByRelationAggregateInput
+  gitSettings?: Prisma.BoardGitSettingOrderByRelationAggregateInput
 }
 
 export type BoardWhereUniqueInput = Prisma.AtLeast<{
@@ -355,10 +317,6 @@ export type BoardWhereUniqueInput = Prisma.AtLeast<{
   description?: Prisma.StringNullableFilter<"Board"> | string | null
   aiContext?: Prisma.StringNullableFilter<"Board"> | string | null
   archived?: Prisma.BoolFilter<"Board"> | boolean
-  completeOnGithubMerge?: Prisma.BoolFilter<"Board"> | boolean
-  completeOnGitlabMerge?: Prisma.BoolFilter<"Board"> | boolean
-  agentAutoRevise?: Prisma.BoolFilter<"Board"> | boolean
-  agentAutoReviseLimit?: Prisma.IntFilter<"Board"> | number
   createdAt?: Prisma.DateTimeFilter<"Board"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Board"> | Date | string
   privateOwner?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
@@ -372,6 +330,7 @@ export type BoardWhereUniqueInput = Prisma.AtLeast<{
   repositories?: Prisma.BoardRepositoryListRelationFilter
   agentUsages?: Prisma.AgentUsageListRelationFilter
   templates?: Prisma.TicketTemplateListRelationFilter
+  gitSettings?: Prisma.BoardGitSettingListRelationFilter
 }, "id" | "privateOwnerId" | "key">
 
 export type BoardOrderByWithAggregationInput = {
@@ -384,10 +343,6 @@ export type BoardOrderByWithAggregationInput = {
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   aiContext?: Prisma.SortOrderInput | Prisma.SortOrder
   archived?: Prisma.SortOrder
-  completeOnGithubMerge?: Prisma.SortOrder
-  completeOnGitlabMerge?: Prisma.SortOrder
-  agentAutoRevise?: Prisma.SortOrder
-  agentAutoReviseLimit?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.BoardCountOrderByAggregateInput
@@ -410,10 +365,6 @@ export type BoardScalarWhereWithAggregatesInput = {
   description?: Prisma.StringNullableWithAggregatesFilter<"Board"> | string | null
   aiContext?: Prisma.StringNullableWithAggregatesFilter<"Board"> | string | null
   archived?: Prisma.BoolWithAggregatesFilter<"Board"> | boolean
-  completeOnGithubMerge?: Prisma.BoolWithAggregatesFilter<"Board"> | boolean
-  completeOnGitlabMerge?: Prisma.BoolWithAggregatesFilter<"Board"> | boolean
-  agentAutoRevise?: Prisma.BoolWithAggregatesFilter<"Board"> | boolean
-  agentAutoReviseLimit?: Prisma.IntWithAggregatesFilter<"Board"> | number
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Board"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Board"> | Date | string
 }
@@ -427,10 +378,6 @@ export type BoardCreateInput = {
   description?: string | null
   aiContext?: string | null
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -444,6 +391,7 @@ export type BoardCreateInput = {
   repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateInput = {
@@ -456,10 +404,6 @@ export type BoardUncheckedCreateInput = {
   description?: string | null
   aiContext?: string | null
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -472,6 +416,7 @@ export type BoardUncheckedCreateInput = {
   repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUpdateInput = {
@@ -483,10 +428,6 @@ export type BoardUpdateInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -500,6 +441,7 @@ export type BoardUpdateInput = {
   repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateInput = {
@@ -512,10 +454,6 @@ export type BoardUncheckedUpdateInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
@@ -528,6 +466,7 @@ export type BoardUncheckedUpdateInput = {
   repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateManyInput = {
@@ -540,10 +479,6 @@ export type BoardCreateManyInput = {
   description?: string | null
   aiContext?: string | null
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -557,10 +492,6 @@ export type BoardUpdateManyMutationInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -575,10 +506,6 @@ export type BoardUncheckedUpdateManyInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -598,17 +525,12 @@ export type BoardCountOrderByAggregateInput = {
   description?: Prisma.SortOrder
   aiContext?: Prisma.SortOrder
   archived?: Prisma.SortOrder
-  completeOnGithubMerge?: Prisma.SortOrder
-  completeOnGitlabMerge?: Prisma.SortOrder
-  agentAutoRevise?: Prisma.SortOrder
-  agentAutoReviseLimit?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
 export type BoardAvgOrderByAggregateInput = {
   ticketSeq?: Prisma.SortOrder
-  agentAutoReviseLimit?: Prisma.SortOrder
 }
 
 export type BoardMaxOrderByAggregateInput = {
@@ -621,10 +543,6 @@ export type BoardMaxOrderByAggregateInput = {
   description?: Prisma.SortOrder
   aiContext?: Prisma.SortOrder
   archived?: Prisma.SortOrder
-  completeOnGithubMerge?: Prisma.SortOrder
-  completeOnGitlabMerge?: Prisma.SortOrder
-  agentAutoRevise?: Prisma.SortOrder
-  agentAutoReviseLimit?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -639,17 +557,12 @@ export type BoardMinOrderByAggregateInput = {
   description?: Prisma.SortOrder
   aiContext?: Prisma.SortOrder
   archived?: Prisma.SortOrder
-  completeOnGithubMerge?: Prisma.SortOrder
-  completeOnGitlabMerge?: Prisma.SortOrder
-  agentAutoRevise?: Prisma.SortOrder
-  agentAutoReviseLimit?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
 export type BoardSumOrderByAggregateInput = {
   ticketSeq?: Prisma.SortOrder
-  agentAutoReviseLimit?: Prisma.SortOrder
 }
 
 export type BoardScalarRelationFilter = {
@@ -763,6 +676,20 @@ export type BoardUpdateOneRequiredWithoutRepositoriesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.BoardUpdateToOneWithWhereWithoutRepositoriesInput, Prisma.BoardUpdateWithoutRepositoriesInput>, Prisma.BoardUncheckedUpdateWithoutRepositoriesInput>
 }
 
+export type BoardCreateNestedOneWithoutGitSettingsInput = {
+  create?: Prisma.XOR<Prisma.BoardCreateWithoutGitSettingsInput, Prisma.BoardUncheckedCreateWithoutGitSettingsInput>
+  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutGitSettingsInput
+  connect?: Prisma.BoardWhereUniqueInput
+}
+
+export type BoardUpdateOneRequiredWithoutGitSettingsNestedInput = {
+  create?: Prisma.XOR<Prisma.BoardCreateWithoutGitSettingsInput, Prisma.BoardUncheckedCreateWithoutGitSettingsInput>
+  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutGitSettingsInput
+  upsert?: Prisma.BoardUpsertWithoutGitSettingsInput
+  connect?: Prisma.BoardWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.BoardUpdateToOneWithWhereWithoutGitSettingsInput, Prisma.BoardUpdateWithoutGitSettingsInput>, Prisma.BoardUncheckedUpdateWithoutGitSettingsInput>
+}
+
 export type BoardCreateNestedOneWithoutNotifySettingsInput = {
   create?: Prisma.XOR<Prisma.BoardCreateWithoutNotifySettingsInput, Prisma.BoardUncheckedCreateWithoutNotifySettingsInput>
   connectOrCreate?: Prisma.BoardCreateOrConnectWithoutNotifySettingsInput
@@ -848,10 +775,6 @@ export type BoardCreateWithoutAgentUsagesInput = {
   description?: string | null
   aiContext?: string | null
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -864,6 +787,7 @@ export type BoardCreateWithoutAgentUsagesInput = {
   notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
   repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutAgentUsagesInput = {
@@ -876,10 +800,6 @@ export type BoardUncheckedCreateWithoutAgentUsagesInput = {
   description?: string | null
   aiContext?: string | null
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -891,6 +811,7 @@ export type BoardUncheckedCreateWithoutAgentUsagesInput = {
   notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
   repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutAgentUsagesInput = {
@@ -918,10 +839,6 @@ export type BoardUpdateWithoutAgentUsagesInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -934,6 +851,7 @@ export type BoardUpdateWithoutAgentUsagesInput = {
   notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
   repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutAgentUsagesInput = {
@@ -946,10 +864,6 @@ export type BoardUncheckedUpdateWithoutAgentUsagesInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
@@ -961,6 +875,7 @@ export type BoardUncheckedUpdateWithoutAgentUsagesInput = {
   notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
   repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutKeyHistoriesInput = {
@@ -972,10 +887,6 @@ export type BoardCreateWithoutKeyHistoriesInput = {
   description?: string | null
   aiContext?: string | null
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -988,6 +899,7 @@ export type BoardCreateWithoutKeyHistoriesInput = {
   repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutKeyHistoriesInput = {
@@ -1000,10 +912,6 @@ export type BoardUncheckedCreateWithoutKeyHistoriesInput = {
   description?: string | null
   aiContext?: string | null
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -1015,6 +923,7 @@ export type BoardUncheckedCreateWithoutKeyHistoriesInput = {
   repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutKeyHistoriesInput = {
@@ -1042,10 +951,6 @@ export type BoardUpdateWithoutKeyHistoriesInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -1058,6 +963,7 @@ export type BoardUpdateWithoutKeyHistoriesInput = {
   repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutKeyHistoriesInput = {
@@ -1070,10 +976,6 @@ export type BoardUncheckedUpdateWithoutKeyHistoriesInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
@@ -1085,6 +987,7 @@ export type BoardUncheckedUpdateWithoutKeyHistoriesInput = {
   repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutTemplatesInput = {
@@ -1096,10 +999,6 @@ export type BoardCreateWithoutTemplatesInput = {
   description?: string | null
   aiContext?: string | null
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -1112,6 +1011,7 @@ export type BoardCreateWithoutTemplatesInput = {
   notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
   repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutTemplatesInput = {
@@ -1124,10 +1024,6 @@ export type BoardUncheckedCreateWithoutTemplatesInput = {
   description?: string | null
   aiContext?: string | null
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -1139,6 +1035,7 @@ export type BoardUncheckedCreateWithoutTemplatesInput = {
   notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
   repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutTemplatesInput = {
@@ -1166,10 +1063,6 @@ export type BoardUpdateWithoutTemplatesInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -1182,6 +1075,7 @@ export type BoardUpdateWithoutTemplatesInput = {
   notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
   repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutTemplatesInput = {
@@ -1194,10 +1088,6 @@ export type BoardUncheckedUpdateWithoutTemplatesInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
@@ -1209,6 +1099,7 @@ export type BoardUncheckedUpdateWithoutTemplatesInput = {
   notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
   repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutTagsInput = {
@@ -1220,10 +1111,6 @@ export type BoardCreateWithoutTagsInput = {
   description?: string | null
   aiContext?: string | null
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -1236,6 +1123,7 @@ export type BoardCreateWithoutTagsInput = {
   repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutTagsInput = {
@@ -1248,10 +1136,6 @@ export type BoardUncheckedCreateWithoutTagsInput = {
   description?: string | null
   aiContext?: string | null
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -1263,6 +1147,7 @@ export type BoardUncheckedCreateWithoutTagsInput = {
   repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutTagsInput = {
@@ -1290,10 +1175,6 @@ export type BoardUpdateWithoutTagsInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -1306,6 +1187,7 @@ export type BoardUpdateWithoutTagsInput = {
   repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutTagsInput = {
@@ -1318,10 +1200,6 @@ export type BoardUncheckedUpdateWithoutTagsInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
@@ -1333,6 +1211,7 @@ export type BoardUncheckedUpdateWithoutTagsInput = {
   repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutMembersInput = {
@@ -1344,10 +1223,6 @@ export type BoardCreateWithoutMembersInput = {
   description?: string | null
   aiContext?: string | null
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -1360,6 +1235,7 @@ export type BoardCreateWithoutMembersInput = {
   repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutMembersInput = {
@@ -1372,10 +1248,6 @@ export type BoardUncheckedCreateWithoutMembersInput = {
   description?: string | null
   aiContext?: string | null
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   groups?: Prisma.BoardGroupUncheckedCreateNestedManyWithoutBoardInput
@@ -1387,6 +1259,7 @@ export type BoardUncheckedCreateWithoutMembersInput = {
   repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutMembersInput = {
@@ -1414,10 +1287,6 @@ export type BoardUpdateWithoutMembersInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -1430,6 +1299,7 @@ export type BoardUpdateWithoutMembersInput = {
   repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutMembersInput = {
@@ -1442,10 +1312,6 @@ export type BoardUncheckedUpdateWithoutMembersInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   groups?: Prisma.BoardGroupUncheckedUpdateManyWithoutBoardNestedInput
@@ -1457,6 +1323,7 @@ export type BoardUncheckedUpdateWithoutMembersInput = {
   repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutGroupsInput = {
@@ -1468,10 +1335,6 @@ export type BoardCreateWithoutGroupsInput = {
   description?: string | null
   aiContext?: string | null
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -1484,6 +1347,7 @@ export type BoardCreateWithoutGroupsInput = {
   repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutGroupsInput = {
@@ -1496,10 +1360,6 @@ export type BoardUncheckedCreateWithoutGroupsInput = {
   description?: string | null
   aiContext?: string | null
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -1511,6 +1371,7 @@ export type BoardUncheckedCreateWithoutGroupsInput = {
   repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutGroupsInput = {
@@ -1538,10 +1399,6 @@ export type BoardUpdateWithoutGroupsInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -1554,6 +1411,7 @@ export type BoardUpdateWithoutGroupsInput = {
   repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutGroupsInput = {
@@ -1566,10 +1424,6 @@ export type BoardUncheckedUpdateWithoutGroupsInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
@@ -1581,6 +1435,7 @@ export type BoardUncheckedUpdateWithoutGroupsInput = {
   repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutRepositoriesInput = {
@@ -1592,10 +1447,6 @@ export type BoardCreateWithoutRepositoriesInput = {
   description?: string | null
   aiContext?: string | null
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -1608,6 +1459,7 @@ export type BoardCreateWithoutRepositoriesInput = {
   notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutRepositoriesInput = {
@@ -1620,10 +1472,6 @@ export type BoardUncheckedCreateWithoutRepositoriesInput = {
   description?: string | null
   aiContext?: string | null
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -1635,6 +1483,7 @@ export type BoardUncheckedCreateWithoutRepositoriesInput = {
   notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutRepositoriesInput = {
@@ -1662,10 +1511,6 @@ export type BoardUpdateWithoutRepositoriesInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -1678,6 +1523,7 @@ export type BoardUpdateWithoutRepositoriesInput = {
   notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutRepositoriesInput = {
@@ -1690,10 +1536,6 @@ export type BoardUncheckedUpdateWithoutRepositoriesInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
@@ -1703,6 +1545,119 @@ export type BoardUncheckedUpdateWithoutRepositoriesInput = {
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutBoardNestedInput
   keyHistories?: Prisma.BoardKeyHistoryUncheckedUpdateManyWithoutBoardNestedInput
   notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
+  agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput
+}
+
+export type BoardCreateWithoutGitSettingsInput = {
+  id?: string
+  kind?: $Enums.BoardKind
+  key: string
+  ticketSeq?: number
+  name: string
+  description?: string | null
+  aiContext?: string | null
+  archived?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
+  members?: Prisma.BoardMemberCreateNestedManyWithoutBoardInput
+  groups?: Prisma.BoardGroupCreateNestedManyWithoutBoardInput
+  tickets?: Prisma.TicketCreateNestedManyWithoutBoardInput
+  tags?: Prisma.TagCreateNestedManyWithoutBoardInput
+  attachments?: Prisma.AttachmentCreateNestedManyWithoutBoardInput
+  keyHistories?: Prisma.BoardKeyHistoryCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
+  repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
+  agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
+}
+
+export type BoardUncheckedCreateWithoutGitSettingsInput = {
+  id?: string
+  kind?: $Enums.BoardKind
+  privateOwnerId?: string | null
+  key: string
+  ticketSeq?: number
+  name: string
+  description?: string | null
+  aiContext?: string | null
+  archived?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
+  groups?: Prisma.BoardGroupUncheckedCreateNestedManyWithoutBoardInput
+  tickets?: Prisma.TicketUncheckedCreateNestedManyWithoutBoardInput
+  tags?: Prisma.TagUncheckedCreateNestedManyWithoutBoardInput
+  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutBoardInput
+  keyHistories?: Prisma.BoardKeyHistoryUncheckedCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
+  repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
+  agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
+}
+
+export type BoardCreateOrConnectWithoutGitSettingsInput = {
+  where: Prisma.BoardWhereUniqueInput
+  create: Prisma.XOR<Prisma.BoardCreateWithoutGitSettingsInput, Prisma.BoardUncheckedCreateWithoutGitSettingsInput>
+}
+
+export type BoardUpsertWithoutGitSettingsInput = {
+  update: Prisma.XOR<Prisma.BoardUpdateWithoutGitSettingsInput, Prisma.BoardUncheckedUpdateWithoutGitSettingsInput>
+  create: Prisma.XOR<Prisma.BoardCreateWithoutGitSettingsInput, Prisma.BoardUncheckedCreateWithoutGitSettingsInput>
+  where?: Prisma.BoardWhereInput
+}
+
+export type BoardUpdateToOneWithWhereWithoutGitSettingsInput = {
+  where?: Prisma.BoardWhereInput
+  data: Prisma.XOR<Prisma.BoardUpdateWithoutGitSettingsInput, Prisma.BoardUncheckedUpdateWithoutGitSettingsInput>
+}
+
+export type BoardUpdateWithoutGitSettingsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
+  members?: Prisma.BoardMemberUpdateManyWithoutBoardNestedInput
+  groups?: Prisma.BoardGroupUpdateManyWithoutBoardNestedInput
+  tickets?: Prisma.TicketUpdateManyWithoutBoardNestedInput
+  tags?: Prisma.TagUpdateManyWithoutBoardNestedInput
+  attachments?: Prisma.AttachmentUpdateManyWithoutBoardNestedInput
+  keyHistories?: Prisma.BoardKeyHistoryUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
+  repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
+  agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
+}
+
+export type BoardUncheckedUpdateWithoutGitSettingsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  privateOwnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
+  groups?: Prisma.BoardGroupUncheckedUpdateManyWithoutBoardNestedInput
+  tickets?: Prisma.TicketUncheckedUpdateManyWithoutBoardNestedInput
+  tags?: Prisma.TagUncheckedUpdateManyWithoutBoardNestedInput
+  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutBoardNestedInput
+  keyHistories?: Prisma.BoardKeyHistoryUncheckedUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
+  repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
 }
@@ -1716,10 +1671,6 @@ export type BoardCreateWithoutNotifySettingsInput = {
   description?: string | null
   aiContext?: string | null
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -1732,6 +1683,7 @@ export type BoardCreateWithoutNotifySettingsInput = {
   repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutNotifySettingsInput = {
@@ -1744,10 +1696,6 @@ export type BoardUncheckedCreateWithoutNotifySettingsInput = {
   description?: string | null
   aiContext?: string | null
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -1759,6 +1707,7 @@ export type BoardUncheckedCreateWithoutNotifySettingsInput = {
   repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutNotifySettingsInput = {
@@ -1786,10 +1735,6 @@ export type BoardUpdateWithoutNotifySettingsInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -1802,6 +1747,7 @@ export type BoardUpdateWithoutNotifySettingsInput = {
   repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutNotifySettingsInput = {
@@ -1814,10 +1760,6 @@ export type BoardUncheckedUpdateWithoutNotifySettingsInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
@@ -1829,6 +1771,7 @@ export type BoardUncheckedUpdateWithoutNotifySettingsInput = {
   repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutAttachmentsInput = {
@@ -1840,10 +1783,6 @@ export type BoardCreateWithoutAttachmentsInput = {
   description?: string | null
   aiContext?: string | null
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -1856,6 +1795,7 @@ export type BoardCreateWithoutAttachmentsInput = {
   repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutAttachmentsInput = {
@@ -1868,10 +1808,6 @@ export type BoardUncheckedCreateWithoutAttachmentsInput = {
   description?: string | null
   aiContext?: string | null
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -1883,6 +1819,7 @@ export type BoardUncheckedCreateWithoutAttachmentsInput = {
   repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutAttachmentsInput = {
@@ -1910,10 +1847,6 @@ export type BoardUpdateWithoutAttachmentsInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -1926,6 +1859,7 @@ export type BoardUpdateWithoutAttachmentsInput = {
   repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutAttachmentsInput = {
@@ -1938,10 +1872,6 @@ export type BoardUncheckedUpdateWithoutAttachmentsInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
@@ -1953,6 +1883,7 @@ export type BoardUncheckedUpdateWithoutAttachmentsInput = {
   repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutTicketsInput = {
@@ -1964,10 +1895,6 @@ export type BoardCreateWithoutTicketsInput = {
   description?: string | null
   aiContext?: string | null
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
@@ -1980,6 +1907,7 @@ export type BoardCreateWithoutTicketsInput = {
   repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutTicketsInput = {
@@ -1992,10 +1920,6 @@ export type BoardUncheckedCreateWithoutTicketsInput = {
   description?: string | null
   aiContext?: string | null
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -2007,6 +1931,7 @@ export type BoardUncheckedCreateWithoutTicketsInput = {
   repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutTicketsInput = {
@@ -2034,10 +1959,6 @@ export type BoardUpdateWithoutTicketsInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
@@ -2050,6 +1971,7 @@ export type BoardUpdateWithoutTicketsInput = {
   repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutTicketsInput = {
@@ -2062,10 +1984,6 @@ export type BoardUncheckedUpdateWithoutTicketsInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
@@ -2077,6 +1995,7 @@ export type BoardUncheckedUpdateWithoutTicketsInput = {
   repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutPrivateOwnerInput = {
@@ -2088,10 +2007,6 @@ export type BoardCreateWithoutPrivateOwnerInput = {
   description?: string | null
   aiContext?: string | null
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberCreateNestedManyWithoutBoardInput
@@ -2104,6 +2019,7 @@ export type BoardCreateWithoutPrivateOwnerInput = {
   repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutPrivateOwnerInput = {
@@ -2115,10 +2031,6 @@ export type BoardUncheckedCreateWithoutPrivateOwnerInput = {
   description?: string | null
   aiContext?: string | null
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
@@ -2131,6 +2043,7 @@ export type BoardUncheckedCreateWithoutPrivateOwnerInput = {
   repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutPrivateOwnerInput = {
@@ -2158,10 +2071,6 @@ export type BoardUpdateWithoutPrivateOwnerInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUpdateManyWithoutBoardNestedInput
@@ -2174,6 +2083,7 @@ export type BoardUpdateWithoutPrivateOwnerInput = {
   repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutPrivateOwnerInput = {
@@ -2185,10 +2095,6 @@ export type BoardUncheckedUpdateWithoutPrivateOwnerInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  agentAutoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
@@ -2201,6 +2107,7 @@ export type BoardUncheckedUpdateWithoutPrivateOwnerInput = {
   repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 
@@ -2219,6 +2126,7 @@ export type BoardCountOutputType = {
   repositories: number
   agentUsages: number
   templates: number
+  gitSettings: number
 }
 
 export type BoardCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2232,6 +2140,7 @@ export type BoardCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.
   repositories?: boolean | BoardCountOutputTypeCountRepositoriesArgs
   agentUsages?: boolean | BoardCountOutputTypeCountAgentUsagesArgs
   templates?: boolean | BoardCountOutputTypeCountTemplatesArgs
+  gitSettings?: boolean | BoardCountOutputTypeCountGitSettingsArgs
 }
 
 /**
@@ -2314,6 +2223,13 @@ export type BoardCountOutputTypeCountTemplatesArgs<ExtArgs extends runtime.Types
   where?: Prisma.TicketTemplateWhereInput
 }
 
+/**
+ * BoardCountOutputType without action
+ */
+export type BoardCountOutputTypeCountGitSettingsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.BoardGitSettingWhereInput
+}
+
 
 export type BoardSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -2325,10 +2241,6 @@ export type BoardSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   description?: boolean
   aiContext?: boolean
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   privateOwner?: boolean | Prisma.Board$privateOwnerArgs<ExtArgs>
@@ -2342,6 +2254,7 @@ export type BoardSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   repositories?: boolean | Prisma.Board$repositoriesArgs<ExtArgs>
   agentUsages?: boolean | Prisma.Board$agentUsagesArgs<ExtArgs>
   templates?: boolean | Prisma.Board$templatesArgs<ExtArgs>
+  gitSettings?: boolean | Prisma.Board$gitSettingsArgs<ExtArgs>
   _count?: boolean | Prisma.BoardCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["board"]>
 
@@ -2355,10 +2268,6 @@ export type BoardSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   description?: boolean
   aiContext?: boolean
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   privateOwner?: boolean | Prisma.Board$privateOwnerArgs<ExtArgs>
@@ -2374,10 +2283,6 @@ export type BoardSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   description?: boolean
   aiContext?: boolean
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   privateOwner?: boolean | Prisma.Board$privateOwnerArgs<ExtArgs>
@@ -2393,15 +2298,11 @@ export type BoardSelectScalar = {
   description?: boolean
   aiContext?: boolean
   archived?: boolean
-  completeOnGithubMerge?: boolean
-  completeOnGitlabMerge?: boolean
-  agentAutoRevise?: boolean
-  agentAutoReviseLimit?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type BoardOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "kind" | "privateOwnerId" | "key" | "ticketSeq" | "name" | "description" | "aiContext" | "archived" | "completeOnGithubMerge" | "completeOnGitlabMerge" | "agentAutoRevise" | "agentAutoReviseLimit" | "createdAt" | "updatedAt", ExtArgs["result"]["board"]>
+export type BoardOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "kind" | "privateOwnerId" | "key" | "ticketSeq" | "name" | "description" | "aiContext" | "archived" | "createdAt" | "updatedAt", ExtArgs["result"]["board"]>
 export type BoardInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   privateOwner?: boolean | Prisma.Board$privateOwnerArgs<ExtArgs>
   members?: boolean | Prisma.Board$membersArgs<ExtArgs>
@@ -2414,6 +2315,7 @@ export type BoardInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   repositories?: boolean | Prisma.Board$repositoriesArgs<ExtArgs>
   agentUsages?: boolean | Prisma.Board$agentUsagesArgs<ExtArgs>
   templates?: boolean | Prisma.Board$templatesArgs<ExtArgs>
+  gitSettings?: boolean | Prisma.Board$gitSettingsArgs<ExtArgs>
   _count?: boolean | Prisma.BoardCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type BoardIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2437,6 +2339,7 @@ export type $BoardPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     repositories: Prisma.$BoardRepositoryPayload<ExtArgs>[]
     agentUsages: Prisma.$AgentUsagePayload<ExtArgs>[]
     templates: Prisma.$TicketTemplatePayload<ExtArgs>[]
+    gitSettings: Prisma.$BoardGitSettingPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2479,22 +2382,6 @@ export type $BoardPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
      * アーカイブ済み。一覧の既定の表示からは外れる
      */
     archived: boolean
-    /**
-     * GitHub の PR のマージで、紐付いた PR / MR がすべてマージ / クローズされたチケットを完了にする(オプトイン)
-     */
-    completeOnGithubMerge: boolean
-    /**
-     * GitLab の MR のマージで、紐付いた PR / MR がすべてマージ / クローズされたチケットを完了にする(オプトイン)
-     */
-    completeOnGitlabMerge: boolean
-    /**
-     * 紐付いた PR / MR の CI 失敗・レビュー指摘で、報告済みのエージェント担当チケットを revise へ戻す(オプトイン)
-     */
-    agentAutoRevise: boolean
-    /**
-     * 1チケットあたりの自動差し戻し回数の上限(Ticket.agentAutoReviseCount と比べる)
-     */
-    agentAutoReviseLimit: number
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["board"]>
@@ -2902,6 +2789,7 @@ export interface Prisma__BoardClient<T, Null = never, ExtArgs extends runtime.Ty
   repositories<T extends Prisma.Board$repositoriesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Board$repositoriesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BoardRepositoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   agentUsages<T extends Prisma.Board$agentUsagesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Board$agentUsagesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AgentUsagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   templates<T extends Prisma.Board$templatesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Board$templatesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TicketTemplatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  gitSettings<T extends Prisma.Board$gitSettingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Board$gitSettingsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BoardGitSettingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2940,10 +2828,6 @@ export interface BoardFieldRefs {
   readonly description: Prisma.FieldRef<"Board", 'String'>
   readonly aiContext: Prisma.FieldRef<"Board", 'String'>
   readonly archived: Prisma.FieldRef<"Board", 'Boolean'>
-  readonly completeOnGithubMerge: Prisma.FieldRef<"Board", 'Boolean'>
-  readonly completeOnGitlabMerge: Prisma.FieldRef<"Board", 'Boolean'>
-  readonly agentAutoRevise: Prisma.FieldRef<"Board", 'Boolean'>
-  readonly agentAutoReviseLimit: Prisma.FieldRef<"Board", 'Int'>
   readonly createdAt: Prisma.FieldRef<"Board", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Board", 'DateTime'>
 }
@@ -3603,6 +3487,30 @@ export type Board$templatesArgs<ExtArgs extends runtime.Types.Extensions.Interna
   take?: number
   skip?: number
   distinct?: Prisma.TicketTemplateScalarFieldEnum | Prisma.TicketTemplateScalarFieldEnum[]
+}
+
+/**
+ * Board.gitSettings
+ */
+export type Board$gitSettingsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the BoardGitSetting
+   */
+  select?: Prisma.BoardGitSettingSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the BoardGitSetting
+   */
+  omit?: Prisma.BoardGitSettingOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.BoardGitSettingInclude<ExtArgs> | null
+  where?: Prisma.BoardGitSettingWhereInput
+  orderBy?: Prisma.BoardGitSettingOrderByWithRelationInput | Prisma.BoardGitSettingOrderByWithRelationInput[]
+  cursor?: Prisma.BoardGitSettingWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.BoardGitSettingScalarFieldEnum | Prisma.BoardGitSettingScalarFieldEnum[]
 }
 
 /**

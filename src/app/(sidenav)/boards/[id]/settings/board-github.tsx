@@ -14,7 +14,7 @@ import { dayformat } from '@/lib/day'
 import { normalizeGithubRepo } from '@/lib/github/github'
 import { useLocale } from '@/locale/client'
 import { FC, useState } from 'react'
-import { CompleteOnMergeSwitch } from './board-git'
+import { GitProviderSettings } from './board-git'
 import { IssuedTarget, IssuedTokenModal } from './board-git-token-modal'
 import {
   addBoardGithubRepository,
@@ -224,14 +224,14 @@ const GithubRepositories: FC<{ boardId: string; github: Github; refresh: () => P
         key={issuedModal.key}
         state={issuedModal}
         label={t('github_webhook_secret')}
-        description={t('msg_github_secret_desc')}
+        steps={t('msg_github_webhook_steps')}
       />
     </FlexCol>
   )
 }
 
 /**
- * ボードの GitHub 連携(対応付けるリポジトリとマージで完了の設定)。
+ * ボードの GitHub 連携(対応付けるリポジトリと、マージで完了・エージェントへの自動差し戻しの設定)。
  */
 export const BoardGithub: FC<{ boardId: string }> = ({ boardId }) => {
   const { t } = useLocale()
@@ -248,12 +248,7 @@ export const BoardGithub: FC<{ boardId: string }> = ({ boardId }) => {
     <FlexCol>
       <span className='text-muted text-xs'>{t('msg_board_git_desc')}</span>
       <GithubRepositories boardId={boardId} github={github} refresh={refresh} />
-      <CompleteOnMergeSwitch
-        boardId={boardId}
-        provider='github'
-        isSelected={github.completeOnMerge}
-        refresh={refresh}
-      />
+      <GitProviderSettings boardId={boardId} provider='github' setting={github.setting} refresh={refresh} />
     </FlexCol>
   )
 }

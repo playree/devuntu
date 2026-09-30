@@ -12,14 +12,12 @@ import { getBoardMemberUsers } from '@/lib/board/board-member'
 import {
   addBoardGithubRepository as addBoardGithubRepositoryCore,
   addBoardGitlabRepository as addBoardGitlabRepositoryCore,
-  getBoardAgentAutoRevise as getBoardAgentAutoReviseCore,
   getBoardGithub as getBoardGithubCore,
   getBoardGitlab as getBoardGitlabCore,
   regenerateGithubSecret as regenerateGithubSecretCore,
   regenerateGitlabToken as regenerateGitlabTokenCore,
   removeBoardRepository as removeBoardRepositoryCore,
-  setBoardAgentAutoRevise as setBoardAgentAutoReviseCore,
-  setBoardCompleteOnPrMerge as setBoardCompleteOnPrMergeCore,
+  setBoardGitSetting as setBoardGitSettingCore,
   setGitlabSigningToken as setGitlabSigningTokenCore,
 } from '@/lib/board/board-repository'
 import {
@@ -54,10 +52,9 @@ import {
   scBoardRepositoryTarget,
   scGetBoardSlackChannels,
   scRemoveBoardMember,
-  scSetBoardAgentAutoRevise,
   scSetBoardAiContext,
   scSetBoardArchived,
-  scSetBoardCompleteOnPrMerge,
+  scSetBoardGitSetting,
   scSetBoardGroups,
   scSetBoardNotifySetting,
   scSetGitlabSigningToken,
@@ -170,14 +167,14 @@ export const deleteBoard = safeAuthAction
  * Git 連携(GitHub / GitLab)
  * -----------------------------------------------------------------------------------------------*/
 
-/** GitHub の対応付けたリポジトリ・マージで完了の設定と、Webhook の登録先(owner または管理者) */
+/** GitHub の対応付けたリポジトリ・連携の設定と、Webhook の登録先(owner または管理者) */
 export const getBoardGithub = safeAuthAction
   .metadata({ actionName: 'getBoardGithub', role: 'user' })
   .inputSchema(scUUID)
   .action(async ({ ctx: { user }, parsedInput: { id } }) => await getBoardGithubCore(user, id))
 export type GetBoardGithubReturnType = Awaited<ReturnType<typeof getBoardGithub>>['data']
 
-/** GitLab の対応付けたプロジェクト・マージで完了の設定と、Webhook の登録先(owner または管理者) */
+/** GitLab の対応付けたプロジェクト・連携の設定と、Webhook の登録先(owner または管理者) */
 export const getBoardGitlab = safeAuthAction
   .metadata({ actionName: 'getBoardGitlab', role: 'user' })
   .inputSchema(scUUID)
@@ -235,26 +232,12 @@ export const removeBoardRepository = safeAuthAction
     return { id }
   })
 
-/** PR / MR のマージでチケットを完了にするかの切り替え(provider ごと。owner または管理者) */
-export const setBoardCompleteOnPrMerge = safeAuthAction
-  .metadata({ actionName: 'setBoardCompleteOnPrMerge', role: 'user' })
-  .inputSchema(scSetBoardCompleteOnPrMerge)
-  .action(async ({ ctx: { user }, parsedInput: { id, provider, completeOnMerge } }) => {
-    await setBoardCompleteOnPrMergeCore(user, id, provider, completeOnMerge)
-    return { id }
-  })
-
-/** エージェントへの自動差し戻し(CI の失敗・レビュー指摘)の設定(owner または管理者) */
-export const getBoardAgentAutoRevise = safeAuthAction
-  .metadata({ actionName: 'getBoardAgentAutoRevise', role: 'user' })
-  .inputSchema(scUUID)
-  .action(async ({ ctx: { user }, parsedInput: { id } }) => await getBoardAgentAutoReviseCore(user, id))
-
-export const setBoardAgentAutoRevise = safeAuthAction
-  .metadata({ actionName: 'setBoardAgentAutoRevise', role: 'user' })
-  .inputSchema(scSetBoardAgentAutoRevise)
-  .action(async ({ ctx: { user }, parsedInput: { id, enabled, limit } }) => {
-    await setBoardAgentAutoReviseCore(user, id, { enabled, limit })
+/** provider ごとのマージで完了・エージェントへの自動差し戻しの設定(owner または管理者) */
+export const setBoardGitSetting = safeAuthAction
+  .metadata({ actionName: 'setBoardGitSetting', role: 'user' })
+  .inputSchema(scSetBoardGitSetting)
+  .action(async ({ ctx: { user }, parsedInput: { id, provider, ...data } }) => {
+    await setBoardGitSettingCore(user, id, provider, data)
     return { id }
   })
 

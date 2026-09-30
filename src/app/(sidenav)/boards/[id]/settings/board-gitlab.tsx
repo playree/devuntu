@@ -18,8 +18,8 @@ import { dayformat } from '@/lib/day'
 import { GITLAB_SIGNING_TOKEN_PATTERN, gitlabInstanceLabel, normalizeGitlabProjectPath } from '@/lib/gitlab/gitlab'
 import { useLocale } from '@/locale/client'
 import { FC, useState } from 'react'
-import { CompleteOnMergeSwitch } from './board-git'
-import { IssuedTarget, IssuedTokenModal, WebhookTarget } from './board-git-token-modal'
+import { GitProviderSettings } from './board-git'
+import { IssuedTarget, IssuedTokenModal, WebhookSteps, WebhookTarget } from './board-git-token-modal'
 import {
   addBoardGitlabRepository,
   getBoardGitlab,
@@ -76,13 +76,13 @@ const SigningTokenModal: FC<{
         e?.preventDefault()
         await save()
       }}
-      submit={{ isPending: isSaving, isDisabled: !secret.trim() }}
+      submit={{ label: t('save'), isPending: isSaving, isDisabled: !secret.trim() }}
     >
       {target && (
         <FlexCol>
           <span className='font-mono text-sm break-all'>{target.repo}</span>
           <CopyableField label={t('git_webhook_url')} text={target.webhookUrl} />
-          <NoticePanel className='text-xs'>{t('msg_gitlab_signing_token_desc')}</NoticePanel>
+          <WebhookSteps steps={t('msg_gitlab_signing_webhook_steps')} />
           <InputField
             type='password'
             label={t('gitlab_signing_token')}
@@ -360,6 +360,7 @@ const GitlabRepositories: FC<{ boardId: string; gitlab: Gitlab; refresh: () => P
         key={issuedModal.key}
         state={issuedModal}
         label={t('gitlab_secret_token')}
+        steps={t('msg_gitlab_token_webhook_steps')}
         description={t('msg_gitlab_secret_token_desc')}
       />
     </FlexCol>
@@ -367,7 +368,7 @@ const GitlabRepositories: FC<{ boardId: string; gitlab: Gitlab; refresh: () => P
 }
 
 /**
- * ボードの GitLab 連携(対応付けるプロジェクトとマージで完了の設定)。
+ * ボードの GitLab 連携(対応付けるプロジェクトと、マージで完了・エージェントへの自動差し戻しの設定)。
  */
 export const BoardGitlab: FC<{ boardId: string }> = ({ boardId }) => {
   const { t } = useLocale()
@@ -384,12 +385,7 @@ export const BoardGitlab: FC<{ boardId: string }> = ({ boardId }) => {
     <FlexCol>
       <span className='text-muted text-xs'>{t('msg_board_git_desc')}</span>
       <GitlabRepositories boardId={boardId} gitlab={gitlab} refresh={refresh} />
-      <CompleteOnMergeSwitch
-        boardId={boardId}
-        provider='gitlab'
-        isSelected={gitlab.completeOnMerge}
-        refresh={refresh}
-      />
+      <GitProviderSettings boardId={boardId} provider='gitlab' setting={gitlab.setting} refresh={refresh} />
     </FlexCol>
   )
 }

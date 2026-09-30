@@ -122,6 +122,33 @@ model BoardRepository {
   @@map("board_repository")
 }
 
+/// ボードの Git 連携の provider ごとの設定。行が無い provider はすべて既定値として扱う
+model BoardGitSetting {
+  id String @id @default(uuid(7))
+
+  boardId String
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  provider GitProvider
+
+  /// PR / MR のマージで、紐付いた PR / MR がすべてマージ / クローズされたチケットを完了にする(オプトイン)
+  completeOnMerge Boolean @default(false)
+
+  /// 紐付いた PR / MR の CI 失敗・レビュー指摘で、報告済みのエージェント担当チケットを revise へ戻す(オプトイン)
+  autoRevise Boolean @default(false)
+
+  /// 1チケットあたりの自動差し戻し回数の上限。回数(Ticket.agentAutoReviseCount)は provider をまたいで数える
+  autoReviseLimit Int @default(3)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // @@unique が (boardId, ...) の先頭索引を兼ねるため @@index([boardId]) は不要
+  @@unique([boardId, provider])
+  @@map("board_git_setting")
+}
+
 /// GitHub の Check Suite(CI を実行するアプリごとのまとまり)の最新状態。
 /// リンクとは独立に持ち、表示時に headSha で集計する(リンクの登録より先に CI が終わることがあるため)。
 model GitCheckSuite {

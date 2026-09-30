@@ -75,7 +75,7 @@ model Ticket {
   agentMode  AgentTaskMode?
   agentState AgentTaskState?
 
-  /// CI 失敗・レビュー指摘による自動差し戻しの回数。ボードの上限(agentAutoReviseLimit)と比べる。担当が替わったら 0 に戻す
+  /// CI 失敗・レビュー指摘による自動差し戻しの回数。きっかけの provider の上限(BoardGitSetting.autoReviseLimit)と比べる。担当が替わったら 0 に戻す
   agentAutoReviseCount Int @default(0)
 
   /// 子チケットが次の順番へ進む条件(親として持つ)。エージェントの待ち判定に使う

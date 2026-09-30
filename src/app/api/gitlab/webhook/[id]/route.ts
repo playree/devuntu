@@ -1,5 +1,6 @@
 import { gitlabBaseUrls } from '@/lib/board/board-repository'
 import { nowDate } from '@/lib/day'
+import { gitLinkedBoardSelect, toGitLinkedBoard } from '@/lib/git/git-webhook'
 import { verifyGitlabSignature, verifyGitlabToken } from '@/lib/gitlab/gitlab-signature'
 import { handleGitlabEvent } from '@/lib/gitlab/gitlab-webhook'
 import { logger } from '@/lib/logger'
@@ -38,9 +39,7 @@ export const POST = async (request: Request, { params }: { params: Promise<{ id:
       repo: true,
       webhookAuth: true,
       webhookSecret: true,
-      board: {
-        select: { id: true, key: true, completeOnGitlabMerge: true, agentAutoRevise: true, agentAutoReviseLimit: true },
-      },
+      board: { select: gitLinkedBoardSelect('gitlab') },
     },
   })
   // GITLAB_URLS から外したインスタンスの対応付けは、行が残っていても受けない
@@ -92,17 +91,11 @@ export const POST = async (request: Request, { params }: { params: Promise<{ id:
    * 失敗を 500 で返せば、GitLab の Webhook の履歴(Recent events)から再送できる。
    */
   try {
-    const { completeOnGitlabMerge, agentAutoRevise, agentAutoReviseLimit, ...board } = repository.board
     await handleGitlabEvent(event, body, {
       id,
       baseUrl: repository.baseUrl,
       repo: repository.repo,
-      board: {
-        ...board,
-        completeOnPrMerge: completeOnGitlabMerge,
-        autoRevise: agentAutoRevise,
-        autoReviseLimit: agentAutoReviseLimit,
-      },
+      board: toGitLinkedBoard(repository.board),
     })
   } catch (error) {
     logger.error({ error, event, delivery, repositoryId: id }, 'gitlab webhook failed')

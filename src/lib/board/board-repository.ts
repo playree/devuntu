@@ -1,5 +1,5 @@
 /**
- * ボードの Git 連携(GitHub / GitLab のリポジトリの対応付け・マージで完了・エージェントへの自動差し戻し)の設定(サーバー専用)
+ * ボードの Git 連携(GitHub / GitLab のリポジトリの対応付けと、provider ごとのマージで完了・エージェントへの自動差し戻し)の設定(サーバー専用)
  *
  * `/boards/[id]/settings` の Server Action から呼ぶ。設定できるのは owner と管理者。
  * Webhook は対応付けたリポジトリのイベントだけを扱うので、ここがボードごとの受け入れ範囲になる。
@@ -13,6 +13,7 @@ import type { GitProvider, GitWebhookAuth } from '@/generated/prisma/enums'
 import { randomBytes } from 'node:crypto'
 import { envu } from '../env-util'
 import { errInvalidOperation, errValidation } from '../error'
+import { type BoardGitSettingValue, DEFAULT_BOARD_GIT_SETTING } from '../git/git'
 import { githubWebhookPath, normalizeGithubRepo } from '../github/github'
 import { gitlabWebhookPath, normalizeGitlabProjectPath } from '../gitlab/gitlab'
 import { isValidGitlabSigningToken } from '../gitlab/gitlab-signature'
@@ -38,14 +39,15 @@ export const gitlabBaseUrls = (): string[] => {
   }
 }
 
+const gitSettingSelect = { completeOnMerge: true, autoRevise: true, autoReviseLimit: true } as const
+
 const findBoardRepositories = async (actor: Actor, boardId: string, provider: GitProvider) => {
   await assertBoardAccess(actor, boardId, 'manage')
 
   const board = await prisma.board.findUnique({
     where: { id: boardId },
     select: {
-      completeOnGithubMerge: true,
-      completeOnGitlabMerge: true,
+      gitSettings: { where: { provider }, select: gitSettingSelect },
       repositories: {
         where: { provider },
         select: {
@@ -63,7 +65,8 @@ const findBoardRepositories = async (actor: Actor, boardId: string, provider: Gi
   if (!board) {
     throw errInvalidOperation()
   }
-  return board
+  const { gitSettings, ...rest } = board
+  return { ...rest, setting: gitSettings[0] ?? DEFAULT_BOARD_GIT_SETTING }
 }
 
 /**
@@ -73,7 +76,7 @@ export const getBoardGithub = async (actor: Actor, boardId: string) => {
   const board = await findBoardRepositories(actor, boardId, 'github')
 
   return {
-    completeOnMerge: board.completeOnGithubMerge,
+    setting: board.setting,
     repositories: board.repositories.map(({ id, repo, webhookSecret, lastReceivedAt }) => ({
       id,
       repo,
@@ -93,7 +96,7 @@ export const getBoardGitlab = async (actor: Actor, boardId: string) => {
   const instances = gitlabBaseUrls()
 
   return {
-    completeOnMerge: board.completeOnGitlabMerge,
+    setting: board.setting,
     enabled: instances.length > 0,
     instances,
     repositories: board.repositories.map(({ id, baseUrl, repo, webhookAuth, webhookSecret, lastReceivedAt }) => ({
@@ -278,48 +281,22 @@ export const removeBoardRepository = async (actor: Actor, boardId: string, repos
   logger.info({ userId: actor.id, boardId, repositoryId }, 'board repository removed')
 }
 
-export const setBoardCompleteOnPrMerge = async (
+/** provider ごとの Git 連携の設定(マージで完了・エージェントへの自動差し戻し)。指定した項目だけを変え、行が無ければ作る */
+export const setBoardGitSetting = async (
   actor: Actor,
   boardId: string,
   provider: GitProvider,
-  completeOnMerge: boolean,
-) => {
-  const data =
-    provider === 'github' ? { completeOnGithubMerge: completeOnMerge } : { completeOnGitlabMerge: completeOnMerge }
-  await prisma.$transaction(async (tx) => {
-    await assertBoardAccess(actor, boardId, 'manage', tx)
-    await tx.board.update({ where: { id: boardId }, data, select: { id: true } })
-  })
-
-  logger.info({ userId: actor.id, boardId, provider, completeOnMerge }, 'board complete on pr merge updated')
-}
-
-/** エージェントへの自動差し戻し(CI の失敗・レビュー指摘)の設定 */
-export const getBoardAgentAutoRevise = async (actor: Actor, boardId: string) => {
-  await assertBoardAccess(actor, boardId, 'manage')
-  const board = await prisma.board.findUnique({
-    where: { id: boardId },
-    select: { agentAutoRevise: true, agentAutoReviseLimit: true },
-  })
-  if (!board) {
-    throw errInvalidOperation()
-  }
-  return { enabled: board.agentAutoRevise, limit: board.agentAutoReviseLimit }
-}
-
-export const setBoardAgentAutoRevise = async (
-  actor: Actor,
-  boardId: string,
-  { enabled, limit }: { enabled: boolean; limit: number },
+  data: Partial<BoardGitSettingValue>,
 ) => {
   await prisma.$transaction(async (tx) => {
     await assertBoardAccess(actor, boardId, 'manage', tx)
-    await tx.board.update({
-      where: { id: boardId },
-      data: { agentAutoRevise: enabled, agentAutoReviseLimit: limit },
+    await tx.boardGitSetting.upsert({
+      where: { boardId_provider: { boardId, provider } },
+      create: { boardId, provider, ...data },
+      update: data,
       select: { id: true },
     })
   })
 
-  logger.info({ userId: actor.id, boardId, enabled, limit }, 'board agent auto revise updated')
+  logger.info({ userId: actor.id, boardId, provider, ...data }, 'board git setting updated')
 }

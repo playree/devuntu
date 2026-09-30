@@ -215,6 +215,11 @@ export type TicketLink = Prisma.TicketLinkModel
  */
 export type BoardRepository = Prisma.BoardRepositoryModel
 /**
+ * Model BoardGitSetting
+ * ボードの Git 連携の provider ごとの設定。行が無い provider はすべて既定値として扱う
+ */
+export type BoardGitSetting = Prisma.BoardGitSettingModel
+/**
  * Model GitCheckSuite
  * GitHub の Check Suite(CI を実行するアプリごとのまとまり)の最新状態。
  * リンクとは独立に持ち、表示時に headSha で集計する(リンクの登録より先に CI が終わることがあるため)。

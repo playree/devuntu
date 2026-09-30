@@ -15,12 +15,29 @@ export type WebhookTarget = { id: string; repo: string; webhookUrl: string }
 /** 作ったシークレットの表示。平文は作った応答でしか受け取れないので一度だけ見せる */
 export type IssuedTarget = WebhookTarget & { token: string }
 
+/** GitHub / GitLab 側で Webhook を登録する手順。改行区切りの文言を番号付きの手順にする */
+export const WebhookSteps: FC<{ steps: string }> = ({ steps }) => {
+  const { t } = useLocale()
+  return (
+    <FlexCol isSmart>
+      <span className='text-sm'>{t('git_webhook_steps')}</span>
+      <ol className='list-decimal space-y-1 pl-5 text-xs'>
+        {steps.split('\n').map((step) => (
+          <li key={step}>{step}</li>
+        ))}
+      </ol>
+    </FlexCol>
+  )
+}
+
 export const IssuedTokenModal: FC<{
   state: ReturnType<typeof useModalState<IssuedTarget>>
   /** モーダルのタイトルと、シークレットの欄の名前 */
   label: string
-  description: string
-}> = ({ state, label, description }) => {
+  /** Webhook の登録手順(改行区切り) */
+  steps: string
+  description?: string
+}> = ({ state, label, steps, description }) => {
   const { t } = useLocale()
   const target = state.target
   return (
@@ -37,9 +54,9 @@ export const IssuedTokenModal: FC<{
           <CopyableField label={label} text={target.token} isMask />
           <NoticePanel className='text-xs'>
             {t('msg_token_once')}
-            {'\n'}
-            {description}
+            {description && `\n${description}`}
           </NoticePanel>
+          <WebhookSteps steps={steps} />
         </FlexCol>
       )}
     </DialogModal>

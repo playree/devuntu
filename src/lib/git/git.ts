@@ -8,6 +8,23 @@ import type { GitProvider, GitWebhookAuth, PullRequestState, TicketLinkKind } fr
 import { parseGithubUrl } from '../github/github'
 import { looksLikeGitlabUrl, parseGitlabUrl } from '../gitlab/gitlab'
 
+/** 連携する Git ホスティング */
+export const GIT_PROVIDERS = ['github', 'gitlab'] as const satisfies readonly GitProvider[]
+
+/** ボードの provider ごとの Git 連携の設定(BoardGitSetting) */
+export type BoardGitSettingValue = {
+  completeOnMerge: boolean
+  autoRevise: boolean
+  autoReviseLimit: number
+}
+
+/** BoardGitSetting の行が無い provider の設定。スキーマの既定値と揃える */
+export const DEFAULT_BOARD_GIT_SETTING: BoardGitSettingValue = {
+  completeOnMerge: false,
+  autoRevise: false,
+  autoReviseLimit: 3,
+}
+
 /** GitLab の Webhook の検証方式。signing(署名トークン)を既定・推奨にする */
 export const GIT_WEBHOOK_AUTHS = ['signing', 'token'] as const satisfies readonly GitWebhookAuth[]
 

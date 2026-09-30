@@ -426,6 +426,7 @@ export const ModelName = {
   CommandRunChunk: 'CommandRunChunk',
   TicketLink: 'TicketLink',
   BoardRepository: 'BoardRepository',
+  BoardGitSetting: 'BoardGitSetting',
   GitCheckSuite: 'GitCheckSuite',
   UserNotifySetting: 'UserNotifySetting',
   WebPushSubscription: 'WebPushSubscription',
@@ -468,7 +469,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentAutoReviseTrigger" | "agentUsage" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "board" | "boardKeyHistory" | "ticketTemplate" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "calendarShare" | "calendarBusyTime" | "commandTargetMember" | "commandTargetGroup" | "commandRun" | "commandRunChunk" | "ticketLink" | "boardRepository" | "gitCheckSuite" | "userNotifySetting" | "webPushSubscription" | "boardNotifySetting" | "notifyOutbox" | "notifyDelivery" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "ticket" | "ticketComment" | "ticketCriterion" | "ticketRelation" | "ticketActivity" | "user" | "group" | "userGroup"
+    modelProps: "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentAutoReviseTrigger" | "agentUsage" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "board" | "boardKeyHistory" | "ticketTemplate" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "calendarShare" | "calendarBusyTime" | "commandTargetMember" | "commandTargetGroup" | "commandRun" | "commandRunChunk" | "ticketLink" | "boardRepository" | "boardGitSetting" | "gitCheckSuite" | "userNotifySetting" | "webPushSubscription" | "boardNotifySetting" | "notifyOutbox" | "notifyDelivery" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "ticket" | "ticketComment" | "ticketCriterion" | "ticketRelation" | "ticketActivity" | "user" | "group" | "userGroup"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2615,6 +2616,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.BoardRepositoryCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.BoardRepositoryCountAggregateOutputType> | number
+        }
+      }
+    }
+    BoardGitSetting: {
+      payload: Prisma.$BoardGitSettingPayload<ExtArgs>
+      fields: Prisma.BoardGitSettingFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BoardGitSettingFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardGitSettingPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BoardGitSettingFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardGitSettingPayload>
+        }
+        findFirst: {
+          args: Prisma.BoardGitSettingFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardGitSettingPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BoardGitSettingFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardGitSettingPayload>
+        }
+        findMany: {
+          args: Prisma.BoardGitSettingFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardGitSettingPayload>[]
+        }
+        create: {
+          args: Prisma.BoardGitSettingCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardGitSettingPayload>
+        }
+        createMany: {
+          args: Prisma.BoardGitSettingCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BoardGitSettingCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardGitSettingPayload>[]
+        }
+        delete: {
+          args: Prisma.BoardGitSettingDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardGitSettingPayload>
+        }
+        update: {
+          args: Prisma.BoardGitSettingUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardGitSettingPayload>
+        }
+        deleteMany: {
+          args: Prisma.BoardGitSettingDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BoardGitSettingUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BoardGitSettingUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardGitSettingPayload>[]
+        }
+        upsert: {
+          args: Prisma.BoardGitSettingUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardGitSettingPayload>
+        }
+        aggregate: {
+          args: Prisma.BoardGitSettingAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBoardGitSetting>
+        }
+        groupBy: {
+          args: Prisma.BoardGitSettingGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BoardGitSettingGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BoardGitSettingCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BoardGitSettingCountAggregateOutputType> | number
         }
       }
     }
@@ -4885,10 +4960,6 @@ export const BoardScalarFieldEnum = {
   description: 'description',
   aiContext: 'aiContext',
   archived: 'archived',
-  completeOnGithubMerge: 'completeOnGithubMerge',
-  completeOnGitlabMerge: 'completeOnGitlabMerge',
-  agentAutoRevise: 'agentAutoRevise',
-  agentAutoReviseLimit: 'agentAutoReviseLimit',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -5091,6 +5162,20 @@ export const BoardRepositoryScalarFieldEnum = {
 } as const
 
 export type BoardRepositoryScalarFieldEnum = (typeof BoardRepositoryScalarFieldEnum)[keyof typeof BoardRepositoryScalarFieldEnum]
+
+
+export const BoardGitSettingScalarFieldEnum = {
+  id: 'id',
+  boardId: 'boardId',
+  provider: 'provider',
+  completeOnMerge: 'completeOnMerge',
+  autoRevise: 'autoRevise',
+  autoReviseLimit: 'autoReviseLimit',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BoardGitSettingScalarFieldEnum = (typeof BoardGitSettingScalarFieldEnum)[keyof typeof BoardGitSettingScalarFieldEnum]
 
 
 export const GitCheckSuiteScalarFieldEnum = {
@@ -6243,6 +6328,7 @@ export type GlobalOmitConfig = {
   commandRunChunk?: Prisma.CommandRunChunkOmit
   ticketLink?: Prisma.TicketLinkOmit
   boardRepository?: Prisma.BoardRepositoryOmit
+  boardGitSetting?: Prisma.BoardGitSettingOmit
   gitCheckSuite?: Prisma.GitCheckSuiteOmit
   userNotifySetting?: Prisma.UserNotifySettingOmit
   webPushSubscription?: Prisma.WebPushSubscriptionOmit
