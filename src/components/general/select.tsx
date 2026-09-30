@@ -134,6 +134,8 @@ export type SingleSelectFieldProps = SelectFieldBaseProps & {
    * 値が別の手段(かんばんのレーンなど)で既に自明で、トリガーは操作の入口としてだけ使う場合に指定する。
    */
   triggerLabel?: ReactNode
+  /** 未選択時の表示 */
+  placeholder?: ReactNode
 }
 
 /**
@@ -154,6 +156,7 @@ export const SingleSelectField = ({
   isSmart: isSmartProp,
   isSmartForm: isSmartFormProp,
   triggerLabel,
+  placeholder,
   value,
   onChange,
   onBlur,
@@ -182,7 +185,10 @@ export const SingleSelectField = ({
               if (triggerLabel) {
                 return <>{triggerLabel}</>
               }
-              return value && groupOptions[value] ? <>{groupOptions[value]}</> : <></>
+              if (value && groupOptions[value]) {
+                return <>{groupOptions[value]}</>
+              }
+              return placeholder ? <span className='text-muted'>{placeholder}</span> : <></>
             }}
           </Select.Value>
           {isClearable && value && !isDisabled && (

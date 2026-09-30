@@ -56,7 +56,7 @@ export const NoticePanel: FC<ComponentProps<typeof Alert> & { title?: string }> 
     <Alert.Indicator />
     <Alert.Content className={cn('self-center', className)}>
       {title && <Alert.Title>{title}</Alert.Title>}
-      <Alert.Description className='text-xs whitespace-pre-line'>{children}</Alert.Description>
+      {children && <Alert.Description className='text-xs whitespace-pre-line'>{children}</Alert.Description>}
     </Alert.Content>
   </Alert>
 )

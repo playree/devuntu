@@ -70,6 +70,8 @@ const isExtraModalSize = (size: FormModalSize): size is ExtraModalSize => size i
 type ModalFrameProps = {
   state: Pick<UseOverlayStateReturn, 'isOpen' | 'setOpen'>
   title: { text: string; icon?: ReactNode }
+  /** 見出しの右(閉じるボタンの左)に置く要素 */
+  headerEnd?: ReactNode
   size?: FormModalSize
   hiddenCloseButton?: boolean
   /** 閉じられない処理中。閉じるボタンと Esc を無効にする */
@@ -84,6 +86,7 @@ type ModalFrameProps = {
 const ModalFrame: FC<ModalFrameProps & { children: ReactNode }> = ({
   state,
   title,
+  headerEnd,
   size,
   hiddenCloseButton,
   isPending,
@@ -106,11 +109,22 @@ const ModalFrame: FC<ModalFrameProps & { children: ReactNode }> = ({
       <Modal.Container placement='top' size={extraSizeClass ? undefined : (size as ModalContainerProps['size'])}>
         <Modal.Dialog className={extraSizeClass}>
           {!hiddenCloseButton && <Modal.CloseTrigger isDisabled={isPending} />}
-          <Modal.Header>
-            <Modal.Heading className='flex items-center gap-2'>
+          <Modal.Header className='flex-row flex-wrap items-center justify-between gap-2'>
+            <Modal.Heading className={cn('flex items-center gap-2', headerEnd && 'shrink-0 whitespace-nowrap')}>
               {title.icon}
               {title.text}
             </Modal.Heading>
+            {headerEnd && (
+              <div
+                /**
+                 * 縦は見出しの行高に収め、表示の有無でヘッダーの高さが変わらないようにする。
+                 * 見出しと並べる幅が無いスマホでは次の行へ回し、sm 以上では absolute で置かれる閉じるボタンの分を右に空ける
+                 */
+                className='-my-1 flex min-w-48 flex-1 justify-end sm:pr-8'
+              >
+                {headerEnd}
+              </div>
+            )}
           </Modal.Header>
           {children}
         </Modal.Dialog>

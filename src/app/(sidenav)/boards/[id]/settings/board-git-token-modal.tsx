@@ -21,7 +21,7 @@ export const WebhookSteps: FC<{ steps: string }> = ({ steps }) => {
   return (
     <FlexCol isSmart>
       <span className='text-sm'>{t('git_webhook_steps')}</span>
-      <ol className='list-decimal space-y-1 pl-5 text-xs'>
+      <ol className='text-foreground list-decimal space-y-1 pl-5 text-sm'>
         {steps.split('\n').map((step) => (
           <li key={step}>{step}</li>
         ))}
@@ -43,7 +43,7 @@ export const IssuedTokenModal: FC<{
   return (
     <DialogModal
       state={state}
-      size='lg'
+      size='3xl'
       title={{ text: label, icon: <KeyIcon /> }}
       footer={<MultiButton onPress={state.close}>{t('ok')}</MultiButton>}
     >
@@ -52,9 +52,8 @@ export const IssuedTokenModal: FC<{
           <span className='font-mono text-sm break-all'>{target.repo}</span>
           <CopyableField label={t('git_webhook_url')} text={target.webhookUrl} />
           <CopyableField label={label} text={target.token} isMask />
-          <NoticePanel className='text-xs'>
-            {t('msg_token_once')}
-            {description && `\n${description}`}
+          <NoticePanel status='warning' className='text-xs' title={t('msg_token_once')}>
+            {description}
           </NoticePanel>
           <WebhookSteps steps={steps} />
         </FlexCol>

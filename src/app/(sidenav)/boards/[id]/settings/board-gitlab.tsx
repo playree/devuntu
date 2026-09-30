@@ -76,6 +76,7 @@ const SigningTokenModal: FC<{
         e?.preventDefault()
         await save()
       }}
+      size='3xl'
       submit={{ label: t('save'), isPending: isSaving, isDisabled: !secret.trim() }}
     >
       {target && (
