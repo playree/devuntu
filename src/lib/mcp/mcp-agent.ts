@@ -20,7 +20,8 @@ import { AGENT_OUTCOMES, finishAgentTask } from '../agent/agent-run'
 import { findAgentRunner } from '../agent/agent-runner'
 import { agentSetupCliPrompt, agentSetupGuide } from '../agent/agent-setup'
 import { findAgentTicket, pickAgentTasks, resolveAgentTask } from '../agent/agent-task'
-import { assertTicketAccess } from '../board/board-access'
+import { assertTicketAccess, getTicketAccess } from '../board/board-access'
+import { findBoardAiContext } from '../board/board-setting'
 import { listTicketCriteria } from '../board/ticket-criterion'
 import { errInvalidOperation } from '../error'
 import type { ResourceAuth } from '../oauth/oauth-resource'
@@ -35,6 +36,12 @@ const INACTIVE_NOTE = 'Run conditions are not met. Exit without processing any t
 const loadContext = async (auth: ResourceAuth) => {
   const runner = await findAgentRunner(auth.user.id)
   return { runner, activity: await evaluateRunnerActivity(runner) }
+}
+
+/** ボードの AI 向けコンテキスト。get_ticket と同じく、ボードのメンバーでなければ返さない */
+const findMemberBoardContext = async (auth: ResourceAuth, ticketId: string): Promise<string | null> => {
+  const access = await getTicketAccess(auth.user, ticketId)
+  return access?.boardRole ? findBoardAiContext(access.boardId) : null
 }
 
 /**
@@ -73,6 +80,7 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
       description:
         'Always call this before processing a ticket. Returns the run conditions (whether active and the allowed hours), the tickets to process, ' +
         'the action to perform, and the rule instructions. Follow the rule throughout the whole run. ' +
+        'When a ticketId is given, task.boardContext (only when set) holds premises shared by every ticket on its board: read it before working. ' +
         'On revise, task.autoRevise lists CI failures and pull request reviews that sent the ticket back automatically: ' +
         'read the details from the pull request, address them, and report what you changed (or why no change is needed). ' +
         'If active is false, exit without doing anything',
@@ -112,10 +120,11 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
         })
       }
 
-      const [criteria, decision, autoRevise] = await Promise.all([
+      const [criteria, decision, autoRevise, boardContext] = await Promise.all([
         listTicketCriteria(id),
         task.action === 'revise' ? findLatestAgentDecision(id, auth.user.id) : null,
         task.action === 'revise' ? listRunAutoRevise(runner.id, id) : [],
+        findMemberBoardContext(auth, id),
       ])
       return jsonResult({
         ...base,
@@ -128,6 +137,8 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
           decision: decision ? { kind: decision.decision, commentId: decision.id, content: decision.content } : null,
           /** revise のきっかけになった CI の失敗・PR / MR のレビュー指摘(自動差し戻し)。無ければ空 */
           autoRevise,
+          /** チケットが属するボードの AI 向けコンテキスト。未設定なら項目ごと載せない */
+          ...(boardContext ? { boardContext } : {}),
         },
         note: null,
       })

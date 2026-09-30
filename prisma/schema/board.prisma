@@ -59,6 +59,10 @@ model Board {
   /// ボードの説明
   description String?
 
+  /// AI 向けコンテキスト(Markdown)。対象リポジトリ・規約・用語など、チケットごとに書かなくてよい前提。
+  /// MCP の get_ticket / get_board / get_agent_task でボードのメンバーにだけ返す
+  aiContext String?
+
   /// アーカイブ済み。一覧の既定の表示からは外れる
   archived Boolean @default(false)
 

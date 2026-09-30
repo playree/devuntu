@@ -178,7 +178,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     {
       title: 'Get board',
       description:
-        'Returns board details (members, tags, and ticket counts per status). ' +
+        'Returns board details (members, tags, ticket counts per status, and boardContext if set). ' +
         'Use the IDs returned here for assigneeId and tagIds in create_ticket / update_ticket',
       inputSchema: { boardId: z.string().min(1).describe('Board ID or board key (e.g. ABC)') },
     },
@@ -192,6 +192,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       description:
         'Gets ticket details by display ID (e.g. ABC-42) or ticket ID, including content, status, assignee, tags, comments, linked artifacts, ' +
         'parent/children, related tickets, and recent change history (activities, newest first). ' +
+        'boardContext (only when set) holds premises shared by every ticket on the board, such as the target repository and conventions: read it before working. ' +
         'When working on the ticket, follow the steps in the workflow field of the response (doing when starting, posting plan / report, linking artifacts)',
       inputSchema: { ticketId: z.string().min(1) },
     },

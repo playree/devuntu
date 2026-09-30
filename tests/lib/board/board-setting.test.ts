@@ -62,8 +62,10 @@ vi.mock('@/lib/storage/attachment', () => ({
 const {
   assertBoardNotifyManageable,
   deleteBoard,
+  findBoardAiContext,
   getBoardDetail,
   getBoardNotify,
+  setBoardAiContext,
   setBoardArchivedState,
   setBoardNotify,
   updateBoardProfile,
@@ -80,6 +82,7 @@ const boardRow = {
   key: 'ABC',
   name: 'ボード',
   description: '説明',
+  aiContext: null,
   archived: false,
   createdAt: new Date('2026-01-01T00:00:00Z'),
 }
@@ -236,6 +239,67 @@ describe('updateBoardProfile', () => {
 
     await expect(updateBoardProfile(user, input)).rejects.toBe(denied)
     expect(board.update).not.toHaveBeenCalled()
+  })
+})
+
+describe('AI 向けコンテキスト', () => {
+  it('詳細では未設定なら空文字にする', async () => {
+    expect((await getBoardDetail(user, 'b1')).aiContext).toBe('')
+
+    board.findUnique.mockResolvedValue({ ...boardRow, aiContext: '## 前提' } as never)
+    expect((await getBoardDetail(user, 'b1')).aiContext).toBe('## 前提')
+  })
+
+  it('manage 権限を検証してから保存する', async () => {
+    await setBoardAiContext(user, 'b1', '## 前提\n')
+
+    expect(mocks.assertBoardAccess).toHaveBeenCalledWith(user, 'b1', 'manage', prisma)
+    expect(mocks.assertTeamBoard).not.toHaveBeenCalled()
+    expect(board.update).toHaveBeenCalledWith({
+      where: { id: 'b1' },
+      data: { aiContext: '## 前提' },
+      select: { id: true },
+    })
+  })
+
+  it('プライベートボードは所有者なら保存できる', async () => {
+    mocks.assertBoardAccess.mockResolvedValue({ boardId: 'b1', kind: 'private', role: 'owner', via: 'member' })
+    board.findUnique.mockResolvedValue({ privateOwnerId: 'u1' } as never)
+
+    await setBoardAiContext(user, 'b1', '## 前提')
+
+    expect(board.update).toHaveBeenCalled()
+  })
+
+  it('他人のプライベートボードには管理者でも保存させない', async () => {
+    mocks.assertBoardAccess.mockResolvedValue({ boardId: 'b1', kind: 'private', role: 'owner', via: 'member' })
+    board.findUnique.mockResolvedValue({ privateOwnerId: 'u1' } as never)
+
+    await expect(setBoardAiContext(admin, 'b1', '## 前提')).rejects.toMatchObject({ errorType: 'INVALID_OPERATION' })
+    expect(board.update).not.toHaveBeenCalled()
+  })
+
+  it('空白だけなら未設定(null)として保存する', async () => {
+    await setBoardAiContext(user, 'b1', '  \n ')
+
+    expect(board.update).toHaveBeenCalledWith(expect.objectContaining({ data: { aiContext: null } }))
+  })
+
+  it('manage 権限が無ければ保存しない', async () => {
+    mocks.assertBoardAccess.mockRejectedValue(denied)
+
+    await expect(setBoardAiContext(user, 'b1', '## 前提')).rejects.toBe(denied)
+    expect(board.update).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['## 前提', '## 前提'],
+    ['', null],
+    [null, null],
+  ])('MCP 向けの取得は %j を %j として返す', async (aiContext, expected) => {
+    board.findUnique.mockResolvedValue({ aiContext } as never)
+
+    expect(await findBoardAiContext('b1')).toBe(expected)
   })
 })
 

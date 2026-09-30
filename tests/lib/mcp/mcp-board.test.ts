@@ -109,6 +109,7 @@ describe('getBoardForMcp', () => {
       key: 'ABC',
       name: 'テストボード',
       description: null,
+      aiContext: null,
     } as never)
     vi.mocked(assertBoardAccess).mockResolvedValueOnce({
       boardId,
@@ -147,5 +148,26 @@ describe('getBoardForMcp', () => {
       ticketCounts: { todo: 2 },
     })
     expect(assertBoardAccess).toHaveBeenCalledWith(auth.user, boardId, 'view')
+  })
+
+  it('AI 向けコンテキストが設定されていれば boardContext として返す', async () => {
+    vi.mocked(prisma.board.findUnique).mockResolvedValueOnce({
+      key: 'ABC',
+      name: 'テストボード',
+      description: null,
+      aiContext: '## 前提',
+    } as never)
+    vi.mocked(assertBoardAccess).mockResolvedValueOnce({
+      boardId,
+      kind: 'team',
+      role: 'member',
+      via: 'member',
+      archived: false,
+    })
+    vi.mocked(getBoardMemberUsers).mockResolvedValueOnce([])
+    vi.mocked(listBoardTags).mockResolvedValueOnce([])
+    vi.mocked(countTicketsByBoard).mockResolvedValueOnce({})
+
+    expect(await getBoardForMcp(auth, boardId)).toMatchObject({ boardContext: '## 前提' })
   })
 })

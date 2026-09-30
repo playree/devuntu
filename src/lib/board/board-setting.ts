@@ -1,5 +1,5 @@
 /**
- * ボード設定(概要 / アーカイブ / チャネル通知 / 削除)の処理(サーバー専用)
+ * ボード設定(概要 / AI 向けコンテキスト / アーカイブ / チャネル通知 / 削除)の処理(サーバー専用)
  *
  * `/boards/[id]/settings` の Server Action から呼ぶ。権限の検証もここで行うので、
  * 呼び出し側は入力の検証と結果の返却だけを持つ。
@@ -35,6 +35,7 @@ export const getBoardDetail = async (actor: Actor, id: string) => {
       key: true,
       name: true,
       description: true,
+      aiContext: true,
       archived: true,
       createdAt: true,
     },
@@ -49,6 +50,7 @@ export const getBoardDetail = async (actor: Actor, id: string) => {
   return {
     ...board,
     description: board.description ?? '',
+    aiContext: board.aiContext ?? '',
     role: access.role,
     via: access.via,
     // 権限境界: ユーザー単位のアサインは owner、グループ単位は管理者のみ
@@ -87,6 +89,35 @@ export const updateBoardProfile = async (
 
   logger.info({ userId: actor.id, id }, 'board updated')
   return board
+}
+
+/**
+ * AI 向けコンテキストの更新(owner または管理者)。空文字は未設定(null)として保存する。
+ * プライベートボードでも所有者が使えるよう、チームボードに限定しない。
+ * ただし内容は所有者の AI クライアントへ指示として届くので、プライベートボードは管理者でも所有者以外に書かせない
+ */
+export const setBoardAiContext = async (actor: Actor, id: string, aiContext: string) => {
+  await prisma.$transaction(async (tx) => {
+    const access = await assertBoardAccess(actor, id, 'manage', tx)
+    if (access.kind === 'private') {
+      const board = await tx.board.findUnique({ where: { id }, select: { privateOwnerId: true } })
+      if (board?.privateOwnerId !== actor.id) {
+        throw errInvalidOperation()
+      }
+    }
+    await tx.board.update({ where: { id }, data: { aiContext: aiContext.trim() || null }, select: { id: true } })
+  })
+
+  logger.info({ userId: actor.id, id }, 'board ai context updated')
+}
+
+/**
+ * MCP の応答に載せる AI 向けコンテキスト。未設定なら null。
+ * 権限は見ないので、呼び出し側でボードのメンバーであることを確かめてから使う
+ */
+export const findBoardAiContext = async (boardId: string): Promise<string | null> => {
+  const board = await prisma.board.findUnique({ where: { id: boardId }, select: { aiContext: true } })
+  return board?.aiContext || null
 }
 
 /**

@@ -352,6 +352,7 @@ export const BoardScalarFieldEnum = {
   ticketSeq: 'ticketSeq',
   name: 'name',
   description: 'description',
+  aiContext: 'aiContext',
   archived: 'archived',
   completeOnGithubMerge: 'completeOnGithubMerge',
   completeOnGitlabMerge: 'completeOnGitlabMerge',

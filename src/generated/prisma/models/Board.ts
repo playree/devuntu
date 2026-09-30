@@ -44,6 +44,7 @@ export type BoardMinAggregateOutputType = {
   ticketSeq: number | null
   name: string | null
   description: string | null
+  aiContext: string | null
   archived: boolean | null
   completeOnGithubMerge: boolean | null
   completeOnGitlabMerge: boolean | null
@@ -61,6 +62,7 @@ export type BoardMaxAggregateOutputType = {
   ticketSeq: number | null
   name: string | null
   description: string | null
+  aiContext: string | null
   archived: boolean | null
   completeOnGithubMerge: boolean | null
   completeOnGitlabMerge: boolean | null
@@ -78,6 +80,7 @@ export type BoardCountAggregateOutputType = {
   ticketSeq: number
   name: number
   description: number
+  aiContext: number
   archived: number
   completeOnGithubMerge: number
   completeOnGitlabMerge: number
@@ -107,6 +110,7 @@ export type BoardMinAggregateInputType = {
   ticketSeq?: true
   name?: true
   description?: true
+  aiContext?: true
   archived?: true
   completeOnGithubMerge?: true
   completeOnGitlabMerge?: true
@@ -124,6 +128,7 @@ export type BoardMaxAggregateInputType = {
   ticketSeq?: true
   name?: true
   description?: true
+  aiContext?: true
   archived?: true
   completeOnGithubMerge?: true
   completeOnGitlabMerge?: true
@@ -141,6 +146,7 @@ export type BoardCountAggregateInputType = {
   ticketSeq?: true
   name?: true
   description?: true
+  aiContext?: true
   archived?: true
   completeOnGithubMerge?: true
   completeOnGitlabMerge?: true
@@ -245,6 +251,7 @@ export type BoardGroupByOutputType = {
   ticketSeq: number
   name: string
   description: string | null
+  aiContext: string | null
   archived: boolean
   completeOnGithubMerge: boolean
   completeOnGitlabMerge: boolean
@@ -285,6 +292,7 @@ export type BoardWhereInput = {
   ticketSeq?: Prisma.IntFilter<"Board"> | number
   name?: Prisma.StringFilter<"Board"> | string
   description?: Prisma.StringNullableFilter<"Board"> | string | null
+  aiContext?: Prisma.StringNullableFilter<"Board"> | string | null
   archived?: Prisma.BoolFilter<"Board"> | boolean
   completeOnGithubMerge?: Prisma.BoolFilter<"Board"> | boolean
   completeOnGitlabMerge?: Prisma.BoolFilter<"Board"> | boolean
@@ -312,6 +320,7 @@ export type BoardOrderByWithRelationInput = {
   ticketSeq?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiContext?: Prisma.SortOrderInput | Prisma.SortOrder
   archived?: Prisma.SortOrder
   completeOnGithubMerge?: Prisma.SortOrder
   completeOnGitlabMerge?: Prisma.SortOrder
@@ -342,6 +351,7 @@ export type BoardWhereUniqueInput = Prisma.AtLeast<{
   ticketSeq?: Prisma.IntFilter<"Board"> | number
   name?: Prisma.StringFilter<"Board"> | string
   description?: Prisma.StringNullableFilter<"Board"> | string | null
+  aiContext?: Prisma.StringNullableFilter<"Board"> | string | null
   archived?: Prisma.BoolFilter<"Board"> | boolean
   completeOnGithubMerge?: Prisma.BoolFilter<"Board"> | boolean
   completeOnGitlabMerge?: Prisma.BoolFilter<"Board"> | boolean
@@ -369,6 +379,7 @@ export type BoardOrderByWithAggregationInput = {
   ticketSeq?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiContext?: Prisma.SortOrderInput | Prisma.SortOrder
   archived?: Prisma.SortOrder
   completeOnGithubMerge?: Prisma.SortOrder
   completeOnGitlabMerge?: Prisma.SortOrder
@@ -394,6 +405,7 @@ export type BoardScalarWhereWithAggregatesInput = {
   ticketSeq?: Prisma.IntWithAggregatesFilter<"Board"> | number
   name?: Prisma.StringWithAggregatesFilter<"Board"> | string
   description?: Prisma.StringNullableWithAggregatesFilter<"Board"> | string | null
+  aiContext?: Prisma.StringNullableWithAggregatesFilter<"Board"> | string | null
   archived?: Prisma.BoolWithAggregatesFilter<"Board"> | boolean
   completeOnGithubMerge?: Prisma.BoolWithAggregatesFilter<"Board"> | boolean
   completeOnGitlabMerge?: Prisma.BoolWithAggregatesFilter<"Board"> | boolean
@@ -410,6 +422,7 @@ export type BoardCreateInput = {
   ticketSeq?: number
   name: string
   description?: string | null
+  aiContext?: string | null
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
@@ -437,6 +450,7 @@ export type BoardUncheckedCreateInput = {
   ticketSeq?: number
   name: string
   description?: string | null
+  aiContext?: string | null
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
@@ -462,6 +476,7 @@ export type BoardUpdateInput = {
   ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -489,6 +504,7 @@ export type BoardUncheckedUpdateInput = {
   ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -515,6 +531,7 @@ export type BoardCreateManyInput = {
   ticketSeq?: number
   name: string
   description?: string | null
+  aiContext?: string | null
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
@@ -531,6 +548,7 @@ export type BoardUpdateManyMutationInput = {
   ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -548,6 +566,7 @@ export type BoardUncheckedUpdateManyInput = {
   ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -570,6 +589,7 @@ export type BoardCountOrderByAggregateInput = {
   ticketSeq?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrder
+  aiContext?: Prisma.SortOrder
   archived?: Prisma.SortOrder
   completeOnGithubMerge?: Prisma.SortOrder
   completeOnGitlabMerge?: Prisma.SortOrder
@@ -592,6 +612,7 @@ export type BoardMaxOrderByAggregateInput = {
   ticketSeq?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrder
+  aiContext?: Prisma.SortOrder
   archived?: Prisma.SortOrder
   completeOnGithubMerge?: Prisma.SortOrder
   completeOnGitlabMerge?: Prisma.SortOrder
@@ -609,6 +630,7 @@ export type BoardMinOrderByAggregateInput = {
   ticketSeq?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrder
+  aiContext?: Prisma.SortOrder
   archived?: Prisma.SortOrder
   completeOnGithubMerge?: Prisma.SortOrder
   completeOnGitlabMerge?: Prisma.SortOrder
@@ -803,6 +825,7 @@ export type BoardCreateWithoutAgentUsagesInput = {
   ticketSeq?: number
   name: string
   description?: string | null
+  aiContext?: string | null
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
@@ -829,6 +852,7 @@ export type BoardUncheckedCreateWithoutAgentUsagesInput = {
   ticketSeq?: number
   name: string
   description?: string | null
+  aiContext?: string | null
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
@@ -869,6 +893,7 @@ export type BoardUpdateWithoutAgentUsagesInput = {
   ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -895,6 +920,7 @@ export type BoardUncheckedUpdateWithoutAgentUsagesInput = {
   ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -919,6 +945,7 @@ export type BoardCreateWithoutKeyHistoriesInput = {
   ticketSeq?: number
   name: string
   description?: string | null
+  aiContext?: string | null
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
@@ -945,6 +972,7 @@ export type BoardUncheckedCreateWithoutKeyHistoriesInput = {
   ticketSeq?: number
   name: string
   description?: string | null
+  aiContext?: string | null
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
@@ -985,6 +1013,7 @@ export type BoardUpdateWithoutKeyHistoriesInput = {
   ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1011,6 +1040,7 @@ export type BoardUncheckedUpdateWithoutKeyHistoriesInput = {
   ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1035,6 +1065,7 @@ export type BoardCreateWithoutTagsInput = {
   ticketSeq?: number
   name: string
   description?: string | null
+  aiContext?: string | null
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
@@ -1061,6 +1092,7 @@ export type BoardUncheckedCreateWithoutTagsInput = {
   ticketSeq?: number
   name: string
   description?: string | null
+  aiContext?: string | null
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
@@ -1101,6 +1133,7 @@ export type BoardUpdateWithoutTagsInput = {
   ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1127,6 +1160,7 @@ export type BoardUncheckedUpdateWithoutTagsInput = {
   ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1151,6 +1185,7 @@ export type BoardCreateWithoutMembersInput = {
   ticketSeq?: number
   name: string
   description?: string | null
+  aiContext?: string | null
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
@@ -1177,6 +1212,7 @@ export type BoardUncheckedCreateWithoutMembersInput = {
   ticketSeq?: number
   name: string
   description?: string | null
+  aiContext?: string | null
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
@@ -1217,6 +1253,7 @@ export type BoardUpdateWithoutMembersInput = {
   ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1243,6 +1280,7 @@ export type BoardUncheckedUpdateWithoutMembersInput = {
   ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1267,6 +1305,7 @@ export type BoardCreateWithoutGroupsInput = {
   ticketSeq?: number
   name: string
   description?: string | null
+  aiContext?: string | null
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
@@ -1293,6 +1332,7 @@ export type BoardUncheckedCreateWithoutGroupsInput = {
   ticketSeq?: number
   name: string
   description?: string | null
+  aiContext?: string | null
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
@@ -1333,6 +1373,7 @@ export type BoardUpdateWithoutGroupsInput = {
   ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1359,6 +1400,7 @@ export type BoardUncheckedUpdateWithoutGroupsInput = {
   ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1383,6 +1425,7 @@ export type BoardCreateWithoutRepositoriesInput = {
   ticketSeq?: number
   name: string
   description?: string | null
+  aiContext?: string | null
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
@@ -1409,6 +1452,7 @@ export type BoardUncheckedCreateWithoutRepositoriesInput = {
   ticketSeq?: number
   name: string
   description?: string | null
+  aiContext?: string | null
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
@@ -1449,6 +1493,7 @@ export type BoardUpdateWithoutRepositoriesInput = {
   ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1475,6 +1520,7 @@ export type BoardUncheckedUpdateWithoutRepositoriesInput = {
   ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1499,6 +1545,7 @@ export type BoardCreateWithoutNotifySettingsInput = {
   ticketSeq?: number
   name: string
   description?: string | null
+  aiContext?: string | null
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
@@ -1525,6 +1572,7 @@ export type BoardUncheckedCreateWithoutNotifySettingsInput = {
   ticketSeq?: number
   name: string
   description?: string | null
+  aiContext?: string | null
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
@@ -1565,6 +1613,7 @@ export type BoardUpdateWithoutNotifySettingsInput = {
   ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1591,6 +1640,7 @@ export type BoardUncheckedUpdateWithoutNotifySettingsInput = {
   ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1615,6 +1665,7 @@ export type BoardCreateWithoutAttachmentsInput = {
   ticketSeq?: number
   name: string
   description?: string | null
+  aiContext?: string | null
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
@@ -1641,6 +1692,7 @@ export type BoardUncheckedCreateWithoutAttachmentsInput = {
   ticketSeq?: number
   name: string
   description?: string | null
+  aiContext?: string | null
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
@@ -1681,6 +1733,7 @@ export type BoardUpdateWithoutAttachmentsInput = {
   ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1707,6 +1760,7 @@ export type BoardUncheckedUpdateWithoutAttachmentsInput = {
   ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1731,6 +1785,7 @@ export type BoardCreateWithoutTicketsInput = {
   ticketSeq?: number
   name: string
   description?: string | null
+  aiContext?: string | null
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
@@ -1757,6 +1812,7 @@ export type BoardUncheckedCreateWithoutTicketsInput = {
   ticketSeq?: number
   name: string
   description?: string | null
+  aiContext?: string | null
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
@@ -1797,6 +1853,7 @@ export type BoardUpdateWithoutTicketsInput = {
   ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1823,6 +1880,7 @@ export type BoardUncheckedUpdateWithoutTicketsInput = {
   ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1847,6 +1905,7 @@ export type BoardCreateWithoutPrivateOwnerInput = {
   ticketSeq?: number
   name: string
   description?: string | null
+  aiContext?: string | null
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
@@ -1872,6 +1931,7 @@ export type BoardUncheckedCreateWithoutPrivateOwnerInput = {
   ticketSeq?: number
   name: string
   description?: string | null
+  aiContext?: string | null
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
@@ -1913,6 +1973,7 @@ export type BoardUpdateWithoutPrivateOwnerInput = {
   ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1938,6 +1999,7 @@ export type BoardUncheckedUpdateWithoutPrivateOwnerInput = {
   ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGithubMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completeOnGitlabMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2067,6 +2129,7 @@ export type BoardSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   ticketSeq?: boolean
   name?: boolean
   description?: boolean
+  aiContext?: boolean
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
@@ -2095,6 +2158,7 @@ export type BoardSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   ticketSeq?: boolean
   name?: boolean
   description?: boolean
+  aiContext?: boolean
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
@@ -2113,6 +2177,7 @@ export type BoardSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   ticketSeq?: boolean
   name?: boolean
   description?: boolean
+  aiContext?: boolean
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
@@ -2131,6 +2196,7 @@ export type BoardSelectScalar = {
   ticketSeq?: boolean
   name?: boolean
   description?: boolean
+  aiContext?: boolean
   archived?: boolean
   completeOnGithubMerge?: boolean
   completeOnGitlabMerge?: boolean
@@ -2140,7 +2206,7 @@ export type BoardSelectScalar = {
   updatedAt?: boolean
 }
 
-export type BoardOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "kind" | "privateOwnerId" | "key" | "ticketSeq" | "name" | "description" | "archived" | "completeOnGithubMerge" | "completeOnGitlabMerge" | "agentAutoRevise" | "agentAutoReviseLimit" | "createdAt" | "updatedAt", ExtArgs["result"]["board"]>
+export type BoardOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "kind" | "privateOwnerId" | "key" | "ticketSeq" | "name" | "description" | "aiContext" | "archived" | "completeOnGithubMerge" | "completeOnGitlabMerge" | "agentAutoRevise" | "agentAutoReviseLimit" | "createdAt" | "updatedAt", ExtArgs["result"]["board"]>
 export type BoardInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   privateOwner?: boolean | Prisma.Board$privateOwnerArgs<ExtArgs>
   members?: boolean | Prisma.Board$membersArgs<ExtArgs>
@@ -2207,6 +2273,11 @@ export type $BoardPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
      * ボードの説明
      */
     description: string | null
+    /**
+     * AI 向けコンテキスト(Markdown)。対象リポジトリ・規約・用語など、チケットごとに書かなくてよい前提。
+     * MCP の get_ticket / get_board / get_agent_task でボードのメンバーにだけ返す
+     */
+    aiContext: string | null
     /**
      * アーカイブ済み。一覧の既定の表示からは外れる
      */
@@ -2669,6 +2740,7 @@ export interface BoardFieldRefs {
   readonly ticketSeq: Prisma.FieldRef<"Board", 'Int'>
   readonly name: Prisma.FieldRef<"Board", 'String'>
   readonly description: Prisma.FieldRef<"Board", 'String'>
+  readonly aiContext: Prisma.FieldRef<"Board", 'String'>
   readonly archived: Prisma.FieldRef<"Board", 'Boolean'>
   readonly completeOnGithubMerge: Prisma.FieldRef<"Board", 'Boolean'>
   readonly completeOnGitlabMerge: Prisma.FieldRef<"Board", 'Boolean'>

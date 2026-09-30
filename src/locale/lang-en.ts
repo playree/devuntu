@@ -104,6 +104,7 @@ export const en: DefaultLocaleItems = {
   back: 'Back',
   board: 'Board',
   board_agent_auto_revise: 'Agent Auto Revise',
+  board_ai_context: 'AI Context',
   board_deleted: 'Deleted board',
   board_github: 'GitHub Integration',
   board_gitlab: 'GitLab Integration',
@@ -599,6 +600,9 @@ Please copy and use the connection information above.
   msg_archive_board: 'Archiving hides the board from the default board list. Tickets are kept.',
   msg_avatar_desc:
     'Your avatar is copied from the sign-in provider. Setting a custom image stops it from being copied again.',
+  msg_board_ai_context_desc:
+    'Premises shared by the tickets on this board (target repository, conventions, terms, etc.) in Markdown. It is included as boardContext in the MCP get_ticket / get_board / get_agent_task responses, so it reaches both the AI clients used by board members and the agents. Leaving it blank means not set.',
+  msg_board_ai_context_none: 'No context is set.',
   msg_board_key_change: 'Changing the key means ticket IDs already shared will no longer point to their tickets.',
   msg_board_slack_notify_desc:
     'Posts the selected events on this board to a Slack channel. Choose both a channel and the events.',

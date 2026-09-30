@@ -104,6 +104,7 @@ export const ja: DefaultLocaleItems = {
   back: '戻る',
   board: 'ボード',
   board_agent_auto_revise: 'エージェントの自動差し戻し',
+  board_ai_context: 'AI向けコンテキスト',
   board_deleted: '削除済みのボード',
   board_github: 'GitHub連携',
   board_gitlab: 'GitLab連携',
@@ -599,6 +600,9 @@ export const ja: DefaultLocaleItems = {
   msg_archive_board: 'アーカイブすると、ボード一覧の既定の表示対象から外れます。チケットは残ります。',
   msg_avatar_desc:
     'サインイン時に連携元のアバター画像がコピーされます。独自の画像を設定すると、以降はコピーされなくなります。',
+  msg_board_ai_context_desc:
+    'このボードのチケットに共通する前提(対象リポジトリ・規約・用語など)をMarkdownで書きます。MCPの get_ticket / get_board / get_agent_task の応答に boardContext として載り、ボードのメンバーが使うAIクライアントとエージェントの両方に届きます。空欄は未設定として扱われます。',
+  msg_board_ai_context_none: 'コンテキストは設定されていません。',
   msg_board_key_change: 'キーを変更すると、共有済みのチケットIDは元のチケットを指さなくなります。',
   msg_board_slack_notify_desc:
     'このボードで選んだ出来事をSlackチャンネルへ投稿します。通知先とイベントの両方を選んでください。',

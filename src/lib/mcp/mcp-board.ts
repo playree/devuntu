@@ -62,7 +62,7 @@ export const getBoardForMcp = async (auth: ResourceAuth, boardIdOrKey: string) =
 
   const board = await prisma.board.findUnique({
     where: { id },
-    select: { key: true, name: true, description: true },
+    select: { key: true, name: true, description: true, aiContext: true },
   })
   if (!board) {
     throw errInvalidOperation()
@@ -79,6 +79,8 @@ export const getBoardForMcp = async (auth: ResourceAuth, boardIdOrKey: string) =
     key: board.key,
     name: board.name,
     description: board.description ?? '',
+    /** ボードの AI 向けコンテキスト。未設定なら項目ごと載せない */
+    ...(board.aiContext ? { boardContext: board.aiContext } : {}),
     kind: access.kind,
     archived: access.archived,
     role: access.role,

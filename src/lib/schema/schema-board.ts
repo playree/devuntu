@@ -55,6 +55,13 @@ export const scSetBoardArchived = z.object({
 })
 export type SetBoardArchived = z.infer<typeof scSetBoardArchived>
 
+/** ボードの AI 向けコンテキスト(Markdown)。空文字は未設定として保存する */
+export const scSetBoardAiContext = z.object({
+  id: z.uuidv7(),
+  aiContext: z.string().max(8000),
+})
+export type SetBoardAiContext = z.infer<typeof scSetBoardAiContext>
+
 /**
  * 通知先に選べる Slack チャンネルの一覧。`id` はボード ID。
  * `force` はキャッシュを捨てて Slack から取り直す(招待直後に一覧へ反映させるため)。

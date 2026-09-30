@@ -61,7 +61,7 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
     where: { id },
     select: {
       number: true,
-      board: { select: { name: true, key: true } },
+      board: { select: { name: true, key: true, aiContext: true } },
       title: true,
       content: true,
       status: true,
@@ -109,6 +109,11 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
     /** 本文・コメントに貼られた画像のキー。`get_image` で中身を見られることに気づけるよう返す */
     attachmentKeys: extractUploadKeys([ticket.content ?? '', ...ticket.comments.map((c) => c.content)].join('\n')),
     boardName: ticket.board.name,
+    /**
+     * ボードの AI 向けコンテキスト(対象リポジトリ・規約など、チケット共通の前提)。
+     * ボード内の情報なので承認者には見せず、未設定なら項目ごと載せない
+     */
+    ...(access.boardRole && ticket.board.aiContext ? { boardContext: ticket.board.aiContext } : {}),
     title: ticket.title,
     content: ticket.content,
     status: ticket.status,
