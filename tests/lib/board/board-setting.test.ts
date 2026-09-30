@@ -251,13 +251,14 @@ describe('AI 向けコンテキスト', () => {
   })
 
   it('manage 権限を検証してから保存する', async () => {
-    await setBoardAiContext(user, 'b1', '## 前提\n')
+    await setBoardAiContext(user, 'b1', '    npm test\n')
 
     expect(mocks.assertBoardAccess).toHaveBeenCalledWith(user, 'b1', 'manage', prisma)
     expect(mocks.assertTeamBoard).not.toHaveBeenCalled()
+    // 先頭の字下げはコードブロックの意味を持つので、空白を削らずに保存する
     expect(board.update).toHaveBeenCalledWith({
       where: { id: 'b1' },
-      data: { aiContext: '## 前提' },
+      data: { aiContext: '    npm test\n' },
       select: { id: true },
     })
   })

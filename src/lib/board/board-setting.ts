@@ -92,7 +92,7 @@ export const updateBoardProfile = async (
 }
 
 /**
- * AI 向けコンテキストの更新(owner または管理者)。空文字は未設定(null)として保存する。
+ * AI 向けコンテキストの更新(owner または管理者)。空白だけなら未設定(null)とし、それ以外は Markdown の字下げを崩さないよう手を加えずに保存する。
  * プライベートボードでも所有者が使えるよう、チームボードに限定しない。
  * ただし内容は所有者の AI クライアントへ指示として届くので、プライベートボードは管理者でも所有者以外に書かせない
  */
@@ -105,7 +105,11 @@ export const setBoardAiContext = async (actor: Actor, id: string, aiContext: str
         throw errInvalidOperation()
       }
     }
-    await tx.board.update({ where: { id }, data: { aiContext: aiContext.trim() || null }, select: { id: true } })
+    await tx.board.update({
+      where: { id },
+      data: { aiContext: aiContext.trim() ? aiContext : null },
+      select: { id: true },
+    })
   })
 
   logger.info({ userId: actor.id, id }, 'board ai context updated')
