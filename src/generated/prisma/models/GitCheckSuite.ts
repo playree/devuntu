@@ -247,6 +247,7 @@ export type GitCheckSuiteWhereInput = {
   syncedAt?: Prisma.DateTimeFilter<"GitCheckSuite"> | Date | string
   createdAt?: Prisma.DateTimeFilter<"GitCheckSuite"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"GitCheckSuite"> | Date | string
+  repository?: Prisma.XOR<Prisma.BoardRepositoryScalarRelationFilter, Prisma.BoardRepositoryWhereInput>
 }
 
 export type GitCheckSuiteOrderByWithRelationInput = {
@@ -263,6 +264,7 @@ export type GitCheckSuiteOrderByWithRelationInput = {
   syncedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  repository?: Prisma.BoardRepositoryOrderByWithRelationInput
 }
 
 export type GitCheckSuiteWhereUniqueInput = Prisma.AtLeast<{
@@ -283,6 +285,7 @@ export type GitCheckSuiteWhereUniqueInput = Prisma.AtLeast<{
   syncedAt?: Prisma.DateTimeFilter<"GitCheckSuite"> | Date | string
   createdAt?: Prisma.DateTimeFilter<"GitCheckSuite"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"GitCheckSuite"> | Date | string
+  repository?: Prisma.XOR<Prisma.BoardRepositoryScalarRelationFilter, Prisma.BoardRepositoryWhereInput>
 }, "id" | "provider_baseUrl_repo_suiteId_repositoryId">
 
 export type GitCheckSuiteOrderByWithAggregationInput = {
@@ -329,7 +332,6 @@ export type GitCheckSuiteCreateInput = {
   baseUrl?: string
   repo: string
   suiteId: string
-  repositoryId?: string
   headSha: string
   appName: string
   status: string
@@ -337,6 +339,7 @@ export type GitCheckSuiteCreateInput = {
   syncedAt: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
+  repository: Prisma.BoardRepositoryCreateNestedOneWithoutCheckSuitesInput
 }
 
 export type GitCheckSuiteUncheckedCreateInput = {
@@ -345,7 +348,7 @@ export type GitCheckSuiteUncheckedCreateInput = {
   baseUrl?: string
   repo: string
   suiteId: string
-  repositoryId?: string
+  repositoryId: string
   headSha: string
   appName: string
   status: string
@@ -361,7 +364,6 @@ export type GitCheckSuiteUpdateInput = {
   baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
   repo?: Prisma.StringFieldUpdateOperationsInput | string
   suiteId?: Prisma.StringFieldUpdateOperationsInput | string
-  repositoryId?: Prisma.StringFieldUpdateOperationsInput | string
   headSha?: Prisma.StringFieldUpdateOperationsInput | string
   appName?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -369,6 +371,7 @@ export type GitCheckSuiteUpdateInput = {
   syncedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  repository?: Prisma.BoardRepositoryUpdateOneRequiredWithoutCheckSuitesNestedInput
 }
 
 export type GitCheckSuiteUncheckedUpdateInput = {
@@ -393,7 +396,7 @@ export type GitCheckSuiteCreateManyInput = {
   baseUrl?: string
   repo: string
   suiteId: string
-  repositoryId?: string
+  repositoryId: string
   headSha: string
   appName: string
   status: string
@@ -409,7 +412,6 @@ export type GitCheckSuiteUpdateManyMutationInput = {
   baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
   repo?: Prisma.StringFieldUpdateOperationsInput | string
   suiteId?: Prisma.StringFieldUpdateOperationsInput | string
-  repositoryId?: Prisma.StringFieldUpdateOperationsInput | string
   headSha?: Prisma.StringFieldUpdateOperationsInput | string
   appName?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -433,6 +435,16 @@ export type GitCheckSuiteUncheckedUpdateManyInput = {
   syncedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type GitCheckSuiteListRelationFilter = {
+  every?: Prisma.GitCheckSuiteWhereInput
+  some?: Prisma.GitCheckSuiteWhereInput
+  none?: Prisma.GitCheckSuiteWhereInput
+}
+
+export type GitCheckSuiteOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
 }
 
 export type GitCheckSuiteProviderBaseUrlRepoSuiteIdRepositoryIdCompoundUniqueInput = {
@@ -491,6 +503,183 @@ export type GitCheckSuiteMinOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
 }
 
+export type GitCheckSuiteCreateNestedManyWithoutRepositoryInput = {
+  create?: Prisma.XOR<Prisma.GitCheckSuiteCreateWithoutRepositoryInput, Prisma.GitCheckSuiteUncheckedCreateWithoutRepositoryInput> | Prisma.GitCheckSuiteCreateWithoutRepositoryInput[] | Prisma.GitCheckSuiteUncheckedCreateWithoutRepositoryInput[]
+  connectOrCreate?: Prisma.GitCheckSuiteCreateOrConnectWithoutRepositoryInput | Prisma.GitCheckSuiteCreateOrConnectWithoutRepositoryInput[]
+  createMany?: Prisma.GitCheckSuiteCreateManyRepositoryInputEnvelope
+  connect?: Prisma.GitCheckSuiteWhereUniqueInput | Prisma.GitCheckSuiteWhereUniqueInput[]
+}
+
+export type GitCheckSuiteUncheckedCreateNestedManyWithoutRepositoryInput = {
+  create?: Prisma.XOR<Prisma.GitCheckSuiteCreateWithoutRepositoryInput, Prisma.GitCheckSuiteUncheckedCreateWithoutRepositoryInput> | Prisma.GitCheckSuiteCreateWithoutRepositoryInput[] | Prisma.GitCheckSuiteUncheckedCreateWithoutRepositoryInput[]
+  connectOrCreate?: Prisma.GitCheckSuiteCreateOrConnectWithoutRepositoryInput | Prisma.GitCheckSuiteCreateOrConnectWithoutRepositoryInput[]
+  createMany?: Prisma.GitCheckSuiteCreateManyRepositoryInputEnvelope
+  connect?: Prisma.GitCheckSuiteWhereUniqueInput | Prisma.GitCheckSuiteWhereUniqueInput[]
+}
+
+export type GitCheckSuiteUpdateManyWithoutRepositoryNestedInput = {
+  create?: Prisma.XOR<Prisma.GitCheckSuiteCreateWithoutRepositoryInput, Prisma.GitCheckSuiteUncheckedCreateWithoutRepositoryInput> | Prisma.GitCheckSuiteCreateWithoutRepositoryInput[] | Prisma.GitCheckSuiteUncheckedCreateWithoutRepositoryInput[]
+  connectOrCreate?: Prisma.GitCheckSuiteCreateOrConnectWithoutRepositoryInput | Prisma.GitCheckSuiteCreateOrConnectWithoutRepositoryInput[]
+  upsert?: Prisma.GitCheckSuiteUpsertWithWhereUniqueWithoutRepositoryInput | Prisma.GitCheckSuiteUpsertWithWhereUniqueWithoutRepositoryInput[]
+  createMany?: Prisma.GitCheckSuiteCreateManyRepositoryInputEnvelope
+  set?: Prisma.GitCheckSuiteWhereUniqueInput | Prisma.GitCheckSuiteWhereUniqueInput[]
+  disconnect?: Prisma.GitCheckSuiteWhereUniqueInput | Prisma.GitCheckSuiteWhereUniqueInput[]
+  delete?: Prisma.GitCheckSuiteWhereUniqueInput | Prisma.GitCheckSuiteWhereUniqueInput[]
+  connect?: Prisma.GitCheckSuiteWhereUniqueInput | Prisma.GitCheckSuiteWhereUniqueInput[]
+  update?: Prisma.GitCheckSuiteUpdateWithWhereUniqueWithoutRepositoryInput | Prisma.GitCheckSuiteUpdateWithWhereUniqueWithoutRepositoryInput[]
+  updateMany?: Prisma.GitCheckSuiteUpdateManyWithWhereWithoutRepositoryInput | Prisma.GitCheckSuiteUpdateManyWithWhereWithoutRepositoryInput[]
+  deleteMany?: Prisma.GitCheckSuiteScalarWhereInput | Prisma.GitCheckSuiteScalarWhereInput[]
+}
+
+export type GitCheckSuiteUncheckedUpdateManyWithoutRepositoryNestedInput = {
+  create?: Prisma.XOR<Prisma.GitCheckSuiteCreateWithoutRepositoryInput, Prisma.GitCheckSuiteUncheckedCreateWithoutRepositoryInput> | Prisma.GitCheckSuiteCreateWithoutRepositoryInput[] | Prisma.GitCheckSuiteUncheckedCreateWithoutRepositoryInput[]
+  connectOrCreate?: Prisma.GitCheckSuiteCreateOrConnectWithoutRepositoryInput | Prisma.GitCheckSuiteCreateOrConnectWithoutRepositoryInput[]
+  upsert?: Prisma.GitCheckSuiteUpsertWithWhereUniqueWithoutRepositoryInput | Prisma.GitCheckSuiteUpsertWithWhereUniqueWithoutRepositoryInput[]
+  createMany?: Prisma.GitCheckSuiteCreateManyRepositoryInputEnvelope
+  set?: Prisma.GitCheckSuiteWhereUniqueInput | Prisma.GitCheckSuiteWhereUniqueInput[]
+  disconnect?: Prisma.GitCheckSuiteWhereUniqueInput | Prisma.GitCheckSuiteWhereUniqueInput[]
+  delete?: Prisma.GitCheckSuiteWhereUniqueInput | Prisma.GitCheckSuiteWhereUniqueInput[]
+  connect?: Prisma.GitCheckSuiteWhereUniqueInput | Prisma.GitCheckSuiteWhereUniqueInput[]
+  update?: Prisma.GitCheckSuiteUpdateWithWhereUniqueWithoutRepositoryInput | Prisma.GitCheckSuiteUpdateWithWhereUniqueWithoutRepositoryInput[]
+  updateMany?: Prisma.GitCheckSuiteUpdateManyWithWhereWithoutRepositoryInput | Prisma.GitCheckSuiteUpdateManyWithWhereWithoutRepositoryInput[]
+  deleteMany?: Prisma.GitCheckSuiteScalarWhereInput | Prisma.GitCheckSuiteScalarWhereInput[]
+}
+
+export type GitCheckSuiteCreateWithoutRepositoryInput = {
+  id?: string
+  provider?: $Enums.GitProvider
+  baseUrl?: string
+  repo: string
+  suiteId: string
+  headSha: string
+  appName: string
+  status: string
+  conclusion?: string | null
+  syncedAt: Date | string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type GitCheckSuiteUncheckedCreateWithoutRepositoryInput = {
+  id?: string
+  provider?: $Enums.GitProvider
+  baseUrl?: string
+  repo: string
+  suiteId: string
+  headSha: string
+  appName: string
+  status: string
+  conclusion?: string | null
+  syncedAt: Date | string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type GitCheckSuiteCreateOrConnectWithoutRepositoryInput = {
+  where: Prisma.GitCheckSuiteWhereUniqueInput
+  create: Prisma.XOR<Prisma.GitCheckSuiteCreateWithoutRepositoryInput, Prisma.GitCheckSuiteUncheckedCreateWithoutRepositoryInput>
+}
+
+export type GitCheckSuiteCreateManyRepositoryInputEnvelope = {
+  data: Prisma.GitCheckSuiteCreateManyRepositoryInput | Prisma.GitCheckSuiteCreateManyRepositoryInput[]
+  skipDuplicates?: boolean
+}
+
+export type GitCheckSuiteUpsertWithWhereUniqueWithoutRepositoryInput = {
+  where: Prisma.GitCheckSuiteWhereUniqueInput
+  update: Prisma.XOR<Prisma.GitCheckSuiteUpdateWithoutRepositoryInput, Prisma.GitCheckSuiteUncheckedUpdateWithoutRepositoryInput>
+  create: Prisma.XOR<Prisma.GitCheckSuiteCreateWithoutRepositoryInput, Prisma.GitCheckSuiteUncheckedCreateWithoutRepositoryInput>
+}
+
+export type GitCheckSuiteUpdateWithWhereUniqueWithoutRepositoryInput = {
+  where: Prisma.GitCheckSuiteWhereUniqueInput
+  data: Prisma.XOR<Prisma.GitCheckSuiteUpdateWithoutRepositoryInput, Prisma.GitCheckSuiteUncheckedUpdateWithoutRepositoryInput>
+}
+
+export type GitCheckSuiteUpdateManyWithWhereWithoutRepositoryInput = {
+  where: Prisma.GitCheckSuiteScalarWhereInput
+  data: Prisma.XOR<Prisma.GitCheckSuiteUpdateManyMutationInput, Prisma.GitCheckSuiteUncheckedUpdateManyWithoutRepositoryInput>
+}
+
+export type GitCheckSuiteScalarWhereInput = {
+  AND?: Prisma.GitCheckSuiteScalarWhereInput | Prisma.GitCheckSuiteScalarWhereInput[]
+  OR?: Prisma.GitCheckSuiteScalarWhereInput[]
+  NOT?: Prisma.GitCheckSuiteScalarWhereInput | Prisma.GitCheckSuiteScalarWhereInput[]
+  id?: Prisma.StringFilter<"GitCheckSuite"> | string
+  provider?: Prisma.EnumGitProviderFilter<"GitCheckSuite"> | $Enums.GitProvider
+  baseUrl?: Prisma.StringFilter<"GitCheckSuite"> | string
+  repo?: Prisma.StringFilter<"GitCheckSuite"> | string
+  suiteId?: Prisma.StringFilter<"GitCheckSuite"> | string
+  repositoryId?: Prisma.StringFilter<"GitCheckSuite"> | string
+  headSha?: Prisma.StringFilter<"GitCheckSuite"> | string
+  appName?: Prisma.StringFilter<"GitCheckSuite"> | string
+  status?: Prisma.StringFilter<"GitCheckSuite"> | string
+  conclusion?: Prisma.StringNullableFilter<"GitCheckSuite"> | string | null
+  syncedAt?: Prisma.DateTimeFilter<"GitCheckSuite"> | Date | string
+  createdAt?: Prisma.DateTimeFilter<"GitCheckSuite"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"GitCheckSuite"> | Date | string
+}
+
+export type GitCheckSuiteCreateManyRepositoryInput = {
+  id?: string
+  provider?: $Enums.GitProvider
+  baseUrl?: string
+  repo: string
+  suiteId: string
+  headSha: string
+  appName: string
+  status: string
+  conclusion?: string | null
+  syncedAt: Date | string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type GitCheckSuiteUpdateWithoutRepositoryInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  repo?: Prisma.StringFieldUpdateOperationsInput | string
+  suiteId?: Prisma.StringFieldUpdateOperationsInput | string
+  headSha?: Prisma.StringFieldUpdateOperationsInput | string
+  appName?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  conclusion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  syncedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type GitCheckSuiteUncheckedUpdateWithoutRepositoryInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  repo?: Prisma.StringFieldUpdateOperationsInput | string
+  suiteId?: Prisma.StringFieldUpdateOperationsInput | string
+  headSha?: Prisma.StringFieldUpdateOperationsInput | string
+  appName?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  conclusion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  syncedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type GitCheckSuiteUncheckedUpdateManyWithoutRepositoryInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  repo?: Prisma.StringFieldUpdateOperationsInput | string
+  suiteId?: Prisma.StringFieldUpdateOperationsInput | string
+  headSha?: Prisma.StringFieldUpdateOperationsInput | string
+  appName?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  conclusion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  syncedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
 
 
 export type GitCheckSuiteSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -507,6 +696,7 @@ export type GitCheckSuiteSelect<ExtArgs extends runtime.Types.Extensions.Interna
   syncedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  repository?: boolean | Prisma.BoardRepositoryDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["gitCheckSuite"]>
 
 export type GitCheckSuiteSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -523,6 +713,7 @@ export type GitCheckSuiteSelectCreateManyAndReturn<ExtArgs extends runtime.Types
   syncedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  repository?: boolean | Prisma.BoardRepositoryDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["gitCheckSuite"]>
 
 export type GitCheckSuiteSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -539,6 +730,7 @@ export type GitCheckSuiteSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
   syncedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  repository?: boolean | Prisma.BoardRepositoryDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["gitCheckSuite"]>
 
 export type GitCheckSuiteSelectScalar = {
@@ -558,10 +750,21 @@ export type GitCheckSuiteSelectScalar = {
 }
 
 export type GitCheckSuiteOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "provider" | "baseUrl" | "repo" | "suiteId" | "repositoryId" | "headSha" | "appName" | "status" | "conclusion" | "syncedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["gitCheckSuite"]>
+export type GitCheckSuiteInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  repository?: boolean | Prisma.BoardRepositoryDefaultArgs<ExtArgs>
+}
+export type GitCheckSuiteIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  repository?: boolean | Prisma.BoardRepositoryDefaultArgs<ExtArgs>
+}
+export type GitCheckSuiteIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  repository?: boolean | Prisma.BoardRepositoryDefaultArgs<ExtArgs>
+}
 
 export type $GitCheckSuitePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "GitCheckSuite"
-  objects: {}
+  objects: {
+    repository: Prisma.$BoardRepositoryPayload<ExtArgs>
+  }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     provider: $Enums.GitProvider
@@ -578,9 +781,8 @@ export type $GitCheckSuitePayload<ExtArgs extends runtime.Types.Extensions.Inter
      */
     suiteId: string
     /**
-     * 受け取った対応付け(BoardRepository.id)。空文字は対応付けごとのシークレットにする前の GitHub の行。
-     * シークレットは対応付けごとにボードの管理者が持つため、別のボードの対応付けを経由して
-     * 届いた CI の状態を混ぜないよう、表示時にこのボードの対応付けのものだけを使う
+     * 受け取った対応付け。シークレットは対応付けごとにボードの管理者が持つため、別のボードの対応付けを
+     * 経由して届いた CI の状態を混ぜないよう、表示時にこのボードの対応付けのものだけを使う
      */
     repositoryId: string
     headSha: string
@@ -997,6 +1199,7 @@ readonly fields: GitCheckSuiteFieldRefs;
  */
 export interface Prisma__GitCheckSuiteClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  repository<T extends Prisma.BoardRepositoryDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.BoardRepositoryDefaultArgs<ExtArgs>>): Prisma.Prisma__BoardRepositoryClient<runtime.Types.Result.GetResult<Prisma.$BoardRepositoryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1056,6 +1259,10 @@ export type GitCheckSuiteFindUniqueArgs<ExtArgs extends runtime.Types.Extensions
    */
   omit?: Prisma.GitCheckSuiteOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GitCheckSuiteInclude<ExtArgs> | null
+  /**
    * Filter, which GitCheckSuite to fetch.
    */
   where: Prisma.GitCheckSuiteWhereUniqueInput
@@ -1074,6 +1281,10 @@ export type GitCheckSuiteFindUniqueOrThrowArgs<ExtArgs extends runtime.Types.Ext
    */
   omit?: Prisma.GitCheckSuiteOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GitCheckSuiteInclude<ExtArgs> | null
+  /**
    * Filter, which GitCheckSuite to fetch.
    */
   where: Prisma.GitCheckSuiteWhereUniqueInput
@@ -1091,6 +1302,10 @@ export type GitCheckSuiteFindFirstArgs<ExtArgs extends runtime.Types.Extensions.
    * Omit specific fields from the GitCheckSuite
    */
   omit?: Prisma.GitCheckSuiteOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GitCheckSuiteInclude<ExtArgs> | null
   /**
    * Filter, which GitCheckSuite to fetch.
    */
@@ -1140,6 +1355,10 @@ export type GitCheckSuiteFindFirstOrThrowArgs<ExtArgs extends runtime.Types.Exte
    */
   omit?: Prisma.GitCheckSuiteOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GitCheckSuiteInclude<ExtArgs> | null
+  /**
    * Filter, which GitCheckSuite to fetch.
    */
   where?: Prisma.GitCheckSuiteWhereInput
@@ -1187,6 +1406,10 @@ export type GitCheckSuiteFindManyArgs<ExtArgs extends runtime.Types.Extensions.I
    * Omit specific fields from the GitCheckSuite
    */
   omit?: Prisma.GitCheckSuiteOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GitCheckSuiteInclude<ExtArgs> | null
   /**
    * Filter, which GitCheckSuites to fetch.
    */
@@ -1236,6 +1459,10 @@ export type GitCheckSuiteCreateArgs<ExtArgs extends runtime.Types.Extensions.Int
    */
   omit?: Prisma.GitCheckSuiteOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GitCheckSuiteInclude<ExtArgs> | null
+  /**
    * The data needed to create a GitCheckSuite.
    */
   data: Prisma.XOR<Prisma.GitCheckSuiteCreateInput, Prisma.GitCheckSuiteUncheckedCreateInput>
@@ -1269,6 +1496,10 @@ export type GitCheckSuiteCreateManyAndReturnArgs<ExtArgs extends runtime.Types.E
    */
   data: Prisma.GitCheckSuiteCreateManyInput | Prisma.GitCheckSuiteCreateManyInput[]
   skipDuplicates?: boolean
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GitCheckSuiteIncludeCreateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -1283,6 +1514,10 @@ export type GitCheckSuiteUpdateArgs<ExtArgs extends runtime.Types.Extensions.Int
    * Omit specific fields from the GitCheckSuite
    */
   omit?: Prisma.GitCheckSuiteOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GitCheckSuiteInclude<ExtArgs> | null
   /**
    * The data needed to update a GitCheckSuite.
    */
@@ -1335,6 +1570,10 @@ export type GitCheckSuiteUpdateManyAndReturnArgs<ExtArgs extends runtime.Types.E
    * Limit how many GitCheckSuites to update.
    */
   limit?: number
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GitCheckSuiteIncludeUpdateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -1349,6 +1588,10 @@ export type GitCheckSuiteUpsertArgs<ExtArgs extends runtime.Types.Extensions.Int
    * Omit specific fields from the GitCheckSuite
    */
   omit?: Prisma.GitCheckSuiteOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GitCheckSuiteInclude<ExtArgs> | null
   /**
    * The filter to search for the GitCheckSuite to update in case it exists.
    */
@@ -1375,6 +1618,10 @@ export type GitCheckSuiteDeleteArgs<ExtArgs extends runtime.Types.Extensions.Int
    * Omit specific fields from the GitCheckSuite
    */
   omit?: Prisma.GitCheckSuiteOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GitCheckSuiteInclude<ExtArgs> | null
   /**
    * Filter which GitCheckSuite to delete.
    */
@@ -1407,4 +1654,8 @@ export type GitCheckSuiteDefaultArgs<ExtArgs extends runtime.Types.Extensions.In
    * Omit specific fields from the GitCheckSuite
    */
   omit?: Prisma.GitCheckSuiteOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GitCheckSuiteInclude<ExtArgs> | null
 }

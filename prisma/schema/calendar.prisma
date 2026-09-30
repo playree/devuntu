@@ -16,7 +16,6 @@ model CalendarShare {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([publicId])
   @@map("calendar_share")
 }
 

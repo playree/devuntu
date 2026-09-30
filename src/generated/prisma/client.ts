@@ -157,6 +157,7 @@ export type BoardMember = Prisma.BoardMemberModel
 /**
  * Model BoardGroup
  * {@link BoardMember} のグループ指定版。グループの所属ユーザーがボードの参加者になる。
+ * ロールは持たず、常に member 相当。
  */
 export type BoardGroup = Prisma.BoardGroupModel
 /**
