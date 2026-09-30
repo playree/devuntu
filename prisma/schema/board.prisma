@@ -66,8 +66,6 @@ model Board {
   /// アーカイブ済み。一覧の既定の表示からは外れる
   archived Boolean @default(false)
 
-  /// エージェントの実行結果を通知する Slack チャンネル(`C...`)。null なら通知しない。
-
   // メタデータ
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -213,6 +211,7 @@ model BoardMember {
 }
 
 /// {@link BoardMember} のグループ指定版。グループの所属ユーザーがボードの参加者になる。
+/// ロールは持たず、常に member 相当。
 model BoardGroup {
   id String @id @default(uuid(7))
 
@@ -224,7 +223,7 @@ model BoardGroup {
   groupId String
   group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
-  /// ボード内での権限
+  // メタデータ
   createdAt DateTime @default(now())
 
   @@unique([boardId, groupId])

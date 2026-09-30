@@ -113,27 +113,18 @@ describe('listTicketLinks', () => {
           },
         ]),
       },
-      boardRepository: { findMany: vi.fn(async () => [{ id: 'r1' }, { id: 'r2' }]) },
       gitCheckSuite: { findMany: vi.fn(async () => []) },
     }
 
     await listTicketLinks('t1', db as never)
 
-    expect(db.boardRepository.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { board: { tickets: { some: { id: 't1' } } } } }),
-    )
     expect(db.gitCheckSuite.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
+          repository: { board: { tickets: { some: { id: 't1' } } } },
           OR: [
-            { provider: 'github', baseUrl: '', repo: 'o/r', headSha: 'aaa', repositoryId: { in: ['r1', 'r2'] } },
-            {
-              provider: 'gitlab',
-              baseUrl: 'https://gitlab.com',
-              repo: 'g/p',
-              headSha: 'bbb',
-              repositoryId: { in: ['r1', 'r2'] },
-            },
+            { provider: 'github', baseUrl: '', repo: 'o/r', headSha: 'aaa' },
+            { provider: 'gitlab', baseUrl: 'https://gitlab.com', repo: 'g/p', headSha: 'bbb' },
           ],
         },
       }),

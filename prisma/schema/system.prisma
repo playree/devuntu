@@ -62,12 +62,12 @@ model Attachment {
 
   /// アップロードしたユーザー。ユーザー削除時は SetNull でファイルの記録だけ残す
   createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id], onDelete: SetNull)
 
   // NOTE: 本文からの参照は外部キーではなく Markdown 中のURLなので、参照が外れても行は残る。
   // どこからも参照されない行は猶予を置いて `maintenance-attachment.ts` が実体ごと消す
 
   // メタデータ
-  createdBy User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
   createdAt DateTime @default(now())
 
   @@index([boardId])

@@ -44,31 +44,13 @@ export const listTicketLinks = async (ticketId: string, db: Db = prisma) => {
     orderBy: { createdAt: 'asc' },
   })
 
-  const repositoryIds = links.some(({ headSha }) => headSha)
-    ? (
-        await db.boardRepository.findMany({
-          where: { board: { tickets: { some: { id: ticketId } } } },
-          select: { id: true },
-        })
-      ).map(({ id }) => id)
-    : []
   const targets = links.flatMap(({ provider, baseUrl, repo, headSha }) =>
-    headSha
-      ? [
-          {
-            provider,
-            baseUrl,
-            repo,
-            headSha,
-            repositoryId: { in: repositoryIds },
-          },
-        ]
-      : [],
+    headSha ? [{ provider, baseUrl, repo, headSha }] : [],
   )
   const suites =
     targets.length > 0
       ? await db.gitCheckSuite.findMany({
-          where: { OR: targets },
+          where: { repository: { board: { tickets: { some: { id: ticketId } } } }, OR: targets },
           select: { provider: true, baseUrl: true, repo: true, headSha: true, status: true, conclusion: true },
         })
       : []

@@ -117,6 +117,8 @@ model BoardRepository {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  checkSuites GitCheckSuite[]
+
   @@unique([boardId, provider, baseUrl, repo])
   @@index([provider, baseUrl, repo])
   @@map("board_repository")
@@ -165,10 +167,10 @@ model GitCheckSuite {
   /// GitHub の check_suite.id / GitLab の pipeline.id
   suiteId String
 
-  /// 受け取った対応付け(BoardRepository.id)。空文字は対応付けごとのシークレットにする前の GitHub の行。
-  /// シークレットは対応付けごとにボードの管理者が持つため、別のボードの対応付けを経由して
-  /// 届いた CI の状態を混ぜないよう、表示時にこのボードの対応付けのものだけを使う
-  repositoryId String @default("")
+  /// 受け取った対応付け。シークレットは対応付けごとにボードの管理者が持つため、別のボードの対応付けを
+  /// 経由して届いた CI の状態を混ぜないよう、表示時にこのボードの対応付けのものだけを使う
+  repositoryId String
+  repository   BoardRepository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
 
   headSha String
 
@@ -191,6 +193,8 @@ model GitCheckSuite {
 
   @@unique([provider, baseUrl, repo, suiteId, repositoryId])
   @@index([provider, baseUrl, repo, headSha])
+  // 対応付けの削除で連鎖削除する行を引く
+  @@index([repositoryId])
   // 古い行の掃除(maintenance-sweep.ts)
   @@index([updatedAt])
   @@map("git_check_suite")

@@ -142,8 +142,8 @@ model UserGroup {
   // メタデータ
   createdAt DateTime @default(now())
 
+  // @@unique が (userId, ...) の先頭索引を兼ねるため @@index([userId]) は不要
   @@unique([userId, groupId])
-  @@index([userId])
   @@index([groupId])
   @@map("user_group")
 }

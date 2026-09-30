@@ -475,6 +475,8 @@ DB と S3 を順に取得する間に添付が消えると、復元後にその�
 | `git_check_suite`        | 更新が保持期間より古い(GitHub / GitLab 連携の CI 結果。マージ済み・放置された PR のもの) | 90日       |
 | `attachment` + 実体      | どの本文からも参照されていない                                                           | 既定24時間 |
 
+`git_check_suite` は、ボードからリポジトリの対応付けを外したときにも、その対応付けで受け取った行がまとめて消える。
+
 実行履歴の保持期間と残す件数は環境変数で変えられる(`AGENT_RUN_RETENTION_DAYS` / `AGENT_RUN_KEEP` と
 `COMMAND_RUN_RETENTION_DAYS` / `COMMAND_RUN_KEEP`、既定は 90日 / 500件 / 90日 / 300件。
 [環境変数](./environment-variables.md#メンテナンス)と[リモート実行](./environment-variables.md#リモート実行)を参照)。

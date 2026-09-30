@@ -223,6 +223,7 @@ export type BoardRepositoryWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"BoardRepository"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"BoardRepository"> | Date | string
   board?: Prisma.XOR<Prisma.BoardScalarRelationFilter, Prisma.BoardWhereInput>
+  checkSuites?: Prisma.GitCheckSuiteListRelationFilter
 }
 
 export type BoardRepositoryOrderByWithRelationInput = {
@@ -237,6 +238,7 @@ export type BoardRepositoryOrderByWithRelationInput = {
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   board?: Prisma.BoardOrderByWithRelationInput
+  checkSuites?: Prisma.GitCheckSuiteOrderByRelationAggregateInput
 }
 
 export type BoardRepositoryWhereUniqueInput = Prisma.AtLeast<{
@@ -255,6 +257,7 @@ export type BoardRepositoryWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"BoardRepository"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"BoardRepository"> | Date | string
   board?: Prisma.XOR<Prisma.BoardScalarRelationFilter, Prisma.BoardWhereInput>
+  checkSuites?: Prisma.GitCheckSuiteListRelationFilter
 }, "id" | "boardId_provider_baseUrl_repo">
 
 export type BoardRepositoryOrderByWithAggregationInput = {
@@ -300,6 +303,7 @@ export type BoardRepositoryCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   board: Prisma.BoardCreateNestedOneWithoutRepositoriesInput
+  checkSuites?: Prisma.GitCheckSuiteCreateNestedManyWithoutRepositoryInput
 }
 
 export type BoardRepositoryUncheckedCreateInput = {
@@ -313,6 +317,7 @@ export type BoardRepositoryUncheckedCreateInput = {
   lastReceivedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  checkSuites?: Prisma.GitCheckSuiteUncheckedCreateNestedManyWithoutRepositoryInput
 }
 
 export type BoardRepositoryUpdateInput = {
@@ -326,6 +331,7 @@ export type BoardRepositoryUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   board?: Prisma.BoardUpdateOneRequiredWithoutRepositoriesNestedInput
+  checkSuites?: Prisma.GitCheckSuiteUpdateManyWithoutRepositoryNestedInput
 }
 
 export type BoardRepositoryUncheckedUpdateInput = {
@@ -339,6 +345,7 @@ export type BoardRepositoryUncheckedUpdateInput = {
   lastReceivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  checkSuites?: Prisma.GitCheckSuiteUncheckedUpdateManyWithoutRepositoryNestedInput
 }
 
 export type BoardRepositoryCreateManyInput = {
@@ -435,6 +442,11 @@ export type BoardRepositoryMinOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
 }
 
+export type BoardRepositoryScalarRelationFilter = {
+  is?: Prisma.BoardRepositoryWhereInput
+  isNot?: Prisma.BoardRepositoryWhereInput
+}
+
 export type BoardRepositoryCreateNestedManyWithoutBoardInput = {
   create?: Prisma.XOR<Prisma.BoardRepositoryCreateWithoutBoardInput, Prisma.BoardRepositoryUncheckedCreateWithoutBoardInput> | Prisma.BoardRepositoryCreateWithoutBoardInput[] | Prisma.BoardRepositoryUncheckedCreateWithoutBoardInput[]
   connectOrCreate?: Prisma.BoardRepositoryCreateOrConnectWithoutBoardInput | Prisma.BoardRepositoryCreateOrConnectWithoutBoardInput[]
@@ -481,6 +493,20 @@ export type NullableEnumGitWebhookAuthFieldUpdateOperationsInput = {
   set?: $Enums.GitWebhookAuth | null
 }
 
+export type BoardRepositoryCreateNestedOneWithoutCheckSuitesInput = {
+  create?: Prisma.XOR<Prisma.BoardRepositoryCreateWithoutCheckSuitesInput, Prisma.BoardRepositoryUncheckedCreateWithoutCheckSuitesInput>
+  connectOrCreate?: Prisma.BoardRepositoryCreateOrConnectWithoutCheckSuitesInput
+  connect?: Prisma.BoardRepositoryWhereUniqueInput
+}
+
+export type BoardRepositoryUpdateOneRequiredWithoutCheckSuitesNestedInput = {
+  create?: Prisma.XOR<Prisma.BoardRepositoryCreateWithoutCheckSuitesInput, Prisma.BoardRepositoryUncheckedCreateWithoutCheckSuitesInput>
+  connectOrCreate?: Prisma.BoardRepositoryCreateOrConnectWithoutCheckSuitesInput
+  upsert?: Prisma.BoardRepositoryUpsertWithoutCheckSuitesInput
+  connect?: Prisma.BoardRepositoryWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.BoardRepositoryUpdateToOneWithWhereWithoutCheckSuitesInput, Prisma.BoardRepositoryUpdateWithoutCheckSuitesInput>, Prisma.BoardRepositoryUncheckedUpdateWithoutCheckSuitesInput>
+}
+
 export type BoardRepositoryCreateWithoutBoardInput = {
   id?: string
   provider?: $Enums.GitProvider
@@ -491,6 +517,7 @@ export type BoardRepositoryCreateWithoutBoardInput = {
   lastReceivedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  checkSuites?: Prisma.GitCheckSuiteCreateNestedManyWithoutRepositoryInput
 }
 
 export type BoardRepositoryUncheckedCreateWithoutBoardInput = {
@@ -503,6 +530,7 @@ export type BoardRepositoryUncheckedCreateWithoutBoardInput = {
   lastReceivedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  checkSuites?: Prisma.GitCheckSuiteUncheckedCreateNestedManyWithoutRepositoryInput
 }
 
 export type BoardRepositoryCreateOrConnectWithoutBoardInput = {
@@ -547,6 +575,74 @@ export type BoardRepositoryScalarWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"BoardRepository"> | Date | string
 }
 
+export type BoardRepositoryCreateWithoutCheckSuitesInput = {
+  id?: string
+  provider?: $Enums.GitProvider
+  baseUrl?: string
+  repo: string
+  webhookAuth?: $Enums.GitWebhookAuth | null
+  webhookSecret?: string | null
+  lastReceivedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  board: Prisma.BoardCreateNestedOneWithoutRepositoriesInput
+}
+
+export type BoardRepositoryUncheckedCreateWithoutCheckSuitesInput = {
+  id?: string
+  boardId: string
+  provider?: $Enums.GitProvider
+  baseUrl?: string
+  repo: string
+  webhookAuth?: $Enums.GitWebhookAuth | null
+  webhookSecret?: string | null
+  lastReceivedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type BoardRepositoryCreateOrConnectWithoutCheckSuitesInput = {
+  where: Prisma.BoardRepositoryWhereUniqueInput
+  create: Prisma.XOR<Prisma.BoardRepositoryCreateWithoutCheckSuitesInput, Prisma.BoardRepositoryUncheckedCreateWithoutCheckSuitesInput>
+}
+
+export type BoardRepositoryUpsertWithoutCheckSuitesInput = {
+  update: Prisma.XOR<Prisma.BoardRepositoryUpdateWithoutCheckSuitesInput, Prisma.BoardRepositoryUncheckedUpdateWithoutCheckSuitesInput>
+  create: Prisma.XOR<Prisma.BoardRepositoryCreateWithoutCheckSuitesInput, Prisma.BoardRepositoryUncheckedCreateWithoutCheckSuitesInput>
+  where?: Prisma.BoardRepositoryWhereInput
+}
+
+export type BoardRepositoryUpdateToOneWithWhereWithoutCheckSuitesInput = {
+  where?: Prisma.BoardRepositoryWhereInput
+  data: Prisma.XOR<Prisma.BoardRepositoryUpdateWithoutCheckSuitesInput, Prisma.BoardRepositoryUncheckedUpdateWithoutCheckSuitesInput>
+}
+
+export type BoardRepositoryUpdateWithoutCheckSuitesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  repo?: Prisma.StringFieldUpdateOperationsInput | string
+  webhookAuth?: Prisma.NullableEnumGitWebhookAuthFieldUpdateOperationsInput | $Enums.GitWebhookAuth | null
+  webhookSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastReceivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  board?: Prisma.BoardUpdateOneRequiredWithoutRepositoriesNestedInput
+}
+
+export type BoardRepositoryUncheckedUpdateWithoutCheckSuitesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  boardId?: Prisma.StringFieldUpdateOperationsInput | string
+  provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
+  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  repo?: Prisma.StringFieldUpdateOperationsInput | string
+  webhookAuth?: Prisma.NullableEnumGitWebhookAuthFieldUpdateOperationsInput | $Enums.GitWebhookAuth | null
+  webhookSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastReceivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
 export type BoardRepositoryCreateManyBoardInput = {
   id?: string
   provider?: $Enums.GitProvider
@@ -569,6 +665,7 @@ export type BoardRepositoryUpdateWithoutBoardInput = {
   lastReceivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  checkSuites?: Prisma.GitCheckSuiteUpdateManyWithoutRepositoryNestedInput
 }
 
 export type BoardRepositoryUncheckedUpdateWithoutBoardInput = {
@@ -581,6 +678,7 @@ export type BoardRepositoryUncheckedUpdateWithoutBoardInput = {
   lastReceivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  checkSuites?: Prisma.GitCheckSuiteUncheckedUpdateManyWithoutRepositoryNestedInput
 }
 
 export type BoardRepositoryUncheckedUpdateManyWithoutBoardInput = {
@@ -596,6 +694,35 @@ export type BoardRepositoryUncheckedUpdateManyWithoutBoardInput = {
 }
 
 
+/**
+ * Count Type BoardRepositoryCountOutputType
+ */
+
+export type BoardRepositoryCountOutputType = {
+  checkSuites: number
+}
+
+export type BoardRepositoryCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  checkSuites?: boolean | BoardRepositoryCountOutputTypeCountCheckSuitesArgs
+}
+
+/**
+ * BoardRepositoryCountOutputType without action
+ */
+export type BoardRepositoryCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the BoardRepositoryCountOutputType
+   */
+  select?: Prisma.BoardRepositoryCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * BoardRepositoryCountOutputType without action
+ */
+export type BoardRepositoryCountOutputTypeCountCheckSuitesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.GitCheckSuiteWhereInput
+}
+
 
 export type BoardRepositorySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -609,6 +736,8 @@ export type BoardRepositorySelect<ExtArgs extends runtime.Types.Extensions.Inter
   createdAt?: boolean
   updatedAt?: boolean
   board?: boolean | Prisma.BoardDefaultArgs<ExtArgs>
+  checkSuites?: boolean | Prisma.BoardRepository$checkSuitesArgs<ExtArgs>
+  _count?: boolean | Prisma.BoardRepositoryCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["boardRepository"]>
 
 export type BoardRepositorySelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -655,6 +784,8 @@ export type BoardRepositorySelectScalar = {
 export type BoardRepositoryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "boardId" | "provider" | "baseUrl" | "repo" | "webhookAuth" | "webhookSecret" | "lastReceivedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["boardRepository"]>
 export type BoardRepositoryInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   board?: boolean | Prisma.BoardDefaultArgs<ExtArgs>
+  checkSuites?: boolean | Prisma.BoardRepository$checkSuitesArgs<ExtArgs>
+  _count?: boolean | Prisma.BoardRepositoryCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type BoardRepositoryIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   board?: boolean | Prisma.BoardDefaultArgs<ExtArgs>
@@ -667,6 +798,7 @@ export type $BoardRepositoryPayload<ExtArgs extends runtime.Types.Extensions.Int
   name: "BoardRepository"
   objects: {
     board: Prisma.$BoardPayload<ExtArgs>
+    checkSuites: Prisma.$GitCheckSuitePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1089,6 +1221,7 @@ readonly fields: BoardRepositoryFieldRefs;
 export interface Prisma__BoardRepositoryClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   board<T extends Prisma.BoardDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.BoardDefaultArgs<ExtArgs>>): Prisma.Prisma__BoardClient<runtime.Types.Result.GetResult<Prisma.$BoardPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  checkSuites<T extends Prisma.BoardRepository$checkSuitesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.BoardRepository$checkSuitesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$GitCheckSuitePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1526,6 +1659,30 @@ export type BoardRepositoryDeleteManyArgs<ExtArgs extends runtime.Types.Extensio
    * Limit how many BoardRepositories to delete.
    */
   limit?: number
+}
+
+/**
+ * BoardRepository.checkSuites
+ */
+export type BoardRepository$checkSuitesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the GitCheckSuite
+   */
+  select?: Prisma.GitCheckSuiteSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the GitCheckSuite
+   */
+  omit?: Prisma.GitCheckSuiteOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GitCheckSuiteInclude<ExtArgs> | null
+  where?: Prisma.GitCheckSuiteWhereInput
+  orderBy?: Prisma.GitCheckSuiteOrderByWithRelationInput | Prisma.GitCheckSuiteOrderByWithRelationInput[]
+  cursor?: Prisma.GitCheckSuiteWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.GitCheckSuiteScalarFieldEnum | Prisma.GitCheckSuiteScalarFieldEnum[]
 }
 
 /**

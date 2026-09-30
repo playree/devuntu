@@ -15,6 +15,7 @@ import type * as Prisma from "../internal/prismaNamespace"
 /**
  * Model BoardGroup
  * {@link BoardMember} のグループ指定版。グループの所属ユーザーがボードの参加者になる。
+ * ロールは持たず、常に member 相当。
  */
 export type BoardGroupModel = runtime.Types.Result.DefaultSelection<Prisma.$BoardGroupPayload>
 
@@ -587,9 +588,6 @@ export type $BoardGroupPayload<ExtArgs extends runtime.Types.Extensions.Internal
      * 参加するグループ。所属ユーザー全員がボードの参加者になる
      */
     groupId: string
-    /**
-     * ボード内での権限
-     */
     createdAt: Date
   }, ExtArgs["result"]["boardGroup"]>
   composites: {}
