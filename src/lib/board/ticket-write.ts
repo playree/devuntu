@@ -32,6 +32,14 @@ export const nextTicketNumber = async (tx: Prisma.TransactionClient, boardId: st
 }
 
 /**
+ * チケット行のロック。変更前の値(変更履歴・通知の before)を読む前に取り、同じチケットへの同時更新を直列にする。
+ * 取らないと、先行の更新がコミットする前の値を読んで「A → C」のように実際と違う履歴を残しうる
+ */
+export const lockTicketRow = async (tx: Prisma.TransactionClient, ticketId: string): Promise<void> => {
+  await tx.$queryRaw`SELECT "id" FROM "ticket" WHERE "id" = ${ticketId} FOR UPDATE`
+}
+
+/**
  * その添付が、指定チケット以外の本文から使われているかを調べる。
  *
  * 同じチケット(とそのコメント)からの参照は保存先ボードと同じボードなので、

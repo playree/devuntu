@@ -35,7 +35,13 @@ import { criteriaActivity, diffTicketSnapshot } from './ticket-activity-rule'
 import { syncTicketCriteria } from './ticket-criterion'
 import { ticketDisplayId } from './ticket-id'
 import { assignTicketParent, writeOwnChildOrder } from './ticket-relation'
-import { assertReplyTarget, moveTicketToLane, nextTicketNumber, reassignContentAttachments } from './ticket-write'
+import {
+  assertReplyTarget,
+  lockTicketRow,
+  moveTicketToLane,
+  nextTicketNumber,
+  reassignContentAttachments,
+} from './ticket-write'
 
 /** 経路固有の追加制限。`assertTicketAccess` を通った直後に同じトランザクション内で呼ぶ。NG なら throw する */
 export type TicketAuthorize = (access: TicketAccess) => void
@@ -183,6 +189,7 @@ export const updateTicket = async (
   const { assigneeId, tagIds, dueDate, status, criteria, parentId, childOrder, ...rest } = input
 
   return prisma.$transaction(async (tx) => {
+    await lockTicketRow(tx, id)
     const access = await assertTicketAccess(actor, id, 'edit', tx)
     opts?.authorize?.(access)
     // 通知の判断に使う変更前の状態。認可の問い合わせで既に読めているので追加の SELECT は要らない
@@ -310,6 +317,7 @@ export const deleteTicket = async (actor: Actor, id: string, opts?: { authorize?
  */
 export const changeTicketStatus = async (actor: Actor, id: string, status: TicketStatus, index?: number) =>
   prisma.$transaction(async (tx) => {
+    await lockTicketRow(tx, id)
     const access = await assertTicketAccess(actor, id, 'edit', tx)
     const lane = await moveTicketToLane(tx, { access, status, index, by: { actorId: actor.id } })
 
@@ -325,6 +333,7 @@ export const changeTicketStatus = async (actor: Actor, id: string, status: Ticke
  */
 export const completeTicketByMerge = async (ticketId: string, pullRequest: string): Promise<boolean> =>
   prisma.$transaction(async (tx) => {
+    await lockTicketRow(tx, ticketId)
     const ticket = await tx.ticket.findUnique({
       where: { id: ticketId },
       select: { id: true, boardId: true, status: true, board: { select: { archived: true } } },

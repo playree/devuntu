@@ -30,7 +30,12 @@ import {
   updateTicket,
   type UpdateTicketInput,
 } from '@/lib/board/ticket-mutation'
-import { assertReplyTarget, moveTicketToLane, reassignContentAttachments } from '@/lib/board/ticket-write'
+import {
+  assertReplyTarget,
+  lockTicketRow,
+  moveTicketToLane,
+  reassignContentAttachments,
+} from '@/lib/board/ticket-write'
 import { ClientError, errInvalidOperation } from '@/lib/error'
 import { resolveBoardId } from '@/lib/mcp/mcp-board'
 import {
@@ -87,6 +92,7 @@ vi.mock('@/lib/board/board-member', () => ({
 
 vi.mock('@/lib/board/ticket-write', () => ({
   assertReplyTarget: vi.fn(),
+  lockTicketRow: vi.fn(),
   moveTicketToLane: vi.fn(),
   nextTicketNumber: vi.fn(async () => 7),
   reassignContentAttachments: vi.fn(),
@@ -488,6 +494,18 @@ describe.each(routes)('updateTicket: %s', (_label, route) => {
     expect(reassignContentAttachments).toHaveBeenCalledWith(fakeTx, '本文', 'board-1', route.actor, TICKET_ID)
   })
 
+  it('変更前の値を読む前にチケット行をロックする', async () => {
+    await route.update(TICKET_ID, { title: '変更' })
+
+    expect(lockTicketRow).toHaveBeenCalledWith(fakeTx, TICKET_ID)
+    expect(vi.mocked(lockTicketRow).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(assertTicketAccess).mock.invocationCallOrder[0],
+    )
+    expect(vi.mocked(lockTicketRow).mock.invocationCallOrder[0]).toBeLessThan(
+      fakeTx.ticket.findUniqueOrThrow.mock.invocationCallOrder[0],
+    )
+  })
+
   it('値が変わった項目だけを変更者付きで履歴に残す', async () => {
     fakeTx.ticket.findUniqueOrThrow.mockResolvedValue(
       currentTicket({ assignee: { name: 'エージェント' }, tags: [{ tag: { name: '既存' } }] }),
@@ -875,6 +893,10 @@ describe('経路で共通化していない操作', () => {
     const actor = oauthAuth().user
 
     await changeTicketStatus(actor, TICKET_ID, 'done', 0)
+
+    expect(vi.mocked(lockTicketRow).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(assertTicketAccess).mock.invocationCallOrder[0],
+    )
 
     expect(assertTicketAccess).toHaveBeenCalledWith(actor, TICKET_ID, 'edit', fakeTx)
     expect(moveTicketToLane).toHaveBeenCalledWith(fakeTx, {

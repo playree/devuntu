@@ -197,6 +197,21 @@ describe('decideAgentComment', () => {
     )
   })
 
+  it('変更前のステータスはロック後に読み直した値を使う', async () => {
+    setup('done', 'report')
+    // ロック前の認可では todo と読めていたが、ロックを待つ間に doing へ変わった
+    vi.mocked(assertTicketAccess).mockResolvedValue({ ...access, status: 'todo' })
+
+    await decideAgentComment({ id: 'u1' }, { commentId: 'c1', decision: 'approved', content: '完了' })
+
+    expect(moveTicketToLane).toHaveBeenCalledWith(fakeTx, {
+      access: expect.objectContaining({ status: 'doing' }),
+      status: 'done',
+      by: { actorId: 'u1' },
+    })
+    expect(enqueueTicketMoved).toHaveBeenCalledWith(expect.objectContaining({ before: 'doing' }), fakeTx)
+  })
+
   it('報告の差し戻しで返信待ちへ戻し、revise で再開させる', async () => {
     setup('done', 'report')
 

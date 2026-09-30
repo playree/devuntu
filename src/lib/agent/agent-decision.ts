@@ -145,9 +145,14 @@ export const decideAgentComment = async (actor: Actor, input: DecideAgentComment
 
     if (pending.type === 'report') {
       if (input.decision === 'approved') {
-        const lane = await moveTicketToLane(tx, { access, status: 'done', by: { actorId: actor.id } })
+        // 変更前のステータスはロック後に読み直した値を使う(access はロック前に読んでいる)
+        const lane = await moveTicketToLane(tx, {
+          access: { ...access, status: ticket.status },
+          status: 'done',
+          by: { actorId: actor.id },
+        })
         await enqueueTicketMoved(
-          { actorId: actor.id, ticketId: target.ticketId, before: access.status, after: lane.status },
+          { actorId: actor.id, ticketId: target.ticketId, before: ticket.status, after: lane.status },
           tx,
         )
       } else {
