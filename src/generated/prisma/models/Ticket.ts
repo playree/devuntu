@@ -3171,7 +3171,7 @@ export type $TicketPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     agentMode: $Enums.AgentTaskMode | null
     agentState: $Enums.AgentTaskState | null
     /**
-     * CI 失敗・レビュー指摘による自動差し戻しの回数。ボードの上限(agentAutoReviseLimit)と比べる。担当が替わったら 0 に戻す
+     * CI 失敗・レビュー指摘による自動差し戻しの回数。きっかけの provider の上限(BoardGitSetting.autoReviseLimit)と比べる。担当が替わったら 0 に戻す
      */
     agentAutoReviseCount: number
     /**

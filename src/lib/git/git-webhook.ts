@@ -11,7 +11,13 @@ import { gitlabBaseUrls } from '../board/board-repository'
 import { completeTicketByMerge } from '../board/ticket-mutation'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
-import { extractDisplayIdFromBranch, isAllPullRequestsDone, pullRequestLabel } from './git'
+import {
+  type BoardGitSettingValue,
+  DEFAULT_BOARD_GIT_SETTING,
+  extractDisplayIdFromBranch,
+  isAllPullRequestsDone,
+  pullRequestLabel,
+} from './git'
 
 /** リポジトリの指定(provider + インスタンス + パス) */
 export type GitRepoKey = { provider: GitProvider; baseUrl: string; repo: string }
@@ -31,6 +37,29 @@ export type GitLinkedBoard = {
   /** CI の失敗・レビュー指摘でエージェントへ自動差し戻しするか */
   autoRevise: boolean
   autoReviseLimit: number
+}
+
+/** Webhook の受け口で対応付けのボードを引く select。設定は受けた provider の行だけに絞る */
+export const gitLinkedBoardSelect = (provider: GitProvider) => ({
+  id: true,
+  key: true,
+  gitSettings: {
+    where: { provider },
+    select: { completeOnMerge: true, autoRevise: true, autoReviseLimit: true },
+  },
+})
+
+/** {@link gitLinkedBoardSelect} で引いたボードを、イベントの対象の形にする。設定の行が無ければ既定値(すべてオフ) */
+export const toGitLinkedBoard = ({
+  gitSettings,
+  ...board
+}: {
+  id: string
+  key: string
+  gitSettings: BoardGitSettingValue[]
+}): GitLinkedBoard => {
+  const { completeOnMerge, autoRevise, autoReviseLimit } = gitSettings[0] ?? DEFAULT_BOARD_GIT_SETTING
+  return { ...board, completeOnPrMerge: completeOnMerge, autoRevise, autoReviseLimit }
 }
 
 /**

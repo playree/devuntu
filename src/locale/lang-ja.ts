@@ -104,7 +104,6 @@ export const ja: DefaultLocaleItems = {
   avatar: 'アバター',
   back: '戻る',
   board: 'ボード',
-  board_agent_auto_revise: 'エージェントの自動差し戻し',
   board_ai_context: 'AI向けコンテキスト',
   board_deleted: '削除済みのボード',
   board_github: 'GitHub連携',
@@ -325,6 +324,7 @@ export const ja: DefaultLocaleItems = {
   gitlab_signing_token: '署名トークン',
   gitlab_webhook_auth: '検証方式',
   git_webhook_url: 'Webhook URL',
+  git_webhook_steps: '登録手順',
   google_account: 'Googleアカウント',
   google_account_allowed_groups: '利用を許可するグループ',
   google_account_enable: 'Googleアカウント連携を有効化',
@@ -589,9 +589,7 @@ export const ja: DefaultLocaleItems = {
   msg_agent_mode_desc:
     'エージェントに任せる方式を選びます。プラン先行はプランを投稿して返信を待ち、自動実行はそのまま対応して報告します。変更できるのはこのエージェントの承認者だけです。',
   msg_agent_auto_revise_desc:
-    '紐付いたPR / MRのCIが失敗したとき、またはレビュー・コメント(CodeRabbitなどを含む)が付いたときに、報告済みのエージェント担当チケットを revise として処理し直させます。最後の指摘から2分待ってまとめて渡し、上限回数に達したらそれ以上は差し戻しません。GitHub / GitLab連携のWebhookが必要です。',
-  msg_agent_auto_revise_webhook:
-    'Webhookのイベントに、GitHubは Pull request reviews、GitLabは Comments も追加してください。',
+    '紐付いたPR / MRのCIが失敗したとき、またはレビュー・コメント(CodeRabbitなどを含む)が付いたときに、報告済みのエージェント担当チケットを revise として処理し直させます。最後の指摘から2分待ってまとめて渡し、上限回数(回数は GitHub / GitLab で共通)に達したらそれ以上は差し戻しません。',
   msg_agent_custom_instruction_desc:
     'エージェントが作業前に読み、処理全体を通じて従う指示(Markdown)です。空欄は指示なしとして扱われます。',
   msg_agent_no_approver: '承認者が未設定です。このエージェントのチケットは誰もエージェントモードを変更できません。',
@@ -614,26 +612,30 @@ export const ja: DefaultLocaleItems = {
   msg_board_git_desc:
     '対応付けたリポジトリでは、ブランチ名の先頭の表示ID(例: feature/KEY-12)からプルリクエスト / マージリクエストをチケットに自動で紐付けます。',
   msg_board_gitlab_desc:
-    'GitLabのプロジェクトの Settings → Webhooks で、プロジェクトごとに表示される Webhook URL を登録します。\nTrigger は Merge request events / Pipeline events を選びます。GitLab 19.0 以降は署名トークン、それより前のバージョンはシークレットトークンで検証します。',
-  msg_gitlab_signing_token_desc:
-    'GitLab の Webhook の画面で「Generate signing token」を押し、表示された whsec_ で始まるトークンを貼り付けます。トークンは GitLab でも一度しか表示されません。',
-  msg_gitlab_secret_token_desc:
-    'このトークンを GitLab の Webhook の Secret token に貼り付けます。GitLab 19.0 以降なら、より安全な署名トークンの利用をおすすめします。',
+    'プロジェクトを追加すると、Webhook URL と、GitLab 側での Webhook の登録手順が表示されます。\nGitLab 19.0 以降は署名トークン、それより前のバージョンはシークレットトークンで検証します。',
+  msg_gitlab_secret_token_desc: 'GitLab 19.0 以降なら、より安全な署名トークンの利用をおすすめします。',
   msg_gitlab_regenerate_confirm:
     'トークンを作り直すと、今のトークンは使えなくなります。GitLab 側の Secret token も入れ直してください。',
   msg_gitlab_secret_unset: 'トークンを設定するまで、このプロジェクトの Webhook は受け付けません。',
+  msg_gitlab_signing_webhook_steps:
+    'プロジェクトの Settings → Webhooks で「Add new webhook」を押します(トークンの設定し直しの場合は登録済みの Webhook を編集します)\nURL に上の Webhook URL を貼り付けます\nTrigger で Merge request events / Pipeline events を選びます(自動差し戻しを使う場合は Comments も)\n「Generate signing token」を押し、表示された whsec_ で始まるトークンを下の欄に貼り付けます(GitLab でも一度しか表示されません)\nGitLab 側で Webhook を保存し、ここで「保存」を押します',
+  msg_gitlab_token_webhook_steps:
+    'プロジェクトの Settings → Webhooks で「Add new webhook」を押します(作り直しの場合は登録済みの Webhook を編集します)\nURL に上の Webhook URL を貼り付けます\nSecret token に上のシークレットトークンを貼り付けます\nTrigger で Merge request events / Pipeline events を選びます(自動差し戻しを使う場合は Comments も)\n「Add webhook」で保存します。届くと一覧の最終受信が更新されます',
   msg_git_provider_disabled:
     'この環境では連携が無効になっています(Webhook を受け付けません)。残っている対応付けは外せます。',
   msg_gitlab_already_added:
     '既に対応付けているプロジェクトです。検証方式の切り替えやトークンの作り直しは一覧から行えます。',
+  msg_gitlab_auto_revise_webhook: 'GitLab の Webhook の Trigger に Comments も追加してください。',
   msg_board_github_desc:
-    'GitHub のリポジトリの Settings → Webhooks で、リポジトリごとに表示される Webhook URL を Payload URL に登録します。\nContent type は application/json、Secret は対応付けたときに表示されるシークレットにし、イベントは Pull requests / Check suites / Check runs を選びます。',
+    'リポジトリを追加すると、Webhook URL・シークレットと、GitHub 側での Webhook の登録手順が表示されます。',
   msg_github_already_added: '既に対応付けているリポジトリです。シークレットの作り直しは一覧から行えます。',
+  msg_github_auto_revise_webhook: 'GitHub の Webhook のイベントに Pull request reviews も追加してください。',
   msg_github_regenerate_confirm:
     'シークレットを作り直すと、今のシークレットは使えなくなります。GitHub 側の Webhook の Secret も入れ直してください。',
-  msg_github_secret_desc: 'このシークレットを GitHub の Webhook の Secret に貼り付けます。',
   msg_github_secret_unset:
     'シークレットを発行するまで、このリポジトリの Webhook は受け付けません。「シークレットを再発行」で発行し、GitHub 側の Webhook の URL と Secret を登録し直してください。',
+  msg_github_webhook_steps:
+    'リポジトリの Settings → Webhooks で「Add webhook」を押します(再発行の場合は登録済みの Webhook を編集します)\nPayload URL に上の Webhook URL を貼り付けます\nContent type は application/json を選びます\nSecret に上の Webhook シークレットを貼り付けます\n「Let me select individual events」で Pull requests / Check suites / Check runs を選びます(自動差し戻しを使う場合は Pull request reviews も)\n「Add webhook」で保存します。届くと一覧の最終受信が更新されます',
   msg_git_complete_on_pr_merge:
     '紐付いたプルリクエスト / マージリクエストがすべてマージまたはクローズされ、1件以上マージされたときに完了にします。',
   msg_calendar_share_desc:

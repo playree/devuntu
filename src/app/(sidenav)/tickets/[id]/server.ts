@@ -61,7 +61,14 @@ export const getTicket = safeAuthAction
         id: true,
         number: true,
         boardId: true,
-        board: { select: { name: true, kind: true, key: true, agentAutoRevise: true, agentAutoReviseLimit: true } },
+        board: {
+          select: {
+            name: true,
+            kind: true,
+            key: true,
+            gitSettings: { where: { autoRevise: true }, select: { autoReviseLimit: true } },
+          },
+        },
         title: true,
         content: true,
         mentionedUserIds: true,
@@ -154,8 +161,14 @@ export const getTicket = safeAuthAction
       assigneeName: assignee?.name ?? '',
       /** 担当がエージェントのときだけ、処理方式(`agentMode`)を選べるようにする */
       assigneeIsAgent: assignee?.isAgent ?? false,
-      /** CI の失敗・レビュー指摘による自動差し戻しの回数と上限。ボードで無効なら null */
-      autoRevise: board.agentAutoRevise ? { count: agentAutoReviseCount, limit: board.agentAutoReviseLimit } : null,
+      /**
+       * CI の失敗・レビュー指摘による自動差し戻しの回数と上限。どの provider でも無効なら null。
+       * 上限は provider ごとなので、有効な provider のうち最も大きいものを出す
+       */
+      autoRevise:
+        board.gitSettings.length > 0
+          ? { count: agentAutoReviseCount, limit: Math.max(...board.gitSettings.map((s) => s.autoReviseLimit)) }
+          : null,
       createdByName: createdBy?.name ?? '',
       // スレッドは 1 階層のみなので、親コメントに自分宛の返信だけをぶら下げれば表示側は再帰不要
       comments: (() => {

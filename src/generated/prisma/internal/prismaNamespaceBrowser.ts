@@ -80,6 +80,7 @@ export const ModelName = {
   CommandRunChunk: 'CommandRunChunk',
   TicketLink: 'TicketLink',
   BoardRepository: 'BoardRepository',
+  BoardGitSetting: 'BoardGitSetting',
   GitCheckSuite: 'GitCheckSuite',
   UserNotifySetting: 'UserNotifySetting',
   WebPushSubscription: 'WebPushSubscription',
@@ -355,10 +356,6 @@ export const BoardScalarFieldEnum = {
   description: 'description',
   aiContext: 'aiContext',
   archived: 'archived',
-  completeOnGithubMerge: 'completeOnGithubMerge',
-  completeOnGitlabMerge: 'completeOnGitlabMerge',
-  agentAutoRevise: 'agentAutoRevise',
-  agentAutoReviseLimit: 'agentAutoReviseLimit',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -561,6 +558,20 @@ export const BoardRepositoryScalarFieldEnum = {
 } as const
 
 export type BoardRepositoryScalarFieldEnum = (typeof BoardRepositoryScalarFieldEnum)[keyof typeof BoardRepositoryScalarFieldEnum]
+
+
+export const BoardGitSettingScalarFieldEnum = {
+  id: 'id',
+  boardId: 'boardId',
+  provider: 'provider',
+  completeOnMerge: 'completeOnMerge',
+  autoRevise: 'autoRevise',
+  autoReviseLimit: 'autoReviseLimit',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BoardGitSettingScalarFieldEnum = (typeof BoardGitSettingScalarFieldEnum)[keyof typeof BoardGitSettingScalarFieldEnum]
 
 
 export const GitCheckSuiteScalarFieldEnum = {

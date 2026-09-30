@@ -138,8 +138,8 @@ revise で再開したエージェントには、`get_agent_task` の `task.deci
 
 ## 自動差し戻し(CI の失敗・レビュー指摘)
 
-ボード設定の「エージェントの自動差し戻し」を有効にすると、紐付いた PR / MR の CI の失敗やレビュー指摘を
-GitHub / GitLab の Webhook で受けたときに、報告済み(`agentState=done`)のエージェント担当チケットを `planned` へ戻し、
+ボード設定の「GitHub連携」/「GitLab連携」で自動差し戻しを有効にすると(provider ごとの設定。`BoardGitSetting`)、紐付いた PR / MR の CI の失敗やレビュー指摘を
+その provider の Webhook で受けたときに、報告済み(`agentState=done`)のエージェント担当チケットを `planned` へ戻し、
 revise で拾わせる。人が report を差し戻すのと同じ流れを、Webhook のきっかけで行う。実装は `src/lib/agent/agent-auto-revise.ts`。
 
 **きっかけ。** 受けたイベントを `AgentAutoReviseTrigger` に1件ずつ記録する。
@@ -190,7 +190,8 @@ CodeRabbit のように数回に分けて投稿されるレビューを、1回�
 
 レビュー本文は先頭 4000 文字まで保存する。インラインの指摘などの詳細は、エージェントが PR / MR から読む。
 
-**上限。** 1チケットあたりの回数はボードで 1〜20 回(既定 3 回)に設定する。上限に達したチケットはそれ以上差し戻さない。
+**上限。** 1チケットあたりの回数は provider ごとに 1〜20 回(既定 3 回)で設定する。回数(`Ticket.agentAutoReviseCount`)は provider をまたいで数え、
+きっかけの provider の上限に達したチケットはそれ以上差し戻さない。
 回数はチケット詳細の処理状態の横に「自動差し戻し n / 上限」と出る。担当を替えると 0 に戻り、未消化のきっかけも捨てる。
 CodeRabbit は push のたびに再レビューするので、指摘が続くと上限まで差し戻しが続く。
 

@@ -104,7 +104,6 @@ export const en: DefaultLocaleItems = {
   avatar: 'Avatar',
   back: 'Back',
   board: 'Board',
-  board_agent_auto_revise: 'Agent Auto Revise',
   board_ai_context: 'AI Context',
   board_deleted: 'Deleted board',
   board_github: 'GitHub Integration',
@@ -326,6 +325,7 @@ export const en: DefaultLocaleItems = {
   gitlab_signing_token: 'Signing token',
   gitlab_webhook_auth: 'Verification',
   git_webhook_url: 'Webhook URL',
+  git_webhook_steps: 'Setup steps',
   google_account: 'Google Account',
   google_account_allowed_groups: 'Allowed groups',
   google_account_enable: 'Enable Google account linking',
@@ -589,9 +589,7 @@ Please copy and use the connection information above.
   msg_agent_mode_desc:
     'Choose how the agent handles this ticket. Plan first posts a plan and waits for your reply; Auto carries out the work and reports back. Only approvers of this agent can change it.',
   msg_agent_auto_revise_desc:
-    'When CI fails or a review / comment (including bots such as CodeRabbit) is posted on a linked pull / merge request, tickets the agent has already reported on are sent back for revision. Comments are collected for 2 minutes after the last one, and nothing is sent back once the limit is reached. Requires the GitHub / GitLab webhook.',
-  msg_agent_auto_revise_webhook:
-    'Also enable Pull request reviews (GitHub) or Comments (GitLab) in the webhook events.',
+    'When CI fails or a review / comment (including bots such as CodeRabbit) is posted on a linked pull / merge request, tickets the agent has already reported on are sent back for revision. Comments are collected for 2 minutes after the last one, and nothing is sent back once the limit is reached (the count is shared between GitHub and GitLab).',
   msg_agent_custom_instruction_desc:
     'The instructions (Markdown) the agent reads before starting work and follows throughout. Leaving it blank means no instructions.',
   msg_agent_no_approver: 'No approver is set. Nobody can change the agent mode of tickets assigned to this agent.',
@@ -614,26 +612,30 @@ Please copy and use the connection information above.
   msg_board_git_desc:
     'For linked repositories, pull requests and merge requests are linked to tickets automatically by the display ID at the start of the branch name (e.g. feature/KEY-12).',
   msg_board_gitlab_desc:
-    'In the project Settings → Webhooks on GitLab, register the Webhook URL shown for each project.\nSelect the Merge request events / Pipeline events triggers. GitLab 19.0 or later is verified with a signing token, earlier versions with a secret token.',
-  msg_gitlab_signing_token_desc:
-    'On the GitLab webhook page, press Generate signing token and paste the token starting with whsec_. GitLab also shows the token only once.',
-  msg_gitlab_secret_token_desc:
-    'Paste this token into the Secret token of the GitLab webhook. On GitLab 19.0 or later, the more secure signing token is recommended.',
+    'After adding a project, its webhook URL and the steps to register the webhook on GitLab are shown.\nGitLab 19.0 or later is verified with a signing token, earlier versions with a secret token.',
+  msg_gitlab_secret_token_desc: 'On GitLab 19.0 or later, the more secure signing token is recommended.',
   msg_gitlab_regenerate_confirm:
     'Regenerating the token invalidates the current one. Update the Secret token on GitLab as well.',
   msg_gitlab_secret_unset: 'Webhooks for this project are rejected until a token is set.',
+  msg_gitlab_signing_webhook_steps:
+    'In the project Settings → Webhooks on GitLab, press "Add new webhook" (when setting the token again, edit the registered webhook)\nPaste the webhook URL above into URL\nSelect the Merge request events / Pipeline events triggers (also Comments to use auto revise)\nPress "Generate signing token" and paste the token starting with whsec_ into the field below (GitLab also shows it only once)\nSave the webhook on GitLab, then press "Save" here',
+  msg_gitlab_token_webhook_steps:
+    'In the project Settings → Webhooks on GitLab, press "Add new webhook" (when regenerating, edit the registered webhook)\nPaste the webhook URL above into URL\nPaste the secret token above into Secret token\nSelect the Merge request events / Pipeline events triggers (also Comments to use auto revise)\nSave with "Add webhook". Last received in the list is updated once a delivery arrives',
   msg_git_provider_disabled:
     'The integration is disabled in this environment (webhooks are not accepted). You can remove the remaining links.',
   msg_gitlab_already_added:
     'This project is already linked. Switch the verification or regenerate the token from the list.',
+  msg_gitlab_auto_revise_webhook: 'Also enable Comments in the triggers of the GitLab webhook.',
   msg_board_github_desc:
-    'In the repository Settings → Webhooks on GitHub, register the webhook URL shown for each repository as the Payload URL.\nSet Content type to application/json, Secret to the secret shown when the repository is linked, and select the Pull requests / Check suites / Check runs events.',
+    'After adding a repository, its webhook URL, secret, and the steps to register the webhook on GitHub are shown.',
   msg_github_already_added: 'This repository is already linked. You can regenerate the secret from the list.',
+  msg_github_auto_revise_webhook: 'Also enable Pull request reviews in the events of the GitHub webhook.',
   msg_github_regenerate_confirm:
     'Regenerating the secret invalidates the current one. Update the Secret of the GitHub webhook as well.',
-  msg_github_secret_desc: 'Paste this secret into the Secret of the GitHub webhook.',
   msg_github_secret_unset:
     'Webhooks for this repository are rejected until a secret is issued. Use "Regenerate Secret" and register the webhook URL and Secret on GitHub again.',
+  msg_github_webhook_steps:
+    'In the repository Settings → Webhooks on GitHub, press "Add webhook" (when regenerating, edit the registered webhook)\nPaste the webhook URL above into Payload URL\nSet Content type to application/json\nPaste the webhook secret above into Secret\nChoose "Let me select individual events" and select Pull requests / Check suites / Check runs (also Pull request reviews to use auto revise)\nSave with "Add webhook". Last received in the list is updated once a delivery arrives',
   msg_git_complete_on_pr_merge:
     'A ticket is completed when all linked pull requests / merge requests are merged or closed and at least one of them is merged.',
   msg_calendar_share_desc:
