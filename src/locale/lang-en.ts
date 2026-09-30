@@ -588,8 +588,10 @@ Please copy and use the connection information above.
     'The email address is generated from the handle and cannot be changed later. Mail is never delivered to it.',
   msg_agent_mode_desc:
     'Choose how the agent handles this ticket. Plan first posts a plan and waits for your reply; Auto carries out the work and reports back. Only approvers of this agent can change it.',
-  msg_agent_auto_revise_desc:
-    'When CI fails or a review / comment (including bots such as CodeRabbit) is posted on a linked pull / merge request, tickets the agent has already reported on are sent back for revision. Comments are collected for 2 minutes after the last one, and nothing is sent back once the limit is reached (the count is shared between GitHub and GitLab).',
+  msg_github_auto_revise_desc:
+    'When CI fails or a review (Pull request reviews, including bots such as CodeRabbit) is submitted on a linked pull request, tickets the agent has already reported on are sent back for revision. Conversation comments and review comments outside a review do not send tickets back. Reviews are collected for 2 minutes after the last one, and nothing is sent back once the limit is reached (the count is shared between GitHub and GitLab).',
+  msg_gitlab_auto_revise_desc:
+    'When CI fails or a comment (including bots such as CodeRabbit) is posted on a linked merge request, tickets the agent has already reported on are sent back for revision. Comments are collected for 2 minutes after the last one, and nothing is sent back once the limit is reached (the count is shared between GitHub and GitLab).',
   msg_agent_custom_instruction_desc:
     'The instructions (Markdown) the agent reads before starting work and follows throughout. Leaving it blank means no instructions.',
   msg_agent_no_approver: 'No approver is set. Nobody can change the agent mode of tickets assigned to this agent.',

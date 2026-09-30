@@ -21,10 +21,21 @@ const LIMIT_OPTIONS = Object.fromEntries(
   }),
 )
 
-/** provider ごとに違う文言。Webhook で追加するイベントの名前が provider で違う */
-const PROVIDER_TEXTS: Record<GitProvider, { completeOnMerge: LocaleItem; autoReviseWebhook: LocaleItem }> = {
-  github: { completeOnMerge: 'github_complete_on_merge', autoReviseWebhook: 'msg_github_auto_revise_webhook' },
-  gitlab: { completeOnMerge: 'gitlab_complete_on_merge', autoReviseWebhook: 'msg_gitlab_auto_revise_webhook' },
+/** provider ごとに違う文言。差し戻しのきっかけになるイベントと、Webhook で追加するイベントの名前が provider で違う */
+const PROVIDER_TEXTS: Record<
+  GitProvider,
+  { completeOnMerge: LocaleItem; autoReviseDesc: LocaleItem; autoReviseWebhook: LocaleItem }
+> = {
+  github: {
+    completeOnMerge: 'github_complete_on_merge',
+    autoReviseDesc: 'msg_github_auto_revise_desc',
+    autoReviseWebhook: 'msg_github_auto_revise_webhook',
+  },
+  gitlab: {
+    completeOnMerge: 'gitlab_complete_on_merge',
+    autoReviseDesc: 'msg_gitlab_auto_revise_desc',
+    autoReviseWebhook: 'msg_gitlab_auto_revise_webhook',
+  },
 }
 
 /**
@@ -75,7 +86,7 @@ export const GitProviderSettings: FC<{
           isDisabled={isSaving}
           onChange={(autoRevise) => void save({ autoRevise })}
         />
-        <span className='text-muted text-xs'>{t('msg_agent_auto_revise_desc')}</span>
+        <span className='text-muted text-xs'>{t(texts.autoReviseDesc)}</span>
       </FlexCol>
       <div className='w-full sm:w-60'>
         <SingleSelectField
