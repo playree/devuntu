@@ -256,6 +256,7 @@ export type LocaleItemBase =
   | 'copied'
   | 'copy'
   | 'copy_url'
+  | 'create_child_ticket'
   | 'create_tag'
   | 'created_at'
   | 'criteria_summary'

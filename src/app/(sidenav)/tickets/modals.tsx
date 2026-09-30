@@ -16,23 +16,35 @@ import {
   toCriterionDraftRows,
 } from '@/components/ticket/criteria-rows-field'
 import { TagSelectCtrl } from '@/components/ticket/tag-id-select'
+import { TicketIdText } from '@/components/ticket/ticket-chip'
 import { useBoardName, useTicketOptions } from '@/components/ticket/ticket-options'
 import { UserSelectCtrl } from '@/components/user-select'
-import type { TicketStatus } from '@/generated/prisma/enums'
+import type { TicketPriority, TicketStatus } from '@/generated/prisma/enums'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { CreateTicketIn, CreateTicketOut, scCreateTicket } from '@/lib/schema/schema-ticket'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { FC, useEffect, useState } from 'react'
+import { FC, useEffect, useRef, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { createTicket, createTicketTag, getTicketTemplateOptions } from './server'
 import { type TicketFormOptions, useBoardAssignees } from './use-ticket-form'
+
+/** 子チケットとして作るときの親。ボード・優先度・タグの初期値に使う */
+export type ChildTicketParent = {
+  id: string
+  displayId: string
+  title: string
+  boardId: string
+  priority: TicketPriority
+  tagIds: string[]
+}
 
 /**
  * チケット作成モーダル。
  * ボードは必須(既定はプライベートボード)で、担当者とタグの候補は選択中のボードに連動する。
  *
  * かんばん(/boards/[id])のレーンからも開くため、初期ステータスとボード固定を受け取れるようにしている。
+ * 親チケットを渡すと、その子として作る(ボードは親のものに固定し、優先度とタグを引き継ぐ)。
  */
 export const AddModal: FC<
   ModalBaseProps & {
@@ -42,14 +54,15 @@ export const AddModal: FC<
     defaultStatus?: TicketStatus
     /** true ならボードを変更させない(かんばんで作ったカードが画面に出ない事故を防ぐ) */
     isBoardLocked?: boolean
+    parent?: ChildTicketParent
   }
-> = ({ state, reload, options, defaultBoardId, defaultStatus, isBoardLocked }) => {
+> = ({ state, reload, options, defaultBoardId, defaultStatus, isBoardLocked, parent }) => {
   const { t, fet } = useLocale()
   const { statusOptions, priorityOptions } = useTicketOptions()
   const boardName = useBoardName()
   const boardOptions = Object.fromEntries(options.boards.map((board) => [board.id, boardName(board)]))
 
-  const initialBoardId = defaultBoardId ?? options.privateBoardId
+  const initialBoardId = parent?.boardId ?? defaultBoardId ?? options.privateBoardId
   /** そのボードでの既定担当者。プライベートボードはメンバーが本人 1 人なので本人を選んでおく */
   const defaultAssigneeId = (boardId: string) => (boardId === options.privateBoardId ? options.selfUserId : null)
 
@@ -66,9 +79,9 @@ export const AddModal: FC<
       title: '',
       content: '',
       status: defaultStatus ?? 'todo',
-      priority: 'medium',
+      priority: parent?.priority ?? 'medium',
       dueDate: null,
-      tagIds: [],
+      tagIds: parent?.tagIds ?? [],
       assigneeId: defaultAssigneeId(initialBoardId),
     },
   })
@@ -91,9 +104,14 @@ export const AddModal: FC<
   // 本文のエディタは初回の値しか取り込まないので、テンプレートを写したときは作り直す
   const [contentKey, setContentKey] = useState(0)
 
-  // ボードが変わったら前のボードの担当者・タグの ID が残らないよう既定値へ戻す
-  // (初回マウントでも走るが defaultValues と同じ値を書くだけなので実害はない)
+  // ボードが変わったら前のボードの担当者・タグの ID が残らないよう既定値へ戻す。
+  // 初回は親から引き継いだタグを消さないよう、実際に変わったときだけにする
+  const prevBoardId = useRef(initialBoardId)
   useEffect(() => {
+    if (prevBoardId.current === boardId) {
+      return
+    }
+    prevBoardId.current = boardId
     setValue('assigneeId', boardId === options.privateBoardId ? options.selfUserId : null)
     setValue('tagIds', [])
   }, [boardId, options.privateBoardId, options.selfUserId, setValue])
@@ -129,7 +147,11 @@ export const AddModal: FC<
       size='5xl'
       onSubmit={handleSubmit(async (req) => {
         const res = await parseAction(
-          createTicket({ ...req, criteria: filledCriterionRows(criteria).map((row) => row.text) }),
+          createTicket({
+            ...req,
+            criteria: filledCriterionRows(criteria).map((row) => row.text),
+            parentId: parent?.id,
+          }),
         )
         notify.success(t('msg_added_target', { target: res.title }))
         reload()
@@ -155,13 +177,20 @@ export const AddModal: FC<
       submit={{ isPending: isSubmitting, isDisabled: !isValidCriterionRows(criteria) }}
     >
       <GridBox isSmart>
+        {parent && (
+          <div className='col-span-12 flex min-w-0 items-center gap-2 text-sm'>
+            <span className='text-muted shrink-0 text-xs'>{t('parent_ticket')}</span>
+            <TicketIdText displayId={parent.displayId} />
+            <span className='truncate'>{parent.title}</span>
+          </div>
+        )}
         <div className='col-span-12 md:col-span-4'>
           <SingleSelectCtrl
             control={control}
             name='boardId'
             groupOptions={boardOptions}
             label={t('board')}
-            isDisabled={isBoardLocked}
+            isDisabled={isBoardLocked || !!parent}
           />
         </div>
         <div className='col-span-12 md:col-span-8'>

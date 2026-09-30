@@ -264,6 +264,7 @@ export const en: DefaultLocaleItems = {
   copied: 'Copied!',
   copy: 'Copy',
   copy_url: 'Copy URL',
+  create_child_ticket: 'Create child ticket',
   create_tag: 'Create “${name}”',
   created_at: 'Created At',
   criteria_summary: 'Checked ${checked}/${total} · Self-check ${met}/${total}',

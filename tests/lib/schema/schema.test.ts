@@ -44,6 +44,21 @@ describe('scCreateTicket: priority は必須(既定 medium)', () => {
   })
 })
 
+describe('scCreateTicket: 親チケットはチケット ID で受ける', () => {
+  it('チケット ID を渡すとそのまま通る', () => {
+    expect(scCreateTicket.parse({ boardId, title: 'x', parentId: ticketId }).parentId).toBe(ticketId)
+  })
+
+  it('未指定・null は親なしとして通る', () => {
+    expect(scCreateTicket.parse({ boardId, title: 'x' }).parentId).toBeUndefined()
+    expect(scCreateTicket.parse({ boardId, title: 'x', parentId: null }).parentId).toBeNull()
+  })
+
+  it('表示ID は受け付けない(Web からはチケット ID を渡す)', () => {
+    expect(scCreateTicket.safeParse({ boardId, title: 'x', parentId: 'ABC-1' }).success).toBe(false)
+  })
+})
+
 describe('scPatchTicket: 渡された項目だけを更新する', () => {
   it('未指定の項目には既定値を入れない', () => {
     const res = scPatchTicket.parse({ id: ticketId })

@@ -263,6 +263,7 @@ export const ja: DefaultLocaleItems = {
   copied: 'コピーしました',
   copy: 'コピー',
   copy_url: 'URLをコピー',
+  create_child_ticket: '子チケットを作成',
   create_tag: '「${name}」を作成',
   created_at: '作成日時',
   criteria_summary: '確認 ${checked}/${total} ・ 自己申告 ${met}/${total}',
