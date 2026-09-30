@@ -13,6 +13,7 @@ import { type Db } from '../prisma'
 import { extractUploadKeys, toUploadUrl } from '../storage/upload'
 import type { Actor, TicketAccess } from './board-access'
 import { insertAt, kanbanDoneSince, kanbanLaneWhere, reindexLane } from './kanban'
+import { type ActivityBy, recordTicketActivities } from './ticket-activity'
 
 /**
  * ボード内のチケット番号を 1 つ払い出す。
@@ -28,6 +29,14 @@ export const nextTicketNumber = async (tx: Prisma.TransactionClient, boardId: st
     select: { ticketSeq: true },
   })
   return ticketSeq
+}
+
+/**
+ * チケット行のロック。変更前の値(変更履歴・通知の before)を読む前に取り、同じチケットへの同時更新を直列にする。
+ * 取らないと、先行の更新がコミットする前の値を読んで「A → C」のように実際と違う履歴を残しうる
+ */
+export const lockTicketRow = async (tx: Prisma.TransactionClient, ticketId: string): Promise<void> => {
+  await tx.$queryRaw`SELECT "id" FROM "ticket" WHERE "id" = ${ticketId} FOR UPDATE`
 }
 
 /**
@@ -131,6 +140,8 @@ export const assertReplyTarget = async (tx: Db, ticketId: string, parentId: stri
  *
  * 採番の対象は盤面に表示されるカードだけ。かんばんに出ない古い完了カードは読まず order も触らないので、
  * クライアントが送る index(盤面に見えているカードだけを数えた位置)とそのまま基準が揃う。
+ *
+ * ステータスが変わる移動は経路に関わらずここを通るので、変更履歴もここで残す(`by` が変更した主体)。
  */
 export const moveTicketToLane = async (
   tx: Prisma.TransactionClient,
@@ -138,7 +149,13 @@ export const moveTicketToLane = async (
     access,
     status,
     index,
-  }: { access: Pick<TicketAccess, 'ticketId' | 'boardId' | 'status'>; status: TicketStatus; index?: number },
+    by,
+  }: {
+    access: Pick<TicketAccess, 'ticketId' | 'boardId' | 'status'>
+    status: TicketStatus
+    index?: number
+    by: ActivityBy
+  },
 ): Promise<{ id: string; status: TicketStatus; order: number }> => {
   // レーンは「同一ボード + 同一ステータス」で決まる
   const lane = await tx.ticket.findMany({
@@ -164,6 +181,9 @@ export const moveTicketToLane = async (
       ...(access.status !== status && { completedAt: status === 'done' ? nowDate() : null }),
     },
   })
+  if (access.status !== status) {
+    await recordTicketActivities(tx, access.ticketId, by, [{ field: 'status', before: access.status, after: status }])
+  }
 
   // MAX_KANBAN_CARDS(500)まで入りうるレーンで毎回全行を UPDATE しないよう、order が変わる行だけ触る
   const shifted = ordered.filter(({ id, order }) => id !== access.ticketId && currentOrder.get(id) !== order)

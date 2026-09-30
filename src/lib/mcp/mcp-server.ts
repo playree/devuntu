@@ -191,7 +191,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       title: 'Get ticket',
       description:
         'Gets ticket details by display ID (e.g. ABC-42) or ticket ID, including content, status, assignee, tags, comments, linked artifacts, ' +
-        'parent/children, and related tickets. ' +
+        'parent/children, related tickets, and recent change history (activities, newest first). ' +
         'When working on the ticket, follow the steps in the workflow field of the response (doing when starting, posting plan / report, linking artifacts)',
       inputSchema: { ticketId: z.string().min(1) },
     },

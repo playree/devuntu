@@ -1,5 +1,7 @@
 import type { TicketCommentType, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
 import { assertTicketAccess, findTicketIdByDisplayId, getAccessibleBoardIds } from '@/lib/board/board-access'
+import { listTicketActivities } from '@/lib/board/ticket-activity'
+import { TICKET_ACTIVITY_MCP_LIMIT } from '@/lib/board/ticket-activity-rule'
 import {
   type AgentCriterionReport,
   assertAgentCriteria,
@@ -92,9 +94,10 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
   }
 
   const displayId = ticketDisplayId({ key: ticket.board.key, number: ticket.number })
-  const [links, criteria, relations, waiting] = await Promise.all([
+  const [links, criteria, activities, relations, waiting] = await Promise.all([
     listTicketLinks(id),
     listTicketCriteria(id),
+    listTicketActivities(id, TICKET_ACTIVITY_MCP_LIMIT),
     // 関係の相手は同じボードのチケットなので、ボードのメンバーでない承認者には見せない
     access.boardRole ? listTicketRelations(id) : EMPTY_TICKET_RELATIONS,
     // 順番待ちは兄弟の状態から出すので、関係と同じくボードのメンバーでない承認者には見せない
@@ -166,6 +169,18 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
       title,
       prState,
       ci,
+    })),
+    /**
+     * 直近の変更履歴(新しい順)。actorName が空で source=merge なら PR / MR のマージによる自動完了。
+     * before / after は要約で、担当・タグは名前、本文は先頭の抜粋、受け入れ条件は消した / 足した文言(改行区切り)
+     */
+    activities: activities.map(({ field, source, before, after, actorName, createdAt }) => ({
+      field,
+      source,
+      actorName,
+      before,
+      after,
+      createdAt,
     })),
   }
 }

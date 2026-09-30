@@ -239,3 +239,26 @@ export const TicketRelationType = {
 } as const
 
 export type TicketRelationType = (typeof TicketRelationType)[keyof typeof TicketRelationType]
+
+
+export const TicketActivityField = {
+  created: 'created',
+  title: 'title',
+  content: 'content',
+  status: 'status',
+  priority: 'priority',
+  dueDate: 'dueDate',
+  assignee: 'assignee',
+  tags: 'tags',
+  criteria: 'criteria'
+} as const
+
+export type TicketActivityField = (typeof TicketActivityField)[keyof typeof TicketActivityField]
+
+
+export const TicketActivitySource = {
+  user: 'user',
+  merge: 'merge'
+} as const
+
+export type TicketActivitySource = (typeof TicketActivitySource)[keyof typeof TicketActivitySource]

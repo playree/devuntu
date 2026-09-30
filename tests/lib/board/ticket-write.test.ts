@@ -179,6 +179,7 @@ describe('moveTicketToLane', () => {
       findMany: vi.fn().mockResolvedValue(lane),
       update: vi.fn().mockResolvedValue({}),
     },
+    ticketActivity: { createMany: vi.fn().mockResolvedValue({ count: 1 }) },
     $executeRaw: vi.fn().mockResolvedValue(0),
   })
 
@@ -193,10 +194,11 @@ describe('moveTicketToLane', () => {
   }
 
   const access = (status: 'todo' | 'doing' | 'done') => ({ ticketId: 't', boardId: BOARD_ID, status })
+  const by = { actorId: 'user-1' }
 
   it('移動先レーンは同じボード・同じステータスの盤面に見えるカードで引く', async () => {
     const tx = laneTx([])
-    await moveTicketToLane(tx as never, { access: access('todo'), status: 'done' })
+    await moveTicketToLane(tx as never, { access: access('todo'), status: 'done', by })
 
     expect(tx.ticket.findMany).toHaveBeenCalledWith({
       where: kanbanLaneWhere(BOARD_ID, 'done', kanbanDoneSince(NOW)),
@@ -210,7 +212,7 @@ describe('moveTicketToLane', () => {
       { id: 'a', order: 0 },
       { id: 'b', order: 1 },
     ])
-    expect(await moveTicketToLane(tx as never, { access: access('todo'), status: 'doing' })).toEqual({
+    expect(await moveTicketToLane(tx as never, { access: access('todo'), status: 'doing', by })).toEqual({
       id: 't',
       status: 'doing',
       order: 2,
@@ -227,7 +229,9 @@ describe('moveTicketToLane', () => {
       { id: 'a', order: 0 },
       { id: 'b', order: 1 },
     ])
-    expect(await moveTicketToLane(tx as never, { access: access('todo'), status: 'doing', index: 0 })).toMatchObject({
+    expect(
+      await moveTicketToLane(tx as never, { access: access('todo'), status: 'doing', index: 0, by }),
+    ).toMatchObject({
       order: 0,
     })
     expect(tx.$executeRaw).toHaveBeenCalledTimes(1)
@@ -237,9 +241,35 @@ describe('moveTicketToLane', () => {
     ])
   })
 
+  it('ステータスが変われば変更者付きで履歴に残す', async () => {
+    const tx = laneTx([])
+    await moveTicketToLane(tx as never, { access: access('todo'), status: 'doing', by })
+    expect(tx.ticketActivity.createMany).toHaveBeenCalledWith({
+      data: [{ ticketId: 't', actorId: 'user-1', source: 'user', field: 'status', before: 'todo', after: 'doing' }],
+    })
+  })
+
+  it('マージによる自動完了は変更者なしで経路を残す', async () => {
+    const tx = laneTx([])
+    await moveTicketToLane(tx as never, {
+      access: access('doing'),
+      status: 'done',
+      by: { actorId: null, source: 'merge' },
+    })
+    expect(tx.ticketActivity.createMany).toHaveBeenCalledWith({
+      data: [{ ticketId: 't', actorId: null, source: 'merge', field: 'status', before: 'doing', after: 'done' }],
+    })
+  })
+
+  it('同一レーン内の並べ替えは履歴に残さない', async () => {
+    const tx = laneTx([{ id: 'a', order: 0 }])
+    await moveTicketToLane(tx as never, { access: access('todo'), status: 'todo', index: 0, by })
+    expect(tx.ticketActivity.createMany).not.toHaveBeenCalled()
+  })
+
   it('done へ移せば完了日時を入れる', async () => {
     const tx = laneTx([])
-    await moveTicketToLane(tx as never, { access: access('doing'), status: 'done' })
+    await moveTicketToLane(tx as never, { access: access('doing'), status: 'done', by })
     expect(tx.ticket.update).toHaveBeenCalledWith({
       where: { id: 't' },
       data: { status: 'done', order: 0, completedAt: NOW },
@@ -248,7 +278,7 @@ describe('moveTicketToLane', () => {
 
   it('done から戻せば完了日時を消す', async () => {
     const tx = laneTx([])
-    await moveTicketToLane(tx as never, { access: access('done'), status: 'todo' })
+    await moveTicketToLane(tx as never, { access: access('done'), status: 'todo', by })
     expect(tx.ticket.update).toHaveBeenCalledWith({
       where: { id: 't' },
       data: { status: 'todo', order: 0, completedAt: null },
@@ -261,7 +291,7 @@ describe('moveTicketToLane', () => {
       { id: 't', order: 1 },
       { id: 'b', order: 2 },
     ])
-    await moveTicketToLane(tx as never, { access: access('done'), status: 'done', index: 0 })
+    await moveTicketToLane(tx as never, { access: access('done'), status: 'done', index: 0, by })
 
     expect(tx.ticket.update).toHaveBeenCalledWith({ where: { id: 't' }, data: { status: 'done', order: 0 } })
     expect(shiftedRows(tx)).toEqual([['a', 1]])
@@ -272,7 +302,7 @@ describe('moveTicketToLane', () => {
       { id: 'a', order: 0 },
       { id: 't', order: 1 },
     ])
-    await moveTicketToLane(tx as never, { access: access('todo'), status: 'todo', index: 1 })
+    await moveTicketToLane(tx as never, { access: access('todo'), status: 'todo', index: 1, by })
 
     expect(tx.ticket.update).toHaveBeenCalledWith({ where: { id: 't' }, data: { status: 'todo', order: 1 } })
     expect(tx.$executeRaw).not.toHaveBeenCalled()
@@ -284,15 +314,15 @@ describe('moveTicketToLane', () => {
       { id: 'b', order: 1 },
     ]
     const tail = laneTx(lane)
-    expect(await moveTicketToLane(tail as never, { access: access('todo'), status: 'doing', index: 99 })).toMatchObject(
-      { order: 2 },
-    )
+    expect(
+      await moveTicketToLane(tail as never, { access: access('todo'), status: 'doing', index: 99, by }),
+    ).toMatchObject({ order: 2 })
     expect(tail.$executeRaw).not.toHaveBeenCalled()
 
     const head = laneTx(lane)
-    expect(await moveTicketToLane(head as never, { access: access('todo'), status: 'doing', index: -1 })).toMatchObject(
-      { order: 0 },
-    )
+    expect(
+      await moveTicketToLane(head as never, { access: access('todo'), status: 'doing', index: -1, by }),
+    ).toMatchObject({ order: 0 })
     expect(shiftedRows(head)).toEqual([
       ['a', 1],
       ['b', 2],
@@ -305,7 +335,7 @@ describe('moveTicketToLane', () => {
       { id: 'b', order: 5 },
       { id: 'c', order: 2 },
     ])
-    await moveTicketToLane(tx as never, { access: access('todo'), status: 'doing' })
+    await moveTicketToLane(tx as never, { access: access('todo'), status: 'doing', by })
 
     expect(tx.ticket.update).toHaveBeenCalledWith({
       where: { id: 't' },

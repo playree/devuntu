@@ -823,6 +823,40 @@ export type EnumTicketRelationTypeWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumTicketRelationTypeFilter<$PrismaModel>
 }
 
+export type EnumTicketActivitySourceFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketActivitySource | Prisma.EnumTicketActivitySourceFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketActivitySource[] | Prisma.ListEnumTicketActivitySourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TicketActivitySource[] | Prisma.ListEnumTicketActivitySourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTicketActivitySourceFilter<$PrismaModel> | $Enums.TicketActivitySource
+}
+
+export type EnumTicketActivityFieldFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketActivityField | Prisma.EnumTicketActivityFieldFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketActivityField[] | Prisma.ListEnumTicketActivityFieldFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TicketActivityField[] | Prisma.ListEnumTicketActivityFieldFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTicketActivityFieldFilter<$PrismaModel> | $Enums.TicketActivityField
+}
+
+export type EnumTicketActivitySourceWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketActivitySource | Prisma.EnumTicketActivitySourceFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketActivitySource[] | Prisma.ListEnumTicketActivitySourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TicketActivitySource[] | Prisma.ListEnumTicketActivitySourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTicketActivitySourceWithAggregatesFilter<$PrismaModel> | $Enums.TicketActivitySource
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTicketActivitySourceFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTicketActivitySourceFilter<$PrismaModel>
+}
+
+export type EnumTicketActivityFieldWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketActivityField | Prisma.EnumTicketActivityFieldFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketActivityField[] | Prisma.ListEnumTicketActivityFieldFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TicketActivityField[] | Prisma.ListEnumTicketActivityFieldFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTicketActivityFieldWithAggregatesFilter<$PrismaModel> | $Enums.TicketActivityField
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTicketActivityFieldFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTicketActivityFieldFilter<$PrismaModel>
+}
+
 export type NestedStringFilter<$PrismaModel = never> = {
   equals?: string | Prisma.StringFieldRefInput<$PrismaModel>
   in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
@@ -1589,6 +1623,40 @@ export type NestedEnumTicketRelationTypeWithAggregatesFilter<$PrismaModel = neve
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumTicketRelationTypeFilter<$PrismaModel>
   _max?: Prisma.NestedEnumTicketRelationTypeFilter<$PrismaModel>
+}
+
+export type NestedEnumTicketActivitySourceFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketActivitySource | Prisma.EnumTicketActivitySourceFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketActivitySource[] | Prisma.ListEnumTicketActivitySourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TicketActivitySource[] | Prisma.ListEnumTicketActivitySourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTicketActivitySourceFilter<$PrismaModel> | $Enums.TicketActivitySource
+}
+
+export type NestedEnumTicketActivityFieldFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketActivityField | Prisma.EnumTicketActivityFieldFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketActivityField[] | Prisma.ListEnumTicketActivityFieldFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TicketActivityField[] | Prisma.ListEnumTicketActivityFieldFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTicketActivityFieldFilter<$PrismaModel> | $Enums.TicketActivityField
+}
+
+export type NestedEnumTicketActivitySourceWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketActivitySource | Prisma.EnumTicketActivitySourceFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketActivitySource[] | Prisma.ListEnumTicketActivitySourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TicketActivitySource[] | Prisma.ListEnumTicketActivitySourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTicketActivitySourceWithAggregatesFilter<$PrismaModel> | $Enums.TicketActivitySource
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTicketActivitySourceFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTicketActivitySourceFilter<$PrismaModel>
+}
+
+export type NestedEnumTicketActivityFieldWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketActivityField | Prisma.EnumTicketActivityFieldFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketActivityField[] | Prisma.ListEnumTicketActivityFieldFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TicketActivityField[] | Prisma.ListEnumTicketActivityFieldFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTicketActivityFieldWithAggregatesFilter<$PrismaModel> | $Enums.TicketActivityField
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTicketActivityFieldFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTicketActivityFieldFilter<$PrismaModel>
 }
 
 

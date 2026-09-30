@@ -4,6 +4,8 @@ import { safeAuthAction } from '@/lib/action/action-server'
 import { decideAgentComment as decideAgentCommentCore, findPendingAgentDecision } from '@/lib/agent/agent-decision'
 import { assertTicketAccess } from '@/lib/board/board-access'
 import { TAG_SELECT } from '@/lib/board/tag'
+import { listTicketActivities } from '@/lib/board/ticket-activity'
+import { TICKET_ACTIVITY_LIMIT } from '@/lib/board/ticket-activity-rule'
 import { checkTicketCriterion as checkTicketCriterionCore, listTicketCriteria } from '@/lib/board/ticket-criterion'
 import { ticketDisplayId, ticketShortPath } from '@/lib/board/ticket-id'
 import {
@@ -117,9 +119,10 @@ export const getTicket = safeAuthAction
         return name ? [name] : []
       })
 
-    const [links, criteria, relations, pendingDecision, waiting] = await Promise.all([
+    const [links, criteria, activities, relations, pendingDecision, waiting] = await Promise.all([
       listTicketLinks(id),
       listTicketCriteria(id),
+      listTicketActivities(id, TICKET_ACTIVITY_LIMIT),
       // 関係の相手は同じボードのチケットなので、ボードのメンバーでない承認者には見せない
       access.boardRole ? listTicketRelations(id) : EMPTY_TICKET_RELATIONS,
       findPendingAgentDecision({
@@ -172,6 +175,8 @@ export const getTicket = safeAuthAction
       })(),
       links,
       criteria,
+      /** 変更履歴(新しい順・直近 TICKET_ACTIVITY_LIMIT 件) */
+      activities,
       relations,
       /** 前の順番の兄弟が済んでおらず、エージェントが拾わない状態か */
       isWaiting: waiting.has(id),

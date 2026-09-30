@@ -333,6 +333,11 @@ const server = {
     return getEnvInt('AGENT_RUN_RETENTION_DAYS', { default: 90, min: 1, max: MAX_RETENTION_DAYS })
   },
 
+  /** チケットの変更履歴を残す期間(日) */
+  get TICKET_ACTIVITY_RETENTION_DAYS() {
+    return getEnvInt('TICKET_ACTIVITY_RETENTION_DAYS', { default: 365, min: 1, max: MAX_RETENTION_DAYS })
+  },
+
   /**
    * ランナー1台あたりに残す実行履歴の上限。期間内に積み上がった分への歯止め。
    *

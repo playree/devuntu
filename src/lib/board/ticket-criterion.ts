@@ -47,12 +47,13 @@ const RESET_CHECKS = {
  *
  * id 付きの項目は既存の行を引き継ぎ(文言が変わったら確認状態をリセット)、id の無い項目は新規に作る。
  * 一覧に無い既存の行は消す。他のチケットの id が混ざっていたら throw する。
+ * 戻り値は変更履歴に残す差分で、文言を変えた項目は removed / added の両方に入る。
  */
 export const syncTicketCriteria = async (
   tx: Prisma.TransactionClient,
   ticketId: string,
   items: CriterionItem[],
-): Promise<void> => {
+): Promise<{ removed: string[]; added: string[] }> => {
   const existing = await tx.ticketCriterion.findMany({ where: { ticketId }, select: { id: true, text: true } })
   const textById = new Map(existing.map((row) => [row.id, row.text]))
 
@@ -61,18 +62,28 @@ export const syncTicketCriteria = async (
     throw errInvalidOperation()
   }
 
+  const removed = existing.filter((row) => !keptIds.includes(row.id)).map((row) => row.text)
+  const added: string[] = []
+
   await tx.ticketCriterion.deleteMany({ where: { ticketId, id: { notIn: keptIds } } })
   for (const [order, item] of items.entries()) {
     if (!item.id) {
       await tx.ticketCriterion.create({ data: { ticketId, order, text: item.text } })
+      added.push(item.text)
       continue
     }
-    const isTextChanged = textById.get(item.id) !== item.text
+    const previous = textById.get(item.id)
+    const isTextChanged = previous !== item.text
     await tx.ticketCriterion.update({
       where: { id: item.id },
       data: { order, text: item.text, ...(isTextChanged && RESET_CHECKS) },
     })
+    if (isTextChanged && previous !== undefined) {
+      removed.push(previous)
+      added.push(item.text)
+    }
   }
+  return { removed, added }
 }
 
 /** 人による確認の切り替え。チケットを編集できる人だけが行える */

@@ -350,6 +350,12 @@ export type TicketCriterion = Prisma.TicketCriterionModel
  */
 export type TicketRelation = Prisma.TicketRelationModel
 /**
+ * Model TicketActivity
+ * チケットの変更履歴。変更の経路に関わらず `ticket-mutation.ts` / `ticket-write.ts` の共通経路で記録する。
+ * 保持期間(TICKET_ACTIVITY_RETENTION_DAYS)を過ぎたものは自動メンテナンスで消す
+ */
+export type TicketActivity = Prisma.TicketActivityModel
+/**
  * Model User
  * アプリの利用者。Webにログインする人のほか、MCP からのみ利用するAIエージェント用ユーザー
  * (isAgent = true)も同じテーブルで持つ。

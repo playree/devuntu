@@ -16,6 +16,7 @@ import {
 } from '@/lib/board/board-access'
 import { assertBoardAssignee, getBoardMentionCandidates, getTicketMentionCandidates } from '@/lib/board/board-member'
 import { assertTagIdsInBoard, syncTicketTags } from '@/lib/board/tag'
+import { recordTicketActivities } from '@/lib/board/ticket-activity'
 import { syncTicketCriteria } from '@/lib/board/ticket-criterion'
 import {
   addComment,
@@ -29,7 +30,12 @@ import {
   updateTicket,
   type UpdateTicketInput,
 } from '@/lib/board/ticket-mutation'
-import { assertReplyTarget, moveTicketToLane, reassignContentAttachments } from '@/lib/board/ticket-write'
+import {
+  assertReplyTarget,
+  lockTicketRow,
+  moveTicketToLane,
+  reassignContentAttachments,
+} from '@/lib/board/ticket-write'
 import { ClientError, errInvalidOperation } from '@/lib/error'
 import { resolveBoardId } from '@/lib/mcp/mcp-board'
 import {
@@ -59,6 +65,8 @@ const fakeTx = vi.hoisted(() => ({
     aggregate: vi.fn(),
     findUniqueOrThrow: vi.fn(),
   },
+  user: { findUnique: vi.fn() },
+  tag: { findMany: vi.fn() },
   ticketComment: {
     create: vi.fn(),
     update: vi.fn(),
@@ -84,6 +92,7 @@ vi.mock('@/lib/board/board-member', () => ({
 
 vi.mock('@/lib/board/ticket-write', () => ({
   assertReplyTarget: vi.fn(),
+  lockTicketRow: vi.fn(),
   moveTicketToLane: vi.fn(),
   nextTicketNumber: vi.fn(async () => 7),
   reassignContentAttachments: vi.fn(),
@@ -96,8 +105,10 @@ vi.mock('@/lib/board/tag', () => ({
 
 vi.mock('@/lib/board/ticket-criterion', () => ({
   listTicketCriteria: vi.fn(),
-  syncTicketCriteria: vi.fn(),
+  syncTicketCriteria: vi.fn(async () => ({ removed: [], added: [] })),
 }))
+
+vi.mock('@/lib/board/ticket-activity', () => ({ recordTicketActivities: vi.fn() }))
 
 vi.mock('@/lib/agent/agent-auto-revise', () => ({ discardAutoReviseTriggers: vi.fn() }))
 
@@ -112,6 +123,18 @@ vi.mock('@/lib/notify/notify-trigger', () => ({
 }))
 
 // 表示ID の形式でなければ resolveTicketId はそのまま返すので、UUID 形式の ID を使う
+/** updateTicket が変更前の値として読むチケット */
+const currentTicket = (overrides: Record<string, unknown> = {}) => ({
+  title: 'チケット',
+  content: null,
+  priority: 'medium',
+  dueDate: null,
+  mentionedUserIds: [],
+  assignee: null,
+  tags: [],
+  ...overrides,
+})
+
 const TICKET_ID = '019eef64-6cc1-78f1-8f50-1ef869860010'
 const COMMENT_ID = '019eef64-6cc1-78f1-8f50-1ef869860020'
 const AGENT_A = 'agent-a'
@@ -227,7 +250,9 @@ beforeEach(() => {
   })
   fakeTx.ticket.create.mockResolvedValue({ id: 'new-ticket', title: '新規', number: 7, board: { key: 'TST' } })
   fakeTx.ticket.aggregate.mockResolvedValue({ _max: { order: null } })
-  fakeTx.ticket.findUniqueOrThrow.mockResolvedValue({ mentionedUserIds: [] })
+  fakeTx.ticket.findUniqueOrThrow.mockResolvedValue(currentTicket())
+  fakeTx.user.findUnique.mockResolvedValue({ name: '担当' })
+  fakeTx.tag.findMany.mockResolvedValue([])
   fakeTx.ticketComment.create.mockResolvedValue({ id: COMMENT_ID })
   vi.mocked(moveTicketToLane).mockResolvedValue({ id: TICKET_ID, status: 'done', order: 0 })
 })
@@ -265,6 +290,14 @@ describe.each(routes)('createTicket: %s', (_label, route) => {
 
     await expect(route.create(createInput({ tagIds: ['foreign-tag'] }))).rejects.toThrow(ClientError)
     expect(fakeTx.ticket.create).not.toHaveBeenCalled()
+  })
+
+  it('作成を変更者付きで履歴に残す', async () => {
+    await route.create(createInput())
+
+    expect(recordTicketActivities).toHaveBeenCalledWith(fakeTx, 'new-ticket', { actorId: route.actor.id }, [
+      { field: 'created', before: null, after: '新規' },
+    ])
   })
 
   it('作成者・採番・レーン末尾の順序・タグ・受け入れ条件を保存し、表示ID を返す', async () => {
@@ -443,7 +476,7 @@ describe.each(routes)('updateTicket: %s', (_label, route) => {
   })
 
   it('本文を書き換えるとメンションを解き直し、増えた相手だけを通知する', async () => {
-    fakeTx.ticket.findUniqueOrThrow.mockResolvedValue({ mentionedUserIds: [MEMBER_X.id] })
+    fakeTx.ticket.findUniqueOrThrow.mockResolvedValue(currentTicket({ mentionedUserIds: [MEMBER_X.id] }))
     vi.mocked(getTicketMentionCandidates).mockResolvedValue([MEMBER_X, MEMBER_Y])
 
     await route.update(TICKET_ID, { content: `@[${MEMBER_X.email}] @[${MEMBER_Y.email}]` })
@@ -459,6 +492,43 @@ describe.each(routes)('updateTicket: %s', (_label, route) => {
     await route.update(TICKET_ID, { content: '本文' })
 
     expect(reassignContentAttachments).toHaveBeenCalledWith(fakeTx, '本文', 'board-1', route.actor, TICKET_ID)
+  })
+
+  it('変更前の値を読む前にチケット行をロックする', async () => {
+    await route.update(TICKET_ID, { title: '変更' })
+
+    expect(lockTicketRow).toHaveBeenCalledWith(fakeTx, TICKET_ID)
+    expect(vi.mocked(lockTicketRow).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(assertTicketAccess).mock.invocationCallOrder[0],
+    )
+    expect(vi.mocked(lockTicketRow).mock.invocationCallOrder[0]).toBeLessThan(
+      fakeTx.ticket.findUniqueOrThrow.mock.invocationCallOrder[0],
+    )
+  })
+
+  it('値が変わった項目だけを変更者付きで履歴に残す', async () => {
+    fakeTx.ticket.findUniqueOrThrow.mockResolvedValue(
+      currentTicket({ assignee: { name: 'エージェント' }, tags: [{ tag: { name: '既存' } }] }),
+    )
+    fakeTx.tag.findMany.mockResolvedValue([{ name: '既存' }, { name: '追加' }])
+    vi.mocked(syncTicketCriteria).mockResolvedValue({ removed: ['旧'], added: ['新'] })
+
+    await route.update(TICKET_ID, {
+      title: 'チケット',
+      priority: 'high',
+      dueDate: '2026-10-01',
+      assigneeId: HUMAN,
+      tagIds: ['tag-1', 'tag-2'],
+      criteria: [{ text: '新' }],
+    })
+
+    expect(recordTicketActivities).toHaveBeenCalledWith(fakeTx, TICKET_ID, { actorId: route.actor.id }, [
+      { field: 'priority', before: 'medium', after: 'high' },
+      { field: 'dueDate', before: null, after: '2026-10-01' },
+      { field: 'assignee', before: 'エージェント', after: '担当' },
+      { field: 'tags', before: '既存', after: '既存, 追加' },
+      { field: 'criteria', before: '旧', after: '新' },
+    ])
   })
 
   it('担当の変更を通知に渡す', async () => {
@@ -479,7 +549,11 @@ describe.each(routes)('updateTicket: %s', (_label, route) => {
   it('status を指定するとレーンを移し、移動後のステータスを返して通知に渡す', async () => {
     const result = await route.update(TICKET_ID, { status: 'done' })
 
-    expect(moveTicketToLane).toHaveBeenCalledWith(fakeTx, { access: baseAccess, status: 'done' })
+    expect(moveTicketToLane).toHaveBeenCalledWith(fakeTx, {
+      access: baseAccess,
+      status: 'done',
+      by: { actorId: route.actor.id },
+    })
     expect(result).toEqual({ id: TICKET_ID, title: 'チケット', displayId: 'TST-1', status: 'done' })
     expect(enqueueTicketUpdated).toHaveBeenCalledWith(
       expect.objectContaining({ after: { assigneeId: AGENT_A, status: 'done' } }),
@@ -820,8 +894,17 @@ describe('経路で共通化していない操作', () => {
 
     await changeTicketStatus(actor, TICKET_ID, 'done', 0)
 
+    expect(vi.mocked(lockTicketRow).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(assertTicketAccess).mock.invocationCallOrder[0],
+    )
+
     expect(assertTicketAccess).toHaveBeenCalledWith(actor, TICKET_ID, 'edit', fakeTx)
-    expect(moveTicketToLane).toHaveBeenCalledWith(fakeTx, { access: baseAccess, status: 'done', index: 0 })
+    expect(moveTicketToLane).toHaveBeenCalledWith(fakeTx, {
+      access: baseAccess,
+      status: 'done',
+      index: 0,
+      by: { actorId: actor.id },
+    })
     expect(enqueueTicketMoved).toHaveBeenCalledWith(
       { actorId: actor.id, ticketId: TICKET_ID, before: 'todo', after: 'done' },
       fakeTx,

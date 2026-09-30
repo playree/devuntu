@@ -75,13 +75,14 @@ model User {
   calendarBusyTimes CalendarBusyTime[]
 
   // Board / Ticket
-  boardMembers    BoardMember[]
-  privateBoard    Board?
-  createdTickets  Ticket[]          @relation("TicketCreator")
-  assignedTickets Ticket[]          @relation("TicketAssignee")
-  ticketComments  TicketComment[]
-  ticketLinks     TicketLink[]
-  checkedCriteria TicketCriterion[]
+  boardMembers     BoardMember[]
+  privateBoard     Board?
+  createdTickets   Ticket[]          @relation("TicketCreator")
+  assignedTickets  Ticket[]          @relation("TicketAssignee")
+  ticketComments   TicketComment[]
+  ticketLinks      TicketLink[]
+  checkedCriteria  TicketCriterion[]
+  ticketActivities TicketActivity[]
 
   // MCP
   mcpTokens McpToken[]

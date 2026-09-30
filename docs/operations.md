@@ -471,12 +471,16 @@ DB と S3 を順に取得する間に添付が消えると、復元後にその�
 | `upload_nonce`           | `expiresAt` 超過(アップロード時の掃除の取りこぼし)                                       | なし       |
 | `agent_run`              | 開始が保持期間より古い + ランナーごとに新しい N 件だけ残す                               | 既定90日   |
 | `command_run`            | 受付が保持期間より古い + コマンドごとに新しい N 件だけ残す                               | 既定90日   |
+| `ticket_activity`        | 記録が保持期間より古い(チケットの変更履歴)                                               | 既定365日  |
 | `git_check_suite`        | 更新が保持期間より古い(GitHub / GitLab 連携の CI 結果。マージ済み・放置された PR のもの) | 90日       |
 | `attachment` + 実体      | どの本文からも参照されていない                                                           | 既定24時間 |
 
 実行履歴の保持期間と残す件数は環境変数で変えられる(`AGENT_RUN_RETENTION_DAYS` / `AGENT_RUN_KEEP` と
 `COMMAND_RUN_RETENTION_DAYS` / `COMMAND_RUN_KEEP`、既定は 90日 / 500件 / 90日 / 300件。
 [環境変数](./environment-variables.md#メンテナンス)と[リモート実行](./environment-variables.md#リモート実行)を参照)。
+
+チケットの変更履歴の保持期間は `TICKET_ACTIVITY_RETENTION_DAYS`(既定 365日)で変えられる。
+チケットを削除すると、その履歴も保持期間を待たずに一緒に消える。
 
 エージェントの月ごとの利用量(`agent_usage`)は掃除の対象にしない。実行履歴が消えても月のコストと
 予算上限の判定が狂わないよう、実行履歴とは別に積み上げているため(1 エージェント × ボード × 月で 1 行なので増え方は小さい)。

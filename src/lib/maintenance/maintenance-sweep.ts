@@ -167,6 +167,14 @@ export const sweepCommandRuns = async (now: Date): Promise<number> => {
   return count + capped
 }
 
+/** チケットの変更履歴。保持期間(`TICKET_ACTIVITY_RETENTION_DAYS`)を過ぎたものを消す */
+export const sweepTicketActivities = async (now: Date): Promise<number> =>
+  (
+    await prisma.ticketActivity.deleteMany({
+      where: { createdAt: { lt: msBefore(now, envu.server.TICKET_ACTIVITY_RETENTION_DAYS * DAY_MS) } },
+    })
+  ).count
+
 /** 更新が止まった CI の状態(GitHub の Check Suite / GitLab のパイプライン)。消えた後に表示される CI の結果は「無し」になる */
 export const sweepGitCheckSuites = async (now: Date): Promise<number> =>
   (await prisma.gitCheckSuite.deleteMany({ where: { updatedAt: { lt: msBefore(now, GIT_CHECK_SUITE_RETENTION_MS) } } }))
@@ -195,6 +203,7 @@ export const runMaintenanceSweep = async (now: Date = nowDate()): Promise<SweepC
   await runStep(counts, 'uploadNonce', () => sweepUploadNonces(now))
   await runStep(counts, 'agentRun', () => sweepAgentRuns(now))
   await runStep(counts, 'commandRun', () => sweepCommandRuns(now))
+  await runStep(counts, 'ticketActivity', () => sweepTicketActivities(now))
   await runStep(counts, 'gitCheckSuite', () => sweepGitCheckSuites(now))
   await runStep(counts, 'attachment', () => sweepOrphanAttachments(now))
 
