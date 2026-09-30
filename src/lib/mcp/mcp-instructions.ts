@@ -24,6 +24,11 @@ export const TICKET_WORKFLOW = [
 export const ACCEPTANCE_CRITERIA_GUIDE =
   'Put completion conditions (acceptance criteria / definition of done / checklist) in acceptanceCriteria as one verifiable sentence per item, not in content.'
 
+/** ボードの AI 向けコンテキスト(get_ticket / get_board / get_agent_task の boardContext)の読み方 */
+const BOARD_CONTEXT_GUIDE =
+  'boardContext in get_ticket / get_board / get_agent_task (only when set) holds premises shared by every ticket on the board ' +
+  '(target repository, conventions, terms, etc.). Read it before working on a ticket and follow it unless the ticket says otherwise.'
+
 /** 手順より優先するもの。既定値であることを必ず添える */
 const PRECEDENCE =
   'If the user instructions or project rules (CLAUDE.md / AGENTS.md, etc.) say otherwise, follow them. ' +
@@ -43,6 +48,7 @@ export const mcpInstructions = (kind: ResourceAuth['kind']): string => {
     'Comment types: type=plan is a work plan and type=report is a work report; both are shown separately from regular comments on the detail screen.',
     'Link GitHub / GitLab branches / pull requests (merge requests) / commits to a ticket with link_ticket_artifact to show their state and CI results on the ticket.',
     `When creating or updating a ticket: ${ACCEPTANCE_CRITERIA_GUIDE}`,
+    BOARD_CONTEXT_GUIDE,
   ]
   if (kind === 'agent') {
     return [

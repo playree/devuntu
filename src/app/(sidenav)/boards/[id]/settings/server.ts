@@ -27,6 +27,7 @@ import {
   deleteBoard as deleteBoardCore,
   getBoardDetail as getBoardDetailCore,
   getBoardNotify as getBoardNotifyCore,
+  setBoardAiContext as setBoardAiContextCore,
   setBoardArchivedState,
   setBoardNotify as setBoardNotifyCore,
   updateBoardProfile,
@@ -48,6 +49,7 @@ import {
   scGetBoardSlackChannels,
   scRemoveBoardMember,
   scSetBoardAgentAutoRevise,
+  scSetBoardAiContext,
   scSetBoardArchived,
   scSetBoardCompleteOnPrMerge,
   scSetBoardGroups,
@@ -93,6 +95,15 @@ export const updateBoard = safeAuthAction
   .metadata({ actionName: 'updateBoard', role: 'user' })
   .inputSchema(scUpdateBoard)
   .action(async ({ ctx: { user }, parsedInput }) => await updateBoardProfile(user, parsedInput))
+
+/** AI 向けコンテキストの更新(owner または管理者) */
+export const setBoardAiContext = safeAuthAction
+  .metadata({ actionName: 'setBoardAiContext', role: 'user' })
+  .inputSchema(scSetBoardAiContext)
+  .action(async ({ ctx: { user }, parsedInput: { id, aiContext } }) => {
+    await setBoardAiContextCore(user, id, aiContext)
+    return { id }
+  })
 
 /** アーカイブの切り替え(owner または管理者) */
 export const setBoardArchived = safeAuthAction

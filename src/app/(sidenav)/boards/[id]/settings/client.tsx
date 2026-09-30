@@ -13,6 +13,7 @@ import {
   ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
   Cog6ToothIcon,
+  CpuChipIcon,
   ExclamationTriangleIcon,
   GithubIcon,
   GitlabIcon,
@@ -32,6 +33,7 @@ import { useLocale } from '@/locale/client'
 import { Accordion, ButtonGroup } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
+import { BoardAiContext } from './board-ai-context'
 import { BoardAutoRevise } from './board-auto-revise'
 import { BoardGithub } from './board-github'
 import { BoardGitlab } from './board-gitlab'
@@ -60,7 +62,7 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
   const router = useRouter()
   const boardName = useBoardName()
 
-  const { data: board, reload, isLoading } = useActionData(() => getBoardDetail({ id: boardId }))
+  const { data: board, reload, refresh, isLoading } = useActionData(() => getBoardDetail({ id: boardId }))
   const { data: tags, reload: reloadTags } = useActionData(() => getBoardTags({ id: boardId }))
   // アサイン編集は manage 権限が要るため、取得できない場合は undefined のまま(フォームを出さない)
   const { data: assignments, reload: reloadAssignments } = useActionData(() => getBoardAssignments({ id: boardId }))
@@ -219,6 +221,19 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
               reloadTags()
             }}
           />
+        </AccordionSection>
+
+        <AccordionSection
+          /**
+           * AI 向けコンテキスト: MCP でチケットと一緒に返すボード共通の前提。
+           * MCP で届く内容なのでメンバーには閲覧させ、編集は owner と管理者に限る。
+           * 保存後は開いているセクションを閉じないよう、isLoading を立てない refresh で取り直す
+           */
+          id='board_ai_context'
+          icon={<CpuChipIcon />}
+          title={t('board_ai_context')}
+        >
+          <BoardAiContext boardId={board.id} aiContext={board.aiContext} canManage={board.canManage} reload={refresh} />
         </AccordionSection>
 
         {canManageBoard && board.slackEnabled && (

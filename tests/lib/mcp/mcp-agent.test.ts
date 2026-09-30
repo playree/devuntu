@@ -13,7 +13,8 @@ import { postChildProposal } from '@/lib/agent/agent-proposal'
 import { finishAgentTask } from '@/lib/agent/agent-run'
 import { findAgentRunner } from '@/lib/agent/agent-runner'
 import { findAgentTicket, pickAgentTasks, resolveAgentTask } from '@/lib/agent/agent-task'
-import { assertTicketAccess } from '@/lib/board/board-access'
+import { assertTicketAccess, getTicketAccess } from '@/lib/board/board-access'
+import { findBoardAiContext } from '@/lib/board/board-setting'
 import { listTicketCriteria } from '@/lib/board/ticket-criterion'
 import { errInvalidOperation } from '@/lib/error'
 import { resolveTicketId } from '@/lib/mcp/mcp-ticket'
@@ -46,6 +47,11 @@ vi.mock('@/lib/agent/agent-run', async (importOriginal) => ({
 
 vi.mock('@/lib/board/board-access', () => ({
   assertTicketAccess: vi.fn(),
+  getTicketAccess: vi.fn(),
+}))
+
+vi.mock('@/lib/board/board-setting', () => ({
+  findBoardAiContext: vi.fn(),
 }))
 
 vi.mock('@/lib/board/ticket-criterion', () => ({
@@ -97,6 +103,8 @@ beforeEach(() => {
   vi.mocked(pickAgentTasks).mockResolvedValue([])
   vi.mocked(listTicketCriteria).mockResolvedValue([])
   vi.mocked(findLatestAgentDecision).mockResolvedValue(null)
+  vi.mocked(getTicketAccess).mockResolvedValue({ boardId: 'b1', boardRole: 'member' } as never)
+  vi.mocked(findBoardAiContext).mockResolvedValue(null)
 })
 
 describe('自動運用ツールの登録', () => {
@@ -251,6 +259,50 @@ describe('get_agent_task', () => {
 
     expect(listRunAutoRevise).toHaveBeenCalledWith(runnerRow.id, 't1')
     expect(parseResult(result.content).task).toMatchObject({ autoRevise })
+  })
+
+  describe('ボードの AI 向けコンテキスト', () => {
+    const task = {
+      ticketId: 't1',
+      displayId: 'ABC-42',
+      title: 'テスト',
+      mode: 'plan',
+      action: 'plan',
+      state: 'running',
+    }
+    const callTask = async () =>
+      parseResult(
+        (
+          await (
+            await connectDevuntuMcp(agentAuth)
+          ).callTool({ name: 'get_agent_task', arguments: { ticketId: 'ABC-42' } })
+        ).content,
+      ).task
+
+    beforeEach(() => {
+      vi.mocked(resolveAgentTask).mockResolvedValue(task as never)
+      vi.mocked(resolveTicketId).mockResolvedValue('t1')
+    })
+
+    it('設定されていれば task.boardContext に載せる', async () => {
+      vi.mocked(findBoardAiContext).mockResolvedValue('## 前提')
+
+      expect(await callTask()).toMatchObject({ boardContext: '## 前提' })
+      expect(getTicketAccess).toHaveBeenCalledWith(agentAuth.user, 't1')
+      expect(findBoardAiContext).toHaveBeenCalledWith('b1')
+    })
+
+    it('未設定なら項目ごと載せない', async () => {
+      expect(await callTask()).not.toHaveProperty('boardContext')
+    })
+
+    it('ボードのメンバーでなければ引かない', async () => {
+      vi.mocked(getTicketAccess).mockResolvedValue({ boardId: 'b1', boardRole: null } as never)
+      vi.mocked(findBoardAiContext).mockResolvedValue('## 前提')
+
+      expect(await callTask()).not.toHaveProperty('boardContext')
+      expect(findBoardAiContext).not.toHaveBeenCalled()
+    })
   })
 
   it('処理対象でないチケットを指定した場合は task が null になる', async () => {
