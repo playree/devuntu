@@ -188,7 +188,7 @@ export const TicketDetailClient: FC<{
         defaultExpandedKeys={[]}
         className='pb-4'
       >
-        <TicketRelations ticket={ticket} refresh={refreshAll} />
+        <TicketRelations ticket={ticket} options={options} refresh={refreshAll} />
         <TicketLinks ticket={ticket} refresh={refreshAll} />
         <TicketActivities ticket={ticket} />
       </Accordion>
