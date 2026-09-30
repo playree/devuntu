@@ -136,20 +136,34 @@ export const AddModal: FC<
         state.close()
       })}
       title={{ text: t('add_ticket'), icon: <PlusIcon /> }}
-      submit={{ isPending: isSubmitting, isDisabled: !isValidCriterionRows(criteria) }}
-    >
-      <GridBox isSmart>
-        {boardTemplates.length > 0 && (
-          <div className='col-span-12 md:col-span-4'>
+      headerEnd={
+        boardTemplates.length > 0 && (
+          <div className='w-full sm:w-56'>
             <SingleSelectField
               groupOptions={templateOptions}
               label={t('ticket_template')}
+              placeholder={t('ticket_template')}
               value={templateId}
               onChange={applyTemplate}
+              isLabelHidden
+              isSmart
               isClearable
             />
           </div>
-        )}
+        )
+      }
+      submit={{ isPending: isSubmitting, isDisabled: !isValidCriterionRows(criteria) }}
+    >
+      <GridBox isSmart>
+        <div className='col-span-12 md:col-span-4'>
+          <SingleSelectCtrl
+            control={control}
+            name='boardId'
+            groupOptions={boardOptions}
+            label={t('board')}
+            isDisabled={isBoardLocked}
+          />
+        </div>
         <div className='col-span-12 md:col-span-8'>
           <InputCtrl
             control={control}
@@ -161,15 +175,6 @@ export const AddModal: FC<
           />
         </div>
 
-        <div className='col-span-6 md:col-span-4'>
-          <SingleSelectCtrl
-            control={control}
-            name='boardId'
-            groupOptions={boardOptions}
-            label={t('board')}
-            isDisabled={isBoardLocked}
-          />
-        </div>
         <div className='col-span-6 md:col-span-2'>
           <SingleSelectCtrl control={control} name='status' groupOptions={statusOptions} label={t('status')} />
         </div>
