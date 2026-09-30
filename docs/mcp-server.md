@@ -165,10 +165,10 @@ AIエージェントは `devuntu-agent` を名乗るので、`claude mcp list` �
 | `ping`                   | 接続確認。認可済みユーザーのメールアドレスを返す                                                                                        | なし                                                                                                                                                               |
 | `echo`                   | 入力した文字列をそのまま返す                                                                                                            | `message`                                                                                                                                                          |
 | `list_boards`            | アクセスできるボードの一覧。チケットを作る前に対象ボードを特定する                                                                      | `includeArchived`(任意)                                                                                                                                            |
-| `get_board`              | ボードの詳細(メンバー・タグ・ステータス別のチケット件数・AI向けコンテキスト)                                                            | `boardId`                                                                                                                                                          |
+| `get_board`              | ボードの詳細(メンバー・タグ・ステータス別のチケット件数・AI向けコンテキスト・チケットテンプレート)                                      | `boardId`                                                                                                                                                          |
 | `get_ticket`             | チケットの詳細(本文・ステータス・担当者・タグ・受け入れ条件・コメント・親子・関連・変更履歴・短縮URL・ボードのAI向けコンテキスト)を取得 | `ticketId`                                                                                                                                                         |
 | `search_tickets`         | アクセスできるチケットを検索(更新日時の降順)                                                                                            | `keyword` / `status` / `priority` / `tags` / `boardId` / `assignee` / `relatedTo` / `relation` / `limit`                                                           |
-| `create_ticket`          | ボードにチケットを新規作成                                                                                                              | `boardId` / `title` / `content` / `status` / `priority` / `dueDate` / `assigneeId` / `tagIds` / `acceptanceCriteria` / `parentId` / `childOrder`                   |
+| `create_ticket`          | ボードにチケットを新規作成                                                                                                              | `boardId` / `title` / `templateId` / `content` / `status` / `priority` / `dueDate` / `assigneeId` / `tagIds` / `acceptanceCriteria` / `parentId` / `childOrder`    |
 | `update_ticket`          | チケットの内容とステータスを更新                                                                                                        | `ticketId` / `title` / `content` / `priority` / `dueDate` / `assigneeId` / `tagIds` / `status` / `acceptanceCriteria` / `parentId` / `childOrder` / `childAdvance` |
 | `delete_ticket`          | チケットを削除                                                                                                                          | `ticketId`                                                                                                                                                         |
 | `add_ticket_comment`     | コメントを追加(対応プラン・対応報告・返信もここから)                                                                                    | `ticketId` / `content` / `type` / `parentId`                                                                                                                       |
@@ -271,6 +271,20 @@ OAuth / ユーザーの MCP トークンで接続した場合だけ登録する�
 - 読み方(着手前に読み、チケットに別の指示が無ければ従う)は `instructions` とツールの description で伝える
 - MCP resources としては公開していない(ツールの応答で届くため)
 - エージェント単位の指示(`AgentRunner.rule`)との分担は [agent-runner.md](agent-runner.md#ルール) を参照
+
+### チケットテンプレート
+
+ボード設定の「チケットテンプレート」(`TicketTemplate`。1ボード20件まで)は、本文・受け入れ条件・タグ・優先度の雛形。
+`get_board` の `templates` に `id` / `name` / `content` / `acceptanceCriteria` / `tagIds` / `priority` で載る
+(テンプレートが無いボードでは項目ごと載せない)。
+
+- `create_ticket` の `templateId` にテンプレートの ID か名前を渡すと、**明示した項目を優先**し、
+  省略した `content` / `acceptanceCriteria` / `tagIds` / `priority` だけをテンプレートで埋めて作成する
+  (空文字・空配列も明示として扱う)。件名(`title`)は常に必須
+- `priority` はテンプレートにも無ければ `medium`、`tagIds` は空。`templateId` を渡さなければ従来と同じ既定値になる
+- テンプレートの `tagIds` は、ボードから削除されたタグを除いて返す・適用する
+- 他ボードのテンプレートや存在しないテンプレートを指定するとエラーになり、チケットは作られない
+- 作成したチケットとテンプレートの紐付けは持たない(後からテンプレートを変えても既存のチケットは変わらない)
 
 ### 入力の約束ごと
 

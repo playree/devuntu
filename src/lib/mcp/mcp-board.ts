@@ -13,6 +13,7 @@ import { assertBoardAccess } from '@/lib/board/board-access'
 import { getBoardMemberUsers } from '@/lib/board/board-member'
 import { listBoardTags } from '@/lib/board/tag'
 import { BOARD_KEY_PATTERN } from '@/lib/board/ticket-id'
+import { listTicketTemplates } from '@/lib/board/ticket-template'
 import { errInvalidOperation } from '@/lib/error'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import { prisma } from '@/lib/prisma'
@@ -68,9 +69,10 @@ export const getBoardForMcp = async (auth: ResourceAuth, boardIdOrKey: string) =
     throw errInvalidOperation()
   }
 
-  const [members, tags, counts] = await Promise.all([
+  const [members, tags, templates, counts] = await Promise.all([
     getBoardMemberUsers(id),
     listBoardTags(id),
+    listTicketTemplates(id),
     countTicketsByBoard([id]),
   ])
 
@@ -88,6 +90,19 @@ export const getBoardForMcp = async (auth: ResourceAuth, boardIdOrKey: string) =
     members: members.map(({ id, name, email, isAgent, role, via }) => ({ id, name, email, isAgent, role, via })),
     /** チケットの tagIds に指定できるタグ。他ボードのタグは付けられない */
     tags: tags.map(({ id, name, color }) => ({ id, name, color })),
+    /** create_ticket の templateId に指定できる雛形。無いボードでは項目ごと載せない */
+    ...(templates.length > 0
+      ? {
+          templates: templates.map(({ id, name, content, criteria, tagIds, priority }) => ({
+            id,
+            name,
+            content,
+            acceptanceCriteria: criteria,
+            tagIds,
+            priority,
+          })),
+        }
+      : {}),
     ticketCounts: counts[id] ?? {},
   }
 }

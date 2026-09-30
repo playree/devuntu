@@ -4,21 +4,28 @@ import { DatePickerCtrl } from '@/components/general/date-picker'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
 import { FormModal, ModalBaseProps } from '@/components/general/modal'
-import { SingleSelectCtrl } from '@/components/general/select'
+import { SingleSelectCtrl, SingleSelectField } from '@/components/general/select'
 import { PlusIcon } from '@/components/icon'
 import { MarkdownCtrl } from '@/components/markdown/markdown-editor'
 import { notify } from '@/components/notify'
+import {
+  CriteriaRowsField,
+  type CriterionDraftRow,
+  filledCriterionRows,
+  isValidCriterionRows,
+  toCriterionDraftRows,
+} from '@/components/ticket/criteria-rows-field'
 import { TagSelectCtrl } from '@/components/ticket/tag-id-select'
 import { useBoardName, useTicketOptions } from '@/components/ticket/ticket-options'
 import { UserSelectCtrl } from '@/components/user-select'
 import type { TicketStatus } from '@/generated/prisma/enums'
-import { parseAction } from '@/lib/action/action-client'
+import { parseAction, useActionData } from '@/lib/action/action-client'
 import { CreateTicketIn, CreateTicketOut, scCreateTicket } from '@/lib/schema/schema-ticket'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { FC, useEffect } from 'react'
+import { FC, useEffect, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
-import { createTicket, createTicketTag } from './server'
+import { createTicket, createTicketTag, getTicketTemplateOptions } from './server'
 import { type TicketFormOptions, useBoardAssignees } from './use-ticket-form'
 
 /**
@@ -70,6 +77,19 @@ export const AddModal: FC<
   const { assignees: boardAssignees } = useBoardAssignees(boardId)
   // タグは選択中のボードのものだけを候補にする(他ボードのタグはサーバー側で弾かれる)
   const boardTags = options.tags.filter((tag) => tag.boardId === boardId)
+  const { data: templates } = useActionData(() => getTicketTemplateOptions({ id: boardId }), {
+    skip: !boardId,
+    key: boardId,
+  })
+  const boardTemplates = templates ?? []
+  const templateOptions = Object.fromEntries(boardTemplates.map((template) => [template.id, template.name]))
+  // 選んだボードも覚えておき、ボードを切り替えたら選択を外れた扱いにする
+  const [selected, setSelected] = useState<{ boardId: string; id: string | null }>()
+  const templateId = selected?.boardId === boardId ? selected.id : null
+  // 受け入れ条件は行の並べ替えがあるため react-hook-form の外で持ち、送信時に文言だけを渡す
+  const [criteria, setCriteria] = useState<CriterionDraftRow[]>([])
+  // 本文のエディタは初回の値しか取り込まないので、テンプレートを写したときは作り直す
+  const [contentKey, setContentKey] = useState(0)
 
   // ボードが変わったら前のボードの担当者・タグの ID が残らないよう既定値へ戻す
   // (初回マウントでも走るが defaultValues と同じ値を書くだけなので実害はない)
@@ -78,20 +98,58 @@ export const AddModal: FC<
     setValue('tagIds', [])
   }, [boardId, options.privateBoardId, options.selfUserId, setValue])
 
+  /**
+   * テンプレートの内容をフォームへ写す。テンプレートが持つ項目だけを置き換え、空の項目は入力済みの値を残す。
+   * 写した後は通常の入力と同じく自由に編集できる
+   */
+  const applyTemplate = (id: string | null) => {
+    setSelected({ boardId, id })
+    const template = boardTemplates.find((row) => row.id === id)
+    if (!template) {
+      return
+    }
+    if (template.content) {
+      setValue('content', template.content)
+      setContentKey((key) => key + 1)
+    }
+    if (template.priority) {
+      setValue('priority', template.priority)
+    }
+    if (template.tagIds.length > 0) {
+      setValue('tagIds', template.tagIds, { shouldValidate: true })
+    }
+    if (template.criteria.length > 0) {
+      setCriteria(toCriterionDraftRows(template.criteria))
+    }
+  }
+
   return (
     <FormModal
       state={state}
       size='5xl'
       onSubmit={handleSubmit(async (req) => {
-        const res = await parseAction(createTicket(req))
+        const res = await parseAction(
+          createTicket({ ...req, criteria: filledCriterionRows(criteria).map((row) => row.text) }),
+        )
         notify.success(t('msg_added_target', { target: res.title }))
         reload()
         state.close()
       })}
       title={{ text: t('add_ticket'), icon: <PlusIcon /> }}
-      submit={{ isPending: isSubmitting }}
+      submit={{ isPending: isSubmitting, isDisabled: !isValidCriterionRows(criteria) }}
     >
       <GridBox isSmart>
+        {boardTemplates.length > 0 && (
+          <div className='col-span-12 md:col-span-4'>
+            <SingleSelectField
+              groupOptions={templateOptions}
+              label={t('ticket_template')}
+              value={templateId}
+              onChange={applyTemplate}
+              isClearable
+            />
+          </div>
+        )}
         <div className='col-span-12 md:col-span-8'>
           <InputCtrl
             control={control}
@@ -137,6 +195,7 @@ export const AddModal: FC<
 
         <div className='col-span-12'>
           <MarkdownCtrl
+            key={contentKey}
             control={control}
             name='content'
             constraintSchema={scCreateTicket}
@@ -145,6 +204,11 @@ export const AddModal: FC<
             // メンション候補は担当者候補と同じボードメンバー(取得を 1 本にまとめている)
             mentionCandidates={boardAssignees}
           />
+        </div>
+
+        <div className='col-span-12 space-y-1'>
+          <div className='text-sm'>{t('acceptance_criteria')}</div>
+          <CriteriaRowsField rows={criteria} onChange={setCriteria} />
         </div>
       </GridBox>
     </FormModal>

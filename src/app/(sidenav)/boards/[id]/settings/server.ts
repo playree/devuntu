@@ -38,6 +38,12 @@ import {
   listBoardTagsForManage,
   updateBoardTag as updateBoardTagCore,
 } from '@/lib/board/tag'
+import {
+  createTicketTemplate as createTicketTemplateCore,
+  deleteTicketTemplate as deleteTicketTemplateCore,
+  listBoardTicketTemplates,
+  updateTicketTemplate as updateTicketTemplateCore,
+} from '@/lib/board/ticket-template'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { assertRateLimit } from '@/lib/rate-limit'
@@ -59,6 +65,7 @@ import {
   scUpsertBoardMember,
 } from '@/lib/schema/schema-board'
 import { scCreateTag, scUpdateTag } from '@/lib/schema/schema-ticket'
+import { scCreateTicketTemplate, scUpdateTicketTemplate } from '@/lib/schema/schema-ticket-template'
 import { listSlackChannels } from '@/lib/slack/slack-server'
 
 /**
@@ -334,5 +341,37 @@ export const deleteBoardTag = safeAuthAction
   .inputSchema(scUUID)
   .action(async ({ ctx: { user }, parsedInput: { id } }) => {
     await deleteBoardTagCore(user, id)
+    return { id }
+  })
+
+/* -------------------------------------------------------------------------------------------------
+ * チケットテンプレート
+ * -----------------------------------------------------------------------------------------------*/
+
+/** テンプレート一覧。閲覧はメンバーなら可能 */
+export const getBoardTicketTemplates = safeAuthAction
+  .metadata({ actionName: 'getBoardTicketTemplates', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => listBoardTicketTemplates(user, id))
+export type GetBoardTicketTemplatesReturnType = Awaited<ReturnType<typeof getBoardTicketTemplates>>['data']
+
+/** テンプレート追加(owner または管理者) */
+export const createBoardTicketTemplate = safeAuthAction
+  .metadata({ actionName: 'createBoardTicketTemplate', role: 'user' })
+  .inputSchema(scCreateTicketTemplate)
+  .action(async ({ ctx: { user }, parsedInput }) => await createTicketTemplateCore(user, parsedInput))
+
+/** テンプレート更新(owner または管理者) */
+export const updateBoardTicketTemplate = safeAuthAction
+  .metadata({ actionName: 'updateBoardTicketTemplate', role: 'user' })
+  .inputSchema(scUpdateTicketTemplate)
+  .action(async ({ ctx: { user }, parsedInput }) => await updateTicketTemplateCore(user, parsedInput))
+
+/** テンプレート削除(owner または管理者) */
+export const deleteBoardTicketTemplate = safeAuthAction
+  .metadata({ actionName: 'deleteBoardTicketTemplate', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => {
+    await deleteTicketTemplateCore(user, id)
     return { id }
   })

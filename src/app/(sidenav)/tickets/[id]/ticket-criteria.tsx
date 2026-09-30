@@ -3,34 +3,24 @@
 import { MultiButton, SubmitButtons } from '@/components/general/button'
 import { CheckboxField } from '@/components/general/checkbox'
 import { FlexCol } from '@/components/general/flex'
-import { InputField } from '@/components/general/input'
-import {
-  CheckBadgeIcon,
-  CheckIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-  ClipboardDocumentCheckIcon,
-  PencilSquareIcon,
-  PlusIcon,
-  XCircleIcon,
-  XMarkIcon,
-} from '@/components/icon'
+import { CheckBadgeIcon, CheckIcon, ClipboardDocumentCheckIcon, PencilSquareIcon, XCircleIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
+import {
+  CriteriaRowsField,
+  type CriterionDraftRow,
+  filledCriterionRows,
+  isValidCriterionRows,
+} from '@/components/ticket/criteria-rows-field'
 import { parseAction } from '@/lib/action/action-client'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { dayformat } from '@/lib/day'
-import { MAX_CRITERION_TEXT, MAX_TICKET_CRITERIA, zCriterionText } from '@/lib/schema/schema-ticket'
 import { useLocale } from '@/locale/client'
 import { Popover } from '@heroui/react'
-import { nanoid } from 'nanoid'
 import { FC, PointerEvent, useEffect, useRef, useState } from 'react'
 import { checkTicketCriterion, GetTicketReturnType, saveTicketCriteria } from './server'
 
 type Ticket = NonNullable<GetTicketReturnType>
 type Criterion = Ticket['criteria'][number]
-
-/** 編集中の 1 行。key は並べ替えても入力欄を取り違えないための描画用 */
-type DraftRow = { key: string; id?: string; text: string }
 
 /** 閉じた状態 / マウスを乗せて開いた状態 / 押して開いた状態 */
 type SelfReportOpenMode = 'closed' | 'hover' | 'press'
@@ -160,29 +150,19 @@ const CriteriaEditor: FC<{
   refresh: () => Promise<void>
 }> = ({ ticket, onClose, refresh }) => {
   const { t } = useLocale()
-  const [rows, setRows] = useState<DraftRow[]>(() => ticket.criteria.map(({ id, text }) => ({ key: id, id, text })))
+  const [rows, setRows] = useState<CriterionDraftRow[]>(() =>
+    ticket.criteria.map(({ id, text }) => ({ key: id, id, text })),
+  )
   const [isSaving, setSaving] = useState(false)
-
-  const update = (key: string, text: string) =>
-    setRows((current) => current.map((row) => (row.key === key ? { ...row, text } : row)))
-  const remove = (key: string) => setRows((current) => current.filter((row) => row.key !== key))
-  const move = (index: number, offset: number) =>
-    setRows((current) => {
-      const next = [...current]
-      const [row] = next.splice(index, 1)
-      next.splice(index + offset, 0, row)
-      return next
-    })
-
-  // 空の行は保存時に捨てるので、入力途中の空行があっても保存できる
-  const filled = rows.filter((row) => row.text.trim())
-  const isValid = filled.every((row) => zCriterionText.safeParse(row.text).success)
 
   const save = async () => {
     setSaving(true)
     try {
       await parseAction(
-        saveTicketCriteria({ ticketId: ticket.id, items: filled.map(({ id, text }) => ({ id, text })) }),
+        saveTicketCriteria({
+          ticketId: ticket.id,
+          items: filledCriterionRows(rows).map(({ id, text }) => ({ id, text })),
+        }),
       )
       notify.success(t('msg_saved'))
       await refresh()
@@ -195,73 +175,21 @@ const CriteriaEditor: FC<{
   }
 
   return (
-    <div className='space-y-2'>
-      {rows.map((row, index) => (
-        <div key={row.key} className='flex items-center gap-1'>
-          <div className='grow'>
-            <InputField
-              isSmart
-              isLabelHidden
-              label={t('criterion_text')}
-              aria-label={t('criterion_text')}
-              value={row.text}
-              maxLength={MAX_CRITERION_TEXT}
-              onChange={(e) => update(row.key, e.target.value)}
-            />
-          </div>
-          <div className='flex shrink-0'>
-            <MultiButton
-              isIconOnly
-              size='sm'
-              variant='ghost'
-              tooltip={t('move_up')}
-              icon={<ChevronUpIcon width={16} />}
-              isDisabled={index === 0}
-              onPress={() => move(index, -1)}
-            />
-            <MultiButton
-              isIconOnly
-              size='sm'
-              variant='ghost'
-              tooltip={t('move_down')}
-              icon={<ChevronDownIcon width={16} />}
-              isDisabled={index === rows.length - 1}
-              onPress={() => move(index, 1)}
-            />
-          </div>
-          <MultiButton
-            isIconOnly
-            size='sm'
-            variant='ghost'
-            tooltip={t('delete')}
-            icon={<XMarkIcon width={16} />}
-            onPress={() => remove(row.key)}
-          />
-        </div>
-      ))}
-      <div className='flex flex-wrap items-center gap-2'>
-        <MultiButton
+    <CriteriaRowsField
+      rows={rows}
+      onChange={setRows}
+      action={
+        <SubmitButtons
           size='sm'
-          variant='outline'
-          icon={<PlusIcon width={16} />}
-          isDisabled={rows.length >= MAX_TICKET_CRITERIA}
-          onPress={() => setRows((current) => [...current, { key: nanoid(), text: '' }])}
-        >
-          {t('add_criterion')}
-        </MultiButton>
-        <div className='ml-auto flex gap-2'>
-          <SubmitButtons
-            size='sm'
-            label={t('save')}
-            icon={<CheckIcon width={16} />}
-            isPending={isSaving}
-            isDisabled={!isValid}
-            onPress={save}
-            onCancel={onClose}
-          />
-        </div>
-      </div>
-    </div>
+          label={t('save')}
+          icon={<CheckIcon width={16} />}
+          isPending={isSaving}
+          isDisabled={!isValidCriterionRows(rows)}
+          onPress={save}
+          onCancel={onClose}
+        />
+      }
+    />
   )
 }
 
