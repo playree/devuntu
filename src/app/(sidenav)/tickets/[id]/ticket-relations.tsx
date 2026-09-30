@@ -3,6 +3,7 @@
 import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
+import { useModalState } from '@/components/general/modal'
 import { SingleSelectField } from '@/components/general/select'
 import {
   ArrowTopRightOnSquareIcon,
@@ -33,6 +34,8 @@ import { useLocale } from '@/locale/client'
 import Link from 'next/link'
 import { FC, ReactNode, useCallback, useState } from 'react'
 import { tv } from 'tailwind-variants'
+import { AddModal } from '../modals'
+import type { TicketFormOptions } from '../use-ticket-form'
 import {
   addTicketRelation,
   GetTicketReturnType,
@@ -334,8 +337,46 @@ const ChildAdvanceField: FC<{ ticket: Ticket; refresh: () => Promise<void> }> = 
   )
 }
 
+/** このチケットを親として子チケットを作る。作成先は親のボードに固定し、順番は兄弟の末尾になる */
+const CreateChildButton: FC<{ ticket: Ticket; options: TicketFormOptions; refresh: () => Promise<void> }> = ({
+  ticket,
+  options,
+  refresh,
+}) => {
+  const { t } = useLocale()
+  const modal = useModalState()
+  return (
+    <>
+      <div>
+        <MultiButton size='sm' variant='outline' icon={<PlusIcon width={16} />} onPress={() => modal.open()}>
+          {t('create_child_ticket')}
+        </MultiButton>
+      </div>
+      <AddModal
+        key={modal.key}
+        state={modal}
+        reload={() => void refresh()}
+        options={options}
+        parent={{
+          id: ticket.id,
+          displayId: ticket.displayId,
+          title: ticket.title,
+          boardId: ticket.boardId,
+          priority: ticket.priority,
+          tagIds: ticket.tags.map((tag) => tag.id),
+        }}
+      />
+    </>
+  )
+}
+
 /** 親チケット・直下の子・関連チケット。参照は 1 階層だけ */
-export const TicketRelations: FC<{ ticket: Ticket; refresh: () => Promise<void> }> = ({ ticket, refresh }) => {
+export const TicketRelations: FC<{
+  ticket: Ticket
+  /** 子チケット作成モーダルの選択肢。取得できるまでは作成ボタンを出さない */
+  options?: TicketFormOptions
+  refresh: () => Promise<void>
+}> = ({ ticket, options, refresh }) => {
   const { t } = useLocale()
   const { relations, canEdit, displayId } = ticket
   const { parent, children, childProgress, related } = relations
@@ -418,6 +459,7 @@ export const TicketRelations: FC<{ ticket: Ticket; refresh: () => Promise<void> 
         </RelationGroup>
 
         {canEdit && <AddRelationForm ticket={ticket} refresh={refresh} />}
+        {canEdit && options && <CreateChildButton ticket={ticket} options={options} refresh={refresh} />}
       </FlexCol>
     </AccordionSection>
   )

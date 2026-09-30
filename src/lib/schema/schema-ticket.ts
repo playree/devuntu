@@ -89,6 +89,8 @@ export const scCreateTicket = z.object({
   assigneeId: z.uuidv7().nullish(),
   /** 受け入れ条件の文言(空行は画面側で捨てる)。MCP は acceptanceCriteria で受ける */
   criteria: z.array(zCriterionText).max(MAX_TICKET_CRITERIA, el('@too_many_criteria')).optional(),
+  /** 親チケットの ID。同じボードのものだけ(別ボードはサーバー側で弾く) */
+  parentId: z.uuidv7().nullish(),
 })
 export type CreateTicket = z.infer<typeof scCreateTicket>
 export type CreateTicketIn = z.input<typeof scCreateTicket>
