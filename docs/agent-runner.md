@@ -403,8 +403,8 @@ codex の `--sandbox danger-full-access` も同じ前提で、CLI 間に差は�
 | `--verbose`       | ログを DEBUG レベルで出す                                                                          |
 | `--version`       | ランナーのバージョンを表示する                                                                     |
 
-`--dry-run` / `--debug` でも `/api/agent/status` への問い合わせ(最終ポーリング時刻の更新)と自動更新は行い、
-実行の記録(`/api/agent/runs`)はしない。設定の不備は終了コード 2 で終わる。
+`--dry-run` / `--debug` でも `/api/agent/status` への問い合わせ(最終ポーリング時刻の更新)は行い、
+`self_update` が有効なら自動更新も行う。実行の記録(`/api/agent/runs`)はしない。設定の不備は終了コード 2 で終わる。
 
 ### 利用量の計測
 

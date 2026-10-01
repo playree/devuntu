@@ -593,7 +593,7 @@ docker compose logs devuntu | grep 'orphan attachment sweep capped'
 ### インデックスを足す目安
 
 掃除用のインデックスは一部のテーブルにだけ置いている(`ticket_activity.createdAt` /
-`git_check_suite.updatedAt` / `upload_nonce.expiresAt`)。`session` / `verification` / `oauth_*` には置いていない。
+`git_check_suite.updatedAt` / `upload_nonce.expiresAt` / `agent_run.(runnerId, startedAt)`)。`session` / `verification` / `oauth_*` には置いていない。
 特に `session.expiresAt` はセッション更新のたびに書き換わる列で、最も書き込みの多いテーブルに索引を足すと
 1時間に1回のスキャンと引き換えにリクエストごとの索引更新を招くため、あえて入れていない。
 
