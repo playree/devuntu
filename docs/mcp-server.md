@@ -7,8 +7,11 @@
   - [誰が使えるか](#誰が使えるか)
   - [ツール一覧](#ツール一覧)
     - [共通のツール](#共通のツール)
+    - [人間の経路専用のツール](#人間の経路専用のツール)
     - [エージェント専用のツール](#エージェント専用のツール)
     - [クライアントへの案内](#クライアントへの案内)
+    - [ボードの AI 向けコンテキスト](#ボードの-ai-向けコンテキスト)
+    - [チケットテンプレート](#チケットテンプレート)
     - [入力の約束ごと](#入力の約束ごと)
   - [ユーザーの MCP トークン](#ユーザーの-mcp-トークン)
   - [AIエージェント用ユーザー](#aiエージェント用ユーザー)
@@ -27,7 +30,9 @@
 
 `/api/mcp` を MCP クライアント(AIエージェントのCLI / IDE など)へ公開しており、Devuntu 自身が認可サーバーを
 兼ねるため、クライアントは接続時に動的クライアント登録(DCR)→ 認可コードフローの順で進む。
-利用するには管理者が `OIDC_DCR_ENABLED=true` を設定している必要がある。
+`OIDC_DCR_ENABLED` が制御するのはこの DCR(`/api/auth/oauth2/register`)だけで、既定の `false` では
+MCP クライアントが自動で登録できない(`/admin/oidc-clients` で手動登録したクライアントは認可コードフローで使える)。`/api/mcp` 自体は常に公開されており、
+下記のユーザーの MCP トークン・エージェントトークンは `OIDC_DCR_ENABLED` に関係なく使える。
 
 ブラウザを持たない**AIエージェント**は認可コードフローを踏めないため、管理画面で発行する
 長期トークンで接続する。人間も、CI やサーバーなどブラウザを開けない環境からは
@@ -149,7 +154,8 @@ AIエージェントは `devuntu-agent` を名乗るので、`claude mcp list` �
 
 ## ツール一覧
 
-`ping` から `get_agent_setup_guide` までは接続の種類(人間 / AIエージェント)を問わず登録される。
+[共通のツール](#共通のツール)と、[画像の添付](#画像の添付)の `create_image_upload_token` / `upload_image` / `get_image` は
+接続の種類(人間 / AIエージェント)を問わず登録される。
 人間の2経路(認可コードフロー / ユーザーの MCP トークン)は登録されるツールも権限も同じ。
 `report_acceptance_criteria` は人間の経路でだけ、`get_agent_task` / `finish_agent_task` / `propose_child_tickets` はエージェント用トークンで
 接続した場合だけ登録される(`src/lib/mcp/mcp-server.ts`)。
@@ -160,25 +166,25 @@ AIエージェントは `devuntu-agent` を名乗るので、`claude mcp list` �
 
 ### 共通のツール
 
-| ツール                   | 用途                                                                                                                                    | 入力                                                                                                                                                               |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `ping`                   | 接続確認。認可済みユーザーのメールアドレスを返す                                                                                        | なし                                                                                                                                                               |
-| `echo`                   | 入力した文字列をそのまま返す                                                                                                            | `message`                                                                                                                                                          |
-| `list_boards`            | アクセスできるボードの一覧。チケットを作る前に対象ボードを特定する                                                                      | `includeArchived`(任意)                                                                                                                                            |
-| `get_board`              | ボードの詳細(メンバー・タグ・ステータス別のチケット件数・AI向けコンテキスト・チケットテンプレート)                                      | `boardId`                                                                                                                                                          |
-| `get_ticket`             | チケットの詳細(本文・ステータス・担当者・タグ・受け入れ条件・コメント・親子・関連・変更履歴・短縮URL・ボードのAI向けコンテキスト)を取得 | `ticketId`                                                                                                                                                         |
-| `search_tickets`         | アクセスできるチケットを検索(更新日時の降順)                                                                                            | `keyword` / `status` / `priority` / `tags` / `boardId` / `assignee` / `relatedTo` / `relation` / `limit`                                                           |
-| `create_ticket`          | ボードにチケットを新規作成                                                                                                              | `boardId` / `title` / `templateId` / `content` / `status` / `priority` / `dueDate` / `assigneeId` / `tagIds` / `acceptanceCriteria` / `parentId` / `childOrder`    |
-| `update_ticket`          | チケットの内容とステータスを更新                                                                                                        | `ticketId` / `title` / `content` / `priority` / `dueDate` / `assigneeId` / `tagIds` / `status` / `acceptanceCriteria` / `parentId` / `childOrder` / `childAdvance` |
-| `delete_ticket`          | チケットを削除                                                                                                                          | `ticketId`                                                                                                                                                         |
-| `add_ticket_comment`     | コメントを追加(対応プラン・対応報告・返信もここから)                                                                                    | `ticketId` / `content` / `type` / `parentId`                                                                                                                       |
-| `update_ticket_comment`  | 自分が投稿したコメントを編集                                                                                                            | `commentId` / `content`                                                                                                                                            |
-| `delete_ticket_comment`  | コメントを削除                                                                                                                          | `commentId`                                                                                                                                                        |
-| `link_ticket_artifact`   | GitHub / GitLab のブランチ / プルリクエスト / コミットの URL をチケットに紐付ける                                                       | `ticketId` / `url`                                                                                                                                                 |
-| `unlink_ticket_artifact` | 紐付けを外す                                                                                                                            | `linkId`                                                                                                                                                           |
-| `link_related_ticket`    | 同じボードのチケット同士を関連付ける(向きなし)                                                                                          | `ticketId` / `relatedTicketId`                                                                                                                                     |
-| `unlink_ticket_relation` | 親子・関連を外す                                                                                                                        | `relationId`                                                                                                                                                       |
-| `get_agent_setup_guide`  | 自動運用(Devuntu Agent)を自分のマシンへ用意する手順を返す。人が読むためのもの                                                           | `cli`(任意。未指定なら手順ではなく CLI の選択を促す)                                                                                                               |
+| ツール                   | 用途                                                                                                                                                                | 入力                                                                                                                                                               |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ping`                   | 接続確認。認可済みユーザーのメールアドレスを返す                                                                                                                    | なし                                                                                                                                                               |
+| `echo`                   | 入力した文字列をそのまま返す                                                                                                                                        | `message`                                                                                                                                                          |
+| `list_boards`            | アクセスできるボードの一覧。チケットを作る前に対象ボードを特定する                                                                                                  | `includeArchived`(任意)                                                                                                                                            |
+| `get_board`              | ボードの詳細(メンバー・タグ・ステータス別のチケット件数・AI向けコンテキスト・チケットテンプレート)                                                                  | `boardId`                                                                                                                                                          |
+| `get_ticket`             | チケットの詳細(本文・ステータス・担当者・タグ・受け入れ条件・コメント・親子・関連・紐付け・変更履歴・短縮URL・ボードのAI向けコンテキスト・貼られた画像のキー)を取得 | `ticketId`                                                                                                                                                         |
+| `search_tickets`         | アクセスできるチケットを検索(更新日時の降順)                                                                                                                        | `keyword` / `status` / `priority` / `tags` / `boardId` / `assignee` / `relatedTo` / `relation` / `limit`                                                           |
+| `create_ticket`          | ボードにチケットを新規作成                                                                                                                                          | `boardId` / `title` / `templateId` / `content` / `status` / `priority` / `dueDate` / `assigneeId` / `tagIds` / `acceptanceCriteria` / `parentId` / `childOrder`    |
+| `update_ticket`          | チケットの内容とステータスを更新                                                                                                                                    | `ticketId` / `title` / `content` / `priority` / `dueDate` / `assigneeId` / `tagIds` / `status` / `acceptanceCriteria` / `parentId` / `childOrder` / `childAdvance` |
+| `delete_ticket`          | チケットを削除                                                                                                                                                      | `ticketId`                                                                                                                                                         |
+| `add_ticket_comment`     | コメントを追加(対応プラン・対応報告・返信もここから)                                                                                                                | `ticketId` / `content` / `type` / `parentId`                                                                                                                       |
+| `update_ticket_comment`  | 自分が投稿したコメントを編集                                                                                                                                        | `commentId` / `content`                                                                                                                                            |
+| `delete_ticket_comment`  | コメントを削除                                                                                                                                                      | `commentId`                                                                                                                                                        |
+| `link_ticket_artifact`   | GitHub / GitLab のブランチ / プルリクエスト / コミットの URL をチケットに紐付ける                                                                                   | `ticketId` / `url`                                                                                                                                                 |
+| `unlink_ticket_artifact` | 紐付けを外す                                                                                                                                                        | `linkId`                                                                                                                                                           |
+| `link_related_ticket`    | 同じボードのチケット同士を関連付ける(向きなし)                                                                                                                      | `ticketId` / `relatedTicketId`                                                                                                                                     |
+| `unlink_ticket_relation` | 親子・関連を外す                                                                                                                                                    | `relationId`                                                                                                                                                       |
+| `get_agent_setup_guide`  | 自動運用(Devuntu Agent)を自分のマシンへ用意する手順を返す。人が読むためのもの                                                                                       | `cli`(任意。未指定なら手順ではなく CLI の選択を促す)                                                                                                               |
 
 権限はボードのロールで決まり、基本は画面と同じ。ただしチケットの更新・削除だけは MCP 経由に
 追加の制限がある(`src/lib/board/ticket-permission.ts` の `canMcpUpdateTicket` / `canMcpDeleteTicket`)。
@@ -217,7 +223,8 @@ OAuth / ユーザーの MCP トークンで接続した場合だけ登録する�
 - `get_agent_task` の応答が `active: false` の場合は、何もせず終了する(コメントの投稿もしない)
 - `outcome` は `planned`(プランを投稿して返信待ち) / `completed`(対応完了) / `skipped`(見送り) / `failed`(失敗)
 - `get_agent_task` の `task` には、受け入れ条件(`acceptanceCriteria`)と、revise のきっかけになった承認 / 差し戻し
-  (`decision`)、設定されていればボードの AI 向けコンテキスト(`boardContext`)が載る。`finish_agent_task` の `criteria` で各条件の充足(`met`)と根拠(`evidence`)を報告すると、
+  (`decision`)と CI の失敗・PR / MR のレビュー指摘(`autoRevise`。
+  [agent-runner.md](agent-runner.md#自動差し戻しci-の失敗レビュー指摘))、設定されていればボードの AI 向けコンテキスト(`boardContext`)が載る。`finish_agent_task` の `criteria` で各条件の充足(`met`)と根拠(`evidence`)を報告すると、
   チケット詳細に自己申告として表示される。報告しなかった項目は前回の申告のまま残り、そのチケットに無い id を含む場合は
   何も記録せずエラーになる(実行は閉じないので、直して呼び直せる)
 - `propose_child_tickets` の `children` は子チケットごとの `title` / `content` / `order`(1〜999) / `mode`
@@ -308,6 +315,8 @@ OAuth / ユーザーの MCP トークンで接続した場合だけ登録する�
   `childOrder` は親の下での順番(1〜999)で、同じ値の子は番号順に並ぶ。省略すると兄弟の末尾に入る。
   画面で子を並べ替えると、兄弟全体が1から振り直される(同じ順番のまとまりは保ち、動かした子だけが単独の順番になる)。
   親が無い(外す)のに `childOrder` だけを渡すとエラーになる
+- `get_ticket` の `attachmentKeys` は本文・コメントに貼られた画像のキーで、`get_image` で中身を見られる。
+  `canEdit` / `canDelete` は画面での編集・削除の可否(MCP 経由の追加の制限は含まない)
 - `get_ticket` の `parent` / `children` / `related` は直下の1階層だけを返す(親の親や孫は含めない)。
   `children` は順番(`order`)の昇順で、`childProgress` に完了した子の数と子の数が入る。外すときは各要素の `relationId` を使う
 - `get_ticket` の `childAdvance` は親として持つ「子が次の順番へ進む条件」(`done` / `reported`)で、`update_ticket` で変えられる。
@@ -346,7 +355,7 @@ OAuth / ユーザーの MCP トークンで接続した場合だけ登録する�
 - 最終利用日時を持つが、リクエストごとの書き込みを避けるため 5 分間隔でしか更新しない。
   一覧の値は最大5分ぶん古くなりうる
 - ユーザーを削除するとトークンも一緒に消える(外部キーの Cascade)
-- 自動運用のツール(`get_agent_task` / `finish_agent_task`)は登録されない。
+- 自動運用のツール(`get_agent_task` / `finish_agent_task` / `propose_child_tickets`)は登録されない。
   ランナー向けの `/api/agent/*` もエージェントトークン専用なので、このトークンでは使えない
 
 ## AIエージェント用ユーザー
@@ -385,7 +394,7 @@ MCP からのみ利用できる。ボードやチケットの権限は人間の�
 ### 自動運用のツール
 
 エージェント用トークンで接続した場合だけ、自動運用(Devuntu Agent)のツール
-(`get_agent_task` / `finish_agent_task`)が追加で登録される。
+(`get_agent_task` / `finish_agent_task` / `propose_child_tickets`)が追加で登録される。
 一覧は [エージェント専用のツール](#エージェント専用のツール)、仕組みの詳細は
 [docs/agent-runner.md](agent-runner.md) を参照。
 

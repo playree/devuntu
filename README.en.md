@@ -50,13 +50,19 @@ and the AI agent features are designed around that same premise (a human check i
 ## Features
 
 - Kanban boards and tickets (boards, tags, assignees, priorities, due dates, comments, mentions)
+  - Parent/child and related tickets, acceptance criteria, per-board ticket templates and change history
+  - Filter the board and the ticket list down to the children or related tickets of a given ticket
 - Google Calendar integration, and sharing your free/busy time through a public URL that needs no sign-in
-- Email / Slack DM / web push notifications for mentions and assignee changes
+- Email / Slack DM / web push notifications for mentions, assignee changes and AI agent run results,
+  and Slack channel notifications per team board (tickets created / completed, assignee changes, agent run results)
 - An MCP server, so AI agents can work on tickets with your own permissions
 - AI agents can be registered as assignees and process their assigned tickets automatically
   (currently `Claude` and `Codex` are supported)
+  - Agents can split a large ticket into child tickets; once you approve the proposal, they work through the children in order
+  - Per-board AI context (target repository, conventions, terms) delivered to MCP clients and agents as `boardContext`
 - Link GitHub / GitLab (including self-hosted) branches, pull requests and commits to tickets,
-  showing the PR status and CI results. Tickets can be completed automatically on merge
+  showing the PR status and CI results. Tickets can be completed automatically on merge,
+  and CI failures or PR/MR review comments can send the ticket back to the agent automatically
 - Run predefined jobs on remote servers and follow the output in real time
 - Passkey authentication and Google sign-in
 - Can act as an OAuth provider
@@ -155,20 +161,20 @@ Migrations are applied automatically. **Take a backup before updating** (see [Op
 
 ## Integrations
 
-All of them are optional. Set the environment variables and restart `devuntu`;
+All of them are optional. Each is enabled once its requirements are met (for environment variables, restart `devuntu`);
 Google and Slack additionally need to be enabled by an administrator at `/admin/settings`.
 
-| Integration      | Requires                                                                    | Enables                                                     |
-| ---------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| Email            | `MAIL_SEND` / `MAIL_FROM`                                                   | Email OTP sign-in and email notifications                   |
-| Google           | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                                 | Google sign-in and the calendar                             |
-| Slack            | The `SLACK_*` variables                                                     | Slack DM notifications and ticket URL unfurling             |
-| Web push         | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`                                    | Push notifications to browsers and phones                   |
-| GitHub           | Nothing (a secret is issued per repository in the board settings)           | PR status and CI results, auto-complete on merge            |
-| GitLab           | `GITLAB_URLS`                                                               | MR status and CI results, auto-complete on merge            |
-| MCP              | `OIDC_DCR_ENABLED=true`                                                     | Connections from MCP clients to `<BETTER_AUTH_URL>/api/mcp` |
-| AI agents        | Creating an agent and issuing a token at `/admin/agents`                    | Automatic ticket processing by agents                       |
-| Remote execution | `COMMAND_EXEC_ENABLED=true`, definition files, an SSH key and `known_hosts` | Running predefined jobs on remote servers from the UI       |
+| Integration      | Requires                                                                    | Enables                                                                                         |
+| ---------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Email            | `MAIL_SEND` / `MAIL_FROM`                                                   | Email OTP sign-in and email notifications                                                       |
+| Google           | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                                 | Google sign-in and the calendar                                                                 |
+| Slack            | The `SLACK_*` variables                                                     | Slack DM notifications and ticket URL unfurling                                                 |
+| Web push         | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`                                    | Push notifications to browsers and phones                                                       |
+| GitHub           | Nothing (a secret is issued per repository in the board settings)           | PR status and CI results, auto-complete on merge, send back to the agent on CI failure / review |
+| GitLab           | `GITLAB_URLS`                                                               | MR status and CI results, auto-complete on merge, send back to the agent on CI failure / review |
+| MCP              | `OIDC_DCR_ENABLED=true`                                                     | Connections from MCP clients to `<BETTER_AUTH_URL>/api/mcp`                                     |
+| AI agents        | Creating an agent and issuing a token at `/admin/agents`                    | Automatic ticket processing by agents                                                           |
+| Remote execution | `COMMAND_EXEC_ENABLED=true`, definition files, an SSH key and `known_hosts` | Running predefined jobs on remote servers from the UI                                           |
 
 Details (in Japanese): [installation](docs/installation.md#外部サービス連携任意),
 [notifications](docs/notifications.md), [MCP server](docs/mcp-server.md),

@@ -140,12 +140,14 @@ advisory lock を保持できないため、そもそも採れない)。
 **どの条件でどのイベントを発火するかは `src/lib/notify/notify-trigger.ts` に閉じる。**
 同じ操作が Web(Server Action)と MCP の 2 系統にあるため、判断を呼び出し元に書くと必ず片方が漏れる。
 
-| 入口                        | 呼び出し元                                               | 発火するイベント              |
-| --------------------------- | -------------------------------------------------------- | ----------------------------- |
-| `enqueueTicketCreated()`    | `createTicket` / `createTicketForMcp`                    | `mention` / `ticket_assigned` |
-| `enqueueTicketUpdated()`    | `patchTicket` / `updateTicketForMcp`                     | `mention` / `ticket_assigned` |
-| `enqueueTicketCommented()`  | `addTicketComment` / `updateTicketComment` とその MCP 版 | `mention`                     |
-| `enqueueAgentRunFinished()` | `agent-run.ts` の実行を閉じる 3 経路                     | `agent_run`                   |
+| 入口                              | 呼び出し元                                                                                                                               | 発火するイベント                                                                    |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `enqueueTicketCreated()`          | `ticket-mutation.ts` の `insertTicket`(`createTicket` / `createTicketForMcp`、起票案の承認で作る子チケット(`agent-proposal.ts`))         | `ticket_created` / `mention` / `ticket_assigned`、完了で作ったら `ticket_completed` |
+| `enqueueTicketUpdated()`          | `ticket-mutation.ts` の `updateTicket`(`patchTicket` / `updateTicketForMcp`)                                                             | `mention` / `ticket_assigned`、完了へ動いたら `ticket_completed`                    |
+| `enqueueTicketMoved()`            | ステータスだけの変更(`changeTicketStatus` = `updateTicketStatus` / かんばんの DnD)、report の承認による完了(`agent-decision.ts`)         | 完了へ動いたら `ticket_completed`                                                   |
+| `enqueueTicketCompletedByMerge()` | `completeTicketByMerge`(`git-webhook.ts` の PR / MR マージによる自動完了)                                                                | `ticket_completed`(操作者なし)                                                      |
+| `enqueueTicketCommented()`        | `ticket-mutation.ts` の `insertComment` / `updateComment`(Web と MCP のコメント、承認 / 差し戻しの返信、`propose_child_tickets` の plan) | `mention`                                                                           |
+| `enqueueAgentRunFinished()`       | `agent-run.ts` の実行を閉じる 3 経路                                                                                                     | `agent_run`                                                                         |
 
 呼び出し元は「何が起きたか」(前後の状態・増えたメンション)を渡すだけで、発火の判断はしない。
 
