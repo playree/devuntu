@@ -116,6 +116,7 @@ const TemplateModal: FC<{
 
         <div className='col-span-12'>
           <MarkdownCtrl
+            allowImages
             control={control}
             name='content'
             constraintSchema={scTicketTemplateFields}

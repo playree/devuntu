@@ -60,6 +60,7 @@ export const AnnouncementEditModal: FC<ModalBaseProps> = ({ state, reload }) => 
     >
       {initialBody !== undefined && (
         <MarkdownInput // WYSIWYG なので別途プレビューは持たない
+          allowImages
           label={t('announcement')}
           defaultValue={initialBody}
           onChange={setBody}

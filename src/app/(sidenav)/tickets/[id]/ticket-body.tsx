@@ -51,6 +51,7 @@ export const TicketBody: FC<{
   return (
     <div className='py-4'>
       <MarkdownField
+        allowImages
         body={ticket.content ?? ''}
         isEditing={isEditingContent}
         // 編集中に変わらない値を渡す(MDXEditor は編集モードのマウント時にこの値を取り込む)

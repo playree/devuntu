@@ -119,6 +119,7 @@ export const AgentDecisionButtons: FC<{
         }}
       >
         <MarkdownInput
+          allowImages
           defaultValue={reason}
           onChange={setReason}
           length={reason.length}

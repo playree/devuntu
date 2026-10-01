@@ -2,7 +2,7 @@
  * 添付キーの参照元検索の単体テスト
  *
  * 「参照されている」の判断を誤ると実データを消してしまうので、
- * 5つの参照元それぞれを拾えること、本文のページ送りが取りこぼさないことを確認する。
+ * 6つの参照元それぞれを拾えること、本文のページ送りが取りこぼさないことを確認する。
  */
 
 import { ATTACHMENT_SCAN_BATCH } from '@/lib/maintenance/maintenance'
@@ -15,6 +15,7 @@ vi.mock('@/lib/prisma', async () =>
   (await import('../../helpers/prisma')).mockPrisma({
     ticket: ['findMany', 'findFirst'],
     ticketComment: ['findMany', 'findFirst'],
+    ticketTemplate: ['findMany', 'findFirst'],
     user: ['findMany', 'findFirst'],
     linkWidget: ['findMany', 'findFirst'],
   }),
@@ -27,29 +28,34 @@ const keyA = '019eef64-6cc1-78f1-8f50-1ef86986289a.webp'
 const keyB = '019eef64-6cc1-78f1-8f50-1ef86986289b.webp'
 const keyC = '019eef64-6cc1-78f1-8f50-1ef86986289c.webp'
 const keyD = '019eef64-6cc1-78f1-8f50-1ef86986289d.webp'
+const keyE = '019eef64-6cc1-78f1-8f50-1ef86986289e.webp'
 
 beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(prisma.ticket.findMany).mockResolvedValue([] as never)
   vi.mocked(prisma.ticketComment.findMany).mockResolvedValue([] as never)
+  vi.mocked(prisma.ticketTemplate.findMany).mockResolvedValue([] as never)
   vi.mocked(prisma.user.findMany).mockResolvedValue([] as never)
   vi.mocked(prisma.linkWidget.findMany).mockResolvedValue([] as never)
-  for (const model of [prisma.ticket, prisma.ticketComment, prisma.user, prisma.linkWidget]) {
+  for (const model of [prisma.ticket, prisma.ticketComment, prisma.ticketTemplate, prisma.user, prisma.linkWidget]) {
     vi.mocked(model.findFirst).mockResolvedValue(null)
   }
   getString.mockResolvedValue(null)
 })
 
 describe('collectReferencedUploadKeys', () => {
-  it('本文・アバター・アイコン・お知らせのすべてから集める', async () => {
+  it('本文・テンプレート・アバター・アイコン・お知らせのすべてから集める', async () => {
     vi.mocked(prisma.ticket.findMany).mockResolvedValue([{ id: 't1', content: `![](${toUploadUrl(keyA)})` }] as never)
+    vi.mocked(prisma.ticketTemplate.findMany).mockResolvedValue([
+      { id: 'tt1', content: `![](${toUploadUrl(keyE)})` },
+    ] as never)
     vi.mocked(prisma.user.findMany).mockResolvedValue([{ image: toUploadUrl(keyB) }] as never)
     vi.mocked(prisma.linkWidget.findMany).mockResolvedValue([{ iconPath: toUploadUrl(keyC) }] as never)
     getString.mockResolvedValue({ value: `お知らせ ${toUploadUrl(keyD)}` })
 
     const keys = await collectReferencedUploadKeys()
 
-    expect([...keys].sort()).toEqual([keyA, keyB, keyC, keyD].sort())
+    expect([...keys].sort()).toEqual([keyA, keyB, keyC, keyD, keyE].sort())
   })
 
   it('1ページに収まらない本文はカーソルで続きを引く', async () => {
@@ -86,6 +92,11 @@ describe('findAttachmentReference', () => {
   it('コメント本文の参照を見つける', async () => {
     vi.mocked(prisma.ticketComment.findFirst).mockResolvedValue({ id: 'c1' } as never)
     expect(await findAttachmentReference(keyA)).toBe('comment')
+  })
+
+  it('チケットテンプレート本文の参照を見つける', async () => {
+    vi.mocked(prisma.ticketTemplate.findFirst).mockResolvedValue({ id: 'tt1' } as never)
+    expect(await findAttachmentReference(keyA)).toBe('ticketTemplate')
   })
 
   it('アバターの参照を見つける', async () => {

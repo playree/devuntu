@@ -136,6 +136,7 @@ export const CommentItem: FC<{
       {isEditing ? (
         <div className='mt-2 space-y-2'>
           <MarkdownInput
+            allowImages
             defaultValue={comment.content}
             onChange={setDraft}
             length={draft.length}
@@ -216,6 +217,7 @@ export const CommentReplyAction: FC<{
   return isReplying ? (
     <div className='space-y-2 pb-2'>
       <MarkdownInput
+        allowImages
         defaultValue=''
         onChange={setReplyDraft}
         length={replyDraft.length}

@@ -14,8 +14,11 @@ import { ATTACHMENT_SCAN_BATCH } from '../maintenance/maintenance'
 import { prisma } from '../prisma'
 import { extractUploadKeys, isUploadUrl, toUploadKey, toUploadUrl, UPLOAD_URL_PREFIX } from './upload'
 
-/** 添付を参照しうる場所 */
-export type AttachmentRefSource = 'ticket' | 'comment' | 'user' | 'linkWidget' | 'announcement'
+/**
+ * 添付を参照しうる場所。
+ * 画像を挿入できるエディタ(`allowImages`)の保存先は、`tests/components/markdown/image-editors.test.ts` の一覧と対で保つ
+ */
+export type AttachmentRefSource = 'ticket' | 'comment' | 'ticketTemplate' | 'user' | 'linkWidget' | 'announcement'
 
 /** 本文にアップロードURLを含む行だけを対象にする条件 */
 const hasUploadUrl = { content: { contains: UPLOAD_URL_PREFIX } }
@@ -73,6 +76,7 @@ export const collectReferencedUploadKeys = async (): Promise<Set<string>> => {
 
   await collectFromContent((args) => prisma.ticket.findMany(args), keys)
   await collectFromContent((args) => prisma.ticketComment.findMany(args), keys)
+  await collectFromContent((args) => prisma.ticketTemplate.findMany(args), keys)
 
   const [users, widgets, announcement] = await Promise.all([
     prisma.user.findMany({ where: { image: { startsWith: `${UPLOAD_URL_PREFIX}/` } }, select: { image: true } }),
@@ -110,6 +114,9 @@ export const findAttachmentReference = async (key: string): Promise<AttachmentRe
   }
   if (await prisma.ticketComment.findFirst({ where: { content: { contains: url } }, select: { id: true } })) {
     return 'comment'
+  }
+  if (await prisma.ticketTemplate.findFirst({ where: { content: { contains: url } }, select: { id: true } })) {
+    return 'ticketTemplate'
   }
   if (await prisma.user.findFirst({ where: { image: url }, select: { id: true } })) {
     return 'user'

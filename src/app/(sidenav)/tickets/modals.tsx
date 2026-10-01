@@ -229,6 +229,7 @@ export const AddModal: FC<
 
         <div className='col-span-12'>
           <MarkdownCtrl
+            allowImages
             key={contentKey}
             control={control}
             name='content'
