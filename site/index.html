@@ -6,7 +6,7 @@
     <title>Devuntu - セルフホスト型の開発サーバー構築ツール</title>
     <meta
       name="description"
-      content="Devuntu は、かんばん形式のボード/チケット管理を中心に、カレンダー連携、メール/Slack/Webプッシュ通知、MCP/AIエージェント連携、リモート実行などを備えたセルフホスト型の開発サーバー構築ツールです。"
+      content="Devuntu は、かんばん形式のボード/チケット管理を中心に、カレンダー連携、メール/Slack/Webプッシュ通知、MCP/AIエージェント連携、GitHub/GitLab連携、リモート実行などを備えたセルフホスト型の開発サーバー構築ツールです。"
     />
     <link rel="canonical" href="https://playree.github.io/devuntu/" />
     <link rel="alternate" hreflang="ja" href="https://playree.github.io/devuntu/" />
@@ -18,7 +18,7 @@
     <meta property="og:title" content="Devuntu" />
     <meta
       property="og:description"
-      content="かんばん・カレンダー・通知・MCP/AIエージェント連携・リモート実行を備えたセルフホスト型の開発サーバー構築ツール"
+      content="かんばん・カレンダー・通知・MCP/AIエージェント連携・GitHub/GitLab連携・リモート実行を備えたセルフホスト型の開発サーバー構築ツール"
     />
     <meta property="og:url" content="https://playree.github.io/devuntu/" />
     <meta property="og:image" content="https://playree.github.io/devuntu/assets/icon-512.png" />
@@ -37,7 +37,7 @@
           <img src="assets/logo.png" alt="Devuntu" width="340" height="128" />
         </h1>
         <p class="lead">
-          かんばん形式のボード/チケット管理を中心に、カレンダー連携、メール/Slack/Webプッシュ通知、MCP/AIエージェント連携、リモート実行などを備えたセルフホスト型の開発サーバー構築ツール
+          かんばん形式のボード/チケット管理を中心に、カレンダー連携、メール/Slack/Webプッシュ通知、MCP/AIエージェント連携、GitHub/GitLab連携、リモート実行などを備えたセルフホスト型の開発サーバー構築ツール
         </p>
         <div class="actions">
           <a class="button primary" href="https://github.com/playree/devuntu">GitHub でソースを見る</a>
@@ -52,7 +52,9 @@
         <ul class="features">
           <li>
             <h3>かんばんとチケット管理</h3>
-            <p>ボード、タグ、担当者、優先度、期日、コメント、メンション</p>
+            <p>
+              ボード、タグ、担当者、優先度、期日、コメント、メンション。親子・関連チケット、受け入れ条件、ボードごとのチケットテンプレート、変更履歴
+            </p>
           </li>
           <li>
             <h3>カレンダー連携</h3>
@@ -60,7 +62,10 @@
           </li>
           <li>
             <h3>通知</h3>
-            <p>メンションや担当者変更をメール / Slack DM / Webプッシュで通知</p>
+            <p>
+              メンションや担当者変更、エージェントの実行結果をメール / Slack DM / Webプッシュで通知。チームボードは
+              Slack チャンネルへも流せる
+            </p>
           </li>
           <li>
             <h3>MCPサーバー</h3>
@@ -71,6 +76,21 @@
             <p>AIエージェントを担当者として登録し、担当チケットを自動で処理させられる(Claude / Codex に対応)</p>
           </li>
           <li>
+            <h3>タスク分割</h3>
+            <p>大きなチケットはエージェントが子チケットの起票案を出し、承認すると子を順番どおりに自動で処理する</p>
+          </li>
+          <li>
+            <h3>AI向けコンテキスト</h3>
+            <p>対象リポジトリや規約など、ボード共通の前提を MCP クライアント・エージェントへ届ける</p>
+          </li>
+          <li>
+            <h3>GitHub / GitLab 連携</h3>
+            <p>
+              ブランチ・PR・コミットをチケットに紐付けて PR の状態と CI
+              の結果を表示。マージで自動完了、CIの失敗やレビュー指摘でエージェントへ自動で差し戻し
+            </p>
+          </li>
+          <li>
             <h3>リモート実行</h3>
             <p>定義済みの処理をリモートのサーバーで実行し、出力をリアルタイムで確認できる</p>
           </li>
@@ -78,15 +98,47 @@
             <h3>認証</h3>
             <p>パスキー認証、Googleログイン。OAuthプロバイダとしても利用できる</p>
           </li>
+          <li>
+            <h3>日本語 / 英語</h3>
+            <p>画面の表示言語を切り替えられ、通知の文面も選んだ言語で届く</p>
+          </li>
         </ul>
+      </section>
+
+      <section class="container">
+        <h2>画面</h2>
+        <div class="screenshots">
+          <figure>
+            <img
+              src="assets/screenshots/dashboard.webp"
+              alt="ダッシュボード"
+              width="1350"
+              height="1050"
+              loading="lazy"
+            />
+            <figcaption>ダッシュボード</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/screenshots/board.webp" alt="かんばんボード" width="1350" height="1050" loading="lazy" />
+            <figcaption>かんばんボード</figcaption>
+          </figure>
+        </div>
       </section>
 
       <section class="container">
         <h2>はじめる</h2>
         <p>
-          Docker Compose で導入できます。手順は<a
-            href="https://github.com/playree/devuntu/blob/main/docs/installation.md"
-            >導入手順</a
+          Docker イメージを提供しており、Docker Compose で導入できます。必要なファイルは
+          <code>compose.yaml</code> だけです。
+        </p>
+        <ol class="steps">
+          <li><code>compose.yaml</code> をホストへ配置する</li>
+          <li><code>docker compose run --rm tools setup-env</code> で設定ファイルを対話生成する</li>
+          <li><code>docker compose up -d --wait</code> で起動する(DBマイグレーションは起動時に自動実行)</li>
+          <li><code>/start</code> を開いて最初の管理者を登録する</li>
+        </ol>
+        <p>
+          手順の詳細は<a href="https://github.com/playree/devuntu/blob/main/docs/installation.md">導入手順</a
           >を、機能の詳細は<a href="https://github.com/playree/devuntu#readme">README</a>を参照してください。
         </p>
         <p class="note" lang="en">The documentation is available in Japanese only.</p>

@@ -376,6 +376,9 @@ pnpm why sharp
 
 - `site/` 直下がそのまま公開ルートになる。ページを増やすときは `site/<名前>/index.html` を追加し、
   共通のスタイル・画像は `site/assets/` に置く
+- 画面のスクリーンショット(`site/assets/screenshots/`)は `docs/images/` の同名ファイルの複製。
+  `docs/images/` を撮り直したら、こちらにもコピーする(Pages には `site/` しか配信されないため)
+- 機能一覧は README の「できること」に合わせる。機能を追加・変更したら日英両方のページも更新する
 - 英語ページは `site/en/index.html`。内容を変えたら日英両方を更新し、`hreflang` の相互リンクも揃える
 - ページを増やしたら `site/sitemap.xml` にも追加する。robots.txt はドメイン直下(`playree.github.io/robots.txt`)
   しか読まれずプロジェクトサイトでは効かないため、サイトマップは Search Console から送信する
