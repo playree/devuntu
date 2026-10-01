@@ -194,7 +194,7 @@ Googleアカウントと連携すると、`/cal` で自分の予定を確認で�
 チームボードでは、チケットの作成・完了・担当者の変更・エージェントの実行結果を Slack チャンネルへ流せます。
 また Slack に貼られたチケットURLは、閲覧権限を確認した上でカード表示に展開されます。
 
-実装の詳細や Slack App の設定手順は [docs/notifications.md](docs/notifications.md) を参照。
+Slack App の設定などは [docs/notifications.md](docs/notifications.md)、実装の詳細は [docs/notifications-internals.md](docs/notifications-internals.md) を参照。
 
 ## AIとの連携
 
@@ -238,7 +238,7 @@ DevuntuはMCPサーバーの単純な提供だけでなく、AI開発に適し�
 > エージェント側からDevuntuサーバーにポーリングする方式としている為、エージェント側にポート開放など特別な設定は不要です。  
 > エージェント側からDevuntuサーバーへ通信できる環境であれば利用できます。
 
-仕組みは [docs/agent-runner.md](docs/agent-runner.md) を参照
+設置・運用は [docs/agent-runner.md](docs/agent-runner.md)、仕組みは [docs/agent-runner-internals.md](docs/agent-runner-internals.md) を参照
 
 ### 承認
 

@@ -3,9 +3,12 @@
     - [チケットはボードを移動しない](#チケットはボードを移動しない)
   - [開発用インフラ起動](#開発用インフラ起動)
     - [初回に用意するファイル](#初回に用意するファイル)
+    - [ベースライン貼り替え(v0.9.1 より前の開発DBを持っている場合)](#ベースライン貼り替えv091-より前の開発dbを持っている場合)
   - [同一PCでの並行clone(エージェント開発用など)](#同一pcでの並行cloneエージェント開発用など)
-  - [バックアップ・リストア](#バックアップリストア)
   - [インストール](#インストール)
+  - [環境変数の実装](#環境変数の実装)
+    - [検索エンジン向けの設定](#検索エンジン向けの設定)
+    - [開発専用の変数](#開発専用の変数)
   - [開発サーバー・Prisma](#開発サーバーprisma)
   - [ビルド](#ビルド)
   - [テスト・Lint](#テストlint)
@@ -150,10 +153,6 @@ PORT=3010 pnpm dev
 
 Google/Slack など外部OAuthのコールバックURLは `http://localhost:3000/...` 決め打ちで登録されていることが多い。この並行clone(`localhost:3010`)でOAuthログインを試す場合は、各サービスの管理画面側でコールバックURLを別途追加登録する必要がある。
 
-## バックアップ・リストア
-
-DB/S3 のバックアップとリストア、`tools`サービスの使い方は [operations.md](operations.md) を参照。
-
 ## インストール
 
 ```sh
@@ -180,6 +179,60 @@ COMMAND_SSH_DIR=$PWD/.work/command-config/ssh \
 pnpm dev
 ```
 
+## 環境変数の実装
+
+運用者向けの変数の一覧と運用上の注意は [environment-variables.md](environment-variables.md) にある。
+ここには実装側の決めごとと、開発専用の変数を置く。
+
+- 定義元は `src/lib/env-util.ts`。参照時も同ファイルの `envu` を利用する
+- 真偽値の変数は `true` / `false`(大文字小文字は問わない)だけを受け付ける。`1` や綴り違いが
+  黙って既定の反対側へ倒れると気づけないため、読み取り時にエラーにしている。数値の変数も同様に、
+  整数でない値(`abc` / `1.5` など)や範囲外の値は読み取り時にエラーにしている
+- 範囲の根拠。`RELEASE_NOTES_LIMIT` の上限100は GitHub API の `per_page` の上限、`AGENT_RUN_KEEP` の
+  下限100は画面が出せる件数に合わせている(下回ると「一覧に出ているのに実体が無い」履歴が生まれる)
+- 起動時に渡す値は `NEXT_PUBLIC_*` にしない。配布物は事前ビルド済みのイメージで、`NEXT_PUBLIC_*` は
+  ビルド時にインライン化されるため起動時に渡した値が入らない。VAPID 公開鍵も Server Action で実行時に返している
+- `SESSION_FRESH_AGE` のチェックは `src/lib/auth/session-fresh.ts`
+- `NOTIFY_WORKER_ENABLED=false` で止まるのは配信側だけで、通知は `notify_outbox` へ溜まる
+  ([notifications-internals.md](notifications-internals.md#通知キューと配信ワーカー))
+- `MAINTENANCE_ATTACHMENT_GRACE_HOURS` は、添付が本文の保存より先に作られることへの猶予。作成フォームを
+  開いたまま放置している間、その画像はまだどこからも参照されていないため、この時間が経つまでは削除対象にしない
+- `MAINTENANCE_MODE_FILE` の既定は**実行時の cwd 相対**で、切り替える側(`scripts/maintenance.mjs`)の既定も
+  cwd 相対なので同じファイルを指す。Docker では `WORKDIR /app` なので `/app/config/maintenance` になり、
+  `compose.yaml` がホストの `./config` をマウントしているため `tools` 側と同じ実体になる。clone した環境
+  (`pnpm dev`)ではリポジトリ直下の `config/maintenance` になる
+- リモート実行の実行ログは SSE(`/api/command/runs/[id]/stream`)で配信する。アプリ側でも
+  `X-Accel-Buffering: no` と `Cache-Control: no-transform` を付けているが、設定によってはリバースプロキシ側が優先される
+
+### 検索エンジン向けの設定
+
+- `SEARCH_ENGINE_INDEXING` の拒否時は、`<meta name="robots">`(`src/app/layout.tsx`)と `X-Robots-Tag` ヘッダ
+  (`src/proxy.ts`)が `noindex, nofollow` になる。空き時間の共有(`/cal/[id]`)は設定に関わらず常に `noindex`
+- `/robots.txt` は `src/app/robots.ts`。`SEARCH_ENGINE_INDEXING=true` は載せる意思表示なので、
+  `SEARCH_ENGINE_ROBOTS_ALLOW` によらずクロール許可になる
+- `X-Robots-Tag` が付くのは Proxy が通常処理を継続したページ応答だけ。認証を素通しするパス
+  (`isProxyAuthBypassPath()` の `/api/**`・`/.well-known/**`・拡張子を含むパス)と Server Action(`next-action` ヘッダ)、
+  認証リダイレクトと管理者拒否の rewrite は、ヘッダを付ける前に返る。これらを追わないのは、`/api/` と `/cal/` は
+  クロール許可時も `/robots.txt` で `Disallow` しており、拡張子を含むパスは検索結果に載る HTML ではないため。
+  素通しのパス(静的アセットを含む)でセッション取得を走らせない点も兼ねている。Proxy の matcher の事情は
+  [screens.md](screens.md#アクセス制御の仕組み) を参照
+
+### 開発専用の変数
+
+| 変数名                | 説明                                                                      | デフォルト |
+| --------------------- | ------------------------------------------------------------------------- | ---------- |
+| `DEV_ALLOWED_ORIGINS` | `next dev` で許可する追加オリジン(カンマ区切り)。開発時のみ有効           | -          |
+| `DEBUG_LINODE_DUMMY`  | Linode ダミー応答(JSON)。設定するとダッシュボードの Linode 転送情報に出す | -          |
+
+`DEV_ALLOWED_ORIGINS` だけは例外で、`src/lib/env-util.ts` には定義していない。参照元の `next.config.ts` は
+Next の起動前に評価されるため `envu` を解決できず、`process.env` を直接読んでいる。
+`DEBUG_LINODE_DUMMY` は JSON として解釈できない値だと読み取り時にエラーになる。
+
+以下は利用者が直接設定しない内部変数。
+
+- `BUILD_NO` : ビルド番号。`next.config.ts` の `env` で自動生成・注入される
+- `NODE_ENV` : 実行環境(`development`/`production` 等)。実行環境側で設定される
+
 ## 開発サーバー・Prisma
 
 ```sh
@@ -200,6 +253,10 @@ pnpm build
 ```
 
 `next build`(`output: 'standalone'`)の後に`scripts/patch-standalone.mjs`が走り、`@swc/helpers`の`esm/`を`.next/standalone`へ補完する。Turbopack のファイルトレースが`cjs/`しか同梱しないのに対し、Node は`module-sync`条件で`esm/`を解決するため、補完しないと`node server.js`が`MODULE_NOT_FOUND`で起動しない。また、`src/lib/command/command-catalog.ts`の環境変数由来のパスを使う fs 呼び出しをトレースが解決できず`src/lib/command`の .ts を同梱してしまうため、実行時に不要な`.next/standalone/src`を削除する(instrumentation のトレースには`outputFileTracingExcludes`が効かない)。`scripts/test-standalone.sh`と Docker イメージはどちらもこの成果物を使う。
+
+standalone ビルドでは `web-push` がサーバーチャンクへバンドルされ、`node_modules` に実体が残らない。そのため
+イメージ内では `require('web-push')` が `MODULE_NOT_FOUND` になり、`generateVAPIDKeys()` を使えない
+(導入手順では `node:crypto` のワンライナーで VAPID 鍵を生成している。[installation.md](installation.md#webプッシュ通知))。
 
 ## テスト・Lint
 
