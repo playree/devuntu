@@ -29,7 +29,10 @@ DevuntuのAIエージェント向けの機能も、この(人による確認を�
 
 ![ダッシュボード](docs/images/dashboard.webp)
 
-![ダッシュボード(英語表示)](docs/images/dashboard-en.webp)
+<p>
+  <img src="docs/images/dashboard-en.webp" alt="ダッシュボード(英語表示)" width="49%">
+  <img src="docs/images/dashboard-dark.webp" alt="ダッシュボード(ダークモード)" width="49%">
+</p>
 
 ---
 
