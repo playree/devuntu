@@ -57,7 +57,6 @@ export const BoardAiContext: FC<{
         maxLength={MAX_AI_CONTEXT_LENGTH}
         label={t('board_ai_context')}
         minRows={4}
-        allowImages={false}
         action={
           canManage &&
           !isEditing && (

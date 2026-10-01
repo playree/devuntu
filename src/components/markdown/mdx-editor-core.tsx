@@ -113,8 +113,9 @@ export type MdxEditorCoreProps = {
    */
   uploadBoardId?: string | null
   /**
-   * false にすると画像を挿入できなくする(ツールバーの画像ボタンを出さず、貼り付け / ドロップでもアップロードしない)。
-   * 既存の画像記法の表示は残る。マウント時の値で固定される
+   * true で画像を挿入できるようにする(既定 false)。false の間はツールバーの画像ボタンを出さず、
+   * 貼り付け / ドロップでもアップロードしない。既存の画像記法の表示は残る。マウント時の値で固定される。
+   * true にする本文は、保存先を添付の掃除の参照元(`src/lib/storage/attachment-ref.ts`)に加えること
    */
   allowImages?: boolean
   /**
@@ -141,7 +142,7 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
   onBlur,
   overlayContainer,
   uploadBoardId,
-  allowImages = true,
+  allowImages = false,
   mentionCandidates,
   placeholder,
   autoFocus,

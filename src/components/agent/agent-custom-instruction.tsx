@@ -64,7 +64,6 @@ const CustomInstructionForm: FC<{
         maxLength={MAX_RULE_LENGTH}
         label={t('agent_rule')}
         minRows={4}
-        allowImages={false}
         action={
           !isEditing && (
             <MultiButton

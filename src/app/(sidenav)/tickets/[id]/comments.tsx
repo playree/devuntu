@@ -224,6 +224,7 @@ export const TicketComments: FC<{
       {ticket.canEdit && (
         <div className='space-y-2'>
           <MarkdownInput
+            allowImages
             key={editorKey}
             defaultValue=''
             onChange={setDraft}

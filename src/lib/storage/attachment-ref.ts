@@ -14,7 +14,10 @@ import { ATTACHMENT_SCAN_BATCH } from '../maintenance/maintenance'
 import { prisma } from '../prisma'
 import { extractUploadKeys, isUploadUrl, toUploadKey, toUploadUrl, UPLOAD_URL_PREFIX } from './upload'
 
-/** 添付を参照しうる場所 */
+/**
+ * 添付を参照しうる場所。
+ * 画像を挿入できるエディタ(`allowImages`)の保存先は、`tests/components/markdown/image-editors.test.ts` の一覧と対で保つ
+ */
 export type AttachmentRefSource = 'ticket' | 'comment' | 'ticketTemplate' | 'user' | 'linkWidget' | 'announcement'
 
 /** 本文にアップロードURLを含む行だけを対象にする条件 */
