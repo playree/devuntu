@@ -138,6 +138,8 @@ Server Action(`next-action` ヘッダ)は matcher の対象外で、認証リダ
 
 VAPID 鍵は Web プッシュ通知を使う場合のみ必要で、**公開鍵と秘密鍵の両方**が揃っていないと
 購読 UI ごと出ない。生成手順は [installation.md](./installation.md#webプッシュ通知) を参照。
+`VAPID_SUBJECT` を省略すると `mailto:` に `MAIL_FROM` を付けた値になり、`MAIL_FROM` も未設定なら
+`mailto:devuntu@example.com` になる。
 
 > ⚠️ 公開鍵も `NEXT_PUBLIC_*` にはしない。配布物は事前ビルド済みのイメージで、`NEXT_PUBLIC_*` は
 > ビルド時にインライン化されるため起動時に渡した値が入らない(実行時に Server Action で返している)。
@@ -213,8 +215,9 @@ VAPID 鍵は Web プッシュ通知を使う場合のみ必要で、**公開鍵�
 ターゲットごとにファイルを分ける。接続先(`target`)は画面から作ることも変えることもできず、
 `commands` の編集も `target.editable: true` を書いたファイルの、そのターゲットのオーナーに限られる
 (詳しくは [command-exec.md](command-exec.md#画面から編集する))。
-画面から編集する場合は `COMMAND_DEF_DIR` を書き込み可でマウントする必要がある。
-既定の構成(`config` を読み取り専用でマウント)では書けない。
+画面から編集するには `COMMAND_DEF_DIR` へ書き込める必要がある。同梱の `compose.yaml` は `config` を
+読み取り専用でマウントし、その上に `config/commands` だけを書き込み可で重ねているので、既定の構成で書ける。
+画面からの編集をディレクトリごと禁じたい場合は、`config/commands` のマウントにも `read_only: true` を付ける。
 
 ファイルを追加・更新・削除すると数秒で自動的に読み直される。
 読み込みに失敗したファイルは直前の内容を保持せず、そのファイルのコマンドだけが実行できない状態になる

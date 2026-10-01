@@ -500,7 +500,8 @@ DB と S3 を順に取得する間に添付が消えると、復元後にその�
 添付は `attachment` テーブルと実体の両方を消す。参照は外部キーではなく本文中のURLなので、
 次の5箇所を見て「どこからも参照されていない」ことを確かめてから消す。
 
-- チケット本文 / コメント本文の Markdown
+- チケット本文の Markdown
+- コメント本文の Markdown
 - ユーザーのアバター(`user.image`)
 - リンクウィジェットのアイコン(`link_widget.iconPath`)
 - お知らせ本文(`key_value_store` の `DASHBOARD_ANNOUNCEMENT`)
@@ -508,6 +509,10 @@ DB と S3 を順に取得する間に添付が消えると、復元後にその�
 作成フォームを開いたままの画像を消さないよう、アップロードから
 `MAINTENANCE_ATTACHMENT_GRACE_HOURS`(既定24時間)は対象にしない。
 本文の全走査を伴うので、この掃除だけは1日1回に絞っている。
+
+既知の制約として、チケットテンプレートの本文(`ticket_template.content`)とボードの AI 向けコンテキスト
+(`board.aiContext`)にも画像を貼れるが、上の参照元に含まれていない。そこにだけ貼った画像は
+猶予を過ぎると消える(既定の `delete` の場合)。
 
 削除は**実体 → レコードの順**。逆順にするとレコードだけ消えた場合にキーを辿れなくなり、
 掃除の対象から永久に外れてしまう。この順なら実体だけ消えても次回に拾い直して収束する。
@@ -587,9 +592,10 @@ docker compose logs devuntu | grep 'orphan attachment sweep capped'
 
 ### インデックスを足す目安
 
-いまは掃除用のインデックスを置いていない。`session.expiresAt` はセッション更新のたびに
-書き換わる列で、最も書き込みの多いテーブルに索引を足すと1時間に1回のスキャンと引き換えに
-リクエストごとの索引更新を招くため、あえて入れていない。
+掃除用のインデックスは一部のテーブルにだけ置いている(`ticket_activity.createdAt` /
+`git_check_suite.updatedAt` / `upload_nonce.expiresAt`)。`session` / `verification` / `oauth_*` には置いていない。
+特に `session.expiresAt` はセッション更新のたびに書き換わる列で、最も書き込みの多いテーブルに索引を足すと
+1時間に1回のスキャンと引き換えにリクエストごとの索引更新を招くため、あえて入れていない。
 
 `oauth_access_token` が100万行を超える、または `maintenance sweep finished` の間隔が
 目に見えて延びた場合に `@@index([expiresAt])` の追加を検討する。その際は

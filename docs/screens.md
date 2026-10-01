@@ -46,14 +46,14 @@
 
 ## タスク管理
 
-| 画面名称               | パス                    | アクセス制御                                                                                       |
-| ---------------------- | ----------------------- | -------------------------------------------------------------------------------------------------- |
-| ボード一覧             | `/boards`               | 認証必須(自分がアクセスできるボードのみ表示)                                                       |
-| かんばん               | `/boards/[id]`          | 認証必須 + 対象ボードの参照権限(`owner` / `member`)                                                |
-| ボード設定             | `/boards/[id]/settings` | 認証必須 + 対象ボードの参照権限。メンバー/グループ/タグ等の変更は `owner` または管理者のみ         |
-| チケット一覧           | `/tickets`              | 認証必須(アクセスできるボードのチケットのみ表示)                                                   |
-| チケット詳細           | `/tickets/[id]`         | 認証必須 + 対象チケットの参照権限(所属ボード経由で判定)。親子・関連はボードのメンバーにだけ表示    |
-| チケット表示IDでの参照 | `/t/[displayId]`        | 認証必須。表示ID(`ボードキー-番号`)を `/tickets/[id]` へリダイレクトするだけで、権限は遷移先で判定 |
+| 画面名称               | パス                    | アクセス制御                                                                                                                                                                                                           |
+| ---------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ボード一覧             | `/boards`               | 認証必須(自分がアクセスできるボードのみ表示)                                                                                                                                                                           |
+| かんばん               | `/boards/[id]`          | 認証必須 + 対象ボードの参照権限(`owner` / `member`)                                                                                                                                                                    |
+| ボード設定             | `/boards/[id]/settings` | 認証必須 + 対象ボードの参照権限。メンバー/グループ/タグ・AI向けコンテキスト・チケットテンプレートの変更と Git 連携(provider ごと)の閲覧・変更は `owner` または管理者のみ。テンプレートの閲覧はメンバーなら可能         |
+| チケット一覧           | `/tickets`              | 認証必須(アクセスできるボードのチケットのみ表示)。`?boardId=` / `?status=`(複数可) / `?assignee=`(`none` = 未割り当て) / `?relatedTo=`(表示ID) / `?relation=`(`child` / `related` / `all`)で初期の絞り込みを指定できる |
+| チケット詳細           | `/tickets/[id]`         | 認証必須 + 対象チケットの参照権限(所属ボード経由で判定)。親子・関連と順番待ちはボードのメンバーにだけ表示し、変更履歴は閲覧できる人全員に表示                                                                          |
+| チケット表示IDでの参照 | `/t/[displayId]`        | 認証必須。表示ID(`ボードキー-番号`)で `findTicketIdByDisplayId`(`src/lib/board/board-access.ts`)が参照権限を判定し、`/tickets/[id]` へリダイレクト。アクセスできない場合は存在しない場合と同じく404                    |
 
 ## 管理者
 
@@ -85,26 +85,30 @@
 
 Proxy は認証処理を通さず素通しするため、各ルートハンドラ内で個別に認証する(メンテナンスモード中の遮断だけは Proxy が行う)。
 
-| パス                                               | アクセス制御                                                                                                             |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `/api/auth/[...all]`                               | Better Auth のハンドラ(認証処理自体)                                                                                     |
-| `/api/auth/.well-known/openid-configuration`       | 認証不要(OIDC ディスカバリ)                                                                                              |
-| `/api/auth/.well-known/oauth-authorization-server` | 認証不要(RFC 8414 認可サーバーメタデータ)                                                                                |
-| `/.well-known/oauth-authorization-server/api/auth` | 認証不要(RFC 8414 のパス挿入形式。同じ内容を返す)                                                                        |
-| `/.well-known/oauth-protected-resource/api/mcp`    | 認証不要(RFC 9728 保護リソースメタデータ)                                                                                |
-| `/api/auth/oauth2/register`                        | 認証不要(RFC 7591 動的クライアント登録)。`OIDC_DCR_ENABLED` 時のみ                                                       |
-| `/api/mcp`                                         | アクセストークン必須(未提示は401 + `WWW-Authenticate`)                                                                   |
-| `/api/health`                                      | 認証不要(ヘルスチェック)                                                                                                 |
-| `/api/agent/status`                                | エージェント用トークン必須(POST)。稼働条件と処理対象チケットを返す                                                       |
-| `/api/agent/runs`                                  | エージェント用トークン必須(POST)。実行の開始を記録                                                                       |
-| `/api/agent/runs/[id]`                             | エージェント用トークン必須(PATCH)。実行の終了を記録                                                                      |
-| `/agent/devuntu_agent.py`                          | 認証不要(`public/` の静的配布)。ランナー本体。秘密情報は含まない                                                         |
-| `/api/upload`                                      | 認証必須(セッション、またはMCPの短命トークン)。画像アップロード(POST)                                                    |
-| `/api/upload/[filename]`                           | 認証必須(未ログインは401)。画像配信(GET)                                                                                 |
-| `/api/avatar/[filename]`                           | **認証不要**。`user.image` から参照中のキーだけを配信(GET)                                                               |
-| `/api/slack/events`                                | 認証不要。Slack の署名検証だけが門番(POST)                                                                               |
-| `/api/github/webhook/[id]`                         | 認証不要。対応付けごとのシークレットによる GitHub の署名検証だけが門番(POST)。対応付けが無ければ404                      |
-| `/api/gitlab/webhook/[id]`                         | 認証不要。対応付けごとのトークン(署名 / シークレット)の検証だけが門番(POST)。`GITLAB_URLS` 未設定・対応付けが無ければ404 |
-| `/api/webpush/key`                                 | 認証必須。VAPID 公開鍵を返す(GET)。Service Worker の再購読用                                                             |
-| `/api/webpush/subscribe`                           | 認証必須。`pushsubscriptionchange` の再購読報告(POST)                                                                    |
-| `/api/command/runs/[id]/stream`                    | 認証必須 + 実行者本人または管理者。実行ログのSSE配信(GET)                                                                |
+| パス                                               | アクセス制御                                                                                                                |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `/api/auth/[...all]`                               | Better Auth のハンドラ(認証処理自体)                                                                                        |
+| `/api/auth/.well-known/openid-configuration`       | 認証不要(OIDC ディスカバリ)                                                                                                 |
+| `/api/auth/.well-known/oauth-authorization-server` | 認証不要(RFC 8414 認可サーバーメタデータ)                                                                                   |
+| `/.well-known/oauth-authorization-server/api/auth` | 認証不要(RFC 8414 のパス挿入形式。同じ内容を返す)                                                                           |
+| `/.well-known/oauth-protected-resource/api/mcp`    | 認証不要(RFC 9728 保護リソースメタデータ)                                                                                   |
+| `/api/auth/oauth2/register`                        | 認証不要(RFC 7591 動的クライアント登録)。`OIDC_DCR_ENABLED` 時のみ                                                          |
+| `/api/mcp`                                         | アクセストークン必須(未提示・無効は401、スコープ不足は403。いずれも `WWW-Authenticate` を返す)                              |
+| `/api/health`                                      | 認証不要(ヘルスチェック)                                                                                                    |
+| `/api/agent/status`                                | エージェント用トークン必須(POST)。稼働条件と処理対象チケットを返す                                                          |
+| `/api/agent/runs`                                  | エージェント用トークン必須(POST)。実行の開始を記録                                                                          |
+| `/api/agent/runs/[id]`                             | エージェント用トークン必須(PATCH)。実行の終了を記録                                                                         |
+| `/agent/devuntu_agent.py`                          | 認証不要(`public/` の静的配布)。ランナー本体。秘密情報は含まない                                                            |
+| `/agent/agent-setup-guide.md`                      | 認証不要(`public/` の静的配布)。セットアップ手順の雛形(MCP の `get_agent_setup_guide` が値を埋めて返す)。秘密情報は含まない |
+| `/agent/agent-user.png`                            | 認証不要(`public/` の静的配布)。AIエージェント用ユーザーのアバター画像                                                      |
+| `/api/upload`                                      | 認証必須(セッション、またはMCPの短命トークン)。画像アップロード(POST)                                                       |
+| `/api/upload/[filename]`                           | 認証必須(未ログインは401)。画像配信(GET)                                                                                    |
+| `/api/avatar/[filename]`                           | **認証不要**。`user.image` から参照中のキーだけを配信(GET)                                                                  |
+| `/api/slack/events`                                | 認証不要。Slack の署名検証だけが門番(POST)                                                                                  |
+| `/api/github/webhook/[id]`                         | 認証不要。対応付けごとのシークレットによる GitHub の署名検証だけが門番(POST)。対応付けが無ければ404                         |
+| `/api/gitlab/webhook/[id]`                         | 認証不要。対応付けごとのトークン(署名 / シークレット)の検証だけが門番(POST)。`GITLAB_URLS` 未設定・対応付けが無ければ404    |
+| `/api/webpush/key`                                 | 認証必須。VAPID 公開鍵を返す(GET)。Service Worker の再購読用                                                                |
+| `/api/webpush/subscribe`                           | 認証必須。`pushsubscriptionchange` の再購読報告(POST)                                                                       |
+| `/api/command/runs/[id]/stream`                    | 認証必須 + 実行者本人または管理者。実行ログのSSE配信(GET)                                                                   |
+
+ほかの `public/` 配下(`/sw.js`・PWA のアイコン・ロゴ)も、拡張子を持つパスとして認証なしで配信される。

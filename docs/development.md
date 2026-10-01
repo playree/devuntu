@@ -6,6 +6,7 @@
   - [同一PCでの並行clone(エージェント開発用など)](#同一pcでの並行cloneエージェント開発用など)
   - [バックアップ・リストア](#バックアップリストア)
   - [インストール](#インストール)
+  - [開発サーバー・Prisma](#開発サーバーprisma)
   - [ビルド](#ビルド)
   - [テスト・Lint](#テストlint)
   - [画面の動作確認](#画面の動作確認)
@@ -159,6 +160,19 @@ COMMAND_SSH_DIR=$PWD/.work/command-config/ssh \
 pnpm dev
 ```
 
+## 開発サーバー・Prisma
+
+```sh
+pnpm dev         # next dev(http://localhost:3000)
+pnpm dev:domain  # .env.domain を優先して読み込んで next dev(足りない変数は .env から)
+pnpm migrate     # prisma migrate dev(スキーマの変更からマイグレーションを作成・適用)
+pnpm generate    # prisma generate(src/generated/prisma を再生成)
+pnpm studio      # prisma studio(DB の中身をブラウザで見る)
+```
+
+Prismaスキーマ(`prisma/schema/*.prisma`)を変えたら `pnpm generate` を実行する。
+`src/generated` はコミット対象なので、生成結果も一緒にコミットする。
+
 ## ビルド
 
 ```sh
@@ -171,12 +185,13 @@ pnpm build
 
 テストソースは `tests/` 配下、設定は `vitest.config.ts` と `vitest.setup.ts`。
 
-| 場所             | 内容                                                                             |
-| ---------------- | -------------------------------------------------------------------------------- |
-| `tests/lib/`     | `src/lib/` のテスト。サブフォルダ構成とファイル名は `src/lib/` に揃える          |
-| `tests/app/`     | Route Handler など `src/app/` のテスト                                           |
-| `tests/scripts/` | `scripts/` の運用ツールのテスト                                                  |
-| `tests/helpers/` | 共通ヘルパー(Prisma のモック、MCP クライアントの接続、`ResourceAuth` の偽データ) |
+| 場所                | 内容                                                                             |
+| ------------------- | -------------------------------------------------------------------------------- |
+| `tests/lib/`        | `src/lib/` のテスト。サブフォルダ構成とファイル名は `src/lib/` に揃える          |
+| `tests/app/`        | Route Handler など `src/app/` のテスト                                           |
+| `tests/components/` | `src/components/` のテスト。サブフォルダ構成は `src/components/` に揃える        |
+| `tests/scripts/`    | `scripts/` の運用ツールのテスト                                                  |
+| `tests/helpers/`    | 共通ヘルパー(Prisma のモック、MCP クライアントの接続、`ResourceAuth` の偽データ) |
 
 `@/lib/prisma` の差し替えは `tests/helpers/prisma.ts` の `mockPrisma` を使う。`vi.mock` の factory は
 import より先に評価されるため、factory の中で動的 import する。
@@ -193,9 +208,10 @@ pnpm typecheck   # next typegen && tsc --noEmit(TS7/tsgo)
 pnpm prettier    # 整形
 ```
 
-`.github/workflows/ci.yml` では `pnpm lint` → `pnpm typecheck` → `pnpm test` の順で実行している
+`.github/workflows/ci.yml` では `pnpm lint` → `pnpm typecheck` → `pnpm test` → `pnpm build` の順で実行している
 (型が壊れた状態でテストを流しても情報が増えないため)。`src/generated` はコミット済みなので
-`prisma generate` は要らない。
+`prisma generate` は要らない。Build はイメージと同じダミー値(`docker/dummy-secrets/`)を環境変数に入れて
+standalone 出力まで通し、リリース時のビルド失敗を PR の時点で拾う。
 
 standalone ビルドの起動確認は `pnpm test:standalone`(`scripts/test-standalone.sh`)。
 

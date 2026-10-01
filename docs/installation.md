@@ -79,10 +79,20 @@ PostgreSQL とオブジェクトストレージへ外部から直接到達でき
 ├── compose.yaml       # 配置する
 ├── .env.docker        # 手順2で生成される
 ├── .env.db            # 手順2で生成される
-└── seaweedfs-s3.json  # 手順2で生成される
+├── seaweedfs-s3.json  # 手順2で生成される
+└── config/            # devuntu へマウントする(メンテナンスモードのフラグ・リモート実行の定義と鍵)
+    └── commands/
 ```
 
 書き込めるディレクトリを使うこと。設定ファイルは実行したユーザーの所有で作られる。
+
+`config/` と `config/commands/` は `compose.yaml` が `devuntu` へ bind マウントしており、無ければ
+起動時に Docker が **root 所有で**作る。後から定義ファイルや鍵を置く([リモート実行](#リモート実行))
+予定があるなら、先に自分で作っておくとホスト側で sudo 無しに編集できる。
+
+```sh
+mkdir -p config/commands
+```
 
 ## 2. 設定ファイルの作成
 
@@ -298,7 +308,7 @@ Webhook のトークンはプロジェクトごとに画面から設定するの
 出ないので、使わない場合は省略してよい。
 
 `docker compose run --rm tools setup-env` の「Webプッシュ通知を有効にしますか?」で `y` を選ぶと鍵を生成する。
-プッシュサービスからの連絡先(`VAPID_SUBJECT`)も同じ流れで設定できる(既定は `mailto:${MAIL_FROM}`)。
+プッシュサービスからの連絡先(`VAPID_SUBJECT`)も同じ流れで設定できる(既定は `mailto:${MAIL_FROM}`。`MAIL_FROM` も未設定なら `mailto:devuntu@example.com`)。
 
 手で用意する場合は次のワンライナーで生成し、出力の 2 行を `.env.docker` へ追記して再起動する。
 
@@ -318,8 +328,10 @@ docker compose run --rm --entrypoint node tools -e "const {generateKeyPairSync}=
 
 ### MCP サーバーの公開
 
-`OIDC_DCR_ENABLED=true` を設定すると、AIエージェントなどの MCP クライアントが
-`<BETTER_AUTH_URL>/api/mcp` へ動的クライアント登録(DCR)で接続できるようになる。
+`<BETTER_AUTH_URL>/api/mcp` は常に公開されており、`/account` で発行するユーザーの MCP トークンと
+`/admin/agents` で発行するエージェントトークンは設定なしで使える。
+`OIDC_DCR_ENABLED=true` を設定すると、これに加えて MCP クライアントが動的クライアント登録(DCR)→
+ブラウザでの認可コードフローで接続できるようになる(`OIDC_DCR_ENABLED` が制御するのは DCR だけ)。
 環境変数だけで有効になり、`/admin/settings` での操作は不要。
 詳細と運用上の注意は [mcp-server.md](mcp-server.md) を参照。
 
@@ -337,7 +349,9 @@ docker compose run --rm --entrypoint node tools -e "const {generateKeyPairSync}=
 2. 定義ファイルの配置(`COMMAND_DEF_DIR` の直下、既定 `/app/config/commands`)
 3. `/admin/commands` でのターゲットへのアサイン(管理者自身も、アサインしないと実行できない)
 
-定義ファイルと SSH の鍵はコンテナへ read-only でマウントする。`compose.yaml` の `devuntu` サービスへ:
+定義ファイルと SSH の鍵は、ホストの `./config` 配下に置く。`compose.yaml` の `devuntu` サービスは
+既定で `./config` を `/app/config` へ read-only でマウントし、その上に `./config/commands` だけを
+書き込み可で重ねている。
 
 ```yaml
 volumes:
@@ -345,6 +359,10 @@ volumes:
     source: ./config
     target: /app/config
     read_only: true
+  # commands だけ書き込み可。ssh(秘密鍵)は read-only のまま
+  - type: bind
+    source: ./config/commands
+    target: /app/config/commands
 ```
 
 ```text
@@ -362,22 +380,11 @@ volumes:
 作ったり消したりする([operations.md](operations.md#メンテナンスモード))。`./config` は
 リモート実行を使わない構成でもこのフラグの置き場として使うため、マウントしたままにしておく。
 
-コマンドの定義を**画面から編集できるようにする**場合は、`commands` だけを書き込み可で重ねる。
-`config` 全体を書き込み可にすると SSH の秘密鍵まで書き込み可になってしまう。
+`commands` を書き込み可にしているのは、コマンドの定義を**画面から編集できるようにする**ため。
+`config` 全体を書き込み可にすると SSH の秘密鍵まで書き込み可になってしまうので、`commands` だけを重ねている。
+画面からの編集をディレクトリごと禁じたい場合は、2 つ目のマウントに `read_only: true` を足す。
 
-```yaml
-volumes:
-  - type: bind
-    source: ./config
-    target: /app/config
-    read_only: true
-  # commands だけ書き込み可。ssh(秘密鍵)は read-only のまま
-  - type: bind
-    source: ./config/commands
-    target: /app/config/commands
-```
-
-この場合でも、実際に編集できるのは定義ファイルへ `target.editable: true` を書いたターゲットだけで、
+書き込み可のままでも、実際に編集できるのは定義ファイルへ `target.editable: true` を書いたターゲットだけで、
 編集できるのはそのターゲットのオーナーに限られる。接続先(`target`)そのものは画面から変えられない。詳しくは
 [command-exec.md](command-exec.md#画面から編集する)を参照。
 
