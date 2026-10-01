@@ -44,7 +44,9 @@ describe('reassignContentAttachments', () => {
   const actor = { id: 'u1' }
   const content = `本文\n![shot](${toUploadUrl(KEY)})`
 
-  const fakeAttachmentTx = (options: { candidates?: { key: string }[]; ticket?: object; comment?: object } = {}) => {
+  const fakeAttachmentTx = (
+    options: { candidates?: { key: string }[]; ticket?: object; comment?: object; template?: object } = {},
+  ) => {
     const tx = {
       attachment: {
         findMany: vi.fn().mockResolvedValue(options.candidates ?? [{ key: KEY }]),
@@ -52,6 +54,7 @@ describe('reassignContentAttachments', () => {
       },
       ticket: { findFirst: vi.fn().mockResolvedValue(options.ticket ?? null) },
       ticketComment: { findFirst: vi.fn().mockResolvedValue(options.comment ?? null) },
+      ticketTemplate: { findFirst: vi.fn().mockResolvedValue(options.template ?? null) },
     }
     return tx
   }
@@ -95,6 +98,13 @@ describe('reassignContentAttachments', () => {
 
   it('他のチケットのコメントから使われていれば付け替えない', async () => {
     const tx = fakeAttachmentTx({ comment: { id: 'other-comment' } })
+    await reassignContentAttachments(tx as never, content, BOARD_ID, actor)
+
+    expect(tx.attachment.updateMany).not.toHaveBeenCalled()
+  })
+
+  it('チケットテンプレートの本文から使われていれば付け替えない', async () => {
+    const tx = fakeAttachmentTx({ template: { id: 'template-1' } })
     await reassignContentAttachments(tx as never, content, BOARD_ID, actor)
 
     expect(tx.attachment.updateMany).not.toHaveBeenCalled()

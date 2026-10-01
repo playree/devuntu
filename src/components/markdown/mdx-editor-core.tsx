@@ -67,7 +67,7 @@ const VIEW_MODES = ['rich-text', 'source'] as const
 const TO_MARKDOWN_OPTIONS = { bullet: '-', listItemIndent: 'one' } as const
 
 /** コードブロック非選択時に出す通常のリッチテキスト用コントロール */
-const RichTextControls: FC = () => (
+const RichTextControls: FC<{ allowImages: boolean }> = ({ allowImages }) => (
   <>
     <UndoRedo />
     <Separator />
@@ -78,7 +78,7 @@ const RichTextControls: FC = () => (
     <ListsToggle />
     <Separator />
     <CreateLink />
-    <InsertImage />
+    {allowImages && <InsertImage />}
     <InsertTable />
     <InsertCodeBlock />
   </>
@@ -89,12 +89,12 @@ const RichTextControls: FC = () => (
  * リッチテキスト用コントロールを隠し、言語セレクタだけを出す。
  * ビュー切替は常に使えるよう DiffSourceToggleWrapper は分岐の外に置く。
  */
-const Toolbar: FC = () => (
+const Toolbar: FC<{ allowImages: boolean }> = ({ allowImages }) => (
   <DiffSourceToggleWrapper options={[...VIEW_MODES]}>
     <ConditionalContents
       options={[
         { when: (editor) => editor?.editorType === 'codeblock', contents: () => <ChangeCodeMirrorLanguage /> },
-        { fallback: () => <RichTextControls /> },
+        { fallback: () => <RichTextControls allowImages={allowImages} /> },
       ]}
     />
   </DiffSourceToggleWrapper>
@@ -112,6 +112,11 @@ export type MdxEditorCoreProps = {
    * 省略すると全ログインユーザーが参照できる添付になるので、ボードに属する本文では必ず渡すこと
    */
   uploadBoardId?: string | null
+  /**
+   * false にすると画像を挿入できなくする(ツールバーの画像ボタンを出さず、貼り付け / ドロップでもアップロードしない)。
+   * 既存の画像記法の表示は残る。マウント時の値で固定される
+   */
+  allowImages?: boolean
   /**
    * `@` 入力時に出すメンション候補。空 / 未指定なら候補は出ない。
    * ボードに属する本文では、そのボードのメンバー(担当者候補と同じ集合)を渡す
@@ -136,6 +141,7 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
   onBlur,
   overlayContainer,
   uploadBoardId,
+  allowImages = true,
   mentionCandidates,
   placeholder,
   autoFocus,
@@ -144,6 +150,7 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
 }) => {
   // マウント時のテーマで固定する(編集中にテーマを切り替えても plugins を作り直さない)
   const [isDarkAtMount] = useState(isDark)
+  const [allowImagesAtMount] = useState(allowImages)
 
   /**
    * 添付先ボードは編集中に変わりうる(新規チケットモーダルのボード選択)。
@@ -201,10 +208,12 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
        * imageUploadHandler を渡すと、ツールバーの InsertImage に加えて
        * 貼り付け / ドラッグ&ドロップも imagePlugin 側が拾ってアップロードするようになる。
        * ハンドラは ref に固定した安定参照なので plugins は作り直されない。
+       * 画像を禁止する場合もプラグイン自体は残す(既存本文の画像記法を読み込めなくなるため)。
+       * ハンドラが無いと、画像だけの貼り付けは握りつぶされ、ドロップは何もしない。
        * UI 一式は既定の CSS Modules 実装からアプリの部品に差し替える
        */
       imagePlugin({
-        imageUploadHandler: uploadHandler,
+        imageUploadHandler: allowImagesAtMount ? uploadHandler : null,
         ImageDialog: MdxImageDialog,
         /**
          * imagePlugin の引数の型は props を取らないコンポーネントしか受け付けないが、
@@ -219,10 +228,10 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
       codeMirrorPlugin({ codeBlockLanguages: CODE_BLOCK_LANGUAGES, codeMirrorExtensions }),
       markdownShortcutPlugin(),
       diffSourcePlugin({ viewMode: 'rich-text', codeMirrorExtensions }),
-      toolbarPlugin({ toolbarContents: () => <Toolbar /> }),
+      toolbarPlugin({ toolbarContents: () => <Toolbar allowImages={allowImagesAtMount} /> }),
     ]
-    // uploadHandler は useState で固定した安定参照なので、依存に入れても plugins は作り直されない
-  }, [isDarkAtMount, uploadHandler])
+    // uploadHandler / allowImagesAtMount は useState で固定した値なので、依存に入れても plugins は作り直されない
+  }, [isDarkAtMount, allowImagesAtMount, uploadHandler])
 
   return (
     <MentionCandidatesProvider candidates={mentionCandidates}>

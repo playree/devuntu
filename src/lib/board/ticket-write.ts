@@ -40,7 +40,7 @@ export const lockTicketRow = async (tx: Prisma.TransactionClient, ticketId: stri
 }
 
 /**
- * その添付が、指定チケット以外の本文から使われているかを調べる。
+ * その添付が、指定チケット以外の本文(チケット・コメント・チケットテンプレート)から使われているかを調べる。
  *
  * 同じチケット(とそのコメント)からの参照は保存先ボードと同じボードなので、
  * 付け替えを止める理由にならない。`excludeTicketId` はそれを除くためのもの。
@@ -62,7 +62,11 @@ const isAttachmentInUse = async (
     where: { content: { contains: url }, ...(excludeTicketId && { ticketId: { not: excludeTicketId } }) },
     select: { id: true },
   })
-  return comment !== null
+  if (comment) {
+    return true
+  }
+  const template = await tx.ticketTemplate.findFirst({ where: { content: { contains: url } }, select: { id: true } })
+  return template !== null
 }
 
 /**

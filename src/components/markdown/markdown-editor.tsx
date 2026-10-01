@@ -54,6 +54,8 @@ const MdxEditorHost = memo<{
   onBlur?: () => void
   /** 挿入した画像の添付先ボード({@link MarkdownInput} 参照) */
   uploadBoardId?: string | null
+  /** false で画像を挿入できなくする({@link MarkdownField} 参照) */
+  allowImages?: boolean
   /** `@` 入力時のメンション候補({@link MarkdownInput} 参照) */
   mentionCandidates?: MentionCandidate[]
   /** 編集面の最小行数 */
@@ -65,6 +67,7 @@ const MdxEditorHost = memo<{
   onChange,
   onBlur,
   uploadBoardId,
+  allowImages,
   mentionCandidates,
   minRows = DEFAULT_MIN_ROWS,
   className,
@@ -90,6 +93,7 @@ const MdxEditorHost = memo<{
           onBlur={onBlur}
           overlayContainer={container}
           uploadBoardId={uploadBoardId}
+          allowImages={allowImages}
           mentionCandidates={mentionCandidates}
           className={className}
         />
@@ -170,6 +174,11 @@ export const MarkdownField: FC<{
   maxLength?: number
   /** 挿入した画像の添付先ボード({@link MarkdownInput} 参照) */
   uploadBoardId?: string | null
+  /**
+   * false にすると画像を挿入できなくする(既定 true)。
+   * AI 向けの指示など、画像を渡しても使われず添付の掃除の参照元にも入らない本文で指定する
+   */
+  allowImages?: boolean
   /** `@` 入力時のメンション候補({@link MarkdownInput} 参照) */
   mentionCandidates?: MentionCandidate[]
   /** 編集面の最小行数(既定 {@link DEFAULT_MIN_ROWS}) */
@@ -187,6 +196,7 @@ export const MarkdownField: FC<{
   label,
   maxLength,
   uploadBoardId,
+  allowImages,
   mentionCandidates,
   minRows,
   action,
@@ -218,6 +228,7 @@ export const MarkdownField: FC<{
             initialMarkdown={defaultValue}
             onChange={onChange}
             uploadBoardId={uploadBoardId}
+            allowImages={allowImages}
             mentionCandidates={mentionCandidates}
             minRows={minRows}
             className={FLAT_CLASS}
