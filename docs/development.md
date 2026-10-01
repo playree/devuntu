@@ -99,6 +99,26 @@ EOF
 Prismaスキーマは `prisma/schema/` 配下にドメインごとのファイル(`board.prisma` / `ticket.prisma` など)で分けて置き、generator / datasource は `schema.prisma` に持つ。
 
 `prisma/migrations` は Prismaスキーマから生成したフルDDL(`0_init`)をベースラインに、以降のスキーマ変更を差分マイグレーションとして積む。
+ベースラインへの統合は一般公開前(v0.9.1)に行ったものが最後で、今後は行わない。
+コミット済みのマイグレーションは編集・削除せず、スキーマの変更は `pnpm migrate` で新しい差分マイグレーションを作って追加する。
+
+### ベースライン貼り替え(v0.9.1 より前の開発DBを持っている場合)
+
+**v0.9.1 の統合を取り込む前から使っている開発DBは、そのままでは `prisma migrate` が動かない。**
+`_prisma_migrations` に残る旧 `0_init` の checksum が新しい `migration.sql` と一致せず、
+`migrate deploy` / `migrate dev` が「適用済みのマイグレーションが変更されている」として失敗する。
+
+統合前の最新(`20260930120000_tidy_schema`)まで適用済みであることを確認してから、履歴を1行の `0_init` に貼り替える。
+DDL は流れないのでデータはそのまま残る。
+
+```sh
+echo 'DELETE FROM "_prisma_migrations";' | pnpm exec prisma db execute --stdin
+pnpm exec prisma migrate resolve --applied 0_init
+pnpm exec prisma migrate status   # Database schema is up to date!
+```
+
+データが要らないなら `pnpm exec prisma migrate reset` で作り直してもよい。
+新しく作るDBは `pnpm migrate` を1回流すだけでよく、この作業は不要。
 
 ## 同一PCでの並行clone(エージェント開発用など)
 

@@ -2,6 +2,9 @@
 CREATE SCHEMA IF NOT EXISTS "public";
 
 -- CreateEnum
+CREATE TYPE "AgentAutoReviseSource" AS ENUM ('ci', 'review');
+
+-- CreateEnum
 CREATE TYPE "AgentTaskMode" AS ENUM ('plan', 'auto');
 
 -- CreateEnum
@@ -23,13 +26,28 @@ CREATE TYPE "BoardKind" AS ENUM ('private', 'team');
 CREATE TYPE "TagColor" AS ENUM ('gray', 'red', 'orange', 'amber', 'green', 'teal', 'blue', 'indigo', 'violet', 'pink');
 
 -- CreateEnum
-CREATE TYPE "TicketStatus" AS ENUM ('backlog', 'todo', 'doing', 'done');
+CREATE TYPE "CommandTargetMemberRole" AS ENUM ('owner', 'member');
 
 -- CreateEnum
-CREATE TYPE "TicketPriority" AS ENUM ('urgent', 'high', 'medium', 'low');
+CREATE TYPE "CommandRunStatus" AS ENUM ('queued', 'running', 'succeeded', 'failed', 'canceled');
 
 -- CreateEnum
-CREATE TYPE "TicketCommentType" AS ENUM ('plan', 'report');
+CREATE TYPE "CommandStream" AS ENUM ('stdout', 'stderr', 'system');
+
+-- CreateEnum
+CREATE TYPE "GitProvider" AS ENUM ('github', 'gitlab');
+
+-- CreateEnum
+CREATE TYPE "GitWebhookAuth" AS ENUM ('signing', 'token');
+
+-- CreateEnum
+CREATE TYPE "TicketLinkKind" AS ENUM ('branch', 'pull_request', 'commit');
+
+-- CreateEnum
+CREATE TYPE "PullRequestState" AS ENUM ('open', 'draft', 'merged', 'closed');
+
+-- CreateEnum
+CREATE TYPE "TicketLinkSource" AS ENUM ('manual', 'auto');
 
 -- CreateEnum
 CREATE TYPE "NotifyEvent" AS ENUM ('mention', 'agent_run', 'ticket_assigned', 'ticket_created', 'ticket_completed');
@@ -41,36 +59,28 @@ CREATE TYPE "NotifyChannel" AS ENUM ('email', 'slack', 'webpush');
 CREATE TYPE "NotifyJobStatus" AS ENUM ('pending', 'processing', 'done', 'failed');
 
 -- CreateEnum
-CREATE TYPE "CommandTargetMemberRole" AS ENUM ('owner', 'member');
+CREATE TYPE "TicketStatus" AS ENUM ('backlog', 'todo', 'doing', 'done');
 
 -- CreateEnum
-CREATE TYPE "CommandRunStatus" AS ENUM ('queued', 'running', 'succeeded', 'failed', 'canceled');
+CREATE TYPE "TicketPriority" AS ENUM ('urgent', 'high', 'medium', 'low');
 
 -- CreateEnum
-CREATE TYPE "CommandStream" AS ENUM ('stdout', 'stderr', 'system');
+CREATE TYPE "TicketCommentType" AS ENUM ('plan', 'report');
 
--- CreateTable
-CREATE TABLE "user" (
-    "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
-    "emailVerified" BOOLEAN NOT NULL DEFAULT false,
-    "image" TEXT,
-    "role" TEXT,
-    "banned" BOOLEAN DEFAULT false,
-    "banReason" TEXT,
-    "banExpires" TIMESTAMP(3),
-    "twoFactorEnabled" BOOLEAN DEFAULT false,
-    "nameLocked" BOOLEAN DEFAULT false,
-    "locale" TEXT,
-    "lastLoginAt" TIMESTAMP(3),
-    "timezone" TEXT,
-    "isAgent" BOOLEAN NOT NULL DEFAULT false,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+-- CreateEnum
+CREATE TYPE "TicketCommentDecision" AS ENUM ('approved', 'rejected');
 
-    CONSTRAINT "user_pkey" PRIMARY KEY ("id")
-);
+-- CreateEnum
+CREATE TYPE "TicketChildAdvance" AS ENUM ('done', 'reported');
+
+-- CreateEnum
+CREATE TYPE "TicketRelationType" AS ENUM ('parent', 'related');
+
+-- CreateEnum
+CREATE TYPE "TicketActivityField" AS ENUM ('created', 'title', 'content', 'status', 'priority', 'dueDate', 'assignee', 'tags', 'criteria');
+
+-- CreateEnum
+CREATE TYPE "TicketActivitySource" AS ENUM ('user', 'merge');
 
 -- CreateTable
 CREATE TABLE "agent_token" (
@@ -112,6 +122,7 @@ CREATE TABLE "agent_runner" (
     "rule" TEXT,
     "dailyRunLimit" INTEGER NOT NULL DEFAULT 0,
     "dailyResetMin" INTEGER NOT NULL DEFAULT 300,
+    "monthlyBudgetUsd" DECIMAL(10,2) NOT NULL DEFAULT 0,
     "lastPolledAt" TIMESTAMP(3),
     "hostname" TEXT,
     "version" TEXT,
@@ -132,8 +143,54 @@ CREATE TABLE "agent_run" (
     "summary" TEXT,
     "startedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "finishedAt" TIMESTAMP(3),
+    "model" TEXT,
+    "inputTokens" INTEGER,
+    "cachedInputTokens" INTEGER,
+    "outputTokens" INTEGER,
+    "costUsd" DECIMAL(12,6),
+    "exitCode" INTEGER,
+    "measuredAt" TIMESTAMP(3),
 
     CONSTRAINT "agent_run_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "agent_auto_revise_trigger" (
+    "id" TEXT NOT NULL,
+    "ticketId" TEXT NOT NULL,
+    "source" "AgentAutoReviseSource" NOT NULL,
+    "provider" "GitProvider" NOT NULL,
+    "baseUrl" TEXT NOT NULL DEFAULT '',
+    "repo" TEXT NOT NULL,
+    "number" INTEGER NOT NULL,
+    "url" TEXT NOT NULL,
+    "checks" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "body" TEXT,
+    "author" TEXT,
+    "reviewState" TEXT,
+    "dedupeKey" TEXT NOT NULL,
+    "runId" TEXT,
+    "consumed" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "agent_auto_revise_trigger_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "agent_usage" (
+    "id" TEXT NOT NULL,
+    "runnerId" TEXT NOT NULL,
+    "month" TEXT NOT NULL,
+    "boardId" TEXT,
+    "runs" INTEGER NOT NULL DEFAULT 0,
+    "inputTokens" BIGINT NOT NULL DEFAULT 0,
+    "cachedInputTokens" BIGINT NOT NULL DEFAULT 0,
+    "outputTokens" BIGINT NOT NULL DEFAULT 0,
+    "costUsd" DECIMAL(14,6) NOT NULL DEFAULT 0,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "agent_usage_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -243,6 +300,327 @@ CREATE TABLE "jwks" (
     "crv" TEXT,
 
     CONSTRAINT "jwks_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "board" (
+    "id" TEXT NOT NULL,
+    "kind" "BoardKind" NOT NULL DEFAULT 'team',
+    "privateOwnerId" TEXT,
+    "key" TEXT NOT NULL,
+    "ticketSeq" INTEGER NOT NULL DEFAULT 0,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "aiContext" TEXT,
+    "archived" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "board_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "board_key_history" (
+    "key" TEXT NOT NULL,
+    "boardId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "board_key_history_pkey" PRIMARY KEY ("key")
+);
+
+-- CreateTable
+CREATE TABLE "ticket_template" (
+    "id" TEXT NOT NULL,
+    "boardId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "content" TEXT NOT NULL DEFAULT '',
+    "criteria" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "tagIds" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "priority" "TicketPriority",
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "ticket_template_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "tag" (
+    "id" TEXT NOT NULL,
+    "boardId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "color" "TagColor" NOT NULL DEFAULT 'gray',
+    "order" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "tag_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ticket_tag" (
+    "id" TEXT NOT NULL,
+    "ticketId" TEXT NOT NULL,
+    "tagId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ticket_tag_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "board_member" (
+    "id" TEXT NOT NULL,
+    "boardId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "role" "BoardMemberRole" NOT NULL DEFAULT 'member',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "board_member_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "board_group" (
+    "id" TEXT NOT NULL,
+    "boardId" TEXT NOT NULL,
+    "groupId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "board_group_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "calendar_share" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "publicId" TEXT NOT NULL,
+    "options" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "calendar_share_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "calendar_busy_time" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "weekdays" INTEGER[],
+    "startMin" INTEGER NOT NULL,
+    "endMin" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "calendar_busy_time_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "command_target_member" (
+    "id" TEXT NOT NULL,
+    "targetKey" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "role" "CommandTargetMemberRole" NOT NULL DEFAULT 'member',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "command_target_member_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "command_target_group" (
+    "id" TEXT NOT NULL,
+    "targetKey" TEXT NOT NULL,
+    "groupId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "command_target_group_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "command_run" (
+    "id" TEXT NOT NULL,
+    "commandKey" TEXT NOT NULL,
+    "commandLabel" TEXT NOT NULL,
+    "targetLabel" TEXT NOT NULL,
+    "userId" TEXT,
+    "userName" TEXT NOT NULL,
+    "params" JSONB NOT NULL,
+    "argsPreview" TEXT NOT NULL,
+    "status" "CommandRunStatus" NOT NULL DEFAULT 'queued',
+    "activeKey" TEXT,
+    "workerId" TEXT,
+    "claimedAt" TIMESTAMP(3),
+    "heartbeatAt" TIMESTAMP(3),
+    "cancelRequestedAt" TIMESTAMP(3),
+    "cancelRequestedBy" TEXT,
+    "exitCode" INTEGER,
+    "failureKind" TEXT,
+    "lastSeq" INTEGER NOT NULL DEFAULT 0,
+    "bytes" INTEGER NOT NULL DEFAULT 0,
+    "truncated" BOOLEAN NOT NULL DEFAULT false,
+    "queuedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "startedAt" TIMESTAMP(3),
+    "finishedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "command_run_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "command_run_chunk" (
+    "runId" TEXT NOT NULL,
+    "seq" INTEGER NOT NULL,
+    "stream" "CommandStream" NOT NULL,
+    "text" TEXT NOT NULL,
+    "at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "command_run_chunk_pkey" PRIMARY KEY ("runId","seq")
+);
+
+-- CreateTable
+CREATE TABLE "ticket_link" (
+    "id" TEXT NOT NULL,
+    "ticketId" TEXT NOT NULL,
+    "provider" "GitProvider" NOT NULL DEFAULT 'github',
+    "kind" "TicketLinkKind" NOT NULL,
+    "baseUrl" TEXT NOT NULL DEFAULT '',
+    "repo" TEXT NOT NULL,
+    "ref" TEXT NOT NULL,
+    "url" TEXT NOT NULL,
+    "title" TEXT,
+    "prState" "PullRequestState",
+    "headSha" TEXT,
+    "syncedAt" TIMESTAMP(3),
+    "source" "TicketLinkSource" NOT NULL DEFAULT 'manual',
+    "dismissed" BOOLEAN NOT NULL DEFAULT false,
+    "createdById" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "ticket_link_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "board_repository" (
+    "id" TEXT NOT NULL,
+    "boardId" TEXT NOT NULL,
+    "provider" "GitProvider" NOT NULL DEFAULT 'github',
+    "baseUrl" TEXT NOT NULL DEFAULT '',
+    "repo" TEXT NOT NULL,
+    "webhookAuth" "GitWebhookAuth",
+    "webhookSecret" TEXT,
+    "lastReceivedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "board_repository_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "board_git_setting" (
+    "id" TEXT NOT NULL,
+    "boardId" TEXT NOT NULL,
+    "provider" "GitProvider" NOT NULL,
+    "completeOnMerge" BOOLEAN NOT NULL DEFAULT false,
+    "autoRevise" BOOLEAN NOT NULL DEFAULT false,
+    "autoReviseLimit" INTEGER NOT NULL DEFAULT 3,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "board_git_setting_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "git_check_suite" (
+    "id" TEXT NOT NULL,
+    "provider" "GitProvider" NOT NULL DEFAULT 'github',
+    "baseUrl" TEXT NOT NULL DEFAULT '',
+    "repo" TEXT NOT NULL,
+    "suiteId" TEXT NOT NULL,
+    "repositoryId" TEXT NOT NULL,
+    "headSha" TEXT NOT NULL,
+    "appName" TEXT NOT NULL,
+    "status" TEXT NOT NULL,
+    "conclusion" TEXT,
+    "syncedAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "git_check_suite_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "user_notify_setting" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "event" "NotifyEvent" NOT NULL,
+    "email" BOOLEAN NOT NULL DEFAULT false,
+    "slack" BOOLEAN NOT NULL DEFAULT false,
+    "webpush" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "user_notify_setting_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "web_push_subscription" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "endpoint" TEXT NOT NULL,
+    "p256dh" TEXT NOT NULL,
+    "auth" TEXT NOT NULL,
+    "label" TEXT,
+    "lastUsedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "web_push_subscription_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "board_notify_setting" (
+    "id" TEXT NOT NULL,
+    "boardId" TEXT NOT NULL,
+    "event" "NotifyEvent" NOT NULL,
+    "slackChannelId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "board_notify_setting_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "notify_outbox" (
+    "id" TEXT NOT NULL,
+    "event" "NotifyEvent" NOT NULL,
+    "actorId" TEXT,
+    "targetUserIds" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "payload" JSONB NOT NULL,
+    "status" "NotifyJobStatus" NOT NULL DEFAULT 'pending',
+    "attempts" INTEGER NOT NULL DEFAULT 0,
+    "claimedAt" TIMESTAMP(3),
+    "failedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "notify_outbox_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "notify_delivery" (
+    "id" TEXT NOT NULL,
+    "outboxId" TEXT NOT NULL,
+    "channel" "NotifyChannel" NOT NULL,
+    "userId" TEXT,
+    "slackChannelId" TEXT,
+    "status" "NotifyJobStatus" NOT NULL DEFAULT 'pending',
+    "scheduledAt" TIMESTAMP(3) NOT NULL,
+    "attempts" INTEGER NOT NULL DEFAULT 0,
+    "claimedAt" TIMESTAMP(3),
+    "lastError" TEXT,
+    "failedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "notify_delivery_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -458,6 +836,114 @@ CREATE TABLE "app_version" (
 );
 
 -- CreateTable
+CREATE TABLE "ticket" (
+    "id" TEXT NOT NULL,
+    "boardId" TEXT NOT NULL,
+    "createdById" TEXT,
+    "assigneeId" TEXT,
+    "number" INTEGER NOT NULL,
+    "title" TEXT NOT NULL,
+    "content" TEXT,
+    "status" "TicketStatus" NOT NULL DEFAULT 'todo',
+    "priority" "TicketPriority" NOT NULL DEFAULT 'medium',
+    "dueDate" TIMESTAMP(3),
+    "completedAt" TIMESTAMP(3),
+    "order" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "mentionedUserIds" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "agentMode" "AgentTaskMode",
+    "agentState" "AgentTaskState",
+    "agentAutoReviseCount" INTEGER NOT NULL DEFAULT 0,
+    "childAdvance" "TicketChildAdvance" NOT NULL DEFAULT 'done',
+
+    CONSTRAINT "ticket_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ticket_comment" (
+    "id" TEXT NOT NULL,
+    "ticketId" TEXT NOT NULL,
+    "authorId" TEXT,
+    "content" TEXT NOT NULL,
+    "type" "TicketCommentType",
+    "decision" "TicketCommentDecision",
+    "proposal" JSONB,
+    "parentId" TEXT,
+    "mentionedUserIds" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "ticket_comment_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ticket_criterion" (
+    "id" TEXT NOT NULL,
+    "ticketId" TEXT NOT NULL,
+    "order" INTEGER NOT NULL,
+    "text" TEXT NOT NULL,
+    "checkedById" TEXT,
+    "checkedAt" TIMESTAMP(3),
+    "agentMet" BOOLEAN,
+    "agentEvidence" TEXT,
+    "agentReportedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "ticket_criterion_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ticket_relation" (
+    "id" TEXT NOT NULL,
+    "type" "TicketRelationType" NOT NULL,
+    "fromId" TEXT NOT NULL,
+    "toId" TEXT NOT NULL,
+    "order" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ticket_relation_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ticket_activity" (
+    "id" TEXT NOT NULL,
+    "ticketId" TEXT NOT NULL,
+    "actorId" TEXT,
+    "source" "TicketActivitySource" NOT NULL DEFAULT 'user',
+    "field" "TicketActivityField" NOT NULL,
+    "before" TEXT,
+    "after" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ticket_activity_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "user" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "emailVerified" BOOLEAN NOT NULL DEFAULT false,
+    "image" TEXT,
+    "role" TEXT,
+    "banned" BOOLEAN DEFAULT false,
+    "banReason" TEXT,
+    "banExpires" TIMESTAMP(3),
+    "twoFactorEnabled" BOOLEAN DEFAULT false,
+    "nameLocked" BOOLEAN DEFAULT false,
+    "locale" TEXT,
+    "lastLoginAt" TIMESTAMP(3),
+    "timezone" TEXT,
+    "isAgent" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "user_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "group" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -477,283 +963,6 @@ CREATE TABLE "user_group" (
 
     CONSTRAINT "user_group_pkey" PRIMARY KEY ("id")
 );
-
--- CreateTable
-CREATE TABLE "calendar_share" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "publicId" TEXT NOT NULL,
-    "options" JSONB,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "calendar_share_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "calendar_busy_time" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "title" TEXT NOT NULL,
-    "weekdays" INTEGER[],
-    "startMin" INTEGER NOT NULL,
-    "endMin" INTEGER NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "calendar_busy_time_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "board" (
-    "id" TEXT NOT NULL,
-    "kind" "BoardKind" NOT NULL DEFAULT 'team',
-    "privateOwnerId" TEXT,
-    "key" TEXT NOT NULL,
-    "ticketSeq" INTEGER NOT NULL DEFAULT 0,
-    "name" TEXT NOT NULL,
-    "description" TEXT,
-    "archived" BOOLEAN NOT NULL DEFAULT false,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "board_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "board_key_history" (
-    "key" TEXT NOT NULL,
-    "boardId" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "board_key_history_pkey" PRIMARY KEY ("key")
-);
-
--- CreateTable
-CREATE TABLE "tag" (
-    "id" TEXT NOT NULL,
-    "boardId" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "color" "TagColor" NOT NULL DEFAULT 'gray',
-    "order" INTEGER NOT NULL DEFAULT 0,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "tag_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "ticket_tag" (
-    "id" TEXT NOT NULL,
-    "ticketId" TEXT NOT NULL,
-    "tagId" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "ticket_tag_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "board_member" (
-    "id" TEXT NOT NULL,
-    "boardId" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "role" "BoardMemberRole" NOT NULL DEFAULT 'member',
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "board_member_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "board_group" (
-    "id" TEXT NOT NULL,
-    "boardId" TEXT NOT NULL,
-    "groupId" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "board_group_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "ticket" (
-    "id" TEXT NOT NULL,
-    "boardId" TEXT NOT NULL,
-    "createdById" TEXT,
-    "assigneeId" TEXT,
-    "number" INTEGER NOT NULL,
-    "title" TEXT NOT NULL,
-    "content" TEXT,
-    "status" "TicketStatus" NOT NULL DEFAULT 'todo',
-    "priority" "TicketPriority" NOT NULL DEFAULT 'medium',
-    "dueDate" TIMESTAMP(3),
-    "completedAt" TIMESTAMP(3),
-    "order" INTEGER NOT NULL DEFAULT 0,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-    "mentionedUserIds" TEXT[] DEFAULT ARRAY[]::TEXT[],
-    "agentMode" "AgentTaskMode",
-    "agentState" "AgentTaskState",
-
-    CONSTRAINT "ticket_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "ticket_comment" (
-    "id" TEXT NOT NULL,
-    "ticketId" TEXT NOT NULL,
-    "authorId" TEXT,
-    "content" TEXT NOT NULL,
-    "type" "TicketCommentType",
-    "parentId" TEXT,
-    "mentionedUserIds" TEXT[] DEFAULT ARRAY[]::TEXT[],
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "ticket_comment_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "user_notify_setting" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "event" "NotifyEvent" NOT NULL,
-    "email" BOOLEAN NOT NULL DEFAULT false,
-    "slack" BOOLEAN NOT NULL DEFAULT false,
-    "webpush" BOOLEAN NOT NULL DEFAULT false,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "user_notify_setting_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "web_push_subscription" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "endpoint" TEXT NOT NULL,
-    "p256dh" TEXT NOT NULL,
-    "auth" TEXT NOT NULL,
-    "label" TEXT,
-    "lastUsedAt" TIMESTAMP(3),
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "web_push_subscription_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "board_notify_setting" (
-    "id" TEXT NOT NULL,
-    "boardId" TEXT NOT NULL,
-    "event" "NotifyEvent" NOT NULL,
-    "slackChannelId" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "board_notify_setting_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "notify_outbox" (
-    "id" TEXT NOT NULL,
-    "event" "NotifyEvent" NOT NULL,
-    "actorId" TEXT,
-    "targetUserIds" TEXT[] DEFAULT ARRAY[]::TEXT[],
-    "payload" JSONB NOT NULL,
-    "status" "NotifyJobStatus" NOT NULL DEFAULT 'pending',
-    "attempts" INTEGER NOT NULL DEFAULT 0,
-    "claimedAt" TIMESTAMP(3),
-    "failedAt" TIMESTAMP(3),
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "notify_outbox_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "notify_delivery" (
-    "id" TEXT NOT NULL,
-    "outboxId" TEXT NOT NULL,
-    "channel" "NotifyChannel" NOT NULL,
-    "userId" TEXT,
-    "slackChannelId" TEXT,
-    "status" "NotifyJobStatus" NOT NULL DEFAULT 'pending',
-    "scheduledAt" TIMESTAMP(3) NOT NULL,
-    "attempts" INTEGER NOT NULL DEFAULT 0,
-    "claimedAt" TIMESTAMP(3),
-    "lastError" TEXT,
-    "failedAt" TIMESTAMP(3),
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "notify_delivery_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "command_target_member" (
-    "id" TEXT NOT NULL,
-    "targetKey" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "role" "CommandTargetMemberRole" NOT NULL DEFAULT 'member',
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "command_target_member_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "command_target_group" (
-    "id" TEXT NOT NULL,
-    "targetKey" TEXT NOT NULL,
-    "groupId" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "command_target_group_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "command_run" (
-    "id" TEXT NOT NULL,
-    "commandKey" TEXT NOT NULL,
-    "commandLabel" TEXT NOT NULL,
-    "targetLabel" TEXT NOT NULL,
-    "userId" TEXT,
-    "userName" TEXT NOT NULL,
-    "params" JSONB NOT NULL,
-    "argsPreview" TEXT NOT NULL,
-    "status" "CommandRunStatus" NOT NULL DEFAULT 'queued',
-    "activeKey" TEXT,
-    "workerId" TEXT,
-    "claimedAt" TIMESTAMP(3),
-    "heartbeatAt" TIMESTAMP(3),
-    "cancelRequestedAt" TIMESTAMP(3),
-    "cancelRequestedBy" TEXT,
-    "exitCode" INTEGER,
-    "failureKind" TEXT,
-    "lastSeq" INTEGER NOT NULL DEFAULT 0,
-    "bytes" INTEGER NOT NULL DEFAULT 0,
-    "truncated" BOOLEAN NOT NULL DEFAULT false,
-    "queuedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "startedAt" TIMESTAMP(3),
-    "finishedAt" TIMESTAMP(3),
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "command_run_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "command_run_chunk" (
-    "runId" TEXT NOT NULL,
-    "seq" INTEGER NOT NULL,
-    "stream" "CommandStream" NOT NULL,
-    "text" TEXT NOT NULL,
-    "at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "command_run_chunk_pkey" PRIMARY KEY ("runId","seq")
-);
-
--- CreateIndex
-CREATE INDEX "user_image_idx" ON "user"("image");
-
--- CreateIndex
-CREATE UNIQUE INDEX "user_email_key" ON "user"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "agent_token_userId_key" ON "agent_token"("userId");
@@ -778,6 +987,21 @@ CREATE INDEX "agent_run_runnerId_startedAt_idx" ON "agent_run"("runnerId", "star
 
 -- CreateIndex
 CREATE INDEX "agent_run_ticketId_idx" ON "agent_run"("ticketId");
+
+-- CreateIndex
+CREATE INDEX "agent_auto_revise_trigger_ticketId_consumed_idx" ON "agent_auto_revise_trigger"("ticketId", "consumed");
+
+-- CreateIndex
+CREATE INDEX "agent_auto_revise_trigger_runId_idx" ON "agent_auto_revise_trigger"("runId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "agent_auto_revise_trigger_ticketId_dedupeKey_key" ON "agent_auto_revise_trigger"("ticketId", "dedupeKey");
+
+-- CreateIndex
+CREATE INDEX "agent_usage_runnerId_month_idx" ON "agent_usage"("runnerId", "month");
+
+-- CreateIndex
+CREATE INDEX "agent_usage_boardId_idx" ON "agent_usage"("boardId");
 
 -- CreateIndex
 CREATE INDEX "agent_approver_userId_idx" ON "agent_approver"("userId");
@@ -814,6 +1038,123 @@ CREATE INDEX "passkey_userId_idx" ON "passkey"("userId");
 
 -- CreateIndex
 CREATE INDEX "passkey_credentialID_idx" ON "passkey"("credentialID");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "board_privateOwnerId_key" ON "board"("privateOwnerId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "board_key_key" ON "board"("key");
+
+-- CreateIndex
+CREATE INDEX "board_key_history_boardId_idx" ON "board_key_history"("boardId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ticket_template_boardId_name_key" ON "ticket_template"("boardId", "name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "tag_boardId_name_key" ON "tag"("boardId", "name");
+
+-- CreateIndex
+CREATE INDEX "ticket_tag_tagId_idx" ON "ticket_tag"("tagId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ticket_tag_ticketId_tagId_key" ON "ticket_tag"("ticketId", "tagId");
+
+-- CreateIndex
+CREATE INDEX "board_member_userId_idx" ON "board_member"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "board_member_boardId_userId_key" ON "board_member"("boardId", "userId");
+
+-- CreateIndex
+CREATE INDEX "board_group_groupId_idx" ON "board_group"("groupId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "board_group_boardId_groupId_key" ON "board_group"("boardId", "groupId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "calendar_share_userId_key" ON "calendar_share"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "calendar_share_publicId_key" ON "calendar_share"("publicId");
+
+-- CreateIndex
+CREATE INDEX "calendar_busy_time_userId_idx" ON "calendar_busy_time"("userId");
+
+-- CreateIndex
+CREATE INDEX "command_target_member_userId_idx" ON "command_target_member"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "command_target_member_targetKey_userId_key" ON "command_target_member"("targetKey", "userId");
+
+-- CreateIndex
+CREATE INDEX "command_target_group_groupId_idx" ON "command_target_group"("groupId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "command_target_group_targetKey_groupId_key" ON "command_target_group"("targetKey", "groupId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "command_run_activeKey_key" ON "command_run"("activeKey");
+
+-- CreateIndex
+CREATE INDEX "command_run_status_queuedAt_idx" ON "command_run"("status", "queuedAt");
+
+-- CreateIndex
+CREATE INDEX "command_run_userId_queuedAt_idx" ON "command_run"("userId", "queuedAt");
+
+-- CreateIndex
+CREATE INDEX "command_run_commandKey_queuedAt_idx" ON "command_run"("commandKey", "queuedAt");
+
+-- CreateIndex
+CREATE INDEX "ticket_link_provider_baseUrl_repo_kind_ref_idx" ON "ticket_link"("provider", "baseUrl", "repo", "kind", "ref");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ticket_link_ticketId_provider_baseUrl_repo_kind_ref_key" ON "ticket_link"("ticketId", "provider", "baseUrl", "repo", "kind", "ref");
+
+-- CreateIndex
+CREATE INDEX "board_repository_provider_baseUrl_repo_idx" ON "board_repository"("provider", "baseUrl", "repo");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "board_repository_boardId_provider_baseUrl_repo_key" ON "board_repository"("boardId", "provider", "baseUrl", "repo");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "board_git_setting_boardId_provider_key" ON "board_git_setting"("boardId", "provider");
+
+-- CreateIndex
+CREATE INDEX "git_check_suite_provider_baseUrl_repo_headSha_idx" ON "git_check_suite"("provider", "baseUrl", "repo", "headSha");
+
+-- CreateIndex
+CREATE INDEX "git_check_suite_repositoryId_idx" ON "git_check_suite"("repositoryId");
+
+-- CreateIndex
+CREATE INDEX "git_check_suite_updatedAt_idx" ON "git_check_suite"("updatedAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "git_check_suite_provider_baseUrl_repo_suiteId_repositoryId_key" ON "git_check_suite"("provider", "baseUrl", "repo", "suiteId", "repositoryId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "user_notify_setting_userId_event_key" ON "user_notify_setting"("userId", "event");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "web_push_subscription_endpoint_key" ON "web_push_subscription"("endpoint");
+
+-- CreateIndex
+CREATE INDEX "web_push_subscription_userId_idx" ON "web_push_subscription"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "board_notify_setting_boardId_event_key" ON "board_notify_setting"("boardId", "event");
+
+-- CreateIndex
+CREATE INDEX "notify_outbox_status_createdAt_idx" ON "notify_outbox"("status", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "notify_delivery_channel_status_scheduledAt_idx" ON "notify_delivery"("channel", "status", "scheduledAt");
+
+-- CreateIndex
+CREATE INDEX "notify_delivery_userId_channel_status_scheduledAt_idx" ON "notify_delivery"("userId", "channel", "status", "scheduledAt");
+
+-- CreateIndex
+CREATE INDEX "notify_delivery_outboxId_idx" ON "notify_delivery"("outboxId");
 
 -- CreateIndex
 CREATE INDEX "oauth_client_userId_idx" ON "oauth_client"("userId");
@@ -894,57 +1235,6 @@ CREATE INDEX "key_value_store_group_idx" ON "key_value_store"("group");
 CREATE UNIQUE INDEX "app_version_version_key" ON "app_version"("version");
 
 -- CreateIndex
-CREATE INDEX "user_group_userId_idx" ON "user_group"("userId");
-
--- CreateIndex
-CREATE INDEX "user_group_groupId_idx" ON "user_group"("groupId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "user_group_userId_groupId_key" ON "user_group"("userId", "groupId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "calendar_share_userId_key" ON "calendar_share"("userId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "calendar_share_publicId_key" ON "calendar_share"("publicId");
-
--- CreateIndex
-CREATE INDEX "calendar_share_publicId_idx" ON "calendar_share"("publicId");
-
--- CreateIndex
-CREATE INDEX "calendar_busy_time_userId_idx" ON "calendar_busy_time"("userId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "board_privateOwnerId_key" ON "board"("privateOwnerId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "board_key_key" ON "board"("key");
-
--- CreateIndex
-CREATE INDEX "board_key_history_boardId_idx" ON "board_key_history"("boardId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "tag_boardId_name_key" ON "tag"("boardId", "name");
-
--- CreateIndex
-CREATE INDEX "ticket_tag_tagId_idx" ON "ticket_tag"("tagId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "ticket_tag_ticketId_tagId_key" ON "ticket_tag"("ticketId", "tagId");
-
--- CreateIndex
-CREATE INDEX "board_member_userId_idx" ON "board_member"("userId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "board_member_boardId_userId_key" ON "board_member"("boardId", "userId");
-
--- CreateIndex
-CREATE INDEX "board_group_groupId_idx" ON "board_group"("groupId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "board_group_boardId_groupId_key" ON "board_group"("boardId", "groupId");
-
--- CreateIndex
 CREATE INDEX "ticket_boardId_status_order_idx" ON "ticket"("boardId", "status", "order");
 
 -- CreateIndex
@@ -960,6 +1250,9 @@ CREATE INDEX "ticket_createdById_idx" ON "ticket"("createdById");
 CREATE INDEX "ticket_updatedAt_idx" ON "ticket"("updatedAt");
 
 -- CreateIndex
+CREATE INDEX "ticket_mentionedUserIds_idx" ON "ticket" USING GIN ("mentionedUserIds");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "ticket_boardId_number_key" ON "ticket"("boardId", "number");
 
 -- CreateIndex
@@ -969,52 +1262,34 @@ CREATE INDEX "ticket_comment_ticketId_createdAt_idx" ON "ticket_comment"("ticket
 CREATE INDEX "ticket_comment_parentId_idx" ON "ticket_comment"("parentId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "user_notify_setting_userId_event_key" ON "user_notify_setting"("userId", "event");
+CREATE INDEX "ticket_comment_mentionedUserIds_idx" ON "ticket_comment" USING GIN ("mentionedUserIds");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "web_push_subscription_endpoint_key" ON "web_push_subscription"("endpoint");
+CREATE INDEX "ticket_criterion_ticketId_order_idx" ON "ticket_criterion"("ticketId", "order");
 
 -- CreateIndex
-CREATE INDEX "web_push_subscription_userId_idx" ON "web_push_subscription"("userId");
+CREATE INDEX "ticket_relation_toId_type_idx" ON "ticket_relation"("toId", "type");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "board_notify_setting_boardId_event_key" ON "board_notify_setting"("boardId", "event");
+CREATE UNIQUE INDEX "ticket_relation_type_fromId_toId_key" ON "ticket_relation"("type", "fromId", "toId");
 
 -- CreateIndex
-CREATE INDEX "notify_outbox_status_createdAt_idx" ON "notify_outbox"("status", "createdAt");
+CREATE INDEX "ticket_activity_ticketId_createdAt_idx" ON "ticket_activity"("ticketId", "createdAt");
 
 -- CreateIndex
-CREATE INDEX "notify_delivery_channel_status_scheduledAt_idx" ON "notify_delivery"("channel", "status", "scheduledAt");
+CREATE INDEX "ticket_activity_createdAt_idx" ON "ticket_activity"("createdAt");
 
 -- CreateIndex
-CREATE INDEX "notify_delivery_userId_channel_status_scheduledAt_idx" ON "notify_delivery"("userId", "channel", "status", "scheduledAt");
+CREATE INDEX "user_image_idx" ON "user"("image");
 
 -- CreateIndex
-CREATE INDEX "notify_delivery_outboxId_idx" ON "notify_delivery"("outboxId");
+CREATE UNIQUE INDEX "user_email_key" ON "user"("email");
 
 -- CreateIndex
-CREATE INDEX "command_target_member_userId_idx" ON "command_target_member"("userId");
+CREATE INDEX "user_group_groupId_idx" ON "user_group"("groupId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "command_target_member_targetKey_userId_key" ON "command_target_member"("targetKey", "userId");
-
--- CreateIndex
-CREATE INDEX "command_target_group_groupId_idx" ON "command_target_group"("groupId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "command_target_group_targetKey_groupId_key" ON "command_target_group"("targetKey", "groupId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "command_run_activeKey_key" ON "command_run"("activeKey");
-
--- CreateIndex
-CREATE INDEX "command_run_status_queuedAt_idx" ON "command_run"("status", "queuedAt");
-
--- CreateIndex
-CREATE INDEX "command_run_userId_queuedAt_idx" ON "command_run"("userId", "queuedAt");
-
--- CreateIndex
-CREATE INDEX "command_run_commandKey_queuedAt_idx" ON "command_run"("commandKey", "queuedAt");
+CREATE UNIQUE INDEX "user_group_userId_groupId_key" ON "user_group"("userId", "groupId");
 
 -- AddForeignKey
 ALTER TABLE "agent_token" ADD CONSTRAINT "agent_token_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -1033,6 +1308,18 @@ ALTER TABLE "agent_run" ADD CONSTRAINT "agent_run_runnerId_fkey" FOREIGN KEY ("r
 
 -- AddForeignKey
 ALTER TABLE "agent_run" ADD CONSTRAINT "agent_run_ticketId_fkey" FOREIGN KEY ("ticketId") REFERENCES "ticket"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "agent_auto_revise_trigger" ADD CONSTRAINT "agent_auto_revise_trigger_ticketId_fkey" FOREIGN KEY ("ticketId") REFERENCES "ticket"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "agent_auto_revise_trigger" ADD CONSTRAINT "agent_auto_revise_trigger_runId_fkey" FOREIGN KEY ("runId") REFERENCES "agent_run"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "agent_usage" ADD CONSTRAINT "agent_usage_runnerId_fkey" FOREIGN KEY ("runnerId") REFERENCES "agent_runner"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "agent_usage" ADD CONSTRAINT "agent_usage_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "board"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "agent_approver" ADD CONSTRAINT "agent_approver_agentId_fkey" FOREIGN KEY ("agentId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -1057,6 +1344,87 @@ ALTER TABLE "two_factor" ADD CONSTRAINT "two_factor_userId_fkey" FOREIGN KEY ("u
 
 -- AddForeignKey
 ALTER TABLE "passkey" ADD CONSTRAINT "passkey_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "board" ADD CONSTRAINT "board_privateOwnerId_fkey" FOREIGN KEY ("privateOwnerId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "board_key_history" ADD CONSTRAINT "board_key_history_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "board"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ticket_template" ADD CONSTRAINT "ticket_template_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "board"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "tag" ADD CONSTRAINT "tag_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "board"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ticket_tag" ADD CONSTRAINT "ticket_tag_ticketId_fkey" FOREIGN KEY ("ticketId") REFERENCES "ticket"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ticket_tag" ADD CONSTRAINT "ticket_tag_tagId_fkey" FOREIGN KEY ("tagId") REFERENCES "tag"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "board_member" ADD CONSTRAINT "board_member_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "board"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "board_member" ADD CONSTRAINT "board_member_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "board_group" ADD CONSTRAINT "board_group_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "board"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "board_group" ADD CONSTRAINT "board_group_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "group"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "calendar_share" ADD CONSTRAINT "calendar_share_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "calendar_busy_time" ADD CONSTRAINT "calendar_busy_time_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "command_target_member" ADD CONSTRAINT "command_target_member_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "command_target_group" ADD CONSTRAINT "command_target_group_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "group"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "command_run" ADD CONSTRAINT "command_run_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "command_run_chunk" ADD CONSTRAINT "command_run_chunk_runId_fkey" FOREIGN KEY ("runId") REFERENCES "command_run"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ticket_link" ADD CONSTRAINT "ticket_link_ticketId_fkey" FOREIGN KEY ("ticketId") REFERENCES "ticket"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ticket_link" ADD CONSTRAINT "ticket_link_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "board_repository" ADD CONSTRAINT "board_repository_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "board"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "board_git_setting" ADD CONSTRAINT "board_git_setting_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "board"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "git_check_suite" ADD CONSTRAINT "git_check_suite_repositoryId_fkey" FOREIGN KEY ("repositoryId") REFERENCES "board_repository"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "user_notify_setting" ADD CONSTRAINT "user_notify_setting_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "web_push_subscription" ADD CONSTRAINT "web_push_subscription_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "board_notify_setting" ADD CONSTRAINT "board_notify_setting_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "board"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "notify_outbox" ADD CONSTRAINT "notify_outbox_actorId_fkey" FOREIGN KEY ("actorId") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "notify_delivery" ADD CONSTRAINT "notify_delivery_outboxId_fkey" FOREIGN KEY ("outboxId") REFERENCES "notify_outbox"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "notify_delivery" ADD CONSTRAINT "notify_delivery_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "oauth_client" ADD CONSTRAINT "oauth_client_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -1104,45 +1472,6 @@ ALTER TABLE "attachment" ADD CONSTRAINT "attachment_boardId_fkey" FOREIGN KEY ("
 ALTER TABLE "attachment" ADD CONSTRAINT "attachment_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "user_group" ADD CONSTRAINT "user_group_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "user_group" ADD CONSTRAINT "user_group_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "group"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "calendar_share" ADD CONSTRAINT "calendar_share_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "calendar_busy_time" ADD CONSTRAINT "calendar_busy_time_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "board" ADD CONSTRAINT "board_privateOwnerId_fkey" FOREIGN KEY ("privateOwnerId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "board_key_history" ADD CONSTRAINT "board_key_history_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "board"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "tag" ADD CONSTRAINT "tag_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "board"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "ticket_tag" ADD CONSTRAINT "ticket_tag_ticketId_fkey" FOREIGN KEY ("ticketId") REFERENCES "ticket"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "ticket_tag" ADD CONSTRAINT "ticket_tag_tagId_fkey" FOREIGN KEY ("tagId") REFERENCES "tag"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "board_member" ADD CONSTRAINT "board_member_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "board"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "board_member" ADD CONSTRAINT "board_member_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "board_group" ADD CONSTRAINT "board_group_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "board"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "board_group" ADD CONSTRAINT "board_group_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "group"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "ticket" ADD CONSTRAINT "ticket_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "board"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -1161,31 +1490,25 @@ ALTER TABLE "ticket_comment" ADD CONSTRAINT "ticket_comment_authorId_fkey" FOREI
 ALTER TABLE "ticket_comment" ADD CONSTRAINT "ticket_comment_parentId_fkey" FOREIGN KEY ("parentId") REFERENCES "ticket_comment"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "user_notify_setting" ADD CONSTRAINT "user_notify_setting_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "ticket_criterion" ADD CONSTRAINT "ticket_criterion_ticketId_fkey" FOREIGN KEY ("ticketId") REFERENCES "ticket"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "web_push_subscription" ADD CONSTRAINT "web_push_subscription_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "ticket_criterion" ADD CONSTRAINT "ticket_criterion_checkedById_fkey" FOREIGN KEY ("checkedById") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "board_notify_setting" ADD CONSTRAINT "board_notify_setting_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "board"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "ticket_relation" ADD CONSTRAINT "ticket_relation_fromId_fkey" FOREIGN KEY ("fromId") REFERENCES "ticket"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "notify_outbox" ADD CONSTRAINT "notify_outbox_actorId_fkey" FOREIGN KEY ("actorId") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "ticket_relation" ADD CONSTRAINT "ticket_relation_toId_fkey" FOREIGN KEY ("toId") REFERENCES "ticket"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "notify_delivery" ADD CONSTRAINT "notify_delivery_outboxId_fkey" FOREIGN KEY ("outboxId") REFERENCES "notify_outbox"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "ticket_activity" ADD CONSTRAINT "ticket_activity_ticketId_fkey" FOREIGN KEY ("ticketId") REFERENCES "ticket"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "notify_delivery" ADD CONSTRAINT "notify_delivery_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "ticket_activity" ADD CONSTRAINT "ticket_activity_actorId_fkey" FOREIGN KEY ("actorId") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "command_target_member" ADD CONSTRAINT "command_target_member_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "user_group" ADD CONSTRAINT "user_group_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "command_target_group" ADD CONSTRAINT "command_target_group_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "group"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "command_run" ADD CONSTRAINT "command_run_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "command_run_chunk" ADD CONSTRAINT "command_run_chunk_runId_fkey" FOREIGN KEY ("runId") REFERENCES "command_run"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "user_group" ADD CONSTRAINT "user_group_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "group"("id") ON DELETE CASCADE ON UPDATE CASCADE;
