@@ -6,6 +6,7 @@ import { InputCtrl } from '@/components/general/input'
 import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { SingleSelectField } from '@/components/general/select'
 import { SwitchCtrl } from '@/components/general/switch'
+import { MultiTable } from '@/components/general/table'
 import { CheckIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { ActionResult, parseAction } from '@/lib/action/action-client'
@@ -23,8 +24,9 @@ import { useDefaultTimezone, useUserTimezone } from '@/lib/auth/use-timezone'
 import { COMMON_TIMEZONES, dayformat, minToHHmm, tzOffsetLabel, tzOffsetMinutes } from '@/lib/day'
 import { SaveAgentRunner, scSaveAgentRunner } from '@/lib/schema/schema-agent'
 import { useLocale } from '@/locale/client'
+import { Table } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { FC, ReactNode, useMemo } from 'react'
+import { FC, useMemo } from 'react'
 import { Control, Controller, FieldPath, useForm } from 'react-hook-form'
 
 /** 設定を保存する Server Action。管理者用と承認者用で権限判定が違うため、呼び出し側から渡す */
@@ -68,12 +70,39 @@ const TimeSelect: FC<{
   />
 )
 
-const StatusField: FC<{ label: string; children: ReactNode }> = ({ label, children }) => (
-  <div className='flex items-center justify-between gap-2'>
-    <span className='opacity-70'>{label}</span>
-    <span className='truncate font-mono'>{children}</span>
-  </div>
-)
+/** ランナーの稼働状況(ランナーからの報告値)を1行の表で出す */
+const RunnerStatus: FC<{ current: AgentRunnerConfig }> = ({ current }) => {
+  const { t } = useLocale()
+  const tz = useUserTimezone()
+  const cellClass = 'font-mono text-xs whitespace-nowrap'
+
+  return (
+    <MultiTable
+      isSmart
+      aria-label='agent runner status'
+      items={[{ ...current, id: 'status' }]}
+      columns={[
+        { id: 'lastPolledAt', name: t('agent_last_polled'), isRowHeader: true, minWidth: 180, defaultWidth: '1fr' },
+        { id: 'dailyUsage', name: t('agent_daily_usage'), minWidth: 120, defaultWidth: '1fr' },
+        { id: 'host', name: t('agent_host'), minWidth: 120, defaultWidth: '1fr' },
+        { id: 'version', name: t('version'), minWidth: 150, defaultWidth: '1fr' },
+      ]}
+    >
+      {(row) => (
+        <Table.Row id={row.id}>
+          <Table.Cell className={cellClass}>{dayformat(row.lastPolledAt, 'tz-simple', tz) || '-'}</Table.Cell>
+          <Table.Cell className={cellClass}>
+            {`${row.todayRuns} / ${
+              row.dailyRunLimit === AGENT_UNLIMITED_DAILY_RUNS ? t('agent_unlimited') : row.dailyRunLimit
+            }`}
+          </Table.Cell>
+          <Table.Cell className={cellClass}>{row.hostname || '-'}</Table.Cell>
+          <Table.Cell className={cellClass}>{row.version || '-'}</Table.Cell>
+        </Table.Row>
+      )}
+    </MultiTable>
+  )
+}
 
 const RunnerForm: FC<{
   agentId: string
@@ -82,7 +111,6 @@ const RunnerForm: FC<{
   save: SaveRunnerAction
 }> = ({ agentId, current, refresh, save }) => {
   const { t, fet } = useLocale()
-  const tz = useUserTimezone()
   const defaultTz = useDefaultTimezone()
 
   // 主要都市をオフセット順に並べる。設定済みの値が候補外なら先頭へ足して必ず選べるようにする
@@ -206,17 +234,8 @@ const RunnerForm: FC<{
         </div>
 
         {current && (
-          <div className='col-span-12 space-y-1 border-t pt-2 text-xs'>
-            <StatusField label={t('agent_last_polled')}>
-              {dayformat(current.lastPolledAt, 'tz-simple', tz) || '-'}
-            </StatusField>
-            <StatusField label={t('agent_daily_usage')}>
-              {`${current.todayRuns} / ${
-                current.dailyRunLimit === AGENT_UNLIMITED_DAILY_RUNS ? t('agent_unlimited') : current.dailyRunLimit
-              }`}
-            </StatusField>
-            <StatusField label={t('agent_host')}>{current.hostname || '-'}</StatusField>
-            <StatusField label={t('version')}>{current.version || '-'}</StatusField>
+          <div className='col-span-12'>
+            <RunnerStatus current={current} />
           </div>
         )}
 
