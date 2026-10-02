@@ -181,7 +181,9 @@ bearer_token_env_var = "DEVUNTU_AGENT_TOKEN"
 - `delete_ticket_comment` — 自分が投稿したコメント、またはチケットを削除できる権限を持つ場合
 - 本文やコメントのメンション(`@[アドレス]`)は画面から書いた場合と同じように解決され、通知も飛ぶ
 - `link_ticket_artifact` / `unlink_ticket_artifact` — コメントの投稿と同じく、チケットを編集できれば使える
-- `link_related_ticket` / `unlink_ticket_relation` — `update_ticket` と同じ制限を受ける(関連は両端のチケット、親子は子のチケットで判定する)
+- `link_related_ticket` / `unlink_ticket_relation` — `update_ticket` と同じ制限を受ける。親子は子のチケットで判定し、
+  関連はどちらか一方のチケットで満たせばよい(自分が担当のチケットを、他人が担当のチケットへ関連付けられる)
+- これらの制限で更新を弾いた場合は、他人が担当のチケットであることが分かるメッセージのエラーを返す
 
 チケットに対応するときの手順(着手時に対応中にする → プランを投稿 → 成果物を紐付け → 受け入れ条件の結果を記録 → 報告を投稿)は、
 利用者がルールを書かなくてもサーバーからクライアントへ伝える。利用者の指示やプロジェクトのルール(CLAUDE.md / AGENTS.md など)が

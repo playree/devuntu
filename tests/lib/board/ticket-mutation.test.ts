@@ -43,6 +43,7 @@ import {
   createTicketForMcp,
   deleteTicketCommentForMcp,
   deleteTicketForMcp,
+  TICKET_ASSIGNED_TO_OTHER,
   updateTicketCommentForMcp,
   updateTicketForMcp,
 } from '@/lib/mcp/mcp-ticket'
@@ -594,7 +595,7 @@ describe.each(routes)('updateTicket の権限表: %s', (_label, route) => {
         await expect(result).resolves.toMatchObject({ id: TICKET_ID })
         expect(fakeTx.ticket.update).toHaveBeenCalled()
       } else {
-        await expect(result).rejects.toThrow(ClientError)
+        await expect(result).rejects.toMatchObject({ errorType: TICKET_ASSIGNED_TO_OTHER })
         expect(fakeTx.ticket.update).not.toHaveBeenCalled()
         expect(fakeTx.ticket.findUniqueOrThrow).not.toHaveBeenCalled()
         expect(enqueueTicketUpdated).not.toHaveBeenCalled()

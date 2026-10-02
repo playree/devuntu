@@ -7,7 +7,7 @@
 
 import type { Prisma } from '@/generated/prisma/client'
 import type { TicketRelationType } from '@/generated/prisma/enums'
-import { errClient, errInvalidOperation } from '../error'
+import { ClientError, errClient, errInvalidOperation } from '../error'
 import { isUniqueViolation, prisma, type Db } from '../prisma'
 import { assertTicketAccess, type Actor, type TicketAccess } from './board-access'
 import { isTicketUuid, parseTicketDisplayId, parseTicketNumber, ticketDisplayId } from './ticket-id'
@@ -129,7 +129,8 @@ export type AddTicketRelationInput = {
 
 /**
  * 経路固有の追加制限(`TicketAuthorize`)を、関係で変わるチケットに掛ける。
- * 親子は子の属性(親)を変える扱いなので子だけ(`update_ticket` の parentId と同じ)、関連は向きが無いので両端に掛ける
+ * 親子は子の属性(親)を変える扱いなので子だけ(`update_ticket` の parentId と同じ)。
+ * 関連は向きが無く相手の属性も変えないので、どちらか一端で満たせばよい(自分の担当チケットを他人の担当チケットへ関連付けられる)
  */
 const authorizeRelation = async (
   tx: Prisma.TransactionClient,
@@ -142,9 +143,27 @@ const authorizeRelation = async (
   if (!authorize) {
     return
   }
-  const ticketIds = relation.type === 'parent' ? [relation.toId] : [relation.fromId, relation.toId]
-  for (const ticketId of ticketIds) {
-    authorize(ticketId === checked.ticketId ? checked : await assertTicketAccess(actor, ticketId, 'edit', tx))
+  const accessOf = async (ticketId: string) =>
+    ticketId === checked.ticketId ? checked : assertTicketAccess(actor, ticketId, 'edit', tx)
+  if (relation.type === 'parent') {
+    authorize(await accessOf(relation.toId))
+    return
+  }
+
+  // 判定済みのチケットを先に試し、通れば相手は問い合わせない。相手で判定し直すのは拒否(ClientError)のときだけ
+  const other = relation.fromId === checked.ticketId ? relation.toId : relation.fromId
+  try {
+    authorize(checked)
+  } catch (error) {
+    if (!(error instanceof ClientError)) {
+      throw error
+    }
+    const otherAccess = await accessOf(other)
+    try {
+      authorize(otherAccess)
+    } catch (otherError) {
+      throw otherError instanceof ClientError ? error : otherError
+    }
   }
 }
 

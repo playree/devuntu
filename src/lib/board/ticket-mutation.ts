@@ -43,7 +43,7 @@ import {
   reassignContentAttachments,
 } from './ticket-write'
 
-/** 経路固有の追加制限。`assertTicketAccess` を通った直後に同じトランザクション内で呼ぶ。NG なら throw する */
+/** 経路固有の追加制限。`assertTicketAccess` を通った直後に同じトランザクション内で呼ぶ。NG なら `ClientError` を throw する */
 export type TicketAuthorize = (access: TicketAccess) => void
 
 export type CreateTicketInput = {
