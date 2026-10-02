@@ -2,9 +2,10 @@
 
 import { SideDrawer } from '@/components/general/drawer'
 import { FlexCol } from '@/components/general/flex'
+import { isBlankTarget } from '@/lib/client-utils'
 import { useLocale } from '@/locale/client'
 import { cn } from '@heroui/react'
-import { FC, ReactNode } from 'react'
+import { FC, ReactNode, useEffect, useEffectEvent } from 'react'
 import { TicketDetailClient } from './[id]/client'
 import { type BoardAssignee, type TicketFormOptions } from './use-ticket-form'
 
@@ -13,6 +14,7 @@ import { type BoardAssignee, type TicketFormOptions } from './use-ticket-form'
  *
  * 詳細パネルを開いている間は data-nav-hidden でサイドメニューを隠し、横幅を稼ぐ。
  * あわせて中央寄せ(mx-auto)をやめて左に寄せ、右のパネルと重なりにくくする。
+ * パネルを開いている間に一覧側の空白(操作できる要素の外)を押すと、選択を解除して閉じる。
  */
 export const TicketDrawerLayout: FC<{
   selectedId: string | undefined
@@ -33,6 +35,40 @@ export const TicketDrawerLayout: FC<{
   children: ReactNode
 }> = ({ selectedId, onClose, onChanged, formOptions, boardAssignees, className, isFitScreen, children }) => {
   const { t } = useLocale()
+  const close = useEffectEvent(() => onClose())
+
+  /**
+   * 一覧の下に残る余白など枠の外も対象にしたいので、document で受けて #side-main(メインコンテンツ)
+   * の範囲で判定する。ポータルに出るモーダルやポップオーバーは #side-main の外なので対象にならない。
+   *
+   * 押下時点でも空白だったかを見るのは、カードをドラッグしてレーンの空白で離すと click が押下と離した
+   * 要素の共通祖先で発火し、空白扱いになるため。リンクなどは preventParentSelection で伝播を
+   * 止めているので、押下は capture で受ける。
+   * 空白から文字列をドラッグで範囲選択したときも click が出るので、選択が残っていれば閉じない
+   */
+  useEffect(() => {
+    const area = document.getElementById('side-main')
+    if (!selectedId || !area) {
+      return
+    }
+    let isBlankPress = false
+    const onPointerDown = (e: PointerEvent) => {
+      isBlankPress = isBlankTarget(e.target, area)
+    }
+    const onClick = (e: MouseEvent) => {
+      const isSelectingText = window.getSelection()?.isCollapsed === false
+      if (isBlankPress && !isSelectingText && !e.defaultPrevented && isBlankTarget(e.target, area)) {
+        close()
+      }
+    }
+    document.addEventListener('pointerdown', onPointerDown, true)
+    document.addEventListener('click', onClick)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown, true)
+      document.removeEventListener('click', onClick)
+    }
+  }, [selectedId])
+
   return (
     <FlexCol
       data-wide
