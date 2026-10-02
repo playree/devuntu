@@ -339,6 +339,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       title: 'Link related ticket',
       description:
         'Links two tickets on the same board as related (undirected; visible from both tickets). ' +
+        'Members can link a ticket assigned to someone else as long as the other ticket is assigned to them or unassigned. ' +
         'Set parent/child with parentId in update_ticket / create_ticket',
       inputSchema: {
         ticketId: z.string().min(1),
@@ -353,7 +354,8 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     {
       title: 'Unlink relation',
       description:
-        'Removes a parent/child or related link. Get relationId from parent / children / related in get_ticket',
+        'Removes a parent/child or related link. Get relationId from parent / children / related in get_ticket. ' +
+        'Members can remove a related link if either ticket is assigned to them or unassigned, and a parent/child link if the child is',
       inputSchema: { relationId: z.uuidv7() },
     },
     async ({ relationId }) => jsonResult(await unlinkTicketRelationForMcp(auth, relationId)),

@@ -38,7 +38,7 @@ import { buildTicketWhere, ticketListOrderBy } from '@/lib/board/ticket-search'
 import { findWaitingTicketIds } from '@/lib/board/ticket-sequence'
 import { findTicketTemplate } from '@/lib/board/ticket-template'
 import { applyTicketTemplate } from '@/lib/board/ticket-template-rule'
-import { errInvalidOperation } from '@/lib/error'
+import { ClientError, errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { resolveBoardId } from '@/lib/mcp/mcp-board'
 import { ticketWorkflowFor } from '@/lib/mcp/mcp-instructions'
@@ -294,12 +294,20 @@ export const createTicketForMcp = async (auth: ResourceAuth, { templateId, ...in
 
 export type McpUpdateTicketInput = UpdateTicketInput
 
+/** canMcpUpdateTicket で弾いた。エージェントが理由を読めるよう、メッセージに制限の内容を書く */
+export const TICKET_ASSIGNED_TO_OTHER = 'TICKET_ASSIGNED_TO_OTHER'
+const errTicketAssignedToOther = () =>
+  new ClientError(
+    TICKET_ASSIGNED_TO_OTHER,
+    'Board members cannot update a ticket assigned to someone else via MCP (unassigned tickets and your own are allowed)',
+  )
+
 /** MCP限定の追加制限: メンバーは他人が担当のチケットを更新できない(canMcpUpdateTicket)。親子・関連の変更にも掛ける */
 const mcpUpdateAuthorize =
   (auth: ResourceAuth): TicketAuthorize =>
   (access) => {
     if (!canMcpUpdateTicket({ userId: auth.user.id, boardRole: access.boardRole, assigneeId: access.assigneeId })) {
-      throw errInvalidOperation()
+      throw errTicketAssignedToOther()
     }
   }
 
