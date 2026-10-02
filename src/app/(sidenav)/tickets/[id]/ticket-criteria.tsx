@@ -121,12 +121,14 @@ const CriterionRow: FC<{ criterion: Criterion; canEdit: boolean; refresh: () => 
         id={`criterion-${criterion.id}`}
         variant='secondary' // 行の背景が白いので、同じ白の枠にならないようにする
         label={criterion.text}
+        contentClassName='text-xs' // 一覧として詰めて見せるため、文言とチェックボックスを 1 段階小さくする
+        controlClassName='size-3.5'
         isSelected={criterion.checkedAt !== null}
         isDisabled={!canEdit || isSaving}
         onChange={toggle}
       />
       {(criterion.agentMet !== null || criterion.checkedAt) && (
-        <div className='text-muted flex flex-wrap items-center gap-x-4 gap-y-0.5 pl-7 text-xs'>
+        <div className='text-muted flex flex-wrap items-center gap-x-4 gap-y-0.5 pl-5.5 text-xs'>
           {criterion.agentMet !== null && (
             <CriterionSelfReport met={criterion.agentMet} evidence={criterion.agentEvidence} />
           )}

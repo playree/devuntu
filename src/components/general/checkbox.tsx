@@ -10,19 +10,24 @@ import { useIsSmart, useSmart } from './smart'
  * react-hook-form に依存しない Checkbox 本体。
  * isSelected / onChange / onBlur / ref はそのまま Checkbox へ透過するため、外部stateでも制御できる。
  */
-export const CheckboxField: FC<CheckboxProps & { id: string; label: string; isSmart?: boolean }> = ({
-  id,
-  label,
-  isSmart: isSmartProp,
-  ...props
-}) => {
+export const CheckboxField: FC<
+  CheckboxProps & {
+    id: string
+    label: string
+    isSmart?: boolean
+    /** 文言部分(Checkbox.Content)に足す className。文字サイズなどを個別に上書きしたいときに使う */
+    contentClassName?: string
+    /** チェックボックス本体(Checkbox.Control)に足す className */
+    controlClassName?: string
+  }
+> = ({ id, label, isSmart: isSmartProp, contentClassName, controlClassName, ...props }) => {
   const isSmart = useIsSmart(isSmartProp)
   return (
     <Checkbox {...props} id={id}>
       <Checkbox.Content // isSmart: ラベル相当の文言なので他フィールドのラベルと同じ体裁に揃える
-        className={isSmart ? 'gap-2 text-sm font-normal' : ''}
+        className={cn(isSmart ? 'gap-2 text-sm font-normal' : '', contentClassName)}
       >
-        <Checkbox.Control className={cn('size-5', isSmart ? 'size-4' : '')}>
+        <Checkbox.Control className={cn('size-5', isSmart ? 'size-4' : '', controlClassName)}>
           <Checkbox.Indicator />
         </Checkbox.Control>
         {label}
