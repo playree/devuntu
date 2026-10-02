@@ -213,6 +213,9 @@ OAuth / ユーザーの MCP トークンで接続した場合だけ使える
 | `finish_agent_task`     | 処理結果を報告して1回の実行を閉じる                                              |
 | `propose_child_tickets` | 子チケットの起票案付きのプランを投稿する                                         |
 
+- エージェントが処理を始めたチケットは、`backlog` / `todo` ならサーバーが対応中(`doing`)へ移す
+- 受け入れ条件が空なら、エージェントは plan の投稿時(execute は着手時)に `update_ticket` で設定する。既存の項目は削除・書き換えしない
+
 入力と応答の詳細は [agent-runner-internals.md](agent-runner-internals.md#エージェント専用の-mcp-ツール) を参照。
 
 ### ボードの AI 向けコンテキスト

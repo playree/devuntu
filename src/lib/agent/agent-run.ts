@@ -6,14 +6,15 @@
  */
 
 import { Prisma } from '@/generated/prisma/client'
-import type { AgentRunAction, AgentRunStatus, AgentTaskState } from '@/generated/prisma/enums'
+import type { AgentRunAction, AgentRunStatus, AgentTaskState, TicketStatus } from '@/generated/prisma/enums'
 import { type AgentCriterionReport, assertAgentCriteria, writeAgentCriteria } from '../board/ticket-criterion'
 import { ticketDisplayId } from '../board/ticket-id'
+import { moveTicketToLane } from '../board/ticket-write'
 import { MINUTE_MS, msBefore, nowDate } from '../day'
 import { logger } from '../logger'
 import { MAX_NOTIFY_RECIPIENTS } from '../notify/notify'
 import type { AgentRunNotifyState } from '../notify/notify-payload'
-import { type AgentRunNotification, enqueueAgentRunFinished } from '../notify/notify-trigger'
+import { type AgentRunNotification, enqueueAgentRunFinished, enqueueTicketMoved } from '../notify/notify-trigger'
 import { prisma } from '../prisma'
 import { AGENT_UNLIMITED_DAILY_RUNS } from './agent'
 import {
@@ -166,8 +167,12 @@ export type StartAgentRunResult =
   | { ok: false; reason: 'daily_limit'; usage: AgentRunUsage }
   | { ok: false; reason: 'monthly_budget'; budget: AgentBudgetUsage }
 
+/** エージェントが処理を始めたときに対応中(doing)へ移すステータス。doing / done は触らない */
+const AGENT_START_STATUSES: ReadonlySet<TicketStatus> = new Set(['backlog', 'todo'])
+
 /**
  * 実行の開始を記録し、チケットを処理中にする。
+ * ステータスが backlog / todo のチケットは、人が着手したときと同じく対応中(doing)へ移す。
  * 対象がエージェントの担当でない、またはオプトインされていない場合は `ticket_not_available` を返す。
  * 待ち時間の過ぎていない自動差し戻しのきっかけがある場合も、次の回で拾い直すよう `ticket_not_available` を返す。
  *
@@ -216,11 +221,33 @@ export const startAgentRun = async (
       select: { id: true },
     })
     await tx.ticket.update({ where: { id: target.id }, data: { agentState: 'running' } })
+    await moveAgentTicketToDoing(tx, runner.userId, target.id)
     await consumeAutoReviseTriggers(tx, target.id, created.id)
 
     logger.info({ runnerId: runner.id, runId: created.id, ticketRef: target.displayId, action }, 'agent run started')
     return { ok: true, run: { id: created.id, displayId: target.displayId } }
   })
+}
+
+/**
+ * 処理を始めたチケットを対応中へ移す。Claude への指示に頼らず、古いランナーのままでも確実に移すためサーバー側で行う。
+ * ステータス変更の共通経路を通し、変更履歴(変更者はエージェント)と通知を人の操作とそろえる。
+ * ステータスはチケット行をロックした後に読む。
+ */
+const moveAgentTicketToDoing = async (tx: Prisma.TransactionClient, agentUserId: string, ticketId: string) => {
+  const ticket = await tx.ticket.findUniqueOrThrow({
+    where: { id: ticketId },
+    select: { id: true, boardId: true, status: true },
+  })
+  if (!AGENT_START_STATUSES.has(ticket.status)) {
+    return
+  }
+  const lane = await moveTicketToLane(tx, {
+    access: { ticketId: ticket.id, boardId: ticket.boardId, status: ticket.status },
+    status: 'doing',
+    by: { actorId: agentUserId },
+  })
+  await enqueueTicketMoved({ actorId: agentUserId, ticketId, before: ticket.status, after: lane.status }, tx)
 }
 
 /**
