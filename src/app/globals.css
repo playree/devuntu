@@ -284,6 +284,24 @@
   cursor: pointer;
 }
 
+/* 表示・編集の両面に効く本文の補正。style.css はレイヤー無しなので、上と同じ理由で @layer の外に書く。
+ *
+ * インラインコードは Lexical が <code><span class="…code…"> の二重要素で描画し、
+ * 外側に .markdown code、内側に style.css の背景と padding が当たって枠が二重になる。内側を打ち消して外側の箱だけにする */
+.mdxeditor .markdown code > * {
+  background-color: transparent;
+  padding: 0;
+}
+
+/* リスト項目には style.css が上下 var(--spacing-2) の margin を付けるため、.markdown li + li の間隔だけにする */
+.mdxeditor .markdown li {
+  margin-block: 0;
+}
+
+.mdxeditor .markdown li + li {
+  margin-top: calc(var(--spacing) * 1);
+}
+
 /* MDXEditor のポップアップ(ツールバーのプルダウン・リンク/画像ダイアログ)の重なり順。
  *
  * MDXEditor は Portal 先のコンテナを overlayContainer(既定は document.body)直下に作り、
