@@ -18,13 +18,19 @@ import { failStaleAgentRuns, finishAgentRunById, finishAgentTask, startAgentRun 
 import { type AgentRunnerRow } from '@/lib/agent/agent-runner'
 import { pickAgentTasks, resolveAgentTask } from '@/lib/agent/agent-task'
 import { findWaitingTicketIds } from '@/lib/board/ticket-sequence'
+import { moveTicketToLane } from '@/lib/board/ticket-write'
 import { ClientError } from '@/lib/error'
-import { enqueueAgentRunFinished } from '@/lib/notify/notify-trigger'
+import { enqueueAgentRunFinished, enqueueTicketMoved } from '@/lib/notify/notify-trigger'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // 通知は実行を閉じたことの副作用。ここでは「どう呼ばれたか」だけを見る
-vi.mock('@/lib/notify/notify-trigger', () => ({ enqueueAgentRunFinished: vi.fn() }))
+vi.mock('@/lib/notify/notify-trigger', () => ({ enqueueAgentRunFinished: vi.fn(), enqueueTicketMoved: vi.fn() }))
+
+// レーンの再採番と変更履歴の記録は ticket-write.test.ts で見る。ここでは開始時に対応中へ移すかだけを確かめる
+vi.mock('@/lib/board/ticket-write', () => ({
+  moveTicketToLane: vi.fn(async (_tx, { access, status }) => ({ id: access.ticketId, status, order: 0 })),
+}))
 
 // 順番待ちの判定は ticket-sequence.test.ts で見る。ここでは結果を待ち行列から外すことだけを確かめる
 vi.mock('@/lib/board/ticket-sequence', () => ({ findWaitingTicketIds: vi.fn(async () => new Set()) }))
@@ -38,7 +44,7 @@ vi.mock('@/lib/agent/agent-auto-revise', () => ({
 
 vi.mock('@/lib/prisma', async () =>
   (await import('../../helpers/prisma')).mockPrisma({
-    ticket: ['findMany', 'findFirst', 'findUnique', 'update', 'updateMany'],
+    ticket: ['findMany', 'findFirst', 'findUnique', 'findUniqueOrThrow', 'update', 'updateMany'],
     ticketComment: ['findFirst'],
     agentRun: ['count', 'findMany', 'findFirst', 'findUnique', 'create', 'update', 'updateMany'],
     agentRunner: ['findUnique', 'update'],
@@ -542,6 +548,14 @@ describe('startAgentRun', () => {
     ...override,
   })
 
+  /** 行ロック後に読み直すステータス。既定は対応中(ステータスを動かさない) */
+  const lockedStatus = (status: string) =>
+    ticket.findUniqueOrThrow.mockResolvedValue({ id: 't1', boardId: 'b1', status } as never)
+
+  beforeEach(() => {
+    lockedStatus('doing')
+  })
+
   it('処理してよい条件を満たさないチケットは開始できない', async () => {
     ticket.findFirst.mockResolvedValueOnce(null as never)
 
@@ -565,6 +579,43 @@ describe('startAgentRun', () => {
     expect(ticket.update).toHaveBeenCalledWith({ where: { id: 't1' }, data: { agentState: 'running' } })
     // 未消化の自動差し戻しのきっかけは、この実行で引き受ける
     expect(consumeAutoReviseTriggers).toHaveBeenCalledWith(expect.anything(), 't1', 'run1')
+  })
+
+  it.each(['backlog', 'todo'])('%s のチケットは、エージェントを変更者として対応中へ移す', async (status) => {
+    ticket.findFirst.mockResolvedValueOnce(openTicket({ status }) as never)
+    lockedStatus(status)
+    agentRun.create.mockResolvedValueOnce({ id: 'run1' } as never)
+
+    expect(await startAgentRun(runner(), 't1', 'plan')).toMatchObject({ ok: true })
+    // 変更履歴はステータス変更の共通経路(moveTicketToLane)が残す
+    expect(moveTicketToLane).toHaveBeenCalledWith(expect.anything(), {
+      access: { ticketId: 't1', boardId: 'b1', status },
+      status: 'doing',
+      by: { actorId: 'a1' },
+    })
+    expect(enqueueTicketMoved).toHaveBeenCalledWith(
+      { actorId: 'a1', ticketId: 't1', before: status, after: 'doing' },
+      expect.anything(),
+    )
+  })
+
+  it.each(['doing', 'done'])('%s のチケットはステータスを変えない', async (status) => {
+    ticket.findFirst.mockResolvedValueOnce(openTicket({ status }) as never)
+    lockedStatus(status)
+    agentRun.create.mockResolvedValueOnce({ id: 'run1' } as never)
+
+    expect(await startAgentRun(runner(), 't1', 'revise')).toMatchObject({ ok: true })
+    expect(moveTicketToLane).not.toHaveBeenCalled()
+    expect(enqueueTicketMoved).not.toHaveBeenCalled()
+  })
+
+  it('開始できなかった場合はステータスを変えない', async () => {
+    ticket.findFirst.mockResolvedValueOnce(openTicket() as never)
+    lockedStatus('todo')
+    vi.mocked(hasUnsettledAutoRevise).mockResolvedValueOnce(true)
+
+    await startAgentRun(runner(), 't1', 'revise')
+    expect(moveTicketToLane).not.toHaveBeenCalled()
   })
 
   it('待ち行列を作った後に自動差し戻しのきっかけが届いていたら、開始せず次の回へ回す', async () => {

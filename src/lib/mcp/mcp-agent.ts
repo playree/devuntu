@@ -83,6 +83,9 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
         'When a ticketId is given, task.boardContext (only when set) holds premises shared by every ticket on its board: read it before working. ' +
         'On revise, task.autoRevise lists CI failures and pull request reviews that sent the ticket back automatically: ' +
         'read the details from the pull request, address them, and report what you changed (or why no change is needed). ' +
+        'task.acceptanceCriteria holds the completion conditions. If it is empty, set them with update_ticket acceptanceCriteria ' +
+        'when posting the plan (or when starting on execute), one verifiable sentence per item. ' +
+        'Never delete or rewrite existing items: only add missing ones, passing the existing items with their id. ' +
         'If active is false, exit without doing anything',
       inputSchema: {
         ticketId: z
@@ -131,7 +134,10 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
         rule,
         task: {
           ...task,
-          /** 完了の基準。completed で終えるときは finish_agent_task の criteria で各項目の充足を報告する */
+          /**
+           * 完了の基準。completed で終えるときは finish_agent_task の criteria で各項目の充足を報告する。
+           * 空なら plan の投稿時(execute は着手時)にエージェントが設定する(description で指示している)
+           */
           acceptanceCriteria: criteria.map(({ id: criterionId, text }) => ({ id: criterionId, text })),
           /** revise のきっかけになった承認 / 差し戻し。ボタンを使わない返信だけなら null */
           decision: decision ? { kind: decision.decision, commentId: decision.id, content: decision.content } : null,
