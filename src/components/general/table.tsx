@@ -212,16 +212,18 @@ export const MultiTable = <T extends object>({
           />
         </Table.Content>
       </Table.ResizableContainer>
-      <Table.Footer className='relative'>
-        {pagingList && <TablePaging {...pagingList} />}
-        {pagingList?.isLoading && (
-          <div // inset-0 でフッタ全体を覆うため、pointer-events-none が無いとページャのクリックを奪ってしまう
-            className='pointer-events-none absolute inset-0 z-10 flex items-center justify-center'
-          >
-            <Spinner />
-          </div>
-        )}
-      </Table.Footer>
+      {pagingList && (
+        <Table.Footer className='relative'>
+          <TablePaging {...pagingList} />
+          {pagingList.isLoading && (
+            <div // inset-0 でフッタ全体を覆うため、pointer-events-none が無いとページャのクリックを奪ってしまう
+              className='pointer-events-none absolute inset-0 z-10 flex items-center justify-center'
+            >
+              <Spinner />
+            </div>
+          )}
+        </Table.Footer>
+      )}
     </Table>
   )
 }
