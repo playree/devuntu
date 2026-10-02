@@ -180,3 +180,40 @@ h3 {
   justify-content: space-between;
   gap: 8px;
 }
+
+.screenshots {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+  gap: 16px;
+}
+
+.screenshots figure {
+  margin: 0;
+}
+
+.screenshots img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.screenshots figcaption {
+  margin-top: 8px;
+  color: var(--fg-muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.steps {
+  padding-left: 1.5em;
+}
+
+code {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--bg-muted);
+  font-size: 0.9em;
+  overflow-wrap: anywhere;
+}

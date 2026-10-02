@@ -196,18 +196,23 @@ See [docs/operations.md](docs/operations.md) for the procedures and scheduled ru
 
 The following documents are in Japanese.
 
-| Document                                                       | Contents                                               |
-| -------------------------------------------------------------- | ------------------------------------------------------ |
-| [docs/user-guide.md](docs/user-guide.md)                       | How to use each screen                                 |
-| [docs/installation.md](docs/installation.md)                   | Self-hosting setup                                     |
-| [docs/operations.md](docs/operations.md)                       | Backup / restore and automatic maintenance             |
-| [docs/environment-variables.md](docs/environment-variables.md) | Environment variables                                  |
-| [docs/notifications.md](docs/notifications.md)                 | Notifications (queue, channels, Slack)                 |
-| [docs/mcp-server.md](docs/mcp-server.md)                       | MCP server, authentication and tools                   |
-| [docs/agent-runner.md](docs/agent-runner.md)                   | Running AI agents automatically (Devuntu Agent)        |
-| [docs/command-exec.md](docs/command-exec.md)                   | Remote execution (definitions, SSH, permissions)       |
-| [docs/screens.md](docs/screens.md)                             | Screens, APIs and access control                       |
-| [docs/development.md](docs/development.md)                     | Development environment, builds and package management |
+| Document                                                           | Contents                                                                |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| [docs/user-guide.md](docs/user-guide.md)                           | How to use each screen                                                  |
+| [docs/installation.md](docs/installation.md)                       | Self-hosting setup                                                      |
+| [docs/operations.md](docs/operations.md)                           | Backup / restore and maintenance                                        |
+| [docs/environment-variables.md](docs/environment-variables.md)     | Environment variables                                                   |
+| [docs/notifications.md](docs/notifications.md)                     | Notification settings and Slack App setup                               |
+| [docs/mcp-server.md](docs/mcp-server.md)                           | MCP server: registration, tools and tokens                              |
+| [docs/agent-runner.md](docs/agent-runner.md)                       | Running AI agents automatically: setup and operation (Devuntu Agent)    |
+| [docs/command-exec.md](docs/command-exec.md)                       | Remote execution (definitions, SSH, permissions)                        |
+| [docs/development.md](docs/development.md)                         | Development environment, builds and package management (for developers) |
+| [docs/screens.md](docs/screens.md)                                 | Screens, APIs and access control (for developers)                       |
+| [docs/operations-internals.md](docs/operations-internals.md)       | How backup and maintenance work (for developers)                        |
+| [docs/notifications-internals.md](docs/notifications-internals.md) | How notifications work: queue, triggers, channels (for developers)      |
+| [docs/mcp-server-internals.md](docs/mcp-server-internals.md)       | MCP server internals: authentication and input rules (for developers)   |
+| [docs/agent-runner-internals.md](docs/agent-runner-internals.md)   | How the AI agent automation works (for developers)                      |
+| [docs/command-exec-internals.md](docs/command-exec-internals.md)   | Remote execution internals (for developers)                             |
 
 ## Contributing
 

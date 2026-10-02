@@ -6,7 +6,7 @@
     <title>Devuntu - A self-hosted development server setup tool</title>
     <meta
       name="description"
-      content="Devuntu is a self-hosted development server setup tool centered around Kanban-style board/ticket management, featuring calendar integration, email / Slack / web push notifications, MCP / AI agent integration and remote execution."
+      content="Devuntu is a self-hosted development server setup tool centered around Kanban-style board/ticket management, featuring calendar integration, email / Slack / web push notifications, MCP / AI agent integration, GitHub / GitLab integration and remote execution."
     />
     <link rel="canonical" href="https://playree.github.io/devuntu/en/" />
     <link rel="alternate" hreflang="ja" href="https://playree.github.io/devuntu/" />
@@ -18,7 +18,7 @@
     <meta property="og:title" content="Devuntu" />
     <meta
       property="og:description"
-      content="A self-hosted development server setup tool with Kanban boards, calendar, notifications, MCP / AI agent integration and remote execution"
+      content="A self-hosted development server setup tool with Kanban boards, calendar, notifications, MCP / AI agent integration, GitHub / GitLab integration and remote execution"
     />
     <meta property="og:url" content="https://playree.github.io/devuntu/en/" />
     <meta property="og:image" content="https://playree.github.io/devuntu/assets/icon-512.png" />
@@ -39,7 +39,8 @@
         </h1>
         <p class="lead">
           A self-hosted development server setup tool centered around Kanban-style board/ticket management, featuring
-          calendar integration, email / Slack / web push notifications, MCP / AI agent integration and remote execution
+          calendar integration, email / Slack / web push notifications, MCP / AI agent integration, GitHub / GitLab
+          integration and remote execution
         </p>
         <div class="actions">
           <a class="button primary" href="https://github.com/playree/devuntu/blob/main/README.en.md">View on GitHub</a>
@@ -54,7 +55,10 @@
         <ul class="features">
           <li>
             <h3>Kanban boards and tickets</h3>
-            <p>Boards, tags, assignees, priorities, due dates, comments and mentions</p>
+            <p>
+              Boards, tags, assignees, priorities, due dates, comments and mentions. Parent/child and related tickets,
+              acceptance criteria, per-board ticket templates and change history
+            </p>
           </li>
           <li>
             <h3>Calendar</h3>
@@ -64,7 +68,10 @@
           </li>
           <li>
             <h3>Notifications</h3>
-            <p>Email / Slack DM / web push notifications for mentions and assignee changes</p>
+            <p>
+              Email / Slack DM / web push notifications for mentions, assignee changes and AI agent run results. Team
+              boards can also post to a Slack channel
+            </p>
           </li>
           <li>
             <h3>MCP server</h3>
@@ -75,6 +82,24 @@
             <p>Register AI agents as assignees and let them process their tickets automatically (Claude / Codex)</p>
           </li>
           <li>
+            <h3>Task splitting</h3>
+            <p>
+              Agents can split a large ticket into child tickets; once you approve the proposal, they work through the
+              children in order
+            </p>
+          </li>
+          <li>
+            <h3>AI context</h3>
+            <p>Per-board premises such as the target repository and conventions, delivered to MCP clients and agents</p>
+          </li>
+          <li>
+            <h3>GitHub / GitLab</h3>
+            <p>
+              Link branches, pull requests and commits to tickets and see the PR status and CI results. Complete tickets
+              on merge, and send them back to the agent on CI failures or review comments
+            </p>
+          </li>
+          <li>
             <h3>Remote execution</h3>
             <p>Run predefined jobs on remote servers and follow the output in real time</p>
           </li>
@@ -82,15 +107,48 @@
             <h3>Authentication</h3>
             <p>Passkeys and Google sign-in. Devuntu can also act as an OAuth provider</p>
           </li>
+          <li>
+            <h3>English / Japanese</h3>
+            <p>Switch the UI language; notifications are sent in the language you choose</p>
+          </li>
         </ul>
+      </section>
+
+      <section class="container">
+        <h2>Screenshots</h2>
+        <div class="screenshots">
+          <figure>
+            <img
+              src="../assets/screenshots/dashboard-en.webp"
+              alt="Dashboard"
+              width="1350"
+              height="1050"
+              loading="lazy"
+            />
+            <figcaption>Dashboard</figcaption>
+          </figure>
+          <figure>
+            <img src="../assets/screenshots/board.webp" alt="Kanban board" width="1350" height="1050" loading="lazy" />
+            <figcaption>Kanban board (Japanese UI)</figcaption>
+          </figure>
+        </div>
       </section>
 
       <section class="container">
         <h2>Get started</h2>
         <p>
-          Devuntu runs with Docker Compose. Follow the
-          <a href="https://github.com/playree/devuntu/blob/main/README.en.md#quick-start">quick start</a> in the README
-          to set it up. The application UI is available in English and Japanese.
+          Devuntu is distributed as a Docker image and runs with Docker Compose. The only file you need is
+          <code>compose.yaml</code>.
+        </p>
+        <ol class="steps">
+          <li>Place <code>compose.yaml</code> on the host</li>
+          <li>Generate the configuration files with <code>docker compose run --rm tools setup-env</code></li>
+          <li>Start it with <code>docker compose up -d --wait</code> (database migrations run on startup)</li>
+          <li>Open <code>/start</code> and register the first administrator</li>
+        </ol>
+        <p>
+          See the <a href="https://github.com/playree/devuntu/blob/main/README.en.md#quick-start">quick start</a> in the
+          README for details. The application UI is available in English and Japanese.
         </p>
         <p class="note">
           The detailed documentation is available in Japanese only. Please use a translation tool or an AI assistant.

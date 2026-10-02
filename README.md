@@ -16,7 +16,8 @@ Devuntu は、かんばん形式のボード/チケット管理を中心に、
 カレンダー連携、メール/Slack/Webプッシュ通知、MCP/AIエージェント連携、リモート実行などを備えた
 セルフホスト型の開発サーバー構築ツールです。
 
-個人・少数チーム開発をするうえで、自分が欲しいと思った機能を形にしたものになります。  
+個人・少数チーム開発をするうえで、自分が開発する上で欲しいと思った機能を形にしたものになります。  
+なので、連携機能(サービス)も自分が普段使っているものがメインとなっています。(Claude / GitHub / GitLab / Slack / Googleアカウント)  
 開発中にAI開発が普及してきたこともあり、AI開発にも最適化しています。
 
 Devuntuの開発にもAI開発を採用していますが、全てをAI任せではなく、人による確認と調整を行っています。  
@@ -29,7 +30,10 @@ DevuntuのAIエージェント向けの機能も、この(人による確認を�
 
 ![ダッシュボード](docs/images/dashboard.webp)
 
-![ダッシュボード(英語表示)](docs/images/dashboard-en.webp)
+<p>
+  <img src="docs/images/dashboard-en.webp" alt="ダッシュボード(英語表示)" width="49%">
+  <img src="docs/images/dashboard-dark.webp" alt="ダッシュボード(ダークモード)" width="49%">
+</p>
 
 ---
 
@@ -87,7 +91,7 @@ DevuntuのAIエージェント向けの機能も、この(人による確認を�
 - 最新のライブラリやフレームワークを利用  
   開発のプロトタイプとしての側面を持つ
 - AI開発に最適化  
-  時代に取り残されないように
+  後付け的なMCPとかでは無く、最初からAI開発を前提とした機能設計
 - アップデートの継続  
   出来る限りアップデートを続けていきます
 
@@ -190,7 +194,7 @@ Googleアカウントと連携すると、`/cal` で自分の予定を確認で�
 チームボードでは、チケットの作成・完了・担当者の変更・エージェントの実行結果を Slack チャンネルへ流せます。
 また Slack に貼られたチケットURLは、閲覧権限を確認した上でカード表示に展開されます。
 
-実装の詳細や Slack App の設定手順は [docs/notifications.md](docs/notifications.md) を参照。
+Slack App の設定などは [docs/notifications.md](docs/notifications.md)、実装の詳細は [docs/notifications-internals.md](docs/notifications-internals.md) を参照。
 
 ## AIとの連携
 
@@ -234,7 +238,7 @@ DevuntuはMCPサーバーの単純な提供だけでなく、AI開発に適し�
 > エージェント側からDevuntuサーバーにポーリングする方式としている為、エージェント側にポート開放など特別な設定は不要です。  
 > エージェント側からDevuntuサーバーへ通信できる環境であれば利用できます。
 
-仕組みは [docs/agent-runner.md](docs/agent-runner.md) を参照
+設置・運用は [docs/agent-runner.md](docs/agent-runner.md)、仕組みは [docs/agent-runner-internals.md](docs/agent-runner-internals.md) を参照
 
 ### 承認
 

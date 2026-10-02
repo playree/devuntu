@@ -78,7 +78,7 @@ export const proxy = async (request: NextRequest) => {
 
   /**
    * meta robots を読まない取得元にも届くよう、ヘッダでも同じ指示を返す。
-   * 付くのは通常処理を継続したページ応答だけ(適用範囲は docs/environment-variables.md)。
+   * 付くのは通常処理を継続したページ応答だけ(適用範囲は docs/development.md)。
    */
   if (!envu.server.SEARCH_ENGINE_INDEXING) {
     response.headers.set('X-Robots-Tag', 'noindex, nofollow')

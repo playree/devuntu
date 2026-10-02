@@ -1,6 +1,6 @@
 # 基本ルール
 
-- 回答は日本語でお願い
+- 会話は日本語でお願い
 
 # プロジェクト概要
 
@@ -22,22 +22,27 @@ MCPサーバー・AIエージェント連携を備えたセルフホスト型の
 
 機能や仕様を調べるとき・変更したときは、対応するドキュメントを参照して更新する。
 
-| ファイル                                                       | 内容                                                 |
-| -------------------------------------------------------------- | ---------------------------------------------------- |
-| [README.md](README.md)                                         | 全体の入口。各ドキュメントへの索引                   |
-| [README.en.md](README.en.md)                                   | 英語の README(概要・クイックスタート)                |
-| [docs/user-guide.md](docs/user-guide.md)                       | 画面ごとの使い方(利用者向け)                         |
-| [docs/screens.md](docs/screens.md)                             | 画面・APIの一覧とアクセス制御                        |
-| [docs/installation.md](docs/installation.md)                   | セルフホストの導入手順                               |
-| [docs/operations.md](docs/operations.md)                       | バックアップ/リストア・自動メンテナンス              |
-| [docs/environment-variables.md](docs/environment-variables.md) | 環境変数の一覧                                       |
-| [docs/development.md](docs/development.md)                     | 開発環境・ビルド・パッケージ管理                     |
-| [docs/notifications.md](docs/notifications.md)                 | 通知(キュー・チャネル・Slack連携)の実装              |
-| [docs/mcp-server.md](docs/mcp-server.md)                       | MCPサーバーと認証経路・ツール一覧                    |
-| [docs/agent-runner.md](docs/agent-runner.md)                   | AIエージェントの自動運用(Devuntu Agent)              |
-| [docs/command-exec.md](docs/command-exec.md)                   | リモート実行(定義・SSH・権限)                        |
-| [CONTRIBUTING.md](CONTRIBUTING.md)                             | 開発規約(ブランチ・コミット・PR・コーディングルール) |
-| [SECURITY.md](SECURITY.md)                                     | 脆弱性の報告方法                                     |
+| ファイル                                                           | 内容                                                    |
+| ------------------------------------------------------------------ | ------------------------------------------------------- |
+| [README.md](README.md)                                             | 全体の入口。各ドキュメントへの索引                      |
+| [README.en.md](README.en.md)                                       | 英語の README(概要・クイックスタート)                   |
+| [docs/user-guide.md](docs/user-guide.md)                           | 画面ごとの使い方(利用者向け)                            |
+| [docs/installation.md](docs/installation.md)                       | セルフホストの導入手順(運用者向け)                      |
+| [docs/operations.md](docs/operations.md)                           | バックアップ/リストア・メンテナンス(運用者向け)         |
+| [docs/environment-variables.md](docs/environment-variables.md)     | 環境変数の一覧(運用者向け)                              |
+| [docs/notifications.md](docs/notifications.md)                     | 通知の設定・Slack App(運用者向け)                       |
+| [docs/mcp-server.md](docs/mcp-server.md)                           | MCPサーバーの登録・ツール・トークン(利用者・運用者向け) |
+| [docs/agent-runner.md](docs/agent-runner.md)                       | AIエージェントの自動運用の設置・設定(運用者向け)        |
+| [docs/command-exec.md](docs/command-exec.md)                       | リモート実行の定義・SSH・権限(運用者向け)               |
+| [docs/development.md](docs/development.md)                         | 開発環境・ビルド・パッケージ管理(開発者向け)            |
+| [docs/screens.md](docs/screens.md)                                 | 画面・APIの一覧とアクセス制御(開発者向け)               |
+| [docs/operations-internals.md](docs/operations-internals.md)       | バックアップ・メンテナンスの仕組み(開発者向け)          |
+| [docs/notifications-internals.md](docs/notifications-internals.md) | 通知(キュー・トリガー・チャネル)の仕組み(開発者向け)    |
+| [docs/mcp-server-internals.md](docs/mcp-server-internals.md)       | MCPサーバーの認証・入力仕様の実装(開発者向け)           |
+| [docs/agent-runner-internals.md](docs/agent-runner-internals.md)   | AIエージェントの自動運用の仕組み(開発者向け)            |
+| [docs/command-exec-internals.md](docs/command-exec-internals.md)   | リモート実行の実装上の決めごと(開発者向け)              |
+| [CONTRIBUTING.md](CONTRIBUTING.md)                                 | 開発規約(ブランチ・コミット・PR・コーディングルール)    |
+| [SECURITY.md](SECURITY.md)                                         | 脆弱性の報告方法                                        |
 
 # 開発規約
 

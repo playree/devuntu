@@ -61,10 +61,8 @@ PostgreSQL とオブジェクトストレージへ外部から直接到達でき
 リバースプロキシを同じホストに置く場合は、`devuntu` の `ports` も `127.0.0.1:3000:3000` に絞って
 プロキシ経由だけに限定できる。
 
-`tools` は設定ファイルの生成(`setup-env`)、DB / S3 のバックアップ・リストア(`db-backup` / `db-restore` /
-`s3-backup` / `s3-restore` と、対でまとめて行う `full-backup` / `full-restore`)、
-メンテナンスモードの切り替え(`maintenance`)を行う使い捨てサービスで、`profiles: ['tools']` が
-付いているため `docker compose up` では起動しない([operations.md](operations.md#toolsサービス))。
+`tools` は設定ファイルの生成・バックアップ / リストア・メンテナンスモードの切り替えを行う使い捨てサービスで、
+`docker compose up` では起動しない(サブコマンドは [operations.md](operations.md#toolsサービス) を参照)。
 
 永続データは名前付きボリューム `pgdata` / `seaweeddata` に入る。
 
@@ -142,7 +140,7 @@ docker compose run --rm tools setup-env
 
 全変数の一覧とデフォルト値は [environment-variables.md](environment-variables.md) を参照。
 `DISABLE_PASSWORD_AUTH=false`(パスワード認証あり)を選んだ場合の 2要素認証の挙動は
-[screens.md](screens.md#アクセス制御の仕組み) を参照。
+[environment-variables.md](environment-variables.md#認証) を参照。
 
 > ⚠️ **DBパスワードは初回起動より後には変えられない。** postgres は最初の `docker compose up` で
 > ボリュームを初期化し、そのときのパスワードを保持する。後から `.env.db` を書き換えても DB 側は
@@ -214,7 +212,7 @@ docker compose up -d
 ```
 
 `db` と `s3` の healthcheck が通ってから `devuntu` が起動する。
-DB マイグレーションは `docker/docker-entrypoint.sh` が起動時に `prisma migrate deploy` を実行するため、
+DB マイグレーションは起動時にコンテナが `prisma migrate deploy` を実行するため、
 **手動でのマイグレーションは不要**(アップデート時も同じ)。
 
 `devuntu` にも `/api/health` を叩く healthcheck を設定しているため、起動完了まで待ちたい場合は
@@ -270,8 +268,8 @@ Google 側のコールバックURLには**次の2つ**を登録する。
 <BETTER_AUTH_URL>/api/auth/callback/google-account
 ```
 
-サインイン用と、カレンダー連携用(refresh token を取るための別プロバイダ)で `providerId` が異なる。
-後者を登録しないと `/account` のカレンダー連携で `redirect_uri_mismatch` になる。
+1つ目はサインイン用、2つ目はカレンダー連携用。2つ目を登録しないと `/account` のカレンダー連携で
+`redirect_uri_mismatch` になる。
 
 そのうえで、管理者が `/admin/settings` で「Googleアカウント連携」を有効化する。この設定が効くのは
 アカウント連携とカレンダー機能で、**サインイン画面の「Googleでサインイン」は環境変数だけで決まる**。
@@ -294,6 +292,7 @@ Slack に貼られたチケットURLの展開が使えるようになる。
 環境変数の設定は要らない。ボード設定の「GitHub連携」でリポジトリを対応付けると、チケットに紐付けたプルリクエストの
 状態と CI の結果を Webhook で受け取れるようになる。Webhook のシークレットはリポジトリごとに画面から発行する。
 GitHub の API は呼ばないので、トークンや GitHub App は要らない。登録の手順は [user-guide.md](user-guide.md#関連リンクブランチprコミット) を参照。
+シークレットは `BETTER_AUTH_SECRET` で暗号化して保存するので、`BETTER_AUTH_SECRET` を変えた場合はボード設定でシークレットを再発行する。
 
 ### GitLab連携
 
@@ -301,6 +300,7 @@ GitHub の API は呼ばないので、トークンや GitHub App は要らな�
 (例: `GITLAB_URLS=https://gitlab.com,https://git.example.com/gitlab`)。セルフホスト版はサブパスに置いたものも書ける。
 Webhook のトークンはプロジェクトごとに画面から設定するので、環境変数での共通のシークレットは無い。
 `docker compose run --rm tools setup-env` でも設定できる。GitLab の API は呼ばないので、アクセストークンは要らない。登録の手順は [user-guide.md](user-guide.md#gitlab-の-webhook) を参照。
+トークンは `BETTER_AUTH_SECRET` で暗号化して保存するので、`BETTER_AUTH_SECRET` を変えた場合はボード設定でトークンを設定し直す。
 
 ### Webプッシュ通知
 
@@ -316,9 +316,7 @@ Webhook のトークンはプロジェクトごとに画面から設定するの
 docker compose run --rm --entrypoint node tools -e "const {generateKeyPairSync}=require('node:crypto');const {privateKey}=generateKeyPairSync('ec',{namedCurve:'prime256v1'});const j=privateKey.export({format:'jwk'});const b=(v)=>Buffer.from(v,'base64url');console.log('VAPID_PUBLIC_KEY='+Buffer.concat([Buffer.from([4]),b(j.x),b(j.y)]).toString('base64url'));console.log('VAPID_PRIVATE_KEY='+j.d)"
 ```
 
-> ⚠️ `web-push` の `generateVAPIDKeys()` はイメージ内では使えない。standalone ビルドでは
-> `web-push` がサーバーチャンクへバンドルされ、`node_modules` に実体が残らないため
-> `require('web-push')` が `MODULE_NOT_FOUND` になる。
+> ⚠️ `web-push` の `generateVAPIDKeys()` はイメージ内では使えないので、上のワンライナーを使う。
 
 - **鍵を入れ替えると既存の購読はすべて無効になる**(登録済みの端末へ送ると `401` になり、
   利用者は再登録が必要)。生成し直すのは鍵が漏れた場合だけにする
@@ -347,7 +345,8 @@ docker compose run --rm --entrypoint node tools -e "const {generateKeyPairSync}=
 
 1. `COMMAND_EXEC_ENABLED=true`
 2. 定義ファイルの配置(`COMMAND_DEF_DIR` の直下、既定 `/app/config/commands`)
-3. `/admin/commands` でのターゲットへのアサイン(管理者自身も、アサインしないと実行できない)
+3. `/admin/commands` でのターゲットへのアサイン(管理者自身も、アサインしないと実行できない。
+   [command-exec.md](command-exec.md#権限))
 
 定義ファイルと SSH の鍵は、ホストの `./config` 配下に置く。`compose.yaml` の `devuntu` サービスは
 既定で `./config` を `/app/config` へ read-only でマウントし、その上に `./config/commands` だけを
@@ -380,12 +379,9 @@ volumes:
 作ったり消したりする([operations.md](operations.md#メンテナンスモード))。`./config` は
 リモート実行を使わない構成でもこのフラグの置き場として使うため、マウントしたままにしておく。
 
-`commands` を書き込み可にしているのは、コマンドの定義を**画面から編集できるようにする**ため。
-`config` 全体を書き込み可にすると SSH の秘密鍵まで書き込み可になってしまうので、`commands` だけを重ねている。
-画面からの編集をディレクトリごと禁じたい場合は、2 つ目のマウントに `read_only: true` を足す。
-
-書き込み可のままでも、実際に編集できるのは定義ファイルへ `target.editable: true` を書いたターゲットだけで、
-編集できるのはそのターゲットのオーナーに限られる。接続先(`target`)そのものは画面から変えられない。詳しくは
+`commands` だけを書き込み可にしているのは、コマンドの定義を画面から編集できるようにするため
+(`config` 全体だと SSH の秘密鍵まで書き込み可になる)。画面からの編集をディレクトリごと禁じたい場合は、
+2 つ目のマウントに `read_only: true` を足す。画面から編集できる範囲は
 [command-exec.md](command-exec.md#画面から編集する)を参照。
 
 devuntu が載っている**ホスト側**で実行したい場合は、コンテナからホストへ SSH する構成になるので、
@@ -408,8 +404,15 @@ docker compose pull
 docker compose up -d
 ```
 
-新しいイメージで起動する際、entrypoint が `prisma migrate deploy` を実行して DB を追随させる。
+新しいイメージで起動する際、`prisma migrate deploy` が実行されて DB が追随する。
 **アップデート前にバックアップを取得する**こと([operations.md](operations.md))。
+
+使うイメージは `compose.yaml` が参照する `playree/devuntu:latest`(リリース済みの版)。`edge` はリリース前の
+確認用のビルドなので運用には使わない。特定の版に固定したい場合は `<version>` のタグを指定する。
+
+以前の `GITHUB_WEBHOOK_SECRET`(全リポジトリ共通のシークレット)と共通の URL(`/api/github/webhook`)は廃止した。
+それ以前に対応付けたリポジトリはボード設定で「シークレット未設定」と表示されるので、「シークレットを再発行」で発行し、
+GitHub 側の Webhook の Payload URL と Secret を登録し直す。`GITHUB_WEBHOOK_SECRET` は環境変数から消してよい。
 
 ## 困ったとき
 
