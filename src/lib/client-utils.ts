@@ -25,6 +25,44 @@ export const preventParentSelection = {
 }
 
 /**
+ * 押しても「空白」とみなさない要素。操作できる要素・選択対象(表の行、`data-keep-selection`)・
+ * ダイアログ(詳細パネル自身やモーダル)・ポップオーバーの中身。
+ */
+const NOT_BLANK_SELECTOR = [
+  'a',
+  'button',
+  'input',
+  'textarea',
+  'select',
+  'label',
+  '[contenteditable="true"]',
+  '[role="button"]',
+  '[role="checkbox"]',
+  '[role="radio"]',
+  '[role="switch"]',
+  '[role="tab"]',
+  '[role="combobox"]',
+  '[role="slider"]',
+  '[role="row"]',
+  '[role="gridcell"]',
+  '[role="dialog"]',
+  '[role="listbox"]',
+  '[role="option"]',
+  '[role="menu"]',
+  '[role="menuitem"]',
+  // react-aria の usePress を使う部品(role を持たないものもある)
+  '[data-react-aria-pressable]',
+  '[data-keep-selection]',
+].join(',')
+
+/**
+ * area 内の空白(操作できる要素の外)を押したか。area を包む要素(area の下に残るページの余白)も空白とみなし、
+ * それ以外の area の外(サイドメニューやポータルに出るモーダル・ポップオーバー)は対象外にする。
+ */
+export const isBlankTarget = (target: EventTarget | null, area: Element) =>
+  target instanceof Element && (target.contains(area) || (area.contains(target) && !target.closest(NOT_BLANK_SELECTOR)))
+
+/**
  * 認証後の遷移先として安全な値だけを通す。
  *
  * `cb` はクエリ文字列で渡ってくる = 攻撃者が自由に指定できるため、検証せずに `router.push` すると
