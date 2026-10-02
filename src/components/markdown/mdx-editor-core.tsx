@@ -1,5 +1,6 @@
 'use client'
 
+import { codeMirrorDark } from '@/components/code/codemirror-dark'
 import { notify } from '@/components/notify'
 import { uploadImage } from '@/lib/storage/upload'
 import { useLocale } from '@/locale/client'
@@ -34,7 +35,6 @@ import {
   UndoRedo,
 } from '@mdxeditor/editor'
 import '@mdxeditor/editor/style.css'
-import { basicDark } from 'cm6-theme-basic-dark'
 import { useTheme } from 'next-themes'
 import { FC, ReactElement, useEffect, useMemo, useRef, useState } from 'react'
 import { decoratorClickPlugin } from './mdx-decorator-click-plugin'
@@ -190,9 +190,9 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
 
   const plugins = useMemo(() => {
     // source モードとコードブロックの CodeMirror は basicLight がハードコードされているため、
-    // ダーク時は basicDark を渡して上書きする。カスタム拡張は拡張配列の先頭=高優先度で入り、
+    // ダーク時は basicDark(選択色の補正込み)を渡して上書きする。カスタム拡張は拡張配列の先頭=高優先度で入り、
     // CodeMirror は高優先度の StyleModule を最後にマウントするので後勝ちで有効になる。
-    const codeMirrorExtensions = isDarkAtMount ? [basicDark] : []
+    const codeMirrorExtensions = isDarkAtMount ? codeMirrorDark : []
     return [
       // 危険な生HTMLはここで落とすため、編集して保存すると本文からも消える
       sanitizeHtmlPlugin(),

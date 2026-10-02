@@ -11,9 +11,9 @@ import {
 } from '@codemirror/language'
 import { Compartment, EditorState, Extension } from '@codemirror/state'
 import { placeholder as cmPlaceholder, EditorView, highlightActiveLine, keymap, lineNumbers } from '@codemirror/view'
-import { basicDark } from 'cm6-theme-basic-dark'
 import { useTheme } from 'next-themes'
 import { FC, useEffect, useRef } from 'react'
+import { codeMirrorDark } from './codemirror-dark'
 import { yamlLint, type EditorIssue } from './yaml-lint'
 
 export type YamlEditorCoreProps = {
@@ -42,9 +42,9 @@ const baseTheme = EditorView.theme({
   '.cm-scroller': { overflow: 'auto' },
 })
 
-/** ダークは basicDark に任せ、ライトは CodeMirror 既定のハイライトを当てる */
+/** ダークは basicDark(選択色の補正込み)に任せ、ライトは CodeMirror 既定のハイライトを当てる */
 const colorTheme = (isDark: boolean): Extension =>
-  isDark ? basicDark : syntaxHighlighting(defaultHighlightStyle, { fallback: true })
+  isDark ? codeMirrorDark : syntaxHighlighting(defaultHighlightStyle, { fallback: true })
 
 /**
  * CodeMirror の実体。ブラウザ専用なので `next/dynamic` の `ssr: false` 経由で読み込む前提。

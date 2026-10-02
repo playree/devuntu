@@ -127,12 +127,14 @@
     @apply inline rounded-sm bg-gray-200 px-1 font-mono dark:bg-gray-800;
   }
 
+  /* 長い行は折り返さず、ブロック内で横スクロールさせる */
   .markdown pre {
-    @apply rounded-sm bg-gray-100 p-4 dark:bg-gray-800;
+    @apply overflow-x-auto rounded-sm border border-gray-300 bg-gray-200/60 p-4 dark:border-gray-700 dark:bg-gray-800;
   }
 
+  /* 内容幅まで広げて、横スクロールの終端にも pre の右 padding を残す */
   .markdown pre code {
-    @apply block overflow-visible rounded-none bg-transparent p-0;
+    @apply block w-max min-w-full overflow-visible rounded-none bg-transparent p-0;
   }
 
   .markdown ul {
@@ -166,7 +168,7 @@
 
   /* Override pygments style background color. */
   .markdown .highlight pre {
-    @apply bg-gray-100! dark:bg-gray-800!;
+    @apply bg-gray-200/60! dark:bg-gray-800!;
   }
 
   .toast__description {
@@ -280,6 +282,24 @@
 
 .mdxeditor.mdxeditor-view .markdown a img {
   cursor: pointer;
+}
+
+/* 表示・編集の両面に効く本文の補正。style.css はレイヤー無しなので、上と同じ理由で @layer の外に書く。
+ *
+ * インラインコードは Lexical が <code><span class="…code…"> の二重要素で描画し、
+ * 外側に .markdown code、内側に style.css の背景と padding が当たって枠が二重になる。内側を打ち消して外側の箱だけにする */
+.mdxeditor .markdown code > * {
+  background-color: transparent;
+  padding: 0;
+}
+
+/* リスト項目には style.css が上下 var(--spacing-2) の margin を付けるため、.markdown li + li の間隔だけにする */
+.mdxeditor .markdown li {
+  margin-block: 0;
+}
+
+.mdxeditor .markdown li + li {
+  margin-top: calc(var(--spacing) * 1);
 }
 
 /* MDXEditor のポップアップ(ツールバーのプルダウン・リンク/画像ダイアログ)の重なり順。
