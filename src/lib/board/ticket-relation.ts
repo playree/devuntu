@@ -7,7 +7,7 @@
 
 import type { Prisma } from '@/generated/prisma/client'
 import type { TicketRelationType } from '@/generated/prisma/enums'
-import { errClient, errInvalidOperation } from '../error'
+import { ClientError, errClient, errInvalidOperation } from '../error'
 import { isUniqueViolation, prisma, type Db } from '../prisma'
 import { assertTicketAccess, type Actor, type TicketAccess } from './board-access'
 import { isTicketUuid, parseTicketDisplayId, parseTicketNumber, ticketDisplayId } from './ticket-id'
@@ -150,16 +150,19 @@ const authorizeRelation = async (
     return
   }
 
-  // 判定済みのチケットを先に試し、通れば相手は問い合わせない
+  // 判定済みのチケットを先に試し、通れば相手は問い合わせない。相手で判定し直すのは拒否(ClientError)のときだけ
   const other = relation.fromId === checked.ticketId ? relation.toId : relation.fromId
   try {
     authorize(checked)
   } catch (error) {
+    if (!(error instanceof ClientError)) {
+      throw error
+    }
     const otherAccess = await accessOf(other)
     try {
       authorize(otherAccess)
-    } catch {
-      throw error
+    } catch (otherError) {
+      throw otherError instanceof ClientError ? error : otherError
     }
   }
 }

@@ -355,7 +355,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       title: 'Unlink relation',
       description:
         'Removes a parent/child or related link. Get relationId from parent / children / related in get_ticket. ' +
-        'Members can remove a related link if either ticket is assigned to them or unassigned, and a parent/child link if the child is',
+        'Members can remove a related link if either ticket is assigned to them or unassigned, and a parent/child link if the child ticket is assigned to them or unassigned',
       inputSchema: { relationId: z.uuidv7() },
     },
     async ({ relationId }) => jsonResult(await unlinkTicketRelationForMcp(auth, relationId)),

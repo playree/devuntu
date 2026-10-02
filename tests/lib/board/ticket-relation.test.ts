@@ -16,6 +16,7 @@ import {
   writeTicketParent,
 } from '@/lib/board/ticket-relation'
 import { RELATION_ALREADY_EXISTS, RELATION_TARGET_INVALID } from '@/lib/board/ticket-relation-rule'
+import { ClientError } from '@/lib/error'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const fakeTx = vi.hoisted(() => ({
@@ -219,7 +220,7 @@ describe('addTicketRelation', () => {
   it('関連は操作するチケットで弾かれても、相手で満たせば作る', async () => {
     const authorize = vi.fn((access: { ticketId: string }) => {
       if (access.ticketId === TICKET_ID) {
-        throw new Error('denied')
+        throw new ClientError('DENIED')
       }
     })
 
@@ -231,24 +232,49 @@ describe('addTicketRelation', () => {
 
   it('関連の両端とも経路の追加制限で弾かれたら、操作するチケットのエラーで何も書き込まない', async () => {
     const authorize = vi.fn((access: { ticketId: string }) => {
-      throw new Error(`denied ${access.ticketId}`)
+      throw new ClientError(`DENIED_${access.ticketId}`)
     })
 
     await expect(
       addTicketRelation(actor, { ticketId: TICKET_ID, target: 'ABC-1', kind: 'related' }, { authorize }),
-    ).rejects.toThrow(`denied ${TICKET_ID}`)
+    ).rejects.toMatchObject({ errorType: `DENIED_${TICKET_ID}` })
     expect(authorize).toHaveBeenCalledTimes(2)
+    expect(fakeTx.ticketRelation.create).not.toHaveBeenCalled()
+  })
+
+  it('関連の経路の追加制限が拒否(ClientError)以外の例外を投げたら、相手で判定し直さずにそのまま投げる', async () => {
+    const authorize = vi.fn((access: { ticketId: string }) => {
+      if (access.ticketId === TICKET_ID) {
+        throw new Error('unexpected')
+      }
+    })
+
+    await expect(
+      addTicketRelation(actor, { ticketId: TICKET_ID, target: 'ABC-1', kind: 'related' }, { authorize }),
+    ).rejects.toThrow('unexpected')
+    expect(authorize).toHaveBeenCalledTimes(1)
+    expect(fakeTx.ticketRelation.create).not.toHaveBeenCalled()
+  })
+
+  it('関連の相手側の判定が拒否以外の例外を投げたら、それを投げる', async () => {
+    const authorize = vi.fn((access: { ticketId: string }) => {
+      throw access.ticketId === TICKET_ID ? new ClientError('DENIED') : new Error('unexpected')
+    })
+
+    await expect(
+      addTicketRelation(actor, { ticketId: TICKET_ID, target: 'ABC-1', kind: 'related' }, { authorize }),
+    ).rejects.toThrow('unexpected')
     expect(fakeTx.ticketRelation.create).not.toHaveBeenCalled()
   })
 
   it('親子は子で経路の追加制限に弾かれたら何も書き込まない', async () => {
     const authorize = vi.fn(() => {
-      throw new Error('denied')
+      throw new ClientError('DENIED')
     })
 
     await expect(
       addTicketRelation(actor, { ticketId: TICKET_ID, target: 'ABC-1', kind: 'child' }, { authorize }),
-    ).rejects.toThrow('denied')
+    ).rejects.toMatchObject({ errorType: 'DENIED' })
     expect(fakeTx.ticketRelation.create).not.toHaveBeenCalled()
   })
 
@@ -284,7 +310,7 @@ describe('removeTicketRelation / moveTicketChild', () => {
     fakeTx.ticketRelation.findUnique.mockResolvedValue({ type: 'related', fromId: OTHER_ID, toId: TICKET_ID })
     const authorize = vi.fn((access: { ticketId: string }) => {
       if (access.ticketId === OTHER_ID) {
-        throw new Error('denied')
+        throw new ClientError('DENIED')
       }
     })
 
@@ -297,10 +323,10 @@ describe('removeTicketRelation / moveTicketChild', () => {
   it('関連の両端とも経路の追加制限で弾かれたら消さない', async () => {
     fakeTx.ticketRelation.findUnique.mockResolvedValue({ type: 'related', fromId: OTHER_ID, toId: TICKET_ID })
     const authorize = vi.fn(() => {
-      throw new Error('denied')
+      throw new ClientError('DENIED')
     })
 
-    await expect(removeTicketRelation(actor, 'r1', { authorize })).rejects.toThrow('denied')
+    await expect(removeTicketRelation(actor, 'r1', { authorize })).rejects.toMatchObject({ errorType: 'DENIED' })
     expect(fakeTx.ticketRelation.delete).not.toHaveBeenCalled()
   })
 
@@ -308,11 +334,11 @@ describe('removeTicketRelation / moveTicketChild', () => {
     fakeTx.ticketRelation.findUnique.mockResolvedValue({ type: 'parent', fromId: OTHER_ID, toId: TICKET_ID })
     const authorize = vi.fn((access: { ticketId: string }) => {
       if (access.ticketId === TICKET_ID) {
-        throw new Error('denied')
+        throw new ClientError('DENIED')
       }
     })
 
-    await expect(removeTicketRelation(actor, 'r1', { authorize })).rejects.toThrow('denied')
+    await expect(removeTicketRelation(actor, 'r1', { authorize })).rejects.toMatchObject({ errorType: 'DENIED' })
     expect(authorize.mock.calls.map(([access]) => access.ticketId)).toEqual([TICKET_ID])
     expect(fakeTx.ticketRelation.delete).not.toHaveBeenCalled()
   })
