@@ -3,7 +3,7 @@
  *
  *   pnpm s3:restore backup/s3_YYYYMMDD_HHMMSS
  *
- * Docker環境では compose.yaml の tools サービスで実行する(手順は docs/operations.md 参照)。
+ * Docker環境では compose.yaml の tools サービスで実行する(手順は docs/admin/operations.md 参照)。
  *
  * `--check` を付けると、ストレージへ一切接続せずバックアップの中身だけを検証して終わる。
  * `restore-all.mjs` が `restore-db.mjs`(DROP DATABASE から始まる)より**前**に呼ぶためのもので、

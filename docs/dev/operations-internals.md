@@ -19,7 +19,7 @@
 # 運用の仕組み(開発者向け)
 
 バックアップ・リストア・メンテナンスモード・自動メンテナンスの実装と、その設計判断をまとめる。
-手順・コマンド・確認方法(運用者向け)は [operations.md](operations.md) を参照。
+手順・コマンド・確認方法(運用者向け)は [operations.md](../admin/operations.md) を参照。
 
 ## スクリプトの構成
 
@@ -34,6 +34,21 @@
 | `pnpm full:backup`  | `scripts/backup-all.mjs`  |
 | `pnpm full:restore` | `scripts/restore-all.mjs` |
 | `pnpm maintenance`  | `scripts/maintenance.mjs` |
+
+リポジトリを clone した環境(開発環境など)では、`docker compose run --rm tools <サブコマンド>` の代わりに
+これらを使う。引数は `tools` と同じ(例: `pnpm full:restore backup/full_YYYYMMDD_HHMMSS`、`pnpm maintenance on`)。
+`node ./scripts/backup-db.mjs` のように直接実行してもよい。
+
+- 接続先は `.env` の `DATABASE_URL` / `S3_ENDPOINT` / `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` から解決する
+- ホストに `pg_dump` が無い場合は `docker compose exec -T db` 経由へ自動で切り替わる(どちらで実行したかは1行目に出力される)。
+  外部の PostgreSQL を使う構成では、実行するホストに `postgresql-client` を入れる(入っていない場合は実行前にエラーで止まる)
+- S3 バックアップの中身は次のとおり
+
+```text
+backup/s3_YYYYMMDD_HHMMSS/
+├── manifest.json  … キー・Content-Type・サイズ・ETag の一覧
+└── objects/       … オブジェクト本体(ファイル名=オブジェクトキー)
+```
 
 ## toolsサービスの実装
 
@@ -65,6 +80,7 @@
 - オブジェクトキーは `<uuidv7>.<拡張子>` のフラット構成。`/` を含むキーがあった場合は警告を出してスキップする
 - `manifest.json` にはキー・Content-Type・サイズ・ETag を記録する。リストア時の Content-Type はこの値を使う
 - リストアはバックアップに含まれるキーを上書きするだけで、ストレージ側にしか無いオブジェクトは削除しない(同じキーへ何度実行しても安全)
+- 古い起動オプションの SeaweedFS で作られた volume ファイル(`*.dat`)は、1 ファイルあたり 1GiB を `fallocate` で先行確保している。実データが数 KB でもディスクを 10GB 以上占有することがあるため、運用者向けにはボリュームの作り直し手順を案内している(現行の `compose.yaml` の起動オプションでは先行確保は起きない)
 
 ### 一括バックアップ / リストア
 
@@ -97,6 +113,16 @@ clone した環境(`pnpm dev` / `pnpm maintenance`)では、どちらもリポ�
 切り替えは各プロセスが自分でファイルの有無に追随する形で反映される(遅れは最大1秒)。
 
 ### 遮断の仕組み
+
+| 対象                                  | メンテナンス中                               |
+| ------------------------------------- | -------------------------------------------- |
+| 画面                                  | `/maintenance` の案内を 503 で表示           |
+| Server Action(画面操作)               | 503 JSON                                     |
+| API(`/api/**`。MCP `/api/mcp` を含む) | 503 JSON                                     |
+| `/api/health`                         | **通常どおり 200**(監視と compose の疎通)    |
+| `_next/*` と `/favicon.ico`           | **通常どおり配信**(案内画面を出すために必要) |
+
+いずれも `Retry-After` を付けて返す。
 
 - 遮断は `src/proxy.ts` の1箇所に集約してあり、各 API ルートや Server Action には手を入れていない
 - `/sw.js` や `/robots.txt` のような拡張子付きのパスも遮断する。Proxy の matcher から外すと、`/api/upload/<キー>.webp` のような**拡張子を持つルートハンドラ**まで素通しになり、遮断中に DB を引いて接続を張り直してしまうため
@@ -194,8 +220,17 @@ DBから辿れなくなり、DBを起点にする掃除の対象から永久に�
 回収されるまでの間 `boardId` は null(全ログインユーザーへ配信してよい扱い)になるが、キーは
 推測できず、URLを知っているのは削除したボードのメンバーだけなので閲覧の実害は無い。
 
-棚卸しで S3 の一覧と突き合わせたとき、掃除やアップロードの最中に取ったバックアップでは正常な行も
-差分に出るのは、実体を書いてからレコードを作るため。
+記録の無い実体を棚卸ししたい場合は、S3 の一覧と突き合わせる。
+
+```sh
+pnpm s3:backup
+docker compose exec -T db psql -U devuser -d devuntu -Atc 'SELECT key FROM attachment' | sort > /tmp/db-keys
+jq -r '.[].key' backup/s3_YYYYMMDD_HHMMSS/manifest.json | sort > /tmp/s3-keys
+comm -13 /tmp/db-keys /tmp/s3-keys
+```
+
+差分に出たキーが、記録の無い実体の候補になる。ただし実体を書いてからレコードを作るため、
+**掃除やアップロードの最中に取ったバックアップでは正常な行も差分に出る**。消す前に作成日時を確かめること。
 
 ### インデックスを足す目安
 

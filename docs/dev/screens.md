@@ -8,8 +8,8 @@
 
 # 画面一覧とアクセス制御
 
-開発者向け(画面・API の実装とアクセス制御)。画面の使い方は [user-guide.md](user-guide.md)、
-導入・運用は [installation.md](installation.md) / [operations.md](operations.md) を参照。
+開発者向け(画面・API の実装とアクセス制御)。画面の使い方は [user-guide.md](../guide/user-guide.md)、
+導入・運用は [installation.md](../admin/installation.md) / [operations.md](../admin/operations.md) を参照。
 
 ## アクセス制御の仕組み
 
@@ -18,8 +18,8 @@
 - **認証必須** : `/auth/signin` `/start` `/cal/:id` `/maintenance` 以外の全ページ。未ログインは `/auth/signin?cb=<元のURL>` へリダイレクト
 - **管理者のみ** : `/admin/**`。`role !== 'admin'` の場合は 404 へ rewrite(メニューにも表示されない)
 - **2要素認証** : `TWO_FA_REQUIRED=true` かつ `DISABLE_PASSWORD_AUTH=false` の場合、2FA未設定なら `/auth/signin?mode=2FA` へリダイレクト。`TWO_FA_REQUIRED=false` の場合はサインイン時の 2FA チャレンジを行わないため、`twoFactorEnabled` が true の利用者もパスワードのみでサインインする(`?mode=2FA` へ直接アクセスした場合も通常のサインイン画面になる)
-- **検索エンジンのインデックス** : インデックスの可否は `SEARCH_ENGINE_INDEXING`(`<meta name="robots">`・`X-Robots-Tag`)、`/robots.txt` でのクロールの可否は `SEARCH_ENGINE_ROBOTS_ALLOW` で決まる(いずれも既定は拒否)。詳細は [environment-variables.md](environment-variables.md#基本) を参照
-- **メンテナンスモード** : フラグファイルがあると、画面・Server Action・API を Proxy が 503 で遮断する(画面は `/maintenance` へ rewrite)。セッションを見ないため**管理者も含めて全員が対象**。通すのは `/api/health`(監視)と、メンテナンス画面の表示に要る `_next/*` と `/favicon.ico` だけ。詳細は [operations.md](operations.md#メンテナンスモード) を参照
+- **検索エンジンのインデックス** : インデックスの可否は `SEARCH_ENGINE_INDEXING`(`<meta name="robots">`・`X-Robots-Tag`)、`/robots.txt` でのクロールの可否は `SEARCH_ENGINE_ROBOTS_ALLOW` で決まる(いずれも既定は拒否)。詳細は [environment-variables.md](../admin/environment-variables.md#基本) を参照
+- **メンテナンスモード** : フラグファイルがあると、画面・Server Action・API を Proxy が 503 で遮断する(画面は `/maintenance` へ rewrite)。セッションを見ないため**管理者も含めて全員が対象**。通すのは `/api/health`(監視)と、メンテナンス画面の表示に要る `_next/*` と `/favicon.ico` だけ。詳細は [operations.md](../admin/operations.md#メンテナンスモード) を参照
 - Proxy の matcher が除外するのは `_next/*` だけで、`api/**`・Server Action(`next-action` ヘッダ)・静的アセットも Proxy を通る(メンテナンスモードの遮断を Proxy 1箇所に集約するため)。ただし通常時はいずれも認証処理を通さず素通しするので、レコード単位の認可(ボード/チケットの参照・編集権限)は従来どおり各 Server Action 側で `assertBoardAccess` / `assertTicketAccess`(`src/lib/board/board-access.ts`)により検証する
 
 ボードの権限は直接メンバー(`BoardMember`)またはグループ経由(`BoardGroup`)で解決され、`owner` / `member` のロールを持つ。
@@ -45,7 +45,7 @@
 
 `/commands` 以下の画面は `COMMAND_EXEC_ENABLED=true` のときだけ表示される。ターゲットにアサインされて
 いないユーザーにはメニューにも出ない(管理者でもアサインが無ければ実行できない)。アサインとロールの
-考え方は [command-exec.md](command-exec.md#権限) を参照。
+考え方は [command-exec.md](../admin/command-exec.md#権限) を参照。
 
 ## タスク管理
 

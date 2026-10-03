@@ -73,7 +73,7 @@ and the AI agent features are designed around that same premise (a human check i
 ## Quick start
 
 Devuntu is distributed as a Docker image and runs with Docker Compose.
-The full guide (in Japanese) is [docs/installation.md](docs/installation.md).
+The full guide (in Japanese) is [docs/admin/installation.md](docs/admin/installation.md).
 
 ### Requirements
 
@@ -122,7 +122,7 @@ You can run it again later to change settings; the current values are offered as
 > The database password cannot be changed after the first start. PostgreSQL keeps the password
 > it was initialized with, even if you edit `.env.db` later.
 
-All environment variables are listed in [docs/environment-variables.md](docs/environment-variables.md).
+All environment variables are listed in [docs/admin/environment-variables.md](docs/admin/environment-variables.md).
 
 ### 3. Start
 
@@ -172,13 +172,13 @@ Google and Slack additionally need to be enabled by an administrator at `/admin/
 | Web push         | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`                                    | Push notifications to browsers and phones                                                       |
 | GitHub           | Nothing (a secret is issued per repository in the board settings)           | PR status and CI results, auto-complete on merge, send back to the agent on CI failure / review |
 | GitLab           | `GITLAB_URLS`                                                               | MR status and CI results, auto-complete on merge, send back to the agent on CI failure / review |
-| MCP              | `OIDC_DCR_ENABLED=true`                                                     | Connections from MCP clients to `<BETTER_AUTH_URL>/api/mcp`                                     |
+| MCP              | Nothing for token access (`OIDC_DCR_ENABLED=true` for browser sign-in)      | Connections from MCP clients to `<BETTER_AUTH_URL>/api/mcp`                                     |
 | AI agents        | Creating an agent and issuing a token at `/admin/agents`                    | Automatic ticket processing by agents                                                           |
 | Remote execution | `COMMAND_EXEC_ENABLED=true`, definition files, an SSH key and `known_hosts` | Running predefined jobs on remote servers from the UI                                           |
 
-Details (in Japanese): [installation](docs/installation.md#外部サービス連携任意),
-[notifications](docs/notifications.md), [MCP server](docs/mcp-server.md),
-[AI agents](docs/agent-runner.md), [remote execution](docs/command-exec.md).
+Details (in Japanese): [installation](docs/admin/installation.md#外部サービス連携任意),
+[notifications](docs/admin/notifications.md), [GitHub / GitLab](docs/admin/git-integration.md), [MCP server](docs/admin/mcp-server.md),
+[AI agents](docs/admin/agent-runner.md), [remote execution](docs/admin/command-exec.md).
 
 ## Operations
 
@@ -190,29 +190,28 @@ docker compose run --rm tools full-restore
 docker compose run --rm tools maintenance on|off
 ```
 
-See [docs/operations.md](docs/operations.md) for the procedures and scheduled runs.
+See [docs/admin/operations.md](docs/admin/operations.md) for the procedures and scheduled runs.
 
 ## Documentation
 
 The following documents are in Japanese.
 
-| Document                                                           | Contents                                                                |
-| ------------------------------------------------------------------ | ----------------------------------------------------------------------- |
-| [docs/user-guide.md](docs/user-guide.md)                           | How to use each screen                                                  |
-| [docs/installation.md](docs/installation.md)                       | Self-hosting setup                                                      |
-| [docs/operations.md](docs/operations.md)                           | Backup / restore and maintenance                                        |
-| [docs/environment-variables.md](docs/environment-variables.md)     | Environment variables                                                   |
-| [docs/notifications.md](docs/notifications.md)                     | Notification settings and Slack App setup                               |
-| [docs/mcp-server.md](docs/mcp-server.md)                           | MCP server: registration, tools and tokens                              |
-| [docs/agent-runner.md](docs/agent-runner.md)                       | Running AI agents automatically: setup and operation (Devuntu Agent)    |
-| [docs/command-exec.md](docs/command-exec.md)                       | Remote execution (definitions, SSH, permissions)                        |
-| [docs/development.md](docs/development.md)                         | Development environment, builds and package management (for developers) |
-| [docs/screens.md](docs/screens.md)                                 | Screens, APIs and access control (for developers)                       |
-| [docs/operations-internals.md](docs/operations-internals.md)       | How backup and maintenance work (for developers)                        |
-| [docs/notifications-internals.md](docs/notifications-internals.md) | How notifications work: queue, triggers, channels (for developers)      |
-| [docs/mcp-server-internals.md](docs/mcp-server-internals.md)       | MCP server internals: authentication and input rules (for developers)   |
-| [docs/agent-runner-internals.md](docs/agent-runner-internals.md)   | How the AI agent automation works (for developers)                      |
-| [docs/command-exec-internals.md](docs/command-exec-internals.md)   | Remote execution internals (for developers)                             |
+| Document                                                                   | Contents                                                               |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| [docs/README.md](docs/README.md)                                           | Entry point: which pages to read, by audience                          |
+| [docs/guide/getting-started.md](docs/guide/getting-started.md)             | Getting started: the first 30 minutes, terms, roles, FAQ               |
+| [docs/guide/user-guide.md](docs/guide/user-guide.md)                       | How to use each screen                                                 |
+| [docs/guide/ai.md](docs/guide/ai.md)                                       | Connecting AI tools (MCP) and handing tickets to AI agents             |
+| [docs/admin/README.md](docs/admin/README.md)                               | For operators: page list, what to do after installation, admin screens |
+| [docs/admin/installation.md](docs/admin/installation.md)                   | Self-hosting setup, HTTPS (reverse proxy), integrations                |
+| [docs/admin/operations.md](docs/admin/operations.md)                       | Backup / restore and maintenance                                       |
+| [docs/admin/environment-variables.md](docs/admin/environment-variables.md) | Environment variables                                                  |
+| [docs/admin/notifications.md](docs/admin/notifications.md)                 | Notification settings and Slack App setup                              |
+| [docs/admin/git-integration.md](docs/admin/git-integration.md)             | GitHub / GitLab integration (webhooks)                                 |
+| [docs/admin/mcp-server.md](docs/admin/mcp-server.md)                       | MCP server: exposure settings and tokens                               |
+| [docs/admin/agent-runner.md](docs/admin/agent-runner.md)                   | Running AI agents automatically: setup and operation (Devuntu Agent)   |
+| [docs/admin/command-exec.md](docs/admin/command-exec.md)                   | Remote execution (definitions, SSH, permissions)                       |
+| [docs/dev/README.md](docs/dev/README.md)                                   | For developers: page list (development, screens, internals, MCP tools) |
 
 ## Contributing
 

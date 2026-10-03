@@ -3,10 +3,10 @@
   - [構成](#構成)
   - [1. compose.yaml の配置](#1-composeyaml-の配置)
   - [2. 設定ファイルの作成](#2-設定ファイルの作成)
-    - [スクリプトを使わない場合](#スクリプトを使わない場合)
   - [3. 起動](#3-起動)
   - [4. 初期セットアップ(最初の管理者を作る)](#4-初期セットアップ最初の管理者を作る)
   - [5. サインインの確認](#5-サインインの確認)
+  - [HTTPS で公開する(リバースプロキシ)](#https-で公開するリバースプロキシ)
   - [外部サービス連携(任意)](#外部サービス連携任意)
     - [Googleアカウント連携](#googleアカウント連携)
     - [Slack連携](#slack連携)
@@ -18,11 +18,26 @@
     - [リモート実行](#リモート実行)
   - [アップデート](#アップデート)
   - [困ったとき](#困ったとき)
+  - [付録: 設定ファイルを手で書く場合](#付録-設定ファイルを手で書く場合)
 
 # 導入(セルフホスト)
 
+> **対象**: Devuntu を自分のサーバーに立てる人
+>
+> 必要なのは Docker が動くホスト(メモリ 2GB 以上)と `compose.yaml` 1つだけ。最短の流れは次のとおり。
+>
+> ```sh
+> mkdir -p /opt/devuntu/config/commands && cd /opt/devuntu
+> curl -fsSLO https://raw.githubusercontent.com/playree/devuntu/main/compose.yaml
+> docker compose run --rm tools setup-env   # 質問に答えて設定ファイルを作る
+> docker compose up -d --wait               # 起動(DB の準備も自動)
+> ```
+>
+> 起動したら `<公開URL>/start` を開いて最初の管理者を登録する。試すだけなら、`setup-env` のメール送信方式で
+> `debug` を選ぶと、サインイン用のコードがログ(`docker compose logs devuntu`)に出る。
+
 Docker Compose で Devuntu を立ち上げるまでの手順。運用開始後のバックアップ手順は
-[operations.md](operations.md)、開発環境の構築は [development.md](development.md) を参照。
+[operations.md](operations.md)、導入後に管理者がやることは [README.md](README.md#導入後にやること) を参照。
 
 ## 前提
 
@@ -34,10 +49,8 @@ Docker Compose で Devuntu を立ち上げるまでの手順。運用開始後�
   公開済みイメージを pull する前提の値で、ホスト上で自前ビルドする場合は別途 4GB 以上必要
 - 利用者に見せる URL を決めてあること(`BETTER_AUTH_URL` に設定する)
 - **HTTPS で公開する場合は DNS とリバースプロキシ(またはロードバランサー)**。`compose.yaml` が公開するのは
-  HTTP の 3000 番だけで、TLS 終端もホスト名の振り分けも行わない。`https://` の `BETTER_AUTH_URL` を
-  そのまま開けるようにするには、決めたホスト名を DNS で解決させ、TLS を終端するプロキシから 3000 番へ
-  転送する構成が必要。画像アップロードが 5MB まで通るよう、**リクエストボディの上限を 6MB 以上**に
-  広げておくこと(nginx の `client_max_body_size` は既定 1MB)
+  HTTP の 3000 番だけで、TLS 終端もホスト名の振り分けも行わない
+  (設定例は [HTTPS で公開する](#https-で公開するリバースプロキシ))
 - **メール送信手段**。本手順の最小構成(`DISABLE_PASSWORD_AUTH=true`)ではメールOTPがサインインの唯一の手段になるため、
   SendGrid / sendmail / SMTP のいずれかを用意する。試用のみであれば `MAIL_SEND=debug` でサーバーログに
   OTP を出力させることもできる
@@ -147,64 +160,6 @@ docker compose run --rm tools setup-env
 > 変わらず、アプリが認証エラーになる。変更するにはボリューム(`pgdata`)を作り直すか、
 > DB 側で `ALTER USER` する。
 
-### スクリプトを使わない場合
-
-`.env.docker` は手で書いてもよい。最小構成は次のとおり。
-
-```sh
-# 基本
-DEFAULT_LOCALE=ja
-DEFAULT_TIMEZONE=Asia/Tokyo
-DATABASE_URL=postgresql://devuser:<DBパスワード>@db:5432/devuntu?schema=public
-
-# 認証
-BETTER_AUTH_URL=https://devuntu.example.com
-BETTER_AUTH_SECRET=<openssl rand -base64 32 の出力>
-DISABLE_PASSWORD_AUTH=true
-
-# メール(メールOTPのサインインに必要)
-MAIL_SEND=smtp
-MAIL_FROM=devuntu@example.com
-SMTP_HOST=<SMTPホスト>
-SMTP_PORT=25
-
-# オブジェクトストレージ
-S3_ENDPOINT=http://s3:8333
-S3_BUCKET=devuntu
-S3_ACCESS_KEY_ID=<アクセスキー>
-S3_SECRET_ACCESS_KEY=<シークレットキー>
-```
-
-この場合は `.env.db` と `seaweedfs-s3.json` も自分で用意する。**`.env.db` が無いと `db` サービスが
-起動せず、`seaweedfs-s3.json` が無いと `s3` サービスの起動がエラーになる。**
-
-```sh
-# .env.db
-POSTGRES_USER=devuser
-POSTGRES_PASSWORD=<DBパスワード>   # DATABASE_URL と揃える
-POSTGRES_DB=devuntu
-```
-
-`seaweedfs-s3.json`(JSON にコメントは書けないので、次の内容をそのまま保存する)。
-
-```json
-{
-  "identities": [
-    {
-      "name": "devuntu",
-      "credentials": [{ "accessKey": "<アクセスキー>", "secretKey": "<シークレットキー>" }],
-      "actions": ["Read", "Write", "List", "Tagging", "Admin"]
-    }
-  ]
-}
-```
-
-`S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` をこの JSON と揃える。バケットは初回アップロード時に
-自動作成されるため事前作業は不要。検索エンジンへのインデックスとクロールは**既定で拒否**しているので、
-社外へ公開して検索結果に載せたい場合のみ `SEARCH_ENGINE_INDEXING=true` を設定する
-(載せたくないが既にインデックスされてしまった場合の `SEARCH_ENGINE_ROBOTS_ALLOW` は
-[environment-variables.md](environment-variables.md#基本) を参照)。
-
 ## 3. 起動
 
 ```sh
@@ -247,9 +202,55 @@ curl -s http://localhost:3000/api/health
 メールが届かない場合は `MAIL_SEND` 周りの設定を見直す。`MAIL_SEND=debug` にしていると
 実際には送信されず、OTP はサーバーログ(`docker compose logs devuntu`)に出力される。
 
+## HTTPS で公開する(リバースプロキシ)
+
+`BETTER_AUTH_URL` に設定した `https://` の URL で開けるよう、TLS を終端するプロキシから `devuntu` の 3000 番へ転送する。
+押さえる点は2つ。
+
+- 画像アップロード(5MB まで)が通るよう、**リクエストボディの上限を 6MB 以上**にする(nginx の `client_max_body_size` は既定 1MB)
+- リモート実行のログ配信(SSE)を**バッファリングしない**
+
+プロキシを同じホストに置く場合は、`compose.yaml` の `devuntu` の `ports` を `127.0.0.1:3000:3000` に絞ると、
+プロキシ経由でしか到達できなくなる。
+
+Caddy の例(証明書は Caddy が自動で取得する。SSE もそのまま流れる)。
+
+```text
+devuntu.example.com {
+	request_body {
+		max_size 6MB
+	}
+	reverse_proxy 127.0.0.1:3000
+}
+```
+
+nginx の例(証明書は certbot などで別途用意する)。
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name devuntu.example.com;
+    ssl_certificate     /etc/letsencrypt/live/devuntu.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/devuntu.example.com/privkey.pem;
+
+    client_max_body_size 6m;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_buffering off;
+    }
+}
+```
+
 ## 外部サービス連携(任意)
 
-いずれも環境変数を設定して `devuntu` を再起動する。加えて必要な操作は連携ごとに異なる。
+いずれも環境変数を設定し、`docker compose up -d` で `devuntu` を作り直して反映する
+(`docker compose restart` では `.env.docker` が読み直されない)。環境変数は `docker compose run --rm tools setup-env` を
+再実行して入力してもよい。加えて必要な操作は連携ごとに異なる。
 
 ### Googleアカウント連携
 
@@ -285,13 +286,13 @@ Slack App のマニフェストは `slack/manifest.yaml`。
 
 Slack DM 通知(メンション / 担当者の変更 / エージェントの実行結果)、ボードごとのチャンネル通知、
 Slack に貼られたチケットURLの展開が使えるようになる。
-手順の詳細は [notifications.md](notifications.md#slack通知の前提) を参照。
+Slack App の作り方から順を追った手順は [notifications.md](notifications.md#slack-連携を使えるようにする) を参照。
 
 ### GitHub連携
 
 環境変数の設定は要らない。ボード設定の「GitHub連携」でリポジトリを対応付けると、チケットに紐付けたプルリクエストの
 状態と CI の結果を Webhook で受け取れるようになる。Webhook のシークレットはリポジトリごとに画面から発行する。
-GitHub の API は呼ばないので、トークンや GitHub App は要らない。登録の手順は [user-guide.md](user-guide.md#関連リンクブランチprコミット) を参照。
+GitHub の API は呼ばないので、トークンや GitHub App は要らない。登録の手順は [git-integration.md](git-integration.md#github-の-webhook) を参照。
 シークレットは `BETTER_AUTH_SECRET` で暗号化して保存するので、`BETTER_AUTH_SECRET` を変えた場合はボード設定でシークレットを再発行する。
 
 ### GitLab連携
@@ -299,7 +300,7 @@ GitHub の API は呼ばないので、トークンや GitHub App は要らな�
 `GITLAB_URLS` に使う GitLab のインスタンスの URL をカンマ区切りで書くと、ボード設定に「GitLab連携」が現れる
 (例: `GITLAB_URLS=https://gitlab.com,https://git.example.com/gitlab`)。セルフホスト版はサブパスに置いたものも書ける。
 Webhook のトークンはプロジェクトごとに画面から設定するので、環境変数での共通のシークレットは無い。
-`docker compose run --rm tools setup-env` でも設定できる。GitLab の API は呼ばないので、アクセストークンは要らない。登録の手順は [user-guide.md](user-guide.md#gitlab-の-webhook) を参照。
+`docker compose run --rm tools setup-env` でも設定できる。GitLab の API は呼ばないので、アクセストークンは要らない。登録の手順は [git-integration.md](git-integration.md#gitlab-の-webhook) を参照。
 トークンは `BETTER_AUTH_SECRET` で暗号化して保存するので、`BETTER_AUTH_SECRET` を変えた場合はボード設定でトークンを設定し直す。
 
 ### Webプッシュ通知
@@ -327,7 +328,7 @@ docker compose run --rm --entrypoint node tools -e "const {generateKeyPairSync}=
 ### MCP サーバーの公開
 
 `<BETTER_AUTH_URL>/api/mcp` は常に公開されており、`/account` で発行するユーザーの MCP トークンと
-`/admin/agents` で発行するエージェントトークンは設定なしで使える。
+`/admin/agents` で発行するエージェントトークンは**設定なしで**使える。
 `OIDC_DCR_ENABLED=true` を設定すると、これに加えて MCP クライアントが動的クライアント登録(DCR)→
 ブラウザでの認可コードフローで接続できるようになる(`OIDC_DCR_ENABLED` が制御するのは DCR だけ)。
 環境変数だけで有効になり、`/admin/settings` での操作は不要。
@@ -393,7 +394,7 @@ extra_hosts:
 ```
 
 リバースプロキシを挟む場合は、実行ログの配信(SSE)を**バッファリングしない**設定にする
-(nginx なら該当ロケーションで `proxy_buffering off;`)。
+([HTTPS で公開する](#https-で公開するリバースプロキシ)の例を参照)。
 
 定義ファイルの書き方・鍵の準備・権限の考え方は [command-exec.md](command-exec.md) を参照。
 
@@ -405,14 +406,15 @@ docker compose up -d
 ```
 
 新しいイメージで起動する際、`prisma migrate deploy` が実行されて DB が追随する。
-**アップデート前にバックアップを取得する**こと([operations.md](operations.md))。
+**アップデート前にバックアップを取得する**こと。取得の間だけ利用者を止めて取るなら次のとおり([operations.md](operations.md))。
+
+```sh
+docker compose run --rm tools full-backup --maintenance
+docker compose pull && docker compose up -d
+```
 
 使うイメージは `compose.yaml` が参照する `playree/devuntu:latest`(リリース済みの版)。`edge` はリリース前の
 確認用のビルドなので運用には使わない。特定の版に固定したい場合は `<version>` のタグを指定する。
-
-以前の `GITHUB_WEBHOOK_SECRET`(全リポジトリ共通のシークレット)と共通の URL(`/api/github/webhook`)は廃止した。
-それ以前に対応付けたリポジトリはボード設定で「シークレット未設定」と表示されるので、「シークレットを再発行」で発行し、
-GitHub 側の Webhook の Payload URL と Secret を登録し直す。`GITHUB_WEBHOOK_SECRET` は環境変数から消してよい。
 
 ## 困ったとき
 
@@ -427,3 +429,61 @@ GitHub 側の Webhook の Payload URL と Secret を登録し直す。`GITHUB_WE
 | OTP メールが届かない                     | `MAIL_SEND` / `MAIL_FROM` と送信手段の設定。`debug` の場合はログに出力される              |
 | 画像がアップロードできない・表示されない | `s3` サービスの状態と `S3_*` の設定、`seaweedfs-s3.json` との突き合わせ                   |
 | カレンダーが使えない                     | Googleアカウント連携が有効か(`/admin/settings`)、利用者本人が `/account` で連携しているか |
+
+## 付録: 設定ファイルを手で書く場合
+
+`setup-env` を使わず、`.env.docker` を手で書いてもよい。最小構成は次のとおり。
+
+```sh
+# 基本
+DEFAULT_LOCALE=ja
+DEFAULT_TIMEZONE=Asia/Tokyo
+DATABASE_URL=postgresql://devuser:<DBパスワード>@db:5432/devuntu?schema=public
+
+# 認証
+BETTER_AUTH_URL=https://devuntu.example.com
+BETTER_AUTH_SECRET=<openssl rand -base64 32 の出力>
+DISABLE_PASSWORD_AUTH=true
+
+# メール(メールOTPのサインインに必要)
+MAIL_SEND=smtp
+MAIL_FROM=devuntu@example.com
+SMTP_HOST=<SMTPホスト>
+SMTP_PORT=25
+
+# オブジェクトストレージ
+S3_ENDPOINT=http://s3:8333
+S3_BUCKET=devuntu
+S3_ACCESS_KEY_ID=<アクセスキー>
+S3_SECRET_ACCESS_KEY=<シークレットキー>
+```
+
+この場合は `.env.db` と `seaweedfs-s3.json` も自分で用意する。**`.env.db` が無いと `db` サービスが
+起動せず、`seaweedfs-s3.json` が無いと `s3` サービスの起動がエラーになる。**
+
+```sh
+# .env.db
+POSTGRES_USER=devuser
+POSTGRES_PASSWORD=<DBパスワード>   # DATABASE_URL と揃える
+POSTGRES_DB=devuntu
+```
+
+`seaweedfs-s3.json`(JSON にコメントは書けないので、次の内容をそのまま保存する)。
+
+```json
+{
+  "identities": [
+    {
+      "name": "devuntu",
+      "credentials": [{ "accessKey": "<アクセスキー>", "secretKey": "<シークレットキー>" }],
+      "actions": ["Read", "Write", "List", "Tagging", "Admin"]
+    }
+  ]
+}
+```
+
+`S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` をこの JSON と揃える。バケットは初回アップロード時に
+自動作成されるため事前作業は不要。検索エンジンへのインデックスとクロールは**既定で拒否**しているので、
+社外へ公開して検索結果に載せたい場合のみ `SEARCH_ENGINE_INDEXING=true` を設定する
+(載せたくないが既にインデックスされてしまった場合の `SEARCH_ENGINE_ROBOTS_ALLOW` は
+[environment-variables.md](environment-variables.md#基本) を参照)。

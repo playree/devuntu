@@ -3118,7 +3118,7 @@ export type $TicketPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     /**
      * プライベートも必ずボード(kind=private)に属する。所有者による別スコープは持たない。
      * 作成時に決まり以後変更しない(ボード移動は無い)。本文に貼った添付の可視範囲がこの前提に依存する
-     * (docs/development.md「チケットはボードを移動しない」)
+     * (docs/dev/development.md「チケットはボードを移動しない」)
      */
     boardId: string
     /**

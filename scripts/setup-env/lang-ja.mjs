@@ -150,7 +150,7 @@ export const ja = {
   build_failed: (message) => `設定を組み立てられませんでした: ${message}`,
   env_docker_header: [
     'Devuntu セルフホスト用の環境変数(docker compose run --rm tools setup-env で再生成できる)',
-    '全変数の一覧は docs/environment-variables.md を参照',
+    '全変数の一覧は docs/admin/environment-variables.md を参照',
   ],
   env_docker_extras: 'その他(このスクリプトが管理していない設定)',
   env_db_header: [

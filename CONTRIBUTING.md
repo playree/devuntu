@@ -17,8 +17,8 @@ Devuntu への Issue・Pull Request を歓迎します。
 
 ## 開発環境
 
-セットアップ・ビルド・パッケージ管理の手順は [docs/development.md](docs/development.md) を参照してください。
-画面とアクセス制御の一覧は [docs/screens.md](docs/screens.md) にあります。
+セットアップ・ビルド・パッケージ管理の手順は [docs/dev/development.md](docs/dev/development.md) を参照してください。
+画面とアクセス制御の一覧は [docs/dev/screens.md](docs/dev/screens.md) にあります。
 
 ## ブランチ
 
@@ -45,7 +45,7 @@ pnpm build
 ```
 
 - 修正したファイルには `pnpm exec prettier --write <ファイル>` をかけてください
-- 機能や仕様を変えた場合は、対応するドキュメント(`README.md` / `README.en.md` / `docs/*.md`)も更新してください
+- 機能や仕様を変えた場合は、対応するドキュメント(`README.md` / `README.en.md` / `docs/**/*.md`)も更新してください
 
 ## 言語の追加
 

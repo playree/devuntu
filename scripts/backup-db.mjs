@@ -3,7 +3,7 @@
  *
  *   pnpm db:backup
  *
- * Docker環境では compose.yaml の tools サービスで実行する(手順は docs/operations.md 参照)。
+ * Docker環境では compose.yaml の tools サービスで実行する(手順は docs/admin/operations.md 参照)。
  *
  *   docker compose run --rm tools db-backup
  *

@@ -48,6 +48,7 @@ DevuntuのAIエージェント向けの機能も、この(人による確認を�
 - [Devuntu](#devuntu)
   - [できること](#できること)
   - [設計・開発方針](#設計開発方針)
+  - [ドキュメント](#ドキュメント)
 - [導入者向け](#導入者向け)
   - [構成](#構成)
   - [導入の流れ](#導入の流れ)
@@ -106,6 +107,16 @@ DevuntuのAIエージェント向けの機能も、この(人による確認を�
 - **アップデートの継続**  
   出来る限りアップデートを続けていきます
 
+## ドキュメント
+
+読む人に合わせて分けています。入口は [docs/README.md](docs/README.md) です。
+
+| 読む人                                       | まず読むもの                                     | 一覧                               |
+| -------------------------------------------- | ------------------------------------------------ | ---------------------------------- |
+| 使う人(チケットを書く・見る・AIに任せる)     | [はじめに](docs/guide/getting-started.md)        | [利用者向け](docs/guide/README.md) |
+| 立てる人・管理する人(導入・運用・管理者)     | [導入(セルフホスト)](docs/admin/installation.md) | [運用者向け](docs/admin/README.md) |
+| 作る人(Devuntu 自体の開発・コントリビュート) | [開発](docs/dev/development.md)                  | [開発者向け](docs/dev/README.md)   |
+
 # 導入者向け
 
 Dockerイメージを提供しており、`compose.yaml`で簡単に構築できるようにしています。
@@ -131,7 +142,7 @@ Docker Compose で3つのサービスを起動します(`compose.yaml`)。
 4. `<BETTER_AUTH_URL>/start` を開いて最初の管理者を登録する
 5. 必要に応じて Google / Slack / MCP / AIエージェントの連携を設定する
 
-手順の詳細と注意点は [docs/installation.md](docs/installation.md) を参照。
+手順の詳細と注意点は [docs/admin/installation.md](docs/admin/installation.md)、導入後にやることは [docs/admin/README.md](docs/admin/README.md#導入後にやること) を参照。
 
 ## 外部サービス連携
 
@@ -145,7 +156,7 @@ Docker Compose で3つのサービスを起動します(`compose.yaml`)。
 | Webプッシュ    | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`                         | ブラウザ / スマートフォンへのプッシュ通知                              |
 | GitHub         | 不要(ボード設定で対応付けごとにシークレットを発行)               | PR の状態・CI の反映、マージでの自動完了、エージェントへの自動差し戻し |
 | GitLab         | `GITLAB_URLS`                                                    | MR の状態・CI の反映、マージでの自動完了、エージェントへの自動差し戻し |
-| MCP            | `OIDC_DCR_ENABLED=true`                                          | MCPクライアントからの接続                                              |
+| MCP            | 不要(ブラウザでの認可も使うなら `OIDC_DCR_ENABLED=true`)         | MCPクライアントからの接続                                              |
 | AIエージェント | `/admin/agents` でのエージェント作成とトークン発行               | エージェントによるチケットの自動処理                                   |
 | リモート実行   | `COMMAND_EXEC_ENABLED=true` と定義ファイル / SSH鍵 / known_hosts | 画面からリモートサーバーでの定義済み処理の実行                         |
 
@@ -159,7 +170,7 @@ DB とアップロード画像は別々バックアップ可能ですが、バ�
 
 リストア中は**メンテナンスモード**で全アクセスを遮断できます
 (`docker compose run --rm tools maintenance on|off`)。アプリを止めずに、利用者へは案内画面を返します。
-手順・定期実行は [docs/operations.md](docs/operations.md) を参照。
+手順・定期実行は [docs/admin/operations.md](docs/admin/operations.md) を参照。
 
 アップデートは `docker compose pull && docker compose up -d`。マイグレーションは起動時に自動適用されます。
 
@@ -172,11 +183,11 @@ docker compose pull && docker compose up -d
 
 ## 環境変数
 
-環境変数の一覧は [docs/environment-variables.md](docs/environment-variables.md) を参照。
+環境変数の一覧は [docs/admin/environment-variables.md](docs/admin/environment-variables.md) を参照。
 
 # 利用者向け
 
-画面の使い方は [docs/user-guide.md](docs/user-guide.md) にまとめています。
+初めての方は [はじめに](docs/guide/getting-started.md)、画面の使い方は [docs/guide/user-guide.md](docs/guide/user-guide.md) にまとめています。
 
 ## ボードとチケット
 
@@ -212,7 +223,7 @@ Googleアカウントと連携すると、`/cal` で自分の予定を確認で�
 チームボードでは、チケットの作成・完了・担当者の変更・エージェントの実行結果を Slack チャンネルへ流せます。
 また Slack に貼られたチケットURLは、閲覧権限を確認した上でカード表示に展開されます。
 
-Slack App の設定などは [docs/notifications.md](docs/notifications.md)、実装の詳細は [docs/notifications-internals.md](docs/notifications-internals.md) を参照。
+Slack App の設定などは [docs/admin/notifications.md](docs/admin/notifications.md)、実装の詳細は [docs/dev/notifications-internals.md](docs/dev/notifications-internals.md) を参照。
 
 ## AIとの連携
 
@@ -228,7 +239,7 @@ DevuntuはMCPサーバーの単純な提供だけでなく、AI開発に適し�
 - チケットに受け入れ条件があれば、対応後に条件ごとの充足と根拠を自己申告として記録します(`report_acceptance_criteria`)。
 - チケットの作成時にボードのチケットテンプレートを指定でき、ボードの「AI向けコンテキスト」はチケットやボードの取得時に `boardContext` として届きます。
 
-登録手順と仕組みは [docs/mcp-server.md](docs/mcp-server.md) を参照
+つなぎ方と使い方は [docs/guide/ai.md](docs/guide/ai.md)、公開設定とトークンの運用は [docs/admin/mcp-server.md](docs/admin/mcp-server.md) を参照
 
 ### AIエージェント
 
@@ -250,7 +261,7 @@ AIエージェントを担当者にし、チケットの「エージェントモ
 - **自動差し戻し**  
   ボード設定で有効にすると、紐付いた PR / MR の CI の失敗やレビュー指摘を受けて、報告済みのチケットをエージェントへ自動で差し戻します。
 
-詳しい使い方は [docs/user-guide.md](docs/user-guide.md#エージェントにチケットを任せる) を参照
+詳しい使い方は [docs/guide/ai.md](docs/guide/ai.md#エージェントにチケットを任せる) を参照
 
 ### AI向けの共通インプット定義
 
@@ -287,7 +298,7 @@ AI向けにインプットできる共通定義を2種類用意しています�
 > エージェント側からDevuntuサーバーにポーリングする方式としている為、エージェント側にポート開放など特別な設定は不要です。  
 > エージェント側からDevuntuサーバーへ通信できる環境であれば利用できます。
 
-設置・運用は [docs/agent-runner.md](docs/agent-runner.md)、仕組みは [docs/agent-runner-internals.md](docs/agent-runner-internals.md) を参照
+設置・運用は [docs/admin/agent-runner.md](docs/admin/agent-runner.md)、仕組みは [docs/dev/agent-runner-internals.md](docs/dev/agent-runner-internals.md) を参照
 
 ### 承認
 
@@ -302,7 +313,7 @@ AI向けにインプットできる共通定義を2種類用意しています�
 コマンドへのパラメータは画面上から指定できるようになっています。  
 出力は実行中もリアルタイムで流れ、履歴として残ります。
 
-定義の書き方・SSHの準備・権限の考え方は [docs/command-exec.md](docs/command-exec.md) を参照。
+定義の書き方・SSHの準備・権限の考え方は [docs/admin/command-exec.md](docs/admin/command-exec.md) を参照。
 
 # 開発者向け
 
@@ -310,7 +321,7 @@ AI向けにインプットできる共通定義を2種類用意しています�
 
 - Node.js v24
 - Next.js v16
-- TypeScript v7(v6 と併存。詳細は[docs/development.md](docs/development.md#typescript-v7-と-v6-の併存)を参照)
+- TypeScript v7(v6 と併存。詳細は[docs/dev/development.md](docs/dev/development.md#typescript-v7-と-v6-の併存)を参照)
 - pnpm v12
 - Prisma v7
 - Better Auth v1.7
@@ -324,11 +335,12 @@ AI向けにインプットできる共通定義を2種類用意しています�
 ## 開発環境
 
 開発環境のセットアップ、ビルド、パッケージ管理、イメージ作成などの手順は
-[docs/development.md](docs/development.md) を参照。
+[docs/dev/development.md](docs/dev/development.md) を参照。
 
 ## 画面とアクセス制御
 
-画面一覧とアクセス制御の実装、および API のアクセス制御は [docs/screens.md](docs/screens.md) を参照。
+画面一覧とアクセス制御の実装、および API のアクセス制御は [docs/dev/screens.md](docs/dev/screens.md) を参照。
+機能ごとの仕組みは [docs/dev/README.md](docs/dev/README.md) に一覧があります。
 
 ## テスト・Lint
 
