@@ -18,10 +18,10 @@
 # AIエージェントの自動運用の仕組み(開発者向け)
 
 Devuntu Agent の全体の作り・状態遷移・実装上の判断をまとめる。
-ランナーの設置・設定・トラブル対応(運用者向け)は [agent-runner.md](agent-runner.md)、
-チケットを任せる側の使い方は [user-guide.md](user-guide.md#エージェントにチケットを任せる) を参照。
+ランナーの設置・設定・トラブル対応(運用者向け)は [agent-runner.md](../admin/agent-runner.md)、
+チケットを任せる側の使い方は [ai.md](../guide/ai.md#エージェントにチケットを任せる) を参照。
 
-エージェントユーザーそのもの(作成・トークン)は [docs/mcp-server.md](mcp-server.md#aiエージェント用ユーザー) を参照。
+エージェントユーザーそのもの(作成・トークン)は [mcp-server.md](../admin/mcp-server.md#aiエージェント用ユーザー) を参照。
 
 ## 全体の流れ
 
@@ -98,7 +98,7 @@ devuntu_agent.py
 
 ランナーが渡す指示には「GitHub / GitLab にブランチやプルリクエスト(マージリクエスト)を作ったら `link_ticket_artifact` でチケットに紐付ける」が
 含まれる。紐付けた PR の状態と CI の結果はチケット詳細に表示され、ボードの設定次第でマージ時にチケットが完了になる
-([user-guide.md](user-guide.md#関連リンクブランチprコミット))。ブランチ名の先頭に表示IDを入れる作法
+([user-guide.md](../guide/user-guide.md#関連リンクブランチprコミット))。ブランチ名の先頭に表示IDを入れる作法
 (例: `feature/ABC-12`)をルールに書いておけば、登録し忘れても Webhook が自動で紐付ける。
 
 ## 受け入れ条件と自己チェック
@@ -289,7 +289,7 @@ CodeRabbit は push のたびに再レビューするので、指摘が続くと
 (タイムゾーンは時間帯と同じ)。判定は開始前だけなので、**実行中の1回ぶんは上限を超え得る**(ソフトリミット)。
 コストを返さない CLI(codex)の実行は予算に数えない。
 
-設定画面(`/admin/agents/[id]` / `/agents`)の項目は [agent-runner.md](agent-runner.md#画面での設定) を参照。
+設定画面(`/admin/agents/[id]` / `/agents`)の項目は [agent-runner.md](../admin/agent-runner.md#画面での設定) を参照。
 最終ポーリング時刻・ホスト名・ランナーのバージョンはランナーの自己申告で、稼働状況の表示にだけ使い認可には使わない。
 
 ## 認証
@@ -325,15 +325,15 @@ CodeRabbit は push のたびに再レビューするので、指摘が続くと
   (`done` = 前の順番が完了したら / `reported` = エージェントの報告済みでも進む。省略すると親の設定のまま)。
   順番は親の既存の子と同じ並びに入る。人が承認すると子チケットが起票される([タスク分割](#タスク分割子チケットの起票と順番))
 
-人間の経路と共通のツール・入力の約束ごとは [mcp-server.md](mcp-server.md#ツール一覧) と
+人間の経路と共通のツール・入力の約束ごとは [mcp-tools.md](mcp-tools.md#ツール一覧) と
 [mcp-server-internals.md](mcp-server-internals.md#入力の約束ごと) を参照。
 
 ## ランナー(devuntu_agent.py)
 
-[public/agent/devuntu_agent.py](../public/agent/devuntu_agent.py)。標準ライブラリだけで動く。
+[public/agent/devuntu_agent.py](../../public/agent/devuntu_agent.py)。標準ライブラリだけで動く。
 `public/` に置いてあるのは、セットアップ時に `curl <BASE_URL>/agent/devuntu_agent.py` で
 **サーバーと同じ版**を取得できるようにするため(秘密情報は含まない)。
-設定キー・サブコマンド・ファイル配置は [agent-runner.md](agent-runner.md#configjson) を参照。ここでは実装上の判断を書く。
+設定キー・サブコマンド・ファイル配置は [agent-runner.md](../admin/agent-runner.md#configjson) を参照。ここでは実装上の判断を書く。
 
 - 常駐しない。cron が単発起動するので、プロセス監視も再起動も要らない
 - cron の PATH では `claude` / `codex` を解決できないため、ランナーが PATH を補ってから CLI を起動する。
@@ -409,7 +409,7 @@ Claude Code や Codex CLI から「devuntu のエージェントをセットア�
 手順を返さず、利用者に確認するよう促す**。頼んだ CLI とエージェントに使わせたい CLI は別のことがあるので、
 呼び出し側に選ばせない(未指定のまま手順を返すと、本文で先に出てくる方で進めてしまう)。
 
-手順の本文は [public/agent/agent-setup-guide.md](../public/agent/agent-setup-guide.md)(MCP 経由で返すため英語)。
+手順の本文は [public/agent/agent-setup-guide.md](../../public/agent/agent-setup-guide.md)(MCP 経由で返すため英語)。
 CLI 別の記述は `<!-- cli:claude -->` … `<!-- /cli -->` で囲んであり、プレースホルダーの置換と
-ブロックの絞り込みは [src/lib/agent/agent-setup.ts](../src/lib/agent/agent-setup.ts) で行う。
+ブロックの絞り込みは [src/lib/agent/agent-setup.ts](../../src/lib/agent/agent-setup.ts) で行う。
 URL はサーバー自身のものが埋め込まれる。

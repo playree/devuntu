@@ -19,13 +19,21 @@
 
 # リモート実行
 
+> **対象**: リモート実行を有効にして、実行できる処理を定義する管理者
+>
+> 1. `COMMAND_EXEC_ENABLED=true` を設定し、SSH の秘密鍵と known_hosts を `./config/ssh` に置く([SSHの準備](#sshの準備))
+> 2. 接続先ごとに定義ファイル(YAML)を `./config/commands` に置く([定義ファイル](#定義ファイル))
+> 3. `/admin/commands` で、実行させたい人をターゲットにアサインする([権限](#権限))
+>
+> 本番のサーバーへつなぐ前に、[安全性の考え方](#安全性の考え方)と[リモート側の堅牢化](#リモート側の堅牢化)を読むこと。
+
 あらかじめ定義しておいた処理を画面のボタンから実行し、出力をリアルタイムで見る仕組み。
 デプロイやバッチの再実行など、これまでサーバーへ SSH して手作業していた運用を画面へ寄せるためのもの。
 
 既定では無効。`COMMAND_EXEC_ENABLED=true` と定義ファイルの配置の両方が揃って初めて動く
 (環境変数の一覧は [environment-variables.md](environment-variables.md#リモート実行) を参照)。
 
-利用者から見た使い方は [user-guide.md](user-guide.md#リモート実行)、実装上の決めごと(開発者向け)は [command-exec-internals.md](command-exec-internals.md) を参照。
+利用者から見た使い方は [user-guide.md](../guide/user-guide.md#リモート実行)、実装上の決めごと(開発者向け)は [command-exec-internals.md](../dev/command-exec-internals.md) を参照。
 
 ## 全体の流れ
 
@@ -214,7 +222,7 @@ inputs:
 
 `target.editable: true` を書いたファイルは、`/commands/targets/<ターゲットID>` から `commands` を
 追加・編集・削除できる。編集はコマンド 1 件ぶんの YAML をその場で書く形で、保存時に
-定義ファイルと同じスキーマで検証される(画面での操作は [user-guide.md](user-guide.md#コマンドの定義を画面から編集するオーナー) を参照)。
+定義ファイルと同じスキーマで検証される(画面での操作は [user-guide.md](../guide/user-guide.md#コマンドの定義を画面から編集するオーナー) を参照)。
 
 **`target` はどのファイルでも画面から編集できない。** 影響は「既に鍵が通っているターゲットで、
 その鍵のユーザーにできること」に閉じる。有効にする前に[安全性の考え方](#安全性の考え方)の前提

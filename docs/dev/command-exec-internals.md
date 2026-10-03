@@ -1,7 +1,7 @@
 # リモート実行の仕組み(開発者向け)
 
 リモート実行の実装上の決めごと。定義ファイルの書き方・SSH の準備・権限など運用者向けの内容は
-[command-exec.md](command-exec.md) を参照。
+[command-exec.md](../admin/command-exec.md) を参照。
 
 ## 実行の流れ
 

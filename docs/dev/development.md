@@ -28,7 +28,10 @@
 
 # 開発
 
-セルフホストの導入手順は [installation.md](installation.md)、運用(バックアップ)は [operations.md](operations.md) を参照。
+Devuntu 自体を開発する人向けの、環境構築・ビルド・パッケージ管理の手順。
+ブランチ・コミット・PR の出し方とコーディングルールは [CONTRIBUTING.md](../../CONTRIBUTING.md)、
+開発者向けドキュメントの一覧は [README.md](README.md) を参照。
+セルフホストの導入手順は [installation.md](../admin/installation.md)、運用(バックアップ)は [operations.md](../admin/operations.md) を参照。
 
 ## 設計上の決めごと
 
@@ -159,7 +162,7 @@ Google/Slack など外部OAuthのコールバックURLは `http://localhost:3000
 pnpm install
 ```
 
-開発用の `.env` は手で用意する(参照する変数は [environment-variables.md](environment-variables.md))。
+開発用の `.env` は手で用意する(参照する変数は [environment-variables.md](../admin/environment-variables.md))。
 `pnpm setup:env` はセルフホスト用の `.env.docker` / `.env.db` / `seaweedfs-s3.json` を生成する
 スクリプトで、**開発用の `.env` は対象外**。リポジトリ直下で実行すると同名のファイルを上書きするため、
 動作を試すときは `--dir` で別の場所を指定する。
@@ -168,7 +171,7 @@ pnpm install
 pnpm setup:env --dir /tmp/setup-test --dry-run
 ```
 
-リモート実行機能([command-exec.md](command-exec.md))を動かす場合は、**ホストに `ssh` コマンドが必要**
+リモート実行機能([command-exec.md](../admin/command-exec.md))を動かす場合は、**ホストに `ssh` コマンドが必要**
 (Docker イメージには `openssh-client` を同梱しているが、`pnpm dev` はホストの `ssh` を使う)。
 開発時は環境変数を渡して起動すると、`.env` を汚さずに試せる。
 
@@ -181,7 +184,7 @@ pnpm dev
 
 ## 環境変数の実装
 
-運用者向けの変数の一覧と運用上の注意は [environment-variables.md](environment-variables.md) にある。
+運用者向けの変数の一覧と運用上の注意は [environment-variables.md](../admin/environment-variables.md) にある。
 ここには実装側の決めごとと、開発専用の変数を置く。
 
 - 定義元は `src/lib/env-util.ts`。参照時も同ファイルの `envu` を利用する
@@ -256,7 +259,7 @@ pnpm build
 
 standalone ビルドでは `web-push` がサーバーチャンクへバンドルされ、`node_modules` に実体が残らない。そのため
 イメージ内では `require('web-push')` が `MODULE_NOT_FOUND` になり、`generateVAPIDKeys()` を使えない
-(導入手順では `node:crypto` のワンライナーで VAPID 鍵を生成している。[installation.md](installation.md#webプッシュ通知))。
+(導入手順では `node:crypto` のワンライナーで VAPID 鍵を生成している。[installation.md](../admin/installation.md#webプッシュ通知))。
 
 ## テスト・Lint
 
@@ -383,7 +386,7 @@ pnpm dlx auth generate
 ## イメージ作成
 
 Docker Hub(`playree/devuntu`)への publish は GitHub Actions の `Release`
-([.github/workflows/release.yml](../.github/workflows/release.yml))で行う。ローカルからは push しない。
+([.github/workflows/release.yml](../../.github/workflows/release.yml))で行う。ローカルからは push しない。
 
 タグの意味は下記のとおり。
 
@@ -436,12 +439,14 @@ pnpm why sharp
 - 画面のスクリーンショット(`site/assets/screenshots/`)は `docs/images/` の同名ファイルの複製。
   `docs/images/` を撮り直したら、こちらにもコピーする(Pages には `site/` しか配信されないため)
 - 機能一覧は README の「できること」に合わせる。機能を追加・変更したら日英両方のページも更新する
+- 「ドキュメント」節のリンクは GitHub 上の `docs/guide/README.md` / `docs/admin/README.md` / `docs/dev/README.md` などを指す。
+  docs の構成を変えたら、日英両方のリンクも直す
 - 英語ページは `site/en/index.html`。内容を変えたら日英両方を更新し、`hreflang` の相互リンクも揃える
 - ページを増やしたら `site/sitemap.xml` にも追加する。robots.txt はドメイン直下(`playree.github.io/robots.txt`)
   しか読まれずプロジェクトサイトでは効かないため、サイトマップは Search Console から送信する
 - Google Search Console などの所有権確認ファイル(`google<ID>.html` 等)は `site/` 直下に置く。
   Jekyll を通さないので、ファイルは加工されずに配信される
-- デプロイは GitHub Actions の `Pages`([.github/workflows/pages.yml](../.github/workflows/pages.yml))。
+- デプロイは GitHub Actions の `Pages`([.github/workflows/pages.yml](../../.github/workflows/pages.yml))。
   main への push で `site/` が変わったときと、手動実行で動く
 - リポジトリの Settings → Pages → Source を「GitHub Actions」にしておく必要がある
 - アプリのビルドとイメージには含めない(`.dockerignore` と `eslint.config.ts` で除外している)

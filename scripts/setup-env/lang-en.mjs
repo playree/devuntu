@@ -142,7 +142,7 @@ export const en = {
   build_failed: (message) => `Could not build the config: ${message}`,
   env_docker_header: [
     'Environment variables for self-hosting Devuntu (regenerate with docker compose run --rm tools setup-env)',
-    'See docs/environment-variables.md for all variables',
+    'See docs/admin/environment-variables.md for all variables',
   ],
   env_docker_extras: 'Others (settings not managed by this script)',
   env_db_header: [

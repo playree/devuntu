@@ -1,4 +1,5 @@
 - [通知](#通知)
+  - [Slack 連携を使えるようにする](#slack-連携を使えるようにする)
   - [イベントとチャネル](#イベントとチャネル)
   - [チャネルごとの有効条件](#チャネルごとの有効条件)
     - [メール通知の前提](#メール通知の前提)
@@ -14,23 +15,57 @@
 
 # 通知
 
-チケットの操作やエージェントの実行結果を、メール / Slack / Webプッシュで知らせる仕組み。
-ここでは、通知を使えるようにする運用者向けに、有効にする条件と Slack App の設定、トラブル対応をまとめる。
+> **対象**: 通知(メール / Slack / Webプッシュ)を使えるようにする運用者・管理者
+>
+> - メール通知は `MAIL_SEND` を設定するだけで使える
+> - Slack は Slack App を作って環境変数を入れ、`/admin/settings` で有効にする([手順](#slack-連携を使えるようにする))
+> - Webプッシュは VAPID 鍵を設定すると、利用者が端末ごとに登録できるようになる
 
-- 通知はキューを経由して非同期に送る。チケット操作の応答が遅れることも、送信の失敗で操作が失敗することもない
+チケットの操作やエージェントの実行結果を、メール / Slack / Webプッシュで知らせる。
+ここでは、有効にする条件と Slack App の設定、トラブル対応をまとめる。
+
+- 通知は非同期に送る。送信に失敗してもチケットの操作は失敗しない
 - 操作した本人には通知しない
 - 文面は宛先ユーザーの言語で組み立てる。Slack チャンネル宛は既定の言語(`DEFAULT_LOCALE`)に固定
 
 関連するドキュメント:
 
-- 利用者の設定方法: [user-guide.md](user-guide.md#通知)
+- 利用者の設定方法: [user-guide.md](../guide/user-guide.md#通知)
 - 環境変数の設定: [installation.md](installation.md#slack連携) / [installation.md](installation.md#webプッシュ通知)
-- 仕組み・実装(開発者向け): [notifications-internals.md](notifications-internals.md)
+- 仕組み・実装(開発者向け): [notifications-internals.md](../dev/notifications-internals.md)
+
+## Slack 連携を使えるようにする
+
+Slack DM 通知・ボードごとのチャンネル通知・チケットURLの展開を使うまでの流れ。
+Slack から到達できる公開 HTTPS のドメインが必要で、`localhost` の環境では使えない。
+
+1. **Slack App を作る** — [`slack/manifest.yaml`](https://github.com/playree/devuntu/blob/main/slack/manifest.yaml) をダウンロードし、
+   `devuntu.example.com` を `BETTER_AUTH_URL` のホスト名に置き換える。<https://api.slack.com/apps> → Create New App →
+   **From a manifest** に貼り付けて作成し、ワークスペースへインストールする
+2. **値を控える** — 作成したアプリの画面から次の値を控える
+
+   | Slack の画面                                             | 環境変数               |
+   | -------------------------------------------------------- | ---------------------- |
+   | Basic Information → App Credentials → Client ID          | `SLACK_CLIENT_ID`      |
+   | Basic Information → App Credentials → Client Secret      | `SLACK_CLIENT_SECRET`  |
+   | Basic Information → App Credentials → Signing Secret     | `SLACK_SIGNING_SECRET` |
+   | OAuth & Permissions → Bot User OAuth Token(`xoxb-`)      | `SLACK_BOT_TOKEN`      |
+   | ワークスペースID(`T...`。任意。他のワークスペースを拒否) | `SLACK_TEAM_ID`        |
+
+3. **環境変数を設定する** — `docker compose run --rm tools setup-env` の Slack 連携の質問で入力するか、
+   `.env.docker` へ書く。`docker compose up -d` で作り直して反映する
+4. **管理者が有効にする** — `/admin/settings` で「Slack連携を有効にする」を ON にする。
+   使えるユーザーを絞る場合は「Slack連携を許可するグループ」を指定する(空なら全ユーザー)
+5. **利用者が連携する** — 各自が `/account` の「Slackアカウントと連携」から連携する
+   (Slack のメールアドレスが Devuntu のものと一致している必要がある)
+6. **チャンネルへ招待する** — チャンネル通知やリンクの展開を使うチャンネルで `/invite @Devuntu` を実行する
+
+Event Subscriptions の Request URL が **Verified** になっていることも確認する([Slack App側の設定](#slack-app側の設定))。
 
 ## イベントとチャネル
 
 宛先は 2 種類ある。個人宛(DM)は各ユーザーが `/account` の「通知設定」で、
-Slack チャンネル宛はボードの管理者が `/boards/[id]/settings` の「チャネル通知」で選ぶ。
+Slack チャンネル宛はボードのオーナーか管理者がボード設定の「チャネル通知」で選ぶ。
 
 | イベント                         | 個人宛(メール / Slack DM / Webプッシュ) | Slack チャンネル宛 |
 | -------------------------------- | --------------------------------------- | ------------------ |
@@ -87,7 +122,7 @@ Slack DM は、次の 3 段がすべて揃ったユーザーにだけ届く。
 
 ## ボードごとのチャネル通知
 
-チームボードの出来事を Slack チャンネルへ投稿する。`/boards/[id]/settings` の「チャネル通知」で、
+チームボードの出来事を Slack チャンネルへ投稿する。ボード設定の「チャネル通知」で、
 「通知先チャンネル」を 1 つと「通知するイベント」(チケット作成 / チケット完了 / チケットの担当者変更 / エージェント実行結果)を選ぶ。
 
 - 設定できるのはボードのオーナーと管理者。プライベートボードには無い
@@ -126,8 +161,9 @@ AIエージェント([agent-runner.md](agent-runner.md))の実行が終了した
 
 ## Slack App側の設定
 
-アプリの定義は `slack/manifest.yaml` にある。<https://api.slack.com/apps> の **From a manifest** に貼り付けて作成する
-(既存アプリには App Manifest 画面から反映する)。ホスト名の置き換えと、取得した値をどの環境変数へ入れるかはファイル冒頭のコメントを参照。
+アプリの定義は [`slack/manifest.yaml`](https://github.com/playree/devuntu/blob/main/slack/manifest.yaml) にある。
+作り方は [Slack 連携を使えるようにする](#slack-連携を使えるようにする) を参照(既存アプリには App Manifest 画面から反映する)。
+マニフェストの主な項目は次のとおり。
 
 | マニフェストの項目                                           | 用途                                              |
 | ------------------------------------------------------------ | ------------------------------------------------- |
@@ -171,5 +207,5 @@ Slack に貼られたチケットURL(`/t/<表示ID>` または `/tickets/<チケ
 | チャンネルへ投稿されない                       | ボード設定で通知先とイベントの両方を選んだか / Bot が招待されているか / 投稿が制限されたチャンネルでないか(アプリのログに warn が出る)/ `SLACK_BOT_TOKEN`                                       |
 | リンクが展開されない                           | `LOG_LEVEL=debug` にして `slack unfurl skipped` の `reason` を見る(`bot is not in the channel` / `unlinked user` / `no ticket url` / `no viewable ticket`)。オリジン不一致なら `baseUrl` も出る |
 | 投入側と配信側のどちらで止まっているか         | `NOTIFY_WORKER_ENABLED=false` にすると通知はキューへ溜まるだけになる。溜まり方で切り分ける                                                                                                      |
-| 届かない通知の状態を見たい                     | [operations.md の「通知キューの確認」](operations.md#通知キューの確認)で、キューの行の状態から止まった段階を調べる                                                                              |
+| 届かない通知の状態を見たい                     | DB のキューの行から止まった段階を調べる(開発者向け: [通知キューの確認](../dev/notifications-internals.md#通知キューの確認))                                                                     |
 | Web プッシュが特定の端末にだけ届かない         | その端末で再登録する。失効した登録は自動で消える。iPhone / iPad は [iOS / iPadOS の制約](#ios--ipados-の制約)を確認する                                                                         |

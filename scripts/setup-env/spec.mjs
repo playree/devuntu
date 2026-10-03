@@ -1,7 +1,7 @@
 /**
  * セルフホスト用の設定ファイルを組み立てるための定義と純関数群。
  *
- * 変数の必須・既定値は `src/lib/env-util.ts` と `docs/environment-variables.md` に合わせている。
+ * 変数の必須・既定値は `src/lib/env-util.ts` と `docs/admin/environment-variables.md` に合わせている。
  * `@/` エイリアスは Node ランタイムで解決できないため、`backup-s3.mjs` と同様に
  * アプリのモジュールは読まず、同名の環境変数として定義を持たせている。
  * fs も process も触らないので、そのままテストできる。
@@ -40,7 +40,7 @@ const localizedSection = (titleKey, keys) => ({
   keys,
 })
 
-/** `.env.docker` のセクション構成。`docs/environment-variables.md` の見出しと揃えている */
+/** `.env.docker` のセクション構成。`docs/admin/environment-variables.md` の見出しと揃えている */
 export const ENV_DOCKER_SECTIONS = [
   localizedSection('section_basic', [
     'DEFAULT_LOCALE',

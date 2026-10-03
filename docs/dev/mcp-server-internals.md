@@ -13,7 +13,8 @@
 # MCP サーバーの仕組み(開発者向け)
 
 MCP サーバーの認証の振り分け・ツールの入力仕様・実装上の判断をまとめる。
-クライアントの登録手順・ツール一覧・トークンの運用(利用者・運用者向け)は [mcp-server.md](mcp-server.md) を参照。
+クライアントの登録手順(利用者向け)は [ai.md](../guide/ai.md#aiツールからつなぐmcp)、公開設定とトークンの運用(運用者向け)は
+[mcp-server.md](../admin/mcp-server.md)、ツールの一覧は [mcp-tools.md](mcp-tools.md) を参照。
 エージェント専用のツールの詳細は [agent-runner-internals.md](agent-runner-internals.md#エージェント専用の-mcp-ツール) にある。
 
 ## 認証の振り分け
@@ -113,7 +114,7 @@ MCP サーバーの認証の振り分け・ツールの入力仕様・実装上�
   - GitLab: `<インスタンスの URL>/<プロジェクトのパス>/-/` に続く `merge_requests/<番号>` / `tree/<ブランチ名>` / `commit/<SHA>`。
     インスタンスはサーバーの `GITLAB_URLS` に書いたものだけ
 - `get_ticket` の `links` に、紐付けた一覧が `provider`(`github` / `gitlab`)、PR の状態(`prState`)、CI の結果(`ci`)付きで返る。
-  状態と CI はボードに対応付けたリポジトリの Webhook で更新される([user-guide.md](user-guide.md) の「関連リンク」)
+  状態と CI はボードに対応付けたリポジトリの Webhook で更新される([user-guide.md](../guide/user-guide.md) の「関連リンク」)
 - `get_ticket` の `activities` に、直近20件の変更履歴が新しい順で返る。各要素は `field`(`created` / `title` / `content` /
   `status` / `priority` / `dueDate` / `assignee` / `tags` / `criteria`)、`actorName`、`source`(`user` / `merge`)、
   `before` / `after`、`createdAt`。`before` / `after` は要約で、担当・タグは名前、本文は先頭100文字の抜粋、
@@ -190,7 +191,7 @@ AIエージェント用ユーザーは `User.isAgent` が立ったユーザー�
 
 - 添付先のボードを省略させないのは、ボードに属さない添付は全ログインユーザーが読めてしまうため(MCP からは作らせない)。
   `ticketId` を指定した場合は、そのチケットを編集できることを確認してからボードを決める
-- 添付の可視判定は `Attachment.boardId` で行う。本文の保存時に付け替える条件は [mcp-server.md](mcp-server.md#制限) を参照
+- 添付の可視判定は `Attachment.boardId` で行う。本文の保存時に付け替える条件は [mcp-tools.md](mcp-tools.md#制限) を参照
 
 アップロードトークン:
 

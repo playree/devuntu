@@ -12,7 +12,7 @@
 
 - [ ] `pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm build` が通る
 - [ ] 修正したファイルに `pnpm exec prettier --write` をかけた
-- [ ] 機能・仕様の変更に合わせてドキュメント(`README.md` / `README.en.md` / `docs/*.md`)を更新した
+- [ ] 機能・仕様の変更に合わせてドキュメント(`README.md` / `README.en.md` / `docs/**/*.md`)を更新した
 - [ ] UI を変更した場合、スマホレイアウトも確認した
 - [ ] Prismaスキーマ(`prisma/schema/*.prisma`)を変更した場合、`pnpm generate` とマイグレーションを含めた
 - [ ] better-auth を更新した場合、要求されるテーブル定義に変更が無いか確認した

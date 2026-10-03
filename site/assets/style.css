@@ -166,6 +166,36 @@ h3 {
   font-size: 0.95rem;
 }
 
+.docs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.docs a {
+  display: block;
+  height: 100%;
+  padding: 16px 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-muted);
+  text-decoration: none;
+}
+
+.docs a:hover,
+.docs a:focus-visible {
+  border-color: var(--accent);
+}
+
+.docs p {
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: 0.95rem;
+}
+
 .footer {
   margin-top: 64px;
   padding: 24px 0;

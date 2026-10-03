@@ -1,4 +1,5 @@
 - [環境変数](#環境変数)
+  - [用途別の早見表](#用途別の早見表)
   - [基本](#基本)
   - [認証](#認証)
   - [通知](#通知)
@@ -11,16 +12,37 @@
 
 # 環境変数
 
-セルフホストで設定する環境変数の一覧(運用者向け)。定義元・参照方法・開発専用の変数は
-[development.md](development.md#環境変数の実装) を参照。
+> **対象**: Devuntu を導入・運用する人
+>
+> - 起動に必要な変数は `docker compose run --rm tools setup-env` が対話で尋ねて `.env.docker` へ書く
+> - 連携を足すときは、下の[早見表](#用途別の早見表)で必要な変数を確かめる
+> - 変更は `docker compose up -d` で反映する(`docker compose restart` では読み直されない)
+
+セルフホストで設定する環境変数の一覧。定義元・参照方法・開発専用の変数(開発者向け)は
+[development.md](../dev/development.md#環境変数の実装) を参照。
 
 セルフホスト用の `.env.docker` は `docker compose run --rm tools setup-env` で対話生成できる
-([installation.md](./installation.md#2-設定ファイルの作成))。尋ねるのは起動に必要な変数で、
+([installation.md](installation.md#2-設定ファイルの作成))。尋ねるのは起動に必要な変数と連携の設定で、
 導入時に判断の必要がない変数は尋ねない。尋ねない変数はこのファイルを見て
-`.env.docker` へ直接書く(既に値があれば再実行しても引き継がれる)。値の変更は再起動で反映される。
+`.env.docker` へ直接書く(既に値があれば再実行しても引き継がれる)。
 
 真偽値の変数は `true` / `false`(大文字小文字は問わない)だけを受け付ける。`1` や綴り違い、
 整数でない値(`abc` / `1.5` など)、範囲外の数値は読み取り時にエラーになる。
+
+## 用途別の早見表
+
+| やりたいこと                          | 設定する変数                                                                                                   | あわせて必要な操作                                                                                                        |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| 起動する(最小構成)                    | `DATABASE_URL` / `BETTER_AUTH_URL` / `BETTER_AUTH_SECRET` / `S3_*` / `MAIL_*`                                  | `setup-env` がすべて尋ねる                                                                                                |
+| Google でサインイン・カレンダー       | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_ALLOWED_DOMAINS`                                         | サインインは変数だけで有効。カレンダーを使うなら `/admin/settings` で有効化([手順](installation.md#googleアカウント連携)) |
+| Slack 通知・リンクの展開              | `SLACK_CLIENT_ID` / `SLACK_CLIENT_SECRET` / `SLACK_BOT_TOKEN` / `SLACK_SIGNING_SECRET`(任意で `SLACK_TEAM_ID`) | Slack App の作成と `/admin/settings` での有効化([手順](notifications.md#slack-連携を使えるようにする))                    |
+| Webプッシュ通知                       | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`                                                                       | `setup-env` が生成できる                                                                                                  |
+| GitLab 連携                           | `GITLAB_URLS`                                                                                                  | ボード設定で対応付け([手順](git-integration.md))                                                                          |
+| GitHub 連携                           | 不要                                                                                                           | ボード設定で対応付け([手順](git-integration.md))                                                                          |
+| MCP クライアントのブラウザ認可(DCR)   | `OIDC_DCR_ENABLED=true`                                                                                        | トークンでの接続だけなら不要([mcp-server.md](mcp-server.md))                                                              |
+| リモート実行                          | `COMMAND_EXEC_ENABLED=true`                                                                                    | 定義ファイル・SSH 鍵の配置とアサイン([command-exec.md](command-exec.md))                                                  |
+| 別の Devuntu のアカウントでサインイン | `MAIN_DEVUNTU_URL` / `MAIN_DEVUNTU_CLIENT_ID` / `MAIN_DEVUNTU_CLIENT_SECRET`                                   | 連携元の Devuntu の `/admin/oidc-clients` でクライアントを登録                                                            |
+| ダッシュボードに転送量を出す(Linode)  | `LINODE_ID` / `LINODE_PERSONAL_ACCESS_TOKEN`                                                                   | -                                                                                                                         |
 
 ## 基本
 
@@ -69,7 +91,7 @@
 | `DISABLE_PASSWORD_AUTH`        | パスワード認証を無効化                                                                                                |      | `false`           |
 | `OIDC_DCR_ENABLED`             | 動的クライアント登録を有効化                                                                                          |      | `false`           |
 | `MCP_REFRESH_TOKEN_EXPIRES_IN` | MCP リフレッシュトークンの有効期間(秒)                                                                                |      | `15552000`(180日) |
-| `MAIN_DEVUNTU_URL`             | 連携元 Devuntu の URL                                                                                                 |      | -                 |
+| `MAIN_DEVUNTU_URL`             | 連携元 Devuntu の URL(別の Devuntu を IdP にしてサインインさせる場合)                                                 |      | -                 |
 | `MAIN_DEVUNTU_CLIENT_ID`       | 連携元クライアントID                                                                                                  |      | -                 |
 | `MAIN_DEVUNTU_CLIENT_SECRET`   | 連携元クライアントシークレット                                                                                        |      | -                 |
 | `GOOGLE_CLIENT_ID`             | Google OAuth クライアントID                                                                                           |      | -                 |
@@ -103,7 +125,7 @@
 - VAPID 鍵は Web プッシュ通知を使う場合のみ必要で、**公開鍵と秘密鍵の両方**が無いと購読 UI ごと出ない。
   `VAPID_SUBJECT` を省略し `MAIL_FROM` も未設定なら `mailto:devuntu@example.com` になる
 
-鍵の生成は [installation.md](./installation.md#webプッシュ通知)、通知の仕組みは [notifications.md](./notifications.md) を参照。
+鍵の生成は [installation.md](installation.md#webプッシュ通知)、通知の仕組みは [notifications.md](notifications.md) を参照。
 
 ## メンテナンス
 
@@ -120,7 +142,7 @@
 - 添付の削除は取り消せないため、`MAINTENANCE_ATTACHMENT_MODE=dry-run` で対象をログで確かめてから `delete` にできる
 - `AGENT_RUN_KEEP` は **100 未満を指定すると起動時に失敗する**。実行履歴を減らしても、月ごとの利用量と予算上限の判定には影響しない
 
-対象と保持の詳細は [自動メンテナンス](./operations.md#自動メンテナンス)を参照(リモート実行の履歴は[リモート実行](#リモート実行)の変数)。
+対象と保持の詳細は [自動メンテナンス](operations.md#自動メンテナンス)を参照(リモート実行の履歴は[リモート実行](#リモート実行)の変数)。
 
 ## メンテナンスモード
 
@@ -131,7 +153,7 @@
 - 前節の[メンテナンス](#メンテナンス)(掃除)とは別物で、リストア中に全アクセスを遮断するモード。**ファイルがあれば遮断中**
 - 既定のままなら `tools maintenance on|off` と同じファイルを指す。置き場を変える場合は切り替え側の `--file` も合わせる
 
-切り替え方とフラグの置き場は [メンテナンスモード](./operations.md#メンテナンスモード)を参照。
+切り替え方とフラグの置き場は [メンテナンスモード](operations.md#メンテナンスモード)を参照。
 
 ## リモート実行
 
@@ -152,8 +174,8 @@
   `COMMAND_MAX_CONCURRENT` は同時に張る SSH 接続の数になるので控えめにする
 - `COMMAND_WORKER_ENABLED=false` にすると待ち行列に積まれるだけで実行されない(切り分け用)
 
-マウントの構成とリバースプロキシの設定は [installation.md](./installation.md#リモート実行)、定義ファイル・SSH の準備・
-権限は [command-exec.md](./command-exec.md)、履歴の掃除は [自動メンテナンス](./operations.md#自動メンテナンス)を参照。
+マウントの構成とリバースプロキシの設定は [installation.md](installation.md#リモート実行)、定義ファイル・SSH の準備・
+権限は [command-exec.md](command-exec.md)、履歴の掃除は [自動メンテナンス](operations.md#自動メンテナンス)を参照。
 
 ## メール
 

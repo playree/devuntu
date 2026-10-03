@@ -22,13 +22,14 @@
   - [Slackでのチケットリンクのプレビュー](#slackでのチケットリンクのプレビュー)
     - [展開されるのはアプリが参加している会話だけ](#展開されるのはアプリが参加している会話だけ)
     - [リクエストの検証](#リクエストの検証)
+  - [通知キューの確認](#通知キューの確認)
   - [トリガー・チャネルを増やす場合](#トリガーチャネルを増やす場合)
 
 # 通知の仕組み(開発者向け)
 
 通知のキュー・トリガー・各チャネルの送信の作りと、実装上の判断をまとめる。
-有効にする条件・Slack App の設定・トラブル対応(運用者向け)は [notifications.md](notifications.md)、
-利用者の設定方法は [user-guide.md](user-guide.md#通知) を参照。
+有効にする条件・Slack App の設定・トラブル対応(運用者向け)は [notifications.md](../admin/notifications.md)、
+利用者の設定方法は [user-guide.md](../guide/user-guide.md#通知) を参照。
 
 通知は宛先の決まり方で 2 種類に分かれる。
 
@@ -202,7 +203,7 @@ SELECT が増えることはない。
 
 ## メール通知
 
-有効になる条件(`MAIL_SEND`)は [notifications.md](notifications.md#メール通知の前提) を参照。宛先は `User.email`。
+有効になる条件(`MAIL_SEND`)は [notifications.md](../admin/notifications.md#メール通知の前提) を参照。宛先は `User.email`。
 
 - `MAIL_SEND` 未設定の環境では `isMailConfigured()`(`src/lib/mail.ts`)が false になり、**通知メールは送信を試みずスキップされる**(OTP メールなど他の送信は `Unable to send email` エラーになる)
 - 1 通ずつ送信し、1 通の失敗で残りの宛先を巻き添えにしない(失敗した配信だけが再試行に回る)
@@ -230,7 +231,7 @@ SELECT が増えることはない。
 
 ## Slack DM
 
-届く条件(環境変数・管理者による有効化・本人の連携の 3 段)は [notifications.md](notifications.md#slack通知の前提) を参照。
+届く条件(環境変数・管理者による有効化・本人の連携の 3 段)は [notifications.md](../admin/notifications.md#slack通知の前提) を参照。
 どれかを満たさない相手は宛先から自然に消えるだけで、エラーにはならない。
 
 - 環境変数の判定は `hasSlackCredentials()`(`src/lib/slack/slack-account.ts`)
@@ -243,7 +244,7 @@ SELECT が増えることはない。
 
 ## Webプッシュ通知
 
-届く条件(VAPID 鍵・端末の購読・通知 ON の 3 段)は [notifications.md](notifications.md#webプッシュ通知の前提) を参照。
+届く条件(VAPID 鍵・端末の購読・通知 ON の 3 段)は [notifications.md](../admin/notifications.md#webプッシュ通知の前提) を参照。
 
 - 購読の登録・解除は `/account` の「通知設定」内にある「Webプッシュ通知」(`webpush.tsx`)。
   チェックボックスを有効にする手段なので、通知設定と同じセクションに置いている
@@ -291,7 +292,7 @@ PWA manifest は `src/app/manifest.ts`(`display: 'standalone'`、アイコンは
 
 ### iOS / iPadOS の判定
 
-対応する OS と起動方法の制約は [notifications.md](notifications.md#ios--ipados-の制約) を参照。
+対応する OS と起動方法の制約は [notifications.md](../admin/notifications.md#ios--ipados-の制約) を参照。
 
 - Safari のタブでは `window.PushManager` が存在しない(ホーム画面に追加した standalone 起動の場合だけある)
 - 権限の要求は**ユーザー操作(クリック)から直接**呼ばないと拒否される
@@ -318,8 +319,8 @@ PWA manifest は `src/app/manifest.ts`(`display: 'standalone'`、アイコンは
 
 ## エージェント実行結果の通知
 
-AIエージェントの自動運用([agent-runner.md](agent-runner.md))は無人で動くため、実行履歴を見に行かないと結果が分からない。
-宛先と文面の種類(運用者向け)は [notifications.md](notifications.md#エージェント実行結果の通知) を参照。
+AIエージェントの自動運用([agent-runner.md](../admin/agent-runner.md))は無人で動くため、実行履歴を見に行かないと結果が分からない。
+宛先と文面の種類(運用者向け)は [notifications.md](../admin/notifications.md#エージェント実行結果の通知) を参照。
 宛先は 2 つあり、1 回の発生から両方へ展開される。
 
 | 宛先             | 誰に届くか                               | 設定                               |
@@ -392,7 +393,7 @@ DM は `ticketRequesterIds()`(エージェント用ユーザーは DM を読ま�
 
 Slack に貼られたチケットURLを、Slack Events API の `link_shared` を受けて
 `chat.unfurl` でカード表示に展開する(`src/app/api/slack/events/route.ts` → `src/lib/slack/slack-unfurl.ts`)。
-Slack App 側の設定(マニフェスト・スコープ・Request URL)は [notifications.md](notifications.md#slack-app側の設定) を参照。
+Slack App 側の設定(マニフェスト・スコープ・Request URL)は [notifications.md](../admin/notifications.md#slack-app側の設定) を参照。
 
 サイト側は認証必須のままなので、未認証の Slack クローラに OGP を読ませる方式は採れない。
 代わりに **リンクを貼った本人の閲覧権限をサーバー側で検証してから展開する**。
@@ -430,7 +431,7 @@ Slack は `links:read` があると **アプリが参加していない公開チ
 展開されない場合は `slack unfurl skipped` のデバッグログに止まった段階が `reason` で出る
 (`bot is not in the channel` / `unlinked user` / `no ticket url` / `no viewable ticket`。
 オリジン不一致なら `baseUrl` も出る)。動作確認の方法と見方は
-[notifications.md](notifications.md#slackでのチケットリンクのプレビュー) を参照。
+[notifications.md](../admin/notifications.md#slackでのチケットリンクのプレビュー) を参照。
 
 ### リクエストの検証
 
@@ -440,6 +441,41 @@ Slack の署名(`src/lib/slack/slack-signature.ts`)だけが門番になるの�
 - 署名は**生ボディ**に対して計算されるため、`request.text()` で読んでから検証する(`request.json()` を先に呼ぶと一致しない)
 - タイムスタンプが 5 分以上ずれたリクエストは、署名が正しくてもリプレイとして拒否する
 - Slack は 3 秒以内の応答を要求するため、200 を返したあと `after()` の中でチケットを照会して `chat.unfurl` を呼ぶ
+
+## 通知キューの確認
+
+届かない通知は、キューの行の状態を見れば止まった段階が分かる。運用者向けの症状別の確認は
+[notifications.md](../admin/notifications.md#詰まったときに見る場所) を参照。
+
+```sh
+# 試行回数を使い切った配信を数える
+docker compose exec -T db psql -U devuser -d devuntu \
+  -c "SELECT channel, \"lastError\", count(*) FROM notify_delivery WHERE status = 'failed' GROUP BY 1, 2"
+
+# 打ち切って未処理へ戻した配信(再試行では直らないもの)
+docker compose exec -T db psql -U devuser -d devuntu \
+  -c "SELECT channel, \"lastError\", count(*) FROM notify_delivery WHERE status = 'pending' AND \"lastError\" IS NOT NULL GROUP BY 1, 2"
+
+# 展開されないまま溜まっている発生記録
+docker compose exec -T db psql -U devuser -d devuntu \
+  -c "SELECT status, count(*), min(\"createdAt\") FROM notify_outbox GROUP BY 1"
+```
+
+- `notify_delivery` に `failed` が溜まっている : 試行回数を使い切っている。`lastError` の分類
+  (`retryable` なら送信先の障害、`rate_limited` なら流量の超過)で切り分ける
+- `notify_delivery` の `lastError` が `revoked` : 認証情報が失効している。再試行では直らないので
+  `pending` のまま残り続ける(`failed` にはならない)。見る先は `channel` で変わり、`slack` なら
+  `SLACK_BOT_TOKEN`、`webpush` なら VAPID 鍵(`VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`)を確認する
+- `notify_outbox` に `pending` が溜まっている : ワーカーが回っていない。`NOTIFY_WORKER_ENABLED` と
+  起動ログ(`notify worker started`)を確認する
+- `notify_outbox` の `failed` : ペイロードが壊れている(アプリのバージョン差など)。保持期間を過ぎれば自動で消える
+  (保持期間は行の作成時刻ではなく `failedAt` から数えるので、ワーカーを長く止めた後に失敗した分も原因を追える)
+- 送信できた配信は行ごと消えるので、**空であることが正常**。送信の記録はアプリログ側に残る
+- Web プッシュが届かない場合は `web_push_subscription` に端末の行があるかを見る。
+  失効(`404` / `410`)を返した購読は自動で消えるので、行が無ければ利用者に再登録してもらう
+
+行が溜まったまま原因が解消できない場合、削除して差し支えない(通知は再送されないだけで、
+チケットの内容には影響しない)。
 
 ## トリガー・チャネルを増やす場合
 

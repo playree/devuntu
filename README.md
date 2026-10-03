@@ -16,7 +16,13 @@ Devuntu は、かんばん形式のボード/チケット管理を中心に、
 カレンダー連携、メール/Slack/Webプッシュ通知、MCP/AIエージェント連携、リモート実行などを備えた
 セルフホスト型の開発サーバー構築ツールです。
 
-個人・少数チーム開発をするうえで、自分が開発する上で欲しいと思った機能を形にしたものになります。  
+- シンプルなチケット＆かんばんボードが欲しい
+- Claude Codeを利用してプラン作成→実装と進めた際に、プランや実装結果を残したかった
+- AIエージェントを担当のように扱いたい（チケットの割り当てで対応を開始する）
+- 各種通知はSlackに欲しい
+- GitHub / GitLab(セルフホスト)と連携させたい
+
+など、個人・少数チーム開発をするうえで、自分が開発する上で欲しいと思った機能を形にしたものになります。  
 なので、連携機能(サービス)も自分が普段使っているものがメインとなっています。(Claude / GitHub / GitLab / Slack / Googleアカウント)  
 開発中にAI開発が普及してきたこともあり、AI開発にも最適化しています。
 
@@ -40,11 +46,13 @@ DevuntuのAIエージェント向けの機能も、この(人による確認を�
 - [Devuntu](#devuntu)
   - [できること](#できること)
   - [設計・開発方針](#設計開発方針)
+  - [ドキュメント](#ドキュメント)
 - [導入者向け](#導入者向け)
   - [構成](#構成)
   - [導入の流れ](#導入の流れ)
   - [外部サービス連携](#外部サービス連携)
   - [運用](#運用)
+    - [メンテナンスモードでフルバックアップを取得してから、Devuntuを最新版にアップグレードする場合](#メンテナンスモードでフルバックアップを取得してからdevuntuを最新版にアップグレードする場合)
   - [環境変数](#環境変数)
 - [利用者向け](#利用者向け)
   - [ボードとチケット](#ボードとチケット)
@@ -52,8 +60,10 @@ DevuntuのAIエージェント向けの機能も、この(人による確認を�
   - [表示言語](#表示言語)
   - [通知](#通知)
   - [AIとの連携](#aiとの連携)
-    - [MCPクライアントから使う](#mcpクライアントから使う)
-    - [エージェントに任せる](#エージェントに任せる)
+    - [MCPサーバー](#mcpサーバー)
+    - [AIエージェント](#aiエージェント)
+    - [AI向けの共通インプット定義](#ai向けの共通インプット定義)
+    - [Devuntu Agentのセットアップ](#devuntu-agentのセットアップ)
     - [承認](#承認)
   - [リモート実行](#リモート実行)
 - [開発者向け](#開発者向け)
@@ -86,14 +96,24 @@ DevuntuのAIエージェント向けの機能も、この(人による確認を�
 
 ## 設計・開発方針
 
-- シンプルな機能やUI  
+- **シンプルな機能やUI**  
   まずは自分が使いやすいと思うものを実現する
-- 最新のライブラリやフレームワークを利用  
+- **最新のライブラリやフレームワークを利用**  
   開発のプロトタイプとしての側面を持つ
-- AI開発に最適化  
+- **AI開発に最適化**  
   後付け的なMCPとかでは無く、最初からAI開発を前提とした機能設計
-- アップデートの継続  
+- **アップデートの継続**  
   出来る限りアップデートを続けていきます
+
+## ドキュメント
+
+読む人に合わせて分けています。入口は [docs/README.md](docs/README.md) です。
+
+| 読む人                                       | まず読むもの                                     | 一覧                               |
+| -------------------------------------------- | ------------------------------------------------ | ---------------------------------- |
+| 使う人(チケットを書く・見る・AIに任せる)     | [はじめに](docs/guide/getting-started.md)        | [利用者向け](docs/guide/README.md) |
+| 立てる人・管理する人(導入・運用・管理者)     | [導入(セルフホスト)](docs/admin/installation.md) | [運用者向け](docs/admin/README.md) |
+| 作る人(Devuntu 自体の開発・コントリビュート) | [開発](docs/dev/development.md)                  | [開発者向け](docs/dev/README.md)   |
 
 # 導入者向け
 
@@ -120,7 +140,7 @@ Docker Compose で3つのサービスを起動します(`compose.yaml`)。
 4. `<BETTER_AUTH_URL>/start` を開いて最初の管理者を登録する
 5. 必要に応じて Google / Slack / MCP / AIエージェントの連携を設定する
 
-手順の詳細と注意点は [docs/installation.md](docs/installation.md) を参照。
+手順の詳細と注意点は [docs/admin/installation.md](docs/admin/installation.md)、導入後にやることは [docs/admin/README.md](docs/admin/README.md#導入後にやること) を参照。
 
 ## 外部サービス連携
 
@@ -134,13 +154,13 @@ Docker Compose で3つのサービスを起動します(`compose.yaml`)。
 | Webプッシュ    | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`                         | ブラウザ / スマートフォンへのプッシュ通知                              |
 | GitHub         | 不要(ボード設定で対応付けごとにシークレットを発行)               | PR の状態・CI の反映、マージでの自動完了、エージェントへの自動差し戻し |
 | GitLab         | `GITLAB_URLS`                                                    | MR の状態・CI の反映、マージでの自動完了、エージェントへの自動差し戻し |
-| MCP            | `OIDC_DCR_ENABLED=true`                                          | MCPクライアントからの接続                                              |
+| MCP            | 不要(ブラウザでの認可も使うなら `OIDC_DCR_ENABLED=true`)         | MCPクライアントからの接続                                              |
 | AIエージェント | `/admin/agents` でのエージェント作成とトークン発行               | エージェントによるチケットの自動処理                                   |
 | リモート実行   | `COMMAND_EXEC_ENABLED=true` と定義ファイル / SSH鍵 / known_hosts | 画面からリモートサーバーでの定義済み処理の実行                         |
 
 ## 運用
 
-DB とアップロード画像は別々に保存されるため、バックアップは**必ず対で取得**します。
+DB とアップロード画像は別々バックアップ可能ですが、バックアップはセットでまとめて取得することをお勧めします。
 `docker compose run --rm tools full-backup` で両方を1つのディレクトリへまとめて取得でき、
 `full-restore` で対のまま復元できます(リポジトリを clone せずに実行できます)。
 `full-backup --maintenance` にすると、取得の間だけメンテナンスモードにして DB と画像のずれを無くせます
@@ -148,17 +168,31 @@ DB とアップロード画像は別々に保存されるため、バックア�
 
 リストア中は**メンテナンスモード**で全アクセスを遮断できます
 (`docker compose run --rm tools maintenance on|off`)。アプリを止めずに、利用者へは案内画面を返します。
-手順・定期実行は [docs/operations.md](docs/operations.md) を参照。
+手順・定期実行は [docs/admin/operations.md](docs/admin/operations.md) を参照。
 
 アップデートは `docker compose pull && docker compose up -d`。マイグレーションは起動時に自動適用されます。
 
+### メンテナンスモードでフルバックアップを取得してから、Devuntuを最新版にアップグレードする場合
+
+バックアップの取得からアップグレードの完了まで、メンテナンスモードで利用者を止めておきます
+(取得後の書き込みがバックアップに入らず、アップグレードに失敗して戻したときに失われるため)。
+
+```sh
+docker compose pull                                       # 先に新しいイメージを取得(利用者は止めない)
+docker compose run --rm tools maintenance on              # 利用者を止める
+docker compose run --rm tools full-backup --maintenance   # 接続が切れるのを待って取得(ON のまま)
+docker compose up -d --wait                               # 新しいイメージで起動(マイグレーションも自動)
+docker compose logs devuntu                               # 起動を確認してから解除する
+docker compose run --rm tools maintenance off
+```
+
 ## 環境変数
 
-環境変数の一覧は [docs/environment-variables.md](docs/environment-variables.md) を参照。
+環境変数の一覧は [docs/admin/environment-variables.md](docs/admin/environment-variables.md) を参照。
 
 # 利用者向け
 
-画面の使い方は [docs/user-guide.md](docs/user-guide.md) にまとめています。
+初めての方は [はじめに](docs/guide/getting-started.md)、画面の使い方は [docs/guide/user-guide.md](docs/guide/user-guide.md) にまとめています。
 
 ## ボードとチケット
 
@@ -180,7 +214,7 @@ Googleアカウントと連携すると、`/cal` で自分の予定を確認で�
 
 画面は日本語と英語に対応しています。サイドバーの `lang` から切り替えられ、ログイン中はアカウントに保存されます。
 初回はブラウザの言語に合わせ、日本語・英語のどちらでもなければ環境変数 `DEFAULT_LOCALE`(未設定なら英語)で表示します。
-ほかの言語の追加手順は [CONTRIBUTING.md](CONTRIBUTING.md#言語の追加) を参照(翻訳の Pull Request を歓迎します)。
+ほかの言語の追加手順は [CONTRIBUTING.md](CONTRIBUTING.md#言語の追加) を参照。
 
 ## 通知
 
@@ -194,13 +228,13 @@ Googleアカウントと連携すると、`/cal` で自分の予定を確認で�
 チームボードでは、チケットの作成・完了・担当者の変更・エージェントの実行結果を Slack チャンネルへ流せます。
 また Slack に貼られたチケットURLは、閲覧権限を確認した上でカード表示に展開されます。
 
-Slack App の設定などは [docs/notifications.md](docs/notifications.md)、実装の詳細は [docs/notifications-internals.md](docs/notifications-internals.md) を参照。
+Slack App の設定などは [docs/admin/notifications.md](docs/admin/notifications.md)、実装の詳細は [docs/dev/notifications-internals.md](docs/dev/notifications-internals.md) を参照。
 
 ## AIとの連携
 
 DevuntuはMCPサーバーの単純な提供だけでなく、AI開発に適した形で提供します。
 
-### MCPクライアントから使う
+### MCPサーバー
 
 `/api/mcp` へ接続すると、自分の権限でチケットの検索・作成・更新ができます。  
 コメントを、プラン(`type=plan`)や報告書(`type=report`)として投稿できるようになっており、対応内容を確認し易くなっています。
@@ -210,11 +244,11 @@ DevuntuはMCPサーバーの単純な提供だけでなく、AI開発に適し�
 - チケットに受け入れ条件があれば、対応後に条件ごとの充足と根拠を自己申告として記録します(`report_acceptance_criteria`)。
 - チケットの作成時にボードのチケットテンプレートを指定でき、ボードの「AI向けコンテキスト」はチケットやボードの取得時に `boardContext` として届きます。
 
-登録手順と仕組みは [docs/mcp-server.md](docs/mcp-server.md) を参照
+つなぎ方と使い方は [docs/guide/ai.md](docs/guide/ai.md)、公開設定とトークンの運用は [docs/admin/mcp-server.md](docs/admin/mcp-server.md) を参照
 
-### エージェントに任せる
+### AIエージェント
 
-エージェントを担当者にし、チケットの「エージェントモード」を選ぶと、設定したAIエージェントのCLI が自動起動して対応をおこないます。
+AIエージェントを担当者にし、チケットの「エージェントモード」を選ぶと、設定したAIエージェントのCLI が自動起動して対応をおこないます。
 
 - **エージェントモード：自動実行**  
   チケットの内容をAIエージェントが自動で処理します。  
@@ -232,13 +266,44 @@ DevuntuはMCPサーバーの単純な提供だけでなく、AI開発に適し�
 - **自動差し戻し**  
   ボード設定で有効にすると、紐付いた PR / MR の CI の失敗やレビュー指摘を受けて、報告済みのチケットをエージェントへ自動で差し戻します。
 
-使い方は [docs/user-guide.md](docs/user-guide.md#エージェントにチケットを任せる) を参照
+詳しい使い方は [docs/guide/ai.md](docs/guide/ai.md#エージェントにチケットを任せる) を参照
+
+### AI向けの共通インプット定義
+
+AI向けにインプットできる共通定義を2種類用意しています。
+
+- **AI向けコンテキスト**  
+  これはボード単位で持てる情報です。  
+  MCP/エージェント両方でチケットを処理する際に読み込むので、両方に効きます。  
+  基本的にボード単位のルールなどを記載します。
+- **カスタム指示**  
+  これはエージェント単位に持てる情報です。  
+  特定のエージェントが処理をする際に読み込みます。  
+  エージェント単位での共通ルールなどを記載します。
+
+上記共通インプット定義と、プロジェクト(リポジトリ)配下の定義(`CLAUDE.md`/`AGENTS.md`など)、そしてチケット内容がチケット処理時のインプット内容となるので、これらを適切にご利用ください。
+
+### Devuntu Agentのセットアップ
+
+なるべく簡単にセットアップできるように整備しています。
+
+1. エージェントが稼働するインスタンスを用意する  
+   Ubuntuで独立したインスタンスを用意するのがおすすめ
+2. 用意したインスタンスに`Claude or Codex`のCLIをインストール
+3. DevuntuのMCPサーバーを登録
+4. そして、`devuntu のエージェントをセットアップして`と指示するだけです。  
+   対話式でセットアップすることができます。  
+   セットアップの途中でエージェント用のトークンが要求されますので、管理者画面から発行してください。
+5. あとは、必要に応じでエージェントの作業ディレクトリで開発できるように開発環境をセットアップしてください。  
+   Git操作が必要ならGitの設定や、DBが必要ならDBのセットアップなど。
+
+仕組みは至ってシンプルで、用意してあげたエージェント用の開発環境で、エージェントが定期的に自分担当のチケットをチェックし、対象チケットがあればその内容をヘッドレスモードで処理して、結果を報告するというだけです。
 
 > [!TIP]
 > エージェント側からDevuntuサーバーにポーリングする方式としている為、エージェント側にポート開放など特別な設定は不要です。  
 > エージェント側からDevuntuサーバーへ通信できる環境であれば利用できます。
 
-設置・運用は [docs/agent-runner.md](docs/agent-runner.md)、仕組みは [docs/agent-runner-internals.md](docs/agent-runner-internals.md) を参照
+設置・運用は [docs/admin/agent-runner.md](docs/admin/agent-runner.md)、仕組みは [docs/dev/agent-runner-internals.md](docs/dev/agent-runner-internals.md) を参照
 
 ### 承認
 
@@ -253,7 +318,7 @@ DevuntuはMCPサーバーの単純な提供だけでなく、AI開発に適し�
 コマンドへのパラメータは画面上から指定できるようになっています。  
 出力は実行中もリアルタイムで流れ、履歴として残ります。
 
-定義の書き方・SSHの準備・権限の考え方は [docs/command-exec.md](docs/command-exec.md) を参照。
+定義の書き方・SSHの準備・権限の考え方は [docs/admin/command-exec.md](docs/admin/command-exec.md) を参照。
 
 # 開発者向け
 
@@ -261,7 +326,7 @@ DevuntuはMCPサーバーの単純な提供だけでなく、AI開発に適し�
 
 - Node.js v24
 - Next.js v16
-- TypeScript v7(v6 と併存。詳細は[docs/development.md](docs/development.md#typescript-v7-と-v6-の併存)を参照)
+- TypeScript v7(v6 と併存。詳細は[docs/dev/development.md](docs/dev/development.md#typescript-v7-と-v6-の併存)を参照)
 - pnpm v12
 - Prisma v7
 - Better Auth v1.7
@@ -275,11 +340,12 @@ DevuntuはMCPサーバーの単純な提供だけでなく、AI開発に適し�
 ## 開発環境
 
 開発環境のセットアップ、ビルド、パッケージ管理、イメージ作成などの手順は
-[docs/development.md](docs/development.md) を参照。
+[docs/dev/development.md](docs/dev/development.md) を参照。
 
 ## 画面とアクセス制御
 
-画面一覧とアクセス制御の実装、および API のアクセス制御は [docs/screens.md](docs/screens.md) を参照。
+画面一覧とアクセス制御の実装、および API のアクセス制御は [docs/dev/screens.md](docs/dev/screens.md) を参照。
+機能ごとの仕組みは [docs/dev/README.md](docs/dev/README.md) に一覧があります。
 
 ## テスト・Lint
 
