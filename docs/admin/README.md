@@ -35,7 +35,8 @@ Devuntu を自分のサーバーに立てる人と、管理者として運用す
 6. **AI を使う**(任意) — 利用者に [AIとの連携](../guide/ai.md) を案内する。エージェントに任せるなら
    `/admin/agents` でエージェントを作り、[ランナーを設置する](agent-runner.md)
 
-アップデートは `docker compose run --rm tools full-backup --maintenance` の後に `docker compose pull && docker compose up -d`。
+アップデートは、メンテナンスモードで利用者を止めてバックアップを取り、止めたまま新しいイメージで起動する
+([手順](operations.md#まずはこれだけ))。
 
 ## 管理者の画面
 

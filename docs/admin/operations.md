@@ -41,11 +41,21 @@ docker compose run --rm tools full-backup
 # 復元(終わってもメンテナンスモードのままなので、確認してから解除する)
 docker compose run --rm tools full-restore backup/full_YYYYMMDD_HHMMSS
 docker compose run --rm tools maintenance off
-
-# アップデート(取得の間だけ利用者を止めてバックアップしてから、新しいイメージで起動する)
-docker compose run --rm tools full-backup --maintenance
-docker compose pull && docker compose up -d
 ```
+
+アップデートは、利用者を止めてバックアップを取り、止めたまま新しいイメージで起動する。
+
+```sh
+docker compose pull                                       # 先に新しいイメージを取得(利用者は止めない)
+docker compose run --rm tools maintenance on              # 利用者を止める
+docker compose run --rm tools full-backup --maintenance   # 接続が切れるのを待って取得(ON のまま)
+docker compose up -d --wait                               # 新しいイメージで起動(マイグレーションも自動)
+docker compose logs devuntu                               # 起動を確認してから解除する
+docker compose run --rm tools maintenance off
+```
+
+メンテナンス中は管理者も画面に入れないので、解除前の確認はログと `/api/health` で行う。
+取得の後も止めておくのは、取得後の書き込みがバックアップに入らず、アップデートに失敗して戻したときに失われるため。
 
 あとは[定期実行](#定期実行)で毎日のバックアップを cron に入れ、`backup/` を別のディスクやホストへ退避すれば最低限の運用になる。
 
@@ -356,10 +366,15 @@ docker compose run --rm tools maintenance off
 `seaweeddata` ボリュームを作り直すと、S3 のディスク消費をリセットできる。古いバージョンの `compose.yaml` で作った
 ボリュームは、実データが数 KB でもディスクを 10GB 以上占有することがある(現行の `compose.yaml` では起きない)。
 
-必ずバックアップを取ってから実行する。
+バックアップから復元が終わるまでの間に画像が追加されると、その画像は失われる(消すボリュームに書かれるため)。
+**メンテナンスモードで書き込みを止めたまま**バックアップから復元まで行い、確認してから解除する。
 
 ```sh
-docker compose run --rm tools full-backup
+# 書き込みを止める
+docker compose run --rm tools maintenance on
+
+# バックアップ(ON のまま、アプリの接続が切れるのを待ってから取得する)
+docker compose run --rm tools full-backup --maintenance
 
 docker compose stop s3 && docker compose rm -f s3
 
@@ -369,6 +384,9 @@ docker volume rm <確認したボリューム名>
 
 docker compose up -d --wait s3
 docker compose run --rm tools s3-restore backup/full_YYYYMMDD_HHMMSS/s3
+
+# 復元の件数とログを確認してから解除する
+docker compose run --rm tools maintenance off
 ```
 
 - ボリューム名の接頭辞は Compose のプロジェクト名(既定では `compose.yaml` を置いたディレクトリ名)になるため、`devuntu_seaweeddata` とは限らない

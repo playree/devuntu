@@ -406,11 +406,16 @@ docker compose up -d
 ```
 
 新しいイメージで起動する際、`prisma migrate deploy` が実行されて DB が追随する。
-**アップデート前にバックアップを取得する**こと。取得の間だけ利用者を止めて取るなら次のとおり([operations.md](operations.md))。
+**アップデート前にバックアップを取得する**こと。利用者を止めてバックアップを取り、止めたまま新しいイメージで起動するなら
+次のとおり([operations.md](operations.md#まずはこれだけ))。
 
 ```sh
-docker compose run --rm tools full-backup --maintenance
-docker compose pull && docker compose up -d
+docker compose pull                                       # 先に新しいイメージを取得(利用者は止めない)
+docker compose run --rm tools maintenance on              # 利用者を止める
+docker compose run --rm tools full-backup --maintenance   # 接続が切れるのを待って取得(ON のまま)
+docker compose up -d --wait                               # 新しいイメージで起動(マイグレーションも自動)
+docker compose logs devuntu                               # 起動を確認してから解除する
+docker compose run --rm tools maintenance off
 ```
 
 使うイメージは `compose.yaml` が参照する `playree/devuntu:latest`(リリース済みの版)。`edge` はリリース前の

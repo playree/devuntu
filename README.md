@@ -174,9 +174,16 @@ DB とアップロード画像は別々バックアップ可能ですが、バ�
 
 ### メンテナンスモードでフルバックアップを取得してから、Devuntuを最新版にアップグレードする場合
 
+バックアップの取得からアップグレードの完了まで、メンテナンスモードで利用者を止めておきます
+(取得後の書き込みがバックアップに入らず、アップグレードに失敗して戻したときに失われるため)。
+
 ```sh
-docker compose run --rm tools full-backup --maintenance
-docker compose pull && docker compose up -d
+docker compose pull                                       # 先に新しいイメージを取得(利用者は止めない)
+docker compose run --rm tools maintenance on              # 利用者を止める
+docker compose run --rm tools full-backup --maintenance   # 接続が切れるのを待って取得(ON のまま)
+docker compose up -d --wait                               # 新しいイメージで起動(マイグレーションも自動)
+docker compose logs devuntu                               # 起動を確認してから解除する
+docker compose run --rm tools maintenance off
 ```
 
 ## 環境変数
