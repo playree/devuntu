@@ -8,7 +8,7 @@ English | [日本語](README.md)
 
 Website: https://playree.github.io/devuntu/en/
 
-Devuntu is a self-hosted development server setup tool centered around Kanban-style board/ticket management,
+Devuntu is a self-hosted project management tool centered around Kanban-style board/ticket management,
 featuring calendar integration, email / Slack / web push notifications, MCP / AI agent integration and remote execution.
 
 It started as a collection of features I wanted for solo and small-team development.
