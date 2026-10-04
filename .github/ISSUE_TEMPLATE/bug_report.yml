@@ -33,7 +33,7 @@ body:
     id: version
     attributes:
       label: バージョン
-      description: リリースのバージョン、または Docker イメージのタグ(`latest` / `edge` など)
+      description: リリースのバージョン(ダッシュボードに表示されるもの)、または Docker イメージのタグ(`stable` / `latest` / `edge` など)
     validations:
       required: true
   - type: dropdown

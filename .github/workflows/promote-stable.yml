@@ -33,9 +33,20 @@ jobs:
           fi
 
       - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-          fetch-tags: true
+
+      - name: Resolve release commit
+        run: |
+          git fetch --depth=1 origin "refs/tags/v$VERSION:refs/tags/v$VERSION" || {
+            echo "tag v$VERSION not found" >&2
+            exit 1
+          }
+          sha=$(git rev-parse "refs/tags/v$VERSION^{commit}")
+          # この仕組みより前の版は compose.yaml が stable を参照しておらず、取得元にすると利用者が latest を追うことになる
+          if ! git show "$sha:compose.yaml" | grep -q "$IMAGE:stable"; then
+            echo "compose.yaml at v$VERSION does not use $IMAGE:stable" >&2
+            exit 1
+          fi
+          echo "SHA=$sha" >> "$GITHUB_ENV"
 
       - uses: docker/setup-buildx-action@v4
 
@@ -46,23 +57,21 @@ jobs:
 
       # Release の promote と同じく、ビルド元の commit がリリースタグと一致するイメージだけを付け替える。
       # 検査と付け替えの間に <version> が動いても巻き込まれないよう digest で固定する
-      - name: Promote to stable
+      - name: Verify image
         run: |
-          sha=$(git rev-parse --verify --quiet "refs/tags/v$VERSION^{commit}") || {
-            echo "tag v$VERSION not found" >&2
-            exit 1
-          }
           digest=$(docker buildx imagetools inspect "$IMAGE:$VERSION" --format '{{ .Manifest.Digest }}')
           rev=$(.github/scripts/image-revision.sh "$IMAGE@$digest")
-          if [ "$rev" != "$sha" ]; then
-            echo "$IMAGE:$VERSION ($digest) is built from $rev, not v$VERSION ($sha)" >&2
+          if [ "$rev" != "$SHA" ]; then
+            echo "$IMAGE:$VERSION ($digest) is built from $rev, not v$VERSION ($SHA)" >&2
             exit 1
           fi
-          docker buildx imagetools create -t "$IMAGE:stable" "$IMAGE@$digest"
-          echo "SHA=$sha" >> "$GITHUB_ENV"
+          echo "DIGEST=$digest" >> "$GITHUB_ENV"
 
-      # compose.yaml を stable のイメージと同じ commit から取得できるようにする
+      # compose.yaml の取得元。権限やルールセットで弾かれた場合にイメージだけ先に動かないよう、こちらを先に行う
       - name: Move stable tag
         run: |
           git tag -f stable "$SHA"
           git push -f origin refs/tags/stable
+
+      - name: Promote to stable
+        run: docker buildx imagetools create -t "$IMAGE:stable" "$IMAGE@$DIGEST"

@@ -161,7 +161,7 @@ Migrations are applied automatically. **Take a backup before updating** (see [Op
 
 `compose.yaml` uses the `stable` tag: a release that has been confirmed to work for a while after it was published.
 Use `latest` for the newest release, or `<version>` (e.g. `0.9.3`) to pin a version.
-Images are available for linux/amd64 and linux/arm64.
+Images are available for linux/amd64 and linux/arm64 (arm64 from 0.9.3 onward).
 
 ## Integrations
 

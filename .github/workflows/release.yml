@@ -51,6 +51,7 @@ jobs:
         uses: docker/metadata-action@v6
         with:
           images: ${{ env.IMAGE }}
+          # ラベルだけ使う。タグは edge ジョブで digest をまとめるときに付ける
           tags: type=raw,value=edge
 
       - id: build
@@ -81,6 +82,8 @@ jobs:
           name: digests-${{ env.PLATFORM_PAIR }}
           path: ${{ runner.temp }}/digests/*
           if-no-files-found: error
+          # Re-run で同じ名前を上げ直せるようにする
+          overwrite: true
           retention-days: 1
 
   # 各プラットフォームの digest をまとめて edge にする

@@ -389,7 +389,7 @@ Docker Hub(`playree/devuntu`)への publish は GitHub Actions の `Release`
 ([.github/workflows/release.yml](../../.github/workflows/release.yml))と `Promote stable`
 ([.github/workflows/promote-stable.yml](../../.github/workflows/promote-stable.yml))で行う。ローカルからは push しない。
 
-イメージは linux/amd64 と linux/arm64 のマルチアーキ。QEMU だと arm64 の Next.js ビルドが遅いため、
+イメージは linux/amd64 と linux/arm64 のマルチアーキ(0.9.3 以降。それより前の版は linux/amd64 のみ)。QEMU だと arm64 の Next.js ビルドが遅いため、
 プラットフォームごとにネイティブランナー(`ubuntu-latest` / `ubuntu-24.04-arm`)で並列にビルドし、digest をまとめて `edge` にする。
 
 タグの意味は下記のとおり。後ろのタグほど、前のタグで確認したイメージを再ビルドせずに付け替えたもの。
@@ -418,7 +418,7 @@ Docker Hub(`playree/devuntu`)への publish は GitHub Actions の `Release`
 食い違う場合はジョブが失敗する。その場合は2からやり直す。
 
 `Promote stable` も同様に、`<version>` のイメージのビルド元が `v<version>` のタグの commit と一致しない場合
-(タグが無い場合を含む)は失敗する。過去の `version` を指定すれば `stable` を戻せるが、`stable` を使っている環境で
+(タグが無い場合を含む)と、その commit の `compose.yaml` が `stable` を参照していない(この仕組みより前の)版の場合は失敗する。過去の `version` を指定すれば `stable` を戻せるが、`stable` を使っている環境で
 既に新しい版のマイグレーションが適用されていると古い版では動かない可能性があるため、戻すより修正版のリリースを優先する。
 
 ### ローカルでのビルド
