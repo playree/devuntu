@@ -53,7 +53,7 @@ const SCROLL_CARDS_CLASS = 'md:-m-0.5 md:flex-1 md:overflow-y-auto md:p-0.5'
  * backlog のカード領域の高さ上限。グリッド表示のカード2行分で頭打ちにして、残りはレーン内でスクロールさせる。
  *
  * カードは内容なりの高さなので、一番背が高くなる構成(タイトル2行 + メタ行 + タグ行 = 実測 117px)を基準に
- * 117px × 2行 + gap-2(8px) + p-0.5 の上下(4px) = 246px を満たす値にしている。
+ * 117px × 2行 + gap-1.5(6px) + p-0.5 の上下(4px) = 244px を満たす値にしている。
  *
  * md 未満は1カラムの縦積みでレーン内スクロールも掛けないため、上限も掛けない(ページスクロールに任せる)。
  */
@@ -73,7 +73,7 @@ export const LANE_LAYOUT: Record<TicketStatus, { className: string; cardsClassNa
        * items-start が無いと grid 既定の stretch でカードの外枠(ドロップ枠)だけが行の最大高さまで伸び、
        * 中身なりの高さしか持たない色付きカードの下に CARD_BACKDROP_CLASS の下地が帯として露出する。
        */
-      'md:grid md:grid-cols-3 md:items-start md:gap-2 md:space-y-0 xl:grid-cols-4',
+      'md:grid md:grid-cols-3 md:items-start md:gap-1.5 md:space-y-0 xl:grid-cols-4',
       BACKLOG_MAX_H_CLASS,
       'md:-m-0.5 md:overflow-y-auto md:p-0.5',
     ),
@@ -331,7 +331,7 @@ export const KanbanLane: FC<{
         )}
       </legend>
 
-      <div className={cn('min-h-16 space-y-2', cardsClassName)}>
+      <div className={cn('min-h-16 space-y-1.5', cardsClassName)}>
         {cards.map((card) => (
           <KanbanCardView
             key={card.id}
