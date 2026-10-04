@@ -1,4 +1,4 @@
-x-app-image: &app-image playree/devuntu:latest
+x-app-image: &app-image playree/devuntu:stable
 
 services:
   devuntu:

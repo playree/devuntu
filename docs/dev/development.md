@@ -386,15 +386,24 @@ pnpm dlx auth generate
 ## イメージ作成
 
 Docker Hub(`playree/devuntu`)への publish は GitHub Actions の `Release`
-([.github/workflows/release.yml](../../.github/workflows/release.yml))で行う。ローカルからは push しない。
+([.github/workflows/release.yml](../../.github/workflows/release.yml))と `Promote stable`
+([.github/workflows/promote-stable.yml](../../.github/workflows/promote-stable.yml))で行う。ローカルからは push しない。
 
-タグの意味は下記のとおり。
+イメージは linux/amd64 と linux/arm64 のマルチアーキ(0.9.3 以降。それより前の版は linux/amd64 のみ)。QEMU だと arm64 の Next.js ビルドが遅いため、
+プラットフォームごとにネイティブランナー(`ubuntu-latest` / `ubuntu-24.04-arm`)で並列にビルドし、digest をまとめて `edge` にする。
 
-| タグ        | 中身                                                     |
-| ----------- | -------------------------------------------------------- |
-| `edge`      | 手動実行したときの最新ビルド。確認用                     |
-| `<version>` | `edge` で確認したイメージそのもの。`package.json` と同じ |
-| `latest`    | 同上。`compose.yaml` が参照する                          |
+タグの意味は下記のとおり。後ろのタグほど、前のタグで確認したイメージを再ビルドせずに付け替えたもの。
+
+| タグ        | 中身                                                              |
+| ----------- | ----------------------------------------------------------------- |
+| `edge`      | 手動実行したときの最新ビルド。確認用                              |
+| `<version>` | `edge` で確認したイメージそのもの。`package.json` と同じ          |
+| `latest`    | 最新のリリース(`<version>` と同じ)                                |
+| `stable`    | リリース後に問題が無かった `<version>`。`compose.yaml` が参照する |
+
+`stable` を付けるときは、git タグ `stable` も同じ commit へ動かす。導入手順の `compose.yaml` はこの git タグから取得するため、
+導入時点では `stable` のイメージと同じ版になる。ただし取得済みの `compose.yaml` は自動で更新されず、アップデートは既存の
+`compose.yaml` のまま新しいイメージで起動する。`compose.yaml` を変更したリリースでは、取得し直す必要があることをリリースノートで案内する。
 
 ### リリース手順
 
@@ -403,10 +412,15 @@ Docker Hub(`playree/devuntu`)への publish は GitHub Actions の `Release`
 3. `docker pull playree/devuntu:edge`で動作確認する
 4. 問題なければ**2で実行したのと同じ commit**に`v<version>`のタグを打って push する
 5. `Release`が`edge`と同一のイメージに`<version>`と`latest`を付ける
+6. `latest`で一定期間問題が無ければ、Actions の `Promote stable` を`version`を指定して手動実行する
 
 `promote`ジョブは再ビルドせずタグを付け替えるだけなので、3で確認したものがそのまま公開される。
 ビルド元の commit とタグの commit が食い違う場合と、`package.json`の`version`とタグ名が
 食い違う場合はジョブが失敗する。その場合は2からやり直す。
+
+`Promote stable` も同様に、`<version>` のイメージのビルド元が `v<version>` のタグの commit と一致しない場合
+(タグが無い場合を含む)と、その commit の `compose.yaml` が `stable` を参照していない(この仕組みより前の)版の場合は失敗する。過去の `version` を指定すれば `stable` を戻せるが、`stable` を使っている環境で
+既に新しい版のマイグレーションが適用されていると古い版では動かない可能性があるため、戻すより修正版のリリースを優先する。
 
 ### ローカルでのビルド
 

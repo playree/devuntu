@@ -17,6 +17,7 @@
     - [AIエージェント](#aiエージェント)
     - [リモート実行](#リモート実行)
   - [アップデート](#アップデート)
+    - [イメージのタグ](#イメージのタグ)
   - [困ったとき](#困ったとき)
   - [付録: 設定ファイルを手で書く場合](#付録-設定ファイルを手で書く場合)
 
@@ -28,7 +29,7 @@
 >
 > ```sh
 > mkdir -p /opt/devuntu/config/commands && cd /opt/devuntu
-> curl -fsSLO https://raw.githubusercontent.com/playree/devuntu/main/compose.yaml
+> curl -fsSLO https://raw.githubusercontent.com/playree/devuntu/stable/compose.yaml
 > docker compose run --rm tools setup-env   # 質問に答えて設定ファイルを作る
 > docker compose up -d --wait               # 起動(DB の準備も自動)
 > ```
@@ -43,7 +44,8 @@ Docker Compose で Devuntu を立ち上げるまでの手順。運用開始後�
 
 - Docker / Docker Compose が動くホスト。`compose.yaml` が `env_file` の `required: false` を使うため
   **Docker Compose は v2.24 以降**が必要。また `devuntu` の healthcheck が `start_interval` を使うため
-  **Docker Engine は 25.0 以降**が必要
+  **Docker Engine は 25.0 以降**が必要。イメージは linux/amd64 と linux/arm64 に対応している
+  (linux/arm64 は 0.9.3 以降の版)
 - **メモリは最低 2GB、推奨 4GB**。内訳の目安はアプリ本体 250〜600MB(画像変換とワーカーを含む)、
   `db` 150〜300MB、`s3` 150〜400MB で、これにホストOSと Docker デーモンの 300〜500MB が乗る。
   公開済みイメージを pull する前提の値で、ホスト上で自前ビルドする場合は別途 4GB 以上必要
@@ -61,7 +63,7 @@ Docker Compose で Devuntu を立ち上げるまでの手順。運用開始後�
 
 | サービス  | イメージ                 | 役割                             | ホストへの公開ポート       |
 | --------- | ------------------------ | -------------------------------- | -------------------------- |
-| `devuntu` | `playree/devuntu:latest` | アプリ本体(Next.js)              | `3000`(全インターフェース) |
+| `devuntu` | `playree/devuntu:stable` | アプリ本体(Next.js)              | `3000`(全インターフェース) |
 | `db`      | `postgres:18`            | データベース                     | `127.0.0.1:5432`           |
 | `s3`      | `chrislusf/seaweedfs`    | アップロード画像の保存先(S3互換) | `127.0.0.1:8333`           |
 
@@ -81,7 +83,8 @@ PostgreSQL とオブジェクトストレージへ外部から直接到達でき
 
 ## 1. compose.yaml の配置
 
-任意のディレクトリ(例: `/opt/devuntu`)に、このリポジトリの `compose.yaml` を置く。
+任意のディレクトリ(例: `/opt/devuntu`)に、このリポジトリの `compose.yaml` を置く。main ではなく git タグ `stable`
+(イメージの `stable` と同じ版)のものを使う(冒頭の `curl` の取得元)。
 アプリはイメージから起動するため、リポジトリ全体の clone は不要。**必要なファイルはこの1つだけ**で、
 残りは次の手順で生成する。
 
@@ -406,6 +409,9 @@ docker compose up -d
 ```
 
 新しいイメージで起動する際、`prisma migrate deploy` が実行されて DB が追随する。
+`docker compose pull` で更新されるのはイメージだけで、`compose.yaml` は更新されない。リリースノートに `compose.yaml` の変更が
+ある場合は、冒頭の `curl` の URL から別名で取得し(`-o compose.yaml.new`)、手元の `compose.yaml` と比べて必要な変更を反映する
+(そのまま上書きすると、手元で変えた `ports` の絞り込みなどが消えるため)。
 **アップデート前にバックアップを取得する**こと。利用者を止めてバックアップを取り、止めたまま新しいイメージで起動するなら
 次のとおり([operations.md](operations.md#まずはこれだけ))。
 
@@ -418,8 +424,22 @@ docker compose logs devuntu                               # 起動を確認し�
 docker compose run --rm tools maintenance off
 ```
 
-使うイメージは `compose.yaml` が参照する `playree/devuntu:latest`(リリース済みの版)。`edge` はリリース前の
-確認用のビルドなので運用には使わない。特定の版に固定したい場合は `<version>` のタグを指定する。
+### イメージのタグ
+
+`compose.yaml` は `stable` を参照している。ほかの版を使いたい場合は、`compose.yaml` 冒頭の `x-app-image` のタグを書き換える。
+
+| タグ        | 中身                                                                 |
+| ----------- | -------------------------------------------------------------------- |
+| `stable`    | リリース後、一定期間問題が無いことを確認した版。**通常はこれを使う** |
+| `latest`    | 最新のリリース。新しい機能を早く使いたい場合                         |
+| `<version>` | 特定の版(例: `0.9.3`)。アップデートの時期を自分で決めたい場合        |
+| `edge`      | リリース前の確認用のビルド。運用には使わない                         |
+
+以前の `compose.yaml` は `latest` を参照している。`stable` へ移る場合は、`x-app-image` を書き換えるか
+`compose.yaml` を取得し直す(`setup-env` で生成した設定ファイルはそのまま使える)。
+
+DB のマイグレーションは前進のみのため、**タグを書き換えるだけでは古い版へ戻せない**(戻すにはアップデート前のバックアップから
+リストアする)。`latest` から `stable` へ切り替えるときも、その時点の `stable` が使用中の版より古い場合は、`stable` が追いつくまで待つ。
 
 ## 困ったとき
 
