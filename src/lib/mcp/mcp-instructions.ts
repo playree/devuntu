@@ -27,11 +27,11 @@ export const ACCEPTANCE_CRITERIA_GUIDE =
 /** ボードの AI 向けコンテキスト(get_ticket / get_board / get_agent_task の boardContext)の読み方 */
 const BOARD_CONTEXT_GUIDE =
   'boardContext in get_ticket / get_board / get_agent_task (only when set) holds premises shared by every ticket on the board ' +
-  '(target repository, conventions, terms, etc.). Read it before working on a ticket and follow it unless the ticket says otherwise.'
+  '(target repository, conventions, terms, etc.). Read it before working on a ticket and follow it; the ticket itself takes precedence over it.'
 
-/** 手順より優先するもの。既定値であることを必ず添える */
+/** 指示の優先順位。手順が既定値であることを必ず添える */
 const PRECEDENCE =
-  'If the user instructions or project rules (CLAUDE.md / AGENTS.md, etc.) say otherwise, follow them. ' +
+  'Precedence: user instructions > the ticket > project rules (CLAUDE.md / AGENTS.md, etc.) and boardContext > these default steps. ' +
   'When you are only asked to read a ticket or answer a question, do not post comments or change the status.'
 
 /**

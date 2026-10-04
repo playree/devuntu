@@ -22,8 +22,9 @@ describe('ticketWorkflowFor', () => {
     expect(ticketWorkflowFor('agent', true)).toBeUndefined()
   })
 
-  it('利用者の指示が優先であることを添える', () => {
-    expect(ticketWorkflowFor('oauth', true)?.at(-1)).toContain('user instructions')
+  it('利用者の指示を最優先に、既定の手順を最下位にした優先順位を添える', () => {
+    const precedence = ticketWorkflowFor('oauth', true)?.at(-1)
+    expect(precedence).toMatch(/user instructions > the ticket > .*CLAUDE\.md.* and boardContext > these default steps/)
   })
 })
 
@@ -41,6 +42,11 @@ describe('mcpInstructions', () => {
   it('受け入れ条件の結果は report ではなく自己申告として記録させる', () => {
     expect(mcpInstructions('oauth')).toContain('report_acceptance_criteria')
     expect(mcpInstructions('agent')).not.toContain('report_acceptance_criteria')
+  })
+
+  it('優先順位は人の経路にだけ載せる(エージェントはランナーの指示に従う)', () => {
+    expect(mcpInstructions('oauth')).toContain('Precedence:')
+    expect(mcpInstructions('agent')).not.toContain('Precedence:')
   })
 
   it('クライアントに切り詰められないよう短く保つ', () => {
