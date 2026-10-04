@@ -4,7 +4,8 @@ import { Accordion } from '@heroui/react'
 import { ComponentProps, FC, ReactNode } from 'react'
 import { tv } from 'tailwind-variants'
 
-const bodyStyles = tv({ base: 'px-4' })
+// Panel は開閉アニメーションのため overflow: clip なので、先頭の入力欄のフォーカスリングが切れないよう上に余白を取る
+const bodyStyles = tv({ base: 'px-4 pt-1' })
 
 /**
  * Accordion の 1 セクション。
