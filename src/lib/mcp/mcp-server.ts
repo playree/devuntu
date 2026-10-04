@@ -169,7 +169,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     {
       title: 'Echo',
       description: 'Returns the input string as is',
-      inputSchema: { message: z.string().min(1) },
+      inputSchema: z.strictObject({ message: z.string().min(1) }),
     },
     async ({ message }) => ({ content: [{ type: 'text' as const, text: message }] }),
   )
@@ -181,9 +181,9 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       description:
         'Returns the boards you can access. Before creating or searching tickets, identify the target board ID (or key) here. ' +
         'Assignee and tag candidates differ per board, so call get_board next',
-      inputSchema: {
+      inputSchema: z.strictObject({
         includeArchived: z.boolean().optional().describe('Include archived boards. Excluded by default'),
-      },
+      }),
     },
     async ({ includeArchived }) => jsonResult(await listBoardsForMcp(auth, { includeArchived })),
   )
@@ -196,7 +196,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
         'Returns board details (members, tags, ticket counts per status, and boardContext / templates if set). ' +
         'Use the IDs returned here for assigneeId and tagIds in create_ticket / update_ticket. ' +
         'When a template fits the ticket, pass it as templateId in create_ticket',
-      inputSchema: { boardId: z.string().min(1).describe('Board ID or board key (e.g. ABC)') },
+      inputSchema: z.strictObject({ boardId: z.string().min(1).describe('Board ID or board key (e.g. ABC)') }),
     },
     async ({ boardId }) => jsonResult(await getBoardForMcp(auth, boardId)),
   )
@@ -210,7 +210,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
         'parent/children, related tickets, and recent change history (activities, newest first). ' +
         'boardContext (only when set) holds premises shared by every ticket on the board, such as the target repository and conventions: read it before working. ' +
         'When working on the ticket, follow the steps in the workflow field of the response (doing when starting, posting plan / report, linking artifacts)',
-      inputSchema: { ticketId: z.string().min(1) },
+      inputSchema: z.strictObject({ ticketId: z.string().min(1) }),
     },
     async ({ ticketId }) => jsonResult(await getTicketForMcp(auth, ticketId)),
   )
@@ -220,7 +220,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     {
       title: 'Search tickets',
       description: 'Searches accessible tickets by keyword, status, priority, tag, board, assignee, and related ticket',
-      inputSchema: mcpTicketSearchSchema.shape,
+      inputSchema: z.strictObject(mcpTicketSearchSchema.shape),
     },
     async (input) => jsonResult(await searchTicketsForMcp(auth, input)),
   )
@@ -230,7 +230,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     {
       title: 'Create ticket',
       description: `Creates a new ticket on a board. Specify parentId to create it as a child ticket. ${ACCEPTANCE_CRITERIA_GUIDE}`,
-      inputSchema: mcpCreateTicketSchema.shape,
+      inputSchema: z.strictObject(mcpCreateTicketSchema.shape),
     },
     async ({ acceptanceCriteria, ...input }) =>
       jsonResult(await createTicketForMcp(auth, { ...input, criteria: acceptanceCriteria })),
@@ -244,7 +244,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
         'Updates ticket fields (title / content / priority / due date / assignee / tags / acceptance criteria / parent / child advance rule) and status. Set status to doing when you start working on it. ' +
         'Members cannot update tickets assigned to someone else (unassigned tickets are allowed; owners have no restriction). ' +
         ACCEPTANCE_CRITERIA_GUIDE,
-      inputSchema: mcpUpdateTicketSchema.shape,
+      inputSchema: z.strictObject(mcpUpdateTicketSchema.shape),
     },
     async ({ ticketId, acceptanceCriteria, ...input }) =>
       jsonResult(await updateTicketForMcp(auth, ticketId, { ...input, criteria: acceptanceCriteria })),
@@ -255,7 +255,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     {
       title: 'Delete ticket',
       description: 'Deletes a ticket. Both owners and members can delete only tickets they created',
-      inputSchema: { ticketId: z.string().min(1) },
+      inputSchema: z.strictObject({ ticketId: z.string().min(1) }),
     },
     async ({ ticketId }) => jsonResult(await deleteTicketForMcp(auth, ticketId)),
   )
@@ -268,7 +268,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
         'Adds a comment to a ticket. Post with type=plan once you have a plan and type=report when you finish ' +
         '(record acceptance criteria results with report_acceptance_criteria, not in the report); ' +
         'these are shown collapsed on the detail screen, distinct from regular comments. Reply to an existing comment with parentId (one level only)',
-      inputSchema: {
+      inputSchema: z.strictObject({
         ticketId: z.string().min(1),
         content: zCommentContent,
         type: zCommentType.describe('plan=work plan, report=work report. Omit for a regular comment'),
@@ -278,7 +278,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
           .describe(
             'ID of the parent comment to reply to. Cannot be a comment that is itself a reply (one level only)',
           ),
-      },
+      }),
     },
     async ({ ticketId, content, type, parentId }) =>
       jsonResult(await addTicketCommentForMcp(auth, ticketId, content, type, parentId)),
@@ -289,7 +289,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     {
       title: 'Update comment',
       description: 'Edits a comment you posted',
-      inputSchema: { commentId: z.uuidv7(), content: zCommentContent },
+      inputSchema: z.strictObject({ commentId: z.uuidv7(), content: zCommentContent }),
     },
     async ({ commentId, content }) => jsonResult(await updateTicketCommentForMcp(auth, commentId, content)),
   )
@@ -299,7 +299,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     {
       title: 'Delete comment',
       description: 'Deletes a comment you posted, or any comment on a ticket you are allowed to delete',
-      inputSchema: { commentId: z.uuidv7() },
+      inputSchema: z.strictObject({ commentId: z.uuidv7() }),
     },
     async ({ commentId }) => jsonResult(await deleteTicketCommentForMcp(auth, commentId)),
   )
@@ -312,12 +312,12 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
         'Links a GitHub / GitLab branch / pull request (merge request) / commit URL to a ticket. ' +
         'The kind is detected from the URL. Link a pull request once created so its state and CI results appear on the ticket detail. ' +
         'For GitLab, only URLs of instances allowed by the server are accepted',
-      inputSchema: {
+      inputSchema: z.strictObject({
         ticketId: z.string().min(1),
         url: zGitUrl.describe(
           'e.g. https://github.com/owner/repo/pull/123 / https://gitlab.com/group/project/-/merge_requests/12',
         ),
-      },
+      }),
     },
     async ({ ticketId, url }) => jsonResult(await linkTicketArtifactForMcp(auth, ticketId, url)),
   )
@@ -328,7 +328,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       title: 'Unlink artifact',
       description:
         'Unlinks a branch / pull request (merge request) / commit from a ticket. Get linkId from links in get_ticket',
-      inputSchema: { linkId: z.uuidv7() },
+      inputSchema: z.strictObject({ linkId: z.uuidv7() }),
     },
     async ({ linkId }) => jsonResult(await unlinkTicketArtifactForMcp(auth, linkId)),
   )
@@ -341,10 +341,10 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
         'Links two tickets on the same board as related (undirected; visible from both tickets). ' +
         'Members can link a ticket assigned to someone else as long as the other ticket is assigned to them or unassigned. ' +
         'Set parent/child with parentId in update_ticket / create_ticket',
-      inputSchema: {
+      inputSchema: z.strictObject({
         ticketId: z.string().min(1),
         relatedTicketId: zRelationTarget.describe('Display ID (e.g. ABC-42) or ticket ID of the ticket to link'),
-      },
+      }),
     },
     async ({ ticketId, relatedTicketId }) => jsonResult(await linkRelatedTicketForMcp(auth, ticketId, relatedTicketId)),
   )
@@ -356,7 +356,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       description:
         'Removes a parent/child or related link. Get relationId from parent / children / related in get_ticket. ' +
         'Members can remove a related link if either ticket is assigned to them or unassigned, and a parent/child link if the child ticket is assigned to them or unassigned',
-      inputSchema: { relationId: z.uuidv7() },
+      inputSchema: z.strictObject({ relationId: z.uuidv7() }),
     },
     async ({ relationId }) => jsonResult(await unlinkTicketRelationForMcp(auth, relationId)),
   )
@@ -379,12 +379,12 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
           'Records whether each acceptance criterion is met, with evidence, as a self-check shown on the ticket detail. ' +
           'Call it when you finish working on a ticket that has acceptance criteria, instead of listing the results in the type=report comment. ' +
           'Items not included keep their previous result',
-        inputSchema: {
+        inputSchema: z.strictObject({
           ticketId: z.string().min(1),
           criteria: zCriterionReports('id from acceptanceCriteria in get_ticket')
             .min(1)
             .describe('Self-check result for each acceptance criterion'),
-        },
+        }),
       },
       async ({ ticketId, criteria }) => jsonResult(await reportTicketCriteriaForMcp(auth, ticketId, criteria)),
     )

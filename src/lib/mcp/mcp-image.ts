@@ -187,7 +187,7 @@ export const registerImageTools = (server: McpServer, auth: ResourceAuth) => {
         'then embed that URL in the content with Markdown `![description](URL)` (raw <img> tags are stripped when displayed). ' +
         'Always use this when the file is available locally (upload_image consumes a large number of tokens). ' +
         `Expires in ${UPLOAD_TOKEN_TTL_SECONDS / 60} minutes and can be used only once`,
-      inputSchema: targetSchema,
+      inputSchema: z.strictObject(targetSchema),
     },
     async (input) => jsonResult(await createImageUploadTokenForMcp(auth, input)),
   )
@@ -201,7 +201,7 @@ export const registerImageTools = (server: McpServer, auth: ResourceAuth) => {
         'This is a fallback only for clients that cannot run a shell; base64 consumes a lot of context, ' +
         'so use create_image_upload_token when the file path is known. ' +
         `data is limited to ${Math.floor(MAX_BASE64_LENGTH / 1024)}KB (roughly an image of 100KB or less)`,
-      inputSchema: {
+      inputSchema: z.strictObject({
         ...targetSchema,
         filename: z.string().min(1).max(255).describe('Original file name. Also used as the image alt text'),
         mimeType: z.enum(ACCEPTED_IMAGE_TYPES),
@@ -210,7 +210,7 @@ export const registerImageTools = (server: McpServer, auth: ResourceAuth) => {
           .min(1)
           .max(MAX_BASE64_LENGTH)
           .describe('Base64 of the image. A `data:image/png;base64,` prefix is allowed'),
-      },
+      }),
     },
     async (input) => jsonResult(await uploadImageForMcp(auth, input)),
   )
@@ -222,7 +222,7 @@ export const registerImageTools = (server: McpServer, auth: ResourceAuth) => {
       description:
         `Fetches an image embedded in ticket content or a comment (a \`${UPLOAD_URL_PREFIX}/<key>\` URL, or the key) and returns it as an image. ` +
         'Use it when you need to actually see a screenshot or diagram in the content',
-      inputSchema: {
+      inputSchema: z.strictObject({
         image: z.string().min(1).describe(`A \`${UPLOAD_URL_PREFIX}/<key>.webp\` URL, or the key itself`),
         maxSize: z
           .number()
@@ -231,7 +231,7 @@ export const registerImageTools = (server: McpServer, auth: ResourceAuth) => {
           .max(MAX_READ_SIZE)
           .optional()
           .describe(`Long side of the returned image (px). Defaults to ${DEFAULT_READ_SIZE}`),
-      },
+      }),
     },
     async (input) => {
       const { image, meta } = await getImageForMcp(auth, input)

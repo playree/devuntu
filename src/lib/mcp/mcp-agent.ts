@@ -59,12 +59,12 @@ export const registerAgentSetupTool = (server: McpServer) => {
         'Returns the steps to set up automated AI agent operation (Devuntu Agent) on your machine, ' +
         'from preparing the working directory to fetching and configuring the runner, registering cron, and verifying it works. ' +
         'The user chooses which CLI to run it with, so when called without cli it returns an instruction to ask the user instead of the steps',
-      inputSchema: {
+      inputSchema: z.strictObject({
         cli: z
           .enum(AGENT_CLI_KINDS)
           .optional()
           .describe('CLI to set up. claude=Claude Code / codex=Codex CLI. Ask the user before specifying'),
-      },
+      }),
     },
     async ({ cli }) => ({
       content: [{ type: 'text' as const, text: cli ? agentSetupGuide(cli) : agentSetupCliPrompt() }],
@@ -87,13 +87,13 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
         'when posting the plan (or when starting on execute), one verifiable sentence per item. ' +
         'Never delete or rewrite existing items: only add missing ones, passing the existing items with their id. ' +
         'If active is false, exit without doing anything',
-      inputSchema: {
+      inputSchema: z.strictObject({
         ticketId: z
           .string()
           .min(1)
           .optional()
           .describe('Target ticket (display ID allowed). Omit to get the list of tickets waiting to be processed'),
-      },
+      }),
     },
     async ({ ticketId }) => {
       const { runner, activity } = await loadContext(auth)
@@ -159,14 +159,14 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
         'Reports the result of processing a ticket and closes the run. ' +
         'planned=plan posted and waiting for a reply, completed=done, skipped=skipped, failed=failed. ' +
         'If the ticket has acceptance criteria, completed must report every item as met with evidence in criteria',
-      inputSchema: {
+      inputSchema: z.strictObject({
         ticketId: z.string().min(1),
         outcome: z.enum(AGENT_OUTCOMES),
         summary: z.string().max(2000).optional().describe('Summary of the result recorded in the run history'),
         criteria: zCriterionReports('id from acceptanceCriteria in get_agent_task')
           .optional()
           .describe('Self-check result for each acceptance criterion'),
-      },
+      }),
     },
     async ({ ticketId, outcome, summary, criteria }) => {
       const { runner } = await loadContext(auth)
@@ -197,11 +197,11 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
         'or the work clearly consists of several independently reviewable deliverables that do not fit in one run. ' +
         'When you do split, use this instead of add_ticket_comment and finish with outcome=planned. ' +
         'If it is rejected, revise the proposal and post it again with this tool',
-      inputSchema: {
+      inputSchema: z.strictObject({
         ticketId: z.string().min(1),
         content: zCommentContent.describe('Plan body (Markdown): why and how the work is split'),
         ...zChildProposal.shape,
-      },
+      }),
     },
     async ({ ticketId, content, children, advance }) => {
       const id = await resolveTicketId(auth, ticketId)
