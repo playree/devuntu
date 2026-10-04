@@ -402,7 +402,8 @@ Docker Hub(`playree/devuntu`)への publish は GitHub Actions の `Release`
 | `stable`    | リリース後に問題が無かった `<version>`。`compose.yaml` が参照する |
 
 `stable` を付けるときは、git タグ `stable` も同じ commit へ動かす。導入手順の `compose.yaml` はこの git タグから取得するため、
-利用者の `compose.yaml` は常に `stable` のイメージと同じ版になる。
+導入時点では `stable` のイメージと同じ版になる。ただし取得済みの `compose.yaml` は自動で更新されず、アップデートは既存の
+`compose.yaml` のまま新しいイメージで起動する。`compose.yaml` を変更したリリースでは、取得し直す必要があることをリリースノートで案内する。
 
 ### リリース手順
 

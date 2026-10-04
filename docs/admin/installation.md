@@ -409,6 +409,9 @@ docker compose up -d
 ```
 
 新しいイメージで起動する際、`prisma migrate deploy` が実行されて DB が追随する。
+`docker compose pull` で更新されるのはイメージだけで、`compose.yaml` は更新されない。リリースノートに `compose.yaml` の変更が
+ある場合は、冒頭の `curl` の URL から別名で取得し(`-o compose.yaml.new`)、手元の `compose.yaml` と比べて必要な変更を反映する
+(そのまま上書きすると、手元で変えた `ports` の絞り込みなどが消えるため)。
 **アップデート前にバックアップを取得する**こと。利用者を止めてバックアップを取り、止めたまま新しいイメージで起動するなら
 次のとおり([operations.md](operations.md#まずはこれだけ))。
 
