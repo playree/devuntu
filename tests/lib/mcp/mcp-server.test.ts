@@ -146,6 +146,30 @@ describe('createDevuntuMcpServer', () => {
     expect(tools.map((tool) => tool.name)).not.toContain('report_acceptance_criteria')
   })
 
+  it('引数を取るツールは inputSchema で未知の引数を許さない', async () => {
+    for (const anyAuth of [auth, agentAuth]) {
+      const { tools } = await (await connectDevuntuMcp(anyAuth)).listTools()
+      const withArgs = tools.filter((tool) => Object.keys(tool.inputSchema.properties ?? {}).length > 0)
+      expect(withArgs.length).toBeGreaterThan(0)
+      withArgs.forEach((tool) => expect(tool.inputSchema, tool.name).toHaveProperty('additionalProperties', false))
+    }
+  })
+
+  it('未知の引数は黙って捨てずにエラーにする(本文を description で渡すと空のチケットができてしまうため)', async () => {
+    vi.mocked(createTicketForMcp).mockClear()
+
+    const result = await (
+      await connectDevuntuMcp()
+    ).callTool({
+      name: 'create_ticket',
+      arguments: { boardId: 'b1', title: '新規チケット', description: '本文' },
+    })
+
+    expect(result.isError).toBe(true)
+    expect(JSON.stringify(result.content)).toContain('description')
+    expect(createTicketForMcp).not.toHaveBeenCalled()
+  })
+
   it('ping は認可済みユーザーの情報を返す', async () => {
     const result = await (await connectDevuntuMcp()).callTool({ name: 'ping', arguments: {} })
     expect(result.content).toEqual([{ type: 'text', text: `pong: ${auth.user.email}` }])

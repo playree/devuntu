@@ -78,6 +78,8 @@ MCP サーバーの認証の振り分け・ツールの入力仕様・実装上�
 
 ## 入力の約束ごと
 
+- 各ツールの `inputSchema` は `z.strictObject` で登録し、定義に無い引数はエラーにする(JSON Schema に `additionalProperties: false` が出る)。
+  生の shape を渡すと SDK が strip の `z.object` に包み、`content` のつもりの `description` などが黙って捨てられて空のチケットができるため
 - `ticketId` は**表示ID(例: ABC-42)でもチケットIDでも**受け取れる(`resolveTicketId`)。
   `commentId` と `assigneeId` は UUIDv7 のみ
 - `boardId` は**ボードID でもボードキー(例: ABC)でも**受け取れる(`resolveBoardId`)。
