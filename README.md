@@ -119,7 +119,7 @@ DevuntuのAIエージェント向けの機能も、この(人による確認を�
 
 # 導入者向け
 
-Dockerイメージを提供しており、`compose.yaml`で簡単に構築できるようにしています。
+Dockerイメージ(linux/amd64 / linux/arm64)を提供しており、`compose.yaml`で簡単に構築できるようにしています。
 
 ## 構成
 
@@ -136,7 +136,7 @@ Docker Compose で3つのサービスを起動します(`compose.yaml`)。
 
 ## 導入の流れ
 
-1. [`compose.yaml`](compose.yaml) をホストへ配置する(必要なファイルはこれだけ)
+1. [`compose.yaml`](https://github.com/playree/devuntu/blob/stable/compose.yaml) をホストへ配置する(必要なファイルはこれだけ)
 2. `docker compose run --rm tools setup-env` で設定ファイル(`.env.docker` / `.env.db` / `seaweedfs-s3.json`)を対話生成する
 3. `docker compose up -d --wait` で起動する(DBマイグレーションは起動時に自動実行)
 4. `<BETTER_AUTH_URL>/start` を開いて最初の管理者を登録する
@@ -173,6 +173,8 @@ DB とアップロード画像は別々バックアップ可能ですが、バ�
 手順・定期実行は [docs/admin/operations.md](docs/admin/operations.md) を参照。
 
 アップデートは `docker compose pull && docker compose up -d`。マイグレーションは起動時に自動適用されます。
+`compose.yaml` が参照するのは、リリース後に問題が無いことを確認した版(`stable`)です。
+イメージのタグの使い分けは [docs/admin/installation.md](docs/admin/installation.md#イメージのタグ) を参照。
 
 ### メンテナンスモードでフルバックアップを取得してから、Devuntuを最新版にアップグレードする場合
 

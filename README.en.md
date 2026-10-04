@@ -100,7 +100,7 @@ It does not start with `docker compose up`.
 
 ### 1. Place compose.yaml
 
-Put [`compose.yaml`](compose.yaml) from this repository in any writable directory (e.g. `/opt/devuntu`).
+Put [`compose.yaml`](https://github.com/playree/devuntu/blob/stable/compose.yaml) from this repository in any writable directory (e.g. `/opt/devuntu`).
 **This is the only file you need**; cloning the repository is not required.
 
 ### 2. Generate the configuration files
@@ -158,6 +158,10 @@ docker compose up -d
 ```
 
 Migrations are applied automatically. **Take a backup before updating** (see [Operations](#operations)).
+
+`compose.yaml` uses the `stable` tag: a release that has been confirmed to work for a while after it was published.
+Use `latest` for the newest release, or `<version>` (e.g. `0.9.3`) to pin a version.
+Images are available for linux/amd64 and linux/arm64.
 
 ## Integrations
 
