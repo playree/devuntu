@@ -12,6 +12,7 @@ import { parseAction } from '@/lib/action/action-client'
 import { scDecideAgentComment } from '@/lib/schema/schema-ticket'
 import { useConfirmAction } from '@/lib/use-confirm-action'
 import { useLocale } from '@/locale/client'
+import { cn } from '@heroui/react'
 import { FC, useState } from 'react'
 import { decideAgentComment } from './server'
 
@@ -33,8 +34,10 @@ export const AgentDecisionButtons: FC<{
   /** 差し戻し理由に貼った画像の添付先 */
   boardId: string
   mentionCandidates?: MentionCandidate[]
+  /** テーブルの行内など、詰めて表示するとき */
+  isSmart?: boolean
   onDecided: () => Promise<void> | void
-}> = ({ commentId, type, proposedChildren, boardId, mentionCandidates, onDecided }) => {
+}> = ({ commentId, type, proposedChildren, boardId, mentionCandidates, isSmart, onDecided }) => {
   const { t } = useLocale()
   const confirmAction = useConfirmAction()
   const rejectModal = useModalState()
@@ -82,13 +85,15 @@ export const AgentDecisionButtons: FC<{
     }
   }
 
+  const iconWidth = isSmart ? 14 : 16
   const isReasonValid = !!reason.trim() && (MAX_REASON_LENGTH === undefined || reason.length <= MAX_REASON_LENGTH)
 
   return (
-    <div className='flex flex-wrap items-center gap-2'>
+    <div className={cn('flex flex-wrap items-center', isSmart ? 'gap-1.5' : 'gap-2')}>
       <MultiButton
         size='sm'
-        icon={<CheckIcon width={16} />}
+        isSmart={isSmart}
+        icon={<CheckIcon width={iconWidth} />}
         isPending={pending === 'approved'}
         isDisabled={!!pending}
         onPress={approve}
@@ -98,7 +103,8 @@ export const AgentDecisionButtons: FC<{
       <MultiButton
         size='sm'
         variant='outline'
-        icon={<ArrowLeftCircleIcon width={16} />}
+        isSmart={isSmart}
+        icon={<ArrowLeftCircleIcon width={iconWidth} />}
         isDisabled={!!pending}
         onPress={() => rejectModal.open()}
       >

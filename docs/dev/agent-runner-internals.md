@@ -124,7 +124,7 @@ devuntu_agent.py
 
 ## 承認 / 差し戻し
 
-エージェントの plan / report には、チケット詳細と `/agents` から「承認」「差し戻し」で返答できる。
+エージェントの plan / report には、チケット詳細と `/agents` から「承認」「差戻」で返答できる。
 押すと返信コメントが投稿され、`TicketComment.decision` に種別(`approved` / `rejected`)が入る。
 実装は `src/lib/agent/agent-decision.ts`。
 

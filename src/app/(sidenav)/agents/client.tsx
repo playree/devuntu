@@ -152,7 +152,7 @@ export const AgentsClient: FC = () => {
               />
             </div>
 
-            <div className='col-span-12 md:col-span-5'>
+            <div className='col-span-12 md:col-span-8'>
               <MultiTagField // 全解除は「絞り込みなし」(すべての処理状態)として扱う
                 label={t('agent_state')}
                 items={AGENT_TASK_STATES.map((state) => ({ id: state, label: agentStateOptions[state] }))}
@@ -192,8 +192,8 @@ export const AgentsClient: FC = () => {
                 id: 'decision',
                 name: t('agent_decision'),
                 allowsSorting: false,
-                minWidth: 230,
-                defaultWidth: 230,
+                minWidth: 170,
+                defaultWidth: 170,
               },
               { id: 'updatedAt', name: t('updated_at'), allowsSorting: true, minWidth: 110, defaultWidth: 110 },
             ]}
@@ -246,6 +246,7 @@ export const AgentsClient: FC = () => {
                 <Table.Cell {...preventParentSelection}>
                   {item.pendingDecision ? (
                     <AgentDecisionButtons
+                      isSmart
                       commentId={item.pendingDecision.commentId}
                       type={item.pendingDecision.type}
                       proposedChildren={item.pendingDecision.proposedChildren}
