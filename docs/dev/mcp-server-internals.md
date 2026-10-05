@@ -61,11 +61,8 @@ MCP サーバーの認証の振り分け・ツールの入力仕様・実装上�
 | ツールの description             | `get_ticket` / `create_ticket` / `update_ticket` / `add_ticket_comment` に要点を1文ずつ | どのクライアントでも                  |
 | `get_ticket` の応答の `workflow` | 手順の全文。チケットを編集できる人の経路のときだけ返す                                  | どのクライアントでも(Codex など)      |
 
-手順は、着手時に status を `doing` にする → 方針を `type=plan` で投稿 → 確認事項は通常コメント →
-ブランチ / PR / コミットを `link_ticket_artifact` で紐付け → 完了時に受け入れ条件の結果を `report_acceptance_criteria` で記録 →
-`type=report` で報告、の順。
-あくまで既定値で、優先順位を「利用者の指示 > チケットの内容 > プロジェクトのルール(CLAUDE.md / AGENTS.md など)とボードの AI 向けコンテキスト > この手順」と添える。
-読むだけ・質問に答えるだけの依頼ではコメントもステータス変更もしない。
+手順はあくまで既定値で、利用者の指示・チケットの内容・プロジェクトのルール・ボードの AI 向けコンテキストを優先させる。
+文言の全文は [届く文言](#届く文言) を参照。
 
 チケットを作成・更新するときは、完了条件(Done の定義・確認項目)を本文(`content`)に書かず、
 検証できる1文ずつ受け入れ条件(`acceptanceCriteria`)に入れるよう伝える。これは人・エージェントの両方の経路の
@@ -75,6 +72,64 @@ MCP サーバーの認証の振り分け・ツールの入力仕様・実装上�
 
 エージェント用トークンの接続では、ステータス変更の手順を載せず `workflow` も返さない。
 自動運用の流れはランナーの指示と `get_agent_task` の rule が持つため([agent-runner-internals.md](agent-runner-internals.md))。
+
+### 届く文言
+
+`mcpInstructions()` が返す全文。文言を変えたらここも更新する(`tests/lib/mcp/mcp-instructions.test.ts` で食い違いを検出する)。
+
+**人の経路(OAuth / ユーザートークン)の `instructions`**
+
+```text
+devuntu is a kanban-style ticket management tool. ticketId accepts a display ID (e.g. ABC-42).
+Comment types: type=plan is a work plan and type=report is a work report; both are shown separately from regular comments on the detail screen.
+Link GitHub / GitLab branches / pull requests (merge requests) / commits to a ticket with link_ticket_artifact to show their state and CI results on the ticket.
+When creating or updating a ticket: Put completion conditions (acceptance criteria / definition of done / checklist) in acceptanceCriteria as one verifiable sentence per item, not in content.
+boardContext in get_ticket / get_board / get_agent_task (only when set) holds premises shared by every ticket on the board (target repository, conventions, terms, etc.). Read it before working on a ticket and follow it; the ticket itself takes precedence over it.
+
+When working from a ticket, follow these steps by default (no need to ask for confirmation each time).
+1. When starting: set status to doing with update_ticket (leave it unchanged if already doing / done)
+2. Once you have a plan: post it with add_ticket_comment using type=plan
+3. Questions for the user: post them as a regular comment without type
+4. After creating a branch / pull request / commit: link the URL with link_ticket_artifact (naming the branch feature/<display ID> links it automatically for repositories connected to the board)
+5. When done: if the ticket has acceptance criteria, record whether each one is met with evidence using report_acceptance_criteria (not in the report comment)
+6. Then post a report with add_ticket_comment using type=report covering what you did, how you verified it, and any remaining issues (attach screenshots via create_image_upload_token)
+
+Precedence: user instructions > the ticket > project rules (CLAUDE.md / AGENTS.md, etc.) and boardContext > these default steps. When you are only asked to read a ticket or answer a question, do not post comments or change the status.
+```
+
+1. devuntu はかんばん形式のチケット管理ツール。ticketId には表示ID(例: ABC-42)を指定できる
+2. コメントの種別: type=plan は対応プラン、type=report は対応報告。どちらも詳細画面で通常コメントと分けて表示される
+3. GitHub / GitLab のブランチ / PR(MR) / コミットを link_ticket_artifact でチケットに紐付けると、状態と CI の結果がチケットに表示される
+4. チケットの作成・更新時: 完了条件(受け入れ条件 / Done の定義 / チェックリスト)は content ではなく acceptanceCriteria に、検証できる1文ずつ入れる
+5. get_ticket / get_board / get_agent_task の boardContext(設定時のみ)は、ボードのすべてのチケットに共通する前提(対象リポジトリ・規約・用語など)。
+   チケットに着手する前に読んで従う。チケット自体の内容がそれより優先される
+6. チケットに対応するときは、既定で次の手順に従う(都度の確認は不要)
+   1. 着手時: update_ticket で status を doing にする(既に doing / done なら変えない)
+   2. プランができたら: add_ticket_comment で type=plan として投稿する
+   3. 利用者への質問: type を付けない通常コメントで投稿する
+   4. ブランチ / PR / コミットを作ったら: link_ticket_artifact で URL を紐付ける
+      (ボードに連携したリポジトリでは、ブランチ名を feature/<表示ID> にすると自動で紐付く)
+   5. 完了時: 受け入れ条件があれば、それぞれ満たしたかを根拠付きで report_acceptance_criteria に記録する(report のコメントには書かない)
+   6. 続けて add_ticket_comment で type=report として、やったこと・確認方法・残課題を報告する(スクリーンショットは create_image_upload_token で添付)
+7. 優先順位: 利用者の指示 > チケット > プロジェクトのルール(CLAUDE.md / AGENTS.md など)と boardContext > この既定の手順。
+   チケットを読む・質問に答えるだけを頼まれたときは、コメントもステータス変更もしない
+
+**エージェント用トークンの `instructions`**
+
+```text
+devuntu is a kanban-style ticket management tool. ticketId accepts a display ID (e.g. ABC-42).
+Comment types: type=plan is a work plan and type=report is a work report; both are shown separately from regular comments on the detail screen.
+Link GitHub / GitLab branches / pull requests (merge requests) / commits to a ticket with link_ticket_artifact to show their state and CI results on the ticket.
+When creating or updating a ticket: Put completion conditions (acceptance criteria / definition of done / checklist) in acceptanceCriteria as one verifiable sentence per item, not in content.
+boardContext in get_ticket / get_board / get_agent_task (only when set) holds premises shared by every ticket on the board (target repository, conventions, terms, etc.). Read it before working on a ticket and follow it; the ticket itself takes precedence over it.
+In automated operation, follow the rule returned by get_agent_task and the runner instructions, and finally report the result with finish_agent_task.
+```
+
+先頭の5行は人の経路の 1〜5 と同じ。最後の行は「自動運用では get_agent_task が返す rule とランナーの指示に従い、最後に finish_agent_task で結果を報告する」。
+
+**`get_ticket` の `workflow`**
+
+人の経路でチケットを編集できるときだけ、上の 6 の手順(1〜6)と 7 の優先順位を文字列の配列で返す(英文は instructions と同じ)。
 
 ## 入力の約束ごと
 
