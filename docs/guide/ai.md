@@ -105,6 +105,13 @@ AI ツールに「devuntu の ping を呼んで」と頼む。自分のメール
 ボードの AI 向けコンテキストで別のやり方を書いた場合は、そちらが優先される。
 実際に AI へ届く文言は [mcp-server-internals.md の「届く文言」](../dev/mcp-server-internals.md#届く文言)(開発者向け)を参照。
 
+チケットには、次のようなプラン(左)と報告書(右)がコメントとして残る。
+
+<p>
+  <img src="../images/ticket-plan.webp" alt="AI が投稿したプラン" width="49%">
+  <img src="../images/ticket-report.webp" alt="AI が投稿した報告書" width="49%">
+</p>
+
 ### MCP 経由でできること・できないこと
 
 権限は画面と同じで、ボードのロール(オーナー / メンバー)で決まる。ただし、AI が他人の作業を書き換えないよう、

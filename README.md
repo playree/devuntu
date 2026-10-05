@@ -261,6 +261,11 @@ DevuntuはMCPサーバーの単純な提供だけでなく、AI開発に適し�
 - チケットに受け入れ条件があれば、対応後に条件ごとの充足と根拠を自己申告として記録します(`report_acceptance_criteria`)。
 - チケットの作成時にボードのチケットテンプレートを指定でき、ボードの「AI向けコンテキスト」はチケットやボードの取得時に `boardContext` として届きます。
 
+<p>
+  <img src="docs/images/ticket-plan.webp" alt="AI が投稿したプラン" width="49%">
+  <img src="docs/images/ticket-report.webp" alt="AI が投稿した報告書" width="49%">
+</p>
+
 つなぎ方と使い方は [docs/guide/ai.md](docs/guide/ai.md)、公開設定とトークンの運用は [docs/admin/mcp-server.md](docs/admin/mcp-server.md) を参照
 
 ### AIエージェント
