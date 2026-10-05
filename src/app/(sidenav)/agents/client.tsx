@@ -192,8 +192,8 @@ export const AgentsClient: FC = () => {
                 id: 'decision',
                 name: t('agent_decision'),
                 allowsSorting: false,
-                minWidth: 230,
-                defaultWidth: 230,
+                minWidth: 170,
+                defaultWidth: 170,
               },
               { id: 'updatedAt', name: t('updated_at'), allowsSorting: true, minWidth: 110, defaultWidth: 110 },
             ]}
@@ -246,6 +246,7 @@ export const AgentsClient: FC = () => {
                 <Table.Cell {...preventParentSelection}>
                   {item.pendingDecision ? (
                     <AgentDecisionButtons
+                      isSmart
                       commentId={item.pendingDecision.commentId}
                       type={item.pendingDecision.type}
                       proposedChildren={item.pendingDecision.proposedChildren}
