@@ -6,6 +6,8 @@ import {
   TICKET_WORKFLOW,
   ticketWorkflowFor,
 } from '@/lib/mcp/mcp-instructions'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
 describe('ticketWorkflowFor', () => {
@@ -47,6 +49,15 @@ describe('mcpInstructions', () => {
   it('優先順位は人の経路にだけ載せる(エージェントはランナーの指示に従う)', () => {
     expect(mcpInstructions('oauth')).toContain('Precedence:')
     expect(mcpInstructions('agent')).not.toContain('Precedence:')
+  })
+
+  it('ドキュメントに載せた全文がコードの文言と一致する', () => {
+    const doc = readFileSync(
+      fileURLToPath(new URL('../../../docs/dev/mcp-server-internals.md', import.meta.url)),
+      'utf8',
+    )
+    expect(doc).toContain(`\n${mcpInstructions('oauth')}\n`)
+    expect(doc).toContain(`\n${mcpInstructions('agent')}\n`)
   })
 
   it('クライアントに切り詰められないよう短く保つ', () => {
