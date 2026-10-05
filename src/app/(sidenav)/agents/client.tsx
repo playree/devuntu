@@ -152,7 +152,7 @@ export const AgentsClient: FC = () => {
               />
             </div>
 
-            <div className='col-span-12 md:col-span-5'>
+            <div className='col-span-12 md:col-span-8'>
               <MultiTagField // 全解除は「絞り込みなし」(すべての処理状態)として扱う
                 label={t('agent_state')}
                 items={AGENT_TASK_STATES.map((state) => ({ id: state, label: agentStateOptions[state] }))}
