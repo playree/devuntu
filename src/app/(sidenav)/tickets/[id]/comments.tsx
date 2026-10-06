@@ -180,6 +180,7 @@ export const TicketComments: FC<{
         <div key={comment.id} className='space-y-2'>
           <CommentItem
             comment={comment}
+            ticketId={ticket.id}
             boardId={ticket.boardId}
             mentionCandidates={mentionCandidates}
             canDelete={ticket.canDelete}
@@ -199,6 +200,7 @@ export const TicketComments: FC<{
                 <CommentItem
                   key={reply.id}
                   comment={reply}
+                  ticketId={ticket.id}
                   boardId={ticket.boardId}
                   mentionCandidates={mentionCandidates}
                   canDelete={ticket.canDelete}

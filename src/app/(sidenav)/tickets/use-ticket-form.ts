@@ -18,16 +18,17 @@ export const useTicketFormOptions = (initial?: TicketFormOptions) => {
 /**
  * ボードの担当者候補(プライベートボードなら本人のみ)。
  * 呼び出し元が取得済みの候補を持っている場合は initial を渡すと取得しない。
- * isLoaded は取得に成功したかどうか。失敗・取得中は false で、他へ渡すかの判断に使う
+ * isLoaded は取得に成功したかどうか。失敗・取得中は false で、他へ渡すかの判断に使う。
+ * isLoading は取得中かどうか。失敗も含めて結果が出るまで待ちたい場合に使う
  */
 export const useBoardAssignees = (boardId: string | undefined, initial?: BoardAssignee[]) => {
-  const { data } = useActionData(() => getAssigneeOptions({ id: boardId ?? '' }), {
+  const { data, isLoading } = useActionData(() => getAssigneeOptions({ id: boardId ?? '' }), {
     skip: !boardId || !!initial,
     key: boardId,
   })
 
   if (initial) {
-    return { assignees: initial, isLoaded: true }
+    return { assignees: initial, isLoaded: true, isLoading: false }
   }
-  return { assignees: data ?? [], isLoaded: !!boardId && !!data }
+  return { assignees: data ?? [], isLoaded: !!boardId && !!data, isLoading }
 }

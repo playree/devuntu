@@ -4,24 +4,19 @@ import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
 import { getFieldConstraints } from '@/components/general/field-constraints'
 import { Panel } from '@/components/general/panel'
-import {
-  CheckIcon,
-  ClipboardDocumentCheckIcon,
-  ClipboardDocumentIcon,
-  PencilSquareIcon,
-  ReplyIcon,
-  TrashIcon,
-} from '@/components/icon'
+import { CheckIcon, PencilSquareIcon, PrinterIcon, ReplyIcon, TrashIcon } from '@/components/icon'
 import { MarkdownInput } from '@/components/markdown/markdown-editor'
 import { MarkdownView } from '@/components/markdown/markdown-view'
 import type { MentionCandidate } from '@/components/markdown/mention-menu'
 import { notify } from '@/components/notify'
+import { CommentTypeIcon } from '@/components/ticket/comment-type-icon'
 import { MentionChips } from '@/components/ticket/mention-chips'
 import { DecisionChip } from '@/components/ticket/ticket-chip'
 import { parseAction } from '@/lib/action/action-client'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { TICKET_COMMENT_TYPE_LOCALE } from '@/lib/board/ticket-enum'
 import { commentAnchorId } from '@/lib/board/ticket-id'
+import { ticketPrintPath } from '@/lib/board/ticket-print'
 import { dayformat } from '@/lib/day'
 import { scCreateTicketComment } from '@/lib/schema/schema-ticket'
 import { useConfirmAction } from '@/lib/use-confirm-action'
@@ -52,6 +47,7 @@ const commentStyles = tv({
 /** コメント 1 件。投稿者本人なら編集できる */
 export const CommentItem: FC<{
   comment: Comment
+  ticketId: string
   boardId: string
   /** `@` 入力時のメンション候補(そのボードのメンバー) */
   mentionCandidates: MentionCandidate[]
@@ -61,7 +57,7 @@ export const CommentItem: FC<{
   refresh: () => Promise<void>
   /** 本文の下に置く操作(承認/差し戻しボタン) */
   footer?: ReactNode
-}> = ({ comment, boardId, mentionCandidates, canDelete, isTarget, refresh, footer }) => {
+}> = ({ comment, ticketId, boardId, mentionCandidates, canDelete, isTarget, refresh, footer }) => {
   const { t } = useLocale()
   const tz = useUserTimezone()
   const confirmAction = useConfirmAction()
@@ -105,6 +101,17 @@ export const CommentItem: FC<{
         <span className='font-mono'>{dayformat(comment.createdAt, 'tz-minute', tz)}</span>
         {comment.decision && <DecisionChip value={comment.decision} />}
         <div className='ml-auto flex gap-0.5'>
+          {comment.type && !isEditing && (
+            <MultiButton // プラン/報告書だけを PDF に出す。通常のコメントは単体で残す用途が無いので出さない
+              isIconOnly
+              size='sm'
+              variant='outline'
+              className='h-7 w-7 rounded-sm'
+              tooltip={t('export_pdf')}
+              icon={<PrinterIcon width={16} />}
+              onPress={() => window.open(ticketPrintPath(ticketId, comment.id), '_blank', 'noopener')}
+            />
+          )}
           {comment.isMine && !isEditing && (
             <MultiButton
               isIconOnly
@@ -165,9 +172,7 @@ export const CommentItem: FC<{
         <Accordion defaultExpandedKeys={[]} hideSeparator className='mt-1'>
           <AccordionSection
             id='body'
-            icon={
-              comment.type === 'plan' ? <ClipboardDocumentIcon width={16} /> : <ClipboardDocumentCheckIcon width={16} />
-            }
+            icon={<CommentTypeIcon type={comment.type} />}
             title={t(TICKET_COMMENT_TYPE_LOCALE[comment.type])}
             bodyClassName='px-0'
           >

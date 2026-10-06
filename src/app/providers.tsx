@@ -6,11 +6,12 @@ import { GeneralUiText, GeneralUiTextProvider } from '@/components/general/ui-te
 import { LocaleProvider } from '@/components/locale/client'
 import { NotifyProvider } from '@/components/notify'
 import { DefaultTimezoneContext } from '@/lib/auth/use-timezone'
+import { PRINT_PATH_PREFIX } from '@/lib/board/ticket-print'
 import { useLocale } from '@/locale/client'
 import { localeConfig } from '@/locale/config'
 import { RouterProvider } from '@heroui/react'
 import { ThemeProvider, type ThemeProviderProps } from 'next-themes'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { FC, ReactNode, useMemo } from 'react'
 
 export interface ProvidersProps {
@@ -29,6 +30,19 @@ const MyRouterProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   return (
     <RouterProvider navigate={(href, routerOptions) => router.push(href, routerOptions)}>{children}</RouterProvider>
+  )
+}
+
+/**
+ * 印刷用ページはダーク設定でも白地で出す(PDF に保存したときに読めるように)。
+ * パスの参照をここに閉じ込め、遷移のたびに Providers 全体が描き直されないようにする
+ */
+const MyThemeProvider: FC<{ themeProps?: ThemeProviderProps; children: ReactNode }> = ({ themeProps, children }) => {
+  const forcedTheme = usePathname().startsWith(PRINT_PATH_PREFIX) ? 'light' : undefined
+  return (
+    <ThemeProvider {...themeProps} forcedTheme={forcedTheme}>
+      {children}
+    </ThemeProvider>
   )
 }
 
@@ -78,7 +92,7 @@ export const Providers: FC<ProvidersProps> = ({
   defaultTimezone,
 }) => {
   return (
-    <ThemeProvider {...themeProps}>
+    <MyThemeProvider themeProps={themeProps}>
       <NotifyProvider />
       <LocaleProvider
         config={localeConfig}
@@ -96,6 +110,6 @@ export const Providers: FC<ProvidersProps> = ({
           </MyGeneralUiTextProvider>
         </DefaultTimezoneContext>
       </LocaleProvider>
-    </ThemeProvider>
+    </MyThemeProvider>
   )
 }

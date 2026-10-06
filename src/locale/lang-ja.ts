@@ -306,6 +306,7 @@ export const ja: DefaultLocaleItems = {
   error: 'エラー',
   everyday: '毎日',
   expires_in_days: '${days}日後',
+  export_pdf: 'PDF出力',
   filter: 'フィルタ',
   free_memory: '空きメモリ',
   git_repositories: '対応付けたリポジトリ',
@@ -423,6 +424,7 @@ export const ja: DefaultLocaleItems = {
   prev: '前へ',
   prev_week: '前週',
   preview: 'プレビュー',
+  print_or_save_pdf: '印刷 / PDFに保存',
   priority: '優先度',
   priority_high: '高',
   priority_low: '低',
@@ -583,6 +585,7 @@ export const ja: DefaultLocaleItems = {
   msg_added_passkey: 'パスキーを登録しました。',
   msg_added_passkey_description: '必要に応じて名前を編集してください。',
   msg_passkey_failed: 'パスキーの操作に失敗しました。もう一度お試しください。',
+  msg_print_pdf_hint: '印刷ダイアログの送信先で「PDFに保存」を選んでください。',
   msg_added_target: '${target} を追加しました。',
   msg_agent_approver_desc:
     '承認者だけがチケットのエージェントモードを変更できます。\n承認者が1人もいないエージェントは、誰もエージェントモードを変更できません。',

@@ -1,6 +1,7 @@
 'use client'
 
-import { cn } from '@heroui/react'
+import { useResolvedTheme } from '@/lib/use-resolved-theme'
+import { cn, Skeleton } from '@heroui/react'
 import {
   codeBlockPlugin,
   headingsPlugin,
@@ -14,7 +15,6 @@ import {
   thematicBreakPlugin,
 } from '@mdxeditor/editor'
 import '@mdxeditor/editor/style.css'
-import { useTheme } from 'next-themes'
 import { FC, MouseEvent, useEffect, useMemo, useRef } from 'react'
 import { useModalState } from '../general/modal'
 import { findLightboxImage, ImageLightbox, LightboxImage } from './image-lightbox'
@@ -58,7 +58,7 @@ const openLinkInNewTab = (e: MouseEvent<HTMLDivElement>) => {
  * CodeMirror を含まないぶん表示だけの画面では読み込むチャンクが小さくなる。
  */
 const MdxViewCore: FC<MdxViewCoreProps> = ({ markdown, onError, mentionUsers }) => {
-  const { resolvedTheme } = useTheme()
+  const resolvedTheme = useResolvedTheme()
   const editorRef = useRef<MDXEditorMethods>(null)
   /**
    * 反映済みの Markdown。マウント時は `markdown` prop から取り込まれるため初期値に入れておく。
@@ -105,7 +105,13 @@ const MdxViewCore: FC<MdxViewCoreProps> = ({ markdown, onError, mentionUsers }) 
       tablePlugin(),
       readOnlyTablePlugin(),
       // readOnly でも click は届くため、画像の選択枠とリサイズハンドルは明示的に止める
-      imagePlugin({ disableImageResize: true, disableImageSettingsButton: true, ImageDialog: () => null }),
+      imagePlugin({
+        disableImageResize: true,
+        disableImageSettingsButton: true,
+        ImageDialog: () => null,
+        // 画像の読み込み中は <img> が DOM に出ないため、印刷用ページが待つ目印を付けた枠を出す(usePrintWhenReady)
+        imagePlaceholder: () => <Skeleton data-markdown-loading className='h-24 w-40 rounded-lg' />,
+      }),
       codeBlockPlugin({ codeBlockEditorDescriptors: [readOnlyCodeBlockDescriptor] }),
       // 表示専用なので候補の入力補助は付けない(記法の解釈と描画だけ)
       mentionPlugin(),

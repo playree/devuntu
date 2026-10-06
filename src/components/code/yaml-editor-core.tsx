@@ -1,5 +1,6 @@
 'use client'
 
+import { useResolvedTheme } from '@/lib/use-resolved-theme'
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
 import { yaml } from '@codemirror/lang-yaml'
 import {
@@ -11,7 +12,6 @@ import {
 } from '@codemirror/language'
 import { Compartment, EditorState, Extension } from '@codemirror/state'
 import { placeholder as cmPlaceholder, EditorView, highlightActiveLine, keymap, lineNumbers } from '@codemirror/view'
-import { useTheme } from 'next-themes'
 import { FC, useEffect, useRef } from 'react'
 import { codeMirrorDark } from './codemirror-dark'
 import { yamlLint, type EditorIssue } from './yaml-lint'
@@ -134,11 +134,11 @@ const YamlEditorInner: FC<YamlEditorCoreProps & { isDark: boolean }> = ({
 }
 
 /**
- * `useTheme` の resolvedTheme は初回レンダーでは undefined なので、確定するまで本体をマウントしない。
+ * テーマ(useResolvedTheme)は初回レンダーでは undefined なので、確定するまで本体をマウントしない。
  * 先にマウントすると、ダークの利用者に一瞬ライトの編集面が見える。
  */
 const YamlEditorCore: FC<YamlEditorCoreProps> = (props) => {
-  const { resolvedTheme } = useTheme()
+  const resolvedTheme = useResolvedTheme()
   if (!resolvedTheme) {
     return null
   }

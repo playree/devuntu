@@ -9,7 +9,12 @@ import { MentionUser } from './mention-node'
 // MDXEditor はブラウザ専用なので SSR から外す(lexical も別チャンクへ分離される)
 const MdxViewCore = dynamic(() => import('./mdx-view-core'), {
   ssr: false,
-  loading: () => <Skeleton className='h-6 w-full rounded-lg' />,
+  loading: () => (
+    <Skeleton // 印刷用ページが描画の完了を待つ目印(usePrintWhenReady)
+      data-markdown-loading
+      className='h-6 w-full rounded-lg'
+    />
+  ),
 })
 
 /**
