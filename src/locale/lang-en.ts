@@ -307,6 +307,7 @@ export const en: DefaultLocaleItems = {
   error: 'Error',
   everyday: 'Every Day',
   expires_in_days: 'In ${days} days',
+  export_pdf: 'Export PDF',
   filter: 'Filter',
   free_memory: 'Free Memory',
   git_repositories: 'Linked Repositories',
@@ -423,6 +424,7 @@ export const en: DefaultLocaleItems = {
   prev: 'Prev',
   prev_week: 'Previous Week',
   preview: 'Preview',
+  print_or_save_pdf: 'Print / Save as PDF',
   priority: 'Priority',
   priority_high: 'High',
   priority_low: 'Low',
@@ -583,6 +585,7 @@ Please copy and use the connection information above.
   msg_added_passkey: 'Passkey registered.',
   msg_added_passkey_description: 'Edit the name as needed.',
   msg_passkey_failed: 'Passkey operation failed. Please try again.',
+  msg_print_pdf_hint: 'Choose "Save as PDF" as the destination in the print dialog.',
   msg_added_target: 'Added ${target}.',
   msg_agent_approver_desc:
     'Only approvers can change the agent mode of a ticket. If an agent has no approvers, nobody can change its agent mode.',

@@ -3,6 +3,7 @@
 import { codeMirrorDark } from '@/components/code/codemirror-dark'
 import { notify } from '@/components/notify'
 import { uploadImage } from '@/lib/storage/upload'
+import { useResolvedTheme } from '@/lib/use-resolved-theme'
 import { useLocale } from '@/locale/client'
 import { cn } from '@heroui/react'
 import {
@@ -35,7 +36,6 @@ import {
   UndoRedo,
 } from '@mdxeditor/editor'
 import '@mdxeditor/editor/style.css'
-import { useTheme } from 'next-themes'
 import { FC, ReactElement, useEffect, useMemo, useRef, useState } from 'react'
 import { decoratorClickPlugin } from './mdx-decorator-click-plugin'
 import { MdxImageDialog } from './mdx-image-dialog'
@@ -271,11 +271,11 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
  * ツールバーに出さない構文(`---` / `![](url)`)のプラグインも、既存本文を
  * パースエラーにしないために読み込んでおく。
  *
- * `useTheme` の resolvedTheme は初回レンダーでは undefined なので、確定するまで
+ * テーマ(useResolvedTheme)は初回レンダーでは undefined なので、確定するまで
  * 本体をマウントしない。先にマウントすると確定直後に plugins が作り直されてしまう。
  */
 const MdxEditorCore: FC<MdxEditorCoreProps> = (props) => {
-  const { resolvedTheme } = useTheme()
+  const resolvedTheme = useResolvedTheme()
   if (!resolvedTheme) {
     return null
   }
