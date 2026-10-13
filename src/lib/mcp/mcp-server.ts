@@ -43,7 +43,7 @@ import {
 } from '@/lib/schema/schema-ticket'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { jsonResult } from './mcp'
+import { jsonResult, TOOL_ANNOTATIONS } from './mcp'
 
 /**
  * devuntu の MCP サーバー本体。
@@ -158,7 +158,11 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
 
   server.registerTool(
     'ping',
-    { title: 'Ping', description: 'Connectivity check. Returns the authorized user' },
+    {
+      title: 'Ping',
+      annotations: TOOL_ANNOTATIONS.readOnly,
+      description: 'Connectivity check. Returns the authorized user',
+    },
     async () => ({
       content: [{ type: 'text' as const, text: `pong: ${auth.user.email}` }],
     }),
@@ -168,6 +172,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     'echo',
     {
       title: 'Echo',
+      annotations: TOOL_ANNOTATIONS.readOnly,
       description: 'Returns the input string as is',
       inputSchema: z.strictObject({ message: z.string().min(1) }),
     },
@@ -178,6 +183,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     'list_boards',
     {
       title: 'List boards',
+      annotations: TOOL_ANNOTATIONS.readOnly,
       description:
         'Returns the boards you can access. Before creating or searching tickets, identify the target board ID (or key) here. ' +
         'Assignee and tag candidates differ per board, so call get_board next',
@@ -192,6 +198,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     'get_board',
     {
       title: 'Get board',
+      annotations: TOOL_ANNOTATIONS.readOnly,
       description:
         'Returns board details (members, tags, ticket counts per status, and boardContext / templates if set). ' +
         'Use the IDs returned here for assigneeId and tagIds in create_ticket / update_ticket. ' +
@@ -205,6 +212,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     'get_ticket',
     {
       title: 'Get ticket',
+      annotations: TOOL_ANNOTATIONS.readOnly,
       description:
         'Gets ticket details by display ID (e.g. ABC-42) or ticket ID, including content, status, assignee, tags, comments, linked artifacts, ' +
         'parent/children, related tickets, and recent change history (activities, newest first). ' +
@@ -219,6 +227,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     'search_tickets',
     {
       title: 'Search tickets',
+      annotations: TOOL_ANNOTATIONS.readOnly,
       description: 'Searches accessible tickets by keyword, status, priority, tag, board, assignee, and related ticket',
       inputSchema: z.strictObject(mcpTicketSearchSchema.shape),
     },
@@ -229,6 +238,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     'create_ticket',
     {
       title: 'Create ticket',
+      annotations: TOOL_ANNOTATIONS.additive,
       description: `Creates a new ticket on a board. Specify parentId to create it as a child ticket. ${ACCEPTANCE_CRITERIA_GUIDE}`,
       inputSchema: z.strictObject(mcpCreateTicketSchema.shape),
     },
@@ -240,6 +250,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     'update_ticket',
     {
       title: 'Update ticket',
+      annotations: TOOL_ANNOTATIONS.destructive,
       description:
         'Updates ticket fields (title / content / priority / due date / assignee / tags / acceptance criteria / parent / child advance rule) and status. Set status to doing when you start working on it. ' +
         'Members cannot update tickets assigned to someone else (unassigned tickets are allowed; owners have no restriction). ' +
@@ -254,6 +265,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     'delete_ticket',
     {
       title: 'Delete ticket',
+      annotations: TOOL_ANNOTATIONS.destructiveIdempotent,
       description: 'Deletes a ticket. Both owners and members can delete only tickets they created',
       inputSchema: z.strictObject({ ticketId: z.string().min(1) }),
     },
@@ -264,6 +276,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     'add_ticket_comment',
     {
       title: 'Add comment',
+      annotations: TOOL_ANNOTATIONS.additive,
       description:
         'Adds a comment to a ticket. Post with type=plan once you have a plan and type=report when you finish ' +
         '(record acceptance criteria results with report_acceptance_criteria, not in the report); ' +
@@ -288,6 +301,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     'update_ticket_comment',
     {
       title: 'Update comment',
+      annotations: TOOL_ANNOTATIONS.destructiveIdempotent,
       description: 'Edits a comment you posted',
       inputSchema: z.strictObject({ commentId: z.uuidv7(), content: zCommentContent }),
     },
@@ -298,6 +312,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     'delete_ticket_comment',
     {
       title: 'Delete comment',
+      annotations: TOOL_ANNOTATIONS.destructiveIdempotent,
       description: 'Deletes a comment you posted, or any comment on a ticket you are allowed to delete',
       inputSchema: z.strictObject({ commentId: z.uuidv7() }),
     },
@@ -308,6 +323,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     'link_ticket_artifact',
     {
       title: 'Link artifact',
+      annotations: TOOL_ANNOTATIONS.additiveIdempotent,
       description:
         'Links a GitHub / GitLab branch / pull request (merge request) / commit URL to a ticket. ' +
         'The kind is detected from the URL. Link a pull request once created so its state and CI results appear on the ticket detail. ' +
@@ -326,6 +342,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     'unlink_ticket_artifact',
     {
       title: 'Unlink artifact',
+      annotations: TOOL_ANNOTATIONS.destructiveIdempotent,
       description:
         'Unlinks a branch / pull request (merge request) / commit from a ticket. Get linkId from links in get_ticket',
       inputSchema: z.strictObject({ linkId: z.uuidv7() }),
@@ -337,6 +354,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     'link_related_ticket',
     {
       title: 'Link related ticket',
+      annotations: TOOL_ANNOTATIONS.additiveIdempotent,
       description:
         'Links two tickets on the same board as related (undirected; visible from both tickets). ' +
         'Members can link a ticket assigned to someone else as long as the other ticket is assigned to them or unassigned. ' +
@@ -353,6 +371,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     'unlink_ticket_relation',
     {
       title: 'Unlink relation',
+      annotations: TOOL_ANNOTATIONS.destructiveIdempotent,
       description:
         'Removes a parent/child or related link. Get relationId from parent / children / related in get_ticket. ' +
         'Members can remove a related link if either ticket is assigned to them or unassigned, and a parent/child link if the child ticket is assigned to them or unassigned',
@@ -375,6 +394,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       'report_acceptance_criteria',
       {
         title: 'Report acceptance criteria',
+        annotations: TOOL_ANNOTATIONS.destructiveIdempotent,
         description:
           'Records whether each acceptance criterion is met, with evidence, as a self-check shown on the ticket detail. ' +
           'Call it when you finish working on a ticket that has acceptance criteria, instead of listing the results in the type=report comment. ' +

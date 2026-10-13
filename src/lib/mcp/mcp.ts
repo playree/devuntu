@@ -5,6 +5,8 @@
  * ここはトークンの発行画面からも読むので、純粋な値と関数だけを置くこと。
  */
 
+import type { ToolAnnotations } from '@modelcontextprotocol/sdk/types.js'
+
 /** エージェント用トークンや OAuth のアクセストークン(JWT)と取り違えないための接頭辞 */
 export const MCP_TOKEN_PREFIX = 'devuntu_pat_'
 
@@ -71,3 +73,17 @@ export const mcpTokenExportCommand = (tokenEnv: string, token: string): string =
 export const jsonResult = (value: unknown) => ({
   content: [{ type: 'text' as const, text: JSON.stringify(value, null, 2) }],
 })
+
+/**
+ * ツールの注釈(MCP の Tool annotations)。クライアントが確認の要否を決めるヒントで、権限の強制ではない。
+ * Claude Code のプランモードは readOnlyHint が true のツールしか確認なしで呼ばないので、書き込むツールに readOnly を付けないこと。
+ * destructive は追加だけで済まない(既存の値を上書き・削除しうる)もの、idempotent は同じ入力で繰り返しても結果が変わらないもの。
+ * devuntu の外(GitHub など)へ書き込むツールは無いので openWorldHint は常に false
+ */
+export const TOOL_ANNOTATIONS = {
+  readOnly: { readOnlyHint: true, openWorldHint: false },
+  additive: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+  additiveIdempotent: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  destructive: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false },
+  destructiveIdempotent: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
+} as const satisfies Record<string, ToolAnnotations>
