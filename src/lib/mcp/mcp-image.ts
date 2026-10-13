@@ -27,7 +27,7 @@ import { resizeWebp, WEBP_MIME } from '../storage/image'
 import { getObject } from '../storage/storage'
 import { isValidUploadKey, toUploadKey, UPLOAD_URL_PREFIX } from '../storage/upload'
 import { signUploadToken, UPLOAD_TOKEN_TTL_SECONDS } from '../storage/upload-token'
-import { jsonResult } from './mcp'
+import { jsonResult, TOOL_ANNOTATIONS } from './mcp'
 import { resolveBoardId } from './mcp-board'
 import { resolveTicketId } from './mcp-ticket'
 
@@ -181,6 +181,7 @@ export const registerImageTools = (server: McpServer, auth: ResourceAuth) => {
     'create_image_upload_token',
     {
       title: 'Create image upload token',
+      annotations: TOOL_ANNOTATIONS.additive,
       description:
         'Issues a single-use upload URL and token for embedding images in ticket content or comments. ' +
         `POST the image file directly with the returned curl command to get \`${UPLOAD_URL_PREFIX}/<key>.webp\`, ` +
@@ -196,6 +197,7 @@ export const registerImageTools = (server: McpServer, auth: ResourceAuth) => {
     'upload_image',
     {
       title: 'Upload image (base64)',
+      annotations: TOOL_ANNOTATIONS.additive,
       description:
         'Uploads an image passed directly as base64 and returns a URL for embedding it in content. ' +
         'This is a fallback only for clients that cannot run a shell; base64 consumes a lot of context, ' +
@@ -219,6 +221,7 @@ export const registerImageTools = (server: McpServer, auth: ResourceAuth) => {
     'get_image',
     {
       title: 'Get image',
+      annotations: TOOL_ANNOTATIONS.readOnly,
       description:
         `Fetches an image embedded in ticket content or a comment (a \`${UPLOAD_URL_PREFIX}/<key>\` URL, or the key) and returns it as an image. ` +
         'Use it when you need to actually see a screenshot or diagram in the content',

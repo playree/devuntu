@@ -26,7 +26,7 @@ import { listTicketCriteria } from '../board/ticket-criterion'
 import { errInvalidOperation } from '../error'
 import type { ResourceAuth } from '../oauth/oauth-resource'
 import { zChildProposal, zCommentContent, zCriterionReports } from '../schema/schema-ticket'
-import { jsonResult } from './mcp'
+import { jsonResult, TOOL_ANNOTATIONS } from './mcp'
 import { resolveTicketId } from './mcp-ticket'
 
 /** 稼働条件を満たさないときに Claude へ返す指示。判断の余地を残さない文にする */
@@ -55,6 +55,7 @@ export const registerAgentSetupTool = (server: McpServer) => {
     'get_agent_setup_guide',
     {
       title: 'Agent setup guide',
+      annotations: TOOL_ANNOTATIONS.readOnly,
       description:
         'Returns the steps to set up automated AI agent operation (Devuntu Agent) on your machine, ' +
         'from preparing the working directory to fetching and configuring the runner, registering cron, and verifying it works. ' +
@@ -77,6 +78,7 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
     'get_agent_task',
     {
       title: 'Get rule and tasks',
+      annotations: TOOL_ANNOTATIONS.readOnly,
       description:
         'Always call this before processing a ticket. Returns the run conditions (whether active and the allowed hours), the tickets to process, ' +
         'the action to perform, and the rule instructions. Follow the rule throughout the whole run. ' +
@@ -155,6 +157,7 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
     'finish_agent_task',
     {
       title: 'Report task result',
+      annotations: TOOL_ANNOTATIONS.destructive,
       description:
         'Reports the result of processing a ticket and closes the run. ' +
         'planned=plan posted and waiting for a reply, completed=done, skipped=skipped, failed=failed. ' +
@@ -187,6 +190,7 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
     'propose_child_tickets',
     {
       title: 'Propose child tickets',
+      annotations: TOOL_ANNOTATIONS.additive,
       description:
         'Posts a plan (type=plan comment) that splits the ticket into child tickets. ' +
         'When a human approves it, the children are created under this ticket with the given order, ' +

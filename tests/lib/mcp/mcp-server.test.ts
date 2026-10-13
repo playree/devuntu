@@ -6,6 +6,7 @@
  * 単体テストの対象外としている)。
  */
 
+import { TOOL_ANNOTATIONS } from '@/lib/mcp/mcp'
 import { getBoardForMcp, listBoardsForMcp } from '@/lib/mcp/mcp-board'
 import {
   addTicketCommentForMcp,
@@ -119,6 +120,42 @@ describe('createDevuntuMcpServer', () => {
       const { tools } = await client.listTools()
       expect(JSON.stringify(tools)).not.toMatch(JAPANESE)
       expect(client.getInstructions() ?? '').not.toMatch(JAPANESE)
+    }
+  })
+
+  it('ツールの注釈は分類表のとおり(書き込むツールに readOnlyHint を付けない)', async () => {
+    const expected: Record<string, keyof typeof TOOL_ANNOTATIONS> = {
+      ping: 'readOnly',
+      echo: 'readOnly',
+      list_boards: 'readOnly',
+      get_board: 'readOnly',
+      get_ticket: 'readOnly',
+      search_tickets: 'readOnly',
+      get_image: 'readOnly',
+      get_agent_setup_guide: 'readOnly',
+      get_agent_task: 'readOnly',
+      create_ticket: 'additive',
+      add_ticket_comment: 'additive',
+      create_image_upload_token: 'additive',
+      upload_image: 'additive',
+      propose_child_tickets: 'additive',
+      link_ticket_artifact: 'additiveIdempotent',
+      link_related_ticket: 'additiveIdempotent',
+      update_ticket: 'destructive',
+      finish_agent_task: 'destructive',
+      update_ticket_comment: 'destructiveIdempotent',
+      report_acceptance_criteria: 'destructiveIdempotent',
+      delete_ticket: 'destructiveIdempotent',
+      delete_ticket_comment: 'destructiveIdempotent',
+      unlink_ticket_artifact: 'destructiveIdempotent',
+      unlink_ticket_relation: 'destructiveIdempotent',
+    }
+    for (const authKind of [auth, patAuth, agentAuth]) {
+      const { tools } = await (await connectDevuntuMcp(authKind)).listTools()
+      for (const tool of tools) {
+        expect(tool.name in expected, tool.name).toBe(true)
+        expect(tool.annotations, tool.name).toEqual(TOOL_ANNOTATIONS[expected[tool.name]])
+      }
     }
   })
 

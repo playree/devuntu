@@ -95,6 +95,31 @@ OAuth / ユーザーの MCP トークンで接続した場合だけ使える
 
 入力と応答の詳細は [agent-runner-internals.md](agent-runner-internals.md#エージェント専用の-mcp-ツール) を参照。
 
+### ツールの注釈(annotations)
+
+各ツールには MCP の Tool annotations を付けている(`src/lib/mcp/mcp.ts` の `TOOL_ANNOTATIONS`)。
+クライアントが確認の要否を決めるためのヒントで、権限の強制ではない(認可はサーバー側でこれまでどおり行う)。
+Claude Code のプランモードは `readOnlyHint: true` のツールしか確認なしで呼ばないため、読み取りのツールだけに付ける。
+devuntu の外(GitHub など)へ書き込むツールは無いので、`openWorldHint` は全ツール `false`。
+
+MCP の仕様に合わせ、追加だけで済まない(既存の値を上書き・削除しうる)ものを destructive、
+同じ入力で繰り返しても結果が変わらないものを idempotent とする。
+
+| 分類                    | readOnly | destructive | idempotent | ツール                                                                                                                                                   |
+| ----------------------- | -------- | ----------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `readOnly`              | true     | -           | -          | `ping` / `echo` / `list_boards` / `get_board` / `get_ticket` / `search_tickets` / `get_image` / `get_agent_setup_guide` / `get_agent_task`               |
+| `additive`              | false    | false       | false      | `create_ticket` / `add_ticket_comment` / `create_image_upload_token` / `upload_image` / `propose_child_tickets`                                          |
+| `additiveIdempotent`    | false    | false       | true       | `link_ticket_artifact` / `link_related_ticket`                                                                                                           |
+| `destructive`           | false    | true        | false      | `update_ticket` / `finish_agent_task`                                                                                                                    |
+| `destructiveIdempotent` | false    | true        | true       | `update_ticket_comment` / `report_acceptance_criteria` / `delete_ticket` / `delete_ticket_comment` / `unlink_ticket_artifact` / `unlink_ticket_relation` |
+
+- `update_ticket` は値を上書きし、`acceptanceCriteria` は全件置き換え(含めなかった項目はチェックや申告ごと消える)、
+  `parentId: null` で親子を外せる。id の無い受け入れ条件は呼ぶたびに作り直されて変更履歴も残るので、冪等にもしない
+- `finish_agent_task` は受け入れ条件の申告を上書きする。実行がタイムアウトで閉じられた後に繰り返すと、
+  タイムアウトで付いた状態を上書きしてしまうので冪等にしない
+- `update_ticket_comment` / `report_acceptance_criteria` は履歴を残さずに本文・申告を上書きする
+- `link_ticket_artifact` は同じ URL なら既存の紐付けを戻すだけ、`link_related_ticket` は2回目がエラーになるだけで状態は変わらない
+
 ### ボードの AI 向けコンテキスト
 
 ボード設定の「AI向けコンテキスト」(Markdown・8000文字まで)は、対象リポジトリ・規約・用語など

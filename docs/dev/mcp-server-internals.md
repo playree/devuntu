@@ -42,6 +42,9 @@ MCP サーバーの認証の振り分け・ツールの入力仕様・実装上�
   申告するので、一覧に出すと誤用のもとになる
 - `get_agent_task` / `finish_agent_task` / `propose_child_tickets` はエージェント用トークンの接続だけ(`src/lib/mcp/mcp-agent.ts`)。
   人間の MCP クライアントには関係が無く、一覧に出しても誤用のもとにしかならない
+- 新しいツールには `TOOL_ANNOTATIONS`(`src/lib/mcp/mcp.ts`)のどれかを `annotations` に必ず付ける。
+  書き込みを伴うツールに `readOnly` を付けると、Claude Code のプランモードで確認なしに実行されてしまう。分類は
+  [mcp-tools.md](mcp-tools.md#ツールの注釈annotations) を参照
 - MCP 経由の追加の権限制限は `src/lib/board/ticket-permission.ts` の `canMcpUpdateTicket` / `canMcpDeleteTicket`
   - `canMcpUpdateTicket` で弾いたときは `TICKET_ASSIGNED_TO_OTHER`(`src/lib/mcp/mcp-ticket.ts`)。関係への掛け方は
     `src/lib/board/ticket-relation.ts` の `authorizeRelation`(親子は子、関連はどちらか一端)
