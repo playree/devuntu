@@ -452,6 +452,7 @@ export const en: DefaultLocaleItems = {
   relation_kind_related: 'Relate',
   relation_remove: 'Remove relation',
   release_note: 'Release Note',
+  release_note_details: 'Details',
   register_passkey: 'Register Passkey',
   registered_at: 'Registered',
   reload: 'Reload',

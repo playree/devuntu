@@ -27,6 +27,11 @@ jobs:
           node-version: 24
           cache: 'pnpm'
 
+      # リリース済みの version のまま main に入ると、その変更をリリースするタグが打てない
+      - name: Verify version is not released
+        if: github.event_name == 'pull_request'
+        run: node scripts/release-version.mjs --check
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
