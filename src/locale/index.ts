@@ -463,6 +463,7 @@ export type LocaleItemBase =
   | 'relation_kind_related'
   | 'relation_remove'
   | 'release_note'
+  | 'release_note_details'
   | 'reload'
   | 'remove_link'
   | 'remove_target'
