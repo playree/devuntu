@@ -825,7 +825,8 @@ export const ja: DefaultLocaleItems = {
   notify_msg_ticket_completed: '${from}さんがチケットを完了しました',
   notify_msg_ticket_completed_by_pr: 'プルリクエスト ${pr} の完了により、チケットを自動で完了しました',
   notify_msg_ticket_created: '${from}さんがチケットを作成しました',
-  notify_msg_ticket_merge_held: 'PR ${pr} は完了しましたが、未達の受け入れ条件が ${count} 件あるため完了にしていません',
+  notify_msg_ticket_merge_held:
+    'PR / MR ${pr} は完了しましたが、未達の受け入れ条件が ${count} 件あるため完了にしていません',
 
   slack_msg_open_ticket: 'チケットを開く',
 

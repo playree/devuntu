@@ -828,7 +828,7 @@ Expiration time: 5 minutes
   notify_msg_ticket_completed_by_pr: 'Completed automatically as pull request ${pr} was finished',
   notify_msg_ticket_created: '${from} created this ticket',
   notify_msg_ticket_merge_held:
-    'PR ${pr} was finished, but this ticket was not completed because of unmet acceptance criteria (${count})',
+    'PR / MR ${pr} was finished, but this ticket was not completed because of unmet acceptance criteria (${count})',
 
   slack_msg_open_ticket: 'Open ticket',
 

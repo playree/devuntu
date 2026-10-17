@@ -87,7 +87,7 @@ const zMcpTicketContent = zTicketContent
 const ACCEPTANCE_CRITERIA_DESCRIPTION =
   'Acceptance criteria: where completion conditions / definition of done go. One verifiable sentence per item. Do not duplicate them in content. ' +
   'Include work that remains after the pull request is merged (e.g. tagging a release): ' +
-  'while it is unmet, merging does not complete the ticket (see mergeCompletion in get_ticket)'
+  'while it is unmet, merging does not complete the ticket unless mergeCompletion in get_ticket is absent or its criteriaCheck is none'
 
 /** priority / tagIds はテンプレートで埋めるかを決めるため、既定値を外して未指定を区別する */
 const mcpCreateTicketSchema = scCreateTicket.omit({ criteria: true }).extend({
@@ -219,7 +219,8 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
         'Gets ticket details by display ID (e.g. ABC-42) or ticket ID, including content, status, assignee, tags, comments, linked artifacts, ' +
         'parent/children, related tickets, and recent change history (activities, newest first). ' +
         'boardContext (only when set) holds premises shared by every ticket on the board, such as the target repository and conventions: read it before working. ' +
-        'mergeCompletion (only when set) lists the git providers whose merges complete the ticket, and how unmet acceptance criteria hold it back. ' +
+        'mergeCompletion (only when set) lists the git providers whose merges complete the ticket; ' +
+        'with criteriaCheck checked / checkedOrReported, unmet acceptance criteria hold it back (none does not check them). ' +
         'When working on the ticket, follow the steps in the workflow field of the response (doing when starting, posting plan / report, linking artifacts)',
       inputSchema: z.strictObject({ ticketId: z.string().min(1) }),
     },

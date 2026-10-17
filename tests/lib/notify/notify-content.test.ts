@@ -123,7 +123,9 @@ describe('buildNotifyContent: ticket_merge_held', () => {
     const content = buildNotifyContent('ticket_merge_held', mergeHeld(), 'ja', 'dm')
     expect(content.subject).toBe('[ABC-42] ログイン画面のレイアウト崩れ')
     expect(content.url).toBe('https://devuntu.example.com/t/ABC-42')
-    expect(content.body).toBe('PR owner/repo#12 は完了しましたが、未達の受け入れ条件が 2 件あるため完了にしていません')
+    expect(content.body).toBe(
+      'PR / MR owner/repo#12 は完了しましたが、未達の受け入れ条件が 2 件あるため完了にしていません',
+    )
   })
 })
 
