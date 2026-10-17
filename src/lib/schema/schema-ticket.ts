@@ -212,7 +212,9 @@ export const zCriterionReports = (idDescription: string) =>
     .array(
       z.object({
         id: z.uuidv7().describe(idDescription),
-        met: z.boolean().describe('Whether the criterion is met'),
+        met: z
+          .boolean()
+          .describe('Whether the criterion is met. Report false for work not done yet (e.g. tagging after merge)'),
         evidence: zCriterionEvidence.describe(
           'Evidence for the judgment (what was checked, test results, relevant code, etc.)',
         ),

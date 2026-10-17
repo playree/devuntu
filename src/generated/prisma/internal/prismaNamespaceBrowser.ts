@@ -565,6 +565,7 @@ export const BoardGitSettingScalarFieldEnum = {
   boardId: 'boardId',
   provider: 'provider',
   completeOnMerge: 'completeOnMerge',
+  mergeCriteriaCheck: 'mergeCriteriaCheck',
   autoRevise: 'autoRevise',
   autoReviseLimit: 'autoReviseLimit',
   createdAt: 'createdAt',

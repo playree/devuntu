@@ -653,6 +653,23 @@ export type EnumGitWebhookAuthNullableWithAggregatesFilter<$PrismaModel = never>
   _max?: Prisma.NestedEnumGitWebhookAuthNullableFilter<$PrismaModel>
 }
 
+export type EnumMergeCriteriaCheckFilter<$PrismaModel = never> = {
+  equals?: $Enums.MergeCriteriaCheck | Prisma.EnumMergeCriteriaCheckFieldRefInput<$PrismaModel>
+  in?: $Enums.MergeCriteriaCheck[] | Prisma.ListEnumMergeCriteriaCheckFieldRefInput<$PrismaModel>
+  notIn?: $Enums.MergeCriteriaCheck[] | Prisma.ListEnumMergeCriteriaCheckFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumMergeCriteriaCheckFilter<$PrismaModel> | $Enums.MergeCriteriaCheck
+}
+
+export type EnumMergeCriteriaCheckWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.MergeCriteriaCheck | Prisma.EnumMergeCriteriaCheckFieldRefInput<$PrismaModel>
+  in?: $Enums.MergeCriteriaCheck[] | Prisma.ListEnumMergeCriteriaCheckFieldRefInput<$PrismaModel>
+  notIn?: $Enums.MergeCriteriaCheck[] | Prisma.ListEnumMergeCriteriaCheckFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumMergeCriteriaCheckWithAggregatesFilter<$PrismaModel> | $Enums.MergeCriteriaCheck
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumMergeCriteriaCheckFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumMergeCriteriaCheckFilter<$PrismaModel>
+}
+
 export type EnumNotifyEventFilter<$PrismaModel = never> = {
   equals?: $Enums.NotifyEvent | Prisma.EnumNotifyEventFieldRefInput<$PrismaModel>
   in?: $Enums.NotifyEvent[] | Prisma.ListEnumNotifyEventFieldRefInput<$PrismaModel>
@@ -1470,6 +1487,23 @@ export type NestedEnumGitWebhookAuthNullableWithAggregatesFilter<$PrismaModel = 
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedEnumGitWebhookAuthNullableFilter<$PrismaModel>
   _max?: Prisma.NestedEnumGitWebhookAuthNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumMergeCriteriaCheckFilter<$PrismaModel = never> = {
+  equals?: $Enums.MergeCriteriaCheck | Prisma.EnumMergeCriteriaCheckFieldRefInput<$PrismaModel>
+  in?: $Enums.MergeCriteriaCheck[] | Prisma.ListEnumMergeCriteriaCheckFieldRefInput<$PrismaModel>
+  notIn?: $Enums.MergeCriteriaCheck[] | Prisma.ListEnumMergeCriteriaCheckFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumMergeCriteriaCheckFilter<$PrismaModel> | $Enums.MergeCriteriaCheck
+}
+
+export type NestedEnumMergeCriteriaCheckWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.MergeCriteriaCheck | Prisma.EnumMergeCriteriaCheckFieldRefInput<$PrismaModel>
+  in?: $Enums.MergeCriteriaCheck[] | Prisma.ListEnumMergeCriteriaCheckFieldRefInput<$PrismaModel>
+  notIn?: $Enums.MergeCriteriaCheck[] | Prisma.ListEnumMergeCriteriaCheckFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumMergeCriteriaCheckWithAggregatesFilter<$PrismaModel> | $Enums.MergeCriteriaCheck
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumMergeCriteriaCheckFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumMergeCriteriaCheckFilter<$PrismaModel>
 }
 
 export type NestedEnumNotifyEventFilter<$PrismaModel = never> = {

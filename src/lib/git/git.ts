@@ -4,7 +4,14 @@
  * NOTE: このファイルはクライアントからも import されるため、サーバー専用の処理(prisma / 署名検証など)は置かない。
  */
 
-import type { GitProvider, GitWebhookAuth, PullRequestState, TicketLinkKind } from '@/generated/prisma/enums'
+import type {
+  GitProvider,
+  GitWebhookAuth,
+  MergeCriteriaCheck,
+  PullRequestState,
+  TicketLinkKind,
+} from '@/generated/prisma/enums'
+import type { LocaleItemBase } from '@/locale'
 import { parseGithubUrl } from '../github/github'
 import { looksLikeGitlabUrl, parseGitlabUrl } from '../gitlab/gitlab'
 
@@ -14,6 +21,7 @@ export const GIT_PROVIDERS = ['github', 'gitlab'] as const satisfies readonly Gi
 /** ボードの provider ごとの Git 連携の設定(BoardGitSetting) */
 export type BoardGitSettingValue = {
   completeOnMerge: boolean
+  mergeCriteriaCheck: MergeCriteriaCheck
   autoRevise: boolean
   autoReviseLimit: number
 }
@@ -21,8 +29,56 @@ export type BoardGitSettingValue = {
 /** BoardGitSetting の行が無い provider の設定。スキーマの既定値と揃える */
 export const DEFAULT_BOARD_GIT_SETTING: BoardGitSettingValue = {
   completeOnMerge: false,
+  mergeCriteriaCheck: 'checkedOrReported',
   autoRevise: false,
   autoReviseLimit: 3,
+}
+
+/** マージによる自動完了の前に見る受け入れ条件の判定。並びは設定画面の選択肢の順 */
+export const MERGE_CRITERIA_CHECKS = [
+  'none',
+  'checkedOrReported',
+  'checked',
+] as const satisfies readonly MergeCriteriaCheck[]
+
+export const MERGE_CRITERIA_CHECK_LOCALE = {
+  none: 'merge_criteria_check_none',
+  checkedOrReported: 'merge_criteria_check_checked_or_reported',
+  checked: 'merge_criteria_check_checked',
+} as const satisfies Record<MergeCriteriaCheck, LocaleItemBase>
+
+export const isMergeCriteriaCheck = (value: unknown): value is MergeCriteriaCheck =>
+  MERGE_CRITERIA_CHECKS.includes(value as MergeCriteriaCheck)
+
+/** 未達の判定に使う受け入れ条件の状態 */
+export type MergeCriterionState = { text: string; checkedAt: Date | null; agentMet: boolean | null }
+
+/** マージによる自動完了を保留する、未達の受け入れ条件の文言。空なら完了にしてよい */
+export const unmetMergeCriteria = (criteria: MergeCriterionState[], check: MergeCriteriaCheck): string[] => {
+  if (check === 'none') {
+    return []
+  }
+  return criteria
+    .filter(({ checkedAt, agentMet }) => !checkedAt && (check === 'checked' || agentMet !== true))
+    .map(({ text }) => text)
+}
+
+/** {@link mergeCompletionOf} に渡す BoardGitSetting の select */
+export const MERGE_COMPLETION_SELECT = { provider: true, completeOnMerge: true, mergeCriteriaCheck: true } as const
+
+/**
+ * MCP(get_ticket / get_board)へ返す、マージによる自動完了の設定。自動完了が ON の provider だけを載せ、
+ * 1つも無ければ undefined(項目ごと載せない)
+ */
+export const mergeCompletionOf = (
+  settings: { provider: GitProvider; completeOnMerge: boolean; mergeCriteriaCheck: MergeCriteriaCheck }[],
+): Partial<Record<GitProvider, { criteriaCheck: MergeCriteriaCheck }>> | undefined => {
+  const enabled = settings.filter(({ completeOnMerge }) => completeOnMerge)
+  return enabled.length > 0
+    ? Object.fromEntries(
+        enabled.map(({ provider, mergeCriteriaCheck }) => [provider, { criteriaCheck: mergeCriteriaCheck }]),
+      )
+    : undefined
 }
 
 /** GitLab の Webhook の検証方式。signing(署名トークン)を既定・推奨にする */

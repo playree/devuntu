@@ -15,6 +15,7 @@ import { listBoardTags } from '@/lib/board/tag'
 import { BOARD_KEY_PATTERN } from '@/lib/board/ticket-id'
 import { listTicketTemplates } from '@/lib/board/ticket-template'
 import { errInvalidOperation } from '@/lib/error'
+import { MERGE_COMPLETION_SELECT, mergeCompletionOf } from '@/lib/git/git'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import { prisma } from '@/lib/prisma'
 
@@ -63,7 +64,13 @@ export const getBoardForMcp = async (auth: ResourceAuth, boardIdOrKey: string) =
 
   const board = await prisma.board.findUnique({
     where: { id },
-    select: { key: true, name: true, description: true, aiContext: true },
+    select: {
+      key: true,
+      name: true,
+      description: true,
+      aiContext: true,
+      gitSettings: { select: MERGE_COMPLETION_SELECT },
+    },
   })
   if (!board) {
     throw errInvalidOperation()
@@ -76,6 +83,8 @@ export const getBoardForMcp = async (auth: ResourceAuth, boardIdOrKey: string) =
     countTicketsByBoard([id]),
   ])
 
+  const mergeCompletion = mergeCompletionOf(board.gitSettings)
+
   return {
     id,
     key: board.key,
@@ -83,6 +92,8 @@ export const getBoardForMcp = async (auth: ResourceAuth, boardIdOrKey: string) =
     description: board.description ?? '',
     /** ボードの AI 向けコンテキスト。未設定なら項目ごと載せない */
     ...(board.aiContext ? { boardContext: board.aiContext } : {}),
+    /** マージで自動完了する provider と、その前に見る受け入れ条件の判定。自動完了が無ければ項目ごと載せない */
+    ...(mergeCompletion ? { mergeCompletion } : {}),
     kind: access.kind,
     archived: access.archived,
     role: access.role,

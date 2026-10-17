@@ -39,6 +39,13 @@ const changed = (override: Partial<NotifyPayload<'ticket_created'>> = {}): Notif
   ...override,
 })
 
+const mergeHeld = (override: Partial<NotifyPayload<'ticket_merge_held'>> = {}): NotifyPayload<'ticket_merge_held'> => ({
+  ...ticketRef,
+  pullRequest: 'owner/repo#12',
+  unmetCount: 2,
+  ...override,
+})
+
 const startedAt = new Date('2026-08-25T00:00:00Z')
 
 const agentRun = (override: Partial<NotifyPayload<'agent_run'>> = {}): NotifyPayload<'agent_run'> => ({
@@ -111,6 +118,17 @@ describe('buildNotifyContent: ticket_created / ticket_completed', () => {
   }
 })
 
+describe('buildNotifyContent: ticket_merge_held', () => {
+  it('短縮URLへリンクし、PR / MR と未達の受け入れ条件の件数を出す', () => {
+    const content = buildNotifyContent('ticket_merge_held', mergeHeld(), 'ja', 'dm')
+    expect(content.subject).toBe('[ABC-42] ログイン画面のレイアウト崩れ')
+    expect(content.url).toBe('https://devuntu.example.com/t/ABC-42')
+    expect(content.body).toBe(
+      'PR / MR owner/repo#12 は完了しましたが、未達の受け入れ条件が 2 件あるため完了にしていません',
+    )
+  })
+})
+
 describe('buildNotifyContent: mention', () => {
   it('チケット本文のメンションは短縮URLへリンクする', () => {
     expect(buildNotifyContent('mention', mention(), 'ja', 'dm').url).toBe('https://devuntu.example.com/t/ABC-42')
@@ -177,6 +195,7 @@ describe('buildNotifyContent: ロケール', () => {
         buildNotifyContent('ticket_assigned', assigned(), locale, 'channel'),
         buildNotifyContent('ticket_created', changed(), locale, 'channel'),
         buildNotifyContent('ticket_completed', changed(), locale, 'channel'),
+        buildNotifyContent('ticket_merge_held', mergeHeld(), locale, 'dm'),
       ]) {
         expect(content.subject).not.toMatch(/\$\{/)
         expect(content.body).not.toMatch(/\$\{/)

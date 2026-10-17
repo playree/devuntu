@@ -28,6 +28,31 @@ export const recordTicketActivities = async (
   })
 }
 
+/**
+ * マージによる自動完了を保留済みか。同じ PR / MR で保留した記録があるか、最後のステータス変更より後に
+ * (どの PR / MR でも)保留した記録があれば保留済みとする。再配信や、紐付いた別の PR / MR の閉じたイベントで
+ * 保留を重ねないため。チケットの行ロックを取った後に呼ぶ(同時に届いたイベントで二重に記録しない)
+ */
+export const hasMergeHeld = async (
+  tx: Prisma.TransactionClient,
+  ticketId: string,
+  pullRequest: string,
+): Promise<boolean> => {
+  const samePullRequest = await tx.ticketActivity.findFirst({
+    where: { ticketId, field: 'mergeHeld', before: pullRequest },
+    select: { id: true },
+  })
+  if (samePullRequest) {
+    return true
+  }
+  const latest = await tx.ticketActivity.findFirst({
+    where: { ticketId, field: { in: ['status', 'mergeHeld'] } },
+    select: { field: true },
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+  })
+  return latest?.field === 'mergeHeld'
+}
+
 /** 新しい順に limit 件 */
 export const listTicketActivities = async (ticketId: string, limit: number, tx: Db = prisma) => {
   const rows = await tx.ticketActivity.findMany({

@@ -8,7 +8,12 @@ import { notify } from '@/components/notify'
 import type { GitProvider } from '@/generated/prisma/enums'
 import { parseAction } from '@/lib/action/action-client'
 import { AUTO_REVISE_LIMIT_MAX, AUTO_REVISE_LIMIT_MIN } from '@/lib/agent/agent'
-import type { BoardGitSettingValue } from '@/lib/git/git'
+import {
+  type BoardGitSettingValue,
+  isMergeCriteriaCheck,
+  MERGE_CRITERIA_CHECK_LOCALE,
+  MERGE_CRITERIA_CHECKS,
+} from '@/lib/git/git'
 import { LocaleItem } from '@/locale'
 import { useLocale } from '@/locale/client'
 import { FC, useState } from 'react'
@@ -50,6 +55,9 @@ export const GitProviderSettings: FC<{
   const { t } = useLocale()
   const [isSaving, setSaving] = useState(false)
   const texts = PROVIDER_TEXTS[provider]
+  const criteriaCheckOptions = Object.fromEntries(
+    MERGE_CRITERIA_CHECKS.map((check) => [check, t(MERGE_CRITERIA_CHECK_LOCALE[check])]),
+  )
 
   const save = async (data: Partial<BoardGitSettingValue>) => {
     setSaving(true)
@@ -76,6 +84,23 @@ export const GitProviderSettings: FC<{
           onChange={(completeOnMerge) => void save({ completeOnMerge })}
         />
         <span className='text-muted text-xs'>{t('msg_git_complete_on_pr_merge')}</span>
+      </FlexCol>
+      <FlexCol isSmart>
+        <div className='w-full sm:w-60'>
+          <SingleSelectField
+            isSmart
+            label={t('merge_criteria_check')}
+            groupOptions={criteriaCheckOptions}
+            value={setting.mergeCriteriaCheck}
+            isDisabled={isSaving || !setting.completeOnMerge}
+            onChange={(value) => {
+              if (isMergeCriteriaCheck(value) && value !== setting.mergeCriteriaCheck) {
+                void save({ mergeCriteriaCheck: value })
+              }
+            }}
+          />
+        </div>
+        <span className='text-muted text-xs'>{t('msg_merge_criteria_check')}</span>
       </FlexCol>
       <FlexCol isSmart>
         <SwitchField

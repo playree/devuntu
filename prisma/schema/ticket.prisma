@@ -261,13 +261,15 @@ enum TicketActivityField {
   tags
   /// 受け入れ条件
   criteria
+  /// マージによる自動完了の保留(before: PR / MR、after: 未達の受け入れ条件)
+  mergeHeld
 }
 
 /// 変更の経路。人・エージェントの操作は user、変更者のいない自動の変更はそれぞれの値
 enum TicketActivitySource {
   /// 人・エージェントの操作(画面 / MCP)
   user
-  /// PR / MR のマージによる自動完了
+  /// PR / MR のマージによる自動完了・その保留
   merge
 }
 

@@ -159,12 +159,22 @@ export const TicketLinkSource = {
 export type TicketLinkSource = (typeof TicketLinkSource)[keyof typeof TicketLinkSource]
 
 
+export const MergeCriteriaCheck = {
+  none: 'none',
+  checkedOrReported: 'checkedOrReported',
+  checked: 'checked'
+} as const
+
+export type MergeCriteriaCheck = (typeof MergeCriteriaCheck)[keyof typeof MergeCriteriaCheck]
+
+
 export const NotifyEvent = {
   mention: 'mention',
   agent_run: 'agent_run',
   ticket_assigned: 'ticket_assigned',
   ticket_created: 'ticket_created',
-  ticket_completed: 'ticket_completed'
+  ticket_completed: 'ticket_completed',
+  ticket_merge_held: 'ticket_merge_held'
 } as const
 
 export type NotifyEvent = (typeof NotifyEvent)[keyof typeof NotifyEvent]
@@ -250,7 +260,8 @@ export const TicketActivityField = {
   dueDate: 'dueDate',
   assignee: 'assignee',
   tags: 'tags',
-  criteria: 'criteria'
+  criteria: 'criteria',
+  mergeHeld: 'mergeHeld'
 } as const
 
 export type TicketActivityField = (typeof TicketActivityField)[keyof typeof TicketActivityField]

@@ -295,6 +295,32 @@ export const enqueueTicketCompletedByMerge = async (
   )
 }
 
+/**
+ * 未達の受け入れ条件があるため、PR / MR のマージによる自動完了を保留した(Git 連携)。
+ * 操作した人はいないので、システム由来(actorId なし)として投入する。
+ * 同じ PR / MR の再配信で重ねて送らないよう、呼び出し元が保留を初めて記録したときだけ呼ぶ。
+ */
+export const enqueueTicketMergeHeld = async (
+  param: { ticketId: string; pullRequest: string; unmetCount: number },
+  tx: Prisma.TransactionClient = prisma,
+): Promise<void> => {
+  const { ticketId, pullRequest, unmetCount } = param
+  const ticket = await loadTicketNotifyRef(ticketId, tx)
+  if (!ticket) {
+    return
+  }
+
+  logger.info({ ticketId, pullRequest, unmetCount }, 'ticket merge held notify')
+
+  await enqueueNotify(
+    {
+      event: 'ticket_merge_held',
+      payload: { ...ticketPayload(ticket), pullRequest, unmetCount },
+    },
+    tx,
+  )
+}
+
 /** 通知に載せるチケットの識別を引く。削除済みなら通知しないので null */
 const loadTicketNotifyRef = async (ticketId: string, tx: Prisma.TransactionClient): Promise<TicketNotifyRef | null> => {
   const ticket = await tx.ticket.findUnique({

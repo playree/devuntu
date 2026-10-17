@@ -85,7 +85,9 @@ const zMcpTicketContent = zTicketContent
   .describe('Ticket description (Markdown). Do not write completion conditions here; use acceptanceCriteria')
 
 const ACCEPTANCE_CRITERIA_DESCRIPTION =
-  'Acceptance criteria: where completion conditions / definition of done go. One verifiable sentence per item. Do not duplicate them in content'
+  'Acceptance criteria: where completion conditions / definition of done go. One verifiable sentence per item. Do not duplicate them in content. ' +
+  'Include work that remains after the pull request is merged (e.g. tagging a release): ' +
+  'while it is unmet, merging does not complete the ticket unless mergeCompletion in get_ticket is absent or its criteriaCheck is none'
 
 /** priority / tagIds はテンプレートで埋めるかを決めるため、既定値を外して未指定を区別する */
 const mcpCreateTicketSchema = scCreateTicket.omit({ criteria: true }).extend({
@@ -200,7 +202,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       title: 'Get board',
       annotations: TOOL_ANNOTATIONS.readOnly,
       description:
-        'Returns board details (members, tags, ticket counts per status, and boardContext / templates if set). ' +
+        'Returns board details (members, tags, ticket counts per status, and boardContext / templates / mergeCompletion if set). ' +
         'Use the IDs returned here for assigneeId and tagIds in create_ticket / update_ticket. ' +
         'When a template fits the ticket, pass it as templateId in create_ticket',
       inputSchema: z.strictObject({ boardId: z.string().min(1).describe('Board ID or board key (e.g. ABC)') }),
@@ -217,6 +219,8 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
         'Gets ticket details by display ID (e.g. ABC-42) or ticket ID, including content, status, assignee, tags, comments, linked artifacts, ' +
         'parent/children, related tickets, and recent change history (activities, newest first). ' +
         'boardContext (only when set) holds premises shared by every ticket on the board, such as the target repository and conventions: read it before working. ' +
+        'mergeCompletion (only when set) lists the git providers whose merges complete the ticket; ' +
+        'with criteriaCheck checked / checkedOrReported, unmet acceptance criteria hold it back (none does not check them). ' +
         'When working on the ticket, follow the steps in the workflow field of the response (doing when starting, posting plan / report, linking artifacts)',
       inputSchema: z.strictObject({ ticketId: z.string().min(1) }),
     },
@@ -398,6 +402,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
         description:
           'Records whether each acceptance criterion is met, with evidence, as a self-check shown on the ticket detail. ' +
           'Call it when you finish working on a ticket that has acceptance criteria, instead of listing the results in the type=report comment. ' +
+          'Report work you have not done yet (e.g. steps after merge) as met=false. ' +
           'Items not included keep their previous result',
         inputSchema: z.strictObject({
           ticketId: z.string().min(1),

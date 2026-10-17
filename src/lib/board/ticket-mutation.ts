@@ -7,6 +7,7 @@
 
 import type { Prisma } from '@/generated/prisma/client'
 import type {
+  MergeCriteriaCheck,
   TicketChildAdvance,
   TicketCommentDecision,
   TicketCommentType,
@@ -16,10 +17,12 @@ import type {
 import { discardAutoReviseTriggers } from '../agent/agent-auto-revise'
 import { dateOnlyToUtc, nowDate, utcToDateOnly } from '../day'
 import { errInvalidOperation } from '../error'
+import { unmetMergeCriteria } from '../git/git'
 import {
   enqueueTicketCommented,
   enqueueTicketCompletedByMerge,
   enqueueTicketCreated,
+  enqueueTicketMergeHeld,
   enqueueTicketMoved,
   enqueueTicketUpdated,
 } from '../notify/notify-trigger'
@@ -30,8 +33,8 @@ import { assertBoardAssignee, getBoardMentionCandidates, getTicketMentionCandida
 import { extractMentionEmails, resolveMentionUserIds } from './mention'
 import { assertTagIdsInBoard, syncTicketTags } from './tag'
 import { nextOrder } from './tag-rule'
-import { recordTicketActivities } from './ticket-activity'
-import { criteriaActivity, diffTicketSnapshot } from './ticket-activity-rule'
+import { hasMergeHeld, recordTicketActivities } from './ticket-activity'
+import { criteriaActivity, diffTicketSnapshot, mergeHeldActivity } from './ticket-activity-rule'
 import { syncTicketCriteria } from './ticket-criterion'
 import { ticketDisplayId } from './ticket-id'
 import { assignTicketParent, writeOwnChildOrder } from './ticket-relation'
@@ -329,16 +332,40 @@ export const changeTicketStatus = async (actor: Actor, id: string, status: Ticke
 /**
  * PR / MR のマージによる自動完了(Git 連携)。操作した人はいないのでシステムの操作として扱い、権限の判定は挟まない。
  * 対象を絞るのは呼び出し元(Webhook)の責務で、ここではアーカイブ済みのボードと完了済みのチケットだけを除く。
+ *
+ * 受け入れ条件の判定(criteriaCheck)で未達が残れば完了にせず、保留の履歴と通知を残す。
+ * 保留済み({@link hasMergeHeld})なら何も残さない。保留後の完了は人の操作に任せる。
  * 完了へ動かしたら true。
  */
-export const completeTicketByMerge = async (ticketId: string, pullRequest: string): Promise<boolean> =>
+export const completeTicketByMerge = async (
+  ticketId: string,
+  pullRequest: string,
+  criteriaCheck: MergeCriteriaCheck,
+): Promise<boolean> =>
   prisma.$transaction(async (tx) => {
     await lockTicketRow(tx, ticketId)
     const ticket = await tx.ticket.findUnique({
       where: { id: ticketId },
-      select: { id: true, boardId: true, status: true, board: { select: { archived: true } } },
+      select: {
+        id: true,
+        boardId: true,
+        status: true,
+        board: { select: { archived: true } },
+        criteria: { select: { text: true, checkedAt: true, agentMet: true }, orderBy: { order: 'asc' } },
+      },
     })
     if (!ticket || ticket.board.archived || ticket.status === 'done') {
+      return false
+    }
+
+    const unmet = unmetMergeCriteria(ticket.criteria, criteriaCheck)
+    if (unmet.length > 0) {
+      if (!(await hasMergeHeld(tx, ticketId, pullRequest))) {
+        await recordTicketActivities(tx, ticketId, { actorId: null, source: 'merge' }, [
+          mergeHeldActivity(pullRequest, unmet),
+        ])
+        await enqueueTicketMergeHeld({ ticketId, pullRequest, unmetCount: unmet.length }, tx)
+      }
       return false
     }
 

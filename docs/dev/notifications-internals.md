@@ -33,15 +33,15 @@
 
 通知は宛先の決まり方で 2 種類に分かれる。
 
-| 種類         | 宛先             | 設定場所                                      | イベント                                                                | チャネル                         |
-| ------------ | ---------------- | --------------------------------------------- | ----------------------------------------------------------------------- | -------------------------------- |
-| DM 通知      | ユーザー個人     | `/account` の通知設定(`UserNotifySetting`)    | `mention` / `agent_run` / `ticket_assigned`                             | メール / Slack DM / Web プッシュ |
-| チャネル通知 | Slack チャンネル | `/boards/[id]/settings`(`BoardNotifySetting`) | `agent_run` / `ticket_assigned` / `ticket_created` / `ticket_completed` | Slack                            |
+| 種類         | 宛先             | 設定場所                                      | イベント                                                                                      | チャネル                         |
+| ------------ | ---------------- | --------------------------------------------- | --------------------------------------------------------------------------------------------- | -------------------------------- |
+| DM 通知      | ユーザー個人     | `/account` の通知設定(`UserNotifySetting`)    | `mention` / `agent_run` / `ticket_assigned` / `ticket_merge_held`                             | メール / Slack DM / Web プッシュ |
+| チャネル通知 | Slack チャンネル | `/boards/[id]/settings`(`BoardNotifySetting`) | `agent_run` / `ticket_assigned` / `ticket_created` / `ticket_completed` / `ticket_merge_held` | Slack                            |
 
 イベント種別は Prisma の `NotifyEvent`、チャネルは `NotifyChannel`。どちらの宛先に出るイベントかは
 `DM_NOTIFY_EVENTS` / `CHANNEL_NOTIFY_EVENTS`(`src/lib/notify/notify.ts`)で分ける。
 
-`agent_run` / `ticket_assigned` のように**DM とチャネルの両方を持つイベント**もある。1 回の発生で
+`agent_run` / `ticket_assigned` / `ticket_merge_held` のように**DM とチャネルの両方を持つイベント**もある。1 回の発生で
 両方へ展開されるので、発火の記録は 1 行で済む。同じイベントでも本人宛の DM と第三者が読む
 チャンネルでは文面が変わる(`notify-content.ts` の `NotifyAudience`)。
 
@@ -150,6 +150,7 @@ advisory lock を保持できないため、そもそも採れない)。
 | `enqueueTicketUpdated()`          | `ticket-mutation.ts` の `updateTicket`(`patchTicket` / `updateTicketForMcp`)                                                             | `mention` / `ticket_assigned`、完了へ動いたら `ticket_completed`                    |
 | `enqueueTicketMoved()`            | ステータスだけの変更(`changeTicketStatus` = `updateTicketStatus` / かんばんの DnD)、report の承認による完了(`agent-decision.ts`)         | 完了へ動いたら `ticket_completed`                                                   |
 | `enqueueTicketCompletedByMerge()` | `completeTicketByMerge`(`git-webhook.ts` の PR / MR マージによる自動完了)                                                                | `ticket_completed`(操作者なし)                                                      |
+| `enqueueTicketMergeHeld()`        | `completeTicketByMerge`(未達の受け入れ条件があり、自動完了を保留したとき)                                                                | `ticket_merge_held`(操作者なし)                                                     |
 | `enqueueTicketCommented()`        | `ticket-mutation.ts` の `insertComment` / `updateComment`(Web と MCP のコメント、承認 / 差し戻しの返信、`propose_child_tickets` の plan) | `mention`                                                                           |
 | `enqueueAgentRunFinished()`       | `agent-run.ts` の実行を閉じる 3 経路                                                                                                     | `agent_run`                                                                         |
 
@@ -157,13 +158,14 @@ advisory lock を保持できないため、そもそも採れない)。
 
 ### 発火の条件
 
-| イベント           | 条件                                                                                                                                                                                                                                                                |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mention`          | 増えたメンションがあるとき。本文を編集し直すたびに同じ相手へ通知しないよう、**増えた分だけ**を宛先にする(差分は呼び出し元が取る)                                                                                                                                    |
-| `ticket_assigned`  | 担当者が実際に変わって、かつ新しい担当者がいるとき(外しただけでは知らせる相手も内容も無い)。作成時に担当者を付けるのも同じ扱い                                                                                                                                      |
-| `ticket_created`   | チケットを作成したとき。常に発火する(送るかはボードの設定次第)                                                                                                                                                                                                      |
-| `ticket_completed` | **完了レーンへ入った瞬間だけ**。完了のまま並べ替えても、完了から戻しても発火しない。最初から完了で作った場合は作成と併せて発火する。Git 連携(GitHub / GitLab)の PR マージによる自動完了でも発火し、そのときは操作者の無いシステム由来の通知になる(文面に PR を出す) |
-| `agent_run`        | 実行が終了したとき(成功 / 失敗 / スキップ)。開始時は通知しない                                                                                                                                                                                                      |
+| イベント            | 条件                                                                                                                                                                                                                                                                                                                                                                |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mention`           | 増えたメンションがあるとき。本文を編集し直すたびに同じ相手へ通知しないよう、**増えた分だけ**を宛先にする(差分は呼び出し元が取る)                                                                                                                                                                                                                                    |
+| `ticket_assigned`   | 担当者が実際に変わって、かつ新しい担当者がいるとき(外しただけでは知らせる相手も内容も無い)。作成時に担当者を付けるのも同じ扱い                                                                                                                                                                                                                                      |
+| `ticket_created`    | チケットを作成したとき。常に発火する(送るかはボードの設定次第)                                                                                                                                                                                                                                                                                                      |
+| `ticket_completed`  | **完了レーンへ入った瞬間だけ**。完了のまま並べ替えても、完了から戻しても発火しない。最初から完了で作った場合は作成と併せて発火する。Git 連携(GitHub / GitLab)の PR マージによる自動完了でも発火し、そのときは操作者の無いシステム由来の通知になる(文面に PR を出す)                                                                                                 |
+| `agent_run`         | 実行が終了したとき(成功 / 失敗 / スキップ)。開始時は通知しない                                                                                                                                                                                                                                                                                                      |
+| `ticket_merge_held` | PR / MR のマージで完了にするはずが、ボードの判定(`mergeCriteriaCheck`)で未達の受け入れ条件が残り、完了を保留したとき。同じ PR / MR の保留が変更履歴(`mergeHeld`)にあるか、最後のステータス変更より後に保留済みなら発火しない(再配信や別の PR / MR で重ねない)。DM は担当者(人)、担当がエージェント / 未割り当てなら作成者へ。どちらも今チケットを閲覧できる場合だけ |
 
 `ticket_assigned` は DM とチャネルの両方を持つので、**DM を届ける相手がいない場合も発火する**。
 自分で自分を担当にした場合と担当がエージェント用ユーザーの場合は DM の宛先を空にするだけで、

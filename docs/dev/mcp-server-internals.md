@@ -73,6 +73,10 @@ MCP サーバーの認証の振り分け・ツールの入力仕様・実装上�
 各受け入れ条件を満たしたかは `type=report` の本文に並べさせず、`report_acceptance_criteria` でチケットの自己申告として記録させる
 (`add_ticket_comment` の description にも添える)。
 
+マージによる自動完了で受け入れ条件を見るボードのため、`acceptanceCriteria` の入力説明ではマージ後に残る作業(タグ打ちなど)も
+条件に入れるよう、`report_acceptance_criteria` の description と `met` の入力説明では、まだ行っていない作業を `met=false` で報告するよう伝える。
+`instructions` は文字数の上限とドキュメントとの一致テストがあるため、この案内は載せない。
+
 エージェント用トークンの接続では、ステータス変更の手順を載せず `workflow` も返さない。
 自動運用の流れはランナーの指示と `get_agent_task` の rule が持つため([agent-runner-internals.md](agent-runner-internals.md))。
 
@@ -176,9 +180,12 @@ In automated operation, follow the rule returned by get_agent_task and the runne
 - `get_ticket` の `links` に、紐付けた一覧が `provider`(`github` / `gitlab`)、PR の状態(`prState`)、CI の結果(`ci`)付きで返る。
   状態と CI はボードに対応付けたリポジトリの Webhook で更新される([user-guide.md](../guide/user-guide.md) の「関連リンク」)
 - `get_ticket` の `activities` に、直近20件の変更履歴が新しい順で返る。各要素は `field`(`created` / `title` / `content` /
-  `status` / `priority` / `dueDate` / `assignee` / `tags` / `criteria`)、`actorName`、`source`(`user` / `merge`)、
+  `status` / `priority` / `dueDate` / `assignee` / `tags` / `criteria` / `mergeHeld`)、`actorName`、`source`(`user` / `merge`)、
   `before` / `after`、`createdAt`。`before` / `after` は要約で、担当・タグは名前、本文は先頭100文字の抜粋、
-  受け入れ条件は消した / 足した文言(改行区切り)。`source=merge` は PR / MR のマージによる自動完了で、`actorName` は空になる
+  受け入れ条件は消した / 足した文言(改行区切り)。`source=merge` は PR / MR のマージによる自動完了とその保留で、`actorName` は空になる。
+  `mergeHeld` は未達の受け入れ条件があるため自動完了を保留した記録で、`before` が PR / MR(`owner/repo#12` など)、`after` が未達の条件(改行区切り)
+- `get_ticket` / `get_board` の `mergeCompletion` に、マージで自動完了する provider ごとの受け入れ条件の判定(`criteriaCheck`)が返る。
+  自動完了がオンの provider が無ければ項目ごと載せず、`get_ticket` ではボードのメンバーでない承認者に載せない([mcp-tools.md](mcp-tools.md#マージによる自動完了の設定))
 
 ## ボードの AI 向けコンテキスト
 

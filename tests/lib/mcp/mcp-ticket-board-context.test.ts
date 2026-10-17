@@ -1,4 +1,4 @@
-/** get_ticket の boardContext(ボードの AI 向けコンテキスト)は、ボードのメンバーにだけ設定時のみ載せる */
+/** get_ticket の boardContext(ボードの AI 向けコンテキスト)と mergeCompletion は、ボードのメンバーにだけ設定時のみ載せる */
 
 import { assertTicketAccess, type TicketAccess } from '@/lib/board/board-access'
 import { getTicketForMcp } from '@/lib/mcp/mcp-ticket'
@@ -41,9 +41,11 @@ const access = (override: Partial<TicketAccess> = {}): TicketAccess => ({
   ...override,
 })
 
-const ticketRow = (aiContext: string | null) => ({
+const MERGE_ON = [{ provider: 'github', completeOnMerge: true, mergeCriteriaCheck: 'checkedOrReported' }]
+
+const ticketRow = (aiContext: string | null, gitSettings: unknown[] = []) => ({
   number: 1,
-  board: { name: 'ボード', key: 'ABC', aiContext },
+  board: { name: 'ボード', key: 'ABC', aiContext, gitSettings },
   title: 'チケット',
   content: null,
   status: 'doing',
@@ -82,5 +84,30 @@ describe('getTicketForMcp の boardContext', () => {
     vi.mocked(prisma.ticket.findUnique).mockResolvedValue(ticketRow('## 前提') as never)
 
     expect(await getTicketForMcp(auth, TICKET_ID)).not.toHaveProperty('boardContext')
+  })
+})
+
+describe('getTicketForMcp の mergeCompletion', () => {
+  it('マージで自動完了するボードでは provider ごとの受け入れ条件の判定を返す', async () => {
+    vi.mocked(prisma.ticket.findUnique).mockResolvedValue(ticketRow(null, MERGE_ON) as never)
+
+    expect(await getTicketForMcp(auth, TICKET_ID)).toMatchObject({
+      mergeCompletion: { github: { criteriaCheck: 'checkedOrReported' } },
+    })
+  })
+
+  it('マージで自動完了しないボードでは項目ごと載せない', async () => {
+    vi.mocked(prisma.ticket.findUnique).mockResolvedValue(
+      ticketRow(null, [{ provider: 'github', completeOnMerge: false, mergeCriteriaCheck: 'checked' }]) as never,
+    )
+
+    expect(await getTicketForMcp(auth, TICKET_ID)).not.toHaveProperty('mergeCompletion')
+  })
+
+  it('ボードのメンバーでない利用者(承認者)には返さない', async () => {
+    vi.mocked(assertTicketAccess).mockResolvedValue(access({ boardRole: null, canEdit: false, canDelete: false }))
+    vi.mocked(prisma.ticket.findUnique).mockResolvedValue(ticketRow(null, MERGE_ON) as never)
+
+    expect(await getTicketForMcp(auth, TICKET_ID)).not.toHaveProperty('mergeCompletion')
   })
 })
