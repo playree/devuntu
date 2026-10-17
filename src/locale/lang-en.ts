@@ -365,11 +365,11 @@ export const en: DefaultLocaleItems = {
   mcp_token: 'MCP Token',
   mcp_token_env_command: 'Environment Variable',
   mentioned: 'Mentioned',
+  mention_in_ticket: 'Description',
   merge_criteria_check: 'Acceptance criteria check before completion',
   merge_criteria_check_checked: 'Must be checked by a person',
   merge_criteria_check_checked_or_reported: 'Checked by a person or reported as met',
   merge_criteria_check_none: 'Do not check',
-  mention_in_ticket: 'Description',
   move_down: 'Move Down',
   move_up: 'Move Up',
   msg_confirm_approve_proposal:
@@ -828,7 +828,7 @@ Expiration time: 5 minutes
   notify_msg_ticket_completed_by_pr: 'Completed automatically as pull request ${pr} was finished',
   notify_msg_ticket_created: '${from} created this ticket',
   notify_msg_ticket_merge_held:
-    'PR ${pr} was finished, but this ticket was not completed because ${count} acceptance criteria are not met',
+    'PR ${pr} was finished, but this ticket was not completed because of unmet acceptance criteria (${count})',
 
   slack_msg_open_ticket: 'Open ticket',
 

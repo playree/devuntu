@@ -109,7 +109,7 @@ vi.mock('@/lib/board/ticket-criterion', () => ({
   syncTicketCriteria: vi.fn(async () => ({ removed: [], added: [] })),
 }))
 
-vi.mock('@/lib/board/ticket-activity', () => ({ recordTicketActivities: vi.fn() }))
+vi.mock('@/lib/board/ticket-activity', () => ({ hasMergeHeld: vi.fn(), recordTicketActivities: vi.fn() }))
 
 vi.mock('@/lib/agent/agent-auto-revise', () => ({ discardAutoReviseTriggers: vi.fn() }))
 

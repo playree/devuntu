@@ -4,16 +4,14 @@
  * 受け入れ条件の判定で未達が残れば完了にせず、保留の履歴と通知を1回だけ残すことを検証する。
  */
 
-import { recordTicketActivities } from '@/lib/board/ticket-activity'
+import { hasMergeHeld, recordTicketActivities } from '@/lib/board/ticket-activity'
 import { completeTicketByMerge } from '@/lib/board/ticket-mutation'
 import { lockTicketRow, moveTicketToLane } from '@/lib/board/ticket-write'
 import { enqueueTicketCompletedByMerge, enqueueTicketMergeHeld } from '@/lib/notify/notify-trigger'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/prisma', async () =>
-  (await import('../../helpers/prisma')).mockPrisma({ ticket: ['findUnique'], ticketActivity: ['findFirst'] }),
-)
+vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({ ticket: ['findUnique'] }))
 
 vi.mock('@/lib/board/ticket-write', () => ({
   assertReplyTarget: vi.fn(),
@@ -23,7 +21,7 @@ vi.mock('@/lib/board/ticket-write', () => ({
   reassignContentAttachments: vi.fn(),
 }))
 
-vi.mock('@/lib/board/ticket-activity', () => ({ recordTicketActivities: vi.fn() }))
+vi.mock('@/lib/board/ticket-activity', () => ({ hasMergeHeld: vi.fn(), recordTicketActivities: vi.fn() }))
 
 vi.mock('@/lib/notify/notify-trigger', () => ({
   enqueueTicketCommented: vi.fn(),
@@ -52,7 +50,7 @@ const mockTicket = (criteria: ReturnType<typeof criterion>[], overrides: Record<
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.mocked(prisma.ticketActivity.findFirst).mockResolvedValue(null)
+  vi.mocked(hasMergeHeld).mockResolvedValue(false)
 })
 
 describe('completeTicketByMerge: 完了にする', () => {
@@ -107,15 +105,15 @@ describe('completeTicketByMerge: 保留する', () => {
     ])
   })
 
-  it('同じ PR で保留済みなら、再配信では履歴も通知も重ねない', async () => {
+  it('保留済みなら、再配信では履歴も通知も重ねない', async () => {
     mockTicket([criterion('タグを打つ', null, null)])
-    vi.mocked(prisma.ticketActivity.findFirst).mockResolvedValueOnce({ id: 'a1' } as never)
+    vi.mocked(hasMergeHeld).mockResolvedValueOnce(true)
 
     expect(await completeTicketByMerge(TICKET_ID, PR, 'checkedOrReported')).toBe(false)
-    expect(prisma.ticketActivity.findFirst).toHaveBeenCalledWith({
-      where: { ticketId: TICKET_ID, field: 'mergeHeld', before: PR },
-      select: { id: true },
-    })
+    expect(hasMergeHeld).toHaveBeenCalledWith(prisma, TICKET_ID, PR)
+    expect(vi.mocked(lockTicketRow).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(hasMergeHeld).mock.invocationCallOrder[0],
+    )
     expect(recordTicketActivities).not.toHaveBeenCalled()
     expect(enqueueTicketMergeHeld).not.toHaveBeenCalled()
   })

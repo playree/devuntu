@@ -364,11 +364,11 @@ export const ja: DefaultLocaleItems = {
   mcp_token: 'MCPトークン',
   mcp_token_env_command: '環境変数の設定',
   mentioned: 'メンション',
+  mention_in_ticket: '本文',
   merge_criteria_check: '完了前の受け入れ条件の判定',
   merge_criteria_check_checked: '人の確認が必須',
   merge_criteria_check_checked_or_reported: '人の確認または自己申告',
   merge_criteria_check_none: 'チェックしない',
-  mention_in_ticket: '本文',
   move_down: '下へ移動',
   move_up: '上へ移動',
   msg_confirm_approve_proposal:

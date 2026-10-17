@@ -33,7 +33,7 @@ import { assertBoardAssignee, getBoardMentionCandidates, getTicketMentionCandida
 import { extractMentionEmails, resolveMentionUserIds } from './mention'
 import { assertTagIdsInBoard, syncTicketTags } from './tag'
 import { nextOrder } from './tag-rule'
-import { recordTicketActivities } from './ticket-activity'
+import { hasMergeHeld, recordTicketActivities } from './ticket-activity'
 import { criteriaActivity, diffTicketSnapshot, mergeHeldActivity } from './ticket-activity-rule'
 import { syncTicketCriteria } from './ticket-criterion'
 import { ticketDisplayId } from './ticket-id'
@@ -334,7 +334,7 @@ export const changeTicketStatus = async (actor: Actor, id: string, status: Ticke
  * 対象を絞るのは呼び出し元(Webhook)の責務で、ここではアーカイブ済みのボードと完了済みのチケットだけを除く。
  *
  * 受け入れ条件の判定(criteriaCheck)で未達が残れば完了にせず、保留の履歴と通知を残す。
- * 同じ PR / MR の再配信では、保留の履歴があれば何も残さない。保留後の完了は人の操作に任せる。
+ * 保留済み({@link hasMergeHeld})なら何も残さない。保留後の完了は人の操作に任せる。
  * 完了へ動かしたら true。
  */
 export const completeTicketByMerge = async (
@@ -360,11 +360,7 @@ export const completeTicketByMerge = async (
 
     const unmet = unmetMergeCriteria(ticket.criteria, criteriaCheck)
     if (unmet.length > 0) {
-      const held = await tx.ticketActivity.findFirst({
-        where: { ticketId, field: 'mergeHeld', before: pullRequest },
-        select: { id: true },
-      })
-      if (!held) {
+      if (!(await hasMergeHeld(tx, ticketId, pullRequest))) {
         await recordTicketActivities(tx, ticketId, { actorId: null, source: 'merge' }, [
           mergeHeldActivity(pullRequest, unmet),
         ])
