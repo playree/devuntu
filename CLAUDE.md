@@ -83,6 +83,14 @@ docs は読者別に `guide/`(利用者)・`admin/`(運用者)・`dev/`(開発�
 - `prisma/migrations/**`
 - `**/*.lock`
 
+# バージョンとリリース
+
+- リリース済みの version は remote のタグ(`v<version>` / `stable`)が正。`pnpm release:version` で確認する
+- feature ブランチを作ったら `pnpm release:version --bump` を実行する。version が上がった場合は、それだけを最初のコミットにする(例: `v1.0.2 start (DEVUNTU-1)`)
+  - リリースチケット(ボードの AI 向けコンテキスト)は、上げた後の version で探す
+  - リリース済みの version のままでは PR の CI と edge のビルドが失敗する
+- edge のビルドは人が行う。latest(タグ打ち・リリースノート)と stable はスキル `release` で行う
+
 # PR作成前のセルフレビュー
 
 - PRを作成する前に、スキル `code-review` で main との差分をセルフレビューする

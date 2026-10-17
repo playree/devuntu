@@ -405,22 +405,60 @@ Docker Hub(`playree/devuntu`)への publish は GitHub Actions の `Release`
 導入時点では `stable` のイメージと同じ版になる。ただし取得済みの `compose.yaml` は自動で更新されず、アップデートは既存の
 `compose.yaml` のまま新しいイメージで起動する。`compose.yaml` を変更したリリースでは、取得し直す必要があることをリリースノートで案内する。
 
+### リリース済みの version
+
+リリース済みの version は、remote の git タグ `v<version>`(GitHub Release の公開で作られる)が正。
+stable は git タグ `stable` と同じ commit を指す `v<version>` になる。`pnpm release:version`
+([scripts/release-version.mjs](../../scripts/release-version.mjs))で確認できる。ローカルのタグは fetch するまで古いままなので、
+スクリプトは毎回 `git ls-remote` で remote を見る。
+
+```sh
+pnpm release:version           # version / released / latest / stable / bumpTo を JSON で出す
+pnpm release:version --check   # リリース済み(または最新リリースより古い)なら exit 1
+pnpm release:version --bump    # リリース済みなら package.json を次のパッチへ上げる(未リリースなら何もしない)
+```
+
+開発はリリース済みでない version で行う。作業を始めるときに `--bump` を実行し、上がった場合はそれだけを
+最初のコミットにして、対応の PR に含める(`vX.Y.Z start`)。並行する PR が同じように上げても、変更が同じなので競合しない。
+上げ忘れは CI(pull_request)と `Release` の edge ビルドの `--check` で止まる。
+
 ### リリース手順
 
-1. `package.json`の`version`を上げて main に入れる
-2. Actions の `Release` を手動実行(`Run workflow`)する。ビルドされた`edge`が publish される
-3. `docker pull playree/devuntu:edge`で動作確認する
-4. 問題なければ**2で実行したのと同じ commit**に`v<version>`のタグを打って push する
-5. `Release`が`edge`と同一のイメージに`<version>`と`latest`を付ける
-6. `latest`で一定期間問題が無ければ、Actions の `Promote stable` を`version`を指定して手動実行する
+edge は人、latest と stable は AI(スキル [release](../../.claude/skills/release/SKILL.md))が行う。
 
-`promote`ジョブは再ビルドせずタグを付け替えるだけなので、3で確認したものがそのまま公開される。
+1. (人)リリースする内容が main に揃ったら、Actions の `Release` を手動実行(`Run workflow`)する。ビルドされた`edge`が publish される
+2. (人)`docker pull playree/devuntu:edge`で動作確認する
+3. (AI `/release`)2で確認した edge のビルド元 commit を Actions の実行履歴から特定し、前回のタグからの PR とリリースチケットに
+   関連付いたチケットを集めてリリースノートを書く。その commit を対象に**ドラフト**の GitHub Release を作る
+4. (人)ドラフトを確認する。OK なら AI が公開し、`v<version>` のタグが作られる
+5. `Release`が`edge`と同一のイメージに`<version>`と`latest`を付ける。AI は完了を確認し、リリースチケットを完了にする
+6. (AI `/release stable`)`latest`で一定期間問題が無ければ、`Promote stable` を`version`を指定して実行する。
+   公開から間もない場合や、公開後に起票された未完了の不具合チケットがある場合は、実行前に人へ確認する
+
+`promote`ジョブは再ビルドせずタグを付け替えるだけなので、2で確認したものがそのまま公開される。
 ビルド元の commit とタグの commit が食い違う場合と、`package.json`の`version`とタグ名が
-食い違う場合はジョブが失敗する。その場合は2からやり直す。
+食い違う場合はジョブが失敗する。その場合は1からやり直す。
 
 `Promote stable` も同様に、`<version>` のイメージのビルド元が `v<version>` のタグの commit と一致しない場合
 (タグが無い場合を含む)と、その commit の `compose.yaml` が `stable` を参照していない(この仕組みより前の)版の場合は失敗する。過去の `version` を指定すれば `stable` を戻せるが、`stable` を使っている環境で
 既に新しい版のマイグレーションが適用されていると古い版では動かない可能性があるため、戻すより修正版のリリースを優先する。
+
+### リリースノート
+
+GitHub Release の本文がリリースノートで、ダッシュボードの「リリースノート」ウィジェットにも表示される。
+本文は `<!-- details -->`(GitHub では表示されない)で要点と詳細に分ける。
+
+```md
+- 要点(利用者に効く変更を1行ずつ。運用者の対応が必要なものは必ず入れる)
+
+<!-- details -->
+
+## 新機能 / 改善 / 不具合修正 / 運用者向け / アップデート
+```
+
+ウィジェットは区切りより前だけを表示し、続きは GitHub のリリースページへのリンクにする
+(`src/lib/release-note.ts` の `splitReleaseNote`)。区切りの無い(この形式より前の)リリースは全文を表示する。
+ドラフトは GitHub API が返さないため表示されず、プレリリースは除外している。
 
 ### ローカルでのビルド
 

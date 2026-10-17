@@ -10,6 +10,7 @@ import { envu } from '@/lib/env-util'
 import { errCommunication } from '@/lib/error'
 import { getString } from '@/lib/kvs'
 import { prisma } from '@/lib/prisma'
+import { splitReleaseNote } from '@/lib/release-note'
 import os from 'os'
 import pkg from '../../../package.json'
 
@@ -92,8 +93,22 @@ export const getReleaseNotes = safeAuthAction
     if (!res.ok) {
       return []
     }
-    const json = (await res.json()) as { id: number; name: string; body: string }[]
-    return json.map(({ id, name, body }) => ({ id: String(id), name, body }))
+    const json = (await res.json()) as {
+      id: number
+      name: string | null
+      tag_name: string
+      body: string | null
+      html_url: string
+      prerelease: boolean
+    }[]
+    return json
+      .filter((release) => !release.prerelease)
+      .map((release) => ({
+        id: String(release.id),
+        name: release.name || release.tag_name,
+        url: release.html_url,
+        ...splitReleaseNote(release.body),
+      }))
   })
 export type GetReleaseNotesReturnType = Awaited<ReturnType<typeof getReleaseNotes>>['data']
 

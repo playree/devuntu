@@ -20,6 +20,11 @@ jobs:
         with:
           persist-credentials: false
 
+      # リリース済みの version のまま main に入ると、次のリリースのタグが打てなくなる
+      - name: Verify version is not released
+        if: github.event_name == 'pull_request'
+        run: node scripts/release-version.mjs --check
+
       - uses: pnpm/action-setup@v6.1.0
 
       - uses: actions/setup-node@v7

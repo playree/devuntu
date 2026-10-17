@@ -32,7 +32,8 @@
     "full:backup": "node ./scripts/backup-all.mjs",
     "full:restore": "node ./scripts/restore-all.mjs",
     "maintenance": "node ./scripts/maintenance.mjs",
-    "setup:env": "node ./scripts/setup-env/index.mjs"
+    "setup:env": "node ./scripts/setup-env/index.mjs",
+    "release:version": "node ./scripts/release-version.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1136.0",

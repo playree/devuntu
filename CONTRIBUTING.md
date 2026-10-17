@@ -44,6 +44,7 @@ pnpm test
 pnpm build
 ```
 
+- `package.json` の `version` がリリース済みのままだと CI が失敗します。`pnpm release:version --bump` で次のパッチへ上げ、最初のコミットにしてください
 - 修正したファイルには `pnpm exec prettier --write <ファイル>` をかけてください
 - 機能や仕様を変えた場合は、対応するドキュメント(`README.md` / `README.en.md` / `docs/**/*.md`)も更新してください
 

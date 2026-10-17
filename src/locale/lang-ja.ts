@@ -452,6 +452,7 @@ export const ja: DefaultLocaleItems = {
   relation_kind_related: '関連付ける',
   relation_remove: '関係を解除',
   release_note: 'リリースノート',
+  release_note_details: '詳細',
   register_passkey: 'パスキーを登録する',
   registered_at: '登録',
   reload: 'リロード',
