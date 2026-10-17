@@ -39,6 +39,7 @@ export type BoardGitSettingMinAggregateOutputType = {
   boardId: string | null
   provider: $Enums.GitProvider | null
   completeOnMerge: boolean | null
+  mergeCriteriaCheck: $Enums.MergeCriteriaCheck | null
   autoRevise: boolean | null
   autoReviseLimit: number | null
   createdAt: Date | null
@@ -50,6 +51,7 @@ export type BoardGitSettingMaxAggregateOutputType = {
   boardId: string | null
   provider: $Enums.GitProvider | null
   completeOnMerge: boolean | null
+  mergeCriteriaCheck: $Enums.MergeCriteriaCheck | null
   autoRevise: boolean | null
   autoReviseLimit: number | null
   createdAt: Date | null
@@ -61,6 +63,7 @@ export type BoardGitSettingCountAggregateOutputType = {
   boardId: number
   provider: number
   completeOnMerge: number
+  mergeCriteriaCheck: number
   autoRevise: number
   autoReviseLimit: number
   createdAt: number
@@ -82,6 +85,7 @@ export type BoardGitSettingMinAggregateInputType = {
   boardId?: true
   provider?: true
   completeOnMerge?: true
+  mergeCriteriaCheck?: true
   autoRevise?: true
   autoReviseLimit?: true
   createdAt?: true
@@ -93,6 +97,7 @@ export type BoardGitSettingMaxAggregateInputType = {
   boardId?: true
   provider?: true
   completeOnMerge?: true
+  mergeCriteriaCheck?: true
   autoRevise?: true
   autoReviseLimit?: true
   createdAt?: true
@@ -104,6 +109,7 @@ export type BoardGitSettingCountAggregateInputType = {
   boardId?: true
   provider?: true
   completeOnMerge?: true
+  mergeCriteriaCheck?: true
   autoRevise?: true
   autoReviseLimit?: true
   createdAt?: true
@@ -202,6 +208,7 @@ export type BoardGitSettingGroupByOutputType = {
   boardId: string
   provider: $Enums.GitProvider
   completeOnMerge: boolean
+  mergeCriteriaCheck: $Enums.MergeCriteriaCheck
   autoRevise: boolean
   autoReviseLimit: number
   createdAt: Date
@@ -236,6 +243,7 @@ export type BoardGitSettingWhereInput = {
   boardId?: Prisma.StringFilter<"BoardGitSetting"> | string
   provider?: Prisma.EnumGitProviderFilter<"BoardGitSetting"> | $Enums.GitProvider
   completeOnMerge?: Prisma.BoolFilter<"BoardGitSetting"> | boolean
+  mergeCriteriaCheck?: Prisma.EnumMergeCriteriaCheckFilter<"BoardGitSetting"> | $Enums.MergeCriteriaCheck
   autoRevise?: Prisma.BoolFilter<"BoardGitSetting"> | boolean
   autoReviseLimit?: Prisma.IntFilter<"BoardGitSetting"> | number
   createdAt?: Prisma.DateTimeFilter<"BoardGitSetting"> | Date | string
@@ -248,6 +256,7 @@ export type BoardGitSettingOrderByWithRelationInput = {
   boardId?: Prisma.SortOrder
   provider?: Prisma.SortOrder
   completeOnMerge?: Prisma.SortOrder
+  mergeCriteriaCheck?: Prisma.SortOrder
   autoRevise?: Prisma.SortOrder
   autoReviseLimit?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -264,6 +273,7 @@ export type BoardGitSettingWhereUniqueInput = Prisma.AtLeast<{
   boardId?: Prisma.StringFilter<"BoardGitSetting"> | string
   provider?: Prisma.EnumGitProviderFilter<"BoardGitSetting"> | $Enums.GitProvider
   completeOnMerge?: Prisma.BoolFilter<"BoardGitSetting"> | boolean
+  mergeCriteriaCheck?: Prisma.EnumMergeCriteriaCheckFilter<"BoardGitSetting"> | $Enums.MergeCriteriaCheck
   autoRevise?: Prisma.BoolFilter<"BoardGitSetting"> | boolean
   autoReviseLimit?: Prisma.IntFilter<"BoardGitSetting"> | number
   createdAt?: Prisma.DateTimeFilter<"BoardGitSetting"> | Date | string
@@ -276,6 +286,7 @@ export type BoardGitSettingOrderByWithAggregationInput = {
   boardId?: Prisma.SortOrder
   provider?: Prisma.SortOrder
   completeOnMerge?: Prisma.SortOrder
+  mergeCriteriaCheck?: Prisma.SortOrder
   autoRevise?: Prisma.SortOrder
   autoReviseLimit?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -295,6 +306,7 @@ export type BoardGitSettingScalarWhereWithAggregatesInput = {
   boardId?: Prisma.StringWithAggregatesFilter<"BoardGitSetting"> | string
   provider?: Prisma.EnumGitProviderWithAggregatesFilter<"BoardGitSetting"> | $Enums.GitProvider
   completeOnMerge?: Prisma.BoolWithAggregatesFilter<"BoardGitSetting"> | boolean
+  mergeCriteriaCheck?: Prisma.EnumMergeCriteriaCheckWithAggregatesFilter<"BoardGitSetting"> | $Enums.MergeCriteriaCheck
   autoRevise?: Prisma.BoolWithAggregatesFilter<"BoardGitSetting"> | boolean
   autoReviseLimit?: Prisma.IntWithAggregatesFilter<"BoardGitSetting"> | number
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"BoardGitSetting"> | Date | string
@@ -305,6 +317,7 @@ export type BoardGitSettingCreateInput = {
   id?: string
   provider: $Enums.GitProvider
   completeOnMerge?: boolean
+  mergeCriteriaCheck?: $Enums.MergeCriteriaCheck
   autoRevise?: boolean
   autoReviseLimit?: number
   createdAt?: Date | string
@@ -317,6 +330,7 @@ export type BoardGitSettingUncheckedCreateInput = {
   boardId: string
   provider: $Enums.GitProvider
   completeOnMerge?: boolean
+  mergeCriteriaCheck?: $Enums.MergeCriteriaCheck
   autoRevise?: boolean
   autoReviseLimit?: number
   createdAt?: Date | string
@@ -327,6 +341,7 @@ export type BoardGitSettingUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
   completeOnMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  mergeCriteriaCheck?: Prisma.EnumMergeCriteriaCheckFieldUpdateOperationsInput | $Enums.MergeCriteriaCheck
   autoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
   autoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -339,6 +354,7 @@ export type BoardGitSettingUncheckedUpdateInput = {
   boardId?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
   completeOnMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  mergeCriteriaCheck?: Prisma.EnumMergeCriteriaCheckFieldUpdateOperationsInput | $Enums.MergeCriteriaCheck
   autoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
   autoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -350,6 +366,7 @@ export type BoardGitSettingCreateManyInput = {
   boardId: string
   provider: $Enums.GitProvider
   completeOnMerge?: boolean
+  mergeCriteriaCheck?: $Enums.MergeCriteriaCheck
   autoRevise?: boolean
   autoReviseLimit?: number
   createdAt?: Date | string
@@ -360,6 +377,7 @@ export type BoardGitSettingUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
   completeOnMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  mergeCriteriaCheck?: Prisma.EnumMergeCriteriaCheckFieldUpdateOperationsInput | $Enums.MergeCriteriaCheck
   autoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
   autoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -371,6 +389,7 @@ export type BoardGitSettingUncheckedUpdateManyInput = {
   boardId?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
   completeOnMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  mergeCriteriaCheck?: Prisma.EnumMergeCriteriaCheckFieldUpdateOperationsInput | $Enums.MergeCriteriaCheck
   autoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
   autoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -397,6 +416,7 @@ export type BoardGitSettingCountOrderByAggregateInput = {
   boardId?: Prisma.SortOrder
   provider?: Prisma.SortOrder
   completeOnMerge?: Prisma.SortOrder
+  mergeCriteriaCheck?: Prisma.SortOrder
   autoRevise?: Prisma.SortOrder
   autoReviseLimit?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -412,6 +432,7 @@ export type BoardGitSettingMaxOrderByAggregateInput = {
   boardId?: Prisma.SortOrder
   provider?: Prisma.SortOrder
   completeOnMerge?: Prisma.SortOrder
+  mergeCriteriaCheck?: Prisma.SortOrder
   autoRevise?: Prisma.SortOrder
   autoReviseLimit?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -423,6 +444,7 @@ export type BoardGitSettingMinOrderByAggregateInput = {
   boardId?: Prisma.SortOrder
   provider?: Prisma.SortOrder
   completeOnMerge?: Prisma.SortOrder
+  mergeCriteriaCheck?: Prisma.SortOrder
   autoRevise?: Prisma.SortOrder
   autoReviseLimit?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -475,10 +497,15 @@ export type BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput = {
   deleteMany?: Prisma.BoardGitSettingScalarWhereInput | Prisma.BoardGitSettingScalarWhereInput[]
 }
 
+export type EnumMergeCriteriaCheckFieldUpdateOperationsInput = {
+  set?: $Enums.MergeCriteriaCheck
+}
+
 export type BoardGitSettingCreateWithoutBoardInput = {
   id?: string
   provider: $Enums.GitProvider
   completeOnMerge?: boolean
+  mergeCriteriaCheck?: $Enums.MergeCriteriaCheck
   autoRevise?: boolean
   autoReviseLimit?: number
   createdAt?: Date | string
@@ -489,6 +516,7 @@ export type BoardGitSettingUncheckedCreateWithoutBoardInput = {
   id?: string
   provider: $Enums.GitProvider
   completeOnMerge?: boolean
+  mergeCriteriaCheck?: $Enums.MergeCriteriaCheck
   autoRevise?: boolean
   autoReviseLimit?: number
   createdAt?: Date | string
@@ -529,6 +557,7 @@ export type BoardGitSettingScalarWhereInput = {
   boardId?: Prisma.StringFilter<"BoardGitSetting"> | string
   provider?: Prisma.EnumGitProviderFilter<"BoardGitSetting"> | $Enums.GitProvider
   completeOnMerge?: Prisma.BoolFilter<"BoardGitSetting"> | boolean
+  mergeCriteriaCheck?: Prisma.EnumMergeCriteriaCheckFilter<"BoardGitSetting"> | $Enums.MergeCriteriaCheck
   autoRevise?: Prisma.BoolFilter<"BoardGitSetting"> | boolean
   autoReviseLimit?: Prisma.IntFilter<"BoardGitSetting"> | number
   createdAt?: Prisma.DateTimeFilter<"BoardGitSetting"> | Date | string
@@ -539,6 +568,7 @@ export type BoardGitSettingCreateManyBoardInput = {
   id?: string
   provider: $Enums.GitProvider
   completeOnMerge?: boolean
+  mergeCriteriaCheck?: $Enums.MergeCriteriaCheck
   autoRevise?: boolean
   autoReviseLimit?: number
   createdAt?: Date | string
@@ -549,6 +579,7 @@ export type BoardGitSettingUpdateWithoutBoardInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
   completeOnMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  mergeCriteriaCheck?: Prisma.EnumMergeCriteriaCheckFieldUpdateOperationsInput | $Enums.MergeCriteriaCheck
   autoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
   autoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -559,6 +590,7 @@ export type BoardGitSettingUncheckedUpdateWithoutBoardInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
   completeOnMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  mergeCriteriaCheck?: Prisma.EnumMergeCriteriaCheckFieldUpdateOperationsInput | $Enums.MergeCriteriaCheck
   autoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
   autoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -569,6 +601,7 @@ export type BoardGitSettingUncheckedUpdateManyWithoutBoardInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   provider?: Prisma.EnumGitProviderFieldUpdateOperationsInput | $Enums.GitProvider
   completeOnMerge?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  mergeCriteriaCheck?: Prisma.EnumMergeCriteriaCheckFieldUpdateOperationsInput | $Enums.MergeCriteriaCheck
   autoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
   autoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -582,6 +615,7 @@ export type BoardGitSettingSelect<ExtArgs extends runtime.Types.Extensions.Inter
   boardId?: boolean
   provider?: boolean
   completeOnMerge?: boolean
+  mergeCriteriaCheck?: boolean
   autoRevise?: boolean
   autoReviseLimit?: boolean
   createdAt?: boolean
@@ -594,6 +628,7 @@ export type BoardGitSettingSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   boardId?: boolean
   provider?: boolean
   completeOnMerge?: boolean
+  mergeCriteriaCheck?: boolean
   autoRevise?: boolean
   autoReviseLimit?: boolean
   createdAt?: boolean
@@ -606,6 +641,7 @@ export type BoardGitSettingSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
   boardId?: boolean
   provider?: boolean
   completeOnMerge?: boolean
+  mergeCriteriaCheck?: boolean
   autoRevise?: boolean
   autoReviseLimit?: boolean
   createdAt?: boolean
@@ -618,13 +654,14 @@ export type BoardGitSettingSelectScalar = {
   boardId?: boolean
   provider?: boolean
   completeOnMerge?: boolean
+  mergeCriteriaCheck?: boolean
   autoRevise?: boolean
   autoReviseLimit?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type BoardGitSettingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "boardId" | "provider" | "completeOnMerge" | "autoRevise" | "autoReviseLimit" | "createdAt" | "updatedAt", ExtArgs["result"]["boardGitSetting"]>
+export type BoardGitSettingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "boardId" | "provider" | "completeOnMerge" | "mergeCriteriaCheck" | "autoRevise" | "autoReviseLimit" | "createdAt" | "updatedAt", ExtArgs["result"]["boardGitSetting"]>
 export type BoardGitSettingInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   board?: boolean | Prisma.BoardDefaultArgs<ExtArgs>
 }
@@ -648,6 +685,10 @@ export type $BoardGitSettingPayload<ExtArgs extends runtime.Types.Extensions.Int
      * PR / MR のマージで、紐付いた PR / MR がすべてマージ / クローズされたチケットを完了にする(オプトイン)
      */
     completeOnMerge: boolean
+    /**
+     * 自動完了の前に見る受け入れ条件の判定。未達が残るチケットは完了にせず保留する
+     */
+    mergeCriteriaCheck: $Enums.MergeCriteriaCheck
     /**
      * 紐付いた PR / MR の CI 失敗・レビュー指摘で、報告済みのエージェント担当チケットを revise へ戻す(オプトイン)
      */
@@ -1086,6 +1127,7 @@ export interface BoardGitSettingFieldRefs {
   readonly boardId: Prisma.FieldRef<"BoardGitSetting", 'String'>
   readonly provider: Prisma.FieldRef<"BoardGitSetting", 'GitProvider'>
   readonly completeOnMerge: Prisma.FieldRef<"BoardGitSetting", 'Boolean'>
+  readonly mergeCriteriaCheck: Prisma.FieldRef<"BoardGitSetting", 'MergeCriteriaCheck'>
   readonly autoRevise: Prisma.FieldRef<"BoardGitSetting", 'Boolean'>
   readonly autoReviseLimit: Prisma.FieldRef<"BoardGitSetting", 'Int'>
   readonly createdAt: Prisma.FieldRef<"BoardGitSetting", 'DateTime'>

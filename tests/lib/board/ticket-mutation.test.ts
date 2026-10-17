@@ -119,6 +119,7 @@ vi.mock('@/lib/notify/notify-trigger', () => ({
   enqueueTicketCommented: vi.fn(),
   enqueueTicketCompletedByMerge: vi.fn(),
   enqueueTicketCreated: vi.fn(),
+  enqueueTicketMergeHeld: vi.fn(),
   enqueueTicketMoved: vi.fn(),
   enqueueTicketUpdated: vi.fn(),
 }))

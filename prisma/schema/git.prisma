@@ -124,6 +124,16 @@ model BoardRepository {
   @@map("board_repository")
 }
 
+/// マージによる自動完了で、受け入れ条件をどう判定するか
+enum MergeCriteriaCheck {
+  /// 受け入れ条件を見ない
+  none
+  /// 人の確認済み、または自己申告(agentMet = true)なら満たしたとみなす
+  checkedOrReported
+  /// 人の確認済みのみ満たしたとみなす
+  checked
+}
+
 /// ボードの Git 連携の provider ごとの設定。行が無い provider はすべて既定値として扱う
 model BoardGitSetting {
   id String @id @default(uuid(7))
@@ -135,6 +145,9 @@ model BoardGitSetting {
 
   /// PR / MR のマージで、紐付いた PR / MR がすべてマージ / クローズされたチケットを完了にする(オプトイン)
   completeOnMerge Boolean @default(false)
+
+  /// 自動完了の前に見る受け入れ条件の判定。未達が残るチケットは完了にせず保留する
+  mergeCriteriaCheck MergeCriteriaCheck @default(checkedOrReported)
 
   /// 紐付いた PR / MR の CI 失敗・レビュー指摘で、報告済みのエージェント担当チケットを revise へ戻す(オプトイン)
   autoRevise Boolean @default(false)

@@ -45,12 +45,29 @@ const CriteriaDiff: FC<{ activity: Activity }> = ({ activity }) => {
   )
 }
 
+/** マージの自動完了の保留は、きっかけの PR / MR と、その時点で未達だった受け入れ条件を出す */
+const MergeHeldDetail: FC<{ activity: Activity }> = ({ activity }) => (
+  <div className='space-y-0.5'>
+    <div className='break-all'>{activity.before ?? '-'}</div>
+    <ul className='text-muted list-disc space-y-0.5 pl-5'>
+      {(activity.after?.split('\n') ?? []).map((line, index) => (
+        <li key={index} className='break-all'>
+          {line}
+        </li>
+      ))}
+    </ul>
+  </div>
+)
+
 const ActivityDetail: FC<{ activity: Activity }> = ({ activity }) => {
   if (activity.field === 'created') {
     return null
   }
   if (activity.field === 'criteria') {
     return <CriteriaDiff activity={activity} />
+  }
+  if (activity.field === 'mergeHeld') {
+    return <MergeHeldDetail activity={activity} />
   }
   return (
     <div className='flex flex-wrap items-center gap-x-2 gap-y-1'>

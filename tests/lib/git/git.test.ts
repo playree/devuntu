@@ -4,9 +4,11 @@ import {
   extractDisplayIdFromBranch,
   isAllPullRequestsDone,
   looksLikeGitUrl,
+  mergeCompletionOf,
   parseGitUrl,
   summarizeCheckSuites,
   ticketLinkLabel,
+  unmetMergeCriteria,
 } from '@/lib/git/git'
 import { describe, expect, it } from 'vitest'
 
@@ -126,5 +128,49 @@ describe('ticketLinkLabel', () => {
 
   it('GitLab の MR は ! で番号を付ける', () => {
     expect(ticketLinkLabel({ provider: 'gitlab', kind: 'pull_request', repo: 'g/s/p', ref: '3' })).toBe('g/s/p!3')
+  })
+})
+
+describe('unmetMergeCriteria', () => {
+  const AT = new Date('2026-10-01T00:00:00Z')
+  const CRITERIA = [
+    { text: '人が確認', checkedAt: AT, agentMet: null },
+    { text: '自己申告で達成', checkedAt: null, agentMet: true },
+    { text: '自己申告で未達', checkedAt: null, agentMet: false },
+    { text: '未申告', checkedAt: null, agentMet: null },
+  ]
+
+  it('チェックしないなら未達は無い', () => {
+    expect(unmetMergeCriteria(CRITERIA, 'none')).toEqual([])
+  })
+
+  it('人の確認または自己申告なら、どちらでも満たしていない条件だけが未達', () => {
+    expect(unmetMergeCriteria(CRITERIA, 'checkedOrReported')).toEqual(['自己申告で未達', '未申告'])
+  })
+
+  it('人の確認が必須なら、自己申告だけの条件も未達', () => {
+    expect(unmetMergeCriteria(CRITERIA, 'checked')).toEqual(['自己申告で達成', '自己申告で未達', '未申告'])
+  })
+
+  it('受け入れ条件が無ければ未達は無い', () => {
+    expect(unmetMergeCriteria([], 'checked')).toEqual([])
+  })
+})
+
+describe('mergeCompletionOf', () => {
+  it('マージで自動完了する provider だけを判定方法つきで返す', () => {
+    expect(
+      mergeCompletionOf([
+        { provider: 'github', completeOnMerge: true, mergeCriteriaCheck: 'checkedOrReported' },
+        { provider: 'gitlab', completeOnMerge: false, mergeCriteriaCheck: 'checked' },
+      ]),
+    ).toEqual({ github: { criteriaCheck: 'checkedOrReported' } })
+  })
+
+  it('自動完了する provider が無ければ undefined', () => {
+    expect(mergeCompletionOf([])).toBeUndefined()
+    expect(
+      mergeCompletionOf([{ provider: 'github', completeOnMerge: false, mergeCriteriaCheck: 'none' }]),
+    ).toBeUndefined()
   })
 })

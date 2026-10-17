@@ -5,7 +5,7 @@
  * どのイベントを扱うか・どのボードが対象かは、provider ごとの Webhook 処理で決めてから呼ぶ。
  */
 
-import type { GitProvider, PullRequestState } from '@/generated/prisma/enums'
+import type { GitProvider, MergeCriteriaCheck, PullRequestState } from '@/generated/prisma/enums'
 import { isFailedConclusion, requestAutoRevise } from '../agent/agent-auto-revise'
 import { gitlabBaseUrls } from '../board/board-repository'
 import { completeTicketByMerge } from '../board/ticket-mutation'
@@ -34,6 +34,8 @@ export type GitLinkedBoard = {
   id: string
   key: string
   completeOnPrMerge: boolean
+  /** マージで完了にする前に見る受け入れ条件の判定 */
+  mergeCriteriaCheck: MergeCriteriaCheck
   /** CI の失敗・レビュー指摘でエージェントへ自動差し戻しするか */
   autoRevise: boolean
   autoReviseLimit: number
@@ -45,7 +47,7 @@ export const gitLinkedBoardSelect = (provider: GitProvider) => ({
   key: true,
   gitSettings: {
     where: { provider },
-    select: { completeOnMerge: true, autoRevise: true, autoReviseLimit: true },
+    select: { completeOnMerge: true, mergeCriteriaCheck: true, autoRevise: true, autoReviseLimit: true },
   },
 })
 
@@ -58,8 +60,9 @@ export const toGitLinkedBoard = ({
   key: string
   gitSettings: BoardGitSettingValue[]
 }): GitLinkedBoard => {
-  const { completeOnMerge, autoRevise, autoReviseLimit } = gitSettings[0] ?? DEFAULT_BOARD_GIT_SETTING
-  return { ...board, completeOnPrMerge: completeOnMerge, autoRevise, autoReviseLimit }
+  const { completeOnMerge, mergeCriteriaCheck, autoRevise, autoReviseLimit } =
+    gitSettings[0] ?? DEFAULT_BOARD_GIT_SETTING
+  return { ...board, completeOnPrMerge: completeOnMerge, mergeCriteriaCheck, autoRevise, autoReviseLimit }
 }
 
 /**
@@ -99,9 +102,13 @@ export const autoLinkPullRequest = async (
  *
  * 判定に使うのは、そのボードに対応付けたリポジトリ(provider を問わない)の PR / MR だけ。対応付けていない
  * リポジトリの PR には Webhook が届かず状態が空のままなので、含めるといつまでも完了にならない。外したリンクも含めない。
+ * 受け入れ条件の判定(criteriaCheck)で未達が残るチケットは、完了にせず保留する({@link completeTicketByMerge})。
  */
-export const completeMergedTickets = async (targets: { ticketId: string; boardId: string }[], pullRequest: string) => {
-  for (const { ticketId, boardId } of targets) {
+export const completeMergedTickets = async (
+  targets: { ticketId: string; boardId: string; criteriaCheck: MergeCriteriaCheck }[],
+  pullRequest: string,
+) => {
+  for (const { ticketId, boardId, criteriaCheck } of targets) {
     const baseUrls = gitlabBaseUrls()
     const repositories = (
       await prisma.boardRepository.findMany({
@@ -119,7 +126,7 @@ export const completeMergedTickets = async (targets: { ticketId: string; boardId
     if (!isAllPullRequestsDone(links.map(({ prState }) => prState))) {
       continue
     }
-    if (await completeTicketByMerge(ticketId, pullRequest)) {
+    if (await completeTicketByMerge(ticketId, pullRequest, criteriaCheck)) {
       logger.info({ ticketId, pullRequest }, 'ticket completed by merge')
     }
   }
@@ -165,16 +172,27 @@ export const syncPullRequest = async ({
   if (!isClosed) {
     return
   }
-  const completeBoardIds = boards.filter(({ completeOnPrMerge }) => completeOnPrMerge).map(({ id }) => id)
-  if (completeBoardIds.length === 0) {
+  const criteriaCheckByBoard = new Map(
+    boards
+      .filter(({ completeOnPrMerge }) => completeOnPrMerge)
+      .map(({ id, mergeCriteriaCheck }) => [id, mergeCriteriaCheck]),
+  )
+  if (criteriaCheckByBoard.size === 0) {
     return
   }
   const targets = await prisma.ticketLink.findMany({
-    where: { ...where, dismissed: false, ticket: { boardId: { in: completeBoardIds }, status: { not: 'done' } } },
+    where: {
+      ...where,
+      dismissed: false,
+      ticket: { boardId: { in: [...criteriaCheckByBoard.keys()] }, status: { not: 'done' } },
+    },
     select: { ticketId: true, ticket: { select: { boardId: true } } },
   })
   await completeMergedTickets(
-    targets.map(({ ticketId, ticket }) => ({ ticketId, boardId: ticket.boardId })),
+    targets.flatMap(({ ticketId, ticket: { boardId } }) => {
+      const criteriaCheck = criteriaCheckByBoard.get(boardId)
+      return criteriaCheck ? [{ ticketId, boardId, criteriaCheck }] : []
+    }),
     pullRequestLabel(key.provider, key.repo, number),
   )
 }

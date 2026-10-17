@@ -39,6 +39,7 @@ import { findWaitingTicketIds } from '@/lib/board/ticket-sequence'
 import { findTicketTemplate } from '@/lib/board/ticket-template'
 import { applyTicketTemplate } from '@/lib/board/ticket-template-rule'
 import { ClientError, errInvalidOperation } from '@/lib/error'
+import { MERGE_COMPLETION_SELECT, mergeCompletionOf } from '@/lib/git/git'
 import { logger } from '@/lib/logger'
 import { resolveBoardId } from '@/lib/mcp/mcp-board'
 import { ticketWorkflowFor } from '@/lib/mcp/mcp-instructions'
@@ -68,7 +69,7 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
     where: { id },
     select: {
       number: true,
-      board: { select: { name: true, key: true, aiContext: true } },
+      board: { select: { name: true, key: true, aiContext: true, gitSettings: { select: MERGE_COMPLETION_SELECT } } },
       title: true,
       content: true,
       status: true,
@@ -101,6 +102,7 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
   }
 
   const displayId = ticketDisplayId({ key: ticket.board.key, number: ticket.number })
+  const mergeCompletion = access.boardRole ? mergeCompletionOf(ticket.board.gitSettings) : undefined
   const [links, criteria, activities, relations, waiting] = await Promise.all([
     listTicketLinks(id),
     listTicketCriteria(id),
@@ -121,6 +123,8 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
      * ボード内の情報なので承認者には見せず、未設定なら項目ごと載せない
      */
     ...(access.boardRole && ticket.board.aiContext ? { boardContext: ticket.board.aiContext } : {}),
+    /** マージによる自動完了の設定。boardContext と同じくボード内の情報なので承認者には見せない */
+    ...(mergeCompletion ? { mergeCompletion } : {}),
     title: ticket.title,
     content: ticket.content,
     status: ticket.status,

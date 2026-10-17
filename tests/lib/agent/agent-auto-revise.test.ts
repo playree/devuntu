@@ -26,7 +26,14 @@ vi.mock('@/lib/prisma', async () =>
 )
 
 const KEY: GitRepoKey = { provider: 'github', baseUrl: '', repo: 'owner/repo' }
-const BOARD: GitLinkedBoard = { id: 'b1', key: 'ABC', completeOnPrMerge: false, autoRevise: true, autoReviseLimit: 3 }
+const BOARD: GitLinkedBoard = {
+  id: 'b1',
+  key: 'ABC',
+  completeOnPrMerge: false,
+  mergeCriteriaCheck: 'checkedOrReported',
+  autoRevise: true,
+  autoReviseLimit: 3,
+}
 const LINK = { ticketId: 't1', ref: '12', url: 'https://github.com/owner/repo/pull/12', ticket: { boardId: 'b1' } }
 const REVIEW = { source: 'review' as const, dedupeKey: 'review:1', body: '指摘', author: 'coderabbitai[bot]' }
 

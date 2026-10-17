@@ -127,3 +127,43 @@ describe('resolveNotifyTargets: イベントごとの宛先', () => {
     },
   )
 })
+
+describe('resolveNotifyTargets(ticket_merge_held)', () => {
+  const held = { ticketId: 't1', boardId: 'b1' } as NotifyPayload<'ticket_merge_held'>
+  const HUMAN = { id: 'u1', role: 'user', isAgent: false }
+  const REQUESTER = { id: 'u2', role: 'user', isAgent: false }
+  const AGENT = { id: 'agent-1', role: null, isAgent: true }
+
+  const mockOwner = (assignee: typeof HUMAN | typeof AGENT | null, createdBy: typeof HUMAN | null) =>
+    vi.mocked(prisma.ticket.findUnique).mockResolvedValue({ assignee, createdBy } as never)
+
+  it('担当者が人なら担当者へ DM し、ボードの設定があればチャンネルへも流す', async () => {
+    mockOwner(HUMAN, REQUESTER)
+    vi.mocked(getTicketAccess).mockResolvedValue({ canView: true } as never)
+    vi.mocked(getBoardNotifyChannels).mockResolvedValue(['C0123ABCD'])
+
+    expect(await resolveNotifyTargets('ticket_merge_held', held, explicit)).toEqual({
+      userIds: ['u1'],
+      slackChannelIds: ['C0123ABCD'],
+    })
+    expect(getBoardNotifyChannels).toHaveBeenCalledWith('b1', 'ticket_merge_held')
+  })
+
+  it.each([
+    ['エージェント担当', AGENT],
+    ['未割り当て', null],
+  ] as const)('%s なら依頼者(作成者)へ DM する', async (_label, assignee) => {
+    mockOwner(assignee, REQUESTER)
+    vi.mocked(getTicketAccess).mockResolvedValue({ canView: true } as never)
+
+    expect((await resolveNotifyTargets('ticket_merge_held', held, explicit)).userIds).toEqual(['u2'])
+  })
+
+  it('閲覧できなくなった担当者へは送らず、作成者へも回さない', async () => {
+    mockOwner(HUMAN, REQUESTER)
+    vi.mocked(getTicketAccess).mockResolvedValue({ canView: false } as never)
+
+    expect((await resolveNotifyTargets('ticket_merge_held', held, explicit)).userIds).toEqual([])
+    expect(getTicketAccess).toHaveBeenCalledTimes(1)
+  })
+})

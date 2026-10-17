@@ -10,6 +10,7 @@ import {
   enqueueAgentRunFinished,
   enqueueTicketCommented,
   enqueueTicketCreated,
+  enqueueTicketMergeHeld,
   enqueueTicketUpdated,
   type AgentRunNotification,
 } from '@/lib/notify/notify-trigger'
@@ -17,7 +18,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/notify/notify-enqueue', () => ({ enqueueNotify: vi.fn(async () => undefined) }))
 vi.mock('@/lib/prisma', async () =>
-  (await import('../../helpers/prisma')).mockPrisma({ user: ['findUnique', 'findMany'] }),
+  (await import('../../helpers/prisma')).mockPrisma({ user: ['findUnique', 'findMany'], ticket: ['findUnique'] }),
 )
 
 const { enqueueNotify } = await import('@/lib/notify/notify-enqueue')
@@ -349,5 +350,42 @@ describe('作成 / 完了: チャネル通知だけのイベント', () => {
       displayId: ticket.displayId,
       fromName: '操作した人',
     })
+  })
+})
+
+describe('マージによる自動完了の保留', () => {
+  it('操作した人なしで ticket_merge_held を投入する(宛先は担当者・依頼者から引く)', async () => {
+    vi.mocked(prisma.ticket.findUnique).mockResolvedValue({
+      id: ticket.id,
+      boardId: ticket.boardId,
+      number: 42,
+      title: ticket.title,
+      board: { key: 'ABC' },
+    } as never)
+
+    await enqueueTicketMergeHeld({ ticketId: ticket.id, pullRequest: 'owner/repo#12', unmetCount: 2 })
+
+    expect(enqueue).toHaveBeenCalledWith(
+      {
+        event: 'ticket_merge_held',
+        payload: {
+          ticketId: ticket.id,
+          boardId: ticket.boardId,
+          displayId: 'ABC-42',
+          ticketTitle: ticket.title,
+          pullRequest: 'owner/repo#12',
+          unmetCount: 2,
+        },
+      },
+      prisma,
+    )
+  })
+
+  it('チケットが削除済みなら投入しない', async () => {
+    vi.mocked(prisma.ticket.findUnique).mockResolvedValue(null)
+
+    await enqueueTicketMergeHeld({ ticketId: ticket.id, pullRequest: 'owner/repo#12', unmetCount: 1 })
+
+    expect(enqueue).not.toHaveBeenCalled()
   })
 })

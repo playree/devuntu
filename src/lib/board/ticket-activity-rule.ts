@@ -29,6 +29,7 @@ export const TICKET_ACTIVITY_FIELD_LOCALE = {
   assignee: 'assignee',
   tags: 'tags',
   criteria: 'acceptance_criteria',
+  mergeHeld: 'activity_merge_held',
 } as const satisfies Record<TicketActivityField, LocaleItemBase>
 
 /** 記録する1行ぶん(変更者・日時は書き込み側で付ける) */
@@ -107,3 +108,10 @@ export const criteriaActivity = ({
   removed.length === 0 && added.length === 0
     ? null
     : { field: 'criteria', before: joinLines(removed), after: joinLines(added) }
+
+/** マージによる自動完了の保留。どの PR / MR で保留したかと、その時点の未達の受け入れ条件を残す */
+export const mergeHeldActivity = (pullRequest: string, unmet: string[]): TicketActivityEntry => ({
+  field: 'mergeHeld',
+  before: pullRequest,
+  after: joinLines(unmet),
+})

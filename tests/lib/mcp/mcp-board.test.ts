@@ -115,6 +115,7 @@ describe('getBoardForMcp', () => {
       name: 'テストボード',
       description: null,
       aiContext: null,
+      gitSettings: [],
     } as never)
     vi.mocked(assertBoardAccess).mockResolvedValueOnce({
       boardId,
@@ -161,6 +162,7 @@ describe('getBoardForMcp', () => {
       name: 'テストボード',
       description: null,
       aiContext: '## 前提',
+      gitSettings: [],
     } as never)
     vi.mocked(assertBoardAccess).mockResolvedValueOnce({
       boardId,
@@ -182,6 +184,7 @@ describe('getBoardForMcp', () => {
       name: 'テストボード',
       description: null,
       aiContext: null,
+      gitSettings: [],
     } as never)
     vi.mocked(assertBoardAccess).mockResolvedValueOnce({
       boardId,
@@ -219,12 +222,38 @@ describe('getBoardForMcp', () => {
     expect(listTicketTemplates).toHaveBeenCalledWith(boardId)
   })
 
+  it('マージで自動完了する provider だけを mergeCompletion として返す', async () => {
+    vi.mocked(prisma.board.findUnique).mockResolvedValueOnce({
+      key: 'ABC',
+      name: 'テストボード',
+      description: null,
+      aiContext: null,
+      gitSettings: [
+        { provider: 'github', completeOnMerge: true, mergeCriteriaCheck: 'checked' },
+        { provider: 'gitlab', completeOnMerge: false, mergeCriteriaCheck: 'none' },
+      ],
+    } as never)
+    vi.mocked(assertBoardAccess).mockResolvedValueOnce({
+      boardId,
+      kind: 'team',
+      role: 'member',
+      via: 'member',
+      archived: false,
+    })
+    vi.mocked(getBoardMemberUsers).mockResolvedValueOnce([])
+    vi.mocked(listBoardTags).mockResolvedValueOnce([])
+    vi.mocked(countTicketsByBoard).mockResolvedValueOnce({})
+
+    expect((await getBoardForMcp(auth, boardId)).mergeCompletion).toEqual({ github: { criteriaCheck: 'checked' } })
+  })
+
   it('テンプレートが無いボードでは templates を載せない', async () => {
     vi.mocked(prisma.board.findUnique).mockResolvedValueOnce({
       key: 'ABC',
       name: 'テストボード',
       description: null,
       aiContext: null,
+      gitSettings: [],
     } as never)
     vi.mocked(assertBoardAccess).mockResolvedValueOnce({
       boardId,

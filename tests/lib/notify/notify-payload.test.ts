@@ -69,3 +69,15 @@ describe('parseNotifyPayload: agent_run', () => {
     expect(() => parseNotifyPayload('agent_run', { ...payload, action: 'unknown' })).toThrow(ClientError)
   })
 })
+
+describe('parseNotifyPayload: ticket_merge_held', () => {
+  const payload = { ...ticketRef, pullRequest: 'owner/repo#12', unmetCount: 2 }
+
+  it('PR / MR と未達の件数で通る', () => {
+    expect(parseNotifyPayload('ticket_merge_held', payload)).toMatchObject(payload)
+  })
+
+  it('未達が0件の行は弾く(保留していない)', () => {
+    expect(() => parseNotifyPayload('ticket_merge_held', { ...payload, unmetCount: 0 })).toThrow(ClientError)
+  })
+})

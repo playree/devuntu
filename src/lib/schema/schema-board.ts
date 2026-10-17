@@ -6,7 +6,7 @@ import { el } from '@/locale'
 import { z } from 'zod'
 import { AUTO_REVISE_LIMIT_MAX, AUTO_REVISE_LIMIT_MIN } from '../agent/agent'
 import { BOARD_KEY_PATTERN, isReservedBoardKey, MAX_BOARD_KEY } from '../board/ticket-id'
-import { GIT_PROVIDERS, GIT_WEBHOOK_AUTHS } from '../git/git'
+import { GIT_PROVIDERS, GIT_WEBHOOK_AUTHS, MERGE_CRITERIA_CHECKS } from '../git/git'
 import { normalizeGithubRepo } from '../github/github'
 import { GITLAB_SIGNING_TOKEN_PATTERN, normalizeGitlabProjectPath } from '../gitlab/gitlab'
 import { CHANNEL_NOTIFY_EVENTS } from '../notify/notify'
@@ -179,6 +179,7 @@ export const scSetBoardGitSetting = z.object({
   id: z.uuidv7(),
   provider: z.enum(GIT_PROVIDERS),
   completeOnMerge: z.boolean().optional(),
+  mergeCriteriaCheck: z.enum(MERGE_CRITERIA_CHECKS).optional(),
   autoRevise: z.boolean().optional(),
   autoReviseLimit: z.number().int().min(AUTO_REVISE_LIMIT_MIN).max(AUTO_REVISE_LIMIT_MAX).optional(),
 })

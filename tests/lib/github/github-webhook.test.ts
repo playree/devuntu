@@ -34,7 +34,14 @@ vi.mock('@/lib/agent/agent-auto-revise', async (importOriginal) => ({
   requestAutoRevise: vi.fn(async () => undefined),
 }))
 
-const BOARD = { id: 'b1', key: 'ABC', completeOnPrMerge: true, autoRevise: true, autoReviseLimit: 3 }
+const BOARD = {
+  id: 'b1',
+  key: 'ABC',
+  completeOnPrMerge: true,
+  mergeCriteriaCheck: 'checked' as const,
+  autoRevise: true,
+  autoReviseLimit: 3,
+}
 /** 受け口の URL が指す対応付け */
 const TARGET = { id: 'r1', repo: 'owner/repo', board: BOARD }
 const UPDATED_AT = '2026-09-26T10:00:00Z'
@@ -141,7 +148,7 @@ describe('pull_request', () => {
       TARGET,
     )
 
-    expect(completeTicketByMerge).toHaveBeenCalledWith('t1', 'owner/repo#12')
+    expect(completeTicketByMerge).toHaveBeenCalledWith('t1', 'owner/repo#12', 'checked')
   })
 
   it('完了の判定はボードに対応付けたリポジトリの PR だけで行う', async () => {

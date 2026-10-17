@@ -16,6 +16,9 @@ enum NotifyEvent {
 
   /// チケットが完了した(status = done)
   ticket_completed
+
+  /// 未達の受け入れ条件があるため、マージによる自動完了を保留した
+  ticket_merge_held
 }
 
 /// 通知チャネル。UserNotifySetting の列名と一致させる(NOTIFY_CHANNELS)

@@ -38,7 +38,14 @@ const TARGET = {
   id: 'r1',
   baseUrl: BASE_URL,
   repo: 'group/proj',
-  board: { id: 'b1', key: 'ABC', completeOnPrMerge: true, autoRevise: true, autoReviseLimit: 3 },
+  board: {
+    id: 'b1',
+    key: 'ABC',
+    completeOnPrMerge: true,
+    mergeCriteriaCheck: 'checked' as const,
+    autoRevise: true,
+    autoReviseLimit: 3,
+  },
 }
 const KEY = { provider: 'gitlab', baseUrl: BASE_URL, repo: 'group/proj' }
 
@@ -136,7 +143,7 @@ describe('Merge Request Hook', () => {
 
     await handleGitlabEvent('Merge Request Hook', mergeRequestEvent({ action: 'merge', state: 'merged' }), TARGET)
 
-    expect(completeTicketByMerge).toHaveBeenCalledWith('t1', 'group/proj!7')
+    expect(completeTicketByMerge).toHaveBeenCalledWith('t1', 'group/proj!7', 'checked')
   })
 
   it('完了の判定は、Webhook を受けられる対応付けの PR / MR だけで行う', async () => {

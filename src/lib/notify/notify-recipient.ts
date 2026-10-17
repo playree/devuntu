@@ -14,7 +14,7 @@
  */
 
 import type { NotifyEvent } from '@/generated/prisma/enums'
-import { getTicketAccess } from '../board/board-access'
+import { type Actor, getTicketAccess } from '../board/board-access'
 import { prisma } from '../prisma'
 import { getBoardNotifyChannels } from './notify-board-setting'
 import type { NotifyPayload } from './notify-payload'
@@ -31,6 +31,19 @@ export type ExplicitTargets = {
   userIds: string[]
 }
 
+const NOTIFY_USER_SELECT = { id: true, role: true, isAgent: true } as const
+
+/** DM を送れる相手か。エージェント用ユーザーは DM を読まず、閲覧できないチケットの内容は送らない */
+const viewerIds = async (
+  user: (Actor & { isAgent: boolean }) | null | undefined,
+  ticketId: string,
+): Promise<string[]> => {
+  if (!user || user.isAgent) {
+    return []
+  }
+  return (await getTicketAccess(user, ticketId))?.canView ? [user.id] : []
+}
+
 /**
  * チケットの作成者。エージェントの実行結果を知りたいのは処理を依頼した本人。
  *
@@ -41,13 +54,22 @@ export type ExplicitTargets = {
 const ticketRequesterIds = async (ticketId: string): Promise<string[]> => {
   const ticket = await prisma.ticket.findUnique({
     where: { id: ticketId },
-    select: { createdBy: { select: { id: true, role: true, isAgent: true } } },
+    select: { createdBy: { select: NOTIFY_USER_SELECT } },
   })
-  const requester = ticket?.createdBy
-  if (!requester || requester.isAgent) {
-    return []
-  }
-  return (await getTicketAccess(requester, ticketId))?.canView ? [requester.id] : []
+  return viewerIds(ticket?.createdBy, ticketId)
+}
+
+/**
+ * チケットの担当者(人)。担当がエージェント / 未割り当てなら、代わりに作成者(依頼者)へ送る。
+ * 人の担当者が今はチケットを閲覧できないときは、作成者へは回さずに誰へも送らない。
+ */
+const ticketOwnerIds = async (ticketId: string): Promise<string[]> => {
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    select: { assignee: { select: NOTIFY_USER_SELECT }, createdBy: { select: NOTIFY_USER_SELECT } },
+  })
+  const assignee = ticket?.assignee
+  return assignee && !assignee.isAgent ? viewerIds(assignee, ticketId) : viewerIds(ticket?.createdBy, ticketId)
 }
 
 /**
@@ -89,6 +111,12 @@ const RESOLVERS = {
   ticket_completed: async (payload) => ({
     userIds: [],
     slackChannelIds: await boardChannels(payload.boardId, 'ticket_completed'),
+  }),
+
+  /** マージの自動完了の保留は、完了を手で行う担当者(エージェント担当 / 未割り当てなら依頼者)へ DM する */
+  ticket_merge_held: async (payload) => ({
+    userIds: await ticketOwnerIds(payload.ticketId),
+    slackChannelIds: await boardChannels(payload.boardId, 'ticket_merge_held'),
   }),
 } as const satisfies { [E in NotifyEvent]: Resolver<E> }
 

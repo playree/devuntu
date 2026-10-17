@@ -5169,6 +5169,7 @@ export const BoardGitSettingScalarFieldEnum = {
   boardId: 'boardId',
   provider: 'provider',
   completeOnMerge: 'completeOnMerge',
+  mergeCriteriaCheck: 'mergeCriteriaCheck',
   autoRevise: 'autoRevise',
   autoReviseLimit: 'autoReviseLimit',
   createdAt: 'createdAt',
@@ -5964,6 +5965,20 @@ export type EnumGitWebhookAuthFieldRefInput<$PrismaModel> = FieldRefInputType<$P
  * Reference to a field of type 'GitWebhookAuth[]'
  */
 export type ListEnumGitWebhookAuthFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'GitWebhookAuth[]'>
+    
+
+
+/**
+ * Reference to a field of type 'MergeCriteriaCheck'
+ */
+export type EnumMergeCriteriaCheckFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MergeCriteriaCheck'>
+    
+
+
+/**
+ * Reference to a field of type 'MergeCriteriaCheck[]'
+ */
+export type ListEnumMergeCriteriaCheckFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MergeCriteriaCheck[]'>
     
 
 

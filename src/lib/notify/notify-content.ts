@@ -130,6 +130,12 @@ const BUILDERS = {
       : t(locale, 'notify_msg_ticket_completed', { from: payload.fromName }),
     url: shortUrl(payload.displayId).toString(),
   }),
+
+  ticket_merge_held: (payload, locale) => ({
+    subject: subjectOf(payload),
+    body: t(locale, 'notify_msg_ticket_merge_held', { pr: payload.pullRequest, count: String(payload.unmetCount) }),
+    url: shortUrl(payload.displayId).toString(),
+  }),
 } as const satisfies { [E in NotifyEvent]: ContentBuilder<E> }
 
 /**

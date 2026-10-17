@@ -39,7 +39,12 @@ export const gitlabBaseUrls = (): string[] => {
   }
 }
 
-const gitSettingSelect = { completeOnMerge: true, autoRevise: true, autoReviseLimit: true } as const
+const gitSettingSelect = {
+  completeOnMerge: true,
+  mergeCriteriaCheck: true,
+  autoRevise: true,
+  autoReviseLimit: true,
+} as const
 
 const findBoardRepositories = async (actor: Actor, boardId: string, provider: GitProvider) => {
   await assertBoardAccess(actor, boardId, 'manage')

@@ -4,6 +4,7 @@ import {
   criteriaActivity,
   diffTicketSnapshot,
   excerptContent,
+  mergeHeldActivity,
   type TicketActivitySnapshot,
 } from '@/lib/board/ticket-activity-rule'
 import { describe, expect, it } from 'vitest'
@@ -89,5 +90,15 @@ describe('criteriaActivity', () => {
   it('長すぎる値は上限で切る', () => {
     const entry = criteriaActivity({ removed: [], added: ['x'.repeat(ACTIVITY_VALUE_MAX + 10)] })
     expect(entry?.after).toHaveLength(ACTIVITY_VALUE_MAX + 1)
+  })
+})
+
+describe('mergeHeldActivity', () => {
+  it('PR / MR を変更前に、未達の受け入れ条件を改行区切りで変更後に持つ', () => {
+    expect(mergeHeldActivity('owner/repo#12', ['タグを打つ', 'リリースノートを書く'])).toEqual({
+      field: 'mergeHeld',
+      before: 'owner/repo#12',
+      after: 'タグを打つ\nリリースノートを書く',
+    })
   })
 })

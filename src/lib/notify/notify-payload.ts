@@ -75,6 +75,13 @@ const scTicketCompleted = scTicketChanged.extend({
   pullRequest: z.string().min(1).optional(),
 })
 
+const scTicketMergeHeld = scTicketRef.extend({
+  /** 保留のきっかけになった PR / MR(`owner/name#123` / `group/project!45`) */
+  pullRequest: z.string().min(1),
+  /** 未達の受け入れ条件の件数 */
+  unmetCount: z.number().int().min(1),
+})
+
 /** イベントごとのペイロード定義。イベントを足すとここが型エラーになる */
 export const NOTIFY_PAYLOAD_SCHEMA = {
   mention: scMention,
@@ -82,6 +89,7 @@ export const NOTIFY_PAYLOAD_SCHEMA = {
   ticket_assigned: scTicketAssigned,
   ticket_created: scTicketChanged,
   ticket_completed: scTicketCompleted,
+  ticket_merge_held: scTicketMergeHeld,
 } as const satisfies Record<NotifyEvent, z.ZodType>
 
 export type NotifyPayloadMap = { [E in NotifyEvent]: z.infer<(typeof NOTIFY_PAYLOAD_SCHEMA)[E]> }

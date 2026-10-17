@@ -61,7 +61,8 @@ and the AI agent features are designed around that same premise (a human check i
   - Agents can split a large ticket into child tickets; once you approve the proposal, they work through the children in order
   - Per-board AI context (target repository, conventions, terms) delivered to MCP clients and agents as `boardContext`
 - Link GitHub / GitLab (including self-hosted) branches, pull requests and commits to tickets,
-  showing the PR status and CI results. Tickets can be completed automatically on merge,
+  showing the PR status and CI results. Tickets can be completed automatically on merge
+  (held while acceptance criteria are unmet),
   and CI failures or PR/MR review comments can send the ticket back to the agent automatically
 - Run predefined jobs on remote servers and follow the output in real time
 - Passkey authentication and Google sign-in
