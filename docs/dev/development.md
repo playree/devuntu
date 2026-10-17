@@ -420,7 +420,8 @@ pnpm release:version --bump    # リリース済みなら package.json を次の
 
 開発はリリース済みでない version で行う。作業を始めるときに `--bump` を実行し、上がった場合はそれだけを
 最初のコミットにして、対応の PR に含める(`vX.Y.Z start`)。並行する PR が同じように上げても、変更が同じなので競合しない。
-上げ忘れは CI(pull_request)と `Release` の edge ビルドの `--check` で止まる。
+上げ忘れは CI(pull_request)と `Release` の edge ビルドの `--check` で止まる。edge ビルドだけは `--allow-tag-at <commit>` を付けており、
+公開済みのタグがビルドする commit を指す場合(promote が失敗し、同じ commit から edge を作り直すとき)は通す。
 
 ### リリース手順
 
@@ -458,7 +459,7 @@ GitHub Release の本文がリリースノートで、ダッシュボードの�
 
 ウィジェットは区切りより前だけを表示し、続きは GitHub のリリースページへのリンクにする
 (`src/lib/release-note.ts` の `splitReleaseNote`)。区切りの無い(この形式より前の)リリースは全文を表示する。
-ドラフトは GitHub API が返さないため表示されず、プレリリースは除外している。
+ドラフトは(認証なしの)GitHub API が返さないため表示されない。
 
 ### ローカルでのビルド
 

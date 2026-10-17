@@ -99,16 +99,13 @@ export const getReleaseNotes = safeAuthAction
       tag_name: string
       body: string | null
       html_url: string
-      prerelease: boolean
     }[]
-    return json
-      .filter((release) => !release.prerelease)
-      .map((release) => ({
-        id: String(release.id),
-        name: release.name || release.tag_name,
-        url: release.html_url,
-        ...splitReleaseNote(release.body),
-      }))
+    return json.map((release) => ({
+      id: String(release.id),
+      name: release.name || release.tag_name,
+      url: release.html_url,
+      ...splitReleaseNote(release.body),
+    }))
   })
 export type GetReleaseNotesReturnType = Awaited<ReturnType<typeof getReleaseNotes>>['data']
 

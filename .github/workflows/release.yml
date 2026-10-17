@@ -18,10 +18,28 @@ env:
   IMAGE: playree/devuntu
 
 jobs:
+  # リリース済みの version のままでは、この edge を次のリリースとして公開できない(タグが既にある)。
+  # 公開済みのタグがこの commit を指す場合だけは、promote をやり直すための作り直しとして通す
+  verify:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Verify version is not released
+        run: node scripts/release-version.mjs --check --allow-tag-at "$GITHUB_SHA"
+
   # 選んだ ref をプラットフォームごとにビルドし、タグを付けずに digest だけ push する。
   # QEMU だと arm64 のビルドが遅いため、それぞれのネイティブランナーで並列に回す
   build:
     if: github.event_name == 'workflow_dispatch'
+    needs: verify
     strategy:
       matrix:
         include:
@@ -39,10 +57,6 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-
-      # リリース済みの version のままでは、この edge を次のリリースとして公開できない(タグが既にある)
-      - name: Verify version is not released
-        run: node scripts/release-version.mjs --check
 
       - uses: docker/setup-buildx-action@v4
 

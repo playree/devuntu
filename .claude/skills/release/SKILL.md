@@ -131,7 +131,9 @@ gh release edit vV --draft=false --latest
   - `git ls-remote --tags origin vV` が S を指していること
 - **失敗した場合は、Release やタグを勝手に消さない**
   - ジョブのログから原因(edge のビルド元とタグの commit の不一致、version の不一致など)を調べて報告する
-  - やり直し方(edge を S から作り直して Re-run するか、Release とタグを消して作り直すか)はユーザーと決める
+  - やり直し方はユーザーと決める。次の2通りがある
+    - edge を S から作り直す(人が `Release` を ref `vV` で手動実行する。タグが S を指すので version のチェックは通る)。その後、失敗した promote の run を `gh run rerun <id>` でやり直す
+    - Release とタグを消して作り直す
 
 ### 1-7. リリースチケットを完了にする
 

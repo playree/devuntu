@@ -3,6 +3,7 @@
  *
  *   pnpm release:version            状態を JSON で出す
  *   pnpm release:version --check    リリース済み(または最新リリースより古い)なら exit 1
+ *                                   `--allow-tag-at <sha>` を付けると、タグがその commit を指す場合は通す(リリースの commit から edge を作り直すとき)
  *   pnpm release:version --bump     リリース済み(または古い)なら、次のパッチへ package.json を書き換える
  *
  * リリースは GitHub Release の公開で作られる `v<version>` タグ、stable は git タグ `stable` が正。
@@ -13,6 +14,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
+const VERSION = /^\d+\.\d+\.\d+$/
 const VERSION_TAG = /^refs\/tags\/v(\d+\.\d+\.\d+)$/
 const STABLE_TAG = 'refs/tags/stable'
 
@@ -65,13 +67,21 @@ export const parseRemoteTags = (output) => {
  * version の状態。`bumpTo` はリリース済み、または最新リリースより古いときに上げる先(それ以外は null)
  */
 export const releaseStatus = (version, { releases, stableSha }) => {
+  if (!VERSION.test(version)) {
+    throw new Error(`package.json version must be x.y.z: ${version}`)
+  }
   const latest = releases[0]?.version ?? null
-  const released = releases.some((r) => r.version === version)
+  const releasedSha = releases.find((r) => r.version === version)?.sha ?? null
+  const released = releasedSha !== null
   const outdated = latest !== null && compareVersion(version, latest) < 0
   const stable = releases.find((r) => r.sha === stableSha)?.version ?? null
-  const base = latest !== null && compareVersion(latest, version) > 0 ? latest : version
-  return { version, released, outdated, latest, stable, bumpTo: released || outdated ? nextPatch(base) : null }
+  const bumpTo = released || outdated ? nextPatch(outdated ? latest : version) : null
+  return { version, released, releasedSha, outdated, latest, stable, bumpTo }
 }
+
+/** `--check` を通すか。リリース済みでも、タグが allowSha を指していればそのリリース自体の作り直しとみなす */
+export const passesCheck = (status, allowSha) =>
+  !status.bumpTo || (status.released && allowSha !== undefined && status.releasedSha === allowSha)
 
 /** package.json の文字列の `"version"` だけを書き換える(他の行の書式は保つ) */
 export const replaceVersion = (text, version) => {
@@ -90,12 +100,14 @@ const main = (args) => {
   const status = releaseStatus(version, parseRemoteTags(output))
 
   if (args.includes('--check')) {
-    if (status.bumpTo) {
+    const allowIndex = args.indexOf('--allow-tag-at')
+    const allowSha = allowIndex < 0 ? undefined : args[allowIndex + 1]
+    if (!passesCheck(status, allowSha)) {
       const reason = status.released ? `v${version} is already released` : `${version} is older than v${status.latest}`
       process.stderr.write(`${reason}. Run \`pnpm release:version --bump\` to start ${status.bumpTo}.\n`)
       return 1
     }
-    process.stdout.write(`${version} is not released yet\n`)
+    process.stdout.write(status.released ? `v${version} points to ${allowSha}\n` : `${version} is not released yet\n`)
     return 0
   }
 

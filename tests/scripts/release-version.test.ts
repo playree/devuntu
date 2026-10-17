@@ -9,6 +9,7 @@ import {
   compareVersion,
   nextPatch,
   parseRemoteTags,
+  passesCheck,
   releaseStatus,
   replaceVersion,
 } from '../../scripts/release-version.mjs'
@@ -60,6 +61,7 @@ describe('releaseStatus', () => {
     expect(releaseStatus('1.0.1', tags)).toEqual({
       version: '1.0.1',
       released: true,
+      releasedSha: 'aaa',
       outdated: false,
       latest: '1.0.1',
       stable: '1.0.1',
@@ -82,6 +84,32 @@ describe('releaseStatus', () => {
 
   it('リリースが1つも無ければ上げない', () => {
     expect(releaseStatus('0.1.0', parseRemoteTags(''))).toMatchObject({ latest: null, bumpTo: null })
+  })
+
+  it('x.y.z でない version はエラー', () => {
+    expect(() => releaseStatus('1.0.2-rc.1', tags)).toThrow('x.y.z')
+    expect(() => releaseStatus('1.0', tags)).toThrow('x.y.z')
+  })
+})
+
+describe('passesCheck', () => {
+  const tags = parseRemoteTags(LS_REMOTE)
+
+  it('未リリースなら通す', () => {
+    expect(passesCheck(releaseStatus('1.0.2', tags), undefined)).toBe(true)
+  })
+
+  it('リリース済みなら通さない', () => {
+    expect(passesCheck(releaseStatus('1.0.1', tags), undefined)).toBe(false)
+  })
+
+  it('リリース済みでも、タグが指定の commit を指していれば通す', () => {
+    expect(passesCheck(releaseStatus('1.0.1', tags), 'aaa')).toBe(true)
+    expect(passesCheck(releaseStatus('1.0.1', tags), 'bbb')).toBe(false)
+  })
+
+  it('最新リリースより古い version は commit を指定しても通さない', () => {
+    expect(passesCheck(releaseStatus('0.9.4', tags), 'bbb')).toBe(false)
   })
 })
 
