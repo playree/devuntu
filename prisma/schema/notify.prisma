@@ -19,6 +19,17 @@ enum NotifyEvent {
 
   /// 未達の受け入れ条件があるため、マージによる自動完了を保留した
   ticket_merge_held
+
+  /// チケットの期限が明日 / 今日になった(担当者へのリマインド)
+  ticket_due
+}
+
+/// 期限のリマインドの種類
+enum DueRemindKind {
+  /// 期限の前日
+  day_before
+  /// 期限の当日
+  due_day
 }
 
 /// 通知チャネル。UserNotifySetting の列名と一致させる(NOTIFY_CHANNELS)
@@ -213,4 +224,28 @@ model NotifyDelivery {
   @@index([userId, channel, status, scheduledAt])
   @@index([outboxId])
   @@map("notify_delivery")
+}
+
+/// 期限のリマインドを投入した記録。同じリマインドを二度送らないために持つ。
+///
+/// 期限ごとに記録するので、期限を変えると変更後の期限で改めて送られる(チケット更新側で消す必要が無い)。
+/// 期限を過ぎて久しい行はメンテナンスの掃除で消す。
+model TicketDueReminder {
+  id String @id @default(uuid(7))
+
+  ticketId String
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  kind DueRemindKind
+
+  /// 投入した時点の期限(`Ticket.dueDate` と同じく UTC 0:00)
+  dueDate DateTime
+
+  createdAt DateTime @default(now())
+
+  // (ticketId, ...) の @@unique が ticketId 先頭の索引を兼ねる
+  @@unique([ticketId, kind, dueDate])
+  // 掃除は期限で引く
+  @@index([dueDate])
+  @@map("ticket_due_reminder")
 }

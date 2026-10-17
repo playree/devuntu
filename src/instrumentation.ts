@@ -27,6 +27,9 @@ export const register = async () => {
   const { startNotifyWorker } = await import('./lib/notify/notify-worker')
   startNotifyWorker()
 
+  const { startDueRemindWorker } = await import('./lib/notify/notify-due-worker')
+  startDueRemindWorker()
+
   const { startMaintenanceWorker } = await import('./lib/maintenance/maintenance-worker')
   startMaintenanceWorker()
 

@@ -408,6 +408,7 @@ export const ja: DefaultLocaleItems = {
   notify_event_ticket_assigned: 'チケットの担当者に指定されたとき',
   notify_event_ticket_completed: 'チケットが完了したとき',
   notify_event_ticket_created: 'チケットが作成されたとき',
+  notify_event_ticket_due: '担当チケットの期日が明日・今日になったとき',
   notify_event_ticket_merge_held: 'マージによる自動完了が保留されたとき',
   notify_settings: '通知設定',
   notify_webpush: 'Webプッシュ通知',
@@ -825,6 +826,8 @@ export const ja: DefaultLocaleItems = {
   notify_msg_ticket_completed: '${from}さんがチケットを完了しました',
   notify_msg_ticket_completed_by_pr: 'プルリクエスト ${pr} の完了により、チケットを自動で完了しました',
   notify_msg_ticket_created: '${from}さんがチケットを作成しました',
+  notify_msg_ticket_due_day_before: '明日(${due})が期日です',
+  notify_msg_ticket_due_due_day: '今日(${due})が期日です',
   notify_msg_ticket_merge_held:
     'PR / MR ${pr} は完了しましたが、未達の受け入れ条件が ${count} 件あるため完了にしていません',
 

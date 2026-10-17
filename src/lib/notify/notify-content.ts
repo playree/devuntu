@@ -9,7 +9,7 @@
  * 定義漏れがコンパイルエラーになる。
  */
 
-import type { NotifyEvent } from '@/generated/prisma/enums'
+import type { DueRemindKind, NotifyEvent } from '@/generated/prisma/enums'
 import type { LocaleItemBase } from '@/locale'
 import { t } from '@/locale/server'
 import { AGENT_RUN_ACTION_LOCALE, AGENT_RUN_STATUS_LOCALE, agentRunDuration } from '../agent/agent'
@@ -63,6 +63,11 @@ const AGENT_RUN_NOTIFY_MSG = {
   failed: 'notify_msg_agent_run_failed',
   skipped: 'notify_msg_agent_run_skipped',
 } as const satisfies Record<AgentRunNotifyState, LocaleItemBase>
+
+const TICKET_DUE_MSG = {
+  day_before: 'notify_msg_ticket_due_day_before',
+  due_day: 'notify_msg_ticket_due_due_day',
+} as const satisfies Record<DueRemindKind, LocaleItemBase>
 
 const BUILDERS = {
   /**
@@ -134,6 +139,12 @@ const BUILDERS = {
   ticket_merge_held: (payload, locale) => ({
     subject: subjectOf(payload),
     body: t(locale, 'notify_msg_ticket_merge_held', { pr: payload.pullRequest, count: String(payload.unmetCount) }),
+    url: shortUrl(payload.displayId).toString(),
+  }),
+
+  ticket_due: (payload, locale) => ({
+    subject: subjectOf(payload),
+    body: t(locale, TICKET_DUE_MSG[payload.kind], { due: payload.dueDate }),
     url: shortUrl(payload.displayId).toString(),
   }),
 } as const satisfies { [E in NotifyEvent]: ContentBuilder<E> }

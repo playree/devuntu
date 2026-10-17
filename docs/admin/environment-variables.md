@@ -116,12 +116,13 @@
 
 | 変数名                  | 説明                                               | 必須 | デフォルト            |
 | ----------------------- | -------------------------------------------------- | ---- | --------------------- |
-| `NOTIFY_WORKER_ENABLED` | 通知の配信ワーカーを動かすか                       |      | `true`                |
+| `NOTIFY_WORKER_ENABLED` | 通知の配信ワーカー・期日のリマインドを動かすか     |      | `true`                |
 | `VAPID_PUBLIC_KEY`      | Web プッシュの VAPID 公開鍵(base64url)             |      | -                     |
 | `VAPID_PRIVATE_KEY`     | Web プッシュの VAPID 秘密鍵(base64url)             |      | -                     |
 | `VAPID_SUBJECT`         | プッシュサービスからの連絡先(`mailto:` / `https:`) |      | `mailto:${MAIL_FROM}` |
 
-- `NOTIFY_WORKER_ENABLED=false` にすると通知はキューへ溜まるだけで配信されない(投入側と配信側の切り分け用)
+- `NOTIFY_WORKER_ENABLED=false` にすると通知はキューへ溜まるだけで配信されない(投入側と配信側の切り分け用)。
+  期日のリマインドは投入もされない(止めている間に期日が過ぎた分は、再開しても送らない)
 - VAPID 鍵は Web プッシュ通知を使う場合のみ必要で、**公開鍵と秘密鍵の両方**が無いと購読 UI ごと出ない。
   `VAPID_SUBJECT` を省略し `MAIL_FROM` も未設定なら `mailto:devuntu@example.com` になる
 

@@ -8,6 +8,7 @@
     - [発火の条件](#発火の条件)
     - [変更前の状態は追加の問い合わせ無しで取れる](#変更前の状態は追加の問い合わせ無しで取れる)
     - [文面に出すものは投入時に確定させる](#文面に出すものは投入時に確定させる)
+    - [期日のリマインド](#期日のリマインド)
   - [ユーザーごとの通知設定](#ユーザーごとの通知設定)
   - [メール通知](#メール通知)
     - [まとめて1通にする](#まとめて1通にする)
@@ -35,7 +36,7 @@
 
 | 種類         | 宛先             | 設定場所                                      | イベント                                                                                      | チャネル                         |
 | ------------ | ---------------- | --------------------------------------------- | --------------------------------------------------------------------------------------------- | -------------------------------- |
-| DM 通知      | ユーザー個人     | `/account` の通知設定(`UserNotifySetting`)    | `mention` / `agent_run` / `ticket_assigned` / `ticket_merge_held`                             | メール / Slack DM / Web プッシュ |
+| DM 通知      | ユーザー個人     | `/account` の通知設定(`UserNotifySetting`)    | `mention` / `agent_run` / `ticket_assigned` / `ticket_merge_held` / `ticket_due`              | メール / Slack DM / Web プッシュ |
 | チャネル通知 | Slack チャンネル | `/boards/[id]/settings`(`BoardNotifySetting`) | `agent_run` / `ticket_assigned` / `ticket_created` / `ticket_completed` / `ticket_merge_held` | Slack                            |
 
 イベント種別は Prisma の `NotifyEvent`、チャネルは `NotifyChannel`。どちらの宛先に出るイベントかは
@@ -81,7 +82,8 @@
 | tick | `setInterval`(`NOTIFY_TICK_MS`) | kick が使えなかった分(リクエスト文脈の外からの投入)と、再試行・取りこぼしの回収を拾う保険 |
 
 起動は `src/instrumentation.ts` から。`NOTIFY_WORKER_ENABLED=false` で止められる
-(投入だけが続き配信は行われないので、通知が出ない原因の切り分けに使える)。
+(投入だけが続き配信は行われないので、通知が出ない原因の切り分けに使える。
+ただし期日のリマインドは投入側もワーカーなので、一緒に止まる([期日のリマインド](#期日のリマインド)))。
 
 ### 1 tick の処理
 
@@ -153,6 +155,7 @@ advisory lock を保持できないため、そもそも採れない)。
 | `enqueueTicketMergeHeld()`        | `completeTicketByMerge`(未達の受け入れ条件があり、自動完了を保留したとき)                                                                | `ticket_merge_held`(操作者なし)                                                     |
 | `enqueueTicketCommented()`        | `ticket-mutation.ts` の `insertComment` / `updateComment`(Web と MCP のコメント、承認 / 差し戻しの返信、`propose_child_tickets` の plan) | `mention`                                                                           |
 | `enqueueAgentRunFinished()`       | `agent-run.ts` の実行を閉じる 3 経路                                                                                                     | `agent_run`                                                                         |
+| `runDueRemind()`                  | `notify-due-worker.ts`(5分ごと)。操作ではなく時刻を起点にする唯一のトリガーなので `notify-due.ts` に分けている                           | `ticket_due`(操作者なし)                                                            |
 
 呼び出し元は「何が起きたか」(前後の状態・増えたメンション)を渡すだけで、発火の判断はしない。
 
@@ -192,6 +195,31 @@ SELECT が増えることはない。
 - 文面は宛先ユーザーのロケールで組み立てる(チャンネル宛は既定ロケール固定)
 - メールと Slack はキューの上では独立した配信行になる。片方のチャネルが失敗してももう片方は止まらない
 - Slack は投入直後に届くが、**メールは最大 5 分遅れる**([まとめて1通にする](#まとめて1通にする))
+
+### 期日のリマインド
+
+`ticket_due` だけは操作ではなく時刻を起点に発火する。専用のワーカー(`src/lib/notify/notify-due-worker.ts`、
+`DUE_REMIND_TICK_MS` = 5分ごと、起動1分後から)が `runDueRemind()`(`src/lib/notify/notify-due.ts`)を回し、
+投入した通知の配信はほかの通知と同じく通知ワーカーが行う。
+
+- **宛先と送る時刻**: 宛先は `ticket_merge_held` と同じ担当者(人)、担当がエージェント / 未割り当てなら作成者。
+  期日は日付だけ(UTC 0:00)なので、宛先のタイムゾーン(`User.timezone`、無ければ `DEFAULT_TIMEZONE`)で
+  今日が期日の前日なら `day_before`、当日なら `due_day` とし、`DUE_REMIND_MINUTES`(9:00)を過ぎてから投入する(`dueRemindKind()`)。
+  候補は期日が UTC の今日 -1 日〜 +2 日のチケットで、どのタイムゾーンの「今日 / 明日」も覆う
+- **送らないもの**: 完了済み、アーカイブ済みボード、宛先が人でない、宛先が今はチケットを閲覧できない(投入の直前に `ticketOwnerIds` と突き合わせる)、
+  宛先が `ticket_due` をどのチャネルでも ON にしていない。
+  設定が OFF の宛先には送信記録も作らないので、その日のうちに ON にすれば次の周で届く。
+  期日を過ぎたもの(ワーカーが止まっていた間の分)は後から送らない
+- **二重送信の防止**: 投入と同じトランザクションで `TicketDueReminder`(`ticketId` + `kind` + `dueDate` で一意)を
+  `createMany({ skipDuplicates: true })` で作り、作れたときだけ投入する。多重に走っても一方だけが送る。
+  期日ごとに記録するので、期日を変えると変更後の期日で改めて送られる(チケット更新側で記録を消す必要が無い)。
+  期日から30日を過ぎた記録はメンテナンスの掃除で消す
+- **流量**: 操作者の無い投入は流量制限(`notify-enqueue.ts`、1分あたり120件)の枠を共有するので、
+  1周の投入を `DUE_REMIND_BATCH`(50件)までに抑え、残りは次の周で拾う。
+  それでも枠が埋まって捨てられた(`enqueueNotify` が false を返した)ときは、送信記録ごとロールバックしてその周を打ち切る
+  (記録だけが残ると、その日はもう送れない)
+- **配信時の再確認**: 宛先の解決(`notify-recipient.ts`)で、チケットが未完了かつ期限が投入時のままかを見直す。
+  メールの集約待ちの間に完了・期限変更したチケットへ、古い期限の知らせを送らない
 
 ## ユーザーごとの通知設定
 

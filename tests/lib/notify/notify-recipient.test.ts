@@ -167,3 +167,33 @@ describe('resolveNotifyTargets(ticket_merge_held)', () => {
     expect(getTicketAccess).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('resolveNotifyTargets(ticket_due)', () => {
+  const due = { ticketId: 't1', boardId: 'b1', dueDate: '2026-10-20' } as NotifyPayload<'ticket_due'>
+
+  const mockTicket = (state: { status: string; dueDate: Date | null }) =>
+    vi.mocked(prisma.ticket.findUnique).mockResolvedValue({
+      ...state,
+      assignee: { id: 'u1', role: 'user', isAgent: false },
+      createdBy: { id: 'u2', role: 'user', isAgent: false },
+    } as never)
+
+  it('担当者へ DM し、チャンネルへは流さない', async () => {
+    mockTicket({ status: 'doing', dueDate: new Date('2026-10-20T00:00:00Z') })
+    vi.mocked(getTicketAccess).mockResolvedValue({ canView: true } as never)
+
+    expect(await resolveNotifyTargets('ticket_due', due, explicit)).toEqual({ userIds: ['u1'], slackChannelIds: [] })
+    expect(getBoardNotifyChannels).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['完了した', { status: 'done', dueDate: new Date('2026-10-20T00:00:00Z') }],
+    ['期限を変えた', { status: 'doing', dueDate: new Date('2026-10-27T00:00:00Z') }],
+    ['期限を外した', { status: 'doing', dueDate: null }],
+  ])('投入後に%sチケットには送らない', async (_label, state) => {
+    mockTicket(state)
+    vi.mocked(getTicketAccess).mockResolvedValue({ canView: true } as never)
+
+    expect((await resolveNotifyTargets('ticket_due', due, explicit)).userIds).toEqual([])
+  })
+})

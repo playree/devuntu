@@ -53,7 +53,7 @@ and the AI agent features are designed around that same premise (a human check i
   - Parent/child and related tickets, acceptance criteria, per-board ticket templates and change history
   - Filter the board and the ticket list down to the children or related tickets of a given ticket
 - Google Calendar integration, and sharing your free/busy time through a public URL that needs no sign-in
-- Email / Slack DM / web push notifications for mentions, assignee changes and AI agent run results,
+- Email / Slack DM / web push notifications for mentions, assignee changes, AI agent run results and due date reminders,
   and Slack channel notifications per team board (tickets created / completed, assignee changes, agent run results)
 - An MCP server, so AI agents can work on tickets with your own permissions
 - AI agents can be registered as assignees and process their assigned tickets automatically

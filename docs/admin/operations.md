@@ -239,6 +239,7 @@ docker compose run --rm tools maintenance off     # 解除する
 | リモート実行の履歴(ログを含む)  | 90日より古いもの。期間内でもコマンドごとに新しい300件を超えた分。実行中のものは消さない | `COMMAND_RUN_RETENTION_DAYS` / `COMMAND_RUN_KEEP`                    |
 | チケットの変更履歴              | 365日より古いもの。チケットを削除したときも一緒に消える                                 | `TICKET_ACTIVITY_RETENTION_DAYS`                                     |
 | GitHub / GitLab 連携の CI 結果  | 更新から90日後。ボードからリポジトリの対応付けを外したときも消える                      | -                                                                    |
+| 期日のリマインドの送信記録      | 期日から30日後。チケットを削除したときも一緒に消える                                    | -                                                                    |
 | 添付(画像の実体を含む)          | どこからも参照されず、アップロードから24時間たったもの                                  | `MAINTENANCE_ATTACHMENT_MODE` / `MAINTENANCE_ATTACHMENT_GRACE_HOURS` |
 
 - エージェントの月ごとの利用量(コスト・トークン数)は消さない。実行履歴が消えても月の集計と予算上限の判定は変わらない

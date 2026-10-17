@@ -15,6 +15,7 @@
 
 import type { NotifyEvent } from '@/generated/prisma/enums'
 import { type Actor, getTicketAccess } from '../board/board-access'
+import { utcToDateOnly } from '../day'
 import { prisma } from '../prisma'
 import { getBoardNotifyChannels } from './notify-board-setting'
 import type { NotifyPayload } from './notify-payload'
@@ -63,13 +64,19 @@ const ticketRequesterIds = async (ticketId: string): Promise<string[]> => {
  * チケットの担当者(人)。担当がエージェント / 未割り当てなら、代わりに作成者(依頼者)へ送る。
  * 人の担当者が今はチケットを閲覧できないときは、作成者へは回さずに誰へも送らない。
  */
-const ticketOwnerIds = async (ticketId: string): Promise<string[]> => {
+export const ticketOwnerIds = async (ticketId: string): Promise<string[]> => {
   const ticket = await prisma.ticket.findUnique({
     where: { id: ticketId },
     select: { assignee: { select: NOTIFY_USER_SELECT }, createdBy: { select: NOTIFY_USER_SELECT } },
   })
   const assignee = ticket?.assignee
   return assignee && !assignee.isAgent ? viewerIds(assignee, ticketId) : viewerIds(ticket?.createdBy, ticketId)
+}
+
+/** 未完了で、期限が投入時(`dueDate` = YYYY-MM-DD)のままか */
+const isStillDue = async (ticketId: string, dueDate: string): Promise<boolean> => {
+  const ticket = await prisma.ticket.findUnique({ where: { id: ticketId }, select: { status: true, dueDate: true } })
+  return !!ticket && ticket.status !== 'done' && utcToDateOnly(ticket.dueDate) === dueDate
 }
 
 /**
@@ -117,6 +124,15 @@ const RESOLVERS = {
   ticket_merge_held: async (payload) => ({
     userIds: await ticketOwnerIds(payload.ticketId),
     slackChannelIds: await boardChannels(payload.boardId, 'ticket_merge_held'),
+  }),
+
+  /**
+   * 期限のリマインドは期限までに手を動かす担当者(エージェント担当 / 未割り当てなら依頼者)へ DM する。チャネル通知は持たない。
+   * 投入から配信までの間に完了した・期限を変えたチケットには、古い期限の知らせを送らない
+   */
+  ticket_due: async (payload) => ({
+    userIds: (await isStillDue(payload.ticketId, payload.dueDate)) ? await ticketOwnerIds(payload.ticketId) : [],
+    slackChannelIds: [],
   }),
 } as const satisfies { [E in NotifyEvent]: Resolver<E> }
 
