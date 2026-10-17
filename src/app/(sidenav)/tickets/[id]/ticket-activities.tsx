@@ -85,7 +85,7 @@ const ActivityItem: FC<{ activity: Activity }> = ({ activity }) => {
   const actor = activity.source === 'merge' ? t('activity_by_merge') : activity.actorName || t('no_name')
 
   return (
-    <li className='space-y-1 border-b border-(--border) pb-2 text-sm last:border-b-0'>
+    <li className='border-border space-y-1 border-b pb-2 text-sm last:border-b-0'>
       <div className='flex flex-wrap items-center gap-x-2'>
         <span className='font-medium'>{actor}</span>
         <span className='text-muted'>{t(TICKET_ACTIVITY_FIELD_LOCALE[activity.field])}</span>
