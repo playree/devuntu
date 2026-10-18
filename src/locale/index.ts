@@ -412,6 +412,7 @@ export type LocaleItemBase =
   | 'notify_event_ticket_assigned'
   | 'notify_event_ticket_completed'
   | 'notify_event_ticket_created'
+  | 'notify_event_ticket_due'
   | 'notify_event_ticket_merge_held'
   | 'notify_msg_ticket_completed_by_pr'
   | 'notify_settings'
@@ -742,6 +743,8 @@ export type LocaleItemBase =
   | 'notify_msg_ticket_assigned_channel'
   | 'notify_msg_ticket_completed'
   | 'notify_msg_ticket_created'
+  | 'notify_msg_ticket_due_day_before'
+  | 'notify_msg_ticket_due_due_day'
   | 'notify_msg_ticket_merge_held'
   // for Slack
   | 'slack_msg_open_ticket'

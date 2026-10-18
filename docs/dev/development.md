@@ -196,7 +196,7 @@ pnpm dev
 - 起動時に渡す値は `NEXT_PUBLIC_*` にしない。配布物は事前ビルド済みのイメージで、`NEXT_PUBLIC_*` は
   ビルド時にインライン化されるため起動時に渡した値が入らない。VAPID 公開鍵も Server Action で実行時に返している
 - `SESSION_FRESH_AGE` のチェックは `src/lib/auth/session-fresh.ts`
-- `NOTIFY_WORKER_ENABLED=false` で止まるのは配信側だけで、通知は `notify_outbox` へ溜まる
+- `NOTIFY_WORKER_ENABLED=false` で止まるのは配信側と期日のリマインドの投入で、ほかの通知は `notify_outbox` へ溜まる
   ([notifications-internals.md](notifications-internals.md#通知キューと配信ワーカー))
 - `MAINTENANCE_ATTACHMENT_GRACE_HOURS` は、添付が本文の保存より先に作られることへの猶予。作成フォームを
   開いたまま放置している間、その画像はまだどこからも参照されていないため、この時間が経つまでは削除対象にしない

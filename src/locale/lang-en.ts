@@ -408,6 +408,7 @@ export const en: DefaultLocaleItems = {
   notify_event_ticket_assigned: 'When I am assigned to a ticket',
   notify_event_ticket_completed: 'When a ticket is completed',
   notify_event_ticket_created: 'When a ticket is created',
+  notify_event_ticket_due: 'When my ticket is due tomorrow or today',
   notify_event_ticket_merge_held: 'When auto-completion on merge is held',
   notify_settings: 'Notifications',
   notify_webpush: 'Web push notifications',
@@ -827,6 +828,8 @@ Expiration time: 5 minutes
   notify_msg_ticket_completed: '${from} completed this ticket',
   notify_msg_ticket_completed_by_pr: 'Completed automatically as pull request ${pr} was finished',
   notify_msg_ticket_created: '${from} created this ticket',
+  notify_msg_ticket_due_day_before: 'This ticket is due tomorrow (${due})',
+  notify_msg_ticket_due_due_day: 'This ticket is due today (${due})',
   notify_msg_ticket_merge_held:
     'PR / MR ${pr} was finished, but this ticket was not completed because of unmet acceptance criteria (${count})',
 

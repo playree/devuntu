@@ -7,6 +7,7 @@
 
 import { DAY_MS, msBefore } from '@/lib/day'
 import {
+  DUE_REMINDER_RETENTION_MS,
   GIT_CHECK_SUITE_RETENTION_MS,
   OAUTH_TOKEN_RETENTION_MS,
   SESSION_RETENTION_MS,
@@ -16,6 +17,7 @@ import {
   runMaintenanceSweep,
   sweepAgentRuns,
   sweepCommandRuns,
+  sweepDueReminders,
   sweepGitCheckSuites,
   sweepOauthAccessTokens,
   sweepOauthClientAssertions,
@@ -70,6 +72,7 @@ vi.mock('@/lib/prisma', async () =>
     commandRun: ['deleteMany', 'findMany'],
     gitCheckSuite: ['deleteMany'],
     ticketActivity: ['deleteMany'],
+    ticketDueReminder: ['deleteMany'],
   }),
 )
 
@@ -93,6 +96,7 @@ beforeEach(() => {
     prisma.commandRun,
     prisma.gitCheckSuite,
     prisma.ticketActivity,
+    prisma.ticketDueReminder,
   ]) {
     vi.mocked(model.deleteMany).mockResolvedValue({ count: 0 })
   }
@@ -106,6 +110,15 @@ describe('sweepGitCheckSuites', () => {
     await sweepGitCheckSuites(now)
     expect(vi.mocked(prisma.gitCheckSuite.deleteMany).mock.calls[0][0]).toEqual({
       where: { updatedAt: { lt: msBefore(now, GIT_CHECK_SUITE_RETENTION_MS) } },
+    })
+  })
+})
+
+describe('sweepDueReminders', () => {
+  it('期限が保持期間より前の送信記録だけを消す', async () => {
+    await sweepDueReminders(now)
+    expect(vi.mocked(prisma.ticketDueReminder.deleteMany).mock.calls[0][0]).toEqual({
+      where: { dueDate: { lt: msBefore(now, DUE_REMINDER_RETENTION_MS) } },
     })
   })
 })
@@ -283,5 +296,6 @@ describe('runMaintenanceSweep', () => {
     expect(counts.verification).toBe(3)
     expect(vi.mocked(prisma.uploadNonce.deleteMany)).toHaveBeenCalled()
     expect(vi.mocked(prisma.commandRun.deleteMany)).toHaveBeenCalled()
+    expect(counts.dueReminder).toBe(0)
   })
 })

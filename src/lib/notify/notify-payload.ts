@@ -9,7 +9,7 @@
  * 定義漏れがコンパイルエラーになる。
  */
 
-import { AgentRunAction, type AgentTaskState, type NotifyEvent } from '@/generated/prisma/enums'
+import { AgentRunAction, type AgentTaskState, DueRemindKind, type NotifyEvent } from '@/generated/prisma/enums'
 import { z } from 'zod'
 import { errValidation } from '../error'
 
@@ -82,6 +82,12 @@ const scTicketMergeHeld = scTicketRef.extend({
   unmetCount: z.number().int().min(1),
 })
 
+const scTicketDue = scTicketRef.extend({
+  kind: z.enum(DueRemindKind),
+  /** 期限(YYYY-MM-DD) */
+  dueDate: z.iso.date(),
+})
+
 /** イベントごとのペイロード定義。イベントを足すとここが型エラーになる */
 export const NOTIFY_PAYLOAD_SCHEMA = {
   mention: scMention,
@@ -90,6 +96,7 @@ export const NOTIFY_PAYLOAD_SCHEMA = {
   ticket_created: scTicketChanged,
   ticket_completed: scTicketCompleted,
   ticket_merge_held: scTicketMergeHeld,
+  ticket_due: scTicketDue,
 } as const satisfies Record<NotifyEvent, z.ZodType>
 
 export type NotifyPayloadMap = { [E in NotifyEvent]: z.infer<(typeof NOTIFY_PAYLOAD_SCHEMA)[E]> }

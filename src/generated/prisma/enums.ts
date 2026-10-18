@@ -174,10 +174,19 @@ export const NotifyEvent = {
   ticket_assigned: 'ticket_assigned',
   ticket_created: 'ticket_created',
   ticket_completed: 'ticket_completed',
-  ticket_merge_held: 'ticket_merge_held'
+  ticket_merge_held: 'ticket_merge_held',
+  ticket_due: 'ticket_due'
 } as const
 
 export type NotifyEvent = (typeof NotifyEvent)[keyof typeof NotifyEvent]
+
+
+export const DueRemindKind = {
+  day_before: 'day_before',
+  due_day: 'due_day'
+} as const
+
+export type DueRemindKind = (typeof DueRemindKind)[keyof typeof DueRemindKind]
 
 
 export const NotifyChannel = {

@@ -433,6 +433,7 @@ export const ModelName = {
   BoardNotifySetting: 'BoardNotifySetting',
   NotifyOutbox: 'NotifyOutbox',
   NotifyDelivery: 'NotifyDelivery',
+  TicketDueReminder: 'TicketDueReminder',
   OauthClient: 'OauthClient',
   OauthRefreshToken: 'OauthRefreshToken',
   OauthAccessToken: 'OauthAccessToken',
@@ -469,7 +470,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentAutoReviseTrigger" | "agentUsage" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "board" | "boardKeyHistory" | "ticketTemplate" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "calendarShare" | "calendarBusyTime" | "commandTargetMember" | "commandTargetGroup" | "commandRun" | "commandRunChunk" | "ticketLink" | "boardRepository" | "boardGitSetting" | "gitCheckSuite" | "userNotifySetting" | "webPushSubscription" | "boardNotifySetting" | "notifyOutbox" | "notifyDelivery" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "ticket" | "ticketComment" | "ticketCriterion" | "ticketRelation" | "ticketActivity" | "user" | "group" | "userGroup"
+    modelProps: "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentAutoReviseTrigger" | "agentUsage" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "board" | "boardKeyHistory" | "ticketTemplate" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "calendarShare" | "calendarBusyTime" | "commandTargetMember" | "commandTargetGroup" | "commandRun" | "commandRunChunk" | "ticketLink" | "boardRepository" | "boardGitSetting" | "gitCheckSuite" | "userNotifySetting" | "webPushSubscription" | "boardNotifySetting" | "notifyOutbox" | "notifyDelivery" | "ticketDueReminder" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "ticket" | "ticketComment" | "ticketCriterion" | "ticketRelation" | "ticketActivity" | "user" | "group" | "userGroup"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -3137,6 +3138,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    TicketDueReminder: {
+      payload: Prisma.$TicketDueReminderPayload<ExtArgs>
+      fields: Prisma.TicketDueReminderFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TicketDueReminderFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketDueReminderPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TicketDueReminderFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketDueReminderPayload>
+        }
+        findFirst: {
+          args: Prisma.TicketDueReminderFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketDueReminderPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TicketDueReminderFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketDueReminderPayload>
+        }
+        findMany: {
+          args: Prisma.TicketDueReminderFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketDueReminderPayload>[]
+        }
+        create: {
+          args: Prisma.TicketDueReminderCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketDueReminderPayload>
+        }
+        createMany: {
+          args: Prisma.TicketDueReminderCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TicketDueReminderCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketDueReminderPayload>[]
+        }
+        delete: {
+          args: Prisma.TicketDueReminderDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketDueReminderPayload>
+        }
+        update: {
+          args: Prisma.TicketDueReminderUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketDueReminderPayload>
+        }
+        deleteMany: {
+          args: Prisma.TicketDueReminderDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TicketDueReminderUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TicketDueReminderUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketDueReminderPayload>[]
+        }
+        upsert: {
+          args: Prisma.TicketDueReminderUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketDueReminderPayload>
+        }
+        aggregate: {
+          args: Prisma.TicketDueReminderAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTicketDueReminder>
+        }
+        groupBy: {
+          args: Prisma.TicketDueReminderGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TicketDueReminderGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TicketDueReminderCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TicketDueReminderCountAggregateOutputType> | number
+        }
+      }
+    }
     OauthClient: {
       payload: Prisma.$OauthClientPayload<ExtArgs>
       fields: Prisma.OauthClientFieldRefs
@@ -5272,6 +5347,17 @@ export const NotifyDeliveryScalarFieldEnum = {
 export type NotifyDeliveryScalarFieldEnum = (typeof NotifyDeliveryScalarFieldEnum)[keyof typeof NotifyDeliveryScalarFieldEnum]
 
 
+export const TicketDueReminderScalarFieldEnum = {
+  id: 'id',
+  ticketId: 'ticketId',
+  kind: 'kind',
+  dueDate: 'dueDate',
+  createdAt: 'createdAt'
+} as const
+
+export type TicketDueReminderScalarFieldEnum = (typeof TicketDueReminderScalarFieldEnum)[keyof typeof TicketDueReminderScalarFieldEnum]
+
+
 export const OauthClientScalarFieldEnum = {
   id: 'id',
   clientId: 'clientId',
@@ -6025,6 +6111,20 @@ export type ListEnumNotifyChannelFieldRefInput<$PrismaModel> = FieldRefInputType
 
 
 /**
+ * Reference to a field of type 'DueRemindKind'
+ */
+export type EnumDueRemindKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DueRemindKind'>
+    
+
+
+/**
+ * Reference to a field of type 'DueRemindKind[]'
+ */
+export type ListEnumDueRemindKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DueRemindKind[]'>
+    
+
+
+/**
  * Reference to a field of type 'TicketStatus'
  */
 export type EnumTicketStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TicketStatus'>
@@ -6350,6 +6450,7 @@ export type GlobalOmitConfig = {
   boardNotifySetting?: Prisma.BoardNotifySettingOmit
   notifyOutbox?: Prisma.NotifyOutboxOmit
   notifyDelivery?: Prisma.NotifyDeliveryOmit
+  ticketDueReminder?: Prisma.TicketDueReminderOmit
   oauthClient?: Prisma.OauthClientOmit
   oauthRefreshToken?: Prisma.OauthRefreshTokenOmit
   oauthAccessToken?: Prisma.OauthAccessTokenOmit

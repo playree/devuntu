@@ -268,6 +268,14 @@ export type NotifyOutbox = Prisma.NotifyOutboxModel
  */
 export type NotifyDelivery = Prisma.NotifyDeliveryModel
 /**
+ * Model TicketDueReminder
+ * 期限のリマインドを投入した記録。同じリマインドを二度送らないために持つ。
+ * 
+ * 期限ごとに記録するので、期限を変えると変更後の期限で改めて送られる(チケット更新側で消す必要が無い)。
+ * 期限を過ぎて久しい行はメンテナンスの掃除で消す。
+ */
+export type TicketDueReminder = Prisma.TicketDueReminderModel
+/**
  * Model OauthClient
  * OIDC プロバイダとして受け付けるクライアントの登録情報。
  * better-auth の oauth-provider プラグインが要求するテーブルで、列の増減はライブラリ側の要求に従う。

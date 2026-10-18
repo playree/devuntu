@@ -87,6 +87,7 @@ export const ModelName = {
   BoardNotifySetting: 'BoardNotifySetting',
   NotifyOutbox: 'NotifyOutbox',
   NotifyDelivery: 'NotifyDelivery',
+  TicketDueReminder: 'TicketDueReminder',
   OauthClient: 'OauthClient',
   OauthRefreshToken: 'OauthRefreshToken',
   OauthAccessToken: 'OauthAccessToken',
@@ -666,6 +667,17 @@ export const NotifyDeliveryScalarFieldEnum = {
 } as const
 
 export type NotifyDeliveryScalarFieldEnum = (typeof NotifyDeliveryScalarFieldEnum)[keyof typeof NotifyDeliveryScalarFieldEnum]
+
+
+export const TicketDueReminderScalarFieldEnum = {
+  id: 'id',
+  ticketId: 'ticketId',
+  kind: 'kind',
+  dueDate: 'dueDate',
+  createdAt: 'createdAt'
+} as const
+
+export type TicketDueReminderScalarFieldEnum = (typeof TicketDueReminderScalarFieldEnum)[keyof typeof TicketDueReminderScalarFieldEnum]
 
 
 export const OauthClientScalarFieldEnum = {

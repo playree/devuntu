@@ -19,6 +19,7 @@ export const NOTIFY_EVENTS = [
   'ticket_created',
   'ticket_completed',
   'ticket_merge_held',
+  'ticket_due',
 ] as const satisfies readonly NotifyEvent[]
 
 /**
@@ -30,6 +31,7 @@ export const DM_NOTIFY_EVENTS = [
   'agent_run',
   'ticket_assigned',
   'ticket_merge_held',
+  'ticket_due',
 ] as const satisfies readonly NotifyEvent[]
 export type DmNotifyEvent = (typeof DM_NOTIFY_EVENTS)[number]
 
@@ -87,6 +89,18 @@ export const NOTIFY_RETRY_BASE_MS = 60_000
 
 /** `processing` のまま放置された行を取りこぼしとみなす時間。再起動やクラッシュぶんを拾う */
 export const NOTIFY_CLAIM_TIMEOUT_MS = 300_000
+
+/** 期限のリマインドを送る時刻(宛先のタイムゾーンの 0:00 からの分) */
+export const DUE_REMIND_MINUTES = 9 * 60
+
+/** 期限のリマインドを探す間隔。送る時刻からの遅れはこの間隔が上限になる */
+export const DUE_REMIND_TICK_MS = 300_000
+
+/**
+ * 1周で投入するリマインドの上限。
+ * システム由来の投入はまとめて流量制限(`notify-enqueue.ts`)を受けるので、それを超えない数に抑えて残りは次の周へ回す
+ */
+export const DUE_REMIND_BATCH = 50
 
 /** 試行回数を使い切った配信を残しておく期間 */
 export const NOTIFY_FAILED_RETENTION_MS = 7 * DAY_MS

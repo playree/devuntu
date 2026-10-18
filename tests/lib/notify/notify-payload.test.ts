@@ -81,3 +81,16 @@ describe('parseNotifyPayload: ticket_merge_held', () => {
     expect(() => parseNotifyPayload('ticket_merge_held', { ...payload, unmetCount: 0 })).toThrow(ClientError)
   })
 })
+
+describe('parseNotifyPayload: ticket_due', () => {
+  const payload = { ...ticketRef, kind: 'due_day', dueDate: '2026-10-20' }
+
+  it('種類と期日で通る', () => {
+    expect(parseNotifyPayload('ticket_due', payload)).toMatchObject(payload)
+  })
+
+  it('未知の種類・日付でない期日は弾く', () => {
+    expect(() => parseNotifyPayload('ticket_due', { ...payload, kind: 'overdue' })).toThrow(ClientError)
+    expect(() => parseNotifyPayload('ticket_due', { ...payload, dueDate: '2026-10-20T00:00:00Z' })).toThrow(ClientError)
+  })
+})

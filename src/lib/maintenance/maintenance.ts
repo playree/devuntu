@@ -28,6 +28,9 @@ export const OAUTH_TOKEN_RETENTION_MS = DAY_MS
  */
 export const GIT_CHECK_SUITE_RETENTION_MS = 90 * DAY_MS
 
+/** 期限のリマインドの送信記録の保持期間(期限からの日数)。期限を過ぎたものはもう送らないので、二重送信の防止に要るのは直近だけ */
+export const DUE_REMINDER_RETENTION_MS = 30 * DAY_MS
+
 // 実行履歴の保持(期間と件数)は運用者が変えられるようにしてあるので `envu.server` 側にある
 
 /** 添付の掃除を回す間隔。本文の全走査を伴うので tick ごとには行わない */

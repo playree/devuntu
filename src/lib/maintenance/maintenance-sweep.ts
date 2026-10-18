@@ -14,6 +14,7 @@ import { envu } from '../env-util'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
 import {
+  DUE_REMINDER_RETENTION_MS,
   GIT_CHECK_SUITE_RETENTION_MS,
   MAINTENANCE_DELETE_BATCH,
   OAUTH_TOKEN_RETENTION_MS,
@@ -180,6 +181,11 @@ export const sweepGitCheckSuites = async (now: Date): Promise<number> =>
   (await prisma.gitCheckSuite.deleteMany({ where: { updatedAt: { lt: msBefore(now, GIT_CHECK_SUITE_RETENTION_MS) } } }))
     .count
 
+/** 期限を過ぎて久しいリマインドの送信記録 */
+export const sweepDueReminders = async (now: Date): Promise<number> =>
+  (await prisma.ticketDueReminder.deleteMany({ where: { dueDate: { lt: msBefore(now, DUE_REMINDER_RETENTION_MS) } } }))
+    .count
+
 /** 1手順ぶん。1つ失敗しても残りの手順は続ける */
 const runStep = async (counts: SweepCounts, step: string, fn: () => Promise<number>): Promise<void> => {
   try {
@@ -205,6 +211,7 @@ export const runMaintenanceSweep = async (now: Date = nowDate()): Promise<SweepC
   await runStep(counts, 'commandRun', () => sweepCommandRuns(now))
   await runStep(counts, 'ticketActivity', () => sweepTicketActivities(now))
   await runStep(counts, 'gitCheckSuite', () => sweepGitCheckSuites(now))
+  await runStep(counts, 'dueReminder', () => sweepDueReminders(now))
   await runStep(counts, 'attachment', () => sweepOrphanAttachments(now))
 
   logger.info(counts, 'maintenance sweep finished')
