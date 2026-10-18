@@ -408,7 +408,7 @@ export const en: DefaultLocaleItems = {
   notify_event_ticket_assigned: 'When I am assigned to a ticket',
   notify_event_ticket_completed: 'When a ticket is completed',
   notify_event_ticket_created: 'When a ticket is created',
-  notify_event_ticket_due: 'When my ticket is due tomorrow or today',
+  notify_event_ticket_due: "When my ticket's due date is approaching",
   notify_event_ticket_merge_held: 'When auto-completion on merge is held',
   notify_settings: 'Notifications',
   notify_webpush: 'Web push notifications',
