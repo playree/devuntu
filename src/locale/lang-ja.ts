@@ -408,7 +408,7 @@ export const ja: DefaultLocaleItems = {
   notify_event_ticket_assigned: 'チケットの担当者に指定されたとき',
   notify_event_ticket_completed: 'チケットが完了したとき',
   notify_event_ticket_created: 'チケットが作成されたとき',
-  notify_event_ticket_due: '担当チケットの期日が明日・今日になったとき',
+  notify_event_ticket_due: '担当チケットの期日が近づいたとき',
   notify_event_ticket_merge_held: 'マージによる自動完了が保留されたとき',
   notify_settings: '通知設定',
   notify_webpush: 'Webプッシュ通知',
