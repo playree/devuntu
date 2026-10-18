@@ -350,7 +350,7 @@ pnpm patch-commit '<出力されたパス>'
 
 | 上書き対象 | 指定     | 理由                                       |
 | ---------- | -------- | ------------------------------------------ |
-| `sharp`    | `0.35.4` | Next.js の画像最適化で使うバージョンを固定 |
+| `sharp`    | `0.35.5` | Next.js の画像最適化で使うバージョンを固定 |
 
 `lexical`と`@lexical/react`は`package.json`で`0.48.0`に固定している。`@mdxeditor/editor`が`@lexical/*`を`^0.48.0`で要求しているため、ルートだけ 0.49 系以降へ上げると MDXEditor 配下に 0.48 系が別インスタンスで残り、`useLexicalComposerContext`が別モジュールの Context を引いてメンション機能が実行時に壊れる。`overrides`で全体を揃える手もあるが、0.49.0 が組み込みノードの`$config()`移行で`importJSON`/`importDOM`/`clone`/`transform`の static を落としており、以降のバージョンも含めて MDXEditor 側が未対応。MDXEditor が追随したら上げる。
 
