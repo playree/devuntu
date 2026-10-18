@@ -171,9 +171,10 @@ describe('resolveNotifyTargets(ticket_merge_held)', () => {
 describe('resolveNotifyTargets(ticket_due)', () => {
   const due = { ticketId: 't1', boardId: 'b1', dueDate: '2026-10-20' } as NotifyPayload<'ticket_due'>
 
-  const mockTicket = (state: { status: string; dueDate: Date | null }) =>
+  const mockTicket = (state: { status: string; dueDate: Date | null; archived?: boolean }) =>
     vi.mocked(prisma.ticket.findUnique).mockResolvedValue({
       ...state,
+      board: { archived: state.archived ?? false },
       assignee: { id: 'u1', role: 'user', isAgent: false },
       createdBy: { id: 'u2', role: 'user', isAgent: false },
     } as never)
@@ -190,6 +191,7 @@ describe('resolveNotifyTargets(ticket_due)', () => {
     ['完了した', { status: 'done', dueDate: new Date('2026-10-20T00:00:00Z') }],
     ['期限を変えた', { status: 'doing', dueDate: new Date('2026-10-27T00:00:00Z') }],
     ['期限を外した', { status: 'doing', dueDate: null }],
+    ['ボードをアーカイブした', { status: 'doing', dueDate: new Date('2026-10-20T00:00:00Z'), archived: true }],
   ])('投入後に%sチケットには送らない', async (_label, state) => {
     mockTicket(state)
     vi.mocked(getTicketAccess).mockResolvedValue({ canView: true } as never)

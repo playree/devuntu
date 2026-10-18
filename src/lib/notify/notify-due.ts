@@ -114,11 +114,17 @@ export const runDueRemind = async (now: Date = nowDate()): Promise<number> => {
   })
 
   let enqueued = 0
-  for (const { ticket, owner, dueDate, kind } of targets.slice(0, DUE_REMIND_BATCH)) {
-    // 閲覧できなくなった宛先には配信側も送らない。記録だけを残すと、権限が戻ってもその日は送れなくなる
+  let attempted = 0
+  for (const { ticket, owner, dueDate, kind } of targets) {
+    if (attempted >= DUE_REMIND_BATCH) {
+      break
+    }
+    // 閲覧できなくなった宛先には配信側も送らない。記録だけを残すと、権限が戻ってもその日は送れなくなる。
+    // 上限はこの確認の後で数える(送れない候補が先頭に溜まって、後ろの候補が毎周あふれることが無いように)
     if (!(await ticketOwnerIds(ticket.id)).includes(owner.id)) {
       continue
     }
+    attempted++
     try {
       // 記録を作れたときだけ投入する。多重に走っても、記録の一意制約でどちらか一方だけが送る
       const created = await prisma.$transaction(async (tx) => {
@@ -155,7 +161,7 @@ export const runDueRemind = async (now: Date = nowDate()): Promise<number> => {
     }
   }
 
-  if (enqueued > 0 || targets.length > DUE_REMIND_BATCH) {
+  if (enqueued > 0 || attempted >= DUE_REMIND_BATCH) {
     logger.info({ enqueued, candidates: targets.length }, 'due remind enqueued')
   }
   return enqueued

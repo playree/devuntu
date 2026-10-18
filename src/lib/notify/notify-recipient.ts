@@ -73,10 +73,13 @@ export const ticketOwnerIds = async (ticketId: string): Promise<string[]> => {
   return assignee && !assignee.isAgent ? viewerIds(assignee, ticketId) : viewerIds(ticket?.createdBy, ticketId)
 }
 
-/** 未完了で、期限が投入時(`dueDate` = YYYY-MM-DD)のままか */
+/** 未完了・ボードが未アーカイブで、期限が投入時(`dueDate` = YYYY-MM-DD)のままか */
 const isStillDue = async (ticketId: string, dueDate: string): Promise<boolean> => {
-  const ticket = await prisma.ticket.findUnique({ where: { id: ticketId }, select: { status: true, dueDate: true } })
-  return !!ticket && ticket.status !== 'done' && utcToDateOnly(ticket.dueDate) === dueDate
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    select: { status: true, dueDate: true, board: { select: { archived: true } } },
+  })
+  return !!ticket && !ticket.board.archived && ticket.status !== 'done' && utcToDateOnly(ticket.dueDate) === dueDate
 }
 
 /**

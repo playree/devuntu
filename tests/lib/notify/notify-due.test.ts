@@ -193,6 +193,16 @@ describe('runDueRemind', () => {
     expect(payloads().map((p) => p.ticketId)).toEqual(['ticket-2'])
   })
 
+  it('閲覧できない候補は上限に数えない(後ろの候補があふれ続けない)', async () => {
+    findTickets.mockResolvedValue(
+      Array.from({ length: DUE_REMIND_BATCH + 1 }, (_, i) => ticket({ id: `ticket-${i}` })) as never,
+    )
+    // 先頭の候補だけ宛先が閲覧できない
+    ownerIds.mockImplementation(async (ticketId) => (ticketId === 'ticket-0' ? [] : ['user-assignee']))
+    expect(await runDueRemind(NOW)).toBe(DUE_REMIND_BATCH)
+    expect(payloads().at(-1)?.ticketId).toBe(`ticket-${DUE_REMIND_BATCH}`)
+  })
+
   it('1周で投入するのは上限まで', async () => {
     findTickets.mockResolvedValue(
       Array.from({ length: DUE_REMIND_BATCH + 5 }, (_, i) => ticket({ id: `ticket-${i}` })) as never,
