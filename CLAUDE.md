@@ -105,12 +105,8 @@ docs は読者別に `guide/`(利用者)・`admin/`(運用者)・`dev/`(開発�
   - 「コミット済みだが未プッシュ」も同様にNG
 - 修正しない指摘への反論や質問への回答も、作業ツリーに未反映の変更が残っている状態では行わない(先にコミット&プッシュするか、変更を退避する)
 
-<!-- BEGIN:nextjs-agent-rules -->
+# Next.js
 
-# This is NOT the Next.js you know
+`next dev` が管理する AGENTS.md の指示に従う。
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
-
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
-
-<!-- END:nextjs-agent-rules -->
+@AGENTS.md
