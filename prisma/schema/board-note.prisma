@@ -1,0 +1,116 @@
+/// ボードノートの区分。書き込みの規則と AI への渡し方(索引の載せ方)が異なる
+enum BoardNoteKind {
+  /// ユーザーが定義する、またはユーザーの指示・同意を得て AI が書くもの
+  knowledge
+  /// AI が作業中に自動で書くもの(人も編集できる)
+  memory
+}
+
+/// ボードノートの種別。画面の絞り込みに使い、MCP の索引には載せない
+enum BoardNoteType {
+  /// 規約・人からの指摘
+  convention
+  /// 決定事項
+  decision
+  /// 知見・ハマり所
+  insight
+  /// 外部の参照先
+  reference
+}
+
+/// ボードノートを書いた経路
+enum BoardNoteVia {
+  /// 画面
+  web
+  /// MCP(人の経路・エージェントの両方)
+  mcp
+}
+
+/// ボードノートの版の操作
+enum BoardNoteRevisionAction {
+  created
+  updated
+  deleted
+  restored
+}
+
+/// ボード単位で共有する AI 向けのノート(メモリ / ナレッジ)。
+/// MCP では name と description の索引だけを get_ticket / get_board / get_agent_task に載せ、本文は get_board_notes で読ませる
+model BoardNote {
+  id String @id @default(uuid(7))
+
+  boardId String
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  kind BoardNoteKind
+  type BoardNoteType
+
+  /// ボード内で一意の kebab-case の名前。MCP ではこれで引く
+  name String
+
+  /// 索引に載せる1行の説明
+  description String
+
+  /// 本文(Markdown)
+  content String
+
+  createdById String?
+  createdBy   User?   @relation("BoardNoteCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById String?
+  updatedBy   User?   @relation("BoardNoteUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  /// 最後に書いた経路
+  updatedVia BoardNoteVia @default(web)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // @@unique が (boardId, ...) の先頭索引を兼ねる
+  @@unique([boardId, name])
+  @@index([boardId, kind])
+  @@map("board_note")
+}
+
+/// ボードノートの版。変更後(deleted は削除直前)の全文を持つ。
+/// 削除後も復元に使うため noteId に外部キーを張らない。1件あたりの版数(BOARD_NOTE_REVISION_MAX_PER_NOTE)を
+/// 超えた分は書き込み時に、保持期間(BOARD_NOTE_REVISION_RETENTION_DAYS)を過ぎた分は自動メンテナンスで消す
+model BoardNoteRevision {
+  id String @id @default(uuid(7))
+
+  boardId String
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  /// 対象の BoardNote.id。復元すると同じ id で作り直す
+  noteId String
+
+  action BoardNoteRevisionAction
+
+  kind        BoardNoteKind
+  type        BoardNoteType
+  name        String
+  description String
+  content     String
+
+  /// 変更者。退会しても変更の事実は残すので SetNull
+  actorId String?
+  actor   User?   @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  via BoardNoteVia
+
+  /// 書いたときに対応していたチケット(MCP で指定されたとき)
+  ticketId String?
+  ticket   Ticket? @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+
+  /// action=restored のときの戻し元の版
+  restoredFromId String?
+
+  createdAt DateTime @default(now())
+
+  @@index([noteId, createdAt])
+  @@index([boardId, createdAt])
+  // 保持期間の掃除で古い順に引く
+  @@index([createdAt])
+  @@index([ticketId])
+  @@map("board_note_revision")
+}

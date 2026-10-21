@@ -65,6 +65,8 @@ export const ModelName = {
   TwoFactor: 'TwoFactor',
   Passkey: 'Passkey',
   Jwks: 'Jwks',
+  BoardNote: 'BoardNote',
+  BoardNoteRevision: 'BoardNoteRevision',
   Board: 'Board',
   BoardKeyHistory: 'BoardKeyHistory',
   TicketTemplate: 'TicketTemplate',
@@ -345,6 +347,44 @@ export const JwksScalarFieldEnum = {
 } as const
 
 export type JwksScalarFieldEnum = (typeof JwksScalarFieldEnum)[keyof typeof JwksScalarFieldEnum]
+
+
+export const BoardNoteScalarFieldEnum = {
+  id: 'id',
+  boardId: 'boardId',
+  kind: 'kind',
+  type: 'type',
+  name: 'name',
+  description: 'description',
+  content: 'content',
+  createdById: 'createdById',
+  updatedById: 'updatedById',
+  updatedVia: 'updatedVia',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BoardNoteScalarFieldEnum = (typeof BoardNoteScalarFieldEnum)[keyof typeof BoardNoteScalarFieldEnum]
+
+
+export const BoardNoteRevisionScalarFieldEnum = {
+  id: 'id',
+  boardId: 'boardId',
+  noteId: 'noteId',
+  action: 'action',
+  kind: 'kind',
+  type: 'type',
+  name: 'name',
+  description: 'description',
+  content: 'content',
+  actorId: 'actorId',
+  via: 'via',
+  ticketId: 'ticketId',
+  restoredFromId: 'restoredFromId',
+  createdAt: 'createdAt'
+} as const
+
+export type BoardNoteRevisionScalarFieldEnum = (typeof BoardNoteRevisionScalarFieldEnum)[keyof typeof BoardNoteRevisionScalarFieldEnum]
 
 
 export const BoardScalarFieldEnum = {

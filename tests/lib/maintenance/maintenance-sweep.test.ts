@@ -16,6 +16,7 @@ import {
 import {
   runMaintenanceSweep,
   sweepAgentRuns,
+  sweepBoardNoteRevisions,
   sweepCommandRuns,
   sweepDueReminders,
   sweepGitCheckSuites,
@@ -36,6 +37,7 @@ const AGENT_KEEP = 200
 const COMMAND_RETENTION_DAYS = 10
 const COMMAND_KEEP = 50
 const TICKET_ACTIVITY_DAYS = 60
+const BOARD_NOTE_REVISION_DAYS = 90
 
 vi.mock('@/lib/env-util', () => ({
   envu: {
@@ -55,6 +57,9 @@ vi.mock('@/lib/env-util', () => ({
       get TICKET_ACTIVITY_RETENTION_DAYS() {
         return TICKET_ACTIVITY_DAYS
       },
+      get BOARD_NOTE_REVISION_RETENTION_DAYS() {
+        return BOARD_NOTE_REVISION_DAYS
+      },
     },
   },
 }))
@@ -72,6 +77,7 @@ vi.mock('@/lib/prisma', async () =>
     commandRun: ['deleteMany', 'findMany'],
     gitCheckSuite: ['deleteMany'],
     ticketActivity: ['deleteMany'],
+    boardNoteRevision: ['deleteMany'],
     ticketDueReminder: ['deleteMany'],
   }),
 )
@@ -96,6 +102,7 @@ beforeEach(() => {
     prisma.commandRun,
     prisma.gitCheckSuite,
     prisma.ticketActivity,
+    prisma.boardNoteRevision,
     prisma.ticketDueReminder,
   ]) {
     vi.mocked(model.deleteMany).mockResolvedValue({ count: 0 })
@@ -128,6 +135,15 @@ describe('sweepTicketActivities', () => {
     await sweepTicketActivities(now)
     expect(vi.mocked(prisma.ticketActivity.deleteMany).mock.calls[0][0]).toEqual({
       where: { createdAt: { lt: msBefore(now, TICKET_ACTIVITY_DAYS * DAY_MS) } },
+    })
+  })
+})
+
+describe('sweepBoardNoteRevisions', () => {
+  it('保持期間より前に記録された版だけを消す', async () => {
+    await sweepBoardNoteRevisions(now)
+    expect(vi.mocked(prisma.boardNoteRevision.deleteMany).mock.calls[0][0]).toEqual({
+      where: { createdAt: { lt: msBefore(now, BOARD_NOTE_REVISION_DAYS * DAY_MS) } },
     })
   })
 })

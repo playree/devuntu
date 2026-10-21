@@ -26,7 +26,9 @@ describe('ticketWorkflowFor', () => {
 
   it('利用者の指示を最優先に、既定の手順を最下位にした優先順位を添える', () => {
     const precedence = ticketWorkflowFor('oauth', true)?.at(-1)
-    expect(precedence).toMatch(/user instructions > the ticket > .*CLAUDE\.md.* and boardContext > these default steps/)
+    expect(precedence).toMatch(
+      /user instructions > the ticket > .*CLAUDE\.md.* and boardContext > boardKnowledge > boardMemory > these default steps/,
+    )
   })
 })
 

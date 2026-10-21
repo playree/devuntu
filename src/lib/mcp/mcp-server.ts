@@ -3,6 +3,7 @@ import { ASSIGNEE_NONE } from '@/lib/board/ticket-search'
 import { AGENT_MCP_SERVER_NAME, MCP_SERVER_NAME } from '@/lib/mcp/mcp'
 import { registerAgentSetupTool, registerAgentTools } from '@/lib/mcp/mcp-agent'
 import { getBoardForMcp, listBoardsForMcp } from '@/lib/mcp/mcp-board'
+import { registerBoardNoteTools } from '@/lib/mcp/mcp-board-note'
 import { registerImageTools } from '@/lib/mcp/mcp-image'
 import { ACCEPTANCE_CRITERIA_GUIDE, mcpInstructions } from '@/lib/mcp/mcp-instructions'
 import {
@@ -203,6 +204,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       annotations: TOOL_ANNOTATIONS.readOnly,
       description:
         'Returns board details (members, tags, ticket counts per status, and boardContext / templates / mergeCompletion if set). ' +
+        'boardKnowledge / boardMemory (only when set) index shared notes: read the relevant ones with get_board_notes. ' +
         'Use the IDs returned here for assigneeId and tagIds in create_ticket / update_ticket. ' +
         'When a template fits the ticket, pass it as templateId in create_ticket',
       inputSchema: z.strictObject({ boardId: z.string().min(1).describe('Board ID or board key (e.g. ABC)') }),
@@ -219,6 +221,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
         'Gets ticket details by display ID (e.g. ABC-42) or ticket ID, including content, status, assignee, tags, comments, linked artifacts, ' +
         'parent/children, related tickets, and recent change history (activities, newest first). ' +
         'boardContext (only when set) holds premises shared by every ticket on the board, such as the target repository and conventions: read it before working. ' +
+        'boardKnowledge / boardMemory (only when set) index shared notes: read the relevant ones with get_board_notes. ' +
         'mergeCompletion (only when set) lists the git providers whose merges complete the ticket; ' +
         'with criteriaCheck checked / checkedOrReported, unmet acceptance criteria hold it back (none does not check them). ' +
         'When working on the ticket, follow the steps in the workflow field of the response (doing when starting, posting plan / report, linking artifacts)',
@@ -386,6 +389,9 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
 
   // 画像の添付・取得は人間の利用者もエージェントも使う
   registerImageTools(server, auth)
+
+  // ボードノートも両方の経路で使う(ナレッジの変更可否は経路で判定する)
+  registerBoardNoteTools(server, auth)
 
   // セットアップ手順は人が読むものなので接続の種類を問わない
   registerAgentSetupTool(server)

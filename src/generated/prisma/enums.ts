@@ -56,6 +56,42 @@ export const AgentRunStatus = {
 export type AgentRunStatus = (typeof AgentRunStatus)[keyof typeof AgentRunStatus]
 
 
+export const BoardNoteKind = {
+  knowledge: 'knowledge',
+  memory: 'memory'
+} as const
+
+export type BoardNoteKind = (typeof BoardNoteKind)[keyof typeof BoardNoteKind]
+
+
+export const BoardNoteType = {
+  convention: 'convention',
+  decision: 'decision',
+  insight: 'insight',
+  reference: 'reference'
+} as const
+
+export type BoardNoteType = (typeof BoardNoteType)[keyof typeof BoardNoteType]
+
+
+export const BoardNoteVia = {
+  web: 'web',
+  mcp: 'mcp'
+} as const
+
+export type BoardNoteVia = (typeof BoardNoteVia)[keyof typeof BoardNoteVia]
+
+
+export const BoardNoteRevisionAction = {
+  created: 'created',
+  updated: 'updated',
+  deleted: 'deleted',
+  restored: 'restored'
+} as const
+
+export type BoardNoteRevisionAction = (typeof BoardNoteRevisionAction)[keyof typeof BoardNoteRevisionAction]
+
+
 export const BoardMemberRole = {
   owner: 'owner',
   member: 'member'

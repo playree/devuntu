@@ -31,11 +31,16 @@ vi.mock('@/lib/board/ticket-template', () => ({
   listTicketTemplates: vi.fn().mockResolvedValue([]),
 }))
 
+vi.mock('@/lib/board-note/board-note', () => ({
+  findBoardNoteIndex: vi.fn().mockResolvedValue({}),
+}))
+
 const { assertBoardAccess } = await import('@/lib/board/board-access')
 const { countTicketsByBoard, listAccessibleBoards } = await import('@/lib/board/board')
 const { getBoardMemberUsers } = await import('@/lib/board/board-member')
 const { listBoardTags } = await import('@/lib/board/tag')
 const { listTicketTemplates } = await import('@/lib/board/ticket-template')
+const { findBoardNoteIndex } = await import('@/lib/board-note/board-note')
 
 const auth = oauthAuth()
 
@@ -176,6 +181,38 @@ describe('getBoardForMcp', () => {
     vi.mocked(countTicketsByBoard).mockResolvedValueOnce({})
 
     expect(await getBoardForMcp(auth, boardId)).toMatchObject({ boardContext: '## 前提' })
+  })
+
+  it('ボードノートがあれば索引(boardKnowledge / boardMemory)を返す', async () => {
+    vi.mocked(prisma.board.findUnique).mockResolvedValueOnce({
+      key: 'ABC',
+      name: 'テストボード',
+      description: null,
+      aiContext: null,
+      gitSettings: [],
+    } as never)
+    vi.mocked(assertBoardAccess).mockResolvedValueOnce({
+      boardId,
+      kind: 'team',
+      role: 'member',
+      via: 'member',
+      archived: false,
+    })
+    vi.mocked(getBoardMemberUsers).mockResolvedValueOnce([])
+    vi.mocked(listBoardTags).mockResolvedValueOnce([])
+    vi.mocked(countTicketsByBoard).mockResolvedValueOnce({})
+    vi.mocked(findBoardNoteIndex).mockResolvedValueOnce({
+      boardKnowledge: ['deploy-flow: 本番デプロイの順序'],
+      boardMemory: ['migrate-gotcha: 失敗する件'],
+      boardMemoryOmitted: 3,
+    })
+
+    expect(await getBoardForMcp(auth, boardId)).toMatchObject({
+      boardKnowledge: ['deploy-flow: 本番デプロイの順序'],
+      boardMemory: ['migrate-gotcha: 失敗する件'],
+      boardMemoryOmitted: 3,
+    })
+    expect(findBoardNoteIndex).toHaveBeenCalledWith(boardId)
   })
 
   it('テンプレートがあれば templates として返し、受け入れ条件は acceptanceCriteria の名前にする', async () => {

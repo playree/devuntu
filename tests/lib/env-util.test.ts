@@ -380,3 +380,33 @@ describe('DEFAULT_TIMEZONE', () => {
     expect(() => envu.server.DEFAULT_TIMEZONE).toThrow()
   })
 })
+
+describe('ボードノートの上限と保持期間', () => {
+  const KEYS = [
+    'BOARD_MEMORY_MAX_COUNT',
+    'BOARD_KNOWLEDGE_MAX_COUNT',
+    'BOARD_NOTE_REVISION_MAX_PER_NOTE',
+    'BOARD_NOTE_REVISION_RETENTION_DAYS',
+  ] as const
+  KEYS.forEach(restoreEnv)
+
+  it('未設定なら既定値', () => {
+    KEYS.forEach((key) => delete process.env[key])
+    expect(envu.server.BOARD_MEMORY_MAX_COUNT).toBe(200)
+    expect(envu.server.BOARD_KNOWLEDGE_MAX_COUNT).toBe(100)
+    expect(envu.server.BOARD_NOTE_REVISION_MAX_PER_NOTE).toBe(50)
+    expect(envu.server.BOARD_NOTE_REVISION_RETENTION_DAYS).toBe(365)
+  })
+
+  it('設定した値を返す', () => {
+    KEYS.forEach((key) => (process.env[key] = '3'))
+    KEYS.forEach((key) => expect(envu.server[key]).toBe(3))
+  })
+
+  it.each(['0', '-1', '1.5', 'abc'])('1 未満や整数でない値は起動時に弾く (%s)', (value) => {
+    KEYS.forEach((key) => {
+      process.env[key] = value
+      expect(() => envu.server[key]).toThrow()
+    })
+  })
+})

@@ -276,6 +276,8 @@ export type BoardWhereInput = {
   agentUsages?: Prisma.AgentUsageListRelationFilter
   templates?: Prisma.TicketTemplateListRelationFilter
   gitSettings?: Prisma.BoardGitSettingListRelationFilter
+  notes?: Prisma.BoardNoteListRelationFilter
+  noteRevisions?: Prisma.BoardNoteRevisionListRelationFilter
 }
 
 export type BoardOrderByWithRelationInput = {
@@ -302,6 +304,8 @@ export type BoardOrderByWithRelationInput = {
   agentUsages?: Prisma.AgentUsageOrderByRelationAggregateInput
   templates?: Prisma.TicketTemplateOrderByRelationAggregateInput
   gitSettings?: Prisma.BoardGitSettingOrderByRelationAggregateInput
+  notes?: Prisma.BoardNoteOrderByRelationAggregateInput
+  noteRevisions?: Prisma.BoardNoteRevisionOrderByRelationAggregateInput
 }
 
 export type BoardWhereUniqueInput = Prisma.AtLeast<{
@@ -331,6 +335,8 @@ export type BoardWhereUniqueInput = Prisma.AtLeast<{
   agentUsages?: Prisma.AgentUsageListRelationFilter
   templates?: Prisma.TicketTemplateListRelationFilter
   gitSettings?: Prisma.BoardGitSettingListRelationFilter
+  notes?: Prisma.BoardNoteListRelationFilter
+  noteRevisions?: Prisma.BoardNoteRevisionListRelationFilter
 }, "id" | "privateOwnerId" | "key">
 
 export type BoardOrderByWithAggregationInput = {
@@ -392,6 +398,8 @@ export type BoardCreateInput = {
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
   gitSettings?: Prisma.BoardGitSettingCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateInput = {
@@ -417,6 +425,8 @@ export type BoardUncheckedCreateInput = {
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
   gitSettings?: Prisma.BoardGitSettingUncheckedCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteUncheckedCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUpdateInput = {
@@ -442,6 +452,8 @@ export type BoardUpdateInput = {
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
   gitSettings?: Prisma.BoardGitSettingUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateInput = {
@@ -467,6 +479,8 @@ export type BoardUncheckedUpdateInput = {
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
   gitSettings?: Prisma.BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUncheckedUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateManyInput = {
@@ -513,6 +527,11 @@ export type BoardUncheckedUpdateManyInput = {
 export type BoardNullableScalarRelationFilter = {
   is?: Prisma.BoardWhereInput | null
   isNot?: Prisma.BoardWhereInput | null
+}
+
+export type BoardScalarRelationFilter = {
+  is?: Prisma.BoardWhereInput
+  isNot?: Prisma.BoardWhereInput
 }
 
 export type BoardCountOrderByAggregateInput = {
@@ -565,11 +584,6 @@ export type BoardSumOrderByAggregateInput = {
   ticketSeq?: Prisma.SortOrder
 }
 
-export type BoardScalarRelationFilter = {
-  is?: Prisma.BoardWhereInput
-  isNot?: Prisma.BoardWhereInput
-}
-
 export type BoardCreateNestedOneWithoutAgentUsagesInput = {
   create?: Prisma.XOR<Prisma.BoardCreateWithoutAgentUsagesInput, Prisma.BoardUncheckedCreateWithoutAgentUsagesInput>
   connectOrCreate?: Prisma.BoardCreateOrConnectWithoutAgentUsagesInput
@@ -584,6 +598,34 @@ export type BoardUpdateOneWithoutAgentUsagesNestedInput = {
   delete?: Prisma.BoardWhereInput | boolean
   connect?: Prisma.BoardWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.BoardUpdateToOneWithWhereWithoutAgentUsagesInput, Prisma.BoardUpdateWithoutAgentUsagesInput>, Prisma.BoardUncheckedUpdateWithoutAgentUsagesInput>
+}
+
+export type BoardCreateNestedOneWithoutNotesInput = {
+  create?: Prisma.XOR<Prisma.BoardCreateWithoutNotesInput, Prisma.BoardUncheckedCreateWithoutNotesInput>
+  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutNotesInput
+  connect?: Prisma.BoardWhereUniqueInput
+}
+
+export type BoardUpdateOneRequiredWithoutNotesNestedInput = {
+  create?: Prisma.XOR<Prisma.BoardCreateWithoutNotesInput, Prisma.BoardUncheckedCreateWithoutNotesInput>
+  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutNotesInput
+  upsert?: Prisma.BoardUpsertWithoutNotesInput
+  connect?: Prisma.BoardWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.BoardUpdateToOneWithWhereWithoutNotesInput, Prisma.BoardUpdateWithoutNotesInput>, Prisma.BoardUncheckedUpdateWithoutNotesInput>
+}
+
+export type BoardCreateNestedOneWithoutNoteRevisionsInput = {
+  create?: Prisma.XOR<Prisma.BoardCreateWithoutNoteRevisionsInput, Prisma.BoardUncheckedCreateWithoutNoteRevisionsInput>
+  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutNoteRevisionsInput
+  connect?: Prisma.BoardWhereUniqueInput
+}
+
+export type BoardUpdateOneRequiredWithoutNoteRevisionsNestedInput = {
+  create?: Prisma.XOR<Prisma.BoardCreateWithoutNoteRevisionsInput, Prisma.BoardUncheckedCreateWithoutNoteRevisionsInput>
+  connectOrCreate?: Prisma.BoardCreateOrConnectWithoutNoteRevisionsInput
+  upsert?: Prisma.BoardUpsertWithoutNoteRevisionsInput
+  connect?: Prisma.BoardWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.BoardUpdateToOneWithWhereWithoutNoteRevisionsInput, Prisma.BoardUpdateWithoutNoteRevisionsInput>, Prisma.BoardUncheckedUpdateWithoutNoteRevisionsInput>
 }
 
 export type EnumBoardKindFieldUpdateOperationsInput = {
@@ -788,6 +830,8 @@ export type BoardCreateWithoutAgentUsagesInput = {
   repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
   gitSettings?: Prisma.BoardGitSettingCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutAgentUsagesInput = {
@@ -812,6 +856,8 @@ export type BoardUncheckedCreateWithoutAgentUsagesInput = {
   repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
   gitSettings?: Prisma.BoardGitSettingUncheckedCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteUncheckedCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutAgentUsagesInput = {
@@ -852,6 +898,8 @@ export type BoardUpdateWithoutAgentUsagesInput = {
   repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
   gitSettings?: Prisma.BoardGitSettingUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutAgentUsagesInput = {
@@ -876,6 +924,248 @@ export type BoardUncheckedUpdateWithoutAgentUsagesInput = {
   repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
   gitSettings?: Prisma.BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUncheckedUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedUpdateManyWithoutBoardNestedInput
+}
+
+export type BoardCreateWithoutNotesInput = {
+  id?: string
+  kind?: $Enums.BoardKind
+  key: string
+  ticketSeq?: number
+  name: string
+  description?: string | null
+  aiContext?: string | null
+  archived?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
+  members?: Prisma.BoardMemberCreateNestedManyWithoutBoardInput
+  groups?: Prisma.BoardGroupCreateNestedManyWithoutBoardInput
+  tickets?: Prisma.TicketCreateNestedManyWithoutBoardInput
+  tags?: Prisma.TagCreateNestedManyWithoutBoardInput
+  attachments?: Prisma.AttachmentCreateNestedManyWithoutBoardInput
+  keyHistories?: Prisma.BoardKeyHistoryCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
+  repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
+  agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionCreateNestedManyWithoutBoardInput
+}
+
+export type BoardUncheckedCreateWithoutNotesInput = {
+  id?: string
+  kind?: $Enums.BoardKind
+  privateOwnerId?: string | null
+  key: string
+  ticketSeq?: number
+  name: string
+  description?: string | null
+  aiContext?: string | null
+  archived?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
+  groups?: Prisma.BoardGroupUncheckedCreateNestedManyWithoutBoardInput
+  tickets?: Prisma.TicketUncheckedCreateNestedManyWithoutBoardInput
+  tags?: Prisma.TagUncheckedCreateNestedManyWithoutBoardInput
+  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutBoardInput
+  keyHistories?: Prisma.BoardKeyHistoryUncheckedCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
+  repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
+  agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedCreateNestedManyWithoutBoardInput
+}
+
+export type BoardCreateOrConnectWithoutNotesInput = {
+  where: Prisma.BoardWhereUniqueInput
+  create: Prisma.XOR<Prisma.BoardCreateWithoutNotesInput, Prisma.BoardUncheckedCreateWithoutNotesInput>
+}
+
+export type BoardUpsertWithoutNotesInput = {
+  update: Prisma.XOR<Prisma.BoardUpdateWithoutNotesInput, Prisma.BoardUncheckedUpdateWithoutNotesInput>
+  create: Prisma.XOR<Prisma.BoardCreateWithoutNotesInput, Prisma.BoardUncheckedCreateWithoutNotesInput>
+  where?: Prisma.BoardWhereInput
+}
+
+export type BoardUpdateToOneWithWhereWithoutNotesInput = {
+  where?: Prisma.BoardWhereInput
+  data: Prisma.XOR<Prisma.BoardUpdateWithoutNotesInput, Prisma.BoardUncheckedUpdateWithoutNotesInput>
+}
+
+export type BoardUpdateWithoutNotesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
+  members?: Prisma.BoardMemberUpdateManyWithoutBoardNestedInput
+  groups?: Prisma.BoardGroupUpdateManyWithoutBoardNestedInput
+  tickets?: Prisma.TicketUpdateManyWithoutBoardNestedInput
+  tags?: Prisma.TagUpdateManyWithoutBoardNestedInput
+  attachments?: Prisma.AttachmentUpdateManyWithoutBoardNestedInput
+  keyHistories?: Prisma.BoardKeyHistoryUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
+  repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
+  agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUpdateManyWithoutBoardNestedInput
+}
+
+export type BoardUncheckedUpdateWithoutNotesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  privateOwnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
+  groups?: Prisma.BoardGroupUncheckedUpdateManyWithoutBoardNestedInput
+  tickets?: Prisma.TicketUncheckedUpdateManyWithoutBoardNestedInput
+  tags?: Prisma.TagUncheckedUpdateManyWithoutBoardNestedInput
+  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutBoardNestedInput
+  keyHistories?: Prisma.BoardKeyHistoryUncheckedUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
+  repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
+  agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedUpdateManyWithoutBoardNestedInput
+}
+
+export type BoardCreateWithoutNoteRevisionsInput = {
+  id?: string
+  kind?: $Enums.BoardKind
+  key: string
+  ticketSeq?: number
+  name: string
+  description?: string | null
+  aiContext?: string | null
+  archived?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  privateOwner?: Prisma.UserCreateNestedOneWithoutPrivateBoardInput
+  members?: Prisma.BoardMemberCreateNestedManyWithoutBoardInput
+  groups?: Prisma.BoardGroupCreateNestedManyWithoutBoardInput
+  tickets?: Prisma.TicketCreateNestedManyWithoutBoardInput
+  tags?: Prisma.TagCreateNestedManyWithoutBoardInput
+  attachments?: Prisma.AttachmentCreateNestedManyWithoutBoardInput
+  keyHistories?: Prisma.BoardKeyHistoryCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingCreateNestedManyWithoutBoardInput
+  repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
+  agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteCreateNestedManyWithoutBoardInput
+}
+
+export type BoardUncheckedCreateWithoutNoteRevisionsInput = {
+  id?: string
+  kind?: $Enums.BoardKind
+  privateOwnerId?: string | null
+  key: string
+  ticketSeq?: number
+  name: string
+  description?: string | null
+  aiContext?: string | null
+  archived?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutBoardInput
+  groups?: Prisma.BoardGroupUncheckedCreateNestedManyWithoutBoardInput
+  tickets?: Prisma.TicketUncheckedCreateNestedManyWithoutBoardInput
+  tags?: Prisma.TagUncheckedCreateNestedManyWithoutBoardInput
+  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutBoardInput
+  keyHistories?: Prisma.BoardKeyHistoryUncheckedCreateNestedManyWithoutBoardInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedCreateNestedManyWithoutBoardInput
+  repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
+  agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
+  templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteUncheckedCreateNestedManyWithoutBoardInput
+}
+
+export type BoardCreateOrConnectWithoutNoteRevisionsInput = {
+  where: Prisma.BoardWhereUniqueInput
+  create: Prisma.XOR<Prisma.BoardCreateWithoutNoteRevisionsInput, Prisma.BoardUncheckedCreateWithoutNoteRevisionsInput>
+}
+
+export type BoardUpsertWithoutNoteRevisionsInput = {
+  update: Prisma.XOR<Prisma.BoardUpdateWithoutNoteRevisionsInput, Prisma.BoardUncheckedUpdateWithoutNoteRevisionsInput>
+  create: Prisma.XOR<Prisma.BoardCreateWithoutNoteRevisionsInput, Prisma.BoardUncheckedCreateWithoutNoteRevisionsInput>
+  where?: Prisma.BoardWhereInput
+}
+
+export type BoardUpdateToOneWithWhereWithoutNoteRevisionsInput = {
+  where?: Prisma.BoardWhereInput
+  data: Prisma.XOR<Prisma.BoardUpdateWithoutNoteRevisionsInput, Prisma.BoardUncheckedUpdateWithoutNoteRevisionsInput>
+}
+
+export type BoardUpdateWithoutNoteRevisionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  privateOwner?: Prisma.UserUpdateOneWithoutPrivateBoardNestedInput
+  members?: Prisma.BoardMemberUpdateManyWithoutBoardNestedInput
+  groups?: Prisma.BoardGroupUpdateManyWithoutBoardNestedInput
+  tickets?: Prisma.TicketUpdateManyWithoutBoardNestedInput
+  tags?: Prisma.TagUpdateManyWithoutBoardNestedInput
+  attachments?: Prisma.AttachmentUpdateManyWithoutBoardNestedInput
+  keyHistories?: Prisma.BoardKeyHistoryUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUpdateManyWithoutBoardNestedInput
+  repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
+  agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUpdateManyWithoutBoardNestedInput
+}
+
+export type BoardUncheckedUpdateWithoutNoteRevisionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumBoardKindFieldUpdateOperationsInput | $Enums.BoardKind
+  privateOwnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  ticketSeq?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiContext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.BoardMemberUncheckedUpdateManyWithoutBoardNestedInput
+  groups?: Prisma.BoardGroupUncheckedUpdateManyWithoutBoardNestedInput
+  tickets?: Prisma.TicketUncheckedUpdateManyWithoutBoardNestedInput
+  tags?: Prisma.TagUncheckedUpdateManyWithoutBoardNestedInput
+  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutBoardNestedInput
+  keyHistories?: Prisma.BoardKeyHistoryUncheckedUpdateManyWithoutBoardNestedInput
+  notifySettings?: Prisma.BoardNotifySettingUncheckedUpdateManyWithoutBoardNestedInput
+  repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
+  agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
+  templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
+  gitSettings?: Prisma.BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutKeyHistoriesInput = {
@@ -900,6 +1190,8 @@ export type BoardCreateWithoutKeyHistoriesInput = {
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
   gitSettings?: Prisma.BoardGitSettingCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutKeyHistoriesInput = {
@@ -924,6 +1216,8 @@ export type BoardUncheckedCreateWithoutKeyHistoriesInput = {
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
   gitSettings?: Prisma.BoardGitSettingUncheckedCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteUncheckedCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutKeyHistoriesInput = {
@@ -964,6 +1258,8 @@ export type BoardUpdateWithoutKeyHistoriesInput = {
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
   gitSettings?: Prisma.BoardGitSettingUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutKeyHistoriesInput = {
@@ -988,6 +1284,8 @@ export type BoardUncheckedUpdateWithoutKeyHistoriesInput = {
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
   gitSettings?: Prisma.BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUncheckedUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutTemplatesInput = {
@@ -1012,6 +1310,8 @@ export type BoardCreateWithoutTemplatesInput = {
   repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
   gitSettings?: Prisma.BoardGitSettingCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutTemplatesInput = {
@@ -1036,6 +1336,8 @@ export type BoardUncheckedCreateWithoutTemplatesInput = {
   repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
   gitSettings?: Prisma.BoardGitSettingUncheckedCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteUncheckedCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutTemplatesInput = {
@@ -1076,6 +1378,8 @@ export type BoardUpdateWithoutTemplatesInput = {
   repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
   gitSettings?: Prisma.BoardGitSettingUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutTemplatesInput = {
@@ -1100,6 +1404,8 @@ export type BoardUncheckedUpdateWithoutTemplatesInput = {
   repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
   gitSettings?: Prisma.BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUncheckedUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutTagsInput = {
@@ -1124,6 +1430,8 @@ export type BoardCreateWithoutTagsInput = {
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
   gitSettings?: Prisma.BoardGitSettingCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutTagsInput = {
@@ -1148,6 +1456,8 @@ export type BoardUncheckedCreateWithoutTagsInput = {
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
   gitSettings?: Prisma.BoardGitSettingUncheckedCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteUncheckedCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutTagsInput = {
@@ -1188,6 +1498,8 @@ export type BoardUpdateWithoutTagsInput = {
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
   gitSettings?: Prisma.BoardGitSettingUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutTagsInput = {
@@ -1212,6 +1524,8 @@ export type BoardUncheckedUpdateWithoutTagsInput = {
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
   gitSettings?: Prisma.BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUncheckedUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutMembersInput = {
@@ -1236,6 +1550,8 @@ export type BoardCreateWithoutMembersInput = {
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
   gitSettings?: Prisma.BoardGitSettingCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutMembersInput = {
@@ -1260,6 +1576,8 @@ export type BoardUncheckedCreateWithoutMembersInput = {
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
   gitSettings?: Prisma.BoardGitSettingUncheckedCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteUncheckedCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutMembersInput = {
@@ -1300,6 +1618,8 @@ export type BoardUpdateWithoutMembersInput = {
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
   gitSettings?: Prisma.BoardGitSettingUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutMembersInput = {
@@ -1324,6 +1644,8 @@ export type BoardUncheckedUpdateWithoutMembersInput = {
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
   gitSettings?: Prisma.BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUncheckedUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutGroupsInput = {
@@ -1348,6 +1670,8 @@ export type BoardCreateWithoutGroupsInput = {
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
   gitSettings?: Prisma.BoardGitSettingCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutGroupsInput = {
@@ -1372,6 +1696,8 @@ export type BoardUncheckedCreateWithoutGroupsInput = {
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
   gitSettings?: Prisma.BoardGitSettingUncheckedCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteUncheckedCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutGroupsInput = {
@@ -1412,6 +1738,8 @@ export type BoardUpdateWithoutGroupsInput = {
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
   gitSettings?: Prisma.BoardGitSettingUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutGroupsInput = {
@@ -1436,6 +1764,8 @@ export type BoardUncheckedUpdateWithoutGroupsInput = {
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
   gitSettings?: Prisma.BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUncheckedUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutRepositoriesInput = {
@@ -1460,6 +1790,8 @@ export type BoardCreateWithoutRepositoriesInput = {
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
   gitSettings?: Prisma.BoardGitSettingCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutRepositoriesInput = {
@@ -1484,6 +1816,8 @@ export type BoardUncheckedCreateWithoutRepositoriesInput = {
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
   gitSettings?: Prisma.BoardGitSettingUncheckedCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteUncheckedCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutRepositoriesInput = {
@@ -1524,6 +1858,8 @@ export type BoardUpdateWithoutRepositoriesInput = {
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
   gitSettings?: Prisma.BoardGitSettingUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutRepositoriesInput = {
@@ -1548,6 +1884,8 @@ export type BoardUncheckedUpdateWithoutRepositoriesInput = {
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
   gitSettings?: Prisma.BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUncheckedUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutGitSettingsInput = {
@@ -1572,6 +1910,8 @@ export type BoardCreateWithoutGitSettingsInput = {
   repositories?: Prisma.BoardRepositoryCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutGitSettingsInput = {
@@ -1596,6 +1936,8 @@ export type BoardUncheckedCreateWithoutGitSettingsInput = {
   repositories?: Prisma.BoardRepositoryUncheckedCreateNestedManyWithoutBoardInput
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteUncheckedCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutGitSettingsInput = {
@@ -1636,6 +1978,8 @@ export type BoardUpdateWithoutGitSettingsInput = {
   repositories?: Prisma.BoardRepositoryUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutGitSettingsInput = {
@@ -1660,6 +2004,8 @@ export type BoardUncheckedUpdateWithoutGitSettingsInput = {
   repositories?: Prisma.BoardRepositoryUncheckedUpdateManyWithoutBoardNestedInput
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUncheckedUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutNotifySettingsInput = {
@@ -1684,6 +2030,8 @@ export type BoardCreateWithoutNotifySettingsInput = {
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
   gitSettings?: Prisma.BoardGitSettingCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutNotifySettingsInput = {
@@ -1708,6 +2056,8 @@ export type BoardUncheckedCreateWithoutNotifySettingsInput = {
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
   gitSettings?: Prisma.BoardGitSettingUncheckedCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteUncheckedCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutNotifySettingsInput = {
@@ -1748,6 +2098,8 @@ export type BoardUpdateWithoutNotifySettingsInput = {
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
   gitSettings?: Prisma.BoardGitSettingUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutNotifySettingsInput = {
@@ -1772,6 +2124,8 @@ export type BoardUncheckedUpdateWithoutNotifySettingsInput = {
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
   gitSettings?: Prisma.BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUncheckedUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutAttachmentsInput = {
@@ -1796,6 +2150,8 @@ export type BoardCreateWithoutAttachmentsInput = {
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
   gitSettings?: Prisma.BoardGitSettingCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutAttachmentsInput = {
@@ -1820,6 +2176,8 @@ export type BoardUncheckedCreateWithoutAttachmentsInput = {
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
   gitSettings?: Prisma.BoardGitSettingUncheckedCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteUncheckedCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutAttachmentsInput = {
@@ -1860,6 +2218,8 @@ export type BoardUpdateWithoutAttachmentsInput = {
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
   gitSettings?: Prisma.BoardGitSettingUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutAttachmentsInput = {
@@ -1884,6 +2244,8 @@ export type BoardUncheckedUpdateWithoutAttachmentsInput = {
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
   gitSettings?: Prisma.BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUncheckedUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutTicketsInput = {
@@ -1908,6 +2270,8 @@ export type BoardCreateWithoutTicketsInput = {
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
   gitSettings?: Prisma.BoardGitSettingCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutTicketsInput = {
@@ -1932,6 +2296,8 @@ export type BoardUncheckedCreateWithoutTicketsInput = {
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
   gitSettings?: Prisma.BoardGitSettingUncheckedCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteUncheckedCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutTicketsInput = {
@@ -1972,6 +2338,8 @@ export type BoardUpdateWithoutTicketsInput = {
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
   gitSettings?: Prisma.BoardGitSettingUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutTicketsInput = {
@@ -1996,6 +2364,8 @@ export type BoardUncheckedUpdateWithoutTicketsInput = {
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
   gitSettings?: Prisma.BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUncheckedUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardCreateWithoutPrivateOwnerInput = {
@@ -2020,6 +2390,8 @@ export type BoardCreateWithoutPrivateOwnerInput = {
   agentUsages?: Prisma.AgentUsageCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateCreateNestedManyWithoutBoardInput
   gitSettings?: Prisma.BoardGitSettingCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionCreateNestedManyWithoutBoardInput
 }
 
 export type BoardUncheckedCreateWithoutPrivateOwnerInput = {
@@ -2044,6 +2416,8 @@ export type BoardUncheckedCreateWithoutPrivateOwnerInput = {
   agentUsages?: Prisma.AgentUsageUncheckedCreateNestedManyWithoutBoardInput
   templates?: Prisma.TicketTemplateUncheckedCreateNestedManyWithoutBoardInput
   gitSettings?: Prisma.BoardGitSettingUncheckedCreateNestedManyWithoutBoardInput
+  notes?: Prisma.BoardNoteUncheckedCreateNestedManyWithoutBoardInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedCreateNestedManyWithoutBoardInput
 }
 
 export type BoardCreateOrConnectWithoutPrivateOwnerInput = {
@@ -2084,6 +2458,8 @@ export type BoardUpdateWithoutPrivateOwnerInput = {
   agentUsages?: Prisma.AgentUsageUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUpdateManyWithoutBoardNestedInput
   gitSettings?: Prisma.BoardGitSettingUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUpdateManyWithoutBoardNestedInput
 }
 
 export type BoardUncheckedUpdateWithoutPrivateOwnerInput = {
@@ -2108,6 +2484,8 @@ export type BoardUncheckedUpdateWithoutPrivateOwnerInput = {
   agentUsages?: Prisma.AgentUsageUncheckedUpdateManyWithoutBoardNestedInput
   templates?: Prisma.TicketTemplateUncheckedUpdateManyWithoutBoardNestedInput
   gitSettings?: Prisma.BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput
+  notes?: Prisma.BoardNoteUncheckedUpdateManyWithoutBoardNestedInput
+  noteRevisions?: Prisma.BoardNoteRevisionUncheckedUpdateManyWithoutBoardNestedInput
 }
 
 
@@ -2127,6 +2505,8 @@ export type BoardCountOutputType = {
   agentUsages: number
   templates: number
   gitSettings: number
+  notes: number
+  noteRevisions: number
 }
 
 export type BoardCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2141,6 +2521,8 @@ export type BoardCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.
   agentUsages?: boolean | BoardCountOutputTypeCountAgentUsagesArgs
   templates?: boolean | BoardCountOutputTypeCountTemplatesArgs
   gitSettings?: boolean | BoardCountOutputTypeCountGitSettingsArgs
+  notes?: boolean | BoardCountOutputTypeCountNotesArgs
+  noteRevisions?: boolean | BoardCountOutputTypeCountNoteRevisionsArgs
 }
 
 /**
@@ -2230,6 +2612,20 @@ export type BoardCountOutputTypeCountGitSettingsArgs<ExtArgs extends runtime.Typ
   where?: Prisma.BoardGitSettingWhereInput
 }
 
+/**
+ * BoardCountOutputType without action
+ */
+export type BoardCountOutputTypeCountNotesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.BoardNoteWhereInput
+}
+
+/**
+ * BoardCountOutputType without action
+ */
+export type BoardCountOutputTypeCountNoteRevisionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.BoardNoteRevisionWhereInput
+}
+
 
 export type BoardSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -2255,6 +2651,8 @@ export type BoardSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   agentUsages?: boolean | Prisma.Board$agentUsagesArgs<ExtArgs>
   templates?: boolean | Prisma.Board$templatesArgs<ExtArgs>
   gitSettings?: boolean | Prisma.Board$gitSettingsArgs<ExtArgs>
+  notes?: boolean | Prisma.Board$notesArgs<ExtArgs>
+  noteRevisions?: boolean | Prisma.Board$noteRevisionsArgs<ExtArgs>
   _count?: boolean | Prisma.BoardCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["board"]>
 
@@ -2316,6 +2714,8 @@ export type BoardInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   agentUsages?: boolean | Prisma.Board$agentUsagesArgs<ExtArgs>
   templates?: boolean | Prisma.Board$templatesArgs<ExtArgs>
   gitSettings?: boolean | Prisma.Board$gitSettingsArgs<ExtArgs>
+  notes?: boolean | Prisma.Board$notesArgs<ExtArgs>
+  noteRevisions?: boolean | Prisma.Board$noteRevisionsArgs<ExtArgs>
   _count?: boolean | Prisma.BoardCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type BoardIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2340,6 +2740,8 @@ export type $BoardPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     agentUsages: Prisma.$AgentUsagePayload<ExtArgs>[]
     templates: Prisma.$TicketTemplatePayload<ExtArgs>[]
     gitSettings: Prisma.$BoardGitSettingPayload<ExtArgs>[]
+    notes: Prisma.$BoardNotePayload<ExtArgs>[]
+    noteRevisions: Prisma.$BoardNoteRevisionPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2790,6 +3192,8 @@ export interface Prisma__BoardClient<T, Null = never, ExtArgs extends runtime.Ty
   agentUsages<T extends Prisma.Board$agentUsagesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Board$agentUsagesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AgentUsagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   templates<T extends Prisma.Board$templatesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Board$templatesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TicketTemplatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   gitSettings<T extends Prisma.Board$gitSettingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Board$gitSettingsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BoardGitSettingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  notes<T extends Prisma.Board$notesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Board$notesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BoardNotePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  noteRevisions<T extends Prisma.Board$noteRevisionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Board$noteRevisionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BoardNoteRevisionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3511,6 +3915,54 @@ export type Board$gitSettingsArgs<ExtArgs extends runtime.Types.Extensions.Inter
   take?: number
   skip?: number
   distinct?: Prisma.BoardGitSettingScalarFieldEnum | Prisma.BoardGitSettingScalarFieldEnum[]
+}
+
+/**
+ * Board.notes
+ */
+export type Board$notesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the BoardNote
+   */
+  select?: Prisma.BoardNoteSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the BoardNote
+   */
+  omit?: Prisma.BoardNoteOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.BoardNoteInclude<ExtArgs> | null
+  where?: Prisma.BoardNoteWhereInput
+  orderBy?: Prisma.BoardNoteOrderByWithRelationInput | Prisma.BoardNoteOrderByWithRelationInput[]
+  cursor?: Prisma.BoardNoteWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.BoardNoteScalarFieldEnum | Prisma.BoardNoteScalarFieldEnum[]
+}
+
+/**
+ * Board.noteRevisions
+ */
+export type Board$noteRevisionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the BoardNoteRevision
+   */
+  select?: Prisma.BoardNoteRevisionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the BoardNoteRevision
+   */
+  omit?: Prisma.BoardNoteRevisionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.BoardNoteRevisionInclude<ExtArgs> | null
+  where?: Prisma.BoardNoteRevisionWhereInput
+  orderBy?: Prisma.BoardNoteRevisionOrderByWithRelationInput | Prisma.BoardNoteRevisionOrderByWithRelationInput[]
+  cursor?: Prisma.BoardNoteRevisionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.BoardNoteRevisionScalarFieldEnum | Prisma.BoardNoteRevisionScalarFieldEnum[]
 }
 
 /**

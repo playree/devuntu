@@ -13,6 +13,7 @@ import { postChildProposal } from '@/lib/agent/agent-proposal'
 import { finishAgentTask } from '@/lib/agent/agent-run'
 import { findAgentRunner } from '@/lib/agent/agent-runner'
 import { findAgentTicket, pickAgentTasks, resolveAgentTask } from '@/lib/agent/agent-task'
+import { findBoardNoteIndex } from '@/lib/board-note/board-note'
 import { assertTicketAccess, getTicketAccess } from '@/lib/board/board-access'
 import { findBoardAiContext } from '@/lib/board/board-setting'
 import { listTicketCriteria } from '@/lib/board/ticket-criterion'
@@ -52,6 +53,10 @@ vi.mock('@/lib/board/board-access', () => ({
 
 vi.mock('@/lib/board/board-setting', () => ({
   findBoardAiContext: vi.fn(),
+}))
+
+vi.mock('@/lib/board-note/board-note', () => ({
+  findBoardNoteIndex: vi.fn(),
 }))
 
 vi.mock('@/lib/board/ticket-criterion', () => ({
@@ -105,6 +110,7 @@ beforeEach(() => {
   vi.mocked(findLatestAgentDecision).mockResolvedValue(null)
   vi.mocked(getTicketAccess).mockResolvedValue({ boardId: 'b1', boardRole: 'member' } as never)
   vi.mocked(findBoardAiContext).mockResolvedValue(null)
+  vi.mocked(findBoardNoteIndex).mockResolvedValue({})
 })
 
 describe('自動運用ツールの登録', () => {
@@ -302,6 +308,14 @@ describe('get_agent_task', () => {
 
       expect(await callTask()).not.toHaveProperty('boardContext')
       expect(findBoardAiContext).not.toHaveBeenCalled()
+      expect(findBoardNoteIndex).not.toHaveBeenCalled()
+    })
+
+    it('ボードノートの索引を task に載せる', async () => {
+      vi.mocked(findBoardNoteIndex).mockResolvedValue({ boardMemory: ['migrate-gotcha: 失敗する件'] })
+
+      expect(await callTask()).toMatchObject({ boardMemory: ['migrate-gotcha: 失敗する件'] })
+      expect(findBoardNoteIndex).toHaveBeenCalledWith('b1')
     })
   })
 

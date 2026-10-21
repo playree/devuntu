@@ -20,6 +20,8 @@ import { AGENT_OUTCOMES, finishAgentTask } from '../agent/agent-run'
 import { findAgentRunner } from '../agent/agent-runner'
 import { agentSetupCliPrompt, agentSetupGuide } from '../agent/agent-setup'
 import { findAgentTicket, pickAgentTasks, resolveAgentTask } from '../agent/agent-task'
+import { findBoardNoteIndex } from '../board-note/board-note'
+import type { BoardNoteIndex } from '../board-note/board-note-rule'
 import { assertTicketAccess, getTicketAccess } from '../board/board-access'
 import { findBoardAiContext } from '../board/board-setting'
 import { listTicketCriteria } from '../board/ticket-criterion'
@@ -38,10 +40,20 @@ const loadContext = async (auth: ResourceAuth) => {
   return { runner, activity: await evaluateRunnerActivity(runner) }
 }
 
-/** ボードの AI 向けコンテキスト。get_ticket と同じく、ボードのメンバーでなければ返さない */
-const findMemberBoardContext = async (auth: ResourceAuth, ticketId: string): Promise<string | null> => {
+/** ボードの AI 向けコンテキストとボードノートの索引。get_ticket と同じく、ボードのメンバーでなければ返さない */
+const findMemberBoardContext = async (
+  auth: ResourceAuth,
+  ticketId: string,
+): Promise<{ boardContext: string | null; noteIndex: BoardNoteIndex }> => {
   const access = await getTicketAccess(auth.user, ticketId)
-  return access?.boardRole ? findBoardAiContext(access.boardId) : null
+  if (!access?.boardRole) {
+    return { boardContext: null, noteIndex: {} }
+  }
+  const [boardContext, noteIndex] = await Promise.all([
+    findBoardAiContext(access.boardId),
+    findBoardNoteIndex(access.boardId),
+  ])
+  return { boardContext, noteIndex }
 }
 
 /**
@@ -83,6 +95,7 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
         'Always call this before processing a ticket. Returns the run conditions (whether active and the allowed hours), the tickets to process, ' +
         'the action to perform, and the rule instructions. Follow the rule throughout the whole run. ' +
         'When a ticketId is given, task.boardContext (only when set) holds premises shared by every ticket on its board: read it before working. ' +
+        'task.boardKnowledge / task.boardMemory (only when set) index shared notes: read the relevant ones with get_board_notes. ' +
         'On revise, task.autoRevise lists CI failures and pull request reviews that sent the ticket back automatically: ' +
         'read the details from the pull request, address them, and report what you changed (or why no change is needed). ' +
         'task.acceptanceCriteria holds the completion conditions. If it is empty, set them with update_ticket acceptanceCriteria ' +
@@ -125,7 +138,7 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
         })
       }
 
-      const [criteria, decision, autoRevise, boardContext] = await Promise.all([
+      const [criteria, decision, autoRevise, { boardContext, noteIndex }] = await Promise.all([
         listTicketCriteria(id),
         task.action === 'revise' ? findLatestAgentDecision(id, auth.user.id) : null,
         task.action === 'revise' ? listRunAutoRevise(runner.id, id) : [],
@@ -147,6 +160,8 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
           autoRevise,
           /** チケットが属するボードの AI 向けコンテキスト。未設定なら項目ごと載せない */
           ...(boardContext ? { boardContext } : {}),
+          /** ボードノートの索引(boardKnowledge / boardMemory)。本文は get_board_notes で読む */
+          ...noteIndex,
         },
         note: null,
       })

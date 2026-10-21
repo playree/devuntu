@@ -81,6 +81,8 @@ model Board {
   agentUsages    AgentUsage[]
   templates      TicketTemplate[]
   gitSettings    BoardGitSetting[]
+  notes          BoardNote[]
+  noteRevisions  BoardNoteRevision[]
 
   @@map("board")
 }

@@ -88,6 +88,8 @@ model Ticket {
   criteria   TicketCriterion[]
   activities TicketActivity[]
 
+  boardNoteRevisions BoardNoteRevision[]
+
   autoReviseTriggers AgentAutoReviseTrigger[]
 
   dueReminders TicketDueReminder[]

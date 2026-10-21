@@ -17,7 +17,8 @@ export const TICKET_WORKFLOW = [
   'Questions for the user: post them as a regular comment without type',
   'After creating a branch / pull request / commit: link the URL with link_ticket_artifact (naming the branch feature/<display ID> links it automatically for repositories connected to the board)',
   'When done: if the ticket has acceptance criteria, record whether each one is met with evidence using report_acceptance_criteria (not in the report comment)',
-  'Then post a report with add_ticket_comment using type=report covering what you did, how you verified it, and any remaining issues (attach screenshots via create_image_upload_token)',
+  'Then post a report with add_ticket_comment using type=report covering what you did, how you verified it, and remaining issues (attach screenshots via create_image_upload_token)',
+  'Save learnings useful for other tickets as memory with save_board_note',
 ] as const
 
 /** 完了条件を本文に書かれると受け入れ条件が使われないため、置き場所を伝える(ツールの description にも載せる) */
@@ -27,11 +28,19 @@ export const ACCEPTANCE_CRITERIA_GUIDE =
 /** ボードの AI 向けコンテキスト(get_ticket / get_board / get_agent_task の boardContext)の読み方 */
 const BOARD_CONTEXT_GUIDE =
   'boardContext in get_ticket / get_board / get_agent_task (only when set) holds premises shared by every ticket on the board ' +
-  '(target repository, conventions, terms, etc.). Read it before working on a ticket and follow it; the ticket itself takes precedence over it.'
+  '(target repository, conventions, terms): read and follow it before working.'
+
+/**
+ * ボードノートの索引(boardKnowledge / boardMemory)の読み方と書き方。
+ * 保存の規則の詳細は save_board_note の description に持たせ、ここは要点だけにする(instructions の文字数を抑えるため)
+ */
+const BOARD_NOTE_GUIDE =
+  'boardKnowledge / boardMemory there index shared notes ("name: description"): read relevant ones with get_board_notes. ' +
+  'Change knowledge only with user consent.'
 
 /** 指示の優先順位。手順が既定値であることを必ず添える */
 const PRECEDENCE =
-  'Precedence: user instructions > the ticket > project rules (CLAUDE.md / AGENTS.md, etc.) and boardContext > these default steps. ' +
+  'Precedence: user instructions > the ticket > project rules (CLAUDE.md / AGENTS.md, etc.) and boardContext > boardKnowledge > boardMemory > these default steps. ' +
   'When you are only asked to read a ticket or answer a question, do not post comments or change the status.'
 
 /**
@@ -45,10 +54,10 @@ export const ticketWorkflowFor = (kind: ResourceAuth['kind'], canEdit: boolean):
 export const mcpInstructions = (kind: ResourceAuth['kind']): string => {
   const common = [
     'devuntu is a kanban-style ticket management tool. ticketId accepts a display ID (e.g. ABC-42).',
-    'Comment types: type=plan is a work plan and type=report is a work report; both are shown separately from regular comments on the detail screen.',
-    'Link GitHub / GitLab branches / pull requests (merge requests) / commits to a ticket with link_ticket_artifact to show their state and CI results on the ticket.',
+    'Link GitHub / GitLab branches, PRs (MRs) and commits with link_ticket_artifact to show their state and CI results on the ticket.',
     `When creating or updating a ticket: ${ACCEPTANCE_CRITERIA_GUIDE}`,
     BOARD_CONTEXT_GUIDE,
+    BOARD_NOTE_GUIDE,
   ]
   if (kind === 'agent') {
     return [
@@ -59,7 +68,7 @@ export const mcpInstructions = (kind: ResourceAuth['kind']): string => {
   return [
     ...common,
     '',
-    'When working from a ticket, follow these steps by default (no need to ask for confirmation each time).',
+    'When working from a ticket, follow these steps by default (no need to confirm each time).',
     ...TICKET_WORKFLOW.map((step, i) => `${i + 1}. ${step}`),
     '',
     PRECEDENCE,

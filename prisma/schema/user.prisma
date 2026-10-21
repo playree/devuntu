@@ -84,6 +84,11 @@ model User {
   checkedCriteria  TicketCriterion[]
   ticketActivities TicketActivity[]
 
+  // Board note
+  createdBoardNotes  BoardNote[]         @relation("BoardNoteCreatedBy")
+  updatedBoardNotes  BoardNote[]         @relation("BoardNoteUpdatedBy")
+  boardNoteRevisions BoardNoteRevision[]
+
   // MCP
   mcpTokens McpToken[]
 
