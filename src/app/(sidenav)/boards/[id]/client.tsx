@@ -8,10 +8,10 @@ import { PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
 import {
   ArrowLeftCircleIcon,
-  ArrowTopRightOnSquareIcon,
   Cog6ToothIcon,
   FunnelIcon,
   LightBulbIcon,
+  TicketIcon,
   ViewColumnsIcon,
 } from '@/components/icon'
 import { NoAccessView } from '@/components/no-access-view'
@@ -137,7 +137,7 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
         <MultiButton
           isIconOnly
           tooltip={t('ticket')}
-          icon={<ArrowTopRightOnSquareIcon />}
+          icon={<TicketIcon />}
           onPress={() => router.push(`/tickets?boardId=${board.id}`)}
         >
           <ButtonGroup.Separator />
