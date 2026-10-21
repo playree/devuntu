@@ -51,7 +51,7 @@ MCP サーバー(`/api/mcp`)が提供するツールと、その権限・入力�
 | `link_related_ticket`    | 同じボードのチケット同士を関連付ける(向きなし)                                                                                                                                                  | `ticketId` / `relatedTicketId`                                                                                                                                     |
 | `unlink_ticket_relation` | 親子・関連を外す                                                                                                                                                                                | `relationId`                                                                                                                                                       |
 | `get_board_notes`        | ボードノート(ナレッジ / メモリ)の本文を名前で読む。名前を渡さなければ索引をキーワード・区分で検索する                                                                                           | `boardId` / `names` / `keyword` / `kind`                                                                                                                           |
-| `save_board_note`        | ボードノートを名前で作成・更新する(渡した項目だけ変える)。区分の変更で昇格 / 降格                                                                                                               | `boardId` / `name` / `kind` / `type` / `description` / `content` / `newName` / `expectedUpdatedAt` / `ticketId` / `userApproved`                                   |
+| `save_board_note`        | ボードノートを名前で作成・更新する(渡した項目だけ変える)。区分の変更で昇格 / 降格                                                                                                               | `boardId` / `name` / `kind` / `description` / `content` / `newName` / `expectedUpdatedAt` / `ticketId` / `userApproved`                                            |
 | `delete_board_note`      | ボードノートを削除する(履歴から復元できる)                                                                                                                                                      | `boardId` / `name` / `ticketId` / `userApproved`                                                                                                                   |
 | `get_agent_setup_guide`  | 自動運用(Devuntu Agent)を自分のマシンへ用意する手順を返す。人が読むためのもの                                                                                                                   | `cli`(任意。未指定なら手順ではなく CLI の選択を促す)                                                                                                               |
 
@@ -157,7 +157,7 @@ AI向けコンテキストと合わせて、AI 向けの情報を3層で持つ�
   (JSON のキーを繰り返さずに済み、トークンが少ない)。届くのは `boardContext` と同じくボードのメンバーだけ
   - ナレッジは全件(名前順)、メモリは更新の新しい順に50件まで。載せきれなかったメモリの件数を `boardMemoryOmitted` で返す。0件の区分は項目ごと省く
 - 本文は `get_board_notes` に `names`(10件まで)を渡して読む。名前を渡さなければ、索引をキーワード(名前・説明・本文)と区分で検索する
-- `save_board_note` は名前で引き、あれば渡した項目だけ更新、無ければ作成する(作成時は `description` / `content` が必須。既定は `kind=memory` / `type=insight`)
+- `save_board_note` は名前で引き、あれば渡した項目だけ更新、無ければ作成する(作成時は `description` / `content` が必須。既定は `kind=memory`)
   - `newName` で改名、`kind` の変更で昇格 / 降格。`expectedUpdatedAt` を渡すと、読んだ後に他の人が更新していれば競合としてエラーにする
   - `ticketId` を渡すと、どのチケットの対応中に書いたかが履歴に残る(同じボードのチケットのみ)
 - 書き込みの規則
@@ -171,7 +171,6 @@ AI向けコンテキストと合わせて、AI 向けの情報を3層で持つ�
   `userApproved` は AI の自己申告で、ユーザーの明示的な指示・同意があるときだけ付けるよう description で伝える。
   強制ではなく、AI に意図して判断させるための歯止め。誰がどの経路で書いたかは履歴に残る
 
-- 種別(`type`)は `convention`(規約・人からの指摘)/ `decision`(決定事項)/ `insight`(知見・ハマり所)/ `reference`(外部の参照先)。画面の絞り込み用で、索引には載せない
 - 上限: 名前60文字(kebab-case・ボード内で一意)、説明150文字(改行なし)、本文はメモリ4000文字・ナレッジ20000文字。
   件数はボードあたりメモリ200件・ナレッジ100件(`BOARD_MEMORY_MAX_COUNT` / `BOARD_KNOWLEDGE_MAX_COUNT`)
 - 優先度は ユーザーの指示 > チケット > boardContext > ナレッジ > メモリ。保存の規則(重複を作らず更新する・1件1テーマ・

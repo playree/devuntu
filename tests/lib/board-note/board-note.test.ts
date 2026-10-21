@@ -68,7 +68,6 @@ const HUMAN_APPROVED: BoardNoteWriter = { via: 'mcp', agent: false, userApproved
 
 const snapshot = (override: Partial<BoardNoteSnapshot> = {}): BoardNoteSnapshot => ({
   kind: 'memory',
-  type: 'insight',
   name: 'migrate-gotcha',
   description: 'migrate dev が失敗する件',
   content: '本文',

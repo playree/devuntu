@@ -6,7 +6,6 @@ import { describe, expect, it } from 'vitest'
 
 const fields = (override: Record<string, unknown> = {}) => ({
   kind: 'memory',
-  type: 'insight',
   name: 'deploy-steps',
   description: '本番デプロイの順序',
   content: '本文',

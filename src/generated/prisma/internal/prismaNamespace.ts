@@ -5179,7 +5179,6 @@ export const BoardNoteScalarFieldEnum = {
   id: 'id',
   boardId: 'boardId',
   kind: 'kind',
-  type: 'type',
   name: 'name',
   description: 'description',
   content: 'content',
@@ -5199,7 +5198,6 @@ export const BoardNoteRevisionScalarFieldEnum = {
   noteId: 'noteId',
   action: 'action',
   kind: 'kind',
-  type: 'type',
   name: 'name',
   description: 'description',
   content: 'content',
@@ -6085,20 +6083,6 @@ export type EnumBoardNoteKindFieldRefInput<$PrismaModel> = FieldRefInputType<$Pr
  * Reference to a field of type 'BoardNoteKind[]'
  */
 export type ListEnumBoardNoteKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BoardNoteKind[]'>
-    
-
-
-/**
- * Reference to a field of type 'BoardNoteType'
- */
-export type EnumBoardNoteTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BoardNoteType'>
-    
-
-
-/**
- * Reference to a field of type 'BoardNoteType[]'
- */
-export type ListEnumBoardNoteTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BoardNoteType[]'>
     
 
 

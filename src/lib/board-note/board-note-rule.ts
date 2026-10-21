@@ -5,21 +5,10 @@
  * 件数・版数の上限は環境変数から読むため、ここでは持たず引数で受け取る。
  */
 
-import type { BoardNoteKind, BoardNoteType } from '@/generated/prisma/enums'
+import type { BoardNoteKind } from '@/generated/prisma/enums'
 
 /** 区分。画面のタブの並び順を兼ねる */
 export const BOARD_NOTE_KINDS = ['knowledge', 'memory'] as const satisfies readonly BoardNoteKind[]
-
-/** 種別。宣言順が画面の並び順 */
-export const BOARD_NOTE_TYPES = [
-  'convention',
-  'decision',
-  'insight',
-  'reference',
-] as const satisfies readonly BoardNoteType[]
-
-/** 種別を指定せずに作ったときの既定値 */
-export const DEFAULT_BOARD_NOTE_TYPE: BoardNoteType = 'insight'
 
 /** 名前は kebab-case(MCP で引くキーなので、表記ゆれで重複を作らせない) */
 export const BOARD_NOTE_NAME_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
@@ -69,18 +58,13 @@ export const touchesKnowledge = (before: BoardNoteKind | null, after: BoardNoteK
 /** 版として残す項目 */
 export type BoardNoteSnapshot = {
   kind: BoardNoteKind
-  type: BoardNoteType
   name: string
   description: string
   content: string
 }
 
 export const sameBoardNoteSnapshot = (a: BoardNoteSnapshot, b: BoardNoteSnapshot): boolean =>
-  a.kind === b.kind &&
-  a.type === b.type &&
-  a.name === b.name &&
-  a.description === b.description &&
-  a.content === b.content
+  a.kind === b.kind && a.name === b.name && a.description === b.description && a.content === b.content
 
 /** 索引の1行。MEMORY.md と同じ粒度で、JSON のキーを繰り返さずに済む文字列にする */
 export const boardNoteIndexLine = ({ name, description }: { name: string; description: string }): string =>

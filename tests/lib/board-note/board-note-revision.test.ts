@@ -21,7 +21,6 @@ const revision = (id: string, noteId: string, kind: 'knowledge' | 'memory') => (
   noteId,
   action: 'deleted',
   kind,
-  type: 'insight',
   name: noteId,
   description: '説明',
   via: 'web',

@@ -1,10 +1,9 @@
 /** ボードノートの書き込みの可否と、MCP の応答に載せる索引 */
 
-import { BoardNoteKind, BoardNoteType } from '@/generated/prisma/enums'
+import { BoardNoteKind } from '@/generated/prisma/enums'
 import {
   BOARD_NOTE_KINDS,
   BOARD_NOTE_NAME_PATTERN,
-  BOARD_NOTE_TYPES,
   buildBoardNoteIndex,
   knowledgeDenial,
   MCP_MEMORY_INDEX_LIMIT,
@@ -12,10 +11,9 @@ import {
 } from '@/lib/board-note/board-note-rule'
 import { describe, expect, it } from 'vitest'
 
-describe('区分・種別', () => {
+describe('区分', () => {
   it('Prisma の enum と一致する', () => {
     expect([...BOARD_NOTE_KINDS].sort()).toEqual(Object.values(BoardNoteKind).sort())
-    expect([...BOARD_NOTE_TYPES].sort()).toEqual(Object.values(BoardNoteType).sort())
   })
 })
 

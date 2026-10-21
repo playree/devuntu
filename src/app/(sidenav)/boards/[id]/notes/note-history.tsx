@@ -1,6 +1,6 @@
 'use client'
 
-import { BoardNoteKindChip, BoardNoteTypeChip } from '@/components/board-note/board-note-chip'
+import { BoardNoteKindChip } from '@/components/board-note/board-note-chip'
 import { MultiButton } from '@/components/general/button'
 import { DialogModal, useModalState } from '@/components/general/modal'
 import { PanelSkeleton } from '@/components/general/panel'
@@ -50,14 +50,6 @@ const RevisionDiff: FC<{ revision: Revision; previous: Revision | undefined }> =
         label={t('board_note_kind')}
         before={<BoardNoteKindChip value={previous.kind} />}
         after={<BoardNoteKindChip value={revision.kind} />}
-      />
-    ),
-    previous.type !== revision.type && (
-      <FieldChange
-        key='type'
-        label={t('board_note_type')}
-        before={<BoardNoteTypeChip value={previous.type} />}
-        after={<BoardNoteTypeChip value={revision.type} />}
       />
     ),
     previous.name !== revision.name && (

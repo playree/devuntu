@@ -43,7 +43,7 @@ beforeEach(() => {
 })
 
 describe('saveBoardNoteForMcp', () => {
-  it('同じ名前が無ければ、既定の区分(memory)・種別(insight)で作る', async () => {
+  it('同じ名前が無ければ、既定の区分(memory)で作る', async () => {
     vi.mocked(findBoardNoteIdByName).mockResolvedValue(null)
 
     const result = await saveBoardNoteForMcp(agent, {
@@ -60,7 +60,7 @@ describe('saveBoardNoteForMcp', () => {
       agent.user,
       { via: 'mcp', agent: true, userApproved: false },
       BOARD_ID,
-      { kind: 'memory', type: 'insight', name: 'migrate-gotcha', description: '説明', content: '本文' },
+      { kind: 'memory', name: 'migrate-gotcha', description: '説明', content: '本文' },
       { ticketId: 'ticket-1' },
     )
   })
@@ -134,7 +134,6 @@ describe('getBoardNotesForMcp', () => {
         {
           name: 'a',
           kind: 'memory',
-          type: 'insight',
           description: 'd',
           content: 'c',
           updatedAt: UPDATED_AT,
@@ -149,7 +148,6 @@ describe('getBoardNotesForMcp', () => {
         {
           name: 'a',
           kind: 'memory',
-          type: 'insight',
           description: 'd',
           content: 'c',
           updatedAt: UPDATED_AT,

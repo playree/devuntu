@@ -242,7 +242,7 @@ Precedence: the ticket > boardContext > boardKnowledge > boardMemory. Comments w
 
 ### 版(履歴)
 
-- 変更のたびに `BoardNoteRevision` へ変更後の全文(`kind` / `type` / `name` / `description` / `content`)を残す。
+- 変更のたびに `BoardNoteRevision` へ変更後の全文(`kind` / `name` / `description` / `content`)を残す。
   削除は削除直前の全文を `action=deleted` で残す。内容が変わらない保存は版を作らない
 - `noteId` には外部キーを張らない。削除後も版を残し、復元は同じ `id` でノートを作り直す(履歴がつながる)。
   同じ名前のノートが別にあれば `DUPLICATED_BOARD_NOTE_NAME`

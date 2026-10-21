@@ -29,7 +29,6 @@ export type BoardNoteMinAggregateOutputType = {
   id: string | null
   boardId: string | null
   kind: $Enums.BoardNoteKind | null
-  type: $Enums.BoardNoteType | null
   name: string | null
   description: string | null
   content: string | null
@@ -44,7 +43,6 @@ export type BoardNoteMaxAggregateOutputType = {
   id: string | null
   boardId: string | null
   kind: $Enums.BoardNoteKind | null
-  type: $Enums.BoardNoteType | null
   name: string | null
   description: string | null
   content: string | null
@@ -59,7 +57,6 @@ export type BoardNoteCountAggregateOutputType = {
   id: number
   boardId: number
   kind: number
-  type: number
   name: number
   description: number
   content: number
@@ -76,7 +73,6 @@ export type BoardNoteMinAggregateInputType = {
   id?: true
   boardId?: true
   kind?: true
-  type?: true
   name?: true
   description?: true
   content?: true
@@ -91,7 +87,6 @@ export type BoardNoteMaxAggregateInputType = {
   id?: true
   boardId?: true
   kind?: true
-  type?: true
   name?: true
   description?: true
   content?: true
@@ -106,7 +101,6 @@ export type BoardNoteCountAggregateInputType = {
   id?: true
   boardId?: true
   kind?: true
-  type?: true
   name?: true
   description?: true
   content?: true
@@ -194,7 +188,6 @@ export type BoardNoteGroupByOutputType = {
   id: string
   boardId: string
   kind: $Enums.BoardNoteKind
-  type: $Enums.BoardNoteType
   name: string
   description: string
   content: string
@@ -230,7 +223,6 @@ export type BoardNoteWhereInput = {
   id?: Prisma.StringFilter<"BoardNote"> | string
   boardId?: Prisma.StringFilter<"BoardNote"> | string
   kind?: Prisma.EnumBoardNoteKindFilter<"BoardNote"> | $Enums.BoardNoteKind
-  type?: Prisma.EnumBoardNoteTypeFilter<"BoardNote"> | $Enums.BoardNoteType
   name?: Prisma.StringFilter<"BoardNote"> | string
   description?: Prisma.StringFilter<"BoardNote"> | string
   content?: Prisma.StringFilter<"BoardNote"> | string
@@ -248,7 +240,6 @@ export type BoardNoteOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   boardId?: Prisma.SortOrder
   kind?: Prisma.SortOrder
-  type?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrder
   content?: Prisma.SortOrder
@@ -270,7 +261,6 @@ export type BoardNoteWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.BoardNoteWhereInput | Prisma.BoardNoteWhereInput[]
   boardId?: Prisma.StringFilter<"BoardNote"> | string
   kind?: Prisma.EnumBoardNoteKindFilter<"BoardNote"> | $Enums.BoardNoteKind
-  type?: Prisma.EnumBoardNoteTypeFilter<"BoardNote"> | $Enums.BoardNoteType
   name?: Prisma.StringFilter<"BoardNote"> | string
   description?: Prisma.StringFilter<"BoardNote"> | string
   content?: Prisma.StringFilter<"BoardNote"> | string
@@ -288,7 +278,6 @@ export type BoardNoteOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   boardId?: Prisma.SortOrder
   kind?: Prisma.SortOrder
-  type?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrder
   content?: Prisma.SortOrder
@@ -309,7 +298,6 @@ export type BoardNoteScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"BoardNote"> | string
   boardId?: Prisma.StringWithAggregatesFilter<"BoardNote"> | string
   kind?: Prisma.EnumBoardNoteKindWithAggregatesFilter<"BoardNote"> | $Enums.BoardNoteKind
-  type?: Prisma.EnumBoardNoteTypeWithAggregatesFilter<"BoardNote"> | $Enums.BoardNoteType
   name?: Prisma.StringWithAggregatesFilter<"BoardNote"> | string
   description?: Prisma.StringWithAggregatesFilter<"BoardNote"> | string
   content?: Prisma.StringWithAggregatesFilter<"BoardNote"> | string
@@ -323,7 +311,6 @@ export type BoardNoteScalarWhereWithAggregatesInput = {
 export type BoardNoteCreateInput = {
   id?: string
   kind: $Enums.BoardNoteKind
-  type: $Enums.BoardNoteType
   name: string
   description: string
   content: string
@@ -339,7 +326,6 @@ export type BoardNoteUncheckedCreateInput = {
   id?: string
   boardId: string
   kind: $Enums.BoardNoteKind
-  type: $Enums.BoardNoteType
   name: string
   description: string
   content: string
@@ -353,7 +339,6 @@ export type BoardNoteUncheckedCreateInput = {
 export type BoardNoteUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumBoardNoteKindFieldUpdateOperationsInput | $Enums.BoardNoteKind
-  type?: Prisma.EnumBoardNoteTypeFieldUpdateOperationsInput | $Enums.BoardNoteType
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
@@ -369,7 +354,6 @@ export type BoardNoteUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   boardId?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumBoardNoteKindFieldUpdateOperationsInput | $Enums.BoardNoteKind
-  type?: Prisma.EnumBoardNoteTypeFieldUpdateOperationsInput | $Enums.BoardNoteType
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
@@ -384,7 +368,6 @@ export type BoardNoteCreateManyInput = {
   id?: string
   boardId: string
   kind: $Enums.BoardNoteKind
-  type: $Enums.BoardNoteType
   name: string
   description: string
   content: string
@@ -398,7 +381,6 @@ export type BoardNoteCreateManyInput = {
 export type BoardNoteUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumBoardNoteKindFieldUpdateOperationsInput | $Enums.BoardNoteKind
-  type?: Prisma.EnumBoardNoteTypeFieldUpdateOperationsInput | $Enums.BoardNoteType
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
@@ -411,7 +393,6 @@ export type BoardNoteUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   boardId?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumBoardNoteKindFieldUpdateOperationsInput | $Enums.BoardNoteKind
-  type?: Prisma.EnumBoardNoteTypeFieldUpdateOperationsInput | $Enums.BoardNoteType
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
@@ -431,7 +412,6 @@ export type BoardNoteCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   boardId?: Prisma.SortOrder
   kind?: Prisma.SortOrder
-  type?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrder
   content?: Prisma.SortOrder
@@ -446,7 +426,6 @@ export type BoardNoteMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   boardId?: Prisma.SortOrder
   kind?: Prisma.SortOrder
-  type?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrder
   content?: Prisma.SortOrder
@@ -461,7 +440,6 @@ export type BoardNoteMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   boardId?: Prisma.SortOrder
   kind?: Prisma.SortOrder
-  type?: Prisma.SortOrder
   name?: Prisma.SortOrder
   description?: Prisma.SortOrder
   content?: Prisma.SortOrder
@@ -484,10 +462,6 @@ export type BoardNoteOrderByRelationAggregateInput = {
 
 export type EnumBoardNoteKindFieldUpdateOperationsInput = {
   set?: $Enums.BoardNoteKind
-}
-
-export type EnumBoardNoteTypeFieldUpdateOperationsInput = {
-  set?: $Enums.BoardNoteType
 }
 
 export type EnumBoardNoteViaFieldUpdateOperationsInput = {
@@ -623,7 +597,6 @@ export type BoardNoteUncheckedUpdateManyWithoutUpdatedByNestedInput = {
 export type BoardNoteCreateWithoutBoardInput = {
   id?: string
   kind: $Enums.BoardNoteKind
-  type: $Enums.BoardNoteType
   name: string
   description: string
   content: string
@@ -637,7 +610,6 @@ export type BoardNoteCreateWithoutBoardInput = {
 export type BoardNoteUncheckedCreateWithoutBoardInput = {
   id?: string
   kind: $Enums.BoardNoteKind
-  type: $Enums.BoardNoteType
   name: string
   description: string
   content: string
@@ -681,7 +653,6 @@ export type BoardNoteScalarWhereInput = {
   id?: Prisma.StringFilter<"BoardNote"> | string
   boardId?: Prisma.StringFilter<"BoardNote"> | string
   kind?: Prisma.EnumBoardNoteKindFilter<"BoardNote"> | $Enums.BoardNoteKind
-  type?: Prisma.EnumBoardNoteTypeFilter<"BoardNote"> | $Enums.BoardNoteType
   name?: Prisma.StringFilter<"BoardNote"> | string
   description?: Prisma.StringFilter<"BoardNote"> | string
   content?: Prisma.StringFilter<"BoardNote"> | string
@@ -695,7 +666,6 @@ export type BoardNoteScalarWhereInput = {
 export type BoardNoteCreateWithoutCreatedByInput = {
   id?: string
   kind: $Enums.BoardNoteKind
-  type: $Enums.BoardNoteType
   name: string
   description: string
   content: string
@@ -710,7 +680,6 @@ export type BoardNoteUncheckedCreateWithoutCreatedByInput = {
   id?: string
   boardId: string
   kind: $Enums.BoardNoteKind
-  type: $Enums.BoardNoteType
   name: string
   description: string
   content: string
@@ -733,7 +702,6 @@ export type BoardNoteCreateManyCreatedByInputEnvelope = {
 export type BoardNoteCreateWithoutUpdatedByInput = {
   id?: string
   kind: $Enums.BoardNoteKind
-  type: $Enums.BoardNoteType
   name: string
   description: string
   content: string
@@ -748,7 +716,6 @@ export type BoardNoteUncheckedCreateWithoutUpdatedByInput = {
   id?: string
   boardId: string
   kind: $Enums.BoardNoteKind
-  type: $Enums.BoardNoteType
   name: string
   description: string
   content: string
@@ -803,7 +770,6 @@ export type BoardNoteUpdateManyWithWhereWithoutUpdatedByInput = {
 export type BoardNoteCreateManyBoardInput = {
   id?: string
   kind: $Enums.BoardNoteKind
-  type: $Enums.BoardNoteType
   name: string
   description: string
   content: string
@@ -817,7 +783,6 @@ export type BoardNoteCreateManyBoardInput = {
 export type BoardNoteUpdateWithoutBoardInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumBoardNoteKindFieldUpdateOperationsInput | $Enums.BoardNoteKind
-  type?: Prisma.EnumBoardNoteTypeFieldUpdateOperationsInput | $Enums.BoardNoteType
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
@@ -831,7 +796,6 @@ export type BoardNoteUpdateWithoutBoardInput = {
 export type BoardNoteUncheckedUpdateWithoutBoardInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumBoardNoteKindFieldUpdateOperationsInput | $Enums.BoardNoteKind
-  type?: Prisma.EnumBoardNoteTypeFieldUpdateOperationsInput | $Enums.BoardNoteType
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
@@ -845,7 +809,6 @@ export type BoardNoteUncheckedUpdateWithoutBoardInput = {
 export type BoardNoteUncheckedUpdateManyWithoutBoardInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumBoardNoteKindFieldUpdateOperationsInput | $Enums.BoardNoteKind
-  type?: Prisma.EnumBoardNoteTypeFieldUpdateOperationsInput | $Enums.BoardNoteType
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
@@ -860,7 +823,6 @@ export type BoardNoteCreateManyCreatedByInput = {
   id?: string
   boardId: string
   kind: $Enums.BoardNoteKind
-  type: $Enums.BoardNoteType
   name: string
   description: string
   content: string
@@ -874,7 +836,6 @@ export type BoardNoteCreateManyUpdatedByInput = {
   id?: string
   boardId: string
   kind: $Enums.BoardNoteKind
-  type: $Enums.BoardNoteType
   name: string
   description: string
   content: string
@@ -887,7 +848,6 @@ export type BoardNoteCreateManyUpdatedByInput = {
 export type BoardNoteUpdateWithoutCreatedByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumBoardNoteKindFieldUpdateOperationsInput | $Enums.BoardNoteKind
-  type?: Prisma.EnumBoardNoteTypeFieldUpdateOperationsInput | $Enums.BoardNoteType
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
@@ -902,7 +862,6 @@ export type BoardNoteUncheckedUpdateWithoutCreatedByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   boardId?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumBoardNoteKindFieldUpdateOperationsInput | $Enums.BoardNoteKind
-  type?: Prisma.EnumBoardNoteTypeFieldUpdateOperationsInput | $Enums.BoardNoteType
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
@@ -916,7 +875,6 @@ export type BoardNoteUncheckedUpdateManyWithoutCreatedByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   boardId?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumBoardNoteKindFieldUpdateOperationsInput | $Enums.BoardNoteKind
-  type?: Prisma.EnumBoardNoteTypeFieldUpdateOperationsInput | $Enums.BoardNoteType
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
@@ -929,7 +887,6 @@ export type BoardNoteUncheckedUpdateManyWithoutCreatedByInput = {
 export type BoardNoteUpdateWithoutUpdatedByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumBoardNoteKindFieldUpdateOperationsInput | $Enums.BoardNoteKind
-  type?: Prisma.EnumBoardNoteTypeFieldUpdateOperationsInput | $Enums.BoardNoteType
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
@@ -944,7 +901,6 @@ export type BoardNoteUncheckedUpdateWithoutUpdatedByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   boardId?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumBoardNoteKindFieldUpdateOperationsInput | $Enums.BoardNoteKind
-  type?: Prisma.EnumBoardNoteTypeFieldUpdateOperationsInput | $Enums.BoardNoteType
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
@@ -958,7 +914,6 @@ export type BoardNoteUncheckedUpdateManyWithoutUpdatedByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   boardId?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumBoardNoteKindFieldUpdateOperationsInput | $Enums.BoardNoteKind
-  type?: Prisma.EnumBoardNoteTypeFieldUpdateOperationsInput | $Enums.BoardNoteType
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
@@ -974,7 +929,6 @@ export type BoardNoteSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   id?: boolean
   boardId?: boolean
   kind?: boolean
-  type?: boolean
   name?: boolean
   description?: boolean
   content?: boolean
@@ -992,7 +946,6 @@ export type BoardNoteSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   id?: boolean
   boardId?: boolean
   kind?: boolean
-  type?: boolean
   name?: boolean
   description?: boolean
   content?: boolean
@@ -1010,7 +963,6 @@ export type BoardNoteSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
   id?: boolean
   boardId?: boolean
   kind?: boolean
-  type?: boolean
   name?: boolean
   description?: boolean
   content?: boolean
@@ -1028,7 +980,6 @@ export type BoardNoteSelectScalar = {
   id?: boolean
   boardId?: boolean
   kind?: boolean
-  type?: boolean
   name?: boolean
   description?: boolean
   content?: boolean
@@ -1039,7 +990,7 @@ export type BoardNoteSelectScalar = {
   updatedAt?: boolean
 }
 
-export type BoardNoteOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "boardId" | "kind" | "type" | "name" | "description" | "content" | "createdById" | "updatedById" | "updatedVia" | "createdAt" | "updatedAt", ExtArgs["result"]["boardNote"]>
+export type BoardNoteOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "boardId" | "kind" | "name" | "description" | "content" | "createdById" | "updatedById" | "updatedVia" | "createdAt" | "updatedAt", ExtArgs["result"]["boardNote"]>
 export type BoardNoteInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   board?: boolean | Prisma.BoardDefaultArgs<ExtArgs>
   createdBy?: boolean | Prisma.BoardNote$createdByArgs<ExtArgs>
@@ -1067,7 +1018,6 @@ export type $BoardNotePayload<ExtArgs extends runtime.Types.Extensions.InternalA
     id: string
     boardId: string
     kind: $Enums.BoardNoteKind
-    type: $Enums.BoardNoteType
     /**
      * ボード内で一意の kebab-case の名前。MCP ではこれで引く
      */
@@ -1517,7 +1467,6 @@ export interface BoardNoteFieldRefs {
   readonly id: Prisma.FieldRef<"BoardNote", 'String'>
   readonly boardId: Prisma.FieldRef<"BoardNote", 'String'>
   readonly kind: Prisma.FieldRef<"BoardNote", 'BoardNoteKind'>
-  readonly type: Prisma.FieldRef<"BoardNote", 'BoardNoteType'>
   readonly name: Prisma.FieldRef<"BoardNote", 'String'>
   readonly description: Prisma.FieldRef<"BoardNote", 'String'>
   readonly content: Prisma.FieldRef<"BoardNote", 'String'>

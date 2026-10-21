@@ -6,18 +6,6 @@ enum BoardNoteKind {
   memory
 }
 
-/// ボードノートの種別。画面の絞り込みに使い、MCP の索引には載せない
-enum BoardNoteType {
-  /// 規約・人からの指摘
-  convention
-  /// 決定事項
-  decision
-  /// 知見・ハマり所
-  insight
-  /// 外部の参照先
-  reference
-}
-
 /// ボードノートを書いた経路
 enum BoardNoteVia {
   /// 画面
@@ -43,7 +31,6 @@ model BoardNote {
   board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
 
   kind BoardNoteKind
-  type BoardNoteType
 
   /// ボード内で一意の kebab-case の名前。MCP ではこれで引く
   name String
@@ -87,7 +74,6 @@ model BoardNoteRevision {
   action BoardNoteRevisionAction
 
   kind        BoardNoteKind
-  type        BoardNoteType
   name        String
   description String
   content     String

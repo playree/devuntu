@@ -371,13 +371,6 @@ export type EnumBoardNoteKindFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumBoardNoteKindFilter<$PrismaModel> | $Enums.BoardNoteKind
 }
 
-export type EnumBoardNoteTypeFilter<$PrismaModel = never> = {
-  equals?: $Enums.BoardNoteType | Prisma.EnumBoardNoteTypeFieldRefInput<$PrismaModel>
-  in?: $Enums.BoardNoteType[] | Prisma.ListEnumBoardNoteTypeFieldRefInput<$PrismaModel>
-  notIn?: $Enums.BoardNoteType[] | Prisma.ListEnumBoardNoteTypeFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumBoardNoteTypeFilter<$PrismaModel> | $Enums.BoardNoteType
-}
-
 export type EnumBoardNoteViaFilter<$PrismaModel = never> = {
   equals?: $Enums.BoardNoteVia | Prisma.EnumBoardNoteViaFieldRefInput<$PrismaModel>
   in?: $Enums.BoardNoteVia[] | Prisma.ListEnumBoardNoteViaFieldRefInput<$PrismaModel>
@@ -393,16 +386,6 @@ export type EnumBoardNoteKindWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumBoardNoteKindFilter<$PrismaModel>
   _max?: Prisma.NestedEnumBoardNoteKindFilter<$PrismaModel>
-}
-
-export type EnumBoardNoteTypeWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: $Enums.BoardNoteType | Prisma.EnumBoardNoteTypeFieldRefInput<$PrismaModel>
-  in?: $Enums.BoardNoteType[] | Prisma.ListEnumBoardNoteTypeFieldRefInput<$PrismaModel>
-  notIn?: $Enums.BoardNoteType[] | Prisma.ListEnumBoardNoteTypeFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumBoardNoteTypeWithAggregatesFilter<$PrismaModel> | $Enums.BoardNoteType
-  _count?: Prisma.NestedIntFilter<$PrismaModel>
-  _min?: Prisma.NestedEnumBoardNoteTypeFilter<$PrismaModel>
-  _max?: Prisma.NestedEnumBoardNoteTypeFilter<$PrismaModel>
 }
 
 export type EnumBoardNoteViaWithAggregatesFilter<$PrismaModel = never> = {
@@ -1346,13 +1329,6 @@ export type NestedEnumBoardNoteKindFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumBoardNoteKindFilter<$PrismaModel> | $Enums.BoardNoteKind
 }
 
-export type NestedEnumBoardNoteTypeFilter<$PrismaModel = never> = {
-  equals?: $Enums.BoardNoteType | Prisma.EnumBoardNoteTypeFieldRefInput<$PrismaModel>
-  in?: $Enums.BoardNoteType[] | Prisma.ListEnumBoardNoteTypeFieldRefInput<$PrismaModel>
-  notIn?: $Enums.BoardNoteType[] | Prisma.ListEnumBoardNoteTypeFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumBoardNoteTypeFilter<$PrismaModel> | $Enums.BoardNoteType
-}
-
 export type NestedEnumBoardNoteViaFilter<$PrismaModel = never> = {
   equals?: $Enums.BoardNoteVia | Prisma.EnumBoardNoteViaFieldRefInput<$PrismaModel>
   in?: $Enums.BoardNoteVia[] | Prisma.ListEnumBoardNoteViaFieldRefInput<$PrismaModel>
@@ -1368,16 +1344,6 @@ export type NestedEnumBoardNoteKindWithAggregatesFilter<$PrismaModel = never> = 
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumBoardNoteKindFilter<$PrismaModel>
   _max?: Prisma.NestedEnumBoardNoteKindFilter<$PrismaModel>
-}
-
-export type NestedEnumBoardNoteTypeWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: $Enums.BoardNoteType | Prisma.EnumBoardNoteTypeFieldRefInput<$PrismaModel>
-  in?: $Enums.BoardNoteType[] | Prisma.ListEnumBoardNoteTypeFieldRefInput<$PrismaModel>
-  notIn?: $Enums.BoardNoteType[] | Prisma.ListEnumBoardNoteTypeFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumBoardNoteTypeWithAggregatesFilter<$PrismaModel> | $Enums.BoardNoteType
-  _count?: Prisma.NestedIntFilter<$PrismaModel>
-  _min?: Prisma.NestedEnumBoardNoteTypeFilter<$PrismaModel>
-  _max?: Prisma.NestedEnumBoardNoteTypeFilter<$PrismaModel>
 }
 
 export type NestedEnumBoardNoteViaWithAggregatesFilter<$PrismaModel = never> = {

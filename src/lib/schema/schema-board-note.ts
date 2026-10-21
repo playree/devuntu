@@ -7,14 +7,12 @@ import { z } from 'zod'
 import {
   BOARD_NOTE_KINDS,
   BOARD_NOTE_NAME_PATTERN,
-  BOARD_NOTE_TYPES,
   MAX_BOARD_NOTE_CONTENT,
   MAX_BOARD_NOTE_DESCRIPTION,
   MAX_BOARD_NOTE_NAME,
 } from '../board-note/board-note-rule'
 
 export const zBoardNoteKind = z.enum(BOARD_NOTE_KINDS)
-export const zBoardNoteType = z.enum(BOARD_NOTE_TYPES)
 
 export const zBoardNoteName = z
   .string()
@@ -41,7 +39,6 @@ export const zBoardNoteContent = z
 export const scBoardNoteFields = z
   .object({
     kind: zBoardNoteKind,
-    type: zBoardNoteType,
     name: zBoardNoteName,
     description: zBoardNoteDescription,
     content: zBoardNoteContent,

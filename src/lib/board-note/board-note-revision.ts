@@ -44,7 +44,6 @@ const REVISION_SUMMARY_SELECT = {
   noteId: true,
   action: true,
   kind: true,
-  type: true,
   name: true,
   description: true,
   via: true,

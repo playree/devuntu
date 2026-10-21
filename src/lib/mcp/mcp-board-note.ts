@@ -20,20 +20,13 @@ import {
 import {
   boardNoteIndexLine,
   type BoardNoteWriter,
-  DEFAULT_BOARD_NOTE_TYPE,
   MAX_BOARD_NOTE_CONTENT,
   MAX_BOARD_NOTE_NAMES_PER_READ,
 } from '../board-note/board-note-rule'
 import { assertBoardAccess } from '../board/board-access'
 import { errValidation } from '../error'
 import type { ResourceAuth } from '../oauth/oauth-resource'
-import {
-  zBoardNoteContent,
-  zBoardNoteDescription,
-  zBoardNoteKind,
-  zBoardNoteName,
-  zBoardNoteType,
-} from '../schema/schema-board-note'
+import { zBoardNoteContent, zBoardNoteDescription, zBoardNoteKind, zBoardNoteName } from '../schema/schema-board-note'
 import { jsonResult, TOOL_ANNOTATIONS } from './mcp'
 import { resolveBoardId } from './mcp-board'
 import { resolveTicketId } from './mcp-ticket'
@@ -55,7 +48,6 @@ export const getBoardNotesForMcp = async (
       notes: notes.map((note) => ({
         name: note.name,
         kind: note.kind,
-        type: note.type,
         description: note.description,
         content: note.content,
         /** 更新するときに expectedUpdatedAt へ渡せば、他の人の更新を上書きせずに済む */
@@ -80,7 +72,6 @@ export type McpSaveBoardNoteInput = {
   boardId: string
   name: string
   kind?: 'knowledge' | 'memory'
-  type?: 'convention' | 'decision' | 'insight' | 'reference'
   description?: string
   content?: string
   newName?: string
@@ -127,7 +118,6 @@ export const saveBoardNoteForMcp = async (
           boardId,
           {
             kind: fields.kind ?? 'memory',
-            type: fields.type ?? DEFAULT_BOARD_NOTE_TYPE,
             name,
             description: fields.description,
             content: fields.content,
@@ -223,11 +213,6 @@ export const registerBoardNoteTools = (server: McpServer, auth: ResourceAuth) =>
         boardId: zBoardIdOrKey,
         name: zBoardNoteName.describe('kebab-case name, unique on the board (e.g. prisma-migration-gotcha)'),
         kind: zBoardNoteKind.optional().describe('Defaults to memory when creating. Changing it moves the note'),
-        type: zBoardNoteType
-          .optional()
-          .describe(
-            `convention=rules and user feedback / decision=decisions and reasons / insight=findings and gotchas / reference=pointers to external resources. Defaults to ${DEFAULT_BOARD_NOTE_TYPE} when creating`,
-          ),
         description: zBoardNoteDescription.optional().describe('One line shown in the index. Required when creating'),
         content: zBoardNoteContent
           .optional()

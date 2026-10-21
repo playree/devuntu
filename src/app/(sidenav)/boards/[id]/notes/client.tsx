@@ -1,13 +1,11 @@
 'use client'
 
-import { BoardNoteTypeChip, boardNoteTypeChip } from '@/components/board-note/board-note-chip'
 import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
 import { FlexCol } from '@/components/general/flex'
 import { InputSearchField } from '@/components/general/input'
 import { useModalState } from '@/components/general/modal'
 import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
-import { SingleSelectField } from '@/components/general/select'
 import { TabsBox } from '@/components/general/tabs'
 import { ContentHeader } from '@/components/header'
 import {
@@ -24,7 +22,7 @@ import { NoAccessView } from '@/components/no-access-view'
 import { notify } from '@/components/notify'
 import { ReloadButton } from '@/components/reload-button'
 import { useBoardName } from '@/components/ticket/ticket-options'
-import type { BoardNoteKind, BoardNoteType } from '@/generated/prisma/enums'
+import type { BoardNoteKind } from '@/generated/prisma/enums'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { BOARD_NOTE_KINDS } from '@/lib/board-note/board-note-rule'
@@ -50,7 +48,6 @@ const NoteRow: FC<{ note: Note; onOpen: () => void }> = ({ note, onOpen }) => (
   >
     <span className='flex w-full flex-wrap items-center gap-2'>
       <span className='font-mono text-sm font-medium break-all'>{note.name}</span>
-      <BoardNoteTypeChip value={note.type} />
     </span>
     <span className='text-sm wrap-break-word'>{note.description}</span>
     <NoteUpdatedBy
@@ -135,16 +132,15 @@ const DeletedNotes: FC<{
 const NotePanel: FC<{
   page: Page
   kind: BoardNoteKind
-  type: BoardNoteType | null
   onOpen: (note: Note) => void
   onAdd: () => void
   onHistory: (target: HistoryTarget) => void
   reload: () => void
   /** 変わると削除済みの一覧を取り直す(詳細・履歴での削除や復元を反映する) */
   version: number
-}> = ({ page, kind, type, onOpen, onAdd, onHistory, reload, version }) => {
+}> = ({ page, kind, onOpen, onAdd, onHistory, reload, version }) => {
   const { t } = useLocale()
-  const notes = page.notes.filter((note) => note.kind === kind && (!type || note.type === type))
+  const notes = page.notes.filter((note) => note.kind === kind)
   const count = page.counts[kind]
   const limit = page.limits[kind]
 
@@ -204,9 +200,7 @@ export const BoardNotesClient: FC<{ boardId: string }> = ({ boardId }) => {
   const { t } = useLocale()
   const router = useRouter()
   const boardName = useBoardName()
-  const typeOptions = boardNoteTypeChip.useOptions()
   const [keyword, setKeyword] = useState('')
-  const [type, setType] = useState<BoardNoteType | null>(null)
   const [version, setVersion] = useState(0)
   const detailState = useModalState<string>()
   const editState = useModalState<EditTarget>()
@@ -271,30 +265,14 @@ export const BoardNotesClient: FC<{ boardId: string }> = ({ boardId }) => {
         </div>
       )}
 
-      <div className='grid grid-cols-12 gap-2'>
-        <div className='col-span-12 md:col-span-8'>
-          <InputSearchField
-            isSmart
-            aria-label={t('keyword')}
-            defaultValue={keyword}
-            maxLength={100}
-            onSubmit={(value) => setKeyword(value.trim())}
-            onClear={() => setKeyword('')}
-          />
-        </div>
-        <div className='col-span-12 md:col-span-4'>
-          <SingleSelectField
-            isSmart
-            isLabelHidden
-            label={t('board_note_type')}
-            groupOptions={typeOptions}
-            placeholder={t('board_note_type_all')}
-            isClearable
-            value={type}
-            onChange={(value) => setType(value as BoardNoteType | null)}
-          />
-        </div>
-      </div>
+      <InputSearchField
+        isSmart
+        aria-label={t('keyword')}
+        defaultValue={keyword}
+        maxLength={100}
+        onSubmit={(value) => setKeyword(value.trim())}
+        onClear={() => setKeyword('')}
+      />
 
       <TabsBox
         aria-label={t('board_notes')}
@@ -306,7 +284,6 @@ export const BoardNotesClient: FC<{ boardId: string }> = ({ boardId }) => {
             <NotePanel
               page={page}
               kind={kind}
-              type={type}
               onOpen={(note) => detailState.open(note.id)}
               onAdd={() => editState.open({ kind })}
               onHistory={(target) => historyState.open(target)}

@@ -64,16 +64,6 @@ export const BoardNoteKind = {
 export type BoardNoteKind = (typeof BoardNoteKind)[keyof typeof BoardNoteKind]
 
 
-export const BoardNoteType = {
-  convention: 'convention',
-  decision: 'decision',
-  insight: 'insight',
-  reference: 'reference'
-} as const
-
-export type BoardNoteType = (typeof BoardNoteType)[keyof typeof BoardNoteType]
-
-
 export const BoardNoteVia = {
   web: 'web',
   mcp: 'mcp'

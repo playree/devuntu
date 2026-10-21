@@ -6,7 +6,7 @@
  * 純粋関数と定数は `board-note-rule.ts` を参照。
  */
 
-import type { BoardNoteKind, BoardNoteType } from '@/generated/prisma/enums'
+import type { BoardNoteKind } from '@/generated/prisma/enums'
 import { assertBoardAccess, type Actor } from '../board/board-access'
 import { splitKeywords } from '../board/ticket-search'
 import { envu } from '../env-util'
@@ -98,11 +98,10 @@ const resolveRevisionTicketId = async (tx: Db, boardId: string, ticketId: string
   return ticket.id
 }
 
-const SNAPSHOT_SELECT = { kind: true, type: true, name: true, description: true, content: true } as const
+const SNAPSHOT_SELECT = { kind: true, name: true, description: true, content: true } as const
 
-const snapshotOf = ({ kind, type, name, description, content }: BoardNoteSnapshot): BoardNoteSnapshot => ({
+const snapshotOf = ({ kind, name, description, content }: BoardNoteSnapshot): BoardNoteSnapshot => ({
   kind,
-  type,
   name,
   description,
   content,
@@ -111,7 +110,6 @@ const snapshotOf = ({ kind, type, name, description, content }: BoardNoteSnapsho
 const NOTE_SUMMARY_SELECT = {
   id: true,
   kind: true,
-  type: true,
   name: true,
   description: true,
   updatedAt: true,
@@ -199,7 +197,6 @@ export const updateBoardNote = async (
       const before = snapshotOf(existing)
       const next: BoardNoteSnapshot = {
         kind: patch.kind ?? before.kind,
-        type: patch.type ?? before.type,
         name: patch.name ?? before.name,
         description: patch.description ?? before.description,
         content: patch.content ?? before.content,
@@ -318,13 +315,12 @@ export const restoreBoardNoteRevision = async (actor: Actor, revisionId: string)
   return outcome
 }
 
-export type BoardNoteQuery = { kind?: BoardNoteKind; type?: BoardNoteType; keyword?: string }
+export type BoardNoteQuery = { kind?: BoardNoteKind; keyword?: string }
 
 /** キーワードは語ごとに AND、各語は名前・説明・本文のいずれかに含まれればよい */
-const boardNoteWhere = (boardId: string, { kind, type, keyword }: BoardNoteQuery) => ({
+const boardNoteWhere = (boardId: string, { kind, keyword }: BoardNoteQuery) => ({
   boardId,
   ...(kind ? { kind } : {}),
-  ...(type ? { type } : {}),
   AND: splitKeywords(keyword ?? '').map((word) => ({
     OR: (['name', 'description', 'content'] as const).map((field) => ({
       [field]: { contains: word, mode: 'insensitive' as const },

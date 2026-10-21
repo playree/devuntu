@@ -1,11 +1,6 @@
 'use client'
 
-import {
-  BoardNoteKindChip,
-  boardNoteKindChip,
-  BoardNoteTypeChip,
-  boardNoteTypeChip,
-} from '@/components/board-note/board-note-chip'
+import { BoardNoteKindChip, boardNoteKindChip } from '@/components/board-note/board-note-chip'
 import { MultiButton } from '@/components/general/button'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
@@ -26,7 +21,7 @@ import { MarkdownView } from '@/components/markdown/markdown-view'
 import { notify } from '@/components/notify'
 import type { BoardNoteKind } from '@/generated/prisma/enums'
 import { parseAction, useActionData } from '@/lib/action/action-client'
-import { DEFAULT_BOARD_NOTE_TYPE, MAX_BOARD_NOTE_CONTENT } from '@/lib/board-note/board-note-rule'
+import { MAX_BOARD_NOTE_CONTENT } from '@/lib/board-note/board-note-rule'
 import { type BoardNoteFields, scBoardNoteFields } from '@/lib/schema/schema-board-note'
 import { useConfirmAction } from '@/lib/use-confirm-action'
 import { useLocale } from '@/locale/client'
@@ -140,7 +135,6 @@ export const NoteDetailModal: FC<{
         <div className='space-y-3'>
           <div className='flex flex-wrap items-center gap-2'>
             <BoardNoteKindChip value={note.kind} />
-            <BoardNoteTypeChip value={note.type} />
           </div>
           <div className='text-sm wrap-break-word'>{note.description}</div>
           <MarkdownView body={note.content} className='border-border rounded-lg border px-3 py-2' />
@@ -164,7 +158,6 @@ export const NoteEditModal: FC<{
 }> = ({ state, boardId, reload }) => {
   const { t, fet } = useLocale()
   const kindOptions = boardNoteKindChip.useOptions()
-  const typeOptions = boardNoteTypeChip.useOptions()
   const note = state.target?.note
 
   const {
@@ -176,7 +169,6 @@ export const NoteEditModal: FC<{
     mode: 'onChange',
     defaultValues: {
       kind: note?.kind ?? state.target?.kind ?? 'memory',
-      type: note?.type ?? DEFAULT_BOARD_NOTE_TYPE,
       name: note?.name ?? '',
       description: note?.description ?? '',
       content: note?.content ?? '',
@@ -216,11 +208,8 @@ export const NoteEditModal: FC<{
             autoFocus
           />
         </div>
-        <div className='col-span-6 md:col-span-3'>
+        <div className='col-span-12 md:col-span-6'>
           <SingleSelectCtrl control={control} name='kind' groupOptions={kindOptions} label={t('board_note_kind')} />
-        </div>
-        <div className='col-span-6 md:col-span-3'>
-          <SingleSelectCtrl control={control} name='type' groupOptions={typeOptions} label={t('board_note_type')} />
         </div>
         <div className='col-span-12'>
           <InputCtrl
