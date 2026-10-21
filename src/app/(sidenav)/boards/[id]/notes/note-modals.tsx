@@ -133,7 +133,7 @@ export const NoteDetailModal: FC<{
         <PanelSkeleton />
       ) : (
         <div className='space-y-3'>
-          <div className='flex flex-wrap items-center gap-2'>
+          <div>
             <BoardNoteKindChip value={note.kind} />
           </div>
           <div className='text-sm wrap-break-word'>{note.description}</div>
