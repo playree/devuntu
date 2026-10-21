@@ -2,9 +2,6 @@
 CREATE TYPE "BoardNoteKind" AS ENUM ('knowledge', 'memory');
 
 -- CreateEnum
-CREATE TYPE "BoardNoteType" AS ENUM ('convention', 'decision', 'insight', 'reference');
-
--- CreateEnum
 CREATE TYPE "BoardNoteVia" AS ENUM ('web', 'mcp');
 
 -- CreateEnum
@@ -15,7 +12,6 @@ CREATE TABLE "board_note" (
     "id" TEXT NOT NULL,
     "boardId" TEXT NOT NULL,
     "kind" "BoardNoteKind" NOT NULL,
-    "type" "BoardNoteType" NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "content" TEXT NOT NULL,
@@ -35,7 +31,6 @@ CREATE TABLE "board_note_revision" (
     "noteId" TEXT NOT NULL,
     "action" "BoardNoteRevisionAction" NOT NULL,
     "kind" "BoardNoteKind" NOT NULL,
-    "type" "BoardNoteType" NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "content" TEXT NOT NULL,
