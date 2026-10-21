@@ -1,4 +1,5 @@
 import type { TicketCommentType, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
+import { findBoardNoteIndex } from '@/lib/board-note/board-note'
 import {
   assertBoardAccess,
   assertTicketAccess,
@@ -103,7 +104,7 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
 
   const displayId = ticketDisplayId({ key: ticket.board.key, number: ticket.number })
   const mergeCompletion = access.boardRole ? mergeCompletionOf(ticket.board.gitSettings) : undefined
-  const [links, criteria, activities, relations, waiting] = await Promise.all([
+  const [links, criteria, activities, relations, waiting, noteIndex] = await Promise.all([
     listTicketLinks(id),
     listTicketCriteria(id),
     listTicketActivities(id, TICKET_ACTIVITY_MCP_LIMIT),
@@ -111,6 +112,8 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
     access.boardRole ? listTicketRelations(id) : EMPTY_TICKET_RELATIONS,
     // 順番待ちは兄弟の状態から出すので、関係と同じくボードのメンバーでない承認者には見せない
     findWaitingTicketIds(access.boardRole ? [id] : []),
+    // ボードノートも boardContext と同じくボード内の情報なので承認者には見せない
+    access.boardRole ? findBoardNoteIndex(access.boardId) : {},
   ])
 
   return {
@@ -118,11 +121,15 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
     /** 本文・コメントに貼られた画像のキー。`get_image` で中身を見られることに気づけるよう返す */
     attachmentKeys: extractUploadKeys([ticket.content ?? '', ...ticket.comments.map((c) => c.content)].join('\n')),
     boardName: ticket.board.name,
+    /** get_board_notes / save_board_note の boardId に渡せる */
+    boardKey: ticket.board.key,
     /**
      * ボードの AI 向けコンテキスト(対象リポジトリ・規約など、チケット共通の前提)。
      * ボード内の情報なので承認者には見せず、未設定なら項目ごと載せない
      */
     ...(access.boardRole && ticket.board.aiContext ? { boardContext: ticket.board.aiContext } : {}),
+    /** ボードノートの索引(boardKnowledge / boardMemory)。本文は get_board_notes で読む */
+    ...noteIndex,
     /** マージによる自動完了の設定。boardContext と同じくボード内の情報なので承認者には見せない */
     ...(mergeCompletion ? { mergeCompletion } : {}),
     title: ticket.title,

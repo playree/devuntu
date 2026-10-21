@@ -411,6 +411,8 @@ export const ModelName = {
   TwoFactor: 'TwoFactor',
   Passkey: 'Passkey',
   Jwks: 'Jwks',
+  BoardNote: 'BoardNote',
+  BoardNoteRevision: 'BoardNoteRevision',
   Board: 'Board',
   BoardKeyHistory: 'BoardKeyHistory',
   TicketTemplate: 'TicketTemplate',
@@ -470,7 +472,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentAutoReviseTrigger" | "agentUsage" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "board" | "boardKeyHistory" | "ticketTemplate" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "calendarShare" | "calendarBusyTime" | "commandTargetMember" | "commandTargetGroup" | "commandRun" | "commandRunChunk" | "ticketLink" | "boardRepository" | "boardGitSetting" | "gitCheckSuite" | "userNotifySetting" | "webPushSubscription" | "boardNotifySetting" | "notifyOutbox" | "notifyDelivery" | "ticketDueReminder" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "ticket" | "ticketComment" | "ticketCriterion" | "ticketRelation" | "ticketActivity" | "user" | "group" | "userGroup"
+    modelProps: "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentAutoReviseTrigger" | "agentUsage" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "boardNote" | "boardNoteRevision" | "board" | "boardKeyHistory" | "ticketTemplate" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "calendarShare" | "calendarBusyTime" | "commandTargetMember" | "commandTargetGroup" | "commandRun" | "commandRunChunk" | "ticketLink" | "boardRepository" | "boardGitSetting" | "gitCheckSuite" | "userNotifySetting" | "webPushSubscription" | "boardNotifySetting" | "notifyOutbox" | "notifyDelivery" | "ticketDueReminder" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "ticket" | "ticketComment" | "ticketCriterion" | "ticketRelation" | "ticketActivity" | "user" | "group" | "userGroup"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1507,6 +1509,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.JwksCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.JwksCountAggregateOutputType> | number
+        }
+      }
+    }
+    BoardNote: {
+      payload: Prisma.$BoardNotePayload<ExtArgs>
+      fields: Prisma.BoardNoteFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BoardNoteFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNotePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BoardNoteFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNotePayload>
+        }
+        findFirst: {
+          args: Prisma.BoardNoteFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNotePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BoardNoteFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNotePayload>
+        }
+        findMany: {
+          args: Prisma.BoardNoteFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNotePayload>[]
+        }
+        create: {
+          args: Prisma.BoardNoteCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNotePayload>
+        }
+        createMany: {
+          args: Prisma.BoardNoteCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BoardNoteCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNotePayload>[]
+        }
+        delete: {
+          args: Prisma.BoardNoteDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNotePayload>
+        }
+        update: {
+          args: Prisma.BoardNoteUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNotePayload>
+        }
+        deleteMany: {
+          args: Prisma.BoardNoteDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BoardNoteUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BoardNoteUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNotePayload>[]
+        }
+        upsert: {
+          args: Prisma.BoardNoteUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNotePayload>
+        }
+        aggregate: {
+          args: Prisma.BoardNoteAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBoardNote>
+        }
+        groupBy: {
+          args: Prisma.BoardNoteGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BoardNoteGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BoardNoteCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BoardNoteCountAggregateOutputType> | number
+        }
+      }
+    }
+    BoardNoteRevision: {
+      payload: Prisma.$BoardNoteRevisionPayload<ExtArgs>
+      fields: Prisma.BoardNoteRevisionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BoardNoteRevisionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNoteRevisionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BoardNoteRevisionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNoteRevisionPayload>
+        }
+        findFirst: {
+          args: Prisma.BoardNoteRevisionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNoteRevisionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BoardNoteRevisionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNoteRevisionPayload>
+        }
+        findMany: {
+          args: Prisma.BoardNoteRevisionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNoteRevisionPayload>[]
+        }
+        create: {
+          args: Prisma.BoardNoteRevisionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNoteRevisionPayload>
+        }
+        createMany: {
+          args: Prisma.BoardNoteRevisionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BoardNoteRevisionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNoteRevisionPayload>[]
+        }
+        delete: {
+          args: Prisma.BoardNoteRevisionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNoteRevisionPayload>
+        }
+        update: {
+          args: Prisma.BoardNoteRevisionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNoteRevisionPayload>
+        }
+        deleteMany: {
+          args: Prisma.BoardNoteRevisionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BoardNoteRevisionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BoardNoteRevisionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNoteRevisionPayload>[]
+        }
+        upsert: {
+          args: Prisma.BoardNoteRevisionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BoardNoteRevisionPayload>
+        }
+        aggregate: {
+          args: Prisma.BoardNoteRevisionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBoardNoteRevision>
+        }
+        groupBy: {
+          args: Prisma.BoardNoteRevisionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BoardNoteRevisionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BoardNoteRevisionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BoardNoteRevisionCountAggregateOutputType> | number
         }
       }
     }
@@ -5025,6 +5175,42 @@ export const JwksScalarFieldEnum = {
 export type JwksScalarFieldEnum = (typeof JwksScalarFieldEnum)[keyof typeof JwksScalarFieldEnum]
 
 
+export const BoardNoteScalarFieldEnum = {
+  id: 'id',
+  boardId: 'boardId',
+  kind: 'kind',
+  name: 'name',
+  description: 'description',
+  content: 'content',
+  createdById: 'createdById',
+  updatedById: 'updatedById',
+  updatedVia: 'updatedVia',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BoardNoteScalarFieldEnum = (typeof BoardNoteScalarFieldEnum)[keyof typeof BoardNoteScalarFieldEnum]
+
+
+export const BoardNoteRevisionScalarFieldEnum = {
+  id: 'id',
+  boardId: 'boardId',
+  noteId: 'noteId',
+  action: 'action',
+  kind: 'kind',
+  name: 'name',
+  description: 'description',
+  content: 'content',
+  actorId: 'actorId',
+  via: 'via',
+  ticketId: 'ticketId',
+  restoredFromId: 'restoredFromId',
+  createdAt: 'createdAt'
+} as const
+
+export type BoardNoteRevisionScalarFieldEnum = (typeof BoardNoteRevisionScalarFieldEnum)[keyof typeof BoardNoteRevisionScalarFieldEnum]
+
+
 export const BoardScalarFieldEnum = {
   id: 'id',
   kind: 'kind',
@@ -5887,6 +6073,48 @@ export type ListBigIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaMod
 
 
 /**
+ * Reference to a field of type 'BoardNoteKind'
+ */
+export type EnumBoardNoteKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BoardNoteKind'>
+    
+
+
+/**
+ * Reference to a field of type 'BoardNoteKind[]'
+ */
+export type ListEnumBoardNoteKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BoardNoteKind[]'>
+    
+
+
+/**
+ * Reference to a field of type 'BoardNoteVia'
+ */
+export type EnumBoardNoteViaFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BoardNoteVia'>
+    
+
+
+/**
+ * Reference to a field of type 'BoardNoteVia[]'
+ */
+export type ListEnumBoardNoteViaFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BoardNoteVia[]'>
+    
+
+
+/**
+ * Reference to a field of type 'BoardNoteRevisionAction'
+ */
+export type EnumBoardNoteRevisionActionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BoardNoteRevisionAction'>
+    
+
+
+/**
+ * Reference to a field of type 'BoardNoteRevisionAction[]'
+ */
+export type ListEnumBoardNoteRevisionActionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BoardNoteRevisionAction[]'>
+    
+
+
+/**
  * Reference to a field of type 'BoardKind'
  */
 export type EnumBoardKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BoardKind'>
@@ -6428,6 +6656,8 @@ export type GlobalOmitConfig = {
   twoFactor?: Prisma.TwoFactorOmit
   passkey?: Prisma.PasskeyOmit
   jwks?: Prisma.JwksOmit
+  boardNote?: Prisma.BoardNoteOmit
+  boardNoteRevision?: Prisma.BoardNoteRevisionOmit
   board?: Prisma.BoardOmit
   boardKeyHistory?: Prisma.BoardKeyHistoryOmit
   ticketTemplate?: Prisma.TicketTemplateOmit

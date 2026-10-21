@@ -98,6 +98,19 @@ export type Passkey = Prisma.PasskeyModel
  */
 export type Jwks = Prisma.JwksModel
 /**
+ * Model BoardNote
+ * ボード単位で共有する AI 向けのノート(メモリ / ナレッジ)。
+ * MCP では name と description の索引だけを get_ticket / get_board / get_agent_task に載せ、本文は get_board_notes で読ませる
+ */
+export type BoardNote = Prisma.BoardNoteModel
+/**
+ * Model BoardNoteRevision
+ * ボードノートの版。変更後(deleted は削除直前)の全文を持つ。
+ * 削除後も復元に使うため noteId に外部キーを張らない。1件あたりの版数(BOARD_NOTE_REVISION_MAX_PER_NOTE)を
+ * 超えた分は書き込み時に、保持期間(BOARD_NOTE_REVISION_RETENTION_DAYS)を過ぎた分は自動メンテナンスで消す
+ */
+export type BoardNoteRevision = Prisma.BoardNoteRevisionModel
+/**
  * Model Board
  * チケットを載せるかんばんボード。個人用(private)と共有(team)の2種類がある。
  */

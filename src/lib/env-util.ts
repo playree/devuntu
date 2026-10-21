@@ -338,6 +338,26 @@ const server = {
     return getEnvInt('TICKET_ACTIVITY_RETENTION_DAYS', { default: 365, min: 1, max: MAX_RETENTION_DAYS })
   },
 
+  /** ボードあたりのメモリ件数の上限。下げても既存のメモリは消さず、新規作成だけを止める */
+  get BOARD_MEMORY_MAX_COUNT() {
+    return getEnvInt('BOARD_MEMORY_MAX_COUNT', { default: 200, min: 1 })
+  },
+
+  /** ボードあたりのナレッジ件数の上限。下げても既存のナレッジは消さず、新規作成だけを止める */
+  get BOARD_KNOWLEDGE_MAX_COUNT() {
+    return getEnvInt('BOARD_KNOWLEDGE_MAX_COUNT', { default: 100, min: 1 })
+  },
+
+  /** ボードノート1件あたりに残す版の数。超えた分は書き込み時に古い順に消す */
+  get BOARD_NOTE_REVISION_MAX_PER_NOTE() {
+    return getEnvInt('BOARD_NOTE_REVISION_MAX_PER_NOTE', { default: 50, min: 1 })
+  },
+
+  /** ボードノートの版を残す期間(日)。削除済みのノートを復元できるのもこの期間 */
+  get BOARD_NOTE_REVISION_RETENTION_DAYS() {
+    return getEnvInt('BOARD_NOTE_REVISION_RETENTION_DAYS', { default: 365, min: 1, max: MAX_RETENTION_DAYS })
+  },
+
   /**
    * ランナー1台あたりに残す実行履歴の上限。期間内に積み上がった分への歯止め。
    *

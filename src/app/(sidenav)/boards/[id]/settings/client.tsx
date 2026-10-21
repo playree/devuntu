@@ -18,6 +18,7 @@ import {
   GithubIcon,
   GitlabIcon,
   InformationCircleIcon,
+  LightBulbIcon,
   SlackIcon,
   TagIcon,
   UserGroupIcon,
@@ -106,6 +107,14 @@ export const BoardSettingsClient: FC<{ boardId: string }> = ({ boardId }) => {
           tooltip={t('ticket')}
           icon={<ArrowTopRightOnSquareIcon />}
           onPress={() => router.push(`/tickets?boardId=${board.id}`)}
+        >
+          <ButtonGroup.Separator />
+        </MultiButton>
+        <MultiButton
+          isIconOnly
+          tooltip={t('board_notes')}
+          icon={<LightBulbIcon />}
+          onPress={() => router.push(`/boards/${board.id}/notes`)}
         >
           <ButtonGroup.Separator />
         </MultiButton>

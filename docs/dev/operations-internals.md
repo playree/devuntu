@@ -155,6 +155,7 @@ clone した環境(`pnpm dev` / `pnpm maintenance`)では、どちらもリポ�
 | `agent_run`              | 開始が保持期間より古い + ランナーごとに新しい N 件だけ残す                               | 既定90日   |
 | `command_run`            | 受付が保持期間より古い + コマンドごとに新しい N 件だけ残す                               | 既定90日   |
 | `ticket_activity`        | 記録が保持期間より古い(チケットの変更履歴)                                               | 既定365日  |
+| `board_note_revision`    | 記録が保持期間より古い(ボードノートの版。削除済みノートはこれで復元できなくなる)         | 既定365日  |
 | `git_check_suite`        | 更新が保持期間より古い(GitHub / GitLab 連携の CI 結果。マージ済み・放置された PR のもの) | 90日       |
 | `ticket_due_reminder`    | 期日が保持期間より古い(期日のリマインドの送信記録。期日を過ぎたものはもう送らない)       | 30日       |
 | `attachment` + 実体      | どの本文からも参照されていない                                                           | 既定24時間 |
@@ -178,7 +179,7 @@ clone した環境(`pnpm dev` / `pnpm maintenance`)では、どちらもリポ�
 - リンクウィジェットのアイコン(`link_widget.iconPath`)
 - お知らせ本文(`key_value_store` の `DASHBOARD_ANNOUNCEMENT`)
 
-ボードの AI 向けコンテキスト(`board.aiContext`)とエージェントのカスタム指示(`agent_runner.rule`)は
+ボードの AI 向けコンテキスト(`board.aiContext`)・ボードノート(`board_note.content`)とエージェントのカスタム指示(`agent_runner.rule`)は
 AI に渡す文字列なので参照元に含めない。エディタからは画像を挿入できないようにしている。
 
 本文の全走査を伴うので、この掃除だけは1日1回に絞っている。

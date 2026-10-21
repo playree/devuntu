@@ -4,6 +4,7 @@
     - [人間の経路専用のツール](#人間の経路専用のツール)
     - [エージェント専用のツール](#エージェント専用のツール)
     - [ボードの AI 向けコンテキスト](#ボードの-ai-向けコンテキスト)
+    - [ボードノート(ナレッジ / メモリ)](#ボードノートナレッジ--メモリ)
     - [チケットテンプレート](#チケットテンプレート)
   - [画像の添付](#画像の添付)
     - [ファイルを直接送る(推奨)](#ファイルを直接送る推奨)
@@ -49,6 +50,9 @@ MCP サーバー(`/api/mcp`)が提供するツールと、その権限・入力�
 | `unlink_ticket_artifact` | 紐付けを外す                                                                                                                                                                                    | `linkId`                                                                                                                                                           |
 | `link_related_ticket`    | 同じボードのチケット同士を関連付ける(向きなし)                                                                                                                                                  | `ticketId` / `relatedTicketId`                                                                                                                                     |
 | `unlink_ticket_relation` | 親子・関連を外す                                                                                                                                                                                | `relationId`                                                                                                                                                       |
+| `get_board_notes`        | ボードノート(ナレッジ / メモリ)の本文を名前で読む。名前を渡さなければ索引をキーワード・区分で検索する                                                                                           | `boardId` / `names` / `keyword` / `kind`                                                                                                                           |
+| `save_board_note`        | ボードノートを名前で作成・更新する(渡した項目だけ変える)。区分の変更で昇格 / 降格                                                                                                               | `boardId` / `name` / `kind` / `description` / `content` / `newName` / `expectedUpdatedAt` / `ticketId` / `userApproved`                                            |
+| `delete_board_note`      | ボードノートを削除する(履歴から復元できる)                                                                                                                                                      | `boardId` / `name` / `ticketId` / `userApproved`                                                                                                                   |
 | `get_agent_setup_guide`  | 自動運用(Devuntu Agent)を自分のマシンへ用意する手順を返す。人が読むためのもの                                                                                                                   | `cli`(任意。未指定なら手順ではなく CLI の選択を促す)                                                                                                               |
 
 権限はボードのロールで決まり、基本は画面と同じ。ただしチケットの更新・削除だけは MCP 経由に追加の制限がある。
@@ -61,6 +65,8 @@ MCP サーバー(`/api/mcp`)が提供するツールと、その権限・入力�
 - `link_related_ticket` / `unlink_ticket_relation` — `update_ticket` と同じ制限を受ける。親子は子のチケットで判定し、
   関連はどちらか一方のチケットで満たせばよい(自分が担当のチケットを、他人が担当のチケットへ関連付けられる)
 - これらの制限で更新を弾いた場合は、他人が担当のチケットであることが分かるメッセージのエラーを返す
+- `save_board_note` / `delete_board_note` — ナレッジに関わる変更(作成・更新・削除・昇格 / 降格)は、
+  人の経路では `userApproved: true` が要り、エージェント経路ではできない([ボードノート](#ボードノートナレッジ--メモリ))
 
 チケットに対応するときの手順(着手時に対応中にする → プランを投稿 → 成果物を紐付け → 受け入れ条件の結果を記録 → 報告を投稿)は、
 利用者がルールを書かなくてもサーバーからクライアントへ伝える。利用者の指示・チケットの内容・プロジェクトのルール(CLAUDE.md / AGENTS.md など)・
@@ -106,13 +112,13 @@ devuntu の外(GitHub など)へ書き込むツールは無いので、`openWorl
 MCP の仕様に合わせ、追加だけで済まない(既存の値を上書き・削除しうる)ものを destructive、
 同じ入力で繰り返しても結果が変わらないものを idempotent とする。
 
-| 分類                    | readOnly | destructive | idempotent | ツール                                                                                                                                                   |
-| ----------------------- | -------- | ----------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `readOnly`              | true     | -           | -          | `ping` / `echo` / `list_boards` / `get_board` / `get_ticket` / `search_tickets` / `get_image` / `get_agent_setup_guide` / `get_agent_task`               |
-| `additive`              | false    | false       | false      | `create_ticket` / `add_ticket_comment` / `create_image_upload_token` / `upload_image` / `propose_child_tickets`                                          |
-| `additiveIdempotent`    | false    | false       | true       | `link_ticket_artifact` / `link_related_ticket`                                                                                                           |
-| `destructive`           | false    | true        | false      | `update_ticket` / `finish_agent_task`                                                                                                                    |
-| `destructiveIdempotent` | false    | true        | true       | `update_ticket_comment` / `report_acceptance_criteria` / `delete_ticket` / `delete_ticket_comment` / `unlink_ticket_artifact` / `unlink_ticket_relation` |
+| 分類                    | readOnly | destructive | idempotent | ツール                                                                                                                                                                         |
+| ----------------------- | -------- | ----------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `readOnly`              | true     | -           | -          | `ping` / `echo` / `list_boards` / `get_board` / `get_ticket` / `search_tickets` / `get_image` / `get_agent_setup_guide` / `get_agent_task` / `get_board_notes`                 |
+| `additive`              | false    | false       | false      | `create_ticket` / `add_ticket_comment` / `create_image_upload_token` / `upload_image` / `propose_child_tickets`                                                                |
+| `additiveIdempotent`    | false    | false       | true       | `link_ticket_artifact` / `link_related_ticket`                                                                                                                                 |
+| `destructive`           | false    | true        | false      | `update_ticket` / `finish_agent_task` / `save_board_note`                                                                                                                      |
+| `destructiveIdempotent` | false    | true        | true       | `update_ticket_comment` / `report_acceptance_criteria` / `delete_ticket` / `delete_ticket_comment` / `unlink_ticket_artifact` / `unlink_ticket_relation` / `delete_board_note` |
 
 - `update_ticket` は値を上書きし、`acceptanceCriteria` は全件置き換え(含めなかった項目はチェックや申告ごと消える)、
   `parentId: null` で親子を外せる。id の無い受け入れ条件は呼ぶたびに作り直されて変更履歴も残るので、冪等にもしない
@@ -120,6 +126,8 @@ MCP の仕様に合わせ、追加だけで済まない(既存の値を上書き
   タイムアウトで付いた状態を上書きしてしまうので冪等にしない
 - `update_ticket_comment` / `report_acceptance_criteria` は履歴を残さずに本文・申告を上書きする
 - `link_ticket_artifact` は同じ URL なら既存の紐付けを戻すだけ、`link_related_ticket` は2回目がエラーになるだけで状態は変わらない
+- `save_board_note` は既存のノートを上書きする(版は残る)。同じ内容なら版を作らないが、作成と更新を名前で兼ねるので冪等にはしない。
+  `delete_board_note` は無い名前に対して `deleted: false` を返すだけなので冪等
 
 ### ボードの AI 向けコンテキスト
 
@@ -133,6 +141,51 @@ MCP の仕様に合わせ、追加だけで済まない(既存の値を上書き
 
 届く条件の詳細は [mcp-server-internals.md](mcp-server-internals.md#ボードの-ai-向けコンテキスト)、
 エージェント単位の指示(カスタム指示)との分担は [agent-runner-internals.md](agent-runner-internals.md#ルールとボードの-ai-向けコンテキスト) を参照。
+
+### ボードノート(ナレッジ / メモリ)
+
+ボード単位でメンバーと AI が共有するノート。Claude Code の個人メモリ(1件1事実・索引を常に読み、本文は必要なときに読む)をボード単位にしたもの。
+AI向けコンテキストと合わせて、AI 向けの情報を3層で持つ。
+
+| 層                 | 書く人                                    | AI への渡し方                            |
+| ------------------ | ----------------------------------------- | ---------------------------------------- |
+| AI向けコンテキスト | オーナー(画面のみ)                        | 常に全文(`boardContext`)                 |
+| ナレッジ           | 利用者、または利用者の指示・同意を得た AI | 索引(`boardKnowledge`)。本文は必要なとき |
+| メモリ             | AI が作業中に自動で(人も画面で編集できる) | 索引(`boardMemory`)。本文は必要なとき    |
+
+- `get_board` / `get_ticket` / `get_agent_task` の応答に、索引を `"name: description"` の文字列の配列で載せる
+  (JSON のキーを繰り返さずに済み、トークンが少ない)。届くのは `boardContext` と同じくボードのメンバーだけ
+  - ナレッジは全件(名前順)、メモリは更新の新しい順に50件まで。載せきれなかったメモリの件数を `boardMemoryOmitted` で返す。0件の区分は項目ごと省く
+- 本文は `get_board_notes` に `names`(10件まで)を渡して読む。名前を渡さなければ、索引をキーワード(名前・説明・本文)と区分で検索する
+- `save_board_note` は名前で引き、あれば渡した項目だけ更新、無ければ作成する(作成時は `description` / `content` が必須。既定は `kind=memory`)
+  - `newName` で改名、`kind` の変更で昇格 / 降格。`expectedUpdatedAt` を渡すと、読んだ後に他の人が更新していれば競合としてエラーにする
+  - `ticketId` を渡すと、どのチケットの対応中に書いたかが履歴に残る(同じボードのチケットのみ)
+- 書き込みの規則
+
+  | 経路                                     | メモリ | ナレッジ(作成・更新・削除・昇格 / 降格)  |
+  | ---------------------------------------- | ------ | ---------------------------------------- |
+  | 画面(メンバー、未アーカイブのボード)     | 可     | 可                                       |
+  | MCP の人の経路(OAuth / ユーザートークン) | 可     | `userApproved: true` のときだけ          |
+  | MCP のエージェント経路                   | 可     | 不可(昇格させたい知見は報告で提案させる) |
+
+  `userApproved` は AI の自己申告で、ユーザーの明示的な指示・同意があるときだけ付けるよう description で伝える。
+  強制ではなく、AI に意図して判断させるための歯止め。誰がどの経路で書いたかは履歴に残る
+
+- 上限: 名前60文字(kebab-case・ボード内で一意)、説明150文字(改行なし)、本文はメモリ4000文字・ナレッジ20000文字。
+  件数はボードあたりメモリ200件・ナレッジ100件(`BOARD_MEMORY_MAX_COUNT` / `BOARD_KNOWLEDGE_MAX_COUNT`)
+- 優先度は ユーザーの指示 > チケット > boardContext > ナレッジ > メモリ。保存の規則(重複を作らず更新する・1件1テーマ・
+  チケット固有の経緯や秘密情報を保存しない)は `save_board_note` の description で伝える
+- 残し先の振り分けは instructions と `save_board_note` の description で伝える
+  ([mcp-server-internals.md](mcp-server-internals.md#届く文言))
+
+  | 得た情報                                                     | 残し先                                                       |
+  | ------------------------------------------------------------ | ------------------------------------------------------------ |
+  | 個人の好み、自分のマシン・環境に固有のこと(パス・ポートなど) | クライアント自身のメモリ(ボードノートには入れない)           |
+  | メンバーの誰もが、どの環境でも使える知見                     | メモリ                                                       |
+  | 利用者に覚えておくよう頼まれた、ボード全体の決めごと・手順   | ナレッジ(`userApproved: true`)                               |
+  | 確かめられたメモリ、確認・調査で得た残しておくべき情報       | ナレッジにするかを利用者に提案する(エージェントは報告で提案) |
+
+データの持ち方と履歴は [mcp-server-internals.md](mcp-server-internals.md#ボードノート) を参照。
 
 ### マージによる自動完了の設定
 

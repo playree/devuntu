@@ -60,6 +60,8 @@ and the AI agent features are designed around that same premise (a human check i
   (currently `Claude` and `Codex` are supported)
   - Agents can split a large ticket into child tickets; once you approve the proposal, they work through the children in order
   - Per-board AI context (target repository, conventions, terms) delivered to MCP clients and agents as `boardContext`
+  - Per-board knowledge (curated by users) and memory (recorded by AI while working), shared by members and AI:
+    only an index is delivered and AI reads the content it needs
 - Link GitHub / GitLab (including self-hosted) branches, pull requests and commits to tickets,
   showing the PR status and CI results. Tickets can be completed automatically on merge
   (held while acceptance criteria are unmet),

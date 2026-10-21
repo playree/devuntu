@@ -8,6 +8,7 @@
  * 権限判定は画面と同じ関数(assertBoardAccess / listAccessibleBoards)へそのまま委ねること。
  */
 
+import { findBoardNoteIndex } from '@/lib/board-note/board-note'
 import { countTicketsByBoard, listAccessibleBoards } from '@/lib/board/board'
 import { assertBoardAccess } from '@/lib/board/board-access'
 import { getBoardMemberUsers } from '@/lib/board/board-member'
@@ -76,11 +77,12 @@ export const getBoardForMcp = async (auth: ResourceAuth, boardIdOrKey: string) =
     throw errInvalidOperation()
   }
 
-  const [members, tags, templates, counts] = await Promise.all([
+  const [members, tags, templates, counts, noteIndex] = await Promise.all([
     getBoardMemberUsers(id),
     listBoardTags(id),
     listTicketTemplates(id),
     countTicketsByBoard([id]),
+    findBoardNoteIndex(id),
   ])
 
   const mergeCompletion = mergeCompletionOf(board.gitSettings)
@@ -92,6 +94,8 @@ export const getBoardForMcp = async (auth: ResourceAuth, boardIdOrKey: string) =
     description: board.description ?? '',
     /** ボードの AI 向けコンテキスト。未設定なら項目ごと載せない */
     ...(board.aiContext ? { boardContext: board.aiContext } : {}),
+    /** ボードノートの索引(boardKnowledge / boardMemory)。本文は get_board_notes で読む */
+    ...noteIndex,
     /** マージで自動完了する provider と、その前に見る受け入れ条件の判定。自動完了が無ければ項目ごと載せない */
     ...(mergeCompletion ? { mergeCompletion } : {}),
     kind: access.kind,

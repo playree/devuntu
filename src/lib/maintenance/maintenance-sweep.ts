@@ -176,6 +176,14 @@ export const sweepTicketActivities = async (now: Date): Promise<number> =>
     })
   ).count
 
+/** ボードノートの版。保持期間(`BOARD_NOTE_REVISION_RETENTION_DAYS`)を過ぎたものを消す。削除済みノートはこれで復元できなくなる */
+export const sweepBoardNoteRevisions = async (now: Date): Promise<number> =>
+  (
+    await prisma.boardNoteRevision.deleteMany({
+      where: { createdAt: { lt: msBefore(now, envu.server.BOARD_NOTE_REVISION_RETENTION_DAYS * DAY_MS) } },
+    })
+  ).count
+
 /** 更新が止まった CI の状態(GitHub の Check Suite / GitLab のパイプライン)。消えた後に表示される CI の結果は「無し」になる */
 export const sweepGitCheckSuites = async (now: Date): Promise<number> =>
   (await prisma.gitCheckSuite.deleteMany({ where: { updatedAt: { lt: msBefore(now, GIT_CHECK_SUITE_RETENTION_MS) } } }))
@@ -210,6 +218,7 @@ export const runMaintenanceSweep = async (now: Date = nowDate()): Promise<SweepC
   await runStep(counts, 'agentRun', () => sweepAgentRuns(now))
   await runStep(counts, 'commandRun', () => sweepCommandRuns(now))
   await runStep(counts, 'ticketActivity', () => sweepTicketActivities(now))
+  await runStep(counts, 'boardNoteRevision', () => sweepBoardNoteRevisions(now))
   await runStep(counts, 'gitCheckSuite', () => sweepGitCheckSuites(now))
   await runStep(counts, 'dueReminder', () => sweepDueReminders(now))
   await runStep(counts, 'attachment', () => sweepOrphanAttachments(now))

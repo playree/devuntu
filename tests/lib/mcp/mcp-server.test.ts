@@ -123,6 +123,15 @@ describe('createDevuntuMcpServer', () => {
     }
   })
 
+  it('ツールの description もクライアントに切り詰められないよう短く保つ', async () => {
+    for (const authKind of [auth, agentAuth]) {
+      const { tools } = await (await connectDevuntuMcp(authKind)).listTools()
+      for (const tool of tools) {
+        expect(tool.description?.length ?? 0, tool.name).toBeLessThan(2000)
+      }
+    }
+  })
+
   it('ツールの注釈は分類表のとおり(書き込むツールに readOnlyHint を付けない)', async () => {
     const expected: Record<string, keyof typeof TOOL_ANNOTATIONS> = {
       ping: 'readOnly',
@@ -134,6 +143,7 @@ describe('createDevuntuMcpServer', () => {
       get_image: 'readOnly',
       get_agent_setup_guide: 'readOnly',
       get_agent_task: 'readOnly',
+      get_board_notes: 'readOnly',
       create_ticket: 'additive',
       add_ticket_comment: 'additive',
       create_image_upload_token: 'additive',
@@ -143,12 +153,14 @@ describe('createDevuntuMcpServer', () => {
       link_related_ticket: 'additiveIdempotent',
       update_ticket: 'destructive',
       finish_agent_task: 'destructive',
+      save_board_note: 'destructive',
       update_ticket_comment: 'destructiveIdempotent',
       report_acceptance_criteria: 'destructiveIdempotent',
       delete_ticket: 'destructiveIdempotent',
       delete_ticket_comment: 'destructiveIdempotent',
       unlink_ticket_artifact: 'destructiveIdempotent',
       unlink_ticket_relation: 'destructiveIdempotent',
+      delete_board_note: 'destructiveIdempotent',
     }
     for (const authKind of [auth, patAuth, agentAuth]) {
       const { tools } = await (await connectDevuntuMcp(authKind)).listTools()
@@ -170,6 +182,9 @@ describe('createDevuntuMcpServer', () => {
         'get_image',
         'get_agent_setup_guide',
         'link_ticket_artifact',
+        'get_board_notes',
+        'save_board_note',
+        'delete_board_note',
       ]),
     )
   })

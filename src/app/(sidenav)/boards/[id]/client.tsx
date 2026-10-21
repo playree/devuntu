@@ -11,6 +11,7 @@ import {
   ArrowTopRightOnSquareIcon,
   Cog6ToothIcon,
   FunnelIcon,
+  LightBulbIcon,
   ViewColumnsIcon,
 } from '@/components/icon'
 import { NoAccessView } from '@/components/no-access-view'
@@ -146,6 +147,14 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
           tooltip={t('board_settings')}
           icon={<Cog6ToothIcon />}
           onPress={() => router.push(`/boards/${board.id}/settings`)}
+        >
+          <ButtonGroup.Separator />
+        </MultiButton>
+        <MultiButton
+          isIconOnly
+          tooltip={t('board_notes')}
+          icon={<LightBulbIcon />}
+          onPress={() => router.push(`/boards/${board.id}/notes`)}
         >
           <ButtonGroup.Separator />
         </MultiButton>

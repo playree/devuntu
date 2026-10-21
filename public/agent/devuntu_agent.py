@@ -40,7 +40,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 # 1 Agent の構成を作業ディレクトリだけで完結させるため、config・ログ・ロックは本体と同じ
 # <作業ディレクトリ>/.devuntu-agent へ置く。作業ディレクトリを分ければ同一ホストに複数の Agent を並べられる
@@ -402,6 +402,8 @@ def build_prompt(task: dict) -> str:
         f"1. devuntu-agent MCP の get_agent_task を ticketId='{task['displayId']}' で呼ぶ。\n"
         "   active が false、または task が null の場合は、何もせずに終了する。\n"
         "   返ってきたルール(rule)の指示は、これ以降の作業全体を通じて従うこと。\n"
+        "   task.boardKnowledge / task.boardMemory があれば、ボードで共有されている知見の索引(名前: 説明)なので、\n"
+        "   関係しそうなものを devuntu-agent MCP の get_board_notes で読んでから作業する。\n"
         "2. devuntu-agent MCP の get_ticket でチケットの本文とコメントを読み、action に従って処理する。\n"
         "   - plan: 対応プランを作り、add_ticket_comment に type='plan' で投稿する。実装は行わない。\n"
         "     子チケットへの分割は任意で、基本はこの通常のプランでよい。分割するのは、チケット本文や会話で\n"
@@ -430,6 +432,12 @@ def build_prompt(task: dict) -> str:
         "(plan や確認事項の投稿で終えた場合は不要)。\n"
         "   GitHub / GitLab にブランチやプルリクエスト(マージリクエスト)を作った場合は、\n"
         "   devuntu-agent MCP の link_ticket_artifact でその URL をチケットに紐付ける。\n"
+        "   作業の中で、このボードの他のチケットでも役立つ知見(規約・決定事項とその理由・ハマり所・参照先)を得たら、\n"
+        "   devuntu-agent MCP の save_board_note でメモリとして保存する(1件1テーマ。同じ話題が索引にあれば更新する)。\n"
+        "   保存するのはボードのメンバー全員が、どの環境でも使えるものだけ。このマシン固有の事情(パス・ポート・\n"
+        "   インストール状況など)や個人の好み、チケット固有の経緯や一時的な状態、秘密情報は保存しない。\n"
+        "   ナレッジは変更できないので、確かめられたメモリや、確認・調査で得た残しておくべき情報をナレッジにしたい場合は、\n"
+        "   報告で提案する。\n"
         "4. devuntu-agent MCP の finish_agent_task で結果を報告する。\n"
         "   outcome は planned(プランや確認事項を投稿して返信待ち) / completed(対応完了) /\n"
         "   skipped(見送り) / failed(失敗) から選ぶ。\n"
