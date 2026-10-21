@@ -44,6 +44,14 @@ const PRECEDENCE =
   'When you are only asked to read a ticket or answer a question, do not post comments or change the status.'
 
 /**
+ * エージェントの経路の優先順位とコメントの種別。人の経路は PRECEDENCE と手順(TICKET_WORKFLOW)で伝わるが、
+ * エージェントには手順を載せないので、ここで補う(文字数の上限は人の経路のほうが厳しいので、こちらにだけ書く)
+ */
+const AGENT_PRECEDENCE =
+  'Precedence: the ticket > boardContext > boardKnowledge > boardMemory. ' +
+  'Comments with type=plan / type=report are shown separately from regular comments as a plan / a report.'
+
+/**
  * `get_ticket` の応答に載せる手順。実行できる人(チケットを編集できる人の経路)にだけ返す。
  * エージェントはランナーの指示と get_agent_task の rule に従うので載せない(自動運用の流れと食い違わせない)。
  */
@@ -63,6 +71,7 @@ export const mcpInstructions = (kind: ResourceAuth['kind']): string => {
     return [
       ...common,
       'In automated operation, follow the rule returned by get_agent_task and the runner instructions, and finally report the result with finish_agent_task.',
+      AGENT_PRECEDENCE,
     ].join('\n')
   }
   return [

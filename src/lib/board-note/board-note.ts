@@ -43,11 +43,9 @@ const errLimitReached = (kind: BoardNoteKind, max: number) =>
     BOARD_NOTE_LIMIT_REACHED,
     `This board already has the maximum number of ${kind} notes (${max}). Update or delete an existing one instead`,
   )
-const errConflict = () =>
-  new ClientError(
-    BOARD_NOTE_CONFLICT,
-    'The note was updated by someone else after you read it. Read it again and retry',
-  )
+/** 読んだ後に他の人が更新した・削除した(MCP は削除済みの名前への保存にも使う) */
+export const errBoardNoteConflict = (message = 'The note was updated by someone else after you read it') =>
+  new ClientError(BOARD_NOTE_CONFLICT, `${message}. Read it again and retry`)
 const errKnowledgeDenied = (reason: 'agent' | 'approval') =>
   new ClientError(
     BOARD_NOTE_KNOWLEDGE_DENIED,
@@ -196,7 +194,7 @@ export const updateBoardNote = async (
       }
       await assertBoardAccess(actor, existing.boardId, 'write', tx)
       if (opts.expectedUpdatedAt && new Date(opts.expectedUpdatedAt).getTime() !== existing.updatedAt.getTime()) {
-        throw errConflict()
+        throw errBoardNoteConflict()
       }
       const before = snapshotOf(existing)
       const next: BoardNoteSnapshot = {
@@ -334,14 +332,17 @@ const boardNoteWhere = (boardId: string, { kind, type, keyword }: BoardNoteQuery
   })),
 })
 
-/** ノートの一覧(本文なし)。ナレッジ → メモリの順、区分内は更新の新しい順 */
-export const listBoardNotes = async (actor: Actor, boardId: string, query: BoardNoteQuery = {}) => {
-  await assertBoardAccess(actor, boardId, 'view')
-  return prisma.boardNote.findMany({
+const queryBoardNotes = (boardId: string, query: BoardNoteQuery) =>
+  prisma.boardNote.findMany({
     where: boardNoteWhere(boardId, query),
     select: NOTE_SUMMARY_SELECT,
     orderBy: [{ kind: 'asc' }, { updatedAt: 'desc' }, { name: 'asc' }],
   })
+
+/** ノートの一覧(本文なし)。ナレッジ → メモリの順、区分内は更新の新しい順 */
+export const listBoardNotes = async (actor: Actor, boardId: string, query: BoardNoteQuery = {}) => {
+  await assertBoardAccess(actor, boardId, 'view')
+  return queryBoardNotes(boardId, query)
 }
 
 export type BoardNoteSummary = Awaited<ReturnType<typeof listBoardNotes>>[number]
@@ -415,7 +416,7 @@ export const getBoardNotePage = async (actor: Actor, boardId: string, query: Boa
   const access = await assertBoardAccess(actor, boardId, 'view')
   const [board, notes, counts] = await Promise.all([
     prisma.board.findUniqueOrThrow({ where: { id: boardId }, select: { id: true, name: true, kind: true } }),
-    listBoardNotes(actor, boardId, query),
+    queryBoardNotes(boardId, query),
     countBoardNotes(boardId),
   ])
   return { board, canWrite: !access.archived, archived: access.archived, notes, counts, limits: boardNoteLimits() }

@@ -17,7 +17,8 @@ import { agentAuth, oauthAuth } from '../../helpers/resource-auth'
 vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({ board: ['findUnique'] }))
 vi.mock('@/lib/board/board-access', () => ({ assertBoardAccess: vi.fn() }))
 vi.mock('@/lib/mcp/mcp-ticket', () => ({ resolveTicketId: vi.fn() }))
-vi.mock('@/lib/board-note/board-note', () => ({
+vi.mock('@/lib/board-note/board-note', async (importOriginal) => ({
+  errBoardNoteConflict: (await importOriginal<typeof import('@/lib/board-note/board-note')>()).errBoardNoteConflict,
   createBoardNote: vi.fn(),
   deleteBoardNote: vi.fn(),
   findBoardNoteIdByName: vi.fn(),
@@ -171,5 +172,22 @@ describe('getBoardNotesForMcp', () => {
       total: 2,
     })
     expect(listBoardNotes).toHaveBeenCalledWith(human.user, BOARD_ID, { kind: undefined, keyword: 'deploy' })
+  })
+})
+
+describe('saveBoardNoteForMcp の競合検出', () => {
+  it('読んだ後に削除されたノートは作り直さず競合として返す', async () => {
+    vi.mocked(findBoardNoteIdByName).mockResolvedValue(null)
+
+    await expect(
+      saveBoardNoteForMcp(human, {
+        boardId: BOARD_ID,
+        name: 'gone',
+        description: 'd',
+        content: 'c',
+        expectedUpdatedAt: UPDATED_AT.toISOString(),
+      }),
+    ).rejects.toMatchObject({ errorType: 'BOARD_NOTE_CONFLICT' })
+    expect(createBoardNote).not.toHaveBeenCalled()
   })
 })

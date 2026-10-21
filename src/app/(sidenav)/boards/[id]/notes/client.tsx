@@ -140,7 +140,9 @@ const NotePanel: FC<{
   onAdd: () => void
   onHistory: (target: HistoryTarget) => void
   reload: () => void
-}> = ({ page, kind, type, onOpen, onAdd, onHistory, reload }) => {
+  /** 変わると削除済みの一覧を取り直す(詳細・履歴での削除や復元を反映する) */
+  version: number
+}> = ({ page, kind, type, onOpen, onAdd, onHistory, reload, version }) => {
   const { t } = useLocale()
   const notes = page.notes.filter((note) => note.kind === kind && (!type || note.type === type))
   const count = page.counts[kind]
@@ -181,6 +183,7 @@ const NotePanel: FC<{
       <Accordion hideSeparator>
         <AccordionSection id='deleted' icon={<TrashIcon />} title={t('board_note_deleted')} isLazyBody>
           <DeletedNotes
+            key={version}
             boardId={page.board.id}
             kind={kind}
             canWrite={page.canWrite}
@@ -204,6 +207,7 @@ export const BoardNotesClient: FC<{ boardId: string }> = ({ boardId }) => {
   const typeOptions = boardNoteTypeChip.useOptions()
   const [keyword, setKeyword] = useState('')
   const [type, setType] = useState<BoardNoteType | null>(null)
+  const [version, setVersion] = useState(0)
   const detailState = useModalState<string>()
   const editState = useModalState<EditTarget>()
   const historyState = useModalState<HistoryTarget>()
@@ -216,6 +220,11 @@ export const BoardNotesClient: FC<{ boardId: string }> = ({ boardId }) => {
   } = useActionData(() => getBoardNotes({ boardId, keyword }), {
     key: keyword,
   })
+  // 一覧と削除済みの一覧をまとめて取り直す
+  const reloadAll = () => {
+    refresh()
+    setVersion((v) => v + 1)
+  }
 
   if (isLoading && !page) {
     return <PanelSkeleton />
@@ -302,6 +311,7 @@ export const BoardNotesClient: FC<{ boardId: string }> = ({ boardId }) => {
               onAdd={() => editState.open({ kind })}
               onHistory={(target) => historyState.open(target)}
               reload={refresh}
+              version={version}
             />
           ),
         }))}
@@ -311,12 +321,19 @@ export const BoardNotesClient: FC<{ boardId: string }> = ({ boardId }) => {
         key={detailState.key}
         state={detailState}
         canWrite={page.canWrite}
-        onEdit={(note) => editState.open({ note })}
-        onHistory={(target) => historyState.open(target)}
-        reload={refresh}
+        // 詳細は開いた時点の内容を持つので、編集・履歴へ移るときは閉じて古い内容(更新日時)を残さない
+        onEdit={(note) => {
+          detailState.close()
+          editState.open({ note })
+        }}
+        onHistory={(target) => {
+          detailState.close()
+          historyState.open(target)
+        }}
+        reload={reloadAll}
       />
-      <NoteEditModal key={editState.key} state={editState} boardId={boardId} reload={refresh} />
-      <NoteHistoryModal key={historyState.key} state={historyState} canWrite={page.canWrite} reload={refresh} />
+      <NoteEditModal key={editState.key} state={editState} boardId={boardId} reload={reloadAll} />
+      <NoteHistoryModal key={historyState.key} state={historyState} canWrite={page.canWrite} reload={reloadAll} />
     </FlexCol>
   )
 }

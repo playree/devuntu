@@ -398,6 +398,8 @@ export const ja: DefaultLocaleItems = {
   msg_board_note_deleted_revision: 'この版で削除されました。この版に戻すと削除前の内容で復元します。',
   msg_board_note_limit_reached: 'このボードの件数の上限に達しています。既存のものを更新するか削除してください。',
   msg_board_note_no_change: '前の版から変更はありません。',
+  msg_board_note_too_long_to_move:
+    '本文が移動先の上限(${max}文字)を超えているため移せません。先に本文を短くしてください。',
   msg_board_notes_desc:
     'AIと共有する、このボードの知識です。ナレッジは利用者が管理するもの(AIはユーザーの指示や同意があるときだけ更新)、メモリはAIが作業中に自動で溜めるものです。どちらもMCPの get_ticket / get_board / get_agent_task に索引(名前と説明)だけが載り、AIは必要なものの本文を読みます。常に全文を渡す前提はボード設定の「AI向けコンテキスト」に書いてください。変更はすべて履歴に残り、ここから戻せます。',
   msg_confirm_approve_proposal:

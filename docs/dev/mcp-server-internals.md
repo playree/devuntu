@@ -128,7 +128,7 @@ Precedence: user instructions > the ticket > project rules (CLAUDE.md / AGENTS.m
 `instructions` は 2000 文字未満に保つ(`tests/lib/mcp/mcp-instructions.test.ts`)。MCP の仕様に上限は無いが、
 Claude Code は instructions とツールの description をそれぞれ約 2KB で黙って切り詰めるという報告があり、
 後半の手順と優先順位が届かなくなるのを避けるため。詳しい規則はツールの description(こちらも同じ上限)に持たせる。
-コメントの種別(plan / report)は手順の 2・6 と `add_ticket_comment` の description で伝わるので、instructions には別に載せない。
+人の経路では、コメントの種別(plan / report)は手順の 2・6 と `add_ticket_comment` の description で伝わるので、別の行にはしない(エージェントの経路には手順が無いので1行で伝える)。
 
 **エージェント用トークンの `instructions`**
 
@@ -139,9 +139,12 @@ When creating or updating a ticket: Put completion conditions (acceptance criter
 boardContext in get_ticket / get_board / get_agent_task (only when set) holds premises shared by every ticket on the board (target repository, conventions, terms): read and follow it before working.
 boardKnowledge / boardMemory there index shared notes ("name: description"): read relevant ones with get_board_notes. Change knowledge only with user consent.
 In automated operation, follow the rule returned by get_agent_task and the runner instructions, and finally report the result with finish_agent_task.
+Precedence: the ticket > boardContext > boardKnowledge > boardMemory. Comments with type=plan / type=report are shown separately from regular comments as a plan / a report.
 ```
 
-先頭の5行は人の経路の 1〜5 と同じ。最後の行は「自動運用では get_agent_task が返す rule とランナーの指示に従い、最後に finish_agent_task で結果を報告する」。
+先頭の5行は人の経路の 1〜5 と同じ。続く行は「自動運用では get_agent_task が返す rule とランナーの指示に従い、最後に finish_agent_task で結果を報告する」。
+最後の行は優先順位(チケット > boardContext > boardKnowledge > boardMemory)とコメントの種別(type=plan / type=report は通常コメントと分けて表示される)。
+エージェントには手順と人の経路の優先順位を載せないので、この2点をここで補う。
 
 **`get_ticket` の `workflow`**
 

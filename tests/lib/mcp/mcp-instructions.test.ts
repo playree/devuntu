@@ -48,9 +48,14 @@ describe('mcpInstructions', () => {
     expect(mcpInstructions('agent')).not.toContain('report_acceptance_criteria')
   })
 
-  it('優先順位は人の経路にだけ載せる(エージェントはランナーの指示に従う)', () => {
-    expect(mcpInstructions('oauth')).toContain('Precedence:')
-    expect(mcpInstructions('agent')).not.toContain('Precedence:')
+  it('既定の手順を含む優先順位は人の経路にだけ載せる(エージェントはランナーの指示に従う)', () => {
+    expect(mcpInstructions('oauth')).toContain('these default steps')
+    expect(mcpInstructions('agent')).not.toContain('these default steps')
+  })
+
+  it('エージェントにも、チケット > boardContext > ナレッジ > メモリの順とコメントの種別を伝える', () => {
+    expect(mcpInstructions('agent')).toContain('the ticket > boardContext > boardKnowledge > boardMemory')
+    expect(mcpInstructions('agent')).toContain('type=plan / type=report')
   })
 
   it('ドキュメントに載せた全文がコードの文言と一致する', () => {

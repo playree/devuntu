@@ -38,7 +38,8 @@ export const writeBoardNoteRevision = async (tx: Db, { snapshot, ...revision }: 
   }
 }
 
-const REVISION_SELECT = {
+// 削除済みの一覧は名前と説明だけを出すので、本文は履歴を開いたときにだけ引く
+const REVISION_SUMMARY_SELECT = {
   id: true,
   noteId: true,
   action: true,
@@ -46,12 +47,15 @@ const REVISION_SELECT = {
   type: true,
   name: true,
   description: true,
-  content: true,
   via: true,
   createdAt: true,
   actor: { select: { name: true, isAgent: true } },
   ticket: { select: { number: true, board: { select: { key: true } } } },
 } as const
+
+const REVISION_SELECT = { ...REVISION_SUMMARY_SELECT, content: true } as const
+
+export type BoardNoteRevisionSummary = Omit<BoardNoteRevisionItem, 'content'>
 
 export type BoardNoteRevisionItem = BoardNoteSnapshot & {
   id: string
@@ -65,11 +69,11 @@ export type BoardNoteRevisionItem = BoardNoteSnapshot & {
   ticketDisplayId: string | null
 }
 
-const toRevisionItem = ({
+const toRevisionItem = <T extends Prisma.BoardNoteRevisionGetPayload<{ select: typeof REVISION_SUMMARY_SELECT }>>({
   ticket,
   actor,
   ...row
-}: Prisma.BoardNoteRevisionGetPayload<{ select: typeof REVISION_SELECT }>): BoardNoteRevisionItem => ({
+}: T) => ({
   ...row,
   actorName: actor?.name ?? '',
   actorIsAgent: actor?.isAgent ?? false,
@@ -90,29 +94,33 @@ export const listBoardNoteRevisions = async (actor: Actor, noteId: string): Prom
     select: REVISION_SELECT,
     orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
   })
-  return rows.map(toRevisionItem)
+  return rows.map((row): BoardNoteRevisionItem => toRevisionItem(row))
 }
 
-/** 削除済みのノート(最後の版が削除で、いまは存在しないもの)。復元はその版から行う */
+/**
+ * 削除済みのノート(いまは存在しないもの)を、最後に削除された版で返す。復元はその版から行う。
+ * 区分は削除と復元・昇格をまたいで変わりうるので、ノートごとに最後の削除を選んでから区分で絞る
+ */
 export const listDeletedBoardNotes = async (
   actor: Actor,
   boardId: string,
   kind: BoardNoteKind,
-): Promise<BoardNoteRevisionItem[]> => {
+): Promise<BoardNoteRevisionSummary[]> => {
   await assertBoardAccess(actor, boardId, 'view')
   const rows = await prisma.boardNoteRevision.findMany({
-    where: { boardId, kind, action: 'deleted' },
-    select: REVISION_SELECT,
+    where: { boardId, action: 'deleted' },
+    select: REVISION_SUMMARY_SELECT,
     orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     distinct: ['noteId'],
   })
-  if (rows.length === 0) {
+  const deleted = rows.filter((row) => row.kind === kind)
+  if (deleted.length === 0) {
     return []
   }
   const alive = await prisma.boardNote.findMany({
-    where: { id: { in: rows.map(({ noteId }) => noteId) } },
+    where: { id: { in: deleted.map(({ noteId }) => noteId) } },
     select: { id: true },
   })
   const aliveIds = new Set(alive.map(({ id }) => id))
-  return rows.filter(({ noteId }) => !aliveIds.has(noteId)).map(toRevisionItem)
+  return deleted.filter(({ noteId }) => !aliveIds.has(noteId)).map(toRevisionItem)
 }

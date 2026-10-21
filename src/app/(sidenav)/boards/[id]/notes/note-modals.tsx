@@ -26,7 +26,7 @@ import { MarkdownView } from '@/components/markdown/markdown-view'
 import { notify } from '@/components/notify'
 import type { BoardNoteKind } from '@/generated/prisma/enums'
 import { parseAction, useActionData } from '@/lib/action/action-client'
-import { DEFAULT_BOARD_NOTE_TYPE } from '@/lib/board-note/board-note-rule'
+import { DEFAULT_BOARD_NOTE_TYPE, MAX_BOARD_NOTE_CONTENT } from '@/lib/board-note/board-note-rule'
 import { type BoardNoteFields, scBoardNoteFields } from '@/lib/schema/schema-board-note'
 import { useConfirmAction } from '@/lib/use-confirm-action'
 import { useLocale } from '@/locale/client'
@@ -64,6 +64,10 @@ export const NoteDetailModal: FC<{
 
   const move = async (target: NoteDetail) => {
     const kind = target.kind === 'memory' ? 'knowledge' : 'memory'
+    if (target.content.length > MAX_BOARD_NOTE_CONTENT[kind]) {
+      notify.warn(t('msg_board_note_too_long_to_move', { max: `${MAX_BOARD_NOTE_CONTENT[kind]}` }))
+      return
+    }
     await parseAction(moveBoardNote({ id: target.id, kind }))
     notify.success(t('msg_moved_board_note', { target: target.name, kind: t(`board_note_kind_${kind}`) }))
     refresh()

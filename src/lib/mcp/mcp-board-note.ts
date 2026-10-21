@@ -11,6 +11,7 @@ import { z } from 'zod'
 import {
   createBoardNote,
   deleteBoardNote,
+  errBoardNoteConflict,
   findBoardNoteIdByName,
   getBoardNotesByName,
   listBoardNotes,
@@ -110,6 +111,10 @@ export const saveBoardNoteForMcp = async (
   const result = id
     ? await updateBoardNote(auth.user, writer, id, { ...fields, name: newName }, { expectedUpdatedAt, ticketId })
     : await (() => {
+        if (expectedUpdatedAt) {
+          // 読んだ後に消されたノートを作り直して、削除を黙って取り消さないようにする
+          throw errBoardNoteConflict(`The note ${name} was deleted after you read it`)
+        }
         if (newName) {
           throw errValidation(`No note named ${name} exists to rename. Use name for a new note`)
         }

@@ -393,6 +393,7 @@ export type LocaleItemBase =
   | 'msg_board_note_deleted_revision'
   | 'msg_board_note_limit_reached'
   | 'msg_board_note_no_change'
+  | 'msg_board_note_too_long_to_move'
   | 'msg_board_notes_desc'
   | 'msg_confirm_approve_proposal'
   | 'msg_confirm_restore_board_note'
