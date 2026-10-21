@@ -1,11 +1,6 @@
 /** MCP クライアントへ伝える対応の作法 */
 
-import {
-  ACCEPTANCE_CRITERIA_GUIDE,
-  mcpInstructions,
-  TICKET_WORKFLOW,
-  ticketWorkflowFor,
-} from '@/lib/mcp/mcp-instructions'
+import { mcpInstructions, TICKET_WORKFLOW, ticketWorkflowFor } from '@/lib/mcp/mcp-instructions'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
@@ -39,8 +34,20 @@ describe('mcpInstructions', () => {
   })
 
   it('完了条件の置き場所(acceptanceCriteria)をどの経路にも伝える', () => {
-    expect(mcpInstructions('oauth')).toContain(ACCEPTANCE_CRITERIA_GUIDE)
-    expect(mcpInstructions('agent')).toContain(ACCEPTANCE_CRITERIA_GUIDE)
+    expect(mcpInstructions('oauth')).toMatch(/completion conditions .* in acceptanceCriteria/)
+    expect(mcpInstructions('agent')).toMatch(/completion conditions .* in acceptanceCriteria/)
+  })
+
+  it('個人・手元の環境のことはボードノートでなくクライアント自身のメモリへ回させる', () => {
+    expect(mcpInstructions('oauth')).toMatch(/own machine .*: your own memory, not board notes/)
+    expect(mcpInstructions('agent')).toMatch(/own machine .*: your own memory, not board notes/)
+  })
+
+  it('人の経路は依頼されたらナレッジに書き、それ以外は提案させる。エージェントは報告で提案させる', () => {
+    expect(mcpInstructions('oauth')).toContain('the user asks you to remember: knowledge (userApproved=true)')
+    expect(mcpInstructions('oauth')).toContain('propose making them knowledge')
+    expect(mcpInstructions('agent')).not.toContain('userApproved')
+    expect(mcpInstructions('agent')).toContain('as knowledge in your report')
   })
 
   it('受け入れ条件の結果は report ではなく自己申告として記録させる', () => {

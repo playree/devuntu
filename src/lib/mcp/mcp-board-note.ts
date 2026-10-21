@@ -202,10 +202,13 @@ export const registerBoardNoteTools = (server: McpServer, auth: ResourceAuth) =>
       annotations: TOOL_ANNOTATIONS.destructive,
       description:
         'Saves a note shared with every member of the board: updates the note with the same name (only the fields you pass change), or creates it. ' +
+        'Save only what any member can use in any environment; personal preferences and facts about your own machine / environment (paths, ports, installed tools) belong in your own memory, not here. ' +
         'kind=memory (default) is for learnings you record on your own that will help future work on other tickets of this board: ' +
-        'conventions and feedback from users, decisions and their reasons, gotchas, and pointers to external resources. ' +
+        'conventions and feedback that apply to the whole board, decisions and their reasons, gotchas, and pointers to external resources. ' +
         'kind=knowledge is curated by users: create, update or move a note to / from knowledge only when the user explicitly asked or agreed, ' +
-        'and pass userApproved=true (agent connections cannot change knowledge; propose it in your report instead). ' +
+        'and pass userApproved=true. When the user asks you to remember a board-wide rule or procedure, save it as knowledge. ' +
+        'Propose making confirmed memory, or findings from checks / research worth keeping, knowledge instead of saving it without consent ' +
+        '(agent connections cannot change knowledge; propose it in your report). ' +
         'Check boardKnowledge / boardMemory first and update an existing note instead of creating a duplicate; ' +
         'delete memory that turned out to be wrong. Keep one topic per note, with a one-line description that makes its relevance clear from the index. ' +
         'Do not save ticket-specific progress, temporary state, information already in the repository, or secrets',

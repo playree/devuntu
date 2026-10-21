@@ -89,66 +89,88 @@ MCP サーバーの認証の振り分け・ツールの入力仕様・実装上�
 
 ```text
 devuntu is a kanban-style ticket management tool. ticketId accepts a display ID (e.g. ABC-42).
-Link GitHub / GitLab branches, PRs (MRs) and commits with link_ticket_artifact to show their state and CI results on the ticket.
-When creating or updating a ticket: Put completion conditions (acceptance criteria / definition of done / checklist) in acceptanceCriteria as one verifiable sentence per item, not in content.
-boardContext in get_ticket / get_board / get_agent_task (only when set) holds premises shared by every ticket on the board (target repository, conventions, terms): read and follow it before working.
-boardKnowledge / boardMemory there index shared notes ("name: description"): read relevant ones with get_board_notes. Change knowledge only with user consent.
+Tickets: put completion conditions (definition of done / checklist) in acceptanceCriteria, one verifiable sentence each, not in content.
 
-When working from a ticket, follow these steps by default (no need to confirm each time).
-1. When starting: set status to doing with update_ticket (leave it unchanged if already doing / done)
-2. Once you have a plan: post it with add_ticket_comment using type=plan
-3. Questions for the user: post them as a regular comment without type
-4. After creating a branch / pull request / commit: link the URL with link_ticket_artifact (naming the branch feature/<display ID> links it automatically for repositories connected to the board)
-5. When done: if the ticket has acceptance criteria, record whether each one is met with evidence using report_acceptance_criteria (not in the report comment)
-6. Then post a report with add_ticket_comment using type=report covering what you did, how you verified it, and remaining issues (attach screenshots via create_image_upload_token)
-7. Save learnings useful for other tickets as memory with save_board_note
+In get_ticket / get_board / get_agent_task (only when set):
+- boardContext: premises for every ticket on the board (repository, conventions, terms). Read and follow it before working.
+- boardKnowledge / boardMemory: indexes ("name: description") of notes shared by all board members. Read relevant ones with get_board_notes.
 
-Precedence: user instructions > the ticket > project rules (CLAUDE.md / AGENTS.md, etc.) and boardContext > boardKnowledge > boardMemory > these default steps. When you are only asked to read a ticket or answer a question, do not post comments or change the status.
+Where to keep what you learn:
+- Personal preferences or facts about your own machine / environment: your own memory, not board notes.
+- Learnings any member can use in any environment: memory via save_board_note (update, do not duplicate).
+- Board-wide rules or procedures the user asks you to remember: knowledge (userApproved=true).
+- Confirmed memory or findings from checks / research worth keeping: propose making them knowledge. Change knowledge only with user consent.
+
+Default steps when working on a ticket (no need to confirm each time):
+1. Start: set status to doing with update_ticket (unless already doing / done)
+2. Plan: post it with add_ticket_comment type=plan. Questions for the user: comments without type
+3. Branch / PR / commit: link the URL with link_ticket_artifact (feature/<display ID> branches link automatically)
+4. Done: if the ticket has acceptance criteria, record whether each is met with evidence via report_acceptance_criteria (not in the report)
+5. Report: add_ticket_comment type=report with what you did, how you verified it, and remaining issues (screenshots via create_image_upload_token)
+
+Precedence: user instructions > the ticket > project rules (CLAUDE.md / AGENTS.md, etc.) and boardContext > boardKnowledge > boardMemory > these default steps. When only asked to read a ticket or answer a question, do not comment or change the status.
 ```
 
-1. devuntu はかんばん形式のチケット管理ツール。ticketId には表示ID(例: ABC-42)を指定できる
-2. GitHub / GitLab のブランチ / PR(MR) / コミットを link_ticket_artifact で紐付けると、状態と CI の結果がチケットに表示される
-3. チケットの作成・更新時: 完了条件(受け入れ条件 / Done の定義 / チェックリスト)は content ではなく acceptanceCriteria に、検証できる1文ずつ入れる
-4. get_ticket / get_board / get_agent_task の boardContext(設定時のみ)は、ボードのすべてのチケットに共通する前提(対象リポジトリ・規約・用語)。
-   着手する前に読んで従う
-5. 同じ応答の boardKnowledge / boardMemory は、共有ノートの索引(`name: description`)。関係するものを get_board_notes で読む。
-   ナレッジは利用者の同意があるときだけ変える
-6. チケットに対応するときは、既定で次の手順に従う(都度の確認は不要)
-   1. 着手時: update_ticket で status を doing にする(既に doing / done なら変えない)
-   2. プランができたら: add_ticket_comment で type=plan として投稿する
-   3. 利用者への質問: type を付けない通常コメントで投稿する
-   4. ブランチ / PR / コミットを作ったら: link_ticket_artifact で URL を紐付ける
-      (ボードに連携したリポジトリでは、ブランチ名を feature/<表示ID> にすると自動で紐付く)
-   5. 完了時: 受け入れ条件があれば、それぞれ満たしたかを根拠付きで report_acceptance_criteria に記録する(report のコメントには書かない)
-   6. 続けて add_ticket_comment で type=report として、やったこと・確認方法・残課題を報告する(スクリーンショットは create_image_upload_token で添付)
-   7. 他のチケットでも役立つ知見を save_board_note でメモリとして保存する
-7. 優先順位: 利用者の指示 > チケット > プロジェクトのルール(CLAUDE.md / AGENTS.md など)と boardContext > boardKnowledge > boardMemory > この既定の手順。
+「ボードの前提 / 情報の残し先 / 手順 / 優先順位」の節に分け、同じ案内を2か所に書かない。
+
+1. 前置き: devuntu はかんばん形式のチケット管理ツール。ticketId には表示ID(例: ABC-42)を指定できる。
+   チケットの完了条件(Done の定義 / チェックリスト)は content ではなく acceptanceCriteria に、検証できる1文ずつ入れる
+2. ボードの前提(get_ticket / get_board / get_agent_task に、設定時のみ載る)
+   - boardContext: ボードのすべてのチケットに共通する前提(対象リポジトリ・規約・用語)。着手する前に読んで従う
+   - boardKnowledge / boardMemory: ボードのメンバー全員で共有するノートの索引(`name: description`)。関係するものを get_board_notes で読む
+3. 得た情報の残し先
+   - 個人の好みや、自分のマシン・環境に固有のこと: クライアント自身のメモリ。ボードノートには入れない
+   - メンバーの誰もが、どの環境でも使える知見: save_board_note でメモリへ(重複させず更新する)
+   - 利用者に覚えておくよう頼まれた、ボード全体の決めごと・手順: ナレッジへ(`userApproved=true`)
+   - 確かめられたメモリや、確認・調査で得た残しておくべき情報: ナレッジにするかを提案する。ナレッジは利用者の同意があるときだけ変える
+4. チケットに対応するときの既定の手順(都度の確認は不要)
+   1. 着手: update_ticket で status を doing にする(既に doing / done なら変えない)
+   2. プラン: add_ticket_comment で type=plan として投稿する。利用者への質問は type を付けない通常コメントで
+   3. ブランチ / PR / コミット: link_ticket_artifact で URL を紐付ける(ブランチ名を feature/<表示ID> にすると自動で紐付く)
+   4. 完了: 受け入れ条件があれば、それぞれ満たしたかを根拠付きで report_acceptance_criteria に記録する(report には書かない)
+   5. 報告: add_ticket_comment で type=report として、やったこと・確認方法・残課題を報告する(スクリーンショットは create_image_upload_token で添付)
+5. 優先順位: 利用者の指示 > チケット > プロジェクトのルール(CLAUDE.md / AGENTS.md など)と boardContext > boardKnowledge > boardMemory > この既定の手順。
    チケットを読む・質問に答えるだけを頼まれたときは、コメントもステータス変更もしない
 
 `instructions` は 2000 文字未満に保つ(`tests/lib/mcp/mcp-instructions.test.ts`)。MCP の仕様に上限は無いが、
 Claude Code は instructions とツールの description をそれぞれ約 2KB で黙って切り詰めるという報告があり、
 後半の手順と優先順位が届かなくなるのを避けるため。詳しい規則はツールの description(こちらも同じ上限)に持たせる。
-人の経路では、コメントの種別(plan / report)は手順の 2・6 と `add_ticket_comment` の description で伝わるので、別の行にはしない(エージェントの経路には手順が無いので1行で伝える)。
+
+- 受け入れ条件の案内は、`create_ticket` / `update_ticket` の description に載せる全文(`ACCEPTANCE_CRITERIA_GUIDE`)を縮めた形で載せる
+- 紐付けの説明(状態と CI の結果がチケットに表示される)は、人の経路では手順3と `link_ticket_artifact` の description に任せる
+- コメントの種別(plan / report)は、手順2・5と `add_ticket_comment` の description で伝わるので、別の行にはしない
+- 情報の残し先は、Claude Code がツールの description を必要になるまで読み込まないため(遅延ロード)、保存先を選ぶ前に届く instructions に書く。
+  同じ規則は `save_board_note` の description にも書く(instructions を使わないクライアント向け)
 
 **エージェント用トークンの `instructions`**
 
 ```text
 devuntu is a kanban-style ticket management tool. ticketId accepts a display ID (e.g. ABC-42).
-Link GitHub / GitLab branches, PRs (MRs) and commits with link_ticket_artifact to show their state and CI results on the ticket.
-When creating or updating a ticket: Put completion conditions (acceptance criteria / definition of done / checklist) in acceptanceCriteria as one verifiable sentence per item, not in content.
-boardContext in get_ticket / get_board / get_agent_task (only when set) holds premises shared by every ticket on the board (target repository, conventions, terms): read and follow it before working.
-boardKnowledge / boardMemory there index shared notes ("name: description"): read relevant ones with get_board_notes. Change knowledge only with user consent.
+Tickets: put completion conditions (definition of done / checklist) in acceptanceCriteria, one verifiable sentence each, not in content.
+
+In get_ticket / get_board / get_agent_task (only when set):
+- boardContext: premises for every ticket on the board (repository, conventions, terms). Read and follow it before working.
+- boardKnowledge / boardMemory: indexes ("name: description") of notes shared by all board members. Read relevant ones with get_board_notes.
+
+Where to keep what you learn:
+- Personal preferences or facts about your own machine / environment: your own memory, not board notes.
+- Learnings any member can use in any environment: memory via save_board_note (update, do not duplicate).
+- Agents cannot change knowledge: propose confirmed memory or findings worth keeping as knowledge in your report.
+
 In automated operation, follow the rule returned by get_agent_task and the runner instructions, and finally report the result with finish_agent_task.
+Link GitHub / GitLab branches, PRs (MRs) and commits with link_ticket_artifact to show their state and CI results on the ticket.
 Precedence: the ticket > boardContext > boardKnowledge > boardMemory. Comments with type=plan / type=report are shown separately from regular comments as a plan / a report.
 ```
 
-先頭の5行は人の経路の 1〜5 と同じ。続く行は「自動運用では get_agent_task が返す rule とランナーの指示に従い、最後に finish_agent_task で結果を報告する」。
+前置き・ボードの前提・残し先の先頭2項目は人の経路と同じ。エージェントはナレッジを変更できないので、残し先の3項目めは
+「確かめられたメモリや残しておくべき情報は、ナレッジにするよう報告で提案する」になる。
+続く行は「自動運用では get_agent_task が返す rule とランナーの指示に従い、最後に finish_agent_task で結果を報告する」と、紐付けの説明。
 最後の行は優先順位(チケット > boardContext > boardKnowledge > boardMemory)とコメントの種別(type=plan / type=report は通常コメントと分けて表示される)。
-エージェントには手順と人の経路の優先順位を載せないので、この2点をここで補う。
+エージェントには手順と人の経路の優先順位を載せないので、紐付け・優先順位・コメントの種別をここで補う。
 
 **`get_ticket` の `workflow`**
 
-人の経路でチケットを編集できるときだけ、上の 6 の手順(1〜7)と 7 の優先順位を文字列の配列で返す(英文は instructions と同じ)。
+人の経路でチケットを編集できるときだけ、上の 4 の手順(1〜5)と 5 の優先順位を文字列の配列で返す(英文は instructions と同じ)。
 
 ## 入力の約束ごと
 
