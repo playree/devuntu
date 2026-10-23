@@ -1,6 +1,7 @@
 name: Pages
 
-# site/ の中身を GitHub Pages の公開ルートとして配信する(画面のスクリーンショットは docs/images から入れる)
+# site/ の中身をそのまま GitHub Pages の公開ルートとして配信する
+# site/images は docs/images へのシンボリックリンク(upload-pages-artifact が実体化して配信する)
 on:
   workflow_dispatch:
   push:
@@ -30,8 +31,6 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-
-      - run: cp -r docs/images site/images
 
       - uses: actions/configure-pages@v6
 
