@@ -52,6 +52,7 @@ and the AI agent features are designed around that same premise (a human check i
 - Kanban boards and tickets (boards, tags, assignees, priorities, due dates, comments, mentions)
   - Parent/child and related tickets, acceptance criteria, per-board ticket templates and change history
   - Filter the board and the ticket list down to the children or related tickets of a given ticket
+  - Export a ticket or a plan / report as PDF
 - Google Calendar integration, and sharing your free/busy time through a public URL that needs no sign-in
 - Email / Slack DM / web push notifications for mentions, assignee changes, AI agent run results and due date reminders,
   and Slack channel notifications per team board (tickets created / completed, assignee changes, agent run results)
@@ -67,7 +68,7 @@ and the AI agent features are designed around that same premise (a human check i
   (held while acceptance criteria are unmet),
   and CI failures or PR/MR review comments can send the ticket back to the agent automatically
 - Run predefined jobs on remote servers and follow the output in real time
-- Passkey authentication and Google sign-in
+- Email OTP, passkey authentication and Google sign-in
 - Can act as an OAuth provider
 - English / Japanese UI
 
@@ -206,6 +207,7 @@ The following documents are in Japanese.
 | Document                                                                   | Contents                                                               |
 | -------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | [docs/README.md](docs/README.md)                                           | Entry point: which pages to read, by audience                          |
+| [docs/guide/README.md](docs/guide/README.md)                               | For users: page list                                                   |
 | [docs/guide/getting-started.md](docs/guide/getting-started.md)             | Getting started: the first 30 minutes, terms, roles, FAQ               |
 | [docs/guide/user-guide.md](docs/guide/user-guide.md)                       | How to use each screen                                                 |
 | [docs/guide/ai.md](docs/guide/ai.md)                                       | Connecting AI tools (MCP) and handing tickets to AI agents             |

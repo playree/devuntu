@@ -70,3 +70,6 @@ __pycache__/
 
 # Claude Code の個人用設定
 /CLAUDE.local.md
+
+# 紹介サイトのプレビュー用に docs/images から複製したスクリーンショット
+/site/images

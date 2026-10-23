@@ -1,12 +1,13 @@
 name: Pages
 
-# site/ の中身をそのまま GitHub Pages の公開ルートとして配信する
+# site/ の中身を GitHub Pages の公開ルートとして配信する(画面のスクリーンショットは docs/images から入れる)
 on:
   workflow_dispatch:
   push:
     branches: [main]
     paths:
       - 'site/**'
+      - 'docs/images/**'
       - '.github/workflows/pages.yml'
 
 permissions:
@@ -29,6 +30,8 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
+
+      - run: cp -r docs/images site/images
 
       - uses: actions/configure-pages@v6
 

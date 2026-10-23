@@ -54,6 +54,10 @@ pnpm release:version          # version / released / latest / stable / bumpTo
   2. 関連付いたチケットを集める: `search_tickets`(relatedTo: そのチケット / relation: related)
   3. 各チケットを `get_ticket` で読み、タグ(機能追加 / 改善 / 不具合)で分類する
 - 関連チケットのうち、完了していないものや PR が S に含まれていないものは、ノートから外し、ユーザーに伝える
+- 機能追加・改善のうち利用者や運用者から見える機能が、S の時点で次の機能一覧に反映されているかを確かめる。
+  漏れていればユーザーに示し、リリースの前に直すかを確認する
+  - `README.md` の「できること」と `README.en.md` の Features
+  - 紹介サイトの `site/index.html` の「できること」と `site/en/index.html` の Features
 
 ### 1-3. 運用者への影響を調べる
 
