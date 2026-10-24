@@ -21,7 +21,10 @@
       content="かんばん・カレンダー・通知・MCP/AIエージェント連携・GitHub/GitLab連携・リモート実行を備えたセルフホスト型のプロジェクト管理ツール"
     />
     <meta property="og:url" content="https://playree.github.io/devuntu/" />
+    <meta property="og:site_name" content="Devuntu" />
     <meta property="og:image" content="https://playree.github.io/devuntu/assets/icon-512.png" />
+    <meta property="og:image:alt" content="Devuntu のロゴ" />
+    <meta property="og:locale" content="ja_JP" />
     <meta name="twitter:card" content="summary" />
     <link rel="stylesheet" href="assets/style.css" />
   </head>
@@ -53,7 +56,8 @@
           <li>
             <h3>かんばんとチケット管理</h3>
             <p>
-              ボード、タグ、担当者、優先度、期日、コメント、メンション。親子・関連チケット、受け入れ条件、ボードごとのチケットテンプレート、変更履歴
+              ボード、タグ、担当者、優先度、期日、コメント、メンション。親子・関連チケット、受け入れ条件、ボードごとのチケットテンプレート、変更履歴。指定したチケットの子・関連チケットへの絞り込み、チケットやプラン/報告書の
+              PDF 出力
             </p>
           </li>
           <li>
@@ -63,8 +67,8 @@
           <li>
             <h3>通知</h3>
             <p>
-              メンションや担当者変更、エージェントの実行結果をメール / Slack DM / Webプッシュで通知。チームボードは
-              Slack チャンネルへも流せる
+              メンションや担当者変更、期日のリマインド、エージェントの実行結果をメール / Slack DM /
+              Webプッシュで通知。チームボードは Slack チャンネルへも流せる
             </p>
           </li>
           <li>
@@ -84,10 +88,17 @@
             <p>対象リポジトリや規約など、ボード共通の前提を MCP クライアント・エージェントへ届ける</p>
           </li>
           <li>
+            <h3>ナレッジ / メモリ</h3>
+            <p>
+              利用者が管理する知識を「ナレッジ」に、AI が作業で得た知見を「メモリ」にボード単位で溜め、メンバーと AI
+              で共有する
+            </p>
+          </li>
+          <li>
             <h3>GitHub / GitLab 連携</h3>
             <p>
               ブランチ・PR・コミットをチケットに紐付けて PR の状態と CI
-              の結果を表示。マージで自動完了、CIの失敗やレビュー指摘でエージェントへ自動で差し戻し
+              の結果を表示。マージで自動完了(未達の受け入れ条件があれば保留)、CIの失敗やレビュー指摘でエージェントへ自動で差し戻し
             </p>
           </li>
           <li>
@@ -96,7 +107,7 @@
           </li>
           <li>
             <h3>認証</h3>
-            <p>パスキー認証、Googleログイン。OAuthプロバイダとしても利用できる</p>
+            <p>メールOTP、パスキー認証、Googleログイン。OAuthプロバイダとしても利用できる</p>
           </li>
           <li>
             <h3>日本語 / 英語</h3>
@@ -109,17 +120,11 @@
         <h2>画面</h2>
         <div class="screenshots">
           <figure>
-            <img
-              src="assets/screenshots/dashboard.webp"
-              alt="ダッシュボード"
-              width="1350"
-              height="1050"
-              loading="lazy"
-            />
+            <img src="images/dashboard.webp" alt="ダッシュボード" width="1350" height="945" loading="lazy" />
             <figcaption>ダッシュボード</figcaption>
           </figure>
           <figure>
-            <img src="assets/screenshots/board.webp" alt="かんばんボード" width="1350" height="1050" loading="lazy" />
+            <img src="images/board.webp" alt="かんばんボード" width="1350" height="945" loading="lazy" />
             <figcaption>かんばんボード</figcaption>
           </figure>
         </div>
@@ -131,11 +136,19 @@
           Docker イメージを提供しており、Docker Compose で導入できます。必要なファイルは
           <code>compose.yaml</code> だけです。
         </p>
+        <p>
+          前提: Docker Compose v2.24 以降 / Docker Engine 25.0 以降、メモリ 2GB 以上(推奨
+          4GB)、サインイン用のメール送信手段。HTTPS で公開する場合はリバースプロキシ
+        </p>
         <ol class="steps">
-          <li><code>compose.yaml</code> をホストへ配置する</li>
+          <li>
+            <code>compose.yaml</code> をホストへ配置する(<code
+              >curl -fsSLO https://raw.githubusercontent.com/playree/devuntu/stable/compose.yaml</code
+            >)
+          </li>
           <li><code>docker compose run --rm tools setup-env</code> で設定ファイルを対話生成する</li>
           <li><code>docker compose up -d --wait</code> で起動する(DBマイグレーションは起動時に自動実行)</li>
-          <li><code>/start</code> を開いて最初の管理者を登録する</li>
+          <li><code>&lt;BETTER_AUTH_URL&gt;/start</code> を開いて最初の管理者を登録する</li>
         </ol>
         <p>
           手順の詳細は<a href="https://github.com/playree/devuntu/blob/main/docs/admin/installation.md">導入手順</a

@@ -1,12 +1,14 @@
 name: Pages
 
 # site/ の中身をそのまま GitHub Pages の公開ルートとして配信する
+# site/images は docs/images へのシンボリックリンク(upload-pages-artifact が実体化して配信する)
 on:
   workflow_dispatch:
   push:
     branches: [main]
     paths:
       - 'site/**'
+      - 'docs/images/**'
       - '.github/workflows/pages.yml'
 
 permissions:

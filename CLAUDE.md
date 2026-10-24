@@ -29,6 +29,7 @@ docs は読者別に `guide/`(利用者)・`admin/`(運用者)・`dev/`(開発�
 | [README.md](README.md)                                                     | 全体の入口。各ドキュメントへの索引                       |
 | [README.en.md](README.en.md)                                               | 英語の README(概要・クイックスタート)                    |
 | [docs/README.md](docs/README.md)                                           | ドキュメントの入口(読者別の案内)                         |
+| [docs/guide/README.md](docs/guide/README.md)                               | 利用者向けドキュメントの一覧                             |
 | [docs/guide/getting-started.md](docs/guide/getting-started.md)             | はじめに(最初の30分・用語・役割と権限・FAQ)(利用者向け)  |
 | [docs/guide/user-guide.md](docs/guide/user-guide.md)                       | 画面ごとの使い方(利用者向け)                             |
 | [docs/guide/ai.md](docs/guide/ai.md)                                       | MCP のつなぎ方・エージェントへの任せ方・承認(利用者向け) |
@@ -51,6 +52,7 @@ docs は読者別に `guide/`(利用者)・`admin/`(運用者)・`dev/`(開発�
 | [docs/dev/agent-runner-internals.md](docs/dev/agent-runner-internals.md)   | AIエージェントの自動運用の仕組み(開発者向け)             |
 | [docs/dev/command-exec-internals.md](docs/dev/command-exec-internals.md)   | リモート実行の実装上の決めごと(開発者向け)               |
 | [CONTRIBUTING.md](CONTRIBUTING.md)                                         | 開発規約(ブランチ・コミット・PR・コーディングルール)     |
+| [site/index.html](site/index.html)                                         | 紹介サイト(日英)。規約は development.md                  |
 | [SECURITY.md](SECURITY.md)                                                 | 脆弱性の報告方法                                         |
 
 # 開発規約

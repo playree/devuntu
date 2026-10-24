@@ -21,7 +21,9 @@
       content="A self-hosted project management tool with Kanban boards, calendar, notifications, MCP / AI agent integration, GitHub / GitLab integration and remote execution"
     />
     <meta property="og:url" content="https://playree.github.io/devuntu/en/" />
+    <meta property="og:site_name" content="Devuntu" />
     <meta property="og:image" content="https://playree.github.io/devuntu/assets/icon-512.png" />
+    <meta property="og:image:alt" content="Devuntu logo" />
     <meta property="og:locale" content="en_US" />
     <meta name="twitter:card" content="summary" />
     <link rel="stylesheet" href="../assets/style.css" />
@@ -57,7 +59,8 @@
             <h3>Kanban boards and tickets</h3>
             <p>
               Boards, tags, assignees, priorities, due dates, comments and mentions. Parent/child and related tickets,
-              acceptance criteria, per-board ticket templates and change history
+              acceptance criteria, per-board ticket templates and change history. Filter down to the children or related
+              tickets of a ticket, and export tickets or plans / reports as PDF
             </p>
           </li>
           <li>
@@ -69,8 +72,8 @@
           <li>
             <h3>Notifications</h3>
             <p>
-              Email / Slack DM / web push notifications for mentions, assignee changes and AI agent run results. Team
-              boards can also post to a Slack channel
+              Email / Slack DM / web push notifications for mentions, assignee changes, due date reminders and AI agent
+              run results. Team boards can also post to a Slack channel
             </p>
           </li>
           <li>
@@ -93,10 +96,17 @@
             <p>Per-board premises such as the target repository and conventions, delivered to MCP clients and agents</p>
           </li>
           <li>
+            <h3>Knowledge / memory</h3>
+            <p>
+              Per-board knowledge curated by users and memory recorded by AI while working, shared by members and AI
+            </p>
+          </li>
+          <li>
             <h3>GitHub / GitLab</h3>
             <p>
               Link branches, pull requests and commits to tickets and see the PR status and CI results. Complete tickets
-              on merge, and send them back to the agent on CI failures or review comments
+              on merge (held while acceptance criteria are unmet), and send them back to the agent on CI failures or
+              review comments
             </p>
           </li>
           <li>
@@ -105,7 +115,7 @@
           </li>
           <li>
             <h3>Authentication</h3>
-            <p>Passkeys and Google sign-in. Devuntu can also act as an OAuth provider</p>
+            <p>Email OTP, passkeys and Google sign-in. Devuntu can also act as an OAuth provider</p>
           </li>
           <li>
             <h3>English / Japanese</h3>
@@ -118,17 +128,11 @@
         <h2>Screenshots</h2>
         <div class="screenshots">
           <figure>
-            <img
-              src="../assets/screenshots/dashboard-en.webp"
-              alt="Dashboard"
-              width="1350"
-              height="1050"
-              loading="lazy"
-            />
+            <img src="../images/dashboard-en.webp" alt="Dashboard" width="1350" height="945" loading="lazy" />
             <figcaption>Dashboard</figcaption>
           </figure>
           <figure>
-            <img src="../assets/screenshots/board.webp" alt="Kanban board" width="1350" height="1050" loading="lazy" />
+            <img src="../images/board.webp" alt="Kanban board" width="1350" height="945" loading="lazy" />
             <figcaption>Kanban board (Japanese UI)</figcaption>
           </figure>
         </div>
@@ -140,18 +144,23 @@
           Devuntu is distributed as a Docker image and runs with Docker Compose. The only file you need is
           <code>compose.yaml</code>.
         </p>
+        <p>
+          Requirements: Docker Compose v2.24+ / Docker Engine 25.0+, 2GB of memory or more (4GB recommended), and a way
+          to send email for sign-in. A reverse proxy if you serve it over HTTPS
+        </p>
         <ol class="steps">
-          <li>Place <code>compose.yaml</code> on the host</li>
+          <li>
+            Place <code>compose.yaml</code> on the host (<code
+              >curl -fsSLO https://raw.githubusercontent.com/playree/devuntu/stable/compose.yaml</code
+            >)
+          </li>
           <li>Generate the configuration files with <code>docker compose run --rm tools setup-env</code></li>
           <li>Start it with <code>docker compose up -d --wait</code> (database migrations run on startup)</li>
-          <li>Open <code>/start</code> and register the first administrator</li>
+          <li>Open <code>&lt;BETTER_AUTH_URL&gt;/start</code> and register the first administrator</li>
         </ol>
         <p>
           See the <a href="https://github.com/playree/devuntu/blob/main/README.en.md#quick-start">quick start</a> in the
           README for details. The application UI is available in English and Japanese.
-        </p>
-        <p class="note">
-          The detailed documentation is available in Japanese only. Please use a translation tool or an AI assistant.
         </p>
       </section>
       <section class="container">
@@ -176,6 +185,9 @@
             </a>
           </li>
         </ul>
+        <p class="note">
+          The detailed documentation is available in Japanese only. Please use a translation tool or an AI assistant.
+        </p>
       </section>
     </main>
 
