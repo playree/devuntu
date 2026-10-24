@@ -488,7 +488,7 @@ pnpm why sharp
 ビルドツールは使わず素の HTML/CSS をそのまま配信する。
 
 - `site/` 直下がそのまま公開ルートになる。ページを増やすときは `site/<名前>/index.html` を追加し、
-  共通のスタイル・画像は `site/assets/` に置く
+  共通のスタイルと、スクリーンショット以外の画像(ロゴ・アイコン)は `site/assets/` に置く
 - 画面のスクリーンショットは `docs/images/` の画像をそのまま使う。`site/images` は `docs/images` へのシンボリックリンクで、
   ページからは `images/<名前>.webp`(英語ページは `../images/<名前>.webp`)で参照する。
   デプロイ時は実体化して配信され、`docs/images/` の変更でも再デプロイされる。
