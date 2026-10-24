@@ -397,22 +397,23 @@ export const addTicketCommentForMcp = async (
   }
 
   const ticketId = await resolveTicketId(auth, ticketIdOrDisplayId)
+  // 投稿の後に確かめると、その失敗が「投稿できなかった」に見えて AI が同じアナウンスを投稿し直しうるので、先に確かめる。
+  // 結果は投稿(認可)が通ったときだけ返すので、閲覧できないボードの設定は漏れない
+  const announced = isAnnouncement ? await willAnnounce(ticketId, content) : undefined
   const comment = await addComment(auth.user, { ticketId, content, type, parentId })
 
   logger.info({ userId: auth.user.id, ticketId, commentId: comment.id }, 'mcp ticket comment added')
-  if (!isAnnouncement) {
-    return { id: comment.id }
-  }
+  return announced === undefined ? { id: comment.id } : { id: comment.id, announced }
+}
 
+/** アナウンスを投稿したら Slack チャンネルへ流れるか */
+const willAnnounce = async (ticketId: string, content: string): Promise<boolean> => {
   // 記法を落とすと空になる本文(画像だけなど)はトリガーが投入しないので、届かない扱いにする
   if (!announcementText(content)) {
-    return { id: comment.id, announced: false }
+    return false
   }
   const ticket = await prisma.ticket.findUnique({ where: { id: ticketId }, select: { boardId: true } })
-  return {
-    id: comment.id,
-    announced: !!ticket && (await isChannelNotifyEnabled(ticket.boardId, 'announcement')),
-  }
+  return !!ticket && (await isChannelNotifyEnabled(ticket.boardId, 'announcement'))
 }
 
 /**

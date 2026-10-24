@@ -73,6 +73,13 @@ describe('addTicketCommentForMcp: アナウンス', () => {
     expect(isChannelNotifyEnabled).not.toHaveBeenCalled()
   })
 
+  it('届くかの確認は投稿の前に行う(投稿後の失敗で、投稿済みなのにエラーを返さない)', async () => {
+    vi.mocked(isChannelNotifyEnabled).mockRejectedValue(new Error('db down'))
+
+    await expect(addTicketCommentForMcp(oauthAuth(), TICKET_ID, 'x', 'announcement', null, true)).rejects.toThrow()
+    expect(addComment).not.toHaveBeenCalled()
+  })
+
   it('人の経路でも了承(userApproved=true)が無ければ投稿しない', async () => {
     for (const userApproved of [undefined, false]) {
       expect(

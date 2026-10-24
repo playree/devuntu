@@ -156,6 +156,22 @@ describe('buildTicketMessage: chat.postMessage のペイロードを組み立て
     expect(sectionText.endsWith('\n>v1.0.0\n>\n>• 機能A')).toBe(true)
   })
 
+  it('長い複数行の抜粋は、収まらない行を途中で切らずに落として `>…` で続きを示す', () => {
+    const line = 'あ'.repeat(900)
+    const res = buildTicketMessage({ ...base, excerpt: [line, line, line, line].join('\n') })
+    const sectionText = (res.blocks[0] as { text: { text: string } }).text.text
+    expect(sectionText.length).toBeLessThanOrEqual(3000)
+    expect(sectionText.endsWith(`\n>${line}\n>${line}\n>${line}\n>…`)).toBe(true)
+    expect(res.text.length).toBeLessThanOrEqual(3000)
+  })
+
+  it('エスケープで伸びた抜粋も上限に収め、1 行目を切り詰めるときは文字参照を壊さない', () => {
+    const res = buildTicketMessage({ ...base, excerpt: '&'.repeat(1000) })
+    const sectionText = (res.blocks[0] as { text: { text: string } }).text.text
+    expect(sectionText.length).toBeLessThanOrEqual(3000)
+    expect(sectionText).toMatch(/(&amp;)+…$/)
+  })
+
   it('抜粋が無い場合は引用行を作らない', () => {
     const res = buildTicketMessage(base)
     const sectionText = (res.blocks[0] as { text: { text: string } }).text.text

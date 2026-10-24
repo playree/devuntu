@@ -173,6 +173,47 @@ const fitLines = (lines: string[], max: number): string => {
   return fitted.join('\n')
 }
 
+/** 文字参照(`&amp;` など)の途中で切れた末尾。壊れた参照を Slack へ送らないよう、切り詰めた後に落とす */
+const RE_PARTIAL_ENTITY = /&[a-z]*$/
+
+/**
+ * 抜粋を行ごとに `>` を付けた引用にして、上限に収める。
+ *
+ * mrkdwn の引用は行頭の `>` でしか続かない(アナウンスの本文は改行を残して渡ってくる)。
+ * 収まらない行は途中で切らずに落とし、続きがあることを `>…` で示す(行や URL の途中で切れた告知より読める)。
+ * 1 行目は落とすと何も残らないので、文字参照を壊さない位置で切り詰める。
+ */
+const fitQuote = (excerpt: string, max: number): string => {
+  const fitted: string[] = []
+  let budget = max
+
+  for (const line of escapeSlackText(excerpt).split('\n')) {
+    const quoted = `>${line}`
+    // 先頭行以外は改行の分を差し引く
+    const room = fitted.length === 0 ? budget : budget - 1
+    if (quoted.length <= room) {
+      fitted.push(quoted)
+      budget = room - quoted.length
+      continue
+    }
+    // `>…` の 2 文字も入らなければ何も足さない
+    if (room >= 2) {
+      fitted.push(fitted.length === 0 ? `${quoted.slice(0, room - 1).replace(RE_PARTIAL_ENTITY, '')}…` : '>…')
+    }
+    break
+  }
+
+  return fitted.join('\n')
+}
+
+/** 見出し・本文を積んだ残りの予算で、抜粋の引用を後ろに付ける */
+const withQuote = (lines: string[], excerpt: string | undefined): string => {
+  const head = fitLines(lines, SECTION_TEXT_MAX)
+  // 引用の前に入る改行 1 文字も予算に含める
+  const quote = excerpt ? fitQuote(excerpt, SECTION_TEXT_MAX - head.length - 1) : ''
+  return quote ? `${head}\n${quote}` : head
+}
+
 /**
  * チケットに紐づく通知の chat.postMessage ペイロードを組み立てる。
  * メンションの DM と、ボードのチャンネル通知で共用する。
@@ -183,25 +224,18 @@ const fitLines = (lines: string[], max: number): string => {
 export const buildTicketMessage = ({ subject, url, body, excerpt, openLabel }: TicketMessageParam) => {
   const safeSubject = escapeSlackText(subject)
   const safeBody = escapeSlackText(body)
-  // mrkdwn の引用は行ごとに `>` が要る(アナウンスの本文は改行を残して渡ってくる)
-  const quoted = excerpt
-    ? escapeSlackText(excerpt)
-        .split('\n')
-        .map((line) => `>${line}`)
-        .join('\n')
-    : ''
 
   // 見出しのリンクを先に確定させ、余った分を本文・抜粋の順に割り当てる
   const heading = boldLink(url, safeSubject, SECTION_TEXT_MAX)
 
   return {
-    text: fitLines([safeSubject, safeBody, quoted], SECTION_TEXT_MAX),
+    text: withQuote([safeSubject, safeBody], excerpt),
     blocks: [
       {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: fitLines([heading, safeBody, quoted], SECTION_TEXT_MAX),
+          text: withQuote([heading, safeBody], excerpt),
         },
       },
       {
