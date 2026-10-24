@@ -9,7 +9,7 @@ import { MarkdownInput } from '@/components/markdown/markdown-editor'
 import type { MentionCandidate } from '@/components/markdown/mention-menu'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action/action-client'
-import { TICKET_COMMENT_TYPE_LOCALE, TICKET_COMMENT_TYPES } from '@/lib/board/ticket-enum'
+import { TICKET_COMMENT_SEND_LOCALE, TICKET_COMMENT_TYPE_LOCALE, TICKET_COMMENT_TYPES } from '@/lib/board/ticket-enum'
 import { commentAnchorId, decodeSegment } from '@/lib/board/ticket-id'
 import { scCreateTicketComment } from '@/lib/schema/schema-ticket'
 import { useLocationHash } from '@/lib/use-location-hash'
@@ -98,7 +98,7 @@ export const TicketComments: FC<{
   const flatComments = comments.flatMap((comment) => [comment, ...comment.replies])
   const targetId = useCommentAnchor(flatComments)
 
-  const [typeFilter, setTypeFilter] = useState<CommentTypeOption[]>(['none', 'plan', 'report'])
+  const [typeFilter, setTypeFilter] = useState<CommentTypeOption[]>(['none', ...TICKET_COMMENT_TYPES])
   // 種別はスレッド(親コメント)単位で絞り込み、返信は親が表示対象のときだけ追従させる。
   // ただし通知リンクの対象を含むスレッドは、種別に関わらず表示してアンカー移動できるようにする
   const visibleComments = comments.filter(
@@ -124,14 +124,16 @@ export const TicketComments: FC<{
 
   const commentTypeFilterItems: MultiTagItem<CommentTypeOption>[] = [
     { id: 'none', label: t('comment_type_none') },
-    { id: 'plan', label: t(TICKET_COMMENT_TYPE_LOCALE.plan) },
-    { id: 'report', label: t(TICKET_COMMENT_TYPE_LOCALE.report) },
+    ...TICKET_COMMENT_TYPES.map((type) => ({ id: type, label: t(TICKET_COMMENT_TYPE_LOCALE[type]) })),
   ]
 
   const commentTypeOptions: SplitButtonOption<CommentTypeOption>[] = [
     { id: 'none', menuLabel: t('comment_type_none'), actionLabel: t('send') },
-    { id: 'plan', menuLabel: t(TICKET_COMMENT_TYPE_LOCALE.plan), actionLabel: t('send_as_plan') },
-    { id: 'report', menuLabel: t(TICKET_COMMENT_TYPE_LOCALE.report), actionLabel: t('send_as_report') },
+    ...TICKET_COMMENT_TYPES.map((type) => ({
+      id: type,
+      menuLabel: t(TICKET_COMMENT_TYPE_LOCALE[type]),
+      actionLabel: t(TICKET_COMMENT_SEND_LOCALE[type]),
+    })),
   ]
 
   const post = async () => {

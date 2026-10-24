@@ -53,6 +53,14 @@ const due = (override: Partial<NotifyPayload<'ticket_due'>> = {}): NotifyPayload
   ...override,
 })
 
+const announcement = (override: Partial<NotifyPayload<'announcement'>> = {}): NotifyPayload<'announcement'> => ({
+  ...ticketRef,
+  commentId: 'comment-1',
+  fromName: 'テストユーザー',
+  excerpt: 'v1.0.0\n• 機能A',
+  ...override,
+})
+
 const startedAt = new Date('2026-08-25T00:00:00Z')
 
 const agentRun = (override: Partial<NotifyPayload<'agent_run'>> = {}): NotifyPayload<'agent_run'> => ({
@@ -148,6 +156,16 @@ describe('buildNotifyContent: ticket_due', () => {
   })
 })
 
+describe('buildNotifyContent: announcement', () => {
+  it('アナウンスしたコメントの位置へリンクし、改行を残した本文を抜粋に出す', () => {
+    const content = buildNotifyContent('announcement', announcement(), 'ja', 'channel')
+    expect(content.subject).toBe('[ABC-42] ログイン画面のレイアウト崩れ')
+    expect(content.url).toBe('https://devuntu.example.com/t/ABC-42#comment-comment-1')
+    expect(content.body).toBe('テストユーザーさんがアナウンスしました')
+    expect(content.excerpt).toBe('v1.0.0\n• 機能A')
+  })
+})
+
 describe('buildNotifyContent: mention', () => {
   it('チケット本文のメンションは短縮URLへリンクする', () => {
     expect(buildNotifyContent('mention', mention(), 'ja', 'dm').url).toBe('https://devuntu.example.com/t/ABC-42')
@@ -217,6 +235,7 @@ describe('buildNotifyContent: ロケール', () => {
         buildNotifyContent('ticket_merge_held', mergeHeld(), locale, 'dm'),
         buildNotifyContent('ticket_due', due(), locale, 'dm'),
         buildNotifyContent('ticket_due', due({ kind: 'due_day' }), locale, 'dm'),
+        buildNotifyContent('announcement', announcement(), locale, 'channel'),
       ]) {
         expect(content.subject).not.toMatch(/\$\{/)
         expect(content.body).not.toMatch(/\$\{/)

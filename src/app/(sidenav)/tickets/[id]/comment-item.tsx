@@ -102,7 +102,7 @@ export const CommentItem: FC<{
         {comment.decision && <DecisionChip value={comment.decision} />}
         <div className='ml-auto flex gap-0.5'>
           {comment.type && !isEditing && (
-            <MultiButton // プラン/報告書だけを PDF に出す。通常のコメントは単体で残す用途が無いので出さない
+            <MultiButton // 種別付き(プラン/報告書/アナウンス)だけを PDF に出す。通常のコメントは単体で残す用途が無いので出さない
               isIconOnly
               size='sm'
               variant='outline'
@@ -168,8 +168,8 @@ export const CommentItem: FC<{
           </div>
         </div>
       ) : comment.type ? (
-        // plan / report は長文になりやすいので折りたたみ、デフォルトは閉じておく
-        <Accordion defaultExpandedKeys={[]} hideSeparator className='mt-1'>
+        // plan / report は長文になりやすいので折りたたみ、デフォルトは閉じておく。アナウンスは読ませたいので開いておく
+        <Accordion defaultExpandedKeys={comment.type === 'announcement' ? ['body'] : []} hideSeparator className='mt-1'>
           <AccordionSection
             id='body'
             icon={<CommentTypeIcon type={comment.type} />}

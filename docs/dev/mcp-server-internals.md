@@ -159,18 +159,44 @@ Where to keep what you learn:
 
 In automated operation, follow the rule returned by get_agent_task and the runner instructions, and finally report the result with finish_agent_task.
 Link GitHub / GitLab branches, PRs (MRs) and commits with link_ticket_artifact to show their state and CI results on the ticket.
-Precedence: the ticket > boardContext > boardKnowledge > boardMemory. Comments with type=plan / type=report are shown separately from regular comments as a plan / a report.
+Precedence: the ticket > boardContext > boardKnowledge > boardMemory. Comments with type=plan / type=report are shown separately from regular comments as a plan / a report. Agents cannot post type=announcement: if the result is worth telling all board members (e.g. a release), propose an announcement text in your report.
 ```
 
 前置き・ボードの前提・残し先の先頭2項目は人の経路と同じ。エージェントはナレッジを変更できないので、残し先の3項目めは
 「確かめられたメモリや残しておくべき情報は、ナレッジにするよう報告で提案する」になる。
 続く行は「自動運用では get_agent_task が返す rule とランナーの指示に従い、最後に finish_agent_task で結果を報告する」と、紐付けの説明。
-最後の行は優先順位(チケット > boardContext > boardKnowledge > boardMemory)とコメントの種別(type=plan / type=report は通常コメントと分けて表示される)。
+最後の行は優先順位(チケット > boardContext > boardKnowledge > boardMemory)とコメントの種別(type=plan / type=report は通常コメントと分けて表示される)、
+アナウンスは投稿できないので、告知すべき結果なら告知文の案を報告に載せること([アナウンス](#アナウンス))。
 エージェントには手順と人の経路の優先順位を載せないので、紐付け・優先順位・コメントの種別をここで補う。
 
 **`get_ticket` の `workflow`**
 
-人の経路でチケットを編集できるときだけ、上の 4 の手順(1〜5)と 5 の優先順位を文字列の配列で返す(英文は instructions と同じ)。
+人の経路でチケットを編集できるときだけ、上の 4 の手順(1〜5)、告知の手順、5 の優先順位を文字列の配列で返す(手順と優先順位の英文は instructions と同じ)。
+告知の手順(`ANNOUNCE_STEP`)は次の 1 行で、instructions には文字数の上限に余裕が無いので載せない
+(使い方の詳細は `add_ticket_comment` の description に持たせる)。
+
+```text
+Announce: if the result is worth telling all board members (e.g. a release), propose an announcement text to the user. Post it with add_ticket_comment type=announcement and userApproved=true only after the user agrees
+```
+
+### アナウンス
+
+`add_ticket_comment` の `type=announcement` はボードメンバー全員へのアナウンスで、ボードのチャネル通知で
+`announcement` を ON にしていれば Slack チャンネルへも投稿される([notifications-internals.md](notifications-internals.md))。
+全員へ届くので、**投稿するかは利用者が決める**。AI は告知の機会に気づいて文面を提案するところまでを担う。
+
+| 経路                         | 扱い                                                                                                                            |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 人(OAuth / ユーザートークン) | 文面を提案し、利用者が了承したら `userApproved=true` を付けて投稿する。付けないと `ANNOUNCEMENT_DENIED`                         |
+| エージェント用トークン       | 確認する相手がいないので投稿できない(`ANNOUNCEMENT_DENIED`)。告知すべき結果なら report に告知文の案を載せ、人が画面から投稿する |
+
+ナレッジの変更(`userApproved` / `knowledgeDenial`)と同じ考え方で、エラーのメッセージには理由と対処を書く。
+
+**届くかどうかを AI に返す**。設定が無いボードで投稿しても記録はチケットに残るが Slack へは流れないので、
+「告知した」と報告させないために次を返す。判定はボードの設定と Slack 連携の有効状態(`isChannelNotifyEnabled()`、展開時と同じ条件)。
+
+- `get_board` / `get_ticket` の `announcementEnabled`: 今投稿すれば Slack へ流れるときだけ `true` を載せる(`get_ticket` は boardContext と同じくボードのメンバーにだけ。投稿できないエージェントの経路には返さない)
+- `add_ticket_comment` の応答の `announced`: `type=announcement` のときだけ付く。投稿時点で Slack へ投入される設定だったか(記法を落とすと空になる本文は投入されないので `false`)
 
 ## 入力の約束ごと
 
@@ -205,8 +231,9 @@ Precedence: the ticket > boardContext > boardKnowledge > boardMemory. Comments w
   コメントの `proposal` には、エージェントが `propose_child_tickets` で付けた子チケットの起票案が入る
 - `dueDate` は `YYYY-MM-DD`。`null` を渡すと解除、省略すると変更しない。`assigneeId` と `tagIds` も同じ扱い
 - 文字数は画面と共通(`src/lib/schema/schema-ticket.ts`)。タイトル120文字、本文・コメント40000文字、タグは10個まで
-- `add_ticket_comment` の `type` は `plan`(対応プラン) / `report`(対応報告)。指定すると詳細画面で
-  折りたたみ表示され、通常コメントと区別できる。`parentId` での返信は**1階層のみ**
+- `add_ticket_comment` の `type` は `plan`(対応プラン) / `report`(対応報告) / `announcement`(アナウンス)。
+  指定すると詳細画面で通常コメントと区別して表示される(plan / report は折りたたみ、アナウンスは展開)。
+  `announcement` には `userApproved=true` が要る([アナウンス](#アナウンス))。`parentId` での返信は**1階層のみ**
 - `link_ticket_artifact` の `url` は次のいずれか。種別は URL から判定し、同じものを2回登録しても1件にまとまる
   - GitHub: `https://github.com/<owner>/<repo>/` に続く `pull/<番号>` / `tree/<ブランチ名>` / `commit/<SHA>`
   - GitLab: `<インスタンスの URL>/<プロジェクトのパス>/-/` に続く `merge_requests/<番号>` / `tree/<ブランチ名>` / `commit/<SHA>`。

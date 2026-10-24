@@ -20,6 +20,7 @@ export const NOTIFY_EVENTS = [
   'ticket_completed',
   'ticket_merge_held',
   'ticket_due',
+  'announcement',
 ] as const satisfies readonly NotifyEvent[]
 
 /**
@@ -42,6 +43,7 @@ export const CHANNEL_NOTIFY_EVENTS = [
   'ticket_created',
   'ticket_completed',
   'ticket_merge_held',
+  'announcement',
 ] as const satisfies readonly NotifyEvent[]
 export type ChannelNotifyEvent = (typeof CHANNEL_NOTIFY_EVENTS)[number]
 
@@ -117,6 +119,9 @@ export const NOTIFY_CHANNEL_RATE_LIMIT: Record<NotifyChannel, { limit: number; w
 /** 通知に載せる本文抜粋の上限。Slack の section 上限(3000)には余裕を持って収まる長さにする */
 export const NOTIFY_EXCERPT_MAX = 500
 
+/** アナウンスの本文の上限。見出し・本文と合わせても Slack の section 上限(3000)に収まる長さにする */
+export const NOTIFY_ANNOUNCEMENT_MAX = 2000
+
 /** 画像 `![alt](url)` / リンク `[text](url)`。URL は通知では邪魔なのでラベルだけ残す */
 const RE_IMAGE = /!\[([^\]]*)]\([^)]*\)/g
 const RE_LINK = /\[([^\]]*)]\([^)]*\)/g
@@ -126,6 +131,24 @@ const RE_HTML_TAG = /<\/?[a-zA-Z][^>]*>/g
 
 /** 行頭の見出し / 引用 / リストのマーカー */
 const RE_LINE_MARKER = /^[ \t]{0,3}(?:#{1,6}[ \t]+|>[ \t]?|[-*+][ \t]+|\d+[.)][ \t]+)/gm
+
+/** アナウンス用。リンクの URL も残すので、URL(タイトルの前まで)を取り出す */
+const RE_LINK_WITH_URL = /\[([^\]]*)]\(([^)\s]*)[^)]*\)/g
+
+/** アナウンス用。自動リンク `<https://...>`。生HTMLのタグとして落とされる前に URL へ戻す */
+const RE_AUTOLINK = /<(https?:\/\/[^\s>]+)>/g
+
+/** アナウンス用。行頭の見出し / 引用のマーカー(リストは形を残すので分ける) */
+const RE_BLOCK_MARKER = /^[ \t]{0,3}(?:#{1,6}[ \t]+|>[ \t]?)/gm
+
+/** アナウンス用。行頭の箇条書きの記号。`•` へ置き換えて箇条書きの形を残す */
+const RE_BULLET_MARKER = /^([ \t]*)[-*+][ \t]+/gm
+
+/** アナウンス用。区切り線(`---` / `***` / `___`)の行 */
+const RE_THEMATIC_BREAK = /^[ \t]*([-*_])(?:[ \t]*\1){2,}[ \t]*$/gm
+
+/** アナウンス用。コードブロックの囲みの行(改行ごと)。中身は告知の本文として残す */
+const RE_CODE_FENCE = /^[ \t]*(?:```+|~~~+).*(?:\r?\n|$)/gm
 
 /**
  * 強調・打ち消しの記号。`_` 単体は snake_case を壊すので対象にしない。
@@ -207,4 +230,64 @@ export const commentExcerpt = (
     .replace(RE_BACKSLASH_ESCAPE, '$1')
 
   return truncate(decodeCharacterReferences(text).replace(/\s+/g, ' ').trim(), max)
+}
+
+/** 退避した URL の目印。本文に現れない制御文字で囲む */
+const urlToken = (index: number) => `\u0000${index}\u0000`
+const RE_URL_TOKEN = /\u0000(\d+)\u0000/g
+
+/**
+ * アナウンスの本文を Slack へ載せる形にする。
+ *
+ * {@link commentExcerpt} と同じく記法を落とすが、告知の中身(リリースの要点など)を読めるよう
+ * 改行・箇条書き・リンクの URL は残す。空行の連続は 1 つに畳む。
+ */
+export const announcementText = (
+  content: string,
+  /** メンションの表示名。キーは {@link findMentions} が返す正規化済みのメールアドレス */
+  mentionNames: ReadonlyMap<string, string> = new Map(),
+  max: number = NOTIFY_ANNOUNCEMENT_MAX,
+): string => {
+  // URL は強調やエスケープの記号(`__init__.py` など)を落とされないよう退避し、最後に戻す
+  const urls: string[] = []
+  const keepUrl = (url: string) => urlToken(urls.push(url) - 1)
+  // リンクはラベルと URL を残す(Slack が URL を自動でリンクにする)。相対パスは外から開けないのでラベルだけにする
+  const linkWithUrl = (_matched: string, label: string, url: string): string => {
+    if (!/^https?:\/\//.test(url)) {
+      return label
+    }
+    return !label || label === url ? keepUrl(url) : `${label} (${keepUrl(url)})`
+  }
+
+  // メンションを先に外す。`]` を残したままだとリンク記法として拾われうる
+  const text = replaceMentions(content.replace(RE_CODE_FENCE, '').replace(/`+/g, ''), mentionNames)
+    .replace(RE_THEMATIC_BREAK, '')
+    .replace(RE_IMAGE, '$1')
+    .replace(RE_LINK_WITH_URL, linkWithUrl)
+    .replace(RE_AUTOLINK, (_matched, url: string) => keepUrl(url))
+    .replace(RE_HTML_TAG, '')
+    .replace(RE_BLOCK_MARKER, '')
+    // 強調の `*` と区別できるよう、強調を落とす前に置き換える
+    .replace(RE_BULLET_MARKER, '$1• ')
+    .replace(RE_EMPHASIS, '')
+    .replace(RE_BACKSLASH_ESCAPE, '$1')
+
+  const lines = decodeCharacterReferences(text)
+    .replace(RE_URL_TOKEN, (_matched, index: string) => urls[Number(index)])
+    .split(/\r?\n/)
+    // 行頭の字下げ(入れ子の箇条書き)は残し、行中の空白だけを畳む
+    .map((line) =>
+      line
+        .replace(/\t/g, '  ')
+        .replace(/(?<=\S)\s+/g, ' ')
+        .trimEnd(),
+    )
+
+  return truncate(
+    lines
+      .join('\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim(),
+    max,
+  )
 }

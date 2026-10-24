@@ -1165,7 +1165,7 @@ export type $TicketCommentPayload<ExtArgs extends runtime.Types.Extensions.Inter
      */
     content: string
     /**
-     * null = 通常コメント。plan/report は詳細画面でデフォルト折りたたみ表示する
+     * null = 通常コメント。plan/report は詳細画面でデフォルト折りたたみ表示する(announcement は展開して表示する)
      */
     type: $Enums.TicketCommentType | null
     /**

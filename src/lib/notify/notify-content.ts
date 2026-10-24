@@ -147,6 +147,14 @@ const BUILDERS = {
     body: t(locale, TICKET_DUE_MSG[payload.kind], { due: payload.dueDate }),
     url: shortUrl(payload.displayId).toString(),
   }),
+
+  /** アナウンスは本文そのものが知らせたい内容なので、改行を残した本文を抜粋の位置に出す */
+  announcement: (payload, locale) => ({
+    subject: subjectOf(payload),
+    body: t(locale, 'notify_msg_announcement', { from: payload.fromName }),
+    url: shortUrl(payload.displayId, payload.commentId).toString(),
+    excerpt: payload.excerpt,
+  }),
 } as const satisfies { [E in NotifyEvent]: ContentBuilder<E> }
 
 /**

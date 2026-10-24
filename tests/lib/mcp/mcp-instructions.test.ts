@@ -1,6 +1,6 @@
 /** MCP クライアントへ伝える対応の作法 */
 
-import { mcpInstructions, TICKET_WORKFLOW, ticketWorkflowFor } from '@/lib/mcp/mcp-instructions'
+import { ANNOUNCE_STEP, mcpInstructions, TICKET_WORKFLOW, ticketWorkflowFor } from '@/lib/mcp/mcp-instructions'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
@@ -9,6 +9,13 @@ describe('ticketWorkflowFor', () => {
   it('人の経路でチケットを編集できるときだけ手順を返す', () => {
     expect(ticketWorkflowFor('oauth', true)).toEqual(expect.arrayContaining([...TICKET_WORKFLOW]))
     expect(ticketWorkflowFor('pat', true)).toBeDefined()
+  })
+
+  it('告知の手順は workflow にだけ載せ、利用者の了承を得てから投稿させる', () => {
+    expect(ticketWorkflowFor('oauth', true)).toContain(ANNOUNCE_STEP)
+    expect(ANNOUNCE_STEP).toMatch(/propose .* only after the user agrees/)
+    // instructions は文字数の上限に余裕が無いので載せない(詳細は add_ticket_comment の description)
+    expect(mcpInstructions('oauth')).not.toContain(ANNOUNCE_STEP)
   })
 
   it('編集できない人には、実行できない手順になるので返さない', () => {
@@ -63,6 +70,11 @@ describe('mcpInstructions', () => {
   it('エージェントにも、チケット > boardContext > ナレッジ > メモリの順とコメントの種別を伝える', () => {
     expect(mcpInstructions('agent')).toContain('the ticket > boardContext > boardKnowledge > boardMemory')
     expect(mcpInstructions('agent')).toContain('type=plan / type=report')
+  })
+
+  it('エージェントにはアナウンスを投稿させず、報告で提案させる', () => {
+    expect(mcpInstructions('agent')).toContain('Agents cannot post type=announcement')
+    expect(mcpInstructions('agent')).toContain('propose an announcement text in your report')
   })
 
   it('ドキュメントに載せた全文がコードの文言と一致する', () => {

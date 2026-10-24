@@ -243,7 +243,7 @@ Googleアカウントと連携すると、`/cal` で自分の予定を確認で�
 - **Slack DM** — 管理者による連携の有効化と、利用者本人の Slack アカウント連携が必要です
 - **Webプッシュ** — VAPID 鍵の設定が前提で、通知を受けたい端末ごとに `/account` から購読を登録します
 
-チームボードでは、チケットの作成・完了・担当者の変更・エージェントの実行結果を Slack チャンネルへ流せます。
+チームボードでは、チケットの作成・完了・担当者の変更・エージェントの実行結果・アナウンス(リリースのお知らせなど)を Slack チャンネルへ流せます。
 また Slack に貼られたチケットURLは、閲覧権限を確認した上でカード表示に展開されます。
 
 Slack App の設定などは [docs/admin/notifications.md](docs/admin/notifications.md)、実装の詳細は [docs/dev/notifications-internals.md](docs/dev/notifications-internals.md) を参照。

@@ -18,6 +18,7 @@
     - [Service Worker](#service-worker)
     - [iOS / iPadOS の判定](#ios--ipados-の判定)
   - [ボードごとのチャネル通知設定](#ボードごとのチャネル通知設定)
+    - [アナウンス](#アナウンス)
   - [エージェント実行結果の通知](#エージェント実行結果の通知)
     - [通知先チャンネルの一覧](#通知先チャンネルの一覧)
   - [Slackでのチケットリンクのプレビュー](#slackでのチケットリンクのプレビュー)
@@ -34,10 +35,10 @@
 
 通知は宛先の決まり方で 2 種類に分かれる。
 
-| 種類         | 宛先             | 設定場所                                      | イベント                                                                                      | チャネル                         |
-| ------------ | ---------------- | --------------------------------------------- | --------------------------------------------------------------------------------------------- | -------------------------------- |
-| DM 通知      | ユーザー個人     | `/account` の通知設定(`UserNotifySetting`)    | `mention` / `agent_run` / `ticket_assigned` / `ticket_merge_held` / `ticket_due`              | メール / Slack DM / Web プッシュ |
-| チャネル通知 | Slack チャンネル | `/boards/[id]/settings`(`BoardNotifySetting`) | `agent_run` / `ticket_assigned` / `ticket_created` / `ticket_completed` / `ticket_merge_held` | Slack                            |
+| 種類         | 宛先             | 設定場所                                      | イベント                                                                                                       | チャネル                         |
+| ------------ | ---------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| DM 通知      | ユーザー個人     | `/account` の通知設定(`UserNotifySetting`)    | `mention` / `agent_run` / `ticket_assigned` / `ticket_merge_held` / `ticket_due`                               | メール / Slack DM / Web プッシュ |
+| チャネル通知 | Slack チャンネル | `/boards/[id]/settings`(`BoardNotifySetting`) | `agent_run` / `ticket_assigned` / `ticket_created` / `ticket_completed` / `ticket_merge_held` / `announcement` | Slack                            |
 
 イベント種別は Prisma の `NotifyEvent`、チャネルは `NotifyChannel`。どちらの宛先に出るイベントかは
 `DM_NOTIFY_EVENTS` / `CHANNEL_NOTIFY_EVENTS`(`src/lib/notify/notify.ts`)で分ける。
@@ -153,7 +154,7 @@ advisory lock を保持できないため、そもそも採れない)。
 | `enqueueTicketMoved()`            | ステータスだけの変更(`changeTicketStatus` = `updateTicketStatus` / かんばんの DnD)、report の承認による完了(`agent-decision.ts`)         | 完了へ動いたら `ticket_completed`                                                   |
 | `enqueueTicketCompletedByMerge()` | `completeTicketByMerge`(`git-webhook.ts` の PR / MR マージによる自動完了)                                                                | `ticket_completed`(操作者なし)                                                      |
 | `enqueueTicketMergeHeld()`        | `completeTicketByMerge`(未達の受け入れ条件があり、自動完了を保留したとき)                                                                | `ticket_merge_held`(操作者なし)                                                     |
-| `enqueueTicketCommented()`        | `ticket-mutation.ts` の `insertComment` / `updateComment`(Web と MCP のコメント、承認 / 差し戻しの返信、`propose_child_tickets` の plan) | `mention`                                                                           |
+| `enqueueTicketCommented()`        | `ticket-mutation.ts` の `insertComment` / `updateComment`(Web と MCP のコメント、承認 / 差し戻しの返信、`propose_child_tickets` の plan) | `mention`、種別がアナウンスのコメントを投稿したら `announcement`                    |
 | `enqueueAgentRunFinished()`       | `agent-run.ts` の実行を閉じる 3 経路                                                                                                     | `agent_run`                                                                         |
 | `runDueRemind()`                  | `notify-due-worker.ts`(5分ごと)。操作ではなく時刻を起点にする唯一のトリガーなので `notify-due.ts` に分けている                           | `ticket_due`(操作者なし)                                                            |
 
@@ -169,6 +170,7 @@ advisory lock を保持できないため、そもそも採れない)。
 | `ticket_completed`  | **完了レーンへ入った瞬間だけ**。完了のまま並べ替えても、完了から戻しても発火しない。最初から完了で作った場合は作成と併せて発火する。Git 連携(GitHub / GitLab)の PR マージによる自動完了でも発火し、そのときは操作者の無いシステム由来の通知になる(文面に PR を出す)                                                                                                 |
 | `agent_run`         | 実行が終了したとき(成功 / 失敗 / スキップ)。開始時は通知しない                                                                                                                                                                                                                                                                                                      |
 | `ticket_merge_held` | PR / MR のマージで完了にするはずが、ボードの判定(`mergeCriteriaCheck`)で未達の受け入れ条件が残り、完了を保留したとき。同じ PR / MR の保留が変更履歴(`mergeHeld`)にあるか、最後のステータス変更より後に保留済みなら発火しない(再配信や別の PR / MR で重ねない)。DM は担当者(人)、担当がエージェント / 未割り当てなら作成者へ。どちらも今チケットを閲覧できる場合だけ |
+| `announcement`      | 種別がアナウンスのコメントを**投稿したときだけ**。常に発火する(送るかはボードの設定次第)。編集では種別を渡さないので発火しない(直すたびにチャンネルへ流さない)。記法を落とした本文が空なら発火しない                                                                                                                                                                |
 
 `ticket_assigned` は DM とチャネルの両方を持つので、**DM を届ける相手がいない場合も発火する**。
 自分で自分を担当にした場合と担当がエージェント用ユーザーの場合は DM の宛先を空にするだけで、
@@ -344,8 +346,24 @@ PWA manifest は `src/app/manifest.ts`(`display: 'standalone'`、アイコンは
 - 宛先は配信直前に `getBoardNotifyChannels()` が引くので、**設定を消した後に投入された分も送られない**
 - 差分更新にせず総入れ替えにしているのは、部分更新の分岐を作らないため
 
-`ticket_created` / `ticket_completed` はチャネル通知だけのイベントで、`UserNotifySetting` には出ない
+`ticket_created` / `ticket_completed` / `announcement` はチャネル通知だけのイベントで、`UserNotifySetting` には出ない
 (個人ごとに「このボードのチケット作成を知りたい」は表せないため)。
+
+### アナウンス
+
+リリースのお知らせなど、ボードメンバーへ知らせたい内容を流すためのイベント。操作に連動する他のイベントと違い、
+**利用者が書いた本文そのものが知らせたい内容**なので、文面の作り方が異なる。
+
+- 発信はコメント種別 `announcement` の投稿(Web の送信メニュー / MCP の `add_ticket_comment`)。記録はチケットのコメントとして残る
+- 本文は `announcementText()`(`notify.ts`)で組み立てる。`commentExcerpt()` と同じく記法を落とすが、
+  リリースの要点を読めるよう**改行・箇条書き(`•`)・リンクの URL を残す**(相対パスのリンクは外から開けないのでラベルだけ)。
+  上限は `NOTIFY_ANNOUNCEMENT_MAX`(2000 文字)で、見出し・本文と合わせても Slack の section 上限(3000)に収まる
+- Slack では抜粋の位置に引用として出す。`buildTicketMessage()` は抜粋を行ごとに `>` を付けて引用にする
+  (mrkdwn の引用は行頭の `>` でしか続かない)
+- リンク先はアナウンスしたコメントの位置(`/t/<表示ID>#comment-<id>`)
+- MCP は投稿するかを利用者に決めさせる(人の経路は `userApproved=true` が要り、エージェントの経路は投稿できない)。
+  「届くか」を AI に返す判定は `isChannelNotifyEnabled()`(ボードの設定 + Slack 連携の有効状態。展開時と同じ条件)。
+  詳細は [mcp-server-internals.md](mcp-server-internals.md#アナウンス)
 
 ## エージェント実行結果の通知
 

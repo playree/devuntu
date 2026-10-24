@@ -22,6 +22,9 @@ enum NotifyEvent {
 
   /// チケットの期限が明日 / 今日になった(担当者へのリマインド)
   ticket_due
+
+  /// アナウンス(種別 announcement のコメント)が投稿された
+  announcement
 }
 
 /// 期限のリマインドの種類

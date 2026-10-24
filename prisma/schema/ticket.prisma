@@ -130,7 +130,7 @@ model TicketComment {
   /// 本文(Markdown)
   content String
 
-  /// null = 通常コメント。plan/report は詳細画面でデフォルト折りたたみ表示する
+  /// null = 通常コメント。plan/report は詳細画面でデフォルト折りたたみ表示する(announcement は展開して表示する)
   type TicketCommentType?
 
   /// plan / report への承認・差し戻しの返信。承認/差し戻しボタンから投稿したときだけ入る
@@ -158,12 +158,14 @@ model TicketComment {
   @@map("ticket_comment")
 }
 
-/// コメントの種別。null(通常コメント)以外はエージェントの投稿を表す
+/// コメントの種別。null は通常コメント。plan / report はエージェントの投稿を表す
 enum TicketCommentType {
   /// エージェントが投稿した作業プラン
   plan
   /// エージェントが投稿した対応報告
   report
+  /// ボードメンバーへのアナウンス。ボードのチャネル通知(announcement)で Slack チャンネルへも投稿する
+  announcement
 }
 
 /// plan / report への返答の種別

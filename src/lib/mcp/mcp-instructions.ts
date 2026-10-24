@@ -21,6 +21,27 @@ export const TICKET_WORKFLOW = [
   'Report: add_ticket_comment type=report with what you did, how you verified it, and remaining issues (screenshots via create_image_upload_token)',
 ] as const
 
+/**
+ * 結果の告知(アナウンス)の手順。instructions は文字数の上限に余裕が無いので `get_ticket` の workflow にだけ載せ、
+ * 使い方の詳細は add_ticket_comment の description(ANNOUNCEMENT_GUIDE)に持たせる
+ */
+export const ANNOUNCE_STEP =
+  'Announce: if the result is worth telling all board members (e.g. a release), propose an announcement text to the user. ' +
+  'Post it with add_ticket_comment type=announcement and userApproved=true only after the user agrees'
+
+/**
+ * アナウンスの使い方(add_ticket_comment の description)。ボードメンバー全員へ届くので、投稿するかは利用者が決める。
+ * 人の経路は提案して了承を得てから投稿させ、確認する相手のいないエージェントには報告で提案させる
+ */
+export const ANNOUNCEMENT_GUIDE =
+  "type=announcement posts an announcement for all board members, also sent to the board's Slack channel when get_ticket / get_board has announcementEnabled. " +
+  "Posting it is the user's decision: propose the text and post it only after the user agrees, with userApproved=true. " +
+  'The response has announced=true when it was sent to Slack; otherwise tell the user it was only recorded on the ticket'
+
+/** エージェントの経路はアナウンスを投稿できない(add_ticket_comment で拒否する)ので、報告で提案させる */
+export const AGENT_ANNOUNCEMENT_GUIDE =
+  'Agents cannot post type=announcement: if the result is worth telling all board members (e.g. a release), propose an announcement text in your report'
+
 /** 完了条件を本文に書かれると受け入れ条件が使われないため、置き場所を伝える(create_ticket / update_ticket の description) */
 export const ACCEPTANCE_CRITERIA_GUIDE =
   'Put completion conditions (acceptance criteria / definition of done / checklist) in acceptanceCriteria as one verifiable sentence per item, not in content.'
@@ -67,14 +88,15 @@ const PRECEDENCE =
  */
 const AGENT_PRECEDENCE =
   'Precedence: the ticket > boardContext > boardKnowledge > boardMemory. ' +
-  'Comments with type=plan / type=report are shown separately from regular comments as a plan / a report.'
+  'Comments with type=plan / type=report are shown separately from regular comments as a plan / a report. ' +
+  `${AGENT_ANNOUNCEMENT_GUIDE}.`
 
 /**
  * `get_ticket` の応答に載せる手順。実行できる人(チケットを編集できる人の経路)にだけ返す。
  * エージェントはランナーの指示と get_agent_task の rule に従うので載せない(自動運用の流れと食い違わせない)。
  */
 export const ticketWorkflowFor = (kind: ResourceAuth['kind'], canEdit: boolean): readonly string[] | undefined =>
-  kind !== 'agent' && canEdit ? [...TICKET_WORKFLOW, PRECEDENCE] : undefined
+  kind !== 'agent' && canEdit ? [...TICKET_WORKFLOW, ANNOUNCE_STEP, PRECEDENCE] : undefined
 
 /** 初期化応答に載せる instructions */
 export const mcpInstructions = (kind: ResourceAuth['kind']): string => {

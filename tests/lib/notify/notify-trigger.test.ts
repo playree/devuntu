@@ -242,6 +242,67 @@ describe('コメント: 担当変更は判断しない', () => {
   })
 })
 
+describe('アナウンス: チャネル通知だけのイベント', () => {
+  it('種別がアナウンスのコメントを投稿したら投入する', async () => {
+    await enqueueTicketCommented({
+      actorId: ACTOR,
+      ticket,
+      comment: { id: 'comment-1', content: '## v1.0.0\n- 機能A\n- 機能B', type: 'announcement' },
+      addedMentionUserIds: [],
+    })
+    expect(events()).toEqual(['announcement'])
+    expect(enqueued('announcement')).toMatchObject({
+      actorId: ACTOR,
+      payload: {
+        ticketId: ticket.id,
+        boardId: ticket.boardId,
+        displayId: ticket.displayId,
+        ticketTitle: ticket.title,
+        commentId: 'comment-1',
+        fromName: '操作した人',
+        // 改行と箇条書きを残す
+        excerpt: 'v1.0.0\n• 機能A\n• 機能B',
+      },
+    })
+    // DM の宛先は持たない(チャンネルの宛先は配信直前にボードの設定から引く)
+    expect(enqueued('announcement')).not.toHaveProperty('targetUserIds')
+  })
+
+  it('通常コメント / plan / report / 種別を渡さない編集では投入しない', async () => {
+    for (const type of [null, 'plan', 'report', undefined] as const) {
+      await enqueueTicketCommented({
+        actorId: ACTOR,
+        ticket,
+        comment: { id: 'comment-1', content: 'テスト', type },
+        addedMentionUserIds: [],
+      })
+    }
+    expect(events()).not.toContain('announcement')
+  })
+
+  it('記法だけのアナウンスは告知する中身が無いので投入しない', async () => {
+    await enqueueTicketCommented({
+      actorId: ACTOR,
+      ticket,
+      comment: { id: 'comment-1', content: '---', type: 'announcement' },
+      addedMentionUserIds: [],
+    })
+    expect(events()).not.toContain('announcement')
+  })
+
+  it('メンションを含むアナウンスはメンション通知と両方を投入する', async () => {
+    vi.mocked(prisma.user.findMany).mockResolvedValue([{ email: 'foo@example.com', name: 'テストユーザー' }] as never)
+    await enqueueTicketCommented({
+      actorId: ACTOR,
+      ticket,
+      comment: { id: 'comment-1', content: '@[foo@example.com] リリースしました', type: 'announcement' },
+      addedMentionUserIds: [OTHER],
+    })
+    expect(events()).toEqual(['mention', 'announcement'])
+    expect(enqueued('announcement')?.payload).toMatchObject({ excerpt: '@テストユーザー リリースしました' })
+  })
+})
+
 describe('エージェントの実行終了', () => {
   const startedAt = new Date('2026-08-25T00:00:00Z')
 

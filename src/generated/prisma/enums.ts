@@ -201,7 +201,8 @@ export const NotifyEvent = {
   ticket_created: 'ticket_created',
   ticket_completed: 'ticket_completed',
   ticket_merge_held: 'ticket_merge_held',
-  ticket_due: 'ticket_due'
+  ticket_due: 'ticket_due',
+  announcement: 'announcement'
 } as const
 
 export type NotifyEvent = (typeof NotifyEvent)[keyof typeof NotifyEvent]
@@ -256,7 +257,8 @@ export type TicketPriority = (typeof TicketPriority)[keyof typeof TicketPriority
 
 export const TicketCommentType = {
   plan: 'plan',
-  report: 'report'
+  report: 'report',
+  announcement: 'announcement'
 } as const
 
 export type TicketCommentType = (typeof TicketCommentType)[keyof typeof TicketCommentType]
