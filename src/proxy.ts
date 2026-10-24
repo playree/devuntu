@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession, redirectSignIn, redirectTwoFaEnable } from './lib/auth/auth'
 import { authConfig, isProxyAuthBypassPath } from './lib/auth/auth-config'
+import { requiresTwoFaSetup } from './lib/auth/two-fa'
 import { envu } from './lib/env-util'
 import { logger } from './lib/logger'
 import { MAINTENANCE_MODE_RETRY_AFTER_SEC } from './lib/maintenance/maintenance'
@@ -16,7 +17,9 @@ import { localeConfig } from './locale/config'
  * メンテナンスモードの遮断のために外したので、ここで従来と同じ「素通し」に戻す。
  */
 const bypassesProxyAuth = (request: NextRequest) =>
-  isProxyAuthBypassPath(request.nextUrl.pathname) || request.headers.has('next-action')
+  isProxyAuthBypassPath(request.nextUrl.pathname) ||
+  // Server Action は POST だけ。GET にヘッダを付けただけで画面の認証・管理者判定を抜けさせない
+  (request.method === 'POST' && request.headers.has('next-action'))
 
 export const proxy = async (request: NextRequest) => {
   const {
@@ -59,10 +62,8 @@ export const proxy = async (request: NextRequest) => {
       // クエリまで含めるのは /consent の署名付きクエリを再ログインで失わないため
       return redirectSignIn(`${pathname}${search}`)
     }
-    if (envu.server.TWO_FA_REQUIRED && !envu.server.DISABLE_PASSWORD_AUTH) {
-      if (!session.user.twoFactorEnabled) {
-        return redirectTwoFaEnable(`${pathname}${search}`)
-      }
+    if (requiresTwoFaSetup(session.user)) {
+      return redirectTwoFaEnable(`${pathname}${search}`)
     }
 
     // 管理者

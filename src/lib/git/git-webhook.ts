@@ -163,31 +163,37 @@ export const syncPullRequest = async ({
     prState === 'merged'
       ? [{ syncedAt: null }, { syncedAt: { lte: syncedAt } }]
       : [{ syncedAt: null }, { syncedAt: { lt: syncedAt } }, { syncedAt, prState: { not: 'merged' as const } }]
+  const criteriaCheckByBoard = new Map(
+    boards
+      .filter(({ completeOnPrMerge }) => completeOnPrMerge)
+      .map(({ id, mergeCriteriaCheck }) => [id, mergeCriteriaCheck]),
+  )
+  /**
+   * 完了の判定は、このイベントで状態が変わるリンクに限る(更新する前に引く)。
+   * 再配信や遅れて届いた同じ closed イベントで、マージ後に人が戻したチケットを完了にし直さない
+   */
+  const targets =
+    isClosed && criteriaCheckByBoard.size > 0
+      ? await prisma.ticketLink.findMany({
+          where: {
+            ...where,
+            AND: [{ OR: newer }, { OR: [{ prState: null }, { prState: { not: prState } }] }],
+            dismissed: false,
+            ticket: { boardId: { in: [...criteriaCheckByBoard.keys()] }, status: { not: 'done' } },
+          },
+          select: { ticketId: true, ticket: { select: { boardId: true } } },
+        })
+      : []
+
   // head が届かないイベントでは、保存済みの head(CI の突き合わせ先)を消さない
   await prisma.ticketLink.updateMany({
     where: { ...where, OR: newer },
     data: { ...state, headSha: state.headSha ?? undefined },
   })
 
-  if (!isClosed) {
+  if (targets.length === 0) {
     return
   }
-  const criteriaCheckByBoard = new Map(
-    boards
-      .filter(({ completeOnPrMerge }) => completeOnPrMerge)
-      .map(({ id, mergeCriteriaCheck }) => [id, mergeCriteriaCheck]),
-  )
-  if (criteriaCheckByBoard.size === 0) {
-    return
-  }
-  const targets = await prisma.ticketLink.findMany({
-    where: {
-      ...where,
-      dismissed: false,
-      ticket: { boardId: { in: [...criteriaCheckByBoard.keys()] }, status: { not: 'done' } },
-    },
-    select: { ticketId: true, ticket: { select: { boardId: true } } },
-  })
   await completeMergedTickets(
     targets.flatMap(({ ticketId, ticket: { boardId } }) => {
       const criteriaCheck = criteriaCheckByBoard.get(boardId)

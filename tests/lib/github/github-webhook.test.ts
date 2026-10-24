@@ -190,6 +190,27 @@ describe('pull_request', () => {
     expect(completeTicketByMerge).not.toHaveBeenCalled()
   })
 
+  it('完了の判定は、このイベントで状態が変わるリンクに限る(再配信で完了にし直さない)', async () => {
+    mockBoardRepositories()
+    // 既に merged のリンクは対象に引かれない
+    vi.mocked(prisma.ticketLink.findMany).mockResolvedValueOnce([] as never)
+
+    await handleGithubEvent(
+      'pull_request',
+      pullRequestEvent({ action: 'closed', state: 'closed', merged: true }),
+      TARGET,
+    )
+
+    expect(vi.mocked(prisma.ticketLink.findMany).mock.calls[0][0]?.where).toMatchObject({
+      AND: [expect.anything(), { OR: [{ prState: null }, { prState: { not: 'merged' } }] }],
+    })
+    // 状態を変える前に引く
+    expect(vi.mocked(prisma.ticketLink.findMany).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(prisma.ticketLink.updateMany).mock.invocationCallOrder[0],
+    )
+    expect(completeTicketByMerge).not.toHaveBeenCalled()
+  })
+
   it('マージで完了にしないボードでは判定しない', async () => {
     await handleGithubEvent('pull_request', pullRequestEvent({ action: 'closed', state: 'closed', merged: true }), {
       ...TARGET,

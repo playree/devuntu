@@ -140,8 +140,10 @@ export const syncBoardGroups = async (
   groupIds: string[],
 ): Promise<void> => {
   await tx.boardGroup.deleteMany({ where: { boardId } })
-  if (groupIds.length > 0) {
-    await tx.boardGroup.createMany({ data: groupIds.map((groupId) => ({ boardId, groupId })) })
+  // 重複は存在確認(assertBoardAssignmentTargets)では畳んで数えるので、ここでも畳まないと一意制約で落ちる
+  const unique = [...new Set(groupIds)]
+  if (unique.length > 0) {
+    await tx.boardGroup.createMany({ data: unique.map((groupId) => ({ boardId, groupId })) })
   }
 }
 

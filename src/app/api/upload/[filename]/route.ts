@@ -1,4 +1,4 @@
-import { getServerSession } from '@/lib/auth/auth'
+import { getActiveSession } from '@/lib/auth/auth'
 import { canViewAttachment } from '@/lib/board/board-access'
 import { prisma } from '@/lib/prisma'
 import { getObject } from '@/lib/storage/storage'
@@ -18,7 +18,7 @@ import { isValidUploadKey } from '@/lib/storage/upload'
  * 全ログインユーザーへ配信してよい。
  */
 export const GET = async (_req: Request, { params }: { params: Promise<{ filename: string }> }) => {
-  const session = await getServerSession()
+  const session = await getActiveSession()
   if (!session?.user) {
     return new Response(null, { status: 401 })
   }

@@ -34,6 +34,22 @@ export const sanitizeLogText = (text: string): string =>
     // 孤立サロゲート(対になっていない上位/下位)は UTF-8 として不正なので置換文字へ倒す
     .replaceAll(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '\uFFFD')
 
+/** UTF-8 で `maxBytes` に収まるところまでを返す。文字の途中では切らない */
+export const truncateUtf8 = (text: string, maxBytes: number): string => {
+  if (maxBytes <= 0) {
+    return ''
+  }
+  const bytes = Buffer.from(text, 'utf8')
+  if (bytes.length <= maxBytes) {
+    return text
+  }
+  // 途中で切れた文字は置換文字になるので落とす
+  return bytes
+    .subarray(0, maxBytes)
+    .toString('utf8')
+    .replace(/\uFFFD$/, '')
+}
+
 export type LogChunkInput = { stream: CommandStream; text: string }
 
 export type LogBuffer = {
@@ -93,17 +109,25 @@ export const createLogBuffer = (runId: string, workerId: string): LogBuffer => {
       return
     }
 
-    if (savedBytes + queuedBytes >= COMMAND_MAX_OUTPUT_BYTES || savedChunks + queue.length >= COMMAND_MAX_CHUNKS) {
-      isTruncated = true
-      if (!truncationNoticeQueued) {
-        truncationNoticeQueued = true
-        // 「途中で切れている」ことを履歴からも分かるようにする
-        enqueue('system', encodeSystemMessage('command_truncated'))
+    if (savedBytes + queuedBytes < COMMAND_MAX_OUTPUT_BYTES && savedChunks + queue.length < COMMAND_MAX_CHUNKS) {
+      const remaining = COMMAND_MAX_OUTPUT_BYTES - savedBytes - queuedBytes
+      if (Buffer.byteLength(text, 'utf8') <= remaining) {
+        enqueue(stream, text)
+        return
       }
-      return
+      // 1 回で上限を跨ぐ分は、収まるところまで残して打ち切る
+      const head = truncateUtf8(text, remaining)
+      if (head.length > 0) {
+        enqueue(stream, head)
+      }
     }
 
-    enqueue(stream, text)
+    isTruncated = true
+    if (!truncationNoticeQueued) {
+      truncationNoticeQueued = true
+      // 「途中で切れている」ことを履歴からも分かるようにする
+      enqueue('system', encodeSystemMessage('command_truncated'))
+    }
   }
 
   const runFlush = async (): Promise<boolean> => {

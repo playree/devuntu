@@ -15,6 +15,7 @@ import {
   COMMAND_FLUSH_INTERVAL_MS,
   COMMAND_FLUSH_MAX_RETRIES,
   COMMAND_KILL_GRACE_MS,
+  COMMAND_MAX_LINE_CHARS,
   type CommandDef,
   type CommandFailureKind,
   type CommandInputValues,
@@ -85,6 +86,7 @@ export const resolveOutcome = (input: {
  *
  * チャンク境界でマルチバイト文字が割れるので、ストリームごとに `StringDecoder` を持つ。
  * 番兵の判定は行単位なので、改行で終わっていない末尾は次のチャンクまで持ち越す。
+ * 持ち越しは `COMMAND_MAX_LINE_CHARS` までで、超えたら改行が無くても流す。
  */
 const pipeStream = (
   stream: NodeJS.ReadableStream,
@@ -114,6 +116,10 @@ const pipeStream = (
     const lines = (carry + decoder.write(chunk)).split('\n')
     // 最後の要素は改行で終わっていない断片。次のチャンクと繋ぐ
     carry = lines.pop() ?? ''
+    if (carry.length >= COMMAND_MAX_LINE_CHARS) {
+      lines.push(carry)
+      carry = ''
+    }
     emit(lines)
   })
 

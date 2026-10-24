@@ -203,14 +203,22 @@ export const settleDelivery = async (
 /**
  * 掴んだまま送らなかった配信を未処理へ戻す。
  * 送っていないので試行回数も戻す(打ち切りで再試行の回数を使い切らせない)。
+ *
+ * `retryAt` を渡すと取り出しの順番を後ろへ回す。先頭に居座って他の行の判断材料を奪わないようにする。
  */
-export const releaseDeliveries = async (ids: string[], reason: DeliveryOutcome): Promise<void> => {
+export const releaseDeliveries = async (ids: string[], reason: DeliveryOutcome, retryAt?: Date): Promise<void> => {
   if (ids.length === 0) {
     return
   }
   await prisma.notifyDelivery.updateMany({
     where: { id: { in: ids } },
-    data: { status: 'pending', claimedAt: null, attempts: { decrement: 1 }, lastError: reason },
+    data: {
+      status: 'pending',
+      claimedAt: null,
+      attempts: { decrement: 1 },
+      lastError: reason,
+      ...(retryAt && { scheduledAt: retryAt }),
+    },
   })
 }
 

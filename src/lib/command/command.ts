@@ -150,6 +150,14 @@ export const COMMAND_RUNAWAY_BYTES = 32 * 1024 * 1024
 /** 保存するチャンク数の上限 */
 export const COMMAND_MAX_CHUNKS = 5_000
 
+/**
+ * 改行を待って持ち越す断片の上限(文字数)。
+ *
+ * 改行を出さないコマンド(バイナリの出力や `\r` だけの進捗)で持ち越しが際限なく伸び、
+ * 上限や暴走の判定にも届かなくなるのを防ぐ。超えたら改行が無くても 1 行として流す。
+ */
+export const COMMAND_MAX_LINE_CHARS = 64 * 1024
+
 /** 生存申告の間隔 */
 export const COMMAND_HEARTBEAT_MS = 5_000
 

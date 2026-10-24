@@ -2,7 +2,7 @@
  * 添付キーの参照元検索の単体テスト
  *
  * 「参照されている」の判断を誤ると実データを消してしまうので、
- * 6つの参照元それぞれを拾えること、本文のページ送りが取りこぼさないことを確認する。
+ * 7つの参照元それぞれを拾えること、本文のページ送りが取りこぼさないことを確認する。
  */
 
 import { ATTACHMENT_SCAN_BATCH } from '@/lib/maintenance/maintenance'
@@ -16,6 +16,8 @@ vi.mock('@/lib/prisma', async () =>
     ticket: ['findMany', 'findFirst'],
     ticketComment: ['findMany', 'findFirst'],
     ticketTemplate: ['findMany', 'findFirst'],
+    boardNote: ['findMany', 'findFirst'],
+    boardNoteRevision: ['findMany', 'findFirst'],
     user: ['findMany', 'findFirst'],
     linkWidget: ['findMany', 'findFirst'],
   }),
@@ -35,9 +37,19 @@ beforeEach(() => {
   vi.mocked(prisma.ticket.findMany).mockResolvedValue([] as never)
   vi.mocked(prisma.ticketComment.findMany).mockResolvedValue([] as never)
   vi.mocked(prisma.ticketTemplate.findMany).mockResolvedValue([] as never)
+  vi.mocked(prisma.boardNote.findMany).mockResolvedValue([] as never)
+  vi.mocked(prisma.boardNoteRevision.findMany).mockResolvedValue([] as never)
   vi.mocked(prisma.user.findMany).mockResolvedValue([] as never)
   vi.mocked(prisma.linkWidget.findMany).mockResolvedValue([] as never)
-  for (const model of [prisma.ticket, prisma.ticketComment, prisma.ticketTemplate, prisma.user, prisma.linkWidget]) {
+  for (const model of [
+    prisma.ticket,
+    prisma.ticketComment,
+    prisma.ticketTemplate,
+    prisma.boardNote,
+    prisma.boardNoteRevision,
+    prisma.user,
+    prisma.linkWidget,
+  ]) {
     vi.mocked(model.findFirst).mockResolvedValue(null)
   }
   getString.mockResolvedValue(null)
@@ -56,6 +68,19 @@ describe('collectReferencedUploadKeys', () => {
     const keys = await collectReferencedUploadKeys()
 
     expect([...keys].sort()).toEqual([keyA, keyB, keyC, keyD, keyE].sort())
+  })
+
+  it('ボードノートとその版の本文からも集める(MCP で画像の URL を書ける)', async () => {
+    vi.mocked(prisma.boardNote.findMany).mockResolvedValue([
+      { id: 'n1', content: `![](${toUploadUrl(keyA)})` },
+    ] as never)
+    vi.mocked(prisma.boardNoteRevision.findMany).mockResolvedValue([
+      { id: 'r1', content: `![](${toUploadUrl(keyB)})` },
+    ] as never)
+
+    const keys = await collectReferencedUploadKeys()
+
+    expect([...keys].sort()).toEqual([keyA, keyB].sort())
   })
 
   it('1ページに収まらない本文はカーソルで続きを引く', async () => {
@@ -97,6 +122,16 @@ describe('findAttachmentReference', () => {
   it('チケットテンプレート本文の参照を見つける', async () => {
     vi.mocked(prisma.ticketTemplate.findFirst).mockResolvedValue({ id: 'tt1' } as never)
     expect(await findAttachmentReference(keyA)).toBe('ticketTemplate')
+  })
+
+  it('ボードノート本文の参照を見つける', async () => {
+    vi.mocked(prisma.boardNote.findFirst).mockResolvedValue({ id: 'n1' } as never)
+    expect(await findAttachmentReference(keyA)).toBe('boardNote')
+  })
+
+  it('ボードノートの版の参照を見つける', async () => {
+    vi.mocked(prisma.boardNoteRevision.findFirst).mockResolvedValue({ id: 'r1' } as never)
+    expect(await findAttachmentReference(keyA)).toBe('boardNote')
   })
 
   it('アバターの参照を見つける', async () => {

@@ -40,6 +40,17 @@ export const lockTicketRow = async (tx: Prisma.TransactionClient, ticketId: stri
 }
 
 /**
+ * かんばんのレーン(ボード + ステータス)のロック。レーンを読んで振り直す間に、同じレーンへの別の移動を割り込ませない。
+ *
+ * ボード行のロックは「ボード → チケット」の順で取る決まりで、チケット行をロックした後の
+ * ここでは取れない(チケット作成とデッドロックする)。レーン専用の advisory lock にして、
+ * 移動の最後に取るロックにする。
+ */
+const lockKanbanLane = async (tx: Prisma.TransactionClient, boardId: string, status: TicketStatus): Promise<void> => {
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`kanban-lane:${boardId}:${status}`}))`
+}
+
+/**
  * その添付が、指定チケット以外の本文(チケット・コメント・チケットテンプレート)から使われているかを調べる。
  *
  * 同じチケット(とそのコメント)からの参照は保存先ボードと同じボードなので、
@@ -162,6 +173,7 @@ export const moveTicketToLane = async (
   },
 ): Promise<{ id: string; status: TicketStatus; order: number }> => {
   // レーンは「同一ボード + 同一ステータス」で決まる
+  await lockKanbanLane(tx, access.boardId, status)
   const lane = await tx.ticket.findMany({
     where: kanbanLaneWhere(access.boardId, status, kanbanDoneSince(nowDate())),
     select: { id: true, order: true },

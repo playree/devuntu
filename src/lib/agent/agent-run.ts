@@ -212,6 +212,14 @@ export const startAgentRun = async (
 
     // Webhook からのきっかけの追加と直列にし、待ち行列を作った後に届いたきっかけは次の回へ回す
     await tx.$queryRaw`SELECT "id" FROM "ticket" WHERE "id" = ${target.id} FOR UPDATE`
+    // 同じトークンのランナーが複数台で同じタスクを受け取っても、実行は 1 件に限る
+    const running = await tx.agentRun.findFirst({
+      where: { ticketId: target.id, status: 'running' },
+      select: { id: true },
+    })
+    if (running) {
+      return { ok: false, reason: 'ticket_not_available' }
+    }
     if (await hasUnsettledAutoRevise(tx, target.id, now)) {
       return { ok: false, reason: 'ticket_not_available' }
     }
@@ -342,6 +350,35 @@ export const finishAgentRunById = async (
   return true
 }
 
+/**
+ * 時間切れで閉じられたばかりの実行がまだ結果を確定させている場合、その状態を返す。
+ *
+ * 時間切れの後も Claude は動き続けていることがあり、遅れて届いた報告で `failed` を黙って
+ * 上書きしないようにする。人が待ち行列へ戻した(状態が変わった)後の報告や、時間切れから
+ * 十分経った後に MCP だけで動かした報告は従来どおり受け付ける。
+ */
+const findTimedOutAgentState = async (
+  tx: Prisma.TransactionClient,
+  runnerId: string,
+  ticketId: string,
+  now: Date,
+): Promise<AgentTaskState | null> => {
+  const [latest, ticket] = await Promise.all([
+    tx.agentRun.findFirst({
+      where: { runnerId, ticketId },
+      orderBy: { startedAt: 'desc' },
+      select: { status: true, summary: true, finishedAt: true },
+    }),
+    tx.ticket.findUnique({ where: { id: ticketId }, select: { agentState: true } }),
+  ])
+  const closedByTimeout =
+    latest?.status === 'failed' &&
+    latest.summary === TIMEOUT_SUMMARY &&
+    !!latest.finishedAt &&
+    latest.finishedAt > msBefore(now, AGENT_RUN_TIMEOUT_MIN * MINUTE_MS)
+  return closedByTimeout && ticket?.agentState === 'failed' ? 'failed' : null
+}
+
 /** エージェントが報告する処理結果 */
 export const AGENT_OUTCOMES = ['planned', 'completed', 'skipped', 'failed'] as const
 export type AgentOutcome = (typeof AGENT_OUTCOMES)[number]
@@ -396,6 +433,11 @@ export const finishAgentTask = async (
         })
       : null
     if (!open || !runner) {
+      // ランナーが開始した実行を時間切れなどが先に閉じていた場合は、向こうが確定させた状態を尊重する
+      const timedOut = runner ? await findTimedOutAgentState(tx, runner.id, ticketId, now) : null
+      if (timedOut) {
+        return { state: timedOut }
+      }
       // 実行履歴が無いので通知もしない。チケットが無ければここで例外になる
       await tx.ticket.update({ where: { id: ticketId }, data: { agentState: state }, select: { id: true } })
       await writeAgentCriteria(tx, criteria)

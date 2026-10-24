@@ -20,9 +20,12 @@ export const scUpdateAnnouncement = z.object({
 })
 export type UpdateAnnouncement = z.infer<typeof scUpdateAnnouncement>
 
+/** 全員のダッシュボードにリンクとして出すので、http(s) 以外(javascript: など)は受け付けない */
+const zLinkUrl = z.url({ protocol: /^https?$/ })
+
 export const scCreateLinkWidget = z.object({
   name: zName,
-  url: z.url(),
+  url: zLinkUrl,
   description: zDescription,
   icon: zImageFile.optional(),
 })
@@ -31,7 +34,7 @@ export type CreateLinkWidget = z.infer<typeof scCreateLinkWidget>
 export const scUpdateLinkWidget = z.object({
   id: z.uuidv7(),
   name: zName,
-  url: z.url(),
+  url: zLinkUrl,
   description: zDescription,
   icon: zImageFile.nullish(), // File | null | undefined
 })

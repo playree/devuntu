@@ -6,12 +6,12 @@
  */
 
 import { GET } from '@/app/api/command/runs/[id]/stream/route'
-import { getServerSession } from '@/lib/auth/auth'
+import { getActiveSession } from '@/lib/auth/auth'
 import { getCommandRun } from '@/lib/command/command-run'
 import { consumeRateLimit } from '@/lib/rate-limit'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/auth/auth', () => ({ getServerSession: vi.fn() }))
+vi.mock('@/lib/auth/auth', () => ({ getActiveSession: vi.fn() }))
 vi.mock('@/lib/command/command-run', () => ({ getCommandRun: vi.fn() }))
 vi.mock('@/lib/rate-limit', () => ({ consumeRateLimit: vi.fn() }))
 // ストリームの中身は command-stream.test.ts で見る。ここでは開くかどうかだけ
@@ -30,7 +30,7 @@ const call = (opts?: { headers?: Record<string, string>; query?: string }) =>
   )
 
 const setSession = (user: { id: string; role?: string | null } | null) => {
-  vi.mocked(getServerSession).mockResolvedValue((user ? { user } : null) as never)
+  vi.mocked(getActiveSession).mockResolvedValue((user ? { user } : null) as never)
 }
 
 const setRun = (userId: string | null) => {

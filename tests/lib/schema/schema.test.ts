@@ -9,6 +9,7 @@ import { DM_NOTIFY_EVENTS } from '@/lib/notify/notify'
 import { zPassword } from '@/lib/schema/schema'
 import { scCreateUser, scUpdateIntegrationSettings, scUpdateUser } from '@/lib/schema/schema-admin'
 import { scSetBoardNotifySetting, zBoardKey } from '@/lib/schema/schema-board'
+import { scCreateLinkWidget } from '@/lib/schema/schema-dashboard'
 import { scUpdateNotifySetting, scUpdateNotifySettings, scWebPushSubscription } from '@/lib/schema/schema-notify'
 import {
   scCreateTag,
@@ -337,5 +338,17 @@ describe('scSetBoardNotifySetting: ボードのチャネル通知', () => {
   it('イベントの指定漏れは弾く', () => {
     // 部分更新を許すとサーバー側に「未指定なら据え置き」の分岐が必要になるので必須にしている
     expect(scSetBoardNotifySetting.safeParse({ id: boardId, slackChannelId: 'C0123ABCD' }).success).toBe(false)
+  })
+})
+
+describe('scCreateLinkWidget: リンクは http(s) だけ', () => {
+  const input = (url: string) => ({ name: 'リンク', url, description: '' })
+
+  it.each(['https://example.com', 'http://intranet.local/path'])('%s は受け付ける', (url) => {
+    expect(scCreateLinkWidget.safeParse(input(url)).success).toBe(true)
+  })
+
+  it.each(['javascript:alert(1)', 'data:text/html,x', 'ftp://example.com'])('%s は拒否する', (url) => {
+    expect(scCreateLinkWidget.safeParse(input(url)).success).toBe(false)
   })
 })

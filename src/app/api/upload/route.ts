@@ -1,4 +1,4 @@
-import { getServerSession } from '@/lib/auth/auth'
+import { getActiveSession } from '@/lib/auth/auth'
 import { assertBoardAccess, type Actor } from '@/lib/board/board-access'
 import { ClientError } from '@/lib/error'
 import { logger } from '@/lib/logger'
@@ -43,7 +43,7 @@ const authenticate = async (req: Request): Promise<UploadAuth | null> => {
   if (byToken) {
     return byToken.ok ? { kind: 'token', actor: byToken.actor } : null
   }
-  const user = (await getServerSession())?.user
+  const user = (await getActiveSession())?.user
   return user ? { kind: 'session', user } : null
 }
 

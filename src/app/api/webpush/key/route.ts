@@ -11,12 +11,12 @@
  * (`subscribe/route.ts`)がセッションを要求するので、ここも同じ門番に揃える。
  */
 
-import { getServerSession } from '@/lib/auth/auth'
+import { getActiveSession } from '@/lib/auth/auth'
 import { envu } from '@/lib/env-util'
 import { isWebPushConfigured } from '@/lib/webpush/webpush-server'
 
 export const GET = async () => {
-  const user = (await getServerSession())?.user
+  const user = (await getActiveSession())?.user
   if (!user) {
     return Response.json({ error: 'unauthorized' }, { status: 401 })
   }

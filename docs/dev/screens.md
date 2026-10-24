@@ -18,9 +18,12 @@
 - **認証必須** : `/auth/signin` `/start` `/cal/:id` `/maintenance` 以外の全ページ。未ログインは `/auth/signin?cb=<元のURL>` へリダイレクト
 - **管理者のみ** : `/admin/**`。`role !== 'admin'` の場合は 404 へ rewrite(メニューにも表示されない)
 - **2要素認証** : `TWO_FA_REQUIRED=true` かつ `DISABLE_PASSWORD_AUTH=false` の場合、2FA未設定なら `/auth/signin?mode=2FA` へリダイレクト。`TWO_FA_REQUIRED=false` の場合はサインイン時の 2FA チャレンジを行わないため、`twoFactorEnabled` が true の利用者もパスワードのみでサインインする(`?mode=2FA` へ直接アクセスした場合も通常のサインイン画面になる)
+  - Server Action・API・OAuth の認可は Proxy の誘導を通らないので、同じ判定(`requiresTwoFaSetup()`、`src/lib/auth/two-fa.ts`)を入口でも行う。
+    `safeAuthAction` は `INVALID_SESSION` を返し(2FA 設定前に呼ぶ必要がある Action だけ metadata に `allowWithoutTwoFa: true`)、
+    セッションで認証する API は `getActiveSession()` で未ログインと同じ扱いにし、`/api/auth/oauth2/authorize` は `TWO_FACTOR_REQUIRED` で拒否する
 - **検索エンジンのインデックス** : インデックスの可否は `SEARCH_ENGINE_INDEXING`(`<meta name="robots">`・`X-Robots-Tag`)、`/robots.txt` でのクロールの可否は `SEARCH_ENGINE_ROBOTS_ALLOW` で決まる(いずれも既定は拒否)。詳細は [environment-variables.md](../admin/environment-variables.md#基本) を参照
 - **メンテナンスモード** : フラグファイルがあると、画面・Server Action・API を Proxy が 503 で遮断する(画面は `/maintenance` へ rewrite)。セッションを見ないため**管理者も含めて全員が対象**。通すのは `/api/health`(監視)と、メンテナンス画面の表示に要る `_next/*` と `/favicon.ico` だけ。詳細は [operations.md](../admin/operations.md#メンテナンスモード) を参照
-- Proxy の matcher が除外するのは `_next/*` だけで、`api/**`・Server Action(`next-action` ヘッダ)・静的アセットも Proxy を通る(メンテナンスモードの遮断を Proxy 1箇所に集約するため)。ただし通常時はいずれも認証処理を通さず素通しするので、レコード単位の認可(ボード/チケットの参照・編集権限)は従来どおり各 Server Action 側で `assertBoardAccess` / `assertTicketAccess`(`src/lib/board/board-access.ts`)により検証する
+- Proxy の matcher が除外するのは `_next/*` だけで、`api/**`・Server Action(POST かつ `next-action` ヘッダ)・静的アセットも Proxy を通る(メンテナンスモードの遮断を Proxy 1箇所に集約するため)。ただし通常時はいずれも認証処理を通さず素通しするので、レコード単位の認可(ボード/チケットの参照・編集権限)は従来どおり各 Server Action 側で `assertBoardAccess` / `assertTicketAccess`(`src/lib/board/board-access.ts`)により検証する
 
 ボードの権限は直接メンバー(`BoardMember`)またはグループ経由(`BoardGroup`)で解決され、`owner` / `member` のロールを持つ。
 
@@ -92,7 +95,7 @@ Proxy は認証処理を通さず素通しするため、各ルートハンド�
 
 | パス                                               | アクセス制御                                                                                                                |
 | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `/api/auth/[...all]`                               | Better Auth のハンドラ(認証処理自体)                                                                                        |
+| `/api/auth/[...all]`                               | Better Auth のハンドラ(認証処理自体)。`/update-user` は `disabledPaths` で塞いでいる(`user.image` を任意の値にできるため)   |
 | `/api/auth/.well-known/openid-configuration`       | 認証不要(OIDC ディスカバリ)                                                                                                 |
 | `/api/auth/.well-known/oauth-authorization-server` | 認証不要(RFC 8414 認可サーバーメタデータ)                                                                                   |
 | `/.well-known/oauth-authorization-server/api/auth` | 認証不要(RFC 8414 のパス挿入形式。同じ内容を返す)                                                                           |

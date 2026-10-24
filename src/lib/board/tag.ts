@@ -115,15 +115,24 @@ export const syncTicketTags = async (
   }
 }
 
-/** タグ作成(メンバーなら可能)。件数チェックと採番を create と同じトランザクションに入れ、同時作成で上限を超えないようにする */
+/** タグの件数チェックから作成までを、同じボードへの他の作成と直列にする */
+export const lockBoardForTags = async (tx: Prisma.TransactionClient, boardId: string): Promise<void> => {
+  await tx.$queryRaw`SELECT "id" FROM "board" WHERE "id" = ${boardId} FOR UPDATE`
+}
+
+/**
+ * タグ作成(メンバーなら可能。アーカイブ済みボードは読み取り専用なので不可)。
+ * ボード行をロックしてから件数チェックと採番を行い、同時作成で上限を超えないようにする
+ */
 export const createBoardTag = async (
   actor: Actor,
   { boardId, name, color, order }: { boardId: string; name: string; color: TagColor; order?: number },
 ): Promise<TagOption> => {
-  await assertBoardAccess(actor, boardId, 'view')
+  await assertBoardAccess(actor, boardId, 'write')
 
   const tag = await prisma
     .$transaction(async (tx) => {
+      await lockBoardForTags(tx, boardId)
       const tags = await tx.tag.findMany({ where: { boardId }, select: { order: true } })
       if (tags.length >= MAX_TAGS_PER_SCOPE) {
         throw errInvalidOperation()

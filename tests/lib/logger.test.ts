@@ -27,6 +27,12 @@ describe('LOG_REDACT_PATHS', () => {
     expect(capture({ password: 'secret' }).password).toBe('[Redacted]')
   })
 
+  it('Webhook の署名シークレット(secret)も伏せる', () => {
+    const logged = capture({ metadata: { actionName: 'setGitlabSigningToken' }, input: { id: 'x', secret: 'whsec_x' } })
+    expect(logged.input.secret).toBe('[Redacted]')
+    expect(logged.input.id).toBe('x')
+  })
+
   it('Server Action の input に含まれるキーを伏せる', () => {
     const log = capture({ metadata: { actionName: 'x' }, input: { email: 'a', password: 'secret', token: 't' } })
     expect(log.input).toEqual({ email: 'a', password: '[Redacted]', token: '[Redacted]' })

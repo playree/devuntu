@@ -618,6 +618,15 @@ describe('startAgentRun', () => {
     expect(moveTicketToLane).not.toHaveBeenCalled()
   })
 
+  it('同じチケットに実行中の実行があれば、二重に開始しない', async () => {
+    ticket.findFirst.mockResolvedValueOnce(openTicket() as never)
+    agentRun.findFirst.mockResolvedValueOnce({ id: 'run0' } as never)
+
+    expect(await startAgentRun(runner(), 't1', 'plan')).toEqual({ ok: false, reason: 'ticket_not_available' })
+    expect(agentRun.create).not.toHaveBeenCalled()
+    expect(ticket.update).not.toHaveBeenCalled()
+  })
+
   it('待ち行列を作った後に自動差し戻しのきっかけが届いていたら、開始せず次の回へ回す', async () => {
     ticket.findFirst.mockResolvedValueOnce(openTicket() as never)
     vi.mocked(hasUnsettledAutoRevise).mockResolvedValueOnce(true)
@@ -735,6 +744,28 @@ describe('finishAgentTask', () => {
     expect(await finishAgentTask(null, 't1', 'completed')).toEqual({ state: 'done' })
     expect(agentRun.findFirst).not.toHaveBeenCalled()
     expect(agentRun.updateMany).not.toHaveBeenCalled()
+  })
+
+  it('時間切れで閉じられた直後の報告は、failed を上書きしない', async () => {
+    // 実行中の実行は無い → 直近の実行が時間切れで閉じられている
+    agentRun.findFirst
+      .mockResolvedValueOnce(null as never)
+      .mockResolvedValueOnce({ status: 'failed', summary: 'timeout', finishedAt: new Date() } as never)
+    ticket.findUnique.mockResolvedValueOnce({ agentState: 'failed' } as never)
+
+    expect(await finishAgentTask(runner(), 't1', 'completed', '要約')).toEqual({ state: 'failed' })
+    expect(ticket.update).not.toHaveBeenCalled()
+    expect(notifyMock).not.toHaveBeenCalled()
+  })
+
+  it('時間切れの後に人が待ち行列へ戻していれば、MCP だけの報告として状態を更新する', async () => {
+    agentRun.findFirst
+      .mockResolvedValueOnce(null as never)
+      .mockResolvedValueOnce({ status: 'failed', summary: 'timeout', finishedAt: new Date() } as never)
+    ticket.findUnique.mockResolvedValueOnce({ agentState: 'queued' } as never)
+
+    expect(await finishAgentTask(runner(), 't1', 'completed')).toEqual({ state: 'done' })
+    expect(ticket.update).toHaveBeenCalledWith(expect.objectContaining({ data: { agentState: 'done' } }))
   })
 
   it('先に閉じられた実行は状態を巻き戻さず通知もしない', async () => {

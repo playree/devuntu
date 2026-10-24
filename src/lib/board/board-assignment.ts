@@ -74,6 +74,8 @@ const upsertBoardMemberRow = async (
   tx: Prisma.TransactionClient,
   { actor, boardId, userId, role }: { actor: Actor; boardId: string; userId: string; role: BoardRole },
 ): Promise<void> => {
+  // owner の数え上げから更新までを、同じボードへの他の変更と直列にする(2 人の owner が同時に外し合うと 0 人になる)
+  await tx.$queryRaw`SELECT "id" FROM "board" WHERE "id" = ${boardId} FOR UPDATE`
   await assertBoardAccess(actor, boardId, 'manage', tx)
   await assertTeamBoard(tx, boardId)
   await assertBoardAssignmentTargets(tx, { userIds: [userId], groupIds: [] })
@@ -99,6 +101,8 @@ export const upsertBoardMember = async (actor: Actor, input: { boardId: string; 
  */
 export const removeBoardMember = async (actor: Actor, { boardId, userId }: { boardId: string; userId: string }) => {
   await prisma.$transaction(async (tx) => {
+    // owner の数え上げから削除までを直列にする(upsertBoardMemberRow と同じ)
+    await tx.$queryRaw`SELECT "id" FROM "board" WHERE "id" = ${boardId} FOR UPDATE`
     await assertBoardAccess(actor, boardId, 'manage', tx)
     await assertTeamBoard(tx, boardId)
 

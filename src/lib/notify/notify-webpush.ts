@@ -9,7 +9,12 @@
  */
 
 import { logger } from '../logger'
-import { deleteWebPushSubscription, findWebPushSubscriptions, sendWebPush } from '../webpush/webpush-server'
+import {
+  deleteUserWebPushSubscriptions,
+  deleteWebPushSubscription,
+  findWebPushSubscriptions,
+  sendWebPush,
+} from '../webpush/webpush-server'
 import type { NotifyContent } from './notify-content'
 import { isDeliveryAborting, isDeliverySettled, type DeliveryOutcome } from './notify-outcome'
 
@@ -23,7 +28,8 @@ import { isDeliveryAborting, isDeliverySettled, type DeliveryOutcome } from './n
  *
  * 結果は次の順で決める。
  *
- * - 失効を除く全端末が鍵の不正なら、そのまま打ち切りを伝える(チャネルごと止める)
+ * - 失効を除く全端末が鍵の不正なら、そのまま打ち切りを伝える。端末 1 台の利用者が古い鍵の購読だけを
+ *   持つ場合と見分けられないので、チャネルを止めるかは呼び出し側が他の利用者の結果と合わせて決める
  * - 1 台でも送れたら `ok`(再送すると届いた端末に二重で出てしまう)
  * - それ以外は最初の失敗を返して再試行に回す
  *
@@ -83,4 +89,9 @@ export const deliverWebPush = async (param: {
   // 失効(unlinked)はその端末だけの問題なので、配信の結果としては採らない
   const failure = results.find(({ outcome }) => !isDeliverySettled(outcome) && !isDeliveryAborting(outcome))
   return failure?.outcome ?? 'unlinked'
+}
+
+/** 全端末が鍵の不正だった利用者の購読を消す。他の利用者へは届いており、構成障害ではないと分かった場合に使う */
+export const dropStaleWebPushSubscriptions = async (userId: string): Promise<void> => {
+  await deleteUserWebPushSubscriptions(userId)
 }

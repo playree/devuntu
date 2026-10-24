@@ -124,6 +124,24 @@ export const removeImageAttachment = async (url: string): Promise<void> => {
 }
 
 /**
+ * 本人がアップロードした、ボードに属さない画像だけを削除する。
+ *
+ * `user.image` のように参照先を利用者が指せる値から消すときに使い、他人の添付を巻き込まない。
+ */
+export const removeOwnedImageAttachment = async (url: string, userId: string): Promise<void> => {
+  if (!isUploadUrl(url)) {
+    return
+  }
+  const key = toUploadKey(url)
+  const owned = await prisma.attachment.count({ where: { key, createdById: userId, boardId: null } })
+  if (owned === 0) {
+    logger.warn({ key, userId }, 'skip removing attachment not owned by user')
+    return
+  }
+  await removeAttachmentByKey(key)
+}
+
+/**
  * ボードに属する添付のキー。紐付けを外すとボードから辿れなくなるので、
  * 実体を消すには**外す前に**控えておく必要がある。
  */
