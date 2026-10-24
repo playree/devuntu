@@ -5,7 +5,12 @@ import { registerAgentSetupTool, registerAgentTools } from '@/lib/mcp/mcp-agent'
 import { getBoardForMcp, listBoardsForMcp } from '@/lib/mcp/mcp-board'
 import { registerBoardNoteTools } from '@/lib/mcp/mcp-board-note'
 import { registerImageTools } from '@/lib/mcp/mcp-image'
-import { ACCEPTANCE_CRITERIA_GUIDE, mcpInstructions } from '@/lib/mcp/mcp-instructions'
+import {
+  ACCEPTANCE_CRITERIA_GUIDE,
+  AGENT_ANNOUNCEMENT_GUIDE,
+  ANNOUNCEMENT_GUIDE,
+  mcpInstructions,
+} from '@/lib/mcp/mcp-instructions'
 import {
   addTicketCommentForMcp,
   createTicketForMcp,
@@ -203,7 +208,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       title: 'Get board',
       annotations: TOOL_ANNOTATIONS.readOnly,
       description:
-        'Returns board details (members, tags, ticket counts per status, and boardContext / templates / mergeCompletion if set). ' +
+        'Returns board details (members, tags, ticket counts per status, and boardContext / templates / mergeCompletion / announcementEnabled if set). ' +
         'boardKnowledge / boardMemory (only when set) index shared notes: read the relevant ones with get_board_notes. ' +
         'Use the IDs returned here for assigneeId and tagIds in create_ticket / update_ticket. ' +
         'When a template fits the ticket, pass it as templateId in create_ticket',
@@ -224,6 +229,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
         'boardKnowledge / boardMemory (only when set) index shared notes: read the relevant ones with get_board_notes. ' +
         'mergeCompletion (only when set) lists the git providers whose merges complete the ticket; ' +
         'with criteriaCheck checked / checkedOrReported, unmet acceptance criteria hold it back (none does not check them). ' +
+        "announcementEnabled (only when set) means type=announcement comments are also sent to the board's Slack channel. " +
         'When working on the ticket, follow the steps in the workflow field of the response (doing when starting, posting plan / report, linking artifacts)',
       inputSchema: z.strictObject({ ticketId: z.string().min(1) }),
     },
@@ -287,21 +293,29 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       description:
         'Adds a comment to a ticket. Post with type=plan once you have a plan and type=report when you finish ' +
         '(record acceptance criteria results with report_acceptance_criteria, not in the report); ' +
-        'these are shown collapsed on the detail screen, distinct from regular comments. Reply to an existing comment with parentId (one level only)',
+        'these are shown collapsed on the detail screen, distinct from regular comments. ' +
+        (auth.kind === 'agent' ? AGENT_ANNOUNCEMENT_GUIDE : ANNOUNCEMENT_GUIDE) +
+        '. Reply to an existing comment with parentId (one level only)',
       inputSchema: z.strictObject({
         ticketId: z.string().min(1),
         content: zCommentContent,
-        type: zCommentType.describe('plan=work plan, report=work report. Omit for a regular comment'),
+        type: zCommentType.describe(
+          'plan=work plan, report=work report, announcement=announcement for all board members. Omit for a regular comment',
+        ),
         parentId: z
           .uuidv7()
           .nullish()
           .describe(
             'ID of the parent comment to reply to. Cannot be a comment that is itself a reply (one level only)',
           ),
+        userApproved: z
+          .boolean()
+          .optional()
+          .describe('Set true only when the user explicitly instructed or agreed to post this announcement'),
       }),
     },
-    async ({ ticketId, content, type, parentId }) =>
-      jsonResult(await addTicketCommentForMcp(auth, ticketId, content, type, parentId)),
+    async ({ ticketId, content, type, parentId, userApproved }) =>
+      jsonResult(await addTicketCommentForMcp(auth, ticketId, content, type, parentId, userApproved)),
   )
 
   server.registerTool(

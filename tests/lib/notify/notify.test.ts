@@ -8,9 +8,11 @@
 import { NotifyChannel, NotifyEvent } from '@/generated/prisma/enums'
 import { expandTemplate } from '@/lib/locale-util'
 import {
+  announcementText,
   CHANNEL_NOTIFY_EVENTS,
   commentExcerpt,
   DM_NOTIFY_EVENTS,
+  NOTIFY_ANNOUNCEMENT_MAX,
   NOTIFY_CHANNEL_RATE_LIMIT,
   NOTIFY_CHANNELS,
   NOTIFY_DELIVER_BATCH,
@@ -238,5 +240,55 @@ describe('commentExcerpt: 通知に載せるコメント本文の抜粋', () => 
   it('記法だけの本文は空文字になる(呼び出し側が抜粋なしとして扱える)', () => {
     expect(commentExcerpt('![](https://example.com/a.webp)')).toBe('')
     expect(commentExcerpt('   ')).toBe('')
+  })
+})
+
+describe('announcementText: アナウンスとして Slack に載せる本文', () => {
+  it('改行と箇条書きを残し、空行の連続は 1 つに畳む', () => {
+    expect(announcementText('## v1.0.0\n\n\n\n* 機能A\n- 機能B\n  + 入れ子\n1. 番号付き')).toBe(
+      'v1.0.0\n\n• 機能A\n• 機能B\n  • 入れ子\n1. 番号付き',
+    )
+  })
+
+  it('強調・引用・区切り線の記号は落とす', () => {
+    expect(announcementText('**重要** な _お知らせ_\n> 引用\n\n---\n\n以上')).toBe('重要 な _お知らせ_\n引用\n\n以上')
+  })
+
+  it('リンクは URL を残す。ラベルと同じなら URL だけ、相対パスはラベルだけ', () => {
+    expect(announcementText('[リリースノート](https://example.com/r/v1 "title")')).toBe(
+      'リリースノート (https://example.com/r/v1)',
+    )
+    expect(announcementText('[https://example.com/a](https://example.com/a)')).toBe('https://example.com/a')
+    expect(announcementText('<https://example.com/b> を参照')).toBe('https://example.com/b を参照')
+    expect(announcementText('[チケット](/t/PRJ-1) を参照')).toBe('チケット を参照')
+  })
+
+  it('画像はラベルだけにする', () => {
+    expect(announcementText('![スクショ](https://example.com/a.webp)')).toBe('スクショ')
+  })
+
+  it('コードは囲みだけを落として中身を残す', () => {
+    expect(announcementText('手順\n\n```sh\ndocker compose pull\n```\n`pnpm migrate` を実行')).toBe(
+      '手順\n\ndocker compose pull\npnpm migrate を実行',
+    )
+  })
+
+  it('メンションは `@表示名` にする', () => {
+    const names = new Map([['foo@example.com', 'テストユーザー']])
+    expect(announcementText('@[foo@example.com] おつかれさまです', names)).toBe('@テストユーザー おつかれさまです')
+  })
+
+  it('行中の空白は畳み、行頭の字下げは残す', () => {
+    expect(announcementText('a   b&#x20;\n\t- c')).toBe('a b\n  • c')
+  })
+
+  it('上限で切り詰める', () => {
+    const text = announcementText('あ'.repeat(NOTIFY_ANNOUNCEMENT_MAX + 10))
+    expect(text).toHaveLength(NOTIFY_ANNOUNCEMENT_MAX)
+    expect(text.endsWith('…')).toBe(true)
+  })
+
+  it('記法だけの本文は空文字になる', () => {
+    expect(announcementText('***')).toBe('')
   })
 })

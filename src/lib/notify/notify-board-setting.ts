@@ -13,6 +13,7 @@ import type { Prisma } from '@/generated/prisma/client'
 import type { NotifyEvent } from '@/generated/prisma/enums'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
+import { getSlackSettings, hasSlackCredentials } from '../slack/slack-account'
 import { CHANNEL_NOTIFY_EVENTS, type ChannelNotifyEvent } from './notify'
 
 /** ボードの設定。イベントごとの ON/OFF と、共通の通知先チャンネル */
@@ -76,4 +77,21 @@ export const getBoardNotifyChannels = async (boardId: string, event: NotifyEvent
     select: { slackChannelId: true },
   })
   return rows.map(({ slackChannelId }) => slackChannelId)
+}
+
+/**
+ * 指定イベントを今投入したら、チャンネルへ投稿されるか。
+ *
+ * 展開時(`notify-fanout.ts`)と同じく、ボードの設定に加えて Slack 連携が有効かも見る。
+ * MCP でアナウンスを投稿する AI が、届かないのに「告知した」と報告しないために使う。
+ */
+export const isChannelNotifyEnabled = async (boardId: string, event: NotifyEvent): Promise<boolean> => {
+  if (!hasSlackCredentials()) {
+    return false
+  }
+  const [{ enabled }, count] = await Promise.all([
+    getSlackSettings(),
+    prisma.boardNotifySetting.count({ where: { boardId, event } }),
+  ])
+  return enabled && count > 0
 }

@@ -149,6 +149,13 @@ describe('buildTicketMessage: chat.postMessage のペイロードを組み立て
     expect(res.text).toContain('iOS Safari だけで再現しました')
   })
 
+  it('複数行の抜粋(アナウンスの本文)は行ごとに引用にする', () => {
+    const res = buildTicketMessage({ ...base, excerpt: 'v1.0.0\n\n• 機能A' })
+    const sectionText = (res.blocks[0] as { text: { text: string } }).text.text
+    // mrkdwn の引用は行頭の `>` でしか続かない。空行も引用の中に残す
+    expect(sectionText.endsWith('\n>v1.0.0\n>\n>• 機能A')).toBe(true)
+  })
+
   it('抜粋が無い場合は引用行を作らない', () => {
     const res = buildTicketMessage(base)
     const sectionText = (res.blocks[0] as { text: { text: string } }).text.text

@@ -198,6 +198,17 @@ describe('createDevuntuMcpServer', () => {
     expect(tools.map((tool) => tool.name)).not.toContain('report_acceptance_criteria')
   })
 
+  it('add_ticket_comment の説明: 人にはアナウンスを利用者の了承後に投稿させ、エージェントには報告で提案させる', async () => {
+    const descriptionOf = async (authKind: typeof auth) => {
+      const { tools } = await (await connectDevuntuMcp(authKind)).listTools()
+      return tools.find((tool) => tool.name === 'add_ticket_comment')?.description ?? ''
+    }
+    for (const humanAuth of [auth, patAuth]) {
+      expect(await descriptionOf(humanAuth)).toContain('only after the user agrees, with userApproved=true')
+    }
+    expect(await descriptionOf(agentAuth)).toContain('Agents cannot post type=announcement')
+  })
+
   it('引数を取るツールは inputSchema で未知の引数を許さない', async () => {
     for (const anyAuth of [auth, agentAuth]) {
       const { tools } = await (await connectDevuntuMcp(anyAuth)).listTools()
@@ -431,7 +442,7 @@ describe('createDevuntuMcpServer', () => {
       arguments: { ticketId: 'ABC-1', content: 'コメント' },
     })
 
-    expect(addTicketCommentForMcp).toHaveBeenCalledWith(auth, 'ABC-1', 'コメント', undefined, undefined)
+    expect(addTicketCommentForMcp).toHaveBeenCalledWith(auth, 'ABC-1', 'コメント', undefined, undefined, undefined)
     expect(result.content).toEqual([{ type: 'text', text: JSON.stringify({ id: 'c1' }, null, 2) }])
   })
 
@@ -456,7 +467,29 @@ describe('createDevuntuMcpServer', () => {
       'プラン',
       'plan',
       '0195c1e0-0000-7000-8000-000000000001',
+      undefined,
     )
+  })
+
+  it('add_ticket_comment はアナウンスの userApproved も渡す', async () => {
+    vi.mocked(addTicketCommentForMcp).mockResolvedValueOnce({ id: 'c1', announced: true } as never)
+
+    const result = await (
+      await connectDevuntuMcp()
+    ).callTool({
+      name: 'add_ticket_comment',
+      arguments: { ticketId: 'ABC-1', content: 'v1.0.0 をリリースしました', type: 'announcement', userApproved: true },
+    })
+
+    expect(addTicketCommentForMcp).toHaveBeenCalledWith(
+      auth,
+      'ABC-1',
+      'v1.0.0 をリリースしました',
+      'announcement',
+      undefined,
+      true,
+    )
+    expect(result.content).toEqual([{ type: 'text', text: JSON.stringify({ id: 'c1', announced: true }, null, 2) }])
   })
 
   it('update_ticket_comment は commentId と content を渡す', async () => {

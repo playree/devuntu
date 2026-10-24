@@ -88,6 +88,14 @@ const scTicketDue = scTicketRef.extend({
   dueDate: z.iso.date(),
 })
 
+const scAnnouncement = scTicketRef.extend({
+  commentId: z.string().min(1),
+  /** 投稿した本人の表示名 */
+  fromName: z.string(),
+  /** `announcementText()` を通した本文。改行を残す */
+  excerpt: z.string().min(1),
+})
+
 /** イベントごとのペイロード定義。イベントを足すとここが型エラーになる */
 export const NOTIFY_PAYLOAD_SCHEMA = {
   mention: scMention,
@@ -97,6 +105,7 @@ export const NOTIFY_PAYLOAD_SCHEMA = {
   ticket_completed: scTicketCompleted,
   ticket_merge_held: scTicketMergeHeld,
   ticket_due: scTicketDue,
+  announcement: scAnnouncement,
 } as const satisfies Record<NotifyEvent, z.ZodType>
 
 export type NotifyPayloadMap = { [E in NotifyEvent]: z.infer<(typeof NOTIFY_PAYLOAD_SCHEMA)[E]> }

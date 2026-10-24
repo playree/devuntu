@@ -137,6 +137,12 @@ const RESOLVERS = {
     userIds: (await isStillDue(payload.ticketId, payload.dueDate)) ? await ticketOwnerIds(payload.ticketId) : [],
     slackChannelIds: [],
   }),
+
+  /** アナウンスはチャネル通知のみ。ボードメンバー全員が見るチャンネルへ投稿する */
+  announcement: async (payload) => ({
+    userIds: [],
+    slackChannelIds: await boardChannels(payload.boardId, 'announcement'),
+  }),
 } as const satisfies { [E in NotifyEvent]: Resolver<E> }
 
 export const resolveNotifyTargets = async <E extends NotifyEvent>(

@@ -42,12 +42,16 @@ export const isTicketStatus = (value: string): value is TicketStatus =>
 export const isTicketPriority = (value: string): value is TicketPriority =>
   (TICKET_PRIORITIES as readonly string[]).includes(value)
 
-/** コメントの種別。plan/report は詳細画面でデフォルト折りたたみ表示する。未指定(null)は通常コメント */
-export const TICKET_COMMENT_TYPES = ['plan', 'report'] as const satisfies readonly TicketCommentType[]
+/**
+ * コメントの種別。plan/report は詳細画面でデフォルト折りたたみ表示する。未指定(null)は通常コメント。
+ * announcement はボードのチャネル通知で Slack チャンネルへも投稿する
+ */
+export const TICKET_COMMENT_TYPES = ['plan', 'report', 'announcement'] as const satisfies readonly TicketCommentType[]
 
 export const TICKET_COMMENT_TYPE_LOCALE = {
   plan: 'comment_type_plan',
   report: 'comment_type_report',
+  announcement: 'comment_type_announcement',
 } as const satisfies Record<TicketCommentType, LocaleItemBase>
 
 /** plan / report への返答(承認 / 差し戻し)。承認/差し戻しボタンから投稿した返信にだけ付く */

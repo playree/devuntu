@@ -17,12 +17,12 @@
  */
 
 import type { Prisma } from '@/generated/prisma/client'
-import type { AgentRunAction, AgentRunStatus, TicketStatus } from '@/generated/prisma/enums'
+import type { AgentRunAction, AgentRunStatus, TicketCommentType, TicketStatus } from '@/generated/prisma/enums'
 import { extractMentionEmails, normalizeMentionText } from '../board/mention'
 import { ticketDisplayId } from '../board/ticket-id'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
-import { commentExcerpt } from './notify'
+import { announcementText, commentExcerpt } from './notify'
 import { enqueueNotify } from './notify-enqueue'
 import type { AgentRunNotifyState } from './notify-payload'
 
@@ -338,18 +338,53 @@ const loadTicketNotifyRef = async (ticketId: string, tx: Prisma.TransactionClien
   }
 }
 
-/** コメントの投稿・編集。コメント経由のメンションだけを発火する */
+/**
+ * アナウンスの投稿。チャネル通知だけのイベントで、宛先はボードの設定から引く。
+ * 本文は改行を残した形で投入時に確定させる(配信までにコメントが消えても告知の中身は送る)。
+ */
+const enqueueAnnounced = async (
+  param: { actorId: string; ticket: TicketNotifyRef; comment: { id: string; content: string } },
+  tx: Prisma.TransactionClient,
+): Promise<void> => {
+  const { actorId, ticket, comment } = param
+  const excerpt = announcementText(comment.content, await resolveMentionNames(comment.content, tx))
+  // 記法を落とした結果が空なら告知する中身が無い
+  if (!excerpt) {
+    return
+  }
+
+  logger.info({ ticketId: ticket.id, commentId: comment.id, actorId }, 'announcement notify')
+
+  await enqueueNotify(
+    {
+      event: 'announcement',
+      actorId,
+      payload: { ...ticketPayload(ticket), commentId: comment.id, fromName: await actorName(actorId, tx), excerpt },
+    },
+    tx,
+  )
+}
+
+/**
+ * コメントの投稿・編集。コメント経由のメンションと、アナウンスの投稿を発火する。
+ *
+ * `comment.type` は投稿時だけ渡す。アナウンスを編集し直すたびにチャンネルへ流さないため、
+ * 編集では渡さない(発火しない)。
+ */
 export const enqueueTicketCommented = async (
   param: {
     actorId: string
     ticket: TicketNotifyRef
-    comment: { id: string; content: string }
+    comment: { id: string; content: string; type?: TicketCommentType | null }
     addedMentionUserIds: string[]
   },
   tx: Prisma.TransactionClient = prisma,
 ): Promise<void> => {
   const { actorId, ticket, comment, addedMentionUserIds } = param
   await enqueueMentioned({ actorId, ticket, userIds: addedMentionUserIds, comment }, tx)
+  if (comment.type === 'announcement') {
+    await enqueueAnnounced({ actorId, ticket, comment }, tx)
+  }
 }
 
 /**

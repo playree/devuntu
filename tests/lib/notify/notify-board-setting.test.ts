@@ -7,13 +7,22 @@
 
 import type { Prisma } from '@/generated/prisma/client'
 import { CHANNEL_NOTIFY_EVENTS } from '@/lib/notify/notify'
-import { getBoardNotifyChannels, getBoardNotifySetting, setBoardNotifySetting } from '@/lib/notify/notify-board-setting'
+import {
+  getBoardNotifyChannels,
+  getBoardNotifySetting,
+  isChannelNotifyEnabled,
+  setBoardNotifySetting,
+} from '@/lib/notify/notify-board-setting'
 import { prisma } from '@/lib/prisma'
+import { getSlackSettings, hasSlackCredentials } from '@/lib/slack/slack-account'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/prisma', async () =>
-  (await import('../../helpers/prisma')).mockPrisma({ boardNotifySetting: ['findMany', 'deleteMany', 'createMany'] }),
+  (await import('../../helpers/prisma')).mockPrisma({
+    boardNotifySetting: ['findMany', 'deleteMany', 'createMany', 'count'],
+  }),
 )
+vi.mock('@/lib/slack/slack-account', () => ({ getSlackSettings: vi.fn(), hasSlackCredentials: vi.fn() }))
 
 const findMany = vi.mocked(prisma.boardNotifySetting.findMany)
 const deleteMany = vi.mocked(prisma.boardNotifySetting.deleteMany)
@@ -115,5 +124,37 @@ describe('getBoardNotifyChannels', () => {
     findMany.mockResolvedValue([])
 
     expect(await getBoardNotifyChannels('b1', 'agent_run')).toEqual([])
+  })
+})
+
+describe('isChannelNotifyEnabled', () => {
+  const count = vi.mocked(prisma.boardNotifySetting.count)
+  const givenSlack = (credentials: boolean, enabled: boolean) => {
+    vi.mocked(hasSlackCredentials).mockReturnValue(credentials)
+    vi.mocked(getSlackSettings).mockResolvedValue({ enabled } as never)
+  }
+
+  it('ボードの設定があり、Slack 連携が有効なら true', async () => {
+    givenSlack(true, true)
+    count.mockResolvedValue(1)
+
+    expect(await isChannelNotifyEnabled('b1', 'announcement')).toBe(true)
+    expect(count.mock.calls[0][0]).toMatchObject({ where: { boardId: 'b1', event: 'announcement' } })
+  })
+
+  it('ボードの設定が無ければ false', async () => {
+    givenSlack(true, true)
+    count.mockResolvedValue(0)
+
+    expect(await isChannelNotifyEnabled('b1', 'announcement')).toBe(false)
+  })
+
+  it('Slack 連携が無効・未設定なら、ボードの設定があっても false(展開時に落とされるため)', async () => {
+    count.mockResolvedValue(1)
+    givenSlack(true, false)
+    expect(await isChannelNotifyEnabled('b1', 'announcement')).toBe(false)
+
+    givenSlack(false, true)
+    expect(await isChannelNotifyEnabled('b1', 'announcement')).toBe(false)
   })
 })

@@ -17,6 +17,7 @@ import { BOARD_KEY_PATTERN } from '@/lib/board/ticket-id'
 import { listTicketTemplates } from '@/lib/board/ticket-template'
 import { errInvalidOperation } from '@/lib/error'
 import { MERGE_COMPLETION_SELECT, mergeCompletionOf } from '@/lib/git/git'
+import { isChannelNotifyEnabled } from '@/lib/notify/notify-board-setting'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import { prisma } from '@/lib/prisma'
 
@@ -77,12 +78,13 @@ export const getBoardForMcp = async (auth: ResourceAuth, boardIdOrKey: string) =
     throw errInvalidOperation()
   }
 
-  const [members, tags, templates, counts, noteIndex] = await Promise.all([
+  const [members, tags, templates, counts, noteIndex, announcementEnabled] = await Promise.all([
     getBoardMemberUsers(id),
     listBoardTags(id),
     listTicketTemplates(id),
     countTicketsByBoard([id]),
     findBoardNoteIndex(id),
+    isChannelNotifyEnabled(id, 'announcement'),
   ])
 
   const mergeCompletion = mergeCompletionOf(board.gitSettings)
@@ -98,6 +100,8 @@ export const getBoardForMcp = async (auth: ResourceAuth, boardIdOrKey: string) =
     ...noteIndex,
     /** マージで自動完了する provider と、その前に見る受け入れ条件の判定。自動完了が無ければ項目ごと載せない */
     ...(mergeCompletion ? { mergeCompletion } : {}),
+    /** アナウンス(type=announcement のコメント)が Slack チャンネルへ投稿されるか。されないなら項目ごと載せない */
+    ...(announcementEnabled ? { announcementEnabled } : {}),
     kind: access.kind,
     archived: access.archived,
     role: access.role,

@@ -110,7 +110,7 @@ describe('resolveNotifyTargets: イベントごとの宛先', () => {
     expect(prisma.ticket.findUnique, '作成者は宛先にしない').not.toHaveBeenCalled()
   })
 
-  it.each(['ticket_created', 'ticket_completed'] as const)(
+  it.each(['ticket_created', 'ticket_completed', 'announcement'] as const)(
     '%s はチャネル通知だけで、渡された宛先があっても DM しない',
     async (event) => {
       vi.mocked(getBoardNotifyChannels).mockResolvedValue(['C0123ABCD'])

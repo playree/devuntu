@@ -429,7 +429,7 @@ export const insertComment = async (
         displayId: ticketDisplayId({ key: ticket.board.key, number: ticket.number }),
         title: ticket.title,
       },
-      comment: { id: comment.id, content },
+      comment: { id: comment.id, content, type },
       addedMentionUserIds: mentionedUserIds,
     },
     tx,

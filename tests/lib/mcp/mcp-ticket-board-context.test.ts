@@ -1,11 +1,12 @@
 /**
- * get_ticket の boardContext(ボードの AI 向けコンテキスト)・mergeCompletion・ボードノートの索引は、
+ * get_ticket の boardContext(ボードの AI 向けコンテキスト)・mergeCompletion・ボードノートの索引・announcementEnabled は、
  * ボードのメンバーにだけ設定時のみ載せる
  */
 
 import { findBoardNoteIndex } from '@/lib/board-note/board-note'
 import { assertTicketAccess, type TicketAccess } from '@/lib/board/board-access'
 import { getTicketForMcp } from '@/lib/mcp/mcp-ticket'
+import { isChannelNotifyEnabled } from '@/lib/notify/notify-board-setting'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { oauthAuth } from '../../helpers/resource-auth'
@@ -26,6 +27,7 @@ vi.mock('@/lib/board/ticket-relation', async (importOriginal) => {
 })
 vi.mock('@/lib/board/ticket-sequence', () => ({ findWaitingTicketIds: vi.fn(async () => new Set()) }))
 vi.mock('@/lib/board-note/board-note', () => ({ findBoardNoteIndex: vi.fn(async () => ({})) }))
+vi.mock('@/lib/notify/notify-board-setting', () => ({ isChannelNotifyEnabled: vi.fn(async () => false) }))
 
 const auth = oauthAuth()
 const TICKET_ID = '0195c1e0-0000-7000-8000-0000000000aa'
@@ -137,5 +139,31 @@ describe('getTicketForMcp のボードノートの索引', () => {
     expect(result).not.toHaveProperty('boardKnowledge')
     expect(result).not.toHaveProperty('boardMemory')
     expect(findBoardNoteIndex).not.toHaveBeenCalled()
+  })
+})
+
+describe('getTicketForMcp の announcementEnabled', () => {
+  it('アナウンスが Slack へ流れるボードなら、メンバーには true を返す', async () => {
+    vi.mocked(isChannelNotifyEnabled).mockResolvedValue(true)
+    vi.mocked(prisma.ticket.findUnique).mockResolvedValue(ticketRow(null) as never)
+
+    expect(await getTicketForMcp(auth, TICKET_ID)).toMatchObject({ announcementEnabled: true })
+    expect(isChannelNotifyEnabled).toHaveBeenCalledWith('board-1', 'announcement')
+  })
+
+  it('流れないボードでは項目ごと載せない', async () => {
+    vi.mocked(isChannelNotifyEnabled).mockResolvedValue(false)
+    vi.mocked(prisma.ticket.findUnique).mockResolvedValue(ticketRow(null) as never)
+
+    expect(await getTicketForMcp(auth, TICKET_ID)).not.toHaveProperty('announcementEnabled')
+  })
+
+  it('ボードのメンバーでない利用者(承認者)には返さない', async () => {
+    vi.mocked(isChannelNotifyEnabled).mockResolvedValue(true)
+    vi.mocked(assertTicketAccess).mockResolvedValue(access({ boardRole: null, canEdit: false, canDelete: false }))
+    vi.mocked(prisma.ticket.findUnique).mockResolvedValue(ticketRow(null) as never)
+
+    expect(await getTicketForMcp(auth, TICKET_ID)).not.toHaveProperty('announcementEnabled')
+    expect(isChannelNotifyEnabled).not.toHaveBeenCalled()
   })
 })

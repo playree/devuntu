@@ -44,6 +44,7 @@ import { MERGE_COMPLETION_SELECT, mergeCompletionOf } from '@/lib/git/git'
 import { logger } from '@/lib/logger'
 import { resolveBoardId } from '@/lib/mcp/mcp-board'
 import { ticketWorkflowFor } from '@/lib/mcp/mcp-instructions'
+import { isChannelNotifyEnabled } from '@/lib/notify/notify-board-setting'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import { prisma } from '@/lib/prisma'
 import { parseChildProposal } from '@/lib/schema/schema-ticket'
@@ -104,7 +105,7 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
 
   const displayId = ticketDisplayId({ key: ticket.board.key, number: ticket.number })
   const mergeCompletion = access.boardRole ? mergeCompletionOf(ticket.board.gitSettings) : undefined
-  const [links, criteria, activities, relations, waiting, noteIndex] = await Promise.all([
+  const [links, criteria, activities, relations, waiting, noteIndex, announcementEnabled] = await Promise.all([
     listTicketLinks(id),
     listTicketCriteria(id),
     listTicketActivities(id, TICKET_ACTIVITY_MCP_LIMIT),
@@ -114,6 +115,8 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
     findWaitingTicketIds(access.boardRole ? [id] : []),
     // ボードノートも boardContext と同じくボード内の情報なので承認者には見せない
     access.boardRole ? findBoardNoteIndex(access.boardId) : {},
+    // ボードの通知設定もボード内の情報なので承認者には見せない
+    access.boardRole ? isChannelNotifyEnabled(access.boardId, 'announcement') : false,
   ])
 
   return {
@@ -132,6 +135,8 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
     ...noteIndex,
     /** マージによる自動完了の設定。boardContext と同じくボード内の情報なので承認者には見せない */
     ...(mergeCompletion ? { mergeCompletion } : {}),
+    /** アナウンス(type=announcement のコメント)がボードの Slack チャンネルへ投稿されるか。されないなら項目ごと載せない */
+    ...(announcementEnabled ? { announcementEnabled } : {}),
     title: ticket.title,
     content: ticket.content,
     status: ticket.status,
@@ -158,7 +163,7 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
       id: comment.id,
       authorName: comment.author?.name ?? '',
       content: comment.content,
-      /** plan=対応プラン / report=対応報告 / null=通常コメント */
+      /** plan=対応プラン / report=対応報告 / announcement=アナウンス / null=通常コメント */
       type: comment.type,
       /** plan / report への返答。approved=承認 / rejected=差し戻し / null=通常の返信 */
       decision: comment.decision,
@@ -356,8 +361,23 @@ export const deleteTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId
   return { id }
 }
 
+/** アナウンスを弾いた。AI が次の手を選べるよう、メッセージに理由と対処を書く */
+export const ANNOUNCEMENT_DENIED = 'ANNOUNCEMENT_DENIED'
+const errAnnouncementDenied = (reason: 'agent' | 'approval') =>
+  new ClientError(
+    ANNOUNCEMENT_DENIED,
+    reason === 'agent'
+      ? 'Agents cannot post announcements. Propose the announcement text in your report instead'
+      : 'Posting an announcement requires the user to decide. Propose the text to the user, then retry with userApproved=true',
+  )
+
 /**
- * コメント投稿。MCP限定の追加制限は無く、Web版の addTicketComment と同じ権限判定を使う。
+ * コメント投稿。Web版の addTicketComment と同じ権限判定を使う。
+ *
+ * MCP限定の追加制限はアナウンスだけ。ボードメンバー全員へ届くので投稿するかは利用者が決める:
+ * 人の経路は利用者の了承(userApproved)を申告したときだけ通し、確認する相手のいないエージェント経路は通さない。
+ * アナウンスの応答には、チャンネルへ投稿される設定だったか(announced)を返す。
+ * 届かないのに「告知した」と報告させないため。
  */
 export const addTicketCommentForMcp = async (
   auth: ResourceAuth,
@@ -365,12 +385,29 @@ export const addTicketCommentForMcp = async (
   content: string,
   type?: TicketCommentType | null,
   parentId?: string | null,
+  userApproved?: boolean,
 ) => {
+  const isAnnouncement = type === 'announcement'
+  if (isAnnouncement && auth.kind === 'agent') {
+    throw errAnnouncementDenied('agent')
+  }
+  if (isAnnouncement && userApproved !== true) {
+    throw errAnnouncementDenied('approval')
+  }
+
   const ticketId = await resolveTicketId(auth, ticketIdOrDisplayId)
   const comment = await addComment(auth.user, { ticketId, content, type, parentId })
 
   logger.info({ userId: auth.user.id, ticketId, commentId: comment.id }, 'mcp ticket comment added')
-  return { id: comment.id }
+  if (!isAnnouncement) {
+    return { id: comment.id }
+  }
+
+  const ticket = await prisma.ticket.findUnique({ where: { id: ticketId }, select: { boardId: true } })
+  return {
+    id: comment.id,
+    announced: !!ticket && (await isChannelNotifyEnabled(ticket.boardId, 'announcement')),
+  }
 }
 
 /**

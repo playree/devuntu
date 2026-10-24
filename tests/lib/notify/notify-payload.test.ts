@@ -94,3 +94,16 @@ describe('parseNotifyPayload: ticket_due', () => {
     expect(() => parseNotifyPayload('ticket_due', { ...payload, dueDate: '2026-10-20T00:00:00Z' })).toThrow(ClientError)
   })
 })
+
+describe('parseNotifyPayload: announcement', () => {
+  const payload = { ...ticketRef, commentId: 'comment-1', fromName: 'テストユーザー', excerpt: 'v1.0.0\n• 機能A' }
+
+  it('コメントIDと本文で通る(改行を保つ)', () => {
+    expect(parseNotifyPayload('announcement', payload)).toMatchObject(payload)
+  })
+
+  it('本文が空・コメントIDが無い行は弾く', () => {
+    expect(() => parseNotifyPayload('announcement', { ...payload, excerpt: '' })).toThrow(ClientError)
+    expect(() => parseNotifyPayload('announcement', { ...payload, commentId: undefined })).toThrow(ClientError)
+  })
+})

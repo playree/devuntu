@@ -143,7 +143,7 @@ export type TicketMessageParam = {
   url: string
   /** 「〇〇さんがメンションしました」などの本文。呼び出し側でロケール解決済みのものを渡す */
   body: string
-  /** 引用として本文の下に出す抜粋(コメント本文 / エージェントの報告要約)。利用者入力を含むので生文字列を渡す */
+  /** 引用として本文の下に出す抜粋(コメント本文 / エージェントの報告要約 / アナウンスの本文)。利用者入力を含むので生文字列を渡す */
   excerpt?: string
   /** ボタンのラベル */
   openLabel: string
@@ -183,8 +183,13 @@ const fitLines = (lines: string[], max: number): string => {
 export const buildTicketMessage = ({ subject, url, body, excerpt, openLabel }: TicketMessageParam) => {
   const safeSubject = escapeSlackText(subject)
   const safeBody = escapeSlackText(body)
-  // mrkdwn の引用。抜粋は改行を畳んだ 1 行で渡ってくる前提
-  const quoted = excerpt ? `>${escapeSlackText(excerpt)}` : ''
+  // mrkdwn の引用は行ごとに `>` が要る(アナウンスの本文は改行を残して渡ってくる)
+  const quoted = excerpt
+    ? escapeSlackText(excerpt)
+        .split('\n')
+        .map((line) => `>${line}`)
+        .join('\n')
+    : ''
 
   // 見出しのリンクを先に確定させ、余った分を本文・抜粋の順に割り当てる
   const heading = boldLink(url, safeSubject, SECTION_TEXT_MAX)
