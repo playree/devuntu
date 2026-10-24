@@ -1,6 +1,6 @@
 'use client'
 
-import { addDaysDateOnly, clipToZonedDay, toZone, WEEKDAY_LABELS, zonedMinutes } from '@/lib/day'
+import { addDaysDateOnly, clipToZonedDay, toZone, WEEKDAY_LABELS, zonedDayBounds, zonedMinutes } from '@/lib/day'
 import type { BusySlot } from '@/lib/google/google-calendar'
 import { useLocale } from '@/locale/client'
 import { cn } from '@heroui/react'
@@ -53,10 +53,11 @@ export const WeekView: FC<{ weekStartISO: string; busy: BusySlot[]; timezone: st
       // 日の境界は暦日から解決する(dayjs の add(n, 'day') はオフセットを固定したまま 24 時間ずつ進むため、DST の切替日にずれる)
       const date = addDaysDateOnly(firstDate, di)
       const dayStart = zonedMinutes(date, 0, timezone)
+      const bounds = zonedDayBounds(date, timezone)
 
       const blocks: DayBlock[] = []
       for (const slot of busy) {
-        const clipped = clipToZonedDay(date, new Date(slot.start).getTime(), new Date(slot.end).getTime(), timezone)
+        const clipped = clipToZonedDay(bounds, new Date(slot.start).getTime(), new Date(slot.end).getTime(), timezone)
         if (clipped) {
           blocks.push({
             top: (clipped.startMin / (24 * 60)) * TOTAL_HEIGHT,

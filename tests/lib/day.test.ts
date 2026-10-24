@@ -6,6 +6,7 @@ import {
   msBefore,
   startOfWeek,
   weekRange,
+  zonedDayBounds,
   zonedMinutes,
 } from '@/lib/day'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -131,40 +132,41 @@ describe('msBefore', () => {
 })
 
 describe('clipToZonedDay', () => {
-  const ms = (iso: string) => new Date(iso).getTime()
+  /** 暦日 1 日に切り取る(日の範囲は zonedDayBounds で求める) */
+  const clip = (date: string, tz: string, start: string, end: string) =>
+    clipToZonedDay(zonedDayBounds(date, tz), new Date(start).getTime(), new Date(end).getTime(), tz)
 
   it('日をまたぐ区間はその日の分だけ切り取る', () => {
     // Asia/Tokyo の 3/4 22:00 〜 3/5 02:00
-    const range = [ms('2026-03-04T13:00:00Z'), ms('2026-03-04T17:00:00Z')] as const
-    expect(clipToZonedDay('2026-03-04', ...range, 'Asia/Tokyo')).toEqual({ startMin: 22 * 60, endMin: 1440 })
-    expect(clipToZonedDay('2026-03-05', ...range, 'Asia/Tokyo')).toEqual({ startMin: 0, endMin: 2 * 60 })
+    const range = ['2026-03-04T13:00:00Z', '2026-03-04T17:00:00Z'] as const
+    expect(clip('2026-03-04', 'Asia/Tokyo', ...range)).toEqual({ startMin: 22 * 60, endMin: 1440 })
+    expect(clip('2026-03-05', 'Asia/Tokyo', ...range)).toEqual({ startMin: 0, endMin: 2 * 60 })
   })
 
   it('重ならなければ null', () => {
-    expect(
-      clipToZonedDay('2026-03-06', ms('2026-03-04T13:00:00Z'), ms('2026-03-04T17:00:00Z'), 'Asia/Tokyo'),
-    ).toBeNull()
+    expect(clip('2026-03-06', 'Asia/Tokyo', '2026-03-04T13:00:00Z', '2026-03-04T17:00:00Z')).toBeNull()
   })
 
   it('夏時間が終わる日(25 時間)も、現地の 23:00〜24:00 をその日に含め、壁時計の位置で返す', () => {
     // Europe/Berlin 2026-10-25 は 03:00 CEST → 02:00 CET。23:00 CET = 22:00Z
-    expect(
-      clipToZonedDay('2026-10-25', ms('2026-10-25T22:00:00Z'), ms('2026-10-25T23:00:00Z'), 'Europe/Berlin'),
-    ).toEqual({ startMin: 23 * 60, endMin: 1440 })
+    expect(clip('2026-10-25', 'Europe/Berlin', '2026-10-25T22:00:00Z', '2026-10-25T23:00:00Z')).toEqual({
+      startMin: 23 * 60,
+      endMin: 1440,
+    })
     // 切替後の 10:00 CET = 09:00Z は 10:00 の位置
-    expect(
-      clipToZonedDay('2026-10-25', ms('2026-10-25T09:00:00Z'), ms('2026-10-25T10:00:00Z'), 'Europe/Berlin'),
-    ).toEqual({ startMin: 10 * 60, endMin: 11 * 60 })
+    expect(clip('2026-10-25', 'Europe/Berlin', '2026-10-25T09:00:00Z', '2026-10-25T10:00:00Z')).toEqual({
+      startMin: 10 * 60,
+      endMin: 11 * 60,
+    })
   })
 
   it('夏時間が始まる日(23 時間)も壁時計の位置で返す', () => {
     // Europe/Berlin 2026-03-29 は 02:00 CET → 03:00 CEST。10:00 CEST = 08:00Z
-    expect(
-      clipToZonedDay('2026-03-29', ms('2026-03-29T08:00:00Z'), ms('2026-03-29T09:00:00Z'), 'Europe/Berlin'),
-    ).toEqual({ startMin: 10 * 60, endMin: 11 * 60 })
+    expect(clip('2026-03-29', 'Europe/Berlin', '2026-03-29T08:00:00Z', '2026-03-29T09:00:00Z')).toEqual({
+      startMin: 10 * 60,
+      endMin: 11 * 60,
+    })
     // 前日の 23:00 CET(22:00Z)は含めない
-    expect(
-      clipToZonedDay('2026-03-29', ms('2026-03-28T22:00:00Z'), ms('2026-03-28T23:00:00Z'), 'Europe/Berlin'),
-    ).toBeNull()
+    expect(clip('2026-03-29', 'Europe/Berlin', '2026-03-28T22:00:00Z', '2026-03-28T23:00:00Z')).toBeNull()
   })
 })

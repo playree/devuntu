@@ -169,11 +169,13 @@ export const syncPullRequest = async ({
       .map(({ id, mergeCriteriaCheck }) => [id, mergeCriteriaCheck]),
   )
   /**
-   * 完了の判定は、このイベントで状態が変わるリンクに限る(更新する前に引く)。
-   * 再配信や遅れて届いた同じ closed イベントで、マージ後に人が戻したチケットを完了にし直さない
+   * 完了の判定は、このイベントで閉じた状態へ変わるリンクに限る(更新する前に引く)。
+   * 再配信や遅れて届いた同じ closed イベントで、マージ後に人が戻したチケットを完了にし直さない。
+   * closed より先に別のイベント(edited など)が閉じた状態を運んできた場合は、そちらで判定する
    */
+  const closing = isClosed || prState === 'merged' || prState === 'closed'
   const targets =
-    isClosed && criteriaCheckByBoard.size > 0
+    closing && criteriaCheckByBoard.size > 0
       ? await prisma.ticketLink.findMany({
           where: {
             ...where,

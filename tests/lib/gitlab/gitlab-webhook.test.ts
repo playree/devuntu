@@ -176,11 +176,27 @@ describe('Merge Request Hook', () => {
     expect(vi.mocked(prisma.ticketLink.updateMany).mock.calls[0][0]?.data).toMatchObject({ headSha: undefined })
   })
 
-  it('閉じた後の編集(update)では完了の判定をしない', async () => {
+  it('閉じた後の編集(update)では、既に閉じた状態のリンクの完了判定をし直さない', async () => {
+    // 既に merged のリンクは「このイベントで閉じた」対象に引かれない
+    vi.mocked(prisma.ticketLink.findMany).mockResolvedValueOnce([] as never)
+
     await handleGitlabEvent('Merge Request Hook', mergeRequestEvent({ action: 'update', state: 'merged' }), TARGET)
 
-    expect(prisma.ticketLink.findMany).not.toHaveBeenCalled()
+    expect(vi.mocked(prisma.ticketLink.findMany).mock.calls[0][0]?.where).toMatchObject({
+      AND: [expect.anything(), { OR: [{ prState: null }, { prState: { not: 'merged' } }] }],
+    })
     expect(completeTicketByMerge).not.toHaveBeenCalled()
+  })
+
+  it('merge より先に届いた編集(update)が閉じた状態を運んだら、そこで完了の判定をする', async () => {
+    vi.mocked(prisma.ticketLink.findMany)
+      .mockResolvedValueOnce([{ ticketId: 't1', ticket: { boardId: 'b1' } }] as never)
+      .mockResolvedValueOnce([{ prState: 'merged' }] as never)
+    vi.mocked(prisma.boardRepository.findMany).mockResolvedValue([KEY] as never)
+
+    await handleGitlabEvent('Merge Request Hook', mergeRequestEvent({ action: 'update', state: 'merged' }), TARGET)
+
+    expect(completeTicketByMerge).toHaveBeenCalled()
   })
 
   it('マージで完了にしないボードでは判定しない', async () => {

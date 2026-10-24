@@ -136,13 +136,14 @@ export const deleteWebPushSubscription = async (id: string): Promise<void> => {
 }
 
 /**
- * 利用者の購読をすべて消す。
+ * 利用者の購読のうち、`sentAt` より前に登録されたものを消す。
  *
  * 全端末が鍵の不正(401 / 403)で、同じ周に他の利用者へは届いた場合に使う。
  * 古い鍵で登録された購読は失効(404 / 410)にならず、残すと毎回失敗し続ける。
+ * 鍵を差し替えた後の再購読はエンドポイントごと変わって新しい行になるので、送信後に登録し直した購読は残る。
  */
-export const deleteUserWebPushSubscriptions = async (userId: string): Promise<void> => {
-  const { count } = await prisma.webPushSubscription.deleteMany({ where: { userId } })
+export const deleteUserWebPushSubscriptions = async (userId: string, sentAt: Date): Promise<void> => {
+  const { count } = await prisma.webPushSubscription.deleteMany({ where: { userId, createdAt: { lte: sentAt } } })
   if (count > 0) {
     logger.info({ userId, count }, 'web push subscriptions removed')
   }

@@ -91,7 +91,10 @@ export const deliverWebPush = async (param: {
   return failure?.outcome ?? 'unlinked'
 }
 
-/** 全端末が鍵の不正だった利用者の購読を消す。他の利用者へは届いており、構成障害ではないと分かった場合に使う */
-export const dropStaleWebPushSubscriptions = async (userId: string): Promise<void> => {
-  await deleteUserWebPushSubscriptions(userId)
+/**
+ * 全端末が鍵の不正だった利用者の購読を消す。他の利用者へは届いており、構成障害ではないと分かった場合に使う。
+ * `sentAt` は鍵の不正を受け取った送信の時刻で、それより後に登録し直した購読は消さない
+ */
+export const dropStaleWebPushSubscriptions = async (userId: string, sentAt: Date): Promise<void> => {
+  await deleteUserWebPushSubscriptions(userId, sentAt)
 }

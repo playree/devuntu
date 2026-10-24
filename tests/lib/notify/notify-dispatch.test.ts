@@ -429,7 +429,7 @@ describe('runNotifyDispatch: Web プッシュ', () => {
 
     expect(deliverWebPush).toHaveBeenCalledTimes(2)
     expect(releaseDeliveries).not.toHaveBeenCalled()
-    expect(dropStaleWebPushSubscriptions).toHaveBeenCalledWith('u1')
+    expect(dropStaleWebPushSubscriptions).toHaveBeenCalledWith('u1', expect.any(Date))
     expect(settled()).toEqual([
       ['w2', 'ok'],
       ['w1', 'unlinked'],
@@ -445,7 +445,7 @@ describe('runNotifyDispatch: Web プッシュ', () => {
 
     await runNotifyDispatch(now)
 
-    expect(dropStaleWebPushSubscriptions).toHaveBeenCalledWith('u2')
+    expect(dropStaleWebPushSubscriptions).toHaveBeenCalledWith('u2', expect.any(Date))
     expect(settled()).toEqual([
       ['w1', 'ok'],
       ['w2', 'unlinked'],

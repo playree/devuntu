@@ -217,20 +217,22 @@ const WEBPUSH_ABORT_USERS = 2
 const deliverWebPushBatch = async (now: Date, limit: number): Promise<number> => {
   const claimed = await claimDeliveries('webpush', limit)
 
-  const suspects: ClaimedDelivery[] = []
+  /** 判断待ちの行と、鍵の不正を受け取った送信の時刻 */
+  const suspects: { delivery: ClaimedDelivery; sentAt: Date }[] = []
   let delivered = false
 
   const dropSuspects = async () => {
-    for (const suspect of suspects.splice(0)) {
-      if (suspect.userId) {
-        await dropStaleWebPushSubscriptions(suspect.userId)
+    for (const { delivery, sentAt } of suspects.splice(0)) {
+      if (delivery.userId) {
+        await dropStaleWebPushSubscriptions(delivery.userId, sentAt)
       }
-      await settleDelivery(suspect, 'unlinked', now)
+      await settleDelivery(delivery, 'unlinked', now)
     }
   }
 
   for (const [index, delivery] of claimed.entries()) {
     const { userId } = delivery
+    const sentAt = nowDate()
     let outcome: DeliveryOutcome
     try {
       if (!userId) {
@@ -250,12 +252,12 @@ const deliverWebPushBatch = async (now: Date, limit: number): Promise<number> =>
     }
 
     if (isDeliveryAborting(outcome)) {
-      suspects.push(delivery)
+      suspects.push({ delivery, sentAt })
       if (delivered) {
         await dropSuspects()
         continue
       }
-      if (new Set(suspects.map((suspect) => suspect.userId)).size < WEBPUSH_ABORT_USERS) {
+      if (new Set(suspects.map((suspect) => suspect.delivery.userId)).size < WEBPUSH_ABORT_USERS) {
         continue
       }
 
@@ -263,7 +265,7 @@ const deliverWebPushBatch = async (now: Date, limit: number): Promise<number> =>
       logger.error({ channel: 'webpush', aborted: rest.length + suspects.length }, 'notify channel aborted')
       // 判断待ちの行は送れていないので試行回数を戻す。順番は後ろへ回し、次の周で他の行から判断できるようにする
       await releaseDeliveries(
-        suspects.map(({ id }) => id),
+        suspects.map((suspect) => suspect.delivery.id),
         outcome,
         retryScheduledAt(now, 1),
       )
@@ -283,7 +285,7 @@ const deliverWebPushBatch = async (now: Date, limit: number): Promise<number> =>
   }
 
   for (const suspect of suspects) {
-    await settleDelivery(suspect, 'failed', now)
+    await settleDelivery(suspect.delivery, 'failed', now)
   }
   return claimed.length
 }

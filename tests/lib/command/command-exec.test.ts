@@ -258,8 +258,9 @@ describe('executeCommandRun', () => {
     await fake.finish(0)
     await promise
 
+    // 区切った断片に改行は足さない(つなげると元の出力に戻る)
     expect(logMock.pushed).toEqual([
-      { stream: 'stdout', text: `${block}${block}\n` },
+      { stream: 'stdout', text: `${block}${block}` },
       { stream: 'stdout', text: 'tail\n' },
     ])
   })

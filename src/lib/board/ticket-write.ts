@@ -40,18 +40,28 @@ export const lockTicketRow = async (tx: Prisma.TransactionClient, ticketId: stri
 }
 
 /**
- * かんばんのレーン(ボード + ステータス)のロック。レーンを読んで振り直す間に、同じレーンへの別の移動を割り込ませない。
+ * かんばんの移動先レーン(ボード + ステータス)のロック。かんばんの並べ替え同士を直列にし、
+ * レーンを読んで振り直す間に同じレーンへの別の並べ替えを割り込ませない。
  *
- * ボード行のロックは「ボード → チケット」の順で取る決まりで、チケット行をロックした後の
- * ここでは取れない(チケット作成とデッドロックする)。レーン専用の advisory lock にして、
- * 移動の最後に取るロックにする。
+ * **トランザクションの最初に取る**(チケット行のロックより前)。振り直しはレーン内の他のチケット行を更新するので、
+ * 行を握ったままレーンを待つと、そのレーンを持つ側が行を待ってデッドロックする。
+ * チケットはボードを移動しないので、ボードは行をロックする前に読んでよい。
  */
-const lockKanbanLane = async (tx: Prisma.TransactionClient, boardId: string, status: TicketStatus): Promise<void> => {
-  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`kanban-lane:${boardId}:${status}`}))`
+export const lockKanbanLane = async (
+  tx: Prisma.TransactionClient,
+  ticketId: string,
+  status: TicketStatus,
+): Promise<void> => {
+  const ticket = await tx.ticket.findUnique({ where: { id: ticketId }, select: { boardId: true } })
+  if (!ticket) {
+    // 存在しないチケットは後続の権限判定が弾く
+    return
+  }
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`kanban-lane:${ticket.boardId}:${status}`}))`
 }
 
 /**
- * その添付が、指定チケット以外の本文(チケット・コメント・チケットテンプレート)から使われているかを調べる。
+ * その添付が、指定チケット以外の本文(チケット・コメント・チケットテンプレート・ボードノート)から使われているかを調べる。
  *
  * 同じチケット(とそのコメント)からの参照は保存先ボードと同じボードなので、
  * 付け替えを止める理由にならない。`excludeTicketId` はそれを除くためのもの。
@@ -77,7 +87,16 @@ const isAttachmentInUse = async (
     return true
   }
   const template = await tx.ticketTemplate.findFirst({ where: { content: { contains: url } }, select: { id: true } })
-  return template !== null
+  if (template) {
+    return true
+  }
+  // ボードノートは MCP で画像の URL を書ける(添付の掃除の参照元と揃える)
+  const note = await tx.boardNote.findFirst({ where: { content: { contains: url } }, select: { id: true } })
+  if (note) {
+    return true
+  }
+  const revision = await tx.boardNoteRevision.findFirst({ where: { content: { contains: url } }, select: { id: true } })
+  return revision !== null
 }
 
 /**
@@ -173,7 +192,6 @@ export const moveTicketToLane = async (
   },
 ): Promise<{ id: string; status: TicketStatus; order: number }> => {
   // レーンは「同一ボード + 同一ステータス」で決まる
-  await lockKanbanLane(tx, access.boardId, status)
   const lane = await tx.ticket.findMany({
     where: kanbanLaneWhere(access.boardId, status, kanbanDoneSince(nowDate())),
     select: { id: true, order: true },

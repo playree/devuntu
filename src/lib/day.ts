@@ -206,21 +206,26 @@ export const zonedMinutes = (date: string, min: number, tz: string = DEFAULT_TZ)
 }
 
 /**
- * 区間を暦日(YYYY-MM-DD)1 日ぶんに切り取り、0:00 からの壁時計の分で返す。重ならなければ null。
+ * 暦日(YYYY-MM-DD)1 日の範囲(現地の 0:00〜翌 0:00)。DST の切替日は 23 / 25 時間になる
+ */
+export const zonedDayBounds = (date: string, tz: string = DEFAULT_TZ): { startMs: number; endMs: number } => ({
+  startMs: zonedMinutes(date, 0, tz).valueOf(),
+  endMs: zonedMinutes(date, 1440, tz).valueOf(),
+})
+
+/**
+ * 区間を 1 日の範囲(`zonedDayBounds`)に切り取り、0:00 からの壁時計の分で返す。重ならなければ null。
  *
- * 日の境界は暦日から解決するので、DST の切替日(23 / 25 時間)でも現地の 0:00〜24:00 を指す。
- * 位置も経過時間ではなく壁時計で返し、24 時間の目盛りに揃える。
+ * 位置は経過時間ではなく壁時計で返し、DST の切替日も 24 時間の目盛りに揃える。
  */
 export const clipToZonedDay = (
-  date: string,
+  day: { startMs: number; endMs: number },
   startMs: number,
   endMs: number,
   tz: string = DEFAULT_TZ,
 ): { startMin: number; endMin: number } | null => {
-  const dayStart = zonedMinutes(date, 0, tz).valueOf()
-  const dayEnd = zonedMinutes(date, 1440, tz).valueOf()
-  const s = Math.max(startMs, dayStart)
-  const e = Math.min(endMs, dayEnd)
+  const s = Math.max(startMs, day.startMs)
+  const e = Math.min(endMs, day.endMs)
   if (e <= s) {
     return null
   }
@@ -230,6 +235,6 @@ export const clipToZonedDay = (
   }
   const startMin = wallMinutes(s)
   // 戻る切替(同じ時刻が 2 度ある)を跨ぐと終わりが始まりより前に見えるので、始まりより前にはしない
-  const endMin = e === dayEnd ? 1440 : Math.max(startMin, wallMinutes(e))
+  const endMin = e === day.endMs ? 1440 : Math.max(startMin, wallMinutes(e))
   return { startMin, endMin }
 }

@@ -116,11 +116,13 @@ const pipeStream = (
     const lines = (carry + decoder.write(chunk)).split('\n')
     // 最後の要素は改行で終わっていない断片。次のチャンクと繋ぐ
     carry = lines.pop() ?? ''
+    emit(lines)
     if (carry.length >= COMMAND_MAX_LINE_CHARS) {
-      lines.push(carry)
+      // 番兵は短い 1 行なので、ここで流す断片には含まれない。元の出力に無い改行は足さない
+      buffer.push(kind, carry)
+      onChunk()
       carry = ''
     }
-    emit(lines)
   })
 
   stream.on('end', () => {

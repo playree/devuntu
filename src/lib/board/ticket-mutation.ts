@@ -40,6 +40,7 @@ import { ticketDisplayId } from './ticket-id'
 import { assignTicketParent, writeOwnChildOrder } from './ticket-relation'
 import {
   assertReplyTarget,
+  lockKanbanLane,
   lockTicketRow,
   moveTicketToLane,
   nextTicketNumber,
@@ -320,6 +321,8 @@ export const deleteTicket = async (actor: Actor, id: string, opts?: { authorize?
  */
 export const changeTicketStatus = async (actor: Actor, id: string, status: TicketStatus, index?: number) =>
   prisma.$transaction(async (tx) => {
+    // 同じレーンへの並べ替えを直列にする。チケット行より先に取る(lockKanbanLane を参照)
+    await lockKanbanLane(tx, id, status)
     await lockTicketRow(tx, id)
     const access = await assertTicketAccess(actor, id, 'edit', tx)
     const lane = await moveTicketToLane(tx, { access, status, index, by: { actorId: actor.id } })
