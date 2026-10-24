@@ -232,13 +232,9 @@ export const commentExcerpt = (
   return truncate(decodeCharacterReferences(text).replace(/\s+/g, ' ').trim(), max)
 }
 
-/** リンクはラベルと URL を残す。Slack が URL を自動でリンクにする。相対パスは外から開けないのでラベルだけにする */
-const linkWithUrl = (_matched: string, label: string, url: string): string => {
-  if (!/^https?:\/\//.test(url)) {
-    return label
-  }
-  return !label || label === url ? url : `${label} (${url})`
-}
+/** 退避した URL の目印。本文に現れない制御文字で囲む */
+const urlToken = (index: number) => `\u0000${index}\u0000`
+const RE_URL_TOKEN = /\u0000(\d+)\u0000/g
 
 /**
  * アナウンスの本文を Slack へ載せる形にする。
@@ -252,12 +248,23 @@ export const announcementText = (
   mentionNames: ReadonlyMap<string, string> = new Map(),
   max: number = NOTIFY_ANNOUNCEMENT_MAX,
 ): string => {
+  // URL は強調やエスケープの記号(`__init__.py` など)を落とされないよう退避し、最後に戻す
+  const urls: string[] = []
+  const keepUrl = (url: string) => urlToken(urls.push(url) - 1)
+  // リンクはラベルと URL を残す(Slack が URL を自動でリンクにする)。相対パスは外から開けないのでラベルだけにする
+  const linkWithUrl = (_matched: string, label: string, url: string): string => {
+    if (!/^https?:\/\//.test(url)) {
+      return label
+    }
+    return !label || label === url ? keepUrl(url) : `${label} (${keepUrl(url)})`
+  }
+
   // メンションを先に外す。`]` を残したままだとリンク記法として拾われうる
   const text = replaceMentions(content.replace(RE_CODE_FENCE, '').replace(/`+/g, ''), mentionNames)
     .replace(RE_THEMATIC_BREAK, '')
     .replace(RE_IMAGE, '$1')
     .replace(RE_LINK_WITH_URL, linkWithUrl)
-    .replace(RE_AUTOLINK, '$1')
+    .replace(RE_AUTOLINK, (_matched, url: string) => keepUrl(url))
     .replace(RE_HTML_TAG, '')
     .replace(RE_BLOCK_MARKER, '')
     // 強調の `*` と区別できるよう、強調を落とす前に置き換える
@@ -266,6 +273,7 @@ export const announcementText = (
     .replace(RE_BACKSLASH_ESCAPE, '$1')
 
   const lines = decodeCharacterReferences(text)
+    .replace(RE_URL_TOKEN, (_matched, index: string) => urls[Number(index)])
     .split(/\r?\n/)
     // 行頭の字下げ(入れ子の箇条書き)は残し、行中の空白だけを畳む
     .map((line) =>

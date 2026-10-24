@@ -59,6 +59,20 @@ describe('addTicketCommentForMcp: アナウンス', () => {
     })
   })
 
+  it('記法を落とすと空になる本文は投入されないので announced=false', async () => {
+    expect(
+      await addTicketCommentForMcp(
+        oauthAuth(),
+        TICKET_ID,
+        '![](https://example.com/a.webp)',
+        'announcement',
+        null,
+        true,
+      ),
+    ).toEqual({ id: COMMENT_ID, announced: false })
+    expect(isChannelNotifyEnabled).not.toHaveBeenCalled()
+  })
+
   it('人の経路でも了承(userApproved=true)が無ければ投稿しない', async () => {
     for (const userApproved of [undefined, false]) {
       expect(

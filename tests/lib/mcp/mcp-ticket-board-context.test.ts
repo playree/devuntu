@@ -9,7 +9,7 @@ import { getTicketForMcp } from '@/lib/mcp/mcp-ticket'
 import { isChannelNotifyEnabled } from '@/lib/notify/notify-board-setting'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { oauthAuth } from '../../helpers/resource-auth'
+import { agentAuth, oauthAuth } from '../../helpers/resource-auth'
 
 vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({ ticket: ['findUnique'] }))
 
@@ -156,6 +156,14 @@ describe('getTicketForMcp の announcementEnabled', () => {
     vi.mocked(prisma.ticket.findUnique).mockResolvedValue(ticketRow(null) as never)
 
     expect(await getTicketForMcp(auth, TICKET_ID)).not.toHaveProperty('announcementEnabled')
+  })
+
+  it('アナウンスを投稿できないエージェントには返さない', async () => {
+    vi.mocked(isChannelNotifyEnabled).mockResolvedValue(true)
+    vi.mocked(prisma.ticket.findUnique).mockResolvedValue(ticketRow(null) as never)
+
+    expect(await getTicketForMcp(agentAuth(), TICKET_ID)).not.toHaveProperty('announcementEnabled')
+    expect(isChannelNotifyEnabled).not.toHaveBeenCalled()
   })
 
   it('ボードのメンバーでない利用者(承認者)には返さない', async () => {

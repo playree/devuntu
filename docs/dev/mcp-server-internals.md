@@ -195,8 +195,8 @@ Announce: if the result is worth telling all board members (e.g. a release), pro
 **届くかどうかを AI に返す**。設定が無いボードで投稿しても記録はチケットに残るが Slack へは流れないので、
 「告知した」と報告させないために次を返す。判定はボードの設定と Slack 連携の有効状態(`isChannelNotifyEnabled()`、展開時と同じ条件)。
 
-- `get_board` / `get_ticket` の `announcementEnabled`: 今投稿すれば Slack へ流れるときだけ `true` を載せる(`get_ticket` は boardContext と同じくボードのメンバーにだけ)
-- `add_ticket_comment` の応答の `announced`: `type=announcement` のときだけ付く。投稿時点で Slack へ投入される設定だったか
+- `get_board` / `get_ticket` の `announcementEnabled`: 今投稿すれば Slack へ流れるときだけ `true` を載せる(`get_ticket` は boardContext と同じくボードのメンバーにだけ。投稿できないエージェントの経路には返さない)
+- `add_ticket_comment` の応答の `announced`: `type=announcement` のときだけ付く。投稿時点で Slack へ投入される設定だったか(記法を落とすと空になる本文は投入されないので `false`)
 
 ## 入力の約束ごと
 

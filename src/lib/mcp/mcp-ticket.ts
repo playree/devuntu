@@ -44,6 +44,7 @@ import { MERGE_COMPLETION_SELECT, mergeCompletionOf } from '@/lib/git/git'
 import { logger } from '@/lib/logger'
 import { resolveBoardId } from '@/lib/mcp/mcp-board'
 import { ticketWorkflowFor } from '@/lib/mcp/mcp-instructions'
+import { announcementText } from '@/lib/notify/notify'
 import { isChannelNotifyEnabled } from '@/lib/notify/notify-board-setting'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import { prisma } from '@/lib/prisma'
@@ -115,8 +116,8 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
     findWaitingTicketIds(access.boardRole ? [id] : []),
     // ボードノートも boardContext と同じくボード内の情報なので承認者には見せない
     access.boardRole ? findBoardNoteIndex(access.boardId) : {},
-    // ボードの通知設定もボード内の情報なので承認者には見せない
-    access.boardRole ? isChannelNotifyEnabled(access.boardId, 'announcement') : false,
+    // ボードの通知設定もボード内の情報なので承認者には見せない。アナウンスを投稿できないエージェントにも返さない
+    access.boardRole && auth.kind !== 'agent' ? isChannelNotifyEnabled(access.boardId, 'announcement') : false,
   ])
 
   return {
@@ -403,6 +404,10 @@ export const addTicketCommentForMcp = async (
     return { id: comment.id }
   }
 
+  // 記法を落とすと空になる本文(画像だけなど)はトリガーが投入しないので、届かない扱いにする
+  if (!announcementText(content)) {
+    return { id: comment.id, announced: false }
+  }
   const ticket = await prisma.ticket.findUnique({ where: { id: ticketId }, select: { boardId: true } })
   return {
     id: comment.id,

@@ -263,6 +263,12 @@ describe('announcementText: アナウンスとして Slack に載せる本文', 
     expect(announcementText('[チケット](/t/PRJ-1) を参照')).toBe('チケット を参照')
   })
 
+  it('URL 中の強調・エスケープに見える記号は落とさない', () => {
+    expect(announcementText('[init](https://example.com/pkg/__init__.py) と <https://example.com/a*b~~c>')).toBe(
+      'init (https://example.com/pkg/__init__.py) と https://example.com/a*b~~c',
+    )
+  })
+
   it('画像はラベルだけにする', () => {
     expect(announcementText('![スクショ](https://example.com/a.webp)')).toBe('スクショ')
   })

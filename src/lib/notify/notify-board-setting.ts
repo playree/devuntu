@@ -80,18 +80,20 @@ export const getBoardNotifyChannels = async (boardId: string, event: NotifyEvent
 }
 
 /**
+ * チャンネルへ投稿できるか。チャネル通知は管理者が Slack 連携ごと止めたら止まる(ユーザーの通知設定では表せない)。
+ * 展開時(`notify-fanout.ts`)と {@link isChannelNotifyEnabled} が同じ判定を使う。
+ */
+export const isSlackChannelPostEnabled = async (): Promise<boolean> =>
+  hasSlackCredentials() && (await getSlackSettings()).enabled
+
+/**
  * 指定イベントを今投入したら、チャンネルへ投稿されるか。
  *
- * 展開時(`notify-fanout.ts`)と同じく、ボードの設定に加えて Slack 連携が有効かも見る。
  * MCP でアナウンスを投稿する AI が、届かないのに「告知した」と報告しないために使う。
  */
 export const isChannelNotifyEnabled = async (boardId: string, event: NotifyEvent): Promise<boolean> => {
-  if (!hasSlackCredentials()) {
+  if (!(await isSlackChannelPostEnabled())) {
     return false
   }
-  const [{ enabled }, count] = await Promise.all([
-    getSlackSettings(),
-    prisma.boardNotifySetting.count({ where: { boardId, event } }),
-  ])
-  return enabled && count > 0
+  return (await prisma.boardNotifySetting.count({ where: { boardId, event } })) > 0
 }

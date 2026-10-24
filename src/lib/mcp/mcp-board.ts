@@ -84,7 +84,8 @@ export const getBoardForMcp = async (auth: ResourceAuth, boardIdOrKey: string) =
     listTicketTemplates(id),
     countTicketsByBoard([id]),
     findBoardNoteIndex(id),
-    isChannelNotifyEnabled(id, 'announcement'),
+    // アナウンスを投稿できないエージェントには返さない
+    auth.kind === 'agent' ? false : isChannelNotifyEnabled(id, 'announcement'),
   ])
 
   const mergeCompletion = mergeCompletionOf(board.gitSettings)

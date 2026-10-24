@@ -8,13 +8,11 @@ import { ChatBubbleIcon, CheckIcon } from '@/components/icon'
 import { MarkdownInput } from '@/components/markdown/markdown-editor'
 import type { MentionCandidate } from '@/components/markdown/mention-menu'
 import { notify } from '@/components/notify'
-import type { TicketCommentType } from '@/generated/prisma/enums'
 import { parseAction } from '@/lib/action/action-client'
-import { TICKET_COMMENT_TYPE_LOCALE, TICKET_COMMENT_TYPES } from '@/lib/board/ticket-enum'
+import { TICKET_COMMENT_SEND_LOCALE, TICKET_COMMENT_TYPE_LOCALE, TICKET_COMMENT_TYPES } from '@/lib/board/ticket-enum'
 import { commentAnchorId, decodeSegment } from '@/lib/board/ticket-id'
 import { scCreateTicketComment } from '@/lib/schema/schema-ticket'
 import { useLocationHash } from '@/lib/use-location-hash'
-import type { LocaleItemBase } from '@/locale'
 import { useLocale } from '@/locale/client'
 import { FC, useEffect, useState } from 'react'
 import { CommentItem, CommentReplyAction, type Comment } from './comment-item'
@@ -28,13 +26,6 @@ const MAX_COMMENT_LENGTH = getFieldConstraints(scCreateTicketComment, 'content')
 
 /** 投稿フォームの種別選択肢。'none' は通常コメント(type を渡さない) */
 type CommentTypeOption = 'none' | (typeof TICKET_COMMENT_TYPES)[number]
-
-/** 種別を選んだときの送信ボタンの文言 */
-const SEND_AS_LOCALE = {
-  plan: 'send_as_plan',
-  report: 'send_as_report',
-  announcement: 'send_as_announcement',
-} as const satisfies Record<TicketCommentType, LocaleItemBase>
 
 /** 位置の追い直しを打ち切るまでの時間 */
 const ANCHOR_FOLLOW_MS = 3000
@@ -141,7 +132,7 @@ export const TicketComments: FC<{
     ...TICKET_COMMENT_TYPES.map((type) => ({
       id: type,
       menuLabel: t(TICKET_COMMENT_TYPE_LOCALE[type]),
-      actionLabel: t(SEND_AS_LOCALE[type]),
+      actionLabel: t(TICKET_COMMENT_SEND_LOCALE[type]),
     })),
   ]
 

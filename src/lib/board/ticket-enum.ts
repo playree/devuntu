@@ -54,5 +54,12 @@ export const TICKET_COMMENT_TYPE_LOCALE = {
   announcement: 'comment_type_announcement',
 } as const satisfies Record<TicketCommentType, LocaleItemBase>
 
+/** 種別を選んで投稿するときの送信ボタンの文言 */
+export const TICKET_COMMENT_SEND_LOCALE = {
+  plan: 'send_as_plan',
+  report: 'send_as_report',
+  announcement: 'send_as_announcement',
+} as const satisfies Record<TicketCommentType, LocaleItemBase>
+
 /** plan / report への返答(承認 / 差し戻し)。承認/差し戻しボタンから投稿した返信にだけ付く */
 export const TICKET_COMMENT_DECISIONS = ['approved', 'rejected'] as const satisfies readonly TicketCommentDecision[]

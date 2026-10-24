@@ -13,9 +13,10 @@ import { logger } from '../logger'
 import { isMailConfigured } from '../mail'
 import { prisma } from '../prisma'
 import { SLACK_PROVIDER_ID } from '../slack/slack'
-import { filterSlackAllowedUserIds, getSlackSettings, hasSlackCredentials } from '../slack/slack-account'
+import { filterSlackAllowedUserIds } from '../slack/slack-account'
 import { isWebPushConfigured } from '../webpush/webpush-server'
 import { MAX_NOTIFY_RECIPIENTS, type NotifyChannel } from './notify'
+import { isSlackChannelPostEnabled } from './notify-board-setting'
 import type { NotifyTargets } from './notify-recipient'
 import { nextEmailWindowAt } from './notify-schedule'
 import { filterNotifiable } from './notify-setting'
@@ -151,14 +152,10 @@ export const buildDeliveries = async (param: {
     deliveries.push({ outboxId, channel: 'webpush', userId, scheduledAt: now })
   }
 
-  // チャンネル通知は管理者が Slack 連携ごと止めたら止まる(ユーザーの通知設定では表せない)
-  if (targets.slackChannelIds.length > 0 && hasSlackCredentials()) {
-    const { enabled } = await getSlackSettings()
-    if (enabled) {
-      const channels = capRecipients([...targets.slackChannelIds].sort(), 'slack channel', { outboxId, event })
-      for (const slackChannelId of channels) {
-        deliveries.push({ outboxId, channel: 'slack', slackChannelId, scheduledAt: now })
-      }
+  if (targets.slackChannelIds.length > 0 && (await isSlackChannelPostEnabled())) {
+    const channels = capRecipients([...targets.slackChannelIds].sort(), 'slack channel', { outboxId, event })
+    for (const slackChannelId of channels) {
+      deliveries.push({ outboxId, channel: 'slack', slackChannelId, scheduledAt: now })
     }
   }
 
