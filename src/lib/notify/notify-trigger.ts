@@ -18,11 +18,13 @@
 
 import type { Prisma } from '@/generated/prisma/client'
 import type { AgentRunAction, AgentRunStatus, TicketCommentType, TicketStatus } from '@/generated/prisma/enums'
-import { extractMentionEmails, normalizeMentionText } from '../board/mention'
+import { getBoardMemberUsers } from '../board/board-member'
+import { findMentions, normalizeMentionText } from '../board/mention'
 import { ticketDisplayId } from '../board/ticket-id'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
 import { announcementText, commentExcerpt } from './notify'
+import { isChannelNotifyEnabled } from './notify-board-setting'
 import { enqueueNotify } from './notify-enqueue'
 import type { AgentRunNotifyState } from './notify-payload'
 
@@ -63,22 +65,29 @@ const actorName = async (actorId: string, tx: Prisma.TransactionClient): Promise
  * 本文中のメンションを表示名へ解決する。
  *
  * 画面(`mention-node.tsx`)は `@表示名` で描画するので、通知でも同じ見え方に揃える。
- * 引けなかったメールアドレスは画面と同じくそのまま出す。
+ * 名前を引くのは画面と同じくボードのメンバーだけで、引けなかったメールアドレスは画面と同じくそのまま出す
+ * (アナウンスはチャンネルへ流れるので、ボード外のユーザーの名前を載せない)。
+ * アナウンスはコードの中身も載せるので、コード内のメンション記法も対象にする。
  */
-const resolveMentionNames = async (content: string, tx: Prisma.TransactionClient): Promise<Map<string, string>> => {
-  // 正規化・重複除去済み(コードブロック内のメンションも除かれている)
-  const emails = extractMentionEmails(content)
-  if (emails.length === 0) {
+const resolveMentionNames = async (
+  content: string,
+  boardId: string,
+  tx: Prisma.TransactionClient,
+): Promise<Map<string, string>> => {
+  const emails = new Set(findMentions(content).map(({ email }) => email))
+  if (emails.size === 0) {
     return new Map()
   }
 
-  const users = await tx.user.findMany({
+  const names = new Map<string, string>()
+  for (const { email, name } of await getBoardMemberUsers(boardId, tx)) {
     // 保存されている大文字小文字に依存しないよう、正規化した形と突き合わせる
-    where: { OR: emails.map((email) => ({ email: { equals: email, mode: 'insensitive' as const } })) },
-    select: { email: true, name: true },
-  })
-
-  return new Map(users.map(({ email, name }) => [normalizeMentionText(email), name]))
+    const normalized = normalizeMentionText(email)
+    if (emails.has(normalized)) {
+      names.set(normalized, name)
+    }
+  }
+  return names
 }
 
 /**
@@ -105,7 +114,9 @@ const enqueueMentioned = async (
 
   logger.info({ ticketId: ticket.id, commentId: comment?.id, actorId, targetUserIds }, 'mention notify')
 
-  const excerpt = comment ? commentExcerpt(comment.content, await resolveMentionNames(comment.content, tx)) : ''
+  const excerpt = comment
+    ? commentExcerpt(comment.content, await resolveMentionNames(comment.content, ticket.boardId, tx))
+    : ''
 
   await enqueueNotify(
     {
@@ -341,21 +352,28 @@ const loadTicketNotifyRef = async (ticketId: string, tx: Prisma.TransactionClien
 /**
  * アナウンスの投稿。チャネル通知だけのイベントで、宛先はボードの設定から引く。
  * 本文は改行を残した形で投入時に確定させる(配信までにコメントが消えても告知の中身は送る)。
+ *
+ * チャンネルへ流れる投入をしたかを返す。投稿した人(MCP の AI / 画面)に、届かないのに
+ * 「告知した」と思わせないため。流れる先が無いボードでは行を作らない。
  */
 const enqueueAnnounced = async (
   param: { actorId: string; ticket: TicketNotifyRef; comment: { id: string; content: string } },
   tx: Prisma.TransactionClient,
-): Promise<void> => {
+): Promise<boolean> => {
   const { actorId, ticket, comment } = param
-  const excerpt = announcementText(comment.content, await resolveMentionNames(comment.content, tx))
+  // 流れる先が無ければ、本文を組み立てる(メンバーを引く)前にやめる
+  if (!(await isChannelNotifyEnabled(ticket.boardId, 'announcement', tx))) {
+    return false
+  }
+  const excerpt = announcementText(comment.content, await resolveMentionNames(comment.content, ticket.boardId, tx))
   // 記法を落とした結果が空なら告知する中身が無い
   if (!excerpt) {
-    return
+    return false
   }
 
   logger.info({ ticketId: ticket.id, commentId: comment.id, actorId }, 'announcement notify')
 
-  await enqueueNotify(
+  return enqueueNotify(
     {
       event: 'announcement',
       actorId,
@@ -370,6 +388,8 @@ const enqueueAnnounced = async (
  *
  * `comment.type` は投稿時だけ渡す。アナウンスを編集し直すたびにチャンネルへ流さないため、
  * 編集では渡さない(発火しない)。
+ *
+ * アナウンスをチャンネルへ流す投入をしたかを返す(アナウンス以外は false)。
  */
 export const enqueueTicketCommented = async (
   param: {
@@ -379,12 +399,10 @@ export const enqueueTicketCommented = async (
     addedMentionUserIds: string[]
   },
   tx: Prisma.TransactionClient = prisma,
-): Promise<void> => {
+): Promise<boolean> => {
   const { actorId, ticket, comment, addedMentionUserIds } = param
   await enqueueMentioned({ actorId, ticket, userIds: addedMentionUserIds, comment }, tx)
-  if (comment.type === 'announcement') {
-    await enqueueAnnounced({ actorId, ticket, comment }, tx)
-  }
+  return comment.type === 'announcement' && (await enqueueAnnounced({ actorId, ticket, comment }, tx))
 }
 
 /**

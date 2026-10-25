@@ -393,6 +393,7 @@ export type AddCommentInput = {
  * 権限判定(`assertTicketAccess` の 'edit')を済ませた後に同じトランザクション内で呼ぶ。
  * `decision` は承認/差し戻しの返信だけが付ける(`agent-decision.ts`)。
  * `proposal` は子チケットの起票案で、エージェントの plan だけが付ける(`agent-proposal.ts`)。
+ * `announced` はアナウンスを Slack チャンネルへ流す投入をしたか(アナウンス以外は false)。
  */
 export const insertComment = async (
   tx: Prisma.TransactionClient,
@@ -423,7 +424,7 @@ export const insertComment = async (
   })
 
   // 投稿と同じトランザクションで投入する(コミット後に落ちると通知だけが消える)
-  await enqueueTicketCommented(
+  const announced = await enqueueTicketCommented(
     {
       actorId: actor.id,
       ticket: {
@@ -438,7 +439,7 @@ export const insertComment = async (
     tx,
   )
 
-  return { id: comment.id, mentionedUserIds }
+  return { id: comment.id, mentionedUserIds, announced }
 }
 
 /** コメント投稿(メンションの解決を含む) */

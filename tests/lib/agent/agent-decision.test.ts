@@ -94,6 +94,22 @@ describe('findPendingAgentDecision', () => {
     expect(await findPendingAgentDecision(ticket, fakeTx as never)).toBeNull()
   })
 
+  it('アナウンスは返信に数えない(ボタンを消さない)', async () => {
+    mockComments({ id: 'plan-1', type: 'plan' })
+    await findPendingAgentDecision(ticket, fakeTx as never)
+    expect(fakeTx.ticketComment.findFirst).toHaveBeenLastCalledWith({
+      where: {
+        ticketId: 't1',
+        createdAt: { gt: PLAN_AT },
+        AND: [
+          { OR: [{ authorId: { not: AGENT } }, { authorId: null }] },
+          { OR: [{ type: null }, { type: { not: 'announcement' } }] },
+        ],
+      },
+      select: { id: true },
+    })
+  })
+
   it('質問(通常コメント)で返答待ちになっている場合は対象にしない', async () => {
     mockComments({ id: 'question-1', type: null })
     expect(await findPendingAgentDecision(ticket, fakeTx as never)).toBeNull()

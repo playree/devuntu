@@ -656,6 +656,9 @@ export const ja: DefaultLocaleItems = {
     '担当チケットを定期的に取りに来る常駐エージェントの設定です。稼働条件を満たすときだけAIエージェントが起動します。\n開始・終了はどちらか未指定なら終日稼働、開始が終了より後の場合は日跨ぎ(夜間のみ)として扱います。\n1日の処理上限は起動1回ごとに数え、0を指定すると無制限です。カウントは上限リセット時刻(タイムゾーン設定に従う)を境に0へ戻ります。\n月の予算上限は今月のコストが達すると新しい実行を開始しなくなります(実行中のものは止めません)。0を指定すると無制限です。',
   msg_agent_usage_desc:
     'CLI の出力から取得したトークン数とコストの今月の合計です。集計は毎月1日の上限リセット時刻(タイムゾーン設定に従う)を境に切り替わります。コストを返さない CLI(Codex CLI)の実行は、コストに含まれません。',
+  msg_announced: 'アナウンスを投稿しました。Slack チャンネルへも送ります。',
+  msg_announcement_recorded_only:
+    'アナウンスをチケットに記録しました。Slack チャンネルには送られていません(通知先の設定が無い、送信が制限された、本文が画像だけ、のいずれか)。',
   msg_archive_board: 'アーカイブすると、ボード一覧の既定の表示対象から外れます。チケットは残ります。',
   msg_avatar_desc:
     'サインイン時に連携元のアバター画像がコピーされます。独自の画像を設定すると、以降はコピーされなくなります。',
@@ -856,9 +859,9 @@ export const ja: DefaultLocaleItems = {
 
   notify_msg_agent_run_done: '${agent}が対応を報告しました。内容を確認して承認・差し戻しをしてください(${duration})',
   notify_msg_agent_run_failed: '${agent}の${action}が失敗しました。実行履歴とチケットを確認してください(${duration})',
+  notify_msg_agent_run_finished: '${agent}の${action}が完了(${result} / ${duration})',
   notify_msg_agent_run_planned: '${agent}がプランを投稿しました。返信で承認・差し戻しをしてください(${duration})',
   notify_msg_agent_run_skipped: '${agent}が${action}を見送りました。チケットのコメントを確認してください(${duration})',
-  notify_msg_agent_run_finished: '${agent}の${action}が完了(${result} / ${duration})',
   notify_msg_announcement: '${from}さんがアナウンスしました',
   notify_msg_mentioned: '${from}さんがあなたをメンションしました',
   notify_msg_mentioned_comment: '${from}さんがコメントであなたをメンションしました',

@@ -16,12 +16,16 @@ import {
 } from '@/lib/notify/notify-trigger'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/notify/notify-enqueue', () => ({ enqueueNotify: vi.fn(async () => undefined) }))
+vi.mock('@/lib/notify/notify-enqueue', () => ({ enqueueNotify: vi.fn(async () => true) }))
+vi.mock('@/lib/notify/notify-board-setting', () => ({ isChannelNotifyEnabled: vi.fn(async () => true) }))
+vi.mock('@/lib/board/board-member', () => ({ getBoardMemberUsers: vi.fn(async () => []) }))
 vi.mock('@/lib/prisma', async () =>
-  (await import('../../helpers/prisma')).mockPrisma({ user: ['findUnique', 'findMany'], ticket: ['findUnique'] }),
+  (await import('../../helpers/prisma')).mockPrisma({ user: ['findUnique'], ticket: ['findUnique'] }),
 )
 
 const { enqueueNotify } = await import('@/lib/notify/notify-enqueue')
+const { isChannelNotifyEnabled } = await import('@/lib/notify/notify-board-setting')
+const { getBoardMemberUsers } = await import('@/lib/board/board-member')
 const { prisma } = await import('@/lib/prisma')
 
 const enqueue = vi.mocked(enqueueNotify)
@@ -47,8 +51,15 @@ beforeEach(() => {
   vi.clearAllMocks()
   // 表示名の解決 / 担当者の isAgent 判定はどちらも user.findUnique を使う
   findUser.mockResolvedValue({ name: '操作した人', isAgent: false } as never)
-  vi.mocked(prisma.user.findMany).mockResolvedValue([])
 })
+
+/** ボードのメンバー(メンションの表示名を引く相手) */
+const members = (...users: { email: string; name: string }[]) =>
+  vi
+    .mocked(getBoardMemberUsers)
+    .mockResolvedValue(
+      users.map((user, i) => ({ id: `member-${i}`, image: null, isAgent: false, role: null, via: 'member', ...user })),
+    )
 
 describe('メンション: 発火しない条件', () => {
   it('増えたメンションが無ければ投入しない', async () => {
@@ -291,7 +302,7 @@ describe('アナウンス: チャネル通知だけのイベント', () => {
   })
 
   it('メンションを含むアナウンスはメンション通知と両方を投入する', async () => {
-    vi.mocked(prisma.user.findMany).mockResolvedValue([{ email: 'foo@example.com', name: 'テストユーザー' }] as never)
+    members({ email: 'Foo@example.com', name: 'テストユーザー' })
     await enqueueTicketCommented({
       actorId: ACTOR,
       ticket,
@@ -300,6 +311,59 @@ describe('アナウンス: チャネル通知だけのイベント', () => {
     })
     expect(events()).toEqual(['mention', 'announcement'])
     expect(enqueued('announcement')?.payload).toMatchObject({ excerpt: '@テストユーザー リリースしました' })
+    expect(getBoardMemberUsers).toHaveBeenCalledWith(ticket.boardId, expect.anything())
+  })
+
+  it('コード内のメンションも表示名にし、ボード外のユーザーの名前は引かない', async () => {
+    members({ email: 'foo@example.com', name: 'テストユーザー' })
+    await enqueueTicketCommented({
+      actorId: ACTOR,
+      ticket,
+      comment: { id: 'comment-1', content: '`@[foo@example.com]` と @[bar@example.com]', type: 'announcement' },
+      addedMentionUserIds: [],
+    })
+    expect(enqueued('announcement')?.payload).toMatchObject({ excerpt: '`@テストユーザー` と @bar@example.com' })
+  })
+
+  it('投入したら true を返す(アナウンス以外は false)', async () => {
+    const comment = { id: 'comment-1', content: 'リリースしました' }
+    expect(
+      await enqueueTicketCommented({
+        actorId: ACTOR,
+        ticket,
+        comment: { ...comment, type: 'announcement' },
+        addedMentionUserIds: [],
+      }),
+    ).toBe(true)
+    expect(await enqueueTicketCommented({ actorId: ACTOR, ticket, comment, addedMentionUserIds: [] })).toBe(false)
+  })
+
+  it('チャンネルへ流れないボードでは投入せず false を返す', async () => {
+    vi.mocked(isChannelNotifyEnabled).mockResolvedValueOnce(false)
+    expect(
+      await enqueueTicketCommented({
+        actorId: ACTOR,
+        ticket,
+        comment: { id: 'comment-1', content: '@[foo@example.com] リリースしました', type: 'announcement' },
+        addedMentionUserIds: [],
+      }),
+    ).toBe(false)
+    expect(isChannelNotifyEnabled).toHaveBeenCalledWith(ticket.boardId, 'announcement', expect.anything())
+    expect(events()).not.toContain('announcement')
+    // 本文を組み立てる前にやめる
+    expect(getBoardMemberUsers).not.toHaveBeenCalled()
+  })
+
+  it('流量制限で捨てられたら false を返す', async () => {
+    enqueue.mockResolvedValueOnce(false)
+    expect(
+      await enqueueTicketCommented({
+        actorId: ACTOR,
+        ticket,
+        comment: { id: 'comment-1', content: 'リリースしました', type: 'announcement' },
+        addedMentionUserIds: [],
+      }),
+    ).toBe(false)
   })
 })
 

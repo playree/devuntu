@@ -12,7 +12,7 @@
 import type { Prisma } from '@/generated/prisma/client'
 import type { NotifyEvent } from '@/generated/prisma/enums'
 import { logger } from '../logger'
-import { prisma } from '../prisma'
+import { prisma, type Db } from '../prisma'
 import { getSlackSettings, hasSlackCredentials } from '../slack/slack-account'
 import { CHANNEL_NOTIFY_EVENTS, type ChannelNotifyEvent } from './notify'
 
@@ -89,11 +89,16 @@ export const isSlackChannelPostEnabled = async (): Promise<boolean> =>
 /**
  * 指定イベントを今投入したら、チャンネルへ投稿されるか。
  *
- * MCP でアナウンスを投稿する AI が、届かないのに「告知した」と報告しないために使う。
+ * アナウンスを投稿する人や AI が、届かないのに「告知した」と思わないために使う
+ * (トリガーの投入判断と、MCP の announcementEnabled)。
  */
-export const isChannelNotifyEnabled = async (boardId: string, event: NotifyEvent): Promise<boolean> => {
+export const isChannelNotifyEnabled = async (
+  boardId: string,
+  event: NotifyEvent,
+  tx: Db = prisma,
+): Promise<boolean> => {
   if (!(await isSlackChannelPostEnabled())) {
     return false
   }
-  return (await prisma.boardNotifySetting.count({ where: { boardId, event } })) > 0
+  return (await tx.boardNotifySetting.count({ where: { boardId, event } })) > 0
 }

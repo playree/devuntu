@@ -429,7 +429,7 @@ describe('propose_child_tickets', () => {
   it('担当を確かめてから、起票案付きの plan を投稿する', async () => {
     vi.mocked(resolveTicketId).mockResolvedValue('t1')
     vi.mocked(findAgentTicket).mockResolvedValue({ id: 't1', displayId: 'ABC-42', mode: 'plan', state: 'running' })
-    vi.mocked(postChildProposal).mockResolvedValue({ id: 'c1', mentionedUserIds: [] })
+    vi.mocked(postChildProposal).mockResolvedValue({ id: 'c1', mentionedUserIds: [], announced: false })
 
     const result = await (
       await connectDevuntuMcp(agentAuth)

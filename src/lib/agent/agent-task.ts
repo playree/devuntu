@@ -22,11 +22,27 @@ export type AgentTask = {
 }
 
 /**
- * プラン投稿後に利用者からの返信が来ているか。
+ * 担当エージェントの発言(`after` の時点)より後に付いた、利用者からの返信の条件。
  *
- * エージェント自身の最新コメントより後に、他の誰かのコメントが付いていれば返信とみなす。
  * 投稿者が消えたコメント(`authorId = null`)も利用者側の発言として数える。
+ * アナウンスはボード全体への告知でエージェントへの返答ではないので数えない
+ * (数えると承認・差し戻しのボタンが消え、revise が走る)。
  */
+export const agentReplyWhere = (
+  ticketId: string,
+  agentUserId: string,
+  after: Date,
+): Prisma.TicketCommentWhereInput => ({
+  ticketId,
+  createdAt: { gt: after },
+  AND: [
+    { OR: [{ authorId: { not: agentUserId } }, { authorId: null }] },
+    // `not` だけでは種別の無い(null の)通常コメントまで外れるので、null を明示して残す
+    { OR: [{ type: null }, { type: { not: 'announcement' } }] },
+  ],
+})
+
+/** プラン投稿後に利用者からの返信が来ているか(条件は {@link agentReplyWhere}) */
 const hasReplyAfterPlan = async (ticketId: string, agentUserId: string): Promise<boolean> => {
   const lastAgentComment = await prisma.ticketComment.findFirst({
     where: { ticketId, authorId: agentUserId },
@@ -37,11 +53,7 @@ const hasReplyAfterPlan = async (ticketId: string, agentUserId: string): Promise
     return false
   }
   const reply = await prisma.ticketComment.findFirst({
-    where: {
-      ticketId,
-      createdAt: { gt: lastAgentComment.createdAt },
-      OR: [{ authorId: { not: agentUserId } }, { authorId: null }],
-    },
+    where: agentReplyWhere(ticketId, agentUserId, lastAgentComment.createdAt),
     select: { id: true },
   })
   return reply !== null

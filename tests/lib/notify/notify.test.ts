@@ -273,10 +273,70 @@ describe('announcementText: アナウンスとして Slack に載せる本文', 
     expect(announcementText('![スクショ](https://example.com/a.webp)')).toBe('スクショ')
   })
 
-  it('コードは囲みだけを落として中身を残す', () => {
+  it('コードは囲みを Slack のコードに置き換えて中身を残す', () => {
     expect(announcementText('手順\n\n```sh\ndocker compose pull\n```\n`pnpm migrate` を実行')).toBe(
-      '手順\n\ndocker compose pull\npnpm migrate を実行',
+      '手順\n\n`docker compose pull`\n`pnpm migrate` を実行',
     )
+  })
+
+  it('コードの中身には記法の除去をかけない(Slack が書式として読まないようコードとして囲む)', () => {
+    expect(announcementText('`Array<string>` と `**/*.ts` と `a  b`')).toBe('`Array<string>` と `**/*.ts` と `a  b`')
+    expect(announcementText('```md\n# 見出しではない\n- old\n\n  **字下げ**\n```\n以上')).toBe(
+      '`# 見出しではない`\n`- old`\n\n  `**字下げ**`\n以上',
+    )
+  })
+
+  it('バッククォートを含むコードは三重のバッククォートで囲む', () => {
+    expect(announcementText('``a `b` c``')).toBe('```a `b` c```')
+  })
+
+  it('開始と違う文字を含む行ではコードブロックを閉じない', () => {
+    expect(announcementText('```\n**a**\n```~\n- b\n```\n**c**')).toBe('`**a**`\n```~\n`- b`\nc')
+  })
+
+  it('閉じていないコードブロックは末尾までをコードとして残す', () => {
+    expect(announcementText('手順\n```\n- a\n- b')).toBe('手順\n`- a`\n`- b`')
+  })
+
+  it('情報文字列にバッククォートを含む行はコードブロックの開始にしない', () => {
+    expect(announcementText('```js```\n**太字**\n- item')).toBe('`js`\n太字\n• item')
+  })
+
+  it('対になっていないバッククォートは落とし、エスケープされたものは記号として残す', () => {
+    expect(announcementText('a ` b')).toBe('a b')
+    expect(announcementText('a \\`b\\` c')).toBe('a `b` c')
+  })
+
+  it('本文に直接書いた URL は記号を落とさず、末尾の句読点・強調・対にならない括弧は外す', () => {
+    expect(announcementText('https://example.com/pkg/__init__.py を参照')).toBe(
+      'https://example.com/pkg/__init__.py を参照',
+    )
+    expect(announcementText('**https://example.com/a** と (https://example.com/b)。')).toBe(
+      'https://example.com/a と (https://example.com/b)。',
+    )
+    expect(announcementText('https://example.com/wiki/A_(b) と https://example.com/c.')).toBe(
+      'https://example.com/wiki/A_(b) と https://example.com/c.',
+    )
+    expect(announcementText('https://example.com/a\\_b')).toBe('https://example.com/a_b')
+  })
+
+  it('URL の直後の文字参照は URL に含めず、実体へ戻す', () => {
+    expect(announcementText('https://example.com/a&#x20;\n次の行')).toBe('https://example.com/a\n次の行')
+  })
+
+  it('閉じ括弧が大量に続いても線形で終わる', () => {
+    const started = performance.now()
+    expect(announcementText(`https://a${')'.repeat(39_990)}`, new Map(), 20)).toHaveLength(20)
+    expect(performance.now() - started).toBeLessThan(1000)
+  })
+
+  it('エスケープされた `\\<URL>` もバックスラッシュを残さず URL にする', () => {
+    expect(announcementText('\\<https://example.com/a__b__c> を参照')).toBe('https://example.com/a__b__c を参照')
+  })
+
+  it('コード内のメンションもメールアドレスのまま出さない', () => {
+    const names = new Map([['foo@example.com', 'テストユーザー']])
+    expect(announcementText('`@[foo@example.com]` に依頼', names)).toBe('`@テストユーザー` に依頼')
   })
 
   it('メンションは `@表示名` にする', () => {

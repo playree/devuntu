@@ -296,6 +296,21 @@ describe('pickAgentTasks', () => {
     expect(tasks[0]).toMatchObject({ ticketId: 't1', action: 'revise', state: 'planned' })
   })
 
+  it('アナウンスはプランへの返信に数えない', async () => {
+    const planAt = new Date('2026-08-25T00:00:00Z')
+    ticket.findMany.mockResolvedValueOnce([row({ agentState: 'planned' })] as never)
+    ticketComment.findFirst.mockResolvedValueOnce({ createdAt: planAt } as never).mockResolvedValueOnce(null as never)
+
+    await pickAgentTasks(runner())
+    expect(ticketComment.findFirst).toHaveBeenLastCalledWith({
+      where: expect.objectContaining({
+        createdAt: { gt: planAt },
+        AND: expect.arrayContaining([{ OR: [{ type: null }, { type: { not: 'announcement' } }] }]),
+      }),
+      select: { id: true },
+    })
+  })
+
   it('プラン投稿後に返信が無ければ拾わない', async () => {
     ticket.findMany.mockResolvedValueOnce([row({ agentState: 'planned' })] as never)
     ticketComment.findFirst
