@@ -40,24 +40,28 @@ export const lockTicketRow = async (tx: Prisma.TransactionClient, ticketId: stri
 }
 
 /**
- * かんばんの移動先レーン(ボード + ステータス)のロック。かんばんの並べ替え同士を直列にし、
+ * かんばんのレーン(ボード + ステータス)のロック。かんばんの並べ替え同士を直列にし、
  * レーンを読んで振り直す間に同じレーンへの別の並べ替えを割り込ませない。
  *
  * **トランザクションの最初に取る**(チケット行のロックより前)。振り直しはレーン内の他のチケット行を更新するので、
  * 行を握ったままレーンを待つと、そのレーンを持つ側が行を待ってデッドロックする。
- * チケットはボードを移動しないので、ボードは行をロックする前に読んでよい。
+ * 移動元のレーンも取り、キー順に取る(X → Y と Y → X の同時移動で、互いのレーンの行を待ち合わないようにする)。
+ * チケットはボードを移動しないので、ボードと移動元のステータスは行をロックする前に読んでよい。
  */
 export const lockKanbanLane = async (
   tx: Prisma.TransactionClient,
   ticketId: string,
   status: TicketStatus,
 ): Promise<void> => {
-  const ticket = await tx.ticket.findUnique({ where: { id: ticketId }, select: { boardId: true } })
+  const ticket = await tx.ticket.findUnique({ where: { id: ticketId }, select: { boardId: true, status: true } })
   if (!ticket) {
     // 存在しないチケットは後続の権限判定が弾く
     return
   }
-  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`kanban-lane:${ticket.boardId}:${status}`}))`
+  const keys = [...new Set([ticket.status, status])].map((lane) => `kanban-lane:${ticket.boardId}:${lane}`).sort()
+  for (const key of keys) {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${key}))`
+  }
 }
 
 /**

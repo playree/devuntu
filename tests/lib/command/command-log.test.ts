@@ -62,6 +62,10 @@ describe('truncateUtf8', () => {
     expect(truncateUtf8('😀😀', 6)).toBe('😀')
   })
 
+  it('元の文字列にある置換文字(U+FFFD)は残す', () => {
+    expect(truncateUtf8('\uFFFDx', 3)).toBe('\uFFFD')
+  })
+
   it('上限が 0 以下なら空文字', () => {
     expect(truncateUtf8('abc', 0)).toBe('')
   })

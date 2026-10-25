@@ -139,34 +139,47 @@ describe('clipToZonedDay', () => {
   it('日をまたぐ区間はその日の分だけ切り取る', () => {
     // Asia/Tokyo の 3/4 22:00 〜 3/5 02:00
     const range = ['2026-03-04T13:00:00Z', '2026-03-04T17:00:00Z'] as const
-    expect(clip('2026-03-04', 'Asia/Tokyo', ...range)).toEqual({ startMin: 22 * 60, endMin: 1440 })
-    expect(clip('2026-03-05', 'Asia/Tokyo', ...range)).toEqual({ startMin: 0, endMin: 2 * 60 })
+    expect(clip('2026-03-04', 'Asia/Tokyo', ...range)).toEqual([{ startMin: 22 * 60, endMin: 1440 }])
+    expect(clip('2026-03-05', 'Asia/Tokyo', ...range)).toEqual([{ startMin: 0, endMin: 2 * 60 }])
   })
 
-  it('重ならなければ null', () => {
-    expect(clip('2026-03-06', 'Asia/Tokyo', '2026-03-04T13:00:00Z', '2026-03-04T17:00:00Z')).toBeNull()
+  it('重ならなければ空', () => {
+    expect(clip('2026-03-06', 'Asia/Tokyo', '2026-03-04T13:00:00Z', '2026-03-04T17:00:00Z')).toEqual([])
   })
 
   it('夏時間が終わる日(25 時間)も、現地の 23:00〜24:00 をその日に含め、壁時計の位置で返す', () => {
     // Europe/Berlin 2026-10-25 は 03:00 CEST → 02:00 CET。23:00 CET = 22:00Z
-    expect(clip('2026-10-25', 'Europe/Berlin', '2026-10-25T22:00:00Z', '2026-10-25T23:00:00Z')).toEqual({
-      startMin: 23 * 60,
-      endMin: 1440,
-    })
+    expect(clip('2026-10-25', 'Europe/Berlin', '2026-10-25T22:00:00Z', '2026-10-25T23:00:00Z')).toEqual([
+      { startMin: 23 * 60, endMin: 1440 },
+    ])
     // 切替後の 10:00 CET = 09:00Z は 10:00 の位置
-    expect(clip('2026-10-25', 'Europe/Berlin', '2026-10-25T09:00:00Z', '2026-10-25T10:00:00Z')).toEqual({
-      startMin: 10 * 60,
-      endMin: 11 * 60,
-    })
+    expect(clip('2026-10-25', 'Europe/Berlin', '2026-10-25T09:00:00Z', '2026-10-25T10:00:00Z')).toEqual([
+      { startMin: 10 * 60, endMin: 11 * 60 },
+    ])
   })
 
   it('夏時間が始まる日(23 時間)も壁時計の位置で返す', () => {
     // Europe/Berlin 2026-03-29 は 02:00 CET → 03:00 CEST。10:00 CEST = 08:00Z
-    expect(clip('2026-03-29', 'Europe/Berlin', '2026-03-29T08:00:00Z', '2026-03-29T09:00:00Z')).toEqual({
-      startMin: 10 * 60,
-      endMin: 11 * 60,
-    })
+    expect(clip('2026-03-29', 'Europe/Berlin', '2026-03-29T08:00:00Z', '2026-03-29T09:00:00Z')).toEqual([
+      { startMin: 10 * 60, endMin: 11 * 60 },
+    ])
     // 前日の 23:00 CET(22:00Z)は含めない
-    expect(clip('2026-03-29', 'Europe/Berlin', '2026-03-28T22:00:00Z', '2026-03-28T23:00:00Z')).toBeNull()
+    expect(clip('2026-03-29', 'Europe/Berlin', '2026-03-28T22:00:00Z', '2026-03-28T23:00:00Z')).toEqual([])
+  })
+
+  it('戻る切替をまたぐ区間は、切替の前後で 2 つに分ける(同じ時刻帯が 2 度現れる)', () => {
+    // 00:45Z = 1 回目の 02:45 CEST、01:15Z = 2 回目の 02:15 CET。切替は 01:00Z(03:00 CEST → 02:00 CET)
+    expect(clip('2026-10-25', 'Europe/Berlin', '2026-10-25T00:45:00Z', '2026-10-25T01:15:00Z')).toEqual([
+      { startMin: 2 * 60 + 45, endMin: 3 * 60 },
+      { startMin: 2 * 60, endMin: 2 * 60 + 15 },
+    ])
+  })
+
+  it('進む切替をまたぐ区間は、存在しない 1 時間を空けて 2 つに分ける', () => {
+    // 00:30Z = 01:30 CET、01:30Z = 03:30 CEST。切替は 01:00Z(02:00 CET → 03:00 CEST)
+    expect(clip('2026-03-29', 'Europe/Berlin', '2026-03-29T00:30:00Z', '2026-03-29T01:30:00Z')).toEqual([
+      { startMin: 60 + 30, endMin: 2 * 60 },
+      { startMin: 3 * 60, endMin: 3 * 60 + 30 },
+    ])
   })
 })

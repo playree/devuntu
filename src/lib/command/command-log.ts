@@ -43,11 +43,12 @@ export const truncateUtf8 = (text: string, maxBytes: number): string => {
   if (bytes.length <= maxBytes) {
     return text
   }
-  // 途中で切れた文字は置換文字になるので落とす
-  return bytes
-    .subarray(0, maxBytes)
-    .toString('utf8')
-    .replace(/\uFFFD$/, '')
+  // 切る位置が文字の途中(継続バイト 10xxxxxx)なら、その文字の先頭まで戻す
+  let end = maxBytes
+  while (end > 0 && (bytes[end] & 0xc0) === 0x80) {
+    end -= 1
+  }
+  return bytes.subarray(0, end).toString('utf8')
 }
 
 export type LogChunkInput = { stream: CommandStream; text: string }

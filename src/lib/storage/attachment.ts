@@ -133,7 +133,11 @@ export const removeOwnedImageAttachment = async (url: string, userId: string): P
     return
   }
   const key = toUploadKey(url)
-  const owned = await prisma.attachment.count({ where: { key, createdById: userId, boardId: null } })
+  // 削除はベストエフォート(removeAttachmentByKey と同じ)。確認に失敗したら消さずに戻る
+  const owned = await prisma.attachment.count({ where: { key, createdById: userId, boardId: null } }).catch((err) => {
+    logger.error({ err, key, userId }, 'failed to check attachment owner')
+    return 0
+  })
   if (owned === 0) {
     logger.warn({ key, userId }, 'skip removing attachment not owned by user')
     return

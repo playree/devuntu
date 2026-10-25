@@ -9,7 +9,7 @@ import { DM_NOTIFY_EVENTS } from '@/lib/notify/notify'
 import { zPassword } from '@/lib/schema/schema'
 import { scCreateUser, scUpdateIntegrationSettings, scUpdateUser } from '@/lib/schema/schema-admin'
 import { scSetBoardNotifySetting, zBoardKey } from '@/lib/schema/schema-board'
-import { scCreateLinkWidget } from '@/lib/schema/schema-dashboard'
+import { scCreateLinkWidget, scUpdateLinkWidget } from '@/lib/schema/schema-dashboard'
 import { scUpdateNotifySetting, scUpdateNotifySettings, scWebPushSubscription } from '@/lib/schema/schema-notify'
 import {
   scCreateTag,
@@ -350,5 +350,13 @@ describe('scCreateLinkWidget: リンクは http(s) だけ', () => {
 
   it.each(['javascript:alert(1)', 'data:text/html,x', 'ftp://example.com'])('%s は拒否する', (url) => {
     expect(scCreateLinkWidget.safeParse(input(url)).success).toBe(false)
+  })
+
+  it.each([
+    ['https://example.com', true],
+    ['javascript:alert(1)', false],
+  ])('更新でも同じ制約: %s', (url, ok) => {
+    const update = { id: '019eef64-6cc1-78f1-8f50-1ef869860001', ...input(url) }
+    expect(scUpdateLinkWidget.safeParse(update).success).toBe(ok)
   })
 })

@@ -57,11 +57,16 @@ export const WeekView: FC<{ weekStartISO: string; busy: BusySlot[]; timezone: st
 
       const blocks: DayBlock[] = []
       for (const slot of busy) {
-        const clipped = clipToZonedDay(bounds, new Date(slot.start).getTime(), new Date(slot.end).getTime(), timezone)
-        if (clipped) {
+        // DST の切替をまたぐ区間は 2 つに分かれる
+        for (const range of clipToZonedDay(
+          bounds,
+          new Date(slot.start).getTime(),
+          new Date(slot.end).getTime(),
+          timezone,
+        )) {
           blocks.push({
-            top: (clipped.startMin / (24 * 60)) * TOTAL_HEIGHT,
-            height: ((clipped.endMin - clipped.startMin) / (24 * 60)) * TOTAL_HEIGHT,
+            top: (range.startMin / (24 * 60)) * TOTAL_HEIGHT,
+            height: ((range.endMin - range.startMin) / (24 * 60)) * TOTAL_HEIGHT,
           })
         }
       }

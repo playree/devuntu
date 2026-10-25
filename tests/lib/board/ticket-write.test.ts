@@ -383,17 +383,28 @@ describe('moveTicketToLane', () => {
 })
 
 describe('lockKanbanLane', () => {
-  const tx = (ticket: { boardId: string } | null) => ({
+  const tx = (ticket: { boardId: string; status: string } | null) => ({
     ticket: { findUnique: vi.fn().mockResolvedValue(ticket) },
     $executeRaw: vi.fn().mockResolvedValue(0),
   })
 
-  it('チケットのボードと移動先ステータスでレーンをロックする', async () => {
-    const t = tx({ boardId: 'board-1' })
+  it('同じレーン内の並べ替えは、そのレーンだけをロックする', async () => {
+    const t = tx({ boardId: 'board-1', status: 'done' })
     await lockKanbanLane(t as never, 't1', 'done')
 
     expect(t.$executeRaw).toHaveBeenCalledTimes(1)
     expect(t.$executeRaw.mock.calls[0][1]).toBe('kanban-lane:board-1:done')
+  })
+
+  it('移動元と移動先のレーンを、移動の向きに関わらずキー順にロックする', async () => {
+    const forward = tx({ boardId: 'board-1', status: 'todo' })
+    await lockKanbanLane(forward as never, 't1', 'doing')
+    const backward = tx({ boardId: 'board-1', status: 'doing' })
+    await lockKanbanLane(backward as never, 't2', 'todo')
+
+    const keys = (t: ReturnType<typeof tx>) => t.$executeRaw.mock.calls.map((call) => call[1])
+    expect(keys(forward)).toEqual(['kanban-lane:board-1:doing', 'kanban-lane:board-1:todo'])
+    expect(keys(backward)).toEqual(keys(forward))
   })
 
   it('存在しないチケットはロックせず、後続の権限判定に任せる', async () => {

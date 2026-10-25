@@ -81,6 +81,12 @@ export const resolveOutcome = (input: {
   return { status: 'failed' }
 }
 
+/** 文字列を `max` 文字以内で切る位置。サロゲートペアの間では切らない */
+const splitPoint = (text: string, max: number): number => {
+  const code = text.charCodeAt(max - 1)
+  return code >= 0xd800 && code <= 0xdbff ? max - 1 : max
+}
+
 /**
  * ストリームを取り込み、番兵行だけを落としてバッファへ流す。
  *
@@ -117,11 +123,12 @@ const pipeStream = (
     // 最後の要素は改行で終わっていない断片。次のチャンクと繋ぐ
     carry = lines.pop() ?? ''
     emit(lines)
-    if (carry.length >= COMMAND_MAX_LINE_CHARS) {
-      // 番兵は短い 1 行なので、ここで流す断片には含まれない。元の出力に無い改行は足さない
-      buffer.push(kind, carry)
+    // 番兵は短い 1 行なので、ここで流す断片には含まれない。元の出力に無い改行は足さない
+    while (carry.length >= COMMAND_MAX_LINE_CHARS) {
+      const size = splitPoint(carry, COMMAND_MAX_LINE_CHARS)
+      buffer.push(kind, carry.slice(0, size))
       onChunk()
-      carry = ''
+      carry = carry.slice(size)
     }
   })
 

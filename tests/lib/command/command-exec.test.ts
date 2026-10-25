@@ -265,6 +265,16 @@ describe('executeCommandRun', () => {
     ])
   })
 
+  it('改行の無い大きなチャンクは上限ごとに分けて流し、余りだけを持ち越す', async () => {
+    const fake = createFakeSsh()
+    const promise = run(fake)
+    fake.stdout.write('y'.repeat(COMMAND_MAX_LINE_CHARS * 2 + 10))
+    await fake.finish(0)
+    await promise
+
+    expect(logMock.pushed.map(({ text }) => text.length)).toEqual([COMMAND_MAX_LINE_CHARS, COMMAND_MAX_LINE_CHARS, 11])
+  })
+
   it('接続先を用意できなければ実行せず失敗として閉じる', async () => {
     await executeCommandRun({
       runId: 'run-1',
