@@ -1,29 +1,24 @@
 /**
  * add_ticket_comment の type=announcement は、ボードメンバー全員へ届くので投稿するかを利用者が決める。
  * 人の経路は利用者の了承(userApproved)が要り、エージェントの経路は投稿できない。
- * 投稿したら、Slack チャンネルへ流れる設定だったか(announced)を返す
+ * 投稿したら、Slack チャンネルへ流す投入をしたか(announced)を返す
  */
 
 import { addComment } from '@/lib/board/ticket-mutation'
 import { ClientError } from '@/lib/error'
 import { addTicketCommentForMcp, ANNOUNCEMENT_DENIED } from '@/lib/mcp/mcp-ticket'
-import { isChannelNotifyEnabled } from '@/lib/notify/notify-board-setting'
-import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { agentAuth, oauthAuth, patAuth } from '../../helpers/resource-auth'
 
-vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({ ticket: ['findUnique'] }))
+vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({}))
 vi.mock('@/lib/board/ticket-mutation', () => ({ addComment: vi.fn() }))
-vi.mock('@/lib/notify/notify-board-setting', () => ({ isChannelNotifyEnabled: vi.fn() }))
 
 const TICKET_ID = '0195c1e0-0000-7000-8000-0000000000aa'
 const COMMENT_ID = '0195c1e0-0000-7000-8000-0000000000cc'
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.mocked(addComment).mockResolvedValue({ id: COMMENT_ID, mentionedUserIds: [] })
-  vi.mocked(prisma.ticket.findUnique).mockResolvedValue({ boardId: 'board-1' } as never)
-  vi.mocked(isChannelNotifyEnabled).mockResolvedValue(true)
+  vi.mocked(addComment).mockResolvedValue({ id: COMMENT_ID, mentionedUserIds: [], announced: true })
 })
 
 /** 拒否されたときのエラー種別 */
@@ -47,37 +42,15 @@ describe('addTicketCommentForMcp: アナウンス', () => {
       type: 'announcement',
       parentId: null,
     })
-    expect(isChannelNotifyEnabled).toHaveBeenCalledWith('board-1', 'announcement')
   })
 
-  it('チャンネルへ流れないボードでは announced=false(記録だけ残る)', async () => {
-    vi.mocked(isChannelNotifyEnabled).mockResolvedValue(false)
+  it('投稿で投入されなかった(流れる先が無い・流量制限・空の本文)なら announced=false(記録だけ残る)', async () => {
+    vi.mocked(addComment).mockResolvedValue({ id: COMMENT_ID, mentionedUserIds: [], announced: false })
 
     expect(await addTicketCommentForMcp(oauthAuth(), TICKET_ID, 'x', 'announcement', null, true)).toEqual({
       id: COMMENT_ID,
       announced: false,
     })
-  })
-
-  it('記法を落とすと空になる本文は投入されないので announced=false', async () => {
-    expect(
-      await addTicketCommentForMcp(
-        oauthAuth(),
-        TICKET_ID,
-        '![](https://example.com/a.webp)',
-        'announcement',
-        null,
-        true,
-      ),
-    ).toEqual({ id: COMMENT_ID, announced: false })
-    expect(isChannelNotifyEnabled).not.toHaveBeenCalled()
-  })
-
-  it('届くかの確認は投稿の前に行う(投稿後の失敗で、投稿済みなのにエラーを返さない)', async () => {
-    vi.mocked(isChannelNotifyEnabled).mockRejectedValue(new Error('db down'))
-
-    await expect(addTicketCommentForMcp(oauthAuth(), TICKET_ID, 'x', 'announcement', null, true)).rejects.toThrow()
-    expect(addComment).not.toHaveBeenCalled()
   })
 
   it('人の経路でも了承(userApproved=true)が無ければ投稿しない', async () => {
@@ -104,6 +77,5 @@ describe('addTicketCommentForMcp: アナウンス', () => {
         expect(await addTicketCommentForMcp(auth, TICKET_ID, 'x', type)).toEqual({ id: COMMENT_ID })
       }
     }
-    expect(isChannelNotifyEnabled).not.toHaveBeenCalled()
   })
 })

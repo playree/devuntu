@@ -135,8 +135,17 @@ const RE_LINE_MARKER = /^[ \t]{0,3}(?:#{1,6}[ \t]+|>[ \t]?|[-*+][ \t]+|\d+[.)][ 
 /** アナウンス用。リンクの URL も残すので、URL(タイトルの前まで)を取り出す */
 const RE_LINK_WITH_URL = /\[([^\]]*)]\(([^)\s]*)[^)]*\)/g
 
-/** アナウンス用。自動リンク `<https://...>`。生HTMLのタグとして落とされる前に URL へ戻す */
-const RE_AUTOLINK = /<(https?:\/\/[^\s>]+)>/g
+/**
+ * アナウンス用。自動リンク `<https://...>`。生HTMLのタグとして落とされる前に URL へ戻す。
+ * 利用者が打った `<` は書き出しで `\<` になるので、その形も拾う
+ */
+const RE_AUTOLINK = /\\?<(https?:\/\/[^\s>]+?)\\?>/g
+
+/** アナウンス用。本文に直接書いた URL。ASCII の範囲だけを拾い、続く日本語を巻き込まない */
+const RE_BARE_URL = /https?:\/\/[\w\-.~:/?#[\]@!$&'()*+,;=%\\]+/g
+
+/** URL の末尾に付いた句読点・強調の記号。URL の一部ではなく文や記法の側とみなす */
+const RE_URL_TAIL = /[.,:;!?'*_~\\\]]+$/
 
 /** アナウンス用。行頭の見出し / 引用のマーカー(リストは形を残すので分ける) */
 const RE_BLOCK_MARKER = /^[ \t]{0,3}(?:#{1,6}[ \t]+|>[ \t]?)/gm
@@ -147,8 +156,11 @@ const RE_BULLET_MARKER = /^([ \t]*)[-*+][ \t]+/gm
 /** アナウンス用。区切り線(`---` / `***` / `___`)の行 */
 const RE_THEMATIC_BREAK = /^[ \t]*([-*_])(?:[ \t]*\1){2,}[ \t]*$/gm
 
-/** アナウンス用。コードブロックの囲みの行(改行ごと)。中身は告知の本文として残す */
-const RE_CODE_FENCE = /^[ \t]*(?:```+|~~~+).*(?:\r?\n|$)/gm
+/** アナウンス用。コードブロック(囲みが閉じていなければ末尾まで)。中身は告知の本文として残す */
+const RE_CODE_BLOCK = /^[ \t]*(`{3,}|~{3,})[^\n]*(?:\n|$)([\s\S]*?)(?:^[ \t]*\1[`~]*[ \t]*$|(?![\s\S]))/gm
+
+/** アナウンス用。インラインコード。開始と終了のバッククォートの数が揃うものだけを拾う */
+const RE_CODE_SPAN = /(?<!`)(`+)(?!`)([^\n]+?)(?<!`)\1(?!`)/g
 
 /**
  * 強調・打ち消しの記号。`_` 単体は snake_case を壊すので対象にしない。
@@ -232,15 +244,28 @@ export const commentExcerpt = (
   return truncate(decodeCharacterReferences(text).replace(/\s+/g, ' ').trim(), max)
 }
 
-/** 退避した URL の目印。本文に現れない制御文字で囲む */
-const urlToken = (index: number) => `\u0000${index}\u0000`
-const RE_URL_TOKEN = /\u0000(\d+)\u0000/g
+/** 退避した URL・コードの目印。本文に現れない制御文字で囲む */
+const keptToken = (index: number) => `\u0000${index}\u0000`
+const RE_KEPT_TOKEN = /\u0000(\d+)\u0000/g
+
+/**
+ * 本文に直接書いた URL の範囲を決める。
+ * 末尾の句読点や強調の記号は外し、閉じ括弧は URL 内の開き括弧と対にならない分だけ外す(`(https://...)` の括弧)。
+ */
+const splitBareUrl = (matched: string): { url: string; rest: string } => {
+  let url = matched.replace(RE_URL_TAIL, '')
+  while (url.endsWith(')') && url.split('(').length < url.split(')').length) {
+    url = url.slice(0, -1).replace(RE_URL_TAIL, '')
+  }
+  return { url, rest: matched.slice(url.length) }
+}
 
 /**
  * アナウンスの本文を Slack へ載せる形にする。
  *
  * {@link commentExcerpt} と同じく記法を落とすが、告知の中身(リリースの要点など)を読めるよう
  * 改行・箇条書き・リンクの URL は残す。空行の連続は 1 つに畳む。
+ * コードと URL は記法の除去がかからないよう退避し、中身をそのまま戻す。
  */
 export const announcementText = (
   content: string,
@@ -248,23 +273,38 @@ export const announcementText = (
   mentionNames: ReadonlyMap<string, string> = new Map(),
   max: number = NOTIFY_ANNOUNCEMENT_MAX,
 ): string => {
-  // URL は強調やエスケープの記号(`__init__.py` など)を落とされないよう退避し、最後に戻す
-  const urls: string[] = []
-  const keepUrl = (url: string) => urlToken(urls.push(url) - 1)
+  const kept: string[] = []
+  const keep = (text: string) => keptToken(kept.push(text) - 1)
+  // コードの中のメンション記法もメールアドレスのまま出さない
+  const keepCode = (code: string) => keep(replaceMentions(code, mentionNames))
   // リンクはラベルと URL を残す(Slack が URL を自動でリンクにする)。相対パスは外から開けないのでラベルだけにする
   const linkWithUrl = (_matched: string, label: string, url: string): string => {
     if (!/^https?:\/\//.test(url)) {
       return label
     }
-    return !label || label === url ? keepUrl(url) : `${label} (${keepUrl(url)})`
+    return !label || label === url ? keep(url) : `${label} (${keep(url)})`
+  }
+  const keepBareUrl = (matched: string): string => {
+    const { url, rest } = splitBareUrl(matched)
+    return keep(url.replace(RE_BACKSLASH_ESCAPE, '$1')) + rest
   }
 
+  const codeKept = content
+    .replace(RE_CODE_BLOCK, (_matched, _fence, code: string) => keepCode(code.replace(/\r?\n$/, '')))
+    // CommonMark と同じく、両端が空白のときだけ 1 つずつ外す(バッククォートを含むコードを囲むための空白)
+    .replace(RE_CODE_SPAN, (_matched, _ticks, code: string) =>
+      keepCode(/^ .*[^ ].* $/.test(code) ? code.slice(1, -1) : code),
+    )
+    // 対になっていないバッククォート
+    .replace(/`+/g, '')
+
   // メンションを先に外す。`]` を残したままだとリンク記法として拾われうる
-  const text = replaceMentions(content.replace(RE_CODE_FENCE, '').replace(/`+/g, ''), mentionNames)
+  const text = replaceMentions(codeKept, mentionNames)
     .replace(RE_THEMATIC_BREAK, '')
     .replace(RE_IMAGE, '$1')
     .replace(RE_LINK_WITH_URL, linkWithUrl)
-    .replace(RE_AUTOLINK, (_matched, url: string) => keepUrl(url))
+    .replace(RE_AUTOLINK, (_matched, url: string) => keep(url))
+    .replace(RE_BARE_URL, keepBareUrl)
     .replace(RE_HTML_TAG, '')
     .replace(RE_BLOCK_MARKER, '')
     // 強調の `*` と区別できるよう、強調を落とす前に置き換える
@@ -273,7 +313,6 @@ export const announcementText = (
     .replace(RE_BACKSLASH_ESCAPE, '$1')
 
   const lines = decodeCharacterReferences(text)
-    .replace(RE_URL_TOKEN, (_matched, index: string) => urls[Number(index)])
     .split(/\r?\n/)
     // 行頭の字下げ(入れ子の箇条書き)は残し、行中の空白だけを畳む
     .map((line) =>
@@ -287,6 +326,8 @@ export const announcementText = (
     lines
       .join('\n')
       .replace(/\n{3,}/g, '\n\n')
+      // コードの字下げや連続する空白は崩さないよう、行の整形を終えてから戻す
+      .replace(RE_KEPT_TOKEN, (_matched, index: string) => kept[Number(index)])
       .trim(),
     max,
   )

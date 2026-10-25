@@ -657,6 +657,9 @@ Please copy and use the connection information above.
     "Settings for the runner that polls for assigned tickets. The AI agent starts only while these conditions are met. Leaving either start or end unset means all day; a start later than the end crosses midnight (nights only). The daily run limit counts every start, and 0 means unlimited; the count returns to 0 at the reset time, based on the timezone setting.\nOnce this month's cost reaches the monthly budget, no new runs start (runs in progress are not stopped). 0 means unlimited.",
   msg_agent_usage_desc:
     'Totals this month of the tokens and cost reported by the CLI. The month switches at the reset time on the 1st (in the configured time zone). Runs whose CLI does not report cost (Codex CLI) are not included in the cost.',
+  msg_announced: 'Posted the announcement. It will also be sent to the Slack channel.',
+  msg_announcement_recorded_only:
+    'Recorded the announcement on the ticket. It was not sent to the Slack channel (the board has no channel to notify, or sending was throttled).',
   msg_archive_board: 'Archiving hides the board from the default board list. Tickets are kept.',
   msg_avatar_desc:
     'Your avatar is copied from the sign-in provider. Setting a custom image stops it from being copied again.',
@@ -859,9 +862,9 @@ Expiration time: 5 minutes
 
   notify_msg_agent_run_done: '${agent} reported the work. Review it and approve or reject (${duration})',
   notify_msg_agent_run_failed: '${agent} failed ${action}. Check the run history and the ticket (${duration})',
+  notify_msg_agent_run_finished: '${agent} finished ${action} (${result} / ${duration})',
   notify_msg_agent_run_planned: '${agent} posted a plan. Reply to approve or reject it (${duration})',
   notify_msg_agent_run_skipped: '${agent} skipped ${action}. Check the ticket comments (${duration})',
-  notify_msg_agent_run_finished: '${agent} finished ${action} (${result} / ${duration})',
   notify_msg_announcement: '${from} posted an announcement',
   notify_msg_mentioned: '${from} mentioned you',
   notify_msg_mentioned_comment: '${from} mentioned you in a comment',

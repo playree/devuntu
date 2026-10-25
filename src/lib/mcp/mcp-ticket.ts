@@ -44,7 +44,6 @@ import { MERGE_COMPLETION_SELECT, mergeCompletionOf } from '@/lib/git/git'
 import { logger } from '@/lib/logger'
 import { resolveBoardId } from '@/lib/mcp/mcp-board'
 import { ticketWorkflowFor } from '@/lib/mcp/mcp-instructions'
-import { announcementText } from '@/lib/notify/notify'
 import { isChannelNotifyEnabled } from '@/lib/notify/notify-board-setting'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import { prisma } from '@/lib/prisma'
@@ -377,7 +376,7 @@ const errAnnouncementDenied = (reason: 'agent' | 'approval') =>
  *
  * MCP限定の追加制限はアナウンスだけ。ボードメンバー全員へ届くので投稿するかは利用者が決める:
  * 人の経路は利用者の了承(userApproved)を申告したときだけ通し、確認する相手のいないエージェント経路は通さない。
- * アナウンスの応答には、チャンネルへ投稿される設定だったか(announced)を返す。
+ * アナウンスの応答には、チャンネルへ流す投入をしたか(announced)を返す。
  * 届かないのに「告知した」と報告させないため。
  */
 export const addTicketCommentForMcp = async (
@@ -397,23 +396,10 @@ export const addTicketCommentForMcp = async (
   }
 
   const ticketId = await resolveTicketId(auth, ticketIdOrDisplayId)
-  // 投稿の後に確かめると、その失敗が「投稿できなかった」に見えて AI が同じアナウンスを投稿し直しうるので、先に確かめる。
-  // 結果は投稿(認可)が通ったときだけ返すので、閲覧できないボードの設定は漏れない
-  const announced = isAnnouncement ? await willAnnounce(ticketId, content) : undefined
   const comment = await addComment(auth.user, { ticketId, content, type, parentId })
 
   logger.info({ userId: auth.user.id, ticketId, commentId: comment.id }, 'mcp ticket comment added')
-  return announced === undefined ? { id: comment.id } : { id: comment.id, announced }
-}
-
-/** アナウンスを投稿したら Slack チャンネルへ流れるか */
-const willAnnounce = async (ticketId: string, content: string): Promise<boolean> => {
-  // 記法を落とすと空になる本文(画像だけなど)はトリガーが投入しないので、届かない扱いにする
-  if (!announcementText(content)) {
-    return false
-  }
-  const ticket = await prisma.ticket.findUnique({ where: { id: ticketId }, select: { boardId: true } })
-  return !!ticket && (await isChannelNotifyEnabled(ticket.boardId, 'announcement'))
+  return isAnnouncement ? { id: comment.id, announced: comment.announced } : { id: comment.id }
 }
 
 /**

@@ -139,14 +139,21 @@ export const TicketComments: FC<{
   const post = async () => {
     setPosting(true)
     try {
-      await parseAction(
+      const { announced } = await parseAction(
         addTicketComment({
           ticketId: ticket.id,
           content: draft,
           type: commentType === 'none' ? null : commentType,
         }),
       )
-      notify.success(t('msg_added_comment'))
+      if (commentType !== 'announcement') {
+        notify.success(t('msg_added_comment'))
+      } else if (announced) {
+        notify.success(t('msg_announced'))
+      } else {
+        // Slack へ流れない(ボードの通知先が無い・送信が制限された)ことを、送れたと誤解させない
+        notify.warn(t('msg_announcement_recorded_only'))
+      }
       setDraft('')
       setCommentType('none')
       setEditorKey((n) => n + 1)

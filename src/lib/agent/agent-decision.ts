@@ -16,6 +16,7 @@ import { enqueueTicketMoved } from '../notify/notify-trigger'
 import { prisma, type Db } from '../prisma'
 import { parseChildProposal } from '../schema/schema-ticket'
 import { applyChildProposal } from './agent-proposal'
+import { agentReplyWhere } from './agent-task'
 
 /** 返答待ちの plan / report。`proposedChildren` は plan に付いた起票案の子チケット数(無ければ 0) */
 export type PendingAgentDecision = { commentId: string; type: TicketCommentType; proposedChildren: number }
@@ -37,7 +38,7 @@ const AWAITING_TYPE: Partial<Record<AgentTaskState, TicketCommentType>> = {
 /**
  * 承認/差し戻しボタンを出す対象。無ければ null。
  *
- * 担当エージェントの最新コメントが、処理状態に対応する plan / report で、その後に誰の返信も無いこと。
+ * 担当エージェントの最新コメントが、処理状態に対応する plan / report で、その後に誰の返信も無いこと(アナウンスは返信に数えない)。
  * 質問(通常コメント)で返答待ちになっている場合や、既に誰かが返信した後は対象にしない。
  */
 export const findPendingAgentDecision = async (
@@ -59,11 +60,7 @@ export const findPendingAgentDecision = async (
   }
 
   const reply = await tx.ticketComment.findFirst({
-    where: {
-      ticketId: ticket.id,
-      createdAt: { gt: last.createdAt },
-      OR: [{ authorId: { not: ticket.assigneeId } }, { authorId: null }],
-    },
+    where: agentReplyWhere(ticket.id, ticket.assigneeId, last.createdAt),
     select: { id: true },
   })
   if (reply) {

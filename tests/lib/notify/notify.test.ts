@@ -279,6 +279,45 @@ describe('announcementText: アナウンスとして Slack に載せる本文', 
     )
   })
 
+  it('コードの中身には記法の除去をかけない', () => {
+    expect(announcementText('`Array<string>` と `**/*.ts` と ``a `b` c`` と `a  b`')).toBe(
+      'Array<string> と **/*.ts と a `b` c と a  b',
+    )
+    expect(announcementText('```md\n# 見出しではない\n- old\n+ new\n  **字下げ**\n```\n以上')).toBe(
+      '# 見出しではない\n- old\n+ new\n  **字下げ**\n以上',
+    )
+  })
+
+  it('閉じていないコードブロックは末尾までをコードとして残す', () => {
+    expect(announcementText('手順\n```\n- a\n- b')).toBe('手順\n- a\n- b')
+  })
+
+  it('対になっていないバッククォートは落とす', () => {
+    expect(announcementText('a ` b')).toBe('a b')
+  })
+
+  it('本文に直接書いた URL は記号を落とさず、末尾の句読点・強調・対にならない括弧は外す', () => {
+    expect(announcementText('https://example.com/pkg/__init__.py を参照')).toBe(
+      'https://example.com/pkg/__init__.py を参照',
+    )
+    expect(announcementText('**https://example.com/a** と (https://example.com/b)。')).toBe(
+      'https://example.com/a と (https://example.com/b)。',
+    )
+    expect(announcementText('https://example.com/wiki/A_(b) と https://example.com/c.')).toBe(
+      'https://example.com/wiki/A_(b) と https://example.com/c.',
+    )
+    expect(announcementText('https://example.com/a\\_b')).toBe('https://example.com/a_b')
+  })
+
+  it('エスケープされた `\\<URL>` もバックスラッシュを残さず URL にする', () => {
+    expect(announcementText('\\<https://example.com/a__b__c> を参照')).toBe('https://example.com/a__b__c を参照')
+  })
+
+  it('コード内のメンションもメールアドレスのまま出さない', () => {
+    const names = new Map([['foo@example.com', 'テストユーザー']])
+    expect(announcementText('`@[foo@example.com]` に依頼', names)).toBe('@テストユーザー に依頼')
+  })
+
   it('メンションは `@表示名` にする', () => {
     const names = new Map([['foo@example.com', 'テストユーザー']])
     expect(announcementText('@[foo@example.com] おつかれさまです', names)).toBe('@テストユーザー おつかれさまです')
