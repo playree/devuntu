@@ -163,6 +163,29 @@ const twoFactorPlugin = {
   ...(!envu.server.TWO_FA_REQUIRED && { hooks: {} }),
 }
 
+const emailOtpPlugin = emailOTP({
+  disableSignUp: true,
+  sendVerificationOTP: async ({ email, otp, type }) => {
+    // エージェントはログインできないので、宛先の存在を探る手段にもしない
+    const user = await prisma.user.findUnique({ where: { email }, select: { locale: true, isAgent: true } })
+    logger.debug({ email, type, user }, 'sendVerificationOTP')
+    if (user && !user.isAgent) {
+      await sendEmailOtp({ locale: user.locale, to: email, otp })
+    }
+  },
+})
+
+/**
+ * パスワード認証が有効な運用では、メール OTP の HTTP 経路をすべて塞ぐ。
+ *
+ * 2FA の hook は `/sign-in/email-otp` を対象にせず、OTP によるパスワード再設定も開いているため、
+ * 残すとメールボックスだけでパスワード + 2FA を迂回できる。2FA の OTP(`/two-factor/*`)は別経路。
+ * プラグインの定義から導出し、better-auth の更新で増えたエンドポイントも塞ぐ(serverOnly は path を持たない)。
+ */
+const emailOtpDisabledPaths = envu.server.DISABLE_PASSWORD_AUTH
+  ? []
+  : Object.values(emailOtpPlugin.endpoints).flatMap((endpoint) => (endpoint.path ? [endpoint.path] : []))
+
 export const auth = betterAuth({
   appName: envu.server.NEXT_PUBLIC_APP_NAME,
   /**
@@ -170,7 +193,7 @@ export const auth = betterAuth({
    * `image` は公開アバター配信の判定と削除対象に使うため、他人の添付を公開・削除できてしまう。
    * プロフィールの変更は Server Action 経由に限る。
    */
-  disabledPaths: ['/update-user'],
+  disabledPaths: ['/update-user', ...emailOtpDisabledPaths],
   session: {
     expiresIn: envu.server.SESSION_EXPIRES_IN,
     freshAge: envu.server.SESSION_FRESH_AGE,
@@ -317,17 +340,7 @@ export const auth = betterAuth({
   },
   plugins: [
     admin(),
-    emailOTP({
-      disableSignUp: true,
-      sendVerificationOTP: async ({ email, otp, type }) => {
-        // エージェントはログインできないので、宛先の存在を探る手段にもしない
-        const user = await prisma.user.findUnique({ where: { email }, select: { locale: true, isAgent: true } })
-        logger.debug({ email, type, user }, 'sendVerificationOTP')
-        if (user && !user.isAgent) {
-          await sendEmailOtp({ locale: user.locale, to: email, otp })
-        }
-      },
-    }),
+    emailOtpPlugin,
     twoFactorPlugin,
     passkey({
       authenticatorSelection: {
