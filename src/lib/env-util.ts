@@ -191,6 +191,19 @@ const server = {
   get OIDC_DCR_ENABLED() {
     return getEnvBoolean('OIDC_DCR_ENABLED')
   },
+  /**
+   * 動的クライアント登録で、ループバック・private-use スキーム以外に受け付けるリダイレクトURI(完全一致)。
+   * claude.ai のようにサーバー側で認可コードを受け取る MCP クライアント向け
+   */
+  get OIDC_DCR_ALLOWED_REDIRECT_URIS() {
+    const uris = getEnv('OIDC_DCR_ALLOWED_REDIRECT_URIS')
+    return uris
+      ? uris
+          .split(',')
+          .map((uri) => uri.trim())
+          .filter(Boolean)
+      : []
+  },
   get MAIN_DEVUNTU_URL() {
     return getEnv('MAIN_DEVUNTU_URL')
   },

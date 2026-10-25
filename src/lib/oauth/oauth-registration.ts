@@ -5,7 +5,8 @@
  * 登録できてもデータは読めない(ログインと同意、リソース側の権限チェックが別に効く)が、
  * 認可コードの戻り先だけは絞っておく。ループバックと private-use スキームに限っておけば、
  * 発行されたコードは必ず利用者自身の端末へ戻るため、外部サーバーへコードを流すクライアントを
- * 登録できない。
+ * 登録できない。claude.ai のようにサーバー側で戻りを受ける MCP クライアントは、管理者が
+ * `OIDC_DCR_ALLOWED_REDIRECT_URIS` で戻り先を完全一致で列挙したときだけ受け付ける。
  *
  * 判定は引数だけで決まる純粋関数にして `tests/lib/oauth-registration.test.ts` の対象にする
  * (env / prisma / logger には依存させない)。
@@ -51,8 +52,12 @@ export const isLocalRedirectUri = (uri: string): boolean => {
 
 /**
  * 登録要求のリダイレクトURIをすべて受け付けられるか。
+ * ローカルに閉じたものか、`allowedUris`(管理者が信頼した戻り先)に完全一致するものだけを通す。
  * 1つでも外部へ戻るものが混ざっていれば登録ごと拒否する。
  * `authorization_code` には redirect_uris が必須なので、空・未指定も通さない。
  */
-export const isLocalRegistration = (redirectUris: string[] | undefined): boolean =>
-  !!redirectUris?.length && redirectUris.every(isLocalRedirectUri)
+export const isAllowedRegistration = (
+  redirectUris: string[] | undefined,
+  allowedUris: readonly string[] = [],
+): boolean =>
+  !!redirectUris?.length && redirectUris.every((uri) => isLocalRedirectUri(uri) || allowedUris.includes(uri))

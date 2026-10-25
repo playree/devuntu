@@ -334,6 +334,7 @@ docker compose run --rm --entrypoint node tools -e "const {generateKeyPairSync}=
 `/admin/agents` で発行するエージェントトークンは**設定なしで**使える。
 `OIDC_DCR_ENABLED=true` を設定すると、これに加えて MCP クライアントが動的クライアント登録(DCR)→
 ブラウザでの認可コードフローで接続できるようになる(`OIDC_DCR_ENABLED` が制御するのは DCR だけ)。
+claude.ai(Web / デスクトップ)のコネクタから使わせる場合は、`OIDC_DCR_ALLOWED_REDIRECT_URIS` も設定する。
 環境変数だけで有効になり、`/admin/settings` での操作は不要。
 詳細と運用上の注意は [mcp-server.md](mcp-server.md) を参照。
 
