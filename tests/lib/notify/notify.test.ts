@@ -286,8 +286,12 @@ describe('announcementText: アナウンスとして Slack に載せる本文', 
     )
   })
 
-  it('バッククォートを含むコードは Slack で囲めないので、中身だけを残す', () => {
-    expect(announcementText('``a `b` c``')).toBe('a `b` c')
+  it('バッククォートを含むコードは三重のバッククォートで囲む', () => {
+    expect(announcementText('``a `b` c``')).toBe('```a `b` c```')
+  })
+
+  it('開始と違う文字を含む行ではコードブロックを閉じない', () => {
+    expect(announcementText('```\n**a**\n```~\n- b\n```\n**c**')).toBe('`**a**`\n```~\n`- b`\nc')
   })
 
   it('閉じていないコードブロックは末尾までをコードとして残す', () => {

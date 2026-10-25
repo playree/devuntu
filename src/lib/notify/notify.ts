@@ -161,9 +161,11 @@ const RE_THEMATIC_BREAK = /^[ \t]*([-*_])(?:[ \t]*\1){2,}[ \t]*$/gm
 
 /**
  * アナウンス用。コードブロック(囲みが閉じていなければ末尾まで)。中身は告知の本文として残す。
- * バッククォートの囲みは、CommonMark と同じく情報文字列にバッククォートを含めない(「```js```」はインラインコード)
+ * バッククォートの囲みは、CommonMark と同じく情報文字列にバッククォートを含めない(「```js```」はインラインコード)。
+ * 閉じの囲みは開始と同じ文字だけで書かれた行に限る(「```~」では閉じない)
  */
-const RE_CODE_BLOCK = /^[ \t]*(`{3,}(?=[^`\n]*$)|~{3,})[^\n]*(?:\n|$)([\s\S]*?)(?:^[ \t]*\1[`~]*[ \t]*$|(?![\s\S]))/gm
+const RE_CODE_BLOCK =
+  /^[ \t]*(`{3,}(?=[^`\n]*$)|~{3,})[^\n]*(?:\n|$)([\s\S]*?)(?:^[ \t]*\1(?:(?<=`)`*|(?<=~)~*)[ \t]*$|(?![\s\S]))/gm
 
 /**
  * アナウンス用。インラインコード。開始と終了のバッククォートの数が揃うものだけを拾う。
@@ -279,12 +281,15 @@ const splitBareUrl = (matched: string): { url: string; rest: string } => {
 
 /**
  * Slack の mrkdwn で `*` `_` `~` が書式として読まれないよう、コードを行ごとに `` ` `` で囲む。
- * Slack には二重のバッククォートが無いので、`` ` `` を含む行は囲まずに残す
+ * Slack には二重のバッククォートが無いので、`` ` `` を含む行は ```` ``` ```` で囲む(```` ``` ```` を含む行は囲めないので残す)
  */
 const slackCode = (code: string): string =>
-  code.replace(/^([ \t]*)(\S.*?)[ \t]*$/gm, (matched, indent: string, body: string) =>
-    body.includes('`') ? matched : `${indent}\`${body}\``,
-  )
+  code.replace(/^([ \t]*)(\S.*?)[ \t]*$/gm, (matched, indent: string, body: string) => {
+    if (body.includes('```')) {
+      return matched
+    }
+    return body.includes('`') ? `${indent}\`\`\`${body}\`\`\`` : `${indent}\`${body}\``
+  })
 
 /**
  * アナウンスの本文を Slack へ載せる形にする。
