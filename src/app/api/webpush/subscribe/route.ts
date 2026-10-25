@@ -9,13 +9,13 @@
  * 門番はここでのセッション確認だけなので、確認を通す前に本文を解釈しない。
  */
 
-import { getServerSession } from '@/lib/auth/auth'
+import { getActiveSession } from '@/lib/auth/auth'
 import { logger } from '@/lib/logger'
 import { scWebPushSubscription } from '@/lib/schema/schema-notify'
 import { isWebPushConfigured, saveWebPushSubscription } from '@/lib/webpush/webpush-server'
 
 export const POST = async (req: Request) => {
-  const user = (await getServerSession())?.user
+  const user = (await getActiveSession())?.user
   if (!user) {
     return Response.json({ error: 'unauthorized' }, { status: 401 })
   }

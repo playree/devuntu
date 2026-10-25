@@ -170,16 +170,20 @@ clone した環境(`pnpm dev` / `pnpm maintenance`)では、どちらもリポ�
 ### 添付の掃除
 
 添付は `attachment` テーブルと実体の両方を消す。参照は外部キーではなく本文中のURLなので、
-次の6箇所を見て「どこからも参照されていない」ことを確かめてから消す。
+次の7箇所を見て「どこからも参照されていない」ことを確かめてから消す。
 
 - チケット本文の Markdown
 - コメント本文の Markdown
 - チケットテンプレート本文の Markdown(`ticket_template.content`)
+- ボードノートとその版の本文(`board_note.content` / `board_note_revision.content`)
 - ユーザーのアバター(`user.image`)
 - リンクウィジェットのアイコン(`link_widget.iconPath`)
 - お知らせ本文(`key_value_store` の `DASHBOARD_ANNOUNCEMENT`)
 
-ボードの AI 向けコンテキスト(`board.aiContext`)・ボードノート(`board_note.content`)とエージェントのカスタム指示(`agent_runner.rule`)は
+ボードノートは画面のエディタからは画像を挿入できないが、MCP では `upload_image` で得た URL を本文に書けて、
+画面でも画像として表示されるため参照元に含める。
+
+ボードの AI 向けコンテキスト(`board.aiContext`)とエージェントのカスタム指示(`agent_runner.rule`)は
 AI に渡す文字列なので参照元に含めない。エディタからは画像を挿入できないようにしている。
 
 本文の全走査を伴うので、この掃除だけは1日1回に絞っている。

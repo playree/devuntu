@@ -204,3 +204,57 @@ export const zonedMinutes = (date: string, min: number, tz: string = DEFAULT_TZ)
 
   return dayjs(exact.length > 0 ? Math.min(...exact) : Math.max(...candidates)).tz(tz)
 }
+
+/**
+ * 暦日(YYYY-MM-DD)1 日の範囲(現地の 0:00〜翌 0:00)。DST の切替日は 23 / 25 時間になる
+ */
+export const zonedDayBounds = (date: string, tz: string = DEFAULT_TZ): { startMs: number; endMs: number } => ({
+  startMs: zonedMinutes(date, 0, tz).valueOf(),
+  endMs: zonedMinutes(date, 1440, tz).valueOf(),
+})
+
+/**
+ * 区間を 1 日の範囲(`zonedDayBounds`)に切り取り、0:00 からの壁時計の分で返す。重ならなければ空。
+ *
+ * 位置は経過時間ではなく壁時計で返し、DST の切替日も 24 時間の目盛りに揃える。
+ * 区間が切替をまたぐ場合は切替の瞬間で分ける(戻る切替では同じ時刻帯が 2 度現れ、進む切替では 1 時間が飛ぶ)。
+ */
+export const clipToZonedDay = (
+  day: { startMs: number; endMs: number },
+  startMs: number,
+  endMs: number,
+  tz: string = DEFAULT_TZ,
+): { startMin: number; endMin: number }[] => {
+  const s = Math.max(startMs, day.startMs)
+  const e = Math.min(endMs, day.endMs)
+  if (e <= s) {
+    return []
+  }
+  const wallMinutes = (ms: number) => {
+    const d = dayjs(ms).tz(tz)
+    return d.hour() * 60 + d.minute() + d.second() / 60
+  }
+  const wallEnd = (ms: number) => (ms === day.endMs ? 1440 : wallMinutes(ms))
+
+  if (offsetAt(s, tz) === offsetAt(e, tz)) {
+    return [{ startMin: wallMinutes(s), endMin: wallEnd(e) }]
+  }
+  // 切替の瞬間(オフセットが変わる最初の分)を二分探索で求める。1 日に切替は 1 回まで
+  let lo = s
+  let hi = e
+  while (hi - lo > MINUTE_MS) {
+    const mid = lo + Math.floor((hi - lo) / 2)
+    if (offsetAt(mid, tz) === offsetAt(s, tz)) {
+      lo = mid
+    } else {
+      hi = mid
+    }
+  }
+  // (lo, hi] は 1 分以内なので、分の境界はちょうど 1 つ(切替の瞬間)
+  const switchAt = Math.floor(hi / MINUTE_MS) * MINUTE_MS
+  const startMin = wallMinutes(s)
+  return [
+    { startMin, endMin: startMin + (switchAt - s) / MINUTE_MS },
+    { startMin: wallMinutes(switchAt), endMin: wallEnd(e) },
+  ].filter(({ startMin, endMin }) => endMin > startMin)
+}

@@ -5,7 +5,11 @@ import { envu } from './env-util'
  * ログに出さないキー。pino の `*` は1階層だけに当たるので、
  * Server Action の input(`{ input: { password } }`)など入れ子になる深さぶん並べる
  */
-export const LOG_REDACT_PATHS = ['password', 'client_secret', 'token'].flatMap((key) => [key, `*.${key}`, `*.*.${key}`])
+export const LOG_REDACT_PATHS = ['password', 'client_secret', 'token', 'secret'].flatMap((key) => [
+  key,
+  `*.${key}`,
+  `*.*.${key}`,
+])
 
 export const logger = pino({
   level: envu.server.LOG_LEVEL || 'info',

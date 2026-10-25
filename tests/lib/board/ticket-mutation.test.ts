@@ -32,6 +32,7 @@ import {
 } from '@/lib/board/ticket-mutation'
 import {
   assertReplyTarget,
+  lockKanbanLane,
   lockTicketRow,
   moveTicketToLane,
   reassignContentAttachments,
@@ -93,6 +94,7 @@ vi.mock('@/lib/board/board-member', () => ({
 
 vi.mock('@/lib/board/ticket-write', () => ({
   assertReplyTarget: vi.fn(),
+  lockKanbanLane: vi.fn(),
   lockTicketRow: vi.fn(),
   moveTicketToLane: vi.fn(),
   nextTicketNumber: vi.fn(async () => 7),
@@ -898,6 +900,11 @@ describe('経路で共通化していない操作', () => {
 
     expect(vi.mocked(lockTicketRow).mock.invocationCallOrder[0]).toBeLessThan(
       vi.mocked(assertTicketAccess).mock.invocationCallOrder[0],
+    )
+    // 移動先レーンのロックはチケット行より先に取る(行を握ったままレーンを待つとデッドロックする)
+    expect(lockKanbanLane).toHaveBeenCalledWith(fakeTx, TICKET_ID, 'done')
+    expect(vi.mocked(lockKanbanLane).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(lockTicketRow).mock.invocationCallOrder[0],
     )
 
     expect(assertTicketAccess).toHaveBeenCalledWith(actor, TICKET_ID, 'edit', fakeTx)

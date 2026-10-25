@@ -4,8 +4,7 @@ import { safeAuthAction } from '@/lib/action/action-server'
 import { ensurePrivateBoard } from '@/lib/board/board'
 import { assertBoardAccess, getAccessibleBoardIds } from '@/lib/board/board-access'
 import { getBoardMemberUsers, getBoardsMemberUsers } from '@/lib/board/board-member'
-import { listVisibleTags, rethrowDuplicatedTagName, TAG_SELECT } from '@/lib/board/tag'
-import { MAX_TAGS_PER_SCOPE, nextOrder } from '@/lib/board/tag-rule'
+import { insertBoardTag, listVisibleTags, rethrowDuplicatedTagName, TAG_SELECT } from '@/lib/board/tag'
 import { ticketDisplayId } from '@/lib/board/ticket-id'
 import { createTicket as createTicketCore, deleteTicket as deleteTicketCore } from '@/lib/board/ticket-mutation'
 import {
@@ -17,7 +16,6 @@ import {
   ticketScopeWhere,
 } from '@/lib/board/ticket-search'
 import { listBoardTicketTemplates } from '@/lib/board/ticket-template'
-import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { scUUID } from '@/lib/schema/schema'
@@ -153,8 +151,8 @@ export const createTicketTag = safeAuthAction
   .metadata({ actionName: 'createTicketTag', role: 'user' })
   .inputSchema(scCreateTag)
   .action(async ({ ctx: { user }, parsedInput: { boardId, name, color, order } }) => {
-    // タグ作成はメンバーなら可能(リネーム / 削除は manage が必要)
-    await assertBoardAccess(user, boardId, 'view')
+    // タグ作成はメンバーなら可能(リネーム / 削除は manage が必要)。アーカイブ済みボードは読み取り専用
+    await assertBoardAccess(user, boardId, 'write')
 
     // 同名が既にあればそれを返す(UI 上は作成せず選択だけさせたい)
     const existing = await prisma.tag.findUnique({ where: { boardId_name: { boardId, name } }, select: TAG_SELECT })
@@ -162,22 +160,11 @@ export const createTicketTag = safeAuthAction
       return existing
     }
 
-    const tags = await prisma.tag.findMany({ where: { boardId }, select: { order: true } })
-    if (tags.length >= MAX_TAGS_PER_SCOPE) {
-      throw errInvalidOperation()
-    }
-
-    // トランザクションにしないのは、PostgreSQL では一意制約違反でトランザクション全体が
-    // 中断され、同じ tx 内で既存タグを読み直せなくなるため
-    const tag = await prisma.tag
-      .create({
-        data: { boardId, name, color, order: order ?? nextOrder(tags.map((row) => row.order)) },
-        select: TAG_SELECT,
-      })
-      .catch(async (e) => {
-        const raced = await prisma.tag.findUnique({ where: { boardId_name: { boardId, name } }, select: TAG_SELECT })
-        return raced ?? rethrowDuplicatedTagName(e)
-      })
+    // 一意制約違反でトランザクションは中断されるので、同時に作られた同名タグはトランザクションの外で読み直す
+    const tag = await insertBoardTag(boardId, { name, color, order }).catch(async (e) => {
+      const raced = await prisma.tag.findUnique({ where: { boardId_name: { boardId, name } }, select: TAG_SELECT })
+      return raced ?? rethrowDuplicatedTagName(e)
+    })
 
     logger.info({ userId: user.id, tag }, 'tag created')
     return tag

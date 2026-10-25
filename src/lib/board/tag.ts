@@ -115,25 +115,34 @@ export const syncTicketTags = async (
   }
 }
 
-/** タグ作成(メンバーなら可能)。件数チェックと採番を create と同じトランザクションに入れ、同時作成で上限を超えないようにする */
+/**
+ * ボード行をロックしてから件数チェックと採番を行い、タグを作る。同時作成で上限を超えないようにする。
+ * 権限の判定と、同名タグ(一意制約違反)の扱いは呼び出し側で行う
+ */
+export const insertBoardTag = async (
+  boardId: string,
+  { name, color, order }: { name: string; color: TagColor; order?: number },
+): Promise<TagOption> =>
+  prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT "id" FROM "board" WHERE "id" = ${boardId} FOR UPDATE`
+    const tags = await tx.tag.findMany({ where: { boardId }, select: { order: true } })
+    if (tags.length >= MAX_TAGS_PER_SCOPE) {
+      throw errInvalidOperation()
+    }
+    return tx.tag.create({
+      data: { boardId, name, color, order: order ?? nextOrder(tags.map((row) => row.order)) },
+      select: TAG_SELECT,
+    })
+  })
+
+/** タグ作成(メンバーなら可能。アーカイブ済みボードは読み取り専用なので不可) */
 export const createBoardTag = async (
   actor: Actor,
   { boardId, name, color, order }: { boardId: string; name: string; color: TagColor; order?: number },
 ): Promise<TagOption> => {
-  await assertBoardAccess(actor, boardId, 'view')
+  await assertBoardAccess(actor, boardId, 'write')
 
-  const tag = await prisma
-    .$transaction(async (tx) => {
-      const tags = await tx.tag.findMany({ where: { boardId }, select: { order: true } })
-      if (tags.length >= MAX_TAGS_PER_SCOPE) {
-        throw errInvalidOperation()
-      }
-      return tx.tag.create({
-        data: { boardId, name, color, order: order ?? nextOrder(tags.map((row) => row.order)) },
-        select: TAG_SELECT,
-      })
-    })
-    .catch(rethrowDuplicatedTagName)
+  const tag = await insertBoardTag(boardId, { name, color, order }).catch(rethrowDuplicatedTagName)
 
   logger.info({ userId: actor.id, tag }, 'tag created')
   return tag

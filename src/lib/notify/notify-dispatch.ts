@@ -38,8 +38,9 @@ import {
   type ClaimedOutbox,
 } from './notify-queue'
 import { resolveNotifyTargets } from './notify-recipient'
+import { retryScheduledAt } from './notify-schedule'
 import { deliverSlack } from './notify-slack'
-import { deliverWebPush } from './notify-webpush'
+import { deliverWebPush, dropStaleWebPushSubscriptions } from './notify-webpush'
 
 /**
  * 掴んだアウトボックスを配信行へ展開する。
@@ -196,17 +197,42 @@ const deliverEmailBatch = async (now: Date, limit: number): Promise<number> => {
   return byUser.size
 }
 
+/** 鍵の不正を VAPID の構成障害とみなすのに要る、同じ周で続けて鍵の不正になった別々の利用者の数 */
+const WEBPUSH_ABORT_USERS = 2
+
 /**
  * Web プッシュを送る。
  *
  * 宛先は必ずユーザー(チャンネル通知は Slack だけ)。1 配信で登録済みの全端末へ送るので、
  * ここでは配信行を 1 つずつ処理する。
+ *
+ * 鍵の不正(401 / 403)は、VAPID の構成障害でも、端末 1 台の利用者が古い鍵の購読だけを持つ場合でも
+ * 同じ結果になる。前者なのに送り続けても全滅し、後者なのにチャネルを止めると全員に届かなくなるので、
+ * 同じ周の他の利用者の結果で見分ける。
+ *
+ * - 他の利用者へ 1 件でも届いたら端末側の問題。その利用者の購読を消して `unlinked` にする
+ * - 別々の利用者で続けば構成障害。判断待ちの行と残りを未処理へ戻して打ち切る
+ * - 判断材料が無いまま終わった行は通常の失敗として再試行へ回す(先頭に居座らせない)
  */
 const deliverWebPushBatch = async (now: Date, limit: number): Promise<number> => {
   const claimed = await claimDeliveries('webpush', limit)
 
+  /** 判断待ちの行と、鍵の不正を受け取った送信の時刻 */
+  const suspects: { delivery: ClaimedDelivery; sentAt: Date }[] = []
+  let delivered = false
+
+  const dropSuspects = async () => {
+    for (const { delivery, sentAt } of suspects.splice(0)) {
+      if (delivery.userId) {
+        await dropStaleWebPushSubscriptions(delivery.userId, sentAt)
+      }
+      await settleDelivery(delivery, 'unlinked', now)
+    }
+  }
+
   for (const [index, delivery] of claimed.entries()) {
     const { userId } = delivery
+    const sentAt = nowDate()
     let outcome: DeliveryOutcome
     try {
       if (!userId) {
@@ -224,12 +250,25 @@ const deliverWebPushBatch = async (now: Date, limit: number): Promise<number> =>
       logger.error({ error, deliveryId: delivery.id }, 'notify delivery failed')
       outcome = 'failed'
     }
-    await settleDelivery(delivery, outcome, now)
 
     if (isDeliveryAborting(outcome)) {
-      // VAPID 鍵が不正なら残りも全滅する
+      suspects.push({ delivery, sentAt })
+      if (delivered) {
+        await dropSuspects()
+        continue
+      }
+      if (new Set(suspects.map((suspect) => suspect.delivery.userId)).size < WEBPUSH_ABORT_USERS) {
+        continue
+      }
+
       const rest = claimed.slice(index + 1)
-      logger.error({ channel: 'webpush', aborted: rest.length }, 'notify channel aborted')
+      logger.error({ channel: 'webpush', aborted: rest.length + suspects.length }, 'notify channel aborted')
+      // 判断待ちの行は送れていないので試行回数を戻す。順番は後ろへ回し、次の周で他の行から判断できるようにする
+      await releaseDeliveries(
+        suspects.map((suspect) => suspect.delivery.id),
+        outcome,
+        retryScheduledAt(now, 1),
+      )
       await releaseDeliveries(
         rest.map(({ id }) => id),
         outcome,
@@ -237,6 +276,16 @@ const deliverWebPushBatch = async (now: Date, limit: number): Promise<number> =>
       // 送らずに戻した分は枠を使っていない
       return index + 1
     }
+
+    await settleDelivery(delivery, outcome, now)
+    if (outcome === 'ok') {
+      delivered = true
+      await dropSuspects()
+    }
+  }
+
+  for (const suspect of suspects) {
+    await settleDelivery(suspect.delivery, 'failed', now)
   }
   return claimed.length
 }

@@ -6,7 +6,7 @@ import { isValidTimezone } from '../day'
 import { errValidation } from '../error'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
-import { removeImageAttachment, saveImageAttachment } from '../storage/attachment'
+import { removeImageAttachment, removeOwnedImageAttachment, saveImageAttachment } from '../storage/attachment'
 
 export const updateUserTimezone = async (userId: string, timezone: string) => {
   if (!isValidTimezone(timezone)) {
@@ -28,7 +28,7 @@ export const updateUserAvatar = async (userId: string, image: File | null): Prom
   if (image === null) {
     await prisma.user.update({ where: { id: userId }, data: { image: null } })
     if (existing.image) {
-      await removeImageAttachment(existing.image)
+      await removeOwnedImageAttachment(existing.image, userId)
     }
     logger.info({ userId }, 'user avatar removed')
     return null
@@ -43,7 +43,7 @@ export const updateUserAvatar = async (userId: string, image: File | null): Prom
     throw err
   }
   if (existing.image) {
-    await removeImageAttachment(existing.image)
+    await removeOwnedImageAttachment(existing.image, userId)
   }
   logger.info({ userId }, 'user avatar updated')
   return url

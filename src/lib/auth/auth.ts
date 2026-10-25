@@ -2,7 +2,7 @@ import { oauthProvider } from '@better-auth/oauth-provider'
 import { passkey } from '@better-auth/passkey'
 import { APIError, betterAuth, type BetterAuthPlugin, GoogleProfile } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
-import { createAuthMiddleware } from 'better-auth/api'
+import { createAuthMiddleware, getSessionFromCtx } from 'better-auth/api'
 import { nextCookies } from 'better-auth/next-js'
 import { admin, emailOTP, genericOAuth, type GenericOAuthConfig, jwt, slack, twoFactor } from 'better-auth/plugins'
 import { decodeJwt } from 'jose'
@@ -22,6 +22,7 @@ import { SLACK_PROVIDER_ID } from '../slack/slack'
 import { slackUserInfo } from '../slack/slack-server'
 import { authConfig } from './auth-config'
 import { MCP_RESOURCE, MCP_SCOPES } from './mcp-scope'
+import { requiresTwoFaSetup } from './two-fa'
 import { resolveSyncedProfile } from './user-sync'
 
 /**
@@ -47,6 +48,32 @@ const dcrPolicy = {
             })
           }
           return { context: { body: { ...body, application_type: 'native' } } }
+        }),
+      },
+    ],
+  },
+} satisfies BetterAuthPlugin
+
+/**
+ * 2FA の設定が済んでいない利用者に OAuth の認可コードを出さない。
+ * 同意済みのクライアントは同意画面(Proxy の 2FA 誘導を通る)を経ずにコードが出るため、ここで止める。
+ */
+const twoFaAuthorizePolicy = {
+  id: 'two-fa-authorize-policy',
+  hooks: {
+    before: [
+      {
+        matcher: (ctx) => ctx.path === '/oauth2/authorize',
+        handler: createAuthMiddleware(async (ctx) => {
+          const session = await getSessionFromCtx(ctx)
+          // フック内のセッションはプラグインの追加フィールドが型に乗らない
+          if (session && requiresTwoFaSetup(session.user as { twoFactorEnabled?: boolean | null })) {
+            logger.info({ userId: session.user.id }, 'oauth authorize rejected: 2fa not enabled')
+            throw new APIError('FORBIDDEN', {
+              code: 'TWO_FACTOR_REQUIRED',
+              message: 'two-factor authentication required',
+            })
+          }
         }),
       },
     ],
@@ -138,6 +165,12 @@ const twoFactorPlugin = {
 
 export const auth = betterAuth({
   appName: envu.server.NEXT_PUBLIC_APP_NAME,
+  /**
+   * 標準の `/update-user` はセッションだけで `name` / `image` を任意の値に書き換えられる。
+   * `image` は公開アバター配信の判定と削除対象に使うため、他人の添付を公開・削除できてしまう。
+   * プロフィールの変更は Server Action 経由に限る。
+   */
+  disabledPaths: ['/update-user'],
   session: {
     expiresIn: envu.server.SESSION_EXPIRES_IN,
     freshAge: envu.server.SESSION_FRESH_AGE,
@@ -342,6 +375,7 @@ export const auth = betterAuth({
       clientRegistrationDefaultResources: [MCP_RESOURCE],
     }),
     dcrPolicy,
+    twoFaAuthorizePolicy,
     genericOAuth({
       config: oauthConfigs,
     }),
@@ -353,6 +387,12 @@ export const getServerSession = async () =>
   auth.api.getSession({
     headers: await headers(),
   })
+
+/** ルートハンドラ用のセッション取得。2FA の設定が済んでいないセッションは無いものとして扱う */
+export const getActiveSession = async () => {
+  const session = await getServerSession()
+  return session && !requiresTwoFaSetup(session.user) ? session : null
+}
 
 export const redirectSignIn = (callbackURL?: string) =>
   NextResponse.redirect(makeUrl(authConfig.path.signIn, callbackURL ? { cb: callbackURL } : undefined))

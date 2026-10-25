@@ -3,13 +3,19 @@ import { createMiddleware, createSafeActionClient } from 'next-safe-action'
 import { headers } from 'next/headers'
 import z from 'zod'
 import { auth } from '../auth/auth'
+import { requiresTwoFaSetup } from '../auth/two-fa'
 import { ClientError, errInvalidSession, errPermissionDenied, SYSTEM_ERROR } from '../error'
 import { logger } from '../logger'
 
 const normalMetaSc = z.object({ actionName: z.string() })
 type NormalMetaSc = z.infer<typeof normalMetaSc>
 
-const authMetaSc = z.object({ actionName: z.string(), role: z.enum(['user', 'admin']) })
+const authMetaSc = z.object({
+  actionName: z.string(),
+  role: z.enum(['user', 'admin']),
+  /** 2FA 必須の運用でも、2FA の設定前に呼べる Action(サインイン画面で使うもの) */
+  allowWithoutTwoFa: z.boolean().optional(),
+})
 type AuthMetaSc = z.infer<typeof authMetaSc>
 
 type ServerError = { name?: string; errorType: string; message: string }
@@ -78,7 +84,7 @@ const authMiddleware = createMiddleware<{
   ctx: object
   metadata: AuthMetaSc
 }>().define(async ({ next, metadata }) => {
-  const { role } = metadata
+  const { role, allowWithoutTwoFa } = metadata
 
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -86,6 +92,11 @@ const authMiddleware = createMiddleware<{
 
   // サインイン状態チェック
   if (!session?.user) {
+    throw errInvalidSession()
+  }
+
+  // Server Action は Proxy の 2FA 誘導を通らないので、ここでも止める
+  if (!allowWithoutTwoFa && requiresTwoFaSetup(session.user)) {
     throw errInvalidSession()
   }
 

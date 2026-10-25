@@ -6,6 +6,7 @@
  */
 
 import {
+  COMMAND_MAX_LINE_CHARS,
   COMMAND_SENTINEL_MARK,
   COMMAND_START_SENTINEL,
   type CommandDef,
@@ -245,6 +246,33 @@ describe('executeCommandRun', () => {
     await promise
 
     expect(logMock.pushed).toEqual([{ stream: 'stdout', text: 'no newline at end\n' }])
+  })
+
+  it('改行の無い出力も一定量で区切って流す(持ち越しを際限なく伸ばさない)', async () => {
+    const fake = createFakeSsh()
+    const promise = run(fake)
+    const block = 'x'.repeat(COMMAND_MAX_LINE_CHARS / 2)
+    fake.stdout.write(block)
+    fake.stdout.write(block)
+    fake.stdout.write('tail')
+    await fake.finish(0)
+    await promise
+
+    // 区切った断片に改行は足さない(つなげると元の出力に戻る)
+    expect(logMock.pushed).toEqual([
+      { stream: 'stdout', text: `${block}${block}` },
+      { stream: 'stdout', text: 'tail\n' },
+    ])
+  })
+
+  it('改行の無い大きなチャンクは上限ごとに分けて流し、余りだけを持ち越す', async () => {
+    const fake = createFakeSsh()
+    const promise = run(fake)
+    fake.stdout.write('y'.repeat(COMMAND_MAX_LINE_CHARS * 2 + 10))
+    await fake.finish(0)
+    await promise
+
+    expect(logMock.pushed.map(({ text }) => text.length)).toEqual([COMMAND_MAX_LINE_CHARS, COMMAND_MAX_LINE_CHARS, 11])
   })
 
   it('接続先を用意できなければ実行せず失敗として閉じる', async () => {

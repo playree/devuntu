@@ -1,4 +1,4 @@
-import { getServerSession } from '@/lib/auth/auth'
+import { getActiveSession } from '@/lib/auth/auth'
 import { isAdminActor } from '@/lib/board/board-access'
 import { parseCursor, sseHeaders } from '@/lib/command/command-api'
 import { getCommandRun } from '@/lib/command/command-run'
@@ -21,7 +21,7 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 export const GET = async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
-  const session = await getServerSession()
+  const session = await getActiveSession()
   if (!session?.user) {
     return new Response(null, { status: 401, headers: { 'Cache-Control': 'no-store' } })
   }

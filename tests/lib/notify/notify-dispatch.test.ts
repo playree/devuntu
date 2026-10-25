@@ -26,7 +26,7 @@ import {
 } from '@/lib/notify/notify-queue'
 import { resolveNotifyTargets } from '@/lib/notify/notify-recipient'
 import { deliverSlack } from '@/lib/notify/notify-slack'
-import { deliverWebPush } from '@/lib/notify/notify-webpush'
+import { deliverWebPush, dropStaleWebPushSubscriptions } from '@/lib/notify/notify-webpush'
 import { prisma } from '@/lib/prisma'
 import { consumeRateLimit, remainingRateLimit } from '@/lib/rate-limit'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -51,7 +51,7 @@ vi.mock('@/lib/notify/notify-fanout', () => ({ buildDeliveries: vi.fn(), createD
 vi.mock('@/lib/notify/notify-content', () => ({ buildNotifyContent: vi.fn() }))
 vi.mock('@/lib/notify/notify-email', () => ({ deliverEmail: vi.fn(), findMailRecipient: vi.fn() }))
 vi.mock('@/lib/notify/notify-slack', () => ({ deliverSlack: vi.fn() }))
-vi.mock('@/lib/notify/notify-webpush', () => ({ deliverWebPush: vi.fn() }))
+vi.mock('@/lib/notify/notify-webpush', () => ({ deliverWebPush: vi.fn(), dropStaleWebPushSubscriptions: vi.fn() }))
 vi.mock('@/lib/rate-limit', () => ({ consumeRateLimit: vi.fn(), remainingRateLimit: vi.fn() }))
 
 const now = new Date('2026-09-08T10:00:00.000Z')
@@ -401,14 +401,66 @@ describe('runNotifyDispatch: Web プッシュ', () => {
     expect(settled()).toEqual([['w1', 'unlinked']])
   })
 
-  it('鍵の不正(revoked)を掴んだら残りを未処理へ戻す', async () => {
-    claimed.webpush = [delivery({ id: 'w1', channel: 'webpush' }), delivery({ id: 'w2', channel: 'webpush' })]
+  it('別々の利用者で鍵の不正(revoked)が続いたら構成障害として残りを未処理へ戻す', async () => {
+    claimed.webpush = [
+      delivery({ id: 'w1', channel: 'webpush', userId: 'u1' }),
+      delivery({ id: 'w2', channel: 'webpush', userId: 'u2' }),
+      delivery({ id: 'w3', channel: 'webpush', userId: 'u3' }),
+    ]
+    vi.mocked(deliverWebPush).mockResolvedValue('revoked')
+
+    await runNotifyDispatch(now)
+
+    expect(deliverWebPush).toHaveBeenCalledTimes(2)
+    expect(releaseDeliveries).toHaveBeenCalledWith(['w1', 'w2'], 'revoked', expect.any(Date))
+    expect(releaseDeliveries).toHaveBeenCalledWith(['w3'], 'revoked')
+    expect(dropStaleWebPushSubscriptions).not.toHaveBeenCalled()
+    expect(settled()).toEqual([])
+  })
+
+  it('1 人の利用者の鍵の不正では止めず、他の利用者へ届いたらその利用者の購読を消す', async () => {
+    claimed.webpush = [
+      delivery({ id: 'w1', channel: 'webpush', userId: 'u1' }),
+      delivery({ id: 'w2', channel: 'webpush', userId: 'u2' }),
+    ]
     vi.mocked(deliverWebPush).mockResolvedValueOnce('revoked')
 
     await runNotifyDispatch(now)
 
-    expect(deliverWebPush).toHaveBeenCalledTimes(1)
-    expect(releaseDeliveries).toHaveBeenCalledWith(['w2'], 'revoked')
+    expect(deliverWebPush).toHaveBeenCalledTimes(2)
+    expect(releaseDeliveries).not.toHaveBeenCalled()
+    expect(dropStaleWebPushSubscriptions).toHaveBeenCalledWith('u1', expect.any(Date))
+    expect(settled()).toEqual([
+      ['w2', 'ok'],
+      ['w1', 'unlinked'],
+    ])
+  })
+
+  it('他の利用者へ届いた後の鍵の不正は、その場で購読を消す', async () => {
+    claimed.webpush = [
+      delivery({ id: 'w1', channel: 'webpush', userId: 'u1' }),
+      delivery({ id: 'w2', channel: 'webpush', userId: 'u2' }),
+    ]
+    vi.mocked(deliverWebPush).mockResolvedValueOnce('ok').mockResolvedValueOnce('revoked')
+
+    await runNotifyDispatch(now)
+
+    expect(dropStaleWebPushSubscriptions).toHaveBeenCalledWith('u2', expect.any(Date))
+    expect(settled()).toEqual([
+      ['w1', 'ok'],
+      ['w2', 'unlinked'],
+    ])
+  })
+
+  it('判断材料が無いまま終わった鍵の不正は、通常の失敗として再試行へ回す', async () => {
+    claimed.webpush = [delivery({ id: 'w1', channel: 'webpush', userId: 'u1' })]
+    vi.mocked(deliverWebPush).mockResolvedValueOnce('revoked')
+
+    await runNotifyDispatch(now)
+
+    expect(releaseDeliveries).not.toHaveBeenCalled()
+    expect(dropStaleWebPushSubscriptions).not.toHaveBeenCalled()
+    expect(settled()).toEqual([['w1', 'failed']])
   })
 
   it('送信で例外が出た行は failed にする', async () => {

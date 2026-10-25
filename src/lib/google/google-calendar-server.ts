@@ -16,6 +16,9 @@ import type { BusySlot } from './google-calendar'
 
 const FREEBUSY_ENDPOINT = 'https://www.googleapis.com/calendar/v3/freeBusy'
 
+/** 未認証の公開カレンダーから呼ばれるので、Google の応答待ちでリクエストを長く握らない */
+const FREEBUSY_TIMEOUT_MS = 5_000
+
 type FreeBusyResponse = {
   calendars?: Record<string, { busy?: { start?: string; end?: string }[] }>
 }
@@ -84,6 +87,7 @@ export const getGoogleFreeBusy = async ({
         timeZone,
         items: [{ id: 'primary' }],
       }),
+      signal: AbortSignal.timeout(FREEBUSY_TIMEOUT_MS),
     })
     if (!res.ok) {
       const body = await res.text().catch(() => '')

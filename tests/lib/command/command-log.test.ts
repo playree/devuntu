@@ -21,7 +21,7 @@ vi.mock('@/lib/prisma', async () =>
   }),
 )
 
-const { createLogBuffer, sanitizeLogText, touchRun } = await import('@/lib/command/command-log')
+const { createLogBuffer, sanitizeLogText, touchRun, truncateUtf8 } = await import('@/lib/command/command-log')
 
 /** 所有権あり(updateMany が1行更新した)として振る舞わせる */
 const grantOwnership = (lastSeq = 10) => {
@@ -48,6 +48,26 @@ describe('sanitizeLogText', () => {
 
   it('正しいサロゲートペアはそのまま残す', () => {
     expect(sanitizeLogText('絵文字🚀です')).toBe('絵文字🚀です')
+  })
+})
+
+describe('truncateUtf8', () => {
+  it('上限に収まればそのまま返す', () => {
+    expect(truncateUtf8('abc', 3)).toBe('abc')
+  })
+
+  it('マルチバイト文字の途中では切らない', () => {
+    // 「あ」は 3 バイト。4 バイトに収めると 2 文字目は入らない
+    expect(truncateUtf8('ああ', 4)).toBe('あ')
+    expect(truncateUtf8('😀😀', 6)).toBe('😀')
+  })
+
+  it('元の文字列にある置換文字(U+FFFD)は残す', () => {
+    expect(truncateUtf8('\uFFFDx', 3)).toBe('\uFFFD')
+  })
+
+  it('上限が 0 以下なら空文字', () => {
+    expect(truncateUtf8('abc', 0)).toBe('')
   })
 })
 
@@ -116,6 +136,19 @@ describe('createLogBuffer', () => {
     }
     expect(buffer.truncated()).toBe(true)
     expect(buffer.received()).toBeGreaterThan(COMMAND_MAX_OUTPUT_BYTES)
+  })
+
+  it('1 回で上限を跨ぐ出力は、上限ちょうどまで残して打ち切る', async () => {
+    const buffer = createLogBuffer('run-1', 'worker-1')
+    buffer.push('stdout', 'x'.repeat(COMMAND_MAX_OUTPUT_BYTES + 1024))
+    await buffer.flush()
+
+    const arg = vi.mocked(prisma.commandRunChunk.createMany).mock.calls[0][0] as {
+      data: { stream: string; text: string }[]
+    }
+    const saved = arg.data.filter((chunk) => chunk.stream === 'stdout')
+    expect(saved.map((chunk) => chunk.text.length)).toEqual([COMMAND_MAX_OUTPUT_BYTES])
+    expect(buffer.truncated()).toBe(true)
   })
 
   it('打ち切りの説明を1度だけ入れる', async () => {

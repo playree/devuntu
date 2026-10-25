@@ -1,6 +1,11 @@
 import { assertBoardAccess } from '@/lib/board/board-access'
 import { kanbanDoneSince, kanbanLaneWhere } from '@/lib/board/kanban'
-import { assertReplyTarget, moveTicketToLane, reassignContentAttachments } from '@/lib/board/ticket-write'
+import {
+  assertReplyTarget,
+  lockKanbanLane,
+  moveTicketToLane,
+  reassignContentAttachments,
+} from '@/lib/board/ticket-write'
 import { ClientError } from '@/lib/error'
 import { toUploadUrl } from '@/lib/storage/upload'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -45,7 +50,14 @@ describe('reassignContentAttachments', () => {
   const content = `本文\n![shot](${toUploadUrl(KEY)})`
 
   const fakeAttachmentTx = (
-    options: { candidates?: { key: string }[]; ticket?: object; comment?: object; template?: object } = {},
+    options: {
+      candidates?: { key: string }[]
+      ticket?: object
+      comment?: object
+      template?: object
+      note?: object
+      revision?: object
+    } = {},
   ) => {
     const tx = {
       attachment: {
@@ -55,6 +67,8 @@ describe('reassignContentAttachments', () => {
       ticket: { findFirst: vi.fn().mockResolvedValue(options.ticket ?? null) },
       ticketComment: { findFirst: vi.fn().mockResolvedValue(options.comment ?? null) },
       ticketTemplate: { findFirst: vi.fn().mockResolvedValue(options.template ?? null) },
+      boardNote: { findFirst: vi.fn().mockResolvedValue(options.note ?? null) },
+      boardNoteRevision: { findFirst: vi.fn().mockResolvedValue(options.revision ?? null) },
     }
     return tx
   }
@@ -105,6 +119,16 @@ describe('reassignContentAttachments', () => {
 
   it('チケットテンプレートの本文から使われていれば付け替えない', async () => {
     const tx = fakeAttachmentTx({ template: { id: 'template-1' } })
+    await reassignContentAttachments(tx as never, content, BOARD_ID, actor)
+
+    expect(tx.attachment.updateMany).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['ボードノート', { note: { id: 'note-1' } }],
+    ['ボードノートの版', { revision: { id: 'revision-1' } }],
+  ])('%sの本文から使われていれば付け替えない', async (_name, options) => {
+    const tx = fakeAttachmentTx(options)
     await reassignContentAttachments(tx as never, content, BOARD_ID, actor)
 
     expect(tx.attachment.updateMany).not.toHaveBeenCalled()
@@ -355,5 +379,38 @@ describe('moveTicketToLane', () => {
       ['a', 0],
       ['b', 1],
     ])
+  })
+})
+
+describe('lockKanbanLane', () => {
+  const tx = (ticket: { boardId: string; status: string } | null) => ({
+    ticket: { findUnique: vi.fn().mockResolvedValue(ticket) },
+    $executeRaw: vi.fn().mockResolvedValue(0),
+  })
+
+  it('同じレーン内の並べ替えは、そのレーンだけをロックする', async () => {
+    const t = tx({ boardId: 'board-1', status: 'done' })
+    await lockKanbanLane(t as never, 't1', 'done')
+
+    expect(t.$executeRaw).toHaveBeenCalledTimes(1)
+    expect(t.$executeRaw.mock.calls[0][1]).toBe('kanban-lane:board-1:done')
+  })
+
+  it('移動元と移動先のレーンを、移動の向きに関わらずキー順にロックする', async () => {
+    const forward = tx({ boardId: 'board-1', status: 'todo' })
+    await lockKanbanLane(forward as never, 't1', 'doing')
+    const backward = tx({ boardId: 'board-1', status: 'doing' })
+    await lockKanbanLane(backward as never, 't2', 'todo')
+
+    const keys = (t: ReturnType<typeof tx>) => t.$executeRaw.mock.calls.map((call) => call[1])
+    expect(keys(forward)).toEqual(['kanban-lane:board-1:doing', 'kanban-lane:board-1:todo'])
+    expect(keys(backward)).toEqual(keys(forward))
+  })
+
+  it('存在しないチケットはロックせず、後続の権限判定に任せる', async () => {
+    const t = tx(null)
+    await lockKanbanLane(t as never, 't1', 'done')
+
+    expect(t.$executeRaw).not.toHaveBeenCalled()
   })
 })

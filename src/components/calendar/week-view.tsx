@@ -1,6 +1,6 @@
 'use client'
 
-import { toZone, WEEKDAY_LABELS } from '@/lib/day'
+import { addDaysDateOnly, clipToZonedDay, toZone, WEEKDAY_LABELS, zonedDayBounds, zonedMinutes } from '@/lib/day'
 import type { BusySlot } from '@/lib/google/google-calendar'
 import { useLocale } from '@/locale/client'
 import { cn } from '@heroui/react'
@@ -48,34 +48,37 @@ export const WeekView: FC<{ weekStartISO: string; busy: BusySlot[]; timezone: st
 
   // 各日ごとの列情報(日付・当日判定・busyブロック位置)を算出
   const days = useMemo(() => {
+    const firstDate = weekStart.format('YYYY-MM-DD')
     return Array.from({ length: 7 }, (_, di) => {
-      const dayStart = weekStart.add(di, 'day')
-      const dayStartMs = dayStart.valueOf()
-      const dayEndMs = dayStart.add(1, 'day').valueOf()
-      const dayMs = dayEndMs - dayStartMs
+      // 日の境界は暦日から解決する(dayjs の add(n, 'day') はオフセットを固定したまま 24 時間ずつ進むため、DST の切替日にずれる)
+      const date = addDaysDateOnly(firstDate, di)
+      const dayStart = zonedMinutes(date, 0, timezone)
+      const bounds = zonedDayBounds(date, timezone)
 
       const blocks: DayBlock[] = []
       for (const slot of busy) {
-        const bs = new Date(slot.start).getTime()
-        const be = new Date(slot.end).getTime()
-        const s = Math.max(bs, dayStartMs)
-        const e = Math.min(be, dayEndMs)
-        if (e > s) {
+        // DST の切替をまたぐ区間は 2 つに分かれる
+        for (const range of clipToZonedDay(
+          bounds,
+          new Date(slot.start).getTime(),
+          new Date(slot.end).getTime(),
+          timezone,
+        )) {
           blocks.push({
-            top: ((s - dayStartMs) / dayMs) * TOTAL_HEIGHT,
-            height: ((e - s) / dayMs) * TOTAL_HEIGHT,
+            top: (range.startMin / (24 * 60)) * TOTAL_HEIGHT,
+            height: ((range.endMin - range.startMin) / (24 * 60)) * TOTAL_HEIGHT,
           })
         }
       }
 
       return {
-        key: dayStart.format('YYYY-MM-DD'),
+        key: date,
         weekdayIndex: dayStart.day(),
         dateLabel: dayStart.format('M/D'),
         blocks,
       }
     })
-  }, [weekStart, busy])
+  }, [weekStart, busy, timezone])
 
   useEffect(() => {
     // 初期スクロール位置: 当週に今日が含まれれば現在時刻を中央に、なければ 8:00 付近を表示
