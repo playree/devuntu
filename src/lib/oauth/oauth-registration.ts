@@ -51,6 +51,21 @@ export const isLocalRedirectUri = (uri: string): boolean => {
 }
 
 /**
+ * 自分自身を指すホスト名か。`hostname` は URL が正規化した値(`127.1` → `127.0.0.1` など)を受け取る。
+ * IPv4 の `127.0.0.0/8`、IPv6 の `::1` と IPv4 射影アドレス、`localhost` とそのサブドメイン(RFC 6761)を含む。
+ */
+const isLoopbackHostname = (hostname: string): boolean => {
+  const host = hostname.replace(/\.$/, '')
+  return (
+    /^127\.\d+\.\d+\.\d+$/.test(host) ||
+    host === '[::1]' ||
+    /^\[::ffff:7f[0-9a-f]{2}:[0-9a-f]{1,4}\]$/.test(host) ||
+    host === 'localhost' ||
+    host.endsWith('.localhost')
+  )
+}
+
+/**
  * `OIDC_DCR_ALLOWED_REDIRECT_URIS` に書ける URI か。
  * 登録時は `native` として better-auth に検証させるため、そこで通らない形(http・ループバックの https・
  * 資格情報やフラグメント付き)は設定の時点で弾く。
@@ -64,7 +79,7 @@ export const isAllowableRedirectUri = (uri: string): boolean => {
   }
   return (
     url.protocol === 'https:' &&
-    !LOOPBACK_HOSTNAMES.has(url.hostname) &&
+    !isLoopbackHostname(url.hostname) &&
     !url.username &&
     !url.password &&
     !uri.includes('#')

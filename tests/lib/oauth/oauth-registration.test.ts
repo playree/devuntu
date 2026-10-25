@@ -109,7 +109,13 @@ describe('isAllowableRedirectUri', () => {
   it.each([
     'http://mcp.example/cb',
     'https://localhost/cb',
+    'https://localhost./cb',
+    'https://app.localhost/cb',
     'https://127.0.0.1/cb',
+    'https://127.0.0.2/cb',
+    'https://127.1/cb',
+    'https://[::1]/cb',
+    'https://[::ffff:127.0.0.1]/cb',
     'https://user:pass@mcp.example/cb',
     'https://mcp.example/cb#frag',
     'com.example.app:/oauth',
