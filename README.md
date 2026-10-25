@@ -151,17 +151,17 @@ Docker Compose で3つのサービスを起動します(`compose.yaml`)。
 
 いずれも任意です。「前提」の設定を済ませると有効になり、Google と Slack はさらに管理者が `/admin/settings` で有効化します。
 
-| 連携           | 前提                                                             | 有効にすると                                                           |
-| -------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| メール         | `MAIL_SEND` / `MAIL_FROM`                                        | メールOTPでのサインインとメール通知                                    |
-| Google         | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                      | Googleサインインとカレンダー機能                                       |
-| Slack          | `SLACK_*` 一式                                                   | Slack DM 通知とチケットURLの展開                                       |
-| Webプッシュ    | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`                         | ブラウザ / スマートフォンへのプッシュ通知                              |
-| GitHub         | 不要(ボード設定で対応付けごとにシークレットを発行)               | PR の状態・CI の反映、マージでの自動完了、エージェントへの自動差し戻し |
-| GitLab         | `GITLAB_URLS`                                                    | MR の状態・CI の反映、マージでの自動完了、エージェントへの自動差し戻し |
-| MCP            | 不要(ブラウザでの認可も使うなら `OIDC_DCR_ENABLED=true`)         | MCPクライアントからの接続                                              |
-| AIエージェント | `/admin/agents` でのエージェント作成とトークン発行               | エージェントによるチケットの自動処理                                   |
-| リモート実行   | `COMMAND_EXEC_ENABLED=true` と定義ファイル / SSH鍵 / known_hosts | 画面からリモートサーバーでの定義済み処理の実行                         |
+| 連携           | 前提                                                                                                           | 有効にすると                                                           |
+| -------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| メール         | `MAIL_SEND` / `MAIL_FROM`                                                                                      | メールOTPでのサインインとメール通知                                    |
+| Google         | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                                                                    | Googleサインインとカレンダー機能                                       |
+| Slack          | `SLACK_*` 一式                                                                                                 | Slack DM 通知とチケットURLの展開                                       |
+| Webプッシュ    | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`                                                                       | ブラウザ / スマートフォンへのプッシュ通知                              |
+| GitHub         | 不要(ボード設定で対応付けごとにシークレットを発行)                                                             | PR の状態・CI の反映、マージでの自動完了、エージェントへの自動差し戻し |
+| GitLab         | `GITLAB_URLS`                                                                                                  | MR の状態・CI の反映、マージでの自動完了、エージェントへの自動差し戻し |
+| MCP            | 不要(ブラウザでの認可も使うなら `OIDC_DCR_ENABLED=true`。claude.ai からは `OIDC_DCR_ALLOWED_REDIRECT_URIS` も) | MCPクライアントからの接続                                              |
+| AIエージェント | `/admin/agents` でのエージェント作成とトークン発行                                                             | エージェントによるチケットの自動処理                                   |
+| リモート実行   | `COMMAND_EXEC_ENABLED=true` と定義ファイル / SSH鍵 / known_hosts                                               | 画面からリモートサーバーでの定義済み処理の実行                         |
 
 ## 運用
 

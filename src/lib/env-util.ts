@@ -1,6 +1,7 @@
 import { isValidTimezone } from './day'
 import { errSystemError } from './error'
 import { normalizeGitlabBaseUrl } from './gitlab/gitlab'
+import { isAllowableRedirectUri } from './oauth/oauth-registration'
 
 function getEnv<T extends string = string>(key: string, opts: { required: true }): T
 function getEnv<T extends string = string>(key: string, opts: { default: T }): T
@@ -196,13 +197,20 @@ const server = {
    * claude.ai のようにサーバー側で認可コードを受け取る MCP クライアント向け
    */
   get OIDC_DCR_ALLOWED_REDIRECT_URIS() {
-    const uris = getEnv('OIDC_DCR_ALLOWED_REDIRECT_URIS')
-    return uris
-      ? uris
-          .split(',')
-          .map((uri) => uri.trim())
-          .filter(Boolean)
-      : []
+    const raw = getEnv('OIDC_DCR_ALLOWED_REDIRECT_URIS')
+    if (!raw) {
+      return []
+    }
+    return raw
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean)
+      .map((value) => {
+        if (!isAllowableRedirectUri(value)) {
+          throw errSystemError(`OIDC_DCR_ALLOWED_REDIRECT_URIS has an invalid URI: ${value}`)
+        }
+        return value
+      })
   },
   get MAIN_DEVUNTU_URL() {
     return getEnv('MAIN_DEVUNTU_URL')

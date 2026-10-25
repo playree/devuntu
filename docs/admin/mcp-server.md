@@ -146,6 +146,9 @@ OIDC_DCR_ALLOWED_REDIRECT_URIS=https://claude.ai/api/mcp/auth_callback,https://c
 
 - `claude.com` は Anthropic が将来の戻り先として案内しているもの。両方を入れておく
 - ここに書いた URI は、だれでも DCR で戻り先として登録できるようになる。信頼できるサービスの URI だけを入れる
+- 書けるのはループバック以外の `https` の URI だけ。それ以外が混ざると許可リスト全体が無効になり、登録時にログへ
+  `OIDC_DCR_ALLOWED_REDIRECT_URIS is invalid` が出る
+- 判定は登録の時点だけ。後から URI を外しても、登録済みのクライアントはそのまま使える。止めるには「動的登録」セクションで該当する行を無効化・削除する
 - 利用者側の手順は [ai.md](../guide/ai.md#claudeai-から登録する) を参照
 
 ## 詰まったときに見る場所

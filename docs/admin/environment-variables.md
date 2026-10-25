@@ -115,7 +115,8 @@
 - `SESSION_FRESH_AGE` は、パスワード変更など重要な操作に「サインインからの経過時間」の上限を課す
 - `OIDC_DCR_ALLOWED_REDIRECT_URIS` は、claude.ai(Web / デスクトップ)のように認可コードをサーバーで受け取る MCP クライアント向け。
   未設定ではループバック(`http://localhost` など)と private-use スキームの戻り先だけを受け付ける。
-  claude.ai を使うなら `https://claude.ai/api/mcp/auth_callback,https://claude.com/api/mcp/auth_callback` を設定する([mcp-server.md](mcp-server.md#claudeai-から接続させる))
+  claude.ai を使うなら `https://claude.ai/api/mcp/auth_callback,https://claude.com/api/mcp/auth_callback` を設定する([mcp-server.md](mcp-server.md#claudeai-から接続させる))。
+  ループバック以外の `https` の URI だけを書ける
 - `GOOGLE_ALLOWED_DOMAINS` は **Googleサインインを使う場合は最低1件必要**(未設定だと全ドメインが拒否される)
 
 外部サービスごとの設定手順は [installation.md](installation.md#外部サービス連携任意) を参照。

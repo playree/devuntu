@@ -8,7 +8,7 @@
  * 登録できない。claude.ai のようにサーバー側で戻りを受ける MCP クライアントは、管理者が
  * `OIDC_DCR_ALLOWED_REDIRECT_URIS` で戻り先を完全一致で列挙したときだけ受け付ける。
  *
- * 判定は引数だけで決まる純粋関数にして `tests/lib/oauth-registration.test.ts` の対象にする
+ * 判定は引数だけで決まる純粋関数にして `tests/lib/oauth/oauth-registration.test.ts` の対象にする
  * (env / prisma / logger には依存させない)。
  */
 
@@ -51,13 +51,34 @@ export const isLocalRedirectUri = (uri: string): boolean => {
 }
 
 /**
+ * `OIDC_DCR_ALLOWED_REDIRECT_URIS` に書ける URI か。
+ * 登録時は `native` として better-auth に検証させるため、そこで通らない形(http・ループバックの https・
+ * 資格情報やフラグメント付き)は設定の時点で弾く。
+ */
+export const isAllowableRedirectUri = (uri: string): boolean => {
+  let url: URL
+  try {
+    url = new URL(uri)
+  } catch {
+    return false
+  }
+  return (
+    url.protocol === 'https:' &&
+    !LOOPBACK_HOSTNAMES.has(url.hostname) &&
+    !url.username &&
+    !url.password &&
+    !uri.includes('#')
+  )
+}
+
+/**
  * 登録要求のリダイレクトURIをすべて受け付けられるか。
  * ローカルに閉じたものか、`allowedUris`(管理者が信頼した戻り先)に完全一致するものだけを通す。
  * 1つでも外部へ戻るものが混ざっていれば登録ごと拒否する。
  * `authorization_code` には redirect_uris が必須なので、空・未指定も通さない。
+ * 本文のスキーマ検証より前に呼ばれるため、配列でない値もここで拒否する。
  */
-export const isAllowedRegistration = (
-  redirectUris: string[] | undefined,
-  allowedUris: readonly string[] = [],
-): boolean =>
-  !!redirectUris?.length && redirectUris.every((uri) => isLocalRedirectUri(uri) || allowedUris.includes(uri))
+export const isAllowedRegistration = (redirectUris: unknown, allowedUris: readonly string[] = []): boolean =>
+  Array.isArray(redirectUris) &&
+  redirectUris.length > 0 &&
+  redirectUris.every((uri) => typeof uri === 'string' && (isLocalRedirectUri(uri) || allowedUris.includes(uri)))
