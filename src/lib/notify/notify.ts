@@ -141,11 +141,14 @@ const RE_LINK_WITH_URL = /\[([^\]]*)]\(([^)\s]*)[^)]*\)/g
  */
 const RE_AUTOLINK = /\\?<(https?:\/\/[^\s>]+?)\\?>/g
 
-/** アナウンス用。本文に直接書いた URL。ASCII の範囲だけを拾い、続く日本語を巻き込まない */
-const RE_BARE_URL = /https?:\/\/[\w\-.~:/?#[\]@!$&'()*+,;=%\\]+/g
+/**
+ * アナウンス用。本文に直接書いた URL。ASCII の範囲だけを拾い、続く日本語を巻き込まない。
+ * 文字参照(段落末尾の `&#x20;` など)の手前で止め、参照は本文側で実体へ戻す
+ */
+const RE_BARE_URL = /https?:\/\/(?:(?!&(?:#[Xx][0-9A-Fa-f]+|#\d+|[a-zA-Z]+);)[\w\-.~:/?#[\]@!$&'()*+,;=%\\])+/g
 
 /** URL の末尾に付いた句読点・強調の記号。URL の一部ではなく文や記法の側とみなす */
-const RE_URL_TAIL = /[.,:;!?'*_~\\\]]+$/
+const URL_TAIL_CHARS = new Set(".,:;!?'*_~\\]")
 
 /** アナウンス用。行頭の見出し / 引用のマーカー(リストは形を残すので分ける) */
 const RE_BLOCK_MARKER = /^[ \t]{0,3}(?:#{1,6}[ \t]+|>[ \t]?)/gm
@@ -156,11 +159,17 @@ const RE_BULLET_MARKER = /^([ \t]*)[-*+][ \t]+/gm
 /** アナウンス用。区切り線(`---` / `***` / `___`)の行 */
 const RE_THEMATIC_BREAK = /^[ \t]*([-*_])(?:[ \t]*\1){2,}[ \t]*$/gm
 
-/** アナウンス用。コードブロック(囲みが閉じていなければ末尾まで)。中身は告知の本文として残す */
-const RE_CODE_BLOCK = /^[ \t]*(`{3,}|~{3,})[^\n]*(?:\n|$)([\s\S]*?)(?:^[ \t]*\1[`~]*[ \t]*$|(?![\s\S]))/gm
+/**
+ * アナウンス用。コードブロック(囲みが閉じていなければ末尾まで)。中身は告知の本文として残す。
+ * バッククォートの囲みは、CommonMark と同じく情報文字列にバッククォートを含めない(「```js```」はインラインコード)
+ */
+const RE_CODE_BLOCK = /^[ \t]*(`{3,}(?=[^`\n]*$)|~{3,})[^\n]*(?:\n|$)([\s\S]*?)(?:^[ \t]*\1[`~]*[ \t]*$|(?![\s\S]))/gm
 
-/** アナウンス用。インラインコード。開始と終了のバッククォートの数が揃うものだけを拾う */
-const RE_CODE_SPAN = /(?<!`)(`+)(?!`)([^\n]+?)(?<!`)\1(?!`)/g
+/**
+ * アナウンス用。インラインコード。開始と終了のバッククォートの数が揃うものだけを拾う。
+ * エスケープされたバッククォート(`\``)は記号として書かれた文字なので、開始にしない
+ */
+const RE_CODE_SPAN = /(?<![`\\])(`+)(?!`)([^\n]+?)(?<!`)\1(?!`)/g
 
 /**
  * 強調・打ち消しの記号。`_` 単体は snake_case を壊すので対象にしない。
@@ -253,19 +262,36 @@ const RE_KEPT_TOKEN = /\u0000(\d+)\u0000/g
  * 末尾の句読点や強調の記号は外し、閉じ括弧は URL 内の開き括弧と対にならない分だけ外す(`(https://...)` の括弧)。
  */
 const splitBareUrl = (matched: string): { url: string; rest: string } => {
-  let url = matched.replace(RE_URL_TAIL, '')
-  while (url.endsWith(')') && url.split('(').length < url.split(')').length) {
-    url = url.slice(0, -1).replace(RE_URL_TAIL, '')
+  // 末尾から 1 文字ずつ見る(閉じ括弧が大量に続く本文でも線形で終わらせる)
+  let unpaired = matched.split(')').length - matched.split('(').length
+  let end = matched.length
+  while (end > 0) {
+    const char = matched[end - 1]
+    if (char === ')' && unpaired > 0) {
+      unpaired--
+    } else if (!URL_TAIL_CHARS.has(char)) {
+      break
+    }
+    end--
   }
-  return { url, rest: matched.slice(url.length) }
+  return { url: matched.slice(0, end), rest: matched.slice(end) }
 }
+
+/**
+ * Slack の mrkdwn で `*` `_` `~` が書式として読まれないよう、コードを行ごとに `` ` `` で囲む。
+ * Slack には二重のバッククォートが無いので、`` ` `` を含む行は囲まずに残す
+ */
+const slackCode = (code: string): string =>
+  code.replace(/^([ \t]*)(\S.*?)[ \t]*$/gm, (matched, indent: string, body: string) =>
+    body.includes('`') ? matched : `${indent}\`${body}\``,
+  )
 
 /**
  * アナウンスの本文を Slack へ載せる形にする。
  *
  * {@link commentExcerpt} と同じく記法を落とすが、告知の中身(リリースの要点など)を読めるよう
  * 改行・箇条書き・リンクの URL は残す。空行の連続は 1 つに畳む。
- * コードと URL は記法の除去がかからないよう退避し、中身をそのまま戻す。
+ * コードと URL は記法の除去がかからないよう退避し、中身をそのまま戻す(コードは Slack のコードとして囲む)。
  */
 export const announcementText = (
   content: string,
@@ -276,7 +302,7 @@ export const announcementText = (
   const kept: string[] = []
   const keep = (text: string) => keptToken(kept.push(text) - 1)
   // コードの中のメンション記法もメールアドレスのまま出さない
-  const keepCode = (code: string) => keep(replaceMentions(code, mentionNames))
+  const keepCode = (code: string) => keep(slackCode(replaceMentions(code, mentionNames)))
   // リンクはラベルと URL を残す(Slack が URL を自動でリンクにする)。相対パスは外から開けないのでラベルだけにする
   const linkWithUrl = (_matched: string, label: string, url: string): string => {
     if (!/^https?:\/\//.test(url)) {
@@ -295,8 +321,8 @@ export const announcementText = (
     .replace(RE_CODE_SPAN, (_matched, _ticks, code: string) =>
       keepCode(/^ .*[^ ].* $/.test(code) ? code.slice(1, -1) : code),
     )
-    // 対になっていないバッククォート
-    .replace(/`+/g, '')
+    // 対になっていないバッククォート(エスケープされたものは後段で記号として戻す)
+    .replace(/(?<!\\)`+/g, '')
 
   // メンションを先に外す。`]` を残したままだとリンク記法として拾われうる
   const text = replaceMentions(codeKept, mentionNames)

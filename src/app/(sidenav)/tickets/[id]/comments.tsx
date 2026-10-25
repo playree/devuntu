@@ -151,8 +151,8 @@ export const TicketComments: FC<{
       } else if (announced) {
         notify.success(t('msg_announced'))
       } else {
-        // Slack へ流れない(ボードの通知先が無い・送信が制限された)ことを、送れたと誤解させない
-        notify.warn(t('msg_announcement_recorded_only'))
+        // Slack へ流れなかったことを、送れたと誤解させない(Slack を使わない環境もあるので警告にはしない)
+        notify.info(t('msg_announcement_recorded_only'))
       }
       setDraft('')
       setCommentType('none')

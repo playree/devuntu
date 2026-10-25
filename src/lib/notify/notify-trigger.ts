@@ -361,9 +361,13 @@ const enqueueAnnounced = async (
   tx: Prisma.TransactionClient,
 ): Promise<boolean> => {
   const { actorId, ticket, comment } = param
+  // 流れる先が無ければ、本文を組み立てる(メンバーを引く)前にやめる
+  if (!(await isChannelNotifyEnabled(ticket.boardId, 'announcement', tx))) {
+    return false
+  }
   const excerpt = announcementText(comment.content, await resolveMentionNames(comment.content, ticket.boardId, tx))
   // 記法を落とした結果が空なら告知する中身が無い
-  if (!excerpt || !(await isChannelNotifyEnabled(ticket.boardId, 'announcement', tx))) {
+  if (!excerpt) {
     return false
   }
 

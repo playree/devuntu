@@ -659,7 +659,7 @@ Please copy and use the connection information above.
     'Totals this month of the tokens and cost reported by the CLI. The month switches at the reset time on the 1st (in the configured time zone). Runs whose CLI does not report cost (Codex CLI) are not included in the cost.',
   msg_announced: 'Posted the announcement. It will also be sent to the Slack channel.',
   msg_announcement_recorded_only:
-    'Recorded the announcement on the ticket. It was not sent to the Slack channel (the board has no channel to notify, or sending was throttled).',
+    'Recorded the announcement on the ticket. It was not sent to the Slack channel (no channel is set up, sending was throttled, or the body has only images).',
   msg_archive_board: 'Archiving hides the board from the default board list. Tickets are kept.',
   msg_avatar_desc:
     'Your avatar is copied from the sign-in provider. Setting a custom image stops it from being copied again.',

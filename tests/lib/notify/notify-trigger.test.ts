@@ -322,7 +322,7 @@ describe('アナウンス: チャネル通知だけのイベント', () => {
       comment: { id: 'comment-1', content: '`@[foo@example.com]` と @[bar@example.com]', type: 'announcement' },
       addedMentionUserIds: [],
     })
-    expect(enqueued('announcement')?.payload).toMatchObject({ excerpt: '@テストユーザー と @bar@example.com' })
+    expect(enqueued('announcement')?.payload).toMatchObject({ excerpt: '`@テストユーザー` と @bar@example.com' })
   })
 
   it('投入したら true を返す(アナウンス以外は false)', async () => {
@@ -344,12 +344,14 @@ describe('アナウンス: チャネル通知だけのイベント', () => {
       await enqueueTicketCommented({
         actorId: ACTOR,
         ticket,
-        comment: { id: 'comment-1', content: 'リリースしました', type: 'announcement' },
+        comment: { id: 'comment-1', content: '@[foo@example.com] リリースしました', type: 'announcement' },
         addedMentionUserIds: [],
       }),
     ).toBe(false)
     expect(isChannelNotifyEnabled).toHaveBeenCalledWith(ticket.boardId, 'announcement', expect.anything())
     expect(events()).not.toContain('announcement')
+    // 本文を組み立てる前にやめる
+    expect(getBoardMemberUsers).not.toHaveBeenCalled()
   })
 
   it('流量制限で捨てられたら false を返す', async () => {
