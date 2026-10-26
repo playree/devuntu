@@ -85,6 +85,7 @@ claude mcp add --scope user --transport http devuntu <Devuntu の URL>/api/mcp
 登録後、devuntu のツールを最初に使ったときにブラウザが開く。サインインして同意すると、以降は自動的に継続する
 (ブラウザを開けないサーバー上では `claude mcp login --no-browser devuntu`)。
 
+- サインインから時間が経っている(既定24時間)と、接続の途中でもう一度サインインを求められる。サインインし直すとそのまま続く
 - 許可の取り消しは `/account` の「許可済みアプリ」から行う
 - 登録名はトークンの場合と同じ `devuntu`。どちらか一方で登録する
 - 登録状況は `claude mcp list`、削除は `claude mcp remove devuntu`

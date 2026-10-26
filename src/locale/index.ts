@@ -732,6 +732,7 @@ export type LocaleItemBase =
   | 'msg_not_allowed_domain_in_google'
   | 'msg_notify_email_digest'
   | 'msg_notify_slack_unavailable'
+  | 'msg_oauth_re_auth'
   | 'msg_otp_sent'
   | 'msg_owner_required'
   | 'msg_passkey_failed'

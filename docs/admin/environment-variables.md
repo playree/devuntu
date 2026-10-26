@@ -112,7 +112,8 @@
 - `DISABLE_PASSWORD_AUTH=false`(パスワード認証あり)では、メールOTPの API(サインイン・パスワード再設定・メールアドレスの確認など)をすべて塞ぐ。
   メールボックスだけでパスワード + 2要素認証を迂回できてしまうため。サインインはパスワード(+ 2要素認証)・パスキー・
   外部サービス連携のいずれかで行う。2要素認証のコードのメール送信はこれとは別の経路で、引き続き使える
-- `SESSION_FRESH_AGE` は、パスワード変更など重要な操作に「サインインからの経過時間」の上限を課す
+- `SESSION_FRESH_AGE` は、パスワード変更など重要な操作に「サインインからの経過時間」の上限を課す。
+  MCP トークンの発行と、OAuth でリフレッシュトークン(`offline_access`)を求める認可(ブラウザでの MCP 接続など)も対象
 - `OIDC_DCR_ALLOWED_REDIRECT_URIS` は、claude.ai(Web / デスクトップ)のように認可コードをサーバーで受け取る MCP クライアント向け。
   未設定ではループバック(`http://localhost` など)と private-use スキームの戻り先だけを受け付ける。
   claude.ai を使うなら `https://claude.ai/api/mcp/auth_callback,https://claude.com/api/mcp/auth_callback` を設定する([mcp-server.md](mcp-server.md#claudeai-から接続させる))。

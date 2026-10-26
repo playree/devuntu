@@ -16,11 +16,12 @@ import { getUserByEmail } from './server'
 
 export const UsernameForm: FC<{
   direction: number
+  defaultEmail?: string
   next: (email: string, nextStep: 'PASSWORD' | 'OTP') => void
-}> = ({ direction, next }) => {
+}> = ({ direction, defaultEmail, next }) => {
   const { t, fet } = useLocale()
   const searchParams = useSearchParams()
-  const reAuthUser = searchParams.get('re')
+  const reAuthUser = searchParams.get('re') ?? defaultEmail
   const {
     control,
     handleSubmit,

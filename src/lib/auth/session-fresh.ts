@@ -10,15 +10,17 @@ import { errClient } from '../error'
 import { SESSION_NOT_FRESH } from './auth-config'
 
 /**
- * ログインからの経過時間が `SESSION_FRESH_AGE` 未満であることを要求する。
+ * ログインからの経過時間が `SESSION_FRESH_AGE` 未満か。
  * `0` はチェック無効(better-auth の freshAge と同じ扱い)。
  */
-export const assertFreshSession = (session: { createdAt: Date }): void => {
+export const isFreshSession = (session: { createdAt: Date }): boolean => {
   const freshAge = envu.server.SESSION_FRESH_AGE
-  if (freshAge === 0) {
-    return
-  }
-  if (Date.now() - session.createdAt.getTime() >= freshAge * 1000) {
+  return freshAge === 0 || Date.now() - session.createdAt.getTime() < freshAge * 1000
+}
+
+/** ログインからの経過時間が `SESSION_FRESH_AGE` 未満であることを要求する */
+export const assertFreshSession = (session: { createdAt: Date }): void => {
+  if (!isFreshSession(session)) {
     throw errClient(SESSION_NOT_FRESH)
   }
 }
