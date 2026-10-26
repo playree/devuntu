@@ -14,6 +14,7 @@ import { envu } from '../env-util'
 import { CALENDAR_READONLY_SCOPE, GOOGLE_ACCOUNT_PROVIDER_ID } from '../google/google-calendar'
 import { logger } from '../logger'
 import { sendEmailOtp } from '../mail'
+import { isAuthorizeRequestBody, withFreshMaxAge } from '../oauth/oauth-authorize'
 import { isAllowedRegistration } from '../oauth/oauth-registration'
 import { idTokenStandardClaims, toPublicAvatarUrl } from '../oauth/oidc-claims'
 import { prisma } from '../prisma'
@@ -88,6 +89,33 @@ const twoFaAuthorizePolicy = {
               message: 'two-factor authentication required',
             })
           }
+        }),
+      },
+    ],
+  },
+} satisfies BetterAuthPlugin
+
+/**
+ * `offline_access` を求める認可にセッションの鮮度を要求する(`oauth-authorize.ts`)。
+ *
+ * 認可要求へ `max_age` を差し込み、判定と再認証への誘導を oauth-provider に任せる。
+ * 同意の確定も内部で `/oauth2/authorize` をフック付きで再実行するので、ここを通る。
+ * POST の authorize はパラメータを body から読むため、authorize の要求らしい body にも差し込む。
+ */
+const freshAuthorizePolicy = {
+  id: 'fresh-authorize-policy',
+  hooks: {
+    before: [
+      {
+        matcher: (ctx) => ctx.path === '/oauth2/authorize',
+        handler: createAuthMiddleware(async (ctx) => {
+          const freshAge = envu.server.SESSION_FRESH_AGE
+          const query = withFreshMaxAge(ctx.query, freshAge)
+          const body = isAuthorizeRequestBody(ctx.body) ? withFreshMaxAge(ctx.body, freshAge) : undefined
+          if (!query && !body) {
+            return
+          }
+          return { context: { ...(query && { query }), ...(body && { body }) } }
         }),
       },
     ],
@@ -403,6 +431,7 @@ export const auth = betterAuth({
     }),
     dcrPolicy,
     twoFaAuthorizePolicy,
+    freshAuthorizePolicy,
     genericOAuth({
       config: oauthConfigs,
     }),

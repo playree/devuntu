@@ -10,9 +10,9 @@ export const metadata: Metadata = {
 }
 
 const SignInPage: FC<{
-  searchParams: Promise<{ mode?: '2FA' }>
+  searchParams: Promise<{ mode?: '2FA'; client_id?: string; max_age?: string }>
 }> = async ({ searchParams }) => {
-  const { mode } = await searchParams
+  const { mode, client_id: clientId, max_age: maxAge } = await searchParams
 
   const twoFaRequired = envu.server.TWO_FA_REQUIRED
 
@@ -21,6 +21,17 @@ const SignInPage: FC<{
     const session = await getServerSession()
     const email = session?.user.email
     return <SignInClient sessionEmail={email} twoFaRequired={twoFaRequired} />
+  }
+
+  /**
+   * ログイン済みで OAuth の認可から送られてきたのは、セッションが `max_age` より古いため
+   * (`offline_access` の認可には `SESSION_FRESH_AGE` が差し込まれる)。再認証だと分かるようにする。
+   */
+  if (clientId && maxAge !== undefined) {
+    const session = await getServerSession()
+    if (session) {
+      return <SignInClient reAuthEmail={session.user.email} twoFaRequired={twoFaRequired} />
+    }
   }
 
   return <SignInClient twoFaRequired={twoFaRequired} />

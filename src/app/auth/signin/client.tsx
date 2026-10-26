@@ -3,6 +3,7 @@
 import { MultiButton } from '@/components/general/button'
 import { Grid } from '@/components/general/grid'
 import { GrowMotion } from '@/components/general/grow-motion'
+import { NoticePanel } from '@/components/general/panel'
 import { useStep } from '@/components/general/step-motion'
 import { FingerPrintIcon, GoogleIcon, KeyIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
@@ -22,10 +23,12 @@ import { type Mode, PasswordForm } from './password-form'
 import { TwoFaForm } from './two-fa-form'
 import { UsernameForm } from './username-form'
 
-export const SignInClient: FC<{ sessionEmail?: string; twoFaRequired: boolean }> = ({
-  sessionEmail,
-  twoFaRequired,
-}) => {
+export const SignInClient: FC<{
+  sessionEmail?: string
+  /** OAuth の認可で再認証を求められたときのログイン中のメールアドレス */
+  reAuthEmail?: string
+  twoFaRequired: boolean
+}> = ({ sessionEmail, reAuthEmail, twoFaRequired }) => {
   const searchParams = useSearchParams()
   const { t } = useLocale()
   const { step, forward, back } = useStep<'EMAIL' | 'PASSWORD' | 'OTP' | '2FA'>(sessionEmail ? 'PASSWORD' : 'EMAIL')
@@ -88,12 +91,15 @@ export const SignInClient: FC<{ sessionEmail?: string; twoFaRequired: boolean }>
         </div>
       </Grid>
 
+      {reAuthEmail && step.id === 'EMAIL' && <NoticePanel className='mb-4'>{t('msg_oauth_re_auth')}</NoticePanel>}
+
       <div className='min-h-32 overflow-hidden'>
         <AnimatePresence mode='wait' custom={step.direction}>
           {step.id === 'EMAIL' && (
             <UsernameForm
               key='step_email'
               direction={step.direction}
+              defaultEmail={reAuthEmail}
               next={(email, nextStep) => {
                 forward(nextStep)
                 setEmail(email)

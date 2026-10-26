@@ -787,6 +787,7 @@ export const ja: DefaultLocaleItems = {
     'このアカウントでのGoogleサインインは許可されていません。\nEメール又はパスキーでのサインインをご利用ください。',
   msg_notify_email_digest: 'メール通知は${minutes}分間隔でまとめて1通で届きます。',
   msg_notify_slack_unavailable: 'この環境ではSlack連携を利用できません。',
+  msg_oauth_re_auth: 'このアプリとの連携を続けるには、もう一度サインインしてください。',
   msg_otp_sent: '認証コードを送信しました。',
   msg_owner_required: 'オーナーを1人以上指定してください。',
   msg_re_auth: '該当の操作を行うには再認証が必要です。\n認証後に再度実行してください。',

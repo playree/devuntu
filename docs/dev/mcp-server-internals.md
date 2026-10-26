@@ -374,3 +374,21 @@ DCR で受け付けるリダイレクトURIの判定(ループバックか逆ド
   **完全一致**したときだけ通す(前方一致やホスト単位にすると、同じホストの別パスへコードを流せてしまう)
 - `dcrPolicy` は `application_type` を `native` に倒すが、better-auth の native 検証は非ループバックの `https` を許すので、
   許可リストの URI もそのまま登録できる
+
+## 認可に課すセッションの鮮度
+
+`offline_access` を求める認可(`scope` 未指定も含む。DCR の既定スコープに入っているため)には、ログインからの経過が
+`SESSION_FRESH_AGE` 未満であることを要求する。フックは `freshAuthorizePolicy`(`src/lib/auth/auth.ts`)、判定式は
+`src/lib/oauth/oauth-authorize.ts`。
+
+- 盗んだセッション Cookie から、Web セッション失効後も使えるリフレッシュトークンを取らせないため。ユーザーの MCP トークンの発行(`assertFreshSession`)と同じ考え方
+- `/oauth2/authorize` の before フックで認可要求に `max_age = SESSION_FRESH_AGE` を差し込み、判定は oauth-provider の `max_age` の実装に任せる。
+  古いセッションはサインイン画面へ送られ、サインイン画面は `client_id` があれば authorize へ戻すので、サインインし直すと認可がそのまま続く。
+  サインイン画面はログイン中に `client_id` と `max_age` 付きで来たら再認証の案内を出す
+- POST の authorize はパラメータを body から読むので、`response_type` を持つ body にも差し込む
+- 同意済みのクライアント・`skipConsent` のクライアントも、コードを出す前にこの判定を通る
+- 同意の確定(`/oauth2/consent`)は、内部で `/oauth2/authorize` をフック付き(`dispatchAuthEndpoint`)で再実行するので、同じく差し込まれる。
+  同意画面の署名付きクエリからは判定を通った時点で `max_age` が外れ、そのクエリはセッションに紐付かないが、再実行時に差し込み直すため
+  古いセッションでの許可はサインイン画面へ送られる
+- クライアントがより短い `max_age` を求めていればそれを使う。`SESSION_FRESH_AGE=0` では差し込まない
+- `offline_access` を含まない認可(OIDC のシングルサインオン)は対象外。リフレッシュトークンが出ず、セッションより長生きする資格情報にならないため

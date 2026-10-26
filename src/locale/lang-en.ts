@@ -788,6 +788,7 @@ Please copy and use the connection information above.
     'Google sign in is not allowed for this account.\nPlease sign in with your email or passkey instead.',
   msg_notify_email_digest: 'Email notifications are batched into a single message every ${minutes} minutes.',
   msg_notify_slack_unavailable: 'Slack integration is not available in this environment.',
+  msg_oauth_re_auth: 'Please sign in again to continue connecting this app.',
   msg_otp_sent: 'Verification code sent.',
   msg_owner_required: 'At least one owner is required.',
   msg_re_auth: 'Re-authentication is required to perform the operation.\nPlease try again after re-authentication.',
