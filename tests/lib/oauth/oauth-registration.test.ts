@@ -5,7 +5,7 @@
  * この判定が、外部へコードを流すクライアントを登録させないための門番になる。
  */
 
-import { isLocalRedirectUri, isLocalRegistration } from '@/lib/oauth/oauth-registration'
+import { isAllowableRedirectUri, isAllowedRegistration, isLocalRedirectUri } from '@/lib/oauth/oauth-registration'
 import { describe, expect, it } from 'vitest'
 
 describe('isLocalRedirectUri', () => {
@@ -48,17 +48,79 @@ describe('isLocalRedirectUri', () => {
   })
 })
 
-describe('isLocalRegistration', () => {
+describe('isAllowedRegistration', () => {
+  const allowed = ['https://claude.ai/api/mcp/auth_callback']
+
   it('すべてローカルなら受け入れる', () => {
-    expect(isLocalRegistration(['http://localhost:1/cb', 'com.example.app:/oauth'])).toBe(true)
+    expect(isAllowedRegistration(['http://localhost:1/cb', 'com.example.app:/oauth'])).toBe(true)
   })
 
   it('1つでも外部に戻るものが混ざれば拒否する', () => {
-    expect(isLocalRegistration(['http://localhost:1/cb', 'https://evil.example/cb'])).toBe(false)
+    expect(isAllowedRegistration(['http://localhost:1/cb', 'https://evil.example/cb'])).toBe(false)
   })
 
   it('空配列と未指定を拒否する', () => {
-    expect(isLocalRegistration([])).toBe(false)
-    expect(isLocalRegistration(undefined)).toBe(false)
+    expect(isAllowedRegistration([])).toBe(false)
+    expect(isAllowedRegistration(undefined)).toBe(false)
+  })
+
+  it('許可リストに完全一致する https を受け入れる', () => {
+    expect(isAllowedRegistration(['https://claude.ai/api/mcp/auth_callback'], allowed)).toBe(true)
+  })
+
+  it('許可リストの URI とローカルの URI の混在を受け入れる', () => {
+    expect(isAllowedRegistration(['https://claude.ai/api/mcp/auth_callback', 'http://localhost:1/cb'], allowed)).toBe(
+      true,
+    )
+  })
+
+  it.each([
+    'https://claude.ai/api/mcp/auth_callback/',
+    'https://claude.ai/api/mcp/auth_callback?x=1',
+    'https://claude.ai.evil.example/api/mcp/auth_callback',
+    'https://evil.example/cb',
+  ])('許可リストに完全一致しない https を拒否する: %s', (uri) => {
+    expect(isAllowedRegistration([uri], allowed)).toBe(false)
+  })
+
+  it('許可リストの URI に許可外の URI が混ざれば拒否する', () => {
+    expect(isAllowedRegistration(['https://claude.ai/api/mcp/auth_callback', 'https://evil.example/cb'], allowed)).toBe(
+      false,
+    )
+  })
+
+  it('許可リストが無ければ https を拒否する', () => {
+    expect(isAllowedRegistration(['https://claude.ai/api/mcp/auth_callback'])).toBe(false)
+  })
+
+  it.each(['https://claude.ai/api/mcp/auth_callback', { length: 1 }, [1]])(
+    '配列の文字列でない値を拒否する: %j',
+    (value) => {
+      expect(isAllowedRegistration(value, allowed)).toBe(false)
+    },
+  )
+})
+
+describe('isAllowableRedirectUri', () => {
+  it('ループバック以外の https を受け入れる', () => {
+    expect(isAllowableRedirectUri('https://claude.ai/api/mcp/auth_callback')).toBe(true)
+  })
+
+  it.each([
+    'http://mcp.example/cb',
+    'https://localhost/cb',
+    'https://localhost./cb',
+    'https://app.localhost/cb',
+    'https://127.0.0.1/cb',
+    'https://127.0.0.2/cb',
+    'https://127.1/cb',
+    'https://[::1]/cb',
+    'https://[::ffff:127.0.0.1]/cb',
+    'https://user:pass@mcp.example/cb',
+    'https://mcp.example/cb#frag',
+    'com.example.app:/oauth',
+    'not a url',
+  ])('native として登録できない URI を拒否する: %s', (uri) => {
+    expect(isAllowableRedirectUri(uri)).toBe(false)
   })
 })

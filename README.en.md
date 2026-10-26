@@ -172,17 +172,17 @@ Images are available for linux/amd64 and linux/arm64 (arm64 from 0.9.3 onward).
 All of them are optional. Each is enabled once its requirements are met (for environment variables, restart `devuntu`);
 Google and Slack additionally need to be enabled by an administrator at `/admin/settings`.
 
-| Integration      | Requires                                                                    | Enables                                                                                         |
-| ---------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| Email            | `MAIL_SEND` / `MAIL_FROM`                                                   | Email OTP sign-in and email notifications                                                       |
-| Google           | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                                 | Google sign-in and the calendar                                                                 |
-| Slack            | The `SLACK_*` variables                                                     | Slack DM notifications and ticket URL unfurling                                                 |
-| Web push         | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`                                    | Push notifications to browsers and phones                                                       |
-| GitHub           | Nothing (a secret is issued per repository in the board settings)           | PR status and CI results, auto-complete on merge, send back to the agent on CI failure / review |
-| GitLab           | `GITLAB_URLS`                                                               | MR status and CI results, auto-complete on merge, send back to the agent on CI failure / review |
-| MCP              | Nothing for token access (`OIDC_DCR_ENABLED=true` for browser sign-in)      | Connections from MCP clients to `<BETTER_AUTH_URL>/api/mcp`                                     |
-| AI agents        | Creating an agent and issuing a token at `/admin/agents`                    | Automatic ticket processing by agents                                                           |
-| Remote execution | `COMMAND_EXEC_ENABLED=true`, definition files, an SSH key and `known_hosts` | Running predefined jobs on remote servers from the UI                                           |
+| Integration      | Requires                                                                                                                    | Enables                                                                                         |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Email            | `MAIL_SEND` / `MAIL_FROM`                                                                                                   | Email OTP sign-in and email notifications                                                       |
+| Google           | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                                                                                 | Google sign-in and the calendar                                                                 |
+| Slack            | The `SLACK_*` variables                                                                                                     | Slack DM notifications and ticket URL unfurling                                                 |
+| Web push         | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`                                                                                    | Push notifications to browsers and phones                                                       |
+| GitHub           | Nothing (a secret is issued per repository in the board settings)                                                           | PR status and CI results, auto-complete on merge, send back to the agent on CI failure / review |
+| GitLab           | `GITLAB_URLS`                                                                                                               | MR status and CI results, auto-complete on merge, send back to the agent on CI failure / review |
+| MCP              | Nothing for token access (`OIDC_DCR_ENABLED=true` for browser sign-in; also `OIDC_DCR_ALLOWED_REDIRECT_URIS` for claude.ai) | Connections from MCP clients to `<BETTER_AUTH_URL>/api/mcp`                                     |
+| AI agents        | Creating an agent and issuing a token at `/admin/agents`                                                                    | Automatic ticket processing by agents                                                           |
+| Remote execution | `COMMAND_EXEC_ENABLED=true`, definition files, an SSH key and `known_hosts`                                                 | Running predefined jobs on remote servers from the UI                                           |
 
 Details (in Japanese): [installation](docs/admin/installation.md#外部サービス連携任意),
 [notifications](docs/admin/notifications.md), [GitHub / GitLab](docs/admin/git-integration.md), [MCP server](docs/admin/mcp-server.md),

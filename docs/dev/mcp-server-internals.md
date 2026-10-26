@@ -368,3 +368,9 @@ AIエージェント用ユーザーは `User.isAgent` が立ったユーザー�
 
 DCR で受け付けるリダイレクトURIの判定(ループバックか逆ドメイン形式の private-use スキームだけ)は
 `src/lib/oauth/oauth-registration.ts`。
+
+- 認可コードが利用者自身の端末へ戻るものだけを既定で通す。外部サーバーへコードを流すクライアントを未認証の DCR で作らせないため
+- claude.ai のように戻りをサーバーで受ける MCP クライアントは、管理者が `OIDC_DCR_ALLOWED_REDIRECT_URIS` に列挙した URI と
+  **完全一致**したときだけ通す(前方一致やホスト単位にすると、同じホストの別パスへコードを流せてしまう)
+- `dcrPolicy` は `application_type` を `native` に倒すが、better-auth の native 検証は非ループバックの `https` を許すので、
+  許可リストの URI もそのまま登録できる

@@ -14,7 +14,7 @@ import { envu } from '../env-util'
 import { CALENDAR_READONLY_SCOPE, GOOGLE_ACCOUNT_PROVIDER_ID } from '../google/google-calendar'
 import { logger } from '../logger'
 import { sendEmailOtp } from '../mail'
-import { isLocalRegistration } from '../oauth/oauth-registration'
+import { isAllowedRegistration } from '../oauth/oauth-registration'
 import { idTokenStandardClaims, toPublicAvatarUrl } from '../oauth/oidc-claims'
 import { prisma } from '../prisma'
 import { makeUrl } from '../server-utils'
@@ -26,9 +26,23 @@ import { requiresTwoFaSetup } from './two-fa'
 import { resolveSyncedProfile } from './user-sync'
 
 /**
+ * DCR で追加で受け付けるリダイレクトURI。
+ * 読めない値が混ざっていたら許可リストごと無効にし、ループバック等だけを受け付ける。
+ */
+const dcrAllowedRedirectUris = (): string[] => {
+  try {
+    return envu.server.OIDC_DCR_ALLOWED_REDIRECT_URIS
+  } catch (error) {
+    logger.error({ error }, 'OIDC_DCR_ALLOWED_REDIRECT_URIS is invalid. Only local redirect URIs are allowed')
+    return []
+  }
+}
+
+/**
  * 動的クライアント登録(RFC 7591)の受け入れポリシー。
  *
- * `POST /oauth2/register` は未認証で叩ける。ここでリダイレクトURIをローカルに閉じたものだけに絞り、
+ * `POST /oauth2/register` は未認証で叩ける。ここでリダイレクトURIをローカルに閉じたものと
+ * 管理者が許可したもの(`OIDC_DCR_ALLOWED_REDIRECT_URIS`)だけに絞り、
  * 併せて `application_type` を native に倒す(未指定だと web 扱いになり、ループバックのURIが
  * `invalid_redirect_uri` で弾かれてしまう)。
  */
@@ -39,12 +53,12 @@ const dcrPolicy = {
       {
         matcher: (ctx) => ctx.path === '/oauth2/register',
         handler: createAuthMiddleware(async (ctx) => {
-          const body = ctx.body as { redirect_uris?: string[] } | undefined
-          if (!isLocalRegistration(body?.redirect_uris)) {
+          const body = ctx.body as { redirect_uris?: unknown } | undefined
+          if (!isAllowedRegistration(body?.redirect_uris, dcrAllowedRedirectUris())) {
             logger.info({ redirectUris: body?.redirect_uris }, 'dcr rejected')
             throw new APIError('BAD_REQUEST', {
               error: 'invalid_redirect_uri',
-              error_description: 'redirect_uris must be loopback or private-use scheme URIs',
+              error_description: 'redirect_uris must be loopback, private-use scheme, or administrator-allowed URIs',
             })
           }
           return { context: { body: { ...body, application_type: 'native' } } }

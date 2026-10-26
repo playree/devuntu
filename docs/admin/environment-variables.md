@@ -40,7 +40,7 @@
 | Webプッシュ通知                       | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`                                                                       | `setup-env` が生成できる                                                                                                  |
 | GitLab 連携                           | `GITLAB_URLS`                                                                                                  | ボード設定で対応付け([手順](git-integration.md))                                                                          |
 | GitHub 連携                           | 不要                                                                                                           | ボード設定で対応付け([手順](git-integration.md))                                                                          |
-| MCP クライアントのブラウザ認可(DCR)   | `OIDC_DCR_ENABLED=true`                                                                                        | トークンでの接続だけなら不要([mcp-server.md](mcp-server.md))                                                              |
+| MCP クライアントのブラウザ認可(DCR)   | `OIDC_DCR_ENABLED=true`(claude.ai から使うなら `OIDC_DCR_ALLOWED_REDIRECT_URIS` も)                            | トークンでの接続だけなら不要([mcp-server.md](mcp-server.md))                                                              |
 | リモート実行                          | `COMMAND_EXEC_ENABLED=true`                                                                                    | 定義ファイル・SSH 鍵の配置とアサイン([command-exec.md](command-exec.md))                                                  |
 | 別の Devuntu のアカウントでサインイン | `MAIN_DEVUNTU_URL` / `MAIN_DEVUNTU_CLIENT_ID` / `MAIN_DEVUNTU_CLIENT_SECRET`                                   | 連携元の Devuntu の `/admin/oidc-clients` でクライアントを登録                                                            |
 | ダッシュボードに転送量を出す(Linode)  | `LINODE_ID` / `LINODE_PERSONAL_ACCESS_TOKEN`                                                                   | -                                                                                                                         |
@@ -82,28 +82,29 @@
 
 ## 認証
 
-| 変数名                         | 説明                                                                                                                  | 必須 | デフォルト        |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------------- | ---- | ----------------- |
-| `BETTER_AUTH_URL`              | 運用するベースの URL                                                                                                  | 〇   | -                 |
-| `BETTER_AUTH_SECRET`           | Better Auth 用シークレット。GitHub / GitLab 連携の Webhook シークレットの暗号化にも使うため、変えると設定し直しが要る | 〇   | -                 |
-| `SESSION_EXPIRES_IN`           | セッション有効期間(秒)                                                                                                |      | `432000`(5日)     |
-| `SESSION_FRESH_AGE`            | セッション fresh 期間(秒)。`0` で無効                                                                                 |      | `86400`(1日)      |
-| `TWO_FA_REQUIRED`              | 2要素認証を必須にするか                                                                                               |      | `true`            |
-| `DISABLE_PASSWORD_AUTH`        | パスワード認証を無効化                                                                                                |      | `false`           |
-| `OIDC_DCR_ENABLED`             | 動的クライアント登録を有効化                                                                                          |      | `false`           |
-| `MCP_REFRESH_TOKEN_EXPIRES_IN` | MCP リフレッシュトークンの有効期間(秒)                                                                                |      | `15552000`(180日) |
-| `MAIN_DEVUNTU_URL`             | 連携元 Devuntu の URL(別の Devuntu を IdP にしてサインインさせる場合)                                                 |      | -                 |
-| `MAIN_DEVUNTU_CLIENT_ID`       | 連携元クライアントID                                                                                                  |      | -                 |
-| `MAIN_DEVUNTU_CLIENT_SECRET`   | 連携元クライアントシークレット                                                                                        |      | -                 |
-| `GOOGLE_CLIENT_ID`             | Google OAuth クライアントID                                                                                           |      | -                 |
-| `GOOGLE_CLIENT_SECRET`         | Google OAuth クライアントシークレット                                                                                 |      | -                 |
-| `GOOGLE_ALLOWED_DOMAINS`       | サインインを許可するドメイン(カンマ区切り)                                                                            |      | -                 |
-| `SLACK_CLIENT_ID`              | Slack OAuth クライアントID                                                                                            |      | -                 |
-| `SLACK_CLIENT_SECRET`          | Slack OAuth クライアントシークレット                                                                                  |      | -                 |
-| `SLACK_BOT_TOKEN`              | Slack Bot トークン(`xoxb-`)                                                                                           |      | -                 |
-| `SLACK_TEAM_ID`                | Slack ワークスペースID(`T...`)                                                                                        |      | -                 |
-| `SLACK_SIGNING_SECRET`         | Slack リクエスト署名シークレット                                                                                      |      | -                 |
-| `GITLAB_URLS`                  | GitLab 連携で使うインスタンスの URL(カンマ区切り)。未設定なら GitLab 連携は無効                                       |      | -                 |
+| 変数名                           | 説明                                                                                                                  | 必須 | デフォルト        |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ---- | ----------------- |
+| `BETTER_AUTH_URL`                | 運用するベースの URL                                                                                                  | 〇   | -                 |
+| `BETTER_AUTH_SECRET`             | Better Auth 用シークレット。GitHub / GitLab 連携の Webhook シークレットの暗号化にも使うため、変えると設定し直しが要る | 〇   | -                 |
+| `SESSION_EXPIRES_IN`             | セッション有効期間(秒)                                                                                                |      | `432000`(5日)     |
+| `SESSION_FRESH_AGE`              | セッション fresh 期間(秒)。`0` で無効                                                                                 |      | `86400`(1日)      |
+| `TWO_FA_REQUIRED`                | 2要素認証を必須にするか                                                                                               |      | `true`            |
+| `DISABLE_PASSWORD_AUTH`          | パスワード認証を無効化                                                                                                |      | `false`           |
+| `OIDC_DCR_ENABLED`               | 動的クライアント登録を有効化                                                                                          |      | `false`           |
+| `OIDC_DCR_ALLOWED_REDIRECT_URIS` | 動的クライアント登録で追加で受け付けるリダイレクトURI(カンマ区切り・完全一致)                                         |      | -                 |
+| `MCP_REFRESH_TOKEN_EXPIRES_IN`   | MCP リフレッシュトークンの有効期間(秒)                                                                                |      | `15552000`(180日) |
+| `MAIN_DEVUNTU_URL`               | 連携元 Devuntu の URL(別の Devuntu を IdP にしてサインインさせる場合)                                                 |      | -                 |
+| `MAIN_DEVUNTU_CLIENT_ID`         | 連携元クライアントID                                                                                                  |      | -                 |
+| `MAIN_DEVUNTU_CLIENT_SECRET`     | 連携元クライアントシークレット                                                                                        |      | -                 |
+| `GOOGLE_CLIENT_ID`               | Google OAuth クライアントID                                                                                           |      | -                 |
+| `GOOGLE_CLIENT_SECRET`           | Google OAuth クライアントシークレット                                                                                 |      | -                 |
+| `GOOGLE_ALLOWED_DOMAINS`         | サインインを許可するドメイン(カンマ区切り)                                                                            |      | -                 |
+| `SLACK_CLIENT_ID`                | Slack OAuth クライアントID                                                                                            |      | -                 |
+| `SLACK_CLIENT_SECRET`            | Slack OAuth クライアントシークレット                                                                                  |      | -                 |
+| `SLACK_BOT_TOKEN`                | Slack Bot トークン(`xoxb-`)                                                                                           |      | -                 |
+| `SLACK_TEAM_ID`                  | Slack ワークスペースID(`T...`)                                                                                        |      | -                 |
+| `SLACK_SIGNING_SECRET`           | Slack リクエスト署名シークレット                                                                                      |      | -                 |
+| `GITLAB_URLS`                    | GitLab 連携で使うインスタンスの URL(カンマ区切り)。未設定なら GitLab 連携は無効                                       |      | -                 |
 
 - `TWO_FA_REQUIRED=false` にすると、過去に 2FA を有効化した利用者も含めてパスワードのみでサインインする
   (サインイン時の 2FA チャレンジ自体を行わない)。`DISABLE_PASSWORD_AUTH=true`(メールOTPでのサインイン)では
@@ -112,6 +113,10 @@
   メールボックスだけでパスワード + 2要素認証を迂回できてしまうため。サインインはパスワード(+ 2要素認証)・パスキー・
   外部サービス連携のいずれかで行う。2要素認証のコードのメール送信はこれとは別の経路で、引き続き使える
 - `SESSION_FRESH_AGE` は、パスワード変更など重要な操作に「サインインからの経過時間」の上限を課す
+- `OIDC_DCR_ALLOWED_REDIRECT_URIS` は、claude.ai(Web / デスクトップ)のように認可コードをサーバーで受け取る MCP クライアント向け。
+  未設定ではループバック(`http://localhost` など)と private-use スキームの戻り先だけを受け付ける。
+  claude.ai を使うなら `https://claude.ai/api/mcp/auth_callback,https://claude.com/api/mcp/auth_callback` を設定する([mcp-server.md](mcp-server.md#claudeai-から接続させる))。
+  ループバック(`localhost` / `127.0.0.0/8` / `::1`)以外の `https` で、ユーザー情報(`user:pass@`)とフラグメント(`#`)を含まない URI だけを書ける
 - `GOOGLE_ALLOWED_DOMAINS` は **Googleサインインを使う場合は最低1件必要**(未設定だと全ドメインが拒否される)
 
 外部サービスごとの設定手順は [installation.md](installation.md#外部サービス連携任意) を参照。
