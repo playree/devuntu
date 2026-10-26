@@ -195,7 +195,7 @@ const handlePipeline = async (body: unknown, target: GitlabWebhookTarget) => {
  * MR へのコメント(レビューのスレッドを含む)を差し戻しのきっかけにする。
  * システムノート(push やラベル変更の記録)と、MR の作成者自身のコメントは除く。
  * Note Hook には投稿者の権限が無いので、ボード設定で許可したユーザーのコメントに限る(本文がエージェントへの指示になるため)。
- * イベントの操作者(`user`)がコメントの投稿者でない場合(他人のコメントの編集など)も、本文の書き手が分からないので除く。
+ * イベントの操作者(`user`)がコメントの投稿者だと確かめられない場合(他人のコメントの編集など)も、本文の書き手が分からないので除く。
  */
 const handleNote = async (body: unknown, target: GitlabWebhookTarget) => {
   const parsed = scNoteEvent.safeParse(body)
@@ -211,7 +211,7 @@ const handleNote = async (body: unknown, target: GitlabWebhookTarget) => {
     return
   }
   const author = user?.username ?? null
-  const isNoteAuthor = note.author_id == null || note.author_id === user?.id
+  const isNoteAuthor = note.author_id != null && note.author_id === user?.id
   if (!author || !isNoteAuthor || !target.board.autoReviseReviewers.includes(author.toLowerCase())) {
     if (target.board.autoRevise) {
       logger.info({ repo: target.repo, number: mr.iid, author }, 'agent auto revise skipped: untrusted reviewer')

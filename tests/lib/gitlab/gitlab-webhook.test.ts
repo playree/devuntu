@@ -340,11 +340,13 @@ describe('Note Hook', () => {
     expect(vi.mocked(requestAutoRevise).mock.calls[0][1]).toMatchObject({ author: 'CodeRabbitAI' })
   })
 
-  it('許可していないユーザー・投稿者の無い・操作者が投稿者でないコメントはきっかけにせず、本文を渡さない', async () => {
+  it('許可していないユーザー・投稿者の無い・操作者が投稿者と確かめられないコメントはきっかけにせず、本文を渡さない', async () => {
     await handleGitlabEvent('Note Hook', noteEvent({ username: 'outsider' }), TARGET)
     await handleGitlabEvent('Note Hook', { ...noteEvent(), user: null }, TARGET)
     // 許可したユーザーが、他人(id: 3)のコメントを編集したときのイベント
     await handleGitlabEvent('Note Hook', noteEvent({ authorId: 3 }), TARGET)
+    const { author_id: _, ...withoutAuthor } = noteEvent().object_attributes
+    await handleGitlabEvent('Note Hook', { ...noteEvent(), object_attributes: withoutAuthor }, TARGET)
     await handleGitlabEvent('Note Hook', noteEvent(), {
       ...TARGET,
       board: { ...TARGET.board, autoReviseReviewers: [] },

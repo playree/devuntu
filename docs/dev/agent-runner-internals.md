@@ -172,7 +172,7 @@ revise で拾わせる。人が report を差し戻すのと同じ流れを、We
 - 本文がそのままエージェントへの指示になるため、レビュー・コメントは投稿者を絞る。範囲外はきっかけを作らず(本文も保存しない)、
   `agent auto revise skipped: untrusted reviewer` のログだけを残す
   - GitHub: `review.author_association` が `OWNER` / `MEMBER` / `COLLABORATOR`、または `review.user.type` が `Bot`(GitHub App はリポジトリの管理者がインストールしたものしか投稿できない)
-  - GitLab: Note Hook に投稿者の権限が無いため、`BoardGitSetting.autoReviseReviewers`(小文字のユーザー名)に含まれる `user.username` だけ。空ならコメントでは差し戻さない
+  - GitLab: Note Hook に投稿者の権限が無いため、`BoardGitSetting.autoReviseReviewers`(小文字のユーザー名)に含まれる `user.username` だけ(操作者 `user.id` がコメントの投稿者 `author_id` と一致するものに限る)。空ならコメントでは差し戻さない
 - 同じ suite / パイプラインの失敗は1つのきっかけにまとめ、失敗したチェック名だけを足していく。再送されたイベントは `dedupeKey` で重複させない
 
 **状態ごとの扱い。** チケットの行ロックを取って、ランナーの実行開始と直列にする。
