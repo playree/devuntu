@@ -33,3 +33,23 @@ export const freshMaxAge = (requested: unknown, freshAge: number): number | unde
   }
   return freshAge
 }
+
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null
+
+/**
+ * 認可要求のパラメータ(query または POST の body)に `max_age` を設定したものを返す。
+ * 鮮度を要求しない要求や、`freshAge` が `0` のときは undefined(手を加えない)。
+ */
+export const withFreshMaxAge = (params: unknown, freshAge: number): Record<string, unknown> | undefined => {
+  if (!isRecord(params) || !requiresFreshAuthorization(params.scope)) {
+    return undefined
+  }
+  const maxAge = freshMaxAge(params.max_age, freshAge)
+  return maxAge === undefined ? undefined : { ...params, max_age: String(maxAge) }
+}
+
+/**
+ * POST の body が認可要求か。同意の確定から再実行される authorize では body が同意画面の送信内容なので、
+ * `response_type`(認可要求に必須)の有無で見分けて、そちらには手を加えない。
+ */
+export const isAuthorizeRequestBody = (body: unknown): boolean => isRecord(body) && 'response_type' in body

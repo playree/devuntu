@@ -14,16 +14,15 @@ import { envu } from '../env-util'
 import { CALENDAR_READONLY_SCOPE, GOOGLE_ACCOUNT_PROVIDER_ID } from '../google/google-calendar'
 import { logger } from '../logger'
 import { sendEmailOtp } from '../mail'
-import { freshMaxAge, requiresFreshAuthorization } from '../oauth/oauth-authorize'
+import { isAuthorizeRequestBody, withFreshMaxAge } from '../oauth/oauth-authorize'
 import { isAllowedRegistration } from '../oauth/oauth-registration'
 import { idTokenStandardClaims, toPublicAvatarUrl } from '../oauth/oidc-claims'
 import { prisma } from '../prisma'
 import { makeUrl } from '../server-utils'
 import { SLACK_PROVIDER_ID } from '../slack/slack'
 import { slackUserInfo } from '../slack/slack-server'
-import { authConfig, SESSION_NOT_FRESH } from './auth-config'
+import { authConfig } from './auth-config'
 import { MCP_RESOURCE, MCP_SCOPES } from './mcp-scope'
-import { isFreshSession } from './session-fresh'
 import { requiresTwoFaSetup } from './two-fa'
 import { resolveSyncedProfile } from './user-sync'
 
@@ -99,11 +98,9 @@ const twoFaAuthorizePolicy = {
 /**
  * `offline_access` を求める認可にセッションの鮮度を要求する(`oauth-authorize.ts`)。
  *
- * authorize では `max_age` を差し込み、判定と再認証への誘導を oauth-provider に任せる。
- * 同意済みのクライアント・`skipConsent` のクライアントも、コードを出す前にこの判定を通る。
- *
- * 同意画面へ渡る署名付きクエリからは、判定を通った時点で `max_age` が外される。
- * そのクエリはセッションに紐付かず有効期限(10分)まで使えるので、同意の確定でも鮮度を見る。
+ * 認可要求へ `max_age` を差し込み、判定と再認証への誘導を oauth-provider に任せる。
+ * 同意の確定も内部で `/oauth2/authorize` をフック付きで再実行するので、ここを通る。
+ * POST の authorize はパラメータを body から読むため、authorize の要求らしい body にも差し込む。
  */
 const freshAuthorizePolicy = {
   id: 'fresh-authorize-policy',
@@ -112,34 +109,13 @@ const freshAuthorizePolicy = {
       {
         matcher: (ctx) => ctx.path === '/oauth2/authorize',
         handler: createAuthMiddleware(async (ctx) => {
-          const query = (ctx.query ?? {}) as Record<string, unknown>
-          if (!requiresFreshAuthorization(query.scope)) {
+          const freshAge = envu.server.SESSION_FRESH_AGE
+          const query = withFreshMaxAge(ctx.query, freshAge)
+          const body = isAuthorizeRequestBody(ctx.body) ? withFreshMaxAge(ctx.body, freshAge) : undefined
+          if (!query && !body) {
             return
           }
-          const maxAge = freshMaxAge(query.max_age, envu.server.SESSION_FRESH_AGE)
-          if (maxAge === undefined) {
-            return
-          }
-          return { context: { query: { ...query, max_age: String(maxAge) } } }
-        }),
-      },
-      {
-        matcher: (ctx) => ctx.path === '/oauth2/consent',
-        handler: createAuthMiddleware(async (ctx) => {
-          const body = ctx.body as { accept?: unknown; scope?: unknown; oauth_query?: unknown } | undefined
-          if (body?.accept !== true || typeof body.oauth_query !== 'string') {
-            return
-          }
-          // 同意で絞り込んだ scope があればそれが発行されるスコープになる
-          const scope = body.scope ?? new URLSearchParams(body.oauth_query).get('scope') ?? undefined
-          if (!requiresFreshAuthorization(scope)) {
-            return
-          }
-          const session = await getSessionFromCtx(ctx)
-          if (session && !isFreshSession(session.session)) {
-            logger.info({ userId: session.user.id }, 'oauth consent rejected: session not fresh')
-            throw new APIError('FORBIDDEN', { code: SESSION_NOT_FRESH, message: 'session is not fresh' })
-          }
+          return { context: { ...(query && { query }), ...(body && { body }) } }
         }),
       },
     ],
