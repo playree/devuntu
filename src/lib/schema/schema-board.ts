@@ -4,11 +4,11 @@
 
 import { el } from '@/locale'
 import { z } from 'zod'
-import { AUTO_REVISE_LIMIT_MAX, AUTO_REVISE_LIMIT_MIN } from '../agent/agent'
+import { AUTO_REVISE_LIMIT_MAX, AUTO_REVISE_LIMIT_MIN, AUTO_REVISE_REVIEWERS_MAX } from '../agent/agent'
 import { BOARD_KEY_PATTERN, isReservedBoardKey, MAX_BOARD_KEY } from '../board/ticket-id'
 import { GIT_PROVIDERS, GIT_WEBHOOK_AUTHS, MERGE_CRITERIA_CHECKS } from '../git/git'
 import { normalizeGithubRepo } from '../github/github'
-import { GITLAB_SIGNING_TOKEN_PATTERN, normalizeGitlabProjectPath } from '../gitlab/gitlab'
+import { GITLAB_SIGNING_TOKEN_PATTERN, GITLAB_USERNAME_PATTERN, normalizeGitlabProjectPath } from '../gitlab/gitlab'
 import { CHANNEL_NOTIFY_EVENTS } from '../notify/notify'
 import { SLACK_CHANNEL_ID_PATTERN } from '../slack/slack'
 import { zName } from './schema'
@@ -174,6 +174,12 @@ export const scBoardRepositoryTarget = z.object({
   repositoryId: z.uuidv7(),
 })
 
+/** 自動差し戻しのきっかけにする GitLab のユーザー名。GitLab は大文字小文字を区別しないので小文字へ寄せる */
+export const zAutoReviseReviewers = z
+  .array(z.string().trim().regex(GITLAB_USERNAME_PATTERN, el('@invalid_auto_revise_reviewers')).toLowerCase())
+  .max(AUTO_REVISE_REVIEWERS_MAX, el('@invalid_auto_revise_reviewers'))
+  .transform((names) => [...new Set(names)])
+
 /** provider ごとの Git 連携の設定。指定した項目だけを変える */
 export const scSetBoardGitSetting = z.object({
   id: z.uuidv7(),
@@ -182,4 +188,5 @@ export const scSetBoardGitSetting = z.object({
   mergeCriteriaCheck: z.enum(MERGE_CRITERIA_CHECKS).optional(),
   autoRevise: z.boolean().optional(),
   autoReviseLimit: z.number().int().min(AUTO_REVISE_LIMIT_MIN).max(AUTO_REVISE_LIMIT_MAX).optional(),
+  autoReviseReviewers: zAutoReviseReviewers.optional(),
 })

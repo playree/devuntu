@@ -40,6 +40,7 @@ export const ja: DefaultLocaleItems = {
   agent_auto_revise: 'CI失敗・レビュー指摘でエージェントへ自動差し戻しする',
   agent_auto_revise_count: '自動差し戻し',
   agent_auto_revise_limit: '1チケットあたりの上限回数',
+  agent_auto_revise_reviewers: '差し戻しのきっかけにするユーザー',
   agent_budget: '予算上限',
   agent_cost: 'コスト',
   agent_custom_instruction: 'カスタム指示',
@@ -643,9 +644,9 @@ export const ja: DefaultLocaleItems = {
   msg_agent_mode_desc:
     'エージェントに任せる方式を選びます。プラン先行はプランを投稿して返信を待ち、自動実行はそのまま対応して報告します。変更できるのはこのエージェントの承認者だけです。',
   msg_github_auto_revise_desc:
-    '紐付いたプルリクエストの CI が失敗したとき、またはレビュー(Pull request reviews。CodeRabbit などのボットを含む)が付いたときに、報告済みのエージェント担当チケットを revise として処理し直させます。会話欄へのコメントやレビュー外の行コメントでは差し戻しません。最後の指摘から2分待ってまとめて渡し、上限回数(回数は GitHub / GitLab で共通)に達したらそれ以上は差し戻しません。',
+    '紐付いたプルリクエストの CI が失敗したとき、またはレビュー(Pull request reviews)が付いたときに、報告済みのエージェント担当チケットを revise として処理し直させます。きっかけにするレビューは、リポジトリのオーナー・Organization のメンバー・コラボレーターと、CodeRabbit などのボット(GitHub App)のものだけです。会話欄へのコメントやレビュー外の行コメントでは差し戻しません。最後の指摘から2分待ってまとめて渡し、上限回数(回数は GitHub / GitLab で共通)に達したらそれ以上は差し戻しません。',
   msg_gitlab_auto_revise_desc:
-    '紐付いたマージリクエストの CI が失敗したとき、またはコメント(CodeRabbit などのボットを含む)が付いたときに、報告済みのエージェント担当チケットを revise として処理し直させます。最後の指摘から2分待ってまとめて渡し、上限回数(回数は GitHub / GitLab で共通)に達したらそれ以上は差し戻しません。',
+    '紐付いたマージリクエストの CI が失敗したとき、または下で登録したユーザーのコメントが付いたときに、報告済みのエージェント担当チケットを revise として処理し直させます。最後の指摘から2分待ってまとめて渡し、上限回数(回数は GitHub / GitLab で共通)に達したらそれ以上は差し戻しません。',
   msg_agent_custom_instruction_desc:
     'エージェントが作業前に読み、処理全体を通じて従う指示(Markdown)です。空欄は指示なしとして扱われます。',
   msg_agent_no_approver: '承認者が未設定です。このエージェントのチケットは誰もエージェントモードを変更できません。',
@@ -684,6 +685,8 @@ export const ja: DefaultLocaleItems = {
     'この環境では連携が無効になっています(Webhook を受け付けません)。残っている対応付けは外せます。',
   msg_gitlab_already_added:
     '既に対応付けているプロジェクトです。検証方式の切り替えやトークンの作り直しは一覧から行えます。',
+  msg_gitlab_auto_revise_reviewers_desc:
+    'コメントで差し戻しのきっかけにする GitLab のユーザー名(CodeRabbit などのボットを含む)。カンマか空白で区切ります。空のときは、コメントでは差し戻しません(CI の失敗では差し戻します)。それ以外のユーザーのコメントは無視し、エージェントに渡しません。',
   msg_gitlab_auto_revise_webhook: 'GitLab の Webhook の Trigger に Comments も追加してください。',
   msg_board_github_desc:
     'リポジトリを追加すると、Webhook URL・シークレットと、GitHub 側での Webhook の登録手順が表示されます。',
@@ -923,6 +926,7 @@ export const ja: DefaultLocaleItems = {
   '@invalid_github_repo': 'owner/repo の形式で指定してください',
   '@invalid_gitlab_project': 'group/project の形式で指定してください',
   '@invalid_gitlab_signing_token': 'whsec_ で始まる署名トークンを指定してください',
+  '@invalid_auto_revise_reviewers': 'GitLabのユーザー名(英数字と _ . -)を50件まで',
   '@too_many_criteria': '受け入れ条件の数が上限を超えています',
   '@invalid_display_id': '表示ID(例: ABC-12)で指定してください',
   '@relation_target_invalid': '同じボードの別のチケットを指定してください',

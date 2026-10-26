@@ -45,6 +45,7 @@ const TARGET = {
     mergeCriteriaCheck: 'checked' as const,
     autoRevise: true,
     autoReviseLimit: 3,
+    autoReviseReviewers: ['reviewer', 'coderabbitai'],
   },
 }
 const KEY = { provider: 'gitlab', baseUrl: BASE_URL, repo: 'group/proj' }
@@ -292,10 +293,12 @@ describe('Pipeline Hook', () => {
 })
 
 describe('Note Hook', () => {
-  const noteEvent = (override: { noteableType?: string; system?: boolean; authorId?: number; path?: string } = {}) => ({
+  const noteEvent = (
+    override: { noteableType?: string; system?: boolean; authorId?: number; path?: string; username?: string } = {},
+  ) => ({
     object_kind: 'note',
     project: { id: 1, path_with_namespace: override.path ?? 'group/proj' },
-    user: { username: 'reviewer' },
+    user: { username: override.username ?? 'reviewer' },
     object_attributes: {
       id: 900,
       note: '直してください',
@@ -327,6 +330,23 @@ describe('Note Hook', () => {
     await handleGitlabEvent('Note Hook', noteEvent({ system: true }), TARGET)
     await handleGitlabEvent('Note Hook', noteEvent({ authorId: 1 }), TARGET)
     await handleGitlabEvent('Note Hook', noteEvent({ path: 'group/other' }), TARGET)
+
+    expect(requestAutoRevise).not.toHaveBeenCalled()
+  })
+
+  it('許可したユーザーは大文字小文字を区別せずに判定する', async () => {
+    await handleGitlabEvent('Note Hook', noteEvent({ username: 'CodeRabbitAI' }), TARGET)
+
+    expect(vi.mocked(requestAutoRevise).mock.calls[0][1]).toMatchObject({ author: 'CodeRabbitAI' })
+  })
+
+  it('許可していないユーザー・投稿者の無いコメントはきっかけにせず、本文を渡さない', async () => {
+    await handleGitlabEvent('Note Hook', noteEvent({ username: 'outsider' }), TARGET)
+    await handleGitlabEvent('Note Hook', { ...noteEvent(), user: null }, TARGET)
+    await handleGitlabEvent('Note Hook', noteEvent(), {
+      ...TARGET,
+      board: { ...TARGET.board, autoReviseReviewers: [] },
+    })
 
     expect(requestAutoRevise).not.toHaveBeenCalled()
   })

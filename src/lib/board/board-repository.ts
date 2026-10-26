@@ -44,6 +44,7 @@ const gitSettingSelect = {
   mergeCriteriaCheck: true,
   autoRevise: true,
   autoReviseLimit: true,
+  autoReviseReviewers: true,
 } as const
 
 const findBoardRepositories = async (actor: Actor, boardId: string, provider: GitProvider) => {

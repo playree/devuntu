@@ -39,6 +39,8 @@ export type GitLinkedBoard = {
   /** CI の失敗・レビュー指摘でエージェントへ自動差し戻しするか */
   autoRevise: boolean
   autoReviseLimit: number
+  /** MR へのコメントで差し戻しのきっかけにする GitLab のユーザー名(小文字) */
+  autoReviseReviewers: string[]
 }
 
 /** Webhook の受け口で対応付けのボードを引く select。設定は受けた provider の行だけに絞る */
@@ -47,7 +49,13 @@ export const gitLinkedBoardSelect = (provider: GitProvider) => ({
   key: true,
   gitSettings: {
     where: { provider },
-    select: { completeOnMerge: true, mergeCriteriaCheck: true, autoRevise: true, autoReviseLimit: true },
+    select: {
+      completeOnMerge: true,
+      mergeCriteriaCheck: true,
+      autoRevise: true,
+      autoReviseLimit: true,
+      autoReviseReviewers: true,
+    },
   },
 })
 
@@ -60,9 +68,8 @@ export const toGitLinkedBoard = ({
   key: string
   gitSettings: BoardGitSettingValue[]
 }): GitLinkedBoard => {
-  const { completeOnMerge, mergeCriteriaCheck, autoRevise, autoReviseLimit } =
-    gitSettings[0] ?? DEFAULT_BOARD_GIT_SETTING
-  return { ...board, completeOnPrMerge: completeOnMerge, mergeCriteriaCheck, autoRevise, autoReviseLimit }
+  const { completeOnMerge, mergeCriteriaCheck, ...autoReviseSetting } = gitSettings[0] ?? DEFAULT_BOARD_GIT_SETTING
+  return { ...board, completeOnPrMerge: completeOnMerge, mergeCriteriaCheck, ...autoReviseSetting }
 }
 
 /**

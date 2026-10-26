@@ -66,6 +66,7 @@ export type BoardGitSettingCountAggregateOutputType = {
   mergeCriteriaCheck: number
   autoRevise: number
   autoReviseLimit: number
+  autoReviseReviewers: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -112,6 +113,7 @@ export type BoardGitSettingCountAggregateInputType = {
   mergeCriteriaCheck?: true
   autoRevise?: true
   autoReviseLimit?: true
+  autoReviseReviewers?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -211,6 +213,7 @@ export type BoardGitSettingGroupByOutputType = {
   mergeCriteriaCheck: $Enums.MergeCriteriaCheck
   autoRevise: boolean
   autoReviseLimit: number
+  autoReviseReviewers: string[]
   createdAt: Date
   updatedAt: Date
   _count: BoardGitSettingCountAggregateOutputType | null
@@ -246,6 +249,7 @@ export type BoardGitSettingWhereInput = {
   mergeCriteriaCheck?: Prisma.EnumMergeCriteriaCheckFilter<"BoardGitSetting"> | $Enums.MergeCriteriaCheck
   autoRevise?: Prisma.BoolFilter<"BoardGitSetting"> | boolean
   autoReviseLimit?: Prisma.IntFilter<"BoardGitSetting"> | number
+  autoReviseReviewers?: Prisma.StringNullableListFilter<"BoardGitSetting">
   createdAt?: Prisma.DateTimeFilter<"BoardGitSetting"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"BoardGitSetting"> | Date | string
   board?: Prisma.XOR<Prisma.BoardScalarRelationFilter, Prisma.BoardWhereInput>
@@ -259,6 +263,7 @@ export type BoardGitSettingOrderByWithRelationInput = {
   mergeCriteriaCheck?: Prisma.SortOrder
   autoRevise?: Prisma.SortOrder
   autoReviseLimit?: Prisma.SortOrder
+  autoReviseReviewers?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   board?: Prisma.BoardOrderByWithRelationInput
@@ -276,6 +281,7 @@ export type BoardGitSettingWhereUniqueInput = Prisma.AtLeast<{
   mergeCriteriaCheck?: Prisma.EnumMergeCriteriaCheckFilter<"BoardGitSetting"> | $Enums.MergeCriteriaCheck
   autoRevise?: Prisma.BoolFilter<"BoardGitSetting"> | boolean
   autoReviseLimit?: Prisma.IntFilter<"BoardGitSetting"> | number
+  autoReviseReviewers?: Prisma.StringNullableListFilter<"BoardGitSetting">
   createdAt?: Prisma.DateTimeFilter<"BoardGitSetting"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"BoardGitSetting"> | Date | string
   board?: Prisma.XOR<Prisma.BoardScalarRelationFilter, Prisma.BoardWhereInput>
@@ -289,6 +295,7 @@ export type BoardGitSettingOrderByWithAggregationInput = {
   mergeCriteriaCheck?: Prisma.SortOrder
   autoRevise?: Prisma.SortOrder
   autoReviseLimit?: Prisma.SortOrder
+  autoReviseReviewers?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.BoardGitSettingCountOrderByAggregateInput
@@ -309,6 +316,7 @@ export type BoardGitSettingScalarWhereWithAggregatesInput = {
   mergeCriteriaCheck?: Prisma.EnumMergeCriteriaCheckWithAggregatesFilter<"BoardGitSetting"> | $Enums.MergeCriteriaCheck
   autoRevise?: Prisma.BoolWithAggregatesFilter<"BoardGitSetting"> | boolean
   autoReviseLimit?: Prisma.IntWithAggregatesFilter<"BoardGitSetting"> | number
+  autoReviseReviewers?: Prisma.StringNullableListFilter<"BoardGitSetting">
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"BoardGitSetting"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"BoardGitSetting"> | Date | string
 }
@@ -320,6 +328,7 @@ export type BoardGitSettingCreateInput = {
   mergeCriteriaCheck?: $Enums.MergeCriteriaCheck
   autoRevise?: boolean
   autoReviseLimit?: number
+  autoReviseReviewers?: Prisma.BoardGitSettingCreateautoReviseReviewersInput | string[]
   createdAt?: Date | string
   updatedAt?: Date | string
   board: Prisma.BoardCreateNestedOneWithoutGitSettingsInput
@@ -333,6 +342,7 @@ export type BoardGitSettingUncheckedCreateInput = {
   mergeCriteriaCheck?: $Enums.MergeCriteriaCheck
   autoRevise?: boolean
   autoReviseLimit?: number
+  autoReviseReviewers?: Prisma.BoardGitSettingCreateautoReviseReviewersInput | string[]
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -344,6 +354,7 @@ export type BoardGitSettingUpdateInput = {
   mergeCriteriaCheck?: Prisma.EnumMergeCriteriaCheckFieldUpdateOperationsInput | $Enums.MergeCriteriaCheck
   autoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
   autoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  autoReviseReviewers?: Prisma.BoardGitSettingUpdateautoReviseReviewersInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   board?: Prisma.BoardUpdateOneRequiredWithoutGitSettingsNestedInput
@@ -357,6 +368,7 @@ export type BoardGitSettingUncheckedUpdateInput = {
   mergeCriteriaCheck?: Prisma.EnumMergeCriteriaCheckFieldUpdateOperationsInput | $Enums.MergeCriteriaCheck
   autoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
   autoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  autoReviseReviewers?: Prisma.BoardGitSettingUpdateautoReviseReviewersInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -369,6 +381,7 @@ export type BoardGitSettingCreateManyInput = {
   mergeCriteriaCheck?: $Enums.MergeCriteriaCheck
   autoRevise?: boolean
   autoReviseLimit?: number
+  autoReviseReviewers?: Prisma.BoardGitSettingCreateautoReviseReviewersInput | string[]
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -380,6 +393,7 @@ export type BoardGitSettingUpdateManyMutationInput = {
   mergeCriteriaCheck?: Prisma.EnumMergeCriteriaCheckFieldUpdateOperationsInput | $Enums.MergeCriteriaCheck
   autoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
   autoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  autoReviseReviewers?: Prisma.BoardGitSettingUpdateautoReviseReviewersInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -392,6 +406,7 @@ export type BoardGitSettingUncheckedUpdateManyInput = {
   mergeCriteriaCheck?: Prisma.EnumMergeCriteriaCheckFieldUpdateOperationsInput | $Enums.MergeCriteriaCheck
   autoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
   autoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  autoReviseReviewers?: Prisma.BoardGitSettingUpdateautoReviseReviewersInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -419,6 +434,7 @@ export type BoardGitSettingCountOrderByAggregateInput = {
   mergeCriteriaCheck?: Prisma.SortOrder
   autoRevise?: Prisma.SortOrder
   autoReviseLimit?: Prisma.SortOrder
+  autoReviseReviewers?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -497,8 +513,17 @@ export type BoardGitSettingUncheckedUpdateManyWithoutBoardNestedInput = {
   deleteMany?: Prisma.BoardGitSettingScalarWhereInput | Prisma.BoardGitSettingScalarWhereInput[]
 }
 
+export type BoardGitSettingCreateautoReviseReviewersInput = {
+  set: string[]
+}
+
 export type EnumMergeCriteriaCheckFieldUpdateOperationsInput = {
   set?: $Enums.MergeCriteriaCheck
+}
+
+export type BoardGitSettingUpdateautoReviseReviewersInput = {
+  set?: string[]
+  push?: string | string[]
 }
 
 export type BoardGitSettingCreateWithoutBoardInput = {
@@ -508,6 +533,7 @@ export type BoardGitSettingCreateWithoutBoardInput = {
   mergeCriteriaCheck?: $Enums.MergeCriteriaCheck
   autoRevise?: boolean
   autoReviseLimit?: number
+  autoReviseReviewers?: Prisma.BoardGitSettingCreateautoReviseReviewersInput | string[]
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -519,6 +545,7 @@ export type BoardGitSettingUncheckedCreateWithoutBoardInput = {
   mergeCriteriaCheck?: $Enums.MergeCriteriaCheck
   autoRevise?: boolean
   autoReviseLimit?: number
+  autoReviseReviewers?: Prisma.BoardGitSettingCreateautoReviseReviewersInput | string[]
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -560,6 +587,7 @@ export type BoardGitSettingScalarWhereInput = {
   mergeCriteriaCheck?: Prisma.EnumMergeCriteriaCheckFilter<"BoardGitSetting"> | $Enums.MergeCriteriaCheck
   autoRevise?: Prisma.BoolFilter<"BoardGitSetting"> | boolean
   autoReviseLimit?: Prisma.IntFilter<"BoardGitSetting"> | number
+  autoReviseReviewers?: Prisma.StringNullableListFilter<"BoardGitSetting">
   createdAt?: Prisma.DateTimeFilter<"BoardGitSetting"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"BoardGitSetting"> | Date | string
 }
@@ -571,6 +599,7 @@ export type BoardGitSettingCreateManyBoardInput = {
   mergeCriteriaCheck?: $Enums.MergeCriteriaCheck
   autoRevise?: boolean
   autoReviseLimit?: number
+  autoReviseReviewers?: Prisma.BoardGitSettingCreateautoReviseReviewersInput | string[]
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -582,6 +611,7 @@ export type BoardGitSettingUpdateWithoutBoardInput = {
   mergeCriteriaCheck?: Prisma.EnumMergeCriteriaCheckFieldUpdateOperationsInput | $Enums.MergeCriteriaCheck
   autoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
   autoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  autoReviseReviewers?: Prisma.BoardGitSettingUpdateautoReviseReviewersInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -593,6 +623,7 @@ export type BoardGitSettingUncheckedUpdateWithoutBoardInput = {
   mergeCriteriaCheck?: Prisma.EnumMergeCriteriaCheckFieldUpdateOperationsInput | $Enums.MergeCriteriaCheck
   autoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
   autoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  autoReviseReviewers?: Prisma.BoardGitSettingUpdateautoReviseReviewersInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -604,6 +635,7 @@ export type BoardGitSettingUncheckedUpdateManyWithoutBoardInput = {
   mergeCriteriaCheck?: Prisma.EnumMergeCriteriaCheckFieldUpdateOperationsInput | $Enums.MergeCriteriaCheck
   autoRevise?: Prisma.BoolFieldUpdateOperationsInput | boolean
   autoReviseLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  autoReviseReviewers?: Prisma.BoardGitSettingUpdateautoReviseReviewersInput | string[]
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -618,6 +650,7 @@ export type BoardGitSettingSelect<ExtArgs extends runtime.Types.Extensions.Inter
   mergeCriteriaCheck?: boolean
   autoRevise?: boolean
   autoReviseLimit?: boolean
+  autoReviseReviewers?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   board?: boolean | Prisma.BoardDefaultArgs<ExtArgs>
@@ -631,6 +664,7 @@ export type BoardGitSettingSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   mergeCriteriaCheck?: boolean
   autoRevise?: boolean
   autoReviseLimit?: boolean
+  autoReviseReviewers?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   board?: boolean | Prisma.BoardDefaultArgs<ExtArgs>
@@ -644,6 +678,7 @@ export type BoardGitSettingSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
   mergeCriteriaCheck?: boolean
   autoRevise?: boolean
   autoReviseLimit?: boolean
+  autoReviseReviewers?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   board?: boolean | Prisma.BoardDefaultArgs<ExtArgs>
@@ -657,11 +692,12 @@ export type BoardGitSettingSelectScalar = {
   mergeCriteriaCheck?: boolean
   autoRevise?: boolean
   autoReviseLimit?: boolean
+  autoReviseReviewers?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type BoardGitSettingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "boardId" | "provider" | "completeOnMerge" | "mergeCriteriaCheck" | "autoRevise" | "autoReviseLimit" | "createdAt" | "updatedAt", ExtArgs["result"]["boardGitSetting"]>
+export type BoardGitSettingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "boardId" | "provider" | "completeOnMerge" | "mergeCriteriaCheck" | "autoRevise" | "autoReviseLimit" | "autoReviseReviewers" | "createdAt" | "updatedAt", ExtArgs["result"]["boardGitSetting"]>
 export type BoardGitSettingInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   board?: boolean | Prisma.BoardDefaultArgs<ExtArgs>
 }
@@ -697,6 +733,10 @@ export type $BoardGitSettingPayload<ExtArgs extends runtime.Types.Extensions.Int
      * 1チケットあたりの自動差し戻し回数の上限。回数(Ticket.agentAutoReviseCount)は provider をまたいで数える
      */
     autoReviseLimit: number
+    /**
+     * MR へのコメントで差し戻しのきっかけにする GitLab のユーザー名(小文字)。Note Hook に投稿者の権限が無いため許可リストで絞る。GitHub では使わない
+     */
+    autoReviseReviewers: string[]
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["boardGitSetting"]>
@@ -1130,6 +1170,7 @@ export interface BoardGitSettingFieldRefs {
   readonly mergeCriteriaCheck: Prisma.FieldRef<"BoardGitSetting", 'MergeCriteriaCheck'>
   readonly autoRevise: Prisma.FieldRef<"BoardGitSetting", 'Boolean'>
   readonly autoReviseLimit: Prisma.FieldRef<"BoardGitSetting", 'Int'>
+  readonly autoReviseReviewers: Prisma.FieldRef<"BoardGitSetting", 'String[]'>
   readonly createdAt: Prisma.FieldRef<"BoardGitSetting", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"BoardGitSetting", 'DateTime'>
 }

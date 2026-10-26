@@ -194,6 +194,7 @@ const handlePipeline = async (body: unknown, target: GitlabWebhookTarget) => {
 /**
  * MR へのコメント(レビューのスレッドを含む)を差し戻しのきっかけにする。
  * システムノート(push やラベル変更の記録)と、MR の作成者自身のコメントは除く。
+ * Note Hook には投稿者の権限が無いので、ボード設定で許可したユーザーのコメントに限る(本文がエージェントへの指示になるため)。
  */
 const handleNote = async (body: unknown, target: GitlabWebhookTarget) => {
   const parsed = scNoteEvent.safeParse(body)
@@ -208,13 +209,20 @@ const handleNote = async (body: unknown, target: GitlabWebhookTarget) => {
   if (note.author_id != null && note.author_id === mr.author_id) {
     return
   }
+  const author = user?.username ?? null
+  if (!author || !target.board.autoReviseReviewers.includes(author.toLowerCase())) {
+    if (target.board.autoRevise) {
+      logger.info({ repo: target.repo, number: mr.iid, author }, 'agent auto revise skipped: untrusted reviewer')
+    }
+    return
+  }
   await requestAutoRevise(
     { key: repoKey(target), boards: [target.board], pullRequest: { number: mr.iid } },
     {
       source: 'review',
       dedupeKey: `review:${note.id}`,
       body: note.note,
-      author: user?.username ?? null,
+      author,
       url: note.url,
     },
   )

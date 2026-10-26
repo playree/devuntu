@@ -24,6 +24,8 @@ export type BoardGitSettingValue = {
   mergeCriteriaCheck: MergeCriteriaCheck
   autoRevise: boolean
   autoReviseLimit: number
+  /** MR へのコメントで差し戻しのきっかけにする GitLab のユーザー名(小文字)。GitHub では使わない */
+  autoReviseReviewers: string[]
 }
 
 /** BoardGitSetting の行が無い provider の設定。スキーマの既定値と揃える */
@@ -32,6 +34,7 @@ export const DEFAULT_BOARD_GIT_SETTING: BoardGitSettingValue = {
   mergeCriteriaCheck: 'checkedOrReported',
   autoRevise: false,
   autoReviseLimit: 3,
+  autoReviseReviewers: [],
 }
 
 /** マージによる自動完了の前に見る受け入れ条件の判定。並びは設定画面の選択肢の順 */
