@@ -298,7 +298,7 @@ describe('Note Hook', () => {
   ) => ({
     object_kind: 'note',
     project: { id: 1, path_with_namespace: override.path ?? 'group/proj' },
-    user: { username: override.username ?? 'reviewer' },
+    user: { id: 2, username: override.username ?? 'reviewer' },
     object_attributes: {
       id: 900,
       note: '直してください',
@@ -340,9 +340,11 @@ describe('Note Hook', () => {
     expect(vi.mocked(requestAutoRevise).mock.calls[0][1]).toMatchObject({ author: 'CodeRabbitAI' })
   })
 
-  it('許可していないユーザー・投稿者の無いコメントはきっかけにせず、本文を渡さない', async () => {
+  it('許可していないユーザー・投稿者の無い・操作者が投稿者でないコメントはきっかけにせず、本文を渡さない', async () => {
     await handleGitlabEvent('Note Hook', noteEvent({ username: 'outsider' }), TARGET)
     await handleGitlabEvent('Note Hook', { ...noteEvent(), user: null }, TARGET)
+    // 許可したユーザーが、他人(id: 3)のコメントを編集したときのイベント
+    await handleGitlabEvent('Note Hook', noteEvent({ authorId: 3 }), TARGET)
     await handleGitlabEvent('Note Hook', noteEvent(), {
       ...TARGET,
       board: { ...TARGET.board, autoReviseReviewers: [] },

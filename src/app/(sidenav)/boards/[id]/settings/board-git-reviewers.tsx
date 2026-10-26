@@ -36,7 +36,6 @@ export const GitlabAutoReviseReviewers: FC<{
             value={draft}
             isDisabled={isDisabled || isSaving}
             onChange={(e) => setDraft(e.target.value)}
-            errorMessage={parsed.success ? undefined : t('@invalid_auto_revise_reviewers')}
           />
         </div>
         <MultiButton
@@ -54,6 +53,13 @@ export const GitlabAutoReviseReviewers: FC<{
           {t('save')}
         </MultiButton>
       </div>
+      {!parsed.success && (
+        <span // 入力欄のエラー表示に任せると行の下端が伸びて保存ボタンがずれるので、行の外に出す
+          className='text-danger text-xs'
+        >
+          {t('@invalid_auto_revise_reviewers')}
+        </span>
+      )}
       <span className='text-muted text-xs'>{t('msg_gitlab_auto_revise_reviewers_desc')}</span>
     </FlexCol>
   )

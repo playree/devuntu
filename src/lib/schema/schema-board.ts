@@ -177,8 +177,8 @@ export const scBoardRepositoryTarget = z.object({
 /** 自動差し戻しのきっかけにする GitLab のユーザー名。GitLab は大文字小文字を区別しないので小文字へ寄せる */
 export const zAutoReviseReviewers = z
   .array(z.string().trim().regex(GITLAB_USERNAME_PATTERN, el('@invalid_auto_revise_reviewers')).toLowerCase())
-  .max(AUTO_REVISE_REVIEWERS_MAX, el('@invalid_auto_revise_reviewers'))
   .transform((names) => [...new Set(names)])
+  .pipe(z.array(z.string()).max(AUTO_REVISE_REVIEWERS_MAX, el('@invalid_auto_revise_reviewers')))
 
 /** provider ごとの Git 連携の設定。指定した項目だけを変える */
 export const scSetBoardGitSetting = z.object({

@@ -204,7 +204,7 @@ const handleCheckRun = async (body: unknown, target: GithubWebhookTarget) => {
 /**
  * レビューの投稿。修正依頼と、CodeRabbit などのコメントのレビューを差し戻しのきっかけにする。
  * PR の作成者自身のレビュー(エージェントがスレッドへ返信したときに作られるもの)と、
- * 書き込み権限の無い第三者のレビュー(本文がエージェントへの指示になるため)は除く。
+ * リポジトリと関係の無い第三者のレビュー(本文がエージェントへの指示になるため)は除く。
  */
 const handlePullRequestReview = async (body: unknown, target: GithubWebhookTarget) => {
   const parsed = scPullRequestReviewEvent.safeParse(body)

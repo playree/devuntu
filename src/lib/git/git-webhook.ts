@@ -68,8 +68,16 @@ export const toGitLinkedBoard = ({
   key: string
   gitSettings: BoardGitSettingValue[]
 }): GitLinkedBoard => {
-  const { completeOnMerge, mergeCriteriaCheck, ...autoReviseSetting } = gitSettings[0] ?? DEFAULT_BOARD_GIT_SETTING
-  return { ...board, completeOnPrMerge: completeOnMerge, mergeCriteriaCheck, ...autoReviseSetting }
+  const { completeOnMerge, mergeCriteriaCheck, autoRevise, autoReviseLimit, autoReviseReviewers } =
+    gitSettings[0] ?? DEFAULT_BOARD_GIT_SETTING
+  return {
+    ...board,
+    completeOnPrMerge: completeOnMerge,
+    mergeCriteriaCheck,
+    autoRevise,
+    autoReviseLimit,
+    autoReviseReviewers,
+  }
 }
 
 /**

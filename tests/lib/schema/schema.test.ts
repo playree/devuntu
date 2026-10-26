@@ -205,6 +205,10 @@ describe('zAutoReviseReviewers: 自動差し戻しのきっかけにする GitLa
     expect(zAutoReviseReviewers.safeParse(['@user']).success, '記号').toBe(false)
     expect(zAutoReviseReviewers.safeParse(['']).success, '空文字').toBe(false)
     expect(zAutoReviseReviewers.safeParse(Array.from({ length: 51 }, (_, i) => `user${i}`)).success).toBe(false)
+    expect(
+      zAutoReviseReviewers.safeParse([...Array.from({ length: 50 }, (_, i) => `user${i}`), 'USER0']).success,
+      '重複を除いて上限以内なら通す',
+    ).toBe(true)
   })
 })
 
