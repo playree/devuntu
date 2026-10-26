@@ -40,6 +40,7 @@ export const en: DefaultLocaleItems = {
   agent_auto_revise: 'Send agent tickets back on CI failures and review comments',
   agent_auto_revise_count: 'Auto Revise',
   agent_auto_revise_limit: 'Limit per ticket',
+  agent_auto_revise_reviewers: 'Users whose comments send tickets back',
   agent_budget: 'Budget',
   agent_cost: 'Cost',
   agent_custom_instruction: 'Custom Instruction',
@@ -644,9 +645,9 @@ Please copy and use the connection information above.
   msg_agent_mode_desc:
     'Choose how the agent handles this ticket. Plan first posts a plan and waits for your reply; Auto carries out the work and reports back. Only approvers of this agent can change it.',
   msg_github_auto_revise_desc:
-    'When CI fails or a review (Pull request reviews, including bots such as CodeRabbit) is submitted on a linked pull request, tickets the agent has already reported on are sent back for revision. Conversation comments and review comments outside a review do not send tickets back. Reviews are collected for 2 minutes after the last one, and nothing is sent back once the limit is reached (the count is shared between GitHub and GitLab).',
+    'When CI fails or a review (Pull request reviews) is submitted on a linked pull request, tickets the agent has already reported on are sent back for revision. Only reviews by the repository owner, organization members, collaborators, and bots (GitHub Apps) such as CodeRabbit count. Conversation comments and review comments outside a review do not send tickets back. Reviews are collected for 2 minutes after the last one, and nothing is sent back once the limit is reached (the count is shared between GitHub and GitLab).',
   msg_gitlab_auto_revise_desc:
-    'When CI fails or a comment (including bots such as CodeRabbit) is posted on a linked merge request, tickets the agent has already reported on are sent back for revision. Comments are collected for 2 minutes after the last one, and nothing is sent back once the limit is reached (the count is shared between GitHub and GitLab).',
+    'When CI fails or a user listed below comments on a linked merge request, tickets the agent has already reported on are sent back for revision. Comments are collected for 2 minutes after the last one, and nothing is sent back once the limit is reached (the count is shared between GitHub and GitLab).',
   msg_agent_custom_instruction_desc:
     'The instructions (Markdown) the agent reads before starting work and follows throughout. Leaving it blank means no instructions.',
   msg_agent_no_approver: 'No approver is set. Nobody can change the agent mode of tickets assigned to this agent.',
@@ -685,6 +686,8 @@ Please copy and use the connection information above.
     'The integration is disabled in this environment (webhooks are not accepted). You can remove the remaining links.',
   msg_gitlab_already_added:
     'This project is already linked. Switch the verification or regenerate the token from the list.',
+  msg_gitlab_auto_revise_reviewers_desc:
+    'GitLab usernames whose comments send tickets back (including bots such as CodeRabbit), separated by commas or spaces. When empty, comments do not send tickets back (CI failures still do). Comments by other users are ignored and not passed to the agent.',
   msg_gitlab_auto_revise_webhook: 'Also enable Comments in the triggers of the GitLab webhook.',
   msg_board_github_desc:
     'After adding a repository, its webhook URL, secret, and the steps to register the webhook on GitHub are shown.',
@@ -929,6 +932,7 @@ Expiration time: 5 minutes
   '@invalid_github_repo': 'Use the owner/repo format',
   '@invalid_gitlab_project': 'Use the group/project format',
   '@invalid_gitlab_signing_token': 'Enter a signing token starting with whsec_',
+  '@invalid_auto_revise_reviewers': 'Up to 50 GitLab usernames (letters, digits, _ . -)',
   '@too_many_criteria': 'Too many acceptance criteria',
   '@invalid_display_id': 'Enter a display ID (e.g. ABC-12)',
   '@relation_target_invalid': 'Specify another ticket on the same board',

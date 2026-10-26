@@ -69,7 +69,8 @@ const scPullRequestReviewEvent = z.object({
     state: z.string(),
     body: z.string().nullish(),
     html_url: z.string(),
-    user: z.object({ login: z.string() }).nullish(),
+    author_association: z.string().nullish(),
+    user: z.object({ login: z.string(), type: z.string().nullish() }).nullish(),
   }),
   pull_request: z.object({
     number: z.number().int().positive(),
@@ -79,6 +80,16 @@ const scPullRequestReviewEvent = z.object({
 
 /** 差し戻しのきっかけにするレビューの状態。承認(approved)は含めない */
 const REVISE_REVIEW_STATES = new Set(['changes_requested', 'commented'])
+
+/** 差し戻しのきっかけにするレビュアーのリポジトリとの関係。CONTRIBUTOR / NONE などは誰でもなれるので含めない */
+const TRUSTED_AUTHOR_ASSOCIATIONS = new Set(['OWNER', 'MEMBER', 'COLLABORATOR'])
+
+/**
+ * 差し戻しのきっかけにしてよいレビュアーか。ボット(GitHub App)はリポジトリの管理者がインストールしたものしか
+ * 投稿できないので、関係に関わらず含める(CodeRabbit などの author_association は NONE になる)。
+ */
+const isTrustedReviewer = (review: z.infer<typeof scPullRequestReviewEvent>['review']): boolean =>
+  review.user?.type === 'Bot' || TRUSTED_AUTHOR_ASSOCIATIONS.has(review.author_association?.toUpperCase() ?? '')
 
 /** Webhook の対象(受け口の URL が指す対応付け) */
 export type GithubWebhookTarget = {
@@ -192,7 +203,8 @@ const handleCheckRun = async (body: unknown, target: GithubWebhookTarget) => {
 
 /**
  * レビューの投稿。修正依頼と、CodeRabbit などのコメントのレビューを差し戻しのきっかけにする。
- * PR の作成者自身のレビュー(エージェントがスレッドへ返信したときに作られるもの)は除く。
+ * PR の作成者自身のレビュー(エージェントがスレッドへ返信したときに作られるもの)と、
+ * リポジトリと関係の無い第三者のレビュー(本文がエージェントへの指示になるため)は除く。
  */
 const handlePullRequestReview = async (body: unknown, target: GithubWebhookTarget) => {
   const parsed = scPullRequestReviewEvent.safeParse(body)
@@ -207,6 +219,15 @@ const handlePullRequestReview = async (body: unknown, target: GithubWebhookTarge
   }
   const author = review.user?.login ?? null
   if (author && author === pr.user?.login) {
+    return
+  }
+  if (!isTrustedReviewer(review)) {
+    if (target.board.autoRevise) {
+      logger.info(
+        { repo: target.repo, number: pr.number, author, association: review.author_association ?? null },
+        'agent auto revise skipped: untrusted reviewer',
+      )
+    }
     return
   }
   await requestAutoRevise(

@@ -17,6 +17,7 @@ import {
 import { LocaleItem } from '@/locale'
 import { useLocale } from '@/locale/client'
 import { FC, useState } from 'react'
+import { GitlabAutoReviseReviewers } from './board-git-reviewers'
 import { setBoardGitSetting } from './server'
 
 const LIMIT_OPTIONS = Object.fromEntries(
@@ -127,6 +128,15 @@ export const GitProviderSettings: FC<{
           }}
         />
       </div>
+      {provider === 'gitlab' && (
+        <GitlabAutoReviseReviewers
+          key={setting.autoReviseReviewers.join(',')}
+          reviewers={setting.autoReviseReviewers}
+          isDisabled={!setting.autoRevise}
+          isSaving={isSaving}
+          onSave={(autoReviseReviewers) => save({ autoReviseReviewers })}
+        />
+      )}
       {setting.autoRevise && <NoticePanel className='text-xs'>{t(texts.autoReviseWebhook)}</NoticePanel>}
     </FlexCol>
   )

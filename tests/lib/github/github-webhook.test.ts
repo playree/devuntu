@@ -41,6 +41,7 @@ const BOARD = {
   mergeCriteriaCheck: 'checked' as const,
   autoRevise: true,
   autoReviseLimit: 3,
+  autoReviseReviewers: [],
 }
 /** 受け口の URL が指す対応付け */
 const TARGET = { id: 'r1', repo: 'owner/repo', board: BOARD }
@@ -378,7 +379,9 @@ describe('check_suite / check_run', () => {
 })
 
 describe('pull_request_review', () => {
-  const reviewEvent = (override: { action?: string; state?: string; login?: string } = {}) => ({
+  const reviewEvent = (
+    override: { action?: string; state?: string; login?: string; type?: string; association?: string } = {},
+  ) => ({
     action: override.action ?? 'submitted',
     repository: { full_name: 'owner/repo' },
     review: {
@@ -386,7 +389,8 @@ describe('pull_request_review', () => {
       state: override.state ?? 'commented',
       body: '指摘です',
       html_url: 'https://github.com/owner/repo/pull/12#pullrequestreview-501',
-      user: { login: override.login ?? 'coderabbitai[bot]' },
+      author_association: override.association ?? 'NONE',
+      user: { login: override.login ?? 'coderabbitai[bot]', type: override.type ?? 'Bot' },
     },
     pull_request: { number: 12, user: { login: 'devuntu-agent' } },
   })
@@ -415,6 +419,24 @@ describe('pull_request_review', () => {
     await handleGithubEvent('pull_request_review', reviewEvent({ action: 'edited' }), TARGET)
     await handleGithubEvent('pull_request_review', reviewEvent({ login: 'devuntu-agent' }), TARGET)
     await handleGithubEvent('pull_request_review', reviewEvent(), { ...TARGET, repo: 'owner/other' })
+
+    expect(requestAutoRevise).not.toHaveBeenCalled()
+  })
+
+  it('リポジトリのオーナー・メンバー・コラボレーターのレビューはきっかけにする', async () => {
+    for (const association of ['OWNER', 'MEMBER', 'COLLABORATOR']) {
+      await handleGithubEvent('pull_request_review', reviewEvent({ login: 'user', type: 'User', association }), TARGET)
+    }
+
+    expect(requestAutoRevise).toHaveBeenCalledTimes(3)
+  })
+
+  it('書き込み権限の無い第三者のレビューはきっかけにせず、本文を渡さない', async () => {
+    for (const association of ['CONTRIBUTOR', 'FIRST_TIME_CONTRIBUTOR', 'NONE']) {
+      await handleGithubEvent('pull_request_review', reviewEvent({ login: 'user', type: 'User', association }), TARGET)
+    }
+    const { author_association: _, ...review } = reviewEvent({ login: 'user', type: 'User' }).review
+    await handleGithubEvent('pull_request_review', { ...reviewEvent(), review }, TARGET)
 
     expect(requestAutoRevise).not.toHaveBeenCalled()
   })

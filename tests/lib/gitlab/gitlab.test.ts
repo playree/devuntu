@@ -7,6 +7,7 @@ import {
   normalizeGitlabProjectPath,
   parseGitlabUrl,
   pipelineCheckStatusOf,
+  splitGitlabUsernames,
 } from '@/lib/gitlab/gitlab'
 import { describe, expect, it } from 'vitest'
 
@@ -126,5 +127,12 @@ describe('pipelineCheckStatusOf', () => {
     expect(pipelineCheckStatusOf('manual')).toEqual({ status: 'completed', conclusion: 'neutral' })
     expect(pipelineCheckStatusOf('running')).toEqual({ status: 'in_progress', conclusion: null })
     expect(pipelineCheckStatusOf('unknown_status')).toEqual({ status: 'in_progress', conclusion: null })
+  })
+})
+
+describe('splitGitlabUsernames', () => {
+  it('カンマ・空白・改行で区切り、メンションの @ を外す', () => {
+    expect(splitGitlabUsernames(' @coderabbitai, reviewer\nuser2 ,,')).toEqual(['coderabbitai', 'reviewer', 'user2'])
+    expect(splitGitlabUsernames('  ')).toEqual([])
   })
 })

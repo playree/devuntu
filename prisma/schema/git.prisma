@@ -155,6 +155,9 @@ model BoardGitSetting {
   /// 1チケットあたりの自動差し戻し回数の上限。回数(Ticket.agentAutoReviseCount)は provider をまたいで数える
   autoReviseLimit Int @default(3)
 
+  /// MR へのコメントで差し戻しのきっかけにする GitLab のユーザー名(小文字)。Note Hook に投稿者の権限が無いため許可リストで絞る。GitHub では使わない
+  autoReviseReviewers String[] @default([])
+
   // メタデータ
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

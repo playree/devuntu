@@ -8,7 +8,7 @@ import { ASSIGNEE_NONE } from '@/lib/board/ticket-search'
 import { DM_NOTIFY_EVENTS } from '@/lib/notify/notify'
 import { zPassword } from '@/lib/schema/schema'
 import { scCreateUser, scUpdateIntegrationSettings, scUpdateUser } from '@/lib/schema/schema-admin'
-import { scSetBoardNotifySetting, zBoardKey } from '@/lib/schema/schema-board'
+import { scSetBoardNotifySetting, zAutoReviseReviewers, zBoardKey } from '@/lib/schema/schema-board'
 import { scCreateLinkWidget, scUpdateLinkWidget } from '@/lib/schema/schema-dashboard'
 import { scUpdateNotifySetting, scUpdateNotifySettings, scWebPushSubscription } from '@/lib/schema/schema-notify'
 import {
@@ -188,6 +188,27 @@ describe('zBoardKey: ボードキーの入力チェック', () => {
   it('予約キーのエラーメッセージは専用のロケールキーになる', () => {
     const res = zBoardKey.safeParse('PRV1')
     expect(res.error?.issues[0]?.message).toBe('@reserved_board_key')
+  })
+})
+
+describe('zAutoReviseReviewers: 自動差し戻しのきっかけにする GitLab のユーザー名', () => {
+  it('小文字へ寄せて重複を除く', () => {
+    expect(zAutoReviseReviewers.parse(['CodeRabbitAI', ' coderabbitai ', 'user.name_1-x'])).toEqual([
+      'coderabbitai',
+      'user.name_1-x',
+    ])
+    expect(zAutoReviseReviewers.parse([]), '空は許可(コメントでは差し戻さない)').toEqual([])
+  })
+
+  it('ユーザー名の形でない値と、上限を超える件数は受け付けない', () => {
+    expect(zAutoReviseReviewers.safeParse(['user name']).success, '空白').toBe(false)
+    expect(zAutoReviseReviewers.safeParse(['@user']).success, '記号').toBe(false)
+    expect(zAutoReviseReviewers.safeParse(['']).success, '空文字').toBe(false)
+    expect(zAutoReviseReviewers.safeParse(Array.from({ length: 51 }, (_, i) => `user${i}`)).success).toBe(false)
+    expect(
+      zAutoReviseReviewers.safeParse([...Array.from({ length: 50 }, (_, i) => `user${i}`), 'USER0']).success,
+      '重複を除いて上限以内なら通す',
+    ).toBe(true)
   })
 })
 

@@ -170,6 +170,9 @@ export const AGENT_UNLIMITED_DAILY_RUNS = 0
 export const AUTO_REVISE_LIMIT_MIN = 1
 export const AUTO_REVISE_LIMIT_MAX = 20
 
+/** 自動差し戻しのきっかけにする GitLab のユーザー名の登録数の上限 */
+export const AUTO_REVISE_REVIEWERS_MAX = 50
+
 /**
  * 1日の処理上限に指定できる最大値。
  * ポーリング間隔が最短(60秒)でも1日で到達できない回数を上限にし、入力ミスの歯止めだけを掛ける。

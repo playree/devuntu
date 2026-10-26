@@ -17,7 +17,15 @@ describe('toGitLinkedBoard', () => {
       toGitLinkedBoard({
         id: 'board-1',
         key: 'ABC',
-        gitSettings: [{ completeOnMerge: true, mergeCriteriaCheck: 'checked', autoRevise: true, autoReviseLimit: 5 }],
+        gitSettings: [
+          {
+            completeOnMerge: true,
+            mergeCriteriaCheck: 'checked',
+            autoRevise: true,
+            autoReviseLimit: 5,
+            autoReviseReviewers: ['reviewer'],
+          },
+        ],
       }),
     ).toEqual({
       id: 'board-1',
@@ -26,6 +34,7 @@ describe('toGitLinkedBoard', () => {
       mergeCriteriaCheck: 'checked',
       autoRevise: true,
       autoReviseLimit: 5,
+      autoReviseReviewers: ['reviewer'],
     })
   })
 
@@ -37,6 +46,7 @@ describe('toGitLinkedBoard', () => {
       mergeCriteriaCheck: 'checkedOrReported',
       autoRevise: false,
       autoReviseLimit: 3,
+      autoReviseReviewers: [],
     })
   })
 })

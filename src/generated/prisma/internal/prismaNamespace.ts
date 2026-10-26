@@ -5433,6 +5433,7 @@ export const BoardGitSettingScalarFieldEnum = {
   mergeCriteriaCheck: 'mergeCriteriaCheck',
   autoRevise: 'autoRevise',
   autoReviseLimit: 'autoReviseLimit',
+  autoReviseReviewers: 'autoReviseReviewers',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

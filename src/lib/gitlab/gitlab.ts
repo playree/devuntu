@@ -39,6 +39,16 @@ export const normalizeGitlabBaseUrl = (raw: string): string | null => {
 /** GitLab が作る署名トークンの形(`whsec_` + base64)。画面から貼られた値の確認に使う */
 export const GITLAB_SIGNING_TOKEN_PATTERN = /^whsec_[A-Za-z0-9+/]+={0,2}$/
 
+/** GitLab のユーザー名(英数字と `_` `.` `-`) */
+export const GITLAB_USERNAME_PATTERN = /^[A-Za-z0-9_.-]{1,255}$/
+
+/** 入力欄の文字列(カンマ・空白・改行区切り)をユーザー名の並びにする。メンションの `@` は外す */
+export const splitGitlabUsernames = (text: string): string[] =>
+  text
+    .split(/[\s,]+/)
+    .map((name) => name.replace(/^@/, ''))
+    .filter(Boolean)
+
 /** 表示用のインスタンス名(スキームを外したもの) */
 export const gitlabInstanceLabel = (baseUrl: string): string => baseUrl.replace(/^https?:\/\//, '')
 
