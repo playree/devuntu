@@ -54,7 +54,7 @@ export const parseBearerToken = (authorization: string | null): string | undefin
  *
  * Web ログインセッションからは独立しており、ログアウトやセッション失効の影響を受けない。
  * 無効化はトークン自身の有効期限(アクセストークンは既定1時間、リフレッシュトークンは
- * `MCP_REFRESH_TOKEN_EXPIRES_IN`)、OAuth クライアントの無効化、ユーザー BAN で行う。
+ * `MCP_REFRESH_TOKEN_EXPIRES_IN`)、OAuth クライアントの無効化、利用者による許可の取り消し、ユーザー BAN で行う。
  */
 export const verifyMcpAccessToken = async (token: string): Promise<ResourceAuthResult> => {
   let payload
@@ -70,29 +70,48 @@ export const verifyMcpAccessToken = async (token: string): Promise<ResourceAuthR
     return { ok: false, error: 'insufficient_scope' }
   }
 
-  /**
-   * 発行元クライアントの生存も見る。JWT は自己完結なので、これが無いと管理画面で無効化・削除した
-   * クライアントのトークンが有効期限まで通り続けてしまう。better-auth のイントロスペクションと同じ扱い。
-   */
   const clientId = typeof payload.azp === 'string' ? payload.azp : undefined
-  if (!clientId) {
+  const userId = payload.sub
+  if (!clientId || !userId || typeof payload.iat !== 'number') {
     return { ok: false, error: 'invalid_token' }
   }
-  const client = await prisma.oauthClient.findUnique({ where: { clientId }, select: { disabled: true } })
+
+  /**
+   * 発行元クライアントの生存と、利用者の同意が残っているかも見る。JWT は自己完結で DB に行が無いため、
+   * これが無いと管理画面で無効化・削除したクライアントや、`/account` で取り消した許可のトークンが
+   * 有効期限まで通り続けてしまう。
+   *
+   * 同意の `createdAt` は oauth-provider が秒精度で入れ、スコープ追加の再同意では変わらない。
+   * `iat` 以前の同意に限ることで、取り消し後に許可し直しても取り消し前のトークンは通さない。
+   * 同意画面を省略するクライアントは同意行を作らないので確認しない(止めるのはクライアントの無効化)。
+   */
+  const client = await prisma.oauthClient.findUnique({
+    where: { clientId },
+    select: {
+      disabled: true,
+      skipConsent: true,
+      oauthconsents: {
+        where: { userId, createdAt: { lte: new Date(payload.iat * 1000) } },
+        select: { id: true },
+        take: 1,
+      },
+    },
+  })
   if (!client || client.disabled) {
     logger.info({ clientId }, 'mcp token client unavailable')
     return { ok: false, error: 'invalid_token' }
   }
-
-  if (!payload.sub) {
+  if (!client.skipConsent && client.oauthconsents.length === 0) {
+    logger.info({ clientId, userId }, 'mcp token consent revoked')
     return { ok: false, error: 'invalid_token' }
   }
+
   const user = await prisma.user.findUnique({
-    where: { id: payload.sub },
+    where: { id: userId },
     select: { id: true, name: true, email: true, role: true, banned: true },
   })
   if (!user || user.banned) {
-    logger.info({ userId: payload.sub }, 'mcp token user unavailable')
+    logger.info({ userId }, 'mcp token user unavailable')
     return { ok: false, error: 'invalid_token' }
   }
 
