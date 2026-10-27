@@ -242,6 +242,7 @@ export type LocaleItemBase =
   | 'command_sys_log_write_failed'
   | 'command_sys_output_limit'
   | 'command_sys_queued_canceled'
+  | 'command_sys_remote_unconfirmed'
   | 'command_sys_ssh_error'
   | 'command_sys_ssh_setup_failed'
   | 'command_sys_timeout'

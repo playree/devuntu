@@ -158,6 +158,8 @@ export const executeCommandRun = async (input: ExecuteInput): Promise<void> => {
   let sentinelSeen = false
   let flushFailures = 0
   let finished = false
+  /** 中断後に ssh が自然に終わらず、こちらで落とした。リモートが止まったかは分からない */
+  let stopUnconfirmed = false
   /**
    * 間隔とサイズ閾値の両方から呼ばれるので、書き出し中の重複起動を省く。
    *
@@ -188,7 +190,10 @@ export const executeCommandRun = async (input: ExecuteInput): Promise<void> => {
    * 中断の実体。
    *
    * まず stdin を閉じる。リモート側に実行ゲートを置いている場合はこれが EOF になり、
-   * リモートのプロセスグループごと落ちる。置いていない場合に備えて SIGTERM → SIGKILL も続ける。
+   * リモートのプロセスグループごと落ちて ssh も猶予内に終わる。
+   * 置いていない場合に備えて SIGTERM → SIGKILL も続けるが、落ちるのはローカルの ssh だけで
+   * pty の無いリモートの処理は動き続けうる(`-tt` にしない理由は `command-ssh.ts`)。
+   * そのため猶予内に終わらなかった実行は、停止を確認できなかったものとして履歴に残す。
    */
   const abort = (reason: CommandFailureKind) => {
     if (aborted || finished) {
@@ -196,8 +201,18 @@ export const executeCommandRun = async (input: ExecuteInput): Promise<void> => {
     }
     aborted = reason
     child.closeStdin()
-    setTimeout(() => child.kill('SIGTERM'), COMMAND_ABORT_GRACE_MS).unref()
-    setTimeout(() => child.kill('SIGKILL'), COMMAND_ABORT_GRACE_MS + COMMAND_KILL_GRACE_MS).unref()
+    setTimeout(() => {
+      if (finished) {
+        return
+      }
+      stopUnconfirmed = true
+      child.kill('SIGTERM')
+      setTimeout(() => {
+        if (!finished) {
+          child.kill('SIGKILL')
+        }
+      }, COMMAND_KILL_GRACE_MS).unref()
+    }, COMMAND_ABORT_GRACE_MS).unref()
   }
 
   registerRun(runId, { abort })
@@ -273,6 +288,10 @@ export const executeCommandRun = async (input: ExecuteInput): Promise<void> => {
     const notice = outcome.failureKind ? FAILURE_NOTICE[outcome.failureKind] : undefined
     if (notice) {
       await appendSystemMessage(runId, notice.item, notice.values?.(def))
+    }
+    // interrupted は回収かプロセス終了が先に閉じている。確定済みの行には書き足さない
+    if (stopUnconfirmed && aborted !== 'interrupted') {
+      await appendSystemMessage(runId, 'command_sys_remote_unconfirmed')
     }
 
     await finishCommandRun({

@@ -248,6 +248,8 @@ export const ja: DefaultLocaleItems = {
   command_sys_log_write_failed: 'ログを保存できなかったため中断しました。',
   command_sys_output_limit: '出力が異常に多いため中断しました。',
   command_sys_queued_canceled: '順番待ちの間に中断されました。',
+  command_sys_remote_unconfirmed:
+    'リモート側の処理が止まったことを確認できませんでした。処理が続いている可能性があるため、リモート側の状態を確認してください。',
   command_sys_ssh_error: '接続に失敗しました。ホスト鍵・鍵の権限・接続先の設定を確認してください。',
   command_sys_ssh_setup_failed: '接続先の秘密鍵または known_hosts を読み込めないため実行できません。',
   command_sys_timeout: 'タイムアウト(${sec}秒)により中断しました。',

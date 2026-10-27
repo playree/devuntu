@@ -48,7 +48,8 @@ export type SshTarget = {
  * 動作としては一見成立してしまうので、レビューでは気付きにくい。
  */
 export const buildSshArgs = (target: SshTarget, remoteCommand: string): string[] => [
-  // TTY を割り当てない。-tt にすると stdout と stderr が混ざり、進捗表示で区別できなくなる
+  // TTY を割り当てない。-tt にすると stdout と stderr が混ざり、進捗表示で区別できなくなる。
+  // 実行ゲートの authorized_keys に付ける no-pty とも合わない
   '-T',
   // パスフレーズやパスワードの入力待ちで固まらせない
   '-o',
