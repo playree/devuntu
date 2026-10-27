@@ -32,14 +32,6 @@ export const nextTicketNumber = async (tx: Prisma.TransactionClient, boardId: st
 }
 
 /**
- * チケット行のロック。変更前の値(変更履歴・通知の before)を読む前に取り、同じチケットへの同時更新を直列にする。
- * 取らないと、先行の更新がコミットする前の値を読んで「A → C」のように実際と違う履歴を残しうる
- */
-export const lockTicketRow = async (tx: Prisma.TransactionClient, ticketId: string): Promise<void> => {
-  await tx.$queryRaw`SELECT "id" FROM "ticket" WHERE "id" = ${ticketId} FOR UPDATE`
-}
-
-/**
  * かんばんのレーン(ボード + ステータス)のロック。かんばんの並べ替え同士を直列にし、
  * レーンを読んで振り直す間に同じレーンへの別の並べ替えを割り込ませない。
  *
@@ -228,11 +220,11 @@ export const moveTicketToLane = async (
   if (shifted.length > 0) {
     /**
      * レーン先頭への移動では実質全行が対象になるため、1 行ずつではなく 1 文で更新する。
-     * 生 SQL では `@updatedAt` が効かないので、1 行ずつ update していたときと同じになるよう明示的に触る。
+     * 押し出されただけの行は更新日時を変えない(更新日時順の一覧やエージェントの待ち行列で順番が動かないように)
      */
     await tx.$executeRaw`
       UPDATE "ticket" AS t
-      SET "order" = v."order", "updatedAt" = NOW()
+      SET "order" = v."order"
       FROM (VALUES ${Prisma.join(
         shifted.map(({ id, order }) => Prisma.sql`(${id}::text, ${order}::int)`),
       )}) AS v(id, "order")

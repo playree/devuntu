@@ -31,6 +31,7 @@ import type { ChildProposal, CriterionItem } from '../schema/schema-ticket'
 import { type Actor, assertBoardAccess, assertTicketAccess, type TicketAccess } from './board-access'
 import { assertBoardAssignee, getBoardMentionCandidates, getTicketMentionCandidates } from './board-member'
 import { extractMentionEmails, resolveMentionUserIds } from './mention'
+import { lockTicketRow } from './row-lock'
 import { assertTagIdsInBoard, syncTicketTags } from './tag'
 import { nextOrder } from './tag-rule'
 import { hasMergeHeld, recordTicketActivities } from './ticket-activity'
@@ -41,7 +42,6 @@ import { assignTicketParent, writeOwnChildOrder } from './ticket-relation'
 import {
   assertReplyTarget,
   lockKanbanLane,
-  lockTicketRow,
   moveTicketToLane,
   nextTicketNumber,
   reassignContentAttachments,

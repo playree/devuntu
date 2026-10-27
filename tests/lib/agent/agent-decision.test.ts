@@ -4,7 +4,12 @@
  * ボタンを出す条件(返答待ちの判定)と、返答ごとのチケットの状態遷移を確かめる。
  */
 
-import { decideAgentComment, findLatestAgentDecision, findPendingAgentDecision } from '@/lib/agent/agent-decision'
+import {
+  decideAgentComment,
+  findLatestAgentDecision,
+  findPendingAgentDecision,
+  findPendingAgentDecisions,
+} from '@/lib/agent/agent-decision'
 import { applyChildProposal } from '@/lib/agent/agent-proposal'
 import { assertTicketAccess, type TicketAccess } from '@/lib/board/board-access'
 import { insertComment } from '@/lib/board/ticket-mutation'
@@ -16,7 +21,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const fakeTx = vi.hoisted(() => ({
   $queryRaw: vi.fn(),
   ticket: { findUniqueOrThrow: vi.fn(), update: vi.fn() },
-  ticketComment: { findFirst: vi.fn(), findUnique: vi.fn() },
+  ticketComment: { findFirst: vi.fn(), findUnique: vi.fn(), groupBy: vi.fn() },
 }))
 
 vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({}, { tx: fakeTx }))
@@ -49,19 +54,29 @@ const PROPOSAL = {
   advance: 'reported',
 }
 
-/** エージェントの最新コメントと、その後の返信の有無を順に返す */
+/** チケットごとのエージェントの最新コメント(DISTINCT ON の生 SQL)。行ロックの `$queryRaw` には何も返さない */
+const mockLastComments = (rows: unknown[]) => {
+  fakeTx.$queryRaw.mockImplementation(async (sql: string[]) => (sql.join('').includes('DISTINCT ON') ? rows : []))
+}
+
+/** ロックの `$queryRaw` の SQL(最新コメントの取得を除く) */
+const lockQueries = () =>
+  fakeTx.$queryRaw.mock.calls.map(([sql]) => (sql as string[]).join('?')).filter((sql) => sql.includes('FOR UPDATE'))
+
+/** エージェントの最新コメントと、その後の返信の有無を返す */
 const mockComments = (
   last: { id: string; type: 'plan' | 'report' | null; proposal?: unknown } | null,
   hasReply = false,
 ) => {
-  fakeTx.ticketComment.findFirst
-    .mockResolvedValueOnce(last && { ...last, createdAt: PLAN_AT })
-    .mockResolvedValueOnce(hasReply ? { id: 'reply' } : null)
+  mockLastComments(last ? [{ proposal: null, ...last, ticketId: 't1', createdAt: PLAN_AT }] : [])
+  fakeTx.ticketComment.groupBy.mockResolvedValueOnce(hasReply ? [{ ticketId: 't1' }] : [])
 }
 
 beforeEach(() => {
   vi.clearAllMocks()
   fakeTx.ticketComment.findFirst.mockReset()
+  fakeTx.$queryRaw.mockReset()
+  fakeTx.ticketComment.groupBy.mockReset()
   vi.mocked(assertTicketAccess).mockResolvedValue(access)
 })
 
@@ -97,29 +112,73 @@ describe('findPendingAgentDecision', () => {
   it('アナウンスは返信に数えない(ボタンを消さない)', async () => {
     mockComments({ id: 'plan-1', type: 'plan' })
     await findPendingAgentDecision(ticket, fakeTx as never)
-    expect(fakeTx.ticketComment.findFirst).toHaveBeenLastCalledWith({
+    expect(fakeTx.ticketComment.groupBy).toHaveBeenLastCalledWith({
+      by: ['ticketId'],
       where: {
-        ticketId: 't1',
-        createdAt: { gt: PLAN_AT },
-        AND: [
-          { OR: [{ authorId: { not: AGENT } }, { authorId: null }] },
-          { OR: [{ type: null }, { type: { not: 'announcement' } }] },
+        OR: [
+          {
+            ticketId: 't1',
+            createdAt: { gt: PLAN_AT },
+            AND: [
+              { OR: [{ authorId: { not: AGENT } }, { authorId: null }] },
+              { OR: [{ type: null }, { type: { not: 'announcement' } }] },
+            ],
+          },
         ],
       },
-      select: { id: true },
     })
   })
 
   it('質問(通常コメント)で返答待ちになっている場合は対象にしない', async () => {
     mockComments({ id: 'question-1', type: null })
     expect(await findPendingAgentDecision(ticket, fakeTx as never)).toBeNull()
+    expect(fakeTx.ticketComment.groupBy).not.toHaveBeenCalled()
   })
 
   it('処理中・完了済みのチケット・担当が人間なら問い合わせもしない', async () => {
     expect(await findPendingAgentDecision({ ...ticket, agentState: 'running' }, fakeTx as never)).toBeNull()
     expect(await findPendingAgentDecision({ ...ticket, status: 'done' }, fakeTx as never)).toBeNull()
     expect(await findPendingAgentDecision({ ...ticket, assigneeIsAgent: false }, fakeTx as never)).toBeNull()
-    expect(fakeTx.ticketComment.findFirst).not.toHaveBeenCalled()
+    expect(fakeTx.$queryRaw).not.toHaveBeenCalled()
+  })
+})
+
+describe('findPendingAgentDecisions', () => {
+  it('複数のチケットを件数によらず 2 クエリで判定する', async () => {
+    const tickets = [
+      ticket,
+      { ...ticket, id: 't2', agentState: 'done' as const },
+      { ...ticket, id: 't3' },
+      { ...ticket, id: 't4' },
+      { ...ticket, id: 't5', agentState: 'running' as const },
+    ]
+    mockLastComments([
+      { id: 'plan-1', ticketId: 't1', type: 'plan', createdAt: PLAN_AT, proposal: PROPOSAL },
+      { id: 'report-2', ticketId: 't2', type: 'report', createdAt: PLAN_AT, proposal: null },
+      { id: 'plan-3', ticketId: 't3', type: 'plan', createdAt: PLAN_AT, proposal: null },
+      { id: 'question-4', ticketId: 't4', type: null, createdAt: PLAN_AT, proposal: null },
+    ])
+    fakeTx.ticketComment.groupBy.mockResolvedValueOnce([{ ticketId: 't3' }])
+
+    const pending = await findPendingAgentDecisions(tickets, fakeTx as never)
+
+    expect([...pending]).toEqual([
+      ['t1', { commentId: 'plan-1', type: 'plan', proposedChildren: 2 }],
+      ['t2', { commentId: 'report-2', type: 'report', proposedChildren: 0 }],
+    ])
+    expect(fakeTx.$queryRaw).toHaveBeenCalledTimes(1)
+    expect(fakeTx.$queryRaw.mock.calls[0].slice(1)).toEqual([
+      expect.objectContaining({ values: ['t1', AGENT, 't2', AGENT, 't3', AGENT, 't4', AGENT] }),
+    ])
+    expect(fakeTx.ticketComment.groupBy).toHaveBeenCalledTimes(1)
+    expect(fakeTx.ticketComment.groupBy.mock.calls[0][0].where.OR.map((w: { ticketId: string }) => w.ticketId)).toEqual(
+      ['t1', 't2', 't3'],
+    )
+  })
+
+  it('対象が無ければ問い合わせない', async () => {
+    expect((await findPendingAgentDecisions([], fakeTx as never)).size).toBe(0)
+    expect(fakeTx.$queryRaw).not.toHaveBeenCalled()
   })
 })
 
@@ -170,8 +229,7 @@ describe('decideAgentComment', () => {
     )
     expect(result.childTicketIds).toEqual(['child-1'])
     // 通常のチケット作成と同じく、親より先にボードをロックする
-    const locks = fakeTx.$queryRaw.mock.calls.map(([sql]) => (sql as string[]).join('?'))
-    expect(locks).toEqual([
+    expect(lockQueries()).toEqual([
       'SELECT "id" FROM "board" WHERE "id" = ? FOR UPDATE',
       'SELECT "id" FROM "ticket" WHERE "id" = ? FOR UPDATE',
     ])
@@ -184,8 +242,7 @@ describe('decideAgentComment', () => {
 
     expect(applyChildProposal).not.toHaveBeenCalled()
     // 起票しない返答ではボードをロックしない
-    const locks = fakeTx.$queryRaw.mock.calls.map(([sql]) => (sql as string[]).join('?'))
-    expect(locks).toEqual(['SELECT "id" FROM "ticket" WHERE "id" = ? FOR UPDATE'])
+    expect(lockQueries()).toEqual(['SELECT "id" FROM "ticket" WHERE "id" = ? FOR UPDATE'])
   })
 
   it('対象が返信なら、その親のスレッドへ返信する', async () => {

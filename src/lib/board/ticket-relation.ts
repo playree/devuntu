@@ -10,6 +10,7 @@ import type { TicketRelationType } from '@/generated/prisma/enums'
 import { ClientError, errClient, errInvalidOperation } from '../error'
 import { isUniqueViolation, prisma, type Db } from '../prisma'
 import { assertTicketAccess, type Actor, type TicketAccess } from './board-access'
+import { lockTicketRow } from './row-lock'
 import { isTicketUuid, parseTicketDisplayId, parseTicketNumber, ticketDisplayId } from './ticket-id'
 import type { TicketAuthorize } from './ticket-mutation'
 import {
@@ -42,17 +43,10 @@ export const resolveRelationTarget = async (tx: Db, boardId: string, raw: string
   return ticket.id
 }
 
-/**
- * チケット行のロック。子をロックして親の付け替えを直列にし(親が 2 つに増えない)、
- * 末尾の順番を採るときは親もロックして兄弟の同時追加で同じ順番が付かないようにする
- */
-const lockTicket = async (tx: Prisma.TransactionClient, ticketId: string) => {
-  await tx.$queryRaw`SELECT "id" FROM "ticket" WHERE "id" = ${ticketId} FOR UPDATE`
-}
-
 /** 親の下の末尾の順番(兄弟の最大 + 1)。子が居なければ 1。上限を超える場合は上限に揃える */
 const nextChildOrder = async (tx: Prisma.TransactionClient, parentId: string): Promise<number> => {
-  await lockTicket(tx, parentId)
+  // 親をロックして、兄弟の同時追加で同じ順番が付かないようにする
+  await lockTicketRow(tx, parentId)
   const max = await tx.ticketRelation.aggregate({
     where: { type: 'parent', fromId: parentId },
     _max: { order: true },
@@ -73,7 +67,8 @@ export const writeTicketParent = async (
   if (parentId === childId) {
     throw errClient(RELATION_TARGET_INVALID)
   }
-  await lockTicket(tx, childId)
+  // 子をロックして親の付け替えを直列にする(親が 2 つに増えない)
+  await lockTicketRow(tx, childId)
 
   const current = await tx.ticketRelation.findFirst({
     where: { type: 'parent', toId: childId },
@@ -238,7 +233,7 @@ export const moveTicketChild = async (actor: Actor, relationId: string, offset: 
       throw errInvalidOperation()
     }
     await assertTicketAccess(actor, relation.fromId, 'edit', tx)
-    await lockTicket(tx, relation.fromId)
+    await lockTicketRow(tx, relation.fromId)
 
     const siblings = (
       await tx.ticketRelation.findMany({

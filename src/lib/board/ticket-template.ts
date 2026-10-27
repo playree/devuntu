@@ -12,6 +12,7 @@ import { isUniqueViolation, prisma, type Db } from '../prisma'
 import type { CreateTicketTemplate, UpdateTicketTemplate } from '../schema/schema-ticket-template'
 import { assertBoardAccess, type Actor } from './board-access'
 import { assertBoardContentManageable } from './board-setting'
+import { lockBoardRow } from './row-lock'
 import { assertTagIdsInBoard } from './tag'
 import {
   DUPLICATED_TEMPLATE_NAME,
@@ -99,7 +100,7 @@ export const createTicketTemplate = async (actor: Actor, { boardId, tagIds, ...f
   const template = await prisma
     .$transaction(async (tx) => {
       await assertBoardContentManageable(actor, boardId, tx)
-      await tx.$queryRaw`SELECT "id" FROM "board" WHERE "id" = ${boardId} FOR UPDATE`
+      await lockBoardRow(tx, boardId)
       const count = await tx.ticketTemplate.count({ where: { boardId } })
       if (count >= MAX_TEMPLATES_PER_BOARD) {
         throw errInvalidOperation()

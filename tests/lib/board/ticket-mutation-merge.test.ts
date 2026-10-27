@@ -4,18 +4,20 @@
  * 受け入れ条件の判定で未達が残れば完了にせず、保留の履歴と通知を1回だけ残すことを検証する。
  */
 
+import { lockTicketRow } from '@/lib/board/row-lock'
 import { hasMergeHeld, recordTicketActivities } from '@/lib/board/ticket-activity'
 import { completeTicketByMerge } from '@/lib/board/ticket-mutation'
-import { lockTicketRow, moveTicketToLane } from '@/lib/board/ticket-write'
+import { moveTicketToLane } from '@/lib/board/ticket-write'
 import { enqueueTicketCompletedByMerge, enqueueTicketMergeHeld } from '@/lib/notify/notify-trigger'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({ ticket: ['findUnique'] }))
 
+vi.mock('@/lib/board/row-lock', () => ({ lockTicketRow: vi.fn() }))
+
 vi.mock('@/lib/board/ticket-write', () => ({
   assertReplyTarget: vi.fn(),
-  lockTicketRow: vi.fn(),
   moveTicketToLane: vi.fn(),
   nextTicketNumber: vi.fn(),
   reassignContentAttachments: vi.fn(),

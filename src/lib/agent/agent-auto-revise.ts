@@ -12,6 +12,7 @@
 
 import type { Prisma } from '@/generated/prisma/client'
 import type { AgentAutoReviseSource } from '@/generated/prisma/enums'
+import { lockTicketRow } from '../board/row-lock'
 import { OPEN_TICKET_STATUSES } from '../board/ticket-enum'
 import { MINUTE_MS, msBefore, nowDate } from '../day'
 import type { GitLinkedBoard, GitRepoKey } from '../git/git-webhook'
@@ -57,7 +58,7 @@ const applyTrigger = async (
   limit: number,
   data: Omit<Prisma.AgentAutoReviseTriggerCreateManyInput, 'ticketId'>,
 ): Promise<AutoReviseResult> => {
-  await tx.$queryRaw`SELECT "id" FROM "ticket" WHERE "id" = ${ticketId} FOR UPDATE`
+  await lockTicketRow(tx, ticketId)
   const ticket = await tx.ticket.findUnique({
     where: { id: ticketId },
     select: { agentState: true, agentAutoReviseCount: true },

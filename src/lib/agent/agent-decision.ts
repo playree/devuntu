@@ -6,9 +6,10 @@
  * report は処理を終えた後なので、差し戻しのときだけ `agentState` を `planned` へ戻して revise で再開させる。
  */
 
-import type { Prisma } from '@/generated/prisma/client'
+import { Prisma, type TicketComment } from '@/generated/prisma/client'
 import type { AgentTaskState, TicketCommentDecision, TicketCommentType, TicketStatus } from '@/generated/prisma/enums'
 import { assertTicketAccess, type Actor } from '../board/board-access'
+import { lockBoardRow, lockTicketRow } from '../board/row-lock'
 import { insertComment } from '../board/ticket-mutation'
 import { moveTicketToLane } from '../board/ticket-write'
 import { errInvalidOperation } from '../error'
@@ -29,6 +30,8 @@ type DecisionTicket = {
   status: TicketStatus
 }
 
+type LastAgentComment = Pick<TicketComment, 'id' | 'ticketId' | 'type' | 'createdAt' | 'proposal'>
+
 /** 返答を待つ処理状態と、そのとき返答の対象になるコメントの種別 */
 const AWAITING_TYPE: Partial<Record<AgentTaskState, TicketCommentType>> = {
   planned: 'plan',
@@ -36,39 +39,69 @@ const AWAITING_TYPE: Partial<Record<AgentTaskState, TicketCommentType>> = {
 }
 
 /**
- * 承認/差し戻しボタンを出す対象。無ければ null。
+ * 承認/差し戻しボタンを出す対象を、チケットの件数によらず最大 2 クエリでまとめて引く。対象のチケットだけが Map に入る。
  *
  * 担当エージェントの最新コメントが、処理状態に対応する plan / report で、その後に誰の返信も無いこと(アナウンスは返信に数えない)。
  * 質問(通常コメント)で返答待ちになっている場合や、既に誰かが返信した後は対象にしない。
  */
+export const findPendingAgentDecisions = async (
+  tickets: DecisionTicket[],
+  tx: Db = prisma,
+): Promise<Map<string, PendingAgentDecision>> => {
+  const awaiting = new Map<string, { agentId: string; expected: TicketCommentType }>()
+  for (const ticket of tickets) {
+    const expected = ticket.agentState ? AWAITING_TYPE[ticket.agentState] : undefined
+    if (expected && ticket.assigneeIsAgent && ticket.assigneeId && ticket.status !== 'done') {
+      awaiting.set(ticket.id, { agentId: ticket.assigneeId, expected })
+    }
+  }
+  const pending = new Map<string, PendingAgentDecision>()
+  if (awaiting.size === 0) {
+    return pending
+  }
+
+  // Prisma の distinct はメモリ上で絞るため全コメントを読んでしまう。チケットごとに 1 行だけ返す DISTINCT ON で引く
+  const lasts = await tx.$queryRaw<LastAgentComment[]>`
+    SELECT DISTINCT ON (c."ticketId") c."id", c."ticketId", c."type", c."createdAt", c."proposal"
+    FROM "ticket_comment" AS c
+    JOIN (VALUES ${Prisma.join(
+      [...awaiting].map(([ticketId, { agentId }]) => Prisma.sql`(${ticketId}::text, ${agentId}::text)`),
+    )}) AS v("ticketId", "authorId")
+      ON c."ticketId" = v."ticketId" AND c."authorId" = v."authorId"
+    ORDER BY c."ticketId", c."createdAt" DESC, c."id" DESC
+  `
+  const candidates = lasts.flatMap((last) => {
+    const target = awaiting.get(last.ticketId)
+    return target && last.type === target.expected ? [{ ...last, ...target }] : []
+  })
+  if (candidates.length === 0) {
+    return pending
+  }
+
+  const replied = await tx.ticketComment.groupBy({
+    by: ['ticketId'],
+    where: { OR: candidates.map((last) => agentReplyWhere(last.ticketId, last.agentId, last.createdAt)) },
+  })
+  const repliedIds = new Set(replied.map(({ ticketId }) => ticketId))
+  for (const last of candidates) {
+    if (repliedIds.has(last.ticketId)) {
+      continue
+    }
+    const proposal = last.expected === 'plan' ? parseChildProposal(last.proposal) : null
+    pending.set(last.ticketId, {
+      commentId: last.id,
+      type: last.expected,
+      proposedChildren: proposal?.children.length ?? 0,
+    })
+  }
+  return pending
+}
+
+/** チケット1件の返答待ち({@link findPendingAgentDecisions})。無ければ null */
 export const findPendingAgentDecision = async (
   ticket: DecisionTicket,
   tx: Db = prisma,
-): Promise<PendingAgentDecision | null> => {
-  const expected = ticket.agentState ? AWAITING_TYPE[ticket.agentState] : undefined
-  if (!expected || !ticket.assigneeIsAgent || !ticket.assigneeId || ticket.status === 'done') {
-    return null
-  }
-
-  const last = await tx.ticketComment.findFirst({
-    where: { ticketId: ticket.id, authorId: ticket.assigneeId },
-    orderBy: { createdAt: 'desc' },
-    select: { id: true, type: true, createdAt: true, proposal: true },
-  })
-  if (!last || last.type !== expected) {
-    return null
-  }
-
-  const reply = await tx.ticketComment.findFirst({
-    where: agentReplyWhere(ticket.id, ticket.assigneeId, last.createdAt),
-    select: { id: true },
-  })
-  if (reply) {
-    return null
-  }
-  const proposal = expected === 'plan' ? parseChildProposal(last.proposal) : null
-  return { commentId: last.id, type: expected, proposedChildren: proposal?.children.length ?? 0 }
-}
+): Promise<PendingAgentDecision | null> => (await findPendingAgentDecisions([ticket], tx)).get(ticket.id) ?? null
 
 /** 判定に要るチケットの項目 */
 const decisionTicketSelect = {
@@ -119,10 +152,10 @@ export const decideAgentComment = async (actor: Actor, input: DecideAgentComment
      * ロックするので、こちらも親より先にボードを取って順番をそろえる(逆順だと同じ親への作成とデッドロックする)
      */
     if (input.decision === 'approved' && target.proposal !== null) {
-      await tx.$queryRaw`SELECT "id" FROM "board" WHERE "id" = ${access.boardId} FOR UPDATE`
+      await lockBoardRow(tx, access.boardId)
     }
     // 同じ plan / report へ同時に返答されても、返答待ちの判定と投稿を直列にする
-    await tx.$queryRaw`SELECT "id" FROM "ticket" WHERE "id" = ${target.ticketId} FOR UPDATE`
+    await lockTicketRow(tx, target.ticketId)
     const ticket = await tx.ticket.findUniqueOrThrow({ where: { id: target.ticketId }, select: decisionTicketSelect })
     const pending = await findPendingAgentDecision(toDecisionTicket(ticket), tx)
     if (pending?.commentId !== target.id) {

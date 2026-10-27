@@ -7,6 +7,7 @@
 
 import { Prisma } from '@/generated/prisma/client'
 import type { AgentRunAction, AgentRunStatus, AgentTaskState, TicketStatus } from '@/generated/prisma/enums'
+import { lockTicketRow } from '../board/row-lock'
 import { type AgentCriterionReport, assertAgentCriteria, writeAgentCriteria } from '../board/ticket-criterion'
 import { ticketDisplayId } from '../board/ticket-id'
 import { moveTicketToLane } from '../board/ticket-write'
@@ -211,7 +212,7 @@ export const startAgentRun = async (
     }
 
     // Webhook からのきっかけの追加と直列にし、待ち行列を作った後に届いたきっかけは次の回へ回す
-    await tx.$queryRaw`SELECT "id" FROM "ticket" WHERE "id" = ${target.id} FOR UPDATE`
+    await lockTicketRow(tx, target.id)
     // 同じトークンのランナーが複数台で同じタスクを受け取っても、実行は 1 件に限る
     const running = await tx.agentRun.findFirst({
       where: { ticketId: target.id, status: 'running' },
