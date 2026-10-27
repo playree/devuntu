@@ -50,8 +50,11 @@ export const authConfig: AuthConfig = {
  *
  * - `/api/**` : ルートハンドラ。レコード単位の認可は各ハンドラで行う
  * - `/.well-known/**` : OIDC / RFC 8414・9728 のメタデータ。末尾に拡張子が無いので拡張子判定では拾えない
- * - 末尾に拡張子があるもの : `/sw.js` `/robots.txt` `/manifest.webmanifest` `/agent/devuntu_agent.py` など。
- *   `/api/upload/<uuidv7>.webp` のようなルートハンドラもここに当たるが、どちらにせよ素通しでよい
+ * - ルート直下の拡張子付きファイル : `public/` 直下の `/sw.js` と、メタデータルートの `/robots.txt`
+ *   `/manifest.webmanifest` `/favicon.ico` など。ルート直下に動的ルートは無いので画面とは衝突しない
+ * - `/agent/` 直下の拡張子付きファイル : `public/agent/` のランナー配布物(`/agent/devuntu_agent.py` など)
+ *
+ * 拡張子の有無だけで判定すると、`/tickets/x.y` のような動的セグメントの画面まで認証を素通りするため、場所で絞っている。
  */
 export const isProxyAuthBypassPath = (pathname: string): boolean =>
-  pathname.startsWith('/api/') || pathname.startsWith('/.well-known/') || /\.[^/]+$/.test(pathname)
+  pathname.startsWith('/api/') || pathname.startsWith('/.well-known/') || /^\/(agent\/)?[^/]+\.[^/]+$/.test(pathname)

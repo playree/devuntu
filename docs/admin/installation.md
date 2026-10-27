@@ -123,6 +123,7 @@ docker compose run --rm tools setup-env
 - 検索エンジンへのインデックスとクロール(`SEARCH_ENGINE_INDEXING` / `SEARCH_ENGINE_ROBOTS_ALLOW`)
 - 連携元 Devuntu との連携(`MAIN_DEVUNTU_*`)
 - ホスト情報の表示(`LINODE_*`)
+- 手前のリバースプロキシの段数(`TRUSTED_PROXY_COUNT`)
 - ログレベル・セッション期間・自動メンテナンス(`LOG_LEVEL` / `SESSION_*` /
   `MCP_REFRESH_TOKEN_EXPIRES_IN` / `NOTIFY_WORKER_ENABLED` / `MAINTENANCE_*`)
 
@@ -198,6 +199,9 @@ curl -s http://localhost:3000/api/health
 
 プロキシを同じホストに置く場合は、`compose.yaml` の `devuntu` の `ports` を `127.0.0.1:3000:3000` に絞ると、
 プロキシ経由でしか到達できなくなる。
+3000 番へ直接届く状態では `X-Forwarded-For` を詐称でき、サインインなどのレート制限が IP 単位で効かなくなるので、プロキシ経由だけにしておく。
+ロードバランサーの後ろにさらにプロキシを置くなど多段にする場合は、段数を `TRUSTED_PROXY_COUNT` に設定する
+([environment-variables.md](environment-variables.md#認証))。
 
 Caddy の例(証明書は Caddy が自動で取得する。SSE もそのまま流れる)。
 

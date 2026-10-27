@@ -26,8 +26,10 @@ updated: 2026-10-27
 ボードの権限は直接メンバー(`BoardMember`)またはグループ経由(`BoardGroup`)で解決され、`owner` / `member` のロールを持つ。
 
 認証処理を通さないパスの判定は `isProxyAuthBypassPath()`(`src/lib/auth/auth-config.ts`)にある。
-`/api/**`、`/.well-known/**`、末尾に拡張子があるものが対象で、`/sw.js`(Service Worker)や
+`/api/**`、`/.well-known/**`、ルート直下と `/agent/` 直下(ランナーの配布物)の拡張子付きファイルが対象で、`/sw.js`(Service Worker)や
 `/manifest.webmanifest`(PWA manifest)、`/robots.txt` は認証をかけずに配信される。
+拡張子の判定をルート直下に絞っているのは、`/tickets/x.y` のような動的セグメントの画面まで素通しにしないため。
+`public/` に配下のディレクトリを足す場合は `isProxyAuthBypassPath()` にも加える。
 **matcher 側の除外にしないのは、matcher から外れたパスは Proxy 自体が動かずメンテナンス時に
 遮断できないため**(`/api/upload/<uuidv7>.webp` のような拡張子を持つルートハンドラが素通しになる)。
 
@@ -117,7 +119,7 @@ Proxy は認証処理を通さず素通しするため、各ルートハンド�
 | `/api/webpush/subscribe`                           | 認証必須。`pushsubscriptionchange` の再購読報告(POST)                                                                                                                                                                                                                                       |
 | `/api/command/runs/[id]/stream`                    | 認証必須 + 実行者本人または管理者。実行ログのSSE配信(GET)                                                                                                                                                                                                                                   |
 
-ほかの `public/` 配下(`/sw.js`・PWA のアイコン・ロゴ)も、拡張子を持つパスとして認証なしで配信される。
+ほかの `public/` 配下(`/sw.js`・PWA のアイコン・ロゴ)も、ルート直下の拡張子付きファイルとして認証なしで配信される。
 
 ### Git 連携の Webhook
 

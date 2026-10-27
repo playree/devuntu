@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import fcntl
+import ipaddress
 import json
 import logging
 import logging.handlers
@@ -37,10 +38,11 @@ import subprocess
 import sys
 import tempfile
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 # 1 Agent の構成を作業ディレクトリだけで完結させるため、config・ログ・ロックは本体と同じ
 # <作業ディレクトリ>/.devuntu-agent へ置く。作業ディレクトリを分ければ同一ホストに複数の Agent を並べられる
@@ -53,6 +55,7 @@ DEFAULT_LOCK_PATH = AGENT_DIR / "agent.lock"
 # ランナー自体の配布先。curl での初回取得と自動更新の両方でこのパスを使う
 # (src/lib/agent/agent-setup.ts の AGENT_SCRIPT_PATH と同じ)
 AGENT_SCRIPT_PATH = "/agent/devuntu_agent.py"
+
 
 # 起動する CLI の種類。config の cli.kind で選ぶ
 DEFAULT_CLI_KIND = "claude"
@@ -265,9 +268,31 @@ def call_api(config: Config, method: str, path: str, body: dict | None = None) -
 # ---------------------------------------------------------------------------
 
 
+def is_trusted_update_origin(base_url: str) -> bool:
+    """自動更新の取得元として信頼できるか。https か、経路で書き換えられる心配の無いループバック(開発環境)だけ"""
+    parsed = urllib.parse.urlsplit(base_url)
+    if parsed.scheme == "https":
+        return True
+    host = parsed.hostname or ""
+    if host == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
+
+
 def self_update(config: Config) -> bool:
     """自分自身を最新版に更新する。書き換えたら True。失敗しても致命的ではないので warning ログだけ残して戻る"""
     url = f"{config.base_url}{AGENT_SCRIPT_PATH}"
+
+    # 取得したスクリプトをそのまま実行することになるため、経路で差し替えられうる http では更新しない
+    if not is_trusted_update_origin(config.base_url):
+        log.warning(
+            "base_url is not https, skipping update (use https or set self_update to false): %s", config.base_url
+        )
+        return False
+
     try:
         request = urllib.request.Request(url, headers={"user-agent": f"devuntu-agent/{__version__}"})
         with urllib.request.urlopen(request, timeout=30) as response:

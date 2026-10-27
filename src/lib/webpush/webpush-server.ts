@@ -166,9 +166,22 @@ export const saveWebPushSubscription = async (
   const { endpoint, p256dh, auth, replacedEndpoint } = input
   const label = input.label?.slice(0, MAX_WEBPUSH_LABEL) || null
 
+  /**
+   * 他人の購読の持ち主を移すのは、鍵まで一致する場合(同じブラウザで別のアカウントにログインし直した)だけ。
+   * エンドポイントを知っただけの第三者が登録すると、被害者に通知が届かなくなるため。
+   * 拒否してもエラーにはしない(エンドポイントが登録済みかどうかを漏らさない)
+   */
+  const existing = await prisma.webPushSubscription.findUnique({
+    where: { endpoint },
+    select: { userId: true, p256dh: true, auth: true },
+  })
+  if (existing && existing.userId !== userId && (existing.p256dh !== p256dh || existing.auth !== auth)) {
+    logger.warn({ userId }, 'web push subscription owned by another user with different keys, ignored')
+    return
+  }
+
   await prisma.webPushSubscription.upsert({
     where: { endpoint },
-    // 別のユーザーが同じエンドポイントを持つことは無いが、端末を渡した場合に持ち主を移す
     // 登録し直した時刻を登録日時にする。鍵の不正の後に登録し直した購読を、古い購読の掃除で消さないため
     update: { userId, p256dh, auth, label, createdAt: nowDate() },
     create: { userId, endpoint, p256dh, auth, label },

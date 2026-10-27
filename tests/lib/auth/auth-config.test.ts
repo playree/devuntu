@@ -46,17 +46,30 @@ describe('認証バイパス: 画面ではないパスは Proxy の認証処理�
     '/robots.txt',
     '/manifest.webmanifest',
     '/favicon.ico',
+    '/apple-icon.png',
     '/agent/devuntu_agent.py',
+    '/agent/agent-user.png',
   ])('%s は認証処理を通さない', (path) => {
     expect(isProxyAuthBypassPath(path)).toBe(true)
   })
 
-  it.each(['/', '/boards', '/boards/019fab7b-3d5c-74bd-b45f-1c88cb683a57', '/admin/users', '/maintenance'])(
-    '%s は画面なので認証処理を通す',
-    (path) => {
-      expect(isProxyAuthBypassPath(path)).toBe(false)
-    },
-  )
+  it.each([
+    '/',
+    '/boards',
+    '/boards/019fab7b-3d5c-74bd-b45f-1c88cb683a57',
+    '/admin/users',
+    '/maintenance',
+    // 動的セグメントに拡張子のような値が入っても画面として扱う
+    '/tickets/x.y',
+    '/boards/foo.json',
+    '/admin/agents/a.b',
+    '/t/DEVUNTU-1.png',
+    // ランナー配布物以外の /agent/ 配下は画面として扱う
+    '/agent/runs',
+    '/agent/x/y.z',
+  ])('%s は画面なので認証処理を通す', (path) => {
+    expect(isProxyAuthBypassPath(path)).toBe(false)
+  })
 })
 
 describe('メンテナンスモード: 監視とメンテナンス画面のアセット以外を遮断する', () => {

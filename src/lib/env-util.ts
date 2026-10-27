@@ -172,6 +172,13 @@ const server = {
   get BETTER_AUTH_URL() {
     return getEnv('BETTER_AUTH_URL', { required: true })
   },
+  /**
+   * アプリの手前にある信頼するリバースプロキシの段数。
+   * `x-forwarded-for` の末尾からこの番目をクライアントIPとして扱う(レート制限のキー)
+   */
+  get TRUSTED_PROXY_COUNT() {
+    return getEnvInt('TRUSTED_PROXY_COUNT', { default: 1, min: 1, max: 10 })
+  },
   get SESSION_EXPIRES_IN() {
     return getEnvInt('SESSION_EXPIRES_IN', { default: 60 * 60 * 24 * 5, min: 1 })
   },

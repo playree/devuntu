@@ -107,7 +107,7 @@ Codex CLI はコストを返さないため、Codex の実行は予算に数え�
 | `cli`         | `{}`                       | CLI の設定([CLI の設定](#cli-の設定cli))                                |
 | `timeout_sec` | `3600`                     | CLI を待つ上限(秒)。超えたら止めて失敗にする                            |
 | `log_path`    | `.devuntu-agent/agent.log` | ログの出力先                                                            |
-| `self_update` | `true`                     | 自動更新するか                                                          |
+| `self_update` | `true`                     | 自動更新するか(`base_url` が https でないと行わない。localhost は除く)  |
 
 トークンを再発行したら、`config.json` の `token` だけを書き換えればよい(MCP の設定ファイルはトークンを直接持たない)。
 
@@ -184,6 +184,8 @@ codex で推論の強さなどモデル以外を変えたい場合は、`cli.arg
 - **多重起動**はランナー自身がロックで防ぐ。cron 行に `flock` などを足さない(毎回スキップされるようになる)
 - **自動更新**: 起動のたびにサーバーの最新版と比べ、違えば自分自身を書き換えて終了する(その回はチケットを処理しない)。
   失敗しても warning をログに残して処理を続ける。止めたい場合は `self_update: false`
+  - `base_url` が `http://` の場合は、取得したスクリプトを経路で差し替えられうるため自動更新しない(warning を残す)。
+    `localhost` とループバックアドレス(`127.0.0.0/8` / `::1`)だけは http でも更新する。警告を止めたい場合は https にするか `self_update: false`
 
 ## cron で動かすときの注意点
 
