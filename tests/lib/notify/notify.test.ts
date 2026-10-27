@@ -229,6 +229,8 @@ describe('commentExcerpt: 通知に載せるコメント本文の抜粋', () => 
   it('生HTMLのタグは落とす', () => {
     expect(commentExcerpt('<u>comment</u>')).toBe('comment')
     expect(commentExcerpt('<img height="173" src="/api/upload/x.webp" />\n\ntest')).toBe('test')
+    expect(commentExcerpt('<<b>script>alert(1)'), '外した結果できたタグも落とす').toBe('alert(1)')
+    expect(commentExcerpt('a < b'), 'タグでない < は残す').toBe('a < b')
   })
 
   it('上限を超えたら省略記号を付ける', () => {
@@ -271,6 +273,11 @@ describe('announcementText: アナウンスとして Slack に載せる本文', 
 
   it('画像はラベルだけにする', () => {
     expect(announcementText('![スクショ](https://example.com/a.webp)')).toBe('スクショ')
+  })
+
+  it('生HTMLのタグは落とす', () => {
+    expect(announcementText('<u>お知らせ</u>\n<<b>script>alert(1)')).toBe('お知らせ\nalert(1)')
+    expect(announcementText('a < b'), 'タグでない < は残す').toBe('a < b')
   })
 
   it('コードは囲みを Slack のコードに置き換えて中身を残す', () => {
