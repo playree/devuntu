@@ -3,7 +3,9 @@
  *
  * NOTE: プロセス内の Map なので、水平スケールすると別インスタンスが掴んだ実行は
  *       ここから止められない。ただし中断の要求は DB に残り、掴んでいるプロセスの dispatch が
- *       tick ごとに `listCancelRequestedRuns` で拾うので正しさは壊れず、反応が最大 `COMMAND_TICK_MS` ぶん遅れるだけ。
+ *       tick ごとに `listCancelRequestedRuns` で拾うので正しさは壊れず、反応が遅れるだけ
+ *       (通常は次の tick。stale 回収の後に拾い、前の dispatch が終わるまで tick を重ねないので、
+ *       DB が遅いと `COMMAND_TICK_MS` を超えうる)。
  *       共有が必要になったらこのファイルの中身だけを差し替えればよい
  *       (`rate-limit.ts` / `cache.ts` と同じ扱い)。
  */
