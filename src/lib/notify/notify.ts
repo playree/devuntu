@@ -209,6 +209,16 @@ const decodeCharacterReferences = (text: string): string =>
     return String.fromCodePoint(code)
   })
 
+/** 生HTMLのタグを落とす。外した結果が新たなタグにならなくなるまで繰り返す(`<<b>script>` など) */
+const stripHtmlTags = (text: string): string => {
+  let prev: string
+  do {
+    prev = text
+    text = text.replace(RE_HTML_TAG, '')
+  } while (text !== prev)
+  return text
+}
+
 /**
  * メンション記法を `@表示名` へ置き換える。
  *
@@ -235,6 +245,7 @@ const replaceMentions = (text: string, names: ReadonlyMap<string, string>): stri
  * 素のテキストへ均し、改行も畳んで 1 行にする(Slack の引用 1 行 / メールの 1 段落として出す)。
  * エスケープや文字参照も戻して、画面で見えているものへ寄せる。
  * 記法を完全に解釈するわけではなく、通知で読める程度に均すのが目的。
+ * 文字参照も戻すため、出力は HTML として安全ではない。HTML に埋める側でエスケープする。
  */
 export const commentExcerpt = (
   content: string,
@@ -243,10 +254,9 @@ export const commentExcerpt = (
   max: number = NOTIFY_EXCERPT_MAX,
 ): string => {
   // メンションを先に外す。`]` を残したままだとリンク記法として拾われうる
-  const text = replaceMentions(stripCodeSpans(content), mentionNames)
-    .replace(RE_IMAGE, '$1')
-    .replace(RE_LINK, '$1')
-    .replace(RE_HTML_TAG, '')
+  const text = stripHtmlTags(
+    replaceMentions(stripCodeSpans(content), mentionNames).replace(RE_IMAGE, '$1').replace(RE_LINK, '$1'),
+  )
     .replace(RE_LINE_MARKER, '')
     .replace(RE_EMPHASIS, '')
     // 記法を落とし終えてから、記号として書かれた文字を戻す
@@ -297,6 +307,7 @@ const slackCode = (code: string): string =>
  * {@link commentExcerpt} と同じく記法を落とすが、告知の中身(リリースの要点など)を読めるよう
  * 改行・箇条書き・リンクの URL は残す。空行の連続は 1 つに畳む。
  * コードと URL は記法の除去がかからないよう退避し、中身をそのまま戻す(コードは Slack のコードとして囲む)。
+ * 文字参照も戻すため、出力は HTML として安全ではない。HTML に埋める側でエスケープする。
  */
 export const announcementText = (
   content: string,
@@ -330,13 +341,14 @@ export const announcementText = (
     .replace(/(?<!\\)`+/g, '')
 
   // メンションを先に外す。`]` を残したままだとリンク記法として拾われうる
-  const text = replaceMentions(codeKept, mentionNames)
-    .replace(RE_THEMATIC_BREAK, '')
-    .replace(RE_IMAGE, '$1')
-    .replace(RE_LINK_WITH_URL, linkWithUrl)
-    .replace(RE_AUTOLINK, (_matched, url: string) => keep(url))
-    .replace(RE_BARE_URL, keepBareUrl)
-    .replace(RE_HTML_TAG, '')
+  const text = stripHtmlTags(
+    replaceMentions(codeKept, mentionNames)
+      .replace(RE_THEMATIC_BREAK, '')
+      .replace(RE_IMAGE, '$1')
+      .replace(RE_LINK_WITH_URL, linkWithUrl)
+      .replace(RE_AUTOLINK, (_matched, url: string) => keep(url))
+      .replace(RE_BARE_URL, keepBareUrl),
+  )
     .replace(RE_BLOCK_MARKER, '')
     // 強調の `*` と区別できるよう、強調を落とす前に置き換える
     .replace(RE_BULLET_MARKER, '$1• ')
