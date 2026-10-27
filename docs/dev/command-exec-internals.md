@@ -14,6 +14,13 @@
 - 送るコマンドのクォートは `src/lib/command/command-args.ts` の `shellQuote`、引数に使える文字集合は `COMMAND_VALUE_PATTERN`
 - ssh に `SendEnv` は付けていない
 
+## 中断
+
+- 中断要求は DB の `cancelRequestedAt` に立て、実行を掴んでいるプロセスの dispatch が tick ごとに `listCancelRequestedRuns` で拾う(別プロセスの子プロセスは kill できないため)
+- 中断・タイムアウトはまず ssh の stdin を閉じる。実行ゲートがあれば EOF でリモートのプロセスグループごと落ち、ssh も自然に終わる
+- `COMMAND_ABORT_GRACE_MS` 内に ssh が終わらなければ SIGTERM、さらに `COMMAND_KILL_GRACE_MS` 後に SIGKILL で落とす。この場合はリモートが止まったか分からないので、`command_sys_remote_unconfirmed` を履歴に残す。`activeKey` は解放する(停止を確かめる手段が無く、保持すると誰も解除できない)
+- `-tt` で pty を割り当てて SIGHUP で落とす方法は採らない。stdout と stderr が混ざるうえ、実行ゲートの `no-pty` と合わず、pager などの対話動作で固まりうる
+
 ## 実行の記録
 
 - アプリが差し込む行(`stream` が `system`)はロケールキーのまま保存し、表示時に閲覧者の言語で解決する

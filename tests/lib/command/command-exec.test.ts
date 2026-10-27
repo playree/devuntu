@@ -6,6 +6,9 @@
  */
 
 import {
+  COMMAND_ABORT_GRACE_MS,
+  COMMAND_FLUSH_INTERVAL_MS,
+  COMMAND_KILL_GRACE_MS,
   COMMAND_MAX_LINE_CHARS,
   COMMAND_SENTINEL_MARK,
   COMMAND_START_SENTINEL,
@@ -65,7 +68,7 @@ vi.mock('@/lib/command/command-run', () => ({
   },
 }))
 
-const { executeCommandRun, resolveOutcome } = await import('@/lib/command/command-exec')
+const { applyCancel, executeCommandRun, resolveOutcome } = await import('@/lib/command/command-exec')
 const { runningCount } = await import('@/lib/command/command-registry')
 
 const def: CommandDef = {
@@ -344,5 +347,84 @@ describe('executeCommandRun', () => {
     await expect(promise).rejects.toThrow('db down')
 
     expect(runningCount()).toBe(0)
+  })
+})
+
+describe('executeCommandRun の中断', () => {
+  // setImmediate は偽の ssh の終了に使うので本物のまま残す
+  const useFakeTimers = () =>
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] })
+
+  it('猶予内に ssh が終われば、リモートも止まったものとして警告を残さない', async () => {
+    // 実行ゲートがあると stdin を閉じた時点でリモートのプロセスグループごと落ちる
+    useFakeTimers()
+    const fake = createFakeSsh()
+    const promise = run(fake)
+    expect(applyCancel('run-1')).toBe(true)
+    expect(fake.calls.closeStdin).toBe(1)
+
+    await vi.advanceTimersByTimeAsync(COMMAND_ABORT_GRACE_MS - 1)
+    await fake.finish(143)
+    await promise
+    await vi.advanceTimersByTimeAsync(COMMAND_ABORT_GRACE_MS + COMMAND_KILL_GRACE_MS)
+
+    expect(fake.calls.kills).toEqual([])
+    expect(finishMock.calls[0]).toMatchObject({ status: 'canceled', failureKind: 'canceled' })
+    expect(logMock.systemMessages.map(({ item }) => item)).toEqual(['command_sys_canceled'])
+  })
+
+  it('猶予内に ssh が終わらなければ落とし、リモートの停止を確認できなかったことを残す', async () => {
+    // 実行ゲートが無いと、ローカルの ssh を落としてもリモートの処理は動き続けうる
+    useFakeTimers()
+    const fake = createFakeSsh()
+    const promise = run(fake)
+    applyCancel('run-1')
+
+    await vi.advanceTimersByTimeAsync(COMMAND_ABORT_GRACE_MS)
+    expect(fake.calls.kills).toEqual(['SIGTERM'])
+    await fake.finish(255)
+    await promise
+
+    expect(finishMock.calls[0]).toMatchObject({ status: 'canceled', failureKind: 'canceled' })
+    expect(logMock.systemMessages.map(({ item }) => item)).toEqual([
+      'command_sys_canceled',
+      'command_sys_remote_unconfirmed',
+    ])
+  })
+
+  it('回収が先に閉じた実行には、ssh を落としても警告を書き足さない', async () => {
+    // 確定済みの行に追記しない(flush が所有権を失った経路)
+    useFakeTimers()
+    logMock.flushResult = false
+    const fake = createFakeSsh()
+    const promise = run(fake)
+
+    await vi.advanceTimersByTimeAsync(COMMAND_FLUSH_INTERVAL_MS)
+    expect(fake.calls.closeStdin).toBe(1)
+    await vi.advanceTimersByTimeAsync(COMMAND_ABORT_GRACE_MS)
+    expect(fake.calls.kills).toEqual(['SIGTERM'])
+    await fake.finish(255)
+    await promise
+
+    expect(logMock.systemMessages).toEqual([])
+  })
+
+  it('タイムアウトでも、ssh が猶予内に終わらなければ警告を残す', async () => {
+    useFakeTimers()
+    const fake = createFakeSsh()
+    const promise = run(fake)
+
+    await vi.advanceTimersByTimeAsync(def.timeoutSec * 1000)
+    expect(fake.calls.closeStdin).toBe(1)
+    await vi.advanceTimersByTimeAsync(COMMAND_ABORT_GRACE_MS + COMMAND_KILL_GRACE_MS)
+    expect(fake.calls.kills).toEqual(['SIGTERM', 'SIGKILL'])
+    await fake.finish(null)
+    await promise
+
+    expect(finishMock.calls[0]).toMatchObject({ status: 'failed', failureKind: 'timeout' })
+    expect(logMock.systemMessages.map(({ item }) => item)).toEqual([
+      'command_sys_timeout',
+      'command_sys_remote_unconfirmed',
+    ])
   })
 })

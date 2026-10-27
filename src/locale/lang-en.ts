@@ -248,6 +248,8 @@ export const en: DefaultLocaleItems = {
   command_sys_log_write_failed: 'Aborted because the log could not be saved.',
   command_sys_output_limit: 'Aborted because the output was abnormally large.',
   command_sys_queued_canceled: 'Canceled while waiting in the queue.',
+  command_sys_remote_unconfirmed:
+    'Could not confirm that the process on the remote host stopped. It may still be running, so check the state on the remote host.',
   command_sys_ssh_error: 'Could not connect. Check the host key, key permissions, and target settings.',
   command_sys_ssh_setup_failed:
     'The private key or known_hosts for the target could not be read, so the command was not run.',
