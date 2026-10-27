@@ -83,20 +83,27 @@ export const verifyMcpAccessToken = async (token: string): Promise<ResourceAuthR
    *
    * 同意の `createdAt` は oauth-provider が秒精度で入れ、スコープ追加の再同意では変わらない。
    * `iat` 以前の同意に限ることで、取り消し後に許可し直しても取り消し前のトークンは通さない。
-   * 同意画面を省略するクライアントは同意行を作らないので確認しない(止めるのはクライアントの無効化)。
+   * 同意画面を省略するクライアントは同意行を作らず、取り消しても同意なしで認可し直せるので確認しない
+   * (止めるのはクライアントの無効化)。
    */
-  const client = await prisma.oauthClient.findUnique({
-    where: { clientId },
-    select: {
-      disabled: true,
-      skipConsent: true,
-      oauthconsents: {
-        where: { userId, createdAt: { lte: new Date(payload.iat * 1000) } },
-        select: { id: true },
-        take: 1,
+  const [client, user] = await Promise.all([
+    prisma.oauthClient.findUnique({
+      where: { clientId },
+      select: {
+        disabled: true,
+        skipConsent: true,
+        oauthconsents: {
+          where: { userId, createdAt: { lte: new Date(payload.iat * 1000) } },
+          select: { id: true },
+          take: 1,
+        },
       },
-    },
-  })
+    }),
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, email: true, role: true, banned: true },
+    }),
+  ])
   if (!client || client.disabled) {
     logger.info({ clientId }, 'mcp token client unavailable')
     return { ok: false, error: 'invalid_token' }
@@ -105,11 +112,6 @@ export const verifyMcpAccessToken = async (token: string): Promise<ResourceAuthR
     logger.info({ clientId, userId }, 'mcp token consent revoked')
     return { ok: false, error: 'invalid_token' }
   }
-
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { id: true, name: true, email: true, role: true, banned: true },
-  })
   if (!user || user.banned) {
     logger.info({ userId }, 'mcp token user unavailable')
     return { ok: false, error: 'invalid_token' }

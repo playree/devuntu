@@ -64,7 +64,12 @@ describe('verifyMcpAccessToken', () => {
     givenPayload()
     givenClient({ oauthconsents: [] })
     expect(await verifyMcpAccessToken('jwt')).toEqual({ ok: false, error: 'invalid_token' })
-    expect(prisma.user.findUnique).not.toHaveBeenCalled()
+  })
+
+  it('skipConsent が未設定(null)のクライアントは同意を確認する', async () => {
+    givenPayload()
+    givenClient({ skipConsent: null, oauthconsents: [] })
+    expect(await verifyMcpAccessToken('jwt')).toEqual({ ok: false, error: 'invalid_token' })
   })
 
   it('同意画面を省略するクライアントは同意行が無くても通す', async () => {
@@ -76,6 +81,12 @@ describe('verifyMcpAccessToken', () => {
   it('無効化したクライアントのトークンは拒否する', async () => {
     givenPayload()
     givenClient({ disabled: true })
+    expect(await verifyMcpAccessToken('jwt')).toEqual({ ok: false, error: 'invalid_token' })
+  })
+
+  it('削除したクライアントのトークンは拒否する', async () => {
+    givenPayload()
+    vi.mocked(prisma.oauthClient.findUnique).mockResolvedValue(null)
     expect(await verifyMcpAccessToken('jwt')).toEqual({ ok: false, error: 'invalid_token' })
   })
 
