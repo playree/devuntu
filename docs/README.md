@@ -1,3 +1,9 @@
+---
+type: design_doc
+title: Devuntu ドキュメント
+updated: 2026-10-27
+---
+
 # Devuntu ドキュメント
 
 読む人に合わせて3つに分けている。まずは自分に当てはまるところから読む。

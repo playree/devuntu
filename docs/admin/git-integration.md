@@ -1,10 +1,8 @@
-- [GitHub / GitLab 連携](#github--gitlab-連携)
-  - [できること](#できること)
-  - [事前の設定(運用者)](#事前の設定運用者)
-  - [GitHub の Webhook](#github-の-webhook)
-  - [GitLab の Webhook](#gitlab-の-webhook)
-  - [連携のオプション](#連携のオプション)
-  - [詰まったときに見る場所](#詰まったときに見る場所)
+---
+type: design_doc
+title: GitHub / GitLab 連携
+updated: 2026-10-27
+---
 
 # GitHub / GitLab 連携
 
