@@ -258,7 +258,7 @@ describe('moveTicketToLane', () => {
     expect(tx.$executeRaw).not.toHaveBeenCalled()
   })
 
-  it('先頭に入れれば後ろのカードを 1 文でずらす', async () => {
+  it('先頭に入れれば後ろのカードを 1 文でずらし、ずらした行の更新日時は変えない', async () => {
     const tx = laneTx([
       { id: 'a', order: 0 },
       { id: 'b', order: 1 },
@@ -273,6 +273,7 @@ describe('moveTicketToLane', () => {
       ['a', 1],
       ['b', 2],
     ])
+    expect((tx.$executeRaw.mock.calls[0][0] as string[]).join('?')).not.toContain('updatedAt')
   })
 
   it('ステータスが変われば変更者付きで履歴に残す', async () => {

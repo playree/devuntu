@@ -4,7 +4,7 @@ import type { TicketWhereInput } from '@/generated/prisma/models'
 import { safeAuthAction } from '@/lib/action/action-server'
 import { agentStateWhere } from '@/lib/agent/agent'
 import { isAgentApprover, listApprovableAgents } from '@/lib/agent/agent-approver'
-import { findPendingAgentDecision } from '@/lib/agent/agent-decision'
+import { findPendingAgentDecisions } from '@/lib/agent/agent-decision'
 import { createAgentRunnerActions } from '@/lib/agent/agent-runner-action'
 import { getAccessibleBoardIds } from '@/lib/board/board-access'
 import { OPEN_TICKET_STATUSES } from '@/lib/board/ticket-enum'
@@ -79,31 +79,28 @@ export const getAgentTickets = safeAuthAction
         getAccessibleBoardIds(user.id),
       ])
 
-      const items = await Promise.all(
-        tickets.map(async ({ board, boardId, ...ticket }) => {
-          // plan / report への返答はボードのメンバーだけの操作。承認者であっても非メンバーには出さない
-          const canEdit = writableBoardIds.includes(boardId)
-          const pendingDecision = canEdit
-            ? await findPendingAgentDecision({
-                id: ticket.id,
-                assigneeId: agentId,
-                assigneeIsAgent: true,
-                agentState: ticket.agentState,
-                status: ticket.status,
-              })
-            : null
-          return {
-            ...ticket,
-            boardId,
-            displayId: ticketDisplayId({ key: board.key, number: ticket.number }),
-            boardName: board.name,
-            boardKind: board.kind,
-            // アーカイブ済みボードのチケットは承認者でも変更できない(canEditAgentMode と同じ判定)
-            canEditAgentMode: !board.archived,
-            pendingDecision,
-          }
-        }),
+      // plan / report への返答はボードのメンバーだけの操作。承認者であっても非メンバーには出さない
+      const editable = tickets.filter(({ boardId }) => writableBoardIds.includes(boardId))
+      const pendingDecisions = await findPendingAgentDecisions(
+        editable.map(({ id, agentState, status }) => ({
+          id,
+          assigneeId: agentId,
+          assigneeIsAgent: true,
+          agentState,
+          status,
+        })),
       )
+
+      const items = tickets.map(({ board, boardId, ...ticket }) => ({
+        ...ticket,
+        boardId,
+        displayId: ticketDisplayId({ key: board.key, number: ticket.number }),
+        boardName: board.name,
+        boardKind: board.kind,
+        // アーカイブ済みボードのチケットは承認者でも変更できない(canEditAgentMode と同じ判定)
+        canEditAgentMode: !board.archived,
+        pendingDecision: pendingDecisions.get(ticket.id) ?? null,
+      }))
 
       return { items, total }
     },

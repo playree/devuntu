@@ -14,6 +14,7 @@ import { errClient, errInvalidOperation } from '../error'
 import { logger } from '../logger'
 import { isUniqueViolation, prisma, type Db } from '../prisma'
 import { assertBoardAccess, type Actor } from './board-access'
+import { lockBoardRow } from './row-lock'
 import { diffTagIds, DUPLICATED_TAG_NAME, MAX_TAGS_PER_SCOPE, nextOrder } from './tag-rule'
 
 /** タグの選択肢。フォーム / 検索パネル / チップ表示で共有する */
@@ -124,7 +125,7 @@ export const insertBoardTag = async (
   { name, color, order }: { name: string; color: TagColor; order?: number },
 ): Promise<TagOption> =>
   prisma.$transaction(async (tx) => {
-    await tx.$queryRaw`SELECT "id" FROM "board" WHERE "id" = ${boardId} FOR UPDATE`
+    await lockBoardRow(tx, boardId)
     const tags = await tx.tag.findMany({ where: { boardId }, select: { order: true } })
     if (tags.length >= MAX_TAGS_PER_SCOPE) {
       throw errInvalidOperation()

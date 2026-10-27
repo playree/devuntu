@@ -8,6 +8,7 @@
 
 import type { BoardNoteKind } from '@/generated/prisma/enums'
 import { assertBoardAccess, type Actor } from '../board/board-access'
+import { lockBoardRow } from '../board/row-lock'
 import { splitKeywords } from '../board/ticket-search'
 import { envu } from '../env-util'
 import { ClientError, errInvalidOperation, errValidation } from '../error'
@@ -79,7 +80,7 @@ const assertContentLength = ({ kind, content }: Pick<BoardNoteSnapshot, 'kind' |
 
 /** ボード行をロックしてから件数を数え、同時作成で上限を超えないようにする */
 const assertCapacity = async (tx: Db, boardId: string, kind: BoardNoteKind) => {
-  await tx.$queryRaw`SELECT "id" FROM "board" WHERE "id" = ${boardId} FOR UPDATE`
+  await lockBoardRow(tx, boardId)
   const max = boardNoteLimits()[kind]
   if ((await tx.boardNote.count({ where: { boardId, kind } })) >= max) {
     throw errLimitReached(kind, max)

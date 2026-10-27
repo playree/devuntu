@@ -15,6 +15,7 @@ import {
   type TicketAccess,
 } from '@/lib/board/board-access'
 import { assertBoardAssignee, getBoardMentionCandidates, getTicketMentionCandidates } from '@/lib/board/board-member'
+import { lockTicketRow } from '@/lib/board/row-lock'
 import { assertTagIdsInBoard, syncTicketTags } from '@/lib/board/tag'
 import { recordTicketActivities } from '@/lib/board/ticket-activity'
 import { syncTicketCriteria } from '@/lib/board/ticket-criterion'
@@ -33,7 +34,6 @@ import {
 import {
   assertReplyTarget,
   lockKanbanLane,
-  lockTicketRow,
   moveTicketToLane,
   reassignContentAttachments,
 } from '@/lib/board/ticket-write'
@@ -92,10 +92,11 @@ vi.mock('@/lib/board/board-member', () => ({
   getTicketMentionCandidates: vi.fn(async () => []),
 }))
 
+vi.mock('@/lib/board/row-lock', () => ({ lockTicketRow: vi.fn() }))
+
 vi.mock('@/lib/board/ticket-write', () => ({
   assertReplyTarget: vi.fn(),
   lockKanbanLane: vi.fn(),
-  lockTicketRow: vi.fn(),
   moveTicketToLane: vi.fn(),
   nextTicketNumber: vi.fn(async () => 7),
   reassignContentAttachments: vi.fn(),
