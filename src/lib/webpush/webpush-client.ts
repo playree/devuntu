@@ -95,13 +95,14 @@ export const subscribeLocalPush = async (publicKey: string): Promise<LocalSubscr
 
   const applicationServerKey = urlBase64ToUint8Array(publicKey)
   /**
-   * 鍵を差し替えた後は古い購読が残っていると購読し直せないので、先に解除する。
+   * 既存の購読は鍵が同じでも解除して作り直す。
+   * VAPID 鍵を差し替えた後は古い購読が残っていると購読し直せないうえ、同じ購読を送り直すだけだと、
+   * エンドポイントを知る第三者に先に登録された行(鍵の不一致でサーバーが更新を拒否する)から抜け出せないため。
    * 解除した購読はサーバー側にも残るため、エンドポイントを報告して消してもらう。
    */
   const current = await registration.pushManager.getSubscription()
-  let replacedEndpoint: string | undefined
-  if (current && !isSameApplicationServerKey(current.options.applicationServerKey, applicationServerKey)) {
-    replacedEndpoint = current.endpoint
+  const replacedEndpoint = current?.endpoint
+  if (current) {
     await current.unsubscribe()
   }
 

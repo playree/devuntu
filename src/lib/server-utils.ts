@@ -2,15 +2,43 @@ import { headers } from 'next/headers'
 import { envu } from './env-util'
 
 /**
+ * `x-forwarded-for` から、信頼するプロキシが記録したクライアントIPを選ぶ。
+ *
+ * 付け足し型のプロキシ(nginx の `$proxy_add_x_forwarded_for` など)は受け取った値の末尾に
+ * 接続元を足すため、先頭はクライアントが自由に決められる。信頼できるのは末尾から
+ * `trustedProxyCount` 番目(最も外側の信頼するプロキシが記録した接続元)なので、そこを採る。
+ * 要素が足りない場合は先頭を採る。
+ */
+export const pickForwardedClientIp = (forwardedFor: string, trustedProxyCount: number) => {
+  const ips = forwardedFor
+    .split(',')
+    .map((ip) => ip.trim())
+    .filter(Boolean)
+  const picked = ips[Math.max(ips.length - trustedProxyCount, 0)]
+  return picked === undefined ? undefined : stripClientPort(picked)
+}
+
+/**
+ * `203.0.113.1:54321` / `[2001:db8::1]:54321` のように付いた送信元ポートを外す。
+ *
+ * クライアントのポートを残すプロキシ(AWS ALB の `routing.http.xff_client_port.enabled` など)の背後では、
+ * ポートを変えるだけで別のキーになり、IP 単位の制限をすり抜けられてしまうため。
+ */
+const stripClientPort = (ip: string) =>
+  ip.match(/^\[([^\]]+)\](?::\d+)?$/)?.[1] ?? ip.match(/^(\d{1,3}(?:\.\d{1,3}){3}):\d+$/)?.[1] ?? ip
+
+/**
  * クライアントIPを取得する(レート制限のキー用)。
  *
- * リバースプロキシ配下で動かす前提なので `x-forwarded-for` の先頭を採る。
+ * リバースプロキシ配下で動かす前提で、`x-forwarded-for` の末尾から信頼するプロキシの段数
+ * (`TRUSTED_PROXY_COUNT`)番目を採る。
  * ヘッダは詐称できるため認可には使わず、あくまで濫用のコストを上げる目的に留めること。
  * 取得できない場合は `unknown` を返し、その集合でまとめて制限が掛かるようにする。
  */
 export const getClientIp = async () => {
   const headerList = await headers()
-  const forwarded = headerList.get('x-forwarded-for')?.split(',')[0]?.trim()
+  const forwardedFor = headerList.get('x-forwarded-for')
+  const forwarded = forwardedFor ? pickForwardedClientIp(forwardedFor, envu.server.TRUSTED_PROXY_COUNT) : undefined
   return forwarded || headerList.get('x-real-ip')?.trim() || 'unknown'
 }
 

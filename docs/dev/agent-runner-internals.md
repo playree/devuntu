@@ -348,6 +348,9 @@ CodeRabbit は push のたびに再レビューするので、指摘が続くと
   同一ホストに複数のエージェントを並べられるようにしている。ランナーは自分の隣の `config.json` を読むので、cron 行にパスの指定は要らない
 - 自動更新(poll のたびに `AGENT_SCRIPT_PATH` から取得)で書き換えた回は、チケットを処理せずに終了する。
   旧コードのまま処理するとサーバーの期待する挙動とずれるため。取得や書き換えの失敗は warning ログだけで継続する
+- 自動更新は `base_url` が https のとき(と、ループバックのホスト。`is_trusted_update_origin`)だけ行う。取得した内容の確認は
+  先頭行と `__version__` の有無だけなので、経路の改ざんを防ぐのは TLS に任せている。
+  確かめた `base_url` 以外から取得しないよう、リダイレクトも追わない(`NoRedirectHandler`。3xx は取得失敗として warning)
 - `--dry-run` / `--debug` でも `/api/agent/status` への問い合わせ(最終ポーリング時刻の更新)と自動更新は行い、
   実行の記録(`/api/agent/runs`)はしない
 

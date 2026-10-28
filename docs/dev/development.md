@@ -192,7 +192,7 @@ pnpm dev
 - `/robots.txt` は `src/app/robots.ts`。`SEARCH_ENGINE_INDEXING=true` は載せる意思表示なので、
   `SEARCH_ENGINE_ROBOTS_ALLOW` によらずクロール許可になる
 - `X-Robots-Tag` が付くのは Proxy が通常処理を継続したページ応答だけ。認証を素通しするパス
-  (`isProxyAuthBypassPath()` の `/api/**`・`/.well-known/**`・拡張子を含むパス)と Server Action(`next-action` ヘッダ)、
+  (`isProxyAuthBypassPath()` の `/api/**`・`/.well-known/**`・ルート直下と `/agent/` 直下の拡張子付きファイル)と Server Action(`next-action` ヘッダ)、
   認証リダイレクトと管理者拒否の rewrite は、ヘッダを付ける前に返る。これらを追わないのは、`/api/` と `/cal/` は
   クロール許可時も `/robots.txt` で `Disallow` しており、拡張子を含むパスは検索結果に載る HTML ではないため。
   素通しのパス(静的アセットを含む)でセッション取得を走らせない点も兼ねている。Proxy の matcher の事情は
