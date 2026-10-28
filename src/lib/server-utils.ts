@@ -14,8 +14,18 @@ export const pickForwardedClientIp = (forwardedFor: string, trustedProxyCount: n
     .split(',')
     .map((ip) => ip.trim())
     .filter(Boolean)
-  return ips[Math.max(ips.length - trustedProxyCount, 0)]
+  const picked = ips[Math.max(ips.length - trustedProxyCount, 0)]
+  return picked === undefined ? undefined : stripClientPort(picked)
 }
+
+/**
+ * `203.0.113.1:54321` / `[2001:db8::1]:54321` のように付いた送信元ポートを外す。
+ *
+ * クライアントのポートを残すプロキシ(AWS ALB の `routing.http.xff_client_port.enabled` など)の背後では、
+ * ポートを変えるだけで別のキーになり、IP 単位の制限をすり抜けられてしまうため。
+ */
+const stripClientPort = (ip: string) =>
+  ip.match(/^\[([^\]]+)\](?::\d+)?$/)?.[1] ?? ip.match(/^(\d{1,3}(?:\.\d{1,3}){3}):\d+$/)?.[1] ?? ip
 
 /**
  * クライアントIPを取得する(レート制限のキー用)。

@@ -30,6 +30,14 @@ describe('pickForwardedClientIp: x-forwarded-for からの選択', () => {
     expect(pickForwardedClientIp('203.0.113.1', 2)).toBe('203.0.113.1')
   })
 
+  it('送信元ポートは外す(ポートを変えて別のキーにさせない)', () => {
+    expect(pickForwardedClientIp('198.51.100.9, 203.0.113.1:54321', 1)).toBe('203.0.113.1')
+    expect(pickForwardedClientIp('[2001:db8::1]:54321', 1)).toBe('2001:db8::1')
+    expect(pickForwardedClientIp('[2001:db8::1]', 1)).toBe('2001:db8::1')
+    // ポートの無い IPv6 はそのまま
+    expect(pickForwardedClientIp('2001:db8::1', 1)).toBe('2001:db8::1')
+  })
+
   it('空白と空要素は無視する', () => {
     expect(pickForwardedClientIp(' 198.51.100.9 ,, 203.0.113.1 ', 1)).toBe('203.0.113.1')
     expect(pickForwardedClientIp(' , ', 1)).toBeUndefined()

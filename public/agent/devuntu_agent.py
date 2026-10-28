@@ -268,6 +268,13 @@ def call_api(config: Config, method: str, path: str, body: dict | None = None) -
 # ---------------------------------------------------------------------------
 
 
+class NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """リダイレクトを追わない。3xx は HTTPError になる"""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
 def is_trusted_update_origin(base_url: str) -> bool:
     """自動更新の取得元として信頼できるか。https か、経路で書き換えられる心配の無いループバック(開発環境)だけ"""
     parsed = urllib.parse.urlsplit(base_url)
@@ -295,7 +302,9 @@ def self_update(config: Config) -> bool:
 
     try:
         request = urllib.request.Request(url, headers={"user-agent": f"devuntu-agent/{__version__}"})
-        with urllib.request.urlopen(request, timeout=30) as response:
+        # リダイレクトを追うと、確かめた base_url とは別の(http の)取得元のスクリプトで書き換えてしまうため追わない
+        opener = urllib.request.build_opener(NoRedirectHandler)
+        with opener.open(request, timeout=30) as response:
             latest = response.read()
     except (urllib.error.URLError, TimeoutError, socket.timeout) as e:
         log.warning("failed to fetch the latest version: %s", e)
