@@ -44,7 +44,7 @@ command -v codex    # Actual location. Use it when cron cannot find the command
 <!-- cli:opencode -->
 
 ```sh
-opencode --version     # 2.x or later (these steps use the v2 configuration format)
+opencode --version     # 2.2.3 or later (earlier versions may drop the usage of the last step from the output)
 command -v opencode    # Actual location. Use it when cron cannot find the command
 ```
 

@@ -389,6 +389,9 @@ CodeRabbit は push のたびに再レビューするので、指摘が続くと
 | `costUsd`           | `total_cost_usd`                                 | 無し(金額を返さないので null)      | `step_finish` の `cost` の合計                                    |
 | `model`             | `modelUsage` のうちコストが最も大きいモデル      | `cli.model`(未指定なら null)       | `cli.model`(未指定なら null)                                      |
 
+opencode 2.2.2 以前は `run --format json` が最後のステップの `step_finish` を出さないことがある(2.2.3 で修正)。
+保存済みセッションから補うことはせず、セットアップ手順で 2.2.3 以降を前提にしている。
+
 実行は `finish_agent_task` で先に閉じていることが多いので、**閉じた後の実行にも計測値だけは書き込む**
 (状態・要約は報告を優先する)。所要時間は既存の開始 / 終了時刻から出す。
 

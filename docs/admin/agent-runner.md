@@ -146,6 +146,7 @@ OpenCode はモデルの単価から求めたコストを返す。単価の無�
 
 opencode は、ランナーが `cli.args` とは別に `--standalone` を付けて起動する(`cli.args` に `--standalone` / `--server` があれば付けない)。
 OpenCode は既定で常駐の background service が設定を読むため、ランナーが渡す `DEVUNTU_AGENT_TOKEN` が MCP の設定(`{env:DEVUNTU_AGENT_TOKEN}`)へ届かないため。
+OpenCode は 2.2.3 以降を使う。それより前の 2.x は出力から最後のステップの `step_finish` が落ちることがあり、トークン数・コストが少なく記録される。
 
 codex で推論の強さなどモデル以外を変えたい場合は、`cli.args` に `-c model_reasoning_effort="high"` や `--profile <名前>` を足す。
 `cli.args` で出力形式(`--output-format` / `--json` / `--format`)を指定すると、トークン数・コストが記録されなくなる。
