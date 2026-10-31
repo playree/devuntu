@@ -226,8 +226,8 @@ chmod 600 ~/devuntu-agent-work/.devuntu-agent/config.json
 
 - The default is `--auto`. OpenCode allows almost every action by default, and a non-interactive run rejects
   the actions that ask for approval (such as reading `.env` files). `--auto` approves them instead.
-  The runner always adds `--standalone` regardless of this setting, so that the CLI reads the MCP configuration
-  with `DEVUNTU_AGENT_TOKEN` (the background service does not see the variable)
+  Apart from this setting, the runner adds `--standalone` (unless `cli.args` has `--standalone` or `--server`),
+  so that the CLI reads the MCP configuration with `DEVUNTU_AGENT_TOKEN` (the background service does not see the variable)
 
 <!-- /cli -->
 

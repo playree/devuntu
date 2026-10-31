@@ -367,7 +367,8 @@ CodeRabbit は push のたびに再レビューするので、指摘が続くと
   エージェント専用ホストで動かす前提で、CLI の間に権限の差は無い
 - codex の `--skip-git-repo-check` は外せない。codex は git リポジトリの中でしか動かないが、
   `workdir` は clone の基点であってリポジトリではないため
-- opencode の `--standalone` は `cli.args` によらず必ず付ける。既定では常駐の background service が設定を読むので、
+- opencode の `--standalone` は `cli.args` の既定ではなく起動コマンドの側で付ける(`cli.args` を書き換えても外れない。
+  `--standalone` / `--server` を自分で指定した場合だけ付けない)。既定では常駐の background service が設定を読むので、
   ランナーが渡す `DEVUNTU_AGENT_TOKEN` が MCP の設定(`{env:DEVUNTU_AGENT_TOKEN}`)に届かない
 - opencode は作業ディレクトリを cwd ではなく環境変数 `PWD` から決め、端末でない stdin を指示の続きとして読む。
   そのためランナーは CLI の起動時に `PWD` を `workdir` に揃え、stdin を閉じて渡す(全 CLI 共通)

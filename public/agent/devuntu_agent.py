@@ -504,7 +504,9 @@ def build_command(config: Config, task: dict, cli_bin: str | None = None) -> lis
         # opencode の非対話モードはサブコマンド run で、指示は位置引数として最後に置く。
         # 既定では常駐の background service が設定を読むため、ここで渡す DEVUNTU_AGENT_TOKEN が
         # MCP の設定({env:...})へ届かない。--standalone で環境変数を引き継ぐ専用のサーバーを立てさせる
-        return [*command, "run", "--standalone", *output, *model, *config.cli_args, prompt]
+        # (接続先を cli.args で明示している場合は足さない)
+        server = [] if any(arg.split("=")[0] in ("--standalone", "--server") for arg in config.cli_args) else ["--standalone"]
+        return [*command, "run", *server, *output, *model, *config.cli_args, prompt]
     return [*command, "-p", prompt, *output, *model, *config.cli_args]
 
 
@@ -641,6 +643,7 @@ def parse_opencode_output(stdout: str, model: str) -> tuple[str | None, dict]:
         part = event.get("part")
         if kind == "text" and isinstance(part, dict) and isinstance(part.get("text"), str):
             message = part["text"]
+            error = None
         elif kind == "step_finish" and isinstance(part, dict) and isinstance(part.get("tokens"), dict):
             tokens = part["tokens"]
             cache = tokens.get("cache") if isinstance(tokens.get("cache"), dict) else {}
@@ -651,7 +654,10 @@ def parse_opencode_output(stdout: str, model: str) -> tuple[str | None, dict]:
             outputs.append(sum_counts(to_count(tokens.get("output")), to_count(tokens.get("reasoning"))))
             costs.append(to_cost(part.get("cost")))
         elif kind == "error" and isinstance(event.get("error"), dict):
-            error = str(event["error"].get("message") or "") or error
+            # 版によって {message} と {name, data: {message}} の 2 通りがある
+            detail = event["error"]
+            data = detail.get("data") if isinstance(detail.get("data"), dict) else {}
+            error = str(detail.get("message") or data.get("message") or detail.get("name") or "") or error
 
     present_costs = [cost for cost in costs if cost is not None]
     metrics = {
@@ -665,7 +671,8 @@ def parse_opencode_output(stdout: str, model: str) -> tuple[str | None, dict]:
         metrics = {}
     if not recognized:
         return None, {}
-    summary = message if message is not None else (error or "")
+    # 最後の応答の後に起きたエラーは、途中の応答より失敗の理由として役に立つ
+    summary = error if error else (message if message is not None else "")
     return summary, {key: value for key, value in metrics.items() if value is not None}
 
 
