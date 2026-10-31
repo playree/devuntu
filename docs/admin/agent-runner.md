@@ -1,7 +1,7 @@
 ---
 type: design_doc
 title: AIエージェントの自動運用(Devuntu Agent)
-updated: 2026-10-27
+updated: 2026-10-31
 ---
 
 # AIエージェントの自動運用(Devuntu Agent)
@@ -9,10 +9,10 @@ updated: 2026-10-27
 > **対象**: エージェントを動かすマシン(ランナー)を用意・運用する人
 >
 > 1. 管理者が `/admin/agents` でエージェントを作り、トークンを発行する。承認者を決め、担当させたいボードのメンバーに加える
-> 2. エージェント専用のマシンに Claude Code か Codex CLI を入れ、Devuntu の MCP を登録して「devuntu のエージェントをセットアップして」と頼む
+> 2. エージェント専用のマシンに Claude Code・Codex CLI・OpenCode のいずれかを入れ、Devuntu の MCP を登録して「devuntu のエージェントをセットアップして」と頼む
 > 3. 作業ディレクトリに開発環境(Git の認証など)を用意し、画面の「自動運用」を有効にする
 
-エージェントに担当させたチケットを、AI エージェントの CLI(Claude Code / Codex CLI)が自動で処理する仕組み。
+エージェントに担当させたチケットを、AI エージェントの CLI(Claude Code / Codex CLI / OpenCode)が自動で処理する仕組み。
 ここでは、エージェントを動かすマシン(ランナー)を設置・運用する人向けに、設定と保守の方法をまとめる。
 
 - 常駐プロセスは無い。cron が 5 分おきにランナー(`devuntu_agent.py`)を起動し、処理すべきチケットがあるときだけ CLI を起動する
@@ -36,13 +36,13 @@ cron からは権限確認に誰も答えられないため、CLI は既定で�
 
 ## セットアップ
 
-Claude Code か Codex CLI から、Devuntu の MCP に接続した状態で「devuntu のエージェントをセットアップして」と頼む。
+Claude Code・Codex CLI・OpenCode のいずれかから、Devuntu の MCP に接続した状態で「devuntu のエージェントをセットアップして」と頼む。
 MCP ツール `get_agent_setup_guide` がそのマシン向けの手順を返し、それに沿って進む
 (MCP の登録は [ai.md](../guide/ai.md#aiツールからつなぐmcp) の手順で、セットアップする人自身のトークンを使えばよい)。
 
 - 途中でエージェント用のトークンを求められる。管理者が `/admin/agents` で発行する
 
-- 途中で、エージェントにどちらの CLI(Claude Code / Codex CLI)を使わせるかを聞かれる。セットアップを頼んだ CLI と同じでなくてよい
+- 途中で、エージェントにどの CLI(Claude Code / Codex CLI / OpenCode)を使わせるかを聞かれる。セットアップを頼んだ CLI と同じでなくてよい
 - ランナー本体は `curl <Devuntu の URL>/agent/devuntu_agent.py` で、サーバーと同じ版が取得される
 
 ## 画面での設定
@@ -75,6 +75,7 @@ MCP ツール `get_agent_setup_guide` がそのマシン向けの手順を返し
 | 月の予算上限(USD) | 今月のコストが上限に達すると新しい実行を始めない。`0` は無制限。実行中の1回は止めないので、最後の1回ぶんは超えることがある |
 
 Codex CLI はコストを返さないため、Codex の実行は予算に数えない(コストは `-` と表示される)。
+OpenCode はモデルの単価から求めたコストを返す。単価の無いモデル(自前で立てたモデルなど)では `0` になる。
 
 ### カスタム指示
 
@@ -113,19 +114,20 @@ Codex CLI はコストを返さないため、Codex の実行は予算に数え�
 
 ### CLI の設定(cli)
 
-| キー        | 内容                                                                                    |
-| ----------- | --------------------------------------------------------------------------------------- |
-| `cli.kind`  | 使う CLI。`claude`(既定)/ `codex`                                                       |
-| `cli.bin`   | CLI のコマンド。既定は `cli.kind` と同じ名前                                            |
-| `cli.args`  | CLI に渡す引数。指定すると既定を置き換える                                              |
-| `cli.model` | モデル。claude は `--model` のエイリアス(`opus` など)、codex はモデル名(`gpt-5.5` など) |
-| `cli.path`  | CLI を探す PATH。セットアップ時に `save-path` で保存する                                |
-| `cli.env`   | CLI に追加で渡す環境変数([cron で動かすときの注意点](#cron-で動かすときの注意点))       |
+| キー        | 内容                                                                                                                                         |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cli.kind`  | 使う CLI。`claude`(既定)/ `codex` / `opencode`                                                                                               |
+| `cli.bin`   | CLI のコマンド。既定は `cli.kind` と同じ名前                                                                                                 |
+| `cli.args`  | CLI に渡す引数。指定すると既定を置き換える                                                                                                   |
+| `cli.model` | モデル。claude は `--model` のエイリアス(`opus` など)、codex はモデル名(`gpt-5.5` など)、opencode は `provider/model`(`openai/gpt-5.5` など) |
+| `cli.path`  | CLI を探す PATH。セットアップ時に `save-path` で保存する                                                                                     |
+| `cli.env`   | CLI に追加で渡す環境変数([cron で動かすときの注意点](#cron-で動かすときの注意点))                                                            |
 
 | `cli.kind` | `cli.args` の既定                                    | `cli.model` の既定                             |
 | ---------- | ---------------------------------------------------- | ---------------------------------------------- |
 | `claude`   | `--permission-mode auto`                             | `opus`                                         |
 | `codex`    | `--sandbox danger-full-access --skip-git-repo-check` | なし(`~/.codex/config.toml` の `model` に従う) |
+| `opencode` | `--auto`                                             | なし(OpenCode の設定の `model` に従う)         |
 
 権限を絞る例:
 
@@ -139,8 +141,15 @@ Codex CLI はコストを返さないため、Codex の実行は予算に数え�
   `network_access=true` が無いと `git clone` や依存関係のインストールが失敗する。
   また `~/.npm` や `~/.cache`、`~/.gitconfig` などへの書き込みも弾かれるので、ビルドまでさせる場合は事前に確認する
 
+- opencode: `--auto` を外すと、承認が要る操作(`.env` の読み取りなど)は自動で拒否される。
+  さらに絞るなら作業ディレクトリの `opencode.json` の `permissions` に `deny` のルールを足す(`--auto` でも `deny` は守られる)
+
+opencode は、ランナーが `cli.args` とは別に `--standalone` を付けて起動する(`cli.args` に `--standalone` / `--server` があれば付けない)。
+OpenCode は既定で常駐の background service が設定を読むため、ランナーが渡す `DEVUNTU_AGENT_TOKEN` が MCP の設定(`{env:DEVUNTU_AGENT_TOKEN}`)へ届かないため。
+OpenCode は 2.2.3 以降を使う。それより前の 2.x は出力から最後のステップの `step_finish` が落ちることがあり、トークン数・コストが少なく記録される。
+
 codex で推論の強さなどモデル以外を変えたい場合は、`cli.args` に `-c model_reasoning_effort="high"` や `--profile <名前>` を足す。
-`cli.args` で出力形式(`--output-format` / `--json`)を指定すると、トークン数・コストが記録されなくなる。
+`cli.args` で出力形式(`--output-format` / `--json` / `--format`)を指定すると、トークン数・コストが記録されなくなる。
 
 ## コマンド
 

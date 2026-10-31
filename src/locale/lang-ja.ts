@@ -460,6 +460,7 @@ export const ja: DefaultLocaleItems = {
   oidc_clients_dynamic: '動的登録',
   oidc_clients_manual: '手動登録',
   ok: 'OK',
+  opencode: 'OpenCode',
   otp: 'OTP',
   overdue: '期限切れ',
   owner: 'オーナー',

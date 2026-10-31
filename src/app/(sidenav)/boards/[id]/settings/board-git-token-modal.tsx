@@ -51,7 +51,7 @@ export const IssuedTokenModal: FC<{
         <FlexCol isSmart>
           <span className='font-mono text-sm break-all'>{target.repo}</span>
           <CopyableField label={t('git_webhook_url')} text={target.webhookUrl} />
-          <CopyableField label={label} text={target.token} isMask />
+          <CopyableField label={label} text={target.token} />
           <NoticePanel status='warning' className='text-xs' title={t('msg_token_once')}>
             {description}
           </NoticePanel>

@@ -1,7 +1,7 @@
 ---
 type: design_doc
 title: AIエージェントの自動運用の仕組み(開発者向け)
-updated: 2026-10-27
+updated: 2026-10-31
 ---
 
 # AIエージェントの自動運用の仕組み(開発者向け)
@@ -24,7 +24,7 @@ cron
 devuntu_agent.py
  ├─ 1. POST  /api/agent/status        動いてよいか / 何を処理するか
  ├─ 2. POST  /api/agent/runs          実行の開始を記録(チケットが処理中になる)
- ├─ 3. claude -p / codex exec         CLI を起動
+ ├─ 3. claude -p / codex exec / opencode run  CLI を起動
  │     └─ 4. エージェントが MCP で get_agent_task → 処理 → finish_agent_task
  └─ 5. PATCH /api/agent/runs/:id      計測値(トークン数・コスト)の記録と、未報告のまま終了した場合の保険
 ```
@@ -338,7 +338,7 @@ CodeRabbit は push のたびに再レビューするので、指摘が続くと
 設定キー・サブコマンド・ファイル配置は [agent-runner.md](../admin/agent-runner.md#configjson) を参照。ここでは実装上の判断を書く。
 
 - 常駐しない。cron が単発起動するので、プロセス監視も再起動も要らない
-- cron の PATH では `claude` / `codex` を解決できないため、ランナーが PATH を補ってから CLI を起動する。
+- cron の PATH では `claude` / `codex` / `opencode` を解決できないため、ランナーが PATH を補ってから CLI を起動する。
   `cli.path`(`save-path` で対話シェルの PATH を保存)が優先で、主なインストール先(`~/.local/bin`、nvm の node など)の推測は
   そのフォールバック。補った PATH は CLI 自身にも渡るので、エージェントが呼ぶコマンドの解決にも効く
 - 多重起動の防止はランナー側のファイルロックで行う。cron 行に排他の仕組みを足すと同じロックファイルの
@@ -357,31 +357,40 @@ CodeRabbit は push のたびに再レビューするので、指摘が続くと
 `cli.kind` で起動する CLI を選ぶ。CLI ごとに違うのは**起動コマンドの組み立てと既定値だけ**で、
 渡すプロンプトも処理の流れも共通(`build_command` に閉じている)。
 
-| `cli.kind` | 起動コマンド          | `cli.args` の既定                                    | `cli.model` の既定 |
-| ---------- | --------------------- | ---------------------------------------------------- | ------------------ |
-| `claude`   | `claude -p <prompt>`  | `--permission-mode auto`                             | `opus`             |
-| `codex`    | `codex exec <prompt>` | `--sandbox danger-full-access --skip-git-repo-check` | なし(CLI 側の既定) |
+| `cli.kind` | 起動コマンド                         | `cli.args` の既定                                    | `cli.model` の既定 |
+| ---------- | ------------------------------------ | ---------------------------------------------------- | ------------------ |
+| `claude`   | `claude -p <prompt>`                 | `--permission-mode auto`                             | `opus`             |
+| `codex`    | `codex exec <prompt>`                | `--sandbox danger-full-access --skip-git-repo-check` | なし(CLI 側の既定) |
+| `opencode` | `opencode run --standalone <prompt>` | `--auto`                                             | なし(CLI 側の既定) |
 
 - `cli.args` の既定がどちらも自動承認なのは、cron からは権限確認に誰も答えられないため。
-  エージェント専用ホストで動かす前提で、claude と codex の間に権限の差は無い
+  エージェント専用ホストで動かす前提で、CLI の間に権限の差は無い
 - codex の `--skip-git-repo-check` は外せない。codex は git リポジトリの中でしか動かないが、
   `workdir` は clone の基点であってリポジトリではないため
+- opencode の `--standalone` は `cli.args` の既定ではなく起動コマンドの側で付ける(`cli.args` を書き換えても外れない。
+  `--standalone` / `--server` を自分で指定した場合だけ付けない)。既定では常駐の background service が設定を読むので、
+  ランナーが渡す `DEVUNTU_AGENT_TOKEN` が MCP の設定(`{env:DEVUNTU_AGENT_TOKEN}`)に届かない
+- opencode は作業ディレクトリを cwd ではなく環境変数 `PWD` から決め、端末でない stdin を指示の続きとして読む。
+  そのためランナーは CLI の起動時に `PWD` を `workdir` に揃え、stdin を閉じて渡す(全 CLI 共通)
 
 ## 利用量の計測
 
-ランナーは CLI の出力を機械可読にして起動し(claude は `--output-format json`、codex は `exec --json`)、
+ランナーは CLI の出力を機械可読にして起動し(claude は `--output-format json`、codex は `exec --json`、opencode は `run --format json`)、
 終了後にトークン数・コスト・モデル・終了コードを取り出して `PATCH /api/agent/runs/:id` の `metrics` で送る。
 実行履歴に残す要約(最終メッセージ)も同じ出力から取り出す。`cli.args` に出力形式
-(`--output-format` / `--json`)を自分で指定した場合はランナーは足さず、解析できなければ計測値を送らない
+(`--output-format` / `--json` / `--format`)を自分で指定した場合はランナーは足さず、解析できなければ計測値を送らない
 (従来どおり標準出力をそのまま要約にする)。
 
-| 項目                | claude                                           | codex                              |
-| ------------------- | ------------------------------------------------ | ---------------------------------- |
-| `inputTokens`       | `modelUsage` の入力 + キャッシュ読み書きの合計   | `turn.completed` の `input_tokens` |
-| `cachedInputTokens` | キャッシュから読んだぶん(`cacheReadInputTokens`) | `cached_input_tokens`              |
-| `outputTokens`      | `modelUsage` の出力の合計                        | `output_tokens`                    |
-| `costUsd`           | `total_cost_usd`                                 | 無し(金額を返さないので null)      |
-| `model`             | `modelUsage` のうちコストが最も大きいモデル      | `cli.model`(未指定なら null)       |
+| 項目                | claude                                           | codex                              | opencode                                                          |
+| ------------------- | ------------------------------------------------ | ---------------------------------- | ----------------------------------------------------------------- |
+| `inputTokens`       | `modelUsage` の入力 + キャッシュ読み書きの合計   | `turn.completed` の `input_tokens` | `step_finish` の `tokens.input` + `tokens.cache` の読み書きの合計 |
+| `cachedInputTokens` | キャッシュから読んだぶん(`cacheReadInputTokens`) | `cached_input_tokens`              | `tokens.cache.read` の合計                                        |
+| `outputTokens`      | `modelUsage` の出力の合計                        | `output_tokens`                    | `tokens.output` + `tokens.reasoning` の合計                       |
+| `costUsd`           | `total_cost_usd`                                 | 無し(金額を返さないので null)      | `step_finish` の `cost` の合計                                    |
+| `model`             | `modelUsage` のうちコストが最も大きいモデル      | `cli.model`(未指定なら null)       | `cli.model`(未指定なら null)                                      |
+
+opencode 2.2.2 以前は `run --format json` が最後のステップの `step_finish` を出さないことがある(2.2.3 で修正)。
+保存済みセッションから補うことはせず、セットアップ手順で 2.2.3 以降を前提にしている。
 
 実行は `finish_agent_task` で先に閉じていることが多いので、**閉じた後の実行にも計測値だけは書き込む**
 (状態・要約は報告を優先する)。所要時間は既存の開始 / 終了時刻から出す。
@@ -400,6 +409,7 @@ CodeRabbit は push のたびに再レビューするので、指摘が続くと
 
 - Claude Code: `.mcp.json` のヘッダに `Bearer ${DEVUNTU_AGENT_TOKEN}`(読み込み時に展開される)
 - Codex CLI: `.codex/config.toml` の `bearer_token_env_var = "DEVUNTU_AGENT_TOKEN"`
+- OpenCode: `opencode.json` のヘッダに `Bearer {env:DEVUNTU_AGENT_TOKEN}`(読み込み時に展開される)
 
 トークンの在処が `config.json` だけになるので、再発行時に直す場所が 1 箇所で済む。人が同じ作業
 ディレクトリで CLI を手動起動して確認するときは、`devuntu_agent.py env` が同じ環境変数を
@@ -408,7 +418,7 @@ CodeRabbit は push のたびに再レビューするので、指摘が続くと
 ## セットアップ手順の生成
 
 MCP ツール `get_agent_setup_guide` が、そのマシンで実行できる手順を返す。
-Claude Code や Codex CLI から「devuntu のエージェントをセットアップして」と頼めば、この手順に沿って進む。
+Claude Code・Codex CLI・OpenCode から「devuntu のエージェントをセットアップして」と頼めば、この手順に沿って進む。
 
 どちらの CLI で動かすかは引数 `cli` で決まり、手順はその CLI の分だけが返る。**未指定で呼ばれた場合は
 手順を返さず、利用者に確認するよう促す**。頼んだ CLI とエージェントに使わせたい CLI は別のことがあるので、

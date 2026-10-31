@@ -462,6 +462,7 @@ export type LocaleItemBase =
   | 'oidc_clients_dynamic'
   | 'oidc_clients_manual'
   | 'ok'
+  | 'opencode'
   | 'otp'
   | 'overdue'
   | 'owner'

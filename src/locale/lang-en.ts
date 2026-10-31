@@ -461,6 +461,7 @@ export const en: DefaultLocaleItems = {
   oidc_clients_dynamic: 'Dynamically Registered',
   oidc_clients_manual: 'Manually Registered',
   ok: 'OK',
+  opencode: 'OpenCode',
   otp: 'OTP',
   overdue: 'Overdue',
   owner: 'Owner',

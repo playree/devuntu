@@ -154,6 +154,19 @@ describe('get_agent_setup_guide', () => {
     expect(text).not.toContain('claude')
   })
 
+  it('opencode の手順も返す', async () => {
+    const result = await (
+      await connectDevuntuMcp(agentAuth)
+    ).callTool({
+      name: 'get_agent_setup_guide',
+      arguments: { cli: 'opencode' },
+    })
+    const text = (result.content as { text: string }[])[0].text
+
+    expect(text).toContain('"kind": "opencode"')
+    expect(text).not.toContain('codex')
+  })
+
   it('CLI 未指定では手順を返さず、利用者に選ばせる', async () => {
     const result = await (await connectDevuntuMcp(agentAuth)).callTool({ name: 'get_agent_setup_guide', arguments: {} })
     const text = (result.content as { text: string }[])[0].text

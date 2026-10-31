@@ -58,7 +58,7 @@ and the AI agent features are designed around that same premise (a human check i
   and Slack channel notifications per team board (tickets created / completed, assignee changes, agent run results, auto-completion held on merge, announcements)
 - An MCP server, so AI agents can work on tickets with your own permissions
 - AI agents can be registered as assignees and process their assigned tickets automatically
-  (currently `Claude` and `Codex` are supported)
+  (currently `Claude`, `Codex`, and `OpenCode` are supported)
   - Agents can split a large ticket into child tickets; once you approve the proposal, they work through the children in order
   - Per-board AI context (target repository, conventions, terms) delivered to MCP clients and agents as `boardContext`
   - Per-board knowledge (curated by users) and memory (recorded by AI while working), shared by members and AI:

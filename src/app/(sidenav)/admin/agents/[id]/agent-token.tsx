@@ -11,10 +11,10 @@ import { ArrowPathIcon, CheckIcon } from '@/components/icon'
 import { IssuedTokenView } from '@/components/issued-token-view'
 import { TokenExpiresSelect } from '@/components/token-expires-select'
 import { parseAction } from '@/lib/action/action-client'
-import { AGENT_TOKEN_ENV, AGENT_TOKEN_PREFIX, AGENT_TOKEN_REF } from '@/lib/agent/agent'
+import { AGENT_TOKEN_ENV, AGENT_TOKEN_OPENCODE_REF, AGENT_TOKEN_PREFIX, AGENT_TOKEN_REF } from '@/lib/agent/agent'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { dayformat } from '@/lib/day'
-import { AGENT_MCP_SERVER_NAME, mcpAddCommand, mcpCodexAddCommand } from '@/lib/mcp/mcp'
+import { AGENT_MCP_SERVER_NAME, mcpAddCommand, mcpCodexAddCommand, mcpOpenCodeAddCommand } from '@/lib/mcp/mcp'
 import { IssueAgentToken, scIssueAgentToken } from '@/lib/schema/schema-agent'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -140,15 +140,24 @@ export const AgentToken: FC<{
                 token={issued}
                 tokenLabel={t('agent_token')}
                 claudeCommand={
-                  <CopyableField // トークンではなく環境変数の参照が入るので伏せ字にしない
+                  <CopyableField
                     text={mcpAddCommand(baseUrl, AGENT_TOKEN_REF, AGENT_MCP_SERVER_NAME, 'project')}
                     label={t('mcp_add_command')}
+                    isMultiline
                   />
                 }
                 codexCommand={
                   <CopyableField
                     text={mcpCodexAddCommand(baseUrl, AGENT_MCP_SERVER_NAME, AGENT_TOKEN_ENV)}
                     label={t('mcp_add_command')}
+                    isMultiline
+                  />
+                }
+                opencodeCommand={
+                  <CopyableField
+                    text={mcpOpenCodeAddCommand(baseUrl, AGENT_TOKEN_OPENCODE_REF, AGENT_MCP_SERVER_NAME, false)}
+                    label={t('mcp_add_command')}
+                    isMultiline
                   />
                 }
                 notice={t('msg_agent_token_env')}

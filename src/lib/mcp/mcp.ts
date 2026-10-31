@@ -35,6 +35,9 @@ export const AGENT_MCP_SERVER_NAME = 'devuntu-agent'
 /** MCP のエンドポイント。相対解決で baseUrl のパス末尾を落とさないよう / を補う */
 const mcpUrl = (baseUrl: string): string => new URL('api/mcp', `${baseUrl.replace(/\/+$/, '')}/`).toString()
 
+/** 1 行に収まらないコマンドを、そのまま貼って実行できるよう `\` で行を継いで並べる */
+const continuedLines = (...lines: string[]): string => lines.join(' \\\n  ')
+
 /**
  * `claude mcp add` の登録先スコープ。
  * `local` は CLI の既定なのでフラグを出さない。
@@ -49,7 +52,11 @@ export type McpAddScope = 'local' | 'user' | 'project'
  */
 export const mcpAddCommand = (baseUrl: string, token: string, serverName: string, scope: McpAddScope): string => {
   const scopeOption = scope === 'local' ? '' : `--scope ${scope} `
-  return `claude mcp add ${scopeOption}--transport http ${serverName} ${mcpUrl(baseUrl)} --header 'Authorization: Bearer ${token}'`
+  return continuedLines(
+    `claude mcp add ${scopeOption}--transport http ${serverName}`,
+    mcpUrl(baseUrl),
+    `--header 'Authorization: Bearer ${token}'`,
+  )
 }
 
 /**
@@ -59,7 +66,21 @@ export const mcpAddCommand = (baseUrl: string, token: string, serverName: string
  * 指定は持たない。作業ディレクトリごとに分けたい場合はセットアップ手順の方法で設定ファイルへ書く。
  */
 export const mcpCodexAddCommand = (baseUrl: string, serverName: string, tokenEnv: string): string =>
-  `codex mcp add --url ${mcpUrl(baseUrl)} --bearer-token-env-var ${tokenEnv} ${serverName}`
+  continuedLines(`codex mcp add ${serverName}`, `--url ${mcpUrl(baseUrl)}`, `--bearer-token-env-var ${tokenEnv}`)
+
+/**
+ * OpenCode へ貼り付けるための登録コマンド。`global` で `~/.config/opencode` に、無ければ実行したディレクトリの
+ * `opencode.json` に書く(Claude Code の `--scope user` / `--scope project` に当たる)。
+ *
+ * `token` には実トークンのほか環境変数参照(`{env:...}`)も渡すため、シェルに展開させないよう
+ * ヘッダはシングルクォートで囲む。ヘッダは `名前=値` の形で渡す。
+ */
+export const mcpOpenCodeAddCommand = (baseUrl: string, token: string, serverName: string, global: boolean): string =>
+  continuedLines(
+    `opencode mcp add ${serverName}${global ? ' --global' : ''}`,
+    `--url ${mcpUrl(baseUrl)}`,
+    `--header 'Authorization=Bearer ${token}'`,
+  )
 
 /**
  * Codex 用の環境変数をシェルへ設定するコマンド。

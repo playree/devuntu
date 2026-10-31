@@ -118,7 +118,7 @@ export const AddModal: FC<ModalBaseProps & { baseUrl: string }> = ({ state, relo
                   <CopyableField text={output.clientId} label={t('client_id')} />
                 </div>
                 <div className='col-span-12'>
-                  <CopyableField text={output.clientSecret} label={t('client_secret')} isMask />
+                  <CopyableField text={output.clientSecret} label={t('client_secret')} />
                 </div>
                 <div className='col-span-12'>
                   <CopyableField text={new URL('api/auth', baseUrl).toString()} label={t('issuer_url')} />

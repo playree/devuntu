@@ -22,6 +22,7 @@ import {
   MCP_TOKEN_LIMIT_REACHED,
   mcpAddCommand,
   mcpCodexAddCommand,
+  mcpOpenCodeAddCommand,
   mcpTokenExportCommand,
 } from '@/lib/mcp/mcp'
 import { IssueMcpToken, scIssueMcpToken, scUpdatePasskey, UpdatePasskey } from '@/lib/schema/schema-auth'
@@ -163,7 +164,7 @@ export const IssueMcpTokenModal: FC<ModalBaseProps & { baseUrl: string }> = ({ s
          * 発行の前後でモーダルの高さが変わらないよう、内容の多い OUTPUT 側に高さを合わせる。
          * スマホ幅では折り返しが増えて OUTPUT が高くなるので、その分だけ広く取る
          */
-        className='min-h-92 overflow-hidden sm:min-h-85'
+        className='min-h-108 overflow-hidden sm:min-h-93'
       >
         <AnimatePresence mode='wait' custom={step.direction}>
           {step.id === 'INPUT' && (
@@ -192,33 +193,40 @@ export const IssueMcpTokenModal: FC<ModalBaseProps & { baseUrl: string }> = ({ s
                 token={issued}
                 tokenLabel={t('mcp_token')}
                 // タブを切り替えてもモーダルの高さが跳ねないよう、内容の多い Codex 側に合わせる
-                panelClassName='min-h-53 sm:min-h-47'
+                panelClassName='min-h-69 sm:min-h-56'
                 claudeCommand={
                   <CopyableField
                     text={mcpAddCommand(baseUrl, issued, MCP_SERVER_NAME, 'user')}
                     label={t('mcp_add_command')}
-                    isMask
+                    isMultiline
                   />
                 }
                 codexCommand={
                   <GridBox>
                     <div className='col-span-12'>
-                      <CopyableField // 環境変数の名前しか入らないので伏せ字にしない
+                      <CopyableField
                         text={mcpCodexAddCommand(baseUrl, MCP_SERVER_NAME, MCP_TOKEN_ENV)}
                         label={t('mcp_add_command')}
+                        isMultiline
                       />
                     </div>
                     <div className='col-span-12'>
                       <CopyableField
                         text={mcpTokenExportCommand(MCP_TOKEN_ENV, issued)}
                         label={t('mcp_token_env_command')}
-                        isMask
                       />
                     </div>
                     <div className='col-span-12'>
                       <NoticePanel className='text-xs'>{t('msg_mcp_token_env')}</NoticePanel>
                     </div>
                   </GridBox>
+                }
+                opencodeCommand={
+                  <CopyableField
+                    text={mcpOpenCodeAddCommand(baseUrl, issued, MCP_SERVER_NAME, true)}
+                    label={t('mcp_add_command')}
+                    isMultiline
+                  />
                 }
               />
             </StepMotion>

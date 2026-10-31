@@ -56,8 +56,6 @@ const MyGeneralUiTextProvider: FC<{ children: ReactNode }> = ({ children }) => {
       confirmed: t('confirmed'),
       copy: t('copy'),
       copied: t('copied'),
-      show: t('show'),
-      hide: t('hide'),
       clear: t('clear'),
       search: t('search'),
       notSelected: t('not_selected'),
