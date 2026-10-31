@@ -33,6 +33,26 @@ describe('agentSetupGuide', () => {
     })
   })
 
+  it('既存のエージェントを確認し、上書きか新しい作業ディレクトリかを利用者に選ばせる', () => {
+    ;[claude, codex, opencode].forEach((guide) => {
+      expect(guide).toContain('crontab -l 2>/dev/null | grep -F devuntu_agent.py')
+      expect(guide).toContain('~/devuntu-agent-work*/.devuntu-agent/config.json')
+      expect(guide).toContain('**Overwrite**')
+      expect(guide).toContain('**New working directory**')
+      expect(guide.indexOf('### Check for an existing agent')).toBeLessThan(
+        guide.indexOf('mkdir -p ~/devuntu-agent-work'),
+      )
+    })
+  })
+
+  it('同じ作業ディレクトリの cron 行が既にあれば追加しない', () => {
+    ;[claude, codex, opencode].forEach((guide) => {
+      expect(guide).toContain(
+        "crontab -l 2>/dev/null | grep -v '^#' | grep -qF '~/devuntu-agent-work/.devuntu-agent/devuntu_agent.py poll' || \\",
+      )
+    })
+  })
+
   it('claude を選ぶと他の CLI のコマンドが残らない', () => {
     expect(claude).toContain('claude mcp add --transport http devuntu-agent')
     expect(claude).toContain('"kind": "claude"')
