@@ -76,7 +76,9 @@ export const registerAgentSetupTool = (server: McpServer) => {
         cli: z
           .enum(AGENT_CLI_KINDS)
           .optional()
-          .describe('CLI to set up. claude=Claude Code / codex=Codex CLI. Ask the user before specifying'),
+          .describe(
+            'CLI to set up. claude=Claude Code / codex=Codex CLI / opencode=OpenCode. Ask the user before specifying',
+          ),
       }),
     },
     async ({ cli }) => ({

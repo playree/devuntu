@@ -1,7 +1,7 @@
 ---
 type: design_doc
 title: MCP サーバー
-updated: 2026-10-27
+updated: 2026-10-31
 ---
 
 # MCP サーバー
@@ -12,7 +12,7 @@ updated: 2026-10-27
 > - ブラウザでのサインインと同意だけで接続させたい場合は、`OIDC_DCR_ENABLED=true` を設定する
 > - AIエージェント用のユーザーとトークンは `/admin/agents` で作る
 
-`/api/mcp` を MCP クライアント(Claude Code / Codex CLI などの AI ツール)へ公開する。
+`/api/mcp` を MCP クライアント(Claude Code / Codex CLI / OpenCode などの AI ツール)へ公開する。
 利用者のつなぎ方と使い方は [ai.md](../guide/ai.md)、ツールの一覧(開発者向け)は [mcp-tools.md](../dev/mcp-tools.md)、
 認証の振り分け・実装上の判断(開発者向け)は [mcp-server-internals.md](../dev/mcp-server-internals.md) を参照。
 
@@ -81,7 +81,7 @@ updated: 2026-10-27
 
 ### エージェントとして登録する
 
-`/admin/agents` でトークンを発行した際に表示されるコマンドをそのまま使える。CLI(Claude Code / Codex CLI)を
+`/admin/agents` でトークンを発行した際に表示されるコマンドをそのまま使える。CLI(Claude Code / Codex CLI / OpenCode)を
 切り替えると、その CLI 向けの登録方法が表示される。この経路ではブラウザでのログインと同意は発生しない。
 
 ```sh
@@ -96,6 +96,13 @@ Codex CLI の場合は `.codex/config.toml` に次を足す。
 [mcp_servers.devuntu-agent]
 url = "<BETTER_AUTH_URL>/api/mcp"
 bearer_token_env_var = "DEVUNTU_AGENT_TOKEN"
+```
+
+OpenCode の場合は作業ディレクトリで次を実行する(`--global` を付けないので、作業ディレクトリ直下の `opencode.json` に書かれる)。
+
+```sh
+opencode mcp add devuntu-agent --url <BETTER_AUTH_URL>/api/mcp \
+  --header 'Authorization=Bearer {env:DEVUNTU_AGENT_TOKEN}'
 ```
 
 トークンは設定ファイルへ直接書かず、環境変数 `DEVUNTU_AGENT_TOKEN` を参照する形にしてある。

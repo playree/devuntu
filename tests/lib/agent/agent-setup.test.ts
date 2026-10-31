@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest'
 
 const claude = agentSetupGuide('claude')
 const codex = agentSetupGuide('codex')
+const opencode = agentSetupGuide('opencode')
 
 describe('agentSetupGuide', () => {
   it('このサーバーのランナー配布先と MCP のURLを埋めて返す', () => {
@@ -18,7 +19,7 @@ describe('agentSetupGuide', () => {
   })
 
   it('プレースホルダーとマーカーを残さない', () => {
-    ;[claude, codex].forEach((guide) => {
+    ;[claude, codex, opencode].forEach((guide) => {
       expect(guide).not.toContain('{{')
       expect(guide).not.toContain('<!-- cli:')
       expect(guide).not.toContain('<!-- /cli -->')
@@ -27,23 +28,33 @@ describe('agentSetupGuide', () => {
   })
 
   it('手順と CLI 未指定時の応答は英語で返す', () => {
-    ;[claude, codex, agentSetupCliPrompt()].forEach((text) => {
+    ;[claude, codex, opencode, agentSetupCliPrompt()].forEach((text) => {
       expect(text).not.toMatch(/[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u)
     })
   })
 
-  it('claude を選ぶと codex のコマンドが残らない', () => {
+  it('claude を選ぶと他の CLI のコマンドが残らない', () => {
     expect(claude).toContain('claude mcp add --transport http devuntu-agent')
     expect(claude).toContain('"kind": "claude"')
     expect(claude).not.toContain('codex')
     expect(claude).not.toContain('bearer_token_env_var')
+    expect(claude).not.toContain('opencode')
   })
 
-  it('codex を選ぶと claude のコマンドが残らない', () => {
+  it('codex を選ぶと他の CLI のコマンドが残らない', () => {
     expect(codex).toContain('bearer_token_env_var = "DEVUNTU_AGENT_TOKEN"')
     expect(codex).toContain('"kind": "codex"')
     expect(codex).not.toContain('claude')
     expect(codex).not.toContain('.mcp.json')
+    expect(codex).not.toContain('opencode')
+  })
+
+  it('opencode を選ぶと他の CLI のコマンドが残らない', () => {
+    expect(opencode).toContain("--header 'Authorization=Bearer {env:DEVUNTU_AGENT_TOKEN}'")
+    expect(opencode).toContain('"kind": "opencode"')
+    expect(opencode).not.toContain('claude')
+    expect(opencode).not.toContain('.mcp.json')
+    expect(opencode).not.toContain('codex')
   })
 })
 
@@ -55,5 +66,6 @@ describe('agentSetupCliPrompt', () => {
     expect(prompt).toContain('Ask the user')
     expect(prompt).toContain('Claude Code')
     expect(prompt).toContain('Codex CLI')
+    expect(prompt).toContain('OpenCode')
   })
 })

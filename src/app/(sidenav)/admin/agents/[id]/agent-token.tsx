@@ -11,10 +11,10 @@ import { ArrowPathIcon, CheckIcon } from '@/components/icon'
 import { IssuedTokenView } from '@/components/issued-token-view'
 import { TokenExpiresSelect } from '@/components/token-expires-select'
 import { parseAction } from '@/lib/action/action-client'
-import { AGENT_TOKEN_ENV, AGENT_TOKEN_PREFIX, AGENT_TOKEN_REF } from '@/lib/agent/agent'
+import { AGENT_TOKEN_ENV, AGENT_TOKEN_OPENCODE_REF, AGENT_TOKEN_PREFIX, AGENT_TOKEN_REF } from '@/lib/agent/agent'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { dayformat } from '@/lib/day'
-import { AGENT_MCP_SERVER_NAME, mcpAddCommand, mcpCodexAddCommand } from '@/lib/mcp/mcp'
+import { AGENT_MCP_SERVER_NAME, mcpAddCommand, mcpCodexAddCommand, mcpOpenCodeAddCommand } from '@/lib/mcp/mcp'
 import { IssueAgentToken, scIssueAgentToken } from '@/lib/schema/schema-agent'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -148,6 +148,12 @@ export const AgentToken: FC<{
                 codexCommand={
                   <CopyableField
                     text={mcpCodexAddCommand(baseUrl, AGENT_MCP_SERVER_NAME, AGENT_TOKEN_ENV)}
+                    label={t('mcp_add_command')}
+                  />
+                }
+                opencodeCommand={
+                  <CopyableField
+                    text={mcpOpenCodeAddCommand(baseUrl, AGENT_TOKEN_OPENCODE_REF, AGENT_MCP_SERVER_NAME, false)}
                     label={t('mcp_add_command')}
                   />
                 }

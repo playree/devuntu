@@ -16,11 +16,12 @@ export const IssuedTokenView: FC<{
   tokenLabel: string
   claudeCommand: ReactNode
   codexCommand: ReactNode
+  opencodeCommand: ReactNode
   /** タブの中身の最小高さ。切り替えでモーダルの高さが跳ねないようにする */
   panelClassName?: string
   /** 末尾に出す補足 */
   notice?: string
-}> = ({ token, tokenLabel, claudeCommand, codexCommand, panelClassName, notice }) => {
+}> = ({ token, tokenLabel, claudeCommand, codexCommand, opencodeCommand, panelClassName, notice }) => {
   const { t } = useLocale()
   return (
     <GridBox>
@@ -38,6 +39,7 @@ export const IssuedTokenView: FC<{
           items={[
             { id: 'claude', label: t('claude_code'), content: claudeCommand },
             { id: 'codex', label: t('codex_cli'), content: codexCommand },
+            { id: 'opencode', label: t('opencode'), content: opencodeCommand },
           ]}
         />
       </div>

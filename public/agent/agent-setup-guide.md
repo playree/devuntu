@@ -9,7 +9,7 @@ and the script asks devuntu whether there are tickets to process. If there are, 
 ## Prerequisites
 
 - **CLI**: these steps assume the agent runs on **{{cliLabel}}** (`{{cliKind}}`).
-  What to do with each ticket is read from devuntu (MCP), so the behavior is the same with either CLI
+  What to do with each ticket is read from devuntu (MCP), so the behavior is the same with any CLI
 - **Agent token**: issued by a devuntu administrator at `{{baseUrl}}/admin/agents`
   (a string starting with `devuntu_agent_`, shown only once when issued)
 - **Working directory**: the base directory where the agent clones repositories to work on.
@@ -38,6 +38,14 @@ command -v claude   # Actual location. Use it when cron cannot find the command
 ```sh
 codex --version
 command -v codex    # Actual location. Use it when cron cannot find the command
+```
+
+<!-- /cli -->
+<!-- cli:opencode -->
+
+```sh
+opencode --version     # 2.x or later (these steps use the v2 configuration format)
+command -v opencode    # Actual location. Use it when cron cannot find the command
 ```
 
 <!-- /cli -->
@@ -141,6 +149,22 @@ configuration with the single command
 `codex mcp add --url {{mcpUrl}} --bearer-token-env-var DEVUNTU_AGENT_TOKEN devuntu-agent`.
 No trust setting is needed in that case, but `devuntu-agent` will also show up in Codex sessions a person uses.
 <!-- /cli -->
+<!-- cli:opencode -->
+
+Save it to `opencode.json` in the working directory (without `--global`). The command merges the server into
+an existing file, so other settings are kept. The literal string `{env:DEVUNTU_AGENT_TOKEN}` must be saved,
+so wrap it in single quotes.
+
+```sh
+cd ~/devuntu-agent-work
+opencode mcp add devuntu-agent --url {{mcpUrl}} \
+  --header 'Authorization=Bearer {env:DEVUNTU_AGENT_TOKEN}'
+```
+
+OpenCode expands `{env:...}` to the environment variable when loading, so no secret remains in `opencode.json`.
+Check with `cat opencode.json` that `{env:DEVUNTU_AGENT_TOKEN}` is stored under `mcp.servers.devuntu-agent.headers`.
+The connection is verified in step 6.
+<!-- /cli -->
 
 ## 4. Fetch the runner
 
@@ -198,6 +222,14 @@ chmod 600 ~/devuntu-agent-work/.devuntu-agent/config.json
   clones and not a git repository, so codex refuses to start without `--skip-git-repo-check`
 
 <!-- /cli -->
+<!-- cli:opencode -->
+
+- The default is `--auto`. OpenCode allows almost every action by default, and a non-interactive run rejects
+  the actions that ask for approval (such as reading `.env` files). `--auto` approves them instead.
+  The runner always adds `--standalone` regardless of this setting, so that the CLI reads the MCP configuration
+  with `DEVUNTU_AGENT_TOKEN` (the background service does not see the variable)
+
+<!-- /cli -->
 
 - **Caution**: these defaults **assume the agent runs on a dedicated host**. The ticket content and comments
   the agent reads can act directly as instructions to the agent, so with the defaults, malicious (or mistaken)
@@ -225,6 +257,12 @@ chmod 600 ~/devuntu-agent-work/.devuntu-agent/config.json
   (`~/.codex/<name>.config.toml` is layered over the base settings)
 
 <!-- /cli -->
+<!-- cli:opencode -->
+
+    add `deny` rules to `permissions` in `opencode.json` (e.g. `{ "action": "external_directory", "resource": "*", "effect": "deny" }`).
+    Rules marked `deny` are enforced even with `--auto`. Remove `--auto` as well to reject everything that asks for approval
+
+<!-- /cli -->
 <!-- cli:claude -->
 
 - `cli.model`: model to use. Defaults to `opus`. Any alias accepted by `--model`, such as `sonnet` / `fable`,
@@ -236,6 +274,13 @@ chmod 600 ~/devuntu-agent-work/.devuntu-agent/config.json
 - `cli.model`: model to use. No default. To specify one, write the model name as is, like `"model": "gpt-5.5"`
   (passed as `codex exec --model <value>`). When omitted, `model` in `~/.codex/config.toml` is used,
   or the codex default model if that is not set either
+
+<!-- /cli -->
+<!-- cli:opencode -->
+
+- `cli.model`: model to use. No default. To specify one, write it as `provider/model`, like
+  `"model": "openai/gpt-5.5"` (passed as `opencode run --model <value>`; `opencode models` lists the candidates).
+  When omitted, `model` in the OpenCode configuration is used
 
 <!-- /cli -->
 
@@ -283,13 +328,39 @@ How to read the output:
 - `401` is returned → the token is wrong (or it was reissued and is outdated)
 
 To check the MCP side (whether the token reaches the CLI and it can connect to devuntu), load the environment
-variables and then run the CLI's list command.
+variables and then run the CLI.
+
+<!-- cli:claude -->
 
 ```sh
 cd ~/devuntu-agent-work
 eval "$(python3 .devuntu-agent/devuntu_agent.py env)"
-{{cliKind}} mcp list
+claude mcp list
 ```
+
+<!-- /cli -->
+<!-- cli:codex -->
+
+```sh
+cd ~/devuntu-agent-work
+eval "$(python3 .devuntu-agent/devuntu_agent.py env)"
+codex mcp list
+```
+
+<!-- /cli -->
+<!-- cli:opencode -->
+
+```sh
+cd ~/devuntu-agent-work
+eval "$(python3 .devuntu-agent/devuntu_agent.py env)"
+opencode run --standalone "Call the devuntu-agent MCP tool get_agent_task without arguments and reply with whether it succeeded"
+```
+
+`opencode mcp list` cannot be used for this check. It asks the background service, which does not see
+`DEVUNTU_AGENT_TOKEN` exported in this shell, so it reports `needs authentication`. `--standalone` starts a private
+server that inherits the environment variables, and the runner also starts the CLI this way.
+
+<!-- /cli -->
 
 The `env` subcommand prints the same environment variables the runner passes to the CLI (`DEVUNTU_AGENT_TOKEN` and PATH)
 in `export` form. Run it first whenever you run the agent by hand to check things.
@@ -356,6 +427,18 @@ description: Set up devuntu automated operation (Devuntu Agent) on this machine 
 
 Write it to `AGENTS.md` (no frontmatter needed).
 <!-- /cli -->
+<!-- cli:opencode -->
+
+Put it in `.opencode/skills/devuntu-agent/SKILL.md` with the following frontmatter at the top.
+
+```yaml
+---
+name: devuntu-agent
+description: Set up devuntu automated operation (Devuntu Agent) on this machine and verify that it works.
+---
+```
+
+<!-- /cli -->
 
 Do not write the token (keep it only in the configuration file).
 
@@ -398,4 +481,8 @@ and repeat steps 2 to 8.
 <!-- cli:codex -->
 
 | The agent cannot connect to MCP | `bearer_token_env_var` in `.codex/config.toml`, and the trust setting for the working directory (step 3) |
+<!-- /cli -->
+<!-- cli:opencode -->
+
+| The agent cannot connect to MCP | Whether `{env:DEVUNTU_AGENT_TOKEN}` in `opencode.json` has been replaced by the expanded value (step 3) |
 <!-- /cli -->

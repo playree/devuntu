@@ -9,14 +9,14 @@
 
     1. POST /api/agent/status  ... 稼働条件と処理すべきチケットを聞く
     2. POST /api/agent/runs    ... 実行の開始を記録する(チケットが処理中になる)
-    3. claude -p "..." / codex exec "..." ... CLI を起動してチケットを処理させる
+    3. claude -p "..." / codex exec "..." / opencode run "..." ... CLI を起動してチケットを処理させる
     4. PATCH /api/agent/runs/<id> ... 実行の終了と、CLI の出力から取れた計測値(トークン数・コスト)を記録する
 
 チケットの状態そのものは CLI 側のエージェントが devuntu-agent MCP の finish_agent_task で報告する。
 このスクリプトは CLI の終了コードしか知らないので、4 は保険として扱われる
 (報告が無いまま終わった実行はサーバー側で失敗として閉じられる)。
 
-起動する CLI は config の `cli.kind` で選ぶ(`claude` / `codex`)。CLI ごとに違うのは
+起動する CLI は config の `cli.kind` で選ぶ(`claude` / `codex` / `opencode`)。CLI ごとに違うのは
 起動コマンドの組み立てと既定値だけで、チケットの処理内容そのものは MCP 側から読ませるため共通。
 """
 
@@ -42,7 +42,7 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 
 # 1 Agent の構成を作業ディレクトリだけで完結させるため、config・ログ・ロックは本体と同じ
 # <作業ディレクトリ>/.devuntu-agent へ置く。作業ディレクトリを分ければ同一ホストに複数の Agent を並べられる
@@ -64,11 +64,12 @@ DEFAULT_CLI_KIND = "claude"
 #
 # args: 権限確認で止まると cron からは誰も答えられないので、既定はツール利用を自動承認する。
 #   codex は git リポジトリの中でしか動かないため、clone の基点でしかない作業ディレクトリでも
-#   起動できるよう --skip-git-repo-check を足す
-# model: codex は空にして CLI 側の既定モデルに任せる
+#   起動できるよう --skip-git-repo-check を足す。opencode は確認(ask)を自動で拒否するので --auto で承認させる
+# model: codex / opencode は空にして CLI 側の既定モデルに任せる
 CLI_DEFAULTS: dict[str, dict[str, object]] = {
     "claude": {"args": ["--permission-mode", "auto"], "model": "opus"},
     "codex": {"args": ["--sandbox", "danger-full-access", "--skip-git-repo-check"], "model": ""},
+    "opencode": {"args": ["--auto"], "model": ""},
 }
 SUPPORTED_CLI_KINDS = tuple(CLI_DEFAULTS)
 
@@ -77,9 +78,10 @@ SUPPORTED_CLI_KINDS = tuple(CLI_DEFAULTS)
 CLI_OUTPUT_FLAGS: dict[str, dict[str, object]] = {
     "claude": {"flag": "--output-format", "args": ["--output-format", "json"]},
     "codex": {"flag": "--json", "args": ["--json"]},
+    "opencode": {"flag": "--format", "args": ["--format", "json"]},
 }
 
-# MCP の設定ファイル(.mcp.json / .codex/config.toml)がトークンを参照するための環境変数名。
+# MCP の設定ファイル(.mcp.json / .codex/config.toml / opencode.json)がトークンを参照するための環境変数名。
 # 設定ファイルへ平文で書かせず、トークンの在処を config.json だけに保つために CLI へ渡す
 AGENT_TOKEN_ENV = "DEVUNTU_AGENT_TOKEN"
 
@@ -90,6 +92,7 @@ DEFAULT_PATH_DIRS = (
     "~/bin",
     "~/.claude/local",
     "~/.codex/bin",
+    "~/.opencode/bin",
     "/usr/local/bin",
     "/opt/homebrew/bin",
 )
@@ -497,6 +500,11 @@ def build_command(config: Config, task: dict, cli_bin: str | None = None) -> lis
     if config.cli_kind == "codex":
         # codex の非対話モードはサブコマンド exec で、指示は位置引数として最後に置く
         return [*command, "exec", *output, *model, *config.cli_args, prompt]
+    if config.cli_kind == "opencode":
+        # opencode の非対話モードはサブコマンド run で、指示は位置引数として最後に置く。
+        # 既定では常駐の background service が設定を読むため、ここで渡す DEVUNTU_AGENT_TOKEN が
+        # MCP の設定({env:...})へ届かない。--standalone で環境変数を引き継ぐ専用のサーバーを立てさせる
+        return [*command, "run", "--standalone", *output, *model, *config.cli_args, prompt]
     return [*command, "-p", prompt, *output, *model, *config.cli_args]
 
 
@@ -611,11 +619,63 @@ def parse_codex_output(stdout: str, model: str) -> tuple[str | None, dict]:
     return summary, {key: value for key, value in metrics.items() if value is not None}
 
 
+def parse_opencode_output(stdout: str, model: str) -> tuple[str | None, dict]:
+    """opencode run --format json の出力(1 行 1 イベントの JSON)から (最終メッセージ, 計測値) を取り出す。
+    モデル名は出力に無いため cli.model が分かる場合だけ入れる"""
+    message: str | None = None
+    error: str | None = None
+    recognized = False
+    inputs: list[int | None] = []
+    cached: list[int | None] = []
+    outputs: list[int | None] = []
+    costs: list[float | None] = []
+    for line in stdout.splitlines():
+        try:
+            event = json.loads(line)
+        except ValueError:
+            continue
+        if not isinstance(event, dict) or not isinstance(event.get("type"), str):
+            continue
+        recognized = True
+        kind = event.get("type")
+        part = event.get("part")
+        if kind == "text" and isinstance(part, dict) and isinstance(part.get("text"), str):
+            message = part["text"]
+        elif kind == "step_finish" and isinstance(part, dict) and isinstance(part.get("tokens"), dict):
+            tokens = part["tokens"]
+            cache = tokens.get("cache") if isinstance(tokens.get("cache"), dict) else {}
+            # opencode の input はキャッシュ分を含まないので、claude と同じくキャッシュの読み書きを足す
+            cache_read = to_count(cache.get("read"))
+            inputs.append(sum_counts(to_count(tokens.get("input")), cache_read, to_count(cache.get("write"))))
+            cached.append(cache_read)
+            outputs.append(sum_counts(to_count(tokens.get("output")), to_count(tokens.get("reasoning"))))
+            costs.append(to_cost(part.get("cost")))
+        elif kind == "error" and isinstance(event.get("error"), dict):
+            error = str(event["error"].get("message") or "") or error
+
+    present_costs = [cost for cost in costs if cost is not None]
+    metrics = {
+        "inputTokens": sum_counts(*inputs),
+        "cachedInputTokens": sum_counts(*cached),
+        "outputTokens": sum_counts(*outputs),
+        "costUsd": sum(present_costs) if present_costs else None,
+        "model": model or None,
+    }
+    if metrics["inputTokens"] is None and metrics["outputTokens"] is None:
+        metrics = {}
+    if not recognized:
+        return None, {}
+    summary = message if message is not None else (error or "")
+    return summary, {key: value for key, value in metrics.items() if value is not None}
+
+
 def parse_cli_output(config: Config, stdout: str) -> tuple[str, dict]:
     """CLI の標準出力から (実行履歴に残す最終メッセージ, 計測値) を取り出す。
     解析できない出力(cli.args で出力形式を変えた場合など)は、従来どおり標準出力をそのまま要約にする"""
     if config.cli_kind == "codex":
         message, metrics = parse_codex_output(stdout, config.cli_model)
+    elif config.cli_kind == "opencode":
+        message, metrics = parse_opencode_output(stdout, config.cli_model)
     else:
         message, metrics = parse_claude_output(stdout)
     return (message if message is not None else stdout).strip(), metrics
@@ -639,11 +699,15 @@ def run_cli(config: Config, task: dict) -> tuple[str, str, dict]:
         config.workdir,
         cli_bin,
     )
+    # opencode は作業ディレクトリを cwd ではなく PWD から決める。cron の PWD はホームなので作業ディレクトリに揃える
+    env["PWD"] = str(config.workdir)
 
     try:
         completed = subprocess.run(
             command,
             cwd=str(config.workdir),
+            # 端末でない stdin を指示の続きとして読む CLI(opencode)があるため、何も渡さない
+            stdin=subprocess.DEVNULL,
             capture_output=True,
             text=True,
             timeout=config.timeout_sec,

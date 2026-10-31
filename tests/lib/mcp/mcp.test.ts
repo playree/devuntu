@@ -5,8 +5,14 @@
  * URL の組み立てを固定する。
  */
 
-import { AGENT_TOKEN_ENV, AGENT_TOKEN_REF } from '@/lib/agent/agent'
-import { MCP_TOKEN_ENV, mcpAddCommand, mcpCodexAddCommand, mcpTokenExportCommand } from '@/lib/mcp/mcp'
+import { AGENT_TOKEN_ENV, AGENT_TOKEN_OPENCODE_REF, AGENT_TOKEN_REF } from '@/lib/agent/agent'
+import {
+  MCP_TOKEN_ENV,
+  mcpAddCommand,
+  mcpCodexAddCommand,
+  mcpOpenCodeAddCommand,
+  mcpTokenExportCommand,
+} from '@/lib/mcp/mcp'
 import { describe, expect, it } from 'vitest'
 
 describe('mcpAddCommand', () => {
@@ -53,6 +59,22 @@ describe('mcpCodexAddCommand', () => {
     const command = mcpCodexAddCommand('https://devuntu.example', 'devuntu', MCP_TOKEN_ENV)
     expect(command).toBe(
       'codex mcp add --url https://devuntu.example/api/mcp --bearer-token-env-var DEVUNTU_MCP_TOKEN devuntu',
+    )
+  })
+})
+
+describe('mcpOpenCodeAddCommand', () => {
+  it('global ではユーザー設定へ登録する(ユーザーのトークン用)', () => {
+    expect(mcpOpenCodeAddCommand('https://devuntu.example', 'devuntu_pat_x', 'devuntu', true)).toBe(
+      'opencode mcp add devuntu --global --url https://devuntu.example/api/mcp' +
+        " --header 'Authorization=Bearer devuntu_pat_x'",
+    )
+  })
+
+  it('global でなければ --global を付けず、環境変数の参照はシェルに展開させない', () => {
+    expect(mcpOpenCodeAddCommand('https://devuntu.example', AGENT_TOKEN_OPENCODE_REF, 'devuntu-agent', false)).toBe(
+      'opencode mcp add devuntu-agent --url https://devuntu.example/api/mcp' +
+        " --header 'Authorization=Bearer {env:DEVUNTU_AGENT_TOKEN}'",
     )
   })
 })

@@ -62,6 +62,16 @@ export const mcpCodexAddCommand = (baseUrl: string, serverName: string, tokenEnv
   `codex mcp add --url ${mcpUrl(baseUrl)} --bearer-token-env-var ${tokenEnv} ${serverName}`
 
 /**
+ * OpenCode へ貼り付けるための登録コマンド。`global` で `~/.config/opencode` に、無ければ実行したディレクトリの
+ * `opencode.json` に書く(Claude Code の `--scope user` / `--scope project` に当たる)。
+ *
+ * `token` には実トークンのほか環境変数参照(`{env:...}`)も渡すため、シェルに展開させないよう
+ * ヘッダはシングルクォートで囲む。ヘッダは `名前=値` の形で渡す。
+ */
+export const mcpOpenCodeAddCommand = (baseUrl: string, token: string, serverName: string, global: boolean): string =>
+  `opencode mcp add ${serverName} ${global ? '--global ' : ''}--url ${mcpUrl(baseUrl)} --header 'Authorization=Bearer ${token}'`
+
+/**
  * Codex 用の環境変数をシェルへ設定するコマンド。
  *
  * Codex は接続のたびに環境変数を読むので、シェルの設定ファイルへ残す必要がある。

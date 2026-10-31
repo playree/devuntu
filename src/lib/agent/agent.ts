@@ -47,14 +47,18 @@ export const AGENT_TOKEN_ENV = 'DEVUNTU_AGENT_TOKEN'
 /** MCP の設定ファイルへ書くトークンの参照 */
 export const AGENT_TOKEN_REF = `\${${AGENT_TOKEN_ENV}}`
 
+/** OpenCode の設定ファイルへ書くトークンの参照(OpenCode は `${...}` を展開せず `{env:...}` で参照する) */
+export const AGENT_TOKEN_OPENCODE_REF = `{env:${AGENT_TOKEN_ENV}}`
+
 /** ランナーが起動できる CLI(`public/agent/devuntu_agent.py` の `CLI_DEFAULTS` と対) */
-export const AGENT_CLI_KINDS = ['claude', 'codex'] as const
+export const AGENT_CLI_KINDS = ['claude', 'codex', 'opencode'] as const
 
 export type AgentCliKind = (typeof AGENT_CLI_KINDS)[number]
 
 export const AGENT_CLI_LABEL = {
   claude: 'Claude Code',
   codex: 'Codex CLI',
+  opencode: 'OpenCode',
 } as const satisfies Record<AgentCliKind, string>
 
 /* -------------------------------------------------------------------------------------------------

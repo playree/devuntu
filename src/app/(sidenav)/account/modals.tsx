@@ -22,6 +22,7 @@ import {
   MCP_TOKEN_LIMIT_REACHED,
   mcpAddCommand,
   mcpCodexAddCommand,
+  mcpOpenCodeAddCommand,
   mcpTokenExportCommand,
 } from '@/lib/mcp/mcp'
 import { IssueMcpToken, scIssueMcpToken, scUpdatePasskey, UpdatePasskey } from '@/lib/schema/schema-auth'
@@ -219,6 +220,13 @@ export const IssueMcpTokenModal: FC<ModalBaseProps & { baseUrl: string }> = ({ s
                       <NoticePanel className='text-xs'>{t('msg_mcp_token_env')}</NoticePanel>
                     </div>
                   </GridBox>
+                }
+                opencodeCommand={
+                  <CopyableField
+                    text={mcpOpenCodeAddCommand(baseUrl, issued, MCP_SERVER_NAME, true)}
+                    label={t('mcp_add_command')}
+                    isMask
+                  />
                 }
               />
             </StepMotion>

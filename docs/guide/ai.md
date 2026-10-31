@@ -1,7 +1,7 @@
 ---
 type: design_doc
 title: AIとの連携
-updated: 2026-10-27
+updated: 2026-10-31
 ---
 
 # AIとの連携
@@ -55,6 +55,13 @@ codex mcp add --url <Devuntu の URL>/api/mcp --bearer-token-env-var DEVUNTU_MCP
 
 ```sh
 export DEVUNTU_MCP_TOKEN='<発行したトークン>'   # .bashrc / .zshrc などに残す
+```
+
+OpenCode(v2 以降)の場合は次の形になる。`--global` を外すと、実行したディレクトリの `opencode.json` に登録される(そのプロジェクトでだけ使える)。
+
+```sh
+opencode mcp add devuntu --global --url <Devuntu の URL>/api/mcp \
+  --header 'Authorization=Bearer <発行したトークン>'
 ```
 
 - トークンは1人10本まで発行できる。端末ごとに分けておくと、失くしたときにその端末の分だけ消せる
@@ -203,7 +210,7 @@ AI へのインプットは、この2つと、次の[ナレッジとメモリ](#
 ## エージェントにチケットを任せる
 
 管理者が用意した**エージェント**(AI専用のユーザー)をチケットの担当者にすると、
-そのエージェントを動かしているマシンで AIエージェントの CLI(Claude Code / Codex CLI)が自動的に起動して対応する。
+そのエージェントを動かしているマシンで AIエージェントの CLI(Claude Code / Codex CLI / OpenCode)が自動的に起動して対応する。
 
 **担当者に指定しただけでは動かない。** チケット詳細で「エージェントモード」を選ぶ必要がある。
 エージェントモードを選べるのは、そのエージェントの**承認者**だけ([エージェントの承認](#エージェントの承認))。
