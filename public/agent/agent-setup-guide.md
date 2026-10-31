@@ -146,7 +146,7 @@ Run `codex mcp list` inside the working directory and confirm that `devuntu-agen
 
 If no person uses Codex on that machine (a dedicated agent machine), you may instead register it in the user
 configuration with the single command
-`codex mcp add --url {{mcpUrl}} --bearer-token-env-var DEVUNTU_AGENT_TOKEN devuntu-agent`.
+`codex mcp add devuntu-agent --url {{mcpUrl}} --bearer-token-env-var DEVUNTU_AGENT_TOKEN`.
 No trust setting is needed in that case, but `devuntu-agent` will also show up in Codex sessions a person uses.
 <!-- /cli -->
 <!-- cli:opencode -->

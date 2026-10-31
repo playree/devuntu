@@ -6,8 +6,8 @@ import { Button, cn, InputGroup, InputProps, Label, ProgressBar, TextField } fro
 import { ChangeEvent, FC, useEffect, useRef, useState } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 import { FieldBaseProps, FieldError, FieldLabel } from './general/field'
-import { EyeIcon, EyeSlashIcon } from './general/icons'
 import { useSmart } from './general/smart'
+import { EyeIcon, EyeSlashIcon } from './icon'
 
 const COLOR: ('default' | 'danger' | 'warning' | 'success' | 'accent')[] = [
   'default',

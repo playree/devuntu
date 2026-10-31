@@ -26,7 +26,7 @@ export const IssuedTokenView: FC<{
   return (
     <GridBox>
       <div className='col-span-12'>
-        <CopyableField text={token} label={tokenLabel} isMask />
+        <CopyableField text={token} label={tokenLabel} />
       </div>
       <div className='col-span-12'>
         <NoticePanel className='text-xs'>{t('msg_token_once')}</NoticePanel>

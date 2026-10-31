@@ -12,8 +12,6 @@ export type GeneralUiText = {
   confirmed: string
   copy: string
   copied: string
-  show: string
-  hide: string
   clear: string
   search: string
   notSelected: string
@@ -40,8 +38,6 @@ const DEFAULT_UI_TEXT: GeneralUiText = {
   confirmed: 'Confirmed',
   copy: 'Copy',
   copied: 'Copied!',
-  show: 'Show',
-  hide: 'Hide',
   clear: 'Clear',
   search: 'Search',
   notSelected: 'Not selected',

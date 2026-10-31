@@ -85,8 +85,8 @@ updated: 2026-10-31
 切り替えると、その CLI 向けの登録方法が表示される。この経路ではブラウザでのログインと同意は発生しない。
 
 ```sh
-claude mcp add --transport http devuntu-agent <BETTER_AUTH_URL>/api/mcp \
-  --scope project \
+claude mcp add --scope project --transport http devuntu-agent \
+  <BETTER_AUTH_URL>/api/mcp \
   --header 'Authorization: Bearer ${DEVUNTU_AGENT_TOKEN}'
 ```
 
@@ -101,7 +101,8 @@ bearer_token_env_var = "DEVUNTU_AGENT_TOKEN"
 OpenCode の場合は作業ディレクトリで次を実行する(`--global` を付けないので、作業ディレクトリ直下の `opencode.json` に書かれる)。
 
 ```sh
-opencode mcp add devuntu-agent --url <BETTER_AUTH_URL>/api/mcp \
+opencode mcp add devuntu-agent \
+  --url <BETTER_AUTH_URL>/api/mcp \
   --header 'Authorization=Bearer {env:DEVUNTU_AGENT_TOKEN}'
 ```
 

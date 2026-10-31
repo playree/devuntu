@@ -140,21 +140,24 @@ export const AgentToken: FC<{
                 token={issued}
                 tokenLabel={t('agent_token')}
                 claudeCommand={
-                  <CopyableField // トークンではなく環境変数の参照が入るので伏せ字にしない
+                  <CopyableField
                     text={mcpAddCommand(baseUrl, AGENT_TOKEN_REF, AGENT_MCP_SERVER_NAME, 'project')}
                     label={t('mcp_add_command')}
+                    isMultiline
                   />
                 }
                 codexCommand={
                   <CopyableField
                     text={mcpCodexAddCommand(baseUrl, AGENT_MCP_SERVER_NAME, AGENT_TOKEN_ENV)}
                     label={t('mcp_add_command')}
+                    isMultiline
                   />
                 }
                 opencodeCommand={
                   <CopyableField
                     text={mcpOpenCodeAddCommand(baseUrl, AGENT_TOKEN_OPENCODE_REF, AGENT_MCP_SERVER_NAME, false)}
                     label={t('mcp_add_command')}
+                    isMultiline
                   />
                 }
                 notice={t('msg_agent_token_env')}

@@ -43,14 +43,17 @@ Devuntu は MCP サーバーとして動くので、MCP に対応した AI ツ�
 Claude Code の場合は次の形になる。
 
 ```sh
-claude mcp add --scope user --transport http devuntu <Devuntu の URL>/api/mcp \
+claude mcp add --scope user --transport http devuntu \
+  <Devuntu の URL>/api/mcp \
   --header 'Authorization: Bearer <発行したトークン>'
 ```
 
 Codex CLI の場合は、トークンを環境変数へ置いてから登録する(Codex は設定ファイルにトークンそのものを書けないため)。
 
 ```sh
-codex mcp add --url <Devuntu の URL>/api/mcp --bearer-token-env-var DEVUNTU_MCP_TOKEN devuntu
+codex mcp add devuntu \
+  --url <Devuntu の URL>/api/mcp \
+  --bearer-token-env-var DEVUNTU_MCP_TOKEN
 ```
 
 ```sh
@@ -60,7 +63,8 @@ export DEVUNTU_MCP_TOKEN='<発行したトークン>'   # .bashrc / .zshrc な�
 OpenCode(v2 以降)の場合は次の形になる。`--global` を外すと、実行したディレクトリの `opencode.json` に登録される(そのプロジェクトでだけ使える)。
 
 ```sh
-opencode mcp add devuntu --global --url <Devuntu の URL>/api/mcp \
+opencode mcp add devuntu --global \
+  --url <Devuntu の URL>/api/mcp \
   --header 'Authorization=Bearer <発行したトークン>'
 ```
 
