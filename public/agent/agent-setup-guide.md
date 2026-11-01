@@ -87,8 +87,9 @@ A CLI kind of `None` means the runner's default CLI.
     the token of a different agent (see "Running multiple agents on the same machine")
 
 If the chosen directory is not `~/devuntu-agent-work`, **replace `~/devuntu-agent-work` with it in every command and path
-below**, including the cron line in step 8. Where `$HOME/devuntu-agent-work` is written, use `$HOME/<directory name>`
-instead (`~` is not expanded inside double quotes or heredocs).
+below**, including the cron line in step 8. Where `$HOME/devuntu-agent-work` is written, use the absolute path of the
+chosen directory instead (`$HOME/<directory name>` when it is directly under the home directory), because `~` is not
+expanded inside double quotes or heredocs.
 
 ### Create the working directory
 
