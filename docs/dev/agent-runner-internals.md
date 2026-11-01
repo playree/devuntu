@@ -316,6 +316,17 @@ CodeRabbit は push のたびに再レビューするので、指摘が続くと
 
 - `get_agent_task` の応答が `active: false` の場合は、何もせず終了する(コメントの投稿もしない)
 - `outcome` は `planned`(プランを投稿して返信待ち) / `completed`(対応完了) / `skipped`(見送り) / `failed`(失敗)
+- プランへの返信を待たずに完了・報告させない。plan の制約を守るかは CLI・モデル次第なので、
+  サーバー側で止める(`src/lib/agent/agent-plan-guard.ts`)
+  - 止めるのは、そのエージェントの直近の実行が plan で実行中のとき、または `planned` で閉じて返信待ちのまま
+    次の実行が始まっていないとき(`planned` で閉じた直後に同じ CLI が報告・完了へ進むのも止める)。
+    返信を受けた revise の実行が始まると処理状態が `running` になり、対象から外れる
+  - `finish_agent_task` の `completed` は、何も閉じずにエラー(`AGENT_PLAN_ONLY`)にする。メッセージで `planned` で終えるよう伝える。
+    `planned` で閉じた後の返信待ちでは、`skipped` / `failed` も同じエラーにする(別の結果で返信待ちを解いてから完了へ進めないように)。
+    plan の実行中の `skipped` / `failed` は受け付ける
+  - `add_ticket_comment` の `type=report` も、同じ条件なら投稿せずに同じエラーにする(プランと通常コメントは投稿できる)
+  - `get_agent_task` は action が plan のとき、プランだけ投稿して `planned` で終えるよう `note` で念を押す
+  - CLI が手元で行うファイル変更はサーバーからは止められない。止めるのは完了扱いと報告書の投稿まで
 - `get_agent_task` の `task` には、受け入れ条件(`acceptanceCriteria`)と、revise のきっかけになった承認 / 差し戻し
   (`decision`)と CI の失敗・PR / MR のレビュー指摘(`autoRevise`。[自動差し戻し](#自動差し戻しci-の失敗レビュー指摘))、
   設定されていればボードの AI 向けコンテキスト(`boardContext`)とボードノートの索引(`boardKnowledge` / `boardMemory`)が載る

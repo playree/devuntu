@@ -77,7 +77,10 @@ const fakeTx = vi.hoisted(() => ({
   },
 }))
 
-vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({}, { tx: fakeTx }))
+// エージェントの報告書の前にプランへの返信待ちかを引く(mcp-ticket-agent-plan.test.ts)。ここでは自動運用の設定が無い
+vi.mock('@/lib/prisma', async () =>
+  (await import('../../helpers/prisma')).mockPrisma({ agentRunner: ['findUnique'] }, { tx: fakeTx }),
+)
 
 vi.mock('@/lib/board/board-access', () => ({
   assertBoardAccess: vi.fn(),
@@ -238,6 +241,7 @@ const ticketCreateData = () => fakeTx.ticket.create.mock.calls[0][0].data
 
 beforeEach(() => {
   vi.clearAllMocks()
+  vi.mocked(prisma.agentRunner.findUnique).mockResolvedValue(null)
   givenAccess()
   vi.mocked(assertBoardAccess).mockResolvedValue({
     boardId: 'board-1',

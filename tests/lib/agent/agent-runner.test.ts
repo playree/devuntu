@@ -744,7 +744,7 @@ describe('finishAgentTask', () => {
 
   it.each([
     ['revise', 'planned'],
-    ['plan', 'completed'],
+    ['plan', 'planned'],
   ] as const)('%s で開始し %s を報告した実行はアクションを書き換えない', async (action, outcome) => {
     agentRun.findFirst.mockResolvedValueOnce({ id: 'run1', action } as never)
 
@@ -753,6 +753,47 @@ describe('finishAgentTask', () => {
     expect(agentRun.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ action: undefined }) }),
     )
+  })
+
+  it('plan の実行は completed で閉じられず、実行もチケットも更新しない', async () => {
+    agentRun.findFirst.mockResolvedValueOnce({ id: 'run1', action: 'plan' } as never)
+
+    const error = await finishAgentTask(runner(), 't1', 'completed', '要約').catch((e: unknown) => e)
+
+    expect(error).toBeInstanceOf(ClientError)
+    expect((error as ClientError).errorType).toBe('AGENT_PLAN_ONLY')
+    expect((error as ClientError).message, '直し方(planned で終える)を伝える').toContain('outcome=planned')
+    expect(agentRun.updateMany).not.toHaveBeenCalled()
+    expect(ticket.update).not.toHaveBeenCalled()
+    expect(notifyMock).not.toHaveBeenCalled()
+  })
+
+  it.each(['completed', 'skipped', 'failed'] as const)(
+    'planned で閉じた直後の %s は、返信待ちなので受け付けない',
+    async (outcome) => {
+      // 同じ CLI が finish_agent_task(planned) の後に続けて報告したケース。skipped / failed で返信待ちを解いてから
+      // completed へ進めないよう、planned 以外は受け付けない
+      agentRun.findFirst
+        .mockResolvedValueOnce(null as never) // 実行中の実行は無い
+        .mockResolvedValueOnce({ status: 'succeeded', summary: null, finishedAt: new Date() } as never) // 時間切れではない
+        .mockResolvedValueOnce({ action: 'plan', status: 'succeeded' } as never) // 直近の実行は plan
+      ticket.findUnique
+        .mockResolvedValueOnce({ agentState: 'planned' } as never)
+        .mockResolvedValueOnce({ agentState: 'planned' } as never)
+
+      const error = await finishAgentTask(runner(), 't1', outcome).catch((e: unknown) => e)
+
+      expect((error as ClientError).errorType).toBe('AGENT_PLAN_ONLY')
+      expect(ticket.update, '返信待ちのまま残す').not.toHaveBeenCalled()
+    },
+  )
+
+  it.each(['skipped', 'failed'] as const)('plan の実行も %s では閉じられる', async (outcome) => {
+    agentRun.findFirst.mockResolvedValueOnce({ id: 'run1', action: 'plan' } as never)
+
+    await finishAgentTask(runner(), 't1', outcome)
+
+    expect(agentRun.updateMany).toHaveBeenCalledTimes(1)
   })
 
   it('自動運用の設定が無い場合は状態だけ更新する', async () => {

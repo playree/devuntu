@@ -34,6 +34,15 @@ import { resolveTicketId } from './mcp-ticket'
 /** 稼働条件を満たさないときに Claude へ返す指示。判断の余地を残さない文にする */
 const INACTIVE_NOTE = 'Run conditions are not met. Exit without processing any ticket. Do not post any comments either.'
 
+/**
+ * plan のときに返す指示。plan の制約はランナーの指示文にもあるが、守られないことがあるので念を押す
+ * (サーバー側の指示なので、更新前のランナーにも効く)
+ */
+const PLAN_NOTE =
+  'This run is a plan: read and investigate only, then post the plan with add_ticket_comment type=plan ' +
+  '(or propose_child_tickets) and finish with outcome=planned. Do not change files, branches or pull requests, ' +
+  'do not post a report, and do not finish with outcome=completed. The work starts in a later run after a human replies to the plan'
+
 /** 自動運用の設定と稼働条件をまとめて引く。3ツールとも入口はこれ */
 const loadContext = async (auth: ResourceAuth) => {
   const runner = await findAgentRunner(auth.user.id)
@@ -165,7 +174,7 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
           /** ボードノートの索引(boardKnowledge / boardMemory)。本文は get_board_notes で読む */
           ...noteIndex,
         },
-        note: null,
+        note: task.action === 'plan' ? PLAN_NOTE : null,
       })
     },
   )
@@ -178,7 +187,8 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
       description:
         'Reports the result of processing a ticket and closes the run. ' +
         'planned=plan posted and waiting for a reply, completed=done, skipped=skipped, failed=failed. ' +
-        'If the ticket has acceptance criteria, completed must report every item as met with evidence in criteria',
+        'If the ticket has acceptance criteria, completed must report every item as met with evidence in criteria. ' +
+        'A plan run cannot finish with completed: finish it with planned (or skipped / failed)',
       inputSchema: z.strictObject({
         ticketId: z.string().min(1),
         outcome: z.enum(AGENT_OUTCOMES),
