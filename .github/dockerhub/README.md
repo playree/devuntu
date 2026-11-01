@@ -12,8 +12,9 @@ Self-hosted kanban & ticket management with a built-in MCP server, where AI agen
 
 - **AI agents as assignees**: assign tickets to Claude Code / Codex / OpenCode and they get processed, even while you sleep.
   Plans and reports stay on the ticket, and a human reviews and approves before work moves on
-- **Built-in MCP server**: create, update and report on tickets from the AI tools you already use, with your own permissions
-- **Self-host with one `compose.yaml`**: runs with Docker Compose and keeps your data on your own server, with no seat limits or fees
+- **Built-in MCP server**: create, update and report on tickets from the AI tools you already use, with your own permissions.
+  Per-board premises (repository, conventions) reach the AI too
+- **Self-host with one `compose.yaml`**: runs with Docker Compose and keeps your data on your own server. MIT licensed, with no seat limits or fees
 
 Also: GitHub / GitLab integration (PR status, CI results, auto-complete on merge), email / Slack / web push notifications,
 Google Calendar and free/busy sharing, remote execution, passkeys and Google sign-in, English / Japanese UI.

@@ -421,7 +421,9 @@ edge は人、latest と stable は AI(スキル [release](../../.claude/skills/
 
 `promote`ジョブは最後に、Docker Hub の説明文を [.github/dockerhub/README.md](../../.github/dockerhub/README.md)(英語)で上書きする
 (`peter-evans/dockerhub-description`)。Docker Hub の説明文は直接編集せず、このファイルを直す。
-`DOCKERHUB_TOKEN` に Read & Write & Delete の権限が無いと同期だけが失敗する(イメージの公開には影響せず、ジョブも失敗にしない)。
+同期するのは latest の公開時だけなので、main でこのファイルを直しても Docker Hub に出るのは次のリリースから。
+`DOCKERHUB_TOKEN` に Read & Write & Delete の権限が無いと同期だけが失敗する(イメージの公開には影響せず、ジョブは警告を出して成功する)。
+action はトークンを渡すため commit SHA で固定している。上げるときはタグの commit を確かめて SHA とコメントの版を揃える。
 
 `Promote stable` も同様に、`<version>` のイメージのビルド元が `v<version>` のタグの commit と一致しない場合
 (タグが無い場合を含む)と、その commit の `compose.yaml` が `stable` を参照していない(この仕組みより前の)版の場合は失敗する。過去の `version` を指定すれば `stable` を戻せるが、`stable` を使っている環境で

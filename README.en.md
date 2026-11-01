@@ -32,11 +32,6 @@ docker compose up -d --wait
 # open <BETTER_AUTH_URL>/start in a browser and register the first administrator
 ```
 
-It started as a collection of features I wanted for solo and small-team development.
-As AI-assisted development became common during its development, Devuntu has also been optimized for working with AI agents.
-Devuntu itself is developed with AI, but not everything is left to AI: humans review and adjust the work,
-and the AI agent features are designed around that same premise (a human check in the loop).
-
 > [!NOTE]
 > **The detailed documentation (`docs/`) is available in Japanese only.**
 > Translation tools and AI have become accurate enough that we keep Japanese as
@@ -53,6 +48,7 @@ and the AI agent features are designed around that same premise (a human check i
 ---
 
 - [Features](#features)
+- [Background](#background)
 - [Quick start](#quick-start)
   - [Requirements](#requirements)
   - [Services](#services)
@@ -94,6 +90,13 @@ and the AI agent features are designed around that same premise (a human check i
 - English / Japanese UI
 
 ![Kanban board](docs/images/board.webp)
+
+## Background
+
+It started as a collection of features I wanted for solo and small-team development.
+As AI-assisted development became common during its development, Devuntu has also been optimized for working with AI agents.
+Devuntu itself is developed with AI, but not everything is left to AI: humans review and adjust the work,
+and the AI agent features are designed around that same premise (a human check in the loop).
 
 ## Quick start
 
