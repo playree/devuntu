@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Devuntu - A self-hosted project management tool</title>
+    <title>Devuntu - Self-hosted kanban &amp; ticket management for working with AI agents</title>
     <meta
       name="description"
-      content="Devuntu is a self-hosted project management tool centered around Kanban-style board/ticket management, featuring calendar integration, email / Slack / web push notifications, MCP / AI agent integration, GitHub / GitLab integration and remote execution."
+      content="Devuntu is a self-hosted kanban and ticket management tool with a built-in MCP server, where AI agents (Claude Code / Codex / OpenCode) work on tickets as assignees and humans approve. GitHub / GitLab, Slack and calendar integration. Runs with Docker Compose, MIT licensed."
     />
     <link rel="canonical" href="https://playree.github.io/devuntu/en/" />
     <link rel="alternate" hreflang="ja" href="https://playree.github.io/devuntu/" />
@@ -15,17 +15,40 @@
     <link rel="icon" type="image/png" href="../assets/icon-192.png" />
     <link rel="apple-touch-icon" href="../assets/icon-192.png" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Devuntu" />
+    <meta
+      property="og:title"
+      content="Devuntu - Self-hosted kanban &amp; ticket management for working with AI agents"
+    />
     <meta
       property="og:description"
-      content="A self-hosted project management tool with Kanban boards, calendar, notifications, MCP / AI agent integration, GitHub / GitLab integration and remote execution"
+      content="Built-in MCP server. AI agents work on tickets as assignees, and humans approve. GitHub / GitLab, Slack and calendar integration. Self-hosted with Docker Compose, MIT licensed"
     />
     <meta property="og:url" content="https://playree.github.io/devuntu/en/" />
     <meta property="og:site_name" content="Devuntu" />
-    <meta property="og:image" content="https://playree.github.io/devuntu/assets/icon-512.png" />
-    <meta property="og:image:alt" content="Devuntu logo" />
+    <meta property="og:image" content="https://playree.github.io/devuntu/assets/og-image-en.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Devuntu logo and the dashboard screen" />
     <meta property="og:locale" content="en_US" />
-    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Devuntu",
+        "description": "A self-hosted kanban and ticket management tool with a built-in MCP server, where AI agents work on tickets as assignees",
+        "url": "https://playree.github.io/devuntu/en/",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Docker",
+        "inLanguage": ["en", "ja"],
+        "license": "https://opensource.org/licenses/MIT",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "image": "https://playree.github.io/devuntu/assets/og-image-en.png",
+        "screenshot": "https://playree.github.io/devuntu/images/dashboard-en.webp",
+        "sameAs": ["https://github.com/playree/devuntu", "https://hub.docker.com/r/playree/devuntu"]
+      }
+    </script>
     <link rel="stylesheet" href="../assets/style.css" />
   </head>
   <body>
@@ -52,6 +75,32 @@
     </header>
 
     <main>
+      <section class="container">
+        <h2>Why Devuntu</h2>
+        <ul class="highlights">
+          <li>
+            <h3>AI agents as assignees</h3>
+            <p>
+              Assign tickets to Claude Code / Codex / OpenCode and they get processed, even while you sleep. Plans and
+              reports stay on the ticket, and a human reviews and approves before work moves on
+            </p>
+          </li>
+          <li>
+            <h3>Built-in MCP server</h3>
+            <p>
+              Create, update and report on tickets from the AI tools you already use, with your own permissions.
+              Per-board premises (repository, conventions) reach the AI too
+            </p>
+          </li>
+          <li>
+            <h3>Self-host with one compose.yaml</h3>
+            <p>
+              Runs with Docker Compose and keeps your data on your own server. MIT licensed, with no seat limits or fees
+            </p>
+          </li>
+        </ul>
+      </section>
+
       <section class="container">
         <h2>Features</h2>
         <ul class="features">
@@ -137,6 +186,20 @@
           <figure>
             <img src="../images/board.webp" alt="Kanban board" width="1350" height="945" loading="lazy" />
             <figcaption>Kanban board (Japanese UI)</figcaption>
+          </figure>
+          <figure>
+            <img src="../images/ticket-plan.webp" alt="A plan posted by AI" width="1350" height="945" loading="lazy" />
+            <figcaption>A plan posted by AI (Japanese UI)</figcaption>
+          </figure>
+          <figure>
+            <img
+              src="../images/ticket-report.webp"
+              alt="A report posted by AI"
+              width="1350"
+              height="945"
+              loading="lazy"
+            />
+            <figcaption>A report posted by AI (Japanese UI)</figcaption>
           </figure>
         </div>
       </section>

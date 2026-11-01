@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Devuntu - セルフホスト型のプロジェクト管理ツール</title>
+    <title>Devuntu - AI エージェントと進めるセルフホスト型のかんばん・チケット管理</title>
     <meta
       name="description"
-      content="Devuntu は、かんばん形式のボード/チケット管理を中心に、カレンダー連携、メール/Slack/Webプッシュ通知、MCP/AIエージェント連携、GitHub/GitLab連携、リモート実行などを備えたセルフホスト型のプロジェクト管理ツールです。"
+      content="Devuntu は、MCP サーバーを内蔵し、AI エージェント(Claude Code / Codex / OpenCode)が担当者としてチケットを処理できる、セルフホスト型のかんばん・チケット管理ツールです。GitHub/GitLab 連携、Slack 通知、カレンダー連携を備え、Docker Compose で導入できます(MIT ライセンス)。"
     />
     <link rel="canonical" href="https://playree.github.io/devuntu/" />
     <link rel="alternate" hreflang="ja" href="https://playree.github.io/devuntu/" />
@@ -15,17 +15,37 @@
     <link rel="icon" type="image/png" href="assets/icon-192.png" />
     <link rel="apple-touch-icon" href="assets/icon-192.png" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Devuntu" />
+    <meta property="og:title" content="Devuntu - AI エージェントと進めるセルフホスト型のかんばん・チケット管理" />
     <meta
       property="og:description"
-      content="かんばん・カレンダー・通知・MCP/AIエージェント連携・GitHub/GitLab連携・リモート実行を備えたセルフホスト型のプロジェクト管理ツール"
+      content="MCP サーバー内蔵。AI エージェントが担当者としてチケットを処理し、人が承認する。GitHub/GitLab・Slack・カレンダー連携、Docker Compose で導入できる MIT ライセンスのセルフホスト型ツール"
     />
     <meta property="og:url" content="https://playree.github.io/devuntu/" />
     <meta property="og:site_name" content="Devuntu" />
-    <meta property="og:image" content="https://playree.github.io/devuntu/assets/icon-512.png" />
-    <meta property="og:image:alt" content="Devuntu のロゴ" />
+    <meta property="og:image" content="https://playree.github.io/devuntu/assets/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Devuntu のロゴと、かんばんボードの画面" />
     <meta property="og:locale" content="ja_JP" />
-    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Devuntu",
+        "description": "MCP サーバーを内蔵し、AI エージェントが担当者としてチケットを処理できる、セルフホスト型のかんばん・チケット管理ツール",
+        "url": "https://playree.github.io/devuntu/",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Docker",
+        "inLanguage": ["ja", "en"],
+        "license": "https://opensource.org/licenses/MIT",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "image": "https://playree.github.io/devuntu/assets/og-image.png",
+        "screenshot": "https://playree.github.io/devuntu/images/board.webp",
+        "sameAs": ["https://github.com/playree/devuntu", "https://hub.docker.com/r/playree/devuntu"]
+      }
+    </script>
     <link rel="stylesheet" href="assets/style.css" />
   </head>
   <body>
@@ -50,6 +70,30 @@
     </header>
 
     <main>
+      <section class="container">
+        <h2>Devuntu の特徴</h2>
+        <ul class="highlights">
+          <li>
+            <h3>AI エージェントが担当者になる</h3>
+            <p>
+              Claude Code / Codex / OpenCode
+              を担当者に登録すると、就寝中でも担当チケットを処理する。プランと報告はチケットに残り、人が確認・承認してから先へ進む
+            </p>
+          </li>
+          <li>
+            <h3>MCP サーバーを内蔵</h3>
+            <p>
+              普段使いの AI
+              ツールから、自分の権限でチケットの起票・更新・報告ができる。ボードごとの前提(リポジトリや規約)も AI へ届く
+            </p>
+          </li>
+          <li>
+            <h3>compose.yaml 1つでセルフホスト</h3>
+            <p>Docker Compose で導入でき、データは手元に置ける。MIT ライセンスで、人数による制限や課金は無い</p>
+          </li>
+        </ul>
+      </section>
+
       <section class="container">
         <h2>できること</h2>
         <ul class="features">
@@ -129,6 +173,14 @@
           <figure>
             <img src="images/board.webp" alt="かんばんボード" width="1350" height="945" loading="lazy" />
             <figcaption>かんばんボード</figcaption>
+          </figure>
+          <figure>
+            <img src="images/ticket-plan.webp" alt="AI が投稿したプラン" width="1350" height="945" loading="lazy" />
+            <figcaption>AI が投稿したプラン</figcaption>
+          </figure>
+          <figure>
+            <img src="images/ticket-report.webp" alt="AI が投稿した報告書" width="1350" height="945" loading="lazy" />
+            <figcaption>AI が投稿した報告書</figcaption>
           </figure>
         </div>
       </section>

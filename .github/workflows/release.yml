@@ -173,3 +173,14 @@ jobs:
             -t "$IMAGE:${GITHUB_REF_NAME#v}" \
             -t "$IMAGE:latest" \
             "$IMAGE@$digest"
+
+      # 説明文の同期に失敗しても、イメージの公開は済んでいるのでリリースは失敗にしない
+      - name: Update Docker Hub description
+        continue-on-error: true
+        uses: peter-evans/dockerhub-description@v5
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ env.IMAGE }}
+          short-description: Self-hosted kanban & ticket management with a built-in MCP server and AI agents
+          readme-filepath: .github/dockerhub/README.md
