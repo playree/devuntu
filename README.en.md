@@ -15,8 +15,8 @@ featuring calendar integration, email / Slack / web push notifications, MCP / AI
 **Why Devuntu**
 
 - **AI agents as assignees**  
-  Assign tickets to Claude Code / Codex / OpenCode and they get processed, even while you sleep.
-  Plans and reports stay on the ticket, and a human reviews and approves before work moves on
+  Assign a ticket to Claude Code / Codex / OpenCode and, once an approver picks the agent mode (plan first or auto),
+  it gets processed, even while you sleep. Plans and reports stay on the ticket, where humans can approve them or send them back
 - **Built-in MCP server**  
   Create, update and report on tickets from the AI tools you already use, with your own permissions.
   Per-board premises (repository, conventions) reach the AI too
@@ -26,10 +26,12 @@ featuring calendar integration, email / Slack / web push notifications, MCP / AI
 **Try it** (details in [Quick start](#quick-start))
 
 ```sh
+mkdir devuntu && cd devuntu
 curl -fsSLO https://raw.githubusercontent.com/playree/devuntu/stable/compose.yaml
 docker compose run --rm tools setup-env   # generate the configuration interactively
 docker compose up -d --wait
-# open <BETTER_AUTH_URL>/start in a browser and register the first administrator
+# right after starting, open <BETTER_AUTH_URL>/start and register the first administrator
+# (until then, anyone who can reach this page can register)
 ```
 
 > [!NOTE]

@@ -50,12 +50,12 @@ const assertFont = () => {
 const build = async (variant) => {
   const image = sharp(variant.shot)
   const meta = await image.metadata()
-  const crop = {
-    left: Math.round(variant.crop.left * meta.width),
-    top: Math.round(variant.crop.top * meta.height),
-    width: Math.round(variant.crop.width * meta.width),
-    height: Math.round(variant.crop.height * meta.height),
-  }
+  // 幅と高さを個別に丸めると端が画像の外へ 1px はみ出すことがあるため、両端を丸めてから差を取る
+  const left = Math.round(variant.crop.left * meta.width)
+  const top = Math.round(variant.crop.top * meta.height)
+  const right = Math.min(meta.width, Math.round((variant.crop.left + variant.crop.width) * meta.width))
+  const bottom = Math.min(meta.height, Math.round((variant.crop.top + variant.crop.height) * meta.height))
+  const crop = { left, top, width: right - left, height: bottom - top }
   const shotH = Math.round((crop.height / crop.width) * SHOT.width)
   if (SHOT.y + shotH + SHOT.shadow > H - BOTTOM_MARGIN) {
     throw new Error(`${variant.shot}: 切り出しが縦に長すぎる(高さ ${shotH})`)

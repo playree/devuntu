@@ -485,7 +485,8 @@ pnpm why sharp
 - 英語ページは `site/en/index.html`。内容を変えたら日英両方を更新し、`hreflang` の相互リンクも揃える
 - SNS などで共有されたときのカード画像(OGP)は `site/assets/og-image.png`(日本語)/ `og-image-en.png`(英語)。
   1200×630 で、`docs/images/` のスクリーンショットから `pnpm site:og-image`([scripts/site-og-image.mjs](../../scripts/site-og-image.mjs))で作る。
-  元のスクリーンショットや「特徴」の文言を変えたら作り直す。日本語の描画にホストのフォント(Noto Sans CJK JP)を使う
+  元のスクリーンショットや「特徴」の文言を変えたら作り直す。日本語の描画にホストのフォント(Noto Sans CJK JP)を使い、
+  その有無を fontconfig の `fc-list` で確かめるため、両方が入っている環境で実行する(Ubuntu なら `fonts-noto-cjk` と `fontconfig`)
 - 各ページの `<head>` に構造化データ(JSON-LD の `SoftwareApplication`)を置いている。title / description や画像を変えたら合わせて直す
 - 冒頭の「特徴」(3 点)は README.md / README.en.md の冒頭、[.github/dockerhub/README.md](../../.github/dockerhub/README.md) と揃える
 - ページを増やしたら `site/sitemap.xml` にも追加する。robots.txt はドメイン直下(`playree.github.io/robots.txt`)

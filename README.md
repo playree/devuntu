@@ -10,7 +10,7 @@
 Website: https://playree.github.io/devuntu/
 
 > [!NOTE]
-> **Self-hosted kanban & ticket management with a built-in MCP server, where AI agents (Claude Code / Codex / OpenCode) work on your tickets and humans approve.**
+> **Self-hosted kanban & ticket management with a built-in MCP server, where AI agents (Claude Code / Codex / OpenCode) work on your tickets, with humans approving plans and reports.**
 > **English README: [README.en.md](README.en.md)** (overview and quick start).
 > The detailed documentation is available in Japanese only.
 
@@ -21,7 +21,7 @@ Devuntu は、かんばん形式のボード/チケット管理を中心に、
 **特徴**
 
 - **AI エージェントが担当者になる**  
-  Claude Code / Codex / OpenCode を担当者に登録すると、就寝中でも担当チケットを処理します。プランと報告はチケットに残り、人が確認・承認してから先へ進みます
+  Claude Code / Codex / OpenCode を担当者にして、承認者がエージェントモード(プラン先行 / 自動実行)を選ぶと、就寝中でも担当チケットを処理します。プランや報告書はチケットに残り、人が承認・差し戻しできます
 - **MCP サーバーを内蔵**  
   普段使いの AI ツールから、自分の権限でチケットの起票・更新・報告ができます。ボードごとの前提(リポジトリや規約)も AI へ届きます
 - **`compose.yaml` 1つでセルフホスト**  
@@ -30,10 +30,12 @@ Devuntu は、かんばん形式のボード/チケット管理を中心に、
 **すぐに試す**(詳細は[導入の流れ](#導入の流れ))
 
 ```sh
+mkdir devuntu && cd devuntu
 curl -fsSLO https://raw.githubusercontent.com/playree/devuntu/stable/compose.yaml
 docker compose run --rm tools setup-env   # 設定ファイルを対話生成
 docker compose up -d --wait
-# ブラウザで <BETTER_AUTH_URL>/start を開いて最初の管理者を登録
+# 起動したらすぐ、ブラウザで <BETTER_AUTH_URL>/start を開いて最初の管理者を登録
+# (ユーザーが居ない間は、この画面に届く人なら誰でも登録できる)
 ```
 
 ---
