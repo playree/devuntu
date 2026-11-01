@@ -60,6 +60,39 @@ PRs automatically with `gh pr create`.
 
 ## 2. Prepare the working directory
 
+### Check for an existing agent
+
+These steps use `~/devuntu-agent-work` as the working directory. If an agent is already set up there,
+following them as is **replaces that agent** (step 5 rewrites its `config.json`, including the token and the CLI).
+First check whether this machine already has an agent. The token is not printed.
+
+```sh
+crontab -l 2>/dev/null | grep -F devuntu_agent.py
+for f in ~/devuntu-agent-work*/.devuntu-agent/config.json; do
+  [ -f "$f" ] && python3 -c 'import json, sys; c = json.load(open(sys.argv[1])); print(sys.argv[1], c.get("base_url"), (c.get("cli") or {}).get("kind"))' "$f"
+done
+```
+
+A CLI kind of `None` means the runner's default CLI.
+
+- Nothing is printed (the exit status is then 1, which is not an error) → continue with `~/devuntu-agent-work`
+- Something is printed → **do not decide on your own. Show the user the working directories and CLI kinds found, and ask** which to do:
+  - **Overwrite**: reuse one of the working directories found (the user chooses which) and replace the agent there.
+    That agent stops running with its previous token and CLI. Before changing any file, remove its cron line
+    (`crontab -l | grep -vF '<working directory>/.devuntu-agent/devuntu_agent.py poll' | crontab -`, with the path as
+    written in the cron line) and wait until no `devuntu_agent.py` of that directory is running (`pgrep -af devuntu_agent.py`).
+    Otherwise cron may start it halfway through, with the new MCP configuration and the old token. Step 8 registers it again
+  - **New working directory**: create a directory that does not exist yet (`~/devuntu-agent-work` if it is free,
+    otherwise e.g. `~/devuntu-agent-work-{{cliKind}}`). One agent can have only one runner, so a new directory needs
+    the token of a different agent (see "Running multiple agents on the same machine")
+
+If the chosen directory is not `~/devuntu-agent-work`, **replace `~/devuntu-agent-work` with it in every command and path
+below**, including the cron line in step 8. Where `$HOME/devuntu-agent-work` is written, use the absolute path of the
+chosen directory instead (`$HOME/<directory name>` when it is directly under the home directory), because `~` is not
+expanded inside double quotes or heredocs.
+
+### Create the working directory
+
 The agent may work on more than one repository, so `~/devuntu-agent-work` is not a clone of a specific
 repository but a **base directory** under which the needed repositories are cloned.
 The agent decides which repository to work on from the ticket content and the pre-work instructions (step 7).
@@ -103,6 +136,10 @@ claude mcp add --transport http devuntu-agent {{mcpUrl}} \
   --header 'Authorization: Bearer ${DEVUNTU_AGENT_TOKEN}'
 ```
 
+If it fails because `devuntu-agent` already exists (when overwriting an agent), check its URL in `.mcp.json`.
+Keep the entry if the URL is `{{mcpUrl}}` (the token is not in it). Otherwise run
+`claude mcp remove devuntu-agent --scope project` and run the command above again.
+
 Claude Code expands this notation to the environment variable when loading, so no secret remains in `.mcp.json`.
 Check with `cat .mcp.json` that `${DEVUNTU_AGENT_TOKEN}` is stored unexpanded
 (if the expanded value was stored, replace it with `${DEVUNTU_AGENT_TOKEN}`).
@@ -128,7 +165,8 @@ TOML
 
 TOML does not allow defining the same table twice, and a duplicate makes codex unable to read the configuration file.
 That is why the command does not append when the block already exists. To change the URL or the token
-environment variable name, edit the existing block directly instead of using this command.
+environment variable name (for example when overwriting an agent whose URL differs from `{{mcpUrl}}`),
+edit the existing block directly instead of using this command.
 
 Codex **reads project configuration only in trusted directories**, so also add a line to the user configuration
 (`~/.codex/config.toml`) that trusts the working directory.
@@ -386,11 +424,15 @@ the same machine. Keep the cron line to just running the runner and do not add a
 (it would double up with the runner's lock, the runner would fail to acquire it every time, and every run would be skipped).
 
 ```sh
+crontab -l 2>/dev/null | grep -v '^[[:space:]]*#' | grep -qF '~/devuntu-agent-work/.devuntu-agent/devuntu_agent.py poll' || \
 ( crontab -l 2>/dev/null; \
   echo "*/{{intervalMinutes}} * * * * python3 ~/devuntu-agent-work/.devuntu-agent/devuntu_agent.py poll" \
 ) | crontab -
 crontab -l
 ```
+
+When the working directory already has a cron line, nothing is added.
+If that line has a different interval from `*/{{intervalMinutes}}`, fix it with `crontab -e`.
 
 There is no need to add PATH to the cron line. The runner passes the PATH saved by `save-path` in step 5
 to the CLI. If you still get `not found`, write the absolute path found with `command -v {{cliKind}}`

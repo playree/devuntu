@@ -1,7 +1,7 @@
 ---
 type: design_doc
 title: AIエージェントの自動運用(Devuntu Agent)
-updated: 2026-10-31
+updated: 2026-11-01
 ---
 
 # AIエージェントの自動運用(Devuntu Agent)
@@ -9,7 +9,7 @@ updated: 2026-10-31
 > **対象**: エージェントを動かすマシン(ランナー)を用意・運用する人
 >
 > 1. 管理者が `/admin/agents` でエージェントを作り、トークンを発行する。承認者を決め、担当させたいボードのメンバーに加える
-> 2. エージェント専用のマシンに Claude Code・Codex CLI・OpenCode のいずれかを入れ、Devuntu の MCP を登録して「devuntu のエージェントをセットアップして」と頼む
+> 2. エージェント専用のマシンに Claude Code・Codex CLI・OpenCode のいずれかを入れ、Devuntu の MCP を登録して「devuntu のエージェントを新たにセットアップして」と頼む
 > 3. 作業ディレクトリに開発環境(Git の認証など)を用意し、画面の「自動運用」を有効にする
 
 エージェントに担当させたチケットを、AI エージェントの CLI(Claude Code / Codex CLI / OpenCode)が自動で処理する仕組み。
@@ -36,12 +36,13 @@ cron からは権限確認に誰も答えられないため、CLI は既定で�
 
 ## セットアップ
 
-Claude Code・Codex CLI・OpenCode のいずれかから、Devuntu の MCP に接続した状態で「devuntu のエージェントをセットアップして」と頼む。
+Claude Code・Codex CLI・OpenCode のいずれかから、Devuntu の MCP に接続した状態で「devuntu のエージェントを新たにセットアップして」と頼む。
 MCP ツール `get_agent_setup_guide` がそのマシン向けの手順を返し、それに沿って進む
 (MCP の登録は [ai.md](../guide/ai.md#aiツールからつなぐmcp) の手順で、セットアップする人自身のトークンを使えばよい)。
 
 - 途中でエージェント用のトークンを求められる。管理者が `/admin/agents` で発行する
-
+- 既にエージェントの作業ディレクトリ(既定は `~/devuntu-agent-work`)がある場合は、上書きするか、新しい作業ディレクトリを作るかを聞かれる。
+  上書きすると、そのディレクトリにあったエージェントは置き換わる。新しく作る場合は、別のエージェントのトークンが要る(ランナーはエージェント 1 つにつき 1 つ)
 - 途中で、エージェントにどの CLI(Claude Code / Codex CLI / OpenCode)を使わせるかを聞かれる。セットアップを頼んだ CLI と同じでなくてよい
 - ランナー本体は `curl <Devuntu の URL>/agent/devuntu_agent.py` で、サーバーと同じ版が取得される
 

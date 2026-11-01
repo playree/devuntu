@@ -1,7 +1,7 @@
 ---
 type: design_doc
 title: AIエージェントの自動運用の仕組み(開発者向け)
-updated: 2026-10-31
+updated: 2026-11-01
 ---
 
 # AIエージェントの自動運用の仕組み(開発者向け)
@@ -418,11 +418,16 @@ opencode 2.2.2 以前は `run --format json` が最後のステップの `step_f
 ## セットアップ手順の生成
 
 MCP ツール `get_agent_setup_guide` が、そのマシンで実行できる手順を返す。
-Claude Code・Codex CLI・OpenCode から「devuntu のエージェントをセットアップして」と頼めば、この手順に沿って進む。
+Claude Code・Codex CLI・OpenCode から「devuntu のエージェントを新たにセットアップして」と頼めば、この手順に沿って進む。
 
 どちらの CLI で動かすかは引数 `cli` で決まり、手順はその CLI の分だけが返る。**未指定で呼ばれた場合は
 手順を返さず、利用者に確認するよう促す**。頼んだ CLI とエージェントに使わせたい CLI は別のことがあるので、
 呼び出し側に選ばせない(未指定のまま手順を返すと、本文で先に出てくる方で進めてしまう)。
+
+手順は既定の作業ディレクトリ `~/devuntu-agent-work` を使い、`config.json` を作り直すため、そのまま進めると
+既存のエージェントを黙って置き換えてしまう。そこで手順の冒頭で cron の登録と `~/devuntu-agent-work*/.devuntu-agent/config.json` を
+確認させ(トークンは表示しない)、見つかった場合は上書きか新しい作業ディレクトリかを利用者に選ばせる。
+上書きする場合は、ファイルを変える前にその cron 行を外し、実行中のランナーの終了を待たせる(途中で起動されると、新しい MCP 設定と古いトークンの組み合わせで動いてしまう)。cron 登録は同じ作業ディレクトリの行があれば追加しない。
 
 手順の本文は [public/agent/agent-setup-guide.md](../../public/agent/agent-setup-guide.md)(MCP 経由で返すため英語)。
 CLI 別の記述は `<!-- cli:claude -->` … `<!-- /cli -->` で囲んであり、プレースホルダーの置換と
