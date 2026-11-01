@@ -7,10 +7,12 @@
 import { addComment } from '@/lib/board/ticket-mutation'
 import { ClientError } from '@/lib/error'
 import { addTicketCommentForMcp, ANNOUNCEMENT_DENIED } from '@/lib/mcp/mcp-ticket'
+import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { agentAuth, oauthAuth, patAuth } from '../../helpers/resource-auth'
 
-vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({}))
+// エージェントの報告書は plan の実行中かを引く(mcp-ticket-agent-plan.test.ts)。ここでは実行中の plan は無い
+vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({ agentRun: ['count'] }))
 vi.mock('@/lib/board/ticket-mutation', () => ({ addComment: vi.fn() }))
 
 const TICKET_ID = '0195c1e0-0000-7000-8000-0000000000aa'
@@ -19,6 +21,7 @@ const COMMENT_ID = '0195c1e0-0000-7000-8000-0000000000cc'
 beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(addComment).mockResolvedValue({ id: COMMENT_ID, mentionedUserIds: [], announced: true })
+  vi.mocked(prisma.agentRun.count).mockResolvedValue(0)
 })
 
 /** 拒否されたときのエラー種別 */

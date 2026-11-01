@@ -77,7 +77,10 @@ const fakeTx = vi.hoisted(() => ({
   },
 }))
 
-vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({}, { tx: fakeTx }))
+// agentRun.count はエージェントの報告書の前に plan の実行中かを引く(mcp-ticket-agent-plan.test.ts)。ここでは 0 件として扱う
+vi.mock('@/lib/prisma', async () =>
+  (await import('../../helpers/prisma')).mockPrisma({ agentRun: ['count'] }, { tx: fakeTx }),
+)
 
 vi.mock('@/lib/board/board-access', () => ({
   assertBoardAccess: vi.fn(),
@@ -238,6 +241,7 @@ const ticketCreateData = () => fakeTx.ticket.create.mock.calls[0][0].data
 
 beforeEach(() => {
   vi.clearAllMocks()
+  vi.mocked(prisma.agentRun.count).mockResolvedValue(0)
   givenAccess()
   vi.mocked(assertBoardAccess).mockResolvedValue({
     boardId: 'board-1',

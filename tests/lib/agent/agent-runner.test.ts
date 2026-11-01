@@ -744,7 +744,7 @@ describe('finishAgentTask', () => {
 
   it.each([
     ['revise', 'planned'],
-    ['plan', 'completed'],
+    ['plan', 'planned'],
   ] as const)('%s で開始し %s を報告した実行はアクションを書き換えない', async (action, outcome) => {
     agentRun.findFirst.mockResolvedValueOnce({ id: 'run1', action } as never)
 
@@ -753,6 +753,27 @@ describe('finishAgentTask', () => {
     expect(agentRun.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ action: undefined }) }),
     )
+  })
+
+  it('plan の実行は completed で閉じられず、実行もチケットも更新しない', async () => {
+    agentRun.findFirst.mockResolvedValueOnce({ id: 'run1', action: 'plan' } as never)
+
+    const error = await finishAgentTask(runner(), 't1', 'completed', '要約').catch((e: unknown) => e)
+
+    expect(error).toBeInstanceOf(ClientError)
+    expect((error as ClientError).errorType).toBe('AGENT_PLAN_ONLY')
+    expect((error as ClientError).message, '直し方(planned で終える)を伝える').toContain('outcome=planned')
+    expect(agentRun.updateMany).not.toHaveBeenCalled()
+    expect(ticket.update).not.toHaveBeenCalled()
+    expect(notifyMock).not.toHaveBeenCalled()
+  })
+
+  it.each(['skipped', 'failed'] as const)('plan の実行も %s では閉じられる', async (outcome) => {
+    agentRun.findFirst.mockResolvedValueOnce({ id: 'run1', action: 'plan' } as never)
+
+    await finishAgentTask(runner(), 't1', outcome)
+
+    expect(agentRun.updateMany).toHaveBeenCalledTimes(1)
   })
 
   it('自動運用の設定が無い場合は状態だけ更新する', async () => {

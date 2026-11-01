@@ -12,6 +12,7 @@ import { type AgentCriterionReport, assertAgentCriteria, writeAgentCriteria } fr
 import { ticketDisplayId } from '../board/ticket-id'
 import { moveTicketToLane } from '../board/ticket-write'
 import { MINUTE_MS, msBefore, nowDate } from '../day'
+import { ClientError } from '../error'
 import { logger } from '../logger'
 import { MAX_NOTIFY_RECIPIENTS } from '../notify/notify'
 import type { AgentRunNotifyState } from '../notify/notify-payload'
@@ -392,6 +393,29 @@ const OUTCOME_MAP: Record<AgentOutcome, { state: AgentRunNotifyState; run: Exclu
 }
 
 /**
+ * plan の実行で、承認前に完了・報告しようとしたのを弾いた。
+ * plan の制約を守るかは CLI・モデル次第なので、サーバー側で止めて、直し方をメッセージで伝える。
+ */
+export const AGENT_PLAN_ONLY = 'AGENT_PLAN_ONLY'
+const errAgentPlanOnly = () =>
+  new ClientError(
+    AGENT_PLAN_ONLY,
+    'This run is a plan: the ticket cannot be completed or reported until a human approves the plan. ' +
+      'Post the plan with add_ticket_comment type=plan (questions as a regular comment) and finish with outcome=planned. ' +
+      'Do the work in a later run after the plan is approved',
+  )
+
+/** エージェントがこのチケットを plan として処理中なら弾く。plan の実行中に報告書を投稿させないために使う */
+export const assertAgentNotPlanning = async (userId: string, ticketId: string): Promise<void> => {
+  const count = await prisma.agentRun.count({
+    where: { ticketId, status: 'running', action: 'plan', runner: { userId } },
+  })
+  if (count > 0) {
+    throw errAgentPlanOnly()
+  }
+}
+
+/**
  * 実行に記録するアクション。
  *
  * `revise` はプラン修正と実装への移行の両方を含み、開始時点ではどちらか決まらない。
@@ -411,6 +435,7 @@ const settleAction = (action: AgentRunAction, outcome: AgentOutcome): AgentRunAc
  * 受け入れ条件の自己申告(`criteria`)も、状態を進めたときだけ同じトランザクションで記録する。
  * 失敗として閉じられた実行の申告が「充足」として残ると、画面上は満たしたように見えてしまうため。
  * そのチケットに無い項目が混ざっていたら、何も閉じずに throw する(エージェントが直して呼び直せる)。
+ * plan の実行を `completed` で閉じようとした場合も同じく throw する。
  */
 export const finishAgentTask = async (
   runner: AgentRunnerRow | null,
@@ -443,6 +468,11 @@ export const finishAgentTask = async (
       await tx.ticket.update({ where: { id: ticketId }, data: { agentState: state }, select: { id: true } })
       await writeAgentCriteria(tx, criteria)
       return { state }
+    }
+
+    // プラン先行の承認を飛ばして完了させない(例外でトランザクションごと戻る)
+    if (open.action === 'plan' && outcome === 'completed') {
+      throw errAgentPlanOnly()
     }
 
     const settled = settleAction(open.action, outcome)

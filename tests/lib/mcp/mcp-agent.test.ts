@@ -215,10 +215,9 @@ describe('get_agent_task', () => {
 
     expect(resolveAgentTask).toHaveBeenCalledWith(runnerRow, 't1')
     expect(pickAgentTasks).not.toHaveBeenCalled()
-    expect(parseResult(result.content)).toMatchObject({
-      task: { ...task, acceptanceCriteria: [], decision: null },
-      note: null,
-    })
+    const body = parseResult(result.content)
+    expect(body).toMatchObject({ task: { ...task, acceptanceCriteria: [], decision: null } })
+    expect(body.note, 'plan ではプランだけ投稿して planned で終えるよう念を押す').toContain('outcome=planned')
     // revise 以外では返答を引かない
     expect(findLatestAgentDecision).not.toHaveBeenCalled()
   })
@@ -244,10 +243,12 @@ describe('get_agent_task', () => {
     ).callTool({ name: 'get_agent_task', arguments: { ticketId: 'ABC-42' } })
 
     expect(findLatestAgentDecision).toHaveBeenCalledWith('t1', 'a1')
-    expect(parseResult(result.content).task).toMatchObject({
+    const body = parseResult(result.content)
+    expect(body.task).toMatchObject({
       acceptanceCriteria: [{ id: 'c1', text: '条件1' }],
       decision: { kind: 'rejected', commentId: 'm1', content: '理由' },
     })
+    expect(body.note, 'plan 用の指示は plan のときだけ').toBeNull()
   })
 
   it('revise では、この実行が引き受けた自動差し戻しのきっかけを渡す', async () => {

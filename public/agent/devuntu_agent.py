@@ -42,7 +42,7 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-__version__ = "1.0.3"
+__version__ = "1.0.4"
 
 # 1 Agent の構成を作業ディレクトリだけで完結させるため、config・ログ・ロックは本体と同じ
 # <作業ディレクトリ>/.devuntu-agent へ置く。作業ディレクトリを分ければ同一ホストに複数の Agent を並べられる
@@ -443,6 +443,9 @@ def build_prompt(task: dict) -> str:
         "   関係しそうなものを devuntu-agent MCP の get_board_notes で読んでから作業する。\n"
         "2. devuntu-agent MCP の get_ticket でチケットの本文とコメントを読み、action に従って処理する。\n"
         "   - plan: 対応プランを作り、add_ticket_comment に type='plan' で投稿する。実装は行わない。\n"
+        "     読む・調べるまでにとどめ、ファイル・ブランチ・プルリクエストは変更しない。プランを投稿したら\n"
+        "     手順 3 の報告はせず、手順 4 で outcome='planned' を報告して終える(実装は承認後の回で行う)。\n"
+        "     質問への回答や調査結果そのものが成果物のチケットでも、答えはプランに書かず承認後の回で報告する。\n"
         "     子チケットへの分割は任意で、基本はこの通常のプランでよい。分割するのは、チケット本文や会話で\n"
         "     分割を指示された場合か、独立して確認できる成果物が複数に分かれ1回の実行に収まらない規模の場合だけ。\n"
         "     その場合は代わりに devuntu-agent MCP の propose_child_tickets で\n"
