@@ -173,3 +173,20 @@ jobs:
             -t "$IMAGE:${GITHUB_REF_NAME#v}" \
             -t "$IMAGE:latest" \
             "$IMAGE@$digest"
+
+      # 説明文の同期に失敗しても、イメージの公開は済んでいるのでリリースは失敗にせず警告に留める。
+      # Docker Hub のトークンを渡すサードパーティの action なので、commit SHA で固定する
+      - id: dockerhub-description
+        name: Update Docker Hub description
+        continue-on-error: true
+        uses: peter-evans/dockerhub-description@1b9a80c056b620d92cedb9d9b5a223409c68ddfa # v5.0.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ env.IMAGE }}
+          short-description: Self-hosted kanban & ticket management with a built-in MCP server and AI agents
+          readme-filepath: .github/dockerhub/README.md
+
+      - name: Warn on Docker Hub description failure
+        if: steps.dockerhub-description.outcome == 'failure'
+        run: echo "::warning::Docker Hub の説明文を同期できなかった(DOCKERHUB_TOKEN の権限を確認する)"

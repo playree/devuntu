@@ -1,0 +1,47 @@
+# Devuntu
+
+Self-hosted kanban & ticket management with a built-in MCP server, where AI agents (Claude Code / Codex / OpenCode) work on your tickets, with humans approving plans and reports.
+
+- Source and issues: https://github.com/playree/devuntu
+- Website: https://playree.github.io/devuntu/en/
+- License: MIT
+
+![Dashboard](https://raw.githubusercontent.com/playree/devuntu/main/docs/images/dashboard-en.webp)
+
+## Why Devuntu
+
+- **AI agents as assignees**: assign a ticket to Claude Code / Codex / OpenCode and, once an approver picks the agent mode (plan first or auto),
+  it gets processed, even while you sleep. Plans and reports stay on the ticket, where humans can approve them or send them back
+- **Built-in MCP server**: create, update and report on tickets from the AI tools you already use, with your own permissions.
+  Per-board premises (repository, conventions) reach the AI too
+- **Self-host with one `compose.yaml`**: runs with Docker Compose and keeps your data on your own server. MIT licensed, with no seat limits or fees
+
+Also: GitHub / GitLab integration (PR status, CI results, auto-complete on merge), email / Slack / web push notifications,
+Google Calendar and free/busy sharing, remote execution, passkeys and Google sign-in, English / Japanese UI.
+
+## Quick start
+
+Requires Docker Engine 25.0+ and Docker Compose v2.24+, and 2 GB of memory or more (4 GB recommended).
+
+```sh
+mkdir devuntu && cd devuntu
+curl -fsSLO https://raw.githubusercontent.com/playree/devuntu/stable/compose.yaml
+docker compose run --rm tools setup-env   # generate the configuration interactively
+docker compose up -d --wait
+```
+
+Right after starting, open `<BETTER_AUTH_URL>/start` in a browser and register the first administrator.
+Until then, anyone who can reach this page can register, so restrict access to port 3000 (firewall etc.)
+if the host is publicly reachable, and open it after registering.
+The full steps are in the [README](https://github.com/playree/devuntu/blob/main/README.en.md#quick-start).
+
+## Tags
+
+| Tag         | Contents                                                                     |
+| ----------- | ---------------------------------------------------------------------------- |
+| `stable`    | A release confirmed to work for a while after it was published (recommended) |
+| `latest`    | The newest release                                                           |
+| `<version>` | A specific release (e.g. `1.1.4`)                                            |
+| `edge`      | A build under test before release                                            |
+
+Images are available for linux/amd64 and linux/arm64.

@@ -3,6 +3,7 @@
 [![CI](https://github.com/playree/devuntu/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/playree/devuntu/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/github/license/playree/devuntu)](LICENSE)
 [![Docker Pulls](https://img.shields.io/docker/pulls/playree/devuntu)](https://hub.docker.com/r/playree/devuntu)
+[![Release](https://img.shields.io/github/v/release/playree/devuntu)](https://github.com/playree/devuntu/releases/latest)
 
 English | [日本語](README.md)
 
@@ -11,10 +12,27 @@ Website: https://playree.github.io/devuntu/en/
 Devuntu is a self-hosted project management tool centered around Kanban-style board/ticket management,
 featuring calendar integration, email / Slack / web push notifications, MCP / AI agent integration and remote execution.
 
-It started as a collection of features I wanted for solo and small-team development.
-As AI-assisted development became common during its development, Devuntu has also been optimized for working with AI agents.
-Devuntu itself is developed with AI, but not everything is left to AI: humans review and adjust the work,
-and the AI agent features are designed around that same premise (a human check in the loop).
+**Why Devuntu**
+
+- **AI agents as assignees**  
+  Assign a ticket to Claude Code / Codex / OpenCode and, once an approver picks the agent mode (plan first or auto),
+  it gets processed, even while you sleep. Plans and reports stay on the ticket, where humans can approve them or send them back
+- **Built-in MCP server**  
+  Create, update and report on tickets from the AI tools you already use, with your own permissions.
+  Per-board premises (repository, conventions) reach the AI too
+- **Self-host with one `compose.yaml`**  
+  Runs with Docker Compose and keeps your data on your own server. MIT licensed, with no seat limits or fees
+
+**Try it** (details in [Quick start](#quick-start))
+
+```sh
+mkdir devuntu && cd devuntu
+curl -fsSLO https://raw.githubusercontent.com/playree/devuntu/stable/compose.yaml
+docker compose run --rm tools setup-env   # generate the configuration interactively
+docker compose up -d --wait
+# right after starting, open <BETTER_AUTH_URL>/start and register the first administrator
+# (until then, anyone who can reach this page can register)
+```
 
 > [!NOTE]
 > **The detailed documentation (`docs/`) is available in Japanese only.**
@@ -32,6 +50,7 @@ and the AI agent features are designed around that same premise (a human check i
 ---
 
 - [Features](#features)
+- [Background](#background)
 - [Quick start](#quick-start)
   - [Requirements](#requirements)
   - [Services](#services)
@@ -73,6 +92,13 @@ and the AI agent features are designed around that same premise (a human check i
 - English / Japanese UI
 
 ![Kanban board](docs/images/board.webp)
+
+## Background
+
+It started as a collection of features I wanted for solo and small-team development.
+As AI-assisted development became common during its development, Devuntu has also been optimized for working with AI agents.
+Devuntu itself is developed with AI, but not everything is left to AI: humans review and adjust the work,
+and the AI agent features are designed around that same premise (a human check in the loop).
 
 ## Quick start
 

@@ -144,6 +144,33 @@ h3 {
   font-size: 1rem;
 }
 
+.highlights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.highlights li {
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--accent);
+  border-radius: 12px;
+  background: var(--bg-muted);
+}
+
+.highlights h3 {
+  margin-bottom: 8px;
+  font-size: 1.1rem;
+}
+
+.highlights p {
+  margin: 0;
+  color: var(--fg-muted);
+}
+
 .features {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));

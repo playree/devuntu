@@ -419,6 +419,12 @@ edge は人、latest と stable は AI(スキル [release](../../.claude/skills/
 ビルド元の commit とタグの commit が食い違う場合と、`package.json`の`version`とタグ名が
 食い違う場合はジョブが失敗する。その場合は1からやり直す。
 
+`promote`ジョブは最後に、Docker Hub の説明文を [.github/dockerhub/README.md](../../.github/dockerhub/README.md)(英語)で上書きする
+(`peter-evans/dockerhub-description`)。Docker Hub の説明文は直接編集せず、このファイルを直す。
+同期するのは latest の公開時だけなので、main でこのファイルを直しても Docker Hub に出るのは次のリリースから。
+`DOCKERHUB_TOKEN` に Read & Write & Delete の権限が無いと同期だけが失敗する(イメージの公開には影響せず、ジョブは警告を出して成功する)。
+action はトークンを渡すため commit SHA で固定している。上げるときはタグの commit を確かめて SHA とコメントの版を揃える。
+
 `Promote stable` も同様に、`<version>` のイメージのビルド元が `v<version>` のタグの commit と一致しない場合
 (タグが無い場合を含む)と、その commit の `compose.yaml` が `stable` を参照していない(この仕組みより前の)版の場合は失敗する。過去の `version` を指定すれば `stable` を戻せるが、`stable` を使っている環境で
 既に新しい版のマイグレーションが適用されていると古い版では動かない可能性があるため、戻すより修正版のリリースを優先する。
@@ -477,6 +483,12 @@ pnpm why sharp
 - 「ドキュメント」節のリンクは GitHub 上の `docs/guide/README.md` / `docs/admin/README.md` / `docs/dev/README.md` などを指す。
   docs の構成を変えたら、日英両方のリンクも直す
 - 英語ページは `site/en/index.html`。内容を変えたら日英両方を更新し、`hreflang` の相互リンクも揃える
+- SNS などで共有されたときのカード画像(OGP)は `site/assets/og-image.png`(日本語)/ `og-image-en.png`(英語)。
+  1200×630 で、`docs/images/` のスクリーンショットから `pnpm site:og-image`([scripts/site-og-image.mjs](../../scripts/site-og-image.mjs))で作る。
+  元のスクリーンショットや「特徴」の文言を変えたら作り直す。日本語の描画にホストのフォント(Noto Sans CJK JP)を使い、
+  その有無を fontconfig の `fc-list` で確かめるため、両方が入っている環境で実行する(Ubuntu なら `fonts-noto-cjk` と `fontconfig`)
+- 各ページの `<head>` に構造化データ(JSON-LD の `SoftwareApplication`)を置いている。title / description や画像を変えたら合わせて直す
+- 冒頭の「特徴」(3 点)は README.md / README.en.md の冒頭、[.github/dockerhub/README.md](../../.github/dockerhub/README.md) と揃える
 - ページを増やしたら `site/sitemap.xml` にも追加する。robots.txt はドメイン直下(`playree.github.io/robots.txt`)
   しか読まれずプロジェクトサイトでは効かないため、サイトマップは Search Console から送信する
 - Google Search Console などの所有権確認ファイル(`google<ID>.html` 等)は `site/` 直下に置く。

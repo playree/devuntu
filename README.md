@@ -3,12 +3,14 @@
 [![CI](https://github.com/playree/devuntu/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/playree/devuntu/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/github/license/playree/devuntu)](LICENSE)
 [![Docker Pulls](https://img.shields.io/docker/pulls/playree/devuntu)](https://hub.docker.com/r/playree/devuntu)
+[![Release](https://img.shields.io/github/v/release/playree/devuntu)](https://github.com/playree/devuntu/releases/latest)
 
 [English](README.en.md) | 日本語
 
 Website: https://playree.github.io/devuntu/
 
 > [!NOTE]
+> **Self-hosted kanban & ticket management with a built-in MCP server, where AI agents (Claude Code / Codex / OpenCode) work on your tickets, with humans approving plans and reports.**
 > **English README: [README.en.md](README.en.md)** (overview and quick start).
 > The detailed documentation is available in Japanese only.
 
@@ -16,23 +18,25 @@ Devuntu は、かんばん形式のボード/チケット管理を中心に、
 カレンダー連携、メール/Slack/Webプッシュ通知、MCP/AIエージェント連携、リモート実行などを備えた
 セルフホスト型のプロジェクト管理ツールです。
 
-- シンプルなチケット＆かんばんボードが欲しい
-- Claude Codeを利用してプラン作成→実装と進めた際に、プランや実装結果を残しておきたい
-- 就寝中の時間を有効活用したい（就寝中にClaude Codeでチケットを処理させる）
-- 各種通知はSlackに欲しい
-- GitHub / GitLab(セルフホスト)と連携させたい
-- 自分の空き時間を共有したい
-- 定型処理をツール化したい
+**特徴**
 
-など、個人・少数チーム開発をするうえで、自分が開発する上で欲しいと思った機能を形にしたものになります。  
-なので、連携機能(サービス)も自分が普段使っているものがメインとなっています。(Claude / GitHub / GitLab / Slack / Googleアカウント)  
-開発中にAI開発が普及してきたこともあり、AI開発にも最適化しています。
+- **AI エージェントが担当者になる**  
+  Claude Code / Codex / OpenCode を担当者にして、承認者がエージェントモード(プラン先行 / 自動実行)を選ぶと、就寝中でも担当チケットを処理します。プランや報告書はチケットに残り、人が承認・差し戻しできます
+- **MCP サーバーを内蔵**  
+  普段使いの AI ツールから、自分の権限でチケットの起票・更新・報告ができます。ボードごとの前提(リポジトリや規約)も AI へ届きます
+- **`compose.yaml` 1つでセルフホスト**  
+  Docker Compose で導入でき、データは手元に置けます。MIT ライセンスで、人数による制限や課金はありません
 
-Devuntuの開発にもAI開発を採用していますが、全てをAI任せではなく、人による確認と調整を行っています。  
-DevuntuのAIエージェント向けの機能も、この(人による確認を挟む)前提で最適化しています。
+**すぐに試す**(詳細は[導入の流れ](#導入の流れ))
 
-それとDevuntuの基礎(基本構成や初期画面やAPIなど)は、まず人の手で作成しています。  
-基礎やベースとなる画面などを用意することにより、AIはそれを真似てくれるので、かなり開発が安定すると思います。
+```sh
+mkdir devuntu && cd devuntu
+curl -fsSLO https://raw.githubusercontent.com/playree/devuntu/stable/compose.yaml
+docker compose run --rm tools setup-env   # 設定ファイルを対話生成
+docker compose up -d --wait
+# 起動したらすぐ、ブラウザで <BETTER_AUTH_URL>/start を開いて最初の管理者を登録
+# (ユーザーが居ない間は、この画面に届く人なら誰でも登録できる)
+```
 
 ---
 
@@ -47,6 +51,7 @@ DevuntuのAIエージェント向けの機能も、この(人による確認を�
 
 - [Devuntu](#devuntu)
   - [できること](#できること)
+  - [開発の背景](#開発の背景)
   - [設計・開発方針](#設計開発方針)
   - [ドキュメント](#ドキュメント)
 - [導入者向け](#導入者向け)
@@ -98,6 +103,26 @@ DevuntuのAIエージェント向けの機能も、この(人による確認を�
 - メールOTP、パスキー認証、Googleログイン
 - OAuthプロバイダとして利用できる
 - 日本語 / 英語の表示切り替え
+
+## 開発の背景
+
+- シンプルなチケット＆かんばんボードが欲しい
+- Claude Codeを利用してプラン作成→実装と進めた際に、プランや実装結果を残しておきたい
+- 就寝中の時間を有効活用したい（就寝中にClaude Codeでチケットを処理させる）
+- 各種通知はSlackに欲しい
+- GitHub / GitLab(セルフホスト)と連携させたい
+- 自分の空き時間を共有したい
+- 定型処理をツール化したい
+
+など、個人・少数チーム開発をするうえで、自分が開発する上で欲しいと思った機能を形にしたものになります。  
+なので、連携機能(サービス)も自分が普段使っているものがメインとなっています。(Claude / GitHub / GitLab / Slack / Googleアカウント)  
+開発中にAI開発が普及してきたこともあり、AI開発にも最適化しています。
+
+Devuntuの開発にもAI開発を採用していますが、全てをAI任せではなく、人による確認と調整を行っています。  
+DevuntuのAIエージェント向けの機能も、この(人による確認を挟む)前提で最適化しています。
+
+それとDevuntuの基礎(基本構成や初期画面やAPIなど)は、まず人の手で作成しています。  
+基礎やベースとなる画面などを用意することにより、AIはそれを真似てくれるので、かなり開発が安定すると思います。
 
 ## 設計・開発方針
 
