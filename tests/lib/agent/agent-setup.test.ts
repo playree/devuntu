@@ -48,7 +48,7 @@ describe('agentSetupGuide', () => {
   it('同じ作業ディレクトリの cron 行が既にあれば追加しない', () => {
     ;[claude, codex, opencode].forEach((guide) => {
       expect(guide).toContain(
-        "crontab -l 2>/dev/null | grep -v '^#' | grep -qF '~/devuntu-agent-work/.devuntu-agent/devuntu_agent.py poll' || \\",
+        "crontab -l 2>/dev/null | grep -v '^[[:space:]]*#' | grep -qF '~/devuntu-agent-work/.devuntu-agent/devuntu_agent.py poll' || \\",
       )
     })
   })

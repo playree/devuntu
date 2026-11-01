@@ -427,7 +427,7 @@ Claude Code・Codex CLI・OpenCode から「devuntu のエージェントを新�
 手順は既定の作業ディレクトリ `~/devuntu-agent-work` を使い、`config.json` を作り直すため、そのまま進めると
 既存のエージェントを黙って置き換えてしまう。そこで手順の冒頭で cron の登録と `~/devuntu-agent-work*/.devuntu-agent/config.json` を
 確認させ(トークンは表示しない)、見つかった場合は上書きか新しい作業ディレクトリかを利用者に選ばせる。
-上書きでも二重登録にならないよう、cron 登録は同じ作業ディレクトリの行があれば追加しない。
+上書きする場合は、ファイルを変える前にその cron 行を外し、実行中のランナーの終了を待たせる(途中で起動されると、新しい MCP 設定と古いトークンの組み合わせで動いてしまう)。cron 登録は同じ作業ディレクトリの行があれば追加しない。
 
 手順の本文は [public/agent/agent-setup-guide.md](../../public/agent/agent-setup-guide.md)(MCP 経由で返すため英語)。
 CLI 別の記述は `<!-- cli:claude -->` … `<!-- /cli -->` で囲んであり、プレースホルダーの置換と

@@ -69,20 +69,26 @@ First check whether this machine already has an agent. The token is not printed.
 ```sh
 crontab -l 2>/dev/null | grep -F devuntu_agent.py
 for f in ~/devuntu-agent-work*/.devuntu-agent/config.json; do
-  [ -f "$f" ] && python3 -c 'import json, sys; c = json.load(open(sys.argv[1])); print(sys.argv[1], c.get("base_url"), c.get("cli", {}).get("kind"))' "$f"
+  [ -f "$f" ] && python3 -c 'import json, sys; c = json.load(open(sys.argv[1])); print(sys.argv[1], c.get("base_url"), (c.get("cli") or {}).get("kind"))' "$f"
 done
 ```
+
+A CLI kind of `None` means the runner's default CLI.
 
 - Nothing is printed (the exit status is then 1, which is not an error) → continue with `~/devuntu-agent-work`
 - Something is printed → **do not decide on your own. Show the user the working directories and CLI kinds found, and ask** which to do:
   - **Overwrite**: reuse one of the working directories found (the user chooses which) and replace the agent there.
-    That agent stops running with its previous token and CLI
+    That agent stops running with its previous token and CLI. Before changing any file, remove its cron line
+    (`crontab -l | grep -vF '<working directory>/.devuntu-agent/devuntu_agent.py poll' | crontab -`, with the path as
+    written in the cron line) and wait until no `devuntu_agent.py` of that directory is running (`pgrep -af devuntu_agent.py`).
+    Otherwise cron may start it halfway through, with the new MCP configuration and the old token. Step 8 registers it again
   - **New working directory**: create a directory that does not exist yet (`~/devuntu-agent-work` if it is free,
     otherwise e.g. `~/devuntu-agent-work-{{cliKind}}`). One agent can have only one runner, so a new directory needs
     the token of a different agent (see "Running multiple agents on the same machine")
 
-If the chosen directory is not `~/devuntu-agent-work`, **replace `~/devuntu-agent-work` (and `$HOME/devuntu-agent-work`)
-with it in every command and path below**, including the cron line in step 8.
+If the chosen directory is not `~/devuntu-agent-work`, **replace `~/devuntu-agent-work` with it in every command and path
+below**, including the cron line in step 8. Where `$HOME/devuntu-agent-work` is written, use `$HOME/<directory name>`
+instead (`~` is not expanded inside double quotes or heredocs).
 
 ### Create the working directory
 
@@ -417,14 +423,14 @@ the same machine. Keep the cron line to just running the runner and do not add a
 (it would double up with the runner's lock, the runner would fail to acquire it every time, and every run would be skipped).
 
 ```sh
-crontab -l 2>/dev/null | grep -v '^#' | grep -qF '~/devuntu-agent-work/.devuntu-agent/devuntu_agent.py poll' || \
+crontab -l 2>/dev/null | grep -v '^[[:space:]]*#' | grep -qF '~/devuntu-agent-work/.devuntu-agent/devuntu_agent.py poll' || \
 ( crontab -l 2>/dev/null; \
   echo "*/{{intervalMinutes}} * * * * python3 ~/devuntu-agent-work/.devuntu-agent/devuntu_agent.py poll" \
 ) | crontab -
 crontab -l
 ```
 
-When the working directory already has a cron line (overwriting an agent), nothing is added.
+When the working directory already has a cron line, nothing is added.
 If that line has a different interval from `*/{{intervalMinutes}}`, fix it with `crontab -e`.
 
 There is no need to add PATH to the cron line. The runner passes the PATH saved by `save-path` in step 5
