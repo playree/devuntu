@@ -768,6 +768,22 @@ describe('finishAgentTask', () => {
     expect(notifyMock).not.toHaveBeenCalled()
   })
 
+  it('planned で閉じた直後の completed は、返信待ちなので受け付けない', async () => {
+    // 同じ CLI が finish_agent_task(planned) の後に続けて completed を報告したケース
+    agentRun.findFirst
+      .mockResolvedValueOnce(null as never) // 実行中の実行は無い
+      .mockResolvedValueOnce({ status: 'succeeded', summary: null, finishedAt: new Date() } as never) // 時間切れではない
+      .mockResolvedValueOnce({ action: 'plan', status: 'succeeded' } as never) // 直近の実行は plan
+    ticket.findUnique
+      .mockResolvedValueOnce({ agentState: 'planned' } as never)
+      .mockResolvedValueOnce({ agentState: 'planned' } as never)
+
+    const error = await finishAgentTask(runner(), 't1', 'completed').catch((e: unknown) => e)
+
+    expect((error as ClientError).errorType).toBe('AGENT_PLAN_ONLY')
+    expect(ticket.update, '報告済みにしない').not.toHaveBeenCalled()
+  })
+
   it.each(['skipped', 'failed'] as const)('plan の実行も %s では閉じられる', async (outcome) => {
     agentRun.findFirst.mockResolvedValueOnce({ id: 'run1', action: 'plan' } as never)
 

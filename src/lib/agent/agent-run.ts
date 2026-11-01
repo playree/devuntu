@@ -26,7 +26,7 @@ import {
   hasMonthlyBudget,
 } from './agent-activity'
 import { consumeAutoReviseTriggers, hasUnsettledAutoRevise } from './agent-auto-revise'
-import { errAgentPlanOnly } from './agent-plan-guard'
+import { awaitsPlanReply, errAgentPlanOnly, findAwaitsPlanReply } from './agent-plan-guard'
 import type { AgentRunnerRow } from './agent-runner'
 import { findAgentTicket } from './agent-task'
 import { type AgentRunMetrics, lockAgentRunner, recordAgentRunMetrics } from './agent-usage'
@@ -412,7 +412,7 @@ const settleAction = (action: AgentRunAction, outcome: AgentOutcome): AgentRunAc
  * 受け入れ条件の自己申告(`criteria`)も、状態を進めたときだけ同じトランザクションで記録する。
  * 失敗として閉じられた実行の申告が「充足」として残ると、画面上は満たしたように見えてしまうため。
  * そのチケットに無い項目が混ざっていたら、何も閉じずに throw する(エージェントが直して呼び直せる)。
- * plan の実行を `completed` で閉じようとした場合も同じく throw する。
+ * プランへの返信を待つべきとき(`awaitsPlanReply`)に `completed` を報告した場合も同じく throw する。
  */
 export const finishAgentTask = async (
   runner: AgentRunnerRow | null,
@@ -441,6 +441,10 @@ export const finishAgentTask = async (
       if (timedOut) {
         return { state: timedOut }
       }
+      // planned で閉じた直後に、返信を待たずに完了へ進むのも止める
+      if (runner && outcome === 'completed' && (await findAwaitsPlanReply(tx, runner.id, ticketId))) {
+        throw errAgentPlanOnly()
+      }
       // 実行履歴が無いので通知もしない。チケットが無ければここで例外になる
       await tx.ticket.update({ where: { id: ticketId }, data: { agentState: state }, select: { id: true } })
       await writeAgentCriteria(tx, criteria)
@@ -448,7 +452,7 @@ export const finishAgentTask = async (
     }
 
     // プランへの返信を待たずに完了させない(例外でトランザクションごと戻る)
-    if (open.action === 'plan' && outcome === 'completed') {
+    if (outcome === 'completed' && awaitsPlanReply({ action: open.action, status: 'running' }, null)) {
       throw errAgentPlanOnly()
     }
 

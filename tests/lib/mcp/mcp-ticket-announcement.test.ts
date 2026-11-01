@@ -11,8 +11,8 @@ import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { agentAuth, oauthAuth, patAuth } from '../../helpers/resource-auth'
 
-// エージェントの報告書は plan の実行中かを引く(mcp-ticket-agent-plan.test.ts)。ここでは実行中の plan は無い
-vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({ agentRun: ['count'] }))
+// エージェントの報告書はプランへの返信待ちかを引く(mcp-ticket-agent-plan.test.ts)。ここでは自動運用の設定が無い
+vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({ agentRunner: ['findUnique'] }))
 vi.mock('@/lib/board/ticket-mutation', () => ({ addComment: vi.fn() }))
 
 const TICKET_ID = '0195c1e0-0000-7000-8000-0000000000aa'
@@ -21,7 +21,7 @@ const COMMENT_ID = '0195c1e0-0000-7000-8000-0000000000cc'
 beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(addComment).mockResolvedValue({ id: COMMENT_ID, mentionedUserIds: [], announced: true })
-  vi.mocked(prisma.agentRun.count).mockResolvedValue(0)
+  vi.mocked(prisma.agentRunner.findUnique).mockResolvedValue(null)
 })
 
 /** 拒否されたときのエラー種別 */

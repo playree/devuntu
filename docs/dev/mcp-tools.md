@@ -92,7 +92,7 @@ OAuth / ユーザーの MCP トークンで接続した場合だけ使える
 
 - エージェントが処理を始めたチケットは、`backlog` / `todo` ならサーバーが対応中(`doing`)へ移す
 - 受け入れ条件が空なら、エージェントは plan の投稿時(execute は着手時)に `update_ticket` で設定する。既存の項目は削除・書き換えしない
-- plan の実行中は、`finish_agent_task` の `completed` と `add_ticket_comment` の `type=report` をエラーにする(プランへの返信を待たずに完了・報告させない)
+- plan の実行中と、`planned` で閉じて返信待ちの間は、`finish_agent_task` の `completed` と `add_ticket_comment` の `type=report` をエラーにする(プランへの返信を待たずに完了・報告させない)
 
 入力と応答の詳細は [agent-runner-internals.md](agent-runner-internals.md#エージェント専用の-mcp-ツール) を参照。
 

@@ -1,5 +1,5 @@
 import type { TicketCommentType, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
-import { assertAgentNotPlanning } from '@/lib/agent/agent-plan-guard'
+import { assertAgentReportAllowed } from '@/lib/agent/agent-plan-guard'
 import { findBoardNoteIndex } from '@/lib/board-note/board-note'
 import {
   assertBoardAccess,
@@ -375,7 +375,7 @@ const errAnnouncementDenied = (reason: 'agent' | 'approval') =>
 /**
  * コメント投稿。Web版の addTicketComment と同じ権限判定を使う。
  *
- * MCP限定の追加制限はアナウンスと、plan の実行中のエージェントの報告書。
+ * MCP限定の追加制限はアナウンスと、プランへの返信を待つべきチケットへのエージェントの報告書。
  * アナウンスはボードメンバー全員へ届くので投稿するかは利用者が決める:
  * 人の経路は利用者の了承(userApproved)を申告したときだけ通し、確認する相手のいないエージェント経路は通さない。
  * アナウンスの応答には、チャンネルへ流す投入をしたか(announced)を返す。
@@ -399,7 +399,7 @@ export const addTicketCommentForMcp = async (
 
   const ticketId = await resolveTicketId(auth, ticketIdOrDisplayId)
   if (type === 'report' && auth.kind === 'agent') {
-    await assertAgentNotPlanning(auth.user.id, ticketId)
+    await assertAgentReportAllowed(auth.user.id, ticketId)
   }
   const comment = await addComment(auth.user, { ticketId, content, type, parentId })
 
