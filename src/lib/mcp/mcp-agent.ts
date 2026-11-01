@@ -41,7 +41,7 @@ const INACTIVE_NOTE = 'Run conditions are not met. Exit without processing any t
 const PLAN_NOTE =
   'This run is a plan: read and investigate only, then post the plan with add_ticket_comment type=plan ' +
   '(or propose_child_tickets) and finish with outcome=planned. Do not change files, branches or pull requests, ' +
-  'do not post a report, and do not finish with outcome=completed. The work starts in a later run after a human approves the plan'
+  'do not post a report, and do not finish with outcome=completed. The work starts in a later run after a human replies to the plan'
 
 /** 自動運用の設定と稼働条件をまとめて引く。3ツールとも入口はこれ */
 const loadContext = async (auth: ResourceAuth) => {
@@ -187,7 +187,8 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
       description:
         'Reports the result of processing a ticket and closes the run. ' +
         'planned=plan posted and waiting for a reply, completed=done, skipped=skipped, failed=failed. ' +
-        'If the ticket has acceptance criteria, completed must report every item as met with evidence in criteria',
+        'If the ticket has acceptance criteria, completed must report every item as met with evidence in criteria. ' +
+        'A plan run cannot finish with completed: finish it with planned (or skipped / failed)',
       inputSchema: z.strictObject({
         ticketId: z.string().min(1),
         outcome: z.enum(AGENT_OUTCOMES),

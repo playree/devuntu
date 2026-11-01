@@ -3,7 +3,7 @@
  * プラン先行のチケットで、承認前に報告書(承認 / 差戻のボタン付き)が出ないようにするため
  */
 
-import { AGENT_PLAN_ONLY } from '@/lib/agent/agent-run'
+import { AGENT_PLAN_ONLY } from '@/lib/agent/agent-plan-guard'
 import { addComment } from '@/lib/board/ticket-mutation'
 import { ClientError } from '@/lib/error'
 import { addTicketCommentForMcp } from '@/lib/mcp/mcp-ticket'

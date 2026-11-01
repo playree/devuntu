@@ -1,5 +1,5 @@
 import type { TicketCommentType, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
-import { assertAgentNotPlanning } from '@/lib/agent/agent-run'
+import { assertAgentNotPlanning } from '@/lib/agent/agent-plan-guard'
 import { findBoardNoteIndex } from '@/lib/board-note/board-note'
 import {
   assertBoardAccess,

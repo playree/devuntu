@@ -316,7 +316,8 @@ CodeRabbit は push のたびに再レビューするので、指摘が続くと
 
 - `get_agent_task` の応答が `active: false` の場合は、何もせず終了する(コメントの投稿もしない)
 - `outcome` は `planned`(プランを投稿して返信待ち) / `completed`(対応完了) / `skipped`(見送り) / `failed`(失敗)
-- plan の実行中は、承認前に完了・報告させない。plan の制約を守るかは CLI・モデル次第なので、サーバー側で止める
+- plan の実行中は、プランへの返信を待たずに完了・報告させない。plan の制約を守るかは CLI・モデル次第なので、
+  サーバー側で止める(`src/lib/agent/agent-plan-guard.ts`)。返信を受けた revise の実行は対象外
   - `finish_agent_task` の `completed` は、何も閉じずにエラー(`AGENT_PLAN_ONLY`)にする。メッセージで `planned` で終えるよう伝える
   - `add_ticket_comment` の `type=report` も、そのエージェントが同じチケットを plan として処理中なら投稿せずに同じエラーにする
     (プランと通常コメントは投稿できる)
