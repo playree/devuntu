@@ -15,7 +15,7 @@ export const AGENT_PLAN_ONLY = 'AGENT_PLAN_ONLY'
 export const errAgentPlanOnly = () =>
   new ClientError(
     AGENT_PLAN_ONLY,
-    'This ticket is waiting for a human reply to the plan: it cannot be completed or reported yet. ' +
+    'This ticket is waiting for a human reply to the plan: it cannot be reported or finished with another outcome yet. ' +
       'Post the plan with add_ticket_comment type=plan (questions as a regular comment) and finish with outcome=planned. ' +
       'Do the work in a later run after the reply',
   )

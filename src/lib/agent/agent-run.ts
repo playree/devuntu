@@ -413,6 +413,7 @@ const settleAction = (action: AgentRunAction, outcome: AgentOutcome): AgentRunAc
  * 失敗として閉じられた実行の申告が「充足」として残ると、画面上は満たしたように見えてしまうため。
  * そのチケットに無い項目が混ざっていたら、何も閉じずに throw する(エージェントが直して呼び直せる)。
  * プランへの返信を待つべきとき(`awaitsPlanReply`)に `completed` を報告した場合も同じく throw する。
+ * `planned` で閉じた後の返信待ちでは、`skipped` / `failed` で返信待ちを解くこともできない。
  */
 export const finishAgentTask = async (
   runner: AgentRunnerRow | null,
@@ -441,8 +442,8 @@ export const finishAgentTask = async (
       if (timedOut) {
         return { state: timedOut }
       }
-      // planned で閉じた直後に、返信を待たずに完了へ進むのも止める
-      if (runner && outcome === 'completed' && (await findAwaitsPlanReply(tx, runner.id, ticketId))) {
+      // planned で閉じた後は、返信を待たずに完了へ進むのも、別の結果で返信待ちを解くのも止める
+      if (runner && outcome !== 'planned' && (await findAwaitsPlanReply(tx, runner.id, ticketId))) {
         throw errAgentPlanOnly()
       }
       // 実行履歴が無いので通知もしない。チケットが無ければここで例外になる
