@@ -410,8 +410,9 @@ edge は人、latest と stable は AI(スキル [release](../../.claude/skills/
 3. (AI `/release`)2で確認した edge のビルド元 commit を Actions の実行履歴から特定し、前回のタグからの PR とリリースチケットに
    関連付いたチケットを集めてリリースノートを書く。その commit を対象に**ドラフト**の GitHub Release を作る
 4. (人)ドラフトを確認する。OK なら AI が公開し、`v<version>` のタグが作られる
-5. `Release`が`edge`と同一のイメージに`<version>`と`latest`を付ける。AI は完了を確認し、リリースチケットを完了にする
-6. (AI `/release stable`)`latest`で一定期間問題が無ければ、`Promote stable` を`version`を指定して実行する。
+5. `Release`が`edge`と同一のイメージに`<version>`と`latest`を付ける。AI は完了を確認し、リリースチケットを完了にする。
+   あわせて、公開日の3日後を期限とした stable 作業のチケット(`v<version>をstableにする`)を登録する
+6. (AI `/release stable`)`latest`で一定期間問題が無ければ、`Promote stable` を`version`を指定して実行し、stable 作業のチケットを完了にする。
    公開から間もない場合や、公開後に起票された未完了の不具合チケットがある場合は、実行前に人へ確認する
 
 `promote`ジョブは再ビルドせずタグを付け替えるだけなので、2で確認したものがそのまま公開される。

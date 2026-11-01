@@ -153,12 +153,26 @@ gh release edit vV --draft=false --latest
 
 次の version へ上げるのは、次のチケットに着手するときに行う(ここでは上げない。CLAUDE.md の「バージョンとリリース」)。
 
+### 1-8. stable 作業のチケットを登録する
+
+stable にし忘れないよう、公開したら stable 作業のチケットを登録する。
+
+1. `create_ticket` で次のチケットを作る
+   - board: DEVUNTU / タイトル: `vVをstableにする`(「vVリリース」の検索に掛からない名前にする)
+   - status: todo / 担当: 自分 / タグ: リリース
+   - 期限: 公開日(JST)の3日後
+   - 本文: Release の URL と、`/release stable V` で行うこと
+   - 受け入れ条件: `pnpm release:version` の stable が V になっている
+2. `link_related_ticket` で「vVリリース」チケットと関連付ける
+
 ## 2. stable(`/release stable [version]`)
 
 ### 2-1. 対象の確認
 
 - 対象の version(V)は、指定があればそれを使い、無ければ `pnpm release:version` の `latest` を使う
-- `pnpm release:version` の `stable` が既に V なら、何もせず報告して終わる
+- stable 作業のチケット(1-8)を探す: `search_tickets`(boardId: DEVUNTU / tags: リリース / keyword: `stableにする` / status: todo・doing)
+  - V のものがあれば、`update_ticket` で status を doing にする
+- `pnpm release:version` の `stable` が既に V なら、2-4 のチケットの片付けだけ行って報告して終わる
 - V が今の stable より古い場合はロールバックになる
   - stable を使っている環境で新しい版のマイグレーションが適用済みだと動かないため、必ずユーザーに確認する
   - 確認するときは、修正版のリリースの方を勧める
@@ -194,4 +208,8 @@ gh run watch <id> --exit-status
 ### 2-4. 確認と記録
 
 - `git fetch origin --tags --force && pnpm release:version` で、`stable` が V になったことを確かめる
-- 「vVリリース」チケットがあれば、通常のコメント(type なし)で stable にした旨を残す。status は変えない
+- 2-1 で見つけた V の stable 作業のチケットについて、次の順で行う
+  1. `report_acceptance_criteria` で受け入れ条件の結果を記録する
+  2. `add_ticket_comment`(type=report)で、`Promote stable` の run の URL と、stable の前後の version を報告する
+  3. `update_ticket` で status を done にする
+- V より古い版の未完了の stable 作業のチケットは、`vV を stable にしたため不要` とコメントして done にする
