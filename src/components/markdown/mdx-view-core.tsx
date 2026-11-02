@@ -109,7 +109,7 @@ const MdxViewCore: FC<MdxViewCoreProps> = ({ markdown, onError, mentionUsers }) 
         disableImageResize: true,
         disableImageSettingsButton: true,
         ImageDialog: () => null,
-        // 画像の読み込み中は <img> が DOM に出ないため、印刷用ページが待つ目印を付けた枠を出す(usePrintWhenReady)
+        // 画像の読み込み中は <img> が DOM に出ないため、印刷用ページが待つ目印を付けた枠を出す(useWhenRendered)
         imagePlaceholder: () => <Skeleton data-markdown-loading className='h-24 w-40 rounded-lg' />,
       }),
       codeBlockPlugin({ codeBlockEditorDescriptors: [readOnlyCodeBlockDescriptor] }),
