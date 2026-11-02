@@ -71,7 +71,7 @@ docker compose up -d --wait
 - Kanban boards and tickets (boards, tags, assignees, priorities, due dates, comments, mentions)
   - Parent/child and related tickets, acceptance criteria, per-board ticket templates and change history
   - Filter the board and the ticket list down to the children or related tickets of a given ticket
-  - Export a ticket or a plan / report as PDF
+  - Export a ticket or a plan / report as PDF or HTML
 - Google Calendar integration, and sharing your free/busy time through a public URL that needs no sign-in
 - Email / Slack DM / web push notifications for mentions, assignee changes, AI agent run results, auto-completion held on merge and due date reminders,
   and Slack channel notifications per team board (tickets created / completed, assignee changes, agent run results, auto-completion held on merge, announcements)

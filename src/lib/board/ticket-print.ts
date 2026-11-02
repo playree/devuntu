@@ -1,5 +1,5 @@
 /**
- * チケットの印刷用ページ(PDF 出力)のパス・文書タイトルの組み立て
+ * チケットの印刷用ページ(PDF / HTML 出力)のパス・文書タイトルの組み立て
  *
  * サーバー / クライアントの双方から import する純粋関数のみを置く。
  */
@@ -10,10 +10,31 @@ export const PRINT_PATH_PREFIX = '/print/'
 /** 印刷用ページのクエリでプラン/報告書の 1 件を指すキー */
 export const PRINT_COMMENT_PARAM = 'comment'
 
-/** 印刷用ページのパス。commentId を渡すとそのプラン/報告書だけを出す */
-export const ticketPrintPath = (ticketId: string, commentId?: string): string => {
+/** 印刷用ページのクエリで出力形式を指すキー */
+export const PRINT_FORMAT_PARAM = 'format'
+
+/** 出力形式。pdf は印刷ダイアログを開き、html は自己完結の HTML ファイルを保存する */
+export const TICKET_EXPORT_FORMATS = ['pdf', 'html'] as const
+export type TicketExportFormat = (typeof TICKET_EXPORT_FORMATS)[number]
+
+/** クエリの値を出力形式にする。未指定・不正値は pdf */
+export const parseTicketExportFormat = (value: unknown): TicketExportFormat =>
+  TICKET_EXPORT_FORMATS.find((format) => format === value) ?? 'pdf'
+
+/** 印刷用ページのパス。commentId を渡すとそのプラン/報告書だけを出す。format は既定の pdf ならクエリに付けない */
+export const ticketPrintPath = (
+  ticketId: string,
+  { commentId, format = 'pdf' }: { commentId?: string; format?: TicketExportFormat } = {},
+): string => {
   const path = `${PRINT_PATH_PREFIX}tickets/${encodeURIComponent(ticketId)}`
-  return commentId ? `${path}?${new URLSearchParams({ [PRINT_COMMENT_PARAM]: commentId })}` : path
+  const query = new URLSearchParams()
+  if (commentId) {
+    query.set(PRINT_COMMENT_PARAM, commentId)
+  }
+  if (format !== 'pdf') {
+    query.set(PRINT_FORMAT_PARAM, format)
+  }
+  return query.size > 0 ? `${path}?${query}` : path
 }
 
 /**
@@ -30,6 +51,10 @@ export const ticketPrintTitle = ({
   /** プラン/報告書の単体のときの種別名 */
   typeLabel?: string
 }): string => `${displayId} ${typeLabel ?? title}`
+
+/** HTML 出力の保存ファイル名。OS でファイル名に使えない文字は `_` に置き換える */
+export const ticketExportFileName = (title: string): string =>
+  `${title.replace(/[\\/:*?"<>|\u0000-\u001f\u007f]/g, '_').trim() || 'ticket'}.html`
 
 /** 種別(プラン/報告書)が付いたコメント */
 export type PrintableComment<C extends { type: string | null }> = C & { type: NonNullable<C['type']> }

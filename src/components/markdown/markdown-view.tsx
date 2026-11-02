@@ -10,7 +10,7 @@ import { MentionUser } from './mention-node'
 const MdxViewCore = dynamic(() => import('./mdx-view-core'), {
   ssr: false,
   loading: () => (
-    <Skeleton // 印刷用ページが描画の完了を待つ目印(usePrintWhenReady)
+    <Skeleton // 印刷用ページが描画の完了を待つ目印(useWhenRendered)
       data-markdown-loading
       className='h-6 w-full rounded-lg'
     />

@@ -4,7 +4,7 @@ import { AccordionSection } from '@/components/general/accordion'
 import { MultiButton } from '@/components/general/button'
 import { getFieldConstraints } from '@/components/general/field-constraints'
 import { Panel } from '@/components/general/panel'
-import { CheckIcon, PencilSquareIcon, PrinterIcon, ReplyIcon, TrashIcon } from '@/components/icon'
+import { CheckIcon, PencilSquareIcon, ReplyIcon, TrashIcon } from '@/components/icon'
 import { MarkdownInput } from '@/components/markdown/markdown-editor'
 import { MarkdownView } from '@/components/markdown/markdown-view'
 import type { MentionCandidate } from '@/components/markdown/mention-menu'
@@ -12,11 +12,11 @@ import { notify } from '@/components/notify'
 import { CommentTypeIcon } from '@/components/ticket/comment-type-icon'
 import { MentionChips } from '@/components/ticket/mention-chips'
 import { DecisionChip } from '@/components/ticket/ticket-chip'
+import { TicketExportMenu } from '@/components/ticket/ticket-export-menu'
 import { parseAction } from '@/lib/action/action-client'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { TICKET_COMMENT_TYPE_LOCALE } from '@/lib/board/ticket-enum'
 import { commentAnchorId } from '@/lib/board/ticket-id'
-import { ticketPrintPath } from '@/lib/board/ticket-print'
 import { dayformat } from '@/lib/day'
 import { scCreateTicketComment } from '@/lib/schema/schema-ticket'
 import { useConfirmAction } from '@/lib/use-confirm-action'
@@ -102,14 +102,11 @@ export const CommentItem: FC<{
         {comment.decision && <DecisionChip value={comment.decision} />}
         <div className='ml-auto flex gap-0.5'>
           {comment.type && !isEditing && (
-            <MultiButton // 種別付き(プラン/報告書/アナウンス)だけを PDF に出す。通常のコメントは単体で残す用途が無いので出さない
-              isIconOnly
-              size='sm'
+            <TicketExportMenu // 種別付き(プラン/報告書/アナウンス)だけを出力できる。通常のコメントは単体で残す用途が無いので出さない
+              ticketId={ticketId}
+              commentId={comment.id}
               variant='outline'
               className='h-7 w-7 rounded-sm'
-              tooltip={t('export_pdf')}
-              icon={<PrinterIcon width={16} />}
-              onPress={() => window.open(ticketPrintPath(ticketId, comment.id), '_blank', 'noopener')}
             />
           )}
           {comment.isMine && !isEditing && (

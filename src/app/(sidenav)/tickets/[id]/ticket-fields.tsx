@@ -7,9 +7,10 @@ import { Grid } from '@/components/general/grid'
 import { InputField } from '@/components/general/input'
 import { NoticePanel, Panel } from '@/components/general/panel'
 import { SingleSelectField } from '@/components/general/select'
-import { PrinterIcon, TrashIcon } from '@/components/icon'
+import { TrashIcon } from '@/components/icon'
 import { TagIdSelectField } from '@/components/ticket/tag-id-select'
 import { AgentProgressChip, PriorityChip, StatusChip, TagChips } from '@/components/ticket/ticket-chip'
+import { TicketExportMenu } from '@/components/ticket/ticket-export-menu'
 import {
   AGENT_MODE_NONE,
   useAgentModeOptions,
@@ -20,7 +21,6 @@ import { UserSelectField } from '@/components/user-select'
 import type { AgentTaskMode, TicketStatus } from '@/generated/prisma/enums'
 import { parseAction } from '@/lib/action/action-client'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
-import { ticketPrintPath } from '@/lib/board/ticket-print'
 import { dayformat, utcToDateOnly } from '@/lib/day'
 import { PatchTicketIn, scPatchTicket, zTicketTitle } from '@/lib/schema/schema-ticket'
 import { useLocale } from '@/locale/client'
@@ -291,14 +291,7 @@ export const TicketFieldPanel: FC<{
           </span>
         )}
         <div className='ml-auto flex gap-1'>
-          <MultiButton // 印刷用ページを別タブで開き、ブラウザの印刷ダイアログから PDF に保存させる
-            isIconOnly
-            size='sm'
-            variant='ghost'
-            tooltip={t('export_pdf')}
-            icon={<PrinterIcon width={16} />}
-            onPress={() => window.open(ticketPrintPath(ticket.id), '_blank', 'noopener')}
-          />
+          <TicketExportMenu ticketId={ticket.id} variant='ghost' />
           {ticket.canDelete && (
             <MultiButton
               isIconOnly
