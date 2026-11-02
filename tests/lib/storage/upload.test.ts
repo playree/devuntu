@@ -10,6 +10,7 @@ import {
   formatFileSize,
   isValidUploadKey,
   newUploadKey,
+  toDownloadName,
   toUploadExt,
   toUploadKey,
   toUploadUrl,
@@ -134,5 +135,22 @@ describe('formatFileSize', () => {
     [10 * 1024 * 1024, '10.0 MB'],
   ])('%d バイト → %s', (bytes, text) => {
     expect(formatFileSize(bytes)).toBe(text)
+  })
+})
+
+describe('toDownloadName', () => {
+  it.each([
+    ['shot.png', 'shot.webp'],
+    ['photo.JPEG', 'photo.webp'],
+    ['image', 'image.webp'],
+    ['.hidden', '.hidden.webp'],
+  ])('webp に変換した画像は拡張子だけを webp にする: %s → %s', (name, expected) => {
+    expect(toDownloadName(name, 'image/webp')).toBe(expected)
+  })
+
+  it('元から webp の画像と画像以外のファイルは元の名前のまま', () => {
+    expect(toDownloadName('a.WEBP', 'image/webp')).toBe('a.WEBP')
+    expect(toDownloadName('diagram.png', 'image/png')).toBe('diagram.png')
+    expect(toDownloadName('build.log', 'text/x-log')).toBe('build.log')
   })
 })

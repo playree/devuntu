@@ -5,7 +5,7 @@ import { PaperClipIcon, PhotoIcon } from '@/components/icon'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { dayformat } from '@/lib/day'
 import { ACCEPTED_IMAGE_TYPES } from '@/lib/schema/schema'
-import { formatFileSize, toUploadUrl } from '@/lib/storage/upload'
+import { formatFileSize, toDownloadName, toUploadUrl } from '@/lib/storage/upload'
 import { useLocale } from '@/locale/client'
 import { FC } from 'react'
 import { GetTicketReturnType } from './server'
@@ -43,7 +43,7 @@ export const TicketAttachments: FC<{ ticket: Ticket }> = ({ ticket }) => {
             )}
             <a
               href={toUploadUrl(attachment.key)}
-              download={attachment.originalName}
+              download={toDownloadName(attachment.originalName, attachment.mimeType)}
               className='min-w-0 truncate text-sm hover:underline'
             >
               {attachment.originalName}

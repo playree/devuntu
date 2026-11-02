@@ -86,6 +86,18 @@ export const formatFileSize = (bytes: number) => {
   return `${(kb / 1024).toFixed(1)} MB`
 }
 
+/**
+ * ダウンロード時のファイル名。本文に貼った画像は保存時に webp へ変換しているので、
+ * 拡張子だけを保存形式に合わせる(`shot.png` → `shot.webp`)。名前部分は残す
+ */
+export const toDownloadName = (originalName: string, mimeType: string) => {
+  if (mimeType !== 'image/webp' || /\.webp$/i.test(originalName)) {
+    return originalName
+  }
+  const dot = originalName.lastIndexOf('.')
+  return `${dot > 0 ? originalName.slice(0, dot) : originalName}.webp`
+}
+
 /** 新規保存用のキーを生成する */
 export const newUploadKey = (ext: string) => `${uuidv7()}.${ext}`
 

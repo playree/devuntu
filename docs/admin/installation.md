@@ -194,8 +194,9 @@ curl -s http://localhost:3000/api/health
 `BETTER_AUTH_URL` に設定した `https://` の URL で開けるよう、TLS を終端するプロキシから `devuntu` の 3000 番へ転送する。
 押さえる点は2つ。
 
-- ファイル添付(既定 10MB まで)が通るよう、**リクエストボディの上限を 11MB 以上**にする(nginx の `client_max_body_size` は既定 1MB)。
-  上限を `ATTACHMENT_MAX_SIZE_MB` で変えた場合は、その値 + 1MB 以上にする
+- ファイル添付(既定 10MiB まで)が通るよう、**リクエストボディの上限を 11MiB 以上**にする(nginx の `client_max_body_size` は既定 1MB)。
+  上限を `ATTACHMENT_MAX_SIZE_MB` で変えた場合は、その値 + 1MiB 以上にする(`ATTACHMENT_MAX_SIZE_MB` は MiB 単位。
+  nginx の `m` は MiB だが、Caddy の `MB` は 1,000,000 バイトなので `MiB` で書く)
 - リモート実行のログ配信(SSE)を**バッファリングしない**
 
 プロキシを同じホストに置く場合は、`compose.yaml` の `devuntu` の `ports` を `127.0.0.1:3000:3000` に絞ると、
@@ -209,7 +210,7 @@ Caddy の例(証明書は Caddy が自動で取得する。SSE もそのまま�
 ```text
 devuntu.example.com {
 	request_body {
-		max_size 11MB
+		max_size 11MiB
 	}
 	reverse_proxy 127.0.0.1:3000
 }
