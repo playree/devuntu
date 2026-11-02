@@ -103,7 +103,7 @@ Default steps when working on a ticket (no need to confirm each time):
 2. Plan: post it with add_ticket_comment type=plan. Questions for the user: comments without type
 3. Branch / PR / commit: link the URL with link_ticket_artifact (feature/<display ID> branches link automatically)
 4. Done: if the ticket has acceptance criteria, record whether each is met with evidence via report_acceptance_criteria (not in the report)
-5. Report: add_ticket_comment type=report with what you did, how you verified it, and remaining issues (screenshots via create_image_upload_token)
+5. Report: add_ticket_comment type=report with what you did, how you verified it, and remaining issues (screenshots via create_image_upload_token, other files via create_file_upload_token)
 
 Precedence: user instructions > the ticket > project rules (CLAUDE.md / AGENTS.md, etc.) and boardContext > boardKnowledge > boardMemory > these default steps. When only asked to read a ticket or answer a question, do not comment or change the status.
 ```

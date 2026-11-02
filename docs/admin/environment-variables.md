@@ -226,17 +226,20 @@ updated: 2026-10-27
 
 ## オブジェクトストレージ
 
-| 変数名                 | 説明                                 | 必須 | デフォルト  |
-| ---------------------- | ------------------------------------ | ---- | ----------- |
-| `S3_ENDPOINT`          | S3 API のエンドポイント              | 〇   | -           |
-| `S3_BUCKET`            | バケット名(存在しない場合は自動作成) |      | `devuntu`   |
-| `S3_REGION`            | リージョン(SeaweedFS では任意値)     |      | `us-east-1` |
-| `S3_ACCESS_KEY_ID`     | アクセスキー                         | 〇   | -           |
-| `S3_SECRET_ACCESS_KEY` | シークレットキー                     | 〇   | -           |
-| `S3_FORCE_PATH_STYLE`  | パススタイルのアドレッシングを強制   |      | `true`      |
+| 変数名                   | 説明                                 | 必須 | デフォルト  |
+| ------------------------ | ------------------------------------ | ---- | ----------- |
+| `S3_ENDPOINT`            | S3 API のエンドポイント              | 〇   | -           |
+| `S3_BUCKET`              | バケット名(存在しない場合は自動作成) |      | `devuntu`   |
+| `S3_REGION`              | リージョン(SeaweedFS では任意値)     |      | `us-east-1` |
+| `S3_ACCESS_KEY_ID`       | アクセスキー                         | 〇   | -           |
+| `S3_SECRET_ACCESS_KEY`   | シークレットキー                     | 〇   | -           |
+| `S3_FORCE_PATH_STYLE`    | パススタイルのアドレッシングを強制   |      | `true`      |
+| `ATTACHMENT_MAX_SIZE_MB` | ファイル添付の上限(MB。1〜100)       |      | `10`        |
 
-- アップロードファイル(画像)の保存先。S3互換APIを話すストレージであれば何でもよく、`compose.yaml` では
+- アップロードファイル(画像・添付ファイル)の保存先。S3互換APIを話すストレージであれば何でもよく、`compose.yaml` では
   OSS の [SeaweedFS](https://github.com/seaweedfs/seaweedfs) を同梱している
+- `ATTACHMENT_MAX_SIZE_MB` を上げる場合は、前段のプロキシのリクエストボディの上限もあわせて上げる
+  ([HTTPS で公開する](installation.md#https-で公開するリバースプロキシ)。nginx なら `client_max_body_size` を上限 + 1MB 以上にする)。画像の上限(5MB)は変わらない
 - 同梱の SeaweedFS の認証情報は `compose.yaml` と同じ階層の `seaweedfs-s3.json` で定義する。
   `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` と揃えること
 

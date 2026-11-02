@@ -20,7 +20,7 @@ import { logger } from '../logger'
 import { parseBearerToken } from '../oauth/oauth-resource'
 import { isUniqueViolation, prisma } from '../prisma'
 import { makeUrl } from '../server-utils'
-import { UPLOAD_URL_PREFIX } from './upload'
+import { toUploadUrl, UPLOAD_URL_PREFIX } from './upload'
 
 /**
  * 有効期限。モデルがcurlを組み立てて実行するまでのラグを見込みつつ、
@@ -134,4 +134,63 @@ export const resolveUploadToken = async (req: Request): Promise<UploadAuthResult
   }
   const actor = await verifyUploadToken(token)
   return actor ? { ok: true, actor } : { ok: false }
+}
+
+/**
+ * ダウンロード用トークンの有効期限。
+ * 読み取りは何度やっても状態を変えないので使い捨てにはせず、期限内は繰り返し使える
+ */
+export const DOWNLOAD_TOKEN_TTL_SECONDS = 10 * 60
+
+/** 対象のファイルの配信URLを `aud` にする。別のキーやアップロード(`/api/upload`)には使えない */
+const downloadAudience = (key: string) => makeUrl(toUploadUrl(key)).toString()
+
+/** MCP クライアントにファイルを取得させるための短命トークン。戻り値の平文は保存しない */
+export const signDownloadToken = async ({ userId, key }: { userId: string; key: string }): Promise<string> =>
+  new SignJWT({})
+    .setProtectedHeader({ alg: ALGORITHM })
+    .setSubject(userId)
+    .setIssuer(issuer())
+    .setAudience(downloadAudience(key))
+    .setIssuedAt()
+    .setExpirationTime(`${DOWNLOAD_TOKEN_TTL_SECONDS}s`)
+    .sign(secret())
+
+/**
+ * ダウンロード用トークンを検証し、実行者を返す。
+ * 閲覧権限はトークンに持たせず、呼び元が利用時点で `canViewAttachment` を通すこと
+ */
+export const verifyDownloadToken = async (
+  token: string,
+  key: string,
+): Promise<{ id: string; role: string | null } | null> => {
+  let sub
+  try {
+    sub = (
+      await jwtVerify(token, secret(), { issuer: issuer(), audience: downloadAudience(key), algorithms: [ALGORITHM] })
+    ).payload.sub
+  } catch {
+    return null
+  }
+  if (!sub) {
+    return null
+  }
+  const user = await prisma.user.findUnique({ where: { id: sub }, select: { id: true, role: true, banned: true } })
+  if (!user || user.banned) {
+    return null
+  }
+  return { id: user.id, role: user.role }
+}
+
+/** リクエストに Bearer があればダウンロード用トークンとして扱う。無ければセッション経路にフォールバックさせる */
+export const resolveDownloadToken = async (
+  req: Request,
+  key: string,
+): Promise<{ ok: true; user: { id: string; role: string | null } } | { ok: false } | null> => {
+  const token = parseBearerToken(req.headers.get('authorization'))
+  if (!token) {
+    return null
+  }
+  const user = await verifyDownloadToken(token, key)
+  return user ? { ok: true, user } : { ok: false }
 }

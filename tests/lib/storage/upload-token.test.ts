@@ -7,7 +7,14 @@
 
 import { getBoardAccess } from '@/lib/board/board-access'
 import { prisma } from '@/lib/prisma'
-import { signUploadToken, UPLOAD_TOKEN_TTL_SECONDS, verifyUploadToken } from '@/lib/storage/upload-token'
+import {
+  DOWNLOAD_TOKEN_TTL_SECONDS,
+  signDownloadToken,
+  signUploadToken,
+  UPLOAD_TOKEN_TTL_SECONDS,
+  verifyDownloadToken,
+  verifyUploadToken,
+} from '@/lib/storage/upload-token'
 import { generateKeyPair, SignJWT } from 'jose'
 import { uuidv7 } from 'uuidv7'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -154,5 +161,47 @@ describe('signUploadToken / verifyUploadToken', () => {
     const token = await signUploadToken({ userId: USER_ID, boardId: BOARD_ID })
 
     expect(await verifyUploadToken(token)).toBeNull()
+  })
+})
+
+describe('signDownloadToken / verifyDownloadToken', () => {
+  const KEY = '019eef64-6cc1-78f1-8f50-1ef86986289a.pdf'
+  const OTHER_KEY = '019eef64-6cc1-78f1-8f50-1ef86986289b.pdf'
+
+  it('発行したトークンから実行者を復元でき、期限内は繰り返し使える', async () => {
+    const token = await signDownloadToken({ userId: USER_ID, key: KEY })
+
+    expect(await verifyDownloadToken(token, KEY)).toEqual({ id: USER_ID, role: null })
+    expect(await verifyDownloadToken(token, KEY)).toEqual({ id: USER_ID, role: null })
+    expect(createNonce).not.toHaveBeenCalled()
+  })
+
+  it('別のファイルには使えない', async () => {
+    const token = await signDownloadToken({ userId: USER_ID, key: KEY })
+
+    expect(await verifyDownloadToken(token, OTHER_KEY)).toBeNull()
+  })
+
+  it('アップロード用トークンはダウンロードに使えず、ダウンロード用トークンはアップロードに使えない', async () => {
+    const uploadToken = await signUploadToken({ userId: USER_ID, boardId: BOARD_ID })
+    const downloadToken = await signDownloadToken({ userId: USER_ID, key: KEY })
+
+    expect(await verifyDownloadToken(uploadToken, KEY)).toBeNull()
+    expect(await verifyUploadToken(downloadToken)).toBeNull()
+  })
+
+  it('有効期限を過ぎたトークンを拒否する', async () => {
+    vi.useFakeTimers()
+    const token = await signDownloadToken({ userId: USER_ID, key: KEY })
+    vi.advanceTimersByTime((DOWNLOAD_TOKEN_TTL_SECONDS + 60) * 1000)
+
+    expect(await verifyDownloadToken(token, KEY)).toBeNull()
+  })
+
+  it('発行後にBANされた利用者を拒否する', async () => {
+    findUser.mockResolvedValue({ id: USER_ID, role: null, banned: true } as never)
+    const token = await signDownloadToken({ userId: USER_ID, key: KEY })
+
+    expect(await verifyDownloadToken(token, KEY)).toBeNull()
   })
 })

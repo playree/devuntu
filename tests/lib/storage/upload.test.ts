@@ -7,8 +7,10 @@
 
 import {
   extractUploadKeys,
+  formatFileSize,
   isValidUploadKey,
   newUploadKey,
+  toUploadExt,
   toUploadKey,
   toUploadUrl,
   UPLOAD_URL_PREFIX,
@@ -54,6 +56,11 @@ describe('extractUploadKeys', () => {
     expect(extractUploadKeys(content)).toEqual([a])
   })
 
+  it('URL の直後の句読点はキーに含めない', () => {
+    const key = '019eef64-6cc1-78f1-8f50-1ef86986289a.log'
+    expect(extractUploadKeys(`ログ: ${toUploadUrl(key)}. 以上`)).toEqual([key])
+  })
+
   it('添付URLが無ければ空配列', () => {
     expect(extractUploadKeys('本文だけ https://example.com/image.webp')).toEqual([])
     expect(extractUploadKeys('')).toEqual([])
@@ -67,6 +74,8 @@ describe('isValidUploadKey', () => {
     ['019eef64-6cc1-78f1-8f50-1ef86986289a.jpg', 'jpg'],
     ['019eef64-6cc1-78f1-8f50-1ef86986289a.jpeg', 'jpeg'],
     ['019eef64-6cc1-78f1-8f50-1ef86986289a.gif', 'gif'],
+    ['019eef64-6cc1-78f1-8f50-1ef86986289a.pdf', 'ファイル添付(pdf)'],
+    ['019eef64-6cc1-78f1-8f50-1ef86986289a.bin', '拡張子を決められないファイル'],
   ])('許可する: %s (%s)', (key) => {
     expect(isValidUploadKey(key)).toBe(true)
   })
@@ -76,7 +85,9 @@ describe('isValidUploadKey', () => {
     ['../../etc/passwd', 'パストラバーサル'],
     ['019eef64-6cc1-78f1-8f50-1ef86986289a/../secret.webp', 'キー内のパストラバーサル'],
     ['sub/019eef64-6cc1-78f1-8f50-1ef86986289a.webp', 'ディレクトリ区切り'],
-    ['019eef64-6cc1-78f1-8f50-1ef86986289a.svg', '許可しない拡張子(svg)'],
+    ['019eef64-6cc1-78f1-8f50-1ef86986289a.PDF', '大文字の拡張子'],
+    ['019eef64-6cc1-78f1-8f50-1ef86986289a.verylongext', '11文字以上の拡張子'],
+    ['019eef64-6cc1-78f1-8f50-1ef86986289a.tar-gz', '英数字以外を含む拡張子'],
     ['019eef64-6cc1-78f1-8f50-1ef86986289a', '拡張子なし'],
     ['019eef64-6cc1-78f1-8f50-1ef86986289a.webp.svg', '二重拡張子'],
     ['not-a-uuid.webp', 'UUID形式でない'],
@@ -86,5 +97,42 @@ describe('isValidUploadKey', () => {
     ['019EEF64-6CC1-78F1-8F50-1EF86986289A.webp', '大文字(生成されない形式)'],
   ])('拒否する: %s (%s)', (key) => {
     expect(isValidUploadKey(key)).toBe(false)
+  })
+})
+
+describe('toUploadExt', () => {
+  it.each([
+    ['report.pdf', 'pdf'],
+    ['Archive.TAR.GZ', 'gz'],
+    ['build.log', 'log'],
+  ])('ファイル名の拡張子を小文字で返す: %s', (name, ext) => {
+    expect(toUploadExt(name)).toBe(ext)
+  })
+
+  it.each([
+    ['README', '拡張子なし'],
+    ['.env', 'ドットファイル'],
+    ['data.verylongext', '11文字以上'],
+    ['a.tar-gz', '英数字以外を含む'],
+    ['memo.テキスト', '英数字以外の文字'],
+    ['trailing.', '末尾がドット'],
+  ])('キーに使えないものは bin にする: %s (%s)', (name) => {
+    expect(toUploadExt(name)).toBe('bin')
+  })
+
+  it('返した拡張子でキーの検証を通る', () => {
+    expect(isValidUploadKey(newUploadKey(toUploadExt('x.Docx')))).toBe(true)
+  })
+})
+
+describe('formatFileSize', () => {
+  it.each([
+    [0, '0 B'],
+    [1023, '1023 B'],
+    [1024, '1.0 KB'],
+    [1536, '1.5 KB'],
+    [10 * 1024 * 1024, '10.0 MB'],
+  ])('%d バイト → %s', (bytes, text) => {
+    expect(formatFileSize(bytes)).toBe(text)
   })
 })

@@ -32,6 +32,8 @@ updated: 2026-10-27
 `public/` に配下のディレクトリを足す場合は `isProxyAuthBypassPath()` にも加える。
 **matcher 側の除外にしないのは、matcher から外れたパスは Proxy 自体が動かずメンテナンス時に
 遮断できないため**(`/api/upload/<uuidv7>.webp` のような拡張子を持つルートハンドラが素通しになる)。
+例外はアップロードの POST 先 `/api/upload`(ちょうど)だけで、matcher から外してメンテナンスの遮断をルート側で行う。
+Proxy は通るリクエストのボディを既定 10MB まで複製して溜め、超えた分を黙って切り捨てるため、ファイル添付が壊れる。
 
 ## 一般
 
@@ -109,8 +111,8 @@ Proxy は認証処理を通さず素通しするため、各ルートハンド�
 | `/agent/devuntu_agent.py`                          | 認証不要(`public/` の静的配布)。ランナー本体。秘密情報は含まない                                                                                                                                                                                                                            |
 | `/agent/agent-setup-guide.md`                      | 認証不要(`public/` の静的配布)。セットアップ手順の雛形(MCP の `get_agent_setup_guide` が値を埋めて返す)。秘密情報は含まない                                                                                                                                                                 |
 | `/agent/agent-user.png`                            | 認証不要(`public/` の静的配布)。AIエージェント用ユーザーのアバター画像                                                                                                                                                                                                                      |
-| `/api/upload`                                      | 認証必須(セッション、またはMCPの短命トークン)。画像アップロード(POST)                                                                                                                                                                                                                       |
-| `/api/upload/[filename]`                           | 認証必須(未ログインは401)。画像配信(GET)                                                                                                                                                                                                                                                    |
+| `/api/upload`                                      | 認証必須(セッション、またはMCPの短命トークン)。画像・ファイルのアップロード(POST。クエリ `?kind=file` でファイル)                                                                                                                                                                           |
+| `/api/upload/[filename]`                           | 認証必須(未ログインは401。MCPの `get_file` が発行したダウンロードトークンも可)。画像・ファイルの配信(GET。画像以外はダウンロードさせる)                                                                                                                                                     |
 | `/api/avatar/[filename]`                           | **認証不要**。`user.image` から参照中のキーだけを配信(GET)                                                                                                                                                                                                                                  |
 | `/api/slack/events`                                | 認証不要。Slack の署名検証だけが門番(POST)                                                                                                                                                                                                                                                  |
 | `/api/github/webhook/[id]`                         | 認証不要。対応付けごとのシークレットによる GitHub の署名検証だけが門番(POST)。対応付けが無ければ404                                                                                                                                                                                         |

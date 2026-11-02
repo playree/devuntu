@@ -114,7 +114,12 @@ export const proxy = async (request: NextRequest) => {
  * Proxy 1箇所に集約するため。matcher から外すと Proxy 自体が動かず遮断できないので、
  * `/api/upload/<uuidv7>.webp` のような**拡張子を持つルートハンドラ**が素通しになってしまう。
  * 通常時の扱いは `bypassesProxyAuth` で従来どおり素通しに戻している。
+ *
+ * 例外はアップロードの POST 先(`/api/upload` ちょうど。配信の `/api/upload/<key>` は通す)。
+ * Proxy は通るリクエストのボディを既定 10MB まで複製して溜め、超えた分を黙って切り捨てるため、
+ * ファイル添付(上限は ATTACHMENT_MAX_SIZE_MB)が壊れる。上限を上げると認証前の全リクエストに
+ * 大きなバッファを許すことになるので、ここだけ外してメンテナンスモードの遮断はルート側で行う。
  */
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|_next/webpack-hmr).*)'],
+  matcher: ['/((?!_next/static|_next/image|_next/webpack-hmr|api/upload(?!/)).*)'],
 }

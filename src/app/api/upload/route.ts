@@ -1,11 +1,14 @@
 import { getActiveSession } from '@/lib/auth/auth'
 import { assertBoardAccess, type Actor } from '@/lib/board/board-access'
+import { envu } from '@/lib/env-util'
 import { ClientError } from '@/lib/error'
 import { logger } from '@/lib/logger'
+import { MAINTENANCE_MODE_RETRY_AFTER_SEC } from '@/lib/maintenance/maintenance'
+import { isMaintenanceMode } from '@/lib/maintenance/maintenance-mode'
 import { consumeRateLimit } from '@/lib/rate-limit'
-import { MAX_IMAGE_SIZE, zImageFile } from '@/lib/schema/schema'
-import { saveContentImage } from '@/lib/storage/attachment'
-import { UPLOAD_BOARD_ID_FIELD } from '@/lib/storage/upload'
+import { MAX_IMAGE_SIZE, zAttachmentFile, zImageFile } from '@/lib/schema/schema'
+import { saveContentFile, saveContentImage } from '@/lib/storage/attachment'
+import { UPLOAD_BOARD_ID_FIELD, UPLOAD_KIND_PARAM } from '@/lib/storage/upload'
 import { resolveUploadToken, type UploadActor } from '@/lib/storage/upload-token'
 import { LocaleItem } from '@/locale'
 import { requestLocale } from '@/locale/request'
@@ -13,27 +16,33 @@ import { t } from '@/locale/server'
 import { z } from 'zod'
 
 /**
- * 画像をアップロードしてオブジェクトストレージに保存する。
+ * 画像・ファイルをアップロードしてオブジェクトストレージに保存する。
+ * クエリの `kind=file` はファイル添付(変換せず保存)、それ以外は画像(webp に変換)として扱う。
+ * 種類をボディではなくクエリで受けるのは、ボディを読む前に上限を決めるため。
  *
  * Server Action ではなく Route Handler にしているのは、MDXEditor の
  * `imageUploadHandler` が fetch 前提であること、および Server Action の
  * `bodySizeLimit`(既定1MB)の制約を受けないため。
  * `src/proxy.ts` は `api/` の認証を素通しにしているのでここで自前認証する。
+ * このパスは Proxy の matcher から外してあるので、メンテナンスモードの遮断もここで行う。
  *
  * 認証は2経路ある。ブラウザはログインセッション、MCPクライアントは
  * `create_image_upload_token` が発行した短命トークンの Bearer で入る。
  * どちらも**本文を読む前に**判定し、未認証のリクエストにメモリを使わせない。
  */
 
-/** multipart のオーバーヘッド分だけ画像上限より緩める。これを超えるボディは読み切らずに捨てる */
-const MAX_BODY_SIZE = MAX_IMAGE_SIZE + 1024 * 1024
+/** 添付ファイルの上限(バイト)。環境変数で変わるので都度読む */
+const maxFileSize = () => envu.server.ATTACHMENT_MAX_SIZE_MB * 1024 * 1024
+
+/** multipart のオーバーヘッド分だけ上限より緩める。これを超えるボディは読み切らずに捨てる */
+const MULTIPART_OVERHEAD = 1024 * 1024
 
 /** 濫用のコストを上げるための緩い制限。ブラウザからの連続貼り付けは通る値にする */
 const UPLOAD_RATE_LIMIT = { limit: 60, windowMs: 10 * 60 * 1000 }
 
 /** ロケールキーのまま返しても呼び元(`uploadImage`)が解決できないので、ここで文言にする */
-const badRequest = async (message: LocaleItem) =>
-  Response.json({ message: t(await requestLocale(), message) }, { status: 400 })
+const badRequest = async (message: LocaleItem, values?: Record<string, number>) =>
+  Response.json({ message: t(await requestLocale(), message, values) }, { status: 400 })
 
 type UploadAuth = { kind: 'token'; actor: UploadActor } | { kind: 'session'; user: Actor }
 
@@ -96,9 +105,18 @@ const limitBody = (req: Request, max: number) => {
 }
 
 export const POST = async (req: Request) => {
+  if (isMaintenanceMode()) {
+    return Response.json(
+      { error: 'maintenance' },
+      { status: 503, headers: { 'Retry-After': String(MAINTENANCE_MODE_RETRY_AFTER_SEC) } },
+    )
+  }
+
+  const isFile = new URL(req.url).searchParams.get(UPLOAD_KIND_PARAM) === 'file'
   // 正直な申告の巨大リクエストは、ストリームを流す前にここで落とす
+  const maxBody = (isFile ? maxFileSize() : MAX_IMAGE_SIZE) + MULTIPART_OVERHEAD
   const contentLength = Number(req.headers.get('content-length'))
-  if (Number.isFinite(contentLength) && contentLength > MAX_BODY_SIZE) {
+  if (Number.isFinite(contentLength) && contentLength > maxBody) {
     return new Response(null, { status: 413 })
   }
 
@@ -112,7 +130,7 @@ export const POST = async (req: Request) => {
     return new Response(null, { status: 429 })
   }
 
-  const limited = limitBody(req, MAX_BODY_SIZE)
+  const limited = limitBody(req, maxBody)
   const form = await limited.request.formData().catch(() => null)
   if (!form) {
     return new Response(null, { status: limited.isExceeded() ? 413 : 400 })
@@ -137,6 +155,21 @@ export const POST = async (req: Request) => {
       return new Response(null, { status: 403 })
     }
     actor = { userId, boardId }
+  }
+
+  if (isFile) {
+    const parsed = zAttachmentFile(maxFileSize()).safeParse(form.get('file'))
+    if (!parsed.success) {
+      const message = (parsed.error.issues[0]?.message ?? '@invalid_file_size') as LocaleItem
+      return await badRequest(message, { max: envu.server.ATTACHMENT_MAX_SIZE_MB })
+    }
+    try {
+      const { url } = await saveContentFile(parsed.data, actor)
+      return Response.json({ url })
+    } catch (err) {
+      logger.error({ err, userId }, 'file attachment upload failed')
+      throw err
+    }
   }
 
   const parsed = zImageFile.safeParse(form.get('file'))

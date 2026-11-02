@@ -25,6 +25,12 @@ export const zImageFile = z
   .refine((file) => file.size <= MAX_IMAGE_SIZE, el('@invalid_image_size'))
   .refine((file) => ACCEPTED_IMAGE_TYPES.includes(file.type), el('@invalid_image_type'))
 
+/** 添付ファイル。上限は環境変数 `ATTACHMENT_MAX_SIZE_MB` で変わるため、バイト数を受け取って作る */
+export const zAttachmentFile = (maxBytes: number) =>
+  z
+    .instanceof(File, { message: el('@required_field') })
+    .refine((file) => file.size <= maxBytes, el('@invalid_file_size'))
+
 export const scUUID = z.object({
   id: z.uuidv7(),
 })

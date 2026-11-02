@@ -53,7 +53,7 @@ const UPLOAD_TOKEN_RATE_LIMIT = { limit: 20, windowMs: 10 * 60 * 1000 }
 const READ_RATE_LIMIT = { limit: 30, windowMs: 60 * 1000 }
 
 /** 添付先ボードの指定。新規作成前は ticketId が無いので boardId も受ける */
-const targetSchema = {
+export const targetSchema = {
   ticketId: z
     .string()
     .min(1)
@@ -71,7 +71,7 @@ const targetSchema = {
 /**
  * 添付先ボードを決める。
  *
- * 画像は本文へ貼る前提なので、チケット指定の場合は閲覧ではなく編集できることを要求する。
+ * 画像・ファイルは本文へ貼る前提なので、チケット指定の場合は閲覧ではなく編集できることを要求する。
  * ボードに属さない添付(全ログインユーザーが読める)は MCP からは作らせない。
  */
 const resolveUploadTarget = async (
@@ -93,9 +93,9 @@ const resolveUploadTarget = async (
 /** `data:image/png;base64,...` 形式で渡されることが多いので接頭辞を許容する */
 const stripDataUrl = (data: string) => data.replace(/^data:[^;,]*;base64,/, '').trim()
 
-/** 保存済み画像の指定は key でも `/api/upload/<key>` URL でも受ける(絶対URLも可) */
-const parseImageKey = (image: string): string => {
-  const key = toUploadKey(image.trim())
+/** 保存済みファイルの指定は key でも `/api/upload/<key>` URL でも受ける(絶対URLも可) */
+export const parseUploadKey = (value: string): string => {
+  const key = toUploadKey(value.trim())
   if (!isValidUploadKey(key)) {
     throw errInvalidOperation()
   }
@@ -121,13 +121,22 @@ const uploadImageForMcp = async (
   return { url, markdown: `![${input.filename}](${url})` }
 }
 
-const createImageUploadTokenForMcp = async (auth: ResourceAuth, input: { ticketId?: string; boardId?: string }) => {
+/**
+ * 添付先ボードを決めて、`/api/upload` 用の短命トークンを発行する(画像・ファイル共通)。
+ * トークンは種類を問わず、種類はアップロード時のクエリ(`?kind=file`)で決まる
+ */
+export const issueUploadToken = async (auth: ResourceAuth, input: { ticketId?: string; boardId?: string }) => {
   const boardId = await resolveUploadTarget(auth, input)
   assertRateLimit(`upload-token:user:${auth.user.id}`, UPLOAD_TOKEN_RATE_LIMIT)
 
   const token = await signUploadToken({ userId: auth.user.id, boardId })
-  const uploadUrl = makeUrl(UPLOAD_URL_PREFIX).toString()
   logger.info({ userId: auth.user.id, boardId }, 'mcp upload token issued')
+  return { boardId, token }
+}
+
+const createImageUploadTokenForMcp = async (auth: ResourceAuth, input: { ticketId?: string; boardId?: string }) => {
+  const { boardId, token } = await issueUploadToken(auth, input)
+  const uploadUrl = makeUrl(UPLOAD_URL_PREFIX).toString()
 
   return {
     uploadUrl,
@@ -144,15 +153,19 @@ const createImageUploadTokenForMcp = async (auth: ResourceAuth, input: { ticketI
 
 const getImageForMcp = async (auth: ResourceAuth, input: { image: string; maxSize?: number }) => {
   assertRateLimit(`get-image:${auth.user.id}`, READ_RATE_LIMIT)
-  const key = parseImageKey(input.image)
+  const key = parseUploadKey(input.image)
 
   const attachment = await prisma.attachment.findUnique({
     where: { key },
-    select: { boardId: true, originalName: true, size: true },
+    select: { boardId: true, originalName: true, size: true, mimeType: true },
   })
   // アクセス不可は未存在と区別せず、キーの当たり判定を返さない(配信APIと同じ扱い)
   if (!attachment || !(await canViewAttachment(auth.user, { key, boardId: attachment.boardId }))) {
     throw errInvalidOperation()
+  }
+  // 添付ファイル(最大 ATTACHMENT_MAX_SIZE_MB)を丸ごと読んで sharp に渡さないよう、画像以外はここで返す
+  if (!ACCEPTED_IMAGE_TYPES.includes(attachment.mimeType)) {
+    throw errValidation('Not an image. Use get_file to read this attachment')
   }
 
   const object = await getObject(key)

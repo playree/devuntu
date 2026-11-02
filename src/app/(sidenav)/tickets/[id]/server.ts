@@ -43,6 +43,8 @@ import {
   scUpdateTicketStatus,
 } from '@/lib/schema/schema-ticket'
 import { makeUrl } from '@/lib/server-utils'
+import { listContentAttachments } from '@/lib/storage/attachment'
+import { extractUploadKeys } from '@/lib/storage/upload'
 
 /**
  * チケット詳細取得(本文 + コメント + 権限)
@@ -126,7 +128,10 @@ export const getTicket = safeAuthAction
         return name ? [name] : []
       })
 
-    const [links, criteria, activities, relations, pendingDecision, waiting] = await Promise.all([
+    const attachmentKeys = extractUploadKeys(
+      [ticket.content ?? '', ...ticket.comments.map((comment) => comment.content)].join('\n'),
+    )
+    const [links, criteria, activities, relations, pendingDecision, waiting, attachments] = await Promise.all([
       listTicketLinks(id),
       listTicketCriteria(id),
       listTicketActivities(id, TICKET_ACTIVITY_LIMIT),
@@ -141,6 +146,7 @@ export const getTicket = safeAuthAction
       }),
       // 順番待ちは兄弟の状態から出すので、関係と同じくボードのメンバーでない承認者には見せない
       findWaitingTicketIds(access.boardRole ? [id] : []),
+      listContentAttachments(attachmentKeys, ticket.boardId),
     ])
 
     const { board, assignee, createdBy, comments, tags, mentionedUserIds, agentAutoReviseCount, ...rest } = ticket
@@ -187,6 +193,8 @@ export const getTicket = safeAuthAction
           }))
       })(),
       links,
+      /** 本文・コメントにリンク / 画像として貼られた添付(本文での登場順) */
+      attachments,
       criteria,
       /** 変更履歴(新しい順・直近 TICKET_ACTIVITY_LIMIT 件) */
       activities,

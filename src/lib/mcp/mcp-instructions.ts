@@ -18,7 +18,7 @@ export const TICKET_WORKFLOW = [
   'Plan: post it with add_ticket_comment type=plan. Questions for the user: comments without type',
   'Branch / PR / commit: link the URL with link_ticket_artifact (feature/<display ID> branches link automatically)',
   'Done: if the ticket has acceptance criteria, record whether each is met with evidence via report_acceptance_criteria (not in the report)',
-  'Report: add_ticket_comment type=report with what you did, how you verified it, and remaining issues (screenshots via create_image_upload_token)',
+  'Report: add_ticket_comment type=report with what you did, how you verified it, and remaining issues (screenshots via create_image_upload_token, other files via create_file_upload_token)',
 ] as const
 
 /**

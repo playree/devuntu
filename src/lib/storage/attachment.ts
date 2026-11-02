@@ -4,21 +4,26 @@ import { prisma } from '../prisma'
 import { toWebp, toWebpBytes, WEBP_EXT, WEBP_MIME } from './image'
 import { fetchRemoteImage } from './remote-image'
 import { deleteObject, putObject } from './storage'
-import { isUploadUrl, newUploadKey, toUploadKey, toUploadUrl } from './upload'
+import { isUploadUrl, newUploadKey, toUploadExt, toUploadKey, toUploadUrl } from './upload'
+
+type AttachmentMeta = { originalName: string; boardId: string | null; userId: string }
 
 /**
- * 変換済みのwebpをオブジェクトストレージへ保存し、Attachment を作る。
+ * オブジェクトストレージへ保存し、Attachment を作る。
  * キーは保存ごとにユニークにして、URLの変化でキャッシュバスティングも兼ねる。
  */
-const storeWebp = async (webp: Uint8Array, meta: { originalName: string; boardId: string | null; userId: string }) => {
-  const key = newUploadKey(WEBP_EXT)
-  await putObject(key, webp, WEBP_MIME)
+const storeAttachment = async (
+  bytes: Uint8Array,
+  { ext, mimeType, ...meta }: AttachmentMeta & { ext: string; mimeType: string },
+) => {
+  const key = newUploadKey(ext)
+  await putObject(key, bytes, mimeType)
   try {
     return await prisma.attachment.create({
       data: {
         key,
-        mimeType: WEBP_MIME,
-        size: webp.byteLength,
+        mimeType,
+        size: bytes.byteLength,
         originalName: meta.originalName,
         boardId: meta.boardId,
         createdById: meta.userId,
@@ -30,6 +35,10 @@ const storeWebp = async (webp: Uint8Array, meta: { originalName: string; boardId
     throw err
   }
 }
+
+/** 変換済みのwebpを保存する */
+const storeWebp = (webp: Uint8Array, meta: AttachmentMeta) =>
+  storeAttachment(webp, { ...meta, ext: WEBP_EXT, mimeType: WEBP_MIME })
 
 /** アイコン用途の一辺(px) */
 const ICON_SIZE = 128
@@ -86,6 +95,82 @@ export const saveContentImage = async (file: File, { boardId, userId }: { boardI
   const attachment = await storeWebp(webp, { originalName: file.name, boardId, userId })
   logger.info({ key: attachment.key, size: attachment.size, boardId, userId }, 'attachment uploaded')
   return { url: toUploadUrl(attachment.key), key: attachment.key, size: attachment.size }
+}
+
+/**
+ * ブラウザが文書やスクリプトとして解釈しうる形式。
+ * 配信時は `Content-Disposition: attachment` を付けるが、それに頼らず保存の時点で型を落としておく
+ */
+const ACTIVE_MIME_TYPES = new Set([
+  'text/html',
+  'application/xhtml+xml',
+  'image/svg+xml',
+  'text/xml',
+  'application/xml',
+  'text/xsl',
+  'application/xslt+xml',
+  'text/javascript',
+  'application/javascript',
+  'application/x-javascript',
+  'text/ecmascript',
+  'application/ecmascript',
+  'multipart/x-mixed-replace',
+])
+
+/**
+ * 記録するファイル名の上限。配信時に Content-Disposition へ入れるため、ヘッダーが膨らみすぎないよう切る。
+ * 拡張子を残すため末尾側を残す
+ */
+const MAX_ORIGINAL_NAME_LENGTH = 200
+
+/** 中身を判別できない(させない)ファイルの型 */
+export const OCTET_STREAM_MIME = 'application/octet-stream'
+
+/**
+ * 申告された Content-Type を保存用に正規化する。
+ * パラメータ(`; charset=...`)は落とし、形式が不正なもの・{@link ACTIVE_MIME_TYPES}・XML 系(`+xml`。
+ * XHTML の名前空間でスクリプトを書ける)は octet-stream にする
+ */
+export const toStoredMimeType = (type: string) => {
+  const mime = type.split(';')[0].trim().toLowerCase()
+  if (!/^[a-z0-9][\w.+-]*\/[a-z0-9][\w.+-]*$/.test(mime) || ACTIVE_MIME_TYPES.has(mime) || mime.endsWith('+xml')) {
+    return OCTET_STREAM_MIME
+  }
+  return mime
+}
+
+/**
+ * 本文(チケット/コメント/お知らせ)へリンクとして貼るファイルを、変換せずに保存して公開URLを返す。
+ * `boardId` の扱いは {@link saveContentImage} と同じ。
+ */
+export const saveContentFile = async (file: File, { boardId, userId }: { boardId: string | null; userId: string }) => {
+  const attachment = await storeAttachment(new Uint8Array(await file.arrayBuffer()), {
+    ext: toUploadExt(file.name),
+    mimeType: toStoredMimeType(file.type),
+    originalName: [...file.name].slice(-MAX_ORIGINAL_NAME_LENGTH).join(''),
+    boardId,
+    userId,
+  })
+  logger.info({ key: attachment.key, size: attachment.size, boardId, userId }, 'file attachment uploaded')
+  return { url: toUploadUrl(attachment.key), key: attachment.key, size: attachment.size }
+}
+
+/**
+ * 本文から参照されている添付の一覧(チケット詳細・MCP の get_ticket 用)。並びは `keys` の順。
+ *
+ * 本文には他ボードの添付URLも書けてしまうため、そのボードとボードに属さないものだけに絞り、
+ * 見られない添付の名前やサイズを出さない。
+ */
+export const listContentAttachments = async (keys: string[], boardId: string) => {
+  if (keys.length === 0) {
+    return []
+  }
+  const rows = await prisma.attachment.findMany({
+    where: { key: { in: keys }, OR: [{ boardId }, { boardId: null }] },
+    select: { key: true, originalName: true, size: true, mimeType: true, createdAt: true },
+  })
+  const byKey = new Map(rows.map((row) => [row.key, row]))
+  return keys.flatMap((key) => byKey.get(key) ?? [])
 }
 
 /**
