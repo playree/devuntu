@@ -34,6 +34,14 @@ describe('splitReleaseNote', () => {
     })
   })
 
+  it('言語の区切りの空白の有無を問わない', () => {
+    expect(splitReleaseNote('- 要点\n<!--lang:en-->\n- Summary')).toEqual({
+      summary: '- 要点',
+      localized: { en: '- Summary' },
+      hasDetails: false,
+    })
+  })
+
   it('詳細にある言語の区切りは要点に含めない', () => {
     const body = '- 要点\n<!-- details -->\n## 新機能\n<!-- lang:en -->\n- Details'
     expect(splitReleaseNote(body)).toEqual({ summary: '- 要点', localized: {}, hasDetails: true })
