@@ -19,8 +19,24 @@ export const UPLOAD_URL_PREFIX = '/api/upload'
  */
 export const AVATAR_URL_PREFIX = '/api/avatar'
 
-/** 許可するキーの形式(`<uuidv7>.<拡張子>`) */
-const UPLOAD_KEY_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(webp|png|jpe?g|gif)$/
+/**
+ * 許可するキーの形式(`<uuidv7>.<拡張子>`)。
+ * ファイル添付は元の拡張子を残すため、拡張子は形式だけを見る({@link toUploadExt} で正規化したもの)
+ */
+const UPLOAD_KEY_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.[a-z0-9]{1,10}$/
+
+/** 拡張子として使えない名前のファイルに付ける拡張子 */
+const FALLBACK_EXT = 'bin'
+
+/**
+ * ファイル名からキーに使う拡張子を取り出す。
+ * 小文字の英数字10文字までに収まらないもの(拡張子なしを含む)は `bin` にする
+ */
+export const toUploadExt = (filename: string) => {
+  const dot = filename.lastIndexOf('.')
+  const ext = dot > 0 ? filename.slice(dot + 1).toLowerCase() : ''
+  return /^[a-z0-9]{1,10}$/.test(ext) ? ext : FALLBACK_EXT
+}
 
 /** 保存キーから公開URLを生成 */
 export const toUploadUrl = (key: string) => `${UPLOAD_URL_PREFIX}/${key}`
@@ -48,7 +64,7 @@ export const isValidUploadKey = (key: string) => UPLOAD_KEY_REGEX.test(key)
  * 形式検証を通したものだけ返すので、本文へ手書きされた任意の文字列がキーとして扱われることはない。
  */
 export const extractUploadKeys = (content: string): string[] => {
-  const matches = content.matchAll(new RegExp(`${UPLOAD_URL_PREFIX}/([\\w.-]+)`, 'g'))
+  const matches = content.matchAll(new RegExp(`${UPLOAD_URL_PREFIX}/([\\w-]+\\.[a-z0-9]+)`, 'g'))
   const keys = new Set<string>()
   for (const [, key] of matches) {
     if (isValidUploadKey(key)) {
@@ -58,11 +74,58 @@ export const extractUploadKeys = (content: string): string[] => {
   return [...keys]
 }
 
+/** ファイルサイズの表示(`512 B` / `1.2 KB` / `3.4 MB`) */
+export const formatFileSize = (bytes: number) => {
+  if (bytes < 1024) {
+    return `${bytes} B`
+  }
+  const kb = bytes / 1024
+  if (kb < 1024) {
+    return `${kb.toFixed(1)} KB`
+  }
+  return `${(kb / 1024).toFixed(1)} MB`
+}
+
+/**
+ * ダウンロード時のファイル名。本文に貼った画像は保存時に webp へ変換しているので、
+ * 拡張子だけを保存形式に合わせる(`shot.png` → `shot.webp`)。名前部分は残す
+ */
+export const toDownloadName = (originalName: string, mimeType: string) => {
+  if (mimeType !== 'image/webp' || /\.webp$/i.test(originalName)) {
+    return originalName
+  }
+  const dot = originalName.lastIndexOf('.')
+  return `${dot > 0 ? originalName.slice(0, dot) : originalName}.webp`
+}
+
 /** 新規保存用のキーを生成する */
 export const newUploadKey = (ext: string) => `${uuidv7()}.${ext}`
 
 /** アップロード時に添付先ボードを伝えるフォームフィールド名。配信時の可視判定に使う */
 export const UPLOAD_BOARD_ID_FIELD = 'boardId'
+
+/**
+ * アップロードの種類を伝えるクエリパラメータ名(`?kind=file`)。省略時は画像として扱う。
+ * サーバーがボディを読む前に上限を決められるよう、フォームではなくクエリで渡す
+ */
+export const UPLOAD_KIND_PARAM = 'kind'
+
+export type UploadKind = 'image' | 'file'
+
+const upload = async (file: File, kind: UploadKind, boardId?: string | null) => {
+  const form = new FormData()
+  form.append('file', file)
+  if (boardId) {
+    form.append(UPLOAD_BOARD_ID_FIELD, boardId)
+  }
+  const url = kind === 'file' ? `${UPLOAD_URL_PREFIX}?${UPLOAD_KIND_PARAM}=file` : UPLOAD_URL_PREFIX
+  const res = await fetch(url, { method: 'POST', body: form })
+  if (!res.ok) {
+    const { message } = await res.json().catch(() => ({ message: undefined }))
+    throw new Error(message ?? `upload failed: ${res.status}`)
+  }
+  return ((await res.json()) as { url: string }).url
+}
 
 /**
  * 画像をアップロードして公開URLを返す(MDXEditor の imageUploadHandler 用)。
@@ -71,17 +134,7 @@ export const UPLOAD_BOARD_ID_FIELD = 'boardId'
  * `boardId` を渡すとその添付はボードのメンバーにしか配信されない。
  * 省略した場合は全ログインユーザーが参照できる(お知らせなどボードに属さない本文向け)。
  */
-export const uploadImage = async (file: File, boardId?: string | null) => {
-  const form = new FormData()
-  form.append('file', file)
-  if (boardId) {
-    form.append(UPLOAD_BOARD_ID_FIELD, boardId)
-  }
-  const res = await fetch(UPLOAD_URL_PREFIX, { method: 'POST', body: form })
-  if (!res.ok) {
-    const { message } = await res.json().catch(() => ({ message: undefined }))
-    throw new Error(message ?? `upload failed: ${res.status}`)
-  }
-  const { url } = (await res.json()) as { url: string }
-  return url
-}
+export const uploadImage = (file: File, boardId?: string | null) => upload(file, 'image', boardId)
+
+/** ファイルを変換せずにアップロードして公開URLを返す。`boardId` の扱いは {@link uploadImage} と同じ */
+export const uploadFile = (file: File, boardId?: string | null) => upload(file, 'file', boardId)

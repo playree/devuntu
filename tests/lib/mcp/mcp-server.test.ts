@@ -79,6 +79,8 @@ describe('createDevuntuMcpServer', () => {
         'create_image_upload_token',
         'upload_image',
         'get_image',
+        'create_file_upload_token',
+        'get_file',
       ]),
     )
   })
@@ -141,12 +143,14 @@ describe('createDevuntuMcpServer', () => {
       get_ticket: 'readOnly',
       search_tickets: 'readOnly',
       get_image: 'readOnly',
+      get_file: 'readOnly',
       get_agent_setup_guide: 'readOnly',
       get_agent_task: 'readOnly',
       get_board_notes: 'readOnly',
       create_ticket: 'additive',
       add_ticket_comment: 'additive',
       create_image_upload_token: 'additive',
+      create_file_upload_token: 'additive',
       upload_image: 'additive',
       propose_child_tickets: 'additive',
       link_ticket_artifact: 'additiveIdempotent',

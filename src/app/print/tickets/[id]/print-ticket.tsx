@@ -7,6 +7,7 @@ import { CiStatusChip, PullRequestStateChip } from '@/components/ticket/ticket-l
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { dayformat } from '@/lib/day'
 import { ticketLinkLabel } from '@/lib/git/git'
+import { formatFileSize } from '@/lib/storage/upload'
 import { useLocale } from '@/locale/client'
 import { FC, ReactNode } from 'react'
 import {
@@ -166,6 +167,18 @@ const PrintLinks: FC<{ links: PrintTicketData['links'] }> = ({ links }) => (
   </ul>
 )
 
+/** 添付の一覧。中身は埋め込まず、名前とサイズだけを出す(リンク先はログインが必要) */
+const PrintAttachments: FC<{ attachments: PrintTicketData['attachments'] }> = ({ attachments }) => (
+  <ul className='space-y-1'>
+    {attachments.map((attachment) => (
+      <li key={attachment.key} className='flex break-inside-avoid flex-wrap items-center gap-x-2 text-sm'>
+        <span className='wrap-anywhere'>{attachment.originalName}</span>
+        <span className='text-muted text-xs'>{formatFileSize(attachment.size)}</span>
+      </li>
+    ))}
+  </ul>
+)
+
 const PrintCommentItem: FC<{ comment: PrintCommentData; mentionUsers: MentionCandidate[] }> = ({
   comment,
   mentionUsers,
@@ -210,6 +223,12 @@ export const PrintTicket: FC<{ ticket: PrintTicketData; mentionUsers: MentionCan
       {ticket.links.length > 0 && (
         <PrintSection title={t('ticket_links')}>
           <PrintLinks links={ticket.links} />
+        </PrintSection>
+      )}
+
+      {ticket.attachments.length > 0 && (
+        <PrintSection title={`${t('ticket_attachments')} (${ticket.attachments.length})`}>
+          <PrintAttachments attachments={ticket.attachments} />
         </PrintSection>
       )}
 

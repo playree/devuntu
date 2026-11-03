@@ -43,7 +43,18 @@ const allowedOrigins = process.env.DEV_ALLOWED_ORIGINS?.split(',')
 const nextConfig: NextConfig = {
   /* config options here */
   output: 'standalone',
-  headers: async () => [{ source: '/:path*', headers: securityHeaders }],
+  headers: async () => [
+    { source: '/:path*', headers: securityHeaders },
+    /**
+     * アップロードファイルの配信。添付ファイルは利用者が中身を決められるので、万一ブラウザで直接開かれても
+     * 同一オリジンのスクリプトとして動かないよう sandbox を足す(同じキーは後に書いたものが勝つ)。
+     * `<img>` での表示には効かないので画像はそのまま使える
+     */
+    {
+      source: '/api/upload/:path*',
+      headers: [{ key: 'Content-Security-Policy', value: "frame-ancestors 'none'; sandbox" }],
+    },
+  ],
   env: {
     BUILD_NO: genBuildNo(),
   },

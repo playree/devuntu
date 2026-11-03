@@ -4,6 +4,7 @@ import { AGENT_MCP_SERVER_NAME, MCP_SERVER_NAME } from '@/lib/mcp/mcp'
 import { registerAgentSetupTool, registerAgentTools } from '@/lib/mcp/mcp-agent'
 import { getBoardForMcp, listBoardsForMcp } from '@/lib/mcp/mcp-board'
 import { registerBoardNoteTools } from '@/lib/mcp/mcp-board-note'
+import { registerFileTools } from '@/lib/mcp/mcp-file'
 import { registerImageTools } from '@/lib/mcp/mcp-image'
 import {
   ACCEPTANCE_CRITERIA_GUIDE,
@@ -401,8 +402,9 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     async ({ relationId }) => jsonResult(await unlinkTicketRelationForMcp(auth, relationId)),
   )
 
-  // 画像の添付・取得は人間の利用者もエージェントも使う
+  // 画像・ファイルの添付・取得は人間の利用者もエージェントも使う
   registerImageTools(server, auth)
+  registerFileTools(server, auth)
 
   // ボードノートも両方の経路で使う(ナレッジの変更可否は経路で判定する)
   registerBoardNoteTools(server, auth)

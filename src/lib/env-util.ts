@@ -356,6 +356,13 @@ const server = {
     return getEnvInt('MAINTENANCE_ATTACHMENT_GRACE_HOURS', { default: 24, min: 1 })
   },
 
+  /**
+   * ファイル添付の上限(MB)。アップロードはボディをメモリに読んでから保存するので、上げすぎないよう 100 で頭打ちにする
+   */
+  get ATTACHMENT_MAX_SIZE_MB() {
+    return getEnvInt('ATTACHMENT_MAX_SIZE_MB', { default: 10, min: 1, max: 100 })
+  },
+
   /** エージェントの実行履歴を残す期間(日) */
   get AGENT_RUN_RETENTION_DAYS() {
     return getEnvInt('AGENT_RUN_RETENTION_DAYS', { default: 90, min: 1, max: MAX_RETENTION_DAYS })

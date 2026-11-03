@@ -18,6 +18,7 @@ import { type BoardAssignee, type TicketFormOptions, useBoardAssignees, useTicke
 import { TicketComments } from './comments'
 import { getTicket, patchTicket, updateTicketAgentMode, updateTicketStatus } from './server'
 import { TicketActivities } from './ticket-activities'
+import { TicketAttachments } from './ticket-attachments'
 import { TicketBody } from './ticket-body'
 import { TicketCriteria } from './ticket-criteria'
 import { type Draft, type EditField, TicketFieldPanel } from './ticket-fields'
@@ -190,6 +191,7 @@ export const TicketDetailClient: FC<{
       >
         <TicketRelations ticket={ticket} options={options} refresh={refreshAll} />
         <TicketLinks ticket={ticket} refresh={refreshAll} />
+        <TicketAttachments ticket={ticket} />
         <TicketActivities ticket={ticket} />
       </Accordion>
 

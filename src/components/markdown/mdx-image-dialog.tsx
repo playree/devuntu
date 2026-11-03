@@ -16,26 +16,8 @@ import {
 } from '@mdxeditor/editor'
 import Image from 'next/image'
 import { FC, useEffect, useRef, useState } from 'react'
-import { tv } from 'tailwind-variants'
+import { FileDropzone, uploadDialogStyles } from './file-dropzone'
 import { useMdxPopupContainer } from './mdx-popup-container'
-
-const dialogStyles = tv({
-  slots: {
-    dropzone:
-      'flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-6 transition-colors',
-    preview: 'max-h-56 w-auto object-contain',
-    hint: 'text-muted text-sm',
-    fileName: 'text-muted truncate text-sm',
-    error: 'text-danger text-sm',
-  },
-  variants: {
-    isDragOver: {
-      // クラス名は purge 対策で必ず完全なリテラルで書くこと
-      true: { dropzone: 'border-accent bg-accent/10' },
-      false: { dropzone: 'border-mist-200 dark:border-mist-900' },
-    },
-  },
-})
 
 /**
  * 画像の挿入 / 差し替えダイアログ。`imagePlugin` の `ImageDialog` に渡して既定の実装と入れ替える。
@@ -62,8 +44,6 @@ export const MdxImageDialog: FC = () => {
   const [preview, setPreview] = useState<string | null>(null)
   const [error, setError] = useState<string>()
   const [isPending, setPending] = useState(false)
-  const [isDragOver, setDragOver] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
 
   const isOpen = dialogState.type !== 'inactive'
 
@@ -75,7 +55,6 @@ export const MdxImageDialog: FC = () => {
     setPreview(null)
     setError(undefined)
     setPending(false)
-    setDragOver(false)
   }
 
   useEffect(() => {
@@ -149,7 +128,7 @@ export const MdxImageDialog: FC = () => {
   }
 
   const isEditing = dialogState.type === 'editing'
-  const styles = dialogStyles()
+  const styles = uploadDialogStyles()
   return (
     <DialogModal
       state={{
@@ -181,23 +160,7 @@ export const MdxImageDialog: FC = () => {
     >
       <FlexCol // チケット編集モーダル内でも使うため DialogModal にする(form を置くと submit が外側の form へ伝播する)
       >
-        <button
-          type='button'
-          aria-label={t('select_file')} // プレビュー表示中は中の文言が消えるので明示する
-          onClick={() => inputRef.current?.click()}
-          // preventDefault を忘れるとブラウザが既定動作でドロップした画像を開いてしまう
-          onDragOver={(e) => {
-            e.preventDefault()
-            setDragOver(true)
-          }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={(e) => {
-            e.preventDefault()
-            setDragOver(false)
-            select(e.dataTransfer.files[0])
-          }}
-          className={styles.dropzone({ isDragOver })}
-        >
+        <FileDropzone accept={ACCEPTED_IMAGE_TYPES.join(',')} onSelect={select} aria-label={t('select_file')}>
           {preview ? (
             <Image
               src={preview}
@@ -213,14 +176,7 @@ export const MdxImageDialog: FC = () => {
               <span className={styles.hint()}>{t('msg_drop_image')}</span>
             </>
           )}
-        </button>
-        <input
-          ref={inputRef}
-          type='file'
-          accept={ACCEPTED_IMAGE_TYPES.join(',')}
-          className='hidden'
-          onChange={(e) => select(e.target.files?.[0])}
-        />
+        </FileDropzone>
         <div className={styles.fileName()}>{file?.name ?? t('no_file_selected')}</div>
         {error && <div className={styles.error()}>{error}</div>}
       </FlexCol>

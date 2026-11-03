@@ -1,8 +1,22 @@
 import { getActiveSession } from '@/lib/auth/auth'
 import { canViewAttachment } from '@/lib/board/board-access'
 import { prisma } from '@/lib/prisma'
+import { ACCEPTED_IMAGE_TYPES } from '@/lib/schema/schema'
 import { getObject } from '@/lib/storage/storage'
 import { isValidUploadKey } from '@/lib/storage/upload'
+import { resolveDownloadToken } from '@/lib/storage/upload-token'
+
+/**
+ * 画像以外(ファイル添付)はブラウザで開かせずダウンロードさせる。
+ * 万一開かれた場合の CSP の sandbox は next.config.ts で付ける(ここで付けても全体の CSP で上書きされる)
+ */
+const fileHeaders = (originalName: string) => ({
+  // RFC 5987 の attr-char に無い ' ( ) * は encodeURIComponent が残すので、自前で符号化する
+  'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(originalName).replace(
+    /['()*]/g,
+    (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`,
+  )}`,
+})
 
 /**
  * アップロードファイルを配信する。
@@ -16,29 +30,32 @@ import { isValidUploadKey } from '@/lib/storage/upload'
  * URL さえ知られれば他ユーザーから読めてしまうため。
  * boardId が null のものはボードに属さない本文(お知らせ / リンクウィジェットのアイコン)なので
  * 全ログインユーザーへ配信してよい。
+ *
+ * MCP クライアントは `get_file` が発行した短命トークンの Bearer で入る(対象のキーに紐づく)。
  */
-export const GET = async (_req: Request, { params }: { params: Promise<{ filename: string }> }) => {
-  const session = await getActiveSession()
-  if (!session?.user) {
-    return new Response(null, { status: 401 })
-  }
-
+export const GET = async (req: Request, { params }: { params: Promise<{ filename: string }> }) => {
   const { filename } = await params
   if (!isValidUploadKey(filename)) {
     return new Response(null, { status: 400 })
   }
 
+  const byToken = await resolveDownloadToken(req, filename)
+  const user = byToken ? (byToken.ok ? byToken.user : null) : (await getActiveSession())?.user
+  if (!user) {
+    return new Response(null, { status: 401 })
+  }
+
   // 存在しないキーはストレージを叩かずに返す
   const attachment = await prisma.attachment.findUnique({
     where: { key: filename },
-    select: { mimeType: true, boardId: true },
+    select: { mimeType: true, boardId: true, originalName: true },
   })
   if (!attachment) {
     return new Response(null, { status: 404 })
   }
 
   // アクセス不可は未存在と区別せず 404 にして、キーの当たり判定を返さない
-  if (!(await canViewAttachment(session.user, { key: filename, boardId: attachment.boardId }))) {
+  if (!(await canViewAttachment(user, { key: filename, boardId: attachment.boardId }))) {
     return new Response(null, { status: 404 })
   }
 
@@ -51,8 +68,9 @@ export const GET = async (_req: Request, { params }: { params: Promise<{ filenam
     headers: {
       'Content-Type': attachment.mimeType,
       ...(object.contentLength ? { 'Content-Length': String(object.contentLength) } : {}),
-      // 保存時に webp へ正規化しているが、Content-Type を推測させない
+      // 保存時に型を正規化しているが、Content-Type を推測させない
       'X-Content-Type-Options': 'nosniff',
+      ...(ACCEPTED_IMAGE_TYPES.includes(attachment.mimeType) ? {} : fileHeaders(attachment.originalName)),
       // 認証必須のためprivate。キーは保存ごとに変わるため長期キャッシュ可能
       'Cache-Control': 'private, max-age=31536000, immutable',
     },

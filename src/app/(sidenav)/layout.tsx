@@ -1,8 +1,10 @@
 import { FC, ReactNode } from 'react'
 
 import { SideNavbar } from '@/components/general/side-navbar'
+import { MaxFileSizeProvider } from '@/components/markdown/upload-limit'
 import { getServerSession } from '@/lib/auth/auth'
 import { canUseAnyCommand } from '@/lib/command/command-access'
+import { envu } from '@/lib/env-util'
 import { canUseGoogleAccount } from '@/lib/google/google-account'
 import { CommandAvailableProvider, createMenu, GoogleAvailableProvider } from './menu'
 import { SessionPending } from './pending'
@@ -17,15 +19,17 @@ const SideNavLayout: FC<{ children: ReactNode }> = async ({ children }) => {
   return (
     <GoogleAvailableProvider value={googleAvailable}>
       <CommandAvailableProvider value={commandAvailable}>
-        <SessionPending>
-          <SideNavbar menu={createMenu}>
-            <div // 子が data-wide のときだけ幅制限を外し、data-fit-screen のときは #side-main の高さも子へ通す
-              className='mx-auto max-w-4xl px-2 has-data-wide:max-w-none md:has-data-fit-screen:h-full lg:px-0'
-            >
-              {children}
-            </div>
-          </SideNavbar>
-        </SessionPending>
+        <MaxFileSizeProvider value={envu.server.ATTACHMENT_MAX_SIZE_MB}>
+          <SessionPending>
+            <SideNavbar menu={createMenu}>
+              <div // 子が data-wide のときだけ幅制限を外し、data-fit-screen のときは #side-main の高さも子へ通す
+                className='mx-auto max-w-4xl px-2 has-data-wide:max-w-none md:has-data-fit-screen:h-full lg:px-0'
+              >
+                {children}
+              </div>
+            </SideNavbar>
+          </SessionPending>
+        </MaxFileSizeProvider>
       </CommandAvailableProvider>
     </GoogleAvailableProvider>
   )

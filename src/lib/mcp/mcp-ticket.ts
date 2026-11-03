@@ -50,6 +50,7 @@ import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import { prisma } from '@/lib/prisma'
 import { parseChildProposal } from '@/lib/schema/schema-ticket'
 import { makeUrl } from '@/lib/server-utils'
+import { listContentAttachments } from '@/lib/storage/attachment'
 import { extractUploadKeys } from '@/lib/storage/upload'
 
 /** 表示ID(ABC-42)でもチケットIDでも受け取れるようにする。エージェント向けツールからも使う */
@@ -105,25 +106,39 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
   }
 
   const displayId = ticketDisplayId({ key: ticket.board.key, number: ticket.number })
+  const attachmentKeys = extractUploadKeys([ticket.content ?? '', ...ticket.comments.map((c) => c.content)].join('\n'))
   const mergeCompletion = access.boardRole ? mergeCompletionOf(ticket.board.gitSettings) : undefined
-  const [links, criteria, activities, relations, waiting, noteIndex, announcementEnabled] = await Promise.all([
-    listTicketLinks(id),
-    listTicketCriteria(id),
-    listTicketActivities(id, TICKET_ACTIVITY_MCP_LIMIT),
-    // 関係の相手は同じボードのチケットなので、ボードのメンバーでない承認者には見せない
-    access.boardRole ? listTicketRelations(id) : EMPTY_TICKET_RELATIONS,
-    // 順番待ちは兄弟の状態から出すので、関係と同じくボードのメンバーでない承認者には見せない
-    findWaitingTicketIds(access.boardRole ? [id] : []),
-    // ボードノートも boardContext と同じくボード内の情報なので承認者には見せない
-    access.boardRole ? findBoardNoteIndex(access.boardId) : {},
-    // ボードの通知設定もボード内の情報なので承認者には見せない。アナウンスを投稿できないエージェントにも返さない
-    access.boardRole && auth.kind !== 'agent' ? isChannelNotifyEnabled(access.boardId, 'announcement') : false,
-  ])
+  const [links, criteria, activities, relations, waiting, noteIndex, announcementEnabled, attachments] =
+    await Promise.all([
+      listTicketLinks(id),
+      listTicketCriteria(id),
+      listTicketActivities(id, TICKET_ACTIVITY_MCP_LIMIT),
+      // 関係の相手は同じボードのチケットなので、ボードのメンバーでない承認者には見せない
+      access.boardRole ? listTicketRelations(id) : EMPTY_TICKET_RELATIONS,
+      // 順番待ちは兄弟の状態から出すので、関係と同じくボードのメンバーでない承認者には見せない
+      findWaitingTicketIds(access.boardRole ? [id] : []),
+      // ボードノートも boardContext と同じくボード内の情報なので承認者には見せない
+      access.boardRole ? findBoardNoteIndex(access.boardId) : {},
+      // ボードの通知設定もボード内の情報なので承認者には見せない。アナウンスを投稿できないエージェントにも返さない
+      access.boardRole && auth.kind !== 'agent' ? isChannelNotifyEnabled(access.boardId, 'announcement') : false,
+      listContentAttachments(attachmentKeys, access.boardId),
+    ])
 
   return {
     displayId,
-    /** 本文・コメントに貼られた画像のキー。`get_image` で中身を見られることに気づけるよう返す */
-    attachmentKeys: extractUploadKeys([ticket.content ?? '', ...ticket.comments.map((c) => c.content)].join('\n')),
+    /** 本文・コメントに貼られた画像・ファイルのキー。`get_image` / `get_file` で中身を見られることに気づけるよう返す */
+    attachmentKeys,
+    /** 添付の名前・サイズ・形式。画像(image/*)は get_image、それ以外は get_file で読む */
+    ...(attachments.length > 0
+      ? {
+          attachments: attachments.map(({ key, originalName, size, mimeType }) => ({
+            key,
+            name: originalName,
+            size,
+            mimeType,
+          })),
+        }
+      : {}),
     boardName: ticket.board.name,
     /** get_board_notes / save_board_note の boardId に渡せる */
     boardKey: ticket.board.key,

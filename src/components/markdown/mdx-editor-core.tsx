@@ -2,7 +2,7 @@
 
 import { codeMirrorDark } from '@/components/code/codemirror-dark'
 import { notify } from '@/components/notify'
-import { uploadImage } from '@/lib/storage/upload'
+import { uploadFile, uploadImage } from '@/lib/storage/upload'
 import { useResolvedTheme } from '@/lib/use-resolved-theme'
 import { useLocale } from '@/locale/client'
 import { cn } from '@heroui/react'
@@ -38,6 +38,7 @@ import {
 import '@mdxeditor/editor/style.css'
 import { FC, ReactElement, useEffect, useMemo, useRef, useState } from 'react'
 import { decoratorClickPlugin } from './mdx-decorator-click-plugin'
+import { FileUploadProvider, InsertFile } from './mdx-file-dialog'
 import { MdxImageDialog } from './mdx-image-dialog'
 import { MdxEditImageToolbar, MdxImagePlaceholder } from './mdx-image-toolbar'
 import { MdxLinkDialog } from './mdx-link-dialog'
@@ -79,6 +80,7 @@ const RichTextControls: FC<{ allowImages: boolean }> = ({ allowImages }) => (
     <Separator />
     <CreateLink />
     {allowImages && <InsertImage />}
+    {allowImages && <InsertFile />}
     <InsertTable />
     <InsertCodeBlock />
   </>
@@ -113,7 +115,7 @@ export type MdxEditorCoreProps = {
    */
   uploadBoardId?: string | null
   /**
-   * true で画像を挿入できるようにする(既定 false)。false の間はツールバーの画像ボタンを出さず、
+   * true で画像とファイルを挿入できるようにする(既定 false)。false の間はツールバーの画像・ファイルのボタンを出さず、
    * 貼り付け / ドロップでもアップロードしない。既存の画像記法の表示は残る。マウント時の値で固定される。
    * true にする本文は、保存先を添付の掃除の参照元(`src/lib/storage/attachment-ref.ts`)に加えること
    */
@@ -188,6 +190,9 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
     }
   })
 
+  // ファイルの失敗通知はダイアログ側(mdx-file-dialog.tsx)が出す
+  const [fileUploadHandler] = useState(() => (file: File) => uploadFile(file, boardIdRef.current))
+
   const plugins = useMemo(() => {
     // source モードとコードブロックの CodeMirror は basicLight がハードコードされているため、
     // ダーク時は basicDark(選択色の補正込み)を渡して上書きする。カスタム拡張は拡張配列の先頭=高優先度で入り、
@@ -237,27 +242,29 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
   return (
     <MentionCandidatesProvider candidates={mentionCandidates}>
       <MentionUsersProvider users={mentionCandidates}>
-        <MDXEditor
-          markdown={markdown}
-          // 初期値の正規化による変更は無視する(編集していないのに dirty になるのを防ぐ)
-          onChange={(value, initialMarkdownNormalize) => {
-            if (!initialMarkdownNormalize) {
-              onChange(value)
-            }
-          }}
-          onBlur={onBlur ? () => onBlur() : undefined}
-          overlayContainer={overlayContainer}
-          placeholder={placeholder}
-          autoFocus={autoFocus}
-          // dark-theme が MDXEditor 公式のダーク切替。className の各語は
-          // ポップアップ用コンテナにもコピーされるため、ドロップダウンとダイアログにも効く
-          className={cn(isDark && 'dark-theme', className)}
-          // globals.css の .markdown を編集面にも効かせて表示側と見た目を揃える。
-          // globals.css の `.mdxeditor .markdown` は最小行数(--mdx-min-rows)の適用先も兼ねる
-          contentEditableClassName='markdown'
-          toMarkdownOptions={TO_MARKDOWN_OPTIONS}
-          plugins={plugins}
-        />
+        <FileUploadProvider handler={fileUploadHandler}>
+          <MDXEditor
+            markdown={markdown}
+            // 初期値の正規化による変更は無視する(編集していないのに dirty になるのを防ぐ)
+            onChange={(value, initialMarkdownNormalize) => {
+              if (!initialMarkdownNormalize) {
+                onChange(value)
+              }
+            }}
+            onBlur={onBlur ? () => onBlur() : undefined}
+            overlayContainer={overlayContainer}
+            placeholder={placeholder}
+            autoFocus={autoFocus}
+            // dark-theme が MDXEditor 公式のダーク切替。className の各語は
+            // ポップアップ用コンテナにもコピーされるため、ドロップダウンとダイアログにも効く
+            className={cn(isDark && 'dark-theme', className)}
+            // globals.css の .markdown を編集面にも効かせて表示側と見た目を揃える。
+            // globals.css の `.mdxeditor .markdown` は最小行数(--mdx-min-rows)の適用先も兼ねる
+            contentEditableClassName='markdown'
+            toMarkdownOptions={TO_MARKDOWN_OPTIONS}
+            plugins={plugins}
+          />
+        </FileUploadProvider>
       </MentionUsersProvider>
     </MentionCandidatesProvider>
   )

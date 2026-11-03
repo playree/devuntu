@@ -57,7 +57,12 @@ beforeEach(() => {
   vi.mocked(canViewAttachment).mockResolvedValue(true)
   vi.mocked(saveContentImage).mockResolvedValue({ url: `/api/upload/${KEY}`, key: KEY, size: 100 })
   vi.mocked(resizeWebp).mockResolvedValue(Buffer.from('resized'))
-  findAttachment.mockResolvedValue({ boardId: BOARD_ID, originalName: 'shot.png', size: 100 } as never)
+  findAttachment.mockResolvedValue({
+    boardId: BOARD_ID,
+    originalName: 'shot.png',
+    size: 100,
+    mimeType: 'image/webp',
+  } as never)
   // ストリームは一度しか読めないので呼び出しごとに作り直す
   vi.mocked(getObject).mockImplementation(async () => ({
     body: new Blob([new Uint8Array([1, 2, 3])]).stream(),
@@ -203,10 +208,25 @@ describe('get_image', () => {
   it('キーの形式が不正なものはストレージを見ずに拒否する', async () => {
     const client = await connectClient()
 
-    // uuidv7 + 許可拡張子のホワイトリストなので、二重拡張子や UUIDv4 も通らない
+    // uuidv7 + 拡張子の形式で見るので、二重拡張子や UUIDv4 も通らない
     for (const image of ['../../etc/passwd', 'not-a-key', `${KEY}.svg`, '019eef64-6cc1-48f1-8f50-1ef86986289a.webp']) {
       expect((await client.callTool({ name: 'get_image', arguments: { image } })).isError).toBe(true)
     }
+    expect(getObject).not.toHaveBeenCalled()
+  })
+
+  it('画像以外の添付は中身を読まずに拒否する(get_file へ誘導する)', async () => {
+    findAttachment.mockResolvedValue({
+      boardId: BOARD_ID,
+      originalName: 'a.zip',
+      size: 100,
+      mimeType: 'application/zip',
+    } as never)
+
+    const result = await (await connectClient()).callTool({ name: 'get_image', arguments: { image: KEY } })
+
+    expect(result.isError).toBe(true)
+    expect(JSON.stringify(result.content)).toContain('get_file')
     expect(getObject).not.toHaveBeenCalled()
   })
 
@@ -223,7 +243,12 @@ describe('get_image', () => {
   })
 
   it('閲覧の可否は配信APIと同じ判定(キーと添付先ボード)に委ねる', async () => {
-    findAttachment.mockResolvedValue({ boardId: null, originalName: 'icon.png', size: 10 } as never)
+    findAttachment.mockResolvedValue({
+      boardId: null,
+      originalName: 'icon.png',
+      size: 10,
+      mimeType: 'image/webp',
+    } as never)
 
     const result = await (await connectClient()).callTool({ name: 'get_image', arguments: { image: KEY } })
 
