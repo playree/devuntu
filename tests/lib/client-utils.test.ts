@@ -16,6 +16,8 @@ describe('safeCallbackPath: 認証後の遷移先の検証', () => {
     stubWindow()
     expect(safeCallbackPath('/tickets')).toBe('/tickets')
     expect(safeCallbackPath('/tickets?page=2#top'), 'クエリとハッシュも保つ').toBe('/tickets?page=2#top')
+    expect(safeCallbackPath('/boards/xxx?tab=a#h')).toBe('/boards/xxx?tab=a#h')
+    expect(safeCallbackPath('/a//b'), '途中の // は通す').toBe('/a//b')
   })
 
   it('同一オリジンの絶対URLはパスへ畳む', () => {
@@ -29,6 +31,14 @@ describe('safeCallbackPath: 認証後の遷移先の検証', () => {
     expect(safeCallbackPath('//evil.example/'), 'プロトコル相対').toBe('/')
     expect(safeCallbackPath('/\\evil.example/'), 'バックスラッシュ').toBe('/')
     expect(safeCallbackPath('http://user@evil.example/'), '認証情報付き').toBe('/')
+  })
+
+  it('同一オリジンでも、畳むと // で始まるパスになる値は既定値へ落とす', () => {
+    stubWindow()
+    expect(safeCallbackPath('/.//evil.example/login'), 'ドットセグメント').toBe('/')
+    expect(safeCallbackPath('/%2e//evil.example/'), 'エンコードしたドットセグメント').toBe('/')
+    expect(safeCallbackPath(`${ORIGIN}//evil.example/`), '自オリジンの後ろに //').toBe('/')
+    expect(safeCallbackPath('/./\\evil.example/'), 'ドットセグメント + バックスラッシュ').toBe('/')
   })
 
   it('スキームを持つ危険な値も既定値へ落とす', () => {
