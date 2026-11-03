@@ -81,6 +81,11 @@ git diff --stat vP S -- compose.yaml docker/ prisma/migrations public/agent/devu
 - 要点(利用者に効く変更を1行ずつ、3〜5個程度)
 - ⚠ 運用者の対応が必要なもの(compose.yaml の取得し直しなど)は、必ず要点に入れる
 
+<!-- lang:en -->
+
+- 上の要点の英訳(同じ項目を同じ順に)
+- ⚠ Operator action required: ...
+
 <!-- details -->
 
 ## 新機能
@@ -102,10 +107,11 @@ git diff --stat vP S -- compose.yaml docker/ prisma/migrations public/agent/devu
 
 - **`<!-- details -->` より前が要点**。ダッシュボードのリリースノートウィジェットには、ここだけが表示される(以降は GitHub の「詳細」リンクから見る)
   - 要点は Markdown の箇条書きだけにし、見出しは使わない
+  - 要点は日本語と英語で書く。`<!-- lang:en -->` より前が日本語、以降が英語。ウィジェットは表示言語が日本語なら日本語、それ以外は英語を出す
 - 詳細は利用者・運用者が読んで分かる粒度で書く。実装の内部(関数名・ファイル名)は書かない
 - 項目の末尾に PR 番号 `(#n)` を付ける
 - 該当が無い見出しは書かない
-- 日本語で書く
+- 詳細は日本語で書く
 - 個人名・メールアドレス・社内の URL・DEVUNTU のチケットIDは書かない(公開リポジトリのため)
 
 ### 1-5. ドラフトを作って確認をもらう
