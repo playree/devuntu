@@ -10,7 +10,7 @@ import type { AgentRunAction, AgentRunStatus, AgentTaskState, TicketStatus } fro
 import { lockTicketRow } from '../board/row-lock'
 import { type AgentCriterionReport, assertAgentCriteria, writeAgentCriteria } from '../board/ticket-criterion'
 import { ticketDisplayId } from '../board/ticket-id'
-import { moveTicketToLane } from '../board/ticket-write'
+import { lockKanbanLane, moveTicketToLane } from '../board/ticket-write'
 import { MINUTE_MS, msBefore, nowDate } from '../day'
 import { logger } from '../logger'
 import { MAX_NOTIFY_RECIPIENTS } from '../notify/notify'
@@ -212,6 +212,11 @@ export const startAgentRun = async (
       }
     }
 
+    /**
+     * 対応中へ移すときのレーンの並べ替えを直列にする。チケット行より先に取る(lockKanbanLane を参照)。
+     * 移すかどうかは行ロック後のステータスで決めるので、ここでは常に取る
+     */
+    await lockKanbanLane(tx, target.id, 'doing')
     // Webhook からのきっかけの追加と直列にし、待ち行列を作った後に届いたきっかけは次の回へ回す
     await lockTicketRow(tx, target.id)
     // 同じトークンのランナーが複数台で同じタスクを受け取っても、実行は 1 件に限る

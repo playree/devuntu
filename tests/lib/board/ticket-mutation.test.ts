@@ -575,6 +575,21 @@ describe.each(routes)('updateTicket: %s', (_label, route) => {
 
     expect(moveTicketToLane).not.toHaveBeenCalled()
   })
+
+  it('status を指定すると、チケット行より先にレーンをロックする', async () => {
+    await route.update(TICKET_ID, { status: 'done' })
+
+    expect(lockKanbanLane).toHaveBeenCalledWith(fakeTx, TICKET_ID, 'done')
+    expect(vi.mocked(lockKanbanLane).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(lockTicketRow).mock.invocationCallOrder[0],
+    )
+  })
+
+  it('status を指定しなければレーンをロックしない', async () => {
+    await route.update(TICKET_ID, { title: '変更' })
+
+    expect(lockKanbanLane).not.toHaveBeenCalled()
+  })
 })
 
 /**
