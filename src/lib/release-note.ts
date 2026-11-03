@@ -4,13 +4,24 @@
 export const RELEASE_NOTE_DETAILS_MARKER = '<!-- details -->'
 
 /**
- * リリースノート本文を要点だけにする。区切りより前が要点で、区切りが無ければ(この形式より前のリリース)全文を要点とする
+ * 要点の言語の区切り(`<!-- lang:en -->` など)。次の区切りまでがそのロケールの要点
+ */
+export const RELEASE_NOTE_LANG_MARKER = /<!-- lang:([A-Za-z0-9-]+) -->/
+
+/**
+ * リリースノート本文を要点だけにする。区切りより前が要点で、区切りが無ければ(この形式より前のリリース)全文を要点とする。
+ * 要点は言語の区切りで分け、最初の区切りより前を既定の要点(`summary`)、区切り以降をロケールごとの要点(`localized`)とする
  */
 export const splitReleaseNote = (body: string | null | undefined) => {
   const text = body ?? ''
   const index = text.indexOf(RELEASE_NOTE_DETAILS_MARKER)
-  if (index < 0) {
-    return { summary: text.trim(), hasDetails: false }
+  const hasDetails = index >= 0
+  const [summary, ...rest] = (hasDetails ? text.slice(0, index) : text).split(
+    new RegExp(RELEASE_NOTE_LANG_MARKER.source, 'g'),
+  )
+  const localized: Record<string, string> = {}
+  for (let i = 0; i + 1 < rest.length; i += 2) {
+    localized[rest[i]] = rest[i + 1].trim()
   }
-  return { summary: text.slice(0, index).trim(), hasDetails: true }
+  return { summary: summary.trim(), localized, hasDetails }
 }

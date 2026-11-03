@@ -9,10 +9,10 @@ import { getReleaseNotes } from '../server'
 import { EditableLink, WidgetDataCard, WidgetFC } from './widget-card'
 
 /**
- * リリースノート Widget。本文は要点だけを出し、詳細は GitHub のリリースページへリンクする
+ * リリースノート Widget。本文は要点だけを出し(表示ロケールの要点が無ければ既定の要点)、詳細は GitHub のリリースページへリンクする
  */
 export const ReleaseNoteWidget: WidgetFC = ({ id, editable }) => {
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
   const { data, isLoading } = useActionData(getReleaseNotes)
 
   return (
@@ -30,7 +30,7 @@ export const ReleaseNoteWidget: WidgetFC = ({ id, editable }) => {
             return (
               <div key={note.id}>
                 <div className='text-base font-bold'>{note.name}</div>
-                <MarkdownView body={note.summary} />
+                <MarkdownView body={note.localized[locale] || note.summary} />
                 {note.hasDetails && (
                   <EditableLink
                     href={note.url}
