@@ -4,22 +4,28 @@
 export const RELEASE_NOTE_DETAILS_MARKER = '<!-- details -->'
 
 /**
- * 要点の言語の区切り(`<!-- lang:en -->` など)。次の区切りまでがそのロケールの要点
+ * 要点の日本語と英語の区切り。区切りより前が日本語、以降が英語の要点
  */
-export const RELEASE_NOTE_LANG_MARKER = /<!--\s*lang:([A-Za-z0-9-]+)\s*-->/
+export const RELEASE_NOTE_EN_MARKER = /<!--\s*lang:en\s*-->/
 
 /**
  * リリースノート本文を要点だけにする。区切りより前が要点で、区切りが無ければ(この形式より前のリリース)全文を要点とする。
- * 要点は言語の区切りで分け、最初の区切りより前を既定の要点(`summary`)、区切り以降をロケールごとの要点(`localized`)とする
+ * 要点は英語の区切りで日本語(`summary`)と英語(`summaryEn`)に分ける。英語が無ければ `summaryEn` は空
  */
 export const splitReleaseNote = (body: string | null | undefined) => {
   const text = body ?? ''
   const index = text.indexOf(RELEASE_NOTE_DETAILS_MARKER)
   const hasDetails = index >= 0
-  const [summary, ...rest] = (hasDetails ? text.slice(0, index) : text).split(RELEASE_NOTE_LANG_MARKER)
-  const localized: Record<string, string> = {}
-  for (let i = 0; i + 1 < rest.length; i += 2) {
-    localized[rest[i]] = rest[i + 1].trim()
+  const [summary, summaryEn = ''] = (hasDetails ? text.slice(0, index) : text).split(RELEASE_NOTE_EN_MARKER, 2)
+  return { summary: summary.trim(), summaryEn: summaryEn.trim(), hasDetails }
+}
+
+/**
+ * 表示する要点を選ぶ。日本語なら日本語、それ以外は英語(英語が無いリリースは日本語)
+ */
+export const pickReleaseNoteSummary = (note: { summary: string; summaryEn: string }, locale: string) => {
+  if (locale === 'ja') {
+    return note.summary
   }
-  return { summary: summary.trim(), localized, hasDetails }
+  return note.summaryEn || note.summary
 }
