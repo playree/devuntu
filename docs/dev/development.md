@@ -293,6 +293,7 @@ pnpm v12 の `pnpm-lock.yaml` は YAML の2ドキュメント構成(1つ目が p
 
 - **`prisma`** … `latest`のdist-tagが8系のRCを指している(`@prisma/client`の`latest`は7系)。`^7`の範囲では入らないので実害は無い。8系への移行はCLIとクライアントの安定版が揃ってから行う
 - **`lexical` / `@lexical/react`** … 後述の[パッケージのバージョン上書き](#パッケージのバージョン上書き)を参照
+- **`tailwind-variants`** … `@heroui/react`が3.3.1で固定しているため、4系へは HeroUI が追随してから上げる。ルートだけ上げると自前の`tv`/`cn`と HeroUI 内部で3系と4系が併存する
 
 ### 重複インスタンスの確認
 
