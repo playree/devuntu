@@ -29,6 +29,7 @@ export const ja = {
   intro_out_dir: (dir) => `生成先: ${dir}`,
   intro_enter_default: 'Enter だけを押すと [] 内の既定値を使います。秘密の値は既定値をマスクして表示します',
   intro_loaded_existing: '既存の .env.docker を読み込み、現在値を既定値にしています',
+  renamed_keys: (keys) => `次の設定は名前が変わったため、新しい名前で書き出します: ${keys}`,
 
   // セクション(`.env.docker` の見出しにも使う)
   section_basic: '基本',
@@ -70,13 +71,13 @@ export const ja = {
   q_better_auth_url_help: '実際に配信するオリジンと完全に一致させます(不一致だとサインインのPOSTが拒否されます)',
   q_regenerate_auth_secret: 'BETTER_AUTH_SECRET を再生成しますか?(既存の全セッションが無効になります)',
   auth_secret_generated: 'BETTER_AUTH_SECRET を自動生成しました',
-  q_disable_password_auth: 'パスワード認証を無効にし、メールOTPのみでサインインしますか? (DISABLE_PASSWORD_AUTH)',
+  q_passwordless_auth: 'パスワードの代わりに、メールOTPのみのパスワードレス認証にしますか? (PASSWORDLESS_AUTH_ENABLED)',
   q_two_fa_required: '2要素認証を必須にしますか? (TWO_FA_REQUIRED)',
   two_fa_note: '利用者は初回サインイン後に2要素認証の設定が必須になります',
   q_oidc_dcr: 'MCPサーバーを公開しますか? (OIDC_DCR_ENABLED)',
 
   // D. メール
-  otp_only_note: 'パスワード認証を無効にしたため、メールOTPが唯一のサインイン手段になります',
+  otp_only_note: 'パスワードレス認証にしたため、メールOTPが唯一のサインイン手段になります',
   q_mail_send: '送信方式 (MAIL_SEND)',
   mail_debug_label: 'debug(送信せずサーバーログへ出力)',
   mail_none_label: '設定しない(メールを送信しない)',

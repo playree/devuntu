@@ -224,7 +224,7 @@ const emailOtpPlugin = emailOTP({
  * 残すとメールボックスだけでパスワード + 2FA を迂回できる。2FA の OTP(`/two-factor/*`)は別経路。
  * プラグインの定義から導出し、better-auth の更新で増えたエンドポイントも塞ぐ(serverOnly は path を持たない)。
  */
-const emailOtpDisabledPaths = envu.server.DISABLE_PASSWORD_AUTH
+const emailOtpDisabledPaths = envu.server.PASSWORDLESS_AUTH_ENABLED
   ? []
   : Object.values(emailOtpPlugin.endpoints).flatMap((endpoint) => (endpoint.path ? [endpoint.path] : []))
 
@@ -283,11 +283,11 @@ export const auth = betterAuth({
       // ローカルの emailVerified は OTP サインインか 2FA 完了でしか立たない。
       // パスワード認証かつ 2FA 不要の運用だけは作成直後の false が残り続けるため、
       // そのケースに限りプロバイダ側の検証に委ねる
-      requireLocalEmailVerified: envu.server.TWO_FA_REQUIRED || envu.server.DISABLE_PASSWORD_AUTH,
+      requireLocalEmailVerified: envu.server.TWO_FA_REQUIRED || envu.server.PASSWORDLESS_AUTH_ENABLED,
     },
   },
   emailAndPassword: {
-    enabled: !envu.server.DISABLE_PASSWORD_AUTH,
+    enabled: !envu.server.PASSWORDLESS_AUTH_ENABLED,
   },
   databaseHooks: {
     user: {

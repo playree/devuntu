@@ -28,6 +28,7 @@ export const en = {
   intro_out_dir: (dir) => `Output: ${dir}`,
   intro_enter_default: 'Press Enter alone to use the default in []. Secret defaults are shown masked',
   intro_loaded_existing: 'Loaded the existing .env.docker and using its values as defaults',
+  renamed_keys: (keys) => `These settings were renamed and will be written under the new name: ${keys}`,
 
   section_basic: 'Basic',
   section_database: 'Database',
@@ -65,12 +66,12 @@ export const en = {
   q_better_auth_url_help: 'Must exactly match the origin you serve from (otherwise sign-in POSTs are rejected)',
   q_regenerate_auth_secret: 'Regenerate BETTER_AUTH_SECRET? (all existing sessions will be invalidated)',
   auth_secret_generated: 'Generated BETTER_AUTH_SECRET',
-  q_disable_password_auth: 'Disable password sign-in and allow email OTP only? (DISABLE_PASSWORD_AUTH)',
+  q_passwordless_auth: 'Enable passwordless sign-in (email OTP only) instead of passwords? (PASSWORDLESS_AUTH_ENABLED)',
   q_two_fa_required: 'Require two-factor authentication? (TWO_FA_REQUIRED)',
   two_fa_note: 'Users must set up two-factor authentication after their first sign-in',
   q_oidc_dcr: 'Expose the MCP server? (OIDC_DCR_ENABLED)',
 
-  otp_only_note: 'Password sign-in is disabled, so email OTP is the only way to sign in',
+  otp_only_note: 'Passwordless sign-in is enabled, so email OTP is the only way to sign in',
   q_mail_send: 'Delivery method (MAIL_SEND)',
   mail_debug_label: 'debug (do not send; print to the server log)',
   mail_none_label: 'none (do not send mail)',

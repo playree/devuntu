@@ -18,6 +18,9 @@ export const register = async () => {
   const { isMaintenanceMode, startMaintenanceModeWatcher } = await import('./lib/maintenance/maintenance-mode')
   startMaintenanceModeWatcher()
 
+  const { warnDeprecatedEnv } = await import('./lib/env-deprecated')
+  warnDeprecatedEnv()
+
   // 起動時点で遮断中なら DB へ触らない(観測目的の記録のためにリストア中の接続を張り直さない)
   if (!isMaintenanceMode()) {
     const { recordAppVersion } = await import('./lib/app-version')

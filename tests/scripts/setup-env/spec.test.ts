@@ -10,6 +10,7 @@ import webpush from 'web-push'
 import {
   ENV_DOCKER_SECTIONS,
   MANUAL_KEYS,
+  RENAMED_KEYS,
   buildDatabaseUrl,
   buildSeaweedS3Config,
   generatePassword,
@@ -18,6 +19,7 @@ import {
   isBundledDbUrl,
   isBundledS3Endpoint,
   mailRequiredKeys,
+  migrateRenamedKeys,
   parseDatabaseUrl,
   validateAllowedDomains,
   validateBetterAuthUrl,
@@ -218,6 +220,34 @@ describe('MANUAL_KEYS', () => {
     // 含まれていないと、引き継いだ値が「その他」セクションへ落ちてしまう
     const known = new Set(ENV_DOCKER_SECTIONS.flatMap((s) => s.keys))
     expect(MANUAL_KEYS.filter((key) => !known.has(key))).toEqual([])
+  })
+})
+
+describe('migrateRenamedKeys', () => {
+  it('新名はすべて .env.docker のセクションに含まれる', () => {
+    const known = new Set(ENV_DOCKER_SECTIONS.flatMap((s) => s.keys))
+    expect(Object.values(RENAMED_KEYS).filter((key) => !known.has(key))).toEqual([])
+  })
+
+  it('旧名の値を新名へ移し、旧名は外す', () => {
+    // 旧名を残すと「管理していないキー」として旧名のまま書き戻される
+    expect(migrateRenamedKeys({ DISABLE_PASSWORD_AUTH: 'true', LOG_LEVEL: 'info' })).toEqual({
+      values: { PASSWORDLESS_AUTH_ENABLED: 'true', LOG_LEVEL: 'info' },
+      renamed: ['DISABLE_PASSWORD_AUTH → PASSWORDLESS_AUTH_ENABLED'],
+    })
+  })
+
+  it('新旧両方あれば新名の値を残す', () => {
+    expect(migrateRenamedKeys({ DISABLE_PASSWORD_AUTH: 'true', PASSWORDLESS_AUTH_ENABLED: 'false' }).values).toEqual({
+      PASSWORDLESS_AUTH_ENABLED: 'false',
+    })
+  })
+
+  it('旧名が無ければそのまま返す', () => {
+    expect(migrateRenamedKeys({ PASSWORDLESS_AUTH_ENABLED: 'true' })).toEqual({
+      values: { PASSWORDLESS_AUTH_ENABLED: 'true' },
+      renamed: [],
+    })
   })
 })
 

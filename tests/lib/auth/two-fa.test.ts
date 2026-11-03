@@ -3,12 +3,12 @@
 import { requiresTwoFaSetup } from '@/lib/auth/two-fa'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const env = vi.hoisted(() => ({ TWO_FA_REQUIRED: true, DISABLE_PASSWORD_AUTH: false }))
+const env = vi.hoisted(() => ({ TWO_FA_REQUIRED: true, PASSWORDLESS_AUTH_ENABLED: false }))
 vi.mock('@/lib/env-util', () => ({ envu: { server: env } }))
 
 beforeEach(() => {
   env.TWO_FA_REQUIRED = true
-  env.DISABLE_PASSWORD_AUTH = false
+  env.PASSWORDLESS_AUTH_ENABLED = false
 })
 
 describe('requiresTwoFaSetup', () => {
@@ -27,8 +27,8 @@ describe('requiresTwoFaSetup', () => {
     expect(requiresTwoFaSetup({ twoFactorEnabled: false })).toBe(false)
   })
 
-  it('パスワード認証を無効にした運用では止めない(OTP サインイン自体がメールの確認を兼ねる)', () => {
-    env.DISABLE_PASSWORD_AUTH = true
+  it('パスワードレス認証の運用では止めない(OTP サインイン自体がメールの確認を兼ねる)', () => {
+    env.PASSWORDLESS_AUTH_ENABLED = true
     expect(requiresTwoFaSetup({ twoFactorEnabled: false })).toBe(false)
   })
 })

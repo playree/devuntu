@@ -15,7 +15,7 @@ updated: 2026-10-27
 
 - **認証必須** : `/auth/signin` `/start` `/cal/:id` `/maintenance` 以外の全ページ。未ログインは `/auth/signin?cb=<元のURL>` へリダイレクト
 - **管理者のみ** : `/admin/**`。`role !== 'admin'` の場合は 404 へ rewrite(メニューにも表示されない)
-- **2要素認証** : `TWO_FA_REQUIRED=true` かつ `DISABLE_PASSWORD_AUTH=false` の場合、2FA未設定なら `/auth/signin?mode=2FA` へリダイレクト。`TWO_FA_REQUIRED=false` の場合はサインイン時の 2FA チャレンジを行わないため、`twoFactorEnabled` が true の利用者もパスワードのみでサインインする(`?mode=2FA` へ直接アクセスした場合も通常のサインイン画面になる)
+- **2要素認証** : `TWO_FA_REQUIRED=true` かつ `PASSWORDLESS_AUTH_ENABLED=false` の場合、2FA未設定なら `/auth/signin?mode=2FA` へリダイレクト。`TWO_FA_REQUIRED=false` の場合はサインイン時の 2FA チャレンジを行わないため、`twoFactorEnabled` が true の利用者もパスワードのみでサインインする(`?mode=2FA` へ直接アクセスした場合も通常のサインイン画面になる)
   - Server Action・API・OAuth の認可は Proxy の誘導を通らないので、同じ判定(`requiresTwoFaSetup()`、`src/lib/auth/two-fa.ts`)を入口でも行う。
     `safeAuthAction` は `INVALID_SESSION` を返し(2FA 設定前に呼ぶ必要がある Action だけ metadata に `allowWithoutTwoFa: true`)、
     セッションで認証する API は `getActiveSession()` で未ログインと同じ扱いにし、`/api/auth/oauth2/authorize` は `TWO_FACTOR_REQUIRED` で拒否する
