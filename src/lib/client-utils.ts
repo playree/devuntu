@@ -79,8 +79,11 @@ export const safeCallbackPath = (raw: string | null | undefined, fallback: strin
       return fallback
     }
     const path = `${url.pathname}${url.search}${url.hash}`
-    // `/.//host` などは同一オリジンのままパスが `//host` に畳まれ、location.assign でプロトコル相対として外部へ飛ぶ
-    if (path.startsWith('//') || path.startsWith('/\\')) {
+    /**
+     * `/.//host` などは同一オリジンのままパスが `//host` に畳まれ、location.assign でプロトコル相対として外部へ飛ぶ。
+     * `\` はパーサーが `/` へ置き換えるので、`/\host` 系もここで弾ける
+     */
+    if (path.startsWith('//')) {
       return fallback
     }
     return path
