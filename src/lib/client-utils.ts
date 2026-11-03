@@ -67,7 +67,7 @@ export const isBlankTarget = (target: EventTarget | null, area: Element) =>
  *
  * `cb` はクエリ文字列で渡ってくる = 攻撃者が自由に指定できるため、検証せずに `router.push` すると
  * 「正規のサインイン画面でログインした直後に外部サイトへ飛ばされる」オープンリダイレクトになる。
- * 同一オリジンならパス(+クエリ/ハッシュ)へ畳み、他オリジン・`//host`・`javascript:` は落とす。
+ * 同一オリジンならパス(+クエリ/ハッシュ)へ畳み、他オリジン・`javascript:`・畳んだ結果が `//host` になるものは落とす。
  */
 export const safeCallbackPath = (raw: string | null | undefined, fallback: string = '/') => {
   if (!raw || typeof window === 'undefined') {
@@ -78,7 +78,15 @@ export const safeCallbackPath = (raw: string | null | undefined, fallback: strin
     if (url.origin !== window.location.origin) {
       return fallback
     }
-    return `${url.pathname}${url.search}${url.hash}`
+    const path = `${url.pathname}${url.search}${url.hash}`
+    /**
+     * `/.//host` などは同一オリジンのままパスが `//host` に畳まれ、location.assign でプロトコル相対として外部へ飛ぶ。
+     * `\` はパーサーが `/` へ置き換えるので、`/\host` 系もここで弾ける
+     */
+    if (path.startsWith('//')) {
+      return fallback
+    }
+    return path
   } catch {
     return fallback
   }
