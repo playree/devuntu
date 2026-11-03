@@ -8,9 +8,17 @@ import { logger } from './logger'
  */
 export const warnDeprecatedEnv = (): void => {
   if (envu.server.DEPRECATED_PASSWORDLESS_AUTH_SET) {
+    // 新名も設定済みなら旧名は効いていない。どちらの値が効いているかを取り違えないよう書き分ける
+    const replacementSet = Boolean(process.env.PASSWORDLESS_AUTH_ENABLED?.trim())
     logger.warn(
-      { deprecated: DEPRECATED_PASSWORDLESS_AUTH_KEY, replacement: 'PASSWORDLESS_AUTH_ENABLED' },
-      'deprecated env var is set. Rename it; the old name will be removed in a future release. The new name takes precedence when both are set',
+      {
+        deprecated: DEPRECATED_PASSWORDLESS_AUTH_KEY,
+        replacement: 'PASSWORDLESS_AUTH_ENABLED',
+        passwordless: envu.server.PASSWORDLESS_AUTH_ENABLED,
+      },
+      replacementSet
+        ? 'deprecated env var is ignored because the new name is set. Remove the old name'
+        : 'deprecated env var is in effect. Rename it; the old name will be removed in a future release',
     )
   }
 }

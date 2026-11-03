@@ -12,12 +12,23 @@ afterEach(() => {
 })
 
 describe('warnDeprecatedEnv', () => {
-  it('旧名 DISABLE_PASSWORD_AUTH が設定されていれば新名を添えて警告する', () => {
+  it('旧名だけが設定されていれば、旧名の値が効いている旨を新名を添えて警告する', () => {
+    vi.stubEnv('PASSWORDLESS_AUTH_ENABLED', '')
     vi.stubEnv('DISABLE_PASSWORD_AUTH', 'true')
     warnDeprecatedEnv()
     expect(warn).toHaveBeenCalledWith(
-      { deprecated: 'DISABLE_PASSWORD_AUTH', replacement: 'PASSWORDLESS_AUTH_ENABLED' },
-      expect.any(String),
+      { deprecated: 'DISABLE_PASSWORD_AUTH', replacement: 'PASSWORDLESS_AUTH_ENABLED', passwordless: true },
+      expect.stringContaining('in effect'),
+    )
+  })
+
+  it('新旧両方あれば、旧名は効いていない旨を警告する', () => {
+    vi.stubEnv('PASSWORDLESS_AUTH_ENABLED', 'false')
+    vi.stubEnv('DISABLE_PASSWORD_AUTH', 'true')
+    warnDeprecatedEnv()
+    expect(warn).toHaveBeenCalledWith(
+      expect.objectContaining({ passwordless: false }),
+      expect.stringContaining('ignored'),
     )
   })
 

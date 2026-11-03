@@ -243,6 +243,12 @@ describe('migrateRenamedKeys', () => {
     })
   })
 
+  it('新名が空白だけなら旧名の値を使う(アプリと同じ扱い)', () => {
+    expect(migrateRenamedKeys({ DISABLE_PASSWORD_AUTH: 'true', PASSWORDLESS_AUTH_ENABLED: ' ' }).values).toEqual({
+      PASSWORDLESS_AUTH_ENABLED: 'true',
+    })
+  })
+
   it('旧名が無ければそのまま返す', () => {
     expect(migrateRenamedKeys({ PASSWORDLESS_AUTH_ENABLED: 'true' })).toEqual({
       values: { PASSWORDLESS_AUTH_ENABLED: 'true' },

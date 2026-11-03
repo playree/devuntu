@@ -155,7 +155,8 @@ export const migrateRenamedKeys = (values) => {
     if (migrated[oldKey] === undefined) {
       continue
     }
-    if (migrated[newKey] === undefined || migrated[newKey] === '') {
+    // アプリ(`env-util.ts`)と同じく、空白だけの値も未設定として扱う
+    if (!migrated[newKey]?.trim()) {
       migrated[newKey] = migrated[oldKey]
     }
     delete migrated[oldKey]
