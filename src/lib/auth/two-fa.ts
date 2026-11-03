@@ -8,4 +8,4 @@ import { envu } from '../env-util'
  * それぞれの入口でもこの判定で止める。
  */
 export const requiresTwoFaSetup = (user: { twoFactorEnabled?: boolean | null }): boolean =>
-  envu.server.TWO_FA_REQUIRED && !envu.server.DISABLE_PASSWORD_AUTH && !user.twoFactorEnabled
+  envu.server.TWO_FA_REQUIRED && !envu.server.PASSWORDLESS_AUTH_ENABLED && !user.twoFactorEnabled

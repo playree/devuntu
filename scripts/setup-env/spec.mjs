@@ -55,7 +55,7 @@ export const ENV_DOCKER_SECTIONS = [
     'DATABASE_URL',
     'BETTER_AUTH_URL',
     'BETTER_AUTH_SECRET',
-    'DISABLE_PASSWORD_AUTH',
+    'PASSWORDLESS_AUTH_ENABLED',
     'TWO_FA_REQUIRED',
     'SESSION_EXPIRES_IN',
     'SESSION_FRESH_AGE',
@@ -138,6 +138,32 @@ export const MANUAL_KEYS = [
   'LINODE_ID',
   'LINODE_PERSONAL_ACCESS_TOKEN',
 ]
+
+/** 改名した変数(旧名 → 新名)。`src/lib/env-util.ts` は旧名も当面読むが、書き出すのは新名だけにする */
+export const RENAMED_KEYS = {
+  DISABLE_PASSWORD_AUTH: 'PASSWORDLESS_AUTH_ENABLED',
+}
+
+/**
+ * 既存ファイルの値の旧名を新名へ読み替える。新名に値があればそちらを残す(アプリと同じ優先順)。
+ * 旧名は結果から外し、「管理していないキー」として残さない。
+ */
+export const migrateRenamedKeys = (values) => {
+  const migrated = { ...values }
+  const renamed = []
+  for (const [oldKey, newKey] of Object.entries(RENAMED_KEYS)) {
+    if (migrated[oldKey] === undefined) {
+      continue
+    }
+    // アプリ(`env-util.ts`)と同じく、空白だけの値も未設定として扱う
+    if (!migrated[newKey]?.trim()) {
+      migrated[newKey] = migrated[oldKey]
+    }
+    delete migrated[oldKey]
+    renamed.push(`${oldKey} → ${newKey}`)
+  }
+  return { values: migrated, renamed }
+}
 
 /** `.env.db` は postgres の公式イメージが読む変数だけを持つ */
 export const ENV_DB_SECTIONS = [{ title: 'PostgreSQL', keys: ['POSTGRES_USER', 'POSTGRES_PASSWORD', 'POSTGRES_DB'] }]

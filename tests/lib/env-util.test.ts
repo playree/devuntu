@@ -152,6 +152,49 @@ const restoreEnv = (key: string): void => {
   })
 }
 
+describe('PASSWORDLESS_AUTH_ENABLED', () => {
+  restoreEnv('PASSWORDLESS_AUTH_ENABLED')
+  restoreEnv('DISABLE_PASSWORD_AUTH')
+
+  it('新旧どちらも未設定なら false(パスワード認証)', () => {
+    delete process.env.PASSWORDLESS_AUTH_ENABLED
+    delete process.env.DISABLE_PASSWORD_AUTH
+    expect(envu.server.PASSWORDLESS_AUTH_ENABLED).toBe(false)
+    expect(envu.server.DEPRECATED_PASSWORDLESS_AUTH_SET).toBe(false)
+  })
+
+  it.each([
+    ['true', true],
+    ['false', false],
+  ])('新名の値を使う (%s)', (value, expected) => {
+    process.env.PASSWORDLESS_AUTH_ENABLED = value
+    delete process.env.DISABLE_PASSWORD_AUTH
+    expect(envu.server.PASSWORDLESS_AUTH_ENABLED).toBe(expected)
+  })
+
+  it('新名が未設定なら旧名 DISABLE_PASSWORD_AUTH を読む', () => {
+    // 旧名を無視すると、更新しただけでパスワードを持たない利用者がサインインできなくなる
+    delete process.env.PASSWORDLESS_AUTH_ENABLED
+    process.env.DISABLE_PASSWORD_AUTH = 'true'
+    expect(envu.server.PASSWORDLESS_AUTH_ENABLED).toBe(true)
+    expect(envu.server.DEPRECATED_PASSWORDLESS_AUTH_SET).toBe(true)
+  })
+
+  it('新旧両方あれば新名を優先する', () => {
+    process.env.PASSWORDLESS_AUTH_ENABLED = 'false'
+    process.env.DISABLE_PASSWORD_AUTH = 'true'
+    expect(envu.server.PASSWORDLESS_AUTH_ENABLED).toBe(false)
+    expect(envu.server.DEPRECATED_PASSWORDLESS_AUTH_SET).toBe(true)
+  })
+
+  it.each(['PASSWORDLESS_AUTH_ENABLED', 'DISABLE_PASSWORD_AUTH'])('綴り違いは起動時に弾く (%s)', (key) => {
+    delete process.env.PASSWORDLESS_AUTH_ENABLED
+    delete process.env.DISABLE_PASSWORD_AUTH
+    process.env[key] = '1'
+    expect(() => envu.server.PASSWORDLESS_AUTH_ENABLED).toThrow()
+  })
+})
+
 describe('AGENT_RUN_RETENTION_DAYS / COMMAND_RUN_RETENTION_DAYS', () => {
   restoreEnv('AGENT_RUN_RETENTION_DAYS')
   restoreEnv('COMMAND_RUN_RETENTION_DAYS')

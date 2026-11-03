@@ -23,7 +23,7 @@ function getEnv<T extends string = string>(key: string, opts?: { required?: bool
  * 真偽値の環境変数。`true` / `false` 以外は起動時に弾く。
  *
  * 綴り違いを黙って既定の反対側へ倒すと、`SEARCH_ENGINE_INDEXING=ture` で検索結果へ載る、
- * `DISABLE_PASSWORD_AUTH=1` でパスワード認証が消えるといった、設定した本人が気づけない事故になる。
+ * `PASSWORDLESS_AUTH_ENABLED=1` でパスワード認証が残るといった、設定した本人が気づけない事故になる。
  */
 function getEnvBoolean(key: string, opts?: { default?: boolean }): boolean {
   const value = process.env[key]?.trim()
@@ -36,6 +36,9 @@ function getEnvBoolean(key: string, opts?: { default?: boolean }): boolean {
   }
   return lower === 'true'
 }
+
+/** `PASSWORDLESS_AUTH_ENABLED` の旧名。意味は同じ(true でメールOTPのみ) */
+export const DEPRECATED_PASSWORDLESS_AUTH_KEY = 'DISABLE_PASSWORD_AUTH'
 
 type EnvIntRange = { min?: number; max?: number }
 
@@ -192,8 +195,17 @@ const server = {
   get TWO_FA_REQUIRED() {
     return getEnvBoolean('TWO_FA_REQUIRED', { default: true })
   },
-  get DISABLE_PASSWORD_AUTH() {
-    return getEnvBoolean('DISABLE_PASSWORD_AUTH')
+  /** メールOTPだけでサインインさせる。false ではパスワード認証になり、メールOTPの経路を塞ぐ */
+  get PASSWORDLESS_AUTH_ENABLED() {
+    if (process.env.PASSWORDLESS_AUTH_ENABLED?.trim()) {
+      return getEnvBoolean('PASSWORDLESS_AUTH_ENABLED')
+    }
+    // 旧名を読まないと、更新しただけでパスワード認証へ切り替わり、パスワードを持たない利用者が締め出される
+    return getEnvBoolean(DEPRECATED_PASSWORDLESS_AUTH_KEY)
+  },
+  /** 旧名 `DISABLE_PASSWORD_AUTH` が設定されているか。起動時の警告に使う */
+  get DEPRECATED_PASSWORDLESS_AUTH_SET() {
+    return Boolean(process.env[DEPRECATED_PASSWORDLESS_AUTH_KEY]?.trim())
   },
   /** 動的クライアント登録(RFC 7591)を有効にする。MCP クライアントの接続に必要 */
   get OIDC_DCR_ENABLED() {

@@ -13,8 +13,8 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 type Auth = (typeof import('@/lib/auth/auth'))['auth']
 
-const loadAuth = async (disablePasswordAuth: boolean): Promise<Auth> => {
-  vi.stubEnv('DISABLE_PASSWORD_AUTH', String(disablePasswordAuth))
+const loadAuth = async (passwordlessAuth: boolean): Promise<Auth> => {
+  vi.stubEnv('PASSWORDLESS_AUTH_ENABLED', String(passwordlessAuth))
   vi.resetModules()
   return (await import('@/lib/auth/auth')).auth
 }
@@ -68,7 +68,7 @@ describe('塞いだエンドポイント', () => {
     })
   })
 
-  describe('パスワード認証が無効', () => {
+  describe('パスワードレス認証が有効', () => {
     let auth: Auth
     beforeAll(async () => {
       auth = await loadAuth(true)

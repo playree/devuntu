@@ -36,7 +36,7 @@ Docker Compose で Devuntu を立ち上げるまでの手順。運用開始後�
 - **HTTPS で公開する場合は DNS とリバースプロキシ(またはロードバランサー)**。`compose.yaml` が公開するのは
   HTTP の 3000 番だけで、TLS 終端もホスト名の振り分けも行わない
   (設定例は [HTTPS で公開する](#https-で公開するリバースプロキシ))
-- **メール送信手段**。本手順の最小構成(`DISABLE_PASSWORD_AUTH=true`)ではメールOTPがサインインの唯一の手段になるため、
+- **メール送信手段**。本手順の最小構成(`PASSWORDLESS_AUTH_ENABLED=true`)ではメールOTPがサインインの唯一の手段になるため、
   SendGrid / sendmail / SMTP のいずれかを用意する。試用のみであれば `MAIL_SEND=debug` でサーバーログに
   OTP を出力させることもできる
 
@@ -139,7 +139,7 @@ docker compose run --rm tools setup-env
 - VAPID 鍵の生成(Webプッシュ通知を有効にした場合)
 
 全変数の一覧とデフォルト値は [environment-variables.md](environment-variables.md) を参照。
-`DISABLE_PASSWORD_AUTH=false`(パスワード認証あり)を選んだ場合の 2要素認証の挙動は
+`PASSWORDLESS_AUTH_ENABLED=false`(パスワード認証あり)を選んだ場合の 2要素認証の挙動は
 [environment-variables.md](environment-variables.md#認証) を参照。
 
 > ⚠️ **DBパスワードは初回起動より後には変えられない。** postgres は最初の `docker compose up` で
@@ -179,7 +179,7 @@ curl -s http://localhost:3000/api/health
 
 - この画面はユーザーが1人も居ないときだけ開ける。1人でも登録されると `/` へリダイレクトされ、
   以後は使えない。**起動したらまず実施する**
-- 入力するのは名前とメールアドレス。`DISABLE_PASSWORD_AUTH=false` の場合のみパスワード欄も表示される
+- 入力するのは名前とメールアドレス。`PASSWORDLESS_AUTH_ENABLED=false` の場合のみパスワード欄も表示される
 - 以後のユーザー追加は管理者が `/admin/users` から行う
 
 ## 5. サインインの確認
@@ -458,7 +458,7 @@ DATABASE_URL=postgresql://devuser:<DBパスワード>@db:5432/devuntu?schema=pub
 # 認証
 BETTER_AUTH_URL=https://devuntu.example.com
 BETTER_AUTH_SECRET=<openssl rand -base64 32 の出力>
-DISABLE_PASSWORD_AUTH=true
+PASSWORDLESS_AUTH_ENABLED=true
 
 # メール(メールOTPのサインインに必要)
 MAIL_SEND=smtp

@@ -83,7 +83,7 @@ updated: 2026-11-03
 | `SESSION_EXPIRES_IN`             | セッション有効期間(秒)                                                                                                             |      | `432000`(5日)     |
 | `SESSION_FRESH_AGE`              | セッション fresh 期間(秒)。`0` で無効                                                                                              |      | `86400`(1日)      |
 | `TWO_FA_REQUIRED`                | 2要素認証を必須にするか                                                                                                            |      | `true`            |
-| `DISABLE_PASSWORD_AUTH`          | パスワード認証を無効化                                                                                                             |      | `false`           |
+| `PASSWORDLESS_AUTH_ENABLED`      | パスワードレス認証(メールOTPのみのサインイン)を有効化。旧名 `DISABLE_PASSWORD_AUTH` も当面は読む                                   |      | `false`           |
 | `OIDC_DCR_ENABLED`               | 動的クライアント登録を有効化                                                                                                       |      | `false`           |
 | `OIDC_DCR_ALLOWED_REDIRECT_URIS` | 動的クライアント登録で追加で受け付けるリダイレクトURI(カンマ区切り・完全一致)                                                      |      | -                 |
 | `MCP_REFRESH_TOKEN_EXPIRES_IN`   | MCP リフレッシュトークンの有効期間(秒)                                                                                             |      | `15552000`(180日) |
@@ -101,10 +101,12 @@ updated: 2026-11-03
 | `SLACK_SIGNING_SECRET`           | Slack リクエスト署名シークレット                                                                                                   |      | -                 |
 | `GITLAB_URLS`                    | GitLab 連携で使うインスタンスの URL(カンマ区切り)。未設定なら GitLab 連携は無効                                                    |      | -                 |
 
+- `PASSWORDLESS_AUTH_ENABLED` は `DISABLE_PASSWORD_AUTH` から改名した(値の意味は同じ)。旧名は新名が未設定の場合に限り読み、
+  起動時に警告をログへ出す。旧名は将来のリリースで読まなくなるため、新名へ書き換える(`setup-env` を再実行すると書き換わる)
 - `TWO_FA_REQUIRED=false` にすると、過去に 2FA を有効化した利用者も含めてパスワードのみでサインインする
-  (サインイン時の 2FA チャレンジ自体を行わない)。`DISABLE_PASSWORD_AUTH=true`(メールOTPでのサインイン)では
+  (サインイン時の 2FA チャレンジ自体を行わない)。`PASSWORDLESS_AUTH_ENABLED=true`(メールOTPでのサインイン)では
   この値に関わらず 2要素認証を通らない
-- `DISABLE_PASSWORD_AUTH=false`(パスワード認証あり)では、メールOTPの API(サインイン・パスワード再設定・メールアドレスの確認など)をすべて塞ぐ。
+- `PASSWORDLESS_AUTH_ENABLED=false`(パスワード認証あり)では、メールOTPの API(サインイン・パスワード再設定・メールアドレスの確認など)をすべて塞ぐ。
   メールボックスだけでパスワード + 2要素認証を迂回できてしまうため。サインインはパスワード(+ 2要素認証)・パスキー・
   外部サービス連携のいずれかで行う。2要素認証のコードのメール送信はこれとは別の経路で、引き続き使える
 - `SESSION_FRESH_AGE` は、パスワード変更など重要な操作に「サインインからの経過時間」の上限を課す。
@@ -222,7 +224,7 @@ updated: 2026-11-03
 | `SMTP_USER`        | SMTP 認証ユーザー                                                               |                         | -          |
 | `SMTP_PASS`        | SMTP 認証パスワード                                                             |                         | -          |
 
-- `DISABLE_PASSWORD_AUTH=true` ではメールOTPがサインインの唯一の手段になるため、送信手段が必要
+- `PASSWORDLESS_AUTH_ENABLED=true` ではメールOTPがサインインの唯一の手段になるため、送信手段が必要
 - `MAIL_SEND=debug` は実際には送信せず、OTP などをサーバーログに出す(試用向け)
 
 ## オブジェクトストレージ

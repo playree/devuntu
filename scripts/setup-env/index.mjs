@@ -36,6 +36,7 @@ import {
   generateVapidKeys,
   isBundledDbUrl,
   isBundledS3Endpoint,
+  migrateRenamedKeys,
   parseDatabaseUrl,
   validateAllowedDomains,
   validateBetterAuthUrl,
@@ -250,7 +251,9 @@ const envDbPath = path.join(outDir, '.env.db')
 const s3ConfigPath = path.join(outDir, 'seaweedfs-s3.json')
 
 const prevEnvText = await readTextIfExists(envDockerPath)
-const prev = prevEnvText ? parseEnvFile(prevEnvText) : {}
+// 差分の表示は元のファイルと比べ、既定値の引き継ぎには改名後のキーを使う
+const prevRaw = prevEnvText ? parseEnvFile(prevEnvText) : {}
+const { values: prev, renamed: renamedKeys } = migrateRenamedKeys(prevRaw)
 const prevDbText = await readTextIfExists(envDbPath)
 const prevDb = prevDbText ? parseEnvFile(prevDbText) : {}
 const prevS3Text = await readTextIfExists(s3ConfigPath)
@@ -297,6 +300,9 @@ note(t('intro_out_dir', outDir))
 note(t('intro_enter_default'))
 if (prevEnvText) {
   note(t('intro_loaded_existing'))
+}
+if (renamedKeys.length > 0) {
+  note(t('renamed_keys', renamedKeys.join(', ')))
 }
 
 const env = {}
@@ -401,9 +407,9 @@ if (has('BETTER_AUTH_SECRET')) {
   note(t('auth_secret_generated'))
 }
 
-const disablePasswordAuth = await askYesNo(t('q_disable_password_auth'), prevBool('DISABLE_PASSWORD_AUTH', true))
-env.DISABLE_PASSWORD_AUTH = String(disablePasswordAuth)
-if (!disablePasswordAuth) {
+const passwordlessAuth = await askYesNo(t('q_passwordless_auth'), prevBool('PASSWORDLESS_AUTH_ENABLED', true))
+env.PASSWORDLESS_AUTH_ENABLED = String(passwordlessAuth)
+if (!passwordlessAuth) {
   const twoFa = await askYesNo(t('q_two_fa_required'), prevBool('TWO_FA_REQUIRED', true))
   env.TWO_FA_REQUIRED = String(twoFa)
   if (twoFa) {
@@ -417,7 +423,7 @@ env.OIDC_DCR_ENABLED = String(await askYesNo(t('q_oidc_dcr'), prevBool('OIDC_DCR
 // D. メール
 // ---
 section(t('section_mail'))
-if (disablePasswordAuth) {
+if (passwordlessAuth) {
   note(t('otp_only_note'))
 }
 let mailSend = await askChoice(
@@ -434,7 +440,7 @@ let mailSend = await askChoice(
   prevOr('MAIL_SEND', prevEnvText ? '' : 'smtp'),
 )
 
-if (mailSend === '' && disablePasswordAuth) {
+if (mailSend === '' && passwordlessAuth) {
   warn(t('mail_none_warn'))
   if (!(await askYesNo(t('q_mail_none_confirm'), false))) {
     mailSend = await askChoice(
@@ -793,7 +799,7 @@ say(color('bold', `${s3ConfigPath}`))
 say(s3ConfigBody.replace(/("secretKey":\s*)"([^"]*)"/g, (_, head, value) => `${head}"${maskSecret(value)}"`))
 
 if (prevEnvText) {
-  const { added, changed, removed } = diffEnv(prev, env)
+  const { added, changed, removed } = diffEnv(prevRaw, env)
   say(color('bold', t('diff_title')))
   note(t('diff_summary', added.length, changed.length, removed.length))
   if (added.length > 0) {
