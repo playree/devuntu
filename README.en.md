@@ -70,6 +70,7 @@ docker compose up -d --wait
 
 - Kanban boards and tickets (boards, tags, assignees, priorities, due dates, comments, mentions)
   - Parent/child and related tickets, acceptance criteria, per-board ticket templates and change history
+  - Attach files to descriptions and comments, with a list of attachments per ticket
   - Filter the board and the ticket list down to the children or related tickets of a given ticket
   - Export a ticket or a plan / report as PDF or HTML
 - Google Calendar integration, and sharing your free/busy time through a public URL that needs no sign-in
@@ -112,8 +113,9 @@ The full guide (in Japanese) is [docs/admin/installation.md](docs/admin/installa
 - The URL users will open Devuntu with. It is set as `BETTER_AUTH_URL` and **must exactly match the
   origin actually served**, otherwise sign-in requests are rejected by the origin check
 - For HTTPS: DNS and a reverse proxy (or load balancer) that terminates TLS and forwards to port 3000.
-  `compose.yaml` only exposes plain HTTP on port 3000. Allow request bodies of **6 MB or more** for image uploads
-  (nginx `client_max_body_size` defaults to 1 MB)
+  `compose.yaml` only exposes plain HTTP on port 3000. Allow request bodies of **11 MiB or more** for file attachments
+  (10 MiB by default; if you raise `ATTACHMENT_MAX_SIZE_MB`, allow that value + 1 MiB.
+  nginx `client_max_body_size` defaults to 1 MB)
 - **A way to send email** (SendGrid / sendmail / SMTP). In the minimal setup, email OTP is the only way to sign in.
   For a trial, `MAIL_SEND=debug` prints the OTP to the server log instead
 
