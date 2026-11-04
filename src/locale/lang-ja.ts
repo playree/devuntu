@@ -718,6 +718,7 @@ export const ja: DefaultLocaleItems = {
   msg_calendar_share_unavailable: 'この共有カレンダーは現在利用できません。',
   msg_calendar_share_url_rotated: '共有URLを再発行しました。以前のURLは無効になりました。',
   msg_cannot_delete_last_admin: '最後の管理者は削除できません。',
+  msg_comment_has_others_replies: '他の人の返信が付いているため、このコメントは削除できません。',
   msg_communication_error: '外部サービスとの通信に失敗しました。時間をおいてからお試しください。',
   msg_confirm_archive_board: '${target} をアーカイブします。',
   msg_confirm_delete_board: '${target} を削除します。ボード内のチケットとコメントもすべて削除されます。',

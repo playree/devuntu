@@ -335,7 +335,9 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     {
       title: 'Delete comment',
       annotations: TOOL_ANNOTATIONS.destructiveIdempotent,
-      description: 'Deletes a comment you posted, or any comment on a ticket you are allowed to delete',
+      description:
+        'Deletes a comment you posted, or any comment on a ticket you are allowed to delete. ' +
+        'Replies are deleted with it, so a comment with replies from others can only be deleted by users who can delete the ticket',
       inputSchema: z.strictObject({ commentId: z.uuidv7() }),
     },
     async ({ commentId }) => jsonResult(await deleteTicketCommentForMcp(auth, commentId)),

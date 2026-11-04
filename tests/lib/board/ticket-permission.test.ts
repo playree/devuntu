@@ -6,6 +6,7 @@
 
 import {
   canApplyAssignments,
+  canDeleteComment,
   canMcpDeleteTicket,
   canMcpUpdateTicket,
   evaluateTicketAccess,
@@ -193,6 +194,19 @@ describe('canMcpDeleteTicket: MCP限定の追加制限(作成者以外は削除�
 
   it('作成者不明(createdById=null)は削除できない', () => {
     expect(canMcpDeleteTicket({ userId: 'u1', createdById: null })).toBe(false)
+  })
+})
+
+describe('canDeleteComment: コメントの削除', () => {
+  it.each([
+    // [投稿者本人か, チケットを削除できるか, 他人の返信があるか, 削除できるか]
+    [true, false, false, true],
+    [true, false, true, false],
+    [true, true, true, true],
+    [false, true, true, true],
+    [false, false, false, false],
+  ])('本人 %s・canDelete %s・他人の返信 %s → %s', (isMine, canDelete, hasOthersReplies, expected) => {
+    expect(canDeleteComment({ isMine, canDelete, hasOthersReplies })).toBe(expected)
   })
 })
 

@@ -93,6 +93,16 @@ export const canMcpUpdateTicket = (input: {
 export const canMcpDeleteTicket = (input: { userId: string; createdById: string | null }): boolean =>
   input.createdById === input.userId
 
+/** 他人の返信が付いた自分のコメントを、チケットを削除できない人が削除しようとした */
+export const COMMENT_HAS_OTHERS_REPLIES = 'COMMENT_HAS_OTHERS_REPLIES'
+
+/**
+ * コメントを削除できるか。返信は親と一緒に消えるため、他人の返信(承認・差し戻しを含む)が付いたコメントは
+ * 投稿者本人でも削除できない。チケットを削除できる人は返信ごと削除できる。
+ */
+export const canDeleteComment = (input: { isMine: boolean; canDelete: boolean; hasOthersReplies: boolean }): boolean =>
+  input.canDelete || (input.isMine && !input.hasOthersReplies)
+
 /**
  * owner が 0 人になるアサインは owner 自身には許可しない(ボードが管理不能になる)。
  * 管理者は /admin/boards から実施できる。

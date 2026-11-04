@@ -17,7 +17,9 @@ import { parseAction } from '@/lib/action/action-client'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { TICKET_COMMENT_TYPE_LOCALE } from '@/lib/board/ticket-enum'
 import { commentAnchorId } from '@/lib/board/ticket-id'
+import { canDeleteComment, COMMENT_HAS_OTHERS_REPLIES } from '@/lib/board/ticket-permission'
 import { dayformat } from '@/lib/day'
+import { ClientError } from '@/lib/error'
 import { scCreateTicketComment } from '@/lib/schema/schema-ticket'
 import { useConfirmAction } from '@/lib/use-confirm-action'
 import { useLocale } from '@/locale/client'
@@ -52,12 +54,24 @@ export const CommentItem: FC<{
   /** `@` 入力時のメンション候補(そのボードのメンバー) */
   mentionCandidates: MentionCandidate[]
   canDelete: boolean
+  /** 他人の返信が付いている(返信自身は常に false) */
+  hasOthersReplies?: boolean
   /** 通知のリンク(`#comment-<id>`)で指されている 1 件 */
   isTarget: boolean
   refresh: () => Promise<void>
   /** 本文の下に置く操作(承認/差し戻しボタン) */
   footer?: ReactNode
-}> = ({ comment, ticketId, boardId, mentionCandidates, canDelete, isTarget, refresh, footer }) => {
+}> = ({
+  comment,
+  ticketId,
+  boardId,
+  mentionCandidates,
+  canDelete,
+  hasOthersReplies = false,
+  isTarget,
+  refresh,
+  footer,
+}) => {
   const { t } = useLocale()
   const tz = useUserTimezone()
   const confirmAction = useConfirmAction()
@@ -84,7 +98,15 @@ export const CommentItem: FC<{
     confirmAction(
       { title: t('confirm_deletion'), text: t('msg_confirm_deletion', { target: t('comment') }) },
       async () => {
-        await parseAction(deleteTicketComment({ id: comment.id }))
+        try {
+          await parseAction(deleteTicketComment({ id: comment.id }))
+        } catch (e) {
+          // 表示した後に他人の返信が付いた。削除ボタンを出さない状態へ読み直す
+          if (e instanceof ClientError && e.errorType === COMMENT_HAS_OTHERS_REPLIES) {
+            await refresh()
+          }
+          throw e
+        }
         notify.success(t('msg_deleted_target', { target: t('comment') }))
         await refresh()
       },
@@ -123,7 +145,7 @@ export const CommentItem: FC<{
               }}
             />
           )}
-          {(comment.isMine || canDelete) && (
+          {canDeleteComment({ isMine: comment.isMine, canDelete, hasOthersReplies }) && (
             <MultiButton
               isIconOnly
               size='sm'

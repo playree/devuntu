@@ -674,6 +674,7 @@ export type LocaleItemBase =
   | 'msg_calendar_share_unavailable'
   | 'msg_calendar_share_url_rotated'
   | 'msg_cannot_delete_last_admin'
+  | 'msg_comment_has_others_replies'
   | 'msg_communication_error'
   | 'msg_confirm_approve_report'
   | 'msg_confirm_archive_board'

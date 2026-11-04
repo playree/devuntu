@@ -16,7 +16,7 @@ import type {
 } from '@/generated/prisma/enums'
 import { discardAutoReviseTriggers } from '../agent/agent-auto-revise'
 import { dateOnlyToUtc, nowDate, utcToDateOnly } from '../day'
-import { errInvalidOperation } from '../error'
+import { ClientError, errInvalidOperation } from '../error'
 import { unmetMergeCriteria } from '../git/git'
 import {
   enqueueTicketCommented,
@@ -31,13 +31,14 @@ import type { ChildProposal, CriterionItem } from '../schema/schema-ticket'
 import { type Actor, assertBoardAccess, assertTicketAccess, type TicketAccess } from './board-access'
 import { assertBoardAssignee, getBoardMentionCandidates, getTicketMentionCandidates } from './board-member'
 import { extractMentionEmails, resolveMentionUserIds } from './mention'
-import { lockTicketRow } from './row-lock'
+import { lockTicketCommentRow, lockTicketRow } from './row-lock'
 import { assertTagIdsInBoard, syncTicketTags } from './tag'
 import { nextOrder } from './tag-rule'
 import { hasMergeHeld, recordTicketActivities } from './ticket-activity'
 import { criteriaActivity, diffTicketSnapshot, mergeHeldActivity } from './ticket-activity-rule'
 import { syncTicketCriteria } from './ticket-criterion'
 import { ticketDisplayId } from './ticket-id'
+import { COMMENT_HAS_OTHERS_REPLIES } from './ticket-permission'
 import { assignTicketParent, writeOwnChildOrder } from './ticket-relation'
 import {
   assertReplyTarget,
@@ -501,7 +502,17 @@ export const updateComment = async (actor: Actor, id: string, content: string) =
     return { id, mentionedUserIds }
   })
 
-/** コメント削除(投稿者本人、またはチケットを削除できる権限を持つ人) */
+/** MCP のエージェントが理由を読めるよう、メッセージに制限の内容を書く */
+const errCommentHasOthersReplies = () =>
+  new ClientError(
+    COMMENT_HAS_OTHERS_REPLIES,
+    'Cannot delete a comment that has replies from others, because the replies would be deleted with it (users who can delete the ticket are allowed)',
+  )
+
+/**
+ * コメント削除(投稿者本人、またはチケットを削除できる権限を持つ人)。
+ * 返信は親と一緒に消えるため、チケットを削除できない人は他人の返信が付いたコメントを削除できない(`canDeleteComment`)
+ */
 export const deleteComment = async (actor: Actor, id: string) => {
   await prisma.$transaction(async (tx) => {
     const target = await tx.ticketComment.findUnique({ where: { id }, select: { ticketId: true, authorId: true } })
@@ -512,6 +523,18 @@ export const deleteComment = async (actor: Actor, id: string) => {
     const access = await assertTicketAccess(actor, target.ticketId, 'edit', tx)
     if (target.authorId !== actor.id && !access.canDelete) {
       throw errInvalidOperation()
+    }
+
+    if (!access.canDelete) {
+      // 数えてから削除するまでの間に返信が付くと、それも一緒に消えるため先にロックする
+      await lockTicketCommentRow(tx, id)
+      const othersReplies = await tx.ticketComment.count({
+        // 退会者の返信(authorId = null)も他人の返信として残す。`not` だけでは NULL が外れる
+        where: { parentId: id, OR: [{ authorId: null }, { authorId: { not: actor.id } }] },
+      })
+      if (othersReplies > 0) {
+        throw errCommentHasOthersReplies()
+      }
     }
 
     await tx.ticketComment.delete({ where: { id } })

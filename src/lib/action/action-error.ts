@@ -13,6 +13,7 @@ import {
 } from '../board-note/board-note-rule'
 import { DUPLICATED_TAG_NAME } from '../board/tag-rule'
 import { DUPLICATED_BOARD_KEY } from '../board/ticket-id'
+import { COMMENT_HAS_OTHERS_REPLIES } from '../board/ticket-permission'
 import { DUPLICATED_TEMPLATE_NAME } from '../board/ticket-template-rule'
 import {
   COMMAND_ALREADY_RUNNING,
@@ -59,6 +60,7 @@ export const ACTION_ERROR_MESSAGES: Record<string, ActionErrorMessage> = {
   [DUPLICATED_BOARD_NOTE_NAME]: { item: 'msg_duplicated_board_note_name', level: 'warn' },
   [BOARD_NOTE_LIMIT_REACHED]: { item: 'msg_board_note_limit_reached', level: 'warn' },
   [BOARD_NOTE_CONFLICT]: { item: 'msg_board_note_conflict', level: 'warn' },
+  [COMMENT_HAS_OTHERS_REPLIES]: { item: 'msg_comment_has_others_replies', level: 'warn' },
   [DUPLICATED_AGENT_HANDLE]: { item: 'msg_duplicated_agent_handle', level: 'warn' },
   [DUPLICATED_MCP_TOKEN_NAME]: { item: 'msg_duplicated_token_name', level: 'warn' },
   [COMMAND_ALREADY_RUNNING]: { item: 'msg_command_already_running', level: 'warn' },
