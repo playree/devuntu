@@ -126,7 +126,7 @@ const TagRowForm: FC<{
 /**
  * タグ管理の表示部品。
  *
- * Server Action は props で注入する(CLAUDE.md の「Server Actions は利用する Client と
+ * Server Action は props で注入する(CONTRIBUTING.md の「Server Actions は利用する Client と
  * 同じ階層の server.ts」を守りつつ、複数のボードで共有できるようにするため)。
  * `canManage` が false のときは作成のみ許可する(member はチケット編集中に新タグが必要になる)。
  */

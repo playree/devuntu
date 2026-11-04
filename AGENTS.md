@@ -1,3 +1,109 @@
+# プロジェクト概要
+
+かんばん形式のボード/チケット管理を中心に、カレンダー連携・通知(メール / Slack / Webプッシュ)・
+MCPサーバー・AIエージェント連携を備えたセルフホスト型のプロジェクト管理ツール。
+
+- Node.js v24
+- Next.js v16
+- TypeScript v7(TypeScript v6 と併存)
+- pnpm v12
+- Prisma v7
+- Better Auth v1.7
+- Tailwind CSS v4
+- HeroUI v3
+- Zod v4
+- next-safe-action v8
+
+## ドキュメント
+
+機能や仕様を調べるとき・変更したときは、対応するドキュメントを参照して更新する。
+
+docs は読者別に `guide/`(利用者)・`admin/`(運用者)・`dev/`(開発者)へ分けている。入口は [docs/README.md](docs/README.md)。
+
+| ファイル                                                                   | 内容                                                     |
+| -------------------------------------------------------------------------- | -------------------------------------------------------- |
+| [README.md](README.md)                                                     | 全体の入口。各ドキュメントへの索引                       |
+| [README.en.md](README.en.md)                                               | 英語の README(概要・クイックスタート)                    |
+| [docs/README.md](docs/README.md)                                           | ドキュメントの入口(読者別の案内)                         |
+| [docs/guide/README.md](docs/guide/README.md)                               | 利用者向けドキュメントの一覧                             |
+| [docs/guide/getting-started.md](docs/guide/getting-started.md)             | はじめに(最初の30分・用語・役割と権限・FAQ)(利用者向け)  |
+| [docs/guide/user-guide.md](docs/guide/user-guide.md)                       | 画面ごとの使い方(利用者向け)                             |
+| [docs/guide/ai.md](docs/guide/ai.md)                                       | MCP のつなぎ方・エージェントへの任せ方・承認(利用者向け) |
+| [docs/admin/README.md](docs/admin/README.md)                               | 導入後にやること・管理者の画面(運用者向け)               |
+| [docs/admin/installation.md](docs/admin/installation.md)                   | セルフホストの導入手順・HTTPS 化(運用者向け)             |
+| [docs/admin/operations.md](docs/admin/operations.md)                       | バックアップ/リストア・メンテナンス(運用者向け)          |
+| [docs/admin/environment-variables.md](docs/admin/environment-variables.md) | 環境変数の早見表と一覧(運用者向け)                       |
+| [docs/admin/notifications.md](docs/admin/notifications.md)                 | 通知の設定・Slack App(運用者向け)                        |
+| [docs/admin/git-integration.md](docs/admin/git-integration.md)             | GitHub / GitLab 連携の Webhook 設定(運用者向け)          |
+| [docs/admin/mcp-server.md](docs/admin/mcp-server.md)                       | MCPサーバーの公開設定・トークンの運用(運用者向け)        |
+| [docs/admin/agent-runner.md](docs/admin/agent-runner.md)                   | AIエージェントの自動運用の設置・設定(運用者向け)         |
+| [docs/admin/command-exec.md](docs/admin/command-exec.md)                   | リモート実行の定義・SSH・権限(運用者向け)                |
+| [docs/dev/README.md](docs/dev/README.md)                                   | 開発者向けドキュメントの一覧                             |
+| [docs/dev/development.md](docs/dev/development.md)                         | 開発環境・ビルド・パッケージ管理(開発者向け)             |
+| [docs/dev/screens.md](docs/dev/screens.md)                                 | 画面・APIの一覧とアクセス制御(開発者向け)                |
+| [docs/dev/mcp-tools.md](docs/dev/mcp-tools.md)                             | MCPツールの一覧・権限・画像添付 API(開発者向け)          |
+| [docs/dev/operations-internals.md](docs/dev/operations-internals.md)       | バックアップ・メンテナンスの仕組み(開発者向け)           |
+| [docs/dev/notifications-internals.md](docs/dev/notifications-internals.md) | 通知(キュー・トリガー・チャネル)の仕組み(開発者向け)     |
+| [docs/dev/mcp-server-internals.md](docs/dev/mcp-server-internals.md)       | MCPサーバーの認証・入力仕様の実装(開発者向け)            |
+| [docs/dev/agent-runner-internals.md](docs/dev/agent-runner-internals.md)   | AIエージェントの自動運用の仕組み(開発者向け)             |
+| [docs/dev/command-exec-internals.md](docs/dev/command-exec-internals.md)   | リモート実行の実装上の決めごと(開発者向け)               |
+| [CONTRIBUTING.md](CONTRIBUTING.md)                                         | 開発規約(ブランチ・コミット・PR・コーディングルール)     |
+| [site/index.html](site/index.html)                                         | 紹介サイト(日英)。規約は development.md                  |
+| [SECURITY.md](SECURITY.md)                                                 | 脆弱性の報告方法                                         |
+
+# 開発規約
+
+ブランチ・コミット・PR・コーディングルールは [CONTRIBUTING.md](CONTRIBUTING.md) にまとめている。作業を始める前に読んで従う。
+
+# 画面の動作確認
+
+- 画面の動作確認は必要最低限とする。軽微な修正では不要。
+- ブラウザはヘッドレスで操作する(DISPLAY 無し)
+- 開発サーバーは必ず `http://localhost:3000`。`BETTER_AUTH_URL` が localhost:3000 固定のため、別ポートでは認証の POST が origin チェックで 403 になる
+- 既に `pnpm dev` が起動している場合は再利用し、再起動しない。自分で起動した場合は確認が終わったら停止する
+- ログインはメールOTP。OTP は `verification` テーブル(`sign-in-otp-<小文字メール>`)から取得する
+- 開発サーバーのログは `.work/dev-server.log`、スクリーンショットは `.work/playwright` に出力する
+
+# ロケールの構成ファイル
+
+- src/locale/index.ts
+- src/locale/lang-ja.ts
+- src/locale/lang-en.ts
+
+# コードレビュー除外ファイル
+
+`.coderabbit.yaml` の `path_filters` と揃える。
+
+- `src/generated/**`
+- `prisma/migrations/**`
+- `**/*.lock`
+
+# バージョンとリリース
+
+- リリース済みの version は remote のタグ(`v<version>` / `stable`)が正。`pnpm release:version` で確認する
+- feature ブランチを作ったら `pnpm release:version --bump` を実行する。version が上がった場合は、それだけを最初のコミットにする(例: `v1.0.2 start (DEVUNTU-1)`)
+  - リリースチケット(ボードの AI 向けコンテキスト)は、上げた後の version で探す
+  - リリース済みの version のままでは PR の CI と edge のビルドが失敗する
+- edge のビルドは人が行う
+
+# PR作成前のセルフレビュー
+
+- PRを作成する前に、main との差分をセルフレビューする
+- 指摘は修正するか、修正しない理由を判断してから PR を出す。修正しなかった指摘とその理由は PR 本文に書く
+- セルフレビューで修正した場合は、`pnpm lint` / `pnpm typecheck` / `pnpm test` を再実行してから PR を出す
+- コードレビュー除外ファイル(上記)は対象外とする
+
+# PRレビューへの返信
+
+- レビュー指摘に対する返信は、**対応内容をコミットしてリモートへプッシュした後**に行う
+  - レビューツール(CodeRabbit等)はリモートの状態を見るため、作業ツリーを直しただけで「修正しました」と返信すると事実と食い違う
+  - 「コミット済みだが未プッシュ」も同様にNG
+- 修正しない指摘への反論や質問への回答も、作業ツリーに未反映の変更が残っている状態では行わない(先にコミット&プッシュするか、変更を退避する)
+
+# Next.js
+
+`next dev` が下のブロックを管理する。ブロックの中は編集しない。
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 ## This is NOT the Next.js you know
