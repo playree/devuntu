@@ -194,6 +194,12 @@ export const startAgentRun = async (
   }
 
   return prisma.$transaction(async (tx) => {
+    /**
+     * 対応中へ移すときのレーンの並べ替えを直列にする。ランナー行・チケット行より先に取る(lockKanbanLane を参照)。
+     * ランナー行を握ったままレーンを待つと、レーン → チケット行(並べ替え)・チケット行 → ランナー行(終了報告)と循環して待ち合う。
+     * 移すかどうかは行ロック後のステータスで決めるので、ここでは常に取る
+     */
+    await lockKanbanLane(tx, target.id, 'doing')
     const limitedDaily = runner.dailyRunLimit > AGENT_UNLIMITED_DAILY_RUNS
     const limitedBudget = hasMonthlyBudget(runner)
     if (limitedDaily || limitedBudget) {
@@ -212,11 +218,6 @@ export const startAgentRun = async (
       }
     }
 
-    /**
-     * 対応中へ移すときのレーンの並べ替えを直列にする。チケット行より先に取る(lockKanbanLane を参照)。
-     * 移すかどうかは行ロック後のステータスで決めるので、ここでは常に取る
-     */
-    await lockKanbanLane(tx, target.id, 'doing')
     // Webhook からのきっかけの追加と直列にし、待ち行列を作った後に届いたきっかけは次の回へ回す
     await lockTicketRow(tx, target.id)
     // 同じトークンのランナーが複数台で同じタスクを受け取っても、実行は 1 件に限る

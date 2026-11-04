@@ -712,6 +712,13 @@ describe('startAgentRun', () => {
     expect(result).toEqual({ ok: true, run: { id: 'run1', displayId: 'ABC-42' } })
     expect(prisma.$transaction).toHaveBeenCalledTimes(1)
     expect(agentRun.count.mock.invocationCallOrder[0]).toBeLessThan(agentRun.create.mock.invocationCallOrder[0])
+    // レーンはランナー行より先に取る(ランナー行を握ったままレーンを待つと、終了報告・並べ替えと循環して待ち合う)
+    const runnerLock = vi
+      .mocked(prisma.$queryRaw)
+      .mock.calls.findIndex(([sql]) => (sql as unknown as string[]).join('').includes('"agent_runner"'))
+    expect(vi.mocked(lockKanbanLane).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(prisma.$queryRaw).mock.invocationCallOrder[runnerLock],
+    )
   })
 })
 
