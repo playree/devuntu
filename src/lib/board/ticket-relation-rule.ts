@@ -37,6 +37,9 @@ export const MAX_CHILD_ORDER = 999
 /** 関係の相手が見つからない(別ボード・存在しない・自分自身)。画面で入力欄のエラーとして出す */
 export const RELATION_TARGET_INVALID = 'RELATION_TARGET_INVALID'
 
+/** 親にしようとしたチケットが子孫にあたり、親子が循環する */
+export const RELATION_CYCLE = 'RELATION_CYCLE'
+
 /** 既に同じ関係がある */
 export const RELATION_ALREADY_EXISTS = 'RELATION_ALREADY_EXISTS'
 

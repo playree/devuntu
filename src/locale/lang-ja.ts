@@ -946,4 +946,5 @@ export const ja: DefaultLocaleItems = {
   '@invalid_display_id': '表示ID(例: ABC-12)で指定してください',
   '@relation_target_invalid': '同じボードの別のチケットを指定してください',
   '@relation_already_exists': '既に同じ関係があります',
+  '@relation_cycle': '親子関係が循環するため設定できません',
 }

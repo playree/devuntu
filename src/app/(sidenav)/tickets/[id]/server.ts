@@ -238,21 +238,23 @@ export const updateTicketAgentMode = safeAuthAction
   .metadata({ actionName: 'updateTicketAgentMode', role: 'user' })
   .inputSchema(scUpdateTicketAgentMode)
   .action(async ({ ctx: { user }, parsedInput: { id, agentMode } }) => {
-    const access = await assertTicketAccess(user, id, 'agentMode')
-    // 担当がエージェントでなくなった直後などに、意味を持たない値が残らないようにする
-    if (!access.assigneeIsAgent) {
-      throw errInvalidOperation()
-    }
+    await prisma.$transaction(async (tx) => {
+      const access = await assertTicketAccess(user, id, 'agentMode', tx)
+      // 担当がエージェントでなくなった直後などに、意味を持たない値が残らないようにする
+      if (!access.assigneeIsAgent) {
+        throw errInvalidOperation()
+      }
 
-    // 選択待ちへ戻したら処理状態も消す(残すと履歴として誤読される)
-    // 担当者がエージェントであることを更新条件に含め、確認〜更新の間に担当者が変わっても不整合が残らないようにする
-    const result = await prisma.ticket.updateMany({
-      where: { id, assignee: { isAgent: true } },
-      data: { agentMode, ...(agentMode === null && { agentState: null }) },
+      // 選択待ちへ戻したら処理状態も消す(残すと履歴として誤読される)
+      // 承認者かどうかは担当者ごとに決まるので、判定した担当者を更新条件に含め、確認〜更新の間に担当者が替わったら更新しない
+      const result = await tx.ticket.updateMany({
+        where: { id, assigneeId: access.assigneeId, assignee: { isAgent: true } },
+        data: { agentMode, ...(agentMode === null && { agentState: null }) },
+      })
+      if (result.count === 0) {
+        throw errInvalidOperation()
+      }
     })
-    if (result.count === 0) {
-      throw errInvalidOperation()
-    }
 
     logger.info({ userId: user.id, id, agentMode }, 'ticket agent mode updated')
     return { id, agentMode }

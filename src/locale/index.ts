@@ -857,6 +857,7 @@ export type LocaleItemError =
   | '@invalid_display_id'
   | '@relation_target_invalid'
   | '@relation_already_exists'
+  | '@relation_cycle'
 export const el = (item: LocaleItemError) => item
 
 export type LocaleItem = LocaleItemBase | LocaleItemError

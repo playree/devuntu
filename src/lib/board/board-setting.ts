@@ -13,6 +13,7 @@ import { prisma, type Db } from '../prisma'
 import { getSlackSettings, hasSlackCredentials } from '../slack/slack-account'
 import { listSlackChannels } from '../slack/slack-server'
 import { detachBoardAttachments, listBoardAttachmentKeys, removeAttachmentByKey } from '../storage/attachment'
+import { findAttachmentReference } from '../storage/attachment-ref'
 import { countTicketsByBoard } from './board'
 import { assertBoardAccess, assertTeamBoard, isAdminActor, type Actor } from './board-access'
 import { reserveBoardKey, rethrowDuplicatedBoardKey } from './board-key'
@@ -206,6 +207,10 @@ export const setBoardNotify = async (
  *
  * 回収されるまでの間 `boardId` は null(全ログインユーザーへ配信してよい扱い)になるが、
  * キーは推測できず、URLを知っているのは削除したボードのメンバーだけなので実害は無い。
+ *
+ * 同じ添付を他ボードのチケットなどにも貼っている場合があるので、実体を消す前に参照を確かめ、
+ * 参照が残っているものは `boardId` が null のまま残す(貼った先のボードのメンバーもURLを知ることになるが、
+ * 推測できないキーなのは変わらない)。参照が外れれば定期の掃除が回収する。
  */
 export const deleteBoard = async (actor: Actor, id: string) => {
   const keys = await prisma.$transaction(async (tx) => {
@@ -220,11 +225,26 @@ export const deleteBoard = async (actor: Actor, id: string) => {
 
   // ロールバックで実データを失わないよう、コミットしてから実体を消す
   let removed = 0
+  let kept = 0
   for (const key of keys) {
+    if (await isAttachmentReferenced(key)) {
+      kept += 1
+      continue
+    }
     if (await removeAttachmentByKey(key)) {
       removed += 1
     }
   }
 
-  logger.info({ userId: actor.id, id, attachments: keys.length, removed }, 'board deleted')
+  logger.info({ userId: actor.id, id, attachments: keys.length, removed, kept }, 'board deleted')
+}
+
+/** 添付がまだどこかから参照されているか。確かめられなかった場合は消さない側に倒し、判断を定期の掃除に任せる */
+const isAttachmentReferenced = async (key: string): Promise<boolean> => {
+  try {
+    return (await findAttachmentReference(key)) !== null
+  } catch (err) {
+    logger.error({ err, key }, 'failed to check attachment reference')
+    return true
+  }
 }

@@ -2,7 +2,7 @@
  * 添付キーの参照元検索の単体テスト
  *
  * 「参照されている」の判断を誤ると実データを消してしまうので、
- * 7つの参照元それぞれを拾えること、本文のページ送りが取りこぼさないことを確認する。
+ * 8つの参照元(子チケットの起票案を含む)それぞれを拾えること、本文のページ送りが取りこぼさないことを確認する。
  */
 
 import { ATTACHMENT_SCAN_BATCH } from '@/lib/maintenance/maintenance'
@@ -52,8 +52,23 @@ beforeEach(() => {
   ]) {
     vi.mocked(model.findFirst).mockResolvedValue(null)
   }
+  vi.mocked(prisma.$queryRaw).mockResolvedValue([] as never)
   getString.mockResolvedValue(null)
 })
+
+/** 子チケットの本文に画像を含む起票案 */
+const proposalWith = (key: string) => ({
+  children: [
+    { title: '子1', content: '画像なし', order: 1, mode: null, acceptanceCriteria: [] },
+    { title: '子2', content: `![](${toUploadUrl(key)})`, order: 2, mode: 'plan', acceptanceCriteria: [] },
+  ],
+})
+
+/** コメント本文の走査と起票案の走査を、where の違いで答え分ける */
+const mockCommentRows = (rows: { content?: unknown[]; proposal?: unknown[] }) => {
+  vi.mocked(prisma.ticketComment.findMany).mockImplementation((async (args: { where: object }) =>
+    'proposal' in args.where ? (rows.proposal ?? []) : (rows.content ?? [])) as never)
+}
 
 describe('collectReferencedUploadKeys', () => {
   it('本文・テンプレート・アバター・アイコン・お知らせのすべてから集める', async () => {
@@ -81,6 +96,35 @@ describe('collectReferencedUploadKeys', () => {
     const keys = await collectReferencedUploadKeys()
 
     expect([...keys].sort()).toEqual([keyA, keyB].sort())
+  })
+
+  it('子チケットの起票案の本文からも集める(承認されるとチケット本文になる)', async () => {
+    mockCommentRows({
+      content: [{ id: 'c1', content: `![](${toUploadUrl(keyA)})` }],
+      proposal: [{ id: 'c2', proposal: proposalWith(keyB) }],
+    })
+
+    const keys = await collectReferencedUploadKeys()
+
+    expect([...keys].sort()).toEqual([keyA, keyB].sort())
+  })
+
+  it('1ページに収まらない起票案もカーソルで続きを引く', async () => {
+    const first = Array.from({ length: ATTACHMENT_SCAN_BATCH }, (_, i) => ({
+      id: `c${String(i).padStart(4, '0')}`,
+      proposal: i === 0 ? proposalWith(keyA) : { children: [] },
+    }))
+    vi.mocked(prisma.ticketComment.findMany)
+      .mockResolvedValueOnce([] as never)
+      .mockResolvedValueOnce(first as never)
+      .mockResolvedValueOnce([{ id: 'zzz', proposal: proposalWith(keyB) }] as never)
+
+    const keys = await collectReferencedUploadKeys()
+
+    expect(vi.mocked(prisma.ticketComment.findMany).mock.calls[2][0]?.cursor).toEqual({
+      id: first[first.length - 1].id,
+    })
+    expect(keys.has(keyA) && keys.has(keyB), '両ページのキーが揃う').toBe(true)
   })
 
   it('1ページに収まらない本文はカーソルで続きを引く', async () => {
@@ -117,6 +161,14 @@ describe('findAttachmentReference', () => {
   it('コメント本文の参照を見つける', async () => {
     vi.mocked(prisma.ticketComment.findFirst).mockResolvedValue({ id: 'c1' } as never)
     expect(await findAttachmentReference(keyA)).toBe('comment')
+  })
+
+  it('子チケットの起票案の参照を、JSON をテキストにして探す', async () => {
+    vi.mocked(prisma.$queryRaw).mockResolvedValue([{ id: 'c1' }] as never)
+    expect(await findAttachmentReference(keyA)).toBe('comment')
+
+    const [, url] = vi.mocked(prisma.$queryRaw).mock.calls[0]
+    expect(url).toBe(toUploadUrl(keyA))
   })
 
   it('チケットテンプレート本文の参照を見つける', async () => {

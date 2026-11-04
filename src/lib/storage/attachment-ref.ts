@@ -5,10 +5,14 @@
  * 本文(Markdown)の中の `/api/upload/<キー>` と、URLをそのまま持つ列の2種類があるので、
  * 「参照されている」の判断はこのファイルに閉じる。
  *
+ * 子チケットの起票案(`ticket_comment.proposal`)は JSON 列で、承認されると各子の本文がチケット本文になる。
+ * 形が崩れた起票案も取りこぼさないよう、項目を問わず JSON の文字列全体を本文と同じように扱う。
+ *
  * 本文側の抽出は `extractUploadKeys()` をそのまま使う。保存する側と同じ関数を通すことで、
  * 掃除する側の「参照されている」が書き込む側の定義とずれない。
  */
 
+import { Prisma } from '@/generated/prisma/client'
 import { getString } from '../kvs'
 import { ATTACHMENT_SCAN_BATCH } from '../maintenance/maintenance'
 import { prisma } from '../prisma'
@@ -62,6 +66,29 @@ const collectFromContent = async (
   }
 }
 
+/** 子チケットの起票案から集める。ページ送りは {@link collectFromContent} と同じ */
+const collectFromProposals = async (keys: Set<string>): Promise<void> => {
+  let cursor: string | undefined
+  for (;;) {
+    const rows = await prisma.ticketComment.findMany({
+      where: { proposal: { not: Prisma.DbNull } },
+      select: { id: true, proposal: true },
+      orderBy: { id: 'asc' },
+      take: ATTACHMENT_SCAN_BATCH,
+      ...(cursor && { cursor: { id: cursor }, skip: 1 }),
+    })
+    for (const row of rows) {
+      for (const key of extractUploadKeys(JSON.stringify(row.proposal ?? null))) {
+        keys.add(key)
+      }
+    }
+    if (rows.length < ATTACHMENT_SCAN_BATCH) {
+      return
+    }
+    cursor = rows[rows.length - 1].id
+  }
+}
+
 /** URL文字列をそのまま持つ列から、アップロードのキーだけを取り出す */
 const toKeys = (urls: (string | null)[]): string[] =>
   urls.filter((url): url is string => !!url && isUploadUrl(url)).map(toUploadKey)
@@ -77,6 +104,7 @@ export const collectReferencedUploadKeys = async (): Promise<Set<string>> => {
 
   await collectFromContent((args) => prisma.ticket.findMany(args), keys)
   await collectFromContent((args) => prisma.ticketComment.findMany(args), keys)
+  await collectFromProposals(keys)
   await collectFromContent((args) => prisma.ticketTemplate.findMany(args), keys)
   // ボードノートは画面のエディタでは画像を貼れないが、MCP では upload_image の URL を本文に書ける
   await collectFromContent((args) => prisma.boardNote.findMany(args), keys)
@@ -117,6 +145,15 @@ export const findAttachmentReference = async (key: string): Promise<AttachmentRe
     return 'ticket'
   }
   if (await prisma.ticketComment.findFirst({ where: { content: { contains: url } }, select: { id: true } })) {
+    return 'comment'
+  }
+  // JSON 列は Prisma の部分一致で文字列全体を検索できないので、テキストにして探す(LIKE はキーの `_` が任意の1文字になるため strpos)
+  const proposals = await prisma.$queryRaw<{ id: string }[]>`
+    SELECT "id" FROM "ticket_comment"
+    WHERE "proposal" IS NOT NULL AND strpos("proposal"::text, ${url}) > 0
+    LIMIT 1
+  `
+  if (proposals.length > 0) {
     return 'comment'
   }
   if (await prisma.ticketTemplate.findFirst({ where: { content: { contains: url } }, select: { id: true } })) {

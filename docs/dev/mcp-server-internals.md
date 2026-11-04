@@ -214,7 +214,8 @@ Announce: if the result is worth telling all board members (e.g. a release), pro
 - `search_tickets` の `assignee` は ユーザーID / `me`(自分) / `none`(未割り当て)。`limit` は既定20・最大50
 - `search_tickets` の `relatedTo` は表示ID。`relation` は `child`(直下の子) / `related`(関連) / `all`(両方。既定)
 - 親子・関連は**同じボードのチケット同士だけ**。`parentId` / `relatedTicketId` は表示ID・チケットID・番号だけ(`12`)のいずれでも受け、
-  別ボードや存在しないチケット、自分自身は `RELATION_TARGET_INVALID`、既にある関連は `RELATION_ALREADY_EXISTS` になる
+  別ボードや存在しないチケット、自分自身は `RELATION_TARGET_INVALID`、既にある関連は `RELATION_ALREADY_EXISTS`、
+  子孫を親にする(親子が循環する)指定は `RELATION_CYCLE` になる
 - `update_ticket` の `parentId` は `null` で親を外す。親は1つだけで、別の親を指定すると置き換わる。
   `childOrder` は親の下での順番(1〜999)で、同じ値の子は番号順に並ぶ。省略すると兄弟の末尾に入る。
   画面で子を並べ替えると、兄弟全体が1から振り直される(同じ順番のまとまりは保ち、動かした子だけが単独の順番になる)。
