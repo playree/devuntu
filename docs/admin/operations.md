@@ -245,10 +245,7 @@ docker compose run --rm tools maintenance off     # 解除する
 `off` / `dry-run` のままにしている環境では、使われなくなった添付が溜まり続ける。
 
 ボードを削除したときのログ(`board deleted`)の `attachments` と `removed` の件数が食い違っていても、
-残りはこの掃除が回収するので手当ては要らない。`kept` は、他のボードのチケットなどからも参照されていて
-実体を残した件数(参照が外れればこの掃除が回収する)。ただし参照の確認自体に失敗した場合も、1件も消さずに
-全件を `kept` に数える。`kept` が `attachments` と同じ数のときは、直前に `failed to collect attachment references`
-のエラーログが出ていないかを確認する(出ていても、残った添付はこの掃除が回収する)。
+残りはこの掃除が回収するので手当ては要らない。
 
 ### アバターの配信
 
