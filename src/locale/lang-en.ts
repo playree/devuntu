@@ -719,6 +719,7 @@ Please copy and use the connection information above.
   msg_calendar_share_unavailable: 'This shared calendar is currently unavailable.',
   msg_calendar_share_url_rotated: 'A new share URL has been issued. The previous URL is no longer valid.',
   msg_cannot_delete_last_admin: 'Cannot delete the last admin.',
+  msg_comment_has_others_replies: 'This comment cannot be deleted because others have replied to it.',
   msg_communication_error: 'Failed to communicate with an external service. Please try again later.',
   msg_confirm_archive_board: 'Archive ${target}.',
   msg_confirm_delete_board: 'Delete ${target}. All tickets and comments in this board will also be deleted.',

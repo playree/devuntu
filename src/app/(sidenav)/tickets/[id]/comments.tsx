@@ -193,6 +193,7 @@ export const TicketComments: FC<{
             boardId={ticket.boardId}
             mentionCandidates={mentionCandidates}
             canDelete={ticket.canDelete}
+            hasOthersReplies={comment.replies.some((reply) => !reply.isMine)}
             isTarget={commentAnchorId(comment.id) === targetId}
             refresh={refresh}
             footer={decisionFooter(comment)}

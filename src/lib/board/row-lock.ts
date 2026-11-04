@@ -20,3 +20,11 @@ export const lockBoardRow = async (tx: Prisma.TransactionClient, boardId: string
 export const lockTicketRow = async (tx: Prisma.TransactionClient, ticketId: string): Promise<void> => {
   await tx.$queryRaw`SELECT "id" FROM "ticket" WHERE "id" = ${ticketId} FOR UPDATE`
 }
+
+/**
+ * コメント行のロック。返信の追加は外部キーで親の行に `FOR KEY SHARE` を取るので、
+ * 親の返信を数えてから削除するまでの間に返信が付くのを防げる
+ */
+export const lockTicketCommentRow = async (tx: Prisma.TransactionClient, commentId: string): Promise<void> => {
+  await tx.$queryRaw`SELECT "id" FROM "ticket_comment" WHERE "id" = ${commentId} FOR UPDATE`
+}

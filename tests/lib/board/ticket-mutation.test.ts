@@ -15,7 +15,7 @@ import {
   type TicketAccess,
 } from '@/lib/board/board-access'
 import { assertBoardAssignee, getBoardMentionCandidates, getTicketMentionCandidates } from '@/lib/board/board-member'
-import { lockTicketRow } from '@/lib/board/row-lock'
+import { lockTicketCommentRow, lockTicketRow } from '@/lib/board/row-lock'
 import { assertTagIdsInBoard, syncTicketTags } from '@/lib/board/tag'
 import { recordTicketActivities } from '@/lib/board/ticket-activity'
 import { syncTicketCriteria } from '@/lib/board/ticket-criterion'
@@ -31,6 +31,7 @@ import {
   updateTicket,
   type UpdateTicketInput,
 } from '@/lib/board/ticket-mutation'
+import { COMMENT_HAS_OTHERS_REPLIES } from '@/lib/board/ticket-permission'
 import {
   assertReplyTarget,
   lockKanbanLane,
@@ -74,6 +75,7 @@ const fakeTx = vi.hoisted(() => ({
     update: vi.fn(),
     delete: vi.fn(),
     findUnique: vi.fn(),
+    count: vi.fn(),
   },
 }))
 
@@ -95,7 +97,7 @@ vi.mock('@/lib/board/board-member', () => ({
   getTicketMentionCandidates: vi.fn(async () => []),
 }))
 
-vi.mock('@/lib/board/row-lock', () => ({ lockTicketRow: vi.fn() }))
+vi.mock('@/lib/board/row-lock', () => ({ lockTicketRow: vi.fn(), lockTicketCommentRow: vi.fn() }))
 
 vi.mock('@/lib/board/ticket-write', () => ({
   assertReplyTarget: vi.fn(),
@@ -263,6 +265,7 @@ beforeEach(() => {
   fakeTx.user.findUnique.mockResolvedValue({ name: '担当' })
   fakeTx.tag.findMany.mockResolvedValue([])
   fakeTx.ticketComment.create.mockResolvedValue({ id: COMMENT_ID })
+  fakeTx.ticketComment.count.mockResolvedValue(0)
   vi.mocked(moveTicketToLane).mockResolvedValue({ id: TICKET_ID, status: 'done', order: 0 })
 })
 
@@ -825,21 +828,23 @@ describe.each(routes)('コメント更新: %s', (_label, route) => {
 })
 
 /**
- * [投稿者, チケットを削除できる権限(canDelete), 削除できるか]
+ * [投稿者, チケットを削除できる権限(canDelete), 他人の返信の数, 削除できるか]
  * チケット削除と違い MCP 固有の追加制限は無いので、全経路で同じ期待値になる
  */
-const deleteCommentTable: [Who, boolean, boolean][] = [
-  ['self', false, true],
-  ['self', true, true],
-  ['other', true, true],
-  ['other', false, false],
+const deleteCommentTable: [Who, boolean, number, boolean][] = [
+  ['self', false, 0, true],
+  ['self', false, 1, false],
+  ['self', true, 1, true],
+  ['other', true, 1, true],
+  ['other', false, 0, false],
 ]
 
 describe.each(routes)('コメント削除: %s', (_label, route) => {
   it.each(deleteCommentTable)(
-    '投稿者 %s・canDelete %s のコメント(削除できる: %s)',
-    async (author, canDelete, allowed) => {
+    '投稿者 %s・canDelete %s・他人の返信 %i 件のコメント(削除できる: %s)',
+    async (author, canDelete, othersReplies, allowed) => {
       fakeTx.ticketComment.findUnique.mockResolvedValue({ ticketId: TICKET_ID, authorId: idOf(author, route.actor) })
+      fakeTx.ticketComment.count.mockResolvedValue(othersReplies)
       givenAccess({ canDelete })
 
       const result = route.deleteComment(COMMENT_ID)
@@ -875,6 +880,40 @@ describe.each(routes)('コメント削除: %s', (_label, route) => {
     givenAccess({ createdById: OTHER, canDelete: true })
 
     await expect(route.deleteComment(COMMENT_ID)).resolves.toEqual({ id: COMMENT_ID })
+  })
+
+  it('他人の返信が付いた自分のコメントは、理由が分かるエラーにして返信ごと残す', async () => {
+    fakeTx.ticketComment.findUnique.mockResolvedValue({ ticketId: TICKET_ID, authorId: route.actor.id })
+    fakeTx.ticketComment.count.mockResolvedValue(1)
+    givenAccess({ canDelete: false })
+
+    await expect(route.deleteComment(COMMENT_ID)).rejects.toMatchObject({ errorType: COMMENT_HAS_OTHERS_REPLIES })
+    expect(fakeTx.ticketComment.delete).not.toHaveBeenCalled()
+  })
+
+  it('他人の返信は、退会者(authorId = null)のものも含めて、コメント行をロックしてから数える', async () => {
+    fakeTx.ticketComment.findUnique.mockResolvedValue({ ticketId: TICKET_ID, authorId: route.actor.id })
+    givenAccess({ canDelete: false })
+
+    await route.deleteComment(COMMENT_ID)
+
+    expect(fakeTx.ticketComment.count).toHaveBeenCalledWith({
+      where: { parentId: COMMENT_ID, OR: [{ authorId: null }, { authorId: { not: route.actor.id } }] },
+    })
+    expect(lockTicketCommentRow).toHaveBeenCalledWith(fakeTx, COMMENT_ID)
+    expect(vi.mocked(lockTicketCommentRow).mock.invocationCallOrder[0]).toBeLessThan(
+      fakeTx.ticketComment.count.mock.invocationCallOrder[0],
+    )
+  })
+
+  it('チケットを削除できる人は返信を数えずに削除する(返信ごと消える)', async () => {
+    fakeTx.ticketComment.findUnique.mockResolvedValue({ ticketId: TICKET_ID, authorId: route.actor.id })
+    givenAccess({ canDelete: true })
+
+    await route.deleteComment(COMMENT_ID)
+
+    expect(fakeTx.ticketComment.count).not.toHaveBeenCalled()
+    expect(lockTicketCommentRow).not.toHaveBeenCalled()
   })
 })
 

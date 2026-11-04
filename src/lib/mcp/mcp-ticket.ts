@@ -434,6 +434,7 @@ export const updateTicketCommentForMcp = async (auth: ResourceAuth, commentId: s
 
 /**
  * コメント削除(投稿者本人、またはチケットを削除できる権限を持つ人)。
+ * 他人の返信が付いたコメントは、チケットを削除できる人だけが削除できる。
  * MCP限定の追加制限(canMcpDeleteTicket)は挟まず、Web版の deleteTicketComment と同じ。
  */
 export const deleteTicketCommentForMcp = async (auth: ResourceAuth, commentId: string) => {

@@ -311,7 +311,8 @@ export const updateTicketComment = safeAuthAction
   })
 
 /**
- * コメント削除(投稿者本人、またはチケットを削除できる権限を持つ人)
+ * コメント削除(投稿者本人、またはチケットを削除できる権限を持つ人)。
+ * 他人の返信が付いたコメントは、チケットを削除できる人だけが削除できる
  */
 export const deleteTicketComment = safeAuthAction
   .metadata({ actionName: 'deleteTicketComment', role: 'user' })
