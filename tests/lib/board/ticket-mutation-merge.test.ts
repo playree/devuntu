@@ -7,7 +7,7 @@
 import { lockTicketRow } from '@/lib/board/row-lock'
 import { hasMergeHeld, recordTicketActivities } from '@/lib/board/ticket-activity'
 import { completeTicketByMerge } from '@/lib/board/ticket-mutation'
-import { moveTicketToLane } from '@/lib/board/ticket-write'
+import { lockKanbanLane, moveTicketToLane } from '@/lib/board/ticket-write'
 import { enqueueTicketCompletedByMerge, enqueueTicketMergeHeld } from '@/lib/notify/notify-trigger'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -18,6 +18,7 @@ vi.mock('@/lib/board/row-lock', () => ({ lockTicketRow: vi.fn() }))
 
 vi.mock('@/lib/board/ticket-write', () => ({
   assertReplyTarget: vi.fn(),
+  lockKanbanLane: vi.fn(),
   moveTicketToLane: vi.fn(),
   nextTicketNumber: vi.fn(),
   reassignContentAttachments: vi.fn(),
@@ -68,6 +69,11 @@ describe('completeTicketByMerge: 完了にする', () => {
     expect(enqueueTicketCompletedByMerge).toHaveBeenCalledWith({ ticketId: TICKET_ID, pullRequest: PR }, prisma)
     expect(vi.mocked(lockTicketRow).mock.invocationCallOrder[0]).toBeLessThan(
       vi.mocked(prisma.ticket.findUnique).mock.invocationCallOrder[0],
+    )
+    // 完了レーンのロックはチケット行より先に取る(行を握ったままレーンを待つとデッドロックする)
+    expect(lockKanbanLane).toHaveBeenCalledWith(prisma, TICKET_ID, 'done')
+    expect(vi.mocked(lockKanbanLane).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(lockTicketRow).mock.invocationCallOrder[0],
     )
   })
 

@@ -11,7 +11,7 @@ import type { AgentTaskState, TicketCommentDecision, TicketCommentType, TicketSt
 import { assertTicketAccess, type Actor } from '../board/board-access'
 import { lockBoardRow, lockTicketRow } from '../board/row-lock'
 import { insertComment } from '../board/ticket-mutation'
-import { moveTicketToLane } from '../board/ticket-write'
+import { lockKanbanLane, moveTicketToLane } from '../board/ticket-write'
 import { errInvalidOperation } from '../error'
 import { enqueueTicketMoved } from '../notify/notify-trigger'
 import { prisma, type Db } from '../prisma'
@@ -140,10 +140,14 @@ export const decideAgentComment = async (actor: Actor, input: DecideAgentComment
   prisma.$transaction(async (tx) => {
     const target = await tx.ticketComment.findUnique({
       where: { id: input.commentId },
-      select: { id: true, ticketId: true, parentId: true, proposal: true },
+      select: { id: true, ticketId: true, parentId: true, type: true, proposal: true },
     })
     if (!target) {
       throw errInvalidOperation()
+    }
+    // report の承認は完了へ移すので、同じレーンへの並べ替えを直列にする。チケット行より先に取る(lockKanbanLane を参照)
+    if (input.decision === 'approved' && target.type === 'report') {
+      await lockKanbanLane(tx, target.ticketId, 'done')
     }
     const access = await assertTicketAccess(actor, target.ticketId, 'edit', tx)
 

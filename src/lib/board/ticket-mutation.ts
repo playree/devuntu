@@ -193,6 +193,10 @@ export const updateTicket = async (
   const { assigneeId, tagIds, dueDate, status, criteria, parentId, childOrder, ...rest } = input
 
   return prisma.$transaction(async (tx) => {
+    // 同じレーンへの並べ替えを直列にする。チケット行より先に取る(lockKanbanLane を参照)
+    if (status !== undefined) {
+      await lockKanbanLane(tx, id, status)
+    }
     await lockTicketRow(tx, id)
     const access = await assertTicketAccess(actor, id, 'edit', tx)
     opts?.authorize?.(access)
@@ -346,6 +350,8 @@ export const completeTicketByMerge = async (
   criteriaCheck: MergeCriteriaCheck,
 ): Promise<boolean> =>
   prisma.$transaction(async (tx) => {
+    // 同じレーンへの並べ替えを直列にする。チケット行より先に取る(lockKanbanLane を参照)
+    await lockKanbanLane(tx, ticketId, 'done')
     await lockTicketRow(tx, ticketId)
     const ticket = await tx.ticket.findUnique({
       where: { id: ticketId },

@@ -18,7 +18,7 @@ import { failStaleAgentRuns, finishAgentRunById, finishAgentTask, startAgentRun 
 import { type AgentRunnerRow } from '@/lib/agent/agent-runner'
 import { pickAgentTasks, resolveAgentTask } from '@/lib/agent/agent-task'
 import { findWaitingTicketIds } from '@/lib/board/ticket-sequence'
-import { moveTicketToLane } from '@/lib/board/ticket-write'
+import { lockKanbanLane, moveTicketToLane } from '@/lib/board/ticket-write'
 import { ClientError } from '@/lib/error'
 import { enqueueAgentRunFinished, enqueueTicketMoved } from '@/lib/notify/notify-trigger'
 import { prisma } from '@/lib/prisma'
@@ -29,6 +29,7 @@ vi.mock('@/lib/notify/notify-trigger', () => ({ enqueueAgentRunFinished: vi.fn()
 
 // レーンの再採番と変更履歴の記録は ticket-write.test.ts で見る。ここでは開始時に対応中へ移すかだけを確かめる
 vi.mock('@/lib/board/ticket-write', () => ({
+  lockKanbanLane: vi.fn(),
   moveTicketToLane: vi.fn(async (_tx, { access, status }) => ({ id: access.ticketId, status, order: 0 })),
 }))
 
@@ -612,6 +613,14 @@ describe('startAgentRun', () => {
       { actorId: 'a1', ticketId: 't1', before: status, after: 'doing' },
       expect.anything(),
     )
+    // 対応中レーンのロックはチケット行より先に取る(行を握ったままレーンを待つとデッドロックする)
+    expect(lockKanbanLane).toHaveBeenCalledWith(expect.anything(), 't1', 'doing')
+    const rowLock = vi
+      .mocked(prisma.$queryRaw)
+      .mock.calls.findIndex(([sql]) => (sql as unknown as string[]).join('').includes('"ticket"'))
+    expect(vi.mocked(lockKanbanLane).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(prisma.$queryRaw).mock.invocationCallOrder[rowLock],
+    )
   })
 
   it.each(['doing', 'done'])('%s のチケットはステータスを変えない', async (status) => {
@@ -703,6 +712,13 @@ describe('startAgentRun', () => {
     expect(result).toEqual({ ok: true, run: { id: 'run1', displayId: 'ABC-42' } })
     expect(prisma.$transaction).toHaveBeenCalledTimes(1)
     expect(agentRun.count.mock.invocationCallOrder[0]).toBeLessThan(agentRun.create.mock.invocationCallOrder[0])
+    // レーンはランナー行より先に取る(ランナー行を握ったままレーンを待つと、終了報告・並べ替えと循環して待ち合う)
+    const runnerLock = vi
+      .mocked(prisma.$queryRaw)
+      .mock.calls.findIndex(([sql]) => (sql as unknown as string[]).join('').includes('"agent_runner"'))
+    expect(vi.mocked(lockKanbanLane).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(prisma.$queryRaw).mock.invocationCallOrder[runnerLock],
+    )
   })
 })
 

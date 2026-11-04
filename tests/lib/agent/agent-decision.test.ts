@@ -13,7 +13,7 @@ import {
 import { applyChildProposal } from '@/lib/agent/agent-proposal'
 import { assertTicketAccess, type TicketAccess } from '@/lib/board/board-access'
 import { insertComment } from '@/lib/board/ticket-mutation'
-import { moveTicketToLane } from '@/lib/board/ticket-write'
+import { lockKanbanLane, moveTicketToLane } from '@/lib/board/ticket-write'
 import { ClientError, errInvalidOperation } from '@/lib/error'
 import { enqueueTicketMoved } from '@/lib/notify/notify-trigger'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -28,7 +28,10 @@ vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockP
 
 vi.mock('@/lib/board/board-access', () => ({ assertTicketAccess: vi.fn() }))
 vi.mock('@/lib/board/ticket-mutation', () => ({ insertComment: vi.fn(async () => ({ id: 'reply-1' })) }))
-vi.mock('@/lib/board/ticket-write', () => ({ moveTicketToLane: vi.fn(async () => ({ status: 'done' })) }))
+vi.mock('@/lib/board/ticket-write', () => ({
+  lockKanbanLane: vi.fn(),
+  moveTicketToLane: vi.fn(async () => ({ status: 'done' })),
+}))
 vi.mock('@/lib/notify/notify-trigger', () => ({ enqueueTicketMoved: vi.fn() }))
 vi.mock('@/lib/agent/agent-proposal', () => ({ applyChildProposal: vi.fn(async () => [{ id: 'child-1' }]) }))
 
@@ -189,7 +192,7 @@ describe('decideAgentComment', () => {
     target: { id: string; parentId: string | null } = { id: 'c1', parentId: null },
     proposal: unknown = null,
   ) => {
-    fakeTx.ticketComment.findUnique.mockResolvedValue({ ...target, ticketId: 't1', proposal })
+    fakeTx.ticketComment.findUnique.mockResolvedValue({ ...target, ticketId: 't1', type, proposal })
     fakeTx.ticket.findUniqueOrThrow.mockResolvedValue({
       id: 't1',
       assigneeId: AGENT,
@@ -214,6 +217,7 @@ describe('decideAgentComment', () => {
     })
     expect(fakeTx.ticket.update).not.toHaveBeenCalled()
     expect(moveTicketToLane).not.toHaveBeenCalled()
+    expect(lockKanbanLane).not.toHaveBeenCalled()
   })
 
   it('起票案付きのプランの承認で子チケットを起票する', async () => {
@@ -268,6 +272,12 @@ describe('decideAgentComment', () => {
       { actorId: 'u1', ticketId: 't1', before: 'doing', after: 'done' },
       fakeTx,
     )
+    // 完了レーンのロックはチケット行より先に取る(行を握ったままレーンを待つとデッドロックする)
+    expect(lockKanbanLane).toHaveBeenCalledWith(fakeTx, 't1', 'done')
+    const rowLock = fakeTx.$queryRaw.mock.calls.findIndex(([sql]) => (sql as string[]).join('').includes('FOR UPDATE'))
+    expect(vi.mocked(lockKanbanLane).mock.invocationCallOrder[0]).toBeLessThan(
+      fakeTx.$queryRaw.mock.invocationCallOrder[rowLock],
+    )
   })
 
   it('変更前のステータスはロック後に読み直した値を使う', async () => {
@@ -292,6 +302,7 @@ describe('decideAgentComment', () => {
 
     expect(fakeTx.ticket.update).toHaveBeenCalledWith({ where: { id: 't1' }, data: { agentState: 'planned' } })
     expect(moveTicketToLane).not.toHaveBeenCalled()
+    expect(lockKanbanLane).not.toHaveBeenCalled()
   })
 
   it('返答待ちでないコメントには返答できない', async () => {

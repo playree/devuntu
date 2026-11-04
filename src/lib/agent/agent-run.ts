@@ -10,7 +10,7 @@ import type { AgentRunAction, AgentRunStatus, AgentTaskState, TicketStatus } fro
 import { lockTicketRow } from '../board/row-lock'
 import { type AgentCriterionReport, assertAgentCriteria, writeAgentCriteria } from '../board/ticket-criterion'
 import { ticketDisplayId } from '../board/ticket-id'
-import { moveTicketToLane } from '../board/ticket-write'
+import { lockKanbanLane, moveTicketToLane } from '../board/ticket-write'
 import { MINUTE_MS, msBefore, nowDate } from '../day'
 import { logger } from '../logger'
 import { MAX_NOTIFY_RECIPIENTS } from '../notify/notify'
@@ -194,6 +194,12 @@ export const startAgentRun = async (
   }
 
   return prisma.$transaction(async (tx) => {
+    /**
+     * 対応中へ移すときのレーンの並べ替えを直列にする。ランナー行・チケット行より先に取る(lockKanbanLane を参照)。
+     * ランナー行を握ったままレーンを待つと、レーン → チケット行(並べ替え)・チケット行 → ランナー行(終了報告)と循環して待ち合う。
+     * 移すかどうかは行ロック後のステータスで決めるので、ここでは常に取る
+     */
+    await lockKanbanLane(tx, target.id, 'doing')
     const limitedDaily = runner.dailyRunLimit > AGENT_UNLIMITED_DAILY_RUNS
     const limitedBudget = hasMonthlyBudget(runner)
     if (limitedDaily || limitedBudget) {
