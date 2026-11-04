@@ -157,7 +157,7 @@ gh release edit vV --draft=false --latest
    - 外したチケット
 3. `update_ticket` で status を done にする
 
-次の version へ上げるのは、次のチケットに着手するときに行う(ここでは上げない。CLAUDE.md の「バージョンとリリース」)。
+次の version へ上げるのは、次のチケットに着手するときに行う(ここでは上げない。AGENTS.md の「バージョンとリリース」)。
 
 ### 1-8. stable 作業のチケットを登録する
 
