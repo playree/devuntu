@@ -952,4 +952,5 @@ Expiration time: 5 minutes
   '@invalid_display_id': 'Enter a display ID (e.g. ABC-12)',
   '@relation_target_invalid': 'Specify another ticket on the same board',
   '@relation_already_exists': 'This relation already exists',
+  '@relation_cycle': 'This would create a parent-child cycle',
 }

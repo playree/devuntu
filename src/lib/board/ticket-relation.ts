@@ -18,6 +18,7 @@ import {
   MAX_CHILD_ORDER,
   normalizeRelatedPair,
   RELATION_ALREADY_EXISTS,
+  RELATION_CYCLE,
   RELATION_TARGET_INVALID,
   type TicketRelationKind,
 } from './ticket-relation-rule'
@@ -55,8 +56,33 @@ const nextChildOrder = async (tx: Prisma.TransactionClient, parentId: string): P
 }
 
 /**
+ * 新しい親の祖先を辿り、子が含まれていれば(= 親が子の子孫なら)RELATION_CYCLE を投げる。
+ *
+ * 祖先は行をロックしてから親を読む。逆向きの親子を同時に設定しても、後から来た側は先行のコミットを待って
+ * その親を読むので循環を見落とさない(互いのロックを待ち合った場合は DB のデッドロック検出でどちらかが失敗する)
+ */
+const assertNotDescendant = async (tx: Prisma.TransactionClient, childId: string, parentId: string) => {
+  // 既存のデータが循環していても止まるよう、辿った祖先を覚えておく
+  const visited = new Set<string>()
+  let ancestorId: string | undefined = parentId
+  while (ancestorId && !visited.has(ancestorId)) {
+    if (ancestorId === childId) {
+      throw errClient(RELATION_CYCLE)
+    }
+    visited.add(ancestorId)
+    await lockTicketRow(tx, ancestorId)
+    const relation: { fromId: string } | null = await tx.ticketRelation.findFirst({
+      where: { type: 'parent', toId: ancestorId },
+      select: { fromId: true },
+    })
+    ancestorId = relation?.fromId
+  }
+}
+
+/**
  * 子の親を設定する(null で外す)。権限判定と相手の解決を済ませた後に同じトランザクション内で呼ぶ。
  * 親は 1 つだけなので、既存の親は置き換える。同じ親のままなら順番だけを変える(未指定なら据え置く)。
+ * 子孫を親にすることはできない(RELATION_CYCLE)。
  */
 export const writeTicketParent = async (
   tx: Prisma.TransactionClient,
@@ -79,6 +105,9 @@ export const writeTicketParent = async (
       await tx.ticketRelation.update({ where: { id: current.id }, data: { order } })
     }
     return
+  }
+  if (parentId) {
+    await assertNotDescendant(tx, childId, parentId)
   }
 
   await tx.ticketRelation.deleteMany({ where: { type: 'parent', toId: childId } })

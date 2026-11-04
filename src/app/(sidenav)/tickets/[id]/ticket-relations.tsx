@@ -20,6 +20,7 @@ import { parseAction } from '@/lib/action/action-client'
 import {
   relatedTicketListPath,
   RELATION_ALREADY_EXISTS,
+  RELATION_CYCLE,
   RELATION_TARGET_INVALID,
   TICKET_CHILD_ADVANCE_LOCALE,
   TICKET_CHILD_ADVANCES,
@@ -220,7 +221,7 @@ const AddRelationForm: FC<{ ticket: Ticket; refresh: () => Promise<void> }> = ({
     setAdding(true)
     try {
       await parseAction(addTicketRelation({ ticketId: ticket.id, target: parsed.data, kind }), {
-        handled: [RELATION_TARGET_INVALID, RELATION_ALREADY_EXISTS],
+        handled: [RELATION_TARGET_INVALID, RELATION_ALREADY_EXISTS, RELATION_CYCLE],
       })
       notify.success(t('msg_saved'))
       setTarget('')
@@ -231,6 +232,8 @@ const AddRelationForm: FC<{ ticket: Ticket; refresh: () => Promise<void> }> = ({
         setError(t('@relation_target_invalid'))
       } else if (e instanceof ClientError && e.errorType === RELATION_ALREADY_EXISTS) {
         setError(t('@relation_already_exists'))
+      } else if (e instanceof ClientError && e.errorType === RELATION_CYCLE) {
+        setError(t('@relation_cycle'))
       }
     } finally {
       setAdding(false)

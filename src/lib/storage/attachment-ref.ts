@@ -5,10 +5,14 @@
  * 本文(Markdown)の中の `/api/upload/<キー>` と、URLをそのまま持つ列の2種類があるので、
  * 「参照されている」の判断はこのファイルに閉じる。
  *
+ * 子チケットの起票案(`ticket_comment.proposal`)は JSON 列で、承認されると各子の本文がチケット本文になる。
+ * 形が崩れた起票案も取りこぼさないよう、項目を問わず JSON の文字列全体を本文と同じように扱う。
+ *
  * 本文側の抽出は `extractUploadKeys()` をそのまま使う。保存する側と同じ関数を通すことで、
  * 掃除する側の「参照されている」が書き込む側の定義とずれない。
  */
 
+import { Prisma } from '@/generated/prisma/client'
 import { getString } from '../kvs'
 import { ATTACHMENT_SCAN_BATCH } from '../maintenance/maintenance'
 import { prisma } from '../prisma'
@@ -24,34 +28,28 @@ export type AttachmentRefSource =
 /** 本文にアップロードURLを含む行だけを対象にする条件 */
 const hasUploadUrl = { content: { contains: UPLOAD_URL_PREFIX } }
 
+/** ページ送りの指定。主キー(uuidv7 = 作成順)のカーソルで送るので、走査中に行が消えてもずれない */
+type PageArgs = { orderBy: { id: 'asc' }; take: number; cursor?: { id: string }; skip?: number }
+
 /**
- * 本文を持つテーブルをページングしながらキーだけを集める。
+ * 行をページングしながら、各行のテキストからキーだけを集める。
  *
- * 本文はページごとに捨てるので、チケットが増えてもメモリに載るのはキーの集合だけになる。
- * ページ送りは主キー(uuidv7 = 作成順)のカーソルで行い、走査中に行が消えてもずれない。
+ * テキストはページごとに捨てるので、チケットが増えてもメモリに載るのはキーの集合だけになる。
  */
-const collectFromContent = async (
-  findMany: (args: {
-    where: typeof hasUploadUrl
-    select: { id: true; content: true }
-    orderBy: { id: 'asc' }
-    take: number
-    cursor?: { id: string }
-    skip?: number
-  }) => Promise<{ id: string; content: string | null }[]>,
+const collectByPage = async <T extends { id: string }>(
+  findPage: (page: PageArgs) => Promise<T[]>,
+  toText: (row: T) => string,
   keys: Set<string>,
 ): Promise<void> => {
   let cursor: string | undefined
   for (;;) {
-    const rows = await findMany({
-      where: hasUploadUrl,
-      select: { id: true, content: true },
+    const rows = await findPage({
       orderBy: { id: 'asc' },
       take: ATTACHMENT_SCAN_BATCH,
       ...(cursor && { cursor: { id: cursor }, skip: 1 }),
     })
     for (const row of rows) {
-      for (const key of extractUploadKeys(row.content ?? '')) {
+      for (const key of extractUploadKeys(toText(row))) {
         keys.add(key)
       }
     }
@@ -61,6 +59,32 @@ const collectFromContent = async (
     cursor = rows[rows.length - 1].id
   }
 }
+
+/** 本文を持つテーブルから集める */
+const collectFromContent = (
+  findMany: (
+    args: { where: typeof hasUploadUrl; select: { id: true; content: true } } & PageArgs,
+  ) => Promise<{ id: string; content: string | null }[]>,
+  keys: Set<string>,
+): Promise<void> =>
+  collectByPage(
+    (page) => findMany({ where: hasUploadUrl, select: { id: true, content: true }, ...page }),
+    (row) => row.content ?? '',
+    keys,
+  )
+
+/** 子チケットの起票案から集める。JSON 列は Prisma の部分一致で絞れないので、起票案のある行をすべて見る */
+const collectFromProposals = (keys: Set<string>): Promise<void> =>
+  collectByPage(
+    (page) =>
+      prisma.ticketComment.findMany({
+        where: { proposal: { not: Prisma.DbNull } },
+        select: { id: true, proposal: true },
+        ...page,
+      }),
+    (row) => JSON.stringify(row.proposal ?? null),
+    keys,
+  )
 
 /** URL文字列をそのまま持つ列から、アップロードのキーだけを取り出す */
 const toKeys = (urls: (string | null)[]): string[] =>
@@ -77,6 +101,7 @@ export const collectReferencedUploadKeys = async (): Promise<Set<string>> => {
 
   await collectFromContent((args) => prisma.ticket.findMany(args), keys)
   await collectFromContent((args) => prisma.ticketComment.findMany(args), keys)
+  await collectFromProposals(keys)
   await collectFromContent((args) => prisma.ticketTemplate.findMany(args), keys)
   // ボードノートは画面のエディタでは画像を貼れないが、MCP では upload_image の URL を本文に書ける
   await collectFromContent((args) => prisma.boardNote.findMany(args), keys)
@@ -117,6 +142,15 @@ export const findAttachmentReference = async (key: string): Promise<AttachmentRe
     return 'ticket'
   }
   if (await prisma.ticketComment.findFirst({ where: { content: { contains: url } }, select: { id: true } })) {
+    return 'comment'
+  }
+  // JSON 列は Prisma の部分一致で文字列全体を検索できないので、テキストにして探す
+  const proposals = await prisma.$queryRaw<{ id: string }[]>`
+    SELECT "id" FROM "ticket_comment"
+    WHERE "proposal" IS NOT NULL AND strpos("proposal"::text, ${url}) > 0
+    LIMIT 1
+  `
+  if (proposals.length > 0) {
     return 'comment'
   }
   if (await prisma.ticketTemplate.findFirst({ where: { content: { contains: url } }, select: { id: true } })) {

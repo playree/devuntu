@@ -1,7 +1,7 @@
 /**
  * チケット間の関係(ticket-relation.ts)の単体テスト
  *
- * 相手を同じボードの中だけから引くこと、子の親が 1 つに保たれること、関連の向きを正規化すること、
+ * 相手を同じボードの中だけから引くこと、子の親が 1 つに保たれること、親子が循環しないこと、関連の向きを正規化すること、
  * 経路の追加制限を親子は子・関連はどちらか一端に掛けることを確かめる。
  */
 
@@ -15,7 +15,7 @@ import {
   resolveRelationTarget,
   writeTicketParent,
 } from '@/lib/board/ticket-relation'
-import { RELATION_ALREADY_EXISTS, RELATION_TARGET_INVALID } from '@/lib/board/ticket-relation-rule'
+import { RELATION_ALREADY_EXISTS, RELATION_CYCLE, RELATION_TARGET_INVALID } from '@/lib/board/ticket-relation-rule'
 import { ClientError } from '@/lib/error'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -45,6 +45,17 @@ const actor = { id: 'u1' }
 const BOARD_ID = 'b1'
 const TICKET_ID = '0195c1e0-0000-7000-8000-000000000002'
 const OTHER_ID = '0195c1e0-0000-7000-8000-000000000001'
+const THIRD_ID = '0195c1e0-0000-7000-8000-000000000003'
+
+/** 子 → 親 の対応で親子関係を持たせる(`ticketRelation.findFirst` で親を引く問い合わせに答える) */
+const withParents = (parents: Record<string, string>) => {
+  fakeTx.ticketRelation.findFirst.mockImplementation(async ({ where }: { where: { toId: string } }) =>
+    parents[where.toId] ? { id: `r-${where.toId}`, fromId: parents[where.toId] } : null,
+  )
+}
+
+/** `lockTicketRow` でロックした行の ID(呼んだ順) */
+const lockedIds = () => fakeTx.$queryRaw.mock.calls.map((call) => call[1])
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -111,8 +122,8 @@ describe('writeTicketParent', () => {
 
     await writeTicketParent(tx, TICKET_ID, OTHER_ID)
 
-    // 子と親の 2 行をロックする
-    expect(fakeTx.$queryRaw).toHaveBeenCalledTimes(2)
+    // 子をロックし、循環の確認で親を、末尾の順番を採るときにも親をロックする
+    expect(lockedIds()).toEqual([TICKET_ID, OTHER_ID, OTHER_ID])
     expect(fakeTx.ticketRelation.create).toHaveBeenCalledWith({
       data: { type: 'parent', fromId: OTHER_ID, toId: TICKET_ID, order: 999 },
     })
@@ -148,6 +159,42 @@ describe('writeTicketParent', () => {
       errorType: RELATION_TARGET_INVALID,
     })
   })
+
+  it('自分の子を親にすると循環するので RELATION_CYCLE(A ⇄ B)', async () => {
+    withParents({ [OTHER_ID]: TICKET_ID })
+
+    await expect(writeTicketParent(tx, TICKET_ID, OTHER_ID)).rejects.toMatchObject({ errorType: RELATION_CYCLE })
+    expect(fakeTx.ticketRelation.deleteMany).not.toHaveBeenCalled()
+    expect(fakeTx.ticketRelation.create).not.toHaveBeenCalled()
+  })
+
+  it('孫以下の子孫を親にしても RELATION_CYCLE(A → B → C → A)', async () => {
+    withParents({ [OTHER_ID]: TICKET_ID, [THIRD_ID]: OTHER_ID })
+
+    await expect(writeTicketParent(tx, TICKET_ID, THIRD_ID)).rejects.toMatchObject({ errorType: RELATION_CYCLE })
+    expect(fakeTx.ticketRelation.deleteMany).not.toHaveBeenCalled()
+    expect(fakeTx.ticketRelation.create).not.toHaveBeenCalled()
+  })
+
+  it('子孫でなければ、祖先を行ロックしながら根まで辿って親にする', async () => {
+    withParents({ [THIRD_ID]: OTHER_ID, [OTHER_ID]: 'root' })
+
+    await writeTicketParent(tx, TICKET_ID, THIRD_ID)
+
+    expect(lockedIds()).toEqual([TICKET_ID, THIRD_ID, OTHER_ID, 'root', THIRD_ID])
+    expect(fakeTx.ticketRelation.create).toHaveBeenCalledWith({
+      data: { type: 'parent', fromId: THIRD_ID, toId: TICKET_ID, order: 1 },
+    })
+  })
+
+  it('既存のデータが循環していても、辿るのを打ち切る', async () => {
+    withParents({ [OTHER_ID]: THIRD_ID, [THIRD_ID]: OTHER_ID })
+
+    await writeTicketParent(tx, TICKET_ID, OTHER_ID)
+
+    expect(lockedIds()).toEqual([TICKET_ID, OTHER_ID, THIRD_ID, OTHER_ID])
+    expect(fakeTx.ticketRelation.create).toHaveBeenCalled()
+  })
 })
 
 describe('addTicketRelation', () => {
@@ -174,6 +221,15 @@ describe('addTicketRelation', () => {
     expect(fakeTx.ticketRelation.create).toHaveBeenCalledWith({
       data: { type: 'parent', fromId: OTHER_ID, toId: TICKET_ID, order: 1 },
     })
+  })
+
+  it('自分の祖先を子にすると循環するので RELATION_CYCLE', async () => {
+    withParents({ [TICKET_ID]: OTHER_ID })
+
+    await expect(
+      addTicketRelation(actor, { ticketId: TICKET_ID, target: 'ABC-1', kind: 'child' }),
+    ).rejects.toMatchObject({ errorType: RELATION_CYCLE })
+    expect(fakeTx.ticketRelation.create).not.toHaveBeenCalled()
   })
 
   it('既に同じ関係があれば RELATION_ALREADY_EXISTS', async () => {
