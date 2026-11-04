@@ -13,7 +13,7 @@ import { prisma, type Db } from '../prisma'
 import { getSlackSettings, hasSlackCredentials } from '../slack/slack-account'
 import { listSlackChannels } from '../slack/slack-server'
 import { detachBoardAttachments, listBoardAttachmentKeys, removeAttachmentByKey } from '../storage/attachment'
-import { findAttachmentReference } from '../storage/attachment-ref'
+import { collectReferencedUploadKeys } from '../storage/attachment-ref'
 import { countTicketsByBoard } from './board'
 import { assertBoardAccess, assertTeamBoard, isAdminActor, type Actor } from './board-access'
 import { reserveBoardKey, rethrowDuplicatedBoardKey } from './board-key'
@@ -211,6 +211,9 @@ export const setBoardNotify = async (
  * 同じ添付を他ボードのチケットなどにも貼っている場合があるので、実体を消す前に参照を確かめ、
  * 参照が残っているものは `boardId` が null のまま残す(貼った先のボードのメンバーもURLを知ることになるが、
  * 推測できないキーなのは変わらない)。参照が外れれば定期の掃除が回収する。
+ * 参照は添付ごとに引かず、一度の走査で集合にして判定する(添付の多いボードで走査が添付数倍にならない)。
+ * 集合を作ってから消すまでの間に他で貼られた分は取りこぼしうるが、URLを知っているのは削除したボードの
+ * メンバーだけで、その間に保存されることはまず無いので、掃除のような消す直前の引き直しはしない。
  */
 export const deleteBoard = async (actor: Actor, id: string) => {
   const keys = await prisma.$transaction(async (tx) => {
@@ -224,10 +227,11 @@ export const deleteBoard = async (actor: Actor, id: string) => {
   })
 
   // ロールバックで実データを失わないよう、コミットしてから実体を消す
+  const referenced = keys.length > 0 ? await collectBoardDeletionReferences(id) : new Set<string>()
   let removed = 0
   let kept = 0
   for (const key of keys) {
-    if (await isAttachmentReferenced(key)) {
+    if (!referenced || referenced.has(key)) {
       kept += 1
       continue
     }
@@ -239,12 +243,12 @@ export const deleteBoard = async (actor: Actor, id: string) => {
   logger.info({ userId: actor.id, id, attachments: keys.length, removed, kept }, 'board deleted')
 }
 
-/** 添付がまだどこかから参照されているか。確かめられなかった場合は消さない側に倒し、判断を定期の掃除に任せる */
-const isAttachmentReferenced = async (key: string): Promise<boolean> => {
+/** 参照されている添付キーの集合。確かめられなかった場合は null を返して 1 件も消さず、判断を定期の掃除に任せる */
+const collectBoardDeletionReferences = async (boardId: string): Promise<Set<string> | null> => {
   try {
-    return (await findAttachmentReference(key)) !== null
+    return await collectReferencedUploadKeys()
   } catch (err) {
-    logger.error({ err, key }, 'failed to check attachment reference')
-    return true
+    logger.error({ err, boardId }, 'failed to collect attachment references')
+    return null
   }
 }

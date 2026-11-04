@@ -26,7 +26,7 @@ const mocks = vi.hoisted(() => ({
   detachBoardAttachments: vi.fn(),
   listBoardAttachmentKeys: vi.fn(),
   removeAttachmentByKey: vi.fn(),
-  findAttachmentReference: vi.fn(),
+  collectReferencedUploadKeys: vi.fn(),
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }))
 
@@ -59,7 +59,7 @@ vi.mock('@/lib/storage/attachment', () => ({
   listBoardAttachmentKeys: mocks.listBoardAttachmentKeys,
   removeAttachmentByKey: mocks.removeAttachmentByKey,
 }))
-vi.mock('@/lib/storage/attachment-ref', () => ({ findAttachmentReference: mocks.findAttachmentReference }))
+vi.mock('@/lib/storage/attachment-ref', () => ({ collectReferencedUploadKeys: mocks.collectReferencedUploadKeys }))
 
 const {
   assertBoardNotifyManageable,
@@ -101,7 +101,7 @@ beforeEach(() => {
   mocks.isGitlabVisible.mockResolvedValue(false)
   mocks.listSlackChannels.mockResolvedValue([{ id: 'C1', name: 'general' }])
   mocks.listBoardAttachmentKeys.mockResolvedValue([])
-  mocks.findAttachmentReference.mockResolvedValue(null)
+  mocks.collectReferencedUploadKeys.mockResolvedValue(new Set())
   board.findUnique.mockResolvedValue(boardRow as never)
   board.update.mockResolvedValue({ id: 'b1', name: 'ボード' } as never)
   board.delete.mockResolvedValue({} as never)
@@ -435,12 +435,13 @@ describe('deleteBoard', () => {
 
   it('他のボードの本文などから参照されている添付は、実体を消さずに残す', async () => {
     mocks.listBoardAttachmentKeys.mockResolvedValue(['k1', 'k2'])
-    mocks.findAttachmentReference.mockImplementation(async (key: string) => (key === 'k1' ? 'ticket' : null))
+    mocks.collectReferencedUploadKeys.mockResolvedValue(new Set(['k1', 'other']))
     mocks.removeAttachmentByKey.mockResolvedValue(true)
 
     await deleteBoard(user, 'b1')
 
-    expect(mocks.findAttachmentReference.mock.calls).toEqual([['k1'], ['k2']])
+    // 参照は添付ごとではなく 1 回の走査で集める
+    expect(mocks.collectReferencedUploadKeys).toHaveBeenCalledTimes(1)
     expect(mocks.removeAttachmentByKey.mock.calls).toEqual([['k2']])
     expect(mocks.logger.info).toHaveBeenCalledWith(
       { userId: 'u1', id: 'b1', attachments: 2, removed: 1, kept: 1 },
@@ -448,18 +449,28 @@ describe('deleteBoard', () => {
     )
   })
 
-  it('参照を確かめられなかった添付は消さずに、残りの処理を続ける', async () => {
+  it('参照を確かめられなければ、ボードは消したまま添付の実体は 1 件も消さない', async () => {
     mocks.listBoardAttachmentKeys.mockResolvedValue(['k1', 'k2'])
-    mocks.findAttachmentReference.mockRejectedValueOnce(new Error('db')).mockResolvedValueOnce(null)
-    mocks.removeAttachmentByKey.mockResolvedValue(true)
+    mocks.collectReferencedUploadKeys.mockRejectedValue(new Error('db'))
 
     await deleteBoard(user, 'b1')
 
-    expect(mocks.removeAttachmentByKey.mock.calls).toEqual([['k2']])
+    expect(board.delete).toHaveBeenCalled()
+    expect(mocks.removeAttachmentByKey).not.toHaveBeenCalled()
     expect(mocks.logger.error).toHaveBeenCalledWith(
-      expect.objectContaining({ key: 'k1' }),
-      'failed to check attachment reference',
+      expect.objectContaining({ boardId: 'b1' }),
+      'failed to collect attachment references',
     )
+    expect(mocks.logger.info).toHaveBeenCalledWith(
+      { userId: 'u1', id: 'b1', attachments: 2, removed: 0, kept: 2 },
+      'board deleted',
+    )
+  })
+
+  it('添付が無ければ参照の走査をしない', async () => {
+    await deleteBoard(user, 'b1')
+
+    expect(mocks.collectReferencedUploadKeys).not.toHaveBeenCalled()
   })
 
   it('ボードの削除に失敗したら実体は消さない', async () => {
