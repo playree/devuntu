@@ -9,7 +9,13 @@ import { DM_NOTIFY_EVENTS } from '@/lib/notify/notify'
 import { zPassword } from '@/lib/schema/schema'
 import { scCreateUser, scUpdateIntegrationSettings, scUpdateUser } from '@/lib/schema/schema-admin'
 import { scSetBoardNotifySetting, zAutoReviseReviewers, zBoardKey } from '@/lib/schema/schema-board'
-import { scCreateLinkWidget, scUpdateLinkWidget } from '@/lib/schema/schema-dashboard'
+import {
+  DASHBOARD_COLUMN_MAX,
+  DASHBOARD_WIDGET_ID_MAX,
+  scCreateLinkWidget,
+  scUpdateDashboard,
+  scUpdateLinkWidget,
+} from '@/lib/schema/schema-dashboard'
 import { scUpdateNotifySetting, scUpdateNotifySettings, scWebPushSubscription } from '@/lib/schema/schema-notify'
 import {
   scCreateTag,
@@ -359,6 +365,31 @@ describe('scSetBoardNotifySetting: ボードのチャネル通知', () => {
   it('イベントの指定漏れは弾く', () => {
     // 部分更新を許すとサーバー側に「未指定なら据え置き」の分岐が必要になるので必須にしている
     expect(scSetBoardNotifySetting.safeParse({ id: boardId, slackChannelId: 'C0123ABCD' }).success).toBe(false)
+  })
+})
+
+describe('scUpdateDashboard: レイアウトの大きさに上限がある', () => {
+  const layout = (left: (string | null)[], right: (string | null)[] = []) => ({ layout: { left, right } })
+
+  it('既定レイアウトの形(各列10枠・リンクウィジェットのID)は受け付ける', () => {
+    const left = ['my_tickets', 'link:019eef64-6cc1-78f1-8f50-1ef869860001', ...Array(8).fill(null)]
+    expect(scUpdateDashboard.safeParse(layout(left, Array(10).fill(null))).success).toBe(true)
+  })
+
+  it('上限ちょうどまでは受け付ける', () => {
+    const column = Array(DASHBOARD_COLUMN_MAX).fill('x'.repeat(DASHBOARD_WIDGET_ID_MAX))
+    expect(scUpdateDashboard.safeParse(layout(column, column)).success).toBe(true)
+  })
+
+  it.each([
+    ['left', layout(Array(DASHBOARD_COLUMN_MAX + 1).fill(null))],
+    ['right', layout([], Array(DASHBOARD_COLUMN_MAX + 1).fill(null))],
+  ])('%s の枠数が上限を超えると拒否する', (_, input) => {
+    expect(scUpdateDashboard.safeParse(input).success).toBe(false)
+  })
+
+  it('ウィジェットIDが上限の長さを超えると拒否する', () => {
+    expect(scUpdateDashboard.safeParse(layout(['x'.repeat(DASHBOARD_WIDGET_ID_MAX + 1)])).success).toBe(false)
   })
 })
 

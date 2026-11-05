@@ -5,9 +5,19 @@
 import { z } from 'zod'
 import { zDescription, zImageFile, zName } from './schema'
 
+/**
+ * 1列の枠数の上限。既定レイアウトは各列10枠なので、保存済みの値を弾かない程度に余裕を持たせる。
+ * 上限が無いと巨大な配列を保存でき、その全量がログにも出る
+ */
+export const DASHBOARD_COLUMN_MAX = 50
+/** ウィジェットIDの長さの上限。最長は `link:<uuidv7>`(41文字) */
+export const DASHBOARD_WIDGET_ID_MAX = 100
+
+const zDashboardColumn = z.array(z.string().max(DASHBOARD_WIDGET_ID_MAX).nullable()).max(DASHBOARD_COLUMN_MAX)
+
 export const scDashboardLayout = z.object({
-  left: z.array(z.string().nullable()),
-  right: z.array(z.string().nullable()),
+  left: zDashboardColumn,
+  right: zDashboardColumn,
 })
 export type DashboardLayout = z.infer<typeof scDashboardLayout>
 

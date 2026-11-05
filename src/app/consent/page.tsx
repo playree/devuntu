@@ -1,6 +1,6 @@
 import { auth } from '@/lib/auth/auth'
 import { logger } from '@/lib/logger'
-import { parseConsentScopes, parseRequestedUserInfoClaims } from '@/lib/oauth/oauth-consent'
+import { consentClientUri, parseConsentScopes, parseRequestedUserInfoClaims } from '@/lib/oauth/oauth-consent'
 import { prisma } from '@/lib/prisma'
 import { en } from '@/locale/lang-en'
 import { isAPIError } from 'better-auth/api'
@@ -52,10 +52,10 @@ const ConsentPage: FC<{
       isValid={!!client && signed}
       isUnverified={isUnverified}
       clientName={client?.client_name}
-      clientUri={client?.client_uri}
-      logoUri={client?.logo_uri}
-      tosUri={client?.tos_uri}
-      policyUri={client?.policy_uri}
+      clientUri={consentClientUri(client?.client_uri)}
+      logoUri={consentClientUri(client?.logo_uri)}
+      tosUri={consentClientUri(client?.tos_uri)}
+      policyUri={consentClientUri(client?.policy_uri)}
       scopes={parseConsentScopes(first(params.scope))}
       claims={parseRequestedUserInfoClaims(first(params.claims))}
     />
