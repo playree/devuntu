@@ -9,6 +9,7 @@
 import { MCP_SCOPES } from '@/lib/auth/mcp-scope'
 import {
   buildSignedOAuthQuery,
+  consentClientUri,
   consentScopeLocaleItem,
   dedupeScopes,
   parseConsentScopes,
@@ -116,5 +117,23 @@ describe('parseRequestedUserInfoClaims', () => {
 
   it.each([undefined, '', 'not-json', '[]', '{"userinfo":"x"}'])('壊れた値(%s)でも落ちない', (claims) => {
     expect(parseRequestedUserInfoClaims(claims)).toEqual([])
+  })
+})
+
+describe('consentClientUri', () => {
+  it('https の絶対 URL はそのまま通す', () => {
+    expect(consentClientUri('https://example.com/logo.png')).toBe('https://example.com/logo.png')
+  })
+
+  it.each([
+    ['http', 'http://example.com/logo.png'],
+    ['javascript', 'javascript:alert(1)'],
+    ['data', 'data:image/svg+xml;base64,PHN2Zy8+'],
+    ['相対パス', '/logo.png'],
+    ['不正な文字列', 'not a url'],
+    ['空文字', ''],
+    ['未指定', undefined],
+  ])('%s は出さない', (_, value) => {
+    expect(consentClientUri(value)).toBeUndefined()
   })
 })

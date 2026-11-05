@@ -28,6 +28,7 @@ import {
   updateTicketCommentForMcp,
   updateTicketForMcp,
 } from '@/lib/mcp/mcp-ticket'
+import { guardMcpToolErrors } from '@/lib/mcp/mcp-tool-error'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import {
   MAX_TICKET_CRITERIA,
@@ -164,6 +165,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
     { name: SERVER_NAME[auth.kind], version: '1.0.0' },
     { instructions: mcpInstructions(auth.kind) },
   )
+  guardMcpToolErrors(server)
 
   server.registerTool(
     'ping',

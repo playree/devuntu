@@ -50,6 +50,14 @@ MCP サーバーの認証の振り分け・ツールの入力仕様・実装上�
 ツールの title / description・入力の説明・サーバーの instructions・エラーメッセージなど、MCP 経由で返す文字列は
 英語に統一している。読むのは主に AI エージェントで、接続時に一度だけ渡すものなのでロケールでは切り替えない。
 
+ツールが投げた例外は、SDK が `message` をそのままツールエラーとして返す。`createDevuntuMcpServer` は生成直後に
+`guardMcpToolErrors`(`src/lib/mcp/mcp-tool-error.ts`)で `registerTool` を包み、ドメインごとのファイルから登録するツールも含めて
+次のようにそろえる(Server Action の `handleServerError` と同じ考え方)。
+
+- `ClientError` はそのまま返す。理由と対処を書いた文言を AI に読ませるため
+- それ以外(Prisma の制約違反や S3 の例外など、モデル名・列名・接続先が混ざりうる)は `logger.error` に残し、`Internal Server Error` だけを返す
+- 入力スキーマの検証エラーはツールの呼び出し前に SDK が返すので、この扱いを通らない
+
 ## クライアントへの案内
 
 利用者がルールを書かなくても、チケットに対応するときに plan / report のコメントと成果物の紐付けを
@@ -372,6 +380,8 @@ DCR で受け付けるリダイレクトURIの判定(ループバックか逆ド
   **完全一致**したときだけ通す(前方一致やホスト単位にすると、同じホストの別パスへコードを流せてしまう)
 - `dcrPolicy` は `application_type` を `native` に倒すが、better-auth の native 検証は非ループバックの `https` を許すので、
   許可リストの URI もそのまま登録できる
+- 登録時の `client_uri` / `logo_uri` / `tos_uri` / `policy_uri` は検証しない。同意画面(`src/app/consent/page.tsx`)が
+  `consentClientUri`(`src/lib/oauth/oauth-consent.ts`)で `https:` の絶対 URL だけを残し、それ以外は表示しない(ロゴが無ければアイコンで代替)
 
 ## 認可に課すセッションの鮮度
 

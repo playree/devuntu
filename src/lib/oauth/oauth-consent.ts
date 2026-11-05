@@ -74,3 +74,18 @@ export const parseRequestedUserInfoClaims = (claims: string | undefined): string
     return []
   }
 }
+
+/**
+ * 同意画面に出すクライアントの URI(client / logo / tos / policy)。動的登録では誰でも任意の値を入れられるので、
+ * `https:` の絶対 URL だけを通し、それ以外(`http:` / `data:` / `javascript:` / 相対・不正な値)は出さない。
+ */
+export const consentClientUri = (value: string | undefined): string | undefined => {
+  if (!value) {
+    return undefined
+  }
+  try {
+    return new URL(value).protocol === 'https:' ? value : undefined
+  } catch {
+    return undefined
+  }
+}

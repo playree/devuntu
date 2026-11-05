@@ -6,6 +6,7 @@
  * 単体テストの対象外としている)。
  */
 
+import { logger } from '@/lib/logger'
 import { TOOL_ANNOTATIONS } from '@/lib/mcp/mcp'
 import { getBoardForMcp, listBoardsForMcp } from '@/lib/mcp/mcp-board'
 import {
@@ -23,7 +24,8 @@ import {
   updateTicketCommentForMcp,
   updateTicketForMcp,
 } from '@/lib/mcp/mcp-ticket'
-import { describe, expect, it, vi } from 'vitest'
+import { MCP_INTERNAL_ERROR_MESSAGE } from '@/lib/mcp/mcp-tool-error'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { connectDevuntuMcp } from '../../helpers/mcp-client'
 import * as fakeAuth from '../../helpers/resource-auth'
 
@@ -56,6 +58,10 @@ const patAuth = fakeAuth.patAuth()
 const JAPANESE = /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u
 
 describe('createDevuntuMcpServer', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('全ツールが tools/list に現れる', async () => {
     const { tools } = await (await connectDevuntuMcp()).listTools()
     expect(tools.map((tool) => tool.name)).toEqual(
@@ -289,6 +295,22 @@ describe('createDevuntuMcpServer', () => {
 
     expect(getTicketForMcp).toHaveBeenCalledWith(auth, 'ABC-1')
     expect(result.content).toEqual([{ type: 'text', text: JSON.stringify({ title: 'テストチケット' }, null, 2) }])
+  })
+
+  it('ツールの想定外の例外は内部の文言を返さず、固定の文言にする', async () => {
+    const logError = vi.spyOn(logger, 'error').mockImplementation(() => {})
+    vi.mocked(getTicketForMcp).mockRejectedValueOnce(new Error('Invalid `prisma.ticket.findFirst()` invocation'))
+
+    const result = await (
+      await connectDevuntuMcp()
+    ).callTool({
+      name: 'get_ticket',
+      arguments: { ticketId: 'ABC-1' },
+    })
+
+    expect(result.isError).toBe(true)
+    expect(result.content).toEqual([{ type: 'text', text: MCP_INTERNAL_ERROR_MESSAGE }])
+    expect(logError).toHaveBeenCalledTimes(1)
   })
 
   it('search_tickets は検索条件を渡し、結果をJSONテキストとして返す', async () => {

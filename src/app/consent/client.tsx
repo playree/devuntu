@@ -74,7 +74,7 @@ export const ConsentClient: FC<{
             <Avatar // ロゴはクライアント登録の任意URLなので、読み込めない場合はアイコンで代替する
               size='sm'
             >
-              <Avatar.Image src={logoUri ?? ''} />
+              {logoUri && <Avatar.Image src={logoUri} />}
               <Avatar.Fallback>
                 <PuzzlePieceIcon className='size-5' />
               </Avatar.Fallback>
