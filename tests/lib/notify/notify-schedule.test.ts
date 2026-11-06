@@ -3,7 +3,12 @@
  */
 
 import { NOTIFY_EMAIL_WINDOW_MS, NOTIFY_MAX_ATTEMPTS, NOTIFY_RETRY_BASE_MS } from '@/lib/notify/notify'
-import { isRetryExhausted, nextEmailWindowAt, retryScheduledAt } from '@/lib/notify/notify-schedule'
+import {
+  emailRetryScheduledAt,
+  isRetryExhausted,
+  nextEmailWindowAt,
+  retryScheduledAt,
+} from '@/lib/notify/notify-schedule'
 import { describe, expect, it } from 'vitest'
 
 const now = new Date('2026-08-25T10:03:20.000Z')
@@ -46,6 +51,22 @@ describe('retryScheduledAt: 再試行の待ち時間', () => {
   it('0 や負の試行回数でも過去にはしない', () => {
     // claim 時の加算を戻した直後などに 0 が渡りうる
     expect(retryScheduledAt(now, 0).getTime()).toBeGreaterThan(now.getTime())
+  })
+})
+
+describe('emailRetryScheduledAt: メールの再試行', () => {
+  it('待ち時間を置いたうえで次のウィンドウ境界へ揃える', () => {
+    // 10:03:20 + 1 分 = 10:04:20 → 10:05:00。+2 分 = 10:05:20 → 10:10:00
+    expect(emailRetryScheduledAt(now, 1).toISOString()).toBe('2026-08-25T10:05:00.000Z')
+    expect(emailRetryScheduledAt(now, 2).toISOString()).toBe('2026-08-25T10:10:00.000Z')
+  })
+
+  it('境界の時刻で、待ち時間より前にはならない', () => {
+    for (const attempts of [0, 1, 2, NOTIFY_MAX_ATTEMPTS]) {
+      const at = emailRetryScheduledAt(now, attempts)
+      expect(at.getTime() % NOTIFY_EMAIL_WINDOW_MS).toBe(0)
+      expect(at.getTime()).toBeGreaterThan(retryScheduledAt(now, attempts).getTime())
+    }
   })
 })
 

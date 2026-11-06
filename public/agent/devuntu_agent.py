@@ -42,7 +42,7 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-__version__ = "1.0.4"
+__version__ = "1.0.5"
 
 # 1 Agent の構成を作業ディレクトリだけで完結させるため、config・ログ・ロックは本体と同じ
 # <作業ディレクトリ>/.devuntu-agent へ置く。作業ディレクトリを分ければ同一ホストに複数の Agent を並べられる
@@ -241,6 +241,13 @@ def save_path(config: Config) -> int:
 # ---------------------------------------------------------------------------
 
 
+class NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """リダイレクトを追わない。3xx は HTTPError になる"""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
 def call_api(config: Config, method: str, path: str, body: dict | None = None) -> dict:
     """devuntu の軽量 API を叩く。応答は必ず JSON オブジェクト"""
     data = json.dumps(body or {}).encode("utf-8")
@@ -255,9 +262,17 @@ def call_api(config: Config, method: str, path: str, body: dict | None = None) -
         },
     )
     try:
-        with urllib.request.urlopen(request, timeout=30) as response:
+        # リダイレクトを追うと、トークン付きの authorization ヘッダーを転送先(http や別ホスト)へ送ってしまうため追わない
+        opener = urllib.request.build_opener(NoRedirectHandler)
+        with opener.open(request, timeout=30) as response:
             return json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
+        if 300 <= e.code < 400:
+            location = e.headers.get("location", "")
+            raise ApiError(
+                f"{method} {path} returned {e.code} (redirect to {location}). "
+                "Set base_url to the final URL (redirects are not followed)"
+            ) from e
         detail = e.read().decode("utf-8", errors="replace")[:200]
         raise ApiError(f"{method} {path} returned {e.code}: {detail}") from e
     except (urllib.error.URLError, TimeoutError, socket.timeout) as e:
@@ -269,13 +284,6 @@ def call_api(config: Config, method: str, path: str, body: dict | None = None) -
 # ---------------------------------------------------------------------------
 # 自動更新
 # ---------------------------------------------------------------------------
-
-
-class NoRedirectHandler(urllib.request.HTTPRedirectHandler):
-    """リダイレクトを追わない。3xx は HTTPError になる"""
-
-    def redirect_request(self, req, fp, code, msg, headers, newurl):
-        return None
 
 
 def is_trusted_update_origin(base_url: str) -> bool:

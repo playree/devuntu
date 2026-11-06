@@ -25,14 +25,18 @@ export const getUserByEmail = safeAction
   .action(async ({ parsedInput: { username } }) => {
     // DB 参照より前に消費して、存在判定の探りにもコストが掛かるようにする
     assertRateLimit(`signin:ip:${await getClientIp()}`, IP_RATE_LIMIT)
+    const next: 'PASSWORD' | 'OTP' = auth.options.emailAndPassword.enabled ? 'PASSWORD' : 'OTP'
+    if (next === 'OTP') {
+      // 実在するアドレスにだけ掛けると、上限に達するかどうかで有無が分かるので、入力値に掛ける
+      assertRateLimit(`signin:otp:${username.toLowerCase()}`, EMAIL_RATE_LIMIT)
+    }
 
     // ユーザー検索(AIエージェントは Web ログインできないので未存在として扱う)
     const found = await prisma.user.findUnique({ where: { email: username } })
     const user = found?.isAgent ? null : found
-    const next: 'PASSWORD' | 'OTP' = auth.options.emailAndPassword.enabled ? 'PASSWORD' : 'OTP'
 
     if (next === 'OTP' && user?.email) {
-      assertRateLimit(`signin:otp:${user.email.toLowerCase()}`, EMAIL_RATE_LIMIT)
+      // メールはレスポンスの後に送る(otp-mail.ts)
       await auth.api.sendVerificationOTP({
         body: {
           email: user.email,

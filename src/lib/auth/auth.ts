@@ -23,6 +23,7 @@ import { SLACK_PROVIDER_ID } from '../slack/slack'
 import { slackUserInfo } from '../slack/slack-server'
 import { authConfig } from './auth-config'
 import { MCP_RESOURCE, MCP_SCOPES } from './mcp-scope'
+import { sendEmailOtpAfterResponse } from './otp-mail'
 import { requiresTwoFaSetup } from './two-fa'
 import { resolveSyncedProfile } from './user-sync'
 
@@ -212,7 +213,7 @@ const emailOtpPlugin = emailOTP({
     const user = await prisma.user.findUnique({ where: { email }, select: { locale: true, isAgent: true } })
     logger.debug({ email, type, user }, 'sendVerificationOTP')
     if (user && !user.isAgent) {
-      await sendEmailOtp({ locale: user.locale, to: email, otp })
+      await sendEmailOtpAfterResponse({ locale: user.locale, to: email, otp })
     }
   },
 })

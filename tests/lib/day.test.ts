@@ -5,6 +5,7 @@ import {
   isValidTimezone,
   msBefore,
   startOfWeek,
+  startOfWeekWithin,
   weekRange,
   zonedDayBounds,
   zonedMinutes,
@@ -38,6 +39,39 @@ describe('weekRange', () => {
     const { timeMin, timeMax } = weekRange(startOfWeek('2026-10-26', tz), tz)
     expect(timeMin).toBe('2026-10-26T04:00:00.000Z')
     expect(timeMax).toBe('2026-11-02T05:00:00.000Z')
+  })
+})
+
+describe('startOfWeekWithin', () => {
+  const tz = 'Asia/Tokyo'
+  const RANGE = { before: 4, after: 12 }
+
+  it('範囲内の週はそのまま。前後の週へ移れる', () => {
+    vi.useFakeTimers({ now: new Date('2026-03-04T03:00:00Z') })
+    const { weekStart, hasPrev, hasNext } = startOfWeekWithin('2026-03-18', tz, RANGE)
+    expect(weekStart.toISOString()).toBe('2026-03-15T15:00:00.000Z')
+    expect(hasPrev).toBe(true)
+    expect(hasNext).toBe(true)
+  })
+
+  it('範囲外は端の週に収め、その先へは移れない', () => {
+    vi.useFakeTimers({ now: new Date('2026-03-04T03:00:00Z') })
+    // 今週は 3/2(月)。4 週前は 2/2、12 週後は 5/25
+    const past = startOfWeekWithin('2020-01-01', tz, RANGE)
+    expect(past.weekStart.toISOString()).toBe('2026-02-01T15:00:00.000Z')
+    expect(past.hasPrev).toBe(false)
+    expect(past.hasNext).toBe(true)
+
+    const future = startOfWeekWithin('2099-01-01', tz, RANGE)
+    expect(future.weekStart.toISOString()).toBe('2026-05-24T15:00:00.000Z')
+    expect(future.hasPrev).toBe(true)
+    expect(future.hasNext).toBe(false)
+  })
+
+  it('未指定・不正な値は今週', () => {
+    vi.useFakeTimers({ now: new Date('2026-03-04T03:00:00Z') })
+    expect(startOfWeekWithin(undefined, tz, RANGE).weekStart.toISOString()).toBe('2026-03-01T15:00:00.000Z')
+    expect(startOfWeekWithin('xxx', tz, RANGE).weekStart.toISOString()).toBe('2026-03-01T15:00:00.000Z')
   })
 })
 

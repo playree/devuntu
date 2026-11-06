@@ -26,5 +26,12 @@ export const nextEmailWindowAt = (now: Date, windowMs: number = NOTIFY_EMAIL_WIN
 export const retryScheduledAt = (now: Date, attempts: number): Date =>
   new Date(now.getTime() + Math.max(1, attempts) * NOTIFY_RETRY_BASE_MS)
 
+/**
+ * メールの再試行時刻。待ち時間を置いたうえで次のウィンドウ境界へ揃える。
+ * 境界から外れた時刻に送ると、同じ区間に届いた通知と別の 1 通になり「ユーザーあたりウィンドウに 1 通」が崩れる。
+ */
+export const emailRetryScheduledAt = (now: Date, attempts: number): Date =>
+  nextEmailWindowAt(retryScheduledAt(now, attempts))
+
 /** 試行回数を使い切ったか。使い切った配信は failed にして原因追跡用に残す */
 export const isRetryExhausted = (attempts: number): boolean => attempts >= NOTIFY_MAX_ATTEMPTS

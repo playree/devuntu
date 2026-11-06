@@ -35,7 +35,8 @@ const scPullRequestEvent = z.object({
     draft: z.boolean().optional(),
     merged: z.boolean().nullish(),
     updated_at: z.coerce.date(),
-    head: z.object({ ref: z.string(), sha: z.string() }),
+    // フォークが削除されていると repo は null になる
+    head: z.object({ ref: z.string(), sha: z.string(), repo: scRepository.nullish() }),
   }),
 })
 
@@ -121,7 +122,19 @@ const handlePullRequest = async (body: unknown, target: GithubWebhookTarget) => 
   const { repo } = target
   const boards = [target.board]
   const key = repoKey(repo)
-  await autoLinkPullRequest({ key, number: pr.number, url: githubPullRequestUrl(repo, pr.number) }, pr.head.ref, boards)
+  /**
+   * 自動で紐付けるのは同じリポジトリのブランチからの PR だけ。フォークのブランチ名は誰でも付けられるので、
+   * 紐付けるとタイトルが MCP に載り、CI の失敗で差し戻され、開いたままならマージ完了も止まる
+   */
+  if (pr.head.repo && isTargetRepo(pr.head.repo, target)) {
+    await autoLinkPullRequest(
+      { key, number: pr.number, url: githubPullRequestUrl(repo, pr.number) },
+      pr.head.ref,
+      boards,
+    )
+  } else {
+    logger.info({ repo, number: pr.number }, 'github pull request auto link skipped: fork')
+  }
 
   await syncPullRequest({
     key,

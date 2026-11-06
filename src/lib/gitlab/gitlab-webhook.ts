@@ -63,6 +63,8 @@ const scMergeRequestEvent = z.object({
     action: z.string().nullish(),
     updated_at: zTime,
     source_branch: z.string(),
+    source_project_id: z.number().int().nullish(),
+    target_project_id: z.number().int().nullish(),
     last_commit: z.object({ id: z.string() }).nullish(),
   }),
 })
@@ -128,11 +130,16 @@ const handleMergeRequest = async (body: unknown, target: GitlabWebhookTarget) =>
 
   const key = repoKey(target)
   const boards = [target.board]
-  await autoLinkPullRequest(
-    { key, number: mr.iid, url: gitlabMergeRequestUrl(target.baseUrl, target.repo, mr.iid) },
-    mr.source_branch,
-    boards,
-  )
+  // 自動で紐付けるのは同じプロジェクトのブランチからの MR だけ(フォークのブランチ名は誰でも付けられる)
+  if (mr.source_project_id != null && mr.source_project_id === mr.target_project_id) {
+    await autoLinkPullRequest(
+      { key, number: mr.iid, url: gitlabMergeRequestUrl(target.baseUrl, target.repo, mr.iid) },
+      mr.source_branch,
+      boards,
+    )
+  } else {
+    logger.info({ repo: target.repo, number: mr.iid }, 'gitlab merge request auto link skipped: fork')
+  }
 
   await syncPullRequest({
     key,

@@ -18,7 +18,10 @@ export const PublicCalClient: FC<{
   busy: BusySlot[] | null
   timezone: string
   title: string
-}> = ({ weekStartISO, busy, timezone, title }) => {
+  /** 前後の週へ移れるか(表示できる週の範囲の端では移れない) */
+  hasPrev: boolean
+  hasNext: boolean
+}> = ({ weekStartISO, busy, timezone, title, hasPrev, hasNext }) => {
   const { t } = useLocale()
   const router = useRouter()
   const pathname = usePathname()
@@ -54,13 +57,25 @@ export const PublicCalClient: FC<{
         </div>
 
         <div className='flex flex-wrap items-center gap-2'>
-          <MultiButton isSmart variant='outline' icon={<ArrowLeftCircleIcon />} onPress={() => go(-7)}>
+          <MultiButton
+            isSmart
+            variant='outline'
+            icon={<ArrowLeftCircleIcon />}
+            isDisabled={!hasPrev}
+            onPress={() => go(-7)}
+          >
             {t('prev_week')}
           </MultiButton>
           <MultiButton isSmart variant='outline' onPress={() => router.push(pathname)}>
             {t('today')}
           </MultiButton>
-          <MultiButton isSmart variant='outline' icon={<ArrowRightCircleIcon />} onPress={() => go(7)}>
+          <MultiButton
+            isSmart
+            variant='outline'
+            icon={<ArrowRightCircleIcon />}
+            isDisabled={!hasNext}
+            onPress={() => go(7)}
+          >
             {t('next_week')}
           </MultiButton>
           <div className='text-muted text-sm font-medium'>{weekLabel}</div>

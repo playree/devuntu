@@ -47,7 +47,9 @@ const BOARD = {
 const TARGET = { id: 'r1', repo: 'owner/repo', board: BOARD }
 const UPDATED_AT = '2026-09-26T10:00:00Z'
 
-const pullRequestEvent = (override: { action?: string; ref?: string; state?: string; merged?: boolean } = {}) => ({
+const pullRequestEvent = (
+  override: { action?: string; ref?: string; state?: string; merged?: boolean; headRepo?: string | null } = {},
+) => ({
   action: override.action ?? 'opened',
   repository: { full_name: 'Owner/Repo' },
   pull_request: {
@@ -57,7 +59,11 @@ const pullRequestEvent = (override: { action?: string; ref?: string; state?: str
     draft: false,
     merged: override.merged ?? false,
     updated_at: UPDATED_AT,
-    head: { ref: override.ref ?? 'feature/ABC-1', sha: 'abc123' },
+    head: {
+      ref: override.ref ?? 'feature/ABC-1',
+      sha: 'abc123',
+      repo: override.headRepo === null ? null : { full_name: override.headRepo ?? 'owner/REPO' },
+    },
   },
 })
 
@@ -97,6 +103,18 @@ describe('pull_request', () => {
       // 外したリンク(dismissed)も行が残っているので作り直さない
       skipDuplicates: true,
     })
+  })
+
+  it('フォーク(または削除されたフォーク)のブランチからの PR は自動で紐付けず、状態の反映だけする', async () => {
+    for (const headRepo of ['attacker/repo', null]) {
+      vi.mocked(prisma.ticketLink.updateMany).mockClear()
+      await handleGithubEvent('pull_request', pullRequestEvent({ headRepo }), TARGET)
+
+      expect(prisma.ticket.findUnique).not.toHaveBeenCalled()
+      expect(prisma.ticketLink.createMany).not.toHaveBeenCalled()
+      // 手で紐付けたリンクの状態は更新する
+      expect(prisma.ticketLink.updateMany).toHaveBeenCalled()
+    }
   })
 
   it('別のボードのキーの表示IDには紐付けない', async () => {

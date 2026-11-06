@@ -147,6 +147,7 @@ revise で再開したエージェントには、`get_agent_task` の `task.deci
 ボード設定の「GitHub連携」/「GitLab連携」で自動差し戻しを有効にすると(provider ごとの設定。`BoardGitSetting`)、紐付いた PR / MR の CI の失敗やレビュー指摘を
 その provider の Webhook で受けたときに、報告済み(`agentState=done`)のエージェント担当チケットを `planned` へ戻し、
 revise で拾わせる。人が report を差し戻すのと同じ流れを、Webhook のきっかけで行う。実装は `src/lib/agent/agent-auto-revise.ts`。
+対象のチケットは紐付いたリンクから探す。フォークからの PR / MR はブランチ名では自動で紐付けないので、手動で紐付けない限り、フォークの CI やレビューでは差し戻らない。
 
 **きっかけ。** 受けたイベントを `AgentAutoReviseTrigger` に1件ずつ記録する。
 
@@ -362,6 +363,8 @@ CodeRabbit は push のたびに再レビューするので、指摘が続くと
 - 自動更新は `base_url` が https のとき(と、ループバックのホスト。`is_trusted_update_origin`)だけ行う。取得した内容の確認は
   先頭行と `__version__` の有無だけなので、経路の改ざんを防ぐのは TLS に任せている。
   確かめた `base_url` 以外から取得しないよう、リダイレクトも追わない(`NoRedirectHandler`。3xx は取得失敗として warning)
+- API の呼び出し(`call_api`)もリダイレクトを追わない(`NoRedirectHandler`。1.0.5 から)。追うと、トークン付きの `authorization` ヘッダーを
+  転送先(http や別のホスト)へ送ってしまうため。3xx は転送先を添えた `ApiError` になる
 - `--dry-run` / `--debug` でも `/api/agent/status` への問い合わせ(最終ポーリング時刻の更新)と自動更新は行い、
   実行の記録(`/api/agent/runs`)はしない
 
