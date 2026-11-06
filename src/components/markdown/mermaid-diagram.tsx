@@ -5,7 +5,7 @@ import { useLocale } from '@/locale/client'
 import { Skeleton } from '@heroui/react'
 import { FC, useEffect, useId, useState } from 'react'
 
-type Rendered = { key: string } & ({ svg: string } | { error: string })
+type Rendered = { code: string; isDark: boolean } & ({ svg: string } | { error: string })
 
 /** mermaid は設定(initialize)がグローバルなので、テーマの違う描画が混ざらないよう1つずつ描く */
 let renderQueue: Promise<unknown> = Promise.resolve()
@@ -47,15 +47,14 @@ export const MermaidDiagram: FC<{ code: string }> = ({ code }) => {
   const isDark = useResolvedTheme() === 'dark'
   // useId の `:` / `«` は mermaid が要素の id とセレクタに使うため取り除く
   const id = `mermaid-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
-  const key = `${isDark}\n${code}`
   const [rendered, setRendered] = useState<Rendered>()
 
   useEffect(() => {
     let cancelled = false
     renderDiagram(id, code, isDark)
       .then(
-        (svg): Rendered => ({ key, svg }),
-        (e: unknown): Rendered => ({ key, error: e instanceof Error ? e.message : String(e) }),
+        (svg): Rendered => ({ code, isDark, svg }),
+        (e: unknown): Rendered => ({ code, isDark, error: e instanceof Error ? e.message : String(e) }),
       )
       .then((result) => {
         if (!cancelled) {
@@ -65,9 +64,9 @@ export const MermaidDiagram: FC<{ code: string }> = ({ code }) => {
     return () => {
       cancelled = true
     }
-  }, [id, code, isDark, key])
+  }, [id, code, isDark])
 
-  const current = rendered?.key === key ? rendered : undefined
+  const current = rendered?.code === code && rendered.isDark === isDark ? rendered : undefined
   if (!current) {
     return <Skeleton data-markdown-loading className='my-2 h-32 w-full rounded-lg' />
   }

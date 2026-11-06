@@ -109,7 +109,9 @@ const stripAlertMarker = (
   if (!marker) {
     return undefined
   }
-  const restInlines = marker.rest ? [{ ...text, value: marker.rest }, ...inlines] : inlines
+  // 目印の行末の改行(行末の空白2つ / `\\`)は見出しの直後の空行になるので落とす
+  const followers = !marker.rest && inlines[0]?.type === 'break' ? inlines.slice(1) : inlines
+  const restInlines = marker.rest ? [{ ...text, value: marker.rest }, ...followers] : followers
   const rest = restInlines.length > 0 ? [{ ...first, children: restInlines }, ...others] : others
   // GitHub と同じく、目印しか無い引用は注意書きにしない
   return rest.length > 0 ? { type: marker.type, children: rest } : undefined
