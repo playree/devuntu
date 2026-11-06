@@ -13,15 +13,13 @@ import {
   MdastImportVisitor,
   realmPlugin,
   ToMarkdownExtension,
-  type isMdastHTMLNode,
 } from '@mdxeditor/editor'
 import { $createTextNode, TextNode } from 'lexical'
 import { createContext, FC, ReactNode, useCallback, useContext, useMemo, useState } from 'react'
+import { MdastNode } from './mdast-types'
 import { MentionCandidate, MentionMenu } from './mention-menu'
 import { $createMentionNode, $isMentionNode, MentionNode } from './mention-node'
 
-/** `@types/mdast` は直接の依存に無いため、公開 API の引数から mdast のノード型を取り出す */
-type MdastNode = Parameters<typeof isMdastHTMLNode>[0]
 type MdastText = Extract<MdastNode, { type: 'text' }>
 
 /** 本文の書き出しに使う独自の mdast ノード。標準の text として出すと `[` がエスケープされてしまう */

@@ -4,11 +4,9 @@ import {
   CodeBlockEditorDescriptor,
   MdastImportVisitor,
   realmPlugin,
-  type isMdastHTMLNode,
 } from '@mdxeditor/editor'
+import { MdastNode } from './mdast-types'
 
-/** `@types/mdast` は直接の依存に無いため、公開 API の引数から mdast のノード型を取り出す */
-type MdastNode = Parameters<typeof isMdastHTMLNode>[0]
 type MdastTable = Extract<MdastNode, { type: 'table' }>
 type MdastTableRow = Extract<MdastNode, { type: 'tableRow' }>
 type MdastTableCell = Extract<MdastNode, { type: 'tableCell' }>

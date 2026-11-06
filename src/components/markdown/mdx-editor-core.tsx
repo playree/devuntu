@@ -39,10 +39,12 @@ import '@mdxeditor/editor/style.css'
 import { FC, ReactElement, useEffect, useMemo, useRef, useState } from 'react'
 import { decoratorClickPlugin } from './mdx-decorator-click-plugin'
 import { FileUploadProvider, InsertFile } from './mdx-file-dialog'
+import { footnotePlugin } from './mdx-footnote-plugin'
 import { MdxImageDialog } from './mdx-image-dialog'
 import { MdxEditImageToolbar, MdxImagePlaceholder } from './mdx-image-toolbar'
 import { MdxLinkDialog } from './mdx-link-dialog'
 import { MentionCandidatesProvider, mentionPlugin } from './mdx-mention-plugin'
+import { referencePlugin } from './mdx-reference-plugin'
 import { sanitizeHtmlPlugin } from './mdx-sanitize-plugin'
 import { MentionCandidate } from './mention-menu'
 import { MentionUsersProvider } from './mention-node'
@@ -230,6 +232,9 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
       }),
       // 候補は React context 経由で渡すため、引数に候補を取らず参照が固定される(mdx-mention-plugin.tsx)
       mentionPlugin({ typeahead: true }),
+      // ツールバーには出さないが、既存本文の参照リンク・脚注を取り込めるようにする
+      referencePlugin(),
+      footnotePlugin(),
       codeBlockPlugin({ defaultCodeBlockLanguage: '' }),
       codeMirrorPlugin({ codeBlockLanguages: CODE_BLOCK_LANGUAGES, codeMirrorExtensions }),
       markdownShortcutPlugin(),

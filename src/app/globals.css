@@ -154,6 +154,24 @@
     @apply h-auto max-w-full rounded-sm;
   }
 
+  /* 参照リンクの定義行(reference-nodes.tsx)が続くときは、書いたとおり詰めて並べる(編集面だけに出る) */
+  .markdown > [data-link-definition]:has(+ [data-link-definition]) {
+    @apply mb-0;
+  }
+
+  /* 脚注の定義(footnote-nodes.tsx)。ラベルの横に本文を並べ、本文より一段小さく出す */
+  .markdown [data-footnote-definition] {
+    @apply text-muted flex gap-2 text-xs;
+  }
+
+  .markdown [data-footnote-label] {
+    @apply shrink-0 font-semibold select-none;
+  }
+
+  .markdown [data-footnote-body] {
+    @apply min-w-0 flex-1 space-y-2;
+  }
+
   .markdown table {
     @apply border-gray-600 dark:border-gray-300;
   }
@@ -265,6 +283,11 @@
 /* 本文が段落以外(表・見出し・区切り線など)で終わると、Lexical がカーソル置き場として
    空の段落を足す。表示側では余白が1行ぶん増えるだけなので隠す */
 .mdxeditor.mdxeditor-view .markdown > p:last-child:has(> br[data-lexical-managed-linebreak]:only-child) {
+  display: none;
+}
+
+/* 参照リンクの定義行(reference-nodes.tsx)は GitHub と同じく表示面では出さない */
+.mdxeditor.mdxeditor-view [data-link-definition] {
   display: none;
 }
 

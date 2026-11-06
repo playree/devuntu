@@ -34,3 +34,22 @@ export const isAllowedHtmlTag = (name: string | null | undefined): name is strin
 const DROPPED_HTML_TAGS: ReadonlySet<string> = new Set(['script', 'style', 'noscript', 'template', 'title', 'textarea'])
 
 export const isDroppedHtmlTag = (name: string | null | undefined) => !!name && DROPPED_HTML_TAGS.has(name)
+
+/** リンクとして開いてよいスキーム。Lexical の `LinkNode` が `sanitizeUrl` で許可しているものに揃える */
+const SAFE_LINK_PROTOCOLS: ReadonlySet<string> = new Set(['http:', 'https:', 'mailto:', 'sms:', 'tel:'])
+
+/**
+ * リンク先の URL を無害化する。許可外のスキーム(`javascript:` / `data:` など)は `about:blank` にする。
+ *
+ * `LinkNode` を使わず独自ノードで `<a>` を描画するときに、標準のリンクと同じ判定を通すためのもの。
+ * スキームを持たない相対 URL はそのまま通す。
+ */
+export const sanitizeLinkUrl = (url: string): string => {
+  let protocol: string
+  try {
+    protocol = new URL(url).protocol
+  } catch {
+    return url
+  }
+  return SAFE_LINK_PROTOCOLS.has(protocol) ? url : 'about:blank'
+}
