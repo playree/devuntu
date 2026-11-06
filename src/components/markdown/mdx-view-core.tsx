@@ -18,7 +18,9 @@ import '@mdxeditor/editor/style.css'
 import { FC, MouseEvent, useEffect, useMemo, useRef } from 'react'
 import { useModalState } from '../general/modal'
 import { findLightboxImage, ImageLightbox, LightboxImage } from './image-lightbox'
+import { footnotePlugin } from './mdx-footnote-plugin'
 import { mentionPlugin } from './mdx-mention-plugin'
+import { referencePlugin } from './mdx-reference-plugin'
 import { sanitizeHtmlPlugin } from './mdx-sanitize-plugin'
 import { readOnlyCodeBlockDescriptor, readOnlyTablePlugin } from './mdx-view-plugins'
 import { MentionUser, MentionUsersProvider } from './mention-node'
@@ -115,6 +117,8 @@ const MdxViewCore: FC<MdxViewCoreProps> = ({ markdown, onError, mentionUsers }) 
       codeBlockPlugin({ codeBlockEditorDescriptors: [readOnlyCodeBlockDescriptor] }),
       // 表示専用なので候補の入力補助は付けない(記法の解釈と描画だけ)
       mentionPlugin(),
+      referencePlugin(),
+      footnotePlugin(),
     ],
     [],
   )

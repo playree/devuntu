@@ -71,6 +71,8 @@
     "framer-motion": "^14.9.0",
     "jose": "^6.2.15",
     "lexical": "0.48.0",
+    "mdast-util-gfm-footnote": "^2.1.0",
+    "micromark-extension-gfm-footnote": "^2.1.0",
     "nanoid": "^6.0.2",
     "next": "16.4.3",
     "next-safe-action": "^8.7.3",

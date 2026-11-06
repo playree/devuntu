@@ -7,7 +7,7 @@
  * vitest(environment: node)からは動かせないので、その入力になる許可リストを固定する。
  */
 
-import { ALLOWED_HTML_TAGS, isAllowedHtmlTag, isDroppedHtmlTag } from '@/lib/markdown-sanitize'
+import { ALLOWED_HTML_TAGS, isAllowedHtmlTag, isDroppedHtmlTag, sanitizeLinkUrl } from '@/lib/markdown-sanitize'
 import { describe, expect, it } from 'vitest'
 
 describe('ALLOWED_HTML_TAGS', () => {
@@ -44,4 +44,24 @@ describe('ALLOWED_HTML_TAGS', () => {
     // 許可を広げるときは属性を全て捨てても壊れないかを確認する
     expect([...ALLOWED_HTML_TAGS].toSorted()).toEqual(['br', 'del', 'ins', 'kbd', 'mark', 's', 'sub', 'sup', 'u'])
   })
+})
+
+describe('sanitizeLinkUrl', () => {
+  it.each(['https://example.com/a?b=c', 'http://example.com', 'mailto:a@example.com', 'tel:0123', 'sms:0123'])(
+    '%s はそのまま通す',
+    (url) => {
+      expect(sanitizeLinkUrl(url)).toBe(url)
+    },
+  )
+
+  it.each(['/tickets/1', './a', '#top', ''])('スキームの無い相対 URL %s はそのまま通す', (url) => {
+    expect(sanitizeLinkUrl(url)).toBe(url)
+  })
+
+  it.each(['javascript:alert(1)', 'JavaScript:alert(1)', 'java\tscript:alert(1)', 'data:text/html,<p>', 'vbscript:x'])(
+    '%s は about:blank にする',
+    (url) => {
+      expect(sanitizeLinkUrl(url)).toBe('about:blank')
+    },
+  )
 })
